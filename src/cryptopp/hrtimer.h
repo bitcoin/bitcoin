@@ -2,7 +2,8 @@
 #define CRYPTOPP_HRTIMER_H
 
 #include "config.h"
-#ifndef HIGHRES_TIMER_AVAILABLE
+
+#if !defined(HIGHRES_TIMER_AVAILABLE) || (defined(CRYPTOPP_WIN32_AVAILABLE) && !defined(THREAD_TIMER_AVAILABLE))
 #include <time.h>
 #endif
 
@@ -14,7 +15,8 @@ NAMESPACE_BEGIN(CryptoPP)
 	typedef clock_t TimerWord;
 #endif
 
-//! _
+//! \class TimerBase
+//! \brief Base class for timers
 class CRYPTOPP_DLL CRYPTOPP_NO_VTABLE TimerBase
 {
 public:
@@ -38,13 +40,15 @@ private:
 	TimerWord m_start, m_last;
 };
 
-//! measure CPU time spent executing instructions of this thread (if supported by OS)
-/*! /note This only works correctly on Windows NT or later. On Unix it reports process time, and others wall clock time.
-*/
+//! \class ThreadUserTimer
+//! \brief Measure CPU time spent executing instructions of this thread (if supported by OS)
+//! \note ThreadUserTimer only works correctly on Windows NT or later desktops and servers.
+//! On Unix-based it reports process time. On Windows Phone and Windows Store it reports wall
+//! clock time with performance counter precision. On all others it reports wall clock time.
 class ThreadUserTimer : public TimerBase
 {
 public:
-	ThreadUserTimer(Unit unit = TimerBase::SECONDS, bool stuckAtZero = false)	: TimerBase(unit, stuckAtZero) {}
+	ThreadUserTimer(Unit unit = TimerBase::SECONDS, bool stuckAtZero = false) : TimerBase(unit, stuckAtZero) {}
 	TimerWord GetCurrentTimerValue();
 	TimerWord TicksPerSecond();
 };

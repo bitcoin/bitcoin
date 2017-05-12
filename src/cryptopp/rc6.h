@@ -11,14 +11,17 @@
 
 NAMESPACE_BEGIN(CryptoPP)
 
-//! _
-struct RC6_Info : public FixedBlockSize<16>, public VariableKeyLength<16, 0, 255>, public VariableRounds<20>
+//! \class RC6_Info
+//! \brief RC6 block cipher information
+struct RC6_Info : public FixedBlockSize<16>, public VariableKeyLength<16, 16, 32, 8>, public VariableRounds<20>
 {
-	static const char *StaticAlgorithmName() {return "RC6";}
+	CRYPTOPP_CONSTEXPR static const char *StaticAlgorithmName() {return "RC6";}
 	typedef word32 RC6_WORD;
 };
 
-/// <a href="http://www.weidai.com/scan-mirror/cs.html#RC6">RC6</a>
+//! \class RC6
+//! \brief RC6 block cipher
+//! \sa <a href="http://www.weidai.com/scan-mirror/cs.html#RC6">RC6</a>
 class RC6 : public RC6_Info, public BlockCipherDocumentation
 {
 	class CRYPTOPP_NO_VTABLE Base : public BlockCipherImpl<RC6_Info>

@@ -11,15 +11,20 @@
 
 NAMESPACE_BEGIN(CryptoPP)
 
-//! _
+//! \class SKIPJACK_Info
+//! \brief SKIPJACK block cipher information
 struct SKIPJACK_Info : public FixedBlockSize<8>, public FixedKeyLength<10>
 {
 	CRYPTOPP_DLL static const char * CRYPTOPP_API StaticAlgorithmName() {return "SKIPJACK";}
 };
 
-/// <a href="http://www.weidai.com/scan-mirror/cs.html#SKIPJACK">SKIPJACK</a>
+//! \class SKIPJACK
+//! \brief SKIPJACK block cipher
+//! \sa <a href="http://www.weidai.com/scan-mirror/cs.html#SKIPJACK">SKIPJACK</a>
 class SKIPJACK : public SKIPJACK_Info, public BlockCipherDocumentation
 {
+	//! \class Base
+	//! \brief SKIPJACK block cipher default operation
 	class CRYPTOPP_DLL CRYPTOPP_NO_VTABLE Base : public BlockCipherImpl<SKIPJACK_Info>
 	{
 	public:
@@ -32,6 +37,8 @@ class SKIPJACK : public SKIPJACK_Info, public BlockCipherDocumentation
 		FixedSizeSecBlock<byte, 10*256> tab;
 	};
 
+	//! \class Enc
+	//! \brief SKIPJACK block cipher encryption operation
 	class CRYPTOPP_DLL CRYPTOPP_NO_VTABLE Enc : public Base
 	{
 	public:
@@ -41,6 +48,8 @@ class SKIPJACK : public SKIPJACK_Info, public BlockCipherDocumentation
 		static const word32 Te[4][256];
 	};
 
+	//! \class Dec
+	//! \brief SKIPJACK block cipher decryption operation
 	class CRYPTOPP_DLL CRYPTOPP_NO_VTABLE Dec : public Base
 	{
 	public:

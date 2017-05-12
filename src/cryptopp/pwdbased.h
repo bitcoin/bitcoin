@@ -1,5 +1,8 @@
 // pwdbased.h - written and placed in the public domain by Wei Dai
 
+//! \file pwdbased.h
+//! \brief Password based key derivation functions
+
 #ifndef CRYPTOPP_PWDBASED_H
 #define CRYPTOPP_PWDBASED_H
 
@@ -10,19 +13,41 @@
 
 NAMESPACE_BEGIN(CryptoPP)
 
-//! abstract base class for password based key derivation function
+//! \brief Abstract base class for password based key derivation function
 class PasswordBasedKeyDerivationFunction
 {
 public:
+#ifndef CRYPTOPP_MAINTAIN_BACKWARDS_COMPATIBILITY_562
+	virtual ~PasswordBasedKeyDerivationFunction() {}
+#endif
+
+	//! \brief Provides the maximum derived key length
+	//! \returns maximum derived key length, in bytes
 	virtual size_t MaxDerivedKeyLength() const =0;
+
+	//! \brief Determines if the derivation function uses the purpose byte
+	//! \returns true if the derivation function uses the purpose byte, false otherwise
 	virtual bool UsesPurposeByte() const =0;
-	//! derive key from password
-	/*! If timeInSeconds != 0, will iterate until time elapsed, as measured by ThreadUserTimer
-		Returns actual iteration count, which is equal to iterations if timeInSeconds == 0, and not less than iterations otherwise. */
+
+	//! \brief Derive key from the password
+	//! \param derived the byte buffer to receive the derived password
+	//! \param derivedLen the size of the byte buffer to receive the derived password
+	//! \param purpose an octet indicating the purpose of the derivation
+	//! \param password the byte buffer with the password
+	//! \param passwordLen the size of the password, in bytes
+	//! \param salt the byte buffer with the salt
+	//! \param saltLen the size of the salt, in bytes
+	//! \param iterations the number of iterations to attempt
+	//! \param timeInSeconds the length of time the derivation function should execute
+	//! \returns iteration count achieved
+	//! \details DeriveKey returns the actual iteration count achieved. If <tt>timeInSeconds == 0</tt>, then the complete number
+	//!   of iterations will be obtained. If <tt>timeInSeconds != 0</tt>, then DeriveKey will iterate until time elapsed, as
+	//!   measured by ThreadUserTimer.
 	virtual unsigned int DeriveKey(byte *derived, size_t derivedLen, byte purpose, const byte *password, size_t passwordLen, const byte *salt, size_t saltLen, unsigned int iterations, double timeInSeconds=0) const =0;
 };
 
-//! PBKDF1 from PKCS #5, T should be a HashTransformation class
+//! \brief PBKDF1 from PKCS #5
+//! \tparam T a HashTransformation class
 template <class T>
 class PKCS5_PBKDF1 : public PasswordBasedKeyDerivationFunction
 {
@@ -33,7 +58,8 @@ public:
 	unsigned int DeriveKey(byte *derived, size_t derivedLen, byte purpose, const byte *password, size_t passwordLen, const byte *salt, size_t saltLen, unsigned int iterations, double timeInSeconds=0) const;
 };
 
-//! PBKDF2 from PKCS #5, T should be a HashTransformation class
+//! \brief PBKDF2 from PKCS #5
+//! \tparam T a HashTransformation class
 template <class T>
 class PKCS5_PBKDF2_HMAC : public PasswordBasedKeyDerivationFunction
 {
@@ -57,8 +83,8 @@ template <class T>
 unsigned int PKCS5_PBKDF1<T>::DeriveKey(byte *derived, size_t derivedLen, byte purpose, const byte *password, size_t passwordLen, const byte *salt, size_t saltLen, unsigned int iterations, double timeInSeconds) const
 {
 	CRYPTOPP_UNUSED(purpose);
-	assert(derivedLen <= MaxDerivedKeyLength());
-	assert(iterations > 0 || timeInSeconds > 0);
+	CRYPTOPP_ASSERT(derivedLen <= MaxDerivedKeyLength());
+	CRYPTOPP_ASSERT(iterations > 0 || timeInSeconds > 0);
 
 	if (!iterations)
 		iterations = 1;
@@ -87,8 +113,8 @@ template <class T>
 unsigned int PKCS5_PBKDF2_HMAC<T>::DeriveKey(byte *derived, size_t derivedLen, byte purpose, const byte *password, size_t passwordLen, const byte *salt, size_t saltLen, unsigned int iterations, double timeInSeconds) const
 {
 	CRYPTOPP_UNUSED(purpose);
-	assert(derivedLen <= MaxDerivedKeyLength());
-	assert(iterations > 0 || timeInSeconds > 0);
+	CRYPTOPP_ASSERT(derivedLen <= MaxDerivedKeyLength());
+	CRYPTOPP_ASSERT(iterations > 0 || timeInSeconds > 0);
 
 	if (!iterations)
 		iterations = 1;
@@ -143,7 +169,8 @@ unsigned int PKCS5_PBKDF2_HMAC<T>::DeriveKey(byte *derived, size_t derivedLen, b
 	return iterations;
 }
 
-//! PBKDF from PKCS #12, appendix B, T should be a HashTransformation class
+//! \brief PBKDF from PKCS #12, appendix B
+//! \tparam T a HashTransformation class
 template <class T>
 class PKCS12_PBKDF : public PasswordBasedKeyDerivationFunction
 {
@@ -156,8 +183,8 @@ public:
 template <class T>
 unsigned int PKCS12_PBKDF<T>::DeriveKey(byte *derived, size_t derivedLen, byte purpose, const byte *password, size_t passwordLen, const byte *salt, size_t saltLen, unsigned int iterations, double timeInSeconds) const
 {
-	assert(derivedLen <= MaxDerivedKeyLength());
-	assert(iterations > 0 || timeInSeconds > 0);
+	CRYPTOPP_ASSERT(derivedLen <= MaxDerivedKeyLength());
+	CRYPTOPP_ASSERT(iterations > 0 || timeInSeconds > 0);
 
 	if (!iterations)
 		iterations = 1;

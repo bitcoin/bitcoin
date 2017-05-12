@@ -18,12 +18,16 @@
 
 NAMESPACE_BEGIN(CryptoPP)
 
-//! _
+//! \class RSAFunction
+//! \brief RSA trapdoor function using the public key
 class CRYPTOPP_DLL RSAFunction : public TrapdoorFunction, public X509PublicKey
 {
 	typedef RSAFunction ThisClass;
 
 public:
+	//! \brief Initialize a RSA public key with {n,e}
+	//! \param n the modulus
+	//! \param e the public exponent
 	void Initialize(const Integer &n, const Integer &e)
 		{m_n = n; m_e = e;}
 
@@ -53,16 +57,35 @@ protected:
 	Integer m_n, m_e;
 };
 
-//! _
+//! \class InvertibleRSAFunction
+//! \brief RSA trapdoor function using the private key
 class CRYPTOPP_DLL InvertibleRSAFunction : public RSAFunction, public TrapdoorFunctionInverse, public PKCS8PrivateKey
 {
 	typedef InvertibleRSAFunction ThisClass;
 
 public:
+	//! \brief Create a RSA private key
+	//! \param rng a RandomNumberGenerator derived class
+	//! \param modulusBits the size of the modulud, in bits
+	//! \param e the desired public exponent
 	void Initialize(RandomNumberGenerator &rng, unsigned int modulusBits, const Integer &e = 17);
+
+	//! \brief Initialize a RSA private key with {n,e,d,p,q,dp,dq,u}
+	//! \param n modulus
+	//! \param e public exponent
+	//! \param d private exponent
+	//! \param p first prime factor
+	//! \param q second prime factor
+	//! \param dp d mod p
+	//! \param dq d mod q
+	//! \param u q<sup>-1</sup> mod p
 	void Initialize(const Integer &n, const Integer &e, const Integer &d, const Integer &p, const Integer &q, const Integer &dp, const Integer &dq, const Integer &u)
 		{m_n = n; m_e = e; m_d = d; m_p = p; m_q = q; m_dp = dp; m_dq = dq; m_u = u;}
-	//! factor n given private exponent
+	//! \brief Initialize a RSA private key with {n,e,d}
+	//! \param n modulus
+	//! \param e public exponent
+	//! \param d private exponent
+	//! \details Initialize() will factor n using d and populate {p,q,dp,dq,u}.
 	void Initialize(const Integer &n, const Integer &e, const Integer &d);
 
 	// PKCS8PrivateKey
@@ -107,6 +130,8 @@ protected:
 	Integer m_d, m_p, m_q, m_dp, m_dq, m_u;
 };
 
+//! \class RSAFunction_ISO
+//! \brief RSA trapdoor function using the public key
 class CRYPTOPP_DLL RSAFunction_ISO : public RSAFunction
 {
 public:
@@ -114,6 +139,8 @@ public:
 	Integer PreimageBound() const {return ++(m_n>>1);}
 };
 
+//! \class InvertibleRSAFunction_ISO
+//! \brief RSA trapdoor function using the private key
 class CRYPTOPP_DLL InvertibleRSAFunction_ISO : public InvertibleRSAFunction
 {
 public:
@@ -121,57 +148,102 @@ public:
 	Integer PreimageBound() const {return ++(m_n>>1);}
 };
 
-//! RSA
+//! \class RSA
+//! \brief RSA algorithm
 struct CRYPTOPP_DLL RSA
 {
-	static const char * CRYPTOPP_API StaticAlgorithmName() {return "RSA";}
+	CRYPTOPP_CONSTEXPR static const char * CRYPTOPP_API StaticAlgorithmName() {return "RSA";}
 	typedef RSAFunction PublicKey;
 	typedef InvertibleRSAFunction PrivateKey;
 };
 
-//! <a href="http://www.weidai.com/scan-mirror/ca.html#RSA">RSA cryptosystem</a>
+//! \class RSAES
+//! \brief RSA encryption algorithm
+//! \tparam STANDARD signature standard
+//! \sa <a href="http://www.weidai.com/scan-mirror/ca.html#RSA">RSA cryptosystem</a>
 template <class STANDARD>
 struct RSAES : public TF_ES<STANDARD, RSA>
 {
 };
 
-//! <a href="http://www.weidai.com/scan-mirror/sig.html#RSA">RSA signature scheme with appendix</a>
-/*! See documentation of PKCS1v15 for a list of hash functions that can be used with it. */
+//! \class RSASS
+//! \brief RSA signature algorithm
+//! \tparam STANDARD signature standard
+//! \tparam H hash transformation
+//! \details See documentation of PKCS1v15 for a list of hash functions that can be used with it.
+//! \sa <a href="http://www.weidai.com/scan-mirror/sig.html#RSA">RSA signature scheme with appendix</a>
 template <class STANDARD, class H>
 struct RSASS : public TF_SS<STANDARD, H, RSA>
 {
 };
 
+//! \class RSA_ISO
+//! \brief RSA algorithm
 struct CRYPTOPP_DLL RSA_ISO
 {
-	static const char * CRYPTOPP_API StaticAlgorithmName() {return "RSA-ISO";}
+	CRYPTOPP_CONSTEXPR static const char * CRYPTOPP_API StaticAlgorithmName() {return "RSA-ISO";}
 	typedef RSAFunction_ISO PublicKey;
 	typedef InvertibleRSAFunction_ISO PrivateKey;
 };
 
+//! \class RSASS_ISO
+//! \brief RSA signature algorithm
+//! \tparam H hash transformation
 template <class H>
 struct RSASS_ISO : public TF_SS<P1363_EMSA2, H, RSA_ISO>
 {
 };
 
-// The two RSA encryption schemes defined in PKCS #1 v2.0
-typedef RSAES<PKCS1v15>::Decryptor RSAES_PKCS1v15_Decryptor;
-typedef RSAES<PKCS1v15>::Encryptor RSAES_PKCS1v15_Encryptor;
+//! \brief \ref RSAES<STANDARD> "RSAES<PKCS1v15>::Decryptor" typedef
+//! \details RSA encryption scheme defined in PKCS #1 v2.0
+DOCUMENTED_TYPEDEF(RSAES<PKCS1v15>::Decryptor, RSAES_PKCS1v15_Decryptor);
+//! \brief \ref RSAES<STANDARD> "RSAES<PKCS1v15>::Encryptor" typedef
+//! \details RSA encryption scheme defined in PKCS #1 v2.0
+DOCUMENTED_TYPEDEF(RSAES<PKCS1v15>::Encryptor, RSAES_PKCS1v15_Encryptor);
 
-typedef RSAES<OAEP<SHA> >::Decryptor RSAES_OAEP_SHA_Decryptor;
-typedef RSAES<OAEP<SHA> >::Encryptor RSAES_OAEP_SHA_Encryptor;
+//! \brief \ref RSAES<STANDARD> "RSAES<OAEP<SHA>>::Decryptor" typedef
+//! \details RSA encryption scheme defined in PKCS #1 v2.0
+DOCUMENTED_TYPEDEF(RSAES<OAEP<SHA> >::Decryptor, RSAES_OAEP_SHA_Decryptor);
+//! \brief \ref RSAES<STANDARD> "RSAES<OAEP<SHA>>::Encryptor" typedef
+//! \details RSA encryption scheme defined in PKCS #1 v2.0
+DOCUMENTED_TYPEDEF(RSAES<OAEP<SHA> >::Encryptor, RSAES_OAEP_SHA_Encryptor);
 
-// The three RSA signature schemes defined in PKCS #1 v2.0
-typedef RSASS<PKCS1v15, SHA>::Signer RSASSA_PKCS1v15_SHA_Signer;
-typedef RSASS<PKCS1v15, SHA>::Verifier RSASSA_PKCS1v15_SHA_Verifier;
+#ifdef CRYPTOPP_DOXYGEN_PROCESSING
+//! \brief \ref RSASS<STANDARD,HASH> "RSASS<PKCS1v15,SHA>::Signer" typedef
+//! \details RSA signature schemes defined in PKCS #1 v2.0
+class RSASSA_PKCS1v15_SHA_Signer : public RSASS<PKCS1v15,SHA>::Signer {};
+//! \brief \ref RSASS<STANDARD,HASH> "RSASS<PKCS1v15,SHA>::Verifier" typedef
+//! \details RSA signature schemes defined in PKCS #1 v2.0
+class RSASSA_PKCS1v15_SHA_Verifier : public RSASS<PKCS1v15,SHA>::Verifier {};
 
 namespace Weak {
-typedef RSASS<PKCS1v15, Weak1::MD2>::Signer RSASSA_PKCS1v15_MD2_Signer;
-typedef RSASS<PKCS1v15, Weak1::MD2>::Verifier RSASSA_PKCS1v15_MD2_Verifier;
 
-typedef RSASS<PKCS1v15, Weak1::MD5>::Signer RSASSA_PKCS1v15_MD5_Signer;
-typedef RSASS<PKCS1v15, Weak1::MD5>::Verifier RSASSA_PKCS1v15_MD5_Verifier;
+//! \brief \ref RSASS<STANDARD,HASH> "RSASS<PKCS1v15, Weak::MD2>::Signer" typedef
+//! \details RSA signature schemes defined in PKCS #1 v2.0
+class RSASSA_PKCS1v15_MD2_Signer : public RSASS<PKCS1v15, Weak1::MD2>::Signer {};
+//! \brief \ref RSASS<STANDARD,HASH> "RSASS<PKCS1v15, Weak::MD2>::Verifier" typedef
+//! \details RSA signature schemes defined in PKCS #1 v2.0
+class RSASSA_PKCS1v15_MD2_Verifier : public RSASS<PKCS1v15, Weak1::MD2>::Verifier {};
+
+//! \brief \ref RSASS<STANDARD,HASH> "RSASS<PKCS1v15, Weak::MD5>::Signer" typedef
+//! \details RSA signature schemes defined in PKCS #1 v2.0
+class RSASSA_PKCS1v15_MD5_Signer : public RSASS<PKCS1v15, Weak1::MD5>::Signer {};
+//! \brief \ref RSASS<STANDARD,HASH> "RSASS<PKCS1v15, Weak::MD5>::Verifier" typedef
+//! \details RSA signature schemes defined in PKCS #1 v2.0
+class RSASSA_PKCS1v15_MD5_Verifier : public RSASS<PKCS1v15, Weak1::MD5>::Verifier {};
 }
+
+#else
+typedef RSASS<PKCS1v15,SHA>::Signer RSASSA_PKCS1v15_SHA_Signer;
+typedef RSASS<PKCS1v15,SHA>::Verifier RSASSA_PKCS1v15_SHA_Verifier;
+
+namespace Weak {
+	typedef RSASS<PKCS1v15, Weak1::MD2>::Signer RSASSA_PKCS1v15_MD2_Signer;
+	typedef RSASS<PKCS1v15, Weak1::MD2>::Verifier RSASSA_PKCS1v15_MD2_Verifier;
+	typedef RSASS<PKCS1v15, Weak1::MD5>::Signer RSASSA_PKCS1v15_MD5_Signer;
+	typedef RSASS<PKCS1v15, Weak1::MD5>::Verifier RSASSA_PKCS1v15_MD5_Verifier;
+}
+#endif // CRYPTOPP_DOXYGEN_PROCESSING
 
 NAMESPACE_END
 

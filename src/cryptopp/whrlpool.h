@@ -13,7 +13,7 @@ public:
 	static void InitState(HashWordType *state);
 	static void Transform(word64 *digest, const word64 *data);
 	void TruncatedFinal(byte *hash, size_t size);
-	static const char * StaticAlgorithmName() {return "Whirlpool";}
+	CRYPTOPP_CONSTEXPR static const char *StaticAlgorithmName() {return "Whirlpool";}
 };
 
 NAMESPACE_END

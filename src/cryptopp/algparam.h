@@ -8,8 +8,8 @@
 #ifndef CRYPTOPP_ALGPARAM_H
 #define CRYPTOPP_ALGPARAM_H
 
-#include "cryptlib.h"
 #include "config.h"
+#include "cryptlib.h"
 
 // TODO: fix 6011 when the API/ABI can change
 #if (CRYPTOPP_MSC_VERSION >= 1400)
@@ -24,22 +24,40 @@
 
 NAMESPACE_BEGIN(CryptoPP)
 
-//! used to pass byte array input as part of a NameValuePairs object
-/*! the deepCopy option is used when the NameValuePairs object can't
-	keep a copy of the data available */
+//! \class ConstByteArrayParameter
+//! \brief Used to pass byte array input as part of a NameValuePairs object
 class ConstByteArrayParameter
 {
 public:
+	//! \brief Construct a ConstByteArrayParameter
+	//! \param data a C-String
+	//! \param deepCopy flag indicating whether the data should be copied
+	//! \details The deepCopy option is used when the NameValuePairs object can't
+	//!   keep a copy of the data available
 	ConstByteArrayParameter(const char *data = NULL, bool deepCopy = false)
 		: m_deepCopy(false), m_data(NULL), m_size(0)
 	{
 		Assign((const byte *)data, data ? strlen(data) : 0, deepCopy);
 	}
+
+	//! \brief Construct a ConstByteArrayParameter
+	//! \param data a memory buffer
+	//! \param size the length of the memory buffer
+	//! \param deepCopy flag indicating whether the data should be copied
+	//! \details The deepCopy option is used when the NameValuePairs object can't
+	//!   keep a copy of the data available
 	ConstByteArrayParameter(const byte *data, size_t size, bool deepCopy = false)
 		: m_deepCopy(false), m_data(NULL), m_size(0)
 	{
 		Assign(data, size, deepCopy);
 	}
+
+	//! \brief Construct a ConstByteArrayParameter
+	//! \tparam T a std::basic_string<char> class
+	//! \param string a std::basic_string<char> class
+	//! \param deepCopy flag indicating whether the data should be copied
+	//! \details The deepCopy option is used when the NameValuePairs object can't
+	//!   keep a copy of the data available
 	template <class T> ConstByteArrayParameter(const T &string, bool deepCopy = false)
 		: m_deepCopy(false), m_data(NULL), m_size(0)
 	{
@@ -47,10 +65,16 @@ public:
 		Assign((const byte *)string.data(), string.size(), deepCopy);
 	}
 
+	//! \brief Assign contents from a memory buffer
+	//! \param data a memory buffer
+	//! \param size the length of the memory buffer
+	//! \param deepCopy flag indicating whether the data should be copied
+	//! \details The deepCopy option is used when the NameValuePairs object can't
+	//!   keep a copy of the data available
 	void Assign(const byte *data, size_t size, bool deepCopy)
 	{
 		// This fires, which means: no data with a size, or data with no size.
-		// assert((data && size) || !(data || size));
+		// CRYPTOPP_ASSERT((data && size) || !(data || size));
 		if (deepCopy)
 			m_block.Assign(data, size);
 		else
@@ -61,8 +85,11 @@ public:
 		m_deepCopy = deepCopy;
 	}
 
+	//! \brief Pointer to the first byte in the memory block
 	const byte *begin() const {return m_deepCopy ? m_block.begin() : m_data;}
+	//! \brief Pointer beyond the last byte in the memory block
 	const byte *end() const {return m_deepCopy ? m_block.end() : m_data + m_size;}
+	//! \brief Length of the memory block
 	size_t size() const {return m_deepCopy ? m_block.size() : m_size;}
 
 private:
@@ -72,16 +99,27 @@ private:
 	SecByteBlock m_block;
 };
 
+//! \class ByteArrayParameter
+//! \brief Used to pass byte array input as part of a NameValuePairs object
 class ByteArrayParameter
 {
 public:
+	//! \brief Construct a ByteArrayParameter
+	//! \param data a memory buffer
+	//! \param size the length of the memory buffer
 	ByteArrayParameter(byte *data = NULL, unsigned int size = 0)
 		: m_data(data), m_size(size) {}
+
+	//! \brief Construct a ByteArrayParameter
+	//! \param block a SecByteBlock
 	ByteArrayParameter(SecByteBlock &block)
 		: m_data(block.begin()), m_size(block.size()) {}
 
+	//! \brief Pointer to the first byte in the memory block
 	byte *begin() const {return m_data;}
+	//! \brief Pointer beyond the last byte in the memory block
 	byte *end() const {return m_data + m_size;}
+	//! \brief Length of the memory block
 	size_t size() const {return m_size;}
 
 private:
@@ -89,9 +127,17 @@ private:
 	size_t m_size;
 };
 
+//! \class CombinedNameValuePairs
+//! \brief Combines two sets of NameValuePairs
+//! \details CombinedNameValuePairs allows you to provide two sets of of NameValuePairs.
+//!   If a name is not found in the first set, then the second set is searched for the
+//!   name and value pair. The second set of NameValuePairs often provides default values.
 class CRYPTOPP_DLL CombinedNameValuePairs : public NameValuePairs
 {
 public:
+	//! \brief Construct a CombinedNameValuePairs
+	//! \param pairs1 reference to the first set of NameValuePairs
+	//! \param pairs2 reference to the second set of NameValuePairs
 	CombinedNameValuePairs(const NameValuePairs &pairs1, const NameValuePairs &pairs2)
 		: m_pairs1(pairs1), m_pairs2(pairs2) {}
 
@@ -101,6 +147,7 @@ private:
 	const NameValuePairs &m_pairs1, &m_pairs2;
 };
 
+#ifndef CRYPTOPP_DOXYGEN_PROCESSING
 template <class T, class BASE>
 class GetValueHelperClass
 {
@@ -129,7 +176,7 @@ public:
 
 		if (!m_found && searchFirst)
 			m_found = searchFirst->GetVoidValue(m_name, valueType, pValue);
-		
+
 		if (!m_found && typeid(T) != typeid(BASE))
 			m_found = pObject->BASE::GetVoidValue(m_name, valueType, pValue);
 	}
@@ -312,6 +359,8 @@ AssignFromHelperClass<T, T> AssignFromHelper(T *pObject, const NameValuePairs &s
 	return AssignFromHelperClass<T, T>(pObject, source);
 }
 
+#endif // CRYPTOPP_DOXYGEN_PROCESSING
+
 // ********************************************************
 
 // to allow the linker to discard Integer code if not needed.
@@ -320,12 +369,16 @@ CRYPTOPP_DLL extern PAssignIntToInteger g_pAssignIntToInteger;
 
 CRYPTOPP_DLL const std::type_info & CRYPTOPP_API IntegerTypeId();
 
+//! \class AlgorithmParametersBase
+//! \brief Base class for AlgorithmParameters
 class CRYPTOPP_DLL AlgorithmParametersBase
 {
 public:
+	//! \class ParameterNotUsed
+	//! \brief Exception thrown when an AlgorithmParameter is unused
 	class ParameterNotUsed : public Exception
 	{
-	public: 
+	public:
 		ParameterNotUsed(const char *name) : Exception(OTHER_ERROR, std::string("AlgorithmParametersBase: parameter \"") + name + "\" not used") {}
 	};
 
@@ -337,6 +390,11 @@ public:
 		x.m_used = true;
 	}
 
+	//! \brief Construct a AlgorithmParametersBase
+	//! \param name the parameter name
+	//! \param throwIfNotUsed flags indicating whether an exception should be thrown
+	//! \details If throwIfNotUsed is true, then a ParameterNotUsed exception
+	//!   will be thrown in the destructor if the parameter is not not retrieved.
 	AlgorithmParametersBase(const char *name, bool throwIfNotUsed)
 		: m_name(name), m_throwIfNotUsed(throwIfNotUsed), m_used(false) {}
 
@@ -359,7 +417,7 @@ public:
 	}
 
 	bool GetVoidValue(const char *name, const std::type_info &valueType, void *pValue) const;
-	
+
 protected:
 	friend class AlgorithmParameters;
 	void operator=(const AlgorithmParametersBase& rhs);	// assignment not allowed, declare this for VC60
@@ -373,10 +431,19 @@ protected:
 	member_ptr<AlgorithmParametersBase> m_next;
 };
 
+//! \class AlgorithmParametersTemplate
+//! \brief Template base class for AlgorithmParameters
+//! \tparam T the class or type
 template <class T>
 class AlgorithmParametersTemplate : public AlgorithmParametersBase
 {
 public:
+	//! \brief Construct an AlgorithmParametersTemplate
+	//! \param name the name of the value
+	//! \param value a reference to the value
+	//! \param throwIfNotUsed flags indicating whether an exception should be thrown
+	//! \details If throwIfNotUsed is true, then a ParameterNotUsed exception
+	//!   will be thrown in the destructor if the parameter is not not retrieved.
 	AlgorithmParametersTemplate(const char *name, const T &value, bool throwIfNotUsed)
 		: AlgorithmParametersBase(name, throwIfNotUsed), m_value(value)
 	{
@@ -392,11 +459,20 @@ public:
 		}
 	}
 
+#if defined(DEBUG_NEW) && (_MSC_VER >= 1300)
+# pragma push_macro("new")
+# undef new
+#endif
+
 	void MoveInto(void *buffer) const
 	{
 		AlgorithmParametersTemplate<T>* p = new(buffer) AlgorithmParametersTemplate<T>(*this);
 		CRYPTOPP_UNUSED(p);	// silence warning
 	}
+
+#if defined(DEBUG_NEW) && (_MSC_VER >= 1300)
+# pragma pop_macro("new")
+#endif
 
 protected:
 	T m_value;

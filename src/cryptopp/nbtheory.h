@@ -38,7 +38,7 @@ CRYPTOPP_DLL Integer CRYPTOPP_API MihailescuProvablePrime(RandomNumberGenerator 
 //!   in the table.
 CRYPTOPP_DLL bool CRYPTOPP_API IsSmallPrime(const Integer &p);
 
-//! 
+//!
 //! \returns true if p is divisible by some prime less than bound.
 //! \details TrialDivision() true if p is divisible by some prime less than bound. bound not be
 //!   greater than the largest entry in the prime table, which is 32719.
@@ -54,7 +54,7 @@ CRYPTOPP_DLL bool CRYPTOPP_API IsLucasProbablePrime(const Integer &n);
 CRYPTOPP_DLL bool CRYPTOPP_API IsStrongProbablePrime(const Integer &n, const Integer &b);
 CRYPTOPP_DLL bool CRYPTOPP_API IsStrongLucasProbablePrime(const Integer &n);
 
-// Rabin-Miller primality test, i.e. repeating the strong probable prime test 
+// Rabin-Miller primality test, i.e. repeating the strong probable prime test
 // for several rounds with random bases
 CRYPTOPP_DLL bool CRYPTOPP_API RabinMillerTest(RandomNumberGenerator &rng, const Integer &w, unsigned int rounds);
 
@@ -157,7 +157,7 @@ public:
 	// Precondition: qbits > 4 && pbits > qbits
 	PrimeAndGenerator(signed int delta, RandomNumberGenerator &rng, unsigned int pbits, unsigned qbits)
 		{Generate(delta, rng, pbits, qbits);}
-	
+
 	void Generate(signed int delta, RandomNumberGenerator &rng, unsigned int pbits, unsigned qbits);
 
 	const Integer& Prime() const {return p;}

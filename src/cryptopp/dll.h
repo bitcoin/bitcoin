@@ -47,14 +47,14 @@
 
 #ifdef _DLL
 // cause CRT DLL to be initialized before Crypto++ so that we can use malloc and free during DllMain()
-#ifdef NDEBUG
-#pragma comment(lib, "msvcrt")
+#ifdef CRYPTOPP_DEBUG
+# pragma comment(lib, "msvcrtd")
+# pragma comment(lib, "cryptopp")
 #else
-#pragma comment(lib, "msvcrtd")
+# pragma comment(lib, "msvcrt")
+# pragma comment(lib, "cryptopp")
 #endif
 #endif
-
-#pragma comment(lib, "cryptopp")
 
 #endif		// #ifdef CRYPTOPP_IMPORTS
 

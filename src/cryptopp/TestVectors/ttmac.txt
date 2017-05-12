@@ -1,0 +1,40 @@
+AlgorithmType: MAC
+Name: Two-Track-MAC
+Source: NESSIE submission
+Comment: Key for all test cases
+Key: 00112233445566778899aabbccddeeff01234567
+Comment: Test Case 1
+Message: ""
+MAC: 2dec8ed4a0fd712ed9fbf2ab466ec2df21215e4a
+Test: Verify
+Comment: Test Case 2
+Message: "a"
+MAC: 5893e3e6e306704dd77ad6e6ed432cde321a7756
+Test: Verify
+Comment: Test Case 3
+Message: "abc"
+MAC: 70bfd1029797a5c16da5b557a1f0b2779b78497e
+Test: Verify
+Comment: Test Case 4
+Message: "message digest"
+MAC: 8289f4f19ffe4f2af737de4bd71c829d93a972fa
+Test: Verify
+Comment: Test Case 5
+Message: "abcdefghijklmnopqrstuvwxyz"
+MAC: 2186ca09c5533198b7371f245273504ca92bae60
+Test: Verify
+Comment: Test Case 6
+Message: "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"
+MAC: 8a7bf77aef62a2578497a27c0d6518a429e7c14d
+Test: Verify
+Comment: Test Case 7
+Message: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+MAC: 54bac392a886806d169556fcbb6789b54fb364fb
+Test: Verify
+Comment: Test Case 8
+Message: r8 "1234567890"
+MAC: 0ced2c9f8f0d9d03981ab5c8184bac43dd54c484
+Test: Verify
+Comment: Test Case 9
+Message: r15625 "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+MAC: 27b3aedb5df8b629f0142194daa3846e1895f3d2

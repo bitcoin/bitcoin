@@ -48,7 +48,7 @@ public:
 		{d2.GenerateKeyPair(rng, privateKey, publicKey);}
 
 	bool Agree(byte *agreedValue,
-		const byte *staticPrivateKey, const byte *ephemeralPrivateKey, 
+		const byte *staticPrivateKey, const byte *ephemeralPrivateKey,
 		const byte *staticOtherPublicKey, const byte *ephemeralOtherPublicKey,
 		bool validateStaticOtherPublicKey=true) const;
 

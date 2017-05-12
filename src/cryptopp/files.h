@@ -43,7 +43,7 @@ public:
 
 private:
 	void StoreInitialize(const NameValuePairs &parameters);
-	
+
 	member_ptr<std::ifstream> m_file;
 	std::istream *m_stream;
 	byte *m_space;

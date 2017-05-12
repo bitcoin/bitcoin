@@ -70,8 +70,8 @@ inline void FPERM(word32 &left, word32 &right)
 }
 */
 
-// Wei Dai's modification to Richard Outerbridge's initial permutation 
-// algorithm, this one is faster if you have access to rotate instructions 
+// Wei Dai's modification to Richard Outerbridge's initial permutation
+// algorithm, this one is faster if you have access to rotate instructions
 // (like in MSVC)
 static inline void IPERM(word32 &left, word32 &right)
 {
@@ -221,7 +221,8 @@ static byte sbox[8][64] = {
 };
 
 /* 32-bit permutation function P used on the output of the S-boxes */
-static byte p32i[] = {
+namespace {
+	const byte p32i[] = {
 	   16,  7, 20, 21,
 	   29, 12, 28, 17,
 		1, 15, 23, 26,
@@ -230,11 +231,13 @@ static byte p32i[] = {
 	   32, 27,  3,  9,
 	   19, 13, 30,  6,
 	   22, 11,  4, 25
-};
+	};
+}
 #endif
 
 /* permuted choice table (key) */
-static const byte pc1[] = {
+namespace {
+	const byte pc1[] = {
 	   57, 49, 41, 33, 25, 17,  9,
 		1, 58, 50, 42, 34, 26, 18,
 	   10,  2, 59, 51, 43, 35, 27,
@@ -244,15 +247,19 @@ static const byte pc1[] = {
 		7, 62, 54, 46, 38, 30, 22,
 	   14,  6, 61, 53, 45, 37, 29,
 	   21, 13,  5, 28, 20, 12,  4
-};
+	};
+}
 
 /* number left rotations of pc1 */
-static const byte totrot[] = {
+namespace {
+	const byte totrot[] = {
 	   1,2,4,6,8,10,12,14,15,17,19,21,23,25,27,28
-};
+	};
+}
 
 /* permuted choice key (table) */
-static const byte pc2[] = {
+namespace {
+	const byte pc2[] = {
 	   14, 17, 11, 24,  1,  5,
 		3, 28, 15,  6, 21, 10,
 	   23, 19, 12,  4, 26,  8,
@@ -261,14 +268,17 @@ static const byte pc2[] = {
 	   30, 40, 51, 45, 33, 48,
 	   44, 49, 39, 56, 34, 53,
 	   46, 42, 50, 36, 29, 32
-};
+	};
+}
 
 /* End of DES-defined tables */
 
 /* bit 0 is left-most in byte */
-static const int bytebit[] = {
+namespace {
+	const int bytebit[] = {
 	   0200,0100,040,020,010,04,02,01
-};
+	};
+}
 
 /* Set key (initialize key schedule array) */
 void RawDES::RawSetKey(CipherDir dir, const byte *key)
@@ -283,7 +293,7 @@ void RawDES::RawSetKey(CipherDir dir, const byte *key)
 	byte *const ks=pcr+56;
 	register int i,j,l;
 	int m;
-	
+
 	for (j=0; j<56; j++) {          /* convert pc1 to bits of key */
 		l=pc1[j]-1;             /* integer bit location  */
 		m = l & 07;             /* find bit              */
@@ -314,7 +324,7 @@ void RawDES::RawSetKey(CipherDir dir, const byte *key)
 			| ((word32)ks[5] << 8)
 			| ((word32)ks[7]);
 	}
-	
+
 	if (dir==DECRYPTION)     // reverse key schedule order
 		for (i=0; i<16; i+=2)
 		{

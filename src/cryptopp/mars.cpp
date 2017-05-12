@@ -58,7 +58,7 @@ void MARS::Enc::ProcessAndXorBlock(const byte *inBlock, const byte *xorBlock, by
 	unsigned int i;
 	word32 a, b, c, d, l, m, r, t;
 	const word32 *k = m_k;
-	
+
 	Block::Get(inBlock)(a)(b)(c)(d);
 
 	a += k[0];	b += k[1];	c += k[2];	d += k[3];
@@ -109,7 +109,7 @@ void MARS::Dec::ProcessAndXorBlock(const byte *inBlock, const byte *xorBlock, by
 	const word32 *k = m_k;
 
 	Block::Get(inBlock)(d)(c)(b)(a);
-	
+
 	d += k[36];	c += k[37];	b += k[38];	a += k[39];
 
 	for (i=0; i<8; i++)

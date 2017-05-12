@@ -31,7 +31,7 @@ static void MulU(byte *k, unsigned int length)
 			k[15] ^= 0x87;
 			break;
 		case 32:
-			k[30] ^= 4; 
+			k[30] ^= 4;
 			k[31] ^= 0x23;
 			break;
 		default:
@@ -57,7 +57,7 @@ void CMAC_Base::UncheckedSetKey(const byte *key, unsigned int length, const Name
 
 void CMAC_Base::Update(const byte *input, size_t length)
 {
-	assert((input && length) || !(input || length));
+	CRYPTOPP_ASSERT((input && length) || !(input || length));
 	if (!length)
 		return;
 
@@ -84,7 +84,7 @@ void CMAC_Base::Update(const byte *input, size_t length)
 
 	if (length > blockSize)
 	{
-		assert(m_counter == 0);
+		CRYPTOPP_ASSERT(m_counter == 0);
 		size_t leftOver = 1 + cipher.AdvancedProcessBlocks(m_reg, input, m_reg, length-1, BlockTransformation::BT_DontIncrementInOutPointers|BlockTransformation::BT_XorInput);
 		input += (length - leftOver);
 		length = leftOver;
@@ -92,12 +92,12 @@ void CMAC_Base::Update(const byte *input, size_t length)
 
 	if (length > 0)
 	{
-		assert(m_counter + length <= blockSize);
+		CRYPTOPP_ASSERT(m_counter + length <= blockSize);
 		xorbuf(m_reg+m_counter, input, length);
 		m_counter += (unsigned int)length;
 	}
 
-	assert(m_counter > 0);
+	CRYPTOPP_ASSERT(m_counter > 0);
 }
 
 void CMAC_Base::TruncatedFinal(byte *mac, size_t size)

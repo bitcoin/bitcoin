@@ -94,7 +94,7 @@ public:
 	//! \pre COUNTOF(lookup) == 256
 	//! \pre COUNTOF(alphabet) == base
 	//! \details Internally, the function sets the first 256 elements in the lookup table to
-	//   their value from the alphabet array or -1. base is the number of element (like 32),
+	//!  their value from the alphabet array or -1. base is the number of element (like 32),
 	//!  and not an exponent (like 5 in 2<sup>5</sup>)
 	static void CRYPTOPP_API InitializeDecodingLookupArray(int *lookup, const byte *alphabet, unsigned int base, bool caseInsensitive);
 

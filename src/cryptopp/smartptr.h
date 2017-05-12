@@ -31,7 +31,7 @@ public:
 };
 
 //! \class member_ptr
-//! \brief Pointer that overloads operator→
+//! \brief Pointer that overloads operator ->
 //! \tparam T class or type
 //! \details member_ptr is used frequently in the library to avoid the issues related to
 //!   std::auto_ptr in C++11 (deprecated) and std::unique_ptr in C++03 (non-existent).
@@ -57,7 +57,7 @@ public:
 		T *old_p = m_p;
 		*((volatile T**)&m_p) = NULL;
 		return old_p;
-	} 
+	}
 
 	void reset(T *p = 0);
 
@@ -74,7 +74,7 @@ template <class T> void member_ptr<T>::reset(T *p) {delete m_p; m_p = p;}
 // ********************************************************
 
 //! \class value_ptr
-//! \brief Value pointer 
+//! \brief Value pointer
 //! \tparam T class or type
 template<class T> class value_ptr : public member_ptr<T>
 {
@@ -158,7 +158,7 @@ private:
 };
 
 template <class T> counted_ptr<T>::counted_ptr(T *p)
-	: m_p(p) 
+	: m_p(p)
 {
 	if (m_p)
 		m_p->m_referenceCount = 1;
@@ -238,9 +238,9 @@ public:
 		{delete [] m_ptr;}
 
 	T& operator[](size_t index)
-		{assert(m_size && index<this->m_size); return this->m_ptr[index];}
+		{CRYPTOPP_ASSERT(m_size && index<this->m_size); return this->m_ptr[index];}
 	const T& operator[](size_t index) const
-		{assert(m_size && index<this->m_size); return this->m_ptr[index];}
+		{CRYPTOPP_ASSERT(m_size && index<this->m_size); return this->m_ptr[index];}
 
 	size_t size() const {return this->m_size;}
 	void resize(size_t newSize)
@@ -252,7 +252,7 @@ public:
 		this->m_size = newSize;
 		this->m_ptr = newPtr;
 	}
-	
+
 #ifdef __BORLANDC__
 	operator T *() const
 		{return (T*)m_ptr;}
@@ -293,9 +293,9 @@ public:
 		{delete [] this->m_ptr;}
 
 	member_ptr<T>& operator[](size_t index)
-		{assert(index<this->m_size); return this->m_ptr[index];}
+		{CRYPTOPP_ASSERT(index<this->m_size); return this->m_ptr[index];}
 	const member_ptr<T>& operator[](size_t index) const
-		{assert(index<this->m_size); return this->m_ptr[index];}
+		{CRYPTOPP_ASSERT(index<this->m_size); return this->m_ptr[index];}
 
 	size_t size() const {return this->m_size;}
 	void resize(size_t newSize)

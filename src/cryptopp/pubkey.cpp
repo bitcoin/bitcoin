@@ -62,7 +62,7 @@ void TF_SignerBase::InputRecoverableMessage(PK_MessageAccumulator &messageAccumu
 
 	ma.m_recoverableMessage.Assign(recoverableMessage, recoverableMessageLength);
 	encoding.ProcessRecoverableMessage(
-		ma.AccessHash(), 
+		ma.AccessHash(),
 		recoverableMessage, recoverableMessageLength,
 		NULL, 0, ma.m_semisignature);
 }
@@ -79,8 +79,8 @@ size_t TF_SignerBase::SignAndRestart(RandomNumberGenerator &rng, PK_MessageAccum
 		throw PK_SignatureScheme::KeyTooShort();
 
 	SecByteBlock representative(MessageRepresentativeLength());
-	encoding.ComputeMessageRepresentative(rng, 
-		ma.m_recoverableMessage, ma.m_recoverableMessage.size(), 
+	encoding.ComputeMessageRepresentative(rng,
+		ma.m_recoverableMessage, ma.m_recoverableMessage.size(),
 		ma.AccessHash(), id, ma.m_empty,
 		representative, MessageRepresentativeBitLength());
 	ma.m_empty = true;

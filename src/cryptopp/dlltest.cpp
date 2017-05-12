@@ -80,7 +80,7 @@ void FIPS140_SampleApplication()
 	const byte message[] = {'a', 'b', 'c'};
 	const byte expectedDigest[] = {0xA9,0x99,0x3E,0x36,0x47,0x06,0x81,0x6A,0xBA,0x3E,0x25,0x71,0x78,0x50,0xC2,0x6C,0x9C,0xD0,0xD8,0x9D};
 	byte digest[20];
-	
+
 	SHA1 sha;
 	sha.Update(message, 3);
 	sha.Final(digest);
@@ -133,7 +133,7 @@ void FIPS140_SampleApplication()
 	// sign and verify
 	byte signature[40];
 	DSA::Signer signer(dsaPrivateKey);
-	assert(signer.SignatureLength() == 40);
+	CRYPTOPP_ASSERT(signer.SignatureLength() == 40);
 	signer.SignMessage(rng, message, 3, signature);
 
 	DSA::Verifier verifier(dsaPublicKey);
@@ -180,6 +180,7 @@ static PDelete s_pDelete = NULL;
 
 extern "C" __declspec(dllexport) void __cdecl SetNewAndDeleteFromCryptoPP(PNew pNew, PDelete pDelete, PSetNewHandler pSetNewHandler)
 {
+	(void)(pSetNewHandler);
 	s_pNew = pNew;
 	s_pDelete = pDelete;
 }

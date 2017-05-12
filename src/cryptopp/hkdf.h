@@ -1,5 +1,9 @@
 // hkdf.h - written and placed in public domain by Jeffrey Walton. Copyright assigned to Crypto++ project.
 
+//! \file hkdf.h
+//! \brief Classes for HKDF from RFC 5869
+//! \since Crypto++ 5.6.3
+
 #ifndef CRYPTOPP_HASH_KEY_DERIVATION_FUNCTION_H
 #define CRYPTOPP_HASH_KEY_DERIVATION_FUNCTION_H
 
@@ -23,12 +27,17 @@ public:
 	virtual ~KeyDerivationFunction() {}
 };
 
-//! General, multipurpose KDF from RFC 5869. T should be a HashTransformation class
-//! https://eprint.iacr.org/2010/264 and https://tools.ietf.org/html/rfc5869
+//! \brief Extract-and-Expand Key Derivation Function (HKDF)
+//! \tparam T HashTransformation class
+//! \sa <A HREF="http://eprint.iacr.org/2010/264">Cryptographic Extraction and Key Derivation: The HKDF Scheme</A>
+//!   and <A HREF="http://tools.ietf.org/html/rfc5869">HMAC-based Extract-and-Expand Key Derivation Function (HKDF)</A>
+//! \since Crypto++ 5.6.3
 template <class T>
 class HKDF : public KeyDerivationFunction
 {
 public:
+	CRYPTOPP_CONSTANT(DIGESTSIZE = T::DIGESTSIZE)
+	CRYPTOPP_CONSTANT(SALTSIZE = T::DIGESTSIZE)
 	static const char* StaticAlgorithmName () {
 		static const std::string name(std::string("HKDF(") + std::string(T::StaticAlgorithmName()) + std::string(")"));
 		return name.c_str();
@@ -36,11 +45,11 @@ public:
 	size_t MaxDerivedKeyLength() const {return static_cast<size_t>(T::DIGESTSIZE) * 255;}
 	bool Usesinfo() const {return true;}
 	unsigned int DeriveKey(byte *derived, size_t derivedLen, const byte *secret, size_t secretLen, const byte *salt, size_t saltLen, const byte* info, size_t infoLen) const;
-	
+
 protected:
 	// If salt is missing (NULL), then use the NULL vector. Missing is different than EMPTY (0 length). The length
 	// of s_NullVector used depends on the Hash function. SHA-256 will use 32 bytes of s_NullVector.
-	typedef byte NullVectorType[T::DIGESTSIZE];
+	typedef byte NullVectorType[SALTSIZE];
 	static const NullVectorType& GetNullVector() {
 		static const NullVectorType s_NullVector = {0};
 		return s_NullVector;
@@ -52,10 +61,10 @@ unsigned int HKDF<T>::DeriveKey(byte *derived, size_t derivedLen, const byte *se
 {
 	static const size_t DIGEST_SIZE = static_cast<size_t>(T::DIGESTSIZE);
 	const unsigned int req = static_cast<unsigned int>(derivedLen);
-	
-	assert(secret && secretLen);
-	assert(derived && derivedLen);
-	assert(derivedLen <= MaxDerivedKeyLength());
+
+	CRYPTOPP_ASSERT(secret && secretLen);
+	CRYPTOPP_ASSERT(derived && derivedLen);
+	CRYPTOPP_ASSERT(derivedLen <= MaxDerivedKeyLength());
 
 	if (derivedLen > MaxDerivedKeyLength())
 		throw InvalidArgument("HKDF: derivedLen must be less than or equal to MaxDerivedKeyLength");

@@ -15,7 +15,7 @@
 #include "secblock.h"
 
 NAMESPACE_BEGIN(CryptoPP)
-	
+
 //! \class SelfTestFailure
 //! Exception thrown when a crypto algorithm is used after a self test fails
 //! \details The self tests for an algorithm are performed by Algortihm class
@@ -36,7 +36,7 @@ CRYPTOPP_DLL bool CRYPTOPP_API FIPS_140_2_ComplianceEnabled();
 
 //! \brief Status of the power-up self test
 enum PowerUpSelfTestStatus {
-	
+
 	//! \brief The self tests have not been performed.
 	POWER_UP_SELF_TEST_NOT_DONE,
 	//! \brief The self tests were executed via DoPowerUpSelfTest() or

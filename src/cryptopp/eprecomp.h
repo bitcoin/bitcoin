@@ -25,7 +25,7 @@ public:
 	virtual const AbstractGroup<Element> & GetGroup() const =0;
 	virtual Element BERDecodeElement(BufferedTransformation &bt) const =0;
 	virtual void DEREncodeElement(BufferedTransformation &bt, const Element &P) const =0;
-	
+
 #ifndef CRYPTOPP_MAINTAIN_BACKWARDS_COMPATIBILITY_562
 	virtual ~DL_GroupPrecomputation() {}
 #endif

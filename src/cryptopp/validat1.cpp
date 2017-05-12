@@ -45,6 +45,7 @@
 #include "zdeflate.h"
 #include "smartptr.h"
 #include "channels.h"
+#include "misc.h"
 
 #include <time.h>
 #include <memory>
@@ -58,6 +59,10 @@
 # pragma strict_gs_check (on)
 #endif
 
+#if CRYPTOPP_GCC_DIAGNOSTIC_AVAILABLE
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
 USING_NAMESPACE(CryptoPP)
 USING_NAMESPACE(std)
 
@@ -66,29 +71,38 @@ bool ValidateAll(bool thorough)
 	bool pass=TestSettings();
 	pass=TestOS_RNG() && pass;
 	pass=TestAutoSeeded() && pass;
-	
+	pass=TestAutoSeededX917() && pass;
+
 #if (CRYPTOPP_BOOL_X86 || CRYPTOPP_BOOL_X32 || CRYPTOPP_BOOL_X64)
 	pass=TestRDRAND() && pass;
 	pass=TestRDSEED() && pass;
-#else
-
 #endif
 
-#if !defined(NDEBUG) && !defined(CRYPTOPP_IMPORTS)
+#if CRYPTOPP_DEBUG && !defined(CRYPTOPP_IMPORTS)
+	// http://github.com/weidai11/cryptopp/issues/92
+	pass=TestSecBlock() && pass;
 	// http://github.com/weidai11/cryptopp/issues/64
 	pass=TestPolynomialMod2() && pass;
+	// http://github.com/weidai11/cryptopp/pull/242
+	pass=TestHuffmanCodes() && pass;
 #endif
 
 	pass=ValidateCRC32() && pass;
+	pass=ValidateCRC32C() && pass;
 	pass=ValidateAdler32() && pass;
 	pass=ValidateMD2() && pass;
 	pass=ValidateMD5() && pass;
 	pass=ValidateSHA() && pass;
-	pass=RunTestDataFile("TestVectors/sha3.txt") && pass;
+
+	pass=RunTestDataFile(CRYPTOPP_DATA_DIR "TestVectors/keccak.txt") && pass;
+	pass=RunTestDataFile(CRYPTOPP_DATA_DIR "TestVectors/sha3_fips_202.txt") && pass;
+
 	pass=ValidateTiger() && pass;
 	pass=ValidateRIPEMD() && pass;
 	pass=ValidatePanama() && pass;
 	pass=ValidateWhirlpool() && pass;
+	pass=ValidateBLAKE2s() && pass;
+	pass=ValidateBLAKE2b() && pass;
 
 	pass=ValidateHMAC() && pass;
 	pass=ValidateTTMAC() && pass;
@@ -124,12 +138,14 @@ bool ValidateAll(bool thorough)
 	pass=ValidateCCM() && pass;
 	pass=ValidateGCM() && pass;
 	pass=ValidateCMAC() && pass;
-	pass=RunTestDataFile("TestVectors/eax.txt") && pass;
-	pass=RunTestDataFile("TestVectors/seed.txt") && pass;
+	pass=RunTestDataFile(CRYPTOPP_DATA_DIR "TestVectors/eax.txt") && pass;
+	pass=RunTestDataFile(CRYPTOPP_DATA_DIR "TestVectors/seed.txt") && pass;
 
 	pass=ValidateBBS() && pass;
 	pass=ValidateDH() && pass;
 	pass=ValidateMQV() && pass;
+	pass=ValidateHMQV() && pass;
+	pass=ValidateFHMQV() && pass;
 	pass=ValidateRSA() && pass;
 	pass=ValidateElGamal() && pass;
 	pass=ValidateDLIES() && pass;
@@ -157,7 +173,7 @@ bool ValidateAll(bool thorough)
 
 bool TestSettings()
 {
-	// Thanks to IlyaBizyaev and Zireael-N, http://github.com/weidai11/cryptopp/issues/28
+	// Thanks to IlyaBizyaev and Zireael, http://github.com/weidai11/cryptopp/issues/28
 #if defined(__MINGW32__)
 	using CryptoPP::memcpy_s;
 #endif
@@ -196,8 +212,9 @@ bool TestSettings()
 	}
 
 #ifdef CRYPTOPP_ALLOW_UNALIGNED_DATA_ACCESS
+	// Don't CRYPTOPP_ASSERT the alignment of testvals. That's what this test is for.
 	byte testvals[10] = {1,2,2,3,3,3,3,2,2,1};
-	if (*(word32 *)(testvals+3) == 0x03030303 && *(word64 *)(testvals+1) == W64LIT(0x0202030303030202))
+	if (*(word32 *)(void *)(testvals+3) == 0x03030303 && *(word64 *)(void *)(testvals+1) == W64LIT(0x0202030303030202))
 		cout << "passed:  Your machine allows unaligned data access.\n";
 	else
 	{
@@ -277,6 +294,7 @@ bool TestSettings()
 	bool hasISSE = HasISSE();
 	bool hasSSE2 = HasSSE2();
 	bool hasSSSE3 = HasSSSE3();
+	bool hasSSE4 = HasSSE4();
 	bool isP4 = IsP4();
 	int cacheLineSize = GetCacheLineSize();
 
@@ -288,8 +306,20 @@ bool TestSettings()
 	else
 		cout << "passed:  ";
 
-	cout << "hasMMX == " << hasMMX << ", hasISSE == " << hasISSE << ", hasSSE2 == " << hasSSE2 << ", hasSSSE3 == " << hasSSSE3 << ", hasAESNI == " << HasAESNI() << ", hasRDRAND == " << HasRDRAND() << ", hasRDSEED == " << HasRDSEED() << ", hasCLMUL == " << HasCLMUL() << ", isP4 == " << isP4 << ", cacheLineSize == " << cacheLineSize;
-	cout << ", AESNI_INTRINSICS == " << CRYPTOPP_BOOL_AESNI_INTRINSICS_AVAILABLE << endl;
+	cout << "hasMMX == " << hasMMX << ", hasISSE == " << hasISSE << ", hasSSE2 == " << hasSSE2 << ", hasSSSE3 == " << hasSSSE3 << ", hasSSE4 == " << hasSSE4;
+	cout << ", hasAESNI == " << HasAESNI() << ", hasCLMUL == " << HasCLMUL() << ", hasRDRAND == " << HasRDRAND() << ", hasRDSEED == " << HasRDSEED();
+	cout << ", isP4 == " << isP4 << ", cacheLineSize == " << cacheLineSize << endl;
+
+#elif (CRYPTOPP_BOOL_ARM32 || CRYPTOPP_BOOL_ARM64)
+	bool hasNEON = HasNEON();
+	bool hasPMULL = HasPMULL();
+	bool hasCRC32 = HasCRC32();
+	bool hasAES = HasAES();
+	bool hasSHA1 = HasSHA1();
+	bool hasSHA2 = HasSHA2();
+
+	cout << "passed:  ";
+	cout << "hasNEON == " << hasNEON << ", hasPMULL == " << hasPMULL << ", hasCRC32 == " << hasCRC32 << ", hasAES == " << hasAES << ", hasSHA1 == " << hasSHA1 << ", hasSHA2 == " << hasSHA2 << endl;
 #endif
 
 	if (!pass)
@@ -299,6 +329,978 @@ bool TestSettings()
 	}
 	return pass;
 }
+
+#if CRYPTOPP_DEBUG && !defined(CRYPTOPP_IMPORTS)
+bool TestSecBlock()
+{
+	cout << "\nTesting SecBlock...\n\n";
+
+	bool pass1=true, pass2=true, pass3=true, pass4=true, pass5=true, pass6=true, pass7=true, temp=false;
+
+	//********** Zeroized block **********//
+
+	{
+		// NULL ptr with a size means to create a new SecBlock with all elements zero'd
+		SecByteBlock z1(NULL, 256);
+		temp = true;
+
+		for (size_t i = 0; i < z1.size(); i++)
+			temp &= (z1[i] == 0);
+
+		pass1 &= temp;
+		if (!temp)
+			cout << "FAILED:";
+		else
+			cout << "passed:";
+		cout << "  Zeroized byte array" << endl;
+
+		SecBlock<word32> z2(NULL, 256);
+		temp = true;
+
+		for (size_t i = 0; i < z2.size(); i++)
+			temp &= (z2[i] == 0);
+
+		pass1 &= temp;
+		if (!temp)
+			cout << "FAILED:";
+		else
+			cout << "passed:";
+		cout << "  Zeroized word32 array" << endl;
+
+		SecBlock<word64> z3(NULL, 256);
+		temp = true;
+
+		for (size_t i = 0; i < z3.size(); i++)
+			temp &= (z3[i] == 0);
+
+		pass1 &= temp;
+		if (!temp)
+			cout << "FAILED:";
+		else
+			cout << "passed:";
+		cout << "  Zeroized word64 array" << endl;
+
+#if defined(CRYPTOPP_WORD128_AVAILABLE)
+		SecBlock<word128> z4(NULL, 256);
+		temp = true;
+
+		for (size_t i = 0; i < z4.size(); i++)
+			temp &= (z4[i] == 0);
+
+		pass1 &= temp;
+		if (!temp)
+			cout << "FAILED:";
+		else
+			cout << "passed:";
+		cout << "  Zeroized word128 array" << endl;
+#endif
+	}
+
+	//********** Assign **********//
+
+	try
+	{
+		SecByteBlock a, b;
+		temp = true;
+
+		a.Assign((const byte*)"a", 1);
+		b.Assign((const byte*)"b", 1);
+
+		temp &= (a.SizeInBytes() == 1);
+		temp &= (b.SizeInBytes() == 1);
+		temp &= (a[0] == 'a');
+		temp &= (b[0] == 'b');
+
+		a.Assign((const byte*)"ab", 2);
+		b.Assign((const byte*)"cd", 2);
+
+		temp &= (a.SizeInBytes() == 2);
+		temp &= (b.SizeInBytes() == 2);
+		temp &= (a[0] == 'a' && a[1] == 'b');
+		temp &= (b[0] == 'c' && b[1] == 'd');
+	}
+	catch(const Exception& /*ex*/)
+	{
+		temp = false;
+	}
+
+	pass2 &= temp;
+	if (!temp)
+		cout << "FAILED:";
+	else
+		cout << "passed:";
+	cout << "  Assign byte" << endl;
+
+	try
+	{
+		SecBlock<word32> a, b;
+		temp = true;
+
+		word32 one[1] = {1}, two[1] = {2};
+		a.Assign(one, 1);
+		b.Assign(two, 1);
+
+		temp &= (a.SizeInBytes() == 4);
+		temp &= (b.SizeInBytes() == 4);
+		temp &= (a[0] == 1);
+		temp &= (b[0] == 2);
+
+		word32 three[2] = {1,2}, four[2] = {3,4};
+		a.Assign(three, 2);
+		b.Assign(four, 2);
+
+		temp &= (a.SizeInBytes() == 8);
+		temp &= (b.SizeInBytes() == 8);
+		temp &= (a[0] == 1 && a[1] == 2);
+		temp &= (b[0] == 3 && b[1] == 4);
+	}
+	catch(const Exception& /*ex*/)
+	{
+		temp = false;
+	}
+
+	pass2 &= temp;
+	if (!temp)
+		cout << "FAILED:";
+	else
+		cout << "passed:";
+	cout << "  Assign word32" << endl;
+
+	try
+	{
+		SecBlock<word64> a, b;
+		temp = true;
+
+		word64 one[1] = {1}, two[1] = {2};
+		a.Assign(one, 1);
+		b.Assign(two, 1);
+
+		temp &= (a.SizeInBytes() == 8);
+		temp &= (b.SizeInBytes() == 8);
+		temp &= (a[0] == 1);
+		temp &= (b[0] == 2);
+
+		word64 three[2] = {1,2}, four[2] = {3,4};
+		a.Assign(three, 2);
+		b.Assign(four, 2);
+
+		temp &= (a.SizeInBytes() == 16);
+		temp &= (b.SizeInBytes() == 16);
+		temp &= (a[0] == 1 && a[1] == 2);
+		temp &= (b[0] == 3 && b[1] == 4);
+	}
+	catch(const Exception& /*ex*/)
+	{
+		temp = false;
+	}
+
+	pass2 &= temp;
+	if (!temp)
+		cout << "FAILED:";
+	else
+		cout << "passed:";
+	cout << "  Assign word64" << endl;
+
+#if defined(CRYPTOPP_WORD128_AVAILABLE)
+	try
+	{
+		SecBlock<word128> a, b;
+		temp = true;
+
+		word128 one[1] = {1}, two[1] = {2};
+		a.Assign(one, 1);
+		b.Assign(two, 1);
+
+		temp &= (a.SizeInBytes() == 16);
+		temp &= (b.SizeInBytes() == 16);
+		temp &= (a[0] == 1);
+		temp &= (b[0] == 2);
+
+		word128 three[2] = {1,2}, four[2] = {3,4};
+		a.Assign(three, 2);
+		b.Assign(four, 2);
+
+		temp &= (a.SizeInBytes() == 32);
+		temp &= (b.SizeInBytes() == 32);
+		temp &= (a[0] == 1 && a[1] == 2);
+		temp &= (b[0] == 3 && b[1] == 4);
+	}
+	catch(const Exception& /*ex*/)
+	{
+		temp = false;
+	}
+
+	pass2 &= temp;
+	if (!temp)
+		cout << "FAILED:";
+	else
+		cout << "passed:";
+	cout << "  Assign word128" << endl;
+#endif
+
+	//********** Append **********//
+
+	try
+	{
+		SecByteBlock a, b;
+		temp = true;
+
+		a.Assign((const byte*)"a", 1);
+		b.Assign((const byte*)"b", 1);
+
+		a += b;
+		temp &= (a.SizeInBytes() == 2);
+		temp &= (a[0] == 'a' && a[1] == 'b');
+
+		a.Assign((const byte*)"ab", 2);
+		b.Assign((const byte*)"cd", 2);
+
+		a += b;
+		temp &= (a.SizeInBytes() == 4);
+		temp &= (a[0] == 'a' && a[1] == 'b' && a[2] == 'c' && a[3] == 'd');
+
+		a.Assign((const byte*)"a", 1);
+
+		a += a;
+		temp &= (a.SizeInBytes() == 2);
+		temp &= (a[0] == 'a' && a[1] == 'a');
+
+		a.Assign((const byte*)"ab", 2);
+
+		a += a;
+		temp &= (a.SizeInBytes() == 4);
+		temp &= (a[0] == 'a' && a[1] == 'b' && a[2] == 'a' && a[3] == 'b');
+	}
+	catch(const Exception& /*ex*/)
+	{
+		temp = false;
+	}
+
+	pass3 &= temp;
+	if (!temp)
+		cout << "FAILED:";
+	else
+		cout << "passed:";
+	cout << "  Append byte" << endl;
+
+	try
+	{
+		SecBlock<word32> a, b;
+		temp = true;
+
+		const word32 one[1] = {1}, two[1] = {2};
+		a.Assign(one, 1);
+		b.Assign(two, 1);
+
+		a += b;
+		temp &= (a.SizeInBytes() == 8);
+		temp &= (a[0] == 1 && a[1] == 2);
+
+		const word32 three[2] = {1,2}, four[2] = {3,4};
+		a.Assign(three, 2);
+		b.Assign(four, 2);
+
+		a += b;
+		temp &= (a.SizeInBytes() == 16);
+		temp &= (a[0] == 1 && a[1] == 2 && a[2] == 3 && a[3] == 4);
+
+		a.Assign(one, 1);
+
+		a += a;
+		temp &= (a.SizeInBytes() == 8);
+		temp &= (a[0] == 1 && a[1] == 1);
+
+		a.Assign(three, 2);
+
+		a += a;
+		temp &= (a.SizeInBytes() == 16);
+		temp &= (a[0] == 1 && a[1] == 2 && a[2] == 1 && a[3] == 2);
+	}
+	catch(const Exception& /*ex*/)
+	{
+		temp = false;
+	}
+
+	pass3 &= temp;
+	if (!temp)
+		cout << "FAILED:";
+	else
+		cout << "passed:";
+	cout << "  Append word32" << endl;
+
+	try
+	{
+		SecBlock<word64> a, b;
+		temp = true;
+
+		const word64 one[1] = {1}, two[1] = {2};
+		a.Assign(one, 1);
+		b.Assign(two, 1);
+
+		a += b;
+		temp &= (a.SizeInBytes() == 16);
+		temp &= (a[0] == 1 && a[1] == 2);
+
+		const word64 three[2] = {1,2}, four[2] = {3,4};
+		a.Assign(three, 2);
+		b.Assign(four, 2);
+
+		a += b;
+		temp &= (a.SizeInBytes() == 32);
+		temp &= (a[0] == 1 && a[1] == 2 && a[2] == 3 && a[3] == 4);
+
+		a.Assign(one, 1);
+
+		a += a;
+		temp &= (a.SizeInBytes() == 16);
+		temp &= (a[0] == 1 && a[1] == 1);
+
+		a.Assign(three, 2);
+
+		a += a;
+		temp &= (a.SizeInBytes() == 32);
+		temp &= (a[0] == 1 && a[1] == 2 && a[2] == 1 && a[3] == 2);
+	}
+	catch(const Exception& /*ex*/)
+	{
+		temp = false;
+	}
+
+	pass3 &= temp;
+	if (!temp)
+		cout << "FAILED:";
+	else
+		cout << "passed:";
+	cout << "  Append word64" << endl;
+
+#if defined(CRYPTOPP_WORD128_AVAILABLE)
+	try
+	{
+		SecBlock<word128> a, b;
+		temp = true;
+
+		const word128 one[1] = {1}, two[1] = {2};
+		a.Assign(one, 1);
+		b.Assign(two, 1);
+
+		a += b;
+		temp &= (a.SizeInBytes() == 32);
+		temp &= (a[0] == 1 && a[1] == 2);
+
+		const word128 three[2] = {1,2}, four[2] = {3,4};
+		a.Assign(three, 2);
+		b.Assign(four, 2);
+
+		a += b;
+		temp &= (a.SizeInBytes() == 64);
+		temp &= (a[0] == 1 && a[1] == 2 && a[2] == 3 && a[3] == 4);
+
+		a.Assign(one, 1);
+
+		a += a;
+		temp &= (a.SizeInBytes() == 32);
+		temp &= (a[0] == 1 && a[1] == 1);
+
+		a.Assign(three, 2);
+
+		a += a;
+		temp &= (a.SizeInBytes() == 64);
+		temp &= (a[0] == 1 && a[1] == 2 && a[2] == 1 && a[3] == 2);
+	}
+	catch(const Exception& /*ex*/)
+	{
+		temp = false;
+	}
+
+	pass3 &= temp;
+	if (!temp)
+		cout << "FAILED:";
+	else
+		cout << "passed:";
+	cout << "  Append word128" << endl;
+#endif
+
+	//********** Concatenate **********//
+
+	// byte
+	try
+	{
+		SecByteBlock a, b, c;
+		temp = true;
+
+		a.Assign((const byte*)"a", 1);
+		b.Assign((const byte*)"b", 1);
+
+		c = a + b;
+		temp &= (a[0] == 'a');
+		temp &= (b[0] == 'b');
+		temp &= (c.SizeInBytes() == 2);
+		temp &= (c[0] == 'a' && c[1] == 'b');
+
+		a.Assign((const byte*)"ab", 2);
+		b.Assign((const byte*)"cd", 2);
+
+		c = a + b;
+		temp &= (a[0] == 'a' && a[1] == 'b');
+		temp &= (b[0] == 'c' && b[1] == 'd');
+		temp &= (c.SizeInBytes() == 4);
+		temp &= (c[0] == 'a' && c[1] == 'b' && c[2] == 'c' && c[3] == 'd');
+	}
+	catch(const Exception& /*ex*/)
+	{
+		temp = false;
+	}
+
+	pass4 &= temp;
+	if (!temp)
+		cout << "FAILED:";
+	else
+		cout << "passed:";
+	cout << "  Concatenate byte" << endl;
+
+	// word32
+	try
+	{
+		SecBlock<word32> a, b, c;
+		temp = true;
+
+		const word32 one[1] = {1}, two[1] = {2};
+		a.Assign(one, 1);
+		b.Assign(two, 1);
+
+		c = a + b;
+		temp &= (a[0] == 1);
+		temp &= (b[0] == 2);
+		temp &= (c.SizeInBytes() == 8);
+		temp &= (c[0] == 1 && c[1] == 2);
+
+		const word32 three[2] = {1,2}, four[2] = {3,4};
+		a.Assign(three, 2);
+		b.Assign(four, 2);
+
+		c = a + b;
+		temp &= (a[0] == 1 && a[1] == 2);
+		temp &= (b[0] == 3 && b[1] == 4);
+		temp &= (c.SizeInBytes() == 16);
+		temp &= (c[0] == 1 && c[1] == 2 && c[2] == 3 && c[3] == 4);
+	}
+	catch(const Exception& /*ex*/)
+	{
+		temp = false;
+	}
+
+	pass4 &= temp;
+	if (!temp)
+		cout << "FAILED:";
+	else
+		cout << "passed:";
+	cout << "  Concatenate word32" << endl;
+
+	// word64
+	try
+	{
+		SecBlock<word64> a, b, c;
+		temp = true;
+
+		const word64 one[1] = {1}, two[1] = {2};
+		a.Assign(one, 1);
+		b.Assign(two, 1);
+
+		c = a + b;
+		temp &= (a[0] == 1);
+		temp &= (b[0] == 2);
+		temp &= (c.SizeInBytes() == 16);
+		temp &= (c[0] == 1 && c[1] == 2);
+
+		const word64 three[2] = {1,2}, four[2] = {3,4};
+		a.Assign(three, 2);
+		b.Assign(four, 2);
+
+		c = a + b;
+		temp &= (a[0] == 1 && a[1] == 2);
+		temp &= (b[0] == 3 && b[1] == 4);
+		temp &= (c.SizeInBytes() == 32);
+		temp &= (c[0] == 1 && c[1] == 2 && c[2] == 3 && c[3] == 4);
+	}
+	catch(const Exception& /*ex*/)
+	{
+		temp = false;
+	}
+
+	pass4 &= temp;
+	if (!temp)
+		cout << "FAILED:";
+	else
+		cout << "passed:";
+	cout << "  Concatenate word64" << endl;
+
+#if defined(CRYPTOPP_WORD128_AVAILABLE)
+	try
+	{
+		SecBlock<word128> a, b, c;
+		temp = true;
+
+		const word128 one[1] = {1}, two[1] = {2};
+		a.Assign(one, 1);
+		b.Assign(two, 1);
+
+		c = a + b;
+		temp &= (a[0] == 1);
+		temp &= (b[0] == 2);
+		temp &= (c.SizeInBytes() == 32);
+		temp &= (c[0] == 1 && c[1] == 2);
+
+		const word128 three[2] = {1,2}, four[2] = {3,4};
+		a.Assign(three, 2);
+		b.Assign(four, 2);
+
+		c = a + b;
+		temp &= (a[0] == 1 && a[1] == 2);
+		temp &= (b[0] == 3 && b[1] == 4);
+		temp &= (c.SizeInBytes() == 64);
+		temp &= (c[0] == 1 && c[1] == 2 && c[2] == 3 && c[3] == 4);
+	}
+	catch(const Exception& /*ex*/)
+	{
+		temp = false;
+	}
+
+	pass4 &= temp;
+	if (!temp)
+		cout << "FAILED:";
+	else
+		cout << "passed:";
+	cout << "  Concatenate word128" << endl;
+#endif
+
+	//********** Equality **********//
+
+	// byte
+	try
+	{
+		static const byte str1[] = "abcdefghijklmnopqrstuvwxyz";
+		static const byte str2[] = "zyxwvutsrqponmlkjihgfedcba";
+		static const byte str3[] = "0123456789";
+
+		temp = true;
+		SecByteBlock a,b;
+
+		a.Assign(str1, COUNTOF(str1));
+		b.Assign(str1, COUNTOF(str1));
+		temp &= (a.operator==(b));
+
+		a.Assign(str3, COUNTOF(str3));
+		b.Assign(str3, COUNTOF(str3));
+		temp &= (a == b);
+
+		a.Assign(str1, COUNTOF(str1));
+		b.Assign(str2, COUNTOF(str2));
+		temp &= (a.operator!=(b));
+
+		a.Assign(str1, COUNTOF(str1));
+		b.Assign(str3, COUNTOF(str3));
+		temp &= (a != b);
+	}
+	catch(const Exception& /*ex*/)
+	{
+		temp = false;
+	}
+
+	pass5 &= temp;
+	if (!temp)
+		cout << "FAILED:";
+	else
+		cout << "passed:";
+	cout << "  Equality byte" << endl;
+
+	// word32
+	try
+	{
+		static const word32 str1[] = {2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97};
+		static const word32 str2[] = {97,89,83,79,73,71,67,61,59,53,47,43,41,37,31,29,23,19,17,13,11,7,5,3,2};
+		static const word32 str3[] = {0,1,2,3,4,5,6,7,8,9};
+
+		temp = true;
+		SecBlock<word32> a,b;
+
+		a.Assign(str1, COUNTOF(str1));
+		b.Assign(str1, COUNTOF(str1));
+		temp &= (a.operator==(b));
+
+		a.Assign(str3, COUNTOF(str3));
+		b.Assign(str3, COUNTOF(str3));
+		temp &= (a == b);
+
+		a.Assign(str1, COUNTOF(str1));
+		b.Assign(str2, COUNTOF(str2));
+		temp &= (a.operator!=(b));
+
+		a.Assign(str1, COUNTOF(str1));
+		b.Assign(str3, COUNTOF(str3));
+		temp &= (a != b);
+	}
+	catch(const Exception& /*ex*/)
+	{
+		temp = false;
+	}
+
+	pass5 &= temp;
+	if (!temp)
+		cout << "FAILED:";
+	else
+		cout << "passed:";
+	cout << "  Equality word32" << endl;
+
+	// word64
+	try
+	{
+		static const word64 str1[] = {2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97};
+		static const word64 str2[] = {97,89,83,79,73,71,67,61,59,53,47,43,41,37,31,29,23,19,17,13,11,7,5,3,2};
+		static const word64 str3[] = {0,1,2,3,4,5,6,7,8,9};
+
+		temp = true;
+		SecBlock<word64> a,b;
+
+		a.Assign(str1, COUNTOF(str1));
+		b.Assign(str1, COUNTOF(str1));
+		temp &= (a.operator==(b));
+
+		a.Assign(str3, COUNTOF(str3));
+		b.Assign(str3, COUNTOF(str3));
+		temp &= (a == b);
+
+		a.Assign(str1, COUNTOF(str1));
+		b.Assign(str2, COUNTOF(str2));
+		temp &= (a.operator!=(b));
+
+		a.Assign(str1, COUNTOF(str1));
+		b.Assign(str3, COUNTOF(str3));
+		temp &= (a != b);
+	}
+	catch(const Exception& /*ex*/)
+	{
+		temp = false;
+	}
+
+	pass5 &= temp;
+	if (!temp)
+		cout << "FAILED:";
+	else
+		cout << "passed:";
+	cout << "  Equality word64" << endl;
+
+#if defined(CRYPTOPP_WORD128_AVAILABLE)
+	// word128
+	try
+	{
+		static const word128 str1[] = {2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97};
+		static const word128 str2[] = {97,89,83,79,73,71,67,61,59,53,47,43,41,37,31,29,23,19,17,13,11,7,5,3,2};
+		static const word128 str3[] = {0,1,2,3,4,5,6,7,8,9};
+
+		temp = true;
+		SecBlock<word128> a,b;
+
+		a.Assign(str1, COUNTOF(str1));
+		b.Assign(str1, COUNTOF(str1));
+		temp &= (a.operator==(b));
+
+		a.Assign(str3, COUNTOF(str3));
+		b.Assign(str3, COUNTOF(str3));
+		temp &= (a == b);
+
+		a.Assign(str1, COUNTOF(str1));
+		b.Assign(str2, COUNTOF(str2));
+		temp &= (a.operator!=(b));
+
+		a.Assign(str1, COUNTOF(str1));
+		b.Assign(str3, COUNTOF(str3));
+		temp &= (a != b);
+	}
+	catch(const Exception& /*ex*/)
+	{
+		temp = false;
+	}
+
+	pass5 &= temp;
+	if (!temp)
+		cout << "FAILED:";
+	else
+		cout << "passed:";
+	cout << "  Equality word128" << endl;
+#endif
+
+	//********** Allocator Size/Overflow **********//
+
+	try
+	{
+		temp = false;
+
+		AllocatorBase<word32> A;
+		const size_t max = A.max_size();
+		SecBlock<word32> t(max+1);
+	}
+	catch(const Exception& /*ex*/)
+	{
+		temp = true;
+	}
+	catch(const std::exception& /*ex*/)
+	{
+		temp = true;
+	}
+
+	pass6 &= temp;
+	if (!temp)
+		cout << "FAILED:";
+	else
+		cout << "passed:";
+	cout << "  Overflow word32" << endl;
+
+	try
+	{
+		temp = false;
+
+		AllocatorBase<word64> A;
+		const size_t max = A.max_size();
+		SecBlock<word64> t(max+1);
+	}
+	catch(const Exception& /*ex*/)
+	{
+		temp = true;
+	}
+	catch(const std::exception& /*ex*/)
+	{
+		temp = true;
+	}
+
+	pass6 &= temp;
+	if (!temp)
+		cout << "FAILED:";
+	else
+		cout << "passed:";
+	cout << "  Overflow word64" << endl;
+
+#if defined(CRYPTOPP_WORD128_AVAILABLE)
+	try
+	{
+		temp = false;
+
+		AllocatorBase<word128> A;
+		const size_t max = A.max_size();
+		SecBlock<word128> t(max+1);
+	}
+	catch(const Exception& /*ex*/)
+	{
+		temp = true;
+	}
+	catch(const std::exception& /*ex*/)
+	{
+		temp = true;
+	}
+
+	pass6 &= temp;
+	if (!temp)
+		cout << "FAILED:";
+	else
+		cout << "passed:";
+	cout << "  Overflow word128" << endl;
+#endif
+
+	//********** FixedSizeAllocatorWithCleanup and Grow **********//
+
+	// byte
+	try
+	{
+		static const unsigned int SIZE = 8;
+		SecBlockWithHint<byte, SIZE> block(SIZE);
+		memset(block, 0xaa, block.SizeInBytes());
+
+		temp = true;
+		block.CleanGrow(SIZE*2);
+		temp &= (block.size() == SIZE*2);
+
+		for (size_t i = 0; i < block.size()/2; i++)
+			temp &= (block[i] == 0xaa);
+		for (size_t i = block.size()/2; i < block.size(); i++)
+			temp &= (block[i] == 0);
+
+		block.CleanNew(SIZE*4);
+		temp &= (block.size() == SIZE*4);
+		for (size_t i = 0; i < block.size(); i++)
+			temp &= (block[i] == 0);
+	}
+	catch(const Exception& /*ex*/)
+	{
+		temp = false;
+	}
+	catch(const std::exception& /*ex*/)
+	{
+		temp = false;
+	}
+
+	pass7 &= temp;
+	if (!temp)
+		cout << "FAILED:";
+	else
+		cout << "passed:";
+	cout << "  FixedSizeAllocator Grow with byte" << endl;
+
+	// word32
+	try
+	{
+		static const unsigned int SIZE = 8;
+		SecBlockWithHint<word32, SIZE> block(SIZE);
+		memset(block, 0xaa, block.SizeInBytes());
+
+		temp = true;
+		block.CleanGrow(SIZE*2);
+		temp &= (block.size() == SIZE*2);
+
+		for (size_t i = 0; i < block.size()/2; i++)
+			temp &= (block[i] == 0xaaaaaaaa);
+
+		for (size_t i = block.size()/2; i < block.size(); i++)
+			temp &= (block[i] == 0);
+
+		block.CleanNew(SIZE*4);
+		temp &= (block.size() == SIZE*4);
+		for (size_t i = 0; i < block.size(); i++)
+			temp &= (block[i] == 0);
+	}
+	catch(const Exception& /*ex*/)
+	{
+		temp = false;
+	}
+	catch(const std::exception& /*ex*/)
+	{
+		temp = false;
+	}
+
+	pass7 &= temp;
+	if (!temp)
+		cout << "FAILED:";
+	else
+		cout << "passed:";
+	cout << "  FixedSizeAllocator Grow with word32" << endl;
+
+	// word64
+	try
+	{
+		static const unsigned int SIZE = 8;
+		SecBlockWithHint<word64, SIZE> block(SIZE);
+		memset(block, 0xaa, block.SizeInBytes());
+
+		temp = true;
+		block.CleanGrow(SIZE*2);
+		temp &= (block.size() == SIZE*2);
+
+		for (size_t i = 0; i < block.size()/2; i++)
+			temp &= (block[i] == W64LIT(0xaaaaaaaaaaaaaaaa));
+
+		for (size_t i = block.size()/2; i < block.size(); i++)
+			temp &= (block[i] == 0);
+
+		block.CleanNew(SIZE*4);
+		temp &= (block.size() == SIZE*4);
+		for (size_t i = 0; i < block.size(); i++)
+			temp &= (block[i] == 0);
+	}
+	catch(const Exception& /*ex*/)
+	{
+		temp = false;
+	}
+	catch(const std::exception& /*ex*/)
+	{
+		temp = false;
+	}
+
+	pass7 &= temp;
+	if (!temp)
+		cout << "FAILED:";
+	else
+		cout << "passed:";
+	cout << "  FixedSizeAllocator Grow with word64" << endl;
+
+#if defined(CRYPTOPP_WORD128_AVAILABLE)
+	// word128
+	try
+	{
+		static const unsigned int SIZE = 8;
+		SecBlock<word128, AllocatorWithCleanup<word128, true> > block(SIZE);
+		memset(block, 0xaa, block.SizeInBytes());
+
+		temp = true;
+		block.CleanGrow(SIZE*2);
+		temp &= (block.size() == SIZE*2);
+
+		for (size_t i = 0; i < block.size()/2; i++)
+			temp &= (block[i] == (((word128)W64LIT(0xaaaaaaaaaaaaaaaa) << 64U) | W64LIT(0xaaaaaaaaaaaaaaaa)));
+
+		for (size_t i = block.size()/2; i < block.size(); i++)
+			temp &= (block[i] == 0);
+
+		block.CleanNew(SIZE*4);
+		temp &= (block.size() == SIZE*4);
+		for (size_t i = 0; i < block.size(); i++)
+			temp &= (block[i] == 0);
+	}
+	catch(const Exception& /*ex*/)
+	{
+		temp = false;
+	}
+	catch(const std::exception& /*ex*/)
+	{
+		temp = false;
+	}
+
+	pass7 &= temp;
+	if (!temp)
+		cout << "FAILED:";
+	else
+		cout << "passed:";
+	cout << "  FixedSizeAllocator Grow with word128" << endl;
+#endif
+
+	return pass1 && pass2 && pass3 && pass4 && pass5 && pass6 && pass7;
+}
+#endif
+
+#if CRYPTOPP_DEBUG && !defined(CRYPTOPP_IMPORTS)
+bool TestHuffmanCodes()
+{
+    cout << "\nTesting Huffman codes...\n\n";
+	bool pass=true;
+
+    static const size_t nCodes = 30;
+    const unsigned int codeCounts[nCodes] = {
+        1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+    static const unsigned int maxCodeBits = nCodes >> 1;
+    unsigned int codeBits[nCodes] = {
+        ~0u, ~0u, ~0u, ~0u, ~0u,
+        ~0u, ~0u, ~0u, ~0u, ~0u,
+        ~0u, ~0u, ~0u, ~0u, ~0u,
+    };
+
+    try
+    {
+        HuffmanEncoder::GenerateCodeLengths(codeBits, maxCodeBits, codeCounts, nCodes);
+    }
+    catch(const Exception& /*ex*/)
+    {
+        pass=false;
+    }
+
+	if (!pass)
+		cout << "FAILED:";
+	else
+		cout << "passed:";
+	cout << "  GenerateCodeLengths" << endl;
+
+    return pass;
+}
+#endif
 
 bool TestOS_RNG()
 {
@@ -396,7 +1398,7 @@ bool TestOS_RNG()
 
 		MeterFilter meter(new Redirector(TheBitBucket()));
 		RandomNumberSource test(*rng, 100000, true, new Deflator(new Redirector(meter)));
-		
+
 		if (meter.GetTotalBytes() < 100000)
 		{
 			cout << "FAILED:";
@@ -412,23 +1414,28 @@ bool TestOS_RNG()
 	return pass;
 }
 
-#if NO_OS_DEPENDENCE
+#if defined(NO_OS_DEPENDENCE) || !defined(OS_RNG_AVAILABLE)
 bool TestAutoSeeded()
-{	
+{
+	return true;
+}
+bool TestAutoSeededX917()
+{
 	return true;
 }
 #else
 bool TestAutoSeeded()
-{	
+{
 	// This tests Auto-Seeding and GenerateIntoBufferedTransformation.
 	cout << "\nTesting AutoSeeded generator...\n\n";
 
 	AutoSeededRandomPool prng;
-	bool generate = true, discard = true;
+	static const unsigned int ENTROPY_SIZE = 32;
+	bool generate = true, discard = true, incorporate = false;
 
 	MeterFilter meter(new Redirector(TheBitBucket()));
 	RandomNumberSource test(prng, 100000, true, new Deflator(new Redirector(meter)));
-	
+
 	if (meter.GetTotalBytes() < 100000)
 	{
 		cout << "FAILED:";
@@ -437,7 +1444,7 @@ bool TestAutoSeeded()
 	else
 		cout << "passed:";
 	cout << "  100000 generated bytes compressed to " << meter.GetTotalBytes() << " bytes by DEFLATE" << endl;
-		
+
 	try
 	{
 		prng.DiscardBytes(100000);
@@ -446,20 +1453,110 @@ bool TestAutoSeeded()
 	{
 		discard = false;
 	}
-	
+
 	if (!discard)
 		cout << "FAILED:";
 	else
 		cout << "passed:";
 	cout << "  discarded 10000 bytes" << endl;
 
-	return generate && discard;	
+	try
+	{
+		if(prng.CanIncorporateEntropy())
+		{
+			SecByteBlock entropy(ENTROPY_SIZE);
+			OS_GenerateRandomBlock(false, entropy, entropy.SizeInBytes());
+
+			prng.IncorporateEntropy(entropy, entropy.SizeInBytes());
+			prng.IncorporateEntropy(entropy, entropy.SizeInBytes());
+			prng.IncorporateEntropy(entropy, entropy.SizeInBytes());
+			prng.IncorporateEntropy(entropy, entropy.SizeInBytes());
+
+			incorporate = true;
+		}
+	}
+	catch(const Exception& /*ex*/)
+	{
+	}
+
+	if (!incorporate)
+		cout << "FAILED:";
+	else
+		cout << "passed:";
+	cout << "  IncorporateEntropy with " << 4*ENTROPY_SIZE << " bytes" << endl;
+
+	return generate && discard && incorporate;
+}
+
+bool TestAutoSeededX917()
+{
+	// This tests Auto-Seeding and GenerateIntoBufferedTransformation.
+	cout << "\nTesting AutoSeeded X917 generator...\n\n";
+
+	AutoSeededX917RNG<AES> prng;
+	static const unsigned int ENTROPY_SIZE = 32;
+	bool generate = true, discard = true, incorporate = false;
+
+	MeterFilter meter(new Redirector(TheBitBucket()));
+	RandomNumberSource test(prng, 100000, true, new Deflator(new Redirector(meter)));
+
+	if (meter.GetTotalBytes() < 100000)
+	{
+		cout << "FAILED:";
+		generate = false;
+	}
+	else
+		cout << "passed:";
+	cout << "  100000 generated bytes compressed to " << meter.GetTotalBytes() << " bytes by DEFLATE" << endl;
+
+	try
+	{
+		prng.DiscardBytes(100000);
+	}
+	catch(const Exception&)
+	{
+		discard = false;
+	}
+
+	if (!discard)
+		cout << "FAILED:";
+	else
+		cout << "passed:";
+	cout << "  discarded 10000 bytes" << endl;
+
+	try
+	{
+		if(prng.CanIncorporateEntropy())
+		{
+			SecByteBlock entropy(ENTROPY_SIZE);
+			OS_GenerateRandomBlock(false, entropy, entropy.SizeInBytes());
+
+			prng.IncorporateEntropy(entropy, entropy.SizeInBytes());
+			prng.IncorporateEntropy(entropy, entropy.SizeInBytes());
+			prng.IncorporateEntropy(entropy, entropy.SizeInBytes());
+			prng.IncorporateEntropy(entropy, entropy.SizeInBytes());
+
+			incorporate = true;
+		}
+	}
+	catch(const Exception& /*ex*/)
+	{
+	}
+
+	if (!incorporate)
+		cout << "FAILED:";
+	else
+		cout << "passed:";
+	cout << "  IncorporateEntropy with " << 4*ENTROPY_SIZE << " bytes" << endl;
+
+	return generate && discard && incorporate;
 }
 #endif // NO_OS_DEPENDENCE
 
 #if (CRYPTOPP_BOOL_X86 || CRYPTOPP_BOOL_X32 || CRYPTOPP_BOOL_X64)
 bool TestRDRAND()
 {
+	// Testing on 6th generation i7 shows RDRAND needs less than 8 retries for 10K bytes.
 	RDRAND rdrand;
 	bool entropy = true, compress = true, discard = true;
 	static const unsigned int SIZE = 10000;
@@ -471,7 +1568,7 @@ bool TestRDRAND()
 		MeterFilter meter(new Redirector(TheBitBucket()));
 		Deflator deflator(new Redirector(meter));
 		MaurerRandomnessTest maurer;
-		
+
 		ChannelSwitch chsw;
 		chsw.AddDefaultRoute(deflator);
 		chsw.AddDefaultRoute(maurer);
@@ -479,7 +1576,7 @@ bool TestRDRAND()
 		RandomNumberSource rns(rdrand, SIZE, true, new Redirector(chsw));
 		deflator.Flush(true);
 
-		assert(0 == maurer.BytesNeeded());
+		CRYPTOPP_ASSERT(0 == maurer.BytesNeeded());
 		const double mv = maurer.GetTestValue();
 		if (mv < 0.98f)
 		{
@@ -488,12 +1585,11 @@ bool TestRDRAND()
 		}
 		else
 			cout << "passed:";
-		
-		const std::streamsize oldp = cout.precision(6);
-		const std::ios::fmtflags oldf = cout.setf(std::ios::fixed, std::ios::floatfield);
+
+		// Coverity finding, also see http://stackoverflow.com/a/34509163/608639.
+		StreamState ss(cout);
+		cout << std::setiosflags(std::ios::fixed) << std::setprecision(6);
 		cout << "  Maurer Randomness Test returned value " << mv << endl;
-		cout.precision(oldp);
-		cout.setf(oldf, std::ios::floatfield);
 
 		if (meter.GetTotalBytes() < SIZE)
 		{
@@ -503,7 +1599,7 @@ bool TestRDRAND()
 		else
 			cout << "passed:";
 		cout << "  " << SIZE << " generated bytes compressed to " << meter.GetTotalBytes() << " bytes by DEFLATE\n";
-		
+
 		try
 		{
 			rdrand.DiscardBytes(SIZE);
@@ -512,7 +1608,7 @@ bool TestRDRAND()
 		{
 			discard = false;
 		}
-		
+
 		if (!discard)
 			cout << "FAILED:";
 		else
@@ -521,10 +1617,16 @@ bool TestRDRAND()
 	}
 	else
 		cout << "\nRDRAND generator not available, skipping test.\n";
-			
+
+	// Squash code coverage warnings on unused functions
+	(void)rdrand.AlgorithmName();
+	(void)rdrand.CanIncorporateEntropy();
+	rdrand.SetRetries(rdrand.GetRetries());
+	rdrand.IncorporateEntropy(NULL, 0);
+
 	if (!(entropy && compress && discard))
 		cout.flush();
-	
+
 	return entropy && compress && discard;
 }
 #endif
@@ -532,7 +1634,9 @@ bool TestRDRAND()
 #if (CRYPTOPP_BOOL_X86 || CRYPTOPP_BOOL_X32 || CRYPTOPP_BOOL_X64)
 bool TestRDSEED()
 {
-	RDSEED rdseed;
+	// Testing on 5th generation i5 shows RDSEED needs about 128 retries for 10K bytes
+	//  on 64-bit/amd64 VM, and it needs more for an 32-bit/i686 VM.
+	RDSEED rdseed(256);
 	bool entropy = true, compress = true, discard = true;
 	static const unsigned int SIZE = 10000;
 
@@ -543,7 +1647,7 @@ bool TestRDSEED()
 		MeterFilter meter(new Redirector(TheBitBucket()));
 		Deflator deflator(new Redirector(meter));
 		MaurerRandomnessTest maurer;
-		
+
 		ChannelSwitch chsw;
 		chsw.AddDefaultRoute(deflator);
 		chsw.AddDefaultRoute(maurer);
@@ -551,7 +1655,7 @@ bool TestRDSEED()
 		RandomNumberSource rns(rdseed, SIZE, true, new Redirector(chsw));
 		deflator.Flush(true);
 
-		assert(0 == maurer.BytesNeeded());
+		CRYPTOPP_ASSERT(0 == maurer.BytesNeeded());
 		const double mv = maurer.GetTestValue();
 		if (mv < 0.98f)
 		{
@@ -560,12 +1664,11 @@ bool TestRDSEED()
 		}
 		else
 			cout << "passed:";
-		
-		const std::streamsize oldp = cout.precision(6);
-		const std::ios::fmtflags oldf = cout.setf(std::ios::fixed, std::ios::floatfield);
+
+		// Coverity finding, also see http://stackoverflow.com/a/34509163/608639.
+		StreamState ss(cout);
+		cout << std::setiosflags(std::ios::fixed) << std::setprecision(6);
 		cout << "  Maurer Randomness Test returned value " << mv << endl;
-		cout.precision(oldp);
-		cout.setf(oldf, std::ios::floatfield);
 
 		if (meter.GetTotalBytes() < SIZE)
 		{
@@ -575,7 +1678,7 @@ bool TestRDSEED()
 		else
 			cout << "passed:";
 		cout << "  " << SIZE << " generated bytes compressed to " << meter.GetTotalBytes() << " bytes by DEFLATE\n";
-		
+
 		try
 		{
 			rdseed.DiscardBytes(SIZE);
@@ -584,7 +1687,7 @@ bool TestRDSEED()
 		{
 			discard = false;
 		}
-		
+
 		if (!discard)
 			cout << "FAILED:";
 		else
@@ -593,10 +1696,16 @@ bool TestRDSEED()
 	}
 	else
 		cout << "\nRDSEED generator not available, skipping test.\n";
-			
+
+	// Squash code coverage warnings on unused functions
+	(void)rdseed.AlgorithmName();
+	(void)rdseed.CanIncorporateEntropy();
+	rdseed.SetRetries(rdseed.GetRetries());
+	rdseed.IncorporateEntropy(NULL, 0);
+
 	if (!(entropy && compress && discard))
 		cout.flush();
-	
+
 	return entropy && compress && discard;
 }
 #endif
@@ -610,8 +1719,8 @@ public:
 	virtual unsigned int BlockSize() const =0;
 	virtual unsigned int KeyLength() const =0;
 
-	virtual apbt NewEncryption(const byte *key) const =0;
-	virtual apbt NewDecryption(const byte *key) const =0;
+	virtual apbt NewEncryption(const byte *keyStr) const =0;
+	virtual apbt NewDecryption(const byte *keyStr) const =0;
 };
 
 template <class E, class D> class FixedRoundsCipherFactory : public CipherFactory
@@ -621,10 +1730,10 @@ public:
 	unsigned int BlockSize() const {return E::BLOCKSIZE;}
 	unsigned int KeyLength() const {return m_keylen;}
 
-	apbt NewEncryption(const byte *key) const
-		{return apbt(new E(key, m_keylen));}
-	apbt NewDecryption(const byte *key) const
-		{return apbt(new D(key, m_keylen));}
+	apbt NewEncryption(const byte *keyStr) const
+		{return apbt(new E(keyStr, m_keylen));}
+	apbt NewDecryption(const byte *keyStr) const
+		{return apbt(new D(keyStr, m_keylen));}
 
 	unsigned int m_keylen;
 };
@@ -637,10 +1746,10 @@ public:
 	unsigned int BlockSize() const {return E::BLOCKSIZE;}
 	unsigned int KeyLength() const {return m_keylen;}
 
-	apbt NewEncryption(const byte *key) const
-		{return apbt(new E(key, m_keylen, m_rounds));}
-	apbt NewDecryption(const byte *key) const
-		{return apbt(new D(key, m_keylen, m_rounds));}
+	apbt NewEncryption(const byte *keyStr) const
+		{return apbt(new E(keyStr, m_keylen, m_rounds));}
+	apbt NewDecryption(const byte *keyStr) const
+		{return apbt(new D(keyStr, m_keylen, m_rounds));}
 
 	unsigned int m_keylen, m_rounds;
 };
@@ -690,7 +1799,7 @@ public:
 		{
 			std::cerr << "incorrect output " << counter << ", " << (word16)validOutput[counter] << ", " << (word16)inByte << "\n";
 			fail = true;
-			assert(false);
+			CRYPTOPP_ASSERT(false);
 		}
 		counter++;
 	}
@@ -705,7 +1814,7 @@ public:
 			if (counter != outputLen)
 			{
 				fail = true;
-				assert(false);
+				CRYPTOPP_ASSERT(false);
 			}
 
 		return 0;
@@ -740,12 +1849,12 @@ bool ValidateDES()
 {
 	cout << "\nDES validation suite running...\n\n";
 
-	FileSource valdata("TestData/descert.dat", true, new HexDecoder);
+	FileSource valdata(CRYPTOPP_DATA_DIR "TestData/descert.dat", true, new HexDecoder);
 	bool pass = BlockTransformationTest(FixedRoundsCipherFactory<DESEncryption, DESDecryption>(), valdata);
 
 	cout << "\nTesting EDE2, EDE3, and XEX3 variants...\n\n";
 
-	FileSource valdata1("TestData/3desval.dat", true, new HexDecoder);
+	FileSource valdata1(CRYPTOPP_DATA_DIR "TestData/3desval.dat", true, new HexDecoder);
 	pass = BlockTransformationTest(FixedRoundsCipherFactory<DES_EDE2_Encryption, DES_EDE2_Decryption>(), valdata1, 1) && pass;
 	pass = BlockTransformationTest(FixedRoundsCipherFactory<DES_EDE3_Encryption, DES_EDE3_Decryption>(), valdata1, 1) && pass;
 	pass = BlockTransformationTest(FixedRoundsCipherFactory<DES_XEX3_Encryption, DES_XEX3_Decryption>(), valdata1, 1) && pass;
@@ -757,7 +1866,7 @@ bool TestModeIV(SymmetricCipher &e, SymmetricCipher &d)
 {
 	SecByteBlock lastIV, iv(e.IVSize());
 	StreamTransformationFilter filter(e, new StreamTransformationFilter(d));
-	
+
 	// vector_ptr<byte> due to Enterprise Analysis finding on the stack based array.
 	vector_ptr<byte> plaintext(20480);
 
@@ -807,7 +1916,7 @@ bool ValidateCipherModes()
 			plain, sizeof(plain), encrypted, sizeof(encrypted));
 		pass = pass && !fail;
 		cout << (fail ? "FAILED   " : "passed   ") << "ECB encryption" << endl;
-		
+
 		ECB_Mode_ExternalCipher::Decryption modeD(desD);
 		fail = !TestFilter(StreamTransformationFilter(modeD, NULL, StreamTransformationFilter::NO_PADDING).Ref(),
 			encrypted, sizeof(encrypted), plain, sizeof(plain));
@@ -817,8 +1926,8 @@ bool ValidateCipherModes()
 	{
 		// from FIPS 81
 		const byte encrypted[] = {
-			0xE5, 0xC7, 0xCD, 0xDE, 0x87, 0x2B, 0xF2, 0x7C, 
-			0x43, 0xE9, 0x34, 0x00, 0x8C, 0x38, 0x9C, 0x0F, 
+			0xE5, 0xC7, 0xCD, 0xDE, 0x87, 0x2B, 0xF2, 0x7C,
+			0x43, 0xE9, 0x34, 0x00, 0x8C, 0x38, 0x9C, 0x0F,
 			0x68, 0x37, 0x88, 0x49, 0x9A, 0x7C, 0x05, 0xF6};
 
 		CBC_Mode_ExternalCipher::Encryption modeE(desE, iv);
@@ -826,7 +1935,7 @@ bool ValidateCipherModes()
 			plain, sizeof(plain), encrypted, sizeof(encrypted));
 		pass = pass && !fail;
 		cout << (fail ? "FAILED   " : "passed   ") << "CBC encryption with no padding" << endl;
-		
+
 		CBC_Mode_ExternalCipher::Decryption modeD(desD, iv);
 		fail = !TestFilter(StreamTransformationFilter(modeD, NULL, StreamTransformationFilter::NO_PADDING).Ref(),
 			encrypted, sizeof(encrypted), plain, sizeof(plain));
@@ -841,9 +1950,9 @@ bool ValidateCipherModes()
 		// generated with Crypto++, matches FIPS 81
 		// but has extra 8 bytes as result of padding
 		const byte encrypted[] = {
-			0xE5, 0xC7, 0xCD, 0xDE, 0x87, 0x2B, 0xF2, 0x7C, 
-			0x43, 0xE9, 0x34, 0x00, 0x8C, 0x38, 0x9C, 0x0F, 
-			0x68, 0x37, 0x88, 0x49, 0x9A, 0x7C, 0x05, 0xF6, 
+			0xE5, 0xC7, 0xCD, 0xDE, 0x87, 0x2B, 0xF2, 0x7C,
+			0x43, 0xE9, 0x34, 0x00, 0x8C, 0x38, 0x9C, 0x0F,
+			0x68, 0x37, 0x88, 0x49, 0x9A, 0x7C, 0x05, 0xF6,
 			0x62, 0xC1, 0x6A, 0x27, 0xE4, 0xFC, 0xF2, 0x77};
 
 		CBC_Mode_ExternalCipher::Encryption modeE(desE, iv);
@@ -851,7 +1960,7 @@ bool ValidateCipherModes()
 			plain, sizeof(plain), encrypted, sizeof(encrypted));
 		pass = pass && !fail;
 		cout << (fail ? "FAILED   " : "passed   ") << "CBC encryption with PKCS #7 padding" << endl;
-		
+
 		CBC_Mode_ExternalCipher::Decryption modeD(desD, iv);
 		fail = !TestFilter(StreamTransformationFilter(modeD).Ref(),
 			encrypted, sizeof(encrypted), plain, sizeof(plain));
@@ -862,9 +1971,9 @@ bool ValidateCipherModes()
 		// generated with Crypto++ 5.2, matches FIPS 81
 		// but has extra 8 bytes as result of padding
 		const byte encrypted[] = {
-			0xE5, 0xC7, 0xCD, 0xDE, 0x87, 0x2B, 0xF2, 0x7C, 
-			0x43, 0xE9, 0x34, 0x00, 0x8C, 0x38, 0x9C, 0x0F, 
-			0x68, 0x37, 0x88, 0x49, 0x9A, 0x7C, 0x05, 0xF6, 
+			0xE5, 0xC7, 0xCD, 0xDE, 0x87, 0x2B, 0xF2, 0x7C,
+			0x43, 0xE9, 0x34, 0x00, 0x8C, 0x38, 0x9C, 0x0F,
+			0x68, 0x37, 0x88, 0x49, 0x9A, 0x7C, 0x05, 0xF6,
 			0xcf, 0xb7, 0xc7, 0x64, 0x0e, 0x7c, 0xd9, 0xa7};
 
 		CBC_Mode_ExternalCipher::Encryption modeE(desE, iv);
@@ -901,8 +2010,8 @@ bool ValidateCipherModes()
 		// generated with Crypto++, matches FIPS 81
 		// but with last two blocks swapped as result of CTS
 		const byte encrypted[] = {
-			0xE5, 0xC7, 0xCD, 0xDE, 0x87, 0x2B, 0xF2, 0x7C, 
-			0x68, 0x37, 0x88, 0x49, 0x9A, 0x7C, 0x05, 0xF6, 
+			0xE5, 0xC7, 0xCD, 0xDE, 0x87, 0x2B, 0xF2, 0x7C,
+			0x68, 0x37, 0x88, 0x49, 0x9A, 0x7C, 0x05, 0xF6,
 			0x43, 0xE9, 0x34, 0x00, 0x8C, 0x38, 0x9C, 0x0F};
 
 		CBC_CTS_Mode_ExternalCipher::Encryption modeE(desE, iv);
@@ -910,7 +2019,7 @@ bool ValidateCipherModes()
 			plain, sizeof(plain), encrypted, sizeof(encrypted));
 		pass = pass && !fail;
 		cout << (fail ? "FAILED   " : "passed   ") << "CBC encryption with ciphertext stealing (CTS)" << endl;
-		
+
 		CBC_CTS_Mode_ExternalCipher::Decryption modeD(desD, iv);
 		fail = !TestFilter(StreamTransformationFilter(modeD).Ref(),
 			encrypted, sizeof(encrypted), plain, sizeof(plain));
@@ -935,7 +2044,7 @@ bool ValidateCipherModes()
 		fail = memcmp(stolenIV, decryptionIV, 8) != 0 || fail;
 		pass = pass && !fail;
 		cout << (fail ? "FAILED   " : "passed   ") << "CBC encryption with ciphertext and IV stealing" << endl;
-		
+
 		CBC_CTS_Mode_ExternalCipher::Decryption modeD(desD, stolenIV);
 		fail = !TestFilter(StreamTransformationFilter(modeD).Ref(),
 			encrypted, sizeof(encrypted), plain, 3);
@@ -1010,8 +2119,8 @@ bool ValidateCipherModes()
 	}
 	{
 		const byte encrypted[] = {	// generated with Crypto++
-			0xF3, 0x09, 0x62, 0x49, 0xC7, 0xF4, 0x6E, 0x51, 
-			0x16, 0x3A, 0x8C, 0xA0, 0xFF, 0xC9, 0x4C, 0x27, 
+			0xF3, 0x09, 0x62, 0x49, 0xC7, 0xF4, 0x6E, 0x51,
+			0x16, 0x3A, 0x8C, 0xA0, 0xFF, 0xC9, 0x4C, 0x27,
 			0xFA, 0x2F, 0x80, 0xF4, 0x80, 0xB8, 0x6F, 0x75};
 
 		CTR_Mode_ExternalCipher::Encryption modeE(desE, iv);
@@ -1032,9 +2141,9 @@ bool ValidateCipherModes()
 	}
 	{
 		const byte plain_3[] = {	// "7654321 Now is the time for "
-			0x37, 0x36, 0x35, 0x34, 0x33, 0x32, 0x31, 0x20, 
-			0x4e, 0x6f, 0x77, 0x20, 0x69, 0x73, 0x20, 0x74, 
-			0x68, 0x65, 0x20, 0x74, 0x69, 0x6d, 0x65, 0x20, 
+			0x37, 0x36, 0x35, 0x34, 0x33, 0x32, 0x31, 0x20,
+			0x4e, 0x6f, 0x77, 0x20, 0x69, 0x73, 0x20, 0x74,
+			0x68, 0x65, 0x20, 0x74, 0x69, 0x6d, 0x65, 0x20,
 			0x66, 0x6f, 0x72, 0x20};
 		const byte mac1[] = {	// from FIPS 113
 			0xf1, 0xd3, 0x0f, 0x68, 0x49, 0x31, 0x2c, 0xa4};
@@ -1089,7 +2198,7 @@ bool ValidateIDEA()
 {
 	cout << "\nIDEA validation suite running...\n\n";
 
-	FileSource valdata("TestData/ideaval.dat", true, new HexDecoder);
+	FileSource valdata(CRYPTOPP_DATA_DIR "TestData/ideaval.dat", true, new HexDecoder);
 	return BlockTransformationTest(FixedRoundsCipherFactory<IDEAEncryption, IDEADecryption>(), valdata);
 }
 
@@ -1097,7 +2206,7 @@ bool ValidateSAFER()
 {
 	cout << "\nSAFER validation suite running...\n\n";
 
-	FileSource valdata("TestData/saferval.dat", true, new HexDecoder);
+	FileSource valdata(CRYPTOPP_DATA_DIR "TestData/saferval.dat", true, new HexDecoder);
 	bool pass = true;
 	pass = BlockTransformationTest(VariableRoundsCipherFactory<SAFER_K_Encryption, SAFER_K_Decryption>(8,6), valdata, 4) && pass;
 	pass = BlockTransformationTest(VariableRoundsCipherFactory<SAFER_K_Encryption, SAFER_K_Decryption>(16,12), valdata, 4) && pass;
@@ -1110,7 +2219,7 @@ bool ValidateRC2()
 {
 	cout << "\nRC2 validation suite running...\n\n";
 
-	FileSource valdata("TestData/rc2val.dat", true, new HexDecoder);
+	FileSource valdata(CRYPTOPP_DATA_DIR "TestData/rc2val.dat", true, new HexDecoder);
 	HexEncoder output(new FileSink(cout));
 	SecByteBlock plain(RC2Encryption::BLOCKSIZE), cipher(RC2Encryption::BLOCKSIZE), out(RC2Encryption::BLOCKSIZE), outplain(RC2Encryption::BLOCKSIZE);
 	SecByteBlock key(128);
@@ -1319,93 +2428,240 @@ bool ValidateARC4()
 bool ValidateRC5()
 {
 	cout << "\nRC5 validation suite running...\n\n";
+	bool pass1 = true, pass2 = true;
 
-	FileSource valdata("TestData/rc5val.dat", true, new HexDecoder);
-	return BlockTransformationTest(VariableRoundsCipherFactory<RC5Encryption, RC5Decryption>(16, 12), valdata);
+	RC5Encryption enc;  // 0 to 2040-bits (255-bytes)
+	pass1 = RC5Encryption::DEFAULT_KEYLENGTH ==  16 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(0) == 0 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(254) == 254 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(255) == 255 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(256) == 255 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(0) == enc.MinKeyLength() && pass1;
+	pass1 = enc.StaticGetValidKeyLength(SIZE_MAX) == enc.MaxKeyLength() && pass1;
+
+	RC5Decryption dec;
+	pass2 = RC5Decryption::DEFAULT_KEYLENGTH ==  16 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(0) == 0 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(254) == 254 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(255) == 255 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(256) == 255 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(0) == dec.MinKeyLength() && pass2;
+	pass2 = dec.StaticGetValidKeyLength(SIZE_MAX) == dec.MaxKeyLength() && pass2;
+	cout << (pass1 && pass2 ? "passed:" : "FAILED:") << "  Algorithm key lengths\n";
+
+	FileSource valdata(CRYPTOPP_DATA_DIR "TestData/rc5val.dat", true, new HexDecoder);
+	return BlockTransformationTest(VariableRoundsCipherFactory<RC5Encryption, RC5Decryption>(16, 12), valdata) && pass1 && pass2;
 }
 
 bool ValidateRC6()
 {
 	cout << "\nRC6 validation suite running...\n\n";
+	bool pass1 = true, pass2 = true, pass3 = true;
 
-	FileSource valdata("TestData/rc6val.dat", true, new HexDecoder);
-	bool pass = true;
-	pass = BlockTransformationTest(FixedRoundsCipherFactory<RC6Encryption, RC6Decryption>(16), valdata, 2) && pass;
-	pass = BlockTransformationTest(FixedRoundsCipherFactory<RC6Encryption, RC6Decryption>(24), valdata, 2) && pass;
-	pass = BlockTransformationTest(FixedRoundsCipherFactory<RC6Encryption, RC6Decryption>(32), valdata, 2) && pass;
-	return pass;
+	RC6Encryption enc;
+	pass1 = enc.StaticGetValidKeyLength(8) == 16 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(16) == 16 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(24) == 24 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(32) == 32 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(64) == 32 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(128) == 32 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(0) == enc.MinKeyLength() && pass1;
+	pass1 = enc.StaticGetValidKeyLength(SIZE_MAX) == enc.MaxKeyLength() && pass1;
+
+	RC6Decryption dec;
+	pass2 = dec.StaticGetValidKeyLength(8) == 16 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(16) == 16 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(24) == 24 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(32) == 32 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(64) == 32 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(128) == 32 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(0) == dec.MinKeyLength() && pass2;
+	pass2 = dec.StaticGetValidKeyLength(SIZE_MAX) == dec.MaxKeyLength() && pass2;
+	cout << (pass1 && pass2 ? "passed:" : "FAILED:") << "  Algorithm key lengths\n";
+
+	FileSource valdata(CRYPTOPP_DATA_DIR "TestData/rc6val.dat", true, new HexDecoder);
+	pass3 = BlockTransformationTest(FixedRoundsCipherFactory<RC6Encryption, RC6Decryption>(16), valdata, 2) && pass3;
+	pass3 = BlockTransformationTest(FixedRoundsCipherFactory<RC6Encryption, RC6Decryption>(24), valdata, 2) && pass3;
+	pass3 = BlockTransformationTest(FixedRoundsCipherFactory<RC6Encryption, RC6Decryption>(32), valdata, 2) && pass3;
+	return pass1 && pass2 && pass3;
 }
 
 bool ValidateMARS()
 {
 	cout << "\nMARS validation suite running...\n\n";
+	bool pass1 = true, pass2 = true, pass3 = true;
 
-	FileSource valdata("TestData/marsval.dat", true, new HexDecoder);
-	bool pass = true;
-	pass = BlockTransformationTest(FixedRoundsCipherFactory<MARSEncryption, MARSDecryption>(16), valdata, 4) && pass;
-	pass = BlockTransformationTest(FixedRoundsCipherFactory<MARSEncryption, MARSDecryption>(24), valdata, 3) && pass;
-	pass = BlockTransformationTest(FixedRoundsCipherFactory<MARSEncryption, MARSDecryption>(32), valdata, 2) && pass;
-	return pass;
+	MARSEncryption enc;
+	pass1 = enc.StaticGetValidKeyLength(8) == 16 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(16) == 16 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(24) == 24 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(32) == 32 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(64) == 56 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(128) == 56 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(0) == enc.MinKeyLength() && pass1;
+	pass1 = enc.StaticGetValidKeyLength(SIZE_MAX) == enc.MaxKeyLength() && pass1;
+
+	MARSDecryption dec;
+	pass2 = dec.StaticGetValidKeyLength(8) == 16 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(16) == 16 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(24) == 24 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(32) == 32 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(64) == 56 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(128) == 56 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(0) == dec.MinKeyLength() && pass2;
+	pass2 = dec.StaticGetValidKeyLength(SIZE_MAX) == dec.MaxKeyLength() && pass2;
+	cout << (pass1 && pass2 ? "passed:" : "FAILED:") << "  Algorithm key lengths\n";
+
+	FileSource valdata(CRYPTOPP_DATA_DIR "TestData/marsval.dat", true, new HexDecoder);
+	pass3 = BlockTransformationTest(FixedRoundsCipherFactory<MARSEncryption, MARSDecryption>(16), valdata, 4) && pass3;
+	pass3 = BlockTransformationTest(FixedRoundsCipherFactory<MARSEncryption, MARSDecryption>(24), valdata, 3) && pass3;
+	pass3 = BlockTransformationTest(FixedRoundsCipherFactory<MARSEncryption, MARSDecryption>(32), valdata, 2) && pass3;
+	return pass1 && pass2 && pass3;
 }
 
 bool ValidateRijndael()
 {
 	cout << "\nRijndael (AES) validation suite running...\n\n";
+	bool pass1 = true, pass2 = true, pass3 = true;
 
-	FileSource valdata("TestData/rijndael.dat", true, new HexDecoder);
-	bool pass = true;
-	pass = BlockTransformationTest(FixedRoundsCipherFactory<RijndaelEncryption, RijndaelDecryption>(16), valdata, 4) && pass;
-	pass = BlockTransformationTest(FixedRoundsCipherFactory<RijndaelEncryption, RijndaelDecryption>(24), valdata, 3) && pass;
-	pass = BlockTransformationTest(FixedRoundsCipherFactory<RijndaelEncryption, RijndaelDecryption>(32), valdata, 2) && pass;
-	pass = RunTestDataFile("TestVectors/aes.txt") && pass;
-	return pass;
+	RijndaelEncryption enc;
+	pass1 = enc.StaticGetValidKeyLength(8) == 16 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(16) == 16 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(24) == 24 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(32) == 32 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(64) == 32 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(128) == 32 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(0) == enc.MinKeyLength() && pass1;
+	pass1 = enc.StaticGetValidKeyLength(SIZE_MAX) == enc.MaxKeyLength() && pass1;
+
+	RijndaelDecryption dec;
+	pass2 = dec.StaticGetValidKeyLength(8) == 16 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(16) == 16 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(24) == 24 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(32) == 32 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(64) == 32 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(128) == 32 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(0) == dec.MinKeyLength() && pass2;
+	pass2 = dec.StaticGetValidKeyLength(SIZE_MAX) == dec.MaxKeyLength() && pass2;
+	cout << (pass1 && pass2 ? "passed:" : "FAILED:") << "  Algorithm key lengths\n";
+
+	FileSource valdata(CRYPTOPP_DATA_DIR "TestData/rijndael.dat", true, new HexDecoder);
+	pass3 = BlockTransformationTest(FixedRoundsCipherFactory<RijndaelEncryption, RijndaelDecryption>(16), valdata, 4) && pass3;
+	pass3 = BlockTransformationTest(FixedRoundsCipherFactory<RijndaelEncryption, RijndaelDecryption>(24), valdata, 3) && pass3;
+	pass3 = BlockTransformationTest(FixedRoundsCipherFactory<RijndaelEncryption, RijndaelDecryption>(32), valdata, 2) && pass3;
+	pass3 = RunTestDataFile(CRYPTOPP_DATA_DIR "TestVectors/aes.txt") && pass3;
+	return pass1 && pass2 && pass3;
 }
 
 bool ValidateTwofish()
 {
 	cout << "\nTwofish validation suite running...\n\n";
+	bool pass1 = true, pass2 = true, pass3 = true;
 
-	FileSource valdata("TestData/twofishv.dat", true, new HexDecoder);
-	bool pass = true;
-	pass = BlockTransformationTest(FixedRoundsCipherFactory<TwofishEncryption, TwofishDecryption>(16), valdata, 4) && pass;
-	pass = BlockTransformationTest(FixedRoundsCipherFactory<TwofishEncryption, TwofishDecryption>(24), valdata, 3) && pass;
-	pass = BlockTransformationTest(FixedRoundsCipherFactory<TwofishEncryption, TwofishDecryption>(32), valdata, 2) && pass;
-	return pass;
+	TwofishEncryption enc;
+	pass1 = enc.StaticGetValidKeyLength(8) == 16 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(16) == 16 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(24) == 24 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(32) == 32 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(64) == 32 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(128) == 32 && pass1;
+
+	TwofishDecryption dec;
+	pass2 = dec.StaticGetValidKeyLength(8) == 16 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(16) == 16 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(24) == 24 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(32) == 32 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(64) == 32 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(128) == 32 && pass2;
+	cout << (pass1 && pass2 ? "passed:" : "FAILED:") << "  Algorithm key lengths\n";
+
+	FileSource valdata(CRYPTOPP_DATA_DIR "TestData/twofishv.dat", true, new HexDecoder);
+	pass3 = BlockTransformationTest(FixedRoundsCipherFactory<TwofishEncryption, TwofishDecryption>(16), valdata, 4) && pass3;
+	pass3 = BlockTransformationTest(FixedRoundsCipherFactory<TwofishEncryption, TwofishDecryption>(24), valdata, 3) && pass3;
+	pass3 = BlockTransformationTest(FixedRoundsCipherFactory<TwofishEncryption, TwofishDecryption>(32), valdata, 2) && pass3;
+	return pass1 && pass2 && pass3;
 }
 
 bool ValidateSerpent()
 {
 	cout << "\nSerpent validation suite running...\n\n";
+	bool pass1 = true, pass2 = true, pass3 = true;
 
-	FileSource valdata("TestData/serpentv.dat", true, new HexDecoder);
+	SerpentEncryption enc;
+	pass1 = enc.StaticGetValidKeyLength(8) == 16 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(16) == 16 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(24) == 24 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(32) == 32 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(64) == 32 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(128) == 32 && pass1;
+
+	SerpentDecryption dec;
+	pass2 = dec.StaticGetValidKeyLength(8) == 16 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(16) == 16 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(24) == 24 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(32) == 32 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(64) == 32 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(128) == 32 && pass2;
+	cout << (pass1 && pass2 ? "passed:" : "FAILED:") << "  Algorithm key lengths\n";
+
+	FileSource valdata(CRYPTOPP_DATA_DIR "TestData/serpentv.dat", true, new HexDecoder);
 	bool pass = true;
 	pass = BlockTransformationTest(FixedRoundsCipherFactory<SerpentEncryption, SerpentDecryption>(16), valdata, 5) && pass;
 	pass = BlockTransformationTest(FixedRoundsCipherFactory<SerpentEncryption, SerpentDecryption>(24), valdata, 4) && pass;
 	pass = BlockTransformationTest(FixedRoundsCipherFactory<SerpentEncryption, SerpentDecryption>(32), valdata, 3) && pass;
-	return pass;
+	return pass1 && pass2 && pass3;
 }
 
 bool ValidateBlowfish()
 {
 	cout << "\nBlowfish validation suite running...\n\n";
+	bool pass1 = true, pass2 = true, pass3 = true, fail;
+
+	BlowfishEncryption enc1;	// 32 to 448-bits (4 to 56-bytes)
+	pass1 = enc1.StaticGetValidKeyLength(3) == 4 && pass1;
+	pass1 = enc1.StaticGetValidKeyLength(4) == 4 && pass1;
+	pass1 = enc1.StaticGetValidKeyLength(5) == 5 && pass1;
+	pass1 = enc1.StaticGetValidKeyLength(8) == 8 && pass1;
+	pass1 = enc1.StaticGetValidKeyLength(16) == 16 && pass1;
+	pass1 = enc1.StaticGetValidKeyLength(24) == 24 && pass1;
+	pass1 = enc1.StaticGetValidKeyLength(32) == 32 && pass1;
+	pass1 = enc1.StaticGetValidKeyLength(56) == 56 && pass1;
+	pass1 = enc1.StaticGetValidKeyLength(57) == 56 && pass1;
+	pass1 = enc1.StaticGetValidKeyLength(60) == 56 && pass1;
+	pass1 = enc1.StaticGetValidKeyLength(64) == 56 && pass1;
+	pass1 = enc1.StaticGetValidKeyLength(128) == 56 && pass1;
+
+	BlowfishDecryption dec1; // 32 to 448-bits (4 to 56-bytes)
+	pass2 = dec1.StaticGetValidKeyLength(3) == 4 && pass2;
+	pass2 = dec1.StaticGetValidKeyLength(4) == 4 && pass2;
+	pass2 = dec1.StaticGetValidKeyLength(5) == 5 && pass2;
+	pass2 = dec1.StaticGetValidKeyLength(8) == 8 && pass2;
+	pass2 = dec1.StaticGetValidKeyLength(16) == 16 && pass2;
+	pass2 = dec1.StaticGetValidKeyLength(24) == 24 && pass2;
+	pass2 = dec1.StaticGetValidKeyLength(32) == 32 && pass2;
+	pass2 = dec1.StaticGetValidKeyLength(56) == 56 && pass2;
+	pass2 = dec1.StaticGetValidKeyLength(57) == 56 && pass2;
+	pass2 = dec1.StaticGetValidKeyLength(60) == 56 && pass2;
+	pass2 = dec1.StaticGetValidKeyLength(64) == 56 && pass2;
+	pass2 = dec1.StaticGetValidKeyLength(128) == 56 && pass2;
+	cout << (pass1 && pass2 ? "passed:" : "FAILED:") << "  Algorithm key lengths\n";
 
 	HexEncoder output(new FileSink(cout));
 	const char *key[]={"abcdefghijklmnopqrstuvwxyz", "Who is John Galt?"};
 	byte *plain[]={(byte *)"BLOWFISH", (byte *)"\xfe\xdc\xba\x98\x76\x54\x32\x10"};
 	byte *cipher[]={(byte *)"\x32\x4e\xd0\xfe\xf4\x13\xa2\x03", (byte *)"\xcc\x91\x73\x2b\x80\x22\xf6\x84"};
 	byte out[8], outplain[8];
-	bool pass=true, fail;
 
 	for (int i=0; i<2; i++)
 	{
-		ECB_Mode<Blowfish>::Encryption enc((byte *)key[i], strlen(key[i]));
-		enc.ProcessData(out, plain[i], 8);
+		ECB_Mode<Blowfish>::Encryption enc2((byte *)key[i], strlen(key[i]));
+		enc2.ProcessData(out, plain[i], 8);
 		fail = memcmp(out, cipher[i], 8) != 0;
 
-		ECB_Mode<Blowfish>::Decryption dec((byte *)key[i], strlen(key[i]));
-		dec.ProcessData(outplain, cipher[i], 8);
+		ECB_Mode<Blowfish>::Decryption dec2((byte *)key[i], strlen(key[i]));
+		dec2.ProcessData(outplain, cipher[i], 8);
 		fail = fail || memcmp(outplain, plain[i], 8);
-		pass = pass && !fail;
+		pass3 = pass3 && !fail;
 
 		cout << (fail ? "FAILED    " : "passed    ");
 		cout << '\"' << key[i] << '\"';
@@ -1416,76 +2672,196 @@ bool ValidateBlowfish()
 		output.Put(out, 8);
 		cout << endl;
 	}
-	return pass;
+	return pass1 && pass2 && pass3;
 }
 
 bool ValidateThreeWay()
 {
 	cout << "\n3-WAY validation suite running...\n\n";
+	bool pass1 = true, pass2 = true;
 
-	FileSource valdata("TestData/3wayval.dat", true, new HexDecoder);
-	return BlockTransformationTest(FixedRoundsCipherFactory<ThreeWayEncryption, ThreeWayDecryption>(), valdata);
+	ThreeWayEncryption enc;  // 96-bit only
+	pass1 = ThreeWayEncryption::KEYLENGTH ==  12 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(8) == 12 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(12) == 12 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(16) == 12 && pass1;
+
+	ThreeWayDecryption dec;  // 96-bit only
+	pass2 = ThreeWayDecryption::KEYLENGTH ==  12 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(8) == 12 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(12) == 12 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(16) == 12 && pass2;
+	cout << (pass1 && pass2 ? "passed:" : "FAILED:") << "  Algorithm key lengths\n";
+
+	FileSource valdata(CRYPTOPP_DATA_DIR "TestData/3wayval.dat", true, new HexDecoder);
+	return BlockTransformationTest(FixedRoundsCipherFactory<ThreeWayEncryption, ThreeWayDecryption>(), valdata) && pass1 && pass2;
 }
 
 bool ValidateGOST()
 {
 	cout << "\nGOST validation suite running...\n\n";
+	bool pass1 = true, pass2 = true;
 
-	FileSource valdata("TestData/gostval.dat", true, new HexDecoder);
-	return BlockTransformationTest(FixedRoundsCipherFactory<GOSTEncryption, GOSTDecryption>(), valdata);
+	GOSTEncryption enc;  // 256-bit only
+	pass1 = GOSTEncryption::KEYLENGTH ==  32 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(16) == 32 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(24) == 32 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(32) == 32 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(40) == 32 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(64) == 32 && pass1;
+
+	GOSTDecryption dec;  // 256-bit only
+	pass2 = GOSTDecryption::KEYLENGTH ==  32 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(16) == 32 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(24) == 32 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(32) == 32 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(40) == 32 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(64) == 32 && pass2;
+	cout << (pass1 && pass2 ? "passed:" : "FAILED:") << "  Algorithm key lengths\n";
+
+	FileSource valdata(CRYPTOPP_DATA_DIR "TestData/gostval.dat", true, new HexDecoder);
+	return BlockTransformationTest(FixedRoundsCipherFactory<GOSTEncryption, GOSTDecryption>(), valdata) && pass1 && pass2;
 }
 
 bool ValidateSHARK()
 {
 	cout << "\nSHARK validation suite running...\n\n";
+	bool pass1 = true, pass2 = true;
 
-	FileSource valdata("TestData/sharkval.dat", true, new HexDecoder);
-	return BlockTransformationTest(FixedRoundsCipherFactory<SHARKEncryption, SHARKDecryption>(), valdata);
+	SHARKEncryption enc;  // 128-bit only
+	pass1 = SHARKEncryption::KEYLENGTH ==  16 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(8) == 16 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(15) == 16 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(16) == 16 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(17) == 16 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(32) == 16 && pass1;
+
+	SHARKDecryption dec;  // 128-bit only
+	pass2 = SHARKDecryption::KEYLENGTH ==  16 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(8) == 16 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(15) == 16 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(16) == 16 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(17) == 16 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(32) == 16 && pass2;
+	cout << (pass1 && pass2 ? "passed:" : "FAILED:") << "  Algorithm key lengths\n";
+
+	FileSource valdata(CRYPTOPP_DATA_DIR "TestData/sharkval.dat", true, new HexDecoder);
+	return BlockTransformationTest(FixedRoundsCipherFactory<SHARKEncryption, SHARKDecryption>(), valdata) && pass1 && pass2;
 }
 
 bool ValidateCAST()
 {
-	bool pass = true;
-
 	cout << "\nCAST-128 validation suite running...\n\n";
+	bool pass1 = true, pass2 = true, pass3 = true;
 
-	FileSource val128("TestData/cast128v.dat", true, new HexDecoder);
-	pass = BlockTransformationTest(FixedRoundsCipherFactory<CAST128Encryption, CAST128Decryption>(16), val128, 1) && pass;
-	pass = BlockTransformationTest(FixedRoundsCipherFactory<CAST128Encryption, CAST128Decryption>(10), val128, 1) && pass;
-	pass = BlockTransformationTest(FixedRoundsCipherFactory<CAST128Encryption, CAST128Decryption>(5), val128, 1) && pass;
+	CAST128Encryption enc1;  // 40 to 128-bits (5 to 16-bytes)
+	pass1 = CAST128Encryption::DEFAULT_KEYLENGTH ==  16 && pass1;
+	pass1 = enc1.StaticGetValidKeyLength(4) == 5 && pass1;
+	pass1 = enc1.StaticGetValidKeyLength(5) == 5 && pass1;
+	pass1 = enc1.StaticGetValidKeyLength(15) == 15 && pass1;
+	pass1 = enc1.StaticGetValidKeyLength(16) == 16 && pass1;
+	pass1 = enc1.StaticGetValidKeyLength(17) == 16 && pass1;
+
+	CAST128Decryption dec1;  // 40 to 128-bits (5 to 16-bytes)
+	pass2 = CAST128Decryption::DEFAULT_KEYLENGTH ==  16 && pass2;
+	pass2 = dec1.StaticGetValidKeyLength(4) == 5 && pass2;
+	pass2 = dec1.StaticGetValidKeyLength(5) == 5 && pass2;
+	pass2 = dec1.StaticGetValidKeyLength(15) == 15 && pass2;
+	pass2 = dec1.StaticGetValidKeyLength(16) == 16 && pass2;
+	pass2 = dec1.StaticGetValidKeyLength(17) == 16 && pass2;
+	cout << (pass1 && pass2 ? "passed:" : "FAILED:") << "  Algorithm key lengths\n";
+
+	FileSource val128(CRYPTOPP_DATA_DIR "TestData/cast128v.dat", true, new HexDecoder);
+	pass3 = BlockTransformationTest(FixedRoundsCipherFactory<CAST128Encryption, CAST128Decryption>(16), val128, 1) && pass3;
+	pass3 = BlockTransformationTest(FixedRoundsCipherFactory<CAST128Encryption, CAST128Decryption>(10), val128, 1) && pass3;
+	pass3 = BlockTransformationTest(FixedRoundsCipherFactory<CAST128Encryption, CAST128Decryption>(5), val128, 1) && pass3;
 
 	cout << "\nCAST-256 validation suite running...\n\n";
+	bool pass4 = true, pass5 = true, pass6 = true;
 
-	FileSource val256("TestData/cast256v.dat", true, new HexDecoder);
-	pass = BlockTransformationTest(FixedRoundsCipherFactory<CAST256Encryption, CAST256Decryption>(16), val256, 1) && pass;
-	pass = BlockTransformationTest(FixedRoundsCipherFactory<CAST256Encryption, CAST256Decryption>(24), val256, 1) && pass;
-	pass = BlockTransformationTest(FixedRoundsCipherFactory<CAST256Encryption, CAST256Decryption>(32), val256, 1) && pass;
+	CAST256Encryption enc2;  // 128, 160, 192, 224, or 256-bits (16 to 32-bytes, step 4)
+	pass1 = CAST128Encryption::DEFAULT_KEYLENGTH ==  16 && pass1;
+	pass4 = enc2.StaticGetValidKeyLength(15) == 16 && pass4;
+	pass4 = enc2.StaticGetValidKeyLength(16) == 16 && pass4;
+	pass4 = enc2.StaticGetValidKeyLength(17) == 20 && pass4;
+	pass4 = enc2.StaticGetValidKeyLength(20) == 20 && pass4;
+	pass4 = enc2.StaticGetValidKeyLength(24) == 24 && pass4;
+	pass4 = enc2.StaticGetValidKeyLength(28) == 28 && pass4;
+	pass4 = enc2.StaticGetValidKeyLength(31) == 32 && pass4;
+	pass4 = enc2.StaticGetValidKeyLength(32) == 32 && pass4;
+	pass4 = enc2.StaticGetValidKeyLength(33) == 32 && pass4;
 
-	return pass;
+	CAST256Decryption dec2;  // 128, 160, 192, 224, or 256-bits (16 to 32-bytes, step 4)
+	pass2 = CAST256Decryption::DEFAULT_KEYLENGTH ==  16 && pass2;
+	pass5 = dec2.StaticGetValidKeyLength(15) == 16 && pass5;
+	pass5 = dec2.StaticGetValidKeyLength(16) == 16 && pass5;
+	pass5 = dec2.StaticGetValidKeyLength(17) == 20 && pass5;
+	pass5 = dec2.StaticGetValidKeyLength(20) == 20 && pass5;
+	pass5 = dec2.StaticGetValidKeyLength(24) == 24 && pass5;
+	pass5 = dec2.StaticGetValidKeyLength(28) == 28 && pass5;
+	pass5 = dec2.StaticGetValidKeyLength(31) == 32 && pass5;
+	pass5 = dec2.StaticGetValidKeyLength(32) == 32 && pass5;
+	pass5 = dec2.StaticGetValidKeyLength(33) == 32 && pass5;
+	cout << (pass4 && pass5 ? "passed:" : "FAILED:") << "  Algorithm key lengths\n";
+
+	FileSource val256(CRYPTOPP_DATA_DIR "TestData/cast256v.dat", true, new HexDecoder);
+	pass6 = BlockTransformationTest(FixedRoundsCipherFactory<CAST256Encryption, CAST256Decryption>(16), val256, 1) && pass6;
+	pass6 = BlockTransformationTest(FixedRoundsCipherFactory<CAST256Encryption, CAST256Decryption>(24), val256, 1) && pass6;
+	pass6 = BlockTransformationTest(FixedRoundsCipherFactory<CAST256Encryption, CAST256Decryption>(32), val256, 1) && pass6;
+
+	return pass1 && pass2 && pass3 && pass4 && pass5 && pass6;
 }
 
 bool ValidateSquare()
 {
 	cout << "\nSquare validation suite running...\n\n";
+	bool pass1 = true, pass2 = true;
 
-	FileSource valdata("TestData/squareva.dat", true, new HexDecoder);
-	return BlockTransformationTest(FixedRoundsCipherFactory<SquareEncryption, SquareDecryption>(), valdata);
+	SquareEncryption enc;  // 128-bits only
+	pass1 = enc.StaticGetValidKeyLength(8) == 16 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(15) == 16 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(16) == 16 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(17) == 16 && pass1;
+
+	SquareDecryption dec;  // 128-bits only
+	pass2 = dec.StaticGetValidKeyLength(8) == 16 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(15) == 16 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(16) == 16 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(17) == 16 && pass2;
+	cout << (pass1 && pass2 ? "passed:" : "FAILED:") << "  Algorithm key lengths\n";
+
+	FileSource valdata(CRYPTOPP_DATA_DIR "TestData/squareva.dat", true, new HexDecoder);
+	return BlockTransformationTest(FixedRoundsCipherFactory<SquareEncryption, SquareDecryption>(), valdata) && pass1 && pass2;
 }
 
 bool ValidateSKIPJACK()
 {
 	cout << "\nSKIPJACK validation suite running...\n\n";
+	bool pass1 = true, pass2 = true;
 
-	FileSource valdata("TestData/skipjack.dat", true, new HexDecoder);
-	return BlockTransformationTest(FixedRoundsCipherFactory<SKIPJACKEncryption, SKIPJACKDecryption>(), valdata);
+	SKIPJACKEncryption enc;  // 80-bits only
+	pass1 = enc.StaticGetValidKeyLength(8) == 10 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(9) == 10 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(10) == 10 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(16) == 10 && pass1;
+
+	SKIPJACKDecryption dec;  // 80-bits only
+	pass2 = dec.StaticGetValidKeyLength(8) == 10 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(9) == 10 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(10) == 10 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(16) == 10 && pass2;
+	cout << (pass1 && pass2 ? "passed:" : "FAILED:") << "  Algorithm key lengths\n";
+
+	FileSource valdata(CRYPTOPP_DATA_DIR "TestData/skipjack.dat", true, new HexDecoder);
+	return BlockTransformationTest(FixedRoundsCipherFactory<SKIPJACKEncryption, SKIPJACKDecryption>(), valdata) && pass1 && pass2;
 }
 
 bool ValidateSEAL()
 {
-	byte input[] = {0x37,0xa0,0x05,0x95,0x9b,0x84,0xc4,0x9c,0xa4,0xbe,0x1e,0x05,0x06,0x73,0x53,0x0f,0x5f,0xb0,0x97,0xfd,0xf6,0xa1,0x3f,0xbd,0x6c,0x2c,0xde,0xcd,0x81,0xfd,0xee,0x7c};
+	static const byte input[] = {0x37,0xa0,0x05,0x95,0x9b,0x84,0xc4,0x9c,0xa4,0xbe,0x1e,0x05,0x06,0x73,0x53,0x0f,0x5f,0xb0,0x97,0xfd,0xf6,0xa1,0x3f,0xbd,0x6c,0x2c,0xde,0xcd,0x81,0xfd,0xee,0x7c};
+	static const byte key[] = {0x67, 0x45, 0x23, 0x01, 0xef, 0xcd, 0xab, 0x89, 0x98, 0xba, 0xdc, 0xfe, 0x10, 0x32, 0x54, 0x76, 0xc3, 0xd2, 0xe1, 0xf0};
+	static const byte iv[] = {0x01, 0x35, 0x77, 0xaf};
 	byte output[32];
-	byte key[] = {0x67, 0x45, 0x23, 0x01, 0xef, 0xcd, 0xab, 0x89, 0x98, 0xba, 0xdc, 0xfe, 0x10, 0x32, 0x54, 0x76, 0xc3, 0xd2, 0xe1, 0xf0};
-	byte iv[] = {0x01, 0x35, 0x77, 0xaf};
 
 	cout << "\nSEAL validation suite running...\n\n";
 
@@ -1514,7 +2890,7 @@ bool ValidateBaseCode()
 	byte data[255];
 	for (unsigned int i=0; i<255; i++)
 		data[i] = byte(i);
-	static const char hexEncoded[] = 
+	static const char hexEncoded[] =
 "000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F2021222324252627"
 "28292A2B2C2D2E2F303132333435363738393A3B3C3D3E3F404142434445464748494A4B4C4D4E4F"
 "505152535455565758595A5B5C5D5E5F606162636465666768696A6B6C6D6E6F7071727374757677"
@@ -1522,14 +2898,14 @@ bool ValidateBaseCode()
 "A0A1A2A3A4A5A6A7A8A9AAABACADAEAFB0B1B2B3B4B5B6B7B8B9BABBBCBDBEBFC0C1C2C3C4C5C6C7"
 "C8C9CACBCCCDCECFD0D1D2D3D4D5D6D7D8D9DADBDCDDDEDFE0E1E2E3E4E5E6E7E8E9EAEBECEDEEEF"
 "F0F1F2F3F4F5F6F7F8F9FAFBFCFDFE";
-	static const char base32Encoded[] = 
+	static const char base32Encoded[] =
 "AAASEA2EAWDAQCAJBIFS2DIQB6IBCESVCSKTNF22DEPBYHA7D2RUAIJCENUCKJTHFAWUWK3NFWZC8NBT"
 "GI3VIPJYG66DUQT5HS8V6R4AIFBEGTCFI3DWSUKKJPGE4VURKBIXEW4WKXMFQYC3MJPX2ZK8M7SGC2VD"
 "NTUYN35IPFXGY5DPP3ZZA6MUQP4HK7VZRB6ZW856RX9H9AEBSKB2JBNGS8EIVCWMTUG27D6SUGJJHFEX"
 "U4M3TGN4VQQJ5HW9WCS4FI7EWYVKRKFJXKX43MPQX82MDNXVYU45PP72ZG7MZRF7Z496BSQC2RCNMTYH"
 "3DE6XU8N3ZHN9WGT4MJ7JXQY49NPVYY55VQ77Z9A6HTQH3HF65V8T4RK7RYQ55ZR8D29F69W8Z5RR8H3"
 "9M7939R8";
-	const char *base64AndHexEncoded = 
+	const char *base64AndHexEncoded =
 "41414543417751464267634943516F4C4441304F4478415245684D554652595847426B6147787764"
 "486838674953496A4A43556D4A7967704B6973734C5334764D4445794D7A51310A4E6A63344F546F"
 "375044302B50304242516B4E4552555A4853456C4B5330784E546B395155564A5456465657563168"
@@ -1578,62 +2954,104 @@ bool ValidateBaseCode()
 bool ValidateSHACAL2()
 {
 	cout << "\nSHACAL-2 validation suite running...\n\n";
+	bool pass1 = true, pass2 = true, pass3 = true;
 
-	bool pass = true;
-	FileSource valdata("TestData/shacal2v.dat", true, new HexDecoder);
-	pass = BlockTransformationTest(FixedRoundsCipherFactory<SHACAL2Encryption, SHACAL2Decryption>(16), valdata, 4) && pass;
-	pass = BlockTransformationTest(FixedRoundsCipherFactory<SHACAL2Encryption, SHACAL2Decryption>(64), valdata, 10) && pass;
-	return pass;
+	SHACAL2Encryption enc;  // 128 to 512-bits (16 to 64-bytes)
+	pass1 = enc.StaticGetValidKeyLength(8) == 16 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(15) == 16 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(16) == 16 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(64) == 64 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(65) == 64 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(128) == 64 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(0) == enc.MinKeyLength() && pass1;
+	pass1 = enc.StaticGetValidKeyLength(SIZE_MAX) == enc.MaxKeyLength() && pass1;
+
+	SHACAL2Decryption dec;  // 128 to 512-bits (16 to 64-bytes)
+	pass2 = dec.StaticGetValidKeyLength(8) == 16 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(15) == 16 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(16) == 16 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(64) == 64 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(65) == 64 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(128) == 64 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(0) == dec.MinKeyLength() && pass2;
+	pass2 = dec.StaticGetValidKeyLength(SIZE_MAX) == dec.MaxKeyLength() && pass2;
+	cout << (pass1 && pass2 ? "passed:" : "FAILED:") << "  Algorithm key lengths\n";
+
+	FileSource valdata(CRYPTOPP_DATA_DIR "TestData/shacal2v.dat", true, new HexDecoder);
+	pass3 = BlockTransformationTest(FixedRoundsCipherFactory<SHACAL2Encryption, SHACAL2Decryption>(16), valdata, 4) && pass3;
+	pass3 = BlockTransformationTest(FixedRoundsCipherFactory<SHACAL2Encryption, SHACAL2Decryption>(64), valdata, 10) && pass3;
+	return pass1 && pass2 && pass3;
 }
 
 bool ValidateCamellia()
 {
 	cout << "\nCamellia validation suite running...\n\n";
+	bool pass1 = true, pass2 = true, pass3 = true;
 
-	bool pass = true;
-	FileSource valdata("TestData/camellia.dat", true, new HexDecoder);
-	pass = BlockTransformationTest(FixedRoundsCipherFactory<CamelliaEncryption, CamelliaDecryption>(16), valdata, 15) && pass;
-	pass = BlockTransformationTest(FixedRoundsCipherFactory<CamelliaEncryption, CamelliaDecryption>(24), valdata, 15) && pass;
-	pass = BlockTransformationTest(FixedRoundsCipherFactory<CamelliaEncryption, CamelliaDecryption>(32), valdata, 15) && pass;
-	return pass;
+	CamelliaEncryption enc;
+	pass1 = enc.StaticGetValidKeyLength(8) == 16 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(16) == 16 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(24) == 24 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(32) == 32 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(64) == 32 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(128) == 32 && pass1;
+	pass1 = enc.StaticGetValidKeyLength(0) == enc.MinKeyLength() && pass1;
+	pass1 = enc.StaticGetValidKeyLength(SIZE_MAX) == enc.MaxKeyLength() && pass1;
+
+	CamelliaDecryption dec;
+	pass2 = dec.StaticGetValidKeyLength(8) == 16 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(16) == 16 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(24) == 24 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(32) == 32 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(64) == 32 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(128) == 32 && pass2;
+	pass2 = dec.StaticGetValidKeyLength(0) == dec.MinKeyLength() && pass2;
+	pass2 = dec.StaticGetValidKeyLength(SIZE_MAX) == dec.MaxKeyLength() && pass2;
+	cout << (pass1 && pass2 ? "passed:" : "FAILED:") << "  Algorithm key lengths\n";
+
+	FileSource valdata(CRYPTOPP_DATA_DIR "TestData/camellia.dat", true, new HexDecoder);
+	pass3 = BlockTransformationTest(FixedRoundsCipherFactory<CamelliaEncryption, CamelliaDecryption>(16), valdata, 15) && pass3;
+	pass3 = BlockTransformationTest(FixedRoundsCipherFactory<CamelliaEncryption, CamelliaDecryption>(24), valdata, 15) && pass3;
+	pass3 = BlockTransformationTest(FixedRoundsCipherFactory<CamelliaEncryption, CamelliaDecryption>(32), valdata, 15) && pass3;
+	return pass1 && pass2 && pass3;
 }
 
 bool ValidateSalsa()
 {
 	cout << "\nSalsa validation suite running...\n";
 
-	return RunTestDataFile("TestVectors/salsa.txt");
+	return RunTestDataFile(CRYPTOPP_DATA_DIR "TestVectors/salsa.txt");
 }
 
 bool ValidateSosemanuk()
 {
 	cout << "\nSosemanuk validation suite running...\n";
-	return RunTestDataFile("TestVectors/sosemanuk.txt");
+	return RunTestDataFile(CRYPTOPP_DATA_DIR "TestVectors/sosemanuk.txt");
 }
 
 bool ValidateVMAC()
 {
 	cout << "\nVMAC validation suite running...\n";
-	return RunTestDataFile("TestVectors/vmac.txt");
+	return RunTestDataFile(CRYPTOPP_DATA_DIR "TestVectors/vmac.txt");
 }
 
 bool ValidateCCM()
 {
 	cout << "\nAES/CCM validation suite running...\n";
-	return RunTestDataFile("TestVectors/ccm.txt");
+	return RunTestDataFile(CRYPTOPP_DATA_DIR "TestVectors/ccm.txt");
 }
 
 bool ValidateGCM()
 {
 	cout << "\nAES/GCM validation suite running...\n";
 	cout << "\n2K tables:";
-	bool pass = RunTestDataFile("TestVectors/gcm.txt", MakeParameters(Name::TableSize(), (int)2048));
+	bool pass = RunTestDataFile(CRYPTOPP_DATA_DIR "TestVectors/gcm.txt", MakeParameters(Name::TableSize(), (int)2048));
 	cout << "\n64K tables:";
-	return RunTestDataFile("TestVectors/gcm.txt", MakeParameters(Name::TableSize(), (int)64*1024)) && pass;
+	return RunTestDataFile(CRYPTOPP_DATA_DIR "TestVectors/gcm.txt", MakeParameters(Name::TableSize(), (int)64*1024)) && pass;
 }
 
 bool ValidateCMAC()
 {
 	cout << "\nCMAC validation suite running...\n";
-	return RunTestDataFile("TestVectors/cmac.txt");
+	return RunTestDataFile(CRYPTOPP_DATA_DIR "TestVectors/cmac.txt");
 }

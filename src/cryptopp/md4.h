@@ -15,7 +15,7 @@ class MD4 : public IteratedHashWithStaticTransform<word32, LittleEndian, 64, 16,
 public:
 	static void InitState(HashWordType *state);
 	static void Transform(word32 *digest, const word32 *data);
-	static const char *StaticAlgorithmName() {return "MD4";}
+	CRYPTOPP_CONSTEXPR static const char *StaticAlgorithmName() {return "MD4";}
 };
 
 }

@@ -30,7 +30,7 @@ void HMAC_Base::UncheckedSetKey(const byte *userKey, unsigned int keylength, con
 		keylength = hash.DigestSize();
 	}
 
-	assert(keylength <= blockSize);
+	CRYPTOPP_ASSERT(keylength <= blockSize);
 	memset(AccessIpad()+keylength, 0, blockSize-keylength);
 
 	for (unsigned int i=0; i<blockSize; i++)
@@ -42,7 +42,7 @@ void HMAC_Base::UncheckedSetKey(const byte *userKey, unsigned int keylength, con
 
 void HMAC_Base::KeyInnerHash()
 {
-	assert(!m_innerHashKeyed);
+	CRYPTOPP_ASSERT(!m_innerHashKeyed);
 	HashTransformation &hash = AccessHash();
 	hash.Update(AccessIpad(), hash.BlockSize());
 	m_innerHashKeyed = true;

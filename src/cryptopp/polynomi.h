@@ -28,9 +28,9 @@ public:
 	//! \name ENUMS, EXCEPTIONS, and TYPEDEFS
 	//@{
 		//! division by zero exception
-		class DivideByZero : public Exception 
+		class DivideByZero : public Exception
 		{
-		public: 
+		public:
 			DivideByZero() : Exception(OTHER_ERROR, "PolynomialOver<T>: division by zero") {}
 		};
 

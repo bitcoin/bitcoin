@@ -1,10 +1,11 @@
-// cryptlib.cpp - written and placed in the public domain by Wei Dai
+// xtr.cpp - written and placed in the public domain by Wei Dai
 
 #include "pch.h"
 
 #include "xtr.h"
 #include "nbtheory.h"
 #include "integer.h"
+#include "algebra.h"
 #include "modarith.h"
 #include "algebra.cpp"
 
@@ -17,8 +18,8 @@ const GFP2Element & GFP2Element::Zero()
 
 void XTR_FindPrimesAndGenerator(RandomNumberGenerator &rng, Integer &p, Integer &q, GFP2Element &g, unsigned int pbits, unsigned int qbits)
 {
-	assert(qbits > 9);	// no primes exist for pbits = 10, qbits = 9
-	assert(pbits > qbits);
+	CRYPTOPP_ASSERT(qbits > 9);	// no primes exist for pbits = 10, qbits = 9
+	CRYPTOPP_ASSERT(pbits > qbits);
 
 	const Integer minQ = Integer::Power2(qbits - 1);
 	const Integer maxQ = Integer::Power2(qbits) - 1;
@@ -29,11 +30,11 @@ void XTR_FindPrimesAndGenerator(RandomNumberGenerator &rng, Integer &p, Integer 
 	do
 	{
 		bool qFound = q.Randomize(rng, minQ, maxQ, Integer::PRIME, 7, 12);
-		CRYPTOPP_UNUSED(qFound); assert(qFound);
+		CRYPTOPP_UNUSED(qFound); CRYPTOPP_ASSERT(qFound);
 		bool solutionsExist = SolveModularQuadraticEquation(r1, r2, 1, -1, 1, q);
-		CRYPTOPP_UNUSED(solutionsExist); assert(solutionsExist);
+		CRYPTOPP_UNUSED(solutionsExist); CRYPTOPP_ASSERT(solutionsExist);
 	} while (!p.Randomize(rng, minP, maxP, Integer::PRIME, CRT(rng.GenerateBit()?r1:r2, q, 2, 3, EuclideanMultiplicativeInverse(p, 3)), 3*q));
-	assert(((p.Squared() - p + 1) % q).IsZero());
+	CRYPTOPP_ASSERT(((p.Squared() - p + 1) % q).IsZero());
 
 	GFP2_ONB<ModularArithmetic> gfp2(p);
 	GFP2Element three = gfp2.ConvertIn(3), t;
@@ -49,7 +50,7 @@ void XTR_FindPrimesAndGenerator(RandomNumberGenerator &rng, Integer &p, Integer 
 		if (g != three)
 			break;
 	}
-	assert(XTR_Exponentiate(g, q, p) == three);
+	CRYPTOPP_ASSERT(XTR_Exponentiate(g, q, p) == three);
 }
 
 GFP2Element XTR_Exponentiate(const GFP2Element &b, const Integer &e, const Integer &p)

@@ -27,7 +27,7 @@ public:
 	{
 		if (!blocking)
 			throw BlockingInputOnly("LineBreakParser");
-		
+
 		unsigned int i, last = 0;
 		for (i=0; i<length; i++)
 		{
@@ -262,7 +262,7 @@ protected:
 
 	static inline void Xor(SecByteBlock &z, const SecByteBlock &x, const SecByteBlock &y)
 	{
-		assert(x.size() == y.size());
+		CRYPTOPP_ASSERT(x.size() == y.size());
 		z.resize(x.size());
 		xorbuf(z, x, y, x.size());
 	}
@@ -456,7 +456,7 @@ protected:
 				{
 					Integer p, q, h, g;
 					int counter;
-					
+
 					SecByteBlock seed(SHA::DIGESTSIZE);
 					do
 					{
@@ -637,7 +637,7 @@ protected:
 			}
 			else
 			{
-				assert(m_test == "Gen");
+				CRYPTOPP_ASSERT(m_test == "Gen");
 				int modLen = atol(m_bracketString.substr(6).c_str());
 				std::string &encodedKey = m_data["PrivKey"];
 				RSA::PrivateKey priv;
@@ -1034,7 +1034,7 @@ protected:
 		}
 		else
 		{
-			assert(m_test == "KAT");
+			CRYPTOPP_ASSERT(m_test == "KAT");
 
 			SecByteBlock &input = m_data2[INPUT];
 			SecByteBlock result(input.size());
@@ -1097,7 +1097,7 @@ protected:
 
 		if (m_line.substr(0, 2) == "H>")
 		{
-			assert(m_test == "sha");
+			CRYPTOPP_ASSERT(m_test == "sha");
 			m_bracketString = m_line.substr(2, m_line.size()-4);
 			m_line = m_line.substr(0, 13) + "Hashes<H";
 			copyLine = true;

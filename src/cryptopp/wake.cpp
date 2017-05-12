@@ -7,7 +7,7 @@
 
 NAMESPACE_BEGIN(CryptoPP)
 
-#if !defined(NDEBUG) && !defined(CRYPTOPP_DOXYGEN_PROCESSING)
+#if CRYPTOPP_DEBUG && !defined(CRYPTOPP_DOXYGEN_PROCESSING)
 void WAKE_TestInstantiations()
 {
 	WAKE_OFB<>::Encryption x2;
@@ -24,7 +24,7 @@ inline word32 WAKE_Base::M(word32 x, word32 y)
 void WAKE_Base::GenKey(word32 k0, word32 k1, word32 k2, word32 k3)
 {
 	// this code is mostly copied from David Wheeler's paper "A Bulk Data Encryption Algorithm"
-	signed int x, z, p;	
+	signed int x, z, p;
 	// x and z were declared as "long" in Wheeler's paper, which is a signed type. I don't know if that was intentional, but it's too late to change it now. -- Wei 7/4/2010
 	CRYPTOPP_COMPILE_ASSERT(sizeof(x) == 4);
 	static unsigned int tt[10]= {

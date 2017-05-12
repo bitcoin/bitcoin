@@ -11,7 +11,7 @@
 
 NAMESPACE_BEGIN(CryptoPP)
 
-//! ADLER-32 checksum calculations 
+//! ADLER-32 checksum calculations
 class Adler32 : public HashTransformation
 {
 public:
@@ -20,7 +20,7 @@ public:
 	void Update(const byte *input, size_t length);
 	void TruncatedFinal(byte *hash, size_t size);
 	unsigned int DigestSize() const {return DIGESTSIZE;}
-    static const char * StaticAlgorithmName() {return "Adler32";}
+    CRYPTOPP_CONSTEXPR static const char *StaticAlgorithmName() {return "Adler32";}
     std::string AlgorithmName() const {return StaticAlgorithmName();}
 
 private:
