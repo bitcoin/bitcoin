@@ -1549,7 +1549,7 @@ string GetSyscoinTransactionDescription(const int op, const vector<vector<unsign
 		return strResponse;
 		break;
 	case OP_CERT_ACTIVATE:
-		strResponse = _("Offer Accepted");
+		strResponse = _("Certificate Activated");
 		break;
 	case OP_CERT_UPDATE:
 		strResponse = _("Certificate Updated");
