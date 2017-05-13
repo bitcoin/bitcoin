@@ -4,6 +4,7 @@
 
 #include <bench.h>
 
+#include <assert.h>
 #include <iostream>
 #include <iomanip>
 #include <sys/time.h>
