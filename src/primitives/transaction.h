@@ -236,8 +236,6 @@ public:
         return nVersion == OUTPUT_STANDARD;
     };
     
-    
-    
     const CTxOutStandard *GetStandardOutput() const
     {
         assert(nVersion == OUTPUT_STANDARD);
@@ -259,6 +257,11 @@ public:
     virtual bool GetScriptPubKey(CScript &scriptPubKey_) const
     {
         return false;
+    };
+    
+    virtual const CScript *GetPScriptPubKey() const
+    {
+        return NULL;
     };
     
     std::string ToString() const;
@@ -350,6 +353,11 @@ public:
         return true;
     };
     
+    virtual const CScript *GetPScriptPubKey() const
+    {
+        return &scriptPubKey;
+    };
+    
     
 };
 
@@ -396,6 +404,11 @@ public:
     {
         scriptPubKey_ = scriptPubKey;
         return true;
+    };
+    
+    virtual const CScript *GetPScriptPubKey() const
+    {
+        return &scriptPubKey;
     };
     
 };

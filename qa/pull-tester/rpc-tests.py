@@ -206,6 +206,13 @@ testScriptsParticl = [
     'multisig.py',
 ]
 
+testScriptsInsight = [
+    'addressindex.py',
+    'timestampindex.py',
+    'spentindex.py',
+    'txindex.py',
+]
+
 
 
 def runtests():
@@ -214,6 +221,8 @@ def runtests():
         test_list = testScripts + testScriptsExt + testScriptsParticl
     elif '-particl' in opts:
         test_list = testScriptsParticl
+    elif '-insight' in opts:
+        test_list = testScriptsInsight
     elif len(opts) == 0 or (len(opts) == 1 and "-win" in opts):
         test_list = testScripts + testScriptsParticl
     elif any(opt.startswith('-r') for opt in opts): # -rn
@@ -224,12 +233,12 @@ def runtests():
                 if opt.isdigit():
                     nR = int(opt)
         
-        pickFrom = testScripts + testScriptsExt + testScriptsParticl
+        pickFrom = testScripts + testScriptsExt + testScriptsParticl + testScriptsInsight
         for n in range(nR):
             test_list.append(pickFrom[random.randrange(len(pickFrom))])
         print("Running tests: ", test_list)
     else:
-        for t in testScripts + testScriptsExt + testScriptsParticl:
+        for t in testScripts + testScriptsExt + testScriptsParticl + testScriptsInsight:
             if t in opts or re.sub(".py$", "", t) in opts:
                 test_list.append(t)
 

@@ -1450,8 +1450,6 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
     assert(txNew.nLockTime <= (unsigned int)chainActive.Height());
     assert(txNew.nLockTime < LOCKTIME_THRESHOLD);
     
-    CAmount nFee = 0;
-    
     {
         std::set<std::pair<const CWalletTx*,unsigned int> > setCoins;
         LOCK2(cs_main, cs_wallet);
@@ -1465,7 +1463,6 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             txNew.vpout.clear();
             wtx.fFromMe = true;
             
-            bool fFirst = true;
             CAmount nValueToSelect = nValue;
             
             double dPriority = 0;
@@ -1633,7 +1630,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 {
                     r.vBlind.resize(32);
                     
-                    if (i == nLastBlindedOutput)
+                    if ((int)i == nLastBlindedOutput)
                     {
                         
                         // Last to-be-blinded value: compute from all other blinding factors.
@@ -1928,8 +1925,6 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
     assert(txNew.nLockTime <= (unsigned int)chainActive.Height());
     assert(txNew.nLockTime < LOCKTIME_THRESHOLD);
     
-    CAmount nFee = 0;
-    
     {
         std::vector<std::pair<MapRecords_t::const_iterator, unsigned int> > setCoins;
         LOCK2(cs_main, cs_wallet);
@@ -1946,7 +1941,6 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             txNew.vpout.clear();
             wtx.fFromMe = true;
             
-            bool fFirst = true;
             CAmount nValueToSelect = nValue;
             
             double dPriority = 0;
@@ -2251,9 +2245,9 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             
             if (r.nType == OUTPUT_CT)
             {
-                CTxOutCT *txout = (CTxOutCT*)txNew.vpout[r.n].get();
+                //CTxOutCT *txout = (CTxOutCT*)txNew.vpout[r.n].get();
                 
-                if (i != nChangePosInOut)
+                if ((int)i != nChangePosInOut)
                 {
                     vpBlinds.push_back(&r.vBlind[0]);
                 };

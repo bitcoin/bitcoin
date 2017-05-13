@@ -101,7 +101,7 @@ namespace boost {
 using namespace std;
 
 const char * const BITCOIN_CONF_FILENAME = "particl.conf";
-const char * const BITCOIN_PID_FILENAME = "particl.pid";
+const char * const BITCOIN_PID_FILENAME = "particld.pid";
 
 CCriticalSection cs_args;
 map<string, string> mapArgs;
