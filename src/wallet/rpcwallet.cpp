@@ -1635,9 +1635,6 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
     // Sent
     if ((!listSent.empty() || nFee != 0) && (fAllAccounts || strAccount == strSentAccount))
     {
-		// SYSCOIN
-		if(!vvchArgs.empty())
-			strResponse = GetSyscoinTransactionDescription(op, vvchArgs, wtx, "send");
         BOOST_FOREACH(const COutputEntry& s, listSent)
         {
             UniValue entry(UniValue::VOBJ);
@@ -1655,8 +1652,11 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
                 WalletTxToJSON(wtx, entry);
             entry.push_back(Pair("abandoned", wtx.isAbandoned()));
 			// SYSCOIN
-			if(!strResponse.empty())
+			if(!vvchArgs.empty() && s.vout == nOut)
+			{
+				strResponse = GetSyscoinTransactionDescription(op, vvchArgs, wtx, "send");
 				entry.push_back(Pair("systx", strResponse));
+			}
             ret.push_back(entry);
         }
     }
@@ -1664,9 +1664,6 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
     // Received
     if (listReceived.size() > 0 && wtx.GetDepthInMainChain() >= nMinDepth)
     {
-		// SYSCOIN
-		if(!vvchArgs.empty())
-			strResponse = GetSyscoinTransactionDescription(op, vvchArgs, wtx, "recv");
         BOOST_FOREACH(const COutputEntry& r, listReceived)
         {
             string account;
@@ -1699,8 +1696,11 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
                 if (fLong)
                     WalletTxToJSON(wtx, entry);
 				// SYSCOIN
-				if(!strResponse.empty())
+				if(!vvchArgs.empty() && r.vout == nOut)
+				{
+					strResponse = GetSyscoinTransactionDescription(op, vvchArgs, wtx, "recv");
 					entry.push_back(Pair("systx", strResponse));
+				}
                 ret.push_back(entry);
             }
         }
