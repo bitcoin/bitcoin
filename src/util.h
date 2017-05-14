@@ -16,6 +16,7 @@
 
 #include "compat.h"
 #include "fs.h"
+#include "sync.h"
 #include "tinyformat.h"
 #include "utiltime.h"
 
@@ -41,7 +42,6 @@ public:
     boost::signals2::signal<std::string (const char* psz)> Translate;
 };
 
-extern const std::map<std::string, std::vector<std::string> >& mapMultiArgs;
 extern bool fPrintToConsole;
 extern bool fPrintToDebugLog;
 
@@ -148,7 +148,6 @@ bool error(const char* fmt, const Args&... args)
 }
 
 void PrintExceptionContinue(const std::exception *pex, const char* pszThread);
-void ParseParameters(int argc, const char*const argv[]);
 void FileCommit(FILE *file);
 bool TruncateFile(FILE *file, unsigned int length);
 int RaiseFileDescriptorLimit(int nMinFD);
@@ -163,7 +162,6 @@ fs::path GetConfigFile(const std::string& confPath);
 fs::path GetPidFile();
 void CreatePidFile(const fs::path &path, pid_t pid);
 #endif
-void ReadConfigFile(const std::string& confPath);
 #ifdef WIN32
 fs::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
 #endif
@@ -180,6 +178,16 @@ inline bool IsSwitchChar(char c)
 #endif
 }
 
+class ArgsManager
+{
+protected:
+    CCriticalSection cs_args;
+    std::map<std::string, std::string> mapArgs;
+    std::map<std::string, std::vector<std::string> > mapMultiArgs;
+public:
+    void ParseParameters(int argc, const char*const argv[]);
+    void ReadConfigFile(const std::string& confPath);
+    std::vector<std::string> ArgsAt(const std::string& strArg);
 /**
  * Return true if the given argument has been manually set
  *
@@ -235,6 +243,16 @@ bool SoftSetBoolArg(const std::string& strArg, bool fValue);
 
 // Forces a arg setting, used only in testing
 void ForceSetArg(const std::string& strArg, const std::string& strValue);
+};
+
+extern ArgsManager argsGlobal;
+
+// wrappers using the global ArgsManager:
+bool IsArgSet(const std::string& strArg);
+std::string GetArg(const std::string& strArg, const std::string& strDefault);
+int64_t GetArg(const std::string& strArg, int64_t nDefault);
+bool GetBoolArg(const std::string& strArg, bool fDefault);
+bool SoftSetBoolArg(const std::string& strArg, bool fValue);
 
 /**
  * Format a string to be used as group of options in help messages
