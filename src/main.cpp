@@ -5811,7 +5811,7 @@ bool ProcessMessage(CNode *pfrom, string strCommand, CDataStream &vRecv, int64_t
     }
 
 
-    else if (pfrom->nVersion == 0)
+    else if (pfrom->nVersion == 0 && !pfrom->fWhitelisted)
     {
         // Must have version message before anything else (Although we may send our VERSION before
         // we receive theirs, it would not be possible to receive their VERACK before their VERSION).
@@ -7069,7 +7069,10 @@ bool ProcessMessages(CNode *pfrom)
         {
             LogPrintf("PROCESSMESSAGE: INVALID MESSAGESTART %s peer=%d ip=%s\n", SanitizeString(msg.hdr.GetCommand()),
                 pfrom->id, pfrom->addrName.c_str());
-            CNode::Ban(pfrom->addr, BanReasonNodeMisbehaving, 4 * 60 * 60); // ban for 4 hours
+            if (!pfrom->fWhitelisted)
+            {
+                CNode::Ban(pfrom->addr, BanReasonNodeMisbehaving, 4 * 60 * 60); // ban for 4 hours
+            }
             fOk = false;
             break;
         }
@@ -7302,7 +7305,7 @@ bool SendMessages(CNode *pto)
         // If not then disconnect and ban the node and a new node will automatically be selected to start the headers
         // download.
         if ((state.fSyncStarted) && (state.fSyncStartTime < GetTime() - INITIAL_HEADERS_TIMEOUT) &&
-            (!state.fFirstHeadersReceived))
+            (!state.fFirstHeadersReceived) && !pto->fWhitelisted)
         {
             pto->fDisconnect = true;
             CNode::Ban(pto->addr, BanReasonNodeMisbehaving, 4 * 60 * 60); // ban for 4 hours
