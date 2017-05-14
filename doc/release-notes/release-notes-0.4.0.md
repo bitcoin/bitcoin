@@ -12,7 +12,7 @@ and will crash on startup if the wallet is encrypted.
 Also note: bitcoin version 0.4 uses a newer version of Berkeley DB
 (bdb version 4.8) than previous versions (bdb 4.7). If you upgrade
 to version 0.4 and then revert back to an earlier version of bitcoin
-the it may be unable to start because bdb 4.7 cannot read bdb 4.8
+it may be unable to start because bdb 4.7 cannot read bdb 4.8
 "log" files.
 
 
