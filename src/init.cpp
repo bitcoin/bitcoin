@@ -1181,6 +1181,61 @@ bool AppInitSanityChecks()
     return LockDataDirectory(true);
 }
 
+static bool InitConnman(bool listen)
+{
+    // ********************************************************* Step 6a: connection manager initialization
+    assert(!g_connman);
+    g_connman = std::unique_ptr<CConnman>(new CConnman(GetRand(std::numeric_limits<uint64_t>::max()), GetRand(std::numeric_limits<uint64_t>::max())));
+    CConnman& connman = *g_connman;
+
+    if (mapMultiArgs.count("-whitelist")) {
+        BOOST_FOREACH(const std::string& net, mapMultiArgs.at("-whitelist")) {
+            CSubNet subnet;
+            LookupSubNet(net.c_str(), subnet);
+            if (!subnet.IsValid())
+                return InitError(strprintf(_("Invalid netmask specified in -whitelist: '%s'"), net));
+            connman.AddWhitelistedRange(subnet);
+        }
+    }
+
+    if (listen) {
+        bool fBound = false;
+        if (mapMultiArgs.count("-bind")) {
+            BOOST_FOREACH(const std::string& strBind, mapMultiArgs.at("-bind")) {
+                CService addrBind;
+                if (!Lookup(strBind.c_str(), addrBind, GetListenPort(), false))
+                    return InitError(ResolveErrMsg("bind", strBind));
+                fBound |= Bind(connman, addrBind, (BF_EXPLICIT | BF_REPORT_ERROR));
+            }
+        }
+        if (mapMultiArgs.count("-whitebind")) {
+            BOOST_FOREACH(const std::string& strBind, mapMultiArgs.at("-whitebind")) {
+                CService addrBind;
+                if (!Lookup(strBind.c_str(), addrBind, 0, false))
+                    return InitError(ResolveErrMsg("whitebind", strBind));
+                if (addrBind.GetPort() == 0)
+                    return InitError(strprintf(_("Need to specify a port with -whitebind: '%s'"), strBind));
+                fBound |= Bind(connman, addrBind, (BF_EXPLICIT | BF_REPORT_ERROR | BF_WHITELIST));
+            }
+        }
+        if (!mapMultiArgs.count("-bind") && !mapMultiArgs.count("-whitebind")) {
+            struct in_addr inaddr_any;
+            inaddr_any.s_addr = INADDR_ANY;
+            fBound |= Bind(connman, CService(in6addr_any, GetListenPort()), BF_NONE);
+            fBound |= Bind(connman, CService(inaddr_any, GetListenPort()), !fBound ? BF_REPORT_ERROR : BF_NONE);
+        }
+        if (!fBound)
+            return InitError(_("Failed to listen on any port. Use -listen=0 if you want this."));
+    }
+
+    if (mapMultiArgs.count("-seednode")) {
+        BOOST_FOREACH(const std::string& strDest, mapMultiArgs.at("-seednode"))
+            connman.AddOneShot(strDest);
+    }
+
+    return true;
+}
+
 bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 {
     const CChainParams& chainparams = Params();
@@ -1244,16 +1299,19 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         return false;
 #endif
     // ********************************************************* Step 6: network initialization
+    // see Step 2: parameter interactions for more information about these
+    fListen = GetBoolArg("-listen", DEFAULT_LISTEN);
+    fDiscover = GetBoolArg("-discover", true);
+    fRelayTxes = !GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY);
+
     // Note that we absolutely cannot open any actual connections
     // until the very end ("start node") as the UTXO/block state
     // is not yet setup and may end up being set up twice if we
     // need to reindex later.
+    if(!InitConnman(fListen))
+        return false;
 
-    assert(!g_connman);
-    g_connman = std::unique_ptr<CConnman>(new CConnman(GetRand(std::numeric_limits<uint64_t>::max()), GetRand(std::numeric_limits<uint64_t>::max())));
-    CConnman& connman = *g_connman;
-
-    peerLogic.reset(new PeerLogicValidation(&connman));
+    peerLogic.reset(new PeerLogicValidation(g_connman.get()));
     RegisterValidationInterface(peerLogic.get());
     RegisterNodeSignals(GetNodeSignals());
 
@@ -1285,16 +1343,6 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
             enum Network net = (enum Network)n;
             if (!nets.count(net))
                 SetLimited(net);
-        }
-    }
-
-    if (mapMultiArgs.count("-whitelist")) {
-        BOOST_FOREACH(const std::string& net, mapMultiArgs.at("-whitelist")) {
-            CSubNet subnet;
-            LookupSubNet(net.c_str(), subnet);
-            if (!subnet.IsValid())
-                return InitError(strprintf(_("Invalid netmask specified in -whitelist: '%s'"), net));
-            connman.AddWhitelistedRange(subnet);
         }
     }
 
@@ -1343,41 +1391,6 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         }
     }
 
-    // see Step 2: parameter interactions for more information about these
-    fListen = GetBoolArg("-listen", DEFAULT_LISTEN);
-    fDiscover = GetBoolArg("-discover", true);
-    fRelayTxes = !GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY);
-
-    if (fListen) {
-        bool fBound = false;
-        if (mapMultiArgs.count("-bind")) {
-            BOOST_FOREACH(const std::string& strBind, mapMultiArgs.at("-bind")) {
-                CService addrBind;
-                if (!Lookup(strBind.c_str(), addrBind, GetListenPort(), false))
-                    return InitError(ResolveErrMsg("bind", strBind));
-                fBound |= Bind(connman, addrBind, (BF_EXPLICIT | BF_REPORT_ERROR));
-            }
-        }
-        if (mapMultiArgs.count("-whitebind")) {
-            BOOST_FOREACH(const std::string& strBind, mapMultiArgs.at("-whitebind")) {
-                CService addrBind;
-                if (!Lookup(strBind.c_str(), addrBind, 0, false))
-                    return InitError(ResolveErrMsg("whitebind", strBind));
-                if (addrBind.GetPort() == 0)
-                    return InitError(strprintf(_("Need to specify a port with -whitebind: '%s'"), strBind));
-                fBound |= Bind(connman, addrBind, (BF_EXPLICIT | BF_REPORT_ERROR | BF_WHITELIST));
-            }
-        }
-        if (!mapMultiArgs.count("-bind") && !mapMultiArgs.count("-whitebind")) {
-            struct in_addr inaddr_any;
-            inaddr_any.s_addr = INADDR_ANY;
-            fBound |= Bind(connman, CService(in6addr_any, GetListenPort()), BF_NONE);
-            fBound |= Bind(connman, CService(inaddr_any, GetListenPort()), !fBound ? BF_REPORT_ERROR : BF_NONE);
-        }
-        if (!fBound)
-            return InitError(_("Failed to listen on any port. Use -listen=0 if you want this."));
-    }
-
     if (mapMultiArgs.count("-externalip")) {
         BOOST_FOREACH(const std::string& strAddr, mapMultiArgs.at("-externalip")) {
             CService addrLocal;
@@ -1386,11 +1399,6 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
             else
                 return InitError(ResolveErrMsg("externalip", strAddr));
         }
-    }
-
-    if (mapMultiArgs.count("-seednode")) {
-        BOOST_FOREACH(const std::string& strDest, mapMultiArgs.at("-seednode"))
-            connman.AddOneShot(strDest);
     }
 
 #if ENABLE_ZMQ
@@ -1661,7 +1669,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     connOptions.nMaxOutboundTimeframe = nMaxOutboundTimeframe;
     connOptions.nMaxOutboundLimit = nMaxOutboundLimit;
 
-    if (!connman.Start(scheduler, strNodeError, connOptions))
+    if (!g_connman->Start(scheduler, strNodeError, connOptions))
         return InitError(strNodeError);
 
     // ********************************************************* Step 12: finished
