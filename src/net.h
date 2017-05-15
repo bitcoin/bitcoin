@@ -53,7 +53,7 @@ static const unsigned int MAX_PROTOCOL_MESSAGE_LENGTH = 2 * 1024 * 1024;
 static const bool DEFAULT_LISTEN = true;
 /** -upnp default */
 #ifdef USE_UPNP
-static const bool DEFAULT_UPNP = USE_UPNP;
+static const bool DEFAULT_UPNP = false;
 #else
 static const bool DEFAULT_UPNP = false;
 #endif
