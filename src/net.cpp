@@ -1832,6 +1832,14 @@ void ThreadOpenConnections()
                     nDisconnects++;
                 }
             }
+
+            // In the event that outbound nodes restart or drop off the network over time we need to 
+            // replenish the number of disconnects allowed once per day.
+            if (GetTime() - nStart > 86400)
+            {
+                nDisconnects = 0;
+                nStart = GetTime();
+            }
         }
 
         // If disconnected then wait for disconnection completion
