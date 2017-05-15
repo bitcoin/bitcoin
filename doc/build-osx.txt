@@ -1,136 +1,46 @@
 Mac OS X Build Instructions and Notes
-====================================
-This guide will show you how to build 42d(headless client) for OSX.
+=====================================
 
-Notes
------
+Recommended OS X 10.10 (or higher, 10.11.6 - El Capitan was used in this manual). All of the commands should be executed in a Terminal application. The built-in one is located in /Applications/Utilities. 
 
-* Tested on OS X 10.7 through 10.10 on 64-bit Intel processors only.
+1. Install Xcode (7.3.1 for El Capital) and accept the license agreement:
 
-* All of the commands should be executed in a Terminal application. The
-built-in one is located in `/Applications/Utilities`.
+https://developer.apple.com/xcode/
 
-Preparation
------------
+Install Xcode command line tools:
 
-You need to install XCode with all the options checked so that the compiler
-and everything is available in /usr not just /Developer. XCode should be
-available on your OS X installation media, but if not, you can get the
-current version from https://developer.apple.com/xcode/. If you install
-Xcode 4.3 or later, you'll need to install its command line tools. This can
-be done in `Xcode > Preferences > Downloads > Components` and generally must
-be re-done or updated every time Xcode is updated.
+xcode-select --install
 
-There's also an assumption that you already have `git` installed. If
-not, it's the path of least resistance to install [Github for Mac](https://mac.github.com/)
-(OS X 10.7+) or
-[Git for OS X](https://code.google.com/p/git-osx-installer/). It is also
-available via Homebrew.
+2. Install MacPorts with dependencies:
 
-You will also need to install [Homebrew](http://brew.sh) in order to install library
-dependencies.
+https://distfiles.macports.org/MacPorts/MacPorts-2.3.5-10.11-ElCapitan.pkg
 
-The installation of the actual dependencies is covered in the Instructions
-sections below.
+sudo port install libtool boost db60 openssl qrencode
 
-Instructions: Homebrew
-----------------------
+nano ~/.profile
+Add these lines:
+export PATH=$PATH:~/opt/local/lib/db6.0
+export PATH=$PATH:~/opt/local/lib/db60/include
 
-#### Install dependencies using Homebrew
+Ctrl+O, Enter, Ctrl+X
 
-        brew install autoconf automake libtool boost openssl pkg-config protobuf qt qrencode
+3. Install Homebrew(http://brew.sh) with dependencies.
 
-#### Installing berkeley-db4 using Homebrew
+/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 
-The homebrew package for berkeley-db4 has been broken for some time.  It will install without Java though.
+brew install autoconf automake pkg-config qt5
 
-Running this command takes you into brew's interactive mode, which allows you to configure, make, and install by hand:
-```
-$ brew install https://raw.github.com/mxcl/homebrew/master/Library/Formula/berkeley-db4.rb -–without-java 
-```
+brew link --force qt5
 
-The rest of these commands are run inside brew interactive mode:
-```
-/private/tmp/berkeley-db4-UGpd0O/db-4.8.30 $ cd ..
-/private/tmp/berkeley-db4-UGpd0O $ db-4.8.30/dist/configure --prefix=/usr/local/Cellar/berkeley-db4/4.8.30 --mandir=/usr/local/Cellar/berkeley-db4/4.8.30/share/man --enable-cxx
-/private/tmp/berkeley-db4-UGpd0O $ make
-/private/tmp/berkeley-db4-UGpd0O $ make install
-/private/tmp/berkeley-db4-UGpd0O $ exit
-```
+4. Clone the github tree and build 42-Qt application.
 
-After exiting, you'll get a warning that the install is keg-only, which means it wasn't symlinked to `/usr/local`.  You don't need it to link it to build 42, but if you want to, here's how:
+git clone https://github.com/42-coin/42.git
 
-    $ brew link --force berkeley-db4
+cd 42
+qmake
+make
 
+5. Create the .dmg disk image:
 
-### Building `42d`
-
-1. Clone the github tree to get the source code and go into the directory.
-
-        git clone https://github.com/42-coin/42.git
-        cd 42
-
-2. Build 42-Qt application:
-        qmake
-        make
-
-3. Build bitcoind:
-        cd src
-        make -f makefile.osx 42d
-
-Use Qt Creator as IDE
-------------------------
-You can use Qt Creator as IDE, for debugging and for manipulating forms, etc.
-Download Qt Creator from http://www.qt.io/download/. Download the "community edition" and only install Qt Creator (uncheck the rest during the installation process).
-
-1. Make sure you installed everything through homebrew mentioned above 
-2. In Qt Creator do "File" -> "Open Project"
-3. Select 42-qt.pro as project file.
-4. In the "Projects" tab select "Manage Kits..."
-5. Select the default "Desktop" kit and select "Clang (x86 64bit in /usr/bin)" as compiler
-6. Select LLDB as debugger (you might need to set the path to your installtion)
-7. Start debugging with Qt Creator
-
-Creating a release build
-------------------------
-You can ignore this section if you are building `42d` for your own use.
-
-42d binary isn't included in the 42-Qt.app bundle.
-
-If you are building `42d` or `42-Qt` for others, your build machine should be set up
-as follows for maximum compatibility:
-
-All dependencies should be compiled with these flags:
-
- -mmacosx-version-min=10.7
- -arch x86_64
- -isysroot $(xcode-select --print-path)/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk
-
-Once dependencies are compiled, you can create the .dmg disk image:
-
+sudo easy_install appscript
 ./contrib/macdeploy/macdeployqtplus 42-Qt.app -dmg -fancy ./contrib/macdeploy/fancy.plist
-
-Running
--------
-
-It's now available at `./42d`, provided that you are still in the `src`
-directory. We have to first create the RPC configuration file, though.
-
-Run `./42d` to get the filename where it should be put, or just try these
-commands:
-
-    echo -e "rpcuser=42rpc\nrpcpassword=$(xxd -l 16 -p /dev/urandom)" > "/Users/${USER}/Library/Application Support/42/42.conf"
-    chmod 600 "/Users/${USER}/Library/Application Support/42/42.conf"
-
-The next time you run it, it will start downloading the blockchain, but it won't
-output anything while it's doing this. This process may take several hours;
-you can monitor its process by looking at the debug.log file, like this:
-
-    tail -f $HOME/Library/Application\ Support/42/debug.log
-
-Other commands:
--------
-
-    ./42d -daemon # to start the bitcoin daemon.
-    ./42d --help  # for a list of command-line options.
-    ./42d help    # When the daemon is running, to get a list of RPC commands

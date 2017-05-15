@@ -1,24 +1,28 @@
 ﻿Данный способ должен подходить для любой Unix системы: Linux, FreeBSD, MacOS X
-При написании этого руководства использовался Linux Mint 17.1 ( http://linuxmint.com/ )
+Данное руководство писалось на Linux Mint 17.1 ( http://linuxmint.com/ ) и проверялось на Ubuntu 14.04 (https://www.ubuntu.com/)
+
 1) Подготовка системы для кросскомпиляции.
 
- sudo apt-get install git bison cmake flex g++ gperf ruby scons libghc-zlib-dev  libghc-zlib-bindings-dev
+sudo apt-get install git bison cmake flex g++ gperf ruby scons libghc-zlib-dev  libghc-zlib-bindings-dev
 
 2) Установка MXE и зависимостей
- cd /home/<ваше имя>/
- git clone https://github.com/mxe/mxe.git
+
+cd /home/<ваше имя>/
+git clone https://github.com/mxe/mxe.git
  
+sudo apt-get install autoconf automake autopoint libtool intltool libtoolize p7zip-full libgtk2.0-dev
 
 2.1) gcc
- cd /home/<ваше имя>/mxe
- make gcc zlib libpng
+
+cd /home/<ваше имя>/mxe
+make gcc zlib libpng
 
 Проверка того, что установка gcc прошла успешно:
 В папке /home/<ваше имя>/mxe/usr/bin должен появиться файл i686-w64-mingw32.static-gcc и i686-w64-mingw32.static-g++
-И при запуске ./i686-w64-mingw32.static-gcc -v должно выдаваться
+И при запуске /home/<ваше имя>/mxe/usr/bin/i686-w64-mingw32.static-gcc -v должно выдаваться
 ......
 Thread model: win32
-gcc version 4.9.3 (GCC)
+gcc version 5.4.0 (GCC)
 
 В папке /home/<ваше имя>/mxe/usr/i686-w64-mingw32.static/lib должны быть файлы:
 libz.a
@@ -26,8 +30,8 @@ libpng.a
 
 2.2) Openssl
  
- cd /home/<ваше имя>/mxe
- make openssl
+cd /home/<ваше имя>/mxe
+make openssl
 
 Проверка что установка Openssl прошла успешно:
 В папке /home/<ваше имя>/mxe/usr/i686-w64-mingw32.static/lib должны появиться два файла
@@ -37,13 +41,13 @@ libpng.a
 
 2.3) Boost
 
- cd /home/<ваше имя>/mxe
- make boost
+cd /home/<ваше имя>/mxe
+make boost
 
 Проверка что установка Boost прошла успешно:
 В /home/<ваше имя>/mxe/usr/i686-w64-mingw32.static/lib папке должны появиться файлы:
 -libboost_имябиблиотеки_mt.a (libboost_atomic-mt.a и другие подобные файлы)
--libboost_имябиблиотеки_mt-d.a (libboost_atomic-mt-d.a и другие подобные файлы)
+-libboost_имябиблиотеки_mt-d.a (libboost_atomic-mt-d.a и другие подобные файлы)                   -!!!!!!!!!!!!нет
 
 В папке /home/<ваше имя>/mxe/usr/i686-w64-mingw32.static/include должна появиться папка boost
 
@@ -56,11 +60,15 @@ libpng.a
 на
 #include <winioctl.h>
 -Сохраните файл
--Откройте терминал
- cd /home/<ваше имя>/db-6.0.20/build_unix
- export PATH=/home/<ваше имя>/mxe/usr/bin:$PATH
- ../dist/configure --host=i686-w64-mingw32.static --enable-mingw --enable-cxx --disable-shared --disable-replication
- make
+-Откройте терминал:
+
+cd /home/<ваше имя>/db-6.0.20/dist
+chmod +x configure
+cd
+cd /home/<ваше имя>/db-6.0.20/build_unix
+export PATH=/home/<ваше имя>/mxe/usr/bin:$PATH
+../dist/configure --host=i686-w64-mingw32.static --enable-mingw --enable-cxx --disable-shared --disable-replication
+make
 
 Проверка, что установка Berkeley DB прошла успешно:
 В папке /home/<ваше имя>/db-6.0.20/build_unix должны появиться файлы:
@@ -72,10 +80,11 @@ libdb_cxx.a
 -Распакуйте в домашнюю папку
 -Откройте терминал:
 
- export PATH=/home/<ваше имя>/mxe/usr/bin:$PATH
- cd /home/<ваше имя>/qrencode-3.4.4
- ./configure --host=i686-w64-mingw32.static --enable-static --disable-shared --without-tools
- make
+export PATH=/home/<ваше имя>/mxe/usr/bin:$PATH
+cd /home/<ваше имя>/qrencode-3.4.4
+chmod +x configure
+./configure --host=i686-w64-mingw32.static --enable-static --disable-shared --without-tools
+make
 
 Проверка что qrencode успешно собралась:
 в папке /home/<ваше имя>/qrencode-3.4.4/.libs должен быть файл:
@@ -84,51 +93,52 @@ libqrencode.a
 2.6 Qt 5 и Qt 4
 
 Qt 4
--Откройте терминал
+-Откройте терминал:
 
- cd /home/<ваше имя>/mxe
- make qt
+cd /home/<ваше имя>/mxe
+make qt
 
 Проверка что Qt4 собрался правильно:
--Откройте терминал
--Введите следующие команды
- export PATH=/home/<ваше имя>/mxe/usr/bin:$PATH
- i686-w64-mingw32.static-qmake-qt4 -v
+-Откройте терминал:
+
+export PATH=/home/<ваше имя>/mxe/usr/bin:$PATH
+i686-w64-mingw32.static-qmake-qt4 -v
 
 -Должно появиться в ответ
 QMake version 2.01a
 Using Qt version 4.8.7 in /home/<ваше имя>/mxe/usr/i686-w64-mingw32.static/qt/lib
 
 Qt 5
--Откройте терминал
+-Откройте терминал:
 
- export PATH=/home/<ваше имя>/mxe/usr/bin:$PATH
- cd /home/<ваше имя>/mxe
- make qtbase qttools qttranslations
+export PATH=/home/<ваше имя>/mxe/usr/bin:$PATH
+cd /home/<ваше имя>/mxe
+make qtbase qttools qttranslations
 
 Проверка что Qt5 собрался правильно:
--Откройте терминал
--Введите следующие команды
- export PATH=/home/<ваше имя>/mxe/usr/bin:$PATH
- i686-w64-mingw32.static-qmake-qt5 -v
+-Откройте терминал:
+
+export PATH=/home/<ваше имя>/mxe/usr/bin:$PATH
+i686-w64-mingw32.static-qmake-qt5 -v
 
 -Должно появиться в ответ
-QMake version 3.0
-Using Qt version 5.5.1 in /home/<ваше имя>/mxe/usr/i686-w64-mingw32.static/qt5/lib
+QMake version 3.1
+Using Qt version 5.8.0 in /home/<ваше имя>/mxe/usr/i686-w64-mingw32.static/qt5/lib
 
 3. Компиляция
 
 3.1 Скачиваем исходники
 -Перейдите в домашнюю папку
--Откройте терминал
+-Откройте терминал:
 
- git clone https://github.com/42-coin/42.git
+git clone https://github.com/42-coin/42.git
 
 3.2 Собираем 42d 
--Откройте файл makefile.mingw в текстовом редакторе.(При написании инструкции использовался Pluma 1.8.1)
--Вставьте 
+-Откройте файл makefile.mingw в текстовом редакторе (например, Pluma, gedit)
+-Замените CC=gcc на 
 CC=$(CROSS)gcc
 CXX=$(CROSS)g++
+
 -Добавьте  строчку USE_ASM:=1
 -Поменяйте текущие INCLUDEPATHS, LIBPATHS, LIBS на:
 
@@ -179,7 +189,7 @@ CXX=$(CROSS)g++
 Сохраните файл
 
 Снова возвращаемся в файл makefile.mingw, измените 
-cd leveldb; make; cd ..
+cd leveldb;TARGET_OS=NATIVE_WINDOWS make libleveldb.a libmemenv.a; cd ..
 на 
 cd leveldb; TARGET_OS=NATIVE_WINDOWS make CROSS=i686-w64-mingw32.static- libleveldb.a libmemenv.a; cd ..
 
@@ -200,28 +210,26 @@ clean:
 
 -Сохраните измененный файл makefile.mingw
 
--Откройте терминал
+-Откройте терминал:
+
 cd /home/<ваше имя>/42/src
 export PATH=/home/<ваше имя>/mxe/usr/bin:$PATH
 make -j n CROSS=i686-w64-mingw32.static- -f makefile.mingw (вместо n количество ядер вашего процессора, которые вы хотите выделить под сборку)
 strip 42d.exe
 
-
-Во время линковки будут выдаваться подобные сообщения:
-libboost_thread_win32-mt.a(thread.o): duplicate section `.rdata$_ZTVN5boost16exception_detail10clone_implINS0_19error_info_injectorINS_9gregorian9bad_monthEEEEE[__ZTVN5boost16exception_detail10clone_implINS0_19error_info_injectorINS_9gregorian9bad_monthEEEEE]' has different size
-Игнорируйте их. На работоспособность программы это никак не влияет
-
+Если всё сделано правильно, то файл 42d.exe будет находится в папке /home/<ваше имя>/42/src.
 
 3.3 Собираем 42 QT
 
 Внимание: Если вы хотите собирать 42 Qt с LevelDB, но пропустили шаг со сборкой 42d.exe, то 
 -Измените Makefile в папке leveldb также как в пункте 3.2
--Откройте терминал и выполните следующие команды:
+-Откройте терминал:
+
 export PATH=/home/<ваше имя>/mxe/usr/bin:$PATH
 cd /home/<ваше имя>/42/src/leveldb
 TARGET_OS=NATIVE_WINDOWS make CROSS=i686-w64-mingw32.static- libleveldb.a libmemenv.a
 
--Откройте файл /home/<ваше имя>/42/42-qt.pro в текстовом редакторе(при написании инструкции использовался Pluma 1.8.1)
+-Откройте файл /home/<ваше имя>/42/42-qt.pro в текстовом редакторе (например, Pluma, gedit)
 -Ниже 
 # Dependency library locations can be customized with:
 #    BOOST_INCLUDE_PATH, BOOST_LIB_PATH, BDB_INCLUDE_PATH,
@@ -247,7 +255,7 @@ LIBS += -lshlwapi
 Если в файле нет такой строчки CONFIG += static , то добавьте её.
 
 Измените 
-win32:QMAKE_LFLAGS........................
+win32:QMAKE_LFLAGS *= -Wl,--dynamicbase -Wl,--nxcompat
 на 
 win32:QMAKE_LFLAGS *= -Wl,--large-address-aware -static 
 
@@ -257,7 +265,7 @@ win32:QMAKE_LRELEASE = $$[QT_INSTALL_BINS]\\lrelease.exe
 win32:QMAKE_LRELEASE = $$[QT_INSTALL_BINS]/lrelease
 
 -Сохраните измененный файл 42-qt.pro
--Откройте терминал и выполните следующие команды
+-Откройте терминал и выполните следующие команды:
 
 Qt4 + транзакционный индекс LevelDB
 
@@ -287,11 +295,7 @@ cd /home/<ваше имя>/42
 i686-w64-mingw32.static-qmake-qt5 "USE_IPV6=1" "USE_ASM=1" 42-qt.pro
 make -j n -f Makefile.Release  (вместо n количество ядер вашего процессора, которые вы хотите выделить под сборку)
 
-
-Если всё сделано правильно, то файл 42-qt.exe будет находится в папке /home/<ваше имя>/42/release
-Во время линковки будут выдаваться подобные сообщения:
-libboost_thread_win32-mt.a(thread.o): duplicate section `.rdata$_ZTVN5boost16exception_detail10clone_implINS0_19error_info_injectorINS_9gregorian9bad_monthEEEEE[__ZTVN5boost16exception_detail10clone_implINS0_19error_info_injectorINS_9gregorian9bad_monthEEEEE]' has different size
-Игнорируйте их. На работоспособность программы это никак не влияет 
+Если всё сделано правильно, то файл 42-qt.exe будет находится в папке /home/<ваше имя>/42/release.
 
 Если вы хотите уменьшить размер бинарных файлов, то
 1) Перейдите на сайт http://upx.sourceforge.net/#downloadupx
