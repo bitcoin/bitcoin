@@ -623,8 +623,11 @@ inline void UnserializeTransaction(TxType& tx, Stream& s) {
             s >> *tx.vpout[k];
         }
         
-        for (auto &txin : tx.vin)
-            s >> txin.scriptWitness.stack;
+        if (fAllowWitness)
+        {
+            for (auto &txin : tx.vin)
+                s >> txin.scriptWitness.stack;
+        };
         return;
     };
     
@@ -690,8 +693,11 @@ inline void SerializeTransaction(const TxType& tx, Stream& s) {
             s << *tx.vpout[k];
         };
         
-        for (auto &txin : tx.vin)
-            s << txin.scriptWitness.stack;
+        if (fAllowWitness)
+        {
+            for (auto &txin : tx.vin)
+                s << txin.scriptWitness.stack;
+        };
         return;
     };
     

@@ -1196,7 +1196,6 @@ void CWallet::MarkConflicted(const uint256& hashBlock, const uint256& hashTx)
 void CWallet::SyncTransaction(const CTransaction& tx, const CBlockIndex *pindex, int posInBlock)
 {
     LOCK2(cs_main, cs_wallet);
-    
 
     if (!AddToWalletIfInvolvingMe(tx, pindex, posInBlock, true))
         return; // Not one of ours
@@ -2054,7 +2053,6 @@ CAmount CWallet::GetBalance() const
             const CWalletTx* pcoin = &(*it).second;
             if (pcoin->IsTrusted())
                 nTotal += pcoin->GetAvailableCredit();
-            
         }
     }
     return nTotal;

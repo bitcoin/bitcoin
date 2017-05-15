@@ -99,7 +99,7 @@ class BlindTest(ParticlTestFramework):
         print("2 listtransactions ", json.dumps(ro, indent=4, default=self.jsonDecimal))
         
         
-        
+        # TODO: Depending on the random split there may not be enough funds in the unspent output here 
         sxAddrTo2_2 = nodes[2].getnewextaddress();
         txnHash4 = nodes[1].sendblindtopart(sxAddrTo2_1, 0.5, '', '', False, 'node1 -> node2 b->p')
         #txnHash4 = nodes[1].sendblindtopart(sxAddrTo2_2, 0.5, '', '', False, 'node1 -> node2 b->p')
@@ -137,7 +137,7 @@ class BlindTest(ParticlTestFramework):
         
         ro = nodes[0].getwalletinfo()
         print("0 getwalletinfo " + json.dumps(ro, indent=4, default=self.jsonDecimal))
-        assert(isclose(ro['total_balance'], 99996.60048194))
+        assert(isclose(ro['total_balance'], 99996.60064394))
         
         
         

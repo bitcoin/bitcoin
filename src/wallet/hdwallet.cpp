@@ -1105,12 +1105,6 @@ CAmount CHDWallet::GetStaked()
     {
         CWalletTx *pcoin = &(*it).second;
         
-        if (pcoin->IsCoinStake())
-        {
-            
-            
-        };
-        
         if (pcoin->IsCoinStake()
             && pcoin->GetDepthInMainChainCached() > 0 // checks for hashunset
             && pcoin->GetBlocksToMaturity() > 0)
@@ -4788,16 +4782,7 @@ bool CHDWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalle
     CMutableTransaction txNew;
     txNew.nVersion = PARTICL_TXN_VERSION;
     txNew.vout.clear();
-    
-    // Discourage fee sniping. See CWallet::CreateTransaction
-    txNew.nLockTime = chainActive.Height();
-    
-    // 1/10 chance of random time further back to increase privacy
-    if (GetRandInt(10) == 0)
-        txNew.nLockTime = std::max(0, (int)txNew.nLockTime - GetRandInt(100));
-    
-    assert(txNew.nLockTime <= (unsigned int)chainActive.Height());
-    assert(txNew.nLockTime < LOCKTIME_THRESHOLD);
+    txNew.nLockTime = 0;
     
     {
         std::set<std::pair<const CWalletTx*,unsigned int> > setCoins;
@@ -7021,7 +7006,7 @@ bool CHDWallet::CreateCoinStake(unsigned int nBits, int64_t nTime, int nBlockHei
 
     CAmount nCredit = 0;
     CScript scriptPubKeyKernel;
-    
+
     std::set<std::pair<const CWalletTx*,unsigned int> >::iterator it = setCoins.begin();
 
     for (; it != setCoins.end(); ++it)
@@ -7029,7 +7014,6 @@ bool CHDWallet::CreateCoinStake(unsigned int nBits, int64_t nTime, int nBlockHei
         auto pcoin = *it;
         if (ThreadStakeMinerStopped()) // interruption_point
             return false;
-        
 
         COutPoint prevoutStake = COutPoint(pcoin.first->GetHash(), pcoin.second);
 
@@ -7102,7 +7086,6 @@ bool CHDWallet::CreateCoinStake(unsigned int nBits, int64_t nTime, int nBlockHei
             out1->scriptPubKey = scriptPubKeyKernel;
             txNew.vpout.push_back(out1);
             
-            
             LogPrint("pos", "%s: Added kernel.\n", __func__);
             
             setCoins.erase(it);
@@ -7110,12 +7093,10 @@ bool CHDWallet::CreateCoinStake(unsigned int nBits, int64_t nTime, int nBlockHei
         };
     };
     
-    
     if (nCredit == 0 || nCredit > nBalance - nReserveBalance)
     {
         return false;
     };
-    
     
     const size_t nMaxStakeCombine = 3; // TODO: make option
     size_t nStakesCombined = 0;
@@ -7148,11 +7129,11 @@ bool CHDWallet::CreateCoinStake(unsigned int nBits, int64_t nTime, int nBlockHei
         // Stop adding more inputs if already too many inputs
         if (txNew.vin.size() >= 100)
             break;
-    
+        
         // Stop adding more inputs if value is already pretty significant
         if (nCredit >= Params().GetStakeCombineThreshold())
             break;
-    
+        
         // Stop adding inputs if reached reserve limit
         if (nCredit + prevOut->nValue > nBalance - nReserveBalance)
             break;
@@ -7169,7 +7150,6 @@ bool CHDWallet::CreateCoinStake(unsigned int nBits, int64_t nTime, int nBlockHei
         nStakesCombined++;
         setCoins.erase(itc);
     };
-    
     
     CAmount nReward = Params().GetProofOfStakeReward(pindexPrev, nFees);
     if (nReward <= 0)

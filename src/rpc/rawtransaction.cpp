@@ -62,7 +62,6 @@ void ScriptPubKeyToJSON(const CScript& scriptPubKey, UniValue& out, bool fInclud
 void OutputToJSON(uint256 &txid, int i,
     const CTxOutBase *baseOut, UniValue &entry)
 {
-    
     bool fCanSpend = false;
     switch (baseOut->GetType())
     {
@@ -79,14 +78,29 @@ void OutputToJSON(uint256 &txid, int i,
             }
             break;
         case OUTPUT_DATA:
+            {
+            CTxOutData *s = (CTxOutData*) baseOut;
             entry.push_back(Pair("type", "data"));
+            entry.push_back(Pair("data_hex", HexStr(s->vData.begin(), s->vData.end())));
+            }
             break;
         case OUTPUT_CT:
+            {
             fCanSpend = true;
+            CTxOutCT *s = (CTxOutCT*) baseOut;
             entry.push_back(Pair("type", "blind"));
+            entry.push_back(Pair("valueCommitment", HexStr(&s->commitment.data[0], &s->commitment.data[0]+33)));
+            UniValue o(UniValue::VOBJ);
+            ScriptPubKeyToJSON(s->scriptPubKey, o, true);
+            entry.push_back(Pair("scriptPubKey", o));
+            entry.push_back(Pair("data_hex", HexStr(s->vData.begin(), s->vData.end())));
+            entry.push_back(Pair("rangeproof", HexStr(s->vRangeproof.begin(), s->vRangeproof.end())));
+            }
             break;
         case OUTPUT_RINGCT:
+            {
             entry.push_back(Pair("type", "anon"));
+            }
             break;
         default:
             entry.push_back(Pair("type", "unknown"));

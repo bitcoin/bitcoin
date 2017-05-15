@@ -92,6 +92,7 @@ UniValue blockheaderToJSON(const CBlockIndex* blockindex)
     result.push_back(Pair("version", blockindex->nVersion));
     result.push_back(Pair("versionHex", strprintf("%08x", blockindex->nVersion)));
     result.push_back(Pair("merkleroot", blockindex->hashMerkleRoot.GetHex()));
+    result.push_back(Pair("witnessmerkleroot", blockindex->hashWitnessMerkleRoot.GetHex()));
     result.push_back(Pair("time", (int64_t)blockindex->nTime));
     result.push_back(Pair("mediantime", (int64_t)blockindex->GetMedianTimePast()));
     result.push_back(Pair("nonce", (uint64_t)blockindex->nNonce));
@@ -123,6 +124,7 @@ UniValue blockToDeltasJSON(const CBlock& block, const CBlockIndex* blockindex)
     result.push_back(Pair("height", blockindex->nHeight));
     result.push_back(Pair("version", block.nVersion));
     result.push_back(Pair("merkleroot", block.hashMerkleRoot.GetHex()));
+    result.push_back(Pair("witnessmerkleroot", block.hashWitnessMerkleRoot.GetHex()));
 
     UniValue deltas(UniValue::VARR);
 
@@ -229,6 +231,7 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool tx
     result.push_back(Pair("version", block.nVersion));
     result.push_back(Pair("versionHex", strprintf("%08x", block.nVersion)));
     result.push_back(Pair("merkleroot", block.hashMerkleRoot.GetHex()));
+    result.push_back(Pair("witnessmerkleroot", block.hashWitnessMerkleRoot.GetHex()));
     UniValue txs(UniValue::VARR);
     for(const auto& tx : block.vtx)
     {
@@ -260,7 +263,7 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool tx
 UniValue getblockdeltas(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
-        throw runtime_error("");
+        throw runtime_error("getblockdeltas <blockhash>\n");
 
     std::string strHash = request.params[0].get_str();
     uint256 hash(uint256S(strHash));
@@ -305,7 +308,6 @@ UniValue getblockhashes(const JSONRPCRequest& request)
             "  }\n"
             "]\n"
             "\nExamples:\n"
-            + HelpExampleCli("getblockhashes", "1231614698 1231024505")
             + HelpExampleRpc("getblockhashes", "1231614698, 1231024505")
             + HelpExampleCli("getblockhashes", "1231614698 1231024505 '{\"noOrphans\":false, \"logicalTimes\":true}'")
             );
@@ -360,7 +362,7 @@ UniValue getblockcount(const JSONRPCRequest& request)
             "getblockcount\n"
             "\nReturns the number of blocks in the longest blockchain.\n"
             "\nResult:\n"
-            "n    (numeric) The current block count\n"
+            "\n    (numeric) The current block count\n"
             "\nExamples:\n"
             + HelpExampleCli("getblockcount", "")
             + HelpExampleRpc("getblockcount", "")
@@ -854,6 +856,7 @@ UniValue getblockheader(const JSONRPCRequest& request)
             "  \"version\" : n,         (numeric) The block version\n"
             "  \"versionHex\" : \"00000000\", (string) The block version formatted in hexadecimal\n"
             "  \"merkleroot\" : \"xxxx\", (string) The merkle root\n"
+            "  \"witnessmerkleroot\" : \"xxxx\", (string) The witness merkle root\n"
             "  \"time\" : ttt,          (numeric) The block time in seconds since epoch (Jan 1 1970 GMT)\n"
             "  \"mediantime\" : ttt,    (numeric) The median block time in seconds since epoch (Jan 1 1970 GMT)\n"
             "  \"nonce\" : n,           (numeric) The nonce\n"
@@ -916,6 +919,7 @@ UniValue getblock(const JSONRPCRequest& request)
             "  \"version\" : n,         (numeric) The block version\n"
             "  \"versionHex\" : \"00000000\", (string) The block version formatted in hexadecimal\n"
             "  \"merkleroot\" : \"xxxx\", (string) The merkle root\n"
+            "  \"witnessmerkleroot\" : \"xxxx\", (string) The witness merkle root\n"
             "  \"tx\" : [               (array of string) The transaction ids\n"
             "     \"transactionid\"     (string) The transaction id\n"
             "     ,...\n"
@@ -1631,7 +1635,7 @@ static const CRPCCommand commands[] =
     { "blockchain",         "getblockcount",          &getblockcount,          true,  {} },
     { "blockchain",         "getblock",               &getblock,               true,  {"blockhash","verbose"} },
     { "blockchain",         "getblockdeltas",         &getblockdeltas,         false, {} },
-    { "blockchain",         "getblockhashes",         &getblockhashes,         true,  {}  },
+    { "blockchain",         "getblockhashes",         &getblockhashes,         true,  {} },
     { "blockchain",         "getblockhash",           &getblockhash,           true,  {"height"} },
     { "blockchain",         "getblockheader",         &getblockheader,         true,  {"blockhash","verbose"} },
     { "blockchain",         "getchaintips",           &getchaintips,           true,  {} },
@@ -1645,7 +1649,6 @@ static const CRPCCommand commands[] =
     { "blockchain",         "gettxoutsetinfo",        &gettxoutsetinfo,        true,  {} },
     { "blockchain",         "pruneblockchain",        &pruneblockchain,        true,  {"height"} },
     { "blockchain",         "verifychain",            &verifychain,            true,  {"checklevel","nblocks"} },
-
     { "blockchain",         "preciousblock",          &preciousblock,          true,  {"blockhash"} },
 
     /* Not shown in help */

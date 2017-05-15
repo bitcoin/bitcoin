@@ -246,7 +246,6 @@ public:
         nFlags = 0;
         bnStakeModifier = uint256();
         prevoutStake.SetNull();
-        //nStakeTime = 0;
         //hashProof = uint256();
         
         nMoneySupply = 0;

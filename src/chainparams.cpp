@@ -375,11 +375,11 @@ public:
         
         nPruneAfterHeight = 100000;
         
-        genesis = CreateGenesisBlockMainNet(1489325366, 147067, 0x1f00ffff);
+        genesis = CreateGenesisBlockMainNet(1489325366, 34910, 0x1f00ffff);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x0000ce51b1fead038a612876fa393cc1166d7b365b0d38bb99f2f311e5a5eea5"));
-        assert(genesis.hashMerkleRoot == uint256S("0x59c9ac2d5430e0ce2cc4b9848e956fcad208322169f77529bc509960fb9f2e33"));
-        assert(genesis.hashWitnessMerkleRoot == genesis.hashMerkleRoot);
+        assert(consensus.hashGenesisBlock == uint256S("0x0000be6337182d22a23622828c8e234933e0dd9f6b9b9faafbd449abbb1b0abf"));
+        assert(genesis.hashMerkleRoot == uint256S("0xfa78a0476dc886dd4c8ebba34176f5561945c1c27e113c1989e0aca7f8f6de8d"));
+        assert(genesis.hashWitnessMerkleRoot == uint256S("0x59c9ac2d5430e0ce2cc4b9848e956fcad208322169f77529bc509960fb9f2e33"));
 
         // Note that of those with the service bits flag, most only support a subset of possible options
         vSeeds.push_back(CDNSSeedData("mainnet.particl.io",  "mainnet.particl.io"));
@@ -511,12 +511,12 @@ public:
         
         nPruneAfterHeight = 1000;
 
-        genesis = CreateGenesisBlockTestNet(1492356413, 10508, 0x1f00ffff);
+        genesis = CreateGenesisBlockTestNet(1492356413, 86023, 0x1f00ffff);
         consensus.hashGenesisBlock = genesis.GetHash();
         
-        assert(consensus.hashGenesisBlock == uint256S("0x00008f2d12f2daba4da44d36cec9dd48d865538c5e3c86bfc9cb1469f20855e7"));
-        assert(genesis.hashMerkleRoot == uint256S("0x05b596687297bf123fd70bf6229678b1eac163e47793579900a72217d22616aa"));
-        assert(genesis.hashWitnessMerkleRoot == genesis.hashMerkleRoot);
+        assert(consensus.hashGenesisBlock == uint256S("0x00007cd5202e8dab3c384b2390e27b89db47647cd973c0913004b9b368cd1162"));
+        assert(genesis.hashMerkleRoot == uint256S("0x1617bd7f2f93d11d065cd655440cd05080b11e06b31e95a9b08bde0f4ad34d9b"));
+        assert(genesis.hashWitnessMerkleRoot == uint256S("0x05b596687297bf123fd70bf6229678b1eac163e47793579900a72217d22616aa"));
 
         vFixedSeeds.clear();
         vSeeds.clear();
@@ -628,10 +628,9 @@ public:
         
         genesis = CreateGenesisBlockRegTest(1487714923, 1, 0x207fffff);
         consensus.hashGenesisBlock = genesis.GetHash();
-        
-        assert(consensus.hashGenesisBlock == uint256S("0x244bb13e5c891eef6b512aadaa5fe39318877ac75ffe71ff45a33117de77081e"));
-        assert(genesis.hashMerkleRoot == uint256S("0xa1e9e44ea880f3865042cc8dba519c2c472a01f0c7caed97d9e94734eba25d9d"));
-        assert(genesis.hashWitnessMerkleRoot == genesis.hashMerkleRoot);
+        assert(consensus.hashGenesisBlock == uint256S("0x233844b5044fc3e9e4b3d948b963fb8e92921ab7820f9b5aece9e3fc8b10fc13"));
+        assert(genesis.hashMerkleRoot == uint256S("0x125c3ec540ddf44b76bfa682a7f769516968bb861bb3193d08c93e2cdba979c8"));
+        assert(genesis.hashWitnessMerkleRoot == uint256S("0xa1e9e44ea880f3865042cc8dba519c2c472a01f0c7caed97d9e94734eba25d9d"));
         
         
         vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.

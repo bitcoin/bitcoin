@@ -2916,7 +2916,6 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         if (block.IsProofOfStake()) // only the genesis block isn't proof of stake
         {
             CAmount nCalculatedStakeReward = Params().GetProofOfStakeReward(pindex->pprev, nFees);
-        
             if (nStakeReward < 0 || nStakeReward > nCalculatedStakeReward)
                 return state.DoS(100, error("ConnectBlock() : coinstake pays too much(actual=%d vs calculated=%d)", nStakeReward, nCalculatedStakeReward), REJECT_INVALID, "bad-cs-amount");
         } else
@@ -4299,6 +4298,7 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Co
             // check witness merkleroot, TODO: should witnessmerkleroot be hashed?
             bool malleated = false;
             uint256 hashWitness = BlockWitnessMerkleRoot(block, &malleated);
+            
             if (hashWitness != block.hashWitnessMerkleRoot)
                 return state.DoS(100, false, REJECT_INVALID, "bad-witness-merkle-match", true, strprintf("%s : witness merkle commitment mismatch", __func__));
             
