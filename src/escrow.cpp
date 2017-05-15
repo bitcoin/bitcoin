@@ -3779,7 +3779,7 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
 	if (params.size() > 0)
 		strRegexp = params[0].get_str();
 
-	if (params.size() > 1)
+	if (params.size() > 1 && params[1].size() > 0)
 		vchEscrow = vchFromValue(params[1]);
 
 	UniValue oRes(UniValue::VARR);

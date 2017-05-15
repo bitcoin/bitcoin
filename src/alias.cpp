@@ -3052,13 +3052,13 @@ UniValue aliasfilter(const UniValue& params, bool fHelp) {
 	if (params.size() > 0)
 		strRegexp = params[0].get_str();
 
-	if (params.size() > 1)
+	if (params.size() > 1 && params[1].size() > 0)
 	{
 		vchAlias = vchFromValue(params[1]);
 		strName = params[1].get_str();
 	}
 
-	if (params.size() > 2)
+	if (params.size() > 2 && params[2].size() > 0)
 		safeSearch = params[2].get_str()=="On"? true: false;
 
 	UniValue oRes(UniValue::VARR);
