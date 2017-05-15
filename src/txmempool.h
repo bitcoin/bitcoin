@@ -64,11 +64,6 @@ class CTxMemPool;
  * (nCountWithDescendants, nSizeWithDescendants, and nModFeesWithDescendants) for
  * all ancestors of the newly added transaction.
  *
- * If updating the descendant state is skipped, we can mark the entry as
- * "dirty", and set nSizeWithDescendants/nModFeesWithDescendants to equal nTxSize/
- * nFee+feeDelta. (This can potentially happen during a reorg, where we limit the
- * amount of work we're willing to do to avoid consuming too much CPU.)
- *
  */
 
 class CTxMemPoolEntry
@@ -87,9 +82,7 @@ private:
 
     // Information about descendants of this transaction that are in the
     // mempool; if we remove this transaction we must remove all of these
-    // descendants as well.  if nCountWithDescendants is 0, treat this entry as
-    // dirty, and nSizeWithDescendants and nModFeesWithDescendants will not be
-    // correct.
+    // descendants as well.
     uint64_t nCountWithDescendants;  //!< number of descendant transactions
     uint64_t nSizeWithDescendants;   //!< ... and size
     CAmount nModFeesWithDescendants; //!< ... and total fees (all including us)
@@ -119,7 +112,7 @@ public:
     size_t DynamicMemoryUsage() const { return nUsageSize; }
     const LockPoints& GetLockPoints() const { return lockPoints; }
 
-    // Adjusts the descendant state, if this entry is not dirty.
+    // Adjusts the descendant state.
     void UpdateDescendantState(int64_t modifySize, CAmount modifyFee, int64_t modifyCount);
     // Adjusts the ancestor state
     void UpdateAncestorState(int64_t modifySize, CAmount modifyFee, int64_t modifyCount, int modifySigOps);
@@ -417,14 +410,6 @@ public:
  * if no bound exists on how many in-mempool ancestors there may be.
  * CalculateMemPoolAncestors() takes configurable limits that are designed to
  * prevent these calculations from being too CPU intensive.
- *
- * Adding transactions from a disconnected block can be very time consuming,
- * because we don't have a way to limit the number of in-mempool descendants.
- * To bound CPU processing, we limit the amount of work we're willing to do
- * to properly update the descendant information for a tx being added from
- * a disconnected block.  If we would exceed the limit, then we instead mark
- * the entry as "dirty", and set the feerate for sorting purposes to be equal
- * the feerate of the transaction without any descendants.
  *
  */
 class CTxMemPool
