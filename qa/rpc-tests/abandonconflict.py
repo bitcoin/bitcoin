@@ -13,8 +13,8 @@ class AbandonConflictTest(BitcoinTestFramework):
 
     def setup_network(self):
         self.nodes = []
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug","-logtimemicros","-minrelaytxfee=0.00001"]))
-        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug","-logtimemicros"]))
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug", "-logtimemicros", "-minrelaytxfee=0.00001", "-whitelist=127.0.0.1"]))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug", "-logtimemicros", "-whitelist=127.0.0.1"]))
         connect_nodes(self.nodes[0], 1)
 
     def run_test(self):
@@ -72,7 +72,7 @@ class AbandonConflictTest(BitcoinTestFramework):
         # TODO: redo with eviction
         # Note had to make sure tx did not have AllowFree priority
         stop_node(self.nodes[0],0)
-        self.nodes[0]=start_node(0, self.options.tmpdir, ["-debug","-logtimemicros","-minrelaytxfee=0.0001"])
+        self.nodes[0]=start_node(0, self.options.tmpdir, ["-debug", "-logtimemicros", "-minrelaytxfee=0.0001", "-whitelist=127.0.0.1"])
 
         # Verify txs no longer in mempool
         assert(len(self.nodes[0].getrawmempool()) == 0)
@@ -98,7 +98,7 @@ class AbandonConflictTest(BitcoinTestFramework):
 
         # Verify that even with a low min relay fee, the tx is not reaccepted from wallet on startup once abandoned
         stop_node(self.nodes[0],0)
-        self.nodes[0]=start_node(0, self.options.tmpdir, ["-debug","-logtimemicros","-minrelaytxfee=0.00001"])
+        self.nodes[0]=start_node(0, self.options.tmpdir, ["-debug", "-logtimemicros", "-minrelaytxfee=0.00001", "-whitelist=127.0.0.1"])
         assert(len(self.nodes[0].getrawmempool()) == 0)
         assert(self.nodes[0].getbalance() == balance)
 
@@ -118,7 +118,7 @@ class AbandonConflictTest(BitcoinTestFramework):
 
         # Remove using high relay fee again
         stop_node(self.nodes[0],0)
-        self.nodes[0]=start_node(0, self.options.tmpdir, ["-debug","-logtimemicros","-minrelaytxfee=0.0001"])
+        self.nodes[0]=start_node(0, self.options.tmpdir, ["-debug", "-logtimemicros", "-minrelaytxfee=0.0001", "-whitelist=127.0.0.1"])
         assert(len(self.nodes[0].getrawmempool()) == 0)
         newbalance = self.nodes[0].getbalance()
         assert(newbalance == balance - Decimal("24.9996"))
