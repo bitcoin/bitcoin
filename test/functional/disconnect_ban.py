@@ -3,6 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test node disconnect and ban behavior"""
+import time
 
 from test_framework.mininode import wait_until
 from test_framework.test_framework import BitcoinTestFramework
@@ -56,11 +57,16 @@ class DisconnectBanTest(BitcoinTestFramework):
         self.log.info("setban: test persistence across node restart")
         self.nodes[1].setban("127.0.0.0/32", "add")
         self.nodes[1].setban("127.0.0.0/24", "add")
+        # Set the mocktime so we can control when bans expire
+        old_time = int(time.time())
+        self.nodes[1].setmocktime(old_time)
         self.nodes[1].setban("192.168.0.1", "add", 1)  # ban for 1 seconds
         self.nodes[1].setban("2001:4d48:ac57:400:cacf:e9ff:fe1d:9c63/19", "add", 1000)  # ban for 1000 seconds
         listBeforeShutdown = self.nodes[1].listbanned()
         assert_equal("192.168.0.1/32", listBeforeShutdown[2]['address'])
-        assert wait_until(lambda: len(self.nodes[1].listbanned()) == 3, timeout=10)
+        # Move time forward by 3 seconds so the third ban has expired
+        self.nodes[1].setmocktime(old_time + 3)
+        assert_equal(len(self.nodes[1].listbanned()), 3)
 
         stop_node(self.nodes[1], 1)
 
