@@ -200,15 +200,15 @@ bool CThinBlock::process(CNode *pfrom, int nSizeThinBlock, string strCommand)
     {
         // This marks the end of the transactions we've received. If we get this and we have NOT been able to
         // finish reassembling the block, we need to re-request the full regular block
+        LogPrint("thin", "Missing %d Thinblock transactions, re-requesting a regular block\n",
+            pfrom->thinBlockWaitingForTxns);
+        thindata.UpdateInBoundReRequestedTx(pfrom->thinBlockWaitingForTxns);
         thindata.ClearThinBlockData(pfrom);
 
         vector<CInv> vGetData;
         vGetData.push_back(CInv(MSG_BLOCK, header.GetHash()));
         pfrom->PushMessage(NetMsgType::GETDATA, vGetData);
         setPreVerifiedTxHash.clear(); // Xpress Validation - clear the set since we do not do XVal on regular blocks
-        LogPrint("thin", "Missing %d Thinblock transactions, re-requesting a regular block\n",
-            pfrom->thinBlockWaitingForTxns);
-        thindata.UpdateInBoundReRequestedTx(pfrom->thinBlockWaitingForTxns);
     }
 
     return true;
