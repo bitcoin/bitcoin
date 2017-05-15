@@ -140,7 +140,6 @@ public:
         vSeeds.push_back(CDNSSeedData("bitcoin.sipa.be", "seed.bitcoin.sipa.be", true)); // Pieter Wuille, only supports x1, x5, x9, and xd
         vSeeds.push_back(CDNSSeedData("bluematt.me", "dnsseed.bluematt.me", true));
         vSeeds.push_back(CDNSSeedData("bitcoinstats.com", "seed.bitcoinstats.com", true)); // Christian Decker, supports x1 - xf
-        vSeeds.push_back(CDNSSeedData("xf2.org", "bitseed.xf2.org")); // Jeff Garzik
         // BITCOINUNLIMITED END
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,0);
