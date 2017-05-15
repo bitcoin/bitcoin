@@ -917,7 +917,7 @@ void InitParameterInteraction()
         }
     }
 
-    if (mapMultiArgs.count("-connect") && mapMultiArgs.at("-connect").size() > 0) {
+    if (gArgs.IsArgSet("-connect")) {
         // when only connecting to trusted nodes, do not seed via DNS, or listen by default
         if (SoftSetBoolArg("-dnsseed", false))
             LogPrintf("%s: parameter interaction: -connect set -> setting -dnsseed=0\n", __func__);
@@ -1109,21 +1109,23 @@ bool AppInitParameterInteraction()
 
     if (IsArgSet("-devnet")) {
         // Require setting of ports when running devnet
-        if (GetArg("-listen", DEFAULT_LISTEN) && !IsArgSet("-port"))
+        if (GetArg("-listen", DEFAULT_LISTEN) && !IsArgSet("-port")) {
             return InitError(_("-port must be specified when -devnet and -listen are specified"));
-        if (GetArg("-server", false) && !IsArgSet("-rpcport"))
+        }
+        if (GetArg("-server", false) && !IsArgSet("-rpcport")) {
             return InitError(_("-rpcport must be specified when -devnet and -server are specified"));
-
-        if (mapMultiArgs.count("-devnet") > 1)
+        }
+        if (gArgs.IsArgSet("-devnet")) {
             return InitError(_("-devnet can only be specified once"));
+        }
     }
 
     fAllowPrivateNet = GetBoolArg("-allowprivatenet", DEFAULT_ALLOWPRIVATENET);
 
     // Make sure enough file descriptors are available
     int nBind = std::max(
-                (mapMultiArgs.count("-bind") ? mapMultiArgs.at("-bind").size() : 0) +
-                (mapMultiArgs.count("-whitebind") ? mapMultiArgs.at("-whitebind").size() : 0), size_t(1));
+                (gArgs.IsArgSet("-bind") ? gArgs.GetArgs("-bind").size() : 0) +
+                (gArgs.IsArgSet("-whitebind") ? gArgs.GetArgs("-whitebind").size() : 0), size_t(1));
     nUserMaxConnections = GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS);
     nMaxConnections = std::max(nUserMaxConnections, 0);
 
@@ -1139,9 +1141,9 @@ bool AppInitParameterInteraction()
 
     // ********************************************************* Step 3: parameter-to-internal-flags
 
-    if (mapMultiArgs.count("-debug") > 0) {
+    if (gArgs.IsArgSet("-debug")) {
         // Special-case: if -debug=0/-nodebug is set, turn off debugging messages
-        const std::vector<std::string>& categories = mapMultiArgs.at("-debug");
+        const std::vector<std::string> categories = gArgs.GetArgs("-debug");
 
         if (!(GetBoolArg("-nodebug", false) || find(categories.begin(), categories.end(), std::string("0")) != categories.end())) {
             for (const auto& cat : categories) {
@@ -1155,9 +1157,8 @@ bool AppInitParameterInteraction()
     }
 
     // Now remove the logging categories which were explicitly excluded
-    if (mapMultiArgs.count("-debugexclude") > 0) {
-        const std::vector<std::string>& excludedCategories = mapMultiArgs.at("-debugexclude");
-        for (const auto& cat : excludedCategories) {
+    if (gArgs.IsArgSet("-debugexclude")) {
+        for (const std::string& cat : gArgs.GetArgs("-debugexclude")) {
             uint64_t flag;
             if (!GetLogCategory(&flag, &cat)) {
                 InitWarning(strprintf(_("Unsupported logging category %s=%s."), "-debugexclude", cat));
@@ -1318,15 +1319,14 @@ bool AppInitParameterInteraction()
 
     nMaxTipAge = GetArg("-maxtipage", DEFAULT_MAX_TIP_AGE);
 
-    if (mapMultiArgs.count("-bip9params")) {
+    if (gArgs.IsArgSet("-bip9params")) {
         // Allow overriding BIP9 parameters for testing
         if (!chainparams.MineBlocksOnDemand()) {
             return InitError("BIP9 parameters may only be overridden on regtest.");
         }
-        const std::vector<std::string>& deployments = mapMultiArgs.at("-bip9params");
-        for (auto i : deployments) {
+        for (const std::string& strDeployment : gArgs.GetArgs("-bip9params")) {
             std::vector<std::string> vDeploymentParams;
-            boost::split(vDeploymentParams, i, boost::is_any_of(":"));
+            boost::split(vDeploymentParams, strDeployment, boost::is_any_of(":"));
             if (vDeploymentParams.size() != 3 && vDeploymentParams.size() != 5) {
                 return InitError("BIP9 parameters malformed, expecting deployment:start:end or deployment:start:end:window:threshold");
             }
@@ -1515,8 +1515,8 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     }
 
     std::vector<std::string> vSporkAddresses;
-    if (mapMultiArgs.count("-sporkaddr")) {
-        vSporkAddresses = mapMultiArgs.at("-sporkaddr");
+    if (gArgs.IsArgSet("-sporkaddr")) {
+        vSporkAddresses = gArgs.GetArgs("-sporkaddr");
     } else {
         vSporkAddresses = Params().SporkAddresses();
     }
@@ -1587,8 +1587,8 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         uacomments.push_back(strprintf("devnet=%s", GetDevNetName()));
     }
 
-    if (mapMultiArgs.count("-uacomment")) {
-        BOOST_FOREACH(std::string cmt, mapMultiArgs.at("-uacomment"))
+    if (gArgs.IsArgSet("-uacomment")) {
+        BOOST_FOREACH(std::string cmt, gArgs.GetArgs("-uacomment"))
         {
             if (cmt != SanitizeString(cmt, SAFE_CHARS_UA_COMMENT))
                 return InitError(strprintf(_("User Agent comment (%s) contains unsafe characters."), cmt));
@@ -1601,9 +1601,9 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
             strSubVersion.size(), MAX_SUBVERSION_LENGTH));
     }
 
-    if (mapMultiArgs.count("-onlynet")) {
+    if (gArgs.IsArgSet("-onlynet")) {
         std::set<enum Network> nets;
-        BOOST_FOREACH(const std::string& snet, mapMultiArgs.at("-onlynet")) {
+        BOOST_FOREACH(const std::string& snet, gArgs.GetArgs("-onlynet")) {
             enum Network net = ParseNetwork(snet);
             if (net == NET_UNROUTABLE)
                 return InitError(strprintf(_("Unknown network specified in -onlynet: '%s'"), snet));
@@ -1616,8 +1616,8 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         }
     }
 
-    if (mapMultiArgs.count("-whitelist")) {
-        BOOST_FOREACH(const std::string& net, mapMultiArgs.at("-whitelist")) {
+    if (gArgs.IsArgSet("-whitelist")) {
+        BOOST_FOREACH(const std::string& net, gArgs.GetArgs("-whitelist")) {
             CSubNet subnet;
             LookupSubNet(net.c_str(), subnet);
             if (!subnet.IsValid())
@@ -1678,16 +1678,16 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     if (fListen) {
         bool fBound = false;
-        if (mapMultiArgs.count("-bind")) {
-            BOOST_FOREACH(const std::string& strBind, mapMultiArgs.at("-bind")) {
+        if (gArgs.IsArgSet("-bind")) {
+            BOOST_FOREACH(const std::string& strBind, gArgs.GetArgs("-bind")) {
                 CService addrBind;
                 if (!Lookup(strBind.c_str(), addrBind, GetListenPort(), false))
                     return InitError(ResolveErrMsg("bind", strBind));
                 fBound |= Bind(connman, addrBind, (BF_EXPLICIT | BF_REPORT_ERROR));
             }
         }
-        if (mapMultiArgs.count("-whitebind")) {
-            BOOST_FOREACH(const std::string& strBind, mapMultiArgs.at("-whitebind")) {
+        if (gArgs.IsArgSet("-whitebind")) {
+            BOOST_FOREACH(const std::string& strBind, gArgs.GetArgs("-whitebind")) {
                 CService addrBind;
                 if (!Lookup(strBind.c_str(), addrBind, 0, false))
                     return InitError(ResolveErrMsg("whitebind", strBind));
@@ -1696,7 +1696,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                 fBound |= Bind(connman, addrBind, (BF_EXPLICIT | BF_REPORT_ERROR | BF_WHITELIST));
             }
         }
-        if (!mapMultiArgs.count("-bind") && !mapMultiArgs.count("-whitebind")) {
+        if (!gArgs.IsArgSet("-bind") && !gArgs.IsArgSet("-whitebind")) {
             struct in_addr inaddr_any;
             inaddr_any.s_addr = INADDR_ANY;
             fBound |= Bind(connman, CService((in6_addr)IN6ADDR_ANY_INIT, GetListenPort()), BF_NONE);
@@ -1706,8 +1706,8 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
             return InitError(_("Failed to listen on any port. Use -listen=0 if you want this."));
     }
 
-    if (mapMultiArgs.count("-externalip")) {
-        BOOST_FOREACH(const std::string& strAddr, mapMultiArgs.at("-externalip")) {
+    if (gArgs.IsArgSet("-externalip")) {
+        BOOST_FOREACH(const std::string& strAddr, gArgs.GetArgs("-externalip")) {
             CService addrLocal;
             if (Lookup(strAddr.c_str(), addrLocal, GetListenPort(), fNameLookup) && addrLocal.IsValid())
                 AddLocal(addrLocal, LOCAL_MANUAL);
@@ -1716,8 +1716,8 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         }
     }
 
-    if (mapMultiArgs.count("-seednode")) {
-        BOOST_FOREACH(const std::string& strDest, mapMultiArgs.at("-seednode"))
+    if (gArgs.IsArgSet("-seednode")) {
+        BOOST_FOREACH(const std::string& strDest, gArgs.GetArgs("-seednode"))
             connman.AddOneShot(strDest);
     }
 
@@ -2101,9 +2101,9 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         uiInterface.NotifyBlockTip.connect(BlockNotifyCallback);
 
     std::vector<fs::path> vImportFiles;
-    if (mapMultiArgs.count("-loadblock"))
+    if (gArgs.IsArgSet("-loadblock"))
     {
-        BOOST_FOREACH(const std::string& strFile, mapMultiArgs.at("-loadblock"))
+        BOOST_FOREACH(const std::string& strFile, gArgs.GetArgs("-loadblock"))
             vImportFiles.push_back(strFile);
     }
 
