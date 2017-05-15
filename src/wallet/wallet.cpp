@@ -1418,6 +1418,21 @@ int CWalletTx::GetRequestCount() const
     return nRequests;
 }
 
+int CWalletTx::GetSpendSize(unsigned int i) const
+{
+    CMutableTransaction txn;
+    txn.vin.push_back(CTxIn(COutPoint(GetHash(), i)));
+    int totalBytes = pwallet->CalculateMaximumSignedTxSize(txn);
+    if (totalBytes == -1) return -1;
+    int witnessversion = 0;
+    std::vector<unsigned char> witnessprogram;
+    // We don't want to multi-count segwit empty vin and flag bytes
+    if (tx->vout[i].scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram)) {
+        totalBytes -= 2;
+    }
+    return totalBytes - GetVirtualTransactionSize(CMutableTransaction());
+}
+
 void CWalletTx::GetAmounts(std::list<COutputEntry>& listReceived,
                            std::list<COutputEntry>& listSent, CAmount& nFee, std::string& strSentAccount, const isminefilter& filter) const
 {

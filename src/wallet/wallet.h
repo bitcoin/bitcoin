@@ -449,6 +449,9 @@ public:
     CAmount GetAvailableWatchOnlyCredit(const bool& fUseCache=true) const;
     CAmount GetChange() const;
 
+    // Get the marginal bytes if spending the specified output from this transaction
+    int GetSpendSize(unsigned int i) const;
+
     void GetAmounts(std::list<COutputEntry>& listReceived,
                     std::list<COutputEntry>& listSent, CAmount& nFee, std::string& strSentAccount, const isminefilter& filter) const;
 
@@ -508,6 +511,9 @@ public:
     int i;
     int nDepth;
 
+    /** Pre-computed estimated size of this output as a fully-signed input in a transaction */
+    int nInputBytes;
+
     /** Whether we have the private keys to spend this output */
     bool fSpendable;
 
@@ -523,7 +529,12 @@ public:
 
     COutput(const CWalletTx *txIn, int iIn, int nDepthIn, bool fSpendableIn, bool fSolvableIn, bool fSafeIn)
     {
-        tx = txIn; i = iIn; nDepth = nDepthIn; fSpendable = fSpendableIn; fSolvable = fSolvableIn; fSafe = fSafeIn;
+        tx = txIn; i = iIn; nDepth = nDepthIn; fSpendable = fSpendableIn; fSolvable = fSolvableIn; fSafe = fSafeIn; nInputBytes = -1;
+        // If known and signable by the given wallet, compute nInputBytes
+        // Failure will keep this value -1
+        if (fSpendable && tx) {
+            nInputBytes = tx->GetSpendSize(i);
+        }
     }
 
     std::string ToString() const;
