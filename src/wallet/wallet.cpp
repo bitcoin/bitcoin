@@ -2267,7 +2267,6 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CFe
         {
             if (!out.fSpendable)
                  continue;
-            //TODO Account for witness empty-vin and flag
             nValueRet += (out.tx->tx->vout[out.i].nValue - effectiveFee.GetFee(out.nInputBytes));
             setCoinsRet.insert(CInputCoin(out.tx, out.i));
         }
@@ -2539,7 +2538,8 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                 txNew.vout.push_back(CTxOut(0, scriptChange));
 
                 // The estimated fee to cover the transaction minus the inputs
-                CAmount outputFee = nFeeRateNeeded.GetFee(GetVirtualTransactionSize(txNew));
+                // plus a buffer for empty vin and flag for witness transactions
+                CAmount outputFee = nFeeRateNeeded.GetFee(GetVirtualTransactionSize(txNew)+2);
 
                 // Now that we estimate full size with change, remove
                 txNew.vout.pop_back();
