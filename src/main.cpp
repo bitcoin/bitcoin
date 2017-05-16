@@ -7195,31 +7195,29 @@ bool SendMessages(CNode *pto)
             }
         }
 
-        if (pto->ThinBlockCapable())
+        // Check to see if there are any thinblocks in flight that have gone beyond the timeout interval.
+        // If so then we need to disconnect them so that the thinblock data is nullified.  We coud null
+        // the thinblock data here but that would possible cause a node to be baneed later if the thinblock
+        // finally did show up. Better to just disconnect this slow node instead.
+        if (pto->mapThinBlocksInFlight.size() > 0)
         {
-            // Check to see if there are any thinblocks in flight that have gone beyond the timeout interval.
-            // If so then we need to disconnect them so that the thinblock data is nullified.  We coud null
-            // the thinblock data here but that would possible cause a node to be baneed later if the thinblock
-            // finally did show up. Better to just disconnect this slow node instead.
-            if (pto->mapThinBlocksInFlight.size() > 0)
+            LOCK(pto->cs_mapthinblocksinflight);
+            std::map<uint256, CNode::CThinBlockInFlight>::iterator iter = pto->mapThinBlocksInFlight.begin();
+            while (iter != pto->mapThinBlocksInFlight.end())
             {
-                LOCK(pto->cs_mapthinblocksinflight);
-                std::map<uint256, CNode::CThinBlockInFlight>::iterator iter = pto->mapThinBlocksInFlight.begin();
-                while (iter != pto->mapThinBlocksInFlight.end())
+                if (!(*iter).second.fReceived && (GetTime() - (*iter).second.nRequestTime) > THINBLOCK_DOWNLOAD_TIMEOUT)
                 {
-                    if (!(*iter).second.fReceived && (GetTime() - (*iter).second.nRequestTime) > THINBLOCK_DOWNLOAD_TIMEOUT)
+                    if (!pto->fWhitelisted && Params().NetworkIDString() != "regtest")
                     {
-                        if (!pto->fWhitelisted && Params().NetworkIDString() != "regtest")
-                        {
-                            LogPrint("thin", "ERROR: Disconnecting peer=%d due to download timeout exceeded "
-                                             "(%d secs)\n",
-                                pto->GetId(), (GetTime() - (*iter).second.nRequestTime));
-                            pto->fDisconnect = true;
-                            break;
-                        }
+                        LogPrint("thin", "ERROR: Disconnecting peer=%d due to download timeout exceeded "
+                                         "(%d secs)\n",
+                            pto->GetId(),
+                            (GetTime() - (*iter).second.nRequestTime));
+                        pto->fDisconnect = true;
+                        break;
                     }
-                    iter++;
                 }
+                iter++;
             }
         }
 
