@@ -1435,10 +1435,12 @@ int CWalletTx::GetSpendSize(unsigned int i) const
     if (totalBytes == -1) return -1;
     int witnessversion = 0;
     std::vector<unsigned char> witnessprogram;
-    // We don't want to multi-count segwit empty vin and flag bytes
+    // We don't want to multi-count segwit empty vin and flag bytes, nor witness stack size byte
     if (tx->vout[i].scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram)) {
-        totalBytes -= 2;
+        totalBytes -= 3;
     }
+    // the witness stack size value value is a variable sized integer. usually, the number of stack items will be well under the single byte var int limit
+    totalBytes++;
     return totalBytes - GetVirtualTransactionSize(CMutableTransaction());
 }
 
