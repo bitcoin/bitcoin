@@ -17,7 +17,7 @@ typedef int64_t CAmount;
 static const CAmount COIN = 100000000;
 static const CAmount CENT = 1000000;
 
-static const std::string CURRENCY_UNIT = "BTC";
+extern const std::string CURRENCY_UNIT;
 
 /** No amount larger than this (in satoshi) is valid.
  *

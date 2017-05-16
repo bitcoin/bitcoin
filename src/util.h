@@ -47,7 +47,7 @@ static const bool DEFAULT_LOGIPS        = true;
 static const bool DEFAULT_LOGTIMESTAMPS = true;
 
 // For bitcoin-cli
-static const char DEFAULT_RPCCONNECT[] = "127.0.0.1";
+extern const char DEFAULT_RPCCONNECT[];
 static const int DEFAULT_HTTP_CLIENT_TIMEOUT = 900;
 
 /** Signals for translation. */

@@ -27,6 +27,11 @@
 #include "wallet/wallet.h"
 #endif
 
+// Needed here so bitcoin-cli can link
+const std::string CURRENCY_UNIT = "BTC";
+const std::string DEFAULT_TOR_CONTROL = "127.0.0.1:9051";
+const char DEFAULT_RPCCONNECT[] = "127.0.0.1";
+
 namespace AllowedArgs {
 
 enum HelpMessageMode {
