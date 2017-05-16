@@ -47,6 +47,7 @@ CChainParams& Params(NetworkType chain)
 
 void SelectParams(NetworkType network)
 {
+    CChainParams::Initialize();
     SelectBaseParams(network);
     g_pCurrentParams = &Params(network);
 }
