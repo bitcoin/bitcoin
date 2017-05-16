@@ -85,7 +85,7 @@ bool CheckAndRequestExpeditedBlocks(CNode *pfrom)
     return false;
 }
 
-void HandleExpeditedRequest(CDataStream &vRecv, CNode *pfrom)
+bool HandleExpeditedRequest(CDataStream &vRecv, CNode *pfrom)
 {
     uint64_t options;
     vRecv >> options;
@@ -95,7 +95,7 @@ void HandleExpeditedRequest(CDataStream &vRecv, CNode *pfrom)
     {
         LOCK(cs_main);
         Misbehaving(pfrom->GetId(), 5);
-        return;
+        return false;
     }
 
     if (options & EXPEDITED_BLOCKS)
@@ -104,7 +104,7 @@ void HandleExpeditedRequest(CDataStream &vRecv, CNode *pfrom)
 
         if (stop) // If stopping, find the array element and clear it.
         {
-            LogPrint("blk", "Stopping expedited blocks to peer %s (%d).\n", pfrom->addrName.c_str(), pfrom->id);
+            LogPrint("blk", "Stopping expedited blocks to peer %s\n", pfrom->GetLogName());
             std::vector<CNode *>::iterator it = std::find(xpeditedBlk.begin(), xpeditedBlk.end(), pfrom);
             if (it != xpeditedBlk.end())
             {
@@ -120,7 +120,7 @@ void HandleExpeditedRequest(CDataStream &vRecv, CNode *pfrom)
                 unsigned int maxExpedited = GetArg("-maxexpeditedblockrecipients", 32);
                 if (xpeditedBlk.size() < maxExpedited)
                 {
-                    LogPrint("blk", "Starting expedited blocks to peer %s (%d).\n", pfrom->addrName.c_str(), pfrom->id);
+                    LogPrint("blk", "Starting expedited blocks to peer %s\n", pfrom->GetLogName());
 
                     // find an empty array location
                     std::vector<CNode *>::iterator it =
@@ -133,8 +133,7 @@ void HandleExpeditedRequest(CDataStream &vRecv, CNode *pfrom)
                 }
                 else
                 {
-                    LogPrint("blk", "Expedited blocks requested from peer %s (%d), but I am full.\n",
-                        pfrom->addrName.c_str(), pfrom->id);
+                    LogPrint("blk", "Expedited blocks requested from peer %s but I am full\n", pfrom->GetLogName());
                 }
             }
         }
@@ -145,7 +144,7 @@ void HandleExpeditedRequest(CDataStream &vRecv, CNode *pfrom)
 
         if (stop) // If stopping, find the array element and clear it.
         {
-            LogPrint("blk", "Stopping expedited transactions to peer %s (%d).\n", pfrom->addrName.c_str(), pfrom->id);
+            LogPrint("blk", "Stopping expedited transactions to peer %s\n", pfrom->GetLogName());
             std::vector<CNode *>::iterator it = std::find(xpeditedTxn.begin(), xpeditedTxn.end(), pfrom);
             if (it != xpeditedTxn.end())
             {
@@ -161,8 +160,7 @@ void HandleExpeditedRequest(CDataStream &vRecv, CNode *pfrom)
                 unsigned int maxExpedited = GetArg("-maxexpeditedtxrecipients", 32);
                 if (xpeditedTxn.size() < maxExpedited)
                 {
-                    LogPrint("blk", "Starting expedited transactions to peer %s (%d).\n", pfrom->addrName.c_str(),
-                        pfrom->id);
+                    LogPrint("blk", "Starting expedited transactions to peer %s\n", pfrom->GetLogName());
 
                     std::vector<CNode *>::iterator it =
                         std::find(xpeditedTxn.begin(), xpeditedTxn.end(), ((CNode *)NULL));
@@ -174,12 +172,14 @@ void HandleExpeditedRequest(CDataStream &vRecv, CNode *pfrom)
                 }
                 else
                 {
-                    LogPrint("blk", "Expedited transactions requested from peer %s (%d), but I am full.\n",
-                        pfrom->addrName.c_str(), pfrom->id);
+                    LogPrint(
+                        "blk", "Expedited transactions requested from peer %s but I am full\n", pfrom->GetLogName());
                 }
             }
         }
     }
+
+    return true;
 }
 
 bool IsRecentlyExpeditedAndStore(const uint256 &hash)
