@@ -342,6 +342,7 @@ void FinalizeNode(NodeId nodeid, bool& fUpdateConnectionTime) {
         assert(nPreferredDownload == 0);
         assert(nPeersWithValidatedDownloads == 0);
     }
+    LogPrint(BCLog::NET, "Cleared nodestate for peer=%d\n", nodeid);
 }
 
 // Requires cs_main.
