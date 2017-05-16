@@ -373,7 +373,7 @@ void RequestBlock(CNode *pfrom, CInv obj)
                 { // We can only send one thinblock per peer at a time
                     {
                         LOCK(pfrom->cs_mapthinblocksinflight);
-                        pfrom->mapThinBlocksInFlight[inv2.hash] = GetTime();
+                        pfrom->mapThinBlocksInFlight[inv2.hash].nRequestTime = GetTime();
                     }
                     inv2.type = MSG_XTHINBLOCK;
                     std::vector<uint256> vOrphanHashes;
@@ -401,7 +401,7 @@ void RequestBlock(CNode *pfrom, CInv obj)
                 {
                     {
                         LOCK(pfrom->cs_mapthinblocksinflight);
-                        pfrom->mapThinBlocksInFlight[inv2.hash] = GetTime();
+                        pfrom->mapThinBlocksInFlight[inv2.hash].nRequestTime = GetTime();
                     }
                     inv2.type = MSG_XTHINBLOCK;
                     std::vector<uint256> vOrphanHashes;

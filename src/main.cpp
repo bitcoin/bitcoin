@@ -7204,16 +7204,16 @@ bool SendMessages(CNode *pto)
             if (pto->mapThinBlocksInFlight.size() > 0)
             {
                 LOCK(pto->cs_mapthinblocksinflight);
-                std::map<uint256, int64_t>::iterator iter = pto->mapThinBlocksInFlight.begin();
+                std::map<uint256, CNode::CThinBlockInFlight>::iterator iter = pto->mapThinBlocksInFlight.begin();
                 while (iter != pto->mapThinBlocksInFlight.end())
                 {
-                    if ((*iter).second != -1 && (GetTime() - (*iter).second) > THINBLOCK_DOWNLOAD_TIMEOUT)
+                    if (!(*iter).second.fReceived && (GetTime() - (*iter).second.nRequestTime) > THINBLOCK_DOWNLOAD_TIMEOUT)
                     {
                         if (!pto->fWhitelisted && Params().NetworkIDString() != "regtest")
                         {
                             LogPrint("thin", "ERROR: Disconnecting peer=%d due to download timeout exceeded "
                                              "(%d secs)\n",
-                                pto->GetId(), (GetTime() - (*iter).second));
+                                pto->GetId(), (GetTime() - (*iter).second.nRequestTime));
                             pto->fDisconnect = true;
                             break;
                         }
