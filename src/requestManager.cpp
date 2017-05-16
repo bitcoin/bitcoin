@@ -431,38 +431,44 @@ bool RequestBlock(CNode *pfrom, CInv obj)
 
 void CRequestManager::SendRequests()
 {
-  int64_t now = 0;
+    int64_t now = 0;
 
-  // TODO: if a node goes offline, rerequest txns from someone else and cleanup references right away
-  cs_objDownloader.lock();
-  if (sendBlkIter == mapBlkInfo.end()) sendBlkIter = mapBlkInfo.begin();
+    // TODO: if a node goes offline, rerequest txns from someone else and cleanup references right away
+    LOCK(cs_objDownloader);
+    if (sendBlkIter == mapBlkInfo.end())
+        sendBlkIter = mapBlkInfo.begin();
 
-  // Modify retry interval. If we're doing IBD or if Traffic Shaping is ON we want to have a longer interval because 
-  // those blocks and txns can take much longer to download.
-  unsigned int blkReqRetryInterval = MIN_BLK_REQUEST_RETRY_INTERVAL;
-  unsigned int txReqRetryInterval = MIN_TX_REQUEST_RETRY_INTERVAL;
-  if ((!IsChainNearlySyncd() && Params().NetworkIDString() != "regtest") || IsTrafficShapingEnabled()) 
+    // Modify retry interval. If we're doing IBD or if Traffic Shaping is ON we want to have a longer interval because
+    // those blocks and txns can take much longer to download.
+    unsigned int blkReqRetryInterval = MIN_BLK_REQUEST_RETRY_INTERVAL;
+    unsigned int txReqRetryInterval = MIN_TX_REQUEST_RETRY_INTERVAL;
+    if ((!IsChainNearlySyncd() && Params().NetworkIDString() != "regtest") || IsTrafficShapingEnabled())
     {
-      blkReqRetryInterval *= 6;
-      txReqRetryInterval *= (12*2);  // we want to optimise block DL during IBD (and give lots of time for shaped nodes) so push the TX retry up to 2 minutes (default val of MIN_TX is 5 sec)
+        blkReqRetryInterval *= 6;
+        // we want to optimise block DL during IBD (and give lots of time for shaped nodes) so push the TX retry up to 2
+        // minutes (default val of MIN_TX is 5 sec)
+        txReqRetryInterval *= (12 * 2);
     }
 
-  // Get Blocks
-  while (sendBlkIter != mapBlkInfo.end())
-   {
-      now = GetTimeMicros();
-      OdMap::iterator itemIter = sendBlkIter;
-      CUnknownObj& item = itemIter->second;
+    // Get Blocks if we are not in the middle of a re-org
+    while (sendBlkIter != mapBlkInfo.end() && !PV.IsReorgInProgress())
+    {
+        now = GetTimeMicros();
+        OdMap::iterator itemIter = sendBlkIter;
+        CUnknownObj &item = itemIter->second;
 
-      ++sendBlkIter;  // move it forward up here in case we need to erase the item we are working with.
-      if (itemIter == mapBlkInfo.end()) break;
+        ++sendBlkIter; // move it forward up here in case we need to erase the item we are working with.
+        if (itemIter == mapBlkInfo.end())
+            break;
 
-      if (now-item.lastRequestTime > blkReqRetryInterval)  // if never requested then lastRequestTime==0 so this will always be true
-	{
-          if (!item.availableFrom.empty())
-	    {
-	      CNodeRequestData next;
-              while (!item.availableFrom.empty() && (next.node == NULL)) // Go thru the availableFrom list, looking for the first node that isn't disconnected
+        // if never requested then lastRequestTime==0 so this will always be true
+        if (now - item.lastRequestTime > blkReqRetryInterval)
+        {
+            if (!item.availableFrom.empty())
+            {
+                CNodeRequestData next;
+                // Go thru the availableFrom list, looking for the first node that isn't disconnected
+                while (!item.availableFrom.empty() && (next.node == NULL))
                 {
                     next = item.availableFrom.front(); // Grab the next location where we can find this object.
                     item.availableFrom.pop_front();
@@ -509,14 +515,13 @@ void CRequestManager::SendRequests()
                     }
 
                     CInv obj = item.obj;
-                    cs_objDownloader.unlock();
+                    LEAVE_CRITICAL_SECTION(cs_objDownloader);
                     if (RequestBlock(next.node, obj))
                     {
                         item.outstandingReqs++;
                         item.lastRequestTime = now;
                     }
-
-                    cs_objDownloader.lock();
+                    ENTER_CRITICAL_SECTION(cs_objDownloader);
 
                     // If you wanted to remember that this node has this data, you could push it back onto the end of
                     // the availableFrom list like this:
@@ -604,37 +609,38 @@ void CRequestManager::SendRequests()
                         }
                     }
 
-	          if (next.node != NULL )
-		    {
-                    if (1)
-                      {
-                        cs_objDownloader.unlock();
-                        LOCK(next.node->cs_vSend);
-  		        // from->AskFor(item.obj); basically just shoves the req into mapAskFor
-                        if (1) // This commented code does skips requesting TX if the node is not synced.  But the req mgr should not make this decision, the caller should not give the TX to me... !item.lastRequestTime || (item.lastRequestTime && IsChainNearlySyncd()))
-                          {
-                            next.node->mapAskFor.insert(std::make_pair(now, item.obj));
-                            item.outstandingReqs++;
-		            item.lastRequestTime = now;
-                          }
-                        cs_objDownloader.lock();
-                      }
-                      {
-                        LOCK(cs_vNodes);
-                        LogPrint("req", "ReqMgr: %s removed ref to %d count %d (disconnect).\n", item.obj.ToString(), next.node->GetId(), next.node->GetRefCount());
-                        next.node->Release();
-                        next.node = NULL;
-		      }
-                      inFlight++;
-                      inFlightTxns << inFlight;
-		    }
-		}
-	    }
-	}
-
+                    if (next.node != NULL)
+                    {
+                        if (1)
+                        {
+                            LEAVE_CRITICAL_SECTION(cs_objDownloader);
+                            LOCK(next.node->cs_vSend);
+                            // from->AskFor(item.obj); basically just shoves the req into mapAskFor
+                            // This commented code does skips requesting TX if the node is not synced.  But the req mgr
+                            // should not make this decision, the caller should not give the TX to me...
+                            // !item.lastRequestTime || (item.lastRequestTime && IsChainNearlySyncd()))
+                            if (1)
+                            {
+                                next.node->mapAskFor.insert(std::make_pair(now, item.obj));
+                                item.outstandingReqs++;
+                                item.lastRequestTime = now;
+                            }
+                            ENTER_CRITICAL_SECTION(cs_objDownloader);
+                        }
+                        {
+                            LOCK(cs_vNodes);
+                            LogPrint("req", "ReqMgr: %s removed tx ref to %d count %d\n",
+                                item.obj.ToString(), next.node->GetId(), next.node->GetRefCount());
+                            next.node->Release();
+                            next.node = NULL;
+                        }
+                        inFlight++;
+                        inFlightTxns << inFlight;
+                    }
+                }
+            }
+        }
     }
-
-  cs_objDownloader.unlock();
 }
 
 bool CRequestManager::IsNodePingAcceptable(CNode* pfrom)
