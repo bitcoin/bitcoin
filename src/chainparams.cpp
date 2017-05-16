@@ -382,16 +382,8 @@ public:
         assert(genesis.hashWitnessMerkleRoot == uint256S("0x59c9ac2d5430e0ce2cc4b9848e956fcad208322169f77529bc509960fb9f2e33"));
 
         // Note that of those with the service bits flag, most only support a subset of possible options
-        vSeeds.push_back(CDNSSeedData("mainnet.particl.io",  "mainnet.particl.io"));
+        vSeeds.push_back(CDNSSeedData("mainnet.particl.io",  "mainnet.particl.io", true));
         
-        /* TODO: add new seeds
-        vSeeds.push_back(CDNSSeedData("main.shadow.cash",  "seed.shadow.cash"));
-        vSeeds.push_back(CDNSSeedData("seed2.shadow.cash", "seed2.shadow.cash"));
-        vSeeds.push_back(CDNSSeedData("seed3.shadow.cash", "seed3.shadow.cash"));
-        vSeeds.push_back(CDNSSeedData("seed4.shadow.cash", "seed4.shadow.cash"));
-        vSeeds.push_back(CDNSSeedData("shadowproject.io",  "seed.shadowproject.io"));
-        vSeeds.push_back(CDNSSeedData("shadowchain.info",  "seed.shadowchain.info"));
-        */
 
         base58Prefixes[PUBKEY_ADDRESS]     = std::vector<unsigned char>(1,56); // P
         base58Prefixes[SCRIPT_ADDRESS]     = std::vector<unsigned char>(1,60);
@@ -521,7 +513,7 @@ public:
         vFixedSeeds.clear();
         vSeeds.clear();
         // nodes with support for servicebits filtering should be at the top
-        vSeeds.push_back(CDNSSeedData("testnet.particl.io",  "testnet.particl.io"));
+        vSeeds.push_back(CDNSSeedData("testnet-seed.particl.io",  "testnet-seed.particl.io", true));
         
         /* TODO: add new seeds
         vSeeds.push_back(CDNSSeedData("main.shadow.cash",  "seed.shadow.cash"));
