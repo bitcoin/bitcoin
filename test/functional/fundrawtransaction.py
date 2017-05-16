@@ -7,7 +7,6 @@
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
-
 def get_unspent(listunspent, amount):
     for utx in listunspent:
         if utx['amount'] == amount:
@@ -40,10 +39,10 @@ class RawTransactionsTest(BitcoinTestFramework):
         # if the fee's positive delta is higher than this value tests will fail,
         # neg. delta always fail the tests.
         # The size of the signature of every input may be at most 2 bytes larger
-        # than a minimum sized signature.
+        # than a minimum sized signature and one additional byte for witness stack byte.
 
         #            = 2 bytes * minRelayTxFeePerByte
-        feeTolerance = 2 * min_relay_tx_fee/1000
+        feeTolerance = 3 * min_relay_tx_fee/1000
 
         self.nodes[2].generate(1)
         self.sync_all()
