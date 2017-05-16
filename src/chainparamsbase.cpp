@@ -56,7 +56,7 @@ public:
         nRPCPort = 8332;
     }
 };
-static CBaseMainParams mainParams;
+static CBaseMainParams g_baseMainParams;
 
 /**
  * Testnet (v3)
@@ -70,7 +70,7 @@ public:
         strDataDir = "testnet3";
     }
 };
-static CBaseTestNetParams testNetParams;
+static CBaseTestNetParams g_baseTestNetParams;
 
 /*
  * Regression test
@@ -84,7 +84,7 @@ public:
         strDataDir = "regtest";
     }
 };
-static CBaseRegTestParams regTestParams;
+static CBaseRegTestParams g_baseRegTestParams;
 
 static CBaseChainParams* pCurrentBaseParams = 0;
 
@@ -97,11 +97,11 @@ const CBaseChainParams& BaseParams()
 CBaseChainParams& BaseParams(NetworkType chain)
 {
     if (chain == NETWORK_MAIN)
-        return mainParams;
+        return g_baseMainParams;
     else if (chain == NETWORK_TESTNET)
-        return testNetParams;
+        return g_baseTestNetParams;
     else if (chain == NETWORK_REGTEST)
-        return regTestParams;
+        return g_baseRegTestParams;
     else
         throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
 }

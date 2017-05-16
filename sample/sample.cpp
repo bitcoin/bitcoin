@@ -3,6 +3,7 @@
 #include "base58.h"
 #include "BitcoinAddress.h"
 #include <secp256k1.h>
+#include "chainparams.h"
 
 static const char* g_pszBase58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
@@ -116,32 +117,48 @@ static void decodePrint(const std::string& s) {
     }
     printf("}\n");
 }
+
+int main_impl();
+
 int main()
 {
-    // std::vector<unsigned char> v(1, 239); // 要素数 1、中身は [239] なリストができる.
-    // unsigned char* p = &v[0];
-
-    unsigned char data[] = { 0,0,0,0,0x11,2,0xE }; // → "11116iLu" になる.
-    // unsigned char data[] = "abc";
-    // unsigned char data[] = { 0xFF };
-    std::string s = MyEncodeBase58(data, data + sizeof(data));
-    printf("%s\n", s.c_str());
-
-    //decodePrint(s);
-    //decodePrint("11116iLu");
-    //decodePrint("1111 6iLu");
-    decodePrint("11116iLu");
-
-    
-
-    // printf("0x%X\n", SECP256K1_EC_COMPRESSED);
-    // printf("0x%X\n", SECP256K1_EC_UNCOMPRESSED);
-    return 0;
-
     ECC_Start();
 
+    try {
+        main_impl();
+    }
+    catch (const std::exception& ex) {
+        printf("Error: %s\n", ex.what());
+    }
+
+    ECC_Stop();
+}
+
+int main_impl()
+{
+    // BASE58関連実験
+    if (0) {
+        // std::vector<unsigned char> v(1, 239); // 要素数 1、中身は [239] なリストができる.
+        // unsigned char* p = &v[0];
+
+        unsigned char data[] = { 0,0,0,0,0x11,2,0xE }; // → "11116iLu" になる.
+                                                       // unsigned char data[] = "abc";
+                                                       // unsigned char data[] = { 0xFF };
+        std::string s = MyEncodeBase58(data, data + sizeof(data));
+        printf("%s\n", s.c_str());
+
+        //decodePrint(s);
+        //decodePrint("11116iLu");
+        //decodePrint("1111 6iLu");
+        decodePrint("11116iLu");
+
+        // printf("0x%X\n", SECP256K1_EC_COMPRESSED);
+        // printf("0x%X\n", SECP256K1_EC_UNCOMPRESSED);
+    }
+
+
     // secret_key prefix の確認.
-    {
+    if(1) {
         CKey key;
 
         // 9 で始まる 51 文字.
@@ -153,6 +170,11 @@ int main()
         SelectParams(NETWORK_REGTEST);
         key.MakeNewKey(true);
         printf("PRIVKEY in REGTEST: %s (%d)\n", key.GetBase58stringWithNetworkSecretKeyPrefix().c_str(), strlen(key.GetBase58stringWithNetworkSecretKeyPrefix().c_str()));
+
+        // L で始まる 52 文字.
+        SelectParams(NETWORK_MAIN);
+        key.MakeNewKey(true);
+        printf("PRIVKEY in MAINNET: %s (%d)\n", key.GetBase58stringWithNetworkSecretKeyPrefix().c_str(), strlen(key.GetBase58stringWithNetworkSecretKeyPrefix().c_str()));
     }
     
 
@@ -190,6 +212,6 @@ int main()
 
 
 
-    ECC_Stop();
+    
     return 0;
 }

@@ -120,4 +120,9 @@ public:
         };
     }
 };
-static CMainParams mainParams;
+CMainParams* g_mainParams;
+
+void Init1() {
+    g_mainParams = new CMainParams();
+}
+
