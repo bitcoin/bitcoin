@@ -13,8 +13,8 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
     def __init__(self):
         super().__init__()
         self.setup_clean_chain = True
-        self.num_nodes = 1
-        self.extra_args = [["-printpriority=1"]]
+        self.num_nodes = 2
+        self.extra_args = [["-printpriority=1"], ["-printpriority=1"]]
 
     def run_test(self):
         self.txouts = gen_return_txouts()
@@ -114,6 +114,17 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         self.log.info("Assert that prioritised free transaction is accepted to mempool")
         assert_equal(self.nodes[0].sendrawtransaction(tx_hex), tx_id)
         assert(tx_id in self.nodes[0].getrawmempool())
+
+        # Test that calling prioritisetransaction is sufficient to trigger
+        # getblocktemplate to (eventually) return a new block.
+        mock_time = int(time.time())
+        self.nodes[0].setmocktime(mock_time)
+        template = self.nodes[0].getblocktemplate()
+        self.nodes[0].prioritisetransaction(tx_id, -int(self.relayfee*COIN))
+        self.nodes[0].setmocktime(mock_time+10)
+        new_template = self.nodes[0].getblocktemplate()
+
+        assert(template != new_template)
 
 if __name__ == '__main__':
     PrioritiseTransactionTest().main()
