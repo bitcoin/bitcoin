@@ -896,14 +896,15 @@ UniValue estimaterawfee(const JSONRPCRequest& request)
             "  \"feerate\" : x.x,        (numeric) estimate fee-per-kilobyte (in BTC)\n"
             "  \"decay\" : x.x,          (numeric) exponential decay (per block) for historical moving average of confirmation data\n"
             "  \"scale\" : x,            (numeric) The resolution of confirmation targets at this time horizon\n"
-            "  \"pass.\"                 information about the lowest range of feerates to succeed in meeting the threshold\n"
-            "  \"fail.\"                 information about the highest range of feerates to fail to meet the threshold\n"
-            "  \"startrange\" : x.x,     (numeric) start of feerate range\n"
-            "  \"endrange\" : x.x,       (numeric) end of feerate range\n"
-            "  \"withintarget\" : x.x,   (numeric) number of txs over history horizon in the feerate range that were confirmed within target\n"
-            "  \"totalconfirmed\" : x.x, (numeric) number of txs over history horizon in the feerate range that were confirmed at any point\n"
-            "  \"inmempool\" : x.x,      (numeric) current number of txs in mempool in the feerate range unconfirmed for at least target blocks\n"
-            "  \"leftmempool\" : x.x,    (numeric) number of txs over history horizon in the feerate range that left mempool unconfirmed after target\n"
+            "  \"pass\" : {              (json object) information about the lowest range of feerates to succeed in meeting the threshold\n"
+            "      \"startrange\" : x.x,     (numeric) start of feerate range\n"
+            "      \"endrange\" : x.x,       (numeric) end of feerate range\n"
+            "      \"withintarget\" : x.x,   (numeric) number of txs over history horizon in the feerate range that were confirmed within target\n"
+            "      \"totalconfirmed\" : x.x, (numeric) number of txs over history horizon in the feerate range that were confirmed at any point\n"
+            "      \"inmempool\" : x.x,      (numeric) current number of txs in mempool in the feerate range unconfirmed for at least target blocks\n"
+            "      \"leftmempool\" : x.x,    (numeric) number of txs over history horizon in the feerate range that left mempool unconfirmed after target\n"
+            "  }\n"
+            "  \"fail\" : { ... }        (json object) information about the highest range of feerates to fail to meet the threshold\n"
             "}\n"
             "\n"
             "A negative feerate is returned if no answer can be given.\n"
@@ -934,18 +935,22 @@ UniValue estimaterawfee(const JSONRPCRequest& request)
     result.push_back(Pair("feerate", feeRate == CFeeRate(0) ? -1.0 : ValueFromAmount(feeRate.GetFeePerK())));
     result.push_back(Pair("decay", buckets.decay));
     result.push_back(Pair("scale", (int)buckets.scale));
-    result.push_back(Pair("pass.startrange", round(buckets.pass.start)));
-    result.push_back(Pair("pass.endrange", round(buckets.pass.end)));
-    result.push_back(Pair("pass.withintarget", round(buckets.pass.withinTarget * 100.0) / 100.0));
-    result.push_back(Pair("pass.totalconfirmed", round(buckets.pass.totalConfirmed * 100.0) / 100.0));
-    result.push_back(Pair("pass.inmempool", round(buckets.pass.inMempool * 100.0) / 100.0));
-    result.push_back(Pair("pass.leftmempool", round(buckets.pass.leftMempool * 100.0) / 100.0));
-    result.push_back(Pair("fail.startrange", round(buckets.fail.start)));
-    result.push_back(Pair("fail.endrange", round(buckets.fail.end)));
-    result.push_back(Pair("fail.withintarget", round(buckets.fail.withinTarget * 100.0) / 100.0));
-    result.push_back(Pair("fail.totalconfirmed", round(buckets.fail.totalConfirmed * 100.0) / 100.0));
-    result.push_back(Pair("fail.inmempool", round(buckets.fail.inMempool * 100.0) / 100.0));
-    result.push_back(Pair("fail.leftmempool", round(buckets.fail.leftMempool * 100.0) / 100.0));
+    UniValue passbucket(UniValue::VOBJ);
+    passbucket.push_back(Pair("startrange", round(buckets.pass.start)));
+    passbucket.push_back(Pair("endrange", round(buckets.pass.end)));
+    passbucket.push_back(Pair("withintarget", round(buckets.pass.withinTarget * 100.0) / 100.0));
+    passbucket.push_back(Pair("totalconfirmed", round(buckets.pass.totalConfirmed * 100.0) / 100.0));
+    passbucket.push_back(Pair("inmempool", round(buckets.pass.inMempool * 100.0) / 100.0));
+    passbucket.push_back(Pair("leftmempool", round(buckets.pass.leftMempool * 100.0) / 100.0));
+    result.push_back(Pair("pass", passbucket));
+    UniValue failbucket(UniValue::VOBJ);
+    failbucket.push_back(Pair("startrange", round(buckets.fail.start)));
+    failbucket.push_back(Pair("endrange", round(buckets.fail.end)));
+    failbucket.push_back(Pair("withintarget", round(buckets.fail.withinTarget * 100.0) / 100.0));
+    failbucket.push_back(Pair("totalconfirmed", round(buckets.fail.totalConfirmed * 100.0) / 100.0));
+    failbucket.push_back(Pair("inmempool", round(buckets.fail.inMempool * 100.0) / 100.0));
+    failbucket.push_back(Pair("leftmempool", round(buckets.fail.leftMempool * 100.0) / 100.0));
+    result.push_back(Pair("fail", failbucket));
     return result;
 }
 
