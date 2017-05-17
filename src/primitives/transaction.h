@@ -410,7 +410,6 @@ public:
     {
         return &scriptPubKey;
     };
-    
 };
 
 class CTxOutRingCT : public CTxOutBase
@@ -440,7 +439,6 @@ public:
         memcpy(&vchAmount[0], commitment.data, 33);
         return true;
     };
-    
 };
 
 class CTxOutData : public CTxOutBase
@@ -834,8 +832,25 @@ public:
     bool IsCoinStake() const
     {
         return GetType() == TXN_COINSTAKE
-            && vin.size() > 0 && vpout.size() > 0;
+            && vin.size() > 0 && vpout.size() > 1
+            && vpout[0]->nVersion == OUTPUT_DATA
+            && vpout[1]->nVersion == OUTPUT_STANDARD;
     }
+
+    bool GetCoinStakeHeight(int &height) const
+    {
+        if (vpout.size() < 2 || vpout[0]->nVersion != OUTPUT_DATA)
+            return false;
+        
+        std::vector<uint8_t> &vData = ((CTxOutData*)vpout[0].get())->vData;
+        if (vData.size() < 4)
+            return false;
+        
+        memcpy(&height, &vData[0], 4);
+        
+        return true;
+    }
+    
 
     bool GetCTFee(CAmount &nFee) const
     {

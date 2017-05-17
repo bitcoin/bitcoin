@@ -1554,7 +1554,7 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 int GetNumPeers()
 {
     //return g_connman->GetNodeCount(CConnman::CONNECTIONS_IN); // doesn't seem accurate
-    return g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL);
+    return g_connman ? g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL) : 0;
 }
 
 int GetNumBlocksOfPeers()
@@ -1590,9 +1590,12 @@ bool IsInitialBlockDownload()
     if (chainActive.Tip()->nHeight > COINBASE_MATURITY
         && chainActive.Tip()->GetBlockTime() < (GetTime() - nMaxTipAge))
         return true;
-    if (chainActive.Tip()->nHeight < GetNumBlocksOfPeers())
+    
+    if (GetNumPeers() < 2
+        || chainActive.Tip()->nHeight < GetNumBlocksOfPeers())
         return true;
     
+    LogPrintf("Leaving InitialBlockDownload (latching to false)\n");
     latchToFalse.store(true, std::memory_order_relaxed);
     return false;
 }
@@ -2504,6 +2507,9 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     
     if (block.IsProofOfStake())
     {
+        pindex->bnStakeModifier = ComputeStakeModifierV2(pindex->pprev, pindex->prevoutStake.hash);
+        setDirtyBlockIndex.insert(pindex);
+        
         uint256 hashProof, targetProofOfStake;
         if (!CheckProofOfStake(pindex->pprev, *block.vtx[0], block.nTime, block.nBits, hashProof, targetProofOfStake))
             return state.DoS(100, error("%s: Check proof of stake failed.", __func__), REJECT_INVALID, "bad-proof-of-stake");
@@ -2643,8 +2649,6 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     CAmount nFees = 0;
     int nInputs = 0;
     int64_t nSigOpsCost = 0;
-    //int64_t nAnonIn = 0;
-    //int64_t nAnonOut = 0;
     int64_t nValueIn = 0;
     int64_t nValueOut = 0;
     int64_t nStakeReward = 0;
@@ -2682,7 +2686,6 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             
             prevheights.resize(tx.vin.size());
             for (size_t j = 0; j < tx.vin.size(); j++) {
-                
                 prevheights[j] = view.AccessCoins(tx.vin[j].prevout.hash)->nHeight;
             }
 
@@ -2738,8 +2741,6 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                             // and to find the amount and address from an input
                             spentIndex.push_back(std::make_pair(CSpentIndexKey(input.prevout.hash, input.prevout.n), CSpentIndexValue(txhash, j, pindex->nHeight, nValue, addressType, hashBytes)));
                         };
-                        
-                        
                     } else
                     {
                         const CTxOut &prevout = view.GetOutputFor(tx.vin[j]);
@@ -4272,19 +4273,14 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Co
         if (block.IsProofOfStake())
         {
             // coinstake output 0 must be data output of blockheight
-            if (block.vtx[0]->vpout.size() < 2
-                || block.vtx[0]->vpout[0]->nVersion != OUTPUT_DATA)
+            int i;
+            if (!block.vtx[0]->GetCoinStakeHeight(i))
                 return state.DoS(100, false, REJECT_INVALID, "bad-cs-malformed", false, "coinstake txn is malformed");
             
-            int i;
-            std::vector<uint8_t> &vData = ((CTxOutData*)block.vtx[0]->vpout[0].get())->vData;
-            if (vData.size() < 4)
-                return state.DoS(100, false, REJECT_INVALID, "bad-cs", false, "malformed coinstake");
-            
-            memcpy(&i, &vData[0], 4);
             if (i != nHeight)
                 return state.DoS(100, false, REJECT_INVALID, "bad-cs-height", false, "block height mismatch in coinstake");
             
+            std::vector<uint8_t> &vData = ((CTxOutData*)block.vtx[0]->vpout[0].get())->vData;
             if (vData.size() > 8 && vData[4] == DO_VOTE)
             {
                 uint32_t voteToken;
@@ -4310,13 +4306,22 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Co
             if (block.GetBlockTime() <= pindexPrev->GetPastTimeLimit() || FutureDrift(block.GetBlockTime()) < pindexPrev->GetBlockTime())
                 return state.DoS(50, false, REJECT_INVALID, "bad-block-time", true, strprintf("%s: block's timestamp is too early", __func__));
             
+            
+            
             uint256 hashProof, targetProofOfStake;
             if ((!fImporting && !fReindex) // blocks are connected at end of import / reindex
                 && !CheckProofOfStake(pindexPrev, *block.vtx[0], block.nTime, block.nBits, hashProof, targetProofOfStake))
             {
                 LogPrintf("WARNING: ContextualCheckBlock(): check proof-of-stake failed for block %s\n", block.GetHash().ToString());
                 //return false; // do not error here as we expect this during initial block download
-                return state.DoS(50, false, REJECT_INVALID, "bad-proof-of-stake", true, strprintf("%s: CheckProofOfStake failed.", __func__));
+                if (!IsInitialBlockDownload())
+                {
+                    if (pindexPrev->bnStakeModifier.IsNull())
+                        // Can happen if the block is received out of order - CheckProofOfStake will run again on connectblock.
+                        LogPrint("pos", "%s: Accepting failed CheckProofOfStake block, missing stake-modifier.\n", __func__);
+                    else
+                        return state.DoS(50, false, REJECT_INVALID, "bad-proof-of-stake", true, strprintf("%s: CheckProofOfStake failed.", __func__));
+                };
             };
         } else
         {
@@ -4571,7 +4576,10 @@ static bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidation
     {
         pindex->SetProofOfStake();
         pindex->prevoutStake = pblock->vtx[0]->vin[0].prevout;
-        pindex->bnStakeModifier = ComputeStakeModifierV2(pindex->pprev, pindex->prevoutStake.hash);
+        if (pindex->pprev && pindex->pprev->bnStakeModifier.IsNull())
+            LogPrintf("Warning: %s - Previous stake modifier is null.\n", __func__);
+        else
+            pindex->bnStakeModifier = ComputeStakeModifierV2(pindex->pprev, pindex->prevoutStake.hash);
         setDirtyBlockIndex.insert(pindex);
     };
     
@@ -4679,11 +4687,14 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
             {
                 pindex->SetProofOfStake();
                 pindex->prevoutStake = pblock->vtx[0]->vin[0].prevout;
-                pindex->bnStakeModifier = ComputeStakeModifierV2(pindex->pprev, pindex->prevoutStake.hash);
+                if (pindex->pprev && pindex->pprev->bnStakeModifier.IsNull())
+                    LogPrintf("Warning: %s - Previous stake modifier is null.\n", __func__);
+                else
+                    pindex->bnStakeModifier = ComputeStakeModifierV2(pindex->pprev, pindex->prevoutStake.hash);
                 
                 pindex->nFlags |= BLOCK_FAILED_DUPLICATE_STAKE;
                 setDirtyBlockIndex.insert(pindex);
-            }
+            };
             
             GetMainSignals().BlockChecked(*pblock, state);
             

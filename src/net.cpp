@@ -1707,7 +1707,7 @@ void CConnman::ThreadOpenConnections()
         CSemaphoreGrant grant(*semOutbound);
         if (interruptNet)
             return;
-        
+
         // Add seed nodes if DNS seeds are all down (an infrastructure attack?).
         if (addrman.size() == 0 && (GetTime() - nStart > 60)) {
             static bool done = false;
@@ -1816,7 +1816,7 @@ void CConnman::ThreadOpenConnections()
                     return;
                 LogPrint("net", "Making feeler connection to %s\n", addrConnect.ToString());
             }
-            
+
             OpenNetworkConnection(addrConnect, (int)setConnected.size() >= std::min(nMaxConnections - 1, 2), &grant, NULL, false, fFeeler);
         }
     }

@@ -2427,18 +2427,13 @@ bool CHDWallet::LoadToWallet(const CWalletTx& wtxIn)
     int nBestHeight = chainActive.Height();
     if (wtx.IsCoinStake() && wtx.isAbandoned())
     {
-        // Abandoned coinstakes record original block hash in vHashes[0]
-        if (wtx.vHashes.size() > 0)
+        int csHeight;
+        if (wtx.tx->GetCoinStakeHeight(csHeight)
+            && csHeight > nBestHeight - 1000)
         {
-            uint256 hash = wtx.vHashes[0];
-            BlockMap::iterator mi = mapBlockIndex.find(hash);
-            if (mi != mapBlockIndex.end()
-                && mi->second->nHeight < nBestHeight - 1000)
-            {
-                // Add to MapStakeSeen to prevent node submitting a block that would be rejected.
-                const COutPoint &kernel = wtx.tx->vin[0].prevout;
-                AddToMapStakeSeen(kernel, hash);
-            };
+            // Add to MapStakeSeen to prevent node submitting a block that would be rejected.
+            const COutPoint &kernel = wtx.tx->vin[0].prevout;
+            AddToMapStakeSeen(kernel, hash);
         };
     };
     

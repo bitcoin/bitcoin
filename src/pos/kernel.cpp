@@ -167,13 +167,14 @@ bool CheckProofOfStake(const CBlockIndex *pindexPrev, const CTransaction &tx, in
     {
         if (fDebug) LogPrint("pos", "%s: GetTransaction failed for %s\n", __func__, txin.prevout.hash.ToString());
         return state.DoS(1, error("%s: prevout-not-in-chain", __func__), REJECT_INVALID, "prevout-not-in-chain");
-    }
+    };
+    
     const CTxOutBase *kernelout= txKernel->vpout[txin.prevout.n].get();
     if (!kernelout->IsStandardOutput())
         return state.DoS(100, error("%s: invalid-prevout", __func__), REJECT_INVALID, "invalid-prevout");
     
     const CTxOutStandard *kernelouts = kernelout->GetStandardOutput();
-    const CScript &kernelPubKey =kernelouts->scriptPubKey;
+    const CScript &kernelPubKey = kernelouts->scriptPubKey;
     const CAmount &amount = kernelouts->nValue;
     
     // Verify signature
@@ -189,7 +190,6 @@ bool CheckProofOfStake(const CBlockIndex *pindexPrev, const CTransaction &tx, in
             REJECT_INVALID, "verify-script-failed");
     
     const uint256 hashBlock = blockKernel.GetHash();
-    
     
     // Min age requirement
     int nDepth;

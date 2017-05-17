@@ -67,6 +67,26 @@ UniValue ping(const JSONRPCRequest& request)
     return NullUniValue;
 }
 
+std::string ServicesToString(ServiceFlags nSerivces)
+{
+    std::string rv = "";
+    
+    if (nSerivces & NODE_NETWORK)
+        rv += std::string(rv.length() > 0 ? " | " : "") + "NETWORK";
+    if (nSerivces & NODE_GETUTXO)
+        rv += std::string(rv.length() > 0 ? " | " : "") + "GETUTXO";
+    if (nSerivces & NODE_BLOOM)
+        rv += std::string(rv.length() > 0 ? " | " : "") + "BLOOM";
+    if (nSerivces & NODE_WITNESS)
+        rv += std::string(rv.length() > 0 ? " | " : "") + "WITNESS";
+    if (nSerivces & NODE_XTHIN)
+        rv += std::string(rv.length() > 0 ? " | " : "") + "XTHIN";
+    if (nSerivces & NODE_SMSG)
+        rv += std::string(rv.length() > 0 ? " | " : "") + "SMSG";
+    
+    return rv;
+};
+
 UniValue getpeerinfo(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0)
@@ -80,6 +100,7 @@ UniValue getpeerinfo(const JSONRPCRequest& request)
             "    \"addr\":\"host:port\",      (string) The ip address and port of the peer\n"
             "    \"addrlocal\":\"ip:port\",   (string) local address\n"
             "    \"services\":\"xxxxxxxxxxxxxxxx\",   (string) The services offered\n"
+            "    \"services_str\":\"string\", (string) The services offered, human readable\n"
             "    \"relaytxes\":true|false,    (boolean) Whether peer has asked us to relay transactions to it\n"
             "    \"lastsend\": ttt,           (numeric) The time in seconds since epoch (Jan 1 1970 GMT) of the last send\n"
             "    \"lastrecv\": ttt,           (numeric) The time in seconds since epoch (Jan 1 1970 GMT) of the last receive\n"
@@ -137,6 +158,7 @@ UniValue getpeerinfo(const JSONRPCRequest& request)
         if (!(stats.addrLocal.empty()))
             obj.push_back(Pair("addrlocal", stats.addrLocal));
         obj.push_back(Pair("services", strprintf("%016x", stats.nServices)));
+        obj.push_back(Pair("services_str", ServicesToString(stats.nServices)));
         obj.push_back(Pair("relaytxes", stats.fRelayTxes));
         obj.push_back(Pair("lastsend", stats.nLastSend));
         obj.push_back(Pair("lastrecv", stats.nLastRecv));
@@ -405,6 +427,7 @@ UniValue getnetworkinfo(const JSONRPCRequest& request)
             "  \"subversion\": \"/Satoshi:x.x.x/\",     (string) the server subversion string\n"
             "  \"protocolversion\": xxxxx,              (numeric) the protocol version\n"
             "  \"localservices\": \"xxxxxxxxxxxxxxxx\", (string) the services we offer to the network\n"
+            "  \"localservices_str\": \"string\",       (string) the services we offer to the network, human readable\n"
             "  \"localrelay\": true|false,              (bool) true if transaction relay is requested from peers\n"
             "  \"timeoffset\": xxxxx,                   (numeric) the time offset\n"
             "  \"connections\": xxxxx,                  (numeric) the number of connections\n"
@@ -442,7 +465,10 @@ UniValue getnetworkinfo(const JSONRPCRequest& request)
     obj.push_back(Pair("subversion",    strSubVersion));
     obj.push_back(Pair("protocolversion",PROTOCOL_VERSION));
     if(g_connman)
+    {
         obj.push_back(Pair("localservices", strprintf("%016x", g_connman->GetLocalServices())));
+        obj.push_back(Pair("localservices_str", ServicesToString(g_connman->GetLocalServices())));
+    }
     obj.push_back(Pair("localrelay",     fRelayTxes));
     obj.push_back(Pair("timeoffset",    GetTimeOffset()));
     if (g_connman) {

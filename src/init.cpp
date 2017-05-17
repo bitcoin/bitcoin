@@ -1700,8 +1700,8 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     // ********************************************************* Step 11: start node
 
     //// debug print
-    LogPrintf("mapBlockIndex.size() = %u\n",   mapBlockIndex.size());
-    LogPrintf("nBestHeight = %d\n",                   chainActive.Height());
+    LogPrintf("mapBlockIndex.size() = %u\n", mapBlockIndex.size());
+    LogPrintf("nBestHeight = %d\n", chainActive.Height());
     if (GetBoolArg("-listenonion", DEFAULT_LISTEN_ONION))
         StartTorControl(threadGroup, scheduler);
 
@@ -1712,7 +1712,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     std::string strNodeError;
     CConnman::Options connOptions;
-    connOptions.nLocalServices = nLocalServices;
+    connOptions.nLocalServices = fSecMsgEnabled ? ServiceFlags(nLocalServices | NODE_SMSG) : nLocalServices;
     connOptions.nRelevantServices = nRelevantServices;
     connOptions.nMaxConnections = nMaxConnections;
     connOptions.nMaxOutbound = std::min(MAX_OUTBOUND_CONNECTIONS, connOptions.nMaxConnections);
