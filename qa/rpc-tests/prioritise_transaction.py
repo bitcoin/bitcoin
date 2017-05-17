@@ -16,7 +16,7 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
     def __init__(self):
         super().__init__()
         self.setup_clean_chain = True
-        self.num_nodes = 1
+        self.num_nodes = 2
 
         self.txouts = gen_return_txouts()
 
@@ -25,6 +25,8 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         self.is_network_split = False
 
         self.nodes.append(start_node(0, self.options.tmpdir, ["-debug", "-printpriority=1"]))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug", "-printpriority=1"])) # TODO move this to extra_args when Bitcoin #10198 gets backported
+        connect_nodes(self.nodes[0], 1) # TODO remove this when Bitcoin #10198 gets backported
         self.relayfee = self.nodes[0].getnetworkinfo()['relayfee']
 
     def run_test(self):
@@ -138,6 +140,17 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         print("Assert that prioritised free transaction is accepted to mempool")
         assert_equal(self.nodes[0].sendrawtransaction(tx2_hex), tx2_id)
         assert(tx2_id in self.nodes[0].getrawmempool())
+
+        # Test that calling prioritisetransaction is sufficient to trigger
+        # getblocktemplate to (eventually) return a new block.
+        mock_time = int(time.time())
+        self.nodes[0].setmocktime(mock_time)
+        template = self.nodes[0].getblocktemplate()
+        self.nodes[0].prioritisetransaction(tx_id, -int(self.relayfee*COIN))
+        self.nodes[0].setmocktime(mock_time+10)
+        new_template = self.nodes[0].getblocktemplate()
+
+        assert(template != new_template)
 
 if __name__ == '__main__':
     PrioritiseTransactionTest().main()
