@@ -2769,7 +2769,7 @@ UniValue bumpfee(const JSONRPCRequest& request)
             "The command will fail if the wallet or mempool contains a transaction that spends one of T's outputs.\n"
             "By default, the new fee will be calculated automatically using estimatefee.\n"
             "The user can specify a confirmation target for estimatefee.\n"
-            "Alternatively, the user can specify totalFee, or use RPC setpaytxfee to set a higher fee rate.\n"
+            "Alternatively, the user can specify totalFee, or use RPC settxfee to set a higher fee rate.\n"
             "At a minimum, the new fee rate must be high enough to pay an additional new relay fee (incrementalfee\n"
             "returned by getnetworkinfo) to enter the node's mempool.\n"
             "\nArguments:\n"
