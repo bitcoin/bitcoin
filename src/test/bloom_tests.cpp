@@ -543,4 +543,121 @@ BOOST_AUTO_TEST_CASE(rolling_bloom)
     }
 }
 
+BOOST_AUTO_TEST_CASE(bloom_full_and_size_tests)
+{
+    {
+        // FP rate of 1.0 will create an empty, zero-element bloom filter
+        CBloomFilter filter(1, 1.0, 0, BLOOM_UPDATE_ALL);
+        BOOST_CHECK(filter.getFull());
+        filter.insert(ParseHex("00"));
+    }
+
+    {
+        // a filter with good parameters should be non-full upon construction
+        CBloomFilter filter(8, 0.01, 0, BLOOM_UPDATE_ALL);
+        BOOST_CHECK(! filter.getFull());
+    }
+
+    {
+        // constructing bloom filters without any empty elements should work
+        // and yield non-full filters as nElements will be set to 1
+        CBloomFilter filter(0, 0.01, 0, BLOOM_UPDATE_ALL);
+        BOOST_CHECK(! filter.getFull());
+    }
+
+    {
+        // default empty filter is full
+        CBloomFilter filter;
+        BOOST_CHECK(filter.getFull());
+    }
+
+    {
+        // deserialization of empty filter should indicate it is full
+        // (test for implicit UpdateEmptyFull)
+        CBloomFilter filter;
+        CDataStream stream(ParseHex("00000000000000000000"),
+                           SER_NETWORK, PROTOCOL_VERSION);
+        stream >> filter;
+        BOOST_CHECK(filter.getFull());
+        BOOST_CHECK(filter.IsWithinSizeConstraints());
+    }
+
+    {
+        // deserialization of one-element empty filter should be non-full
+        // (test for implicit UpdateEmptyFull)
+        CBloomFilter filter;
+        CDataStream stream(ParseHex("0100000000000000000000"),
+                           SER_NETWORK, PROTOCOL_VERSION);
+        stream >> filter;
+        BOOST_CHECK(!filter.getFull());
+        BOOST_CHECK(filter.IsWithinSizeConstraints());
+    }
+
+    {
+        // deserialization of one-element full filter should indicate fullness
+        // (test for implicit UpdateEmptyFull)
+        CBloomFilter filter;
+        CDataStream stream(ParseHex("01ff000000000000000000"),
+                           SER_NETWORK, PROTOCOL_VERSION);
+        stream >> filter;
+        BOOST_CHECK(filter.getFull());
+        BOOST_CHECK(filter.IsWithinSizeConstraints());
+    }
+    {
+        // deserialization of large empty filter
+        // (test for implicit UpdateEmptyFull, size constraint check)
+        CBloomFilter filter;
+        CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
+
+        vector<unsigned char> vch(1U<<20); // too large filter
+        stream << vch;
+        stream << 0U; // nHashFuncs
+        stream << 0U; // nTweak
+        stream << (unsigned char)0; // nFlags
+
+        stream >> filter;
+        BOOST_CHECK(!filter.getFull());
+        BOOST_CHECK(!filter.IsWithinSizeConstraints());
+    }
+
+    {
+        // deserialization of large full filter
+        // (test for implicit UpdateEmptyFull, size constraint check)
+        CBloomFilter filter;
+        CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
+
+        vector<unsigned char> vch(1U<<20, 0xff); // too large filter
+        stream << vch;
+        stream << 0U; // nHashFuncs
+        stream << 0U; // nTweak
+        stream << (unsigned char)0; // nFlags
+
+
+        stream >> filter;
+        BOOST_CHECK(filter.getFull());
+        BOOST_CHECK(!filter.IsWithinSizeConstraints());
+    }
+
+    {
+        // deserialization of empty filter with too many hash functions
+        // (to check size constraint check)
+        CBloomFilter filter;
+        CDataStream stream(ParseHex("0000ffffff0000000000"),
+                           SER_NETWORK, PROTOCOL_VERSION);
+        stream >> filter;
+        BOOST_CHECK(!filter.IsWithinSizeConstraints());
+    }
+
+    {
+       // a rolling bloom filter can be constructed with much larger size than a regular one
+        CRollingBloomFilter rollbloom(120000, 0.000001);
+        BOOST_CHECK(rollbloom.vDataTotalSize() > 800000);
+    }
+
+    {
+       // a regular one, not so much
+        CBloomFilter filter(120000, 0.000001, 0, 0);
+        BOOST_CHECK(filter.vDataSize() < 50000);
+    }
+}
 BOOST_AUTO_TEST_SUITE_END()
