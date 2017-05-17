@@ -693,7 +693,7 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
     mapLinks.erase(it);
     mapTx.erase(it);
     nTransactionsUpdated++;
-    if (minerPolicyEstimator) {minerPolicyEstimator->removeTx(hash);}
+    if (minerPolicyEstimator) {minerPolicyEstimator->removeTx(hash, false);}
     removeAddressIndex(hash);
     removeSpentIndex(hash);
 }

@@ -42,53 +42,57 @@ class TxConfirmStats;
  * within your desired 5 blocks.
  *
  * Here is a brief description of the implementation:
- * When a transaction enters the mempool, we
- * track the height of the block chain at entry.  Whenever a block comes in,
- * we count the number of transactions in each bucket and the total amount of feerate
- * paid in each bucket. Then we calculate how many blocks Y it took each
- * transaction to be mined and we track an array of counters in each bucket
- * for how long it to took transactions to get confirmed from 1 to a max of 25
- * and we increment all the counters from Y up to 25. This is because for any
- * number Z>=Y the transaction was successfully mined within Z blocks.  We
- * want to save a history of this information, so at any time we have a
- * counter of the total number of transactions that happened in a given feerate
- * bucket and the total number that were confirmed in each number 1-25 blocks
- * or less for any bucket.   We save this history by keeping an exponentially
- * decaying moving average of each one of these stats.  Furthermore we also
- * keep track of the number unmined (in mempool) transactions in each bucket
- * and for how many blocks they have been outstanding and use that to increase
- * the number of transactions we've seen in that feerate bucket when calculating
- * an estimate for any number of confirmations below the number of blocks
- * they've been outstanding.
+ * When a transaction enters the mempool, we track the height of the block chain
+ * at entry.  All further calculations are conducted only on this set of "seen"
+ * transactions. Whenever a block comes in, we count the number of transactions
+ * in each bucket and the total amount of feerate paid in each bucket. Then we
+ * calculate how many blocks Y it took each transaction to be mined.  We convert
+ * from a number of blocks to a number of periods Y' each encompassing "scale"
+ * blocks.  This is is tracked in 3 different data sets each up to a maximum
+ * number of periods. Within each data set we have an array of counters in each
+ * feerate bucket and we increment all the counters from Y' up to max periods
+ * representing that a tx was successfullly confirmed in less than or equal to
+ * that many periods. We want to save a history of this information, so at any
+ * time we have a counter of the total number of transactions that happened in a
+ * given feerate bucket and the total number that were confirmed in each of the
+ * periods or less for any bucket.  We save this history by keeping an
+ * exponentially decaying moving average of each one of these stats.  This is
+ * done for a different decay in each of the 3 data sets to keep relevant data
+ * from different time horizons.  Furthermore we also keep track of the number
+ * unmined (in mempool or left mempool without being included in a block)
+ * transactions in each bucket and for how many blocks they have been
+ * outstanding and use both of these numbers to increase the number of transactions
+ * we've seen in that feerate bucket when calculating an estimate for any number
+ * of confirmations below the number of blocks they've been outstanding.
  */
 
-/** Track confirm delays up to 25 blocks, can't estimate beyond that */
-static const unsigned int MAX_BLOCK_CONFIRMS = 25;
+/* Identifier for each of the 3 different TxConfirmStats which will track
+ * history over different time horizons. */
+enum FeeEstimateHorizon {
+    SHORT_HALFLIFE = 0,
+    MED_HALFLIFE = 1,
+    LONG_HALFLIFE = 2
+};
 
-/** Decay of .998 is a half-life of 346 blocks or about 14.4 hours */
-static const double DEFAULT_DECAY = .998;
+/* Used to return detailed information about a feerate bucket */
+struct EstimatorBucket
+{
+    double start = -1;
+    double end = -1;
+    double withinTarget = 0;
+    double totalConfirmed = 0;
+    double inMempool = 0;
+    double leftMempool = 0;
+};
 
-/** Require greater than 95% of X feerate transactions to be confirmed within Y blocks for X to be big enough */
-static const double MIN_SUCCESS_PCT = .95;
-
-/** Require an avg of 1 tx in the combined feerate bucket per block to have stat significance */
-static const double SUFFICIENT_FEETXS = 1;
-
-// Minimum and Maximum values for tracking feerates
-// The MIN_BUCKET_FEERATE should just be set to the lowest reasonable feerate we
-// might ever want to track.  Historically this has been 1000 since it was
-// inheriting DEFAULT_MIN_RELAY_TX_FEE and changing it is disruptive as it
-// invalidates old estimates files. So leave it at 1000 unless it becomes
-// necessary to lower it, and then lower it substantially.
-static constexpr double MIN_BUCKET_FEERATE = 1000;
-static const double MAX_BUCKET_FEERATE = 1e7;
-static const double INF_FEERATE = MAX_MONEY;
-
-// We have to lump transactions into buckets based on feerate, but we want to be able
-// to give accurate estimates over a large range of potential feerates
-// Therefore it makes sense to exponentially space the buckets
-/** Spacing of FeeRate buckets */
-static const double FEE_SPACING = 1.1;
+/* Used to return detailed information about a fee estimate calculation */
+struct EstimationResult
+{
+    EstimatorBucket pass;
+    EstimatorBucket fail;
+    double decay;
+    unsigned int scale;
+};
 
 /**
  *  We want to be able to estimate feerates that are needed on tx's to be included in
@@ -97,6 +101,55 @@ static const double FEE_SPACING = 1.1;
  */
 class CBlockPolicyEstimator
 {
+private:
+    /** Track confirm delays up to 12 blocks for short horizon */
+    static constexpr unsigned int SHORT_BLOCK_PERIODS = 12;
+    static constexpr unsigned int SHORT_SCALE = 1;
+    /** Track confirm delays up to 48 blocks for medium horizon */
+    static constexpr unsigned int MED_BLOCK_PERIODS = 24;
+    static constexpr unsigned int MED_SCALE = 2;
+    /** Track confirm delays up to 1008 blocks for long horizon */
+    static constexpr unsigned int LONG_BLOCK_PERIODS = 42;
+    static constexpr unsigned int LONG_SCALE = 24;
+    /** Historical estimates that are older than this aren't valid */
+    static const unsigned int OLDEST_ESTIMATE_HISTORY = 6 * 1008;
+
+    /** Decay of .962 is a half-life of 18 blocks or about 3 hours */
+    static constexpr double SHORT_DECAY = .962;
+    /** Decay of .998 is a half-life of 144 blocks or about 1 day */
+    static constexpr double MED_DECAY = .9952;
+    /** Decay of .9995 is a half-life of 1008 blocks or about 1 week */
+    static constexpr double LONG_DECAY = .99931;
+
+    /** Require greater than 60% of X feerate transactions to be confirmed within Y/2 blocks*/
+    static constexpr double HALF_SUCCESS_PCT = .6;
+    /** Require greater than 85% of X feerate transactions to be confirmed within Y blocks*/
+    static constexpr double SUCCESS_PCT = .85;
+    /** Require greater than 95% of X feerate transactions to be confirmed within 2 * Y blocks*/
+    static constexpr double DOUBLE_SUCCESS_PCT = .95;
+
+    /** Require an avg of 0.1 tx in the combined feerate bucket per block to have stat significance */
+    static constexpr double SUFFICIENT_FEETXS = 0.1;
+    /** Require an avg of 0.5 tx when using short decay since there are fewer blocks considered*/
+    static constexpr double SUFFICIENT_TXS_SHORT = 0.5;
+
+    /** Minimum and Maximum values for tracking feerates
+     * The MIN_BUCKET_FEERATE should just be set to the lowest reasonable feerate we
+     * might ever want to track.  Historically this has been 1000 since it was
+     * inheriting DEFAULT_MIN_RELAY_TX_FEE and changing it is disruptive as it
+     * invalidates old estimates files. So leave it at 1000 unless it becomes
+     * necessary to lower it, and then lower it substantially.
+     */
+    static constexpr double MIN_BUCKET_FEERATE = 1000;
+    static constexpr double MAX_BUCKET_FEERATE = 1e7;
+
+    /** Spacing of FeeRate buckets
+     * We have to lump transactions into buckets based on feerate, but we want to be able
+     * to give accurate estimates over a large range of potential feerates
+     * Therefore it makes sense to exponentially space the buckets
+     */
+    static constexpr double FEE_SPACING = 1.05;
+
 public:
     /** Create new BlockPolicyEstimator and initialize stats tracking classes with default values */
     CBlockPolicyEstimator();
@@ -110,16 +163,23 @@ public:
     void processTransaction(const CTxMemPoolEntry& entry, bool validFeeEstimate);
 
     /** Remove a transaction from the mempool tracking stats*/
-    bool removeTx(uint256 hash);
+    bool removeTx(uint256 hash, bool inBlock);
 
-    /** Return a feerate estimate */
+    /** DEPRECATED. Return a feerate estimate */
     CFeeRate estimateFee(int confTarget) const;
 
-    /** Estimate feerate needed to get be included in a block within
-     *  confTarget blocks. If no answer can be given at confTarget, return an
-     *  estimate at the lowest target where one can be given.
+    /** Estimate feerate needed to get be included in a block within confTarget
+     *  blocks. If no answer can be given at confTarget, return an estimate at
+     *  the closest target where one can be given.  'conservative' estimates are
+     *  valid over longer time horizons also.
      */
-    CFeeRate estimateSmartFee(int confTarget, int *answerFoundAtTarget, const CTxMemPool& pool) const;
+    CFeeRate estimateSmartFee(int confTarget, int *answerFoundAtTarget, const CTxMemPool& pool, bool conservative = true) const;
+
+    /** Return a specific fee estimate calculation with a given success
+     * threshold and time horizon, and optionally return detailed data about
+     * calculation
+     */
+    CFeeRate estimateRawFee(int confTarget, double successThreshold, FeeEstimateHorizon horizon, EstimationResult *result = nullptr) const;
 
     /** Write estimation data to a file */
     bool Write(CAutoFile& fileout) const;
@@ -127,9 +187,15 @@ public:
     /** Read estimation data from a file */
     bool Read(CAutoFile& filein);
 
+    /** Empty mempool transactions on shutdown to record failure to confirm for txs still in mempool */
+    void FlushUnconfirmed(CTxMemPool& pool);
+
 private:
-    CFeeRate minTrackedFee;    //!< Passed to constructor to avoid dependency on main
     unsigned int nBestSeenHeight;
+    unsigned int firstRecordedHeight;
+    unsigned int historicalFirst;
+    unsigned int historicalBest;
+
     struct TxStatsInfo
     {
         unsigned int blockHeight;
@@ -142,14 +208,30 @@ private:
 
     /** Classes to track historical data on transaction confirmations */
     TxConfirmStats* feeStats;
+    TxConfirmStats* shortStats;
+    TxConfirmStats* longStats;
 
     unsigned int trackedTxs;
     unsigned int untrackedTxs;
+
+    std::vector<double> buckets;              // The upper-bound of the range for the bucket (inclusive)
+    std::map<double, unsigned int> bucketMap; // Map of bucket upper-bound to index into all vectors by bucket
 
     mutable CCriticalSection cs_feeEstimator;
 
     /** Process a transaction confirmed in a block*/
     bool processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry* entry);
 
+    /** Helper for estimateSmartFee */
+    double estimateCombinedFee(unsigned int confTarget, double successThreshold, bool checkShorterHorizon) const;
+    /** Helper for estimateSmartFee */
+    double estimateConservativeFee(unsigned int doubleTarget) const;
+    /** Number of blocks of data recorded while fee estimates have been running */
+    unsigned int BlockSpan() const;
+    /** Number of blocks of recorded fee estimate data represented in saved data file */
+    unsigned int HistoricalBlockSpan() const;
+    /** Calculation of highest target that reasonable estimate can be provided for */
+    unsigned int MaxUsableEstimate() const;
 };
+
 #endif /*BITCOIN_POLICYESTIMATOR_H */
