@@ -21,7 +21,7 @@ requester.AskFor(...)
 
 After the object arrives (its ok to call after ANY object arrives), call "requester.Received(...)" to indicate
 successful receipt, "requester.Rejected(...)" to indicate a bad object (request manager will try someone else), or
-"requester.AlreadReceived" to indicate the receipt of an object that has already been received.
+"requester.AlreadyReceived" to indicate the receipt of an object that has already been received.
  */
 
 #ifndef REQUEST_MANAGER_H
