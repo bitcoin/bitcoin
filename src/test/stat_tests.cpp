@@ -8,7 +8,6 @@
 #include <boost/test/unit_test.hpp>
 
 BOOST_FIXTURE_TEST_SUITE(stat_tests, BasicTestingSetup)
-
 BOOST_AUTO_TEST_CASE(stat_testvectors)
 {
   //const int numMetrics = 5;
@@ -115,6 +114,24 @@ BOOST_AUTO_TEST_CASE(stat_testvectors)
   BOOST_CHECK(s1.Series(0, array, 15) == 15);
   for (int i=0;i<15;i++)
     BOOST_CHECK(array[i] == 5);
+}
+
+BOOST_AUTO_TEST_CASE(stat_empty_construct)
+{
+    {
+        /*! Create non-zero CStatHistory object and destroy it again.
+          This hopefully primes the same memory for the test below to be
+          non-zero, so the (formerly) missing initialization can be caught.
+        */
+        CStatHistory<uint64_t> stats("name");
+        stats += 0x5555555555555555UL;
+        BOOST_CHECK(stats() == 0x5555555555555555UL);
+    }
+    {
+        CStatHistory<uint64_t> stats;
+        // check that default constructor zeroes as well
+        BOOST_CHECK(stats() == 0UL); 
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
