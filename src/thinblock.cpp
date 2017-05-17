@@ -358,13 +358,13 @@ bool CXThinBlockTx::HandleMessage(CDataStream &vRecv, CNode *pfrom)
 
     LogPrint("net", "received blocktxs for %s peer=%d\n", inv.hash.ToString(), pfrom->id);
     {
+        // Do not process unrequested xblocktx unless from an expedited node.
         LOCK(pfrom->cs_mapthinblocksinflight);
-        if (!pfrom->mapThinBlocksInFlight.count(inv.hash))
+        if (!pfrom->mapThinBlocksInFlight.count(inv.hash) && !IsExpeditedNode(pfrom))
         {
-            LogPrint("thin",
-                "xblocktx received but it was either not requested or it was beaten by another block %s  peer=%d\n",
-                inv.hash.ToString(), pfrom->id);
-            return true;
+            Misbehaving(pfrom->GetId(), 10);
+            return error("Received xblocktx %s from peer %s but was unrequested", inv.hash.ToString(),
+                pfrom->GetLogName());
         }
     }
 
@@ -548,7 +548,6 @@ bool CXThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom, string strComm
         return error("%s message received from a non thinblock node, peer=%d", strCommand, pfrom->GetId());
     }
 
-    bool fAlreadyHave = false;
     int nSizeThinBlock = vRecv.size();
     CInv inv(MSG_BLOCK, uint256());
 
@@ -596,7 +595,12 @@ bool CXThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom, string strComm
         // Return early if we already have the block data
         if (pIndex->nStatus & BLOCK_HAVE_DATA)
         {
+            // Tell the Request Manager we received this block
+            requester.AlreadyReceived(inv);
+
             ClearThinBlockInFlight(pfrom, thinBlock.header.GetHash());
+            LogPrint("thin", "Returning because we already have block data %s from peer %s hop %d size %d bytes\n",
+                inv.hash.ToString(), pfrom->GetLogName(), nHops, nSizeThinBlock);
             return true;
         }
 
@@ -622,16 +626,13 @@ bool CXThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom, string strComm
             LogPrint("thin", "Received %s %s from peer %s. Size %d bytes.\n", strCommand, inv.hash.ToString(),
                 pfrom->GetLogName(), nSizeThinBlock);
 
-            // An expedited block or re-requested xthin can arrive and beat the original thin block request/response
-            if (!pfrom->mapThinBlocksInFlight.count(inv.hash))
+            // Do not process unrequested xthinblocks unless from an expedited node.
+            LOCK(pfrom->cs_mapthinblocksinflight);
+            if (!pfrom->mapThinBlocksInFlight.count(inv.hash) && !IsExpeditedNode(pfrom))
             {
-                LogPrint("thin", "%s %s from peer %s received but we may already have processed it\n", strCommand,
-                    inv.hash.ToString(), pfrom->GetLogName());
-                // I'll still continue processing if we don't have an accepted block yet
-                fAlreadyHave = AlreadyHave(inv);
-                if (fAlreadyHave)
-                    // record the bytes received from the thinblock even though we had it already
-                    requester.Received(inv, pfrom, nSizeThinBlock);
+                Misbehaving(pfrom->GetId(), 10);
+                return error("%s %s from peer %s but was unrequested\n", strCommand, inv.hash.ToString(),
+                    pfrom->GetLogName());
             }
         }
     }
@@ -639,9 +640,6 @@ bool CXThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom, string strComm
     // Send expedited block without checking merkle root.
     if (!IsRecentlyExpeditedAndStore(inv.hash))
         SendExpeditedBlock(thinBlock, nHops, pfrom);
-
-    if (fAlreadyHave)
-        return true;
 
     return thinBlock.process(pfrom, nSizeThinBlock, strCommand);
 }
@@ -749,7 +747,7 @@ bool CXThinBlock::process(CNode *pfrom,
                 }
                 else
                 {
-                    LogPrint("thin", "Xthin block has either repeated or missing transactions");
+                    LogPrint("thin", "Xthin block has either repeated or missing transactions\n");
                     collision = true;
                     break;
                 }
