@@ -449,6 +449,9 @@ public:
     CAmount GetAvailableWatchOnlyCredit(const bool& fUseCache=true) const;
     CAmount GetChange() const;
 
+    // Get the marginal bytes if spending the specified output from this transaction
+    int GetSpendSize(unsigned int i) const;
+
     void GetAmounts(std::list<COutputEntry>& listReceived,
                     std::list<COutputEntry>& listSent, CAmount& nFee, std::string& strSentAccount, const isminefilter& filter) const;
 
@@ -483,11 +486,33 @@ public:
 
         outpoint = COutPoint(walletTx->GetHash(), i);
         txout = walletTx->tx->vout[i];
+        eValue = txout.nValue;
+    }
+
+    CInputCoin(const CWalletTx* walletTx, unsigned int i, CAmount effectiveFee)
+    {
+        if (!walletTx)
+            throw std::invalid_argument("walletTx should not be null");
+        if (i >= walletTx->tx->vout.size())
+            throw std::out_of_range("The output index is out of range");
+        if (effectiveFee < 0) {
+            throw std::invalid_argument("effectiveFee should be non-negative");
+        }
+
+        outpoint = COutPoint(walletTx->GetHash(), i);
+        txout = walletTx->tx->vout[i];
+        eValue = txout.nValue - effectiveFee;
     }
 
     COutPoint outpoint;
     CTxOut txout;
+    // "Effective value" of an input coin for coin selection purposes.
+    // Typically this is nValue - feeRate*nBytes_for_input.
+    // This ensures that each coin "pays its way" to the final target amount.
+    CAmount eValue;
 
+
+    // TODO remove?
     bool operator<(const CInputCoin& rhs) const {
         return outpoint < rhs.outpoint;
     }
@@ -508,6 +533,9 @@ public:
     int i;
     int nDepth;
 
+    /** Pre-computed estimated size of this output as a fully-signed input in a transaction */
+    int nInputBytes;
+
     /** Whether we have the private keys to spend this output */
     bool fSpendable;
 
@@ -523,7 +551,12 @@ public:
 
     COutput(const CWalletTx *txIn, int iIn, int nDepthIn, bool fSpendableIn, bool fSolvableIn, bool fSafeIn)
     {
-        tx = txIn; i = iIn; nDepth = nDepthIn; fSpendable = fSpendableIn; fSolvable = fSolvableIn; fSafe = fSafeIn;
+        tx = txIn; i = iIn; nDepth = nDepthIn; fSpendable = fSpendableIn; fSolvable = fSolvableIn; fSafe = fSafeIn; nInputBytes = -1;
+        // If known and signable by the given wallet, compute nInputBytes
+        // Failure will keep this value -1
+        if (fSpendable && tx) {
+            nInputBytes = tx->GetSpendSize(i);
+        }
     }
 
     std::string ToString() const;
@@ -658,7 +691,7 @@ private:
      * all coins from coinControl are selected; Never select unconfirmed coins
      * if they are not ours
      */
-    bool SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CCoinControl *coinControl = NULL) const;
+    bool SelectCoins(const std::vector<COutput>& vAvailableCoins, const CFeeRate effectiveFee, const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CCoinControl *coinControl = NULL) const;
 
     CWalletDB *pwalletdbEncryption;
 
@@ -826,7 +859,7 @@ public:
      * completion the coin set and corresponding actual target value is
      * assembled
      */
-    bool SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int nConfTheirs, uint64_t nMaxAncestors, std::vector<COutput> vCoins, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet) const;
+    bool SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int nConfTheirs, uint64_t nMaxAncestors, std::vector<COutput>& vCoins, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, CFeeRate effectiveFee) const;
 
     bool IsSpent(const uint256& hash, unsigned int n) const;
 
@@ -943,15 +976,18 @@ public:
     static CFeeRate minTxFee;
     static CFeeRate fallbackFee;
     /**
-     * Estimate the minimum fee considering user set parameters
+     * Estimate the minimum fee rate considering user set parameters
      * and the required fee
      */
-    static CAmount GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarget, const CTxMemPool& pool, const CBlockPolicyEstimator& estimator, bool ignoreUserSetFee = false);
+    static CFeeRate GetMinimumFeeRate(unsigned int nConfirmTarget, const CTxMemPool& pool, const CBlockPolicyEstimator& estimator, bool ignoreUserSetFee = false);
+
     /**
      * Return the minimum required fee taking into account the
      * floating relay fee and user set minimum transaction fee
      */
-    static CAmount GetRequiredFee(unsigned int nTxBytes);
+    static CFeeRate GetRequiredFeeRate();
+
+    int64_t CalculateMaximumSignedTxSize(const CTransaction &tx) const;
 
     bool NewKeyPool();
     size_t KeypoolCountExternalKeys();

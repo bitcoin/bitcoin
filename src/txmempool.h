@@ -561,13 +561,13 @@ public:
      *  already in it.  */
     void CalculateDescendants(txiter it, setEntries &setDescendants);
 
-    /** The minimum fee to get into the mempool, which may itself not be enough
+    /** The minimum fee rate to get into the mempool, which may itself not be enough
       *  for larger-sized transactions.
       *  The incrementalRelayFee policy variable is used to bound the time it
       *  takes the fee rate to go back down all the way to 0. When the feerate
       *  would otherwise be half of this, it is set to 0 instead.
       */
-    CFeeRate GetMinFee(size_t sizelimit) const;
+    CFeeRate GetMinFeeRate(size_t sizelimit) const;
 
     /** Remove transactions from the mempool until its dynamic size is <= sizelimit.
       *  pvNoSpendsRemaining, if set, will be populated with the list of transactions

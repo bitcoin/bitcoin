@@ -475,21 +475,15 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         std::vector<unsigned char> witnessprogram;
         if (out.tx->tx->vout[out.i].scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram))
         {
-            nBytesInputs += (32 + 4 + 1 + (107 / WITNESS_SCALE_FACTOR) + 4);
             fWitness = true;
         }
-        else if(ExtractDestination(out.tx->tx->vout[out.i].scriptPubKey, address))
-        {
-            CPubKey pubkey;
-            CKeyID *keyid = boost::get<CKeyID>(&address);
-            if (keyid && model->getPubKey(*keyid, pubkey))
-            {
-                nBytesInputs += (pubkey.IsCompressed() ? 148 : 180);
-            }
-            else
-                nBytesInputs += 148; // in all error cases, simply assume 148 here
+
+        // in all error cases, simply assume 148 here
+        if (out.nInputBytes == -1) {
+            nBytesInputs += 148;
+        } else {
+            nBytesInputs += out.nInputBytes;
         }
-        else nBytesInputs += 148;
     }
 
     // calculation
@@ -501,9 +495,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         {
             // there is some fudging in these numbers related to the actual virtual transaction size calculation that will keep this estimate from being exact.
             // usually, the result will be an overestimate within a couple of satoshis so that the confirmation dialog ends up displaying a slightly smaller fee.
-            // also, the witness stack size value value is a variable sized integer. usually, the number of stack items will be well under the single byte var int limit.
             nBytes += 2; // account for the serialized marker and flag bytes
-            nBytes += nQuantity; // account for the witness byte that holds the number of stack items for each input.
         }
 
         // in the subtract fee from amount case, we can tell if zero change already and subtract the bytes, so that fee calculation afterwards is accurate
@@ -512,7 +504,10 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
                 nBytes -= 34;
 
         // Fee
-        nPayFee = CWallet::GetMinimumFee(nBytes, nTxConfirmTarget, ::mempool, ::feeEstimator);
+        nPayFee = CWallet::GetMinimumFeeRate(nTxConfirmTarget, ::mempool, ::feeEstimator).GetFee(nBytes);
+        if (nPayFee > maxTxFee) {
+            nPayFee = maxTxFee;
+        }
         if (nPayFee > 0 && coinControl->nMinimumTotalFee > nPayFee)
             nPayFee = coinControl->nMinimumTotalFee;
 
@@ -590,9 +585,9 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     // how many satoshis the estimated fee can vary per byte we guess wrong
     double dFeeVary;
     if (payTxFee.GetFeePerK() > 0)
-        dFeeVary = (double)std::max(CWallet::GetRequiredFee(1000), payTxFee.GetFeePerK()) / 1000;
+        dFeeVary = (double)std::max(CWallet::GetRequiredFeeRate().GetFee(1000), payTxFee.GetFeePerK()) / 1000;
     else {
-        dFeeVary = (double)std::max(CWallet::GetRequiredFee(1000), ::feeEstimator.estimateSmartFee(nTxConfirmTarget, NULL, ::mempool).GetFeePerK()) / 1000;
+        dFeeVary = (double)std::max(CWallet::GetRequiredFeeRate().GetFee(1000), ::feeEstimator.estimateSmartFee(nTxConfirmTarget, NULL, ::mempool).GetFeePerK()) / 1000;
     }
     QString toolTip4 = tr("Can vary +/- %1 satoshi(s) per input.").arg(dFeeVary);
 
