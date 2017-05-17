@@ -23,10 +23,10 @@
 #include "script/standard.h"
 #include "timedata.h"
 #include "txmempool.h"
+#include "unlimited.h"
 #include "util.h"
 #include "utilmoneystr.h"
 #include "validationinterface.h"
-#include "unlimited.h"
 
 #include <boost/thread.hpp>
 #include <boost/tuple/tuple.hpp>
@@ -52,17 +52,16 @@ class ScoreCompare
 {
 public:
     ScoreCompare() {}
-
     bool operator()(const CTxMemPool::txiter a, const CTxMemPool::txiter b)
     {
-        return CompareTxMemPoolEntryByScore()(*b,*a); // Convert to less than
+        return CompareTxMemPoolEntryByScore()(*b, *a); // Convert to less than
     }
 };
 
-int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
+int64_t UpdateTime(CBlockHeader *pblock, const Consensus::Params &consensusParams, const CBlockIndex *pindexPrev)
 {
     int64_t nOldTime = pblock->nTime;
-    int64_t nNewTime = std::max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
+    int64_t nNewTime = std::max(pindexPrev->GetMedianTimePast() + 1, GetAdjustedTime());
 
     if (nOldTime < nNewTime)
         pblock->nTime = nNewTime;
@@ -203,8 +202,8 @@ CBlockTemplate *BlockAssembler::CreateNewBlock(const CScript &scriptPubKeyIn, bo
 
     nLastBlockTx = nBlockTx;
     nLastBlockSize = nBlockSize;
-    LogPrintf("CreateNewBlock(): total size %llu txs: %llu fees: %lld sigops %u\n",
-              nBlockSize, nBlockTx, nFees, nBlockSigOps);
+    LogPrintf("CreateNewBlock(): total size %llu txs: %llu fees: %lld sigops %u\n", nBlockSize, nBlockTx, nFees,
+        nBlockSigOps);
 
     // Create coinbase transaction.
     pblock->vtx[0] = coinbaseTx(scriptPubKeyIn, nHeight, nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus()));
@@ -338,8 +337,8 @@ void BlockAssembler::AddToBlock(CBlockTemplate *pblocktemplate, CTxMemPool::txit
         CAmount dummy;
         mempool.ApplyDeltas(iter->GetTx().GetHash(), dPriority, dummy);
         LogPrintf("priority %.1f fee %s txid %s\n", dPriority,
-                  CFeeRate(iter->GetModifiedFee(), iter->GetTxSize()).ToString().c_str(),
-                  iter->GetTx().GetHash().ToString().c_str());
+            CFeeRate(iter->GetModifiedFee(), iter->GetTxSize()).ToString().c_str(),
+            iter->GetTx().GetHash().ToString().c_str());
     }
 }
 
@@ -487,7 +486,7 @@ void BlockAssembler::addPriorityTxs(CBlockTemplate *pblocktemplate)
     }
 }
 
-void IncrementExtraNonce(CBlock* pblock, unsigned int& nExtraNonce)
+void IncrementExtraNonce(CBlock *pblock, unsigned int &nExtraNonce)
 {
     // Update nExtraNonce
     static uint256 hashPrevBlock;
@@ -502,9 +501,9 @@ void IncrementExtraNonce(CBlock* pblock, unsigned int& nExtraNonce)
 
     CScript script = (CScript() << nHeight << CScriptNum(nExtraNonce));
     if (script.size() + COINBASE_FLAGS.size() > MAX_COINBASE_SCRIPTSIG_SIZE)
-      {
+    {
         COINBASE_FLAGS.resize(MAX_COINBASE_SCRIPTSIG_SIZE - script.size());
-      }
+    }
     txCoinbase.vin[0].scriptSig = script + COINBASE_FLAGS;
     assert(txCoinbase.vin[0].scriptSig.size() <= MAX_COINBASE_SCRIPTSIG_SIZE);
 

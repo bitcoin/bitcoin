@@ -12,3 +12,13 @@ globals.cpp
 expedited.cpp
 expedited.h
 test/thinblock_util_tests.cpp
+main.cpp
+main.h
+net.cpp
+net.h
+miner.cpp
+miner.h
+qt/unlimiteddialog.cpp
+qt/unlimiteddialog.h
+qt/unlimitedmodel.cpp
+qt/unlimitedmodel.h

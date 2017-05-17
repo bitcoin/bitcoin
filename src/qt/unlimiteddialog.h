@@ -5,9 +5,9 @@
 #ifndef BITCOIN_QT_UNLIMITEDDIALOG_H
 #define BITCOIN_QT_UNLIMITEDDIALOG_H
 
+#include <QDataWidgetMapper>
 #include <QDialog>
 #include <QIntValidator>
-#include <QDataWidgetMapper>
 class OptionsModel;
 class QValidatedLineEdit;
 class QLineEdit;
@@ -21,23 +21,24 @@ class UnlimitedModel;
 /** Ensures that one edit box is always less than another */
 class LessThanValidator : public QIntValidator
 {
-    QLineEdit* other;
-    QLabel* errorDisplay;
+    QLineEdit *other;
+    QLabel *errorDisplay;
 
 public:
-    LessThanValidator(int minimum, int maximum, QObject* parent = 0) : QIntValidator(minimum, maximum, parent), other(NULL), errorDisplay(NULL)
+    LessThanValidator(int minimum, int maximum, QObject *parent = 0)
+        : QIntValidator(minimum, maximum, parent), other(NULL), errorDisplay(NULL)
     {
     }
 
     // This cannot be part of the constructor because these widgets may not be created at construction time.
-    void initialize(QLineEdit* otherp, QLabel* errorDisplayp)
+    void initialize(QLineEdit *otherp, QLabel *errorDisplayp)
     {
         other = otherp;
         errorDisplay = errorDisplayp;
     }
 
 
-    virtual State validate(QString& input, int& pos) const;
+    virtual State validate(QString &input, int &pos) const;
 };
 
 // Unlimited dialog
@@ -46,7 +47,7 @@ class UnlimitedDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit UnlimitedDialog(QWidget* parent,UnlimitedModel* model);
+    explicit UnlimitedDialog(QWidget *parent, UnlimitedModel *model);
     virtual ~UnlimitedDialog();
     void setMapper();
 
@@ -56,17 +57,19 @@ private Q_SLOTS:
     void on_okButton_clicked();
     void on_cancelButton_clicked();
     void validateBlockSize();
-    void shapingSliderChanged();         // Pushes the traffic shaping slider changes into the traffic shaping edit boxes
-    void shapingMaxEditFinished(void);   // auto-corrects cases where max is lower then average
-    void shapingAveEditFinished(void);   // auto-corrects cases where max is lower then average
-    void shapingEnableChanged(bool val); // Pushes the traffic shaping slider changes into the traffic shaping edit boxes
+    // Pushes the traffic shaping slider changes into the traffic shaping edit boxes
+    void shapingSliderChanged();
+    void shapingMaxEditFinished(void); // auto-corrects cases where max is lower then average
+    void shapingAveEditFinished(void); // auto-corrects cases where max is lower then average
+    // Pushes the traffic shaping slider changes into the traffic shaping edit boxes
+    void shapingEnableChanged(bool val);
 
 Q_SIGNALS:
 
 private:
     Ui_UnlimitedDialog ui;
     QDataWidgetMapper mapper;
-    UnlimitedModel* model;
+    UnlimitedModel *model;
 
     QIntValidator burstValidator;
     LessThanValidator sendAveValidator;
