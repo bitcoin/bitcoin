@@ -10,8 +10,8 @@
 #include "primitives/block.h"
 #include "txmempool.h"
 
-#include <stdint.h>
 #include <memory>
+#include <stdint.h>
 
 class CBlockIndex;
 class CChainParams;
@@ -19,7 +19,10 @@ class CReserveKey;
 class CScript;
 class CWallet;
 
-namespace Consensus { struct Params; };
+namespace Consensus
+{
+struct Params;
+};
 
 static const bool DEFAULT_PRINTPRIORITY = false;
 
@@ -87,7 +90,7 @@ private:
 };
 
 /** Modify the extranonce in a block */
-void IncrementExtraNonce(CBlock* pblock, unsigned int& nExtraNonce);
-int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev);
+void IncrementExtraNonce(CBlock *pblock, unsigned int &nExtraNonce);
+int64_t UpdateTime(CBlockHeader *pblock, const Consensus::Params &consensusParams, const CBlockIndex *pindexPrev);
 
 #endif // BITCOIN_MINER_H
