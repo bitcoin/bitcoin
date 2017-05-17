@@ -350,11 +350,16 @@ public:
 class CNode
 {
 public:
-
     struct CThinBlockInFlight
     {
         int64_t nRequestTime;
         bool fReceived;
+
+        CThinBlockInFlight()
+        {
+            nRequestTime = GetTime();
+            fReceived = false;
+        }
     };
 
     // socket
