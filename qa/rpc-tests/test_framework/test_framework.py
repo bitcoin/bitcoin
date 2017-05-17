@@ -159,7 +159,7 @@ class BitcoinTestFramework(object):
 
         if self.options.trace_rpc:
             import logging
-            logging.basicConfig(level=logging.DEBUG)
+            logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 
         if self.options.coveragedir:
             enable_coverage(self.options.coveragedir)
@@ -207,6 +207,8 @@ class BitcoinTestFramework(object):
             typ, value, tb = sys.exc_info()
             traceback.print_tb(tb)
             if self.drop_to_pdb: pdb.post_mortem(tb)
+        except KeyboardInterrupt as e:
+            print("Exiting after " + repr(e))
 
         if not self.options.noshutdown:
             print("Stopping nodes")
