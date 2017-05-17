@@ -1291,8 +1291,11 @@ extern UniValue getstructuresizes(const UniValue& params, bool fHelp)
     ret.push_back(Pair("mapBlockIndex", mapBlockIndex.size()));
     // CChain
     ret.push_back(Pair("mapAlerts", mapAlerts.size()));
-    ret.push_back(Pair("setPreVerifiedTxHash", setPreVerifiedTxHash.size()));
-    ret.push_back(Pair("setUnVerifiedOrphanTxHash", setUnVerifiedOrphanTxHash.size()));
+    {
+        LOCK(cs_xval);
+        ret.push_back(Pair("setPreVerifiedTxHash", setPreVerifiedTxHash.size()));
+        ret.push_back(Pair("setUnVerifiedOrphanTxHash", setUnVerifiedOrphanTxHash.size()));
+    }
     ret.push_back(Pair("mapLocalHost", mapLocalHost.size()));
     ret.push_back(Pair("CNode::vWhitelistedRange", CNode::vWhitelistedRange.size()));
     ret.push_back(Pair("mapInboundConnectionTracker", mapInboundConnectionTracker.size()));
