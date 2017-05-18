@@ -351,7 +351,7 @@ def runtests():
                     trimmed_tests_to_run.append(t)
             tests_to_run = trimmed_tests_to_run
 
-        if len(tests_to_run) > 1:
+        if len(tests_to_run) > 1 and run_parallel:
             # Populate cache
             subprocess.check_output([RPC_TESTS_DIR + 'create_cache.py'] + [flags])
 
@@ -431,7 +431,7 @@ class RPCTestHandler:
                                                stdout=subprocess.PIPE,
                                                stderr=subprocess.PIPE)))
         if not self.jobs:
-            raise IndexError('%s from empty list' % __name__)
+            raise IndexError('pop from empty list')
         while True:
             # Return first proc that finishes
             time.sleep(.5)
