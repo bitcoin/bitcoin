@@ -108,7 +108,7 @@ class QtRPCTimerBase: public QObject, public RPCTimerBase
 {
     Q_OBJECT
 public:
-    QtRPCTimerBase(boost::function<void(void)>& _func, int64_t millis):
+    QtRPCTimerBase(std::function<void(void)>& _func, int64_t millis):
         func(_func)
     {
         timer.setSingleShot(true);
@@ -120,7 +120,7 @@ private Q_SLOTS:
     void timeout() { func(); }
 private:
     QTimer timer;
-    boost::function<void(void)> func;
+    std::function<void(void)> func;
 };
 
 class QtRPCTimerInterface: public RPCTimerInterface
@@ -128,7 +128,7 @@ class QtRPCTimerInterface: public RPCTimerInterface
 public:
     ~QtRPCTimerInterface() {}
     const char *Name() override { return "Qt"; }
-    RPCTimerBase* NewTimer(boost::function<void(void)>& func, int64_t millis) override
+    RPCTimerBase* NewTimer(std::function<void(void)>& func, int64_t millis) override
     {
         return new QtRPCTimerBase(func, millis);
     }
@@ -452,7 +452,7 @@ RPCConsole::RPCConsole(const PlatformStyle *_platformStyle, QWidget *parent) :
     connect(ui->fontBiggerButton, SIGNAL(clicked()), this, SLOT(fontBigger()));
     connect(ui->fontSmallerButton, SIGNAL(clicked()), this, SLOT(fontSmaller()));
     connect(ui->btnClearTrafficGraph, SIGNAL(clicked()), ui->trafficGraph, SLOT(clear()));
-    
+
     // Wallet Repair Buttons
     // connect(ui->btn_salvagewallet, SIGNAL(clicked()), this, SLOT(walletSalvage()));
     // Disable salvage option in GUI, it's way too powerful and can lead to funds loss
@@ -774,7 +774,7 @@ void RPCConsole::buildParameterlist(QString arg)
     args.removeAll(ZAPTXES2);
     args.removeAll(UPGRADEWALLET);
     args.removeAll(REINDEX);
-   
+
     // Append repair parameter to command line.
     args.append(arg);
 
@@ -797,7 +797,7 @@ void RPCConsole::clear(bool clearHistory)
     // (when using width/height on an img, Qt uses nearest instead of linear interpolation)
     QString iconPath = ":/icons/" + GUIUtil::getThemeName() + "/";
     QString iconName = "";
-    
+
     for(int i=0; ICON_MAPPING[i].url; ++i)
     {
         iconName = ICON_MAPPING[i].source;
