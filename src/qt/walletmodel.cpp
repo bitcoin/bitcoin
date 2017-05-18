@@ -702,9 +702,7 @@ bool WalletModel::transactionSignalsRBF(uint256 hash) const
 {
     LOCK2(cs_main, wallet->cs_wallet);
     const CWalletTx *wtx = wallet->GetWalletTx(hash);
-    if (wtx && SignalsOptInRBF(*wtx))
-        return true;
-    return false;
+    return wtx && SignalsOptInRBF(*wtx);
 }
 
 bool WalletModel::bumpFee(uint256 hash)
