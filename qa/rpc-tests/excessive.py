@@ -18,7 +18,7 @@ import sys
 if sys.version_info[0] < 3:
     raise "Use Python 3"
 import logging
-logging.basicConfig(format='%(asctime)s.%(levelname)s: %(message)s', level=logging.INFO)
+logging.basicConfig(format='%(asctime)s.%(levelname)s: %(message)s', level=logging.INFO, stream=sys.stdout)
 
 
 def mostly_sync_mempools(rpc_connections, difference=50, wait=1, verbose=1):
