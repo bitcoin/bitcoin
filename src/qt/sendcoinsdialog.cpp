@@ -31,8 +31,6 @@
 #include <QTextDocument>
 #include <QTimer>
 
-#define SEND_CONFIRM_DELAY   3
-
 SendCoinsDialog::SendCoinsDialog(const PlatformStyle *_platformStyle, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SendCoinsDialog),
