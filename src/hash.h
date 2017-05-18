@@ -212,7 +212,6 @@ public:
 
     uint256 GetHash() {
         uint256 result;
-        unsigned char out[32];
         ctx.Finalize((unsigned char*)&result);
         return result;
     }
