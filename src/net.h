@@ -105,7 +105,6 @@ CNode *FindNode(const CSubNet &subNet);
 CNode *FindNode(const std::string &addrName);
 CNode *FindNode(const CService &ip);
 int DisconnectSubNetNodes(const CSubNet &subNet);
-CNode *ConnectNode(CAddress addrConnect, const char *pszDest = NULL);
 bool OpenNetworkConnection(const CAddress &addrConnect,
     bool fCountFailure,
     CSemaphoreGrant *grantOutbound = NULL,
