@@ -179,7 +179,7 @@ static std::vector<CAddress> convertSeed6(const std::vector<SeedSpec6> &vSeedsIn
 // one by discovery.
 CAddress GetLocalAddress(const CNetAddr *paddrPeer)
 {
-    CAddress ret(CService("0.0.0.0",GetListenPort()), NODE_NONE);
+    CAddress ret(CService("0.0.0.0",GetListenPort()), nLocalServices);
     CService addr;
     if (GetLocal(addr, paddrPeer))
     {
