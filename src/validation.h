@@ -18,6 +18,7 @@
 #include "script/script_error.h"
 #include "sync.h"
 #include "versionbits.h"
+#include "consensus/consensus.h"
 
 #include <algorithm>
 #include <exception>
@@ -44,6 +45,9 @@ class CTxMemPool;
 class CValidationInterface;
 class CValidationState;
 struct ChainTxData;
+
+template <typename T>
+class CCheckQueueControl;
 
 struct PrecomputedTransactionData;
 struct LockPoints;
@@ -154,6 +158,16 @@ struct BlockHasher
 {
     size_t operator()(const uint256& hash) const { return hash.GetCheapHash(); }
 };
+
+
+/** The minimum serialized size of a CTxIn even with an empty scriptSig */
+static const unsigned int MIN_TXIN_SERIALIZED_SIZE = 41;
+/** The maximum number of scriptchecks which an input can generate */
+static const unsigned int MAX_SCRIPTCHECKS_PER_TXIN = 1;
+/** The maximum number of possible inputs included a block */
+static const unsigned int MAX_TXINS_PER_BLOCK = MAX_BLOCK_BASE_SIZE/MIN_TXIN_SERIALIZED_SIZE;
+/** The maximum number of scriptchecks which could be created */
+static const unsigned int MAX_SCRIPTCHECKS_PER_BLOCK = MAX_TXINS_PER_BLOCK * MAX_SCRIPTCHECKS_PER_TXIN;
 
 extern CScript COINBASE_FLAGS;
 extern CCriticalSection cs_main;
@@ -373,7 +387,7 @@ int64_t GetTransactionSigOpCost(const CTransaction& tx, const CCoinsViewCache& i
  * instead of being performed inline.
  */
 bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &view, bool fScriptChecks,
-                 unsigned int flags, bool cacheStore, PrecomputedTransactionData& txdata, std::vector<CScriptCheck> *pvChecks = NULL);
+                 unsigned int flags, bool cacheStore, PrecomputedTransactionData& txdata, CCheckQueueControl<CScriptCheck> *pCheckQueueControl = NULL);
 
 /** Apply the effects of this transaction on the UTXO set represented by view */
 void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, int nHeight);
