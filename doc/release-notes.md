@@ -42,8 +42,14 @@ Low-level RPC changes
   - The `gettxoutsetinfo` RPC reports `hash_serialized_2` instead of `hash_serialized`,
     which does not commit to the transaction versions of unspent outputs, but does
     commit to the height and coinbase information.
+  - The `gettxoutsetinfo` response now contains `disk_size` and `bogosize` instead of
+    `bytes_serialized`. The first is a more accurate estimate of actual disk usage, but
+    is not deterministic. The second is unrelated to disk usage, but is a
+    database-independent metric of UTXO set size: it counts every UTXO entry as 50 + the
+    length of its scriptPubKey.
   - The `getutxos` REST path no longer reports the `txvers` field in JSON format,
     and always reports 0 for transaction versions in the binary format
+
 
 - Error codes have been updated to be more accurate for the following error cases:
   - `getblock` now returns RPC_MISC_ERROR if the block can't be found on disk (for
