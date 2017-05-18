@@ -5,6 +5,7 @@
 
 #include "interpreter.h"
 
+#include "chain.h"
 #include "primitives/transaction.h"
 #include "crypto/ripemd160.h"
 #include "crypto/sha1.h"
@@ -424,7 +425,36 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                     break;
                 }
 
-                case OP_NOP1: case OP_NOP4: case OP_NOP5:
+                case OP_CHECKBLOCKATHEIGHT:
+                {
+                    if (!(flags & SCRIPT_VERIFY_CHECKBLOCKATHEIGHT)) {
+                        // not enabled; treat as a NOP5
+                        if (flags & SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS) {
+                            return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_NOPS);
+                        }
+                        break;
+                    }
+
+                    if (stack.size() < 2) {
+                        return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
+                    }
+
+                    // nHeight is a 32-bit signed integer field.
+                    const int32_t nHeight = CScriptNum(stacktop(-1), true, 4).getint();
+
+                    valtype vchHashCheck = stacktop(-2);
+
+                    // Compare the specified block hash with the input.
+                    if (!checker.CheckBlockHash(nHeight, vchHashCheck)) {
+                        // Not final rather than a hard reject to avoid caching across different blockchains
+                        // Also because it will *eventually* become final when the height gets old enough
+                        return set_error(serror, SCRIPT_ERR_NOT_FINAL);
+                    }
+
+                    break;
+                }
+
+                case OP_NOP1: case OP_NOP4:
                 case OP_NOP6: case OP_NOP7: case OP_NOP8: case OP_NOP9: case OP_NOP10:
                 {
                     if (flags & SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS)
@@ -1349,6 +1379,28 @@ bool TransactionSignatureChecker::CheckSequence(const CScriptNum& nSequence) con
         return false;
 
     return true;
+}
+
+bool TransactionSignatureChecker::CheckBlockHash(const int32_t nHeight, const std::vector<unsigned char>& vchCompareTo) const
+{
+    if (!chain) {
+        return false;
+    }
+
+    // If the chain doesn't reach the desired height yet, the transaction is non-final
+    if (nHeight > chain->Height()) {
+        return false;
+    }
+
+    // Sufficiently old blocks are always valid
+    if (nHeight <= chain->Height() - 52596) {
+        return true;
+    }
+
+    CBlockIndex* pblockindex = (*chain)[nHeight];
+    std::vector<unsigned char> vchBlockHash(pblockindex->GetBlockHash().begin(), pblockindex->GetBlockHash().end());
+    vchBlockHash.erase(vchBlockHash.begin(), vchBlockHash.end() - vchCompareTo.size());
+    return (vchCompareTo == vchBlockHash);
 }
 
 static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, const std::vector<unsigned char>& program, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror)
