@@ -39,14 +39,30 @@ def wait_until(predicate, attempts=float('inf'), timeout=float('inf')):
 
 # Serialization/deserialization tools
 def sha256(s):
+    """Return the sha256 hash of the passed binary data
+
+    >>> hexlify(sha256("e hat eye pie plus one is O".encode()))
+    b'c5b94099f454a3807377724eb99a33fbe9cb5813006cadc03e862a89d410eaf0'
+    """
     return hashlib.new('sha256', s).digest()
 
 
 def hash256(s):
+    """Return the double SHA256 hash (what bitcoin typically uses) of the passed binary data
+
+    >>> hexlify(hash256("There was a terrible ghastly silence".encode()))
+    b'730ac30b1e7f4061346277ab639d7a68c6686aeba4cc63280968b903024a0a40'
+    """
     return sha256(sha256(s))
 
 
 def deser_string(f):
+    """Convert an array of bytes in the bitcoin P2P protocol format into a string
+
+    >>> import io
+    >>> deser_string(io.BytesIO(ser_string("The grid bug bites!  You get zapped!".encode()))).decode()
+    'The grid bug bites!  You get zapped!'
+    """
     nit = struct.unpack("<B", f.read(1))[0]
     if nit == 253:
         nit = struct.unpack("<H", f.read(2))[0]
@@ -58,6 +74,11 @@ def deser_string(f):
 
 
 def ser_string(s):
+    """convert a string into an array of bytes (in the bitcoin network format)
+
+       >>> ser_string("The grid bug bites!  You get zapped!".encode())
+       b'$The grid bug bites!  You get zapped!'
+    """
     if len(s) < 253:
         return struct.pack("B", len(s)) + s
     elif len(s) < 0x10000:
@@ -971,13 +992,14 @@ class msg_sendheaders(object):
     def __repr__(self):
         return "msg_sendheaders()"
 
-# getheaders message has
-# number of entries
-# vector of hashes
-# hash_stop (hash of last desired block header, 0 to get as many as possible)
 
 
 class msg_getheaders(object):
+    """
+    getheaders message has
+    locator: CBlockLocator object that identifies what block to start with
+    hash_stop: hash of last desired block header, 0 to get as many as possible
+    """
     command = b"getheaders"
 
     def __init__(self):
@@ -1000,9 +1022,11 @@ class msg_getheaders(object):
             % (repr(self.locator), self.hashstop)
 
 
-# headers message has
-# <count> <vector of block headers>
 class msg_headers(object):
+    """
+    headers message has
+    <count> <vector of block headers>
+    """
     command = b"headers"
 
     def __init__(self):
@@ -1052,3 +1076,10 @@ class msg_reject(object):
     def __repr__(self):
         return "msg_reject: %s %d %s [%064x]" \
             % (self.message, self.code, self.reason, self.data)
+
+
+
+def Test():
+    import doctest
+    import sys
+    print(doctest.testmod(sys.modules[__name__],verbose=True))

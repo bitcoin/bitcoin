@@ -120,7 +120,12 @@ class CXThinBlock(CBlockHeader):
         return "CXThinBlock(nVersion=%i hashPrevBlock=%064x hashMerkleRoot=%064x nTime=%s nBits=%08x nNonce=%08x vTxHashes_len=%d vMissingTx_len=%d)" \
             % (self.nVersion, self.hashPrevBlock, self.hashMerkleRoot, time.ctime(self.nTime), self.nBits, self.nNonce, len(self.vTxHashes), len(self.vMissingTx))
 
-    # too large to print
+    # For normal "mainnet" blocks, this function produces a painfully large single line output.
+    # It is so large, you may be forced to kill your python shell just to get it to stop.
+    # But it is easy to accidentally call repr from the python interactive shell or pdb.  There is no current
+    # use and removing this function call makes interactive sessions easier to use.
+    # However, the function shall be left commented out for symmetry with the other objects and in case
+    # it is needed.
     # def __repr__(self):
     #    return "CXThinBlock(nVersion=%i hashPrevBlock=%064x hashMerkleRoot=%064x nTime=%s nBits=%08x nNonce=%08x vTxHashes=%s vMissingTx=%s)" \
     #        % (self.nVersion, self.hashPrevBlock, self.hashMerkleRoot,
@@ -150,7 +155,12 @@ class CThinBlock(CBlockHeader):
         return "CThinBlock(nVersion=%i hashPrevBlock=%064x hashMerkleRoot=%064x nTime=%s nBits=%08x nNonce=%08x vTxHashes_len=%d vMissingTx_len=%d)" \
             % (self.nVersion, self.hashPrevBlock, self.hashMerkleRoot, time.ctime(self.nTime), self.nBits, self.nNonce, len(self.vTxHashes), len(self.vMissingTx))
 
-    # too large to print
+    # For normal "mainnet" blocks, this function produces a painfully large single line output.
+    # It is so large, you may be forced to kill your python shell just to get it to stop.
+    # But it is easy to accidentally call repr from the python interactive shell or pdb.  There is no current
+    # use and removing this function call makes interactive sessions easier to use.
+    # However, the function shall be left commented out for symmetry with the other objects and in case
+    # it is needed.
     # def __repr__(self):
     #    return "CThinBlock(nVersion=%i hashPrevBlock=%064x hashMerkleRoot=%064x nTime=%s nBits=%08x nNonce=%08x vTxHashes=%s vMissingTx=%s)" \
     #        % (self.nVersion, self.hashPrevBlock, self.hashMerkleRoot,

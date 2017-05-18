@@ -36,7 +36,6 @@ from threading import RLock
 from threading import Thread
 import logging
 import copy
-import pdb
 
 from .nodemessages import *
 from .bumessages import *
@@ -275,7 +274,6 @@ class NodeConn(asyncore.dispatcher):
         ret = []
         ann = MsgAnnotater()
         self.cb = type("", (), {"deliver": lambda self, conn, msg: ret.append(ann.annotate(msg, conn))})()
-        # self.cb = type("", (), {"deliver": lambda conn,msg,lst=ret: [print(msg), ret.append(msg) })()
         self.inject_data(buffer)
         self.cp = tmp
         return ret
