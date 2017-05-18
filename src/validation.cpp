@@ -1590,7 +1590,6 @@ bool IsInitialBlockDownload()
     if (chainActive.Tip()->nHeight > COINBASE_MATURITY
         && chainActive.Tip()->GetBlockTime() < (GetTime() - nMaxTipAge))
         return true;
-    
     if (GetNumPeers() < 2
         || chainActive.Tip()->nHeight < GetNumBlocksOfPeers())
         return true;
@@ -2204,7 +2203,7 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
             {
                 const CTxOutBase *out = tx.vpout[k].get();
                 
-                if (out->IsType(OUTPUT_STANDARD)
+                if (!out->IsType(OUTPUT_STANDARD)
                     && !out->IsType(OUTPUT_CT))
                     continue;
                 
@@ -2311,6 +2310,14 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
                     {
                         const CTxOutBase *prevout = view.GetBaseOutputFor(tx.vin[j]);
                         
+                        if (!prevout
+                            || !(prevout->IsType(OUTPUT_STANDARD)
+                                || prevout->IsType(OUTPUT_CT)))
+                        {
+                            LogPrintf("ERROR: %s - GetBaseOutputFor %s failed .\n", __func__, tx.vin[j].ToString());
+                            continue;
+                        };
+                        
                         const CScript *pScript;
                         if (!(pScript = prevout->GetPScriptPubKey()))
                         {
@@ -2363,6 +2370,7 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
                     if (fAddressIndex)
                     {
                         const CTxOut &prevout = view.GetOutputFor(tx.vin[j]);
+                        
                         if (prevout.scriptPubKey.IsPayToScriptHash()) {
                             std::vector<unsigned char> hashBytes(prevout.scriptPubKey.begin()+2, prevout.scriptPubKey.begin()+22);
 
@@ -2703,6 +2711,14 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                     if (tx.IsParticlVersion())
                     {
                         const CTxOutBase *prevout = view.GetBaseOutputFor(tx.vin[j]);
+                        
+                        if (!prevout
+                            || !(prevout->IsType(OUTPUT_STANDARD)
+                                || prevout->IsType(OUTPUT_CT)))
+                        {
+                            LogPrintf("ERROR: %s - GetBaseOutputFor %s failed .\n", __func__, tx.vin[j].ToString());
+                            continue;
+                        };
                         
                         const CScript *pScript;
                         if (!(pScript = prevout->GetPScriptPubKey()))
@@ -4008,7 +4024,8 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
 
     if (fParticlMode)
     {
-        if (block.vtx[0]->IsCoinStake()
+        if (!IsInitialBlockDownload()
+            && block.vtx[0]->IsCoinStake()
             && !CheckStakeUnique(block))
         {
             // TODO: ask peers which stake kernel they have
@@ -4309,19 +4326,19 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Co
             
             
             uint256 hashProof, targetProofOfStake;
-            if ((!fImporting && !fReindex) // blocks are connected at end of import / reindex
+            
+            // Blocks are connected at end of import / reindex
+            // CheckProofOfStake is run again during connectblock
+            if (!IsInitialBlockDownload() // checks (!fImporting && !fReindex) 
                 && !CheckProofOfStake(pindexPrev, *block.vtx[0], block.nTime, block.nBits, hashProof, targetProofOfStake))
             {
                 LogPrintf("WARNING: ContextualCheckBlock(): check proof-of-stake failed for block %s\n", block.GetHash().ToString());
                 //return false; // do not error here as we expect this during initial block download
-                if (!IsInitialBlockDownload())
-                {
-                    if (pindexPrev->bnStakeModifier.IsNull())
-                        // Can happen if the block is received out of order - CheckProofOfStake will run again on connectblock.
-                        LogPrint("pos", "%s: Accepting failed CheckProofOfStake block, missing stake-modifier.\n", __func__);
-                    else
-                        return state.DoS(50, false, REJECT_INVALID, "bad-proof-of-stake", true, strprintf("%s: CheckProofOfStake failed.", __func__));
-                };
+                if (pindexPrev->bnStakeModifier.IsNull())
+                    // Can happen if the block is received out of order - CheckProofOfStake will run again on connectblock.
+                    LogPrint("pos", "%s: Accepting failed CheckProofOfStake block, missing stake-modifier.\n", __func__);
+                else
+                    return state.DoS(50, false, REJECT_INVALID, "bad-proof-of-stake", true, strprintf("%s: CheckProofOfStake failed.", __func__));
             };
         } else
         {
@@ -4576,7 +4593,8 @@ static bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidation
     {
         pindex->SetProofOfStake();
         pindex->prevoutStake = pblock->vtx[0]->vin[0].prevout;
-        if (pindex->pprev && pindex->pprev->bnStakeModifier.IsNull())
+        if (!IsInitialBlockDownload()
+            && pindex->pprev && pindex->pprev->bnStakeModifier.IsNull()) // block received out of order
             LogPrintf("Warning: %s - Previous stake modifier is null.\n", __func__);
         else
             pindex->bnStakeModifier = ComputeStakeModifierV2(pindex->pprev, pindex->prevoutStake.hash);

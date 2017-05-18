@@ -6,8 +6,11 @@
 #define KEY_BLIND_H
 
 #include <secp256k1.h>
+#include <inttypes.h>
 
 extern secp256k1_context *secp256k1_ctx_blind;
+
+int SelectRangeProofParameters(uint64_t nValueIn, int &exponent, uint64_t &minValue);
 
 void ECC_Start_Blinding();
 void ECC_Stop_Blinding();

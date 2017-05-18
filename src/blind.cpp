@@ -7,7 +7,16 @@
 #include <assert.h>
 #include <secp256k1.h>
 
+#include "util.h"
+
+
 secp256k1_context *secp256k1_ctx_blind = NULL;
+
+int SelectRangeProofParameters(uint64_t nValueIn, int &exponent, uint64_t &minValue)
+{
+    
+    return 0;
+};
 
 void ECC_Start_Blinding()
 {
