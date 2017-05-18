@@ -261,9 +261,7 @@ def show_wrapper_options():
 def runtests():
     global passOn
     coverage = None
-    execution_time = {}
-    test_passed = {}
-    test_failure_info = {}
+    test_passed = []
     disabled = []
     skipped = []
     tests_to_run = []
@@ -367,6 +365,7 @@ def runtests():
 
         for _ in range(len(tests_to_run)):
             (name, stdout, stderr, passed, duration) = job_queue.get_next()
+            test_passed.append(passed)
             all_passed = all_passed and passed
             time_sum += duration
 
@@ -389,20 +388,8 @@ def runtests():
         if not showHelp:
             # show some overall results and aggregates
             print()
-            print("%-50s  Status    Time (s)" % "Test")
-            print('-' * 70)
-            for k in sorted(execution_time.keys()):
-                print("%-50s  %-6s    %7s" % (k, "PASS" if test_passed[k] else "FAILED", execution_time[k]))
-            for d in disabled:
-                print("%-50s  %-8s" % (d, "DISABLED"))
-            for s in skipped:
-                print("%-50s  %-8s" % (s, "SKIPPED"))
-            print('-' * 70)
-            print("%-44s  Total time (s): %7s" % (" ", sum(execution_time.values())))
-
-            print
-            print("%d test(s) passed / %d test(s) failed / %d test(s) executed" % (list(test_passed.values()).count(True),
-                                                                       list(test_passed.values()).count(False),
+            print("%d test(s) passed / %d test(s) failed / %d test(s) executed" % (test_passed.count(True),
+                                                                       test_passed.count(False),
                                                                        len(test_passed)))
             print("%d test(s) disabled / %d test(s) skipped due to platform" % (len(disabled), len(skipped)))
 
