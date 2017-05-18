@@ -3,9 +3,9 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "expedited.h"
-#include "tweak.h"
 #include "main.h"
 #include "thinblock.h"
+#include "tweak.h"
 #include "unlimited.h"
 
 #include <sstream>
@@ -72,7 +72,7 @@ bool CheckAndRequestExpeditedBlocks(CNode *pfrom)
                 {
                     LogPrintf("Requesting expedited blocks from peer %s (%d).\n", strListeningPeerIP, pfrom->id);
                     pfrom->PushMessage(NetMsgType::XPEDITEDREQUEST, ((uint64_t)EXPEDITED_BLOCKS));
-                    
+
                     LOCK(cs_xpedited);
                     xpeditedBlkUp.push_back(pfrom);
 
@@ -171,8 +171,8 @@ bool HandleExpeditedRequest(CDataStream &vRecv, CNode *pfrom)
                 }
                 else
                 {
-                    LogPrint("blk", "Expedited transactions requested from peer %s but I am full\n",
-                        pfrom->GetLogName());
+                    LogPrint(
+                        "blk", "Expedited transactions requested from peer %s but I am full\n", pfrom->GetLogName());
                 }
             }
         }

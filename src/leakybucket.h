@@ -27,18 +27,21 @@ protected:
     typedef boost::chrono::steady_clock CClock;
 
     int64_t level; // Current level of the bucket
-    int64_t max;   // Maximum quantity allowed
-    int64_t fill;  // Average rate per second
+    int64_t max; // Maximum quantity allowed
+    int64_t fill; // Average rate per second
     static CClock clock;
     boost::chrono::time_point<CClock> lastFill;
 
-    // This function is called internally to fill the leaky bucket based on the time difference between now and the last time the function was called.
+    // This function is called internally to fill the leaky bucket based on the time difference between now and the last
+    // time the function was called.
     void fillIt()
     {
         boost::chrono::time_point<CClock> now = clock.now();
         CClock::duration elapsed(now - lastFill);
         int64_t msElapsed = boost::chrono::duration_cast<boost::chrono::milliseconds>(elapsed).count();
-        if (msElapsed > 100) // note in practice msElapsed can be < 0, something to do with hyperthreading so reduce don't eliminate this conditional
+        // note in practice msElapsed can be < 0, something to do with hyperthreading so reduce don't eliminate this
+        // conditional
+        if (msElapsed > 100)
         {
             lastFill = now;
             level += (fill * msElapsed) / 1000;
@@ -48,7 +51,8 @@ protected:
     }
 
 public:
-    CLeakyBucket(int64_t maxp, int64_t fillp, int64_t startLevel = std::numeric_limits<long long>::max()) : max(maxp), fill(fillp)
+    CLeakyBucket(int64_t maxp, int64_t fillp, int64_t startLevel = std::numeric_limits<long long>::max())
+        : max(maxp), fill(fillp)
     {
         lastFill = clock.now();
         // set the initial level to either what is specified by the user or to the maximum
@@ -64,7 +68,7 @@ public:
     }
 
     // Access the values in this bucket
-    void get(int64_t* maxp, int64_t* fillp, int64_t* levelp = NULL)
+    void get(int64_t *maxp, int64_t *fillp, int64_t *levelp = NULL)
     {
         if (maxp)
             *maxp = max;
@@ -80,7 +84,7 @@ public:
         max = maxp;
         fill = fillp;
         if (level > max)
-            level = max;        // if pinching, slow traffic quickly.
+            level = max; // if pinching, slow traffic quickly.
         lastFill = clock.now(); // need to reset the lastFill time in case we are turning on this leaky bucket.
     }
 
@@ -100,14 +104,17 @@ public:
             return true; // leaky bucket is turned off.
         assert(amt >= 0);
         fillIt();
-        if (level >= amt) {
+        if (level >= amt)
+        {
             level -= amt;
             return true;
         }
         return false;
     }
 
-    // This function reduces the level in the bucket by amt, even if that makes the level negative, and returns true if the level is >= 0.  This function is useful in a situation like data receipt (with soft limits) where you are not certain how many bytes will be received until after you have received them.
+    // This function reduces the level in the bucket by amt, even if that makes the level negative, and returns true if
+    // the level is >= 0.  This function is useful in a situation like data receipt (with soft limits) where you are not
+    // certain how many bytes will be received until after you have received them.
     bool leak(int64_t amt)
     {
         if (fill == std::numeric_limits<long long>::max())

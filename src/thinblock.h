@@ -5,14 +5,14 @@
 #ifndef BITCOIN_THINBLOCK_H
 #define BITCOIN_THINBLOCK_H
 
-#include "serialize.h"
-#include "uint256.h"
-#include "primitives/block.h"
 #include "bloom.h"
+#include "consensus/validation.h"
+#include "primitives/block.h"
+#include "protocol.h"
+#include "serialize.h"
 #include "stat.h"
 #include "sync.h"
-#include "consensus/validation.h"
-#include "protocol.h"
+#include "uint256.h"
 #include <vector>
 
 class CDataStream;
@@ -26,7 +26,7 @@ public:
     std::vector<CTransaction> vMissingTx; // vector of transactions that did not match the bloom filter
 
 public:
-    CThinBlock(const CBlock& block, CBloomFilter& filter);
+    CThinBlock(const CBlock &block, CBloomFilter &filter);
     CThinBlock() {}
     /**
      * Handle an incoming thin block.  The block is fully validated, and if any transactions are missing, we fall
@@ -40,7 +40,8 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream &s, Operation ser_action, int nType, int nVersion)
+    {
         READWRITE(header);
         READWRITE(vTxHashes);
         READWRITE(vMissingTx);
@@ -59,8 +60,8 @@ public:
     bool collision;
 
 public:
-    CXThinBlock(const CBlock& block, CBloomFilter* filter); // Use the filter to determine which txns the client has
-    CXThinBlock(const CBlock& block);  // Assume client has all of the transactions (except coinbase)
+    CXThinBlock(const CBlock &block, CBloomFilter *filter); // Use the filter to determine which txns the client has
+    CXThinBlock(const CBlock &block); // Assume client has all of the transactions (except coinbase)
     CXThinBlock() {}
     /**
      * Handle an incoming Xthin or Xpedited block
@@ -78,14 +79,15 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream &s, Operation ser_action, int nType, int nVersion)
+    {
         READWRITE(header);
         READWRITE(vTxHashes);
         READWRITE(vMissingTx);
     }
     CInv GetInv() { return CInv(MSG_BLOCK, header.GetHash()); }
-    bool process(CNode* pfrom, int nSizeThinbBlock, std::string strCommand);
-    bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state);
+    bool process(CNode *pfrom, int nSizeThinbBlock, std::string strCommand);
+    bool CheckBlockHeader(const CBlockHeader &block, CValidationState &state);
 };
 
 // This class is used to respond to requests for missing transactions after sending an XThin block.
@@ -98,7 +100,7 @@ public:
     std::vector<CTransaction> vMissingTx; // map of missing transactions
 
 public:
-    CXThinBlockTx(uint256 blockHash, std::vector<CTransaction>& vTx);
+    CXThinBlockTx(uint256 blockHash, std::vector<CTransaction> &vTx);
     CXThinBlockTx() {}
     /**
      * Handle receiving a list of missing xthin block transactions from a prior request
@@ -111,7 +113,8 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream &s, Operation ser_action, int nType, int nVersion)
+    {
         READWRITE(blockhash);
         READWRITE(vMissingTx);
     }
@@ -128,7 +131,7 @@ public:
     std::set<uint64_t> setCheapHashesToRequest; // map of missing transactions
 
 public:
-    CXRequestThinBlockTx(uint256 blockHash, std::set<uint64_t>& setHashesToRequest);
+    CXRequestThinBlockTx(uint256 blockHash, std::set<uint64_t> &setHashesToRequest);
     CXRequestThinBlockTx() {}
     /**
      * Handle an incoming request for missing xthin block transactions
@@ -141,7 +144,8 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream &s, Operation ser_action, int nType, int nVersion)
+    {
         READWRITE(blockhash);
         READWRITE(setCheapHashesToRequest);
     }
@@ -206,18 +210,21 @@ extern CThinBlockData thindata; // Singleton class
 bool HaveConnectThinblockNodes();
 bool HaveThinblockNodes();
 bool IsThinBlocksEnabled();
-bool CanThinBlockBeDownloaded(CNode* pto);
+bool CanThinBlockBeDownloaded(CNode *pto);
 void ConnectToThinBlockNodes();
 void CheckNodeSupportForThinBlocks();
 bool ClearLargestThinBlockAndDisconnect(CNode *pfrom);
 void ClearThinBlockInFlight(CNode *pfrom, uint256 hash);
 void SendXThinBlock(CBlock &block, CNode *pfrom, const CInv &inv);
 bool IsThinBlockValid(const CNode *pfrom, const std::vector<CTransaction> &vMissingTx, const CBlockHeader &header);
-void BuildSeededBloomFilter(CBloomFilter& memPoolFilter, std::vector<uint256>& vOrphanHashes, uint256 hash, bool fDeterministic = false);
+void BuildSeededBloomFilter(CBloomFilter &memPoolFilter,
+    std::vector<uint256> &vOrphanHashes,
+    uint256 hash,
+    bool fDeterministic = false);
 
 // Xpress Validation: begin
 // Transactions that have already been accepted into the memory pool do not need to be
-// re-verified and can avoid having to do a second and expensive CheckInputs() when 
+// re-verified and can avoid having to do a second and expensive CheckInputs() when
 // processing a new block.  (Protected by cs_xval)
 extern std::set<uint256> setPreVerifiedTxHash;
 

@@ -8,8 +8,8 @@
 #include "net.h"
 #include "thinblock.h"
 
-#include <vector>
 #include <univalue.h>
+#include <vector>
 
 
 enum
@@ -47,4 +47,3 @@ extern bool HandleExpeditedBlock(CDataStream &vRecv, CNode *pfrom);
 extern bool IsExpeditedNode(const CNode *pfrom);
 
 #endif
-
