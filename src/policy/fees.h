@@ -51,7 +51,7 @@ class TxConfirmStats;
  * blocks.  This is is tracked in 3 different data sets each up to a maximum
  * number of periods. Within each data set we have an array of counters in each
  * feerate bucket and we increment all the counters from Y' up to max periods
- * representing that a tx was successfullly confirmed in less than or equal to
+ * representing that a tx was successfully confirmed in less than or equal to
  * that many periods. We want to save a history of this information, so at any
  * time we have a counter of the total number of transactions that happened in a
  * given feerate bucket and the total number that were confirmed in each of the
