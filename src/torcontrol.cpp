@@ -14,7 +14,6 @@
 #include <set>
 #include <stdlib.h>
 
-#include <boost/function.hpp>
 #include <boost/bind.hpp>
 #include <boost/signals2/signal.hpp>
 #include <boost/foreach.hpp>
@@ -73,8 +72,8 @@ public:
 class TorControlConnection
 {
 public:
-    typedef boost::function<void(TorControlConnection&)> ConnectionCB;
-    typedef boost::function<void(TorControlConnection &,const TorControlReply &)> ReplyHandlerCB;
+    typedef std::function<void(TorControlConnection&)> ConnectionCB;
+    typedef std::function<void(TorControlConnection &,const TorControlReply &)> ReplyHandlerCB;
 
     /** Create a new TorControlConnection.
      */
@@ -105,9 +104,9 @@ public:
     boost::signals2::signal<void(TorControlConnection &,const TorControlReply &)> async_handler;
 private:
     /** Callback when ready for use */
-    boost::function<void(TorControlConnection&)> connected;
+    std::function<void(TorControlConnection&)> connected;
     /** Callback when connection lost */
-    boost::function<void(TorControlConnection&)> disconnected;
+    std::function<void(TorControlConnection&)> disconnected;
     /** Libevent event base */
     struct event_base *base;
     /** Connection to control socket */
