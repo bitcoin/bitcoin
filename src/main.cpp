@@ -5839,7 +5839,7 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t
 
     else if (strCommand == NetMsgType::XPEDITEDREQUEST)
     {
-        HandleExpeditedRequest(vRecv, pfrom);
+        return HandleExpeditedRequest(vRecv, pfrom);
     }
 
 
