@@ -4,6 +4,11 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 set -e
+if which libtool >/dev/null; then
+    echo
+else
+    echo Libtool is Missing. Bitcoin Requires Libtool To Compile.
+fi
 srcdir="$(dirname $0)"
 cd "$srcdir"
 if [ -z ${LIBTOOLIZE} ] && GLIBTOOLIZE="`which glibtoolize 2>/dev/null`"; then
