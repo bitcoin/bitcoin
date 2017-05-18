@@ -273,6 +273,8 @@ bool CThinBlock::process(CNode *pfrom, int nSizeThinBlock)
         vector<CInv> vGetData;
         vGetData.push_back(CInv(MSG_BLOCK, header.GetHash()));
         pfrom->PushMessage(NetMsgType::GETDATA, vGetData);
+
+        LOCK(cs_xval);
         setPreVerifiedTxHash.clear(); // Xpress Validation - clear the set since we do not do XVal on regular blocks
     }
 
