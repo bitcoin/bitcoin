@@ -2185,11 +2185,11 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 
                 // Fill vin
                 //
-                // Note how the sequence number is set to max()-1 so that the
-                // nLockTime set above actually works.
-                BOOST_FOREACH(const PAIRTYPE(const CWalletTx*,unsigned int)& coin, setCoins)
+                // Note how the sequence number is set to non-maxint so that
+                // the nLockTime set above actually works.
+                for (const auto& coin : setCoins)
                     txNew.vin.push_back(CTxIn(coin.first->GetHash(),coin.second,CScript(),
-                                              std::numeric_limits<unsigned int>::max()-1));
+                                              std::numeric_limits<unsigned int>::max() - 1));
 
                 // Sign
                 int nIn = 0;
@@ -3257,7 +3257,7 @@ bool CWallet::ParameterInteraction()
         CAmount nMaxFee = 0;
         if (!ParseMoney(mapArgs["-maxtxfee"], nMaxFee))
             return UIError(AmountErrMsg("maxtxfee", mapArgs["-maxtxfee"]));
-        if (nMaxFee > HIGH_TX_FEE_PER_KB)
+        if (nMaxFee > HIGH_MAX_TX_FEE)
             UIWarning(_("-maxtxfee is set very high! Fees this large could be paid on a single transaction."));
         maxTxFee.value = nMaxFee;
         if (CFeeRate(maxTxFee.value, 1000) < ::minRelayTxFee)

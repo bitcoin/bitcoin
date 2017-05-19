@@ -18,8 +18,8 @@
 #include "init.h"
 #include "main.h" // For DEFAULT_SCRIPTCHECK_THREADS
 #include "net.h"
-#include "txdb.h" // for -dbcache defaults
 #include "tweak.h"
+#include "txdb.h" // for -dbcache defaults
 
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"
@@ -33,12 +33,8 @@
 extern CTweakRef<uint64_t> miningBlockSize;
 extern CTweakRef<unsigned int> ebTweak;
 
-UnlimitedModel::UnlimitedModel(QObject* parent) : QAbstractListModel(parent)
-{
-    Init();
-}
-
-void UnlimitedModel::addOverriddenOption(const std::string& option)
+UnlimitedModel::UnlimitedModel(QObject *parent) : QAbstractListModel(parent) { Init(); }
+void UnlimitedModel::addOverriddenOption(const std::string &option)
 {
     strOverriddenByCommandLine += QString::fromStdString(option) + "=" + QString::fromStdString(mapArgs[option]) + " ";
 }
@@ -55,23 +51,26 @@ void UnlimitedModel::Init()
     unsigned int tmpMaxGeneratedBlock = maxGeneratedBlock;
 
     if (!settings.contains("excessiveBlockSize"))
-      settings.setValue("excessiveBlockSize", QString::number(excessiveBlockSize));
-    else tmpExcessiveBlockSize = settings.value("excessiveBlockSize").toInt();
+        settings.setValue("excessiveBlockSize", QString::number(excessiveBlockSize));
+    else
+        tmpExcessiveBlockSize = settings.value("excessiveBlockSize").toInt();
 
     if (!settings.contains("excessiveAcceptDepth"))
-      settings.setValue("excessiveAcceptDepth", QString::number(excessiveAcceptDepth));
-    else excessiveAcceptDepth = settings.value("excessiveAcceptDepth").toInt();
+        settings.setValue("excessiveAcceptDepth", QString::number(excessiveAcceptDepth));
+    else
+        excessiveAcceptDepth = settings.value("excessiveAcceptDepth").toInt();
 
     if (!settings.contains("maxGeneratedBlock"))
         settings.setValue("maxGeneratedBlock", QString::number(maxGeneratedBlock));
-    else tmpMaxGeneratedBlock = settings.value("maxGeneratedBlock").toInt();
+    else
+        tmpMaxGeneratedBlock = settings.value("maxGeneratedBlock").toInt();
 
-    if ( ! MiningAndExcessiveBlockValidatorRule(tmpExcessiveBlockSize, tmpMaxGeneratedBlock))
+    if (!MiningAndExcessiveBlockValidatorRule(tmpExcessiveBlockSize, tmpMaxGeneratedBlock))
     {
         std::ostringstream emsg;
-        emsg << "Sorry, your configured maximum mined block (" << tmpMaxGeneratedBlock <<
-                ") is larger than your configured excessive size (" << tmpExcessiveBlockSize <<
-                ").  This would cause you to orphan your own blocks.";
+        emsg << "Sorry, your configured maximum mined block (" << tmpMaxGeneratedBlock
+             << ") is larger than your configured excessive size (" << tmpExcessiveBlockSize
+             << ").  This would cause you to orphan your own blocks.";
         LogPrintf(emsg.str().c_str());
     }
     else
@@ -80,10 +79,10 @@ void UnlimitedModel::Init()
         ebTweak.Set(tmpExcessiveBlockSize);
     }
 
-    if (!SoftSetArg("-excessiveblocksize",boost::lexical_cast<std::string>(excessiveBlockSize)))
-      addOverriddenOption("-excessiveblocksize");
-    if (!SoftSetArg("-excessiveacceptdepth",boost::lexical_cast<std::string>(excessiveAcceptDepth)))
-      addOverriddenOption("-excessiveacceptdepth");
+    if (!SoftSetArg("-excessiveblocksize", boost::lexical_cast<std::string>(excessiveBlockSize)))
+        addOverriddenOption("-excessiveblocksize");
+    if (!SoftSetArg("-excessiveacceptdepth", boost::lexical_cast<std::string>(excessiveAcceptDepth)))
+        addOverriddenOption("-excessiveacceptdepth");
 
     bool inUse = settings.value("fUseReceiveShaping").toBool();
     int64_t burstKB = settings.value("nReceiveBurst").toLongLong();
@@ -122,169 +121,166 @@ void UnlimitedModel::Reset()
         GUIUtil::SetStartOnSystemStartup(false);
 }
 
-int UnlimitedModel::rowCount(const QModelIndex& parent) const
-{
-    return UOptIDRowCount;
-}
-
+int UnlimitedModel::rowCount(const QModelIndex &parent) const { return UOptIDRowCount; }
 // read QSettings values and return them
-QVariant UnlimitedModel::data(const QModelIndex& index, int role) const
+QVariant UnlimitedModel::data(const QModelIndex &index, int role) const
 {
-  if (role == Qt::EditRole)
+    if (role == Qt::EditRole)
     {
-      QSettings settings;
-      switch (index.row())
+        QSettings settings;
+        switch (index.row())
         {
         case MaxGeneratedBlock:
-          return QVariant((unsigned int) maxGeneratedBlock);
+            return QVariant((unsigned int)maxGeneratedBlock);
         case ExcessiveBlockSize:
-          return QVariant(excessiveBlockSize);
+            return QVariant(excessiveBlockSize);
         case ExcessiveAcceptDepth:
-          return QVariant(excessiveAcceptDepth);
+            return QVariant(excessiveAcceptDepth);
         case UseReceiveShaping:
-          return settings.value("fUseReceiveShaping");
+            return settings.value("fUseReceiveShaping");
         case UseSendShaping:
-          return settings.value("fUseSendShaping");
+            return settings.value("fUseSendShaping");
         case ReceiveBurst:
-          return settings.value("nReceiveBurst");
+            return settings.value("nReceiveBurst");
         case ReceiveAve:
-          return settings.value("nReceiveAve");
+            return settings.value("nReceiveAve");
         case SendBurst:
-          return settings.value("nSendBurst");
+            return settings.value("nSendBurst");
         case SendAve:
-          return settings.value("nSendAve");
+            return settings.value("nSendAve");
         default:
-          return QVariant();
+            return QVariant();
         }
     }
-  return QVariant();
+    return QVariant();
 }
 
 // write QSettings values
-bool UnlimitedModel::setData(const QModelIndex& index, const QVariant& value, int role)
+bool UnlimitedModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
-  bool successful = true; /* set to false on parse error */
-  bool changeSendShaper = false;
-  bool changeReceiveShaper = false;
-  if (role == Qt::EditRole)
+    bool successful = true; /* set to false on parse error */
+    bool changeSendShaper = false;
+    bool changeReceiveShaper = false;
+    if (role == Qt::EditRole)
     {
-      QSettings settings;
-      switch (index.row())
+        QSettings settings;
+        switch (index.row())
         {
         case MaxGeneratedBlock:
-          {
+        {
             unsigned int mgb = value.toUInt(&successful);
             if (successful && (settings.value("maxGeneratedBlock") != value))
-              {
+            {
                 settings.setValue("maxGeneratedBlock", value);
                 miningBlockSize.Set(mgb);
-              }
-          }
-          break;
+            }
+        }
+        break;
         case ExcessiveBlockSize:
-          {
+        {
             unsigned int ebs = value.toUInt(&successful);
             if (successful && (settings.value("excessiveBlockSize") != value))
-              {
+            {
                 settings.setValue("excessiveBlockSize", value);
-                ebTweak.Set(ebs);  // equivalant to: excessiveBlockSize = ebs;
-              }
-          }
-          break;
+                ebTweak.Set(ebs); // equivalant to: excessiveBlockSize = ebs;
+            }
+        }
+        break;
         case ExcessiveAcceptDepth:
-          {
+        {
             unsigned int ead = value.toUInt(&successful);
             if (successful && settings.value("excessiveAcceptDepth") != value)
-              {
+            {
                 settings.setValue("excessiveAcceptDepth", value);
                 excessiveAcceptDepth = ead;
-              }
-          }
-          break;
+            }
+        }
+        break;
         case UseReceiveShaping:
-          if (settings.value("fUseReceiveShaping") != value)
+            if (settings.value("fUseReceiveShaping") != value)
             {
-              settings.setValue("fUseReceiveShaping", value);
-              changeReceiveShaper = true;
+                settings.setValue("fUseReceiveShaping", value);
+                changeReceiveShaper = true;
             }
-          break;
+            break;
         case UseSendShaping:
-          if (settings.value("fUseSendShaping") != value)
+            if (settings.value("fUseSendShaping") != value)
             {
-              settings.setValue("fUseSendShaping", value);
-              changeSendShaper = true;
+                settings.setValue("fUseSendShaping", value);
+                changeSendShaper = true;
             }
-          break;
+            break;
         case ReceiveBurst:
-          if (settings.value("nReceiveBurst") != value)
+            if (settings.value("nReceiveBurst") != value)
             {
-              settings.setValue("nReceiveBurst", value);
-              changeReceiveShaper = true;
+                settings.setValue("nReceiveBurst", value);
+                changeReceiveShaper = true;
             }
-          break;
+            break;
         case ReceiveAve:
-          if (settings.value("nReceiveAve") != value)
+            if (settings.value("nReceiveAve") != value)
             {
-              settings.setValue("nReceiveAve", value);
-              changeReceiveShaper = true;
+                settings.setValue("nReceiveAve", value);
+                changeReceiveShaper = true;
             }
-          break;
+            break;
         case SendBurst:
-          if (settings.value("nSendBurst") != value)
+            if (settings.value("nSendBurst") != value)
             {
-              settings.setValue("nSendBurst", value);
-              changeSendShaper = true;
+                settings.setValue("nSendBurst", value);
+                changeSendShaper = true;
             }
-          break;
+            break;
         case SendAve:
-          if (settings.value("nSendAve") != value)
+            if (settings.value("nSendAve") != value)
             {
-              settings.setValue("nSendAve", value);
-              changeSendShaper = true;
+                settings.setValue("nSendAve", value);
+                changeSendShaper = true;
             }
-          break;
+            break;
         default:
-          break;
+            break;
         }
 
 
-      if (changeReceiveShaper)
+        if (changeReceiveShaper)
         {
-          if (settings.value("fUseReceiveShaping").toBool())
+            if (settings.value("fUseReceiveShaping").toBool())
             {
-              int64_t burst = 1024 * settings.value("nReceiveBurst").toLongLong();
-              int64_t ave = 1024 * settings.value("nReceiveAve").toLongLong();
-              receiveShaper.set(burst, ave);
-            } else
-            receiveShaper.disable();
+                int64_t burst = 1024 * settings.value("nReceiveBurst").toLongLong();
+                int64_t ave = 1024 * settings.value("nReceiveAve").toLongLong();
+                receiveShaper.set(burst, ave);
+            }
+            else
+                receiveShaper.disable();
         }
 
-      if (changeSendShaper)
+        if (changeSendShaper)
         {
-          if (settings.value("fUseSendShaping").toBool())
+            if (settings.value("fUseSendShaping").toBool())
             {
-              int64_t burst = 1024 * settings.value("nSendBurst").toLongLong();
-              int64_t ave = 1024 * settings.value("nSendAve").toLongLong();
-              sendShaper.set(burst, ave);
-            } else
-            sendShaper.disable();
+                int64_t burst = 1024 * settings.value("nSendBurst").toLongLong();
+                int64_t ave = 1024 * settings.value("nSendAve").toLongLong();
+                sendShaper.set(burst, ave);
+            }
+            else
+                sendShaper.disable();
         }
     }
 
-  Q_EMIT dataChanged(index, index);
+    Q_EMIT dataChanged(index, index);
 
-  return successful;
+    return successful;
 }
 
-void UnlimitedModel::setMaxGeneratedBlock(const QVariant& value)
+void UnlimitedModel::setMaxGeneratedBlock(const QVariant &value)
 {
-  if (!value.isNull())
+    if (!value.isNull())
     {
-      QSettings settings;
-      maxGeneratedBlock = value.toInt();
-      settings.setValue("maxGeneratedBlock",
-                        static_cast<qlonglong>(maxGeneratedBlock));
-      // Q_EMIT your signal if you need one
+        QSettings settings;
+        maxGeneratedBlock = value.toInt();
+        settings.setValue("maxGeneratedBlock", static_cast<qlonglong>(maxGeneratedBlock));
+        // Q_EMIT your signal if you need one
     }
 }
 

@@ -182,7 +182,7 @@ protected:
     RecordType total;
 
 public:
-    CStatHistory() : CStat<DataType, RecordType>(), timer(stat_io_service) {}
+    CStatHistory() : CStat<DataType, RecordType>(), timer(stat_io_service) { Clear(); }
     CStatHistory(const char *name, unsigned int operation = STAT_OP_SUM)
         : CStat<DataType, RecordType>(name), op(operation), timer(stat_io_service)
     {

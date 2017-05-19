@@ -203,6 +203,7 @@ testScripts = [ RpcTest(t) for t in [
     'abandonconflict',
     'p2p-versionbits-warning',
     'importprunedfunds',
+    'thinblocks'
 ] ]
 
 testScriptsExt = [ RpcTest(t) for t in [
@@ -377,7 +378,6 @@ def runtests():
                         rpcTestDir + repr(t) + flags, shell=True)
                     test_passed[fullscriptcmd] = True
                 except subprocess.CalledProcessError as e:
-                    print("well shucks")
                     print( e )
                     test_failure_info[fullscriptcmd] = e
 
