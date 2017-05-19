@@ -338,7 +338,7 @@ bool CUnknownObj::AddSource(CNode *from)
   return false;
 }
 
-void RequestBlock(CNode *pfrom, CInv obj)
+bool RequestBlock(CNode *pfrom, CInv obj)
 {
     const CChainParams &chainParams = Params();
 
@@ -390,6 +390,7 @@ void RequestBlock(CNode *pfrom, CInv obj)
                     pfrom->PushMessage(NetMsgType::GET_XTHIN, ss);
                     LogPrint("thin", "Requesting Thinblock %s from peer %s (%d)\n", inv2.hash.ToString(),
                         pfrom->addrName.c_str(), pfrom->id);
+                    return true;
                 }
             }
             else
@@ -427,6 +428,7 @@ void RequestBlock(CNode *pfrom, CInv obj)
                     vToFetch.push_back(inv2);
                     pfrom->PushMessage(NetMsgType::GETDATA, vToFetch);
                 }
+                return true;
             }
         }
         else
@@ -438,7 +440,9 @@ void RequestBlock(CNode *pfrom, CInv obj)
             pfrom->PushMessage(NetMsgType::GETDATA, vToFetch);
             LogPrint("thin", "Requesting Regular Block %s from peer %s (%d)\n", inv2.hash.ToString(),
                 pfrom->addrName.c_str(), pfrom->id);
+            return true;
         }
+        return false; // no block was requested
         // BUIP010 Xtreme Thinblocks: end section
     }
 }
@@ -449,7 +453,7 @@ void CRequestManager::SendRequests()
     int64_t now = 0;
 
     // TODO: if a node goes offline, rerequest txns from someone else and cleanup references right away
-    cs_objDownloader.lock();
+    LOCK(cs_objDownloader);
     if (sendBlkIter == mapBlkInfo.end())
         sendBlkIter = mapBlkInfo.begin();
 
@@ -530,13 +534,13 @@ void CRequestManager::SendRequests()
                     }
 
                     CInv obj = item.obj;
-                    cs_objDownloader.unlock();
-
-                    RequestBlock(next.node, obj);
-                    item.outstandingReqs++;
-                    item.lastRequestTime = now;
-
-                    cs_objDownloader.lock();
+                    LEAVE_CRITICAL_SECTION(cs_objDownloader);
+                    if (RequestBlock(next.node, obj))
+                    {
+                        item.outstandingReqs++;
+                        item.lastRequestTime = now;
+                    }
+                    ENTER_CRITICAL_SECTION(cs_objDownloader);
 
                     // If you wanted to remember that this node has this data, you could push it back onto the end of
                     // the availableFrom list like this:
@@ -628,7 +632,7 @@ void CRequestManager::SendRequests()
                     {
                         if (1)
                         {
-                            cs_objDownloader.unlock();
+                            LEAVE_CRITICAL_SECTION(cs_objDownloader);
                             LOCK(next.node->cs_vSend);
                             // from->AskFor(item.obj); basically just shoves the req into mapAskFor
                             // This commented code does skips requesting TX if the node is not synced.  But the req mgr
@@ -640,7 +644,7 @@ void CRequestManager::SendRequests()
                                 item.outstandingReqs++;
                                 item.lastRequestTime = now;
                             }
-                            cs_objDownloader.lock();
+                            ENTER_CRITICAL_SECTION(cs_objDownloader);
                         }
                         {
                             LOCK(cs_vNodes);
@@ -656,8 +660,6 @@ void CRequestManager::SendRequests()
             }
         }
     }
-
-    cs_objDownloader.unlock();
 }
 
 bool CRequestManager::IsNodePingAcceptable(CNode *pfrom)
