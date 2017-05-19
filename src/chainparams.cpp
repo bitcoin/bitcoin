@@ -157,9 +157,12 @@ public:
         assert(hashGenesisBlock == uint256S("0x0000000085370d5e122f64f4ab19c68614ff3df78c8d13cb814fd7e69a1dc6da"));
         assert(genesis.hashMerkleRoot == uint256S("0x80ad356118a9ab8db192db66ef77146cc36d958f959251feace550e4ca3d1446"));
 
-        vSeeds.push_back(CDNSSeedData("crowncoin.org", "nodelist.crowncoin.org"));
-        vSeeds.push_back(CDNSSeedData("infernopool.com", "crw.infernopool.com"));
-	vSeeds.push_back(CDNSSeedData("hardcrw", "hardcrw.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("fra-crwdns", "fra-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("blr-crwdns", "blr-crwdns.infernopool.com"));
+	vSeeds.push_back(CDNSSeedData("sgp-crwdns", "sgp-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("lon-crwdns", "lon-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("nyc-crwdns", "nyc-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("crw", "crw.infernopool.com"));
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,0);                    // Crown addresses start with 'X'
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,5);                    // Crown script addresses start with '7'
