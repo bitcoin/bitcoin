@@ -1,0 +1,310 @@
+#!/bin/bash
+
+INDENT="  "
+
+QT_PRO="bitcoin-qt.pro"
+QT_PRO_TEMPLATE="$QT_PRO.temp"
+
+function check_linux_details {
+    DISTRIB_ID=`lsb_release -i 2>/dev/null | sed -e "s/^.*:\s//g"`
+    DESCRIPTION=`lsb_release -d 2>/dev/null | sed -e "s/^.*:\s//g"`
+    RELEASE=`lsb_release -r 2>/dev/null | sed -e "s/^.*:\s//g"`
+    CODENAME=`lsb_release -c 2>/dev/null | sed -e "s/^.*:\s//g"`
+
+    if [ "${#DESCRIPTION}" -eq "0" ]; then DESCRIPTION=`cat /etc/*-release 2>/dev/null` || DESCRIPTION="unknown"; fi
+    if [[ "$DESCRIPTION" =~ "Gentoo" ]]; then DISTRIB_ID="Gentoo"; fi
+}
+
+function check_linux_packages {
+    case $DISTRIB_ID in
+        Ubuntu)
+            PACKAGEMGRCMD="sudo apt-get install"
+            BUILDREQ="build-essential"
+            BOOSTPKG="libboost-all-dev"
+            SSLPKG="libssl-dev"
+            BDBPKG="libdb4.8-dev libdb4.8++-dev"
+            if [[ $CODENAME == "precise" ]]
+            then
+                PREINSTALLCMDS="${INDENT}sudo apt-get install python-software-properties\n${INDENT}sudo add-apt-repository ppa:bitcoin/bitcoin\n${INDENT}sudo apt-get update"
+            fi
+            UPNPPKG="libminiupnpc-dev"
+            ZLIBPKG="zlibc"
+            ;;
+        Debian)
+            PACKAGEMGRCMD="sudo apt-get install"
+            BUILDREQ="build-essential"
+            BOOSTPKG="libboost-all-dev"
+            SSLPKG="libssl-dev"
+            BDBPKG="libdb4.8-dev libdb4.8++-dev"
+            UPNPPKG="libminiupnpc-dev"
+            ZLIBPKG="zlib"
+            ;;
+        Gentoo)
+            PACKAGEMGRCMD="sudo emerge -av1 --noreplace"
+            BOOSTPKG="boost"
+            SSLPKG="openssl"
+            BDBPKG="sys-libs/db:4.8"
+            UPNPPKG="net-libs/miniupnpc"
+            ZLIBPKG="sys-libs/zlib"
+            ;;
+    esac
+}
+
+# TODO: Make the check granular down to distro and version
+function check_system {
+    [ "$MACHINE" ] || MACHINE=`(uname -m) 2>/dev/null` || MACHINE="unknown"
+    [ "$SYSTEM" ] || SYSTEM=`(uname -s) 2>/dev/null`  || SYSTEM="unknown"
+
+# PREINSTALLCMDS are commands that must be issued prior to package installation.
+    NEEDPREINSTALLCMDS="0"
+    PREINSTALLCMDS=''
+
+    case $SYSTEM in
+        Linux)
+            echo "Linux detected."
+            check_linux_details
+            echo "Distribution: $DESCRIPTION"
+
+            SEDCMD="sed -i"
+            MAKEFILE=bitcoin-qt.pro
+            CXX=g++
+            DEPSDIR="/usr"
+            ESCDEPSDIR='\/usr'
+            LIBPATHS="-L/usr/lib"
+            BDB_LIB_SUFFIX=
+            BOOST_LIB_SUFFIX=
+            USE_UPNP=1
+            check_linux_packages
+            ;;
+        Darwin)
+            echo "OS X detected."
+
+            RELEASE=`sw_vers | grep 'ProductVersion:' | grep -o '[0-9]*\.[0-9]*\.[0-9]*'`
+            echo "Version: $RELEASE"
+
+            `port search twig > /dev/null 2>&1` || echo "WARNING: It appears you do not have MacPorts installed. You will need to install it to get any missing packages. (http://www.macports.org/)"
+            PACKAGEMGRCMD="sudo port install"
+            MAKEFILE=bitcoin-qt.pro
+            CXX=llvm-g++
+            DEPSDIR="/opt/local"
+            ESCDEPSDIR='\/opt\/local'
+            LIBPATHS="-L$DEPSDIR/lib"
+            BDB_LIB_SUFFIX=-4.8
+            BOOST_LIB_SUFFIX=-mt
+            USE_UPNP=1
+            SEDCMD="sed -i .bak"
+            BUILDREQ=
+            BOOSTPKG="boost"
+            SSLPKG="openssl"
+            BDBPKG="db48"
+            UPNPPKG="miniupnpc"
+            ZLIBPKG="zlib"
+            ;;
+        *)
+            echo "Unrecognized system."
+            error_exit 1
+            ;;
+    esac
+}
+
+function success_exit {
+    echo
+    echo "Configuration successful!"
+    echo "Run qmake to create Makefile."
+    echo
+    exit 0
+}
+
+function error_exit {
+    echo
+    echo "Please fix errors and then run configure again."
+    echo
+    exit $1
+}
+
+function missing_pkgs_help {
+    echo
+    echo "You're missing some packages."
+    if [ "${#PACKAGEMGRCMD}" -eq "0" ]; then return; fi
+    OLDIFS="$IFS"; IFS=$'\n'
+    PKGS=(`for pkg in "${MISSINGPKGS[@]}"; do echo "$pkg"; done | sort -du`)
+    IFS="$OLDIFS"
+    INSTALLCMD="$PACKAGEMGRCMD"
+    for pkg in "${PKGS[@]}"; do INSTALLCMD+=" \$$pkg"; done
+    echo
+    echo "To install the packages, run the following command(s):"
+    if [[ "$NEEDPREINSTALLCMDS" -eq "1" ]] && [[ -n "$PREINSTALLCMDS" ]]; then echo -e "${PREINSTALLCMDS}"; fi
+    echo -ne "$INDENT"
+    eval echo "$INSTALLCMD"
+}
+
+function check_headers {
+    echo "#include <iostream>" > __h_test.cpp
+    CXXPROG="int main() { std::cout"
+    i=0;
+    for var; do
+        case $i in
+            0) INCS=$var; i=1; j=1;;
+            1) ((j++)); if [ "$var" == "v" ]; then i=2; else echo "#include <$var>" >> __h_test.cpp; fi;;
+            2) CXXPROG="$CXXPROG << $var << std::endl";;
+        esac
+    done
+    CXXPROG="$CXXPROG; return 0; }"
+    echo "$CXXPROG" >> __h_test.cpp
+    `$CXX -o __h_test __h_test.cpp $INCS > /dev/null 2>&1` || return 1
+    local OLDIFS="$IFS"; IFS=$'\n'; vers=( $(./__h_test) ); IFS="$OLDIFS"
+    rm __h_test.cpp __h_test
+    i=1; for ver in "${vers[@]}"; do k=$(($i+$j)); eval local _lver=\$$k; local lver="$ver"; eval $_lver="'$lver'"; ((i++)); done
+    return 0
+}
+
+function check_lib {
+    local LPATHS=''
+    local LIBS=''
+    local i=0
+    for var; do
+        if [ "$var" == "l" ]; then i=1; continue; fi
+        case $i in
+            0) LPATHS+="$var ";;
+            1) LIBS+="$var ";;
+        esac
+    done
+    echo -ne "    $LIBS: "
+    echo "int main() { return 0; }" > __deptest.cpp
+    `$CXX -o __deptest __deptest.cpp $LPATHS $LIBS > /dev/null 2>&1` || { rm __deptest.cpp; echo "<---- NOT FOUND"; return 1; }
+    rm __deptest.cpp __deptest
+    echo "OK"
+    return 0
+}
+
+function check_bdb_dir {
+    # try each version starting with the most recent
+    BDB_DIRS=(db51 db5.1 db50 db5.0 db49 db4.9 db48 db4.8 db47 db4.7 db46 db4.6)
+    for dir in "${BDB_DIRS[@]}"
+    do
+        if [ ! -d "$DEPSDIR/include/$dir" ]; then continue; fi
+        BDB_DIR="$dir"
+        return 0
+    done
+    return 1
+}
+
+function create_qtprofile {
+    echo "USE_UPNP=$USE_UPNP" > "$QT_PRO"
+    if [[ "${#BDB_INCLUDE_PATH}" -ne 0 ]]; then echo "BDB_INCLUDE_PATH=$BDB_INCLUDE_PATH" >> "$QT_PRO"; fi
+    cat "$QT_PRO_TEMPLATE" >> "$QT_PRO"
+    echo "done."
+}
+
+###############################
+#
+# MAIN SCRIPT BEGINS HERE
+#
+echo
+echo -ne "Detecting system..."
+check_system
+
+MISSINGPKGS=()
+
+#
+# LIBRARY DEPENDENCIES
+#
+echo
+echo "Searching for libraries..."
+
+echo "  Boost:"
+if ! check_lib $LIBPATHS l -lboost_system$BOOST_LIB_SUFFIX; then MISSINGPKGS+=("BOOSTPKG"); fi
+if ! check_lib $LIBPATHS l -lboost_filesystem$BOOST_LIB_SUFFIX; then MISSINGPKGS+=("BOOSTPKG"); fi
+if ! check_lib $LIBPATHS l -lboost_program_options$BOOST_LIB_SUFFIX; then MISSINGPKGS+=("BOOSTPKG"); fi
+if ! check_lib $LIBPATHS l -lboost_thread$BOOST_LIB_SUFFIX; then MISSINGPKGS+=("BOOSTPKG"); fi
+if ! check_lib $LIBPATHS l -lboost_regex$BOOST_LIB_SUFFIX; then MISSINGPKGS+=("BOOSTPKG"); fi
+
+echo "  OpenSSL:"
+if ! check_lib $LIBPATHS l -lssl; then MISSINGPKGS+=("SSLPKG"); fi
+if ! check_lib $LIBPATHS l -lcrypto; then MISSINGPKGS+=("SSLPKG"); fi
+
+echo "  BDB:"
+if check_bdb_dir; then LIBPATHS="$LIBPATHS $LIBPATHS/$BDB_DIR"; BDB_INCLUDE_PATH="$DEPSDIR/include/$BDB_DIR"; fi
+if ! check_lib $LIBPATHS l -ldb_cxx$BDB_LIB_SUFFIX; then MISSINGPKGS+=("BDBPKG"); fi
+
+echo "  zlib:"
+if ! check_lib $LIBPATHS l -lz; then MISSINGPKGS+=("ZLIBPKG"); fi
+
+echo "  UPNP:"
+if ! check_lib $LIBPATHS l -lminiupnpc; then USE_UPNP=-; fi
+
+#
+# HEADER DEPENDENCIES
+#
+echo
+echo "Searching for headers..."
+
+#Boost
+# a full list of headers used in project can be obtained with the following command:
+#  { HEADERS=(`grep "#include <boost" * -r -n | sed -e "s/^.*<\(boost[^>]*\).*$/\\1/g" | sort -du`); for header in "${HEADERS[@]}"; do echo -ne " $header"; done; echo; }
+BOOSTHEADERS="boost/version.hpp"
+echo -ne "  Boost: "
+if ! check_headers -I$DEPSDIR/include $BOOSTHEADERS v BOOST_LIB_VERSION BOOST_VERSION
+then
+    echo "<---- NOT FOUND"
+    MISSINGPKGS+=("BOOSTPKG")
+else
+    echo "$BOOST_LIB_VERSION"
+fi
+
+#OpenSSL
+echo -ne "  OpenSSL: "
+if ! check_headers -I$DEPSDIR/include openssl/opensslv.h v OPENSSL_VERSION_TEXT OPENSSL_VERSION_NUMBER
+then
+    echo "<---- NOT FOUND"
+    MISSINGPKGS+=("SSLPKG")
+else
+    echo "$OPENSSL_VERSION_TEXT"
+fi
+
+#Berkeley DB
+echo -ne "  BDB: "
+if ! check_headers -I$DEPSDIR/include/$BDB_DIR db.h v DB_VERSION_MAJOR DB_VERSION_MINOR DB_VERSION_PATCH DB_VERSION_STRING
+then
+    echo "<---- NOT FOUND"
+    MISSINGPKGS+=("BDBPKG")
+    NEEDPREINSTALLCMDS="1";
+else
+    DB_VERSION_INT=$((DB_VERSION_MAJOR*256*256 + DB_VERSION_MINOR*256 + DB_VERSION_PATCH))
+    echo "$DB_VERSION_STRING"
+# less than version 4.8 
+    if [ "$DB_VERSION_INT" -lt "264192" ]; then echo "   - ERROR: You need BDB version 4.8 or higher."; MISSINGPKGS+=("BDBPKG"); NEEDPREINSTALLCMDS="1"; fi
+# version 4.9 or greater
+    if [ "$DB_VERSION_INT" -ge "264448" ]; then echo "   - WARNING: Wallets might not be compatible with other clients. BDB version 4.8 is recommended."; fi
+fi
+
+#zlib
+echo -ne "  zlib: "
+if ! check_headers -I$DEPSDIR/include zlib.h v ZLIB_VERNUM ZLIB_VERSION
+then
+    echo "<---- NOT FOUND"
+    MISSINGPKGS+=("ZLIBPKG")
+else
+    echo "$ZLIB_VERSION"
+fi
+
+#miniupnpc
+echo -ne "  miniupnpc: "
+if ! check_headers -I$DEPSDIR/include miniupnpc/miniupnpc.h
+then
+    echo "<---- NOT FOUND"
+    USE_UPNP=-
+else
+    echo "Found"
+fi
+
+if [[ ${#MISSINGPKGS[@]} -ne 0 ]]; then { missing_pkgs_help; error_exit 1; }; fi
+
+echo
+if [[ "$USE_UPNP" == "1" ]]; then echo "miniupnpc enabled."; else echo "miniupnpc disabled."; fi
+
+echo
+echo -ne "Creating qt project file..."
+create_qtprofile
+
+success_exit
