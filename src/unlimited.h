@@ -10,7 +10,6 @@
 #include "consensus/validation.h"
 #include "leakybucket.h"
 #include "net.h"
-#include "requestManager.h"
 #include "stat.h"
 #include "thinblock.h"
 #include "tweak.h"

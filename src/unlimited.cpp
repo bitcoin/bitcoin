@@ -18,6 +18,7 @@
 #include "net.h"
 #include "policy/policy.h"
 #include "primitives/block.h"
+#include "requestManager.h"
 #include "rpcserver.h"
 #include "stat.h"
 #include "thinblock.h"
