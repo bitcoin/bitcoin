@@ -1,6 +1,7 @@
 *.tar.gz
 
 *.exe
+bin/
 src/bitcoin
 src/bitcoind
 src/bitcoin-cli

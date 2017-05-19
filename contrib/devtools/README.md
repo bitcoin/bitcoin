@@ -2,6 +2,47 @@ Contents
 ========
 This directory contains tools for developers working on this repository.
 
+archive-binaries.py
+===============
+
+Script to copy all the binaries (bitcoind, bitcoin-tx, bitcoin-cli,
+qt/bitcoin-qt) to a bin and bin/qt directories (assumed to exist in
+the calling directory), appending the last commit id (and optionally
+an arbitrary string before the commit id passed ar parameter before
+the commit id) to the file name. 
+
+This way one can keep a collection of binaries for many different
+branches for testing (while clearly ditinguishing which is which).
+
+Example usage:
+
+```
+git fetch origin
+git checkout origin/v0.12.0
+make check -j21
+python contrib/devtools/archive-binaries.py v0.12.0
+./bin/bitcoind-v0.12.0-188ca9c
+
+git checkout origin/master
+git clean -fdx -e bin/
+./autogen.sh
+./configure
+make check -j21
+python contrib/devtools/archive-binaries.py master
+./bin/bitcoind-master-c8d2473
+```
+
+Later one can test or use previously tagged binaries without building or even being on that branch:
+
+```
+git checkout origin/v0.11.0
+./autogen.sh
+./configure
+make check -j21
+./bin/bitcoind-v0.12.0-188ca9c
+./bin/bitcoind-master-c8d2473
+```
+
 check-doc.py
 ============
 
