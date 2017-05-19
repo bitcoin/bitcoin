@@ -2504,14 +2504,16 @@ void StartNode(boost::thread_group &threadGroup, CScheduler &scheduler)
     nStart = GetTimeMillis();
     CBanDB bandb;
     banmap_t banmap;
-    if (bandb.Read(banmap)) {
+    if (bandb.Read(banmap))
+    {
         CNode::SetBanned(banmap); // thread save setter
         CNode::SetBannedSetDirty(false); // no need to write down, just read data
         CNode::SweepBanned(); // sweep out unused entries
 
-        LogPrint("net", "Loaded %d banned node ips/subnets from banlist.dat  %dms\n",
-            banmap.size(), GetTimeMillis() - nStart);
-    } else
+        LogPrint("net", "Loaded %d banned node ips/subnets from banlist.dat  %dms\n", banmap.size(),
+            GetTimeMillis() - nStart);
+    }
+    else
         LogPrintf("Invalid or missing banlist.dat; recreating\n");
 
     fAddressesInitialized = true;
