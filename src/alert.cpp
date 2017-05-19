@@ -5,6 +5,7 @@
 
 #include "alert.h"
 
+#include "base58.h"
 #include "chainparams.h"
 #include "clientversion.h"
 #include "net.h"
@@ -12,6 +13,7 @@
 #include "timedata.h"
 #include "ui_interface.h"
 #include "util.h"
+#include "utilstrencodings.h"
 
 #include <stdint.h>
 #include <algorithm>
@@ -51,7 +53,7 @@ std::string CUnsignedAlert::ToString() const
     BOOST_FOREACH(int n, setCancel)
         strSetCancel += strprintf("%d ", n);
     std::string strSetSubVer;
-    BOOST_FOREACH(std::string str, setSubVer)
+    BOOST_FOREACH(const std::string& str, setSubVer)
         strSetSubVer += "\"" + str + "\" ";
     return strprintf(
         "CAlert(\n"
@@ -111,7 +113,7 @@ bool CAlert::Cancels(const CAlert& alert) const
     return (alert.nID <= nCancel || setCancel.count(alert.nID));
 }
 
-bool CAlert::AppliesTo(int nVersion, std::string strSubVerIn) const
+bool CAlert::AppliesTo(int nVersion, const std::string& strSubVerIn) const
 {
     // TODO: rework for client-version-embedded-in-strSubVer ?
     return (IsInEffect() &&
@@ -145,7 +147,28 @@ bool CAlert::RelayTo(CNode* pnode) const
     return false;
 }
 
-bool CAlert::CheckSignature() const
+bool CAlert::Sign()
+{
+    CDataStream sMsg(SER_NETWORK, CLIENT_VERSION);
+    sMsg << *(CUnsignedAlert*)this;
+    vchMsg = std::vector<unsigned char>(sMsg.begin(), sMsg.end());
+    CBitcoinSecret vchSecret;
+    if (!vchSecret.SetString(GetArg("-alertkey", "")))
+    {
+        printf("CAlert::SignAlert() : vchSecret.SetString failed\n");
+        return false;
+    }
+    CKey key = vchSecret.GetKey();
+    if (!key.Sign(Hash(vchMsg.begin(), vchMsg.end()), vchSig))
+    {
+        printf("CAlert::SignAlert() : key.Sign failed\n");
+        return false;
+    }
+
+    return true;
+}
+
+bool CAlert::CheckSignature(const std::vector<unsigned char>& alertKey) const
 {
     CPubKey key(Params().AlertKey());
     if (!key.Verify(Hash(vchMsg.begin(), vchMsg.end()), vchSig))
@@ -169,9 +192,9 @@ CAlert CAlert::getAlertByHash(const uint256 &hash)
     return retval;
 }
 
-bool CAlert::ProcessAlert(bool fThread)
+bool CAlert::ProcessAlert(const std::vector<unsigned char>& alertKey, bool fThread)
 {
-    if (!CheckSignature())
+    if (!CheckSignature(alertKey))
         return false;
     if (!IsInEffect())
         return false;

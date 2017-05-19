@@ -4,7 +4,6 @@
 #include "activethrone.h"
 #include "throneman.h"
 #include "throne.h"
-#include "throneconfig.h"
 #include "spork.h"
 
 //
@@ -88,7 +87,7 @@ void CActiveThrone::ManageStatus()
         CPubKey pubKeyCollateralAddress;
         CKey keyCollateralAddress;
 
-        if(GetThroNeVin(vin, pubKeyCollateralAddress, keyCollateralAddress)) {
+        if(pwalletMain->GetThroneVinAndKeys(vin, pubKeyCollateralAddress, keyCollateralAddress)) {
 
             if(GetInputAge(vin) < THRONE_MIN_CONFIRMATIONS){
                 status = ACTIVE_THRONE_INPUT_TOO_NEW;
@@ -112,7 +111,7 @@ void CActiveThrone::ManageStatus()
             }
 
             CThroneBroadcast mnb;
-            if(!CreateBroadcast(vin, service, keyCollateralAddress, pubKeyCollateralAddress, keyThrone, pubKeyThrone, errorMessage, mnb)) {
+            if(!CThroneBroadcast::Create(vin, service, keyCollateralAddress, pubKeyCollateralAddress, keyThrone, pubKeyThrone, errorMessage, mnb)) {
                 notCapableReason = "Error on CreateBroadcast: " + errorMessage;
                 LogPrintf("Register::ManageStatus() - %s\n", notCapableReason);
                 return;
@@ -208,189 +207,6 @@ bool CActiveThrone::SendThronePing(std::string& errorMessage) {
         return false;
     }
 
-}
-
-bool CActiveThrone::CreateBroadcast(std::string strService, std::string strKeyThrone, std::string strTxHash, std::string strOutputIndex, std::string& errorMessage, CThroneBroadcast &mnb, bool fOffline) {
-    CTxIn vin;
-    CPubKey pubKeyCollateralAddress;
-    CKey keyCollateralAddress;
-    CPubKey pubKeyThrone;
-    CKey keyThrone;
-
-    //need correct blocks to send ping
-    if(!fOffline && !throneSync.IsBlockchainSynced()) {
-        errorMessage = "Sync in progress. Must wait until sync is complete to start Throne";
-        LogPrintf("CActiveThrone::CreateBroadcast() - %s\n", errorMessage);
-        return false;
-    }
-
-    if(!darkSendSigner.SetKey(strKeyThrone, errorMessage, keyThrone, pubKeyThrone))
-    {
-        errorMessage = strprintf("Can't find keys for throne %s - %s", strService, errorMessage);
-        LogPrintf("CActiveThrone::CreateBroadcast() - %s\n", errorMessage);
-        return false;
-    }
-
-    if(!GetThroNeVin(vin, pubKeyCollateralAddress, keyCollateralAddress, strTxHash, strOutputIndex)) {
-        errorMessage = strprintf("Could not allocate vin %s:%s for throne %s", strTxHash, strOutputIndex, strService);
-        LogPrintf("CActiveThrone::CreateBroadcast() - %s\n", errorMessage);
-        return false;
-    }
-
-    CService service = CService(strService);
-    if(Params().NetworkID() == CBaseChainParams::MAIN) {
-        if(service.GetPort() != 9340) {
-            errorMessage = strprintf("Invalid port %u for throne %s - only 9340 is supported on mainnet.", service.GetPort(), strService);
-            LogPrintf("CActiveThrone::CreateBroadcast() - %s\n", errorMessage);
-            return false;
-        }
-    } else if(service.GetPort() == 9340) {
-        errorMessage = strprintf("Invalid port %u for throne %s - 9340 is only supported on mainnet.", service.GetPort(), strService);
-        LogPrintf("CActiveThrone::CreateBroadcast() - %s\n", errorMessage);
-        return false;
-    }
-
-    addrman.Add(CAddress(service), CNetAddr("127.0.0.1"), 2*60*60);
-
-    return CreateBroadcast(vin, CService(strService), keyCollateralAddress, pubKeyCollateralAddress, keyThrone, pubKeyThrone, errorMessage, mnb);
-}
-
-bool CActiveThrone::CreateBroadcast(CTxIn vin, CService service, CKey keyCollateralAddress, CPubKey pubKeyCollateralAddress, CKey keyThrone, CPubKey pubKeyThrone, std::string &errorMessage, CThroneBroadcast &mnb) {
-    // wait for reindex and/or import to finish
-    if (fImporting || fReindex) return false;
-
-    CThronePing mnp(vin);
-    if(!mnp.Sign(keyThrone, pubKeyThrone)){
-        errorMessage = strprintf("Failed to sign ping, vin: %s", vin.ToString());
-        LogPrintf("CActiveThrone::CreateBroadcast() -  %s\n", errorMessage);
-        mnb = CThroneBroadcast();
-        return false;
-    }
-
-    mnb = CThroneBroadcast(service, vin, pubKeyCollateralAddress, pubKeyThrone, PROTOCOL_VERSION);
-    mnb.lastPing = mnp;
-    if(!mnb.Sign(keyCollateralAddress)){
-        errorMessage = strprintf("Failed to sign broadcast, vin: %s", vin.ToString());
-        LogPrintf("CActiveThrone::CreateBroadcast() - %s\n", errorMessage);
-        mnb = CThroneBroadcast();
-        return false;
-    }
-
-    return true;
-}
-
-bool CActiveThrone::GetThroNeVin(CTxIn& vin, CPubKey& pubkey, CKey& secretKey) {
-    return GetThroNeVin(vin, pubkey, secretKey, "", "");
-}
-
-bool CActiveThrone::GetThroNeVin(CTxIn& vin, CPubKey& pubkey, CKey& secretKey, std::string strTxHash, std::string strOutputIndex) {
-    // wait for reindex and/or import to finish
-    if (fImporting || fReindex) return false;
-
-    // Find possible candidates
-    TRY_LOCK(pwalletMain->cs_wallet, fWallet);
-    if(!fWallet) return false;
-
-    vector<COutput> possibleCoins = SelectCoinsThrone();
-    COutput *selectedOutput;
-
-    // Find the vin
-    if(!strTxHash.empty()) {
-        // Let's find it
-        uint256 txHash(uint256S(strTxHash));
-        int outputIndex = atoi(strOutputIndex.c_str());
-        bool found = false;
-        BOOST_FOREACH(COutput& out, possibleCoins) {
-            if(out.tx->GetHash() == txHash && out.i == outputIndex)
-            {
-                selectedOutput = &out;
-                found = true;
-                break;
-            }
-        }
-        if(!found) {
-            LogPrintf("CActiveThrone::GetThroNeVin - Could not locate valid vin\n");
-            return false;
-        }
-    } else {
-        // No output specified,  Select the first one
-        if(possibleCoins.size() > 0) {
-            selectedOutput = &possibleCoins[0];
-        } else {
-            LogPrintf("CActiveThrone::GetThroNeVin - Could not locate specified vin from possible list\n");
-            return false;
-        }
-    }
-
-    // At this point we have a selected output, retrieve the associated info
-    return GetVinFromOutput(*selectedOutput, vin, pubkey, secretKey);
-}
-
-
-// Extract Throne vin information from output
-bool CActiveThrone::GetVinFromOutput(COutput out, CTxIn& vin, CPubKey& pubkey, CKey& secretKey) {
-    // wait for reindex and/or import to finish
-    if (fImporting || fReindex) return false;
-
-    CScript pubScript;
-
-    vin = CTxIn(out.tx->GetHash(),out.i);
-    pubScript = out.tx->vout[out.i].scriptPubKey; // the inputs PubKey
-
-    CTxDestination address1;
-    ExtractDestination(pubScript, address1);
-    CBitcoinAddress address2(address1);
-
-    CKeyID keyID;
-    if (!address2.GetKeyID(keyID)) {
-        LogPrintf("CActiveThrone::GetThroNeVin - Address does not refer to a key\n");
-        return false;
-    }
-
-    if (!pwalletMain->GetKey(keyID, secretKey)) {
-        LogPrintf ("CActiveThrone::GetThroNeVin - Private key for address is not known\n");
-        return false;
-    }
-
-    pubkey = secretKey.GetPubKey();
-    return true;
-}
-
-// get all possible outputs for running Throne
-vector<COutput> CActiveThrone::SelectCoinsThrone()
-{
-    vector<COutput> vCoins;
-    vector<COutput> filteredCoins;
-    vector<COutPoint> confLockedCoins;
-
-    // Temporary unlock MN coins from throne.conf
-    if(GetBoolArg("-mnconflock", true)) {
-        uint256 mnTxHash;
-        BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
-            mnTxHash.SetHex(mne.getTxHash());
-            COutPoint outpoint = COutPoint(mnTxHash, atoi(mne.getOutputIndex().c_str()));
-            confLockedCoins.push_back(outpoint);
-            pwalletMain->UnlockCoin(outpoint);
-        }
-    }
-
-    // Retrieve all possible outputs
-    pwalletMain->AvailableCoins(vCoins);
-
-    // Lock MN coins from throne.conf back if they where temporary unlocked
-    if(!confLockedCoins.empty()) {
-        BOOST_FOREACH(COutPoint outpoint, confLockedCoins)
-            pwalletMain->LockCoin(outpoint);
-    }
-
-    // Filter
-    BOOST_FOREACH(const COutput& out, vCoins)
-    {
-        if(out.tx->vout[out.i].nValue == 10000*COIN) { //exactly
-            filteredCoins.push_back(out);
-        }
-    }
-    return filteredCoins;
 }
 
 // when starting a Throne, this can enable to run as a hot wallet with no funds
