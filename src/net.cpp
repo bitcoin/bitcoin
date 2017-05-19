@@ -45,7 +45,7 @@
 
 #include <bitnodes.h>
 
-// Dump addresses to peers.dat every 15 minutes (900s)
+// Dump addresses to peers.dat and banlist.dat every 15 minutes (900s)
 #define DUMP_ADDRESSES_INTERVAL 900
 
 // We add a random period time (0 to 1 seconds) to feeler connections to prevent synchronization.
@@ -616,11 +616,13 @@ void CNode::SweepBanned()
     banmap_t::iterator it = setBanned.begin();
     while (it != setBanned.end())
     {
+        CSubNet subNet = (*it).first;
         CBanEntry banEntry = (*it).second;
         if (now > banEntry.nBanUntil)
         {
             setBanned.erase(it++);
             setBannedIsDirty = true;
+            LogPrint("net", "%s: Removed banned node ip/subnet from banlist.dat: %s\n", __func__, subNet.ToString());
         }
         else
             ++it;
@@ -2481,7 +2483,7 @@ void static Discover(boost::thread_group &threadGroup)
 void StartNode(boost::thread_group &threadGroup, CScheduler &scheduler)
 {
     uiInterface.InitMessage(_("Loading addresses..."));
-    // Load addresses for peers.dat
+    // Load addresses from peers.dat
     int64_t nStart = GetTimeMillis();
     {
         CAddrDB adb;
@@ -2497,23 +2499,29 @@ void StartNode(boost::thread_group &threadGroup, CScheduler &scheduler)
         }
     }
 
-    // try to read stored banlist
+    uiInterface.InitMessage(_("Loading banlist..."));
+    // Load addresses from banlist.dat
+    nStart = GetTimeMillis();
     CBanDB bandb;
     banmap_t banmap;
-    if (!bandb.Read(banmap))
+    if (bandb.Read(banmap))
+    {
+        CNode::SetBanned(banmap); // thread save setter
+        CNode::SetBannedSetDirty(false); // no need to write down, just read data
+        CNode::SweepBanned(); // sweep out unused entries
+
+        LogPrint("net", "Loaded %d banned node ips/subnets from banlist.dat  %dms\n", banmap.size(),
+            GetTimeMillis() - nStart);
+    }
+    else
         LogPrintf("Invalid or missing banlist.dat; recreating\n");
 
-    CNode::SetBanned(banmap); // thread save setter
-    CNode::SetBannedSetDirty(false); // no need to write down just read or nonexistent data
-    CNode::SweepBanned(); // sweap out unused entries
-
-    LogPrintf("Loaded %i addresses from peers.dat  %dms\n", addrman.size(), GetTimeMillis() - nStart);
     fAddressesInitialized = true;
 
     if (semOutbound == NULL)
     {
         // initialize semaphore
-        int nMaxOutbound = min((nMaxOutConnections + MAX_FEELER_CONNECTIONS), nMaxConnections);
+        int nMaxOutbound = std::min((nMaxOutConnections + MAX_FEELER_CONNECTIONS), nMaxConnections);
         semOutbound = new CSemaphore(nMaxOutbound);
     }
 
