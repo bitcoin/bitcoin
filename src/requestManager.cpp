@@ -319,7 +319,7 @@ bool CUnknownObj::AddSource(CNode* from)
   return false;
 }
 
-void RequestBlock(CNode* pfrom, CInv obj)
+bool RequestBlock(CNode *pfrom, CInv obj)
 {
     const CChainParams &chainParams = Params();
 
@@ -371,6 +371,7 @@ void RequestBlock(CNode* pfrom, CInv obj)
                     pfrom->PushMessage(NetMsgType::GET_XTHIN, ss);
                     LogPrint("thin", "Requesting Thinblock %s from peer %s (%d)\n", inv2.hash.ToString(),
                         pfrom->addrName.c_str(), pfrom->id);
+                    return true;
                 }
             }
             else
@@ -408,6 +409,7 @@ void RequestBlock(CNode* pfrom, CInv obj)
                     vToFetch.push_back(inv2);
                     pfrom->PushMessage(NetMsgType::GETDATA, vToFetch);
                 }
+                return true;
             }
         }
         else
@@ -419,7 +421,9 @@ void RequestBlock(CNode* pfrom, CInv obj)
             pfrom->PushMessage(NetMsgType::GETDATA, vToFetch);
             LogPrint("thin", "Requesting Regular Block %s from peer %s (%d)\n", inv2.hash.ToString(),
                 pfrom->addrName.c_str(), pfrom->id);
+            return true;
         }
+        return false; // no block was requested
         // BUIP010 Xtreme Thinblocks: end section
     }
 }
@@ -427,38 +431,44 @@ void RequestBlock(CNode* pfrom, CInv obj)
 
 void CRequestManager::SendRequests()
 {
-  int64_t now = 0;
+    int64_t now = 0;
 
-  // TODO: if a node goes offline, rerequest txns from someone else and cleanup references right away
-  cs_objDownloader.lock();
-  if (sendBlkIter == mapBlkInfo.end()) sendBlkIter = mapBlkInfo.begin();
+    // TODO: if a node goes offline, rerequest txns from someone else and cleanup references right away
+    LOCK(cs_objDownloader);
+    if (sendBlkIter == mapBlkInfo.end())
+        sendBlkIter = mapBlkInfo.begin();
 
-  // Modify retry interval. If we're doing IBD or if Traffic Shaping is ON we want to have a longer interval because 
-  // those blocks and txns can take much longer to download.
-  unsigned int blkReqRetryInterval = MIN_BLK_REQUEST_RETRY_INTERVAL;
-  unsigned int txReqRetryInterval = MIN_TX_REQUEST_RETRY_INTERVAL;
-  if ((!IsChainNearlySyncd() && Params().NetworkIDString() != "regtest") || IsTrafficShapingEnabled()) 
+    // Modify retry interval. If we're doing IBD or if Traffic Shaping is ON we want to have a longer interval because
+    // those blocks and txns can take much longer to download.
+    unsigned int blkReqRetryInterval = MIN_BLK_REQUEST_RETRY_INTERVAL;
+    unsigned int txReqRetryInterval = MIN_TX_REQUEST_RETRY_INTERVAL;
+    if ((!IsChainNearlySyncd() && Params().NetworkIDString() != "regtest") || IsTrafficShapingEnabled())
     {
-      blkReqRetryInterval *= 6;
-      txReqRetryInterval *= (12*2);  // we want to optimise block DL during IBD (and give lots of time for shaped nodes) so push the TX retry up to 2 minutes (default val of MIN_TX is 5 sec)
+        blkReqRetryInterval *= 6;
+        // we want to optimise block DL during IBD (and give lots of time for shaped nodes) so push the TX retry up to 2
+        // minutes (default val of MIN_TX is 5 sec)
+        txReqRetryInterval *= (12 * 2);
     }
 
-  // Get Blocks
-  while (sendBlkIter != mapBlkInfo.end())
-   {
-      now = GetTimeMicros();
-      OdMap::iterator itemIter = sendBlkIter;
-      CUnknownObj& item = itemIter->second;
+    // Get Blocks
+    while (sendBlkIter != mapBlkInfo.end())
+    {
+        now = GetTimeMicros();
+        OdMap::iterator itemIter = sendBlkIter;
+        CUnknownObj &item = itemIter->second;
 
-      ++sendBlkIter;  // move it forward up here in case we need to erase the item we are working with.
-      if (itemIter == mapBlkInfo.end()) break;
+        ++sendBlkIter; // move it forward up here in case we need to erase the item we are working with.
+        if (itemIter == mapBlkInfo.end())
+            break;
 
-      if (now-item.lastRequestTime > blkReqRetryInterval)  // if never requested then lastRequestTime==0 so this will always be true
-	{
-          if (!item.availableFrom.empty())
-	    {
-	      CNodeRequestData next;
-              while (!item.availableFrom.empty() && (next.node == NULL)) // Go thru the availableFrom list, looking for the first node that isn't disconnected
+        // if never requested then lastRequestTime==0 so this will always be true
+        if (now - item.lastRequestTime > blkReqRetryInterval)
+        {
+            if (!item.availableFrom.empty())
+            {
+                CNodeRequestData next;
+                // Go thru the availableFrom list, looking for the first node that isn't disconnected
+                while (!item.availableFrom.empty() && (next.node == NULL))
                 {
                     next = item.availableFrom.front(); // Grab the next location where we can find this object.
                     item.availableFrom.pop_front();
@@ -496,129 +506,141 @@ void CRequestManager::SendRequests()
                     }
                 }
 
-
-	      if (next.node != NULL )
-		{
-                  // If item.lastRequestTime is true then we've requested at least once and we'll try a re-request
-		  if (item.lastRequestTime)
-		    {
-		      LogPrint("req", "Block request timeout for %s.  Retrying\n", item.obj.ToString().c_str());
-		    }
-
-		  CInv obj = item.obj;
-		  cs_objDownloader.unlock();
-
-                  RequestBlock(next.node, obj);
-                  item.outstandingReqs++;
-                  item.lastRequestTime = now;
-
-		  cs_objDownloader.lock();
-
-                  // If you wanted to remember that this node has this data, you could push it back onto the end of the availableFrom list like this:
-                  // next.requestCount += 1;
-		  // next.desirability /= 2;  // Make this node less desirable to re-request.
-		  // item.availableFrom.push_back(next);  // Add the node back onto the end of the list
-
-                  // Instead we'll forget about it -- the node is already popped of of the available list so now we'll release our reference.
-                  LOCK(cs_vNodes);
-                  LogPrint("req", "ReqMgr: %s removed ref to %d count %d (disconnect).\n", item.obj.ToString(), next.node->GetId(), next.node->GetRefCount());
-                  next.node->Release();
-                  next.node = NULL;
-		}
-              else
-		{
-		  // node should never be null... but if it is then there's nothing to do.
-                  LogPrint("req", "Block %s has no sources\n",item.obj.ToString());
-		}
-	    }
-	  else
-	    {
-	      // There can be no block sources because a node dropped out.  In this case, nothing can be done so remove the item.
-	      LogPrint("req", "Block %s has no available sources. Removing\n",item.obj.ToString());
-              cleanup(itemIter);	      // node should never be null... but if it is then there's nothing to do.
-	    }
-
-	}    
-    }
-  
-  // Get Transactions
-  if (sendIter == mapTxnInfo.end()) sendIter = mapTxnInfo.begin();
-  while ((sendIter != mapTxnInfo.end()) && requestPacer.try_leak(1))
-    {
-      now = GetTimeMicros();
-      OdMap::iterator itemIter = sendIter;
-      CUnknownObj& item = itemIter->second;
-
-      ++sendIter;  // move it forward up here in case we need to erase the item we are working with.
-      if (itemIter == mapTxnInfo.end()) break;
-
-      if (now-item.lastRequestTime > txReqRetryInterval)  // if never requested then lastRequestTime==0 so this will always be true
-	{
-          if (!item.rateLimited)
-	    {
-                // If item.lastRequestTime is true then we've requested at least once, so this is a rerequest -> a txn request was dropped.
-		if (item.lastRequestTime)
-		{
-		  LogPrint("req", "Request timeout for %s.  Retrying\n", item.obj.ToString().c_str());
-		  // Not reducing inFlight; it's still outstanding and will be cleaned up when item is removed from map
-                  droppedTxns += 1;  // note we can never be sure its really dropped verses just delayed for a long time so this is not authoritative.
-		}
-
-              if (item.availableFrom.empty())
-		{
-		  // TODO: tell someone about this issue, look in a random node, or something.
-		  cleanup(itemIter);  // right now we give up requesting it if we have no other sources...
-		}
-              else  // Ok, we have at least on source so request this item.
-	        {
-		  CNodeRequestData next;
-		  while (!item.availableFrom.empty() && (next.node == NULL)) // Go thru the availableFrom list, looking for the first node that isn't disconnected
+                if (next.node != NULL)
+                {
+                    // If item.lastRequestTime is true then we've requested at least once and we'll try a re-request
+                    if (item.lastRequestTime)
                     {
-		    next = item.availableFrom.front();  // Grab the next location where we can find this object.
-		    item.availableFrom.pop_front();
-		    if (next.node != NULL)
-		      {
-			if (next.node->fDisconnect)  // Node was disconnected so we can't request from it
-			  {
-			    LOCK(cs_vNodes);
-			    LogPrint("req", "ReqMgr: %s removed ref to %d count %d (disconnect).\n", item.obj.ToString(), next.node->GetId(), next.node->GetRefCount());
-			    next.node->Release();
-			    next.node = NULL; // force the loop to get another node            
-			  }
-		      }
-		    }
+                        LogPrint("req", "Block request timeout for %s.  Retrying\n", item.obj.ToString().c_str());
+                    }
 
-	          if (next.node != NULL )
-		    {
-                    if (1)
-                      {
-                        cs_objDownloader.unlock();
-                        LOCK(next.node->cs_vSend);
-  		        // from->AskFor(item.obj); basically just shoves the req into mapAskFor
-                        if (1) // This commented code does skips requesting TX if the node is not synced.  But the req mgr should not make this decision, the caller should not give the TX to me... !item.lastRequestTime || (item.lastRequestTime && IsChainNearlySyncd()))
-                          {
-                            next.node->mapAskFor.insert(std::make_pair(now, item.obj));
-                            item.outstandingReqs++;
-		            item.lastRequestTime = now;
-                          }
-                        cs_objDownloader.lock();
-                      }
-                      {
-                        LOCK(cs_vNodes);
-                        LogPrint("req", "ReqMgr: %s removed ref to %d count %d (disconnect).\n", item.obj.ToString(), next.node->GetId(), next.node->GetRefCount());
-                        next.node->Release();
-                        next.node = NULL;
-		      }
-                      inFlight++;
-                      inFlightTxns << inFlight;
-		    }
-		}
-	    }
-	}
+                    CInv obj = item.obj;
+                    LEAVE_CRITICAL_SECTION(cs_objDownloader);
+                    if (RequestBlock(next.node, obj))
+                    {
+                        item.outstandingReqs++;
+                        item.lastRequestTime = now;
+                    }
+                    ENTER_CRITICAL_SECTION(cs_objDownloader);
 
+                    // If you wanted to remember that this node has this data, you could push it back onto the end of
+                    // the availableFrom list like this:
+                    // next.requestCount += 1;
+                    // next.desirability /= 2;  // Make this node less desirable to re-request.
+                    // item.availableFrom.push_back(next);  // Add the node back onto the end of the list
+
+                    // Instead we'll forget about it -- the node is already popped of of the available list so now we'll
+                    // release our reference.
+                    LOCK(cs_vNodes);
+                    LogPrint("req", "ReqMgr: %s removed block ref to %d count %d\n", item.obj.ToString(),
+                        next.node->GetId(), next.node->GetRefCount());
+                    next.node->Release();
+                    next.node = NULL;
+                }
+                else
+                {
+                    // node should never be null... but if it is then there's nothing to do.
+                    LogPrint("req", "Block %s has no sources\n", item.obj.ToString());
+                }
+            }
+            else
+            {
+                // There can be no block sources because a node dropped out.  In this case, nothing can be done so
+                // remove the item.
+                LogPrint("req", "Block %s has no available sources. Removing\n", item.obj.ToString());
+                cleanup(itemIter);
+            }
+        }
     }
 
-  cs_objDownloader.unlock();
+    // Get Transactions
+    if (sendIter == mapTxnInfo.end())
+        sendIter = mapTxnInfo.begin();
+    while ((sendIter != mapTxnInfo.end()) && requestPacer.try_leak(1))
+    {
+        now = GetTimeMicros();
+        OdMap::iterator itemIter = sendIter;
+        CUnknownObj &item = itemIter->second;
+
+        ++sendIter; // move it forward up here in case we need to erase the item we are working with.
+        if (itemIter == mapTxnInfo.end())
+            break;
+
+        // if never requested then lastRequestTime==0 so this will always be true
+        if (now - item.lastRequestTime > txReqRetryInterval)
+        {
+            if (!item.rateLimited)
+            {
+                // If item.lastRequestTime is true then we've requested at least once, so this is a rerequest -> a txn
+                // request was dropped.
+                if (item.lastRequestTime)
+                {
+                    LogPrint("req", "Request timeout for %s.  Retrying\n", item.obj.ToString().c_str());
+                    // Not reducing inFlight; it's still outstanding and will be cleaned up when item is removed from
+                    // map
+                    // note we can never be sure its really dropped verses just delayed for a long time so this is not
+                    // authoritative.
+                    droppedTxns += 1;
+                }
+
+                if (item.availableFrom.empty())
+                {
+                    // TODO: tell someone about this issue, look in a random node, or something.
+                    cleanup(itemIter); // right now we give up requesting it if we have no other sources...
+                }
+                else // Ok, we have at least on source so request this item.
+                {
+                    CNodeRequestData next;
+                    // Go thru the availableFrom list, looking for the first node that isn't disconnected
+                    while (!item.availableFrom.empty() && (next.node == NULL))
+                    {
+                        next = item.availableFrom.front(); // Grab the next location where we can find this object.
+                        item.availableFrom.pop_front();
+                        if (next.node != NULL)
+                        {
+                            if (next.node->fDisconnect) // Node was disconnected so we can't request from it
+                            {
+                                LOCK(cs_vNodes);
+                                LogPrint("req", "ReqMgr: %s removed tx ref to %d count %d (on disconnect).\n",
+                                    item.obj.ToString(), next.node->GetId(), next.node->GetRefCount());
+                                next.node->Release();
+                                next.node = NULL; // force the loop to get another node
+                            }
+                        }
+                    }
+
+                    if (next.node != NULL)
+                    {
+                        if (1)
+                        {
+                            LEAVE_CRITICAL_SECTION(cs_objDownloader);
+                            LOCK(next.node->cs_vSend);
+                            // from->AskFor(item.obj); basically just shoves the req into mapAskFor
+                            // This commented code does skips requesting TX if the node is not synced.  But the req mgr
+                            // should not make this decision, the caller should not give the TX to me...
+                            // !item.lastRequestTime || (item.lastRequestTime && IsChainNearlySyncd()))
+                            if (1)
+                            {
+                                next.node->mapAskFor.insert(std::make_pair(now, item.obj));
+                                item.outstandingReqs++;
+                                item.lastRequestTime = now;
+                            }
+                            ENTER_CRITICAL_SECTION(cs_objDownloader);
+                        }
+                        {
+                            LOCK(cs_vNodes);
+                            LogPrint("req", "ReqMgr: %s removed tx ref to %d count %d\n",
+                                item.obj.ToString(), next.node->GetId(), next.node->GetRefCount());
+                            next.node->Release();
+                            next.node = NULL;
+                        }
+                        inFlight++;
+                        inFlightTxns << inFlight;
+                    }
+                }
+            }
+        }
+    }
 }
 
 bool CRequestManager::IsNodePingAcceptable(CNode* pfrom)
