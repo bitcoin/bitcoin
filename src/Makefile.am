@@ -68,7 +68,7 @@ if BUILD_BITCOIN_UTILS
   bin_PROGRAMS += bitcoin-cli bitcoin-tx
 endif
 
-.PHONY: FORCE check-symbols check-security
+.PHONY: FORCE check-symbols check-security check-formatting
 # bitcoin core #
 BITCOIN_CORE_H = \
   addrman.h \
@@ -478,6 +478,10 @@ if HARDEN
 	@echo "Checking binary security..."
 	$(AM_V_at) READELF=$(READELF) OBJDUMP=$(OBJDUMP) $(top_srcdir)/contrib/devtools/security-check.py < $(bin_PROGRAMS)
 endif
+
+check-formatting:
+	@echo "Checking source formatting style..."
+	(cd $(top_srcdir)/src; ../contrib/devtools/clang-format.py check clang-format-3.8 `cat ./.formatted-files`)
 
 %.pb.cc %.pb.h: %.proto
 	@test -f $(PROTOC)
