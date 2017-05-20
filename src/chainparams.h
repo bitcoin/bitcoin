@@ -34,9 +34,13 @@ struct CCheckpointData {
     double fTransactionsPerDay;
 };
 
-static const int DEFAULT_MAINNET_PORT = 8333;
-static const int DEFAULT_TESTNET_PORT = 18333;
-static const int DEFAULT_NOLNET_PORT = 9333;
+enum
+{
+    DEFAULT_MAINNET_PORT = 8333,
+    DEFAULT_TESTNET_PORT = 18333,
+    DEFAULT_NOLNET_PORT = 9333,
+    DEFAULT_REGTESTNET_PORT = 18444
+};
 
 /**
  * CChainParams defines various tweakable parameters of a given instance of the

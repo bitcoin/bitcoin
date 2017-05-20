@@ -1,4 +1,5 @@
 // Copyright (c) 2017 Stephen McCarthy
+// Copyright (c) 2017 The Bitcoin Unlimited developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -26,10 +27,20 @@
 #include "wallet/wallet.h"
 #endif
 
-// Needed here so bitcoin-cli can link
+// These globals are needed here so bitcoin-cli can link
 const std::string CURRENCY_UNIT = "BTC";
 const std::string DEFAULT_TOR_CONTROL = "127.0.0.1:9051";
 const char DEFAULT_RPCCONNECT[] = "127.0.0.1";
+
+// Variables for traffic shaping.  Needed here so bitcoin-cli can link
+/** Default value for the maximum amount of data that can be received in a burst */
+const int64_t DEFAULT_MAX_RECV_BURST = std::numeric_limits<int64_t>::max();
+/** Default value for the maximum amount of data that can be sent in a burst */
+const int64_t DEFAULT_MAX_SEND_BURST = std::numeric_limits<int64_t>::max();
+/** Default value for the average amount of data received per second */
+const int64_t DEFAULT_AVE_RECV = std::numeric_limits<int64_t>::max();
+/** Default value for the average amount of data sent per second */
+const int64_t DEFAULT_AVE_SEND = std::numeric_limits<int64_t>::max();
 
 namespace AllowedArgs
 {
