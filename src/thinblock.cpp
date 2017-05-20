@@ -1530,19 +1530,15 @@ void CheckNodeSupportForThinBlocks()
 {
     if (IsThinBlocksEnabled())
     {
-        // BU: Enforce cs_vNodes lock held external to FindNode function calls to prevent use-after-free errors
-        LOCK(cs_vNodes);
         // Check that a nodes pointed to with connect-thinblock actually supports thinblocks
         BOOST_FOREACH (string &strAddr, mapMultiArgs["-connect-thinblock"])
         {
-            if (CNode *pnode = FindNode(strAddr))
+            CNodeRef node = FindNodeRef(strAddr);
+            if (node && !node->ThinBlockCapable())
             {
-                if (!pnode->ThinBlockCapable())
-                {
-                    LogPrintf("ERROR: You are trying to use connect-thinblocks but to a node that does not support it "
-                              "- Protocol Version: %d peer=%d\n",
-                        pnode->nVersion, pnode->id);
-                }
+                LogPrintf("ERROR: You are trying to use connect-thinblocks but to a node that does not support it "
+                          "- Protocol Version: %d peer=%s\n",
+                    node->nVersion, node->GetLogName());
             }
         }
     }

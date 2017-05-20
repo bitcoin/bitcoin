@@ -35,6 +35,7 @@
 class CAddrMan;
 class CScheduler;
 class CNode;
+class CNodeRef;
 
 namespace boost
 {
@@ -100,10 +101,7 @@ unsigned int SendBufferSize();
 
 void AddOneShot(const std::string &strDest);
 void AddressCurrentlyConnected(const CService &addr);
-CNode *FindNode(const CNetAddr &ip);
-CNode *FindNode(const CSubNet &subNet);
-CNode *FindNode(const std::string &addrName);
-CNode *FindNode(const CService &ip);
+CNodeRef FindNodeRef(const std::string &addrName);
 int DisconnectSubNetNodes(const CSubNet &subNet);
 bool OpenNetworkConnection(const CAddress &addrConnect,
     bool fCountFailure,
@@ -898,6 +896,50 @@ public:
     static uint64_t GetMaxOutboundTimeLeftInCycle();
 };
 
+// Exception-safe class for holding a reference to a CNode
+class CNodeRef
+{
+    void AddRef()
+    {
+        if (_pnode)
+        {
+            LOCK(cs_vNodes);
+            _pnode->AddRef();
+        }
+    }
+
+    void Release()
+    {
+        if (_pnode)
+        {
+            LOCK(cs_vNodes);
+            _pnode->Release();
+            _pnode = nullptr;
+        }
+    }
+
+public:
+    CNodeRef(CNode *pnode = nullptr) : _pnode(pnode) { AddRef(); }
+    CNodeRef(const CNodeRef &other) : _pnode(other._pnode) { AddRef(); }
+    ~CNodeRef() { Release(); }
+    CNode &operator*() const { return *_pnode; };
+    CNode *operator->() const { return _pnode; };
+    explicit operator bool() const { return _pnode; }
+    CNode *get() const { return _pnode; }
+    CNodeRef &operator=(CNode *pnode)
+    {
+        if (pnode != _pnode)
+        {
+            Release();
+            _pnode = pnode;
+            AddRef();
+        }
+        return *this;
+    }
+    CNodeRef &operator=(const CNodeRef &other) { return operator=(other._pnode); }
+private:
+    CNode *_pnode;
+};
 
 class CTransaction;
 void RelayTransaction(const CTransaction &tx);

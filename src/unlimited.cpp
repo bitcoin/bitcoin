@@ -285,7 +285,7 @@ std::string FormatCoinbaseMessage(const std::vector<std::string> &comments, cons
     return ret;
 }
 
-CNode *FindLikelyNode(const std::string &addrName)
+CNodeRef FindLikelyNode(const std::string &addrName)
 {
     LOCK(cs_vNodes);
     bool wildcard = (addrName.find_first_of("*?") != std::string::npos);
@@ -324,7 +324,7 @@ UniValue expedited(const UniValue &params, bool fHelp)
     std::string obj = params[0].get_str();
     std::string strNode = params[1].get_str();
 
-    CNode *node = FindLikelyNode(strNode);
+    CNodeRef node(FindLikelyNode(strNode));
     if (!node)
     {
         throw runtime_error("Unknown node");
@@ -358,7 +358,7 @@ UniValue expedited(const UniValue &params, bool fHelp)
     // Add or remove this node to our list of upstream nodes
     {
         LOCK(cs_xpedited);
-        std::vector<CNode *>::iterator elem = std::find(xpeditedBlkUp.begin(), xpeditedBlkUp.end(), node);
+        std::vector<CNode *>::iterator elem = std::find(xpeditedBlkUp.begin(), xpeditedBlkUp.end(), node.get());
         if ((flags & EXPEDITED_BLOCKS) && (flags & EXPEDITED_STOP))
         {
             if (elem != xpeditedBlkUp.end())
@@ -367,7 +367,7 @@ UniValue expedited(const UniValue &params, bool fHelp)
         else if (flags & EXPEDITED_BLOCKS)
         {
             if (elem == xpeditedBlkUp.end()) // don't add it twice
-                xpeditedBlkUp.push_back(node);
+                xpeditedBlkUp.push_back(node.get());
         }
     }
 
@@ -391,26 +391,11 @@ UniValue pushtx(const UniValue &params, bool fHelp)
 
     string strNode = params[0].get_str();
 
-    // BU: Add lock on cs_vNodes as FindNode now requries it to prevent potential use-after-free errors
-    CNode *node = NULL;
-    {
-        LOCK(cs_vNodes);
-        node = FindLikelyNode(strNode);
+    CNodeRef node(FindLikelyNode(strNode));
+    if (!node)
+        throw runtime_error("Unknown node");
 
-        if (!node)
-        {
-            throw runtime_error("Unknown node");
-        }
-
-        // BU: Since we are passing node to another function, add a ref to prevent use-after-free
-        //    This allows us to release the lock on cs_vNodes earlier while still protecting node from deletion
-        node->AddRef();
-    }
-
-    UnlimitedPushTxns(node);
-
-    // BU: Remember to release the reference we took on node to protect from use-after-free
-    node->Release();
+    UnlimitedPushTxns(node.get());
 
     return NullUniValue;
 }

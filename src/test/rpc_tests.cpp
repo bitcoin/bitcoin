@@ -232,7 +232,7 @@ BOOST_AUTO_TEST_CASE(json_parse_errors)
 BOOST_AUTO_TEST_CASE(rpc_ban)
 {
     BOOST_CHECK_NO_THROW(CallRPC(string("clearbanned")));
-    
+
     UniValue r;
     BOOST_CHECK_NO_THROW(r = CallRPC(string("setban 127.0.0.0 add")));
     BOOST_CHECK_THROW(r = CallRPC(string("setban 127.0.0.0:8334")), runtime_error); //portnumber for setban not allowed
@@ -323,16 +323,16 @@ BOOST_AUTO_TEST_CASE(findlikelynode)
   vNodes.push_back(&n2);
 
   // Test prefix matching
-  BOOST_CHECK(FindLikelyNode("169.254.1.2") == &n1);
-  BOOST_CHECK(FindLikelyNode("169.254.1.2:1234") == NULL);
-  BOOST_CHECK(FindLikelyNode("169.254.1") == &n1);
+  BOOST_CHECK(FindLikelyNode("169.254.1.2").get() == &n1);
+  BOOST_CHECK(FindLikelyNode("169.254.1.2:1234").get() == NULL);
+  BOOST_CHECK(FindLikelyNode("169.254.1").get() == &n1);
 
   // Test wildcard matching
-  BOOST_CHECK(FindLikelyNode("169.254.1*") == &n1);
-  BOOST_CHECK(FindLikelyNode("169.254.2*") == &n2);
-  BOOST_CHECK(FindLikelyNode("169.254.2.3*") == &n2);
-  BOOST_CHECK(FindLikelyNode("169.254.2.?:?") == &n2);
-  BOOST_CHECK(FindLikelyNode("169.254.1.?:*") == &n1);
+  BOOST_CHECK(FindLikelyNode("169.254.1*").get() == &n1);
+  BOOST_CHECK(FindLikelyNode("169.254.2*").get() == &n2);
+  BOOST_CHECK(FindLikelyNode("169.254.2.3*").get() == &n2);
+  BOOST_CHECK(FindLikelyNode("169.254.2.?:?").get() == &n2);
+  BOOST_CHECK(FindLikelyNode("169.254.1.?:*").get() == &n1);
 
   vNodes.clear();
 }
