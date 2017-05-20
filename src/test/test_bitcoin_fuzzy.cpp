@@ -96,7 +96,8 @@ int main(int argc, char **argv)
         {
             try
             {
-                CTransaction tx(deserialize, ds);
+                CTransaction tx;
+                ds >> tx;
             } catch (const std::ios_base::failure& e) {return 0;}
             break;
         }
