@@ -2,7 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "thinblock.h"
+#include <map>
+#include <sstream>
+#include <string>
+#include <vector>
+
 #include "chainparams.h"
 #include "consensus/merkle.h"
 #include "expedited.h"
@@ -11,39 +15,14 @@
 #include "parallel.h"
 #include "policy/policy.h"
 #include "pow.h"
+#include "thinblock.h"
 #include "timedata.h"
 #include "txmempool.h"
 #include "unlimited.h"
 #include "util.h"
 #include "utiltime.h"
-#include <iomanip>
-#include <map>
-#include <sstream>
-#include <string>
-#include <vector>
 
 using namespace std;
-
-extern CCriticalSection cs_thinblockstats;
-extern CCriticalSection cs_orphancache;
-extern map<uint256, COrphanTx> mapOrphanTransactions GUARDED_BY(cs_orphancache);
-
-string formatInfoUnit(double value)
-{
-    static const char *units[] = {"B", "KB", "MB", "GB", "TB", "PB", "EB"};
-
-    size_t i = 0;
-    while ((value > 1000.0 || value < -1000.0) && i < (sizeof(units) / sizeof(units[0])) - 1)
-    {
-        value /= 1000.0;
-        i++;
-    }
-
-    ostringstream ss;
-    ss << fixed << setprecision(2);
-    ss << value << units[i];
-    return ss.str();
-}
 
 CThinBlock::CThinBlock(const CBlock &block, CBloomFilter &filter)
 {

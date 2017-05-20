@@ -119,6 +119,22 @@ static inline bool error(const char* s)
     return false;
 }
 
+/**
+ Format an amount of bytes with a unit symbol attached, such as MB, KB, GB.
+ Uses Kilobytes x1000, not Kibibytes x1024.
+
+ Output value has two digits after the dot. No space between unit symbol and
+ amount.
+
+ Also works for negative amounts. The maximum unit supported is 1 Exabyte (EB).
+ This formatting is used by the thinblock statistics functions, and this
+ is a factored-out utility function.
+
+ @param [value] The value to format
+ @return String with unit
+ */
+extern std::string formatInfoUnit(double value);
+
 void PrintExceptionContinue(const std::exception *pex, const char* pszThread);
 void ParseParameters(int argc, const char*const argv[]);
 void FileCommit(FILE *fileout);
