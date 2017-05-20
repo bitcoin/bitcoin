@@ -6381,7 +6381,7 @@ bool ProcessMessage(CNode *pfrom, string strCommand, CDataStream &vRecv, int64_t
 
         uint256 hashLastBlock;
         hashLastBlock.SetNull();
-        for (const CBlockHeader &header : headers)
+        BOOST_FOREACH (const CBlockHeader &header, headers)
         {
             // check that the first header has a previous block in the blockindex.
             if (hashLastBlock.IsNull())
@@ -6401,7 +6401,7 @@ bool ProcessMessage(CNode *pfrom, string strCommand, CDataStream &vRecv, int64_t
 
         // Check and accept each header in order from youngest block to oldest
         CBlockIndex *pindexLast = NULL;
-        for (const CBlockHeader &header : headers)
+        BOOST_FOREACH (const CBlockHeader &header, headers)
         {
             CValidationState state;
             if (!AcceptBlockHeader(header, state, chainparams, &pindexLast))
@@ -6437,7 +6437,6 @@ bool ProcessMessage(CNode *pfrom, string strCommand, CDataStream &vRecv, int64_t
 
         // update the syncd status.  This should come before we make calls to requester.AskFor().
         IsChainNearlySyncdInit();
-        IsInitialBlockDownloadInit();
 
         // If this set of headers is valid and ends in a block with at least as
         // much work as our tip, download as much as possible.
