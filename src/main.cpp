@@ -5438,17 +5438,17 @@ bool AlreadyHave(const CInv &inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
     case MSG_BLOCK:
     case MSG_XTHINBLOCK:
     case MSG_THINBLOCK:
-        {
-            // The Request Manager functionality requires that we return true only when we actually have received
-            // the block and not when we have received the header only.  Otherwise the request manager may not
-            // be able to update its block source in order to make re-requests.
-            BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
-            if (mi == mapBlockIndex.end())
-                return false;
-            if (!(mi->second->nStatus & BLOCK_HAVE_DATA))
-                return false;
-            return true;
-        }
+    {
+        // The Request Manager functionality requires that we return true only when we actually have received
+        // the block and not when we have received the header only.  Otherwise the request manager may not
+        // be able to update its block source in order to make re-requests.
+        BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
+        if (mi == mapBlockIndex.end())
+            return false;
+        if (!(mi->second->nStatus & BLOCK_HAVE_DATA))
+            return false;
+        return true;
+    }
     }
     // Don't know what it is, just say we already got one
     return true;
@@ -6424,10 +6424,8 @@ bool ProcessMessage(CNode *pfrom, string strCommand, CDataStream &vRecv, int64_t
             // Headers message had its maximum size; the peer may have more headers.
             // TODO: optimize: if pindexLast is an ancestor of chainActive.Tip or pindexBestHeader, continue
             // from there instead.
-            LogPrint("net", "more getheaders (%d) to end to peer=%d (startheight:%d)\n",
-                    pindexLast->nHeight,
-                    pfrom->id,
-                    pfrom->nStartingHeight);
+            LogPrint("net", "more getheaders (%d) to end to peer=%d (startheight:%d)\n", pindexLast->nHeight, pfrom->id,
+                pfrom->nStartingHeight);
             pfrom->PushMessage(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexLast), uint256());
         }
 
@@ -6458,7 +6456,7 @@ bool ProcessMessage(CNode *pfrom, string strCommand, CDataStream &vRecv, int64_t
 
             // Download as much as possible, from earliest to latest.
             unsigned int nAskFor = 0;
-            BOOST_REVERSE_FOREACH(CBlockIndex *pindex, vToFetch)
+            BOOST_REVERSE_FOREACH (CBlockIndex *pindex, vToFetch)
             {
                 // pindex must be nonnull because we populated vToFetch a few lines above
                 CInv inv(MSG_BLOCK, pindex->GetBlockHash());
@@ -6466,8 +6464,7 @@ bool ProcessMessage(CNode *pfrom, string strCommand, CDataStream &vRecv, int64_t
                 {
                     requester.AskFor(inv, pfrom);
                     LogPrint("req", "AskFor block via headers direct fetch %s (%d) peer=%d\n",
-                            pindex->GetBlockHash().ToString(),
-                            pindex->nHeight, pfrom->id);
+                        pindex->GetBlockHash().ToString(), pindex->nHeight, pfrom->id);
                     nAskFor++;
                 }
                 // We don't care about how many blocks are in flight.  We just need to make sure we don't
@@ -6482,10 +6479,9 @@ bool ProcessMessage(CNode *pfrom, string strCommand, CDataStream &vRecv, int64_t
             if (nAskFor > 1)
             {
                 LogPrint("net", "Downloading blocks toward %s (%d) via headers direct fetch\n",
-                        pindexLast->GetBlockHash().ToString(),
-                        pindexLast->nHeight);
+                    pindexLast->GetBlockHash().ToString(), pindexLast->nHeight);
             }
-         }
+        }
 
         CheckBlockIndex(chainparams.GetConsensus());
     }
@@ -7615,17 +7611,18 @@ bool SendMessages(CNode *pto)
         if (!pto->fDisconnect && !pto->fClient && (fFetch || !IsInitialBlockDownload()) &&
             state.nBlocksInFlight < (int)MAX_BLOCKS_IN_TRANSIT_PER_PEER)
         {
-            std::vector<CBlockIndex*> vToDownload;
+            std::vector<CBlockIndex *> vToDownload;
             NodeId staller = -1;
-            FindNextBlocksToDownload(pto->GetId(), MAX_BLOCKS_IN_TRANSIT_PER_PEER - state.nBlocksInFlight, vToDownload, staller);
-            BOOST_FOREACH(CBlockIndex *pindex, vToDownload)
+            FindNextBlocksToDownload(
+                pto->GetId(), MAX_BLOCKS_IN_TRANSIT_PER_PEER - state.nBlocksInFlight, vToDownload, staller);
+            BOOST_FOREACH (CBlockIndex *pindex, vToDownload)
             {
                 CInv inv(MSG_BLOCK, pindex->GetBlockHash());
                 if (!AlreadyHave(inv))
                 {
                     requester.AskFor(inv, pto);
                     LogPrint("req", "AskFor block %s (%d) peer=%d\n", pindex->GetBlockHash().ToString(),
-                            pindex->nHeight, pto->id);
+                        pindex->nHeight, pto->id);
                 }
             }
             if (state.nBlocksInFlight == 0 && staller != -1)
