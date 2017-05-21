@@ -93,7 +93,6 @@ CCriticalSection CNode::cs_totalBytesSent;
 CCriticalSection cs_setservAddNodeAddresses;
 CCriticalSection cs_vAddedNodes;
 CCriticalSection cs_vUseDNSSeeds;
-CCriticalSection cs_nLastNodeId;
 CCriticalSection cs_mapInboundConnectionTracker;
 CCriticalSection cs_vOneShots;
 

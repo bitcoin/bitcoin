@@ -13,6 +13,7 @@
 #include "addrman.h"
 #include "chainparams.h"
 #include "clientversion.h"
+#include "connmgr.h"
 #include "consensus/consensus.h"
 #include "crypto/common.h"
 #include "crypto/common.h"
@@ -120,9 +121,6 @@ extern CCriticalSection cs_vAddedNodes;
 extern vector<std::string> vUseDNSSeeds;
 extern CCriticalSection cs_vUseDNSSeeds;
 // BITCOINUNLIMITED END
-
-NodeId nLastNodeId = 0;
-extern CCriticalSection cs_nLastNodeId;
 
 extern CSemaphore *semOutbound;
 extern CSemaphore *semOutboundAddNode; // BU: separate semaphore for -addnodes
@@ -2944,7 +2942,8 @@ bool CAddrDB::Read(CAddrMan &addr, CDataStream &ssPeers)
 unsigned int ReceiveFloodSize() { return 1000 * GetArg("-maxreceivebuffer", DEFAULT_MAXRECEIVEBUFFER); }
 unsigned int SendBufferSize() { return 1000 * GetArg("-maxsendbuffer", DEFAULT_MAXSENDBUFFER); }
 CNode::CNode(SOCKET hSocketIn, const CAddress &addrIn, const std::string &addrNameIn, bool fInboundIn)
-    : ssSend(SER_NETWORK, INIT_PROTO_VERSION), addrKnown(5000, 0.001), filterInventoryKnown(50000, 0.000001)
+    : ssSend(SER_NETWORK, INIT_PROTO_VERSION), id(CConnMgr::nextNodeId()), addrKnown(5000, 0.001),
+      filterInventoryKnown(50000, 0.000001)
 {
     nServices = 0;
     hSocket = hSocketIn;
@@ -3012,11 +3011,6 @@ CNode::CNode(SOCKET hSocketIn, const CAddress &addrIn, const std::string &addrNa
 
     sendGap.init("node/" + xmledName + "/sendGap", STAT_OP_MAX);
     recvGap.init("node/" + xmledName + "/recvGap", STAT_OP_MAX);
-
-    {
-        LOCK(cs_nLastNodeId);
-        id = nLastNodeId++;
-    }
 
     if (fLogIPs)
         LogPrint("net", "Added connection to %s peer=%d\n", addrName, id);

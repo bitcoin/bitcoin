@@ -90,6 +90,7 @@ BITCOIN_CORE_H = \
   compat/endian.h \
   compat/sanity.h \
   compressor.h \
+  connmgr.h \
   consensus/consensus.h \
   core_io.h \
   core_memusage.h \
@@ -175,6 +176,7 @@ libbitcoin_server_a_SOURCES = \
   bloom.cpp \
   chain.cpp \
   checkpoints.cpp \
+  connmgr.cpp \
   expedited.cpp \
   httprpc.cpp \
   httpserver.cpp \
