@@ -87,9 +87,12 @@ public:
     {
         // Manually recompute the dynamic usage of the whole data, and compare it.
         size_t ret = memusage::DynamicUsage(cacheCoins);
+        size_t count = 0;
         for (CCoinsMap::iterator it = cacheCoins.begin(); it != cacheCoins.end(); it++) {
             ret += it->second.coins.DynamicMemoryUsage();
+            ++count;
         }
+        BOOST_CHECK_EQUAL(GetCacheSize(), count);
         BOOST_CHECK_EQUAL(DynamicMemoryUsage(), ret);
     }
 
@@ -118,10 +121,12 @@ BOOST_AUTO_TEST_CASE(coins_cache_simulation_test)
     bool removed_all_caches = false;
     bool reached_4_caches = false;
     bool added_an_entry = false;
+    bool added_an_unspendable_entry = false;
     bool removed_an_entry = false;
     bool updated_an_entry = false;
     bool found_an_entry = false;
     bool missed_an_entry = false;
+    bool uncached_an_entry = false;
 
     // A simple map to track what we expect the cache stack to represent.
     std::map<COutPoint, Coin> result;
@@ -143,36 +148,49 @@ BOOST_AUTO_TEST_CASE(coins_cache_simulation_test)
         {
             uint256 txid = txids[insecure_rand() % txids.size()]; // txid we're going to modify in this iteration.
             Coin& coin = result[COutPoint(txid, 0)];
-            const Coin& entry = stack.back()->AccessCoin(COutPoint(txid, 0));
+            const Coin& entry = (insecure_rand() % 500 == 0) ? AccessByTxid(*stack.back(), txid) : stack.back()->AccessCoin(COutPoint(txid, 0));
             BOOST_CHECK(coin == entry);
 
             if (insecure_rand() % 5 == 0 || coin.IsPruned()) {
-                if (coin.IsPruned()) {
-                    added_an_entry = true;
+                Coin newcoin;
+                newcoin.out.nValue = insecure_rand();
+                newcoin.nHeight = 1;
+                if (insecure_rand() % 16 == 0 && coin.IsPruned()) {
+                    newcoin.out.scriptPubKey.assign(1 + (insecure_rand() & 0x3F), OP_RETURN);
+                    BOOST_CHECK(newcoin.out.scriptPubKey.IsUnspendable());
+                    added_an_unspendable_entry = true;
                 } else {
-                    updated_an_entry = true;
+                    newcoin.out.scriptPubKey.assign(insecure_rand() & 0x3F, 0); // Random sizes so we can test memory usage accounting
+                    (coin.IsPruned() ? added_an_entry : updated_an_entry) = true;
+                    coin = newcoin;
                 }
-                coin.out.nValue = insecure_rand();
-                coin.nHeight = 1;
+                stack.back()->AddCoin(COutPoint(txid, 0), std::move(newcoin), !coin.IsPruned() || insecure_rand() & 1);
             } else {
-                coin.Clear();
                 removed_an_entry = true;
-            }
-            if (coin.IsPruned()) {
+                coin.Clear();
                 stack.back()->SpendCoin(COutPoint(txid, 0));
-            } else {
-                stack.back()->AddCoin(COutPoint(txid, 0), Coin(coin), true);
             }
+        }
+
+        // One every 10 iterations, remove a random entry from the cache
+        if (insecure_rand() % 10) {
+            COutPoint out(txids[insecure_rand() % txids.size()], 0);
+            int cacheid = insecure_rand() % stack.size();
+            stack[cacheid]->Uncache(out);
+            uncached_an_entry |= !stack[cacheid]->HaveCoinsInCache(out);
         }
 
         // Once every 1000 iterations and at the end, verify the full cache.
         if (insecure_rand() % 1000 == 1 || i == NUM_SIMULATION_ITERATIONS - 1) {
             for (auto it = result.begin(); it != result.end(); it++) {
+                bool have = stack.back()->HaveCoins(it->first);
                 const Coin& coin = stack.back()->AccessCoin(it->first);
+                BOOST_CHECK(have == !coin.IsPruned());
                 BOOST_CHECK(coin == it->second);
                 if (coin.IsPruned()) {
                     missed_an_entry = true;
                 } else {
+                    BOOST_CHECK(stack.back()->HaveCoinsInCache(it->first));
                     found_an_entry = true;
                 }
             }
@@ -222,10 +240,12 @@ BOOST_AUTO_TEST_CASE(coins_cache_simulation_test)
     BOOST_CHECK(removed_all_caches);
     BOOST_CHECK(reached_4_caches);
     BOOST_CHECK(added_an_entry);
+    BOOST_CHECK(added_an_unspendable_entry);
     BOOST_CHECK(removed_an_entry);
     BOOST_CHECK(updated_an_entry);
     BOOST_CHECK(found_an_entry);
     BOOST_CHECK(missed_an_entry);
+    BOOST_CHECK(uncached_an_entry);
 }
 
 // Store of all necessary tx and undo data for next test
@@ -275,6 +295,7 @@ BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
             tx.vin.resize(1);
             tx.vout.resize(1);
             tx.vout[0].nValue = i; //Keep txs unique unless intended to duplicate
+            tx.vout[0].scriptPubKey.assign(insecure_rand() & 0x3F, 0); // Random sizes so we can test memory usage accounting
             unsigned int height = insecure_rand();
             Coin oldcoins;
 
@@ -393,9 +414,22 @@ BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
         // Once every 1000 iterations and at the end, verify the full cache.
         if (insecure_rand() % 1000 == 1 || i == NUM_SIMULATION_ITERATIONS - 1) {
             for (auto it = result.begin(); it != result.end(); it++) {
+                bool have = stack.back()->HaveCoins(it->first);
                 const Coin& coin = stack.back()->AccessCoin(it->first);
+                BOOST_CHECK(have == !coin.IsPruned());
                 BOOST_CHECK(coin == it->second);
             }
+        }
+
+        // One every 10 iterations, remove a random entry from the cache
+        if (utxoset.size() > 1 && insecure_rand() % 30) {
+            stack[insecure_rand() % stack.size()]->Uncache(FindRandomFrom(utxoset)->first);
+        }
+        if (disconnectedids.size() > 1 && insecure_rand() % 30) {
+            stack[insecure_rand() % stack.size()]->Uncache(FindRandomFrom(disconnectedids)->first);
+        }
+        if (duplicateids.size() > 1 && insecure_rand() % 30) {
+            stack[insecure_rand() % stack.size()]->Uncache(FindRandomFrom(duplicateids)->first);
         }
 
         if (insecure_rand() % 100 == 0) {
