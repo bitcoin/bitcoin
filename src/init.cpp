@@ -16,6 +16,7 @@
 #include "checkpoints.h"
 #include "compat/sanity.h"
 #include "consensus/validation.h"
+#include "forks_csv.h"
 #include "fs.h"
 #include "httpserver.h"
 #include "httprpc.h"
@@ -346,6 +347,10 @@ std::string HelpMessage(HelpMessageMode mode)
         strUsage += HelpMessageOpt("-blocksonly", strprintf(_("Whether to operate in a blocks only mode (default: %u)"), DEFAULT_BLOCKSONLY));
     strUsage +=HelpMessageOpt("-assumevalid=<hex>", strprintf(_("If this block is in the chain assume that it and its ancestors are valid and potentially skip their script verification (0 to verify all, default: %s, testnet: %s)"), defaultChainParams->GetConsensus().defaultAssumeValid.GetHex(), testnetChainParams->GetConsensus().defaultAssumeValid.GetHex()));
     strUsage += HelpMessageOpt("-conf=<file>", strprintf(_("Specify configuration file (default: %s)"), BITCOIN_CONF_FILENAME));
+    // bip135 begin
+    strUsage += HelpMessageOpt("-forks=<file>", strprintf(_("Specify fork deployment file (default: %s)"), FORKS_CSV_FILENAME));
+    strUsage += HelpMessageOpt("-dumpforks", _("Dump built-in fork deployment data in CSV format and exit"));
+    // bip135 end
     if (mode == HMM_BITCOIND)
     {
 #if HAVE_DECL_DAEMON
@@ -887,8 +892,11 @@ bool AppInitBasicSetup()
 
 bool AppInitParameterInteraction()
 {
-    const CChainParams& chainparams = Params();
     // ********************************************************* Step 2: parameter interactions
+    // bip135 begin
+    // changed from const to modifiable so that deployment params can be updated
+    CChainParams& chainparams = ModifiableParams();
+    // bip135 end
 
     // also see: InitParameterInteraction()
 
@@ -1181,7 +1189,7 @@ bool AppInitSanityChecks()
 
 bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 {
-    const CChainParams& chainparams = Params();
+    CChainParams& chainparams = ModifiableParams();  // bip135 changed
     // ********************************************************* Step 4a: application initialization
     // After daemonization get the data directory lock again and hold on to it until exit
     // This creates a slight window for a race condition to happen, however this condition is harmless: it
@@ -1209,6 +1217,44 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     LogPrintf("Using data directory %s\n", GetDataDir().string());
     LogPrintf("Using config file %s\n", GetConfigFile(GetArg("-conf", BITCOIN_CONF_FILENAME)).string());
     LogPrintf("Using at most %i automatic connections (%i file descriptors available)\n", nMaxConnections, nFD);
+
+    // bip135 begin
+    // check for fork deployment CSV file, read it
+    std::string ForksCsvFile = GetForksCsvFile().string();
+
+    if (boost::filesystem::exists(ForksCsvFile))
+    {
+        std::ifstream csvFile;
+        bool CsvReadOk = true;
+        try
+        {
+            csvFile.open(ForksCsvFile.c_str(), std::ios::in);
+            if ( csvFile.fail()) {
+                throw std::runtime_error("unable to open deployment file for reading");
+            }
+
+            LogPrintf("Reading deployment configuration CSV file at '%s'\n", ForksCsvFile);
+            // read the CSV file and apply the parameters for current network
+            CsvReadOk = ReadForksCsv(chainparams.NetworkIDString(), csvFile, chainparams.GetModifiableConsensus());
+            csvFile.close();
+        }
+        catch (const std::exception& e)
+        {
+            LogPrintf("Unable to read '%s'\n", ForksCsvFile);
+            // if unable to read file which is present: abort
+            return InitError(strprintf(_("Warning: Could not open deployment configuration CSV file '%s' for reading"), ForksCsvFile));
+        }
+        // if the deployments data doesn't validate correctly, shut down for safety reasons.
+        if (!CsvReadOk) {
+            LogPrintf("Validation of '%s' failed\n", ForksCsvFile);
+            return InitError(strprintf(_("Deployment configuration file '%s' contained invalid data - see debug.log"), ForksCsvFile));
+        }
+    }
+    else {
+        // be noisy, but don't fail if file is absent - use built-in defaults
+        LogPrintf("No deployment configuration found at '%s' - using defaults\n", ForksCsvFile);
+    }
+    // bip135 end
 
     InitSignatureCache();
 

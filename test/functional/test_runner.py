@@ -120,9 +120,11 @@ EXTENDED_SCRIPTS = [
     # vv Tests less than 20m vv
     'smartfees.py',
     # vv Tests less than 5m vv
+    'bip135-grace.py',
     'maxuploadtarget.py',
     'mempool_packages.py',
     # vv Tests less than 2m vv
+    'bip135-threshold.py',
     'bip68-sequence.py',
     'getblocktemplate_longpoll.py',
     'p2p-timeouts.py',

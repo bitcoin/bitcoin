@@ -1,58 +1,189 @@
-// Copyright (c) 2016 The Bitcoin Core developers
+// Copyright (c) 2016-2017 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "versionbits.h"
 #include "consensus/params.h"
 
-const struct BIP9DeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION_BITS_DEPLOYMENTS] = {
+// bip135 begin fill out entire table
+struct BIP9DeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION_BITS_DEPLOYMENTS] = {
     {
-        /*.name =*/ "testdummy",
+        /*.name =*/ (char *) "csv",
         /*.gbt_force =*/ true,
     },
     {
-        /*.name =*/ "csv",
+        /*.name =*/ (char *) "segwit",
         /*.gbt_force =*/ true,
     },
     {
-        /*.name =*/ "segwit",
-        /*.gbt_force =*/ true,
+        /*.name =*/ (char *) "",          // unallocated bit 2
+        /*.gbt_force =*/ false,
+    },
+    {
+        /*.name =*/ (char *) "",          // unallocated bit 3
+        /*.gbt_force =*/ false,
+    },
+    {
+        /*.name =*/ (char *) "",          // unallocated bit 4
+        /*.gbt_force =*/ false,
+    },
+    {
+        /*.name =*/ (char *) "",          // unallocated bit 5
+        /*.gbt_force =*/ false,
+    },
+    {
+        /*.name =*/ (char *) "",          // unallocated bit 6
+        /*.gbt_force =*/ false,
+    },
+    {
+        /*.name =*/ (char *) "",          // unallocated bit 7
+        /*.gbt_force =*/ false,
+    },
+    {
+        /*.name =*/ (char *) "",          // unallocated bit 8
+        /*.gbt_force =*/ false,
+    },
+    {
+        /*.name =*/ (char *) "",          // unallocated bit 9
+        /*.gbt_force =*/ false,
+    },
+    {
+        /*.name =*/ (char *) "",          // unallocated bit 10
+        /*.gbt_force =*/ false,
+    },
+    {
+        /*.name =*/ (char *) "",          // unallocated bit 11
+        /*.gbt_force =*/ false,
+    },
+    {
+        /*.name =*/ (char *) "",          // unallocated bit 12
+        /*.gbt_force =*/ false,
+    },
+    {
+        /*.name =*/ (char *) "",          // unallocated bit 13
+        /*.gbt_force =*/ false,
+    },
+    {
+        /*.name =*/ (char *) "",          // unallocated bit 14
+        /*.gbt_force =*/ false,
+    },
+    {
+        /*.name =*/ (char *) "",          // unallocated bit 15
+        /*.gbt_force =*/ false,
+    },
+    {
+        /*.name =*/ (char *) "",          // unallocated bit 16
+        /*.gbt_force =*/ false,
+    },
+    {
+        /*.name =*/ (char *) "",          // unallocated bit 17
+        /*.gbt_force =*/ false,
+    },
+    {
+        /*.name =*/ (char *) "",          // unallocated bit 18
+        /*.gbt_force =*/ false,
+    },
+    {
+        /*.name =*/ (char *) "",          // unallocated bit 19
+        /*.gbt_force =*/ false,
+    },
+    {
+        /*.name =*/ (char *) "",          // unallocated bit 20
+        /*.gbt_force =*/ false,
+    },
+    {
+        /*.name =*/ (char *) "",          // unallocated bit 21
+        /*.gbt_force =*/ false,
+    },
+    {
+        /*.name =*/ (char *) "",          // unallocated bit 22
+        /*.gbt_force =*/ false,
+    },
+    {
+        /*.name =*/ (char *) "",          // unallocated bit 23
+        /*.gbt_force =*/ false,
+    },
+    {
+        /*.name =*/ (char *) "",          // unallocated bit 24
+        /*.gbt_force =*/ false,
+    },
+    {
+        /*.name =*/ (char *) "",          // unallocated bit 25
+        /*.gbt_force =*/ false,
+    },
+    {
+        /*.name =*/ (char *) "",          // unallocated bit 26
+        /*.gbt_force =*/ false,
+    },
+    {
+        /*.name =*/ (char *) "",          // unallocated bit 27
+        /*.gbt_force =*/ false,
+    },
+    {
+        /*.name =*/ (char *) "testdummy", // unallocated bit 28
+        /*.gbt_force =*/ false,
     }
 };
+// bip135 end
 
+
+// bip135 begin
+// major adaptations to generalize and support new grace period parameters
 ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex* pindexPrev, const Consensus::Params& params, ThresholdConditionCache& cache) const
 {
     int nPeriod = Period(params);
     int nThreshold = Threshold(params);
     int64_t nTimeStart = BeginTime(params);
     int64_t nTimeTimeout = EndTime(params);
+    int nMinLockedBlocks = MinLockedBlocks(params);
+    int64_t nMinLockedTime = MinLockedTime(params);
+    int64_t nActualLockinTime = 0;
+    int nActualLockinBlock = 0;
+
+    if (nPeriod == 0)
+    {
+        // we cannot do anything further -this deployment is not really defined.
+        return THRESHOLD_DEFINED;
+    }
 
     // A block's state is always the same as that of the first of its period, so it is computed based on a pindexPrev whose height equals a multiple of nPeriod - 1.
     if (pindexPrev != NULL) {
+        assert(nPeriod);
         pindexPrev = pindexPrev->GetAncestor(pindexPrev->nHeight - ((pindexPrev->nHeight + 1) % nPeriod));
     }
 
-    // Walk backwards in steps of nPeriod to find a pindexPrev whose information is known
+    // Walk backwards in steps of nPeriod to find a pindexPrev which was DEFINED
     std::vector<const CBlockIndex*> vToCompute;
-    while (cache.count(pindexPrev) == 0) {
+    bool backAtDefined = (cache.count(pindexPrev) && cache[pindexPrev] == THRESHOLD_DEFINED);
+    while (!backAtDefined) {
         if (pindexPrev == NULL) {
             // The genesis block is by definition defined.
             cache[pindexPrev] = THRESHOLD_DEFINED;
             break;
         }
         if (pindexPrev->GetMedianTimePast() < nTimeStart) {
-            // Optimization: don't recompute down further, as we know every earlier block will be before the start time
+            // Optimizaton: don't recompute down further, as we know every
+            // earlier block will be before the start time
             cache[pindexPrev] = THRESHOLD_DEFINED;
             break;
         }
+
+        // push the pindex for later forward walking
         vToCompute.push_back(pindexPrev);
+        // go back one more period
         pindexPrev = pindexPrev->GetAncestor(pindexPrev->nHeight - nPeriod);
+
+        if (cache.count(pindexPrev) > 0 && cache[pindexPrev] == THRESHOLD_DEFINED) {
+            backAtDefined = true;
+        }
     }
 
     // At this point, cache[pindexPrev] is known
     assert(cache.count(pindexPrev));
-    ThresholdState state = cache[pindexPrev];
 
+    // initialize starting state for forward walk
+    ThresholdState state = cache[pindexPrev];
+    assert(state == THRESHOLD_DEFINED);
     // Now walk forward and compute the state of descendants of pindexPrev
     while (!vToCompute.empty()) {
         ThresholdState stateNext = state;
@@ -84,12 +215,23 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
                 }
                 if (count >= nThreshold) {
                     stateNext = THRESHOLD_LOCKED_IN;
+                    // bip135: make a note of lock-in time & height
+                    // this will be used for assessing grace period conditions.
+                    nActualLockinBlock = pindexPrev->nHeight;
+                    nActualLockinTime = pindexPrev->GetMedianTimePast();
                 }
                 break;
             }
             case THRESHOLD_LOCKED_IN: {
-                // Always progresses into ACTIVE.
-                stateNext = THRESHOLD_ACTIVE;
+                // bip135: Progress to ACTIVE only once all grace conditions are met.
+                if (pindexPrev->GetMedianTimePast() >= nActualLockinTime + nMinLockedTime
+                        && pindexPrev->nHeight >= nActualLockinBlock + nMinLockedBlocks) {
+                    stateNext = THRESHOLD_ACTIVE;
+                }
+                else {
+                    // bip135: if grace not yet met, remain in LOCKED_IN
+                    stateNext = THRESHOLD_LOCKED_IN;
+                }
                 break;
             }
             case THRESHOLD_FAILED:
@@ -103,11 +245,12 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
 
     return state;
 }
+// bip135 end
 
 // return the numerical statistics of blocks signalling the specified BIP9 condition in this current period
-BIP9Stats AbstractThresholdConditionChecker::GetStateStatisticsFor(const CBlockIndex* pindex, const Consensus::Params& params) const
+ForkStats AbstractThresholdConditionChecker::GetStateStatisticsFor(const CBlockIndex* pindex, const Consensus::Params& params) const
 {
-    BIP9Stats stats;
+    ForkStats stats;
 
     stats.period = Period(params);
     stats.threshold = Threshold(params);
@@ -176,8 +319,10 @@ private:
 protected:
     int64_t BeginTime(const Consensus::Params& params) const { return params.vDeployments[id].nStartTime; }
     int64_t EndTime(const Consensus::Params& params) const { return params.vDeployments[id].nTimeout; }
-    int Period(const Consensus::Params& params) const { return params.nMinerConfirmationWindow; }
-    int Threshold(const Consensus::Params& params) const { return params.nRuleChangeActivationThreshold; }
+    int Period(const Consensus::Params& params) const { return params.vDeployments[id].windowsize; }
+    int Threshold(const Consensus::Params& params) const { return params.vDeployments[id].threshold; }
+    int MinLockedBlocks(const Consensus::Params& params) const { return params.vDeployments[id].minlockedblocks; }
+    int64_t MinLockedTime(const Consensus::Params& params) const { return params.vDeployments[id].minlockedtime; }
 
     bool Condition(const CBlockIndex* pindex, const Consensus::Params& params) const
     {
@@ -196,7 +341,7 @@ ThresholdState VersionBitsState(const CBlockIndex* pindexPrev, const Consensus::
     return VersionBitsConditionChecker(pos).GetStateFor(pindexPrev, params, cache.caches[pos]);
 }
 
-BIP9Stats VersionBitsStatistics(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos)
+ForkStats VersionBitsStatistics(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos)
 {
     return VersionBitsConditionChecker(pos).GetStateStatisticsFor(pindexPrev, params);
 }

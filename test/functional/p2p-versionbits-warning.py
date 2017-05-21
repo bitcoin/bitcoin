@@ -14,13 +14,17 @@ from test_framework.util import *
 import re
 from test_framework.blocktools import create_block, create_coinbase
 
-VB_PERIOD = 144 # versionbits period length for regtest
-VB_THRESHOLD = 108 # versionbits activation threshold for regtest
+# bip135 begin
+# modified from 108/144 to 51/100 for new unknown versions algo
+VB_PERIOD = 100 # unknown versionbits period length
+VB_THRESHOLD = 51 # unknown versionbits warning level
+# bip135 end
 VB_TOP_BITS = 0x20000000
 VB_UNKNOWN_BIT = 27 # Choose a bit unassigned to any deployment
 
 WARN_UNKNOWN_RULES_MINED = "Unknown block versions being mined! It's possible unknown rules are in effect"
-WARN_UNKNOWN_RULES_ACTIVE = "unknown new rules activated (versionbit {})".format(VB_UNKNOWN_BIT)
+# After BIP135, a client cannot know whether an unknown version bit has gone ACTIVE
+# since the activation threshold of unknown bits is ... unknown.
 VB_PATTERN = re.compile("^Warning.*versionbit")
 
 class TestNode(NodeConnCB):
@@ -97,33 +101,17 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         self.send_blocks_with_version(test_node, VB_THRESHOLD, nVersion)
         self.nodes[0].generate(VB_PERIOD - VB_THRESHOLD)
         # Might not get a versionbits-related alert yet, as we should
-        # have gotten a different alert due to more than 51/100 blocks
+        # have gotten a different alert due to more than 50/100 blocks
         # being of unexpected version.
         # Check that get*info() shows some kind of error.
         assert(WARN_UNKNOWN_RULES_MINED in self.nodes[0].getinfo()["errors"])
         assert(WARN_UNKNOWN_RULES_MINED in self.nodes[0].getmininginfo()["errors"])
         assert(WARN_UNKNOWN_RULES_MINED in self.nodes[0].getnetworkinfo()["warnings"])
 
-        # Mine a period worth of expected blocks so the generic block-version warning
-        # is cleared, and restart the node. This should move the versionbit state
-        # to ACTIVE.
-        self.nodes[0].generate(VB_PERIOD)
-        stop_nodes(self.nodes)
-        # Empty out the alert file
-        with open(self.alert_filename, 'w', encoding='utf8') as _:
-            pass
-        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, self.extra_args)
-
-        # Connecting one block should be enough to generate an error.
-        self.nodes[0].generate(1)
-        assert(WARN_UNKNOWN_RULES_ACTIVE in self.nodes[0].getinfo()["errors"])
-        assert(WARN_UNKNOWN_RULES_ACTIVE in self.nodes[0].getmininginfo()["errors"])
-        assert(WARN_UNKNOWN_RULES_ACTIVE in self.nodes[0].getnetworkinfo()["warnings"])
-        stop_nodes(self.nodes)
-        self.test_versionbits_in_alert_file()
+        # BIP135: removed obsolete check for error on activation of unknown bit
 
         # Test framework expects the node to still be running...
-        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, self.extra_args)
+        #self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, self.extra_args)
 
 if __name__ == '__main__':
     VersionBitsWarningTest().main()

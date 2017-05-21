@@ -1077,7 +1077,7 @@ static UniValue BIP9SoftForkDesc(const Consensus::Params& consensusParams, Conse
     if (THRESHOLD_STARTED == thresholdState)
     {
         UniValue statsUV(UniValue::VOBJ);
-        BIP9Stats statsStruct = VersionBitsTipStatistics(consensusParams, id);
+        ForkStats statsStruct = VersionBitsTipStatistics(consensusParams, id);
         statsUV.push_back(Pair("period", statsStruct.period));
         statsUV.push_back(Pair("threshold", statsStruct.threshold));
         statsUV.push_back(Pair("elapsed", statsStruct.elapsed));
@@ -1087,6 +1087,29 @@ static UniValue BIP9SoftForkDesc(const Consensus::Params& consensusParams, Conse
     }
     return rv;
 }
+
+// bip135 begin
+static UniValue BIP135ForkDesc(const Consensus::Params& consensusParams, Consensus::DeploymentPos id)
+{
+    UniValue rv(UniValue::VOBJ);
+    rv.push_back(Pair("bit", (int)id));
+    const ThresholdState thresholdState = VersionBitsTipState(consensusParams, id);
+    switch (thresholdState) {
+    case THRESHOLD_DEFINED: rv.push_back(Pair("status", "defined")); break;
+    case THRESHOLD_STARTED: rv.push_back(Pair("status", "started")); break;
+    case THRESHOLD_LOCKED_IN: rv.push_back(Pair("status", "locked_in")); break;
+    case THRESHOLD_ACTIVE: rv.push_back(Pair("status", "active")); break;
+    case THRESHOLD_FAILED: rv.push_back(Pair("status", "failed")); break;
+    }
+    rv.push_back(Pair("startTime", consensusParams.vDeployments[id].nStartTime));
+    rv.push_back(Pair("timeout", consensusParams.vDeployments[id].nTimeout));
+    rv.push_back(Pair("windowsize", consensusParams.vDeployments[id].windowsize));
+    rv.push_back(Pair("threshold", consensusParams.vDeployments[id].threshold));
+    rv.push_back(Pair("minlockedblocks", consensusParams.vDeployments[id].minlockedblocks));
+    rv.push_back(Pair("minlockedtime", consensusParams.vDeployments[id].minlockedtime));
+    return rv;
+}
+// bip135 end
 
 void BIP9SoftForkDescPushBack(UniValue& bip9_softforks, const std::string &name, const Consensus::Params& consensusParams, Consensus::DeploymentPos id)
 {
@@ -1126,7 +1149,7 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
             "  ],\n"
             "  \"bip9_softforks\": {          (object) status of BIP9 softforks in progress\n"
             "     \"xxxx\" : {                (string) name of the softfork\n"
-            "        \"status\": \"xxxx\",    (string) one of \"defined\", \"started\", \"locked_in\", \"active\", \"failed\"\n"
+            "        \"status\": \"xxxx\",      (string) one of \"defined\", \"started\", \"locked_in\", \"active\", \"failed\"\n"
             "        \"bit\": xx,             (numeric) the bit (0-28) in the block version field used to signal this softfork (only for \"started\" status)\n"
             "        \"startTime\": xx,       (numeric) the minimum median time past of a block at which the bit gains its meaning\n"
             "        \"timeout\": xx,         (numeric) the median time past of a block at which the deployment is considered failed if not yet locked in\n"
@@ -1140,6 +1163,19 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
             "        }\n"
             "     }\n"
             "  }\n"
+            // bip135 begin
+            "  \"bip135_forks\": {            (object) status of BIP135 forks in progress\n"
+            "     \"xxxx\" : {                (string) name of the fork\n"
+            "        \"status\": \"xxxx\",      (string) one of \"defined\", \"started\", \"locked_in\", \"active\", \"failed\"\n"
+            "        \"bit\": xx,             (numeric) the bit (0-28) in the block version field used to signal this fork (only for \"started\" status)\n"
+            "        \"startTime\": xx,       (numeric) the minimum median time past of a block at which the bit gains its meaning\n"
+            "        \"windowsize\": xx,      (numeric) the number of blocks over which the fork status is tallied\n"
+            "        \"threshold\": xx,       (numeric) the number of blocks in a window that must signal for fork to lock in\n"
+            "        \"minlockedblocks\": xx, (numeric) the minimum number of blocks to elapse after lock-in and before activation\n"
+            "        \"minlockedtime\": xx,   (numeric) the minimum number of seconds to elapse after median time past of lock-in until activation\n"
+            "     }\n"
+            "  }\n"
+            // bip135 end
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("getblockchaininfo", "")
@@ -1163,13 +1199,27 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
     CBlockIndex* tip = chainActive.Tip();
     UniValue softforks(UniValue::VARR);
     UniValue bip9_softforks(UniValue::VOBJ);
+    UniValue bip135_forks(UniValue::VOBJ);  // bip135 added
     softforks.push_back(SoftForkDesc("bip34", 2, tip, consensusParams));
     softforks.push_back(SoftForkDesc("bip66", 3, tip, consensusParams));
     softforks.push_back(SoftForkDesc("bip65", 4, tip, consensusParams));
-    BIP9SoftForkDescPushBack(bip9_softforks, "csv", consensusParams, Consensus::DEPLOYMENT_CSV);
-    BIP9SoftForkDescPushBack(bip9_softforks, "segwit", consensusParams, Consensus::DEPLOYMENT_SEGWIT);
+    // bip135 begin : add all the configured forks
+    assert (Consensus::MAX_VERSION_BITS_DEPLOYMENTS <= VERSIONBITS_NUM_BITS);
+    for (int i = 0; i < Consensus::MAX_VERSION_BITS_DEPLOYMENTS; i++)
+    {
+        Consensus::DeploymentPos bit = static_cast<Consensus::DeploymentPos>(i);
+        const struct BIP9DeploymentInfo& vbinfo = VersionBitsDeploymentInfo[bit];
+        if (isConfiguredDeployment(consensusParams, bit)) {
+            bip9_softforks.push_back(Pair(vbinfo.name, BIP9SoftForkDesc(consensusParams, bit)));
+            bip135_forks.push_back(Pair(vbinfo.name, BIP135ForkDesc(consensusParams, bit)));
+        }
+    }
+
     obj.push_back(Pair("softforks",             softforks));
     obj.push_back(Pair("bip9_softforks", bip9_softforks));
+    // to maintain backward compat initially, we introduce a new list for the full BIP135 data
+    obj.push_back(Pair("bip135_forks", bip135_forks));
+    // bip135 end
 
     if (fPruneMode)
     {

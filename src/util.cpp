@@ -90,6 +90,7 @@
 
 const char * const BITCOIN_CONF_FILENAME = "bitcoin.conf";
 const char * const BITCOIN_PID_FILENAME = "bitcoind.pid";
+const char * const FORKS_CSV_FILENAME = "forks.csv";  // bip135 added
 
 ArgsManager gArgs;
 bool fPrintToConsole = false;
@@ -594,6 +595,19 @@ fs::path GetConfigFile(const std::string& confPath)
         pathConfigFile = GetDataDir(false) / pathConfigFile;
 
     return pathConfigFile;
+}
+
+// bip135 added
+/**
+ * Function to return expected path of FORKS_CSV_FILENAME
+ */
+fs::path GetForksCsvFile()
+{
+    boost::filesystem::path pathCsvFile(GetArg("-forks", FORKS_CSV_FILENAME));
+    if (!pathCsvFile.is_complete())
+        pathCsvFile = GetDataDir(false) / pathCsvFile;
+
+    return pathCsvFile;
 }
 
 void ArgsManager::ReadConfigFile(const std::string& confPath)

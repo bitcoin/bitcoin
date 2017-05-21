@@ -1,10 +1,11 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2016 The Bitcoin Core developers
+// Copyright (c) 2009-2017 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "chainparams.h"
 #include "consensus/merkle.h"
+#include "versionbits.h"  // bip135 added
 
 #include "tinyformat.h"
 #include "util.h"
@@ -86,21 +87,27 @@ public:
         consensus.nPowTargetSpacing = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
-        consensus.nRuleChangeActivationThreshold = 1916; // 95% of 2016
-        consensus.nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999; // December 31, 2008
 
         // Deployment of BIP68, BIP112, and BIP113.
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].bit = 0;
-        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 1462060800; // May 1st, 2016
-        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 1493596800; // May 1st, 2017
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 1462060800LL; // May 1st, 2016
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 1493596800LL; // May 1st, 2017
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].windowsize = 2016;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].threshold = 1916; // 95% of 2016
 
         // Deployment of SegWit (BIP141, BIP143, and BIP147)
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].bit = 1;
-        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 1479168000; // November 15th, 2016.
-        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 1510704000; // November 15th, 2017.
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 1479168000LL; // November 15th, 2016.
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 1510704000LL; // November 15th, 2017.
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].windowsize = 2016;
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].threshold = 1916; // 95% of 2016
+
+        // testing bit
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601LL; // January 1, 2008
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999LL; // December 31, 2008
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].windowsize = 2016;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].threshold = 1916; // 95% of 2016
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000003f94d1ad391682fe038bf5");
@@ -189,21 +196,25 @@ public:
         consensus.nPowTargetSpacing = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = false;
-        consensus.nRuleChangeActivationThreshold = 1512; // 75% for testchains
-        consensus.nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999; // December 31, 2008
-
         // Deployment of BIP68, BIP112, and BIP113.
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].bit = 0;
-        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 1456790400; // March 1st, 2016
-        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 1493596800; // May 1st, 2017
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 1456790400LL; // March 1st, 2016
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 1493596800LL; // May 1st, 2017
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].windowsize = 2016;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].threshold = 1512; // 75% of 2016
 
         // Deployment of SegWit (BIP141, BIP143, and BIP147)
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].bit = 1;
-        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 1462060800; // May 1st 2016
-        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 1493596800; // May 1st 2017
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 1462060800LL; // May 1st 2016
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 1493596800LL; // May 1st 2017
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].windowsize = 2016;
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].threshold = 1512; // 75% of 2016
+
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601LL; // January 1, 2008
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999LL; // December 31, 2008
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].windowsize = 2016;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].threshold = 1512; // 75% of 2016
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000001f057509eba81aed91");
@@ -276,17 +287,24 @@ public:
         consensus.nPowTargetSpacing = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = true;
-        consensus.nRuleChangeActivationThreshold = 108; // 75% for testchains
-        consensus.nMinerConfirmationWindow = 144; // Faster than normal for regtest (144 instead of 2016)
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 0;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 999999999999ULL;
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].bit = 0;
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 0;
-        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 999999999999ULL;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 999999999999LL;
+        // Faster than normal for regtest (144 instead of 2016 blocks)
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].windowsize = 144;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].threshold = 108; // 75% of 144
+
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].bit = 1;
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 0;
-        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 999999999999ULL;
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 999999999999LL;
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].windowsize = 144;
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].threshold = 108; // 75% of 144
+
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 0;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 999999999999LL;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].windowsize = 144;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].threshold = 108; // 75% of 144
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00");
@@ -339,6 +357,25 @@ const CChainParams &Params() {
     return *globalChainParams;
 }
 
+CChainParams& Params(const std::string& chain)
+{
+    CChainParams *chainparams;
+
+    if (chain == CBaseChainParams::MAIN) {
+        chainparams = new CMainParams();
+        return (CChainParams&) *chainparams;
+    }
+    else if (chain == CBaseChainParams::TESTNET) {
+        chainparams = new CTestNetParams();
+        return (CChainParams&) *chainparams;
+    }
+    else if (chain == CBaseChainParams::REGTEST) {
+        chainparams = new CRegTestParams();
+        return (CChainParams&) *chainparams;
+    }
+    throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
+}
+
 std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain)
 {
     if (chain == CBaseChainParams::MAIN)
@@ -361,3 +398,68 @@ void UpdateBIP9Parameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_
     globalChainParams->UpdateBIP9Parameters(d, nStartTime, nTimeout);
 }
  
+// bip135 begin
+/**
+ * Return true if a deployment is considered to be configured for the network.
+ * Deployments with a zero-length name, or a windowsize or threshold equal to
+ * zero are not considered to be configured, and will be reported as 'unknown'
+ * if signals are detected for them.
+ * Unconfigured deployments can be ignored to save processing time, e.g.
+ * in ComputeBlockVersion() when computing the default block version to emit.
+ */
+bool isConfiguredDeployment(const Consensus::Params& consensusParams, const int bit)
+{
+    const Consensus::BIP9Deployment *vdeployments = consensusParams.vDeployments;
+    const struct BIP9DeploymentInfo& vbinfo = VersionBitsDeploymentInfo[bit];
+
+    if (strlen(vbinfo.name) == 0)
+        return false;
+
+    if (vdeployments[bit].windowsize == 0 || vdeployments[bit].threshold == 0)
+    {
+        return false;
+    }
+    return true;
+}
+
+/**
+ * Return a string representing CSV-formatted deployments for the network.
+ * Only configured deployments satisfying isConfiguredDeployment() are included.
+ */
+const std::string NetworkDeploymentInfoCSV(const std::string& network)
+{
+    const Consensus::Params& consensusParams = Params(network).GetConsensus();
+    const Consensus::BIP9Deployment *vdeployments = consensusParams.vDeployments;
+
+    std::string networkInfoStr;
+    networkInfoStr = "# deployment info for network '" + network + "':\n";
+
+    for (int bit = 0; bit < Consensus::MAX_VERSION_BITS_DEPLOYMENTS; bit++)
+    {
+        const struct BIP9DeploymentInfo& vbinfo = VersionBitsDeploymentInfo[bit];
+        if (isConfiguredDeployment(consensusParams, bit)) {
+            networkInfoStr += network + ",";
+            networkInfoStr += std::to_string(bit) + ",";
+            networkInfoStr += std::string(vbinfo.name) + ",";
+            networkInfoStr += std::to_string(vdeployments[bit].nStartTime) + ",";
+            networkInfoStr += std::to_string(vdeployments[bit].nTimeout) + ",";
+            networkInfoStr += std::to_string(vdeployments[bit].windowsize) + ",";
+            networkInfoStr += std::to_string(vdeployments[bit].threshold) + ",";
+            networkInfoStr += std::to_string(vdeployments[bit].minlockedblocks) + ",";
+            networkInfoStr += std::to_string(vdeployments[bit].minlockedtime) + ",";
+            networkInfoStr += (vbinfo.gbt_force ? "true" : "false");
+            networkInfoStr += "\n";
+        }
+    }
+    return networkInfoStr;
+}
+
+/**
+ * Return a modifiable reference to the chain params, to be updated by the
+ * CSV deployment data reading routine.
+ */
+CChainParams &ModifiableParams() {
+    assert(globalChainParams);
+    return *globalChainParams;
+}
+// bip135 end

@@ -1399,41 +1399,42 @@ int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Para
     int32_t nVersion = VERSIONBITS_TOP_BITS;
 
     for (int i = 0; i < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; i++) {
-        ThresholdState state = VersionBitsState(pindexPrev, params, (Consensus::DeploymentPos)i, versionbitscache);
-        if (state == THRESHOLD_LOCKED_IN || state == THRESHOLD_STARTED) {
-            nVersion |= VersionBitsMask(params, (Consensus::DeploymentPos)i);
+        // bip135 begin
+        // guard this because not all deployments have window/threshold
+        if (isConfiguredDeployment(params, i))
+        {
+            ThresholdState state = VersionBitsState(pindexPrev, params, (Consensus::DeploymentPos)i, versionbitscache);
+            // activate the bits that are STARTED or LOCKED_IN according to their deployments
+            if (state == THRESHOLD_LOCKED_IN || state == THRESHOLD_STARTED) {
+                nVersion |= VersionBitsMask(params, (Consensus::DeploymentPos)i);
+            }
         }
+        // bip135 end
     }
 
     return nVersion;
 }
 
-/**
- * Threshold condition checker that triggers when unknown versionbits are seen on the network.
- */
-class WarningBitsConditionChecker : public AbstractThresholdConditionChecker
-{
-private:
-    int bit;
-
-public:
-    WarningBitsConditionChecker(int bitIn) : bit(bitIn) {}
-
-    int64_t BeginTime(const Consensus::Params& params) const { return 0; }
-    int64_t EndTime(const Consensus::Params& params) const { return std::numeric_limits<int64_t>::max(); }
-    int Period(const Consensus::Params& params) const { return params.nMinerConfirmationWindow; }
-    int Threshold(const Consensus::Params& params) const { return params.nRuleChangeActivationThreshold; }
-
-    bool Condition(const CBlockIndex* pindex, const Consensus::Params& params) const
-    {
-        return ((pindex->nVersion & VERSIONBITS_TOP_MASK) == VERSIONBITS_TOP_BITS) &&
-               ((pindex->nVersion >> bit) & 1) != 0 &&
-               ((ComputeBlockVersion(pindex->pprev, params) >> bit) & 1) == 0;
-    }
-};
+// bip135 : removed WarningBitsConditionChecker - no longer needed
 
 // Protected by cs_main
 static ThresholdConditionCache warningcache[VERSIONBITS_NUM_BITS];
+
+// bip135 begin
+// keep track of count over last 100
+struct UnknownForkData {
+    int UnknownForkSignalStrength {0};
+    bool UnknownForkSignalFirstDetected {false};
+    bool UnknownForkSignalLost {false};
+    bool UnknownForkSignalAt25Percent {false};
+    bool UnknownForkSignalAt50Percent {false};
+    bool UnknownForkSignalAt70Percent {false};
+    bool UnknownForkSignalAt90Percent {false};
+    bool UnknownForkSignalAt95Percent {false};
+};
+
+static UnknownForkData unknownFork[VERSIONBITS_NUM_BITS];
+// bip135 end
 
 static int64_t nTimeCheck = 0;
 static int64_t nTimeForks = 0;
@@ -1816,6 +1817,7 @@ void PruneAndFlush() {
 
 /** Update chainActive and related internal data structures. */
 void static UpdateTip(CBlockIndex *pindexNew, const CChainParams& chainParams) {
+    //const CChainParams& chainParams = Params(); // bip135?
     chainActive.SetTip(pindexNew);
 
     // New best block
@@ -1828,34 +1830,100 @@ void static UpdateTip(CBlockIndex *pindexNew, const CChainParams& chainParams) {
     if (!IsInitialBlockDownload())
     {
         int nUpgraded = 0;
+        bool upgradedEval = false;  // bip135 added
         const CBlockIndex* pindex = chainActive.Tip();
-        for (int bit = 0; bit < VERSIONBITS_NUM_BITS; bit++) {
-            WarningBitsConditionChecker checker(bit);
-            ThresholdState state = checker.GetStateFor(pindex, chainParams.GetConsensus(), warningcache[bit]);
-            if (state == THRESHOLD_ACTIVE || state == THRESHOLD_LOCKED_IN) {
-                if (state == THRESHOLD_ACTIVE) {
-                    std::string strWarning = strprintf(_("Warning: unknown new rules activated (versionbit %i)"), bit);
-                    SetMiscWarning(strWarning);
-                    if (!fWarned) {
-                        AlertNotify(strWarning);
-                        fWarned = true;
+        // bip135 begin
+        int32_t anUnexpectedVersion = 0;
+        // start unexpected version / new fork signal checks only after BIT_WARNING_WINDOW block height
+        if (pindex->nHeight >= BIT_WARNING_WINDOW) {
+            for (int bit = 0; bit < VERSIONBITS_NUM_BITS; bit++)
+            {
+                if (!isConfiguredDeployment(chainParams.GetConsensus(), bit)) {
+                    const CBlockIndex* iindex = pindex;  // iterating index, reset to chain tip
+                    // set count for this bit to 0
+                    unknownFork[bit].UnknownForkSignalStrength = 0;
+                    for (int i = 0; i < BIT_WARNING_WINDOW && iindex != NULL; i++)
+                    {
+                        unknownFork[bit].UnknownForkSignalStrength += ((iindex->nVersion >> bit) & 0x1);
+                        if (!upgradedEval) {
+                            // do the old "unexpected block version" counting only during first bit walk
+                            int32_t nExpectedVersion = ComputeBlockVersion(pindex->pprev, chainParams.GetConsensus());
+
+                            if (iindex->nVersion > VERSIONBITS_LAST_OLD_BLOCK_VERSION
+                                                        && (iindex->nVersion & ~nExpectedVersion) != 0)
+                            {
+                                anUnexpectedVersion = iindex->nVersion;
+                                ++nUpgraded;
+                            }
+                        }
+                        iindex = iindex->pprev;
                     }
-                } else {
-                    warningMessages.push_back(strprintf("unknown new rules are about to activate (versionbit %i)", bit));
+                    upgradedEval = true;  // only do the unexpected version checks once during bit loop
+                    if (unknownFork[bit].UnknownForkSignalFirstDetected && !unknownFork[bit].UnknownForkSignalLost
+                            && unknownFork[bit].UnknownForkSignalStrength == 0) {
+                        // report a lost signal
+                        LogPrintf("%s: signal lost for unknown fork (versionbit %i)\n",
+                                __func__, bit);
+                        unknownFork[bit].UnknownForkSignalFirstDetected = true;
+                        unknownFork[bit].UnknownForkSignalLost = true; // set it so that we don't report on it again
+                    }
+                    // report newly gained / regained signal
+                    else if ((!unknownFork[bit].UnknownForkSignalFirstDetected || unknownFork[bit].UnknownForkSignalLost)
+                            && unknownFork[bit].UnknownForkSignalStrength > 0) {
+                        // report a newly detected signal
+                        LogPrintf("%s: new signal detected for unknown fork (versionbit %i) - strength %d/%d\n",
+                                __func__, bit, unknownFork[bit].UnknownForkSignalStrength, BIT_WARNING_WINDOW);
+                        unknownFork[bit].UnknownForkSignalFirstDetected = true; // set it so that we don't report on it again
+                        unknownFork[bit].UnknownForkSignalLost = false;
+                    }
+                    else if (unknownFork[bit].UnknownForkSignalStrength >= 95 && !unknownFork[bit].UnknownForkSignalAt95Percent)
+                    {
+                        LogPrintf("%s: signal for unknown fork (versionbit %i) >= 95%% - strength %d/%d\n",
+                                __func__, bit, unknownFork[bit].UnknownForkSignalStrength, BIT_WARNING_WINDOW);
+                        unknownFork[bit].UnknownForkSignalAt95Percent = true;
+                    }
+                    else if (unknownFork[bit].UnknownForkSignalStrength >= 90 && !unknownFork[bit].UnknownForkSignalAt90Percent)
+                    {
+                        LogPrintf("%s: signal for unknown fork (versionbit %i) >= 90%% - strength %d/%d\n",
+                                __func__, bit, unknownFork[bit].UnknownForkSignalStrength, BIT_WARNING_WINDOW);
+                        unknownFork[bit].UnknownForkSignalAt90Percent = true;
+                        unknownFork[bit].UnknownForkSignalAt95Percent = false;
+                    }
+                    else if (unknownFork[bit].UnknownForkSignalStrength >= 70 && !unknownFork[bit].UnknownForkSignalAt70Percent)
+                    {
+                        LogPrintf("%s: signal for unknown fork (versionbit %i) >= 70%% - strength %d/%d\n",
+                                __func__, bit, unknownFork[bit].UnknownForkSignalStrength, BIT_WARNING_WINDOW);
+                        unknownFork[bit].UnknownForkSignalAt70Percent = true;
+                        unknownFork[bit].UnknownForkSignalAt90Percent = false;
+                        unknownFork[bit].UnknownForkSignalAt95Percent = false;
+                    }
+                    else if (unknownFork[bit].UnknownForkSignalStrength >= 50 && !unknownFork[bit].UnknownForkSignalAt50Percent)
+                    {
+                        LogPrintf("%s: signal for unknown fork (versionbit %i) >= 50%% - strength %d/%d\n",
+                                __func__, bit, unknownFork[bit].UnknownForkSignalStrength, BIT_WARNING_WINDOW);
+                        unknownFork[bit].UnknownForkSignalAt50Percent = true;
+                        unknownFork[bit].UnknownForkSignalAt70Percent = false;
+                        unknownFork[bit].UnknownForkSignalAt90Percent = false;
+                        unknownFork[bit].UnknownForkSignalAt95Percent = false;
+                    }
+                    else if (unknownFork[bit].UnknownForkSignalStrength >= 25 && !unknownFork[bit].UnknownForkSignalAt25Percent)
+                    {
+                        LogPrintf("%s: signal for unknown fork (versionbit %i) >= 25%% - strength %d/%d\n",
+                                __func__, bit, unknownFork[bit].UnknownForkSignalStrength, BIT_WARNING_WINDOW);
+                        unknownFork[bit].UnknownForkSignalAt25Percent = true;
+                        unknownFork[bit].UnknownForkSignalAt50Percent = false;
+                        unknownFork[bit].UnknownForkSignalAt70Percent = false;
+                        unknownFork[bit].UnknownForkSignalAt90Percent = false;
+                        unknownFork[bit].UnknownForkSignalAt95Percent = false;
+                        fWarned = false;  // turn off to repeat the warning when > 50% again
+                    }
                 }
             }
         }
-        // Check the version of the last 100 blocks to see if we need to upgrade:
-        for (int i = 0; i < 100 && pindex != NULL; i++)
-        {
-            int32_t nExpectedVersion = ComputeBlockVersion(pindex->pprev, chainParams.GetConsensus());
-            if (pindex->nVersion > VERSIONBITS_LAST_OLD_BLOCK_VERSION && (pindex->nVersion & ~nExpectedVersion) != 0)
-                ++nUpgraded;
-            pindex = pindex->pprev;
-        }
+
         if (nUpgraded > 0)
-            warningMessages.push_back(strprintf("%d of last 100 blocks have unexpected version", nUpgraded));
-        if (nUpgraded > 100/2)
+            warningMessages.push_back(strprintf("%d of last 100 blocks have unexpected version. One example: 0x%x", nUpgraded, anUnexpectedVersion));
+        if (nUpgraded > BIT_WARNING_WINDOW / 2)
         {
             std::string strWarning = _("Warning: Unknown block versions being mined! It's possible unknown rules are in effect");
             // notify GetWarnings(), called by Qt and the JSON-RPC code to warn the user:
@@ -1865,6 +1933,7 @@ void static UpdateTip(CBlockIndex *pindexNew, const CChainParams& chainParams) {
                 fWarned = true;
             }
         }
+        // bip135 end
     }
     LogPrintf("%s: new best=%s height=%d version=0x%08x log2_work=%.8g tx=%lu date='%s' progress=%f cache=%.1fMiB(%utx)", __func__,
       chainActive.Tip()->GetBlockHash().ToString(), chainActive.Height(), chainActive.Tip()->nVersion,
@@ -3934,7 +4003,7 @@ ThresholdState VersionBitsTipState(const Consensus::Params& params, Consensus::D
     return VersionBitsState(chainActive.Tip(), params, pos, versionbitscache);
 }
 
-BIP9Stats VersionBitsTipStatistics(const Consensus::Params& params, Consensus::DeploymentPos pos)
+ForkStats VersionBitsTipStatistics(const Consensus::Params& params, Consensus::DeploymentPos pos)
 {
     LOCK(cs_main);
     return VersionBitsStatistics(chainActive.Tip(), params, pos);
