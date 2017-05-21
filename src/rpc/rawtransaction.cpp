@@ -23,6 +23,7 @@
 #include "txmempool.h"
 #include "uint256.h"
 #include "utilstrencodings.h"
+#include "blind.h"
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"
 #endif
@@ -95,6 +96,20 @@ void OutputToJSON(uint256 &txid, int i,
             entry.push_back(Pair("scriptPubKey", o));
             entry.push_back(Pair("data_hex", HexStr(s->vData.begin(), s->vData.end())));
             entry.push_back(Pair("rangeproof", HexStr(s->vRangeproof.begin(), s->vRangeproof.end())));
+            
+            if (s->vRangeproof.size() > 0)
+            {
+                int exponent, mantissa;
+                CAmount min_value, max_value;
+                if (0 == GetRangeProofInfo(s->vRangeproof, exponent, mantissa, min_value, max_value))
+                {
+                    entry.push_back(Pair("rp_exponent", exponent));
+                    entry.push_back(Pair("rp_mantissa", mantissa));
+                    entry.push_back(Pair("rp_min_value", ValueFromAmount(min_value)));
+                    entry.push_back(Pair("rp_max_value", ValueFromAmount(max_value)));
+                };
+            };
+            
             }
             break;
         case OUTPUT_RINGCT:

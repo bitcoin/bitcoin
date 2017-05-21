@@ -65,10 +65,6 @@ public:
         [1, 34] pubkey
     */
     std::vector<uint8_t> vPath; // index to m is stored in first entry
-    //std::vector<uint8_t> vBlind;
-    
-    //std::vector<uint8_t> vPubkey;
-    //std::vector<uint8_t> vStealthId;
     
     ADD_SERIALIZE_METHODS;
     template <typename Stream, typename Operation>
@@ -81,9 +77,6 @@ public:
         READWRITE(*(CScriptBase*)(&scriptPubKey));
         READWRITE(sNarration);
         READWRITE(vPath);
-        //READWRITE(vBlind);
-        //READWRITE(vPubkey);
-        //READWRITE(vStealthId);
     }
 };
 
@@ -122,8 +115,6 @@ public:
     mapRTxValue_t mapValue;
     
     std::vector<COutputRecord> vout;
-    //std::vector<COutputRecord> vOwnedOutputs;
-    //std::vector<COutputRecord> vOwnedInputs;
     
     int InsertOutput(COutputRecord &r)
     {
@@ -192,7 +183,6 @@ public:
         READWRITE(mapValue);
         READWRITE(nFee);
         READWRITE(vout);
-        //READWRITE(vOwnedInputs);
     }
 };
 

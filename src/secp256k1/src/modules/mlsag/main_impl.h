@@ -191,12 +191,11 @@ int generateMLSAG(const secp256k1_context *ctx, const uint8_t *nonce,
     memcpy(tmp+32, preimage, 32);
     
     /* seed the random no. generator */
-    secp256k1_rfc6979_hmac_sha256_initialize(&rng, tmp, 32 + 33); 
+    secp256k1_rfc6979_hmac_sha256_initialize(&rng, tmp, 32 + 32);
     
     secp256k1_sha256_initialize(&sha256_m);
     secp256k1_sha256_write(&sha256_m, preimage, 32);
     sha256_pre = sha256_m;
-    
     
     for (k = 0; k < dsRows; ++k)
     {
@@ -224,7 +223,6 @@ int generateMLSAG(const secp256k1_context *ctx, const uint8_t *nonce,
         secp256k1_ge_set_gej(&ge1, &gej2);
         secp256k1_eckey_pubkey_serialize(&ge1, tmp, &clen, 1);
         secp256k1_sha256_write(&sha256_m, tmp, 33); /* H(pk_ind[col]) * alpha[col] */
-        
         
         secp256k1_scalar_set_b32(&s, sk[k], &overflow);
         if (overflow || secp256k1_scalar_is_zero(&s))
@@ -294,7 +292,6 @@ int generateMLSAG(const secp256k1_context *ctx, const uint8_t *nonce,
             
             secp256k1_gej_add_var(&R, &gej1, &gej2, NULL);  /* R =  gej1 + gej2 */
             
-            
             secp256k1_sha256_write(&sha256_m, &pk[(i + k*nCols)*33], 33); /* pk[k][i] */
             secp256k1_ge_set_gej(&ge1, &L);
             secp256k1_eckey_pubkey_serialize(&ge1, tmp, &clen, 1);
@@ -324,7 +321,6 @@ int generateMLSAG(const secp256k1_context *ctx, const uint8_t *nonce,
             secp256k1_eckey_pubkey_serialize(&ge1, tmp, &clen, 1);
             secp256k1_sha256_write(&sha256_m, tmp, 33); /* L */
         };
-        
         
         secp256k1_sha256_finalize(&sha256_m, tmp);
         secp256k1_scalar_set_b32(&clast, tmp, &overflow);

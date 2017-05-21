@@ -6,16 +6,27 @@
 
 #include <assert.h>
 #include <secp256k1.h>
+#include <secp256k1_rangeproof.h>
 
 #include "util.h"
 
 
 secp256k1_context *secp256k1_ctx_blind = NULL;
 
-int SelectRangeProofParameters(uint64_t nValueIn, int &exponent, uint64_t &minValue)
+int SelectRangeProofParameters(uint64_t nValueIn, uint64_t &minValue, int &exponent, int &nBits)
 {
     
+    
+    
     return 0;
+};
+
+int GetRangeProofInfo(const std::vector<uint8_t> &vRangeproof, int &rexp, int &rmantissa, CAmount &min_value, CAmount &max_value)
+{
+    
+    return (!(secp256k1_rangeproof_info(secp256k1_ctx_blind,
+        &rexp, &rmantissa, (uint64_t*) &min_value, (uint64_t*) &max_value,
+        &vRangeproof[0], vRangeproof.size()) == 1));
 };
 
 void ECC_Start_Blinding()

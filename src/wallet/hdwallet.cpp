@@ -1417,7 +1417,6 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
     CExtKeyAccount *sea, CStoredExtKey *pc,
     bool sign, std::string &sError)
 {
-    
     CAmount nFeeRet = 0;
     CAmount nValue = 0;
     for (auto &r : vecSend)
@@ -1547,8 +1546,8 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             
             
             OUTPUT_PTR<CTxOutData> outFee = MAKE_OUTPUT<CTxOutData>();
-            outFee->vData.resize(9);
-            outFee->vData[0] = DO_FEE;
+            outFee->vData.push_back(DO_FEE);
+            outFee->vData.resize(9); // resize to more bytes than varint fee could take
             txNew.vpout.push_back(outFee);
             
             for (size_t i = 0; i < vecSend.size(); ++i)
@@ -1763,7 +1762,9 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
         };
         
         std::vector<uint8_t> &vData = ((CTxOutData*)txNew.vpout[0].get())->vData;
-        memcpy(&vData[1], &nFeeRet, 8);
+        vData.resize(1);
+        if (0 != PutVarInt(vData, nFeeRet))
+            return errorN(1, "%s: PutVarInt %ld failed\n", __func__, nFeeRet);
         
         if (sign)
         {
@@ -1818,10 +1819,11 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
         
         if (r.nType == OUTPUT_CT)
             fCT = true;
-        
     };
     
-    // no point hiding the amount in one output
+    // No point hiding the amount in one output
+    // If one of the outputs was always 0 it would be easy to track amounts,
+    // the output that gets spent would be = plain input.
     if (fCT
         && vecSend.size() < 2)
     {
@@ -1893,8 +1895,7 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
     CExtKeyAccount *sea, CStoredExtKey *pc,
     bool sign, std::string &sError)
 {
-    
-    CAmount nFeeRet = 0; // TODO
+    CAmount nFeeRet = 0;
     CAmount nValue = 0;
     for (auto &r : vecSend)
         nValue += r.nAmount;
@@ -1956,7 +1957,7 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             
             const CAmount nChange = nValueIn - nValueToSelect;
             
-            // Remove last fee output
+            // Remove fee output added during last iteration
             for (size_t i = 0; i < vecSend.size(); ++i)
             {
                 if (vecSend[i].fChange)
@@ -1964,6 +1965,37 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                     vecSend.erase(vecSend.begin() + i);
                     break;
                 };
+            };
+            
+            nChangePosInOut = -1;
+            // Insert a sender-owned 0 value output that becomes the change output if needed
+            {
+                // Fill an output to ourself
+                CPubKey pkChange;
+                if (0 != GetChangeAddress(pkChange))
+                    return errorN(1, sError, __func__, "GetChangeAddress failed.");
+                
+                CKey sEphem;
+                uint32_t nDiscard; // Derive the same ephemeral secret each iteration
+                if (0 != pc->DeriveNextKey(sEphem, nDiscard, true))
+                    return errorN(1, sError, __func__, "TryDeriveNext failed.");
+                
+                CTempRecipient r;
+                r.nType = OUTPUT_CT;
+                r.nAmount = 0;
+                
+                CKeyID idChange = pkChange.GetID();
+                r.address = idChange;
+                r.pkTo = pkChange;
+                r.scriptPubKey = GetScriptForDestination(idChange);
+                r.fChange = true;
+                r.sEphem = sEphem;
+                
+                nChangePosInOut = GetRandInt(vecSend.size()+1);
+                if (nChangePosInOut < (int)vecSend.size()
+                    && vecSend[nChangePosInOut].nType == OUTPUT_DATA)
+                    nChangePosInOut++;
+                vecSend.insert(vecSend.begin()+nChangePosInOut, r);
             };
             
             if (nChange > ::minRelayTxFee.GetFee(2048)) // TODO: better output size estimate
@@ -1989,13 +2021,20 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 r.fChange = true;
                 r.sEphem = sEphem;
                 
-                // Insert change txn at random position:
-                nChangePosInOut = GetRandInt(vecSend.size()+1);
-                // Don't displace data outputs
-                if (nChangePosInOut < (int)vecSend.size()
-                    && vecSend[nChangePosInOut].nType == OUTPUT_DATA)
-                    nChangePosInOut++;
-                vecSend.insert(vecSend.begin()+nChangePosInOut, r);
+                if (nChangePosInOut > -1)
+                {
+                    // Update existing change output
+                    vecSend[nChangePosInOut] = r;
+                } else
+                {
+                    // Insert change txn at random position:
+                    nChangePosInOut = GetRandInt(vecSend.size()+1);
+                    // Don't displace data outputs
+                    if (nChangePosInOut < (int)vecSend.size()
+                        && vecSend[nChangePosInOut].nType == OUTPUT_DATA)
+                        nChangePosInOut++;
+                    vecSend.insert(vecSend.begin()+nChangePosInOut, r);
+                };
             } else
             {
                 nFeeRet += nChange;
@@ -2026,8 +2065,8 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             nChangePosInOut = -1;
             
             OUTPUT_PTR<CTxOutData> outFee = MAKE_OUTPUT<CTxOutData>();
-            outFee->vData.resize(9);
-            outFee->vData[0] = DO_FEE;
+            outFee->vData.push_back(DO_FEE);
+            outFee->vData.resize(9); // resize to more bytes than varint fee could take
             txNew.vpout.push_back(outFee);
             
             for (size_t i = 0; i < vecSend.size(); ++i)
@@ -2093,6 +2132,9 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                     uint64_t min_value = 0;
                     int ct_exponent = 2;
                     int ct_bits = 32;
+                    
+                    SelectRangeProofParameters(nValue, min_value, ct_exponent, ct_bits);
+                    
                     
                     if (1 != secp256k1_rangeproof_sign(secp256k1_ctx_blind,
                         &pout->vRangeproof[0], &nRangeProofLen,
@@ -2299,7 +2341,9 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
         
         
         std::vector<uint8_t> &vData = ((CTxOutData*)txNew.vpout[0].get())->vData;
-        memcpy(&vData[1], &nFeeRet, 8);
+        vData.resize(1);
+        if (0 != PutVarInt(vData, nFeeRet))
+            return errorN(1, "%s: PutVarInt %ld failed\n", __func__, nFeeRet);
         
         if (sign)
         {

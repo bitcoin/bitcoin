@@ -173,7 +173,7 @@ bool ImportOutputs(CBlockTemplate *pblocktemplate, int nHeight)
     if (!Params().CheckImportCoinbase(nHeight, hash))
         return error("%s - Incorrect outputs hash.", __func__);
     
-    pblock->vtx.push_back(MakeTransactionRef(txn));
+    pblock->vtx.insert(pblock->vtx.begin()+1, MakeTransactionRef(txn));
     
     return true;
 };

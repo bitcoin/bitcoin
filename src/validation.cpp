@@ -1590,7 +1590,7 @@ bool IsInitialBlockDownload()
     if (chainActive.Tip()->nHeight > COINBASE_MATURITY
         && chainActive.Tip()->GetBlockTime() < (GetTime() - nMaxTipAge))
         return true;
-    if (GetNumPeers() < 2
+    if (GetNumPeers() < 1
         || chainActive.Tip()->nHeight < GetNumBlocksOfPeers())
         return true;
     
@@ -4323,8 +4323,6 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Co
             if (block.GetBlockTime() <= pindexPrev->GetPastTimeLimit() || FutureDrift(block.GetBlockTime()) < pindexPrev->GetBlockTime())
                 return state.DoS(50, false, REJECT_INVALID, "bad-block-time", true, strprintf("%s: block's timestamp is too early", __func__));
             
-            
-            
             uint256 hashProof, targetProofOfStake;
             
             // Blocks are connected at end of import / reindex
@@ -4364,7 +4362,7 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Co
             && Params().GetLastImportHeight() >= (uint32_t)nHeight)
         {
             // 2nd txn must be coinbase
-            if (block.vtx.size() != 2 || !block.vtx[1]->IsCoinBase())
+            if (block.vtx.size() < 2 || !block.vtx[1]->IsCoinBase())
                 return state.DoS(100, false, REJECT_INVALID, "bad-cb", false, "Second txn of import block must be coinbase");
             
             // Check hash of output data matches expected hash.
@@ -4588,7 +4586,7 @@ static bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidation
 
     if (!AcceptBlockHeader(block, state, chainparams, &pindex))
         return false;
-    
+
     if (block.IsProofOfStake())
     {
         pindex->SetProofOfStake();

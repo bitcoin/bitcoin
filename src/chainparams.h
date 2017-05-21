@@ -39,10 +39,22 @@ struct ChainTxData {
 
 class CImportedCoinbaseTxn
 {
-    public:
-        CImportedCoinbaseTxn(uint32_t nHeightIn, uint256 hashIn) : nHeight(nHeightIn), hash(hashIn) {};
-        uint32_t nHeight;
-        uint256 hash; // hash of output data
+public:
+    CImportedCoinbaseTxn(uint32_t nHeightIn, uint256 hashIn) : nHeight(nHeightIn), hash(hashIn) {};
+    uint32_t nHeight;
+    uint256 hash; // hash of output data
+};
+
+class DevFundSettings
+{
+public:
+    DevFundSettings(std::string sAddrTo, float rMinDevStakeSplit_, int nDevOutputGap_, CAmount nMinDevOutputSize_)
+        : sDevFundAddresses(sAddrTo), rMinDevStakeSplit(rMinDevStakeSplit_), nDevOutputGap(nDevOutputGap_), nMinDevOutputSize(nMinDevOutputSize_)
+        {};
+    std::string sDevFundAddresses;
+    float rMinDevStakeSplit;
+    int nDevOutputGap; // num blocks between dev fund outputs, -1 to disable
+    CAmount nMinDevOutputSize; // if nDevOutputGap is -1, create a devfund output when value is > nMinDevOutputSize
 };
 
 /**
@@ -88,6 +100,8 @@ public:
     int64_t GetStakeCombineThreshold() const { return nStakeCombineThreshold; }
     int64_t GetStakeSplitThreshold() const { return nStakeSplitThreshold; }
     int64_t GetCoinYearReward() const { return nCoinYearReward; }
+    
+    const DevFundSettings *GetDevFundSettings(int nHeight) const;
     
     int64_t GetProofOfStakeReward(const CBlockIndex *pindexPrev, int64_t nFees) const;
     
@@ -151,6 +165,9 @@ protected:
     
     std::vector<CImportedCoinbaseTxn> vImportedCoinbaseTxns;
     uint32_t nLastImportHeight;       // set from vImportedCoinbaseTxns
+    
+    std::vector<std::pair<DevFundSettings, int> > vDevFundSettings;
+    
     
     uint64_t nPruneAfterHeight;
     std::vector<CDNSSeedData> vSeeds;

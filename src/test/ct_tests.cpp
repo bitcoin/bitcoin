@@ -187,4 +187,14 @@ BOOST_AUTO_TEST_CASE(ct_test)
     secp256k1_context_destroy(ctx);
 }
 
+BOOST_AUTO_TEST_CASE(ct_parameters_test)
+{
+    
+    for (size_t k = 0; k < 10000; ++k)
+    {
+        CAmount nValue = GetRand(MAX_MONEY);
+    };
+    
+}
+
 BOOST_AUTO_TEST_SUITE_END()

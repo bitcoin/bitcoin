@@ -858,11 +858,11 @@ public:
             return false;
         
         std::vector<uint8_t> &vData = ((CTxOutData*)vpout[0].get())->vData;
-        if (vData.size() != 9) // < ?
+        if (vData.size() < 2 || vData[0] != DO_FEE)
             return false;
         
-        memcpy(&nFee, &vData[1], 8);
-        return true;
+        size_t nb;
+        return (0 == GetVarInt(vData, 1, (uint64_t&)nFee, nb));
     }
 
     friend bool operator==(const CTransaction& a, const CTransaction& b)
