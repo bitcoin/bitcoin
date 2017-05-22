@@ -155,7 +155,7 @@ protected:
     int Threshold(const Consensus::Params& params) const {
         if (params.vDeployments[id].bit == params.vDeployments[Consensus::DEPLOYMENT_SEGSIGNAL].bit &&
             params.vDeployments[id].nStartTime == params.vDeployments[Consensus::DEPLOYMENT_SEGSIGNAL].nStartTime) {
-            return 1311; // 65% threshold for SEGSIGNAL only
+            return 1612; // 80% threshold for SEGSIGNAL only
         }
         return params.nRuleChangeActivationThreshold;
     }

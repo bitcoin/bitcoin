@@ -97,7 +97,7 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 1510704000; // November 15th, 2017.
 
         // Deployment of SEGSIGNAL
-        consensus.vDeployments[Consensus::DEPLOYMENT_SEGSIGNAL].bit = 2;
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGSIGNAL].bit = 4;
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGSIGNAL].nStartTime = 1496275200; // June 1st, 2017.
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGSIGNAL].nTimeout = 1510704000; // November 15th, 2017.
 
