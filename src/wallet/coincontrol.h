@@ -18,8 +18,6 @@ public:
     bool fAllowOtherInputs;
     //! Includes watch only addresses which match the ISMINE_WATCH_SOLVABLE criteria
     bool fAllowWatchOnly;
-    //! Minimum absolute fee (not per kilobyte)
-    CAmount nMinimumTotalFee;
     //! Override estimated feerate
     bool fOverrideFeeRate;
     //! Feerate to use if overrideFeeRate is true
@@ -40,7 +38,6 @@ public:
         fAllowOtherInputs = false;
         fAllowWatchOnly = false;
         setSelected.clear();
-        nMinimumTotalFee = 0;
         nFeeRate = CFeeRate(0);
         fOverrideFeeRate = false;
         nConfirmTarget = 0;
