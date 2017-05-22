@@ -15,7 +15,7 @@
 
 #include <boost/foreach.hpp>
 
-CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFee)
+CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
 {
     // "Dust" is defined in terms of dustRelayFee,
     // which has units satoshis-per-kilobyte.
@@ -44,12 +44,12 @@ CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFee)
         nSize += (32 + 4 + 1 + 107 + 4); // the 148 mentioned above
     }
 
-    return 3 * dustRelayFee.GetFee(nSize);
+    return 3 * dustRelayFeeIn.GetFee(nSize);
 }
 
-bool IsDust(const CTxOut& txout, const CFeeRate& dustRelayFee)
+bool IsDust(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
 {
-    return (txout.nValue < GetDustThreshold(txout, dustRelayFee));
+    return (txout.nValue < GetDustThreshold(txout, dustRelayFeeIn));
 }
 
     /**
