@@ -37,8 +37,11 @@ private:
     key_equal m_equal_instance;
     IsKeyNull m_null_instance;
     const size_type m_bits;
+    // With 1/4 chance of a bucket being full, this means 1 in 2^40 of this
+    // many in a row.
+    static const int scan_max = 20;
     std::vector<value_type> m_table;
-    size_type m_count = 0, m_scan_max;
+    size_type m_count = 0;
 
     /* Hash should be uniform already. */
     inline size_t hash_base(uint64_t hash) {
@@ -57,21 +60,20 @@ private:
 public:
     open_hash_set(size_type entry_count) :
         m_bits(optimal_hashbits(entry_count)),
-        m_table(1ULL << m_bits),
-        m_scan_max(m_table.size() / 2)
+        m_table(1ULL << m_bits)
     {}
 
     std::pair<iterator, bool> insert(const value_type& value) {
         size_t pos = hash_base(m_hash_instance(value));
         size_t i = 0;
-        while (i < m_scan_max) {
+        while (i < scan_max) {
             if (m_null_instance(m_table[pos])) break;
             if (m_equal_instance(m_table[pos], value)) break;
             pos = (pos + 1)  & ((size_type(1) << m_bits)-1);
             i++;
         }
 
-        if (i == m_scan_max) {
+        if (i == scan_max) {
             return std::make_pair(end(), false);
         }
 
@@ -87,14 +89,14 @@ public:
     iterator find(const value_type& value) {
         size_t pos = hash_base(m_hash_instance(value));
         size_t i = 0;
-        while (i < m_scan_max) {
+        while (i < scan_max) {
             if (m_null_instance(m_table[pos])) break;
             if (m_equal_instance(m_table[pos], value)) break;
             pos = (pos + 1)  & ((size_type(1) << m_bits)-1);
             i++;
         }
 
-        if (i == m_scan_max || m_null_instance(m_table[pos]) || !m_equal_instance(m_table[pos], value)) {
+        if (i == scan_max || m_null_instance(m_table[pos]) || !m_equal_instance(m_table[pos], value)) {
             return end();
         }
         return iterator(&m_table[pos]);
