@@ -109,8 +109,7 @@ class BitcoinTestFramework(object):
                           help="Source directory containing bitcoind/bitcoin-cli (default: %default)")
         parser.add_option("--cachedir", dest="cachedir", default=os.path.normpath(os.path.dirname(os.path.realpath(__file__))+"/../../cache"),
                           help="Directory for caching pregenerated datadirs")
-        parser.add_option("--tmpdir", dest="tmpdir", default=tempfile.mkdtemp(prefix="test"),
-                          help="Root directory for datadirs")
+        parser.add_option("--tmpdir", dest="tmpdir", help="Root directory for datadirs")
         parser.add_option("-l", "--loglevel", dest="loglevel", default="INFO",
                           help="log events at this level and higher to the console. Can be set to DEBUG, INFO, WARNING, ERROR or CRITICAL. Passing --loglevel DEBUG will output all logs to console. Note that logs at all levels are always written to the test_framework.log file in the temporary test directory.")
         parser.add_option("--tracerpc", dest="trace_rpc", default=False, action="store_true",
@@ -124,9 +123,6 @@ class BitcoinTestFramework(object):
         self.add_options(parser)
         (self.options, self.args) = parser.parse_args()
 
-        # backup dir variable for removal at cleanup
-        self.options.root, self.options.tmpdir = self.options.tmpdir, self.options.tmpdir + '/' + str(self.options.port_seed)
-
         if self.options.coveragedir:
             enable_coverage(self.options.coveragedir)
 
@@ -137,7 +133,10 @@ class BitcoinTestFramework(object):
         check_json_precision()
 
         # Set up temp directory and start logging
-        os.makedirs(self.options.tmpdir, exist_ok=False)
+        if self.options.tmpdir:
+            os.makedirs(self.options.tmpdir, exist_ok=False)
+        else:
+            self.options.tmpdir = tempfile.mkdtemp(prefix="test")
         self._start_logging()
 
         success = False
@@ -167,8 +166,6 @@ class BitcoinTestFramework(object):
         if not self.options.nocleanup and not self.options.noshutdown and success:
             self.log.info("Cleaning up")
             shutil.rmtree(self.options.tmpdir)
-            if not os.listdir(self.options.root):
-                os.rmdir(self.options.root)
         else:
             self.log.warning("Not cleaning up dir %s" % self.options.tmpdir)
             if os.getenv("PYTHON_DEBUG", ""):
