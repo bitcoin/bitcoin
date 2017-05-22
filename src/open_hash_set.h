@@ -36,18 +36,29 @@ private:
     hasher m_hash_instance;
     key_equal m_equal_instance;
     IsKeyNull m_null_instance;
+    const size_type m_bits;
     std::vector<value_type> m_table;
     size_type m_count = 0, m_scan_max;
 
     inline size_t hash_pos(uint64_t hash, size_t i) {
         uint64_t input = hash * (i + 1);
         uint32_t value = (input & 0xffffffffffLLU) ^ ((input & 0xffff00000000LLU) >> 16) ^ ((input & 0xffff000000000000LLU) >> 32);
-        return (value * uint64_t(m_table.size())) >> 32;
+        return value & ((size_type(1) << m_bits)-1);
+    }
+
+    // Power of 2 which keeps us under 25 full.
+    static inline size_type optimal_hashbits(size_type entry_count) {
+        size_type bits = 8;
+        while ((1ULL << bits) < (entry_count * 4)) {
+            bits++;
+        }
+        return bits;
     }
 
 public:
-    open_hash_set(size_type entry_count=1000) :
-        m_table(std::max(128*1024/sizeof(value_type), entry_count*3)), // max(1/2 of L2, 3*entries)
+    open_hash_set(size_type entry_count) :
+        m_bits(optimal_hashbits(entry_count)),
+        m_table(1ULL << m_bits),
         m_scan_max(m_table.size() / 2)
     {}
 
