@@ -13,9 +13,6 @@ import re
 import sys
 
 FALSE_POSITIVES = [
-    ("src/dbwrapper.cpp", "vsnprintf(p, limit - p, format, backup_ap)"),
-    ("src/index/base.cpp", "FatalError(const char* fmt, const Args&... args)"),
-    ("src/netbase.cpp", "LogConnectFailure(bool manual_connection, const char* fmt, const Args&... args)"),
     ("src/clientversion.cpp", "strprintf(_(COPYRIGHT_HOLDERS).translated, COPYRIGHT_HOLDERS_SUBSTITUTION)"),
     ("src/test/translation_tests.cpp", "strprintf(format, arg)"),
     ("src/validationinterface.cpp", "LogPrint(BCLog::VALIDATION, fmt \"\\n\", __VA_ARGS__)"),
@@ -196,12 +193,12 @@ def parse_function_call_and_arguments(function_name, function_call):
 
 
 def parse_string_content(argument):
-    """Return the text within quotes in string argument.
+    """Return the text within quotes in string argument, or None if the
+    argument does not contain a quoted string.
 
     >>> parse_string_content('1 "foo %d bar" 2')
     'foo %d bar'
     >>> parse_string_content('1 foobar 2')
-    ''
     >>> parse_string_content('1 "bar" 2')
     'bar'
     >>> parse_string_content('1 "foo" 2 "bar" 3')
@@ -211,11 +208,11 @@ def parse_string_content(argument):
     >>> parse_string_content('""')
     ''
     >>> parse_string_content('')
-    ''
     >>> parse_string_content('1 2 3')
-    ''
     """
     assert type(argument) is str
+    if "\"" not in argument:
+        return None
     string_content = ""
     in_string = False
     for char in normalize(escape(argument)):
@@ -280,6 +277,8 @@ def main():
                     continue
                 argument_count = len(parts) - 3 - args.skip_arguments
                 format_str = parse_string_content(parts[1 + args.skip_arguments])
+                if format_str is None:
+                    continue
                 format_specifier_count = count_format_specifiers(format_str)
                 if format_specifier_count != argument_count:
                     exit_code = 1
