@@ -207,6 +207,22 @@ static std::mutex cs_rng_state;
 static unsigned char rng_state[32] = {0};
 static uint64_t rng_counter = 0;
 
+static void AddDataToRng(void* data, size_t len) {
+    CSHA512 hasher;
+    hasher.Write((const unsigned char*)&len, sizeof(len));
+    hasher.Write((const unsigned char*)data, len);
+    unsigned char buf[64];
+    {
+        std::unique_lock<std::mutex> lock(cs_rng_state);
+        hasher.Write(rng_state, sizeof(rng_state));
+        hasher.Write((const unsigned char*)&rng_counter, sizeof(rng_counter));
+        ++rng_counter;
+        hasher.Finalize(buf);
+        memcpy(rng_state, buf + 32, 32);
+    }
+    memory_cleanse(buf, 64);
+}
+
 void GetStrongRandBytes(unsigned char* out, int num)
 {
     assert(num <= 32);
