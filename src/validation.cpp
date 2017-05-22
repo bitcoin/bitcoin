@@ -1851,7 +1851,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         flags |= SCRIPT_VERIFY_NULLDUMMY;
     }
 
-    if (IsArgSet("-bip148")) {
+    if (GetBoolArg("-bip148",DEFAULT_BIP148)) {
         // BIP148 mandatory segwit signalling.
         int64_t nMedianTimePast = pindex->GetMedianTimePast();
         if ( (nMedianTimePast >= 1501545600) &&  // Tue 01 Aug 2017 00:00:00 UTC
