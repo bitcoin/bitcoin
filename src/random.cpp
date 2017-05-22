@@ -203,6 +203,23 @@ void GetRandBytes(unsigned char* buf, int num)
     }
 }
 
+static void AddDataToRng(void* data, size_t len);
+
+void RandAddSeedSleep()
+{
+    int64_t nPerfCounter1 = GetPerformanceCounter();
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    int64_t nPerfCounter2 = GetPerformanceCounter();
+
+    // Combine with and update state
+    AddDataToRng(&nPerfCounter1, sizeof(nPerfCounter1));
+    AddDataToRng(&nPerfCounter2, sizeof(nPerfCounter2));
+
+    memory_cleanse(&nPerfCounter1, sizeof(nPerfCounter1));
+    memory_cleanse(&nPerfCounter2, sizeof(nPerfCounter2));
+}
+
+
 static std::mutex cs_rng_state;
 static unsigned char rng_state[32] = {0};
 static uint64_t rng_counter = 0;
