@@ -23,7 +23,6 @@ BOOST_AUTO_TEST_CASE(network_restrictions_main)
 {
     const CConsensusParams& params = ConsensusParams("main");
     BOOST_CHECK_EQUAL(params.MSC_STO_BLOCK, 342650);
-    BOOST_CHECK_EQUAL(params.MSC_METADEX_BLOCK, 999999);
 }
 
 BOOST_AUTO_TEST_CASE(network_restrictions_test)
