@@ -15,7 +15,7 @@
 
 #include <boost/foreach.hpp>
 
-CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFee)
+CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
 {
     // "Dust" is defined in terms of CTransaction::minRelayTxFee, which has units duffs-per-kilobyte.
     // If you'd pay more than 1/3 in fees to spend something, then we consider it dust.
@@ -28,12 +28,12 @@ CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFee)
         return 0;
 
     size_t nSize = GetSerializeSize(txout, SER_DISK, 0)+148u;
-    return 3 * dustRelayFee.GetFee(nSize);
+    return 3 * dustRelayFeeIn.GetFee(nSize);
 }
 
-bool IsDust(const CTxOut& txout, const CFeeRate& dustRelayFee)
+bool IsDust(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
 {
-    return (txout.nValue < GetDustThreshold(txout, dustRelayFee));
+    return (txout.nValue < GetDustThreshold(txout, dustRelayFeeIn));
 }
 
     /**
