@@ -12,4 +12,7 @@ class ArgsManager;
 /** @return The fee estimates data file path. */
 fs::path FeeestPath(const ArgsManager& argsman);
 
+/** @return The fee estimates log file path. */
+fs::path FeeestLogPath(const ArgsManager& args);
+
 #endif // BITCOIN_POLICY_FEES_ARGS_H

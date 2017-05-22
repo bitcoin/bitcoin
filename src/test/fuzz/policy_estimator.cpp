@@ -5,6 +5,7 @@
 #include <kernel/mempool_entry.h>
 #include <policy/fees.h>
 #include <policy/fees_args.h>
+#include <policy/fees_input.h>
 #include <primitives/transaction.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
@@ -31,7 +32,9 @@ void initialize_policy_estimator()
 FUZZ_TARGET_INIT(policy_estimator, initialize_policy_estimator)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
-    CBlockPolicyEstimator block_policy_estimator{FeeestPath(*g_setup->m_node.args)};
+    CBlockPolicyEstimator block_policy_estimator;
+    FeeEstInput fee_estimator_input{block_policy_estimator};
+    fee_estimator_input.open(FeeestPath(*g_setup->m_node.args), FeeestLogPath(*g_setup->m_node.args));
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
         CallOneOf(
             fuzzed_data_provider,
@@ -41,7 +44,11 @@ FUZZ_TARGET_INIT(policy_estimator, initialize_policy_estimator)
                     return;
                 }
                 const CTransaction tx{*mtx};
-                block_policy_estimator.processTransaction(ConsumeTxMemPoolEntry(fuzzed_data_provider, tx), fuzzed_data_provider.ConsumeBool());
+                block_policy_estimator.processTx(
+                    tx.GetHash(),
+                    fuzzed_data_provider.ConsumeIntegral<unsigned>(),
+                    fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(1, std::numeric_limits<CAmount>::max() / static_cast<CAmount>(100000)), fuzzed_data_provider.ConsumeIntegralInRange<size_t>(1, std::numeric_limits<uint32_t>::max()),
+                    fuzzed_data_provider.ConsumeBool());
                 if (fuzzed_data_provider.ConsumeBool()) {
                     (void)block_policy_estimator.removeTx(tx.GetHash(), /*inBlock=*/fuzzed_data_provider.ConsumeBool());
                 }
@@ -56,12 +63,11 @@ FUZZ_TARGET_INIT(policy_estimator, initialize_policy_estimator)
                     const CTransaction tx{*mtx};
                     mempool_entries.push_back(ConsumeTxMemPoolEntry(fuzzed_data_provider, tx));
                 }
-                std::vector<const CTxMemPoolEntry*> ptrs;
-                ptrs.reserve(mempool_entries.size());
-                for (const CTxMemPoolEntry& mempool_entry : mempool_entries) {
-                    ptrs.push_back(&mempool_entry);
-                }
-                block_policy_estimator.processBlock(fuzzed_data_provider.ConsumeIntegral<unsigned int>(), ptrs);
+                block_policy_estimator.processBlock(fuzzed_data_provider.ConsumeIntegral<unsigned int>(), [&](const AddTxFn& add_tx) {
+                    for (const CTxMemPoolEntry& mempool_entry : mempool_entries) {
+                        add_tx(mempool_entry.GetTx().GetHash(), mempool_entry.GetHeight(), mempool_entry.GetFee(), mempool_entry.GetTxSize());
+                    }
+                });
             },
             [&] {
                 (void)block_policy_estimator.removeTx(ConsumeUInt256(fuzzed_data_provider), /*inBlock=*/fuzzed_data_provider.ConsumeBool());

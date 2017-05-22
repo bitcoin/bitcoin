@@ -14,7 +14,7 @@
 #include <cstdint>
 #include <optional>
 
-class CBlockPolicyEstimator;
+class FeeEstInput;
 
 /** Default for -maxmempool, maximum megabytes of mempool memory usage */
 static constexpr unsigned int DEFAULT_MAX_MEMPOOL_SIZE_MB{300};
@@ -35,7 +35,7 @@ namespace kernel {
  */
 struct MemPoolOptions {
     /* Used to estimate appropriate transaction fees. */
-    CBlockPolicyEstimator* estimator{nullptr};
+    FeeEstInput* estimator{nullptr};
     /* The ratio used to determine how often sanity checks will run.  */
     int check_ratio{0};
     int64_t max_size_bytes{DEFAULT_MAX_MEMPOOL_SIZE_MB * 1'000'000};
