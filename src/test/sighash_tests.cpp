@@ -98,16 +98,16 @@ void static RandomTransaction(CMutableTransaction &tx, bool fSingle) {
     tx.nVersion = insecure_rand();
     tx.vin.clear();
     tx.vout.clear();
-    tx.nLockTime = (insecure_randrange(2)) ? insecure_rand() : 0;
-    int ins = (insecure_randrange(4)) + 1;
-    int outs = fSingle ? ins : (insecure_randrange(4)) + 1;
+    tx.nLockTime = (insecure_randbool()) ? insecure_rand() : 0;
+    int ins = (insecure_randbits(2)) + 1;
+    int outs = fSingle ? ins : (insecure_randbits(2)) + 1;
     for (int in = 0; in < ins; in++) {
         tx.vin.push_back(CTxIn());
         CTxIn &txin = tx.vin.back();
         txin.prevout.hash = insecure_rand256();
-        txin.prevout.n = insecure_randrange(4);
+        txin.prevout.n = insecure_randbits(2);
         RandomScript(txin.scriptSig);
-        txin.nSequence = (insecure_randrange(2)) ? insecure_rand() : (unsigned int)-1;
+        txin.nSequence = (insecure_randbool()) ? insecure_rand() : (unsigned int)-1;
     }
     for (int out = 0; out < outs; out++) {
         tx.vout.push_back(CTxOut());
