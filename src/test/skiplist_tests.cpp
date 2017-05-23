@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(getlocator_test)
 
     // Test 100 random starting points for locators.
     for (int n=0; n<100; n++) {
-        int r = insecure_rand() % 150000;
+        int r = insecure_randrange(150000);
         CBlockIndex* tip = (r < 100000) ? &vBlocksMain[r] : &vBlocksSide[r - 100000];
         CBlockLocator locator = chain.GetLocator(tip);
 
