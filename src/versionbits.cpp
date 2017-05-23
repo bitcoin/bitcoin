@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "versionbits.h"
-
 #include "consensus/params.h"
 
 const struct BIP9DeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION_BITS_DEPLOYMENTS] = {
@@ -105,6 +104,36 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
     return state;
 }
 
+// return the numerical statistics of blocks signalling the specified BIP9 condition in this current period
+BIP9Stats AbstractThresholdConditionChecker::GetStateStatisticsFor(const CBlockIndex* pindex, const Consensus::Params& params) const
+{
+    BIP9Stats stats;
+
+    stats.period = Period(params);
+    stats.threshold = Threshold(params);
+
+    if (pindex == NULL)
+        return stats;
+
+    // Find beginning of period
+    const CBlockIndex* pindexEndOfPrevPeriod = pindex->GetAncestor(pindex->nHeight - ((pindex->nHeight + 1) % stats.period));
+    stats.elapsed = pindex->nHeight - pindexEndOfPrevPeriod->nHeight;
+
+    // Count from current block to beginning of period
+    int count = 0;
+    const CBlockIndex* currentIndex = pindex;
+    while (pindexEndOfPrevPeriod->nHeight != currentIndex->nHeight){
+        if (Condition(currentIndex, params))
+            count++;
+        currentIndex = currentIndex->pprev;
+    }
+
+    stats.count = count;
+    stats.possible = (stats.period - stats.threshold ) >= (stats.elapsed - count);
+
+    return stats;
+}
+
 int AbstractThresholdConditionChecker::GetStateSinceHeightFor(const CBlockIndex* pindexPrev, const Consensus::Params& params, ThresholdConditionCache& cache) const
 {
     const ThresholdState initialState = GetStateFor(pindexPrev, params, cache);
@@ -165,6 +194,11 @@ public:
 ThresholdState VersionBitsState(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos, VersionBitsCache& cache)
 {
     return VersionBitsConditionChecker(pos).GetStateFor(pindexPrev, params, cache.caches[pos]);
+}
+
+BIP9Stats VersionBitsStatistics(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos)
+{
+    return VersionBitsConditionChecker(pos).GetStateStatisticsFor(pindexPrev, params);
 }
 
 int VersionBitsStateSinceHeight(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos, VersionBitsCache& cache)
