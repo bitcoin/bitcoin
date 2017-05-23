@@ -99,11 +99,42 @@ class BIP9SoftForksTest(ComparisonTestFramework):
 
         assert_equal(self.get_bip9_status(bipName)['status'], 'started')
         assert_equal(self.get_bip9_status(bipName)['since'], 144)
+        assert_equal(self.get_bip9_status(bipName)['statistics']['elapsed'], 0)
+        assert_equal(self.get_bip9_status(bipName)['statistics']['count'], 0)
         tmpl = self.nodes[0].getblocktemplate({})
         assert(bipName not in tmpl['rules'])
         assert_equal(tmpl['vbavailable'][bipName], bitno)
         assert_equal(tmpl['vbrequired'], 0)
         assert(tmpl['version'] & activated_version)
+
+        # Test 1-A
+        # check stats after max number of "signalling not" blocks such that LOCKED_IN still possible this period
+        test_blocks = self.generate_blocks(36, 4, test_blocks) # 0x00000004 (signalling not)
+        test_blocks = self.generate_blocks(10, activated_version) # 0x20000001 (signalling ready)
+        yield TestInstance(test_blocks, sync_every_block=False)
+
+        assert_equal(self.get_bip9_status(bipName)['statistics']['elapsed'], 46)
+        assert_equal(self.get_bip9_status(bipName)['statistics']['count'], 10)
+        assert_equal(self.get_bip9_status(bipName)['statistics']['possible'], True)
+
+        # Test 1-B
+        # check stats after one additional "signalling not" block --  LOCKED_IN no longer possible this period
+        test_blocks = self.generate_blocks(1, 4, test_blocks) # 0x00000004 (signalling not)
+        yield TestInstance(test_blocks, sync_every_block=False)
+
+        assert_equal(self.get_bip9_status(bipName)['statistics']['elapsed'], 47)
+        assert_equal(self.get_bip9_status(bipName)['statistics']['count'], 10)
+        assert_equal(self.get_bip9_status(bipName)['statistics']['possible'], False)
+
+        # Test 1-C
+        # finish period with "ready" blocks, but soft fork will still fail to advance to LOCKED_IN
+        test_blocks = self.generate_blocks(97, activated_version) # 0x20000001 (signalling ready)
+        yield TestInstance(test_blocks, sync_every_block=False)
+
+        assert_equal(self.get_bip9_status(bipName)['statistics']['elapsed'], 0)
+        assert_equal(self.get_bip9_status(bipName)['statistics']['count'], 0)
+        assert_equal(self.get_bip9_status(bipName)['statistics']['possible'], True)
+        assert_equal(self.get_bip9_status(bipName)['status'], 'started')
 
         # Test 2
         # Fail to achieve LOCKED_IN 100 out of 144 signal bit 1
@@ -116,6 +147,8 @@ class BIP9SoftForksTest(ComparisonTestFramework):
 
         assert_equal(self.get_bip9_status(bipName)['status'], 'started')
         assert_equal(self.get_bip9_status(bipName)['since'], 144)
+        assert_equal(self.get_bip9_status(bipName)['statistics']['elapsed'], 0)
+        assert_equal(self.get_bip9_status(bipName)['statistics']['count'], 0)
         tmpl = self.nodes[0].getblocktemplate({})
         assert(bipName not in tmpl['rules'])
         assert_equal(tmpl['vbavailable'][bipName], bitno)
@@ -125,14 +158,24 @@ class BIP9SoftForksTest(ComparisonTestFramework):
         # Test 3
         # 108 out of 144 signal bit 1 to achieve LOCKED_IN
         # using a variety of bits to simulate multiple parallel softforks
-        test_blocks = self.generate_blocks(58, activated_version) # 0x20000001 (signalling ready)
+        test_blocks = self.generate_blocks(57, activated_version) # 0x20000001 (signalling ready)
         test_blocks = self.generate_blocks(26, 4, test_blocks) # 0x00000004 (signalling not)
         test_blocks = self.generate_blocks(50, activated_version, test_blocks) # 0x20000101 (signalling ready)
         test_blocks = self.generate_blocks(10, 4, test_blocks) # 0x20010000 (signalling not)
         yield TestInstance(test_blocks, sync_every_block=False)
 
+        # check counting stats and "possible" flag before last block of this period achieves LOCKED_IN...
+        assert_equal(self.get_bip9_status(bipName)['statistics']['elapsed'], 143)
+        assert_equal(self.get_bip9_status(bipName)['statistics']['count'], 107)
+        assert_equal(self.get_bip9_status(bipName)['statistics']['possible'], True)
+        assert_equal(self.get_bip9_status(bipName)['status'], 'started')
+
+        # ...continue with Test 3
+        test_blocks = self.generate_blocks(1, activated_version) # 0x20000001 (signalling ready)
+        yield TestInstance(test_blocks, sync_every_block=False)
+
         assert_equal(self.get_bip9_status(bipName)['status'], 'locked_in')
-        assert_equal(self.get_bip9_status(bipName)['since'], 432)
+        assert_equal(self.get_bip9_status(bipName)['since'], 576)
         tmpl = self.nodes[0].getblocktemplate({})
         assert(bipName not in tmpl['rules'])
 
@@ -142,7 +185,7 @@ class BIP9SoftForksTest(ComparisonTestFramework):
         yield TestInstance(test_blocks, sync_every_block=False)
 
         assert_equal(self.get_bip9_status(bipName)['status'], 'locked_in')
-        assert_equal(self.get_bip9_status(bipName)['since'], 432)
+        assert_equal(self.get_bip9_status(bipName)['since'], 576)
         tmpl = self.nodes[0].getblocktemplate({})
         assert(bipName not in tmpl['rules'])
 
@@ -168,7 +211,7 @@ class BIP9SoftForksTest(ComparisonTestFramework):
         yield TestInstance([[block, True]])
 
         assert_equal(self.get_bip9_status(bipName)['status'], 'active')
-        assert_equal(self.get_bip9_status(bipName)['since'], 576)
+        assert_equal(self.get_bip9_status(bipName)['since'], 720)
         tmpl = self.nodes[0].getblocktemplate({})
         assert(bipName in tmpl['rules'])
         assert(bipName not in tmpl['vbavailable'])
