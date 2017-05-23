@@ -206,14 +206,14 @@ BOOST_AUTO_TEST_CASE(PrevectorTestInt)
                 test.erase(insecure_rand() % test.size());
             }
             if (((r >> 4) % 8) == 2) {
-                int new_size = std::max<int>(0, std::min<int>(30, test.size() + (insecure_rand() % 5) - 2));
+                int new_size = std::max<int>(0, std::min<int>(30, test.size() + (insecure_randrange(5)) - 2));
                 test.resize(new_size);
             }
             if (((r >> 7) % 8) == 3) {
-                test.insert(insecure_rand() % (test.size() + 1), 1 + (insecure_rand() % 2), insecure_rand());
+                test.insert(insecure_rand() % (test.size() + 1), 1 + (insecure_randrange(2)), insecure_rand());
             }
             if (((r >> 10) % 8) == 4) {
-                int del = std::min<int>(test.size(), 1 + (insecure_rand() % 2));
+                int del = std::min<int>(test.size(), 1 + (insecure_randrange(2)));
                 int beg = insecure_rand() % (test.size() + 1 - del);
                 test.erase(beg, beg + del);
             }
@@ -225,20 +225,20 @@ BOOST_AUTO_TEST_CASE(PrevectorTestInt)
             }
             if (((r >> 21) % 32) == 7) {
                 int values[4];
-                int num = 1 + (insecure_rand() % 4);
+                int num = 1 + (insecure_randrange(4));
                 for (int k = 0; k < num; k++) {
                     values[k] = insecure_rand();
                 }
                 test.insert_range(insecure_rand() % (test.size() + 1), values, values + num);
             }
             if (((r >> 26) % 32) == 8) {
-                int del = std::min<int>(test.size(), 1 + (insecure_rand() % 4));
+                int del = std::min<int>(test.size(), 1 + (insecure_randrange(4)));
                 int beg = insecure_rand() % (test.size() + 1 - del);
                 test.erase(beg, beg + del);
             }
             r = insecure_rand();
             if (r % 32 == 9) {
-                test.reserve(insecure_rand() % 32);
+                test.reserve(insecure_randrange(32));
             }
             if ((r >> 5) % 64 == 10) {
                 test.shrink_to_fit();
@@ -250,7 +250,7 @@ BOOST_AUTO_TEST_CASE(PrevectorTestInt)
                 test.clear();
             }
             if (((r >> 21) % 512) == 12) {
-                test.assign(insecure_rand() % 32, insecure_rand());
+                test.assign(insecure_randrange(32), insecure_rand());
             }
             if (((r >> 15) % 8) == 3) {
                 test.swap();
