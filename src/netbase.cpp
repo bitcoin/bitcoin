@@ -668,13 +668,14 @@ std::string NetworkErrorString(int err)
 std::string NetworkErrorString(int err)
 {
     char buf[256];
-    const char *s = buf;
     buf[0] = 0;
     /* Too bad there are two incompatible implementations of the
      * thread-safe strerror. */
+    const char *s;
 #ifdef STRERROR_R_CHAR_P /* GNU variant can return a pointer outside the passed buffer */
     s = strerror_r(err, buf, sizeof(buf));
 #else /* POSIX variant always returns message in buffer */
+    s = buf;
     if (strerror_r(err, buf, sizeof(buf)))
         buf[0] = 0;
 #endif
