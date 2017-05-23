@@ -17,6 +17,7 @@
 #include <QApplication>
 #include <QTimer>
 #include <QVBoxLayout>
+#include <QtDebug>
 
 namespace
 {
@@ -82,6 +83,11 @@ QModelIndex FindTx(const QAbstractItemModel& model, const uint256& txid)
 //     src/qt/test/test_bitcoin-qt -platform cocoa    # macOS
 void WalletTests::walletTests()
 {
+    if (qobject_cast<QApplication*>(QCoreApplication::instance())==0) {
+        qWarning() << "Skipping gui wallet tests because display is not available.";
+        return;
+    }
+
     // Set up wallet and chain with 101 blocks (1 mature block for spending).
     TestChain100Setup test;
     test.CreateAndProcessBlock({}, GetScriptForRawPubKey(test.coinbaseKey.GetPubKey()));
