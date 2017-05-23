@@ -21,6 +21,9 @@ public:
     CBanDB();
     bool Write(const banmap_t &banSet);
     bool Read(banmap_t &banSet);
+
+    // NOTE: Added for use in unit testing
+    boost::filesystem::path GetDatabasePath() const { return pathBanlist; }
 };
 
 #endif // BITCOIN_BANDB_H
