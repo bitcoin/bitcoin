@@ -13,7 +13,6 @@
 #include "random.h"
 #include "utilstrencodings.h"
 #include "test/test_bitcoin.h"
-#include "test/test_random.h"
 
 #include <vector>
 
