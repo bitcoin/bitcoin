@@ -74,7 +74,6 @@ BITCOIN_TESTS =\
   test/test_bitcoin.cpp \
   test/test_bitcoin.h \
   test/test_bitcoin_main.cpp \
-  test/test_random.h \
   test/testutil.cpp \
   test/testutil.h \
   test/timedata_tests.cpp \
