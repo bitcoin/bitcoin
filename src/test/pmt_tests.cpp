@@ -22,7 +22,7 @@ public:
     // flip one bit in one of the hashes - this should break the authentication
     void Damage() {
         unsigned int n = insecure_rand() % vHash.size();
-        int bit = insecure_rand() % 256;
+        int bit = insecure_randrange(256);
         *(vHash[n].begin() + (bit>>3)) ^= 1<<(bit&7);
     }
 };
