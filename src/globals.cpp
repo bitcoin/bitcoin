@@ -19,6 +19,7 @@
 #include "main.h"
 #include "miner.h"
 #include "net.h"
+#include "nodestate.h"
 #include "parallel.h"
 #include "policy/policy.h"
 #include "primitives/block.h"
@@ -74,6 +75,10 @@ CConditionVariable cvBlockChange;
 proxyType proxyInfo[NET_MAX];
 proxyType nameProxy;
 CCriticalSection cs_proxyInfos;
+
+// moved from main.cpp (now part of nodestate.h)
+std::map<uint256, pair<NodeId, std::list<QueuedBlock>::iterator> > mapBlocksInFlight;
+std::map<NodeId, CNodeState> mapNodeState;
 
 set<uint256> setPreVerifiedTxHash;
 set<uint256> setUnVerifiedOrphanTxHash;
