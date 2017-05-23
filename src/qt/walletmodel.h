@@ -218,8 +218,9 @@ public:
 
     bool getDefaultWalletRbf() const;
 
+    CWallet *wallet; // Used to lock cs_wallet for getOutputs/listCoins
+
 private:
-    CWallet *wallet;
     bool fHaveWatchOnly;
     bool fForceCheckBalanceChanged;
 
