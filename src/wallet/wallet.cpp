@@ -982,6 +982,13 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const CBlockI
     return false;
 }
 
+bool CWallet::TransactionCanBeAbandoned(const uint256& hashTx) const
+{
+    LOCK2(cs_main, cs_wallet);
+    const CWalletTx* wtx = GetWalletTx(hashTx);
+    return wtx && !wtx->isAbandoned() && wtx->GetDepthInMainChain() <= 0 && !wtx->InMempool();
+}
+
 bool CWallet::AbandonTransaction(const uint256& hashTx)
 {
     LOCK2(cs_main, cs_wallet);
@@ -1977,6 +1984,21 @@ CAmount CWallet::GetLegacyBalance(const isminefilter& filter, int minDepth, cons
     return balance;
 }
 
+CAmount CWallet::GetAvailableBalance(const CCoinControl* coinControl) const
+{
+    LOCK2(cs_main, cs_wallet);
+
+    CAmount balance = 0;
+    std::vector<COutput> vCoins;
+    AvailableCoins(vCoins, true, coinControl);
+    for (const COutput& out : vCoins) {
+        if (out.fSpendable) {
+            balance += out.tx->tx->vout[out.i].nValue;
+        }
+    }
+    return balance;
+}
+
 void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const CCoinControl *coinControl, const CAmount &nMinimumAmount, const CAmount &nMaximumAmount, const CAmount &nMinimumSumAmount, const uint64_t &nMaximumCount, const int &nMinDepth, const int &nMaxDepth) const
 {
     vCoins.clear();
@@ -2086,6 +2108,69 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
             }
         }
     }
+}
+
+std::map<CTxDestination, std::vector<COutput>> CWallet::ListCoins() const
+{
+    // TODO: Add AssertLockHeld(cs_wallet) here.
+    //
+    // Because the return value from this function contains pointers to
+    // CWalletTx objects, callers to this function really should acquire the
+    // cs_wallet lock before calling it. However, the current caller doesn't
+    // acquire this lock yet. There was an attempt to add the missing lock in
+    // https://github.com/bitcoin/bitcoin/pull/10340, but that change has been
+    // postponed until after https://github.com/bitcoin/bitcoin/pull/10244 to
+    // avoid adding some extra complexity to the Qt code.
+
+    std::map<CTxDestination, std::vector<COutput>> result;
+
+    std::vector<COutput> availableCoins;
+    AvailableCoins(availableCoins);
+
+    LOCK2(cs_main, cs_wallet);
+    for (auto& coin : availableCoins) {
+        CTxDestination address;
+        if (coin.fSpendable &&
+            ExtractDestination(FindNonChangeParentOutput(*coin.tx->tx, coin.i).scriptPubKey, address)) {
+            result[address].emplace_back(std::move(coin));
+        }
+    }
+
+    std::vector<COutPoint> lockedCoins;
+    ListLockedCoins(lockedCoins);
+    for (const auto& output : lockedCoins) {
+        auto it = mapWallet.find(output.hash);
+        if (it != mapWallet.end()) {
+            int depth = it->second.GetDepthInMainChain();
+            if (depth >= 0 && output.n < it->second.tx->vout.size() &&
+                IsMine(it->second.tx->vout[output.n]) == ISMINE_SPENDABLE) {
+                CTxDestination address;
+                if (ExtractDestination(FindNonChangeParentOutput(*it->second.tx, output.n).scriptPubKey, address)) {
+                    result[address].emplace_back(
+                        &it->second, output.n, depth, true /* spendable */, true /* solvable */, false /* safe */);
+                }
+            }
+        }
+    }
+
+    return result;
+}
+
+const CTxOut& CWallet::FindNonChangeParentOutput(const CTransaction& tx, int output) const
+{
+    const CTransaction* ptx = &tx;
+    int n = output;
+    while (IsChange(ptx->vout[n]) && ptx->vin.size() > 0) {
+        const COutPoint& prevout = ptx->vin[0].prevout;
+        auto it = mapWallet.find(prevout.hash);
+        if (it == mapWallet.end() || it->second.tx->vout.size() <= prevout.n ||
+            !IsMine(it->second.tx->vout[prevout.n])) {
+            break;
+        }
+        ptx = it->second.tx.get();
+        n = prevout.n;
+    }
+    return ptx->vout[n];
 }
 
 static void ApproximateBestSubset(const std::vector<CInputCoin>& vValue, const CAmount& nTotalLower, const CAmount& nTargetValue,
@@ -3407,7 +3492,7 @@ bool CWallet::IsLockedCoin(uint256 hash, unsigned int n) const
     return (setLockedCoins.count(outpt) > 0);
 }
 
-void CWallet::ListLockedCoins(std::vector<COutPoint>& vOutpts)
+void CWallet::ListLockedCoins(std::vector<COutPoint>& vOutpts) const
 {
     AssertLockHeld(cs_wallet); // setLockedCoins
     for (std::set<COutPoint>::iterator it = setLockedCoins.begin();
@@ -3606,6 +3691,20 @@ bool CWallet::GetDestData(const CTxDestination &dest, const std::string &key, st
         }
     }
     return false;
+}
+
+std::vector<std::string> CWallet::GetDestValues(const std::string& prefix) const
+{
+    LOCK(cs_wallet);
+    std::vector<std::string> values;
+    for (const auto& address : mapAddressBook) {
+        for (const auto& data : address.second.destdata) {
+            if (!data.first.compare(0, prefix.size(), prefix)) {
+                values.emplace_back(data.second);
+            }
+        }
+    }
+    return values;
 }
 
 std::string CWallet::GetWalletHelpString(bool showDebug)
