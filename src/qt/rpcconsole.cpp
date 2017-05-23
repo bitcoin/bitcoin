@@ -12,6 +12,7 @@
 
 #include "bantablemodel.h"
 #include "clientmodel.h"
+#include "dosman.h"
 #include "guiutil.h"
 #include "platformstyle.h"
 #include "bantablemodel.h"
@@ -921,7 +922,7 @@ void RPCConsole::banSelectedNode(int bantime)
         int port = 0;
         SplitHostPort(nStr, port, addr);
 
-        CNode::Ban(CNetAddr(addr), BanReasonManuallyAdded, bantime);
+        dosMan.Ban(CNetAddr(addr), BanReasonManuallyAdded, bantime);
         bannedNode->fDisconnect = true;
 
         clearSelectedNode();
@@ -939,7 +940,7 @@ void RPCConsole::unbanSelectedNode()
 
     if (possibleSubnet.IsValid())
     {
-        CNode::Unban(possibleSubnet);
+        dosMan.Unban(possibleSubnet);
     }
 }
 

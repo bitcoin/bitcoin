@@ -7,6 +7,7 @@
 
 #include "allowed_args.h"
 #include "chainparams.h"
+#include "dosman.h"
 #include "httpserver.h"
 #include "init.h"
 #include "main.h"

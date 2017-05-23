@@ -93,10 +93,6 @@ static const bool DEFAULT_FORCEDNSSEED = false;
 static const size_t DEFAULT_MAXRECEIVEBUFFER = 5 * 1000;
 static const size_t DEFAULT_MAXSENDBUFFER = 1 * 1000;
 
-// NOTE: When adjusting this, update rpcnet:setban's help ("24h")
-static const unsigned int DEFAULT_MISBEHAVING_BANTIME = 60 * 60 * 24; // Default 24-hour ban
-
-
 unsigned int ReceiveFloodSize();
 unsigned int SendBufferSize();
 
@@ -383,12 +379,6 @@ public:
     unsigned short addrFromPort;
 
 protected:
-    // Denial-of-service detection/prevention
-    // Key is IP address, value is banned-until-time
-    static banmap_t setBanned;
-    static CCriticalSection cs_setBanned;
-    static bool setBannedIsDirty;
-
     // Basic fuzz-testing
     void Fuzz(int nChance); // modifies ssSend
 
@@ -778,43 +768,6 @@ public:
         return idstr;
     }
 
-
-    // Denial-of-service detection/prevention
-    // The idea is to detect peers that are behaving
-    // badly and disconnect/ban them, but do it in a
-    // one-coding-mistake-won't-shatter-the-entire-network
-    // way.
-    // IMPORTANT:  There should be nothing I can give a
-    // node that it will forward on that will make that
-    // node's peers drop it. If there is, an attacker
-    // can isolate a node and/or try to split the network.
-    // Dropping a node for sending stuff that is invalid
-    // now but might be valid in a later version is also
-    // dangerous, because it can cause a network split
-    // between nodes running old code and nodes running
-    // new code.
-    static void ClearBanned(); // needed for unit testing
-    static bool IsBanned(CNetAddr ip);
-    static bool IsBanned(CSubNet subnet);
-    static void Ban(const CNetAddr &ip,
-        const BanReason &banReason,
-        int64_t bantimeoffset = 0,
-        bool sinceUnixEpoch = false);
-    static void Ban(const CSubNet &subNet,
-        const BanReason &banReason,
-        int64_t bantimeoffset = 0,
-        bool sinceUnixEpoch = false);
-    static bool Unban(const CNetAddr &ip);
-    static bool Unban(const CSubNet &ip);
-    static void GetBanned(banmap_t &banmap);
-    static void SetBanned(const banmap_t &banmap);
-
-    //! check is the banlist has unwritten changes
-    static bool BannedSetIsDirty();
-    //! set the "dirty" flag for the banlist
-    static void SetBannedSetDirty(bool dirty = true);
-    //! clean unused entries (if bantime has expired)
-    static void SweepBanned();
 
     void copyStats(CNodeStats &stats);
 

@@ -6,6 +6,7 @@
 #include "bantablemodel.h"
 
 #include "clientmodel.h"
+#include "dosman.h"
 #include "guiconstants.h"
 #include "guiutil.h"
 
@@ -49,7 +50,7 @@ public:
     void refreshBanlist()
     {
         banmap_t banMap;
-        CNode::GetBanned(banMap);
+        dosMan.GetBanned(banMap);
 
         cachedBanlist.clear();
 #if QT_VERSION >= 0x040700

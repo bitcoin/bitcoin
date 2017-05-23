@@ -15,6 +15,7 @@
 #include "consensus/consensus.h"
 #include "consensus/merkle.h"
 #include "consensus/validation.h"
+#include "dosman.h"
 #include "expedited.h"
 #include "hash.h"
 #include "init.h"
@@ -5780,7 +5781,7 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
         //        attacker sends us messages that do not require a response coupled with an nVersion of zero
         //        then they can continue unimpeded even though they have exceeded the misbehaving threshold.
         pfrom->fDisconnect = true;
-        CNode::Ban(pfrom->addr, BanReasonNodeMisbehaving);
+        dosMan.Ban(pfrom->addr, BanReasonNodeMisbehaving);
         return error("VERSION was not received before other messages - banning peer=%d ip=%s", pfrom->GetId(),
             pfrom->addrName.c_str());
     }
@@ -6968,7 +6969,7 @@ bool ProcessMessages(CNode *pfrom)
                 pfrom->id, pfrom->addrName.c_str());
             if (!pfrom->fWhitelisted)
             {
-                CNode::Ban(pfrom->addr, BanReasonNodeMisbehaving, 4 * 60 * 60); // ban for 4 hours
+                dosMan.Ban(pfrom->addr, BanReasonNodeMisbehaving, 4 * 60 * 60); // ban for 4 hours
             }
             fOk = false;
             break;
@@ -7183,7 +7184,7 @@ bool SendMessages(CNode *pto)
                     LogPrintf("Warning: not banning local peer %s!\n", pto->addr.ToString());
                 else
                 {
-                    CNode::Ban(pto->addr, BanReasonNodeMisbehaving);
+                    dosMan.Ban(pto->addr, BanReasonNodeMisbehaving);
                 }
             }
             state.fShouldBan = false;
@@ -7202,7 +7203,7 @@ bool SendMessages(CNode *pto)
             (!state.fFirstHeadersReceived) && !pto->fWhitelisted)
         {
             pto->fDisconnect = true;
-            CNode::Ban(pto->addr, BanReasonNodeMisbehaving, 4 * 60 * 60); // ban for 4 hours
+            dosMan.Ban(pto->addr, BanReasonNodeMisbehaving, 4 * 60 * 60); // ban for 4 hours
             LogPrintf(
                 "Banning %s because initial headers were either not received or not received before the timeout\n",
                 pto->addr.ToString());

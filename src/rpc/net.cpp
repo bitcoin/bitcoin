@@ -7,6 +7,7 @@
 
 #include "chainparams.h"
 #include "clientversion.h"
+#include "dosman.h"
 #include "main.h"
 #include "net.h"
 #include "netbase.h"
@@ -557,7 +558,7 @@ UniValue setban(const UniValue& params, bool fHelp)
 
     if (strCommand == "add")
     {
-        if (isSubnet ? CNode::IsBanned(subNet) : CNode::IsBanned(netAddr))
+        if (isSubnet ? dosMan.IsBanned(subNet) : dosMan.IsBanned(netAddr))
             throw JSONRPCError(RPC_CLIENT_NODE_ALREADY_ADDED, "Error: IP/Subnet already banned");
 
         int64_t banTime = 0; //use standard bantime if not specified
@@ -568,7 +569,7 @@ UniValue setban(const UniValue& params, bool fHelp)
         if (params.size() == 4 && params[3].isTrue())
             absolute = true;
 
-        isSubnet ? CNode::Ban(subNet, BanReasonManuallyAdded, banTime, absolute) : CNode::Ban(netAddr, BanReasonManuallyAdded, banTime, absolute);
+        isSubnet ? dosMan.Ban(subNet, BanReasonManuallyAdded, banTime, absolute) : dosMan.Ban(netAddr, BanReasonManuallyAdded, banTime, absolute);
 
         //disconnect possible nodes
         if (!isSubnet) subNet = CSubNet(netAddr);
@@ -577,7 +578,7 @@ UniValue setban(const UniValue& params, bool fHelp)
     }
     else if(strCommand == "remove")
     {
-        if (!( isSubnet ? CNode::Unban(subNet) : CNode::Unban(netAddr) ))
+        if (!( isSubnet ? dosMan.Unban(subNet) : dosMan.Unban(netAddr) ))
             throw JSONRPCError(RPC_MISC_ERROR, "Error: Unban failed");
     }
 
@@ -596,7 +597,7 @@ UniValue listbanned(const UniValue& params, bool fHelp)
                             );
 
     banmap_t banMap;
-    CNode::GetBanned(banMap);
+    dosMan.GetBanned(banMap);
 
     UniValue bannedAddresses(UniValue::VARR);
     for (banmap_t::iterator it = banMap.begin(); it != banMap.end(); it++)
@@ -625,7 +626,7 @@ UniValue clearbanned(const UniValue& params, bool fHelp)
                             + HelpExampleRpc("clearbanned", "")
                             );
 
-    CNode::ClearBanned();
+    dosMan.ClearBanned();
     return NullUniValue;
 }
 

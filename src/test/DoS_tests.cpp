@@ -6,6 +6,7 @@
 // Unit tests for denial-of-service detection/prevention code
 
 #include "chainparams.h"
+#include "dosman.h"
 #include "keystore.h"
 #include "main.h"
 #include "net.h"
@@ -40,49 +41,49 @@ BOOST_FIXTURE_TEST_SUITE(DoS_tests, TestingSetup)
 
 BOOST_AUTO_TEST_CASE(DoS_banning)
 {
-    CNode::ClearBanned();
+    dosMan.ClearBanned();
     CAddress addr1(ip(0xa0b0c001));
     CNode dummyNode1(INVALID_SOCKET, addr1, "", true);
     dummyNode1.nVersion = 1;
     Misbehaving(dummyNode1.GetId(), 100); // Should get banned
     SendMessages(&dummyNode1);
-    BOOST_CHECK(CNode::IsBanned(addr1));
-    BOOST_CHECK(!CNode::IsBanned(ip(0xa0b0c001|0x0000ff00))); // Different IP, not banned
+    BOOST_CHECK(dosMan.IsBanned(addr1));
+    BOOST_CHECK(!dosMan.IsBanned(ip(0xa0b0c001|0x0000ff00))); // Different IP, not banned
 
     CAddress addr2(ip(0xa0b0c002));
     CNode dummyNode2(INVALID_SOCKET, addr2, "", true);
     dummyNode2.nVersion = 1;
     Misbehaving(dummyNode2.GetId(), 50);
     SendMessages(&dummyNode2);
-    BOOST_CHECK(!CNode::IsBanned(addr2)); // 2 not banned yet...
-    BOOST_CHECK(CNode::IsBanned(addr1));  // ... but 1 still should be
+    BOOST_CHECK(!dosMan.IsBanned(addr2)); // 2 not banned yet...
+    BOOST_CHECK(dosMan.IsBanned(addr1));  // ... but 1 still should be
     Misbehaving(dummyNode2.GetId(), 50);
     SendMessages(&dummyNode2);
-    BOOST_CHECK(CNode::IsBanned(addr2));
+    BOOST_CHECK(dosMan.IsBanned(addr2));
 }
 
 BOOST_AUTO_TEST_CASE(DoS_banscore)
 {
-    CNode::ClearBanned();
+    dosMan.ClearBanned();
     mapArgs["-banscore"] = "111"; // because 11 is my favorite number
     CAddress addr1(ip(0xa0b0c001));
     CNode dummyNode1(INVALID_SOCKET, addr1, "", true);
     dummyNode1.nVersion = 1;
     Misbehaving(dummyNode1.GetId(), 100);
     SendMessages(&dummyNode1);
-    BOOST_CHECK(!CNode::IsBanned(addr1));
+    BOOST_CHECK(!dosMan.IsBanned(addr1));
     Misbehaving(dummyNode1.GetId(), 10);
     SendMessages(&dummyNode1);
-    BOOST_CHECK(!CNode::IsBanned(addr1));
+    BOOST_CHECK(!dosMan.IsBanned(addr1));
     Misbehaving(dummyNode1.GetId(), 1);
     SendMessages(&dummyNode1);
-    BOOST_CHECK(CNode::IsBanned(addr1));
+    BOOST_CHECK(dosMan.IsBanned(addr1));
     mapArgs.erase("-banscore");
 }
 
 BOOST_AUTO_TEST_CASE(DoS_bantime)
 {
-    CNode::ClearBanned();
+    dosMan.ClearBanned();
     int64_t nStartTime = GetTime();
     SetMockTime(nStartTime); // Overrides future calls to GetTime()
 
@@ -92,13 +93,13 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
 
     Misbehaving(dummyNode.GetId(), 100);
     SendMessages(&dummyNode);
-    BOOST_CHECK(CNode::IsBanned(addr));
+    BOOST_CHECK(dosMan.IsBanned(addr));
 
     SetMockTime(nStartTime+60*60);
-    BOOST_CHECK(CNode::IsBanned(addr));
+    BOOST_CHECK(dosMan.IsBanned(addr));
 
     SetMockTime(nStartTime+60*60*24+1);
-    BOOST_CHECK(!CNode::IsBanned(addr));
+    BOOST_CHECK(!dosMan.IsBanned(addr));
 }
 
 CTransaction RandomOrphan()
