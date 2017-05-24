@@ -240,7 +240,7 @@ bool RemoveLocal(const CService& addr)
 /** Make a particular network entirely off-limits (no automatic connects to it) */
 void SetLimited(enum Network net, bool fLimited)
 {
-    if (net == NET_UNROUTABLE)
+    if (net == NET_UNROUTABLE || net == NET_INTERNAL)
         return;
     LOCK(cs_mapLocalHost);
     vfLimited[net] = fLimited;

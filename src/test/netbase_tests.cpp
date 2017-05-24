@@ -25,6 +25,13 @@ static CSubNet ResolveSubNet(const char* subnet)
     return ret;
 }
 
+static CNetAddr CreateInternal(const char* host)
+{
+    CNetAddr addr;
+    addr.SetInternal(host);
+    return addr;
+}
+
 BOOST_AUTO_TEST_CASE(netbase_networks)
 {
     BOOST_CHECK(ResolveIP("127.0.0.1").GetNetwork()                              == NET_UNROUTABLE);
@@ -32,6 +39,7 @@ BOOST_AUTO_TEST_CASE(netbase_networks)
     BOOST_CHECK(ResolveIP("8.8.8.8").GetNetwork()                                == NET_IPV4);
     BOOST_CHECK(ResolveIP("2001::8888").GetNetwork()                             == NET_IPV6);
     BOOST_CHECK(ResolveIP("FD87:D87E:EB43:edb1:8e4:3588:e546:35ca").GetNetwork() == NET_TOR);
+    BOOST_CHECK(CreateInternal("foo.com").GetNetwork()                           == NET_INTERNAL);
 
 }
 
@@ -58,6 +66,8 @@ BOOST_AUTO_TEST_CASE(netbase_properties)
     BOOST_CHECK(ResolveIP("8.8.8.8").IsRoutable());
     BOOST_CHECK(ResolveIP("2001::1").IsRoutable());
     BOOST_CHECK(ResolveIP("127.0.0.1").IsValid());
+    BOOST_CHECK(CreateInternal("FD6B:88C0:8724:edb1:8e4:3588:e546:35ca").IsInternal());
+    BOOST_CHECK(CreateInternal("bar.com").IsInternal());
 
 }
 
@@ -281,6 +291,9 @@ BOOST_AUTO_TEST_CASE(netbase_getgroup)
     BOOST_CHECK(ResolveIP("2001:470:abcd:9999:9999:9999:9999:9999").GetGroup() == std::vector<unsigned char>({(unsigned char)NET_IPV6, 32, 1, 4, 112, 175})); //he.net
     BOOST_CHECK(ResolveIP("2001:2001:9999:9999:9999:9999:9999:9999").GetGroup() == std::vector<unsigned char>({(unsigned char)NET_IPV6, 32, 1, 32, 1})); //IPv6
 
+    // baz.net sha256 hash: 12929400eb4607c4ac075f087167e75286b179c693eb059a01774b864e8fe505
+    std::vector<unsigned char> internal_group = {NET_INTERNAL, 0x12, 0x92, 0x94, 0x00, 0xeb, 0x46, 0x07, 0xc4, 0xac, 0x07};
+    BOOST_CHECK(CreateInternal("baz.net").GetGroup() == internal_group);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
