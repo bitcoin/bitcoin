@@ -145,15 +145,15 @@ public:
         assert(genesis.hashMerkleRoot == uint256S("0xfa6ef9872494fa9662cf0fecf8c0135a6932e76d7a8764e1155207f3205c7c88")); // PM-Tech: ChainCoin
 
 
-        vSeeds.push_back(CDNSSeedData("seed1.chaincoin.org", "seed1.chaincoin.org"));
-        vSeeds.push_back(CDNSSeedData("seed2.chaincoin.org", "seed2.chaincoin.org"));
-        vSeeds.push_back(CDNSSeedData("seed3.chaincoin.org", "seed3.chaincoin.org"));
-        vSeeds.push_back(CDNSSeedData("seed4.chaincoin.org", "seed4.chaincoin.org"));
-        vSeeds.push_back(CDNSSeedData("seed5.chaincoin.org", "seed5.chaincoin.org"));
-        vSeeds.push_back(CDNSSeedData("seed6.chaincoin.org", "seed6.chaincoin.org"));
-        vSeeds.push_back(CDNSSeedData("seed7.chaincoin.org", "seed7.chaincoin.org"));
-        vSeeds.push_back(CDNSSeedData("seed8.chaincoin.org", "seed8.chaincoin.org"));
-        vSeeds.push_back(CDNSSeedData("chc1.hashunlimited.com", "chc1.hashunlimited.com"));
+        vSeeds.emplace_back("seed1.chaincoin.org");
+        vSeeds.emplace_back("seed2.chaincoin.org");
+        vSeeds.emplace_back("seed3.chaincoin.org");
+        vSeeds.emplace_back("seed4.chaincoin.org");
+        vSeeds.emplace_back("seed5.chaincoin.org");
+        vSeeds.emplace_back("seed6.chaincoin.org");
+        vSeeds.emplace_back("seed7.chaincoin.org");
+        vSeeds.emplace_back("seed8.chaincoin.org");
+        vSeeds.emplace_back("chc1.hashunlimited.com");
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,28); // PM-Tech: ChainCoin
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,4); // PM-Tech: ChainCoin
@@ -271,7 +271,8 @@ public:
         vSeeds.clear();
 
         // nodes with support for servicebits filtering should be at the top
-        vSeeds.push_back(CDNSSeedData("test.chaincoin.org", "test.chaincoin.org"));
+        vSeeds.emplace_back("test.chaincoin.org");
+        vSeeds.emplace_back("test1.hashunlimited.com");
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,80);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,44);
