@@ -8,6 +8,7 @@
 #define BITCOIN_DOSMANAGER_H
 
 #include "banentry.h" // for banmap_t
+#include "net.h" // for NodeId
 #include "netbase.h" // for CSubNet
 #include "sync.h" // for CCritalSection
 
@@ -17,6 +18,7 @@
 
 // NOTE: When adjusting this, update rpcnet:setban's help ("24h")
 static const unsigned int DEFAULT_MISBEHAVING_BANTIME = 60 * 60 * 24; // Default 24-hour ban
+static const unsigned int DEFAULT_BANSCORE_THRESHOLD = 100;
 
 
 class CDoSManager
@@ -71,6 +73,9 @@ public:
     void SetBannedSetDirty(bool dirty = true);
     //! clean unused entries (if bantime has expired)
     void SweepBanned();
+
+    /** Increase a node's misbehavior score. */
+    void Misbehaving(NodeId nodeid, int howmuch);
 };
 
 // actual definition should be in globals.cpp for ordered construction/destruction

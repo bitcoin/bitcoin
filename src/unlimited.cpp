@@ -15,7 +15,6 @@
 #include "expedited.h"
 #include "hash.h"
 #include "leakybucket.h"
-#include "main.h"
 #include "miner.h"
 #include "net.h"
 #include "parallel.h"
@@ -1305,7 +1304,7 @@ void LoadFilter(CNode *pfrom, CBloomFilter *filter)
 {
     if (!filter->IsWithinSizeConstraints())
         // There is no excuse for sending a too-large filter
-        Misbehaving(pfrom->GetId(), 100);
+        dosMan.Misbehaving(pfrom->GetId(), 100);
     else
     {
         LOCK(pfrom->cs_filter);

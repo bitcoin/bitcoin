@@ -4,7 +4,7 @@
 
 #include "parallel.h"
 #include "chainparams.h"
-#include "main.h"
+#include "dosman.h"
 #include "net.h"
 #include "pow.h"
 #include "timedata.h"
@@ -536,7 +536,7 @@ void HandleBlockMessageThread(CNode *pfrom, const string &strCommand, const CBlo
             if (nDoS > 0)
             {
                 LOCK(cs_main);
-                Misbehaving(pfrom->GetId(), nDoS);
+                dosMan.Misbehaving(pfrom->GetId(), nDoS);
             }
         }
     }

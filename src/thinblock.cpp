@@ -9,8 +9,8 @@
 
 #include "chainparams.h"
 #include "consensus/merkle.h"
+#include "dosman.h"
 #include "expedited.h"
-#include "main.h"
 #include "net.h"
 #include "parallel.h"
 #include "policy/policy.h"
@@ -53,7 +53,7 @@ bool CThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom)
     if (!pfrom->ThinBlockCapable())
     {
         LOCK(cs_main);
-        Misbehaving(pfrom->GetId(), 100);
+        dosMan.Misbehaving(pfrom->GetId(), 100);
         return error("Thinblock message received from a non thinblock node, peer=%d", pfrom->GetId());
     }
 
@@ -64,7 +64,7 @@ bool CThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom)
     if (!IsThinBlockValid(pfrom, thinBlock.vMissingTx, thinBlock.header))
     {
         LOCK(cs_main);
-        Misbehaving(pfrom->GetId(), 100);
+        dosMan.Misbehaving(pfrom->GetId(), 100);
         return error("Invalid thinblock received");
     }
 
@@ -75,7 +75,7 @@ bool CThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom)
         BlockMap::iterator mi = mapBlockIndex.find(prevHash);
         if (mi == mapBlockIndex.end())
         {
-            Misbehaving(pfrom->GetId(), 10);
+            dosMan.Misbehaving(pfrom->GetId(), 10);
             return error("thinblock from peer %s (%d) will not connect, unknown previous block %s",
                 pfrom->addrName.c_str(), pfrom->id, prevHash.ToString());
         }
@@ -84,7 +84,7 @@ bool CThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom)
         if (!ContextualCheckBlockHeader(thinBlock.header, state, pprev))
         {
             // Thin block does not fit within our blockchain
-            Misbehaving(pfrom->GetId(), 100);
+            dosMan.Misbehaving(pfrom->GetId(), 100);
             return error("thinblock from peer %s (%d) contextual error: %s", pfrom->addrName.c_str(), pfrom->id,
                 state.GetRejectReason().c_str());
         }
@@ -101,7 +101,7 @@ bool CThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom)
         if (!pfrom->mapThinBlocksInFlight.count(inv.hash) && !IsExpeditedNode(pfrom))
         {
             LOCK(cs_main);
-            Misbehaving(pfrom->GetId(), 100);
+            dosMan.Misbehaving(pfrom->GetId(), 100);
             return error("unrequested thinblock from peer %s (%d)", pfrom->addrName.c_str(), pfrom->id);
         }
     }
@@ -138,7 +138,7 @@ bool CThinBlock::process(CNode *pfrom, int nSizeThinBlock)
     if (header.hashMerkleRoot != merkleroot || mutated)
     {
         LOCK(cs_main);
-        Misbehaving(pfrom->GetId(), 100);
+        dosMan.Misbehaving(pfrom->GetId(), 100);
         return error("Thinblock merkle root does not match computed merkle root, peer=%d", pfrom->GetId());
     }
 
@@ -331,7 +331,7 @@ bool CXThinBlockTx::HandleMessage(CDataStream &vRecv, CNode *pfrom)
     if (!pfrom->ThinBlockCapable())
     {
         LOCK(cs_main);
-        Misbehaving(pfrom->GetId(), 100);
+        dosMan.Misbehaving(pfrom->GetId(), 100);
         return error("Thinblock message received from a non thinblock node, peer=%d", pfrom->GetId());
     }
 
@@ -352,7 +352,7 @@ bool CXThinBlockTx::HandleMessage(CDataStream &vRecv, CNode *pfrom)
         }
 
         LOCK(cs_main);
-        Misbehaving(pfrom->GetId(), 100);
+        dosMan.Misbehaving(pfrom->GetId(), 100);
         return error(
             "incorrectly constructed xblocktx or inconsistent thinblock data received.  Banning peer=%d", pfrom->id);
     }
@@ -430,7 +430,7 @@ bool CXThinBlockTx::HandleMessage(CDataStream &vRecv, CNode *pfrom)
         LogPrint("thin", "Failed to retrieve all transactions for block\n");
         // An expedited block may request transactions that we don't have
         // LOCK(cs_main);
-        // Misbehaving(pfrom->GetId(), 100);
+        // dosMan.Misbehaving(pfrom->GetId(), 100);
     }
 
     return true;
@@ -447,7 +447,7 @@ bool CXRequestThinBlockTx::HandleMessage(CDataStream &vRecv, CNode *pfrom)
     if (!pfrom->ThinBlockCapable())
     {
         LOCK(cs_main);
-        Misbehaving(pfrom->GetId(), 100);
+        dosMan.Misbehaving(pfrom->GetId(), 100);
         return error("Thinblock message received from a non thinblock node, peer=%d", pfrom->GetId());
     }
 
@@ -458,7 +458,7 @@ bool CXRequestThinBlockTx::HandleMessage(CDataStream &vRecv, CNode *pfrom)
     if (thinRequestBlockTx.setCheapHashesToRequest.empty() || thinRequestBlockTx.blockhash.IsNull())
     {
         LOCK(cs_main);
-        Misbehaving(pfrom->GetId(), 100);
+        dosMan.Misbehaving(pfrom->GetId(), 100);
         return error("incorrectly constructed get_xblocktx received.  Banning peer=%d", pfrom->id);
     }
 
@@ -481,7 +481,7 @@ bool CXRequestThinBlockTx::HandleMessage(CDataStream &vRecv, CNode *pfrom)
         if (pfrom->nGetXBlockTxCount >= 20)
         {
             LOCK(cs_main);
-            Misbehaving(pfrom->GetId(), 100); // If they exceed the limit then disconnect them
+            dosMan.Misbehaving(pfrom->GetId(), 100); // If they exceed the limit then disconnect them
             return error("DOS: Misbehaving - requesting too many xblocktx: %s\n", inv.hash.ToString());
         }
     }
@@ -493,7 +493,7 @@ bool CXRequestThinBlockTx::HandleMessage(CDataStream &vRecv, CNode *pfrom)
         if (mi == mapBlockIndex.end())
         {
             LOCK(cs_main);
-            Misbehaving(pfrom->GetId(), 20);
+            dosMan.Misbehaving(pfrom->GetId(), 20);
             return error("Requested block is not available");
         }
         else
@@ -503,7 +503,7 @@ bool CXRequestThinBlockTx::HandleMessage(CDataStream &vRecv, CNode *pfrom)
             if (!ReadBlockFromDisk(block, (*mi).second, consensusParams))
             {
                 LOCK(cs_main);
-                Misbehaving(pfrom->GetId(), 20);
+                dosMan.Misbehaving(pfrom->GetId(), 20);
                 return error("Cannot load block from disk -- Block txn request before assembled");
             }
             else
@@ -547,7 +547,7 @@ bool CXThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom, string strComm
     if (!pfrom->ThinBlockCapable())
     {
         LOCK(cs_main);
-        Misbehaving(pfrom->GetId(), 5);
+        dosMan.Misbehaving(pfrom->GetId(), 5);
         return error("%s message received from a non thinblock node, peer=%d", strCommand, pfrom->GetId());
     }
 
@@ -564,7 +564,7 @@ bool CXThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom, string strComm
         // Message consistency checking (FIXME: some redundancy here with AcceptBlockHeader)
         if (!IsThinBlockValid(pfrom, thinBlock.vMissingTx, thinBlock.header))
         {
-            Misbehaving(pfrom->GetId(), 100);
+            dosMan.Misbehaving(pfrom->GetId(), 100);
             LogPrintf("Received an invalid %s from peer %s\n", strCommand, pfrom->GetLogName());
             return false;
         }
@@ -577,7 +577,7 @@ bool CXThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom, string strComm
             if (state.IsInvalid(nDoS))
             {
                 if (nDoS > 0)
-                    Misbehaving(pfrom->GetId(), nDoS);
+                    dosMan.Misbehaving(pfrom->GetId(), nDoS);
                 LogPrintf("Received an invalid %s header from peer %s\n", strCommand, pfrom->GetLogName());
             }
 
@@ -1535,7 +1535,7 @@ void SendXThinBlock(CBlock &block, CNode *pfrom, const CInv &inv)
     }
     else
     {
-        Misbehaving(pfrom->GetId(), 100);
+        dosMan.Misbehaving(pfrom->GetId(), 100);
         return;
     }
     pfrom->blocksSent += 1;

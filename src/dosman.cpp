@@ -6,6 +6,7 @@
 
 #include "dosman.h"
 #include "bandb.h"
+#include "nodestate.h"
 #include "ui_interface.h"
 
 #include <boost/foreach.hpp>
@@ -159,4 +160,26 @@ void CDoSManager::SetBannedSetDirty(bool dirty)
 {
     LOCK(cs_setBanned); // reuse setBanned lock for the isDirty flag
     setBannedIsDirty = dirty;
+}
+
+// Requires cs_main.
+void CDoSManager::Misbehaving(NodeId pnode, int howmuch)
+{
+    if (howmuch == 0)
+        return;
+
+    CNodeState *state = State(pnode);
+    if (state == NULL)
+        return;
+
+    state->nMisbehavior += howmuch;
+    int banscore = GetArg("-banscore", DEFAULT_BANSCORE_THRESHOLD);
+    if (state->nMisbehavior >= banscore && state->nMisbehavior - howmuch < banscore)
+    {
+        LogPrintf("%s: %s (%d -> %d) BAN THRESHOLD EXCEEDED\n", __func__, state->name, state->nMisbehavior - howmuch,
+            state->nMisbehavior);
+        state->fShouldBan = true;
+    }
+    else
+        LogPrintf("%s: %s (%d -> %d)\n", __func__, state->name, state->nMisbehavior - howmuch, state->nMisbehavior);
 }
