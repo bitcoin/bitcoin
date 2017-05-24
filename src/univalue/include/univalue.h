@@ -25,8 +25,14 @@ public:
         typ = initialType;
         val = initialStr;
     }
-    UniValue(uint64_t val_) {
-        setInt(val_);
+    UniValue(unsigned int val_) {
+       setInt((uint64_t)val_);
+    }
+    UniValue(unsigned long val_) {
+       setInt((uint64_t)val_);
+    }
+    UniValue(unsigned long long val_) {
+        setInt((uint64_t)val_);
     }
     UniValue(int64_t val_) {
         setInt(val_);
@@ -36,9 +42,6 @@ public:
     }
     UniValue(int val_) {
         setInt(val_);
-    }
-    UniValue(unsigned int val_) {  // BU
-       setInt((uint64_t)val_);
     }
     UniValue(double val_) {
         setFloat(val_);
@@ -180,10 +183,17 @@ static inline std::pair<std::string,UniValue> Pair(const char *cKey, std::string
     return std::make_pair(key, uVal);
 }
 
-static inline std::pair<std::string,UniValue> Pair(const char *cKey, uint64_t u64Val)
+static inline std::pair<std::string,UniValue> Pair(const char *cKey, unsigned long ulVal)
 {
     std::string key(cKey);
-    UniValue uVal(u64Val);
+    UniValue uVal(ulVal);
+    return std::make_pair(key, uVal);
+}
+
+static inline std::pair<std::string,UniValue> Pair(const char *cKey, unsigned long long ullVal)
+{
+    std::string key(cKey);
+    UniValue uVal(ullVal);
     return std::make_pair(key, uVal);
 }
 
