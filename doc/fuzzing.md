@@ -1,5 +1,5 @@
-Fuzz-testing Bitcoin Core
-==========================
+Fuzz-testing Bitcoin
+====================
 
 A special test harness `test_bitcoin_fuzzy` is provided to provide an easy
 entry point for fuzzers and the like. In this document we'll describe how to
@@ -20,7 +20,7 @@ export AFLPATH=$PWD
 Instrumentation
 ----------------
 
-To build Bitcoin Core using AFL instrumentation (this assumes that the
+To build Bitcoin using AFL instrumentation (this assumes that the
 `AFLPATH` was set as above):
 ```
 ./configure --disable-ccache --disable-shared --enable-tests CC=${AFLPATH}/afl-gcc CXX=${AFLPATH}/afl-g++
