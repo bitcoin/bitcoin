@@ -136,10 +136,12 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     view->installEventFilter(this);
 
     transactionView = view;
+    transactionView->setObjectName("transactionView");
 
     // Actions
     abandonAction = new QAction(tr("Abandon transaction"), this);
     bumpFeeAction = new QAction(tr("Increase transaction fee"), this);
+    bumpFeeAction->setObjectName("bumpFeeAction");
     QAction *copyAddressAction = new QAction(tr("Copy address"), this);
     QAction *copyLabelAction = new QAction(tr("Copy label"), this);
     QAction *copyAmountAction = new QAction(tr("Copy amount"), this);
@@ -150,6 +152,7 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     QAction *showDetailsAction = new QAction(tr("Show transaction details"), this);
 
     contextMenu = new QMenu(this);
+    contextMenu->setObjectName("contextMenu");
     contextMenu->addAction(copyAddressAction);
     contextMenu->addAction(copyLabelAction);
     contextMenu->addAction(copyAmountAction);
@@ -380,7 +383,7 @@ void TransactionView::contextualMenu(const QPoint &point)
 
     if(index.isValid())
     {
-        contextMenu->exec(QCursor::pos());
+        contextMenu->popup(transactionView->viewport()->mapToGlobal(point));
     }
 }
 
@@ -416,7 +419,7 @@ void TransactionView::bumpFee()
     // Bump tx fee over the walletModel
     if (model->bumpFee(hash)) {
         // Update the table
-        model->getTransactionTableModel()->updateTransaction(hashQStr, CT_UPDATED, false);
+        model->getTransactionTableModel()->updateTransaction(hashQStr, CT_UPDATED, true);
     }
 }
 
