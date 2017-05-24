@@ -350,6 +350,8 @@ case $host in
          if test x$openssl_prefix != x; then
            PKG_CONFIG_PATH="$openssl_prefix/lib/pkgconfig:$PKG_CONFIG_PATH"
            export PKG_CONFIG_PATH
+           CPPFLAGS="$CPPFLAGS -I$openssl_prefix/include"
+           LIBS="$LIBS -L$openssl_prefix/lib"
          fi
          if test x$bdb_prefix != x; then
            CPPFLAGS="$CPPFLAGS -I$bdb_prefix/include"
