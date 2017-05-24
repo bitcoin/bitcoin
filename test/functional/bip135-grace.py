@@ -21,8 +21,7 @@ import tempfile
 This test exercises BIP135 fork grace periods.
 It uses a single node with custom forks.csv file.
 
-It is adapted from bip135-genvbvoting-forks on BU, which was
-derived from bip9-softforks.
+It is originally derived from bip9-softforks.
 '''
 
 
@@ -32,7 +31,7 @@ class BIP135ForksTest(ComparisonTestFramework):
         super().__init__()
         self.setup_clean_chain = True
         self.num_nodes = 1
-        self.defined_forks = [ "bip135test%d" % i for i in range(0,22) ]
+        self.defined_forks = [ "bip135test%d" % i for i in range(7,22) ]
 
     def setup_network(self):
         '''
@@ -52,29 +51,6 @@ class BIP135ForksTest(ComparisonTestFramework):
             self.fork_starttime = self.init_time + 30
             fh.write(
             "# deployment info for network 'regtest':\n" +
-
-            ########## THRESHOLD TESTING BITS (1-6) ############
-
-            # bit 0: test 'csv' fork renaming/reparameterization
-            "regtest,0,bip135test0,%d,999999999999,144,108,0,0,true\n" % (self.fork_starttime) +
-
-            # bit 1: test minimum threshold
-            "regtest,1,bip135test1,%d,999999999999,100,1,0,0,true\n" % (self.fork_starttime) +
-
-            # bit 2: small threshold
-            "regtest,2,bip135test2,%d,999999999999,100,10,0,0,true\n" % (self.fork_starttime) +
-
-            # bit 3: supermajority threshold
-            "regtest,3,bip135test3,%d,999999999999,100,75,0,0,true\n" % (self.fork_starttime) +
-
-            # bit 4: high threshold
-            "regtest,4,bip135test4,%d,999999999999,100,95,0,0,true\n" % (self.fork_starttime) +
-
-            # bit 5: max-but-one threshold
-            "regtest,5,bip135test5,%d,999999999999,100,99,0,0,true\n" % (self.fork_starttime) +
-
-            # bit 6: max threshold
-            "regtest,6,bip135test6,%d,999999999999,100,100,0,0,true\n" % (self.fork_starttime) +
 
             ########## GRACE PERIOD TESTING BITS (7-21) ############
 
@@ -179,10 +155,6 @@ class BIP135ForksTest(ComparisonTestFramework):
             print(info['bip135_forks'][f])
 
     def test_BIP135GraceConditions(self):
-
-        # the fork bits used to check grace period conditions
-        gracebits = self.defined_forks[7:22]
-
         print("begin test_BIP135GraceConditions test")
         node = self.nodes[0]
         self.tip = int("0x" + node.getbestblockhash(), 0)
@@ -200,7 +172,7 @@ class BIP135ForksTest(ComparisonTestFramework):
 
         bcinfo = self.nodes[0].getblockchaininfo()
         # check bits 7-15 , they should be in DEFINED
-        for f in gracebits:
+        for f in self.defined_forks:
             assert_equal(bcinfo['bip135_forks'][f]['bit'], int(f[10:]))
             assert_equal(bcinfo['bip135_forks'][f]['status'], 'defined')
 
@@ -211,14 +183,12 @@ class BIP135ForksTest(ComparisonTestFramework):
         while tip_mediantime < self.fork_starttime or self.height % 10:
             test_blocks = self.generate_blocks(1, 0x20000000)
             yield TestInstance(test_blocks, sync_every_block=False)
-            time.sleep(3)  # need to actually give daemon a little time to change the state
             bcinfo = self.nodes[0].getblockchaininfo()
             tip_mediantime = int(bcinfo['mediantime'])
-            for f in gracebits:
+            for f in self.defined_forks:
                 # transition to STARTED must occur if this is true
                 if tip_mediantime >= self.fork_starttime and self.height % 10 == 0:
                     moved_to_started = True
-                    time.sleep(3)  # need to actually give daemon a little time to change the state
 
                 if moved_to_started:
                     assert_equal(bcinfo['bip135_forks'][f]['status'], 'started')
@@ -233,7 +203,7 @@ class BIP135ForksTest(ComparisonTestFramework):
         # check bits 7-15 , they should all be in LOCKED_IN
         bcinfo = self.nodes[0].getblockchaininfo()
         print("checking all grace period forks are locked in")
-        for f in gracebits:
+        for f in self.defined_forks:
             assert_equal(bcinfo['bip135_forks'][f]['status'], 'locked_in')
 
         # now we just check that they turn ACTIVE only when their configured
@@ -262,9 +232,8 @@ class BIP135ForksTest(ComparisonTestFramework):
 
         test_blocks = self.generate_blocks(10, 0x20000000)
         yield TestInstance(test_blocks, sync_every_block=False)
-        time.sleep(3)
         bcinfo = self.nodes[0].getblockchaininfo()
-        activation_states = [ bcinfo['bip135_forks'][f]['status'] for f in gracebits ]
+        activation_states = [ bcinfo['bip135_forks'][f]['status'] for f in self.defined_forks ]
         assert_equal(activation_states, ['active',
                                          'active',
                                          'active',
@@ -285,9 +254,8 @@ class BIP135ForksTest(ComparisonTestFramework):
         # check the ones supposed to activate at next+1 sync
         test_blocks = self.generate_blocks(10, 0x20000000)
         yield TestInstance(test_blocks, sync_every_block=False)
-        time.sleep(3)
         bcinfo = self.nodes[0].getblockchaininfo()
-        activation_states = [ bcinfo['bip135_forks'][f]['status'] for f in gracebits ]
+        activation_states = [ bcinfo['bip135_forks'][f]['status'] for f in self.defined_forks ]
         assert_equal(activation_states, ['active',
                                          'active',
                                          'active',
@@ -308,9 +276,8 @@ class BIP135ForksTest(ComparisonTestFramework):
         # check the ones supposed to activate at next+2 period
         test_blocks = self.generate_blocks(10, 0x20000000)
         yield TestInstance(test_blocks, sync_every_block=False)
-        time.sleep(3)
         bcinfo = self.nodes[0].getblockchaininfo()
-        activation_states = [ bcinfo['bip135_forks'][f]['status'] for f in gracebits ]
+        activation_states = [ bcinfo['bip135_forks'][f]['status'] for f in self.defined_forks ]
         assert_equal(activation_states, ['active',
                                          'active',
                                          'active',
@@ -331,9 +298,8 @@ class BIP135ForksTest(ComparisonTestFramework):
         # check the ones supposed to activate at next+2 period
         test_blocks = self.generate_blocks(10, 0x20000000)
         yield TestInstance(test_blocks, sync_every_block=False)
-        time.sleep(3)
         bcinfo = self.nodes[0].getblockchaininfo()
-        activation_states = [ bcinfo['bip135_forks'][f]['status'] for f in gracebits ]
+        activation_states = [ bcinfo['bip135_forks'][f]['status'] for f in self.defined_forks ]
         assert_equal(activation_states, ['active',
                                          'active',
                                          'active',

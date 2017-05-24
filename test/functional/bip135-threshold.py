@@ -21,8 +21,7 @@ import tempfile
 This test exercises BIP135 fork activation thresholds.
 It uses a single node with custom forks.csv file.
 
-It is adapted from bip135-genvbvoting-forks on BU, which was
-derived from bip9-softforks.
+It is originally derived from bip9-softforks.
 '''
 
 
