@@ -2909,7 +2909,7 @@ UniValue bumpfee(const JSONRPCRequest& request)
     UniValue errors(UniValue::VARR);
     for (const std::string& err: feeBump.getErrors())
         errors.push_back(err);
-    result.push_back(errors);
+    result.push_back(Pair("errors", errors));
 
     return result;
 }
