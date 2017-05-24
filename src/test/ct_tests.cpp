@@ -12,6 +12,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "blind.h"
+
 BOOST_FIXTURE_TEST_SUITE(ct_tests, BasicTestingSetup)
 
 
@@ -190,9 +192,15 @@ BOOST_AUTO_TEST_CASE(ct_test)
 BOOST_AUTO_TEST_CASE(ct_parameters_test)
 {
     
-    for (size_t k = 0; k < 10000; ++k)
+    //for (size_t k = 0; k < 10000; ++k)
+    for (size_t k = 0; k < 100; ++k)
     {
-        CAmount nValue = GetRand(MAX_MONEY);
+        CAmount nValue = (GetRand((MAX_MONEY / (k+1))) / COIN) * COIN;
+        uint64_t min_value = 0;
+        int ct_exponent = 0;
+        int ct_bits = 32;
+        
+        SelectRangeProofParameters(nValue, min_value, ct_exponent, ct_bits);
     };
     
 }

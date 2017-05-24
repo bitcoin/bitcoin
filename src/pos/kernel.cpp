@@ -72,10 +72,11 @@ bool CheckStakeKernelHash(const CBlockIndex *pindexPrev,
     arith_uint256 bnTarget;
     bool fNegative;
     bool fOverflow;
+
     bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
     if (fNegative || fOverflow || bnTarget == 0)
         return error("%s: SetCompact failed.", __func__);
-    
+
     // Weighted target
     int64_t nValueIn = txPrev.vpout[prevout.n]->GetValue();
     arith_uint256 bnWeight = arith_uint256(nValueIn);

@@ -36,6 +36,10 @@ class ForkTest(ParticlTestFramework):
         #ro = nodes[0].extkeyimportmaster("abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb")
         #assert(ro['account_id'] == 'aaaZf2qnNr5T7PWRmqgmusuu5ACnBcX2ev')
         
+        # stop staking
+        ro = nodes[0].reservebalance(True, 10000000)
+        ro = nodes[3].reservebalance(True, 10000000)
+        
         ro = nodes[0].extkeyimportmaster("pact mammal barrel matrix local final lecture chunk wasp survey bid various book strong spread fall ozone daring like topple door fatigue limb olympic", "", "true")
         ro = nodes[0].getnewextaddress("lblExtTest")
         assert(ro == "pparszNetDqyrvZksLHJkwJGwJ1r9JCcEyLeHatLjerxRuD3qhdTdrdo2mE6e1ewfd25EtiwzsECooU5YwhAzRN63iFid6v5AQn9N5oE9wfBYehn")
@@ -49,23 +53,30 @@ class ForkTest(ParticlTestFramework):
         assert(ro['account_id'] == 'aaaZf2qnNr5T7PWRmqgmusuu5ACnBcX2ev')
         
         ro = nodes[3].getinfo()
+        print(json.dumps(ro, indent=4, default=self.jsonDecimal))
         assert(ro['total_balance'] == 100000)
         
         
+        # start staking
+        ro = nodes[0].reservebalance(False)
+        ro = nodes[3].reservebalance(False)
         
-        self.wait_for_height(nodes[0], 2, 1000)
+        nBlocksShorterChain = 2
+        nBlocksLongerChain = 5
+        
+        self.wait_for_height(nodes[0], nBlocksShorterChain, 1000)
         
         # stop group1 from staking
         ro = nodes[0].reservebalance(True, 10000000)
         
         
-        self.wait_for_height(nodes[3], 5, 2000)
+        self.wait_for_height(nodes[3], nBlocksLongerChain, 2000)
         
         # stop group2 from staking
         ro = nodes[3].reservebalance(True, 10000000)
         
         node0_chain = []
-        for k in range(1, 6):
+        for k in range(1, nBlocksLongerChain+1):
             try:
                 ro = nodes[0].getblockhash(k)
             except JSONRPCException as e:
@@ -89,7 +100,7 @@ class ForkTest(ParticlTestFramework):
             time.sleep(2)
             
             fPass = True
-            for k in range(1, 6):
+            for k in range(1, nBlocksLongerChain+1):
                 try:
                     ro = nodes[0].getblockhash(k)
                 except JSONRPCException as e:
@@ -104,7 +115,7 @@ class ForkTest(ParticlTestFramework):
         
         
         node0_chain = []
-        for k in range(1, 6):
+        for k in range(1, nBlocksLongerChain+1):
             try:
                 ro = nodes[0].getblockhash(k)
             except JSONRPCException as e:
@@ -120,8 +131,8 @@ class ForkTest(ParticlTestFramework):
         ro = nodes[3].getinfo()
         print("\n\nnodes[3].getinfo ", ro)
         
-        #assert(False)
-        #print(json.dumps(ro, indent=4))
+        assert(False)
+        #print(json.dumps(ro, indent=4, default=self.jsonDecimal))
         
 
 if __name__ == '__main__':

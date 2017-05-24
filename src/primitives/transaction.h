@@ -380,7 +380,12 @@ public:
         s << *(CScriptBase*)(&scriptPubKey);
         
         if (fAllowWitness)
+        {
             s << vRangeproof;
+        } else
+        {
+            WriteCompactSize(s, 0);
+        };
     };
     
     template<typename Stream>

@@ -18,6 +18,8 @@ extern int nMinerSleep;
 extern int64_t nLastCoinStakeSearchInterval;
 extern int64_t nLastCoinStakeSearchTime;
 
+double GetPoSKernelPS();
+
 bool CheckStake(CBlock *pblock);
 
 void ShutdownThreadStakeMiner();

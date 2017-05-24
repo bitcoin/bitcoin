@@ -41,7 +41,7 @@ struct CSpentIndexValue {
     uint256 txid;
     unsigned int inputIndex;
     int blockHeight;
-    CAmount satoshis;
+    CAmount satoshis; // -1 for blinded output
     int addressType;
     uint160 addressHash;
 

@@ -2187,7 +2187,6 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
         };
     };
 
-
     std::vector<std::pair<CAddressIndexKey, CAmount> > addressIndex;
     std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > addressUnspentIndex;
     std::vector<std::pair<CSpentIndexKey, CSpentIndexValue> > spentIndex;
@@ -2214,7 +2213,7 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
                     continue;
                 };
                 
-                CAmount nValue = out->IsType(OUTPUT_STANDARD) ? out->GetValue() : 0;
+                CAmount nValue = out->IsType(OUTPUT_STANDARD) ? out->GetValue() : -1;
                 
                 int scriptType = 0;
                 std::vector<unsigned char> hashBytes;
@@ -2727,7 +2726,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                             continue;
                         };
                         
-                        CAmount nValue = prevout->IsType(OUTPUT_STANDARD) ? prevout->GetValue() : 0;
+                        CAmount nValue = prevout->IsType(OUTPUT_STANDARD) ? prevout->GetValue() : -1;
                         
                         uint160 hashBytes; // inits to null
                         int addressType = 0;
@@ -3586,7 +3585,9 @@ bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams,
                 assert(pair.second);
                 const CBlock& block = *(pair.second);
                 for (unsigned int i = 0; i < block.vtx.size(); i++)
+                {
                     GetMainSignals().SyncTransaction(*block.vtx[i], pair.first, i);
+                }
             }
         }
         // When we reach this point, we switched to a new tip (stored in pindexNewTip).
@@ -3970,6 +3971,7 @@ bool CheckStakeUnique(const CBlock &block, bool fUpdate)
         return true;
     
     const static size_t MAX_STAKE_SEEN_SIZE = 1000;
+    
     if (listStakeSeen.size() > MAX_STAKE_SEEN_SIZE)
     {
         const COutPoint &oldest = listStakeSeen.front();

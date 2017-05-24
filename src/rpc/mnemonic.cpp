@@ -77,10 +77,9 @@ UniValue mnemonic(const JSONRPCRequest &request)
             mode = st;
         } else
         {
-            throw std::runtime_error("Unknown mode.");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown mode.");
         };
     };
-    
     
     
     UniValue result(UniValue::VOBJ);
@@ -105,10 +104,10 @@ UniValue mnemonic(const JSONRPCRequest &request)
             
             sstr >> nBytesEntropy;
             if (!sstr)
-                throw std::runtime_error("Invalid num bytes entropy");
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid num bytes entropy");
             
             if (nBytesEntropy < 16 || nBytesEntropy > 64)
-                throw std::runtime_error("Num bytes entropy out of range [16,64].");
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Num bytes entropy out of range [16,64].");
         };
         
         if (request.params.size() > 4)
@@ -116,11 +115,11 @@ UniValue mnemonic(const JSONRPCRequest &request)
             std::string s = request.params[4].get_str();
             
             if (!part::GetStringBool(s, fBip44))
-                throw std::runtime_error("Unknown argument for bip44 flag.");
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown argument for bip44 flag.");
         };
         
         if (request.params.size() > 5)
-            throw std::runtime_error("Too many parameters");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Too many parameters");
         
         std::vector<uint8_t> vEntropy;
         std::vector<uint8_t> vSeed;
@@ -134,10 +133,10 @@ UniValue mnemonic(const JSONRPCRequest &request)
             GetStrongRandBytes2(&vEntropy[0], nBytesEntropy);
             
             if (0 != MnemonicEncode(nLanguage, vEntropy, sMnemonic, sError))
-                throw std::runtime_error(strprintf("MnemonicEncode failed %s.", sError.c_str()).c_str());
+                throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("MnemonicEncode failed %s.", sError.c_str()).c_str());
             
             if (0 != MnemonicToSeed(sMnemonic, sPassword, vSeed))
-                throw std::runtime_error("MnemonicToSeed failed.");
+                throw JSONRPCError(RPC_INTERNAL_ERROR, "MnemonicToSeed failed.");
             
             ekMaster.SetMaster(&vSeed[0], vSeed.size());
             
@@ -163,8 +162,10 @@ UniValue mnemonic(const JSONRPCRequest &request)
         };
         
         // - in c++11 strings are definitely contiguous, and before they're very unlikely not to be
-        memory_cleanse(&sMnemonic[0], sMnemonic.size());
-        memory_cleanse(&sPassword[0], sPassword.size());
+        if (sMnemonic.size() > 0)
+            memory_cleanse(&sMnemonic[0], sMnemonic.size());
+        if (sPassword.size() > 0)
+            memory_cleanse(&sPassword[0], sPassword.size());
     } else
     if (mode == "decode")
     {
@@ -176,34 +177,34 @@ UniValue mnemonic(const JSONRPCRequest &request)
         if (request.params.size() > 1)
             sPassword = request.params[1].get_str();
         else
-            throw std::runtime_error("Must specify password.");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Must specify password.");
         
         if (request.params.size() > 2)
             sMnemonic = request.params[2].get_str();
         else
-            throw std::runtime_error("Must specify mnemonic.");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Must specify mnemonic.");
         
         if (request.params.size() > 3)
         {
             if (!part::GetStringBool(request.params[3].get_str(), fBip44))
-                throw std::runtime_error("Unknown argument for bip44 flag.");
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown argument for bip44 flag.");
         };
         
         if (request.params.size() > 4)
-            throw std::runtime_error("Too many parameters");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Too many parameters");
         
         if (sMnemonic.empty())
-            throw std::runtime_error("Mnemonic can't be blank.");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Mnemonic can't be blank.");
         
         std::vector<uint8_t> vEntropy;
         std::vector<uint8_t> vSeed;
         
         // - decode to determine validity of mnemonic
         if (0 != MnemonicDecode(-1, sMnemonic, vEntropy, sError))
-            throw std::runtime_error(strprintf("MnemonicDecode failed %s.", sError.c_str()).c_str());
+            throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("MnemonicDecode failed %s.", sError.c_str()).c_str());
         
         if (0 != MnemonicToSeed(sMnemonic, sPassword, vSeed))
-            throw std::runtime_error("MnemonicToSeed failed.");
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "MnemonicToSeed failed.");
         
         CExtKey ekMaster;
         CExtKey58 eKey58;
@@ -231,8 +232,10 @@ UniValue mnemonic(const JSONRPCRequest &request)
         };
         
         // - in c++11 strings are definitely contiguous, and before they're very unlikely not to be
-        memory_cleanse(&sMnemonic[0], sMnemonic.size());
-        memory_cleanse(&sPassword[0], sPassword.size());
+        if (sMnemonic.size() > 0)
+            memory_cleanse(&sMnemonic[0], sMnemonic.size());
+        if (sPassword.size() > 0)
+            memory_cleanse(&sPassword[0], sPassword.size());
     } else
     if (mode == "addchecksum")
     {
@@ -240,12 +243,12 @@ UniValue mnemonic(const JSONRPCRequest &request)
         std::string sMnemonicOut;
         std::string sError;
         if (request.params.size() != 2)
-            throw std::runtime_error("Must provide input mnemonic.");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Must provide input mnemonic.");
             
         sMnemonicIn = request.params[1].get_str();
         
         if (0 != MnemonicAddChecksum(-1, sMnemonicIn, sMnemonicOut, sError))
-            throw std::runtime_error(strprintf("MnemonicAddChecksum failed %s", sError.c_str()).c_str());
+            throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("MnemonicAddChecksum failed %s", sError.c_str()).c_str());
         result.push_back(Pair("result", sMnemonicOut));
     } else
     if (mode == "dumpwords")
@@ -275,11 +278,11 @@ UniValue mnemonic(const JSONRPCRequest &request)
         {
             std::string sName;
             if (0 != GetWord(k, planguages, nNamesLen, sName))
-                throw std::runtime_error("GetWord failed.");
+                throw JSONRPCError(RPC_INTERNAL_ERROR, "GetWord failed.");
             
             std::string sDesc(mnLanguagesDesc[k]);
             result.push_back(Pair(sName, sDesc));
-        }
+        };
     } else
     {
         throw std::runtime_error(help);
@@ -292,9 +295,6 @@ static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         okSafeMode
   //  --------------------- ------------------------  -----------------------  ----------
     { "mnemonic",           "mnemonic",               &mnemonic,               true,  {} },
-
-    /* Not shown in help */
-    //{ "hidden",             "setmocktime",            &setmocktime,            true  },
 };
 
 void RegisterMnemonicRPCCommands(CRPCTable &tableRPC)

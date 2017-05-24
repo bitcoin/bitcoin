@@ -36,6 +36,48 @@ int nMinerSleep = 500;
 int64_t nLastCoinStakeSearchInterval = 0; // per node
 int64_t nLastCoinStakeSearchTime = 0;
 
+extern double GetDifficulty(const CBlockIndex* blockindex = NULL);
+
+double GetPoSKernelPS()
+{
+    LOCK(cs_main);
+    
+    CBlockIndex *pindex = chainActive.Tip();
+    CBlockIndex *pindexPrevStake = NULL;
+    
+    int nBestHeight = pindex->nHeight;
+    
+    int nPoSInterval = 72; // blocks sampled
+    double dStakeKernelsTriedAvg = 0;
+    int nStakesHandled = 0, nStakesTime = 0;
+
+
+    while (pindex && nStakesHandled < nPoSInterval)
+    {
+        if (pindex->IsProofOfStake())
+        {
+            if (pindexPrevStake)
+            {
+                dStakeKernelsTriedAvg += GetDifficulty(pindexPrevStake) * 4294967296.0; // TODO: what is this constant?
+                nStakesTime += pindexPrevStake->nTime - pindex->nTime;
+                nStakesHandled++;
+            }
+            pindexPrevStake = pindex;
+        }
+        pindex = pindex->pprev;
+    }
+
+    double result = 0;
+
+    if (nStakesTime)
+        result = dStakeKernelsTriedAvg / nStakesTime;
+
+    //if (IsProtocolV2(nBestHeight))
+        result *= Params().GetStakeTimestampMask(nBestHeight) + 1;
+
+    return result;
+}
+
 bool CheckStake(CBlock *pblock)
 {
     uint256 proofHash, hashTarget;

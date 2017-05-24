@@ -21,7 +21,6 @@
 int64_t CChainParams::GetProofOfStakeReward(const CBlockIndex *pindexPrev, int64_t nFees) const
 {
     int64_t nSubsidy;
-    
 
     nSubsidy = (pindexPrev->nMoneySupply / COIN) * GetCoinYearReward() / (365 * 24 * (60 * 60 / nTargetSpacing));
     
@@ -393,7 +392,7 @@ public:
         assert(genesis.hashWitnessMerkleRoot == uint256S("0x59c9ac2d5430e0ce2cc4b9848e956fcad208322169f77529bc509960fb9f2e33"));
 
         // Note that of those with the service bits flag, most only support a subset of possible options
-        //vSeeds.push_back(CDNSSeedData("mainnet-seed.particl.io",  "mainnet-seed.particl.io"));
+        vSeeds.push_back(CDNSSeedData("mainnet-seed.particl.io",  "mainnet-seed.particl.io", true));
         vSeeds.push_back(CDNSSeedData("dnsseed-mainnet.particl.io",  "dnsseed-mainnet.particl.io", true));
         vSeeds.push_back(CDNSSeedData("mainnet.particl.io",  "mainnet.particl.io", true));
 
@@ -525,7 +524,7 @@ public:
         vFixedSeeds.clear();
         vSeeds.clear();
         // nodes with support for servicebits filtering should be at the top
-        //vSeeds.push_back(CDNSSeedData("testnet-seed.particl.io",  "testnet-seed.particl.io"));
+        vSeeds.push_back(CDNSSeedData("testnet-seed.particl.io",  "testnet-seed.particl.io", true));
         vSeeds.push_back(CDNSSeedData("dnsseed-testnet.particl.io",  "dnsseed-testnet.particl.io", true));
         
         base58Prefixes[PUBKEY_ADDRESS]     = std::vector<unsigned char>(1,118); // p

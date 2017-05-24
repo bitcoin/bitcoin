@@ -624,7 +624,7 @@ void CTxMemPool::addSpentIndex(const CTxMemPoolEntry &entry, const CCoinsViewCac
                 LogPrintf("ERROR: %s - expected script pointer.\n", __func__);
                 continue;
             };
-            CAmount nValue = prevout->IsType(OUTPUT_STANDARD) ? prevout->GetValue() : 0;
+            CAmount nValue = prevout->IsType(OUTPUT_STANDARD) ? prevout->GetValue() : -1;
             
             uint160 addressHash;
             int addressType = 0;

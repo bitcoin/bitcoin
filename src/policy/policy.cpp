@@ -201,7 +201,6 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
 {
     if (tx.IsCoinBase())
         return true; // Coinbases are skipped
-    
 
     for (unsigned int i = 0; i < tx.vin.size(); i++)
     {
@@ -215,9 +214,9 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
         if (tx.IsParticlVersion())
         {
             const CTxOutBase *prev = mapInputs.GetBaseOutputFor(tx.vin[i]);
-            if (!prev->IsStandardOutput())
+            
+            if (!prev || !prev->GetScriptPubKey(prevScript))
                 return false;
-            prevScript = prev->GetStandardOutput()->scriptPubKey;
         } else
         {
             const CTxOut &prev = mapInputs.GetOutputFor(tx.vin[i]);
@@ -226,6 +225,7 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
             prevScript = prev.scriptPubKey;
         };
 
+        
         if (prevScript.IsPayToScriptHash()) {
             std::vector <std::vector<unsigned char> > stack;
             // If the scriptPubKey is P2SH, we try to extract the redeemScript casually by converting the scriptSig
@@ -242,10 +242,9 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
         std::vector<unsigned char> witnessprogram;
 
         // Non-witness program must not be associated with any witness
-        if (!tx.IsParticlVersion() 
+        if (!tx.IsParticlVersion()
             && !prevScript.IsWitnessProgram(witnessversion, witnessprogram))
             return false;
-        
         
         // Check P2WSH standard limits
         if (witnessversion == 0 && witnessprogram.size() == 32) {

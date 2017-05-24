@@ -212,6 +212,7 @@ public:
     
     // TODO: range proof parameters
     
+    
     CKey sEphem;
     CPubKey pkTo;
     int n;
@@ -230,7 +231,6 @@ public:
         : txhash(txhash_), rtx(rtx_), i(i_), nDepth(nDepth_) {};
     
     uint256 txhash;
-    //const CTransactionRecord *rtx;
     MapRecords_t::const_iterator rtx;
     int i;
     int nDepth;
@@ -241,7 +241,6 @@ class CStoredTransaction
 {
 public:
     CTransactionRef tx;
-    //std::vector<uint8_t> vBlinds;
     std::vector<std::pair<int, uint256> > vBlinds;
     
     bool InsertBlind(int n, const uint8_t *p)
@@ -484,16 +483,18 @@ public:
     
     bool AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlockIndex* pIndex, int posInBlock, bool fUpdate);
     
+    CWalletTx *GetTempWalletTx(const uint256& hash);
+    
     const CWalletTx *GetWalletTx(const uint256& hash) const;
     CWalletTx *GetWalletTx(const uint256& hash);
     
     int InsertTempTxn(const uint256 &txid, const uint256 &blockHash, int nIndex) const;
     
-    int OwnStandardOut(const CTxOutStandard *pout, const CTxOutData *pdata, COutputRecord &rout);
+    int OwnStandardOut(const CTxOutStandard *pout, const CTxOutData *pdata, COutputRecord &rout, bool &fUpdated);
     int OwnBlindOut(const CTxOutCT *pout, const CStoredExtKey *pc, uint32_t &nLastChild,
-        COutputRecord &rout, CStoredTransaction &stx);
+        COutputRecord &rout, CStoredTransaction &stx, bool &fUpdated);
     int OwnAnonOut(const CTxOutRingCT *pout, const CStoredExtKey *pc, uint32_t &nLastChild,
-        COutputRecord &rout, CStoredTransaction &stx);
+        COutputRecord &rout, CStoredTransaction &stx, bool &fUpdated);
     
     bool AddToRecord(CTransactionRecord &rtxIn, const CTransaction &tx,
         const CBlockIndex *pIndex, int posInBlock, bool fFlushOnClose=true);
@@ -515,16 +516,16 @@ public:
     
     void SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator>);
     
-    
-    void AvailableCoinsForStaking(std::vector<COutput> &vCoins, int64_t nTime, int nHeight);
-    bool SelectCoinsForStaking(int64_t nTargetValue, int64_t nTime, int nHeight, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet);
+    uint64_t GetStakeWeight() const;
+    void AvailableCoinsForStaking(std::vector<COutput> &vCoins, int64_t nTime, int nHeight) const;
+    bool SelectCoinsForStaking(int64_t nTargetValue, int64_t nTime, int nHeight, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet) const;
     bool CreateCoinStake(unsigned int nBits, int64_t nTime, int nBlockHeight, int64_t nFees, CMutableTransaction &txNew, CKey &key);
     bool SignBlock(CBlockTemplate *pblocktemplate, int nHeight, int64_t nSearchTime);
     
     int64_t nLastCoinStakeSearchTime = 0;
     uint32_t nStealth, nFoundStealth; // for reporting, zero before use
     int64_t nReserveBalance;
-    int deepestTxnDepth = 0; // for stake mining
+    mutable int deepestTxnDepth = 0; // for stake mining
     
     std::set<CStealthAddress> stealthAddresses;
     

@@ -2785,6 +2785,43 @@ UniValue tallyvotes(const JSONRPCRequest &request)
     return result;
 };
 
+UniValue getstakinginfo(const JSONRPCRequest &request)
+{
+    if (request.fHelp || request.params.size() != 0)
+        throw std::runtime_error(
+            "getstakinginfo\n"
+            "Returns an object containing staking-related information.");
+    
+    CHDWallet *pwallet = GetHDWallet();
+    
+    UniValue obj(UniValue::VOBJ);
+    
+    uint64_t nWeight = pwallet->GetStakeWeight();
+
+    uint64_t nNetworkWeight = GetPoSKernelPS();
+    bool staking = nLastCoinStakeSearchTime && nWeight;
+    uint64_t nExpectedTime = staking ? (Params().GetTargetSpacing() * nNetworkWeight / nWeight) : 0;
+
+    obj.push_back(Pair("enabled", GetBoolArg("-staking", true)));
+    obj.push_back(Pair("staking", staking));
+    obj.push_back(Pair("errors", GetWarnings("statusbar")));
+
+    obj.push_back(Pair("currentblocksize", (uint64_t)nLastBlockSize));
+    obj.push_back(Pair("currentblocktx", (uint64_t)nLastBlockTx));
+    obj.push_back(Pair("pooledtx", (uint64_t)mempool.size()));
+
+    obj.push_back(Pair("difficulty", GetDifficulty()));
+    obj.push_back(Pair("search-interval", (int)nLastCoinStakeSearchInterval));
+
+    obj.push_back(Pair("weight", (uint64_t)nWeight));
+    obj.push_back(Pair("netstakeweight", (uint64_t)nNetworkWeight));
+
+    obj.push_back(Pair("expectedtime", nExpectedTime));
+    
+    return obj;
+};
+
+
 
 static int AddOutput(uint8_t nType, std::vector<CTempRecipient> &vecSend, const CTxDestination &address, CAmount nValue,
     bool fSubtractFeeFromAmount, std::string &sNarr, std::string &sError)
@@ -2833,6 +2870,8 @@ UniValue sendparttoblind(const JSONRPCRequest &request)
     CAmount nAmount = AmountFromValue(request.params[1]);
     if (nAmount <= 0)
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send");
+    if (nAmount > pwallet->GetBalance())
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds");
     
     // Wallet comments
     CWalletTx wtx;
@@ -2866,7 +2905,6 @@ UniValue sendparttoblind(const JSONRPCRequest &request)
         if (sNarr.length() < 1 || sNarr.length() > 24)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Narration can range from 1 to 24 characters.");
     };
-    
     
     CReserveKey reservekey(pwallet);
     std::vector<CTempRecipient> vecSend;
@@ -2949,6 +2987,8 @@ UniValue sendblindtopart(const JSONRPCRequest &request)
     CAmount nAmount = AmountFromValue(request.params[1]);
     if (nAmount <= 0)
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send");
+    if (nAmount > pwallet->GetBlindBalance())
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds");
     
     // Wallet comments
     CWalletTx wtx;
@@ -3050,6 +3090,8 @@ UniValue sendblindtoblind(const JSONRPCRequest &request)
     CAmount nAmount = AmountFromValue(request.params[1]);
     if (nAmount <= 0)
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send");
+    if (nAmount > pwallet->GetBlindBalance())
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds");
     
     // Wallet comments
     CWalletTx wtx;
@@ -3204,6 +3246,8 @@ static const CRPCCommand commands[] =
     { "wallet",             "setvote",                  &setvote,                  false,  {"proposal","option","height_start","height_end"} },
     { "wallet",             "votehistory",              &votehistory,              false,  {"current_only"} },
     { "wallet",             "tallyvotes",               &tallyvotes,               false,  {"proposal","height_start","height_end"} },
+    
+    { "wallet",             "getstakinginfo",           &getstakinginfo,           true,  {} },
     
     
     

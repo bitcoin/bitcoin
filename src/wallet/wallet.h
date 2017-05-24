@@ -212,8 +212,8 @@ public:
      */
     int nIndex;
     
-    bool fHeightCached;
-    int nCachedHeight;
+    mutable bool fHeightCached;
+    mutable int nCachedHeight;
 
     CMerkleTx()
     {
@@ -261,7 +261,7 @@ public:
      *  0  : in memory pool, waiting to be included in a block
      * >=1 : this many blocks deep in the main chain
      */
-    int GetDepthInMainChainCached();
+    int GetDepthInMainChainCached() const;
     int GetDepthInMainChain(const CBlockIndex* &pindexRet) const;
     int GetDepthInMainChain() const { const CBlockIndex *pindexRet; return GetDepthInMainChain(pindexRet); }
     bool IsInMainChain() const { const CBlockIndex *pindexRet; return GetDepthInMainChain(pindexRet) > 0; }

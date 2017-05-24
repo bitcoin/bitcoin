@@ -952,6 +952,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
     bool fUpdated = false;
     if (!fInsertedNew)
     {
+        
         // Merge
         if (!wtxIn.hashUnset() && wtxIn.hashBlock != wtx.hashBlock)
         {
@@ -963,6 +964,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
         //if (wtxIn.hashBlock.IsNull() && wtx.isAbandoned())
         if (!wtxIn.hashUnset() && wtx.isAbandoned())
         {
+            LogPrintf("%s: Unabandoning txn %s\n", __func__, hash.ToString());
             wtx.hashBlock = wtxIn.hashBlock;
             fUpdated = true;
         }
@@ -1104,8 +1106,7 @@ bool CWallet::AbandonTransaction(const uint256& hashTx)
         assert(currentconfirm <= 0);
         // if (currentconfirm < 0) {Tx and spends are already conflicted, no need to abandon}
         if (!wtx.isAbandoned()
-            && (wtx.IsCoinStake() || // always abandon coinstake txns
-                currentconfirm == 0)) {
+            && currentconfirm == 0) {
             // If the orig tx was not in block/mempool, none of its spends can be in mempool
             assert(!wtx.InMempool());
             wtx.nIndex = -1;
@@ -1128,6 +1129,8 @@ bool CWallet::AbandonTransaction(const uint256& hashTx)
                 if (mapWallet.count(txin.prevout.hash))
                     mapWallet[txin.prevout.hash].MarkDirty();
             }
+        } else
+        {
         }
     }
 
@@ -4071,7 +4074,7 @@ void CMerkleTx::SetMerkleBranch(const CBlockIndex* pindex, int posInBlock)
     nIndex = posInBlock;
 }
 
-int CMerkleTx::GetDepthInMainChainCached()
+int CMerkleTx::GetDepthInMainChainCached() const
 {
     // NOTE: Don't use where accuracy is critical
     if (hashUnset())
