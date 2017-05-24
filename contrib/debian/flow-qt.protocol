@@ -1,0 +1,11 @@
+[Protocol]
+exec=flow-qt '%u'
+protocol=flow
+input=none
+output=none
+helper=true
+listing=
+reading=false
+writing=false
+makedir=false
+deleting=false

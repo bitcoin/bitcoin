@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2016 The Bitcoin Core developers
+// Copyright (c) 2009-2016 The Flow Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_NET_PROCESSING_H
-#define BITCOIN_NET_PROCESSING_H
+#ifndef FLOW_NET_PROCESSING_H
+#define FLOW_NET_PROCESSING_H
 
 #include "net.h"
 #include "validationinterface.h"
@@ -60,4 +60,4 @@ bool ProcessMessages(CNode* pfrom, CConnman& connman, const std::atomic<bool>& i
  */
 bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interrupt);
 
-#endif // BITCOIN_NET_PROCESSING_H
+#endif // FLOW_NET_PROCESSING_H

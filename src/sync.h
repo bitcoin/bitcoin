@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2016 The Bitcoin Core developers
+// Copyright (c) 2009-2016 The Flow Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_SYNC_H
-#define BITCOIN_SYNC_H
+#ifndef FLOW_SYNC_H
+#define FLOW_SYNC_H
 
 #include "threadsafety.h"
 
@@ -287,4 +287,4 @@ public:
     }
 };
 
-#endif // BITCOIN_SYNC_H
+#endif // FLOW_SYNC_H

@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2014 The Bitcoin Core developers
+// Copyright (c) 2011-2014 The Flow Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_TRANSACTIONDESC_H
-#define BITCOIN_QT_TRANSACTIONDESC_H
+#ifndef FLOW_QT_TRANSACTIONDESC_H
+#define FLOW_QT_TRANSACTIONDESC_H
 
 #include <QObject>
 #include <QString>
@@ -28,4 +28,4 @@ private:
     static QString FormatTxStatus(const CWalletTx& wtx);
 };
 
-#endif // BITCOIN_QT_TRANSACTIONDESC_H
+#endif // FLOW_QT_TRANSACTIONDESC_H

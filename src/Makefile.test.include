@@ -1,12 +1,12 @@
-# Copyright (c) 2013-2016 The Bitcoin Core developers
+# Copyright (c) 2013-2016 The Flow Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-TESTS += test/test_bitcoin
-bin_PROGRAMS += test/test_bitcoin
-noinst_PROGRAMS += test/test_bitcoin_fuzzy
+TESTS += test/test_flow
+bin_PROGRAMS += test/test_flow
+noinst_PROGRAMS += test/test_flow_fuzzy
 TEST_SRCDIR = test
-TEST_BINARY=test/test_bitcoin$(EXEEXT)
+TEST_BINARY=test/test_flow$(EXEEXT)
 
 JSON_TEST_FILES = \
   test/data/script_tests.json \
@@ -21,8 +21,8 @@ RAW_TEST_FILES =
 
 GENERATED_TEST_FILES = $(JSON_TEST_FILES:.json=.json.h) $(RAW_TEST_FILES:.raw=.raw.h)
 
-# test_bitcoin binary #
-BITCOIN_TESTS =\
+# test_flow binary #
+FLOW_TESTS =\
   test/arith_uint256_tests.cpp \
   test/scriptnum10.h \
   test/addrman_tests.cpp \
@@ -71,9 +71,9 @@ BITCOIN_TESTS =\
   test/sigopcount_tests.cpp \
   test/skiplist_tests.cpp \
   test/streams_tests.cpp \
-  test/test_bitcoin.cpp \
-  test/test_bitcoin.h \
-  test/test_bitcoin_main.cpp \
+  test/test_flow.cpp \
+  test/test_flow.h \
+  test/test_flow_main.cpp \
   test/test_random.h \
   test/testutil.cpp \
   test/testutil.h \
@@ -87,7 +87,7 @@ BITCOIN_TESTS =\
   test/util_tests.cpp
 
 if ENABLE_WALLET
-BITCOIN_TESTS += \
+FLOW_TESTS += \
   wallet/test/wallet_test_fixture.cpp \
   wallet/test/wallet_test_fixture.h \
   wallet/test/accounting_tests.cpp \
@@ -95,60 +95,60 @@ BITCOIN_TESTS += \
   wallet/test/crypto_tests.cpp
 endif
 
-test_test_bitcoin_SOURCES = $(BITCOIN_TESTS) $(JSON_TEST_FILES) $(RAW_TEST_FILES)
-test_test_bitcoin_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -I$(builddir)/test/ $(TESTDEFS) $(EVENT_CFLAGS)
-test_test_bitcoin_LDADD = $(LIBBITCOIN_SERVER) $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) $(LIBBITCOIN_CONSENSUS) $(LIBBITCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBMEMENV) \
+test_test_flow_SOURCES = $(FLOW_TESTS) $(JSON_TEST_FILES) $(RAW_TEST_FILES)
+test_test_flow_CPPFLAGS = $(AM_CPPFLAGS) $(FLOW_INCLUDES) -I$(builddir)/test/ $(TESTDEFS) $(EVENT_CFLAGS)
+test_test_flow_LDADD = $(LIBFLOW_SERVER) $(LIBFLOW_CLI) $(LIBFLOW_COMMON) $(LIBFLOW_UTIL) $(LIBFLOW_CONSENSUS) $(LIBFLOW_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBMEMENV) \
   $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(LIBSECP256K1) $(EVENT_LIBS) $(EVENT_PTHREADS_LIBS)
-test_test_bitcoin_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_test_flow_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 if ENABLE_WALLET
-test_test_bitcoin_LDADD += $(LIBBITCOIN_WALLET)
+test_test_flow_LDADD += $(LIBFLOW_WALLET)
 endif
 
-test_test_bitcoin_LDADD += $(LIBBITCOIN_CONSENSUS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS)
-test_test_bitcoin_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) -static
+test_test_flow_LDADD += $(LIBFLOW_CONSENSUS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS)
+test_test_flow_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) -static
 
 if ENABLE_ZMQ
-test_test_bitcoin_LDADD += $(ZMQ_LIBS)
+test_test_flow_LDADD += $(ZMQ_LIBS)
 endif
 #
 
-# test_bitcoin_fuzzy binary #
-test_test_bitcoin_fuzzy_SOURCES = test/test_bitcoin_fuzzy.cpp
-test_test_bitcoin_fuzzy_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-test_test_bitcoin_fuzzy_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-test_test_bitcoin_fuzzy_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+# test_flow_fuzzy binary #
+test_test_flow_fuzzy_SOURCES = test/test_flow_fuzzy.cpp
+test_test_flow_fuzzy_CPPFLAGS = $(AM_CPPFLAGS) $(FLOW_INCLUDES)
+test_test_flow_fuzzy_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_test_flow_fuzzy_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
-test_test_bitcoin_fuzzy_LDADD = \
+test_test_flow_fuzzy_LDADD = \
   $(LIBUNIVALUE) \
-  $(LIBBITCOIN_SERVER) \
-  $(LIBBITCOIN_COMMON) \
-  $(LIBBITCOIN_UTIL) \
-  $(LIBBITCOIN_CONSENSUS) \
-  $(LIBBITCOIN_CRYPTO) \
+  $(LIBFLOW_SERVER) \
+  $(LIBFLOW_COMMON) \
+  $(LIBFLOW_UTIL) \
+  $(LIBFLOW_CONSENSUS) \
+  $(LIBFLOW_CRYPTO) \
   $(LIBSECP256K1)
 
-test_test_bitcoin_fuzzy_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
+test_test_flow_fuzzy_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 #
 
-nodist_test_test_bitcoin_SOURCES = $(GENERATED_TEST_FILES)
+nodist_test_test_flow_SOURCES = $(GENERATED_TEST_FILES)
 
-$(BITCOIN_TESTS): $(GENERATED_TEST_FILES)
+$(FLOW_TESTS): $(GENERATED_TEST_FILES)
 
-CLEAN_BITCOIN_TEST = test/*.gcda test/*.gcno $(GENERATED_TEST_FILES)
+CLEAN_FLOW_TEST = test/*.gcda test/*.gcno $(GENERATED_TEST_FILES)
 
-CLEANFILES += $(CLEAN_BITCOIN_TEST)
+CLEANFILES += $(CLEAN_FLOW_TEST)
 
-bitcoin_test: $(TEST_BINARY)
+flow_test: $(TEST_BINARY)
 
-bitcoin_test_check: $(TEST_BINARY) FORCE
+flow_test_check: $(TEST_BINARY) FORCE
 	$(MAKE) check-TESTS TESTS=$^
 
-bitcoin_test_clean : FORCE
-	rm -f $(CLEAN_BITCOIN_TEST) $(test_test_bitcoin_OBJECTS) $(TEST_BINARY)
+flow_test_clean : FORCE
+	rm -f $(CLEAN_FLOW_TEST) $(test_test_flow_OBJECTS) $(TEST_BINARY)
 
 check-local:
-	@echo "Running test/util/bitcoin-util-test.py..."
-	$(PYTHON) $(top_builddir)/test/util/bitcoin-util-test.py
+	@echo "Running test/util/flow-util-test.py..."
+	$(PYTHON) $(top_builddir)/test/util/flow-util-test.py
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C secp256k1 check
 if EMBEDDED_UNIVALUE
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C univalue check

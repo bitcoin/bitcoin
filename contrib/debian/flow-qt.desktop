@@ -1,0 +1,13 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=Flow Core
+Comment=Connect to the Flow P2P Network
+Comment[de]=Verbinde mit dem Flow peer-to-peer Netzwerk
+Comment[fr]=Flow, monnaie virtuelle cryptographique pair à pair
+Comment[tr]=Flow, eşten eşe kriptografik sanal para birimi
+Exec=flow-qt %u
+Terminal=false
+Type=Application
+Icon=flow128
+MimeType=x-scheme-handler/flow;
+Categories=Office;Finance;

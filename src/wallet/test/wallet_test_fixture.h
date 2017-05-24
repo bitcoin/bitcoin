@@ -1,11 +1,11 @@
-// Copyright (c) 2016 The Bitcoin Core developers
+// Copyright (c) 2016 The Flow Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_WALLET_TEST_FIXTURE_H
-#define BITCOIN_WALLET_TEST_FIXTURE_H
+#ifndef FLOW_WALLET_TEST_FIXTURE_H
+#define FLOW_WALLET_TEST_FIXTURE_H
 
-#include "test/test_bitcoin.h"
+#include "test/test_flow.h"
 
 /** Testing setup and teardown for wallet.
  */

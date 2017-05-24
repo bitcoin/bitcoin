@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2016 The Bitcoin Core developers
+// Copyright (c) 2009-2016 The Flow Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_TEST_RANDOM_H
-#define BITCOIN_TEST_RANDOM_H
+#ifndef FLOW_TEST_RANDOM_H
+#define FLOW_TEST_RANDOM_H
 
 #include "random.h"
 

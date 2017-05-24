@@ -1,13 +1,13 @@
 *.tar.gz
 
 *.exe
-src/bitcoin
-src/bitcoind
-src/bitcoin-cli
-src/bitcoin-tx
-src/test/test_bitcoin
-src/test/test_bitcoin_fuzzy
-src/qt/test/test_bitcoin-qt
+src/flow
+src/flowd
+src/flow-cli
+src/flow-tx
+src/test/test_flow
+src/test/test_flow_fuzzy
+src/qt/test/test_flow-qt
 
 # autoreconf
 Makefile.in
@@ -30,8 +30,8 @@ config.log
 config.status
 configure
 libtool
-src/config/bitcoin-config.h
-src/config/bitcoin-config.h.in
+src/config/flow-config.h
+src/config/flow-config.h.in
 src/config/stamp-h1
 share/setup.nsi
 share/qt/Info.plist
@@ -74,12 +74,12 @@ src/qt/test/moc*.cpp
 # Compilation and Qt preprocessor part
 *.qm
 Makefile
-bitcoin-qt
-Bitcoin-Qt.app
+flow-qt
+Flow-Qt.app
 
 # Unit-tests
 Makefile.test
-bitcoin-qt_test
+flow-qt_test
 src/test/buildenv.py
 
 # Resources cpp
@@ -93,7 +93,7 @@ build
 *.gcno
 *.gcda
 /*.info
-test_bitcoin.coverage/
+test_flow.coverage/
 total.coverage/
 coverage_percent.txt
 
@@ -109,5 +109,5 @@ test/cache/*
 
 /doc/doxygen/
 
-libbitcoinconsensus.pc
+libflowconsensus.pc
 contrib/devtools/split-debug.sh

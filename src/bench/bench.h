@@ -1,9 +1,9 @@
-// Copyright (c) 2015-2016 The Bitcoin Core developers
+// Copyright (c) 2015-2016 The Flow Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_BENCH_BENCH_H
-#define BITCOIN_BENCH_BENCH_H
+#ifndef FLOW_BENCH_BENCH_H
+#define FLOW_BENCH_BENCH_H
 
 #include <functional>
 #include <limits>
@@ -78,4 +78,4 @@ namespace benchmark {
 #define BENCHMARK(n) \
     benchmark::BenchRunner BOOST_PP_CAT(bench_, BOOST_PP_CAT(__LINE__, n))(BOOST_PP_STRINGIZE(n), n);
 
-#endif // BITCOIN_BENCH_BENCH_H
+#endif // FLOW_BENCH_BENCH_H

@@ -1,9 +1,9 @@
-// Copyright (c) 2016 The Bitcoin Core developers
+// Copyright (c) 2016 The Flow Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_THREADINTERRUPT_H
-#define BITCOIN_THREADINTERRUPT_H
+#ifndef FLOW_THREADINTERRUPT_H
+#define FLOW_THREADINTERRUPT_H
 
 #include <atomic>
 #include <chrono>
@@ -31,4 +31,4 @@ private:
     std::atomic<bool> flag;
 };
 
-#endif //BITCOIN_THREADINTERRUPT_H
+#endif //FLOW_THREADINTERRUPT_H

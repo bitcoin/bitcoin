@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2017 The Bitcoin Core developers
+# Copyright (c) 2014-2017 The Flow Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test mempool persistence.
 
-By default, bitcoind will dump mempool on shutdown and
+By default, flowd will dump mempool on shutdown and
 then reload it on startup. This can be overridden with
 the -persistmempool=0 command line option.
 
@@ -33,10 +33,10 @@ Test is as follows:
 import time
 
 from test_framework.mininode import wait_until
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FlowTestFramework
 from test_framework.util import *
 
-class MempoolPersistTest(BitcoinTestFramework):
+class MempoolPersistTest(FlowTestFramework):
 
     def __init__(self):
         super().__init__()
@@ -67,7 +67,7 @@ class MempoolPersistTest(BitcoinTestFramework):
         self.nodes = []
         self.nodes.append(start_node(0, self.options.tmpdir))
         self.nodes.append(start_node(1, self.options.tmpdir))
-        # Give bitcoind a second to reload the mempool
+        # Give flowd a second to reload the mempool
         time.sleep(1)
         assert wait_until(lambda: len(self.nodes[0].getrawmempool()) == 5)
         assert_equal(len(self.nodes[1].getrawmempool()), 0)
@@ -76,7 +76,7 @@ class MempoolPersistTest(BitcoinTestFramework):
         stop_nodes(self.nodes)
         self.nodes = []
         self.nodes.append(start_node(0, self.options.tmpdir, ["-persistmempool=0"]))
-        # Give bitcoind a second to reload the mempool
+        # Give flowd a second to reload the mempool
         time.sleep(1)
         assert_equal(len(self.nodes[0].getrawmempool()), 0)
 

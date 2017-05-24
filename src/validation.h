@@ -1,13 +1,13 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2016 The Bitcoin Core developers
+// Copyright (c) 2009-2016 The Flow Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_VALIDATION_H
-#define BITCOIN_VALIDATION_H
+#ifndef FLOW_VALIDATION_H
+#define FLOW_VALIDATION_H
 
 #if defined(HAVE_CONFIG_H)
-#include "config/bitcoin-config.h"
+#include "config/flow-config.h"
 #endif
 
 #include "amount.h"
@@ -521,4 +521,4 @@ void DumpMempool();
 /** Load the mempool from disk. */
 bool LoadMempool();
 
-#endif // BITCOIN_VALIDATION_H
+#endif // FLOW_VALIDATION_H

@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2016 The Bitcoin Core developers
+// Copyright (c) 2009-2016 The Flow Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_TXMEMPOOL_H
-#define BITCOIN_TXMEMPOOL_H
+#ifndef FLOW_TXMEMPOOL_H
+#define FLOW_TXMEMPOOL_H
 
 #include <memory>
 #include <set>
@@ -662,4 +662,4 @@ public:
     bool HaveCoins(const uint256 &txid) const;
 };
 
-#endif // BITCOIN_TXMEMPOOL_H
+#endif // FLOW_TXMEMPOOL_H

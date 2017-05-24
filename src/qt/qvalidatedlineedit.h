@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2011-2015 The Flow Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_QVALIDATEDLINEEDIT_H
-#define BITCOIN_QT_QVALIDATEDLINEEDIT_H
+#ifndef FLOW_QT_QVALIDATEDLINEEDIT_H
+#define FLOW_QT_QVALIDATEDLINEEDIT_H
 
 #include <QLineEdit>
 
@@ -40,4 +40,4 @@ private Q_SLOTS:
     void checkValidity();
 };
 
-#endif // BITCOIN_QT_QVALIDATEDLINEEDIT_H
+#endif // FLOW_QT_QVALIDATEDLINEEDIT_H

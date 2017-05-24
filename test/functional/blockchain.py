@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2016 The Bitcoin Core developers
+# Copyright (c) 2014-2016 The Flow Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test RPCs related to blockchainstate.
@@ -18,7 +18,7 @@ Tests correspond to code in rpc/blockchain.cpp.
 
 from decimal import Decimal
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FlowTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_jsonrpc,
@@ -27,7 +27,7 @@ from test_framework.util import (
 )
 
 
-class BlockchainTest(BitcoinTestFramework):
+class BlockchainTest(FlowTestFramework):
 
     def __init__(self):
         super().__init__()

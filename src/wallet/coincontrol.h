@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2016 The Bitcoin Core developers
+// Copyright (c) 2011-2016 The Flow Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_WALLET_COINCONTROL_H
-#define BITCOIN_WALLET_COINCONTROL_H
+#ifndef FLOW_WALLET_COINCONTROL_H
+#define FLOW_WALLET_COINCONTROL_H
 
 #include "policy/feerate.h"
 #include "primitives/transaction.h"
@@ -78,4 +78,4 @@ private:
     std::set<COutPoint> setSelected;
 };
 
-#endif // BITCOIN_WALLET_COINCONTROL_H
+#endif // FLOW_WALLET_COINCONTROL_H

@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2016 The Bitcoin Core developers
+// Copyright (c) 2009-2016 The Flow Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_PRIMITIVES_BLOCK_H
-#define BITCOIN_PRIMITIVES_BLOCK_H
+#ifndef FLOW_PRIMITIVES_BLOCK_H
+#define FLOW_PRIMITIVES_BLOCK_H
 
 #include "primitives/transaction.h"
 #include "serialize.h"
@@ -158,4 +158,4 @@ struct CBlockLocator
 /** Compute the consensus-critical block weight (see BIP 141). */
 int64_t GetBlockWeight(const CBlock& tx);
 
-#endif // BITCOIN_PRIMITIVES_BLOCK_H
+#endif // FLOW_PRIMITIVES_BLOCK_H

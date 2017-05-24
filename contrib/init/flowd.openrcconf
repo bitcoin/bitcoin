@@ -1,0 +1,33 @@
+# /etc/conf.d/flowd: config file for /etc/init.d/flowd
+
+# Config file location
+#FLOWD_CONFIGFILE="/etc/flow/flow.conf"
+
+# What directory to write pidfile to?  (created and owned by $FLOWD_USER)
+#FLOWD_PIDDIR="/var/run/flowd"
+
+# What filename to give the pidfile
+#FLOWD_PIDFILE="${FLOWD_PIDDIR}/flowd.pid"
+
+# Where to write flowd data (be mindful that the blockchain is large)
+#FLOWD_DATADIR="/var/lib/flowd"
+
+# User and group to own flowd process
+#FLOWD_USER="flow"
+#FLOWD_GROUP="flow"
+
+# Path to flowd executable
+#FLOWD_BIN="/usr/bin/flowd"
+
+# Nice value to run flowd under
+#FLOWD_NICE=0
+
+# Additional options (avoid -conf and -datadir, use flags above)
+FLOWD_OPTS="-disablewallet"
+
+# The timeout in seconds OpenRC will wait for flowd to terminate
+# after a SIGTERM has been raised.
+# Note that this will be mapped as argument to start-stop-daemon's
+# '--retry' option, which means you can specify a retry schedule
+# here. For more information see man 8 start-stop-daemon.
+FLOWD_SIGTERM_TIMEOUT=60

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2016 The Bitcoin Core developers
+# Copyright (c) 2014-2016 The Flow Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Helpful routines for regression testing."""
@@ -35,7 +35,7 @@ PORT_MIN = 11000
 # The number of ports to "reserve" for p2p and rpc, each
 PORT_RANGE = 5000
 
-BITCOIND_PROC_WAIT_TIMEOUT = 60
+FLOWD_PROC_WAIT_TIMEOUT = 60
 
 
 class PortSeed:
@@ -103,7 +103,7 @@ def rpc_port(n):
     return PORT_MIN + PORT_RANGE + n + (MAX_NODES * PortSeed.n) % (PORT_RANGE - 1 - MAX_NODES)
 
 def check_json_precision():
-    """Make sure json library being used does not lose precision converting BTC values"""
+    """Make sure json library being used does not lose precision converting FLW values"""
     n = Decimal("20000000.00000003")
     satoshis = int(json.loads(json.dumps(float(n)))*1.0e8)
     if satoshis != 2000000000000003:
@@ -175,14 +175,14 @@ def sync_mempools(rpc_connections, *, wait=1, timeout=60):
         timeout -= wait
     raise AssertionError("Mempool sync failed")
 
-bitcoind_processes = {}
+flowd_processes = {}
 
 def initialize_datadir(dirname, n):
     datadir = os.path.join(dirname, "node"+str(n))
     if not os.path.isdir(datadir):
         os.makedirs(datadir)
     rpc_u, rpc_p = rpc_auth_pair(n)
-    with open(os.path.join(datadir, "bitcoin.conf"), 'w', encoding='utf8') as f:
+    with open(os.path.join(datadir, "flow.conf"), 'w', encoding='utf8') as f:
         f.write("regtest=1\n")
         f.write("rpcuser=" + rpc_u + "\n")
         f.write("rpcpassword=" + rpc_p + "\n")
@@ -206,14 +206,14 @@ def rpc_url(i, rpchost=None):
             host = rpchost
     return "http://%s:%s@%s:%d" % (rpc_u, rpc_p, host, int(port))
 
-def wait_for_bitcoind_start(process, url, i):
+def wait_for_flowd_start(process, url, i):
     '''
-    Wait for bitcoind to start. This means that RPC is accessible and fully initialized.
-    Raise an exception if bitcoind exits during initialization.
+    Wait for flowd to start. This means that RPC is accessible and fully initialized.
+    Raise an exception if flowd exits during initialization.
     '''
     while True:
         if process.poll() is not None:
-            raise Exception('bitcoind exited with status %i during initialization' % process.returncode)
+            raise Exception('flowd exited with status %i during initialization' % process.returncode)
         try:
             rpc = get_rpc_proxy(url, i)
             blocks = rpc.getblockcount()
@@ -229,17 +229,17 @@ def wait_for_bitcoind_start(process, url, i):
 
 def start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=None, stderr=None):
     """
-    Start a bitcoind and return RPC connection to it
+    Start a flowd and return RPC connection to it
     """
     datadir = os.path.join(dirname, "node"+str(i))
     if binary is None:
-        binary = os.getenv("BITCOIND", "bitcoind")
+        binary = os.getenv("FLOWD", "flowd")
     args = [binary, "-datadir=" + datadir, "-server", "-keypool=1", "-discover=0", "-rest", "-logtimemicros", "-debug", "-debugexclude=libevent", "-debugexclude=leveldb", "-mocktime=" + str(get_mocktime()), "-uacomment=testnode%d" % i]
     if extra_args is not None: args.extend(extra_args)
-    bitcoind_processes[i] = subprocess.Popen(args, stderr=stderr)
-    logger.debug("initialize_chain: bitcoind started, waiting for RPC to come up")
+    flowd_processes[i] = subprocess.Popen(args, stderr=stderr)
+    logger.debug("initialize_chain: flowd started, waiting for RPC to come up")
     url = rpc_url(i, rpchost)
-    wait_for_bitcoind_start(bitcoind_processes[i], url, i)
+    wait_for_flowd_start(flowd_processes[i], url, i)
     logger.debug("initialize_chain: RPC successfully started")
     proxy = get_rpc_proxy(url, i, timeout=timewait)
 
@@ -254,7 +254,7 @@ def assert_start_raises_init_error(i, dirname, extra_args=None, expected_msg=Non
             node = start_node(i, dirname, extra_args, stderr=log_stderr)
             stop_node(node, i)
         except Exception as e:
-            assert 'bitcoind exited' in str(e) #node must have shutdown
+            assert 'flowd exited' in str(e) #node must have shutdown
             if expected_msg is not None:
                 log_stderr.seek(0)
                 stderr = log_stderr.read().decode('utf-8')
@@ -262,14 +262,14 @@ def assert_start_raises_init_error(i, dirname, extra_args=None, expected_msg=Non
                     raise AssertionError("Expected error \"" + expected_msg + "\" not found in:\n" + stderr)
         else:
             if expected_msg is None:
-                assert_msg = "bitcoind should have exited with an error"
+                assert_msg = "flowd should have exited with an error"
             else:
-                assert_msg = "bitcoind should have exited with expected error " + expected_msg
+                assert_msg = "flowd should have exited with expected error " + expected_msg
             raise AssertionError(assert_msg)
 
 def start_nodes(num_nodes, dirname, extra_args=None, rpchost=None, timewait=None, binary=None):
     """
-    Start multiple bitcoinds, return RPC connections to them
+    Start multiple flowds, return RPC connections to them
     """
     if extra_args is None: extra_args = [ None for _ in range(num_nodes) ]
     if binary is None: binary = [ None for _ in range(num_nodes) ]
@@ -297,14 +297,14 @@ def stop_node(node, i):
 =======
         logger.exception("Unable to stop node")
 >>>>>>> master:test/functional/test_framework/util.py
-    return_code = bitcoind_processes[i].wait(timeout=BITCOIND_PROC_WAIT_TIMEOUT)
+    return_code = flowd_processes[i].wait(timeout=FLOWD_PROC_WAIT_TIMEOUT)
     assert_equal(return_code, 0)
-    del bitcoind_processes[i]
+    del flowd_processes[i]
 
 def stop_nodes(nodes):
     for i, node in enumerate(nodes):
         stop_node(node, i)
-    assert not bitcoind_processes.values() # All connections must be gone now
+    assert not flowd_processes.values() # All connections must be gone now
 
 def set_node_times(nodes, t):
     for node in nodes:
@@ -405,10 +405,10 @@ def assert_fee_amount(fee, tx_size, fee_per_kB):
     """Assert the fee was in range"""
     target_fee = tx_size * fee_per_kB / 1000
     if fee < target_fee:
-        raise AssertionError("Fee of %s BTC too low! (Should be %s BTC)"%(str(fee), str(target_fee)))
+        raise AssertionError("Fee of %s FLW too low! (Should be %s FLW)"%(str(fee), str(target_fee)))
     # allow the wallet's estimation to be at most 2 bytes off
     if fee > (tx_size + 2) * fee_per_kB / 1000:
-        raise AssertionError("Fee of %s BTC too high! (Should be %s BTC)"%(str(fee), str(target_fee)))
+        raise AssertionError("Fee of %s FLW too high! (Should be %s FLW)"%(str(fee), str(target_fee)))
 
 def assert_equal(thing1, thing2, *args):
     if thing1 != thing2 or any(thing1 != arg for arg in args):
