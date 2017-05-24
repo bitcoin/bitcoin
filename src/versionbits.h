@@ -23,11 +23,11 @@ static const int BIT_WARNING_THRESHOLD = 50;
 
 // bip135: assigned numbers to these enum values
 enum ThresholdState {
-    THRESHOLD_DEFINED = 0,
-    THRESHOLD_STARTED = 1,
-    THRESHOLD_LOCKED_IN = 2,
-    THRESHOLD_ACTIVE = 3,
-    THRESHOLD_FAILED = 4,
+    THRESHOLD_DEFINED,
+    THRESHOLD_STARTED,
+    THRESHOLD_LOCKED_IN,
+    THRESHOLD_ACTIVE,
+    THRESHOLD_FAILED
 };
 
 // A map that gives the state for blocks.
