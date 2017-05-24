@@ -39,7 +39,88 @@ CService ip(uint32_t i)
 
 BOOST_FIXTURE_TEST_SUITE(DoS_tests, TestingSetup)
 
-BOOST_AUTO_TEST_CASE(DoS_banning)
+size_t GetNumberBanEntries()
+{
+    banmap_t banmap;
+    dosMan.GetBanned(banmap);
+    return banmap.size();
+}
+
+BOOST_AUTO_TEST_CASE(DoS_basic_ban_tests)
+{
+    // Ensure in-memory banlist is empty
+    dosMan.ClearBanned();
+    BOOST_CHECK(GetNumberBanEntries() == 0);
+
+    // Add a CNetAddr entry to banlist
+    dosMan.Ban(CNetAddr("192.168.1.1"), BanReasonManuallyAdded, DEFAULT_MISBEHAVING_BANTIME, false);
+    // Add a CSubNet entry to banlist
+    dosMan.Ban(CSubNet("10.168.1.0/28"), BanReasonNodeMisbehaving, DEFAULT_MISBEHAVING_BANTIME, false);
+    // Ensure we have exactly 2 entries in our banlist
+    BOOST_CHECK(GetNumberBanEntries() == 2);
+
+    // Verify IsBanned works for single IP directly specified
+    BOOST_CHECK(dosMan.IsBanned(CNetAddr("192.168.1.1")));
+    // Verify IsBanned works for single IP not banned
+    BOOST_CHECK(!dosMan.IsBanned(CNetAddr("192.168.1.2")));
+    // Verify IsBanned works for single IP banned as part of subnet
+    BOOST_CHECK(dosMan.IsBanned(CNetAddr("10.168.1.1")));
+    // Verify IsBanned works for single IP not banned as part of subnet
+    BOOST_CHECK(!dosMan.IsBanned(CNetAddr("10.168.1.19")));
+    // Verify IsBanned works for subnet exact match
+    BOOST_CHECK(dosMan.IsBanned(CSubNet("10.168.1.0/28")));
+    // Verify IsBanned works for subnet not banned
+    BOOST_CHECK(!dosMan.IsBanned(CSubNet("10.168.1.64/30")));
+
+    // REVISIT: Currently subnets require EXACT matches, so the encompassed case should return not banned.
+    BOOST_CHECK(!dosMan.IsBanned(CSubNet("10.168.1.4/30")));
+
+    // Verify unbanning an IP not banned doesn't change banlist contents
+    dosMan.Unban(CNetAddr("192.168.10.1"));
+    // Ensure we still have exactly 2 entries in our banlist
+    BOOST_CHECK(GetNumberBanEntries() == 2);
+
+    // Verify unbanning an IP that is within a subnet, but not directly banned, doesn't
+    // change our banlist conents
+    dosMan.Unban(CNetAddr("10.168.1.1"));
+    // Ensure we still have exactly 2 entries in our banlist
+    BOOST_CHECK(GetNumberBanEntries() == 2);
+    // Verify that the IP we just "unbanned" still shows as banned since it still falls within banned subnet
+    BOOST_CHECK(dosMan.IsBanned(CNetAddr("10.168.1.1")));
+
+    // Verify that unbanning an IP that is banned works
+    dosMan.Unban(CNetAddr("192.168.1.1"));
+    // Ensure we now have exactly 1 entry in our banlist
+    BOOST_CHECK(GetNumberBanEntries() == 1);
+
+    // Verify that unbanning a subnet that is inside a banned subnet doesn't change our banlist contents
+    dosMan.Unban(CSubNet("10.168.1.4/30"));
+    // Ensure we still have exactly 1 entry in our banlist
+    BOOST_CHECK(GetNumberBanEntries() == 1);
+
+    // Verify that unbanning a subnet that encompasses a banned subnet doesn't change our banlist conents
+    dosMan.Unban(CSubNet("10.168.1.0/24"));
+    // Ensure we still have exactly 1 entry in our banlist
+    BOOST_CHECK(GetNumberBanEntries() == 1);
+
+    // Verify that unbanning a subnet that exactly matches a banned subnet updates our banlist conents
+    dosMan.Unban(CSubNet("10.168.1.0/28"));
+    // Ensure we now have exactly 0 entries in our banlist
+    BOOST_CHECK(GetNumberBanEntries() == 0);
+
+    // Re-add ban entries so we can test ClearBanned()
+    dosMan.Ban(CNetAddr("192.168.1.1"), BanReasonManuallyAdded, DEFAULT_MISBEHAVING_BANTIME, false);
+    dosMan.Ban(CSubNet("10.168.1.0/28"), BanReasonNodeMisbehaving, DEFAULT_MISBEHAVING_BANTIME, false);
+    // Ensure we have exactly 2 entries in our banlist
+    BOOST_CHECK(GetNumberBanEntries() == 2);
+
+    // Clear the in-memory banlist
+    dosMan.ClearBanned();
+    // Ensure in-memory banlist is now empty
+    BOOST_CHECK(GetNumberBanEntries() == 0);
+}
+
+BOOST_AUTO_TEST_CASE(DoS_misbehaving_ban_tests)
 {
     dosMan.ClearBanned();
     CAddress addr1(ip(0xa0b0c001));
@@ -62,7 +143,7 @@ BOOST_AUTO_TEST_CASE(DoS_banning)
     BOOST_CHECK(dosMan.IsBanned(addr2));
 }
 
-BOOST_AUTO_TEST_CASE(DoS_banscore)
+BOOST_AUTO_TEST_CASE(DoS_non_default_banscore)
 {
     dosMan.ClearBanned();
     mapArgs["-banscore"] = "111"; // because 11 is my favorite number
@@ -81,7 +162,7 @@ BOOST_AUTO_TEST_CASE(DoS_banscore)
     mapArgs.erase("-banscore");
 }
 
-BOOST_AUTO_TEST_CASE(DoS_bantime)
+BOOST_AUTO_TEST_CASE(DoS_bantime_expiration)
 {
     dosMan.ClearBanned();
     int64_t nStartTime = GetTime();
@@ -95,11 +176,26 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
     SendMessages(&dummyNode);
     BOOST_CHECK(dosMan.IsBanned(addr));
 
+    // Verify that SweepBanned does not remove the entry
+    dosMan.SweepBanned();
+    // Ensure we still have exactly 1 entry in our banlist
+    BOOST_CHECK(GetNumberBanEntries() == 1);
+
     SetMockTime(nStartTime+60*60);
     BOOST_CHECK(dosMan.IsBanned(addr));
 
+    // Verify that SweepBanned still does not remove the entry
+    dosMan.SweepBanned();
+    // Ensure we still have exactly 1 entry in our banlist
+    BOOST_CHECK(GetNumberBanEntries() == 1);
+
     SetMockTime(nStartTime+60*60*24+1);
     BOOST_CHECK(!dosMan.IsBanned(addr));
+
+    // Verify that SweepBanned does remove the entry this time as it is expired
+    dosMan.SweepBanned();
+    // Ensure we now have exactly 0 entries in our banlist
+    BOOST_CHECK(GetNumberBanEntries() == 0);
 }
 
 CTransaction RandomOrphan()
