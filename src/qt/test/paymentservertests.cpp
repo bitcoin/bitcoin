@@ -142,7 +142,7 @@ void PaymentServerTests::paymentServerTests()
     byteArray = QByteArray((const char*)&data[0], data.size());
     r.paymentRequest.parse(byteArray);
     // Ensure the request is initialized, because network "main" is default, even for
-    // uninizialized payment requests and that will fail our test here.
+    // uninitialized payment requests and that will fail our test here.
     QVERIFY(r.paymentRequest.IsInitialized());
     QCOMPARE(PaymentServer::verifyNetwork(r.paymentRequest.getDetails()), false);
 

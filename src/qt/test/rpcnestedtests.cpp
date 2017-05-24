@@ -6,6 +6,7 @@
 
 #include "chainparams.h"
 #include "consensus/validation.h"
+#include "fs.h"
 #include "validation.h"
 #include "rpc/register.h"
 #include "rpc/server.h"
@@ -16,8 +17,6 @@
 
 #include <QDir>
 #include <QtGlobal>
-
-#include <boost/filesystem.hpp>
 
 static UniValue rpcNestedTest_rpc(const JSONRPCRequest& request)
 {
@@ -148,9 +147,13 @@ void RPCNestedTests::rpcNestedTests()
     QVERIFY_EXCEPTION_THROWN(RPCConsole::RPCExecuteCommandLine(result, "rpcNestedTest(abc,,)"), std::runtime_error); //don't tollerate empty arguments when using ,
 #endif
 
+    UnloadBlockIndex();
     delete pcoinsTip;
+    pcoinsTip = nullptr;
     delete pcoinsdbview;
+    pcoinsdbview = nullptr;
     delete pblocktree;
+    pblocktree = nullptr;
 
-    boost::filesystem::remove_all(boost::filesystem::path(path));
+    fs::remove_all(fs::path(path));
 }

@@ -1,5 +1,5 @@
 ---
-name: "bitcoin-linux-0.14"
+name: "bitcoin-linux-0.15"
 enable_cache: true
 suites:
 - "trusty"
@@ -132,6 +132,7 @@ script: |
   export PATH=${WRAP_DIR}:${PATH}
 
   # Create the release tarball using (arbitrarily) the first host
+  export GIT_DIR="$PWD/.git"
   ./autogen.sh
   CONFIG_SITE=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`/share/config.site ./configure --prefix=/
   make dist

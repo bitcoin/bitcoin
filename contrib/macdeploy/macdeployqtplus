@@ -302,7 +302,6 @@ def copyFramework(framework, path, verbose):
         if os.path.exists(fromContentsDir):
             toContentsDir = os.path.join(path, framework.destinationVersionContentsDirectory)
             shutil.copytree(fromContentsDir, toContentsDir, symlinks=True)
-            contentslinkfrom = os.path.join(path, framework.destinationContentsDirectory)
             if verbose >= 3:
                 print("Copied Contents:", fromContentsDir)
                 print(" to:", toContentsDir)
@@ -675,9 +674,8 @@ else:
 if verbose >= 2:
     print("+ Installing qt.conf +")
 
-f = open(os.path.join(applicationBundle.resourcesPath, "qt.conf"), "wb")
-f.write(qt_conf.encode())
-f.close()
+with open(os.path.join(applicationBundle.resourcesPath, "qt.conf"), "wb") as f:
+    f.write(qt_conf.encode())
 
 # ------------------------------------------------
 
