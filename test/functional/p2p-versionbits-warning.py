@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016 The Bitcoin Core developers
+# Copyright (c) 2016-2017 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test version bits warning system.
 
 Generate chains with block versions that appear to be signalling unknown
-soft-forks, and test that warning alerts are generated.
+forks, and test that warning alerts are generated.
 """
 
 from test_framework.mininode import *
@@ -107,11 +107,6 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         assert(WARN_UNKNOWN_RULES_MINED in self.nodes[0].getinfo()["errors"])
         assert(WARN_UNKNOWN_RULES_MINED in self.nodes[0].getmininginfo()["errors"])
         assert(WARN_UNKNOWN_RULES_MINED in self.nodes[0].getnetworkinfo()["warnings"])
-
-        # BIP135: removed obsolete check for error on activation of unknown bit
-
-        # Test framework expects the node to still be running...
-        #self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, self.extra_args)
 
 if __name__ == '__main__':
     VersionBitsWarningTest().main()
