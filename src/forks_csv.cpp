@@ -128,7 +128,7 @@ bool ReadForksCsv(string activeNetworkID, istream& csvInput, Consensus::Params& 
             if (network == activeNetworkID && ValidateOverallParams(network)) {
                 assert(bit >= 0 && bit < VERSIONBITS_NUM_BITS);
                 // update deployment params for current network
-                BIP9DeploymentInfo& vbinfo = VersionBitsDeploymentInfo[bit];
+                ForkDeploymentInfo& vbinfo = VersionBitsDeploymentInfo[bit];
 
                 // copy the data
                 if (name.length()) {

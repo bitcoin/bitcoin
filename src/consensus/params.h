@@ -57,9 +57,9 @@ enum DeploymentPos
 };
 
 /**
- * Struct for each individual consensus rule change using BIP9.
+ * Struct for each individual consensus rule change using BIP135.
  */
-struct BIP9Deployment {
+struct ForkDeployment {
     /** Bit position to select the particular bit in nVersion. */
     int bit;
     /** Start MedianTime for version bits miner confirmation. Can be a date in the past */
@@ -92,16 +92,11 @@ struct Params {
     /** Block height at which BIP66 becomes active */
     int BIP66Height;
     /**
-     * Minimum blocks including miner confirmation of the total of 2016 blocks in a retargeting period,
-     * (nPowTargetTimespan / nPowTargetSpacing) which is also used for BIP9 deployments.
-     * Examples: 1916 for 95%, 1512 for testchains.
-     */
-    /**
      * Deployment parameters for the 29 bits (0..28) defined by bip135
      */
     // bip135 begin
     // fully initialize array
-    BIP9Deployment vDeployments[MAX_VERSION_BITS_DEPLOYMENTS] = {
+    ForkDeployment vDeployments[MAX_VERSION_BITS_DEPLOYMENTS] = {
             { 0, 0LL, 0LL, 0, 0, 0, 0LL },  // deployment on bit 0
             { 1, 0LL, 0LL, 0, 0, 0, 0LL },  // deployment on bit 1
             { 2, 0LL, 0LL, 0, 0, 0, 0LL },  // deployment on bit 2

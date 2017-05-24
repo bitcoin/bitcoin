@@ -6,7 +6,7 @@
 #include "consensus/params.h"
 
 // bip135 begin fill out entire table
-struct BIP9DeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION_BITS_DEPLOYMENTS] = {
+struct ForkDeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION_BITS_DEPLOYMENTS] = {
     {
         /*.name =*/ (char *) "csv",
         /*.gbt_force =*/ true,

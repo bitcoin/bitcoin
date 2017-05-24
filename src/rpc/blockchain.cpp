@@ -1208,7 +1208,7 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
     for (int i = 0; i < Consensus::MAX_VERSION_BITS_DEPLOYMENTS; i++)
     {
         Consensus::DeploymentPos bit = static_cast<Consensus::DeploymentPos>(i);
-        const struct BIP9DeploymentInfo& vbinfo = VersionBitsDeploymentInfo[bit];
+        const struct ForkDeploymentInfo& vbinfo = VersionBitsDeploymentInfo[bit];
         if (isConfiguredDeployment(consensusParams, bit)) {
             bip9_softforks.push_back(Pair(vbinfo.name, BIP9SoftForkDesc(consensusParams, bit)));
             bip135_forks.push_back(Pair(vbinfo.name, BIP135ForkDesc(consensusParams, bit)));
