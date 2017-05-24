@@ -306,7 +306,7 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
             status.status = TransactionStatus::Confirmed;
         }
     }
-
+    status.needsUpdate = false;
 }
 
 bool TransactionRecord::statusUpdateNeeded()

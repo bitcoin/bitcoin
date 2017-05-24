@@ -64,6 +64,8 @@ public:
 
     //** Know when to update transaction for ix locks **/
     int cur_num_ix_locks;
+
+    bool needsUpdate;
 };
 
 /** UI model for a transaction. A core transaction can be represented by multiple UI transactions if it has
