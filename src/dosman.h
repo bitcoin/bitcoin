@@ -76,6 +76,9 @@ public:
 
     /** Increase a node's misbehavior score. */
     void Misbehaving(NodeId nodeid, int howmuch);
+
+    //! save banlist to disk
+    void DumpBanlist();
 };
 
 // actual definition should be in globals.cpp for ordered construction/destruction

@@ -280,3 +280,20 @@ void CDoSManager::Misbehaving(NodeId pnode, int howmuch)
     else
         LogPrintf("%s: %s (%d -> %d)\n", __func__, state->name, state->nMisbehavior - howmuch, state->nMisbehavior);
 }
+
+
+/**
+* Write in-memory banmap to disk
+*/
+void CDoSManager::DumpBanlist()
+{
+    int64_t nStart = GetTimeMillis();
+
+    CBanDB bandb;
+    banmap_t banmap;
+    GetBanned(banmap);
+    bandb.Write(banmap);
+
+    LogPrint(
+        "net", "Flushed %d banned node ips/subnets to banlist.dat  %dms\n", banmap.size(), GetTimeMillis() - nStart);
+}
