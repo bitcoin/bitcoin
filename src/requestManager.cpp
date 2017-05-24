@@ -112,7 +112,7 @@ void CRequestManager::cleanup(OdMap::iterator &itemIt)
 }
 
 // Get this object from somewhere, asynchronously.
-void CRequestManager::AskFor(const CInv &obj, CNode *from, int priority)
+void CRequestManager::AskFor(const CInv &obj, CNode *from, unsigned int priority)
 {
     // LogPrint("req", "ReqMgr: Ask for %s.\n", obj.ToString().c_str());
 
@@ -159,7 +159,7 @@ void CRequestManager::AskFor(const CInv &obj, CNode *from, int priority)
 }
 
 // Get these objects from somewhere, asynchronously.
-void CRequestManager::AskFor(const std::vector<CInv> &objArray, CNode *from, int priority)
+void CRequestManager::AskFor(const std::vector<CInv> &objArray, CNode *from, unsigned int priority)
 {
     unsigned int sz = objArray.size();
     for (unsigned int nInv = 0; nInv < sz; nInv++)

@@ -75,13 +75,14 @@ public:
     // char    requestCount[MAX_AVAIL_FROM];
     // CNode* availableFrom[MAX_AVAIL_FROM];
     ObjectSourceList availableFrom;
-    int priority;
+    unsigned int priority;
 
     CUnknownObj()
     {
         rateLimited = false;
         outstandingReqs = 0;
         lastRequestTime = 0;
+        priority = 0;
     }
 
     bool AddSource(CNode *from); // returns true if the source did not already exist
@@ -119,10 +120,10 @@ public:
     CRequestManager();
 
     // Get this object from somewhere, asynchronously.
-    void AskFor(const CInv &obj, CNode *from, int priority = 0);
+    void AskFor(const CInv &obj, CNode *from, unsigned int priority = 0);
 
     // Get these objects from somewhere, asynchronously.
-    void AskFor(const std::vector<CInv> &objArray, CNode *from, int priority = 0);
+    void AskFor(const std::vector<CInv> &objArray, CNode *from, unsigned int priority = 0);
 
     // Indicate that we got this object, from and bytes are optional (for node performance tracking)
     void Received(const CInv &obj, CNode *from = NULL, int bytes = 0);

@@ -13,7 +13,6 @@
 #include "consensus/validation.h"
 #include "leakybucket.h"
 #include "net.h"
-#include "requestManager.h"
 #include "script/script_error.h"
 #include "stat.h"
 #include "thinblock.h"
