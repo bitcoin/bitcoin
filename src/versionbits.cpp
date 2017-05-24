@@ -153,7 +153,8 @@ protected:
     int64_t EndTime(const Consensus::Params& params) const { return params.vDeployments[id].nTimeout; }
     int Period(const Consensus::Params& params) const { return params.nMinerConfirmationWindow; }
     int Threshold(const Consensus::Params& params) const {
-        if (params.vDeployments[id].bit == params.vDeployments[Consensus::DEPLOYMENT_SEGSIGNAL].bit &&
+        if (params.nRuleChangeActivationThreshold == 1916 && params.nMinerConfirmationWindow == 2016 &&
+            params.vDeployments[id].bit == params.vDeployments[Consensus::DEPLOYMENT_SEGSIGNAL].bit &&
             params.vDeployments[id].nStartTime == params.vDeployments[Consensus::DEPLOYMENT_SEGSIGNAL].nStartTime) {
             return 1612; // 80% threshold for SEGSIGNAL only
         }
