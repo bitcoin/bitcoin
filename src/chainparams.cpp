@@ -415,11 +415,7 @@ bool isConfiguredDeployment(const Consensus::Params& consensusParams, const int 
     if (strlen(vbinfo.name) == 0)
         return false;
 
-    if (vdeployments[bit].windowsize == 0 || vdeployments[bit].threshold == 0)
-    {
-        return false;
-    }
-    return true;
+    return (vdeployments[bit].windowsize != 0 && vdeployments[bit].threshold != 0);
 }
 
 /**
