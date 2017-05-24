@@ -336,13 +336,13 @@ bool AcceptToMemoryPoolWithTime(CTxMemPool& pool, CValidationState &state, const
 /** Convert CValidationState to a human-readable message for logging */
 std::string FormatStateMessage(const CValidationState &state);
 
-/** Get the BIP9 state for a given deployment at the current tip. */
+/** Get the BIP135 state for a given deployment at the current tip. */
 ThresholdState VersionBitsTipState(const Consensus::Params& params, Consensus::DeploymentPos pos);
 
-/** Get the numerical statistics for the BIP9 state for a given deployment at the current tip. */
+/** Get the numerical statistics for the BIP135 state for a given deployment at the current tip. */
 ForkStats VersionBitsTipStatistics(const Consensus::Params& params, Consensus::DeploymentPos pos);
 
-/** Get the block height at which the BIP9 deployment switched into the state for the block building on the current tip. */
+/** Get the block height at which the BIP135 deployment switched into the state for the block building on the current tip. */
 int VersionBitsTipStateSinceHeight(const Consensus::Params& params, Consensus::DeploymentPos pos);
 
 
