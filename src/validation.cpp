@@ -3951,7 +3951,11 @@ static const uint64_t MEMPOOL_DUMP_VERSION = 1;
 bool LoadMempool(void)
 {
     int64_t nExpiryTimeout = GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60;
+<<<<<<< HEAD
+    FILE* filestr = fopen((GetDataDir() / "mempool.dat").string().c_str(), "rb");
+=======
     FILE* filestr = fsbridge::fopen(GetDataDir() / "mempool.dat", "rb");
+>>>>>>> master
     CAutoFile file(filestr, SER_DISK, CLIENT_VERSION);
     if (file.IsNull()) {
         LogPrintf("Failed to open mempool file from disk. Continuing anyway.\n");
@@ -4031,7 +4035,11 @@ void DumpMempool(void)
     int64_t mid = GetTimeMicros();
 
     try {
+<<<<<<< HEAD
+        FILE* filestr = fopen((GetDataDir() / "mempool.dat.new").string().c_str(), "wb");
+=======
         FILE* filestr = fsbridge::fopen(GetDataDir() / "mempool.dat.new", "wb");
+>>>>>>> master
         if (!filestr) {
             return;
         }

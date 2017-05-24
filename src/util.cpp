@@ -197,8 +197,13 @@ void OpenDebugLog()
 
     assert(fileout == NULL);
     assert(vMsgsBeforeOpenLog);
+<<<<<<< HEAD
+    boost::filesystem::path pathDebug = GetDataDir() / "debug.log";
+    fileout = fopen(pathDebug.string().c_str(), "a");
+=======
     fs::path pathDebug = GetDataDir() / "debug.log";
     fileout = fsbridge::fopen(pathDebug, "a");
+>>>>>>> master
     if (fileout) {
         setbuf(fileout, NULL); // unbuffered
         // dump buffered messages from before we opened the log

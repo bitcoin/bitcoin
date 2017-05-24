@@ -1464,12 +1464,21 @@ void CWalletTx::GetAmounts(std::list<COutputEntry>& listReceived,
  * exist in the wallet will be updated.
  *
  * Returns pointer to the first block in the last contiguous range that was
+<<<<<<< HEAD
+ * successfully scanned.
+ *
+ */
+CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate)
+{
+    CBlockIndex* ret = nullptr;
+=======
  * successfully scanned or elided (elided if pIndexStart points at a block
  * before CWallet::nTimeFirstKey). Returns null if there is no such range, or
  * the range doesn't include chainActive.Tip().
  */
 CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate)
 {
+>>>>>>> master
     int64_t nNow = GetTime();
     const CChainParams& chainParams = Params();
 
@@ -1492,6 +1501,22 @@ CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool f
         {
             if (pindex->nHeight % 100 == 0 && dProgressTip - dProgressStart > 0.0)
                 ShowProgress(_("Rescanning..."), std::max(1, std::min(99, (int)((GuessVerificationProgress(chainParams.TxData(), pindex) - dProgressStart) / (dProgressTip - dProgressStart) * 100))));
+<<<<<<< HEAD
+
+            CBlock block;
+            if (ReadBlockFromDisk(block, pindex, Params().GetConsensus())) {
+                for (size_t posInBlock = 0; posInBlock < block.vtx.size(); ++posInBlock) {
+                    AddToWalletIfInvolvingMe(*block.vtx[posInBlock], pindex, posInBlock, fUpdate);
+                }
+                if (!ret) {
+                    ret = pindex;
+                }
+            } else {
+                ret = nullptr;
+            }
+            pindex = chainActive.Next(pindex);
+=======
+>>>>>>> master
             if (GetTime() >= nNow + 60) {
                 nNow = GetTime();
                 LogPrintf("Still rescanning. At block %d. Progress=%f\n", pindex->nHeight, GuessVerificationProgress(chainParams.TxData(), pindex));

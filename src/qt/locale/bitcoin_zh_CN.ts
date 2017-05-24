@@ -3241,6 +3241,10 @@
         <translation>钱包 %s 在外部的数据目录 %s</translation>
     </message>
     <message>
+        <source>Wallet debugging/testing options:</source>
+        <translation>钱包调试/测试选项：</translation>
+    </message>
+    <message>
         <source>Wallet options:</source>
         <translation>钱包选项:</translation>
     </message>

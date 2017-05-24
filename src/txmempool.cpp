@@ -866,7 +866,10 @@ void CTxMemPool::PrioritiseTransaction(const uint256& hash, const CAmount& nFeeD
             BOOST_FOREACH(txiter descendantIt, setDescendants) {
                 mapTx.modify(descendantIt, update_ancestor_state(0, nFeeDelta, 0, 0));
             }
+<<<<<<< HEAD
+=======
             ++nTransactionsUpdated;
+>>>>>>> master
         }
     }
     LogPrintf("PrioritiseTransaction: %s feerate += %s\n", hash.ToString(), FormatMoney(nFeeDelta));

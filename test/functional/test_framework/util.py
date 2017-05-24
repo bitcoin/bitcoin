@@ -292,7 +292,11 @@ def stop_node(node, i):
     try:
         node.stop()
     except http.client.CannotSendRequest as e:
+<<<<<<< HEAD:qa/rpc-tests/test_framework/util.py
+        print("WARN: Unable to stop node: " + repr(e))
+=======
         logger.exception("Unable to stop node")
+>>>>>>> master:test/functional/test_framework/util.py
     return_code = bitcoind_processes[i].wait(timeout=BITCOIND_PROC_WAIT_TIMEOUT)
     assert_equal(return_code, 0)
     del bitcoind_processes[i]
@@ -306,6 +310,8 @@ def set_node_times(nodes, t):
     for node in nodes:
         node.setmocktime(t)
 
+<<<<<<< HEAD:qa/rpc-tests/test_framework/util.py
+=======
 def disconnect_nodes(from_connection, node_num):
     for peer_id in [peer['id'] for peer in from_connection.getpeerinfo() if "testnode%d" % node_num in peer['subver']]:
         from_connection.disconnectnode(nodeid=peer_id)
@@ -317,6 +323,7 @@ def disconnect_nodes(from_connection, node_num):
     else:
         raise AssertionError("timed out waiting for disconnect")
 
+>>>>>>> master:test/functional/test_framework/util.py
 def connect_nodes(from_connection, node_num):
     ip_port = "127.0.0.1:"+str(p2p_port(node_num))
     from_connection.addnode(ip_port, "onetry")
