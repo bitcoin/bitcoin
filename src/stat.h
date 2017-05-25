@@ -79,7 +79,10 @@ protected:
     std::string name;
 
 public:
-    CStat() {}
+    CStat()
+    {
+        value = RecordType(); // = 0;
+    }
     CStat(const char *namep) : name(namep)
     {
         LOCK(cs_statMap);
@@ -182,7 +185,10 @@ protected:
     RecordType total;
 
 public:
-    CStatHistory() : CStat<DataType, RecordType>(), timer(stat_io_service) { Clear(); }
+    CStatHistory() : CStat<DataType, RecordType>(), op(STAT_OP_SUM | STAT_KEEP_COUNT), timer(stat_io_service)
+    {
+        Clear();
+    }
     CStatHistory(const char *name, unsigned int operation = STAT_OP_SUM)
         : CStat<DataType, RecordType>(name), op(operation), timer(stat_io_service)
     {
@@ -212,6 +218,7 @@ public:
     void Clear(void)
     {
         timerCount = 0;
+        sampleCount = 0;
         for (int i = 0; i < STATISTICS_NUM_RANGES; i++)
             loc[i] = 0;
         for (int i = 0; i < STATISTICS_NUM_RANGES; i++)
@@ -221,7 +228,7 @@ public:
             {
                 history[i][j] = RecordType();
             }
-        total = DataType();
+        total = RecordType();
         this->value = RecordType();
         Start();
     }
