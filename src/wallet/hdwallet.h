@@ -293,6 +293,8 @@ public:
         nReserveBalance = 0;
         
         pEKMaster = NULL;
+        
+        fUnlockForStakingOnly = false;
     };
     
     ~CHDWallet()
@@ -541,6 +543,8 @@ public:
     RtxOrdered_t rtxOrdered;
     
     std::vector<CVoteToken> vVoteTokens;
+    
+    bool fUnlockForStakingOnly; // temporary, non-optimal solution.
     
 };
 

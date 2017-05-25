@@ -63,7 +63,6 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason, const bool witnes
         reason = "version";
         return false;
     }
-    
 
     // Extremely large transactions with lots of inputs can cost the network
     // almost as much to process as they cost the sender in fees, because

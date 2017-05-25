@@ -424,8 +424,13 @@ class WalletParticlTest(ParticlTestFramework):
         assert(evkPartOut == evkPart)
         
         
+        ro = nodes[1].walletpassphrase("changedPass", 0, True)
         
-        #print(json.dumps(ro, indent=4))
+        ro = nodes[1].getwalletinfo()
+        assert(ro['encryptionstatus'] == "Unlocked, staking only")
+        assert(ro['unlocked_until'] == 0)
+        
+        #print(json.dumps(ro, indent=4, default=self.jsonDecimal))
         #assert(false)
         
 

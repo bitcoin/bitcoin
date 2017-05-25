@@ -57,6 +57,10 @@ void EnsureWalletIsUnlocked()
 {
     if (pwalletMain->IsLocked())
         throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the wallet passphrase with walletpassphrase first.");
+    
+    if (fParticlWallet
+        && ((CHDWallet*) pwalletMain)->fUnlockForStakingOnly)
+        throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Wallet is unlocked for staking only.");
 }
 
 void WalletTxToJSON(const CWalletTx& wtx, UniValue& entry)
@@ -2200,17 +2204,19 @@ UniValue walletpassphrase(const JSONRPCRequest& request)
     if (!EnsureWalletIsAvailable(request.fHelp))
         return NullUniValue;
 
-    if (pwalletMain->IsCrypted() && (request.fHelp || request.params.size() != 2))
+    if (pwalletMain->IsCrypted() && (request.fHelp || request.params.size() < 2 || request.params.size() > 3))
         throw runtime_error(
-            "walletpassphrase \"passphrase\" timeout\n"
+            "walletpassphrase <passphrase> <timeout> [stakingonly]\n"
             "\nStores the wallet decryption key in memory for 'timeout' seconds.\n"
             "This is needed prior to performing transactions related to private keys such as sending " + CURRENCY_UNIT + "\n"
             "\nArguments:\n"
             "1. \"passphrase\"     (string, required) The wallet passphrase\n"
             "2. timeout            (numeric, required) The time to keep the decryption key in seconds.\n"
+            "3. stakingonly        (bool, optional) If true, sending functions are disabled.\n"
             "\nNote:\n"
             "Issuing the walletpassphrase command while the wallet is already unlocked will set a new unlock\n"
             "time that overrides the old one.\n"
+            "If [stakingonly] is true and <timeout> is 0, the wallet will remain unlocked for staking until manually locked again.\n"
             "\nExamples:\n"
             "\nunlock the wallet for 60 seconds\n"
             + HelpExampleCli("walletpassphrase", "\"my pass phrase\" 60") +
@@ -2241,15 +2247,36 @@ UniValue walletpassphrase(const JSONRPCRequest& request)
     }
     else
         throw runtime_error(
-            "walletpassphrase <passphrase> <timeout>\n"
+            "walletpassphrase <passphrase> <timeout> [stakingonly]\n"
             "Stores the wallet decryption key in memory for <timeout> seconds.");
 
     pwalletMain->TopUpKeyPool();
 
+    bool fWalletUnlockStakingOnly = false;
+    if (request.params.size() > 2)
+        fWalletUnlockStakingOnly = request.params[2].get_bool();
+
+    if (fParticlWallet)
+    {
+        CHDWallet *phdw = (CHDWallet*) pwalletMain;
+        LOCK(phdw->cs_wallet);
+        phdw->fUnlockForStakingOnly = fWalletUnlockStakingOnly;
+    };
+
     int64_t nSleepTime = request.params[1].get_int64();
-    LOCK(cs_nWalletUnlockTime);
-    nWalletUnlockTime = GetTime() + nSleepTime;
-    RPCRunLater("lockwallet", boost::bind(LockWallet, pwalletMain), nSleepTime);
+    
+    // Only allow unlimited timeout (nSleepTime=0) on staking.
+    if (nSleepTime > 0 || !fWalletUnlockStakingOnly)
+    {
+        LOCK(cs_nWalletUnlockTime);
+        nWalletUnlockTime = GetTime() + nSleepTime;
+        RPCRunLater("lockwallet", boost::bind(LockWallet, pwalletMain), nSleepTime);
+    } else
+    {
+        LOCK(cs_nWalletUnlockTime);
+        RPCRunLaterErase("lockwallet");
+        nWalletUnlockTime = 0;
+    };
 
     return NullUniValue;
 }
@@ -2636,13 +2663,21 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
     
     if (fParticlWallet)
     {
-        obj.push_back(Pair("reserve",   ValueFromAmount(((CHDWallet*)pwalletMain)->nReserveBalance)));
+        CHDWallet *pwhd = (CHDWallet*)pwalletMain;
+        obj.push_back(Pair("reserve",   ValueFromAmount(pwhd->nReserveBalance)));
+        
+        obj.push_back(Pair("encryptionstatus", !pwhd->IsCrypted()
+        ? "Unencrypted" : pwhd->IsLocked() ? "Locked" : pwhd->fUnlockForStakingOnly ? "Unlocked, staking only" : "Unlocked"));
+        if (pwhd->IsCrypted())
+            obj.push_back(Pair("unlocked_until", nWalletUnlockTime));
+    } else
+    {
+        obj.push_back(Pair("encryptionstatus", !pwalletMain->IsCrypted()
+        ? "Unencrypted" : pwalletMain->IsLocked() ? "Locked" : "Unlocked"));
+        if (pwalletMain->IsCrypted())
+            obj.push_back(Pair("unlocked_until", nWalletUnlockTime));
     }
     
-    obj.push_back(Pair("encryptionstatus", !pwalletMain->IsCrypted()
-        ? "Unencrypted" : pwalletMain->IsLocked() ? "Locked" : "Unlocked"));
-    if (pwalletMain->IsCrypted())
-        obj.push_back(Pair("unlocked_until", nWalletUnlockTime));
     obj.push_back(Pair("paytxfee",      ValueFromAmount(payTxFee.GetFeePerK())));
     CKeyID masterKeyID = pwalletMain->GetHDChain().masterKeyID;
     if (!masterKeyID.IsNull())

@@ -16,7 +16,7 @@
 
 static const int SERIALIZE_TRANSACTION_NO_WITNESS = 0x40000000;
 
-static const int WITNESS_SCALE_FACTOR = 4;
+static const int WITNESS_SCALE_FACTOR = 2;
 
 static const uint8_t PARTICL_BLOCK_VERSION = 0xA0;
 static const uint8_t PARTICL_TXN_VERSION = 0xA0;

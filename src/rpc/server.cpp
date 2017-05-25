@@ -546,6 +546,11 @@ void RPCRunLater(const std::string& name, boost::function<void(void)> func, int6
     deadlineTimers.emplace(name, std::unique_ptr<RPCTimerBase>(timerInterface->NewTimer(func, nSeconds*1000)));
 }
 
+void RPCRunLaterErase(const std::string &name)
+{
+    deadlineTimers.erase(name);
+}
+
 int RPCSerializationFlags()
 {
     int flag = 0;

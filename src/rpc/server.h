@@ -131,6 +131,7 @@ void RPCUnsetTimerInterface(RPCTimerInterface *iface);
  * Overrides previous timer <name> (if any).
  */
 void RPCRunLater(const std::string& name, boost::function<void(void)> func, int64_t nSeconds);
+void RPCRunLaterErase(const std::string &name);
 
 typedef UniValue(*rpcfn_type)(const JSONRPCRequest& jsonRequest);
 

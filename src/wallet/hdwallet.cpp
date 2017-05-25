@@ -405,10 +405,15 @@ bool CHDWallet::Unlock(const SecureString &strWalletPassphrase)
     if (fDebug)
         LogPrint("hdwallet", "CHDWallet::Unlock()\n");
     
-    if (!IsLocked()
-        || !IsCrypted())
-        return false;
-
+    if (!IsCrypted())
+        return error("%s: Wallet is not encrypted.\n", __func__);
+    
+    if (!IsLocked())
+    {
+        LogPrintf("%s: Wallet is already unlocked.\n", __func__);
+        return true; // TODO: Reunlock?
+    };
+    
     CCrypter crypter;
     CKeyingMaterial vMasterKey;
 

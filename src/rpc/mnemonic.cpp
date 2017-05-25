@@ -211,7 +211,7 @@ UniValue mnemonic(const JSONRPCRequest &request)
         ekMaster.SetMaster(&vSeed[0], vSeed.size());
         
         if (!ekMaster.IsValid())
-            throw std::runtime_error("Invalid key.");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid key.");
         
         if (fBip44)
         {

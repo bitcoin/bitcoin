@@ -35,6 +35,9 @@ void EnsureWalletIsUnlocked(CHDWallet *pwallet)
 {
     if (pwallet->IsLocked())
         throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Wallet locked, please enter the wallet passphrase with walletpassphrase first.");
+    
+    if (pwallet->fUnlockForStakingOnly)
+        throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Wallet is unlocked for staking only.");
 }
 
 static CHDWallet *GetHDWallet()

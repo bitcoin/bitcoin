@@ -142,7 +142,7 @@ class BlindTest(ParticlTestFramework):
         
         
         #assert(False)
-        #print(json.dumps(ro, indent=4))
+        #print(json.dumps(ro, indent=4, default=self.jsonDecimal))
         
 
 if __name__ == '__main__':

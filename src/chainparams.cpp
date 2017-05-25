@@ -23,7 +23,7 @@ int64_t CChainParams::GetProofOfStakeReward(const CBlockIndex *pindexPrev, int64
     int64_t nSubsidy;
 
     nSubsidy = (pindexPrev->nMoneySupply / COIN) * GetCoinYearReward() / (365 * 24 * (60 * 60 / nTargetSpacing));
-    
+
     if (fDebug && GetBoolArg("-printcreation", false))
         LogPrintf("GetProofOfStakeReward(): create=%s\n", FormatMoney(nSubsidy).c_str());
 
@@ -281,6 +281,7 @@ static CBlock CreateGenesisBlockMainNet(uint32_t nTime, uint32_t nNonce, uint32_
     CMutableTransaction txNew;
     txNew.nVersion = PARTICL_TXN_VERSION;
     txNew.SetType(TXN_COINBASE);
+
     txNew.vin.resize(1);
     uint32_t nHeight = 0;  // bip34
     txNew.vin[0].scriptSig = CScript() << 486604799 << CScriptNum(4) << std::vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp)) << OP_RETURN << nHeight;
@@ -385,16 +386,17 @@ public:
         
         nPruneAfterHeight = 100000;
         
-        genesis = CreateGenesisBlockMainNet(1489325366, 34910, 0x1f00ffff);
+        genesis = CreateGenesisBlockMainNet(1495745851, 2587, 0x1f00ffff);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x0000be6337182d22a23622828c8e234933e0dd9f6b9b9faafbd449abbb1b0abf"));
+        assert(consensus.hashGenesisBlock == uint256S("0x0000e40cecb190493429d27e938e09da4b6195838934dc1868e653165153f78b"));
         assert(genesis.hashMerkleRoot == uint256S("0xfa78a0476dc886dd4c8ebba34176f5561945c1c27e113c1989e0aca7f8f6de8d"));
         assert(genesis.hashWitnessMerkleRoot == uint256S("0x59c9ac2d5430e0ce2cc4b9848e956fcad208322169f77529bc509960fb9f2e33"));
-
+        
         // Note that of those with the service bits flag, most only support a subset of possible options
         vSeeds.push_back(CDNSSeedData("mainnet-seed.particl.io",  "mainnet-seed.particl.io", true));
         vSeeds.push_back(CDNSSeedData("dnsseed-mainnet.particl.io",  "dnsseed-mainnet.particl.io", true));
         vSeeds.push_back(CDNSSeedData("mainnet.particl.io",  "mainnet.particl.io", true));
+        
 
         base58Prefixes[PUBKEY_ADDRESS]     = std::vector<unsigned char>(1,56); // P
         base58Prefixes[SCRIPT_ADDRESS]     = std::vector<unsigned char>(1,60);
@@ -514,10 +516,10 @@ public:
         
         nPruneAfterHeight = 1000;
 
-        genesis = CreateGenesisBlockTestNet(1492356413, 86023, 0x1f00ffff);
+        genesis = CreateGenesisBlockTestNet(1495745851, 13103, 0x1f00ffff);
         consensus.hashGenesisBlock = genesis.GetHash();
         
-        assert(consensus.hashGenesisBlock == uint256S("0x00007cd5202e8dab3c384b2390e27b89db47647cd973c0913004b9b368cd1162"));
+        assert(consensus.hashGenesisBlock == uint256S("0x0000aca899ea4ecf30771e5fb0297458f3be259ff3660f97138b8dfe4c9e73e5"));
         assert(genesis.hashMerkleRoot == uint256S("0x1617bd7f2f93d11d065cd655440cd05080b11e06b31e95a9b08bde0f4ad34d9b"));
         assert(genesis.hashWitnessMerkleRoot == uint256S("0x05b596687297bf123fd70bf6229678b1eac163e47793579900a72217d22616aa"));
 
