@@ -337,9 +337,8 @@ OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) 
     ui->labelWalletStatus->setText("(" + tr("out of sync") + ")");
     ui->labelTransactionsStatus->setText("(" + tr("out of sync") + ")");
 
-    // make sure BTC and MSC are always first in the list by adding them first
+    // make sure BTC is always first in the list by adding it first
     UpdatePropertyBalance(0,0,0);
-    UpdatePropertyBalance(1,0,0);
 
     updateOmni();
 
@@ -497,18 +496,17 @@ void OverviewPage::reinitOmni()
     updateOmni();
 }
 
+/** Loop through properties and update the overview - only properties with token balances will be displayed **/
 void OverviewPage::updateOmni()
 {
     LOCK(cs_tally);
 
-    // always show MSC
-    UpdatePropertyBalance(1,global_balance_money[1],global_balance_reserved[1]);
-    // loop properties and update overview
     unsigned int propertyId;
-    unsigned int maxPropIdMainEco = GetNextPropertyId(true);  // these allow us to end the for loop at the highest existing
-    unsigned int maxPropIdTestEco = GetNextPropertyId(false); // property ID rather than a fixed value like 100000 (optimization)
+    unsigned int maxPropIdMainEco = GetNextPropertyId(true);
+    unsigned int maxPropIdTestEco = GetNextPropertyId(false);
+
     // main eco
-    for (propertyId = 2; propertyId < maxPropIdMainEco; propertyId++) {
+    for (propertyId = 1; propertyId < maxPropIdMainEco; propertyId++) {
         if ((global_balance_money[propertyId] > 0) || (global_balance_reserved[propertyId] > 0)) {
             UpdatePropertyBalance(propertyId,global_balance_money[propertyId],global_balance_reserved[propertyId]);
         }
