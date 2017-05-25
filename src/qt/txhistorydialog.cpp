@@ -359,11 +359,11 @@ void TXHistoryDialog::UpdateConfirmations()
         // setup the appropriate icon
         QIcon ic = QIcon(":/icons/transaction_0");
         switch(confirmations) {
-            case 1: ic = QIcon(":/icons/clock_1"); break;
-            case 2: ic = QIcon(":/icons/clock_2"); break;
-            case 3: ic = QIcon(":/icons/clock_3"); break;
-            case 4: ic = QIcon(":/icons/clock_4"); break;
-            case 5: ic = QIcon(":/icons/clock_5"); break;
+            case 1: ic = QIcon(":/icons/transaction_1"); break;
+            case 2: ic = QIcon(":/icons/transaction_2"); break;
+            case 3: ic = QIcon(":/icons/transaction_3"); break;
+            case 4: ic = QIcon(":/icons/transaction_4"); break;
+            case 5: ic = QIcon(":/icons/transaction_5"); break;
         }
         if (confirmations > 5) ic = QIcon(":/icons/transaction_confirmed");
         if (!valid) ic = QIcon(":/icons/transaction_conflicted");
