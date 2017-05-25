@@ -400,7 +400,9 @@ if ENABLE_WALLET
 BITCOIN_QT_CPP += $(BITCOIN_QT_WALLET_CPP)
 endif
 
-RES_IMAGES =
+RES_IMAGES = \
+  qt/res/images/splash.png \
+  qt/res/images/splash_testnet.png
 
 RES_MOVIES = $(wildcard qt/res/movies/spinner-*.png)
 
