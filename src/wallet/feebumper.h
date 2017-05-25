@@ -24,7 +24,7 @@ enum class BumpFeeResult
 class CFeeBumper
 {
 public:
-    CFeeBumper(const CWallet *pWalletIn, const uint256 txidIn, int newConfirmTarget, bool specifiedConfirmTarget, CAmount totalFee, bool newTxReplaceable);
+    CFeeBumper(const CWallet *pWalletIn, const uint256 txidIn, int newConfirmTarget, bool ignoreGlobalPayTxFee, CAmount totalFee, bool newTxReplaceable);
     BumpFeeResult getResult() const { return currentResult; }
     const std::vector<std::string>& getErrors() const { return vErrors; }
     CAmount getOldFee() const { return nOldFee; }

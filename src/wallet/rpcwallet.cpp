@@ -2983,7 +2983,7 @@ UniValue bumpfee(const JSONRPCRequest& request)
     hash.SetHex(request.params[0].get_str());
 
     // optional parameters
-    bool specifiedConfirmTarget = false;
+    bool ignoreGlobalPayTxFee = false;
     int newConfirmTarget = nTxConfirmTarget;
     CAmount totalFee = 0;
     bool replaceable = true;
@@ -3000,7 +3000,10 @@ UniValue bumpfee(const JSONRPCRequest& request)
         if (options.exists("confTarget") && options.exists("totalFee")) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "confTarget and totalFee options should not both be set. Please provide either a confirmation target for fee estimation or an explicit total fee for the transaction.");
         } else if (options.exists("confTarget")) {
-            specifiedConfirmTarget = true;
+            // If the user has explicitly set a confTarget in this rpc call,
+            // then override the default logic that uses the global payTxFee
+            // instead of the confirmation target.
+            ignoreGlobalPayTxFee = true;
             newConfirmTarget = options["confTarget"].get_int();
             if (newConfirmTarget <= 0) { // upper-bound will be checked by estimatefee/smartfee
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid confTarget (cannot be <= 0)");
@@ -3020,7 +3023,7 @@ UniValue bumpfee(const JSONRPCRequest& request)
     LOCK2(cs_main, pwallet->cs_wallet);
     EnsureWalletIsUnlocked(pwallet);
 
-    CFeeBumper feeBump(pwallet, hash, newConfirmTarget, specifiedConfirmTarget, totalFee, replaceable);
+    CFeeBumper feeBump(pwallet, hash, newConfirmTarget, ignoreGlobalPayTxFee, totalFee, replaceable);
     BumpFeeResult res = feeBump.getResult();
     if (res != BumpFeeResult::OK)
     {
