@@ -25,6 +25,7 @@
 #include "pow.h"
 #include "primitives/block.h"
 #include "primitives/transaction.h"
+#include "requestManager.h"
 #include "script/script.h"
 #include "script/sigcache.h"
 #include "script/standard.h"
@@ -34,7 +35,6 @@
 #include "txmempool.h"
 #include "ui_interface.h"
 #include "undo.h"
-#include "unlimited.h" // This is here because many files include util, so hopefully it will minimize diffs
 #include "util.h"
 #include "utilmoneystr.h"
 #include "utilstrencodings.h"
