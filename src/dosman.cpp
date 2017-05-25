@@ -287,6 +287,10 @@ void CDoSManager::Misbehaving(NodeId pnode, int howmuch)
 */
 void CDoSManager::DumpBanlist()
 {
+    // If setBanned is not dirty, don't waste time on disk i/o
+    if (!BannedSetIsDirty())
+        return;
+
     int64_t nStart = GetTimeMillis();
 
     CBanDB bandb;
@@ -294,6 +298,7 @@ void CDoSManager::DumpBanlist()
     GetBanned(banmap);
     bandb.Write(banmap);
 
+    SetBannedSetDirty(false);
     LogPrint(
         "net", "Flushed %d banned node ips/subnets to banlist.dat  %dms\n", banmap.size(), GetTimeMillis() - nStart);
 }

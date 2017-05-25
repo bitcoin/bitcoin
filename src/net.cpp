@@ -1635,11 +1635,8 @@ void DumpData()
 {
     DumpAddresses();
 
-    if (dosMan.BannedSetIsDirty())
-    {
-        dosMan.DumpBanlist();
-        dosMan.SetBannedSetDirty(false);
-    }
+    // Request dos manager to write it's ban list to disk
+    dosMan.DumpBanlist();
 }
 
 void static ProcessOneShot()
