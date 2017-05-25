@@ -86,7 +86,7 @@ WalletView::WalletView(const PlatformStyle *platformStyle, QWidget *parent):
     sendCoinsPage = new QWidget(this);
     QVBoxLayout *svbox = new QVBoxLayout();
     sendCoinsTab = new SendCoinsDialog(platformStyle);
-    sendMPTab = new SendMPDialog();
+    sendMPTab = new SendMPDialog(platformStyle);
     sendTabHolder = new QTabWidget();
     sendTabHolder->addTab(sendMPTab,tr("Omni Layer"));
     sendTabHolder->addTab(sendCoinsTab,tr("Bitcoin"));
