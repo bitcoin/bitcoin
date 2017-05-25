@@ -23,5 +23,5 @@
 #BITCOIND_NICE=0
 
 # Additional options (avoid -conf and -datadir, use flags above)
-BITCOIND_OPTS="-disablewallet"
+#BITCOIND_OPTS=""
 
