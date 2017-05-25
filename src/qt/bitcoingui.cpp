@@ -317,12 +317,15 @@ void BitcoinGUI::createActions()
     receiveCoinsMenuAction->setStatusTip(receiveCoinsAction->statusTip());
     receiveCoinsMenuAction->setToolTip(receiveCoinsMenuAction->statusTip());
 
+
+    /** Exchange UI is disabled (incomplete) in this version
     exchangeAction = new QAction(platformStyle->SingleColorIcon(":/icons/exchange"), tr("&Exchange"), this);
     exchangeAction->setStatusTip(tr("Trade properties on the distributed exchange"));
     exchangeAction->setToolTip(exchangeAction->statusTip());
     exchangeAction->setCheckable(true);
     exchangeAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_5));
     tabGroup->addAction(exchangeAction);
+    **/
 
     historyAction = new QAction(platformStyle->SingleColorIcon(":/icons/history"), tr("&Transactions"), this);
     historyAction->setStatusTip(tr("Browse transaction history"));
@@ -356,8 +359,10 @@ void BitcoinGUI::createActions()
     connect(receiveCoinsMenuAction, SIGNAL(triggered()), this, SLOT(gotoReceiveCoinsPage()));
     connect(historyAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(historyAction, SIGNAL(triggered()), this, SLOT(gotoHistoryPage()));
+    /** Trading UI is disabled in this version
     connect(exchangeAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(exchangeAction, SIGNAL(triggered()), this, SLOT(gotoExchangePage()));
+    **/
     connect(toolboxAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(toolboxAction, SIGNAL(triggered()), this, SLOT(gotoToolboxPage()));
 #endif // ENABLE_WALLET
@@ -493,7 +498,7 @@ void BitcoinGUI::createToolBars()
         toolbar->addAction(balancesAction);
         toolbar->addAction(sendCoinsAction);
         toolbar->addAction(receiveCoinsAction);
-        toolbar->addAction(exchangeAction);
+        // toolbar->addAction(exchangeAction);
         toolbar->addAction(historyAction);
         toolbar->addAction(toolboxAction);
         overviewAction->setChecked(true);
@@ -593,7 +598,7 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
     sendCoinsMenuAction->setEnabled(enabled);
     receiveCoinsAction->setEnabled(enabled);
     receiveCoinsMenuAction->setEnabled(enabled);
-    exchangeAction->setEnabled(enabled);
+    // exchangeAction->setEnabled(enabled);
     historyAction->setEnabled(enabled);
     toolboxAction->setEnabled(enabled);
     encryptWalletAction->setEnabled(enabled);
