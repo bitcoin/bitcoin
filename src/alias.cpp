@@ -1940,20 +1940,30 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	GetAddress(newAlias, &newAddress, scriptPubKeyOrig);
 
 	vector<unsigned char> data;
-	if(mapAliasRegistrationData.count(vchAlias) > 0)
-		data = mapAliasRegistrationData[vchAlias];
-	else
-		newAlias.Serialize(data);
-
-    uint256 hash = Hash(data.begin(), data.end());
-    vector<unsigned char> vchHashAlias = vchFromValue(hash.GetHex());
+	vector<unsigned char> vchHashAlias;
+	uint256 hash;
+	bool bActivation = false;
 	if(mapAliasRegistrationData.count(vchAlias) > 0)
 	{
+		data = mapAliasRegistrationData[vchAlias];
+		mapAliasRegistrationData.erase(vchAlias);
+		hash = Hash(data.begin(), data.end());
+		vchHashAlias = vchFromValue(hash.GetHex());
 		if(!newAlias.UnserializeFromData(data, vchHashAlias))
 			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5508 - " + _("Cannot unserialize alias registration transaction"));
+		bActivation = true;
 	}
+	else
+	{
+		newAlias.Serialize(data);
+		hash = Hash(data.begin(), data.end());
+		vchHashAlias = vchFromValue(hash.GetHex());
+		mapAliasRegistrationData.insert(make_pair(vchAlias, data));	
+	}
+
+
 	CScript scriptPubKey;
-	if(mapAliasRegistrations.count(vchHashAlias) > 0)
+	if(bActivation)
 		scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_ACTIVATE) << vchAlias << newAlias.vchGUID << vchHashAlias << OP_2DROP << OP_2DROP;
 	else
 		scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_ACTIVATE) << vchHashAlias << OP_2DROP;
@@ -1977,7 +1987,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 		fYears = 1;
 	fee.nAmount *= powf(2.88,fYears);
 	CCoinControl coinControl;
-	if(mapAliasRegistrations.count(vchHashAlias) > 0)
+	if(bActivation && mapAliasRegistrations.count(vchHashAlias) > 0)
 	{
 		vecSend.push_back(fee);
 		// add the registration input to the alias activation transaction
@@ -1988,8 +1998,6 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	bool useOnlyAliasPaymentToFund = false;
 
 	SendMoneySyscoin(vchAlias, vchAliasPeg, "", recipient, recipientPayment, vecSend, wtx, &coinControl, useOnlyAliasPaymentToFund);
-	if(!mapAliasRegistrationData.count(vchAlias))
- 		mapAliasRegistrationData.insert(make_pair(vchAlias, data));	
 	UniValue res(UniValue::VARR);
 
 	UniValue signParams(UniValue::VARR);
@@ -2361,10 +2369,12 @@ UniValue syscoinsignrawtransaction(const UniValue& params, bool fHelp) {
 					if(!mapAliasRegistrations.count(vvch[0]))
 						mapAliasRegistrations.insert(make_pair(vvch[0], COutPoint(tx.GetHash(), i)));
 				}
-				else
+				else if(vvch.size() >= 3)
 				{
-					mapAliasRegistrations.erase(vvch[2]);
-					mapAliasRegistrationData.erase(vvch[0]);
+					if(mapAliasRegistrations.count(vvch[2]) > 0)
+						mapAliasRegistrations.erase(vvch[2]);
+					if(mapAliasRegistrationData.count(vvch[0]) > 0)
+						mapAliasRegistrationData.erase(vvch[0]);
 				}
 				break;
 			}
