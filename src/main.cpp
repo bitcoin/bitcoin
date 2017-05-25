@@ -4881,6 +4881,7 @@ void UnloadBlockIndex()
         LOCK(cs_orphancache);
         mapOrphanTransactions.clear();
         mapOrphanTransactionsByPrev.clear();
+        nBytesOrphanPool = 0;
     }
 
     LOCK(cs_main);
