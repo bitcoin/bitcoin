@@ -90,6 +90,17 @@ QModelIndex FindTx(const QAbstractItemModel& model, const uint256& txid)
     return {};
 }
 
+//! Request context menu (call method that is public in qt5, but protected in qt4).
+void RequestContextMenu(QWidget* widget)
+{
+    class Qt4Hack : public QWidget
+    {
+    public:
+        using QWidget::customContextMenuRequested;
+    };
+    static_cast<Qt4Hack*>(widget)->customContextMenuRequested({});
+}
+
 //! Invoke bumpfee on txid and check results.
 void BumpFee(TransactionView& view, const uint256& txid, bool expectDisabled, std::string expectError, bool cancel)
 {
@@ -102,7 +113,7 @@ void BumpFee(TransactionView& view, const uint256& txid, bool expectDisabled, st
     QAction* action = view.findChild<QAction*>("bumpFeeAction");
     table->selectionModel()->select(index, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
     action->setEnabled(expectDisabled);
-    table->customContextMenuRequested({});
+    RequestContextMenu(table);
     QCOMPARE(action->isEnabled(), !expectDisabled);
 
     action->setEnabled(true);
