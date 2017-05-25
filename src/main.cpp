@@ -814,6 +814,9 @@ bool AddOrphanTx(const CTransaction &tx, NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(c
 {
     AssertLockHeld(cs_orphancache);
 
+    if (mapOrphanTransactions.empty())
+        nBytesOrphanPool = 0;
+
     uint256 hash = tx.GetHash();
     if (mapOrphanTransactions.count(hash))
         return false;
