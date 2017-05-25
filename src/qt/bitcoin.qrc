@@ -63,6 +63,7 @@
         <file alias="omni_meta_partcancelled">res/icons/meta_partcancelled.png</file>
         <file alias="omni_meta_partfilled">res/icons/meta_partfilled.png</file>
         <file alias="omni_meta_pending">res/icons/meta_pending.png</file>
+        <file alias="omni_hourglass">res/icons/omni_hourglass.png</file>
     </qresource>
     <qresource prefix="/images">
         <file alias="splash">res/images/splash.png</file>

@@ -308,6 +308,7 @@ RES_ICONS = \
   qt/res/icons/omni_inout.png \
   qt/res/icons/omni_invalid.png \
   qt/res/icons/omni_out.png \
+  qt/res/icons/omni_hourglass.png \
   qt/res/icons/open.png \
   qt/res/icons/overview.png \
   qt/res/icons/quit.png \
