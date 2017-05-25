@@ -79,6 +79,8 @@ public:
 
     //! save banlist to disk
     void DumpBanlist();
+    //! load banlist from disk
+    void LoadBanlist();
 };
 
 // actual definition should be in globals.cpp for ordered construction/destruction

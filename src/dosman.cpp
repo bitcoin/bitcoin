@@ -302,3 +302,27 @@ void CDoSManager::DumpBanlist()
     LogPrint(
         "net", "Flushed %d banned node ips/subnets to banlist.dat  %dms\n", banmap.size(), GetTimeMillis() - nStart);
 }
+
+/**
+* Read banmap from disk into memory
+*/
+void CDoSManager::LoadBanlist()
+{
+    uiInterface.InitMessage(_("Loading banlist..."));
+
+    // Load addresses from banlist.dat
+    int64_t nStart = GetTimeMillis();
+    CBanDB bandb;
+    banmap_t banmap;
+    if (bandb.Read(banmap))
+    {
+        SetBanned(banmap); // thread safe setter
+        SetBannedSetDirty(false); // no need to write down, just read data
+        SweepBanned(); // sweep out expired entries
+
+        LogPrint("net", "Loaded %d banned node ips/subnets from banlist.dat  %dms\n", banmap.size(),
+            GetTimeMillis() - nStart);
+    }
+    else
+        LogPrintf("Invalid or missing banlist.dat; recreating\n");
+}

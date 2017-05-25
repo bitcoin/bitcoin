@@ -11,7 +11,6 @@
 #include "net.h"
 
 #include "addrman.h"
-#include "bandb.h"
 #include "chainparams.h"
 #include "clientversion.h"
 #include "connmgr.h"
@@ -2290,22 +2289,8 @@ void StartNode(boost::thread_group &threadGroup, CScheduler &scheduler)
         }
     }
 
-    uiInterface.InitMessage(_("Loading banlist..."));
-    // Load addresses from banlist.dat
-    nStart = GetTimeMillis();
-    CBanDB bandb;
-    banmap_t banmap;
-    if (bandb.Read(banmap))
-    {
-        dosMan.SetBanned(banmap); // thread save setter
-        dosMan.SetBannedSetDirty(false); // no need to write down, just read data
-        dosMan.SweepBanned(); // sweep out unused entries
-
-        LogPrint("net", "Loaded %d banned node ips/subnets from banlist.dat  %dms\n", banmap.size(),
-            GetTimeMillis() - nStart);
-    }
-    else
-        LogPrintf("Invalid or missing banlist.dat; recreating\n");
+    // ask dos manager to load banlist from disk (or recreate if missing/corrupt)
+    dosMan.LoadBanlist();
 
     fAddressesInitialized = true;
 
