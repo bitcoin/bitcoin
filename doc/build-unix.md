@@ -69,7 +69,7 @@ Build requirements:
 
 Options when installing required Boost library files:
 
-1. On at least Ubuntu 14.04+ and Debian 7+ there are generic names for the
+1. On at least Ubuntu 14.04+ ( > kernel 3.13 )  and Debian 7+( > kernel v3.2.41)  there are generic names for the
 individual boost development packages, so the following can be used to only
 install necessary parts of boost:
 
@@ -144,6 +144,26 @@ To build with Qt 5 (recommended) you need the following:
 libqrencode (optional) can be installed with:
 
     sudo dnf install qrencode-devel
+
+Dependency Build Instructions: Arch Linux
+-------------------------------------
+Build requirements:
+
+sudo pacman -S gcc-c++ libtool make autoconf automake openssl-devel libevent-devel boost-devel libdb4-devel libdb4-cxx-devel zeromq binutils m4 make pkg-config miniupnpc colorcore
+
+opcional libs:
+
+sudo pacman -S armory armory-bin armory-git armory-goatpig-git bitpaint electrum-server-git insight-bitcore insight-bitcore-git 
+
+the LIBS above work together with ( bitcoin-daemon )
+Note: necessary Enable repository Community ( AUR ) 
+
+install necessary parts of boost:
+
+sudo pacman -S boost-libs python python2 bzip2 icu openmpi zlib
+
+To build with Qt 5: 
+sudo pacman -S libevent miniupnpc protobuf qrencode qt5-base zeromq git qt5-base qt5-tools 
 
 Notes
 -----
