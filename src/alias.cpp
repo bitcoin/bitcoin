@@ -900,7 +900,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		if(!vchData.empty())
 		{
 			CAmount fee = GetDataFee(tx.vout[nDataOut].scriptPubKey,  (op == OP_ALIAS_ACTIVATE)? theAlias.vchAliasPeg:dbAlias.vchAliasPeg, nHeight);	
-			// if this is an alias update get expire time and figure out if alias update pays enough fees for updating expiry
+			// if this is an alias payload get expire time and figure out if alias payload pays enough fees for expiry
 			if(!theAlias.IsNull())
 			{
 				int nHeightTmp = nHeight;

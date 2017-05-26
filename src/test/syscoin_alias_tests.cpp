@@ -1076,6 +1076,8 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	AliasNew("node1", "aliasexpire0", "password", "somedata");
 	AliasNew("node2", "aliasexpire1", "password", "somedata");
 	string aliasexpirenode2address = AliasNew("node2", "aliasexpirednode2", "password", "somedata");
+	printf("Sleeping 5 seconds between the creation of aliases for this test...\n");
+	MilliSleep(5000);	
 	string offerguid = OfferNew("node1", "aliasexpire0", "category", "title", "100", "0.01", "description", "USD");
 	OfferAddWhitelist("node1", offerguid, "aliasexpirednode2", "5");
 	string certguid = CertNew("node1", "aliasexpire", "certtitle", "privdata", "pubdata", "Yes");
@@ -1088,10 +1090,12 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	string certgoodguid = CertNew("node1", "aliasexpire2", "certtitle", "privdata", "pubdata");
 	ExpireAlias("aliasexpirednode2");
 	GenerateBlocks(5, "node2");
-
+	
 	AliasNew("node1", "aliasexpire", "passwordnew", "pubdata", "privdata");
 	AliasNew("node1", "aliasexpire0", "passwordnew", "pubdata", "privdata");
 	AliasNew("node2", "aliasexpire1", "passwordnew", "pubdata", "privdata");
+	// should already exist and not be expired
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasexpire2 \"\" \"\"", runtime_error);
 	CKey privKey;
 	privKey.MakeNewKey(true);
 	CPubKey pubKey = privKey.GetPubKey();
