@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE (generate_big_aliasdata)
 	BOOST_CHECK_EQUAL(EncryptMessage(vchPubKey, gooddata, strCipherGoodPrivData), true);
 
 	AliasNew("node1", "jag1", "password", gooddata, gooddata);
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg jag2  \"\" " + gooddata + " " + HexStr(vchFromString(strCipherBadPrivData))));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg jag2 \"\" " + gooddata + " " + HexStr(vchFromString(strCipherBadPrivData))));
 	GenerateBlocks(5);
 	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg jag2 \"\" \"\""), runtime_error);	
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg jag2 \"\" " + baddata + " " + HexStr(vchFromString(strCipherGoodPrivData))));
