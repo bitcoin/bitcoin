@@ -1076,12 +1076,13 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	AliasNew("node1", "aliasexpire0", "password", "somedata");
 	AliasNew("node2", "aliasexpire1", "password", "somedata");
 	string aliasexpirenode2address = AliasNew("node2", "aliasexpirednode2", "password", "somedata");
-	printf("Sleeping 5 seconds between the creation of aliases for this test...\n");
-	MilliSleep(5000);	
 	string offerguid = OfferNew("node1", "aliasexpire0", "category", "title", "100", "0.01", "description", "USD");
 	OfferAddWhitelist("node1", offerguid, "aliasexpirednode2", "5");
 	string certguid = CertNew("node1", "aliasexpire", "certtitle", "privdata", "pubdata", "Yes");
 	StopNode("node3");
+	printf("Sleeping 5 seconds between the creation of aliases for this test...\n");
+	MilliSleep(5000);	
+	GenerateBlocks(10);	
 	AliasNew("node1", "aliasexpire2", "password", "pubdata", "privdata");
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress aliasexpirednode2 300"), runtime_error);
 	GenerateBlocks(10);	
