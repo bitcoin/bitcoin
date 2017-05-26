@@ -1262,7 +1262,7 @@ bool CAliasDB::ScanNames(const std::vector<unsigned char>& vchAliasPage, const s
 					continue;
 				}
 				const string &name = stringFromVch(vchMyAlias);
-				if (!strSearchTermLower.empty() && name.find(strSearchTermLower) != string::npos)
+				if (!strSearchTermLower.empty() && name.find(strSearchTermLower) == string::npos)
 				{
 					pcursor->Next();
 					continue;

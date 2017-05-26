@@ -345,7 +345,7 @@ bool COfferDB::ScanOffers(const std::vector<unsigned char>& vchOfferPage, const 
 					string description = stringFromVch(txPos.sDescription);
 					boost::algorithm::to_lower(title);
 					boost::algorithm::to_lower(description);
-					if (strSearchTerm != offer && alias.find(strSearchTermLower) != string::npos && title.find(strSearchTermLower) != string::npos && description.find(strSearchTermLower) != string::npos)
+					if (strSearchTerm != offer && alias.find(strSearchTermLower) == string::npos && title.find(strSearchTermLower) == string::npos && description.find(strSearchTermLower) == string::npos)
 					{
 						pcursor->Next();
 						continue;

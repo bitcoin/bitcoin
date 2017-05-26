@@ -321,7 +321,7 @@ bool CCertDB::ScanCerts(const std::vector<unsigned char>& vchCertPage, const str
 						const string &myalias = stringFromVch(txPos.vchAlias);
 						string title = stringFromVch(txPos.vchTitle);
 						boost::algorithm::to_lower(title);
-						if (strSearchTerm != cert && myalias.find(strSearchTermLower) != string::npos && title.find(strSearchTermLower) != string::npos)
+						if (strSearchTerm != cert && myalias.find(strSearchTermLower) == string::npos && title.find(strSearchTermLower) == string::npos)
 						{
 							pcursor->Next();
 							continue;
