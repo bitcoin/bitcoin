@@ -10,6 +10,8 @@
 #include "clientmodel.h"
 #include "walletmodel.h"
 
+#include "platformstyle.h"
+
 #include "omnicore/createpayload.h"
 #include "omnicore/errors.h"
 #include "omnicore/omnicore.h"
@@ -45,18 +47,25 @@ using std::string;
 
 using namespace mastercore;
 
-SendMPDialog::SendMPDialog(QWidget *parent) :
+SendMPDialog::SendMPDialog(const PlatformStyle *platformStyle, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SendMPDialog),
     clientModel(0),
-    walletModel(0)
+    walletModel(0),
+    platformStyle(platformStyle)
 {
     ui->setupUi(this);
 
-#ifdef Q_OS_MAC // Icons on push buttons are very uncommon on Mac
-    ui->clearButton->setIcon(QIcon());
-    ui->sendButton->setIcon(QIcon());
-#endif
+    // Use platformStyle instead of ifdef Q_OS_MAC to hide icons on Mac
+    if (!platformStyle->getImagesOnButtons()) {
+        ui->clearButton->setIcon(QIcon());
+        ui->sendButton->setIcon(QIcon());
+    } else {
+        // Use platformStyle to color the icons to match the rest of the UI
+        ui->clearButton->setIcon(platformStyle->SingleColorIcon(":/icons/remove"));
+        ui->sendButton->setIcon(platformStyle->SingleColorIcon(":/icons/send"));
+    }
+
 #if QT_VERSION >= 0x040700 // populate placeholder text
     ui->sendToLineEdit->setPlaceholderText("Enter an Omni Layer address (e.g. 1oMn1LaYeRADDreSShef77z6A5S4P)");
     ui->amountLineEdit->setPlaceholderText("Enter Amount");

@@ -308,6 +308,7 @@ RES_ICONS = \
   qt/res/icons/omni_inout.png \
   qt/res/icons/omni_invalid.png \
   qt/res/icons/omni_out.png \
+  qt/res/icons/omni_hourglass.png \
   qt/res/icons/open.png \
   qt/res/icons/overview.png \
   qt/res/icons/quit.png \
@@ -399,7 +400,9 @@ if ENABLE_WALLET
 BITCOIN_QT_CPP += $(BITCOIN_QT_WALLET_CPP)
 endif
 
-RES_IMAGES =
+RES_IMAGES = \
+  qt/res/images/splash.png \
+  qt/res/images/splash_testnet.png
 
 RES_MOVIES = $(wildcard qt/res/movies/spinner-*.png)
 

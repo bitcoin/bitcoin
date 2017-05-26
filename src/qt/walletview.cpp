@@ -86,14 +86,16 @@ WalletView::WalletView(const PlatformStyle *platformStyle, QWidget *parent):
     sendCoinsPage = new QWidget(this);
     QVBoxLayout *svbox = new QVBoxLayout();
     sendCoinsTab = new SendCoinsDialog(platformStyle);
-    sendMPTab = new SendMPDialog();
+    sendMPTab = new SendMPDialog(platformStyle);
     sendTabHolder = new QTabWidget();
     sendTabHolder->addTab(sendMPTab,tr("Omni Layer"));
     sendTabHolder->addTab(sendCoinsTab,tr("Bitcoin"));
     svbox->addWidget(sendTabHolder);
     sendCoinsPage->setLayout(svbox);
 
-    // exchange page
+    /**
+     * exchange page is disabled in this version
+     *
     exchangePage = new QWidget(this);
     QVBoxLayout *exvbox = new QVBoxLayout();
     metaDExTab = new MetaDExDialog();
@@ -106,6 +108,7 @@ WalletView::WalletView(const PlatformStyle *platformStyle, QWidget *parent):
     exTabHolder->addTab(cancelTab,tr("Cancel Orders"));
     exvbox->addWidget(exTabHolder);
     exchangePage->setLayout(exvbox);
+    **/
 
     // toolbox page
     toolboxPage = new QWidget(this);
@@ -125,7 +128,7 @@ WalletView::WalletView(const PlatformStyle *platformStyle, QWidget *parent):
     addWidget(transactionsPage);
     addWidget(receiveCoinsPage);
     addWidget(sendCoinsPage);
-    addWidget(exchangePage);
+    // addWidget(exchangePage);
     addWidget(toolboxPage);
 
     // Clicking on a transaction on the overview pre-selects the transaction on the transaction history page
@@ -175,16 +178,15 @@ void WalletView::setClientModel(ClientModel *clientModel)
     balancesPage->setClientModel(clientModel);
     sendMPTab->setClientModel(clientModel);
     mpTXTab->setClientModel(clientModel);
-    cancelTab->setClientModel(clientModel);
-    tradeHistoryTab->setClientModel(clientModel);
-    metaDExTab->setClientModel(clientModel);
+    // cancelTab->setClientModel(clientModel);
+    // tradeHistoryTab->setClientModel(clientModel);
+    // metaDExTab->setClientModel(clientModel);
 }
 
 void WalletView::setWalletModel(WalletModel *walletModel)
 {
     this->walletModel = walletModel;
 
-    // Put transaction list in tabs
     transactionView->setModel(walletModel);
     overviewPage->setWalletModel(walletModel);
     receiveCoinsPage->setModel(walletModel);
@@ -193,10 +195,10 @@ void WalletView::setWalletModel(WalletModel *walletModel)
     sendCoinsTab->setModel(walletModel);
     sendMPTab->setWalletModel(walletModel);
     balancesPage->setWalletModel(walletModel);
-    metaDExTab->setWalletModel(walletModel);
     mpTXTab->setWalletModel(walletModel);
-    tradeHistoryTab->setWalletModel(walletModel);
-    cancelTab->setWalletModel(walletModel);
+    // metaDExTab->setWalletModel(walletModel);
+    // tradeHistoryTab->setWalletModel(walletModel);
+    // cancelTab->setWalletModel(walletModel);
 
     if (walletModel)
     {
