@@ -34,10 +34,9 @@ BOOST_AUTO_TEST_CASE (generate_big_aliasdata)
 	CPubKey pubKey = privKey.GetPubKey();
 	vector<unsigned char> vchPubKey(pubKey.begin(), pubKey.end());
 	BOOST_CHECK_EQUAL(EncryptMessage(vchPubKey, baddata, strCipherBadPrivData), true);		
-	BOOST_CHECK_EQUAL(EncryptMessage(vchPubKey, gooddata, strCipherGoodPrivData), true);	
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg jag1 \"\" " + gooddata + " " + HexStr(vchFromString(strCipherGoodPrivData))));
-	GenerateBlocks(5);
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg jag1 \"\" \"\""));
+	BOOST_CHECK_EQUAL(EncryptMessage(vchPubKey, gooddata, strCipherGoodPrivData), true);
+
+	AliasNew("node1", "jag1", gooddata, gooddata);
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg jag2  \"\" " + gooddata + " " + HexStr(vchFromString(strCipherBadPrivData))));
 	GenerateBlocks(5);
 	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg jag2 \"\" \"\""), runtime_error);	
