@@ -184,12 +184,7 @@ bool CEscrowDB::ScanEscrows(const std::vector<unsigned char>& vchEscrow, const s
         boost::this_thread::interruption_point();
         try {
 			if (pcursor->GetKey(key) && key.first == "escrowi") {
-            	const vector<unsigned char> &vchMyEscrow = key.second;
-				if(!vchEscrow.empty() && vchMyEscrow != vchEscrow && strRegexp.empty())
-				{
-					pcursor->Next();
-					continue;              
-				}                    
+            	const vector<unsigned char> &vchMyEscrow = key.second;                   
 				pcursor->GetValue(vtxPos);
 				if (vtxPos.empty()){
 					pcursor->Next();
@@ -229,8 +224,6 @@ bool CEscrowDB::ScanEscrows(const std::vector<unsigned char>& vchEscrow, const s
 					continue;
 				}
                 escrowScan.push_back(make_pair(txPos, vtxPos.front()));
-				if(!vchEscrow.empty() && vchMyEscrow == vchEscrow && strRegexp.empty())
-					break;  
             }
             if (escrowScan.size() >= nMax)
                 break;

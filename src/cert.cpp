@@ -246,11 +246,6 @@ bool CCertDB::ScanCerts(const std::vector<unsigned char>& vchCert, const string 
         try {
 			if (pcursor->GetKey(key) && key.first == "certi") {
             	const vector<unsigned char> &vchMyCert = key.second;
-				if(!vchCert.empty() && vchMyCert != vchCert && strRegexp.empty())
-				{
-					pcursor->Next();
-					continue;              
-				}
 				pcursor->GetValue(vtxPos);
 				if (vtxPos.empty()){
 					pcursor->Next();
@@ -327,8 +322,6 @@ bool CCertDB::ScanCerts(const std::vector<unsigned char>& vchCert, const string 
 					}
 				}
 				certScan.push_back(txPos);
-				if(!vchCert.empty() && vchMyCert == vchCert && strRegexp.empty())
-					break;
 			}
 			if (certScan.size() >= nMax)
 				break;
