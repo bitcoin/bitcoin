@@ -322,6 +322,7 @@ started than on [OpenBSD](build-openbsd.md). Installing dependencies:
 
     pkg install autoconf automake libtool pkgconf
     pkg install boost-libs openssl libevent2
+    pkg install gmake
 
 (`libressl` instead of `openssl` will also work)
 
@@ -338,7 +339,7 @@ Then build using:
 
     ./autogen.sh
     ./configure --with-incompatible-bdb BDB_CFLAGS="-I/usr/local/include/db5" BDB_LIBS="-L/usr/local/lib -ldb_cxx-5"
-    make
+    gmake
 
 *Note on debugging*: The version of `gdb` installed by default is [ancient and considered harmful](https://wiki.freebsd.org/GdbRetirement).
 It is not suitable for debugging a multi-threaded C++ program, not even for getting backtraces. Please install the package `gdb` and
