@@ -255,7 +255,7 @@ bool CFeeBumper::commit(CWallet *pWallet)
     }
     CWalletTx& oldWtx = pWallet->mapWallet[txid];
 
-    // make sure the transaction still has no descendants and hasen't been mined in the meantime
+    // make sure the transaction still has no descendants and hasn't been mined in the meantime
     if (!preconditionChecks(pWallet, oldWtx)) {
         return false;
     }
