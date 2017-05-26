@@ -353,12 +353,12 @@ bool COfferDB::ScanOffers(const std::vector<unsigned char>& vchOfferPage, const 
 				}
 				if(txPos.bPrivate)
 				{
-					if(strRegexp.empty())
+					if(strSearchTerm.empty())
 					{
 						pcursor->Next();
 						continue;
 					}
-					else if(strRegexp != offer)
+					else if(strSearchTerm != offer)
 					{
 						pcursor->Next();
 						continue;
@@ -3658,7 +3658,7 @@ UniValue offerfilter(const UniValue& params, bool fHelp) {
 		"offerfilter [searchterm] [offerpage] [safesearch='Yes'] [category]\n"
 						"scan and filter offers\n"
 						"[searchterm] : find searchterm on offers, empty means all offers\n"
-						"[offerpage] : page with this offer guid, starting from this offer 25 max results are returned\n");
+						"[offerpage] : page with this offer guid, starting from this offer 25 max results are returned\n"
 						"[safesearch] : shows all offers that are safe to display (not on the ban list)\n"
 						"[category] : category you want to search in, empty for all\n");
 
