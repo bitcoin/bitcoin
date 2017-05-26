@@ -716,8 +716,10 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpiredbuyback)
 	// this time steal the alias and try to recreate at the same time
 	ExpireAlias("aliasexpirebuyback");
 	AliasNew("node1", "aliasexpirebuyback", "passwordnew11", "somedata", "data");
+	AliasUpdate("node1", "aliasexpirebuyback", "changedata3", "pvtdata3");
 	ExpireAlias("aliasexpirebuyback");
 	AliasNew("node2", "aliasexpirebuyback", "passwordnew12", "somedata", "data");
+	AliasUpdate("node2", "aliasexpirebuyback", "changedata4", "pvtdata4");
 	GenerateBlocks(5,"node2");
 	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasexpirebuyback " + HexStr(vchFromString("passwordnew13")) + " data2"), runtime_error);
 }
