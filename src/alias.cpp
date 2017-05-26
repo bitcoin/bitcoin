@@ -1230,12 +1230,7 @@ bool CAliasDB::ScanNames(const std::vector<unsigned char>& vchAlias, const strin
         boost::this_thread::interruption_point();
         try {
 			if (pcursor->GetKey(key) && key.first == "namei") {
-            	const vector<unsigned char> &vchMyAlias = key.second;
-				if(!vchAlias.empty() && vchMyAlias != vchAlias && strRegexp.empty())
-				{
-					pcursor->Next();
-					continue;              
-				}			
+            	const vector<unsigned char> &vchMyAlias = key.second;		
                 
 				pcursor->GetValue(vtxPos);
 				
@@ -1274,8 +1269,6 @@ bool CAliasDB::ScanNames(const std::vector<unsigned char>& vchAlias, const strin
 					continue;
 				}
                 nameScan.push_back(txPos);
-				if(!vchAlias.empty() && vchMyAlias == vchAlias && strRegexp.empty())
-					break;
             }
             if (nameScan.size() >= nMax)
                 break;
