@@ -198,7 +198,7 @@ bool COfferDB::ScanOffers(const std::vector<unsigned char>& vchOffer, const stri
         try {
 			if (pcursor->GetKey(key) && key.first == "offeri") {
             	const vector<unsigned char> &vchMyOffer = key.second;
-   				if(!vchOffer.empty() && vchMyOffer != vchOffer)
+   				if(!vchOffer.empty() && vchMyOffer != vchOffer && strRegexp.empty())
 				{
 					pcursor->Next();
 					continue;              
@@ -326,7 +326,7 @@ bool COfferDB::ScanOffers(const std::vector<unsigned char>& vchOffer, const stri
 					}
 				}
                 offerScan.push_back(txPos);
-   				if(!vchOffer.empty() && vchMyOffer == vchOffer)
+   				if(!vchOffer.empty() && vchMyOffer == vchOffer && strRegexp.empty())
 					break; 
             }
             if (offerScan.size() >= nMax)
