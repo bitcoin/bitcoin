@@ -269,7 +269,7 @@ bool CEscrowDB::ScanEscrows(const std::vector<unsigned char>& vchEscrowPage, con
 						continue;
 					}
 				}
-				if (!strSearchTerm.empty() && strSearchTerm != offerstr && strRegexp != escrow && strSearchTermLower != buyerAliasLower && strSearchTermLower != sellerAliasLower && strSearchTermLower != arbiterAliasLower)
+				if (!strSearchTerm.empty() && strSearchTerm != offerstr && strSearchTerm != escrow && strSearchTermLower != buyerAliasLower && strSearchTermLower != sellerAliasLower && strSearchTermLower != arbiterAliasLower)
 				{
 					pcursor->Next();
 					continue;
