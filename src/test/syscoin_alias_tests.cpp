@@ -1095,7 +1095,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	AliasNew("node1", "aliasexpire0", "passwordnew", "pubdata", "privdata");
 	AliasNew("node2", "aliasexpire1", "passwordnew", "pubdata", "privdata");
 	// should already exist and not be expired
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasexpire2 \"\" \"\"", runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasexpire2 \"\" \"\""), runtime_error);
 	CKey privKey;
 	privKey.MakeNewKey(true);
 	CPubKey pubKey = privKey.GetPubKey();
