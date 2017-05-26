@@ -464,9 +464,8 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 {
 	int op;
 	vector<vector<unsigned char> > vvch;
-	if (!DecodeAliasScript(aliasRecipient.scriptPubKey, op, vvch))
-		throw runtime_error("SYSCOIN_RPC_ERROR ERRCODE: 9000 - " + _("Invalid alias recipient"));
-	
+	DecodeAliasScript(aliasRecipient.scriptPubKey, op, vvch);
+		
 	bool bAliasRegistration = op == OP_ALIAS_ACTIVATE && vvch.size() == 1;
     CReserveKey reservekey(pwalletMain);
     CAmount nFeeRequired;

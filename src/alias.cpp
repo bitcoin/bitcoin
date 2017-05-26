@@ -1933,9 +1933,10 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 		vector<unsigned char> vchPubKey(pubKey.begin(), pubKey.end());
 		CSyscoinAddress addressAlias(pubKey.GetID());
 		strAddress = addressAlias.ToString();
+		if (pwalletMain && !pwalletMain->AddKeyPubKey(privKey, pubKey))
+			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5508 - " + _("Error adding key to wallet"));
 	}
 	DecodeBase58(strAddress, newAlias.vchAddress);
-	CSyscoinAddress newAddress;
 	CScript scriptPubKeyOrig;
 	
 
@@ -1968,6 +1969,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	else
 		scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_ACTIVATE) << vchHashAlias << OP_2DROP;
 
+	CSyscoinAddress newAddress;
 	GetAddress(newAlias, &newAddress, scriptPubKeyOrig);
 	scriptPubKey += scriptPubKeyOrig;
 
