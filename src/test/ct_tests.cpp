@@ -30,7 +30,6 @@ BOOST_AUTO_TEST_CASE(ct_test)
 {
     secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
     
-    
     std::vector<CTxOutValueTest> txins(1);
     
     std::vector<const uint8_t*> blindptrs;

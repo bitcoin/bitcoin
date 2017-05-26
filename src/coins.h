@@ -136,7 +136,8 @@ public:
         }
         
         for (auto &txout : vpout) {
-            if (txout != nullptr && txout->nVersion == OUTPUT_DATA)
+            if (txout != nullptr
+                && (txout->nVersion == OUTPUT_DATA || txout->nVersion == OUTPUT_RINGCT))
                 txout.reset();
             
             // TODO:
@@ -180,15 +181,26 @@ public:
             
             if (oa->nVersion != ob->nVersion)
                 return false;
-            // TODO: add other types?
+            
             switch (oa->nVersion)
             {
                 case OUTPUT_STANDARD:
+                    {
                     const CTxOutStandard *sa = (CTxOutStandard*)oa.get();
                     const CTxOutStandard *sb = (CTxOutStandard*)ob.get();
                     if (sa->nValue != sb->nValue
                         || sa->scriptPubKey != sb->scriptPubKey)
                         return false;
+                    }
+                    break;
+                case OUTPUT_CT:
+                    {
+                    const CTxOutCT *sa = (CTxOutCT*)oa.get();
+                    const CTxOutCT *sb = (CTxOutCT*)ob.get();
+                    if (memcmp(sa->commitment.data, sb->commitment.data, 32) != 0
+                        || sa->scriptPubKey != sb->scriptPubKey)
+                        return false;
+                    }
                     break;
             }
         };
@@ -346,12 +358,21 @@ public:
             ret += RecursiveDynamicUsage(out.scriptPubKey);
         }
         for (size_t k = 0; k < vpout.size(); ++k)
-            if (vpout[k] != nullptr && vpout[k]->nVersion == OUTPUT_STANDARD)
+        {
+            if (vpout[k] == nullptr)
+                continue;
+            
+            if (vpout[k]->nVersion == OUTPUT_STANDARD)
             {
                 const CScript &scriptPubKey = vpout[k]->GetStandardOutput()->scriptPubKey;
                 ret += RecursiveDynamicUsage(scriptPubKey);
-            }
-                
+            } else
+            if (vpout[k]->nVersion == OUTPUT_CT)
+            {
+                const CScript &scriptPubKey = ((CTxOutCT*)vpout[k].get())->scriptPubKey;
+                ret += RecursiveDynamicUsage(scriptPubKey);
+            };
+        };
         return ret;
     }
 };

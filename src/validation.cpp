@@ -1720,6 +1720,7 @@ void static InvalidBlockFound(CBlockIndex *pindex, const CValidationState &state
 
 void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txundo, int nHeight)
 {
+    
     // mark inputs spent
     if (!tx.IsCoinBase()) {
         txundo.vprevout.reserve(tx.vin.size());
@@ -1733,7 +1734,8 @@ void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txund
                     || (coins->vpout[nPos]->nVersion != OUTPUT_STANDARD
                         && coins->vpout[nPos]->nVersion != OUTPUT_CT))
                     assert(false);
-                    
+                
+                
                 // mark an outpoint spent, and construct undo information
                 txundo.vprevout.push_back(CTxInUndo(coins->vpout[nPos]));
                 
@@ -2190,7 +2192,8 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
     std::vector<std::pair<CAddressIndexKey, CAmount> > addressIndex;
     std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > addressUnspentIndex;
     std::vector<std::pair<CSpentIndexKey, CSpentIndexValue> > spentIndex;
-
+    
+    int nVtxundo = blockUndo.vtxundo.size()-1;
     // undo transactions in reverse order
     for (int i = block.vtx.size() - 1; i >= 0; i--) {
         const CTransaction &tx = *(block.vtx[i]);
@@ -2290,9 +2293,14 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
         {
             if (!tx.IsCoinBase())
             {
-                const CTxUndo &txundo = blockUndo.vtxundo[i];
+                if (nVtxundo < 0 || nVtxundo >= blockUndo.vtxundo.size())
+                    return error("DisconnectBlock(): transaction undo data offset out of range.");
+                
+                const CTxUndo &txundo = blockUndo.vtxundo[nVtxundo--];
                 if (txundo.vprevout.size() != tx.vin.size())
+                {
                     return error("DisconnectBlock(): transaction and undo data inconsistent");
+                };
                 for (unsigned int j = tx.vin.size(); j-- > 0;)
                 {
                     const COutPoint &out = tx.vin[j].prevout;

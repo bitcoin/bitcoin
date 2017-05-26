@@ -1201,6 +1201,18 @@ static void AddOutputRecordMetaData(CTransactionRecord &rtx, std::vector<CTempRe
 {
     for (auto &r : vecSend)
     {
+        if (r.nType == OUTPUT_STANDARD)
+        {
+            COutputRecord rec;
+            
+            rec.n = r.n;
+            if (r.fChange)
+                rec.nFlags |= ORF_CHANGE;
+            rec.nType = r.nType;
+            rec.nValue = r.nAmount;
+            rec.sNarration = r.sNarration;
+            rtx.InsertOutput(rec);
+        } else
         if (r.nType == OUTPUT_CT)
         {
             COutputRecord rec;
@@ -1209,6 +1221,8 @@ static void AddOutputRecordMetaData(CTransactionRecord &rtx, std::vector<CTempRe
             rec.nType = r.nType;
             rec.nValue = r.nAmount;
             rec.nFlags |= ORF_FROM;
+            if (r.fChange)
+                rec.nFlags |= ORF_CHANGE;
             rec.sNarration = r.sNarration;
             
             if (r.address.type() == typeid(CStealthAddress))
@@ -1449,9 +1463,8 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
     for (auto &r : vecSend)
         nValue += r.nAmount;
     
-    
     if (0 != ExpandTempRecipients(vecSend, pc, sError))
-        return 0; // sError is set
+        return 1; // sError is set
     
     wtx.fTimeReceivedIsTxTime = true;
     wtx.BindWallet(this);
@@ -1928,7 +1941,7 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
         nValue += r.nAmount;
     
     if (0 != ExpandTempRecipients(vecSend, pc, sError))
-        return 0; // sError is set
+        return 1; // sError is set
     
     wtx.fTimeReceivedIsTxTime = true;
     wtx.BindWallet(this);

@@ -196,7 +196,7 @@ bool UniValue::erase(size_t from, size_t to)
     if (typ != VARR)
         return false;
     
-    if (from >= values.size() || to >= values.size()
+    if (from >= values.size() || to > values.size()
         || from > to)
         return false;
     

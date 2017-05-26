@@ -1605,15 +1605,49 @@ void ListRecord(const uint256 &hash, const CTransactionRecord &rtx,
             continue;
         
         UniValue entry(UniValue::VOBJ);
+        
+        CTxDestination dest;
+        if (ExtractDestination(r.scriptPubKey, dest) && !r.scriptPubKey.IsUnspendable())
+        {
+             CBitcoinAddress addr;
+            if (addr.Set(dest))
+                entry.push_back(Pair("address", addr.ToString()));
+        } else
+        {
+            entry.push_back(Pair("address", "unknown"));
+        };
+        
+        
         entry.push_back(Pair("time", rtx.nTimeReceived));
         entry.push_back(Pair("txid", hash.ToString()));
         entry.push_back(Pair("vout", r.n));
         entry.push_back(Pair("narration", r.sNarration));
         
+        CHDWallet *phdw = (CHDWallet*) pwalletMain;
+        int confirms = phdw->GetDepthInMainChain(rtx.blockHash);
+        entry.push_back(Pair("confirmations", confirms));
+        if (confirms > 0)
+        {
+            entry.push_back(Pair("blockhash", rtx.blockHash.GetHex()));
+            entry.push_back(Pair("blockindex", rtx.nIndex));
+            entry.push_back(Pair("blocktime", mapBlockIndex[rtx.blockHash]->GetBlockTime()));
+        } else
+        {
+            entry.push_back(Pair("trusted", phdw->IsTrusted(hash, rtx.blockHash)));
+        };
+        
+        
+        
         if (r.nFlags & ORF_OWNED && r.nFlags & ORF_FROM)
         {
             // sent to self
-            continue;
+            //continue;
+            entry.push_back(Pair("category", "receive"));
+            entry.push_back(Pair("fromself", "true"));
+            entry.push_back(Pair("type", r.nType == OUTPUT_STANDARD ? "standard"
+                : r.nType == OUTPUT_CT ? "blind" : r.nType == OUTPUT_RINGCT ? "anon" : "unknown"));
+            entry.push_back(Pair("amount", ValueFromAmount(r.nValue)));
+            entry.push_back(Pair("fee", ValueFromAmount(rtx.nFee)));
         } else
         if (r.nFlags & ORF_OWNED)
         {
@@ -1627,15 +1661,11 @@ void ListRecord(const uint256 &hash, const CTransactionRecord &rtx,
             entry.push_back(Pair("category", "send"));
             entry.push_back(Pair("type", r.nType == OUTPUT_STANDARD ? "standard"
                 : r.nType == OUTPUT_CT ? "blind" : r.nType == OUTPUT_RINGCT ? "anon" : "unknown"));
-            entry.push_back(Pair("fee", ValueFromAmount(rtx.nFee)));
             entry.push_back(Pair("amount", ValueFromAmount(r.nValue)));
+            entry.push_back(Pair("fee", ValueFromAmount(rtx.nFee)));
         }
         ret.push_back(entry);
     };
-    
-    
-    
-    
 };
 
 void AcentryToJSON(const CAccountingEntry& acentry, const string& strAccount, UniValue& ret)
@@ -1748,14 +1778,14 @@ UniValue listtransactions(const JSONRPCRequest& request)
 
     const CWallet::TxItems &txOrdered = pwalletMain->wtxOrdered;
     
-    
     size_t nCountIter = 0;
     // iterate backwards until we have nCount items to return:
     for (CWallet::TxItems::const_reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
     {
         nCountIter++;
-        if (nFrom > nCountIter)
-            continue;
+        //LogPrintf("[rm] nCountIter, nFrom %d %d\n", nCountIter, nFrom);
+        //if (nFrom >= nCountIter)
+        //    continue;
         
         CWalletTx *const pwtx = (*it).second.first;
         if (pwtx != 0)
@@ -1764,7 +1794,7 @@ UniValue listtransactions(const JSONRPCRequest& request)
         if (pacentry != 0)
             AcentryToJSON(*pacentry, strAccount, retReversed);
         
-        if (nCountIter - nFrom >= nCount)
+        if (nCountIter >= nCount + nFrom)
             break;
     };
     
@@ -1783,14 +1813,12 @@ UniValue listtransactions(const JSONRPCRequest& request)
         for (RtxOrdered_t::const_reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
         {
             nCountIter++;
-            if (nFrom > nCountIter)
-                continue;
-            
-            
+            //if (nFrom >= nCountIter)
+            //    continue;
             
             ListRecord(it->second->first, it->second->second, strAccount, 0, true, retRecords, filter);
             //ListRecord(*pwtx, strAccount, 0, true, retReversed, filter);
-            if (nCountIter - nFrom >= nCount)
+            if (nCountIter >= nCount + nFrom)
                 break;
         };
         
@@ -1803,7 +1831,7 @@ UniValue listtransactions(const JSONRPCRequest& request)
                 int64_t nTime = find_value(ret[k], "time").get_int64();
                 if (nTime > nInsertTime)
                 {
-                    ret.insert(k, ret);
+                    ret.insert(k, retRecords[i]);
                     fFound = true;
                     break;
                 };
@@ -1812,6 +1840,9 @@ UniValue listtransactions(const JSONRPCRequest& request)
             if (!fFound)
                 ret.push_back(retRecords[i]);
         };
+        
+        if (nFrom > 0 && ret.size() > 0)
+            ret.erase(std::max((size_t)0, ret.size() - nFrom), ret.size());
         
         if (ret.size() > nCount)
             ret.erase(0, ret.size() - nCount);

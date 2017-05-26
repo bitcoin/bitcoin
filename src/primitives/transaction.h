@@ -242,7 +242,6 @@ public:
         return (CTxOutStandard*)this;
     };
     
-    
     virtual bool IsEmpty() const { return false;}
     
     void SetValue(CAmount value);
