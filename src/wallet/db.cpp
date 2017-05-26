@@ -169,7 +169,7 @@ bool CDB::Recover(const std::string& filename, void *callbackDataIn, bool (*reco
     // Set -rescan so any missing transactions will be
     // found.
     int64_t now = GetTime();
-    std::string newFilename = strprintf("wallet.%d.bak", now);
+    std::string newFilename = strprintf("%s.%d.bak", filename, now);
 
     int result = bitdb.dbenv->dbrename(NULL, filename.c_str(), NULL,
                                        newFilename.c_str(), DB_AUTO_COMMIT);
@@ -270,7 +270,7 @@ bool CDB::VerifyDatabaseFile(const std::string& walletFile, const fs::path& data
                                      " Original %s saved as %s in %s; if"
                                      " your balance or transactions are incorrect you should"
                                      " restore from a backup."),
-                                   walletFile, "wallet.{timestamp}.bak", dataDir);
+                                   walletFile, "{walletfilename}.{timestamp}.bak", dataDir);
         }
         if (r == CDBEnv::RECOVER_FAIL)
         {
