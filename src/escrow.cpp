@@ -239,7 +239,7 @@ bool CEscrowDB::ScanEscrows(const std::vector<unsigned char>& vchEscrow, const s
         try {
 			if (pcursor->GetKey(key) && key.first == "escrowi") {
             	const vector<unsigned char> &vchMyEscrow = key.second;
-   				if(!vchEscrow.empty() && vchMyEscrow != vchEscrow)
+   				if(!vchEscrow.empty() && vchMyEscrow != vchEscrow && strRegexp.empty())
 				{
 					pcursor->Next();
 					continue;              
@@ -283,7 +283,7 @@ bool CEscrowDB::ScanEscrows(const std::vector<unsigned char>& vchEscrow, const s
 					continue;
 				}
                 escrowScan.push_back(txPos);
-   				if(!vchEscrow.empty() && vchMyEscrow == vchEscrow)
+   				if(!vchEscrow.empty() && vchMyEscrow == vchEscrow && strRegexp.empty())
 					break;   
             }
             if (escrowScan.size() >= nMax)
@@ -3693,7 +3693,7 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
 
 	vector<CEscrow> escrowScan;
 	vector<string> aliases;
-	if (!pescrowdb->ScanEscrows(vchEscrow, strRegexp, aliases, 1000, escrowScan))
+	if (!pescrowdb->ScanEscrows(vchEscrow, strRegexp, aliases, 25, escrowScan))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4607 - " + _("Scan failed"));
 
 	BOOST_FOREACH(const CEscrow& escrow, escrowScan) {

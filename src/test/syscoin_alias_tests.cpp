@@ -646,9 +646,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpiredbuyback)
 	
 	AliasNew("node1", "aliasexpirebuyback", "passwordnew1", "somedata", "data");
 	// can't renew aliases that aren't expired
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasexpirebuyback " + HexStr(vchFromString("password")) + " data"));
-	GenerateBlocks(5);
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasexpirebuyback \"\" \"\""), runtime_error);	
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasexpirebuyback " + HexStr(vchFromString("password")) + " data"), runtime_error);
 	ExpireAlias("aliasexpirebuyback");
 	// expired aliases shouldnt be searchable
 	BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasexpirebuyback", "On"), false);

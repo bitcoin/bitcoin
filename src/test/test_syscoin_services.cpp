@@ -911,21 +911,21 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 bool AliasFilter(const string& node, const string& regex, const string& safesearch)
 {
 	UniValue r;
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasfilter " + regex + " /""/ " + safesearch));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasfilter " + regex + " \"\" " + safesearch));
 	const UniValue &arr = r.get_array();
 	return !arr.empty();
 }
 bool OfferFilter(const string& node, const string& regex, const string& safesearch)
 {
 	UniValue r;
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerfilter " + regex + " /""/ " + safesearch));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerfilter " + regex + " \"\" " + safesearch));
 	const UniValue &arr = r.get_array();
 	return !arr.empty();
 }
 bool CertFilter(const string& node, const string& regex, const string& safesearch)
 {
 	UniValue r;
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certfilter " + regex + " /""/ " + safesearch));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certfilter " + regex + " \"\" " + safesearch));
 	const UniValue &arr = r.get_array();
 	return !arr.empty();
 }

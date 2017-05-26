@@ -1236,7 +1236,7 @@ bool CAliasDB::ScanNames(const std::vector<unsigned char>& vchAlias, const strin
         try {
 			if (pcursor->GetKey(key) && key.first == "namei") {
             	const vector<unsigned char> &vchMyAlias = key.second;
-   				if(!vchAlias.empty() && vchMyAlias != vchAlias)
+   				if(!vchAlias.empty() && vchMyAlias != vchAlias && strRegexp.empty())
 				{
 					pcursor->Next();
 					continue;              
@@ -1279,7 +1279,7 @@ bool CAliasDB::ScanNames(const std::vector<unsigned char>& vchAlias, const strin
 					continue;
 				}
                 nameScan.push_back(txPos);
-   				if(!vchAlias.empty() && vchMyAlias == vchAlias)
+   				if(!vchAlias.empty() && vchMyAlias == vchAlias && strRegexp.empty())
 					break;   
             }
             if (nameScan.size() >= nMax)
@@ -3155,11 +3155,8 @@ UniValue aliasfilter(const UniValue& params, bool fHelp) {
 		strRegexp = params[0].get_str();
 
 	if(CheckParam(params, 1))
-	{
-		vchAlias = vchFromValue(params[1]);
 		strName = params[1].get_str();
-	}
-
+	
 	if(CheckParam(params, 2))
 		safeSearch = params[2].get_str()=="On"? true: false;
 
