@@ -35,13 +35,13 @@ BOOST_AUTO_TEST_CASE (generate_big_aliasdata)
 	vector<unsigned char> vchPubKey(pubKey.begin(), pubKey.end());
 	BOOST_CHECK_EQUAL(EncryptMessage(vchPubKey, baddata, strCipherBadPrivData), true);		
 	BOOST_CHECK_EQUAL(EncryptMessage(vchPubKey, gooddata, strCipherGoodPrivData), true);	
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg jag1 " + HexStr(vchFromString("password")) +  " " + gooddata + " " + HexStr(vchFromString(strCipherGoodPrivData))));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg jag1 \"\" " + gooddata + " " + HexStr(vchFromString(strCipherGoodPrivData))));
 	GenerateBlocks(5);
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg jag1 \"\" \"\""));
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg jag2 " + HexStr(vchFromString("password")) +  " " + gooddata + " " + HexStr(vchFromString(strCipherBadPrivData))));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg jag2  \"\" " + gooddata + " " + HexStr(vchFromString(strCipherBadPrivData))));
 	GenerateBlocks(5);
 	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg jag2 \"\" \"\""), runtime_error);	
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg jag2 " + HexStr(vchFromString("password")) +  " " + baddata + " " + HexStr(vchFromString(strCipherGoodPrivData))));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg jag2 \"\" " + baddata + " " + HexStr(vchFromString(strCipherGoodPrivData))));
 	GenerateBlocks(5);
 	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg jag2 \"\" \"\""), runtime_error);		
 }
