@@ -811,7 +811,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			case OP_ALIAS_ACTIVATE:
 				if (prevOp != OP_ALIAS_ACTIVATE)
 				{
-					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5012 - " + _("Alias input to this transaction not found");
+					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5009 - " + _("Alias input to this transaction not found");
 					return error(errorMessage.c_str());
 				}
 				// Check new/activate hash
