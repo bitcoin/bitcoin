@@ -3683,7 +3683,7 @@ UniValue offerfilter(const UniValue& params, bool fHelp) {
 
 
 	vector<COffer> offerScan;
-	if (!pofferdb->ScanOffers(vchOffer, strRegexp, safeSearch, strCategory, 25, offerScan))
+	if (!pofferdb->ScanOffers(vchOfferPage, strSearchTerm, safeSearch, strCategory, 25, offerScan))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1596 - " + _("Scan failed"));
 	CTransaction aliastx;
 	BOOST_FOREACH(const COffer &txOffer, offerScan) {
