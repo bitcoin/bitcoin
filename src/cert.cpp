@@ -14,7 +14,6 @@
 #include "coincontrol.h"
 #include <boost/algorithm/hex.hpp>
 #include <boost/algorithm/string/case_conv.hpp> // for to_lower()
-#include <boost/xpressive/xpressive_dynamic.hpp>
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/thread.hpp>
@@ -237,18 +236,14 @@ bool CCertDB::GetDBCerts(std::vector<CCert>& certs, const uint64_t &nExpireFilte
     }
 	return true;
 }
-bool CCertDB::ScanCerts(const std::vector<unsigned char>& vchCert, const string &strRegexp, const vector<string>& aliasArray, bool safeSearch, const string& strCategory, unsigned int nMax,
+bool CCertDB::ScanCerts(const std::vector<unsigned char>& vchCertPage, const string &strSearchTerm, const vector<string>& aliasArray, bool safeSearch, const string& strCategory, unsigned int nMax,
         std::vector<CCert>& certScan) {
-    // regexp
-    using namespace boost::xpressive;
-    smatch certparts;
-	string strRegexpLower = strRegexp;
-	boost::algorithm::to_lower(strRegexpLower);
-    sregex cregex = sregex::compile(strRegexpLower);
+	string strSearchTermLower = strSearchTerm;
+	boost::algorithm::to_lower(strSearchTermLower);
 	vector<CCert> vtxPos;
 	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
-	if(!vchCert.empty())
-		pcursor->Seek(make_pair(string("certi"), vchCert));
+	if(!vchCertPage.empty())
+		pcursor->Seek(make_pair(string("certi"), vchCertPage));
 	else
 		pcursor->SeekToFirst();
 	pair<string, vector<unsigned char> > key;
@@ -256,12 +251,7 @@ bool CCertDB::ScanCerts(const std::vector<unsigned char>& vchCert, const string 
         boost::this_thread::interruption_point();
         try {
 			if (pcursor->GetKey(key) && key.first == "certi") {
-            	const vector<unsigned char> &vchMyCert = key.second;
-   				if(!vchCert.empty() && vchMyCert != vchCert && strRegexp.empty())
-				{
-					pcursor->Next();
-					continue;              
-				}                 
+            	const vector<unsigned char> &vchMyCert = key.second;              
 				pcursor->GetValue(vtxPos);
 				if (vtxPos.empty()){
 					pcursor->Next();
@@ -325,21 +315,20 @@ bool CCertDB::ScanCerts(const std::vector<unsigned char>& vchCert, const string 
 						pcursor->Next();
 						continue;
 					}
-					if(strRegexp != "")
+					if(!strSearchTerm.empty())
 					{
 						const string &cert = stringFromVch(vchMyCert);
+						const string &myalias = stringFromVch(txPos.vchAlias);
 						string title = stringFromVch(txPos.vchTitle);
 						boost::algorithm::to_lower(title);
-						if (!regex_search(title, certparts, cregex) && strRegexp != cert && strRegexpLower != stringFromVch(txPos.vchAlias))
+						if (strSearchTerm != cert && myalias.find(strSearchTermLower) != string::npos && title.find(strSearchTermLower) != string::npos)
 						{
 							pcursor->Next();
 							continue;
 						}
 					}
 				}
-				certScan.push_back(txPos);
-   				if(!vchCert.empty() && vchMyCert == vchCert && strRegexp.empty())
-					break;   
+				certScan.push_back(txPos); 
 			}
 			if (certScan.size() >= nMax)
 				break;
@@ -1387,24 +1376,24 @@ bool BuildCertJson(const CCert& cert, const CAliasIndex& alias, UniValue& oCert,
 UniValue certfilter(const UniValue& params, bool fHelp) {
 	if (fHelp || params.size() > 4)
 		throw runtime_error(
-		"certfilter [regexp] [cert] [safesearch='Yes'] [category]\n"
+		"certfilter [searchterm] [certpage] [safesearch='Yes'] [category]\n"
 						"scan and filter certs\n"
-						"[regexp] : apply [regexp] on certs, empty means all certs\n"
-						"[cert] : look for a specific certificate\n"
+						"[searchterm] : find searchterm on certs, empty means all certs\n"
+						"[certpage] : page with this cert guid, starting from this cert 25 max results are returned\n");
 						"[safesearch] : shows all certs that are safe to display (not on the ban list)\n"
 						"[category] : category you want to search in, empty for all\n");
 
-	vector<unsigned char> vchCert;
-	string strRegexp;
+	vector<unsigned char> vchCertPage;
+	string strSearchTerm;
 	string strCategory;
 	bool safeSearch = true;
 
 
 	if(CheckParam(params, 0))
-		strRegexp = params[0].get_str();
+		strSearchTerm = params[0].get_str();
 
 	if(CheckParam(params, 1))
-		vchCert = vchFromValue(params[1]);
+		vchCertPage = vchFromValue(params[1]);
 
 	if(CheckParam(params, 2))
 		safeSearch = params[2].get_str()=="On"? true: false;
@@ -1416,7 +1405,7 @@ UniValue certfilter(const UniValue& params, bool fHelp) {
     
     vector<CCert> certScan;
 	vector<string> aliases;
-    if (!pcertdb->ScanCerts(vchCert, strRegexp, aliases, safeSearch, strCategory, 25, certScan))
+    if (!pcertdb->ScanCerts(vchCertPage, strSearchTerm, aliases, safeSearch, strCategory, 25, certScan))
 		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2520 - " + _("Scan failed"));
   
 	CTransaction aliastx;

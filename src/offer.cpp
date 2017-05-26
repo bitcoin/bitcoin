@@ -15,7 +15,6 @@
 #include "chainparams.h"
 #include "coincontrol.h"
 #include <boost/algorithm/string/case_conv.hpp> // for to_lower()
-#include <boost/xpressive/xpressive_dynamic.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/foreach.hpp>
 #include <boost/thread.hpp>
@@ -224,18 +223,13 @@ bool COfferDB::GetDBOffers(std::vector<vector<COffer> >& offers, const uint64_t 
     }
 	return true;
 }
-bool COfferDB::ScanOffers(const std::vector<unsigned char>& vchOffer, const string& strRegexp, bool safeSearch,const string& strCategory, unsigned int nMax,
+bool COfferDB::ScanOffers(const std::vector<unsigned char>& vchOfferPage, const string& strSearchTerm, bool safeSearch,const string& strCategory, unsigned int nMax,
 		std::vector<COffer>& offerScan) {
-   // regexp
-    using namespace boost::xpressive;
-    smatch offerparts;
-	smatch nameparts;
-	string strRegexpLower = strRegexp;
-	boost::algorithm::to_lower(strRegexpLower);
-	sregex cregex = sregex::compile(strRegexpLower);
+	string strSearchTermLower = strSearchTerm;
+	boost::algorithm::to_lower(strSearchTermLower);
 	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
-	if(!vchOffer.empty())
-		pcursor->Seek(make_pair(string("offeri"), vchOffer));
+	if(!vchOfferPage.empty())
+		pcursor->Seek(make_pair(string("offeri"), vchOfferPage));
 	else
 		pcursor->SeekToFirst();
 	vector<COffer> vtxPos;
@@ -244,12 +238,7 @@ bool COfferDB::ScanOffers(const std::vector<unsigned char>& vchOffer, const stri
 		pair<string, vector<unsigned char> > key;
         try {
 			if (pcursor->GetKey(key) && key.first == "offeri") {
-            	const vector<unsigned char> &vchMyOffer = key.second;
-   				if(!vchOffer.empty() && vchMyOffer != vchOffer && strRegexp.empty())
-				{
-					pcursor->Next();
-					continue;              
-				}                  
+            	const vector<unsigned char> &vchMyOffer = key.second;                
 				pcursor->GetValue(vtxPos);
 
 				if (vtxPos.empty()){
@@ -338,11 +327,6 @@ bool COfferDB::ScanOffers(const std::vector<unsigned char>& vchOffer, const stri
 					continue;
 				}
 
-				string title = stringFromVch(txPos.sTitle);
-				string offer = stringFromVch(vchMyOffer);
-				boost::algorithm::to_lower(title);
-				string description = stringFromVch(txPos.sDescription);
-				boost::algorithm::to_lower(description);
 				if(!theAlias.safeSearch && safeSearch)
 				{
 					pcursor->Next();
@@ -353,15 +337,23 @@ bool COfferDB::ScanOffers(const std::vector<unsigned char>& vchOffer, const stri
 					pcursor->Next();
 					continue;
 				}
-				string alias = stringFromVch(txPos.vchAlias);
-				if (strRegexp != "" && !regex_search(title, offerparts, cregex) && !regex_search(description, offerparts, cregex) && strRegexp != offer && strRegexpLower != alias)
+				if(!strSearchTerm.empty())
 				{
-					pcursor->Next();
-					continue;
+					const string &alias = stringFromVch(txPos.vchAlias);
+					const string &offer = stringFromVch(vchMyOffer);
+					string title = stringFromVch(txPos.sTitle);
+					string description = stringFromVch(txPos.sDescription);
+					boost::algorithm::to_lower(title);
+					boost::algorithm::to_lower(description);
+					if (strSearchTerm != offer && alias.find(strSearchTermLower) != string::npos && title.find(strSearchTermLower) != string::npos && description.find(strSearchTermLower) != string::npos)
+					{
+						pcursor->Next();
+						continue;
+					}
 				}
 				if(txPos.bPrivate)
 				{
-					if(strRegexp == "")
+					if(strRegexp.empty())
 					{
 						pcursor->Next();
 						continue;
@@ -372,9 +364,7 @@ bool COfferDB::ScanOffers(const std::vector<unsigned char>& vchOffer, const stri
 						continue;
 					}
 				}
-                offerScan.push_back(txPos);
-   				if(!vchOffer.empty() && vchMyOffer == vchOffer && strRegexp.empty())
-					break;   
+                offerScan.push_back(txPos); 
             }
             if (offerScan.size() >= nMax)
                 break;
@@ -3675,16 +3665,16 @@ UniValue offerfilter(const UniValue& params, bool fHelp) {
 						"offerfilter \"^offer\" # list all offers starting with \"offer\"\n"
 						"offerfilter 36000 0 0 stat # display stats (number of offers) on active offers\n");
 
-	string strRegexp;
-	vector<unsigned char> vchOffer;
+	string strSearchTerm;
+	vector<unsigned char> vchOfferPage;
 	string strCategory;
 	bool safeSearch = true;
 
 	if(CheckParam(params, 0))
-		strRegexp = params[0].get_str();
+		strSearchTerm = params[0].get_str();
 
 	if(CheckParam(params, 1))
-		vchOffer = vchFromValue(params[1]);
+		vchOfferPage = vchFromValue(params[1]);
 
 	if(CheckParam(params, 2))
 		safeSearch = params[2].get_str()=="On"? true: false;

@@ -1215,18 +1215,14 @@ void CAliasIndex::Serialize(vector<unsigned char>& vchData) {
     vchData = vector<unsigned char>(dsAlias.begin(), dsAlias.end());
 
 }
-bool CAliasDB::ScanNames(const std::vector<unsigned char>& vchAlias, const string& strRegexp, bool safeSearch, 
+bool CAliasDB::ScanNames(const std::vector<unsigned char>& vchAliasPage, const string& strSearchTerm, bool safeSearch, 
 		unsigned int nMax,
 		vector<CAliasIndex>& nameScan) {
-	// regexp
-	using namespace boost::xpressive;
-	smatch nameparts;
-	string strRegexpLower = strRegexp;
-	boost::algorithm::to_lower(strRegexpLower);
-	sregex cregex = sregex::compile(strRegexpLower);
+	string strSearchTermLower = strSearchTerm;
+	boost::algorithm::to_lower(strSearchTermLower);
 	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
-	if(!vchAlias.empty())
-		pcursor->Seek(make_pair(string("namei"), vchAlias));
+	if(!vchAliasPage.empty())
+		pcursor->Seek(make_pair(string("namei"), vchAliasPage));
 	else
 		pcursor->SeekToFirst();
 	vector<CAliasIndex> vtxPos;
@@ -1235,15 +1231,8 @@ bool CAliasDB::ScanNames(const std::vector<unsigned char>& vchAlias, const strin
         boost::this_thread::interruption_point();
         try {
 			if (pcursor->GetKey(key) && key.first == "namei") {
-            	const vector<unsigned char> &vchMyAlias = key.second;
-   				if(!vchAlias.empty() && vchMyAlias != vchAlias && strRegexp.empty())
-				{
-					pcursor->Next();
-					continue;              
-				}  				
-                
+            	const vector<unsigned char> &vchMyAlias = key.second;				
 				pcursor->GetValue(vtxPos);
-				
 				if (vtxPos.empty()){
 					pcursor->Next();
 					continue;
@@ -1273,14 +1262,12 @@ bool CAliasDB::ScanNames(const std::vector<unsigned char>& vchAlias, const strin
 					continue;
 				}
 				const string &name = stringFromVch(vchMyAlias);
-				if (strRegexp != "" && !regex_search(name, nameparts, cregex) && strRegexp != name)
+				if (!strRegexp.empty() && name.find(strSearchTermLower) != string::npos)
 				{
 					pcursor->Next();
 					continue;
 				}
-                nameScan.push_back(txPos);
-   				if(!vchAlias.empty() && vchMyAlias == vchAlias && strRegexp.empty())
-					break;   
+                nameScan.push_back(txPos);  
             }
             if (nameScan.size() >= nMax)
                 break;
@@ -3139,23 +3126,23 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 UniValue aliasfilter(const UniValue& params, bool fHelp) {
 	if (fHelp || params.size() > 3)
 		throw runtime_error(
-		"aliasfilter [regexp] [alias] [safesearch='Yes']\n"
+		"aliasfilter [searchterm] [aliaspage] [safesearch='Yes']\n"
 						"scan and filter aliases\n"
-						"[regexp] : apply [regexp] on aliases, empty means all aliases\n"
-						"[alias] : look for a specific alias\n"
+						"[searchterm] : find searchterm in alias name, empty means all aliases\n"
+						"[aliaspage] : page with this alias name, starting from this alias 25 max results are returned\n"
 						"[safesearch] : shows all aliases that are safe to display (not on the ban list)\n");
 
 	vector<unsigned char> vchAlias;
-	string strRegexp;
-	string strName;
+	string strSearchTerm;
+	string strAliasPage;
 	bool safeSearch = true;
 
 
 	if(CheckParam(params, 0))
-		strRegexp = params[0].get_str();
+		strSearchTerm = params[0].get_str();
 
 	if(CheckParam(params, 1))
-		strName = params[1].get_str();
+		strAliasPage = params[1].get_str();
 	
 	if(CheckParam(params, 2))
 		safeSearch = params[2].get_str()=="On"? true: false;
@@ -3164,10 +3151,10 @@ UniValue aliasfilter(const UniValue& params, bool fHelp) {
 
 	
 	vector<CAliasIndex> nameScan;
-	boost::algorithm::to_lower(strName);
-	vchAlias = vchFromString(strName);
+	boost::algorithm::to_lower(strAliasPage);
+	vchAliasPage = vchFromString(strAliasPage);
 	CTransaction aliastx;
-	if (!paliasdb->ScanNames(vchAlias, strRegexp, safeSearch, 25, nameScan))
+	if (!paliasdb->ScanNames(vchAliasPage, strSearchTerm, safeSearch, 25, nameScan))
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5538 - " + _("Scan failed"));
 
 	BOOST_FOREACH(const CAliasIndex &alias, nameScan) {

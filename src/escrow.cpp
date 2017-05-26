@@ -15,7 +15,6 @@
 #include "chainparams.h"
 #include "coincontrol.h"
 #include <boost/algorithm/string/case_conv.hpp> // for to_lower()
-#include <boost/xpressive/xpressive_dynamic.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/hex.hpp>
 #include <boost/foreach.hpp>
@@ -223,13 +222,13 @@ bool CEscrowDB::GetDBEscrows(std::vector<CEscrow>& escrows, const uint64_t &nExp
     }
 	return true;
 }
-bool CEscrowDB::ScanEscrows(const std::vector<unsigned char>& vchEscrow, const string& strRegexp, const vector<string>& aliasArray, unsigned int nMax,
+bool CEscrowDB::ScanEscrows(const std::vector<unsigned char>& vchEscrowPage, const string& strSearchTerm, const vector<string>& aliasArray, unsigned int nMax,
 							std::vector<CEscrow>& escrowScan) {
-	string strSearchLower = strRegexp;
-	boost::algorithm::to_lower(strSearchLower);
+	string strSearchTermLower = strSearchTerm;
+	boost::algorithm::to_lower(strSearchTermLower);
 	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
-	if(!vchEscrow.empty())
-		pcursor->Seek(make_pair(string("escrowi"), vchEscrow));
+	if(!vchEscrowPage.empty())
+		pcursor->Seek(make_pair(string("escrowi"), vchEscrowPage));
 	else
 		pcursor->SeekToFirst();
 	vector<CEscrow> vtxPos;
@@ -238,12 +237,7 @@ bool CEscrowDB::ScanEscrows(const std::vector<unsigned char>& vchEscrow, const s
         boost::this_thread::interruption_point();
         try {
 			if (pcursor->GetKey(key) && key.first == "escrowi") {
-            	const vector<unsigned char> &vchMyEscrow = key.second;
-   				if(!vchEscrow.empty() && vchMyEscrow != vchEscrow && strRegexp.empty())
-				{
-					pcursor->Next();
-					continue;              
-				}                 
+            	const vector<unsigned char> &vchMyEscrow = key.second;                
 				pcursor->GetValue(vtxPos);
 				if (vtxPos.empty()){
 					pcursor->Next();
@@ -257,12 +251,10 @@ bool CEscrowDB::ScanEscrows(const std::vector<unsigned char>& vchEscrow, const s
 				}
 				const string &escrow = stringFromVch(vchMyEscrow);
 				const string &offerstr = stringFromVch(txPos.vchOffer);
-			
-
-				string buyerAliasLower = stringFromVch(txPos.vchBuyerAlias);
-				string sellerAliasLower = stringFromVch(txPos.vchSellerAlias);
-				string arbiterAliasLower = stringFromVch(txPos.vchArbiterAlias);
-				string linkSellerAliasLower = stringFromVch(txPos.vchLinkSellerAlias);
+				const string &buyerAliasLower = stringFromVch(txPos.vchBuyerAlias);
+				const string & sellerAliasLower = stringFromVch(txPos.vchSellerAlias);
+				const string & arbiterAliasLower = stringFromVch(txPos.vchArbiterAlias);
+				const string & linkSellerAliasLower = stringFromVch(txPos.vchLinkSellerAlias);
 				if(aliasArray.size() > 0)
 				{
 					bool notFoundLinkSeller = true;
@@ -277,14 +269,12 @@ bool CEscrowDB::ScanEscrows(const std::vector<unsigned char>& vchEscrow, const s
 						continue;
 					}
 				}
-				if (strRegexp != "" && strRegexp != offerstr && strRegexp != escrow && strSearchLower != buyerAliasLower && strSearchLower != sellerAliasLower && strSearchLower != arbiterAliasLower)
+				if (!strSearchTerm.empty() && strSearchTerm != offerstr && strRegexp != escrow && strSearchTermLower != buyerAliasLower && strSearchTermLower != sellerAliasLower && strSearchTermLower != arbiterAliasLower)
 				{
 					pcursor->Next();
 					continue;
 				}
                 escrowScan.push_back(txPos);
-   				if(!vchEscrow.empty() && vchMyEscrow == vchEscrow && strRegexp.empty())
-					break;   
             }
             if (escrowScan.size() >= nMax)
                 break;
@@ -3675,25 +3665,25 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 UniValue escrowfilter(const UniValue& params, bool fHelp) {
 	if (fHelp || params.size() > 2)
 		throw runtime_error(
-		"escrowfilter [regexp] [escrow]\n"
+		"escrowfilter [searchterm] [escrowpage]\n"
 						"scan and filter escrows\n"
-						"[regexp] : apply [regexp] on escrows, empty means all escrows\n"
-						"[escrow] : look for a specific escrow guid\n");
+						"[searchterm] : find searchterm on escrows, empty means all escrows\n"
+						"[escrowpage] : page with this escrow guid, starting from this escrow 25 max results are returned\n");
 
-	vector<unsigned char> vchEscrow;
-	string strRegexp;
+	vector<unsigned char> vchEscrowPage;
+	string strSearchTerm;
 
 	if(CheckParam(params, 0))
-		strRegexp = params[0].get_str();
+		strSearchTerm = params[0].get_str();
 
 	if(CheckParam(params, 1))
-		vchEscrow = vchFromValue(params[1]);
+		vchEscrowPage = vchFromValue(params[1]);
 
 	UniValue oRes(UniValue::VARR);
 
 	vector<CEscrow> escrowScan;
 	vector<string> aliases;
-	if (!pescrowdb->ScanEscrows(vchEscrow, strRegexp, aliases, 25, escrowScan))
+	if (!pescrowdb->ScanEscrows(vchEscrowPage, strSearchTerm, aliases, 25, escrowScan))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4607 - " + _("Scan failed"));
 
 	BOOST_FOREACH(const CEscrow& escrow, escrowScan) {
