@@ -337,10 +337,10 @@ bool COfferDB::ScanOffers(const std::vector<unsigned char>& vchOfferPage, const 
 					pcursor->Next();
 					continue;
 				}
+				const string &offer = stringFromVch(vchMyOffer);
 				if(!strSearchTerm.empty())
 				{
 					const string &alias = stringFromVch(txPos.vchAlias);
-					const string &offer = stringFromVch(vchMyOffer);
 					string title = stringFromVch(txPos.sTitle);
 					string description = stringFromVch(txPos.sDescription);
 					boost::algorithm::to_lower(title);
@@ -3658,8 +3658,8 @@ UniValue offerfilter(const UniValue& params, bool fHelp) {
 		"offerfilter [searchterm] [offerpage] [safesearch='Yes'] [category]\n"
 						"scan and filter offers\n"
 						"[searchterm] : find searchterm on offers, empty means all offers\n"
-						"[offerpage] : page with this offer guid, starting from this offer 25 max results are returned\n"
-						"[safesearch] : shows all offers that are safe to display (not on the ban list)\n"
+						"[offerpage] : page with this offer guid, starting from this offer 25 max results are returned. Empty for first 25 offers.\n"
+						"[safesearch] : shows all offers that are safe to display (not on the ban list). Defaults to true\n"
 						"[category] : category you want to search in, empty for all\n");
 
 	string strSearchTerm;

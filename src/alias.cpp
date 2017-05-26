@@ -3129,8 +3129,8 @@ UniValue aliasfilter(const UniValue& params, bool fHelp) {
 		"aliasfilter [searchterm] [aliaspage] [safesearch='Yes']\n"
 						"scan and filter aliases\n"
 						"[searchterm] : find searchterm in alias name, empty means all aliases\n"
-						"[aliaspage] : page with this alias name, starting from this alias 25 max results are returned\n"
-						"[safesearch] : shows all aliases that are safe to display (not on the ban list)\n");
+						"[aliaspage] : page with this alias name, starting from this alias 25 max results are returned. Empty for first 25 aliases.\n"
+						"[safesearch] : shows all aliases that are safe to display (not on the ban list). Defaults to true.\n");
 
 	vector<unsigned char> vchAliasPage;
 	string strSearchTerm;

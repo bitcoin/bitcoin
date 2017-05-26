@@ -1379,8 +1379,8 @@ UniValue certfilter(const UniValue& params, bool fHelp) {
 		"certfilter [searchterm] [certpage] [safesearch='Yes'] [category]\n"
 						"scan and filter certs\n"
 						"[searchterm] : find searchterm on certs, empty means all certs\n"
-						"[certpage] : page with this cert guid, starting from this cert 25 max results are returned\n");
-						"[safesearch] : shows all certs that are safe to display (not on the ban list)\n"
+						"[certpage] : page with this cert guid, starting from this cert 25 max results are returned. Empty for first 25 certs.\n");
+						"[safesearch] : shows all certs that are safe to display (not on the ban list). Defaults to true.\n"
 						"[category] : category you want to search in, empty for all\n");
 
 	vector<unsigned char> vchCertPage;

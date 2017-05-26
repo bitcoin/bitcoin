@@ -3668,7 +3668,7 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
 		"escrowfilter [searchterm] [escrowpage]\n"
 						"scan and filter escrows\n"
 						"[searchterm] : find searchterm on escrows, empty means all escrows\n"
-						"[escrowpage] : page with this escrow guid, starting from this escrow 25 max results are returned\n");
+						"[escrowpage] : page with this escrow guid, starting from this escrow 25 max results are returned. Empty for first 25 escrows.\n");
 
 	vector<unsigned char> vchEscrowPage;
 	string strSearchTerm;
