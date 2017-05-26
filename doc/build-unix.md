@@ -321,7 +321,7 @@ Clang is installed by default as `cc` compiler, this makes it easier to get
 started than on [OpenBSD](build-openbsd.md). Installing dependencies:
 
     pkg install autoconf automake libtool pkgconf
-    pkg install boost-libs openssl libevent2
+    pkg install boost-libs openssl libevent
 
 (`libressl` instead of `openssl` will also work)
 
