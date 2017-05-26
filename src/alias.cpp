@@ -1937,7 +1937,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	DecodeBase58(strAddress, newAlias.vchAddress);
 	CSyscoinAddress newAddress;
 	CScript scriptPubKeyOrig;
-	GetAddress(newAlias, &newAddress, scriptPubKeyOrig);
+	
 
 	vector<unsigned char> data;
 	vector<unsigned char> vchHashAlias;
@@ -1946,9 +1946,9 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	if(mapAliasRegistrationData.count(vchAlias) > 0)
 	{
 		data = mapAliasRegistrationData[vchAlias];
-		mapAliasRegistrationData.erase(vchAlias);
 		hash = Hash(data.begin(), data.end());
 		vchHashAlias = vchFromValue(hash.GetHex());
+		mapAliasRegistrationData.erase(vchAlias);
 		if(!newAlias.UnserializeFromData(data, vchHashAlias))
 			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5508 - " + _("Cannot unserialize alias registration transaction"));
 		bActivation = true;
@@ -1961,13 +1961,14 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 		mapAliasRegistrationData.insert(make_pair(vchAlias, data));	
 	}
 
-
+	
 	CScript scriptPubKey;
 	if(bActivation)
 		scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_ACTIVATE) << vchAlias << newAlias.vchGUID << vchHashAlias << OP_2DROP << OP_2DROP;
 	else
 		scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_ACTIVATE) << vchHashAlias << OP_2DROP;
 
+	GetAddress(newAlias, &newAddress, scriptPubKeyOrig);
 	scriptPubKey += scriptPubKeyOrig;
 
     vector<CRecipient> vecSend;
