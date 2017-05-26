@@ -87,6 +87,7 @@ CTxMemPool mempool(&feeEstimator);
 
 static void CheckBlockIndex(const Consensus::Params& consensusParams);
 static bool IsWitnessLockedIn(const CBlockIndex* pindexPrev, const Consensus::Params& params);
+static int DoS_UASF(int level);
 
 /** Constant stuff for coinbase transactions we create: */
 CScript COINBASE_FLAGS;
@@ -2859,6 +2860,18 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Co
     return true;
 }
 
+// If enabling a UASF flag, peers passing on blocks that don't
+// enforce the soft-fork are probably not trying to DoS us. To avoid
+// disconnecting them, change the DoS level to 0.
+static int DoS_UASF(int level)
+{
+    if (gArgs.GetBoolArg("-bip148", DEFAULT_BIP148)) {
+        return 0;
+    } else {
+        return level;
+    }
+}
+
 static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex)
 {
     AssertLockHeld(cs_main);
@@ -2888,7 +2901,7 @@ static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state
             return state.DoS(10, error("%s: prev block not found", __func__), 0, "prev-blk-not-found");
         pindexPrev = (*mi).second;
         if (pindexPrev->nStatus & BLOCK_FAILED_MASK)
-            return state.DoS(100, error("%s: prev block invalid", __func__), REJECT_INVALID, "bad-prevblk");
+            return state.DoS(DoS_UASF(100), error("%s: prev block invalid", __func__), REJECT_INVALID, "bad-prevblk");
 
         assert(pindexPrev);
         if (fCheckpointsEnabled && !CheckIndexAgainstCheckpoint(pindexPrev, state, chainparams, hash))
