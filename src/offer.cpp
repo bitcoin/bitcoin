@@ -3655,15 +3655,12 @@ UniValue offerhistory(const UniValue& params, bool fHelp) {
 UniValue offerfilter(const UniValue& params, bool fHelp) {
 	if (fHelp || params.size() > 4)
 		throw runtime_error(
-				"offerfilter [[[[[regexp]] from=0]] safesearch='Yes' category]\n"
+		"offerfilter [searchterm] [offerpage] [safesearch='Yes'] [category]\n"
 						"scan and filter offers\n"
-						"[regexp] : apply [regexp] on offers, empty means all offers\n"
-						"[from] : show results from this GUID [from], 0 means first.\n"
+						"[searchterm] : find searchterm on offers, empty means all offers\n"
+						"[offerpage] : page with this offer guid, starting from this offer 25 max results are returned\n");
 						"[safesearch] : shows all offers that are safe to display (not on the ban list)\n"
-						"[category] : category you want to search in, empty for all\n"
-						"offerfilter \"\" 5 # list offers updated in last 5 blocks\n"
-						"offerfilter \"^offer\" # list all offers starting with \"offer\"\n"
-						"offerfilter 36000 0 0 stat # display stats (number of offers) on active offers\n");
+						"[category] : category you want to search in, empty for all\n");
 
 	string strSearchTerm;
 	vector<unsigned char> vchOfferPage;

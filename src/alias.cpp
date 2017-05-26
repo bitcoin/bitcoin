@@ -1262,7 +1262,7 @@ bool CAliasDB::ScanNames(const std::vector<unsigned char>& vchAliasPage, const s
 					continue;
 				}
 				const string &name = stringFromVch(vchMyAlias);
-				if (!strRegexp.empty() && name.find(strSearchTermLower) != string::npos)
+				if (!strSearchTermLower.empty() && name.find(strSearchTermLower) != string::npos)
 				{
 					pcursor->Next();
 					continue;
@@ -3132,7 +3132,7 @@ UniValue aliasfilter(const UniValue& params, bool fHelp) {
 						"[aliaspage] : page with this alias name, starting from this alias 25 max results are returned\n"
 						"[safesearch] : shows all aliases that are safe to display (not on the ban list)\n");
 
-	vector<unsigned char> vchAlias;
+	vector<unsigned char> vchAliasPage;
 	string strSearchTerm;
 	string strAliasPage;
 	bool safeSearch = true;
