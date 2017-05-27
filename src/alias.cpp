@@ -754,7 +754,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				break;
 			}
 		}
-		if(if(op != OP_ALIAS_PAYMENT && !vvchArgs[3].empty())
+		if(op != OP_ALIAS_PAYMENT && !vvchArgs[3].empty())
 		{
 			bool bWitnessSigFound = false;
 			for (unsigned int i = 0; i < tx.vin.size(); i++) {
