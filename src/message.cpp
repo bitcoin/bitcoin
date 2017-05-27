@@ -451,7 +451,7 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 	CSyscoinAddress fromAddr;
 	GetAddress(aliasFrom, &fromAddr, scriptPubKeyAliasOrig);
 
-	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << aliasFrom.vchAlias <<  aliasFrom.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP
+	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << aliasFrom.vchAlias <<  aliasFrom.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP;
 	scriptPubKeyAlias += scriptPubKeyAliasOrig;		
 
 
