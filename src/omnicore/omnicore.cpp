@@ -666,12 +666,13 @@ static unsigned int nCacheMiss = 0;
 /**
  * Fetches transaction inputs and adds them to the coins view cache.
  *
+ * Note: cs_tx_cache should be locked, when adding and accessing inputs!
+ *
  * @param tx[in]  The transaction to fetch inputs for
  * @return True, if all inputs were successfully added to the cache
  */
 static bool FillTxInputCache(const CTransaction& tx)
 {
-    LOCK(cs_tx_cache);
     static unsigned int nCacheSize = GetArg("-omnitxcache", 500000);
 
     if (view.GetCacheSize() > nCacheSize) {
@@ -731,6 +732,13 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
         PrintToLog("%s(block=%d, %s idx= %d); txid: %s\n", __FUNCTION__, nBlock, DateTimeStrFormat("%Y-%m-%d %H:%M:%S", nTime), idx, wtx.GetHash().GetHex());
     }
 
+    // ### SENDER IDENTIFICATION ###
+    std::string strSender;
+    int64_t inAll = 0;
+
+    { // needed to ensure the cache isn't cleared in the meantime when doing parallel queries
+    LOCK(cs_tx_cache);
+
     // Add previous transaction inputs to the cache
     if (!FillTxInputCache(wtx)) {
         PrintToLog("%s() ERROR: failed to get inputs for %s\n", __func__, wtx.GetHash().GetHex());
@@ -738,9 +746,6 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
     }
 
     assert(view.HaveInputs(wtx));
-
-    // ### SENDER IDENTIFICATION ###
-    std::string strSender;
 
     if (omniClass != OMNI_CLASS_C)
     {
@@ -809,7 +814,10 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
         }
     }
 
-    int64_t inAll = view.GetValueIn(wtx);
+    inAll = view.GetValueIn(wtx);
+
+    } // end of LOCK(cs_tx_cache)
+
     int64_t outAll = wtx.GetValueOut();
     int64_t txFee = inAll - outAll; // miner fee
 
