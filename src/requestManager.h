@@ -105,19 +105,18 @@ class CRequestManager
   void AskFor(const std::vector<CInv> &objArray, CNode *from, unsigned int priority = 0);
 
   // Indicate that we got this object, from and bytes are optional (for node performance tracking)
-  void Received(const CInv& obj, CNode* from=NULL, int bytes=0);
+  void Received(const CInv& obj, CNode* from, int bytes=0);
 
   // Indicate that we previously got this object
   void AlreadyReceived(const CInv& obj);
 
   // Indicate that getting this object was rejected
-  void Rejected(const CInv& obj, CNode* from=NULL, unsigned char reason=0);
+  void Rejected(const CInv& obj, CNode* from, unsigned char reason=0);
   
   void SendRequests();
   
   // Indicates whether a node ping time is acceptable relative to the overall average of all nodes.
   bool IsNodePingAcceptable(CNode* pnode);
-
 };
 
 

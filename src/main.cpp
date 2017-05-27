@@ -615,7 +615,6 @@ static void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vec
     // download that next block if the window were 1 larger.
     int nWindowEnd = state->pindexLastCommonBlock->nHeight + BLOCK_DOWNLOAD_WINDOW;
     int nMaxHeight = std::min<int>(state->pindexBestKnownBlock->nHeight, nWindowEnd + 1);
-    NodeId waitingfor = -1;
     while (pindexWalk->nHeight < nMaxHeight)
     {
         // Read up to 128 (or more, if more blocks than that are needed) successors of pindexWalk (towards
@@ -4263,7 +4262,7 @@ static bool IsSuperMajority(int minVersion,
 
 bool ProcessNewBlock(CValidationState &state,
     const CChainParams &chainparams,
-    const CNode *pfrom,
+    CNode *pfrom,
     const CBlock *pblock,
     bool fForceProcessing,
     CDiskBlockPos *dbp)
@@ -4290,7 +4289,8 @@ bool ProcessNewBlock(CValidationState &state,
 
     {
         LOCK(cs_main);
-        bool fRequested = MarkBlockAsReceived(pblock->GetHash());
+        uint256 hash = pblock->GetHash();
+        bool fRequested = MarkBlockAsReceived(hash);
         fRequested |= fForceProcessing;
         if (!checked)
         {
@@ -4311,6 +4311,11 @@ bool ProcessNewBlock(CValidationState &state,
             // until the parents arrive.
             return error("%s: AcceptBlock FAILED", __func__);
         }
+
+        // We must indicate to the request manager that the block was received only after it has
+        // been stored to disk. Doing so prevents unnecessary re-requests.
+        CInv inv(MSG_BLOCK, hash);
+        requester.Received(inv, pfrom);
     }
 
     if (!ActivateBestChain(state, chainparams, pblock))
@@ -6700,7 +6705,7 @@ bool ProcessMessage(CNode *pfrom, string strCommand, CDataStream &vRecv, int64_t
             if (CheckBlockHeader(block, state, true)) // block header is fine
                 SendExpeditedBlock(block, pfrom);
         }
-        requester.Received(inv, pfrom, msgSize);
+
         // BUIP010 Extreme Thinblocks: Handle Block Message
         HandleBlockMessage(pfrom, strCommand, block, inv);
         LOCK(cs_orphancache);

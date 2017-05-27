@@ -229,7 +229,6 @@ bool CThinBlock::process(CNode *pfrom, int nSizeThinBlock)
     if (pfrom->thinBlockWaitingForTxns == 0)
     {
         // We have all the transactions now that are in this block: try to reassemble and process.
-        requester.Received(GetInv(), pfrom, nSizeThinBlock);
         pfrom->thinBlockWaitingForTxns = -1;
         int blockSize = pfrom->thinBlock.GetSerializeSize(SER_NETWORK, CBlock::CURRENT_VERSION);
         LogPrint("thin", "Reassembled thin block for %s (%d bytes). Message was %d bytes, compression ratio %3.2f\n",
@@ -370,7 +369,6 @@ bool CXThinBlockTx::HandleMessage(CDataStream &vRecv, CNode *pfrom)
             LogPrint("thin",
                 "xblocktx received but it was either not requested or it was beaten by another block %s  peer=%d\n",
                 inv.hash.ToString(), pfrom->id);
-            requester.Received(inv, pfrom, msgSize); // record the bytes received from the message
             return true;
         }
     }
@@ -412,7 +410,6 @@ bool CXThinBlockTx::HandleMessage(CDataStream &vRecv, CNode *pfrom)
     {
         // We have all the transactions now that are in this block: try to reassemble and process.
         pfrom->thinBlockWaitingForTxns = -1;
-        requester.Received(inv, pfrom, msgSize);
 
         // for compression statistics, we have to add up the size of xthinblock and the re-requested thinBlockTx.
         int nSizeThinBlockTx = ::GetSerializeSize(thinBlockTx, SER_NETWORK, PROTOCOL_VERSION);
@@ -875,7 +872,7 @@ bool CXThinBlock::process(CNode *pfrom,
         thindata.UpdateInBound(pfrom->nSizeThinBlock, blockSize);
         string ss = thindata.ToString();
         LogPrint("thin", "thin block stats: %s\n", ss.c_str());
-        requester.Received(GetInv(), pfrom, pfrom->nSizeThinBlock);
+
         HandleBlockMessage(pfrom, strCommand, pfrom->thinBlock, GetInv()); // clears the thin block
         LOCK(cs_orphancache);
         BOOST_FOREACH (uint64_t &cheapHash, vTxHashes)
