@@ -623,6 +623,7 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
             case THRESHOLD_FAILED:
                 // Not exposed to GBT at all
                 break;
+            case THRESHOLD_LOCKED_IN_BY_TIMEOUT:
             case THRESHOLD_LOCKED_IN:
                 // Ensure bit is set in block version
                 pblock->nVersion |= VersionBitsMask(consensusParams, pos);

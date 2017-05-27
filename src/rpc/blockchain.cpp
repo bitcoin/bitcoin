@@ -1063,6 +1063,7 @@ static UniValue VBSoftForkDesc(const Consensus::Params& consensusParams, Consens
     switch (thresholdState) {
     case THRESHOLD_DEFINED: rv.push_back(Pair("status", "defined")); break;
     case THRESHOLD_STARTED: rv.push_back(Pair("status", "started")); break;
+    case THRESHOLD_LOCKED_IN_BY_TIMEOUT: rv.push_back(Pair("status", "locked_in_by_timeout")); break;
     case THRESHOLD_LOCKED_IN: rv.push_back(Pair("status", "locked_in")); break;
     case THRESHOLD_ACTIVE: rv.push_back(Pair("status", "active")); break;
     case THRESHOLD_FAILED: rv.push_back(Pair("status", "failed")); break;
