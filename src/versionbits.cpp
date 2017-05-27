@@ -71,7 +71,7 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
             }
             case THRESHOLD_STARTED: {
                 if (pindexPrev->GetMedianTimePast() >= nTimeTimeout) {
-                    stateNext = (fLockInOnTimeout == false) ? THRESHOLD_FAILED : THRESHOLD_LOCKED_IN_BY_TIMEOUT;
+                    stateNext = fLockInOnTimeout ? THRESHOLD_LOCKED_IN_BY_TIMEOUT : THRESHOLD_FAILED;
                     break;
                 }
                 // We need to count
