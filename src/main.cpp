@@ -629,7 +629,7 @@ void FindNextBlocksToDownload(NodeId nodeid,
                 if (pindex->nChainTx)
                     state->pindexLastCommonBlock = pindex;
             }
-            else if (mapBlocksInFlight.count(pindex->GetBlockHash()) == 0)
+            else
             {
                 // The block is not already downloaded, and not yet in flight.
                 if (pindex->nHeight > nWindowEnd)
@@ -647,11 +647,6 @@ void FindNextBlocksToDownload(NodeId nodeid,
                 {
                     return;
                 }
-            }
-            else if (waitingfor == -1)
-            {
-                // This is the first already-in-flight block.
-                waitingfor = mapBlocksInFlight[pindex->GetBlockHash()].first;
             }
         }
     }
