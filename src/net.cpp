@@ -1743,9 +1743,9 @@ void CConnman::ThreadOpenConnections()
         //  * Increase the number of connectable addresses in the tried table.
         //
         // Method:
-        //  * Choose a random address from new and attempt to connect to it if we can connect 
+        //  * Choose a random address from new and attempt to connect to it if we can connect
         //    successfully it is added to tried.
-        //  * Start attempting feeler connections only after node finishes making outbound 
+        //  * Start attempting feeler connections only after node finishes making outbound
         //    connections.
         //  * Only make a feeler connection once every few minutes.
         //
@@ -2211,6 +2211,10 @@ bool CConnman::Start(CScheduler& scheduler, std::string& strNodeError, Options c
     nMaxOutboundTimeframe = connOptions.nMaxOutboundTimeframe;
 
     SetBestHeight(connOptions.nBestHeight);
+
+    for (const auto& strDest : connOptions.vSeedNodes) {
+        AddOneShot(strDest);
+    }
 
     clientInterface = connOptions.uiInterface;
     if (clientInterface) {
