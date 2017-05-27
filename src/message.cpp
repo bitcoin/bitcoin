@@ -418,9 +418,9 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
 }
 
 UniValue messagenew(const UniValue& params, bool fHelp) {
-    if (fHelp || 7 != params.size())
+    if (fHelp || params.size() < 7 || params.size() > 8)
         throw runtime_error(
-		"messagenew <message> <publicdata> <fromalias> <toalias> <encryption_publickey> <encryption_privatekey_from> <encryption_privatekey_to>\n"
+		"messagenew <message> <publicdata> <fromalias> <toalias> <encryption_publickey> <encryption_privatekey_from> <encryption_privatekey_to> [witness]\n"
 						"<message> Message to send. Encrypted to encryption_publickey.\n"
 						"<publicdata> Public message data including title and encryption keys for group viewing access.\n"
 						"<fromalias> Alias to send message from.\n"
@@ -428,6 +428,7 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 						"<encryption_publickey> Encryption public key. Message is encrypted to this key, anyone who has access to private key can read message.\n"	
 						"<encryption_privatekey_from> Encrypted private key to fromalias used for encryption/decryption of this message. Should be encrypted to encryption_publickey of fromalias.\n"	
 						"<encryption_privatekey_to> Encrypted private key to toalias used for encryption/decryption of this message. Should be encrypted to encryption_publickey of toalias.\n"
+						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"	
 						+ HelpRequiringPassphrase());
 	string strMessage = params[0].get_str();
 	string strPubData = params[1].get_str();
@@ -439,7 +440,9 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 	string strEncryptionPublicKey = params[4].get_str();
 	string strEncryptionPrivateKeyFrom = params[5].get_str();
 	string strEncryptionPrivateKeyTo = params[6].get_str();
-
+	vector<unsigned char> vchWitness;
+	if(CheckParam(params, 7))
+		vchWitness = vchFromValue(params[7]);
 	CAliasIndex aliasFrom, aliasTo;
 	CTransaction aliastx;
 	if (!GetTxOfAlias(vchFromString(strFromAddress), aliasFrom, aliastx))
@@ -448,7 +451,7 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 	CSyscoinAddress fromAddr;
 	GetAddress(aliasFrom, &fromAddr, scriptPubKeyAliasOrig);
 
-	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << aliasFrom.vchAlias <<  aliasFrom.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << aliasFrom.vchAlias <<  aliasFrom.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP
 	scriptPubKeyAlias += scriptPubKeyAliasOrig;		
 
 

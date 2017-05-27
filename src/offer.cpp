@@ -1445,9 +1445,9 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 }
 
 UniValue offernew(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() < 7 || params.size() > 14)
+	if (fHelp || params.size() < 7 || params.size() > 15)
 		throw runtime_error(
-		"offernew <alias> <category> <title> <quantity> <price> <description> <currency> [cert. guid] [payment options=SYS] [geolocation] [safe search=Yes] [private=No] [units] [coinoffer=No]\n"
+		"offernew <alias> <category> <title> <quantity> <price> <description> <currency> [cert. guid] [payment options=SYS] [geolocation] [safe search=Yes] [private=No] [units] [coinoffer=No] [witness]\n"
 						"<alias> An alias you own.\n"
 						"<category> category, 255 chars max.\n"
 						"<title> title, 255 chars max.\n"
@@ -1461,6 +1461,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 						"<safe search> set to No if this offer should only show in the search when safe search is not selected. Defaults to Yes (offer shows with or without safe search selected in search lists).\n"						
 						"<private> set to Yes if this offer should be private not be searchable. Defaults to No.\n"
 						"<units> Units that 1 qty represents. For example if selling 1 BTC.\n"
+						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"	
 						+ HelpRequiringPassphrase());
 	// gather inputs
 	float fPrice;
@@ -1524,6 +1525,9 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	bool bCoinOffer = false;
 	if(CheckParam(params, 13))
 		bCoinOffer = params[13].get_str() == "Yes"? true: false;
+	vector<unsigned char> vchWitness;
+	if(CheckParam(params, 14))
+		vchWitness = vchFromValue(params[14]);
 	int precision = 2;
 	CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(alias.vchAliasPeg, vchCurrency, fPrice, chainActive.Tip()->nHeight, precision);
 	if(nPricePerUnit == 0)
@@ -1593,7 +1597,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACTIVATE) << vchOffer << vchHashOffer << OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyOrig;
 	CScript scriptPubKeyAlias;
-	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << alias.vchAlias << alias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << alias.vchAlias << alias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP
 	scriptPubKeyAlias += scriptPubKeyOrig;
 
 	vector<CRecipient> vecSend;
@@ -1648,9 +1652,9 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 }
 
 UniValue offerlink(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() < 3 || params.size() > 4)
+	if (fHelp || params.size() < 3 || params.size() > 5)
 		throw runtime_error(
-		"offerlink <alias> <guid> <commission> [description]\n"
+		"offerlink <alias> <guid> <commission> [description] [witness]\n"
 						"<alias> An alias you own.\n"
 						"<guid> offer guid that you are linking to\n"
 						"<commission> percentage of profit desired over original offer price, > 0, ie: 5 for 5%\n"
@@ -1689,6 +1693,9 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	{
 		vchDescription = linkOffer.sDescription;
 	}
+	vector<unsigned char> vchWitness;
+	if(CheckParam(params, 4))
+		vchWitness = vchFromValue(params[4]);
 	COfferLinkWhitelistEntry entry;
 	if(linkOffer.linkWhitelist.GetLinkEntryByHash(vchAlias, entry))
 	{
@@ -1743,7 +1750,7 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACTIVATE) << vchOffer << vchHashOffer << OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyOrig;
 	CScript scriptPubKeyAlias;
-	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << alias.vchAlias << alias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << alias.vchAlias << alias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP
 	scriptPubKeyAlias += scriptPubKeyOrig;
 
 
@@ -1801,13 +1808,14 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 }
 
 UniValue offeraddwhitelist(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() < 2 || params.size() > 3)
+	if (fHelp || params.size() < 2 || params.size() > 4)
 		throw runtime_error(
-		"offeraddwhitelist <offer guid> <alias guid> [discount percentage]\n"
+		"offeraddwhitelist <offer guid> <alias guid> [discount percentage] [witness]\n"
 		"Add to the affiliate list of your offer(controls who can resell).\n"
 						"<offer guid> offer guid that you are adding to\n"
 						"<alias guid> alias guid representing an alias that you want to add to the affiliate list\n"
 						"<discount percentage> percentage of discount given to affiliate for this offer. 0 to 99.\n"
+						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"	
 						+ HelpRequiringPassphrase());
 
 	// gather & validate inputs
@@ -1817,7 +1825,9 @@ UniValue offeraddwhitelist(const UniValue& params, bool fHelp) {
 
 	if(CheckParam(params, 2))
 		nDiscountPctInteger = boost::lexical_cast<int>(params[2].get_str());
-
+	vector<unsigned char> vchWitness;
+	if(CheckParam(params, 3))
+		vchWitness = vchFromValue(params[3]);
 	CWalletTx wtx;
 
 	// this is a syscoin txn
@@ -1865,7 +1875,7 @@ UniValue offeraddwhitelist(const UniValue& params, bool fHelp) {
 	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_UPDATE) << vchOffer << vchHashOffer << OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyOrig;
 	CScript scriptPubKeyAlias;
-	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << theAlias.vchAlias << theAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << theAlias.vchAlias << theAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP
 	scriptPubKeyAlias += scriptPubKeyOrig;
 
 	vector<CRecipient> vecSend;
@@ -1918,15 +1928,17 @@ UniValue offeraddwhitelist(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue offerremovewhitelist(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() != 2)
+	if (fHelp || params.size() < 2 || params.size() > 3)
 		throw runtime_error(
-		"offerremovewhitelist <offer guid> <alias guid>\n"
+		"offerremovewhitelist <offer guid> <alias guid> [witness]\n"
 		"Remove from the affiliate list of your offer(controls who can resell).\n"
 						+ HelpRequiringPassphrase());
 	// gather & validate inputs
 	vector<unsigned char> vchOffer = vchFromValue(params[0]);
 	vector<unsigned char> vchAlias = vchFromValue(params[1]);
-
+	vector<unsigned char> vchWitness;
+	if(CheckParam(params, 2))
+		vchWitness = vchFromValue(params[2]);
 	CTransaction txCert;
 	CCert theCert;
 	CWalletTx wtx;
@@ -1969,7 +1981,7 @@ UniValue offerremovewhitelist(const UniValue& params, bool fHelp) {
 	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_UPDATE) << vchOffer << vchHashOffer << OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyOrig;
 	CScript scriptPubKeyAlias;
-	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << theAlias.vchAlias << theAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << theAlias.vchAlias << theAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP
 	scriptPubKeyAlias += scriptPubKeyOrig;
 
 	vector<CRecipient> vecSend;
@@ -2022,14 +2034,16 @@ UniValue offerremovewhitelist(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue offerclearwhitelist(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() != 1)
+	if (fHelp || params.size() < 1 || params.size() > 2)
 		throw runtime_error(
-		"offerclearwhitelist <offer guid>\n"
+		"offerclearwhitelist <offer guid> [witness]\n"
 		"Clear the affiliate list of your offer(controls who can resell).\n"
 						+ HelpRequiringPassphrase());
 	// gather & validate inputs
 	vector<unsigned char> vchOffer = vchFromValue(params[0]);
-
+	vector<unsigned char> vchWitness;
+	if(CheckParam(params, 1))
+		vchWitness = vchFromValue(params[1]);
 	// this is a syscoind txn
 	CWalletTx wtx;
 	CScript scriptPubKeyOrig;
@@ -2068,7 +2082,7 @@ UniValue offerclearwhitelist(const UniValue& params, bool fHelp) {
 	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_UPDATE) << vchOffer << vchHashOffer << OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyOrig;
 	CScript scriptPubKeyAlias;
-	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << theAlias.vchAlias << theAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << theAlias.vchAlias << theAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP
 	scriptPubKeyAlias += scriptPubKeyOrig;
 
 	vector<CRecipient> vecSend;
@@ -2122,11 +2136,14 @@ UniValue offerclearwhitelist(const UniValue& params, bool fHelp) {
 }
 
 UniValue offerwhitelist(const UniValue& params, bool fHelp) {
-    if (fHelp || 1 != params.size())
-        throw runtime_error("offerwhitelist <offer guid>\n"
+    if (fHelp || params.size() < 1 || params.size() > 2)
+        throw runtime_error("offerwhitelist <offer guid> [witness]\n"
                 "List all affiliates for this offer.\n");
     UniValue oRes(UniValue::VARR);
     vector<unsigned char> vchOffer = vchFromValue(params[0]);
+	vector<unsigned char> vchWitness;
+	if(CheckParam(params, 1))
+		vchWitness = vchFromValue(params[1]);
 	// look for a transaction with this key
 	CTransaction tx;
 	COffer theOffer;
@@ -2150,9 +2167,9 @@ UniValue offerwhitelist(const UniValue& params, bool fHelp) {
     return oRes;
 }
 UniValue offerupdate(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() < 2 || params.size() > 14)
+	if (fHelp || params.size() < 2 || params.size() > 15)
 		throw runtime_error(
-		"offerupdate <alias> <guid> [category] [title] [quantity] [price] [description] [currency] [private=No] [cert. guid] [geolocation] [safesearch=Yes] [commission] [paymentOptions]\n"
+		"offerupdate <alias> <guid> [category] [title] [quantity] [price] [description] [currency] [private=No] [cert. guid] [geolocation] [safesearch=Yes] [commission] [paymentOptions] [witness]\n"
 						"Perform an update on an offer you control.\n"
 						+ HelpRequiringPassphrase());
 	// gather & validate inputs
@@ -2219,7 +2236,9 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1532 - " + _("Could not validate payment options string"));
 	}
 	unsigned char paymentOptionsMask = (unsigned char) GetPaymentOptionsMaskFromString(paymentOptions);
-
+	vector<unsigned char> vchWitness;
+	if(CheckParam(params, 14))
+		vchWitness = vchFromValue(params[14]);
 
 	CAliasIndex alias, linkAlias;
 	CTransaction aliastx, linkaliastx;
@@ -2367,7 +2386,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	CreateRecipient(scriptPubKey, recipient);
 	vecSend.push_back(recipient);
 	CScript scriptPubKeyAlias;
-	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << alias.vchAlias << alias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << alias.vchAlias << alias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP
 	scriptPubKeyAlias += scriptPubKeyOrig;
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
@@ -2414,8 +2433,8 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue offeraccept(const UniValue& params, bool fHelp) {
-	if (fHelp || 2 > params.size() || params.size() > 6)
-		throw runtime_error("offeraccept <alias> <guid> [quantity] [message] [Ext TxId] [payment option]\n"
+	if (fHelp || 2 > params.size() || params.size() > 7)
+		throw runtime_error("offeraccept <alias> <guid> [quantity] [message] [Ext TxId] [payment option] [witness]\n"
 				"Accept&Pay for a confirmed offer.\n"
 				"<alias> An alias of the buyer.\n"
 				"<guid> guidkey from offer.\n"
@@ -2423,6 +2442,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 				"<message> payment message to seller, 256 characters max.\n"
 				"<Ext TxId> If paid in another coin, enter the Transaction ID here. Default is empty.\n"
 				"<paymentOption> If Ext TxId is defined, specify a valid payment option used to make payment. Default is SYS.\n"
+				"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"	
 				+ HelpRequiringPassphrase());
 	CSyscoinAddress refundAddr;
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
@@ -2458,6 +2478,9 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	}
 	// payment options - and convert payment options string to a bitmask for the txn
 	unsigned char paymentOptionsMask = (unsigned char) GetPaymentOptionsMaskFromString(paymentOptions);
+	vector<unsigned char> vchWitness;
+	if(CheckParam(params, 6))
+		vchWitness = vchFromValue(params[6]);	
 	// this is a syscoin txn
 	CWalletTx wtx;
 	CScript scriptPubKeyAliasOrig;
@@ -2564,7 +2587,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	}
 	CSyscoinAddress buyerAddress;
 	GetAddress(buyerAlias, &buyerAddress, scriptPubKeyAliasOrig);
-	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyerAlias.vchAlias  << buyerAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyerAlias.vchAlias  << buyerAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP
 	scriptPubKeyAlias += scriptPubKeyAliasOrig;
 
 	string strCipherText = "";
@@ -2796,9 +2819,9 @@ void GetFeedback(vector<CFeedback> &feedBackSorted, float &avgRating, const Feed
 }
 
 UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() != 4)
+    if (fHelp || params.size() < 4 || params.size() > 5)
         throw runtime_error(
-		"offeracceptfeedback <offer guid> <offeraccept guid> [feedback] [rating] \n"
+		"offeracceptfeedback <offer guid> <offeraccept guid> [feedback] [rating] [witness]\n"
                         "Send feedback and rating for offer accept specified. Ratings are numbers from 1 to 5\n"
                         + HelpRequiringPassphrase());
    // gather & validate inputs
@@ -2815,7 +2838,9 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1568 - " + _("Invalid rating value"));
 	}
 
-
+	vector<unsigned char> vchWitness;
+	if(CheckParam(params, 4))
+		vchWitness = vchFromValue(params[4]);
     // this is a syscoin transaction
     CWalletTx wtx;
 
@@ -2911,7 +2936,7 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 		sellerFeedback.nHeight = chainActive.Tip()->nHeight;
 		theOffer.accept.feedback.clear();
 		theOffer.accept.feedback.push_back(sellerFeedback);
-		scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyerAlias.vchAlias << buyerAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+		scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyerAlias.vchAlias << buyerAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP
 		scriptPubKeyAlias += buyerScript;
 		scriptPubKeyAliasOrig = buyerScript;
 	}
@@ -2924,7 +2949,7 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 		buyerFeedback.nHeight = chainActive.Tip()->nHeight;
 		theOffer.accept.feedback.clear();
 		theOffer.accept.feedback.push_back(buyerFeedback);
-		scriptPubKeyAlias = CScript() <<  CScript::EncodeOP_N(OP_ALIAS_UPDATE) << sellerAlias.vchAlias << sellerAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+		scriptPubKeyAlias = CScript() <<  CScript::EncodeOP_N(OP_ALIAS_UPDATE) << sellerAlias.vchAlias << sellerAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP
 		scriptPubKeyAlias += sellerScript;
 		scriptPubKeyAliasOrig = sellerScript;
 
@@ -2993,16 +3018,18 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue offeracceptacknowledge(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() != 3)
+    if (fHelp || params.size() < 3 || params.size() > 4)
         throw runtime_error(
-		"offeracceptacknowledge <offer guid> <offeraccept guid> \n"
+		"offeracceptacknowledge <offer guid> <offeraccept guid> [witness] \n"
                         "Acknowledge offer payment as seller of offer. Include some information like tracking number, and a hash and URL of video for proof-of-shipment.\n"
                         + HelpRequiringPassphrase());
    // gather & validate inputs
 	vector<unsigned char> vchOffer = vchFromValue(params[0]);
 	vector<unsigned char> vchAcceptRand = vchFromValue(params[1]);
 	vector<unsigned char> vchMessage = vchFromValue(params[2]);
-
+	vector<unsigned char> vchWitness;
+	if(CheckParam(params, 3))
+		vchWitness = vchFromValue(params[3]);
     // this is a syscoin transaction
     CWalletTx wtx;
 
@@ -3069,7 +3096,7 @@ UniValue offeracceptacknowledge(const UniValue& params, bool fHelp) {
 	theOffer.accept.vchMessage = vchMessage;
 	theOffer.nHeight = chainActive.Tip()->nHeight;
 
-	scriptPubKeyAlias = CScript() <<  CScript::EncodeOP_N(OP_ALIAS_UPDATE) << sellerAlias.vchAlias << sellerAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+	scriptPubKeyAlias = CScript() <<  CScript::EncodeOP_N(OP_ALIAS_UPDATE) << sellerAlias.vchAlias << sellerAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP
 	scriptPubKeyAlias += sellerScript;
 
 

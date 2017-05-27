@@ -706,7 +706,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	{
 		if(op != OP_ALIAS_PAYMENT)
 		{
-			if(vvchArgs.size() != 3)
+			if(vvchArgs.size() != 4)
 			{
 				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5001 - " + _("Alias arguments incorrect size");
 				return error(errorMessage.c_str());
@@ -752,6 +752,35 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				prevOp = pop;
 				vvchPrevArgs = vvch;
 				break;
+			}
+		}
+		if(if(op != OP_ALIAS_PAYMENT && !vvchArgs[3].empty())
+		{
+			bool bWitnessSigFound = false;
+			for (unsigned int i = 0; i < tx.vin.size(); i++) {
+				vector<vector<unsigned char> > vvch;
+				int pop;
+				const COutPoint* prevOutputWitness = &tx.vin[i].prevout;
+				if(!prevOutputWitness)
+					continue;
+				// ensure inputs are unspent when doing consensus check to add to block
+				const CCoins* prevCoinsWitness = inputs.AccessCoins(prevOutputWitness->hash);
+				if(prevCoinsWitness == NULL)
+					continue;
+				if(!prevCoinsWitness->IsAvailable(prevOutputWitness->n) || !IsSyscoinScript(prevCoinsWitness->vout[prevOutputWitness->n].scriptPubKey, pop, vvch))
+				{
+					continue;
+				}
+				// match 4th element in scriptpubkey of alias update with witness input scriptpubkey, if names match then sig is provided
+				if (IsAliasOp(pop, true) && vvchArgs[3] == vvch[0]) {
+					bWitnessSigFound = true;
+					break;
+				}
+			}
+			if(!bWitnessSigFound)
+			{
+				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5002 - " + _("Witness signature not found");
+				return error(errorMessage.c_str());
 			}
 		}
 	}
@@ -1786,9 +1815,9 @@ bool CheckParam(const UniValue& params, const unsigned int index)
 	return false;
 }
 UniValue aliasnew(const UniValue& params, bool fHelp) {
-	if (fHelp || 4 > params.size() || 12 < params.size())
+	if (fHelp || 4 > params.size() || 13 < params.size())
 		throw runtime_error(
-		"aliasnew <aliaspeg> <aliasname> <password> <public value> [private value] [safe search=Yes] [accept transfers=Yes] [expire_timestamp] [address] [password_salt] [encryption_privatekey] [encryption_publickey]\n"
+		"aliasnew <aliaspeg> <aliasname> <password> <public value> [private value] [safe search=Yes] [accept transfers=Yes] [expire_timestamp] [address] [password_salt] [encryption_privatekey] [encryption_publickey] [witness]\n"
 						"<aliasname> alias name.\n"
 						"<password> used to generate your public/private key that controls this alias. Should be encrypted to publickey.\n"
 						"<public value> alias public profile data, 1024 chars max.\n"
@@ -1799,7 +1828,8 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 						"<address> Address for this alias.\n"		
 						"<password_salt> Salt used for key derivation if password is set.\n"
 						"<encryption_privatekey> Encrypted private key used for encryption/decryption of private data related to this alias. Should be encrypted to publickey.\n"
-						"<encryption_publickey> Public key used for encryption/decryption of private data related to this alias.\n"							
+						"<encryption_publickey> Public key used for encryption/decryption of private data related to this alias.\n"						
+						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"							
 						+ HelpRequiringPassphrase());
 	vector<unsigned char> vchAliasPeg = vchFromString(params[0].get_str());
 	if(vchAliasPeg.empty())
@@ -1878,7 +1908,9 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	string strEncryptionPublicKey = "";
 	if(CheckParam(params, 11))
 		strEncryptionPublicKey = params[11].get_str();
-
+	vector<unsigned char> vchWitness;
+	if(CheckParam(params, 12))
+		vchWitness = vchFromValue(params[12]);
 
 	CWalletTx wtx;
 
@@ -1952,7 +1984,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	
 	CScript scriptPubKey;
 	if(bActivation)
-		scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_ACTIVATE) << vchAlias << newAlias.vchGUID << vchHashAlias << OP_2DROP << OP_2DROP;
+		scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_ACTIVATE) << vchAlias << newAlias.vchGUID << vchHashAlias << vchWitness << OP_2DROP << OP_2DROP << OP_DROP;
 	else
 		scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_ACTIVATE) << vchHashAlias << OP_2DROP;
 
@@ -2020,9 +2052,9 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue aliasupdate(const UniValue& params, bool fHelp) {
-	if (fHelp || 2 > params.size() || 12 < params.size())
+	if (fHelp || 2 > params.size() || 13 < params.size())
 		throw runtime_error(
-		"aliasupdate <aliaspeg> <aliasname> [public value] [private value] [safesearch=Yes] [address] [password] [accept_transfers=Yes] [expire_timestamp] [password_salt] [encryption_privatekey] [encryption_publickey]\n"
+		"aliasupdate <aliaspeg> <aliasname> [public value] [private value] [safesearch=Yes] [address] [password] [accept_transfers=Yes] [expire_timestamp] [password_salt] [encryption_privatekey] [encryption_publickey] [witness]\n"
 						"Update and possibly transfer an alias.\n"
 						"<aliasname> alias name.\n"
 						"<public_value> alias public profile data, 1024 chars max.\n"
@@ -2035,6 +2067,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 						"<password_salt> Salt used for key derivation if password is set.\n"
 						"<encryption_privatekey> Encrypted private key used for encryption/decryption of private data related to this alias. If transferring, the key should be encrypted to alias_pubkey.\n"
 						"<encryption_publickey> Public key used for encryption/decryption of private data related to this alias. Useful if you are changing pub/priv keypair for encryption on this alias.\n"						
+						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"	
 						+ HelpRequiringPassphrase());
 	vector<unsigned char> vchAliasPeg = vchFromString(params[0].get_str());
 	if(vchAliasPeg.empty())
@@ -2088,6 +2121,9 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	if(CheckParam(params, 11))
 		strEncryptionPublicKey = params[11].get_str();
 	
+	vector<unsigned char> vchWitness;
+	if(CheckParam(params, 12))
+		vchWitness = vchFromValue(params[12]);
 
 	CTransaction tx;
 	CAliasIndex theAlias;
@@ -2141,7 +2177,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
     vector<unsigned char> vchHashAlias = vchFromValue(hash.GetHex());
 
 	CScript scriptPubKey;
-	scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << copyAlias.vchAlias << copyAlias.vchGUID << vchHashAlias << OP_2DROP << OP_2DROP;
+	scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << copyAlias.vchAlias << copyAlias.vchGUID << vchHashAlias << vchWitness << OP_2DROP << OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyOrig;
 
     vector<CRecipient> vecSend;

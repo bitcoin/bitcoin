@@ -781,9 +781,9 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 
 
 UniValue certnew(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() < 3 || params.size() > 8)
+    if (fHelp || params.size() < 3 || params.size() > 9)
         throw runtime_error(
-		"certnew <alias> <title> <public> [private] [safe search=Yes] [category=certificates] [encryption_publickey] [encryption_privatekey]\n"
+		"certnew <alias> <title> <public> [private] [safe search=Yes] [category=certificates] [encryption_publickey] [encryption_privatekey] [witness]\n"
 						"<alias> An alias you own.\n"
 						"<title> title, 256 characters max.\n"
                         "<public> public data, 256 characters max.\n"
@@ -792,6 +792,7 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 						"<category> category, 25 characters max. Defaults to certificates\n"
 						"<encryption_publickey> Encryption public key. Certificate private data is encrypted to this key, anyone who has access to private key can read message.\n"	
 						"<encryption_privatekey> Encrypted private key to alias used for encryption/decryption of this message. Should be encrypted to encryption_publickey of alias.\n"	
+						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"	
 						+ HelpRequiringPassphrase());
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
     vector<unsigned char> vchTitle = vchFromString(params[1].get_str());
@@ -811,7 +812,9 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 		strEncryptionPublicKey = params[6].get_str();
 	if(CheckParam(params, 7))
 		strEncryptionPrivateKey = params[7].get_str();
-
+	vector<unsigned char> vchWitness;
+	if(CheckParam(params, 8))
+		vchWitness = vchFromValue(params[8]);
 	// check for alias existence in DB
 	CTransaction aliastx;
 	CAliasIndex theAlias;
@@ -858,7 +861,7 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 
     scriptPubKey << CScript::EncodeOP_N(OP_CERT_ACTIVATE) << vchCert << vchHashCert << OP_2DROP << OP_DROP;
     scriptPubKey += scriptPubKeyOrig;
-	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << theAlias.vchAlias << theAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << theAlias.vchAlias << theAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP;
 	scriptPubKeyAlias += scriptPubKeyOrig;
 
 	// use the script pub key to create the vecsend which sendmoney takes and puts it into vout
@@ -915,9 +918,9 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 }
 
 UniValue certupdate(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() < 1 || params.size() > 8)
+    if (fHelp || params.size() < 1 || params.size() > 9)
         throw runtime_error(
-		"certupdate <guid> [title] [public] [private] [safesearch=Yes] [category=certificates] [encryption_publickey] [encryption_privatekey]\n"
+		"certupdate <guid> [title] [public] [private] [safesearch=Yes] [category=certificates] [encryption_publickey] [encryption_privatekey] [witness]\n"
 						"Perform an update on an certificate you control.\n"
 						"<guid> certificate guidkey.\n"
 						"<title> certificate title, 256 characters max.\n"
@@ -927,6 +930,7 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 						"<category> category, 256 characters max. Defaults to certificates\n"
 						"<encryption_publickey> Encryption public key. Certificate private data is encrypted to this key, anyone who has access to private key can read message.\n"	
 						"<encryption_privatekey> Encrypted private key to alias used for encryption/decryption of this message. Should be encrypted to encryption_publickey of alias.\n"	
+						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"	
 						+ HelpRequiringPassphrase());
 	vector<unsigned char> vchCert = vchFromValue(params[0]);
 
@@ -952,7 +956,9 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 	if(CheckParam(params, 7))
 		strEncryptionPrivateKey = params[7].get_str();
 
-
+	vector<unsigned char> vchWitness;
+	if(CheckParam(params, 8))
+		vchWitness = vchFromValue(params[8]);
 
     // this is a syscoind txn
     CWalletTx wtx;
@@ -1011,7 +1017,7 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 	CreateRecipient(scriptPubKey, recipient);
 	vecSend.push_back(recipient);
 	CScript scriptPubKeyAlias;
-	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << theAlias.vchAlias << theAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << theAlias.vchAlias << theAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP
 	scriptPubKeyAlias += scriptPubKeyOrig;
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
@@ -1061,9 +1067,9 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 
 
 UniValue certtransfer(const UniValue& params, bool fHelp) {
- if (fHelp || params.size() < 2 || params.size() > 7)
+ if (fHelp || params.size() < 2 || params.size() > 8)
         throw runtime_error(
-		"certtransfer <guid> <alias> [public] [private] [encryption_publickey] [encryption_privatekey] [accessflags=2]\n"
+		"certtransfer <guid> <alias> [public] [private] [encryption_publickey] [encryption_privatekey] [accessflags=2] [witness]\n"
 						"Transfer a certificate you own to another alias.\n"
 						"<guid> certificate guidkey.\n"
 						"<alias> alias to transfer to.\n"
@@ -1072,6 +1078,7 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 						"<encryption_publickey> Encryption public key. Certificate private data is encrypted to this key, anyone who has access to private key can read message.\n"	
 						"<encryption_privatekey> Encrypted private key to alias used for encryption/decryption of this message. Should be encrypted to encryption_publickey of alias.\n"					
 						"<accessflags> Set new access flags for new owner for this certificate, 0 for read-only, 1 for edit, 2 for edit and transfer access.\n"
+						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"	
 						+ HelpRequiringPassphrase());
 
     // gather & validate inputs
@@ -1093,7 +1100,9 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 		strEncryptionPrivateKey = params[5].get_str();
 	if(CheckParam(params, 6))
 		strAccessFlags = params[6].get_str();
-
+	vector<unsigned char> vchWitness;
+	if(CheckParam(params, 7))
+		vchWitness = vchFromValue(params[7]);
 	// check for alias existence in DB
 	CTransaction tx;
 	CAliasIndex toAlias;
@@ -1157,7 +1166,7 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	vecSend.push_back(recipient);
 
 	CScript scriptPubKeyAlias;
-	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << fromAlias.vchAlias << fromAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << fromAlias.vchAlias << fromAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP
 	scriptPubKeyAlias += scriptPubKeyFromOrig;
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);

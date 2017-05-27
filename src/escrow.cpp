@@ -1293,9 +1293,9 @@ UniValue generateescrowmultisig(const UniValue& params, bool fHelp) {
 }
 
 UniValue escrownew(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() < 5 ||  params.size() > 9)
+    if (fHelp || params.size() < 5 ||  params.size() > 10)
         throw runtime_error(
-		"escrownew <alias> <offer> <quantity> <message> <arbiter alias> [extTx] [payment option] [redeemScript] [height]\n"
+		"escrownew <alias> <offer> <quantity> <message> <arbiter alias> [extTx] [payment option] [redeemScript] [height] [witness]\n"
 						"<alias> An alias you own.\n"
                         "<offer> GUID of offer that this escrow is managing.\n"
                         "<quantity> Quantity of items to buy of offer.\n"
@@ -1305,7 +1305,8 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 						"<paymentOption> If extTx is defined, specify a valid payment option used to make payment. Default is SYS.\n"
 						"<redeemScript> If paid in external chain, enter redeemScript that generateescrowmultisig returns\n"
 						"<height> If paid in extneral chain, enter height that generateescrowmultisig returns\n"
-                        + HelpRequiringPassphrase());
+                        "<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"	
+						+ HelpRequiringPassphrase());
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
 	vector<unsigned char> vchOffer = vchFromValue(params[1]);
 	unsigned int nQty = 1;
@@ -1351,7 +1352,9 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 		vchRedeemScript = vchFromValue(params[7]);
 	if(CheckParam(params, 8))
 		nHeight = boost::lexical_cast<uint64_t>(params[8].get_str());
-
+	vector<unsigned char> vchWitness;
+	if(CheckParam(params, 9))
+		vchWitness = vchFromValue(params[9]);
 
 	CAliasIndex buyeralias;
 	if (!GetTxOfAlias(vchAlias, buyeralias, buyeraliastx))
@@ -1402,7 +1405,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	CSyscoinAddress buyerAddress;
 	GetAddress(buyeralias, &buyerAddress, scriptPubKeyAliasOrig);
 
-	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyeralias.vchAlias  << buyeralias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyeralias.vchAlias  << buyeralias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP
 	scriptPubKeyAlias += scriptPubKeyAliasOrig;
 
 
@@ -1578,9 +1581,9 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue escrowrelease(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() > 3 || params.size() < 2)
+    if (fHelp || params.size() > 4 || params.size() < 2)
         throw runtime_error(
-		"escrowrelease <escrow guid> <user role> [rawTx]\n"
+		"escrowrelease <escrow guid> <user role> [rawTx] [witness]\n"
                         "Releases escrow funds to seller, seller needs to sign the output transaction and send to the network. User role represents either 'buyer' or 'arbiter'. Enter in rawTx if this is an external payment release.\n"
                         + HelpRequiringPassphrase());
     // gather & validate inputs
@@ -1589,7 +1592,9 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	string rawTx = "";
 	if(CheckParam(params, 2))
 		rawTx = params[2].get_str();
-
+	vector<unsigned char> vchWitness;
+	if(CheckParam(params, 3))
+		vchWitness = vchFromValue(params[3]);
     // this is a syscoin transaction
     CWalletTx wtx;
 
@@ -1711,7 +1716,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	if(role == "arbiter")
 	{
 		scriptPubKeyAliasOrig = arbiterScript;
-		scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << arbiterAliasLatest.vchAlias << arbiterAliasLatest.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+		scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << arbiterAliasLatest.vchAlias << arbiterAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP
 		scriptPubKeyAlias += scriptPubKeyAliasOrig;
 		vchLinkAlias = arbiterAliasLatest.vchAlias;
 		theAlias = arbiterAliasLatest;
@@ -1719,7 +1724,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	else if(role == "buyer")
 	{
 		scriptPubKeyAliasOrig = buyerScript;
-		scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyerAliasLatest.vchAlias << buyerAliasLatest.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+		scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyerAliasLatest.vchAlias << buyerAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP
 		scriptPubKeyAlias += scriptPubKeyAliasOrig;
 		vchLinkAlias = buyerAliasLatest.vchAlias;
 		theAlias = buyerAliasLatest;
@@ -1892,15 +1897,17 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue escrowacknowledge(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() != 2)
+    if (fHelp || params.size() < 2 || params.size() > 3)
         throw runtime_error(
-		"escrowacknowledge <escrow guid> <message>\n"
+		"escrowacknowledge <escrow guid> <message> [witness]\n"
                         "Acknowledge escrow payment as seller of offer. Include some information like tracking number, and a hash and URL of video for proof-of-shipment.\n"
                         + HelpRequiringPassphrase());
     // gather & validate inputs
     vector<unsigned char> vchEscrow = vchFromValue(params[0]);
 	vector<unsigned char> vchMessage = vchFromValue(params[1]);
-
+	vector<unsigned char> vchWitness;
+	if(CheckParam(params, 2))
+		vchWitness = vchFromValue(params[2]);
 
 	
 	
@@ -1965,7 +1972,7 @@ UniValue escrowacknowledge(const UniValue& params, bool fHelp) {
 	}
 	
 
-	CScript scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << sellerAliasLatest.vchAlias << sellerAliasLatest.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+	CScript scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << sellerAliasLatest.vchAlias << sellerAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP
 	scriptPubKeyAlias += sellerScript;
 
 	escrow.ClearEscrow();
@@ -2045,9 +2052,9 @@ UniValue escrowacknowledge(const UniValue& params, bool fHelp) {
 
 }
 UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() > 2 || params.size() < 1)
+    if (fHelp || params.size() > 3 || params.size() < 1)
         throw runtime_error(
-		"escrowclaimrelease <escrow guid> [rawTx]\n"
+		"escrowclaimrelease <escrow guid> [rawTx] [witness]\n"
                         "Claim escrow funds released from buyer or arbiter using escrowrelease. Enter in rawTx if this is an external payment release.\n"
                         + HelpRequiringPassphrase());
     // gather & validate inputs
@@ -2293,17 +2300,21 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 
 }
 UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() != 2)
+    if (fHelp || params.size() < 2 || params.size() > 3)
         throw runtime_error(
-		"escrowcompleterelease <escrow guid> <rawtx> \n"
+		"escrowcompleterelease <escrow guid> <rawtx> [witness]\n"
                          "Completes an escrow release by creating the escrow complete release transaction on syscoin blockchain.\n"
 						 "<rawtx> Raw syscoin escrow transaction. Enter the raw tx result from escrowclaimrelease.\n"
-                        + HelpRequiringPassphrase());
+                         "<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"	
+						 + HelpRequiringPassphrase());
     // gather & validate inputs
     vector<unsigned char> vchEscrow = vchFromValue(params[0]);
 	string rawTx = params[1].get_str();
 	CTransaction myRawTx;
 	DecodeHexTx(myRawTx,rawTx);
+	vector<unsigned char> vchWitness;
+	if(CheckParam(params, 2))
+		vchWitness = vchFromValue(params[2]);
     // this is a syscoin transaction
     CWalletTx wtx;
 
@@ -2357,7 +2368,7 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchLinkAlias;
 	CScript scriptPubKeyAlias;
 	
-	scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << sellerAliasLatest.vchAlias << sellerAliasLatest.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+	scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << sellerAliasLatest.vchAlias << sellerAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP
 	scriptPubKeyAlias += sellerScript;
 	vchLinkAlias = sellerAliasLatest.vchAlias;
 
@@ -2445,9 +2456,9 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue escrowrefund(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() > 3 || params.size() < 2)
+    if (fHelp || params.size() > 4 || params.size() < 2)
         throw runtime_error(
-		"escrowrefund <escrow guid> <user role> [rawTx]\n"
+		"escrowrefund <escrow guid> <user role> [rawTx] [witness]\n"
                         "Refunds escrow funds back to buyer, buyer needs to sign the output transaction and send to the network. User role represents either 'seller' or 'arbiter'. Enter in rawTx if this is an external payment refund.\n"
                         + HelpRequiringPassphrase());
     // gather & validate inputs
@@ -2456,6 +2467,9 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	string rawTx = "";
 	if(CheckParam(params, 2))
 		rawTx = params[2].get_str();
+	vector<unsigned char> vchWitness;
+	if(CheckParam(params, 3))
+		vchWitness = vchFromValue(params[3]);
     // this is a syscoin transaction
     CWalletTx wtx;
 
@@ -2564,7 +2578,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	// who is initiating release arbiter or seller?
 	if(role == "arbiter")
 	{	
-		scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << arbiterAliasLatest.vchAlias << arbiterAliasLatest.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+		scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << arbiterAliasLatest.vchAlias << arbiterAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP
 		scriptPubKeyAlias += arbiterScript;
 		scriptPubKeyAliasOrig = arbiterScript;
 		vchLinkAlias = arbiterAliasLatest.vchAlias;
@@ -2572,7 +2586,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	}
 	else if(role == "seller")
 	{		
-		scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << sellerAliasLatest.vchAlias << sellerAliasLatest.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+		scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << sellerAliasLatest.vchAlias << sellerAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP
 		scriptPubKeyAlias += sellerScript;
 		scriptPubKeyAliasOrig = sellerScript;
 		vchLinkAlias = sellerAliasLatest.vchAlias;
@@ -2722,9 +2736,9 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() > 2 || params.size() < 1)
+    if (fHelp || params.size() > 3 || params.size() < 1)
         throw runtime_error(
-		"escrowclaimrefund <escrow guid> [rawTx]\n"
+		"escrowclaimrefund <escrow guid> [rawTx] [witness]\n"
                         "Claim escrow funds released from seller or arbiter using escrowrefund. Enter in rawTx if this is an external payment refund.\n"
                         + HelpRequiringPassphrase());
     // gather & validate inputs
@@ -2733,7 +2747,9 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	if(CheckParam(params, 1))
 		rawTx = params[1].get_str();
 
-	
+	vector<unsigned char> vchWitness;
+	if(CheckParam(params, 2))
+		vchWitness = vchFromValue(params[2]);
     // look for a transaction with this key
     CTransaction tx;
 	CEscrow escrow;
@@ -2911,9 +2927,9 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	return ret;
 }
 UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() != 2)
+    if (fHelp || params.size() < 2 || params.size() > 3)
         throw runtime_error(
-		"escrowcompleterefund <escrow guid> <rawtx> \n"
+		"escrowcompleterefund <escrow guid> <rawtx> [witness]\n"
                          "Completes an escrow refund by creating the escrow complete refund transaction on syscoin blockchain.\n"
 						 "<rawtx> Raw syscoin escrow transaction. Enter the raw tx result from escrowclaimrefund.\n"
                         + HelpRequiringPassphrase());
@@ -2922,6 +2938,9 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 	string rawTx = params[1].get_str();
 	CTransaction myRawTx;
 	DecodeHexTx(myRawTx,rawTx);
+	vector<unsigned char> vchWitness;
+	if(CheckParam(params, 2))
+		vchWitness = vchFromValue(params[2]);
     // this is a syscoin transaction
     CWalletTx wtx;
 
@@ -2975,7 +2994,7 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchLinkAlias;
 	CScript scriptPubKeyAlias;
 
-	scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyerAliasLatest.vchAlias << buyerAliasLatest.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+	scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyerAliasLatest.vchAlias << buyerAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP
 	scriptPubKeyAlias += buyerScript;
 	vchLinkAlias = buyerAliasLatest.vchAlias;
 
@@ -3066,9 +3085,9 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue escrowfeedback(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() != 6)
+    if (fHelp || params.size() < 6 || params.size() > 7)
         throw runtime_error(
-		"escrowfeedback <escrow guid> <user role> <feedbackprimary> <ratingprimary> <feedbacksecondary> <ratingasecondary>\n"
+		"escrowfeedback <escrow guid> <user role> <feedbackprimary> <ratingprimary> <feedbacksecondary> <ratingasecondary> [witness]\n"
                         "Send feedback for primary and secondary users in escrow, depending on who you are. Ratings are numbers from 1 to 5. User Role is either 'buyer', 'seller', 'reseller', or 'arbiter'.\n"
 						"If you are the buyer, feedbackprimary is for seller and feedbacksecondary is for arbiter.\n"
 						"If you are the seller, feedbackprimary is for buyer and feedbacksecondary is for arbiter.\n"
@@ -3086,6 +3105,9 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	nRatingPrimary = boost::lexical_cast<int>(params[3].get_str());
 	vchFeedbackSecondary = vchFromValue(params[4]);
 	nRatingSecondary = boost::lexical_cast<int>(params[5].get_str());
+	vector<unsigned char> vchWitness;
+	if(CheckParam(params, 6))
+		vchWitness = vchFromValue(params[6]);
     // this is a syscoin transaction
     CWalletTx wtx;
 	vector<CEscrow> vtxPos;
@@ -3144,7 +3166,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	if(role == "buyer")
 	{
 			
-		scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyerAliasLatest.vchAlias << buyerAliasLatest.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+		scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyerAliasLatest.vchAlias << buyerAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP
 		scriptPubKeyAlias += buyerScript;
 		scriptPubKeyAliasOrig = buyerScript;
 		vchLinkAlias = buyerAliasLatest.vchAlias;
@@ -3152,7 +3174,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	}
 	else if(role == "seller")
 	{	
-		scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << sellerAliasLatest.vchAlias << sellerAliasLatest.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+		scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << sellerAliasLatest.vchAlias << sellerAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP
 		scriptPubKeyAlias += sellerScript;
 		scriptPubKeyAliasOrig = sellerScript;
 		vchLinkAlias = sellerAliasLatest.vchAlias;
@@ -3160,7 +3182,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	}
 	else if(role == "reseller")
 	{
-		scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << resellerAliasLatest.vchAlias << resellerAliasLatest.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+		scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << resellerAliasLatest.vchAlias << resellerAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP
 		scriptPubKeyAlias += resellerScript;
 		scriptPubKeyAliasOrig = resellerScript;
 		vchLinkAlias = resellerAliasLatest.vchAlias;
@@ -3168,7 +3190,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	}
 	else if(role == "arbiter")
 	{		
-		scriptPubKeyAlias  = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << arbiterAliasLatest.vchAlias << arbiterAliasLatest.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+		scriptPubKeyAlias  = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << arbiterAliasLatest.vchAlias << arbiterAliasLatest.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_DROP
 		scriptPubKeyAlias += arbiterScript;
 		scriptPubKeyAliasOrig = arbiterScript;
 		vchLinkAlias = arbiterAliasLatest.vchAlias;

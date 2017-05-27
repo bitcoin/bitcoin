@@ -122,7 +122,6 @@ public:
     std::vector<unsigned char> vchPublicValue;
 	std::vector<unsigned char> vchPrivateValue;
 	std::vector<unsigned char> vchAddress;
-	std::vector<unsigned char> vchWitnessAlias;
 	std::vector<unsigned char> vchEncryptionPublicKey;
 	std::vector<unsigned char> vchEncryptionPrivateKey;
 	std::vector<unsigned char> vchPassword;
@@ -153,7 +152,6 @@ public:
 		vchPrivateValue.clear();
 		vchGUID.clear();
 		vchAddress.clear();
-		vchWitnessAlias.clear();
 		vchPassword.clear();
 		vchPasswordSalt.clear();
 	}
@@ -203,11 +201,10 @@ public:
 		READWRITE(VARINT(nRatingCountAsArbiter));
 		READWRITE(VARINT(nAccessFlags));
 		READWRITE(vchPasswordSalt);
-		READWRITE(vchAddress);
-		READWRITE(vchWitnessAlias);		
+		READWRITE(vchAddress);	
 	}
     friend bool operator==(const CAliasIndex &a, const CAliasIndex &b) {
-		return (a.safeSearch == b.safeSearch && a.vchWitnessAlias == b.vchWitnessAlias && a.nAccessFlags == b.nAccessFlags && a.vchAddress == b.vchAddress && a.vchEncryptionPublicKey == b.vchEncryptionPublicKey && a.vchEncryptionPrivateKey == b.vchEncryptionPrivateKey && a.vchPassword ==b.vchPassword && a.acceptCertTransfers == b.acceptCertTransfers && a.nExpireTime == b.nExpireTime && a.vchGUID == b.vchGUID && a.vchAlias == b.vchAlias && a.nRatingCountAsArbiter == b.nRatingCountAsArbiter && a.nRatingAsArbiter == b.nRatingAsArbiter && a.nRatingCountAsSeller == b.nRatingCountAsSeller && a.nRatingAsSeller == b.nRatingAsSeller && a.nRatingCountAsBuyer == b.nRatingCountAsBuyer && a.nRatingAsBuyer == b.nRatingAsBuyer && a.safetyLevel == b.safetyLevel && a.nHeight == b.nHeight && a.txHash == b.txHash && a.vchPublicValue == b.vchPublicValue && a.vchPrivateValue == b.vchPrivateValue);
+		return (a.safeSearch == b.safeSearch && a.nAccessFlags == b.nAccessFlags && a.vchAddress == b.vchAddress && a.vchEncryptionPublicKey == b.vchEncryptionPublicKey && a.vchEncryptionPrivateKey == b.vchEncryptionPrivateKey && a.vchPassword ==b.vchPassword && a.acceptCertTransfers == b.acceptCertTransfers && a.nExpireTime == b.nExpireTime && a.vchGUID == b.vchGUID && a.vchAlias == b.vchAlias && a.nRatingCountAsArbiter == b.nRatingCountAsArbiter && a.nRatingAsArbiter == b.nRatingAsArbiter && a.nRatingCountAsSeller == b.nRatingCountAsSeller && a.nRatingAsSeller == b.nRatingAsSeller && a.nRatingCountAsBuyer == b.nRatingCountAsBuyer && a.nRatingAsBuyer == b.nRatingAsBuyer && a.safetyLevel == b.safetyLevel && a.nHeight == b.nHeight && a.txHash == b.txHash && a.vchPublicValue == b.vchPublicValue && a.vchPrivateValue == b.vchPrivateValue);
     }
 
     friend bool operator!=(const CAliasIndex &a, const CAliasIndex &b) {
@@ -223,7 +220,6 @@ public:
         vchPublicValue = b.vchPublicValue;
         vchPrivateValue = b.vchPrivateValue;
 		vchPassword = b.vchPassword;
-		vchWitnessAlias = b.vchWitnessAlias;
 		vchPasswordSalt = b.vchPasswordSalt;
 		vchAddress = b.vchAddress;
 		safetyLevel = b.safetyLevel;
@@ -240,8 +236,8 @@ public:
 		safeSearch = b.safeSearch;
         return *this;
     }   
-    void SetNull() {nAccessFlags = 2;vchWitnessAlias.clear(); vchAddress.clear(); vchEncryptionPublicKey.clear();vchEncryptionPrivateKey.clear();vchAliasPeg.clear();vchPassword.clear(); vchPasswordSalt.clear();acceptCertTransfers = true; nExpireTime = 0; vchGUID.clear(); vchAlias.clear(); nRatingCountAsBuyer = 0; nRatingAsBuyer = 0; nRatingCountAsSeller = 0; nRatingAsSeller = 0; nRatingCountAsArbiter = 0; nRatingAsArbiter = 0; safetyLevel = 0; txHash.SetNull(); nHeight = 0; vchPublicValue.clear(); vchPrivateValue.clear(); safeSearch = true;}
-    bool IsNull() const { return (safeSearch && nAccessFlags == 2 && vchWitnessAlias.empty() && vchAddress.empty() && vchEncryptionPublicKey.empty() && vchEncryptionPrivateKey.empty() && vchAliasPeg.empty() && vchPassword.empty() && vchPasswordSalt.empty() && acceptCertTransfers && nExpireTime == 0 && vchGUID.empty() && vchAlias.empty() && nRatingCountAsBuyer == 0 && nRatingAsBuyer == 0 && nRatingCountAsArbiter == 0 && nRatingAsArbiter == 0 && nRatingCountAsSeller == 0 && nRatingAsSeller == 0 && safetyLevel == 0 && nHeight == 0 && txHash.IsNull() && vchPublicValue.empty() && vchPrivateValue.empty()); }
+    void SetNull() {nAccessFlags = 2; vchAddress.clear(); vchEncryptionPublicKey.clear();vchEncryptionPrivateKey.clear();vchAliasPeg.clear();vchPassword.clear(); vchPasswordSalt.clear();acceptCertTransfers = true; nExpireTime = 0; vchGUID.clear(); vchAlias.clear(); nRatingCountAsBuyer = 0; nRatingAsBuyer = 0; nRatingCountAsSeller = 0; nRatingAsSeller = 0; nRatingCountAsArbiter = 0; nRatingAsArbiter = 0; safetyLevel = 0; txHash.SetNull(); nHeight = 0; vchPublicValue.clear(); vchPrivateValue.clear(); safeSearch = true;}
+    bool IsNull() const { return (safeSearch && nAccessFlags == 2 && vchAddress.empty() && vchEncryptionPublicKey.empty() && vchEncryptionPrivateKey.empty() && vchAliasPeg.empty() && vchPassword.empty() && vchPasswordSalt.empty() && acceptCertTransfers && nExpireTime == 0 && vchGUID.empty() && vchAlias.empty() && nRatingCountAsBuyer == 0 && nRatingAsBuyer == 0 && nRatingCountAsArbiter == 0 && nRatingAsArbiter == 0 && nRatingCountAsSeller == 0 && nRatingAsSeller == 0 && safetyLevel == 0 && nHeight == 0 && txHash.IsNull() && vchPublicValue.empty() && vchPrivateValue.empty()); }
 	bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
 	void Serialize(std::vector<unsigned char>& vchData);
