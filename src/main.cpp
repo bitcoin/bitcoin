@@ -555,10 +555,7 @@ CBlockIndex *LastCommonAncestor(CBlockIndex *pa, CBlockIndex *pb)
 
 /** Update pindexLastCommonBlock and add not-in-flight missing successors to vBlocks, until it has
  *  at most count entries. */
-void FindNextBlocksToDownload(NodeId nodeid,
-    unsigned int count,
-    std::vector<CBlockIndex *> &vBlocks,
-    NodeId &nodeStaller)
+static void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vector<CBlockIndex *> &vBlocks)
 {
     if (count == 0)
         return;
@@ -631,17 +628,13 @@ void FindNextBlocksToDownload(NodeId nodeid,
             }
             else
             {
-                // The block is not already downloaded, and not yet in flight.
+                // Return if we've reached the end of the download window.
                 if (pindex->nHeight > nWindowEnd)
                 {
-                    // We reached the end of the window.
-                    if (vBlocks.size() == 0 && waitingfor != nodeid)
-                    {
-                        // We aren't able to fetch anything, but we would be if the download window was one larger.
-                        nodeStaller = waitingfor;
-                    }
                     return;
                 }
+
+                // Return if we've reached the end of the number of blocks we can download for this peer.
                 vBlocks.push_back(pindex);
                 if (vBlocks.size() == count)
                 {
@@ -7575,9 +7568,7 @@ bool SendMessages(CNode *pto)
             state.nBlocksInFlight < (int)MAX_BLOCKS_IN_TRANSIT_PER_PEER)
         {
             std::vector<CBlockIndex *> vToDownload;
-            NodeId staller = -1;
-            FindNextBlocksToDownload(
-                pto->GetId(), MAX_BLOCKS_IN_TRANSIT_PER_PEER - state.nBlocksInFlight, vToDownload, staller);
+            FindNextBlocksToDownload(pto->GetId(), MAX_BLOCKS_IN_TRANSIT_PER_PEER - state.nBlocksInFlight, vToDownload);
             BOOST_FOREACH (CBlockIndex *pindex, vToDownload)
             {
                 CInv inv(MSG_BLOCK, pindex->GetBlockHash());
