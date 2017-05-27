@@ -595,7 +595,6 @@ static void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vec
     int nWindowEnd = chainActive.Height() + BLOCK_DOWNLOAD_WINDOW;
 
     int nMaxHeight = std::min<int>(state->pindexBestKnownBlock->nHeight, nWindowEnd + 1);
-    NodeId waitingfor = -1;
     while (pindexWalk->nHeight < nMaxHeight)
     {
         // Read up to 128 (or more, if more blocks than that are needed) successors of pindexWalk (towards
@@ -4334,7 +4333,7 @@ static bool IsSuperMajority(int minVersion,
 
 bool ProcessNewBlock(CValidationState &state,
     const CChainParams &chainparams,
-    const CNode *pfrom,
+    CNode *pfrom,
     const CBlock *pblock,
     bool fForceProcessing,
     CDiskBlockPos *dbp,
@@ -4367,7 +4366,8 @@ bool ProcessNewBlock(CValidationState &state,
     //                called from other places.  Currently it seems best to leave cs_main here as is.
     {
         LOCK(cs_main);
-        bool fRequested = MarkBlockAsReceived(pblock->GetHash());
+        uint256 hash = pblock->GetHash();
+        bool fRequested = MarkBlockAsReceived(hash);
         fRequested |= fForceProcessing;
         if (!checked)
         {
@@ -4388,6 +4388,11 @@ bool ProcessNewBlock(CValidationState &state,
             // until the parents arrive.
             return error("%s: AcceptBlock FAILED", __func__);
         }
+
+        // We must indicate to the request manager that the block was received only after it has
+        // been stored to disk. Doing so prevents unnecessary re-requests.
+        CInv inv(MSG_BLOCK, hash);
+        requester.Received(inv, pfrom);
     }
 
     if (!ActivateBestChain(state, chainparams, pblock, fParallel))
@@ -6727,9 +6732,6 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
             if (CheckBlockHeader(block, state, true)) // block header is fine
                 SendExpeditedBlock(block, pfrom);
         }
-        // This comes after the check for block header and expedited forwarding, in case this
-        // block is invalid we don't want to remove it from the request manager yet.
-        requester.Received(inv, pfrom, msgSize);
 
         // Message consistency checking
         // NOTE: consistency checking is handled by checkblock() which is called during
