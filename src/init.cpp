@@ -1514,11 +1514,14 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         }
     }
 
+<<<<<<< HEAD
     if (gArgs.IsArgSet("-seednode")) {
         for (const std::string& strDest : gArgs.GetArgs("-seednode"))
             connman.AddOneShot(strDest);
     }
 
+=======
+>>>>>>> 5d67526... add SeedNodes to CConnman::Options
 #if ENABLE_ZMQ
     pzmqNotificationInterface = CZMQNotificationInterface::Create();
 
@@ -1923,6 +1926,10 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     connOptions.nMaxOutboundTimeframe = nMaxOutboundTimeframe;
     connOptions.nMaxOutboundLimit = nMaxOutboundLimit;
+
+    if (gArgs.IsArgSet("-seednode")) {
+        connOptions.vSeedNodes = gArgs.GetArgs("-seednode");
+    }
 
     if (!connman.Start(scheduler, strNodeError, connOptions))
         return InitError(strNodeError);

@@ -145,6 +145,7 @@ public:
         unsigned int nReceiveFloodSize = 0;
         uint64_t nMaxOutboundTimeframe = 0;
         uint64_t nMaxOutboundLimit = 0;
+        std::vector<std::string> vSeedNodes;
     };
     CConnman(uint64_t seed0, uint64_t seed1);
     ~CConnman();
@@ -289,8 +290,6 @@ public:
     void GetBanned(banmap_t &banmap);
     void SetBanned(const banmap_t &banmap);
 
-    void AddOneShot(const std::string& strDest);
-
     bool AddNode(const std::string& node);
     bool RemoveAddedNode(const std::string& node);
     bool AddPendingMasternode(const CService& addr);
@@ -350,6 +349,7 @@ private:
     };
 
     void ThreadOpenAddedConnections();
+    void AddOneShot(const std::string& strDest);
     void ProcessOneShot();
     void ThreadOpenConnections();
     void ThreadMessageHandler();
