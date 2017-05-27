@@ -1403,6 +1403,9 @@ int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Para
         if (state == THRESHOLD_LOCKED_IN || state == THRESHOLD_LOCKED_IN_BY_TIMEOUT || state == THRESHOLD_STARTED) {
             nVersion |= VersionBitsMask(params, (Consensus::DeploymentPos)i);
         }
+        if (state == THRESHOLD_LOCKED_IN_BY_TIMEOUT) {
+            nVersion |= VERSIONBITS_WARNING_LOCKINONTIMEOUT_BITS;
+        }
     }
 
     return nVersion;
@@ -1839,6 +1842,12 @@ void static UpdateTip(CBlockIndex *pindexNew, const CChainParams& chainParams) {
     {
         int nUpgraded = 0;
         const CBlockIndex* pindex = chainActive.Tip();
+        if (pindex->nVersion & VERSIONBITS_WARNING_LOCKINONTIMEOUT_BITS) {
+            // BIP9 always shown warnings with unknown deployments becoming active
+            const std::string strWarning = _("Warning: unknown new rules locked in (versionbits bip8 timeout)");
+            DoWarning(strWarning);
+            warningMessages.push_back(strWarning);
+        }
         for (int bit = 0; bit < VERSIONBITS_NUM_BITS; bit++) {
             WarningBitsConditionChecker checker(bit);
             ThresholdState state = checker.GetStateFor(pindex, chainParams.GetConsensus(), warningcache[bit]);
