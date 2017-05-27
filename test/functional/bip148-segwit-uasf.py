@@ -49,7 +49,6 @@ class BIP148Test(BitcoinTestFramework):
 
         self.day = -30 # 30 days before BIP168 activation
         self.blockrate = [0,1,3,4,3,0,0]
-        self.sync_groups = [set((0,1,2,4,5,6)), set((3,7))]
 
     def connect_all(self):
         connect_nodes(self.nodes[6],7)
@@ -107,6 +106,9 @@ class BIP148Test(BitcoinTestFramework):
 
     def run_test(self):
         cnt = self.nodes[0].getblockcount()
+        self.sync_groups = [set(range(self.num_nodes))]
+        # (if nodes aren't synced initially, the non-segwit blocks may get accidentally orphaned
+        #  activating/locking in segwit...)
 
         # Lock in CSV
         self.nodes[0].generate(500)
@@ -120,10 +122,12 @@ class BIP148Test(BitcoinTestFramework):
         self.sync_all()
 
         for d in range(120):
+            swstatus = get_bip9_status(self.nodes[0], 'segwit')["status"]
             if self.day == 0:
-                swstatus = get_bip9_status(self.nodes[0], 'segwit')["status"]
                 if swstatus != "started":
-                    raise AssertionError("segwit soft-fork in state %s rather than started" % (swstatus))
+                    raise AssertionError("segwit soft-fork in state %s rather than started at day 0" % (swstatus))
+                self.log.info("Splitting sync groups")
+                self.sync_groups = [set((0,1,2,4,5,6)), set((3,7))]
 
             self.mining()
             tips = set(n.getbestblockhash() for n in self.nodes)
@@ -140,7 +144,7 @@ class BIP148Test(BitcoinTestFramework):
                 else:
                     out.append(a)
 
-            self.log.info("Day %d: status: %s" % (self.day, out))
+            self.log.info("Day %d:%s: status: %s:" % (self.day, swstatus, out))
 
             if self.day == 7:
                 self.bip148_restart(5)
