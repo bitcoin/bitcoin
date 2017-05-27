@@ -23,9 +23,9 @@ BOOST_AUTO_TEST_CASE (generate_offernew)
 
 	// generate a good offer
 	string offerguid = OfferNew("node1", "selleralias1", "category", "title", "100", "0.05", "description", "USD");
-	// by default offers are set to private and not searchable
-	BOOST_CHECK_EQUAL(OfferFilter("node1", "", "On"), false);
-	// direct search should work
+	// by default offers are not private and should be searchable
+	BOOST_CHECK_EQUAL(OfferFilter("node1", "", "On"), true);
+	// direct search should work too
 	BOOST_CHECK_EQUAL(OfferFilter("node1", offerguid, "On"), true);
 
 	// should fail: generate an offer with unknown alias
