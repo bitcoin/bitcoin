@@ -15,6 +15,9 @@ class ListSinceBlockTest (BitcoinTestFramework):
         self.num_nodes = 4
 
     def run_test (self):
+        self.list_since_reorg()
+
+    def list_since_reorg (self):
         '''
         `listsinceblock` did not behave correctly when handed a block that was
         no longer in the main chain:
