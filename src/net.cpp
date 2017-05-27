@@ -2668,6 +2668,7 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
     nPingNonceSent = 0;
     nPingUsecStart = 0;
     nPingUsecTime = 0;
+    nMinPingUsecTime = std::numeric_limits<int64_t>::max();
     fPingQueued = false;
     nMinPingUsecTime = std::numeric_limits<int64_t>::max();
     minFeeFilter = 0;
