@@ -524,16 +524,16 @@
            <item>
             <widget class="QSlider" name="sldGraphRange">
              <property name="minimum">
-              <number>1</number>
+              <number>0</number>
              </property>
              <property name="maximum">
-              <number>288</number>
+              <number>9</number>
              </property>
              <property name="pageStep">
-              <number>12</number>
+              <number>1</number>
              </property>
              <property name="value">
-              <number>6</number>
+              <number>3</number>
              </property>
              <property name="orientation">
               <enum>Qt::Horizontal</enum>

@@ -3,7 +3,8 @@ TESTS += qt/test/test_dash-qt
 
 TEST_QT_MOC_CPP = \
   qt/test/moc_compattests.cpp \
-  qt/test/moc_uritests.cpp
+  qt/test/moc_trafficgraphdatatests.cpp \
+  qt/test/moc_uritests.cpp 
 
 if ENABLE_WALLET
 TEST_QT_MOC_CPP += qt/test/moc_paymentservertests.cpp
@@ -13,7 +14,8 @@ TEST_QT_H = \
   qt/test/compattests.h \
   qt/test/uritests.h \
   qt/test/paymentrequestdata.h \
-  qt/test/paymentservertests.h
+  qt/test/paymentservertests.h \
+  qt/test/trafficgraphdatatests.h
 
 qt_test_test_dash_qt_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BITCOIN_QT_INCLUDES) \
   $(QT_INCLUDES) $(QT_TEST_INCLUDES) $(PROTOBUF_CFLAGS)
@@ -22,6 +24,7 @@ qt_test_test_dash_qt_SOURCES = \
   qt/test/compattests.cpp \
   qt/test/test_main.cpp \
   qt/test/uritests.cpp \
+  qt/test/trafficgraphdatatests.cpp \
   $(TEST_QT_H)
 if ENABLE_WALLET
 qt_test_test_dash_qt_SOURCES += \
