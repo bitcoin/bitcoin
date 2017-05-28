@@ -58,7 +58,7 @@ class BlindTest(ParticlTestFramework):
         
         ro = nodes[0].getwalletinfo()
         print("0 getwalletinfo " + json.dumps(ro, indent=4, default=self.jsonDecimal))
-        assert(isclose(ro['total_balance'], 99996.5996656))
+        assert(isclose(ro['total_balance'], 99996.594196))
         
         
         assert(self.wait_for_mempool(nodes[1], txnHash))
@@ -137,7 +137,7 @@ class BlindTest(ParticlTestFramework):
         
         ro = nodes[0].getwalletinfo()
         print("0 getwalletinfo " + json.dumps(ro, indent=4, default=self.jsonDecimal))
-        assert(isclose(ro['total_balance'], 99996.60064394))
+        assert(isclose(ro['total_balance'], 99996.59876474))
         
         
         

@@ -1046,7 +1046,8 @@ CAmount CHDWallet::GetBalance() const
         
         for (const auto &r : rtx.vout)
         {
-            if (r.nFlags & ORF_OWNED && !IsSpent(txhash, r.n))
+            if (r.nType == OUTPUT_STANDARD
+                && r.nFlags & ORF_OWNED && !IsSpent(txhash, r.n))
                 nBalance += r.nValue;
         };
         
@@ -1496,7 +1497,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             txNew.vpout.clear();
             wtx.fFromMe = true;
             
-            CAmount nValueToSelect = nValue;
+            CAmount nValueToSelect = nValue + nFeeRet;
             
             double dPriority = 0;
             
@@ -1718,7 +1719,6 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 };
             };
             
-            
             // Fill in dummy signatures for fee calculation.
             int nIn = 0;
             for (const auto &coin : setCoins)
@@ -1891,7 +1891,6 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
         return 1;
     };
     
-    
     {
         LOCK(cs_wallet);
         CHDWalletDB wdb(strWalletFile, "r+");
@@ -1976,7 +1975,7 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             txNew.vpout.clear();
             wtx.fFromMe = true;
             
-            CAmount nValueToSelect = nValue;
+            CAmount nValueToSelect = nValue + nFeeRet;
             
             double dPriority = 0;
             
@@ -2097,7 +2096,6 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                     std::numeric_limits<unsigned int>::max() - (fWalletRbf ? 2 : 1)));
             };
             
-            std::vector<uint8_t*> vpBlinds;
             nValueOutPlain = 0;
             // The fee will come out of the change
             
@@ -2259,7 +2257,6 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 {
                     r.nAmount -= additionalFeeNeeded;
                     nFeeRet += additionalFeeNeeded;
-                    nValueOutPlain += nFeeRet;
                     break; // Done, able to increase fee from change
                 }
             };
@@ -2269,6 +2266,9 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             nFeeRet = nFeeNeeded;
             continue;
         };
+        
+        
+        nValueOutPlain += nFeeRet;
         
         std::vector<uint8_t> vInputBlinds;
         std::vector<uint8_t*> vpBlinds;
@@ -2289,7 +2289,6 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 return errorN(1, "%s: GetBlind failed for %s, %d.\n", __func__, txhash.ToString().c_str(), coin.second);
             
             vpBlinds.push_back(&vInputBlinds[nIn * 32]);
-            
             
             // Remove scriptSigs to eliminate the fee calculation dummy signatures
             vin.scriptSig = CScript();
@@ -2322,8 +2321,6 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             
             if (r.nType == OUTPUT_CT)
             {
-                //CTxOutCT *txout = (CTxOutCT*)txNew.vpout[r.n].get();
-                
                 if ((int)i != nChangePosInOut)
                 {
                     vpBlinds.push_back(&r.vBlind[0]);
@@ -2338,6 +2335,8 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 return errorN(1, sError, __func__, "nChangePosInOut not blind.");
             
             CTxOutCT *pout = (CTxOutCT*)txNew.vpout[r.n].get();
+            
+            
             // Last to-be-blinded value: compute from all other blinding factors.
             // sum of output blinding values must equal sum of input blinding values
             if (!secp256k1_pedersen_blind_sum(secp256k1_ctx_blind, &r.vBlind[0], &vpBlinds[0], vpBlinds.size(), nBlindedInputs))
@@ -2358,8 +2357,6 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             
             size_t nRangeProofLen = 5134;
             pout->vRangeproof.resize(nRangeProofLen);
-            
-            // TODO: rangeproof parameter selection
             
             uint64_t min_value = 0;
             int ct_exponent = 0;
@@ -2421,6 +2418,10 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 nIn++;
             };
         };
+        
+        
+        
+        
         
         
         rtx.nFee = nFeeRet;
@@ -6205,21 +6206,28 @@ int CHDWallet::OwnBlindOut(const CTxOutCT *pout, const CStoredExtKey *pc, uint32
     
     uint64_t min_value, max_value;
     uint8_t blindOut[32];
-    unsigned char msg[4096];
-    size_t msg_size;
+    unsigned char msg[256]; // currently narration is capped at 32 bytes
+    size_t mlen = sizeof(msg);
+    memset(msg, 0, mlen);
     uint64_t amountOut;
     if (1 != secp256k1_rangeproof_rewind(secp256k1_ctx_blind,
-        blindOut, &amountOut, msg, &msg_size, nonce.begin(),
+        blindOut, &amountOut, msg, &mlen, nonce.begin(),
         &min_value, &max_value, 
         &pout->commitment, pout->vRangeproof.data(), pout->vRangeproof.size(),
         NULL, 0,
         secp256k1_generator_h))
         return errorN(0, "%s: secp256k1_rangeproof_rewind failed.", __func__);
     
-    //msg[msg_size] = '\0';
-    //if (msg_size)
-    if (strlen((const char*)msg))
-        rout.sNarration = std::string((const char*)msg);
+    msg[mlen-1] = '\0';
+    
+    size_t nNarr = strlen((const char*)msg);
+    if (nNarr > 0)
+        rout.sNarration.assign((const char*)msg, nNarr);
+    else
+        rout.sNarration = "";
+    
+    LogPrintf("TEMP MSG rout.sNarration %s\n", rout.sNarration);
+    
     
     rout.nType = OUTPUT_CT;
     rout.nFlags |= ORF_OWNED;
@@ -6394,6 +6402,74 @@ bool CHDWallet::AddToRecord(CTransactionRecord &rtxIn, const CTransaction &tx,
     
     return true;
 };
+
+std::vector<uint256> CHDWallet::ResendRecordTransactionsBefore(int64_t nTime, CConnman *connman)
+{
+    std::vector<uint256> result;
+
+    LOCK(cs_wallet);
+    
+    
+    for (RtxOrdered_t::iterator it = rtxOrdered.begin(); it != rtxOrdered.end(); ++it)
+    {
+        //it->second->first
+        //it->second->second
+        
+        if (it->first > nTime)
+            continue;
+        
+        CTransactionRecord &rtx = it->second->second;
+        
+        if (rtx.IsAbandoned())
+            continue;
+        if (GetDepthInMainChain(rtx.blockHash) != 0)
+            continue;
+        
+        std::map<uint256, CWalletTx>::iterator twi = mapTempWallet.find(it->second->first);
+        
+        if (twi == mapTempWallet.end())
+        {
+            if (0 != InsertTempTxn(it->second->first, rtx.blockHash, rtx.nIndex)
+                || (twi = mapTempWallet.find(it->second->first)) == mapTempWallet.end())
+            {
+                LogPrintf("ERROR: %s - InsertTempTxn failed %s.", __func__, it->second->first.ToString());
+            }
+        };
+        
+        if (twi != mapTempWallet.end())
+        {
+            if (twi->second.RelayWalletTransaction(connman))
+                result.push_back(it->second->first);
+        };
+    };
+    
+    return result;
+}
+
+void CHDWallet::ResendWalletTransactions(int64_t nBestBlockTime, CConnman *connman)
+{
+    // Do this infrequently and randomly to avoid giving away
+    // that these are our transactions.
+    if (GetTime() < nNextResend || !fBroadcastTransactions)
+        return;
+    bool fFirst = (nNextResend == 0);
+    nNextResend = GetTime() + GetRand(30 * 60);
+    if (fFirst)
+        return;
+
+    // Only do it if there's been a new block since last time
+    if (nBestBlockTime < nLastResend)
+        return;
+    nLastResend = GetTime();
+
+    // Rebroadcast unconfirmed txes older than 5 minutes before the last
+    // block was found:
+    std::vector<uint256> relayed = ResendWalletTransactionsBefore(nBestBlockTime-5*60, connman);
+    
+    std::vector<uint256> relayedRecord = ResendRecordTransactionsBefore(nBestBlockTime-5*60, connman);
+    if (!relayed.empty() || !relayedRecord.empty())
+        LogPrintf("%s: rebroadcast %u unconfirmed transactions\n", __func__, relayed.size() + relayedRecord.size());
+}
 
 void CHDWallet::AvailableCoins(std::vector<COutput>& vCoins, bool fOnlyConfirmed, const CCoinControl *coinControl, bool fIncludeZeroValue) const
 {

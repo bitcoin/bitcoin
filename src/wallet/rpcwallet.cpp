@@ -1621,7 +1621,9 @@ void ListRecord(const uint256 &hash, const CTransactionRecord &rtx,
         entry.push_back(Pair("time", rtx.nTimeReceived));
         entry.push_back(Pair("txid", hash.ToString()));
         entry.push_back(Pair("vout", r.n));
-        entry.push_back(Pair("narration", r.sNarration));
+        
+        if (!r.sNarration.empty())
+            entry.push_back(Pair("narration", r.sNarration));
         
         CHDWallet *phdw = (CHDWallet*) pwalletMain;
         int confirms = phdw->GetDepthInMainChain(rtx.blockHash);
@@ -1817,7 +1819,6 @@ UniValue listtransactions(const JSONRPCRequest& request)
             //    continue;
             
             ListRecord(it->second->first, it->second->second, strAccount, 0, true, retRecords, filter);
-            //ListRecord(*pwtx, strAccount, 0, true, retReversed, filter);
             if (nCountIter >= nCount + nFrom)
                 break;
         };
@@ -2737,7 +2738,19 @@ UniValue resendwallettransactions(const JSONRPCRequest& request)
     LOCK2(cs_main, pwalletMain->cs_wallet);
 
     std::vector<uint256> txids = pwalletMain->ResendWalletTransactionsBefore(GetTime(), g_connman.get());
+    
     UniValue result(UniValue::VARR);
+    
+    if (fParticlMode)
+    {
+        std::vector<uint256> txidsRec;
+        txidsRec = ((CHDWallet*)pwalletMain)->ResendRecordTransactionsBefore(GetTime(), g_connman.get());
+        
+        for (auto &txid : txidsRec)
+            result.push_back(txid.ToString());
+    };
+    
+    
     BOOST_FOREACH(const uint256& txid, txids)
     {
         result.push_back(txid.ToString());

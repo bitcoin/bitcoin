@@ -53,12 +53,12 @@ uint32_t CChainParams::GetStakeMinAge(int nHeight) const
     return nStakeMinAge;
 };
 
-const DevFundSettings *CChainParams::GetDevFundSettings(int nHeight) const
+const DevFundSettings *CChainParams::GetDevFundSettings(int64_t nTime) const
 {
     for (size_t i = vDevFundSettings.size(); i-- > 0; )
     {
-        if (nHeight > vDevFundSettings[i].second)
-            return &vDevFundSettings[i].first;
+        if (nTime > vDevFundSettings[i].first)
+            return &vDevFundSettings[i].second;
     };
     
     return NULL;

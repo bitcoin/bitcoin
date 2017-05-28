@@ -1806,7 +1806,6 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
     if (!inputs.HaveInputs(tx))
         return state.Invalid(false, 0, "", "Inputs unavailable");
     
-    
     std::vector<const secp256k1_pedersen_commitment*> vpCommitsIn, vpCommitsOut;
     size_t nStandard = 0, nCt = 0, nRingCT = 0;
     /*
@@ -1825,19 +1824,19 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
         const CCoins *coins = inputs.AccessCoins(prevout.hash);
         assert(coins);
 
-        // If prev is coinbase, check that it's matured
-        if (coins->IsCoinBase()) {
-            
+        // If prev is coinbase or coinstake, check that it's matured
+        if (coins->IsCoinBase())
+        {
             if (nSpendHeight - coins->nHeight < COINBASE_MATURITY)
             {
                 if (fParticlMode)
                 {
                     // ease in the restriction to start the chain
-                    int nRequiredDepth = std::min(COINBASE_MATURITY, (int)(nSpendHeight / 2));
+                    int nRequiredDepth = std::min(COINBASE_MATURITY, (int)(coins->nHeight / 2));
                     if (nSpendHeight - coins->nHeight < nRequiredDepth)
                         return state.Invalid(false,
                             REJECT_INVALID, "bad-txns-premature-spend-of-coinbase",
-                            strprintf("tried to spend coinbase at depth %d", nSpendHeight - coins->nHeight));
+                            strprintf("tried to spend coinbase at height %d at depth %d", coins->nHeight, nSpendHeight - coins->nHeight));
                 } else
                 return state.Invalid(false,
                     REJECT_INVALID, "bad-txns-premature-spend-of-coinbase",

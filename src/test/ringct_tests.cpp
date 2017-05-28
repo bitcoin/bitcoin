@@ -723,10 +723,10 @@ int doTest(secp256k1_context *ctx, size_t nInputs, size_t nOutputs, CAmount nFee
 
         uint8_t blindOut[32];
         unsigned char msg[4096];
-        size_t msg_size;
+        size_t mlen = sizeof(msg); // input is size of buffer, output is data written
         uint64_t amountOut;
         BOOST_CHECK(secp256k1_rangeproof_rewind(ctx,
-            blindOut, &amountOut, msg, &msg_size, nonce.begin(),
+            blindOut, &amountOut, msg, &mlen, nonce.begin(),
             &min_value, &max_value, 
             &txout.commitment, txout.vchRangeproof.data(), txout.vchRangeproof.size(),
             NULL, 0,

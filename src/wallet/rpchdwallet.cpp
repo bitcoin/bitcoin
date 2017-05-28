@@ -3016,9 +3016,9 @@ UniValue sendblindtopart(const JSONRPCRequest &request)
         fSubtractFeeFromAmount = request.params[4].get_bool();
     
     if (fSubtractFeeFromAmount)
-        throw std::runtime_error("TODO");
+        throw std::runtime_error("TODO: SubtractFeeFromAmount");
     
-    std::string sNarr;
+    std::string sNarr = "";
     if (request.params.size() > 5)
     {
         sNarr = request.params[5].get_str();
@@ -3119,9 +3119,9 @@ UniValue sendblindtoblind(const JSONRPCRequest &request)
         fSubtractFeeFromAmount = request.params[4].get_bool();
     
     if (fSubtractFeeFromAmount)
-        throw std::runtime_error("TODO");
+        throw std::runtime_error("TODO: SubtractFeeFromAmount");
     
-    std::string sNarr;
+    std::string sNarr = "";
     if (request.params.size() > 5)
     {
         sNarr = request.params[5].get_str();

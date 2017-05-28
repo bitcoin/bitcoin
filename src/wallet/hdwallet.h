@@ -501,6 +501,9 @@ public:
     bool AddToRecord(CTransactionRecord &rtxIn, const CTransaction &tx,
         const CBlockIndex *pIndex, int posInBlock, bool fFlushOnClose=true);
     
+    std::vector<uint256> ResendRecordTransactionsBefore(int64_t nTime, CConnman *connman);
+    void ResendWalletTransactions(int64_t nBestBlockTime, CConnman *connman) override;
+    
     
     /**
      * populate vCoins with vector of available COutputs.

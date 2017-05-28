@@ -4,6 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 from test_framework.test_particl import ParticlTestFramework
+from test_framework.test_particl import isclose
 from test_framework.util import *
 
 class PosTest(ParticlTestFramework):
@@ -27,6 +28,9 @@ class PosTest(ParticlTestFramework):
         node = self.nodes[0]
         node1 = self.nodes[1]
         
+        # stop staking
+        ro = node.reservebalance(True, 10000000)
+        
         ro = node.extkeyimportmaster("abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb")
         assert(ro['account_id'] == 'aaaZf2qnNr5T7PWRmqgmusuu5ACnBcX2ev')
         
@@ -39,11 +43,11 @@ class PosTest(ParticlTestFramework):
         
         # test reserve balance
         ro = node.getwalletinfo()
-        assert(ro['reserve'] == 0)
+        assert(isclose(ro['reserve'], 10000000.0))
         
         ro = node.reservebalance(True, 100)
         assert(ro['reserve'] == True)
-        assert(ro['amount'] == 100.0)
+        assert(isclose(ro['amount'], 100.0))
         
         ro = node.getwalletinfo()
         assert(ro['reserve'] == 100)
@@ -54,7 +58,6 @@ class PosTest(ParticlTestFramework):
         
         ro = node.getwalletinfo()
         assert(ro['reserve'] == 0)
-        
         
         assert(self.wait_for_height(node, 1))
         

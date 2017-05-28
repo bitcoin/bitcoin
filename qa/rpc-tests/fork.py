@@ -131,7 +131,7 @@ class ForkTest(ParticlTestFramework):
         ro = nodes[3].getinfo()
         print("\n\nnodes[3].getinfo ", ro)
         
-        assert(False)
+        #assert(False)
         #print(json.dumps(ro, indent=4, default=self.jsonDecimal))
         
 

@@ -101,7 +101,7 @@ public:
     int64_t GetStakeSplitThreshold() const { return nStakeSplitThreshold; }
     int64_t GetCoinYearReward() const { return nCoinYearReward; }
     
-    const DevFundSettings *GetDevFundSettings(int nHeight) const;
+    const DevFundSettings *GetDevFundSettings(int64_t nTime) const;
     
     int64_t GetProofOfStakeReward(const CBlockIndex *pindexPrev, int64_t nFees) const;
     
@@ -166,7 +166,7 @@ protected:
     std::vector<CImportedCoinbaseTxn> vImportedCoinbaseTxns;
     uint32_t nLastImportHeight;       // set from vImportedCoinbaseTxns
     
-    std::vector<std::pair<DevFundSettings, int> > vDevFundSettings;
+    std::vector<std::pair<int64_t, DevFundSettings> > vDevFundSettings;
     
     
     uint64_t nPruneAfterHeight;
