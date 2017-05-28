@@ -460,7 +460,7 @@ When to pay with this method:
 	3b) use total amount + required amount from 2a (if non zero) to find outputs in alias balance, if not enough balance throw error
 	3c) transaction completely funded
 4) if transaction completely funded, try to sign and send to network*/
-void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchAliasPeg, const string &currencyCode, const CRecipient &aliasRecipient, const CRecipient &aliasFeePlaceholderRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool useOnlyAliasPaymentToFund=true, bool transferAlias=false)
+void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const vector<unsigned char> &vchAliasPeg, const string &currencyCode, const CRecipient &aliasRecipient, const CRecipient &aliasFeePlaceholderRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool useOnlyAliasPaymentToFund=true, bool transferAlias=false)
 {
 	int op;
 	vector<vector<unsigned char> > vvch;
@@ -472,6 +472,17 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
     std::string strError;
     int nChangePosRet = -1;
 	// step 1
+	// if witness is specified attach witness input, don't worry about creating another output for the witness alias they can do a manual update later to create new outputs
+	if(!vchWitness.empty())
+	{
+		COutPoint aliasOutPointWitness;
+		unsigned int numResultsWitness = aliasunspent(vchWitness, aliasOutPointWitness);
+		if(numResultsWitness == 0 || aliasOutPointWitness.IsNull())
+		{
+			throw runtime_error("SYSCOIN_RPC_ERROR ERRCODE: 9000 - " + _("This transaction requires a witness but no outputs for witness alias found for alias name: ") + stringFromVch(vchWitness));
+		}
+		coinControl->Select(aliasOutPointWitness);
+	}
 	COutPoint aliasOutPoint;
 	unsigned int numResults = aliasunspent(vchAlias, aliasOutPoint);
 	if(numResults > 0 && numResults >= MAX_ALIAS_UPDATES_PER_BLOCK || bAliasRegistration)

@@ -20,7 +20,7 @@
 #include <functional> 
 #include <boost/range/adaptor/reversed.hpp>
 using namespace std;
-extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchAliasPeg, const string &currencyCode, const CRecipient &aliasRecipient, const CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool useOnlyAliasPaymentToFund=true, bool transferAlias=false);
+extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const vector<unsigned char> &vchAliasPeg, const string &currencyCode, const CRecipient &aliasRecipient, const CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool useOnlyAliasPaymentToFund=true, bool transferAlias=false);
 void PutToMessageList(std::vector<CMessage> &messageList, CMessage& index) {
 	int i = messageList.size() - 1;
 	BOOST_REVERSE_FOREACH(CMessage &o, messageList) {
@@ -508,7 +508,7 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;	
-	SendMoneySyscoin(aliasFrom.vchAlias, aliasFrom.vchAliasPeg, "", aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(aliasFrom.vchAlias, vchWitness, aliasFrom.vchAliasPeg, "", aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 	UniValue res(UniValue::VARR);
 	UniValue signParams(UniValue::VARR);
 	signParams.push_back(EncodeHexTx(wtx));

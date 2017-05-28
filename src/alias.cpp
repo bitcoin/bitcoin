@@ -41,7 +41,7 @@ typedef map<vector<unsigned char>, COutPoint > mapAliasRegistrationsType;
 typedef map<vector<unsigned char>, vector<unsigned char> > mapAliasRegistrationsDataType;
 mapAliasRegistrationsType mapAliasRegistrations;
 mapAliasRegistrationsDataType mapAliasRegistrationData;
-extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchAliasPeg, const string &currencyCode, const CRecipient &aliasRecipient, const CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool useOnlyAliasPaymentToFund=true, bool transferAlias=false);
+extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const vector<unsigned char> &vchAliasPeg, const string &currencyCode, const CRecipient &aliasRecipient, const CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool useOnlyAliasPaymentToFund=true, bool transferAlias=false);
 bool GetSyscoinTransaction(int nHeight, const uint256 &hash, CTransaction &txOut, const Consensus::Params& consensusParams)
 {
 	if(nHeight < 0 || nHeight > chainActive.Height())
@@ -2019,7 +2019,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	coinControl.fAllowWatchOnly = true;
 	bool useOnlyAliasPaymentToFund = false;
 
-	SendMoneySyscoin(vchAlias, vchAliasPeg, "", recipient, recipientPayment, vecSend, wtx, &coinControl, useOnlyAliasPaymentToFund);
+	SendMoneySyscoin(vchAlias, vchWitness, vchAliasPeg, "", recipient, recipientPayment, vecSend, wtx, &coinControl, useOnlyAliasPaymentToFund);
 	UniValue res(UniValue::VARR);
 
 	UniValue signParams(UniValue::VARR);
@@ -2205,7 +2205,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	if(newAddress.ToString() != EncodeBase58(copyAlias.vchAddress))
 		transferAlias = true;
 	
-	SendMoneySyscoin(vchAlias, copyAlias.vchAliasPeg, "", recipient, recipientPayment, vecSend, wtx, &coinControl, useOnlyAliasPaymentToFund, transferAlias);
+	SendMoneySyscoin(vchAlias, vchWitness, copyAlias.vchAliasPeg, "", recipient, recipientPayment, vecSend, wtx, &coinControl, useOnlyAliasPaymentToFund, transferAlias);
 	UniValue res(UniValue::VARR);
 	UniValue signParams(UniValue::VARR);
 	signParams.push_back(EncodeHexTx(wtx));
@@ -3325,7 +3325,7 @@ UniValue aliaspay(const UniValue& params, bool fHelp) {
 	CSyscoinAddress addressAlias;
 	GetAddress(theAlias, &addressAlias, scriptPubKeyOrig);
 	CreateAliasRecipient(scriptPubKeyOrig, theAlias.vchAlias, theAlias.vchAliasPeg, chainActive.Tip()->nHeight, recipientPayment);	
-	SendMoneySyscoin(theAlias.vchAlias, theAlias.vchAliasPeg, strCurrency, recipient, recipientPayment, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(theAlias.vchAlias, vchWitness, theAlias.vchAliasPeg, strCurrency, recipient, recipientPayment, vecSend, wtx, &coinControl);
 	
 	UniValue res(UniValue::VARR);
 	UniValue signParams(UniValue::VARR);
