@@ -4,6 +4,7 @@
 
 #include "bitcoinunits.h"
 
+#include "amount.h"
 #include "primitives/transaction.h"
 
 #include <QStringList>
@@ -38,11 +39,12 @@ bool BitcoinUnits::valid(int unit)
 
 QString BitcoinUnits::name(int unit)
 {
+    const QString baseUnit = QString::fromStdString(CURRENCY_UNIT);
     switch(unit)
     {
-    case BTC: return QString("BTC");
-    case mBTC: return QString("mBTC");
-    case uBTC: return QString::fromUtf8("μBTC");
+    case BTC: return QString("%1").arg(baseUnit);
+    case mBTC: return QString("m%1").arg(baseUnit);
+    case uBTC: return QString::fromUtf8("μ%1").arg(baseUnit);
     default: return QString("???");
     }
 }
