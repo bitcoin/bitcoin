@@ -3325,7 +3325,7 @@ UniValue aliaspay(const UniValue& params, bool fHelp) {
 	CSyscoinAddress addressAlias;
 	GetAddress(theAlias, &addressAlias, scriptPubKeyOrig);
 	CreateAliasRecipient(scriptPubKeyOrig, theAlias.vchAlias, theAlias.vchAliasPeg, chainActive.Tip()->nHeight, recipientPayment);	
-	SendMoneySyscoin(theAlias.vchAlias, vchWitness, theAlias.vchAliasPeg, strCurrency, recipient, recipientPayment, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(theAlias.vchAlias, vchFromString(""), theAlias.vchAliasPeg, strCurrency, recipient, recipientPayment, vecSend, wtx, &coinControl);
 	
 	UniValue res(UniValue::VARR);
 	UniValue signParams(UniValue::VARR);
