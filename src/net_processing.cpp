@@ -481,7 +481,7 @@ void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vector<con
     // Make sure pindexBestKnownBlock is up to date, we'll need it.
     ProcessBlockAvailability(nodeid);
 
-    if (state->pindexBestKnownBlock == NULL || state->pindexBestKnownBlock->nChainWork < chainActive.Tip()->nChainWork) {
+    if (state->pindexBestKnownBlock == NULL || state->pindexBestKnownBlock->nChainWork <= chainActive.Tip()->nChainWork) {
         // This peer has nothing interesting.
         return;
     }
@@ -2028,7 +2028,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         if (pindex->nStatus & BLOCK_HAVE_DATA) // Nothing to do here
             return true;
 
-        if (pindex->nChainWork <= chainActive.Tip()->nChainWork || // We know something better
+        if (pindex->nChainWork <= chainActive.Tip()->nChainWork || // We know something better or as good
                 pindex->nTx != 0) { // We had this block at some point, but pruned it
             if (fAlreadyInFlight) {
                 // We requested this block for some reason, but our mempool will probably be useless
