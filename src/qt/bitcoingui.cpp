@@ -828,7 +828,7 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVer
         progressBarLabel->setVisible(false);
         progressBar->setVisible(false);
     }
-    else
+    else if (Params().NetworkIDString() != "regtest")
     {
         QString timeBehindText = GUIUtil::formatNiceTimeOffset(secs);
 
