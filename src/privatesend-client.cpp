@@ -13,6 +13,7 @@
 #include "txmempool.h"
 #include "util.h"
 #include "utilmoneystr.h"
+#include <memory>
 
 CPrivateSendClient privateSendClient;
 
@@ -1198,6 +1199,8 @@ bool CPrivateSendClient::MakeCollateralAmounts(const CompactTallyItem& tallyItem
 // Create denominations by looping through inputs grouped by addresses
 bool CPrivateSendClient::CreateDenominated()
 {
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+
     std::vector<CompactTallyItem> vecTally;
     if(!pwalletMain->SelectCoinsGrouppedByAddresses(vecTally)) {
         LogPrint("privatesend", "CPrivateSendClient::CreateDenominated -- SelectCoinsGrouppedByAddresses can't find any inputs!\n");
@@ -1241,7 +1244,7 @@ bool CPrivateSendClient::CreateDenominated(const CompactTallyItem& tallyItem, bo
     // ****** Add denoms ************ /
 
     // make our denom addresses
-    CReserveKey reservekeyDenom(pwalletMain);
+    std::vector<std::shared_ptr<CReserveKey>> reservekeyDenomVec;
 
     // try few times - skipping smallest denoms first if there are too much already, if failed - use them
     int nOutputsTotal = 0;
@@ -1268,22 +1271,23 @@ bool CPrivateSendClient::CreateDenominated(const CompactTallyItem& tallyItem, bo
 
             int nOutputs = 0;
 
-            // add each output up to 10 times until it can't be added again
+            // add each output up to 11 times until it can't be added again
             while(nValueLeft - nDenomValue >= 0 && nOutputs <= 10) {
                 CScript scriptDenom;
                 CPubKey vchPubKey;
                 //use a unique change address
-                assert(reservekeyDenom.GetReservedKey(vchPubKey)); // should never fail, as we just unlocked
+                std::shared_ptr<CReserveKey> reservekeyDenom = std::make_shared<CReserveKey>(pwalletMain);
+                reservekeyDenomVec.push_back(reservekeyDenom);
+
+                assert(reservekeyDenom->GetReservedKey(vchPubKey)); // should never fail, as we just unlocked
                 scriptDenom = GetScriptForDestination(vchPubKey.GetID());
-                // TODO: do not keep reservekeyDenom here
-                reservekeyDenom.KeepKey();
 
                 vecSend.push_back((CRecipient){ scriptDenom, nDenomValue, false });
 
                 //increment outputs and subtract denomination amount
                 nOutputs++;
                 nValueLeft -= nDenomValue;
-                LogPrintf("CreateDenominated1: nOutputsTotal: %d, nOutputs: %d, nValueLeft: %f\n", nOutputsTotal, nOutputs, (float)nValueLeft/COIN);
+                LogPrintf("CreateDenominated1: totalOutputs: %d, nOutputsTotal: %d, nOutputs: %d, nValueLeft: %f\n", nOutputsTotal + nOutputs, nOutputsTotal, nOutputs, (float)nValueLeft/COIN);
             }
 
             nOutputsTotal += nOutputs;
@@ -1316,13 +1320,17 @@ bool CPrivateSendClient::CreateDenominated(const CompactTallyItem& tallyItem, bo
             nFeeRet, nChangePosRet, strFail, &coinControl, true, ONLY_NONDENOMINATED_NOT1000IFMN);
     if(!fSuccess) {
         LogPrintf("CPrivateSendClient::CreateDenominated -- Error: %s\n", strFail);
-        // TODO: return reservekeyDenom here
+        for(auto key : reservekeyDenomVec)
+            key->ReturnKey();
         reservekeyCollateral.ReturnKey();
+        LogPrintf("CPrivateSendClient::CreateDenominated -- %d keys returned\n", reservekeyDenomVec.size() + 1);
         return false;
     }
 
-    // TODO: keep reservekeyDenom here
+    for(auto key : reservekeyDenomVec)
+        key->KeepKey();
     reservekeyCollateral.KeepKey();
+    LogPrintf("CPrivateSendClient::CreateDenominated -- %d keys keeped\n", reservekeyDenomVec.size() + 1);
 
     if(!pwalletMain->CommitTransaction(wtx, reservekeyChange)) {
         LogPrintf("CPrivateSendClient::CreateDenominated -- CommitTransaction failed!\n");
