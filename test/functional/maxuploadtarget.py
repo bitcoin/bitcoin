@@ -10,63 +10,24 @@ if uploadtarget has been reached.
 if uploadtarget has been reached.
 * Verify that the upload counters are reset after 24 hours.
 """
+from collections import defaultdict
+import time
 
 from test_framework.mininode import *
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
-import time
 
-# TestNode: bare-bones "peer".  Used mostly as a conduit for a test to sending
-# p2p messages to a node, generating the messages in the main testing logic.
 class TestNode(NodeConnCB):
     def __init__(self):
         super().__init__()
-        self.connection = None
-        self.ping_counter = 1
-        self.last_pong = msg_pong()
-        self.block_receive_map = {}
-
-    def add_connection(self, conn):
-        self.connection = conn
-        self.peer_disconnected = False
+        self.block_receive_map = defaultdict(int)
 
     def on_inv(self, conn, message):
         pass
 
-    # Track the last getdata message we receive (used in the test)
-    def on_getdata(self, conn, message):
-        self.last_getdata = message
-
     def on_block(self, conn, message):
         message.block.calc_sha256()
-        try:
-            self.block_receive_map[message.block.sha256] += 1
-        except KeyError as e:
-            self.block_receive_map[message.block.sha256] = 1
-
-    # Spin until verack message is received from the node.
-    # We use this to signal that our test can begin. This
-    # is called from the testing thread, so it needs to acquire
-    # the global lock.
-    def wait_for_verack(self):
-        def veracked():
-            return self.verack_received
-        return wait_until(veracked, timeout=10)
-
-    def wait_for_disconnect(self):
-        def disconnected():
-            return self.peer_disconnected
-        return wait_until(disconnected, timeout=10)
-
-    # Wrapper for the NodeConn's send_message function
-    def send_message(self, message):
-        self.connection.send_message(message)
-
-    def on_pong(self, conn, message):
-        self.last_pong = message
-
-    def on_close(self, conn):
-        self.peer_disconnected = True
+        self.block_receive_map[message.block.sha256] += 1
 
 class MaxUploadTest(BitcoinTestFramework):
  
@@ -74,14 +35,10 @@ class MaxUploadTest(BitcoinTestFramework):
         super().__init__()
         self.setup_clean_chain = True
         self.num_nodes = 1
+        self.extra_args = [["-maxuploadtarget=800", "-blockmaxsize=999000"]]
 
         # Cache for utxos, as the listunspent may take a long time later in the test
         self.utxo_cache = []
-
-    def setup_network(self):
-        # Start a node with maxuploadtarget of 200 MB (/24h)
-        self.nodes = []
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-maxuploadtarget=800", "-blockmaxsize=999000"]))
 
     def run_test(self):
         # Before we connect anything, we first set the time on the node
@@ -192,33 +149,26 @@ class MaxUploadTest(BitcoinTestFramework):
         stop_node(self.nodes[0], 0)
         self.nodes[0] = start_node(0, self.options.tmpdir, ["-whitelist=127.0.0.1", "-maxuploadtarget=1", "-blockmaxsize=999000"])
 
-        #recreate/reconnect 3 test nodes
-        test_nodes = []
-        connections = []
-
-        for i in range(3):
-            test_nodes.append(TestNode())
-            connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], test_nodes[i]))
-            test_nodes[i].add_connection(connections[i])
+        #recreate/reconnect a test node
+        test_nodes = [TestNode()]
+        connections = [NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], test_nodes[0])]
+        test_nodes[0].add_connection(connections[0])
 
         NetworkThread().start() # Start up network handling in another thread
-        [x.wait_for_verack() for x in test_nodes]
+        test_nodes[0].wait_for_verack()
 
         #retrieve 20 blocks which should be enough to break the 1MB limit
         getdata_request.inv = [CInv(2, big_new_block)]
         for i in range(20):
-            test_nodes[1].send_message(getdata_request)
-            test_nodes[1].sync_with_ping()
-            assert_equal(test_nodes[1].block_receive_map[big_new_block], i+1)
+            test_nodes[0].send_message(getdata_request)
+            test_nodes[0].sync_with_ping()
+            assert_equal(test_nodes[0].block_receive_map[big_new_block], i+1)
 
         getdata_request.inv = [CInv(2, big_old_block)]
-        test_nodes[1].send_message(getdata_request)
-        test_nodes[1].wait_for_disconnect()
-        assert_equal(len(self.nodes[0].getpeerinfo()), 3) #node is still connected because of the whitelist
+        test_nodes[0].send_and_ping(getdata_request)
+        assert_equal(len(self.nodes[0].getpeerinfo()), 1) #node is still connected because of the whitelist
 
-        self.log.info("Peer 1 still connected after trying to download old block (whitelisted)")
-
-        [c.disconnect_node() for c in connections]
+        self.log.info("Peer still connected after trying to download old block (whitelisted)")
 
 if __name__ == '__main__':
     MaxUploadTest().main()

@@ -657,11 +657,13 @@ static void MutateTx(CMutableTransaction& tx, const std::string& command,
         MutateTxDelOutput(tx, commandVal);
     else if (command == "outaddr")
         MutateTxAddOutAddr(tx, commandVal);
-    else if (command == "outpubkey")
+    else if (command == "outpubkey") {
+        if (!ecc) { ecc.reset(new Secp256k1Init()); }
         MutateTxAddOutPubKey(tx, commandVal);
-    else if (command == "outmultisig")
+    } else if (command == "outmultisig") {
+        if (!ecc) { ecc.reset(new Secp256k1Init()); }
         MutateTxAddOutMultiSig(tx, commandVal);
-    else if (command == "outscript")
+    } else if (command == "outscript")
         MutateTxAddOutScript(tx, commandVal);
     else if (command == "outdata")
         MutateTxAddOutData(tx, commandVal);

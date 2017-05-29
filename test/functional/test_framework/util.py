@@ -226,87 +226,6 @@ def wait_for_bitcoind_start(process, url, i):
                 raise # unknown JSON RPC exception
         time.sleep(0.25)
 
-def initialize_chain(test_dir, num_nodes, cachedir):
-    """
-    Create a cache of a 200-block-long chain (with wallet) for MAX_NODES
-    Afterward, create num_nodes copies from the cache
-    """
-
-    assert num_nodes <= MAX_NODES
-    create_cache = False
-    for i in range(MAX_NODES):
-        if not os.path.isdir(os.path.join(cachedir, 'node'+str(i))):
-            create_cache = True
-            break
-
-    if create_cache:
-        logger.debug("Creating data directories from cached datadir")
-
-        #find and delete old cache directories if any exist
-        for i in range(MAX_NODES):
-            if os.path.isdir(os.path.join(cachedir,"node"+str(i))):
-                shutil.rmtree(os.path.join(cachedir,"node"+str(i)))
-
-        # Create cache directories, run bitcoinds:
-        for i in range(MAX_NODES):
-            datadir=initialize_datadir(cachedir, i)
-            args = [ os.getenv("BITCOIND", "bitcoind"), "-server", "-keypool=1", "-datadir="+datadir, "-discover=0" ]
-            if i > 0:
-                args.append("-connect=127.0.0.1:"+str(p2p_port(0)))
-            bitcoind_processes[i] = subprocess.Popen(args)
-            logger.debug("initialize_chain: bitcoind started, waiting for RPC to come up")
-            wait_for_bitcoind_start(bitcoind_processes[i], rpc_url(i), i)
-            logger.debug("initialize_chain: RPC successfully started")
-
-        rpcs = []
-        for i in range(MAX_NODES):
-            try:
-                rpcs.append(get_rpc_proxy(rpc_url(i), i))
-            except:
-                sys.stderr.write("Error connecting to "+url+"\n")
-                sys.exit(1)
-
-        # Create a 200-block-long chain; each of the 4 first nodes
-        # gets 25 mature blocks and 25 immature.
-        # Note: To preserve compatibility with older versions of
-        # initialize_chain, only 4 nodes will generate coins.
-        #
-        # blocks are created with timestamps 10 minutes apart
-        # starting from 2010 minutes in the past
-        enable_mocktime()
-        block_time = get_mocktime() - (201 * 10 * 60)
-        for i in range(2):
-            for peer in range(4):
-                for j in range(25):
-                    set_node_times(rpcs, block_time)
-                    rpcs[peer].generate(1)
-                    block_time += 10*60
-                # Must sync before next peer starts generating blocks
-                sync_blocks(rpcs)
-
-        # Shut them down, and clean up cache directories:
-        stop_nodes(rpcs)
-        disable_mocktime()
-        for i in range(MAX_NODES):
-            os.remove(log_filename(cachedir, i, "debug.log"))
-            os.remove(log_filename(cachedir, i, "db.log"))
-            os.remove(log_filename(cachedir, i, "peers.dat"))
-            os.remove(log_filename(cachedir, i, "fee_estimates.dat"))
-
-    for i in range(num_nodes):
-        from_dir = os.path.join(cachedir, "node"+str(i))
-        to_dir = os.path.join(test_dir,  "node"+str(i))
-        shutil.copytree(from_dir, to_dir)
-        initialize_datadir(test_dir, i) # Overwrite port/rpcport in bitcoin.conf
-
-def initialize_chain_clean(test_dir, num_nodes):
-    """
-    Create an empty blockchain and num_nodes wallets.
-    Useful if a test case wants complete control over initialization.
-    """
-    for i in range(num_nodes):
-        datadir=initialize_datadir(test_dir, i)
-
 
 def start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=None, stderr=None):
     """
@@ -315,7 +234,7 @@ def start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=
     datadir = os.path.join(dirname, "node"+str(i))
     if binary is None:
         binary = os.getenv("BITCOIND", "bitcoind")
-    args = [binary, "-datadir=" + datadir, "-server", "-keypool=1", "-discover=0", "-rest", "-logtimemicros", "-debug", "-debugexclude=libevent", "-debugexclude=leveldb", "-mocktime=" + str(get_mocktime())]
+    args = [binary, "-datadir=" + datadir, "-server", "-keypool=1", "-discover=0", "-rest", "-logtimemicros", "-debug", "-debugexclude=libevent", "-debugexclude=leveldb", "-mocktime=" + str(get_mocktime()), "-uacomment=testnode%d" % i]
     if extra_args is not None: args.extend(extra_args)
     bitcoind_processes[i] = subprocess.Popen(args, stderr=stderr)
     logger.debug("initialize_chain: bitcoind started, waiting for RPC to come up")
@@ -354,6 +273,8 @@ def start_nodes(num_nodes, dirname, extra_args=None, rpchost=None, timewait=None
     """
     if extra_args is None: extra_args = [ None for _ in range(num_nodes) ]
     if binary is None: binary = [ None for _ in range(num_nodes) ]
+    assert_equal(len(extra_args), num_nodes)
+    assert_equal(len(binary), num_nodes)
     rpcs = []
     try:
         for i in range(num_nodes):
@@ -384,6 +305,17 @@ def stop_nodes(nodes):
 def set_node_times(nodes, t):
     for node in nodes:
         node.setmocktime(t)
+
+def disconnect_nodes(from_connection, node_num):
+    for peer_id in [peer['id'] for peer in from_connection.getpeerinfo() if "testnode%d" % node_num in peer['subver']]:
+        from_connection.disconnectnode(nodeid=peer_id)
+
+    for _ in range(50):
+        if [peer['id'] for peer in from_connection.getpeerinfo() if "testnode%d" % node_num in peer['subver']] == []:
+            break
+        time.sleep(0.1)
+    else:
+        raise AssertionError("timed out waiting for disconnect")
 
 def connect_nodes(from_connection, node_num):
     ip_port = "127.0.0.1:"+str(p2p_port(node_num))

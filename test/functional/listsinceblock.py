@@ -43,7 +43,6 @@ class ListSinceBlockTest (BitcoinTestFramework):
         This test only checks that [tx0] is present.
         '''
 
-        assert_equal(self.is_network_split, False)
         self.nodes[2].generate(101)
         self.sync_all()
 
@@ -54,7 +53,6 @@ class ListSinceBlockTest (BitcoinTestFramework):
 
         # Split network into two
         self.split_network()
-        assert_equal(self.is_network_split, True)
 
         # send to nodes[0] from nodes[2]
         senttx = self.nodes[2].sendtoaddress(self.nodes[0].getnewaddress(), 1)
@@ -64,7 +62,7 @@ class ListSinceBlockTest (BitcoinTestFramework):
         self.nodes[2].generate(7)
         self.log.info('lastblockhash=%s' % (lastblockhash))
 
-        self.sync_all()
+        self.sync_all([self.nodes[:2], self.nodes[2:]])
 
         self.join_network()
 

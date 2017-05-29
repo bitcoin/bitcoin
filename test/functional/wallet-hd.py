@@ -6,7 +6,6 @@
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
-    start_nodes,
     start_node,
     assert_equal,
     connect_nodes_bi,
@@ -22,12 +21,7 @@ class WalletHDTest(BitcoinTestFramework):
         super().__init__()
         self.setup_clean_chain = True
         self.num_nodes = 2
-        self.node_args = [['-usehd=0'], ['-usehd=1', '-keypool=0']]
-
-    def setup_network(self):
-        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, self.node_args)
-        self.is_network_split = False
-        connect_nodes_bi(self.nodes, 0, 1)
+        self.extra_args = [['-usehd=0'], ['-usehd=1', '-keypool=0']]
 
     def run_test (self):
         tmpdir = self.options.tmpdir
@@ -35,7 +29,7 @@ class WalletHDTest(BitcoinTestFramework):
         # Make sure can't switch off usehd after wallet creation
         self.stop_node(1)
         assert_start_raises_init_error(1, self.options.tmpdir, ['-usehd=0'], 'already existing HD wallet')
-        self.nodes[1] = start_node(1, self.options.tmpdir, self.node_args[1])
+        self.nodes[1] = start_node(1, self.options.tmpdir, self.extra_args[1])
         connect_nodes_bi(self.nodes, 0, 1)
 
         # Make sure we use hd, keep masterkeyid
@@ -44,7 +38,7 @@ class WalletHDTest(BitcoinTestFramework):
 
         # create an internal key
         change_addr = self.nodes[1].getrawchangeaddress()
-        change_addrV= self.nodes[1].validateaddress(change_addr);
+        change_addrV= self.nodes[1].validateaddress(change_addr)
         assert_equal(change_addrV["hdkeypath"], "m/0'/1'/0'") #first internal child key
 
         # Import a non-HD private key in the HD wallet
@@ -72,7 +66,7 @@ class WalletHDTest(BitcoinTestFramework):
 
         # create an internal key (again)
         change_addr = self.nodes[1].getrawchangeaddress()
-        change_addrV= self.nodes[1].validateaddress(change_addr);
+        change_addrV= self.nodes[1].validateaddress(change_addr)
         assert_equal(change_addrV["hdkeypath"], "m/0'/1'/1'") #second internal child key
 
         self.sync_all()
@@ -82,7 +76,7 @@ class WalletHDTest(BitcoinTestFramework):
         self.stop_node(1)
         os.remove(self.options.tmpdir + "/node1/regtest/wallet.dat")
         shutil.copyfile(tmpdir + "/hd.bak", tmpdir + "/node1/regtest/wallet.dat")
-        self.nodes[1] = start_node(1, self.options.tmpdir, self.node_args[1])
+        self.nodes[1] = start_node(1, self.options.tmpdir, self.extra_args[1])
         #connect_nodes_bi(self.nodes, 0, 1)
 
         # Assert that derivation is deterministic
@@ -96,13 +90,13 @@ class WalletHDTest(BitcoinTestFramework):
 
         # Needs rescan
         self.stop_node(1)
-        self.nodes[1] = start_node(1, self.options.tmpdir, self.node_args[1] + ['-rescan'])
+        self.nodes[1] = start_node(1, self.options.tmpdir, self.extra_args[1] + ['-rescan'])
         #connect_nodes_bi(self.nodes, 0, 1)
         assert_equal(self.nodes[1].getbalance(), num_hd_adds + 1)
 
         # send a tx and make sure its using the internal chain for the changeoutput
         txid = self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), 1)
-        outs = self.nodes[1].decoderawtransaction(self.nodes[1].gettransaction(txid)['hex'])['vout'];
+        outs = self.nodes[1].decoderawtransaction(self.nodes[1].gettransaction(txid)['hex'])['vout']
         keypath = ""
         for out in outs:
             if out['value'] != 1:

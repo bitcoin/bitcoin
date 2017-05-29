@@ -12,9 +12,8 @@ class ImportMultiTest (BitcoinTestFramework):
         self.num_nodes = 2
         self.setup_clean_chain = True
 
-    def setup_network(self, split=False):
-        self.nodes = start_nodes(2, self.options.tmpdir)
-        self.is_network_split=False
+    def setup_network(self):
+        self.setup_nodes()
 
     def run_test (self):
         self.log.info("Mining blocks...")

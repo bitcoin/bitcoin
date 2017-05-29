@@ -65,17 +65,12 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         super().__init__()
         self.num_nodes = 1
         self.setup_clean_chain = False
-
-    def setup_network(self):
-        self.nodes = []
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-maxorphantx=1000",
-                                                              "-whitelist=127.0.0.1",
-                                                              "-limitancestorcount=50",
-                                                              "-limitancestorsize=101",
-                                                              "-limitdescendantcount=200",
-                                                              "-limitdescendantsize=101"
-                                                              ]))
-        self.is_network_split = False
+        self.extra_args= [["-maxorphantx=1000",
+                           "-whitelist=127.0.0.1",
+                           "-limitancestorcount=50",
+                           "-limitancestorsize=101",
+                           "-limitdescendantcount=200",
+                           "-limitdescendantsize=101"]]
 
     def run_test(self):
         make_utxo(self.nodes[0], 1*COIN)

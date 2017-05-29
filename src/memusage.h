@@ -12,6 +12,8 @@
 #include <map>
 #include <set>
 #include <vector>
+#include <unordered_map>
+#include <unordered_set>
 
 #include <boost/foreach.hpp>
 #include <boost/unordered_set.hpp>
@@ -149,7 +151,7 @@ static inline size_t DynamicUsage(const std::shared_ptr<X>& p)
 // Boost data structures
 
 template<typename X>
-struct boost_unordered_node : private X
+struct unordered_node : private X
 {
 private:
     void* ptr;
@@ -158,13 +160,25 @@ private:
 template<typename X, typename Y>
 static inline size_t DynamicUsage(const boost::unordered_set<X, Y>& s)
 {
-    return MallocUsage(sizeof(boost_unordered_node<X>)) * s.size() + MallocUsage(sizeof(void*) * s.bucket_count());
+    return MallocUsage(sizeof(unordered_node<X>)) * s.size() + MallocUsage(sizeof(void*) * s.bucket_count());
 }
 
 template<typename X, typename Y, typename Z>
 static inline size_t DynamicUsage(const boost::unordered_map<X, Y, Z>& m)
 {
-    return MallocUsage(sizeof(boost_unordered_node<std::pair<const X, Y> >)) * m.size() + MallocUsage(sizeof(void*) * m.bucket_count());
+    return MallocUsage(sizeof(unordered_node<std::pair<const X, Y> >)) * m.size() + MallocUsage(sizeof(void*) * m.bucket_count());
+}
+
+template<typename X, typename Y>
+static inline size_t DynamicUsage(const std::unordered_set<X, Y>& s)
+{
+    return MallocUsage(sizeof(unordered_node<X>)) * s.size() + MallocUsage(sizeof(void*) * s.bucket_count());
+}
+
+template<typename X, typename Y, typename Z>
+static inline size_t DynamicUsage(const std::unordered_map<X, Y, Z>& m)
+{
+    return MallocUsage(sizeof(unordered_node<std::pair<const X, Y> >)) * m.size() + MallocUsage(sizeof(void*) * m.bucket_count());
 }
 
 }

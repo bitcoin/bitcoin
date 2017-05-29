@@ -17,17 +17,9 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         super().__init__()
         self.num_nodes = 2
         self.setup_clean_chain = False
+        self.extra_args = [["-checkmempool"]] * 2
 
     alert_filename = None  # Set by setup_network
-
-    def setup_network(self):
-        args = ["-checkmempool"]
-        self.nodes = []
-        self.nodes.append(start_node(0, self.options.tmpdir, args))
-        self.nodes.append(start_node(1, self.options.tmpdir, args))
-        connect_nodes(self.nodes[1], 0)
-        self.is_network_split = False
-        self.sync_all()
 
     def run_test(self):
         # Start with a 200 block chain

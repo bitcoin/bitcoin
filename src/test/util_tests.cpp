@@ -17,8 +17,6 @@
 
 #include <boost/test/unit_test.hpp>
 
-extern std::map<std::string, std::string> mapArgs;
-
 BOOST_FIXTURE_TEST_SUITE(util_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(util_criticalsection)
@@ -100,52 +98,67 @@ BOOST_AUTO_TEST_CASE(util_DateTimeStrFormat)
     BOOST_CHECK_EQUAL(DateTimeStrFormat("%a, %d %b %Y %H:%M:%S +0000", 1317425777), "Fri, 30 Sep 2011 23:36:17 +0000");
 }
 
+class TestArgsManager : public ArgsManager
+{
+public:
+    std::map<std::string, std::string>& GetMapArgs()
+    {
+        return mapArgs;
+    };
+    const std::map<std::string, std::vector<std::string> >& GetMapMultiArgs()
+    {
+        return mapMultiArgs;
+    };
+};
+
 BOOST_AUTO_TEST_CASE(util_ParseParameters)
 {
+    TestArgsManager testArgs;
     const char *argv_test[] = {"-ignored", "-a", "-b", "-ccc=argument", "-ccc=multiple", "f", "-d=e"};
 
-    ParseParameters(0, (char**)argv_test);
-    BOOST_CHECK(mapArgs.empty() && mapMultiArgs.empty());
+    testArgs.ParseParameters(0, (char**)argv_test);
+    BOOST_CHECK(testArgs.GetMapArgs().empty() && testArgs.GetMapMultiArgs().empty());
 
-    ParseParameters(1, (char**)argv_test);
-    BOOST_CHECK(mapArgs.empty() && mapMultiArgs.empty());
+    testArgs.ParseParameters(1, (char**)argv_test);
+    BOOST_CHECK(testArgs.GetMapArgs().empty() && testArgs.GetMapMultiArgs().empty());
 
-    ParseParameters(5, (char**)argv_test);
+    testArgs.ParseParameters(5, (char**)argv_test);
     // expectation: -ignored is ignored (program name argument),
     // -a, -b and -ccc end up in map, -d ignored because it is after
     // a non-option argument (non-GNU option parsing)
-    BOOST_CHECK(mapArgs.size() == 3 && mapMultiArgs.size() == 3);
-    BOOST_CHECK(IsArgSet("-a") && IsArgSet("-b") && IsArgSet("-ccc")
-                && !IsArgSet("f") && !IsArgSet("-d"));
-    BOOST_CHECK(mapMultiArgs.count("-a") && mapMultiArgs.count("-b") && mapMultiArgs.count("-ccc")
-                && !mapMultiArgs.count("f") && !mapMultiArgs.count("-d"));
+    BOOST_CHECK(testArgs.GetMapArgs().size() == 3 && testArgs.GetMapMultiArgs().size() == 3);
+    BOOST_CHECK(testArgs.IsArgSet("-a") && testArgs.IsArgSet("-b") && testArgs.IsArgSet("-ccc")
+                && !testArgs.IsArgSet("f") && !testArgs.IsArgSet("-d"));
+    BOOST_CHECK(testArgs.GetMapMultiArgs().count("-a") && testArgs.GetMapMultiArgs().count("-b") && testArgs.GetMapMultiArgs().count("-ccc")
+                && !testArgs.GetMapMultiArgs().count("f") && !testArgs.GetMapMultiArgs().count("-d"));
 
-    BOOST_CHECK(mapArgs["-a"] == "" && mapArgs["-ccc"] == "multiple");
-    BOOST_CHECK(mapMultiArgs.at("-ccc").size() == 2);
+    BOOST_CHECK(testArgs.GetMapArgs()["-a"] == "" && testArgs.GetMapArgs()["-ccc"] == "multiple");
+    BOOST_CHECK(testArgs.GetArgs("-ccc").size() == 2);
 }
 
 BOOST_AUTO_TEST_CASE(util_GetArg)
 {
-    mapArgs.clear();
-    mapArgs["strtest1"] = "string...";
+    TestArgsManager testArgs;
+    testArgs.GetMapArgs().clear();
+    testArgs.GetMapArgs()["strtest1"] = "string...";
     // strtest2 undefined on purpose
-    mapArgs["inttest1"] = "12345";
-    mapArgs["inttest2"] = "81985529216486895";
+    testArgs.GetMapArgs()["inttest1"] = "12345";
+    testArgs.GetMapArgs()["inttest2"] = "81985529216486895";
     // inttest3 undefined on purpose
-    mapArgs["booltest1"] = "";
+    testArgs.GetMapArgs()["booltest1"] = "";
     // booltest2 undefined on purpose
-    mapArgs["booltest3"] = "0";
-    mapArgs["booltest4"] = "1";
+    testArgs.GetMapArgs()["booltest3"] = "0";
+    testArgs.GetMapArgs()["booltest4"] = "1";
 
-    BOOST_CHECK_EQUAL(GetArg("strtest1", "default"), "string...");
-    BOOST_CHECK_EQUAL(GetArg("strtest2", "default"), "default");
-    BOOST_CHECK_EQUAL(GetArg("inttest1", -1), 12345);
-    BOOST_CHECK_EQUAL(GetArg("inttest2", -1), 81985529216486895LL);
-    BOOST_CHECK_EQUAL(GetArg("inttest3", -1), -1);
-    BOOST_CHECK_EQUAL(GetBoolArg("booltest1", false), true);
-    BOOST_CHECK_EQUAL(GetBoolArg("booltest2", false), false);
-    BOOST_CHECK_EQUAL(GetBoolArg("booltest3", false), false);
-    BOOST_CHECK_EQUAL(GetBoolArg("booltest4", false), true);
+    BOOST_CHECK_EQUAL(testArgs.GetArg("strtest1", "default"), "string...");
+    BOOST_CHECK_EQUAL(testArgs.GetArg("strtest2", "default"), "default");
+    BOOST_CHECK_EQUAL(testArgs.GetArg("inttest1", -1), 12345);
+    BOOST_CHECK_EQUAL(testArgs.GetArg("inttest2", -1), 81985529216486895LL);
+    BOOST_CHECK_EQUAL(testArgs.GetArg("inttest3", -1), -1);
+    BOOST_CHECK_EQUAL(testArgs.GetBoolArg("booltest1", false), true);
+    BOOST_CHECK_EQUAL(testArgs.GetBoolArg("booltest2", false), false);
+    BOOST_CHECK_EQUAL(testArgs.GetBoolArg("booltest3", false), false);
+    BOOST_CHECK_EQUAL(testArgs.GetBoolArg("booltest4", false), true);
 }
 
 BOOST_AUTO_TEST_CASE(util_FormatMoney)

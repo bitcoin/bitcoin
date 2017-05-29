@@ -16,6 +16,8 @@
 
 #include <stdlib.h>
 #include <limits>
+#include <chrono>
+#include <thread>
 
 #ifndef WIN32
 #include <sys/time.h>
@@ -32,6 +34,8 @@
 #include <sys/sysctl.h>
 #endif
 
+#include <mutex>
+
 #include <openssl/err.h>
 #include <openssl/rand.h>
 
@@ -43,15 +47,22 @@ static void RandFailure()
 
 static inline int64_t GetPerformanceCounter()
 {
-    int64_t nCounter = 0;
-#ifdef WIN32
-    QueryPerformanceCounter((LARGE_INTEGER*)&nCounter);
+    // Read the hardware time stamp counter when available.
+    // See https://en.wikipedia.org/wiki/Time_Stamp_Counter for more information.
+#if defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_X64))
+    return __rdtsc();
+#elif !defined(_MSC_VER) && defined(__i386__)
+    uint64_t r = 0;
+    __asm__ volatile ("rdtsc" : "=A"(r)); // Constrain the r variable to the eax:edx pair.
+    return r;
+#elif !defined(_MSC_VER) && (defined(__x86_64__) || defined(__amd64__))
+    uint64_t r1 = 0, r2 = 0;
+    __asm__ volatile ("rdtsc" : "=a"(r1), "=d"(r2)); // Constrain r1 to rax and r2 to rdx.
+    return (r2 << 32) | r1;
 #else
-    timeval t;
-    gettimeofday(&t, NULL);
-    nCounter = (int64_t)(t.tv_sec * 1000000 + t.tv_usec);
+    // Fall back to using C++11 clock (usually microsecond or nanosecond precision)
+    return std::chrono::high_resolution_clock::now().time_since_epoch().count();
 #endif
-    return nCounter;
 }
 
 void RandAddSeed()
@@ -192,6 +203,43 @@ void GetRandBytes(unsigned char* buf, int num)
     }
 }
 
+static void AddDataToRng(void* data, size_t len);
+
+void RandAddSeedSleep()
+{
+    int64_t nPerfCounter1 = GetPerformanceCounter();
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    int64_t nPerfCounter2 = GetPerformanceCounter();
+
+    // Combine with and update state
+    AddDataToRng(&nPerfCounter1, sizeof(nPerfCounter1));
+    AddDataToRng(&nPerfCounter2, sizeof(nPerfCounter2));
+
+    memory_cleanse(&nPerfCounter1, sizeof(nPerfCounter1));
+    memory_cleanse(&nPerfCounter2, sizeof(nPerfCounter2));
+}
+
+
+static std::mutex cs_rng_state;
+static unsigned char rng_state[32] = {0};
+static uint64_t rng_counter = 0;
+
+static void AddDataToRng(void* data, size_t len) {
+    CSHA512 hasher;
+    hasher.Write((const unsigned char*)&len, sizeof(len));
+    hasher.Write((const unsigned char*)data, len);
+    unsigned char buf[64];
+    {
+        std::unique_lock<std::mutex> lock(cs_rng_state);
+        hasher.Write(rng_state, sizeof(rng_state));
+        hasher.Write((const unsigned char*)&rng_counter, sizeof(rng_counter));
+        ++rng_counter;
+        hasher.Finalize(buf);
+        memcpy(rng_state, buf + 32, 32);
+    }
+    memory_cleanse(buf, 64);
+}
+
 void GetStrongRandBytes(unsigned char* out, int num)
 {
     assert(num <= 32);
@@ -207,8 +255,17 @@ void GetStrongRandBytes(unsigned char* out, int num)
     GetOSRand(buf);
     hasher.Write(buf, 32);
 
+    // Combine with and update state
+    {
+        std::unique_lock<std::mutex> lock(cs_rng_state);
+        hasher.Write(rng_state, sizeof(rng_state));
+        hasher.Write((const unsigned char*)&rng_counter, sizeof(rng_counter));
+        ++rng_counter;
+        hasher.Finalize(buf);
+        memcpy(rng_state, buf + 32, 32);
+    }
+
     // Produce output
-    hasher.Finalize(buf);
     memcpy(out, buf, num);
     memory_cleanse(buf, 64);
 }
@@ -240,26 +297,22 @@ uint256 GetRandHash()
     return hash;
 }
 
-FastRandomContext::FastRandomContext(bool fDeterministic)
+void FastRandomContext::RandomSeed()
 {
-    // The seed values have some unlikely fixed points which we avoid.
-    if (fDeterministic) {
-        Rz = Rw = 11;
-    } else {
-        uint32_t tmp;
-        do {
-            GetRandBytes((unsigned char*)&tmp, 4);
-        } while (tmp == 0 || tmp == 0x9068ffffU);
-        Rz = tmp;
-        do {
-            GetRandBytes((unsigned char*)&tmp, 4);
-        } while (tmp == 0 || tmp == 0x464fffffU);
-        Rw = tmp;
-    }
+    uint256 seed = GetRandHash();
+    rng.SetKey(seed.begin(), 32);
+    requires_seed = false;
+}
+
+FastRandomContext::FastRandomContext(const uint256& seed) : requires_seed(false), bytebuf_size(0), bitbuf_size(0)
+{
+    rng.SetKey(seed.begin(), 32);
 }
 
 bool Random_SanityCheck()
 {
+    uint64_t start = GetPerformanceCounter();
+
     /* This does not measure the quality of randomness, but it does test that
      * OSRandom() overwrites all 32 bytes of the output given a maximum
      * number of tries.
@@ -286,5 +339,25 @@ bool Random_SanityCheck()
 
         tries += 1;
     } while (num_overwritten < NUM_OS_RANDOM_BYTES && tries < MAX_TRIES);
-    return (num_overwritten == NUM_OS_RANDOM_BYTES); /* If this failed, bailed out after too many tries */
+    if (num_overwritten != NUM_OS_RANDOM_BYTES) return false; /* If this failed, bailed out after too many tries */
+
+    // Check that GetPerformanceCounter increases at least during a GetOSRand() call + 1ms sleep.
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    uint64_t stop = GetPerformanceCounter();
+    if (stop == start) return false;
+
+    // We called GetPerformanceCounter. Use it as entropy.
+    RAND_add((const unsigned char*)&start, sizeof(start), 1);
+    RAND_add((const unsigned char*)&stop, sizeof(stop), 1);
+
+    return true;
+}
+
+FastRandomContext::FastRandomContext(bool fDeterministic) : requires_seed(!fDeterministic), bytebuf_size(0), bitbuf_size(0)
+{
+    if (!fDeterministic) {
+        return;
+    }
+    uint256 seed;
+    rng.SetKey(seed.begin(), 32);
 }

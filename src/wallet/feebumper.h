@@ -8,6 +8,7 @@
 #include <primitives/transaction.h>
 
 class CWallet;
+class CWalletTx;
 class uint256;
 
 enum class BumpFeeResult
@@ -44,6 +45,8 @@ public:
     bool commit(CWallet *pWalletNonConst);
 
 private:
+    bool preconditionChecks(const CWallet *pWallet, const CWalletTx& wtx);
+
     const uint256 txid;
     uint256 bumpedTxid;
     CMutableTransaction mtx;
