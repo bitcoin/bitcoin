@@ -49,8 +49,8 @@ BOOST_AUTO_TEST_CASE (generate_aliaswitness)
 	printf("Running generate_aliaswitness...\n");
 	GenerateBlocks(5);
 	UniValue r;
-	AliasNew("node1", "witness1", "password");
-	AliasNew("node2", "witness2", "password");
+	AliasNew("node1", "witness1", "password", "pub");
+	AliasNew("node2", "witness2", "password", "pub");
 	string hex_str = AliasUpdate("node1", "witness1", "\"\"", "\"\"", "newpass", "\"\"", "\"\"", "witness2");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo witness1"));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "password").get_str(), "password");

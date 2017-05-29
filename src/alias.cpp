@@ -2913,8 +2913,8 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 	
 	CAliasIndex txPos;
 	CAliasPayment txPaymentPos;
-    vector<vector<unsigned char> > vvch;
-    int op, nOut;
+    vector<vector<unsigned char> > vvch, vvchAlias;
+    int op, nOut, opAlias, nOutAlias;
 	string opName;
 	UniValue oUpdates(UniValue::VARR);
 	UniValue oPayments(UniValue::VARR);
@@ -2938,7 +2938,15 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 				bOfferPay = false;
 			}
 			UniValue oName(UniValue::VOBJ);
+			string witness = "";
+			if(DecodeAliasTx(tx, opAlias, nOutAlias, vvchAlias))
+			{
+				if(vvchAlias.size() >= 4)
+					witness = stringFromVch(vvchAlias[3]);
+			}
 			oName.push_back(Pair("type", "aliaspayment:" + opName));
+			oName.push_back(Pair("witness", witness));
+			
 			oName.push_back(Pair("txid", tx.GetHash().GetHex()));
 			if(!offer.IsNull())
 			{
@@ -2977,7 +2985,14 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 		{
 			opName = messageFromOp(op);
 			UniValue oName(UniValue::VOBJ);
+			string witness = "";
+			if(DecodeAliasTx(tx, opAlias, nOutAlias, vvchAlias))
+			{
+				if(vvchAlias.size() >= 4)
+					witness = stringFromVch(vvchAlias[3]);
+			}
 			oName.push_back(Pair("type", opName));
+			oName.push_back(Pair("witness", witness));
 			oName.push_back(Pair("txid", tx.GetHash().GetHex()));
 			CMessage message(tx);
 			if(!message.IsNull())
@@ -3004,7 +3019,14 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 				bEscrowPay = false;
 			}
 			UniValue oName(UniValue::VOBJ);
+			string witness = "";
+			if(DecodeAliasTx(tx, opAlias, nOutAlias, vvchAlias))
+			{
+				if(vvchAlias.size() >= 4)
+					witness = stringFromVch(vvchAlias[3]);
+			}
 			oName.push_back(Pair("type", "aliaspayment:" + opName));
+			oName.push_back(Pair("witness", witness));
 			oName.push_back(Pair("txid", tx.GetHash().GetHex()));
 			if(!escrow.IsNull())
 			{
@@ -3054,7 +3076,14 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 		{
 			opName = certFromOp(op);
 			UniValue oName(UniValue::VOBJ);
+			string witness = "";
+			if(DecodeAliasTx(tx, opAlias, nOutAlias, vvchAlias))
+			{
+				if(vvchAlias.size() >= 4)
+					witness = stringFromVch(vvchAlias[3]);
+			}
 			oName.push_back(Pair("type", opName));
+			oName.push_back(Pair("witness", witness));
 			oName.push_back(Pair("txid", tx.GetHash().GetHex()));
 			CCert cert(tx);
 			if(!cert.IsNull())
@@ -3069,7 +3098,11 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 		{
 			opName = aliasFromOp(op);
 			UniValue oName(UniValue::VOBJ);
+			string witness = "";
+			if(vvch.size() >= 4)
+				witness = stringFromVch(vvch[3]);
 			oName.push_back(Pair("type", opName));
+			oName.push_back(Pair("witness", witness));
 			CAliasIndex alias(tx);
 			if(!alias.IsNull())
 			{
