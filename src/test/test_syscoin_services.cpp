@@ -1084,7 +1084,7 @@ void CertUpdate(const string& node, const string& guid, const string& title, con
 
 	}
 }
-void CertTransfer(const string& node, const string &tonode, const string& guid, const string& toalias, , const string& witness)
+void CertTransfer(const string& node, const string &tonode, const string& guid, const string& toalias, const string& witness)
 {
 	UniValue r;
 	CKey privEncryptionKey;
