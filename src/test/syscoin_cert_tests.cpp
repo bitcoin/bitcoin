@@ -141,9 +141,6 @@ BOOST_AUTO_TEST_CASE (generate_certban)
 	string certguidsafe = CertNew("node1", "jagsafesearch1", "certtitle", "certdata", "pub", "Yes");
 	// not safe to search
 	string certguidnotsafe = CertNew("node1", "jagsafesearch1", "certtitle", "certdata", "pub", "No");
-	// can't ban on any other node than one that created sysban
-	BOOST_CHECK_THROW(CertBan("node2",certguidnotsafe,SAFETY_LEVEL1), runtime_error);
-	BOOST_CHECK_THROW(CertBan("node3",certguidsafe,SAFETY_LEVEL1), runtime_error);
 	// ban both certs level 1 (only owner of syscategory can do this)
 	BOOST_CHECK_NO_THROW(CertBan("node1",certguidsafe,SAFETY_LEVEL1));
 	BOOST_CHECK_NO_THROW(CertBan("node1",certguidnotsafe,SAFETY_LEVEL1));

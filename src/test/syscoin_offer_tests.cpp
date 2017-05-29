@@ -685,9 +685,6 @@ BOOST_AUTO_TEST_CASE (generate_offerban)
 	string offerguidsafe = OfferNew("node2", "selleralias15ban", "category", "title", "100", "10.00", "description", "USD", "\"\"", "\"\"", "\"\"", "Yes");
 	// not safe to search
 	string offerguidnotsafe = OfferNew("node2", "selleralias15ban", "category", "title", "100", "10.00", "description", "USD", "\"\"", "\"\"", "\"\"", "No");
-	// can't ban on any other node than one that created sysban
-	BOOST_CHECK_THROW(OfferBan("node2",offerguidnotsafe,SAFETY_LEVEL1), runtime_error);
-	BOOST_CHECK_THROW(OfferBan("node3",offerguidsafe,SAFETY_LEVEL1), runtime_error);
 	// ban both offers level 1 (only owner of syscategory can do this)
 	BOOST_CHECK_NO_THROW(OfferBan("node1",offerguidsafe,SAFETY_LEVEL1));
 	BOOST_CHECK_NO_THROW(OfferBan("node1",offerguidnotsafe,SAFETY_LEVEL1));
