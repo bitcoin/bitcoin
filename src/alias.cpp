@@ -747,8 +747,8 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				prevCoins = NULL;
 				continue;
 			}
-
-			if (IsAliasOp(pop, true) && (vvchArgs[0] == vvch[0] || pop == OP_ALIAS_ACTIVATE)) {
+			// ensure we are not using prev alias input as witness one (size 3)
+			if (IsAliasOp(pop, true) && vvchArgs.size() <= 3 && (vvchArgs[0] == vvch[0] || pop == OP_ALIAS_ACTIVATE)) {
 				prevOp = pop;
 				vvchPrevArgs = vvch;
 				break;
