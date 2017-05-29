@@ -51,6 +51,8 @@
         <file alias="about">res/icons/drkblue/about.png</file>
         <file alias="about_qt">res/icons/drkblue/about_qt.png</file>
         <file alias="verify">res/icons/drkblue/verify.png</file>
+        <file alias="hd_enabled">res/icons/drkblue/hd_enabled.png</file>
+        <file alias="hd_disabled">res/icons/drkblue/hd_disabled.png</file>
     </qresource>
     <qresource prefix="/icons/crownium">
         <file alias="address-book">res/icons/crownium/address-book.png</file>
@@ -101,6 +103,8 @@
         <file alias="about">res/icons/crownium/about.png</file>
         <file alias="about_qt">res/icons/crownium/about_qt.png</file>
         <file alias="verify">res/icons/crownium/verify.png</file>
+        <file alias="hd_enabled">res/icons/crownium/hd_enabled.png</file>
+        <file alias="hd_disabled">res/icons/crownium/hd_disabled.png</file>
     </qresource>
     <qresource prefix="/icons/light">
         <file alias="address-book">res/icons/light/address-book.png</file>
@@ -151,6 +155,8 @@
         <file alias="about">res/icons/light/about.png</file>
         <file alias="about_qt">res/icons/light/about_qt.png</file>
         <file alias="verify">res/icons/light/verify.png</file>
+        <file alias="hd_enabled">res/icons/light/hd_enabled.png</file>
+        <file alias="hd_disabled">res/icons/light/hd_disabled.png</file>
     </qresource>
     <qresource prefix="/icons/trad">
         <file alias="address-book">res/icons/trad/address-book.png</file>
@@ -201,6 +207,8 @@
         <file alias="about">res/icons/trad/about.png</file>
         <file alias="about_qt">res/icons/trad/about_qt.png</file>
         <file alias="verify">res/icons/trad/verify.png</file>
+        <file alias="hd_enabled">res/icons/trad/hd_enabled.png</file>
+        <file alias="hd_disabled">res/icons/trad/hd_disabled.png</file>
     </qresource>
     <qresource prefix="/css">
         <file alias="drkblue">res/css/drkblue.css</file>

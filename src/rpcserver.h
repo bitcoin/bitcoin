@@ -192,6 +192,7 @@ extern UniValue dumpprivkey(const UniValue& params, bool fHelp); // in rpcdump.c
 extern UniValue importprivkey(const UniValue& params, bool fHelp);
 extern UniValue importaddress(const UniValue& params, bool fHelp);
 extern UniValue importpubkey(const UniValue& params, bool fHelp);
+extern UniValue dumphdinfo(const UniValue& params, bool fHelp);
 extern UniValue dumpwallet(const UniValue& params, bool fHelp);
 extern UniValue importwallet(const UniValue& params, bool fHelp);
 extern UniValue importelectrumwallet(const UniValue& params, bool fHelp);

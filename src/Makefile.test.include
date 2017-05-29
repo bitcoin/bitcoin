@@ -24,6 +24,7 @@ JSON_TEST_FILES = \
   test/data/base58_keys_valid.json \
   test/data/base58_encode_decode.json \
   test/data/base58_keys_invalid.json \
+  test/data/bip39_vectors.json \
   test/data/tx_invalid.json \
   test/data/tx_valid.json \
   test/data/sighash.json
@@ -42,6 +43,7 @@ BITCOIN_TESTS =\
   test/base58_tests.cpp \
   test/base64_tests.cpp \
   test/bip32_tests.cpp \
+  test/bip39_tests.cpp \
   test/bloom_tests.cpp \
   test/bswap_tests.cpp \
   test/cachemap_tests.cpp \

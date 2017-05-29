@@ -1070,15 +1070,15 @@ bool CPrivateSendClient::PrepareDenominate(int nMinRounds, int nMaxRounds, std::
                     vecTxIn.erase(it);
                     vCoins.erase(it2);
 
-                    CScript scriptChange;
+                    CScript scriptDenom;
                     CPubKey vchPubKey;
-                    // use a unique change address
-                    assert(reservekey.GetReservedKey(vchPubKey)); // should never fail, as we just unlocked
-                    scriptChange = GetScriptForDestination(vchPubKey.GetID());
+                    // use unique address
+                    assert(reservekey.GetReservedKey(vchPubKey, false)); // should never fail, as we just unlocked
+                    scriptDenom = GetScriptForDestination(vchPubKey.GetID());
                     reservekey.KeepKey();
 
                     // add new output
-                    CTxOut txout(nValueDenom, scriptChange);
+                    CTxOut txout(nValueDenom, scriptDenom);
                     vecTxOutRet.push_back(txout);
 
                     // subtract denomination amount
@@ -1151,7 +1151,7 @@ bool CPrivateSendClient::MakeCollateralAmounts(const CompactTallyItem& tallyItem
 
     CScript scriptCollateral;
     CPubKey vchPubKey;
-    assert(reservekeyCollateral.GetReservedKey(vchPubKey)); // should never fail, as we just unlocked
+    assert(reservekeyCollateral.GetReservedKey(vchPubKey, false)); // should never fail, as we just unlocked
     scriptCollateral = GetScriptForDestination(vchPubKey.GetID());
 
     vecSend.push_back((CRecipient){scriptCollateral, PRIVATESEND_COLLATERAL*4, false});
@@ -1231,7 +1231,7 @@ bool CPrivateSendClient::CreateDenominated(const CompactTallyItem& tallyItem, bo
 
     CScript scriptCollateral;
     CPubKey vchPubKey;
-    assert(reservekeyCollateral.GetReservedKey(vchPubKey)); // should never fail, as we just unlocked
+    assert(reservekeyCollateral.GetReservedKey(vchPubKey, false)); // should never fail, as we just unlocked
     scriptCollateral = GetScriptForDestination(vchPubKey.GetID());
 
     // ****** Add collateral outputs ************ /
@@ -1275,11 +1275,11 @@ bool CPrivateSendClient::CreateDenominated(const CompactTallyItem& tallyItem, bo
             while(nValueLeft - nDenomValue >= 0 && nOutputs <= 10) {
                 CScript scriptDenom;
                 CPubKey vchPubKey;
-                //use a unique change address
+                // use a unique address
                 std::shared_ptr<CReserveKey> reservekeyDenom = std::make_shared<CReserveKey>(pwalletMain);
                 reservekeyDenomVec.push_back(reservekeyDenom);
 
-                assert(reservekeyDenom->GetReservedKey(vchPubKey)); // should never fail, as we just unlocked
+                assert(reservekeyDenom->GetReservedKey(vchPubKey, false)); // should never fail, as we just unlocked
                 scriptDenom = GetScriptForDestination(vchPubKey.GetID());
 
                 vecSend.push_back((CRecipient){ scriptDenom, nDenomValue, false });
