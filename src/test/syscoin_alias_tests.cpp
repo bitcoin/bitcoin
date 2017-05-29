@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
 	BOOST_CHECK(hex_str.empty());
 	// ensure can't update after transfer
 	hex_str = AliasTransfer("node2", "jagmultiupdate", "node1", "changedata8", "");
-	BOOST_CHECK(!hex_str.empty())
+	BOOST_CHECK(!hex_str.empty());
 	for(unsigned int i=0;i<MAX_ALIAS_UPDATES_PER_BLOCK;i++)
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate sysrates.peg jagmultiupdate changedata9"));
 	
@@ -413,7 +413,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasbalance)
 	BOOST_CHECK_EQUAL(balanceBefore, balanceAfter);
 
 	// edit password and see balance is same
-	hex_str = AliasUpdate("node2", "jagnodebalance1", "pubdata1", "privdata1", "newpassword");
+	string hex_str = AliasUpdate("node2", "jagnodebalance1", "pubdata1", "privdata1", "newpassword");
 	BOOST_CHECK(hex_str.empty());
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasinfo jagnodebalance1"));
 	balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
@@ -446,7 +446,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasbalancewithtransfer)
 	BOOST_CHECK_EQUAL(balanceBefore, balanceAfter);
 
 	// transfer alias to someone else and balance should be same
-	hex_str = AliasTransfer("node2", "jagnodebalance2", "node3", "changeddata4", "pvtdata");
+	string hex_str = AliasTransfer("node2", "jagnodebalance2", "node3", "changeddata4", "pvtdata");
 	BOOST_CHECK(hex_str.empty());
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasinfo jagnodebalance2"));
 	CAmount balanceAfterTransfer = AmountFromValue(find_value(r.get_obj(), "balance"));
