@@ -23,6 +23,7 @@
 #include "txmempool.h"
 #include "uint256.h"
 #include "utilstrencodings.h"
+#include "net_processing.h"
 #ifdef ENABLE_WALLET
 #include "wallet/rpcwallet.h"
 #include "wallet/wallet.h"
@@ -923,12 +924,34 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
     }
     if(!g_connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
-
     CInv inv(MSG_TX, hashTx);
-    g_connman->ForEachNode([&inv](CNode* pnode)
+    CNode* stemNode;
+    bool stemRelay = false;
+    std::vector<CNode*> outgoing;
+    g_connman->ForEachNode( [&outgoing](CNode* pnode)
     {
-        pnode->PushInventory(inv);
+        if (!pnode->fInbound && pnode->GetSendVersion() >= DANDELION_VERSION_NUM) {
+            outgoing.push_back(pnode);
+        }
     });
+
+    if (!outgoing.empty()) {
+        Dandelion::stemSet.insert(inv.hash);
+        stemRelay = true;
+        std::vector<CNode*>::iterator randIt = outgoing.begin();
+        std::advance(randIt, std::rand() % outgoing.size());
+        stemNode = *randIt;
+    }
+    g_connman->ForEachNode([&inv, &stemRelay, &stemNode](CNode* pnode)
+    {
+        if (!stemRelay || stemNode == pnode) {
+            pnode->PushInventory(inv);
+        }
+    });
+    //g_connman->ForEachNode([&inv](CNode* pnode)
+    //{
+    //    pnode->PushInventory(inv);
+    //});
     return hashTx.GetHex();
 }
 
