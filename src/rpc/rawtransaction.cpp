@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "base58.h"
+//#include "util.h"
 #include "chain.h"
 #include "coins.h"
 #include "consensus/validation.h"
@@ -928,14 +929,17 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
     CNode* stemNode;
     bool stemRelay = false;
     std::vector<CNode*> outgoing;
+    LogPrintf("DANDELION: Looking for Dandelion Nodes\n");
     g_connman->ForEachNode( [&outgoing](CNode* pnode)
     {
         if (!pnode->fInbound && pnode->GetSendVersion() >= DANDELION_VERSION_NUM) {
+            LogPrintf("DANDELION: found one dandelion node\n");
             outgoing.push_back(pnode);
         }
     });
 
     if (!outgoing.empty()) {
+        LogPrintf("DANDELION: adding inv to dandelion peer's push\n");
         Dandelion::stemSet.insert(inv.hash);
         stemRelay = true;
         std::vector<CNode*>::iterator randIt = outgoing.begin();
@@ -945,6 +949,7 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
     g_connman->ForEachNode([&inv, &stemRelay, &stemNode](CNode* pnode)
     {
         if (!stemRelay || stemNode == pnode) {
+            LogPrintf("DANDELION: pushing transaction\n");
             pnode->PushInventory(inv);
         }
     });

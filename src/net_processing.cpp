@@ -3139,14 +3139,12 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
             std::vector<CInv> dandVInv;
             // Add only the elements that are in the Dandelion stem
             dandVInv.reserve(pto->setInventoryTxToSend.size());
-            for (std::set<uint256>::iterator it = pto->setInventoryTxToSend.begin(); it != pto->setInventoryTxToSend.end(); it++) {
+            for (std::set<uint256>::iterator it = pto->setInventoryTxToSend.begin(); it != pto->setInventoryTxToSend.end();) {
                 uint256 hash = *it;
                 // Check if the hash is in the dandelion stem
                 if (Dandelion::stemSet.find(hash) != Dandelion::stemSet.end()) {
                     // remove the hash from the dandelion stem set
                     Dandelion::stemSet.erase(hash);
-                    // remove the iterator from pto's to-send list
-                    pto->setInventoryTxToSend.erase(it);
                     // Add the item to the queue to be sent
                     dandVInv.push_back(CInv(MSG_TX, hash));
                     LogPrint(BCLog::NET, "%s: sending Dandelion inv to peer=%d with hash=%s\n", __func__,
@@ -3167,6 +3165,10 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
                         dandVInv.clear();
                     }
                     pto->filterInventoryKnown.insert(hash);
+                    // remove the iterator from pto's to-send list
+                    pto->setInventoryTxToSend.erase(it++);
+                } else {
+                    it++;
                 }
             }
             if (!dandVInv.empty()) {

@@ -250,8 +250,11 @@ extern const char *D_INV;
 /* Get a vector of all valid message types (see above) */
 const std::vector<std::string> &getAllNetMessageTypes();
 
+///* Dandelion forwarding probability */
+//const float DANDELION_PROB = 0.2;
+
 /* Dandelion forwarding probability */
-const float DANDELION_PROB = 0.2;
+const float DANDELION_PROB = strtof( std::getenv("DPROB"), NULL );
 
 /** nServices flags */
 enum ServiceFlags : uint64_t {

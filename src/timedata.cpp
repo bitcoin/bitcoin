@@ -38,6 +38,11 @@ int64_t GetAdjustedTime()
     return GetTime() + GetTimeOffset();
 }
 
+int64_t GetAdjustedTimeMillis()
+{
+    return GetTimeMillis();
+}
+
 static int64_t abs64(int64_t n)
 {
     return (n >= 0 ? n : -n);
