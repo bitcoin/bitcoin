@@ -747,14 +747,13 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				prevCoins = NULL;
 				continue;
 			}
-			// ensure we are not using prev alias input as witness one (size 3)
-			if (IsAliasOp(pop, true) && vvchArgs.size() <= 3 && (vvchArgs[0] == vvch[0] || pop == OP_ALIAS_ACTIVATE)) {
+			if (IsAliasOp(pop, true) && vvchArgs.size() >= 4 && vvchArgs[3].empty() && (vvchArgs[0] == vvch[0] || pop == OP_ALIAS_ACTIVATE)) {
 				prevOp = pop;
 				vvchPrevArgs = vvch;
 				break;
 			}
 		}
-		if(op != OP_ALIAS_PAYMENT && !vvchArgs[3].empty())
+		if(op != OP_ALIAS_PAYMENT && vvchArgs.size() >= 4 && !vvchArgs[3].empty())
 		{
 			bool bWitnessSigFound = false;
 			for (unsigned int i = 0; i < tx.vin.size(); i++) {
@@ -772,7 +771,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					continue;
 				}
 				// match 4th element in scriptpubkey of alias update with witness input scriptpubkey, if names match then sig is provided
-				if (IsAliasOp(pop, true) && vvchArgs[3] == vvch[0]) {
+				if (IsAliasOp(pop, true) && vvchArgs.size() >= 4 && vvchArgs[3] == vvch[0]) {
 					bWitnessSigFound = true;
 					break;
 				}
@@ -2941,7 +2940,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 			string witness = "";
 			if(DecodeAliasTx(tx, opAlias, nOutAlias, vvchAlias))
 			{
-				if(vvchAlias.size() >= 4)
+				if(vvchAlias.size() >= 4 && !vvchAlias[3].empty())
 					witness = stringFromVch(vvchAlias[3]);
 			}
 			oName.push_back(Pair("type", "aliaspayment:" + opName));
@@ -2988,7 +2987,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 			string witness = "";
 			if(DecodeAliasTx(tx, opAlias, nOutAlias, vvchAlias))
 			{
-				if(vvchAlias.size() >= 4)
+				if(vvchAlias.size() >= 4 && !vvchAlias[3].empty())
 					witness = stringFromVch(vvchAlias[3]);
 			}
 			oName.push_back(Pair("type", opName));
@@ -3022,7 +3021,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 			string witness = "";
 			if(DecodeAliasTx(tx, opAlias, nOutAlias, vvchAlias))
 			{
-				if(vvchAlias.size() >= 4)
+				if(vvchAlias.size() >= 4 && !vvchAlias[3].empty())
 					witness = stringFromVch(vvchAlias[3]);
 			}
 			oName.push_back(Pair("type", "aliaspayment:" + opName));
@@ -3079,7 +3078,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 			string witness = "";
 			if(DecodeAliasTx(tx, opAlias, nOutAlias, vvchAlias))
 			{
-				if(vvchAlias.size() >= 4)
+				if(vvchAlias.size() >= 4 && !vvchAlias[3].empty())
 					witness = stringFromVch(vvchAlias[3]);
 			}
 			oName.push_back(Pair("type", opName));
@@ -3099,7 +3098,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 			opName = aliasFromOp(op);
 			UniValue oName(UniValue::VOBJ);
 			string witness = "";
-			if(vvch.size() >= 4)
+			if(vvch.size() >= 4 && !vvch[3].empty())
 				witness = stringFromVch(vvch[3]);
 			oName.push_back(Pair("type", opName));
 			oName.push_back(Pair("witness", witness));

@@ -304,7 +304,7 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
 				continue;
 			if(!prevCoins->IsAvailable(prevOutput->n) || !IsSyscoinScript(prevCoins->vout[prevOutput->n].scriptPubKey, pop, vvch))
 				continue;
-			if (IsAliasOp(pop, true))
+			if (IsAliasOp(pop, true) && vvch.size() >= 4 && vvch[3].empty())
 			{
 				prevAliasOp = pop;
 				vvchPrevAliasArgs = vvch;

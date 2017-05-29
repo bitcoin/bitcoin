@@ -505,7 +505,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			if(foundAlias)
 				break;
 
-			else if (!foundAlias && IsAliasOp(pop, true))
+			else if (!foundAlias && IsAliasOp(pop, true) && vvch.size() >= 4 && vvch[3].empty())
 			{
 				foundAlias = true;
 				prevAliasOp = pop;
