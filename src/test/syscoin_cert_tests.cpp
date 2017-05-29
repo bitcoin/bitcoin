@@ -197,7 +197,8 @@ BOOST_AUTO_TEST_CASE (generate_certpruning)
 	// we can find it as normal first
 	BOOST_CHECK_EQUAL(CertFilter("node1", guid, "Off"), true);
 	// make sure our offer alias doesn't expire
-	AliasUpdate("node1", "jagprune1");
+	string hex_str = AliasUpdate("node1", "jagprune1");
+	BOOST_CHECK(hex_str.empty());
 	GenerateBlocks(5, "node1");
 	ExpireAlias("jagprune1");
 	StartNode("node2");
@@ -230,7 +231,8 @@ BOOST_AUTO_TEST_CASE (generate_certpruning)
 	BOOST_CHECK_EQUAL(CertFilter("node1", guid1, "Off"), true);
 	BOOST_CHECK_EQUAL(CertFilter("node2", guid1, "Off"), true);
 	// make sure our offer alias doesn't expire
-	AliasUpdate("node1", "jagprune1");
+	hex_str = AliasUpdate("node1", "jagprune1");
+	BOOST_CHECK(hex_str.empty());
 	GenerateBlocks(5, "node1");
 	ExpireAlias("jagprune1");
 	// now it should be expired

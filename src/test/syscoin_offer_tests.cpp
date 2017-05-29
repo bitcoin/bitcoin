@@ -138,9 +138,12 @@ BOOST_AUTO_TEST_CASE (generate_offerwhitelists)
 	OfferRemoveWhitelist("node1", offerguid, "selleraddwhitelistalias");
 	BOOST_CHECK_THROW(CallRPC("node1", "offerremovewhitelist " + offerguid + " selleraddwhitelistalias"), runtime_error);
 
-	AliasUpdate("node1", "sellerwhitelistalias", "changeddata2", "privdata2");
-	AliasUpdate("node2", "selleraddwhitelistalias", "changeddata2", "privdata2");
-	AliasUpdate("node2", "selleraddwhitelistalias1", "changeddata2", "privdata2");
+	string hex_str = AliasUpdate("node1", "sellerwhitelistalias", "changeddata2", "privdata2");
+	BOOST_CHECK(hex_str.empty());
+	hex_str = AliasUpdate("node2", "selleraddwhitelistalias", "changeddata2", "privdata2");
+	BOOST_CHECK(hex_str.empty());
+	hex_str = AliasUpdate("node2", "selleraddwhitelistalias1", "changeddata2", "privdata2");
+	BOOST_CHECK(hex_str.empty());
 
 	// add to whitelist
 	OfferAddWhitelist("node1", offerguid, "selleraddwhitelistalias", "4");
@@ -154,9 +157,12 @@ BOOST_AUTO_TEST_CASE (generate_offerwhitelists)
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress selleraddwhitelistalias1 100"), runtime_error);
 	GenerateBlocks(10);
 
-	AliasUpdate("node1", "sellerwhitelistalias", "changeddata2", "privdata2");
-	AliasUpdate("node2", "selleraddwhitelistalias", "changeddata2", "privdata2");
-	AliasUpdate("node2", "selleraddwhitelistalias1", "changeddata2", "privdata2");
+	hex_str = AliasUpdate("node1", "sellerwhitelistalias", "changeddata2", "privdata2");
+	BOOST_CHECK(hex_str.empty());
+	hex_str = AliasUpdate("node2", "selleraddwhitelistalias", "changeddata2", "privdata2");
+	BOOST_CHECK(hex_str.empty());
+	hex_str = AliasUpdate("node2", "selleraddwhitelistalias1", "changeddata2", "privdata2");
+	BOOST_CHECK(hex_str.empty());
 
 	OfferRemoveWhitelist("node1", offerguid, "selleraddwhitelistalias");
 
@@ -329,8 +335,10 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate_editcurrency)
 	// 2698.0 SYS/CAD
 	BOOST_CHECK_EQUAL(nTotal, AmountFromValue(3*0.15*2698.0));
 
-	AliasUpdate("node1", "selleraliascurrency", "changeddata2", "privdata2");
-	AliasUpdate("node2", "buyeraliascurrency", "changeddata2", "privdata2");
+	string hex_str = AliasUpdate("node1", "selleraliascurrency", "changeddata2", "privdata2");
+	BOOST_CHECK(hex_str.empty());
+	hex_str = AliasUpdate("node2", "buyeraliascurrency", "changeddata2", "privdata2");
+	BOOST_CHECK(hex_str.empty());
 
 
 	OfferUpdate("node1", "selleraliascurrency", offerguid, "category", "titlenew", "90", "1.00", "descriptionnew", "SYS");
@@ -453,9 +461,12 @@ BOOST_AUTO_TEST_CASE (generate_cert_linkedaccept)
 	OfferAddWhitelist("node1", offerguid, "node2alias", "0");
 	string lofferguid = OfferLink("node2", "node2alias", offerguid, "5", "newdescription");
 
-	AliasUpdate("node1", "node1alias", "changeddata2", "privdata2");
-	AliasUpdate("node2", "node2alias", "changeddata2", "privdata2");
-	AliasUpdate("node3", "node3alias", "changeddata3", "privdata3");
+	string hex_str = AliasUpdate("node1", "node1alias", "changeddata2", "privdata2");
+	BOOST_CHECK(hex_str.empty());
+	hex_str = AliasUpdate("node2", "node2alias", "changeddata2", "privdata2");
+	BOOST_CHECK(hex_str.empty());
+	hex_str = AliasUpdate("node3", "node3alias", "changeddata3", "privdata3");
+	BOOST_CHECK(hex_str.empty());
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress node3alias 135"), runtime_error);
 	GenerateBlocks(10);
 	LinkOfferAccept("node1", "node3", "node3alias", lofferguid, "1", "message", "node2");
@@ -760,7 +771,8 @@ BOOST_AUTO_TEST_CASE (generate_offerpruning)
 	
 	GenerateBlocks(5, "node1");
 	// make sure our offer alias doesn't expire
-	AliasUpdate("node1", "pruneoffer");
+	string hex_str = AliasUpdate("node1", "pruneoffer");
+	BOOST_CHECK(hex_str.empty());
 	ExpireAlias("pruneoffer");
 	// now it should be expired
 	BOOST_CHECK_THROW(CallRPC("node1", "offerupdate pruneoffer " + guid1 + " category title 1 0.05 description"), runtime_error);

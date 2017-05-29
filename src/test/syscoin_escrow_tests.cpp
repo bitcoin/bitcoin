@@ -234,9 +234,12 @@ BOOST_AUTO_TEST_CASE (generate_escrow_linked_release)
 	// arbiter can send release
 	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "escrowclaimrelease " + guid));
 
-	AliasUpdate("node1", "buyeralias2", "changeddata1", "priv");
-	AliasUpdate("node2", "selleralias22", "changeddata1", "priv");
-	AliasUpdate("node3", "arbiteralias2", "changeddata1", "priv");
+	string hex_str = AliasUpdate("node1", "buyeralias2", "changeddata1", "priv");
+	BOOST_CHECK(hex_str.empty());
+	hex_str = AliasUpdate("node2", "selleralias22", "changeddata1", "priv");
+	BOOST_CHECK(hex_str.empty());
+	hex_str = AliasUpdate("node3", "arbiteralias2", "changeddata1", "priv");
+	BOOST_CHECK(hex_str.empty());
 	OfferUpdate("node2", "selleralias22", offerguid, "category", "titlenew", "100", "0.04", "descriptionnew", "EUR");
 	EscrowClaimRelease("node2", guid);
 }
@@ -305,8 +308,10 @@ BOOST_AUTO_TEST_CASE (generate_escrowpruning)
 	StartNode("node1");
 	GenerateBlocks(5, "node1");
 	// ensure you can still update because escrow hasn't been completed yet
-	AliasUpdate("node1", "selleraliasprune");
-	AliasUpdate("node2", "buyeraliasprune");
+	string hex_str = AliasUpdate("node1", "selleraliasprune");
+	BOOST_CHECK(hex_str.empty());
+	hex_str = AliasUpdate("node2", "buyeraliasprune");
+	BOOST_CHECK(hex_str.empty());
 
 	EscrowRelease("node2", "buyer", guid1);
 	OfferUpdate("node1", "selleraliasprune", offerguid);

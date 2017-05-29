@@ -78,7 +78,8 @@ BOOST_AUTO_TEST_CASE (generate_msgaliastransfer)
 	printf("Running generate_msgaliastransfer...\n");
 	MessageNew("node1", "node2", "pubdata", "data", "jagmsg1", "jagmsg2");
 	// transfer an alias and send a message, the new node owner can now read messages to that alias
-	AliasTransfer("node2", "jagmsg2", "node3", "changeddata2", "pvtdata");
+	string hex_str = AliasTransfer("node2", "jagmsg2", "node3", "changeddata2", "pvtdata");
+	BOOST_CHECK(hex_str.empty());
 	// send message to new node owning alias
 	MessageNew("node1", "node3", "pubdata", "data", "jagmsg1", "jagmsg2");
 }

@@ -357,7 +357,10 @@ void CreateSysRatesIfNotExist()
 	try{
 		UniValue r = CallRPC("node1", "aliasinfo sysrates.peg");
 		if(r.isObject())
-			AliasUpdate("node1", "sysrates.peg", data, "priv");
+		{
+			string hex_str = AliasUpdate("node1", "sysrates.peg", data, "priv");
+			BOOST_CHECK(hex_str.empty());
+		}
 		else
 			AliasNew("node1", "sysrates.peg", "password", data);
 	}
@@ -650,7 +653,7 @@ string AliasNew(const string& node, const string& aliasname, const string& passw
 	}
 	return aliasAddress.ToString();
 }
-void AliasTransfer(const string& node, const string& aliasname, const string& tonode, const string& pubdata, const string& privdata,const string& witness)
+string AliasTransfer(const string& node, const string& aliasname, const string& tonode, const string& pubdata, const string& privdata,const string& witness)
 {
 	UniValue r;
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasinfo " + aliasname));
@@ -699,6 +702,19 @@ void AliasTransfer(const string& node, const string& aliasname, const string& to
 	string encryptionpubkey = "\"\"";
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdate sysrates.peg " + aliasname + " " + pubdata + " " + strPrivateHex + " " + safesearch + " " + address + " " + password + " " + acceptTransfers + " " + expires + " " + passwordsalt + " " + strEncryptionPrivateKeyHex + " " + encryptionpubkey + " " + witness));
+	const UniValue& resArray = r.get_array();
+	if(resArray.size() > 1)
+	{
+		const UniValue& complete_value = resArray[1];
+		bool bComplete = false;
+		if (complete_value.isStr())
+			bComplete = complete_value.get_str() == "true";
+		if(!bComplete)
+		{
+			string hex_str = resArray[0].get_str();	
+			return hex_str;
+		}
+	}	
 	GenerateBlocks(5, tonode);
 	GenerateBlocks(5, node);
 
@@ -730,6 +746,7 @@ void AliasTransfer(const string& node, const string& aliasname, const string& to
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "passwordsalt").get_str() , "");
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , aliasAddress.ToString());
 	BOOST_CHECK(find_value(r.get_obj(), "ismine").get_bool() == true);
+	return "";
 }
 string AliasUpdate(const string& node, const string& aliasname, const string& pubdata, const string& privdata, string password, string safesearch, string addressStr, string witness)
 {
