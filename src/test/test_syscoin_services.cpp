@@ -1718,7 +1718,16 @@ const string EscrowNew(const string& node, const string& sellernode, const strin
 		BOOST_CHECK(find_value(r.get_obj(), "pay_message").get_str() == message);
 	}
 
-	BOOST_CHECK_THROW(r = CallRPC(node, "escrowacknowledge " + guid + " message"), runtime_error);
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowacknowledge " + guid + " message"));
+	const UniValue& resArray = r.get_array();
+	if(resArray.size() > 1)
+	{
+		const UniValue& complete_value = resArray[1];
+		bool bComplete = false;
+		if (complete_value.isStr())
+			bComplete = complete_value.get_str() == "true";
+		BOOST_CHECK(!bComplete);
+	}
 	BOOST_CHECK_NO_THROW(r = CallRPC(sellernode, "escrowacknowledge " + guid + " message"));
 	GenerateBlocks(10, sellernode);
 	BOOST_CHECK_THROW(r = CallRPC(sellernode, "escrowacknowledge " + guid + " message"), runtime_error);
