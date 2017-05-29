@@ -669,6 +669,45 @@ BOOST_AUTO_TEST_CASE(test_witness)
     CheckWithFlag(output1, input1, STANDARD_SCRIPT_VERIFY_FLAGS, true);
 }
 
+BOOST_AUTO_TEST_CASE(test_tx_sizelimits)
+{
+    CBasicKeyStore keystore;
+    CCoinsView coinsDummy;
+    CCoinsViewCache coins(&coinsDummy);
+    std::vector<CMutableTransaction> dummyTransactions = SetupDummyInputs(keystore, coins);
+
+    CMutableTransaction tx;
+    tx.nVersion = 1;
+    tx.vin.resize(1);
+    tx.vin[0].prevout.hash = dummyTransactions[0].GetHash();
+    tx.vin[0].prevout.n = 0;
+    tx.vout.resize(1);
+    tx.vout[0].nValue = 1;
+    tx.vout[0].scriptPubKey = CScript();
+
+    size_t sersizeTx = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS);
+
+    BOOST_CHECK(sersizeTx <= MAX_TX_BASE_SIZE);
+
+    CValidationState state;
+    BOOST_CHECK_MESSAGE(CheckTransaction(tx, state) && state.IsValid(), "Simple transaction should be valid.");
+
+    const size_t nTestOutputs = 125000;
+    tx.vout.resize(nTestOutputs);
+
+    for (size_t i = 0; i < nTestOutputs; i++) {
+        tx.vout[i].nValue = 1;
+        tx.vout[i].scriptPubKey = CScript();
+    }
+
+    sersizeTx = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS);
+
+    BOOST_CHECK(sersizeTx > MAX_TX_BASE_SIZE);
+
+    BOOST_CHECK_MESSAGE(!CheckTransaction(tx, state) || !state.IsValid(), "Large transaction should be invalid.");
+
+}
+
 BOOST_AUTO_TEST_CASE(test_IsStandard)
 {
     LOCK(cs_main);
