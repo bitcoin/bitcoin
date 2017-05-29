@@ -747,7 +747,9 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				prevCoins = NULL;
 				continue;
 			}
-			if (IsAliasOp(pop, true) && vvchArgs.size() >= 4 && vvchArgs[3].empty() && (vvchArgs[0] == vvch[0] || pop == OP_ALIAS_ACTIVATE)) {
+			if (IsAliasOp(pop, true) && (vvchArgs[0] == vvch[0] || pop == OP_ALIAS_ACTIVATE)) {
+				if(vvchArgs.size() >= 4 && !vvchArgs[3].empty()
+					continue;
 				prevOp = pop;
 				vvchPrevArgs = vvch;
 				break;
