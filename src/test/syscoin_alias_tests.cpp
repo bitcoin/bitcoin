@@ -584,11 +584,11 @@ BOOST_AUTO_TEST_CASE (generate_multisigalias)
 	BOOST_CHECK(abs(balanceBefore - balanceAfter) < COIN);
 
 	// no multisig so update as normal
-	hex_str = AliasUpdate("node2", "jagnodemultisig1", "\"\"", "\"\"", "newpassword1");
+	hex_str = AliasUpdate("node2", "jagnodemultisig1");
 	BOOST_CHECK(!hex_str.empty());
-	hex_str = AliasUpdate("node3", "jagnodemultisig1", "\"\"", "\"\"", "newpassword1");
+	hex_str = AliasUpdate("node3", "jagnodemultisig1");
 	BOOST_CHECK(!hex_str.empty());
-	hex_str = AliasUpdate("node1", "jagnodemultisig1", "\"\"", "\"\"", "newpassword1");
+	hex_str = AliasUpdate("node1", "jagnodemultisig1");
 	BOOST_CHECK_EQUAL(hex_str, "");
 	// pay to multisig and check balance
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress jagnodemultisig1 6"), runtime_error);
