@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE (generate_aliaswitness)
 	string hex_str = AliasUpdate("node1", "witness1", "\"\"", "\"\"", "newpass", "\"\"", "\"\"", "witness2");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo witness1"));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "password").get_str(), "password");
-	BOOST_CHECK(!hex_str.empty())
+	BOOST_CHECK(!hex_str.empty());
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "syscoinsignrawtransaction " + hex_str));
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5);
