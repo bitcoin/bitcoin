@@ -1768,7 +1768,7 @@ void EscrowClaimRefund(const string& node, const string& guid, const string& wit
 	// get balances before
 	BOOST_CHECK_NO_THROW(a = CallRPC(node, "aliasinfo " + buyeralias));
 	CAmount balanceBuyerBefore = AmountFromValue(find_value(a.get_obj(), "balance"));
-	string rawtx = "\"\""
+	string rawtx = "\"\"";
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowclaimrefund " + guid  + " " + rawtx + " " + witness));
 	UniValue resArray = r.get_array();
 	string strRawTx = resArray[0].get_str();
