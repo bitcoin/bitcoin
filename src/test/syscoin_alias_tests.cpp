@@ -44,6 +44,23 @@ BOOST_AUTO_TEST_CASE (generate_big_aliasdata)
 	GenerateBlocks(5);
 	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg jag2 \"\" \"\""), runtime_error);		
 }
+BOOST_AUTO_TEST_CASE (generate_aliaswitness)
+{
+	printf("Running generate_aliaswitness...\n");
+	GenerateBlocks(5);
+	UniValue r;
+	AliasNew("node1", "witness1", "password");
+	AliasNew("node2", "witness2", "password");
+	string hex_str = AliasUpdate("node1", "witness1", "\"\"", "\"\"", "newpass", "\"\"", "\"\"", "witness2");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo witness1"));
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "password").get_str(), "password");
+	BOOST_CHECK(!hex_str.empty())
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "syscoinsignrawtransaction " + hex_str));
+	GenerateBlocks(5, "node2");
+	GenerateBlocks(5);
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo witness1"));
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "password").get_str(), "newpass");
+}
 BOOST_AUTO_TEST_CASE (generate_big_aliasname)
 {
 	printf("Running generate_big_aliasname...\n");
