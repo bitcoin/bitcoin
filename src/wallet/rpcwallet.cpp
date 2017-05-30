@@ -1497,8 +1497,9 @@ static void MaybePushAddress(UniValue & entry, const CTxDestination &dest)
         entry.push_back(Pair("v2address", addr.ToString()));
 }
 // SYSCOIN
-string GetSyscoinTransactionDescription(const int op, const vector<vector<unsigned char> > &vvchArgs, const CWalletTx &wtx, const string &type, string& responseEnglish)
+string GetSyscoinTransactionDescription(const int op, const vector<vector<unsigned char> > &vvchArgs, const CWalletTx &wtx, const string &type, string& responseEnglish, string& responseGUID)
 {
+	responseGUID = stringFromVch(vvchArgs[0]);
 	string strResponse = "";
 	COffer offer;
 	CEscrow escrow;
@@ -1573,6 +1574,7 @@ string GetSyscoinTransactionDescription(const int op, const vector<vector<unsign
 				responseEnglish = "Offer Accept Received";
 			}
 		}
+		responseGUID = stringFromVch(vvchArgs[1]);
 		strResponse += " " + stringFromVch(vvchArgs[1]) + " (" + stringFromVch(vvchArgs[0]) + ")";
 		return strResponse;
 		break;
@@ -1723,9 +1725,11 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 			if(!vvchArgs.empty() && s.vout == nOut)
 			{
 				string strResponseEnglish = "";
-				strResponse = GetSyscoinTransactionDescription(op, vvchArgs, wtx, "send", strResponseEnglish);
+				string strResponseGUID = "";
+				strResponse = GetSyscoinTransactionDescription(op, vvchArgs, wtx, "send", strResponseEnglish, strResponseGUID);
 				entry.push_back(Pair("systx", strResponse));
 				entry.push_back(Pair("systype", strResponseEnglish));
+				entry.push_back(Pair("sysguid", strResponseGUID));
 			}
             ret.push_back(entry);
         }
@@ -1769,9 +1773,11 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 				if(!vvchArgs.empty() && r.vout == nOut)
 				{
 					string strResponseEnglish = "";
-					strResponse = GetSyscoinTransactionDescription(op, vvchArgs, wtx, "recv", strResponseEnglish);
+					string strResponseGUID = "";
+					strResponse = GetSyscoinTransactionDescription(op, vvchArgs, wtx, "recv", strResponseEnglish, strResponseGUID);
 					entry.push_back(Pair("systx", strResponse));
 					entry.push_back(Pair("systype", strResponseEnglish));
+					entry.push_back(Pair("sysguid", strResponseGUID));
 				}
                 ret.push_back(entry);
             }
