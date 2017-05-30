@@ -1519,11 +1519,12 @@ bool GetAliasOfTx(const CTransaction& tx, vector<unsigned char>& name) {
 bool DecodeAndParseSyscoinTx(const CTransaction& tx, int& op, int& nOut,
 		vector<vector<unsigned char> >& vvch)
 {
-	return DecodeAndParseAliasTx(tx, op, nOut, vvch) 
-		|| DecodeAndParseCertTx(tx, op, nOut, vvch)
+	return  
+		DecodeAndParseCertTx(tx, op, nOut, vvch)
 		|| DecodeAndParseOfferTx(tx, op, nOut, vvch)
 		|| DecodeAndParseEscrowTx(tx, op, nOut, vvch)
-		|| DecodeAndParseMessageTx(tx, op, nOut, vvch);
+		|| DecodeAndParseMessageTx(tx, op, nOut, vvch)
+		|| DecodeAndParseAliasTx(tx, op, nOut, vvch);
 }
 bool DecodeAndParseAliasTx(const CTransaction& tx, int& op, int& nOut,
 		vector<vector<unsigned char> >& vvch)
