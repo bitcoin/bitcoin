@@ -99,6 +99,7 @@ BITCOIN_CORE_H = \
   core_io.h \
   core_memusage.h \
   cuckoocache.h \
+  forks_csv.h \
   fs.h \
   httprpc.h \
   httpserver.h \
@@ -187,6 +188,7 @@ libbitcoin_server_a_SOURCES = \
   chain.cpp \
   checkpoints.cpp \
   consensus/tx_verify.cpp \
+  forks_csv.cpp \
   httprpc.cpp \
   httpserver.cpp \
   init.cpp \
@@ -305,6 +307,7 @@ libbitcoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_common_a_SOURCES = \
   base58.cpp \
+  chain.cpp \
   chainparams.cpp \
   coins.cpp \
   compressor.cpp \
@@ -319,6 +322,7 @@ libbitcoin_common_a_SOURCES = \
   scheduler.cpp \
   script/sign.cpp \
   script/standard.cpp \
+  versionbits.cpp \
   warnings.cpp \
   $(BITCOIN_CORE_H)
 

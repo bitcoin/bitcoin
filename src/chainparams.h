@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2016 The Bitcoin Core developers
+// Copyright (c) 2009-2017 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -58,6 +58,8 @@ public:
     };
 
     const Consensus::Params& GetConsensus() const { return consensus; }
+    /** Modifiable consensus parameters added by bip135 */
+    Consensus::Params& GetModifiableConsensus() { return consensus; }
     const CMessageHeader::MessageStartChars& MessageStart() const { return pchMessageStart; }
     int GetDefaultPort() const { return nDefaultPort; }
 
@@ -109,11 +111,33 @@ std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain);
  */
 const CChainParams &Params();
 
+CChainParams& Params(const std::string& chain);
+
 /**
  * Sets the params returned by Params() to those for the given BIP70 chain name.
  * @throws std::runtime_error when the chain is not supported.
  */
 void SelectParams(const std::string& chain);
+
+// bip135 begin
+/**
+ * Return the currently selected parameters. Can be changed by reading in
+ * some additional config files (e.g. CSV deployment data)
+ */
+CChainParams &ModifiableParams();
+
+/**
+ * Returns true if a deployment is considered active on a particular network
+ */
+
+bool isConfiguredDeployment(const Consensus::Params& consensusParams, const int bit);
+
+/**
+ * Dump the fork deployment parameters for the given BIP70 chain name.
+ * @throws std::runtime_error when the chain is not supported.
+ */
+const std::string NetworkDeploymentInfoCSV(const std::string& chain);
+// bip135 end
 
 /**
  * Allows modifying the BIP9 regtest parameters.

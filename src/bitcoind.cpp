@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2016 The Bitcoin Core developers
+// Copyright (c) 2009-2017 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -19,8 +19,10 @@
 #include "httpserver.h"
 #include "httprpc.h"
 #include "utilstrencodings.h"
+#include "forks_csv.h"
 
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
 
 #include <stdio.h>
@@ -94,6 +96,18 @@ bool AppInit(int argc, char* argv[])
         fprintf(stdout, "%s", strUsage.c_str());
         return true;
     }
+
+    // bip135 begin
+    // dump default deployment info and exit, if requested
+    if (IsArgSet("-dumpforks")) {
+        std::string strVersion = "# " + strprintf(_("%s Daemon"), _(PACKAGE_NAME)) + " " + _("version") + " " + FormatFullVersion();
+        fprintf(stdout, "%s\n%s", strVersion.c_str(), FORKS_CSV_FILE_HEADER);
+        fprintf(stdout, "%s", NetworkDeploymentInfoCSV(CBaseChainParams::MAIN).c_str());
+        fprintf(stdout, "%s", NetworkDeploymentInfoCSV(CBaseChainParams::TESTNET).c_str());
+        fprintf(stdout, "%s", NetworkDeploymentInfoCSV(CBaseChainParams::REGTEST).c_str());
+        return true;
+    }
+    // bip135 end
 
     try
     {
