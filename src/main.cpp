@@ -5717,7 +5717,7 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
             Misbehaving(pfrom->GetId(), 100);
             return false;
         }
-        else if (GetBoolArg("-enforcenodebloom", false))
+        else
         {
             pfrom->fDisconnect = true;
             return false;
