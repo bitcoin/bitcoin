@@ -273,7 +273,8 @@ bool CScript::HasValidOps() const
     CScript::const_iterator it = begin();
     while (it < end()) {
         opcodetype opcode;
-        if (!GetOp(it, opcode) || opcode > 0xb9) {
+        std::vector<unsigned char> item;
+        if (!GetOp(it, opcode, item) || opcode > MAX_OPCODE || item.size() > MAX_SCRIPT_ELEMENT_SIZE) {
             return false;
         }
     }
