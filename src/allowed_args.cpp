@@ -248,7 +248,7 @@ static void addGeneralOptions(AllowedArgs &allowedArgs, HelpMessageMode mode)
         .addArg("mempoolexpiry=<n>", requiredInt,
             strprintf(_("Do not keep transactions in the mempool longer than <n> hours (default: %u)"),
                     DEFAULT_MEMPOOL_EXPIRY))
-        .addArg("ophanpoolexpiry=<n>", requiredInt,
+        .addArg("orphanpoolexpiry=<n>", requiredInt,
             strprintf(_("Do not keep transactions in the orphanpool longer than <n> hours (default: %u)"),
                     DEFAULT_ORPHANPOOL_EXPIRY))
         .addArg("par=<n>", requiredInt, strprintf(_("Set the number of script verification threads (%u to %d, 0 = "
