@@ -12,9 +12,9 @@ DIST_SUBDIRS = . qt test
 .PHONY: FORCE
 # bitcoin core #
 BITCOIN_CORE_H = addrman.h alert.h allocators.h base58.h bignum.h \
-  bitcoinrpc.h bloom.h checkpoints.h checkqueue.h \
+  bitcoinrpc.h bloom.h checkpoints.h checkpointsync.h checkqueue.h \
   clientversion.h compat.h crypter.h db.h hash.h init.h \
-  key.h keystore.h leveldb.h limitedmap.h main.h miner.h mruset.h \
+  key.h kernel.h keystore.h leveldb.h limitedmap.h main.h mruset.h \
   netbase.h net.h protocol.h script.h serialize.h sync.h threadsafety.h \
   txdb.h ui_interface.h uint256.h util.h version.h walletdb.h wallet.h
 
@@ -31,8 +31,8 @@ obj/build.h: FORCE
 version.o: obj/build.h
 
 libppcoin_a_SOURCES = addrman.cpp alert.cpp bitcoinrpc.cpp bloom.cpp \
-  checkpoints.cpp crypter.cpp db.cpp hash.cpp \
-  init.cpp key.cpp keystore.cpp leveldb.cpp main.cpp miner.cpp \
+  checkpoints.cpp checkpointsync.cpp crypter.cpp db.cpp hash.cpp \
+  init.cpp key.cpp kernel.cpp keystore.cpp leveldb.cpp main.cpp \
   netbase.cpp net.cpp noui.cpp protocol.cpp rpcblockchain.cpp rpcdump.cpp \
   rpcmining.cpp rpcnet.cpp rpcrawtransaction.cpp rpcwallet.cpp script.cpp \
   sync.cpp txdb.cpp util.cpp version.cpp wallet.cpp walletdb.cpp $(JSON_H) \
@@ -44,7 +44,7 @@ nodist_libppcoin_a_SOURCES = $(top_srcdir)/src/obj/build.h
 # ppcoind binary #
 ppcoind_LDADD = libppcoin.a leveldb/libleveldb.a leveldb/libmemenv.a \
   $(BOOST_LIBS)
-ppcoind_SOURCES = bitcoind.cpp
+ppcoind_SOURCES = main.cpp
 #
 
 leveldb/libleveldb.a:

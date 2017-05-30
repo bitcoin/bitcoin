@@ -6,12 +6,12 @@ AM_CPPFLAGS =  $(INCLUDES) -I$(top_builddir)/src/obj \
   -I$(top_builddir)/src/qt/forms $(BOOST_INCLUDES) $(PROTOBUF_CFLAGS) \
   $(QR_CFLAGS)
 AM_LDFLAGS = $(PTHREAD_CFLAGS)
-bin_PROGRAMS = bitcoin-qt
-noinst_LIBRARIES = libbitcoinqt.a
+bin_PROGRAMS = peercoin-qt
+noinst_LIBRARIES = libppcoinqt.a
 SUBDIRS = $(BUILD_TEST_QT)
 DIST_SUBDIRS = test
 
-# bitcoin qt core #
+# ppcoin qt core #
 QT_TS = locale/bitcoin_ach.ts locale/bitcoin_af_ZA.ts locale/bitcoin_ar.ts \
   locale/bitcoin_be_BY.ts locale/bitcoin_bg.ts locale/bitcoin_bs.ts \
   locale/bitcoin_ca_ES.ts locale/bitcoin_ca.ts locale/bitcoin_cs.ts \
@@ -58,11 +58,7 @@ QT_MOC = intro.moc overviewpage.moc rpcconsole.moc
 QT_QRC_CPP = qrc_bitcoin.cpp
 QT_QRC = bitcoin.qrc
 
-PROTOBUF_CC = paymentrequest.pb.cc
-PROTOBUF_H = paymentrequest.pb.h
-PROTOBUF_PROTO = paymentrequest.proto
-
-BITCOIN_QT_H  = aboutdialog.h addressbookpage.h addresstablemodel.h \
+PPCOIN_QT_H  = aboutdialog.h addressbookpage.h addresstablemodel.h \
   askpassphrasedialog.h bitcoinaddressvalidator.h bitcoinamountfield.h \
   bitcoingui.h bitcoinunits.h clientmodel.h csvmodelwriter.h \
   editaddressdialog.h guiconstants.h guiutil.h intro.h macdockiconhandler.h \
@@ -74,7 +70,7 @@ BITCOIN_QT_H  = aboutdialog.h addressbookpage.h addresstablemodel.h \
   transactionrecord.h transactiontablemodel.h transactionview.h walletframe.h \
   walletmodel.h walletmodeltransaction.h walletstack.h walletview.h
 
-RES_ICONS = res/icons/bitcoin.png res/icons/address-book.png \
+RES_ICONS = res/icons/ppcoin.png res/icons/address-book.png \
   res/icons/quit.png res/icons/send.png res/icons/toolbar.png \
   res/icons/connect0_16.png res/icons/connect1_16.png \
   res/icons/connect2_16.png res/icons/connect3_16.png \
@@ -88,7 +84,7 @@ RES_ICONS = res/icons/bitcoin.png res/icons/address-book.png \
   res/icons/remove.png res/icons/tx_mined.png res/icons/tx_input.png \
   res/icons/tx_output.png res/icons/tx_inout.png res/icons/lock_closed.png \
   res/icons/lock_open.png res/icons/key.png res/icons/filesave.png \
-  res/icons/qrcode.png res/icons/debugwindow.png res/icons/bitcoin.ico \
+  res/icons/qrcode.png res/icons/debugwindow.png res/icons/ppcoin.ico \
   res/icons/bitcoin_testnet.ico
 
 RES_IMAGES = res/images/about.png res/images/splash.png \
@@ -96,11 +92,11 @@ RES_IMAGES = res/images/about.png res/images/splash.png \
 
 RES_MOVIES = res/movies/update_spinner.mng
 
-BITCOIN_RC = res/bitcoin-qt-res.rc
+PPCOIN_RC = res/bitcoin-qt-res.rc
 
-libbitcoinqt_a_CPPFLAGS = $(AM_CPPFLAGS) $(QT_INCLUDES) \
+libppcoinqt_a_CPPFLAGS = $(AM_CPPFLAGS) $(QT_INCLUDES) \
   -I$(top_srcdir)/src/qt/forms $(QT_DBUS_INCLUDES)
-libbitcoinqt_a_SOURCES = aboutdialog.cpp addressbookpage.cpp \
+libppcoinqt_a_SOURCES = aboutdialog.cpp addressbookpage.cpp \
   addresstablemodel.cpp askpassphrasedialog.cpp bitcoinaddressvalidator.cpp \
   bitcoinamountfield.cpp bitcoin.cpp bitcoingui.cpp bitcoinstrings.cpp \
   bitcoinunits.cpp clientmodel.cpp csvmodelwriter.cpp editaddressdialog.cpp \
@@ -112,13 +108,13 @@ libbitcoinqt_a_SOURCES = aboutdialog.cpp addressbookpage.cpp \
   transactiondescdialog.cpp transactionfilterproxy.cpp transactionrecord.cpp \
   transactiontablemodel.cpp transactionview.cpp walletframe.cpp \
   walletmodel.cpp walletmodeltransaction.cpp walletstack.cpp walletview.cpp \
-  $(BITCOIN_QT_H) $(QT_FORMS_UI) $(QT_QRC) $(QT_TS) $(PROTOBUF_PROTO) \
+  $(PPCOIN_QT_H) $(QT_FORMS_UI) $(QT_QRC) $(QT_TS) $(PROTOBUF_PROTO) \
   $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES)
 
-nodist_libbitcoinqt_a_SOURCES = $(QT_MOC_CPP) $(QT_MOC) $(PROTOBUF_CC) \
+nodist_libppcoinqt_a_SOURCES = $(QT_MOC_CPP) $(QT_MOC) $(PROTOBUF_CC) \
   $(PROTOBUF_H) $(QT_QRC_CPP)
 
-BUILT_SOURCES = $(nodist_libbitcoinqt_a_SOURCES)
+BUILT_SOURCES = $(nodist_libpptoinqt_a_SOURCES)
 
 #Generating these with a half-written protobuf header leads to wacky results.
 #This makes sure it's done.
@@ -126,21 +122,21 @@ $(QT_MOC): $(PROTOBUF_H)
 $(QT_MOC_CPP): $(PROTOBUF_H)
 
 if TARGET_DARWIN
-  libbitcoinqt_a_SOURCES += macdockiconhandler.mm macnotificationhandler.mm
+  libppcoinqt_a_SOURCES += macdockiconhandler.mm macnotificationhandler.mm
 endif
 if TARGET_WINDOWS
-  libbitcoinqt_a_SOURCES += $(BITCOIN_RC)
+  libppcoinqt_a_SOURCES += $(PPCOIN_RC)
 endif
 if USE_QRCODE
-  libbitcoinqt_a_SOURCES += qrcodedialog.cpp
+  libppcoinqt_a_SOURCES += qrcodedialog.cpp
 endif
 #
 
-# bitcoin-qt binary #
-bitcoin_qt_CPPFLAGS = $(AM_CPPFLAGS) $(QT_INCLUDES) \
+# ppcoin-qt binary #
+ppcoin_qt_CPPFLAGS = $(AM_CPPFLAGS) $(QT_INCLUDES) \
   -I$(top_srcdir)/src/qt/forms
-bitcoin_qt_SOURCES = bitcoin.cpp
-bitcoin_qt_LDADD = libbitcoinqt.a $(LIBBITCOIN) $(LIBLEVELDB) $(LIBMEMENV) \
+ppcoin_qt_SOURCES = bitcoin.cpp
+ppcoin_qt_LDADD = libppcoinqt.a $(LIBPPCOIN) $(LIBLEVELDB) $(LIBMEMENV) \
   $(BOOST_LIBS) $(QT_LIBS) $(QT_DBUS_LIBS) $(QR_LIBS) $(PROTOBUF_LIBS)
 
 # forms/foo.h -> forms/ui_foo.h
@@ -152,7 +148,7 @@ QT_QM=$(QT_TS:.ts=.qm)
 .SECONDARY: $(QT_QM)
 
 $(QT_QRC_CPP): $(QT_QRC) $(QT_QM) $(QT_FORMS_H) $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES) $(PROTOBUF_H)
-	@cd $(abs_srcdir); test -f $(RCC) && $(RCC) -name bitcoin -o $(abs_builddir)/$@ $< || \
+	@cd $(abs_srcdir); test -f $(RCC) && $(RCC) -name ppcoin -o $(abs_builddir)/$@ $< || \
 	  echo error: could not build $@
 	$(SED) -i.bak -e '/^\*\*.*Created:/d' $@ && rm $@.bak
 	$(SED) -i.bak -e '/^\*\*.*by:/d' $@ && rm $@.bak

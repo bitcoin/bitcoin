@@ -1,17 +1,17 @@
 .PHONY: FORCE
 
-LIBBITCOIN=$(top_builddir)/src/libbitcoin.a
+LIBPPCOIN=$(top_builddir)/src/libppcoin.a
 LIBLEVELDB=$(top_builddir)/src/leveldb/libleveldb.a
 LIBMEMENV=$(top_builddir)/src/leveldb/libmemenv.a
-LIBBITCOINQT=$(top_builddir)/src/qt/libbitcoinqt.a
+LIBPPCOINQT=$(top_builddir)/src/qt/libppcoinqt.a
 
-$(LIBBITCOIN):
+$(LIBPPCOIN):
 	$(MAKE) -C $(top_builddir)/src $(@F)
 
 $(LIBLEVELDB) $(LIBMEMENV):
 	$(MAKE) -C $(top_builddir)/src leveldb/$(@F)
 
-$(LIBBITCOINQT):
+$(LIBPPCOINQT):
 	$(MAKE) -C $(top_builddir)/src/qt $(@F)
 
 .mm.o:

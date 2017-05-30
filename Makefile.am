@@ -4,18 +4,18 @@ SUBDIRS = src
 
 GZIP_ENV="-9n"
 
-BITCOIND_BIN=$(top_builddir)/src/bitcoind$(EXEEXT)
-BITCOIN_QT_BIN=$(top_builddir)/src/qt/bitcoin-qt$(EXEEXT)
+BITCOIND_BIN=$(top_builddir)/src/ppcoind$(EXEEXT)
+BITCOIN_QT_BIN=$(top_builddir)/src/qt/ppcoin-qt$(EXEEXT)
 BITCOIN_WIN_INSTALLER=$(PACKAGE)-$(PACKAGE_VERSION)-win32-setup$(EXEEXT)
 
-OSX_APP=Bitcoin-Qt.app
-OSX_DMG=Bitcoin-Qt.dmg
+OSX_APP=Peercoin-Qt.app
+OSX_DMG=Peercoin-Qt.dmg
 OSX_DEPLOY_SCRIPT=$(top_srcdir)/contrib/macdeploy/macdeployqtplus
 OSX_FANCY_PLIST=$(top_srcdir)/contrib/macdeploy/fancy.plist
 OSX_INSTALLER_ICONS=$(top_srcdir)/src/qt/res/icons/bitcoin.icns
 OSX_PLIST=$(top_srcdir)/share/qt/Info.plist #not installed
 
-WINDOWS_PACKAGING = $(top_srcdir)/share/pixmaps/bitcoin.ico \
+WINDOWS_PACKAGING = $(top_srcdir)/share/pixmaps/ppcoin.ico \
   $(top_srcdir)/share/pixmaps/nsis-header.bmp \
   $(top_srcdir)/share/pixmaps/nsis-wizard.bmp \
   $(top_srcdir)/doc/README_windows.txt
@@ -76,8 +76,8 @@ $(OSX_APP)/Contents/MacOS/Bitcoin-Qt: $(BITCOIN_QT_BIN)
 	$(INSTALL_STRIP_PROGRAM)  $< $@
 
 OSX_APP_BUILT=$(OSX_APP)/Contents/PkgInfo $(OSX_APP)/Contents/Resources/empty.lproj \
-  $(OSX_APP)/Contents/Resources/bitcoin.icns $(OSX_APP)/Contents/Info.plist \
-  $(OSX_APP)/Contents/MacOS/Bitcoin-Qt
+  $(OSX_APP)/Contents/Resources/ppcoin.icns $(OSX_APP)/Contents/Info.plist \
+  $(OSX_APP)/Contents/MacOS/Peercoin-Qt
 
 $(OSX_DMG): $(OSX_APP_BUILT) $(OSX_PACKAGING)
 	$(OSX_DEPLOY_SCRIPT) $(OSX_APP) -add-qt-tr da,de,es,hu,ru,uk,zh_CN,zh_TW -dmg -fancy $(OSX_FANCY_PLIST) -verbose 2

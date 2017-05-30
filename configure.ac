@@ -429,7 +429,6 @@ if test x$use_pkgconfig = xyes; then
         if test x$use_qr != xno; then
           PKG_CHECK_MODULES([QR], [libqrencode], [have_qrencode=yes], [have_qrencode=no])
         fi
-        PKG_CHECK_MODULES([PROTOBUF], [protobuf], [have_protobuf=yes], [AC_MSG_ERROR(libprotobuf not found.)])
       fi
     ]
   )
@@ -468,7 +467,6 @@ else
     AC_CHECK_LIB([QtCore],      [main],, AC_MSG_ERROR(libQtCore not found. Install it or use --without-qt.))
     AC_CHECK_LIB([QtGui],      [main],, AC_MSG_ERROR(libQtGui not found. Install it or use --without-qt.))
     AC_CHECK_LIB([QtNetwork],      [main],, AC_MSG_ERROR(libQtNetwork not found. Install it or use --without-qt.))
-    AC_CHECK_LIB([protobuf],      [main],, AC_MSG_ERROR(libprotobuf not found. Install it or use --without-qt.))
     QT_LIBS="$LIBS"
     LIBS="$TEMP_LIBS"
 
@@ -708,7 +706,7 @@ AC_SUBST(LEVELDB_TARGET_FLAGS)
 AC_SUBST(BUILD_QT)
 AC_SUBST(BUILD_TEST)
 AC_SUBST(BUILD_TEST_QT)
-AC_CONFIG_FILES([Makefile src/Makefile src/test/Makefile src/qt/Makefile src/qt/test/Makefile share/setup.nsi share/qt/Info.plist])
+AC_CONFIG_FILES([Makefile src/Makefile src/test/Makefile src/qt/Makefile src/qt/test/Makefile share/setup.nsi ])
 AC_CONFIG_FILES([qa/pull-tester/run-bitcoind-for-test.sh],[chmod +x qa/pull-tester/run-bitcoind-for-test.sh])
 AC_CONFIG_FILES([qa/pull-tester/build-tests.sh],[chmod +x qa/pull-tester/build-tests.sh])
 AC_OUTPUT
