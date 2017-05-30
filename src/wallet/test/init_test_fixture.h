@@ -5,6 +5,7 @@
 #ifndef BITCOIN_WALLET_TEST_INIT_TEST_FIXTURE_H
 #define BITCOIN_WALLET_TEST_INIT_TEST_FIXTURE_H
 
+#include <interfaces/chain.h>
 #include <test/test_bitcoin.h>
 
 
@@ -16,6 +17,7 @@ struct InitWalletDirTestingSetup: public BasicTestingSetup {
     fs::path m_datadir;
     fs::path m_cwd;
     std::map<std::string, fs::path> m_walletdir_path_cases;
+    std::unique_ptr<interfaces::Chain> m_chain = interfaces::MakeChain();
 };
 
 #endif // BITCOIN_WALLET_TEST_INIT_TEST_FIXTURE_H

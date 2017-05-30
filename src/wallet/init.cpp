@@ -34,10 +34,10 @@ public:
     //! Responsible for reading and validating the -wallet arguments and verifying the wallet database.
     //  This function will perform salvage on the wallet if requested, as long as only one wallet is
     //  being loaded (WalletParameterInteraction forbids -salvagewallet, -zapwallettxes or -upgradewallet with multiwallet).
-    bool Verify() const override;
+    bool Verify(interfaces::Chain& chain) const override;
 
     //! Load wallet databases.
-    bool Open() const override;
+    bool Open(interfaces::Chain& chain) const override;
 
     //! Complete startup of wallets.
     void Start(CScheduler& scheduler) const override;
@@ -174,7 +174,7 @@ void WalletInit::RegisterRPC(CRPCTable &t) const
     RegisterWalletRPCCommands(t);
 }
 
-bool WalletInit::Verify() const
+bool WalletInit::Verify(interfaces::Chain& chain) const
 {
     if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
         return true;
@@ -219,7 +219,7 @@ bool WalletInit::Verify() const
 
         std::string error_string;
         std::string warning_string;
-        bool verify_success = CWallet::Verify(location, salvage_wallet, error_string, warning_string);
+        bool verify_success = CWallet::Verify(chain, location, salvage_wallet, error_string, warning_string);
         if (!error_string.empty()) InitError(error_string);
         if (!warning_string.empty()) InitWarning(warning_string);
         if (!verify_success) return false;
@@ -228,7 +228,7 @@ bool WalletInit::Verify() const
     return true;
 }
 
-bool WalletInit::Open() const
+bool WalletInit::Open(interfaces::Chain& chain) const
 {
     if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
         LogPrintf("Wallet disabled!\n");
@@ -236,7 +236,7 @@ bool WalletInit::Open() const
     }
 
     for (const std::string& walletFile : gArgs.GetArgs("-wallet")) {
-        std::shared_ptr<CWallet> pwallet = CWallet::CreateWalletFromFile(WalletLocation(walletFile));
+        std::shared_ptr<CWallet> pwallet = CWallet::CreateWalletFromFile(chain, WalletLocation(walletFile));
         if (!pwallet) {
             return false;
         }
