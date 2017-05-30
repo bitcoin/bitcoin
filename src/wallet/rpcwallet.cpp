@@ -1699,9 +1699,10 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 	// we want to display the data carrying one and not the empty utxo	
 	// alias payment does not carry a data output, just alias payment scriptpubkey
 	string strResponse = "";
+	const uint256 &hash = wtx.GetHash();
 	if(wtx.nVersion == GetSyscoinTxVersion())
 		DecodeAndParseSyscoinTx(wtx, op, nOut, vvchArgs);
-	
+	vector<uint256> mapSysTx;
     // Sent
     if ((!listSent.empty() || nFee != 0) && (fAllAccounts || strAccount == strSentAccount))
     {
@@ -1722,8 +1723,9 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
                 WalletTxToJSON(wtx, entry);
             entry.push_back(Pair("abandoned", wtx.isAbandoned()));
 			// SYSCOIN
-			if(!vvchArgs.empty() && s.vout == nOut)
+			if(!vvchArgs.empty() && !mapSysTx[hash])
 			{
+				mapSysTx.push(hash);
 				string strResponseEnglish = "";
 				string strResponseGUID = "";
 				strResponse = GetSyscoinTransactionDescription(op, vvchArgs, wtx, "send", strResponseEnglish, strResponseGUID);
@@ -1770,8 +1772,9 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
                 if (fLong)
                     WalletTxToJSON(wtx, entry);
 				// SYSCOIN
-				if(!vvchArgs.empty() && r.vout == nOut)
+				if(!vvchArgs.empty() && !mapSysTx[hash])
 				{
+					mapSysTx.push(hash);
 					string strResponseEnglish = "";
 					string strResponseGUID = "";
 					strResponse = GetSyscoinTransactionDescription(op, vvchArgs, wtx, "recv", strResponseEnglish, strResponseGUID);
