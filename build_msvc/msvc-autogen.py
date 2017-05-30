@@ -16,10 +16,6 @@ libs = [
 ]
 
 ignore_list = [
-    'rpc/net.cpp',
-    'interfaces/handler.cpp',
-    'interfaces/node.cpp',
-    'interfaces/wallet.cpp',
 ]
 
 lib_sources = {}
@@ -32,7 +28,9 @@ def parse_makefile(makefile):
             if current_lib:
                 source = line.split()[0]
                 if source.endswith('.cpp') and not source.startswith('$') and source not in ignore_list:
-                    lib_sources[current_lib].append(source.replace('/', '\\'))
+                    source_filename = source.replace('/', '\\')
+                    object_filename = source.replace('/', '_')[:-4] + ".obj"
+                    lib_sources[current_lib].append((source_filename, object_filename))
                 if not line.endswith('\\'):
                     current_lib = ''
                 continue
@@ -51,8 +49,10 @@ def main():
     for key, value in lib_sources.items():
         vcxproj_filename = os.path.abspath(os.path.join(os.path.dirname(__file__), key, key + '.vcxproj'))
         content = ''
-        for source_filename in value:
-            content += '    <ClCompile Include="..\\..\\src\\' + source_filename + '" />\n'
+        for source_filename, object_filename in value:
+            content += '    <ClCompile Include="..\\..\\src\\' + source_filename + '">\n'
+            content += '      <ObjectFileName>$(IntDir)' + object_filename + '</ObjectFileName>\n'
+            content += '    </ClCompile>\n'
         with open(vcxproj_filename + '.in', 'r', encoding='utf-8') as vcxproj_in_file:
             with open(vcxproj_filename, 'w', encoding='utf-8') as vcxproj_file:
                 vcxproj_file.write(vcxproj_in_file.read().replace(
