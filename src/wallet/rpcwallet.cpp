@@ -1723,7 +1723,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
                 WalletTxToJSON(wtx, entry);
             entry.push_back(Pair("abandoned", wtx.isAbandoned()));
 			// SYSCOIN
-			if(!vvchArgs.empty() && !mapSysTx[hash])
+			if(!vvchArgs.empty() && std::find(mapSysTx.begin(), mapSysTx.end(), hash) == mapSysTx.end())
 			{
 				mapSysTx.push_back(hash);
 				string strResponseEnglish = "";
@@ -1772,7 +1772,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
                 if (fLong)
                     WalletTxToJSON(wtx, entry);
 				// SYSCOIN
-				if(!vvchArgs.empty() && !mapSysTx[hash])
+				if(!vvchArgs.empty() && std::find(mapSysTx.begin(), mapSysTx.end(), hash) == mapSysTx.end())
 				{
 					mapSysTx.push_back(hash);
 					string strResponseEnglish = "";
