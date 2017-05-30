@@ -190,6 +190,9 @@ enum opcodetype
     OP_INVALIDOPCODE = 0xff,
 };
 
+// Maximum value that an opcode can be
+static const unsigned int MAX_OPCODE = OP_NOP10;
+
 const char* GetOpName(opcodetype opcode);
 
 class scriptnum_error : public std::runtime_error
