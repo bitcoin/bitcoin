@@ -1725,7 +1725,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 			// SYSCOIN
 			if(!vvchArgs.empty() && !mapSysTx[hash])
 			{
-				mapSysTx.push(hash);
+				mapSysTx.push_back(hash);
 				string strResponseEnglish = "";
 				string strResponseGUID = "";
 				strResponse = GetSyscoinTransactionDescription(op, vvchArgs, wtx, "send", strResponseEnglish, strResponseGUID);
@@ -1774,7 +1774,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 				// SYSCOIN
 				if(!vvchArgs.empty() && !mapSysTx[hash])
 				{
-					mapSysTx.push(hash);
+					mapSysTx.push_back(hash);
 					string strResponseEnglish = "";
 					string strResponseGUID = "";
 					strResponse = GetSyscoinTransactionDescription(op, vvchArgs, wtx, "recv", strResponseEnglish, strResponseGUID);
