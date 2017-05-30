@@ -10,7 +10,12 @@ packages:
 - "unzip"
 - "nsis"
 - "faketime"
-reference_datetime: "2011-01-30 00:00:00"
+- "autoconf2.13"
+- "libtool"
+- "automake"
+- "pkg-config"
+
+reference_datetime: "2013-06-01 00:00:00"
 remotes:
 - "url": "https://github.com/peercoin/peercoin.git"
   "dir": "peercoin"
