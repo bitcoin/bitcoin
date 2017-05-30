@@ -1438,4 +1438,18 @@ BOOST_AUTO_TEST_CASE(script_FindAndDelete)
     BOOST_CHECK(s == expect);
 }
 
+BOOST_AUTO_TEST_CASE(script_HasValidOps)
+{
+    // Exercise the HasValidOps functionality
+    CScript script;
+    script = ScriptFromHex("76a9141234567890abcdefa1a2a3a4a5a6a7a8a9a0aaab88ac"); // Normal script
+    BOOST_CHECK(script.HasValidOps());
+    script = ScriptFromHex("76a914ff34567890abcdefa1a2a3a4a5a6a7a8a9a0aaab88ac");
+    BOOST_CHECK(script.HasValidOps());
+    script = ScriptFromHex("ff88ac"); // Script with OP_INVALIDOPCODE explicit
+    BOOST_CHECK(!script.HasValidOps());
+    script = ScriptFromHex("88acc0"); // Script with undefined opcode
+    BOOST_CHECK(!script.HasValidOps());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
