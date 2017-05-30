@@ -267,3 +267,15 @@ std::string CScriptWitness::ToString() const
     }
     return ret + ")";
 }
+
+bool CScript::HasValidOps() const
+{
+    CScript::const_iterator it = begin();
+    while (it < end()) {
+        opcodetype opcode;
+        if (!GetOp(it, opcode) || opcode > 0xb9) {
+            return false;
+        }
+    }
+    return true;
+}
