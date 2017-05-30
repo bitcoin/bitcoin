@@ -6,6 +6,7 @@ from binascii import hexlify, unhexlify
 import time
 from codecs import encode
 from threading import RLock
+from io import BytesIO
 MY_VERSION = 60001  # past bip-31 for ping/pong
 MY_SUBVERSION = b"/python-mininode-tester:0.0.3/"
 
