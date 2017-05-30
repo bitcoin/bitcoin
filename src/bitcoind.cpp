@@ -74,7 +74,13 @@ bool AppInit(int argc, char* argv[])
     // Parameters
     //
     // If Qt is used, parameters/bitcoin.conf are parsed in qt/bitcoin.cpp's main()
-    ParseParameters(argc, argv);
+    AllowedArgs::Bitcoind allowedArgs(&tweaks);
+    try {
+        ParseParameters(argc, argv, allowedArgs);
+    } catch (const std::exception& e) {
+        fprintf(stderr, "Error parsing program options: %s\n", e.what());
+        return false;
+    }
 
     // Process help and version before taking care about datadir
     if (mapArgs.count("-?") || mapArgs.count("-h") ||  mapArgs.count("-help") || mapArgs.count("-version"))
@@ -90,7 +96,7 @@ bool AppInit(int argc, char* argv[])
             strUsage += "\n" + _("Usage:") + "\n" +
                   "  bitcoind [options]                     " + strprintf(_("Start %s Daemon"), _(PACKAGE_NAME)) + "\n";
 
-            strUsage += "\n" + HelpMessage(HMM_BITCOIND);
+            strUsage += "\n" + allowedArgs.helpMessage();
         }
 
         fprintf(stdout, "%s", strUsage.c_str());

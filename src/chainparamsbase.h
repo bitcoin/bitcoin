@@ -33,12 +33,6 @@ protected:
 };
 
 /**
- * Append the help messages for the chainparams options to the
- * parameter string.
- */
-void AppendParamsHelpMessages(std::string& strUsage, bool debugHelp=true);
-
-/**
  * Return the currently selected parameters. This won't change after app
  * startup, except for unit tests.
  */

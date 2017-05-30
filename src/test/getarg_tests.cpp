@@ -29,14 +29,14 @@ static void ResetArgs(const std::string& strArg)
     BOOST_FOREACH(std::string& s, vecArg)
         vecChar.push_back(s.c_str());
 
-    ParseParameters(vecChar.size(), &vecChar[0]);
+    ParseParameters(vecChar.size(), &vecChar[0], AllowedArgs::Bitcoind(&tweaks));
 }
 
 BOOST_AUTO_TEST_CASE(boolarg)
 {
-    ResetArgs("-foo");
-    BOOST_CHECK(GetBoolArg("-foo", false));
-    BOOST_CHECK(GetBoolArg("-foo", true));
+    ResetArgs("-listen");
+    BOOST_CHECK(GetBoolArg("-listen", false));
+    BOOST_CHECK(GetBoolArg("-listen", true));
 
     BOOST_CHECK(!GetBoolArg("-fo", false));
     BOOST_CHECK(GetBoolArg("-fo", true));
@@ -44,120 +44,143 @@ BOOST_AUTO_TEST_CASE(boolarg)
     BOOST_CHECK(!GetBoolArg("-fooo", false));
     BOOST_CHECK(GetBoolArg("-fooo", true));
 
-    ResetArgs("-foo=0");
-    BOOST_CHECK(!GetBoolArg("-foo", false));
-    BOOST_CHECK(!GetBoolArg("-foo", true));
+    for (auto strValue : std::list<std::string>{"0", "f", "n", "false", "no"}) {
+        ResetArgs("-listen=" + strValue);
+        BOOST_CHECK(!GetBoolArg("-listen", false));
+        BOOST_CHECK(!GetBoolArg("-listen", true));
+    }
 
-    ResetArgs("-foo=1");
-    BOOST_CHECK(GetBoolArg("-foo", false));
-    BOOST_CHECK(GetBoolArg("-foo", true));
+    for (auto strValue : std::list<std::string>{"", "1", "t", "y", "true", "yes"}) {
+        ResetArgs("-listen=" + strValue);
+        BOOST_CHECK(GetBoolArg("-listen", false));
+        BOOST_CHECK(GetBoolArg("-listen", true));
+    }
 
     // New 0.6 feature: auto-map -nosomething to !-something:
-    ResetArgs("-nofoo");
-    BOOST_CHECK(!GetBoolArg("-foo", false));
-    BOOST_CHECK(!GetBoolArg("-foo", true));
+    ResetArgs("-nolisten");
+    BOOST_CHECK(!GetBoolArg("-listen", false));
+    BOOST_CHECK(!GetBoolArg("-listen", true));
 
-    ResetArgs("-nofoo=1");
-    BOOST_CHECK(!GetBoolArg("-foo", false));
-    BOOST_CHECK(!GetBoolArg("-foo", true));
+    ResetArgs("-nolisten=1");
+    BOOST_CHECK(!GetBoolArg("-listen", false));
+    BOOST_CHECK(!GetBoolArg("-listen", true));
 
-    ResetArgs("-foo -nofoo");  // -nofoo should win
-    BOOST_CHECK(!GetBoolArg("-foo", false));
-    BOOST_CHECK(!GetBoolArg("-foo", true));
+    ResetArgs("-listen -nolisten");  // -nolisten should win
+    BOOST_CHECK(!GetBoolArg("-listen", false));
+    BOOST_CHECK(!GetBoolArg("-listen", true));
 
-    ResetArgs("-foo=1 -nofoo=1");  // -nofoo should win
-    BOOST_CHECK(!GetBoolArg("-foo", false));
-    BOOST_CHECK(!GetBoolArg("-foo", true));
+    ResetArgs("-listen=1 -nolisten=1");  // -nolisten should win
+    BOOST_CHECK(!GetBoolArg("-listen", false));
+    BOOST_CHECK(!GetBoolArg("-listen", true));
 
-    ResetArgs("-foo=0 -nofoo=0");  // -nofoo=0 should win
-    BOOST_CHECK(GetBoolArg("-foo", false));
-    BOOST_CHECK(GetBoolArg("-foo", true));
+    ResetArgs("-listen=0 -nolisten=0");  // -nolisten=0 should win
+    BOOST_CHECK(GetBoolArg("-listen", false));
+    BOOST_CHECK(GetBoolArg("-listen", true));
 
     // New 0.6 feature: treat -- same as -:
-    ResetArgs("--foo=1");
-    BOOST_CHECK(GetBoolArg("-foo", false));
-    BOOST_CHECK(GetBoolArg("-foo", true));
+    ResetArgs("--listen=1");
+    BOOST_CHECK(GetBoolArg("-listen", false));
+    BOOST_CHECK(GetBoolArg("-listen", true));
 
-    ResetArgs("--nofoo=1");
-    BOOST_CHECK(!GetBoolArg("-foo", false));
-    BOOST_CHECK(!GetBoolArg("-foo", true));
+    ResetArgs("--nolisten=1");
+    BOOST_CHECK(!GetBoolArg("-listen", false));
+    BOOST_CHECK(!GetBoolArg("-listen", true));
 
+    BOOST_CHECK_THROW(ResetArgs("-listen=text"), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(stringarg)
 {
     ResetArgs("");
-    BOOST_CHECK_EQUAL(GetArg("-foo", ""), "");
-    BOOST_CHECK_EQUAL(GetArg("-foo", "eleven"), "eleven");
+    BOOST_CHECK_EQUAL(GetArg("-uacomment", ""), "");
+    BOOST_CHECK_EQUAL(GetArg("-uacomment", "eleven"), "eleven");
 
-    ResetArgs("-foo -bar");
-    BOOST_CHECK_EQUAL(GetArg("-foo", ""), "");
-    BOOST_CHECK_EQUAL(GetArg("-foo", "eleven"), "");
+    ResetArgs("-connect -listen"); // -connect is an optional string argument
+    BOOST_CHECK_EQUAL(GetArg("-connect", ""), "");
+    BOOST_CHECK_EQUAL(GetArg("-connect", "eleven"), "");
 
-    ResetArgs("-foo=");
-    BOOST_CHECK_EQUAL(GetArg("-foo", ""), "");
-    BOOST_CHECK_EQUAL(GetArg("-foo", "eleven"), "");
+    ResetArgs("-connect=");
+    BOOST_CHECK_EQUAL(GetArg("-connect", ""), "");
+    BOOST_CHECK_EQUAL(GetArg("-connect", "eleven"), "");
 
-    ResetArgs("-foo=11");
-    BOOST_CHECK_EQUAL(GetArg("-foo", ""), "11");
-    BOOST_CHECK_EQUAL(GetArg("-foo", "eleven"), "11");
+    ResetArgs("-uacomment=11");
+    BOOST_CHECK_EQUAL(GetArg("-uacomment", ""), "11");
+    BOOST_CHECK_EQUAL(GetArg("-uacomment", "eleven"), "11");
 
-    ResetArgs("-foo=eleven");
-    BOOST_CHECK_EQUAL(GetArg("-foo", ""), "eleven");
-    BOOST_CHECK_EQUAL(GetArg("-foo", "eleven"), "eleven");
+    ResetArgs("-uacomment=eleven");
+    BOOST_CHECK_EQUAL(GetArg("-uacomment", ""), "eleven");
+    BOOST_CHECK_EQUAL(GetArg("-uacomment", "eleven"), "eleven");
 
+    BOOST_CHECK_THROW(ResetArgs("-uacomment"), std::runtime_error);
+    BOOST_CHECK_THROW(ResetArgs("-uacomment="), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(intarg)
 {
     ResetArgs("");
-    BOOST_CHECK_EQUAL(GetArg("-foo", 11), 11);
-    BOOST_CHECK_EQUAL(GetArg("-foo", 0), 0);
+    BOOST_CHECK_EQUAL(GetArg("-maxconnections", 11), 11);
+    BOOST_CHECK_EQUAL(GetArg("-maxconnections", 0), 0);
 
-    ResetArgs("-foo -bar");
-    BOOST_CHECK_EQUAL(GetArg("-foo", 11), 0);
-    BOOST_CHECK_EQUAL(GetArg("-bar", 11), 0);
+    ResetArgs("-maxconnections"); // -maxconnections is an optional int argument
+    BOOST_CHECK_EQUAL(GetArg("-maxconnections", 11), 0);
 
-    ResetArgs("-foo=11 -bar=12");
-    BOOST_CHECK_EQUAL(GetArg("-foo", 0), 11);
-    BOOST_CHECK_EQUAL(GetArg("-bar", 11), 12);
+    ResetArgs("-maxconnections=11 -maxreceivebuffer=12");
+    BOOST_CHECK_EQUAL(GetArg("-maxconnections", 0), 11);
+    BOOST_CHECK_EQUAL(GetArg("-maxreceivebuffer", 11), 12);
 
-    ResetArgs("-foo=NaN -bar=NotANumber");
-    BOOST_CHECK_EQUAL(GetArg("-foo", 1), 0);
-    BOOST_CHECK_EQUAL(GetArg("-bar", 11), 0);
+    ResetArgs("-par=-1");
+    BOOST_CHECK_EQUAL(GetArg("-par", 0), -1);
+
+    BOOST_CHECK_THROW(ResetArgs("-maxreceivebuffer"), std::runtime_error);
+    BOOST_CHECK_THROW(ResetArgs("-maxreceivebuffer="), std::runtime_error);
+    BOOST_CHECK_THROW(ResetArgs("-maxreceivebuffer=NaN"), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(doubledash)
 {
-    ResetArgs("--foo");
-    BOOST_CHECK_EQUAL(GetBoolArg("-foo", false), true);
+    ResetArgs("--listen");
+    BOOST_CHECK_EQUAL(GetBoolArg("-listen", false), true);
 
-    ResetArgs("--foo=verbose --bar=1");
-    BOOST_CHECK_EQUAL(GetArg("-foo", ""), "verbose");
-    BOOST_CHECK_EQUAL(GetArg("-bar", 0), 1);
+    ResetArgs("--uacomment=verbose --maxconnections=1");
+    BOOST_CHECK_EQUAL(GetArg("-uacomment", ""), "verbose");
+    BOOST_CHECK_EQUAL(GetArg("-maxconnections", 0), 1);
 }
 
 BOOST_AUTO_TEST_CASE(boolargno)
 {
-    ResetArgs("-nofoo");
-    BOOST_CHECK(!GetBoolArg("-foo", true));
-    BOOST_CHECK(!GetBoolArg("-foo", false));
+    ResetArgs("-nolisten");
+    BOOST_CHECK(!GetBoolArg("-listen", true));
+    BOOST_CHECK(!GetBoolArg("-listen", false));
 
-    ResetArgs("-nofoo=1");
-    BOOST_CHECK(!GetBoolArg("-foo", true));
-    BOOST_CHECK(!GetBoolArg("-foo", false));
+    ResetArgs("-nolisten=1");
+    BOOST_CHECK(!GetBoolArg("-listen", true));
+    BOOST_CHECK(!GetBoolArg("-listen", false));
 
-    ResetArgs("-nofoo=0");
-    BOOST_CHECK(GetBoolArg("-foo", true));
-    BOOST_CHECK(GetBoolArg("-foo", false));
+    ResetArgs("-nolisten=0");
+    BOOST_CHECK(GetBoolArg("-listen", true));
+    BOOST_CHECK(GetBoolArg("-listen", false));
 
-    ResetArgs("-foo --nofoo"); // --nofoo should win
-    BOOST_CHECK(!GetBoolArg("-foo", true));
-    BOOST_CHECK(!GetBoolArg("-foo", false));
+    ResetArgs("-listen --nolisten"); // --nolisten should win
+    BOOST_CHECK(!GetBoolArg("-listen", true));
+    BOOST_CHECK(!GetBoolArg("-listen", false));
 
-    ResetArgs("-nofoo -foo"); // foo always wins:
-    BOOST_CHECK(GetBoolArg("-foo", true));
-    BOOST_CHECK(GetBoolArg("-foo", false));
+    ResetArgs("-nolisten -listen"); // -listen always wins:
+    BOOST_CHECK(GetBoolArg("-listen", true));
+    BOOST_CHECK(GetBoolArg("-listen", false));
+}
+
+BOOST_AUTO_TEST_CASE(tweakArgs)
+{
+    ResetArgs("-mining.comment=I_Am_A_Meat_Popsicle -mining.coinbaseReserve=250 -wallet.maxTxFee=0.001");
+    BOOST_CHECK_EQUAL(GetArg("-mining.comment", "foo"), "I_Am_A_Meat_Popsicle");
+    BOOST_CHECK_EQUAL(GetArg("-mining.coinbaseReserve", 100), 250);
+    BOOST_CHECK_EQUAL(GetArg("-wallet.maxTxFee", ""), "0.001");
+}
+
+BOOST_AUTO_TEST_CASE(unrecognizedArgs)
+{
+    BOOST_CHECK_THROW(ResetArgs("-unrecognized_arg"), std::runtime_error);
+    BOOST_CHECK_THROW(ResetArgs("-listen -unrecognized_arg"), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

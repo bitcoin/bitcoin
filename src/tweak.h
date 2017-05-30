@@ -17,9 +17,6 @@ typedef std::string CTweakKey;
 typedef std::map<CTweakKey, CTweakBase *> CTweakMap;
 extern CTweakMap tweaks;
 
-// Create a help string for all the ctweaks entries, as they would be used as command line options
-std::string TweakCmdLineHelp();
-
 class CTweakBase
 {
 public:

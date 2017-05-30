@@ -325,12 +325,12 @@ int LogPrintStr(const std::string &str)
     return ret;
 }
 
+static const std::set<std::string> affirmativeStrings{"", "1", "t", "y", "true", "yes"};
+
 /** Interpret string as boolean, for argument parsing */
 static bool InterpretBool(const std::string& strValue)
 {
-    if (strValue.empty())
-        return true;
-    return (atoi(strValue) != 0);
+    return (affirmativeStrings.count(strValue) != 0);
 }
 
 /** Turn -noX into -X=0 */
@@ -343,7 +343,7 @@ static void InterpretNegativeSetting(std::string& strKey, std::string& strValue)
     }
 }
 
-void ParseParameters(int argc, const char* const argv[])
+void ParseParameters(int argc, const char* const argv[], const AllowedArgs::AllowedArgs& allowedArgs)
 {
     mapArgs.clear();
     mapMultiArgs.clear();
@@ -359,7 +359,6 @@ void ParseParameters(int argc, const char* const argv[])
             str = str.substr(0, is_index);
         }
 #ifdef WIN32
-        boost::to_lower(str);
         if (boost::algorithm::starts_with(str, "/"))
             str = "-" + str.substr(1);
 #endif
@@ -372,6 +371,7 @@ void ParseParameters(int argc, const char* const argv[])
         if (str.length() > 1 && str[1] == '-')
             str = str.substr(1);
         InterpretNegativeSetting(str, strValue);
+        allowedArgs.checkArg(str.substr(1), strValue);
 
         mapArgs[str] = strValue;
         mapMultiArgs[str].push_back(strValue);
@@ -413,21 +413,6 @@ bool SoftSetBoolArg(const std::string& strArg, bool fValue)
         return SoftSetArg(strArg, std::string("1"));
     else
         return SoftSetArg(strArg, std::string("0"));
-}
-
-static const int screenWidth = 79;
-static const int optIndent = 2;
-static const int msgIndent = 7;
-
-std::string HelpMessageGroup(const std::string &message) {
-    return std::string(message) + std::string("\n\n");
-}
-
-std::string HelpMessageOpt(const std::string &option, const std::string &message) {
-    return std::string(optIndent,' ') + std::string(option) +
-           std::string("\n") + std::string(msgIndent,' ') +
-           FormatParagraph(message, screenWidth - msgIndent, msgIndent) +
-           std::string("\n\n");
 }
 
 static std::string FormatException(const std::exception* pex, const char* pszThread)
@@ -542,6 +527,7 @@ void ReadConfigFile(map<string, string>& mapSettingsRet,
 
     set<string> setOptions;
     setOptions.insert("*");
+    AllowedArgs::ConfigFile allowedArgs;
 
     for (boost::program_options::detail::config_file_iterator it(streamConfig, setOptions), end; it != end; ++it)
     {
@@ -549,6 +535,7 @@ void ReadConfigFile(map<string, string>& mapSettingsRet,
         string strKey = string("-") + it->string_key;
         string strValue = it->value[0];
         InterpretNegativeSetting(strKey, strValue);
+        allowedArgs.checkArg(strKey.substr(1), strValue);
         if (mapSettingsRet.count(strKey) == 0)
             mapSettingsRet[strKey] = strValue;
         mapMultiSettingsRet[strKey].push_back(strValue);

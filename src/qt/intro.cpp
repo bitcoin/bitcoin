@@ -10,6 +10,7 @@
 #include "intro.h"
 #include "ui_intro.h"
 
+#include "guiconstants.h"
 #include "guiutil.h"
 
 #include "util.h"

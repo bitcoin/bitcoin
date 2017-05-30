@@ -15,6 +15,7 @@
 #include "config/bitcoin-config.h"
 #endif
 
+#include "allowed_args.h"
 #include "compat.h"
 #include "tinyformat.h"
 #include "utiltime.h"
@@ -44,6 +45,10 @@
 static const bool DEFAULT_LOGTIMEMICROS = false;
 static const bool DEFAULT_LOGIPS        = true;
 static const bool DEFAULT_LOGTIMESTAMPS = true;
+
+// For bitcoin-cli
+extern const char DEFAULT_RPCCONNECT[];
+static const int DEFAULT_HTTP_CLIENT_TIMEOUT = 900;
 
 /** Signals for translation. */
 class CTranslationInterface
@@ -120,7 +125,7 @@ static inline bool error(const char* s)
 }
 
 void PrintExceptionContinue(const std::exception *pex, const char* pszThread);
-void ParseParameters(int argc, const char*const argv[]);
+void ParseParameters(int argc, const char*const argv[], const AllowedArgs::AllowedArgs& allowedArgs);
 void FileCommit(FILE *fileout);
 bool TruncateFile(FILE *file, unsigned int length);
 int RaiseFileDescriptorLimit(int nMinFD);
@@ -196,23 +201,6 @@ bool SoftSetArg(const std::string& strArg, const std::string& strValue);
  * @return true if argument gets set, false if it already had a value
  */
 bool SoftSetBoolArg(const std::string& strArg, bool fValue);
-
-/**
- * Format a string to be used as group of options in help messages
- *
- * @param message Group name (e.g. "RPC server options:")
- * @return the formatted string
- */
-std::string HelpMessageGroup(const std::string& message);
-
-/**
- * Format a string to be used as option description in help messages
- *
- * @param option Option message (e.g. "-rpcuser=<user>")
- * @param message Option description (e.g. "Username for JSON-RPC connections")
- * @return the formatted string
- */
-std::string HelpMessageOpt(const std::string& option, const std::string& message);
 
 /**
  * Return the number of physical cores available on the current system.

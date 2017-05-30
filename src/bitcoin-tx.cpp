@@ -49,7 +49,13 @@ static int AppInitRawTx(int argc, char* argv[])
     //
     // Parameters
     //
-    ParseParameters(argc, argv);
+    AllowedArgs::BitcoinTx allowedArgs;
+    try {
+        ParseParameters(argc, argv, allowedArgs);
+    } catch (const std::exception& e) {
+        fprintf(stderr, "Error parsing program options: %s\n", e.what());
+        return EXIT_FAILURE;
+    }
 
     // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
     try {
@@ -61,45 +67,46 @@ static int AppInitRawTx(int argc, char* argv[])
 
     fCreateBlank = GetBoolArg("-create", false);
 
-    if (argc<2 || mapArgs.count("-?") || mapArgs.count("-h") || mapArgs.count("-help"))
+    if (argc<2 || mapArgs.count("-?") || mapArgs.count("-h") || mapArgs.count("-help") || mapArgs.count("-version"))
     {
         // First part of help message is specific to this utility
-        std::string strUsage = strprintf(_("%s bitcoin-tx utility version"), _(PACKAGE_NAME)) + " " + FormatFullVersion() + "\n\n" +
-            _("Usage:") + "\n" +
+        std::string strUsage = strprintf(_("%s bitcoin-tx utility version"), _(PACKAGE_NAME)) + " " + FormatFullVersion() + "\n";
+
+        fprintf(stdout, "%s", strUsage.c_str());
+
+        if (mapArgs.count("-version"))
+            return false;
+
+        strUsage = "\n" + _("Usage:") + "\n" +
               "  bitcoin-tx [options] <hex-tx> [commands]  " + _("Update hex-encoded bitcoin transaction") + "\n" +
               "  bitcoin-tx [options] -create [commands]   " + _("Create hex-encoded bitcoin transaction") + "\n" +
               "\n";
 
         fprintf(stdout, "%s", strUsage.c_str());
 
-        strUsage = HelpMessageGroup(_("Options:"));
-        strUsage += HelpMessageOpt("-?", _("This help message"));
-        strUsage += HelpMessageOpt("-create", _("Create new, empty TX."));
-        strUsage += HelpMessageOpt("-json", _("Select JSON output"));
-        strUsage += HelpMessageOpt("-txid", _("Output only the hex-encoded transaction id of the resultant transaction."));
-        AppendParamsHelpMessages(strUsage);
+        strUsage = allowedArgs.helpMessage();
 
         fprintf(stdout, "%s", strUsage.c_str());
 
-        strUsage = HelpMessageGroup(_("Commands:"));
-        strUsage += HelpMessageOpt("delin=N", _("Delete input N from TX"));
-        strUsage += HelpMessageOpt("delout=N", _("Delete output N from TX"));
-        strUsage += HelpMessageOpt("in=TXID:VOUT", _("Add input to TX"));
-        strUsage += HelpMessageOpt("locktime=N", _("Set TX lock time to N"));
-        strUsage += HelpMessageOpt("nversion=N", _("Set TX version to N"));
-        strUsage += HelpMessageOpt("outaddr=VALUE:ADDRESS", _("Add address-based output to TX"));
-        strUsage += HelpMessageOpt("outdata=[VALUE:]DATA", _("Add data-based output to TX"));
-        strUsage += HelpMessageOpt("outscript=VALUE:SCRIPT", _("Add raw script output to TX"));
-        strUsage += HelpMessageOpt("sign=SIGHASH-FLAGS", _("Add zero or more signatures to transaction") + ". " +
+        strUsage = AllowedArgs::HelpMessageGroup(_("Commands:"));
+        strUsage += AllowedArgs::HelpMessageOpt("delin=N", _("Delete input N from TX"));
+        strUsage += AllowedArgs::HelpMessageOpt("delout=N", _("Delete output N from TX"));
+        strUsage += AllowedArgs::HelpMessageOpt("in=TXID:VOUT", _("Add input to TX"));
+        strUsage += AllowedArgs::HelpMessageOpt("locktime=N", _("Set TX lock time to N"));
+        strUsage += AllowedArgs::HelpMessageOpt("nversion=N", _("Set TX version to N"));
+        strUsage += AllowedArgs::HelpMessageOpt("outaddr=VALUE:ADDRESS", _("Add address-based output to TX"));
+        strUsage += AllowedArgs::HelpMessageOpt("outdata=[VALUE:]DATA", _("Add data-based output to TX"));
+        strUsage += AllowedArgs::HelpMessageOpt("outscript=VALUE:SCRIPT", _("Add raw script output to TX"));
+        strUsage += AllowedArgs::HelpMessageOpt("sign=SIGHASH-FLAGS", _("Add zero or more signatures to transaction") + ". " +
             _("This command requires JSON registers:") +
             _("prevtxs=JSON object") + ", " +
             _("privatekeys=JSON object") + ". " +
             _("See signrawtransaction docs for format of sighash flags, JSON objects."));
         fprintf(stdout, "%s", strUsage.c_str());
 
-        strUsage = HelpMessageGroup(_("Register Commands:"));
-        strUsage += HelpMessageOpt("load=NAME:FILENAME", _("Load JSON file FILENAME into register NAME"));
-        strUsage += HelpMessageOpt("set=NAME:JSON-STRING", _("Set register NAME to given JSON-STRING"));
+        strUsage = AllowedArgs::HelpMessageGroup(_("Register Commands:"));
+        strUsage += AllowedArgs::HelpMessageOpt("load=NAME:FILENAME", _("Load JSON file FILENAME into register NAME"));
+        strUsage += AllowedArgs::HelpMessageOpt("set=NAME:JSON-STRING", _("Set register NAME to given JSON-STRING"));
         fprintf(stdout, "%s", strUsage.c_str());
 
         if (argc < 2) {

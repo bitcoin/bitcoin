@@ -35,28 +35,7 @@ boost::mutex dd_mutex;
 std::map<std::pair<void*, void*>, LockStack> lockorders;
 boost::thread_specific_ptr<LockStack> lockstack;
 
-static const char DEFAULT_RPCCONNECT[] = "127.0.0.1";
-static const int DEFAULT_HTTP_CLIENT_TIMEOUT=900;
 static const int CONTINUE_EXECUTION=-1;
-
-std::string HelpMessageCli()
-{
-    string strUsage;
-    strUsage += HelpMessageGroup(_("Options:"));
-    strUsage += HelpMessageOpt("-?", _("This help message"));
-    strUsage += HelpMessageOpt("-conf=<file>", strprintf(_("Specify configuration file (default: %s)"), BITCOIN_CONF_FILENAME));
-    strUsage += HelpMessageOpt("-datadir=<dir>", _("Specify data directory"));
-    AppendParamsHelpMessages(strUsage);
-    strUsage += HelpMessageOpt("-rpcconnect=<ip>", strprintf(_("Send commands to node running on <ip> (default: %s)"), DEFAULT_RPCCONNECT));
-    strUsage += HelpMessageOpt("-rpcport=<port>", strprintf(_("Connect to JSON-RPC on <port> (default: %u or testnet: %u)"), BaseParams(CBaseChainParams::MAIN).RPCPort(), BaseParams(CBaseChainParams::TESTNET).RPCPort()));
-    strUsage += HelpMessageOpt("-rpcwait", _("Wait for RPC server to start"));
-    strUsage += HelpMessageOpt("-rpcuser=<user>", _("Username for JSON-RPC connections"));
-    strUsage += HelpMessageOpt("-rpcpassword=<pw>", _("Password for JSON-RPC connections"));
-    strUsage += HelpMessageOpt("-rpcclienttimeout=<n>", strprintf(_("Timeout during HTTP requests (default: %d)"), DEFAULT_HTTP_CLIENT_TIMEOUT));
-    strUsage += HelpMessageOpt("-stdin", _("Read extra arguments from standard input, one per line until EOF/Ctrl-D (recommended for sensitive information such as passphrases)"));
-
-    return strUsage;
-}
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -86,7 +65,13 @@ static int AppInitRPC(int argc, char* argv[])
     //
     // Parameters
     //
-    ParseParameters(argc, argv);
+    AllowedArgs::BitcoinCli allowedArgs;
+    try {
+        ParseParameters(argc, argv, allowedArgs);
+    } catch (const std::exception& e) {
+        fprintf(stderr, "Error parsing program options: %s\n", e.what());
+        return EXIT_FAILURE;
+    }
     if (argc<2 || mapArgs.count("-?") || mapArgs.count("-h") || mapArgs.count("-help") || mapArgs.count("-version")) {
         std::string strUsage = strprintf(_("%s RPC client version"), _(PACKAGE_NAME)) + " " + FormatFullVersion() + "\n";
         if (!mapArgs.count("-version")) {
@@ -95,7 +80,7 @@ static int AppInitRPC(int argc, char* argv[])
                   "  bitcoin-cli [options] help                " + _("List commands") + "\n" +
                   "  bitcoin-cli [options] help <command>      " + _("Get help for a command") + "\n";
 
-            strUsage += "\n" + HelpMessageCli();
+            strUsage += "\n" + allowedArgs.helpMessage();
         }
 
         fprintf(stdout, "%s", strUsage.c_str());
@@ -122,11 +107,7 @@ static int AppInitRPC(int argc, char* argv[])
         fprintf(stderr, "Error: %s\n", e.what());
         return EXIT_FAILURE;
     }
-    if (GetBoolArg("-rpcssl", false))
-    {
-        fprintf(stderr, "Error: SSL mode for RPC (-rpcssl) is no longer supported.\n");
-        return EXIT_FAILURE;
-    }
+
     return CONTINUE_EXECUTION;
 }
 
