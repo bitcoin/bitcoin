@@ -1497,7 +1497,7 @@ static void MaybePushAddress(UniValue & entry, const CTxDestination &dest)
         entry.push_back(Pair("v2address", addr.ToString()));
 }
 // SYSCOIN
-string GetSyscoinTransactionDescription(const int op, const vector<vector<unsigned char> > &vvchArgs, const CWalletTx &wtx, const string &type)
+string GetSyscoinTransactionDescription(const int op, const vector<vector<unsigned char> > &vvchArgs, const CWalletTx &wtx, const string &type, string& responseEnglish)
 {
 	string strResponse = "";
 	COffer offer;
@@ -1506,104 +1506,172 @@ string GetSyscoinTransactionDescription(const int op, const vector<vector<unsign
 	{
 	case OP_ALIAS_ACTIVATE:
 		strResponse = _("Alias Activated");
+		responseEnglish = "Alias Activated";
 		break;
 	case OP_ALIAS_PAYMENT:
 		if(type == "send")
+		{
 			strResponse =  _("Alias Payment Sent");
+			responseEnglish = "Alias Payment Sent";
+		}
 		else if(type == "recv")
+		{
 			strResponse = _("Alias Payment Received");
+			responseEnglish = "Alias Payment Received";
+		}
 		break;
 	case OP_ALIAS_UPDATE:
 		if(type == "send")
-			strResponse = (IsSyscoinTxMine(wtx, "alias")) ? _("Alias Updated") : _("Alias Transferred");	
+		{
+			strResponse =  _("Alias Updated");	
+			responseEnglish = "Alias Updated";
+		}
 		else if(type == "recv")
+		{
 			strResponse = _("Alias Received");
+			responseEnglish = "Alias Received";
+		}
 		break;
 	case OP_OFFER_ACTIVATE:
 		strResponse = _("Offer Activated");
+		responseEnglish = "Offer Activated";
 		break;
 	case OP_OFFER_UPDATE:
 		strResponse = _("Offer Updated");
+		responseEnglish = "Offer Updated";
 		break;
 	case OP_OFFER_ACCEPT:
 		offer = COffer(wtx);
 		if(!offer.accept.feedback.empty())
 		{
 			if(type == "send")
+			{
 				strResponse =  _("Offer Accept Feedback");
+				responseEnglish = "Offer Accept Feedback";
+			}
 			else if(type == "recv")
+			{
 				strResponse = _("Offer Accept Feedback Received");
+				responseEnglish = "Offer Accept Feedback Received";
+			}
 		}
 		else if(offer.accept.bPaymentAck)
 		{
 			strResponse = _("Offer Accept Acknowledged");
+			responseEnglish = "Offer Accept Acknowledged";
 		}
 		else
 		{
 			if(type == "send")
+			{
 				strResponse = _("Offer Accepted");
+				responseEnglish = "Offer Accepted";
+			}
 			else if(type == "recv")
+			{
 				strResponse = _("Offer Accept Received");
+				responseEnglish = "Offer Accept Received";
+			}
 		}
 		strResponse += " " + stringFromVch(vvchArgs[1]) + " (" + stringFromVch(vvchArgs[0]) + ")";
 		return strResponse;
 		break;
 	case OP_CERT_ACTIVATE:
 		strResponse = _("Certificate Activated");
+		responseEnglish = "Certificate Activated";
 		break;
 	case OP_CERT_UPDATE:
 		strResponse = _("Certificate Updated");
+		responseEnglish = "Certificate Updated";
 		break;
 	case OP_CERT_TRANSFER:
 		if(type == "send")
+		{
 			strResponse = _("Certificate Transferred");
+			responseEnglish = "Certificate Transferred";
+		}
 		else if(type == "recv")
+		{
 			strResponse = _("Certificate Received");
+			responseEnglish = "Certificate Received";
+		}
 		break;
 	case OP_ESCROW_ACTIVATE:
 		escrow = CEscrow(wtx);
 		if(escrow.bPaymentAck)
+		{
 			strResponse = _("Escrow Acknowledged");
+			responseEnglish = "Escrow Acknowledged";
+		}
 		else
+		{
 			strResponse = _("Escrow Activated");
+			responseEnglish = "Escrow Activated";
+		}
 		break;
 	case OP_ESCROW_RELEASE:
 		if(vvchArgs[1] == vchFromString("1"))
 		{
 			strResponse = _("Escrow Release Complete");
+			responseEnglish = "Escrow Release Complete";
 		}
 		else
 		{
 			if(type == "send")
+			{
 				strResponse = _("Escrow Released");
+				responseEnglish = "Escrow Released";
+			}
 			else if(type == "recv")
+			{
 				strResponse = _("Escrow Release Received");
+				responseEnglish = "Escrow Release Received";
+			}
 		}
 		break;
 	case OP_ESCROW_COMPLETE:		
-			if(type == "send")
-				strResponse = _("Escrow Feedback");
-			else if(type == "recv")
-				strResponse = _("Escrow Feedback Received");
+		if(type == "send")
+		{
+			strResponse = _("Escrow Feedback");
+			responseEnglish = "Escrow Feedback";
+		}
+		else if(type == "recv")
+		{
+			strResponse = _("Escrow Feedback Received");
+			responseEnglish = "Escrow Feedback Received";
+		}
 		break;
 	case OP_ESCROW_REFUND:
 		if(vvchArgs[1] == vchFromString("1"))
 		{
 			strResponse = _("Escrow Refund Complete");
+			responseEnglish = "Escrow Refund Complete";
 		}
 		else
 		{
 			if(type == "send")
+			{
 				strResponse = _("Escrow Refunded");
+				responseEnglish = "Escrow Refunded";
+			}
 			else if(type == "recv")
+			{
 				strResponse = _("Escrow Refund Received");
+				responseEnglish = "Escrow Refund Received";
+			}
 		}
 		break;
 	case OP_MESSAGE_ACTIVATE:
 		if(type == "send")
+		{
 			strResponse = _("Message Sent");
+			responseEnglish = "Message Sent";
+		}
 		else if(type == "recv")
+		{
 			strResponse = _("Message Received");
+			responseEnglish = "Message Received";
+		}
 		break;
 	default:
 		return "";
@@ -1654,8 +1722,10 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 			// SYSCOIN
 			if(!vvchArgs.empty() && s.vout == nOut)
 			{
-				strResponse = GetSyscoinTransactionDescription(op, vvchArgs, wtx, "send");
+				string strResponseEnglish = "";
+				strResponse = GetSyscoinTransactionDescription(op, vvchArgs, wtx, "send", strResponseEnglish);
 				entry.push_back(Pair("systx", strResponse));
+				entry.push_back(Pair("systype", strResponseEnglish));
 			}
             ret.push_back(entry);
         }
@@ -1698,8 +1768,10 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 				// SYSCOIN
 				if(!vvchArgs.empty() && r.vout == nOut)
 				{
-					strResponse = GetSyscoinTransactionDescription(op, vvchArgs, wtx, "recv");
+					string strResponseEnglish = "";
+					strResponse = GetSyscoinTransactionDescription(op, vvchArgs, wtx, "recv", strResponseEnglish);
 					entry.push_back(Pair("systx", strResponse));
+					entry.push_back(Pair("systype", strResponseEnglish));
 				}
                 ret.push_back(entry);
             }
