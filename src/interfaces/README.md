@@ -4,7 +4,7 @@ The following interfaces are defined here:
 
 * [`Chain`](chain.h) — used by wallet to access blockchain and mempool state. Added in [#10973](https://github.com/bitcoin/bitcoin/pull/10973).
 
-* [`Chain::Client`](chain.h) — used by node to start & stop `Chain` clients. Added in [#10973](https://github.com/bitcoin/bitcoin/pull/10973).
+* [`ChainClient`](chain.h) — used by node to start & stop `Chain` clients. Added in [#10973](https://github.com/bitcoin/bitcoin/pull/10973).
 
 * [`Node`](node.h) — used by GUI to start & stop bitcoin node. Added in [#10244](https://github.com/bitcoin/bitcoin/pull/10244).
 
