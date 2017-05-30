@@ -12,6 +12,7 @@ globals.cpp
 expedited.cpp
 expedited.h
 test/thinblock_util_tests.cpp
+test/thinblock_data_tests.cpp
 main.cpp
 main.h
 net.cpp
