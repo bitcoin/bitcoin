@@ -63,25 +63,44 @@ e. Announce 16 more headers that build on that fork.
    Expect: getdata request for 14 more blocks.
 f. Announce 1 more header that builds on that fork.
    Expect: no response.
+
+Part 5: Test handling of headers that don't connect.
+a. Repeat 2 times:
+   1. Create two headers but announce only the second header which won't connect.
+      Expect: DOS 40 after two runs but no ban or disconnect
+   2. Send same two headers but in order.
+      Expect: headers should connect
+
+a. Repeat 2 times:
+   1. Announce a multiple headers that don't connect.
+      Expect: DOS 80 after two runs but no ban or disconnect
+   2. Send same headers in order.
+      Expect: headers should connect
+
+c. Announce a header that does not connect.
+   Expect: DOS 100 with ban
+   Expect: disconnect.
 '''
 
 class BaseNode(NodeConnCB):
     def __init__(self):
         NodeConnCB.__init__(self)
         self.connection = None
-        self.last_inv = None
+        self.last_inv = []
         self.last_headers = None
         self.last_block = None
         self.ping_counter = 1
         self.last_pong = msg_pong(0)
-        self.last_getdata = None
+        self.last_getdata = []
         self.sleep_time = 0.05
         self.block_announced = False
+        self.last_getheaders = None
+        self.disconnected = False
 
     def clear_last_announcement(self):
         with mininode_lock:
             self.block_announced = False
-            self.last_inv = None
+            self.last_inv = []
             self.last_headers = None
 
     def add_connection(self, conn):
@@ -110,7 +129,7 @@ class BaseNode(NodeConnCB):
         self.connection.send_message(message)
 
     def on_inv(self, conn, message):
-        self.last_inv = message
+        self.last_inv.append(message)
         self.block_announced = True
 
     def on_headers(self, conn, message):
@@ -122,39 +141,60 @@ class BaseNode(NodeConnCB):
         self.last_block.calc_sha256()
 
     def on_getdata(self, conn, message):
-        self.last_getdata = message
+        self.last_getdata.append(message)
 
     def on_pong(self, conn, message):
         self.last_pong = message
 
+    def on_getheaders(self, conn, message):
+        self.last_getheaders = message
+
+    def on_close(self, conn):
+        self.disconnected = True
+
     # Test whether the last announcement we received had the
     # right header or the right inv
     # inv and headers should be lists of block hashes
-    def check_last_announcement(self, headers=None, inv=None):
+    def check_last_announcement(self, headers=None, inv=[]):
         expect_headers = headers if headers != None else []
-        expect_inv = inv if inv != None else []
+        expect_inv = inv if inv != [] else []
         test_function = lambda: self.block_announced
         self.sync(test_function)
-        with mininode_lock:
-            self.block_announced = False
+        timeout = 5
+        while timeout > 0:
+            with mininode_lock:
+                self.block_announced = False
 
-            success = True
-            compare_inv = []
-            if self.last_inv != None:
-                compare_inv = [x.hash for x in self.last_inv.inv]
-            if compare_inv != expect_inv:
-                success = False
+                success = True
+                compare_inv = []
+                if self.last_inv != []:
+                    all_inv =  [x.inv for x in self.last_inv]
+                    for x in all_inv:
+                        test_inv = [y.hash for y in x]
+                        compare_inv = compare_inv + test_inv
 
-            hash_headers = []
-            if self.last_headers != None:
-                # treat headers as a list of block hashes
-                hash_headers = [ x.sha256 for x in self.last_headers.headers ]
-            if hash_headers != expect_headers:
-                success = False
+                #Check whether the inventory received is within the list of block hashes that were
+                #mined (During a large reorg the inv's will be fewer than the actual hashes mined).
+                s = set(compare_inv)
+                expect_inv =  [x for x in expect_inv if x in s]
+                if compare_inv != expect_inv:
+                    success = False
 
-            self.last_inv = None
-            self.last_headers = None
-        return success
+                hash_headers = []
+                if self.last_headers != None:
+                    # treat headers as a list of block hashes
+                    hash_headers = [ x.sha256 for x in self.last_headers.headers ]
+                if hash_headers != expect_headers:
+                    success = False
+
+                self.last_inv = []
+                self.last_headers = None
+
+            if success == True:
+                return success
+
+            time.sleep(self.sleep_time)
+            timeout -= self.sleep_time
 
     # Syncing helpers
     def sync(self, test_function, timeout=60):
@@ -162,10 +202,30 @@ class BaseNode(NodeConnCB):
             with mininode_lock:
                 if test_function():
                     return
+
             time.sleep(self.sleep_time)
             timeout -= self.sleep_time
         raise AssertionError("Sync failed to complete")
         
+    # The request manager does not deal with vectors of GETDATA requests but rather one GETDATA per
+    # hash, therefore we need to be able to sync_getdata one message at a time rather than in batches.
+    def sync_getdata(self, hash_list, timeout=60):
+        while timeout > 0:
+            with mininode_lock:
+                #Check whether any getdata responses are in the hash list and
+                #if so remove them from both lists.
+                for x in self.last_getdata:
+                    for y in hash_list:
+                        if (str(x.inv).find(hex(y)[2:]) > 0):
+                            self.last_getdata.remove(x)
+                            hash_list.remove(y)
+                if hash_list == []:
+                    return
+
+            time.sleep(self.sleep_time)
+            timeout -= self.sleep_time
+        raise AssertionError("Sync getdata failed to complete")
+
     def sync_with_ping(self, timeout=60):
         self.send_message(msg_ping(nonce=self.ping_counter))
         test_function = lambda: self.last_pong.nonce == self.ping_counter
@@ -178,11 +238,20 @@ class BaseNode(NodeConnCB):
         self.sync(test_function, timeout)
         return
 
+    def wait_for_getheaders(self, timeout=60):
+        test_function = lambda: self.last_getheaders != None
+        self.sync(test_function, timeout)
+        return
+
     def wait_for_getdata(self, hash_list, timeout=60):
         if hash_list == []:
             return
 
-        test_function = lambda: self.last_getdata != None and [x.hash for x in self.last_getdata.inv] == hash_list
+        self.sync_getdata(hash_list, timeout)
+        return
+
+    def wait_for_disconnect(self, timeout=60):
+        test_function = lambda: self.disconnected
         self.sync(test_function, timeout)
         return
 
@@ -212,8 +281,12 @@ class SendHeadersTest(BitcoinTestFramework):
         initialize_chain_clean(self.options.tmpdir, 2)
 
     def setup_network(self):
+        # TODO: currently mininode does not have support for thinblocks so we can not sync a get_xthin request and must
+        #       therefore have thinblocks turned off during testing.
+        # Currently there are mininode syncronization issues when Parallel Validation is turned on
+        # and therefore have -parallel=0 when running these tests.
         self.nodes = []
-        self.nodes = start_nodes(2, self.options.tmpdir, [["-debug", "-logtimemicros=1"]]*2)
+        self.nodes = start_nodes(2, self.options.tmpdir, [["-debug", "-logtimemicros=1", "-parallel=0", "-use-thinblocks=0"]]*2)
         connect_nodes(self.nodes[0], 1)
 
     # mine count blocks and return the new tip
@@ -320,7 +393,7 @@ class SendHeadersTest(BitcoinTestFramework):
             # with block header, even though the blocks are never requested
             for j in range(2):
                 blocks = []
-                for b in range(i+1):
+                for b in range(1):
                     blocks.append(create_block(tip, create_coinbase(height), block_time))
                     blocks[-1].solve()
                     tip = blocks[-1].sha256
@@ -335,6 +408,7 @@ class SendHeadersTest(BitcoinTestFramework):
                     inv_node.send_block_inv(tip)
                     # Should have received a getheaders as well!
                     test_node.send_header_for_blocks(blocks)
+                    test_node.sync_with_ping()
                     test_node.wait_for_getdata([x.sha256 for x in blocks[0:-1]], timeout=5)
                     [ inv_node.send_block_inv(x.sha256) for x in blocks[0:-1] ]
                     inv_node.sync_with_ping()
@@ -351,7 +425,7 @@ class SendHeadersTest(BitcoinTestFramework):
                 inv_node.sync_with_ping()
                 # This block should not be announced to the inv node (since it also
                 # broadcast it)
-                assert_equal(inv_node.last_inv, None)
+                assert_equal(inv_node.last_inv, [])
                 assert_equal(inv_node.last_headers, None)
                 tip = self.mine_blocks(1)
                 assert_equal(inv_node.check_last_announcement(inv=[tip]), True)
@@ -368,17 +442,17 @@ class SendHeadersTest(BitcoinTestFramework):
         for j in range(2):
             # First try mining a reorg that can propagate with header announcement
             new_block_hashes = self.mine_reorg(length=7)
-            tip = new_block_hashes[-1]
-            assert_equal(inv_node.check_last_announcement(inv=[tip]), True)
+            assert_equal(inv_node.check_last_announcement(inv=new_block_hashes), True)
             assert_equal(test_node.check_last_announcement(headers=new_block_hashes), True)
 
             block_time += 8 
 
-            # Mine a too-large reorg, which should be announced with a single inv
+            # Mine a too-large reorg - we will receive only the first 8 inv's for the 9 block hashes mined.
+            # which represents the MAX_BLOCKS_TO_ANNOUNCE=8
             new_block_hashes = self.mine_reorg(length=8)
             tip = new_block_hashes[-1]
-            assert_equal(inv_node.check_last_announcement(inv=[tip]), True)
-            assert_equal(test_node.check_last_announcement(inv=[tip]), True)
+            assert_equal(inv_node.check_last_announcement(inv=new_block_hashes), True)
+            assert_equal(test_node.check_last_announcement(inv=new_block_hashes), True)
 
             block_time += 9
 
@@ -442,12 +516,12 @@ class SendHeadersTest(BitcoinTestFramework):
             inv_node.send_message(msg_block(blocks[-1]))
 
         inv_node.sync_with_ping() # Make sure blocks are processed
-        test_node.last_getdata = None
+        test_node.last_getdata = []
         test_node.send_header_for_blocks(blocks)
         test_node.sync_with_ping()
         # should not have received any getdata messages
         with mininode_lock:
-            assert_equal(test_node.last_getdata, None)
+            assert_equal(test_node.last_getdata, [])
 
         # This time, direct fetch should work
         blocks = []
@@ -460,7 +534,7 @@ class SendHeadersTest(BitcoinTestFramework):
 
         test_node.send_header_for_blocks(blocks)
         test_node.sync_with_ping()
-        test_node.wait_for_getdata([x.sha256 for x in blocks], timeout=test_node.sleep_time)
+        test_node.wait_for_getdata([x.sha256 for x in blocks], timeout=5)
 
         [ test_node.send_message(msg_block(x)) for x in blocks ]
 
@@ -481,36 +555,141 @@ class SendHeadersTest(BitcoinTestFramework):
 
         # Announcing one block on fork should not trigger direct fetch
         # (less work than tip)
-        test_node.last_getdata = None
+        test_node.last_getdata = []
         test_node.send_header_for_blocks(blocks[0:1])
         test_node.sync_with_ping()
         with mininode_lock:
-            assert_equal(test_node.last_getdata, None)
+            assert_equal(test_node.last_getdata, [])
 
         # Announcing one more block on fork should trigger direct fetch for
         # both blocks (same work as tip)
         test_node.send_header_for_blocks(blocks[1:2])
         test_node.sync_with_ping()
-        test_node.wait_for_getdata([x.sha256 for x in blocks[0:2]], timeout=test_node.sleep_time)
+        test_node.wait_for_getdata([x.sha256 for x in blocks[0:2]], timeout=5)
 
         # Announcing 16 more headers should trigger direct fetch for 14 more
         # blocks
+        self.nodes[0].set("net.maxBlocksInTransitPerPeer=16")
+        self.nodes[1].set("net.maxBlocksInTransitPerPeer=16")
         test_node.send_header_for_blocks(blocks[2:18])
         test_node.sync_with_ping()
-        test_node.wait_for_getdata([x.sha256 for x in blocks[2:16]], timeout=test_node.sleep_time)
+        test_node.wait_for_getdata([x.sha256 for x in blocks[2:16]], timeout=5)
+        with mininode_lock:
+            assert_equal(test_node.last_getdata, [])
 
-        # Announcing 1 more header should not trigger any response
-        test_node.last_getdata = None
+        # Announcing 1 more header should not trigger any response because we
+        # already have the maximumum blocks in flight
+        test_node.last_getdata = []
         test_node.send_header_for_blocks(blocks[18:19])
         test_node.sync_with_ping()
         with mininode_lock:
-            assert_equal(test_node.last_getdata, None)
+            assert_equal(test_node.last_getdata, [])
 
         print("Part 4: success!")
 
+        # Now deliver all those blocks we announced.
+        [ test_node.send_message(msg_block(x)) for x in blocks ]
+
+        print("Part 5: Testing handling of unconnecting headers")
+        # First we test that receipt of a single unconnecting header doesn't cause an immediate ban.
+        # Do this two times only which will give a DOS misbeviour of 40.
+        for i in range(2):
+            test_node.last_getdata = []
+            blocks = []
+            # Create two more blocks.
+            for j in range(2):
+                blocks.append(create_block(tip, create_coinbase(height), block_time))
+                blocks[-1].solve()
+                tip = blocks[-1].sha256
+                block_time += 1
+                height += 1
+
+            # Send the header of the second block -> this won't connect.
+            test_node.send_header_for_blocks([blocks[1]])
+            test_node.sync_with_ping()
+            assert_not_equal(int(self.nodes[0].getbestblockhash(), 16), blocks[1].sha256)
+
+            # Now send them in the right order
+            test_node.send_header_for_blocks(blocks)
+            test_node.sync_with_ping()
+
+            # Wait for getdata and send blocks
+            test_node.wait_for_getdata([x.sha256 for x in blocks], timeout=5)
+            [ test_node.send_message(msg_block(x)) for x in blocks ]
+            test_node.sync_with_ping()
+
+            # Block chain should have updated correctly and all blocks connected
+            assert_equal(int(self.nodes[0].getbestblockhash(), 16), blocks[1].sha256)
+
+
+        # Check that multiple unconnecting headers don't cause an immediate ban.
+        # Do this four times only which will give a DOS misbeviour of 80.
+        for i in range(2):
+            test_node.last_getdata = []
+            blocks = []
+            # Create two more blocks.
+            for j in range(5):
+                blocks.append(create_block(tip, create_coinbase(height), block_time))
+                blocks[-1].solve()
+                tip = blocks[-1].sha256
+                block_time += 1
+                height += 1
+
+            # Reverse order of one of the blocks
+            blocks_reverse = []
+            if i == 0:
+                blocks_reverse.append(blocks[1])
+                blocks_reverse.append(blocks[0])
+                blocks_reverse.append(blocks[2])
+                blocks_reverse.append(blocks[3])
+                blocks_reverse.append(blocks[4])
+
+            if i == 1:
+                blocks_reverse.append(blocks[0])
+                blocks_reverse.append(blocks[1])
+                blocks_reverse.append(blocks[3])
+                blocks_reverse.append(blocks[2])
+                blocks_reverse.append(blocks[4])
+
+            # Send the header of the second block -> this won't connect.
+            test_node.send_header_for_blocks(blocks_reverse)
+            test_node.sync_with_ping()
+            assert_not_equal(int(self.nodes[0].getbestblockhash(), 16), blocks[1].sha256)
+
+            # Now send them in the right order
+            test_node.send_header_for_blocks(blocks)
+            test_node.sync_with_ping()
+
+            # Wait for getdata and send blocks
+            test_node.wait_for_getdata([x.sha256 for x in blocks], timeout=5)
+            [ test_node.send_message(msg_block(x)) for x in blocks ]
+            test_node.sync_with_ping()
+
+            # Block chain should have updated correctly and all blocks connected
+            assert_equal(int(self.nodes[0].getbestblockhash(), 16), blocks[4].sha256)
+
+
+        # Send one more out of order header which should result in a DOS 100 with subsequent ban and disconnect
+        test_node.last_getdata = []
+        blocks = []
+        # Create two more blocks
+        for j in range(2):
+            blocks.append(create_block(tip, create_coinbase(height), block_time))
+            blocks[-1].solve()
+            tip = blocks[-1].sha256
+            block_time += 1
+            height += 1
+        # Send the header of the second block -> this won't connect.
+        test_node.send_header_for_blocks([blocks[1]])
+
+        # Should get disconnected
+        test_node.wait_for_disconnect()
+
         # Finally, check that the inv node never received a getdata request,
         # throughout the test
-        assert_equal(inv_node.last_getdata, None)
+        assert_equal(inv_node.last_getdata, [])
+
+        print("Part 5: success!")
 
 if __name__ == '__main__':
     SendHeadersTest().main()
