@@ -435,7 +435,9 @@ std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain)
 void SelectParams(const std::string& network)
 {
     SelectBaseParams(network);
-    globalChainParams = CreateChainParams(network, gArgs);
+    ArgsManager args;
+    args.ReadConfigFile(gArgs.GetArg("-chainconf", CHAINPARAMS_DEFAULT_CONF_FILE));
+    globalChainParams = CreateChainParams(network, args);
 }
 
 void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout)

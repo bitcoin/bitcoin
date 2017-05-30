@@ -9,6 +9,8 @@
 #include <string>
 #include <vector>
 
+#define CHAINPARAMS_DEFAULT_CONF_FILE "chainparams.conf"
+
 /**
  * CBaseChainParams defines the base parameters (shared between bitcoin-cli and bitcoind)
  * of a given instance of the Bitcoin system.
