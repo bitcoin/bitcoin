@@ -118,6 +118,8 @@ void StartNode(boost::thread_group &threadGroup, CScheduler &scheduler);
 bool StopNode();
 int SocketSendData(CNode *pnode);
 
+// Node IDs are currently signed but only values greater than zero are returned.  Zero or negative can be used as a
+// sentinel value.
 typedef int NodeId;
 
 struct CombinerAll
@@ -197,9 +199,6 @@ extern limitedmap<uint256, int64_t> mapAlreadyAskedFor;
 
 extern std::vector<std::string> vAddedNodes;
 extern CCriticalSection cs_vAddedNodes;
-
-extern NodeId nLastNodeId;
-extern CCriticalSection cs_nLastNodeId;
 
 /** Subversion as sent to the P2P network in `version` messages */
 extern std::string strSubVersion;
