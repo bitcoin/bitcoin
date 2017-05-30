@@ -11,6 +11,10 @@ class CConnman;
 class CScheduler;
 class CRPCTable;
 
+namespace interfaces {
+class Chain;
+} // namespace interfaces
+
 class WalletInitInterface {
 public:
     /** Is the wallet component enabled */
@@ -22,9 +26,9 @@ public:
     /** Register wallet RPC*/
     virtual void RegisterRPC(CRPCTable &) const = 0;
     /** Verify wallets */
-    virtual bool Verify() const = 0;
+    virtual bool Verify(interfaces::Chain& chain) const = 0;
     /** Open wallets*/
-    virtual bool Open() const = 0;
+    virtual bool Open(interfaces::Chain& chain) const = 0;
     /** Start wallets*/
     virtual void Start(CScheduler& scheduler, CConnman* connman) const = 0;
     /** Flush Wallets*/
