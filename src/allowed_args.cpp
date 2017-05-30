@@ -321,7 +321,8 @@ static void addConnectionOptions(AllowedArgs &allowedArgs)
         .addArg("permitbaremultisig", optionalBool,
             strprintf(_("Relay non-P2SH multisig (default: %u)"), DEFAULT_PERMIT_BAREMULTISIG))
         .addArg("peerbloomfilters", optionalBool,
-            strprintf(_("Support filtering of blocks and transaction with bloom filters (default: %u)"), 1))
+            strprintf(_("Support filtering of blocks and transaction with bloom filters (default: %u)"),
+                    DEFAULT_PEERBLOOMFILTERS))
         .addDebugArg("enforcenodebloom", optionalBool,
             strprintf("Enforce minimum protocol version to limit use of bloom filters (default: %u)", 0))
         .addArg(
