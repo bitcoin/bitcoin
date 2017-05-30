@@ -126,6 +126,7 @@ public:
 
 int SecretToPublicKey(const CKey &secret, ec_point &out);
 
+int StealthShared(const CKey &secret, const ec_point &pubkey, CKey &sharedSOut);
 int StealthSecret(const CKey &secret, const ec_point &pubkey, const ec_point &pkSpend, CKey &sharedSOut, ec_point &pkOut);
 int StealthSecretSpend(const CKey &scanSecret, const ec_point &ephemPubkey, const CKey &spendSecret, CKey &secretOut);
 int StealthSharedToSecretSpend(const CKey &sharedS, const CKey &spendSecret, CKey &secretOut);

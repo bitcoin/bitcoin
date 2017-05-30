@@ -386,12 +386,12 @@ public:
         
         nPruneAfterHeight = 100000;
         
-        genesis = CreateGenesisBlockMainNet(1495745851, 2587, 0x1f00ffff);
+        genesis = CreateGenesisBlockMainNet(1496144704, 57948, 0x1f00ffff);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x0000e40cecb190493429d27e938e09da4b6195838934dc1868e653165153f78b"));
+        assert(consensus.hashGenesisBlock == uint256S("0x0000b99cae55dceb03385032637a7f30360c532e19881875f076ee4c15e2313e"));
         assert(genesis.hashMerkleRoot == uint256S("0xfa78a0476dc886dd4c8ebba34176f5561945c1c27e113c1989e0aca7f8f6de8d"));
         assert(genesis.hashWitnessMerkleRoot == uint256S("0x59c9ac2d5430e0ce2cc4b9848e956fcad208322169f77529bc509960fb9f2e33"));
-        
+
         // Note that of those with the service bits flag, most only support a subset of possible options
         vSeeds.push_back(CDNSSeedData("mainnet-seed.particl.io",  "mainnet-seed.particl.io", true));
         vSeeds.push_back(CDNSSeedData("dnsseed-mainnet.particl.io",  "dnsseed-mainnet.particl.io", true));
@@ -550,7 +550,6 @@ public:
         fDefaultConsistencyChecks = false;
         fRequireStandard = false;
         fMineBlocksOnDemand = false;
-
 
         /*
         checkpointData = (CCheckpointData) {

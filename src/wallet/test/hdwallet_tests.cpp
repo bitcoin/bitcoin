@@ -151,6 +151,44 @@ BOOST_AUTO_TEST_CASE(stealth)
     ECC_Stop_Stealth();
 }
 
+BOOST_AUTO_TEST_CASE(stealth_key_index)
+{
+    CHDWallet *pwallet = (CHDWallet*) pwalletMain;
+    
+    //ECC_Start_Stealth();
+    CStealthAddress sx;
+    BOOST_CHECK(sx.SetEncoded("SPGyji8uZFip6H15GUfj6bsutRVLsCyBFL3P7k7T7MUDRaYU8GfwUHpfxonLFAvAwr2RkigyGfTgWMfzLAAP8KMRHq7RE8cwpEEekH"));
+    
+    CStealthAddressIndexed sxi;
+    uint32_t sxId;
+    sx.ToRaw(sxi.addrRaw);
+    BOOST_CHECK(pwallet->GetStealthKeyIndex(sxi, sxId));
+    BOOST_CHECK(sxId == 1);
+    
+    
+    BOOST_CHECK(sx.SetEncoded("SPGx7SrLpMcMUjJhQkMp7D8eRAxzVj34StgQdYHr9887nCNBAiUTr4eiJKunzDaBxUqTWGX1sCCJxvUH9WG1JkJw9o15Xn2JSjnpD9"));
+    sx.ToRaw(sxi.addrRaw);
+    BOOST_CHECK(pwallet->GetStealthKeyIndex(sxi, sxId));
+    BOOST_CHECK(sxId == 2);
+    
+    BOOST_CHECK(sx.SetEncoded("SPGwdFXLfjt3yQLzVhwbQLriSBbSF3gbmBsTDtA4Sjkz5aCDvmPgw3EqT51YqbxanMzFmAUSWtvCheFvUeWc56QH7sYD4nUKVX8kz2"));
+    sx.ToRaw(sxi.addrRaw);
+    BOOST_CHECK(pwallet->GetStealthKeyIndex(sxi, sxId));
+    BOOST_CHECK(sxId == 3);
+    
+    CStealthAddress sxOut;
+    BOOST_CHECK(pwallet->GetStealthByIndex(2, sxOut));
+    BOOST_CHECK(sxOut.ToString() == "SPGx7SrLpMcMUjJhQkMp7D8eRAxzVj34StgQdYHr9887nCNBAiUTr4eiJKunzDaBxUqTWGX1sCCJxvUH9WG1JkJw9o15Xn2JSjnpD9");
+    
+    
+    BOOST_CHECK(sx.SetEncoded("SPGyji8uZFip6H15GUfj6bsutRVLsCyBFL3P7k7T7MUDRaYU8GfwUHpfxonLFAvAwr2RkigyGfTgWMfzLAAP8KMRHq7RE8cwpEEekH"));
+    sx.ToRaw(sxi.addrRaw);
+    BOOST_CHECK(pwallet->GetStealthKeyIndex(sxi, sxId));
+    BOOST_CHECK(sxId == 1);
+    
+    //ECC_Stop_Stealth();
+}
+
 
 
 BOOST_AUTO_TEST_SUITE_END()

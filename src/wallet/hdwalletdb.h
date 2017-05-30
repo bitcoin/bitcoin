@@ -131,7 +131,7 @@ public:
     CPubKey   pkEphem;
     CPubKey   pkScan;
     COutPoint outpoint;
-    
+
     ADD_SERIALIZE_METHODS;
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream &s, Operation ser_action)
@@ -161,7 +161,7 @@ public:
 
     COutPoint outpoint;
     bool fSpent;
-    
+
     ADD_SERIALIZE_METHODS;
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream &s, Operation ser_action)
@@ -178,7 +178,7 @@ public:
 
     CStealthAddressIndexed(std::vector<uint8_t> &addrRaw_) : addrRaw(addrRaw_) {};
     std::vector<uint8_t> addrRaw;
-    
+
     ADD_SERIALIZE_METHODS;
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream &s, Operation ser_action)
@@ -210,24 +210,6 @@ public:
     };
 };
 
-/*
-store in CTransactionRecord mapvalue
-class CEphemLink
-{
-public:
-    CEphemLink() {};
-    
-    std::vector<uint32_t> vPath; // index to m is stored in first entry
-    
-    ADD_SERIALIZE_METHODS;
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream &s, Operation ser_action)
-    {
-        READWRITE(vPath);
-    };
-    
-};
-*/
 
 
 /** Access to the wallet database */

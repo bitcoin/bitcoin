@@ -582,7 +582,6 @@ bool CheckStandardOutput(CValidationState &state, const CTxOutStandard *p, CAmou
 
 bool CheckBlindOutput(CValidationState &state, const CTxOutCT *p)
 {
-    
     if (p->vData.size() < 33 || p->vData.size() > 33 + 5)
         return state.DoS(100, false, REJECT_INVALID, "bad-ctout-ephem-size");
     

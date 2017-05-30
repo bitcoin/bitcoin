@@ -167,6 +167,24 @@ int SecretToPublicKey(const CKey &secret, ec_point &out)
     return 0;
 };
 
+int StealthShared(const CKey &secret, const ec_point &pubkey, CKey &sharedSOut)
+{
+    if (pubkey.size() != EC_COMPRESSED_SIZE)
+        return errorN(1, "%s: sanity checks failed.", __func__);
+    
+    secp256k1_pubkey Q;
+    if (!secp256k1_ec_pubkey_parse(secp256k1_ctx_stealth, &Q, &pubkey[0], EC_COMPRESSED_SIZE))
+        return errorN(1, "%s: secp256k1_ec_pubkey_parse Q failed.", __func__);
+    if (!secp256k1_ec_pubkey_tweak_mul(secp256k1_ctx_stealth, &Q, secret.begin())) // eQ
+        return errorN(1, "%s: secp256k1_ec_pubkey_tweak_mul failed.", __func__);
+    
+    size_t len = 33;
+    uint8_t tmp33[33];
+    secp256k1_ec_pubkey_serialize(secp256k1_ctx_stealth, tmp33, &len, &Q, SECP256K1_EC_COMPRESSED); // Returns: 1 always.
+    
+    CSHA256().Write(tmp33, 33).Finalize(sharedSOut.begin_nc());
+    return 0;
+};
 
 int StealthSecret(const CKey &secret, const ec_point &pubkey, const ec_point &pkSpend, CKey &sharedSOut, ec_point &pkOut)
 {
@@ -204,7 +222,6 @@ int StealthSecret(const CKey &secret, const ec_point &pubkey, const ec_point &pk
         return errorN(1, "%s: sanity checks failed.", __func__);
     
     secp256k1_pubkey Q, R;
-    
     if (!secp256k1_ec_pubkey_parse(secp256k1_ctx_stealth, &Q, &pubkey[0], EC_COMPRESSED_SIZE))
         return errorN(1, "%s: secp256k1_ec_pubkey_parse Q failed.", __func__);
     

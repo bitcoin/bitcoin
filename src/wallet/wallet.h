@@ -650,7 +650,7 @@ private:
     void AddToSpends(const uint256& wtxid);
 
     /* Mark a transaction (and its in-wallet descendants) as conflicting with a particular block. */
-    void MarkConflicted(const uint256& hashBlock, const uint256& hashTx);
+    virtual void MarkConflicted(const uint256& hashBlock, const uint256& hashTx);
 
     virtual void SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator>);
 

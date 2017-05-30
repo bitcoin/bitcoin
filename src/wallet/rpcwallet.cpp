@@ -1599,33 +1599,99 @@ void ListRecord(const uint256 &hash, const CTransactionRecord &rtx,
 {
     bool fAllAccounts = (strAccount == string("*"));
     
+    CHDWallet *phdw = (CHDWallet*) pwalletMain;
+    
     for (auto &r : rtx.vout)
     {
         if (r.nFlags & ORF_CHANGE)
             continue;
         
-        UniValue entry(UniValue::VOBJ);
-        
+        std::string account;
+        CBitcoinAddress addr;
         CTxDestination dest;
         if (ExtractDestination(r.scriptPubKey, dest) && !r.scriptPubKey.IsUnspendable())
         {
-             CBitcoinAddress addr;
-            if (addr.Set(dest))
-                entry.push_back(Pair("address", addr.ToString()));
-        } else
-        {
-            entry.push_back(Pair("address", "unknown"));
+            addr.Set(dest);
+            
+            std::map<CTxDestination, CAddressBookData>::iterator mai = phdw->mapAddressBook.find(dest);
+            if (mai != phdw->mapAddressBook.end() && !mai->second.name.empty())
+                account = mai->second.name;
         };
         
+        if (!fAllAccounts && (account != strAccount))
+            continue;
         
-        entry.push_back(Pair("time", rtx.nTimeReceived));
-        entry.push_back(Pair("txid", hash.ToString()));
+        UniValue entry(UniValue::VOBJ);
+        
+        entry.push_back(Pair("account", account));
+        
+        if (r.vPath.size() > 0)
+        {
+            if (r.vPath[0] == ORA_STEALTH)
+            {
+                if (r.vPath.size() < 5)
+                {
+                    LogPrintf("%s: Warning, malformed vPath.", __func__);
+                } else
+                {
+                    //CKeyID sid;
+                    //memcpy(sid.begin(), &r.vPath[1], 20);
+                    uint32_t sidx;
+                    memcpy(&sidx, &r.vPath[1], 4);
+                    CStealthAddress sx;
+                    if (phdw->GetStealthByIndex(sidx, sx))
+                    {
+                        entry.push_back(Pair("stealth_address", sx.Encoded()));
+                    };
+                };
+            };
+        } else
+        {
+            if (dest.type() == typeid(CKeyID))
+            {
+                CStealthAddress sx;
+                CKeyID idK = boost::get<CKeyID>(dest);
+                if (phdw->GetStealthLinked(idK, sx))
+                {
+                    entry.push_back(Pair("stealth_address", sx.Encoded()));
+                };
+            };
+        };
+        
+        entry.push_back(Pair("address", addr.ToString()));
+        
+        std::string sCategory;
+        if (r.nFlags & ORF_OWNED && r.nFlags & ORF_FROM)
+        {
+            // sent to self
+            //continue;
+            sCategory = "receive";
+        } else
+        if (r.nFlags & ORF_OWNED)
+        {
+            sCategory = "receive";
+        } else
+        if (r.nFlags & ORF_FROM)
+        {
+            sCategory = "send";
+        }
+        
+        entry.push_back(Pair("category", sCategory));
+        
+        entry.push_back(Pair("type", r.nType == OUTPUT_STANDARD ? "standard"
+                : r.nType == OUTPUT_CT ? "blind" : r.nType == OUTPUT_RINGCT ? "anon" : "unknown"));
+        
+        if (r.nFlags & ORF_OWNED && r.nFlags & ORF_FROM)
+            entry.push_back(Pair("fromself", "true"));
+        
+        entry.push_back(Pair("amount", ValueFromAmount(r.nValue)));
+        
+        if (r.nFlags & ORF_FROM)
+            entry.push_back(Pair("fee", ValueFromAmount(rtx.nFee)));
+        
+        
         entry.push_back(Pair("vout", r.n));
         
-        if (!r.sNarration.empty())
-            entry.push_back(Pair("narration", r.sNarration));
-        
-        CHDWallet *phdw = (CHDWallet*) pwalletMain;
         int confirms = phdw->GetDepthInMainChain(rtx.blockHash);
         entry.push_back(Pair("confirmations", confirms));
         if (confirms > 0)
@@ -1638,34 +1704,23 @@ void ListRecord(const uint256 &hash, const CTransactionRecord &rtx,
             entry.push_back(Pair("trusted", phdw->IsTrusted(hash, rtx.blockHash)));
         };
         
+        entry.push_back(Pair("txid", hash.ToString()));
         
+        UniValue conflicts(UniValue::VARR);
+        std::set<uint256> setconflicts = phdw->GetConflicts(hash);
+        setconflicts.erase(hash);
+        for(const auto &conflict : setconflicts)
+            conflicts.push_back(conflict.GetHex());
+        entry.push_back(Pair("walletconflicts", conflicts));
         
-        if (r.nFlags & ORF_OWNED && r.nFlags & ORF_FROM)
-        {
-            // sent to self
-            //continue;
-            entry.push_back(Pair("category", "receive"));
-            entry.push_back(Pair("fromself", "true"));
-            entry.push_back(Pair("type", r.nType == OUTPUT_STANDARD ? "standard"
-                : r.nType == OUTPUT_CT ? "blind" : r.nType == OUTPUT_RINGCT ? "anon" : "unknown"));
-            entry.push_back(Pair("amount", ValueFromAmount(r.nValue)));
-            entry.push_back(Pair("fee", ValueFromAmount(rtx.nFee)));
-        } else
-        if (r.nFlags & ORF_OWNED)
-        {
-            entry.push_back(Pair("category", "receive"));
-            entry.push_back(Pair("type", r.nType == OUTPUT_STANDARD ? "standard"
-                : r.nType == OUTPUT_CT ? "blind" : r.nType == OUTPUT_RINGCT ? "anon" : "unknown"));
-            entry.push_back(Pair("amount", ValueFromAmount(r.nValue)));
-        } else
+        entry.push_back(Pair("time", rtx.nTimeReceived));
+        
+        if (!r.sNarration.empty())
+            entry.push_back(Pair("narration", r.sNarration));
+        
         if (r.nFlags & ORF_FROM)
-        {
-            entry.push_back(Pair("category", "send"));
-            entry.push_back(Pair("type", r.nType == OUTPUT_STANDARD ? "standard"
-                : r.nType == OUTPUT_CT ? "blind" : r.nType == OUTPUT_RINGCT ? "anon" : "unknown"));
-            entry.push_back(Pair("amount", ValueFromAmount(r.nValue)));
-            entry.push_back(Pair("fee", ValueFromAmount(rtx.nFee)));
-        }
+            entry.push_back(Pair("abandoned", rtx.IsAbandoned()));
+        
         ret.push_back(entry);
     };
 };
@@ -1806,7 +1861,7 @@ UniValue listtransactions(const JSONRPCRequest& request)
         ret.push_back(retReversed[i]);
     };
     
-    if (fParticlMode)
+    if (fParticlWallet)
     {
         const RtxOrdered_t &txOrdered = ((CHDWallet*)pwalletMain)->rtxOrdered;
         
@@ -2662,7 +2717,7 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
     UniValue obj(UniValue::VOBJ);
     obj.push_back(Pair("walletversion", pwalletMain->GetVersion()));
     
-    if (fParticlMode)
+    if (fParticlWallet)
     {
         CAmount balance = pwalletMain->GetBalance();
         CAmount blind_balance = ((CHDWallet*)pwalletMain)->GetBlindBalance();
@@ -2741,7 +2796,7 @@ UniValue resendwallettransactions(const JSONRPCRequest& request)
     
     UniValue result(UniValue::VARR);
     
-    if (fParticlMode)
+    if (fParticlWallet)
     {
         std::vector<uint256> txidsRec;
         txidsRec = ((CHDWallet*)pwalletMain)->ResendRecordTransactionsBefore(GetTime(), g_connman.get());
@@ -2841,15 +2896,34 @@ UniValue listunspent(const JSONRPCRequest& request)
     vector<COutput> vecOutputs;
     assert(pwalletMain != NULL);
     LOCK2(cs_main, pwalletMain->cs_wallet);
-    pwalletMain->AvailableCoins(vecOutputs, !include_unsafe, NULL, true);
+    
+    if (fParticlWallet)
+    {
+        ((CHDWallet*)pwalletMain)->AvailableCoins(vecOutputs, !include_unsafe, NULL, true);
+    } else
+    {
+        pwalletMain->AvailableCoins(vecOutputs, !include_unsafe, NULL, true);
+    };
+    
     BOOST_FOREACH(const COutput& out, vecOutputs) {
         if (out.nDepth < nMinDepth || out.nDepth > nMaxDepth)
             continue;
-
+        
+        CAmount nValue;
         CTxDestination address;
-        const CScript& scriptPubKey = out.tx->tx->vout[out.i].scriptPubKey;
-        bool fValidAddress = ExtractDestination(scriptPubKey, address);
-
+        const CScript *scriptPubKey;
+        bool fValidAddress;
+        if (fParticlWallet)
+        {
+            scriptPubKey = out.tx->tx->vpout[out.i]->GetPScriptPubKey();
+            nValue = out.tx->tx->vpout[out.i]->GetValue();
+        } else
+        {
+            scriptPubKey = &out.tx->tx->vout[out.i].scriptPubKey;
+            nValue = out.tx->tx->vout[out.i].nValue;
+        };
+        
+        fValidAddress = ExtractDestination(*scriptPubKey, address);
         if (setAddress.size() && (!fValidAddress || !setAddress.count(address)))
             continue;
 
@@ -2863,7 +2937,7 @@ UniValue listunspent(const JSONRPCRequest& request)
             if (pwalletMain->mapAddressBook.count(address))
                 entry.push_back(Pair("account", pwalletMain->mapAddressBook[address].name));
 
-            if (scriptPubKey.IsPayToScriptHash()) {
+            if (scriptPubKey->IsPayToScriptHash()) {
                 const CScriptID& hash = boost::get<CScriptID>(address);
                 CScript redeemScript;
                 if (pwalletMain->GetCScript(hash, redeemScript))
@@ -2871,8 +2945,8 @@ UniValue listunspent(const JSONRPCRequest& request)
             }
         }
 
-        entry.push_back(Pair("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end())));
-        entry.push_back(Pair("amount", ValueFromAmount(out.tx->tx->vout[out.i].nValue)));
+        entry.push_back(Pair("scriptPubKey", HexStr(scriptPubKey->begin(), scriptPubKey->end())));
+        entry.push_back(Pair("amount", ValueFromAmount(nValue)));
         entry.push_back(Pair("confirmations", out.nDepth));
         entry.push_back(Pair("spendable", out.fSpendable));
         entry.push_back(Pair("solvable", out.fSolvable));

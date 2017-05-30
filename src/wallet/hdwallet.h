@@ -107,8 +107,10 @@ public:
         
     };
     
+    // Conflicted state is marked by set blockHash and nIndex -1
     uint256 blockHash;
     int nIndex;
+    
     int64_t nBlockTime;
     int64_t nTimeReceived;
     CAmount nFee;
@@ -166,6 +168,8 @@ public:
     };
     
     bool IsAbandoned() const { return (blockHash == ABANDON_HASH); }
+    bool HashUnset() const { return (blockHash.IsNull() || blockHash == ABANDON_HASH); }
+    
     
     mutable uint32_t nCacheFlags;
 
@@ -330,6 +334,7 @@ public:
     bool GetPubKey(const CKeyID &address, CPubKey &pkOut) const;
     
     bool HaveStealthAddress(const CStealthAddress &sxAddr) const;
+    bool GetStealthAddressScanKey(CStealthAddress &sxAddr) const;
     
     bool ImportStealthAddress(const CStealthAddress &sxAddr, const CKey &skSpend);
     
@@ -372,6 +377,7 @@ public:
     
     int GetChangeAddress(CPubKey &pk);
     
+    void AddOutputRecordMetaData(CTransactionRecord &rtx, std::vector<CTempRecipient> &vecSend);
     int ExpandTempRecipients(std::vector<CTempRecipient> &vecSend, CStoredExtKey *pc, std::string &sError);
     
     /** Update wallet after successfull transaction */
@@ -474,11 +480,14 @@ public:
         CReserveKey &reservekey, CConnman *connman, CValidationState &state);
     
     int LoadStealthAddresses();
+    bool IndexStealthKey(CHDWalletDB *pwdb, uint160 &hash, const CStealthAddressIndexed &sxi, uint32_t &id);
+    bool GetStealthKeyIndex(const CStealthAddressIndexed &sxi, uint32_t &id);
     bool UpdateStealthAddressIndex(const CKeyID &idK, const CStealthAddressIndexed &sxi, uint32_t &id); // Get stealth index or create new index if none found
+    bool GetStealthByIndex(uint32_t sxId, CStealthAddress &sx);
     bool GetStealthLinked(const CKeyID &idK, CStealthAddress &sx);
     bool ProcessLockedStealthOutputs();
     bool ProcessStealthOutput(const CTxDestination &address,
-        std::vector<uint8_t> &vchEphemPK, uint32_t prefix, bool fHavePrefix, CKey &sShared);
+        std::vector<uint8_t> &vchEphemPK, uint32_t prefix, bool fHavePrefix, CKey &sShared, bool fNeedShared=false);
     
     int CheckForStealthAndNarration(const CTxOutBase *pb, const CTxOutData *pdata, std::string &sNarr);
     bool FindStealthTransactions(const CTransaction &tx, mapValue_t &mapNarr);
@@ -519,6 +528,8 @@ public:
     
     bool IsSpent(const uint256& hash, unsigned int n) const;
     
+    std::set<uint256> GetConflicts(const uint256 &txid) const;
+    void MarkConflicted(const uint256 &hashBlock, const uint256 &hashTx);
     void SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator>);
     
     uint64_t GetStakeWeight() const;
