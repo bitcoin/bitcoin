@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2016 The Bitcoin Core developers
+# Copyright (c) 2014-2016 The Flow Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the wallet keypool and interaction with wallet encryption/locking."""
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FlowTestFramework
 from test_framework.util import *
 
-class KeyPoolTest(BitcoinTestFramework):
+class KeyPoolTest(FlowTestFramework):
 
     def run_test(self):
         nodes = self.nodes
@@ -18,7 +18,7 @@ class KeyPoolTest(BitcoinTestFramework):
         
         # Encrypt wallet and wait to terminate
         nodes[0].encryptwallet('test')
-        bitcoind_processes[0].wait()
+        flowd_processes[0].wait()
         # Restart node 0
         nodes[0] = start_node(0, self.options.tmpdir)
         # Keep creating keys

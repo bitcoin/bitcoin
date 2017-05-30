@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016 The Bitcoin Core developers
+# Copyright (c) 2016 The Flow Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the SegWit changeover logic."""
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FlowTestFramework
 from test_framework.util import *
 from test_framework.mininode import sha256, CTransaction, CTxIn, COutPoint, CTxOut, COIN, ToHex, FromHex
 from test_framework.address import script_to_p2sh, key_to_p2pkh
 from test_framework.script import CScript, OP_HASH160, OP_CHECKSIG, OP_0, hash160, OP_EQUAL, OP_DUP, OP_EQUALVERIFY, OP_1, OP_2, OP_CHECKMULTISIG, OP_TRUE
 from io import BytesIO
+<<<<<<< HEAD:qa/rpc-tests/segwit.py
+from test_framework.mininode import ToHex, FromHex, COIN
+=======
+>>>>>>> master:test/functional/segwit.py
 
 NODE_0 = 0
 NODE_1 = 1
@@ -74,7 +78,7 @@ def find_unspent(node, min_value):
         if utxo['amount'] >= min_value:
             return utxo
 
-class SegWitTest(BitcoinTestFramework):
+class SegWitTest(FlowTestFramework):
 
     def __init__(self):
         super().__init__()
@@ -238,7 +242,11 @@ class SegWitTest(BitcoinTestFramework):
 
         self.nodes[0].generate(1) # Mine a block to clear the gbt cache
 
+<<<<<<< HEAD:qa/rpc-tests/segwit.py
+        print("Non-segwit miners are able to use GBT response after activation.")
+=======
         self.log.info("Non-segwit miners are able to use GBT response after activation.")
+>>>>>>> master:test/functional/segwit.py
         # Create a 3-tx chain: tx1 (non-segwit input, paying to a segwit output) ->
         #                      tx2 (segwit input, paying to a non-segwit output) ->
         #                      tx3 (non-segwit input, paying to a non-segwit output).
@@ -285,7 +293,11 @@ class SegWitTest(BitcoinTestFramework):
         # Mine a block to clear the gbt cache again.
         self.nodes[0].generate(1)
 
+<<<<<<< HEAD:qa/rpc-tests/segwit.py
+        print("Verify behaviour of importaddress, addwitnessaddress and listunspent")
+=======
         self.log.info("Verify behaviour of importaddress, addwitnessaddress and listunspent")
+>>>>>>> master:test/functional/segwit.py
 
         # Some public keys to be used later
         pubkeys = [

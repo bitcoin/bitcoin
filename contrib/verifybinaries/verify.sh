@@ -1,9 +1,9 @@
 #!/bin/bash
-# Copyright (c) 2016 The Bitcoin Core developers
+# Copyright (c) 2016 The Flow Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-###   This script attempts to download the signature file SHA256SUMS.asc from bitcoin.org
+###   This script attempts to download the signature file SHA256SUMS.asc from flow.org
 ###   It first checks if the signature passes, and then downloads the files specified in
 ###   the file, and checks if the hashes of these files match those that are specified
 ###   in the signature file.
@@ -17,13 +17,13 @@ function clean_up {
    done
 }
 
-WORKINGDIR="/tmp/bitcoin_verify_binaries"
+WORKINGDIR="/tmp/flow_verify_binaries"
 TMPFILE="hashes.tmp"
 
 SIGNATUREFILENAME="SHA256SUMS.asc"
 RCSUBDIR="test"
-BASEDIR="https://bitcoin.org/bin/"
-VERSIONPREFIX="bitcoin-core-"
+BASEDIR="https://flow.org/bin/"
+VERSIONPREFIX="flow-core-"
 RCVERSIONSTRING="rc"
 
 if [ ! -d "$WORKINGDIR" ]; then
@@ -34,7 +34,7 @@ cd "$WORKINGDIR"
 
 #test if a version number has been passed as an argument
 if [ -n "$1" ]; then
-   #let's also check if the version number includes the prefix 'bitcoin-',
+   #let's also check if the version number includes the prefix 'flow-',
    #  and add this prefix if it doesn't
    if [[ $1 == "$VERSIONPREFIX"* ]]; then
       VERSION="$1"
@@ -83,7 +83,7 @@ if [ $RET -ne 0 ]; then
       echo "Bad signature."
    elif [ $RET -eq 2 ]; then
       #or if a gpg error has occurred
-      echo "gpg error. Do you have the Bitcoin Core binary release signing key installed?"
+      echo "gpg error. Do you have the Flow Core binary release signing key installed?"
    fi
 
    echo "gpg output:"

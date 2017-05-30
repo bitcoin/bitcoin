@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2016 The Bitcoin Core developers
+// Copyright (c) 2012-2016 The Flow Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,9 +9,12 @@
 #include <utility>
 #include <vector>
 
+<<<<<<< HEAD
+=======
 #include "consensus/validation.h"
+>>>>>>> master
 #include "rpc/server.h"
-#include "test/test_bitcoin.h"
+#include "test/test_flow.h"
 #include "validation.h"
 #include "wallet/test/wallet_test_fixture.h"
 
@@ -187,11 +190,11 @@ BOOST_AUTO_TEST_CASE(coin_selection_tests)
         add_coin( 3*COIN);
         add_coin( 4*COIN); // now we have 5+6+7+8+18+20+30+100+200+300+400 = 1094 cents
         BOOST_CHECK( testWallet.SelectCoinsMinConf(95 * CENT, 1, 1, 0, vCoins, setCoinsRet, nValueRet));
-        BOOST_CHECK_EQUAL(nValueRet, 1 * COIN);  // we should get 1 BTC in 1 coin
+        BOOST_CHECK_EQUAL(nValueRet, 1 * COIN);  // we should get 1 FLW in 1 coin
         BOOST_CHECK_EQUAL(setCoinsRet.size(), 1U);
 
         BOOST_CHECK( testWallet.SelectCoinsMinConf(195 * CENT, 1, 1, 0, vCoins, setCoinsRet, nValueRet));
-        BOOST_CHECK_EQUAL(nValueRet, 2 * COIN);  // we should get 2 BTC in 1 coin
+        BOOST_CHECK_EQUAL(nValueRet, 2 * COIN);  // we should get 2 FLW in 1 coin
         BOOST_CHECK_EQUAL(setCoinsRet.size(), 1U);
 
         // empty the wallet and start again, now with fractions of a cent, to test small change avoidance
@@ -416,7 +419,11 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
         CKey futureKey;
         futureKey.MakeNewKey(true);
         key.pushKV("scriptPubKey", HexStr(GetScriptForRawPubKey(futureKey.GetPubKey())));
+<<<<<<< HEAD
+        key.pushKV("timestamp", newTip->GetBlockTimeMax() + 7200);
+=======
         key.pushKV("timestamp", newTip->GetBlockTimeMax() + TIMESTAMP_WINDOW);
+>>>>>>> master
         key.pushKV("internal", UniValue(true));
         keys.push_back(key);
         JSONRPCRequest request;
@@ -427,6 +434,8 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
         BOOST_CHECK_EQUAL(response.write(), strprintf("[{\"success\":false,\"error\":{\"code\":-1,\"message\":\"Failed to rescan before time %d, transactions may be missing.\"}},{\"success\":true}]", newTip->GetBlockTimeMax()));
         ::pwalletMain = backup;
     }
+<<<<<<< HEAD
+=======
 
     // Verify ScanForWalletTransactions does not return null when the scan is
     // elided due to the nTimeFirstKey optimization.
@@ -438,6 +447,7 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
         }
         BOOST_CHECK_EQUAL(newTip, wallet.ScanForWalletTransactions(newTip));
     }
+>>>>>>> master
 }
 
 // Verify importwallet RPC starts rescan at earliest block with timestamp
@@ -458,7 +468,11 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
 
     // Set key birthday to block time increased by the timestamp window, so
     // rescan will start at the block time.
+<<<<<<< HEAD
+    const int64_t KEY_TIME = BLOCK_TIME + 7200;
+=======
     const int64_t KEY_TIME = BLOCK_TIME + TIMESTAMP_WINDOW;
+>>>>>>> master
     SetMockTime(KEY_TIME);
     coinbaseTxns.emplace_back(*CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey())).vtx[0]);
 
@@ -500,6 +514,8 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
     ::pwalletMain = pwalletMainBackup;
 }
 
+<<<<<<< HEAD
+=======
 // Check that GetImmatureCredit() returns a newly calculated value instead of
 // the cached value after a MarkDirty() call.
 //
@@ -678,4 +694,5 @@ BOOST_FIXTURE_TEST_CASE(ListCoins, ListCoinsTestingSetup)
     BOOST_CHECK_EQUAL(list.begin()->second.size(), 2);
 }
 
+>>>>>>> master
 BOOST_AUTO_TEST_SUITE_END()

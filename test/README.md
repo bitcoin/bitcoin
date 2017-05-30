@@ -1,4 +1,4 @@
-This directory contains integration tests that test bitcoind and its
+This directory contains integration tests that test flowd and its
 utilities in their entirety. It does not contain unit tests, which
 can be found in [/src/test](/src/test), [/src/wallet/test](/src/wallet/test),
 etc.
@@ -6,10 +6,10 @@ etc.
 There are currently two sets of tests in this directory:
 
 - [functional](/test/functional) which test the functionality of 
-bitcoind and bitcoin-qt by interacting with them through the RPC and P2P
+flowd and flow-qt by interacting with them through the RPC and P2P
 interfaces.
-- [util](test/util) which tests the bitcoin utilities, currently only
-bitcoin-tx.
+- [util](test/util) which tests the flow utilities, currently only
+flow-tx.
 
 The util tests are run as part of `make check` target. The functional
 tests are run by the travis continuous build process whenever a pull
@@ -55,9 +55,9 @@ Possible options, which apply to each individual test run:
 
 ```
   -h, --help            show this help message and exit
-  --nocleanup           Leave bitcoinds and test.* datadir on exit or error
-  --noshutdown          Don't stop bitcoinds after the test execution
-  --srcdir=SRCDIR       Source directory containing bitcoind/bitcoin-cli
+  --nocleanup           Leave flowds and test.* datadir on exit or error
+  --noshutdown          Don't stop flowds after the test execution
+  --srcdir=SRCDIR       Source directory containing flowd/flow-cli
                         (default: ../../src)
   --tmpdir=TMPDIR       Root directory for datadirs
   --tracerpc            Print out all RPC calls as they are made
@@ -71,7 +71,7 @@ output (example: `PYTHON_DEBUG=1 test/functional/test_runner.py wallet`).
 A 200-block -regtest blockchain and wallets for four nodes
 is created the first time a regression test is run and
 is stored in the cache/ directory. Each node has 25 mature
-blocks (25*50=1250 BTC) in its wallet.
+blocks (25*50=1250 FLW) in its wallet.
 
 After the first run, the cache/ blockchain and wallets are
 copied into a temporary directory and used as the initial
@@ -82,13 +82,13 @@ to recover with:
 
 ```bash
 rm -rf cache
-killall bitcoind
+killall flowd
 ```
 
 Util tests
 ----------
 
-Util tests can be run locally by running `test/util/bitcoin-util-test.py`. 
+Util tests can be run locally by running `test/util/flow-util-test.py`. 
 Use the `-v` option for verbose output.
 
 Writing functional tests

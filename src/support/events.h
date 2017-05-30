@@ -1,9 +1,9 @@
-// Copyright (c) 2016 The Bitcoin Core developers
+// Copyright (c) 2016 The Flow Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_SUPPORT_EVENTS_H
-#define BITCOIN_SUPPORT_EVENTS_H
+#ifndef FLOW_SUPPORT_EVENTS_H
+#define FLOW_SUPPORT_EVENTS_H
 
 #include <ios>
 #include <memory>
@@ -53,4 +53,4 @@ raii_evhttp_connection obtain_evhttp_connection_base(struct event_base* base, st
     return result;
 }
 
-#endif // BITCOIN_SUPPORT_EVENTS_H
+#endif // FLOW_SUPPORT_EVENTS_H

@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2016 The Bitcoin Core developers
+# Copyright (c) 2014-2016 The Flow Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test descendant package tracking code."""
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FlowTestFramework
 from test_framework.util import *
 from test_framework.mininode import COIN
 
 MAX_ANCESTORS = 25
 MAX_DESCENDANTS = 25
 
-class MempoolPackagesTest(BitcoinTestFramework):
+class MempoolPackagesTest(FlowTestFramework):
     def __init__(self):
         super().__init__()
         self.num_nodes = 2
@@ -96,7 +96,11 @@ class MempoolPackagesTest(BitcoinTestFramework):
 
         # Check that ancestor modified fees includes fee deltas from
         # prioritisetransaction
+<<<<<<< HEAD:qa/rpc-tests/mempool_packages.py
+        self.nodes[0].prioritisetransaction(chain[0], 0, 1000)
+=======
         self.nodes[0].prioritisetransaction(chain[0], 1000)
+>>>>>>> master:test/functional/mempool_packages.py
         mempool = self.nodes[0].getrawmempool(True)
         ancestor_fees = 0
         for x in chain:
@@ -104,7 +108,11 @@ class MempoolPackagesTest(BitcoinTestFramework):
             assert_equal(mempool[x]['ancestorfees'], ancestor_fees * COIN + 1000)
         
         # Undo the prioritisetransaction for later tests
+<<<<<<< HEAD:qa/rpc-tests/mempool_packages.py
+        self.nodes[0].prioritisetransaction(chain[0], 0, -1000)
+=======
         self.nodes[0].prioritisetransaction(chain[0], -1000)
+>>>>>>> master:test/functional/mempool_packages.py
 
         # Check that descendant modified fees includes fee deltas from
         # prioritisetransaction

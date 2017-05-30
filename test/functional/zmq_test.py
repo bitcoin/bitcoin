@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2016 The Bitcoin Core developers
+# Copyright (c) 2015-2016 The Flow Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the ZMQ API."""
@@ -8,10 +8,10 @@ import os
 import struct
 import sys
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FlowTestFramework
 from test_framework.util import *
 
-class ZMQTest (BitcoinTestFramework):
+class ZMQTest (FlowTestFramework):
 
     def __init__(self):
         super().__init__()
@@ -27,14 +27,14 @@ class ZMQTest (BitcoinTestFramework):
             self.log.warning("python3-zmq module not available. Skipping zmq tests!")
             sys.exit(self.TEST_EXIT_SKIPPED)
 
-        # Check that bitcoin has been built with ZMQ enabled
+        # Check that flow has been built with ZMQ enabled
         config = configparser.ConfigParser()
         if not self.options.configfile:
             self.options.configfile = os.path.dirname(__file__) + "/config.ini"
         config.read_file(open(self.options.configfile))
 
         if not config["components"].getboolean("ENABLE_ZMQ"):
-            self.log.warning("bitcoind has not been built with zmq enabled. Skipping zmq tests!")
+            self.log.warning("flowd has not been built with zmq enabled. Skipping zmq tests!")
             sys.exit(self.TEST_EXIT_SKIPPED)
 
         self.zmqContext = zmq.Context()

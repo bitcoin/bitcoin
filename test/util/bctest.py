@@ -1,5 +1,5 @@
 # Copyright 2014 BitPay Inc.
-# Copyright 2016 The Bitcoin Core developers
+# Copyright 2016 The Flow Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 from __future__ import division,print_function,unicode_literals
@@ -106,7 +106,7 @@ def bctest(testDir, testObj, buildenv):
         want_error = testObj["error_txt"]
         # Compare error text
         # TODO: ideally, we'd compare the strings exactly and also assert
-        # That stderr is empty if no errors are expected. However, bitcoin-tx
+        # That stderr is empty if no errors are expected. However, flow-tx
         # emits DISPLAY errors when running as a windows application on
         # linux through wine. Just assert that the expected error text appears
         # somewhere in stderr.

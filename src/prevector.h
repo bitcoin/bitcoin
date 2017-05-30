@@ -1,9 +1,9 @@
-// Copyright (c) 2015-2016 The Bitcoin Core developers
+// Copyright (c) 2015-2016 The Flow Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef _BITCOIN_PREVECTOR_H_
-#define _BITCOIN_PREVECTOR_H_
+#ifndef _FLOW_PREVECTOR_H_
+#define _FLOW_PREVECTOR_H_
 
 #include <assert.h>
 #include <stdlib.h>

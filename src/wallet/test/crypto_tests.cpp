@@ -1,10 +1,10 @@
-// Copyright (c) 2014-2016 The Bitcoin Core developers
+// Copyright (c) 2014-2016 The Flow Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "test/test_random.h"
 #include "utilstrencodings.h"
-#include "test/test_bitcoin.h"
+#include "test/test_flow.h"
 #include "wallet/crypter.h"
 
 #include <vector>
