@@ -33,7 +33,7 @@ class Class
         return true;
     }
 }
-}
+} // namespace foo
 ```
 
 Doxygen comments
@@ -365,6 +365,21 @@ Source code organization
   fully specified types such as `std::string`.
 
   - *Rationale*: Avoids symbol conflicts
+
+- Terminate namespaces with a comment (`// namespace mynamespace`). The comment
+  should be placed on the same line as the brace closing the namespace, e.g.
+
+```c++
+namespace mynamespace {
+    ...
+} // namespace mynamespace
+
+namespace {
+    ...
+} // namespace
+```
+
+  - *Rationale*: Avoids confusion about the namespace context
 
 GUI
 -----

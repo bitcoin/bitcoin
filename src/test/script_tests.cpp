@@ -468,7 +468,7 @@ std::string JSONPrettyPrint(const UniValue& univalue)
     }
     return ret;
 }
-}
+} // namespace
 
 BOOST_AUTO_TEST_CASE(script_build)
 {
