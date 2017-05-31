@@ -1613,6 +1613,12 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         nRelevantServices = ServiceFlags(nRelevantServices | NODE_WITNESS);
     }
 
+    if (gArgs.GetBoolArg("-bip148", DEFAULT_BIP148)) {
+        // We want to preferentially peer with other nodes that enforce BIP148, in case of a chain split
+        nLocalServices = ServiceFlags(nLocalServices | NODE_BIP148);
+        nRelevantServices = ServiceFlags(nRelevantServices | NODE_BIP148);
+    }
+
     // ********************************************************* Step 10: import blocks
 
     if (!CheckDiskSpace())
