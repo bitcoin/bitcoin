@@ -1,6 +1,20 @@
 Building Dash Core
 
-Use the autogen script to prepare the build environment.
+After you install the usual build tools and C++ development tools,
+Dash Core also needs some build dependencies which are not always provided
+by default by the OS package manager
+(in particular BerkeleyDB 4.8 for building with wallet support).
+
+Before trying to build, be sure to read one of these files,
+depending on your environment:
+
+  doc/build-unix.md
+  doc/build-openbsd.md
+  doc/build-osx.md
+  doc/build-windows.md
+
+After installing the needed dependencies,
+use the autogen script to prepare the build environment.
 
     ./autogen.sh
     ./configure
@@ -12,5 +26,5 @@ https://github.com/dashpay/dash-binaries
 Always verify the signatures and checksums.
 
 See doc/build-*.md for instructions on building dashd,
-the intended-for-services, no-graphical-interface, reference
-implementation of Dash.
+the intended-for-services, no-graphical-interface,
+reference implementation of Dash.
