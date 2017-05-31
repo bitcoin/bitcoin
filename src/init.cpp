@@ -809,7 +809,7 @@ int nUserMaxConnections;
 int nFD;
 ServiceFlags nLocalServices = NODE_NETWORK;
 
-}
+} // namespace
 
 [[noreturn]] static void new_handler_terminate()
 {

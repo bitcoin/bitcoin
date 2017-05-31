@@ -400,7 +400,7 @@ public:
     }
 };
 const DummySignatureChecker dummyChecker;
-}
+} // namespace
 
 const BaseSignatureChecker& DummySignatureCreator::Checker() const
 {
