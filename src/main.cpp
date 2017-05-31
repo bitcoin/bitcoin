@@ -991,7 +991,7 @@ bool CheckSequenceLocks(const CTransaction &tx, int flags, LockPoints *lp, bool 
         {
             const CTxIn &txin = tx.vin[txinIndex];
             Coin coin;
-            if (!viewMemPool.GetCoins(txin.prevout, coin))
+            if (!viewMemPool.GetCoin(txin.prevout, coin))
             {
                 return error("%s: Missing input", __func__);
             }
@@ -1150,7 +1150,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool &pool,
     bool *pfMissingInputs,
     bool fOverrideMempoolLimit,
     bool fRejectAbsurdFee,
-    std::vector<COutPoint> &vHashTxnToUncache)
+    std::vector<COutPoint> &vCoinsToUncache)
 {
     unsigned int forkVerifyFlags = 0;
     CTransaction tx = consttx;
@@ -1236,11 +1236,11 @@ bool AcceptToMemoryPoolWorker(CTxMemPool &pool,
             // do all inputs exist?
             BOOST_FOREACH(const CTxIn txin, tx.vin)
             {
-                if (!pcoinsTip->HaveCoinsInCache(txin.prevout))
+                if (!pcoinsTip->HaveCoinInCache(txin.prevout))
                 {
-                    vHashTxnToUncache.push_back(txin.prevout);
+                    vCoinsToUncache.push_back(txin.prevout);
                 }
-                if (!view.HaveCoins(txin.prevout))
+                if (!view.HaveCoin(txin.prevout))
                 {
                     if (pfMissingInputs)
                     {
@@ -1502,12 +1502,12 @@ bool AcceptToMemoryPool(CTxMemPool &pool,
     bool fOverrideMempoolLimit,
     bool fRejectAbsurdFee)
 {
-    std::vector<COutPoint> vHashTxToUncache;
+    std::vector<COutPoint> vCoinsToUncache;
     bool res = AcceptToMemoryPoolWorker(
-        pool, state, tx, fLimitFree, pfMissingInputs, fOverrideMempoolLimit, fRejectAbsurdFee, vHashTxToUncache);
+        pool, state, tx, fLimitFree, pfMissingInputs, fOverrideMempoolLimit, fRejectAbsurdFee, vCoinsToUncache);
     if (!res)
     {
-        for (const COutPoint &remove: vHashTxToUncache)
+        for (const COutPoint &remove: vCoinsToUncache)
             pcoinsTip->Uncache(remove);
     }
 
@@ -1560,7 +1560,7 @@ bool GetTransaction(const uint256 &hash,
     if (fAllowSlow)
     {
         const Coin& coin = AccessByTxid(*pcoinsTip, hash);
-        if (!coin.IsPruned()) pindexSlow = chainActive[coin.nHeight];
+        if (!coin.IsSpent()) pindexSlow = chainActive[coin.nHeight];
     }
 
     if (pindexSlow)
@@ -1870,7 +1870,7 @@ bool CheckTxInputs(const CTransaction &tx, CValidationState &state, const CCoins
     {
         const COutPoint &prevout = tx.vin[i].prevout;
         const Coin& coin = inputs.AccessCoin(prevout);
-        assert(!coin.IsPruned());
+        assert(!coin.IsSpent());
 
         // If prev is coinbase, check that it's matured
         if (coin.IsCoinBase())
@@ -1934,9 +1934,9 @@ bool CheckInputs(const CTransaction &tx,
             {
                 const COutPoint &prevout = tx.vin[i].prevout;
                 const Coin& coin = inputs.AccessCoin(prevout);
-                if (!coin.IsPruned())
+                if (!coin.IsSpent())
                     LogPrintf("ASSERTION: no inputs available\n");
-                assert(!coin.IsPruned());
+                assert(!coin.IsSpent());
 
                 // We very carefully only pass in things to CScriptCheck which
                 // are clearly committed. This provides
@@ -2090,7 +2090,7 @@ int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out)
 {
     bool fClean = true;
 
-    if (view.HaveCoins(out)) fClean = false; // overwriting transaction output
+    if (view.HaveCoin(out)) fClean = false; // overwriting transaction output
 
     if (undo.nHeight == 0)
     {
@@ -2098,7 +2098,7 @@ int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out)
         // information only in undo records for the last spend of a transactions'
         // outputs. This implies that it must be present for some other output of the same tx.
         const Coin& alternate = AccessByTxid(view, out.hash);
-        if (!alternate.IsPruned())
+        if (!alternate.IsSpent())
         {
             undo.nHeight = alternate.nHeight;
             undo.fCoinBase = alternate.fCoinBase;
@@ -2434,7 +2434,7 @@ bool ConnectBlock(const CBlock &block,
             {
                 for (size_t o = 0; o < tx.vout.size(); o++)
                 {
-                    if (view.HaveCoins(COutPoint(tx.GetHash(), o)))
+                    if (view.HaveCoin(COutPoint(tx.GetHash(), o)))
                     {
                         return state.DoS(100, error("ConnectBlock(): tried to overwrite transaction"),
                                          REJECT_INVALID, "bad-txns-BIP30");
@@ -5447,8 +5447,8 @@ bool AlreadyHave(const CInv &inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
         }
         bool rrc = recentRejects ? recentRejects->contains(inv.hash) : false;
         return rrc || mempool.exists(inv.hash) || AlreadyHaveOrphan(inv.hash) || 
-                   pcoinsTip->HaveCoinsInCache(COutPoint(inv.hash, 0)) || // Best effort: only try output 0 and 1
-                   pcoinsTip->HaveCoinsInCache(COutPoint(inv.hash, 1));
+                   pcoinsTip->HaveCoinInCache(COutPoint(inv.hash, 0)) || // Best effort: only try output 0 and 1
+                   pcoinsTip->HaveCoinInCache(COutPoint(inv.hash, 1));
 
     }
     case MSG_BLOCK:
