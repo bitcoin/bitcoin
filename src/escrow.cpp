@@ -3721,7 +3721,7 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 	vector<pair<CEscrow, CEscrow> > escrowScan;
 	if(aliases.size() > 0)
 	{
-		if (!pescrowdb->ScanEscrows(vchNameUniq, vchNameUniq, aliases, 1000, escrowScan))
+		if (!pescrowdb->ScanEscrows(vchNameUniq, stringFromVch(vchNameUniq), aliases, 1000, escrowScan))
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4606 - " + _("Scan failed"));
 	
 	}

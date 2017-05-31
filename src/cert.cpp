@@ -1281,7 +1281,7 @@ UniValue certlist(const UniValue& params, bool fHelp) {
 	vector<CCert> certScan;
 	if(aliases.size() > 0)
 	{
-		if (!pcertdb->ScanCerts(vchNameUniq, vchNameUniq, aliases, true, "", 1000,certScan))
+		if (!pcertdb->ScanCerts(vchNameUniq, stringFromVch(vchNameUniq), aliases, true, "", 1000,certScan))
 			throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2517 - " + _("Scan failed"));
 	}
 	CTransaction aliastx;
