@@ -27,7 +27,7 @@
 extern bool AddOrphanTx(const CTransaction& tx, NodeId peer);
 extern void EraseOrphansFor(NodeId peer);
 extern void EraseOrphansByTime();
-extern unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans);
+extern unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans, uint64_t nMaxBytes);
 
 CService ip(uint32_t i)
 {
@@ -117,6 +117,35 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
     CBasicKeyStore keystore;
     keystore.AddKey(key);
 
+    // Test LimitOrphanTxSize() function: limit by orphan pool bytes
+    // add 50 orphan transactions:
+    for (int i = 0; i < 50; i++)
+    {
+        CMutableTransaction tx;
+        tx.vin.resize(1);
+        tx.vin[0].prevout.n = 0;
+        tx.vin[0].prevout.hash = GetRandHash();
+        tx.vin[0].scriptSig << OP_1;
+        tx.vout.resize(1);
+        tx.vout[0].nValue = 1*CENT;
+        tx.vout[0].scriptPubKey = GetScriptForDestination(key.GetPubKey().GetID());
+      
+        LOCK(cs_orphancache);
+        AddOrphanTx(tx, i);
+    }
+
+    {
+        LOCK(cs_orphancache);
+        LimitOrphanTxSize(50, 8000);
+        BOOST_CHECK_EQUAL(mapOrphanTransactions.size(), 50);
+        LimitOrphanTxSize(50, 6300);
+        BOOST_CHECK(mapOrphanTransactions.size() <= 49);
+        LimitOrphanTxSize(50, 1000);
+        BOOST_CHECK(mapOrphanTransactions.size() <= 8);
+        LimitOrphanTxSize(50, 0);
+        BOOST_CHECK(mapOrphanTransactions.empty());
+    }
+
     // 50 orphan transactions:
     for (int i = 0; i < 50; i++)
     {
@@ -176,23 +205,14 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         BOOST_CHECK(AddOrphanTx(tx, i));  // BU, we keep orphans up to the configured memory limit to help xthin compression so this should succeed whereas it fails in other clients
     }
 
-    // Test EraseOrphansFor:
-    for (NodeId i = 0; i < 3; i++)
-    {
-        size_t sizeBefore = mapOrphanTransactions.size();
-        LOCK(cs_orphancache);
-        EraseOrphansFor(i);
-        BOOST_CHECK(mapOrphanTransactions.size() < sizeBefore);
-    }
-
-    // Test LimitOrphanTxSize() function:
+    // Test LimitOrphanTxSize() function: limit by number of txns
     {
         LOCK(cs_orphancache);
-        LimitOrphanTxSize(40);
-        BOOST_CHECK(mapOrphanTransactions.size() <= 40);
-        LimitOrphanTxSize(10);
-        BOOST_CHECK(mapOrphanTransactions.size() <= 10);
-        LimitOrphanTxSize(0);
+        LimitOrphanTxSize(40, 10000000);
+        BOOST_CHECK_EQUAL(mapOrphanTransactions.size(), 40);
+        LimitOrphanTxSize(10, 10000000);
+        BOOST_CHECK_EQUAL(mapOrphanTransactions.size(), 10);
+        LimitOrphanTxSize(0, 10000000);
         BOOST_CHECK(mapOrphanTransactions.empty());
         BOOST_CHECK(mapOrphanTransactionsByPrev.empty());
     }
