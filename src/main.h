@@ -220,7 +220,7 @@ void UnregisterNodeSignals(CNodeSignals &nodeSignals);
  */
 bool ProcessNewBlock(CValidationState &state,
     const CChainParams &chainparams,
-    const CNode *pfrom,
+    CNode *pfrom,
     const CBlock *pblock,
     bool fForceProcessing,
     CDiskBlockPos *dbp,
