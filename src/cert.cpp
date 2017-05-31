@@ -278,54 +278,51 @@ bool CCertDB::ScanCerts(const std::vector<unsigned char>& vchCertPage, const str
 						continue;
 					}
 				}
-				else
+				if(txPos.safetyLevel >= SAFETY_LEVEL1)
 				{
-					if(txPos.safetyLevel >= SAFETY_LEVEL1)
-					{
-						if(safeSearch)
-						{
-							pcursor->Next();
-							continue;
-						}
-						if(txPos.safetyLevel >= SAFETY_LEVEL2)
-						{
-							pcursor->Next();
-							continue;
-						}
-					}
-					if(!txPos.safeSearch && safeSearch)
+					if(safeSearch)
 					{
 						pcursor->Next();
 						continue;
 					}
-					CAliasIndex theAlias;
-					CTransaction aliastx;
-					if(!GetTxOfAlias(txPos.vchAlias, theAlias, aliastx))
+					if(txPos.safetyLevel >= SAFETY_LEVEL2)
 					{
 						pcursor->Next();
 						continue;
 					}
-					if(!theAlias.safeSearch && safeSearch)
+				}
+				if(!txPos.safeSearch && safeSearch)
+				{
+					pcursor->Next();
+					continue;
+				}
+				CAliasIndex theAlias;
+				CTransaction aliastx;
+				if(!GetTxOfAlias(txPos.vchAlias, theAlias, aliastx))
+				{
+					pcursor->Next();
+					continue;
+				}
+				if(!theAlias.safeSearch && safeSearch)
+				{
+					pcursor->Next();
+					continue;
+				}
+				if((safeSearch && theAlias.safetyLevel > txPos.safetyLevel) || (!safeSearch && theAlias.safetyLevel > SAFETY_LEVEL1))
+				{
+					pcursor->Next();
+					continue;
+				}
+				if(!strSearchTerm.empty())
+				{
+					const string &cert = stringFromVch(vchMyCert);
+					const string &myalias = stringFromVch(txPos.vchAlias);
+					string title = stringFromVch(txPos.vchTitle);
+					boost::algorithm::to_lower(title);
+					if (strSearchTerm != cert && myalias.find(strSearchTermLower) == string::npos && title.find(strSearchTermLower) == string::npos)
 					{
 						pcursor->Next();
 						continue;
-					}
-					if((safeSearch && theAlias.safetyLevel > txPos.safetyLevel) || (!safeSearch && theAlias.safetyLevel > SAFETY_LEVEL1))
-					{
-						pcursor->Next();
-						continue;
-					}
-					if(!strSearchTerm.empty())
-					{
-						const string &cert = stringFromVch(vchMyCert);
-						const string &myalias = stringFromVch(txPos.vchAlias);
-						string title = stringFromVch(txPos.vchTitle);
-						boost::algorithm::to_lower(title);
-						if (strSearchTerm != cert && myalias.find(strSearchTermLower) == string::npos && title.find(strSearchTermLower) == string::npos)
-						{
-							pcursor->Next();
-							continue;
-						}
 					}
 				}
 				certScan.push_back(txPos); 
