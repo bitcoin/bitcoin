@@ -28,18 +28,18 @@ env:
     - PYTHON_DEBUG=1
     - WINEDEBUG=fixme-all
     - RUN_OMNIJ_TESTS=false
-    - OMNIJ_SILENT_LOG=true
+    - OMNIJ_VERBOSE_LOG=false
   matrix:
 # ARM
     - HOST=arm-linux-gnueabihf PACKAGES="g++-arm-linux-gnueabihf" DEP_OPTS="NO_QT=1" CHECK_DOC=1 GOAL="install" BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
 # Win32
     - HOST=i686-w64-mingw32 DPKG_ADD_ARCH="i386" DEP_OPTS="NO_QT=1" PACKAGES="python3 nsis g++-mingw-w64-i686 wine1.6 bc openjdk-7-jre-headless" RUN_TESTS=true RUN_RPC_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-reduce-exports"
 # 32-bit + dash
-    - HOST=i686-pc-linux-gnu PPA="ppa:openjdk-r/ppa" PACKAGES="g++-multilib bc python3-zmq openjdk-8-jdk" DEP_OPTS="NO_QT=1" RUN_TESTS=true RUN_RPC_TESTS=true RUN_OMNIJ_TESTS=true OMNIJ_SILENT_LOG=false GOAL="install" BITCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++" USE_SHELL="/bin/dash"
+    - HOST=i686-pc-linux-gnu PPA="ppa:openjdk-r/ppa" PACKAGES="g++-multilib bc python3-zmq openjdk-8-jdk" DEP_OPTS="NO_QT=1" RUN_TESTS=true RUN_RPC_TESTS=true RUN_OMNIJ_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++" USE_SHELL="/bin/dash"
 # Win64
     - HOST=x86_64-w64-mingw32 DPKG_ADD_ARCH="i386" DEP_OPTS="NO_QT=1" PACKAGES="python3 nsis g++-mingw-w64-x86-64 wine1.6 bc openjdk-7-jre-headless" RUN_TESTS=true RUN_RPC_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-reduce-exports"
 # bitcoind
-    - HOST=x86_64-unknown-linux-gnu PPA="ppa:openjdk-r/ppa" PACKAGES="bc python3-zmq openjdk-8-jdk" DEP_OPTS="NO_QT=1 NO_UPNP=1 DEBUG=1" RUN_TESTS=true RUN_OMNIJ_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports"
+    - HOST=x86_64-unknown-linux-gnu PPA="ppa:openjdk-r/ppa" PACKAGES="bc python3-zmq openjdk-8-jdk" DEP_OPTS="NO_QT=1 NO_UPNP=1 DEBUG=1" RUN_TESTS=true RUN_OMNIJ_TESTS=true OMNIJ_VERBOSE_LOG=true GOAL="install" BITCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports"
 # No wallet
     - HOST=x86_64-unknown-linux-gnu PACKAGES=" openjdk-7-jre-headless python3" DEP_OPTS="NO_WALLET=1" RUN_TESTS=true RUN_RPC_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
 # Cross-Mac
@@ -72,7 +72,7 @@ script:
     - export LD_LIBRARY_PATH=$TRAVIS_BUILD_DIR/depends/$HOST/lib
     - if [ "$RUN_TESTS" = "true" ]; then make $MAKEJOBS check VERBOSE=1; fi
     - if [ "$RUN_RPC_TESTS" = "true" ]; then qa/pull-tester/rpc-tests.py --coverage; fi
-    - if [ "$RUN_OMNIJ_TESTS" = "true" ]; then qa/pull-tester/omnicore-rpc-tests.sh "$OMNIJ_SILENT_LOG"; fi
+    - if [ "$RUN_OMNIJ_TESTS" = "true" ]; then qa/pull-tester/omnicore-rpc-tests.sh "$OMNIJ_VERBOSE_LOG"; fi
 after_script:
     - echo $TRAVIS_COMMIT_RANGE
     - echo $TRAVIS_COMMIT_LOG
