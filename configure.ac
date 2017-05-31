@@ -7,8 +7,9 @@ define(_CLIENT_VERSION_BUILD, 0)
 define(_CLIENT_VERSION_IS_RELEASE, false)
 define(_COPYRIGHT_YEAR, 2013)
 AC_INIT([Peercoin],[_CLIENT_VERSION_MAJOR._CLIENT_VERSION_MINOR._CLIENT_VERSION_REVISION],[info@peercoin.net],[peercoin])
-AC_CONFIG_AUX_DIR([src/build-aux])
-AC_CONFIG_MACRO_DIR([src/m4])
+AC_CONFIG_AUX_DIR([build-aux])
+AC_CONFIG_MACRO_DIR([build-aux/m4])
+LT_INIT([disable-shared])
 AC_CANONICAL_HOST
 AH_TOP([#ifndef BITCOIN_CONFIG_H])
 AH_TOP([#define BITCOIN_CONFIG_H])
@@ -40,6 +41,37 @@ AM_MAINTAINER_MODE([enable])
 
 dnl make the compilation flags quiet unless V=1 is used
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
+
+dnl Checks for programs.
+AC_PROG_CXX
+AC_PROG_CC
+AC_PROG_CPP
+AC_PROG_CXXCPP
+AC_PROG_INSTALL
+AC_PROG_OBJC
+AC_PROG_LN_S
+m4_ifdef([AC_PROG_OBJCXX],[AC_PROG_OBJCXX])
+AC_PROG_MKDIR_P
+AC_PROG_SED
+AC_PATH_TOOL(AR, ar)
+AC_PATH_TOOL(RANLIB, ranlib)
+AC_PATH_TOOL(STRIP, strip)
+AC_PATH_TOOL(GCOV, gcov)
+AC_PATH_PROG(LCOV, lcov)
+AC_PATH_PROG(JAVA, java)
+AC_PATH_PROG(GENHTML, genhtml)
+AC_PATH_PROG([GIT], [git])
+AC_PATH_PROG(CCACHE,ccache)
+AC_PATH_PROG(XGETTEXT,xgettext)
+AC_PATH_PROG(HEXDUMP,hexdump)
+PKG_PROG_PKG_CONFIG
+
+# Enable wallet
+AC_ARG_ENABLE([wallet],
+  [AS_HELP_STRING([--enable-wallet],
+  [enable wallet (default is yes)])],
+  [enable_wallet=$enableval],
+  [enable_wallet=yes])
 
 AC_ARG_WITH([miniupnpc],
   [AS_HELP_STRING([--with-miniupnpc],
@@ -124,32 +156,22 @@ AC_ARG_WITH([protoc-bindir],[AS_HELP_STRING([--with-protoc-bindir=BIN_DIR],[spec
 AC_CONFIG_SRCDIR([src])
 AC_CONFIG_HEADERS([src/bitcoin-config.h])
 
-dnl Checks for programs.
-AC_PROG_CXX
-AC_PROG_CC
-AC_PROG_CPP
-AC_PROG_INSTALL
-AC_PROG_OBJC
-AC_PROG_LN_S
-m4_ifdef([AC_PROG_OBJCXX],[AC_PROG_OBJCXX])
-AC_PROG_MKDIR_P
-AC_PROG_SED
-AC_PATH_TOOL(AR, ar)
-AC_PATH_TOOL(RANLIB, ranlib)
-AC_PATH_TOOL(WINDRES, windres)
-AC_PATH_TOOL(STRIP, strip)
-AC_PATH_TOOL(GCOV, gcov)
-AC_PATH_PROG(LCOV, lcov)
-AC_PATH_PROG(JAVA, java)
-AC_PATH_PROG(GENHTML, genhtml)
-AC_PATH_PROG([GIT], [git])
-AC_PATH_PROGS([MOC], [moc moc-qt4],, $qt_bin_path:$PATH)
-AC_PATH_PROGS([UIC], [uic uic-qt4],, $qt_bin_path:$PATH)
-AC_PATH_PROG([RCC], [rcc],, $qt_bin_path:$PATH)
-AC_PATH_PROG([LRELEASE], [lrelease],, $qt_bin_path:$PATH)
-AC_PATH_PROG([PROTOC], [protoc],, $protoc_bin_path:$PATH)
-AC_PATH_PROG(CCACHE,ccache)
-PKG_PROG_PKG_CONFIG
+# Enable debug 
+AC_ARG_ENABLE([debug],
+    [AS_HELP_STRING([--enable-debug],
+                    [use debug compiler flags and macros (default is no)])],
+    [enable_debug=$enableval],
+    [enable_debug=no])
+
+if test "x$enable_debug" = xyes; then
+    if test "x$GCC" = xyes; then
+        CFLAGS="-g3 -O0 -DDEBUG"
+    fi
+    
+    if test "x$GXX" = xyes; then
+        CXXFLAGS="-g3 -O0 -DDEBUG"
+    fi
+fi 
 
 ## TODO: Remove these hard-coded paths and flags. They are here for the sake of
 ##       compatibility with the legacy buildsystem.
