@@ -49,17 +49,18 @@ bool CMasternodeSync::CheckNodeHeight(CNode* pnode, bool fDisconnectStuckNodes)
 bool CMasternodeSync::IsBlockchainSynced(bool fBlockAccepted)
 {
     static bool fBlockchainSynced = false;
-    static int64_t nTimeLastProcess = GetTime();
     static int nSkipped = 0;
     static bool fFirstBlockAccepted = false;
+
+    if(!pCurrentBlockIndex || !pindexBestHeader || fImporting || fReindex) return false;
+
+    static int64_t nTimeLastProcess = GetTime();
 
     // if the last call to this function was more than 60 minutes ago (client was in sleep mode) reset the sync process
     if(GetTime() - nTimeLastProcess > 60*60) {
         Reset();
         fBlockchainSynced = false;
     }
-
-    if(!pCurrentBlockIndex || !pindexBestHeader || fImporting || fReindex) return false;
 
     if(fBlockAccepted) {
         // this should be only triggered while we are still syncing
