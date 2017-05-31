@@ -1626,48 +1626,6 @@ void MapPort(bool)
 }
 #endif
 
-// BITCOINUNLIMITED START
-void ThreadBitnodesAddressSeed()
-{
-    // Get nodes from websites offering Bitnodes API
-    if ((addrman.size() > 0) && (!GetBoolArg("-forcebitnodes", DEFAULT_FORCEBITNODES)))
-    {
-        MilliSleep(11 * 1000);
-        LOCK(cs_vNodes);
-        if (vNodes.size() >= 2)
-        {
-            LogPrintf("P2P peers available. Skipped Bitnodes seeding.\n");
-            return;
-        }
-    }
-
-    LogPrintf("Loading addresses from Bitnodes API\n");
-
-    vector<string> vIPs;
-    vector<CAddress> vAdd;
-    bool success = GetLeaderboardFromBitnodes(vIPs);
-    if (success)
-    {
-        int portOut;
-        std::string hostOut = "";
-        BOOST_FOREACH (const string &seed, vIPs)
-        {
-            SplitHostPort(seed, portOut, hostOut);
-            CNetAddr ip(hostOut);
-            CAddress addr = CAddress(CService(ip, portOut));
-            addr.nTime = GetTime();
-            vAdd.push_back(addr);
-        }
-        CService bitnodes;
-        if (Lookup("bitnodes.21.co", bitnodes, 0, true))
-            addrman.Add(vAdd, bitnodes);
-    }
-
-    LogPrintf("%d addresses found from Bitnodes API\n", vAdd.size());
-}
-// BITCOINUNLIMITED END
-
-
 static std::string GetDNSHost(const CDNSSeedData &data, uint64_t requiredServiceBits)
 {
     // use default host for non-filter-capable seeds or if we use the default service bits (NODE_NETWORK)
@@ -1680,8 +1638,7 @@ static std::string GetDNSHost(const CDNSSeedData &data, uint64_t requiredService
     return strprintf("x%x.%s", requiredServiceBits, data.host);
 }
 
-
-void ThreadDNSAddressSeed()
+static void DNSAddressSeed()
 {
     // goal: only query DNS seeds if address need is acute
     if ((addrman.size() > 0) && (!GetBoolArg("-forcednsseed", DEFAULT_FORCEDNSSEED)))
@@ -1759,6 +1716,65 @@ void ThreadDNSAddressSeed()
     }
 
     LogPrintf("%d addresses found from DNS seeds\n", found);
+}
+
+// BITCOINUNLIMITED START
+static void BitnodesAddressSeed()
+{
+    // Get nodes from websites offering Bitnodes API
+    if ((addrman.size() > 0) && (!GetBoolArg("-forcebitnodes", DEFAULT_FORCEBITNODES)))
+    {
+        MilliSleep(11 * 1000);
+        LOCK(cs_vNodes);
+        if (vNodes.size() >= 2)
+        {
+            LogPrintf("P2P peers available. Skipped Bitnodes seeding.\n");
+            return;
+        }
+    }
+
+    LogPrintf("Loading addresses from Bitnodes API\n");
+
+    vector<string> vIPs;
+    vector<CAddress> vAdd;
+    bool success = GetLeaderboardFromBitnodes(vIPs);
+    if (success)
+    {
+        int portOut;
+        std::string hostOut = "";
+        BOOST_FOREACH (const string &seed, vIPs)
+        {
+            SplitHostPort(seed, portOut, hostOut);
+            CNetAddr ip(hostOut);
+            CAddress addr = CAddress(CService(ip, portOut));
+            addr.nTime = GetTime();
+            vAdd.push_back(addr);
+        }
+        CService bitnodes;
+        if (Lookup("bitnodes.21.co", bitnodes, 0, true))
+            addrman.Add(vAdd, bitnodes);
+    }
+
+    LogPrintf("%d addresses found from Bitnodes API\n", vAdd.size());
+}
+// BITCOINUNLIMITED END
+
+void ThreadAddressSeeding()
+{
+    if (!GetBoolArg("-dnsseed", true))
+        LogPrintf("DNS seeding disabled\n");
+    else
+    {
+        DNSAddressSeed();
+    }
+
+    // Bitnodes seeding is intended as a backup in the event that DNS seeding fails and a such is run after.
+    if ((!GetBoolArg("-bitnodes", true)) || (Params().NetworkIDString() != "main"))
+        LogPrintf("Bitnodes API seeding disabled\n");
+    else
+    {
+        BitnodesAddressSeed();
+    }
 }
 
 
@@ -2493,17 +2509,7 @@ void StartNode(boost::thread_group &threadGroup, CScheduler &scheduler)
     // Start threads
     //
 
-    // BITCOINUNLIMITED START
-    if ((!GetBoolArg("-bitnodes", true)) || (Params().NetworkIDString() != "main"))
-        LogPrintf("Bitnodes API seeding disabled\n");
-    else
-        threadGroup.create_thread(boost::bind(&TraceThread<void (*)()>, "bitnodes", &ThreadBitnodesAddressSeed));
-    // BITCOINUNLIMITED END
-
-    if (!GetBoolArg("-dnsseed", true))
-        LogPrintf("DNS seeding disabled\n");
-    else
-        threadGroup.create_thread(boost::bind(&TraceThread<void (*)()>, "dnsseed", &ThreadDNSAddressSeed));
+    threadGroup.create_thread(boost::bind(&TraceThread<void (*)()>, "dnsseed", &ThreadAddressSeeding));
 
     // Map ports with UPnP
     MapPort(GetBoolArg("-upnp", DEFAULT_UPNP));
