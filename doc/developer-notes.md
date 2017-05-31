@@ -3,42 +3,65 @@ Developer Notes
 
 Various coding styles have been used during the history of the codebase,
 and the result is not very consistent. However, we're now trying to converge to
-a single style, so please use it in new code. Old code will be converted
-gradually and you are encouraged to use the provided
-[clang-format-diff script](/contrib/devtools/README.md#clang-format-diffpy)
-to clean up the patch automatically before submitting a pull request.
+a single style, which is specified below. When writing patches, favor the new
+style over attempting to mimick the surrounding style, except for move-only
+commits.
 
-- Basic rules specified in [src/.clang-format](/src/.clang-format).
+Do not submit patches solely to modify the style of existing code.
+
+- **Indentation and whitespace rules** as specified in
+[src/.clang-format](/src/.clang-format). You can use the provided
+[clang-format-diff script](/contrib/devtools/README.md#clang-format-diffpy)
+tool to clean up patches automatically before submission.
   - Braces on new lines for namespaces, classes, functions, methods.
   - Braces on the same line for everything else.
   - 4 space indentation (no tabs) for every block except namespaces.
   - No indentation for `public`/`protected`/`private` or for `namespace`.
   - No extra spaces inside parenthesis; don't do ( this )
   - No space after function names; one space after `if`, `for` and `while`.
-  - If an `if` only has a single-statement then-clause, it can appear
-    on the same line as the if, without braces. In every other case,
-    braces are required, and the then and else clauses must appear
+  - If an `if` only has a single-statement `then`-clause, it can appear
+    on the same line as the `if`, without braces. In every other case,
+    braces are required, and the `then` and `else` clauses must appear
     correctly indented on a new line.
+
+- **Symbol naming conventions**. These are preferred in new code, but are not
+required when doing so would need changes to significant pieces of existing
+code.
+  - Variable and namespace names are all lowercase, and may use `_` to
+    separate words.
+    - Class member variables have a `m_` prefix.
+    - Global variables have a `g_` prefix.
+  - Constant names are all uppercase, and use `_` to separate words.
+  - Class names, function names and method names are CamelCase. Do not prefix
+    class names with `C`.
+
+- **Miscellaneous**
   - `++i` is preferred over `i++`.
   - Align pointers and references to the left i.e. use `type& var` and not `type &var`.
 
 Block style example:
 ```c++
+int g_count = 0;
+
 namespace foo
 {
 class Class
 {
+    std::string m_name;
+
+public:
     bool Function(const std::string& s, int n)
     {
         // Comment summarising what this section of code does
         for (int i = 0; i < n; ++i) {
+            int total_sum = 0;
             // When something fails, return early
             if (!Something()) return false;
             ...
-            if (SomethingElse()) {
-                DoMore();
+            if (SomethingElse(i)) {
+                total_sum += ComputeSomething(g_count);
             } else {
-                DoLess();
+                DoSomething(m_name, total_sum);
             }
         }
 
