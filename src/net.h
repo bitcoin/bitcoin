@@ -846,6 +846,8 @@ private:
     CNode *_pnode;
 };
 
+typedef std::vector<CNodeRef> VNodeRefs;
+
 class CTransaction;
 void RelayTransaction(const CTransaction &tx);
 void RelayTransaction(const CTransaction &tx, const CDataStream &ss);

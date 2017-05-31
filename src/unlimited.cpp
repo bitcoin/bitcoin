@@ -7,6 +7,7 @@
 #include "chainparams.h"
 #include "checkpoints.h"
 #include "clientversion.h"
+#include "connmgr.h"
 #include "consensus/consensus.h"
 #include "consensus/params.h"
 #include "consensus/validation.h"
@@ -52,9 +53,6 @@ static atomic<bool> fIsChainNearlySyncd{false};
 extern atomic<bool> fIsInitialBlockDownload;
 extern CTweakRef<uint64_t> miningBlockSize;
 extern CTweakRef<unsigned int> ebTweak;
-extern std::vector<CNode *> xpeditedBlk; // Who requested expedited blocks from us
-extern std::vector<CNode *> xpeditedBlkUp; // Who we requested expedited blocks from
-extern std::vector<CNode *> xpeditedTxn;
 
 int64_t nMaxTipAge = DEFAULT_MAX_TIP_AGE;
 
@@ -290,27 +288,8 @@ UniValue expedited(const UniValue &params, bool fHelp)
             flags |= EXPEDITED_STOP;
     }
 
-    // TODO: validate that the node can handle expedited blocks
+    connmgr->PushExpeditedRequest(node.get(), flags);
 
-    // Add or remove this node to our list of upstream nodes
-    {
-        LOCK(cs_xpedited);
-        std::vector<CNode *>::iterator elem = std::find(xpeditedBlkUp.begin(), xpeditedBlkUp.end(), node.get());
-        if ((flags & EXPEDITED_BLOCKS) && (flags & EXPEDITED_STOP))
-        {
-            if (elem != xpeditedBlkUp.end())
-                xpeditedBlkUp.erase(elem);
-        }
-        else if (flags & EXPEDITED_BLOCKS)
-        {
-            if (elem == xpeditedBlkUp.end()) // don't add it twice
-                xpeditedBlkUp.push_back(node.get());
-        }
-    }
-
-    // Push the expedited message even if its a repeat to allow the operator to reissue the CLI command to trigger
-    // another message.
-    node->PushMessage(NetMsgType::XPEDITEDREQUEST, flags);
     return NullUniValue;
 }
 
@@ -428,10 +407,6 @@ void UnlimitedSetup(void)
         mallocedStats.push_front(new CStatHistory<uint64_t>("net/recv/msg/" + *i));
         mallocedStats.push_front(new CStatHistory<uint64_t>("net/send/msg/" + *i));
     }
-
-    xpeditedBlk.reserve(256);
-    xpeditedBlkUp.reserve(256);
-    xpeditedTxn.reserve(256);
 
     // make outbound conns modifiable by the user
     int nUserMaxOutConnections = GetArg("-maxoutconnections", DEFAULT_MAX_OUTBOUND_CONNECTIONS);
@@ -1646,9 +1621,13 @@ extern UniValue getstructuresizes(const UniValue &params, bool fHelp)
     // CAddrMan
     ret.push_back(Pair("mapOrphanTransactions", mapOrphanTransactions.size()));
     ret.push_back(Pair("mapOrphanTransactionsByPrev", mapOrphanTransactionsByPrev.size()));
-    ret.push_back(Pair("xpeditedBlk", xpeditedBlk.size()));
-    ret.push_back(Pair("xpeditedBlkUp", xpeditedBlkUp.size()));
-    ret.push_back(Pair("xpeditedTxn", xpeditedTxn.size()));
+
+    uint32_t nExpeditedBlocks, nExpeditedTxs, nExpeditedUpstream;
+    connmgr->ExpeditedNodeCounts(nExpeditedBlocks, nExpeditedTxs, nExpeditedUpstream);
+    ret.push_back(Pair("xpeditedBlk", nExpeditedBlocks));
+    ret.push_back(Pair("xpeditedBlkUp", nExpeditedUpstream));
+    ret.push_back(Pair("xpeditedTxn", nExpeditedTxs));
+
 #ifdef DEBUG_LOCKORDER
     ret.push_back(Pair("lockorders", lockorders.size()));
 #endif

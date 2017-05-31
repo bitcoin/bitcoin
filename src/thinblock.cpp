@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "chainparams.h"
+#include "connmgr.h"
 #include "consensus/merkle.h"
 #include "dosman.h"
 #include "expedited.h"
@@ -100,7 +101,7 @@ bool CThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom)
     // Ban a node for sending unrequested thinblocks unless from an expedited node.
     {
         LOCK(pfrom->cs_mapthinblocksinflight);
-        if (!pfrom->mapThinBlocksInFlight.count(inv.hash) && !IsExpeditedNode(pfrom))
+        if (!pfrom->mapThinBlocksInFlight.count(inv.hash) && !connmgr->IsExpeditedUpstream(pfrom))
         {
             LOCK(cs_main);
             dosMan.Misbehaving(pfrom->GetId(), 100);
@@ -316,7 +317,7 @@ bool CXThinBlockTx::HandleMessage(CDataStream &vRecv, CNode *pfrom)
     {
         // Do not process unrequested xblocktx unless from an expedited node.
         LOCK(pfrom->cs_mapthinblocksinflight);
-        if (!pfrom->mapThinBlocksInFlight.count(inv.hash) && !IsExpeditedNode(pfrom))
+        if (!pfrom->mapThinBlocksInFlight.count(inv.hash) && !connmgr->IsExpeditedUpstream(pfrom))
         {
             dosMan.Misbehaving(pfrom->GetId(), 10);
             return error(
@@ -624,7 +625,7 @@ bool CXThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom, string strComm
         }
 
         // If this is an expedited block then add and entry to mapThinBlocksInFlight.
-        if (nHops > 0 && IsExpeditedNode(pfrom))
+        if (nHops > 0 && connmgr->IsExpeditedUpstream(pfrom))
         {
             AddThinBlockInFlight(pfrom, inv.hash);
 
@@ -638,7 +639,7 @@ bool CXThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom, string strComm
 
             // Do not process unrequested xthinblocks unless from an expedited node.
             LOCK(pfrom->cs_mapthinblocksinflight);
-            if (!pfrom->mapThinBlocksInFlight.count(inv.hash) && !IsExpeditedNode(pfrom))
+            if (!pfrom->mapThinBlocksInFlight.count(inv.hash) && !connmgr->IsExpeditedUpstream(pfrom))
             {
                 dosMan.Misbehaving(pfrom->GetId(), 10);
                 return error(
