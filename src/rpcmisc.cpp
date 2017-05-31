@@ -153,6 +153,7 @@ UniValue mnsync(const UniValue& params, bool fHelp)
         UniValue objStatus(UniValue::VOBJ);
         objStatus.push_back(Pair("AssetID", masternodeSync.GetAssetID()));
         objStatus.push_back(Pair("AssetName", masternodeSync.GetAssetName()));
+        objStatus.push_back(Pair("AssetStartTime", masternodeSync.GetAssetStartTime()));
         objStatus.push_back(Pair("Attempt", masternodeSync.GetAttempt()));
         objStatus.push_back(Pair("IsBlockchainSynced", masternodeSync.IsBlockchainSynced()));
         objStatus.push_back(Pair("IsMasternodeListSynced", masternodeSync.IsMasternodeListSynced()));

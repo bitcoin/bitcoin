@@ -169,33 +169,37 @@ void CMasternodeSync::SwitchToNextAsset()
             LogPrintf("CMasternodeSync::SwitchToNextAsset -- Starting %s\n", GetAssetName());
             break;
         case(MASTERNODE_SYNC_SPORKS):
+            LogPrintf("CMasternodeSync::SwitchToNextAsset -- Completed %s in %ss\n", GetAssetName(), GetTime() - nTimeAssetSyncStarted);
             nTimeLastMasternodeList = GetTime();
             nRequestedMasternodeAssets = MASTERNODE_SYNC_LIST;
             LogPrintf("CMasternodeSync::SwitchToNextAsset -- Starting %s\n", GetAssetName());
             break;
         case(MASTERNODE_SYNC_LIST):
+            LogPrintf("CMasternodeSync::SwitchToNextAsset -- Completed %s in %ss\n", GetAssetName(), GetTime() - nTimeAssetSyncStarted);
             nTimeLastPaymentVote = GetTime();
             nRequestedMasternodeAssets = MASTERNODE_SYNC_MNW;
             LogPrintf("CMasternodeSync::SwitchToNextAsset -- Starting %s\n", GetAssetName());
             break;
         case(MASTERNODE_SYNC_MNW):
+            LogPrintf("CMasternodeSync::SwitchToNextAsset -- Completed %s in %ss\n", GetAssetName(), GetTime() - nTimeAssetSyncStarted);
             nTimeLastGovernanceItem = GetTime();
             nRequestedMasternodeAssets = MASTERNODE_SYNC_GOVERNANCE;
             LogPrintf("CMasternodeSync::SwitchToNextAsset -- Starting %s\n", GetAssetName());
             break;
         case(MASTERNODE_SYNC_GOVERNANCE):
-            LogPrintf("CMasternodeSync::SwitchToNextAsset -- Sync has finished\n");
+            LogPrintf("CMasternodeSync::SwitchToNextAsset -- Completed %s in %ss\n", GetAssetName(), GetTime() - nTimeAssetSyncStarted);
             nRequestedMasternodeAssets = MASTERNODE_SYNC_FINISHED;
             uiInterface.NotifyAdditionalDataSyncProgressChanged(1);
             //try to activate our masternode if possible
             activeMasternode.ManageState();
 
             TRY_LOCK(cs_vNodes, lockRecv);
-            if(!lockRecv) return;
-
-            BOOST_FOREACH(CNode* pnode, vNodes) {
-                netfulfilledman.AddFulfilledRequest(pnode->addr, "full-sync");
+            if(lockRecv) {
+                BOOST_FOREACH(CNode* pnode, vNodes) {
+                    netfulfilledman.AddFulfilledRequest(pnode->addr, "full-sync");
+                }
             }
+            LogPrintf("CMasternodeSync::SwitchToNextAsset -- Sync has finished\n");
 
             break;
     }

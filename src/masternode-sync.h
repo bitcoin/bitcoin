@@ -77,6 +77,7 @@ public:
 
     int GetAssetID() { return nRequestedMasternodeAssets; }
     int GetAttempt() { return nRequestedMasternodeAttempt; }
+    int64_t GetAssetStartTime() { return nTimeAssetSyncStarted; }
     std::string GetAssetName();
     std::string GetSyncStatus();
 
