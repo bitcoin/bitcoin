@@ -217,17 +217,17 @@ dnl Requires: INCLUDES must be populated as necessary.
 dnl Output: bitcoin_cv_qt5=yes|no
 AC_DEFUN([_BITCOIN_QT_CHECK_QT5],[
   AC_CACHE_CHECK(for Qt 5, bitcoin_cv_qt5,[
-  AC_TRY_COMPILE(
-    [#include <QtCore>],
-    [
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
+    [[#include <QtCore>]],
+    [[
       #if QT_VERSION < 0x050000
       choke me
       #else
       return 0;
       #endif
-    ],
-    bitcoin_cv_qt5=yes,
-    bitcoin_cv_qt5=no)
+    ]])],
+    [bitcoin_cv_qt5=yes],
+    [bitcoin_cv_qt5=no])
 ])])
 
 dnl Internal. Check if the linked version of Qt was built as static libs.
@@ -237,15 +237,15 @@ dnl Output: bitcoin_cv_static_qt=yes|no
 dnl Output: Defines QT_STATICPLUGIN if plugins are static.
 AC_DEFUN([_BITCOIN_QT_IS_STATIC],[
   AC_CACHE_CHECK(for static Qt, bitcoin_cv_static_qt,[
-  AC_TRY_COMPILE(
-    [#include <QtCore>],
-    [
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
+    [[#include <QtCore>]],
+    [[
       #if defined(QT_STATIC)
       return 0;
       #else
       choke me
       #endif
-    ],
+    ]])],
     [bitcoin_cv_static_qt=yes],
     [bitcoin_cv_static_qt=no])
   ])
@@ -263,13 +263,13 @@ AC_DEFUN([_BITCOIN_QT_CHECK_STATIC_PLUGINS],[
   AC_MSG_CHECKING(for static Qt plugins: $2)
   CHECK_STATIC_PLUGINS_TEMP_LIBS="$LIBS"
   LIBS="$2 $QT_LIBS $LIBS"
-  AC_TRY_LINK([
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[
     #define QT_STATICPLUGIN
     #include <QtPlugin>
-    $1],
-    [return 0;],
+    $1]],
+    [[return 0;]])],
     [AC_MSG_RESULT(yes); QT_LIBS="$2 $QT_LIBS"],
-    [AC_MSG_RESULT(no)]; BITCOIN_QT_FAIL(Could not resolve: $2))
+    [AC_MSG_RESULT(no); BITCOIN_QT_FAIL(Could not resolve: $2)])
   LIBS="$CHECK_STATIC_PLUGINS_TEMP_LIBS"
 ])
 

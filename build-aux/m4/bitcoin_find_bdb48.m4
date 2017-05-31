@@ -12,29 +12,29 @@ AC_DEFUN([BITCOIN_FIND_BDB48],[
   done
   for searchpath in $bdbdirlist ''; do
     test -n "${searchpath}" && searchpath="${searchpath}/"
-    AC_TRY_COMPILE([
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
       #include <${searchpath}db_cxx.h>
-    ],[
+    ]],[[
       #if !((DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR >= 8) || DB_VERSION_MAJOR > 4)
         #error "failed to find bdb 4.8+"
       #endif
-    ],[
+    ]])],[
       if test "x$bdbpath" = "xX"; then
         bdbpath="${searchpath}"
       fi
     ],[
       continue
     ])
-    AC_TRY_COMPILE([
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
       #include <${searchpath}db_cxx.h>
-    ],[
+    ]],[[
       #if !(DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR == 8)
         #error "failed to find bdb 4.8"
       #endif
-    ],[
+    ]])],[
       bdb48path="${searchpath}"
       break
-    ])
+    ],[])
   done
   if test "x$bdbpath" = "xX"; then
     AC_MSG_RESULT([no])
