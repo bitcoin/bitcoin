@@ -409,6 +409,9 @@ bool IsWitnessEnabled(const CBlockIndex* pindexPrev, const Consensus::Params& pa
 /** Check if Segregated Witness is Locked In */
 bool IsWitnessLockedIn(const CBlockIndex* pindexPrev, const Consensus::Params& params);
 
+/** Check if block complies with BIP148 rule; note this accepts pindex for the block, not pindexPrev! */
+bool CheckBIP148(const CBlockIndex* pindex, const Consensus::Params&);
+
 /** When there are blocks in the active chain with missing data, rewind the chainstate and remove them from the block index */
 bool RewindBlockIndex(const CChainParams& params);
 
