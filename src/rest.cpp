@@ -514,7 +514,7 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
         for (size_t i = 0; i < vOutPoints.size(); i++) {
             bool hit = false;
             Coin coin;
-            if (view.GetCoins(vOutPoints[i], coin) && !mempool.isSpent(vOutPoints[i])) {
+            if (view.GetCoin(vOutPoints[i], coin) && !mempool.isSpent(vOutPoints[i])) {
                 hit = true;
                 outs.emplace_back(std::move(coin));
             }
