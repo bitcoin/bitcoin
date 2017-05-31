@@ -214,7 +214,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
         {
             const COutPoint &prevout = tx.vin[i].prevout;
             const Coin& coin = inputs.AccessCoin(prevout);
-            assert(!coin.IsPruned());
+            assert(!coin.IsSpent());
 
             // If prev is coinbase, check that it's matured
             if (coin.IsCoinBase()) {

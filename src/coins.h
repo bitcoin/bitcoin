@@ -58,7 +58,7 @@ public:
 
     template<typename Stream>
     void Serialize(Stream &s) const {
-        assert(!IsPruned());
+        assert(!IsSpent());
         uint32_t code = nHeight * 2 + fCoinBase;
         ::Serialize(s, VARINT(code));
         ::Serialize(s, CTxOutCompressor(REF(out)));
@@ -73,7 +73,7 @@ public:
         ::Unserialize(s, REF(CTxOutCompressor(out)));
     }
 
-    bool IsPruned() const {
+    bool IsSpent() const {
         return out.IsNull();
     }
 
@@ -147,11 +147,11 @@ class CCoinsView
 {
 public:
     //! Retrieve the Coin (unspent transaction output) for a given outpoint.
-    virtual bool GetCoins(const COutPoint &outpoint, Coin &coin) const;
+    virtual bool GetCoin(const COutPoint &outpoint, Coin &coin) const;
 
     //! Just check whether we have data for a given outpoint.
     //! This may (but cannot always) return true for spent outputs.
-    virtual bool HaveCoins(const COutPoint &outpoint) const;
+    virtual bool HaveCoin(const COutPoint &outpoint) const;
 
     //! Retrieve the block hash whose state this CCoinsView currently represents
     virtual uint256 GetBestBlock() const;
@@ -179,8 +179,8 @@ protected:
 
 public:
     CCoinsViewBacked(CCoinsView *viewIn);
-    bool GetCoins(const COutPoint &outpoint, Coin &coin) const override;
-    bool HaveCoins(const COutPoint &outpoint) const override;
+    bool GetCoin(const COutPoint &outpoint, Coin &coin) const override;
+    bool HaveCoin(const COutPoint &outpoint) const override;
     uint256 GetBestBlock() const override;
     void SetBackend(CCoinsView &viewIn);
     bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) override;
@@ -207,22 +207,22 @@ public:
     CCoinsViewCache(CCoinsView *baseIn);
 
     // Standard CCoinsView methods
-    bool GetCoins(const COutPoint &outpoint, Coin &coin) const;
-    bool HaveCoins(const COutPoint &outpoint) const;
+    bool GetCoin(const COutPoint &outpoint, Coin &coin) const;
+    bool HaveCoin(const COutPoint &outpoint) const;
     uint256 GetBestBlock() const;
     void SetBestBlock(const uint256 &hashBlock);
     bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock);
 
     /**
      * Check if we have the given utxo already loaded in this cache.
-     * The semantics are the same as HaveCoins(), but no calls to
+     * The semantics are the same as HaveCoin(), but no calls to
      * the backing CCoinsView are made.
      */
-    bool HaveCoinsInCache(const COutPoint &outpoint) const;
+    bool HaveCoinInCache(const COutPoint &outpoint) const;
 
     /**
      * Return a reference to Coin in the cache, or a pruned one if not found. This is
-     * more efficient than GetCoins. Modifications to other cache entries are
+     * more efficient than GetCoin. Modifications to other cache entries are
      * allowed while accessing the returned pointer.
      */
     const Coin& AccessCoin(const COutPoint &output) const;
@@ -273,7 +273,7 @@ public:
     bool HaveInputs(const CTransaction& tx) const;
 
 private:
-    CCoinsMap::iterator FetchCoins(const COutPoint &outpoint) const;
+    CCoinsMap::iterator FetchCoin(const COutPoint &outpoint) const;
 
     /**
      * By making the copy constructor private, we prevent accidentally using it when one intends to create a cache on top of a base cache.

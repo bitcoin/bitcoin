@@ -25,7 +25,7 @@ namespace
 //! equality test
 bool operator==(const Coin &a, const Coin &b) {
     // Empty Coin objects are always equal.
-    if (a.IsPruned() && b.IsPruned()) return true;
+    if (a.IsSpent() && b.IsSpent()) return true;
     return a.fCoinBase == b.fCoinBase &&
            a.nHeight == b.nHeight &&
            a.out == b.out;
@@ -37,24 +37,24 @@ class CCoinsViewTest : public CCoinsView
     std::map<COutPoint, Coin> map_;
 
 public:
-    bool GetCoins(const COutPoint& outpoint, Coin& coin) const
+    bool GetCoin(const COutPoint& outpoint, Coin& coin) const
     {
         std::map<COutPoint, Coin>::const_iterator it = map_.find(outpoint);
         if (it == map_.end()) {
             return false;
         }
         coin = it->second;
-        if (coin.IsPruned() && insecure_rand() % 2 == 0) {
+        if (coin.IsSpent() && insecure_rand() % 2 == 0) {
             // Randomly return false in case of an empty entry.
             return false;
         }
         return true;
     }
 
-    bool HaveCoins(const COutPoint& outpoint) const
+    bool HaveCoin(const COutPoint& outpoint) const
     {
         Coin coin;
-        return GetCoins(outpoint, coin);
+        return GetCoin(outpoint, coin);
     }
 
     uint256 GetBestBlock() const { return hashBestBlock_; }
@@ -65,7 +65,7 @@ public:
             if (it->second.flags & CCoinsCacheEntry::DIRTY) {
                 // Same optimization used in CCoinsViewDB is to only write dirty entries.
                 map_[it->first] = it->second.coin;
-                if (it->second.coin.IsPruned() && insecure_rand() % 3 == 0) {
+                if (it->second.coin.IsSpent() && insecure_rand() % 3 == 0) {
                     // Randomly delete empty entries on write.
                     map_.erase(it->first);
                 }
@@ -151,20 +151,20 @@ BOOST_AUTO_TEST_CASE(coins_cache_simulation_test)
             const Coin& entry = (insecure_rand() % 500 == 0) ? AccessByTxid(*stack.back(), txid) : stack.back()->AccessCoin(COutPoint(txid, 0));
             BOOST_CHECK(coin == entry);
 
-            if (insecure_rand() % 5 == 0 || coin.IsPruned()) {
+            if (insecure_rand() % 5 == 0 || coin.IsSpent()) {
                 Coin newcoin;
                 newcoin.out.nValue = insecure_rand();
                 newcoin.nHeight = 1;
-                if (insecure_rand() % 16 == 0 && coin.IsPruned()) {
+                if (insecure_rand() % 16 == 0 && coin.IsSpent()) {
                     newcoin.out.scriptPubKey.assign(1 + (insecure_rand() & 0x3F), OP_RETURN);
                     BOOST_CHECK(newcoin.out.scriptPubKey.IsUnspendable());
                     added_an_unspendable_entry = true;
                 } else {
                     newcoin.out.scriptPubKey.assign(insecure_rand() & 0x3F, 0); // Random sizes so we can test memory usage accounting
-                    (coin.IsPruned() ? added_an_entry : updated_an_entry) = true;
+                    (coin.IsSpent() ? added_an_entry : updated_an_entry) = true;
                     coin = newcoin;
                 }
-                stack.back()->AddCoin(COutPoint(txid, 0), std::move(newcoin), !coin.IsPruned() || insecure_rand() & 1);
+                stack.back()->AddCoin(COutPoint(txid, 0), std::move(newcoin), !coin.IsSpent() || insecure_rand() & 1);
             } else {
                 removed_an_entry = true;
                 coin.Clear();
@@ -177,20 +177,20 @@ BOOST_AUTO_TEST_CASE(coins_cache_simulation_test)
             COutPoint out(txids[insecure_rand() % txids.size()], 0);
             int cacheid = insecure_rand() % stack.size();
             stack[cacheid]->Uncache(out);
-            uncached_an_entry |= !stack[cacheid]->HaveCoinsInCache(out);
+            uncached_an_entry |= !stack[cacheid]->HaveCoinInCache(out);
         }
 
         // Once every 1000 iterations and at the end, verify the full cache.
         if (insecure_rand() % 1000 == 1 || i == NUM_SIMULATION_ITERATIONS - 1) {
             for (auto it = result.begin(); it != result.end(); it++) {
-                bool have = stack.back()->HaveCoins(it->first);
+                bool have = stack.back()->HaveCoin(it->first);
                 const Coin& coin = stack.back()->AccessCoin(it->first);
-                BOOST_CHECK(have == !coin.IsPruned());
+                BOOST_CHECK(have == !coin.IsSpent());
                 BOOST_CHECK(coin == it->second);
-                if (coin.IsPruned()) {
+                if (coin.IsSpent()) {
                     missed_an_entry = true;
                 } else {
-                    BOOST_CHECK(stack.back()->HaveCoinsInCache(it->first));
+                    BOOST_CHECK(stack.back()->HaveCoinInCache(it->first));
                     found_an_entry = true;
                 }
             }
@@ -281,9 +281,9 @@ BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
     stack.push_back(new CCoinsViewCacheTest(&base)); // Start with one cache.
 
     // Track the txids we've used in various sets
-    std::set<COutPoint> coinbaseids;
-    std::set<COutPoint> disconnectedids;
-    std::set<COutPoint> duplicateids;
+    std::set<COutPoint> coinbase_coins;
+    std::set<COutPoint> disconnected_coins;
+    std::set<COutPoint> duplicate_coins;
     std::set<COutPoint> utxoset;
 
     for (unsigned int i = 0; i < NUM_SIMULATION_ITERATIONS; i++) {
@@ -297,22 +297,22 @@ BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
             tx.vout[0].nValue = i; //Keep txs unique unless intended to duplicate
             tx.vout[0].scriptPubKey.assign(insecure_rand() & 0x3F, 0); // Random sizes so we can test memory usage accounting
             unsigned int height = insecure_rand();
-            Coin oldcoins;
+            Coin old_coin;
 
             // 2/20 times create a new coinbase
-            if (randiter % 20 < 2 || coinbaseids.size() < 10) {
+            if (randiter % 20 < 2 || coinbase_coins.size() < 10) {
                 // 1/10 of those times create a duplicate coinbase
-                if (insecure_rand() % 10 == 0 && coinbaseids.size()) {
-                    auto utxod = FindRandomFrom(coinbaseids);
+                if (insecure_rand() % 10 == 0 && coinbase_coins.size()) {
+                    auto utxod = FindRandomFrom(coinbase_coins);
                     // Reuse the exact same coinbase
                     tx = std::get<0>(utxod->second);
                     // shouldn't be available for reconnection if its been duplicated
-                    disconnectedids.erase(utxod->first);
+                    disconnected_coins.erase(utxod->first);
 
-                    duplicateids.insert(utxod->first);
+                    duplicate_coins.insert(utxod->first);
                 }
                 else {
-                    coinbaseids.insert(COutPoint(tx.GetHash(), 0));
+                    coinbase_coins.insert(COutPoint(tx.GetHash(), 0));
                 }
                 assert(CTransaction(tx).IsCoinBase());
             }
@@ -322,21 +322,21 @@ BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
 
                 COutPoint prevout;
                 // 1/20 times reconnect a previously disconnected tx
-                if (randiter % 20 == 2 && disconnectedids.size()) {
-                    auto utxod = FindRandomFrom(disconnectedids);
+                if (randiter % 20 == 2 && disconnected_coins.size()) {
+                    auto utxod = FindRandomFrom(disconnected_coins);
                     tx = std::get<0>(utxod->second);
                     prevout = tx.vin[0].prevout;
                     if (!CTransaction(tx).IsCoinBase() && !utxoset.count(prevout)) {
-                        disconnectedids.erase(utxod->first);
+                        disconnected_coins.erase(utxod->first);
                         continue;
                     }
 
                     // If this tx is already IN the UTXO, then it must be a coinbase, and it must be a duplicate
                     if (utxoset.count(utxod->first)) {
                         assert(CTransaction(tx).IsCoinBase());
-                        assert(duplicateids.count(utxod->first));
+                        assert(duplicate_coins.count(utxod->first));
                     }
-                    disconnectedids.erase(utxod->first);
+                    disconnected_coins.erase(utxod->first);
                 }
 
                 // 16/20 times create a regular tx
@@ -349,7 +349,7 @@ BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
                     assert(!CTransaction(tx).IsCoinBase());
                 }
                 // In this simple test coins only have two states, spent or unspent, save the unspent state to restore
-                oldcoins = result[prevout];
+                old_coin = result[prevout];
                 // Update the expected result of prevouthash to know these coins are spent
                 result[prevout].Clear();
 
@@ -357,7 +357,7 @@ BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
 
                 // The test is designed to ensure spending a duplicate coinbase will work properly
                 // if that ever happens and not resurrect the previously overwritten coinbase
-                if (duplicateids.count(prevout)) {
+                if (duplicate_coins.count(prevout)) {
                     spent_a_duplicate_coinbase = true;
                 }
 
@@ -375,21 +375,21 @@ BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
             utxoset.insert(outpoint);
 
             // Track this tx and undo info to use later
-            utxoData.emplace(outpoint, std::make_tuple(tx,undo,oldcoins));
+            utxoData.emplace(outpoint, std::make_tuple(tx,undo,old_coin));
         } else if (utxoset.size()) {
             //1/20 times undo a previous transaction
             auto utxod = FindRandomFrom(utxoset);
 
             CTransaction &tx = std::get<0>(utxod->second);
             CTxUndo &undo = std::get<1>(utxod->second);
-            Coin &origcoins = std::get<2>(utxod->second);
+            Coin &orig_coin = std::get<2>(utxod->second);
 
             // Update the expected result
             // Remove new outputs
             result[utxod->first].Clear();
             // If not coinbase restore prevout
             if (!tx.IsCoinBase()) {
-                result[tx.vin[0].prevout] = origcoins;
+                result[tx.vin[0].prevout] = orig_coin;
             }
 
             // Disconnect the tx from the current UTXO
@@ -403,7 +403,7 @@ BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
                 ApplyTxInUndo(std::move(coin), *(stack.back()), out);
             }
             // Store as a candidate for reconnection
-            disconnectedids.insert(utxod->first);
+            disconnected_coins.insert(utxod->first);
 
             // Update the utxoset
             utxoset.erase(utxod->first);
@@ -414,9 +414,9 @@ BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
         // Once every 1000 iterations and at the end, verify the full cache.
         if (insecure_rand() % 1000 == 1 || i == NUM_SIMULATION_ITERATIONS - 1) {
             for (auto it = result.begin(); it != result.end(); it++) {
-                bool have = stack.back()->HaveCoins(it->first);
+                bool have = stack.back()->HaveCoin(it->first);
                 const Coin& coin = stack.back()->AccessCoin(it->first);
-                BOOST_CHECK(have == !coin.IsPruned());
+                BOOST_CHECK(have == !coin.IsSpent());
                 BOOST_CHECK(coin == it->second);
             }
         }
@@ -425,11 +425,11 @@ BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
         if (utxoset.size() > 1 && insecure_rand() % 30) {
             stack[insecure_rand() % stack.size()]->Uncache(FindRandomFrom(utxoset)->first);
         }
-        if (disconnectedids.size() > 1 && insecure_rand() % 30) {
-            stack[insecure_rand() % stack.size()]->Uncache(FindRandomFrom(disconnectedids)->first);
+        if (disconnected_coins.size() > 1 && insecure_rand() % 30) {
+            stack[insecure_rand() % stack.size()]->Uncache(FindRandomFrom(disconnected_coins)->first);
         }
-        if (duplicateids.size() > 1 && insecure_rand() % 30) {
-            stack[insecure_rand() % stack.size()]->Uncache(FindRandomFrom(duplicateids)->first);
+        if (duplicate_coins.size() > 1 && insecure_rand() % 30) {
+            stack[insecure_rand() % stack.size()]->Uncache(FindRandomFrom(duplicate_coins)->first);
         }
 
         if (insecure_rand() % 100 == 0) {
@@ -537,11 +537,11 @@ void SetCoinsValue(CAmount value, Coin& coin)
 {
     assert(value != ABSENT);
     coin.Clear();
-    assert(coin.IsPruned());
+    assert(coin.IsSpent());
     if (value != PRUNED) {
         coin.out.nValue = value;
         coin.nHeight = 1;
-        assert(!coin.IsPruned());
+        assert(!coin.IsSpent());
     }
 }
 
@@ -567,7 +567,7 @@ void GetCoinsMapEntry(const CCoinsMap& map, CAmount& value, char& flags)
         value = ABSENT;
         flags = NO_ENTRY;
     } else {
-        if (it->second.coin.IsPruned()) {
+        if (it->second.coin.IsSpent()) {
             value = PRUNED;
         } else {
             value = it->second.coin.out.nValue;
