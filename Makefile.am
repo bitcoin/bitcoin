@@ -43,8 +43,9 @@ distcleancheck:
 $(BITCOIN_WIN_INSTALLER): $(BITCOIND_BIN) $(BITCOIN_QT_BIN)
 	$(MAKE) distdir
 	$(MKDIR_P) $(top_builddir)/release
-	$(INSTALL_STRIP_PROGRAM) $(top_builddir)/src/bitcoind$(EXEEXT) $(top_builddir)/release
-	$(INSTALL_STRIP_PROGRAM) $(top_builddir)/src/qt/bitcoin-qt$(EXEEXT) $(top_builddir)/release
+	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(BITCOIND_BIN) $(top_builddir)/release
+	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(BITCOIN_QT_BIN) $(top_builddir)/release
+	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(BITCOIN_CLI_BIN) $(top_builddir)/release
 	@test -f $(MAKENSIS) && $(MAKENSIS) $(top_builddir)/share/setup.nsi || \
 	  echo error: could not build $@
 
@@ -73,7 +74,7 @@ $(OSX_APP)/Contents/Resources/bitcoin.icns: $(OSX_INSTALLER_ICONS)
 
 $(OSX_APP)/Contents/MacOS/Bitcoin-Qt: $(BITCOIN_QT_BIN)
 	$(MKDIR_P) $(@D)
-	$(INSTALL_STRIP_PROGRAM)  $< $@
+	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM)  $< $@
 
 OSX_APP_BUILT=$(OSX_APP)/Contents/PkgInfo $(OSX_APP)/Contents/Resources/empty.lproj \
   $(OSX_APP)/Contents/Resources/ppcoin.icns $(OSX_APP)/Contents/Info.plist \
