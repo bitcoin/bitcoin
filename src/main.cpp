@@ -7601,14 +7601,6 @@ bool SendMessages(CNode *pto)
                         pindex->nHeight, pto->id);
                 }
             }
-            if (state.nBlocksInFlight == 0 && staller != -1)
-            {
-                if (State(staller)->nStallingSince == 0)
-                {
-                    State(staller)->nStallingSince = nNow;
-                    LogPrint("net", "Stall started peer=%d\n", staller);
-                }
-            }
         }
 
         //

@@ -339,7 +339,6 @@ bool CXThinBlockTx::HandleMessage(CDataStream &vRecv, CNode *pfrom)
         return error("Thinblock message received from a non thinblock node, peer=%d", pfrom->GetId());
     }
 
-    size_t msgSize = vRecv.size();
     CXThinBlockTx thinBlockTx;
     vRecv >> thinBlockTx;
 
