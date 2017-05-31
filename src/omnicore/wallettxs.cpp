@@ -23,6 +23,7 @@
 #endif
 
 #include <stdint.h>
+#include <algorithm>
 #include <map>
 #include <string>
 
@@ -161,6 +162,45 @@ int IsMyAddress(const std::string& address)
 }
 
 /**
+ * Estimate the minimum fee considering user set parameters and the required fee.
+ *
+ * @return The estimated fee per 1000 byte, or 50000 satoshi as per default
+ */
+static int64_t GetEstimatedFeePerKb()
+{
+    int64_t nFee = 50000; // 0.0005 BTC;
+
+#ifdef ENABLE_WALLET
+    if (pwalletMain) {
+        nFee = pwalletMain->GetMinimumFee(1000, nTxConfirmTarget, mempool);
+    }
+#endif
+
+    return nFee;
+}
+
+/**
+ * Output values below this value are considered uneconomic, because it would
+ * require more fees to pay than the output is worth.
+ *
+ * @param txOut[in]  The transaction output to check
+ * @return The minimum value an output to spent should have
+ */
+static int64_t GetEconomicThreshold(const CTxOut& txOut)
+{
+    // Minimum value needed to relay the transaction
+    int64_t nThresholdDust = txOut.GetDustThreshold(minRelayTxFee);
+
+    // Use the estimated fee that is also used to contruct transactions.
+    // We use the absolute minimum, so we divide by 3, to get rid of the
+    // safety margin used for the dust threshold used for relaying.
+    CFeeRate estimatedFeeRate(GetEstimatedFeePerKb());
+    int64_t nThresholdFees = txOut.GetDustThreshold(estimatedFeeRate) / 3;
+
+    return std::max(nThresholdDust, nThresholdFees);
+}
+
+/**
  * Selects spendable outputs to create a transaction.
  */
 int64_t SelectCoins(const std::string& fromAddress, CCoinControl& coinControl, int64_t additional)
@@ -173,8 +213,8 @@ int64_t SelectCoins(const std::string& fromAddress, CCoinControl& coinControl, i
         return 0;
     }
 
-    // assume 20 KB max. transaction size at 0.0001 per kilobyte
-    int64_t nMax = (COIN * (20 * (0.0001)));
+    // select coins to cover up to 20 kB max. transaction size
+    int64_t nMax = 20 * GetEstimatedFeePerKb();
 
     // if referenceamount is set it is needed to be accounted for here too
     if (0 < additional) nMax += additional;
@@ -207,10 +247,16 @@ int64_t SelectCoins(const std::string& fromAddress, CCoinControl& coinControl, i
             if (pwalletMain->IsSpent(txid, n)) {
                 continue;
             }
+            if (txOut.nValue < GetEconomicThreshold(txOut)) {
+                if (msc_debug_tokens)
+                    PrintToLog("%s: output value below economic threshold: %s:%d, value: %d\n",
+                            __func__, txid.GetHex(), n, txOut.nValue);
+                continue;
+            }
 
             std::string sAddress = CBitcoinAddress(dest).ToString();
             if (msc_debug_tokens)
-                PrintToLog("%s(): sender: %s, outpoint: %s:%d, value: %d\n", __func__, sAddress, txid.GetHex(), n, txOut.nValue);
+                PrintToLog("%s: sender: %s, outpoint: %s:%d, value: %d\n", __func__, sAddress, txid.GetHex(), n, txOut.nValue);
 
             // only use funds from the sender's address
             if (fromAddress == sAddress) {
