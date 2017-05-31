@@ -3570,8 +3570,12 @@ bool RewindBlockIndex(const CChainParams& params)
     LOCK(cs_main);
 
     int nHeight = 1;
+    bool fCheckBIP148 = gArgs.GetBoolArg("-bip148", DEFAULT_BIP148);
     while (nHeight <= chainActive.Height()) {
         if (IsWitnessEnabled(chainActive[nHeight - 1], params.GetConsensus()) && !(chainActive[nHeight]->nStatus & BLOCK_OPT_WITNESS)) {
+            break;
+        }
+        if (fCheckBIP148 && !CheckBIP148(chainActive[nHeight], params.GetConsensus())) {
             break;
         }
         nHeight++;
