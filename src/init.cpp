@@ -1210,8 +1210,11 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 #ifndef WIN32
     CreatePidFile(GetPidFile(), getpid());
 #endif
-    if (GetBoolArg("-shrinkdebugfile", !fDebug))
+    if (GetBoolArg("-shrinkdebugfile", !fDebug)) {
+        // Do this first since it both loads a bunch of debug.log into memory,
+        // and because this needs to happen before any other debug.log printing
         ShrinkDebugFile();
+    }
 
     if (fPrintToDebugLog)
         OpenDebugLog();
