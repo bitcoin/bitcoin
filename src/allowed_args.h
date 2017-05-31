@@ -136,7 +136,7 @@ public:
 class ConfigFile : public AllowedArgs
 {
 public:
-    ConfigFile();
+    ConfigFile(CTweakMap *pTweaks);
 };
 
 } // namespace AllowedArgs
