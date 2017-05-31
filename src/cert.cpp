@@ -1309,6 +1309,9 @@ UniValue certlist(const UniValue& params, bool fHelp) {
 					{
 						oRes.push_back(oCert);
 					}
+					// if finding specific GUID don't need to look any further
+					if (vchNameUniq.size() > 0)
+						return oRes;
 				}	
 			}
 		}
