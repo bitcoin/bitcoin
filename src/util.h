@@ -241,7 +241,8 @@ bool SoftSetArg(const std::string& strArg, const std::string& strValue);
  */
 bool SoftSetBoolArg(const std::string& strArg, bool fValue);
 
-// Forces a arg setting, used only in testing
+// Forces an arg setting. Called by SoftSetArg() if the arg hasn't already
+// been set. Also called directly in testing.
 void ForceSetArg(const std::string& strArg, const std::string& strValue);
 };
 
