@@ -4,6 +4,7 @@ EXTRA_LIBRARIES += qt/libbitcoinqt.a
 # crown qt core #
 QT_TS = \
   qt/locale/crown_bg.ts \
+  qt/locale/crown_cs.ts \
   qt/locale/crown_de.ts \
   qt/locale/crown_en.ts \
   qt/locale/crown_es.ts \
