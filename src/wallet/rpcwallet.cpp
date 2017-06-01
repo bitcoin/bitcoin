@@ -1716,7 +1716,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
                 WalletTxToJSON(wtx, entry);
             entry.push_back(Pair("abandoned", wtx.isAbandoned()));
 			// SYSCOIN
-			if(IsSyscoinScript(wtx.vout[r.vout].scriptPubKey, op, vvchArgs))
+			if(IsSyscoinScript(wtx.vout[s.vout].scriptPubKey, op, vvchArgs))
 			{
 				string strResponseEnglish = "";
 				string strResponseGUID = "";
