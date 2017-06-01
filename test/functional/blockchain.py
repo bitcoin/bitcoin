@@ -24,7 +24,6 @@ from test_framework.util import (
     assert_raises_jsonrpc,
     assert_is_hex_string,
     assert_is_hash_string,
-    connect_nodes_bi,
 )
 
 
