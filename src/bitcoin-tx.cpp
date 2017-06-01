@@ -67,6 +67,8 @@ static int AppInitRawTx(int argc, char* argv[])
         strUsage += HelpMessageOpt("-create", _("Create new, empty TX."));
         strUsage += HelpMessageOpt("-json", _("Select JSON output"));
         strUsage += HelpMessageOpt("-txid", _("Output only the hex-encoded transaction id of the resultant transaction."));
+        strUsage += HelpMessageOpt("-segwit", _("Produce a segwit output."));
+        strUsage += HelpMessageOpt("-p2sh", _("Wrap output into P2SH."));
         AppendParamsHelpMessages(strUsage);
 
         fprintf(stdout, "%s", strUsage.c_str());
@@ -427,6 +429,14 @@ static void MutateTxAddOutScript(CMutableTransaction& tx, const std::string& str
       scriptPubKey = GetScriptForWitness(scriptPubKey);
     }
     if (bScriptHash) {
+      CBitcoinAddress addr(scriptPubKey);
+      scriptPubKey = GetScriptForDestination(addr.Get());
+    }
+
+    if (GetBoolArg("-segwit", false)) {
+      scriptPubKey = GetScriptForWitness(scriptPubKey);
+    }
+    if (GetBoolArg("-p2sh", false)) {
       CBitcoinAddress addr(scriptPubKey);
       scriptPubKey = GetScriptForDestination(addr.Get());
     }
