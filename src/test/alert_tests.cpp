@@ -7,6 +7,7 @@
 //
 
 #include "alert.h"
+#include "chainparams.h"
 #include "clientversion.h"
 #include "data/alertTests.raw.h"
 
@@ -21,11 +22,39 @@
 #include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
 
-#if 0
 //
-// alertTests contains 7 alerts, generated with this code:
-// (SignAndSave code not shown, alert signing key is secret)
+// Sign a CAlert and serialize it
 //
+bool SignAndSave(CAlert &alert)
+{
+    // Sign
+    if(!alert.Sign())
+    {
+        printf("SignAndSave() : could not sign alert:\n%s", alert.ToString().c_str());
+        return false;
+    }
+
+    std::string strFilePath = "src/test/data/alertTests.raw";
+    // open output file and associate it with CAutoFile
+    FILE *file = fopen(strFilePath.c_str(), "ab+");
+    CAutoFile fileout(file, SER_DISK, CLIENT_VERSION);
+    if (fileout.IsNull())
+        return error("%s: Failed to open file %s", __func__, strFilePath);
+
+    try {
+        fileout << alert;
+    }
+    catch (std::exception &e) {
+        return error("%s: Serialize or I/O error - %s", __func__, e.what());
+    }
+    fileout.fclose();
+    return true;
+}
+
+//
+// alertTests contains 8 alerts, generated with this code
+//
+void GenerateAlertTests()
 {
     CAlert alert;
     alert.nRelayUntil   = 60;
@@ -38,45 +67,44 @@
     alert.strComment    = "Alert comment";
     alert.strStatusBar  = "Alert 1";
 
-    SignAndSave(alert, "test/alertTests");
+    SignAndSave(alert);
 
     alert.setSubVer.insert(std::string("/Satoshi:0.1.0/"));
     alert.strStatusBar  = "Alert 1 for Satoshi 0.1.0";
-    SignAndSave(alert, "test/alertTests");
+    SignAndSave(alert);
 
     alert.setSubVer.insert(std::string("/Satoshi:0.2.0/"));
     alert.strStatusBar  = "Alert 1 for Satoshi 0.1.0, 0.2.0";
-    SignAndSave(alert, "test/alertTests");
+    SignAndSave(alert);
 
     alert.setSubVer.clear();
     ++alert.nID;
     alert.nCancel = 1;
     alert.nPriority = 100;
     alert.strStatusBar  = "Alert 2, cancels 1";
-    SignAndSave(alert, "test/alertTests");
+    SignAndSave(alert);
 
     alert.nExpiration += 60;
     ++alert.nID;
-    SignAndSave(alert, "test/alertTests");
+    SignAndSave(alert);
 
     ++alert.nID;
     alert.nMinVer = 11;
     alert.nMaxVer = 22;
-    SignAndSave(alert, "test/alertTests");
+    SignAndSave(alert);
 
     ++alert.nID;
     alert.strStatusBar  = "Alert 2 for Satoshi 0.1.0";
     alert.setSubVer.insert(std::string("/Satoshi:0.1.0/"));
-    SignAndSave(alert, "test/alertTests");
+    SignAndSave(alert);
 
     ++alert.nID;
     alert.nMinVer = 0;
     alert.nMaxVer = 999999;
     alert.strStatusBar  = "Evil Alert'; /bin/ls; echo '";
     alert.setSubVer.clear();
-    SignAndSave(alert, "test/alertTests");
+    SignAndSave(alert);
 }
-#endif
 
 struct ReadAlerts
 {
@@ -113,14 +141,30 @@ struct ReadAlerts
 
 BOOST_FIXTURE_TEST_SUITE(Alert_tests, ReadAlerts)
 
+// Steps to generate alert tests:
+// - update alerts in GenerateAlertTests() (optional)
+// - enable code below (#if 1)
+// - replace "fffffffffffffffffffffffffffffffffffffffffffffffffff" with the actual MAINNET privkey
+// - recompile and run "/path/to/test_dash -t Alert_test"
+//
+// NOTE: make sure to disable code and remove alert privkey when you're done!
+//
+#if 0
+BOOST_AUTO_TEST_CASE(GenerateAlerts)
+{
+    SoftSetArg("-alertkey", "fffffffffffffffffffffffffffffffffffffffffffffffffff");
+    GenerateAlertTests();
+}
+#endif
 
 BOOST_AUTO_TEST_CASE(AlertApplies)
 {
     SetMockTime(11);
+    const std::vector<unsigned char>& alertKey = Params().AlertKey();
 
     BOOST_FOREACH(const CAlert& alert, alerts)
     {
-        BOOST_CHECK(alert.CheckSignature());
+        BOOST_CHECK(alert.CheckSignature(alertKey));
     }
 
     BOOST_CHECK(alerts.size() >= 3);
@@ -157,6 +201,7 @@ BOOST_AUTO_TEST_CASE(AlertApplies)
 BOOST_AUTO_TEST_CASE(AlertNotify)
 {
     SetMockTime(11);
+    const std::vector<unsigned char>& alertKey = Params().AlertKey();
 
     boost::filesystem::path temp = GetTempPath() / "alertnotify.txt";
     boost::filesystem::remove(temp);
@@ -164,7 +209,7 @@ BOOST_AUTO_TEST_CASE(AlertNotify)
     mapArgs["-alertnotify"] = std::string("echo %s >> ") + temp.string();
 
     BOOST_FOREACH(CAlert alert, alerts)
-        alert.ProcessAlert(false);
+        alert.ProcessAlert(alertKey, false);
 
     std::vector<std::string> r = read_lines(temp);
     BOOST_CHECK_EQUAL(r.size(), 4u);

@@ -23,8 +23,8 @@ std::vector<CBudgetProposalBroadcast> vecImmatureBudgetProposals;
 std::vector<CFinalizedBudgetBroadcast> vecImmatureFinalizedBudgets;
 
 int GetBudgetPaymentCycleBlocks(){
-    // Amount of blocks in a months period of time (using 2.6 minutes per) = (60*24*30)/2.6
-    if(Params().NetworkID() == CBaseChainParams::MAIN) return 16616;
+    // Amount of blocks in a months period of time (using 1 minutes per) = (60*24*30)/1
+    if(Params().NetworkID() == CBaseChainParams::MAIN) return 43200;
     //for testing purposes
 
     return 50; //ten times per day
@@ -132,7 +132,7 @@ void CBudgetManager::SubmitFinalBudget()
 
     int nBlockStart = nCurrentHeight - nCurrentHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
     if(nSubmittedHeight >= nBlockStart) return;
-    if(nBlockStart - nCurrentHeight > 576*2) return; // allow submitting final budget only when 2 days left before payments
+    if(nBlockStart - nCurrentHeight > 1440*2) return; // allow submitting final budget only when 2 days left before payments
 
     std::vector<CBudgetProposal*> vBudgetProposals = budget.GetBudget();
     std::string strBudgetName = "main";
@@ -572,7 +572,7 @@ bool CBudgetManager::HasNextFinalizedBudget()
     if(throneSync.IsBudgetFinEmpty()) return true;
 
     int nBlockStart = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
-    if(nBlockStart - pindexPrev->nHeight > 576*2) return true; //we wouldn't have the budget yet
+    if(nBlockStart - pindexPrev->nHeight > 1440*2) return true; //we wouldn't have the budget yet
 
     if(budget.IsBudgetPaymentBlock(nBlockStart)) return true;
 
@@ -788,17 +788,14 @@ CAmount CBudgetManager::GetTotalBudget(int nHeight)
     if(chainActive.Tip() == NULL) return 0;
 
     //get min block value and calculate from that
-    CAmount nSubsidy = 5 * COIN;
+    CAmount nSubsidy = 10 * COIN;
+    int halvings = nHeight / Params().SubsidyHalvingInterval();
 
-    if(Params().NetworkID() == CBaseChainParams::TESTNET){
-        for(int i = 46200; i <= nHeight; i += 210240) nSubsidy -= nSubsidy/14;
-    } else {
-        // yearly decline of production by 7.1% per year, projected 21.3M coins max by year 2050.
-        for(int i = 210240; i <= nHeight; i += 210240) nSubsidy -= nSubsidy/14;
-    }
+    // Subsidy is cut in half every 2,100,000 blocks which will occur approximately every 4 years.
+    nSubsidy >>= halvings;
 
-    // Amount of blocks in a months period of time (using 2.6 minutes per) = (60*24*30)/2.6
-    if(Params().NetworkID() == CBaseChainParams::MAIN) return ((nSubsidy/100)*10)*576*30;
+    // Amount of blocks in a months period of time (using 1 minutes per) = (60*24*30)/1
+    if(Params().NetworkID() == CBaseChainParams::MAIN) return ((nSubsidy/100)*10)*1440*30;
 
     //for testing purposes
     return ((nSubsidy/100)*10)*50;

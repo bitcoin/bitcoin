@@ -165,6 +165,7 @@ OverviewPage::OverviewPage(QWidget *parent) :
             timer->start(1000);
         }
     }
+    ui->frameDarksend->setVisible(false);
 
     // start with displaying the "out of sync" warnings
     showOutOfSyncWarning(true);

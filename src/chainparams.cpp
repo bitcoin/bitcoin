@@ -157,9 +157,12 @@ public:
         assert(hashGenesisBlock == uint256S("0x0000000085370d5e122f64f4ab19c68614ff3df78c8d13cb814fd7e69a1dc6da"));
         assert(genesis.hashMerkleRoot == uint256S("0x80ad356118a9ab8db192db66ef77146cc36d958f959251feace550e4ca3d1446"));
 
-        vSeeds.push_back(CDNSSeedData("crowncoin.org", "nodelist.crowncoin.org"));
-        vSeeds.push_back(CDNSSeedData("infernopool.com", "crw.infernopool.com"));
-	vSeeds.push_back(CDNSSeedData("hardcrw", "hardcrw.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("fra-crwdns", "fra-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("blr-crwdns", "blr-crwdns.infernopool.com"));
+	vSeeds.push_back(CDNSSeedData("sgp-crwdns", "sgp-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("lon-crwdns", "lon-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("nyc-crwdns", "nyc-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("crw", "crw.infernopool.com"));
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,0);                    // Crown addresses start with 'X'
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,5);                    // Crown script addresses start with '7'
@@ -179,8 +182,7 @@ public:
         fTestnetToBeDeprecatedFieldRPC = false;
 
         nPoolMaxTransactions = 3;
-        strSporkKey = "04977aae0411f4e1757e8682c87ee79180ad577ef0351054e6cda5c9381fcd8c7333e88ac250d3ab3e3aafd5d1c1d946f2ca62372db7f35c84398a878aa145f09a";
-        strThronePaymentsPubKey = "04977aae0411f4e1757e8682c87ee79180ad577ef0351054e6cda5c9381fcd8c7333e88ac250d3ab3e3aafd5d1c1d946f2ca62372db7f35c84398a878aa145f09a";
+        strSporkKey = "0440409BDACDCE03BFB6D5F16E2D414953038996B49BEE6697CFA400A0001D0837C885C5B57DAD10E5CAAAE36EE975005CC6CBD7001A2A8DE76FF12185904A9BB1";
         strDarksendPoolDummyAddress = "18WTcWvwrNnfqeQAn6th9QQ2EpnXMq5Th8";
         nStartThronePayments = 1403728576; //Wed, 25 Jun 2014 20:36:16 GMT
     }
@@ -288,8 +290,7 @@ public:
         fTestnetToBeDeprecatedFieldRPC = true;
 
         nPoolMaxTransactions = 2;
-        strSporkKey = "04fc9702847840aaf195de8442ebecedf5b095cdbb9bc716bda9110971b28a49e0ead8564ff0db22209e0374782c093bb899692d524e9d6a6956e7c5ecbcd68284";
-        strThronePaymentsPubKey = "04fc9702847840aaf195de8442ebecedf5b095cdbb9bc716bda9110971b28a49e0ead8564ff0db22209e0374782c093bb899692d524e9d6a6956e7c5ecbcd68284";
+        strSporkKey = "0440409BDACDCE03BFB6D5F16E2D414953038996B49BEE6697CFA400A0001D0837C885C5B57DAD10E5CAAAE36EE975005CC6CBD7001A2A8DE76FF12185904A9BB1";
         strDarksendPoolDummyAddress = "y1EZuxhhNMAUofTBEeLqGE1bJrpC2TWRNp";
         nStartThronePayments = 1420837558; //Fri, 09 Jan 2015 21:05:58 GMT
     }

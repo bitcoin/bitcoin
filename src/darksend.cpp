@@ -2254,7 +2254,7 @@ void ThreadCheckDarkSendPool()
 
             // check if we should activate or ping every few minutes,
             // start right after sync is considered to be done
-            if(c % THRONE_PING_SECONDS == 1) activeThrone.ManageStatus();
+            if(c % THRONE_PING_SECONDS == 15) activeThrone.ManageStatus();
 
             if(c % 60 == 0)
             {

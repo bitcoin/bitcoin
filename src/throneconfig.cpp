@@ -68,6 +68,13 @@ bool CThroneConfig::read(std::string& strErr) {
             streamConfig.close();
             return false;
         }
+        if (!(CService(ip).IsIPv4() && CService(ip).IsRoutable())) {
+            strErr = _("Invalid Address detected in throne.conf") + "\n" +
+                    strprintf(_("Line: %d"), linenumber) + "\n\"" + line + "\"" + "\n" +
+                    _("(IPV4 ONLY)");
+            streamConfig.close();
+            return false;
+        }
 
 
         add(alias, ip, privKey, txHash, outputIndex);
