@@ -1836,13 +1836,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 	// SYSCOIN
     vector<vector<unsigned char> > vvchArgs;
     int op, nOut;
-	// there should only be one data carrying syscoin output per transaction, but there may be more than 1 syscoin utxo in a transaction
-	// we want to display the data carrying one and not the empty utxo	
-	// alias payment does not carry a data output, just alias payment scriptpubkey
 	string strResponse = "";
-	if(wtx.nVersion == GetSyscoinTxVersion())
-		DecodeAndParseSyscoinTx(wtx, op, nOut, vvchArgs);
-	vector<uint256> mapSysTx;	
     // Sent
     if ((!listSent.empty() || nFee != 0) && (fAllAccounts || strAccount == strSentAccount))
     {
@@ -1863,9 +1857,8 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
                 WalletTxToJSON(wtx, entry);
             entry.push_back(Pair("abandoned", wtx.isAbandoned()));
 			// SYSCOIN
-			if(!vvchArgs.empty() && std::find(mapSysTx.begin(), mapSysTx.end(), hash) == mapSysTx.end())
+			if(IsSyscoinScript(wtx.vout[s.vout].scriptPubKey, op, vvchArgs))
 			{
-				mapSysTx.push_back(hash);
 				string strResponseEnglish = "";
 				string strResponseGUID = "";
 				strResponse = GetSyscoinTransactionDescription(op, vvchArgs, wtx, "send", strResponseEnglish, strResponseGUID);
@@ -1912,9 +1905,8 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
                 if (fLong)
                     WalletTxToJSON(wtx, entry);
 				// SYSCOIN
-				if(!vvchArgs.empty() && std::find(mapSysTx.begin(), mapSysTx.end(), hash) == mapSysTx.end())
+				if(IsSyscoinScript(wtx.vout[r.vout].scriptPubKey, op, vvchArgs))
 				{
-					mapSysTx.push_back(hash);
 					string strResponseEnglish = "";
 					string strResponseGUID = "";
 					strResponse = GetSyscoinTransactionDescription(op, vvchArgs, wtx, "recv", strResponseEnglish, strResponseGUID);
