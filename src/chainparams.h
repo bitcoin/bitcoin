@@ -48,13 +48,15 @@ public:
 class DevFundSettings
 {
 public:
-    DevFundSettings(std::string sAddrTo, float rMinDevStakeSplit_, int nDevOutputGap_, CAmount nMinDevOutputSize_)
-        : sDevFundAddresses(sAddrTo), rMinDevStakeSplit(rMinDevStakeSplit_), nDevOutputGap(nDevOutputGap_), nMinDevOutputSize(nMinDevOutputSize_)
+    //DevFundSettings(std::string sAddrTo, float rMinDevStakeSplit_, int nDevOutputGap_, CAmount nMinDevOutputSize_)
+    //    : sDevFundAddresses(sAddrTo), rMinDevStakeSplit(rMinDevStakeSplit_), nDevOutputGap(nDevOutputGap_), nMinDevOutputSize(nMinDevOutputSize_)
+    DevFundSettings(std::string sAddrTo, int nMinDevStakePercent_, int nDevOutputPeriod_)
+        : sDevFundAddresses(sAddrTo), nMinDevStakePercent(nMinDevStakePercent_), nDevOutputPeriod(nDevOutputPeriod_)
         {};
     std::string sDevFundAddresses;
-    float rMinDevStakeSplit;
-    int nDevOutputGap; // num blocks between dev fund outputs, -1 to disable
-    CAmount nMinDevOutputSize; // if nDevOutputGap is -1, create a devfund output when value is > nMinDevOutputSize
+    int nMinDevStakePercent; // [0, 100]
+    int nDevOutputPeriod; // dev fund output is created every n blocks
+    //CAmount nMinDevOutputSize; // if nDevOutputGap is -1, create a devfund output when value is > nMinDevOutputSize
 };
 
 /**
@@ -99,7 +101,7 @@ public:
     
     int64_t GetStakeCombineThreshold() const { return nStakeCombineThreshold; }
     int64_t GetStakeSplitThreshold() const { return nStakeSplitThreshold; }
-    int64_t GetCoinYearReward() const { return nCoinYearReward; }
+    int64_t GetCoinYearReward(int64_t nTime) const;
     
     const DevFundSettings *GetDevFundSettings(int64_t nTime) const;
     

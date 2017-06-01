@@ -174,7 +174,20 @@ public:
     int Add(NodeId id);
 };
 
+/** Cache recently seen coinstake transactions */
+class CoinStakeCache
+{
+public:
+    int nMaxSize = 10;
+    std::list<std::pair<uint256, CTransactionRef> > lData;
+    
+    bool GetCoinStake(const uint256 &blockHash, CTransactionRef &tx);
+    bool InsertCoinStake(const uint256 &blockHash, const CTransactionRef &tx);
+};
+
 extern std::map<uint256, StakeConflict> mapStakeConflict;
+extern CoinStakeCache coinStakeCache;
+
 extern CScript COINBASE_FLAGS;
 extern CCriticalSection cs_main;
 extern CTxMemPool mempool;
@@ -539,6 +552,8 @@ bool GetAddressUnspent(uint160 addressHash, int type,
 bool WriteBlockToDisk(const CBlock& block, CDiskBlockPos& pos, const CMessageHeader::MessageStartChars& messageStart);
 bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos, const Consensus::Params& consensusParams);
 bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams);
+bool ReadTransactionFromDiskBlock(const CBlockIndex *pindex, int nIndex, CTransactionRef &txOut);
+
 
 /** Functions for validating blocks and updating the block tree */
 
@@ -649,5 +664,6 @@ void DumpMempool();
 
 /** Load the mempool from disk. */
 bool LoadMempool();
+
 
 #endif // BITCOIN_VALIDATION_H

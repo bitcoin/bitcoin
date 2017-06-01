@@ -48,6 +48,7 @@ enum DataOutputTypes
     DO_STEALTH_PREFIX       = 4,
     DO_VOTE                 = 5,
     DO_FEE                  = 6,
+    DO_DEV_FUND_CFWD        = 7,
 };
 
 inline bool IsParticlTxVersion(int nVersion)
@@ -867,6 +868,35 @@ public:
         
         size_t nb;
         return (0 == GetVarInt(vData, 1, (uint64_t&)nFee, nb));
+    }
+
+    bool GetDevFundCfwd(CAmount &nCfwd) const
+    {
+        if (vpout.size() < 1 || vpout[0]->nVersion != OUTPUT_DATA)
+            return false;
+        
+        std::vector<uint8_t> &vData = ((CTxOutData*)vpout[0].get())->vData;
+        if (vData.size() < 5)
+            return false;
+        
+        size_t ofs = 4; // first 4 bytes will be height
+        while (ofs < vData.size())
+        {
+            if (vData[ofs] == DO_VOTE)
+            {
+                ofs += 5;
+                continue;
+            };
+            if (vData[ofs] == DO_DEV_FUND_CFWD)
+            {
+                ofs++;
+                size_t nb;
+                return (0 == GetVarInt(vData, ofs, (uint64_t&)nCfwd, nb));
+            };
+            break;
+        };
+        
+        return false;
     }
 
     friend bool operator==(const CTransaction& a, const CTransaction& b)

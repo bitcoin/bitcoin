@@ -18,11 +18,27 @@
 #include "chainparamsseeds.h"
 #include "chainparamsimport.h"
 
+int64_t CChainParams::GetCoinYearReward(int64_t nTime) const
+{
+    static const int64_t nSecondsInYear = 365 * 24 * 60 * 60;
+
+    if (strNetworkID != "regtest")
+    {
+        // Y1 5%, Y2 4%, Y3 3%, Y4 2% ...
+        int64_t nYearsSinceGenesis = (nTime - genesis.nTime) / nSecondsInYear;
+
+        if (nYearsSinceGenesis >= 0 && nYearsSinceGenesis < 3)
+            return (5 - nYearsSinceGenesis) * CENT;
+    };
+
+    return nCoinYearReward;
+};
+
 int64_t CChainParams::GetProofOfStakeReward(const CBlockIndex *pindexPrev, int64_t nFees) const
 {
     int64_t nSubsidy;
 
-    nSubsidy = (pindexPrev->nMoneySupply / COIN) * GetCoinYearReward() / (365 * 24 * (60 * 60 / nTargetSpacing));
+    nSubsidy = (pindexPrev->nMoneySupply / COIN) * GetCoinYearReward(pindexPrev->nTime) / (365 * 24 * (60 * 60 / nTargetSpacing));
 
     if (fDebug && GetBoolArg("-printcreation", false))
         LogPrintf("GetProofOfStakeReward(): create=%s\n", FormatMoney(nSubsidy).c_str());
@@ -36,12 +52,12 @@ bool CChainParams::CheckImportCoinbase(int nHeight, uint256 &hash) const
     {
         if (cth.nHeight != nHeight)
             continue;
-        
+
         if (hash == cth.hash)
             return true;
         return error("%s - Hash mismatch at height %d: %s, expect %s.", __func__, nHeight, hash.ToString(), cth.hash.ToString());
     };
-    
+
     return error("%s - Unknown height.", __func__);
 };
 
@@ -60,7 +76,7 @@ const DevFundSettings *CChainParams::GetDevFundSettings(int64_t nTime) const
         if (nTime > vDevFundSettings[i].first)
             return &vDevFundSettings[i].second;
     };
-    
+
     return NULL;
 };
 
@@ -397,6 +413,10 @@ public:
         vSeeds.push_back(CDNSSeedData("dnsseed-mainnet.particl.io",  "dnsseed-mainnet.particl.io", true));
         vSeeds.push_back(CDNSSeedData("mainnet.particl.io",  "mainnet.particl.io", true));
         
+        
+        vDevFundSettings.push_back(std::make_pair(0, DevFundSettings("RJAPhgckEgRGVPZa9WoGSWW24spskSfLTQ", 10, 10)));
+        
+        
 
         base58Prefixes[PUBKEY_ADDRESS]     = std::vector<unsigned char>(1,56); // P
         base58Prefixes[SCRIPT_ADDRESS]     = std::vector<unsigned char>(1,60);
@@ -516,18 +536,22 @@ public:
         
         nPruneAfterHeight = 1000;
 
-        genesis = CreateGenesisBlockTestNet(1495745851, 13103, 0x1f00ffff);
+        genesis = CreateGenesisBlockTestNet(1496340963, 4646, 0x1f00ffff);
         consensus.hashGenesisBlock = genesis.GetHash();
         
-        assert(consensus.hashGenesisBlock == uint256S("0x0000aca899ea4ecf30771e5fb0297458f3be259ff3660f97138b8dfe4c9e73e5"));
+        assert(consensus.hashGenesisBlock == uint256S("0x000070d7c12bd8121b807c4124aeb1e37590a9453ead5e970cb9aa7b5ba74a48"));
         assert(genesis.hashMerkleRoot == uint256S("0x1617bd7f2f93d11d065cd655440cd05080b11e06b31e95a9b08bde0f4ad34d9b"));
         assert(genesis.hashWitnessMerkleRoot == uint256S("0x05b596687297bf123fd70bf6229678b1eac163e47793579900a72217d22616aa"));
-
+        
         vFixedSeeds.clear();
         vSeeds.clear();
         // nodes with support for servicebits filtering should be at the top
         vSeeds.push_back(CDNSSeedData("testnet-seed.particl.io",  "testnet-seed.particl.io", true));
         vSeeds.push_back(CDNSSeedData("dnsseed-testnet.particl.io",  "dnsseed-testnet.particl.io", true));
+        
+        
+        vDevFundSettings.push_back(std::make_pair(0, DevFundSettings("rTvv9vsbu269mjYYEecPYinDG8Bt7D86qD", 10, 10)));
+        
         
         base58Prefixes[PUBKEY_ADDRESS]     = std::vector<unsigned char>(1,118); // p
         base58Prefixes[SCRIPT_ADDRESS]     = std::vector<unsigned char>(1,122);

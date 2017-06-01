@@ -511,6 +511,16 @@ bool stringsMatchI(const std::string &sString, const std::string &sFind, int typ
     
     return 0; // unknown type
 };
+
+std::string AmountToString(CAmount nValue)
+{
+    bool sign = nValue < 0;
+    int64_t n_abs = (sign ? -nValue : nValue);
+    int64_t quotient = n_abs / COIN;
+    int64_t remainder = n_abs % COIN;
+    return strprintf("%s%d.%08d", sign ? "-" : "", quotient, remainder);
+};
+
 } // namespace part
 
 

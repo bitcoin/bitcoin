@@ -203,9 +203,7 @@ public:
     unsigned int nFlags;  // pos: block index flags
     uint256 bnStakeModifier; // hash modifier for proof-of-stake
     COutPoint prevoutStake;
-    //unsigned int nStakeTime;
     //uint256 hashProof;
-    
     CAmount nMoneySupply;
     
     

@@ -17,6 +17,7 @@
 #include "compat.h"
 #include "tinyformat.h"
 #include "utiltime.h"
+#include "amount.h"
 
 #include <atomic>
 #include <exception>
@@ -156,6 +157,7 @@ namespace part
     std::string GetTimeString(int64_t timestamp, char *buffer, size_t nBuffer);
     std::string BytesReadable(uint64_t nBytes);
     bool stringsMatchI(const std::string &sString, const std::string &sFind, int type);
+    std::string AmountToString(CAmount nValue);
 }
 
 /**

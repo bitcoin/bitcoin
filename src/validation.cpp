@@ -67,6 +67,8 @@ std::map<uint256, StakeConflict> mapStakeConflict;
 std::map<COutPoint, uint256> mapStakeSeen;
 std::list<COutPoint> listStakeSeen;
 
+CoinStakeCache coinStakeCache;
+
 CChain chainActive;
 CBlockIndex *pindexBestHeader = NULL;
 CWaitableCriticalSection csBestBlock;
@@ -1537,6 +1539,38 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus
     return true;
 }
 
+bool ReadTransactionFromDiskBlock(const CBlockIndex* pindex, int nIndex, CTransactionRef &txOut)
+{
+    const CDiskBlockPos &pos = pindex->GetBlockPos();
+    
+    // Open history file to read
+    CAutoFile filein(OpenBlockFile(pos, true), SER_DISK, CLIENT_VERSION);
+    if (filein.IsNull())
+        return error("%s: OpenBlockFile failed for %s", __func__, pos.ToString());
+    
+    CBlockHeader blockHeader;
+    try {
+        filein >> blockHeader;
+        
+        int nTxns = ReadVarInt<CAutoFile,int>(filein);
+        
+        if (nTxns <= nIndex || nIndex < 0)
+            return error("%s: Block %s, txn %d not in available range %d.", __func__, pindex->GetBlockPos().ToString(), nIndex, nTxns);
+        
+        for (int k = 0; k < nIndex; ++k)
+            filein >> txOut;
+    } catch (const std::exception& e)
+    {
+        return error("%s: Deserialize or I/O error - %s at %s", __func__, e.what(), pos.ToString());
+    }
+    
+    if (blockHeader.GetHash() != pindex->GetBlockHash())
+        return error("%s: Hash doesn't match index for %s at %s",
+                __func__, pindex->ToString(), pindex->GetBlockPos().ToString());
+    return true;
+}
+
+
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 {
     int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
@@ -2533,8 +2567,8 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     uint256 hashPrevBlock = pindex->pprev == NULL ? uint256() : pindex->pprev->GetBlockHash();
     assert(hashPrevBlock == view.GetBestBlock());
     
-    
-    bool fIsGenesisBlock = block.GetHash() == chainparams.GetConsensus().hashGenesisBlock;
+    uint256 blockHash = block.GetHash();
+    bool fIsGenesisBlock = blockHash == chainparams.GetConsensus().hashGenesisBlock;
     // Special case for the genesis block, skipping connection of its transactions
     // (its coinbase is unspendable)
     if (!fParticlMode  // genesis coinbase is spendable when in Particl mode
@@ -2937,9 +2971,82 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     {
         if (block.IsProofOfStake()) // only the genesis block isn't proof of stake
         {
+            CTransactionRef txCoinstake = block.vtx[0];
+            const DevFundSettings *pDevFundSettings = Params().GetDevFundSettings(block.nTime);
+            
             CAmount nCalculatedStakeReward = Params().GetProofOfStakeReward(pindex->pprev, nFees);
-            if (nStakeReward < 0 || nStakeReward > nCalculatedStakeReward)
-                return state.DoS(100, error("ConnectBlock() : coinstake pays too much(actual=%d vs calculated=%d)", nStakeReward, nCalculatedStakeReward), REJECT_INVALID, "bad-cs-amount");
+            
+            if (!pDevFundSettings || pDevFundSettings->nMinDevStakePercent <= 0)
+            {
+                if (nStakeReward < 0 || nStakeReward > nCalculatedStakeReward)
+                    return state.DoS(100, error("ConnectBlock() : coinstake pays too much(actual=%d vs calculated=%d)", nStakeReward, nCalculatedStakeReward), REJECT_INVALID, "bad-cs-amount");
+            } else
+            {
+                assert(pDevFundSettings->nMinDevStakePercent <= 100);
+                
+                CAmount nMinDevPart = (nCalculatedStakeReward * pDevFundSettings->nMinDevStakePercent) / 100;
+                CAmount nMaxHolderPart = nCalculatedStakeReward - nMinDevPart;
+                if (nMinDevPart < 0 || nMaxHolderPart < 0)
+                    return state.DoS(100, error("%s: bad coinstake split amount (foundation=%d vs reward=%d)", __func__, nMinDevPart, nMaxHolderPart), REJECT_INVALID, "bad-cs-amount");
+                
+                
+                
+                
+                CAmount nDevBfwd = 0;
+                if (pindex->pprev->nHeight > 0) // genesis block is pow
+                {
+                    CTransactionRef txPrevCoinstake;
+                    if (!coinStakeCache.GetCoinStake(pindex->pprev->GetBlockHash(), txPrevCoinstake))
+                        return state.DoS(100, error("%s: Failed to get previous coinstake.", __func__), REJECT_INVALID, "bad-cs-amount");
+                    
+                    
+                    // Sanity check
+                    assert(txPrevCoinstake->IsCoinStake());
+                    
+                    if (!txPrevCoinstake->GetDevFundCfwd(nDevBfwd))
+                        nDevBfwd = 0;
+                };
+                
+                if (pindex->nHeight % pDevFundSettings->nDevOutputPeriod == 0)
+                {
+                    // output cfwd must exist and match, cfwd data output must be unset
+                    // nStakeReward must == nDevBfwd + nCalculatedStakeReward
+                    
+                    if (nStakeReward != nDevBfwd + nCalculatedStakeReward)
+                        return state.DoS(100, error("%s: bad stake-reward (actual=%d vs expected=%d)", __func__, nStakeReward, nDevBfwd + nCalculatedStakeReward), REJECT_INVALID, "bad-cs-amount");
+                    
+                    CTxDestination dfDest = CBitcoinAddress(pDevFundSettings->sDevFundAddresses).Get();
+                    if (dfDest.type() == typeid(CNoDestination))
+                        return error("%s: Failed to get development fund destination: %s.", __func__, pDevFundSettings->sDevFundAddresses);
+                    CScript devFundScriptPubKey = GetScriptForDestination(dfDest);
+                    
+                    // output 1 must be to the dev fund
+                    const CTxOutStandard *outputDF = txCoinstake->vpout[1]->GetStandardOutput();
+                    if (!outputDF)
+                        return state.DoS(100, error("%s: Bad dev fund output.", __func__), REJECT_INVALID, "bad-cs");
+                    
+                    if (outputDF->scriptPubKey != devFundScriptPubKey)
+                        return state.DoS(100, error("%s: Bad dev fund output script.", __func__), REJECT_INVALID, "bad-cs");
+                    
+                    if (outputDF->nValue < nDevBfwd + nMinDevPart) // max value is clamped already
+                        return state.DoS(100, error("%s: bad dev-reward (actual=%d vs mindevpart=%d)", __func__, nStakeReward, nDevBfwd + nMinDevPart), REJECT_INVALID, "bad-cs-dev-amount");
+                } else
+                {
+                    // Ensure cfwd data output is correct and nStakeReward is <= nHolderPart
+                    // cfwd must == nDevBfwd + (nCalculatedStakeReward - nStakeReward) // allowing users to set a higher split
+                    
+                    if (nStakeReward < 0 || nStakeReward > nMaxHolderPart)
+                        return state.DoS(100, error("%s: bad stake-reward (actual=%d vs maxholderpart=%d)", __func__, nStakeReward, nMaxHolderPart), REJECT_INVALID, "bad-cs-amount");
+                    
+                    CAmount nDevCfwd = nDevBfwd + nCalculatedStakeReward - nStakeReward;
+                    CAmount nDevCfwdCheck = 0;
+                    if (!txCoinstake->GetDevFundCfwd(nDevCfwdCheck)
+                        || nDevCfwdCheck != nDevCfwd)
+                        return state.DoS(100, error("%s: coinstake dev fund carried forward mismatch (actual=%d vs expected=%d)", __func__, nDevCfwdCheck, nDevCfwd), REJECT_INVALID, "bad-cs-cfwd");
+                };
+                
+                coinStakeCache.InsertCoinStake(blockHash, txCoinstake);
+            };
         } else
         {
             if (block.GetHash() != Params().GenesisBlock().GetHash())
@@ -5838,3 +5945,40 @@ public:
         mapBlockIndex.clear();
     }
 } instance_of_cmaincleanup;
+
+
+bool CoinStakeCache::GetCoinStake(const uint256 &blockHash, CTransactionRef &tx)
+{
+    
+    for (const auto &i : lData)
+    {
+        if (blockHash != i.first)
+            continue;
+        tx = i.second;
+        return true;
+    };
+    
+    BlockMap::iterator mi = mapBlockIndex.find(blockHash);
+    if (mi == mapBlockIndex.end())
+        return false;
+    
+    CBlockIndex *pindex = mi->second;
+    if (ReadTransactionFromDiskBlock(pindex, 0, tx))
+        return InsertCoinStake(blockHash, tx);
+    
+    return false;
+};
+
+bool CoinStakeCache::InsertCoinStake(const uint256 &blockHash, const CTransactionRef &tx)
+{
+    
+    lData.emplace_front(blockHash, tx);
+    
+    
+    while (lData.size() > nMaxSize)
+        lData.pop_back();
+    
+    
+    return true;
+};
+

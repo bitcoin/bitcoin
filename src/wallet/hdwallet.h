@@ -558,6 +558,7 @@ public:
     
     std::vector<CVoteToken> vVoteTokens;
     
+    int nUserDevFundCedePercent;
     bool fUnlockForStakingOnly; // temporary, non-optimal solution.
     
 };

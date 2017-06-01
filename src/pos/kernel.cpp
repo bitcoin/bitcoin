@@ -222,7 +222,7 @@ bool CheckKernel(const CBlockIndex *pindexPrev, unsigned int nBits, int64_t nTim
     CBlock block;
     CTransactionRef tx;
     
-    // read transaction and block header, fTxIndex should be enabled by default
+    // Read transaction and block header, fTxIndex should be enabled by default
     if (!GetTransaction(prevout.hash, tx, Params().GetConsensus(), block, true))
         return false;
     

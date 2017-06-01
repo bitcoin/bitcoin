@@ -78,11 +78,25 @@ bool CHDWallet::InitLoadWallet()
     if (!pwallet)
         return false;
 
-    if (!ParseMoney(GetArg("-reservebalance", ""),  pwallet->nReserveBalance))
+    if (!ParseMoney(GetArg("-reservebalance", ""), pwallet->nReserveBalance))
     {
         delete pwallet;
         return InitError(_("Invalid amount for -reservebalance=<amount>"));
     };
+
+    pwallet->nUserDevFundCedePercent = GetArg("-foundationdonationpercent", 0);
+
+    if (pwallet->nUserDevFundCedePercent < 0)
+    {
+        LogPrintf("%s: Warning foundationdonationpercent out of range %d, clamped to %d\n", pwallet->nUserDevFundCedePercent, 0);
+        pwallet->nUserDevFundCedePercent = 0;
+    } else
+    if (pwallet->nUserDevFundCedePercent > 100)
+    {
+        LogPrintf("%s: Warning foundationdonationpercent out of range %d, clamped to %d\n", pwallet->nUserDevFundCedePercent, 100);
+        pwallet->nUserDevFundCedePercent = 100;
+    };
+
 
     if (pwallet->mapMasterKeys.size() > 0
         && !pwallet->SetCrypted())
@@ -1057,7 +1071,6 @@ int CHDWallet::GetDepthInMainChain(const uint256 &blockhash) const
 
 bool CHDWallet::IsTrusted(const uint256 &txhash, const uint256 &blockhash) const
 {
-    
     //if (!CheckFinalTx(*this))
     //    return false;
     //if (tx->IsCoinStake() && hashUnset()) // ignore failed stakes
@@ -6568,9 +6581,6 @@ std::vector<uint256> CHDWallet::ResendRecordTransactionsBefore(int64_t nTime, CC
     
     for (RtxOrdered_t::iterator it = rtxOrdered.begin(); it != rtxOrdered.end(); ++it)
     {
-        //it->second->first
-        //it->second->second
-        
         if (it->first > nTime)
             continue;
         
@@ -7646,10 +7656,61 @@ bool CHDWallet::CreateCoinStake(unsigned int nBits, int64_t nTime, int nBlockHei
     };
     
     CAmount nReward = Params().GetProofOfStakeReward(pindexPrev, nFees);
-    if (nReward <= 0)
+    if (nReward < 0)
         return false;
     
-    nCredit += nReward;
+    const DevFundSettings *pDevFundSettings = Params().GetDevFundSettings(nTime);
+    
+    if (!pDevFundSettings || pDevFundSettings->nMinDevStakePercent <= 0)
+    {
+        nCredit += nReward;
+    } else
+    {
+        int64_t nStakeSplit = std::max(pDevFundSettings->nMinDevStakePercent, nUserDevFundCedePercent);
+        
+        CAmount nDevPart = (nReward * nStakeSplit) / 100;
+        nCredit += nReward - nDevPart;
+        
+        CAmount nDevBfwd = 0;
+        if (nBlockHeight > 1) // genesis block is pow
+        {
+            CTransactionRef txPrevCoinstake;
+            if (!coinStakeCache.GetCoinStake(pindexPrev->GetBlockHash(), txPrevCoinstake))
+                return error("%s: Failed to get previous coinstake: %s.", __func__, pindexPrev->GetBlockHash().ToString());
+            
+            if (!txPrevCoinstake->GetDevFundCfwd(nDevBfwd))
+                nDevBfwd = 0;
+        };
+        
+        CAmount nDevCfwd = nDevBfwd + nDevPart;
+        if (nBlockHeight % pDevFundSettings->nDevOutputPeriod == 0)
+        {
+            std::shared_ptr<CTxOutStandard> outDevSplit = MAKE_OUTPUT<CTxOutStandard>();
+            outDevSplit->nValue = nDevCfwd;
+            
+            CTxDestination dfDest = CBitcoinAddress(pDevFundSettings->sDevFundAddresses).Get();
+            if (dfDest.type() == typeid(CNoDestination))
+                return error("%s: Failed to get foundation fund destination: %s.", __func__, pDevFundSettings->sDevFundAddresses);
+            outDevSplit->scriptPubKey = GetScriptForDestination(dfDest);
+            
+            txNew.vpout.insert(txNew.vpout.begin()+1, outDevSplit);
+        } else
+        {
+            // Add to carried forward
+            std::vector<uint8_t> &vData = ((CTxOutData*)txNew.vpout[0].get())->vData;
+            
+            std::vector<uint8_t> vCfwd(1);
+            vCfwd[0] = DO_DEV_FUND_CFWD;
+            if (0 != PutVarInt(vCfwd, nDevCfwd))
+                return error("%s: PutVarInt failed: %d.", __func__, nDevCfwd);
+            
+            vData.insert(vData.end(), vCfwd.begin(), vCfwd.end());
+        };
+        
+        LogPrint("pos", "%s: Coinstake reward split %d%%, foundation %s, reward %s.\n",
+            __func__, nStakeSplit, part::AmountToString(nDevPart), part::AmountToString(nReward - nDevPart));
+    };
+    
     
     // Set output amount, split outputs if > GetStakeSplitThreshold
     if (nCredit >= Params().GetStakeSplitThreshold())

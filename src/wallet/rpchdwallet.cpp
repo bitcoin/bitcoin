@@ -2799,6 +2799,16 @@ UniValue getstakinginfo(const JSONRPCRequest &request)
     
     UniValue obj(UniValue::VOBJ);
     
+    int64_t nTipTime;
+    float rCoinYearReward;
+    CAmount nMoneySupply;
+    {
+        LOCK(cs_main);
+        nTipTime = chainActive.Tip()->nTime;
+        rCoinYearReward = Params().GetCoinYearReward(nTipTime) / CENT;
+        nMoneySupply = chainActive.Tip()->nMoneySupply;
+    }
+    
     uint64_t nWeight = pwallet->GetStakeWeight();
 
     uint64_t nNetworkWeight = GetPoSKernelPS();
@@ -2808,6 +2818,17 @@ UniValue getstakinginfo(const JSONRPCRequest &request)
     obj.push_back(Pair("enabled", GetBoolArg("-staking", true)));
     obj.push_back(Pair("staking", staking));
     obj.push_back(Pair("errors", GetWarnings("statusbar")));
+
+    obj.push_back(Pair("percentyearreward", rCoinYearReward));
+    obj.push_back(Pair("moneysupply", ValueFromAmount(nMoneySupply)));
+
+    if (pwallet->nUserDevFundCedePercent > 0)
+        obj.push_back(Pair("userfoundationdonationpercent", pwallet->nUserDevFundCedePercent));
+
+    const DevFundSettings *pDevFundSettings = Params().GetDevFundSettings(nTipTime);
+    if (pDevFundSettings && pDevFundSettings->nMinDevStakePercent > 0)
+        obj.push_back(Pair("foundationdonationpercent", pDevFundSettings->nMinDevStakePercent));
+    
 
     obj.push_back(Pair("currentblocksize", (uint64_t)nLastBlockSize));
     obj.push_back(Pair("currentblocktx", (uint64_t)nLastBlockTx));
