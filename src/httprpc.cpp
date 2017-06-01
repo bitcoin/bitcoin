@@ -18,7 +18,7 @@
 #include <stdio.h>
 
 #include <boost/algorithm/string.hpp> // boost::trim
-#include <boost/foreach.hpp> //BOOST_FOREACH
+#include <boost/foreach.hpp>
 
 /** WWW-Authenticate to present with 401 Unauthorized response */
 static const char* WWW_AUTH_HEADER_DATA = "Basic realm=\"jsonrpc\"";
