@@ -168,6 +168,10 @@ public:
         case CT_UPDATED:
             // Miscellaneous updates -- nothing to do, status update will take care of this, and is only computed for
             // visible transactions.
+            for (int i = lowerIndex; i < upperIndex; i++) {
+                TransactionRecord *rec = &cachedWallet[i];
+                rec->status.needsUpdate = true;
+            }
             break;
         }
     }
