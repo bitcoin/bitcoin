@@ -59,7 +59,7 @@ public:
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(*(CAddress*)this);
+        READWRITE(*static_cast<CAddress*>(this));
         READWRITE(source);
         READWRITE(nLastSuccess);
         READWRITE(nAttempts);
