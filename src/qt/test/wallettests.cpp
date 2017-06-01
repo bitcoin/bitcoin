@@ -182,7 +182,7 @@ void TestSendCoins()
     BumpFee(transactionView, txid1, true /* expect disabled */, "not BIP 125 replaceable" /* expected error */, false /* cancel */);
     BumpFee(transactionView, txid2, false /* expect disabled */, {} /* expected error */, true /* cancel */);
     BumpFee(transactionView, txid2, false /* expect disabled */, {} /* expected error */, false /* cancel */);
-    BumpFee(transactionView, txid2, false /* expect disabled */, "already bumped" /* expected error */, false /* cancel */);
+    BumpFee(transactionView, txid2, true /* expect disabled */, "already bumped" /* expected error */, false /* cancel */);
 
     bitdb.Flush(true);
     bitdb.Reset();
