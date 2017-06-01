@@ -129,17 +129,6 @@ void Shutdown()
 //
 // Signal handlers are very limited in what they are allowed to do, so:
 //
-void DetectShutdownThread(boost::thread_group* threadGroup)
-{
-    // Tell the main threads to shutdown.
-    while (!fRequestShutdown)
-    {
-        MilliSleep(200);
-        if (fRequestShutdown)
-            threadGroup->interrupt_all();
-    }
-}
-
 void HandleSIGTERM(int)
 {
     fRequestShutdown = true;
