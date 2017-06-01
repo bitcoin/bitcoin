@@ -451,8 +451,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
         return state.DoS(0, false, REJECT_NONSTANDARD, "non-final");
 
     // is it already in the memory pool?
-    if (pool.exists(hash))
-        return state.Invalid(false, REJECT_ALREADY_KNOWN, "txn-already-in-mempool");
+    if (pool.exists(hash)) {
+        return state.Invalid(false, REJECT_DUPLICATE, "txn-already-in-mempool");
+    }
 
     // If this is a Transaction Lock Request check to see if it's valid
     if(instantsend.HasTxLockRequest(hash) && !CTxLockRequest(tx).IsValid())
@@ -517,8 +518,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
                         }
                     }
                 }
-                if (fReplacementOptOut)
-                    return state.Invalid(false, REJECT_CONFLICT, "txn-mempool-conflict");
+                if (fReplacementOptOut) {
+                    return state.Invalid(false, REJECT_DUPLICATE, "txn-mempool-conflict");
+                }
 
                 setConflicts.insert(ptxConflicting->GetHash());
             }
@@ -545,7 +547,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
                 if (!had_coin_in_cache) {
                     coins_to_uncache.push_back(outpoint);
                 }
-                return state.Invalid(false, REJECT_ALREADY_KNOWN, "txn-already-known");
+                return state.Invalid(false, REJECT_DUPLICATE, "txn-already-known");
             }
         }
 
