@@ -5,14 +5,14 @@ SUBDIRS = src
 GZIP_ENV="-9n"
 
 BITCOIND_BIN=$(top_builddir)/src/ppcoind$(EXEEXT)
-BITCOIN_QT_BIN=$(top_builddir)/src/qt/ppcoin-qt$(EXEEXT)
+BITCOIN_QT_BIN=$(top_builddir)/src/qt/peercoin-qt$(EXEEXT)
 BITCOIN_WIN_INSTALLER=$(PACKAGE)-$(PACKAGE_VERSION)-win32-setup$(EXEEXT)
 
 OSX_APP=Peercoin-Qt.app
 OSX_DMG=Peercoin-Qt.dmg
 OSX_DEPLOY_SCRIPT=$(top_srcdir)/contrib/macdeploy/macdeployqtplus
 OSX_FANCY_PLIST=$(top_srcdir)/contrib/macdeploy/fancy.plist
-OSX_INSTALLER_ICONS=$(top_srcdir)/src/qt/res/icons/bitcoin.icns
+OSX_INSTALLER_ICONS=$(top_srcdir)/src/qt/res/icons/ppcoin.icns
 OSX_PLIST=$(top_srcdir)/share/qt/Info.plist #not installed
 OSX_QT_TRANSLATIONS = da,de,es,hu,ru,uk,zh_CN,zh_TW
 
@@ -53,10 +53,10 @@ $(BITCOIN_WIN_INSTALLER): all-recursive
 	  echo error: could not build $@
 
 $(BITCOIND_BIN):
-	make -C $(top_srcdir)/src bitcoind$(EXEEXT)
+	make -C $(top_srcdir)/src ppcoind$(EXEEXT)
 
 $(BITCOIN_QT_BIN):
-	make -C $(top_srcdir)/src/qt bitcoin-qt$(EXEEXT)
+	make -C $(top_srcdir)/src/qt peercoin-qt$(EXEEXT)
 
 
 $(OSX_APP)/Contents/PkgInfo:
@@ -71,11 +71,11 @@ $(OSX_APP)/Contents/Info.plist: $(OSX_PLIST)
 	$(MKDIR_P) $(@D)
 	$(INSTALL_DATA) $< $@
 
-$(OSX_APP)/Contents/Resources/bitcoin.icns: $(OSX_INSTALLER_ICONS)
+$(OSX_APP)/Contents/Resources/ppcoin.icns: $(OSX_INSTALLER_ICONS)
 	$(MKDIR_P) $(@D)
 	$(INSTALL_DATA) $< $@
 
-$(OSX_APP)/Contents/MacOS/Bitcoin-Qt: $(BITCOIN_QT_BIN)
+$(OSX_APP)/Contents/MacOS/Peercoin-Qt: $(BITCOIN_QT_BIN)
 	$(MKDIR_P) $(@D)
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM)  $< $@
 
@@ -107,7 +107,7 @@ $(APP_DIST_DIR)/.background/background.png:
 $(APP_DIST_DIR)/.DS_Store:
 	$(INSTALL) $(top_srcdir)/contrib/macdeploy/DS_Store $@
 
-$(APP_DIST_DIR)/$(OSX_APP)/Contents/MacOS/Bitcoin-Qt: $(OSX_APP_BUILT) $(OSX_PACKAGING)
+$(APP_DIST_DIR)/$(OSX_APP)/Contents/MacOS/Peercoin-Qt: $(OSX_APP_BUILT) $(OSX_PACKAGING)
 	INSTALLNAMETOOL=$(INSTALLNAMETOOL)  OTOOL=$(OTOOL) STRIP=$(STRIP) $(OSX_DEPLOY_SCRIPT) $(OSX_APP) -translations-dir=$(QT_TRANSLATION_DIR) -add-qt-tr $(OSX_QT_TRANSLATIONS) -verbose 2
 
 deploydir: $(APP_DIST_EXTRAS)
@@ -119,15 +119,6 @@ endif
 if TARGET_WINDOWS
 deploy: $(BITCOIN_WIN_INSTALLER)
 endif
-
-$(BITCOIN_QT_BIN): FORCE
-	$(MAKE) -C src qt/$(@F)
-
-$(BITCOIND_BIN): FORCE
-	$(MAKE) -C src $(@F)
-
-$(BITCOIN_CLI_BIN): FORCE
-	$(MAKE) -C src $(@F)
 
 if USE_LCOV
 
