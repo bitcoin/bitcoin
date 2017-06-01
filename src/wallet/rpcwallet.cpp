@@ -1716,7 +1716,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
                 WalletTxToJSON(wtx, entry);
             entry.push_back(Pair("abandoned", wtx.isAbandoned()));
 			// SYSCOIN
-			if(IsSyscoinScript(wtx.vout[s.vout].scriptPubKey, op, vvchArgs))
+			if(wtx.nVersion == GetSyscoinTxVersion() && (IsSyscoinScript(wtx.vout[s.vout].scriptPubKey, op, vvchArgs) || (wtx.vout[s.vout].scriptPubKey[0] == OP_RETURN && DecodeAndParseSyscoinTx(wtx, op, nOut, vvchArgs))))
 			{
 				string strResponseEnglish = "";
 				string strResponseGUID = "";
@@ -1764,7 +1764,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
                 if (fLong)
                     WalletTxToJSON(wtx, entry);
 				// SYSCOIN
-				if(IsSyscoinScript(wtx.vout[r.vout].scriptPubKey, op, vvchArgs))
+				if(wtx.nVersion == GetSyscoinTxVersion() && (IsSyscoinScript(wtx.vout[r.vout].scriptPubKey, op, vvchArgs) || (wtx.vout[r.vout].scriptPubKey[0] == OP_RETURN && DecodeAndParseSyscoinTx(wtx, op, nOut, vvchArgs))))
 				{
 					string strResponseEnglish = "";
 					string strResponseGUID = "";
