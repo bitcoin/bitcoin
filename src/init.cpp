@@ -1289,16 +1289,6 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         }
     }
 
-    if (gArgs.IsArgSet("-whitelist")) {
-        for (const std::string& net : gArgs.GetArgs("-whitelist")) {
-            CSubNet subnet;
-            LookupSubNet(net.c_str(), subnet);
-            if (!subnet.IsValid())
-                return InitError(strprintf(_("Invalid netmask specified in -whitelist: '%s'"), net));
-            connman.AddWhitelistedRange(subnet);
-        }
-    }
-
     // Check for host lookup allowed before parsing any network related parameters
     fNameLookup = GetBoolArg("-dns", DEFAULT_NAME_LOOKUP);
 
@@ -1660,6 +1650,16 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     connOptions.nMaxOutboundTimeframe = nMaxOutboundTimeframe;
     connOptions.nMaxOutboundLimit = nMaxOutboundLimit;
+
+    if (gArgs.IsArgSet("-whitelist")) {
+        for (const auto& net : gArgs.GetArgs("-whitelist")) {
+            CSubNet subnet;
+            LookupSubNet(net.c_str(), subnet);
+            if (!subnet.IsValid())
+                return InitError(strprintf(_("Invalid netmask specified in -whitelist: '%s'"), net));
+            connOptions.vWhitelistedRange.push_back(subnet);
+        }
+    }
 
     if (gArgs.IsArgSet("-seednode")) {
         connOptions.vSeedNodes = gArgs.GetArgs("-seednode");
