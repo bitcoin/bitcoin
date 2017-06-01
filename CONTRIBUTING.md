@@ -1,7 +1,7 @@
-Contributing to Bitcoin Core
-============================
+Contributing to btc1
+====================
 
-The Bitcoin Core project operates an open contributor model where anyone is
+The btc1 project operates an open contributor model where anyone is
 welcome to contribute towards development in the form of peer review, testing
 and patches. This document explains the practical process and guidelines for
 contributing.
@@ -14,6 +14,11 @@ purposes. As such there are repository "maintainers" who are responsible for
 merging pull requests as well as a "lead maintainer" who is responsible for the
 release cycle, overall merging, moderation and appointment of maintainers.
 
+Filing Issues
+-------------
+Issues are primarily for btc1 members.   Non-members' issues will normally be closed automatically, as a matter of policy.
+
+Issues are not intended as a generalized free support avenue.
 
 Contributor Workflow
 --------------------
