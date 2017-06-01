@@ -521,15 +521,6 @@ std::string HelpMessage(HelpMessageMode mode)
         strUsage += HelpMessageOpt("-rpcservertimeout=<n>", strprintf("Timeout during HTTP requests (default: %d)", DEFAULT_HTTP_SERVER_TIMEOUT));
     }
     
-#ifdef ENABLE_WALLET
-    strUsage += "  -staking                         " + _("Stake your coins to support network and gain reward (default: 1)") + "\n";
-    strUsage += "  -minstakeinterval=<n>            " + _("Minimum time in seconds between successful stakes (default: 30)") + "\n";
-    strUsage += "  -minersleep=<n>                  " + _("Milliseconds between stake attempts. Lowering this param will not result in more stakes. (default: 500)") + "\n";
-    strUsage += "  -reservebalance=<amount>         " + _("Ensure available balance remains above reservebalance. (default: 0)") + "\n";
-    strUsage += "  -foundationdonationpercent=<n>   " + _("Percentage of block reward donated to the foundation fund, overridden by system minimum. (default: 0)") + "\n";
-    
-#endif
-    
     return strUsage;
 }
 

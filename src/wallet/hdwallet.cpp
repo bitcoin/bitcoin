@@ -494,6 +494,8 @@ bool CHDWallet::Unlock(const SecureString &strWalletPassphrase)
         
     } // cs_main, cs_wallet
     
+    WakeThreadStakeMiner();
+    
     return true;
 };
 

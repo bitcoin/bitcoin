@@ -3702,6 +3702,17 @@ std::string CWallet::GetWalletHelpString(bool showDebug)
         strUsage += HelpMessageOpt("-privdb", strprintf("Sets the DB_PRIVATE flag in the wallet db environment (default: %u)", DEFAULT_WALLET_PRIVDB));
         strUsage += HelpMessageOpt("-walletrejectlongchains", strprintf(_("Wallet will not create transactions that violate mempool chain limits (default: %u)"), DEFAULT_WALLET_REJECT_LONG_CHAINS));
     }
+    
+    if (fParticlMode)
+    {
+        strUsage += HelpMessageGroup(_("Wallet staking options:"));
+        
+        strUsage += HelpMessageOpt("-staking", _("Stake your coins to support network and gain reward (default: 1)"));
+        strUsage += HelpMessageOpt("-minstakeinterval=<n>", _("Minimum time in seconds between successful stakes (default: 30)"));
+        strUsage += HelpMessageOpt("-minersleep=<n>", _("Milliseconds between stake attempts. Lowering this param will not result in more stakes. (default: 500)"));
+        strUsage += HelpMessageOpt("-reservebalance=<amount>", _("Ensure available balance remains above reservebalance. (default: 0)"));
+        strUsage += HelpMessageOpt("-foundationdonationpercent=<n>", _("Percentage of block reward donated to the foundation fund, overridden by system minimum. (default: 0)"));
+    };
 
     return strUsage;
 }
