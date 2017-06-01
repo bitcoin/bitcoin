@@ -50,6 +50,7 @@
 #include <QThread>
 #include <QTimer>
 #include <QTranslator>
+#include <QSslCipher>
 #include <QSslConfiguration>
 
 #if defined(QT_STATICPLUGIN)
@@ -564,13 +565,25 @@ int main(int argc, char *argv[])
 #ifdef Q_OS_MAC
     QApplication::setAttribute(Qt::AA_DontShowIconsInMenus);
 #endif
+    {
+        QSslConfiguration sslconf = QSslConfiguration::defaultConfiguration();
 #if QT_VERSION >= 0x050500
-    // Because of the POODLE attack it is recommended to disable SSLv3 (https://disablessl3.com/),
-    // so set SSL protocols to TLS1.0+.
-    QSslConfiguration sslconf = QSslConfiguration::defaultConfiguration();
-    sslconf.setProtocol(QSsl::TlsV1_0OrLater);
-    QSslConfiguration::setDefaultConfiguration(sslconf);
+        // Because of the POODLE attack it is recommended to disable SSLv3 (https://disablessl3.com/),
+        // so set SSL protocols to TLS1.0+.
+        sslconf.setProtocol(QSsl::TlsV1_0OrLater);
+#else
+        // QT versions prior to 5.5 do not have the flag for saying "TLSv1 or later" (https://bugreports.qt.io/browse/QTBUG-43168)
+        // We don't have enum values for 1.1 or 1.2, nor for whatever may come next, so we must manually go through the list and strip anything from SSLv3 or earlier
+        QList<QSslCipher> defaultPermitted = sslconf.ciphers(), safe;
+        for (auto i = defaultPermitted.begin(); i != defaultPermitted.end(); ++i) {
+            if (i->protocol() != QSsl::SslV3 && i->protocol() != QSsl::SslV2) {
+                safe.append(*i);
+            }
+        }
+        sslconf.setCiphers(safe);
 #endif
+        QSslConfiguration::setDefaultConfiguration(sslconf);
+    }
 
     // Register meta types used for QMetaObject::invokeMethod
     qRegisterMetaType< bool* >();
