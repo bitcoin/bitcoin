@@ -145,6 +145,7 @@ public:
         uint64_t nMaxOutboundTimeframe = 0;
         uint64_t nMaxOutboundLimit = 0;
         std::vector<std::string> vSeedNodes;
+        std::vector<CSubNet> vWhitelistedRange;
     };
     CConnman(uint64_t seed0, uint64_t seed1);
     ~CConnman();
@@ -301,8 +302,6 @@ public:
 
     unsigned int GetSendBufferSize() const;
 
-    void AddWhitelistedRange(const CSubNet &subnet);
-
     ServiceFlags GetLocalServices() const;
 
     //!set the max outbound target in bytes
@@ -405,7 +404,6 @@ private:
     // Whitelisted ranges. Any node connecting from these is automatically
     // whitelisted (as well as those connecting to whitelisted binds).
     std::vector<CSubNet> vWhitelistedRange;
-    CCriticalSection cs_vWhitelistedRange;
 
     unsigned int nSendBufferMaxSize;
     unsigned int nReceiveFloodSize;
