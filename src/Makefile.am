@@ -44,7 +44,7 @@ nodist_libppcoin_a_SOURCES = $(top_srcdir)/src/obj/build.h
 # ppcoind binary #
 ppcoind_LDADD = libppcoin.a leveldb/libleveldb.a leveldb/libmemenv.a \
   $(BOOST_LIBS)
-ppcoind_SOURCES = main.cpp
+ppcoind_SOURCES = bitcoind.cpp
 #
 
 leveldb/libleveldb.a:

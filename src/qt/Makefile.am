@@ -104,6 +104,10 @@ QT_MOC_CPP = moc_macdockiconhandler.cpp \
   moc_rpcconsole.cpp \
   moc_overviewpage.cpp
 
+QT_MOC = bitcoin.moc \
+  overviewpage.moc \
+  rpcconsole.moc
+
 QT_QRC_CPP = qrc_bitcoin.cpp
 QT_QRC = bitcoin.qrc
 
@@ -224,7 +228,7 @@ QT_QM=$(QT_TS:.ts=.qm)
 .SECONDARY: $(QT_QM)
 
 $(QT_QRC_CPP): $(QT_QRC) $(QT_QM) $(QT_FORMS_H) $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES) $(PROTOBUF_H)
-	@cd $(abs_srcdir); test -f $(RCC) && $(RCC) -name ppcoin -o $(abs_builddir)/$@ $< || \
+	@cd $(abs_srcdir); test -f $(RCC) && $(RCC) -name bitcoin -o $(abs_builddir)/$@ $< || \
 	  echo error: could not build $@
 	$(SED) -i.bak -e '/^\*\*.*Created:/d' $@ && rm $@.bak
 	$(SED) -i.bak -e '/^\*\*.*by:/d' $@ && rm $@.bak
