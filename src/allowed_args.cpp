@@ -710,7 +710,7 @@ BitcoinTx::BitcoinTx()
         .addDebugArg("", optionalBool, "Read hex-encoded bitcoin transaction from stdin.");
 }
 
-ConfigFile::ConfigFile()
+ConfigFile::ConfigFile(CTweakMap *pTweaks)
 {
     // Merges all allowed args from BitcoinCli, Bitcoind, and BitcoinQt.
     // Excludes args from BitcoinTx, because bitcoin-tx does not read
@@ -718,7 +718,7 @@ ConfigFile::ConfigFile()
     // program does not output a config file help message anywhere.
 
     BitcoinCli bitcoinCli;
-    Bitcoind bitcoind;
+    Bitcoind bitcoind(pTweaks);
     BitcoinQt bitcoinQt;
 
     m_args.insert(bitcoinCli.getArgs().begin(), bitcoinCli.getArgs().end());

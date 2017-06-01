@@ -15,7 +15,7 @@
 
 BOOST_FIXTURE_TEST_SUITE(getarg_tests, BasicTestingSetup)
 
-static void ResetArgs(const std::string& strArg)
+static void ResetArgs(const std::string& strArg, bool fConfigFile=false)
 {
     std::vector<std::string> vecArg;
     if (strArg.size())
@@ -29,7 +29,10 @@ static void ResetArgs(const std::string& strArg)
     BOOST_FOREACH(std::string& s, vecArg)
         vecChar.push_back(s.c_str());
 
-    ParseParameters(vecChar.size(), &vecChar[0], AllowedArgs::Bitcoind(&tweaks));
+    if (fConfigFile)
+        ParseParameters(vecChar.size(), &vecChar[0], AllowedArgs::ConfigFile(&tweaks));
+    else
+        ParseParameters(vecChar.size(), &vecChar[0], AllowedArgs::Bitcoind(&tweaks));
 }
 
 BOOST_AUTO_TEST_CASE(boolarg)
@@ -172,6 +175,12 @@ BOOST_AUTO_TEST_CASE(boolargno)
 BOOST_AUTO_TEST_CASE(tweakArgs)
 {
     ResetArgs("-mining.comment=I_Am_A_Meat_Popsicle -mining.coinbaseReserve=250 -wallet.maxTxFee=0.001");
+    BOOST_CHECK_EQUAL(GetArg("-mining.comment", "foo"), "I_Am_A_Meat_Popsicle");
+    BOOST_CHECK_EQUAL(GetArg("-mining.coinbaseReserve", 100), 250);
+    BOOST_CHECK_EQUAL(GetArg("-wallet.maxTxFee", ""), "0.001");
+
+    // Test ConfigFile accepts tweaks
+    ResetArgs("-mining.comment=I_Am_A_Meat_Popsicle -mining.coinbaseReserve=250 -wallet.maxTxFee=0.001", true);
     BOOST_CHECK_EQUAL(GetArg("-mining.comment", "foo"), "I_Am_A_Meat_Popsicle");
     BOOST_CHECK_EQUAL(GetArg("-mining.coinbaseReserve", 100), 250);
     BOOST_CHECK_EQUAL(GetArg("-wallet.maxTxFee", ""), "0.001");
