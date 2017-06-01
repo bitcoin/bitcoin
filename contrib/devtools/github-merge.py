@@ -301,8 +301,7 @@ def main():
                     subprocess.check_call([GIT,'commit','-q','--gpg-sign','--amend','--no-edit'])
                     break
                 except subprocess.CalledProcessError as e:
-                    print("Error signing, exiting.",file=stderr)
-                    exit(1)
+                    print("Error while signing, asking again.",file=stderr)
             elif reply == 'x':
                 print("Not signing off on merge, exiting.",file=stderr)
                 exit(1)
