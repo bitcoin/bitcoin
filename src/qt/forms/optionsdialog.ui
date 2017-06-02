@@ -13,6 +13,10 @@
   <property name="windowTitle">
    <string>Options</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">QTabWidget:tab-bar { alignment: left }
+QTabBar { alignment: left; }</string>
+  </property>
   <property name="modal">
    <bool>true</bool>
   </property>
