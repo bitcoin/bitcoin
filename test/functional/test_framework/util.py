@@ -7,21 +7,15 @@
 from base64 import b64encode
 from binascii import hexlify, unhexlify
 from decimal import Decimal, ROUND_DOWN
-import errno
-import http.client
 import json
 import logging
 import os
 import random
 import re
-import subprocess
-import tempfile
 import time
 
 from . import coverage
 from .authproxy import AuthServiceProxy, JSONRPCException
-
-COVERAGE_DIR = None
 
 logger = logging.getLogger("TestFramework.utils")
 
@@ -31,9 +25,6 @@ MAX_NODES = 8
 PORT_MIN = 11000
 # The number of ports to "reserve" for p2p and rpc, each
 PORT_RANGE = 5000
-
-BITCOIND_PROC_WAIT_TIMEOUT = 60
-
 
 class PortSeed:
     # Must be initialized with a unique integer for each process
@@ -60,13 +51,7 @@ def disable_mocktime():
 def get_mocktime():
     return MOCKTIME
 
-def enable_coverage(dirname):
-    """Maintain a log of which RPC calls are made during testing."""
-    global COVERAGE_DIR
-    COVERAGE_DIR = dirname
-
-
-def get_rpc_proxy(url, node_number, timeout=None):
+def get_rpc_proxy(url, node_number, timeout=None, coveragedir=None):
     """
     Args:
         url (str): URL of the RPC server to call
@@ -87,7 +72,7 @@ def get_rpc_proxy(url, node_number, timeout=None):
     proxy.url = url  # store URL on proxy for info
 
     coverage_logfile = coverage.get_filename(
-        COVERAGE_DIR, node_number) if COVERAGE_DIR else None
+        coveragedir, node_number) if coveragedir else None
 
     return coverage.AuthServiceProxyWrapper(proxy, coverage_logfile)
 
@@ -172,8 +157,6 @@ def sync_mempools(rpc_connections, *, wait=1, timeout=60):
         timeout -= wait
     raise AssertionError("Mempool sync failed")
 
-bitcoind_processes = {}
-
 def initialize_datadir(dirname, n):
     datadir = os.path.join(dirname, "node" + str(n))
     if not os.path.isdir(datadir):
@@ -222,120 +205,8 @@ def rpc_url(datadir, i, rpchost=None):
             host = rpchost
     return "http://%s:%s@%s:%d" % (rpc_u, rpc_p, host, int(port))
 
-def wait_for_bitcoind_start(process, datadir, i, rpchost=None):
-    '''
-    Wait for bitcoind to start. This means that RPC is accessible and fully initialized.
-    Raise an exception if bitcoind exits during initialization.
-    '''
-    while True:
-        if process.poll() is not None:
-            raise Exception('bitcoind exited with status %i during initialization' % process.returncode)
-        try:
-            # Check if .cookie file to be created
-            rpc = get_rpc_proxy(rpc_url(datadir, i, rpchost), i)
-            rpc.getblockcount()
-            break  # break out of loop on success
-        except IOError as e:
-            if e.errno != errno.ECONNREFUSED:  # Port not yet open?
-                raise  # unknown IO error
-        except JSONRPCException as e:  # Initialization phase
-            if e.error['code'] != -28:  # RPC in warmup?
-                raise  # unknown JSON RPC exception
-        except ValueError as e:  # cookie file not found and no rpcuser or rpcassword. bitcoind still starting
-            if "No RPC credentials" not in str(e):
-                raise
-        time.sleep(0.25)
-
-def wait_for_node_exit(node_index, timeout):
-    bitcoind_processes[node_index].wait(timeout)
-
-def _start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=None, stderr=None):
-    """Start a bitcoind and return RPC connection to it
-
-    This function should only be called from within test_framework, not by individual test scripts."""
-
-    datadir = os.path.join(dirname, "node" + str(i))
-    if binary is None:
-        binary = os.getenv("BITCOIND", "bitcoind")
-    args = [binary, "-datadir=" + datadir, "-server", "-keypool=1", "-discover=0", "-rest", "-logtimemicros", "-debug", "-debugexclude=libevent", "-debugexclude=leveldb", "-mocktime=" + str(get_mocktime()), "-uacomment=testnode%d" % i]
-    if extra_args is not None:
-        args.extend(extra_args)
-    bitcoind_processes[i] = subprocess.Popen(args, stderr=stderr)
-    logger.debug("initialize_chain: bitcoind started, waiting for RPC to come up")
-    wait_for_bitcoind_start(bitcoind_processes[i], datadir, i, rpchost)
-    logger.debug("initialize_chain: RPC successfully started")
-    proxy = get_rpc_proxy(rpc_url(datadir, i, rpchost), i, timeout=timewait)
-
-    if COVERAGE_DIR:
-        coverage.write_all_rpc_commands(COVERAGE_DIR, proxy)
-
-    return proxy
-
-def assert_start_raises_init_error(i, dirname, extra_args=None, expected_msg=None):
-    with tempfile.SpooledTemporaryFile(max_size=2**16) as log_stderr:
-        try:
-            node = _start_node(i, dirname, extra_args, stderr=log_stderr)
-            _stop_node(node, i)
-        except Exception as e:
-            assert 'bitcoind exited' in str(e)  # node must have shutdown
-            if expected_msg is not None:
-                log_stderr.seek(0)
-                stderr = log_stderr.read().decode('utf-8')
-                if expected_msg not in stderr:
-                    raise AssertionError("Expected error \"" + expected_msg + "\" not found in:\n" + stderr)
-        else:
-            if expected_msg is None:
-                assert_msg = "bitcoind should have exited with an error"
-            else:
-                assert_msg = "bitcoind should have exited with expected error " + expected_msg
-            raise AssertionError(assert_msg)
-
-def _start_nodes(num_nodes, dirname, extra_args=None, rpchost=None, timewait=None, binary=None):
-    """Start multiple bitcoinds, return RPC connections to them
-
-    This function should only be called from within test_framework, not by individual test scripts."""
-
-    if extra_args is None:
-        extra_args = [None] * num_nodes
-    if binary is None:
-        binary = [None] * num_nodes
-    assert_equal(len(extra_args), num_nodes)
-    assert_equal(len(binary), num_nodes)
-    rpcs = []
-    try:
-        for i in range(num_nodes):
-            rpcs.append(_start_node(i, dirname, extra_args[i], rpchost, timewait=timewait, binary=binary[i]))
-    except:
-        # If one node failed to start, stop the others
-        _stop_nodes(rpcs)
-        raise
-    return rpcs
-
 def log_filename(dirname, n_node, logname):
     return os.path.join(dirname, "node" + str(n_node), "regtest", logname)
-
-def _stop_node(node, i):
-    """Stop a bitcoind test node
-
-    This function should only be called from within test_framework, not by individual test scripts."""
-
-    logger.debug("Stopping node %d" % i)
-    try:
-        node.stop()
-    except http.client.CannotSendRequest as e:
-        logger.exception("Unable to stop node")
-    return_code = bitcoind_processes[i].wait(timeout=BITCOIND_PROC_WAIT_TIMEOUT)
-    del bitcoind_processes[i]
-    assert_equal(return_code, 0)
-
-def _stop_nodes(nodes):
-    """Stop multiple bitcoind test nodes
-
-    This function should only be called from within test_framework, not by individual test scripts."""
-
-    for i, node in enumerate(nodes):
-        _stop_node(node, i)
-    assert not bitcoind_processes.values()  # All connections must be gone now
 
 def set_node_times(nodes, t):
     for node in nodes:
