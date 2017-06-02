@@ -610,7 +610,7 @@ string AliasNew(const string& node, const string& aliasname, const string& passw
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "password").get_str() , password == "\"\""? "": password);
 	const string &passwordSalt = find_value(r.get_obj(), "passwordsalt").get_str();
 	if(password != "\"\"")
-		BOOST_CHECK_NO_THROW(CallRPC(node, "aliasauthenticate " + aliasname + " " + password + " " + passwordSalt + " Yes"));
+		BOOST_CHECK_NO_THROW(CallRPC(node, "aliasauthenticate " + aliasname + " " + password + " " + passwordSalt + " true"));
 	CAmount balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 	BOOST_CHECK(balanceAfter >= 10*COIN);
 	BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == aliasname);
@@ -625,7 +625,7 @@ string AliasNew(const string& node, const string& aliasname, const string& passw
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "aliasinfo " + aliasname));
 		if(password != "\"\"")
-			BOOST_CHECK_NO_THROW(CallRPC(otherNode1, "aliasauthenticate " + aliasname + " " + password + " " + passwordSalt + " Yes"));
+			BOOST_CHECK_NO_THROW(CallRPC(otherNode1, "aliasauthenticate " + aliasname + " " + password + " " + passwordSalt + " true"));
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "password").get_str() , "");
 		BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == aliasname);
 		if(aliasname != "sysrates.peg" && aliasname != "sysban" && aliasname != "syscategory")
@@ -640,7 +640,7 @@ string AliasNew(const string& node, const string& aliasname, const string& passw
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "aliasinfo " + aliasname));
 		if(password != "\"\"")
-			BOOST_CHECK_NO_THROW(CallRPC(otherNode2, "aliasauthenticate " + aliasname + " " + password + " " + passwordSalt + " Yes"));
+			BOOST_CHECK_NO_THROW(CallRPC(otherNode2, "aliasauthenticate " + aliasname + " " + password + " " + passwordSalt + " true"));
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "password").get_str() , "");
 		BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == aliasname);
 		if(aliasname != "sysrates.peg" && aliasname != "sysban" && aliasname != "syscategory")
@@ -722,7 +722,7 @@ string AliasTransfer(const string& node, const string& aliasname, const string& 
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "password").get_str(), "");
 
 	if(!oldPassword.empty())
-		BOOST_CHECK_THROW(CallRPC(node, "aliasauthenticate " + aliasname + " " + oldPassword + " " + oldPasswordSalt + " Yes"), runtime_error);
+		BOOST_CHECK_THROW(CallRPC(node, "aliasauthenticate " + aliasname + " " + oldPassword + " " + oldPasswordSalt + " true"), runtime_error);
 
 	CAmount balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 	BOOST_CHECK(balanceAfter >= (balanceBefore-COIN));
@@ -770,7 +770,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	if(myPassword.empty())
 		myPassword = oldPassword;
 	else if(!oldPassword.empty())
-		BOOST_CHECK_NO_THROW(CallRPC(node, "aliasauthenticate " + aliasname + " " + oldPassword + " " + oldPasswordSalt + " Yes"));
+		BOOST_CHECK_NO_THROW(CallRPC(node, "aliasauthenticate " + aliasname + " " + oldPassword + " " + oldPasswordSalt + " true"));
 	CAmount balanceBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
 
 	string strCipherPrivateData = "";
@@ -852,8 +852,8 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	{
 		UniValue authresult;
 		if(!oldPassword.empty())
-			BOOST_CHECK_THROW(CallRPC(node, "aliasauthenticate " + aliasname + " " + oldPassword + " " + oldPasswordSalt + " Yes"), runtime_error);
-		BOOST_CHECK_NO_THROW(authresult = CallRPC(node, "aliasauthenticate " + aliasname + " " + myPassword + " " + newPasswordSalt + " Yes"));
+			BOOST_CHECK_THROW(CallRPC(node, "aliasauthenticate " + aliasname + " " + oldPassword + " " + oldPasswordSalt + " true"), runtime_error);
+		BOOST_CHECK_NO_THROW(authresult = CallRPC(node, "aliasauthenticate " + aliasname + " " + myPassword + " " + newPasswordSalt + " true"));
 		if(addressStr1 != "\"\"")
 			BOOST_CHECK_EQUAL(find_value(authresult.get_obj(), "readonly").get_bool(), true);
 	}
@@ -882,8 +882,8 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 		{
 			UniValue authresult;
 			if(!oldPassword.empty())
-				BOOST_CHECK_THROW(CallRPC(node, "aliasauthenticate " + aliasname + " " + oldPassword + " " + oldPasswordSalt + " Yes"), runtime_error);
-			BOOST_CHECK_NO_THROW(authresult = CallRPC(node, "aliasauthenticate " + aliasname + " " + myPassword + " " + newPasswordSalt + " Yes"));
+				BOOST_CHECK_THROW(CallRPC(node, "aliasauthenticate " + aliasname + " " + oldPassword + " " + oldPasswordSalt + " true"), runtime_error);
+			BOOST_CHECK_NO_THROW(authresult = CallRPC(node, "aliasauthenticate " + aliasname + " " + myPassword + " " + newPasswordSalt + " true"));
 			if(addressStr1 != "\"\"")
 				BOOST_CHECK_EQUAL(find_value(authresult.get_obj(), "readonly").get_bool(), true);	
 		}
@@ -906,8 +906,8 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 		{
 			UniValue authresult;
 			if(!oldPassword.empty())
-				BOOST_CHECK_THROW(CallRPC(node, "aliasauthenticate " + aliasname + " " + oldPassword + " " + oldPasswordSalt + " Yes"), runtime_error);
-			BOOST_CHECK_NO_THROW(authresult = CallRPC(node, "aliasauthenticate " + aliasname + " " + myPassword + " " + newPasswordSalt + " Yes"));
+				BOOST_CHECK_THROW(CallRPC(node, "aliasauthenticate " + aliasname + " " + oldPassword + " " + oldPasswordSalt + " true"), runtime_error);
+			BOOST_CHECK_NO_THROW(authresult = CallRPC(node, "aliasauthenticate " + aliasname + " " + myPassword + " " + newPasswordSalt + " true"));
 			if(addressStr1 != "\"\"")
 				BOOST_CHECK_EQUAL(find_value(authresult.get_obj(), "readonly").get_bool(), true);		
 		}
@@ -1248,7 +1248,7 @@ const string OfferNew(const string& node, const string& aliasname, const string&
 	string pvt = "\"\"";
 	string units = "\"\"";
 	UniValue r;
-	//						"offernew <alias> <category> <title> <quantity> <price> <description> <currency> [cert. guid] [payment options=SYS] [geolocation] [safe search=Yes] [private=No] [units] [coinoffer=No] [witness]"
+	//						"offernew <alias> <category> <title> <quantity> <price> <description> <currency> [cert. guid] [payment options=SYS] [geolocation] [safe search=Yes] [private=false] [units] [coinoffer=false] [witness]"
 	string offercreatestr = "offernew " + aliasname + " " + category + " " + title + " " + qty + " " + price + " " + description + " " + currency  + " " + certguid + " " + paymentoptions + " " + geolocation + " " + safesearch + " " + pvt + " " + units + " " + coinoffer + " " + witness;
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, offercreatestr));
 	const UniValue &arr = r.get_array();
@@ -1314,7 +1314,7 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 	string oldtitle = find_value(r.get_obj(), "title").get_str();
 	string oldgeolocation = find_value(r.get_obj(), "geolocation").get_str();
 	string oldcategory = find_value(r.get_obj(), "category").get_str();
-	//						"offerupdate <alias> <guid> [category] [title] [quantity] [price] [description] [currency] [private=No] [cert. guid] [geolocation] [safesearch=Yes] [commission] [paymentOptions] [witness]"
+	//						"offerupdate <alias> <guid> [category] [title] [quantity] [price] [description] [currency] [private=false] [cert. guid] [geolocation] [safesearch=Yes] [commission] [paymentOptions] [witness]"
 	string offerupdatestr = "offerupdate " + aliasname + " " + offerguid + " " + category + " " + title + " " + qty + " " + price + " " + description + " " + currency + " " + isprivate + " " + certguid + " " +  geolocation + " " + safesearch + " " + commission + " " + paymentoptions + " " + witness;
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, offerupdatestr));
 	GenerateBlocks(10, node);
@@ -1867,7 +1867,7 @@ void OfferClearWhitelist(const string& node, const string& offer, const string &
 const UniValue FindOfferAcceptList(const string& node, const string& alias, const string& offerguid, const string& acceptguid, bool nocheck)
 {
 	UniValue r, ret;
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerlist \"[\\\"" + alias + "\\\"]\" " + acceptguid + " Yes"));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerlist \"[\\\"" + alias + "\\\"]\" " + acceptguid + " true"));
 	BOOST_CHECK(r.type() == UniValue::VARR);
 	const UniValue &arrayValue = r.get_array();
 	for(int i=0;i<arrayValue.size();i++)
@@ -1889,7 +1889,7 @@ const UniValue FindOfferAcceptList(const string& node, const string& alias, cons
 const UniValue FindOfferAcceptFeedback(const string& node, const string &alias, const string& offerguid, const string& acceptguid,const string& accepttxid, bool nocheck)
 {
 	UniValue r, ret;
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerlist \"[\\\"" + alias + "\\\"]\" " + acceptguid + " Yes"));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerlist \"[\\\"" + alias + "\\\"]\" " + acceptguid + " true"));
 	BOOST_CHECK(r.type() == UniValue::VARR);
 	const UniValue &arrayValue = r.get_array();
 	for(int i=0;i<arrayValue.size();i++)
