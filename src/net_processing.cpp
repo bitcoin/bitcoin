@@ -219,6 +219,16 @@ struct CNodeState {
         fWantsCmpctWitness = false;
         fSupportsDesiredCmpctVersion = false;
     }
+
+    uint256 CurrentBlockHash() const {
+        if (!hashLastUnknownBlock.IsNull()) {
+            return hashLastUnknownBlock;
+        }
+        if (pindexBestKnownBlock) {
+            return pindexBestKnownBlock->GetBlockHash();
+        }
+        return uint256();
+    }
 };
 
 /** Map maintaining per-node state. Requires cs_main. */
@@ -1187,6 +1197,31 @@ inline void static SendBlockTransactions(const CBlock& block, const BlockTransac
     connman.PushMessage(pfrom, msgMaker.Make(nSendFlags, NetMsgType::BLOCKTXN, resp));
 }
 
+static bool AllowAsMatchingPeerTip(const CBlockIndex * const blockindex)
+{
+    return blockindex && (chainActive.Contains(blockindex) || pindexBestHeader->Contains(blockindex));
+}
+
+static void NetAfterProcessNewBlock(CConnman& connman, const uint256& blockhash)
+{
+    auto blockindex_it = mapBlockIndex.find(blockhash);
+    if (blockindex_it != mapBlockIndex.end() && AllowAsMatchingPeerTip(blockindex_it->second)) {
+        // Block is valid and part of either our main chain or our best-header chain
+        return;
+    }
+
+    // Disconnect any require-matching-tip peers that have this block as their tip
+    connman.ForEachNode([blockhash](CNode* node) {
+        CNodeState *nodestate = State(node->GetId());
+        if (!node->RequireMatchingTip()) {
+            return;
+        }
+        if (nodestate->CurrentBlockHash() != blockhash) {
+            node->fDisconnect = true;
+        }
+    });
+}
+
 bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, CConnman& connman, const std::atomic<bool>& interruptMsgProc)
 {
     LogPrint(BCLog::NET, "received: %s (%u bytes) peer=%d\n", SanitizeString(strCommand), vRecv.size(), pfrom->GetId());
@@ -1566,6 +1601,9 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
             if (inv.type == MSG_BLOCK) {
                 UpdateBlockAvailability(pfrom->GetId(), inv.hash);
+                if (fAlreadyHave && !AllowAsMatchingPeerTip(mapBlockIndex[inv.hash])) {
+                    pfrom->TipDoesntMatch();
+                }
                 if (!fAlreadyHave && !fImporting && !fReindex && !mapBlocksInFlight.count(inv.hash)) {
                     // We used to request the full block here, but since headers-announcements are now the
                     // primary method of announcement on the network, and since, in the case that a node
@@ -1994,6 +2032,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                     Misbehaving(pfrom->GetId(), nDoS);
                 }
                 LogPrintf("Peer %d sent us invalid header via cmpctblock\n", pfrom->GetId());
+                pfrom->TipDoesntMatch();
                 return true;
             }
         }
@@ -2024,8 +2063,12 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         std::map<uint256, std::pair<NodeId, std::list<QueuedBlock>::iterator> >::iterator blockInFlightIt = mapBlocksInFlight.find(pindex->GetBlockHash());
         bool fAlreadyInFlight = blockInFlightIt != mapBlocksInFlight.end();
 
-        if (pindex->nStatus & BLOCK_HAVE_DATA) // Nothing to do here
+        if (pindex->nStatus & BLOCK_HAVE_DATA) {
+            if (!AllowAsMatchingPeerTip(pindex)) {
+                pfrom->TipDoesntMatch();
+            }
             return true;
+        }
 
         if (pindex->nChainWork <= chainActive.Tip()->nChainWork || // We know something better
                 pindex->nTx != 0) { // We had this block at some point, but pruned it
@@ -2151,6 +2194,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             ProcessNewBlock(chainparams, pblock, true, &fNewBlock);
             if (fNewBlock)
                 pfrom->nLastBlockTime = GetTime();
+            NetAfterProcessNewBlock(connman, pblock->GetHash());
 
             LOCK(cs_main); // hold cs_main for CBlockIndex::IsValid()
             if (pindex->IsValid(BLOCK_VALID_TRANSACTIONS)) {
@@ -2228,6 +2272,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             ProcessNewBlock(chainparams, pblock, true, &fNewBlock);
             if (fNewBlock)
                 pfrom->nLastBlockTime = GetTime();
+            NetAfterProcessNewBlock(connman, pblock->GetHash());
         }
     }
 
@@ -2291,6 +2336,8 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             // we can use this peer to download.
             UpdateBlockAvailability(pfrom->GetId(), headers.back().GetHash());
 
+            pfrom->TipDoesntMatch();
+
             return true;
         }
         }
@@ -2317,6 +2364,9 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
         assert(pindexLast);
         UpdateBlockAvailability(pfrom->GetId(), pindexLast->GetBlockHash());
+        if (!AllowAsMatchingPeerTip(pindexLast)) {
+            pfrom->TipDoesntMatch();
+        }
 
         if (nCount == MAX_HEADERS_RESULTS) {
             // Headers message had its maximum size; the peer may have more headers.
@@ -2406,6 +2456,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         ProcessNewBlock(chainparams, pblock, forceProcessing, &fNewBlock);
         if (fNewBlock)
             pfrom->nLastBlockTime = GetTime();
+        NetAfterProcessNewBlock(connman, pblock->GetHash());
     }
 
 

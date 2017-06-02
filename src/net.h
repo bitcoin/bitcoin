@@ -804,6 +804,18 @@ public:
         return nLocalServices;
     }
 
+    bool RequireMatchingTip() const
+    {
+        return !(fInbound || fFeeler);
+    }
+
+    void TipDoesntMatch()
+    {
+        if (RequireMatchingTip()) {
+            fDisconnect = true;
+        }
+    }
+
     std::string GetAddrName() const;
     //! Sets the addrName only if it was not previously set
     void MaybeSetAddrName(const std::string& addrNameIn);
