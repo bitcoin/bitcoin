@@ -111,3 +111,4 @@ test/cache/*
 
 libbitcoinconsensus.pc
 contrib/devtools/split-debug.sh
+.vscode/launch.json
