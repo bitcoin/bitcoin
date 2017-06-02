@@ -16,6 +16,10 @@
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
     <widget class="QTabWidget" name="tabWidget">
+     <property name="styleSheet">
+      <string notr="true">QTabWidget:tab-bar { alignment: left }
+QTabBar { alignment: left; }</string>
+     </property>
      <property name="currentIndex">
       <number>0</number>
      </property>
