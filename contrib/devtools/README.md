@@ -20,6 +20,38 @@ the script should be called from the git root folder as follows.
 git diff -U0 HEAD~1.. | ./contrib/devtools/clang-format-diff.py -p1 -i -v
 ```
 
+clang\_static\_analysis.py
+====================
+A utility for running clang static analysis (`scan-build`) in a consistent way.
+It has two subcommands:
+
+```
+$ ./clang_static_analsis.py report <base_directory>
+$ ./clang_static_analsis.py check <base_directory>
+```
+
+This depends on having `scan-build` and `scan-view` binaries available. There
+are options provided for running with a particular version of clang from a
+particular subdirectory.
+
+
+clang\_static\_analysis.py report \<base\_directory\>
+---------------------------------------------------------
+
+Runs `scan-build` and produces a summary report of the issues found. The result
+directory is kept for browsing with `scan-view` afterwards.
+
+
+clang\_static\_analysis.py check \<base\_directory\>
+---------------------------------------------------------
+
+Similar to the `report` command, but it is a more straightforward check meant
+to accept or reject the state of the repository. If no issues are found, it
+returns a zero status. If issues are found it returns a non-zero status and
+lists specific details. The result directory is kept for browsing with
+`scan-view` afterwards.
+
+
 copyright\_header.py
 ====================
 
