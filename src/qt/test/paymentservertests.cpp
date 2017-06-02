@@ -2,17 +2,17 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <qt/test/paymentservertests.h>
+#include "paymentservertests.h"
 
-#include <optionsmodel.h>
-#include <qt/test/paymentrequestdata.h>
+#include "optionsmodel.h"
+#include "paymentrequestdata.h"
 
-#include <amount.h>
-#include <random.h>
-#include <script/script.h>
-#include <script/standard.h>
-#include <util.h>
-#include <utilstrencodings.h>
+#include "amount.h"
+#include "random.h"
+#include "script/script.h"
+#include "script/standard.h"
+#include "util.h"
+#include "utilstrencodings.h"
 
 #include <openssl/x509.h>
 #include <openssl/x509_vfy.h>
@@ -25,7 +25,7 @@ X509 *parse_b64der_cert(const char* cert_data)
     std::vector<unsigned char> data = DecodeBase64(cert_data);
     assert(data.size() > 0);
     const unsigned char* dptr = &data[0];
-    X509 *cert = d2i_X509(nullptr, &dptr, data.size());
+    X509 *cert = d2i_X509(NULL, &dptr, data.size());
     assert(cert);
     return cert;
 }
@@ -66,7 +66,7 @@ void PaymentServerTests::paymentServerTests()
 {
     SelectParams(CBaseChainParams::MAIN);
     OptionsModel optionsModel;
-    PaymentServer* server = new PaymentServer(nullptr, false);
+    PaymentServer* server = new PaymentServer(NULL, false);
     X509_STORE* caStore = X509_STORE_new();
     X509_STORE_add_cert(caStore, parse_b64der_cert(caCert1_BASE64));
     PaymentServer::LoadRootCAs(caStore);
@@ -196,7 +196,7 @@ void PaymentServerTests::paymentServerTests()
     QVERIFY(r.paymentRequest.IsInitialized());
     // Extract address and amount from the request
     QList<std::pair<CScript, CAmount> > sendingTos = r.paymentRequest.getPayTo();
-    for  (const std::pair<CScript, CAmount>& sendingTo : sendingTos) {
+    for (const PAIRTYPE(CScript, CAmount)& sendingTo : sendingTos) {
         CTxDestination dest;
         if (ExtractDestination(sendingTo.first, dest))
             QCOMPARE(PaymentServer::verifyAmount(sendingTo.second), false);

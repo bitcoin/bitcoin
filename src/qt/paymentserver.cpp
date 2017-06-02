@@ -146,7 +146,7 @@ void PaymentServer::LoadRootCAs(X509_STORE* _store)
     const QDateTime currentTime = QDateTime::currentDateTime();
 
     for (const QSslCertificate& cert : certList) {
-        // Don't log nullptr certificates
+        // Don't log NULL certificates
         if (cert.isNull())
             continue;
 
@@ -268,7 +268,7 @@ void PaymentServer::ipcParseCommandLine(int argc, char* argv[])
 bool PaymentServer::ipcSendCommandLine()
 {
     bool fResult = false;
-    for  (const QString& r : savedPaymentRequests)
+    for (const QString& r : savedPaymentRequests)
     {
         QLocalSocket* socket = new QLocalSocket();
         socket->connectToServer(ipcServerName(), QIODevice::WriteOnly);
