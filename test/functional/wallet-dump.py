@@ -70,7 +70,7 @@ class WalletDumpTest(BitcoinTestFramework):
         # longer than the default 30 seconds due to an expensive
         # CWallet::TopUpKeyPool call, and the encryptwallet RPC made later in
         # the test often takes even longer.
-        self.nodes = start_nodes(self.num_nodes, os.path.join(self.options.tmpdir, "hd"), self.extra_args, timewait=60, stderr=sys.stdout)
+        self.nodes = self.start_nodes(self.num_nodes, os.path.join(self.options.tmpdir, "hd"), self.extra_args, timewait=60, stderr=sys.stdout)
 
     def run_test (self):
         tmpdir = os.path.join(self.options.tmpdir, "hd")
@@ -97,7 +97,7 @@ class WalletDumpTest(BitcoinTestFramework):
         #encrypt wallet, restart, unlock and dump
         self.nodes[0].encryptwallet('test')
         bitcoind_processes[0].wait()
-        self.nodes[0] = start_node(0, tmpdir, self.extra_args[0])
+        self.nodes[0] = self.start_node(0, tmpdir, self.extra_args[0])
         self.nodes[0].walletpassphrase('test', 10)
         # Should be a no-op:
         self.nodes[0].keypoolrefill()

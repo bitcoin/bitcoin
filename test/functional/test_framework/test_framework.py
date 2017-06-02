@@ -41,10 +41,10 @@ from .util import (
     set_mocktime,
     set_node_times,
     satoshi_round,
-    start_node,
-    start_nodes,
-    stop_node,
-    stop_nodes,
+    _start_node,
+    _start_nodes,
+    _stop_node,
+    _stop_nodes,
     sync_blocks,
     sync_mempools,
     sync_masternodes,
@@ -108,7 +108,7 @@ class BitcoinTestFramework(object):
         extra_args = None
         if hasattr(self, "extra_args"):
             extra_args = self.extra_args
-        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, extra_args, stderr=stderr)
+        self.nodes = _start_nodes(self.num_nodes, self.options.tmpdir, extra_args, stderr=stderr)
 
     def run_test(self):
         raise NotImplementedError
@@ -223,16 +223,16 @@ class BitcoinTestFramework(object):
     # Public helper methods. These can be accessed by the subclass test scripts.
 
     def start_node(self, i, dirname, extra_args=None, rpchost=None, timewait=None, binary=None, stderr=None):
-        return start_node(i, dirname, extra_args, rpchost, timewait, binary, stderr)
+        return _start_node(i, dirname, extra_args, rpchost, timewait, binary, stderr)
 
     def start_nodes(self, num_nodes, dirname, extra_args=None, rpchost=None, timewait=None, binary=None, stderr=None):
-        return start_nodes(num_nodes, dirname, extra_args, rpchost, timewait, binary, stderr)
+        return _start_nodes(num_nodes, dirname, extra_args, rpchost, timewait, binary, stderr)
 
     def stop_node(self, num_node):
-        stop_node(self.nodes[num_node], num_node)
+        _stop_node(self.nodes[num_node], num_node)
 
     def stop_nodes(self):
-        stop_nodes(self.nodes)
+        _stop_nodes(self.nodes)
 
     def split_network(self):
         """
