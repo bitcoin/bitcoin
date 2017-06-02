@@ -107,7 +107,7 @@ static void push_lock(void* c, const CLockLocation& locklocation, bool fTry)
 
     (*lockstack).push_back(std::make_pair(c, locklocation));
 
-    for  (const std::pair<void*, CLockLocation> & i : (*lockstack)) {
+    for (const std::pair<void*, CLockLocation> & i : (*lockstack)) {
         if (i.first == c)
             break;
 
@@ -141,7 +141,7 @@ void LeaveCritical()
 std::string LocksHeld()
 {
     std::string result;
-    for  (const std::pair<void*, CLockLocation> & i : *lockstack)
+    for (const std::pair<void*, CLockLocation> & i : *lockstack)
         result += i.second.ToString() + std::string("\n");
     return result;
 }
