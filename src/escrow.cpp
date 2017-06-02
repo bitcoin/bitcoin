@@ -3343,11 +3343,11 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 }
 UniValue escrowinfo(const UniValue& params, bool fHelp) {
     if (fHelp || 1 > params.size() || 2 < params.size())
-        throw runtime_error("escrowinfo <guid> [walletless=No]\n"
+        throw runtime_error("escrowinfo <guid> [walletless=false]\n"
                 "Show stored values of a single escrow\n");
 
     vector<unsigned char> vchEscrow = vchFromValue(params[0]);
-	string strWalletless = "No";
+	string strWalletless = "false";
 	if(CheckParam(params, 1))
 		strWalletless = params[1].get_str();
 	vector<CEscrow> vtxPos;
@@ -3470,7 +3470,7 @@ bool BuildEscrowJson(const CEscrow &escrow, UniValue& oEscrow, const string &str
 	string strDecrypted = "";
 	if(!escrow.vchPaymentMessage.empty())
 	{
-		if(strWalletless == "Yes")
+		if(strWalletless == "true")
 			strData = HexStr(escrow.vchPaymentMessage);		
 		else if(DecryptMessage(sellerAlias, escrow.vchPaymentMessage, strDecrypted))
 			strData = strDecrypted;			
@@ -3591,7 +3591,7 @@ bool BuildEscrowJson(const CEscrow &escrow, UniValue& oEscrow, const string &str
 }
 UniValue escrowlist(const UniValue& params, bool fHelp) {
 	if (fHelp || 3 < params.size())
-        throw runtime_error("escrowlist [\"alias\",...] [<escrow>] [walletless=No]\n"
+        throw runtime_error("escrowlist [\"alias\",...] [<escrow>] [walletless=false]\n"
                 "list escrows that an array of aliases are involved in. Set of aliases to look up based on alias.");
 	UniValue aliasesValue(UniValue::VARR);
 	vector<string> aliases;
@@ -3613,7 +3613,7 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
     if(CheckParam(params, 1))
         vchNameUniq = vchFromValue(params[1]);
 
-	string strWalletless = "No";
+	string strWalletless = "false";
 	if(CheckParam(params, 2))
 		strWalletless = params[2].get_str();
 	map<uint256, CTransaction> vtxTx;
@@ -3721,12 +3721,12 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
 }
 UniValue escrowhistory(const UniValue& params, bool fHelp) {
     if (fHelp || 1 > params.size() || 2 < params.size())
-        throw runtime_error("escrowhistory <escrow> [walletless=No]\n"
+        throw runtime_error("escrowhistory <escrow> [walletless=false]\n"
                 "List all stored values of an escrow.\n");
 
     UniValue oRes(UniValue::VARR);
     vector<unsigned char> vchEscrow = vchFromValue(params[0]);
-	string strWalletless = "No";
+	string strWalletless = "false";
 	if(CheckParam(params, 1))
 		strWalletless = params[1].get_str();
 
@@ -3845,7 +3845,7 @@ bool BuildEscrowStatsJson(const std::vector<CEscrow> &escrows, UniValue& oEscrow
 	UniValue oEscrows(UniValue::VARR);
 	BOOST_REVERSE_FOREACH(const CEscrow& escrow, escrows) {
 		UniValue oEscrow(UniValue::VOBJ);
-		if(!BuildEscrowJson(escrow, oEscrow, "Yes"))
+		if(!BuildEscrowJson(escrow, oEscrow, "true"))
 			continue;
 		oEscrows.push_back(oEscrow);
 	}

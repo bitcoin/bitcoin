@@ -25,8 +25,8 @@ string AliasNew(const string& node, const string& aliasname, const string &passw
 string AliasUpdate(const string& node, const string& aliasname, const string& pubdata="\"\"", const string& privdata="\"\"", string password="\"\"", string safesearch="\"\"", string addressStr = "\"\"", string witness="\"\"");
 string AliasTransfer(const string& node, const string& aliasname, const string& tonode, const string& pubdata="\"\"", const string& privdata="\"\"", const string& witness="\"\"");
 bool AliasFilter(const string& node, const string& regex, const string& safesearch);
-const string CertNew(const string& node, const string& alias, const string& title, const string& data, const string& pubdata, const string& safesearch="Yes", const string& witness="\"\"");
-void CertUpdate(const string& node, const string& guid, const string& title="\"\"", const string& pubdata="\"\"", const string& data="\"\"", const string& safesearch="Yes", const string& witness="\"\"");
+const string CertNew(const string& node, const string& alias, const string& title, const string& data, const string& pubdata, const string& safesearch="true", const string& witness="\"\"");
+void CertUpdate(const string& node, const string& guid, const string& title="\"\"", const string& pubdata="\"\"", const string& data="\"\"", const string& safesearch="true", const string& witness="\"\"");
 void CertTransfer(const string& node, const string& tonode, const string& guid, const string& toalias, const string& witness="\"\"");
 bool CertFilter(const string& node, const string& regex, const string& safesearch);
 bool EscrowFilter(const string& node, const string& regex);

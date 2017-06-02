@@ -1447,7 +1447,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 UniValue offernew(const UniValue& params, bool fHelp) {
 	if (fHelp || params.size() < 7 || params.size() > 15)
 		throw runtime_error(
-		"offernew <alias> <category> <title> <quantity> <price> <description> <currency> [cert. guid] [payment options=SYS] [geolocation] [safe search=Yes] [private=No] [units] [coinoffer=No] [witness]\n"
+		"offernew <alias> <category> <title> <quantity> <price> <description> <currency> [cert. guid] [payment options=SYS] [geolocation] [safe search=true] [private=false] [units] [coinoffer=false] [witness]\n"
 						"<alias> An alias you own.\n"
 						"<category> category, 255 chars max.\n"
 						"<title> title, 255 chars max.\n"
@@ -1507,12 +1507,12 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	string strGeoLocation = "";
 	if(CheckParam(params, 9))
 		strGeoLocation = params[9].get_str();
-	string strSafeSearch = "Yes";
+	string strSafeSearch = "true";
 	if(CheckParam(params, 10))
 		strSafeSearch = params[10].get_str();
 	bool bPrivate = false;
 	if(CheckParam(params, 11))
-		bPrivate = params[11].get_str() == "Yes"? true: false;
+		bPrivate = params[11].get_str() == "true"? true: false;
 	float fUnits=1.0f;
 	if(CheckParam(params, 12))
 	{
@@ -1524,7 +1524,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	}
 	bool bCoinOffer = false;
 	if(CheckParam(params, 13))
-		bCoinOffer = params[13].get_str() == "Yes"? true: false;
+		bCoinOffer = params[13].get_str() == "true"? true: false;
 	vector<unsigned char> vchWitness;
 	if(CheckParam(params, 14))
 		vchWitness = vchFromValue(params[14]);
@@ -1582,7 +1582,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	newOffer.bPrivate = bPrivate;
 	newOffer.paymentOptions = paymentOptionsMask;
 	newOffer.safetyLevel = 0;
-	newOffer.safeSearch = strSafeSearch == "Yes"? true: false;
+	newOffer.safeSearch = strSafeSearch == "true"? true: false;
 	newOffer.vchGeoLocation = vchFromString(strGeoLocation);
 	newOffer.fUnits = fUnits;
 	newOffer.bCoinOffer = bCoinOffer;
@@ -2169,7 +2169,7 @@ UniValue offerwhitelist(const UniValue& params, bool fHelp) {
 UniValue offerupdate(const UniValue& params, bool fHelp) {
 	if (fHelp || params.size() < 2 || params.size() > 15)
 		throw runtime_error(
-		"offerupdate <alias> <guid> [category] [title] [quantity] [price] [description] [currency] [private=No] [cert. guid] [geolocation] [safesearch=Yes] [commission] [paymentOptions] [witness]\n"
+		"offerupdate <alias> <guid> [category] [title] [quantity] [price] [description] [currency] [private=false] [cert. guid] [geolocation] [safesearch=true] [commission] [paymentOptions] [witness]\n"
 						"Perform an update on an offer you control.\n"
 						+ HelpRequiringPassphrase());
 	// gather & validate inputs
@@ -2366,11 +2366,11 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	if(strPrivate.empty())
 		theOffer.bPrivate = offerCopy.bPrivate;
 	else
-		theOffer.bPrivate = strPrivate == "Yes"? true: false;
+		theOffer.bPrivate = strPrivate == "true"? true: false;
 	if(strSafeSearch.empty())
 		theOffer.safeSearch = offerCopy.safeSearch;
 	else
-		theOffer.safeSearch = strSafeSearch == "Yes"? true: false;
+		theOffer.safeSearch = strSafeSearch == "true"? true: false;
 	theOffer.nHeight = chainActive.Tip()->nHeight;
 
 	vector<unsigned char> data;
@@ -3160,12 +3160,12 @@ UniValue offeracceptacknowledge(const UniValue& params, bool fHelp) {
 }
 UniValue offerinfo(const UniValue& params, bool fHelp) {
 	if (fHelp || 1 > params.size() || 2 < params.size())
-		throw runtime_error("offerinfo <guid> [walletless=No]\n"
+		throw runtime_error("offerinfo <guid> [walletless=false]\n"
 				"Show offer details\n");
 
 	UniValue oOffer(UniValue::VOBJ);
 	vector<unsigned char> vchOffer = vchFromValue(params[0]);
-	string strWalletless = "No";
+	string strWalletless = "false";
 	if(CheckParam(params, 1))
 		strWalletless = params[1].get_str();
 	vector<COffer> vtxPos;
@@ -3272,8 +3272,8 @@ bool BuildOfferJson(const COffer& theOffer, const CAliasIndex &alias, UniValue& 
 		oOffer.push_back(Pair("offerlink_guid", ""));
 		oOffer.push_back(Pair("offerlink_seller", ""));
 	}
-	oOffer.push_back(Pair("private", theOffer.bPrivate ? "Yes" : "No"));
-	oOffer.push_back(Pair("safesearch", theOffer.safeSearch? "Yes" : "No"));
+	oOffer.push_back(Pair("private", theOffer.bPrivate ? "true" : "false"));
+	oOffer.push_back(Pair("safesearch", theOffer.safeSearch? "true" : "false"));
 	unsigned char safetyLevel = max(theOffer.safetyLevel, alias.safetyLevel );
 	safetyLevel = max(safetyLevel, linkOffer.safetyLevel );
 	safetyLevel = max(safetyLevel, linkAlias.safetyLevel );
@@ -3499,7 +3499,7 @@ bool BuildOfferAcceptJson(const COffer& theOffer, const CAliasIndex& theAlias, c
 	string strDecrypted = "";
 	if(!theOffer.accept.vchMessage.empty())
 	{
-		if(strWalletless == "Yes")
+		if(strWalletless == "true")
 			strData = HexStr(theOffer.accept.vchMessage);		
 		else if(DecryptMessage(theAlias, theOffer.accept.vchMessage, strDecrypted))
 			strData = strDecrypted;			
@@ -3509,7 +3509,7 @@ bool BuildOfferAcceptJson(const COffer& theOffer, const CAliasIndex& theAlias, c
 }
 UniValue offerlist(const UniValue& params, bool fHelp) {
     if (fHelp || 4 < params.size())
-        throw runtime_error("offerlist [\"alias\",...] [<guid>] [accepts=No] [walletless=No]\n"
+        throw runtime_error("offerlist [\"alias\",...] [<guid>] [accepts=false] [walletless=false]\n"
                 "list offers that an array of aliases own. Set of aliases to look up based on alias.");
 	UniValue aliasesValue(UniValue::VARR);
 	vector<string> aliases;
@@ -3531,11 +3531,11 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
     if(CheckParam(params, 1))
         vchNameUniq = vchFromValue(params[1]);
 
-	string strAccepts = "No";
+	string strAccepts = "false";
 	if(CheckParam(params, 2))
 		strAccepts = params[2].get_str();
 
-	string strWalletless = "No";
+	string strWalletless = "false";
 	if(CheckParam(params, 3))
 		strWalletless = params[3].get_str();
 	map<uint256, CTransaction> vtxTx;
@@ -3580,14 +3580,14 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 				const CTransaction& tx = it.second;
 				
 				COffer offer(tx);
-				if(!offer.IsNull() && ((strAccepts == "Yes" && !offer.accept.IsNull()) || (strAccepts == "No" && offer.accept.IsNull())))
+				if(!offer.IsNull() && ((strAccepts == "true" && !offer.accept.IsNull()) || (strAccepts == "false" && offer.accept.IsNull())))
 				{
-					const vector<unsigned char> &vchKey = strAccepts == "Yes"? offer.accept.vchAcceptRand:offer.vchOffer;
+					const vector<unsigned char> &vchKey = strAccepts == "true"? offer.accept.vchAcceptRand:offer.vchOffer;
 					if (vNamesI.find(vchKey) != vNamesI.end() && (nHeight <= vNamesI[vchKey] || vNamesI[vchKey] < 0))
 						continue;
 					if (vchNameUniq.size() > 0 && vchNameUniq != vchKey)
 						continue;
-					if(strAccepts == "No")
+					if(strAccepts == "false")
 					{
 						vector<COffer> vtxOfferPos;
 						if (!pofferdb->ReadOffer(offer.vchOffer, vtxOfferPos) || vtxOfferPos.empty())
@@ -3602,7 +3602,7 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 						if(BuildOfferJson(theOffer, vtxAliasPos.back(), oOffer, strWalletless))
 							oRes.push_back(oOffer);
 					}
-					else if(strAccepts == "Yes")
+					else if(strAccepts == "true")
 					{
 						COffer acceptOffer;
 						COfferAccept offerAccept;
@@ -3632,12 +3632,12 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 }
 UniValue offerhistory(const UniValue& params, bool fHelp) {
 	if (fHelp || 1 > params.size() || 2 < params.size())
-		throw runtime_error("offerhistory <offer> [walletless=No]\n"
+		throw runtime_error("offerhistory <offer> [walletless=false]\n"
 				"List all stored values of an offer.\n");
 
 	UniValue oRes(UniValue::VARR);
 	vector<unsigned char> vchOffer = vchFromValue(params[0]);
-	string strWalletless = "No";
+	string strWalletless = "false";
 	if(CheckParam(params, 1))
 		strWalletless = params[1].get_str();
 	vector<COffer> vtxPos;
@@ -3685,7 +3685,7 @@ UniValue offerhistory(const UniValue& params, bool fHelp) {
 UniValue offerfilter(const UniValue& params, bool fHelp) {
 	if (fHelp || params.size() > 4)
 		throw runtime_error(
-		"offerfilter [searchterm] [offerpage] [safesearch='Yes'] [category]\n"
+		"offerfilter [searchterm] [offerpage] [safesearch='true'] [category]\n"
 						"scan and filter offers\n"
 						"[searchterm] : find searchterm on offers, empty means all offers\n"
 						"[offerpage] : page with this offer guid, starting from this offer 25 max results are returned. Empty for first 25 offers.\n"
@@ -3704,7 +3704,7 @@ UniValue offerfilter(const UniValue& params, bool fHelp) {
 		vchOfferPage = vchFromValue(params[1]);
 
 	if(CheckParam(params, 2))
-		safeSearch = params[2].get_str()=="On"? true: false;
+		safeSearch = params[2].get_str()=="true"? true: false;
 
 	if(CheckParam(params, 3))
 		strCategory = params[3].get_str();
@@ -3935,7 +3935,7 @@ bool BuildOfferStatsJson(const std::vector<std::vector<COffer> > &offers, UniVal
 		if(!GetTxOfAlias(offer.vchAlias, alias, aliastx, true))
 			continue;
 
-		if(!BuildOfferJson(offer, alias, oOffer, "Yes"))
+		if(!BuildOfferJson(offer, alias, oOffer, "true"))
 			continue;
 		totalOffers++;
 		oOffers.push_back(oOffer);	

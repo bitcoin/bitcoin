@@ -542,11 +542,11 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 
 UniValue messageinfo(const UniValue& params, bool fHelp) {
     if (fHelp || 1 > params.size() || 2 < params.size())
-        throw runtime_error("messageinfo <guid> [walletless=No]\n"
+        throw runtime_error("messageinfo <guid> [walletless=false]\n"
                 "Show stored values of a single message.\n");
 
     vector<unsigned char> vchMessage = vchFromValue(params[0]);
-	string strWalletless = "No";
+	string strWalletless = "false";
 	if(CheckParam(params, 1))
 		strWalletless = params[1].get_str();
 
@@ -566,7 +566,7 @@ UniValue messageinfo(const UniValue& params, bool fHelp) {
 
 UniValue messagereceivelist(const UniValue& params, bool fHelp) {
     if (fHelp || 3 < params.size())
-        throw runtime_error("messagereceivelist [\"alias\",...] [<message>] [walletless=No]\n"
+        throw runtime_error("messagereceivelist [\"alias\",...] [<message>] [walletless=false]\n"
                 "list messages that an array of aliases has recieved. Set of aliases to look up based on alias.");
 	UniValue aliasesValue(UniValue::VARR);
 	vector<string> aliases;
@@ -588,7 +588,7 @@ UniValue messagereceivelist(const UniValue& params, bool fHelp) {
     if(CheckParam(params, 1))
         vchNameUniq = vchFromValue(params[1]);
 
-	string strWalletless = "No";
+	string strWalletless = "false";
 	if(CheckParam(params, 2))
 		strWalletless = params[2].get_str();
 
@@ -655,7 +655,7 @@ bool BuildMessageJson(const CMessage& message, UniValue& oName, const string &st
 	string strEncryptionPrivateKeyFrom = "";
 	string strEncryptionPrivateKeyTo = "";
 	string strKey = "";
-	if(strWalletless == "Yes")
+	if(strWalletless == "true")
 	{
 		strEncryptionPrivateKeyFrom = HexStr(message.vchEncryptionPrivateKeyFrom);
 		strEncryptionPrivateKeyTo = HexStr(message.vchEncryptionPrivateKeyTo);
@@ -693,7 +693,7 @@ bool BuildMessageJson(const CMessage& message, UniValue& oName, const string &st
 	string strDecrypted = "";
 	string strData = "";
 	
-	if(strWalletless == "Yes")
+	if(strWalletless == "true")
 		strData = HexStr(message.vchData);
 	else
 	{
@@ -716,7 +716,7 @@ bool BuildMessageJson(const CMessage& message, UniValue& oName, const string &st
 
 UniValue messagesentlist(const UniValue& params, bool fHelp) {
     if (fHelp || 3 < params.size())
-        throw runtime_error("messagesentlist [\"alias\",...] [<message>] [walletless=No]\n"
+        throw runtime_error("messagesentlist [\"alias\",...] [<message>] [walletless=false]\n"
                 "list messages that an array of aliases has sent. Set of aliases to look up based on alias.");
 	UniValue aliasesValue(UniValue::VARR);
 	vector<string> aliases;
@@ -738,7 +738,7 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
    if(CheckParam(params, 1))
         vchNameUniq = vchFromValue(params[1]);
 
-	string strWalletless = "No";
+	string strWalletless = "false";
 	if(CheckParam(params, 2))
 		strWalletless = params[2].get_str();
 
@@ -883,7 +883,7 @@ bool BuildMessageStatsJson(const std::vector<CMessage> &messages, UniValue& oMes
 	UniValue oMessages(UniValue::VARR);
 	BOOST_REVERSE_FOREACH(const CMessage &message, messages) {
 		UniValue oMessage(UniValue::VOBJ);
-		if(!BuildMessageJson(message, oMessage, "Yes"))
+		if(!BuildMessageJson(message, oMessage, "true"))
 			continue;
 		oMessages.push_back(oMessage);
 	}

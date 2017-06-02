@@ -780,7 +780,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 UniValue certnew(const UniValue& params, bool fHelp) {
     if (fHelp || params.size() < 3 || params.size() > 9)
         throw runtime_error(
-		"certnew <alias> <title> <public> [private] [safe search=Yes] [category=certificates] [encryption_publickey] [encryption_privatekey] [witness]\n"
+		"certnew <alias> <title> <public> [private] [safe search=true] [category=certificates] [encryption_publickey] [encryption_privatekey] [witness]\n"
 						"<alias> An alias you own.\n"
 						"<title> title, 256 characters max.\n"
                         "<public> public data, 256 characters max.\n"
@@ -797,7 +797,7 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 	string strCategory = "certificates";
 	string strEncryptionPublicKey = "";
 	string strEncryptionPrivateKey = "";
-	string strSafeSearch = "Yes";
+	string strSafeSearch = "true";
 	string strData = "";
 	if(CheckParam(params, 3))
 		strData = params[3].get_str();
@@ -848,7 +848,7 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 	newCert.nHeight = chainActive.Tip()->nHeight;
 	newCert.vchAlias = vchAlias;
 	newCert.safetyLevel = 0;
-	newCert.safeSearch = strSafeSearch == "Yes"? true: false;
+	newCert.safeSearch = strSafeSearch == "true"? true: false;
 
 	vector<unsigned char> data;
 	newCert.Serialize(data);
@@ -917,7 +917,7 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 UniValue certupdate(const UniValue& params, bool fHelp) {
     if (fHelp || params.size() < 1 || params.size() > 9)
         throw runtime_error(
-		"certupdate <guid> [title] [public] [private] [safesearch=Yes] [category=certificates] [encryption_publickey] [encryption_privatekey] [witness]\n"
+		"certupdate <guid> [title] [public] [private] [safesearch=true] [category=certificates] [encryption_publickey] [encryption_privatekey] [witness]\n"
 						"Perform an update on an certificate you control.\n"
 						"<guid> certificate guidkey.\n"
 						"<title> certificate title, 256 characters max.\n"
@@ -988,7 +988,7 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 	if(!strPubData.empty())
 		theCert.vchPubData = vchFromString(strPubData);
 	if(!strSafeSearch.empty())
-		theCert.safeSearch = strSafeSearch == "Yes"? true: false;
+		theCert.safeSearch = strSafeSearch == "true"? true: false;
 	else
 		theCert.safeSearch = copyCert.safeSearch;
 	if(!strCategory.empty())
@@ -1214,12 +1214,12 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 
 UniValue certinfo(const UniValue& params, bool fHelp) {
     if (fHelp || 1 > params.size() || 2 < params.size())
-        throw runtime_error("certinfo <guid> [walletless=No]\n"
+        throw runtime_error("certinfo <guid> [walletless=false]\n"
                 "Show stored values of a single certificate and its .\n");
 
     vector<unsigned char> vchCert = vchFromValue(params[0]);
 
-	string strWalletless = "No";
+	string strWalletless = "false";
 	if(CheckParam(params, 1))
 		strWalletless = params[1].get_str();
 
@@ -1243,7 +1243,7 @@ UniValue certinfo(const UniValue& params, bool fHelp) {
 
 UniValue certlist(const UniValue& params, bool fHelp) {
     if (fHelp || 3 < params.size())
-        throw runtime_error("certlist [\"alias\",...] [<cert>] [walletless=No]\n"
+        throw runtime_error("certlist [\"alias\",...] [<cert>] [walletless=false]\n"
                 "list certs that an array of aliases own. Set of aliases to look up based on alias.");
 	UniValue aliasesValue(UniValue::VARR);
 	vector<string> aliases;
@@ -1265,7 +1265,7 @@ UniValue certlist(const UniValue& params, bool fHelp) {
     if(CheckParam(params, 1))
         vchNameUniq = vchFromValue(params[1]);
 
-	string strWalletless = "No";
+	string strWalletless = "false";
 	if(CheckParam(params, 2))
 		strWalletless = params[2].get_str();
 
@@ -1338,14 +1338,14 @@ bool BuildCertJson(const CCert& cert, const CAliasIndex& alias, UniValue& oCert,
 	{
 		string strKey = "";
 		string strDecrypted = "";
-		if(strWalletless == "Yes")
+		if(strWalletless == "true")
 			strEncryptionPrivateKey = HexStr(cert.vchEncryptionPrivateKey);
 		else
 		{
 			if(DecryptMessage(alias, cert.vchEncryptionPrivateKey, strKey))
 				strEncryptionPrivateKey = HexStr(strKey);	
 		}
-		if(strWalletless == "Yes")
+		if(strWalletless == "true")
 			strData = HexStr(cert.vchData);
 		else
 		{
@@ -1362,7 +1362,7 @@ bool BuildCertJson(const CCert& cert, const CAliasIndex& alias, UniValue& oCert,
     oCert.push_back(Pair("privatevalue", strData));
 	oCert.push_back(Pair("publicvalue", stringFromVch(cert.vchPubData)));
 	oCert.push_back(Pair("category", stringFromVch(cert.sCategory)));
-	oCert.push_back(Pair("safesearch", cert.safeSearch? "Yes" : "No"));
+	oCert.push_back(Pair("safesearch", cert.safeSearch? "true" : "false"));
 	unsigned char safetyLevel = max(cert.safetyLevel, alias.safetyLevel );
 	oCert.push_back(Pair("safetylevel", safetyLevel));
 	oCert.push_back(Pair("alias", stringFromVch(cert.vchAlias)));
@@ -1385,7 +1385,7 @@ bool BuildCertJson(const CCert& cert, const CAliasIndex& alias, UniValue& oCert,
 UniValue certfilter(const UniValue& params, bool fHelp) {
 	if (fHelp || params.size() > 4)
 		throw runtime_error(
-		"certfilter [searchterm] [certpage] [safesearch='Yes'] [category]\n"
+		"certfilter [searchterm] [certpage] [safesearch='true'] [category]\n"
 						"scan and filter certs\n"
 						"[searchterm] : find searchterm on certs, empty means all certs\n"
 						"[certpage] : page with this cert guid, starting from this cert 25 max results are returned. Empty for first 25 certs.\n"
@@ -1405,7 +1405,7 @@ UniValue certfilter(const UniValue& params, bool fHelp) {
 		vchCertPage = vchFromValue(params[1]);
 
 	if(CheckParam(params, 2))
-		safeSearch = params[2].get_str()=="On"? true: false;
+		safeSearch = params[2].get_str()=="true"? true: false;
 
 	if(CheckParam(params, 3))
 		strCategory = params[3].get_str();
@@ -1434,12 +1434,12 @@ UniValue certfilter(const UniValue& params, bool fHelp) {
 }
 UniValue certhistory(const UniValue& params, bool fHelp) {
     if (fHelp || 1 > params.size() || 2 < params.size())
-        throw runtime_error("certhistory <guid> [walletless=No]\n"
+        throw runtime_error("certhistory <guid> [walletless=false]\n"
                  "List all stored values of an cert.\n");
 
     vector<unsigned char> vchCert = vchFromValue(params[0]);
 
-	string strWalletless = "No";
+	string strWalletless = "false";
 	if(CheckParam(params, 1))
 		strWalletless = params[1].get_str();
 
@@ -1576,7 +1576,7 @@ bool BuildCertStatsJson(const std::vector<CCert> &certs, UniValue& oCertStats)
 		CTransaction aliastx;
 		if (!GetTxOfAlias(cert.vchAlias, alias, aliastx, true))
 			continue;
-		if(!BuildCertJson(cert, alias, oCert, "Yes"))
+		if(!BuildCertJson(cert, alias, oCert, "true"))
 			continue;
 		oCerts.push_back(oCert);
 	}

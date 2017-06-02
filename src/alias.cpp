@@ -1764,7 +1764,7 @@ UniValue aliasauthenticate(const UniValue& params, bool fHelp) {
 	if(strPassword.empty())
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5501 - " + _("Password cannot be empty"));
 
-	if(!crypt.SetKeyFromPassphrase(strPassword, ParseHex(strSalt), 1, strUnitTest == "Yes"? 2: 1))
+	if(!crypt.SetKeyFromPassphrase(strPassword, ParseHex(strSalt), 1, strUnitTest == "true"? 2: 1))
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5502 - " + _("Could not determine key from password"));
 
 	CKey key;
@@ -1817,7 +1817,7 @@ bool CheckParam(const UniValue& params, const unsigned int index)
 UniValue aliasnew(const UniValue& params, bool fHelp) {
 	if (fHelp || 4 > params.size() || 13 < params.size())
 		throw runtime_error(
-		"aliasnew <aliaspeg> <aliasname> <password> <public value> [private value] [safe search=Yes] [accept transfers=Yes] [expire_timestamp] [address] [password_salt] [encryption_privatekey] [encryption_publickey] [witness]\n"
+		"aliasnew <aliaspeg> <aliasname> <password> <public value> [private value] [safe search=true] [accept transfers=true] [expire_timestamp] [address] [password_salt] [encryption_privatekey] [encryption_publickey] [witness]\n"
 						"<aliasname> alias name.\n"
 						"<password> used to generate your public/private key that controls this alias. Should be encrypted to publickey.\n"
 						"<public value> alias public profile data, 1024 chars max.\n"
@@ -1878,12 +1878,12 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	vchPublicValue = vchFromString(strPublicValue);
 
 	string strPrivateValue = "";
-	string strSafeSearch = "Yes";
+	string strSafeSearch = "true";
 	if(CheckParam(params, 4))
 		strPrivateValue = params[4].get_str();
 	if(CheckParam(params, 5))
 		strSafeSearch = params[5].get_str();
-	string strAcceptCertTransfers = "Yes";
+	string strAcceptCertTransfers = "true";
 
 	if(CheckParam(params, 6))
 		strAcceptCertTransfers = params[6].get_str();
@@ -1941,8 +1941,8 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 		newAlias.vchPassword = ParseHex(strPassword);
 	if(!strPasswordSalt.empty())
 		newAlias.vchPasswordSalt = ParseHex(strPasswordSalt);
-	newAlias.safeSearch = strSafeSearch == "Yes"? true: false;
-	newAlias.acceptCertTransfers = strAcceptCertTransfers == "Yes"? true: false;
+	newAlias.safeSearch = strSafeSearch == "true"? true: false;
+	newAlias.acceptCertTransfers = strAcceptCertTransfers == "true"? true: false;
 	if(strAddress.empty())
 	{
 		// generate new address in this wallet if not passed in
@@ -2054,7 +2054,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	if (fHelp || 2 > params.size() || 13 < params.size())
 		throw runtime_error(
-		"aliasupdate <aliaspeg> <aliasname> [public value] [private value] [safesearch=Yes] [address] [password] [accept_transfers=Yes] [expire_timestamp] [password_salt] [encryption_privatekey] [encryption_publickey] [witness]\n"
+		"aliasupdate <aliaspeg> <aliasname> [public value] [private value] [safesearch=true] [address] [password] [accept_transfers=true] [expire_timestamp] [password_salt] [encryption_privatekey] [encryption_publickey] [witness]\n"
 						"Update and possibly transfer an alias.\n"
 						"<aliasname> alias name.\n"
 						"<public_value> alias public profile data, 1024 chars max.\n"
@@ -2148,7 +2148,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	if(!strPasswordSalt.empty())
 		theAlias.vchPasswordSalt = ParseHex(strPasswordSalt);
 	if(!strSafeSearch.empty())
-		theAlias.safeSearch = strSafeSearch == "Yes"? true: false;
+		theAlias.safeSearch = strSafeSearch == "true"? true: false;
 	else
 		theAlias.safeSearch = copyAlias.safeSearch;
 	if(!strAddress.empty())
@@ -2162,7 +2162,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	if(strAcceptCertTransfers.empty())
 		theAlias.acceptCertTransfers = copyAlias.acceptCertTransfers;
 	else
-		theAlias.acceptCertTransfers = strAcceptCertTransfers == "Yes"? true: false;
+		theAlias.acceptCertTransfers = strAcceptCertTransfers == "true"? true: false;
 	
 	CSyscoinAddress newAddress;
 	CScript scriptPubKeyOrig;
@@ -2757,10 +2757,10 @@ int aliasunspent(const vector<unsigned char> &vchAlias, COutPoint& outpoint)
  */
 UniValue aliasinfo(const UniValue& params, bool fHelp) {
 	if (fHelp || 1 > params.size() || 2 < params.size())
-		throw runtime_error("aliasinfo <aliasname> [walletless=No]\n"
+		throw runtime_error("aliasinfo <aliasname> [walletless=false]\n"
 				"Show values of an alias.\n");
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
-	string strWalletless = "No";
+	string strWalletless = "false";
 	if(CheckParam(params, 1))
 		strWalletless = params[1].get_str();
 
@@ -2789,7 +2789,7 @@ bool BuildAliasJson(const CAliasIndex& alias, const bool pending, UniValue& oNam
 	string strData = "";
 	string strPassword = "";
 	string strDecrypted = "";
-	if(strWalletless == "Yes")
+	if(strWalletless == "true")
 		strEncryptionPrivateKey = HexStr(alias.vchEncryptionPrivateKey);
 	else
 	{
@@ -2797,7 +2797,7 @@ bool BuildAliasJson(const CAliasIndex& alias, const bool pending, UniValue& oNam
 	}
 	if(!alias.vchPrivateValue.empty() || !alias.vchPassword.empty())
 	{
-		if(strWalletless == "Yes")
+		if(strWalletless == "true")
 		{
 			strData = HexStr(alias.vchPrivateValue);
 			strPassword = HexStr(alias.vchPassword);
@@ -2836,8 +2836,8 @@ bool BuildAliasJson(const CAliasIndex& alias, const bool pending, UniValue& oNam
 	const UniValue &resBalance = aliasbalance(balanceParams, false);
 	oName.push_back(Pair("balance", resBalance));
 	oName.push_back(Pair("ismine", IsMyAlias(alias)? true:  false));
-	oName.push_back(Pair("safesearch", alias.safeSearch ? "Yes" : "No"));
-	oName.push_back(Pair("acceptcerttransfers", alias.acceptCertTransfers ? "Yes" : "No"));
+	oName.push_back(Pair("safesearch", alias.safeSearch ? "true" : "false"));
+	oName.push_back(Pair("acceptcerttransfers", alias.acceptCertTransfers ? "true" : "false"));
 	oName.push_back(Pair("safetylevel", alias.safetyLevel ));
 	float ratingAsBuyer = 0;
 	if(alias.nRatingCountAsBuyer > 0)
@@ -2898,11 +2898,11 @@ bool BuildAliasJson(const CAliasIndex& alias, const bool pending, UniValue& oNam
  */
 UniValue aliashistory(const UniValue& params, bool fHelp) {
 	if (fHelp || 1 > params.size() || 2 < params.size())
-		throw runtime_error("aliashistory <aliasname> [walletless=No]\n"
+		throw runtime_error("aliashistory <aliasname> [walletless=false]\n"
 				"List all stored values of an alias.\n");
 	UniValue oRes(UniValue::VARR);
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
-	string strWalletless = "No";
+	string strWalletless = "false";
 	if(CheckParam(params, 1))
 		strWalletless = params[1].get_str();	
 	vector<CAliasIndex> vtxPos;
@@ -3195,7 +3195,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 UniValue aliasfilter(const UniValue& params, bool fHelp) {
 	if (fHelp || params.size() > 3)
 		throw runtime_error(
-		"aliasfilter [searchterm] [aliaspage] [safesearch='Yes']\n"
+		"aliasfilter [searchterm] [aliaspage] [safesearch='true']\n"
 						"scan and filter aliases\n"
 						"[searchterm] : find searchterm in alias name, empty means all aliases\n"
 						"[aliaspage] : page with this alias name, starting from this alias 25 max results are returned. Empty for first 25 aliases.\n"
@@ -3214,7 +3214,7 @@ UniValue aliasfilter(const UniValue& params, bool fHelp) {
 		strAliasPage = params[1].get_str();
 	
 	if(CheckParam(params, 2))
-		safeSearch = params[2].get_str()=="On"? true: false;
+		safeSearch = params[2].get_str()=="true"? true: false;
 
 	UniValue oRes(UniValue::VARR);
 
@@ -3267,7 +3267,7 @@ bool BuildAliasStatsJson(const std::vector<CAliasIndex> &aliases, UniValue& oAli
 	UniValue oAliases(UniValue::VARR);
 	BOOST_REVERSE_FOREACH(const CAliasIndex& alias, aliases) {
 		UniValue oAlias(UniValue::VOBJ);
-		if(!BuildAliasJson(alias, false, oAlias, "Yes"))
+		if(!BuildAliasJson(alias, false, oAlias, "true"))
 			continue;
 		oAliases.push_back(oAlias);
 	}
