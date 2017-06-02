@@ -34,7 +34,7 @@ class CValidationInterface {
 protected:
     virtual void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {}
     virtual void TransactionAddedToMempool(const CTransactionRef &ptxn) {}
-    virtual void BlockConnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex *pindex, const std::vector<CTransactionRef> &txnConflicted) {}
+    virtual void BlockConnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex *pindex, const std::vector<CTransactionRef> &txnConflicted, bool &requestPause) {}
     virtual void BlockDisconnected(const std::shared_ptr<const CBlock> &block) {}
     virtual void SetBestChain(const CBlockLocator &locator) {}
     virtual void Inventory(const uint256 &hash) {}
@@ -56,7 +56,7 @@ struct CMainSignals {
      * Notifies listeners of a block being connected.
      * Provides a vector of transactions evicted from the mempool as a result.
      */
-    boost::signals2::signal<void (const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex, const std::vector<CTransactionRef> &)> BlockConnected;
+    boost::signals2::signal<void (const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex, const std::vector<CTransactionRef> &, bool &requestPause)> BlockConnected;
     /** Notifies listeners of a block being disconnected */
     boost::signals2::signal<void (const std::shared_ptr<const CBlock> &)> BlockDisconnected;
     /** Notifies listeners of a new active block chain. */

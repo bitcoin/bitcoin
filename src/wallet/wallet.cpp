@@ -12,6 +12,7 @@
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
 #include "fs.h"
+#include "init.h" //for StartShutdown()
 #include "key.h"
 #include "keystore.h"
 #include "validation.h"
@@ -77,6 +78,38 @@ std::string COutput::ToString() const
 {
     return strprintf("COutput(%s, %d, %d) [%s]", tx->GetHash().ToString(), i, nDepth, FormatMoney(tx->tx->vout[i].nValue));
 }
+
+class CAffectedKeysVisitor : public boost::static_visitor<void> {
+private:
+    const CKeyStore &keystore;
+    std::vector<CKeyID> &vKeys;
+
+public:
+    CAffectedKeysVisitor(const CKeyStore &keystoreIn, std::vector<CKeyID> &vKeysIn) : keystore(keystoreIn), vKeys(vKeysIn) {}
+
+    void Process(const CScript &script) {
+        txnouttype type;
+        std::vector<CTxDestination> vDest;
+        int nRequired;
+        if (ExtractDestinations(script, type, vDest, nRequired)) {
+            BOOST_FOREACH(const CTxDestination &dest, vDest)
+                boost::apply_visitor(*this, dest);
+        }
+    }
+
+    void operator()(const CKeyID &keyId) {
+        if (keystore.HaveKey(keyId))
+            vKeys.push_back(keyId);
+    }
+
+    void operator()(const CScriptID &scriptId) {
+        CScript script;
+        if (keystore.GetCScript(scriptId, script))
+            Process(script);
+    }
+
+    void operator()(const CNoDestination &none) {}
+};
 
 const CWalletTx* CWallet::GetWalletTx(const uint256& hash) const
 {
@@ -358,6 +391,7 @@ bool CWallet::ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase,
 
 void CWallet::SetBestChain(const CBlockLocator& loc)
 {
+    if (fSyncPausedUntilKeypoolExt) return;
     CWalletDB walletdb(*dbw);
     walletdb.WriteBestBlock(loc);
 }
@@ -970,6 +1004,26 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const CBlockI
         if (fExisted && !fUpdate) return false;
         if (fExisted || IsMine(tx) || IsFromMe(tx))
         {
+            /* Check if any keys in the wallet keypool that were supposed to be unused
+             * have appeared in a new transaction. If so, remove those keys from the keypool.
+             * This can happen when restoring an old wallet backup that does not contain
+             * the mostly recently created transactions from newer versions of the wallet.
+             */
+            std::set<CKeyID> keyPool;
+            GetAllReserveKeys(keyPool);
+            // loop though all outputs
+            for(const CTxOut& txout: tx.vout) {
+                // extract addresses and check if they match with an unused keypool key
+                std::vector<CKeyID> vAffected;
+                CAffectedKeysVisitor(*this, vAffected).Process(txout.scriptPubKey);
+                BOOST_FOREACH(const CKeyID &keyid, vAffected) {
+                    if (keyPool.count(keyid)) {
+                        LogPrintf("%s: Detected a used Keypool key, mark all keypool key up to this key as used\n", __func__);
+                        MarkReserveKeysAsUsed(keyid);
+                    }
+                }
+            }
+
             CWalletTx wtx(this, ptx);
 
             // Get merkle branch if transaction was found in a block
@@ -1122,29 +1176,41 @@ void CWallet::SyncTransaction(const CTransactionRef& ptx, const CBlockIndex *pin
 }
 
 void CWallet::TransactionAddedToMempool(const CTransactionRef& ptx) {
+    if (fSyncPausedUntilKeypoolExt) return;
     LOCK2(cs_main, cs_wallet);
     SyncTransaction(ptx);
 }
 
-void CWallet::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex *pindex, const std::vector<CTransactionRef>& vtxConflicted) {
-    LOCK2(cs_main, cs_wallet);
-    // TODO: Temporarily ensure that mempool removals are notified before
-    // connected transactions.  This shouldn't matter, but the abandoned
-    // state of transactions in our wallet is currently cleared when we
-    // receive another notification and there is a race condition where
-    // notification of a connected conflict might cause an outside process
-    // to abandon a transaction and then have it inadvertently cleared by
-    // the notification that the conflicted transaction was evicted.
-
-    for (const CTransactionRef& ptx : vtxConflicted) {
-        SyncTransaction(ptx);
+void CWallet::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex *pindex, const std::vector<CTransactionRef>& vtxConflicted, bool &requestPause) {
+    if (fSyncPausedUntilKeypoolExt) {
+        requestPause = true;
+        return;
     }
-    for (size_t i = 0; i < pblock->vtx.size(); i++) {
-        SyncTransaction(pblock->vtx[i], pindex, i);
+
+    {
+        LOCK2(cs_main, cs_wallet);
+        // TODO: Temporarily ensure that mempool removals are notified before
+        // connected transactions.  This shouldn't matter, but the abandoned
+        // state of transactions in our wallet is currently cleared when we
+        // receive another notification and there is a race condition where
+        // notification of a connected conflict might cause an outside process
+        // to abandon a transaction and then have it inadvertently cleared by
+        // the notification that the conflicted transaction was evicted.
+
+        for (const CTransactionRef& ptx : vtxConflicted) {
+            SyncTransaction(ptx);
+        }
+        for (size_t i = 0; i < pblock->vtx.size(); i++) {
+            SyncTransaction(pblock->vtx[i], pindex, i);
+        }
+        if (fSyncPausedUntilKeypoolExt) {
+            requestPause = true;
+        }
     }
 }
 
 void CWallet::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock) {
+    if (fSyncPausedUntilKeypoolExt) return;
     LOCK2(cs_main, cs_wallet);
 
     for (const CTransactionRef& ptx : pblock->vtx) {
@@ -1357,6 +1423,57 @@ bool CWallet::IsHDEnabled() const
     return !hdChain.masterKeyID.IsNull();
 }
 
+void CWallet::EventuallyRescanAfterKeypoolTopUp() {
+    if (fSyncPausedUntilKeypoolExt) {
+
+        // for now, enable block requests and tip updates via the states
+        // this will only be sufficient as long as only a single wallet adjusts these stats
+        // switch to counters (instead of a single boolean state) could solve this
+        ::setBlockRequestsPaused(false);
+        ::setTipUpdatesPaused(false);
+
+        // disabled the per-wallet pause
+        fSyncPausedUntilKeypoolExt = false;
+
+        const CChainParams& chainparams = Params();
+        CValidationState state;
+        if (!ActivateBestChain(state, chainparams)) {
+            LogPrintf("Failed to connect best block");
+            StartShutdown();
+        }
+
+        CBlockIndex *pindexRescan = chainActive.Genesis();
+        CWalletDB walletdb(*dbw);
+        CBlockLocator locator;
+        if (walletdb.ReadBestBlock(locator))
+            pindexRescan = FindForkInGlobalIndex(chainActive, locator);
+
+        if (chainActive.Tip() && chainActive.Tip() != pindexRescan)
+        {
+            //We can't rescan beyond non-pruned blocks, stop and throw an error
+            //this might happen if a user uses a old wallet within a pruned node
+            // or if he ran -disablewallet for a longer time, then decided to re-enable
+            if (fPruneMode)
+            {
+                CBlockIndex *block = chainActive.Tip();
+                while (block && block->pprev && (block->pprev->nStatus & BLOCK_HAVE_DATA) && block->pprev->nTx > 0 && pindexRescan != block)
+                    block = block->pprev;
+
+                if (pindexRescan != block) {
+                    const static std::string pruneError = "Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)";
+                    uiInterface.ThreadSafeMessageBox(pruneError, "", CClientUIInterface::MSG_ERROR);
+                    StartShutdown();
+                    throw std::runtime_error(pruneError);
+                }
+            }
+            if (pindexRescan) {
+                LogPrintf("Rescanning from height: %d\n", pindexRescan->nHeight);
+            }
+            ScanForWalletTransactions(pindexRescan, true);
+        }
+    }
+}
+
 int64_t CWalletTx::GetTxTime() const
 {
     int64_t n = nTimeSmart;
@@ -1475,6 +1592,7 @@ CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool f
 
     CBlockIndex* pindex = pindexStart;
     CBlockIndex* ret = pindexStart;
+    CBlockIndex* pindex_prev = NULL;
     {
         LOCK2(cs_main, cs_wallet);
         fAbortRescan = false;
@@ -1502,6 +1620,11 @@ CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool f
                 for (size_t posInBlock = 0; posInBlock < block.vtx.size(); ++posInBlock) {
                     AddToWalletIfInvolvingMe(block.vtx[posInBlock], pindex, posInBlock, fUpdate);
                 }
+                if (fSyncPausedUntilKeypoolExt) {
+                    LogPrintf("Aborting rescanning at block %d. Please extend the keypool first.\n", (pindex ? pindex->nHeight: 0));
+                    return pindex_prev;
+                }
+                pindex_prev = pindex;
                 if (!ret) {
                     ret = pindex;
                 }
@@ -3170,6 +3293,7 @@ void CWallet::ReserveKeyFromKeyPool(int64_t& nIndex, CKeyPool& keypool, bool int
                 setKeyPool.erase(id);
                 assert(keypool.vchPubKey.IsValid());
                 LogPrintf("keypool reserve %d\n", nIndex);
+                CheckKeypoolMinSize();
                 return;
             }
         }
@@ -3435,6 +3559,69 @@ void CReserveKey::ReturnKey()
     vchPubKey = CPubKey();
 }
 
+bool CWallet::CheckKeypoolMinSize() {
+    LOCK(cs_wallet);
+    size_t extKeypoolSize = KeypoolCountExternalKeys();
+    if (!GetBoolArg("-hdignoregaplimit", DEFAULT_IGNORE_HD_MIN_KEYPOOL_SIZE) && IsHDEnabled() && (extKeypoolSize < HD_RESTORE_KEYPOOL_SIZE_MIN || (setKeyPool.size()-extKeypoolSize) < HD_RESTORE_KEYPOOL_SIZE_MIN)) {
+        // if the remaining keypool size is below the gap limit, refuse to continue with the sync
+        fSyncPausedUntilKeypoolExt = true;
+        LogPrintf("%s: Keypool ran below min size, pause wallet sync\n", __func__);
+        return false;
+    }
+    return true;
+}
+
+void CWallet::MarkReserveKeysAsUsed(const CKeyID& keyId)
+{
+    LOCK(cs_wallet);
+    CWalletDB walletdb(*dbw);
+    auto it = std::begin(setKeyPool);
+
+    bool foundInternal = false;
+    int64_t foundIndex = -1;
+    for (const int64_t& id : setKeyPool) {
+        CKeyPool keypool;
+        if (!walletdb.ReadPool(id, keypool))
+            throw std::runtime_error(std::string(__func__) + ": read failed");
+
+        if (keypool.vchPubKey.GetID() == keyId) {
+            foundInternal = keypool.fInternal;
+            foundIndex = id;
+            if (!keypool.fInternal) {
+                SetAddressBook(keyId, "", "receive");
+            }
+            break;
+        }
+    }
+
+    // mark all keys up to the found key as used
+    if (foundIndex >= 0) {
+        while (it != std::end(setKeyPool)) {
+            const int64_t& id = *(it);
+            if (id <= foundIndex) {
+                CKeyPool keypool;
+                if (!walletdb.ReadPool(id, keypool))
+                    throw std::runtime_error(std::string(__func__) + ": read failed");
+
+                // only mark keys on the corresponding chain
+                if (keypool.fInternal == foundInternal) {
+                    KeepKey(id);
+                    it = setKeyPool.erase(it);
+                    continue;
+                }
+            }
+            ++it;
+        }
+    }
+
+    if (IsHDEnabled() && !TopUpKeyPool()) {
+        fSyncPausedUntilKeypoolExt = true;
+        LogPrintf("%s: Topping up keypool failed (locked wallet), pausing transaction processing\n", __func__);
+    }
+
+    CheckKeypoolMinSize();
+}
+
 void CWallet::GetAllReserveKeys(std::set<CKeyID>& setAddress) const
 {
     setAddress.clear();
@@ -3442,7 +3629,7 @@ void CWallet::GetAllReserveKeys(std::set<CKeyID>& setAddress) const
     CWalletDB walletdb(*dbw);
 
     LOCK2(cs_main, cs_wallet);
-    BOOST_FOREACH(const int64_t& id, setKeyPool)
+    for(const int64_t& id : setKeyPool)
     {
         CKeyPool keypool;
         if (!walletdb.ReadPool(id, keypool))
@@ -3503,38 +3690,6 @@ void CWallet::ListLockedCoins(std::vector<COutPoint>& vOutpts) const
 }
 
 /** @} */ // end of Actions
-
-class CAffectedKeysVisitor : public boost::static_visitor<void> {
-private:
-    const CKeyStore &keystore;
-    std::vector<CKeyID> &vKeys;
-
-public:
-    CAffectedKeysVisitor(const CKeyStore &keystoreIn, std::vector<CKeyID> &vKeysIn) : keystore(keystoreIn), vKeys(vKeysIn) {}
-
-    void Process(const CScript &script) {
-        txnouttype type;
-        std::vector<CTxDestination> vDest;
-        int nRequired;
-        if (ExtractDestinations(script, type, vDest, nRequired)) {
-            BOOST_FOREACH(const CTxDestination &dest, vDest)
-                boost::apply_visitor(*this, dest);
-        }
-    }
-
-    void operator()(const CKeyID &keyId) {
-        if (keystore.HaveKey(keyId))
-            vKeys.push_back(keyId);
-    }
-
-    void operator()(const CScriptID &scriptId) {
-        CScript script;
-        if (keystore.GetCScript(scriptId, script))
-            Process(script);
-    }
-
-    void operator()(const CNoDestination &none) {}
-};
 
 void CWallet::GetKeyBirthTimes(std::map<CTxDestination, int64_t> &mapKeyBirth) const {
     AssertLockHeld(cs_wallet); // mapKeyMetadata
@@ -3739,6 +3894,7 @@ std::string CWallet::GetWalletHelpString(bool showDebug)
         strUsage += HelpMessageOpt("-flushwallet", strprintf("Run a thread to flush wallet periodically (default: %u)", DEFAULT_FLUSHWALLET));
         strUsage += HelpMessageOpt("-privdb", strprintf("Sets the DB_PRIVATE flag in the wallet db environment (default: %u)", DEFAULT_WALLET_PRIVDB));
         strUsage += HelpMessageOpt("-walletrejectlongchains", strprintf(_("Wallet will not create transactions that violate mempool chain limits (default: %u)"), DEFAULT_WALLET_REJECT_LONG_CHAINS));
+        strUsage += HelpMessageOpt("-hdignoregaplimit", strprintf(_("Ignores the minimum keypool-size warning for HD restore (default: %u)"), DEFAULT_IGNORE_HD_MIN_KEYPOOL_SIZE));
     }
 
     return strUsage;
@@ -3857,6 +4013,19 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
 
     RegisterValidationInterface(walletInstance);
 
+    // HD Restore: Make sure we always have a reasonable keypool size if HD is enabled
+    if (walletInstance->IsHDEnabled()) {
+        if (GetArg("-keypool", DEFAULT_KEYPOOL_SIZE) < HD_RESTORE_KEYPOOL_SIZE_MIN && !GetBoolArg("-hdignoregaplimit", DEFAULT_IGNORE_HD_MIN_KEYPOOL_SIZE)) {
+            LogPrintf("Parameter Interaction: set keypool to required minimum for encrypted wallets (%d)\n", HD_RESTORE_KEYPOOL_SIZE_MIN);
+            SoftSetArg("-keypool", std::to_string(HD_RESTORE_KEYPOOL_SIZE_MIN));
+        }
+        else {
+            walletInstance->TopUpKeyPool();
+        }
+        if (!walletInstance->CheckKeypoolMinSize() && !GetBoolArg("-hdignoregaplimit", DEFAULT_IGNORE_HD_MIN_KEYPOOL_SIZE)) {
+            InitWarning(_("Your keypool size is below the required limit for HD rescans. Wallet synchronisation is now paused until you have refilled the keypool."));
+        }
+    }
     CBlockIndex *pindexRescan = chainActive.Genesis();
     if (!GetBoolArg("-rescan", false))
     {

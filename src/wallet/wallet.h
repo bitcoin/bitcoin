@@ -40,6 +40,7 @@ extern bool bSpendZeroConfChange;
 extern bool fWalletRbf;
 
 static const unsigned int DEFAULT_KEYPOOL_SIZE = 100;
+static const unsigned int HD_RESTORE_KEYPOOL_SIZE_MIN = 20;
 //! -paytxfee default
 static const CAmount DEFAULT_TRANSACTION_FEE = 0;
 //! -fallbackfee default
@@ -64,6 +65,8 @@ static const bool DEFAULT_WALLETBROADCAST = true;
 static const bool DEFAULT_DISABLE_WALLET = false;
 //! if set, all keys will be derived by using BIP32
 static const bool DEFAULT_USE_HD_WALLET = true;
+
+static const bool DEFAULT_IGNORE_HD_MIN_KEYPOOL_SIZE = false;
 
 extern const char * DEFAULT_WALLET_DAT;
 
@@ -654,6 +657,13 @@ private:
     std::atomic<bool> fScanningWallet;
 
     /**
+     * fSyncPausedUntilKeypoolExt allows to temporarily pause the transaction syncing process until
+     * the keypool has been refilled (manual topup may be required for encrypted and locked wallets).
+     * Not doing so may result in missing transactions in case of a HD recovery (or shared HD wallet).
+     */
+    std::atomic<bool> fSyncPausedUntilKeypoolExt;
+
+    /**
      * Select a set of coins such that nValueRet >= nTargetValue and at least
      * all coins from coinControl are selected; Never select unconfirmed coins
      * if they are not ours
@@ -792,6 +802,7 @@ public:
         nRelockTime = 0;
         fAbortRescan = false;
         fScanningWallet = false;
+        fSyncPausedUntilKeypoolExt = false;
     }
 
     std::map<uint256, CWalletTx> mapWallet;
@@ -915,7 +926,7 @@ public:
     bool AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose=true);
     bool LoadToWallet(const CWalletTx& wtxIn);
     void TransactionAddedToMempool(const CTransactionRef& tx) override;
-    void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex *pindex, const std::vector<CTransactionRef>& vtxConflicted) override;
+    void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex *pindex, const std::vector<CTransactionRef>& vtxConflicted, bool &requestPause) override;
     void BlockDisconnected(const std::shared_ptr<const CBlock>& pblock) override;
     bool AddToWalletIfInvolvingMe(const CTransactionRef& tx, const CBlockIndex* pIndex, int posInBlock, bool fUpdate);
     CBlockIndex* ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate = false);
@@ -974,6 +985,8 @@ public:
     void ReturnKey(int64_t nIndex);
     bool GetKeyFromPool(CPubKey &key, bool internal = false);
     int64_t GetOldestKeyPoolTime();
+    bool CheckKeypoolMinSize();
+    void MarkReserveKeysAsUsed(const CKeyID& keyId);
     void GetAllReserveKeys(std::set<CKeyID>& setAddress) const;
 
     std::set< std::set<CTxDestination> > GetAddressGroupings();
@@ -1121,6 +1134,8 @@ public:
        caller must ensure the current wallet version is correct before calling
        this function). */
     bool SetHDMasterKey(const CPubKey& key);
+
+    void EventuallyRescanAfterKeypoolTopUp();
 };
 
 /** A key allocated from the key pool. */
