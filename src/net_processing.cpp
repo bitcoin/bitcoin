@@ -18,6 +18,7 @@
 #include <netbase.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
+#include <pow.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <random.h>
@@ -1508,12 +1509,23 @@ bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, const std::ve
         LOCK(cs_main);
         CNodeState *nodestate = State(pfrom->GetId());
 
+        uint256 hashLastBlock;
+        for (const CBlockHeader& header : headers) {
+            if (!hashLastBlock.IsNull() && header.hashPrevBlock != hashLastBlock) {
+                Misbehaving(pfrom->GetId(), 20, "non-continuous headers sequence");
+                return false;
+            }
+            hashLastBlock = header.GetHash();
+            if (!CheckProofOfWork(header.GetHash(), header.nBits, chainparams.GetConsensus())) {
+                Misbehaving(pfrom->GetId(), 50, "proof of work failed");
+                return false;
+            }
+        }
+
         // If this looks like it could be a block announcement (nCount <
         // MAX_BLOCKS_TO_ANNOUNCE), use special logic for handling headers that
         // don't connect:
         // - Send a getheaders message in response to try to connect the chain.
-        // - The peer can send up to MAX_UNCONNECTING_HEADERS in a row that
-        //   don't connect before giving DoS points
         // - Once a headers message is received that is valid and does connect,
         //   nUnconnectingHeaders gets reset back to 0.
         if (!LookupBlockIndex(headers[0].hashPrevBlock) && nCount < MAX_BLOCKS_TO_ANNOUNCE) {
@@ -1529,19 +1541,7 @@ bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, const std::ve
             // we can use this peer to download.
             UpdateBlockAvailability(pfrom->GetId(), headers.back().GetHash());
 
-            if (nodestate->nUnconnectingHeaders % MAX_UNCONNECTING_HEADERS == 0) {
-                Misbehaving(pfrom->GetId(), 20);
-            }
             return true;
-        }
-
-        uint256 hashLastBlock;
-        for (const CBlockHeader& header : headers) {
-            if (!hashLastBlock.IsNull() && header.hashPrevBlock != hashLastBlock) {
-                Misbehaving(pfrom->GetId(), 20, "non-continuous headers sequence");
-                return false;
-            }
-            hashLastBlock = header.GetHash();
         }
 
         // If we don't have the last header, then they'll have given us
