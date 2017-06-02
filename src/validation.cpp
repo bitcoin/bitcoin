@@ -2385,8 +2385,10 @@ bool InvalidateBlock(CValidationState& state, const CChainParams& chainparams, C
     setBlockIndexCandidates.erase(pindex);
 
     const bool need_reorg = chainActive.Contains(pindex);
+    bool need_new_best_header = (pindex == pindexBestHeader);
 
     if (need_reorg) {
+        need_new_best_header |= (chainActive.Tip() == pindexBestHeader);
         DisconnectedBlockTransactions disconnectpool;
         while (chainActive.Contains(pindex)) {
             CBlockIndex *pindexWalk = chainActive.Tip();
@@ -2406,7 +2408,10 @@ bool InvalidateBlock(CValidationState& state, const CChainParams& chainparams, C
         // DisconnectTip will add transactions to disconnectpool; try to add these
         // back to the mempool.
         UpdateMempoolForReorg(disconnectpool, true);
+    }
 
+    if (need_reorg || need_new_best_header) {
+        CBlockIndex *new_best_header = chainActive.Tip();
         // The resulting new best tip may not be in setBlockIndexCandidates anymore, so
         // add it again.
         BlockMap::iterator it = mapBlockIndex.begin();
@@ -2414,8 +2419,12 @@ bool InvalidateBlock(CValidationState& state, const CChainParams& chainparams, C
             if (it->second->IsValid(BLOCK_VALID_TRANSACTIONS) && it->second->nChainTx && !setBlockIndexCandidates.value_comp()(it->second, chainActive.Tip())) {
                 setBlockIndexCandidates.insert(it->second);
             }
+            if (it->second->IsValid(BLOCK_VALID_TREE) && CBlockIndexWorkComparator()(pindexBestHeader, it->second)) {
+                new_best_header = it->second;
+            }
             it++;
         }
+        pindexBestHeader = new_best_header;
     }
 
     InvalidChainFound(pindex);
