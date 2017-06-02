@@ -111,7 +111,7 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason, const bool witnes
         return false;
     }
 
-    BOOST_FOREACH(const CTxIn& txin, tx.vin)
+    for (const CTxIn& txin : tx.vin)
     {
         // Biggest 'standard' txin is a 15-of-15 P2SH multisig with compressed
         // keys (remember the 520 byte limit on redeemScript size). That works
@@ -132,7 +132,7 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason, const bool witnes
 
     unsigned int nDataOut = 0;
     txnouttype whichType;
-    BOOST_FOREACH(const CTxOut& txout, tx.vout) {
+    for (const CTxOut& txout : tx.vout) {
         if (!::IsStandard(txout.scriptPubKey, whichType, witnessEnabled)) {
             reason = "scriptpubkey";
             return false;

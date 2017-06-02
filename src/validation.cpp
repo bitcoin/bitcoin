@@ -160,7 +160,7 @@ namespace {
 CBlockIndex* FindForkInGlobalIndex(const CChain& chain, const CBlockLocator& locator)
 {
     // Find the first block the caller has in the main chain
-    BOOST_FOREACH(const uint256& hash, locator.vHave) {
+    for (const uint256& hash : locator.vHave) {
         BlockMap::iterator mi = mapBlockIndex.find(hash);
         if (mi != mapBlockIndex.end())
         {
@@ -297,7 +297,7 @@ bool CheckSequenceLocks(const CTransaction &tx, int flags, LockPoints* lp, bool 
             // lock on a mempool input, so we can use the return value of
             // CheckSequenceLocks to indicate the LockPoints validity
             int maxInputHeight = 0;
-            BOOST_FOREACH(int height, prevheights) {
+            for (int height : prevheights) {
                 // Can ignore mempool inputs since we'll fail if they had non-zero locks
                 if (height != tip->nHeight+1) {
                     maxInputHeight = std::max(maxInputHeight, height);
@@ -317,7 +317,7 @@ void LimitMempoolSize(CTxMemPool& pool, size_t limit, unsigned long age) {
 
     std::vector<COutPoint> vNoSpendsRemaining;
     pool.TrimToSize(limit, &vNoSpendsRemaining);
-    BOOST_FOREACH(const COutPoint& removed, vNoSpendsRemaining)
+    for (const COutPoint& removed : vNoSpendsRemaining)
         pcoinsTip->Uncache(removed);
 }
 
@@ -434,7 +434,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
     std::set<uint256> setConflicts;
     {
     LOCK(pool.cs); // protect pool.mapNextTx
-    BOOST_FOREACH(const CTxIn &txin, tx.vin)
+    for (const CTxIn &txin : tx.vin)
     {
         auto itConflicting = pool.mapNextTx.find(txin.prevout);
         if (itConflicting != pool.mapNextTx.end())
@@ -457,7 +457,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
                 bool fReplacementOptOut = true;
                 if (fEnableReplacement)
                 {
-                    BOOST_FOREACH(const CTxIn &_txin, ptxConflicting->vin)
+                    for (const CTxIn &_txin : ptxConflicting->vin)
                     {
                         if (_txin.nSequence < std::numeric_limits<unsigned int>::max()-1)
                         {
@@ -499,7 +499,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
         }
 
         // do all inputs exist?
-        BOOST_FOREACH(const CTxIn txin, tx.vin) {
+        for (const CTxIn txin : tx.vin) {
             if (!pcoinsTip->HaveCoinInCache(txin.prevout)) {
                 coins_to_uncache.push_back(txin.prevout);
             }
@@ -547,7 +547,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
         // Keep track of transactions that spend a coinbase, which we re-scan
         // during reorgs to ensure COINBASE_MATURITY is still met.
         bool fSpendsCoinbase = false;
-        BOOST_FOREACH(const CTxIn &txin, tx.vin) {
+        for (const CTxIn &txin : tx.vin) {
             const Coin &coin = view.AccessCoin(txin.prevout);
             if (coin.IsCoinBase()) {
                 fSpendsCoinbase = true;
@@ -598,7 +598,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
         // that we have the set of all ancestors we can detect this
         // pathological case by making sure setConflicts and setAncestors don't
         // intersect.
-        BOOST_FOREACH(CTxMemPool::txiter ancestorIt, setAncestors)
+        for (CTxMemPool::txiter ancestorIt : setAncestors)
         {
             const uint256 &hashAncestor = ancestorIt->GetTx().GetHash();
             if (setConflicts.count(hashAncestor))
@@ -629,7 +629,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
             std::set<uint256> setConflictsParents;
             const int maxDescendantsToVisit = 100;
             CTxMemPool::setEntries setIterConflicting;
-            BOOST_FOREACH(const uint256 &hashConflicting, setConflicts)
+            for (const uint256 &hashConflicting : setConflicts)
             {
                 CTxMemPool::txiter mi = pool.mapTx.find(hashConflicting);
                 if (mi == pool.mapTx.end())
@@ -665,7 +665,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
                                   oldFeeRate.ToString()));
                 }
 
-                BOOST_FOREACH(const CTxIn &txin, mi->GetTx().vin)
+                for (const CTxIn &txin : mi->GetTx().vin)
                 {
                     setConflictsParents.insert(txin.prevout.hash);
                 }
@@ -678,10 +678,10 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
             if (nConflictingCount <= maxDescendantsToVisit) {
                 // If not too many to replace, then calculate the set of
                 // transactions that would have to be evicted
-                BOOST_FOREACH(CTxMemPool::txiter it, setIterConflicting) {
+                for (CTxMemPool::txiter it : setIterConflicting) {
                     pool.CalculateDescendants(it, allConflicting);
                 }
-                BOOST_FOREACH(CTxMemPool::txiter it, allConflicting) {
+                for (CTxMemPool::txiter it : allConflicting) {
                     nConflictingFees += it->GetModifiedFee();
                     nConflictingSize += it->GetTxSize();
                 }
@@ -775,7 +775,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
         }
 
         // Remove conflicting transactions from the mempool
-        BOOST_FOREACH(const CTxMemPool::txiter it, allConflicting)
+        for (const CTxMemPool::txiter it : allConflicting)
         {
             LogPrint(BCLog::MEMPOOL, "replacing tx %s with %s for %s BTC additional fees, %d delta bytes\n",
                     it->GetTx().GetHash().ToString(),
@@ -816,7 +816,7 @@ bool AcceptToMemoryPoolWithTime(CTxMemPool& pool, CValidationState &state, const
     std::vector<COutPoint> coins_to_uncache;
     bool res = AcceptToMemoryPoolWorker(pool, state, tx, fLimitFree, pfMissingInputs, nAcceptTime, plTxnReplaced, fOverrideMempoolLimit, nAbsurdFee, coins_to_uncache);
     if (!res) {
-        BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
+        for (const COutPoint& hashTx : coins_to_uncache)
             pcoinsTip->Uncache(hashTx);
     }
     // After we've (potentially) uncached entries, ensure our coins cache is still within its size limits
@@ -1116,7 +1116,7 @@ void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txund
     // mark inputs spent
     if (!tx.IsCoinBase()) {
         txundo.vprevout.reserve(tx.vin.size());
-        BOOST_FOREACH(const CTxIn &txin, tx.vin) {
+        for (const CTxIn &txin : tx.vin) {
             txundo.vprevout.emplace_back();
             inputs.SpendCoin(txin.prevout, &txundo.vprevout.back());
         }
@@ -3097,7 +3097,7 @@ bool TestBlockValidity(CValidationState& state, const CChainParams& chainparams,
 uint64_t CalculateCurrentUsage()
 {
     uint64_t retval = 0;
-    BOOST_FOREACH(const CBlockFileInfo &file, vinfoBlockFile) {
+    for (const CBlockFileInfo &file : vinfoBlockFile) {
         retval += file.nSize + file.nUndoSize;
     }
     return retval;
@@ -3300,13 +3300,13 @@ bool static LoadBlockIndexDB(const CChainParams& chainparams)
     // Calculate nChainWork
     std::vector<std::pair<int, CBlockIndex*> > vSortedByHeight;
     vSortedByHeight.reserve(mapBlockIndex.size());
-    BOOST_FOREACH(const PAIRTYPE(uint256, CBlockIndex*)& item, mapBlockIndex)
+    for (const PAIRTYPE(uint256, CBlockIndex*)& item : mapBlockIndex)
     {
         CBlockIndex* pindex = item.second;
         vSortedByHeight.push_back(std::make_pair(pindex->nHeight, pindex));
     }
     sort(vSortedByHeight.begin(), vSortedByHeight.end());
-    BOOST_FOREACH(const PAIRTYPE(int, CBlockIndex*)& item, vSortedByHeight)
+    for (const PAIRTYPE(int, CBlockIndex*)& item : vSortedByHeight)
     {
         CBlockIndex* pindex = item.second;
         pindex->nChainWork = (pindex->pprev ? pindex->pprev->nChainWork : 0) + GetBlockProof(*pindex);
@@ -3355,7 +3355,7 @@ bool static LoadBlockIndexDB(const CChainParams& chainparams)
     // Check presence of blk files
     LogPrintf("Checking all blk files are present...\n");
     std::set<int> setBlkDataFiles;
-    BOOST_FOREACH(const PAIRTYPE(uint256, CBlockIndex*)& item, mapBlockIndex)
+    for (const PAIRTYPE(uint256, CBlockIndex*)& item : mapBlockIndex)
     {
         CBlockIndex* pindex = item.second;
         if (pindex->nStatus & BLOCK_HAVE_DATA) {
@@ -3611,7 +3611,7 @@ void UnloadBlockIndex()
         warningcache[b].clear();
     }
 
-    BOOST_FOREACH(BlockMap::value_type& entry, mapBlockIndex) {
+    for (BlockMap::value_type& entry : mapBlockIndex) {
         delete entry.second;
     }
     mapBlockIndex.clear();

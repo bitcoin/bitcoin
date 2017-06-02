@@ -23,7 +23,7 @@ GetResults(std::map<CAmount, CAccountingEntry>& results)
     results.clear();
     BOOST_CHECK(pwalletMain->ReorderTransactions() == DB_LOAD_OK);
     pwalletMain->ListAccountCreditDebit("", aes);
-    BOOST_FOREACH(CAccountingEntry& ae, aes)
+    for (CAccountingEntry& ae : aes)
     {
         results[ae.nOrderPos] = ae;
     }
