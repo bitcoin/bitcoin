@@ -8,12 +8,15 @@
 #include <string>
 #include <stdint.h>
 #include <functional>
+#include <mutex>
+#include <condition_variable>
 
 static const int DEFAULT_HTTP_THREADS=4;
 static const int DEFAULT_HTTP_WORKQUEUE=16;
 static const int DEFAULT_HTTP_SERVER_TIMEOUT=30;
 
 struct evhttp_request;
+struct evhttp_connection;
 struct event_base;
 class CService;
 class HTTPRequest;
@@ -59,6 +62,25 @@ class HTTPRequest
 private:
     struct evhttp_request* req;
     bool replySent;
+
+    /** Synchronization data between worker thread and http event thread, for streaming.
+     * This should be alive until the http request is destroyed (as long as it is still possible for
+     * the http_chunk_cb to be called).
+     */
+    struct StreamingData
+    {
+        StreamingData();
+        ~StreamingData();
+        void Update(struct evhttp_connection* evcon);
+        static void http_chunk_cb(struct evhttp_connection* req, void* arg);
+        void SendChunk(struct evhttp_request* req);
+
+        std::mutex cs; /* protects entire object */
+        std::condition_variable cond;
+        size_t buffer_bytes;
+        struct evbuffer* databuf;
+    };
+    StreamingData *streaming;
 
 public:
     HTTPRequest(struct evhttp_request* req);
@@ -114,6 +136,19 @@ public:
      * main thread, do not call any other HTTPRequest methods after calling this.
      */
     void WriteReply(int nStatus, const std::string& strReply = "");
+
+    /**
+     * Start streaming. After calling this, send chunks of data using
+     * SendChunk.
+     */
+    bool StartStreaming(int nStatus);
+
+    /**
+     * Send a chunk of data.
+     * Call this only after StartStreaming.
+     * This can block if there is not enough space in the send queue.
+     */
+    bool SendChunk(const void *data, size_t size);
 };
 
 /** Event handler closure.

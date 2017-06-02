@@ -17,6 +17,7 @@
 #include "txmempool.h"
 #include "utilstrencodings.h"
 #include "version.h"
+#include "util.h"
 
 #include <boost/algorithm/string.hpp>
 
@@ -586,6 +587,65 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
     return true; // continue to process further HTTP reqs on this cxn
 }
 
+// Size of one chunk for streaming utxo set
+const size_t CHUNK_SIZE = 256*1024;
+
+static bool rest_utxoset(HTTPRequest* req, const std::string& strURIPart)
+{
+    if (!CheckWarmup(req))
+        return false;
+
+    req->WriteHeader("Content-Type", "application/octet-stream");
+    // We're timing out during *send*?
+
+    boost::scoped_ptr<CCoinsViewCursor> pcursor(pcoinsTip->Cursor());
+    const uint256 &bestBlock = pcursor->GetBestBlock();
+    int nHeight;
+    {
+        LOCK(cs_main);
+        nHeight = mapBlockIndex.find(bestBlock)->second->nHeight;
+    }
+    std::string filename = strprintf("utxoset-%i-%s.dat", nHeight, bestBlock.ToString());
+    req->WriteHeader("Content-Disposition", "attachment; filename=\""+filename+"\"");
+    req->WriteHeader("X-Best-Block", bestBlock.ToString());
+    req->WriteHeader("X-Block-Height", strprintf("%i", nHeight));
+    req->StartStreaming(HTTP_OK);
+
+    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+    ss << bestBlock;
+    while (pcursor->Valid()) {
+        uint256 key;
+        CCoins coins;
+        if (pcursor->GetKey(key) && pcursor->GetValue(coins)) {
+            ss << key;
+            for (unsigned int i=0; i<coins.vout.size(); i++) {
+                const CTxOut &out = coins.vout[i];
+                if (!out.IsNull()) {
+                    ss << VARINT(i+1);
+                    ss << out;
+                }
+            }
+            ss << VARINT(0);
+        } else {
+            // Not clear what to do here - we've sent part of the data so it's
+            // too late to report an error.
+            ss << VARINT(-1);
+            ss << std::string("Database error - output corrupted");
+            LogPrintf("Database error during utxo dump\n");
+            break;
+        }
+        pcursor->Next();
+        if(ss.size() >= CHUNK_SIZE) {
+            req->SendChunk(&(*ss.begin()), ss.size());
+            ss.clear();
+        }
+    }
+    req->SendChunk(&(*ss.begin()), ss.size());
+    LogPrintf("Got to EOF\n");
+    return true; // continue to process further HTTP reqs on this cxn
+}
+
+
 static const struct {
     const char* prefix;
     bool (*handler)(HTTPRequest* req, const std::string& strReq);
@@ -598,6 +658,7 @@ static const struct {
       {"/rest/mempool/contents", rest_mempool_contents},
       {"/rest/headers/", rest_headers},
       {"/rest/getutxos", rest_getutxos},
+      {"/rest/utxoset", rest_utxoset},
 };
 
 bool StartREST()

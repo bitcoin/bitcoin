@@ -27,6 +27,7 @@
 #include <event2/buffer.h>
 #include <event2/util.h>
 #include <event2/keyvalq_struct.h>
+#include <event2/bufferevent.h>
 
 #ifdef EVENT__HAVE_NETINET_IN_H
 #include <netinet/in.h>
@@ -545,12 +546,19 @@ void HTTPEvent::trigger(struct timeval* tv)
         evtimer_add(ev, tv); // trigger after timeval passed
 }
 HTTPRequest::HTTPRequest(struct evhttp_request* _req) : req(_req),
-                                                       replySent(false)
+                                                       replySent(false), streaming(0)
 {
 }
 HTTPRequest::~HTTPRequest()
 {
-    if (!replySent) {
+    if (streaming) {
+        // Finish streaming in main thread
+        HTTPEvent* ev = new HTTPEvent(eventBase, true, boost::bind(evhttp_send_reply_end, req));
+        ev->trigger(0);
+        LogPrintf("%s: The end\n", __func__);
+        // TODO: MEMORY LEAK deallocate 'streaming' in event thread, after there is no risk
+        // of any of the callbacks being called anymore (e.g. request done and finished, or failed).
+    } else if (!replySent) {
         // Keep track of whether reply was sent to avoid request leaks
         LogPrintf("%s: Unhandled request\n", __func__);
         WriteReply(HTTP_INTERNAL, "Unhandled request");
@@ -653,6 +661,104 @@ HTTPRequest::RequestMethod HTTPRequest::GetRequestMethod()
         return UNKNOWN;
         break;
     }
+}
+
+bool HTTPRequest::StartStreaming(int nStatus)
+{
+    assert(!streaming);
+    streaming = new StreamingData();
+    HTTPEvent* ev = new HTTPEvent(eventBase, true, boost::bind(evhttp_send_reply_start, req, nStatus, (const char*)NULL));
+    ev->trigger(0);
+    return true;
+}
+
+/** TODO: move HTTPRequest::StreamingData to another unit */
+#define MAX_CHUNK_BUFFER (256*1024)
+
+HTTPRequest::StreamingData::StreamingData():
+    buffer_bytes(0)
+{
+    databuf = evbuffer_new();
+    assert(databuf);
+}
+
+HTTPRequest::StreamingData::~StreamingData()
+{
+    evbuffer_free(databuf);
+}
+
+/** Update buffer length in synchronization structure.
+ * @note: Can only safely read the length of the buffer from the event thread.
+ */
+void HTTPRequest::StreamingData::Update(struct evhttp_connection* evcon)
+{
+    {
+        std::unique_lock<std::mutex> lock(cs);
+        struct bufferevent* bufev = evhttp_connection_get_bufferevent(evcon);
+        assert(bufev);
+        struct evbuffer *output = bufferevent_get_output(bufev);
+        assert(output);
+        buffer_bytes = evbuffer_get_length(output);
+    }
+    cond.notify_all();
+}
+
+/** Called by evhttp from event thread after a chunk has been written.
+ */
+void HTTPRequest::StreamingData::http_chunk_cb(struct evhttp_connection* evcon, void* arg)
+{
+    HTTPRequest::StreamingData *self = (HTTPRequest::StreamingData*) arg;
+    self->Update(evcon);
+    // LogPrintf("http_chunk_cb %i\n", self->buffer_bytes);
+}
+
+/** Send current chunk in databuf.
+ * @note: Can only safely be called from event thread
+ */
+void HTTPRequest::StreamingData::SendChunk(struct evhttp_request* req)
+{
+#if LIBEVENT_VERSION_NUMBER >= 0x02010401
+    // LogPrintf("set_http_chunk_cb\n");
+    {
+        std::unique_lock<std::mutex> lock(cs);
+        evhttp_send_reply_chunk_with_cb(req, databuf, &http_chunk_cb, this);
+    }
+    struct evhttp_connection* evcon = evhttp_request_get_connection(req);
+    if (evcon) // If not, the connection closed
+        Update(evcon);
+    else // TODO need a way to signal losing connection so the application doesn't keep sending unnecessarily, and doesn't hang
+        LogPrintf("warning: evcon is 0 in SendChunk\n");
+#endif
+}
+
+bool HTTPRequest::SendChunk(const void *data, size_t size)
+{
+#if LIBEVENT_VERSION_NUMBER >= 0x02010401
+    // Block as long as connection buffer is above maximum
+    assert(streaming);
+    std::unique_lock<std::mutex> lock(streaming->cs);
+    bool delayed = false;
+    while (streaming->buffer_bytes >= MAX_CHUNK_BUFFER) {
+        LogPrintf("buffer full: %i\n", streaming->buffer_bytes);
+        streaming->cond.wait(lock);
+        delayed = true;
+    }
+    if (delayed)
+        LogPrintf("buffer ok: %i\n", streaming->buffer_bytes);
+
+    // Send data
+    evbuffer_add(streaming->databuf, data, size);
+    // Trigger chunk send on http event thread
+    // In principle, this doesn't need to be done every time a chunk is submitted - if a usage
+    // scenario wants to to lots of small chunks it may make sense to queue them up and send
+    // the event after reaching a high-water mark.
+    HTTPEvent* ev = new HTTPEvent(eventBase, true, boost::bind(&StreamingData::SendChunk, streaming, req));
+    ev->trigger(0);
+    return true;
+#else
+    LogPrintf("Error: HTTP streaming is only supported with libevent 2.1.4+\n");
+    throw std::runtime_error("Not implemented: HTTP streaming is only supported with libevent 2.1.4+");
+#endif
 }
 
 void RegisterHTTPHandler(const std::string &prefix, bool exactMatch, const HTTPRequestHandler &handler)
