@@ -2,6 +2,42 @@ Contents
 ========
 This directory contains tools for developers working on this repository.
 
+basic\_style.py
+===============
+
+Provides utilities for identifying and fixing basic coding style issues in the
+repository. It has three subcommands:
+
+```
+$ ./basic_style.py report <base_directory>
+$ ./basic_style.py check <base_directory>
+$ ./basic_style.py fix <base_directory>
+```
+Running these subcommands without arguments displays a usage string.
+
+basic\_style.py report \<base\_directory\>
+---------------------------------------------------------
+
+Produces a report of basic style issues found inside the source files of a
+repository. The basic style rules are defined inside the script as regular
+expressions. Each rule is listed in the report along with the summary of the
+check for that specific rule.
+
+basic\_style.py check \<base\_directory\>
+---------------------------------------------------------
+
+Similar to the `report` command, but is for a more straightforward check meant
+to accept or reject the state of the repository. If no issues are found, it
+returns a zero status. If issues are found it returns a non-zero status and
+also lists the specific files in violation as well as pointing out which
+line(s) and character(s) are the cause.
+
+basic\_style.py fix \<base\_directory\>
+---------------------------------------------------------
+
+Edits the files in the repository with a simple search-and-replace to fix the
+violations according to the substitution string defined in the script.
+
 check-doc.py
 ============
 
