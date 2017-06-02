@@ -380,14 +380,14 @@ bool CWallet::ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase,
         Lock();
 
         CCrypter crypter;
-        CKeyingMaterial vMasterKey;
+        CKeyingMaterial _vMasterKey;
         for (MasterKeyMap::value_type& pMasterKey : mapMasterKeys)
         {
             if(!crypter.SetKeyFromPassphrase(strOldWalletPassphraseFinal, pMasterKey.second.vchSalt, pMasterKey.second.nDeriveIterations, pMasterKey.second.nDerivationMethod))
                 return false;
-            if (!crypter.Decrypt(pMasterKey.second.vchCryptedKey, vMasterKey))
+            if (!crypter.Decrypt(pMasterKey.second.vchCryptedKey, _vMasterKey))
                 return false;
-            if (CCryptoKeyStore::Unlock(vMasterKey))
+            if (CCryptoKeyStore::Unlock(_vMasterKey))
             {
                 int64_t nStartTime = GetTimeMillis();
                 crypter.SetKeyFromPassphrase(strNewWalletPassphrase, pMasterKey.second.vchSalt, pMasterKey.second.nDeriveIterations, pMasterKey.second.nDerivationMethod);
@@ -404,7 +404,7 @@ bool CWallet::ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase,
 
                 if (!crypter.SetKeyFromPassphrase(strNewWalletPassphrase, pMasterKey.second.vchSalt, pMasterKey.second.nDeriveIterations, pMasterKey.second.nDerivationMethod))
                     return false;
-                if (!crypter.Encrypt(vMasterKey, pMasterKey.second.vchCryptedKey))
+                if (!crypter.Encrypt(_vMasterKey, pMasterKey.second.vchCryptedKey))
                     return false;
                 CWalletDB(*dbw).WriteMasterKey(pMasterKey.first, pMasterKey.second);
                 if (fWasLocked)
@@ -1471,7 +1471,7 @@ bool CWallet::IsAllFromMe(const CTransaction& tx, const isminefilter& filter) co
 {
     LOCK(cs_wallet);
 
-    BOOST_FOREACH(const CTxIn& txin, tx.vin)
+    for (const CTxIn& txin : tx.vin)
     {
         auto mi = mapWallet.find(txin.prevout.hash);
         if (mi == mapWallet.end())
@@ -4415,7 +4415,7 @@ std::set< std::set<CTxDestination> > CWallet::GetAddressGroupings()
     }
 
     std::set< std::set<CTxDestination>* > uniqueGroupings; // a set of pointers to groups of addresses
-    std::map< CTxDestination, set<CTxDestination>* > setmap;  // map addresses to the unique group containing it
+    std::map< CTxDestination, std::set<CTxDestination>* > setmap;  // map addresses to the unique group containing it
     for (std::set<CTxDestination> _grouping : groupings)
     {
         // make a set of all the groups hit by this new group
@@ -4426,8 +4426,8 @@ std::set< std::set<CTxDestination> > CWallet::GetAddressGroupings()
                 hits.insert((*it).second);
 
         // merge all hit groups into a new single group and delete old groups
-        std::set<CTxDestination>* merged = new set<CTxDestination>(_grouping);
-        for (set<CTxDestination>* hit : hits)
+        std::set<CTxDestination>* merged = new std::set<CTxDestination>(_grouping);
+        for (std::set<CTxDestination>* hit : hits)
         {
             merged->insert(hit->begin(), hit->end());
             uniqueGroupings.erase(hit);

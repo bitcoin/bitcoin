@@ -488,7 +488,7 @@ void TorController::add_onion_cb(TorControlConnection& _conn, const TorControlRe
 {
     if (reply.code == 250) {
         LogPrint(BCLog::TOR, "tor: ADD_ONION successful\n");
-        BOOST_FOREACH(const std::string &s, reply.lines) {
+        for (const std::string &s : reply.lines) {
             std::map<std::string,std::string> m = ParseTorReplyMapping(s);
             std::map<std::string,std::string>::iterator i;
             if ((i = m.find("ServiceID")) != m.end())
@@ -618,7 +618,7 @@ void TorController::protocolinfo_cb(TorControlConnection& _conn, const TorContro
          * 250-AUTH METHODS=NULL
          * 250-AUTH METHODS=HASHEDPASSWORD
          */
-        BOOST_FOREACH(const std::string &s, reply.lines) {
+        for (const std::string &s : reply.lines) {
             std::pair<std::string,std::string> l = SplitTorReplyLine(s);
             if (l.first == "AUTH") {
                 std::map<std::string,std::string> m = ParseTorReplyMapping(l.second);
@@ -635,7 +635,7 @@ void TorController::protocolinfo_cb(TorControlConnection& _conn, const TorContro
                 }
             }
         }
-        BOOST_FOREACH(const std::string &s, methods) {
+        for (const std::string &s : methods) {
             LogPrint(BCLog::TOR, "tor: Supported authentication method: %s\n", s);
         }
         // Prefer NULL, otherwise SAFECOOKIE. If a password is provided, use HASHEDPASSWORD

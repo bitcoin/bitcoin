@@ -25,7 +25,7 @@ static void ResetArgs(const std::string& strArg)
 
     // Convert to char*:
     std::vector<const char*> vecChar;
-    BOOST_FOREACH(std::string& s, vecArg)
+    for (std::string& s : vecArg)
         vecChar.push_back(s.c_str());
 
     ParseParameters(vecChar.size(), &vecChar[0]);

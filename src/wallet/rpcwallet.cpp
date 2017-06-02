@@ -1342,9 +1342,9 @@ UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bool fByA
             UniValue transactions(UniValue::VARR);
             if (it != mapTally.end())
             {
-                for (const uint256& item : (*it).second.txids)
+                for (const uint256& _item : (*it).second.txids)
                 {
-                    transactions.push_back(item.GetHex());
+                    transactions.push_back(_item.GetHex());
                 }
             }
             obj.push_back(Pair("txids", transactions));
@@ -1759,7 +1759,7 @@ UniValue listaccounts(const JSONRPCRequest& request)
         }
     }
 
-    const list<CAccountingEntry> & acentries = pwallet->laccentries;
+    const std::list<CAccountingEntry>& acentries = pwallet->laccentries;
     for (const CAccountingEntry& entry : acentries)
         mapAccountBalances[entry.strAccount] += entry.nCreditDebit;
 

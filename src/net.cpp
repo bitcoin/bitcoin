@@ -314,7 +314,7 @@ CNode* CConnman::FindNode(const CNetAddr& ip)
 CNode* CConnman::FindNode(const CSubNet& subNet)
 {
     LOCK(cs_vNodes);
-for (CNode* pnode : vNodes)
+    for (CNode* pnode : vNodes)
     if (subNet.Match((CNetAddr)pnode->addr))
         return (pnode);
     return nullptr;
@@ -323,9 +323,10 @@ for (CNode* pnode : vNodes)
 CNode* CConnman::FindNode(const std::string& addrName)
 {
     LOCK(cs_vNodes);
-for (CNode* pnode : vNodes)
-    if (pnode->GetAddrName() == addrName) {
-        return (pnode);
+    for (CNode* pnode : vNodes) {
+        if (pnode->GetAddrName() == addrName) {
+            return (pnode);
+        }
     }
     return nullptr;
 }
@@ -333,8 +334,8 @@ for (CNode* pnode : vNodes)
 CNode* CConnman::FindNode(const CService& addr)
 {
     LOCK(cs_vNodes);
-for (CNode* pnode : vNodes)
-        if((CService)pnode->addr == addr)
+    for (CNode* pnode : vNodes)
+        if ((CService)pnode->addr == addr)
             return (pnode);
     return nullptr;
 }
@@ -537,7 +538,7 @@ void CConnman::Ban(const CSubNet& subNet, const BanReason &banReason, int64_t ba
         clientInterface->BannedListChanged();
     {
         LOCK(cs_vNodes);
-    for (CNode* pnode : vNodes) {
+        for (CNode* pnode : vNodes) {
             if (subNet.Match((CNetAddr)pnode->addr))
                 pnode->fDisconnect = true;
         }
@@ -963,7 +964,7 @@ bool CConnman::AttemptToEvictConnection()
     {
         LOCK(cs_vNodes);
 
-        for(CNode *node : vNodes) {
+        for (CNode *node : vNodes) {
             if (node->fWhitelisted)
                 continue;
             if (!node->fInbound)
@@ -1067,7 +1068,7 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     bool whitelisted = hListenSocket.whitelisted || IsWhitelistedRange(addr);
     {
         LOCK(cs_vNodes);
-    for (CNode* pnode : vNodes)
+        for (CNode* pnode : vNodes)
             if (pnode->fInbound)
                 nInbound++;
     }
@@ -1301,7 +1302,13 @@ void CConnman::ThreadSocketHandler()
         //
         // Service each socket
         //
-        std::vector<CNode*> vNodesCopy = CopyNodeVector();
+        std::vector<CNode*> vNodesCopy;
+        {
+            LOCK(cs_vNodes);
+            vNodesCopy = vNodes;
+            for (CNode* pnode : vNodesCopy)
+                pnode->AddRef();
+        }
         for (CNode* pnode : vNodesCopy)
         {
             if (interruptNet)
@@ -2034,7 +2041,14 @@ void CConnman::ThreadMessageHandler()
 {
     while (!flagInterruptMsgProc)
     {
-        std::vector<CNode*> vNodesCopy = CopyNodeVector();
+        std::vector<CNode*> vNodesCopy;
+        {
+            LOCK(cs_vNodes);
+            vNodesCopy = vNodes;
+            for (CNode* pnode : vNodesCopy) {
+                pnode->AddRef();
+            }
+        }
 
         bool fMoreWork = false;
 
@@ -2058,7 +2072,11 @@ void CConnman::ThreadMessageHandler()
                 return;
         }
 
-        ReleaseNodeVector(vNodesCopy);
+        {
+            LOCK(cs_vNodes);
+            for (CNode* pnode : vNodesCopy)
+                pnode->Release();
+        }
 
         std::unique_lock<std::mutex> lock(mutexMsgProc);
         if (!fMoreWork) {
@@ -2231,7 +2249,7 @@ void CConnman::SetNetworkActive(bool active)
 
         LOCK(cs_vNodes);
         // Close sockets to all nodes
-    for (CNode* pnode : vNodes) {
+        for (CNode* pnode : vNodes) {
             pnode->CloseSocketDisconnect();
         }
     } else {
@@ -2458,8 +2476,7 @@ void CConnman::Stop()
 
     // Close sockets
     for (CNode* pnode : vNodes)
-        if (pnode->hSocket != INVALID_SOCKET)
-            CloseSocket(pnode->hSocket);
+        pnode->CloseSocketDisconnect();
     for (ListenSocket& hListenSocket : vhListenSocket)
         if (hListenSocket.socket != INVALID_SOCKET)
             if (!CloseSocket(hListenSocket.socket))

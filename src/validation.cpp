@@ -509,9 +509,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
                 bool fReplacementOptOut = true;
                 if (fEnableReplacement)
                 {
-                    for (const CTxIn &txin : ptxConflicting->vin)
+                    for (const CTxIn &_txin : ptxConflicting->vin)
                     {
-                        if (txin.nSequence < std::numeric_limits<unsigned int>::max()-1)
+                        if (_txin.nSequence < std::numeric_limits<unsigned int>::max()-1)
                         {
                             fReplacementOptOut = false;
                             break;
@@ -553,10 +553,11 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 
         // do all inputs exist?
         for (const CTxIn txin : tx.vin) {
-            if (!pcoinsTip->HaveCoinInCache(txin.prevout.hash))
-                coins_to_uncache.push_back(txin.prevout.hash);
-            if (!view.HaveCoin(txin.prevout.hash)) {
-                if (pfMissingInputs)
+            if (!pcoinsTip->HaveCoinInCache(txin.prevout)) {
+                coins_to_uncache.push_back(txin.prevout);
+            }
+            if (!view.HaveCoin(txin.prevout)) {
+                if (pfMissingInputs) {
                     *pfMissingInputs = true;
                 }
                 return false; // fMissingInputs and !state.IsInvalid() is used to detect this condition, don't set state.Invalid()
@@ -873,7 +874,7 @@ bool AcceptToMemoryPoolWithTime(CTxMemPool& pool, CValidationState &state, const
     bool res = AcceptToMemoryPoolWorker(pool, state, tx, fLimitFree, pfMissingInputs, nAcceptTime, plTxnReplaced, fOverrideMempoolLimit, nAbsurdFee, coins_to_uncache, fDryRun);
     if (!res || fDryRun) {
         if(!res) LogPrint("mempool", "%s: %s %s\n", __func__, tx->GetHash().ToString(), state.GetRejectReason());
-        for (const COutPoint& hashTx : COutPoint)
+        for (const COutPoint& hashTx : coins_to_uncache)
             pcoinsTip->Uncache(hashTx);
     }
     // After we've (potentially) uncached entries, ensure our coins cache is still within its size limits
