@@ -49,10 +49,12 @@ class BlockchainTest(BitcoinTestFramework):
         assert_equal(res['transactions'], 200)
         assert_equal(res['height'], 200)
         assert_equal(res['txouts'], 200)
-        assert_equal(res['bytes_serialized'], 13924),
         assert_equal(res['bestblock'], node.getblockhash(200))
+        size = res['disk_size']
+        assert size > 6400
+        assert size < 64000
         assert_equal(len(res['bestblock']), 64)
-        assert_equal(len(res['hash_serialized']), 64)
+        assert_equal(len(res['hash_serialized_2']), 64)
 
         self.log.info("Test that gettxoutsetinfo() works for blockchain with just the genesis block")
         b1hash = node.getblockhash(1)
@@ -64,7 +66,7 @@ class BlockchainTest(BitcoinTestFramework):
         assert_equal(res2['height'], 0)
         assert_equal(res2['txouts'], 0)
         assert_equal(res2['bestblock'], node.getblockhash(0))
-        assert_equal(len(res2['hash_serialized']), 64)
+        assert_equal(len(res2['hash_serialized_2']), 64)
 
         self.log.info("Test that gettxoutsetinfo() returns the same result after invalidate/reconsider block")
         node.reconsiderblock(b1hash)
@@ -75,7 +77,7 @@ class BlockchainTest(BitcoinTestFramework):
         assert_equal(res['height'], res3['height'])
         assert_equal(res['txouts'], res3['txouts'])
         assert_equal(res['bestblock'], res3['bestblock'])
-        assert_equal(res['hash_serialized'], res3['hash_serialized'])
+        assert_equal(res['hash_serialized_2'], res3['hash_serialized_2'])
 
     def _test_getblockheader(self):
         node = self.nodes[0]
