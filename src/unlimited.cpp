@@ -560,7 +560,7 @@ static bool ProcessBlockFound(const CBlock *pblock, const CChainParams &chainpar
         // we must terminate any block validation threads that are currently running,
         // Unless they have more work than our own block.
         // TODO: we need a better way to determine if a reorg is in progress.
-        PV.StopAllValidationThreads(pblock->GetBlockHeader().nBits);
+        PV->StopAllValidationThreads(pblock->GetBlockHeader().nBits);
 
         // Process this block the same as if we had received it from another node
         CValidationState state;
