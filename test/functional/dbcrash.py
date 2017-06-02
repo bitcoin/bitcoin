@@ -88,7 +88,7 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
                 # An exception here should mean the node is about to crash.
                 # If bitcoind exits, then try again.  wait_for_node_exit()
                 # should raise an exception if bitcoind doesn't exit.
-                wait_for_node_exit(node_index, timeout=10)
+                self.wait_for_node_exit(node_index, timeout=10)
             self.crashed_on_restart += 1
             time.sleep(1)
 
@@ -140,7 +140,7 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
                 if not self.submit_block_catch_error(i, block):
                     # TODO: more carefully check that the crash is due to -dbcrashratio
                     # (change the exit code perhaps, and check that here?)
-                    wait_for_node_exit(i, timeout=30)
+                    self.wait_for_node_exit(i, timeout=30)
                     self.log.debug("Restarting node %d after block hash %s", i, block_hash)
                     nodei_utxo_hash = self.restart_node(i, block_hash)
                     assert nodei_utxo_hash is not None
