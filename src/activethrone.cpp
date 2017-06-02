@@ -53,45 +53,14 @@ void CActiveThrone::ManageStatus()
             return;
         }
 
-        if (!fListen) {
-            // listen option is probably overwritten by smth else, no good
-            notCapableReason = "Throne must accept connections from outside. Make sure listen configuration option is not overwritten by some another parameter.";
-            LogPrintf("CActiveThrone::ManageStatus() %s\n", notCapableReason);
-            return;
-        }
-
-        bool fFoundLocal = false;
         if(strThroNeAddr.empty()) {
-            {
-                LOCK(cs_vNodes);
-
-                // First try to find whatever local address is specified by externalip option
-                fFoundLocal = GetLocal(service) && CThrone::IsValidNetAddr(service);
-                if(!fFoundLocal) {
-                    // nothing and no live connections, can't do anything for now
-                    if (vNodes.empty()) {
-                        notCapableReason = "Can't detect valid external address. Will retry when there are some connections available.";
-                        LogPrintf("CActiveThrone::ManageStatus() - not capable: %s\n", notCapableReason);
-                        return;
-                    }
-                    // We have some peers, let's try to find our local address from one of them
-                    BOOST_FOREACH(CNode* pnode, vNodes) {
-                        if (pnode->fSuccessfullyConnected && pnode->addr.IsIPv4()) {
-                            fFoundLocal = GetLocal(service, &pnode->addr) && CThrone::IsValidNetAddr(service);
-                            if(fFoundLocal) break;
-                        }
-                    }
-                }
+            if(!GetLocal(service)) {
+                notCapableReason = "Can't detect external address. Please use the throneaddr configuration option.";
+                LogPrintf("CActiveThrone::ManageStatus() - not capable: %s\n", notCapableReason);
+                return;
             }
         } else {
             service = CService(strThroNeAddr);
-            fFoundLocal = CThrone::IsValidNetAddr(service);
-        }
-
-        if(!fFoundLocal) {
-            notCapableReason = "Can't detect valid external address. Please consider using the externalip configuration option if problem persists. Make sure to use IPv4 address only.";
-            LogPrintf("CActiveThrone::ManageStatus - not capable: %s\n", notCapableReason);
-            return;
         }
 
         if(Params().NetworkID() == CBaseChainParams::MAIN) {

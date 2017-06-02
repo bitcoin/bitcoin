@@ -245,7 +245,6 @@ public:
     }
 
     bool IsValidNetAddr();
-    static bool IsValidNetAddr(CService addrIn);
 
     int GetThroneInputAge()
     {

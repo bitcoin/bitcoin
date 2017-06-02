@@ -2253,7 +2253,7 @@ void ThreadCheckDarkSendPool()
             c++;
 
             // check if we should activate or ping every few minutes,
-            // slightly postpone first run to give net thread a chance to connect to some peers
+            // start right after sync is considered to be done
             if(c % THRONE_PING_SECONDS == 15) activeThrone.ManageStatus();
 
             if(c % 60 == 0)
