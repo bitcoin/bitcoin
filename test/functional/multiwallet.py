@@ -35,11 +35,15 @@ class MultiWalletTest(BitcoinTestFramework):
 
         self.nodes[0] = self.start_node(0, self.options.tmpdir, self.extra_args[0])
 
-        w1 = self.nodes[0] / "wallet/w1"
+        w1 = self.nodes[0].get_wallet_rpc("w1")
+        w2 = self.nodes[0].get_wallet_rpc("w2")
+        w3 = self.nodes[0].get_wallet_rpc("w3")
+        wallet_bad = self.nodes[0].get_wallet_rpc("bad")
+
         w1.generate(1)
 
         # accessing invalid wallet fails
-        assert_raises_jsonrpc(-18, "Requested wallet does not exist or is not loaded", (self.nodes[0] / "wallet/bad").getwalletinfo)
+        assert_raises_jsonrpc(-18, "Requested wallet does not exist or is not loaded", wallet_bad.getwalletinfo)
 
         # accessing wallet RPC without using wallet endpoint fails
         assert_raises_jsonrpc(-19, "Wallet file not specified", self.nodes[0].getwalletinfo)
@@ -50,14 +54,12 @@ class MultiWalletTest(BitcoinTestFramework):
         w1_name = w1_info['walletname']
         assert_equal(w1_name, "w1")
 
-        # check w1 wallet balance
-        w2 = self.nodes[0] / "wallet/w2"
+        # check w2 wallet balance
         w2_info = w2.getwalletinfo()
         assert_equal(w2_info['immature_balance'], 0)
         w2_name = w2_info['walletname']
         assert_equal(w2_name, "w2")
 
-        w3 = self.nodes[0] / "wallet/w3"
         w3_name = w3.getwalletinfo()['walletname']
         assert_equal(w3_name, "w3")
 
