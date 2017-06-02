@@ -85,7 +85,7 @@ void CActiveThrone::ManageStatus()
             }
         } else {
             service = CService(strThroNeAddr);
-            fFoundLocal = CThrone::IsValidNetAddr(service);
+            fFoundLocal = GetLocal(service) && CThrone::IsValidNetAddr(service);
         }
 
         if(!fFoundLocal) {
