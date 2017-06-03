@@ -12,7 +12,6 @@
 #include "script/standard.h"
 #include "uint256.h"
 
-
 #include <boost/foreach.hpp>
 
 using namespace std;
@@ -88,6 +87,7 @@ static bool SignStep(const BaseSignatureCreator& creator, const CScript& scriptP
         keyID = CPubKey(vSolutions[0]).GetID();
         return Sign1(keyID, creator, scriptPubKey, ret, sigversion);
     case TX_PUBKEYHASH:
+    case TX_TIMELOCKED_PUBKEYHASH:
         keyID = CKeyID(uint160(vSolutions[0]));
         if (!Sign1(keyID, creator, scriptPubKey, ret, sigversion))
             return false;
@@ -99,6 +99,7 @@ static bool SignStep(const BaseSignatureCreator& creator, const CScript& scriptP
         }
         return true;
     case TX_SCRIPTHASH:
+    case TX_TIMELOCKED_SCRIPTHASH:
         if (creator.KeyStore().GetCScript(uint160(vSolutions[0]), scriptRet)) {
             ret.push_back(std::vector<unsigned char>(scriptRet.begin(), scriptRet.end()));
             return true;
@@ -106,6 +107,7 @@ static bool SignStep(const BaseSignatureCreator& creator, const CScript& scriptP
         return false;
 
     case TX_MULTISIG:
+    case TX_TIMELOCKED_MULTISIG:
         ret.push_back(valtype()); // workaround CHECKMULTISIG bug
         return (SignN(vSolutions, creator, scriptPubKey, ret, sigversion));
 
@@ -156,9 +158,7 @@ bool ProduceSignature(const BaseSignatureCreator& creator, const CScript& fromPu
     CScript subscript;
     sigdata.scriptWitness.stack.clear();
     
-    
-    
-    if (solved && whichType == TX_SCRIPTHASH)
+    if (solved && (whichType == TX_SCRIPTHASH || whichType == TX_TIMELOCKED_SCRIPTHASH))
     {
         // Solver returns the subscript that needs to be evaluated;
         // the final scriptSig is the signatures from that
@@ -190,7 +190,6 @@ bool ProduceSignature(const BaseSignatureCreator& creator, const CScript& fromPu
         sigdata.scriptWitness.stack = result;
         result.clear();
     }
-    
 
     if (P2SH) {
         result.push_back(std::vector<unsigned char>(subscript.begin(), subscript.end()));
@@ -204,11 +203,11 @@ bool ProduceSignature(const BaseSignatureCreator& creator, const CScript& fromPu
         sigdata.scriptSig = PushAll(result);
     };
     
-    
     ScriptError serror = SCRIPT_ERR_OK;
     
     // Test solution
     bool rv = solved && VerifyScript(sigdata.scriptSig, fromPubKey, &sigdata.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, creator.Checker(), &serror);
+    
     
     return rv;
 }
@@ -361,10 +360,10 @@ static Stacks CombineSignatures(const CScript& scriptPubKey, const BaseSignature
     txnouttype txHackType = txType;
     if (checker.IsParticlVersion())
     {
-        if (txHackType == TX_PUBKEY || txHackType == TX_PUBKEYHASH)
+        if (txHackType == TX_PUBKEY || txHackType == TX_PUBKEYHASH || txHackType == TX_TIMELOCKED_PUBKEYHASH)
             txHackType = TX_WITNESS_V0_KEYHASH;
         else
-        if (txHackType == TX_SCRIPTHASH)
+        if (txHackType == TX_SCRIPTHASH || txHackType == TX_TIMELOCKED_SCRIPTHASH)
             txHackType = TX_WITNESS_V0_SCRIPTHASH;
     };
     
@@ -409,6 +408,7 @@ static Stacks CombineSignatures(const CScript& scriptPubKey, const BaseSignature
             return result;
         }
     case TX_MULTISIG:
+    case TX_TIMELOCKED_MULTISIG:
         return Stacks(CombineMultisig(scriptPubKey, checker, vSolutions, sigs1.script, sigs2.script, sigversion));
     case TX_WITNESS_V0_SCRIPTHASH:
         if (sigs1.witness.empty() || sigs1.witness.back().empty())

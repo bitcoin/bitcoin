@@ -276,6 +276,19 @@ static CBlock CreateGenesisBlockTestNet(uint32_t nTime, uint32_t nNonce, uint32_
         txNew.vpout[k] = out;
     };
     
+    // Reserved Particl for primary round
+    OUTPUT_PTR<CTxOutStandard> out = MAKE_OUTPUT<CTxOutStandard>();
+    out->nValue = 996000 * COIN;
+    out->scriptPubKey = CScript() << 1515016800 << OP_CHECKLOCKTIMEVERIFY << OP_DROP << OP_HASH160<< ParseHex("89ca93e03119d53fd9ad1e65ce22b6f8791f8a49") << OP_EQUAL; // 2018-01-04
+    txNew.vpout.push_back(out);
+    
+    // Test
+    out = MAKE_OUTPUT<CTxOutStandard>();
+    out->nValue = 1 * COIN;
+    out->scriptPubKey = CScript() << 1496509287 << OP_CHECKLOCKTIMEVERIFY << OP_DROP << OP_HASH160<< ParseHex("89ca93e03119d53fd9ad1e65ce22b6f8791f8a49") << OP_EQUAL; // 2017-06-03
+    txNew.vpout.push_back(out);
+    
+    
     CBlock genesis;
     genesis.nTime    = nTime;
     genesis.nBits    = nBits;
@@ -311,6 +324,20 @@ static CBlock CreateGenesisBlockMainNet(uint32_t nTime, uint32_t nNonce, uint32_
         txNew.vpout[k] = out;
     };
     
+    // Reserved Particl for primary round
+    OUTPUT_PTR<CTxOutStandard> out = MAKE_OUTPUT<CTxOutStandard>();
+    out->nValue = 996000 * COIN;
+    out->scriptPubKey = CScript() << 1515016800 << OP_CHECKLOCKTIMEVERIFY << OP_DROP << OP_HASH160<< ParseHex("616fec56cfcc7a6b7a5fcc844b9d73c532321b59") << OP_EQUAL; // 2018-01-04
+    txNew.vpout.push_back(out);
+    
+    // Test
+    out = MAKE_OUTPUT<CTxOutStandard>();
+    out->nValue = 1 * COIN;
+    out->scriptPubKey = CScript() << 1496509287 << OP_CHECKLOCKTIMEVERIFY << OP_DROP << OP_HASH160<< ParseHex("616fec56cfcc7a6b7a5fcc844b9d73c532321b59") << OP_EQUAL; // 2017-06-03
+    txNew.vpout.push_back(out);
+    
+    
+    
     CBlock genesis;
     genesis.nTime    = nTime;
     genesis.nBits    = nBits;
@@ -345,12 +372,12 @@ public:
         consensus.nBlockTargetSpacing = 2 * 60;
         
         consensus.nSubsidyHalvingInterval = 210000;
-        consensus.BIP34Height = 227931;
+        consensus.BIP34Height = 0;
         consensus.BIP34Hash = uint256S("0x000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8");
-        consensus.BIP65Height = 388381; // 000000000000000004c2b624ed5d7756c508d90fd0da2c7c679febfa6c4735f0
-        consensus.BIP66Height = 363725; // 00000000000000000379eaa19dce8c9b722d46ae6a57c2f1a988119488b50931
+        consensus.BIP65Height = 0; // 000000000000000004c2b624ed5d7756c508d90fd0da2c7c679febfa6c4735f0
+        consensus.BIP66Height = 0; // 00000000000000000379eaa19dce8c9b722d46ae6a57c2f1a988119488b50931
         
-        consensus.powLimit = uint256S("000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.powLimit = uint256S("000000000005ffffffffffffffffffffffffffffffffffffffffffffffffffff");
         
         
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
@@ -402,11 +429,13 @@ public:
         
         nPruneAfterHeight = 100000;
         
-        genesis = CreateGenesisBlockMainNet(1496144704, 57948, 0x1f00ffff);
+        
+        genesis = CreateGenesisBlockMainNet(1496144704, 76633, 0x1f00ffff);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x0000b99cae55dceb03385032637a7f30360c532e19881875f076ee4c15e2313e"));
-        assert(genesis.hashMerkleRoot == uint256S("0xfa78a0476dc886dd4c8ebba34176f5561945c1c27e113c1989e0aca7f8f6de8d"));
-        assert(genesis.hashWitnessMerkleRoot == uint256S("0x59c9ac2d5430e0ce2cc4b9848e956fcad208322169f77529bc509960fb9f2e33"));
+        
+        assert(consensus.hashGenesisBlock == uint256S("0x00002fd743e33a8a49e33435cb46e07acb5744161784b2517c1f89c803fd6b1f"));
+        assert(genesis.hashMerkleRoot == uint256S("0x0554f546627bdbdbe7c1ee64fe63ad285527f78ad017fd719c21a635267b0fd5"));
+        assert(genesis.hashWitnessMerkleRoot == uint256S("0xc48ed361f2dda2579964e8bb5d409521f0f75a7600390f85581ce7fd468932a7"));
 
         // Note that of those with the service bits flag, most only support a subset of possible options
         vSeeds.push_back(CDNSSeedData("mainnet-seed.particl.io",  "mainnet-seed.particl.io", true));
@@ -414,7 +443,7 @@ public:
         vSeeds.push_back(CDNSSeedData("mainnet.particl.io",  "mainnet.particl.io", true));
         
         
-        vDevFundSettings.push_back(std::make_pair(0, DevFundSettings("RJAPhgckEgRGVPZa9WoGSWW24spskSfLTQ", 10, 10)));
+        vDevFundSettings.push_back(std::make_pair(0, DevFundSettings("RJAPhgckEgRGVPZa9WoGSWW24spskSfLTQ", 10, 60)));
         
         
 
@@ -468,6 +497,11 @@ public:
     
     void SetOld()
     {
+        consensus.BIP34Height = 227931;
+        consensus.BIP34Hash = uint256S("0x000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8");
+        consensus.BIP65Height = 388381; // 000000000000000004c2b624ed5d7756c508d90fd0da2c7c679febfa6c4735f0
+        consensus.BIP66Height = 363725; // 00000000000000000379eaa19dce8c9b722d46ae6a57c2f1a988119488b50931
+        
         consensus.powLimit = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         
         genesis = CreateGenesisBlock(1231006505, 2083236893, 0x1d00ffff, 1, 50 * COIN);
@@ -486,11 +520,18 @@ public:
         consensus.nBlockTargetSpacing = 2 * 60;
         
         consensus.nSubsidyHalvingInterval = 210000;
+        /*
         consensus.BIP34Height = 21111;
         consensus.BIP34Hash = uint256S("0x0000000023b3a96d3484e5abb3755c413e7d41500f8e2a5c3f0dd01299cd8ef8");
         consensus.BIP65Height = 581885; // 00000000007f6655f22f98e72ed80d8b06dc761d5da09df0fa1dc4be4f861eb6
         consensus.BIP66Height = 330776; // 000000002104c8c45e99a8853285a3b592602a3ccde2b832481da85e9e4ba182
-        consensus.powLimit = uint256S("0000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        */
+        consensus.BIP34Height = 0;
+        consensus.BIP65Height = 0;
+        consensus.BIP66Height = 0;
+        
+        consensus.powLimit = uint256S("000000000005ffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         consensus.nPowTargetSpacing = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
@@ -536,12 +577,13 @@ public:
         
         nPruneAfterHeight = 1000;
 
-        genesis = CreateGenesisBlockTestNet(1496340963, 4646, 0x1f00ffff);
+        
+        genesis = CreateGenesisBlockTestNet(1496340963, 42191, 0x1f00ffff);
         consensus.hashGenesisBlock = genesis.GetHash();
         
-        assert(consensus.hashGenesisBlock == uint256S("0x000070d7c12bd8121b807c4124aeb1e37590a9453ead5e970cb9aa7b5ba74a48"));
-        assert(genesis.hashMerkleRoot == uint256S("0x1617bd7f2f93d11d065cd655440cd05080b11e06b31e95a9b08bde0f4ad34d9b"));
-        assert(genesis.hashWitnessMerkleRoot == uint256S("0x05b596687297bf123fd70bf6229678b1eac163e47793579900a72217d22616aa"));
+        assert(consensus.hashGenesisBlock == uint256S("0x00009950a0d1dfd3697f8597d8efbd1540ca1cbb130c90f7b8132b8ca235708e"));
+        assert(genesis.hashMerkleRoot == uint256S("0xd6ac057095dd2e88edd28d77c5ea31ba558b6650c645752e6d8810270e3fa7f5"));
+        assert(genesis.hashWitnessMerkleRoot == uint256S("0xd6f2171de24fb9e1b8c9943e3bd69d3a9c71d965340380d51a9370b0e150f3e6"));
         
         vFixedSeeds.clear();
         vSeeds.clear();
@@ -550,7 +592,7 @@ public:
         vSeeds.push_back(CDNSSeedData("dnsseed-testnet.particl.io",  "dnsseed-testnet.particl.io", true));
         
         
-        vDevFundSettings.push_back(std::make_pair(0, DevFundSettings("rTvv9vsbu269mjYYEecPYinDG8Bt7D86qD", 10, 10)));
+        vDevFundSettings.push_back(std::make_pair(0, DevFundSettings("rTvv9vsbu269mjYYEecPYinDG8Bt7D86qD", 10, 60)));
         
         
         base58Prefixes[PUBKEY_ADDRESS]     = std::vector<unsigned char>(1,118); // p
@@ -646,11 +688,12 @@ public:
         
         nPruneAfterHeight = 1000;
         
-        genesis = CreateGenesisBlockRegTest(1487714923, 1, 0x207fffff);
+        
+        genesis = CreateGenesisBlockRegTest(1487714923, 0, 0x207fffff);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x233844b5044fc3e9e4b3d948b963fb8e92921ab7820f9b5aece9e3fc8b10fc13"));
-        assert(genesis.hashMerkleRoot == uint256S("0x125c3ec540ddf44b76bfa682a7f769516968bb861bb3193d08c93e2cdba979c8"));
-        assert(genesis.hashWitnessMerkleRoot == uint256S("0xa1e9e44ea880f3865042cc8dba519c2c472a01f0c7caed97d9e94734eba25d9d"));
+        assert(consensus.hashGenesisBlock == uint256S("0x6cd174536c0ada5bfa3b8fde16b98ae508fff6586f2ee24cf866867098f25907"));
+        assert(genesis.hashMerkleRoot == uint256S("0xf89653c7208af2c76a3070d436229fb782acbd065bd5810307995b9982423ce7"));
+        assert(genesis.hashWitnessMerkleRoot == uint256S("0x36b66a1aff91f34ab794da710d007777ef5e612a320e1979ac96e5f292399639"));
         
         
         vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.

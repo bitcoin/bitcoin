@@ -134,28 +134,29 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
             
             if (prev->nVersion == OUTPUT_DATA)
                 continue;
-            
-            if (prev->nVersion == OUTPUT_STANDARD)
+            if (prev->nVersion == OUTPUT_STANDARD || prev->nVersion == OUTPUT_CT)
             {
                 std::vector<std::vector<unsigned char> > vSolutions;
                 txnouttype whichType;
                 // get the scriptPubKey corresponding to this input:
                 
-                const CScript& prevScript = prev->GetStandardOutput()->scriptPubKey;
+                const CScript& prevScript = *prev->GetPScriptPubKey();
                 if (!Solver(prevScript, whichType, vSolutions))
                     return false;
 
                 if (whichType == TX_SCRIPTHASH)
                 {
-                    std::vector<std::vector<unsigned char> > stack;
-                    // convert the scriptSig into a stack, so we can inspect the redeemScript
-                    if (!EvalScript(stack, tx.vin[i].scriptSig, SCRIPT_VERIFY_NONE, BaseSignatureChecker(), SIGVERSION_BASE))
+                    if (tx.vin[i].scriptWitness.stack.size() < 1)
                         return false;
-                    if (stack.empty())
+                    if (tx.vin[i].scriptWitness.stack.back().size() > MAX_STANDARD_P2WSH_SCRIPT_SIZE)
                         return false;
-                    CScript subscript(stack.back().begin(), stack.back().end());
-                    if (subscript.GetSigOpCount(true) > MAX_P2SH_SIGOPS) {
+                    size_t sizeWitnessStack = tx.vin[i].scriptWitness.stack.size() - 1;
+                    if (sizeWitnessStack > MAX_STANDARD_P2WSH_STACK_ITEMS)
                         return false;
+                    for (unsigned int j = 0; j < sizeWitnessStack; j++)
+                    {
+                        if (tx.vin[i].scriptWitness.stack[j].size() > MAX_STANDARD_P2WSH_STACK_ITEM_SIZE)
+                            return false;
                     }
                 }
                 continue;

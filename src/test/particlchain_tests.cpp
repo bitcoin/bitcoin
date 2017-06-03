@@ -157,26 +157,11 @@ BOOST_AUTO_TEST_CASE(particlchain_test)
     BOOST_CHECK(blk.hashWitnessMerkleRoot == blkOut.hashWitnessMerkleRoot);
     BOOST_CHECK(blk.nTime == blkOut.nTime && blkOut.nTime == 1487406900);
     
-    //BOOST_MESSAGE("blkOut.vtx.size() " << blkOut.vtx.size());
-    //BOOST_MESSAGE("blkOut.vtx[0]->vpout.size() " << blkOut.vtx[0]->vpout.size());
-    
-    //BOOST_MESSAGE("blkOut.vtx[0].nVersion " << blkOut.vtx[0]->nVersion);
-    
-    
-    //BOOST_MESSAGE("blkOut.vtx[0]->vpout[0]->nVersion " << blkOut.vtx[0]->vpout[0]->nVersion);
-    
     BOOST_CHECK(TXN_COINBASE == blkOut.vtx[0]->GetType());
-    
-    
-    
-    //blkOut.vtx[0]->vpout[0]->scriptPubKey
-    //HexStr
-    
     
     CMutableTransaction txnSpend;
     
     txnSpend.nVersion = PARTICL_BLOCK_VERSION;
-    
 }
 
 

@@ -13,7 +13,6 @@
 #include "script/script.h"
 #include "uint256.h"
 
-
 using namespace std;
 
 typedef vector<unsigned char> valtype;
@@ -495,7 +494,6 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                     return set_error(serror, SCRIPT_ERR_OP_RETURN);
                 }
                 break;
-
 
                 //
                 // Stack ops
@@ -1439,6 +1437,7 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
 
 bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CScriptWitness* witness, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror)
 {
+    
     static const CScriptWitness emptyWitness;
     if (witness == NULL) {
         witness = &emptyWitness;
@@ -1450,7 +1449,6 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
     if ((flags & SCRIPT_VERIFY_SIGPUSHONLY) != 0 && !scriptSig.IsPushOnly()) {
         return set_error(serror, SCRIPT_ERR_SIG_PUSHONLY);
     }
-    
 
     vector<vector<unsigned char> > stack, stackCopy;
     
@@ -1483,7 +1481,6 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
     if (CastToBool(stack.back()) == false)
         return set_error(serror, SCRIPT_ERR_EVAL_FALSE);
     
-    
     // Bare witness programs
     int witnessversion;
     std::vector<unsigned char> witnessprogram;
@@ -1503,8 +1500,10 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
         }
     }
 
+    
     // Additional validation for spend-to-script-hash transactions:
-    if ((flags & SCRIPT_VERIFY_P2SH) && scriptPubKey.IsPayToScriptHash())
+    if ((flags & SCRIPT_VERIFY_P2SH)
+        && (scriptPubKey.IsPayToScriptHash() || scriptPubKey.IsPayToTimeLockedScriptHash()))
     {
         // scriptSig must be literals-only or validation fails
         if (!scriptSig.IsPushOnly())

@@ -1110,7 +1110,6 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
             continue;
         }
         
-        
         CScript prevPubKey;
         CAmount amount;
         std::vector<uint8_t> vchAmount(8);
@@ -1138,8 +1137,6 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
             if (!fHashSingle || (i < mergedTx.vout.size()))
                 ProduceSignature(MutableTransactionSignatureCreator(&keystore, &mergedTx, i, vchAmount, nHashType), prevPubKey, sigdata);
         };
-        
-        
 
         // ... and merge in other signatures:
         BOOST_FOREACH(const CMutableTransaction& txv, txVariants) {
@@ -1147,7 +1144,6 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
                 sigdata = CombineSignatures(prevPubKey, TransactionSignatureChecker(&txConst, i, vchAmount), sigdata, DataFromTransaction(txv, i));
             }
         }
-        
 
         UpdateTransaction(mergedTx, i, sigdata);
 

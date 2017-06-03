@@ -281,8 +281,10 @@ bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
 {
     if (tx.nLockTime == 0)
         return true;
+
     if ((int64_t)tx.nLockTime < ((int64_t)tx.nLockTime < LOCKTIME_THRESHOLD ? (int64_t)nBlockHeight : nBlockTime))
         return true;
+    
     for (const auto& txin : tx.vin) {
         if (!(txin.nSequence == CTxIn::SEQUENCE_FINAL))
             return false;
@@ -318,7 +320,7 @@ bool CheckFinalTx(const CTransaction &tx, int flags)
     const int64_t nBlockTime = (flags & LOCKTIME_MEDIAN_TIME_PAST)
                              ? chainActive.Tip()->GetMedianTimePast()
                              : GetAdjustedTime();
-
+    
     return IsFinalTx(tx, nBlockHeight, nBlockTime);
 }
 
@@ -1557,7 +1559,7 @@ bool ReadTransactionFromDiskBlock(const CBlockIndex* pindex, int nIndex, CTransa
         if (nTxns <= nIndex || nIndex < 0)
             return error("%s: Block %s, txn %d not in available range %d.", __func__, pindex->GetBlockPos().ToString(), nIndex, nTxns);
         
-        for (int k = 0; k < nIndex; ++k)
+        for (int k = 0; k <= nIndex; ++k)
             filein >> txOut;
     } catch (const std::exception& e)
     {
@@ -4289,19 +4291,29 @@ unsigned int GetNextTargetRequired(const CBlockIndex *pindexLast)
     
     if (nHeight < Params().GetLastImportHeight())
     {
+        if (nHeight == 0)
+            return arith_uint256("00ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff").GetCompact();
         int nLastImportHeight = (int) Params().GetLastImportHeight();
-        arith_uint256 nMinProofOfWorkLimit = arith_uint256("00ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        arith_uint256 nMaxProofOfWorkLimit = UintToArith256(consensus.powLimit);
+        arith_uint256 nMaxProofOfWorkLimit = arith_uint256("00000000000fffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        arith_uint256 nMinProofOfWorkLimit = UintToArith256(consensus.powLimit);
         
-        arith_uint256 nStep = ((nMaxProofOfWorkLimit - nMinProofOfWorkLimit) / nLastImportHeight);
+        arith_uint256 nStep = (nMaxProofOfWorkLimit - nMinProofOfWorkLimit) / nLastImportHeight;
         
-        bnProofOfWorkLimit = nMinProofOfWorkLimit + nStep * nHeight;
+        
+        
+        
+        bnProofOfWorkLimit = nMaxProofOfWorkLimit - (nStep * nHeight);
+        
         nProofOfWorkLimit = bnProofOfWorkLimit.GetCompact();
     } else
     {
         bnProofOfWorkLimit = UintToArith256(consensus.powLimit);
         nProofOfWorkLimit = bnProofOfWorkLimit.GetCompact();
     };
+    
+
+    
+    
 
     if (pindexLast == NULL)
         return nProofOfWorkLimit; // Genesis block
@@ -4330,6 +4342,7 @@ unsigned int GetNextTargetRequired(const CBlockIndex *pindexLast)
     int64_t nInterval = nTargetTimespan / nTargetSpacing;
     bnNew *= ((nInterval - 1) * nTargetSpacing + nActualSpacing + nActualSpacing);
     bnNew /= ((nInterval + 1) * nTargetSpacing);
+    
     
     if (bnNew <= 0 || bnNew > bnProofOfWorkLimit)
         return nProofOfWorkLimit;

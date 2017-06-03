@@ -591,8 +591,8 @@ inline void UnserializeTransaction(TxType& tx, Stream& s) {
         s >> bv;
         tx.nVersion |= bv<<8; // TransactionTypes
         
-        //s >> tx.nTime;
-        tx.nLockTime = ReadCompactSize(s);
+        s >> tx.nLockTime;
+        //tx.nLockTime = ReadCompactSize(s);
         
         tx.vin.clear();
         s >> tx.vin;
@@ -686,7 +686,8 @@ inline void SerializeTransaction(const TxType& tx, Stream& s) {
         s << bv; // TransactionType
         
         //s << tx.nTime;
-        WriteCompactSize(s, tx.nLockTime);
+        s << tx.nLockTime;
+        //WriteCompactSize(s, tx.nLockTime);
         s << tx.vin;
         
         WriteCompactSize(s, tx.vpout.size());

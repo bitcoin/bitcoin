@@ -40,7 +40,6 @@ BOOST_FIXTURE_TEST_SUITE(rpc_hdwallet_tests, HDWalletTestingSetup)
 
 BOOST_AUTO_TEST_CASE(rpc_hdwallet)
 {
-    
     UniValue rv;
     
     BOOST_CHECK_NO_THROW(rv = CallRPC("extkeyimportmaster xprv9s21ZrQH143K3VrEYG4rhyPddr2o53qqqpCufLP6Rb3XSta2FZsqCanRJVfpTi4UX28pRaAfVGfiGpYDczv8tzTM6Qm5TRvUA9HDStbNUbQ"));
@@ -105,9 +104,34 @@ BOOST_AUTO_TEST_CASE(rpc_hdwallet)
     
     BOOST_CHECK_NO_THROW(rv = CallRPC("getnewextaddress"));
     sResult = StripQuotes(rv.write());
-    
-    
+}
 
+BOOST_AUTO_TEST_CASE(rpc_hdwallet_timelocks)
+{
+    // TODO
+    
+    CBasicKeyStore keystore;
+    
+    CKey k;
+    k.MakeNewKey(true);
+    keystore.AddKey(k);
+    
+    CPubKey pk = k.GetPubKey();
+    CKeyID id = pk.GetID();
+    
+    CScript script = CScript() << 1487406900 << OP_CHECKLOCKTIMEVERIFY << OP_DROP << OP_DUP << OP_HASH160 << ToByteVector(id) << OP_EQUALVERIFY << OP_CHECKSIG;
+    
+    CMutableTransaction txn;
+    txn.nVersion = PARTICL_TXN_VERSION;
+    txn.SetType(TXN_COINBASE);
+    txn.nLockTime = 0;
+    OUTPUT_PTR<CTxOutStandard> out0 = MAKE_OUTPUT<CTxOutStandard>();
+    out0->nValue = 100;
+    out0->scriptPubKey = script;
+    txn.vpout.push_back(out0);
+    
+    
+    
 }
 
 BOOST_AUTO_TEST_SUITE_END()

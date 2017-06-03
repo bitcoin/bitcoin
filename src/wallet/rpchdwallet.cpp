@@ -2812,7 +2812,7 @@ UniValue getstakinginfo(const JSONRPCRequest &request)
     uint64_t nWeight = pwallet->GetStakeWeight();
 
     uint64_t nNetworkWeight = GetPoSKernelPS();
-    bool staking = nLastCoinStakeSearchTime && nWeight;
+    bool staking = nLastCoinStakeSearchTime && nWeight && fIsStaking;
     uint64_t nExpectedTime = staking ? (Params().GetTargetSpacing() * nNetworkWeight / nWeight) : 0;
 
     obj.push_back(Pair("enabled", GetBoolArg("-staking", true)));

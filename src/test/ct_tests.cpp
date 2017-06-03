@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(ct_test)
         
         uint8_t blindOut[32];
         unsigned char msg[4096];
-        size_t msg_size;
+        size_t msg_size = sizeof(msg);
         uint64_t amountOut;
         BOOST_CHECK(secp256k1_rangeproof_rewind(ctx,
             blindOut, &amountOut, msg, &msg_size, nonce.begin(),
