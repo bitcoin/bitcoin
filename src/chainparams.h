@@ -121,4 +121,8 @@ CChainParams& Params(const std::string& chain);
  */
 void SelectParams(const std::string& chain);
 
+CBlock CreateGenesisBlock(CScript prefix, const std::string &comment, const CScript& genesisOutputScript,
+                          uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion,
+                          const CAmount& genesisReward);
+
 #endif // BITCOIN_CHAINPARAMS_H
