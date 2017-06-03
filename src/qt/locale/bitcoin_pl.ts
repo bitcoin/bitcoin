@@ -851,7 +851,7 @@
     </message>
     <message>
         <source>Unknown...</source>
-        <translation>Nienznane...</translation>
+        <translation>Nieznane...</translation>
     </message>
     <message>
         <source>Last block time</source>
