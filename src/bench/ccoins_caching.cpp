@@ -5,6 +5,7 @@
 #include "bench.h"
 #include "coins.h"
 #include "policy/policy.h"
+#include "policy/inputs.h"
 #include "wallet/crypter.h"
 
 #include <vector>

@@ -8,6 +8,7 @@
 #include "keystore.h"
 #include "validation.h"
 #include "policy/policy.h"
+#include "policy/inputs.h"
 #include "script/script.h"
 #include "script/script_error.h"
 #include "script/sign.h"
