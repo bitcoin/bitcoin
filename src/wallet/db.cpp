@@ -361,7 +361,6 @@ void CDBEnv::CheckpointLSN(const std::string& strFile)
 
 CDB::CDB(CWalletDBWrapper& dbw, const char* pszMode, bool fFlushOnCloseIn) : pdb(NULL), activeTxn(NULL)
 {
-    int ret;
     fReadOnly = (!strchr(pszMode, '+') && !strchr(pszMode, 'w'));
     fFlushOnClose = fFlushOnCloseIn;
     env = dbw.env;
@@ -384,6 +383,7 @@ CDB::CDB(CWalletDBWrapper& dbw, const char* pszMode, bool fFlushOnCloseIn) : pdb
         ++env->mapFileUseCount[strFile];
         pdb = env->mapDb[strFile];
         if (pdb == NULL) {
+            int ret;
             pdb = new Db(env->dbenv, 0);
 
             bool fMockDb = env->IsMock();
