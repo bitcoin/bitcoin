@@ -569,11 +569,11 @@ UniValue listbanned(const JSONRPCRequest& request)
     g_connman->GetBanned(banMap);
 
     UniValue bannedAddresses(UniValue::VARR);
-    for (banmap_t::iterator it = banMap.begin(); it != banMap.end(); it++)
+    for (const auto& entry : banMap)
     {
-        CBanEntry banEntry = (*it).second;
+        const CBanEntry& banEntry = entry.second;
         UniValue rec(UniValue::VOBJ);
-        rec.push_back(Pair("address", (*it).first.ToString()));
+        rec.push_back(Pair("address", entry.first.ToString()));
         rec.push_back(Pair("banned_until", banEntry.nBanUntil));
         rec.push_back(Pair("ban_created", banEntry.nCreateTime));
         rec.push_back(Pair("ban_reason", banEntry.banReasonToString()));
