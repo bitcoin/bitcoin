@@ -900,7 +900,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                     bool fSuccess = checker.CheckSig(vchSig, vchPubKey, scriptCode, sigversion);
 
                     if (!fSuccess && (flags & SCRIPT_VERIFY_NULLFAIL) && vchSig.size())
-                        return set_error(serror, SCRIPT_ERR_SIG_NULLFAIL);
+                        return set_error(serror, SCRIPT_ERR_NULLFAIL);
 
                     popstack(stack);
                     popstack(stack);
@@ -993,7 +993,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                     while (i-- > 1) {
                         // If the operation failed, we require that all signatures must be empty vector
                         if (!fSuccess && (flags & SCRIPT_VERIFY_NULLFAIL) && !ikey2 && stacktop(-1).size())
-                            return set_error(serror, SCRIPT_ERR_SIG_NULLFAIL);
+                            return set_error(serror, SCRIPT_ERR_NULLFAIL);
                         if (ikey2 > 0)
                             ikey2--;
                         popstack(stack);
