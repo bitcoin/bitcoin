@@ -882,7 +882,7 @@ public:
         return nMyStartingHeight;
     }
 
-    int GetRefCount()
+    int GetRefCount() const
     {
         assert(nRefCount >= 0);
         return nRefCount;
@@ -894,7 +894,7 @@ public:
     {
         nRecvVersion = nVersionIn;
     }
-    int GetRecvVersion()
+    int GetRecvVersion() const
     {
         return nRecvVersion;
     }
