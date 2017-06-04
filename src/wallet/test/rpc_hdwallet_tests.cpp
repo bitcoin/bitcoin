@@ -108,7 +108,8 @@ BOOST_AUTO_TEST_CASE(rpc_hdwallet)
 
 BOOST_AUTO_TEST_CASE(rpc_hdwallet_timelocks)
 {
-    // TODO
+    UniValue rv;
+    std::string sResult, sCmd;
     
     CBasicKeyStore keystore;
     
@@ -129,6 +130,35 @@ BOOST_AUTO_TEST_CASE(rpc_hdwallet_timelocks)
     out0->nValue = 100;
     out0->scriptPubKey = script;
     txn.vpout.push_back(out0);
+    
+    
+    
+    
+    CKey kOut;
+    kOut.MakeNewKey(true);
+    keystore.AddKey(kOut);
+    
+    id = kOut.GetPubKey().GetID();
+    
+    
+    sCmd = "createrawtransaction [{\"txid\":\""
+        + txn.GetHash().ToString() + "\","
+        + "\"vout\":0,"
+        + "\"scriptPubKey\":\""+HexStr(script.begin(), script.end())+"\","
+        + "\"amount\":100}]";
+    
+    sCmd += " {\""+CBitcoinAddress(id).ToString()+"\":99.99}";
+    
+    
+    
+    
+    BOOST_CHECK_NO_THROW(rv = CallRPC(sCmd));
+    sResult = StripQuotes(rv.write());
+    
+    
+    
+    
+    
     
     
     

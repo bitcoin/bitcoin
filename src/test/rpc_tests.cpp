@@ -26,6 +26,7 @@ UniValue CallRPC(std::string args)
     JSONRPCRequest request;
     request.strMethod = strMethod;
     request.params = RPCConvertValues(strMethod, vArgs);
+    
     request.fHelp = false;
     BOOST_CHECK(tableRPC[strMethod]);
     rpcfn_type method = tableRPC[strMethod]->actor;

@@ -70,8 +70,6 @@ BOOST_AUTO_TEST_CASE(signature_test)
     
     txn.vin.push_back(CTxIn(txn.GetHash(), 0)); // needed for SignatureHash, why?
     
-    
-    
     CMutableTransaction txn2;
     txn2.vin.push_back(CTxIn(txn.GetHash(), 1));
     
@@ -82,20 +80,6 @@ BOOST_AUTO_TEST_CASE(signature_test)
     CTransaction txToConst(txn2);
     BOOST_CHECK(ProduceSignature(TransactionSignatureCreator(&keystore, &txToConst, 1, vchAmount, SIGHASH_ALL), script, sigdata));
     
-    //BOOST_MESSAGE("sigdata.scriptSig.size() " << sigdata.scriptSig.size());
-    //BOOST_MESSAGE("sigdata.scriptWitness.stack.size() " << sigdata.scriptWitness.stack.size());
-    
-    //BOOST_MESSAGE("scriptSig " << HexStr(sigdata.scriptSig.begin(), sigdata.scriptSig.end()));
-    
-    /*
-    
-    if (nIn == 0) // append serialised block height
-    {
-        sigdata.scriptSig << OP_RETURN << nBlockHeight;
-    };
-    
-    UpdateTransaction(txNew, nIn, sigdata);
-    */
     
 }
 
@@ -137,11 +121,8 @@ BOOST_AUTO_TEST_CASE(particlchain_test)
     blk.hashWitnessMerkleRoot = BlockWitnessMerkleRoot(blk, &mutated);
     //BOOST_CHECK(mutated == false);
     
-    BOOST_MESSAGE("blk.hashMerkleRoot " << blk.hashMerkleRoot.ToString());
-    BOOST_MESSAGE("blk.hashWitnessMerkleRoot " << blk.hashWitnessMerkleRoot.ToString());
     
     //BOOST_CHECK(blk.hashMerkleRoot == blk.hashWitnessMerkleRoot); // no inputs, no witness data, hashes should match
-    
     
     CDataStream ss(SER_DISK, 0);
     
