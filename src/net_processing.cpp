@@ -1115,6 +1115,9 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                         connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::INV, vInv));
                         pfrom->hashContinue.SetNull();
                     }
+                } else if (send) {
+                    // To avoid fingerprinting only send if we would have sent the block
+                    vNotFound.push_back(inv);
                 }
             }
             else if (inv.type == MSG_TX || inv.type == MSG_WITNESS_TX)
