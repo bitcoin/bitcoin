@@ -33,6 +33,7 @@ static void AddScriptCheckThreads(int i, CCheckQueue<CScriptCheck> *pqueue)
 }
 
 CParallelValidation::CParallelValidation(int threadCount, boost::thread_group *threadGroup)
+    : semaphore(nScriptCheckQueues)
 {
     if (threadCount <= 1)
         threadCount = 0;
@@ -402,17 +403,13 @@ void CParallelValidation::HandleBlockMessage(CNode *pfrom,
 {
     uint64_t nBlockSize = ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION);
 
-    /** Initialize Semaphores used to limit the total number of concurrent validation threads. */
-    if (semPV == NULL)
-        semPV = new CSemaphore(nScriptCheckQueues);
-
     // NOTE: You must not have a cs_main lock before you aquire the semaphore grant or you can end up deadlocking
     // AssertLockNotHeld(cs_main); TODO: need to create this
 
     // Aquire semaphore grant
     if (IsChainNearlySyncd())
     {
-        if (!semPV->try_wait())
+        if (!semaphore.try_wait())
         {
             /** The following functionality is for the case when ALL thread queues and grants are in use, meaning
              * somehow an attacker
@@ -471,12 +468,12 @@ void CParallelValidation::HandleBlockMessage(CNode *pfrom,
             } // We must not hold the lock here because we could be waiting for a grant, below.
 
             // wait for semaphore grant
-            semPV->wait();
+            semaphore.wait();
         }
     }
     else
     { // for IBD just wait for the next available
-        semPV->wait();
+        semaphore.wait();
     }
 
     // Add a reference here because we are detaching a thread which may run for a long time and
@@ -613,10 +610,7 @@ void HandleBlockMessageThread(CNode *pfrom, const string strCommand, const CBloc
     // release semaphores depending on whether this was IBD or not.  We can not use IsChainNearlySyncd()
     // because the return value will switch over when IBD is nearly finished and we may end up not releasing
     // the correct semaphore.
-    {
-        LOCK(cs_semPV);
-        semPV->post();
-    }
+    PV->Post();
 
     // Remove the CNode reference we aquired just before we launched this thread.
     {

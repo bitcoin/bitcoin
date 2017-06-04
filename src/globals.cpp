@@ -21,7 +21,6 @@
 #include "miner.h"
 #include "net.h"
 #include "nodestate.h"
-#include "parallel.h"
 #include "policy/policy.h"
 #include "primitives/block.h"
 #include "requestManager.h"
@@ -103,10 +102,6 @@ CCriticalSection cs_statMap;
 
 // critical sections from expedited.cpp
 CCriticalSection cs_xpedited;
-
-// semaphore for parallel validation threads
-CCriticalSection cs_semPV;
-CSemaphore *semPV;
 
 deque<string> vOneShots;
 std::map<CNetAddr, ConnectionHistory> mapInboundConnectionTracker;
