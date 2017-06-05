@@ -19,6 +19,7 @@ Table of contents
   - [Compatibility with Bitcoin Core](#compatibility-with-bitcoin-core)
 - [Imported changes and notes](#imported-changes-and-notes)
   - [Upgrade to Bitcoin Core 0.13.2](#upgrade-to-bitcoin-core-0132)
+  - [Important transaction fee behavior changes](#important-transaction-fee-behavior-changes)
   - [API changes](#api-changes)
   - [New project versioning scheme](#new-project-versioning-scheme)
   - [New project branch structure](#new-project-branch-structure)
@@ -76,6 +77,20 @@ Please see the following release notes for further details:
 - [Release notes for Bitcoin Core 0.13.0](https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.13.0.md)
 - [Release notes for Bitcoin Core 0.13.1](https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.13.1.md)
 - [Release notes for Bitcoin Core 0.13.2](https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.13.2.md)
+
+Important transaction fee behavior changes
+------------------------------------------
+
+Earlier versions of Omni Core (prior to 0.2.0) used Bitcoin Core 0.10.x as a base. Omni Core 0.2.0 however is based on a much newer version of Bitcoin Core (0.13.2) and thus inherits various changes and improvements to the handling of fees that have been added to Bitcoin Core over time.
+
+It is highly recommended that users of Omni Core consider these fee changes and their chosen fee settings when upgrading to Omni Core 0.2.0, and test thoroughly to ensure that fee behavior is desirable and as expected.
+
+Consideration of the modified behavior for the `-paytxfee` setting is especially important. Earlier versions of Bitcoin Core (and thus earlier versions of Omni Core prior to 0.2.0) would round the size of the transaction upwards to the nearest kilobyte when calculating the fee (for example a 250 byte transaction would be rounded up to 1 kB). This issue has been resolved in newer versions of Bitcoin Core, and so Omni Core 0.2.0 will no longer perform this rounding when calculating the fee. A comparison of the behaviors can be shown in the following, where an example `paytxfee` value of 0.001 BTC/kB has been set:
+
+- Omni Core prior to 0.2.0: A transaction with a size of 250 bytes will be rounded up to 1 kB, and so a fee of 0.001 BTC will be used
+- Omni Core 0.2.0: A transaction with a size of 250 bytes will not be rounded, and so a fee of 0.00025 BTC will be used
+
+It is also worth noting that the fee estimation algorithms were updated, and thus the fees chosen when using `-txconfirmtarget` (along with the output of the `estimatefee` RPC) will likely be different in Omni Core 0.2.0 when compared to prior versions.
 
 API changes
 -----------
