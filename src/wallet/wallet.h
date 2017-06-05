@@ -39,7 +39,7 @@ extern unsigned int nTxConfirmTarget;
 extern bool bSpendZeroConfChange;
 extern bool fWalletRbf;
 
-static const unsigned int DEFAULT_KEYPOOL_SIZE = 100;
+static const unsigned int DEFAULT_KEYPOOL_SIZE = 10000;
 //! -paytxfee default
 static const CAmount DEFAULT_TRANSACTION_FEE = 0;
 //! -fallbackfee default
