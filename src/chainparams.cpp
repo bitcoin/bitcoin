@@ -79,11 +79,11 @@ static const Checkpoints::CCheckpointData data = {
 
 static Checkpoints::MapCheckpoints mapCheckpointsTestnet =
         boost::assign::map_list_of
-        ( 0, uint256S("0x000000004daeaebf6182d09b7b40b81bc72caab1a13c79cef2669b0b5686b7b8"))
+        ( 0, uint256S("0x00000000145b811e66b1af003095cce0958ced65e355a579b567882a5ddbb80d"))
         ;
 static const Checkpoints::CCheckpointData dataTestnet = {
         &mapCheckpointsTestnet,
-        1483492562, // * UNIX timestamp of last checkpoint block
+        1496462996, // * UNIX timestamp of last checkpoint block
         0,          // * total number of transactions between genesis and last checkpoint
                     //   (the tx=... number in the SetBestChain debug.log lines)
         0           // * estimated number of transactions per day after checkpoint
@@ -230,10 +230,6 @@ public:
         nTargetSpacing = 1 * 60; // Crown: 2.5 minutes
         nMaxTipAge = 0x7fffffff;
 
-        //! Modify the testnet genesis block so the timestamp is valid for a later start.
-        genesis.nTime = 1483492562;
-        genesis.nNonce = 2574547475;
-
 	/*if (true && genesis.GetHash() != hashGenesisBlock)
                        {
                            printf("Searching for genesis block...\n");
@@ -262,9 +258,24 @@ public:
                            printf("genesis.hashMerkleRoot = %s \n", genesis.hashMerkleRoot.ToString().c_str()); //improvised. worked for me, to find merkle root/
                        }*/
 
+        const char* pszTimestamp = "3. June, when you need a testnet";
+        CMutableTransaction txNew;
+        txNew.vin.resize(1);
+        txNew.vout.resize(1);
+        txNew.vin[0].scriptSig = CScript() << 486604799 << CScriptNum(4) << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
+        txNew.vout[0].nValue = 10 * COIN;
+        txNew.vout[0].scriptPubKey = CScript() << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f") << OP_CHECKSIG;
+        genesis.vtx.push_back(txNew);
+        genesis.hashPrevBlock.SetNull();
+        genesis.hashMerkleRoot = genesis.BuildMerkleTree();
+        genesis.nVersion.SetGenesisVersion(1);
+        genesis.nTime    = 1496462996;
+        genesis.nBits    = 0x1d00ffff;
+        genesis.nNonce   = 1855437720;
+
         hashGenesisBlock = genesis.GetHash();
-        assert(hashGenesisBlock == uint256S("0x000000004daeaebf6182d09b7b40b81bc72caab1a13c79cef2669b0b5686b7b8"));
-        assert(genesis.hashMerkleRoot == uint256S("0x80ad356118a9ab8db192db66ef77146cc36d958f959251feace550e4ca3d1446"));
+        assert(hashGenesisBlock == uint256S("0x00000000145b811e66b1af003095cce0958ced65e355a579b567882a5ddbb80d"));
+        assert(genesis.hashMerkleRoot == uint256S("0x8e7af3840a749c6ff8cae70536d5ad6ef9d8a54cde305f438bc72ae41e3f1d7e"));
 
         vFixedSeeds.clear();
         vSeeds.clear();
