@@ -6363,7 +6363,6 @@ bool ProcessMessage(CNode *pfrom, string strCommand, CDataStream &vRecv, int64_t
 
             if (header.hashPrevBlock != hashLastBlock)
             {
-                Misbehaving(pfrom->GetId(), 20);
                 return error("non-continuous headers sequence");
             }
             hashLastBlock = header.GetHash();
