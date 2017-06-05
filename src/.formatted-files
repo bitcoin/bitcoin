@@ -27,3 +27,6 @@ nodestate.cpp
 nodestate.h
 banentry.cpp
 banentry.h
+bandb.cpp
+bandb.h
+test/bandb_tests.cpp
