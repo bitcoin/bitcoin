@@ -129,7 +129,25 @@ std::string HexBits(unsigned int nBits)
 /// Note: This interface may still be subject to change.
 ///
 
+// ppcoin: remove transaction from mempool
+Value removetransaction(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "removetransaction txid\n"
+            "Removes transaction id from memory pool.");
 
+    uint256 hash;
+    hash.SetHex(params[0].get_str());
+
+    CTransaction tx;
+    uint256 hashBlock = 0;
+    if (!GetTransaction(hash, tx, hashBlock))
+        throw JSONRPCError(-5, "No information available about transaction in mempool");
+
+    mempool.remove(tx);
+    return tx.GetHash().GetHex();
+}
 
 // ppcoin: reserve balance from being staked for network protection
 Value reservebalance(const Array& params, bool fHelp)
@@ -474,6 +492,7 @@ static const CRPCCommand vRPCCommands[] =
     { "lockunspent",            &lockunspent,            false,     false },
     { "listlockunspent",        &listlockunspent,        false,     false },
     { "getbestblockhash",       &getbestblockhash,       false,     false },
+    { "removetransaction",      &removetransaction,      false,     false },
 #ifdef TESTING
     { "generatestake",          &generatestake,          true,      false },
     { "duplicateblock",         &duplicateblock,         true,      false },
