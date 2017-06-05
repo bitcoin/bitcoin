@@ -256,12 +256,6 @@ static IntrRecvError InterruptibleRecv(char* data, size_t len, int timeout, SOCK
     return len == 0 ? IntrRecvError::OK : IntrRecvError::Timeout;
 }
 
-struct ProxyCredentials
-{
-    std::string username;
-    std::string password;
-};
-
 std::string Socks5ErrorString(int err)
 {
     switch(err) {
@@ -278,7 +272,7 @@ std::string Socks5ErrorString(int err)
 }
 
 /** Connect using SOCKS5 (as described in RFC1928) */
-static bool Socks5(const std::string& strDest, int port, const ProxyCredentials *auth, SOCKET& hSocket)
+bool Socks5(const std::string& strDest, int port, const ProxyCredentials *auth, SOCKET& hSocket)
 {
     IntrRecvError recvr;
     LogPrint(BCLog::NET, "SOCKS5 connecting %s\n", strDest);
@@ -413,7 +407,7 @@ static bool Socks5(const std::string& strDest, int port, const ProxyCredentials 
     return true;
 }
 
-bool static ConnectSocketDirectly(const CService &addrConnect, SOCKET& hSocketRet, int nTimeout)
+bool CreateSocket(const CService &addrConnect, SOCKET& hSocketRet)
 {
     hSocketRet = INVALID_SOCKET;
 
@@ -439,7 +433,20 @@ bool static ConnectSocketDirectly(const CService &addrConnect, SOCKET& hSocketRe
 
     // Set to non-blocking
     if (!SetSocketNonBlocking(hSocket, true))
-        return error("ConnectSocketDirectly: Setting socket to non-blocking failed, error %s\n", NetworkErrorString(WSAGetLastError()));
+        return error("%s: Setting socket to non-blocking failed, error %s\n", __func__, NetworkErrorString(WSAGetLastError()));
+
+    hSocketRet = hSocket;
+    return true;
+}
+
+bool ConnectSocketDirectly(const CService &addrConnect, SOCKET& hSocket, int nTimeout)
+{
+    struct sockaddr_storage sockaddr;
+    socklen_t len = sizeof(sockaddr);
+    if (!addrConnect.GetSockAddr((struct sockaddr*)&sockaddr, &len)) {
+        LogPrintf("Cannot connect to %s: unsupported network\n", addrConnect.ToString());
+        return false;
+    }
 
     if (connect(hSocket, (struct sockaddr*)&sockaddr, len) == SOCKET_ERROR)
     {
@@ -493,8 +500,6 @@ bool static ConnectSocketDirectly(const CService &addrConnect, SOCKET& hSocketRe
             return false;
         }
     }
-
-    hSocketRet = hSocket;
     return true;
 }
 
@@ -544,71 +549,6 @@ bool IsProxy(const CNetAddr &addr) {
             return true;
     }
     return false;
-}
-
-static bool ConnectThroughProxy(const proxyType &proxy, const std::string& strDest, int port, SOCKET& hSocketRet, int nTimeout, bool *outProxyConnectionFailed)
-{
-    SOCKET hSocket = INVALID_SOCKET;
-    // first connect to proxy server
-    if (!ConnectSocketDirectly(proxy.proxy, hSocket, nTimeout)) {
-        if (outProxyConnectionFailed)
-            *outProxyConnectionFailed = true;
-        return false;
-    }
-    // do socks negotiation
-    if (proxy.randomize_credentials) {
-        ProxyCredentials random_auth;
-        static std::atomic_int counter;
-        random_auth.username = random_auth.password = strprintf("%i", counter++);
-        if (!Socks5(strDest, (unsigned short)port, &random_auth, hSocket))
-            return false;
-    } else {
-        if (!Socks5(strDest, (unsigned short)port, 0, hSocket))
-            return false;
-    }
-
-    hSocketRet = hSocket;
-    return true;
-}
-
-bool ConnectSocket(const CService &addrDest, SOCKET& hSocketRet, int nTimeout, bool *outProxyConnectionFailed)
-{
-    proxyType proxy;
-    if (outProxyConnectionFailed)
-        *outProxyConnectionFailed = false;
-
-    if (GetProxy(addrDest.GetNetwork(), proxy))
-        return ConnectThroughProxy(proxy, addrDest.ToStringIP(), addrDest.GetPort(), hSocketRet, nTimeout, outProxyConnectionFailed);
-    else // no proxy needed (none set for target network)
-        return ConnectSocketDirectly(addrDest, hSocketRet, nTimeout);
-}
-
-bool ConnectSocketByName(CService &addr, SOCKET& hSocketRet, const char *pszDest, int portDefault, int nTimeout, bool *outProxyConnectionFailed)
-{
-    std::string strDest;
-    int port = portDefault;
-
-    if (outProxyConnectionFailed)
-        *outProxyConnectionFailed = false;
-
-    SplitHostPort(std::string(pszDest), port, strDest);
-
-    proxyType proxy;
-    GetNameProxy(proxy);
-
-    std::vector<CService> addrResolved;
-    if (Lookup(strDest.c_str(), addrResolved, port, fNameLookup && !HaveNameProxy(), 256)) {
-        if (addrResolved.size() > 0) {
-            addr = addrResolved[GetRand(addrResolved.size())];
-            return ConnectSocket(addr, hSocketRet, nTimeout);
-        }
-    }
-
-    addr = CService();
-
-    if (!HaveNameProxy())
-        return false;
-    return ConnectThroughProxy(proxy, strDest, port, hSocketRet, nTimeout, outProxyConnectionFailed);
 }
 
 bool LookupSubNet(const char* pszName, CSubNet& ret)
@@ -735,4 +675,16 @@ bool SetSocketNoDelay(SOCKET& hSocket)
 void InterruptSocks5(bool interrupt)
 {
     interruptSocks5Recv = interrupt;
+}
+
+void CSocketCloser::release()
+{
+    enabled = false;
+}
+
+CSocketCloser::~CSocketCloser()
+{
+    if (enabled) {
+        CloseSocket(hSocket);
+    }
 }
