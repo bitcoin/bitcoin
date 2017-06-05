@@ -109,16 +109,17 @@ BOOST_AUTO_TEST_CASE(rpc_hdwallet)
 BOOST_AUTO_TEST_CASE(rpc_hdwallet_timelocks)
 {
     UniValue rv;
-    std::string sResult, sCmd;
+    std::string sResult, sTxn, sCmd;
     
-    CBasicKeyStore keystore;
+    BOOST_CHECK_NO_THROW(rv = CallRPC("extkeyimportmaster xprv9s21ZrQH143K3VrEYG4rhyPddr2o53qqqpCufLP6Rb3XSta2FZsqCanRJVfpTi4UX28pRaAfVGfiGpYDczv8tzTM6Qm5TRvUA9HDStbNUbQ"));
     
-    CKey k;
-    k.MakeNewKey(true);
-    keystore.AddKey(k);
+    BOOST_CHECK_NO_THROW(rv = CallRPC("getnewaddress"));
+    sResult = StripQuotes(rv.write());
+    BOOST_CHECK(sResult == "PZdYWHgyhuG7NHVCzEkkx3dcLKurTpvmo6");
     
-    CPubKey pk = k.GetPubKey();
-    CKeyID id = pk.GetID();
+    
+    CKeyID id;
+    BOOST_CHECK(CBitcoinAddress(sResult).GetKeyID(id));
     
     CScript script = CScript() << 1487406900 << OP_CHECKLOCKTIMEVERIFY << OP_DROP << OP_DUP << OP_HASH160 << ToByteVector(id) << OP_EQUALVERIFY << OP_CHECKSIG;
     
@@ -134,26 +135,44 @@ BOOST_AUTO_TEST_CASE(rpc_hdwallet_timelocks)
     
     
     
-    CKey kOut;
-    kOut.MakeNewKey(true);
-    keystore.AddKey(kOut);
+    BOOST_CHECK_NO_THROW(rv = CallRPC("getnewaddress"));
+    sResult = StripQuotes(rv.write());
+    BOOST_CHECK(sResult == "PdsEywwkgVLJ8bF8b8Wp9gCj63KrXX3zww");
+    BOOST_CHECK(CBitcoinAddress(sResult).GetKeyID(id));
     
-    id = kOut.GetPubKey().GetID();
     
-    
-    sCmd = "createrawtransaction [{\"txid\":\""
+    sTxn = "[{\"txid\":\""
         + txn.GetHash().ToString() + "\","
         + "\"vout\":0,"
         + "\"scriptPubKey\":\""+HexStr(script.begin(), script.end())+"\","
         + "\"amount\":100}]";
-    
-    sCmd += " {\""+CBitcoinAddress(id).ToString()+"\":99.99}";
-    
+    sCmd = "createrawtransaction " + sTxn + " {\""+CBitcoinAddress(id).ToString()+"\":99.99}";
     
     
-    
-    BOOST_CHECK_NO_THROW(rv = CallRPC(sCmd));
+    BOOST_REQUIRE_NO_THROW(rv = CallRPC(sCmd));
     sResult = StripQuotes(rv.write());
+    
+    
+    
+    sCmd = "signrawtransaction " + sResult + " " + sTxn;
+    
+    BOOST_REQUIRE_NO_THROW(rv = CallRPC(sCmd));
+    BOOST_CHECK(rv["errors"][0]["error"].getValStr() == "Locktime requirement not satisfied");
+    
+    sTxn = "[{\"txid\":\""
+        + txn.GetHash().ToString() + "\","
+        + "\"vout\":0,"
+        + "\"scriptPubKey\":\""+HexStr(script.begin(), script.end())+"\","
+        + "\"amount\":100}]";
+    sCmd = "createrawtransaction " + sTxn + " {\""+CBitcoinAddress(id).ToString()+"\":99.99}" + " 1487500000";
+    
+    BOOST_REQUIRE_NO_THROW(rv = CallRPC(sCmd));
+    sResult = StripQuotes(rv.write());
+    
+    sCmd = "signrawtransaction " + sResult + " " + sTxn;
+    BOOST_REQUIRE_NO_THROW(rv = CallRPC(sCmd));
+    BOOST_CHECK(rv["complete"].getBool() == true);
+    sResult = rv["hex"].getValStr();
     
     
     

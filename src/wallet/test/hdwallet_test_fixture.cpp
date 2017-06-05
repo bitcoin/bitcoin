@@ -14,7 +14,7 @@ HDWalletTestingSetup::HDWalletTestingSetup(const std::string &chainName):
 {
     //fPrintToConsole = true;
     //fDebug = true;
-        
+    
     bitdb.MakeMock();
 
     bool fFirstRun;

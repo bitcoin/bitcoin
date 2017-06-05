@@ -553,7 +553,7 @@ public:
      * txid exists, a new one is created. Simultaneous modifications are not
      * allowed.
      */
-    CCoinsModifier ModifyCoins(const uint256 &txid);
+    CCoinsModifier ModifyCoins(const uint256 &txid, int nVersion = -1);
 
     /**
      * Return a modifiable reference to a CCoins. Assumes that no entry with the given

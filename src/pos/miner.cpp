@@ -51,7 +51,6 @@ double GetPoSKernelPS()
     double dStakeKernelsTriedAvg = 0;
     int nStakesHandled = 0, nStakesTime = 0;
 
-
     while (pindex && nStakesHandled < nPoSInterval)
     {
         if (pindex->IsProofOfStake())
@@ -141,13 +140,12 @@ bool ImportOutputs(CBlockTemplate *pblocktemplate, int nHeight)
         return error("%s: File not found 'genesisOutputs.txt'.", __func__);
     
     
-    const int nMaxOutputsPerTxn = 200;
+    const int nMaxOutputsPerTxn = 80;
     FILE *fp;
     errno = 0;
     if (!(fp = fopen(fPath.string().c_str(), "r")))
         return error("%s - Can't open file, strerror: %s.", __func__, strerror(errno));
     
-    CSHA256 hasher;
     CMutableTransaction txn;
     txn.nVersion = PARTICL_TXN_VERSION;
     txn.SetType(TXN_COINBASE);
@@ -200,8 +198,6 @@ bool ImportOutputs(CBlockTemplate *pblocktemplate, int nHeight)
         txout->scriptPubKey = script;
         txn.vpout.push_back(txout);
         
-        hasher.Write((unsigned char*)&txout->nValue, sizeof(txout->nValue));
-        hasher.Write(txout->scriptPubKey.data(), txout->scriptPubKey.size());
         nAdded++;
         if (nAdded >= nMaxOutputsPerTxn)
             break;
@@ -209,9 +205,7 @@ bool ImportOutputs(CBlockTemplate *pblocktemplate, int nHeight)
     
     fclose(fp);
     
-    uint256 hash;
-    hasher.Finalize((unsigned char*) &hash);
-    
+    uint256 hash = txn.GetHash();
     if (!Params().CheckImportCoinbase(nHeight, hash))
         return error("%s - Incorrect outputs hash.", __func__);
     
@@ -276,6 +270,7 @@ void ThreadStakeMiner(CHDWallet *pwallet)
     assert(pwallet);
     while (!fStopMinerProc)
     {
+        
         if (pwallet->IsLocked() || !GetBoolArg("-staking", true))
         {
             fIsStaking = false;

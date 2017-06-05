@@ -998,10 +998,9 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
             vector<unsigned char> pkData(ParseHexO(prevOut, "scriptPubKey"));
             CScript scriptPubKey(pkData.begin(), pkData.end());
 
-            
             if (fParticlMode)
             {
-                CCoinsModifier coins = view.ModifyCoins(txid);
+                CCoinsModifier coins = view.ModifyCoins(txid, PARTICL_TXN_VERSION);
                 if (coins->IsAvailable(nOut))
                 {
                     if (!coins->vpout[nOut])

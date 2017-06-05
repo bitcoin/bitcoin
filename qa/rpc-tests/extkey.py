@@ -26,6 +26,9 @@ class ExtKeyTest(ParticlTestFramework):
         node = self.nodes[0]
         node1 = self.nodes[1]
         
+        # stop staking
+        ro = node.reservebalance(True, 10000000)
+        
         ro = node.extkeyimportmaster("abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb")
         assert(ro['account_id'] == 'aaaZf2qnNr5T7PWRmqgmusuu5ACnBcX2ev')
         
@@ -34,6 +37,9 @@ class ExtKeyTest(ParticlTestFramework):
         
         ro = node.getinfo()
         assert(ro['total_balance'] == 100000)
+        
+        # Start staking
+        ro = node.reservebalance(False)
         
         assert(self.wait_for_height(node, 1))
         

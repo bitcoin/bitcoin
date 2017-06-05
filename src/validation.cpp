@@ -4489,20 +4489,9 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Co
             if (block.vtx.size() < 2 || !block.vtx[1]->IsCoinBase())
                 return state.DoS(100, false, REJECT_INVALID, "bad-cb", false, "Second txn of import block must be coinbase");
             
-            // Check hash of output data matches expected hash.
-            CSHA256 hasher;
-            for (auto &txout : block.vtx[1]->vpout)
-            {
-                if (!txout->IsStandardOutput())
-                    return state.DoS(100, false, REJECT_INVALID, "bad-cb", false, "Malformed coinbase");
-                const CTxOutStandard *sout = txout->GetStandardOutput();
-                hasher.Write((unsigned char*)&sout->nValue, sizeof(sout->nValue));
-                hasher.Write(sout->scriptPubKey.data(), sout->scriptPubKey.size());
-            };
-            uint256 hash;
-            hasher.Finalize((unsigned char*) &hash);
-            
-            if (!Params().CheckImportCoinbase(nHeight, hash))
+            // Check hash of genesis import txn matches expected hash.
+            uint256 txnHash = block.vtx[1]->GetHash();
+            if (!Params().CheckImportCoinbase(nHeight, txnHash))
                 return state.DoS(100, false, REJECT_INVALID, "bad-cb", false, "Incorrect outputs hash.");
         } else
         {
