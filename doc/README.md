@@ -11,8 +11,8 @@ The following are some helpful notes on how to run Dash on your native platform.
 
 Unpack the files into a directory and run:
 
-- `bin/bitcoin-qt` (GUI) or
-- `bin/bitcoind` (headless)
+- `bin/dash-qt` (GUI) or
+- `bin/dashd` (headless)
 
 ### Windows
 
