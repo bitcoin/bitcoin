@@ -6,6 +6,8 @@
 import os
 import sys
 
+import os
+
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (assert_equal, assert_raises_rpc_error)
 
@@ -104,7 +106,8 @@ class WalletDumpTest(BitcoinTestFramework):
         script_addrs = [multisig_addr]
 
         # dump unencrypted wallet
-        self.nodes[0].dumpwallet(tmpdir + "/node0/wallet.unencrypted.dump")
+        result = self.nodes[0].dumpwallet(tmpdir + "/node0/wallet.unencrypted.dump")
+        assert_equal(result['filename'], os.path.abspath(tmpdir + "/node0/wallet.unencrypted.dump"))
 
         found_addr, found_script_addr, found_addr_chg, found_addr_rsv, hd_master_addr_unenc = \
             read_dump(tmpdir + "/node0/wallet.unencrypted.dump", addrs, script_addrs, None)
