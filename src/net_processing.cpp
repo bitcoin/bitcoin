@@ -1197,7 +1197,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
     }
 
 
-    if (!(pfrom->GetLocalServices() & NODE_BLOOM) &&
+    if (!pfrom->fWhitelisted && !(pfrom->GetLocalServices() & NODE_BLOOM) &&
               (strCommand == NetMsgType::FILTERLOAD ||
                strCommand == NetMsgType::FILTERADD))
     {
