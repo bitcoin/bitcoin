@@ -60,9 +60,9 @@ bool CWalletDB::EraseTx(uint256 hash)
 
 bool CWalletDB::WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey, const CKeyMetadata& keyMeta)
 {
-    if (!WriteIC(std::make_pair(std::string("keymeta"), vchPubKey),
-               keyMeta, false))
+    if (!WriteIC(std::make_pair(std::string("keymeta"), vchPubKey), keyMeta, false)) {
         return false;
+    }
 
     // hash pubkey/privkey to accelerate wallet load
     std::vector<unsigned char> vchKey;
@@ -79,12 +79,13 @@ bool CWalletDB::WriteCryptedKey(const CPubKey& vchPubKey,
 {
     const bool fEraseUnencryptedKey = true;
 
-    if (!WriteIC(std::make_pair(std::string("keymeta"), vchPubKey),
-            keyMeta))
+    if (!WriteIC(std::make_pair(std::string("keymeta"), vchPubKey), keyMeta)) {
         return false;
+    }
 
-    if (!WriteIC(std::make_pair(std::string("ckey"), vchPubKey), vchCryptedSecret, false))
+    if (!WriteIC(std::make_pair(std::string("ckey"), vchPubKey), vchCryptedSecret, false)) {
         return false;
+    }
     if (fEraseUnencryptedKey)
     {
         EraseIC(std::make_pair(std::string("key"), vchPubKey));
@@ -106,15 +107,17 @@ bool CWalletDB::WriteCScript(const uint160& hash, const CScript& redeemScript)
 
 bool CWalletDB::WriteWatchOnly(const CScript &dest, const CKeyMetadata& keyMeta)
 {
-    if (!WriteIC(std::make_pair(std::string("watchmeta"), *(const CScriptBase*)(&dest)), keyMeta))
+    if (!WriteIC(std::make_pair(std::string("watchmeta"), *(const CScriptBase*)(&dest)), keyMeta)) {
         return false;
+    }
     return WriteIC(std::make_pair(std::string("watchs"), *(const CScriptBase*)(&dest)), '1');
 }
 
 bool CWalletDB::EraseWatchOnly(const CScript &dest)
 {
-    if (!EraseIC(std::make_pair(std::string("watchmeta"), *(const CScriptBase*)(&dest))))
+    if (!EraseIC(std::make_pair(std::string("watchmeta"), *(const CScriptBase*)(&dest)))) {
         return false;
+    }
     return EraseIC(std::make_pair(std::string("watchs"), *(const CScriptBase*)(&dest)));
 }
 
