@@ -109,6 +109,7 @@ BITCOIN_CORE_H = \
   merkleblock.h \
   miner.h \
   net.h \
+  nodestate.h \
   leakybucket.h \
   netbase.h \
   noui.h \
@@ -188,6 +189,7 @@ libbitcoin_server_a_SOURCES = \
   merkleblock.cpp \
   miner.cpp \
   net.cpp \
+  nodestate.cpp \
   noui.cpp \
   parallel.cpp \
   policy/fees.cpp \

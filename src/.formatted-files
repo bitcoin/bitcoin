@@ -23,3 +23,5 @@ qt/unlimiteddialog.cpp
 qt/unlimiteddialog.h
 qt/unlimitedmodel.cpp
 qt/unlimitedmodel.h
+nodestate.cpp
+nodestate.h
