@@ -66,7 +66,7 @@ bool CFeeBumper::preconditionChecks(const CWallet *pWallet, const CWalletTx& wtx
     return true;
 }
 
-CFeeBumper::CFeeBumper(const CWallet *pWallet, const uint256 txidIn, int newConfirmTarget, bool specifiedConfirmTarget, CAmount totalFee, bool newTxReplaceable)
+CFeeBumper::CFeeBumper(const CWallet *pWallet, const uint256 txidIn, int newConfirmTarget, bool ignoreGlobalPayTxFee, CAmount totalFee, bool newTxReplaceable)
     :
     txid(std::move(txidIn)),
     nOldFee(0),
@@ -165,15 +165,7 @@ CFeeBumper::CFeeBumper(const CWallet *pWallet, const uint256 txidIn, int newConf
         nNewFee = totalFee;
         nNewFeeRate = CFeeRate(totalFee, maxNewTxSize);
     } else {
-        // if user specified a confirm target then don't consider any global payTxFee
-        if (specifiedConfirmTarget) {
-            nNewFee = CWallet::GetMinimumFee(maxNewTxSize, newConfirmTarget, mempool, ::feeEstimator, true);
-        }
-        // otherwise use the regular wallet logic to select payTxFee or default confirm target
-        else {
-            nNewFee = CWallet::GetMinimumFee(maxNewTxSize, newConfirmTarget, mempool, ::feeEstimator);
-        }
-
+        nNewFee = CWallet::GetMinimumFee(maxNewTxSize, newConfirmTarget, mempool, ::feeEstimator, ignoreGlobalPayTxFee);
         nNewFeeRate = CFeeRate(nNewFee, maxNewTxSize);
 
         // New fee rate must be at least old rate + minimum incremental relay rate
