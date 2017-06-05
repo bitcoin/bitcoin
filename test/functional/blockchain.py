@@ -10,6 +10,7 @@ Test the following RPCs:
     - getbestblockhash
     - getblockhash
     - getblockheader
+    - getchaintxstats
     - getnetworkhashps
     - verifychain
 
@@ -35,11 +36,20 @@ class BlockchainTest(BitcoinTestFramework):
         self.num_nodes = 1
 
     def run_test(self):
+        self._test_getchaintxstats()
         self._test_gettxoutsetinfo()
         self._test_getblockheader()
         self._test_getdifficulty()
         self._test_getnetworkhashps()
         self.nodes[0].verifychain(4, 0)
+
+    def _test_getchaintxstats(self):
+        chaintxstats = self.nodes[0].getchaintxstats(1)
+        # 200 txs plus genesis tx
+        assert_equal(chaintxstats['txcount'], 201)
+        # tx rate should be 1 per 10 minutes, or 1/600
+        # we have to round because of binary math
+        assert_equal(round(chaintxstats['txrate'] * 600, 10), Decimal(1))
 
     def _test_gettxoutsetinfo(self):
         node = self.nodes[0]
