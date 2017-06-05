@@ -4,6 +4,8 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the dumpwallet RPC."""
 
+import os
+
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (assert_equal, bitcoind_processes)
 
@@ -82,7 +84,8 @@ class WalletDumpTest(BitcoinTestFramework):
         self.nodes[0].keypoolrefill()
 
         # dump unencrypted wallet
-        self.nodes[0].dumpwallet(tmpdir + "/node0/wallet.unencrypted.dump")
+        result = self.nodes[0].dumpwallet(tmpdir + "/node0/wallet.unencrypted.dump")
+        assert_equal(result['filename'], os.path.abspath(tmpdir + "/node0/wallet.unencrypted.dump"))
 
         found_addr, found_addr_chg, found_addr_rsv, hd_master_addr_unenc = \
             read_dump(tmpdir + "/node0/wallet.unencrypted.dump", addrs, None)
