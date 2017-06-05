@@ -5800,7 +5800,7 @@ bool ProcessMessage(CNode *pfrom, string strCommand, CDataStream &vRecv, int64_t
         // Must have version message before anything else (Although we may send our VERSION before
         // we receive theirs, it would not be possible to receive their VERACK before their VERSION).
         pfrom->fDisconnect = true;
-        return error("VERSION was not received before other messages - disconnecting peer=%s", pfrom->GetLogName());
+        return error("%s receieved before VERSION message - disconnecting peer=%s", strCommand, pfrom->GetLogName());
     }
 
 
