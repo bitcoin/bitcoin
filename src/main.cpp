@@ -6322,7 +6322,6 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
 
             if (header.hashPrevBlock != hashLastBlock)
             {
-                dosMan.Misbehaving(pfrom->GetId(), 20);
                 return error("non-continuous headers sequence");
             }
             hashLastBlock = header.GetHash();

@@ -622,8 +622,7 @@ class SendHeadersTest(BitcoinTestFramework):
             assert_equal(int(self.nodes[0].getbestblockhash(), 16), blocks[1].sha256)
 
 
-        # Check that multiple unconnecting headers don't cause an immediate ban.
-        # Do this four times only which will give a DOS misbeviour of 80.
+        # Check that multiple unconnecting headers don't cause any issues.
         for i in range(2):
             test_node.last_getdata = []
             blocks = []
@@ -669,7 +668,7 @@ class SendHeadersTest(BitcoinTestFramework):
             assert_equal(int(self.nodes[0].getbestblockhash(), 16), blocks[4].sha256)
 
 
-        # Send one more out of order header which should result in a DOS 100 with subsequent ban and disconnect
+        # Send one more out of order header which should not cause any problems
         test_node.last_getdata = []
         blocks = []
         # Create two more blocks
@@ -681,9 +680,6 @@ class SendHeadersTest(BitcoinTestFramework):
             height += 1
         # Send the header of the second block -> this won't connect.
         test_node.send_header_for_blocks([blocks[1]])
-
-        # Should get disconnected
-        test_node.wait_for_disconnect()
 
         # Finally, check that the inv node never received a getdata request,
         # throughout the test
