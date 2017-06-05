@@ -1,6 +1,6 @@
-Bitcoin Core version 0.14.x is now available from:
+Bitcoin Core version 0.14.2 is now available from:
 
-  <https://bitcoin.org/bin/bitcoin-core-0.14.x/>
+  <https://bitcoin.org/bin/bitcoin-core-0.14.2/>
 
 This is a new minor version release, including various bugfixes and
 performance improvements, as well as updated translations.
@@ -30,11 +30,12 @@ frequently tested on them.
 Notable changes
 ===============
 
-Example item
-------------
+miniupnp CVE-2017-8798
+----------------------------
 
+[todo]
 
-0.14.x Change log
+0.14.2 Change log
 =================
 
 Detailed release notes follow. This overview includes changes that affect
@@ -42,12 +43,41 @@ behavior, not code moves, refactors and string updates. For convenience in locat
 the code changes and accompanying discussion, both the pull request and
 git merge commit are mentioned.
 
+### RPC and other APIs
+- #10410 `321419b` Fix importwallet edge case rescan bug (ryanofsky)
+
+### P2P protocol and network code
+- #10424 `37a8fc5` Populate services in GetLocalAddress (morcos)
+- #10441 `9e3ad50` net: only enforce expected services for half of outgoing connections (theuni)
+
+### Build system
+- #10414 `ffb0c4b` [depends] miniupnpc 2.0.20170509 (fanquake)
+- #10228 `ae479bc` Regenerate bitcoin-config.h as necessary (theuni)
+
+### Miscellaneous
+- #10245 `44a17f2` Minor fix in build documentation for FreeBSD 11 (shigeya)
+- #10215 `0aee4a1` Check interruptNet during dnsseed lookups (TheBlueMatt)
+
+### GUI
+- #10231 `1e936d7` Reduce a significant cs_main lock freeze (jonasschnelli)
+
+### Wallet
+- #10294 `1847642` Unset change position when there is no change (instagibbs)
 
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
 
+- Alex Morcos
+- Cory Fields
+- fanquake
+- Gregory Sanders
+- Jonas Schnelli
+- Matt Corallo
+- Russell Yanofsky
+- Shigeya Suzuki
+- Wladimir J. van der Laan
 
 As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
 
