@@ -48,6 +48,10 @@ class AllowedArgs
 protected:
     std::map<std::string, CheckValueFunc> m_args;
     std::list<HelpComponent> m_helpList;
+    // If true, unrecognized switches are ignored.
+    bool m_permit_unrecognized;
+
+    AllowedArgs(bool permit_unrecognized);
 
 public:
     /**
