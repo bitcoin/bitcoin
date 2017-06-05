@@ -4235,7 +4235,7 @@ CBlockIndex * InsertBlockIndex(uint256 hash)
     // Create new
     CBlockIndex* pindexNew = new CBlockIndex();
     if (!pindexNew)
-        throw runtime_error("LoadBlockIndex(): new CBlockIndex failed");
+        throw runtime_error("InsertBlockIndex(): new CBlockIndex failed");
     mi = mapBlockIndex.insert(make_pair(hash, pindexNew)).first;
     pindexNew->phashBlock = &((*mi).first);
 
@@ -4531,18 +4531,18 @@ bool InitBlockIndex(const CChainParams& chainparams)
             CDiskBlockPos blockPos;
             CValidationState state;
             if (!FindBlockPos(state, blockPos, nBlockSize+8, 0, block.GetBlockTime()))
-                return error("LoadBlockIndex(): FindBlockPos failed");
+                return error("%s: FindBlockPos failed", __func__);
             if (!WriteBlockToDisk(block, blockPos, chainparams.MessageStart()))
-                return error("LoadBlockIndex(): writing genesis block to disk failed");
+                return error("%s: writing genesis block to disk failed", __func__);
             CBlockIndex *pindex = AddToBlockIndex(block);
             if (!ReceivedBlockTransactions(block, state, pindex, blockPos))
-                return error("LoadBlockIndex(): genesis block not accepted");
+                return error("%s: genesis block not accepted", __func__);
             if (!ActivateBestChain(state, chainparams, &block))
-                return error("LoadBlockIndex(): genesis block cannot be activated");
+                return error("%s: genesis block cannot be activated", __func__);
             // Force a chainstate write so that when we VerifyDB in a moment, it doesn't check stale data
             return FlushStateToDisk(state, FLUSH_STATE_ALWAYS);
         } catch (const std::runtime_error& e) {
-            return error("LoadBlockIndex(): failed to initialize block database: %s", e.what());
+            return error("%s: failed to initialize block database: %s", __func__, e.what());
         }
     }
 
@@ -6799,34 +6799,30 @@ bool SendMessages(CNode* pto)
         //
         // Message: getdata (non-blocks)
         //
-        int64_t nFirst = -1;
-        if(!pto->mapAskFor.empty()) {
-            nFirst = (*pto->mapAskFor.begin()).first;
-        }
-        LogPrint("net", "SendMessages (mapAskFor) -- before loop: nNow = %d, nFirst = %d\n", nNow, nFirst);
         while (!pto->fDisconnect && !pto->mapAskFor.empty() && (*pto->mapAskFor.begin()).first <= nNow)
         {
             const CInv& inv = (*pto->mapAskFor.begin()).second;
-            LogPrint("net", "SendMessages (mapAskFor) -- inv = %s peer=%d\n", inv.ToString(), pto->id);
             if (!AlreadyHave(inv))
             {
-                if (fDebug)
-                    LogPrint("net", "Requesting %s peer=%d\n", inv.ToString(), pto->id);
+                LogPrint("net", "SendMessages -- GETDATA -- requesting inv = %s peer=%d\n", inv.ToString(), pto->id);
                 vGetData.push_back(inv);
                 if (vGetData.size() >= 1000)
                 {
                     pto->PushMessage(NetMsgType::GETDATA, vGetData);
+                    LogPrint("net", "SendMessages -- GETDATA -- pushed size = %lu peer=%d\n", vGetData.size(), pto->id);
                     vGetData.clear();
                 }
             } else {
                 //If we're not going to ask, don't expect a response.
-                LogPrint("net", "SendMessages -- already have inv = %s peer=%d\n", inv.ToString(), pto->id);
+                LogPrint("net", "SendMessages -- GETDATA -- already have inv = %s peer=%d\n", inv.ToString(), pto->id);
                 pto->setAskFor.erase(inv.hash);
             }
             pto->mapAskFor.erase(pto->mapAskFor.begin());
         }
-        if (!vGetData.empty())
+        if (!vGetData.empty()) {
             pto->PushMessage(NetMsgType::GETDATA, vGetData);
+            LogPrint("net", "SendMessages -- GETDATA -- pushed size = %lu peer=%d\n", vGetData.size(), pto->id);
+        }
 
     }
     return true;

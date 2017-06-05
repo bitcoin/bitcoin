@@ -105,6 +105,8 @@ public:
 
     void UpdatedBlockTip(const CBlockIndex *pindex);
     void SyncTransaction(const CTransaction& tx, const CBlock* pblock);
+
+    std::string ToString();
 };
 
 class CTxLockRequest : public CTransaction
