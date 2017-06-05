@@ -131,6 +131,7 @@ std::atomic<bool> fDumpMempoolLater(false);
 void StartShutdown()
 {
     fRequestShutdown = true;
+    uiInterface.ShutdownRequested();
 }
 bool ShutdownRequested()
 {
@@ -275,7 +276,7 @@ void Shutdown()
  */
 static void HandleSIGTERM(int)
 {
-    fRequestShutdown = true;
+    StartShutdown();
 }
 
 static void HandleSIGHUP(int)
