@@ -2144,12 +2144,12 @@ CAmount CWallet::GetBalance() const
     return nTotal;
 }
 
-CAmount CWallet::GetAnonymizableBalance(bool fSkipDenominated) const
+CAmount CWallet::GetAnonymizableBalance(bool fSkipDenominated, bool fSkipUnconfirmed) const
 {
     if(fLiteMode) return 0;
 
     std::vector<CompactTallyItem> vecTally;
-    if(!SelectCoinsGrouppedByAddresses(vecTally, fSkipDenominated)) return 0;
+    if(!SelectCoinsGrouppedByAddresses(vecTally, fSkipDenominated, true, fSkipUnconfirmed)) return 0;
 
     CAmount nTotal = 0;
 
@@ -2837,22 +2837,22 @@ struct CompareByAmount
     }
 };
 
-bool CWallet::SelectCoinsGrouppedByAddresses(std::vector<CompactTallyItem>& vecTallyRet, bool fSkipDenominated, bool fAnonymizable) const
+bool CWallet::SelectCoinsGrouppedByAddresses(std::vector<CompactTallyItem>& vecTallyRet, bool fSkipDenominated, bool fAnonymizable, bool fSkipUnconfirmed) const
 {
     LOCK2(cs_main, cs_wallet);
 
     isminefilter filter = ISMINE_SPENDABLE;
 
-    // try to use cache
-    if(fAnonymizable) {
+    // try to use cache for already confirmed anonymizable inputs
+    if(fAnonymizable && fSkipUnconfirmed) {
         if(fSkipDenominated && fAnonymizableTallyCachedNonDenom) {
             vecTallyRet = vecAnonymizableTallyCachedNonDenom;
-            LogPrint("selectcoins", "SelectCoinsGrouppedByAddresses - using cache for non-denom inputs\n");
+            LogPrint("selectcoins", "SelectCoinsGrouppedByAddresses - using cache for non-denom inputs %d\n", vecTallyRet.size());
             return vecTallyRet.size() > 0;
         }
         if(!fSkipDenominated && fAnonymizableTallyCached) {
             vecTallyRet = vecAnonymizableTallyCached;
-            LogPrint("selectcoins", "SelectCoinsGrouppedByAddresses - using cache for all inputs\n");
+            LogPrint("selectcoins", "SelectCoinsGrouppedByAddresses - using cache for all inputs %d\n", vecTallyRet.size());
             return vecTallyRet.size() > 0;
         }
     }
@@ -2863,7 +2863,7 @@ bool CWallet::SelectCoinsGrouppedByAddresses(std::vector<CompactTallyItem>& vecT
         const CWalletTx& wtx = (*it).second;
 
         if(wtx.IsCoinBase() && wtx.GetBlocksToMaturity() > 0) continue;
-        if(!fAnonymizable && !wtx.IsTrusted()) continue;
+        if(fSkipUnconfirmed && !wtx.IsTrusted()) continue;
 
         for (unsigned int i = 0; i < wtx.vout.size(); i++) {
             CTxDestination address;
@@ -2904,8 +2904,8 @@ bool CWallet::SelectCoinsGrouppedByAddresses(std::vector<CompactTallyItem>& vecT
     // order by amounts per address, from smallest to largest
     sort(vecTallyRet.rbegin(), vecTallyRet.rend(), CompareByAmount());
 
-    // cache anonymizable for later use
-    if(fAnonymizable) {
+    // cache already confirmed anonymizable entries for later use
+    if(fAnonymizable && fSkipUnconfirmed) {
         if(fSkipDenominated) {
             vecAnonymizableTallyCachedNonDenom = vecTallyRet;
             fAnonymizableTallyCachedNonDenom = true;

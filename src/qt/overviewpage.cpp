@@ -355,12 +355,12 @@ void OverviewPage::updatePrivateSendProgress()
     {
         nDenominatedConfirmedBalance = pwalletMain->GetDenominatedBalance();
         nDenominatedUnconfirmedBalance = pwalletMain->GetDenominatedBalance(true);
-        nAnonymizableBalance = pwalletMain->GetAnonymizableBalance();
+        nAnonymizableBalance = pwalletMain->GetAnonymizableBalance(false, false);
         nNormalizedAnonymizedBalance = pwalletMain->GetNormalizedAnonymizedBalance();
         nAverageAnonymizedRounds = pwalletMain->GetAverageAnonymizedRounds();
     }
 
-    CAmount nMaxToAnonymize = nAnonymizableBalance + currentAnonymizedBalance + nDenominatedUnconfirmedBalance;
+    CAmount nMaxToAnonymize = nAnonymizableBalance + currentAnonymizedBalance;
 
     // If it's more than the anon threshold, limit to that.
     if(nMaxToAnonymize > privateSendClient.nPrivateSendAmount*COIN) nMaxToAnonymize = privateSendClient.nPrivateSendAmount*COIN;
