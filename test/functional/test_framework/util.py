@@ -181,21 +181,39 @@ def initialize_datadir(dirname, n):
     datadir = os.path.join(dirname, "node"+str(n))
     if not os.path.isdir(datadir):
         os.makedirs(datadir)
-    rpc_u, rpc_p = rpc_auth_pair(n)
     with open(os.path.join(datadir, "bitcoin.conf"), 'w', encoding='utf8') as f:
         f.write("regtest=1\n")
-        f.write("rpcuser=" + rpc_u + "\n")
-        f.write("rpcpassword=" + rpc_p + "\n")
         f.write("port="+str(p2p_port(n))+"\n")
         f.write("rpcport="+str(rpc_port(n))+"\n")
         f.write("listenonion=0\n")
     return datadir
+    
+def get_datadir_path(dirname, n):
+    return os.path.join(dirname, "node"+str(n))
+    
+def get_auth_cookie(datadir, n):
+    if os.path.isfile(os.path.join(datadir, "regtest", ".cookie")):
+        with open(os.path.join(datadir, "regtest", ".cookie"), 'r') as f:
+            userpass = f.read()
+            split_userpass = userpass.split(':')
+            return split_userpass[0], split_userpass[1]
+    else:
+        with open(os.path.join(datadir, "bitcoin.conf"), 'r') as f:
+            user = None
+            password = None
+            for line in f:
+                if line.startswith("rpcuser="):
+                    assert user is None # Ensure that there is only one rpcuser line
+                    user = line.split("=")[1].strip("\n")
+                if line.startswith("rpcpassword="):
+                    assert password is None # Ensure that there is only one rpcpassword line
+                    password = line.split("=")[1].strip("\n")
+            if user is None and password is None:
+                raise ValueError("No RPC credentials")
+            return user, password
 
-def rpc_auth_pair(n):
-    return 'rpcuser💻' + str(n), 'rpcpass🔑' + str(n)
-
-def rpc_url(i, rpchost=None):
-    rpc_u, rpc_p = rpc_auth_pair(i)
+def rpc_url(datadir, i, rpchost=None):
+    rpc_u, rpc_p = get_auth_cookie(datadir, i)
     host = '127.0.0.1'
     port = rpc_port(i)
     if rpchost:
@@ -206,7 +224,7 @@ def rpc_url(i, rpchost=None):
             host = rpchost
     return "http://%s:%s@%s:%d" % (rpc_u, rpc_p, host, int(port))
 
-def wait_for_bitcoind_start(process, url, i):
+def wait_for_bitcoind_start(process, datadir, i):
     '''
     Wait for bitcoind to start. This means that RPC is accessible and fully initialized.
     Raise an exception if bitcoind exits during initialization.
@@ -215,7 +233,8 @@ def wait_for_bitcoind_start(process, url, i):
         if process.poll() is not None:
             raise Exception('bitcoind exited with status %i during initialization' % process.returncode)
         try:
-            rpc = get_rpc_proxy(url, i)
+            # Check if .cookie file to be created
+            rpc = get_rpc_proxy(rpc_url(datadir, i), i)
             blocks = rpc.getblockcount()
             break # break out of loop on success
         except IOError as e:
@@ -224,6 +243,9 @@ def wait_for_bitcoind_start(process, url, i):
         except JSONRPCException as e: # Initialization phase
             if e.error['code'] != -28: # RPC in warmup?
                 raise # unknown JSON RPC exception
+        except ValueError as e: # cookie file not found and no rpcuser or rpcassword. bitcoind still starting
+            if "No RPC credentials" not in str(e):
+                raise
         time.sleep(0.25)
 
 
@@ -239,10 +261,9 @@ def _start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary
     if extra_args is not None: args.extend(extra_args)
     bitcoind_processes[i] = subprocess.Popen(args, stderr=stderr)
     logger.debug("initialize_chain: bitcoind started, waiting for RPC to come up")
-    url = rpc_url(i, rpchost)
-    wait_for_bitcoind_start(bitcoind_processes[i], url, i)
+    wait_for_bitcoind_start(bitcoind_processes[i], datadir, i)
     logger.debug("initialize_chain: RPC successfully started")
-    proxy = get_rpc_proxy(url, i, timeout=timewait)
+    proxy = get_rpc_proxy(rpc_url(datadir, i, rpchost), i, timeout=timewait)
 
     if COVERAGE_DIR:
         coverage.write_all_rpc_commands(COVERAGE_DIR, proxy)
