@@ -6352,7 +6352,7 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
         // header arrives.
         if (fNewUnconnectedHeaders)
             return true;
-        
+
         // If possible add any previously unconnected headers to the headers vector and remove any expired entries.
         std::map<uint256, std::pair<CBlockHeader, int64_t> >::iterator mi = mapUnConnectedHeaders.begin();
         while (mi != mapUnConnectedHeaders.end())
@@ -6376,7 +6376,7 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
             int64_t nTimeHeaderArrived = (*mi).second.second;
             uint256 headerHash = (*mi).first;
             mi++;
-            if (GetTime() - nTimeHeaderArrived > UNCONNECTED_HEADERS_TIMEOUT)
+            if (GetTime() - nTimeHeaderArrived >= UNCONNECTED_HEADERS_TIMEOUT)
             {
                 mapUnConnectedHeaders.erase(toErase);
             }
