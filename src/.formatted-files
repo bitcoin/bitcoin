@@ -30,3 +30,5 @@ banentry.h
 bandb.cpp
 bandb.h
 test/bandb_tests.cpp
+dosman.cpp
+dosman.h

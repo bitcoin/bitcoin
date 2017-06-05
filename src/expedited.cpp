@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "expedited.h"
+#include "dosman.h"
 #include "main.h"
 #include "rpc/server.h"
 #include "thinblock.h"
@@ -94,7 +95,7 @@ bool HandleExpeditedRequest(CDataStream &vRecv, CNode *pfrom)
     if (!pfrom->ThinBlockCapable() || !IsThinBlocksEnabled())
     {
         LOCK(cs_main);
-        Misbehaving(pfrom->GetId(), 5);
+        dosMan.Misbehaving(pfrom->GetId(), 5);
         return false;
     }
 

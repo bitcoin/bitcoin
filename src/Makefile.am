@@ -98,6 +98,7 @@ BITCOIN_CORE_H = \
   consensus/consensus.h \
   core_io.h \
   core_memusage.h \
+  dosman.h \
   expedited.h \
   httprpc.h \
   httpserver.h \
@@ -184,6 +185,7 @@ libbitcoin_server_a_SOURCES = \
   chain.cpp \
   checkpoints.cpp \
   connmgr.cpp \
+  dosman.cpp \
   expedited.cpp \
   httprpc.cpp \
   httpserver.cpp \

@@ -18,6 +18,7 @@
 #include "checkpoints.h"
 #include "compat/sanity.h"
 #include "consensus/validation.h"
+#include "dosman.h"
 #include "httpserver.h"
 #include "httprpc.h"
 #include "key.h"
@@ -1112,7 +1113,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
             CSubNet subnet(net);
             if (!subnet.IsValid())
                 return InitError(strprintf(_("Invalid netmask specified in -whitelist: '%s'"), net));
-            CNode::AddWhitelistedRange(subnet);
+            dosMan.AddWhitelistedRange(subnet);
         }
     }
 

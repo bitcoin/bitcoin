@@ -15,6 +15,7 @@
 #include "consensus/consensus.h"
 #include "consensus/params.h"
 #include "consensus/validation.h"
+#include "dosman.h"
 #include "leakybucket.h"
 #include "main.h"
 #include "miner.h"
@@ -86,9 +87,6 @@ CCriticalSection cs_xval;
 CCriticalSection cs_vNodes;
 CCriticalSection cs_mapLocalHost;
 map<CNetAddr, LocalServiceInfo> mapLocalHost;
-std::vector<CSubNet> CNode::vWhitelistedRange;
-CCriticalSection CNode::cs_vWhitelistedRange;
-CCriticalSection CNode::cs_setBanned;
 uint64_t CNode::nTotalBytesRecv = 0;
 uint64_t CNode::nTotalBytesSent = 0;
 CCriticalSection CNode::cs_totalBytesRecv;
@@ -156,6 +154,7 @@ CSemaphore *semOutbound = NULL;
 CSemaphore *semOutboundAddNode = NULL; // BU: separate semaphore for -addnodes
 CNodeSignals g_signals;
 CAddrMan addrman;
+CDoSManager dosMan;
 
 // BU: change locking of orphan map from using cs_main to cs_orphancache.  There is too much dependance on cs_main locks
 // which are generally too broad in scope.

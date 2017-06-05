@@ -11,10 +11,10 @@
 #include "consensus/params.h"
 #include "consensus/validation.h"
 #include "core_io.h"
+#include "dosman.h"
 #include "expedited.h"
 #include "hash.h"
 #include "leakybucket.h"
-#include "main.h"
 #include "miner.h"
 #include "net.h"
 #include "parallel.h"
@@ -1304,7 +1304,7 @@ void LoadFilter(CNode *pfrom, CBloomFilter *filter)
 {
     if (!filter->IsWithinSizeConstraints())
         // There is no excuse for sending a too-large filter
-        Misbehaving(pfrom->GetId(), 100);
+        dosMan.Misbehaving(pfrom->GetId(), 100);
     else
     {
         LOCK(pfrom->cs_filter);
@@ -1632,7 +1632,7 @@ extern UniValue getstructuresizes(const UniValue &params, bool fHelp)
         ret.push_back(Pair("setUnVerifiedOrphanTxHash", setUnVerifiedOrphanTxHash.size()));
     }
     ret.push_back(Pair("mapLocalHost", mapLocalHost.size()));
-    ret.push_back(Pair("CNode::vWhitelistedRange", CNode::vWhitelistedRange.size()));
+    ret.push_back(Pair("CDoSManager::vWhitelistedRange", dosMan.vWhitelistedRange.size()));
     ret.push_back(Pair("mapInboundConnectionTracker", mapInboundConnectionTracker.size()));
     ret.push_back(Pair("vUseDNSSeeds", vUseDNSSeeds.size()));
     ret.push_back(Pair("vAddedNodes", vAddedNodes.size()));
