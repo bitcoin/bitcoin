@@ -25,3 +25,5 @@ qt/unlimitedmodel.cpp
 qt/unlimitedmodel.h
 nodestate.cpp
 nodestate.h
+banentry.cpp
+banentry.h
