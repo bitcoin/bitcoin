@@ -1050,9 +1050,7 @@ void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpends
             for (const CTransaction& tx : txn) {
                 for (const CTxIn& txin : tx.vin) {
                     if (exists(txin.prevout.hash)) continue;
-                    if (!mapNextTx.count(txin.prevout)) {
-                        pvNoSpendsRemaining->push_back(txin.prevout);
-                    }
+                    pvNoSpendsRemaining->push_back(txin.prevout);
                 }
             }
         }
