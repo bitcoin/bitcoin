@@ -459,7 +459,8 @@ bool CWallet::Verify()
         {
             // Recover readable keypairs:
             CWallet dummyWallet;
-            if (!CWalletDB::Recover(walletFile, (void *)&dummyWallet, CWalletDB::RecoverKeysOnlyFilter))
+            std::string backup_filename;
+            if (!CWalletDB::Recover(walletFile, (void *)&dummyWallet, CWalletDB::RecoverKeysOnlyFilter, backup_filename))
                 return false;
         }
 
