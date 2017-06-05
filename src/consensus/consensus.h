@@ -17,8 +17,12 @@ static const unsigned int MAX_BLOCK_BASE_SIZE = 1000000;
 /** The maximum allowed number of signature check operations in a block (network rule) */
 static const int64_t MAX_BLOCK_SIGOPS_COST = 80000;
 
+/** The minimum allowed size for a transaction */
+static const unsigned int MIN_TRANSACTION_BASE_SIZE = 10;
 /** The maximum allowed size for a transaction, excluding witness data, in bytes */
 static const unsigned int MAX_TX_BASE_SIZE = 1000000;
+/** The maximum allowed number of transactions per block */
+static const unsigned int MAX_BLOCK_VTX = (MAX_BLOCK_BASE_SIZE / MIN_TRANSACTION_BASE_SIZE);
 
 /** Coinbase transaction outputs can only be spent after this number of new blocks (network rule) */
 static const int COINBASE_MATURITY = 100;
