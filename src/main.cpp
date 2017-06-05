@@ -5799,10 +5799,6 @@ bool ProcessMessage(CNode *pfrom, string strCommand, CDataStream &vRecv, int64_t
     {
         // Must have version message before anything else (Although we may send our VERSION before
         // we receive theirs, it would not be possible to receive their VERACK before their VERSION).
-        // NOTE:  we MUST explicitly ban the peer here.  If we only indicate a misbehaviour then the peer
-        //        may never be banned since the banning process requires that messages be sent back. If an
-        //        attacker sends us messages that do not require a response coupled with an nVersion of zero
-        //        then they can continue unimpeded even though they have exceeded the misbehaving threshold.
         pfrom->fDisconnect = true;
         return error("VERSION was not received before other messages - disconnecting peer=%s", pfrom->GetLogName());
     }
