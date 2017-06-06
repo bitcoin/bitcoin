@@ -16,6 +16,19 @@
 
 static constexpr double INF_FEERATE = 1e99;
 
+std::string StringForFeeEstimateHorizon(FeeEstimateHorizon horizon) {
+    static const std::map<FeeEstimateHorizon, std::string> horizon_strings = {
+        {FeeEstimateHorizon::SHORT_HALFLIFE, "short"},
+        {FeeEstimateHorizon::MED_HALFLIFE, "medium"},
+        {FeeEstimateHorizon::LONG_HALFLIFE, "long"},
+    };
+    auto horizon_string = horizon_strings.find(horizon);
+
+    if (horizon_string == horizon_strings.end()) return "unknown";
+
+    return horizon_string->second;
+}
+
 std::string StringForFeeReason(FeeReason reason) {
     static const std::map<FeeReason, std::string> fee_reason_strings = {
         {FeeReason::NONE, "None"},

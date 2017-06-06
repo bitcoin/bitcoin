@@ -838,9 +838,9 @@ UniValue estimatesmartfee(const JSONRPCRequest& request)
 
 UniValue estimaterawfee(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() < 1|| request.params.size() > 3)
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
-            "estimaterawfee nblocks (threshold horizon)\n"
+            "estimaterawfee nblocks (threshold)\n"
             "\nWARNING: This interface is unstable and may disappear or change!\n"
             "\nWARNING: This is an advanced API call that is tightly coupled to the specific\n"
             "         implementation of fee estimation. The parameters it can be called with\n"
@@ -853,68 +853,70 @@ UniValue estimaterawfee(const JSONRPCRequest& request)
             "2. threshold   (numeric, optional) The proportion of transactions in a given feerate range that must have been\n"
             "               confirmed within nblocks in order to consider those feerates as high enough and proceed to check\n"
             "               lower buckets.  Default: 0.95\n"
-            "3. horizon     (numeric, optional) How long a history of estimates to consider. 0=short, 1=medium, 2=long.\n"
-            "               Default: 1\n"
             "\nResult:\n"
             "{\n"
-            "  \"feerate\" : x.x,        (numeric) estimate fee-per-kilobyte (in BTC)\n"
-            "  \"decay\" : x.x,          (numeric) exponential decay (per block) for historical moving average of confirmation data\n"
-            "  \"scale\" : x,            (numeric) The resolution of confirmation targets at this time horizon\n"
-            "  \"pass\" : {              (json object) information about the lowest range of feerates to succeed in meeting the threshold\n"
-            "      \"startrange\" : x.x,     (numeric) start of feerate range\n"
-            "      \"endrange\" : x.x,       (numeric) end of feerate range\n"
-            "      \"withintarget\" : x.x,   (numeric) number of txs over history horizon in the feerate range that were confirmed within target\n"
-            "      \"totalconfirmed\" : x.x, (numeric) number of txs over history horizon in the feerate range that were confirmed at any point\n"
-            "      \"inmempool\" : x.x,      (numeric) current number of txs in mempool in the feerate range unconfirmed for at least target blocks\n"
-            "      \"leftmempool\" : x.x,    (numeric) number of txs over history horizon in the feerate range that left mempool unconfirmed after target\n"
-            "  }\n"
-            "  \"fail\" : { ... }        (json object) information about the highest range of feerates to fail to meet the threshold\n"
+            "  \"short\" : {            (json object) estimate for short time horizon\n"
+            "      \"feerate\" : x.x,        (numeric) estimate fee-per-kilobyte (in BTC)\n"
+            "      \"decay\" : x.x,          (numeric) exponential decay (per block) for historical moving average of confirmation data\n"
+            "      \"scale\" : x,            (numeric) The resolution of confirmation targets at this time horizon\n"
+            "      \"pass\" : {              (json object) information about the lowest range of feerates to succeed in meeting the threshold\n"
+            "          \"startrange\" : x.x,     (numeric) start of feerate range\n"
+            "          \"endrange\" : x.x,       (numeric) end of feerate range\n"
+            "          \"withintarget\" : x.x,   (numeric) number of txs over history horizon in the feerate range that were confirmed within target\n"
+            "          \"totalconfirmed\" : x.x, (numeric) number of txs over history horizon in the feerate range that were confirmed at any point\n"
+            "          \"inmempool\" : x.x,      (numeric) current number of txs in mempool in the feerate range unconfirmed for at least target blocks\n"
+            "          \"leftmempool\" : x.x,    (numeric) number of txs over history horizon in the feerate range that left mempool unconfirmed after target\n"
+            "      },\n"
+            "      \"fail\" : { ... },        (json object) information about the highest range of feerates to fail to meet the threshold\n"
+            "  },\n"
+            "  \"medium\" : { ... },      (json object) estimate for medium time horizon\n"
+            "  \"long\" : { ... }      (json object) estimate for long time horizon\n"
             "}\n"
             "\n"
             "A negative feerate is returned if no answer can be given.\n"
             "\nExample:\n"
-            + HelpExampleCli("estimaterawfee", "6 0.9 1")
+            + HelpExampleCli("estimaterawfee", "6 0.9")
             );
 
     RPCTypeCheck(request.params, {UniValue::VNUM, UniValue::VNUM, UniValue::VNUM}, true);
     RPCTypeCheckArgument(request.params[0], UniValue::VNUM);
     int nBlocks = request.params[0].get_int();
     double threshold = 0.95;
-    if (!request.params[1].isNull())
+    if (!request.params[1].isNull()) {
         threshold = request.params[1].get_real();
-    FeeEstimateHorizon horizon = FeeEstimateHorizon::MED_HALFLIFE;
-    if (!request.params[2].isNull()) {
-        int horizonInt = request.params[2].get_int();
-        if (horizonInt < 0 || horizonInt > 2) {
-            throw JSONRPCError(RPC_TYPE_ERROR, "Invalid horizon for fee estimates");
-        } else {
-            horizon = (FeeEstimateHorizon)horizonInt;
-        }
     }
-    UniValue result(UniValue::VOBJ);
-    CFeeRate feeRate;
-    EstimationResult buckets;
-    feeRate = ::feeEstimator.estimateRawFee(nBlocks, threshold, horizon, &buckets);
 
-    result.push_back(Pair("feerate", feeRate == CFeeRate(0) ? -1.0 : ValueFromAmount(feeRate.GetFeePerK())));
-    result.push_back(Pair("decay", buckets.decay));
-    result.push_back(Pair("scale", (int)buckets.scale));
-    UniValue passbucket(UniValue::VOBJ);
-    passbucket.push_back(Pair("startrange", round(buckets.pass.start)));
-    passbucket.push_back(Pair("endrange", round(buckets.pass.end)));
-    passbucket.push_back(Pair("withintarget", round(buckets.pass.withinTarget * 100.0) / 100.0));
-    passbucket.push_back(Pair("totalconfirmed", round(buckets.pass.totalConfirmed * 100.0) / 100.0));
-    passbucket.push_back(Pair("inmempool", round(buckets.pass.inMempool * 100.0) / 100.0));
-    passbucket.push_back(Pair("leftmempool", round(buckets.pass.leftMempool * 100.0) / 100.0));
-    result.push_back(Pair("pass", passbucket));
-    UniValue failbucket(UniValue::VOBJ);
-    failbucket.push_back(Pair("startrange", round(buckets.fail.start)));
-    failbucket.push_back(Pair("endrange", round(buckets.fail.end)));
-    failbucket.push_back(Pair("withintarget", round(buckets.fail.withinTarget * 100.0) / 100.0));
-    failbucket.push_back(Pair("totalconfirmed", round(buckets.fail.totalConfirmed * 100.0) / 100.0));
-    failbucket.push_back(Pair("inmempool", round(buckets.fail.inMempool * 100.0) / 100.0));
-    failbucket.push_back(Pair("leftmempool", round(buckets.fail.leftMempool * 100.0) / 100.0));
-    result.push_back(Pair("fail", failbucket));
+    UniValue result(UniValue::VOBJ);
+
+    for (FeeEstimateHorizon horizon : {FeeEstimateHorizon::SHORT_HALFLIFE, FeeEstimateHorizon::MED_HALFLIFE, FeeEstimateHorizon::LONG_HALFLIFE}) {
+        CFeeRate feeRate;
+        EstimationResult buckets;
+        feeRate = ::feeEstimator.estimateRawFee(nBlocks, threshold, horizon, &buckets);
+
+        UniValue horizon_result(UniValue::VOBJ);
+        horizon_result.push_back(Pair("feerate", feeRate == CFeeRate(0) ? -1.0 : ValueFromAmount(feeRate.GetFeePerK())));
+        if (!(feeRate == CFeeRate(0))) {
+            horizon_result.push_back(Pair("decay", buckets.decay));
+            horizon_result.push_back(Pair("scale", (int)buckets.scale));
+            UniValue passbucket(UniValue::VOBJ);
+            passbucket.push_back(Pair("startrange", round(buckets.pass.start)));
+            passbucket.push_back(Pair("endrange", round(buckets.pass.end)));
+            passbucket.push_back(Pair("withintarget", round(buckets.pass.withinTarget * 100.0) / 100.0));
+            passbucket.push_back(Pair("totalconfirmed", round(buckets.pass.totalConfirmed * 100.0) / 100.0));
+            passbucket.push_back(Pair("inmempool", round(buckets.pass.inMempool * 100.0) / 100.0));
+            passbucket.push_back(Pair("leftmempool", round(buckets.pass.leftMempool * 100.0) / 100.0));
+            horizon_result.push_back(Pair("pass", passbucket));
+            UniValue failbucket(UniValue::VOBJ);
+            failbucket.push_back(Pair("startrange", round(buckets.fail.start)));
+            failbucket.push_back(Pair("endrange", round(buckets.fail.end)));
+            failbucket.push_back(Pair("withintarget", round(buckets.fail.withinTarget * 100.0) / 100.0));
+            failbucket.push_back(Pair("totalconfirmed", round(buckets.fail.totalConfirmed * 100.0) / 100.0));
+            failbucket.push_back(Pair("inmempool", round(buckets.fail.inMempool * 100.0) / 100.0));
+            failbucket.push_back(Pair("leftmempool", round(buckets.fail.leftMempool * 100.0) / 100.0));
+            horizon_result.push_back(Pair("fail", failbucket));
+        }
+        result.push_back(Pair(StringForFeeEstimateHorizon(horizon), horizon_result));
+    }
     return result;
 }
 
@@ -932,7 +934,7 @@ static const CRPCCommand commands[] =
     { "util",               "estimatefee",            &estimatefee,            true,  {"nblocks"} },
     { "util",               "estimatesmartfee",       &estimatesmartfee,       true,  {"nblocks", "conservative"} },
 
-    { "hidden",             "estimaterawfee",         &estimaterawfee,         true,  {"nblocks", "threshold", "horizon"} },
+    { "hidden",             "estimaterawfee",         &estimaterawfee,         true,  {"nblocks", "threshold"} },
 };
 
 void RegisterMiningRPCCommands(CRPCTable &t)
