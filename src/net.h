@@ -346,7 +346,6 @@ public:
 class CNode
 {
 public:
-
     struct CThinBlockInFlight
     {
         int64_t nRequestTime;

@@ -7203,8 +7203,7 @@ bool SendMessages(CNode *pto)
                     {
                         LogPrint("thin", "ERROR: Disconnecting peer=%d due to download timeout exceeded "
                                          "(%d secs)\n",
-                            pto->GetId(),
-                            (GetTime() - (*iter).second.nRequestTime));
+                            pto->GetId(), (GetTime() - (*iter).second.nRequestTime));
                         pto->fDisconnect = true;
                         break;
                     }
