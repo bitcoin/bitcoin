@@ -8,6 +8,7 @@
 #include "bitcoin-config.h"
 #endif
 
+#include "txdb.h"
 #include "addrman.h"
 #include "rpcserver.h"
 #include "checkpoints.h"
@@ -282,7 +283,7 @@ bool static Bind(const CService &addr, unsigned int flags) {
 }
 
 // Core-specific options shared between UI and daemon
-std::string HelpMessage()
+std::string HelpMessage(HelpMessageMode hmm)
 {
     string strUsage = _("Options:") + "\n" +
         "  -?                     " + _("This help message") + "\n" +

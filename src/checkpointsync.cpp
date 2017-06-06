@@ -58,7 +58,8 @@
 #include "checkpointsync.h"
 
 #include "base58.h"
-#include "bitcoinrpc.h"
+#include "rpcserver.h"
+#include "rpcclient.h"
 #include "main.h"
 #include "txdb.h"
 #include "uint256.h"
