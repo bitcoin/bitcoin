@@ -174,6 +174,17 @@ CTweakRef<uint64_t> miningBlockSize("mining.blockSize",
     &maxGeneratedBlock,
     &MiningBlockSizeValidator);
 
+
+CTweak<uint64_t> miningForkTime("mining.forkTime",
+    "Time in seconds since the epoch to initiate a hard fork as per BUIP055.",
+    1501590000); // Tue 1 Aug 2017 12:20:00 UTC, uahf-technical-spec.md REQ-2
+CTweak<uint64_t> miningForkEB("mining.forkExcessiveBlock",
+    "Set the excessive block to this value at the time of the fork.",
+    8000000); // 8MB, uahf-technical-spec.md REQ-4-1
+CTweak<uint64_t> miningForkMG("mining.forkBlockSize",
+    "Set the maximum block generation size to this value at the time of the fork.",
+    2000000); // 2MB, uahf-technical-spec.md REQ-4-2
+
 CTweak<unsigned int> maxTxSize("net.excessiveTx", "Largest transaction size in bytes", DEFAULT_LARGEST_TRANSACTION);
 CTweakRef<unsigned int> eadTweak("net.excessiveAcceptDepth",
     "Excessive block chain acceptance depth in blocks",

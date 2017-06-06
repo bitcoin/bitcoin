@@ -376,12 +376,12 @@ class ExcessiveBlockTest (BitcoinTestFramework):
 
           logging.info("Building > 1MB block...")
           self.nodes[0].set("net.excessiveTx=1000000")  # Set the excessive transaction size larger for this node so we can generate an "excessive" block for the other nodes
-        
+
           wallet = self.nodes[0].listunspent()
           wallet.sort(key=lambda x: x["amount"],reverse=False)
           logging.info("Wallet length is %d" % len(wallet))
-           
-          # Generate 1 MB worth of transactions        
+
+          # Generate 1 MB worth of transactions
           size = 0
           count = 0
           while size < 1000000:

@@ -337,6 +337,12 @@ class CBlockLocator(object):
 
 class COutPoint(object):
     def __init__(self, hash=0, n=0):
+        if type(hash) is str:
+            t = bytearray(unhexlify(hash))
+            t.reverse()
+            hash = uint256_from_str(t)
+        if type(hash) is bytes:
+            hash = uint256_from_str(hash)
         self.hash = hash
         self.n = n
 
@@ -360,6 +366,7 @@ class CTxIn(object):
             self.prevout = COutPoint()
         else:
             self.prevout = outpoint
+
         self.scriptSig = scriptSig
         self.nSequence = nSequence
 

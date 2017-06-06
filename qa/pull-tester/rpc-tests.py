@@ -170,6 +170,7 @@ testScripts = [ RpcTest(t) for t in [
     'parallel',
     'wallet',
     'excessive',
+    'buip055',
     'listtransactions',
     'receivedby',
     'mempool_resurrect_test',

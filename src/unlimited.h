@@ -6,6 +6,7 @@
 #ifndef BITCOIN_UNLIMITED_H
 #define BITCOIN_UNLIMITED_H
 
+#include "buip055fork.h"
 #include "chain.h"
 #include "checkqueue.h"
 #include "coins.h"
@@ -248,5 +249,6 @@ extern std::list<CStatBase *> mallocedStats;
 extern CCriticalSection cs_blockvalidationthread;
 void InterruptBlockValidationThreads();
 
+extern CTweak<uint64_t> miningForkTime;
 
 #endif

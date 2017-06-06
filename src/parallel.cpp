@@ -549,6 +549,10 @@ void HandleBlockMessageThread(CNode *pfrom, const string strCommand, const CBloc
             if (nDoS > 0)
                 dosMan.Misbehaving(pfrom, nDoS);
         }
+
+        // the current fork is bad due to this block so reset the best header to the best fully-validated block
+        // so we can download another fork of headers (and blocks).
+        pindexBestHeader = chainActive.Tip();
     }
     else
     {
