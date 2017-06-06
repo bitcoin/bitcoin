@@ -27,8 +27,6 @@
 #include <memory>
 #include <stdint.h>
 
-#include <boost/assign/list_of.hpp>
-
 #include <univalue.h>
 
 /**
@@ -819,7 +817,7 @@ UniValue estimatefee(const JSONRPCRequest& request)
             + HelpExampleCli("estimatefee", "6")
             );
 
-    RPCTypeCheck(request.params, boost::assign::list_of(UniValue::VNUM));
+    RPCTypeCheck(request.params, {UniValue::VNUM});
 
     int nBlocks = request.params[0].get_int();
     if (nBlocks < 1)
@@ -860,7 +858,7 @@ UniValue estimatesmartfee(const JSONRPCRequest& request)
             + HelpExampleCli("estimatesmartfee", "6")
             );
 
-    RPCTypeCheck(request.params, boost::assign::list_of(UniValue::VNUM));
+    RPCTypeCheck(request.params, {UniValue::VNUM});
 
     int nBlocks = request.params[0].get_int();
     bool conservative = true;
@@ -917,7 +915,7 @@ UniValue estimaterawfee(const JSONRPCRequest& request)
             + HelpExampleCli("estimaterawfee", "6 0.9 1")
             );
 
-    RPCTypeCheck(request.params, boost::assign::list_of(UniValue::VNUM)(UniValue::VNUM)(UniValue::VNUM), true);
+    RPCTypeCheck(request.params, {UniValue::VNUM, UniValue::VNUM, UniValue::VNUM}, true);
     RPCTypeCheckArgument(request.params[0], UniValue::VNUM);
     int nBlocks = request.params[0].get_int();
     double threshold = 0.95;
