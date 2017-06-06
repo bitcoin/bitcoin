@@ -24,8 +24,6 @@
 #include <instantx.h>
 #include <privatesend-client.h>
 
-#include <boost/assign/list_of.hpp> // for 'map_list_of()'
-
 #include <QApplication>
 #include <QCheckBox>
 #include <QCursor>
