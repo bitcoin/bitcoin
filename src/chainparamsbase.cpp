@@ -13,6 +13,7 @@
 const std::string CBaseChainParams::MAIN = "main";
 const std::string CBaseChainParams::TESTNET = "test";
 const std::string CBaseChainParams::REGTEST = "regtest";
+const std::string CBaseChainParams::C4 = "c4";
 
 void AppendParamsHelpMessages(std::string& strUsage, bool debugHelp)
 {
@@ -33,6 +34,18 @@ public:
     CBaseMainParams()
     {
         nRPCPort = 8332;
+    }
+};
+
+/**
+ * Main network
+ */
+class CBaseC4Params : public CBaseChainParams
+{
+public:
+    CBaseC4Params()
+    {
+        nRPCPort = 9232;
     }
 };
 
@@ -74,6 +87,8 @@ std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const std::string& chain
 {
     if (chain == CBaseChainParams::MAIN)
         return std::unique_ptr<CBaseChainParams>(new CBaseMainParams());
+    else if (chain == CBaseChainParams::C4)
+        return std::unique_ptr<CBaseC4Params>(new CBaseC4Params());
     else if (chain == CBaseChainParams::TESTNET)
         return std::unique_ptr<CBaseChainParams>(new CBaseTestNetParams());
     else if (chain == CBaseChainParams::REGTEST)
@@ -89,6 +104,7 @@ void SelectBaseParams(const std::string& chain)
 
 std::string ChainNameFromCommandLine()
 {
+    bool fC4 = GetBoolArg("-c4", true);
     bool fRegTest = GetBoolArg("-regtest", false);
     bool fTestNet = GetBoolArg("-testnet", false);
 
@@ -98,5 +114,7 @@ std::string ChainNameFromCommandLine()
         return CBaseChainParams::REGTEST;
     if (fTestNet)
         return CBaseChainParams::TESTNET;
+    if (fC4)
+        return CBaseChainParams::C4;
     return CBaseChainParams::MAIN;
 }
