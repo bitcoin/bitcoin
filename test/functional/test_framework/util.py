@@ -187,10 +187,10 @@ def initialize_datadir(dirname, n):
         f.write("rpcport="+str(rpc_port(n))+"\n")
         f.write("listenonion=0\n")
     return datadir
-    
+
 def get_datadir_path(dirname, n):
     return os.path.join(dirname, "node"+str(n))
-    
+
 def get_auth_cookie(datadir, n):
     if os.path.isfile(os.path.join(datadir, "regtest", ".cookie")):
         with open(os.path.join(datadir, "regtest", ".cookie"), 'r') as f:
@@ -224,7 +224,7 @@ def rpc_url(datadir, i, rpchost=None):
             host = rpchost
     return "http://%s:%s@%s:%d" % (rpc_u, rpc_p, host, int(port))
 
-def wait_for_bitcoind_start(process, datadir, i):
+def wait_for_bitcoind_start(process, datadir, i, rpchost=None):
     '''
     Wait for bitcoind to start. This means that RPC is accessible and fully initialized.
     Raise an exception if bitcoind exits during initialization.
@@ -234,7 +234,7 @@ def wait_for_bitcoind_start(process, datadir, i):
             raise Exception('bitcoind exited with status %i during initialization' % process.returncode)
         try:
             # Check if .cookie file to be created
-            rpc = get_rpc_proxy(rpc_url(datadir, i), i)
+            rpc = get_rpc_proxy(rpc_url(datadir, i, rpchost), i)
             blocks = rpc.getblockcount()
             break # break out of loop on success
         except IOError as e:
@@ -261,7 +261,7 @@ def _start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary
     if extra_args is not None: args.extend(extra_args)
     bitcoind_processes[i] = subprocess.Popen(args, stderr=stderr)
     logger.debug("initialize_chain: bitcoind started, waiting for RPC to come up")
-    wait_for_bitcoind_start(bitcoind_processes[i], datadir, i)
+    wait_for_bitcoind_start(bitcoind_processes[i], datadir, i, rpchost)
     logger.debug("initialize_chain: RPC successfully started")
     proxy = get_rpc_proxy(rpc_url(datadir, i, rpchost), i, timeout=timewait)
 
