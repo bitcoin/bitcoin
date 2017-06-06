@@ -50,6 +50,12 @@
 
 // MSG_DONTWAIT is not available on some platforms, if it doesn't exist define it as 0
 #if !defined(HAVE_MSG_DONTWAIT)
+// Silence "warning: "MSG_DONTWAIT" redefined" when compiling under Linux by
+// handling the case where !defined(HAVE_MSG_DONTWAIT) does not imply
+// !defined(MSG_DONTWAIT).
+#if defined(MSG_DONTWAIT)
+#undef MSG_DONTWAIT
+#endif
 #define MSG_DONTWAIT 0
 #endif
 
