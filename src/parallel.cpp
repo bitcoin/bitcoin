@@ -547,13 +547,14 @@ void HandleBlockMessageThread(CNode *pfrom, const string &strCommand, const CBlo
         double nValidationTime = (double)(GetTimeMicros() - startTime) / 1000000.0;
         if (strCommand != NetMsgType::BLOCK)
         {
-            LogPrint("thin", "Processed ThinBlock %s in %.2f seconds\n", inv.hash.ToString(),
-                (double)(GetTimeMicros() - startTime) / 1000000.0);
+            LogPrint("thin", "Processed Block %s reconstructed from (%s) in %.2f seconds, peer=%s\n",
+                inv.hash.ToString(), strCommand, (double)(GetTimeMicros() - startTime) / 1000000.0,
+                pfrom->GetLogName());
             thindata.UpdateValidationTime(nValidationTime);
         }
         else
-            LogPrint("thin", "Processed Regular Block %s in %.2f seconds\n", inv.hash.ToString(),
-                (double)(GetTimeMicros() - startTime) / 1000000.0);
+            LogPrint("thin", "Processed Regular Block %s in %.2f seconds, peer=%s\n", inv.hash.ToString(),
+                (double)(GetTimeMicros() - startTime) / 1000000.0, pfrom->GetLogName());
     }
 
     // When we request a thinblock we may get back a regular block if it is smaller than a thinblock
@@ -564,11 +565,12 @@ void HandleBlockMessageThread(CNode *pfrom, const string &strCommand, const CBlo
         int nTotalThinBlocksInFlight = 0;
         {
             LOCK2(cs_vNodes, pfrom->cs_mapthinblocksinflight);
+
             // Erase this thinblock from the tracking map now that we're done with it.
-            if (pfrom->mapThinBlocksInFlight.erase(inv.hash))
+            if (pfrom->mapThinBlocksInFlight.count(inv.hash))
             {
-                // Clear out and reset thinblock data
-                thindata.ClearThinBlockData(pfrom);
+                // Clear thinblock data and thinblock in flight
+                thindata.ClearThinBlockData(pfrom, inv.hash);
             }
 
             // Count up any other remaining nodes with thinblocks in flight.
