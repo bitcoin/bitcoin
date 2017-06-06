@@ -35,8 +35,6 @@ static secp256k1_context* secp256k1_context_sign = NULL;
  */
 static int ec_privkey_import_der(const secp256k1_context* ctx, unsigned char *out32, const unsigned char *privkey, size_t privkeylen) {
     const unsigned char *end = privkey + privkeylen;
-    size_t lenb = 0;
-    size_t len = 0;
     memset(out32, 0, 32);
     /* sequence header */
     if (end - privkey < 1 || *privkey != 0x30u) {
@@ -47,7 +45,7 @@ static int ec_privkey_import_der(const secp256k1_context* ctx, unsigned char *ou
     if (end - privkey < 1 || !(*privkey & 0x80u)) {
         return 0;
     }
-    lenb = *privkey & ~0x80u; privkey++;
+    size_t lenb = *privkey & ~0x80u; privkey++;
     if (lenb < 1 || lenb > 2) {
         return 0;
     }
@@ -55,7 +53,7 @@ static int ec_privkey_import_der(const secp256k1_context* ctx, unsigned char *ou
         return 0;
     }
     /* sequence length */
-    len = privkey[lenb-1] | (lenb > 1 ? privkey[lenb-2] << 8 : 0u);
+    size_t len = privkey[lenb-1] | (lenb > 1 ? privkey[lenb-2] << 8 : 0u);
     privkey += lenb;
     if (end - privkey < len) {
         return 0;
