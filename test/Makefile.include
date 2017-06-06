@@ -1,0 +1,176 @@
+# Copyright (c) 2013-2017 The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+EXTRA_DIST += \
+    test/README.md \
+    test/util/bctest.py \
+    test/util/bitcoin-util-test.py \
+    test/util/data/bitcoin-util-test.json \
+    test/util/data/blanktxv1.hex \
+    test/util/data/blanktxv1.json \
+    test/util/data/blanktxv2.hex \
+    test/util/data/blanktxv2.json \
+    test/util/data/tt-delin1-out.hex \
+    test/util/data/tt-delin1-out.json \
+    test/util/data/tt-delout1-out.hex \
+    test/util/data/tt-delout1-out.json \
+    test/util/data/tt-locktime317000-out.hex \
+    test/util/data/tt-locktime317000-out.json \
+    test/util/data/tx394b54bb.hex \
+    test/util/data/txcreate1.hex \
+    test/util/data/txcreate1.json \
+    test/util/data/txcreate2.hex \
+    test/util/data/txcreate2.json \
+    test/util/data/txcreatedata1.hex \
+    test/util/data/txcreatedata1.json \
+    test/util/data/txcreatedata2.hex \
+    test/util/data/txcreatedata2.json \
+    test/util/data/txcreatedata_seq0.hex \
+    test/util/data/txcreatedata_seq0.json \
+    test/util/data/txcreatedata_seq1.hex \
+    test/util/data/txcreatedata_seq1.json \
+    test/util/data/txcreatemultisig1.hex \
+    test/util/data/txcreatemultisig1.json \
+    test/util/data/txcreatemultisig2.hex \
+    test/util/data/txcreatemultisig2.json \
+    test/util/data/txcreatemultisig3.hex \
+    test/util/data/txcreatemultisig3.json \
+    test/util/data/txcreatemultisig4.hex \
+    test/util/data/txcreatemultisig4.json \
+    test/util/data/txcreateoutpubkey1.hex \
+    test/util/data/txcreateoutpubkey1.json \
+    test/util/data/txcreateoutpubkey2.hex \
+    test/util/data/txcreateoutpubkey2.json \
+    test/util/data/txcreateoutpubkey3.hex \
+    test/util/data/txcreateoutpubkey3.json \
+    test/util/data/txcreatescript1.hex \
+    test/util/data/txcreatescript1.json \
+    test/util/data/txcreatescript2.hex \
+    test/util/data/txcreatescript2.json \
+    test/util/data/txcreatescript3.hex \
+    test/util/data/txcreatescript3.json \
+    test/util/data/txcreatescript4.hex \
+    test/util/data/txcreatescript4.json \
+    test/util/data/txcreatesignv1.hex \
+    test/util/data/txcreatesignv1.json \
+    test/util/data/txcreatesignv2.hex \
+    test/functional/README.md \
+    test/functional/abandonconflict.py \
+    test/functional/assumevalid.py \
+    test/functional/bip65-cltv-p2p.py \
+    test/functional/bip65-cltv.py \
+    test/functional/bip68-112-113-p2p.py \
+    test/functional/bip68-sequence.py \
+    test/functional/bip9-softforks.py \
+    test/functional/bipdersig-p2p.py \
+    test/functional/bipdersig.py \
+    test/functional/blockchain.py \
+    test/functional/bumpfee.py \
+    test/functional/create_cache.py \
+    test/functional/decodescript.py \
+    test/functional/disablewallet.py \
+    test/functional/forknotify.py \
+    test/functional/fundrawtransaction.py \
+    test/functional/getblocktemplate_longpoll.py \
+    test/functional/getblocktemplate_proposals.py \
+    test/functional/getchaintips.py \
+    test/functional/httpbasics.py \
+    test/functional/importmulti.py \
+    test/functional/importprunedfunds.py \
+    test/functional/import-rescan.py \
+    test/functional/invalidateblock.py \
+    test/functional/invalidblockrequest.py \
+    test/functional/invalidtxrequest.py \
+    test/functional/keypool.py \
+    test/functional/listsinceblock.py \
+    test/functional/listtransactions.py \
+    test/functional/maxblocksinflight.py \
+    test/functional/maxuploadtarget.py \
+    test/functional/mempool_limit.py \
+    test/functional/mempool_packages.py \
+    test/functional/mempool_reorg.py \
+    test/functional/mempool_resurrect_test.py \
+    test/functional/mempool_spendcoinbase.py \
+    test/functional/merkle_blocks.py \
+    test/functional/multi_rpc.py \
+    test/functional/net.py \
+    test/functional/nodehandling.py \
+    test/functional/nulldummy.py \
+    test/functional/p2p-acceptblock.py \
+    test/functional/p2p-compactblocks.py \
+    test/functional/p2p-feefilter.py \
+    test/functional/p2p-fullblocktest.py \
+    test/functional/p2p-leaktests.py \
+    test/functional/p2p-mempool.py \
+    test/functional/p2p-segwit.py \
+    test/functional/p2p-timeouts.py \
+    test/functional/p2p-versionbits-warning.py \
+    test/functional/preciousblock.py \
+    test/functional/prioritise_transaction.py \
+    test/functional/proxy_test.py \
+    test/functional/pruning.py \
+    test/functional/rawtransactions.py \
+    test/functional/README.md \
+    test/functional/receivedby.py \
+    test/functional/reindex.py \
+    test/functional/replace-by-fee.py \
+    test/functional/rest.py \
+    test/functional/rpcbind_test.py \
+    test/functional/rpcnamedargs.py \
+    test/functional/segwit.py \
+    test/functional/sendheaders.py \
+    test/functional/signmessages.py \
+    test/functional/signrawtransactions.py \
+    test/functional/smartfees.py \
+    test/functional/test_framework \
+    test/functional/test_runner.py \
+    test/functional/txn_clone.py \
+    test/functional/txn_doublespend.py \
+    test/functional/wallet-accounts.py \
+    test/functional/walletbackup.py \
+    test/functional/wallet-dump.py \
+    test/functional/wallet-hd.py \
+    test/functional/wallet.py \
+    test/functional/zapwallettxes.py \
+    test/functional/zmq_test.py \
+    test/functional/test_framework/__init__.py \
+    test/functional/test_framework/address.py \
+    test/functional/test_framework/authproxy.py \
+    test/functional/test_framework/bignum.py \
+    test/functional/test_framework/blockstore.py \
+    test/functional/test_framework/blocktools.py \
+    test/functional/test_framework/comptool.py \
+    test/functional/test_framework/coverage.py \
+    test/functional/test_framework/key.py \
+    test/functional/test_framework/mininode.py \
+    test/functional/test_framework/netutil.py \
+    test/functional/test_framework/script.py \
+    test/functional/test_framework/siphash.py \
+    test/functional/test_framework/socks5.py \
+    test/functional/test_framework/test_framework.py \
+    test/functional/test_framework/util.py
+
+FUNCTIONAL_TESTS = \
+    nodehandling \
+    httpbasics \
+    invalidblockrequest \
+    blockchain \
+    rpcnamedargs
+
+.PHONY: all_functional_tests functional_tests util_tests
+
+all_functional_tests:
+	@echo "Running all functional tests"
+	$(builddir)/test/functional/test_runner.py --extended
+
+functional_tests:
+	@echo "Running test/functional/test_runner.py..."
+	$(builddir)/test/functional/test_runner.py $(FUNCTIONAL_TESTS)
+
+util_tests:
+	@echo "Running test/util/bitcoin-util-test.py..."
+	$(PYTHON) $(builddir)/test/util/bitcoin-util-test.py
+
+# This file is problematic for out-of-tree builds if it exists.
+DISTCLEANFILES += test/util/buildenv.pyc
