@@ -1567,17 +1567,3 @@ void RenameThread(const char* name)
 #endif
 }
 
-<<<<<<< HEAD
-bool NewThread(void(*pfn)(void*), void* parg)
-{
-    try
-    {
-        boost::thread(pfn, parg); // thread detaches when out of scope
-    } catch(boost::thread_resource_error &e) {
-        printf("Error creating thread: %s\n", e.what());
-        return false;
-    }
-    return true;
-}
-=======
->>>>>>> 0b47fe6... bitcoin-cli: remove unneeded dependencies (only code movement)
