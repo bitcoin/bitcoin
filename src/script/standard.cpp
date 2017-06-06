@@ -34,7 +34,7 @@ const char* GetTxnOutputType(txnouttype t)
     case TX_MULTISIG: return "multisig";
     case TX_NULL_DATA: return "nulldata";
     case TX_CLTV: return "cltv";  // CLTV HODL Freeze
-    case TX_LABELPUBLIC: return "labelpublic";
+    case TX_LABELPUBLIC: return "publiclabel";
     }
     return NULL;
 }

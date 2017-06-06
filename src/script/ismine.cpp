@@ -52,10 +52,11 @@ std::string getLabelPublic(const CScript& scriptPubKey)
             CScript labelPublic1(vSolutions[1]);
 
             if (labelPublic0 == OP_PUSHDATA1)
-                return "";
+                return ""; //TODO long formats not implemented yet
             else if (labelPublic0 == OP_PUSHDATA2)
-                return "";
+                return ""; //TODO long formats not implemented yet
             else
+                // small format
                 return std::string(labelPublic1.begin()+1,labelPublic1.end());
         }
     }
@@ -108,6 +109,7 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, CBlock
     {
         case TX_NONSTANDARD:
         case TX_NULL_DATA:
+        case TX_LABELPUBLIC:
             break;
         case TX_PUBKEY:
             keyID = CPubKey(vSolutions[0]).GetID();

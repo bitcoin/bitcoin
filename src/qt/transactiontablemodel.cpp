@@ -378,6 +378,8 @@ QString TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
         return tr("Payment to yourself");
     case TransactionRecord::Generated:
         return tr("Mined");
+    case TransactionRecord::PublicLabel:
+        return tr("Public label");
     default:
         return QString();
     }
@@ -414,10 +416,13 @@ QString TransactionTableModel::formatTxToAddress(const TransactionRecord *wtx, b
     QString label = pickLabelWithAddress(wtx->addresses, address);
 
     /* Get all the addresses so the user can filter for any of them */
-    std::string addressList;
+    std::string addressList = "";
     BOOST_FOREACH(const PAIRTYPE(std::string,CScript)& addr, wtx->addresses)
     {
-        addressList = addressList + " " + addr.first;
+        std::string nextAddress = boost::replace_all_copy(addr.first, "\n", " ");
+        // ensure list isn't prefixed by a space
+        if (addressList == "") addressList = nextAddress;
+            else addressList = addressList + " " + nextAddress;
     }
 
     if (label == "") return QString::fromStdString(addressList) + watchAddress;

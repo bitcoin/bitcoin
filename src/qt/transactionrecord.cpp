@@ -56,14 +56,24 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
         {
             // use public label instead of address
             listAllAddresses.push_back(std::make_pair("<" + labelPublic + ">", txout.scriptPubKey));
+
+            // append public label
+            TransactionRecord sub(hash, nTime);
+            sub.idx = parts.size(); // sequence number
+            sub.credit = txout.nValue;
+            sub.type = TransactionRecord::PublicLabel;
+            sub.addresses.push_back(std::make_pair(labelPublic, txout.scriptPubKey));
+
+            parts.append(sub);
+
         }
         else if (ExtractDestination(txout.scriptPubKey, address))
             // a standard address
             listAllAddresses.push_back(std::make_pair(CBitcoinAddress(address).ToString(), txout.scriptPubKey));
 
-            else
-                // add the unknown scriptPubKey as n/a - TODO could also skip these if there is no need to display/filter??
-                listAllAddresses.push_back(std::make_pair("n/a", txout.scriptPubKey));
+        else
+            // add the unknown scriptPubKey as n/a - TODO could also skip these if there is no need to display/filter??
+            listAllAddresses.push_back(std::make_pair("n/a", txout.scriptPubKey));
 
         if (txout.nValue > 0)  // only checkout outputs which received bitcoin
         {
@@ -90,12 +100,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 sub.credit = txout.nValue;
                 sub.involvesWatchAddress = mine & ISMINE_WATCH_ONLY;
                 std::string labelPublic = getLabelPublic(txout.scriptPubKey);
-                if (labelPublic != "")
-                {
-                    // Public label
-                    sub.type = TransactionRecord::PublicLabel;
-                    //listAllAddresses.push_back(std::make_pair(labelPublic, txout.scriptPubKey));
-                }
+                if (labelPublic != "") continue;
                 else if (ExtractDestination(txout.scriptPubKey, address) && wallet->IsMine(address))
                 {
                     // Received by Bitcoin Address
@@ -166,12 +171,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
 
                 CTxDestination address;
                 std::string labelPublic = getLabelPublic(txout.scriptPubKey);
-                if (labelPublic != "")
-                {
-                    // Public label
-                    sub.type = TransactionRecord::PublicLabel;
-                    //listAllAddresses.push_back(std::make_pair(labelPublic, txout.scriptPubKey));
-                }
+                if (labelPublic != "") continue;
                 else if (ExtractDestination(txout.scriptPubKey, address))
                 {
                     // Sent to Bitcoin Address
