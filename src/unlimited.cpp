@@ -1081,7 +1081,7 @@ void HandleBlockMessage(CNode *pfrom, const string &strCommand, CBlock &block, c
     {
         LOCK(pfrom->cs_mapthinblocksinflight);
         if (pfrom->mapThinBlocksInFlight.count(inv.hash))
-            pfrom->mapThinBlocksInFlight[inv.hash].Received = true;
+            pfrom->mapThinBlocksInFlight[inv.hash].fReceived = true;
     }
 
     // Process all blocks from whitelisted peers, even if not requested,
