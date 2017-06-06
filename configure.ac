@@ -42,37 +42,6 @@ AM_MAINTAINER_MODE([enable])
 dnl make the compilation flags quiet unless V=1 is used
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
-dnl Checks for programs.
-AC_PROG_CXX
-AC_PROG_CC
-AC_PROG_CPP
-AC_PROG_CXXCPP
-AC_PROG_INSTALL
-AC_PROG_OBJC
-AC_PROG_LN_S
-m4_ifdef([AC_PROG_OBJCXX],[AC_PROG_OBJCXX])
-AC_PROG_MKDIR_P
-AC_PROG_SED
-AC_PATH_TOOL(AR, ar)
-AC_PATH_TOOL(RANLIB, ranlib)
-AC_PATH_TOOL(STRIP, strip)
-AC_PATH_TOOL(GCOV, gcov)
-AC_PATH_PROG(LCOV, lcov)
-AC_PATH_PROG(JAVA, java)
-AC_PATH_PROG(GENHTML, genhtml)
-AC_PATH_PROG([GIT], [git])
-AC_PATH_PROG(CCACHE,ccache)
-AC_PATH_PROG(XGETTEXT,xgettext)
-AC_PATH_PROG(HEXDUMP,hexdump)
-PKG_PROG_PKG_CONFIG
-
-# Enable wallet
-AC_ARG_ENABLE([wallet],
-  [AS_HELP_STRING([--enable-wallet],
-  [enable wallet (default is yes)])],
-  [enable_wallet=$enableval],
-  [enable_wallet=yes])
-
 AC_ARG_WITH([miniupnpc],
   [AS_HELP_STRING([--with-miniupnpc],
   [enable UPNP (default is yes if libminiupnpc is found)])],
@@ -92,6 +61,20 @@ AC_ARG_ENABLE([ipv6],
   [use_ipv6=$enableval],
   [use_ipv6=yes])
 
+dnl enable qt support
+AC_ARG_WITH([qt],
+  [AS_HELP_STRING([--with-qt],
+  [enable qt (default is yes)])],
+  [use_qt=$withval],
+  [use_qt=yes])
+
+dnl compile with full warnings and debugging symbols
+AC_ARG_ENABLE(debug,
+    AS_HELP_STRING([--enable-debug],[compile with debug symbols (default is yes)]),
+    [use_debug=$enableval],
+    [use_debug=yes])
+    AC_MSG_CHECKING([if compiling with debugging symbols])
+
 AC_ARG_ENABLE(tests,
     AS_HELP_STRING([--enable-tests],[compile tests (default is yes)]),
     [use_tests=$enableval],
@@ -107,6 +90,12 @@ AC_ARG_WITH([qrencode],
   [enable QR code support (default is yes if qt is enabled and libqrencode is found)])],
   [use_qr=$withval],
   [use_qr=auto])
+
+AC_ARG_WITH([qtdbus],
+  [AS_HELP_STRING([--with-qtdbus],
+  [enable DBus support (default is yes if qt is enabled and QtDBus is found)])],
+  [use_dbus=$withval],
+  [use_dbus=auto])
 
 AC_ARG_ENABLE([hardening],
   [AS_HELP_STRING([--enable-hardening],
@@ -126,6 +115,12 @@ AC_ARG_ENABLE([lcov],
   [use_lcov=yes],
   [use_lcov=no])
 
+AC_ARG_WITH([qt-incdir],[AS_HELP_STRING([--with-qt-incdir=INC_DIR],[specify qt include path (overridden by pkgconfig)])], [qt_include_path=$withval], [])
+AC_ARG_WITH([qt-libdir],[AS_HELP_STRING([--with-qt-libdir=LIB_DIR],[specify qt lib path (overridden by pkgconfig)])], [qt_lib_path=$withval], [])
+AC_ARG_WITH([qt-bindir],[AS_HELP_STRING([--with-qt-bindir=BIN_DIR],[specify qt bin path])], [qt_bin_path=$withval], [])
+AC_ARG_WITH([qt-plugindir],[AS_HELP_STRING([--with-qt-plugindir=PLUGIN_DIR],[specify qt plugin path (overridden by pkgconfig)])], [qt_plugin_path=$withval], [])
+AC_ARG_WITH([protoc-bindir],[AS_HELP_STRING([--with-protoc-bindir=BIN_DIR],[specify protoc bin path])], [protoc_bin_path=$withval], [])
+
 
 AC_CONFIG_SRCDIR([src])
 AC_CONFIG_HEADERS([src/bitcoin-config.h])
@@ -142,6 +137,7 @@ AC_PROG_MKDIR_P
 AC_PROG_SED
 AC_PATH_TOOL(AR, ar)
 AC_PATH_TOOL(RANLIB, ranlib)
+AC_PATH_TOOL(WINDRES, windres)
 AC_PATH_TOOL(STRIP, strip)
 AC_PATH_TOOL(GCOV, gcov)
 AC_PATH_PROG(LCOV, lcov)
@@ -151,7 +147,19 @@ AC_PATH_PROG([GIT], [git])
 AC_PATH_PROG(CCACHE,ccache)
 AC_PATH_PROG(XGETTEXT,xgettext)
 AC_PATH_PROG(HEXDUMP,hexdump)
+AC_PATH_PROGS([MOC], [moc moc-qt4],, $qt_bin_path:$PATH)
+AC_PATH_PROGS([UIC], [uic uic-qt4],, $qt_bin_path:$PATH)
+AC_PATH_PROG([RCC], [rcc],, $qt_bin_path:$PATH)
+AC_PATH_PROG([LRELEASE], [lrelease],, $qt_bin_path:$PATH)
 PKG_PROG_PKG_CONFIG
+
+# Enable wallet
+AC_ARG_ENABLE([wallet],
+  [AS_HELP_STRING([--enable-wallet],
+  [enable wallet (default is yes)])],
+  [enable_wallet=$enableval],
+  [enable_wallet=yes])
+
 
 ## TODO: Remove these hard-coded paths and flags. They are here for the sake of
 ##       compatibility with the legacy buildsystem.
@@ -233,6 +241,15 @@ case $host in
        esac
      fi
 
+     if test x$use_qt = xyes; then
+       MOC_DEFS="-DQ_OS_MAC"
+       base_frameworks="-framework Foundation -framework ApplicationServices -framework AppKit"
+       AX_CHECK_LINK_FLAG([[$base_frameworks]],[LIBS="$LIBS $base_frameworks"],[AC_MSG_ERROR(could not find base frameworks)])
+     fi
+
+     AX_CHECK_COMPILE_FLAG([-mmacosx-version-min=10.5],[RELEASE_CXXFLAGS="$RELEASE_CXXFLAGS -mmacosx-version-min=10.5"])
+     AX_CHECK_COMPILE_FLAG([-arch i386],[RELEASE_CXXFLAGS="$RELEASE_CXXFLAGS -arch i386"])
+     RELEASE_CXXFLAGS="$RELEASE_CXXFLAGS -O3"
      CPPFLAGS="$CPPFLAGS -DMAC_OSX"
      TESTDEFS="-DBOOST_TEST_DYN_LINK"
      ;;
@@ -648,10 +665,17 @@ AC_SUBST(USE_QRCODE)
 AC_SUBST(USE_IPV6)
 AC_SUBST(INCLUDES)
 AC_SUBST(BOOST_LIBS)
+AC_SUBST(MOC_DEFS)
+AC_SUBST(QT_INCLUDES)
+AC_SUBST(QT_TEST_LIBS)
+AC_SUBST(QT_LIBS)
+AC_SUBST(QT_DBUS_LIBS)
+AC_SUBST(QT_DBUS_INCLUDES)
+AC_SUBST(QT_TEST_INCLUDES)
 AC_SUBST(TESTDEFS)
 AC_SUBST(LEVELDB_TARGET_FLAGS)
-AC_SUBST(BUILD_TEST)
 AC_SUBST(BUILD_QT)
+AC_SUBST(BUILD_TEST)
 AC_SUBST(BUILD_TEST_QT)
 AC_CONFIG_FILES([Makefile src/Makefile src/test/Makefile src/qt/Makefile src/qt/test/Makefile share/setup.nsi share/qt/Info.plist])
 AC_CONFIG_FILES([qa/pull-tester/run-bitcoind-for-test.sh],[chmod +x qa/pull-tester/run-bitcoind-for-test.sh])
