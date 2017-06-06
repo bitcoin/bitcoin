@@ -139,11 +139,10 @@ bool ImportOutputs(CBlockTemplate *pblocktemplate, int nHeight)
     if (!boost::filesystem::exists(fPath))
         return error("%s: File not found 'genesisOutputs.txt'.", __func__);
     
-    
     const int nMaxOutputsPerTxn = 80;
     FILE *fp;
     errno = 0;
-    if (!(fp = fopen(fPath.string().c_str(), "r")))
+    if (!(fp = fopen(fPath.string().c_str(), "rb")))
         return error("%s - Can't open file, strerror: %s.", __func__, strerror(errno));
     
     CMutableTransaction txn;

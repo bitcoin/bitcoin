@@ -178,13 +178,25 @@ BOOST_AUTO_TEST_CASE(rpc_hdwallet_timelocks)
     
     
     
-    
+    script = CScript() << 1487406900 << OP_CHECKSEQUENCEVERIFY << OP_DROP << OP_DUP << OP_HASH160 << ToByteVector(id) << OP_EQUALVERIFY << OP_CHECKSIG;
     CScript *ps = &((CTxOutStandard*)txn.vpout[0].get())->scriptPubKey;
     BOOST_REQUIRE(ps);
     
-    *ps = CScript() << 1487406900 << OP_CHECKSEQUENCEVERIFY << OP_DROP << OP_DUP << OP_HASH160 << ToByteVector(id) << OP_EQUALVERIFY << OP_CHECKSIG;
+    *ps = script;
     
     
+    
+    sTxn = "[{\"txid\":\""
+        + txn.GetHash().ToString() + "\","
+        + "\"vout\":0,"
+        + "\"scriptPubKey\":\""+HexStr(script.begin(), script.end())+"\","
+        + "\"amount\":100}]";
+    sCmd = "createrawtransaction " + sTxn + " {\""+CBitcoinAddress(vAddresses[0]).ToString()+"\":99.99}";
+    
+    
+    sCmd = "signrawtransaction " + sResult + " " + sTxn;
+    BOOST_REQUIRE_NO_THROW(rv = CallRPC(sCmd));
+    BOOST_CHECK(rv["errors"][0]["error"].getValStr() == "Locktime requirement not satisfied");
     
     
     

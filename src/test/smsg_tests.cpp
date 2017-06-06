@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_CASE(smsg_test)
 
     fSecMsgEnabled = true;
     int rv;
-    int nKeys = 12;
+    const int nKeys = 12;
     CWallet keystore;
     CKey keyOwn[nKeys];
     for (int i = 0; i < nKeys; i++)

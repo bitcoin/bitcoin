@@ -1901,7 +1901,6 @@ bool SecureMsgSendData(CNode *pto, bool fSendTrickle)
 
             uint32_t nBucketsShown = 0;
             vchData.resize(4);
-            uint8_t* p = &vchData[4];
 
             /*
             Get time before loop and after looping through messages set nLastMatched to time before loop.
@@ -1937,19 +1936,21 @@ bool SecureMsgSendData(CNode *pto, bool fSendTrickle)
 
                 uint32_t hash = bkt.hash;
 
-                if(fDebugSmsg)
+                if (fDebugSmsg)
                     LogPrintf("Preparing bucket with hash %d for transfer to node %u. timeChanged=%d > lastMatched=%d\n", hash, pto->id, bkt.timeChanged, pto->smsgData.lastMatched);
-
+                
+                size_t sz = vchData.size();
                 try { vchData.resize(vchData.size() + 16); } catch (std::exception& e)
                 {
                     LogPrintf("vchData.resize %u threw: %s.\n", vchData.size() + 16, e.what());
                     continue;
                 };
+                
+                uint8_t *p = &vchData[sz];
                 memcpy(p, &it->first, 8);
                 memcpy(p+8, &nMessages, 4);
                 memcpy(p+12, &hash, 4);
 
-                p += 16;
                 nBucketsShown++;
                 //if (fDebug)
                 //    LogPrintf("Sending bucket %d, size %d \n", it->first, it->second.size());
