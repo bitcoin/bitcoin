@@ -168,12 +168,20 @@
         <translation>Potvrďte zašifrovanie peňaženky</translation>
     </message>
     <message>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
+        <translation>Varovanie: Ak zašifrujete peňaženku a stratíte heslo, &lt;b&gt;STRATÍTE VŠETKY VAŠE BITCOINY&lt;/b&gt;!</translation>
+    </message>
+    <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
         <translation>Ste si istí, že si želáte zašifrovať peňaženku?</translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
         <translation>Peňaženka zašifrovaná</translation>
+    </message>
+    <message>
+        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>%1 sa teraz zavrie, aby sa ukončil proces šifrovania. Zašifrovanie peňaženky neochráni úplne pred krádežou bitcoinov škodlivými programami, ktoré prenikli do vášho počítača.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -310,6 +318,22 @@
         <translation>Otvoriť &amp;URI...</translation>
     </message>
     <message>
+        <source>Click to disable network activity.</source>
+        <translation>Kliknite pre zakázanie sieťovej aktivity.</translation>
+    </message>
+    <message>
+        <source>Network activity disabled.</source>
+        <translation>Sieťová aktivita zakázaná.</translation>
+    </message>
+    <message>
+        <source>Click to enable network activity again.</source>
+        <translation>Kliknite pre povolenie sieťovej aktivity.</translation>
+    </message>
+    <message>
+        <source>Syncing Headers (%1%)...</source>
+        <translation>Synchronizujú sa hlavičky (%1%)...</translation>
+    </message>
+    <message>
         <source>Reindexing blocks on disk...</source>
         <translation>Preindexúvam bloky na disku...</translation>
     </message>
@@ -431,7 +455,7 @@
     </message>
     <message>
         <source>Last received block was generated %1 ago.</source>
-        <translation>Posledný prijatý blok bol vygenerovaný pred %1.</translation>
+        <translation>Posledný prijatý blok bol vygenerovaný pred: %1.</translation>
     </message>
     <message>
         <source>Transactions after this will not yet be visible.</source>
@@ -460,6 +484,10 @@
     <message>
         <source>%1 client</source>
         <translation>%1 klient</translation>
+    </message>
+    <message>
+        <source>Connecting to peers...</source>
+        <translation>Pripája sa k partnerom...</translation>
     </message>
     <message>
         <source>Catching up...</source>
@@ -511,7 +539,11 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Peňaženka je &lt;b&gt;zašifrovaná&lt;/b&gt; a momentálne &lt;b&gt;zamknutá&lt;/b&gt;</translation>
     </message>
-    </context>
+    <message>
+        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
+        <translation>Vyskytla sa kritická chyba. Bitcoin nemôže ďalej bezpečne pokračovať a ukončí sa.</translation>
+    </message>
+</context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -645,6 +677,10 @@
     <message>
         <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
         <translation>Tento popis sčervenie ak ktorýkoľvek príjemca dostane sumu menšiu ako súčasný limit pre "prach".</translation>
+    </message>
+    <message>
+        <source>Can vary +/- %1 satoshi(s) per input.</source>
+        <translation>Môže sa líšiť o +/- %1 satoshi pre každý vstup.</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -842,8 +878,36 @@
         <translation>Forma</translation>
     </message>
     <message>
+        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</source>
+        <translation>Nedávne transakcie nemusia byť ešte viditeľné preto môže byť zostatok vo vašej peňaženke nesprávny. Táto informácia bude správna keď sa dokončí synchronizovanie peňaženky so sieťou bitcoin, ako je rozpísané nižšie.</translation>
+    </message>
+    <message>
+        <source>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
+        <translation>Pokus o minutie bitcoinov, ktoré sú ovplyvnené ešte nezobrazenými transakciami, nebude sieťou akceptovaný.</translation>
+    </message>
+    <message>
+        <source>Number of blocks left</source>
+        <translation>Počet zostávajúcich blokov</translation>
+    </message>
+    <message>
+        <source>Unknown...</source>
+        <translation>Neznáme...</translation>
+    </message>
+    <message>
         <source>Last block time</source>
         <translation>Čas posledného bloku</translation>
+    </message>
+    <message>
+        <source>Progress</source>
+        <translation>Postup synchronizácie</translation>
+    </message>
+    <message>
+        <source>Progress increase per hour</source>
+        <translation>Prírastok postupu za hodinu</translation>
+    </message>
+    <message>
+        <source>calculating...</source>
+        <translation>počíta sa...</translation>
     </message>
     <message>
         <source>Estimated time left until synced</source>
@@ -853,7 +917,11 @@
         <source>Hide</source>
         <translation>Skryť</translation>
     </message>
-    </context>
+    <message>
+        <source>Unknown. Syncing Headers (%1)...</source>
+        <translation>Neznámy. Synchronizujú sa hlavičky (%1)...</translation>
+    </message>
+</context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -1284,7 +1352,15 @@
         <source>Node/Service</source>
         <translation>Uzol/Služba</translation>
     </message>
-    </context>
+    <message>
+        <source>NodeId</source>
+        <translation>ID uzlu</translation>
+    </message>
+    <message>
+        <source>Ping</source>
+        <translation>Odozva</translation>
+    </message>
+</context>
 <context>
     <name>QObject</name>
     <message>
@@ -1324,6 +1400,22 @@
         <translation>%1 ms</translation>
     </message>
     <message numerus="yes">
+        <source>%n second(s)</source>
+        <translation><numerusform>%n sekunda</numerusform><numerusform>%n sekundy</numerusform><numerusform>%n sekúnd</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n minute(s)</source>
+        <translation><numerusform>%n minúta</numerusform><numerusform>%n minúty</numerusform><numerusform>%n minút</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n hour(s)</source>
+        <translation><numerusform>%n hodina</numerusform><numerusform>%n hodiny</numerusform><numerusform>%n hodín</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n day(s)</source>
+        <translation><numerusform>%n deň</numerusform><numerusform>%n dni</numerusform><numerusform>%n dní</numerusform></translation>
+    </message>
+    <message numerus="yes">
         <source>%n week(s)</source>
         <translation><numerusform>%n týždeň</numerusform><numerusform>%n týždne</numerusform><numerusform>%n týždňov</numerusform></translation>
     </message>
@@ -1335,10 +1427,18 @@
         <source>%n year(s)</source>
         <translation><numerusform>%n rok</numerusform><numerusform>%n roky</numerusform><numerusform>%n rokov</numerusform></translation>
     </message>
-    </context>
+    <message>
+        <source>%1 didn't yet exit safely...</source>
+        <translation>%1 ešte nebol bezpečne ukončený...</translation>
+    </message>
+</context>
 <context>
     <name>QObject::QObject</name>
-    </context>
+    <message>
+        <source>Error: %1</source>
+        <translation>Chyba: %1</translation>
+    </message>
+</context>
 <context>
     <name>QRImageWidget</name>
     <message>
@@ -1382,7 +1482,7 @@
     </message>
     <message>
         <source>Using BerkeleyDB version</source>
-        <translation>Používa BerkeleyDB verziu</translation>
+        <translation>Používa verziu BerkeleyDB</translation>
     </message>
     <message>
         <source>Datadir</source>
@@ -1418,7 +1518,7 @@
     </message>
     <message>
         <source>Current number of transactions</source>
-        <translation>Aktuálny počet tranzakcií</translation>
+        <translation>Aktuálny počet transakcií</translation>
     </message>
     <message>
         <source>Memory usage</source>
@@ -1458,7 +1558,7 @@
     </message>
     <message>
         <source>Starting Block</source>
-        <translation>Počiatočný Blok</translation>
+        <translation>Počiatočný blok</translation>
     </message>
     <message>
         <source>Synced Headers</source>
@@ -1511,11 +1611,15 @@
     </message>
     <message>
         <source>The duration of a currently outstanding ping.</source>
-        <translation>Trvanie aktuálneho pingu</translation>
+        <translation>Trvanie aktuálnej požiadavky na odozvu.</translation>
     </message>
     <message>
         <source>Ping Wait</source>
-        <translation>Čakanie na ping</translation>
+        <translation>Čakanie na odozvu</translation>
+    </message>
+    <message>
+        <source>Min Ping</source>
+        <translation>Minimálna odozva</translation>
     </message>
     <message>
         <source>Time Offset</source>
@@ -1578,6 +1682,18 @@
         <translation>1 &amp;rok</translation>
     </message>
     <message>
+        <source>&amp;Disconnect</source>
+        <translation>&amp;Odpojiť</translation>
+    </message>
+    <message>
+        <source>Ban for</source>
+        <translation>Zakázať na</translation>
+    </message>
+    <message>
+        <source>&amp;Unban</source>
+        <translation>&amp;Zrušiť zákaz</translation>
+    </message>
+    <message>
         <source>Welcome to the %1 RPC console.</source>
         <translation>Vitajte v %1 RPC konzole</translation>
     </message>
@@ -1592,6 +1708,10 @@
     <message>
         <source>WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramification of a command.</source>
         <translation>VAROVANIE: Podvodníci sú aktívni a môžu nabádať používateľov napísať sem príkazy, pomocou ktorých ukradnú ich obsah peňaženky. Nepoužívajte túto konzolu ak nerozumiete presne účinkom príkazov.</translation>
+    </message>
+    <message>
+        <source>Network activity disabled</source>
+        <translation>Sieťová aktivita zakázaná</translation>
     </message>
     <message>
         <source>%1 B</source>
@@ -1711,6 +1831,10 @@
     <message>
         <source>Remove</source>
         <translation>Odstrániť</translation>
+    </message>
+    <message>
+        <source>Copy URI</source>
+        <translation>Kopírovať URI</translation>
     </message>
     <message>
         <source>Copy label</source>
@@ -1911,7 +2035,7 @@
     </message>
     <message>
         <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
-        <translation>(Automatický poplatok ešte nebol aktivovaný. Toto zvyčajne trvá niekoľko blokov...)</translation>
+        <translation>(Automatický poplatok ešte nebol vypočítaný. Toto zvyčajne trvá niekoľko blokov...)</translation>
     </message>
     <message>
         <source>normal</source>
@@ -1994,6 +2118,10 @@
         <translation>Určite chcete odoslať transakciu?</translation>
     </message>
     <message>
+        <source>added as transaction fee</source>
+        <translation>pridané ako poplatok za transakciu</translation>
+    </message>
+    <message>
         <source>Total Amount %1</source>
         <translation>Celková suma %1</translation>
     </message>
@@ -2030,8 +2158,24 @@
         <translation>Vytvorenie transakcie zlyhalo!</translation>
     </message>
     <message>
+        <source>The transaction was rejected with the following reason: %1</source>
+        <translation>Transakcia bola odmietnutá z nasledujúceho dôvodu: %1</translation>
+    </message>
+    <message>
+        <source>A fee higher than %1 is considered an absurdly high fee.</source>
+        <translation>Poplatok vyšší ako %1 sa považuje za neprimerane vysoký.</translation>
+    </message>
+    <message>
         <source>Payment request expired.</source>
         <translation>Vypršala platnosť požiadavky na platbu.</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n block(s)</source>
+        <translation><numerusform>%n blok</numerusform><numerusform>%n bloky</numerusform><numerusform>%n blokov</numerusform></translation>
+    </message>
+    <message>
+        <source>Pay only the required fee of %1</source>
+        <translation>Zaplatiť iba požadovaný poplatok %1</translation>
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
@@ -2090,7 +2234,7 @@
     </message>
     <message>
         <source>Paste address from clipboard</source>
-        <translation>Vložte adresu z klipbordu</translation>
+        <translation>Vložiť adresu zo schránky</translation>
     </message>
     <message>
         <source>Alt+P</source>
@@ -2187,7 +2331,7 @@
     </message>
     <message>
         <source>Paste address from clipboard</source>
-        <translation>Vložte adresu z klipbordu</translation>
+        <translation>Vložiť adresu zo schránky</translation>
     </message>
     <message>
         <source>Alt+P</source>
@@ -2203,7 +2347,7 @@
     </message>
     <message>
         <source>Copy the current signature to the system clipboard</source>
-        <translation>Kopírovať práve zvolenú adresu do systémového klipbordu</translation>
+        <translation>Kopírovať tento podpis do systémovej schránky</translation>
     </message>
     <message>
         <source>Sign the message to prove you own this Bitcoin address</source>
@@ -2423,6 +2567,10 @@
         <translation>ID transakcie</translation>
     </message>
     <message>
+        <source>Transaction total size</source>
+        <translation>Celková veľkosť transakcie</translation>
+    </message>
+    <message>
         <source>Merchant</source>
         <translation>Kupec</translation>
     </message>
@@ -2461,7 +2609,11 @@
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Táto časť obrazovky zobrazuje detailný popis transakcie</translation>
     </message>
-    </context>
+    <message>
+        <source>Details for %1</source>
+        <translation>Podrobnosti pre %1</translation>
+    </message>
+</context>
 <context>
     <name>TransactionTableModel</name>
     <message>
@@ -2644,6 +2796,10 @@
         <translation>Skopírovať neupravenú transakciu</translation>
     </message>
     <message>
+        <source>Copy full transaction details</source>
+        <translation>Kopírovať všetky podrobnosti o transakcii</translation>
+    </message>
+    <message>
         <source>Edit label</source>
         <translation>Upraviť popis</translation>
     </message>
@@ -2804,7 +2960,7 @@
     </message>
     <message>
         <source>Fee (in %s/kB) to add to transactions you send (default: %s)</source>
-        <translation>Poplatok (za %s/kB) pridaný do tranzakcie, ktorú posielate (predvolené: %s)</translation>
+        <translation>Poplatok (za %s/kB) pridaný do transakcie, ktorú posielate (predvolené: %s)</translation>
     </message>
     <message>
         <source>Pruning blockstore...</source>
@@ -2932,7 +3088,7 @@
     </message>
     <message>
         <source>Enable publish hash transaction in &lt;address&gt;</source>
-        <translation>Povoliť zverejnenie hash tranzakcií pre &lt;address&gt;</translation>
+        <translation>Povoliť zverejnenie hash transakcií pre &lt;address&gt;</translation>
     </message>
     <message>
         <source>Enable publish raw block in &lt;address&gt;</source>
@@ -3152,7 +3308,7 @@
     </message>
     <message>
         <source>The transaction amount is too small to send after the fee has been deducted</source>
-        <translation>Suma je príliš malá pre odoslanie tranzakcie</translation>
+        <translation>Suma je príliš malá pre odoslanie transakcie</translation>
     </message>
     <message>
         <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
@@ -3236,7 +3392,7 @@
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
-        <translation>Suma tranzakcie je príliš malá na zaplatenie poplatku</translation>
+        <translation>Suma transakcie je príliš malá na zaplatenie poplatku</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
@@ -3323,6 +3479,10 @@
         <translation>Výstupné ladiace informácie (predvolené: %u, dodanie &lt;category&gt; je voliteľné)</translation>
     </message>
     <message>
+        <source>This is the transaction fee you may pay when fee estimates are not available.</source>
+        <translation>Toto je poplatok za transakciu keď odhad poplatkov ešte nie je k dispozícii.</translation>
+    </message>
+    <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
         <translation>Celková dĺžka verzie sieťového reťazca (%i) prekračuje maximálnu dĺžku (%i). Znížte počet a veľkosť komentárov.</translation>
     </message>
@@ -3353,6 +3513,10 @@
     <message>
         <source>Whitelist peers connecting from the given IP address (e.g. 1.2.3.4) or CIDR notated network (e.g. 1.2.3.0/24). Can be specified multiple times.</source>
         <translation>Povoliť partnerov pripájajúcich sa z danej IP adresy (napr. 1.2.3.4) alebo zo siete vo formáte CIDR (napr. 1.2.3.0/24). Môže byť zadané viackrát.</translation>
+    </message>
+    <message>
+        <source>%s is set very high!</source>
+        <translation>Hodnota %s je nastavená veľmi vysoko!</translation>
     </message>
     <message>
         <source>(default: %s)</source>
@@ -3431,12 +3595,32 @@
         <translation>Minúť nepotvrdené zmenu pri posielaní transakcií (predvolené: %u)</translation>
     </message>
     <message>
+        <source>Starting network threads...</source>
+        <translation>Spúšťajú sa sieťové vlákna...</translation>
+    </message>
+    <message>
+        <source>The wallet will avoid paying less than the minimum relay fee.</source>
+        <translation>Peňaženka zabráni zaplateniu menšej sumy ako je minimálny poplatok.</translation>
+    </message>
+    <message>
+        <source>This is the minimum transaction fee you pay on every transaction.</source>
+        <translation>Toto je minimálny poplatok za transakciu pri každej transakcii.</translation>
+    </message>
+    <message>
+        <source>This is the transaction fee you will pay if you send a transaction.</source>
+        <translation>Toto je poplatok za transakciu pri odoslaní transakcie.</translation>
+    </message>
+    <message>
         <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
         <translation>Hranica pre odpájanie zle sa správajúcim partnerským uzlom (predvolené: %u)</translation>
     </message>
     <message>
         <source>Transaction amounts must not be negative</source>
         <translation>Sumy transakcií nesmú byť záporné</translation>
+    </message>
+    <message>
+        <source>Transaction must have at least one recipient</source>
+        <translation>Transakcia musí mať aspoň jedného príjemcu</translation>
     </message>
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>

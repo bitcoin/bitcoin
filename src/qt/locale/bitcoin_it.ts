@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Fare clic con il tasto destro del mouse per modificare l'indirizzo o l'etichettadefault</translation>
+        <translation>Fare clic con il tasto destro del mouse per modificare l'indirizzo o l'etichetta</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -180,8 +180,20 @@
         <translation>Portamonete cifrato</translation>
     </message>
     <message>
+        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
+        <translation>IMPORTANTE: qualsiasi backup del file portamonete effettuato in precedenza dovrà essere sostituito con il file del portamonete cifrato appena generato. Per ragioni di sicurezza, i precedenti backup del file del portamonete non cifrato diventeranno inservibili non appena si inizierà ad utilizzare il nuovo portamonete cifrato.</translation>
+    </message>
+    <message>
         <source>Wallet encryption failed</source>
         <translation>Il processo di crittografia del tuo portafogli è fallito</translation>
+    </message>
+    <message>
+        <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
+        <translation>Crittaggio fallito a causa di un errore interno. Il portamonete non è stato crittato.</translation>
+    </message>
+    <message>
+        <source>The supplied passphrases do not match.</source>
+        <translation>Le frasi di accesso non corrispondono.</translation>
     </message>
     <message>
         <source>Wallet unlock failed</source>
@@ -191,7 +203,19 @@
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
         <translation>La frase inserita per decrittografare il tuo portafoglio è incorretta</translation>
     </message>
-    </context>
+    <message>
+        <source>Wallet decryption failed</source>
+        <translation>Decrittazione del portamonete fallita.</translation>
+    </message>
+    <message>
+        <source>Wallet passphrase was successfully changed.</source>
+        <translation>La frase di accesso al portamonete è stata cambiata con successo.</translation>
+    </message>
+    <message>
+        <source>Warning: The Caps Lock key is on!</source>
+        <translation>Attenzione: è attivo il tasto blocco maiuscole !</translation>
+    </message>
+</context>
 <context>
     <name>BanTableModel</name>
     <message>
@@ -623,8 +647,20 @@
         <translation>no</translation>
     </message>
     <message>
+        <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
+        <translation>Questa etichetta diventerà rossa se uno qualsiasi dei destinatari riceverà un importo inferiore alla corrente soglia minima per la movimentazione della valuta.</translation>
+    </message>
+    <message>
+        <source>Can vary +/- %1 satoshi(s) per input.</source>
+        <translation>Può variare di +/- %1 satoshi per input.</translation>
+    </message>
+    <message>
         <source>(no label)</source>
         <translation>(nessuna etichetta)</translation>
+    </message>
+    <message>
+        <source>change from %1 (%2)</source>
+        <translation>cambio da %1 (%2)</translation>
     </message>
     <message>
         <source>(change)</source>
@@ -653,7 +689,39 @@
         <source>&amp;Address</source>
         <translation>&amp;Indirizzo</translation>
     </message>
-    </context>
+    <message>
+        <source>New receiving address</source>
+        <translation>Nuovo indirizzo di ricezione</translation>
+    </message>
+    <message>
+        <source>New sending address</source>
+        <translation>Nuovo indirizzo d'invio</translation>
+    </message>
+    <message>
+        <source>Edit receiving address</source>
+        <translation>Modifica indirizzo di ricezione</translation>
+    </message>
+    <message>
+        <source>Edit sending address</source>
+        <translation>Modifica indirizzo d'invio</translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is not a valid Bitcoin address.</source>
+        <translation>L'indirizzo inserito "%1" non è un indirizzo bitcoin valido.</translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is already in the address book.</source>
+        <translation>L'indirizzo inserito "%1" è già in rubrica.</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Impossibile sbloccare il portamonete.</translation>
+    </message>
+    <message>
+        <source>New key generation failed.</source>
+        <translation>Generazione della nuova chiave non riuscita.</translation>
+    </message>
+</context>
 <context>
     <name>FreespaceChecker</name>
     <message>
@@ -782,12 +850,20 @@
         <translation>Modulo</translation>
     </message>
     <message>
+        <source>Number of blocks left</source>
+        <translation>Numero di blocchi mancanti</translation>
+    </message>
+    <message>
         <source>Unknown...</source>
         <translation>Sconosciuto...</translation>
     </message>
     <message>
         <source>Last block time</source>
         <translation>Ora del blocco più recente</translation>
+    </message>
+    <message>
+        <source>Progress</source>
+        <translation>Progresso</translation>
     </message>
     <message>
         <source>Hide</source>
@@ -812,7 +888,11 @@
         <source>Select payment request file</source>
         <translation>Seleziona il file di richiesta di pagamento</translation>
     </message>
-    </context>
+    <message>
+        <source>Select payment request file to open</source>
+        <translation>Seleziona il file di richiesta di pagamento da aprire</translation>
+    </message>
+</context>
 <context>
     <name>OptionsDialog</name>
     <message>
@@ -1127,14 +1207,86 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
 <context>
     <name>PaymentServer</name>
     <message>
+        <source>Payment request error</source>
+        <translation>Errore di richiesta di pagamento</translation>
+    </message>
+    <message>
+        <source>Cannot start bitcoin: click-to-pay handler</source>
+        <translation>Impossibile avviare bitcoin: gestore click-to-pay</translation>
+    </message>
+    <message>
+        <source>URI handling</source>
+        <translation>Gestione URI</translation>
+    </message>
+    <message>
+        <source>Payment request fetch URL is invalid: %1</source>
+        <translation>URL di recupero della Richiesta di pagamento non valido: %1</translation>
+    </message>
+    <message>
+        <source>Invalid payment address %1</source>
+        <translation>Indirizzo di pagamento non valido %1</translation>
+    </message>
+    <message>
+        <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
+        <translation>Impossibile interpretare l'URI! I parametri dell'URI o l'indirizzo Bitcoin potrebbero non essere corretti.</translation>
+    </message>
+    <message>
+        <source>Payment request file handling</source>
+        <translation>Gestione del file di richiesta del pagamento</translation>
+    </message>
+    <message>
+        <source>Payment request file cannot be read! This can be caused by an invalid payment request file.</source>
+        <translation>Impossibile leggere il file della richiesta di pagamento! Il file della richiesta di pagamento potrebbe non essere valido</translation>
+    </message>
+    <message>
+        <source>Payment request rejected</source>
+        <translation>Richiesta di pagamento respinta</translation>
+    </message>
+    <message>
+        <source>Payment request network doesn't match client network.</source>
+        <translation>La rete della richiesta di pagamento non corrisponde alla rete del client.</translation>
+    </message>
+    <message>
         <source>Payment request expired.</source>
         <translation>Richiesta di pagamento scaduta.</translation>
+    </message>
+    <message>
+        <source>Payment request is not initialized.</source>
+        <translation>La richiesta di pagamento non è stata inizializzata.</translation>
+    </message>
+    <message>
+        <source>Unverified payment requests to custom payment scripts are unsupported.</source>
+        <translation>Le richieste di pagamento non verificate verso script di pagamento personalizzati non sono supportate.</translation>
     </message>
     <message>
         <source>Invalid payment request.</source>
         <translation>Richiesta di pagamento invalida</translation>
     </message>
-    </context>
+    <message>
+        <source>Requested payment amount of %1 is too small (considered dust).</source>
+        <translation>L'importo di pagamento di %1 richiesto è troppo basso (considerato come trascurabile).</translation>
+    </message>
+    <message>
+        <source>Refund from %1</source>
+        <translation>Rimborso da %1</translation>
+    </message>
+    <message>
+        <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
+        <translation>La richiesta di pagamento %1 è troppo grande (%2 bytes, consentiti %3 bytes)</translation>
+    </message>
+    <message>
+        <source>Error communicating with %1: %2</source>
+        <translation>Errore di comunicazione con %1: %2</translation>
+    </message>
+    <message>
+        <source>Payment request cannot be parsed!</source>
+        <translation>La richiesta di pagamento non può essere processata!</translation>
+    </message>
+    <message>
+        <source>Payment acknowledged</source>
+        <translation>Pagamento riconosciuto</translation>
+    </message>
+</context>
 <context>
     <name>PeerTableModel</name>
     <message>
@@ -1226,6 +1378,18 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
 </context>
 <context>
     <name>QRImageWidget</name>
+    <message>
+        <source>&amp;Save Image...</source>
+        <translation>&amp;Salva immagine</translation>
+    </message>
+    <message>
+        <source>&amp;Copy Image</source>
+        <translation>&amp;Copia immagine</translation>
+    </message>
+    <message>
+        <source>Save QR Code</source>
+        <translation>Salva codice QR</translation>
+    </message>
     <message>
         <source>PNG Image (*.png)</source>
         <translation>Immagine PNG (*.png)</translation>
@@ -1450,6 +1614,10 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>1 &amp;anno</translation>
     </message>
     <message>
+        <source>&amp;Disconnect</source>
+        <translation>&amp;Disconnetti</translation>
+    </message>
+    <message>
         <source>Welcome to the %1 RPC console.</source>
         <translation>Benvenuto nella console RPC di %1.</translation>
     </message>
@@ -1614,6 +1782,14 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>&amp;Save Image...</source>
         <translation>&amp;Salva Immagine...</translation>
+    </message>
+    <message>
+        <source>Request payment to %1</source>
+        <translation>Richiesta di pagamento a %1</translation>
+    </message>
+    <message>
+        <source>Payment information</source>
+        <translation>Informazioni di pagamento</translation>
     </message>
     <message>
         <source>URI</source>
@@ -1840,6 +2016,26 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>%1 to %2</source>
         <translation>%1 a %2</translation>
+    </message>
+    <message>
+        <source>added as transaction fee</source>
+        <translation> Includi il costo della transazione</translation>
+    </message>
+    <message>
+        <source>or</source>
+        <translation>o</translation>
+    </message>
+    <message>
+        <source>The amount exceeds your balance.</source>
+        <translation>Non hai abbastanza fondi</translation>
+    </message>
+    <message>
+        <source>Transaction creation failed!</source>
+        <translation>Creazione della transazione fallita!</translation>
+    </message>
+    <message>
+        <source>The transaction was rejected with the following reason: %1</source>
+        <translation>La transazione è stata respinta per il seguente motivo: %1</translation>
     </message>
     <message>
         <source>Payment request expired.</source>
@@ -2113,6 +2309,22 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>%1/offline</source>
         <translation>%1/offline</translation>
+    </message>
+    <message>
+        <source>0/unconfirmed, %1</source>
+        <translation>0/non confermati, %1</translation>
+    </message>
+    <message>
+        <source>abandoned</source>
+        <translation>abbandonato</translation>
+    </message>
+    <message>
+        <source>%1/unconfirmed</source>
+        <translation>%1/non confermato</translation>
+    </message>
+    <message>
+        <source>%1 confirmations</source>
+        <translation>%1 conferme</translation>
     </message>
     <message>
         <source>Status</source>
