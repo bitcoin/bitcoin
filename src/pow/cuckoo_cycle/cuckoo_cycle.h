@@ -47,12 +47,24 @@ public:
         // TODO: validate proofsizes; must be even, max must >= min, ...
     }
 
-    static cc_challenge_ref random_challenge(const uint8_t len = HEADERLEN - 4) {
-        cc_challenge* c = new cc_challenge();
-        c->params.resize(len);
-        c->randomize(c->params.size());
-        return cc_challenge_ref(c);
+    cc_challenge(const uint8_t sizeshift_in, const uint16_t proofsize_min_in, const uint16_t proofsize_max_in, const std::vector<uint8_t>& data)
+    : challenge(data)
+    {
+        config.params.resize(5);
+        uint8_t* configb = &config.params[0];
+        *configb = sizeshift = sizeshift_in;
+        configb += 1;
+        *(uint16_t*)configb = proofsize_min = proofsize_min_in;
+        configb += 2;
+        *(uint16_t*)configb = proofsize_max = proofsize_max_in;
     }
+
+    // static cc_challenge_ref random_challenge(const uint8_t len = HEADERLEN - 4) {
+    //     cc_challenge* c = new cc_challenge();
+    //     c->params.resize(len);
+    //     c->randomize(c->params.size());
+    //     return cc_challenge_ref(c);
+    // }
 
     cc_challenge& operator=(const cc_challenge& other) {
         params = other.params;
@@ -76,7 +88,9 @@ public:
     cuckoo_ctx* ctx;
     int next_nonce;
     static int last_err;               ///< last error after call to is_valid()
-    cuckoo_cycle(cc_challenge_ref c_in, callback_ref cb_in = nullptr) : pow(POWID_CUCKOO_CYCLE, c_in, cb_in), thread(nullptr), c(c_in), next_nonce(0) {}
+    bool external_nonce;
+    cuckoo_cycle(cc_challenge_ref c_in, callback_ref cb_in = nullptr, bool external_nonce_in = true)
+    : pow(POWID_CUCKOO_CYCLE, c_in, cb_in), thread(nullptr), c(c_in), next_nonce(0), external_nonce(external_nonce_in) {}
     ~cuckoo_cycle();
 
     std::string last_error_string() {
@@ -84,13 +98,27 @@ public:
     }
 
     bool is_valid(solution& s) const override {
-        if (s.params.size() < size_t(1 + c->proofsize_min) * 4 ||
-            s.params.size() > size_t(1 + c->proofsize_max) * 4) {
-            return false; // 1 nonce + edges, all 32 bit
+        u32* values;
+        u32 nonce = 0;
+        u32* keys;
+        if (external_nonce) {
+            // nonce is embedded in solution
+            if (s.params.size() < size_t(1 + c->proofsize_min) * 4 ||
+                s.params.size() > size_t(1 + c->proofsize_max) * 4) {
+                return false; // 1 nonce + edges, all 32 bit
+            }
+            values = (u32*)&s.params[0];
+            nonce = values[0];
+            keys = &values[1];
+        } else {
+            // nonce is embedded in challenge
+            if (s.params.size() < size_t(c->proofsize_min) * 4 ||
+                s.params.size() > size_t(c->proofsize_max) * 4) {
+                return false; // edges, all 32 bit
+            }
+            values = (u32*)&s.params[0];
+            keys = &values[0];
         }
-        u32* values = (u32*)&s.params[0];
-        u32 nonce = values[0];
-        u32* keys = &values[1];
         uint16_t proofsize = (s.params.size() >> 2) - 1;
         printf("CC is_valid(): nonce=%u, proofsize=%u\n", nonce, proofsize);
 
@@ -98,7 +126,9 @@ public:
         u32 hdrlen = c.get()->params.size();
         memcpy(headernonce, &c.get()->params[0], hdrlen);
         if (hdrlen < sizeof(headernonce)) memset(headernonce + hdrlen, 0, sizeof(headernonce) - hdrlen);
-        ((u32 *)headernonce)[HEADERLEN/sizeof(u32)-1] = htole32(nonce);
+        if (external_nonce) {
+            ((u32 *)headernonce)[HEADERLEN/sizeof(u32)-1] = htole32(nonce);
+        }
 
         last_err = verify(keys, headernonce, HEADERLEN, proofsize);
         return (last_err == POW_OK);

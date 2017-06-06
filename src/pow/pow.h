@@ -8,7 +8,7 @@
 #include <vector>
 #include <stdint.h>
 
-#include "random.h"
+// #include "random.h"
 #include "serialize.h"
 #include "tinyformat.h"
 
@@ -64,20 +64,20 @@ public:
     using container::container;
     challenge() : container() {}
     challenge(const challenge& other) : container(other) { config = other.config; }
-    void randomize(const uint32_t bytes, const uint32_t offset = 0) {
-        if (params.size() < bytes) params.resize(bytes);
-        GetRandBytes(&params.begin()[offset], bytes);
-    }
+    // void randomize(const uint32_t bytes, const uint32_t offset = 0) {
+    //     if (params.size() < bytes) params.resize(bytes);
+    //     GetRandBytes(&params.begin()[offset], bytes);
+    // }
     /**
      * Generate a random challenge of this POW type.
      * @param  size Number of random bytes to generate.
      * @return      A challenge whose params consists of size random bytes.
      */
-    static challenge* random_challenge(const uint32_t size) {
-        challenge* c = new challenge();
-        c->randomize(size);
-        return c;
-    }
+    // static challenge* random_challenge(const uint32_t size) {
+    //     challenge* c = new challenge();
+    //     c->randomize(size);
+    //     return c;
+    // }
 
     ADD_SERIALIZE_METHODS;
 
@@ -140,8 +140,9 @@ public:
 
     /**
      * Determine if s is a valid solution to c.
-     * @param  s A solution to this POW
-     * @return   Whether the solution solves the challenge.
+     * @param  s             A solution to this POW
+     * @param  noncePosition -1 if nonce is embedded in solution, otherwise the byte position in the challenge which indicates the nonce
+     * @return               Whether the solution solves the challenge.
      */
     virtual bool is_valid(solution& s) const = 0;
 

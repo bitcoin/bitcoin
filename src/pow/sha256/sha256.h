@@ -46,11 +46,11 @@ public:
         configb++;
         *(uint32_t*)configb = nonce_offset;
     }
-    static challenge_ref random_challenge(const uint32_t compact_target_in, const uint8_t nonce_size_in, const uint32_t nonce_offset_in, const uint32_t size) {
-        sha256challenge* c = new sha256challenge(compact_target_in, nonce_size_in, nonce_offset_in, size);
-        c->randomize(c->params.size());
-        return challenge_ref(c);
-    }
+    // static challenge_ref random_challenge(const uint32_t compact_target_in, const uint8_t nonce_size_in, const uint32_t nonce_offset_in, const uint32_t size) {
+    //     sha256challenge* c = new sha256challenge(compact_target_in, nonce_size_in, nonce_offset_in, size);
+    //     c->randomize(c->params.size());
+    //     return challenge_ref(c);
+    // }
 };
 
 class sha256 : public pow {
@@ -131,7 +131,8 @@ public:
         if (background || threads > 1) printf("warning: sha256 solver does not spawn threads\n");
         if (state == state_ready && sc->nonce_size > 0 && !fZeroStartingNonce) {
             // randomize nonce
-            GetRandBytes((unsigned char*)&next_nonce, sizeof(next_nonce));
+            // GetRandBytes((unsigned char*)&next_nonce, sizeof(next_nonce));
+            next_nonce = reinterpret_cast<uint64_t>(this);
         }
         state = state_running;
         ticks_left = ticks;

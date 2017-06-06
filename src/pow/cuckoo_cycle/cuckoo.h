@@ -21,7 +21,7 @@ namespace cuckoo_cycle {
 #ifndef SIZESHIFT
 // the main parameter is the 2log of the graph size,
 // which is the size in bits of the node identifiers
-#define SIZESHIFT 28
+#define SIZESHIFT 26
 #endif
 
 // the graph size / number of nodes

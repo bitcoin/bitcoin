@@ -6,7 +6,7 @@
 
 #include <algorithm>
 
-#include "../random.h"
+// #include "../random.h"
 
 namespace powa {
 
@@ -27,9 +27,10 @@ cuckoo_cycle::~cuckoo_cycle() {
 
 void cuckoo_cycle::solve(uint32_t threads, bool background, int32_t ticks) {
     assert(state == state_ready || state == state_paused);
-    if (state == state_ready && !fZeroStartingNonce) {
+    if (external_nonce && state == state_ready && !fZeroStartingNonce) {
         // randomize nonce
-        GetRandBytes((unsigned char*)&next_nonce, sizeof(next_nonce));
+        // GetRandBytes((unsigned char*)&next_nonce, sizeof(next_nonce));
+        next_nonce = (int)reinterpret_cast<uint64_t>(this);
     }
     state = state_running;
     ticks_left = ticks;
@@ -59,7 +60,7 @@ void cuckoo_cycle::solve_async(uint32_t thread_count) { // asynchronous
     memcpy(ws, &c->params[0], c->params.size());
     ctx = new cuckoo_ctx(thread_count, ntrims, 8, c->proofsize_min, c->proofsize_max);
     while (state == state_running) {
-        ctx->setheadernonce(ws, wx, nonce);
+        if (external_nonce) ctx->setheadernonce(ws, wx, nonce);
         for (uint32_t t = 0; t < thread_count; t++) {
             threads[t].id = t;
             threads[t].ctx = ctx;
@@ -87,7 +88,7 @@ void cuckoo_cycle::solve_async(uint32_t thread_count) { // asynchronous
         }
         nonce++;
         ticks_left -= ticks_left > -1;
-        if (ticks_left == 0) state = state_paused;
+        if (ticks_left == 0 || !external_nonce) state = state_paused;
     }
     if (state == state_term) state = state_aborted;
     delete ctx;
