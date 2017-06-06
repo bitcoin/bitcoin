@@ -18,6 +18,9 @@ Before every minor and major release:
   - Testnet should be set some tens of thousands back from the tip due to reorgs there.
   - This update should be reviewed with a reindex-chainstate with assumevalid=0 to catch any defect
      that causes rejection of blocks in the past history.
+* Update UNIX manpages with `contrib/devtools/gen-manpages.sh`. Do this after bumping the version and rebuilding
+  to make sure the bumped version number is up-to-date. Also make sure that the git tree is clean before doing
+  this, to avoid `-dirty` from appearing in the man page version.
 
 Before every major release:
 
