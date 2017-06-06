@@ -84,7 +84,7 @@ public:
     const std::vector<SeedSpec6>& FixedSeeds() const { return vFixedSeeds; }
     const CCheckpointData& Checkpoints() const { return checkpointData; }
     const ChainTxData& TxData() const { return chainTxData; }
-    void UpdateBIP9Parameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout, int64_t nWindowSize, int64_t nThreshold);
+    void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout, int64_t nWindowSize, int64_t nThreshold);
     void UpdateDIP3Parameters(int nActivationHeight, int nEnforcementHeight);
     void UpdateBudgetParameters(int nMasternodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock);
     int PoolMinParticipants() const { return nPoolMinParticipants; }
@@ -143,9 +143,9 @@ const CChainParams &Params();
 void SelectParams(const std::string& chain);
 
 /**
- * Allows modifying the BIP9 regtest parameters.
+ * Allows modifying the Version Bits regtest parameters.
  */
-void UpdateBIP9Parameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout, int64_t nWindowSize, int64_t nThreshold);
+void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout, int64_t nWindowSize, int64_t nThreshold);
 
 /**
  * Allows modifying the DIP3 activation and enforcement height

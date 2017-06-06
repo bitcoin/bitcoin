@@ -313,7 +313,7 @@ static UniValue BIP22ValidationResult(const CValidationState& state)
 }
 
 std::string gbt_vb_name(const Consensus::DeploymentPos pos) {
-    const struct BIP9DeploymentInfo& vbinfo = VersionBitsDeploymentInfo[pos];
+    const struct VBDeploymentInfo& vbinfo = VersionBitsDeploymentInfo[pos];
     std::string s = vbinfo.name;
     if (!vbinfo.gbt_force) {
         s.insert(s.begin(), '!');
@@ -648,7 +648,7 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
                 // FALL THROUGH to get vbavailable set...
             case THRESHOLD_STARTED:
             {
-                const struct BIP9DeploymentInfo& vbinfo = VersionBitsDeploymentInfo[pos];
+                const struct VBDeploymentInfo& vbinfo = VersionBitsDeploymentInfo[pos];
                 vbavailable.push_back(Pair(gbt_vb_name(pos), consensusParams.vDeployments[pos].bit));
                 if (setClientRules.find(vbinfo.name) == setClientRules.end()) {
                     if (!vbinfo.gbt_force) {
@@ -661,7 +661,7 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
             case THRESHOLD_ACTIVE:
             {
                 // Add to rules only
-                const struct BIP9DeploymentInfo& vbinfo = VersionBitsDeploymentInfo[pos];
+                const struct VBDeploymentInfo& vbinfo = VersionBitsDeploymentInfo[pos];
                 aRules.push_back(gbt_vb_name(pos));
                 if (setClientRules.find(vbinfo.name) == setClientRules.end()) {
                     // Not supported by the client; make sure it's safe to proceed
