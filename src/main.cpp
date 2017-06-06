@@ -575,10 +575,7 @@ CBlockIndex *LastCommonAncestor(CBlockIndex *pa, CBlockIndex *pb)
 
 /** Update pindexLastCommonBlock and add not-in-flight missing successors to vBlocks, until it has
  *  at most count entries. */
-void FindNextBlocksToDownload(NodeId nodeid,
-    unsigned int count,
-    std::vector<CBlockIndex *> &vBlocks,
-    NodeId &nodeStaller)
+static void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vector<CBlockIndex *> &vBlocks)
 {
     if (count == 0)
         return;
@@ -618,7 +615,6 @@ void FindNextBlocksToDownload(NodeId nodeid,
     // download that next block if the window were 1 larger.
     int nWindowEnd = state->pindexLastCommonBlock->nHeight + BLOCK_DOWNLOAD_WINDOW;
     int nMaxHeight = std::min<int>(state->pindexBestKnownBlock->nHeight, nWindowEnd + 1);
-    NodeId waitingfor = -1;
     while (pindexWalk->nHeight < nMaxHeight)
     {
         // Read up to 128 (or more, if more blocks than that are needed) successors of pindexWalk (towards
@@ -649,29 +645,20 @@ void FindNextBlocksToDownload(NodeId nodeid,
                 if (pindex->nChainTx)
                     state->pindexLastCommonBlock = pindex;
             }
-            else if (mapBlocksInFlight.count(pindex->GetBlockHash()) == 0)
+            else
             {
-                // The block is not already downloaded, and not yet in flight.
+                // Return if we've reached the end of the download window.
                 if (pindex->nHeight > nWindowEnd)
                 {
-                    // We reached the end of the window.
-                    if (vBlocks.size() == 0 && waitingfor != nodeid)
-                    {
-                        // We aren't able to fetch anything, but we would be if the download window was one larger.
-                        nodeStaller = waitingfor;
-                    }
                     return;
                 }
+
+                // Return if we've reached the end of the number of blocks we can download for this peer.
                 vBlocks.push_back(pindex);
                 if (vBlocks.size() == count)
                 {
                     return;
                 }
-            }
-            else if (waitingfor == -1)
-            {
-                // This is the first already-in-flight block.
-                waitingfor = mapBlocksInFlight[pindex->GetBlockHash()].first;
             }
         }
     }
@@ -4275,7 +4262,7 @@ static bool IsSuperMajority(int minVersion,
 
 bool ProcessNewBlock(CValidationState &state,
     const CChainParams &chainparams,
-    const CNode *pfrom,
+    CNode *pfrom,
     const CBlock *pblock,
     bool fForceProcessing,
     CDiskBlockPos *dbp)
@@ -4302,7 +4289,8 @@ bool ProcessNewBlock(CValidationState &state,
 
     {
         LOCK(cs_main);
-        bool fRequested = MarkBlockAsReceived(pblock->GetHash());
+        uint256 hash = pblock->GetHash();
+        bool fRequested = MarkBlockAsReceived(hash);
         fRequested |= fForceProcessing;
         if (!checked)
         {
@@ -4323,6 +4311,11 @@ bool ProcessNewBlock(CValidationState &state,
             // until the parents arrive.
             return error("%s: AcceptBlock FAILED", __func__);
         }
+
+        // We must indicate to the request manager that the block was received only after it has
+        // been stored to disk. Doing so prevents unnecessary re-requests.
+        CInv inv(MSG_BLOCK, hash);
+        requester.Received(inv, pfrom);
     }
 
     if (!ActivateBestChain(state, chainparams, pblock))
@@ -6712,7 +6705,7 @@ bool ProcessMessage(CNode *pfrom, string strCommand, CDataStream &vRecv, int64_t
             if (CheckBlockHeader(block, state, true)) // block header is fine
                 SendExpeditedBlock(block, pfrom);
         }
-        requester.Received(inv, pfrom, msgSize);
+
         // BUIP010 Extreme Thinblocks: Handle Block Message
         HandleBlockMessage(pfrom, strCommand, block, inv);
         LOCK(cs_orphancache);
@@ -7597,9 +7590,7 @@ bool SendMessages(CNode *pto)
             state.nBlocksInFlight < (int)MAX_BLOCKS_IN_TRANSIT_PER_PEER)
         {
             std::vector<CBlockIndex *> vToDownload;
-            NodeId staller = -1;
-            FindNextBlocksToDownload(
-                pto->GetId(), MAX_BLOCKS_IN_TRANSIT_PER_PEER - state.nBlocksInFlight, vToDownload, staller);
+            FindNextBlocksToDownload(pto->GetId(), MAX_BLOCKS_IN_TRANSIT_PER_PEER - state.nBlocksInFlight, vToDownload);
             BOOST_FOREACH (CBlockIndex *pindex, vToDownload)
             {
                 CInv inv(MSG_BLOCK, pindex->GetBlockHash());
@@ -7608,14 +7599,6 @@ bool SendMessages(CNode *pto)
                     requester.AskFor(inv, pto);
                     LogPrint("req", "AskFor block %s (%d) peer=%d\n", pindex->GetBlockHash().ToString(),
                         pindex->nHeight, pto->id);
-                }
-            }
-            if (state.nBlocksInFlight == 0 && staller != -1)
-            {
-                if (State(staller)->nStallingSince == 0)
-                {
-                    State(staller)->nStallingSince = nNow;
-                    LogPrint("net", "Stall started peer=%d\n", staller);
                 }
             }
         }
