@@ -291,9 +291,12 @@ int CommandLineRPC(int argc, char *argv[])
             
             if (args.size() == 0)
             {
-                args.resize(1);
+                args.resize(2);
                 printf("Please enter a mnemonic or private extkey and press return:\n");
                 std::getline(std::cin, args[0]);
+                
+                printf("Please enter passphrase, leave blank for none:\n");
+                std::getline(std::cin, args[1]);
             } else
             {
                 if (args.size() > 0 && (args[0] == "-stdin" || args[0] == ""))

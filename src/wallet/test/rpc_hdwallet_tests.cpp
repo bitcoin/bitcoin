@@ -110,6 +110,7 @@ BOOST_AUTO_TEST_CASE(rpc_hdwallet_timelocks)
 {
     UniValue rv;
     std::string sResult, sTxn, sCmd;
+    std::vector<std::string> vAddresses;
     
     BOOST_CHECK_NO_THROW(rv = CallRPC("extkeyimportmaster xprv9s21ZrQH143K3VrEYG4rhyPddr2o53qqqpCufLP6Rb3XSta2FZsqCanRJVfpTi4UX28pRaAfVGfiGpYDczv8tzTM6Qm5TRvUA9HDStbNUbQ"));
     
@@ -134,9 +135,9 @@ BOOST_AUTO_TEST_CASE(rpc_hdwallet_timelocks)
     
     
     
-    
     BOOST_CHECK_NO_THROW(rv = CallRPC("getnewaddress"));
     sResult = StripQuotes(rv.write());
+    vAddresses.push_back(sResult);
     BOOST_CHECK(sResult == "PdsEywwkgVLJ8bF8b8Wp9gCj63KrXX3zww");
     BOOST_CHECK(CBitcoinAddress(sResult).GetKeyID(id));
     
@@ -176,6 +177,12 @@ BOOST_AUTO_TEST_CASE(rpc_hdwallet_timelocks)
     
     
     
+    
+    
+    CScript *ps = &((CTxOutStandard*)txn.vpout[0].get())->scriptPubKey;
+    BOOST_REQUIRE(ps);
+    
+    *ps = CScript() << 1487406900 << OP_CHECKSEQUENCEVERIFY << OP_DROP << OP_DUP << OP_HASH160 << ToByteVector(id) << OP_EQUALVERIFY << OP_CHECKSIG;
     
     
     

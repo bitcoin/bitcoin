@@ -89,7 +89,8 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
         } else
         if (k == 1)
         {
-            if (opcode != OP_CHECKLOCKTIMEVERIFY)
+            if (opcode != OP_CHECKLOCKTIMEVERIFY
+                && opcode != OP_CHECKSEQUENCEVERIFY)
                 break;
         } else
         if (k == 2)
