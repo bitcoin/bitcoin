@@ -74,6 +74,8 @@ enum FeeEstimateHorizon {
     LONG_HALFLIFE = 2
 };
 
+std::string StringForFeeEstimateHorizon(FeeEstimateHorizon horizon);
+
 /* Enumeration of reason for returned fee estimate */
 enum class FeeReason {
     NONE,
