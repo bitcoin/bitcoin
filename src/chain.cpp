@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "chain.h"
+#include "util.h"
 
 /**
  * CChain implementation
@@ -97,8 +98,12 @@ CBlockIndex* CBlockIndex::GetAncestor(int height)
             // Only follow pskip if pprev->pskip isn't better than pskip->pprev.
             pindexWalk = pindexWalk->pskip;
             heightWalk = heightSkip;
+        } else if (pindexWalk->pprev == NULL) {
+            // pindexWalk should always have a parent (since pindexWalk is not the genesis block)
+            LogPrintf("%s: Block index is missing a block. Block %s, height %d has no parent.\n",  __func__, pindexWalk->GetBlockHash().ToString(), heightWalk);
+            LogPrintf("%s: Run bitcoin with -reindex to rebuild the block index. This will redownload the entire blockchain if running a pruned node.\n",  __func__);
+            abort();
         } else {
-            assert(pindexWalk->pprev);
             pindexWalk = pindexWalk->pprev;
             heightWalk--;
         }
