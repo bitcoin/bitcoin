@@ -17,6 +17,22 @@
 static secp256k1_context* secp256k1_context_sign = NULL;
 
 /** These functions are taken from the libsecp256k1 distribution and are very ugly. */
+
+/**
+ * This parses a format loosely based on a DER encoding of the ECPrivateKey type from
+ * section C.4 of SEC 1 <http://www.secg.org/sec1-v2.pdf>, with the following caveats:
+ *
+ * * The octet-length of the SEQUENCE must be encoded as 1 or 2 octets. It is not
+ *   required to be encoded as one octet if it is less than 256, as DER would require.
+ * * The octet-length of the SEQUENCE must not be greater than the remaining
+ *   length of the key encoding, but need not match it (i.e. the encoding may contain
+ *   junk after the encoded SEQUENCE).
+ * * The privateKey OCTET STRING is zero-filled on the left to 32 octets.
+ * * Anything after the encoding of the privateKey OCTET STRING is ignored, whether
+ *   or not it is validly encoded DER.
+ *
+ * out32 must point to an output buffer of length at least 32 bytes.
+ */
 static int ec_privkey_import_der(const secp256k1_context* ctx, unsigned char *out32, const unsigned char *privkey, size_t privkeylen) {
     const unsigned char *end = privkey + privkeylen;
     size_t lenb = 0;
@@ -66,6 +82,13 @@ static int ec_privkey_import_der(const secp256k1_context* ctx, unsigned char *ou
     return 1;
 }
 
+/**
+ * This serializes to a DER encoding of the ECPrivateKey type from section C.4 of SEC 1
+ * <http://www.secg.org/sec1-v2.pdf>. The optional parameters and publicKey fields are
+ * included.
+ *
+ * key32 must point to a 32-byte raw private key.
+ */
 static int ec_privkey_export_der(const secp256k1_context *ctx, unsigned char *privkey, size_t *privkeylen, const unsigned char *key32, int compressed) {
     secp256k1_pubkey pubkey;
     size_t pubkeylen = 0;
