@@ -46,6 +46,7 @@ public:
     CBaseC4Params()
     {
         nRPCPort = 9232;
+        strDataDir = "c4";
     }
 };
 

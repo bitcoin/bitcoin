@@ -48,13 +48,15 @@ static void DetermineNonce(CBlock block, uint32_t nBits)
     uint64_t iters = 0;
     block.nNonce = 0;
     uint32_t noncePoint = block.nNonce;
-    arith_uint256 hash = UintToArith256(block.GetHash());
-    arith_uint256 bnLowest = hash;
     uint64_t progressIter = 0;
     std::string targetValueString = bnTarget.ToString();
-    while (!block.CheckProofOfWork(true) || bnTarget <= hash) {
+    bool proven = block.CheckProofOfWork(true);
+    arith_uint256 hash = UintToArith256(block.GetHash());
+    arith_uint256 bnLowest = hash;
+    while (!proven || bnTarget <= hash) {
+        printf("hash: %s\n", hash.ToString().c_str());
         progressIter++;
-        if (hash < bnLowest) {
+        if (proven && hash < bnLowest) {
             bnLowest = hash;
             printf("Progress after %llu iterations (%s):\n", progressIter, TimeDiff(difftime(time(0), lastprog)).c_str());
             progressIter = 0;
@@ -68,20 +70,25 @@ static void DetermineNonce(CBlock block, uint32_t nBits)
             block.nTime++;
             printf("- iterated over all nonce values; updating nTime -> %u\n", block.nTime);
         }
-        if (iters % 10000000 == 0) {
+        // if (iters % 10 == 0) {
             printf("- %llu iters [%u] (last prog %s ago)\n", iters, block.nNonce, TimeDiff(difftime(time(0), lastprog)).c_str());
-        }
+        // }
+        proven = block.CheckProofOfWork(true);
         hash = UintToArith256(block.GetHash());
+        printf("proven -> %s, hash -> %s\n", proven ? "true" : "false", hash.ToString().c_str());
     }
     printf("Took %s\n", TimeDiff(difftime( time(0), start)).c_str());
     printf("   %s\n>= %s\n", bnTarget.ToString().c_str(), block.GetHash().ToString().c_str());
     printf("... after %llu iters, nonce = %u; hash = %s\n", iters, block.nNonce, HexStr(block.GetHash()).c_str());
-    printf("genesis = CreateGenesisBlock(%u, %u, ...);\n", block.nTime, block.nNonce);
+    printf("std::vector<uint32_t> vEdges{");
+    for (size_t i = 0; i < block.vEdges.size(); i++) printf("%s%u", i ? ", " : "", block.vEdges[i]);
+    printf("};\n");
+    printf("genesis = CreateGenesisBlock(%u, %u, ..., cycle);\n", block.nTime, block.nNonce);
     printf("assert(consensus.hashGenesisBlock == uint256S(\"0x%s\"));\n", block.GetHash().ToString().c_str());
     printf("assert(genesis.hashMerkleRoot == uint256S(\"0x%s\"));\n", block.hashMerkleRoot.ToString().c_str());
 }
 
-static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward, uint32_t* cycle = nullptr)
+static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward, std::vector<uint32_t>* vpCycles = nullptr)
 {
     CMutableTransaction txNew;
     txNew.nVersion = 1;
@@ -99,7 +106,7 @@ static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesi
     genesis.vtx.push_back(MakeTransactionRef(std::move(txNew)));
     genesis.hashPrevBlock.SetNull();
     genesis.hashMerkleRoot = BlockMerkleRoot(genesis);
-    if (cycle) memcpy(genesis.cycle, cycle, sizeof(uint32_t) * 42);
+    if (vpCycles) genesis.vEdges = *vpCycles; // memcpy(genesis.cycle, cycle, sizeof(uint32_t) * 42);
     if (DetermineNonceRequired(genesis, nBits)) {
         DetermineNonce(genesis, nBits);
     }
@@ -117,11 +124,11 @@ static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesi
  *     CTxOut(nValue=50.00000000, scriptPubKey=0x5F1DF16B2B704C8A578D0B)
  *   vMerkleTree: 4a5e1e
  */
-static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward, uint32_t* cycle = nullptr)
+static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward, std::vector<uint32_t>* vpCycles = nullptr)
 {
     const char* pszTimestamp = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks";
     const CScript genesisOutputScript = CScript() << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f") << OP_CHECKSIG;
-    return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward, cycle);
+    return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward, vpCycles);
 }
 
 void CChainParams::UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout)
@@ -251,7 +258,7 @@ public:
         consensus.BIP34Hash = uint256S("0x000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8");
         consensus.BIP65Height = 0; // 000000000000000004c2b624ed5d7756c508d90fd0da2c7c679febfa6c4735f0
         consensus.BIP66Height = 0; // 00000000000000000379eaa19dce8c9b722d46ae6a57c2f1a988119488b50931
-        consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.powLimit = uint256S("7fffff0000000000000000000000000000000000000000000000000000000000");
         consensus.nPowTargetTimespan = 60 * 60; // 1 hour
         consensus.nPowTargetSpacing = 1 * 60;
         consensus.fPowAllowMinDifficultyBlocks = false;
@@ -290,10 +297,23 @@ public:
         nDefaultPort = 9232;
         nPruneAfterHeight = 100000;
 
-        uint32_t cycle[42] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-        genesis = CreateGenesisBlock(1496312816, 0, 0x207fffff, 1, 50 * COIN, cycle);
+        std::vector<uint32_t> vEdges{
+            1409485, 3789529, 5371692, 6129924, 6681319, 7028467, 8837407, 15464272, 17576893, 19032192, 20577624, 20631626,
+            21597368, 23555556, 25244627, 25330094, 26483188, 26894653, 28257925, 29032109, 29121948, 32493275, 36840805,
+            36955569, 38233849, 41333142, 44170781, 45702087, 45746177, 49645459, 52369294, 52789153, 55792309, 56770930,
+            61727178, 64753429, 65493219, 67285582, 68759304, 78275336, 82306507, 83680274, 84590365, 84753477, 85478477,
+            86256972, 88510298, 88900836, 90473349, 97441439, 98687694, 100474176, 109541059, 116372748, 122000550,
+            122413502, 123392522, 123616273
+        };
+        // uint32_t powCompact = UintToArith256(consensus.powLimit).GetCompact();
+        // printf(
+        //     "compact %s\n"
+        //     "=       0x%08x\n"
+        //     , consensus.powLimit.ToString().c_str(), powCompact
+        // );
+        genesis = CreateGenesisBlock(1496312816, 1, 0x207fffff, 1, 50 * COIN, &vEdges);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"));
+        assert(consensus.hashGenesisBlock == uint256S("0x437840ad883e641b9659c8a70cb0e2c19466d9d0386dc323ee73e36c252694b0"));
         assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
 
         // Note that of those with the service bits flag, most only support a subset of possible options
@@ -310,7 +330,8 @@ public:
         base58Prefixes[EXT_PUBLIC_KEY] = boost::assign::list_of(0x04)(0x88)(0xB2)(0x1E).convert_to_container<std::vector<unsigned char> >();
         base58Prefixes[EXT_SECRET_KEY] = boost::assign::list_of(0x04)(0x88)(0xAD)(0xE4).convert_to_container<std::vector<unsigned char> >();
 
-        vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_main, pnSeed6_main + ARRAYLEN(pnSeed6_main));
+        vFixedSeeds.clear();
+        vSeeds.clear();
 
         fDefaultConsistencyChecks = false;
         fRequireStandard = true;
@@ -319,19 +340,6 @@ public:
         checkpointData = (CCheckpointData) {
             boost::assign::map_list_of
             ( 0, uint256S("0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206"))
-            // ( 11111, uint256S("0x0000000069e244f73d78e8fd29ba2fd2ed618bd6fa2ee92559f542fdb26e7c1d"))
-            // ( 33333, uint256S("0x000000002dd5588a74784eaa7ab0507a18ad16a236e7b1ce69f00d7ddfb5d0a6"))
-            // ( 74000, uint256S("0x0000000000573993a3c9e41ce34471c079dcf5f52a0e824a81e7f953b8661a20"))
-            // (105000, uint256S("0x00000000000291ce28027faea320c8d2b054b2e0fe44a773f3eefb151d6bdc97"))
-            // (134444, uint256S("0x00000000000005b12ffd4cd315cd34ffd4a594f430ac814c91184a0d42d2b0fe"))
-            // (168000, uint256S("0x000000000000099e61ea72015e79632f216fe6cb33d7899acb35b75c8303b763"))
-            // (193000, uint256S("0x000000000000059f452a5f7340de6682a977387c17010ff6e6c3bd83ca8b1317"))
-            // (210000, uint256S("0x000000000000048b95347e83192f69cf0366076336c639f9b7228e9ba171342e"))
-            // (216116, uint256S("0x00000000000001b4f4b433e81ee46494af945cf96014816a4e2370f11b23df4e"))
-            // (225430, uint256S("0x00000000000001c108384350f74090433e7fcf79a606b8e797f065b130575932"))
-            // (250000, uint256S("0x000000000000003887df1f29024b06fc2200b55f8af8f35453d7be294df2d214"))
-            // (279000, uint256S("0x0000000000000001ae8c72a0b0c301f67e3afca10e819efa9041e458e9bd7e40"))
-            // (295000, uint256S("0x00000000000000004d9b4ef50f0f9d686fd69db2e03af35a100370c64632a983"))
         };
 
         chainTxData = ChainTxData{
