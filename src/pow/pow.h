@@ -140,9 +140,8 @@ public:
 
     /**
      * Determine if s is a valid solution to c.
-     * @param  s             A solution to this POW
-     * @param  noncePosition -1 if nonce is embedded in solution, otherwise the byte position in the challenge which indicates the nonce
-     * @return               Whether the solution solves the challenge.
+     * @param  s A solution to this POW
+     * @return   Whether the solution solves the challenge.
      */
     virtual bool is_valid(solution& s) const = 0;
 
@@ -157,11 +156,12 @@ public:
      * Attempt to solve c in the given number of threads over the given number
      * of ticks. Whenever a solution is found, cb.found_solution is called with
      * the given solution.
-     * @param threads    The number of threads to spin up to solve.
-     * @param background If true, the solver will create a new thread and work from there, returning control to the caller immediately.
-     * @param ticks      Number of ticks (cycles) to attempt before temporarily pausing. If -1, unlimited.
+     * @param  threads    The number of threads to spin up to solve.
+     * @param  background If true, the solver will create a new thread and work from there, returning control to the caller immediately.
+     * @param  ticks      Number of ticks (cycles) to attempt before temporarily pausing. If -1, unlimited.
+     * @return            True if some solution was found before return, false otherwise (always false for background = true).
      */
-    virtual void solve(uint32_t threads = 0, bool background = false, int32_t ticks = -1) = 0;
+    virtual bool solve(uint32_t threads = 0, bool background = false, int32_t ticks = -1) = 0;
 
     /**
      * Stop solving.
@@ -218,10 +218,11 @@ public:
         pows.back()->set_output(s, output);
     }
 
-    void solve(uint32_t threads = 0, bool background = false, int32_t ticks = -1) override {
+    bool solve(uint32_t threads = 0, bool background = false, int32_t ticks = -1) override {
         pows.back()->cb = callback_ref(new callback_proxy(this));
-        pows.back()->solve(threads, false, ticks);
+        bool r = pows.back()->solve(threads, false, ticks);
         state = pows.back()->state; // TODO: deal with background case (right now using false for background always)
+        return r;
     }
 
     int64_t expected_iteration_cycles() const override {
