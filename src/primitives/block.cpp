@@ -17,7 +17,6 @@ bool CBlockHeader::found_solution(const powa::pow& p, powa::challenge_ref c, pow
     vEdges.resize(s->params.size() / 4);
     memcpy(&vEdges[0], &s->params[0], s->params.size());
     // call it a day; we may lose some solutions for this nonce but whatevs
-    solver = nullptr;
     return true;
 }
 

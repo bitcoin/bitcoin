@@ -77,7 +77,8 @@ public:
 
     bool CheckProofOfWork(bool searchCycle = false, bool background = false);
 
-    bool ProofAvailable() { return solver == nullptr && vEdges.size() > 0; }
+    bool ProofAvailable() { return vEdges.size() > 0; }
+    bool IsSolving() { return !ProofAvailable() && solver != nullptr && solver->state == powa::state_running; }
 
     void StopSolving() { if (solver != nullptr) solver->abort(); }
 

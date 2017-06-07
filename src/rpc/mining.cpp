@@ -102,9 +102,10 @@ bool processNonce(CBlock* pblock)
     pblock->CheckProofOfWork(true, true);
 
     boost::system_time checkblktime = boost::get_system_time() + boost::posix_time::seconds(5);
-    while (chainActive.Tip() == tip && !pblock->ProofAvailable()) {
+    while (chainActive.Tip() == tip && !pblock->ProofAvailable() && pblock->IsSolving()) {
         cvBlockChange.timed_wait(lock, checkblktime);
         checkblktime += boost::posix_time::seconds(5);
+        LogPrintf("processNonce: same tip: %s, got proof: %s, is solving: %s\n", chainActive.Tip() == tip ? "true" : "false", pblock->ProofAvailable() ? "true" : "false", pblock->IsSolving() ? "true" : "false");
     }
     return pblock->CheckProofOfWork();
 }

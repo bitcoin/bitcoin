@@ -16,10 +16,8 @@ int cuckoo_cycle::last_err = POW_OK;
 
 cuckoo_cycle::~cuckoo_cycle() {
     if (thread) {
-        if (state == state_running) {
-            state = state_term;
-            thread->join();
-        }
+        if (state == state_running) state = state_term;
+        thread->join();
         delete thread;
         thread = nullptr;
     }
@@ -46,6 +44,7 @@ bool cuckoo_cycle::solve(uint32_t threads, bool background, int32_t ticks) {
 
 void cuckoo_cycle::abort() {
     if (pAbort) {
+        printf("*** setting abort flag\n");
         *pAbort = true;
         pAbort = NULL;
     }
@@ -65,21 +64,25 @@ bool cuckoo_cycle::solve_async(uint32_t thread_count) { // asynchronous
     ctx = new cuckoo_ctx(thread_count, ntrims, 8, c->proofsize_min, c->proofsize_max);
     pAbort = &ctx->abort;
     while (state == state_running) {
+        printf("CC: solve_async() entering loop\n");
         if (external_nonce) {
             ctx->setheadernonce(ws, wx, nonce);
         } else {
             ctx->prepare(ws);
         }
+        printf("CC: making threads\n");
         for (uint32_t t = 0; t < thread_count; t++) {
             threads[t].id = t;
             threads[t].ctx = ctx;
             int err = pthread_create(&threads[t].thread, nullptr, worker, (void*)&threads[t]);
             assert(err == 0);
         }
+        printf("CC: joining threads\n");
         for (uint32_t t = 0; t < thread_count; t++) {
             int err = pthread_join(threads[t].thread, nullptr);
             assert(err == 0);
         }
+        printf("CC: joined threads; state is %s; got %u solutions\n", state == state_running ? "running" : "not running", ctx->nsols);
         // if we are aborted due to deallocation we don't want to talk to callback
         // even if we have solutions, so we break on term
         if (state != state_running) break;
@@ -100,10 +103,14 @@ bool cuckoo_cycle::solve_async(uint32_t thread_count) { // asynchronous
                 break;
             }
         }
+        printf("CC: nonce increment\n");
         nonce++;
         ticks_left -= ticks_left > -1;
-        if (state == state_running && (ticks_left == 0 || !external_nonce)) state = state_paused;
+        if (state == state_running && (ticks_left == 0 || !external_nonce)) {
+            state = state_paused;
+        }
     }
+    printf("CC: leaving loop; state = %s\n", state == state_term ? "term" : state == state_paused ? "paused" : "not term or paused");
     if (state == state_term) state = state_aborted;
     delete ctx;
     delete [] ws;

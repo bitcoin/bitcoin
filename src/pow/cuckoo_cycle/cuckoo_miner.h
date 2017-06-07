@@ -457,6 +457,7 @@ inline void *worker(void *vp) {
 #ifdef SINGLECYCLING
   else pthread_exit(NULL);
 #else
+  printf("CC: pre-main barrier()\n");
   barrier(&ctx->barry);
 #endif
   cuckoo_hash &cuckoo = *ctx->cuckoo;
@@ -492,8 +493,12 @@ inline void *worker(void *vp) {
       }
       if (ffs & 64) break; // can't shift by 64
     }
+    if (block % (64 * 10000) == 0) {
+      printf("CC: block=%u, abort=%s\n", block, ctx->abort ? "true" : "false");
+    }
     if (ctx->abort) pthread_exit(NULL);
   }
+  printf("CC: finished\n");
   pthread_exit(NULL);
   return 0;
 }
