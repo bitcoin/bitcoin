@@ -15,6 +15,8 @@
 template <unsigned int BITS>
 base_uint<BITS>::base_uint(const std::string& str)
 {
+    static_assert(BITS/32 > 0 && BITS%32 == 0, "Template parameter BITS must be a positive multiple of 32.");
+
     SetHex(str);
 }
 
