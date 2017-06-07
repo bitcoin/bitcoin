@@ -18,6 +18,7 @@
 #include "sync.h"
 #include "uint256.h"
 
+#include <atomic>
 #include <deque>
 #include <stdint.h>
 
@@ -358,7 +359,7 @@ public:
     CBloomFilter *pfilter;
     // BU - Xtreme Thinblocks: a bloom filter which is separate from the one used by SPV wallets
     CBloomFilter *pThinBlockFilter;
-    int nRefCount;
+    std::atomic<int> nRefCount;
     NodeId id;
 
     // BUIP010 Xtreme Thinblocks: begin section
@@ -807,19 +808,17 @@ class CNodeRef
     void AddRef()
     {
         if (_pnode)
-        {
-            LOCK(cs_vNodes);
             _pnode->AddRef();
-        }
     }
 
     void Release()
     {
         if (_pnode)
         {
-            LOCK(cs_vNodes);
-            _pnode->Release();
+            // Make the noderef null before releasing, to ensure a user can't get freed memory from us
+            CNode *tmp = _pnode;
             _pnode = nullptr;
+            tmp->Release();
         }
     }
 
