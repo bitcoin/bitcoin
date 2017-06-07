@@ -196,6 +196,13 @@ bool CBloomFilter::IsRelevantAndUpdate(const CTransaction& tx)
             if (data.size() != 0 && contains(data))
                 return true;
         }
+
+        // Match if the filter contains any arbitrary script data element in the scriptWitness
+        BOOST_FOREACH(const std::vector<unsigned char>& push, txin.scriptWitness.stack)
+        {
+            if (push.size() != 0 && contains(push))
+                return true;
+        }
     }
 
     return false;
