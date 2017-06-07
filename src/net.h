@@ -350,6 +350,12 @@ public:
     {
         int64_t nRequestTime;
         bool fReceived;
+
+        CThinBlockInFlight()
+        {
+            nRequestTime = GetTime();
+            fReceived = false;
+        }
     };
 
     // socket
