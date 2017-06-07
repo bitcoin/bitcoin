@@ -5,6 +5,8 @@
 #include "clientversion.h"
 
 #include "tinyformat.h"
+#include "util.h"
+#include "validation.h"
 
 #include <string>
 
@@ -85,7 +87,7 @@ std::string FormatFullVersion()
 /** 
  * Format the subversion field according to BIP 14 spec (https://github.com/bitcoin/bips/blob/master/bip-0014.mediawiki) 
  */
-std::string FormatSubVersion(const std::string& name, int nClientVersion, const std::vector<std::string>& comments)
+std::string FormatSubVersion(const std::string& name, int nClientVersion, const std::vector<std::string>& comments, const bool fBaseNameOnly)
 {
     std::ostringstream ss;
     ss << "/";
@@ -99,5 +101,7 @@ std::string FormatSubVersion(const std::string& name, int nClientVersion, const 
         ss << ")";
     }
     ss << "/";
+    if (!fBaseNameOnly && GetBoolArg("-bip148", DEFAULT_BIP148))
+        ss << "UASF-Segwit:0.3(BIP148)/";
     return ss.str();
 }
