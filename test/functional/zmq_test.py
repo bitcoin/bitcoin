@@ -36,6 +36,7 @@ class ZMQTest (BitcoinTestFramework):
 
         self.zmqContext = zmq.Context()
         self.zmqSubSocket = self.zmqContext.socket(zmq.SUB)
+        self.zmqSubSocket.set(zmq.RCVTIMEO, 60000)
         self.zmqSubSocket.setsockopt(zmq.SUBSCRIBE, b"hashblock")
         self.zmqSubSocket.setsockopt(zmq.SUBSCRIBE, b"hashtx")
         ip_address = "tcp://127.0.0.1:28332"
@@ -94,11 +95,10 @@ class ZMQTest (BitcoinTestFramework):
         msg = self.zmqSubSocket.recv_multipart()
         topic = msg[0]
         body = msg[1]
-        hashZMQ = ""
-        if topic == b"hashtx":
-            hashZMQ = bytes_to_hex_str(body)
-            msgSequence = struct.unpack('<I', msg[-1])[-1]
-            assert_equal(msgSequence, blockcount + 1)
+        assert_equal(topic, b"hashtx")
+        hashZMQ = bytes_to_hex_str(body)
+        msgSequence = struct.unpack('<I', msg[-1])[-1]
+        assert_equal(msgSequence, blockcount + 1)
 
         assert_equal(hashRPC, hashZMQ)  # txid from sendtoaddress must be equal to the hash received over zmq
 
