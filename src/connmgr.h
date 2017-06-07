@@ -42,6 +42,13 @@ public:
     NodeId NextNodeId();
 
     /**
+     * Given a node ID, return a node reference to the node.
+     * @param[in] id     The node ID
+     * @return A CNodeRef.  Will be a null CNodeRef if the node was not found.
+     */
+    CNodeRef FindNodeFromId(NodeId id);
+
+    /**
      * Enable expedited sends to a node.  Ignored if already enabled.
      * @param[in] pNode         The node
      * @param[in] fBlocks       True to enable expedited block sends

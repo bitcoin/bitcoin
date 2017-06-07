@@ -62,6 +62,22 @@ NodeId CConnMgr::NextNodeId()
     return ++next;
 }
 
+/**
+ * Given a node ID, return a node reference to the node.
+ */
+CNodeRef CConnMgr::FindNodeFromId(NodeId id)
+{
+    LOCK(cs_vNodes);
+
+    for (CNode *pNode : vNodes)
+    {
+        if (pNode->GetId() == id)
+            return CNodeRef(pNode);
+    }
+
+    return CNodeRef();
+}
+
 void CConnMgr::EnableExpeditedSends(CNode *pNode, bool fBlocks, bool fTxs, bool fForceIfFull)
 {
     LOCK(cs_expedited);

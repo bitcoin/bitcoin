@@ -67,8 +67,7 @@ bool HandleExpeditedRequest(CDataStream &vRecv, CNode *pfrom)
 
     if (!pfrom->ThinBlockCapable() || !IsThinBlocksEnabled())
     {
-        LOCK(cs_main);
-        dosMan.Misbehaving(pfrom->GetId(), 5);
+        dosMan.Misbehaving(pfrom, 5);
         return false;
     }
 

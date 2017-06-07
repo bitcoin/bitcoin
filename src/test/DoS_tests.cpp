@@ -230,7 +230,7 @@ BOOST_AUTO_TEST_CASE(DoS_misbehaving_ban_tests)
     CAddress addr1(ip(0xa0b0c001));
     CNode dummyNode1(INVALID_SOCKET, addr1, "", true);
     dummyNode1.nVersion = 1;
-    dosMan.Misbehaving(dummyNode1.GetId(), 100); // Should get banned
+    dosMan.Misbehaving(&dummyNode1, 100); // Should get banned
     SendMessages(&dummyNode1);
     BOOST_CHECK(dosMan.IsBanned(addr1));
     BOOST_CHECK(!dosMan.IsBanned(ip(0xa0b0c001|0x0000ff00))); // Different IP, not banned
@@ -238,11 +238,11 @@ BOOST_AUTO_TEST_CASE(DoS_misbehaving_ban_tests)
     CAddress addr2(ip(0xa0b0c002));
     CNode dummyNode2(INVALID_SOCKET, addr2, "", true);
     dummyNode2.nVersion = 1;
-    dosMan.Misbehaving(dummyNode2.GetId(), 50);
+    dosMan.Misbehaving(&dummyNode2, 50);
     SendMessages(&dummyNode2);
     BOOST_CHECK(!dosMan.IsBanned(addr2)); // 2 not banned yet...
     BOOST_CHECK(dosMan.IsBanned(addr1));  // ... but 1 still should be
-    dosMan.Misbehaving(dummyNode2.GetId(), 50);
+    dosMan.Misbehaving(&dummyNode2, 50);
     SendMessages(&dummyNode2);
     BOOST_CHECK(dosMan.IsBanned(addr2));
 }
@@ -253,17 +253,19 @@ BOOST_AUTO_TEST_CASE(DoS_non_default_banscore)
     mapArgs["-banscore"] = "111"; // because 11 is my favorite number
     CAddress addr1(ip(0xa0b0c001));
     CNode dummyNode1(INVALID_SOCKET, addr1, "", true);
+    dosMan.HandleCommandLine();
     dummyNode1.nVersion = 1;
-    dosMan.Misbehaving(dummyNode1.GetId(), 100);
+    dosMan.Misbehaving(&dummyNode1, 100);
     SendMessages(&dummyNode1);
     BOOST_CHECK(!dosMan.IsBanned(addr1));
-    dosMan.Misbehaving(dummyNode1.GetId(), 10);
+    dosMan.Misbehaving(&dummyNode1, 10);
     SendMessages(&dummyNode1);
     BOOST_CHECK(!dosMan.IsBanned(addr1));
-    dosMan.Misbehaving(dummyNode1.GetId(), 1);
+    dosMan.Misbehaving(&dummyNode1, 1);
     SendMessages(&dummyNode1);
     BOOST_CHECK(dosMan.IsBanned(addr1));
     mapArgs.erase("-banscore");
+    dosMan.HandleCommandLine();
 }
 
 BOOST_AUTO_TEST_CASE(DoS_bantime_expiration)
@@ -276,7 +278,7 @@ BOOST_AUTO_TEST_CASE(DoS_bantime_expiration)
     CNode dummyNode(INVALID_SOCKET, addr, "", true);
     dummyNode.nVersion = 1;
 
-    dosMan.Misbehaving(dummyNode.GetId(), 100);
+    dosMan.Misbehaving(&dummyNode, 100);
     SendMessages(&dummyNode);
     BOOST_CHECK(dosMan.IsBanned(addr));
 
@@ -330,7 +332,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         tx.vout.resize(1);
         tx.vout[0].nValue = 1*CENT;
         tx.vout[0].scriptPubKey = GetScriptForDestination(key.GetPubKey().GetID());
-      
+
         LOCK(cs_orphancache);
         AddOrphanTx(tx, i);
     }
@@ -358,7 +360,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         tx.vout.resize(1);
         tx.vout[0].nValue = 1*CENT;
         tx.vout[0].scriptPubKey = GetScriptForDestination(key.GetPubKey().GetID());
-      
+
         LOCK(cs_orphancache);
         AddOrphanTx(tx, i);
     }
@@ -433,7 +435,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
             tx.vout.resize(1);
             tx.vout[0].nValue = 1*CENT;
             tx.vout[0].scriptPubKey = GetScriptForDestination(key.GetPubKey().GetID());
-      
+
             AddOrphanTx(tx, i);
         }
         BOOST_CHECK(mapOrphanTransactions.size() == 50);

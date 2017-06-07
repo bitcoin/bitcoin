@@ -547,10 +547,7 @@ void HandleBlockMessageThread(CNode *pfrom, const string strCommand, const CBloc
             pfrom->PushMessage("reject", strCommand, state.GetRejectCode(),
                 state.GetRejectReason().substr(0, MAX_REJECT_MESSAGE_LENGTH), inv.hash);
             if (nDoS > 0)
-            {
-                LOCK(cs_main);
-                dosMan.Misbehaving(pfrom->GetId(), nDoS);
-            }
+                dosMan.Misbehaving(pfrom, nDoS);
         }
     }
     else

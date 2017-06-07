@@ -676,6 +676,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     fCheckpointsEnabled = GetBoolArg("-checkpoints", DEFAULT_CHECKPOINTS_ENABLED);
 
     connmgr->HandleCommandLine();
+    dosMan.HandleCommandLine();
 
     // mempool limits
     int64_t nMempoolSizeMax = GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;

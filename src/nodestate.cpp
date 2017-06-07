@@ -11,9 +11,6 @@
 */
 CNodeState::CNodeState()
 {
-    fCurrentlyConnected = false;
-    nMisbehavior = 0;
-    fShouldBan = false;
     pindexBestKnownBlock = NULL;
     hashLastUnknownBlock.SetNull();
     pindexLastCommonBlock = NULL;

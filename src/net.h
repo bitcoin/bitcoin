@@ -98,7 +98,6 @@ unsigned int ReceiveFloodSize();
 unsigned int SendBufferSize();
 
 void AddOneShot(const std::string &strDest);
-void AddressCurrentlyConnected(const CService &addr);
 CNodeRef FindNodeRef(const std::string &addrName);
 int DisconnectSubNetNodes(const CSubNet &subNet);
 bool OpenNetworkConnection(const CAddress &addrConnect,
@@ -361,6 +360,13 @@ public:
     CBloomFilter *pThinBlockFilter;
     std::atomic<int> nRefCount;
     NodeId id;
+
+    //! Accumulated misbehaviour score for this peer.
+    std::atomic<int> nMisbehavior;
+    //! Whether this peer should be disconnected and banned (unless whitelisted).
+    bool fShouldBan;
+    //! Whether we have a fully established connection.
+    bool fCurrentlyConnected;
 
     // BUIP010 Xtreme Thinblocks: begin section
     CBlock thinBlock;
