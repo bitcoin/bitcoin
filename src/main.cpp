@@ -5676,10 +5676,9 @@ bool ProcessMessage(CNode *pfrom, string strCommand, CDataStream &vRecv, int64_t
         {
             pfrom->PushMessage(
                 NetMsgType::REJECT, strCommand, REJECT_DUPLICATE, std::string("Duplicate version message"));
-            LOCK(cs_main);
-            Misbehaving(pfrom->GetId(), 100);
-            return error("Duplicate version message received - banning peer=%d version=%s ip=%s", pfrom->GetId(),
-                pfrom->cleanSubVer, pfrom->addrName.c_str());
+            pfrom->fDisconnect = true;
+            return error("Duplicate version message received - disconnecting peer=%s version=%s", pfrom->GetLogName(),
+                pfrom->cleanSubVer);
         }
 
         int64_t nTime;
@@ -5800,14 +5799,8 @@ bool ProcessMessage(CNode *pfrom, string strCommand, CDataStream &vRecv, int64_t
     {
         // Must have version message before anything else (Although we may send our VERSION before
         // we receive theirs, it would not be possible to receive their VERACK before their VERSION).
-        // NOTE:  we MUST explicitly ban the peer here.  If we only indicate a misbehaviour then the peer
-        //        may never be banned since the banning process requires that messages be sent back. If an
-        //        attacker sends us messages that do not require a response coupled with an nVersion of zero
-        //        then they can continue unimpeded even though they have exceeded the misbehaving threshold.
         pfrom->fDisconnect = true;
-        CNode::Ban(pfrom->addr, BanReasonNodeMisbehaving);
-        return error("VERSION was not received before other messages - banning peer=%d ip=%s", pfrom->GetId(),
-            pfrom->addrName.c_str());
+        return error("%s receieved before VERSION message - disconnecting peer=%s", strCommand, pfrom->GetLogName());
     }
 
 
@@ -5816,17 +5809,15 @@ bool ProcessMessage(CNode *pfrom, string strCommand, CDataStream &vRecv, int64_t
         // If we haven't sent a VERSION message yet then we should not get a VERACK message.
         if (pfrom->tVersionSent < 0)
         {
-            LOCK(cs_main);
-            Misbehaving(pfrom->GetId(), 100);
-            return error("VERACK received but we never sent a VERSION message - banning peer=%d version=%s ip=%s",
-                pfrom->GetId(), pfrom->cleanSubVer, pfrom->addrName.c_str());
+            pfrom->fDisconnect = true;
+            return error("VERACK received but we never sent a VERSION message - disconnecting peer=%s version=%s",
+                pfrom->GetLogName(), pfrom->cleanSubVer);
         }
         if (pfrom->fSuccessfullyConnected)
         {
-            LOCK(cs_main);
-            Misbehaving(pfrom->GetId(), 100);
-            return error("duplicate VERACK received - banning peer=%d version=%s ip=%s", pfrom->GetId(),
-                pfrom->cleanSubVer, pfrom->addrName.c_str());
+            pfrom->fDisconnect = true;
+            return error("duplicate VERACK received - disconnecting peer=%s version=%s", pfrom->GetLogName(),
+                pfrom->cleanSubVer);
         }
 
         pfrom->fSuccessfullyConnected = true;
@@ -5872,8 +5863,8 @@ bool ProcessMessage(CNode *pfrom, string strCommand, CDataStream &vRecv, int64_t
         // If they are a bad peer and keep trying to reconnect and still do not VERACK, they will eventually
         // get banned by the connection slot algorithm which tracks disconnects and reconnects.
         pfrom->fDisconnect = true;
-        LogPrint("net", "ERROR: disconnecting - VERACK not received within %d seconds for peer=%d version=%s ip=%s\n",
-            VERACK_TIMEOUT, pfrom->GetId(), pfrom->cleanSubVer, pfrom->addrName.c_str());
+        LogPrint("net", "ERROR: disconnecting - VERACK not received within %d seconds for peer=%s version=%s\n",
+            VERACK_TIMEOUT, pfrom->GetLogName(), pfrom->cleanSubVer);
 
         // update connection tracker which is used by the connection slot algorithm.
         LOCK(cs_mapInboundConnectionTracker);
@@ -6368,7 +6359,6 @@ bool ProcessMessage(CNode *pfrom, string strCommand, CDataStream &vRecv, int64_t
 
             if (header.hashPrevBlock != hashLastBlock)
             {
-                Misbehaving(pfrom->GetId(), 20);
                 return error("non-continuous headers sequence");
             }
             hashLastBlock = header.GetHash();
@@ -7197,31 +7187,28 @@ bool SendMessages(CNode *pto)
             }
         }
 
-        if (pto->ThinBlockCapable())
+        // Check to see if there are any thinblocks in flight that have gone beyond the timeout interval.
+        // If so then we need to disconnect them so that the thinblock data is nullified.  We coud null
+        // the thinblock data here but that would possible cause a node to be baneed later if the thinblock
+        // finally did show up. Better to just disconnect this slow node instead.
+        if (pto->mapThinBlocksInFlight.size() > 0)
         {
-            // Check to see if there are any thinblocks in flight that have gone beyond the timeout interval.
-            // If so then we need to disconnect them so that the thinblock data is nullified.  We coud null
-            // the thinblock data here but that would possible cause a node to be baneed later if the thinblock
-            // finally did show up. Better to just disconnect this slow node instead.
-            if (pto->mapThinBlocksInFlight.size() > 0)
+            LOCK(pto->cs_mapthinblocksinflight);
+            std::map<uint256, CNode::CThinBlockInFlight>::iterator iter = pto->mapThinBlocksInFlight.begin();
+            while (iter != pto->mapThinBlocksInFlight.end())
             {
-                LOCK(pto->cs_mapthinblocksinflight);
-                std::map<uint256, int64_t>::iterator iter = pto->mapThinBlocksInFlight.begin();
-                while (iter != pto->mapThinBlocksInFlight.end())
+                if (!(*iter).second.fReceived && (GetTime() - (*iter).second.nRequestTime) > THINBLOCK_DOWNLOAD_TIMEOUT)
                 {
-                    if ((*iter).second != -1 && (GetTime() - (*iter).second) > THINBLOCK_DOWNLOAD_TIMEOUT)
+                    if (!pto->fWhitelisted && Params().NetworkIDString() != "regtest")
                     {
-                        if (!pto->fWhitelisted && Params().NetworkIDString() != "regtest")
-                        {
-                            LogPrint("thin", "ERROR: Disconnecting peer=%d due to download timeout exceeded "
-                                             "(%d secs)\n",
-                                pto->GetId(), (GetTime() - (*iter).second));
-                            pto->fDisconnect = true;
-                            break;
-                        }
+                        LogPrint("thin", "ERROR: Disconnecting peer=%d due to download timeout exceeded "
+                                         "(%d secs)\n",
+                            pto->GetId(), (GetTime() - (*iter).second.nRequestTime));
+                        pto->fDisconnect = true;
+                        break;
                     }
-                    iter++;
                 }
+                iter++;
             }
         }
 

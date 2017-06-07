@@ -350,13 +350,12 @@ bool RequestBlock(CNode *pfrom, CInv obj)
         {
             if (HaveConnectThinblockNodes() || (HaveThinblockNodes() && thindata.CheckThinblockTimer(obj.hash)))
             {
-                // Must download a block from a ThinBlock peer
+                // Must download an xthinblock from a XTHIN peer.
+                // We can only request one xthinblock per peer at a time.
                 if (pfrom->mapThinBlocksInFlight.size() < 1 && CanThinBlockBeDownloaded(pfrom))
-                { // We can only send one thinblock per peer at a time
-                    {
-                        LOCK(pfrom->cs_mapthinblocksinflight);
-                        pfrom->mapThinBlocksInFlight[inv2.hash] = GetTime();
-                    }
+                {
+                    AddThinBlockInFlight(pfrom, inv2.hash);
+
                     inv2.type = MSG_XTHINBLOCK;
                     std::vector<uint256> vOrphanHashes;
                     {
@@ -370,22 +369,20 @@ bool RequestBlock(CNode *pfrom, CInv obj)
                     ss << filterMemPool;
                     MarkBlockAsInFlight(pfrom->GetId(), obj.hash, chainParams.GetConsensus());
                     pfrom->PushMessage(NetMsgType::GET_XTHIN, ss);
-                    LogPrint("thin", "Requesting Thinblock %s from peer %s (%d)\n", inv2.hash.ToString(),
+                    LogPrint("thin", "Requesting xthinblock %s from peer %s (%d)\n", inv2.hash.ToString(),
                         pfrom->addrName.c_str(), pfrom->id);
                     return true;
                 }
             }
             else
             {
-                // Try to download a thinblock if possible otherwise just download a regular block
-                // We can only send one thinblock per peer at a time
+                // Try to download a thinblock if possible otherwise just download a regular block.
+                // We can only request one xthinblock per peer at a time.
                 MarkBlockAsInFlight(pfrom->GetId(), obj.hash, chainParams.GetConsensus());
                 if (pfrom->mapThinBlocksInFlight.size() < 1 && CanThinBlockBeDownloaded(pfrom))
                 {
-                    {
-                        LOCK(pfrom->cs_mapthinblocksinflight);
-                        pfrom->mapThinBlocksInFlight[inv2.hash] = GetTime();
-                    }
+                    AddThinBlockInFlight(pfrom, inv2.hash);
+
                     inv2.type = MSG_XTHINBLOCK;
                     std::vector<uint256> vOrphanHashes;
                     {
@@ -398,7 +395,7 @@ bool RequestBlock(CNode *pfrom, CInv obj)
                     ss << inv2;
                     ss << filterMemPool;
                     pfrom->PushMessage(NetMsgType::GET_XTHIN, ss);
-                    LogPrint("thin", "Requesting Thinblock %s from peer %s (%d)\n", inv2.hash.ToString(),
+                    LogPrint("thin", "Requesting xthinblock %s from peer %s (%d)\n", inv2.hash.ToString(),
                         pfrom->addrName.c_str(), pfrom->id);
                 }
                 else
@@ -686,4 +683,3 @@ bool CRequestManager::IsNodePingAcceptable(CNode* pfrom)
     }
     return true;
 }
-

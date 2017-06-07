@@ -1081,7 +1081,7 @@ void HandleBlockMessage(CNode *pfrom, const string &strCommand, CBlock &block, c
     {
         LOCK(pfrom->cs_mapthinblocksinflight);
         if (pfrom->mapThinBlocksInFlight.count(inv.hash))
-            pfrom->mapThinBlocksInFlight[inv.hash] = -1;
+            pfrom->mapThinBlocksInFlight[inv.hash].fReceived = true;
     }
 
     // Process all blocks from whitelisted peers, even if not requested,
@@ -1132,10 +1132,10 @@ void HandleBlockMessage(CNode *pfrom, const string &strCommand, CBlock &block, c
         {
             LOCK2(cs_vNodes, pfrom->cs_mapthinblocksinflight);
             // Erase this thinblock from the tracking map now that we're done with it.
-            if (pfrom->mapThinBlocksInFlight.erase(inv.hash))
+            if (pfrom->mapThinBlocksInFlight.count(inv.hash))
             {
                 // Clear out and reset thinblock data
-                thindata.ClearThinBlockData(pfrom);
+                thindata.ClearThinBlockData(pfrom, inv.hash);
             }
 
             // Count up any other remaining nodes with thinblocks in flight.

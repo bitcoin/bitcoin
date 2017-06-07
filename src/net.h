@@ -346,6 +346,18 @@ public:
 class CNode
 {
 public:
+    struct CThinBlockInFlight
+    {
+        int64_t nRequestTime;
+        bool fReceived;
+
+        CThinBlockInFlight()
+        {
+            nRequestTime = GetTime();
+            fReceived = false;
+        }
+    };
+
     // socket
     uint64_t nServices;
     SOCKET hSocket;
@@ -408,11 +420,12 @@ public:
     CBlock thinBlock;
     std::vector<uint256> thinBlockHashes;
     std::vector<uint64_t> xThinBlockHashes;
+    std::map<uint64_t, CTransaction> mapMissingTx;
     uint64_t nLocalThinBlockBytes; // the bytes used in creating this thinblock, updated dynamically
     int nSizeThinBlock; // Original on-wire size of the block. Just used for reporting
     int thinBlockWaitingForTxns; // if -1 then not currently waiting
     CCriticalSection cs_mapthinblocksinflight; // lock mapThinBlocksInFlight
-    std::map<uint256, int64_t> mapThinBlocksInFlight; // thin blocks in flight and the time requested.
+    std::map<uint256, CThinBlockInFlight> mapThinBlocksInFlight; // thin blocks in flight and the time requested.
     double nGetXBlockTxCount; // Count how many get_xblocktx requests are made
     uint64_t nGetXBlockTxLastTime; // The last time a get_xblocktx request was made
     double nGetXthinCount; // Count how many get_xthin requests are made
