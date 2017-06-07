@@ -1,4 +1,6 @@
 echo "Updating Tron..."
+# install requirement 'jq'
+sudo apt-get install jq
 crown-cli stop
 RELEASE=$(curl -s 'https://api.github.com/repos/Crowndev/crowncoin/releases/latest' | jq -r '.assets | .[] | select(.name=="crown-x86_64-unknown-linux-gnu.tar.gz") | .browser_download_url')
 curl -sSL $RELEASE -o crown.tgz
