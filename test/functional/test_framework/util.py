@@ -19,264 +19,8 @@ from .authproxy import AuthServiceProxy, JSONRPCException
 
 logger = logging.getLogger("TestFramework.utils")
 
-# The maximum number of nodes a single test can spawn
-MAX_NODES = 8
-# Don't assign rpc or p2p ports lower than this
-PORT_MIN = 11000
-# The number of ports to "reserve" for p2p and rpc, each
-PORT_RANGE = 5000
-
-class PortSeed:
-    # Must be initialized with a unique integer for each process
-    n = None
-
-def get_rpc_proxy(url, node_number, timeout=None, coveragedir=None):
-    """
-    Args:
-        url (str): URL of the RPC server to call
-        node_number (int): the node number (or id) that this calls to
-
-    Kwargs:
-        timeout (int): HTTP timeout in seconds
-
-    Returns:
-        AuthServiceProxy. convenience object for making RPC calls.
-
-    """
-    proxy_kwargs = {}
-    if timeout is not None:
-        proxy_kwargs['timeout'] = timeout
-
-    proxy = AuthServiceProxy(url, **proxy_kwargs)
-    proxy.url = url  # store URL on proxy for info
-
-    coverage_logfile = coverage.get_filename(
-        coveragedir, node_number) if coveragedir else None
-
-    return coverage.AuthServiceProxyWrapper(proxy, coverage_logfile)
-
-
-def p2p_port(n):
-    assert(n <= MAX_NODES)
-    return PORT_MIN + n + (MAX_NODES * PortSeed.n) % (PORT_RANGE - 1 - MAX_NODES)
-
-def rpc_port(n):
-    return PORT_MIN + PORT_RANGE + n + (MAX_NODES * PortSeed.n) % (PORT_RANGE - 1 - MAX_NODES)
-
-def check_json_precision():
-    """Make sure json library being used does not lose precision converting BTC values"""
-    n = Decimal("20000000.00000003")
-    satoshis = int(json.loads(json.dumps(float(n))) * 1.0e8)
-    if satoshis != 2000000000000003:
-        raise RuntimeError("JSON encode/decode loses precision")
-
-def count_bytes(hex_string):
-    return len(bytearray.fromhex(hex_string))
-
-def bytes_to_hex_str(byte_str):
-    return hexlify(byte_str).decode('ascii')
-
-def hex_str_to_bytes(hex_str):
-    return unhexlify(hex_str.encode('ascii'))
-
-def str_to_b64str(string):
-    return b64encode(string.encode('utf-8')).decode('ascii')
-
-def sync_blocks(rpc_connections, *, wait=1, timeout=60):
-    """
-    Wait until everybody has the same tip.
-
-    sync_blocks needs to be called with an rpc_connections set that has least
-    one node already synced to the latest, stable tip, otherwise there's a
-    chance it might return before all nodes are stably synced.
-    """
-    # Use getblockcount() instead of waitforblockheight() to determine the
-    # initial max height because the two RPCs look at different internal global
-    # variables (chainActive vs latestBlock) and the former gets updated
-    # earlier.
-    maxheight = max(x.getblockcount() for x in rpc_connections)
-    start_time = cur_time = time.time()
-    while cur_time <= start_time + timeout:
-        tips = [r.waitforblockheight(maxheight, int(wait * 1000)) for r in rpc_connections]
-        if all(t["height"] == maxheight for t in tips):
-            if all(t["hash"] == tips[0]["hash"] for t in tips):
-                return
-            raise AssertionError("Block sync failed, mismatched block hashes:{}".format(
-                                 "".join("\n  {!r}".format(tip) for tip in tips)))
-        cur_time = time.time()
-    raise AssertionError("Block sync to height {} timed out:{}".format(
-                         maxheight, "".join("\n  {!r}".format(tip) for tip in tips)))
-
-def sync_chain(rpc_connections, *, wait=1, timeout=60):
-    """
-    Wait until everybody has the same best block
-    """
-    while timeout > 0:
-        best_hash = [x.getbestblockhash() for x in rpc_connections]
-        if best_hash == [best_hash[0]] * len(best_hash):
-            return
-        time.sleep(wait)
-        timeout -= wait
-    raise AssertionError("Chain sync failed: Best block hashes don't match")
-
-def sync_mempools(rpc_connections, *, wait=1, timeout=60):
-    """
-    Wait until everybody has the same transactions in their memory
-    pools
-    """
-    while timeout > 0:
-        pool = set(rpc_connections[0].getrawmempool())
-        num_match = 1
-        for i in range(1, len(rpc_connections)):
-            if set(rpc_connections[i].getrawmempool()) == pool:
-                num_match = num_match + 1
-        if num_match == len(rpc_connections):
-            return
-        time.sleep(wait)
-        timeout -= wait
-    raise AssertionError("Mempool sync failed")
-
-def initialize_datadir(dirname, n):
-    datadir = os.path.join(dirname, "node" + str(n))
-    if not os.path.isdir(datadir):
-        os.makedirs(datadir)
-    with open(os.path.join(datadir, "bitcoin.conf"), 'w', encoding='utf8') as f:
-        f.write("regtest=1\n")
-        f.write("port=" + str(p2p_port(n)) + "\n")
-        f.write("rpcport=" + str(rpc_port(n)) + "\n")
-        f.write("listenonion=0\n")
-    return datadir
-
-def get_datadir_path(dirname, n):
-    return os.path.join(dirname, "node" + str(n))
-
-def get_auth_cookie(datadir, n):
-    user = None
-    password = None
-    if os.path.isfile(os.path.join(datadir, "bitcoin.conf")):
-        with open(os.path.join(datadir, "bitcoin.conf"), 'r') as f:
-            for line in f:
-                if line.startswith("rpcuser="):
-                    assert user is None  # Ensure that there is only one rpcuser line
-                    user = line.split("=")[1].strip("\n")
-                if line.startswith("rpcpassword="):
-                    assert password is None  # Ensure that there is only one rpcpassword line
-                    password = line.split("=")[1].strip("\n")
-    if os.path.isfile(os.path.join(datadir, "regtest", ".cookie")):
-        with open(os.path.join(datadir, "regtest", ".cookie"), 'r') as f:
-            userpass = f.read()
-            split_userpass = userpass.split(':')
-            user = split_userpass[0]
-            password = split_userpass[1]
-    if user is None or password is None:
-        raise ValueError("No RPC credentials")
-    return user, password
-
-def rpc_url(datadir, i, rpchost=None):
-    rpc_u, rpc_p = get_auth_cookie(datadir, i)
-    host = '127.0.0.1'
-    port = rpc_port(i)
-    if rpchost:
-        parts = rpchost.split(':')
-        if len(parts) == 2:
-            host, port = parts
-        else:
-            host = rpchost
-    return "http://%s:%s@%s:%d" % (rpc_u, rpc_p, host, int(port))
-
-def log_filename(dirname, n_node, logname):
-    return os.path.join(dirname, "node" + str(n_node), "regtest", logname)
-
-def set_node_times(nodes, t):
-    for node in nodes:
-        node.setmocktime(t)
-
-def disconnect_nodes(from_connection, node_num):
-    for peer_id in [peer['id'] for peer in from_connection.getpeerinfo() if "testnode%d" % node_num in peer['subver']]:
-        from_connection.disconnectnode(nodeid=peer_id)
-
-    for _ in range(50):
-        if [peer['id'] for peer in from_connection.getpeerinfo() if "testnode%d" % node_num in peer['subver']] == []:
-            break
-        time.sleep(0.1)
-    else:
-        raise AssertionError("timed out waiting for disconnect")
-
-def connect_nodes(from_connection, node_num):
-    ip_port = "127.0.0.1:" + str(p2p_port(node_num))
-    from_connection.addnode(ip_port, "onetry")
-    # poll until version handshake complete to avoid race conditions
-    # with transaction relaying
-    while any(peer['version'] == 0 for peer in from_connection.getpeerinfo()):
-        time.sleep(0.1)
-
-def connect_nodes_bi(nodes, a, b):
-    connect_nodes(nodes[a], b)
-    connect_nodes(nodes[b], a)
-
-def find_output(node, txid, amount):
-    """
-    Return index to output of txid with value amount
-    Raises exception if there is none.
-    """
-    txdata = node.getrawtransaction(txid, 1)
-    for i in range(len(txdata["vout"])):
-        if txdata["vout"][i]["value"] == amount:
-            return i
-    raise RuntimeError("find_output txid %s : %s not found" % (txid, str(amount)))
-
-def gather_inputs(from_node, amount_needed, confirmations_required=1):
-    """
-    Return a random set of unspent txouts that are enough to pay amount_needed
-    """
-    assert(confirmations_required >= 0)
-    utxo = from_node.listunspent(confirmations_required)
-    random.shuffle(utxo)
-    inputs = []
-    total_in = Decimal("0.00000000")
-    while total_in < amount_needed and len(utxo) > 0:
-        t = utxo.pop()
-        total_in += t["amount"]
-        inputs.append({"txid": t["txid"], "vout": t["vout"], "address": t["address"]})
-    if total_in < amount_needed:
-        raise RuntimeError("Insufficient funds: need %d, have %d" % (amount_needed, total_in))
-    return (total_in, inputs)
-
-def make_change(from_node, amount_in, amount_out, fee):
-    """
-    Create change output(s), return them
-    """
-    outputs = {}
-    amount = amount_out + fee
-    change = amount_in - amount
-    if change > amount * 2:
-        # Create an extra change output to break up big inputs
-        change_address = from_node.getnewaddress()
-        # Split change in two, being careful of rounding:
-        outputs[change_address] = Decimal(change / 2).quantize(Decimal('0.00000001'), rounding=ROUND_DOWN)
-        change = amount_in - amount - outputs[change_address]
-    if change > 0:
-        outputs[from_node.getnewaddress()] = change
-    return outputs
-
-def random_transaction(nodes, amount, min_fee, fee_increment, fee_variants):
-    """
-    Create a random transaction.
-    Returns (txid, hex-encoded-transaction-data, fee)
-    """
-    from_node = random.choice(nodes)
-    to_node = random.choice(nodes)
-    fee = min_fee + fee_increment * random.randint(0, fee_variants)
-
-    (total_in, inputs) = gather_inputs(from_node, amount + fee)
-    outputs = make_change(from_node, total_in, amount, fee)
-    outputs[to_node.getnewaddress()] = float(amount)
-
-    rawtx = from_node.createrawtransaction(inputs, outputs)
-    signresult = from_node.signrawtransaction(rawtx)
-    txid = from_node.sendrawtransaction(signresult["hex"], True)
-
-    return (txid, signresult["hex"], fee)
+# Assert functions
+##################
 
 def assert_fee_amount(fee, tx_size, fee_per_kB):
     """Assert the fee was in range"""
@@ -388,8 +132,285 @@ def assert_array_result(object_array, to_match, expected, should_not_find=False)
     if num_matched > 0 and should_not_find:
         raise AssertionError("Objects were found %s" % (str(to_match)))
 
+# Utility functions
+###################
+
+def check_json_precision():
+    """Make sure json library being used does not lose precision converting BTC values"""
+    n = Decimal("20000000.00000003")
+    satoshis = int(json.loads(json.dumps(float(n))) * 1.0e8)
+    if satoshis != 2000000000000003:
+        raise RuntimeError("JSON encode/decode loses precision")
+
+def count_bytes(hex_string):
+    return len(bytearray.fromhex(hex_string))
+
+def bytes_to_hex_str(byte_str):
+    return hexlify(byte_str).decode('ascii')
+
+def hex_str_to_bytes(hex_str):
+    return unhexlify(hex_str.encode('ascii'))
+
+def str_to_b64str(string):
+    return b64encode(string.encode('utf-8')).decode('ascii')
+
 def satoshi_round(amount):
     return Decimal(amount).quantize(Decimal('0.00000001'), rounding=ROUND_DOWN)
+
+# RPC/P2P connection constants and functions
+############################################
+
+# The maximum number of nodes a single test can spawn
+MAX_NODES = 8
+# Don't assign rpc or p2p ports lower than this
+PORT_MIN = 11000
+# The number of ports to "reserve" for p2p and rpc, each
+PORT_RANGE = 5000
+
+class PortSeed:
+    # Must be initialized with a unique integer for each process
+    n = None
+
+def get_rpc_proxy(url, node_number, timeout=None, coveragedir=None):
+    """
+    Args:
+        url (str): URL of the RPC server to call
+        node_number (int): the node number (or id) that this calls to
+
+    Kwargs:
+        timeout (int): HTTP timeout in seconds
+
+    Returns:
+        AuthServiceProxy. convenience object for making RPC calls.
+
+    """
+    proxy_kwargs = {}
+    if timeout is not None:
+        proxy_kwargs['timeout'] = timeout
+
+    proxy = AuthServiceProxy(url, **proxy_kwargs)
+    proxy.url = url  # store URL on proxy for info
+
+    coverage_logfile = coverage.get_filename(
+        coveragedir, node_number) if coveragedir else None
+
+    return coverage.AuthServiceProxyWrapper(proxy, coverage_logfile)
+
+def p2p_port(n):
+    assert(n <= MAX_NODES)
+    return PORT_MIN + n + (MAX_NODES * PortSeed.n) % (PORT_RANGE - 1 - MAX_NODES)
+
+def rpc_port(n):
+    return PORT_MIN + PORT_RANGE + n + (MAX_NODES * PortSeed.n) % (PORT_RANGE - 1 - MAX_NODES)
+
+def rpc_auth_pair(n):
+    return 'rpcuser💻' + str(n), 'rpcpass🔑' + str(n)
+
+def rpc_url(datadir, i, rpchost=None):
+    rpc_u, rpc_p = get_auth_cookie(datadir, i)
+    host = '127.0.0.1'
+    port = rpc_port(i)
+    if rpchost:
+        parts = rpchost.split(':')
+        if len(parts) == 2:
+            host, port = parts
+        else:
+            host = rpchost
+    return "http://%s:%s@%s:%d" % (rpc_u, rpc_p, host, int(port))
+
+# Node functions
+################
+
+def initialize_datadir(dirname, n):
+    datadir = os.path.join(dirname, "node" + str(n))
+    if not os.path.isdir(datadir):
+        os.makedirs(datadir)
+    with open(os.path.join(datadir, "bitcoin.conf"), 'w', encoding='utf8') as f:
+        f.write("regtest=1\n")
+        f.write("port=" + str(p2p_port(n)) + "\n")
+        f.write("rpcport=" + str(rpc_port(n)) + "\n")
+        f.write("listenonion=0\n")
+    return datadir
+
+def get_datadir_path(dirname, n):
+    return os.path.join(dirname, "node" + str(n))
+
+def get_auth_cookie(datadir, n):
+    user = None
+    password = None
+    if os.path.isfile(os.path.join(datadir, "bitcoin.conf")):
+        with open(os.path.join(datadir, "bitcoin.conf"), 'r') as f:
+            for line in f:
+                if line.startswith("rpcuser="):
+                    assert user is None  # Ensure that there is only one rpcuser line
+                    user = line.split("=")[1].strip("\n")
+                if line.startswith("rpcpassword="):
+                    assert password is None  # Ensure that there is only one rpcpassword line
+                    password = line.split("=")[1].strip("\n")
+    if os.path.isfile(os.path.join(datadir, "regtest", ".cookie")):
+        with open(os.path.join(datadir, "regtest", ".cookie"), 'r') as f:
+            userpass = f.read()
+            split_userpass = userpass.split(':')
+            user = split_userpass[0]
+            password = split_userpass[1]
+    if user is None or password is None:
+        raise ValueError("No RPC credentials")
+    return user, password
+
+def log_filename(dirname, n_node, logname):
+    return os.path.join(dirname, "node" + str(n_node), "regtest", logname)
+
+def get_bip9_status(node, key):
+    info = node.getblockchaininfo()
+    return info['bip9_softforks'][key]
+
+def set_node_times(nodes, t):
+    for node in nodes:
+        node.setmocktime(t)
+
+def disconnect_nodes(from_connection, node_num):
+    for peer_id in [peer['id'] for peer in from_connection.getpeerinfo() if "testnode%d" % node_num in peer['subver']]:
+        from_connection.disconnectnode(nodeid=peer_id)
+
+    for _ in range(50):
+        if [peer['id'] for peer in from_connection.getpeerinfo() if "testnode%d" % node_num in peer['subver']] == []:
+            break
+        time.sleep(0.1)
+    else:
+        raise AssertionError("timed out waiting for disconnect")
+
+def connect_nodes(from_connection, node_num):
+    ip_port = "127.0.0.1:" + str(p2p_port(node_num))
+    from_connection.addnode(ip_port, "onetry")
+    # poll until version handshake complete to avoid race conditions
+    # with transaction relaying
+    while any(peer['version'] == 0 for peer in from_connection.getpeerinfo()):
+        time.sleep(0.1)
+
+def connect_nodes_bi(nodes, a, b):
+    connect_nodes(nodes[a], b)
+    connect_nodes(nodes[b], a)
+
+def sync_blocks(rpc_connections, *, wait=1, timeout=60):
+    """
+    Wait until everybody has the same tip.
+
+    sync_blocks needs to be called with an rpc_connections set that has least
+    one node already synced to the latest, stable tip, otherwise there's a
+    chance it might return before all nodes are stably synced.
+    """
+    # Use getblockcount() instead of waitforblockheight() to determine the
+    # initial max height because the two RPCs look at different internal global
+    # variables (chainActive vs latestBlock) and the former gets updated
+    # earlier.
+    maxheight = max(x.getblockcount() for x in rpc_connections)
+    start_time = cur_time = time.time()
+    while cur_time <= start_time + timeout:
+        tips = [r.waitforblockheight(maxheight, int(wait * 1000)) for r in rpc_connections]
+        if all(t["height"] == maxheight for t in tips):
+            if all(t["hash"] == tips[0]["hash"] for t in tips):
+                return
+            raise AssertionError("Block sync failed, mismatched block hashes:{}".format(
+                                 "".join("\n  {!r}".format(tip) for tip in tips)))
+        cur_time = time.time()
+    raise AssertionError("Block sync to height {} timed out:{}".format(
+                         maxheight, "".join("\n  {!r}".format(tip) for tip in tips)))
+
+def sync_chain(rpc_connections, *, wait=1, timeout=60):
+    """
+    Wait until everybody has the same best block
+    """
+    while timeout > 0:
+        best_hash = [x.getbestblockhash() for x in rpc_connections]
+        if best_hash == [best_hash[0]] * len(best_hash):
+            return
+        time.sleep(wait)
+        timeout -= wait
+    raise AssertionError("Chain sync failed: Best block hashes don't match")
+
+def sync_mempools(rpc_connections, *, wait=1, timeout=60):
+    """
+    Wait until everybody has the same transactions in their memory
+    pools
+    """
+    while timeout > 0:
+        pool = set(rpc_connections[0].getrawmempool())
+        num_match = 1
+        for i in range(1, len(rpc_connections)):
+            if set(rpc_connections[i].getrawmempool()) == pool:
+                num_match = num_match + 1
+        if num_match == len(rpc_connections):
+            return
+        time.sleep(wait)
+        timeout -= wait
+    raise AssertionError("Mempool sync failed")
+
+# Transaction/Block functions
+#############################
+
+def find_output(node, txid, amount):
+    """
+    Return index to output of txid with value amount
+    Raises exception if there is none.
+    """
+    txdata = node.getrawtransaction(txid, 1)
+    for i in range(len(txdata["vout"])):
+        if txdata["vout"][i]["value"] == amount:
+            return i
+    raise RuntimeError("find_output txid %s : %s not found" % (txid, str(amount)))
+
+def gather_inputs(from_node, amount_needed, confirmations_required=1):
+    """
+    Return a random set of unspent txouts that are enough to pay amount_needed
+    """
+    assert(confirmations_required >= 0)
+    utxo = from_node.listunspent(confirmations_required)
+    random.shuffle(utxo)
+    inputs = []
+    total_in = Decimal("0.00000000")
+    while total_in < amount_needed and len(utxo) > 0:
+        t = utxo.pop()
+        total_in += t["amount"]
+        inputs.append({"txid": t["txid"], "vout": t["vout"], "address": t["address"]})
+    if total_in < amount_needed:
+        raise RuntimeError("Insufficient funds: need %d, have %d" % (amount_needed, total_in))
+    return (total_in, inputs)
+
+def make_change(from_node, amount_in, amount_out, fee):
+    """
+    Create change output(s), return them
+    """
+    outputs = {}
+    amount = amount_out + fee
+    change = amount_in - amount
+    if change > amount * 2:
+        # Create an extra change output to break up big inputs
+        change_address = from_node.getnewaddress()
+        # Split change in two, being careful of rounding:
+        outputs[change_address] = Decimal(change / 2).quantize(Decimal('0.00000001'), rounding=ROUND_DOWN)
+        change = amount_in - amount - outputs[change_address]
+    if change > 0:
+        outputs[from_node.getnewaddress()] = change
+    return outputs
+
+def random_transaction(nodes, amount, min_fee, fee_increment, fee_variants):
+    """
+    Create a random transaction.
+    Returns (txid, hex-encoded-transaction-data, fee)
+    """
+    from_node = random.choice(nodes)
+    to_node = random.choice(nodes)
+    fee = min_fee + fee_increment * random.randint(0, fee_variants)
+
+    (total_in, inputs) = gather_inputs(from_node, amount + fee)
+    outputs = make_change(from_node, total_in, amount, fee)
+    outputs[to_node.getnewaddress()] = float(amount)
+
+    rawtx = from_node.createrawtransaction(inputs, outputs)
+    signresult = from_node.signrawtransaction(rawtx)
+    txid = from_node.sendrawtransaction(signresult["hex"], True)
+
+    return (txid, signresult["hex"], fee)
 
 # Helper to create at least "count" utxos
 # Pass in a fee that is sufficient for relay and mining new transactions.
@@ -480,7 +501,3 @@ def mine_large_block(node, utxos=None):
     fee = 100 * node.getnetworkinfo()["relayfee"]
     create_lots_of_big_transactions(node, txouts, utxos, num, fee=fee)
     node.generate(1)
-
-def get_bip9_status(node, key):
-    info = node.getblockchaininfo()
-    return info['bip9_softforks'][key]
