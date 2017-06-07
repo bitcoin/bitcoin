@@ -26,10 +26,7 @@ from .util import (
     assert_equal,
     check_json_precision,
     connect_nodes_bi,
-    disable_mocktime,
     disconnect_nodes,
-    enable_mocktime,
-    get_mocktime,
     get_rpc_proxy,
     initialize_datadir,
     get_datadir_path,
@@ -73,6 +70,7 @@ class BitcoinTestFramework(object):
         self.setup_clean_chain = False
         self.nodes = []
         self.bitcoind_processes = {}
+        self.mocktime = 0
 
     def add_options(self, parser):
         pass
@@ -211,7 +209,7 @@ class BitcoinTestFramework(object):
         datadir = os.path.join(dirname, "node" + str(i))
         if binary is None:
             binary = os.getenv("BITCOIND", "bitcoind")
-        args = [binary, "-datadir=" + datadir, "-server", "-keypool=1", "-discover=0", "-rest", "-logtimemicros", "-debug", "-debugexclude=libevent", "-debugexclude=leveldb", "-mocktime=" + str(get_mocktime()), "-uacomment=testnode%d" % i]
+        args = [binary, "-datadir=" + datadir, "-server", "-keypool=1", "-discover=0", "-rest", "-logtimemicros", "-debug", "-debugexclude=libevent", "-debugexclude=leveldb", "-mocktime=" + str(self.mocktime), "-uacomment=testnode%d" % i]
         if extra_args is not None:
             args.extend(extra_args)
         self.bitcoind_processes[i] = subprocess.Popen(args, stderr=stderr)
@@ -312,6 +310,21 @@ class BitcoinTestFramework(object):
             sync_blocks(group)
             sync_mempools(group)
 
+    def enable_mocktime(self):
+        """Enable mocktime for the script.
+
+        mocktime may be needed for scripts that use the cached version of the
+        blockchain.  If the cached version of the blockchain is used without
+        mocktime then the mempools will not sync due to IBD.
+
+        For backwared compatibility of the python scripts with previous
+        versions of the cache, this helper function sets mocktime to Jan 1,
+        2014 + (201 * 10 * 60)"""
+        self.mocktime = 1388534400 + (201 * 10 * 60)
+
+    def disable_mocktime(self):
+        self.mocktime = 0
+
     # Private helper methods. These should not be accessed by the subclass test scripts.
 
     def _start_logging(self):
@@ -389,8 +402,8 @@ class BitcoinTestFramework(object):
             #
             # blocks are created with timestamps 10 minutes apart
             # starting from 2010 minutes in the past
-            enable_mocktime()
-            block_time = get_mocktime() - (201 * 10 * 60)
+            self.enable_mocktime()
+            block_time = self.mocktime - (201 * 10 * 60)
             for i in range(2):
                 for peer in range(4):
                     for j in range(25):
@@ -403,7 +416,7 @@ class BitcoinTestFramework(object):
             # Shut them down, and clean up cache directories:
             self.stop_nodes()
             self.nodes = []
-            disable_mocktime()
+            self.disable_mocktime()
             for i in range(MAX_NODES):
                 os.remove(log_filename(cachedir, i, "debug.log"))
                 os.remove(log_filename(cachedir, i, "db.log"))

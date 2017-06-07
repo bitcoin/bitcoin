@@ -30,27 +30,6 @@ class PortSeed:
     # Must be initialized with a unique integer for each process
     n = None
 
-# Set Mocktime default to OFF.
-# MOCKTIME is only needed for scripts that use the
-# cached version of the blockchain.  If the cached
-# version of the blockchain is used without MOCKTIME
-# then the mempools will not sync due to IBD.
-MOCKTIME = 0
-
-def enable_mocktime():
-    # For backwared compatibility of the python scripts
-    # with previous versions of the cache, set MOCKTIME
-    # to Jan 1, 2014 + (201 * 10 * 60)
-    global MOCKTIME
-    MOCKTIME = 1388534400 + (201 * 10 * 60)
-
-def disable_mocktime():
-    global MOCKTIME
-    MOCKTIME = 0
-
-def get_mocktime():
-    return MOCKTIME
-
 def get_rpc_proxy(url, node_number, timeout=None, coveragedir=None):
     """
     Args:
