@@ -71,7 +71,7 @@ CLEANFILES += *.gcda *.gcno
 ppcoin_test: $(TEST_BINARY)
 
 ppcoin_test_check: $(TEST_BINARY) FORCE
-    $(MAKE) check-TESTS TESTS=$^
+	$(MAKE) check-TESTS TESTS=$^
 
 ppcoin_test_clean : FORCE
-    rm -f $(CLEANFILES) $(test_test_ppcoin_OBJECTS) $(TEST_BINARY)
+	rm -f $(CLEANFILES) $(test_test_ppcoin_OBJECTS) $(TEST_BINARY)

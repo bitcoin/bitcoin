@@ -36,7 +36,7 @@ CLEANFILES += $(CLEAN_PPCOIN_QT_TEST)
 test_ppcoin_qt : qt/test/test_ppcoin-qt$(EXEEXT)
 
 test_ppcoin_qt_check : qt/test/test_ppcoin-qt$(EXEEXT) FORCE
-    $(MAKE) check-TESTS TESTS=$^
+	$(MAKE) check-TESTS TESTS=$^
 
 test_ppcoin_qt_clean: FORCE
-    rm -f $(CLEAN_PPCOIN_QT_TEST) $(qt_test_test_ppcoin_qt_OBJECTS)
+	rm -f $(CLEAN_PPCOIN_QT_TEST) $(qt_test_test_ppcoin_qt_OBJECTS)
