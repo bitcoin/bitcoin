@@ -14,13 +14,20 @@ static const int32_t VERSIONBITS_LAST_OLD_BLOCK_VERSION = 4;
 static const int32_t VERSIONBITS_TOP_BITS = 0x20000000UL;
 /** What bitmask determines whether versionbits is in use */
 static const int32_t VERSIONBITS_TOP_MASK = 0xE0000000UL;
+/**
+ * It is adviced for block creators to mark this bit after versionbits
+ * locked_in by timeout so that ready nodes can show warnings on
+ * unknown deployments, but not required by consensus.
+ */
+static const int32_t VERSIONBITS_WARNING_LOCKINONTIMEOUT_BITS = (1U << 29);
 /** Total bits available for versionbits */
-static const int32_t VERSIONBITS_NUM_BITS = 29;
+static const int32_t VERSIONBITS_NUM_BITS = 28;
 
 enum ThresholdState {
     THRESHOLD_DEFINED,
     THRESHOLD_STARTED,
     THRESHOLD_LOCKED_IN,
+    THRESHOLD_LOCKED_IN_BY_TIMEOUT,
     THRESHOLD_ACTIVE,
     THRESHOLD_FAILED,
 };
@@ -55,6 +62,7 @@ protected:
     virtual bool Condition(const CBlockIndex* pindex, const Consensus::Params& params) const =0;
     virtual int64_t BeginTime(const Consensus::Params& params) const =0;
     virtual int64_t EndTime(const Consensus::Params& params) const =0;
+    virtual bool LockInOnTimeout(const Consensus::Params& params) const =0;
     virtual int Period(const Consensus::Params& params) const =0;
     virtual int Threshold(const Consensus::Params& params) const =0;
 
