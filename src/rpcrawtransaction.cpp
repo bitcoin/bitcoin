@@ -10,6 +10,8 @@
 #include "net.h"
 #include "wallet.h"
 
+#include <boost/assign/list_of.hpp>
+
 using namespace std;
 using namespace boost;
 using namespace boost::assign;

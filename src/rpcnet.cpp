@@ -5,7 +5,6 @@
 
 #include "rpcserver.h"
 #include "net.h"
-#include "bitcoinrpc.h"
 #include "alert.h"
 #include "base58.h"
 

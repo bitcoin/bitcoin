@@ -12,9 +12,10 @@
 #include "util.h"
 #include "wallet.h"
 #include "walletdb.h"
-#include "bitcoinrpc.h"
 #include "init.h"
 #include "base58.h"
+
+#include <boost/assign/list_of.hpp>
 
 using namespace std;
 using namespace boost;

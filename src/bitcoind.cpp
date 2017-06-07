@@ -6,7 +6,6 @@
 #include "rpcserver.h"
 #include "rpcclient.h"
 #include "init.h"
-#include "bitcoinrpc.h"
 #include <boost/algorithm/string/predicate.hpp>
 
 void DetectShutdownThread(boost::thread_group* threadGroup)
