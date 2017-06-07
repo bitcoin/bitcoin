@@ -26,6 +26,7 @@ BITCOIN_INCLUDES += $(UNIVALUE_CFLAGS)
 
 LIBBITCOIN_SERVER=libbitcoin_server.a
 LIBBITCOIN_COMMON=libbitcoin_common.a
+LIBBITCOIN_POLICY=libbitcoin_policy.a
 LIBBITCOIN_CONSENSUS=libbitcoin_consensus.a
 LIBBITCOIN_CLI=libbitcoin_cli.a
 LIBBITCOIN_UTIL=libbitcoin_util.a
@@ -52,6 +53,7 @@ EXTRA_LIBRARIES += \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_COMMON) \
+  $(LIBBITCOIN_POLICY) \
   $(LIBBITCOIN_CONSENSUS) \
   $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_CLI) \
@@ -119,6 +121,7 @@ BITCOIN_CORE_H = \
   noui.h \
   policy/feerate.h \
   policy/fees.h \
+  policy/inputs.h \
   policy/policy.h \
   policy/rbf.h \
   pow.h \
@@ -197,7 +200,7 @@ libbitcoin_server_a_SOURCES = \
   net_processing.cpp \
   noui.cpp \
   policy/fees.cpp \
-  policy/policy.cpp \
+  policy/inputs.cpp \
   pow.cpp \
   rest.cpp \
   rpc/blockchain.cpp \
@@ -314,12 +317,19 @@ libbitcoin_common_a_SOURCES = \
   keystore.cpp \
   netaddress.cpp \
   netbase.cpp \
-  policy/feerate.cpp \
   protocol.cpp \
   scheduler.cpp \
   script/sign.cpp \
   script/standard.cpp \
   warnings.cpp \
+  $(BITCOIN_CORE_H)
+
+# policy: shared between all executables that require policy rules.
+libbitcoin_policy_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+libbitcoin_policy_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libbitcoin_policy_a_SOURCES = \
+  policy/policy.cpp \
+  policy/feerate.cpp \
   $(BITCOIN_CORE_H)
 
 # util: shared between all executables.
@@ -373,6 +383,7 @@ endif
 bitcoind_LDADD = \
   $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_COMMON) \
+  $(LIBBITCOIN_POLICY) \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_WALLET) \

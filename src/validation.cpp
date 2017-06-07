@@ -19,6 +19,7 @@
 #include "init.h"
 #include "policy/fees.h"
 #include "policy/policy.h"
+#include "policy/inputs.h"
 #include "pow.h"
 #include "primitives/block.h"
 #include "primitives/transaction.h"
