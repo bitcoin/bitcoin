@@ -94,6 +94,22 @@ UniValue getnetworkhashps(const JSONRPCRequest& request)
     return GetNetworkHashPS(request.params.size() > 0 ? request.params[0].get_int() : 120, request.params.size() > 1 ? request.params[1].get_int() : -1);
 }
 
+void mine(uint32_t timeoutSeconds)
+{
+    boost::system_time checkblktime = boost::get_system_time() + boost::posix_time::seconds(timeoutSeconds);
+
+    boost::unique_lock<boost::mutex> lock(csBestBlock);
+    CBlockIndex* tip = chainActive.Tip();
+    while (chainActive.Tip()->GetBlockHash() == hashWatchedChain && IsRPCRunning()) {
+        if (!cvBlockChange.timed_wait(lock, checkbkltime)) {
+            // Timeout: Check transactions for update
+            if (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLastLP)
+                break;
+            checkblktime += boost::posix_time::seconds(10);
+        }
+    }
+}
+
 UniValue generateBlocks(std::shared_ptr<CReserveScript> coinbaseScript, int nGenerate, uint64_t nMaxTries, bool keepScript)
 {
     static const int nInnerLoopCount = 0x10000;
@@ -117,7 +133,7 @@ UniValue generateBlocks(std::shared_ptr<CReserveScript> coinbaseScript, int nGen
             LOCK(cs_main);
             IncrementExtraNonce(pblock, chainActive.Tip(), nExtraNonce);
         }
-        while (nMaxTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus())) {
+        while (nMaxTries > 0 && pblock->nNonce < nInnerLoopCount && (!pblock->CheckProofOfWork(true) || !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus()))) {
             ++pblock->nNonce;
             --nMaxTries;
         }
