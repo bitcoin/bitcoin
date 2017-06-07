@@ -2837,15 +2837,108 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
 bool CConnman::ForNode(NodeId id, std::function<bool(CNode* pnode)> func)
 {
     CNode* found = nullptr;
-    LOCK(cs_vNodes);
-    for (auto&& pnode : vNodes) {
-        if(pnode->GetId() == id) {
-            found = pnode;
-            break;
+    {
+        LOCK(cs_vNodes);
+        for (auto&& pnode : vNodes) {
+            if(pnode->GetId() == id) {
+                found = pnode;
+                found->AddRef();
+                break;
+            }
         }
     }
-    return found != nullptr && NodeFullyConnected(found) && func(found);
+    bool res = false;
+    if (found != nullptr) {
+        res = NodeFullyConnected(found) && func(found);
+        found->Release();
+    }
+    return res;
 }
+
+void CConnman::ForEachNode(std::function<void (CNode* pnode)> func)
+{
+    std::vector<CNode*> vNodes_copy;
+    {
+        LOCK(cs_vNodes);
+        vNodes_copy.reserve(vNodes.size());
+        for (auto&& node : vNodes) {
+            node->AddRef();
+            vNodes_copy.push_back(node);
+        }
+    }
+    for (CNode* node : vNodes_copy) {
+        if (NodeFullyConnected(node)) {
+            func(node);
+        }
+        node->Release();
+    }
+};
+
+void CConnman::ForEachNode(std::function<void (const CNode* pnode)> func) const
+{
+    std::vector<CNode*> vNodes_copy;
+    {
+        LOCK(cs_vNodes);
+        vNodes_copy.reserve(vNodes.size());
+        for (auto&& node : vNodes) {
+            node->AddRef();
+            vNodes_copy.push_back(node);
+        }
+    }
+    for (CNode* node : vNodes_copy) {
+        if (NodeFullyConnected(node)) {
+            func(node);
+        }
+        node->Release();
+    }
+};
+
+void CConnman::ForEachNodeThen(std::function<void (CNode* pnode)> pre, std::function<void ()> post)
+{
+    std::vector<CNode*> vNodes_copy;
+    {
+        LOCK(cs_vNodes);
+        vNodes_copy.reserve(vNodes.size());
+        for (auto&& node : vNodes) {
+            node->AddRef();
+            vNodes_copy.push_back(node);
+        }
+    }
+    for (CNode* node : vNodes_copy) {
+        if (NodeFullyConnected(node)) {
+            pre(node);
+        }
+    }
+    post();
+    for (CNode* node : vNodes_copy) {
+        node->Release();
+    }
+};
+
+void CConnman::ForEachNodeThen(std::function<void (const CNode* pnode)> pre, std::function<void ()> post) const
+{
+    std::vector<CNode*> vNodes_copy;
+    {
+        LOCK(cs_vNodes);
+        vNodes_copy.reserve(vNodes.size());
+        for (auto&& node : vNodes) {
+            node->AddRef();
+            vNodes_copy.push_back(node);
+        }
+    }
+    for (CNode* node : vNodes_copy) {
+        if (NodeFullyConnected(node)) {
+            pre(node);
+        }
+    }
+    post();
+    for (CNode* node : vNodes_copy) {
+        node->Release();
+    }
+};
+
+
+
 
 int64_t PoissonNextSend(int64_t nNow, int average_interval_seconds) {
     return nNow + (int64_t)(log1p(GetRand(1ULL << 48) * -0.0000000000000035527136788 /* -1/2^48 */) * average_interval_seconds * -1000000.0 + 0.5);
