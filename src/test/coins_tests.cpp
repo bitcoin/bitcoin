@@ -155,11 +155,11 @@ BOOST_AUTO_TEST_CASE(coins_cache_simulation_test)
                 newcoin.out.nValue = insecure_rand();
                 newcoin.nHeight = 1;
                 if (insecure_randrange(16) == 0 && coin.IsSpent()) {
-                    newcoin.out.scriptPubKey.assign(1 + (insecure_rand() & 0x3F), OP_RETURN);
+                    newcoin.out.scriptPubKey.assign(1 + insecure_randbits(6), OP_RETURN);
                     BOOST_CHECK(newcoin.out.scriptPubKey.IsUnspendable());
                     added_an_unspendable_entry = true;
                 } else {
-                    newcoin.out.scriptPubKey.assign(insecure_rand() & 0x3F, 0); // Random sizes so we can test memory usage accounting
+                    newcoin.out.scriptPubKey.assign(insecure_randbits(6), 0); // Random sizes so we can test memory usage accounting
                     (coin.IsSpent() ? added_an_entry : updated_an_entry) = true;
                     coin = newcoin;
                 }
