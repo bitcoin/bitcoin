@@ -25,7 +25,7 @@ cuckoo_cycle::~cuckoo_cycle() {
     }
 }
 
-void cuckoo_cycle::solve(uint32_t threads, bool background, int32_t ticks) {
+bool cuckoo_cycle::solve(uint32_t threads, bool background, int32_t ticks) {
     assert(state == state_ready || state == state_paused);
     if (external_nonce && state == state_ready && !fZeroStartingNonce) {
         // randomize nonce
@@ -34,23 +34,27 @@ void cuckoo_cycle::solve(uint32_t threads, bool background, int32_t ticks) {
     }
     state = state_running;
     ticks_left = ticks;
-    if (c->params.size() != HEADERLEN - 4) {
-        c->params.resize(HEADERLEN - 4);
+    if (c->params.size() != HEADERLEN - (external_nonce ? 4 : 0)) {
+        c->params.resize(HEADERLEN - (external_nonce ? 4 : 0));
     }
     if (background) {
         thread = new std::thread(&cuckoo_cycle::solve_async, this, threads ?: 1);
-    } else {
-        solve_async(threads ?: 1);
+        return false;
     }
+    return solve_async(threads ?: 1);
 }
 
 void cuckoo_cycle::abort() {
+    if (pAbort) {
+        *pAbort = true;
+        pAbort = NULL;
+    }
     if (state != state_running) return;
     state = state_term;
     thread->join();
 }
 
-void cuckoo_cycle::solve_async(uint32_t thread_count) { // asynchronous
+bool cuckoo_cycle::solve_async(uint32_t thread_count) { // asynchronous
     int ntrims = 1 + (PART_BITS+3)*(PART_BITS+4)/2;
     int nonce  = next_nonce;
     thread_ctx* threads = new thread_ctx[thread_count];
@@ -59,8 +63,13 @@ void cuckoo_cycle::solve_async(uint32_t thread_count) { // asynchronous
     char* ws = new char[wx];
     memcpy(ws, &c->params[0], c->params.size());
     ctx = new cuckoo_ctx(thread_count, ntrims, 8, c->proofsize_min, c->proofsize_max);
+    pAbort = &ctx->abort;
     while (state == state_running) {
-        if (external_nonce) ctx->setheadernonce(ws, wx, nonce);
+        if (external_nonce) {
+            ctx->setheadernonce(ws, wx, nonce);
+        } else {
+            ctx->prepare(ws);
+        }
         for (uint32_t t = 0; t < thread_count; t++) {
             threads[t].id = t;
             threads[t].ctx = ctx;
@@ -78,9 +87,14 @@ void cuckoo_cycle::solve_async(uint32_t thread_count) { // asynchronous
             nonce_t proofsize = ctx->sols[s][ctx->proofsize_max];
             printf("- solution with proofsize = %u found for nonce = %d\n", proofsize, nonce);
             solution_ref sol(new solution());
-            sol->params.resize(4 * (1 + proofsize));
-            SetNonce(sol, nonce);
-            SetKeys(sol, ctx->sols[s], proofsize);
+            sol->params.resize(4 * (proofsize + (external_nonce ? 1 : 0)));
+            if (external_nonce) {
+                SetNonce(sol, nonce);
+                SetKeys(sol, ctx->sols[s], proofsize);
+            } else {
+                memcpy(&sol->params[0], ctx->sols[s], proofsize * 4);
+                printf("solution with nonces %u, %u, %u, ..., %u\n", ctx->sols[s][0], ctx->sols[s][1], ctx->sols[s][2], ctx->sols[s][proofsize-1]);
+            }
             if (cb->found_solution(*this, c, sol)) {
                 state = state_stopped;
                 break;
@@ -88,13 +102,15 @@ void cuckoo_cycle::solve_async(uint32_t thread_count) { // asynchronous
         }
         nonce++;
         ticks_left -= ticks_left > -1;
-        if (ticks_left == 0 || !external_nonce) state = state_paused;
+        if (state == state_running && (ticks_left == 0 || !external_nonce)) state = state_paused;
     }
     if (state == state_term) state = state_aborted;
     delete ctx;
     delete [] ws;
     delete [] threads;
     next_nonce = nonce;
+    pAbort = NULL;
+    return state == state_stopped;
 }
 
 }  // namespace cuckoo_cycle

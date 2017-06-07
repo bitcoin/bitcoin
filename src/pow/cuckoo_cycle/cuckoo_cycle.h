@@ -89,8 +89,9 @@ public:
     int next_nonce;
     static int last_err;               ///< last error after call to is_valid()
     bool external_nonce;
+    std::atomic<bool>* pAbort;
     cuckoo_cycle(cc_challenge_ref c_in, callback_ref cb_in = nullptr, bool external_nonce_in = true)
-    : pow(POWID_CUCKOO_CYCLE, c_in, cb_in), thread(nullptr), c(c_in), next_nonce(0), external_nonce(external_nonce_in) {}
+    : pow(POWID_CUCKOO_CYCLE, c_in, cb_in), thread(nullptr), c(c_in), next_nonce(0), external_nonce(external_nonce_in), pAbort(NULL) {}
     ~cuckoo_cycle();
 
     std::string last_error_string() {
@@ -119,8 +120,7 @@ public:
             values = (u32*)&s.params[0];
             keys = &values[0];
         }
-        uint16_t proofsize = (s.params.size() >> 2) - 1;
-        printf("CC is_valid(): nonce=%u, proofsize=%u\n", nonce, proofsize);
+        uint16_t proofsize = (s.params.size() >> 2) - (external_nonce ? 1 : 0);
 
         char headernonce[HEADERLEN];
         u32 hdrlen = c.get()->params.size();
@@ -131,6 +131,7 @@ public:
         }
 
         last_err = verify(keys, headernonce, HEADERLEN, proofsize);
+        printf("CC is_valid(): nonce=%u, proofsize=%u, err=%d (%s)\n", nonce, proofsize, last_err, last_err == POW_OK ? "true" : "false");
         return (last_err == POW_OK);
     }
 
@@ -140,7 +141,7 @@ public:
         memcpy(&output[0], &s.params[0], s.params.size());
     }
 
-    void solve(uint32_t threads = 0, bool background = false, int32_t ticks = -1) override;
+    bool solve(uint32_t threads = 0, bool background = false, int32_t ticks = -1) override;
 
     int64_t expected_iteration_cycles() const override { return 150000000000; }
     int64_t expected_invprob()          const override {
@@ -153,8 +154,9 @@ public:
     virtual std::string to_string() const override {
         return strprintf("Cuckoo-Cycle<%p; ps=[%u, %u]>", this, c->proofsize_min, c->proofsize_max);
     }
+
 private:
-    void solve_async(uint32_t thread_count);
+    bool solve_async(uint32_t thread_count);
 };
 
 }  // namespace cuckoo_cycle

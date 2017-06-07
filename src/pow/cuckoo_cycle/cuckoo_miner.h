@@ -233,8 +233,10 @@ public:
   uint16_t proofsize_min;
   uint16_t proofsize_max;
   pthread_barrier_t barry;
+  std::atomic<bool> abort;
 
   cuckoo_ctx(u32 n_threads, u32 n_trims, u32 max_sols, uint16_t proofsize_min_in, uint16_t proofsize_max_in) {
+    abort = false;
     proofsize_min = proofsize_min_in;
     proofsize_max = proofsize_max_in;
     nthreads = n_threads;
@@ -249,11 +251,14 @@ public:
     assert(sols != 0);
     nsols = 0;
   }
-  void setheadernonce(char* headernonce, const u32 len, const u32 nonce) {
-    ((u32 *)headernonce)[len/sizeof(u32)-1] = htole32(nonce); // place nonce at end
+  void prepare(char* headernonce) {
     setheader(&sip_keys, headernonce);
     alive->clear(); // set all edges to be alive
     nsols = 0;
+  }
+  void setheadernonce(char* headernonce, const u32 len, const u32 nonce) {
+    ((u32 *)headernonce)[len/sizeof(u32)-1] = htole32(nonce); // place nonce at end
+    prepare(headernonce);
   }
   ~cuckoo_ctx() {
     delete alive;
@@ -298,6 +303,7 @@ public:
         }
         if (ffs & 64) break; // can't shift by 64
       }
+      if (abort) return;
     }
     node_deg(hashes, NPREFETCH, part);
     if (nidx % NSIPHASH != 0) {
@@ -334,6 +340,7 @@ public:
         }
         if (ffs & 64) break; // can't shift by 64
       }
+      if (abort) return;
     }
     const u32 pnsip = nidx & -NSIPHASH;
     if (pnsip != nidx) {
@@ -423,10 +430,13 @@ inline void *worker(void *vp) {
         if (tp->id == 0)
           ctx->nonleaf->clear(); // clear all counts
         barrier(&ctx->barry);
+        if (ctx->abort) pthread_exit(NULL);
         ctx->count_node_deg(tp->id,uorv,part);
         barrier(&ctx->barry);
+        if (ctx->abort) pthread_exit(NULL);
         ctx->kill_leaf_edges(tp->id,uorv,part);
         barrier(&ctx->barry);
+        if (ctx->abort) pthread_exit(NULL);
         // if (tp->id == 0) {
         //   u32 load = (u32)(100LL * alive->count() / CUCKOO_SIZE);
         //   printf(" %c%d %4d%%", "UV"[uorv], part, load);
@@ -437,9 +447,9 @@ inline void *worker(void *vp) {
   }
   if (tp->id == 0) {
     load = (u32)(100LL * alive->count() / CUCKOO_SIZE);
-    // printf("nonce %d: %d trims completed  final load %d%%\n", ctx->nonce, ctx->ntrims, load);
+    printf("CC: %d trims completed  final load %d%%\n", ctx->ntrims, load);
     if (load >= 90) {
-      printf("overloaded! exiting...");
+      printf("overloaded! exiting...\n");
       pthread_exit(NULL);
     }
     ctx->cuckoo = new cuckoo_hash(ctx->nonleaf->bits);
@@ -482,6 +492,7 @@ inline void *worker(void *vp) {
       }
       if (ffs & 64) break; // can't shift by 64
     }
+    if (ctx->abort) pthread_exit(NULL);
   }
   pthread_exit(NULL);
   return 0;
