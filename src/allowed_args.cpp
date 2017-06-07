@@ -15,6 +15,7 @@
 #include "net.h"
 #include "policy/policy.h"
 #include "qt/guiconstants.h"
+#include "requestManager.h"
 #include "script/sigcache.h"
 #include "tinyformat.h"
 #include "torcontrol.h"
@@ -283,6 +284,9 @@ static void addConnectionOptions(AllowedArgs &allowedArgs)
             _("Bind to given address and always listen on it. Use [host]:port notation for IPv6"))
         .addArg("bitnodes", optionalBool,
             _("Query for peer addresses via Bitnodes API, if low on addresses (default: 1 unless -connect)"))
+        .addArg("blkretryinterval", requiredInt,
+            strprintf(_("Time to wait before requesting a block from a different peer, in microseconds (default: %u)"),
+                    DEFAULT_MIN_BLK_REQUEST_RETRY_INTERVAL))
         .addArg("connect=<ip>", optionalStr, _("Connect only to the specified node(s)"))
         .addArg("connect-thinblock=<ip:port>", requiredStr,
             _("Connect to a thinblock node(s). Blocks will only be downloaded from a thinblock peer.  If no "
@@ -342,6 +346,9 @@ static void addConnectionOptions(AllowedArgs &allowedArgs)
         .addArg("torcontrol=<ip>:<port>", requiredStr,
             strprintf(_("Tor control port to use if onion listening enabled (default: %s)"), DEFAULT_TOR_CONTROL))
         .addArg("torpassword=<pass>", requiredStr, _("Tor control port password (default: empty)"))
+        .addArg("txretryinterval", requiredInt,
+            strprintf(_("Time to wait before requesting a tx from a different peer, in microseconds (default: %u)"),
+                    DEFAULT_MIN_TX_REQUEST_RETRY_INTERVAL))
 #ifdef USE_UPNP
 #if USE_UPNP
         .addArg("upnp", optionalBool, _("Use UPnP to map the listening port (default: 1 when listening and no -proxy)"))
