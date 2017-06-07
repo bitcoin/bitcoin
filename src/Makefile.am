@@ -287,6 +287,10 @@ libbitcoin_consensus_a_SOURCES = \
   consensus/validation.h \
   hash.cpp \
   hash.h \
+  pow/cuckoo_cycle/cuckoo_cycle.cpp \
+  pow/cuckoo_cycle/cuckoo_cycle.h \
+  pow/pow.cpp \
+  pow/pow.h \
   prevector.h \
   primitives/block.cpp \
   primitives/block.h \
@@ -325,6 +329,7 @@ libbitcoin_common_a_SOURCES = \
   netbase.cpp \
   policy/feerate.cpp \
   pow/cuckoo_cycle/cuckoo_cycle.cpp \
+  pow/pow.cpp \
   protocol.cpp \
   scheduler.cpp \
   script/sign.cpp \
