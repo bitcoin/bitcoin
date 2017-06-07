@@ -23,18 +23,18 @@
  *  using BOOST_CHECK_CLOSE to fail.
  *
  */
-FastRandomContext insecure_rand(true);
+FastRandomContext local_rand_ctx(true);
 
 BOOST_AUTO_TEST_SUITE(cuckoocache_tests);
 
 
-/** insecure_GetRandHash fills in a uint256 from insecure_rand
+/** insecure_GetRandHash fills in a uint256 from local_rand_ctx
  */
 void insecure_GetRandHash(uint256& t)
 {
     uint32_t* ptr = (uint32_t*)t.begin();
     for (uint8_t j = 0; j < 8; ++j)
-        *(ptr++) = insecure_rand.rand32();
+        *(ptr++) = local_rand_ctx.rand32();
 }
 
 
@@ -45,7 +45,7 @@ void insecure_GetRandHash(uint256& t)
  */
 BOOST_AUTO_TEST_CASE(test_cuckoocache_no_fakes)
 {
-    insecure_rand = FastRandomContext(true);
+    local_rand_ctx = FastRandomContext(true);
     CuckooCache::cache<uint256, SignatureCacheHasher> cc{};
     size_t megabytes = 4;
     cc.setup_bytes(megabytes << 20);
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(test_cuckoocache_no_fakes)
 template <typename Cache>
 double test_cache(size_t megabytes, double load)
 {
-    insecure_rand = FastRandomContext(true);
+    local_rand_ctx = FastRandomContext(true);
     std::vector<uint256> hashes;
     Cache set{};
     size_t bytes = megabytes * (1 << 20);
@@ -76,7 +76,7 @@ double test_cache(size_t megabytes, double load)
     for (uint32_t i = 0; i < n_insert; ++i) {
         uint32_t* ptr = (uint32_t*)hashes[i].begin();
         for (uint8_t j = 0; j < 8; ++j)
-            *(ptr++) = insecure_rand.rand32();
+            *(ptr++) = local_rand_ctx.rand32();
     }
     /** We make a copy of the hashes because future optimizations of the
      * cuckoocache may overwrite the inserted element, so the test is
@@ -137,7 +137,7 @@ template <typename Cache>
 void test_cache_erase(size_t megabytes)
 {
     double load = 1;
-    insecure_rand = FastRandomContext(true);
+    local_rand_ctx = FastRandomContext(true);
     std::vector<uint256> hashes;
     Cache set{};
     size_t bytes = megabytes * (1 << 20);
@@ -147,7 +147,7 @@ void test_cache_erase(size_t megabytes)
     for (uint32_t i = 0; i < n_insert; ++i) {
         uint32_t* ptr = (uint32_t*)hashes[i].begin();
         for (uint8_t j = 0; j < 8; ++j)
-            *(ptr++) = insecure_rand.rand32();
+            *(ptr++) = local_rand_ctx.rand32();
     }
     /** We make a copy of the hashes because future optimizations of the
      * cuckoocache may overwrite the inserted element, so the test is
@@ -200,7 +200,7 @@ template <typename Cache>
 void test_cache_erase_parallel(size_t megabytes)
 {
     double load = 1;
-    insecure_rand = FastRandomContext(true);
+    local_rand_ctx = FastRandomContext(true);
     std::vector<uint256> hashes;
     Cache set{};
     size_t bytes = megabytes * (1 << 20);
@@ -210,7 +210,7 @@ void test_cache_erase_parallel(size_t megabytes)
     for (uint32_t i = 0; i < n_insert; ++i) {
         uint32_t* ptr = (uint32_t*)hashes[i].begin();
         for (uint8_t j = 0; j < 8; ++j)
-            *(ptr++) = insecure_rand.rand32();
+            *(ptr++) = local_rand_ctx.rand32();
     }
     /** We make a copy of the hashes because future optimizations of the
      * cuckoocache may overwrite the inserted element, so the test is
@@ -302,7 +302,7 @@ void test_cache_generations()
     // iterations with non-deterministic values, so it isn't "overfit" to the
     // specific entropy in FastRandomContext(true) and implementation of the
     // cache.
-    insecure_rand = FastRandomContext(true);
+    local_rand_ctx = FastRandomContext(true);
 
     // block_activity models a chunk of network activity. n_insert elements are
     // adde to the cache. The first and last n/4 are stored for removal later
@@ -319,7 +319,7 @@ void test_cache_generations()
             for (uint32_t i = 0; i < n_insert; ++i) {
                 uint32_t* ptr = (uint32_t*)inserts[i].begin();
                 for (uint8_t j = 0; j < 8; ++j)
-                    *(ptr++) = insecure_rand.rand32();
+                    *(ptr++) = local_rand_ctx.rand32();
             }
             for (uint32_t i = 0; i < n_insert / 4; ++i)
                 reads.push_back(inserts[i]);
