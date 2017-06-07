@@ -99,7 +99,7 @@ public:
     }
 
     template<typename T>
-    void solve_t(T startnonce) {
+    bool solve_t(T startnonce) {
         CSHA256 sha;
         uint256 hash;
         arith_uint256 target;
@@ -124,9 +124,10 @@ public:
         next_nonce = refnonce;
         delete [] data;
         state = state == state_term ? state_aborted : state_stopped;
+        return satisfied;
     }
 
-    void solve(uint32_t threads = 0, bool background = false, int32_t ticks = -1) override {
+    bool solve(uint32_t threads = 0, bool background = false, int32_t ticks = -1) override {
         assert(state == state_ready || state == state_paused);
         if (background || threads > 1) printf("warning: sha256 solver does not spawn threads\n");
         if (state == state_ready && sc->nonce_size > 0 && !fZeroStartingNonce) {
@@ -138,10 +139,10 @@ public:
         ticks_left = ticks;
         solution_ref s(new solution());
         switch (sc->nonce_size) {
-        case 0: if (is_valid(*s)) { cb->found_solution(*this, c, s); } return;
-        case 4: solve_t((uint32_t)next_nonce); return;
-        case 8: solve_t(next_nonce); return;
-        default: return; // we don't support this nonce size
+        case 0: if (is_valid(*s)) { cb->found_solution(*this, c, s); return true; } return false;
+        case 4: return solve_t((uint32_t)next_nonce);
+        case 8: return solve_t(next_nonce);
+        default: return false; // we don't support this nonce size
         }
     }
 
