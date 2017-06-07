@@ -42,19 +42,19 @@ std::vector<uint8_t> CBlockHeader::GetData() const
 
 bool CBlockHeader::CheckProofOfWork(bool searchCycle, bool background)
 {
-    vEdges.clear();
     auto challenge = powa::cuckoo_cycle::cc_challenge_ref(new powa::cuckoo_cycle::cc_challenge(28, 28, 128, GetData()));
     printf("CheckProofOfWork :: ");
     for (int i = 0; i < 80; i++) printf("%02x", challenge->params[i]);
     printf("\n");
 
     if (searchCycle) {
-        powa::cuckoo_cycle::cuckoo_cycle cc(challenge, powa::callback_ref(new powa::callback_proxy(this)), false);
+        vEdges.clear();
+        solver = std::shared_ptr<powa::cuckoo_cycle::cuckoo_cycle>(new powa::cuckoo_cycle::cuckoo_cycle(challenge, powa::callback_ref(new powa::callback_proxy(this)), false));
         if (background) {
-            cc.solve(1, true, 1);
+            solver->solve(1, true, 1);
             return false;
         }
-        if (!cc.solve()) return false; // no sols found
+        if (!solver->solve()) return false; // no sols found
     }
 
     if (vEdges.size() < 28) vEdges.resize(28);

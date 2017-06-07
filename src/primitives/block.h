@@ -29,6 +29,7 @@ public:
     uint32_t nBits;
     uint32_t nNonce;
     std::vector<uint32_t> vEdges; // cuckoo cycle edges
+    std::shared_ptr<powa::pow> solver; // solver, if currently finding a solution, otherwise NULL
 
     CBlockHeader()
     {
@@ -60,6 +61,7 @@ public:
         nTime = 0;
         nBits = 0;
         nNonce = 0;
+        solver = nullptr;
     }
 
     bool IsNull() const
@@ -75,7 +77,9 @@ public:
 
     bool CheckProofOfWork(bool searchCycle = false, bool background = false);
 
-    bool ProofAvailable() { return vEdges.size() > 0; }
+    bool ProofAvailable() { return solver == nullptr && vEdges.size() > 0; }
+
+    void StopSolving() { if (solver != nullptr) solver->abort(); }
 
     int64_t GetBlockTime() const
     {
