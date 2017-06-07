@@ -13,7 +13,6 @@
 #include "random.h"
 #include "utilstrencodings.h"
 #include "test/test_bitcoin.h"
-#include "test/test_random.h"
 
 #include <vector>
 
@@ -39,7 +38,7 @@ void TestVector(const Hasher &h, const In &in, const Out &out) {
         Hasher hasher(h);
         size_t pos = 0;
         while (pos < in.size()) {
-            size_t len = insecure_rand() % ((in.size() - pos + 1) / 2 + 1);
+            size_t len = InsecureRandRange((in.size() - pos + 1) / 2 + 1);
             hasher.Write((unsigned char*)&in[pos], len);
             pos += len;
             if (pos > 0 && pos + 2 * out.size() > in.size() && pos < in.size()) {
