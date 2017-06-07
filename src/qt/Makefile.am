@@ -67,6 +67,7 @@ QT_FORMS_UI = forms/aboutdialog.ui forms/addressbookpage.ui \
   forms/signverifymessagedialog.ui forms/transactiondescdialog.ui
 
 QT_MOC_CPP = moc_macdockiconhandler.cpp \
+  moc_macnotificationhandler.cpp \
   moc_aboutdialog.cpp \
   moc_addressbookpage.cpp \
   moc_addresstablemodel.cpp \
@@ -115,7 +116,7 @@ PPCOIN_QT_H  = aboutdialog.h addressbookpage.h addresstablemodel.h \
   askpassphrasedialog.h bitcoinaddressvalidator.h bitcoinamountfield.h \
   bitcoingui.h bitcoinunits.h clientmodel.h csvmodelwriter.h \
   editaddressdialog.h guiconstants.h guiutil.h macdockiconhandler.h \
-  monitoreddatamapper.h notificator.h optionsdialog.h \
+  macnotificationhandler.h monitoreddatamapper.h notificator.h optionsdialog.h \
   optionsmodel.h overviewpage.h paymentserver.h \
   qrcodedialog.h qvalidatedlineedit.h qvaluecombobox.h rpcconsole.h \
   sendcoinsdialog.h sendcoinsentry.h signverifymessagedialog.h splashscreen.h \
@@ -202,7 +203,7 @@ $(QT_MOC): $(PROTOBUF_H)
 $(QT_MOC_CPP): $(PROTOBUF_H)
 
 if TARGET_DARWIN
-  libppcoinqt_a_SOURCES += macdockiconhandler.mm
+  libppcoinqt_a_SOURCES += macdockiconhandler.mm macnotificationhandler.mm
 endif
 if TARGET_WINDOWS
   libppcoinqt_a_SOURCES += $(PPCOIN_RC)

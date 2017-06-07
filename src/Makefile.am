@@ -35,7 +35,7 @@ libppcoin_server_a_SOURCES = addrman.cpp alert.cpp rpcserver.cpp bloom.cpp \
   checkpoints.cpp checkpointsync.cpp crypter.cpp db.cpp \
   init.cpp kernel.cpp keystore.cpp leveldb.cpp main.cpp \
   net.cpp noui.cpp rpcblockchain.cpp rpcdump.cpp \
-  rpcmining.cpp rpcnet.cpp rpcrawtransaction.cpp rpcwallet.cpp \
+  rpcmining.cpp rpcnet.cpp rpcrawtransaction.cpp rpcserver.cpp rpcwallet.cpp \
   txdb.cpp wallet.cpp walletdb.cpp $(JSON_H) \
   $(BITCOIN_CORE_H)
 
@@ -45,6 +45,7 @@ libppcoin_common_a_SOURCES = \
   netbase.cpp \
   protocol.cpp \
   script.cpp \
+  rpcprotocol.cpp \
   sync.cpp \
   util.cpp \
   version.cpp \
