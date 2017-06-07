@@ -212,6 +212,9 @@ public:
     uint256 GetBestBlock() const;
     void SetBestBlock(const uint256 &hashBlock);
     bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock);
+    CCoinsViewCursor* Cursor() const {
+        throw std::logic_error("CCoinsViewCache cursor iteration not supported.");
+    }
 
     /**
      * Check if we have the given utxo already loaded in this cache.
