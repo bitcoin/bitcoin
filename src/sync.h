@@ -72,13 +72,13 @@ public:
 
 #ifdef DEBUG_LOCKORDER
 void EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs, bool fTry = false);
-void LeaveCritical();
+void LeaveCritical(void* cs);
 std::string LocksHeld();
 void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine, void* cs);
 void DeleteLock(void* cs);
 #else
 void static inline EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs, bool fTry = false) {}
-void static inline LeaveCritical() {}
+void static inline LeaveCritical(void* cs) {}
 void static inline AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine, void* cs) {}
 void static inline DeleteLock(void* cs) {}
 #endif
@@ -131,7 +131,7 @@ private:
         EnterCritical(pszName, pszFile, nLine, (void*)(lock.mutex()), true);
         lock.try_lock();
         if (!lock.owns_lock())
-            LeaveCritical();
+            LeaveCritical((void*)(lock.mutex()));
         return lock.owns_lock();
     }
 
@@ -158,7 +158,7 @@ public:
     ~CMutexLock() UNLOCK_FUNCTION()
     {
         if (lock.owns_lock())
-            LeaveCritical();
+            LeaveCritical((void*)(lock.mutex()));
     }
 
     operator bool()
@@ -182,10 +182,10 @@ typedef CMutexLock<CCriticalSection> CCriticalBlock;
         (cs).lock();                                          \
     }
 
-#define LEAVE_CRITICAL_SECTION(cs) \
-    {                              \
-        (cs).unlock();             \
-        LeaveCritical();           \
+#define LEAVE_CRITICAL_SECTION(cs)   \
+    {                                \
+        (cs).unlock();               \
+        LeaveCritical((void*)(&cs)); \
     }
 
 class CSemaphore
