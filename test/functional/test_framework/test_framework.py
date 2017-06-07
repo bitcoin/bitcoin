@@ -14,6 +14,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import traceback
 
 from .util import (
     PortSeed,
@@ -77,7 +78,7 @@ class BitcoinTestFramework(object):
         pass
 
     def setup_chain(self):
-        self.log.info("Initializing test directory "+self.options.tmpdir)
+        self.log.info("Initializing test directory " + self.options.tmpdir)
         if self.setup_clean_chain:
             self._initialize_chain_clean(self.options.tmpdir, self.num_nodes)
         else:
@@ -111,9 +112,9 @@ class BitcoinTestFramework(object):
                           help="Leave bitcoinds and test.* datadir on exit or error")
         parser.add_option("--noshutdown", dest="noshutdown", default=False, action="store_true",
                           help="Don't stop bitcoinds after the test execution")
-        parser.add_option("--srcdir", dest="srcdir", default=os.path.normpath(os.path.dirname(os.path.realpath(__file__))+"/../../../src"),
+        parser.add_option("--srcdir", dest="srcdir", default=os.path.normpath(os.path.dirname(os.path.realpath(__file__)) + "/../../../src"),
                           help="Source directory containing bitcoind/bitcoin-cli (default: %default)")
-        parser.add_option("--cachedir", dest="cachedir", default=os.path.normpath(os.path.dirname(os.path.realpath(__file__))+"/../../cache"),
+        parser.add_option("--cachedir", dest="cachedir", default=os.path.normpath(os.path.dirname(os.path.realpath(__file__)) + "/../../cache"),
                           help="Directory for caching pregenerated datadirs")
         parser.add_option("--tmpdir", dest="tmpdir", help="Root directory for datadirs")
         parser.add_option("-l", "--loglevel", dest="loglevel", default="INFO",
@@ -134,7 +135,7 @@ class BitcoinTestFramework(object):
 
         PortSeed.n = self.options.port_seed
 
-        os.environ['PATH'] = self.options.srcdir+":"+self.options.srcdir+"/qt:"+os.environ['PATH']
+        os.environ['PATH'] = self.options.srcdir + ":" + self.options.srcdir + "/qt:" + os.environ['PATH']
 
         check_json_precision()
 
@@ -188,7 +189,7 @@ class BitcoinTestFramework(object):
                 for fn in filenames:
                     try:
                         with open(fn, 'r') as f:
-                            print("From" , fn, ":")
+                            print("From", fn, ":")
                             print("".join(deque(f, MAX_LINES_TO_PRINT)))
                     except OSError:
                         print("Opening file %s failed." % fn)
@@ -257,7 +258,7 @@ class BitcoinTestFramework(object):
         ll = int(self.options.loglevel) if self.options.loglevel.isdigit() else self.options.loglevel.upper()
         ch.setLevel(ll)
         # Format logs the same as bitcoind's debug.log with microprecision (so log files can be concatenated and sorted)
-        formatter = logging.Formatter(fmt = '%(asctime)s.%(msecs)03d000 %(name)s (%(levelname)s): %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+        formatter = logging.Formatter(fmt='%(asctime)s.%(msecs)03d000 %(name)s (%(levelname)s): %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
         formatter.converter = time.gmtime
         fh.setFormatter(formatter)
         ch.setFormatter(formatter)
@@ -354,18 +355,13 @@ class BitcoinTestFramework(object):
         for i in range(num_nodes):
             initialize_datadir(test_dir, i)
 
-# Test framework for doing p2p comparison testing, which sets up some bitcoind
-# binaries:
-# 1 binary: test binary
-# 2 binaries: 1 test binary, 1 ref binary
-# n>2 binaries: 1 test binary, n-1 ref binaries
-
-class SkipTest(Exception):
-    """This exception is raised to skip a test"""
-    def __init__(self, message):
-        self.message = message
-
 class ComparisonTestFramework(BitcoinTestFramework):
+    """Test framework for doing p2p comparison testing
+
+    Sets up some bitcoind binaries:
+    - 1 binary: test binary
+    - 2 binaries: 1 test binary, 1 ref binary
+    - n>2 binaries: 1 test binary, n-1 ref binaries"""
 
     def __init__(self):
         super().__init__()
@@ -387,4 +383,9 @@ class ComparisonTestFramework(BitcoinTestFramework):
         self.nodes = self.start_nodes(
             self.num_nodes, self.options.tmpdir, extra_args,
             binary=[self.options.testbinary] +
-            [self.options.refbinary]*(self.num_nodes-1))
+            [self.options.refbinary] * (self.num_nodes - 1))
+
+class SkipTest(Exception):
+    """This exception is raised to skip a test"""
+    def __init__(self, message):
+        self.message = message
