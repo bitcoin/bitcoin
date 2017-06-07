@@ -471,6 +471,16 @@ public:
 
 class CInputCoin {
 public:
+
+    CInputCoin(const CTxOut& txoutIn, const COutPoint& outpointIn)
+    {
+        if(txoutIn.IsNull())
+            throw std::invalid_argument("txoutIn should not be null");
+        if (outpointIn.IsNull())
+            throw std::invalid_argument("outpointIn should not be null");
+        outpoint = outpointIn;
+        txout = txoutIn;
+    }
     CInputCoin(const CWalletTx* walletTx, unsigned int i)
     {
         if (!walletTx)
@@ -928,11 +938,13 @@ public:
     CAmount GetLegacyBalance(const isminefilter& filter, int minDepth, const std::string* account) const;
     CAmount GetAvailableBalance(const CCoinControl* coinControl = nullptr) const;
 
+    boost::optional<CInputCoin> FindCoin(const COutPoint& outpoint);
+
     /**
      * Insert additional inputs into the transaction by
      * calling CreateTransaction();
      */
-    bool FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, bool overrideEstimatedFeeRate, const CFeeRate& specificFeeRate, int& nChangePosInOut, std::string& strFailReason, bool includeWatching, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, bool keepReserveKey = true, const CTxDestination& destChange = CNoDestination());
+    bool FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, const CCoinControl& coinControl, int& nChangePosInOut, std::string& strFailReason, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, bool keepReserveKey = true);
     bool SignTransaction(CMutableTransaction& tx);
 
     /**
@@ -1193,11 +1205,15 @@ bool CWallet::DummySignTx(CMutableTransaction &txNew, const ContainerType &coins
         const CScript& scriptPubKey = coin.txout.scriptPubKey;
         SignatureData sigdata;
 
-        if (!ProduceSignature(DummySignatureCreator(this), scriptPubKey, sigdata))
+        auto ismine = IsMine(coin.txout);
+        if (ismine == ISMINE_SPENDABLE || ismine == ISMINE_WATCH_SOLVABLE)
         {
-            return false;
-        } else {
-            UpdateTransaction(txNew, nIn, sigdata);
+            if (!ProduceSignature(DummySignatureCreator(this), scriptPubKey, sigdata))
+            {
+                return false;
+            } else {
+                UpdateTransaction(txNew, nIn, sigdata);
+            }
         }
 
         nIn++;

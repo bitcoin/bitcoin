@@ -65,6 +65,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 1.5)
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 1.0)
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 5.0)
+        self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 3.0)
 
         self.nodes[0].generate(1)
         self.sync_all()
@@ -309,16 +310,43 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_equal(matchingOuts, 2)
         assert_equal(len(dec_tx['vout']), 3)
 
+        ##############################################################################################
+        # test a fundrawtransaction with one vin from wallet and one from mempool, one from CoinView #
+        ##############################################################################################
+        utx = get_unspent(self.nodes[0].listunspent(), 50)
+        recei = self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 4)
+        self.sync_all()
+        # utx2 is unconfirmed, utx3 is confirmed (sent at the beginning of this test)
+        utx2 = get_unspent(self.nodes[2].listunspent(minconf=0, maxconf=0, addresses=None, include_unsafe=True), 4)
+        utx3 = get_unspent(self.nodes[2].listunspent(), 3)
+        inputs  = [ {'txid' : utx['txid'], 'vout' : utx['vout']},{'txid' : utx2['txid'], 'vout' : utx2['vout']},{'txid' : utx3['txid'], 'vout' : utx3['vout']} ]
+        outputs = { self.nodes[0].getnewaddress() : 50 + 4 + 3 + 2 }
+        rawtx   = self.nodes[0].createrawtransaction(inputs, outputs)
+        rawtxfund = self.nodes[0].fundrawtransaction(rawtx)
+        dec_tx  = self.nodes[0].decoderawtransaction(rawtxfund['hex'])
+        # Should contains the 3 previous vin + a new one added by the wallet
+        assert_equal(len(dec_tx['vin']), 4)
+        # Should contains the change, nodes[0] having only 50 BTC coins, it should returns around 43 BTC
+        assert_equal(len(dec_tx['vout']), 2)
+        totalOut = 0
+        for out in dec_tx['vout']:
+            totalOut += out['value']
+        assert_greater_than(totalOut, 50 + 4 + 3 + 2 + 42.9)
+        assert_greater_than(50 + 4 + 3 + 2 + 43, totalOut)
+
         ##############################################
         # test a fundrawtransaction with invalid vin #
         ##############################################
         listunspent = self.nodes[2].listunspent()
-        inputs  = [ {'txid' : "1c7f966dab21119bac53213a2bc7532bff1fa844c124fd750a7d0b1332440bd1", 'vout' : 0} ] #invalid vin!
+        fakeTx = "0100000001aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa0000000000ffffffff0100e1f505000000001600149e74df90b0544a8c8e9337896bb5578f8dd5a70900000000"
+        fakeTxId = "fc5a4367363cf10dc6f2badf709d3691b88acd853dee3b50c4bef080c2760273"
+        inputs  = [ {'txid' : "fc5a4367363cf10dc6f2badf709d3691b88acd853dee3b50c4bef080c2760273", 'vout' : 0} ] #invalid vin!
         outputs = { self.nodes[0].getnewaddress() : 1.0}
         rawtx   = self.nodes[2].createrawtransaction(inputs, outputs)
         dec_tx  = self.nodes[2].decoderawtransaction(rawtx)
-
-        assert_raises_jsonrpc(-4, "Insufficient funds", self.nodes[2].fundrawtransaction, rawtx)
+        assert_raises_jsonrpc(-4, "unknown-input", self.nodes[2].fundrawtransaction, rawtx)
+        rawtxfund = self.nodes[0].fundrawtransaction(rawtx, {}, { 'parentTransactions' : [ fakeTx ], 'previousOutputs' : [ { "txid" : fakeTxId, "n" : 0, "amount" : "1.0", "scriptPubKey" : "00149e74df90b0544a8c8e9337896bb5578f8dd5a709"  } ] })
+        assert_raises_jsonrpc(-8, "Invalid amount for output", self.nodes[2].fundrawtransaction, rawtx, {}, { 'parentTransactions' : [ fakeTx ], 'previousOutputs' : [ { "txid" : fakeTxId, "n" : 0, "amount" : "1.1", "scriptPubKey" : "00149e74df90b0544a8c8e9337896bb5578f8dd5a709"  } ] })
 
         ############################################################
         #compare fee of a standard pubkeyhash transaction
