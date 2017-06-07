@@ -13,22 +13,17 @@ AM_CPPFLAGS =  $(INCLUDES) \
 AM_CPPFLAGS += $(LEVELDB_CPPFLAGS)
 AM_LDFLAGS = $(PTHREAD_CFLAGS)
 
-LIBPPCOIN_SERVER=$(top_builddir)/src/libppcoin_server.a
-LIBPPCOIN_WALLET=$(top_builddir)/src/libppcoin_wallet.a
-LIBPPCOIN_COMMON=$(top_builddir)/src/libppcoin_common.a
-LIBPPCOIN_CLI=$(top_builddir)/src/libppcoin_cli.a
-LIBPPCOINQT=$(top_builddir)/src/qt/libppcoinqt.a
-
-$(LIBPPCOIN):
-	$(MAKE) -C $(top_builddir)/src $(@F)
+LIBPPCOIN_SERVER=libppcoin_server.a
+LIBPPCOIN_WALLET=libppcoin_wallet.a
+LIBPPCOIN_COMMON=libppcoin_common.a
+LIBPPCOIN_CLI=libppcoin_cli.a
+LIBPPCOINQT=qt/libppcoinqt.a
 
 if EMBEDDED_LEVELDB
 $(LIBLEVELDB) $(LIBMEMENV):
 	$(MAKE) -C $(top_builddir)/src leveldb/$(@F)
+$(LIBLEVELDB): $(LIBMEMENV)
 endif
-
-$(LIBPPCOINQT):
-	$(MAKE) -C $(top_builddir)/src/qt $(@F)
 
 .mm.o:
 	$(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \

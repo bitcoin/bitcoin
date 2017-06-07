@@ -14,6 +14,7 @@ noinst_LIBRARIES += libppcoin_wallet.a
 endif
 
 bin_PROGRAMS =
+TESTS =
 
 if BUILD_BITCOIND
   bin_PROGRAMS += ppcoind
@@ -23,8 +24,6 @@ if BUILD_BITCOIN_CLI
   bin_PROGRAMS += peercoin-cli
 endif
 
-SUBDIRS = . $(BUILD_QT) $(BUILD_TEST)
-DIST_SUBDIRS = . qt test
 .PHONY: FORCE
 # bitcoin core #
 BITCOIN_CORE_H = \
@@ -174,17 +173,24 @@ leveldb/%.a:
 	  CC="$(CC)" PLATFORM=$(TARGET_OS) AR="$(AR)" $(LEVELDB_TARGET_FLAGS) \
 	  OPT="$(CXXFLAGS) $(CPPFLAGS)"
 
-qt/bitcoinstrings.cpp: $(libppcoin_server_a_SOURCES) $(libppcoin_common_a_SOURCES) $(libppcoin_cli_a_SOURCES)
-	@test -n $(XGETTEXT) || echo "xgettext is required for updating translations"
-	@cd $(top_srcdir); XGETTEXT=$(XGETTEXT) share/qt/extract_strings_qt.py
-
 CLEANFILES = leveldb/libleveldb.a leveldb/libmemenv.a *.gcda *.gcno
 
 DISTCLEANFILES = obj/build.h
 
-EXTRA_DIST = leveldb Makefile.include
+EXTRA_DIST = leveldb
 
 clean-local:
 	-$(MAKE) -C leveldb clean
-	rm -f leveldb/port/*.gcno leveldb/db/*.gcno leveldb/table/*.gcno leveldb/helpers/*.gcno
-	rm -f leveldb/util/*.gcno leveldb/helpers/memenv/*.gcno
+	rm -f leveldb/*/*.gcno leveldb/helpers/memenv/*.gcno
+
+if ENABLE_TESTS
+include Makefile.test.include
+endif
+
+if ENABLE_QT
+include Makefile.qt.include
+endif
+
+if ENABLE_QT_TESTS
+include Makefile.qttest.include
+endif
