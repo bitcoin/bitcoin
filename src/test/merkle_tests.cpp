@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(merkle_test)
                     // If ntx <= 16, try all branches. Otherwise, try 16 random ones.
                     int mtx = loop;
                     if (ntx > 16) {
-                        mtx = insecure_rand() % ntx;
+                        mtx = insecure_randrange(ntx);
                     }
                     std::vector<uint256> newBranch = BlockMerkleBranch(block, mtx);
                     std::vector<uint256> oldBranch = BlockGetMerkleBranch(block, merkleTree, mtx);

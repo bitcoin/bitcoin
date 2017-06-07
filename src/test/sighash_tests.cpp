@@ -91,7 +91,7 @@ void static RandomScript(CScript &script) {
     script = CScript();
     int ops = (insecure_randrange(10));
     for (int i=0; i<ops; i++)
-        script << oplist[insecure_rand() % (sizeof(oplist)/sizeof(oplist[0]))];
+        script << oplist[insecure_randrange(sizeof(oplist)/sizeof(oplist[0]))];
 }
 
 void static RandomTransaction(CMutableTransaction &tx, bool fSingle) {
@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(sighash_test)
         RandomTransaction(txTo, (nHashType & 0x1f) == SIGHASH_SINGLE);
         CScript scriptCode;
         RandomScript(scriptCode);
-        int nIn = insecure_rand() % txTo.vin.size();
+        int nIn = insecure_randrange(txTo.vin.size());
 
         uint256 sh, sho;
         sho = SignatureHashOld(scriptCode, txTo, nIn, nHashType);
