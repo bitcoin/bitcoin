@@ -123,8 +123,12 @@ static void push_lock(void* c, const CLockLocation& locklocation)
     }
 }
 
-static void pop_lock()
+static void pop_lock(void* cs)
 {
+    // We assert here that locks are popped in the order they were locked.
+    // This is a super-overly-restrictive requirement, but we need it to
+    // make our deadlock detection work properly.
+    assert((*lockstack).back().first == cs);
     (*lockstack).pop_back();
 }
 
@@ -133,9 +137,9 @@ void EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs
     push_lock(cs, CLockLocation(pszName, pszFile, nLine, fTry));
 }
 
-void LeaveCritical()
+void LeaveCritical(void* cs)
 {
-    pop_lock();
+    pop_lock(cs);
 }
 
 std::string LocksHeld()
