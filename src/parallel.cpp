@@ -490,7 +490,7 @@ void CParallelValidation::HandleBlockMessage(CNode *pfrom,
     }
 }
 
-void HandleBlockMessageThread(CNode *pfrom, const string &strCommand, const CBlock &block, const CInv &inv)
+void HandleBlockMessageThread(CNode *pfrom, const string strCommand, const CBlock block, const CInv inv)
 {
     int64_t startTime = GetTimeMicros();
     CValidationState state;
