@@ -189,6 +189,6 @@ public:
 extern CParallelValidation PV; // Singleton class
 
 
-void HandleBlockMessageThread(CNode *pfrom, const std::string &strCommand, const CBlock &block, const CInv &inv);
+void HandleBlockMessageThread(CNode *pfrom, const std::string strCommand, const CBlock block, const CInv inv);
 
 #endif // BITCOIN_PARALLEL_H
