@@ -5,7 +5,6 @@
 """Helpful routines for regression testing."""
 
 import os
-import sys
 
 from binascii import hexlify, unhexlify
 from base64 import b64encode
@@ -13,7 +12,6 @@ from decimal import Decimal, ROUND_DOWN
 import json
 import http.client
 import random
-import shutil
 import subprocess
 import tempfile
 import time
