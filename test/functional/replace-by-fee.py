@@ -99,6 +99,9 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         self.log.info("Running test opt-in...")
         self.test_opt_in()
 
+        self.log.info("Running test RPC...")
+        self.test_rpc()
+
         self.log.info("Running test prioritised transactions...")
         self.test_prioritised_transactions()
 
@@ -515,6 +518,26 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         tx2b_txid = self.nodes[0].sendrawtransaction(tx2b_hex, True)
 
         assert(tx2b_txid in self.nodes[0].getrawmempool())
+
+    def test_rpc(self):
+        us0 = self.nodes[0].listunspent()[0]
+        ins = [us0];
+        outs = {self.nodes[0].getnewaddress() : Decimal(1.0000000)}
+        rawtx0 = self.nodes[0].createrawtransaction(ins, outs, 0, True)
+        rawtx1 = self.nodes[0].createrawtransaction(ins, outs, 0, False)
+        json0  = self.nodes[0].decoderawtransaction(rawtx0)
+        json1  = self.nodes[0].decoderawtransaction(rawtx1)
+        assert_equal(json0["vin"][0]["sequence"], 4294967293)
+        assert_equal(json1["vin"][0]["sequence"], 4294967295)
+
+        rawtx2 = self.nodes[0].createrawtransaction([], outs)
+        frawtx2a = self.nodes[0].fundrawtransaction(rawtx2, {"optIntoRbf": True})
+        frawtx2b = self.nodes[0].fundrawtransaction(rawtx2, {"optIntoRbf": False})
+
+        json0  = self.nodes[0].decoderawtransaction(frawtx2a['hex'])
+        json1  = self.nodes[0].decoderawtransaction(frawtx2b['hex'])
+        assert_equal(json0["vin"][0]["sequence"], 4294967293)
+        assert_equal(json1["vin"][0]["sequence"], 4294967294)
 
 if __name__ == '__main__':
     ReplaceByFeeTest().main()
