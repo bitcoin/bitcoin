@@ -10,7 +10,8 @@ import struct
 from test_framework.test_framework import BitcoinTestFramework, SkipTest
 from test_framework.util import (assert_equal,
                                  bytes_to_hex_str,
-                                 )
+                                 hash256,
+                                )
 
 class ZMQTest (BitcoinTestFramework):
     def set_test_params(self):
@@ -37,9 +38,12 @@ class ZMQTest (BitcoinTestFramework):
         self.zmqSubSocket.set(zmq.RCVTIMEO, 60000)
         self.zmqSubSocket.setsockopt(zmq.SUBSCRIBE, b"hashblock")
         self.zmqSubSocket.setsockopt(zmq.SUBSCRIBE, b"hashtx")
+        self.zmqSubSocket.setsockopt(zmq.SUBSCRIBE, b"rawblock")
+        self.zmqSubSocket.setsockopt(zmq.SUBSCRIBE, b"rawtx")
         ip_address = "tcp://127.0.0.1:28332"
         self.zmqSubSocket.connect(ip_address)
-        self.extra_args = [['-zmqpubhashtx=%s' % ip_address, '-zmqpubhashblock=%s' % ip_address], []]
+        self.extra_args = [['-zmqpubhashblock=%s' % ip_address, '-zmqpubhashtx=%s' % ip_address,
+                       '-zmqpubrawblock=%s' % ip_address, '-zmqpubrawtx=%s' % ip_address], []]
         self.add_nodes(self.num_nodes, self.extra_args)
         self.start_nodes()
 
@@ -59,19 +63,41 @@ class ZMQTest (BitcoinTestFramework):
         msg = self.zmqSubSocket.recv_multipart()
         topic = msg[0]
         assert_equal(topic, b"hashtx")
-        body = msg[1]
+        txhash = msg[1]
         msgSequence = struct.unpack('<I', msg[-1])[-1]
         assert_equal(msgSequence, 0)  # must be sequence 0 on hashtx
+
+        # rawtx
+        msg = self.zmqSubSocket.recv_multipart()
+        topic = msg[0]
+        assert_equal(topic, b"rawtx")
+        body = msg[1]
+        msgSequence = struct.unpack('<I', msg[-1])[-1]
+        assert_equal(msgSequence, 0) # must be sequence 0 on rawtx
+
+        # Check that the rawtx hashes to the hashtx
+        assert_equal(hash256(body), txhash)
 
         self.log.info("Wait for block")
         msg = self.zmqSubSocket.recv_multipart()
         topic = msg[0]
+        assert_equal(topic, b"hashblock")
         body = msg[1]
         msgSequence = struct.unpack('<I', msg[-1])[-1]
         assert_equal(msgSequence, 0)  # must be sequence 0 on hashblock
         blkhash = bytes_to_hex_str(body)
-
         assert_equal(genhashes[0], blkhash)  # blockhash from generate must be equal to the hash received over zmq
+
+        # rawblock
+        msg = self.zmqSubSocket.recv_multipart()
+        topic = msg[0]
+        assert_equal(topic, b"rawblock")
+        body = msg[1]
+        msgSequence = struct.unpack('<I', msg[-1])[-1]
+        assert_equal(msgSequence, 0) #must be sequence 0 on rawblock
+
+        # Check the hash of the rawblock's header matches generate
+        assert_equal(genhashes[0], bytes_to_hex_str(hash256(body[:80])))
 
         self.log.info("Generate 10 blocks (and 10 coinbase txes)")
         n = 10
@@ -79,8 +105,9 @@ class ZMQTest (BitcoinTestFramework):
         self.sync_all()
 
         zmqHashes = []
+        zmqRawHashed = []
         blockcount = 0
-        for x in range(n * 2):
+        for x in range(n * 4):
             msg = self.zmqSubSocket.recv_multipart()
             topic = msg[0]
             body = msg[1]
@@ -89,9 +116,14 @@ class ZMQTest (BitcoinTestFramework):
                 msgSequence = struct.unpack('<I', msg[-1])[-1]
                 assert_equal(msgSequence, blockcount + 1)
                 blockcount += 1
+            if topic == b"rawblock":
+                zmqRawHashed.append(bytes_to_hex_str(hash256(body[:80])))
+                msgSequence = struct.unpack('<I', msg[-1])[-1]
+                assert_equal(msgSequence, blockcount)
 
         for x in range(n):
             assert_equal(genhashes[x], zmqHashes[x])  # blockhash from generate must be equal to the hash received over zmq
+            assert_equal(genhashes[x], zmqRawHashed[x])
 
         self.log.info("Wait for tx from second node")
         # test tx from a second node
@@ -101,13 +133,21 @@ class ZMQTest (BitcoinTestFramework):
         # now we should receive a zmq msg because the tx was broadcast
         msg = self.zmqSubSocket.recv_multipart()
         topic = msg[0]
-        body = msg[1]
         assert_equal(topic, b"hashtx")
+        body = msg[1]
         hashZMQ = bytes_to_hex_str(body)
         msgSequence = struct.unpack('<I', msg[-1])[-1]
         assert_equal(msgSequence, blockcount + 1)
 
+        msg = self.zmqSubSocket.recv_multipart()
+        topic = msg[0]
+        assert_equal(topic, b"rawtx")
+        body = msg[1]
+        hashedZMQ = bytes_to_hex_str(hash256(body))
+        msgSequence = struct.unpack('<I', msg[-1])[-1]
+        assert_equal(msgSequence, blockcount+1)
         assert_equal(hashRPC, hashZMQ)  # txid from sendtoaddress must be equal to the hash received over zmq
+        assert_equal(hashRPC, hashedZMQ)
 
 if __name__ == '__main__':
     ZMQTest().main()
