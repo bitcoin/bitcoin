@@ -671,7 +671,7 @@ public:
     void LockCoin(COutPoint& output);
     void UnlockCoin(COutPoint& output);
     void UnlockAllCoins();
-    void ListLockedCoins(std::vector<COutPoint>& vOutpts) const;
+    void ListLockedCoins(std::vector<COutPoint>& vOutpts);
 
     /**
      * keystore implementation
