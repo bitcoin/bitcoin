@@ -18,24 +18,64 @@
 
 #include "init.h"
 #include "main.h"
-#include "rpcserver.h"
+#include "rpc/server.h"
 #include "sync.h"
 #ifdef ENABLE_WALLET
-#include "wallet.h"
+#include "wallet/wallet.h"
 #endif
 
-#include "json/json_spirit_value.h"
+#include <univalue.h>
 
 #include <stdint.h>
 #include <stdexcept>
 #include <string>
 
 using std::runtime_error;
-using namespace json_spirit;
 using namespace mastercore;
 
-// omni_send - simple send
-Value omni_send(const Array& params, bool fHelp)
+UniValue omni_sendrawtx(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() < 2 || params.size() > 5)
+        throw runtime_error(
+            "omni_sendrawtx \"fromaddress\" \"rawtransaction\" ( \"referenceaddress\" \"redeemaddress\" \"referenceamount\" )\n"
+            "\nBroadcasts a raw Omni Layer transaction.\n"
+            "\nArguments:\n"
+            "1. fromaddress          (string, required) the address to send from\n"
+            "2. rawtransaction       (string, required) the hex-encoded raw transaction\n"
+            "3. referenceaddress     (string, optional) a reference address (none by default)\n"
+            "4. redeemaddress        (string, optional) an address that can spent the transaction dust (sender by default)\n"
+            "5. referenceamount      (string, optional) a bitcoin amount that is sent to the receiver (minimal by default)\n"
+            "\nResult:\n"
+            "\"hash\"                  (string) the hex-encoded transaction hash\n"
+            "\nExamples:\n"
+            + HelpExampleCli("omni_sendrawtx", "\"1MCHESTptvd2LnNp7wmr2sGTpRomteAkq8\" \"000000000000000100000000017d7840\" \"1EqTta1Rt8ixAA32DuC29oukbsSWU62qAV\"")
+            + HelpExampleRpc("omni_sendrawtx", "\"1MCHESTptvd2LnNp7wmr2sGTpRomteAkq8\", \"000000000000000100000000017d7840\", \"1EqTta1Rt8ixAA32DuC29oukbsSWU62qAV\"")
+        );
+
+    std::string fromAddress = ParseAddress(params[0]);
+    std::vector<unsigned char> data = ParseHexV(params[1], "raw transaction");
+    std::string toAddress = (params.size() > 2) ? ParseAddressOrEmpty(params[2]): "";
+    std::string redeemAddress = (params.size() > 3) ? ParseAddressOrEmpty(params[3]): "";
+    int64_t referenceAmount = (params.size() > 4) ? ParseAmount(params[4], true): 0;
+
+    //some sanity checking of the data supplied?
+    uint256 newTX;
+    std::string rawHex;
+    int result = WalletTxBuilder(fromAddress, toAddress, redeemAddress, referenceAmount, data, newTX, rawHex, autoCommit);
+
+    // check error and return the txid (or raw hex depending on autocommit)
+    if (result != 0) {
+        throw JSONRPCError(result, error_str(result));
+    } else {
+        if (!autoCommit) {
+            return rawHex;
+        } else {
+            return newTX.GetHex();
+        }
+    }
+}
+
+UniValue omni_send(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() < 4 || params.size() > 6)
         throw runtime_error(
@@ -93,8 +133,7 @@ Value omni_send(const Array& params, bool fHelp)
     }
 }
 
-// omni_sendall - send all
-Value omni_sendall(const Array& params, bool fHelp)
+UniValue omni_sendall(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() < 3 || params.size() > 5)
         throw runtime_error(
@@ -148,8 +187,7 @@ Value omni_sendall(const Array& params, bool fHelp)
     }
 }
 
-// omni_senddexsell - DEx sell offer
-Value omni_senddexsell(const Array& params, bool fHelp)
+UniValue omni_senddexsell(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 7)
         throw runtime_error(
@@ -238,8 +276,7 @@ Value omni_senddexsell(const Array& params, bool fHelp)
     }
 }
 
-// omni_senddexaccept - DEx accept offer
-Value omni_senddexaccept(const Array& params, bool fHelp)
+UniValue omni_senddexaccept(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() < 4 || params.size() > 5)
         throw runtime_error(
@@ -292,9 +329,8 @@ Value omni_senddexaccept(const Array& params, bool fHelp)
 
     // temporarily update the global transaction fee to pay enough for the accept fee
     CFeeRate payTxFeeOriginal = payTxFee;
-    bool fPayAtLeastCustomFeeOriginal = fPayAtLeastCustomFee;
-    payTxFee = CFeeRate(nMinimumAcceptFee, 1000);
-    fPayAtLeastCustomFee = true;
+    payTxFee = CFeeRate(nMinimumAcceptFee, 225); // TODO: refine!
+    // fPayAtLeastCustomFee = true;
 #endif
 
     // create a payload for the transaction
@@ -308,7 +344,6 @@ Value omni_senddexaccept(const Array& params, bool fHelp)
 #ifdef ENABLE_WALLET
     // set the custom fee back to original
     payTxFee = payTxFeeOriginal;
-    fPayAtLeastCustomFee = fPayAtLeastCustomFeeOriginal;
 #endif
 
     // check error and return the txid (or raw hex depending on autocommit)
@@ -323,8 +358,7 @@ Value omni_senddexaccept(const Array& params, bool fHelp)
     }
 }
 
-// omni_sendissuancecrowdsale - Issue new property with crowdsale
-Value omni_sendissuancecrowdsale(const Array& params, bool fHelp)
+UniValue omni_sendissuancecrowdsale(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 14)
         throw runtime_error(
@@ -397,8 +431,7 @@ Value omni_sendissuancecrowdsale(const Array& params, bool fHelp)
     }
 }
 
-// omni_sendissuancecfixed - Issue new property with fixed amount
-Value omni_sendissuancefixed(const Array& params, bool fHelp)
+UniValue omni_sendissuancefixed(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 10)
         throw runtime_error(
@@ -461,8 +494,7 @@ Value omni_sendissuancefixed(const Array& params, bool fHelp)
     }
 }
 
-// omni_sendissuancemanaged - Issue new property with manual issuance (grant/revoke)
-Value omni_sendissuancemanaged(const Array& params, bool fHelp)
+UniValue omni_sendissuancemanaged(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 9)
         throw runtime_error(
@@ -523,8 +555,7 @@ Value omni_sendissuancemanaged(const Array& params, bool fHelp)
     }
 }
 
-// omni_sendsto - Send to owners
-Value omni_sendsto(const Array& params, bool fHelp)
+UniValue omni_sendsto(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() < 3 || params.size() > 5)
         throw runtime_error(
@@ -578,8 +609,7 @@ Value omni_sendsto(const Array& params, bool fHelp)
     }
 }
 
-// omni_sendgrant - Grant tokens
-Value omni_sendgrant(const Array& params, bool fHelp)
+UniValue omni_sendgrant(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() < 4 || params.size() > 5)
         throw runtime_error(
@@ -634,8 +664,7 @@ Value omni_sendgrant(const Array& params, bool fHelp)
     }
 }
 
-// omni_sendrevoke - Revoke tokens
-Value omni_sendrevoke(const Array& params, bool fHelp)
+UniValue omni_sendrevoke(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() < 3 || params.size() > 4)
         throw runtime_error(
@@ -689,8 +718,7 @@ Value omni_sendrevoke(const Array& params, bool fHelp)
     }
 }
 
-// omni_sendclosecrowdsale - Close an active crowdsale
-Value omni_sendclosecrowdsale(const Array& params, bool fHelp)
+UniValue omni_sendclosecrowdsale(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 2)
         throw runtime_error(
@@ -740,8 +768,7 @@ Value omni_sendclosecrowdsale(const Array& params, bool fHelp)
     }
 }
 
-// trade_MP - MetaDEx trade
-Value trade_MP(const Array& params, bool fHelp)
+UniValue trade_MP(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 6)
         throw runtime_error(
@@ -753,7 +780,7 @@ Value trade_MP(const Array& params, bool fHelp)
             " - sendcanceltradebypair_OMNI\n"
         );
 
-    Array values;
+    UniValue values(UniValue::VARR);
     uint8_t action = ParseMetaDExAction(params[5]);
 
     // Forward to the new commands, based on action value
@@ -803,8 +830,7 @@ Value trade_MP(const Array& params, bool fHelp)
     throw JSONRPCError(RPC_TYPE_ERROR, "Invalid action (1,2,3,4 only)");
 }
 
-// Send a new MetaDEx trade
-Value omni_sendtrade(const Array& params, bool fHelp)
+UniValue omni_sendtrade(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 5)
         throw runtime_error(
@@ -862,8 +888,7 @@ Value omni_sendtrade(const Array& params, bool fHelp)
     }
 }
 
-// Cancel MetaDEx by price
-Value omni_sendcanceltradesbyprice(const Array& params, bool fHelp)
+UniValue omni_sendcanceltradesbyprice(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 5)
         throw runtime_error(
@@ -921,8 +946,7 @@ Value omni_sendcanceltradesbyprice(const Array& params, bool fHelp)
     }
 }
 
-// Cancel MetaDEx orders by currency pair
-Value omni_sendcanceltradesbypair(const Array& params, bool fHelp)
+UniValue omni_sendcanceltradesbypair(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 3)
         throw runtime_error(
@@ -976,8 +1000,7 @@ Value omni_sendcanceltradesbypair(const Array& params, bool fHelp)
     }
 }
 
-// Cancel MetaDEx orders by ecosystem
-Value omni_sendcancelalltrades(const Array& params, bool fHelp)
+UniValue omni_sendcancelalltrades(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 2)
         throw runtime_error(
@@ -1025,8 +1048,7 @@ Value omni_sendcancelalltrades(const Array& params, bool fHelp)
     }
 }
 
-// omni_sendchangeissuer - Change issuer for a property
-Value omni_sendchangeissuer(const Array& params, bool fHelp)
+UniValue omni_sendchangeissuer(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 3)
         throw runtime_error(
@@ -1054,7 +1076,6 @@ Value omni_sendchangeissuer(const Array& params, bool fHelp)
 
     // perform checks
     RequireExistingProperty(propertyId);
-    RequireManagedProperty(propertyId);
     RequireTokenIssuer(fromAddress, propertyId);
 
     // create a payload for the transaction
@@ -1077,7 +1098,7 @@ Value omni_sendchangeissuer(const Array& params, bool fHelp)
     }
 }
 
-Value omni_sendactivation(const Array& params, bool fHelp)
+UniValue omni_sendactivation(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 4)
         throw runtime_error(
@@ -1098,9 +1119,9 @@ Value omni_sendactivation(const Array& params, bool fHelp)
 
     // obtain parameters & info
     std::string fromAddress = ParseAddress(params[0]);
-    uint16_t featureId = params[1].get_uint64();
-    uint32_t activationBlock = params[2].get_uint64();
-    uint32_t minClientVersion = params[3].get_uint64();
+    uint16_t featureId = params[1].get_int();
+    uint32_t activationBlock = params[2].get_int();
+    uint32_t minClientVersion = params[3].get_int();
 
     // create a payload for the transaction
     std::vector<unsigned char> payload = CreatePayload_ActivateFeature(featureId, activationBlock, minClientVersion);
@@ -1122,7 +1143,7 @@ Value omni_sendactivation(const Array& params, bool fHelp)
     }
 }
 
-Value omni_senddeactivation(const Array& params, bool fHelp)
+UniValue omni_senddeactivation(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 2)
         throw runtime_error(
@@ -1141,7 +1162,7 @@ Value omni_senddeactivation(const Array& params, bool fHelp)
 
     // obtain parameters & info
     std::string fromAddress = ParseAddress(params[0]);
-    uint16_t featureId = params[1].get_uint64();
+    uint16_t featureId = params[1].get_int64();
 
     // create a payload for the transaction
     std::vector<unsigned char> payload = CreatePayload_DeactivateFeature(featureId);
@@ -1163,7 +1184,7 @@ Value omni_senddeactivation(const Array& params, bool fHelp)
     }
 }
 
-Value omni_sendalert(const Array& params, bool fHelp)
+UniValue omni_sendalert(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 4)
         throw runtime_error(
@@ -1214,4 +1235,43 @@ Value omni_sendalert(const Array& params, bool fHelp)
             return txid.GetHex();
         }
     }
+}
+
+static const CRPCCommand commands[] =
+{ //  category                             name                            actor (function)               okSafeMode
+  //  ------------------------------------ ------------------------------- ------------------------------ ----------
+#ifdef ENABLE_WALLET
+    { "omni layer (transaction creation)", "omni_sendrawtx",               &omni_sendrawtx,               false },
+    { "omni layer (transaction creation)", "omni_send",                    &omni_send,                    false },
+    { "omni layer (transaction creation)", "omni_senddexsell",             &omni_senddexsell,             false },
+    { "omni layer (transaction creation)", "omni_senddexaccept",           &omni_senddexaccept,           false },
+    { "omni layer (transaction creation)", "omni_sendissuancecrowdsale",   &omni_sendissuancecrowdsale,   false },
+    { "omni layer (transaction creation)", "omni_sendissuancefixed",       &omni_sendissuancefixed,       false },
+    { "omni layer (transaction creation)", "omni_sendissuancemanaged",     &omni_sendissuancemanaged,     false },
+    { "omni layer (transaction creation)", "omni_sendtrade",               &omni_sendtrade,               false },
+    { "omni layer (transaction creation)", "omni_sendcanceltradesbyprice", &omni_sendcanceltradesbyprice, false },
+    { "omni layer (transaction creation)", "omni_sendcanceltradesbypair",  &omni_sendcanceltradesbypair,  false },
+    { "omni layer (transaction creation)", "omni_sendcancelalltrades",     &omni_sendcancelalltrades,     false },
+    { "omni layer (transaction creation)", "omni_sendsto",                 &omni_sendsto,                 false },
+    { "omni layer (transaction creation)", "omni_sendgrant",               &omni_sendgrant,               false },
+    { "omni layer (transaction creation)", "omni_sendrevoke",              &omni_sendrevoke,              false },
+    { "omni layer (transaction creation)", "omni_sendclosecrowdsale",      &omni_sendclosecrowdsale,      false },
+    { "omni layer (transaction creation)", "omni_sendchangeissuer",        &omni_sendchangeissuer,        false },
+    { "omni layer (transaction creation)", "omni_sendall",                 &omni_sendall,                 false },
+    { "hidden",                            "omni_senddeactivation",        &omni_senddeactivation,        true  },
+    { "hidden",                            "omni_sendactivation",          &omni_sendactivation,          false },
+    { "hidden",                            "omni_sendalert",               &omni_sendalert,               true  },
+
+    /* depreciated: */
+    { "hidden",                            "sendrawtx_MP",                 &omni_sendrawtx,               false },
+    { "hidden",                            "send_MP",                      &omni_send,                    false },
+    { "hidden",                            "sendtoowners_MP",              &omni_sendsto,                 false },
+    { "hidden",                            "trade_MP",                     &trade_MP,                     false },
+#endif
+};
+
+void RegisterOmniTransactionCreationRPCCommands(CRPCTable &tableRPC)
+{
+    for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)
+        tableRPC.appendCommand(commands[vcidx].name, &commands[vcidx]);
 }

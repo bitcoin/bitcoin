@@ -10,6 +10,7 @@
 #include "clientmodel.h"
 #include "guiutil.h"
 #include "walletmodel.h"
+#include "platformstyle.h"
 
 #include "omnicore/fetchwallettx.h"
 #include "omnicore/omnicore.h"
@@ -28,10 +29,7 @@
 #include "sync.h"
 #include "txdb.h"
 #include "uint256.h"
-#include "wallet.h"
-
-#include "json/json_spirit_value.h"
-#include "json/json_spirit_writer_template.h"
+#include "wallet/wallet.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
@@ -58,7 +56,6 @@
 #include <QWidget>
 
 using std::string;
-using namespace json_spirit;
 using namespace mastercore;
 
 TXHistoryDialog::TXHistoryDialog(QWidget *parent) :
@@ -76,7 +73,7 @@ TXHistoryDialog::TXHistoryDialog(QWidget *parent) :
     ui->txHistoryTable->setHorizontalHeaderItem(5, new QTableWidgetItem("Address"));
     ui->txHistoryTable->setHorizontalHeaderItem(6, new QTableWidgetItem("Amount"));
     // borrow ColumnResizingFixer again
-    borrowedColumnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(ui->txHistoryTable,100,100);
+    borrowedColumnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(ui->txHistoryTable, 100, 100, this);
     // allow user to adjust - go interactive then manually set widths
     #if QT_VERSION < 0x050000
        ui->txHistoryTable->horizontalHeader()->setResizeMode(2, QHeaderView::Fixed);
@@ -133,7 +130,6 @@ TXHistoryDialog::TXHistoryDialog(QWidget *parent) :
     borrowedColumnResizingFixer->stretchColumnWidth(5);
     ui->txHistoryTable->setSortingEnabled(true);
     ui->txHistoryTable->horizontalHeader()->setSortIndicator(1, Qt::DescendingOrder); // sort by hidden sort key
-
 }
 
 TXHistoryDialog::~TXHistoryDialog()
@@ -197,7 +193,6 @@ int TXHistoryDialog::PopulateHistoryMap()
     // reverse iterate over (now ordered) transactions and populate history map for each one
     for (std::map<std::string,uint256>::reverse_iterator it = walletTransactions.rbegin(); it != walletTransactions.rend(); it++) {
         uint256 txHash = it->second;
-
         // check historyMap, if this tx exists and isn't pending don't waste resources doing anymore work on it
         HistoryMap::iterator hIter = txHistoryMap.find(txHash);
         if (hIter != txHistoryMap.end()) { // the tx is in historyMap, if it's a confirmed transaction skip it
@@ -223,9 +218,9 @@ int TXHistoryDialog::PopulateHistoryMap()
         }
 
         CTransaction wtx;
-        uint256 blockHash = 0;
-        if (!GetTransaction(txHash, wtx, blockHash, true)) continue;
-        if ((0 == blockHash) || (NULL == GetBlockIndex(blockHash))) {
+        uint256 blockHash;
+        if (!GetTransaction(txHash, wtx, Params().GetConsensus(), blockHash, true)) continue;
+        if (blockHash.IsNull() || NULL == GetBlockIndex(blockHash)) {
             // this transaction is unconfirmed, should be one of our pending transactions
             LOCK(cs_pending);
             PendingMap::iterator pending_it = my_pending.find(txHash);
@@ -329,7 +324,7 @@ int TXHistoryDialog::PopulateHistoryMap()
         }
         // override - display amount received not STO amount in packet (the total amount) for STOs I didn't send
         if (type == MSC_TYPE_SEND_TO_OWNERS && !IsMyAddress(mp_obj.getSender())) {
-            Array receiveArray;
+            UniValue receiveArray(UniValue::VARR);
             uint64_t tmpAmount = 0, stoFee = 0;
             LOCK(cs_tally);
             s_stolistdb->getRecipients(txHash, "", &receiveArray, &tmpAmount, &stoFee);
@@ -371,8 +366,9 @@ void TXHistoryDialog::UpdateConfirmations()
             case 5: ic = QIcon(":/icons/transaction_5"); break;
         }
         if (confirmations > 5) ic = QIcon(":/icons/transaction_confirmed");
-        if (!valid) ic = QIcon(":/icons/transaction_invalid");
+        if (!valid) ic = QIcon(":/icons/transaction_conflicted");
         QTableWidgetItem *iconCell = new QTableWidgetItem;
+//        ic = platformStyle->SingleColorIcon(ic);
         iconCell->setIcon(ic);
         ui->txHistoryTable->setItem(row, 2, iconCell);
     }
@@ -478,15 +474,15 @@ void TXHistoryDialog::checkSort(int column)
 
 void TXHistoryDialog::showDetails()
 {
-    Object txobj;
+    UniValue txobj(UniValue::VOBJ);
     uint256 txid;
     txid.SetHex(ui->txHistoryTable->item(ui->txHistoryTable->currentRow(),0)->text().toStdString());
     std::string strTXText;
 
-    if (txid != 0) {
+    if (!txid.IsNull()) {
         // grab extended transaction details via the RPC populator
         int rc = populateRPCTransactionObject(txid, txobj, "", true);
-        if (rc >= 0) strTXText = json_spirit::write_string(Value(txobj), true);
+        if (rc >= 0) strTXText = txobj.write(true);
     }
 
     if (!strTXText.empty()) {

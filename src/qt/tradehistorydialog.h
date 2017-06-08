@@ -63,19 +63,19 @@ private:
     QMenu *contextMenu;
     TradeHistoryMap tradeHistoryMap;
 
-public slots:
+public Q_SLOTS:
     void contextualMenu(const QPoint &point);
     void showDetails();
     void copyTxID();
 
-private slots:
+private Q_SLOTS:
     int PopulateTradeHistoryMap();
     void UpdateData();
     void UpdateTradeHistoryTable(bool forceUpdate = false);
     void RepopulateTradeHistoryTable(int hide);
     void ReinitTradeHistoryTable();
 
-signals:
+Q_SIGNALS:
     // Fired when a message should be reported to the user
     void message(const QString &title, const QString &message, unsigned int style);
 };

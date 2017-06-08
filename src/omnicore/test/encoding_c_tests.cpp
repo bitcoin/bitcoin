@@ -3,19 +3,20 @@
 #include "omnicore/script.h"
 
 #include "script/script.h"
+#include "test/test_bitcoin.h"
 #include "utilstrencodings.h"
+
+#include <boost/test/unit_test.hpp>
 
 #include <stdint.h>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include <boost/test/unit_test.hpp>
-
 // Is resetted to a norm value in each test
 extern unsigned nMaxDatacarrierBytes;
 
-BOOST_AUTO_TEST_SUITE(omnicore_encoding_c_tests)
+BOOST_FIXTURE_TEST_SUITE(omnicore_encoding_c_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(class_c_marker)
 {

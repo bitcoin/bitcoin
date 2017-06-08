@@ -15,7 +15,7 @@
 #include "amount.h"
 #include "sync.h"
 #include "ui_interface.h"
-#include "wallet_ismine.h"
+#include "wallet/wallet.h"
 
 #include <stdint.h>
 #include <map>
@@ -48,7 +48,7 @@ BalancesDialog::BalancesDialog(QWidget *parent) :
     ui->balancesTable->setHorizontalHeaderItem(1, new QTableWidgetItem("Property Name"));
     ui->balancesTable->setHorizontalHeaderItem(2, new QTableWidgetItem("Reserved"));
     ui->balancesTable->setHorizontalHeaderItem(3, new QTableWidgetItem("Available"));
-    borrowedColumnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(ui->balancesTable,100,100);
+    borrowedColumnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(ui->balancesTable, 100, 100, this);
     // note neither resizetocontents or stretch allow user to adjust - go interactive then manually set widths
     #if QT_VERSION < 0x050000
        ui->balancesTable->horizontalHeader()->setResizeMode(0, QHeaderView::Interactive);
@@ -153,7 +153,7 @@ void BalancesDialog::UpdatePropSelector()
     // populate property selector
     for (std::set<uint32_t>::iterator it = global_wallet_property_list.begin() ; it != global_wallet_property_list.end(); ++it) {
         uint32_t propertyId = *it;
-        std::string spId = static_cast<ostringstream*>( &(ostringstream() << propertyId) )->str();
+        std::string spId = strprintf("%d", propertyId);
         std::string spName = getPropertyName(propertyId).c_str();
         if(spName.size()>20) spName=spName.substr(0,20)+"...";
         spName += " (#" + spId + ")";
@@ -194,7 +194,7 @@ void BalancesDialog::PopulateBalances(unsigned int propertyId)
         // loop over the wallet property list and add the wallet totals
         for (std::set<uint32_t>::iterator it = global_wallet_property_list.begin() ; it != global_wallet_property_list.end(); ++it) {
             uint32_t propertyId = *it;
-            std::string spId = static_cast<ostringstream*>( &(ostringstream() << propertyId) )->str();
+            std::string spId = strprintf("%d", propertyId);
             std::string spName = getPropertyName(propertyId).c_str();
             std::string available = FormatMP(propertyId, global_balance_money[propertyId]);
             std::string reserved = FormatMP(propertyId, global_balance_reserved[propertyId]);
@@ -206,7 +206,7 @@ void BalancesDialog::PopulateBalances(unsigned int propertyId)
         bool propertyIsDivisible = isPropertyDivisible(propertyId); // only fetch the SP once, not for every address
 
         // iterate mp_tally_map looking for addresses that hold a balance in propertyId
-        for(std::map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
+        for(std::unordered_map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
             const std::string& address = my_it->first;
             CMPTally& tally = my_it->second;
             tally.init();

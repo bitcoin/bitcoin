@@ -17,6 +17,7 @@
 #include "omnicore/parse_string.h"
 #include "omnicore/pending.h"
 #include "omnicore/rules.h"
+#include "omnicore/rpctxobject.h"
 #include "omnicore/sp.h"
 #include "omnicore/tally.h"
 #include "omnicore/utilsbitcoin.h"
@@ -25,9 +26,10 @@
 #include "amount.h"
 #include "sync.h"
 #include "uint256.h"
-#include "wallet_ismine.h"
+// TODO #include "wallet_ismine.h"
 
 #include <boost/lexical_cast.hpp>
+#include <boost/rational.hpp>
 
 #include <stdint.h>
 #include <map>
@@ -59,20 +61,7 @@ MetaDExDialog::MetaDExDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    //prep lists
-    ui->buyList->setColumnCount(3);
-    ui->sellList->setColumnCount(3);
-    ui->buyList->verticalHeader()->setVisible(false);
-    #if QT_VERSION < 0x050000
-        ui->buyList->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
-    #else
-        ui->buyList->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    #endif
-    ui->buyList->setShowGrid(false);
-    ui->buyList->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    ui->buyList->setSelectionMode(QAbstractItemView::NoSelection);
-    ui->buyList->setFocusPolicy(Qt::NoFocus);
-    ui->buyList->setAlternatingRowColors(true);
+    ui->sellList->setColumnCount(5);
     ui->sellList->verticalHeader()->setVisible(false);
     #if QT_VERSION < 0x050000
         ui->sellList->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
@@ -82,23 +71,24 @@ MetaDExDialog::MetaDExDialog(QWidget *parent) :
     ui->sellList->setShowGrid(false);
     ui->sellList->setEditTriggers(QAbstractItemView::NoEditTriggers);
     ui->sellList->setSelectionMode(QAbstractItemView::NoSelection);
-    ui->sellList->setFocusPolicy(Qt::NoFocus);
     ui->sellList->setAlternatingRowColors(true);
+    ui->sellList->setSelectionBehavior(QAbstractItemView::SelectRows);
+    ui->sellList->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    ui->sellList->setSelectionMode(QAbstractItemView::SingleSelection);
 
-    connect(ui->switchButton, SIGNAL(clicked()), this, SLOT(switchButtonClicked()));
-    connect(ui->buyButton, SIGNAL(clicked()), this, SLOT(buyTrade()));
-    connect(ui->sellButton, SIGNAL(clicked()), this, SLOT(sellTrade()));
-    connect(ui->sellAddressCombo, SIGNAL(activated(int)), this, SLOT(sellAddressComboBoxChanged(int)));
-    connect(ui->buyAddressCombo, SIGNAL(activated(int)), this, SLOT(buyAddressComboBoxChanged(int)));
-    connect(ui->sellAmountLE, SIGNAL(textEdited(const QString &)), this, SLOT(recalcSellTotal()));
-    connect(ui->sellPriceLE, SIGNAL(textEdited(const QString &)), this, SLOT(recalcSellTotal()));
-    connect(ui->buyAmountLE, SIGNAL(textEdited(const QString &)), this, SLOT(recalcBuyTotal()));
-    connect(ui->buyPriceLE, SIGNAL(textEdited(const QString &)), this, SLOT(recalcBuyTotal()));
-    connect(ui->sellList, SIGNAL(cellClicked(int,int)), this, SLOT(sellClicked(int,int)));
-    connect(ui->buyList, SIGNAL(cellClicked(int,int)), this, SLOT(buyClicked(int,int)));
+    connect(ui->comboPairTokenA, SIGNAL(activated(int)), this, SLOT(SwitchMarket()));
+    connect(ui->comboPairTokenB, SIGNAL(activated(int)), this, SLOT(SwitchMarket()));
+    connect(ui->comboAddress, SIGNAL(activated(int)), this, SLOT(UpdateBalance()));
+    connect(ui->chkTestEco, SIGNAL(clicked(bool)), this, SLOT(FullRefresh()));
+    connect(ui->buttonInvertPair, SIGNAL(clicked(bool)), this, SLOT(InvertPair()));
+    connect(ui->buttonTradeHistory, SIGNAL(clicked(bool)), this, SLOT(ShowHistory()));
+    connect(ui->sellAmountSaleLE, SIGNAL(textEdited(const QString &)), this, SLOT(RecalcSellValues()));
+    connect(ui->sellAmountDesiredLE, SIGNAL(textEdited(const QString &)), this, SLOT(RecalcSellValues()));
+    connect(ui->sellUnitPriceLE, SIGNAL(textEdited(const QString &)), this, SLOT(RecalcSellValues()));
+    connect(ui->sellList, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(ShowDetails()));
+    connect(ui->sellButton, SIGNAL(clicked()), this, SLOT(sendTrade()));
 
     FullRefresh();
-
 }
 
 MetaDExDialog::~MetaDExDialog()
@@ -106,11 +96,25 @@ MetaDExDialog::~MetaDExDialog()
     delete ui;
 }
 
+uint32_t MetaDExDialog::GetPropForSale()
+{
+    QString propStr = ui->comboPairTokenA->itemData(ui->comboPairTokenA->currentIndex()).toString();
+    if (propStr.isEmpty()) return 0;
+    return propStr.toUInt();
+}
+
+uint32_t MetaDExDialog::GetPropDesired()
+{
+    QString propStr = ui->comboPairTokenB->itemData(ui->comboPairTokenB->currentIndex()).toString();
+    if (propStr.isEmpty()) return 0;
+    return propStr.toUInt();
+}
+
 void MetaDExDialog::setClientModel(ClientModel *model)
 {
     this->clientModel = model;
     if (NULL != model) {
-        connect(model, SIGNAL(refreshOmniState()), this, SLOT(OrderRefresh()));
+        connect(model, SIGNAL(refreshOmniState()), this, SLOT(UpdateOffers()));
         connect(model, SIGNAL(refreshOmniBalance()), this, SLOT(BalanceOrderRefresh()));
         connect(model, SIGNAL(reinitOmniState()), this, SLOT(FullRefresh()));
     }
@@ -130,465 +134,342 @@ void MetaDExDialog::PopulateAddresses()
     { // restrict scope of lock to address updates only (don't hold for balance update too)
         LOCK(cs_tally);
 
-        uint32_t propertyId = global_metadex_market;
-        bool testeco = false;
-        if (propertyId >= TEST_ECO_PROPERTY_1) testeco = true;
-
-        // get currently selected addresses
-        QString currentSetBuyAddress = ui->buyAddressCombo->currentText();
-        QString currentSetSellAddress = ui->sellAddressCombo->currentText();
-
-        // clear address selectors
-        ui->buyAddressCombo->clear();
-        ui->sellAddressCombo->clear();
-
-        // populate buy and sell addresses
-        for (std::map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
+        uint32_t propertyId = GetPropForSale();
+        QString currentSetAddress = ui->comboAddress->currentText();
+        ui->comboAddress->clear();
+        for (std::unordered_map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
             string address = (my_it->first).c_str();
-            unsigned int id;
+            uint32_t id;
             (my_it->second).init();
             while (0 != (id = (my_it->second).next())) {
                 if (id == propertyId) {
                     if (!getUserAvailableMPbalance(address, propertyId)) continue; // ignore this address, has no available balance to spend
-                    if (IsMyAddress(address) == ISMINE_SPENDABLE) ui->sellAddressCombo->addItem((my_it->first).c_str()); // only include wallet addresses
-                }
-                if (id == OMNI_PROPERTY_MSC && !testeco) {
-                    if (!getUserAvailableMPbalance(address, OMNI_PROPERTY_MSC)) continue;
-                    if (IsMyAddress(address) == ISMINE_SPENDABLE) ui->buyAddressCombo->addItem((my_it->first).c_str());
-                }
-                if (id == OMNI_PROPERTY_TMSC && testeco) {
-                    if (!getUserAvailableMPbalance(address, OMNI_PROPERTY_TMSC)) continue;
-                    if (IsMyAddress(address) == ISMINE_SPENDABLE) ui->buyAddressCombo->addItem((my_it->first).c_str());
+                    if (IsMyAddress(address)) ui->comboAddress->addItem((my_it->first).c_str()); // only include wallet addresses
                 }
             }
         }
+        int idx = ui->comboAddress->findText(currentSetAddress);
+        if (idx != -1) { ui->comboAddress->setCurrentIndex(idx); }
+    }
+    UpdateBalance();
+}
 
-        // attempt to set buy and sell addresses back to values before refresh - may not be possible if it's a new market
-        int sellIdx = ui->sellAddressCombo->findText(currentSetSellAddress);
-        if (sellIdx != -1) { ui->sellAddressCombo->setCurrentIndex(sellIdx); }
-        int buyIdx = ui->buyAddressCombo->findText(currentSetBuyAddress);
-        if (buyIdx != -1) { ui->buyAddressCombo->setCurrentIndex(buyIdx); }
+void MetaDExDialog::UpdateProperties()
+{
+    bool testEco = ui->chkTestEco->isChecked();
+
+    QString currentSetPropA = ui->comboPairTokenA->currentText();
+    QString currentSetPropB = ui->comboPairTokenB->currentText();
+    ui->comboPairTokenA->clear();
+    ui->comboPairTokenB->clear();
+
+    for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
+        uint32_t propertyId = my_it->first;
+        if ((testEco && !isTestEcosystemProperty(propertyId)) || (!testEco && isTestEcosystemProperty(propertyId))) continue;
+        string spName;
+        spName = getPropertyName(propertyId).c_str();
+        uint32_t nameMax = 30;
+        if (isTestEcosystemProperty(propertyId)) nameMax = 20;
+        if (spName.size()>nameMax) {
+            spName = spName.substr(0,nameMax)+"...";
+        }
+        string spId = strprintf("%d", propertyId);
+        spName += " (#" + spId + ")";
+        ui->comboPairTokenA->addItem(spName.c_str(),spId.c_str());
+        ui->comboPairTokenB->addItem(spName.c_str(),spId.c_str());
     }
 
-    // update balances
-    UpdateBalances();
+    if (ui->comboPairTokenA->count() > 1) {
+        int idxA = ui->comboPairTokenA->findText(currentSetPropA);
+        if (idxA != -1) {
+            ui->comboPairTokenA->setCurrentIndex(idxA);
+        } else {
+            ui->comboPairTokenA->setCurrentIndex(0);
+        }
+    }
+    if (ui->comboPairTokenB->count() > 2) {
+        int idxB = ui->comboPairTokenB->findText(currentSetPropB);
+        if (idxB != -1) {
+            ui->comboPairTokenB->setCurrentIndex(idxB);
+        } else {
+            ui->comboPairTokenB->setCurrentIndex(1);
+        }
+    }
+}
+
+// Update the balance for the currently selected address
+void MetaDExDialog::UpdateBalance()
+{
+    QString currentSetAddress = ui->comboAddress->currentText();
+    if (currentSetAddress.isEmpty()) {
+        ui->lblBalance->setText(QString::fromStdString("Your balance: N/A"));
+        ui->lblFeeWarning->setVisible(false);
+    } else {
+        uint32_t propertyId = GetPropForSale();
+        int64_t balanceAvailable = getUserAvailableMPbalance(currentSetAddress.toStdString(), propertyId);
+        string sellBalStr;
+        if (isPropertyDivisible(propertyId)) {
+            sellBalStr = FormatDivisibleMP(balanceAvailable);
+        } else {
+            sellBalStr = FormatIndivisibleMP(balanceAvailable);
+        }
+        ui->lblBalance->setText(QString::fromStdString("Your balance: " + sellBalStr + getTokenLabel(propertyId)));
+        // warning label will be lit if insufficient fees for MetaDEx payload (28 bytes)
+        if (CheckFee(currentSetAddress.toStdString(), 28)) {
+            ui->lblFeeWarning->setVisible(false);
+        } else {
+            ui->lblFeeWarning->setText("WARNING: The address is low on BTC for transaction fees.");
+            ui->lblFeeWarning->setVisible(true);
+        }
+    }
+}
+
+// Change markets when one of the property selector combos is changed
+void MetaDExDialog::SwitchMarket()
+{
+    QString propAStr = ui->comboPairTokenA->itemData(ui->comboPairTokenA->currentIndex()).toString();
+    QString propBStr = ui->comboPairTokenB->itemData(ui->comboPairTokenB->currentIndex()).toString();
+    if (propAStr.isEmpty() || propBStr.isEmpty()) {
+        PrintToLog("QTERROR: Empty variable switching property markets.  PropA=%s, PropB=%s\n",propAStr.toStdString(),propBStr.toStdString());
+        return;
+    }
+    uint32_t propA = propAStr.toUInt();
+    uint32_t propB = propBStr.toUInt();
+    if (propA == propB) {
+        QMessageBox::critical( this, "Unable to change markets",
+        "The property being sold and property desired cannot be the same." );
+        return;
+    }
+    ui->sellAmountSaleLE->clear();
+    ui->sellAmountDesiredLE->clear();
+    ui->sellUnitPriceLE->clear();
+
+    FullRefresh();
+}
+
+// Recalulates the form sell values when one is changed
+void MetaDExDialog::RecalcSellValues()
+{
+    int64_t amountForSale = 0;
+    int64_t amountDesired = 0;
+    amountForSale = StrToInt64(ui->sellAmountSaleLE->text().toStdString(),isPropertyDivisible(GetPropForSale()));
+    amountDesired = StrToInt64(ui->sellAmountDesiredLE->text().toStdString(),isPropertyDivisible(GetPropDesired()));
+
+    if (0 >= amountForSale) {
+        ui->sellAmountSaleLE->setStyleSheet(" QLineEdit { background-color:rgb(255, 204, 209); }");
+    } else {
+        ui->sellAmountSaleLE->setStyleSheet(" QLineEdit { }");
+    }
+    if (0 >= amountDesired) {
+        ui->sellAmountDesiredLE->setStyleSheet(" QLineEdit { background-color:rgb(255, 204, 209); }");
+    } else {
+        ui->sellAmountDesiredLE->setStyleSheet(" QLineEdit { }");
+    }
+    if (ui->sellAmountSaleLE->text().toStdString().length()==0) ui->sellAmountSaleLE->setStyleSheet(" QLineEdit { }");
+    if (ui->sellAmountDesiredLE->text().toStdString().length()==0) ui->sellAmountDesiredLE->setStyleSheet(" QLineEdit { }");
+
+    if (0 >= amountForSale || 0>= amountDesired) {
+        ui->sellUnitPriceLE->clear();
+        return;
+    }
+
+    rational_t unitPrice(amountForSale, amountDesired);
+    std::string unitPriceStr = xToString(unitPrice);
+    if (unitPriceStr.length() > 25) unitPriceStr.resize(25); // keep the price from getting too long
+    ui->sellUnitPriceLE->setText(QString::fromStdString(unitPriceStr));
+}
+
+// Performs a full refresh of all elements - for example when switching markets
+void MetaDExDialog::FullRefresh()
+{
+    UpdateProperties();
+    PopulateAddresses();
+    UpdateOffers();
+
+    ui->lblATSToken->setText(QString::fromStdString(getTokenLabel(GetPropForSale())));
+    ui->lblADToken->setText(QString::fromStdString(getTokenLabel(GetPropDesired())));
+    ui->sellList->setHorizontalHeaderItem(0, new QTableWidgetItem("TXID"));
+    ui->sellList->setHorizontalHeaderItem(1, new QTableWidgetItem("Seller"));
+    ui->sellList->setHorizontalHeaderItem(2, new QTableWidgetItem("Unit Price"));
+    ui->sellList->setHorizontalHeaderItem(3, new QTableWidgetItem(QString::fromStdString(getTokenLabel(GetPropForSale())) + " For Sale"));
+    ui->sellList->setHorizontalHeaderItem(4, new QTableWidgetItem(QString::fromStdString(getTokenLabel(GetPropDesired())) + " Desired"));
+    ui->sellButton->setText("Sell " + QString::fromStdString(getTokenLabel(GetPropForSale())));
+}
+
+// Inverts the pair
+void MetaDExDialog::InvertPair()
+{
+    QString propAStr = ui->comboPairTokenA->itemData(ui->comboPairTokenA->currentIndex()).toString();
+    QString propBStr = ui->comboPairTokenB->itemData(ui->comboPairTokenB->currentIndex()).toString();
+    QString currentSetPropA = ui->comboPairTokenA->currentText();
+    QString currentSetPropB = ui->comboPairTokenB->currentText();
+    if (propAStr.isEmpty() || propBStr.isEmpty()) {
+        PrintToLog("QTERROR: Empty variable switching property markets.  PropA=%s, PropB=%s\n",propAStr.toStdString(),propBStr.toStdString());
+        return;
+    }
+    uint32_t propA = propAStr.toUInt();
+    uint32_t propB = propBStr.toUInt();
+    uint32_t tempB = propB;
+    propB = propA;
+    propA = tempB;
+
+    if (ui->comboPairTokenA->count() > 1) {
+        int idxA = ui->comboPairTokenA->findText(currentSetPropB);
+        if (idxA != -1) {
+            ui->comboPairTokenA->setCurrentIndex(idxA);
+        } else {
+            ui->comboPairTokenA->setCurrentIndex(0);
+        }
+    }
+    if (ui->comboPairTokenB->count() > 2) {
+        int idxB = ui->comboPairTokenB->findText(currentSetPropA);
+        if (idxB != -1) {
+            ui->comboPairTokenB->setCurrentIndex(idxB);
+        } else {
+            ui->comboPairTokenB->setCurrentIndex(1);
+        }
+    }
+
+    ui->sellAmountSaleLE->clear();
+    ui->sellAmountDesiredLE->clear();
+    ui->sellUnitPriceLE->clear();
+    FullRefresh();
+}
+
+// Loops through the MetaDEx and updates the list of offers
+void MetaDExDialog::UpdateOffers()
+{
+    ui->sellList->setRowCount(0);
+
+    LOCK(cs_tally);
+
+    // Obtain divisibility outside the loop to avoid repeatedly loading properties
+    bool divisSale = isPropertyDivisible(GetPropForSale());
+    bool divisDes = isPropertyDivisible(GetPropDesired());
+
+    for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
+        if ((my_it->first != GetPropForSale())) continue; // not the property we're looking for, don't waste any more work
+        md_PricesMap & prices = my_it->second;
+        for (md_PricesMap::iterator it = prices.begin(); it != prices.end(); ++it) { // loop through the sell prices for the property
+            std::string unitPriceStr;
+            bool includesMe = false;
+            md_Set & indexes = (it->second);
+            for (md_Set::iterator it = indexes.begin(); it != indexes.end(); ++it) { // multiple sell offers can exist at the same price, sum them for the UI
+                const CMPMetaDEx& obj = *it;
+                if ((obj.getDesProperty() != GetPropDesired())) continue; // not the property we're interested in
+                if (IsMyAddress(obj.getAddr())) includesMe = true;
+                std::string strAvail;
+                if (divisSale) {
+                    strAvail = FormatDivisibleShortMP(obj.getAmountRemaining());
+                } else {
+                    strAvail = FormatIndivisibleMP(obj.getAmountRemaining());
+                }
+                std::string strDesired;
+                if (divisDes) {
+                    strDesired = FormatDivisibleShortMP(obj.getAmountToFill());
+                } else {
+                    strDesired = FormatIndivisibleMP(obj.getAmountToFill());
+                }
+                std::string priceStr = StripTrailingZeros(obj.displayFullUnitPrice());
+                if (priceStr.length() > 10) {
+                    priceStr.resize(10); // keep price in UI managable
+                    priceStr += "...";
+                }
+                AddRow(includesMe, obj.getHash().GetHex(), obj.getAddr(), priceStr, strAvail, strDesired);
+            }
+        }
+    }
+}
+
+// This function adds a row to the buy or sell offer list
+void MetaDExDialog::AddRow(bool includesMe, const string& txid, const string& seller, const string& price, const string& available, const string& desired)
+{
+    int workingRow;
+    workingRow = ui->sellList->rowCount();
+    ui->sellList->insertRow(workingRow);
+
+    QTableWidgetItem *txidCell = new QTableWidgetItem(QString::fromStdString(txid));
+    QTableWidgetItem *sellerCell = new QTableWidgetItem(QString::fromStdString(seller));
+    QTableWidgetItem *priceCell = new QTableWidgetItem(QString::fromStdString(price));
+    QTableWidgetItem *availableCell = new QTableWidgetItem(QString::fromStdString(available));
+    QTableWidgetItem *desiredCell = new QTableWidgetItem(QString::fromStdString(desired));
+    if(includesMe) {
+        QFont font;
+        font.setBold(true);
+        txidCell->setFont(font);
+        sellerCell->setFont(font);
+        priceCell->setFont(font);
+        availableCell->setFont(font);
+        desiredCell->setFont(font);
+    }
+    txidCell->setTextAlignment(Qt::AlignLeft + Qt::AlignVCenter);
+    sellerCell->setTextAlignment(Qt::AlignLeft + Qt::AlignVCenter);
+    availableCell->setTextAlignment(Qt::AlignRight + Qt::AlignVCenter);
+    priceCell->setTextAlignment(Qt::AlignRight + Qt::AlignVCenter);
+    desiredCell->setTextAlignment(Qt::AlignRight + Qt::AlignVCenter);
+    ui->sellList->setItem(workingRow, 0, txidCell);
+    ui->sellList->setItem(workingRow, 1, sellerCell);
+    ui->sellList->setItem(workingRow, 2, priceCell);
+    ui->sellList->setItem(workingRow, 3, availableCell);
+    ui->sellList->setItem(workingRow, 4, desiredCell);
+}
+
+// Displays details of the selected trade and any associated matches
+void MetaDExDialog::ShowDetails()
+{
+    UniValue txobj(UniValue::VOBJ);;
+    uint256 txid;
+    txid.SetHex(ui->sellList->item(ui->sellList->currentRow(),0)->text().toStdString());
+    std::string strTXText;
+
+    if (!txid.IsNull()) {
+        // grab extended trade details via the RPC populator
+        int rc = populateRPCTransactionObject(txid, txobj, "", true);
+        if (rc >= 0) strTXText = txobj.write(true);
+    }
+
+    if (!strTXText.empty()) {
+        PopulateSimpleDialog(strTXText, "Trade Information", "Trade Information");
+    }
+}
+
+// Show trade history for this pair
+void MetaDExDialog::ShowHistory()
+{
+    UniValue history(UniValue::VARR);
+    LOCK(cs_tally);
+    t_tradelistdb->getTradesForPair(GetPropForSale(), GetPropDesired(), history, 50);
+    std::string strHistory = history.write(true);
+
+    if (!strHistory.empty()) {
+        PopulateSimpleDialog(strHistory, "Trade History", "Trade History");
+    }
 }
 
 void MetaDExDialog::BalanceOrderRefresh()
 {
-    // balances have been updated, there may be a new address
     PopulateAddresses();
-    // refresh orders
-    OrderRefresh();
-}
-
-void MetaDExDialog::OrderRefresh()
-{
     UpdateOffers();
 }
 
-// Executed when the switch market button is clicked
-void MetaDExDialog::SwitchMarket()
+void MetaDExDialog::sendTrade()
 {
-    // perform some checks on the input data before attempting to switch market
-    int64_t searchPropertyId = 0;
-    string searchText = ui->switchLineEdit->text().toStdString();
-    // check for empty field
-    if (searchText.empty()) {
-        QMessageBox::critical( this, "Unable to switch market",
-        "You must enter a property ID to switch the market." );
-        return;
-    }
-    // check that we can cast the field to numerical OK
-    try {
-        searchPropertyId = boost::lexical_cast<int64_t>(searchText);
-    } catch(const boost::bad_lexical_cast &e) { // error casting, searchText likely not numerical
-        QMessageBox::critical( this, "Unable to switch market",
-        "The property ID entered was not a valid number." );
-        return;
-    }
-    // check that the value is in range
-    if ((searchPropertyId < 0) || (searchPropertyId > 4294967295L)) {
-        QMessageBox::critical( this, "Unable to switch market",
-        "The property ID entered is outside the allowed range." );
-        return;
-    }
-    // check that not trying to trade primary for primary (eg market 1 or 2)
-    if ((searchPropertyId == 1) || (searchPropertyId == 2)) {
-        QMessageBox::critical( this, "Unable to switch market",
-        "You cannot trade OMNI/TOMNI against itself." );
-        return;
-    }
-    // check that the property exists
-    bool spExists = false;
-    {
-        LOCK(cs_tally);
-        spExists = _my_sps->hasSP(searchPropertyId);
-    }
-    if (!spExists) {
-        QMessageBox::critical( this, "Unable to switch market",
-        "The property ID entered was not found." );
-        return;
-    }
+//    int blockHeight = GetHeight();
 
-    // with checks complete change the market to the entered property ID and perform a full refresh
-    global_metadex_market = searchPropertyId;
-    ui->buyAmountLE->clear();
-    ui->buyPriceLE->clear();
-    ui->sellAmountLE->clear();
-    ui->sellPriceLE->clear();
-    FullRefresh();
-}
+    string strFromAddress = ui->comboAddress->currentText().toStdString();
+    int64_t amountForSale = 0;
+    int64_t amountDesired = 0;
+    amountForSale = StrToInt64(ui->sellAmountSaleLE->text().toStdString(),isPropertyDivisible(GetPropForSale()));
+    amountDesired = StrToInt64(ui->sellAmountDesiredLE->text().toStdString(),isPropertyDivisible(GetPropDesired()));
+    if (0 >= amountForSale || 0>= amountDesired) {
+        QMessageBox::critical( this, "Unable to send MetaDEx trade",
+        "The amount values supplied are not valid.  Please check your trade parameters and try again." );
+        return;
+    }
 
 /**
- * When a row on the buy side is clicked, populate the sell fields to allow easy selling into the offer accordingly
- */
-void MetaDExDialog::buyClicked(int row, int col)
-{
-    // Populate the sell price field with the price clicked
-    QTableWidgetItem* priceCell = ui->buyList->item(row,2);
-    ui->sellPriceLE->setText(priceCell->text());
-
-    // If the cheapest price is not chosen, make the assumption that user wants to sell down to that price point
-    if (row != 0) {
-        int64_t totalAmount = 0;
-        bool divisible = isPropertyDivisible(global_metadex_market);
-        for (int i = 0; i <= row; i++) {
-            QTableWidgetItem* amountCell = ui->buyList->item(i,1);
-            int64_t amount = StrToInt64(amountCell->text().toStdString(), divisible);
-            totalAmount += amount;
-        }
-        if (divisible) {
-            ui->sellAmountLE->setText(QString::fromStdString(FormatDivisibleShortMP(totalAmount)));
-        } else {
-            ui->sellAmountLE->setText(QString::fromStdString(FormatIndivisibleMP(totalAmount)));
-        }
-    } else {
-        QTableWidgetItem* amountCell = ui->buyList->item(row,1);
-        ui->sellAmountLE->setText(amountCell->text());
-    }
-
-    // Update the total
-    recalcTotal(false);
-}
-
-/**
- * When a row on the sell side is clicked, populate the buy fields to allow easy buying into the offer accordingly
- */
-void MetaDExDialog::sellClicked(int row, int col)
-{
-    // Populate the buy price field with the price clicked
-    QTableWidgetItem* priceCell = ui->sellList->item(row,0);
-    ui->buyPriceLE->setText(priceCell->text());
-
-    // If the cheapest price is not chosen, make the assumption that user wants to buy all available up to that price point
-    if (row != 0) {
-        int64_t totalAmount = 0;
-        bool divisible = isPropertyDivisible(global_metadex_market);
-        for (int i = 0; i <= row; i++) {
-            QTableWidgetItem* amountCell = ui->sellList->item(i,1);
-            int64_t amount = StrToInt64(amountCell->text().toStdString(), divisible);
-            totalAmount += amount;
-        }
-        if (divisible) {
-            ui->buyAmountLE->setText(QString::fromStdString(FormatDivisibleShortMP(totalAmount)));
-        } else {
-            ui->buyAmountLE->setText(QString::fromStdString(FormatIndivisibleMP(totalAmount)));
-        }
-    } else {
-        QTableWidgetItem* amountCell = ui->sellList->item(row,1);
-        ui->buyAmountLE->setText(amountCell->text());
-    }
-
-    // Update the total
-    recalcTotal(true);
-}
-
-// This function adds a row to the buy or sell offer list
-void MetaDExDialog::AddRow(bool useBuyList, bool includesMe, const string& price, const string& available, const string& total)
-{
-    int workingRow;
-    if (useBuyList) {
-        workingRow = ui->buyList->rowCount();
-        ui->buyList->insertRow(workingRow);
-    } else {
-        workingRow = ui->sellList->rowCount();
-        ui->sellList->insertRow(workingRow);
-    }
-    QTableWidgetItem *priceCell = new QTableWidgetItem(QString::fromStdString(price));
-    QTableWidgetItem *availableCell = new QTableWidgetItem(QString::fromStdString(available));
-    QTableWidgetItem *totalCell = new QTableWidgetItem(QString::fromStdString(total));
-    if(includesMe) {
-        QFont font;
-        font.setBold(true);
-        priceCell->setFont(font);
-        availableCell->setFont(font);
-        totalCell->setFont(font);
-    }
-    if (useBuyList) {
-        priceCell->setTextAlignment(Qt::AlignRight + Qt::AlignVCenter);
-        availableCell->setTextAlignment(Qt::AlignRight + Qt::AlignVCenter);
-        totalCell->setTextAlignment(Qt::AlignRight + Qt::AlignVCenter);
-        ui->buyList->setItem(workingRow, 0, totalCell);
-        ui->buyList->setItem(workingRow, 1, availableCell);
-        ui->buyList->setItem(workingRow, 2, priceCell);
-    } else {
-        priceCell->setTextAlignment(Qt::AlignLeft + Qt::AlignVCenter);
-        availableCell->setTextAlignment(Qt::AlignLeft + Qt::AlignVCenter);
-        totalCell->setTextAlignment(Qt::AlignLeft + Qt::AlignVCenter);
-        ui->sellList->setItem(workingRow, 0, priceCell);
-        ui->sellList->setItem(workingRow, 1, availableCell);
-        ui->sellList->setItem(workingRow, 2, totalCell);
-    }
-}
-
-void MetaDExDialog::UpdateBalances()
-{
-    // update the balances for the buy and sell addreses
-    UpdateBuyAddressBalance();
-    UpdateSellAddressBalance();
-}
-
-// This function loops through the MetaDEx and updates the list of buy/sell offers
-void MetaDExDialog::UpdateOffers()
-{
-    for (int useBuyList = 0; useBuyList < 2; ++useBuyList) {
-        if (useBuyList) { ui->buyList->setRowCount(0); } else { ui->sellList->setRowCount(0); }
-        bool testeco = isTestEcosystemProperty(global_metadex_market);
-
-        LOCK(cs_tally);
-
-        for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
-            if ((!useBuyList) && (my_it->first != global_metadex_market)) { continue; } // not the property we're looking for, don't waste any more work
-            if ((useBuyList) && (((!testeco) && (my_it->first != OMNI_PROPERTY_MSC)) || ((testeco) && (my_it->first != OMNI_PROPERTY_TMSC)))) continue;
-            md_PricesMap & prices = my_it->second;
-            for (md_PricesMap::iterator it = prices.begin(); it != prices.end(); ++it) { // loop through the sell prices for the property
-                std::string unitPriceStr;
-                int64_t available = 0, total = 0;
-                bool includesMe = false;
-                md_Set & indexes = (it->second);
-                for (md_Set::iterator it = indexes.begin(); it != indexes.end(); ++it) { // multiple sell offers can exist at the same price, sum them for the UI
-                    const CMPMetaDEx& obj = *it;
-                    if (obj.displayUnitPrice() == "0.00000000") continue; // hide trades that have a lower than 0.00000001 MSC unit price
-                    if(IsMyAddress(obj.getAddr())) includesMe = true;
-                    unitPriceStr = obj.displayUnitPrice();
-                    if (useBuyList) {
-                        if (obj.getDesProperty()==global_metadex_market) {
-                            available += obj.getAmountToFill();
-                            total += obj.getAmountRemaining();
-                        }
-                    } else {
-                        if ( ((testeco) && (obj.getDesProperty() == 2)) || ((!testeco) && (obj.getDesProperty() == 1)) ) {
-                            available += obj.getAmountRemaining();
-                            total += obj.getAmountToFill();
-                        }
-                    }
-                }
-                if ((available > 0) && (total > 0)) { // if there are any available at this price, add to the sell list
-                    string strAvail;
-                    if (isPropertyDivisible(global_metadex_market)) { strAvail = FormatDivisibleShortMP(available); } else { strAvail = FormatIndivisibleMP(available); }
-                    AddRow(useBuyList, includesMe, StripTrailingZeros(unitPriceStr), strAvail, FormatDivisibleShortMP(total));
-                }
-            }
-        }
-    }
-}
-
-// This function updates the balance for the currently selected sell address
-void MetaDExDialog::UpdateSellAddressBalance()
-{
-    QString currentSetSellAddress = ui->sellAddressCombo->currentText();
-    if (currentSetSellAddress.isEmpty()) {
-        ui->yourSellBalanceLabel->setText(QString::fromStdString("Your balance: N/A"));
-        ui->sellAddressFeeWarningLabel->setVisible(false);
-    } else {
-        unsigned int propertyId = global_metadex_market;
-        int64_t balanceAvailable = getUserAvailableMPbalance(currentSetSellAddress.toStdString(), propertyId);
-        string sellBalStr;
-        if (isPropertyDivisible(propertyId)) { sellBalStr = FormatDivisibleMP(balanceAvailable); } else { sellBalStr = FormatIndivisibleMP(balanceAvailable); }
-        ui->yourSellBalanceLabel->setText(QString::fromStdString("Your balance: " + sellBalStr + " SPT"));
-        // warning label will be lit if insufficient fees for MetaDEx payload (28 bytes)
-        if (CheckFee(currentSetSellAddress.toStdString(), 28)) {
-            ui->sellAddressFeeWarningLabel->setVisible(false);
-        } else {
-            ui->sellAddressFeeWarningLabel->setText("WARNING: The address is low on BTC for transaction fees.");
-            ui->sellAddressFeeWarningLabel->setVisible(true);
-        }
-    }
-}
-
-// This function updates the balance for the currently selected buy address
-void MetaDExDialog::UpdateBuyAddressBalance()
-{
-    QString currentSetBuyAddress = ui->buyAddressCombo->currentText();
-    if (currentSetBuyAddress.isEmpty()) {
-        ui->yourBuyBalanceLabel->setText(QString::fromStdString("Your balance: N/A"));
-        ui->buyAddressFeeWarningLabel->setVisible(false);
-    } else {
-        unsigned int propertyId = OMNI_PROPERTY_MSC;
-        if (global_metadex_market >= TEST_ECO_PROPERTY_1) propertyId = OMNI_PROPERTY_TMSC;
-        int64_t balanceAvailable = getUserAvailableMPbalance(currentSetBuyAddress.toStdString(), propertyId);
-        ui->yourBuyBalanceLabel->setText(QString::fromStdString("Your balance: " + FormatDivisibleMP(balanceAvailable) + getTokenLabel(propertyId)));
-        // warning label will be lit if insufficient fees for MetaDEx payload (28 bytes)
-        if (CheckFee(currentSetBuyAddress.toStdString(), 28)) {
-            ui->buyAddressFeeWarningLabel->setVisible(false);
-        } else {
-            ui->buyAddressFeeWarningLabel->setText("WARNING: The address is low on BTC for transaction fees.");
-            ui->buyAddressFeeWarningLabel->setVisible(true);
-        }
-    }
-}
-
-// This function performs a full refresh of all elements - for example when switching markets
-void MetaDExDialog::FullRefresh()
-{
-    // populate market information
-    unsigned int propertyId = global_metadex_market;
-    string propNameStr = getPropertyName(propertyId);
-    bool testeco = false;
-    if (propertyId >= TEST_ECO_PROPERTY_1) testeco = true;
-    if(testeco) {
-        ui->marketLabel->setText(QString::fromStdString("Trade " + propNameStr + " (#" + FormatIndivisibleMP(propertyId) + ") for Test Omni"));
-    } else {
-        ui->marketLabel->setText(QString::fromStdString("Trade " + propNameStr + " (#" + FormatIndivisibleMP(propertyId) + ") for Omni"));
-    }
-
-    // update form labels to reflect market
-    std::string primaryToken;
-    if (testeco) { primaryToken = "TOMNI"; } else { primaryToken = "OMNI"; }
-    ui->exchangeLabel->setText("Exchange - SP#" + QString::fromStdString(FormatIndivisibleMP(propertyId) + "/" + primaryToken));
-    ui->buyTotalLabel->setText("0.00000000 " + QString::fromStdString(primaryToken));
-    ui->sellTotalLabel->setText("0.00000000 " + QString::fromStdString(primaryToken));
-    ui->sellTM->setText(QString::fromStdString(primaryToken));
-    ui->buyTM->setText(QString::fromStdString(primaryToken));
-    ui->buyList->setHorizontalHeaderItem(0, new QTableWidgetItem("Total " + QString::fromStdString(primaryToken)));
-    ui->buyList->setHorizontalHeaderItem(1, new QTableWidgetItem("Total SP#" + QString::fromStdString(FormatIndivisibleMP(global_metadex_market))));
-    ui->buyList->setHorizontalHeaderItem(2, new QTableWidgetItem("Unit Price (" + QString::fromStdString(primaryToken) + ")"));
-    ui->sellList->setHorizontalHeaderItem(0, new QTableWidgetItem("Unit Price (" + QString::fromStdString(primaryToken) + ")"));
-    ui->sellList->setHorizontalHeaderItem(1, new QTableWidgetItem("Total SP#" + QString::fromStdString(FormatIndivisibleMP(global_metadex_market))));
-    ui->sellList->setHorizontalHeaderItem(2, new QTableWidgetItem("Total " + QString::fromStdString(primaryToken)));
-    ui->buyMarketLabel->setText("BUY SP#" + QString::fromStdString(FormatIndivisibleMP(propertyId)));
-    ui->sellMarketLabel->setText("SELL SP#" + QString::fromStdString(FormatIndivisibleMP(propertyId)));
-    ui->sellButton->setText("Sell SP#" + QString::fromStdString(FormatIndivisibleMP(propertyId)));
-    ui->buyButton->setText("Buy SP#" + QString::fromStdString(FormatIndivisibleMP(propertyId)));
-
-    // populate buy and sell addresses
-    PopulateAddresses();
-
-    // update the buy and sell offers
-    UpdateOffers();
-}
-
-void MetaDExDialog::buyAddressComboBoxChanged(int idx)
-{
-    UpdateBuyAddressBalance();
-}
-
-void MetaDExDialog::sellAddressComboBoxChanged(int idx)
-{
-    UpdateSellAddressBalance();
-}
-
-void MetaDExDialog::switchButtonClicked()
-{
-    SwitchMarket();
-}
-
-void MetaDExDialog::sellTrade()
-{
-    sendTrade(true);
-}
-
-void MetaDExDialog::buyTrade()
-{
-    sendTrade(false);
-}
-
-void MetaDExDialog::recalcBuyTotal()
-{
-    recalcTotal(true);
-}
-
-void MetaDExDialog::recalcSellTotal()
-{
-    recalcTotal(false);
-}
-
-// This function recalulates a total price display from user fields
-void MetaDExDialog::recalcTotal(bool useBuyFields)
-{
-    unsigned int propertyId = global_metadex_market;
-    bool divisible = isPropertyDivisible(propertyId);
-    bool testeco = isTestEcosystemProperty(propertyId);
-    int64_t price = 0, amount = 0, totalPrice = 0;
-
-    if (useBuyFields) {
-        amount = StrToInt64(ui->buyAmountLE->text().toStdString(),divisible);
-        price = StrToInt64(ui->buyPriceLE->text().toStdString(),true);
-    } else {
-        amount = StrToInt64(ui->sellAmountLE->text().toStdString(),divisible);
-        price = StrToInt64(ui->sellPriceLE->text().toStdString(),true);
-    }
-
-    if (0 >= amount || 0 >= price) {
-        if (useBuyFields) {
-            ui->buyTotalLabel->setText("N/A");
-        } else {
-            ui->sellTotalLabel->setText("N/A");
-        }
-        return;
-    }
-
-    uint256 amount256 = ConvertTo256(amount);
-    uint256 price256 = ConvertTo256(price);
-    uint256 totalPrice256 = amount256 * price256;
-    if (divisible) totalPrice256 = totalPrice256 / COIN;
-
-    if (totalPrice256 > uint256_const::max_int64) {
-        QMessageBox::critical( this, "Unable to calculate total",
-        "The total amount for the entered trade details would exceed the maximum amount of tokens." );
-        if (useBuyFields) {
-            ui->buyPriceLE->setText("");
-            ui->buyTotalLabel->setText("N/A");
-        } else {
-            ui->sellPriceLE->setText("");
-            ui->sellTotalLabel->setText("N/A");
-        }
-        return;
-    }
-
-    totalPrice = ConvertTo64(totalPrice256);
-
-    QString totalLabel = QString::fromStdString(FormatDivisibleMP(totalPrice));
-    if (testeco) {
-        if (useBuyFields) { ui->buyTotalLabel->setText(totalLabel + " TOMNI"); } else { ui->sellTotalLabel->setText(totalLabel + " TOMNI"); }
-    } else {
-        if (useBuyFields) { ui->buyTotalLabel->setText(totalLabel + " OMNI"); } else { ui->sellTotalLabel->setText(totalLabel + " OMNI"); }
-    }
-}
-
-void MetaDExDialog::sendTrade(bool sell)
-{
-    int blockHeight = GetHeight();
-    uint32_t propertyId = global_metadex_market;
-    bool divisible = isPropertyDivisible(propertyId);
-    bool testeco = isTestEcosystemProperty(propertyId);
-
-    // check if main net trading is allowed
-    if (!IsTransactionTypeAllowed(blockHeight, propertyId, MSC_TYPE_METADEX_TRADE, MP_TX_PKT_V0)) {
-        QMessageBox::critical( this, "Unable to send MetaDEx transaction",
-        "Trading on main ecosystem properties is not yet active.\n\nPlease switch to a test ecosystem market to send trade transactions." );
-        return;
-    }
-
-    // obtain the selected sender address
-    string strFromAddress;
-    if (!sell) { strFromAddress = ui->buyAddressCombo->currentText().toStdString(); } else { strFromAddress = ui->sellAddressCombo->currentText().toStdString(); }
-
     // warn if we have to truncate the amount due to a decimal amount for an indivisible property, but allow send to continue
-    string strAmount;
-    if (!sell) { strAmount = ui->buyAmountLE->text().toStdString(); } else { strAmount = ui->sellAmountLE->text().toStdString(); }
-    if (!divisible) {
+    if (divisible) {
         size_t pos = strAmount.find(".");
         if (pos!=std::string::npos) {
             string tmpStrAmount = strAmount.substr(0,pos);
@@ -607,54 +488,12 @@ void MetaDExDialog::sendTrade(bool sell)
             if (!sell) { ui->buyAmountLE->setText(QString::fromStdString(strAmount)); } else { ui->sellAmountLE->setText(QString::fromStdString(strAmount)); }
         }
     }
-
-    // use strToInt64 function to get the amounts, using divisibility of the property
-    int64_t amountDes;
-    int64_t amountSell;
-    int64_t price;
-    unsigned int propertyIdDes;
-    unsigned int propertyIdSell;
-    if(sell) {
-        amountSell = StrToInt64(ui->sellAmountLE->text().toStdString(),divisible);
-        price = StrToInt64(ui->sellPriceLE->text().toStdString(),true);
-        uint256 amountSell256 = ConvertTo256(amountSell);
-        uint256 priceSell256 = ConvertTo256(price);
-        uint256 totalPrice256 = amountSell256 * priceSell256;
-        if (divisible) totalPrice256 = totalPrice256 / COIN;
-        if (totalPrice256 > uint256_const::max_int64) {
-            QMessageBox::critical( this, "Unable to send MetaDEx trade",
-            "The total amount for the entered trade details would exceed the maximum amount of tokens." );
-            return;
-        }
-        amountDes = ConvertTo64(totalPrice256);
-        if(testeco) { propertyIdDes = 2; } else { propertyIdDes = 1; }
-        propertyIdSell = global_metadex_market;
-    } else {
-        amountDes = StrToInt64(ui->buyAmountLE->text().toStdString(),divisible);
-        price = StrToInt64(ui->buyPriceLE->text().toStdString(),true);
-        uint256 amountDes256 = ConvertTo256(amountDes);
-        uint256 priceDes256 = ConvertTo256(price);
-        uint256 totalPrice256 = amountDes256 * priceDes256;
-        if (divisible) totalPrice256 = totalPrice256 / COIN;
-        if (totalPrice256 > uint256_const::max_int64) {
-            QMessageBox::critical( this, "Unable to send MetaDEx trade",
-            "The total amount for the entered trade details would exceed the maximum amount of tokens." );
-            return;
-        }
-        amountSell = ConvertTo64(totalPrice256);
-        if(testeco) { propertyIdSell = 2; } else { propertyIdSell = 1; }
-        propertyIdDes = global_metadex_market;
-    }
-    if ((0>=amountDes) || (0>=amountSell) || (0>=propertyIdDes) || (0>=propertyIdSell)) {
-        QMessageBox::critical( this, "Unable to send MetaDEx transaction",
-        "The amount entered is not valid.\n\nPlease double-check the transction details thoroughly before retrying your transaction." );
-        return;
-    }
+**/
 
     // check if sending address has enough funds
     int64_t balanceAvailable = 0;
-    balanceAvailable = getUserAvailableMPbalance(strFromAddress, propertyIdSell);
-    if (amountSell>balanceAvailable) {
+    balanceAvailable = getUserAvailableMPbalance(strFromAddress, GetPropForSale());
+    if (amountForSale > balanceAvailable) {
         QMessageBox::critical( this, "Unable to send MetaDEx transaction",
         "The selected sending address does not have a sufficient balance to cover the amount entered.\n\nPlease double-check the transction details thoroughly before retrying your transaction." );
         return;
@@ -672,30 +511,10 @@ void MetaDExDialog::sendTrade(bool sell)
     }
 
     // validation checks all look ok, let's throw up a confirmation dialog
-    string strMsgText = "You are about to send the following MetaDEx transaction, please check the details thoroughly:\n\n";
-    string spNum = static_cast<ostringstream*>( &(ostringstream() << propertyId) )->str();
-    string propDetails = "#" + spNum;
-    string buyStr;
-    string sellStr;
-    if (!sell) strMsgText += "Your buy will be inverted into a sell offer.\n\n";
+    std::string strMsgText = "You are about to send the following MetaDEx transaction, please check the details thoroughly:\n\n";
     strMsgText += "Type: Trade Request\nFrom: " + strFromAddress + "\n\n";
-    if (!sell) { // clicked buy
-        if (divisible) { buyStr = FormatDivisibleMP(amountDes); } else { buyStr = FormatIndivisibleMP(amountDes); }
-        buyStr += "   SPT " + propDetails + "";
-        sellStr = FormatDivisibleMP(amountSell);
-        if (testeco) { sellStr += "   TOMNI"; } else { sellStr += "   OMNI"; }
-        strMsgText += "Buying: " + buyStr + "\nPrice: " + FormatDivisibleMP(price) + "   SP" + propDetails + "/";
-        if (testeco) { strMsgText += "TOMNI"; } else { strMsgText += "OMNI"; }
-        strMsgText += "\nTotal: " + sellStr;
-    } else { // clicked sell
-        buyStr = FormatDivisibleMP(amountDes);
-        if (divisible) { sellStr = FormatDivisibleMP(amountSell); } else { sellStr = FormatIndivisibleMP(amountSell); }
-        if (testeco) { buyStr += "   TOMNI"; } else { buyStr += "   OMNI"; }
-        sellStr += "   SPT " + propDetails + "";
-        strMsgText += "Selling: " + sellStr + "\nPrice: " + FormatDivisibleMP(price) + "   SP" + propDetails + "/";
-        if (testeco) { strMsgText += "TOMNI"; } else { strMsgText += "OMNI"; }
-        strMsgText += "\nTotal: " + buyStr;
-    }
+    strMsgText += "Sell " + FormatMP(isPropertyDivisible(GetPropForSale()), amountForSale) + getTokenLabel(GetPropForSale());
+    strMsgText += " for " + FormatMP(isPropertyDivisible(GetPropDesired()), amountDesired) + getTokenLabel(GetPropDesired());
     strMsgText += "\n\nAre you sure you wish to send this transaction?";
     QString msgText = QString::fromStdString(strMsgText);
     QMessageBox::StandardButton responseClick;
@@ -718,10 +537,10 @@ void MetaDExDialog::sendTrade(bool sell)
     }
 
     // create a payload for the transaction
-    std::vector<unsigned char> payload = CreatePayload_MetaDExTrade(propertyIdSell, amountSell, propertyIdDes, amountDes);
+    std::vector<unsigned char> payload = CreatePayload_MetaDExTrade(GetPropForSale(), amountForSale, GetPropDesired(), amountDesired);
 
     // request the wallet build the transaction (and if needed commit it)
-    uint256 txid = 0;
+    uint256 txid;
     std::string rawHex;
     int result = WalletTxBuilder(strFromAddress, "", "", 0, payload, txid, rawHex, autoCommit);
 
@@ -735,7 +554,7 @@ void MetaDExDialog::sendTrade(bool sell)
         if (!autoCommit) {
             PopulateSimpleDialog(rawHex, "Raw Hex (auto commit is disabled)", "Raw transaction hex");
         } else {
-            PendingAdd(txid, strFromAddress, MSC_TYPE_METADEX_TRADE, propertyIdSell, amountSell);
+            PendingAdd(txid, strFromAddress, MSC_TYPE_METADEX_TRADE, GetPropForSale(), amountForSale);
             PopulateTXSentDialog(txid.GetHex());
         }
     }

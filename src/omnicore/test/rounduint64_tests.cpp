@@ -1,12 +1,14 @@
 #include "omnicore/convert.h"
 
+#include "test/test_bitcoin.h"
+
 #include <stdint.h>
 
 #include <boost/test/unit_test.hpp>
 
 using namespace mastercore;
 
-BOOST_AUTO_TEST_SUITE(omnicore_rounduint64_tests)
+BOOST_FIXTURE_TEST_SUITE(omnicore_rounduint64_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(rounduint64_simple)
 {

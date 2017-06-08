@@ -31,7 +31,7 @@ public:
     void setClientModel(ClientModel *model);
     void setWalletModel(WalletModel *model);
 
-public slots:
+public Q_SLOTS:
     void SendCancelTransaction();
     void UpdateAddressSelector();
     void UpdateCancelCombo();
@@ -44,10 +44,10 @@ private:
     ClientModel *clientModel;
     WalletModel *walletModel;
 
-private slots:
+private Q_SLOTS:
     // None!
 
-signals:
+Q_SIGNALS:
     // Fired when a message should be reported to the user
     void message(const QString &title, const QString &message, unsigned int style);
 };

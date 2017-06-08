@@ -7,7 +7,7 @@
 
 #include "amount.h"
 #include "main.h"
-#include "rpcprotocol.h"
+#include "rpc/protocol.h"
 #include "sync.h"
 #include "tinyformat.h"
 
@@ -159,4 +159,3 @@ void RequireHeightInChain(int blockHeight)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height is out of range");
     }
 }
-

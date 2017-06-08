@@ -6,15 +6,16 @@
 #include "pubkey.h"
 #include "script/script.h"
 #include "script/standard.h"
+#include "test/test_bitcoin.h"
 #include "utilstrencodings.h"
+
+#include <boost/test/unit_test.hpp>
 
 #include <stdint.h>
 #include <string>
 #include <vector>
 
-#include <boost/test/unit_test.hpp>
-
-BOOST_AUTO_TEST_SUITE(omnicore_encoding_b_tests)
+BOOST_FIXTURE_TEST_SUITE(omnicore_encoding_b_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(class_b_empty)
 {

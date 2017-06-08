@@ -11,7 +11,9 @@
 #include "ui_interface.h"
 #include "walletmodel.h"
 #include "clientmodel.h"
+#include "platformstyle.h"
 
+#include "omnicore/fetchwallettx.h"
 #include "omnicore/mdex.h"
 #include "omnicore/omnicore.h"
 #include "omnicore/pending.h"
@@ -20,6 +22,8 @@
 #include "omnicore/sp.h"
 #include "omnicore/tx.h"
 #include "omnicore/utilsbitcoin.h"
+#include "omnicore/walletcache.h"
+#include "omnicore/wallettxs.h"
 
 #include "amount.h"
 #include "init.h"
@@ -28,10 +32,7 @@
 #include "sync.h"
 #include "txdb.h"
 #include "uint256.h"
-#include "wallet.h"
-
-#include "json/json_spirit_value.h"
-#include "json/json_spirit_writer_template.h"
+#include "wallet/wallet.h"
 
 #include <boost/algorithm/string.hpp>
 
@@ -59,7 +60,6 @@
 using std::ostringstream;
 using std::string;
 
-using namespace json_spirit;
 using namespace mastercore;
 
 bool hideInactiveTrades = false;
@@ -80,7 +80,7 @@ TradeHistoryDialog::TradeHistoryDialog(QWidget *parent) :
     ui->tradeHistoryTable->setHorizontalHeaderItem(5, new QTableWidgetItem("Trade Details"));
     ui->tradeHistoryTable->setHorizontalHeaderItem(6, new QTableWidgetItem("Sold"));
     ui->tradeHistoryTable->setHorizontalHeaderItem(7, new QTableWidgetItem("Received"));
-    borrowedColumnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(ui->tradeHistoryTable,100,100);
+    borrowedColumnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(ui->tradeHistoryTable, 100, 100, this);
     #if QT_VERSION < 0x050000
        ui->tradeHistoryTable->horizontalHeader()->setResizeMode(2, QHeaderView::Fixed);
        ui->tradeHistoryTable->horizontalHeader()->setResizeMode(3, QHeaderView::Interactive);
@@ -201,16 +201,17 @@ void TradeHistoryDialog::UpdateTradeHistoryTable(bool forceUpdate)
             QTableWidgetItem *amountInCell = new QTableWidgetItem(QString::fromStdString(objTH.amountIn));
             QTableWidgetItem *txidCell = new QTableWidgetItem(QString::fromStdString(txid.GetHex()));
             QTableWidgetItem *iconCell = new QTableWidgetItem;
-            QIcon ic = QIcon(":/icons/transaction_0");
-            if (objTH.status == "Cancelled") ic =QIcon(":/icons/meta_cancelled");
-            if (objTH.status == "Part Cancel") ic = QIcon(":/icons/meta_partialclosed");
-            if (objTH.status == "Filled") ic = QIcon(":/icons/meta_filled");
-            if (objTH.status == "Open") ic = QIcon(":/icons/meta_open");
-            if (objTH.status == "Part Filled") ic = QIcon(":/icons/meta_partial");
+            QIcon ic = QIcon(":/icons/omni_meta_pending");
+            if (objTH.status == "Cancelled") ic =QIcon(":/icons/omni_meta_cancelled");
+            if (objTH.status == "Part Cancel") ic = QIcon(":/icons/omni_meta_partcancelled");
+            if (objTH.status == "Filled") ic = QIcon(":/icons/omni_meta_filled");
+            if (objTH.status == "Open") ic = QIcon(":/icons/omni_meta_open");
+            if (objTH.status == "Part Filled") ic = QIcon(":/icons/omni_meta_partfilled");
             if (!objTH.valid) {
-                ic = QIcon(":/icons/transaction_invalid");
+                ic = QIcon(":/icons/transaction_conflicted");
                 objTH.status = "Invalid";
             }
+//            ic = platformStyle->SingleColorIcon(ic);
             iconCell->setIcon(ic);
             amountOutCell->setTextAlignment(Qt::AlignRight + Qt::AlignVCenter);
             amountOutCell->setForeground(QColor("#EE0000"));
@@ -298,16 +299,12 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
     // ### END PENDING TRANSACTIONS PROCESSING ###
 
     // ### START WALLET TRANSACTIONS PROCESSING ###
-    std::list<CAccountingEntry> acentries;
-    CWallet::TxItems txOrdered = pwalletMain->OrderedTxItems(acentries, "*");
-    // iterate through wallet entries backwards, limiting to most recent n (default 65535) transactions (override with --omniuiwalletscope=n)
-    int64_t walletTxCount = 0, walletTxMax = GetArg("-omniuiwalletscope", 65535L);
-    for (CWallet::TxItems::reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it) {
-        if (walletTxCount >= walletTxMax) break;
-        ++walletTxCount;
-        CWalletTx *const pwtx = (*it).second.first;
-        if (pwtx == 0) continue;
-        uint256 hash = pwtx->GetHash();
+    // obtain a sorted list of Omni layer wallet transactions (including STO receipts and pending) - default last 65535
+    std::map<std::string,uint256> walletTransactions = FetchWalletOmniTransactions(GetArg("-omniuiwalletscope", 65535L));
+
+    // reverse iterate over (now ordered) transactions and populate history map for each one
+    for (std::map<std::string,uint256>::reverse_iterator it = walletTransactions.rbegin(); it != walletTransactions.rend(); it++) {
+        uint256 hash = it->second;
 
         // use levelDB to perform a fast check on whether it's a bitcoin or Omni tx and whether it's a trade
         std::string tempStrValue;
@@ -344,10 +341,9 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
 
         // tx not in historyMap, retrieve the transaction object
         CTransaction wtx;
-        uint256 blockHash = 0;
-        if (!GetTransaction(hash, wtx, blockHash, true)) continue;
-        blockHash = pwtx->hashBlock;
-        if ((0 == blockHash) || (NULL == GetBlockIndex(blockHash))) continue;
+        uint256 blockHash;
+        if (!GetTransaction(hash, wtx, Params().GetConsensus(), blockHash, true)) continue;
+        if (blockHash.IsNull() || NULL == GetBlockIndex(blockHash)) continue;
         CBlockIndex* pBlockIndex = GetBlockIndex(blockHash);
         if (NULL == pBlockIndex) continue;
         int blockHeight = pBlockIndex->nHeight;
@@ -361,7 +357,7 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
         int64_t amountDesired = 0;
         bool divisibleForSale = false;
         bool divisibleDesired = false;
-        Array tradeArray;
+        UniValue tradeArray(UniValue::VARR);
         int64_t totalReceived = 0;
         int64_t totalSold = 0;
         bool orderOpen = false;
@@ -460,7 +456,7 @@ void TradeHistoryDialog::UpdateData()
         uint32_t propertyIdForSale = tmpObjTH->propertyIdForSale;
         uint32_t propertyIdDesired = tmpObjTH->propertyIdDesired;
         int64_t amountForSale = tmpObjTH->amountForSale;
-        Array tradeArray;
+        UniValue tradeArray(UniValue::VARR);
         int64_t totalReceived = 0;
         int64_t totalSold = 0;
         bool orderOpen = false;
@@ -559,15 +555,15 @@ void TradeHistoryDialog::copyTxID()
  */
 void TradeHistoryDialog::showDetails()
 {
-    Object txobj;
+    UniValue txobj(UniValue::VOBJ);;
     uint256 txid;
     txid.SetHex(ui->tradeHistoryTable->item(ui->tradeHistoryTable->currentRow(),0)->text().toStdString());
     std::string strTXText;
 
-    if (txid != 0) {
+    if (!txid.IsNull()) {
         // grab extended trade details via the RPC populator
         int rc = populateRPCTransactionObject(txid, txobj, "", true);
-        if (rc >= 0) strTXText = json_spirit::write_string(Value(txobj), true);
+        if (rc >= 0) strTXText = txobj.write(true);
     }
 
     if (!strTXText.empty()) {

@@ -16,7 +16,7 @@
 #include "sync.h"
 #include "uint256.h"
 #ifdef ENABLE_WALLET
-#include "wallet.h"
+#include "wallet/wallet.h"
 #endif
 
 #include <stdint.h>
@@ -59,7 +59,7 @@ void WalletTXIDCacheInit()
     LOCK2(cs_tally, pwalletMain->cs_wallet);
 
     std::list<CAccountingEntry> acentries;
-    CWallet::TxItems txOrdered = pwalletMain->OrderedTxItems(acentries, "*");
+    CWallet::TxItems txOrdered = pwalletMain->wtxOrdered;
 
     // Iterate through the wallet, checking if each transaction is Omni (via levelDB)
     for (CWallet::TxItems::reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it) {
@@ -89,7 +89,7 @@ int WalletCacheUpdate()
 
     LOCK(cs_tally);
 
-    for (std::map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
+    for (std::unordered_map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
         const std::string& address = my_it->first;
 
         // determine if this address is in the wallet

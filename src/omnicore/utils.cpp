@@ -1,8 +1,8 @@
 /**
- * @file omnicore_utils.cpp
+ * @file utils.cpp
  *
- * This file serves to seperate utility functions from the main mastercore.cpp
- * and mastercore.h files.
+ * This file serves to seperate utility functions from the main omnicore.cpp
+ * and omnicore.h files.
  */
 
 #include "omnicore/utils.h"
@@ -43,7 +43,7 @@ void PrepareObfuscatedHashes(const std::string& strSeed, int hashCount, std::str
     if (hashCount > MAX_SHA256_OBFUSCATION_TIMES) hashCount = MAX_SHA256_OBFUSCATION_TIMES;
 
     // Do only as many re-hashes as there are data packets, 255 per specification
-    for (unsigned int j = 1; j <= hashCount; ++j)
+    for (int j = 1; j <= hashCount; ++j)
     {
         SHA256(sha_input, strlen((const char *)sha_input), sha_result);
         vec_chars.resize(32);
@@ -55,4 +55,3 @@ void PrepareObfuscatedHashes(const std::string& strSeed, int hashCount, std::str
         strcpy((char *)sha_input, vstrHashes[j].c_str());
     }
 }
-

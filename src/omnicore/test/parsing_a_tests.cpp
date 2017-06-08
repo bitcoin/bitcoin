@@ -12,6 +12,7 @@
 #include "primitives/transaction.h"
 #include "script/script.h"
 #include "script/standard.h"
+#include "test/test_bitcoin.h"
 
 #include <stdint.h>
 #include <limits>
@@ -21,7 +22,7 @@
 
 using namespace mastercore;
 
-BOOST_AUTO_TEST_SUITE(omnicore_parsing_a_tests)
+BOOST_FIXTURE_TEST_SUITE(omnicore_parsing_a_tests, BasicTestingSetup)
 
 /** Creates a dummy transaction with the given inputs and outputs. */
 static CTransaction TxClassA(const std::vector<CTxOut>& txInputs, const std::vector<CTxOut>& txOuts)

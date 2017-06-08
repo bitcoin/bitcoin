@@ -2,14 +2,15 @@
 #include "omnicore/version.h"
 
 #include "util.h"
+#include "test/test_bitcoin.h"
 #include "tinyformat.h"
+
+#include <boost/test/unit_test.hpp>
 
 #include <stdint.h>
 #include <map>
 #include <string>
 #include <vector>
-
-#include <boost/test/unit_test.hpp>
 
 using namespace mastercore;
 
@@ -17,7 +18,7 @@ using namespace mastercore;
 extern std::map<std::string, std::string> mapArgs;
 extern std::map<std::string, std::vector<std::string> > mapMultiArgs;
 
-BOOST_AUTO_TEST_SUITE(omnicore_alert_tests)
+BOOST_FIXTURE_TEST_SUITE(omnicore_alert_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(alert_positive_authorization)
 {

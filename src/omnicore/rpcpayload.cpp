@@ -1,23 +1,21 @@
 #include "omnicore/rpcpayload.h"
 
 #include "omnicore/createpayload.h"
-#include "omnicore/rpc.h"
 #include "omnicore/rpcvalues.h"
 #include "omnicore/rpcrequirements.h"
 #include "omnicore/omnicore.h"
 #include "omnicore/sp.h"
 #include "omnicore/tx.h"
 
-#include "rpcserver.h"
+#include "rpc/server.h"
 #include "utilstrencodings.h"
 
-#include "json/json_spirit_value.h"
+#include <univalue.h>
 
 using std::runtime_error;
-using namespace json_spirit;
 using namespace mastercore;
 
-Value omni_createpayload_simplesend(const Array& params, bool fHelp)
+UniValue omni_createpayload_simplesend(const UniValue& params, bool fHelp)
 {
    if (fHelp || params.size() != 2)
         throw runtime_error(
@@ -46,7 +44,7 @@ Value omni_createpayload_simplesend(const Array& params, bool fHelp)
     return HexStr(payload.begin(), payload.end());
 }
 
-Value omni_createpayload_sendall(const Array& params, bool fHelp)
+UniValue omni_createpayload_sendall(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
@@ -72,7 +70,7 @@ Value omni_createpayload_sendall(const Array& params, bool fHelp)
     return HexStr(payload.begin(), payload.end());
 }
 
-Value omni_createpayload_dexsell(const Array& params, bool fHelp)
+UniValue omni_createpayload_dexsell(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 6)
         throw runtime_error(
@@ -117,7 +115,7 @@ Value omni_createpayload_dexsell(const Array& params, bool fHelp)
     return HexStr(payload.begin(), payload.end());
 }
 
-Value omni_createpayload_dexaccept(const Array& params, bool fHelp)
+UniValue omni_createpayload_dexaccept(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 2)
         throw runtime_error(
@@ -146,7 +144,7 @@ Value omni_createpayload_dexaccept(const Array& params, bool fHelp)
     return HexStr(payload.begin(), payload.end());
 }
 
-Value omni_createpayload_sto(const Array& params, bool fHelp)
+UniValue omni_createpayload_sto(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 3)
         throw runtime_error(
@@ -176,7 +174,7 @@ Value omni_createpayload_sto(const Array& params, bool fHelp)
     return HexStr(payload.begin(), payload.end());
 }
 
-Value omni_createpayload_issuancefixed(const Array& params, bool fHelp)
+UniValue omni_createpayload_issuancefixed(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 9)
         throw runtime_error(
@@ -220,7 +218,7 @@ Value omni_createpayload_issuancefixed(const Array& params, bool fHelp)
     return HexStr(payload.begin(), payload.end());
 }
 
-Value omni_createpayload_issuancecrowdsale(const Array& params, bool fHelp)
+UniValue omni_createpayload_issuancecrowdsale(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 13)
         throw runtime_error(
@@ -274,7 +272,7 @@ Value omni_createpayload_issuancecrowdsale(const Array& params, bool fHelp)
     return HexStr(payload.begin(), payload.end());
 }
 
-Value omni_createpayload_issuancemanaged(const Array& params, bool fHelp)
+UniValue omni_createpayload_issuancemanaged(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 8)
         throw runtime_error(
@@ -316,7 +314,7 @@ Value omni_createpayload_issuancemanaged(const Array& params, bool fHelp)
     return HexStr(payload.begin(), payload.end());
 }
 
-Value omni_createpayload_closecrowdsale(const Array& params, bool fHelp)
+UniValue omni_createpayload_closecrowdsale(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
@@ -344,7 +342,7 @@ Value omni_createpayload_closecrowdsale(const Array& params, bool fHelp)
     return HexStr(payload.begin(), payload.end());
 }
 
-Value omni_createpayload_grant(const Array& params, bool fHelp)
+UniValue omni_createpayload_grant(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 3)
         throw runtime_error(
@@ -376,7 +374,7 @@ Value omni_createpayload_grant(const Array& params, bool fHelp)
     return HexStr(payload.begin(), payload.end());
 }
 
-Value omni_createpayload_revoke(const Array& params, bool fHelp)
+UniValue omni_createpayload_revoke(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 3)
         throw runtime_error(
@@ -408,7 +406,7 @@ Value omni_createpayload_revoke(const Array& params, bool fHelp)
     return HexStr(payload.begin(), payload.end());
 }
 
-Value omni_createpayload_changeissuer(const Array& params, bool fHelp)
+UniValue omni_createpayload_changeissuer(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
@@ -435,7 +433,7 @@ Value omni_createpayload_changeissuer(const Array& params, bool fHelp)
     return HexStr(payload.begin(), payload.end());
 }
 
-Value omni_createpayload_trade(const Array& params, bool fHelp)
+UniValue omni_createpayload_trade(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 4)
         throw runtime_error(
@@ -472,7 +470,7 @@ Value omni_createpayload_trade(const Array& params, bool fHelp)
     return HexStr(payload.begin(), payload.end());
 }
 
-Value omni_createpayload_canceltradesbyprice(const Array& params, bool fHelp)
+UniValue omni_createpayload_canceltradesbyprice(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 4)
         throw runtime_error(
@@ -508,7 +506,7 @@ Value omni_createpayload_canceltradesbyprice(const Array& params, bool fHelp)
     return HexStr(payload.begin(), payload.end());
 }
 
-Value omni_createpayload_canceltradesbypair(const Array& params, bool fHelp)
+UniValue omni_createpayload_canceltradesbypair(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 2)
         throw runtime_error(
@@ -540,7 +538,7 @@ Value omni_createpayload_canceltradesbypair(const Array& params, bool fHelp)
     return HexStr(payload.begin(), payload.end());
 }
 
-Value omni_createpayload_cancelalltrades(const Array& params, bool fHelp)
+UniValue omni_createpayload_cancelalltrades(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
@@ -566,3 +564,29 @@ Value omni_createpayload_cancelalltrades(const Array& params, bool fHelp)
     return HexStr(payload.begin(), payload.end());
 }
 
+static const CRPCCommand commands[] =
+{ //  category                         name                                      actor (function)                         okSafeMode
+  //  -------------------------------- ----------------------------------------- ---------------------------------------- ----------
+    { "omni layer (payload creation)", "omni_createpayload_simplesend",          &omni_createpayload_simplesend,          true },
+    { "omni layer (payload creation)", "omni_createpayload_sendall",             &omni_createpayload_sendall,             true },
+    { "omni layer (payload creation)", "omni_createpayload_dexsell",             &omni_createpayload_dexsell,             true },
+    { "omni layer (payload creation)", "omni_createpayload_dexaccept",           &omni_createpayload_dexaccept,           true },
+    { "omni layer (payload creation)", "omni_createpayload_sto",                 &omni_createpayload_sto,                 true },
+    { "omni layer (payload creation)", "omni_createpayload_grant",               &omni_createpayload_grant,               true },
+    { "omni layer (payload creation)", "omni_createpayload_revoke",              &omni_createpayload_revoke,              true },
+    { "omni layer (payload creation)", "omni_createpayload_changeissuer",        &omni_createpayload_changeissuer,        true },
+    { "omni layer (payload creation)", "omni_createpayload_trade",               &omni_createpayload_trade,               true },
+    { "omni layer (payload creation)", "omni_createpayload_issuancefixed",       &omni_createpayload_issuancefixed,       true },
+    { "omni layer (payload creation)", "omni_createpayload_issuancecrowdsale",   &omni_createpayload_issuancecrowdsale,   true },
+    { "omni layer (payload creation)", "omni_createpayload_issuancemanaged",     &omni_createpayload_issuancemanaged,     true },
+    { "omni layer (payload creation)", "omni_createpayload_closecrowdsale",      &omni_createpayload_closecrowdsale,      true },
+    { "omni layer (payload creation)", "omni_createpayload_canceltradesbyprice", &omni_createpayload_canceltradesbyprice, true },
+    { "omni layer (payload creation)", "omni_createpayload_canceltradesbypair",  &omni_createpayload_canceltradesbypair,  true },
+    { "omni layer (payload creation)", "omni_createpayload_cancelalltrades",     &omni_createpayload_cancelalltrades,     true },
+};
+
+void RegisterOmniPayloadCreationRPCCommands(CRPCTable &tableRPC)
+{
+    for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)
+        tableRPC.appendCommand(commands[vcidx].name, &commands[vcidx]);
+}

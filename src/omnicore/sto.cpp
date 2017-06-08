@@ -5,6 +5,7 @@
 #include "omnicore/tally.h"
 #include "omnicore/uint256_extensions.h"
 
+#include "arith_uint256.h"
 #include "sync.h"
 
 #include <assert.h>
@@ -39,9 +40,9 @@ OwnerAddrType STO_GetReceivers(const std::string& sender, uint32_t property, int
 
     {
         LOCK(cs_tally);
-        std::map<std::string, CMPTally>::reverse_iterator it;
+        std::unordered_map<std::string, CMPTally>::iterator it;
 
-        for (it = mp_tally_map.rbegin(); it != mp_tally_map.rend(); ++it) {
+        for (it = mp_tally_map.begin(); it != mp_tally_map.end(); ++it) {
             const std::string& address = it->first;
             const CMPTally& tally = it->second;
 
@@ -73,9 +74,9 @@ OwnerAddrType STO_GetReceivers(const std::string& sender, uint32_t property, int
     for (OwnerAddrType::reverse_iterator it = ownerAddrSet.rbegin(); it != ownerAddrSet.rend(); ++it) {
         const std::string& address = it->second;
 
-        uint256 owns = ConvertTo256(it->first);
-        uint256 temp = owns * ConvertTo256(amount);
-        uint256 piece = DivideAndRoundUp(temp, ConvertTo256(totalTokens));
+        arith_uint256 owns = ConvertTo256(it->first);
+        arith_uint256 temp = owns * ConvertTo256(amount);
+        arith_uint256 piece = DivideAndRoundUp(temp, ConvertTo256(totalTokens));
 
         int64_t will_really_receive = 0;
         int64_t should_receive = ConvertTo64(piece);

@@ -18,7 +18,7 @@
 #include "tinyformat.h"
 #include "txdb.h"
 #ifdef ENABLE_WALLET
-#include "wallet.h"
+#include "wallet/wallet.h"
 #endif
 
 #include <boost/algorithm/string.hpp>
@@ -65,7 +65,7 @@ std::map<std::string, uint256> FetchWalletOmniTransactions(unsigned int count, i
     CWallet::TxItems txOrdered;
     {
         LOCK(pwalletMain->cs_wallet);
-        txOrdered = pwalletMain->OrderedTxItems(acentries, "*");
+        txOrdered = pwalletMain->wtxOrdered;
     }
     // Iterate backwards through wallet transactions until we have count items to return:
     for (CWallet::TxItems::reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it) {
@@ -77,7 +77,7 @@ std::map<std::string, uint256> FetchWalletOmniTransactions(unsigned int count, i
             if (!p_txlistdb->exists(txHash)) continue;
         }
         const uint256& blockHash = pwtx->hashBlock;
-        if ((0 == blockHash) || (NULL == GetBlockIndex(blockHash))) continue;
+        if (blockHash.IsNull() || (NULL == GetBlockIndex(blockHash))) continue;
         const CBlockIndex* pBlockIndex = GetBlockIndex(blockHash);
         if (NULL == pBlockIndex) continue;
         int blockHeight = pBlockIndex->nHeight;
@@ -108,7 +108,7 @@ std::map<std::string, uint256> FetchWalletOmniTransactions(unsigned int count, i
         }
         int blockHeight = atoi(svstr[1]);
         if (blockHeight < startBlock || blockHeight > endBlock) continue;
-        uint256 txHash(svstr[0]);
+        uint256 txHash = uint256S(svstr[0]);
         if (seenHashes.find(txHash) != seenHashes.end()) continue; // an STO may already be in the wallet if we sent it
         int blockPosition = GetTransactionByteOffset(txHash);
         std::string sortKey = strprintf("%06d%010d", blockHeight, blockPosition);

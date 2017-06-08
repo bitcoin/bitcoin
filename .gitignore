@@ -94,7 +94,6 @@ src/test/buildenv.py
 
 # Resources cpp
 qrc_*.cpp
-
 # Qt creator
 *.pro.user
 
@@ -118,11 +117,19 @@ linux-coverage-build
 linux-build
 win32-build
 qa/pull-tester/run-bitcoind-for-test.sh
-qa/pull-tester/tests-config.sh
+qa/pull-tester/tests_config.py
 qa/pull-tester/cache/*
 qa/pull-tester/test.*/*
 qa/tmp
+<<<<<<< HEAD
+=======
+cache/
+share/BitcoindComparisonTool.jar
+>>>>>>> 0.13
 
 !src/leveldb*/Makefile
 
 /doc/doxygen/
+
+libbitcoinconsensus.pc
+contrib/devtools/split-debug.sh

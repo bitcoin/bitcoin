@@ -10,6 +10,7 @@
 #include "random.h"
 #include "script/script.h"
 #include "script/standard.h"
+#include "test/test_bitcoin.h"
 
 #include <stdint.h>
 #include <algorithm>
@@ -20,7 +21,7 @@
 
 using namespace mastercore;
 
-BOOST_AUTO_TEST_SUITE(omnicore_sender_bycontribution_tests)
+BOOST_FIXTURE_TEST_SUITE(omnicore_sender_bycontribution_tests, BasicTestingSetup)
 
 // Forward declarations
 static CTransaction TxClassB(const std::vector<CTxOut>& txInputs);

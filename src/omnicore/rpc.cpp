@@ -31,19 +31,21 @@
 #include "omnicore/wallettxs.h"
 
 #include "amount.h"
+#include "chainparams.h"
 #include "init.h"
 #include "main.h"
 #include "primitives/block.h"
 #include "primitives/transaction.h"
-#include "rpcserver.h"
+#include "rpc/server.h"
 #include "tinyformat.h"
+#include "txmempool.h"
 #include "uint256.h"
 #include "utilstrencodings.h"
 #ifdef ENABLE_WALLET
-#include "wallet.h"
+#include "wallet/wallet.h"
 #endif
 
-#include "json/json_spirit_value.h"
+#include <univalue.h>
 
 #include <stdint.h>
 #include <map>
@@ -51,7 +53,6 @@
 #include <string>
 
 using std::runtime_error;
-using namespace json_spirit;
 using namespace mastercore;
 
 /**
@@ -77,7 +78,7 @@ void PopulateFailure(int error)
     throw JSONRPCError(RPC_INTERNAL_ERROR, "Generic transaction population failure");
 }
 
-void PropertyToJSON(const CMPSPInfo::Entry& sProperty, Object& property_obj)
+void PropertyToJSON(const CMPSPInfo::Entry& sProperty, UniValue& property_obj)
 {
     property_obj.push_back(Pair("name", sProperty.name));
     property_obj.push_back(Pair("category", sProperty.category));
@@ -87,7 +88,7 @@ void PropertyToJSON(const CMPSPInfo::Entry& sProperty, Object& property_obj)
     property_obj.push_back(Pair("divisible", sProperty.isDivisible()));
 }
 
-void MetaDexObjectToJSON(const CMPMetaDEx& obj, Object& metadex_obj)
+void MetaDexObjectToJSON(const CMPMetaDEx& obj, UniValue& metadex_obj)
 {
     bool propertyIdForSaleIsDivisible = isPropertyDivisible(obj.getProperty());
     bool propertyIdDesiredIsDivisible = isPropertyDivisible(obj.getDesProperty());
@@ -108,7 +109,7 @@ void MetaDexObjectToJSON(const CMPMetaDEx& obj, Object& metadex_obj)
     metadex_obj.push_back(Pair("blocktime", obj.getBlockTime()));
 }
 
-void MetaDexObjectsToJSON(std::vector<CMPMetaDEx>& vMetaDexObjs, Array& response)
+void MetaDexObjectsToJSON(std::vector<CMPMetaDEx>& vMetaDexObjs, UniValue& response)
 {
     MetaDEx_compare compareByHeight;
 
@@ -116,14 +117,14 @@ void MetaDexObjectsToJSON(std::vector<CMPMetaDEx>& vMetaDexObjs, Array& response
     std::sort (vMetaDexObjs.begin(), vMetaDexObjs.end(), compareByHeight);
 
     for (std::vector<CMPMetaDEx>::const_iterator it = vMetaDexObjs.begin(); it != vMetaDexObjs.end(); ++it) {
-        Object metadex_obj;
+        UniValue metadex_obj(UniValue::VOBJ);
         MetaDexObjectToJSON(*it, metadex_obj);
 
         response.push_back(metadex_obj);
     }
 }
 
-bool BalanceToJSON(const std::string& address, uint32_t property, Object& balance_obj, bool divisible)
+bool BalanceToJSON(const std::string& address, uint32_t property, UniValue& balance_obj, bool divisible)
 {
     // confirmed balance minus unconfirmed, spent amounts
     int64_t nAvailable = getUserAvailableMPbalance(address, property);
@@ -149,7 +150,7 @@ bool BalanceToJSON(const std::string& address, uint32_t property, Object& balanc
 }
 
 // Obtains details of a fee distribution
-Value omni_getfeedistribution(const Array& params, bool fHelp)
+UniValue omni_getfeedistribution(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
@@ -182,7 +183,7 @@ Value omni_getfeedistribution(const Array& params, bool fHelp)
     uint32_t propertyId = 0;
     int64_t total = 0;
 
-    Object response;
+    UniValue response(UniValue::VOBJ);
 
     bool found = p_feehistory->GetDistributionData(id, &propertyId, &block, &total);
     if (!found) {
@@ -192,14 +193,14 @@ Value omni_getfeedistribution(const Array& params, bool fHelp)
     response.push_back(Pair("propertyid", (uint64_t)propertyId));
     response.push_back(Pair("block", block));
     response.push_back(Pair("amount", FormatMP(propertyId, total)));
-    Array recipients;
+    UniValue recipients(UniValue::VARR);
     std::set<std::pair<std::string,int64_t> > sRecipients = p_feehistory->GetFeeDistribution(id);
     bool divisible = isPropertyDivisible(propertyId);
     if (!sRecipients.empty()) {
         for (std::set<std::pair<std::string,int64_t> >::iterator it = sRecipients.begin(); it != sRecipients.end(); it++) {
             std::string address = (*it).first;
             int64_t amount = (*it).second;
-            Object recipient;
+            UniValue recipient(UniValue::VOBJ);
             recipient.push_back(Pair("address", address));
             if (divisible) {
                 recipient.push_back(Pair("amount", FormatDivisibleMP(amount)));
@@ -215,7 +216,7 @@ Value omni_getfeedistribution(const Array& params, bool fHelp)
 
 // Obtains all fee distributions for a property
 // TODO : Split off code to populate a fee distribution object into a seperate function
-Value omni_getfeedistributions(const Array& params, bool fHelp)
+UniValue omni_getfeedistributions(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
@@ -246,7 +247,7 @@ Value omni_getfeedistributions(const Array& params, bool fHelp)
     uint32_t prop = ParsePropertyId(params[0]);
     RequireExistingProperty(prop);
 
-    Array response;
+    UniValue response(UniValue::VARR);
 
     std::set<int> sDistributions = p_feehistory->GetDistributionsForProperty(prop);
     if (!sDistributions.empty()) {
@@ -255,7 +256,7 @@ Value omni_getfeedistributions(const Array& params, bool fHelp)
             int block = 0;
             uint32_t propertyId = 0;
             int64_t total = 0;
-            Object responseObj;
+            UniValue responseObj(UniValue::VOBJ);
             bool found = p_feehistory->GetDistributionData(id, &propertyId, &block, &total);
             if (!found) {
                 PrintToLog("Fee History Error - Distribution data not found for distribution ID %d but it was included in GetDistributionsForProperty(prop %d)\n", id, prop);
@@ -265,14 +266,14 @@ Value omni_getfeedistributions(const Array& params, bool fHelp)
             responseObj.push_back(Pair("propertyid", (uint64_t)propertyId));
             responseObj.push_back(Pair("block", block));
             responseObj.push_back(Pair("amount", FormatMP(propertyId, total)));
-            Array recipients;
+            UniValue recipients(UniValue::VARR);
             std::set<std::pair<std::string,int64_t> > sRecipients = p_feehistory->GetFeeDistribution(id);
             bool divisible = isPropertyDivisible(propertyId);
             if (!sRecipients.empty()) {
                 for (std::set<std::pair<std::string,int64_t> >::iterator it = sRecipients.begin(); it != sRecipients.end(); it++) {
                     std::string address = (*it).first;
                     int64_t amount = (*it).second;
-                    Object recipient;
+                    UniValue recipient(UniValue::VOBJ);
                     recipient.push_back(Pair("address", address));
                     if (divisible) {
                         recipient.push_back(Pair("amount", FormatDivisibleMP(amount)));
@@ -290,7 +291,7 @@ Value omni_getfeedistributions(const Array& params, bool fHelp)
 }
 
 // Obtains the trigger value for fee distribution for a/all properties
-Value omni_getfeetrigger(const Array& params, bool fHelp)
+UniValue omni_getfeetrigger(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
         throw runtime_error(
@@ -320,7 +321,7 @@ Value omni_getfeetrigger(const Array& params, bool fHelp)
         RequireExistingProperty(propertyId);
     }
 
-    Array response;
+    UniValue response(UniValue::VARR);
 
     for (uint8_t ecosystem = 1; ecosystem <= 2; ecosystem++) {
         uint32_t startPropertyId = (ecosystem == 1) ? 1 : TEST_ECO_PROPERTY_1;
@@ -328,7 +329,7 @@ Value omni_getfeetrigger(const Array& params, bool fHelp)
             if (propertyId == 0 || propertyId == itPropertyId) {
                 int64_t feeTrigger = p_feecache->GetDistributionThreshold(itPropertyId);
                 std::string strFeeTrigger = FormatMP(itPropertyId, feeTrigger);
-                Object cacheObj;
+                UniValue cacheObj(UniValue::VOBJ);
                 cacheObj.push_back(Pair("propertyid", (uint64_t)itPropertyId));
                 cacheObj.push_back(Pair("feetrigger", strFeeTrigger));
                 response.push_back(cacheObj);
@@ -340,7 +341,7 @@ Value omni_getfeetrigger(const Array& params, bool fHelp)
 }
 
 // Provides the fee share the wallet (or specific address) will receive from fee distributions
-Value omni_getfeeshare(const Array& params, bool fHelp)
+UniValue omni_getfeeshare(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() > 2)
         throw runtime_error(
@@ -375,7 +376,7 @@ Value omni_getfeeshare(const Array& params, bool fHelp)
         ecosystem = ParseEcosystem(params[1]);
     }
 
-    Array response;
+    UniValue response(UniValue::VARR);
     bool addObj = false;
 
     OwnerAddrType receiversSet;
@@ -395,7 +396,7 @@ Value omni_getfeeshare(const Array& params, bool fHelp)
             addObj = true;
         }
         if (addObj) {
-            Object feeShareObj;
+            UniValue feeShareObj(UniValue::VOBJ);
             // NOTE: using float here as this is a display value only which isn't an exact percentage and
             //       changes block to block (due to dev Omni) so high precision not required(?)
             double feeShare = (double(it->first) / double(COIN)) * (double)100;
@@ -411,7 +412,7 @@ Value omni_getfeeshare(const Array& params, bool fHelp)
 }
 
 // Provides the current values of the fee cache
-Value omni_getfeecache(const Array& params, bool fHelp)
+UniValue omni_getfeecache(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
         throw runtime_error(
@@ -441,7 +442,7 @@ Value omni_getfeecache(const Array& params, bool fHelp)
         RequireExistingProperty(propertyId);
     }
 
-    Array response;
+    UniValue response(UniValue::VARR);
 
     for (uint8_t ecosystem = 1; ecosystem <= 2; ecosystem++) {
         uint32_t startPropertyId = (ecosystem == 1) ? 1 : TEST_ECO_PROPERTY_1;
@@ -453,7 +454,7 @@ Value omni_getfeecache(const Array& params, bool fHelp)
                     if (propertyId != itPropertyId) continue;
                 }
                 std::string strFee = FormatMP(itPropertyId, cachedFee);
-                Object cacheObj;
+                UniValue cacheObj(UniValue::VOBJ);
                 cacheObj.push_back(Pair("propertyid", (uint64_t)itPropertyId));
                 cacheObj.push_back(Pair("cachedfees", strFee));
                 response.push_back(cacheObj);
@@ -465,7 +466,7 @@ Value omni_getfeecache(const Array& params, bool fHelp)
 }
 
 // generate a list of seed blocks based on the data in LevelDB
-Value omni_getseedblocks(const Array& params, bool fHelp)
+UniValue omni_getseedblocks(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 2)
         throw runtime_error(
@@ -491,7 +492,7 @@ Value omni_getseedblocks(const Array& params, bool fHelp)
     RequireHeightInChain(startHeight);
     RequireHeightInChain(endHeight);
 
-    Array response;
+    UniValue response(UniValue::VARR);
 
     {
         LOCK(cs_tally);
@@ -505,7 +506,7 @@ Value omni_getseedblocks(const Array& params, bool fHelp)
 }
 
 // obtain the payload for a transaction
-Value omni_getpayload(const Array& params, bool fHelp)
+UniValue omni_getpayload(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
@@ -527,13 +528,13 @@ Value omni_getpayload(const Array& params, bool fHelp)
 
     CTransaction tx;
     uint256 blockHash;
-    if (!GetTransaction(txid, tx, blockHash, true)) {
+    if (!GetTransaction(txid, tx, Params().GetConsensus(), blockHash, true)) {
         PopulateFailure(MP_TX_NOT_FOUND);
     }
 
     int blockTime = 0;
     int blockHeight = GetHeight();
-    if (blockHash != 0) {
+    if (!blockHash.IsNull()) {
         CBlockIndex* pBlockIndex = GetBlockIndex(blockHash);
         if (NULL != pBlockIndex) {
             blockTime = pBlockIndex->nTime;
@@ -545,14 +546,14 @@ Value omni_getpayload(const Array& params, bool fHelp)
     int parseRC = ParseTransaction(tx, blockHeight, 0, mp_obj, blockTime);
     if (parseRC < 0) PopulateFailure(MP_TX_IS_NOT_MASTER_PROTOCOL);
 
-    Object payloadObj;
+    UniValue payloadObj(UniValue::VOBJ);
     payloadObj.push_back(Pair("payload", mp_obj.getPayload()));
     payloadObj.push_back(Pair("payloadsize", mp_obj.getPayloadSize()));
     return payloadObj;
 }
 
 // determine whether to automatically commit transactions
-Value omni_setautocommit(const Array& params, bool fHelp)
+UniValue omni_setautocommit(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
@@ -574,7 +575,7 @@ Value omni_setautocommit(const Array& params, bool fHelp)
 }
 
 // display the tally map & the offer/accept list(s)
-Value mscrpc(const Array& params, bool fHelp)
+UniValue mscrpc(const UniValue& params, bool fHelp)
 {
     int extra = 0;
     int extra2 = 0, extra3 = 0;
@@ -605,7 +606,7 @@ Value mscrpc(const Array& params, bool fHelp)
             LOCK(cs_tally);
             int64_t total = 0;
             // display all balances
-            for (std::map<std::string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
+            for (std::unordered_map<std::string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
                 PrintToConsole("%34s => ", my_it->first);
                 total += (my_it->second).print(extra2, bDivisible);
             }
@@ -632,7 +633,7 @@ Value mscrpc(const Array& params, bool fHelp)
             LOCK(cs_tally);
             uint32_t id = 0;
             // for each address display all currencies it holds
-            for (std::map<std::string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
+            for (std::unordered_map<std::string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
                 PrintToConsole("%34s => ", my_it->first);
                 (my_it->second).print(extra2);
                 (my_it->second).init();
@@ -741,7 +742,7 @@ Value mscrpc(const Array& params, bool fHelp)
 }
 
 // display an MP balance via RPC
-Value omni_getbalance(const Array& params, bool fHelp)
+UniValue omni_getbalance(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 2)
         throw runtime_error(
@@ -765,55 +766,13 @@ Value omni_getbalance(const Array& params, bool fHelp)
 
     RequireExistingProperty(propertyId);
 
-    Object balanceObj;
+    UniValue balanceObj(UniValue::VOBJ);
     BalanceToJSON(address, propertyId, balanceObj, isPropertyDivisible(propertyId));
 
     return balanceObj;
 }
 
-Value omni_sendrawtx(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() < 2 || params.size() > 5)
-        throw runtime_error(
-            "omni_sendrawtx \"fromaddress\" \"rawtransaction\" ( \"referenceaddress\" \"redeemaddress\" \"referenceamount\" )\n"
-            "\nBroadcasts a raw Omni Layer transaction.\n"
-            "\nArguments:\n"
-            "1. fromaddress          (string, required) the address to send from\n"
-            "2. rawtransaction       (string, required) the hex-encoded raw transaction\n"
-            "3. referenceaddress     (string, optional) a reference address (none by default)\n"
-            "4. redeemaddress        (string, optional) an address that can spent the transaction dust (sender by default)\n"
-            "5. referenceamount      (string, optional) a bitcoin amount that is sent to the receiver (minimal by default)\n"
-            "\nResult:\n"
-            "\"hash\"                  (string) the hex-encoded transaction hash\n"
-            "\nExamples:\n"
-            + HelpExampleCli("omni_sendrawtx", "\"1MCHESTptvd2LnNp7wmr2sGTpRomteAkq8\" \"000000000000000100000000017d7840\" \"1EqTta1Rt8ixAA32DuC29oukbsSWU62qAV\"")
-            + HelpExampleRpc("omni_sendrawtx", "\"1MCHESTptvd2LnNp7wmr2sGTpRomteAkq8\", \"000000000000000100000000017d7840\", \"1EqTta1Rt8ixAA32DuC29oukbsSWU62qAV\"")
-        );
-
-    std::string fromAddress = ParseAddress(params[0]);
-    std::vector<unsigned char> data = ParseHexV(params[1], "raw transaction");
-    std::string toAddress = (params.size() > 2) ? ParseAddressOrEmpty(params[2]): "";
-    std::string redeemAddress = (params.size() > 3) ? ParseAddressOrEmpty(params[3]): "";
-    int64_t referenceAmount = (params.size() > 4) ? ParseAmount(params[4], true): 0;
-
-    //some sanity checking of the data supplied?
-    uint256 newTX;
-    std::string rawHex;
-    int result = WalletTxBuilder(fromAddress, toAddress, redeemAddress, referenceAmount, data, newTX, rawHex, autoCommit);
-
-    // check error and return the txid (or raw hex depending on autocommit)
-    if (result != 0) {
-        throw JSONRPCError(result, error_str(result));
-    } else {
-        if (!autoCommit) {
-            return rawHex;
-        } else {
-            return newTX.GetHex();
-        }
-    }
-}
-
-Value omni_getallbalancesforid(const Array& params, bool fHelp)
+UniValue omni_getallbalancesforid(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
@@ -839,12 +798,12 @@ Value omni_getallbalancesforid(const Array& params, bool fHelp)
 
     RequireExistingProperty(propertyId);
 
-    Array response;
+    UniValue response(UniValue::VARR);
     bool isDivisible = isPropertyDivisible(propertyId); // we want to check this BEFORE the loop
 
     LOCK(cs_tally);
 
-    for (std::map<std::string, CMPTally>::iterator it = mp_tally_map.begin(); it != mp_tally_map.end(); ++it) {
+    for (std::unordered_map<std::string, CMPTally>::iterator it = mp_tally_map.begin(); it != mp_tally_map.end(); ++it) {
         uint32_t id = 0;
         bool includeAddress = false;
         std::string address = it->first;
@@ -858,7 +817,7 @@ Value omni_getallbalancesforid(const Array& params, bool fHelp)
         if (!includeAddress) {
             continue; // ignore this address, has never transacted in this propertyId
         }
-        Object balanceObj;
+        UniValue balanceObj(UniValue::VOBJ);
         balanceObj.push_back(Pair("address", address));
         bool nonEmptyBalance = BalanceToJSON(address, propertyId, balanceObj, isDivisible);
 
@@ -870,7 +829,7 @@ Value omni_getallbalancesforid(const Array& params, bool fHelp)
     return response;
 }
 
-Value omni_getallbalancesforaddress(const Array& params, bool fHelp)
+UniValue omni_getallbalancesforaddress(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
@@ -894,7 +853,7 @@ Value omni_getallbalancesforaddress(const Array& params, bool fHelp)
 
     std::string address = ParseAddress(params[0]);
 
-    Array response;
+    UniValue response(UniValue::VARR);
 
     LOCK(cs_tally);
 
@@ -908,7 +867,7 @@ Value omni_getallbalancesforaddress(const Array& params, bool fHelp)
 
     uint32_t propertyId = 0;
     while (0 != (propertyId = addressTally->next())) {
-        Object balanceObj;
+        UniValue balanceObj(UniValue::VOBJ);
         balanceObj.push_back(Pair("propertyid", (uint64_t) propertyId));
         bool nonEmptyBalance = BalanceToJSON(address, propertyId, balanceObj, isPropertyDivisible(propertyId));
 
@@ -920,7 +879,7 @@ Value omni_getallbalancesforaddress(const Array& params, bool fHelp)
     return response;
 }
 
-Value omni_getproperty(const Array& params, bool fHelp)
+UniValue omni_getproperty(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
@@ -962,7 +921,7 @@ Value omni_getproperty(const Array& params, bool fHelp)
     std::string strCreationHash = sp.txid.GetHex();
     std::string strTotalTokens = FormatMP(propertyId, nTotalTokens);
 
-    Object response;
+    UniValue response(UniValue::VOBJ);
     response.push_back(Pair("propertyid", (uint64_t) propertyId));
     PropertyToJSON(sp, response); // name, category, subcategory, data, url, divisible
     response.push_back(Pair("issuer", sp.issuer));
@@ -973,7 +932,7 @@ Value omni_getproperty(const Array& params, bool fHelp)
     return response;
 }
 
-Value omni_listproperties(const Array& params, bool fHelp)
+UniValue omni_listproperties(const UniValue& params, bool fHelp)
 {
     if (fHelp)
         throw runtime_error(
@@ -997,7 +956,7 @@ Value omni_listproperties(const Array& params, bool fHelp)
             + HelpExampleRpc("omni_listproperties", "")
         );
 
-    Array response;
+    UniValue response(UniValue::VARR);
 
     LOCK(cs_tally);
 
@@ -1005,7 +964,7 @@ Value omni_listproperties(const Array& params, bool fHelp)
     for (uint32_t propertyId = 1; propertyId < nextSPID; propertyId++) {
         CMPSPInfo::Entry sp;
         if (_my_sps->getSP(propertyId, sp)) {
-            Object propertyObj;
+            UniValue propertyObj(UniValue::VOBJ);
             propertyObj.push_back(Pair("propertyid", (uint64_t) propertyId));
             PropertyToJSON(sp, propertyObj); // name, category, subcategory, data, url, divisible
 
@@ -1017,7 +976,7 @@ Value omni_listproperties(const Array& params, bool fHelp)
     for (uint32_t propertyId = TEST_ECO_PROPERTY_1; propertyId < nextTestSPID; propertyId++) {
         CMPSPInfo::Entry sp;
         if (_my_sps->getSP(propertyId, sp)) {
-            Object propertyObj;
+            UniValue propertyObj(UniValue::VOBJ);
             propertyObj.push_back(Pair("propertyid", (uint64_t) propertyId));
             PropertyToJSON(sp, propertyObj); // name, category, subcategory, data, url, divisible
 
@@ -1028,7 +987,7 @@ Value omni_listproperties(const Array& params, bool fHelp)
     return response;
 }
 
-Value omni_getcrowdsale(const Array& params, bool fHelp)
+UniValue omni_getcrowdsale(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
@@ -1089,11 +1048,11 @@ Value omni_getcrowdsale(const Array& params, bool fHelp)
 
     CTransaction tx;
     uint256 hashBlock;
-    if (!GetTransaction(creationHash, tx, hashBlock, true)) {
+    if (!GetTransaction(creationHash, tx, Params().GetConsensus(), hashBlock, true)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available about transaction");
     }
 
-    Object response;
+    UniValue response(UniValue::VOBJ);
     bool active = isCrowdsaleActive(propertyId);
     std::map<uint256, std::vector<int64_t> > database;
 
@@ -1120,7 +1079,7 @@ Value omni_getcrowdsale(const Array& params, bool fHelp)
     const std::string& txidClosed = sp.txid_close.GetHex();
 
     int64_t startTime = -1;
-    if (0 != hashBlock && GetBlockIndex(hashBlock)) {
+    if (!hashBlock.IsNull() && GetBlockIndex(hashBlock)) {
         startTime = GetBlockIndex(hashBlock)->nTime;
     }
 
@@ -1128,9 +1087,9 @@ Value omni_getcrowdsale(const Array& params, bool fHelp)
     int64_t amountRaised = 0;
     uint16_t propertyIdType = isPropertyDivisible(propertyId) ? MSC_PROPERTY_TYPE_DIVISIBLE : MSC_PROPERTY_TYPE_INDIVISIBLE;
     uint16_t desiredIdType = isPropertyDivisible(sp.property_desired) ? MSC_PROPERTY_TYPE_DIVISIBLE : MSC_PROPERTY_TYPE_INDIVISIBLE;
-    std::map<std::string, Object> sortMap;
+    std::map<std::string, UniValue> sortMap;
     for (std::map<uint256, std::vector<int64_t> >::const_iterator it = database.begin(); it != database.end(); it++) {
-        Object participanttx;
+        UniValue participanttx(UniValue::VOBJ);
         std::string txid = it->first.GetHex();
         amountRaised += it->second.at(0);
         participanttx.push_back(Pair("txid", txid));
@@ -1162,8 +1121,8 @@ Value omni_getcrowdsale(const Array& params, bool fHelp)
     if (sp.close_early && !sp.max_tokens) response.push_back(Pair("closetx", txidClosed));
 
     if (showVerbose) {
-        Array participanttxs;
-        for (std::map<std::string, Object>::iterator it = sortMap.begin(); it != sortMap.end(); ++it) {
+        UniValue participanttxs(UniValue::VARR);
+        for (std::map<std::string, UniValue>::iterator it = sortMap.begin(); it != sortMap.end(); ++it) {
             participanttxs.push_back(it->second);
         }
         response.push_back(Pair("participanttransactions", participanttxs));
@@ -1172,7 +1131,7 @@ Value omni_getcrowdsale(const Array& params, bool fHelp)
     return response;
 }
 
-Value omni_getactivecrowdsales(const Array& params, bool fHelp)
+UniValue omni_getactivecrowdsales(const UniValue& params, bool fHelp)
 {
     if (fHelp)
         throw runtime_error(
@@ -1198,7 +1157,7 @@ Value omni_getactivecrowdsales(const Array& params, bool fHelp)
             + HelpExampleRpc("omni_getactivecrowdsales", "")
         );
 
-    Array response;
+    UniValue response(UniValue::VARR);
 
     LOCK2(cs_main, cs_tally);
 
@@ -1215,16 +1174,16 @@ Value omni_getactivecrowdsales(const Array& params, bool fHelp)
 
         CTransaction tx;
         uint256 hashBlock;
-        if (!GetTransaction(creationHash, tx, hashBlock, true)) {
+        if (!GetTransaction(creationHash, tx, Params().GetConsensus(), hashBlock, true)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available about transaction");
         }
 
         int64_t startTime = -1;
-        if (0 != hashBlock && GetBlockIndex(hashBlock)) {
+        if (!hashBlock.IsNull() && GetBlockIndex(hashBlock)) {
             startTime = GetBlockIndex(hashBlock)->nTime;
         }
 
-        Object responseObj;
+        UniValue responseObj(UniValue::VOBJ);
         responseObj.push_back(Pair("propertyid", (uint64_t) propertyId));
         responseObj.push_back(Pair("name", sp.name));
         responseObj.push_back(Pair("issuer", sp.issuer));
@@ -1240,7 +1199,7 @@ Value omni_getactivecrowdsales(const Array& params, bool fHelp)
     return response;
 }
 
-Value omni_getgrants(const Array& params, bool fHelp)
+UniValue omni_getgrants(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
@@ -1284,13 +1243,13 @@ Value omni_getgrants(const Array& params, bool fHelp)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Property identifier does not exist");
         }
     }
-    Object response;
+    UniValue response(UniValue::VOBJ);
     const uint256& creationHash = sp.txid;
     int64_t totalTokens = getTotalTokens(propertyId);
 
     // TODO: sort by height?
 
-    Array issuancetxs;
+    UniValue issuancetxs(UniValue::VARR);
     std::map<uint256, std::vector<int64_t> >::const_iterator it;
     for (it = sp.historicalData.begin(); it != sp.historicalData.end(); it++) {
         const std::string& txid = it->first.GetHex();
@@ -1298,14 +1257,14 @@ Value omni_getgrants(const Array& params, bool fHelp)
         int64_t revokedTokens = it->second.at(1);
 
         if (grantedTokens > 0) {
-            Object granttx;
+            UniValue granttx(UniValue::VOBJ);
             granttx.push_back(Pair("txid", txid));
             granttx.push_back(Pair("grant", FormatMP(propertyId, grantedTokens)));
             issuancetxs.push_back(granttx);
         }
 
         if (revokedTokens > 0) {
-            Object revoketx;
+            UniValue revoketx(UniValue::VOBJ);
             revoketx.push_back(Pair("txid", txid));
             revoketx.push_back(Pair("revoke", FormatMP(propertyId, revokedTokens)));
             issuancetxs.push_back(revoketx);
@@ -1322,7 +1281,7 @@ Value omni_getgrants(const Array& params, bool fHelp)
     return response;
 }
 
-Value omni_getorderbook(const Array& params, bool fHelp)
+UniValue omni_getorderbook(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
@@ -1386,12 +1345,12 @@ Value omni_getorderbook(const Array& params, bool fHelp)
         }
     }
 
-    Array response;
+    UniValue response(UniValue::VARR);
     MetaDexObjectsToJSON(vecMetaDexObjects, response);
     return response;
 }
 
-Value omni_gettradehistoryforaddress(const Array& params, bool fHelp)
+UniValue omni_gettradehistoryforaddress(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 3)
         throw runtime_error(
@@ -1444,7 +1403,7 @@ Value omni_gettradehistoryforaddress(const Array& params, bool fHelp)
         );
 
     std::string address = ParseAddress(params[0]);
-    uint64_t count = (params.size() > 1) ? params[1].get_uint64() : 10;
+    uint64_t count = (params.size() > 1) ? params[1].get_int64() : 10;
     uint32_t propertyId = 0;
 
     if (params.size() > 2) {
@@ -1460,10 +1419,10 @@ Value omni_gettradehistoryforaddress(const Array& params, bool fHelp)
     }
 
     // Populate the address trade history into JSON objects until we have processed count transactions
-    Array response;
+    UniValue response(UniValue::VARR);
     uint32_t processed = 0;
-    for(std::vector<uint256>::iterator it = vecTransactions.begin(); it != vecTransactions.end(); ++it) {
-        Object txobj;
+    for(std::vector<uint256>::reverse_iterator it = vecTransactions.rbegin(); it != vecTransactions.rend(); ++it) {
+        UniValue txobj(UniValue::VOBJ);
         int populateResult = populateRPCTransactionObject(*it, txobj, "", true);
         if (0 == populateResult) {
             response.push_back(txobj);
@@ -1475,7 +1434,7 @@ Value omni_gettradehistoryforaddress(const Array& params, bool fHelp)
     return response;
 }
 
-Value omni_gettradehistoryforpair(const Array& params, bool fHelp)
+UniValue omni_gettradehistoryforpair(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 3)
         throw runtime_error(
@@ -1508,7 +1467,7 @@ Value omni_gettradehistoryforpair(const Array& params, bool fHelp)
     // obtain property identifiers for pair & check valid parameters
     uint32_t propertyIdSideA = ParsePropertyId(params[0]);
     uint32_t propertyIdSideB = ParsePropertyId(params[1]);
-    uint64_t count = (params.size() > 2) ? params[2].get_uint64() : 10;
+    uint64_t count = (params.size() > 2) ? params[2].get_int64() : 10;
 
     RequireExistingProperty(propertyIdSideA);
     RequireExistingProperty(propertyIdSideB);
@@ -1516,13 +1475,13 @@ Value omni_gettradehistoryforpair(const Array& params, bool fHelp)
     RequireDifferentIds(propertyIdSideA, propertyIdSideB);
 
     // request pair trade history from trade db
-    Array response;
+    UniValue response(UniValue::VARR);
     LOCK(cs_tally);
     t_tradelistdb->getTradesForPair(propertyIdSideA, propertyIdSideB, response, count);
     return response;
 }
 
-Value omni_getactivedexsells(const Array& params, bool fHelp)
+UniValue omni_getactivedexsells(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
         throw runtime_error(
@@ -1566,7 +1525,9 @@ Value omni_getactivedexsells(const Array& params, bool fHelp)
         addressFilter = ParseAddressOrEmpty(params[0]);
     }
 
-    Array response;
+    UniValue response(UniValue::VARR);
+
+    int curBlock = GetHeight();
 
     LOCK(cs_tally);
 
@@ -1599,7 +1560,7 @@ Value omni_getactivedexsells(const Array& params, bool fHelp)
         int64_t unitPrice = rounduint64(unitPriceFloat * COIN);
         int64_t bitcoinDesired = calculateDesiredBTC(sellOfferAmount, sellBitcoinDesired, amountAvailable);
 
-        Object responseObj;
+        UniValue responseObj(UniValue::VOBJ);
         responseObj.push_back(Pair("txid", txid));
         responseObj.push_back(Pair("propertyid", (uint64_t) propertyId));
         responseObj.push_back(Pair("seller", seller));
@@ -1611,9 +1572,9 @@ Value omni_getactivedexsells(const Array& params, bool fHelp)
 
         // display info about accepts related to sell
         responseObj.push_back(Pair("amountaccepted", FormatDivisibleMP(amountAccepted)));
-        Array acceptsMatched;
+        UniValue acceptsMatched(UniValue::VARR);
         for (AcceptMap::const_iterator ait = my_accepts.begin(); ait != my_accepts.end(); ++ait) {
-            Object matchedAccept;
+            UniValue matchedAccept(UniValue::VOBJ);
             const CMPAccept& accept = ait->second;
             const std::string& acceptCombo = ait->first;
 
@@ -1622,7 +1583,7 @@ Value omni_getactivedexsells(const Array& params, bool fHelp)
                 // split acceptCombo out to get the buyer address
                 std::string buyer = acceptCombo.substr((acceptCombo.find("+") + 1), (acceptCombo.size()-(acceptCombo.find("+") + 1)));
                 int blockOfAccept = accept.getAcceptBlock();
-                int blocksLeftToPay = (blockOfAccept + selloffer.getBlockTimeLimit()) - GetHeight();
+                int blocksLeftToPay = (blockOfAccept + selloffer.getBlockTimeLimit()) - curBlock;
                 int64_t amountAccepted = accept.getAcceptAmountRemaining();
                 // TODO: don't recalculate!
                 int64_t amountToPayInBTC = calculateDesiredBTC(accept.getOfferAmountOriginal(), accept.getBTCDesiredOriginal(), amountAccepted);
@@ -1643,7 +1604,7 @@ Value omni_getactivedexsells(const Array& params, bool fHelp)
     return response;
 }
 
-Value omni_listblocktransactions(const Array& params, bool fHelp)
+UniValue omni_listblocktransactions(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
@@ -1672,12 +1633,12 @@ Value omni_listblocktransactions(const Array& params, bool fHelp)
         LOCK(cs_main);
         CBlockIndex* pBlockIndex = chainActive[blockHeight];
 
-        if (!ReadBlockFromDisk(block, pBlockIndex)) {
+        if (!ReadBlockFromDisk(block, pBlockIndex, Params().GetConsensus())) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Failed to read block from disk");
         }
     }
 
-    Array response;
+    UniValue response(UniValue::VARR);
 
     // now we want to loop through each of the transactions in the block and run against CMPTxList::exists
     // those that return positive add to our response array
@@ -1695,7 +1656,7 @@ Value omni_listblocktransactions(const Array& params, bool fHelp)
     return response;
 }
 
-Value omni_gettransaction(const Array& params, bool fHelp)
+UniValue omni_gettransaction(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
@@ -1725,14 +1686,14 @@ Value omni_gettransaction(const Array& params, bool fHelp)
 
     uint256 hash = ParseHashV(params[0], "txid");
 
-    Object txobj;
+    UniValue txobj(UniValue::VOBJ);
     int populateResult = populateRPCTransactionObject(hash, txobj);
     if (populateResult != 0) PopulateFailure(populateResult);
 
     return txobj;
 }
 
-Value omni_listtransactions(const Array& params, bool fHelp)
+UniValue omni_listtransactions(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() > 5)
         throw runtime_error(
@@ -1789,29 +1750,31 @@ Value omni_listtransactions(const Array& params, bool fHelp)
     std::map<std::string,uint256> walletTransactions = FetchWalletOmniTransactions(nFrom+nCount, nStartBlock, nEndBlock);
 
     // reverse iterate over (now ordered) transactions and populate RPC objects for each one
-    Array response;
+    UniValue response(UniValue::VARR);
     for (std::map<std::string,uint256>::reverse_iterator it = walletTransactions.rbegin(); it != walletTransactions.rend(); it++) {
         uint256 txHash = it->second;
-        Object txobj;
+        UniValue txobj(UniValue::VOBJ);
         int populateResult = populateRPCTransactionObject(txHash, txobj, addressParam);
         if (0 == populateResult) response.push_back(txobj);
     }
 
+    // TODO: reenable cutting!
+/*
     // cut on nFrom and nCount
     if (nFrom > (int)response.size()) nFrom = response.size();
     if ((nFrom + nCount) > (int)response.size()) nCount = response.size() - nFrom;
-    Array::iterator first = response.begin();
+    UniValue::iterator first = response.begin();
     std::advance(first, nFrom);
-    Array::iterator last = response.begin();
+    UniValue::iterator last = response.begin();
     std::advance(last, nFrom+nCount);
     if (last != response.end()) response.erase(last, response.end());
     if (first != response.begin()) response.erase(response.begin(), first);
     std::reverse(response.begin(), response.end());
-
+*/
     return response;
 }
 
-Value omni_listpendingtransactions(const Array& params, bool fHelp)
+UniValue omni_listpendingtransactions(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
         throw runtime_error(
@@ -1851,9 +1814,9 @@ Value omni_listpendingtransactions(const Array& params, bool fHelp)
     std::vector<uint256> vTxid;
     mempool.queryHashes(vTxid);
 
-    Array result;
+    UniValue result(UniValue::VARR);
     BOOST_FOREACH(const uint256& hash, vTxid) {
-        Object txObj;
+        UniValue txObj(UniValue::VOBJ);
         if (populateRPCTransactionObject(hash, txObj, filterAddress) == 0) {
             result.push_back(txObj);
         }
@@ -1862,7 +1825,7 @@ Value omni_listpendingtransactions(const Array& params, bool fHelp)
     return result;
 }
 
-Value omni_getinfo(const Array& params, bool fHelp)
+UniValue omni_getinfo(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
@@ -1894,7 +1857,7 @@ Value omni_getinfo(const Array& params, bool fHelp)
             + HelpExampleRpc("omni_getinfo", "")
         );
 
-    Object infoResponse;
+    UniValue infoResponse(UniValue::VOBJ);
 
     // provide the mastercore and bitcoin version and if available commit id
     infoResponse.push_back(Pair("omnicoreversion_int", OMNICORE_VERSION));
@@ -1922,11 +1885,11 @@ Value omni_getinfo(const Array& params, bool fHelp)
     infoResponse.push_back(Pair("totaltransactions", totalMPTransactions));
 
     // handle alerts
-    Array alerts;
+    UniValue alerts(UniValue::VARR);
     std::vector<AlertData> omniAlerts = GetOmniCoreAlerts();
     for (std::vector<AlertData>::iterator it = omniAlerts.begin(); it != omniAlerts.end(); it++) {
         AlertData alert = *it;
-        Object alertResponse;
+        UniValue alertResponse(UniValue::VOBJ);
         std::string alertTypeStr;
         switch (alert.alert_type) {
             case 1: alertTypeStr = "alertexpiringbyblock";
@@ -1948,7 +1911,7 @@ Value omni_getinfo(const Array& params, bool fHelp)
     return infoResponse;
 }
 
-Value omni_getactivations(const Array& params, bool fHelp)
+UniValue omni_getactivations(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
@@ -1980,12 +1943,12 @@ Value omni_getactivations(const Array& params, bool fHelp)
             + HelpExampleRpc("omni_getactivations", "")
         );
 
-    Object response;
+    UniValue response(UniValue::VOBJ);
 
-    Array arrayPendingActivations;
+    UniValue arrayPendingActivations(UniValue::VARR);
     std::vector<FeatureActivation> vecPendingActivations = GetPendingActivations();
     for (std::vector<FeatureActivation>::iterator it = vecPendingActivations.begin(); it != vecPendingActivations.end(); ++it) {
-        Object actObj;
+        UniValue actObj(UniValue::VOBJ);
         FeatureActivation pendingAct = *it;
         actObj.push_back(Pair("featureid", pendingAct.featureId));
         actObj.push_back(Pair("featurename", pendingAct.featureName));
@@ -1994,10 +1957,10 @@ Value omni_getactivations(const Array& params, bool fHelp)
         arrayPendingActivations.push_back(actObj);
     }
 
-    Array arrayCompletedActivations;
+    UniValue arrayCompletedActivations(UniValue::VARR);
     std::vector<FeatureActivation> vecCompletedActivations = GetCompletedActivations();
     for (std::vector<FeatureActivation>::iterator it = vecCompletedActivations.begin(); it != vecCompletedActivations.end(); ++it) {
-        Object actObj;
+        UniValue actObj(UniValue::VOBJ);
         FeatureActivation completedAct = *it;
         actObj.push_back(Pair("featureid", completedAct.featureId));
         actObj.push_back(Pair("featurename", completedAct.featureName));
@@ -2012,7 +1975,7 @@ Value omni_getactivations(const Array& params, bool fHelp)
     return response;
 }
 
-Value omni_getsto(const Array& params, bool fHelp)
+UniValue omni_getsto(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
@@ -2054,14 +2017,14 @@ Value omni_getsto(const Array& params, bool fHelp)
     std::string filterAddress;
     if (params.size() > 1) filterAddress = ParseAddressOrWildcard(params[1]);
 
-    Object txobj;
+    UniValue txobj(UniValue::VOBJ);
     int populateResult = populateRPCTransactionObject(hash, txobj, "", true, filterAddress);
     if (populateResult != 0) PopulateFailure(populateResult);
 
     return txobj;
 }
 
-Value omni_gettrade(const Array& params, bool fHelp)
+UniValue omni_gettrade(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
@@ -2110,14 +2073,14 @@ Value omni_gettrade(const Array& params, bool fHelp)
 
     uint256 hash = ParseHashV(params[0], "txid");
 
-    Object txobj;
+    UniValue txobj(UniValue::VOBJ);
     int populateResult = populateRPCTransactionObject(hash, txobj, "", true);
     if (populateResult != 0) PopulateFailure(populateResult);
 
     return txobj;
 }
 
-Value omni_getcurrentconsensushash(const Array& params, bool fHelp)
+UniValue omni_getcurrentconsensushash(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
@@ -2144,7 +2107,7 @@ Value omni_getcurrentconsensushash(const Array& params, bool fHelp)
 
     uint256 consensusHash = GetConsensusHash();
 
-    Object response;
+    UniValue response(UniValue::VOBJ);
     response.push_back(Pair("block", block));
     response.push_back(Pair("blockhash", blockHash.GetHex()));
     response.push_back(Pair("consensushash", consensusHash.GetHex()));
@@ -2152,7 +2115,7 @@ Value omni_getcurrentconsensushash(const Array& params, bool fHelp)
     return response;
 }
 
-Value omni_getmetadexhash(const Array& params, bool fHelp)
+UniValue omni_getmetadexhash(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
         throw runtime_error(
@@ -2187,11 +2150,75 @@ Value omni_getmetadexhash(const Array& params, bool fHelp)
 
     uint256 metadexHash = GetMetaDExHash(propertyId);
 
-    Object response;
+    UniValue response(UniValue::VOBJ);
     response.push_back(Pair("block", block));
     response.push_back(Pair("blockhash", blockHash.GetHex()));
     response.push_back(Pair("propertyid", (uint64_t)propertyId));
     response.push_back(Pair("metadexhash", metadexHash.GetHex()));
 
     return response;
+}
+
+static const CRPCCommand commands[] =
+{ //  category                             name                            actor (function)               okSafeMode
+  //  ------------------------------------ ------------------------------- ------------------------------ ----------
+    { "omni layer (data retrieval)", "omni_getinfo",                   &omni_getinfo,                    true  },
+    { "omni layer (data retrieval)", "omni_getactivations",            &omni_getactivations,             true  },
+    { "omni layer (data retrieval)", "omni_getallbalancesforid",       &omni_getallbalancesforid,        false },
+    { "omni layer (data retrieval)", "omni_getbalance",                &omni_getbalance,                 false },
+    { "omni layer (data retrieval)", "omni_gettransaction",            &omni_gettransaction,             false },
+    { "omni layer (data retrieval)", "omni_getproperty",               &omni_getproperty,                false },
+    { "omni layer (data retrieval)", "omni_listproperties",            &omni_listproperties,             false },
+    { "omni layer (data retrieval)", "omni_getcrowdsale",              &omni_getcrowdsale,               false },
+    { "omni layer (data retrieval)", "omni_getgrants",                 &omni_getgrants,                  false },
+    { "omni layer (data retrieval)", "omni_getactivedexsells",         &omni_getactivedexsells,          false },
+    { "omni layer (data retrieval)", "omni_getactivecrowdsales",       &omni_getactivecrowdsales,        false },
+    { "omni layer (data retrieval)", "omni_getorderbook",              &omni_getorderbook,               false },
+    { "omni layer (data retrieval)", "omni_gettrade",                  &omni_gettrade,                   false },
+    { "omni layer (data retrieval)", "omni_getsto",                    &omni_getsto,                     false },
+    { "omni layer (data retrieval)", "omni_listblocktransactions",     &omni_listblocktransactions,      false },
+    { "omni layer (data retrieval)", "omni_listpendingtransactions",   &omni_listpendingtransactions,    false },
+    { "omni layer (data retrieval)", "omni_getallbalancesforaddress",  &omni_getallbalancesforaddress,   false },
+    { "omni layer (data retrieval)", "omni_gettradehistoryforaddress", &omni_gettradehistoryforaddress,  false },
+    { "omni layer (data retrieval)", "omni_gettradehistoryforpair",    &omni_gettradehistoryforpair,     false },
+    { "omni layer (data retrieval)", "omni_getcurrentconsensushash",   &omni_getcurrentconsensushash,    false },
+    { "omni layer (data retrieval)", "omni_getpayload",                &omni_getpayload,                 false },
+    { "omni layer (data retrieval)", "omni_getseedblocks",             &omni_getseedblocks,              false },
+    { "omni layer (data retrieval)", "omni_getmetadexhash",            &omni_getmetadexhash,             false },
+    { "omni layer (data retrieval)", "omni_getfeecache",               &omni_getfeecache,                false },
+    { "omni layer (data retrieval)", "omni_getfeetrigger",             &omni_getfeetrigger,              false },
+    { "omni layer (data retrieval)", "omni_getfeedistribution",        &omni_getfeedistribution,         false },
+    { "omni layer (data retrieval)", "omni_getfeedistributions",       &omni_getfeedistributions,        false },
+#ifdef ENABLE_WALLET
+    { "omni layer (data retrieval)", "omni_listtransactions",          &omni_listtransactions,           false },
+    { "omni layer (data retrieval)", "omni_getfeeshare",               &omni_getfeeshare,                false },
+    { "omni layer (configuration)",  "omni_setautocommit",             &omni_setautocommit,              true  },
+#endif
+    { "hidden",                      "mscrpc",                         &mscrpc,                          true  },
+
+    /* depreciated: */
+    { "hidden",                      "getinfo_MP",                     &omni_getinfo,                    true  },
+    { "hidden",                      "getbalance_MP",                  &omni_getbalance,                 false },
+    { "hidden",                      "getallbalancesforaddress_MP",    &omni_getallbalancesforaddress,   false },
+    { "hidden",                      "getallbalancesforid_MP",         &omni_getallbalancesforid,        false },
+    { "hidden",                      "getproperty_MP",                 &omni_getproperty,                false },
+    { "hidden",                      "listproperties_MP",              &omni_listproperties,             false },
+    { "hidden",                      "getcrowdsale_MP",                &omni_getcrowdsale,               false },
+    { "hidden",                      "getgrants_MP",                   &omni_getgrants,                  false },
+    { "hidden",                      "getactivedexsells_MP",           &omni_getactivedexsells,          false },
+    { "hidden",                      "getactivecrowdsales_MP",         &omni_getactivecrowdsales,        false },
+    { "hidden",                      "getsto_MP",                      &omni_getsto,                     false },
+    { "hidden",                      "getorderbook_MP",                &omni_getorderbook,               false },
+    { "hidden",                      "gettrade_MP",                    &omni_gettrade,                   false },
+    { "hidden",                      "gettransaction_MP",              &omni_gettransaction,             false },
+    { "hidden",                      "listblocktransactions_MP",       &omni_listblocktransactions,      false },
+#ifdef ENABLE_WALLET
+    { "hidden",                      "listtransactions_MP",            &omni_listtransactions,           false },
+#endif
+};
+
+void RegisterOmniDataRetrievalRPCCommands(CRPCTable &tableRPC)
+{
+    for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)
+        tableRPC.appendCommand(commands[vcidx].name, &commands[vcidx]);
 }

@@ -1,14 +1,15 @@
 #include "omnicore/createpayload.h"
 
+#include "test/test_bitcoin.h"
 #include "utilstrencodings.h"
+
+#include <boost/test/unit_test.hpp>
 
 #include <stdint.h>
 #include <vector>
 #include <string>
 
-#include <boost/test/unit_test.hpp>
-
-BOOST_AUTO_TEST_SUITE(omnicore_create_payload_tests)
+BOOST_FIXTURE_TEST_SUITE(omnicore_create_payload_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(payload_simple_send)
 {

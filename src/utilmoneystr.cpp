@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,7 +11,7 @@
 
 using namespace std;
 
-string FormatMoney(const CAmount& n, bool fPlus)
+std::string FormatMoney(const CAmount& n)
 {
     // Note: not using straight sprintf here because we do NOT want
     // localized number formatting.
@@ -29,8 +29,6 @@ string FormatMoney(const CAmount& n, bool fPlus)
 
     if (n < 0)
         str.insert((unsigned int)0, 1, '-');
-    else if (fPlus && n > 0)
-        str.insert((unsigned int)0, 1, '+');
     return str;
 }
 

@@ -21,8 +21,6 @@ OMNICORE_TEST_CPP = \
   omnicore/test/parsing_b_tests.cpp \
   omnicore/test/parsing_c_tests.cpp \
   omnicore/test/rounduint64_tests.cpp \
-  omnicore/test/rpc_requirements_tests.cpp \
-  omnicore/test/rpc_value_tests.cpp \
   omnicore/test/rules_txs_tests.cpp \
   omnicore/test/script_dust_tests.cpp \
   omnicore/test/script_extraction_tests.cpp \

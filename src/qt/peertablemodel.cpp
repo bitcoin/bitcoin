@@ -1,5 +1,5 @@
-// Copyright (c) 2011-2013 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "peertablemodel.h"
@@ -8,7 +8,6 @@
 #include "guiconstants.h"
 #include "guiutil.h"
 
-#include "net.h"
 #include "sync.h"
 
 #include <QDebug>
@@ -63,11 +62,12 @@ public:
 #if QT_VERSION >= 0x040700
             cachedNodeStats.reserve(vNodes.size());
 #endif
-            BOOST_FOREACH(CNode* pnode, vNodes)
+            Q_FOREACH (CNode* pnode, vNodes)
             {
                 CNodeCombinedStats stats;
                 stats.nodeStateStats.nMisbehavior = 0;
                 stats.nodeStateStats.nSyncHeight = -1;
+                stats.nodeStateStats.nCommonHeight = -1;
                 stats.fNodeStateStatsAvailable = false;
                 pnode->copyStats(stats.nodeStats);
                 cachedNodeStats.append(stats);
@@ -85,28 +85,27 @@ public:
         }
 
         if (sortColumn >= 0)
-            // sort cacheNodeStats (use stable sort to prevent rows jumping around unneceesarily)
+            // sort cacheNodeStats (use stable sort to prevent rows jumping around unnecessarily)
             qStableSort(cachedNodeStats.begin(), cachedNodeStats.end(), NodeLessThan(sortColumn, sortOrder));
 
         // build index map
         mapNodeRows.clear();
         int row = 0;
-        BOOST_FOREACH(CNodeCombinedStats &stats, cachedNodeStats)
+        Q_FOREACH (const CNodeCombinedStats& stats, cachedNodeStats)
             mapNodeRows.insert(std::pair<NodeId, int>(stats.nodeStats.nodeid, row++));
     }
 
-    int size()
+    int size() const
     {
         return cachedNodeStats.size();
     }
 
     CNodeCombinedStats *index(int idx)
     {
-        if(idx >= 0 && idx < cachedNodeStats.size()) {
+        if (idx >= 0 && idx < cachedNodeStats.size())
             return &cachedNodeStats[idx];
-        } else {
-            return 0;
-        }
+
+        return 0;
     }
 };
 
@@ -115,18 +114,23 @@ PeerTableModel::PeerTableModel(ClientModel *parent) :
     clientModel(parent),
     timer(0)
 {
-    columns << tr("Address/Hostname") << tr("User Agent") << tr("Ping Time");
-    priv = new PeerTablePriv();
+    columns << tr("Node/Service") << tr("User Agent") << tr("Ping Time");
+    priv.reset(new PeerTablePriv());
     // default to unsorted
     priv->sortColumn = -1;
 
     // set up timer for auto refresh
-    timer = new QTimer();
+    timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), SLOT(refresh()));
     timer->setInterval(MODEL_UPDATE_DELAY);
 
     // load initial data
     refresh();
+}
+
+PeerTableModel::~PeerTableModel()
+{
+    // Intentionally left empty
 }
 
 void PeerTableModel::startAutoRefresh()
@@ -148,7 +152,7 @@ int PeerTableModel::rowCount(const QModelIndex &parent) const
 int PeerTableModel::columnCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
-    return columns.length();;
+    return columns.length();
 }
 
 QVariant PeerTableModel::data(const QModelIndex &index, int role) const
@@ -170,7 +174,7 @@ QVariant PeerTableModel::data(const QModelIndex &index, int role) const
         }
     } else if (role == Qt::TextAlignmentRole) {
         if (index.column() == Ping)
-            return (int)(Qt::AlignRight | Qt::AlignVCenter);
+            return (QVariant)(Qt::AlignRight | Qt::AlignVCenter);
     }
 
     return QVariant();
@@ -203,13 +207,8 @@ QModelIndex PeerTableModel::index(int row, int column, const QModelIndex &parent
     CNodeCombinedStats *data = priv->index(row);
 
     if (data)
-    {
         return createIndex(row, column, data);
-    }
-    else
-    {
-        return QModelIndex();
-    }
+    return QModelIndex();
 }
 
 const CNodeCombinedStats *PeerTableModel::getNodeStats(int idx)
@@ -219,9 +218,9 @@ const CNodeCombinedStats *PeerTableModel::getNodeStats(int idx)
 
 void PeerTableModel::refresh()
 {
-    emit layoutAboutToBeChanged();
+    Q_EMIT layoutAboutToBeChanged();
     priv->refreshPeers();
-    emit layoutChanged();
+    Q_EMIT layoutChanged();
 }
 
 int PeerTableModel::getRowByNodeId(NodeId nodeid)

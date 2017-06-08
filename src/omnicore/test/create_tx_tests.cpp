@@ -3,23 +3,25 @@
 #include "base58.h"
 #include "coins.h"
 #include "core_io.h"
+#include "main.h"
 #include "primitives/transaction.h"
 #include "script/script.h"
 #include "script/standard.h"
+#include "test/test_bitcoin.h"
 #include "utilstrencodings.h"
+
+#include <boost/test/unit_test.hpp>
 
 #include <stdint.h>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include <boost/test/unit_test.hpp>
-
 // Is resetted after the last test
 extern CFeeRate minRelayTxFee;
-static CFeeRate minRelayTxFeeOriginal = minRelayTxFee;
+static CFeeRate minRelayTxFeeOriginal = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE);
 
-BOOST_AUTO_TEST_SUITE(omnicore_create_tx_tests)
+BOOST_FIXTURE_TEST_SUITE(omnicore_create_tx_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(txbuilder_empty)
 {
@@ -48,8 +50,8 @@ BOOST_AUTO_TEST_CASE(txbuilder_add_outpoint)
         "00");
 
     CMutableTransaction tx = TxBuilder()
-        .addInput(COutPoint(uint256("ddfbc64a9b471e6fe88c49b79d639cd354c3596e69c432651155512ef16bef70"), 2))
-        .addInput(COutPoint(uint256("b1922720a04618b810c9addadbe30185b6c39b30526ffa6f0072c373669f2550"), 0))
+        .addInput(COutPoint(uint256S("ddfbc64a9b471e6fe88c49b79d639cd354c3596e69c432651155512ef16bef70"), 2))
+        .addInput(COutPoint(uint256S("b1922720a04618b810c9addadbe30185b6c39b30526ffa6f0072c373669f2550"), 0))
         .build();
 
     BOOST_CHECK_EQUAL(rawTx, EncodeHexTx(CTransaction(tx)));
@@ -62,8 +64,8 @@ BOOST_AUTO_TEST_CASE(txbuilder_add_input)
         "00");
 
     CMutableTransaction tx = TxBuilder()
-        .addInput(uint256("ddfbc64a9b471e6fe88c49b79d639cd354c3596e69c432651155512ef16bef70"), 2)
-        .addInput(uint256("b1922720a04618b810c9addadbe30185b6c39b30526ffa6f0072c373669f2550"), 0)
+        .addInput(uint256S("ddfbc64a9b471e6fe88c49b79d639cd354c3596e69c432651155512ef16bef70"), 2)
+        .addInput(uint256S("b1922720a04618b810c9addadbe30185b6c39b30526ffa6f0072c373669f2550"), 0)
         .build();
 
     BOOST_CHECK_EQUAL(rawTx, EncodeHexTx(CTransaction(tx)));
@@ -125,12 +127,12 @@ BOOST_AUTO_TEST_CASE(txbuilder_add_change)
 
     std::vector<PrevTxsEntry> prevTxs;
     prevTxs.push_back(PrevTxsEntry(
-        uint256("013a0e8989bd1f04393b2113652c76a798b4324afbb94842e51d6019f0425860"),
+        uint256S("013a0e8989bd1f04393b2113652c76a798b4324afbb94842e51d6019f0425860"),
         2,
         99967336LL,
         CScript(scriptA.begin(), scriptA.end())));
     prevTxs.push_back(PrevTxsEntry(
-        uint256("262c1641e59ef21a06d45a8d1f0bd97e39036040772476727da384a34c458b87"),
+        uint256S("262c1641e59ef21a06d45a8d1f0bd97e39036040772476727da384a34c458b87"),
         0,
         78825000LL,
         CScript(scriptB.begin(), scriptB.end())));
@@ -170,7 +172,7 @@ BOOST_AUTO_TEST_CASE(txbuilder_add_change_position)
 
     std::vector<PrevTxsEntry> prevTxs;
     prevTxs.push_back(PrevTxsEntry(
-        uint256("44be28ddf3e5e7da4e976f7fea2d8a9920f4f1fd4fcc1ab28b611c7bce803ee8"),
+        uint256S("44be28ddf3e5e7da4e976f7fea2d8a9920f4f1fd4fcc1ab28b611c7bce803ee8"),
         1,
         500000000LL,
         CScript(script.begin(), script.end())));
@@ -230,12 +232,12 @@ BOOST_AUTO_TEST_CASE(omnitxbuilder_op_return)
 
     std::vector<PrevTxsEntry> prevTxs;
     prevTxs.push_back(PrevTxsEntry(
-        uint256("b2d4b88754976ac537db29d0bd4bbccbd2065d2addca800a9600593042f2c71d"),
+        uint256S("b2d4b88754976ac537db29d0bd4bbccbd2065d2addca800a9600593042f2c71d"),
         1,
         50000LL,
         CScript(scriptA.begin(), scriptA.end())));
     prevTxs.push_back(PrevTxsEntry(
-        uint256("bc021b56580acb2fbcbfe5ac412b63b40d4d77b0968e913bc7b9e91b495ec0f1"),
+        uint256S("bc021b56580acb2fbcbfe5ac412b63b40d4d77b0968e913bc7b9e91b495ec0f1"),
         2,
         99989454LL,
         CScript(scriptB.begin(), scriptB.end())));

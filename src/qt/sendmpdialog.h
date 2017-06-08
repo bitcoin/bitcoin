@@ -26,7 +26,7 @@ class SendMPDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit SendMPDialog(QWidget *parent = 0);
+    explicit SendMPDialog(const PlatformStyle *platformStyle, QWidget *parent = 0);
     ~SendMPDialog();
 
     void setClientModel(ClientModel *model);
@@ -37,7 +37,7 @@ public:
     void updateProperty();
     void updatePropSelector();
 
-public slots:
+public Q_SLOTS:
     void propertyComboBoxChanged(int idx);
     void sendFromComboBoxChanged(int idx);
     void clearButtonClicked();
@@ -49,8 +49,9 @@ private:
     Ui::SendMPDialog *ui;
     ClientModel *clientModel;
     WalletModel *walletModel;
+    const PlatformStyle *platformStyle;
 
-signals:
+Q_SIGNALS:
     // Fired when a message should be reported to the user
     void message(const QString &title, const QString &message, unsigned int style);
 };

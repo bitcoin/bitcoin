@@ -7,19 +7,13 @@
 #include "omnicore/mdex.h"
 
 #include "amount.h"
+#include "main.h"
 #include "sync.h"
+#include "txmempool.h"
 #include "uint256.h"
 #include "ui_interface.h"
 
-#include "json/json_spirit_value.h"
-#include "json/json_spirit_writer_template.h"
-
 #include <string>
-
-using json_spirit::Object;
-using json_spirit::Pair;
-using json_spirit::Value;
-using json_spirit::write_string;
 
 namespace mastercore
 {
@@ -78,6 +72,28 @@ void PendingDelete(const uint256& txid)
 
         // if pending map is now empty following deletion, trigger a status change
         if (my_pending.empty()) uiInterface.OmniPendingChanged(false);
+    }
+}
+
+/**
+ * Performs a check to ensure all pending transactions are still in the mempool.
+ *
+ * NOTE: Transactions no longer in the mempool (eg orphaned) are deleted from
+ *       the pending map and credited back to the pending tally.
+ */
+void PendingCheck()
+{
+    LOCK(cs_pending);
+
+    std::vector<uint256> vecMemPoolTxids;
+    mempool.queryHashes(vecMemPoolTxids);
+
+    for (PendingMap::iterator it = my_pending.begin(); it != my_pending.end(); ++it) {
+        const uint256& txid = it->first;
+        if (std::find(vecMemPoolTxids.begin(), vecMemPoolTxids.end(), txid) == vecMemPoolTxids.end()) {
+            PrintToLog("WARNING: Pending transaction %s is no longer in this nodes mempool and will be discarded\n", txid.GetHex());
+            PendingDelete(txid);
+        }
     }
 }
 

@@ -13,9 +13,6 @@
 
 #include "uint256.h"
 
-#include "json/json_spirit_value.h"
-#include "json/json_spirit_writer_template.h"
-
 #include <string>
 
 #include <QDialog>
@@ -27,7 +24,6 @@
 #include <QWidget>
 
 using std::string;
-using namespace json_spirit;
 using namespace mastercore;
 
 LookupTXDialog::LookupTXDialog(QWidget *parent) :
@@ -59,12 +55,12 @@ void LookupTXDialog::searchTX()
 
     uint256 hash;
     hash.SetHex(searchText);
-    Object txobj;
+    UniValue txobj(UniValue::VOBJ);
     std::string strTXText;
     // make a request to new RPC populator function to populate a transaction object
     int populateResult = populateRPCTransactionObject(hash, txobj, "", true);
     if (0<=populateResult) {
-        strTXText = write_string(Value(txobj), true);
+        strTXText = txobj.write(true);
         if (!strTXText.empty()) PopulateSimpleDialog(strTXText, "Transaction Information", "Transaction Information");
     } else {
         // show error message

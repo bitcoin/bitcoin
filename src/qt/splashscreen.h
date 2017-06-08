@@ -1,5 +1,5 @@
-// Copyright (c) 2011-2014 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_QT_SPLASHSCREEN_H
@@ -27,7 +27,7 @@ protected:
     void paintEvent(QPaintEvent *event);
     void closeEvent(QCloseEvent *event);
 
-public slots:
+public Q_SLOTS:
     /** Slot to call finish() method as it's not defined as slot */
     void slotFinish(QWidget *mainWin);
 

@@ -1,9 +1,6 @@
 Wallet Tools
 ---------------------
 
-### [BitRPC](/contrib/bitrpc) ###
-Allows for sending of all standard Bitcoin commands via RPC rather than as command line args.
-
 ### [SpendFrom](/contrib/spendfrom) ###
 
 Use the raw transactions API to send coins received on a particular
@@ -14,7 +11,10 @@ Repository Tools
 
 ### [Developer tools](/contrib/devtools) ###
 Specific tools for developers working on this repository.
-Contains the script `github-merge.sh` for merging github pull requests securely and signing them using GPG.
+Contains the script `github-merge.py` for merging github pull requests securely and signing them using GPG.
+
+### [Verify-Commits](/contrib/verify-commits) ###
+Tool to verify that every merge commit was signed by a developer using the above `github-merge.py` script.
 
 ### [Linearize](/contrib/linearize) ###
 Construct a linear, no-fork, best version of the blockchain.
@@ -34,13 +34,16 @@ Contains files used to package bitcoind/bitcoin-qt
 for Debian-based Linux systems. If you compile bitcoind/bitcoin-qt yourself, there are some useful files here.
 
 ### [Gitian-descriptors](/contrib/gitian-descriptors) ###
-Gavin's notes on getting gitian builds up and running using KVM.
+Notes on getting Gitian builds up and running using KVM.
 
-### [Gitian-downloader](/contrib/gitian-downloader)
-Various PGP files of core developers. 
+### [Gitian-keys](/contrib/gitian-keys)
+PGP keys used for signing Bitcoin Core [Gitian release](/doc/release-process.md) results.
 
 ### [MacDeploy](/contrib/macdeploy) ###
 Scripts and notes for Mac builds. 
+
+### [RPM](/contrib/rpm) ###
+RPM spec file for building bitcoin-core on RPM based distributions
 
 Test and Verify Tools 
 ---------------------
@@ -48,9 +51,5 @@ Test and Verify Tools
 ### [TestGen](/contrib/testgen) ###
 Utilities to generate test vectors for the data-driven Bitcoin tests.
 
-### [Test Patches](/contrib/test-patches) ###
-These patches are applied when the automated pull-tester
-tests each pull and when master is tested using jenkins.
-
-### [Verify SF Binaries](/contrib/verifysfbinaries) ###
-This script attempts to download and verify the signature file SHA256SUMS.asc from SourceForge.
+### [Verify Binaries](/contrib/verifybinaries) ###
+This script attempts to download and verify the signature file SHA256SUMS.asc from bitcoin.org.

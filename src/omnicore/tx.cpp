@@ -14,7 +14,6 @@
 #include "omnicore/sp.h"
 #include "omnicore/sto.h"
 
-#include "alert.h"
 #include "amount.h"
 #include "main.h"
 #include "sync.h"
@@ -1982,10 +1981,10 @@ int CMPTransaction::logicMath_Deactivation()
 
     // successful deactivation - did we deactivate the MetaDEx?  If so close out all trades
     if (feature_id == FEATURE_METADEX) {
-        int closed = MetaDEx_SHUTDOWN();
+        MetaDEx_SHUTDOWN();
     }
     if (feature_id == FEATURE_TRADEALLPAIRS) {
-        int closed = MetaDEx_SHUTDOWN_ALLPAIR();
+        MetaDEx_SHUTDOWN_ALLPAIR();
     }
 
     return 0;
@@ -2057,7 +2056,7 @@ int CMPTransaction::logicMath_Alert()
     }
 
     // we have a new alert, fire a notify event if needed
-    CAlert::Notify(alert_text, true);
+    AlertNotify(alert_text);
 
     return 0;
 }
