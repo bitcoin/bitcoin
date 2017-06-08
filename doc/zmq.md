@@ -61,8 +61,10 @@ Currently, the following notifications are supported:
 
     -zmqpubhashtx=address
     -zmqpubhashblock=address
+    -zmqpubhashwallettx=address
     -zmqpubrawblock=address
     -zmqpubrawtx=address
+    -zmqpubrawwallettx=address
     -zmqpubsequence=address
 
 The socket type is PUB and the address must be a valid ZeroMQ socket
@@ -92,6 +94,15 @@ Each PUB notification has a topic and body, where the header
 corresponds to the notification type. For instance, for the
 notification `-zmqpubhashtx` the topic is `hashtx` (no null
 terminator). These options can also be provided in bitcoin.conf.
+
+For wallet transaction notifications (both hash and tx), the
+topic also indicate if the transaction came from a block
+or mempool. If originated from mempool `-mempool` postfix
+will be added to the topic, for block `-block` postfix will
+be added. Because zeromq is using prefix matching for topics
+you can subscribe to `rawwallettx` (or `hashwallettx`) to get
+both notifications. If you only want one type of notification
+subscribe to either `rawwallettx-mempool` or `rawwallettx-block`.
 
 The topics are:
 
