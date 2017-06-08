@@ -45,6 +45,14 @@ class ZMQTest (BitcoinTestFramework):
         self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir, extra_args)
 
     def run_test(self):
+        try:
+            self._zmq_test()
+        finally:
+            # Destroy the zmq context
+            self.log.debug("Destroying zmq context")
+            self.zmqContext.destroy(linger=None)
+
+    def _zmq_test(self):
         genhashes = self.nodes[0].generate(1)
         self.sync_all()
 
