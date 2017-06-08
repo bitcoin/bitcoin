@@ -479,8 +479,12 @@ inline void *worker(void *vp) {
           for (nu -= min, nv -= min; us[nu] != vs[nv]; nu++, nv++) ;
           u32 len = nu + nv + 1;
           // printf("%4d-cycle found at %d:%d%%\n", len, tp->id, (u32)(nonce*100LL/HALFSIZE));
-          if (len >= ctx->proofsize_min && len <= ctx->proofsize_max && ctx->nsols < ctx->maxsols)
+          if (len >= ctx->proofsize_min && len <= ctx->proofsize_max && ctx->nsols < ctx->maxsols) {
+            printf("CC: solution found; exiting\n");
             ctx->solution(us, nu, vs, nv, len);
+            pthread_exit(NULL);
+            return 0;
+          }
         } else if (nu < nv) {
           while (nu--)
             cuckoo.set(us[nu+1], us[nu]);
