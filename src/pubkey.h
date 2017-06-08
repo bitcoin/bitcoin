@@ -48,6 +48,9 @@ private:
      * Its length can very cheaply be computed from the first byte.
      */
     unsigned char vch[PUBLIC_KEY_SIZE];
+    static_assert(
+        PUBLIC_KEY_SIZE >= COMPRESSED_PUBLIC_KEY_SIZE,
+        "COMPRESSED_PUBLIC_KEY_SIZE is larger than PUBLIC_KEY_SIZE");
 
     //! Compute the length of a pubkey with a given first byte.
     unsigned int static GetLen(unsigned char chHeader)
