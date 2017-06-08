@@ -20,7 +20,7 @@ bool NodeLessThan::operator()(const CNodeCombinedStats &left, const CNodeCombine
     const CNodeStats *pLeft = &(left.nodeStats);
     const CNodeStats *pRight = &(right.nodeStats);
 
-    if (order == Qt::DescendingOrder)
+    if (order != Qt::DescendingOrder)
         std::swap(pLeft, pRight);
 
     switch(column)
