@@ -164,8 +164,7 @@ bool CDB::Recover(const std::string& filename, void *callbackDataIn, bool (*reco
 {
     // Recovery procedure:
     // move wallet file to wallet.timestamp.bak
-    // Call Salvage with fAggressive=true to
-    // get as much data as possible.
+    // Call Salvage to get as much data as possible.
     // Rewrite salvaged data to fresh wallet file
     // Set -rescan so any missing transactions will be
     // found.
@@ -183,13 +182,13 @@ bool CDB::Recover(const std::string& filename, void *callbackDataIn, bool (*reco
     }
 
     std::vector<CDBEnv::KeyValPair> salvagedData;
-    bool fSuccess = bitdb.Salvage(newFilename, true, salvagedData);
+    bool fSuccess = bitdb.Salvage(newFilename, salvagedData);
     if (salvagedData.empty())
     {
-        LogPrintf("Salvage(aggressive) found no records in %s.\n", newFilename);
+        LogPrintf("Salvage found no records in %s.\n", newFilename);
         return false;
     }
-    LogPrintf("Salvage(aggressive) found %u records\n", salvagedData.size());
+    LogPrintf("Salvage found %u records\n", salvagedData.size());
 
     std::unique_ptr<Db> pdbCopy(new Db(bitdb.dbenv, 0));
     int ret = pdbCopy->open(NULL,               // Txn pointer
@@ -288,14 +287,12 @@ static const char *HEADER_END = "HEADER=END";
 /* End of key/value data */
 static const char *DATA_END = "DATA=END";
 
-bool CDBEnv::Salvage(const std::string& strFile, bool fAggressive, std::vector<CDBEnv::KeyValPair>& vResult)
+bool CDBEnv::Salvage(const std::string& strFile, std::vector<CDBEnv::KeyValPair>& vResult)
 {
     LOCK(cs_db);
     assert(mapFileUseCount.count(strFile) == 0);
 
     u_int32_t flags = DB_SALVAGE;
-    if (fAggressive)
-        flags |= DB_AGGRESSIVE;
 
     std::stringstream strDump;
 
@@ -303,12 +300,7 @@ bool CDBEnv::Salvage(const std::string& strFile, bool fAggressive, std::vector<C
     int result = db.verify(strFile.c_str(), NULL, &strDump, flags);
     if (result == DB_VERIFY_BAD) {
         LogPrintf("CDBEnv::Salvage: Database salvage found errors, all data may not be recoverable.\n");
-        if (!fAggressive) {
-            LogPrintf("CDBEnv::Salvage: Rerun with aggressive mode to ignore errors and continue.\n");
-            return false;
-        }
-    }
-    if (result != 0 && result != DB_VERIFY_BAD) {
+    } else if (result != 0) {
         LogPrintf("CDBEnv::Salvage: Database salvage failed with result %d.\n", result);
         return false;
     }
