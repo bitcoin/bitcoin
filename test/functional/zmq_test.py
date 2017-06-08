@@ -9,6 +9,7 @@ import struct
 
 from test_framework.test_framework import BitcoinTestFramework, SkipTest
 from test_framework.util import (assert_equal,
+                                 assert_not_equal,
                                  bytes_to_hex_str,
                                  hash256,
                                 )
@@ -22,15 +23,16 @@ class ZMQSubscriber:
         import zmq
         self.socket.setsockopt(zmq.SUBSCRIBE, self.topic)
 
-    def receive(self):
+    def receive(self, specific_topic = None):
+        expected_topic = specific_topic if specific_topic else self.topic
+
         topic, body, seq = self.socket.recv_multipart()
         # Topic should match the subscriber topic.
-        assert_equal(topic, self.topic)
+        assert_equal(topic, expected_topic)
         # Sequence should be incremental.
         assert_equal(struct.unpack('<I', seq)[-1], self.sequence)
         self.sequence += 1
         return body
-
 
 class ZMQTest (BitcoinTestFramework):
     def set_test_params(self):
@@ -68,8 +70,10 @@ class ZMQTest (BitcoinTestFramework):
         self.hashtx = ZMQSubscriber(socket, b"hashtx")
         self.rawblock = ZMQSubscriber(socket, b"rawblock")
         self.rawtx = ZMQSubscriber(socket, b"rawtx")
+        self.hashwallettx = ZMQSubscriber(socket, b"hashwallettx")
+        self.rawwallettx = ZMQSubscriber(socket, b"rawwallettx")
 
-        self.extra_args = [["-zmqpub%s=%s" % (sub.topic.decode(), address) for sub in [self.hashblock, self.hashtx, self.rawblock, self.rawtx]], []]
+        self.extra_args = [["-zmqpub%s=%s" % (sub.topic.decode(), address) for sub in [self.hashblock, self.hashtx, self.rawblock, self.rawtx, self.hashwallettx, self.rawwallettx]], []]
         self.add_nodes(self.num_nodes, self.extra_args)
         self.start_nodes()
 
@@ -95,6 +99,11 @@ class ZMQTest (BitcoinTestFramework):
             hex = self.rawtx.receive()
             assert_equal(hash256(hex), txid)
 
+            # Should receive wallet tx
+            wallettxid = self.hashwallettx.receive(b"hashwallettx-block")
+            wallethex = self.rawwallettx.receive(b"rawwallettx-block")
+            assert_equal(hash256(wallethex), wallettxid)
+
             # Should receive the generated block hash.
             hash = bytes_to_hex_str(self.hashblock.receive())
             assert_equal(genhashes[x], hash)
@@ -116,6 +125,10 @@ class ZMQTest (BitcoinTestFramework):
         # Should receive the broadcasted raw transaction.
         hex = self.rawtx.receive()
         assert_equal(payment_txid, bytes_to_hex_str(hash256(hex)))
+
+        wallettxid = self.hashwallettx.receive(b"hashwallettx-mempool")
+        wallethex = self.rawwallettx.receive(b"rawwallettx-mempool")
+        assert_equal(hash256(wallethex), wallettxid)
 
 if __name__ == '__main__':
     ZMQTest().main()

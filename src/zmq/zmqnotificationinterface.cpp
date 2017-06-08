@@ -10,6 +10,10 @@
 #include "streams.h"
 #include "util.h"
 
+#ifdef ENABLE_WALLET
+#include "../wallet/wallet.h"
+#endif
+
 void zmqError(const char *str)
 {
     LogPrint(BCLog::ZMQ, "zmq: Error: %s, errno=%s\n", str, zmq_strerror(errno));
@@ -37,8 +41,10 @@ CZMQNotificationInterface* CZMQNotificationInterface::Create()
 
     factories["pubhashblock"] = CZMQAbstractNotifier::Create<CZMQPublishHashBlockNotifier>;
     factories["pubhashtx"] = CZMQAbstractNotifier::Create<CZMQPublishHashTransactionNotifier>;
+    factories["pubhashwallettx"] = CZMQAbstractNotifier::Create<CZMQPublishHashWalletTransactionNotifier>;
     factories["pubrawblock"] = CZMQAbstractNotifier::Create<CZMQPublishRawBlockNotifier>;
     factories["pubrawtx"] = CZMQAbstractNotifier::Create<CZMQPublishRawTransactionNotifier>;
+    factories["pubrawwallettx"] = CZMQAbstractNotifier::Create<CZMQPublishRawWalletTransactionNotifier>;
 
     for (std::map<std::string, CZMQNotifierFactory>::const_iterator i=factories.begin(); i!=factories.end(); ++i)
     {
@@ -110,6 +116,13 @@ bool CZMQNotificationInterface::Initialize()
 void CZMQNotificationInterface::Shutdown()
 {
     LogPrint(BCLog::ZMQ, "zmq: Shutdown notification interface\n");
+
+#ifdef ENABLE_WALLET
+    for (CWalletRef pwallet : vpwallets) {
+        pwallet->TransactionAddedToWallet.disconnect(boost::bind(&CZMQNotificationInterface::TransactionAddedToWallet, this, _1, _2));
+    }
+#endif
+
     if (pcontext)
     {
         for (std::list<CZMQAbstractNotifier*>::iterator i=notifiers.begin(); i!=notifiers.end(); ++i)
@@ -123,6 +136,14 @@ void CZMQNotificationInterface::Shutdown()
         pcontext = nullptr;
     }
 }
+
+#ifdef ENABLE_WALLET
+void CZMQNotificationInterface::ConnectToWalletSignals() {
+     for (CWalletRef pwallet : vpwallets) {
+        pwallet->TransactionAddedToWallet.connect(boost::bind(&CZMQNotificationInterface::TransactionAddedToWallet, this, _1, _2));
+    }
+}
+#endif
 
 void CZMQNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
 {
@@ -180,3 +201,22 @@ void CZMQNotificationInterface::BlockDisconnected(const std::shared_ptr<const CB
         TransactionAddedToMempool(ptx);
     }
 }
+
+void CZMQNotificationInterface::TransactionAddedToWallet(const CTransactionRef& ptx, const uint256 &hashBlock) {
+    const CTransaction& tx = *ptx;
+
+    for (std::list<CZMQAbstractNotifier*>::iterator i = notifiers.begin(); i!=notifiers.end(); )
+    {
+        CZMQAbstractNotifier *notifier = *i;
+        if (notifier->NotifyWalletTransaction(tx, hashBlock))
+        {
+            i++;
+        }
+        else
+        {
+            notifier->Shutdown();
+            i = notifiers.erase(i);
+        }
+    }
+}
+
