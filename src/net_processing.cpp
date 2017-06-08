@@ -1217,6 +1217,7 @@ static void NetAfterProcessNewBlock(CConnman& connman, const uint256& blockhash)
             return;
         }
         if (nodestate->CurrentBlockHash() != blockhash) {
+            LogPrint(BCLog::NET, "peer=%d has %s as its best block (NetAfterProcessNewBlock), which is unreasonable; disconnecting\n", node->GetId(), blockhash.ToString());
             node->fDisconnect = true;
         }
     });
@@ -1257,7 +1258,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 vRecv >> hash;
 
                 if (strMsg == NetMsgType::BLOCK) {
-                    pfrom->TipDoesntMatch();
+                    pfrom->TipDoesntMatch(strprintf("peer=%d rejected valid block %s", pfrom->GetId(), hash.ToString()));
                 }
             }
 
@@ -1608,7 +1609,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             if (inv.type == MSG_BLOCK) {
                 UpdateBlockAvailability(pfrom->GetId(), inv.hash);
                 if (fAlreadyHave && !AllowAsMatchingPeerTip(mapBlockIndex[inv.hash])) {
-                    pfrom->TipDoesntMatch();
+                    pfrom->TipDoesntMatch(strprintf("peer=%d has %s as its best block (inv), which is unreasonable", pfrom->GetId(), inv.hash.ToString()));
                 }
                 if (!fAlreadyHave && !fImporting && !fReindex && !mapBlocksInFlight.count(inv.hash)) {
                     // We used to request the full block here, but since headers-announcements are now the
@@ -2037,8 +2038,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                     LOCK(cs_main);
                     Misbehaving(pfrom->GetId(), nDoS);
                 }
-                LogPrintf("Peer %d sent us invalid header via cmpctblock\n", pfrom->GetId());
-                pfrom->TipDoesntMatch();
+                pfrom->TipDoesntMatch(strprintf("peer=%d sent us invalid header via cmpctblock", pfrom->GetId()));
                 return true;
             }
         }
@@ -2071,7 +2071,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
         if (pindex->nStatus & BLOCK_HAVE_DATA) {
             if (!AllowAsMatchingPeerTip(pindex)) {
-                pfrom->TipDoesntMatch();
+                pfrom->TipDoesntMatch(strprintf("peer=%d has %s as its best block (cmpctblock), which is unreasonable", pfrom->GetId(), pindex->GetBlockHash().ToString()));
             }
             return true;
         }
@@ -2342,7 +2342,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             // we can use this peer to download.
             UpdateBlockAvailability(pfrom->GetId(), headers.back().GetHash());
 
-            pfrom->TipDoesntMatch();
+            pfrom->TipDoesntMatch(strprintf("peer=%d sent unconnectable headers based on %s", pfrom->GetId(), headers[0].hashPrevBlock.ToString()));
 
             return true;
         }
@@ -2371,7 +2371,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         assert(pindexLast);
         UpdateBlockAvailability(pfrom->GetId(), pindexLast->GetBlockHash());
         if (!AllowAsMatchingPeerTip(pindexLast)) {
-            pfrom->TipDoesntMatch();
+            pfrom->TipDoesntMatch(strprintf("peer=%d has %s as its best block (headers), which is unreasonable", pfrom->GetId(), pindexLast->GetBlockHash().ToString()));
         }
 
         if (nCount == MAX_HEADERS_RESULTS) {

@@ -809,12 +809,7 @@ public:
         return !(fInbound || fFeeler);
     }
 
-    void TipDoesntMatch()
-    {
-        if (RequireMatchingTip()) {
-            fDisconnect = true;
-        }
-    }
+    void TipDoesntMatch(const std::string& msg);
 
     std::string GetAddrName() const;
     //! Sets the addrName only if it was not previously set

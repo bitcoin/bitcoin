@@ -686,6 +686,16 @@ void CNode::copyStats(CNodeStats &stats)
 }
 #undef X
 
+void CNode::TipDoesntMatch(const std::string& msg)
+{
+    if (RequireMatchingTip()) {
+        LogPrint(BCLog::NET, "%s; disconnecting\n", msg);
+        fDisconnect = true;
+    } else {
+        LogPrint(BCLog::NET, "%s (tolerating)\n", msg);
+    }
+}
+
 bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete)
 {
     complete = false;
