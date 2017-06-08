@@ -190,6 +190,9 @@ enum opcodetype
     OP_INVALIDOPCODE = 0xff,
 };
 
+// Maximum value that an opcode can be
+static const unsigned int MAX_OPCODE = OP_NOP10;
+
 const char* GetOpName(opcodetype opcode);
 
 class scriptnum_error : public std::runtime_error
@@ -629,6 +632,9 @@ public:
     /** Called by IsStandardTx and P2SH/BIP62 VerifyScript (which makes it consensus-critical). */
     bool IsPushOnly(const_iterator pc) const;
     bool IsPushOnly() const;
+
+    /** Check if the script contains valid OP_CODES */
+    bool HasValidOps() const;
 
     /**
      * Returns whether the script is guaranteed to fail at execution,
