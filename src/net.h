@@ -806,7 +806,7 @@ public:
 
     bool RequireMatchingTip() const
     {
-        return !(fInbound || fFeeler);
+        return !(fInbound || fFeeler || fWhitelisted || fAddnode);
     }
 
     void TipDoesntMatch(const std::string& msg);
