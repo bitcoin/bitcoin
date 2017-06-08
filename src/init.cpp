@@ -1015,7 +1015,6 @@ bool AppInitParameterInteraction()
         if (nPruneTarget < MIN_DISK_SPACE_FOR_BLOCK_FILES) {
             return InitError(strprintf(_("Prune configured below the minimum of %d MiB.  Please use a higher number."), MIN_DISK_SPACE_FOR_BLOCK_FILES / 1024 / 1024));
         }
-        LogPrintf("Prune configured to target %uMiB on disk for block and undo files.\n", nPruneTarget / 1024 / 1024);
         fPruneMode = true;
     }
 
@@ -1213,6 +1212,9 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     InitSignatureCache();
 
     LogPrintf("Using %u threads for script verification\n", nScriptCheckThreads);
+    if (fPruneMode)
+        LogPrintf("Using %uMiB as target for pruning block and undo files\n", nPruneTarget / 1024 / 1024);
+
     if (nScriptCheckThreads) {
         for (int i=0; i<nScriptCheckThreads-1; i++)
             threadGroup.create_thread(&ThreadScriptCheck);
