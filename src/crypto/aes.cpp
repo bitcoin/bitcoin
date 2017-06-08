@@ -137,7 +137,7 @@ static int CBCDecrypt(const T& dec, const unsigned char iv[AES_BLOCKSIZE], const
         // If used, padding size is the value of the last decrypted byte. For
         // it to be valid, It must be between 1 and AES_BLOCKSIZE.
         padsize = *--out;
-        fail = !padsize | (padsize > AES_BLOCKSIZE);
+        fail = (!padsize) | (padsize > AES_BLOCKSIZE);
 
         // If not well-formed, treat it as though there's no padding.
         padsize *= !fail;
