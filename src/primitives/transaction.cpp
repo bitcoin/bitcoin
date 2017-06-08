@@ -236,7 +236,7 @@ CAmount GetInterest(CAmount nValue, int outputBlockHeight, int valuationHeight, 
         if(valuationHeight>=THEUNFORKENING){
             blocks=std::min(blocks,maturationBlock-outputBlockHeight);
             //If a user hodls before is up to date with chain, the maturation date can appear in the past, causing a crash trying to calculate negative interest
-            blocks=std::min(blocks,0);
+            blocks=std::max(blocks,0);
         }
     }
 
