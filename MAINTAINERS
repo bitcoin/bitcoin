@@ -1,0 +1,78 @@
+
+
+	List of maintainers and how to submit Bitcoin Core changes
+
+Please try to follow the guidelines below.  This will make things
+easier on the maintainers.  Not all of these guidelines matter for every
+trivial patch so apply some common sense.
+
+1.	Always _test_ your changes, however small.
+
+2.	Try to release a few ALPHA test versions to the net. Announce
+	them onto the bitcoin-dev channel and await results.
+
+3.	Make sure your changes compile correctly in multiple
+	configurations, and passes Travis.
+
+4.	When you are happy with a change make it generally available for
+	testing and await feedback.
+
+5.	Make a patch available to the relevant maintainer in github
+	or on the bitcoin-dev list.
+
+	PLEASE check your patch with the automated style checker
+	(clang-format) to catch trivial style violations.
+	See doc/developer-notes.md for guidance here.
+
+	PLEASE CC: the maintainers and mailing list on your changes.
+
+	PLEASE try to include any credit lines you want added with the
+	commit. It avoids people being missed off by mistake and makes
+	it easier to know who wants adding and who doesn't.
+
+	PLEASE document known bugs. If it doesn't work for everything
+	or does something very odd once a month document it.
+
+	PLEASE remember that submissions must be made under the terms
+	of the COPYING licnse.
+
+6.	Make sure you have the right to send any changes you make. If you
+	do changes at work you may find your employer owns the patch
+	not you.
+
+7.	When sending security related changes or reports to a maintainer
+	please Cc: bitcoin-security@lists.sourceforge.net, especially
+	if the maintainer does not respond.
+
+8.	Happy hacking.
+
+Descriptions of section entries:
+
+	M: Mail to/CC: FullName <address@domain>
+	R: Designated reviewer: FullName <address@domain>
+	   These reviewers should be CCed on patches.
+	L: Mailing list that is relevant to this area
+	W: Web-page with status/info
+	Q: Patchwork web based patch tracking system site
+	T: SCM tree type and location.
+	   Type is one of: git, hg, quilt, stgit, topgit
+	S: Status, one of the following:
+	   Supported:	Someone is actually paid to look after this.
+	   Maintained:	Someone actually looks after it.
+	   Odd Fixes:	It has a maintainer but they don't have time to do
+			much other than throw the odd patch in. See below..
+	   Orphan:	No current maintainer [but maybe you could take the
+			role as you write your new code].
+	   Obsolete:	Old code. Something tagged obsolete generally means
+			it has been replaced by a better system and you
+			should be using that.
+
+Maintainers List (try to look for most precise areas first)
+
+		-----------------------------------
+
+QT GUI
+M:	Jonas Schnelli <dev@jonasschnelli.ch>
+L:	bitcoin-dev@lists.linuxfoundation.org
+S:	Maintained
+
