@@ -377,7 +377,7 @@ public:
         consensus.BIP65Height = 0; // 000000000000000004c2b624ed5d7756c508d90fd0da2c7c679febfa6c4735f0
         consensus.BIP66Height = 0; // 00000000000000000379eaa19dce8c9b722d46ae6a57c2f1a988119488b50931
         
-        consensus.powLimit = uint256S("0000000000007fffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.powLimit = uint256S("000000000000bfffffffffffffffffffffffffffffffffffffffffffffffffff");
         
         
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
@@ -530,7 +530,7 @@ public:
         consensus.BIP65Height = 0;
         consensus.BIP66Height = 0;
         
-        consensus.powLimit = uint256S("0000000000007fffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.powLimit = uint256S("000000000001ffffffffffffffffffffffffffffffffffffffffffffffffffff");
         
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         consensus.nPowTargetSpacing = 10 * 60;

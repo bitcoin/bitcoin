@@ -1203,10 +1203,29 @@ CAmount CHDWallet::GetBlindBalance()
 
 CAmount CHDWallet::GetAnonBalance()
 {
-    LogPrintf("%s: TODO\n", __func__);
+    CAmount nBalance = 0;
     
+    LOCK2(cs_main, cs_wallet);
     
-    return 0;
+    for (const auto &ri : mapRecords)
+    {
+        const auto &txhash = ri.first;
+        const auto &rtx = ri.second;
+        
+        if (!IsTrusted(txhash, rtx.blockHash))
+            continue;
+        
+        for (const auto &r : rtx.vout)
+        {
+            if (r.nType == OUTPUT_RINGCT
+                && r.nFlags & ORF_OWNED && !IsSpent(txhash, r.n))
+                nBalance += r.nValue;
+        };
+        
+        if (!MoneyRange(nBalance))
+            throw std::runtime_error(std::string(__func__) + ": value out of range");
+    };
+    return nBalance;
 };
 
 /**
@@ -1482,7 +1501,6 @@ int CHDWallet::ExpandTempRecipients(std::vector<CTempRecipient> &vecSend, CStore
             */
             sEphem.MakeNewKey(true);
             
-            
             if (r.address.type() == typeid(CStealthAddress))
             {
                 CStealthAddress sx = boost::get<CStealthAddress>(r.address);
@@ -1542,6 +1560,13 @@ int CHDWallet::ExpandTempRecipients(std::vector<CTempRecipient> &vecSend, CStore
             };
             
             r.sEphem = sEphem;
+        } else
+        if (r.nType == OUTPUT_RINGCT)
+        {
+            CKey sEphem;
+            
+            
+            return errorN(1, sError, __func__, _("TODO.").c_str());
         };
     };
     

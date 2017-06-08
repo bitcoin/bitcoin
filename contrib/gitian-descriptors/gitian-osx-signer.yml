@@ -1,5 +1,5 @@
 ---
-name: "bitcoin-dmg-signer"
+name: "particl-dmg-signer"
 suites:
 - "trusty"
 architectures:

@@ -553,7 +553,6 @@ public:
     mutable std::map<uint256, CWalletTx> mapTempWallet;
     
     MapRecords_t mapRecords;
-    
     RtxOrdered_t rtxOrdered;
     
     std::vector<CVoteToken> vVoteTokens;

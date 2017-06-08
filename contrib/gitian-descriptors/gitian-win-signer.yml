@@ -1,5 +1,5 @@
 ---
-name: "bitcoin-win-signer"
+name: "particl-win-signer"
 suites:
 - "trusty"
 architectures:

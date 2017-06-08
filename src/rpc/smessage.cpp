@@ -875,7 +875,7 @@ UniValue smsgbuckets(const JSONRPCRequest &request)
                 objM.push_back(Pair("hash", sHash));
                 objM.push_back(Pair("last changed", part::GetTimeString(it->second.timeChanged, cbuf, sizeof(cbuf))));
 
-                boost::filesystem::path fullPath = GetDataDir() / "smsgStore" / sFile;
+                boost::filesystem::path fullPath = GetDataDir() / "smsgstore" / sFile;
 
 
                 if (!boost::filesystem::exists(fullPath))
@@ -926,7 +926,7 @@ UniValue smsgbuckets(const JSONRPCRequest &request)
                 std::string sFile = boost::lexical_cast<std::string>(it->first) + "_01.dat";
 
                 try {
-                    boost::filesystem::path fullPath = GetDataDir() / "smsgStore" / sFile;
+                    boost::filesystem::path fullPath = GetDataDir() / "smsgstore" / sFile;
                     boost::filesystem::remove(fullPath);
                 } catch (const boost::filesystem::filesystem_error& ex)
                 {

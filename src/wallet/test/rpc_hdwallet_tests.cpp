@@ -176,9 +176,14 @@ BOOST_AUTO_TEST_CASE(rpc_hdwallet_timelocks)
     sResult = rv["hex"].getValStr();
     
     
+   
+    uint32_t nSequence = 0;
     
+    int32_t nTime = 2880 / (2 << CTxIn::SEQUENCE_LOCKTIME_GRANULARITY); // 48 hours
+    nSequence |= CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG;
+    nSequence |= nTime;
     
-    script = CScript() << 1487406900 << OP_CHECKSEQUENCEVERIFY << OP_DROP << OP_DUP << OP_HASH160 << ToByteVector(id) << OP_EQUALVERIFY << OP_CHECKSIG;
+    script = CScript() << nSequence << OP_CHECKSEQUENCEVERIFY << OP_DROP << OP_DUP << OP_HASH160 << ToByteVector(id) << OP_EQUALVERIFY << OP_CHECKSIG;
     CScript *ps = &((CTxOutStandard*)txn.vpout[0].get())->scriptPubKey;
     BOOST_REQUIRE(ps);
     
@@ -194,10 +199,36 @@ BOOST_AUTO_TEST_CASE(rpc_hdwallet_timelocks)
     sCmd = "createrawtransaction " + sTxn + " {\""+CBitcoinAddress(vAddresses[0]).ToString()+"\":99.99}";
     
     
+    BOOST_REQUIRE_NO_THROW(rv = CallRPC(sCmd));
+    sResult = StripQuotes(rv.write());
+    
+    
     sCmd = "signrawtransaction " + sResult + " " + sTxn;
     BOOST_REQUIRE_NO_THROW(rv = CallRPC(sCmd));
     BOOST_CHECK(rv["errors"][0]["error"].getValStr() == "Locktime requirement not satisfied");
     
+    char bufferHex[64];
+    snprintf(bufferHex, sizeof(bufferHex), "%d", nSequence);
+    
+    
+    sTxn = "[{\"txid\":\""
+        + txn.GetHash().ToString() + "\","
+        + "\"vout\":0,"
+        + "\"scriptPubKey\":\""+HexStr(script.begin(), script.end())+"\","
+        + "\"amount\":100,"
+        +"\"sequence\":"+std::string(bufferHex)+"}]";
+    sCmd = "createrawtransaction " + sTxn + " {\""+CBitcoinAddress(vAddresses[0]).ToString()+"\":99.99}";
+    
+    
+    
+    BOOST_REQUIRE_NO_THROW(rv = CallRPC(sCmd));
+    sResult = StripQuotes(rv.write());
+    
+    
+    sCmd = "signrawtransaction " + sResult + " " + sTxn;
+    BOOST_REQUIRE_NO_THROW(rv = CallRPC(sCmd));
+    BOOST_CHECK(rv["complete"].getBool() == true);
+    sResult = rv["hex"].getValStr();
     
     
 }

@@ -28,7 +28,7 @@ public:
 
 static int memncmp(uint8_t *p, uint8_t c, size_t len)
 {
-    for (size_t k = 0; k< len; ++k)
+    for (size_t k = 0; k < len; ++k, ++p)
     {
         if (*p < c)
             return -1;
@@ -37,6 +37,10 @@ static int memncmp(uint8_t *p, uint8_t c, size_t len)
     };
     return 0;
 }
+
+struct S32Bytes {
+  uint8_t d[32];
+};
 
 int testCommitmentSum(secp256k1_context *ctx, CAmount nValueIn,
     std::vector<CAmount> &amountsOut, CAmount nValueOutPlain, size_t nCols,
@@ -50,7 +54,7 @@ int testCommitmentSum(secp256k1_context *ctx, CAmount nValueIn,
     std::vector<CKey> kto_outs(amountsOut.size());
     std::vector<CPubKey> pkto_outs(amountsOut.size());
     std::vector<CTxOutValueTest> txouts(amountsOut.size());
-    uint8_t blind[txouts.size()][32];
+    std::vector<S32Bytes> blind(txouts.size());
     
     std::vector<CKey> k_ins(1);
     k_ins[0].MakeNewKey(true);
@@ -80,10 +84,10 @@ int testCommitmentSum(secp256k1_context *ctx, CAmount nValueIn,
         CTxOutValueTest &txout = txouts[k];
         
         if (fUnblindedOutputs)
-            memset(&blind[nBlinded][0], 0, 32);
+            memset(&blind[nBlinded].d[0], 0, 32);
         else
-            GetStrongRandBytes(&blind[nBlinded][0], 32);
-        pBlinds.push_back(&blind[nBlinded++][0]);
+            GetStrongRandBytes(&blind[nBlinded].d[0], 32);
+        pBlinds.push_back(&blind[nBlinded++].d[0]);
         
         BOOST_CHECK(secp256k1_pedersen_commit(ctx, &txout.commitment, (uint8_t*)pBlinds.back(), amountsOut[k], secp256k1_generator_h));
         
@@ -126,12 +130,12 @@ int testCommitmentSum(secp256k1_context *ctx, CAmount nValueIn,
     //BOOST_MESSAGE("nCols " << nCols);
     //BOOST_MESSAGE("index " << index);
     
-    uint8_t m[nCols * nRows * 33]; // m[(col+(cols*row))*33]
-    
-    const uint8_t *pcm_in[nCols * txins.size()]; // pcm_in[col+(cols*row)]
+    uint8_t *m = (uint8_t*) calloc(nCols * nRows, 33); // m[(col+(cols*row))*33]
+    BOOST_REQUIRE(m);
     
     size_t haveFee = (nValueOutPlain != 0) ? 1 : 0;
-    const uint8_t *pcm_out[txouts.size() + haveFee];
+    std::vector<const uint8_t*> pcm_in(nCols * txins.size()); // pcm_in[col+(cols*row)]
+    std::vector<const uint8_t*> pcm_out(txouts.size() + haveFee);
     
     std::vector<CTxOutValueTest> tx_mixin(txins.size() * (nCols-1));
     
@@ -178,13 +182,13 @@ int testCommitmentSum(secp256k1_context *ctx, CAmount nValueIn,
     };
     
     rv = prepareLastRowMLSAG(txouts.size()+haveFee, txouts.size(), nCols, nRows,
-        pcm_in, pcm_out, &pBlinds[0], m, blindSum);
+        &pcm_in[0], &pcm_out[0], &pBlinds[0], m, blindSum);
     BOOST_MESSAGE("prepareLastRowMLSAG  " << rv);
     BOOST_REQUIRE(0 == rv);
     
+    
     if (memncmp(blindSum, 0, 32) == 0)
     {
-        //BOOST_MESSAGE("m  " << HexStr(&m[(index+(nRows-1)*nCols)*33], &m[(index+(nRows-1)*nCols)*33]+33));
         BOOST_REQUIRE(fPass == (0 == memncmp(&m[(index+(nRows-1)*nCols)*33], 0, 33))); // point at infinity encoded as 0*33
         return 0;
     };
@@ -205,6 +209,9 @@ int testCommitmentSum(secp256k1_context *ctx, CAmount nValueIn,
     //BOOST_MESSAGE("pkTestFromCommitmentSum  " << HexStr(pkTestFromCommitmentSum.begin(), pkTestFromCommitmentSum.end()));
     
     BOOST_REQUIRE(fPass == (pkTestFromCommitmentSum == pkTestFromBlindKey));
+    
+    free(m);
+    
     return 0;
 };
 
@@ -278,26 +285,21 @@ BOOST_AUTO_TEST_CASE(ringct_test)
     
     std::vector<CKey> kto_outs(2);
     std::vector<CPubKey> pkto_outs(2);
-    
-    uint8_t blind[txouts.size()][32];
+    std::vector<S32Bytes> blind(txouts.size());
    
     size_t nBlinded = 0;
     for (size_t k = 0; k < txouts.size(); ++k)
     {
-        BOOST_MESSAGE("Output " << k << ": " << amount_outs[k]);
-        
         kto_outs[k].MakeNewKey(true);
         pkto_outs[k] = kto_outs[k].GetPubKey();
         
         
         CTxOutValueTest &txout = txouts[k];
         
-        GetStrongRandBytes(&blind[nBlinded][0], 32);
-        pBlinds.push_back(&blind[nBlinded++][0]);
-        BOOST_MESSAGE("blind " << HexStr(&blind[nBlinded-1][0], &blind[nBlinded-1][0]+32));
+        GetStrongRandBytes(&blind[nBlinded].d[0], 32);
+        pBlinds.push_back(&blind[nBlinded++].d[0]);
         
         BOOST_CHECK(secp256k1_pedersen_commit(ctx, &txout.commitment, (uint8_t*)pBlinds.back(), amount_outs[k], secp256k1_generator_h));
-        BOOST_MESSAGE("C " << k << ": " << HexStr(&txout.commitment.data[0], &txout.commitment.data[0]+33));
         
         // Generate ephemeral key for ECDH nonce generation
         CKey ephemeral_key;
@@ -346,8 +348,8 @@ BOOST_AUTO_TEST_CASE(ringct_test)
     uint8_t *m = (uint8_t*) calloc(nCols * nRows, 33); // m[(col+(cols*row))*33]
     BOOST_REQUIRE(m);
     
-    const uint8_t *pcm_in[nCols * txins.size()]; // pcm_in[col+(cols*row)]
-    const uint8_t *pcm_out[txouts.size()];
+    std::vector<const uint8_t*> pcm_in(nCols * txins.size()); // pcm_in[col+(cols*row)]
+    std::vector<const uint8_t*> pcm_out(txouts.size());
     
     std::vector<CTxOutValueTest> tx_mixin(txins.size() * (nCols-1));
     
@@ -377,7 +379,7 @@ BOOST_AUTO_TEST_CASE(ringct_test)
         pcm_in[i+k*nCols] = mixin.commitment.data;
     };
     
-    const uint8_t *sk[nRows]; // pass in pointer to secret keys to keep them in secured memory
+    std::vector<const uint8_t*> sk(nRows); // pass in pointer to secret keys to keep them in secured memory
     
     for (size_t k = 0; k < txins.size(); ++k)
         sk[k] = k_ins[k].begin();
@@ -389,19 +391,19 @@ BOOST_AUTO_TEST_CASE(ringct_test)
     for (size_t k = 0; k < txouts.size(); ++k)
         pcm_out[k] = txouts[k].commitment.data;
     BOOST_CHECK(0 == prepareLastRowMLSAG(txouts.size(), txouts.size(), nCols, nRows,
-        pcm_in, pcm_out, &pBlinds[0], m, blindSum));
+        &pcm_in[0], &pcm_out[0], &pBlinds[0], m, blindSum));
     uint8_t randSeed[32];
     GetStrongRandBytes(randSeed, 32);
     uint8_t preimage[32];
     
-    uint8_t ki[33 * txins.size()];
     uint8_t pc[32];
+    std::vector<uint8_t> ki(33 * txins.size());
     std::vector<uint8_t> ss(nCols * nRows * 32);
     
     
     BOOST_CHECK(0 == generateMLSAG(ctx, randSeed,
         preimage, nCols, nRows, index, 
-        sk, m, ki, pc, &ss[0]));
+        &sk[0], m, &ki[0], pc, &ss[0]));
     /*
     for (size_t k = 0; k < txins.size(); ++k)
         BOOST_MESSAGE("KeyImage " << k << " : " << HexStr(&ki[k], &ki[k]+33));
@@ -415,7 +417,7 @@ BOOST_AUTO_TEST_CASE(ringct_test)
     */
     BOOST_CHECK(0 == verifyMLSAG(ctx,
         preimage, nCols, nRows, 
-        m, ki, pc, &ss[0]));
+        m, &ki[0], pc, &ss[0]));
     
     free(m);
     
@@ -497,7 +499,7 @@ int doTest(secp256k1_context *ctx, size_t nInputs, size_t nOutputs, CAmount nFee
     std::vector<CTxOutValueTest> txins(nInputs);
     std::vector<CKey> kIns(nInputs);
     
-    uint8_t blindsIn[nInputs][32];
+    std::vector<S32Bytes> blindsIn(nInputs);
     
     // Make inputs
     CAmount nInputSum = 0;
@@ -511,8 +513,8 @@ int doTest(secp256k1_context *ctx, size_t nInputs, size_t nOutputs, CAmount nFee
         kIns[k].Set(tmp, true);
         txins[k].pk = kIns[k].GetPubKey();
         
-        GetBytes(&blindsIn[k][0], 32, fDeterministic);
-        pBlinds.push_back(&blindsIn[k][0]);
+        GetBytes(&blindsIn[k].d[0], 32, fDeterministic);
+        pBlinds.push_back(&blindsIn[k].d[0]);
         
         // Make sure there's always enough coin
         if (k == nInputs-1
@@ -520,7 +522,7 @@ int doTest(secp256k1_context *ctx, size_t nInputs, size_t nOutputs, CAmount nFee
             nValueIn = nFee * 2 + nFee * (rand() % 20000);
         nInputSum += nValueIn;
         
-        BOOST_CHECK(secp256k1_pedersen_commit(ctx, &txins[k].commitment, &blindsIn[k][0], nValueIn, secp256k1_generator_h));
+        BOOST_CHECK(secp256k1_pedersen_commit(ctx, &txins[k].commitment, &blindsIn[k].d[0], nValueIn, secp256k1_generator_h));
         //BOOST_MESSAGE("C: " << HexStr(&txins[0].vchCommitment[0], &txins[0].vchCommitment[0]+33)); 
     };
 
@@ -539,8 +541,8 @@ int doTest(secp256k1_context *ctx, size_t nInputs, size_t nOutputs, CAmount nFee
     
     std::vector<CKey> kto_outs(nOutputs);
     std::vector<CPubKey> pkto_outs(nOutputs);
+    std::vector<S32Bytes> blind(txouts.size());
     
-    uint8_t blind[txouts.size()][32];
     for (size_t k = 0; k < txouts.size(); ++k)
     {
         BOOST_MESSAGE("Output " << k << ": " << amountsOut[k]);
@@ -551,8 +553,8 @@ int doTest(secp256k1_context *ctx, size_t nInputs, size_t nOutputs, CAmount nFee
         
         CTxOutValueTest &txout = txouts[k];
         
-        GetBytes(&blind[k][0], 32, fDeterministic);
-        pBlinds.push_back(&blind[k][0]);
+        GetBytes(&blind[k].d[0], 32, fDeterministic);
+        pBlinds.push_back(&blind[k].d[0]);
         //BOOST_MESSAGE("blind " << HexStr(&blind[k][0], &blind[k][0]+32));
         
         BOOST_CHECK(secp256k1_pedersen_commit(ctx, &txout.commitment, (uint8_t*)pBlinds.back(), amountsOut[k], secp256k1_generator_h));
@@ -604,8 +606,8 @@ int doTest(secp256k1_context *ctx, size_t nInputs, size_t nOutputs, CAmount nFee
     BOOST_REQUIRE(m);
 
     size_t haveFee = (nFee != 0) ? 1 : 0;
-    const uint8_t *pcm_in[nCols * txins.size()]; // pcm_in[col+(cols*row)]
-    const uint8_t *pcm_out[txouts.size() + haveFee];
+    std::vector<const uint8_t*> pcm_in(nCols * txins.size()); // pcm_in[col+(cols*row)]
+    std::vector<const uint8_t*> pcm_out(txouts.size() + haveFee);
 
     std::vector<CTxOutValueTest> tx_mixin(txins.size() * (nCols-1));
 
@@ -637,7 +639,7 @@ int doTest(secp256k1_context *ctx, size_t nInputs, size_t nOutputs, CAmount nFee
         pcm_in[i+k*nCols] = mixin.commitment.data;
     };
 
-    const uint8_t *sk[nRows]; // pass in pointer to secret keys to keep them in secured memory
+    std::vector<const uint8_t*> sk(nRows); // pass in pointer to secret keys to keep them in secured memory
 
     for (size_t k = 0; k < txins.size(); ++k)
         sk[k] = kIns[k].begin();
@@ -660,21 +662,23 @@ int doTest(secp256k1_context *ctx, size_t nInputs, size_t nOutputs, CAmount nFee
     };
     
     BOOST_CHECK(0 == prepareLastRowMLSAG(txouts.size()+haveFee, txouts.size(), nCols, nRows,
-        pcm_in, pcm_out, &pBlinds[0], m, blindSum));
+        &pcm_in[0], &pcm_out[0], &pBlinds[0], m, blindSum));
     
     
-    uint8_t randSeed[32], preimage[32], ki[33 * txins.size()], pc[32];
+    
+    uint8_t randSeed[32], preimage[32], pc[32];
+    std::vector<uint8_t> ki(33 * txins.size());
     std::vector<uint8_t> ss(nCols * nRows * 32);
     
     GetBytes(randSeed, 32, fDeterministic);
     
     BOOST_CHECK(0 == generateMLSAG(ctx, randSeed,
         preimage, nCols, nRows, index, 
-        sk, m, ki, pc, &ss[0]));
+        &sk[0], m, &ki[0], pc, &ss[0]));
     
     BOOST_CHECK(0 == verifyMLSAG(ctx,
         preimage, nCols, nRows, 
-        m, ki, pc, &ss[0]));
+        m, &ki[0], pc, &ss[0]));
     
     free(m);
     /*

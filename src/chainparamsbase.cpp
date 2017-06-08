@@ -95,7 +95,7 @@ std::string ChainNameFromCommandLine()
     bool fRegTest = GetBoolArg("-regtest", false);
     bool fTestNet = GetBoolArg("-testnet", false);
 
-    // - Force testnet
+    // - Force testnet, REMOVE
     if (!fRegTest)
         fTestNet = true;
     

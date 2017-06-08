@@ -1191,7 +1191,7 @@ public:
     bool operator()(const CStealthAddress &dest) const { return false; }
     
 };
-
+/*
 UniValue addwitnessaddress(const JSONRPCRequest& request)
 {
     if (!EnsureWalletIsAvailable(request.fHelp))
@@ -1235,7 +1235,7 @@ UniValue addwitnessaddress(const JSONRPCRequest& request)
 
     return CBitcoinAddress(w.result).ToString();
 }
-
+*/
 struct tallyitem
 {
     CAmount nAmount;
@@ -3449,7 +3449,7 @@ static const CRPCCommand commands[] =
     { "hidden",             "resendwallettransactions", &resendwallettransactions, true,   {} },
     { "wallet",             "abandontransaction",       &abandontransaction,       false,  {"txid"} },
     { "wallet",             "addmultisigaddress",       &addmultisigaddress,       true,   {"nrequired","keys","account"} },
-    { "wallet",             "addwitnessaddress",        &addwitnessaddress,        true,   {"address"} },
+    //{ "wallet",             "addwitnessaddress",        &addwitnessaddress,        true,   {"address"} },
     { "wallet",             "backupwallet",             &backupwallet,             true,   {"destination"} },
     { "wallet",             "bumpfee",                  &bumpfee,                  true,   {"txid", "options"} },
     { "wallet",             "dumpprivkey",              &dumpprivkey,              true,   {"address"}  },

@@ -42,7 +42,8 @@ BOOST_AUTO_TEST_CASE(ct_test)
     BOOST_CHECK(secp256k1_pedersen_commit(ctx, &txins[0].commitment, &blindsin[0][0], nValueIn, secp256k1_generator_h));
     BOOST_MESSAGE("C: " << HexStr(&txins[0].commitment.data[0], &txins[0].commitment.data[0]+33));
     
-    std::vector<CTxOutValueTest> txouts(2);
+    const int nTxOut = 2;
+    std::vector<CTxOutValueTest> txouts(nTxOut);
     
     std::vector<CAmount> amount_outs(2);
     amount_outs[0] = 5.69 * COIN;
@@ -56,7 +57,7 @@ BOOST_AUTO_TEST_CASE(ct_test)
     pkto_outs[0] = kto_outs[0].GetPubKey();
     pkto_outs[1] = kto_outs[1].GetPubKey();
     
-    uint8_t blind[txouts.size()][32];
+    uint8_t blind[nTxOut][32];
     
     size_t nBlinded = 0;
     for (size_t k = 0; k < txouts.size(); ++k)

@@ -2963,17 +2963,104 @@ UniValue sendparttoblind(const JSONRPCRequest &request)
 
 UniValue sendparttoanon(const JSONRPCRequest &request)
 {
-    if (request.fHelp || request.params.size() > 1)
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 6)
         throw std::runtime_error(
-            "sendparttoanon [fromHeight]\n");
+            "sendparttoblind \"address\" amount ( \"comment\" \"comment-to\" subtractfeefromamount, \"narration\")\n"
+            "\nSend an amount of part in a blinded payment to a given address.\n"
+            + HelpRequiringPassphrase() +
+            "\nArguments:\n"
+            "1. \"address\"     (string, required) The particl stealth address to send to.\n"
+            "2. \"amount\"      (numeric or string, required) The amount in " + CURRENCY_UNIT + " to send. eg 0.1\n"
+            "3. \"comment\"     (string, optional) A comment used to store what the transaction is for. \n"
+            "                            This is not part of the transaction, just kept in your wallet.\n"
+            "4. \"comment_to\"  (string, optional) A comment to store the name of the person or organization \n"
+            "                            to which you're sending the transaction. This is not part of the \n"
+            "                            transaction, just kept in your wallet.\n"
+            "5. subtractfeefromamount  (boolean, optional, default=false) The fee will be deducted from the amount being sent.\n"
+            "                            The recipient will receive less " + CURRENCY_UNIT + " than you enter in the amount field.\n"
+            "6. \"narration\"   (string, optional) Up to 24 characters sent with the transaction.\n"
+            "                            The narration is stored in the blockchain and is sent encrypted when destination is a stealth address and uncrypted otherwise.\n"
+            "\nResult:\n"
+            "\"txid\"           (string) The transaction id.\n"
+            "\nExamples:\n"
+            + HelpExampleCli("sendparttoblind", "\"SPGyji8uZFip6H15GUfj6bsutRVLsCyBFL3P7k7T7MUDRaYU8GfwUHpfxonLFAvAwr2RkigyGfTgWMfzLAAP8KMRHq7RE8cwpEEekH\" 0.1"));
     
     CHDWallet *pwallet = GetHDWallet();
     EnsureWalletIsUnlocked(pwallet);
     throw std::runtime_error("TODO");
     
-    UniValue result(UniValue::VOBJ);
+    CBitcoinAddress address(request.params[0].get_str());
+    if (!address.IsValidStealthAddress())
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Particl stealth address");
+
+    CAmount nAmount = AmountFromValue(request.params[1]);
+    if (nAmount <= 0)
+        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send");
+    if (nAmount > pwallet->GetBalance())
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds");
     
-    return result;
+    // Wallet comments
+    CWalletTx wtx;
+    CTransactionRecord rtx;
+    if (request.params.size() > 2 && !request.params[2].isNull() && !request.params[2].get_str().empty())
+    {
+        std::string s = request.params[2].get_str();
+        std::vector<uint8_t> v(s.begin(), s.end());
+        wtx.mapValue["comment"] = s;
+        rtx.mapValue[RTXVT_COMMENT] = v;
+    };
+    if (request.params.size() > 3 && !request.params[3].isNull() && !request.params[3].get_str().empty())
+    {
+        std::string s = request.params[3].get_str();
+        std::vector<uint8_t> v(s.begin(), s.end());
+        wtx.mapValue["to"] = s;
+        rtx.mapValue[RTXVT_TO] = v;
+    };
+ 
+    bool fSubtractFeeFromAmount = false;
+    if (request.params.size() > 4)
+        fSubtractFeeFromAmount = request.params[4].get_bool();
+    
+    if (fSubtractFeeFromAmount)
+        throw std::runtime_error("TODO");
+    
+    std::string sNarr;
+    if (request.params.size() > 5)
+    {
+        sNarr = request.params[5].get_str();
+        if (sNarr.length() < 1 || sNarr.length() > 24)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Narration can range from 1 to 24 characters.");
+    };
+    
+    CReserveKey reservekey(pwallet);
+    std::vector<CTempRecipient> vecSend;
+    std::string sError;
+    if (0 != AddOutput(OUTPUT_RINGCT, vecSend, address.Get(), nAmount, fSubtractFeeFromAmount, sNarr, sError))
+        throw JSONRPCError(RPC_MISC_ERROR, strprintf("AddBlindedOutput failed: %s.", sError));
+    
+    if (0 != pwallet->AddStandardInputs(wtx, rtx, vecSend, true, sError))
+        throw JSONRPCError(RPC_WALLET_ERROR, strprintf("AddStandardInputs failed: %s.", sError));
+    
+    CValidationState state;
+    if (!pwallet->CommitTransaction(wtx, rtx, reservekey, g_connman.get(), state))
+        throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Transaction commit failed: %s", state.GetRejectReason()));
+    
+    UniValue vErrors(UniValue::VARR);
+    if (state.IsInvalid())
+    {
+        // This can happen if the mempool rejected the transaction.  Report
+        // what happened in the "errors" response.
+        vErrors.push_back(strprintf("Error: The transaction was rejected: %s", FormatStateMessage(state)));
+        
+        UniValue result(UniValue::VOBJ);
+        result.push_back(Pair("txid", wtx.GetHash().GetHex()));
+        result.push_back(Pair("errors", vErrors));
+        return result;
+    }
+    
+    pwallet->PostProcessTempRecipients(vecSend);
+    
+    return wtx.GetHash().GetHex();
 }
 
 
@@ -3267,9 +3354,9 @@ static const CRPCCommand commands[] =
     { "wallet",             "filtertransactions",       &filtertransactions,       false,  {"offset","count","sort_code"} },
     { "wallet",             "filteraddresses",          &filteraddresses,          false,  {"offset","count","sort_code"} },
     
-    { "wallet",             "setvote",                  &setvote,                  false,  {"proposal","option","height_start","height_end"} },
-    { "wallet",             "votehistory",              &votehistory,              false,  {"current_only"} },
-    { "wallet",             "tallyvotes",               &tallyvotes,               false,  {"proposal","height_start","height_end"} },
+    { "governance",         "setvote",                  &setvote,                  false,  {"proposal","option","height_start","height_end"} },
+    { "governance",         "votehistory",              &votehistory,              false,  {"current_only"} },
+    { "governance",         "tallyvotes",               &tallyvotes,               false,  {"proposal","height_start","height_end"} },
     
     { "wallet",             "getstakinginfo",           &getstakinginfo,           true,  {} },
     
@@ -3281,11 +3368,11 @@ static const CRPCCommand commands[] =
     
     { "wallet",             "sendblindtopart",          &sendblindtopart,          false,  {"address","amount","comment","comment_to","subtractfeefromamount", "narration"} },
     { "wallet",             "sendblindtoblind",         &sendblindtoblind,         false,  {"address","amount","comment","comment_to","subtractfeefromamount", "narration"} },
-    { "wallet",             "sendblindtoanon",          &sendblindtoanon,          false,  {} },
+    { "wallet",             "sendblindtoanon",          &sendblindtoanon,          false,  {"address","amount","comment","comment_to","subtractfeefromamount", "narration"} },
     
-    { "wallet",             "sendanontopart",           &sendanontopart,           false,  {} },
-    { "wallet",             "sendanontoblind",          &sendanontoblind,          false,  {} },
-    { "wallet",             "sendanontoanon",           &sendanontoanon,           false,  {} },
+    { "wallet",             "sendanontopart",           &sendanontopart,           false,  {"address","amount","comment","comment_to","subtractfeefromamount", "narration"} },
+    { "wallet",             "sendanontoblind",          &sendanontoblind,          false,  {"address","amount","comment","comment_to","subtractfeefromamount", "narration"} },
+    { "wallet",             "sendanontoanon",           &sendanontoanon,           false,  {"address","amount","comment","comment_to","subtractfeefromamount", "narration"} },
     
     
     
