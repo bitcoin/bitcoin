@@ -45,6 +45,8 @@ protected:
      * size limiting, reorg (changes in lock times/coinbase maturity), or
      * replacement. This does not include any transactions which are included
      * in BlockConnectedDisconnected either in block->vtx or in txnConflicted.
+     *
+     * Called on a background thread.
      */
     virtual void TransactionRemovedFromMempool(const CTransactionRef &ptx) {}
     /**
