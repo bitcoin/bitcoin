@@ -121,23 +121,33 @@ void CMainSignals::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockInd
 }
 
 void CMainSignals::TransactionAddedToMempool(const CTransactionRef &ptx) {
-    m_internals->TransactionAddedToMempool(ptx);
+    m_internals->m_schedulerClient.AddToProcessQueue([ptx, this] {
+        m_internals->TransactionAddedToMempool(ptx);
+    });
 }
 
-void CMainSignals::BlockConnected(const std::shared_ptr<const CBlock> &pblock, const CBlockIndex *pindex, const std::vector<CTransactionRef>& vtxConflicted) {
-    m_internals->BlockConnected(pblock, pindex, vtxConflicted);
+void CMainSignals::BlockConnected(const std::shared_ptr<const CBlock> &pblock, const CBlockIndex *pindex, const std::shared_ptr<const std::vector<CTransactionRef>>& pvtxConflicted) {
+    m_internals->m_schedulerClient.AddToProcessQueue([pblock, pindex, pvtxConflicted, this] {
+        m_internals->BlockConnected(pblock, pindex, *pvtxConflicted);
+    });
 }
 
 void CMainSignals::BlockDisconnected(const std::shared_ptr<const CBlock> &pblock) {
-    m_internals->BlockDisconnected(pblock);
+    m_internals->m_schedulerClient.AddToProcessQueue([pblock, this] {
+        m_internals->BlockDisconnected(pblock);
+    });
 }
 
 void CMainSignals::SetBestChain(const CBlockLocator &locator) {
-    m_internals->SetBestChain(locator);
+    m_internals->m_schedulerClient.AddToProcessQueue([locator, this] {
+        m_internals->SetBestChain(locator);
+    });
 }
 
 void CMainSignals::Inventory(const uint256 &hash) {
-    m_internals->Inventory(hash);
+    m_internals->m_schedulerClient.AddToProcessQueue([hash, this] {
+        m_internals->Inventory(hash);
+    });
 }
 
 void CMainSignals::Broadcast(int64_t nBestBlockTime, CConnman* connman) {
