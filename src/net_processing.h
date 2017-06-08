@@ -22,6 +22,11 @@ static const unsigned int DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN = 100;
 static constexpr int64_t HEADERS_DOWNLOAD_TIMEOUT_BASE = 15 * 60 * 1000000; // 15 minutes
 static constexpr int64_t HEADERS_DOWNLOAD_TIMEOUT_PER_HEADER = 1000; // 1ms/header
 
+namespace Dandelion{
+    /** Set of hashes for transactions that are in the Dandelion stem. */
+    extern std::set<uint256> stemSet;
+}
+
 /** Register with a network node to receive its signals */
 void RegisterNodeSignals(CNodeSignals& nodeSignals);
 /** Unregister a network node */

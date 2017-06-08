@@ -9,7 +9,8 @@
  * network protocol versioning
  */
 
-static const int PROTOCOL_VERSION = 70015;
+// Updated the version number to 70016, to be compatible with Dandelion
+static const int PROTOCOL_VERSION = 70016;
 
 //! initial proto version, to be increased after version/verack negotiation
 static const int INIT_PROTO_VERSION = 209;
@@ -44,5 +45,9 @@ static const int SHORT_IDS_BLOCKS_VERSION = 70014;
 
 //! not banning for invalid compact blocks starts with this version
 static const int INVALID_CB_NO_BAN_VERSION = 70015;
+
+// Minimum version number that supports Dandelion
+static const int DANDELION_VERSION_NUM = 70016; 
+
 
 #endif // BITCOIN_VERSION_H
