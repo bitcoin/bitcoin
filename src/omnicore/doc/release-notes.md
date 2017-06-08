@@ -1,11 +1,9 @@
-Omni Core v0.0.11.2
+Omni Core v0.2.0
 ===================
 
-v0.0.11.2 is a bugfix release which resolves an issue where, in the case where a buyer accepts more than available for sale on the traditional distributed exchange, the RPC API reported an amount higher than available. This release also disables the alert system as per default.
+v0.2.0 is a release with minor changes and improvements based on Bitcoin Core 0.13.2.
 
-v0.0.11.1 is a bugfix release which resolves a critical bug in the RPC API whereby under certain circumstances retrieving data about a sell offer may trigger a failsafe and cause the automatic shutdown of the client.
-
-This version is built on top of v0.0.11, which is a major release and consensus critical in terms of the Omni Layer protocol rules. An upgrade is mandatory, and highly recommended. Prior releases will not be compatible with new behavior in this release.
+This version is built on top of v0.0.12, which is a major release and consensus critical in terms of the Omni Layer protocol rules. If you are using an older version of Omni Core than v0.0.12, an upgrade is mandatory, and highly recommended. Prior releases will not be compatible with new behavior in this release.
 
 Please report bugs using the issue tracker on GitHub:
 
@@ -14,21 +12,26 @@ Please report bugs using the issue tracker on GitHub:
 Table of contents
 =================
 
-- [Omni Core v0.0.11.2](#omni-core-v00112)
+- [Omni Core v0.2.0](#omni-core-v020)
 - [Upgrading and downgrading](#upgrading-and-downgrading)
   - [How to upgrade](#how-to-upgrade)
   - [Downgrading](#downgrading)
   - [Compatibility with Bitcoin Core](#compatibility-with-bitcoin-core)
+- [Imported changes and notes](#imported-changes-and-notes)
+  - [Upgrade to Bitcoin Core 0.13.2](#upgrade-to-bitcoin-core-0132)
+  - [Important transaction fee behavior changes](#important-transaction-fee-behavior-changes)
+  - [API changes](#api-changes)
+  - [New project versioning scheme](#new-project-versioning-scheme)
+  - [New project branch structure](#new-project-branch-structure)
 - [Consensus affecting changes](#consensus-affecting-changes)
-  - [Trading of all pairs on the Distributed Exchange](#trading-of-all-pairs-on-the-distributed-exchange)
-  - [Fee distribution system on the Distributed Exchange](#fee-distribution-system-on-the-distributed-exchange)
-  - [Send to Owners cross property suport](#send-to-owners-cross-property-support)
-- [Other notable changes](#other-notable-changes)
-  - [Raw payload creation API](#raw-payload-creation-api)
-  - [Other API extensions](#other-api-extensions)
-  - [Increased OP_RETURN payload size to 80 byte](#increased-op_return-payload-size-to-80-bytes)
-  - [Improved consensus checks](#improved-consensus-checks)
-  - [Various bug fixes and clean-ups](#various-bug-fixes-and-clean-ups)
+    - [Fee distribution system on the Distributed Exchange](#fee-distribution-system-on-the-distributed-exchange)
+    - [Send to Owners cross property suport](#send-to-owners-cross-property-support)
+- [Notable changes](#notable-changes)
+  - [Avoid selection of uneconomic UTXO during transaction creation](#avoid-selection-of-uneconomic-utxo-during-transaction-creation)
+  - [Performance improvements during initial parsing](#performance-improvements-during-initial-parsing)
+  - [New checkpoints and seed blocks up to block 460,000](#new-checkpoints-and-seed-blocks-up-to-block-460000)
+  - [Easy access to specific consensus hashes when parsing](#easy-access-to-specific-consensus-hashes-when-parsing)
+  - [Various bug fixes and improvements](#various-bug-fixes-and-improvements)
 - [Change log](#change-log)
 - [Credits](#credits)
 
@@ -45,37 +48,79 @@ During the first startup historical Omni transactions are reprocessed and Omni C
 Downgrading
 -----------
 
-Downgrading to an Omni Core version prior 0.0.11 is generally not supported as older versions will not provide accurate information due to the changes in consensus rules.
+Downgrading to an Omni Core version prior 0.0.12 is generally not supported as older versions will not provide accurate information due to the changes in consensus rules. Downgrading to Omni Core 0.0.12 can require a reindex of the blockchain, and is not recommended.
 
 Compatibility with Bitcoin Core
 -------------------------------
 
-Omni Core is based on Bitcoin Core 0.10.4 and can be used as replacement for Bitcoin Core. Switching between Omni Core and Bitcoin Core is fully supported at any time.
+Omni Core is based on Bitcoin Core 0.13.2 and can be used as replacement for Bitcoin Core. Switching between Omni Core and Bitcoin Core is fully supported at any time.
+
+Downgrading to a Bitcoin Core version prior 0.12 may not be supported due to the obfuscation of the blockchain database.
 
 Downgrading to a Bitcoin Core version prior 0.10 is not supported due to the new headers-first synchronization.
+
+Imported changes and notes
+==========================
+
+Upgrade to Bitcoin Core 0.13.2
+------------------------------
+
+The underlying base of Omni Core was upgraded from Bitcoin Core 0.10.4 to Bitcoin Core 0.13.2.
+
+Please see the following release notes for further details:
+
+- [Release notes for Bitcoin Core 0.11.0](https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.11.0.md)
+- [Release notes for Bitcoin Core 0.11.1](https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.11.1.md)
+- [Release notes for Bitcoin Core 0.11.2](https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.11.2.md)
+- [Release notes for Bitcoin Core 0.12.0](https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.12.0.md)
+- [Release notes for Bitcoin Core 0.12.1](https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.12.1.md)
+- [Release notes for Bitcoin Core 0.13.0](https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.13.0.md)
+- [Release notes for Bitcoin Core 0.13.1](https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.13.1.md)
+- [Release notes for Bitcoin Core 0.13.2](https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.13.2.md)
+
+Important transaction fee behavior changes
+------------------------------------------
+
+Earlier versions of Omni Core (prior to 0.2.0) used Bitcoin Core 0.10.x as a base. Omni Core 0.2.0 however is based on a much newer version of Bitcoin Core (0.13.2) and thus inherits various changes and improvements to the handling of fees that have been added to Bitcoin Core over time.
+
+It is highly recommended that users of Omni Core consider these fee changes and their chosen fee settings when upgrading to Omni Core 0.2.0, and test thoroughly to ensure that fee behavior is desirable and as expected.
+
+Consideration of the modified behavior for the `-paytxfee` setting is especially important. Earlier versions of Bitcoin Core (and thus earlier versions of Omni Core prior to 0.2.0) would round the size of the transaction upwards to the nearest kilobyte when calculating the fee (for example a 250 byte transaction would be rounded up to 1 kB). This issue has been resolved in newer versions of Bitcoin Core, and so Omni Core 0.2.0 will no longer perform this rounding when calculating the fee. A comparison of the behaviors can be shown in the following, where an example `paytxfee` value of 0.001 BTC/kB has been set:
+
+- Omni Core prior to 0.2.0: A transaction with a size of 250 bytes will be rounded up to 1 kB, and so a fee of 0.001 BTC will be used
+- Omni Core 0.2.0: A transaction with a size of 250 bytes will not be rounded, and so a fee of 0.00025 BTC will be used
+
+It is also worth noting that the fee estimation algorithms were updated, and thus the fees chosen when using `-txconfirmtarget` (along with the output of the `estimatefee` RPC) will likely be different in Omni Core 0.2.0 when compared to prior versions.
+
+API changes
+-----------
+
+The behavior of the RPC [omni_gettradehistoryforaddress](https://github.com/OmniLayer/omnicore/blob/master/src/omnicore/doc/rpc-api.md#omni_gettradehistoryforaddress) was amended to return newest transactions first instead of oldest.
+
+New project versioning scheme
+-----------------------------
+
+Starting with this version of Omni Core, the versioning scheme becomes more intuitive, as it uses MAJOR.MINOR.PATCH from now on, whereby MAJOR indicates consensus affecting changes or other non-backwards-compatible changes, MINOR indicates new functionality in a backwards-compatible manner, and PATCH is used to indicate backwards-compatible bug fixes.
+
+New project branch structure
+----------------------------
+
+The latest stable version of Omni Core can be found in the [master](https://github.com/OmniLayer/omnicore/tree/master) branch on GitHub, while the version under development can be found in the [develop](https://github.com/OmniLayer/omnicore/tree/develop) branch. This provides a cleaner seperation of source code.
+
 
 Consensus affecting changes
 ===========================
 
 All changes of the consensus rules are enabled by activation transactions.
 
-Please note, while Omni Core 0.0.11 contains support for several new rules and features they are not enabled immediately and will be activated via the feature activation mechanism described above.
+Please note, while Omni Core 0.2.0 contains support for several new rules and features they are not enabled immediately and will be activated via the feature activation mechanism described above.
 
 It follows an overview and a description of the consensus rule changes:
-
-Trading of all pairs on the Distributed Exchange
-------------------------------------------------
-
-Once activated trading of any property against any other (within the same ecosystem) will be permitted on the Distributed Exchange.
-
-Due to this change the existing trading UI in the QT version is no longer suitable and has been disabled for this release.  Please use the RPC interface to interact with the Distributed Exchange in this release.  The trading UI will be re-enabled in a future version to accommodate non-Omni pair trading.
-
-This change is identified by `"featureid": 8` and labeled by the GUI as `"Allow trading all pairs on the Distributed Exchange"`.
 
 Fee distribution system on the Distributed Exchange
 ---------------------------------------------------
 
-Omni Core 0.11 contains a fee caching and distribution system.  This system collects small amounts of tokens in a cache until a distribution threshold is reached.  Once this distribution threshold (trigger) is reached for a property, the fees in the cache will be distributed proportionally to holders of the Omni (#1) and Test-Omni (#2) tokens based on the percentage of the total Omni tokens owned.
+Omni Core 0.2.0 contains a fee caching and distribution system. This system collects small amounts of tokens in a cache until a distribution threshold is reached.  Once this distribution threshold (trigger) is reached for a property, the fees in the cache will be distributed proportionally to holders of the Omni (#1) and Test-Omni (#2) tokens based on the percentage of the total Omni tokens owned.
 
 Once activated fees will be collected from trading of non-Omni pairs on the Distributed Exchange (there is no fee for trading Omni pairs).  The party removing liquidity from the market will incur a 0.05% fee which will be transferred to the fee cache, and subsequently distributed to holders of the Omni token.
 
@@ -83,7 +128,7 @@ Once activated fees will be collected from trading of non-Omni pairs on the Dist
 - Placing a trade where liquidity is added to the market (i.e. the trade does not immediately execute an existing trade) incurs no fee
 - Placing a trade where liquidity is removed from the market (i.e. the trade immediately executes an existing trade) the liquidity taker incurs a 0.05% fee
 
-See also [fee system JSON-RPC API documentation](https://github.com/OmniLayer/omnicore/blob/omnicore-0.0.10/src/omnicore/doc/rpc-api.md#fee-system).
+See also [fee system JSON-RPC API documentation](https://github.com/OmniLayer/omnicore/blob/master/src/omnicore/doc/rpc-api.md#fee-system).
 
 This change is identified by `"featureid": 9` and labeled by the GUI as `"Fee system (inc 0.05% fee from trades of non-Omni pairs)"`.
 
@@ -110,112 +155,97 @@ The transaction format of new Send To Owners version is as follows:
 
 This change is identified by `"featureid": 10` and labeled by the GUI as `"Cross-property Send To Owners"`.
 
-Other notable changes
-=====================
+Notable changes
+===============
 
-Raw payload creation API
-------------------------
+Avoid selection of uneconomic UTXO during transaction creation
+--------------------------------------------------------------
 
-Omni Core 0.0.11 adds support for payload creation via the RPC interface.
+In earlier version of Omni Core (prior to 0.2.0), when creating transactions with the Qt UI or the JSON-RPC API (for example with `omni_send`), then the coin selection algorithm may have selected unspent outputs, which are not economic to spend. This may have caused the creation of larger and more expensive transactions than necessary.
 
-The calls are similar to the send transactions (e.g. `omni_send`), without the requirement for an address or any of the balance checks.
+In Omni Core 0.2.0 this is addressed by excluding inputs during the transaction creation, which are more expensive to spend than they are worth. Please note the exclusion is directly related to the fee related configuration options of Omni Core, such as `-paytxfee` or `-txconfirmtarget`.
 
-This allows integrators to build transactions via the [raw transactions interface](https://github.com/OmniLayer/omnicore/blob/omnicore-0.0.10/src/omnicore/doc/rpc-api.md#raw-transactions).
+Performance improvements during initial parsing
+-----------------------------------------------
 
-Other API extensions
---------------------
+Due to various improvements and optimizations, the initial parsing process, when running Omni Core the first time, or when starting Omni Core with `-startclean` flag, is faster by a factor of up to 10x. The improvements also have a positive impact on the time, when processing a new block.
 
-An optional parameter `height` can be provided, when using [omni_decodetransaction](https://github.com/OmniLayer/omnicore/blob/omnicore-0.0.10/src/omnicore/doc/rpc-api.md#omni_decodetransaction), which is used to determine the parsing rules. If no `height` is provided, the chain height is used as default.
+New checkpoints and seed blocks up to block 460,000
+---------------------------------------------------
 
-When retrieving feature activation transactions with [omni_gettransaction](https://github.com/OmniLayer/omnicore/blob/omnicore-0.0.10/src/omnicore/doc/rpc-api.md#omni_gettransaction), then additional fields are included in the result: `"featureid"`, `"activationblock"` and `"minimumversion"`.
+To further speed up the inital parsing process, blocks without Omni transactions are skipped up until block 460,000. To avoid relying on a hardcoded list of seed blocks, Omni Core can be started with `-omniseedblockfilter=0`.
 
-The Omni Core client version is now also exposed under the new key `"omnicoreversion"`, as well as inter via `"omnicoreversion_int"`, when using [omni_getinfo](https://github.com/OmniLayer/omnicore/blob/omnicore-0.0.10/src/omnicore/doc/rpc-api.md#omni_getinfo). The old key `"mastercoreversion"` remains for compatibility in this version.
+Easy access to specific consensus hashes when parsing
+-----------------------------------------------------
 
-The field `"positioninblock"` was added to RPCs retrieving or listing Omni transactions to provide visibility into the order of an Omni transaction within a block.
+Previously to confirm a consensus hash for a particular block it was required to enable `-omnidebug=consensus_hash_every_block` during parsing to log the hash for every block which caused a significant slow down due to the extra work involved.
 
-Increased OP_RETURN payload size to 80 bytes
---------------------------------------------
+This leads to circumstances where to validate a single consensus hash it is neccessary to perform vastly more work than necessary.
 
-The maximum payload for OP_RETURN outputs was increased to 80 byte.
+This version adds a `-omnishowblockconsensushash` startup option which can be used to generate consensus hashes for specific blocks.
 
-At this point a majority of the network supports 80 byte payloads, so Omni Core can safely use the larger payload size. This can result in cheaper transactions, as there is no fallback to bare multisig encoding.
+For example, to validate the checkpoint for block 450,000 without using seed block filtering we can use:
 
-Improved consensus checks
--------------------------
+```
+./omnicored --startclean --omniseedblockfilter=false --omnishowblockconsensushash=450000
+```
 
-Consensus hashing now covers much more of the state to provide wider coverage of the state. The state of properties, crowdsales and the Distributed Exchange are included in the new consensus hashing process.
+Which will then cause a consensus hash to be generated for the corresponding block and written to the log. Multiple instances of the parameter can be used to specify multiple blocks to generate consensus hashes for.
 
-Checkpoints have been updated in Omni Core 0.0.11 to reflect the new consensus hashing algorithm. Seed blocks (for faster initial transaction scanning) and checkpoints are included with Omni Core 0.0.11 up to block 410,000.
+Various bug fixes and improvements
+----------------------------------
 
-Various bug fixes and clean-ups
-------------------------------
+Various smaller improvements were added Omni Core 0.2.0, such as:
 
-Various smaller improvements were added Omni Core 0.0.11, such as:
-
-- Grow balances to fit on "Overview" tab
-- Switch to "Bitcoin" tab in "Send" page when handling Bitcoin URIs
-- Improve and adjust fee warning threshold when sending transactions
-- Fix missing client notification for new feature activations
-- Fix Travis CI builds without cache
-- Fix syntax error in walletdb key parser
-- Fix too-aggressive database clean in block reorganization events
-- Fix issues related to `omni_gettransaction` and `getactivedexsells`
+- Fix incorrect value from getTotalTokens when fees are cached
+- Remove forwarding of setgenerate to generate
+- Reduce test time to avoid hitting Travis CI time limit
+- Sanitize RPC responses and replace non-UTF-8 compliant characters
+- Set minimum fee distribution threshold and protect against empty distributions
+- Check for fee distribution when total number of tokens is changed
+- Fix missing include of test utils header
+- Fix two Omni Core related build warnings
+- Automatically remove stale pending transactions
+- Relax data type checks of omni_createrawtx_change
+- Fix possible lock contention in omni_getactivedexsells
+- Remove managed property check in Change Issuer RPC
+- Hardcode activations up to block 438500
+- Fix a number of bugs in the QT UI
+- Lock fetching and processing inputs while parsing
+- Run RPC tests with explicitly defined datadir and minimum logging
 
 Change log
 ==========
 
 The following list includes relevant pull requests merged into this release:
 ```
-- #226 Upgrade consensus hashing to cover more of the state
-- #316 Support providing height for omni_decodetransaction
-- #317 Expose feature activation fields when decoding transaction
-- #318 Expose Omni Core client version as integer
-- #321 Add consensus hash for block 390000
-- #324 Fix and update seed blocks up to block 390000
-- #325 Add capability to generate seed blocks over RPC
-- #326 Grow balances to fit on overview tab
-- #327 Switch to Bitcoin tab in Send page when handling Bitcoin URIs
-- #328 Update and add unit tests for new consensus hashes
-- #332 Remove seed blocks for structurally invalid transactions + reformat
-- #333 Improve fee warning threshold in GUI
-- #334 Update documentation for getseedblocks, getcurrentconsensushash, setautocommit
-- #335 Disable logging on Windows to speed up CI RPC tests
-- #336 Change the default maximum OP_RETURN size to 80 bytes
-- #341 Add omni_getmetadexhash RPC call to hash state of MetaDEx
-- #343 Remove pre-OP_RETURN legacy code
-- #344 Fix missing client notification for new activations
-- #349 Add positioninblock attribute to RPC output for transactions
-- #358 Add payload creation to the RPC interface
-- #361 Unlock trading of all pairs on the MetaDEx
-- #364 Fix Travis builds without cache
-- #365 Fix syntax error in walletdb key parser
-- #367 Bump version to Omni Core 0.0.11-dev
-- #368 Fix too-aggressive database clean in reorg event
-- #371 Add consensus checkpoints for blocks 400,000 & 410,000
-- #372 Add seed blocks for 390,000 to 410,000
-- #375 Temporarily disable the trading UI
-- #384 Add fee system RPC calls to API doc
-- #385 Add RPC documentation for createpayload calls
-- #386 Don't warn user about unknown block versions
-- #377 Add release notes for Omni Core 0.0.11
-- #376 Bump version to Omni Core 0.0.11-rc1
-- #390 Add cross-property (v1) Send To Owners
-- #395 Move test scripts into /src/omnicore/test
-- #396 Add workaround for "bytes per sigops" limit
-- #400 Change default confirm target to 15 blocks
-- #398 Update release notes for 0.0.11-rc2
-- #397 Bump version to Omni Core 0.0.11-rc2
-- #402 Add seed blocks for 410,000 to 420,000
-- #403 Add consensus hash for block 420,000
-- #405 Use uint256 when calculating desired BTC for DEx 1
-- #404 Bump version to Omni Core 0.0.11-rel
-- #409 Protect uint256 plain integer math
-- #411 Bump version to Omni Core 0.0.11.1-rel
-- #419 Add consensus hash for block 430,000
-- #420 Add seed blocks for 420,000 to 430,000
-- #421 Fix edge case of DEx 1 over-accepts
-- #422 Disable alert system as per default
-- #423 Bump version to Omni Core 0.0.11.2-rel
+- #436 Improve parsing performance
+- #439 Fix incorrect value from getTotalTokens when fees are cached
+- #440 Remove forwarding of setgenerate to generate
+- #441 Reduce test time to avoid hitting Travis CI time limit
+- #443 Sanitize RPC responses and replace non-UTF-8 compliant characters
+- #447 Set minimum fee distribution threshold and protect against empty distributions
+- #448 Check for fee distribution when total number of tokens is changed
+- #451 Fix missing include of test utils header
+- #450 Port code base to Bitcoin Core 0.13.2
+- #453 Update splash screen to be similar to 0.0.11
+- #454 Fix two Omni Core related build warnings
+- #458 Add checkpoint for block 450,000
+- #457 Add seed blocks for 440,000 to 450,000
+- #456 Provide easy access to specific consensus hashes when parsing
+- #460 Show newest transactions for omni_gettradehistoryforaddress
+- #463 Automatically remove stale pending transactions
+- #464 Relax data type checks of omni_createrawtx_change
+- #465 Fix possible lock contention in omni_getactivedexsells
+- #466 Add consensus hash for block 460,000
+- #467 Add seed blocks for 450,000 to 460,000
+- #468 Remove managed property check in Change Issuer RPC
+- #470 Hardcode activations up to block 438500
+- #471 Fix a number of bugs in the QT UI
+- #472 Lock fetching and processing inputs while parsing
+- #473 Avoid selecting uneconomic UTXO during transaction creation
+- #474 Run RPC tests with explicitly defined datadir and minimum logging
+- #460 Bump version to Omni Core 0.2.0 and add release notes
 ```
 
 Credits
