@@ -108,6 +108,10 @@ void UnregisterAllValidationInterfaces() {
     g_signals.m_internals->NotifyTransactionLock.disconnect_all_slots();
 }
 
+void CallFunctionInValidationInterfaceQueue(std::function<void ()> func) {
+    g_signals.m_internals->m_schedulerClient.AddToProcessQueue(std::move(func));
+}
+
 void CMainSignals::MempoolEntryRemoved(CTransactionRef ptx, MemPoolRemovalReason reason) {
     if (reason != MemPoolRemovalReason::BLOCK && reason != MemPoolRemovalReason::CONFLICT) {
         m_internals->m_schedulerClient.AddToProcessQueue([ptx, this] {
