@@ -12,9 +12,7 @@
 #include <boost/signals2/last_value.hpp>
 #include <boost/signals2/signal.hpp>
 
-class CBasicKeyStore;
 class CWallet;
-class uint256;
 class CBlockIndex;
 
 /** General change type (added, updated, removed). */
