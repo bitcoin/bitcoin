@@ -4442,6 +4442,7 @@ int CHDWallet::ExtKeyGetIndex(CHDWalletDB *pwdb, CExtKeyAccount *sea, uint32_t &
     mapEKValue_t::iterator mi = sea->mapValue.find(EKVT_INDEX);
     if (mi != sea->mapValue.end())
     {
+        fUpdate = false;
         assert(mi->second.size() == 4);
         memcpy(&index, &mi->second[0], 4);
         return 0;
@@ -4453,6 +4454,25 @@ int CHDWallet::ExtKeyGetIndex(CHDWalletDB *pwdb, CExtKeyAccount *sea, uint32_t &
     std::vector<uint8_t> vTmp;
     sea->mapValue[EKVT_INDEX] = PushUInt32(vTmp, index);
     fUpdate = true;
+    
+    return 0;
+};
+
+int CHDWallet::ExtKeyGetIndex(CExtKeyAccount *sea, uint32_t &index)
+{
+    LOCK(cs_wallet);
+    
+    CHDWalletDB wdb(strWalletFile, "r+");
+    bool requireUpdateDB;
+    if (0 != ExtKeyGetIndex(&wdb, sea, index, requireUpdateDB))
+        return errorN(1, "ExtKeyGetIndex failed.");
+    
+    if (requireUpdateDB)
+    {
+        CKeyID idAccount = sea->GetID();
+        if (!wdb.WriteExtAccount(idAccount, *sea))
+            return errorN(7, "%s Save account chain failed.", __func__);
+    };
     
     return 0;
 };

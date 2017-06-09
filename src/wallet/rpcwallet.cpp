@@ -685,9 +685,21 @@ UniValue getreceivedbyaddress(const JSONRPCRequest& request)
     for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
     {
         const CWalletTx& wtx = (*it).second;
-        if (wtx.IsCoinBase() || !CheckFinalTx(*wtx.tx))
+        if ((!fParticlWallet && wtx.IsCoinBase()) || !CheckFinalTx(*wtx.tx))
             continue;
 
+        if (fParticlWallet)
+        {
+            for (auto &txout : wtx.tx->vpout)
+            {
+                if (txout->IsStandardOutput()
+                    && *txout->GetPScriptPubKey() == scriptPubKey)
+                {
+                    if (wtx.GetDepthInMainChain() >= nMinDepth)
+                        nAmount += txout->GetValue();
+                };
+            };
+        } else
         BOOST_FOREACH(const CTxOut& txout, wtx.tx->vout)
             if (txout.scriptPubKey == scriptPubKey)
                 if (wtx.GetDepthInMainChain() >= nMinDepth)
@@ -739,9 +751,22 @@ UniValue getreceivedbyaccount(const JSONRPCRequest& request)
     for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
     {
         const CWalletTx& wtx = (*it).second;
-        if (wtx.IsCoinBase() || !CheckFinalTx(*wtx.tx))
+        if ((!fParticlWallet && wtx.IsCoinBase()) || !CheckFinalTx(*wtx.tx))
             continue;
 
+        if (fParticlWallet)
+        {
+            for (auto &txout : wtx.tx->vpout)
+            {
+                CTxDestination address;
+                if (txout->IsStandardOutput()
+                    && ExtractDestination(*txout->GetPScriptPubKey(), address) && IsMine(*pwalletMain, address) && setAddress.count(address))
+                {
+                    if (wtx.GetDepthInMainChain() >= nMinDepth)
+                        nAmount += txout->GetValue();
+                };
+            };
+        } else
         BOOST_FOREACH(const CTxOut& txout, wtx.tx->vout)
         {
             CTxDestination address;

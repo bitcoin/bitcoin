@@ -33,9 +33,6 @@ class AnonTest(ParticlTestFramework):
         ro = nodes[0].extkeyimportmaster("abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb")
         assert(ro['account_id'] == 'aaaZf2qnNr5T7PWRmqgmusuu5ACnBcX2ev')
         
-        #ro = node.extkey("list", "true")
-        #print(json.dumps(ro, indent=4))
-        
         ro = nodes[0].getinfo()
         assert(ro['total_balance'] == 100000)
         
@@ -46,8 +43,16 @@ class AnonTest(ParticlTestFramework):
         
         ro = nodes[1].extkeyimportmaster("drip fog service village program equip minute dentist series hawk crop sphere olympic lazy garbage segment fox library good alley steak jazz force inmate")
         
-        sxAddrTo1 = nodes[1].getnewstealthaddress()
-        assert(sxAddrTo1 == 'TetbYTGv5LiqyFiUD3a5HHbpSinQ9KiRYDGAMvRzPfz4RnHMbKGAwDr1fjLGJ5Eqg1XDwpeGyqWMiwdK3qM3zKWjzHNpaatdoHVzzA')
+        sxAddrTo1_1 = nodes[1].getnewstealthaddress()
+        assert(sxAddrTo1_1 == 'TetbYTGv5LiqyFiUD3a5HHbpSinQ9KiRYDGAMvRzPfz4RnHMbKGAwDr1fjLGJ5Eqg1XDwpeGyqWMiwdK3qM3zKWjzHNpaatdoHVzzA')
+        
+        
+        txnHash = nodes[0].sendparttoblind(sxAddrTo1_1, 1, '', '', False, 'node0 -> node1 p->a')
+        print("txnHash ", txnHash)
+        txnHashes.append(txnHash)
+        
+        
+        
         
         assert(False)
         #print(json.dumps(ro, indent=4))

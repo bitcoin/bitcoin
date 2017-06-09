@@ -293,6 +293,7 @@ int AccountInfo(CExtKeyAccount *pa, int nShowKeys, bool fAllChains, UniValue &ob
             if (pa->nActiveStealth == i)
                 objC.push_back(Pair("function", "active_stealth"));
             
+            objC.push_back(Pair("id", sek->GetIDString58()));
             objC.push_back(Pair("chain", eKey58.ToString()));
             objC.push_back(Pair("label", sek->sLabel));
             objC.push_back(Pair("active", sek->nFlags & EAF_ACTIVE ? "true" : "false"));
@@ -633,6 +634,29 @@ int ManageExtAccount(CExtKeyAccount &sea, std::string &sOptName, std::string &sO
     return 0;
 };
 
+static int ExtractExtKeyId(const std::string &sInKey, CKeyID &keyId, CChainParams::Base58Type prefix)
+{
+    CExtKey58 eKey58;
+    CExtKeyPair ekp;
+    CBitcoinAddress addr;
+    
+    if (addr.SetString(sInKey)
+        && addr.IsValid(prefix)
+        && addr.GetKeyID(keyId, prefix))
+    {
+        // keyId is set
+    } else
+    if (eKey58.Set58(sInKey.c_str()) == 0)
+    {
+        ekp = eKey58.GetKey();
+        keyId = ekp.GetID();
+    } else
+    {
+        throw std::runtime_error("Invalid key.");
+    };
+    return 0;
+};
+
 UniValue extkey(const JSONRPCRequest &request)
 {
     static const char *help = ""
@@ -815,31 +839,13 @@ UniValue extkey(const JSONRPCRequest &request)
     if (mode == "account"
         || mode == "key")
     {
-        
         CKeyID keyId;
-        CExtKey58 eKey58;
-        CExtKeyPair ekp;
-        CBitcoinAddress addr;
-        
         if (request.params.size() > nParamOffset)
         {
             sInKey = request.params[nParamOffset].get_str();
             nParamOffset++;
             
-            if (addr.SetString(sInKey)
-                && addr.IsValid(mode == "account" ? CChainParams::EXT_ACC_HASH : CChainParams::EXT_KEY_HASH)
-                && addr.GetKeyID(keyId, mode == "account" ? CChainParams::EXT_ACC_HASH : CChainParams::EXT_KEY_HASH))
-            {
-                // keyId is set
-            } else
-            if (eKey58.Set58(sInKey.c_str()) == 0)
-            {
-                ekp = eKey58.GetKey();
-                keyId = ekp.GetID();
-            } else
-            {
-                throw std::runtime_error("Invalid key.");
-            };
+            ExtractExtKeyId(sInKey, keyId, mode == "account" ? CChainParams::EXT_ACC_HASH : CChainParams::EXT_KEY_HASH);
         } else
         {
             // - display default account
@@ -1115,24 +1121,7 @@ UniValue extkey(const JSONRPCRequest &request)
         };
         
         CKeyID idNewMaster;
-        CExtKey58 eKey58;
-        CExtKeyPair ekp;
-        CBitcoinAddress addr;
-        
-        if (addr.SetString(sInKey)
-            && addr.IsValid(CChainParams::EXT_KEY_HASH)
-            && addr.GetKeyID(idNewMaster, CChainParams::EXT_KEY_HASH))
-        {
-            // idNewMaster is set
-        } else
-        if (eKey58.Set58(sInKey.c_str()) == 0)
-        {
-            ekp = eKey58.GetKey();
-            idNewMaster = ekp.GetID();
-        } else
-        {
-            throw std::runtime_error("Invalid key.");
-        };
+        ExtractExtKeyId(sInKey, idNewMaster, CChainParams::EXT_KEY_HASH);
         
         {
             LOCK(pwallet->cs_wallet);
@@ -2163,15 +2152,17 @@ UniValue reservebalance(const JSONRPCRequest &request)
 
 UniValue deriverangekeys(const JSONRPCRequest &request)
 {
-    if (request.fHelp || request.params.size() < 1 ||request.params.size() > 4)
+    if (request.fHelp || request.params.size() < 1 ||request.params.size() > 6)
         throw std::runtime_error(
-            "deriverangekeys <start> <end> [save]\n"
+            "deriverangekeys <start> [end] [key/id] [hardened] [save] [add_to_addressbook]\n"
             "<start> start from key.\n"
             "[end] stop deriving after key, default set to derive one key.\n"
+            "[key/id] account to derive from, default external chain of current account.\n"
             "[hardened] derive hardened keys, default false.\n"
             "[save] save derived keys to the wallet, default false.\n"
-            "Derive keys from the external chain of the current account.\n"
-            "Wallet must be unlocked.\n");
+            "[add_to_addressbook] add derived keys to address book, only applies when saving keys, default false.\n"
+            "Derive keys from the specified chain.\n"
+            "Wallet must be unlocked if save or hardened options are set.\n");
     
     CHDWallet *pwallet = GetHDWallet();
     
@@ -2192,23 +2183,39 @@ UniValue deriverangekeys(const JSONRPCRequest &request)
     if (nEnd < 0)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "end can not be positive.");
     
-    bool fHardened = false;
+    std::string sInKey;
     if (request.params.size() > 2)
+        sInKey = request.params[2].get_str();
+    
+    bool fHardened = false;
+    if (request.params.size() > 3)
     {
-        std::string s = request.params[2].get_str();
+        std::string s = request.params[3].get_str();
         
         if (!part::GetStringBool(s, fHardened))
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Unknown argument for hardened: %s.", s.c_str()));
     };
     
     bool fSave = false;
-    if (request.params.size() > 3)
+    if (request.params.size() > 4)
     {
-        std::string s = request.params[3].get_str();
+        std::string s = request.params[4].get_str();
         
         if (!part::GetStringBool(s, fSave))
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Unknown argument for save: %s.", s.c_str()));
     };
+    
+    bool fAddToAddressBook = false;
+    if (request.params.size() > 5)
+    {
+        std::string s = request.params[5].get_str();
+        
+        if (!part::GetStringBool(s, fAddToAddressBook))
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf(_("Unknown argument for add_to_addressbook: %s."), s.c_str()));
+    };
+    
+    if (!fSave && fAddToAddressBook)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, _("add_to_addressbook can't be set without save"));
     
     if (fSave || fHardened)
         EnsureWalletIsUnlocked(pwallet);
@@ -2217,25 +2224,57 @@ UniValue deriverangekeys(const JSONRPCRequest &request)
     
     {
         LOCK2(cs_main, pwallet->cs_wallet);
-        if (pwallet->idDefaultAccount.IsNull())
-            throw JSONRPCError(RPC_WALLET_ERROR, "No default account set.");
         
-        ExtKeyAccountMap::iterator mi = pwallet->mapExtAccounts.find(pwallet->idDefaultAccount);
-        if (mi == pwallet->mapExtAccounts.end())
-            throw JSONRPCError(RPC_WALLET_ERROR, "Unknown account.");
-
-        CExtKeyAccount *sea = mi->second;
         CStoredExtKey *sek = NULL;
-        uint32_t nChain = sea->nActiveExternal;
-        if (nChain < sea->vExtKeys.size())
-            sek = sea->vExtKeys[nChain];
+        CExtKeyAccount *sea = NULL;
+        uint32_t nChain;
+        if (sInKey.length() == 0)
+        {
+            if (pwallet->idDefaultAccount.IsNull())
+                throw JSONRPCError(RPC_WALLET_ERROR, _("No default account set."));
+            
+            ExtKeyAccountMap::iterator mi = pwallet->mapExtAccounts.find(pwallet->idDefaultAccount);
+            if (mi == pwallet->mapExtAccounts.end())
+                throw JSONRPCError(RPC_WALLET_ERROR, _("Unknown account."));
 
+            sea = mi->second;
+            nChain = sea->nActiveExternal;
+            if (nChain < sea->vExtKeys.size())
+                sek = sea->vExtKeys[nChain];
+        } else
+        {
+            CKeyID keyId;
+            ExtractExtKeyId(sInKey, keyId, CChainParams::EXT_KEY_HASH);
+            
+            ExtKeyAccountMap::iterator mi = pwallet->mapExtAccounts.begin();
+            for (; mi != pwallet->mapExtAccounts.end(); ++mi)
+            {
+                sea = mi->second;
+                for (uint32_t i = 0; i < sea->vExtKeyIDs.size(); ++i)
+                {
+                    if (sea->vExtKeyIDs[i] != keyId)
+                        continue;
+                    nChain = i;
+                    sek = sea->vExtKeys[i];
+                };
+                if (sek)
+                    break;
+            };
+        };
+        
         if (!sek)
-            throw JSONRPCError(RPC_WALLET_ERROR, "Unknown chain.");
+            throw JSONRPCError(RPC_WALLET_ERROR, _("Unknown chain."));
+        
+        uint32_t idIndex;
+        if (fAddToAddressBook)
+        {
+            if (0 != pwallet->ExtKeyGetIndex(sea, idIndex))
+                throw JSONRPCError(RPC_WALLET_ERROR, _("ExtKeyGetIndex failed."));
+        };
+        CHDWalletDB wdb(pwallet->strWalletFile, "r+");
         
         uint32_t nChildIn = (uint32_t)nStart;
         CPubKey newKey;
-        
         for (int i = nStart; i <= nEnd; ++i)
         {
             nChildIn = (uint32_t)i;
@@ -2245,6 +2284,10 @@ UniValue deriverangekeys(const JSONRPCRequest &request)
             
             if (nChildIn != nChildOut)
                 LogPrintf("Warning: %s - DeriveKey skipped key %d.\n", __func__, nChildIn);
+            
+            if (fHardened)
+                SetHardenedBit(nChildOut);
+            
             CKeyID idk = newKey.GetID();
             result.push_back(CBitcoinAddress(idk).ToString());
             
@@ -2255,6 +2298,20 @@ UniValue deriverangekeys(const JSONRPCRequest &request)
                 {
                     if (0 != pwallet->ExtKeySaveKey(sea, idk, ak))
                         throw JSONRPCError(RPC_WALLET_ERROR, "ExtKeySaveKey failed.");
+                };
+                
+                if (fAddToAddressBook)
+                {
+                    std::vector<uint32_t> vPath;
+                    vPath.push_back(idIndex); // first entry is the index to the account / master key
+                    
+                    if (0 == AppendChainPath(sek, vPath))
+                        vPath.push_back(nChildOut);
+                    else
+                        vPath.clear();
+                    
+                    std::string strAccount = "";
+                    pwallet->SetAddressBook(&wdb, idk, strAccount, "receive", vPath, false);
                 };
             };
         };
@@ -2402,9 +2459,11 @@ UniValue filteraddresses(const JSONRPCRequest &request)
     if (request.fHelp || request.params.size() > 6)
         throw std::runtime_error(
             "filteraddresses [offset] [count] [sort_code] [match_str] [match_owned] [show_path]\n"
-            "filteraddresses [offset] [count] will 'count' addresses starting from 'offset'\n"
+            "filteraddresses [offset] [count] will list 'count' addresses starting from 'offset'\n"
             "filteraddresses -1 will count addresses\n"
-            "  match_owned 0 off, 1 owned, 2 non-owned\n"
+            "[sort_code] 0 sort by label ascending, 1 sort by label descending, default 0\n"
+            "[match_str] filter by label\n"
+            "[match_owned] 0 off, 1 owned, 2 non-owned, default 0\n"
             "List addresses.");
     
     CHDWallet *pwallet = GetHDWallet();

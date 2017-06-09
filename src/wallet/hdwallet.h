@@ -457,6 +457,7 @@ public:
      */
     int ExtKeyNewIndex(CHDWalletDB *pwdb, const CKeyID &idKey, uint32_t &index);
     int ExtKeyGetIndex(CHDWalletDB *pwdb, CExtKeyAccount *sea, uint32_t &index, bool &fUpdate);
+    int ExtKeyGetIndex(CExtKeyAccount *sea, uint32_t &index);
 
     int NewKeyFromAccount(CHDWalletDB *pwdb, const CKeyID &idAccount, CPubKey &pkOut, bool fInternal, bool fHardened, const char *plabel = NULL);
     int NewKeyFromAccount(CPubKey &pkOut, bool fInternal=false, bool fHardened=false, const char *plabel = NULL); // wrapper - use default account

@@ -33,9 +33,6 @@ class BlindTest(ParticlTestFramework):
         ro = nodes[0].extkeyimportmaster("abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb")
         assert(ro['account_id'] == 'aaaZf2qnNr5T7PWRmqgmusuu5ACnBcX2ev')
         
-        #ro = node.extkey("list", "true")
-        #print(json.dumps(ro, indent=4))
-        
         ro = nodes[0].getinfo()
         assert(ro['total_balance'] == 100000)
         

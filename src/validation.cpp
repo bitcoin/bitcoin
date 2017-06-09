@@ -4309,10 +4309,6 @@ unsigned int GetNextTargetRequired(const CBlockIndex *pindexLast)
     };
     
     
-
-    
-    
-
     if (pindexLast == NULL)
         return nProofOfWorkLimit; // Genesis block
     
