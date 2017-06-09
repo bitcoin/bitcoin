@@ -63,6 +63,7 @@ if ENABLE_WALLET
 test_test_ppcoin_LDADD += $(LIBPPCOIN_WALLET)
 endif
 test_test_ppcoin_LDADD += $(BDB_LIBS)
+test_test_ppcoin_LDFLAGS = $(AM_LDFLAGS)
 
 nodist_test_test_ppcoin_SOURCES = $(TEST_DATA_FILES)
 

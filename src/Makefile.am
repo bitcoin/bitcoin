@@ -167,7 +167,7 @@ if ENABLE_WALLET
 ppcoind_LDADD += libppcoin_wallet.a
 endif
 ppcoind_SOURCES = bitcoind.cpp
-#
+ppcoind_LDFLAGS = $(AM_LDFLAGS)
 
 if TARGET_WINDOWS
 ppcoind_SOURCES += bitcoind-res.rc
@@ -179,7 +179,7 @@ ppcoind_LDADD += $(BDB_LIBS)
 # bitcoin-cli binary #
 peercoin_cli_LDADD = libppcoin_cli.a libppcoin_common.a $(BOOST_LIBS)
 peercoin_cli_SOURCES = bitcoin-cli.cpp
-#
+peercoin_cli_LDFLAGS = $(AM_LDFLAGS)
 
 if TARGET_WINDOWS
 peercoin_cli_SOURCES += bitcoin-cli-res.rc
