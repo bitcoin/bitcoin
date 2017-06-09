@@ -12,9 +12,8 @@ class ImportMultiTest (BitcoinTestFramework):
         self.num_nodes = 2
         self.setup_clean_chain = True
 
-    def setup_network(self, split=False):
-        self.nodes = start_nodes(2, self.options.tmpdir)
-        self.is_network_split=False
+    def setup_network(self):
+        self.setup_nodes()
 
     def run_test (self):
         self.log.info("Mining blocks...")
@@ -429,12 +428,12 @@ class ImportMultiTest (BitcoinTestFramework):
 
 
         # restart nodes to check for proper serialization/deserialization of watch only address
-        stop_nodes(self.nodes)
-        self.nodes = start_nodes(2, self.options.tmpdir)
+        self.stop_nodes()
+        self.nodes = self.start_nodes(2, self.options.tmpdir)
         address_assert = self.nodes[1].validateaddress(watchonly_address)
         assert_equal(address_assert['iswatchonly'], True)
         assert_equal(address_assert['ismine'], False)
-        assert_equal(address_assert['timestamp'], watchonly_timestamp);
+        assert_equal(address_assert['timestamp'], watchonly_timestamp)
 
         # Bad or missing timestamps
         self.log.info("Should throw on invalid or missing timestamp values")

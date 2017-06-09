@@ -11,6 +11,7 @@
 #include "net.h"
 #include "netbase.h"
 #include "chainparams.h"
+#include "util.h"
 
 class CAddrManSerializationMock : public CAddrMan
 {
@@ -71,6 +72,18 @@ CDataStream AddrmanToStream(CAddrManSerializationMock& _addrman)
 }
 
 BOOST_FIXTURE_TEST_SUITE(net_tests, BasicTestingSetup)
+
+BOOST_AUTO_TEST_CASE(cnode_listen_port)
+{
+    // test default
+    unsigned short port = GetListenPort();
+    BOOST_CHECK(port == Params().GetDefaultPort());
+    // test set port
+    unsigned short altPort = 12345;
+    SoftSetArg("-port", std::to_string(altPort));
+    port = GetListenPort();
+    BOOST_CHECK(port == altPort);
+}
 
 BOOST_AUTO_TEST_CASE(caddrdb_read)
 {
@@ -162,12 +175,12 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
     bool fInboundIn = false;
 
     // Test that fFeeler is false by default.
-    std::unique_ptr<CNode> pnode1(new CNode(id++, NODE_NETWORK, height, hSocket, addr, 0, 0, pszDest, fInboundIn));
+    std::unique_ptr<CNode> pnode1(new CNode(id++, NODE_NETWORK, height, hSocket, addr, 0, 0, CAddress(), pszDest, fInboundIn));
     BOOST_CHECK(pnode1->fInbound == false);
     BOOST_CHECK(pnode1->fFeeler == false);
 
     fInboundIn = true;
-    std::unique_ptr<CNode> pnode2(new CNode(id++, NODE_NETWORK, height, hSocket, addr, 1, 1, pszDest, fInboundIn));
+    std::unique_ptr<CNode> pnode2(new CNode(id++, NODE_NETWORK, height, hSocket, addr, 1, 1, CAddress(), pszDest, fInboundIn));
     BOOST_CHECK(pnode2->fInbound == true);
     BOOST_CHECK(pnode2->fFeeler == false);
 }

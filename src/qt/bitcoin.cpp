@@ -10,6 +10,7 @@
 
 #include "chainparams.h"
 #include "clientmodel.h"
+#include "fs.h"
 #include "guiconstants.h"
 #include "guiutil.h"
 #include "intro.h"
@@ -38,7 +39,6 @@
 
 #include <stdint.h>
 
-#include <boost/filesystem/operations.hpp>
 #include <boost/thread.hpp>
 
 #include <QApplication>
@@ -152,15 +152,21 @@ static void initTranslations(QTranslator &qtTranslatorBase, QTranslator &qtTrans
 #if QT_VERSION < 0x050000
 void DebugMessageHandler(QtMsgType type, const char *msg)
 {
-    const char *category = (type == QtDebugMsg) ? "qt" : NULL;
-    LogPrint(category, "GUI: %s\n", msg);
+    if (type == QtDebugMsg) {
+        LogPrint(BCLog::QT, "GUI: %s\n", msg);
+    } else {
+        LogPrintf("GUI: %s\n", msg);
+    }
 }
 #else
 void DebugMessageHandler(QtMsgType type, const QMessageLogContext& context, const QString &msg)
 {
     Q_UNUSED(context);
-    const char *category = (type == QtDebugMsg) ? "qt" : NULL;
-    LogPrint(category, "GUI: %s\n", msg.toStdString());
+    if (type == QtDebugMsg) {
+        LogPrint(BCLog::QT, "GUI: %s\n", msg.toStdString());
+    } else {
+        LogPrintf("GUI: %s\n", msg.toStdString());
+    }
 }
 #endif
 
@@ -602,7 +608,7 @@ int main(int argc, char *argv[])
 
     /// 6. Determine availability of data directory and parse bitcoin.conf
     /// - Do not call GetDataDir(true) before this step finishes
-    if (!boost::filesystem::is_directory(GetDataDir(false)))
+    if (!fs::is_directory(GetDataDir(false)))
     {
         QMessageBox::critical(0, QObject::tr(PACKAGE_NAME),
                               QObject::tr("Error: Specified data directory \"%1\" does not exist.").arg(QString::fromStdString(GetArg("-datadir", ""))));

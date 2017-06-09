@@ -8,11 +8,12 @@
 
 #include "clientversion.h"
 #include "checkqueue.h"
+#include "consensus/tx_verify.h"
 #include "consensus/validation.h"
 #include "core_io.h"
 #include "key.h"
 #include "keystore.h"
-#include "validation.h" // For CheckTransaction
+#include "validation.h"
 #include "policy/policy.h"
 #include "script/script.h"
 #include "script/sign.h"
@@ -25,9 +26,7 @@
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
-#include <boost/assign/list_of.hpp>
 #include <boost/test/unit_test.hpp>
-#include <boost/assign/list_of.hpp>
 #include <boost/foreach.hpp>
 
 #include <univalue.h>
@@ -37,24 +36,25 @@ typedef std::vector<unsigned char> valtype;
 // In script_tests.cpp
 extern UniValue read_json(const std::string& jsondata);
 
-static std::map<std::string, unsigned int> mapFlagNames = boost::assign::map_list_of
-    (std::string("NONE"), (unsigned int)SCRIPT_VERIFY_NONE)
-    (std::string("P2SH"), (unsigned int)SCRIPT_VERIFY_P2SH)
-    (std::string("STRICTENC"), (unsigned int)SCRIPT_VERIFY_STRICTENC)
-    (std::string("DERSIG"), (unsigned int)SCRIPT_VERIFY_DERSIG)
-    (std::string("LOW_S"), (unsigned int)SCRIPT_VERIFY_LOW_S)
-    (std::string("SIGPUSHONLY"), (unsigned int)SCRIPT_VERIFY_SIGPUSHONLY)
-    (std::string("MINIMALDATA"), (unsigned int)SCRIPT_VERIFY_MINIMALDATA)
-    (std::string("NULLDUMMY"), (unsigned int)SCRIPT_VERIFY_NULLDUMMY)
-    (std::string("DISCOURAGE_UPGRADABLE_NOPS"), (unsigned int)SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS)
-    (std::string("CLEANSTACK"), (unsigned int)SCRIPT_VERIFY_CLEANSTACK)
-    (std::string("MINIMALIF"), (unsigned int)SCRIPT_VERIFY_MINIMALIF)
-    (std::string("NULLFAIL"), (unsigned int)SCRIPT_VERIFY_NULLFAIL)
-    (std::string("CHECKLOCKTIMEVERIFY"), (unsigned int)SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY)
-    (std::string("CHECKSEQUENCEVERIFY"), (unsigned int)SCRIPT_VERIFY_CHECKSEQUENCEVERIFY)
-    (std::string("WITNESS"), (unsigned int)SCRIPT_VERIFY_WITNESS)
-    (std::string("DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM"), (unsigned int)SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM)
-    (std::string("WITNESS_PUBKEYTYPE"), (unsigned int)SCRIPT_VERIFY_WITNESS_PUBKEYTYPE);
+static std::map<std::string, unsigned int> mapFlagNames = {
+    {std::string("NONE"), (unsigned int)SCRIPT_VERIFY_NONE},
+    {std::string("P2SH"), (unsigned int)SCRIPT_VERIFY_P2SH},
+    {std::string("STRICTENC"), (unsigned int)SCRIPT_VERIFY_STRICTENC},
+    {std::string("DERSIG"), (unsigned int)SCRIPT_VERIFY_DERSIG},
+    {std::string("LOW_S"), (unsigned int)SCRIPT_VERIFY_LOW_S},
+    {std::string("SIGPUSHONLY"), (unsigned int)SCRIPT_VERIFY_SIGPUSHONLY},
+    {std::string("MINIMALDATA"), (unsigned int)SCRIPT_VERIFY_MINIMALDATA},
+    {std::string("NULLDUMMY"), (unsigned int)SCRIPT_VERIFY_NULLDUMMY},
+    {std::string("DISCOURAGE_UPGRADABLE_NOPS"), (unsigned int)SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS},
+    {std::string("CLEANSTACK"), (unsigned int)SCRIPT_VERIFY_CLEANSTACK},
+    {std::string("MINIMALIF"), (unsigned int)SCRIPT_VERIFY_MINIMALIF},
+    {std::string("NULLFAIL"), (unsigned int)SCRIPT_VERIFY_NULLFAIL},
+    {std::string("CHECKLOCKTIMEVERIFY"), (unsigned int)SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY},
+    {std::string("CHECKSEQUENCEVERIFY"), (unsigned int)SCRIPT_VERIFY_CHECKSEQUENCEVERIFY},
+    {std::string("WITNESS"), (unsigned int)SCRIPT_VERIFY_WITNESS},
+    {std::string("DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM"), (unsigned int)SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM},
+    {std::string("WITNESS_PUBKEYTYPE"), (unsigned int)SCRIPT_VERIFY_WITNESS_PUBKEYTYPE},
+};
 
 unsigned int ParseScriptFlags(std::string strFlags)
 {
@@ -306,14 +306,14 @@ SetupDummyInputs(CBasicKeyStore& keystoreRet, CCoinsViewCache& coinsRet)
     dummyTransactions[0].vout[0].scriptPubKey << ToByteVector(key[0].GetPubKey()) << OP_CHECKSIG;
     dummyTransactions[0].vout[1].nValue = 50*CENT;
     dummyTransactions[0].vout[1].scriptPubKey << ToByteVector(key[1].GetPubKey()) << OP_CHECKSIG;
-    coinsRet.ModifyCoins(dummyTransactions[0].GetHash())->FromTx(dummyTransactions[0], 0);
+    AddCoins(coinsRet, dummyTransactions[0], 0);
 
     dummyTransactions[1].vout.resize(2);
     dummyTransactions[1].vout[0].nValue = 21*CENT;
     dummyTransactions[1].vout[0].scriptPubKey = GetScriptForDestination(key[2].GetPubKey().GetID());
     dummyTransactions[1].vout[1].nValue = 22*CENT;
     dummyTransactions[1].vout[1].scriptPubKey = GetScriptForDestination(key[3].GetPubKey().GetID());
-    coinsRet.ModifyCoins(dummyTransactions[1].GetHash())->FromTx(dummyTransactions[1], 0);
+    AddCoins(coinsRet, dummyTransactions[1], 0);
 
     return dummyTransactions;
 }
@@ -469,19 +469,20 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction) {
     for (int i=0; i<20; i++)
         threadGroup.create_thread(boost::bind(&CCheckQueue<CScriptCheck>::Thread, boost::ref(scriptcheckqueue)));
 
-    CCoins coins;
-    coins.nVersion = 1;
-    coins.fCoinBase = false;
+    std::vector<Coin> coins;
     for(uint32_t i = 0; i < mtx.vin.size(); i++) {
-        CTxOut txout;
-        txout.nValue = 1000;
-        txout.scriptPubKey = scriptPubKey;
-        coins.vout.push_back(txout);
+        Coin coin;
+        coin.nHeight = 1;
+        coin.fCoinBase = false;
+        coin.out.nValue = 1000;
+        coin.out.scriptPubKey = scriptPubKey;
+        coins.emplace_back(std::move(coin));
     }
 
     for(uint32_t i = 0; i < mtx.vin.size(); i++) {
         std::vector<CScriptCheck> vChecks;
-        CScriptCheck check(coins, tx, i, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS, false, &txdata);
+        const CTxOut& output = coins[tx.vin[i].prevout.n].out;
+        CScriptCheck check(output.scriptPubKey, output.nValue, tx, i, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS, false, &txdata);
         vChecks.push_back(CScriptCheck());
         check.swap(vChecks.back());
         control.Add(vChecks);

@@ -25,6 +25,8 @@ The ZMQ functional test requires a python ZMQ library. To install it:
 Running tests locally
 =====================
 
+Build for your system first. Be sure to enable wallet, utils and daemon when you configure. Tests will not run otherwise.
+
 Functional tests
 ----------------
 
@@ -32,7 +34,7 @@ You can run any single test by calling
 
     test/functional/test_runner.py <testname>
 
-Or you can run any combination of tests by calling
+Or you can run any combination (incl. duplicates) of tests by calling
 
     test/functional/test_runner.py <testname1> <testname2> <testname3> ...
 

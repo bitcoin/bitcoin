@@ -10,6 +10,7 @@
 #include "chainparams.h"
 #include "clientversion.h"
 #include "compat.h"
+#include "fs.h"
 #include "rpc/server.h"
 #include "init.h"
 #include "noui.h"
@@ -20,7 +21,6 @@
 #include "utilstrencodings.h"
 
 #include <boost/algorithm/string/predicate.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
 
 #include <stdio.h>
@@ -97,7 +97,7 @@ bool AppInit(int argc, char* argv[])
 
     try
     {
-        if (!boost::filesystem::is_directory(GetDataDir(false)))
+        if (!fs::is_directory(GetDataDir(false)))
         {
             fprintf(stderr, "Error: Specified data directory \"%s\" does not exist.\n", GetArg("-datadir", "").c_str());
             return false;
@@ -117,17 +117,14 @@ bool AppInit(int argc, char* argv[])
             return false;
         }
 
-        // Command-line RPC
-        bool fCommandLine = false;
-        for (int i = 1; i < argc; i++)
-            if (!IsSwitchChar(argv[i][0]) && !boost::algorithm::istarts_with(argv[i], "bitcoin:"))
-                fCommandLine = true;
-
-        if (fCommandLine)
-        {
-            fprintf(stderr, "Error: There is no RPC client functionality in bitcoind anymore. Use the bitcoin-cli utility instead.\n");
-            exit(EXIT_FAILURE);
+        // Error out when loose non-argument tokens are encountered on command line
+        for (int i = 1; i < argc; i++) {
+            if (!IsSwitchChar(argv[i][0])) {
+                fprintf(stderr, "Error: Command line contains unexpected token '%s', see bitcoind -h for a list of options.\n", argv[i]);
+                exit(EXIT_FAILURE);
+            }
         }
+
         // -server defaults to true for bitcoind but not for the GUI so do this here
         SoftSetBoolArg("-server", true);
         // Set this early so that parameter interactions go to console

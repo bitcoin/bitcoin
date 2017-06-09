@@ -5,7 +5,6 @@
 """Test RPC commands for signing and verifying messages."""
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
 
 class SignMessagesTest(BitcoinTestFramework):
 
@@ -13,10 +12,6 @@ class SignMessagesTest(BitcoinTestFramework):
         super().__init__()
         self.setup_clean_chain = True
         self.num_nodes = 1
-
-    def setup_network(self, split=False):
-        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir)
-        self.is_network_split = False
 
     def run_test(self):
         message = 'This is just a test message'

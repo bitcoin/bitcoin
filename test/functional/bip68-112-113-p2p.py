@@ -95,12 +95,7 @@ class BIP68_112_113Test(ComparisonTestFramework):
     def __init__(self):
         super().__init__()
         self.num_nodes = 1
-
-    def setup_network(self):
-        # Must set the blockversion for this test
-        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir,
-                                 extra_args=[['-whitelist=127.0.0.1', '-blockversion=4']],
-                                 binary=[self.options.testbinary])
+        self.extra_args = [['-whitelist=127.0.0.1', '-blockversion=4']]
 
     def run_test(self):
         test = TestManager(self, self.options.tmpdir)

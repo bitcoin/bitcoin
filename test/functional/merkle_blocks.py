@@ -13,20 +13,15 @@ class MerkleBlockTest(BitcoinTestFramework):
         super().__init__()
         self.setup_clean_chain = True
         self.num_nodes = 4
+        # Nodes 0/1 are "wallet" nodes, Nodes 2/3 are used for testing
+        self.extra_args = [[], [], [], ["-txindex"]]
 
     def setup_network(self):
-        self.nodes = []
-        # Nodes 0/1 are "wallet" nodes
-        self.nodes.append(start_node(0, self.options.tmpdir))
-        self.nodes.append(start_node(1, self.options.tmpdir))
-        # Nodes 2/3 are used for testing
-        self.nodes.append(start_node(2, self.options.tmpdir))
-        self.nodes.append(start_node(3, self.options.tmpdir, ["-txindex"]))
+        self.setup_nodes()
         connect_nodes(self.nodes[0], 1)
         connect_nodes(self.nodes[0], 2)
         connect_nodes(self.nodes[0], 3)
 
-        self.is_network_split = False
         self.sync_all()
 
     def run_test(self):

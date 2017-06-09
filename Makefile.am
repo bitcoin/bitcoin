@@ -76,9 +76,6 @@ $(BITCOIN_WIN_INSTALLER): all-recursive
 	  echo error: could not build $@
 	@echo built $@
 
-$(if $(findstring src/,$(MAKECMDGOALS)),$(MAKECMDGOALS), none): FORCE
-	$(MAKE) -C src $(patsubst src/%,%,$@)
-
 $(OSX_APP)/Contents/PkgInfo:
 	$(MKDIR_P) $(@D)
 	@echo "APPL????" > $@
@@ -226,7 +223,6 @@ dist_noinst_SCRIPTS = autogen.sh
 EXTRA_DIST = $(top_srcdir)/share/genbuild.sh test/functional/test_runner.py test/functional $(DIST_CONTRIB) $(DIST_DOCS) $(WINDOWS_PACKAGING) $(OSX_PACKAGING) $(BIN_CHECKS)
 
 EXTRA_DIST += \
-    test/util/bctest.py \
     test/util/bitcoin-util-test.py \
     test/util/data/bitcoin-util-test.json \
     test/util/data/blanktxv1.hex \
@@ -279,9 +275,6 @@ EXTRA_DIST += \
     test/util/data/txcreatesignv2.hex
 
 CLEANFILES = $(OSX_DMG) $(BITCOIN_WIN_INSTALLER)
-
-# This file is problematic for out-of-tree builds if it exists.
-DISTCLEANFILES = test/util/buildenv.pyc
 
 .INTERMEDIATE: $(COVERAGE_INFO)
 

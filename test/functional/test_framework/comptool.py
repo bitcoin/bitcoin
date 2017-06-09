@@ -42,7 +42,7 @@ class RejectResult(object):
 class TestNode(NodeConnCB):
 
     def __init__(self, block_store, tx_store):
-        NodeConnCB.__init__(self)
+        super().__init__()
         self.conn = None
         self.bestblockhash = None
         self.block_store = block_store
@@ -192,9 +192,7 @@ class TestManager(object):
         return wait_until(disconnected, timeout=10)
 
     def wait_for_verack(self):
-        def veracked():
-            return all(node.verack_received for node in self.test_nodes)
-        return wait_until(veracked, timeout=10)
+        return all(node.wait_for_verack() for node in self.test_nodes)
 
     def wait_for_pings(self, counter):
         def received_pongs():

@@ -42,6 +42,7 @@ import decimal
 import json
 import logging
 import socket
+import time
 try:
     import urllib.parse as urlparse
 except ImportError:
@@ -163,6 +164,7 @@ class AuthServiceProxy(object):
         return self._request('POST', self.__url.path, postdata.encode('utf-8'))
 
     def _get_response(self):
+        req_start_time = time.time()
         try:
             http_response = self.__conn.getresponse()
         except socket.timeout as e:
@@ -183,8 +185,9 @@ class AuthServiceProxy(object):
 
         responsedata = http_response.read().decode('utf8')
         response = json.loads(responsedata, parse_float=decimal.Decimal)
+        elapsed = time.time() - req_start_time
         if "error" in response and response["error"] is None:
-            log.debug("<-%s- %s"%(response["id"], json.dumps(response["result"], default=EncodeDecimal, ensure_ascii=self.ensure_ascii)))
+            log.debug("<-%s- [%.6f] %s"%(response["id"], elapsed, json.dumps(response["result"], default=EncodeDecimal, ensure_ascii=self.ensure_ascii)))
         else:
-            log.debug("<-- "+responsedata)
+            log.debug("<-- [%.6f] %s"%(elapsed,responsedata))
         return response

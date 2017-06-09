@@ -23,13 +23,9 @@ class ZapWalletTXesTest (BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 3
 
-    def setup_network(self, split=False):
-        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir)
-        connect_nodes_bi(self.nodes,0,1)
-        connect_nodes_bi(self.nodes,1,2)
+    def setup_network(self):
+        super().setup_network()
         connect_nodes_bi(self.nodes,0,2)
-        self.is_network_split=False
-        self.sync_all()
 
     def run_test (self):
         self.log.info("Mining blocks...")
@@ -62,18 +58,16 @@ class ZapWalletTXesTest (BitcoinTestFramework):
         assert_equal(tx3['txid'], txid3) #tx3 must be available (unconfirmed)
         
         #restart bitcoind
-        self.nodes[0].stop()
-        bitcoind_processes[0].wait()
-        self.nodes[0] = start_node(0,self.options.tmpdir)
+        self.stop_node(0)
+        self.nodes[0] = self.start_node(0,self.options.tmpdir)
         
         tx3 = self.nodes[0].gettransaction(txid3)
         assert_equal(tx3['txid'], txid3) #tx must be available (unconfirmed)
         
-        self.nodes[0].stop()
-        bitcoind_processes[0].wait()
+        self.stop_node(0)
         
         #restart bitcoind with zapwallettxes
-        self.nodes[0] = start_node(0,self.options.tmpdir, ["-zapwallettxes=1"])
+        self.nodes[0] = self.start_node(0,self.options.tmpdir, ["-zapwallettxes=1"])
         
         assert_raises(JSONRPCException, self.nodes[0].gettransaction, [txid3])
         #there must be a expection because the unconfirmed wallettx0 must be gone by now

@@ -98,7 +98,7 @@ class QtRPCTimerBase: public QObject, public RPCTimerBase
 {
     Q_OBJECT
 public:
-    QtRPCTimerBase(boost::function<void(void)>& _func, int64_t millis):
+    QtRPCTimerBase(std::function<void(void)>& _func, int64_t millis):
         func(_func)
     {
         timer.setSingleShot(true);
@@ -110,7 +110,7 @@ private Q_SLOTS:
     void timeout() { func(); }
 private:
     QTimer timer;
-    boost::function<void(void)> func;
+    std::function<void(void)> func;
 };
 
 class QtRPCTimerInterface: public RPCTimerInterface
@@ -118,7 +118,7 @@ class QtRPCTimerInterface: public RPCTimerInterface
 public:
     ~QtRPCTimerInterface() {}
     const char *Name() { return "Qt"; }
-    RPCTimerBase* NewTimer(boost::function<void(void)>& func, int64_t millis)
+    RPCTimerBase* NewTimer(std::function<void(void)>& func, int64_t millis)
     {
         return new QtRPCTimerBase(func, millis);
     }
@@ -174,6 +174,10 @@ bool RPCConsole::RPCParseCommandLine(std::string &strResult, const std::string &
         if (stack.back().empty() && (!nDepthInsideSensitive) && historyFilter.contains(QString::fromStdString(strArg), Qt::CaseInsensitive)) {
             nDepthInsideSensitive = 1;
             filter_begin_pos = chpos;
+        }
+        // Make sure stack is not empty before adding something
+        if (stack.empty()) {
+            stack.push_back(std::vector<std::string>());
         }
         stack.back().push_back(strArg);
     };
@@ -626,9 +630,12 @@ void RPCConsole::setClientModel(ClientModel *model)
         for (size_t i = 0; i < commandList.size(); ++i)
         {
             wordList << commandList[i].c_str();
+            wordList << ("help " + commandList[i]).c_str();
         }
 
+        wordList.sort();
         autoCompleter = new QCompleter(wordList, this);
+        autoCompleter->setModelSorting(QCompleter::CaseSensitivelySortedModel);
         ui->lineEdit->setCompleter(autoCompleter);
         autoCompleter->popup()->installEventFilter(this);
         // Start thread to execute RPC commands.
@@ -723,8 +730,14 @@ void RPCConsole::clear(bool clearHistory)
             ).arg(fixedFontInfo.family(), QString("%1pt").arg(consoleFontSize))
         );
 
+#ifdef Q_OS_MAC
+    QString clsKey = "(⌘)-L";
+#else
+    QString clsKey = "Ctrl-L";
+#endif
+	 
     message(CMD_REPLY, (tr("Welcome to the %1 RPC console.").arg(tr(PACKAGE_NAME)) + "<br>" +
-                        tr("Use up and down arrows to navigate history, and <b>Ctrl-L</b> to clear screen.") + "<br>" +
+                        tr("Use up and down arrows to navigate history, and %1 to clear screen.").arg("<b>"+clsKey+"</b>") + "<br>" +
                         tr("Type <b>help</b> for an overview of available commands.")) +
                         "<br><span class=\"secwarning\">" +
                         tr("WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramification of a command.") +
@@ -822,7 +835,7 @@ void RPCConsole::on_lineEdit_returnPressed()
 
         cmdBeforeBrowsing = QString();
 
-        message(CMD_REQUEST, cmd);
+        message(CMD_REQUEST, QString::fromStdString(strFilteredCmd));
         Q_EMIT cmdRequest(cmd);
 
         cmd = QString::fromStdString(strFilteredCmd);
@@ -1111,7 +1124,7 @@ void RPCConsole::disconnectSelectedNode()
     for(int i = 0; i < nodes.count(); i++)
     {
         // Get currently selected peer address
-        NodeId id = nodes.at(i).data().toInt();
+        NodeId id = nodes.at(i).data().toLongLong();
         // Find the node, disconnect it and clear the selected node
         if(g_connman->DisconnectNode(id))
             clearSelectedNode();
@@ -1128,7 +1141,7 @@ void RPCConsole::banSelectedNode(int bantime)
     for(int i = 0; i < nodes.count(); i++)
     {
         // Get currently selected peer address
-        NodeId id = nodes.at(i).data().toInt();
+        NodeId id = nodes.at(i).data().toLongLong();
 
 	// Get currently selected peer address
 	int detailNodeRow = clientModel->getPeerTableModel()->getRowByNodeId(id);

@@ -147,7 +147,7 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
                 // request it.
                 // This should be rare enough that the extra bandwidth doesn't matter,
                 // but eating a round-trip due to FillBlock failure would be annoying
-                // Note that we dont want duplication between extra_txn and mempool to
+                // Note that we don't want duplication between extra_txn and mempool to
                 // trigger this case, so we compare witness hashes first
                 if (txn_available[idit->second] &&
                         txn_available[idit->second]->GetWitnessHash() != extra_txn[i].second->GetWitnessHash()) {
@@ -164,7 +164,7 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
             break;
     }
 
-    LogPrint("cmpctblock", "Initialized PartiallyDownloadedBlock for block %s using a cmpctblock of size %lu\n", cmpctblock.header.GetHash().ToString(), GetSerializeSize(cmpctblock, SER_NETWORK, PROTOCOL_VERSION));
+    LogPrint(BCLog::CMPCTBLOCK, "Initialized PartiallyDownloadedBlock for block %s using a cmpctblock of size %lu\n", cmpctblock.header.GetHash().ToString(), GetSerializeSize(cmpctblock, SER_NETWORK, PROTOCOL_VERSION));
 
     return READ_STATUS_OK;
 }
@@ -209,10 +209,11 @@ ReadStatus PartiallyDownloadedBlock::FillBlock(CBlock& block, const std::vector<
         return READ_STATUS_CHECKBLOCK_FAILED;
     }
 
-    LogPrint("cmpctblock", "Successfully reconstructed block %s with %lu txn prefilled, %lu txn from mempool (incl at least %lu from extra pool) and %lu txn requested\n", hash.ToString(), prefilled_count, mempool_count, extra_count, vtx_missing.size());
+    LogPrint(BCLog::CMPCTBLOCK, "Successfully reconstructed block %s with %lu txn prefilled, %lu txn from mempool (incl at least %lu from extra pool) and %lu txn requested\n", hash.ToString(), prefilled_count, mempool_count, extra_count, vtx_missing.size());
     if (vtx_missing.size() < 5) {
-        for (const auto& tx : vtx_missing)
-            LogPrint("cmpctblock", "Reconstructed block %s required tx %s\n", hash.ToString(), tx->GetHash().ToString());
+        for (const auto& tx : vtx_missing) {
+            LogPrint(BCLog::CMPCTBLOCK, "Reconstructed block %s required tx %s\n", hash.ToString(), tx->GetHash().ToString());
+        }
     }
 
     return READ_STATUS_OK;

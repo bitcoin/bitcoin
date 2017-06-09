@@ -273,7 +273,7 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
     //
     // Debug view
     //
-    if (fDebug)
+    if (logCategories != BCLog::NONE)
     {
         strHTML += "<hr><br>" + tr("Debug information") + "<br><br>";
         BOOST_FOREACH(const CTxIn& txin, wtx.tx->vin)
@@ -293,13 +293,12 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
         {
             COutPoint prevout = txin.prevout;
 
-            CCoins prev;
-            if(pcoinsTip->GetCoins(prevout.hash, prev))
+            Coin prev;
+            if(pcoinsTip->GetCoin(prevout, prev))
             {
-                if (prevout.n < prev.vout.size())
                 {
                     strHTML += "<li>";
-                    const CTxOut &vout = prev.vout[prevout.n];
+                    const CTxOut &vout = prev.out;
                     CTxDestination address;
                     if (ExtractDestination(vout.scriptPubKey, address))
                     {

@@ -10,7 +10,7 @@ Before every release candidate:
 Before every minor and major release:
 
 * Update [bips.md](bips.md) to account for changes since the last release.
-* Update version in sources (see below)
+* Update version in `configure.ac` (don't forget to set `CLIENT_VERSION_IS_RELEASE` to `true`)
 * Write release notes (see below)
 * Update `src/chainparams.cpp` nMinimumChainWork with information from the getblockchaininfo rpc.
 * Update `src/chainparams.cpp` defaultAssumeValid  with information from the getblockhash rpc.
@@ -24,6 +24,7 @@ Before every major release:
 * Update hardcoded [seeds](/contrib/seeds/README.md), see [this pull request](https://github.com/bitcoin/bitcoin/pull/7415) for an example.
 * Update [`BLOCK_CHAIN_SIZE`](/src/qt/intro.cpp) to the current size plus some overhead.
 * Update `src/chainparams.cpp` chainTxData with statistics about the transaction count and rate.
+* Update version of `contrib/gitian-descriptors/*.yml`: usually one'd want to do this on master after branching off the release - but be sure to at least do it before a new major release
 
 ### First time / New builders
 
@@ -37,23 +38,7 @@ Check out the source code in the following directory hierarchy.
     git clone https://github.com/devrandom/gitian-builder.git
     git clone https://github.com/bitcoin/bitcoin.git
 
-### Bitcoin maintainers/release engineers, update version in sources
-
-Update the following:
-
-- `configure.ac`:
-    - `_CLIENT_VERSION_MAJOR`
-    - `_CLIENT_VERSION_MINOR`
-    - `_CLIENT_VERSION_REVISION`
-    - Don't forget to set `_CLIENT_VERSION_IS_RELEASE` to `true`
-- `src/clientversion.h`: (this mirrors `configure.ac` - see issue #3539)
-    - `CLIENT_VERSION_MAJOR`
-    - `CLIENT_VERSION_MINOR`
-    - `CLIENT_VERSION_REVISION`
-    - Don't forget to set `CLIENT_VERSION_IS_RELEASE` to `true`
-- `doc/README.md` and `doc/README_windows.txt`
-- `doc/Doxyfile`: `PROJECT_NUMBER` contains the full version
-- `contrib/gitian-descriptors/*.yml`: usually one'd want to do this on master after branching off the release - but be sure to at least do it before a new major release
+### Bitcoin maintainers/release engineers, suggestion for writing release notes
 
 Write release notes. git shortlog helps a lot, for example:
 

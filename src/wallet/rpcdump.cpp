@@ -26,7 +26,6 @@
 
 #include <univalue.h>
 
-#include <boost/assign/list_of.hpp>
 #include <boost/foreach.hpp>
 
 std::string static EncodeDumpTime(int64_t nTime) {
@@ -95,6 +94,8 @@ UniValue importprivkey(const JSONRPCRequest& request)
             + HelpExampleCli("importprivkey", "\"mykey\"") +
             "\nImport using a label and without rescan\n"
             + HelpExampleCli("importprivkey", "\"mykey\" \"testing\" false") +
+            "\nImport using default blank label and without rescan\n"
+            + HelpExampleCli("importprivkey", "\"mykey\" \"\" false") +
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("importprivkey", "\"mykey\", \"testing\", false")
         );
@@ -152,6 +153,31 @@ UniValue importprivkey(const JSONRPCRequest& request)
     }
 
     return NullUniValue;
+}
+
+UniValue abortrescan(const JSONRPCRequest& request)
+{
+    CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp || request.params.size() > 0)
+        throw std::runtime_error(
+            "abortrescan\n"
+            "\nStops current wallet rescan triggered e.g. by an importprivkey call.\n"
+            "\nExamples:\n"
+            "\nImport a private key\n"
+            + HelpExampleCli("importprivkey", "\"mykey\"") +
+            "\nAbort the running wallet rescan\n"
+            + HelpExampleCli("abortrescan", "") +
+            "\nAs a JSON-RPC call\n"
+            + HelpExampleRpc("abortrescan", "")
+        );
+
+    if (!pwallet->IsScanning() || pwallet->IsAbortingRescan()) return false;
+    pwallet->AbortRescan();
+    return true;
 }
 
 void ImportAddress(CWallet*, const CBitcoinAddress& address, const std::string& strLabel);
@@ -330,7 +356,7 @@ UniValue removeprunedfunds(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
             "removeprunedfunds \"txid\"\n"
-            "\nDeletes the specified transaction from the wallet. Meant for use with pruned wallets and as a companion to importprunedfunds. This will effect wallet balances.\n"
+            "\nDeletes the specified transaction from the wallet. Meant for use with pruned wallets and as a companion to importprunedfunds. This will affect wallet balances.\n"
             "\nArguments:\n"
             "1. \"txid\"           (string, required) The hex-encoded id of the transaction you are deleting\n"
             "\nExamples:\n"
@@ -509,14 +535,11 @@ UniValue importwallet(const JSONRPCRequest& request)
     }
     file.close();
     pwallet->ShowProgress("", 100); // hide progress dialog in GUI
-
-    CBlockIndex *pindex = chainActive.Tip();
-    while (pindex && pindex->pprev && pindex->GetBlockTime() > nTimeBegin - TIMESTAMP_WINDOW)
-        pindex = pindex->pprev;
-
     pwallet->UpdateTimeFirstKey(nTimeBegin);
 
-    LogPrintf("Rescanning last %i blocks\n", chainActive.Height() - pindex->nHeight + 1);
+    CBlockIndex *pindex = chainActive.FindEarliestAtLeast(nTimeBegin - TIMESTAMP_WINDOW);
+
+    LogPrintf("Rescanning last %i blocks\n", pindex ? chainActive.Height() - pindex->nHeight + 1 : 0);
     pwallet->ScanForWalletTransactions(pindex);
     pwallet->MarkDirty();
 
@@ -579,7 +602,11 @@ UniValue dumpwallet(const JSONRPCRequest& request)
             "dumpwallet \"filename\"\n"
             "\nDumps all wallet keys in a human-readable format.\n"
             "\nArguments:\n"
-            "1. \"filename\"    (string, required) The filename\n"
+            "1. \"filename\"    (string, required) The filename with path (either absolute or relative to bitcoind)\n"
+            "\nResult:\n"
+            "{                           (json object)\n"
+            "  \"filename\" : {        (string) The filename with full absolute path\n"
+            "}\n"
             "\nExamples:\n"
             + HelpExampleCli("dumpwallet", "\"test\"")
             + HelpExampleRpc("dumpwallet", "\"test\"")
@@ -590,7 +617,9 @@ UniValue dumpwallet(const JSONRPCRequest& request)
     EnsureWalletIsUnlocked(pwallet);
 
     std::ofstream file;
-    file.open(request.params[0].get_str().c_str());
+    boost::filesystem::path filepath = request.params[0].get_str();
+    filepath = boost::filesystem::absolute(filepath);
+    file.open(filepath.string().c_str());
     if (!file.is_open())
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
 
@@ -655,7 +684,11 @@ UniValue dumpwallet(const JSONRPCRequest& request)
     file << "\n";
     file << "# End of dump\n";
     file.close();
-    return NullUniValue;
+
+    UniValue reply(UniValue::VOBJ);
+    reply.push_back(Pair("filename", filepath.string()));
+
+    return reply;
 }
 
 
@@ -1036,7 +1069,7 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
 
     // clang-format on
 
-    RPCTypeCheck(mainRequest.params, boost::assign::list_of(UniValue::VARR)(UniValue::VOBJ));
+    RPCTypeCheck(mainRequest.params, {UniValue::VARR, UniValue::VOBJ});
 
     const UniValue& requests = mainRequest.params[0];
 
@@ -1094,13 +1127,13 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
 
     if (fRescan && fRunScan && requests.size()) {
         CBlockIndex* pindex = nLowestTimestamp > minimumTimestamp ? chainActive.FindEarliestAtLeast(std::max<int64_t>(nLowestTimestamp - TIMESTAMP_WINDOW, 0)) : chainActive.Genesis();
-        CBlockIndex* scannedRange = nullptr;
+        CBlockIndex* scanFailed = nullptr;
         if (pindex) {
-            scannedRange = pwallet->ScanForWalletTransactions(pindex, true);
+            scanFailed = pwallet->ScanForWalletTransactions(pindex, true);
             pwallet->ReacceptWalletTransactions();
         }
 
-        if (!scannedRange || scannedRange->nHeight > pindex->nHeight) {
+        if (scanFailed) {
             std::vector<UniValue> results = response.getValues();
             response.clear();
             response.setArray();
@@ -1110,12 +1143,23 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
                 // range, or if the import result already has an error set, let
                 // the result stand unmodified. Otherwise replace the result
                 // with an error message.
-                if (GetImportTimestamp(request, now) - TIMESTAMP_WINDOW >= scannedRange->GetBlockTimeMax() || results.at(i).exists("error")) {
+                if (GetImportTimestamp(request, now) - TIMESTAMP_WINDOW > scanFailed->GetBlockTimeMax() || results.at(i).exists("error")) {
                     response.push_back(results.at(i));
                 } else {
                     UniValue result = UniValue(UniValue::VOBJ);
                     result.pushKV("success", UniValue(false));
-                    result.pushKV("error", JSONRPCError(RPC_MISC_ERROR, strprintf("Failed to rescan before time %d, transactions may be missing.", scannedRange->GetBlockTimeMax())));
+                    result.pushKV(
+                        "error",
+                        JSONRPCError(
+                            RPC_MISC_ERROR,
+                            strprintf("Rescan failed for key with creation timestamp %d. There was an error reading a "
+                                      "block from time %d, which is after or within %d seconds of key creation, and "
+                                      "could contain transactions pertaining to the key. As a result, transactions "
+                                      "and coins using this key may not appear in the wallet. This error could be "
+                                      "caused by pruning or data corruption (see bitcoind log for details) and could "
+                                      "be dealt with by downloading and rescanning the relevant blocks (see -reindex "
+                                      "and -rescan options).",
+                                GetImportTimestamp(request, now), scanFailed->GetBlockTimeMax(), TIMESTAMP_WINDOW)));
                     response.push_back(std::move(result));
                 }
                 ++i;

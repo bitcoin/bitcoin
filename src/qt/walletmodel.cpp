@@ -8,23 +8,29 @@
 #include "consensus/validation.h"
 #include "guiconstants.h"
 #include "guiutil.h"
+#include "optionsmodel.h"
 #include "paymentserver.h"
 #include "recentrequeststablemodel.h"
+#include "sendcoinsdialog.h"
 #include "transactiontablemodel.h"
 
 #include "base58.h"
+#include "chain.h"
 #include "keystore.h"
 #include "validation.h"
 #include "net.h" // for g_connman
+#include "policy/rbf.h"
 #include "sync.h"
 #include "ui_interface.h"
 #include "util.h" // for GetBoolArg
+#include "wallet/feebumper.h"
 #include "wallet/wallet.h"
 #include "wallet/walletdb.h" // for BackupWallet
 
 #include <stdint.h>
 
 #include <QDebug>
+#include <QMessageBox>
 #include <QSet>
 #include <QTimer>
 
@@ -62,14 +68,7 @@ CAmount WalletModel::getBalance(const CCoinControl *coinControl) const
 {
     if (coinControl)
     {
-        CAmount nBalance = 0;
-        std::vector<COutput> vCoins;
-        wallet->AvailableCoins(vCoins, true, coinControl);
-        BOOST_FOREACH(const COutput& out, vCoins)
-            if(out.fSpendable)
-                nBalance += out.tx->tx->vout[out.i].nValue;
-
-        return nBalance;
+        return wallet->GetAvailableBalance(coinControl);
     }
 
     return wallet->GetBalance();
@@ -594,38 +593,11 @@ bool WalletModel::isSpent(const COutPoint& outpoint) const
 // AvailableCoins + LockedCoins grouped by wallet address (put change in one group with wallet address)
 void WalletModel::listCoins(std::map<QString, std::vector<COutput> >& mapCoins) const
 {
-    std::vector<COutput> vCoins;
-    wallet->AvailableCoins(vCoins);
-
-    LOCK2(cs_main, wallet->cs_wallet); // ListLockedCoins, mapWallet
-    std::vector<COutPoint> vLockedCoins;
-    wallet->ListLockedCoins(vLockedCoins);
-
-    // add locked coins
-    BOOST_FOREACH(const COutPoint& outpoint, vLockedCoins)
-    {
-        if (!wallet->mapWallet.count(outpoint.hash)) continue;
-        int nDepth = wallet->mapWallet[outpoint.hash].GetDepthInMainChain();
-        if (nDepth < 0) continue;
-        COutput out(&wallet->mapWallet[outpoint.hash], outpoint.n, nDepth, true /* spendable */, true /* solvable */, true /* safe */);
-        if (outpoint.n < out.tx->tx->vout.size() && wallet->IsMine(out.tx->tx->vout[outpoint.n]) == ISMINE_SPENDABLE)
-            vCoins.push_back(out);
-    }
-
-    BOOST_FOREACH(const COutput& out, vCoins)
-    {
-        COutput cout = out;
-
-        while (wallet->IsChange(cout.tx->tx->vout[cout.i]) && cout.tx->tx->vin.size() > 0 && wallet->IsMine(cout.tx->tx->vin[0]))
-        {
-            if (!wallet->mapWallet.count(cout.tx->tx->vin[0].prevout.hash)) break;
-            cout = COutput(&wallet->mapWallet[cout.tx->tx->vin[0].prevout.hash], cout.tx->tx->vin[0].prevout.n, 0 /* depth */, true /* spendable */, true /* solvable */, true /* safe */);
+    for (auto& group : wallet->ListCoins()) {
+        auto& resultGroup = mapCoins[QString::fromStdString(CBitcoinAddress(group.first).ToString())];
+        for (auto& coin : group.second) {
+            resultGroup.emplace_back(std::move(coin));
         }
-
-        CTxDestination address;
-        if(!out.fSpendable || !ExtractDestination(cout.tx->tx->vout[cout.i].scriptPubKey, address))
-            continue;
-        mapCoins[QString::fromStdString(CBitcoinAddress(address).ToString())].push_back(out);
     }
 }
 
@@ -655,11 +627,7 @@ void WalletModel::listLockedCoins(std::vector<COutPoint>& vOutpts)
 
 void WalletModel::loadReceiveRequests(std::vector<std::string>& vReceiveRequests)
 {
-    LOCK(wallet->cs_wallet);
-    BOOST_FOREACH(const PAIRTYPE(CTxDestination, CAddressBookData)& item, wallet->mapAddressBook)
-        BOOST_FOREACH(const PAIRTYPE(std::string, std::string)& item2, item.second.destdata)
-            if (item2.first.size() > 2 && item2.first.substr(0,2) == "rr") // receive request
-                vReceiveRequests.push_back(item2.second);
+    vReceiveRequests = wallet->GetDestValues("rr"); // receive request
 }
 
 bool WalletModel::saveReceiveRequest(const std::string &sAddress, const int64_t nId, const std::string &sRequest)
@@ -679,17 +647,91 @@ bool WalletModel::saveReceiveRequest(const std::string &sAddress, const int64_t 
 
 bool WalletModel::transactionCanBeAbandoned(uint256 hash) const
 {
-    LOCK2(cs_main, wallet->cs_wallet);
-    const CWalletTx *wtx = wallet->GetWalletTx(hash);
-    if (!wtx || wtx->isAbandoned() || wtx->GetDepthInMainChain() > 0 || wtx->InMempool())
-        return false;
-    return true;
+    return wallet->TransactionCanBeAbandoned(hash);
 }
 
 bool WalletModel::abandonTransaction(uint256 hash) const
 {
     LOCK2(cs_main, wallet->cs_wallet);
     return wallet->AbandonTransaction(hash);
+}
+
+bool WalletModel::transactionCanBeBumped(uint256 hash) const
+{
+    LOCK2(cs_main, wallet->cs_wallet);
+    const CWalletTx *wtx = wallet->GetWalletTx(hash);
+    return wtx && SignalsOptInRBF(*wtx) && !wtx->mapValue.count("replaced_by_txid");
+}
+
+bool WalletModel::bumpFee(uint256 hash)
+{
+    std::unique_ptr<CFeeBumper> feeBump;
+    {
+        LOCK2(cs_main, wallet->cs_wallet);
+        feeBump.reset(new CFeeBumper(wallet, hash, nTxConfirmTarget, false, 0, true));
+    }
+    if (feeBump->getResult() != BumpFeeResult::OK)
+    {
+        QMessageBox::critical(0, tr("Fee bump error"), tr("Increasing transaction fee failed") + "<br />(" +
+            (feeBump->getErrors().size() ? QString::fromStdString(feeBump->getErrors()[0]) : "") +")");
+         return false;
+    }
+
+    // allow a user based fee verification
+    QString questionString = tr("Do you want to increase the fee?");
+    questionString.append("<br />");
+    CAmount oldFee = feeBump->getOldFee();
+    CAmount newFee = feeBump->getNewFee();
+    questionString.append("<table style=\"text-align: left;\">");
+    questionString.append("<tr><td>");
+    questionString.append(tr("Current fee:"));
+    questionString.append("</td><td>");
+    questionString.append(BitcoinUnits::formatHtmlWithUnit(getOptionsModel()->getDisplayUnit(), oldFee));
+    questionString.append("</td></tr><tr><td>");
+    questionString.append(tr("Increase:"));
+    questionString.append("</td><td>");
+    questionString.append(BitcoinUnits::formatHtmlWithUnit(getOptionsModel()->getDisplayUnit(), newFee - oldFee));
+    questionString.append("</td></tr><tr><td>");
+    questionString.append(tr("New fee:"));
+    questionString.append("</td><td>");
+    questionString.append(BitcoinUnits::formatHtmlWithUnit(getOptionsModel()->getDisplayUnit(), newFee));
+    questionString.append("</td></tr></table>");
+    SendConfirmationDialog confirmationDialog(tr("Confirm fee bump"), questionString);
+    confirmationDialog.exec();
+    QMessageBox::StandardButton retval = (QMessageBox::StandardButton)confirmationDialog.result();
+
+    // cancel sign&broadcast if users doesn't want to bump the fee
+    if (retval != QMessageBox::Yes) {
+        return false;
+    }
+
+    WalletModel::UnlockContext ctx(requestUnlock());
+    if(!ctx.isValid())
+    {
+        return false;
+    }
+
+    // sign bumped transaction
+    bool res = false;
+    {
+        LOCK2(cs_main, wallet->cs_wallet);
+        res = feeBump->signTransaction(wallet);
+    }
+    if (!res) {
+        QMessageBox::critical(0, tr("Fee bump error"), tr("Can't sign transaction."));
+        return false;
+    }
+    // commit the bumped transaction
+    {
+        LOCK2(cs_main, wallet->cs_wallet);
+        res = feeBump->commit(wallet);
+    }
+    if(!res) {
+        QMessageBox::critical(0, tr("Fee bump error"), tr("Could not commit transaction") + "<br />(" +
+            QString::fromStdString(feeBump->getErrors()[0])+")");
+         return false;
+    }
+    return true;
 }
 
 bool WalletModel::isWalletEnabled()

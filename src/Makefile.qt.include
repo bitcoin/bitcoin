@@ -122,6 +122,7 @@ QT_MOC_CPP = \
   qt/moc_bitcoinamountfield.cpp \
   qt/moc_bitcoingui.cpp \
   qt/moc_bitcoinunits.cpp \
+  qt/moc_callback.cpp \
   qt/moc_clientmodel.cpp \
   qt/moc_coincontroldialog.cpp \
   qt/moc_coincontroltreewidget.cpp \
@@ -167,6 +168,7 @@ BITCOIN_MM = \
 QT_MOC = \
   qt/bitcoin.moc \
   qt/bitcoinamountfield.moc \
+  qt/callback.moc \
   qt/intro.moc \
   qt/overviewpage.moc \
   qt/rpcconsole.moc
@@ -189,6 +191,7 @@ BITCOIN_QT_H = \
   qt/bitcoinamountfield.h \
   qt/bitcoingui.h \
   qt/bitcoinunits.h \
+  qt/callback.h \
   qt/clientmodel.h \
   qt/coincontroldialog.h \
   qt/coincontroltreewidget.h \

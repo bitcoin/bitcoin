@@ -3,11 +3,12 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the ZMQ API."""
-
-from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
-import zmq
+import configparser
+import os
 import struct
+
+from test_framework.test_framework import BitcoinTestFramework, SkipTest
+from test_framework.util import *
 
 class ZMQTest (BitcoinTestFramework):
 
@@ -18,12 +19,27 @@ class ZMQTest (BitcoinTestFramework):
     port = 28332
 
     def setup_nodes(self):
+        # Try to import python3-zmq. Skip this test if the import fails.
+        try:
+            import zmq
+        except ImportError:
+            raise SkipTest("python3-zmq module not available.")
+
+        # Check that bitcoin has been built with ZMQ enabled
+        config = configparser.ConfigParser()
+        if not self.options.configfile:
+            self.options.configfile = os.path.dirname(__file__) + "/config.ini"
+        config.read_file(open(self.options.configfile))
+
+        if not config["components"].getboolean("ENABLE_ZMQ"):
+            raise SkipTest("bitcoind has not been built with zmq enabled.")
+
         self.zmqContext = zmq.Context()
         self.zmqSubSocket = self.zmqContext.socket(zmq.SUB)
         self.zmqSubSocket.setsockopt(zmq.SUBSCRIBE, b"hashblock")
         self.zmqSubSocket.setsockopt(zmq.SUBSCRIBE, b"hashtx")
         self.zmqSubSocket.connect("tcp://127.0.0.1:%i" % self.port)
-        return start_nodes(self.num_nodes, self.options.tmpdir, extra_args=[
+        self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir, extra_args=[
             ['-zmqpubhashtx=tcp://127.0.0.1:'+str(self.port), '-zmqpubhashblock=tcp://127.0.0.1:'+str(self.port)],
             [],
             [],
@@ -41,7 +57,6 @@ class ZMQTest (BitcoinTestFramework):
         topic = msg[0]
         assert_equal(topic, b"hashtx")
         body = msg[1]
-        nseq = msg[2]
         msgSequence = struct.unpack('<I', msg[-1])[-1]
         assert_equal(msgSequence, 0) #must be sequence 0 on hashtx
 

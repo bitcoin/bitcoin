@@ -46,7 +46,8 @@ qt_test_test_bitcoin_qt_SOURCES = \
 if ENABLE_WALLET
 qt_test_test_bitcoin_qt_SOURCES += \
   qt/test/paymentservertests.cpp \
-  qt/test/wallettests.cpp
+  qt/test/wallettests.cpp \
+  wallet/test/wallet_test_fixture.cpp
 endif
 
 nodist_qt_test_test_bitcoin_qt_SOURCES = $(TEST_QT_MOC_CPP)

@@ -41,11 +41,7 @@ class NULLDUMMYTest(BitcoinTestFramework):
         super().__init__()
         self.num_nodes = 1
         self.setup_clean_chain = True
-
-    def setup_network(self):
-        # Must set the blockversion for this test
-        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir,
-                                 extra_args=[['-whitelist=127.0.0.1', '-walletprematurewitness']])
+        self.extra_args = [['-whitelist=127.0.0.1', '-walletprematurewitness']]
 
     def run_test(self):
         self.address = self.nodes[0].getnewaddress()

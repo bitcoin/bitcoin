@@ -4,7 +4,10 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test running bitcoind with the -rpcbind and -rpcallowip options."""
 
-from test_framework.test_framework import BitcoinTestFramework
+import socket
+import sys
+
+from test_framework.test_framework import BitcoinTestFramework, SkipTest
 from test_framework.util import *
 from test_framework.netutil import *
 
@@ -33,10 +36,10 @@ class RPCBindTest(BitcoinTestFramework):
         if allow_ips:
             base_args += ['-rpcallowip=' + x for x in allow_ips]
         binds = ['-rpcbind='+addr for addr in addresses]
-        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, [base_args + binds], connect_to)
+        self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir, [base_args + binds], connect_to)
         pid = bitcoind_processes[0].pid
         assert_equal(set(get_bind_addrs(pid)), set(expected))
-        stop_nodes(self.nodes)
+        self.stop_nodes()
 
     def run_allowip_test(self, allow_ips, rpchost, rpcport):
         '''
@@ -44,15 +47,16 @@ class RPCBindTest(BitcoinTestFramework):
         at a non-localhost IP.
         '''
         base_args = ['-disablewallet', '-nolisten'] + ['-rpcallowip='+x for x in allow_ips]
-        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, [base_args])
+        self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir, [base_args])
         # connect to node through non-loopback interface
         node = get_rpc_proxy(rpc_url(0, "%s:%d" % (rpchost, rpcport)), 0)
         node.getnetworkinfo()
-        stop_nodes(self.nodes)
+        self.stop_nodes()
 
     def run_test(self):
         # due to OS-specific network stats queries, this test works only on Linux
-        assert(sys.platform.startswith('linux'))
+        if not sys.platform.startswith('linux'):
+            raise SkipTest("This test can only be run on linux.")
         # find the first non-loopback interface for testing
         non_loopback_ip = None
         for name,ip in all_interfaces():
@@ -60,7 +64,14 @@ class RPCBindTest(BitcoinTestFramework):
                 non_loopback_ip = ip
                 break
         if non_loopback_ip is None:
-            assert(not 'This test requires at least one non-loopback IPv4 interface')
+            raise SkipTest("This test requires at least one non-loopback IPv4 interface.")
+        try:
+            s = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+            s.connect(("::1",1))
+            s.close
+        except OSError:
+            raise SkipTest("This test requires IPv6 support.")
+
         self.log.info("Using interface %s for testing" % non_loopback_ip)
 
         defaultport = rpc_port(0)

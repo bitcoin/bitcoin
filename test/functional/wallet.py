@@ -6,7 +6,7 @@
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
-class WalletTest (BitcoinTestFramework):
+class WalletTest(BitcoinTestFramework):
 
     def check_fee_amount(self, curr_balance, balance_with_fee, fee_per_byte, tx_size):
         """Return curr_balance after asserting the fee was in range"""
@@ -20,15 +20,14 @@ class WalletTest (BitcoinTestFramework):
         self.num_nodes = 4
         self.extra_args = [['-usehd={:d}'.format(i%2==0)] for i in range(4)]
 
-    def setup_network(self, split=False):
-        self.nodes = start_nodes(3, self.options.tmpdir, self.extra_args[:3])
+    def setup_network(self):
+        self.nodes = self.start_nodes(3, self.options.tmpdir, self.extra_args[:3])
         connect_nodes_bi(self.nodes,0,1)
         connect_nodes_bi(self.nodes,1,2)
         connect_nodes_bi(self.nodes,0,2)
-        self.is_network_split=False
         self.sync_all()
 
-    def run_test (self):
+    def run_test(self):
 
         # Check that there's no UTXO on none of the nodes
         assert_equal(len(self.nodes[0].listunspent()), 0)
@@ -52,14 +51,38 @@ class WalletTest (BitcoinTestFramework):
         assert_equal(self.nodes[2].getbalance(), 0)
 
         # Check that only first and second nodes have UTXOs
-        assert_equal(len(self.nodes[0].listunspent()), 1)
+        utxos = self.nodes[0].listunspent()
+        assert_equal(len(utxos), 1)
         assert_equal(len(self.nodes[1].listunspent()), 1)
         assert_equal(len(self.nodes[2].listunspent()), 0)
 
         # Send 21 BTC from 0 to 2 using sendtoaddress call.
+        # Locked memory should use at least 32 bytes to sign each transaction
+        self.log.info("test getmemoryinfo")
+        memory_before = self.nodes[0].getmemoryinfo()
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 11)
-        self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 10)
+        mempool_txid = self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 10)
+        memory_after = self.nodes[0].getmemoryinfo()
+        assert(memory_before['locked']['used'] + 64 <= memory_after['locked']['used'])
 
+        self.log.info("test gettxout")
+        # utxo spent in mempool should be visible if you exclude mempool
+        # but invisible if you include mempool
+        confirmed_txid, confirmed_index = utxos[0]["txid"], utxos[0]["vout"]
+        txout = self.nodes[0].gettxout(confirmed_txid, confirmed_index, False)
+        assert_equal(txout['value'], 50)
+        txout = self.nodes[0].gettxout(confirmed_txid, confirmed_index, True)
+        assert txout is None
+        # new utxo from mempool should be invisible if you exclude mempool
+        # but visible if you include mempool
+        txout = self.nodes[0].gettxout(mempool_txid, 0, False)
+        assert txout is None
+        txout1 = self.nodes[0].gettxout(mempool_txid, 0, True)
+        txout2 = self.nodes[0].gettxout(mempool_txid, 1, True)
+        # note the mempool tx will have randomly assigned indices
+        # but 10 will go to node2 and the rest will go to node0
+        balance = self.nodes[0].getbalance()
+        assert_equal(set([txout1['value'], txout2['value']]), set([10, balance]))
         walletinfo = self.nodes[0].getwalletinfo()
         assert_equal(walletinfo['immature_balance'], 0)
 
@@ -155,7 +178,7 @@ class WalletTest (BitcoinTestFramework):
         txid2 = self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), 1)
         sync_mempools(self.nodes)
 
-        self.nodes.append(start_node(3, self.options.tmpdir, self.extra_args[3]))
+        self.nodes.append(self.start_node(3, self.options.tmpdir, self.extra_args[3]))
         connect_nodes_bi(self.nodes, 0, 3)
         sync_blocks(self.nodes)
 
@@ -198,8 +221,8 @@ class WalletTest (BitcoinTestFramework):
         assert(found)
 
         #do some -walletbroadcast tests
-        stop_nodes(self.nodes)
-        self.nodes = start_nodes(3, self.options.tmpdir, [["-walletbroadcast=0"],["-walletbroadcast=0"],["-walletbroadcast=0"]])
+        self.stop_nodes()
+        self.nodes = self.start_nodes(3, self.options.tmpdir, [["-walletbroadcast=0"],["-walletbroadcast=0"],["-walletbroadcast=0"]])
         connect_nodes_bi(self.nodes,0,1)
         connect_nodes_bi(self.nodes,1,2)
         connect_nodes_bi(self.nodes,0,2)
@@ -223,8 +246,8 @@ class WalletTest (BitcoinTestFramework):
         txIdNotBroadcasted  = self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 2)
 
         #restart the nodes with -walletbroadcast=1
-        stop_nodes(self.nodes)
-        self.nodes = start_nodes(3, self.options.tmpdir)
+        self.stop_nodes()
+        self.nodes = self.start_nodes(3, self.options.tmpdir)
         connect_nodes_bi(self.nodes,0,1)
         connect_nodes_bi(self.nodes,1,2)
         connect_nodes_bi(self.nodes,0,2)
@@ -325,9 +348,9 @@ class WalletTest (BitcoinTestFramework):
         chainlimit = 6
         for m in maintenance:
             self.log.info("check " + m)
-            stop_nodes(self.nodes)
+            self.stop_nodes()
             # set lower ancestor limit for later
-            self.nodes = start_nodes(3, self.options.tmpdir, [[m, "-limitancestorcount="+str(chainlimit)]] * 3)
+            self.nodes = self.start_nodes(3, self.options.tmpdir, [[m, "-limitancestorcount="+str(chainlimit)]] * 3)
             while m == '-reindex' and [block_count] * 3 != [self.nodes[i].getblockcount() for i in range(3)]:
                 # reindex will leave rpc warm up "early"; Wait for it to finish
                 time.sleep(0.1)
@@ -374,8 +397,8 @@ class WalletTest (BitcoinTestFramework):
 
         # Try with walletrejectlongchains
         # Double chain limit but require combining inputs, so we pass SelectCoinsMinConf
-        stop_node(self.nodes[0],0)
-        self.nodes[0] = start_node(0, self.options.tmpdir, ["-walletrejectlongchains", "-limitancestorcount="+str(2*chainlimit)])
+        self.stop_node(0)
+        self.nodes[0] = self.start_node(0, self.options.tmpdir, ["-walletrejectlongchains", "-limitancestorcount="+str(2*chainlimit)])
 
         # wait for loadmempool
         timeout = 10

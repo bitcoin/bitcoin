@@ -179,12 +179,6 @@ bool CNetAddr::IsLocal() const
    return false;
 }
 
-bool CNetAddr::IsMulticast() const
-{
-    return    (IsIPv4() && (GetByte(3) & 0xF0) == 0xE0)
-           || (GetByte(15) == 0xFF);
-}
-
 bool CNetAddr::IsValid() const
 {
     // Cleanup 3-byte shifted addresses caused by garbage in size field

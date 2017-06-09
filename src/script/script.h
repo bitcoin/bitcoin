@@ -30,6 +30,9 @@ static const int MAX_PUBKEYS_PER_MULTISIG = 20;
 // Maximum script length in bytes
 static const int MAX_SCRIPT_SIZE = 10000;
 
+// Maximum number of values on script interpreter stack
+static const int MAX_STACK_SIZE = 1000;
+
 // Threshold for nLockTime: below this value it is interpreted as block number,
 // otherwise as UNIX timestamp.
 static const unsigned int LOCKTIME_THRESHOLD = 500000000; // Tue Nov  5 00:53:20 1985 UTC
@@ -186,6 +189,9 @@ enum opcodetype
 
     OP_INVALIDOPCODE = 0xff,
 };
+
+// Maximum value that an opcode can be
+static const unsigned int MAX_OPCODE = OP_NOP10;
 
 const char* GetOpName(opcodetype opcode);
 
@@ -626,6 +632,9 @@ public:
     /** Called by IsStandardTx and P2SH/BIP62 VerifyScript (which makes it consensus-critical). */
     bool IsPushOnly(const_iterator pc) const;
     bool IsPushOnly() const;
+
+    /** Check if the script contains valid OP_CODES */
+    bool HasValidOps() const;
 
     /**
      * Returns whether the script is guaranteed to fail at execution,

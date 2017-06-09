@@ -9,7 +9,6 @@
 #include "streams.h"
 
 #include "test/test_bitcoin.h"
-#include "test/test_random.h"
 
 #include <boost/test/unit_test.hpp>
 
@@ -28,6 +27,7 @@ class prevector_tester {
     typedef typename pretype::size_type Size;
     bool passed = true;
     FastRandomContext rand_cache;
+    uint256 rand_seed;
 
 
     template <typename A, typename B>
@@ -183,13 +183,12 @@ public:
     }
 
     ~prevector_tester() {
-        BOOST_CHECK_MESSAGE(passed, "insecure_rand_Rz: "
-                << rand_cache.Rz
-                << ", insecure_rand_Rw: "
-                << rand_cache.Rw);
+        BOOST_CHECK_MESSAGE(passed, "insecure_rand: " + rand_seed.ToString());
     }
+
     prevector_tester() {
-        seed_insecure_rand();
+        SeedInsecureRand();
+        rand_seed = insecure_rand_seed;
         rand_cache = insecure_rand_ctx;
     }
 };
@@ -199,67 +198,65 @@ BOOST_AUTO_TEST_CASE(PrevectorTestInt)
     for (int j = 0; j < 64; j++) {
         prevector_tester<8, int> test;
         for (int i = 0; i < 2048; i++) {
-            int r = insecure_rand();
-            if ((r % 4) == 0) {
-                test.insert(insecure_rand() % (test.size() + 1), insecure_rand());
+            if (InsecureRandBits(2) == 0) {
+                test.insert(InsecureRandRange(test.size() + 1), InsecureRand32());
             }
-            if (test.size() > 0 && ((r >> 2) % 4) == 1) {
-                test.erase(insecure_rand() % test.size());
+            if (test.size() > 0 && InsecureRandBits(2) == 1) {
+                test.erase(InsecureRandRange(test.size()));
             }
-            if (((r >> 4) % 8) == 2) {
-                int new_size = std::max<int>(0, std::min<int>(30, test.size() + (insecure_rand() % 5) - 2));
+            if (InsecureRandBits(3) == 2) {
+                int new_size = std::max<int>(0, std::min<int>(30, test.size() + (InsecureRandRange(5)) - 2));
                 test.resize(new_size);
             }
-            if (((r >> 7) % 8) == 3) {
-                test.insert(insecure_rand() % (test.size() + 1), 1 + (insecure_rand() % 2), insecure_rand());
+            if (InsecureRandBits(3) == 3) {
+                test.insert(InsecureRandRange(test.size() + 1), 1 + InsecureRandBool(), InsecureRand32());
             }
-            if (((r >> 10) % 8) == 4) {
-                int del = std::min<int>(test.size(), 1 + (insecure_rand() % 2));
-                int beg = insecure_rand() % (test.size() + 1 - del);
+            if (InsecureRandBits(3) == 4) {
+                int del = std::min<int>(test.size(), 1 + (InsecureRandBool()));
+                int beg = InsecureRandRange(test.size() + 1 - del);
                 test.erase(beg, beg + del);
             }
-            if (((r >> 13) % 16) == 5) {
-                test.push_back(insecure_rand());
+            if (InsecureRandBits(4) == 5) {
+                test.push_back(InsecureRand32());
             }
-            if (test.size() > 0 && ((r >> 17) % 16) == 6) {
+            if (test.size() > 0 && InsecureRandBits(4) == 6) {
                 test.pop_back();
             }
-            if (((r >> 21) % 32) == 7) {
+            if (InsecureRandBits(5) == 7) {
                 int values[4];
-                int num = 1 + (insecure_rand() % 4);
+                int num = 1 + (InsecureRandBits(2));
                 for (int k = 0; k < num; k++) {
-                    values[k] = insecure_rand();
+                    values[k] = InsecureRand32();
                 }
-                test.insert_range(insecure_rand() % (test.size() + 1), values, values + num);
+                test.insert_range(InsecureRandRange(test.size() + 1), values, values + num);
             }
-            if (((r >> 26) % 32) == 8) {
-                int del = std::min<int>(test.size(), 1 + (insecure_rand() % 4));
-                int beg = insecure_rand() % (test.size() + 1 - del);
+            if (InsecureRandBits(5) == 8) {
+                int del = std::min<int>(test.size(), 1 + (InsecureRandBits(2)));
+                int beg = InsecureRandRange(test.size() + 1 - del);
                 test.erase(beg, beg + del);
             }
-            r = insecure_rand();
-            if (r % 32 == 9) {
-                test.reserve(insecure_rand() % 32);
+            if (InsecureRandBits(5) == 9) {
+                test.reserve(InsecureRandBits(5));
             }
-            if ((r >> 5) % 64 == 10) {
+            if (InsecureRandBits(6) == 10) {
                 test.shrink_to_fit();
             }
             if (test.size() > 0) {
-                test.update(insecure_rand() % test.size(), insecure_rand());
+                test.update(InsecureRandRange(test.size()), InsecureRand32());
             }
-            if (((r >> 11) % 1024) == 11) {
+            if (InsecureRandBits(10) == 11) {
                 test.clear();
             }
-            if (((r >> 21) % 512) == 12) {
-                test.assign(insecure_rand() % 32, insecure_rand());
+            if (InsecureRandBits(9) == 12) {
+                test.assign(InsecureRandBits(5), InsecureRand32());
             }
-            if (((r >> 15) % 8) == 3) {
+            if (InsecureRandBits(3) == 3) {
                 test.swap();
             }
-            if (((r >> 15) % 16) == 8) {
+            if (InsecureRandBits(4) == 8) {
                 test.copy();
             }
-            if (((r >> 15) % 32) == 18) {
+            if (InsecureRandBits(5) == 18) {
                 test.move();
             }
         }

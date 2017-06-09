@@ -6,11 +6,10 @@
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
-from test_framework.mininode import sha256, ripemd160, CTransaction, CTxIn, COutPoint, CTxOut, COIN
+from test_framework.mininode import sha256, CTransaction, CTxIn, COutPoint, CTxOut, COIN, ToHex, FromHex
 from test_framework.address import script_to_p2sh, key_to_p2pkh
-from test_framework.script import CScript, OP_HASH160, OP_CHECKSIG, OP_0, hash160, OP_EQUAL, OP_DUP, OP_EQUALVERIFY, OP_1, OP_2, OP_CHECKMULTISIG, hash160, OP_TRUE
+from test_framework.script import CScript, OP_HASH160, OP_CHECKSIG, OP_0, hash160, OP_EQUAL, OP_DUP, OP_EQUALVERIFY, OP_1, OP_2, OP_CHECKMULTISIG, OP_TRUE
 from io import BytesIO
-from test_framework.mininode import ToHex, FromHex, COIN
 
 NODE_0 = 0
 NODE_1 = 1
@@ -81,16 +80,13 @@ class SegWitTest(BitcoinTestFramework):
         super().__init__()
         self.setup_clean_chain = True
         self.num_nodes = 3
+        self.extra_args = [["-walletprematurewitness", "-rpcserialversion=0"],
+                           ["-blockversion=4", "-promiscuousmempoolflags=517", "-prematurewitness", "-walletprematurewitness", "-rpcserialversion=1"],
+                           ["-blockversion=536870915", "-promiscuousmempoolflags=517", "-prematurewitness", "-walletprematurewitness"]]
 
     def setup_network(self):
-        self.nodes = []
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-walletprematurewitness", "-rpcserialversion=0"]))
-        self.nodes.append(start_node(1, self.options.tmpdir, ["-blockversion=4", "-promiscuousmempoolflags=517", "-prematurewitness", "-walletprematurewitness", "-rpcserialversion=1"]))
-        self.nodes.append(start_node(2, self.options.tmpdir, ["-blockversion=536870915", "-promiscuousmempoolflags=517", "-prematurewitness", "-walletprematurewitness"]))
-        connect_nodes(self.nodes[1], 0)
-        connect_nodes(self.nodes[2], 1)
+        super().setup_network()
         connect_nodes(self.nodes[0], 2)
-        self.is_network_split = False
         self.sync_all()
 
     def success_mine(self, node, txid, sign, redeem_script=""):

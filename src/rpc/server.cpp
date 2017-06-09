@@ -6,6 +6,7 @@
 #include "rpc/server.h"
 
 #include "base58.h"
+#include "fs.h"
 #include "init.h"
 #include "random.h"
 #include "sync.h"
@@ -16,12 +17,13 @@
 #include <univalue.h>
 
 #include <boost/bind.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/signals2/signal.hpp>
 #include <boost/thread.hpp>
 #include <boost/algorithm/string/case_conv.hpp> // for to_upper()
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
 
 #include <memory> // for unique_ptr
 #include <unordered_map>
@@ -42,17 +44,17 @@ static struct CRPCSignals
     boost::signals2::signal<void (const CRPCCommand&)> PreCommand;
 } g_rpcSignals;
 
-void RPCServer::OnStarted(boost::function<void ()> slot)
+void RPCServer::OnStarted(std::function<void ()> slot)
 {
     g_rpcSignals.Started.connect(slot);
 }
 
-void RPCServer::OnStopped(boost::function<void ()> slot)
+void RPCServer::OnStopped(std::function<void ()> slot)
 {
     g_rpcSignals.Stopped.connect(slot);
 }
 
-void RPCServer::OnPreCommand(boost::function<void (const CRPCCommand&)> slot)
+void RPCServer::OnPreCommand(std::function<void (const CRPCCommand&)> slot)
 {
     g_rpcSignals.PreCommand.connect(boost::bind(slot, _1));
 }
@@ -305,7 +307,7 @@ bool CRPCTable::appendCommand(const std::string& name, const CRPCCommand* pcmd)
 
 bool StartRPC()
 {
-    LogPrint("rpc", "Starting RPC\n");
+    LogPrint(BCLog::RPC, "Starting RPC\n");
     fRPCRunning = true;
     g_rpcSignals.Started();
     return true;
@@ -313,15 +315,16 @@ bool StartRPC()
 
 void InterruptRPC()
 {
-    LogPrint("rpc", "Interrupting RPC\n");
+    LogPrint(BCLog::RPC, "Interrupting RPC\n");
     // Interrupt e.g. running longpolls
     fRPCRunning = false;
 }
 
 void StopRPC()
 {
-    LogPrint("rpc", "Stopping RPC\n");
+    LogPrint(BCLog::RPC, "Stopping RPC\n");
     deadlineTimers.clear();
+    DeleteAuthCookie();
     g_rpcSignals.Stopped();
 }
 
@@ -368,8 +371,7 @@ void JSONRPCRequest::parse(const UniValue& valRequest)
     if (!valMethod.isStr())
         throw JSONRPCError(RPC_INVALID_REQUEST, "Method must be a string");
     strMethod = valMethod.get_str();
-    if (strMethod != "getblocktemplate")
-        LogPrint("rpc", "ThreadRPCServer method=%s\n", SanitizeString(strMethod));
+    LogPrint(BCLog::RPC, "ThreadRPCServer method=%s\n", SanitizeString(strMethod));
 
     // Parse params
     UniValue valParams = find_value(request, "params");
@@ -432,8 +434,16 @@ static inline JSONRPCRequest transformNamedArguments(const JSONRPCRequest& in, c
     }
     // Process expected parameters.
     int hole = 0;
-    for (const std::string &argName: argNames) {
-        auto fr = argsIn.find(argName);
+    for (const std::string &argNamePattern: argNames) {
+        std::vector<std::string> vargNames;
+        boost::algorithm::split(vargNames, argNamePattern, boost::algorithm::is_any_of("|"));
+        auto fr = argsIn.end();
+        for (const std::string & argName : vargNames) {
+            fr = argsIn.find(argName);
+            if (fr != argsIn.end()) {
+                break;
+            }
+        }
         if (fr != argsIn.end()) {
             for (int i = 0; i < hole; ++i) {
                 // Fill hole between specified parameters with JSON nulls,
@@ -526,12 +536,12 @@ void RPCUnsetTimerInterface(RPCTimerInterface *iface)
         timerInterface = NULL;
 }
 
-void RPCRunLater(const std::string& name, boost::function<void(void)> func, int64_t nSeconds)
+void RPCRunLater(const std::string& name, std::function<void(void)> func, int64_t nSeconds)
 {
     if (!timerInterface)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "No timer handler registered for RPC");
     deadlineTimers.erase(name);
-    LogPrint("rpc", "queue run of timer %s in %i seconds (using %s)\n", name, nSeconds, timerInterface->Name());
+    LogPrint(BCLog::RPC, "queue run of timer %s in %i seconds (using %s)\n", name, nSeconds, timerInterface->Name());
     deadlineTimers.emplace(name, std::unique_ptr<RPCTimerBase>(timerInterface->NewTimer(func, nSeconds*1000)));
 }
 

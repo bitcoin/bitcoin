@@ -181,7 +181,5 @@ void BanTableModel::sort(int column, Qt::SortOrder order)
 
 bool BanTableModel::shouldShow()
 {
-    if (priv->size() > 0)
-        return true;
-    return false;
+    return priv->size() > 0;
 }
