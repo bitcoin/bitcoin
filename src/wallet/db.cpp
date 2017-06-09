@@ -20,7 +20,6 @@
 
 #include <boost/foreach.hpp>
 #include <boost/thread.hpp>
-#include <boost/version.hpp>
 
 //
 // CDB

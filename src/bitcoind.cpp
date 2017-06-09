@@ -20,7 +20,6 @@
 #include "httprpc.h"
 #include "utilstrencodings.h"
 
-#include <boost/algorithm/string/predicate.hpp>
 #include <boost/thread.hpp>
 
 #include <stdio.h>

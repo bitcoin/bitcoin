@@ -30,8 +30,6 @@
 #include "utilstrencodings.h"
 #include "validationinterface.h"
 
-#include <boost/thread.hpp>
-
 #if defined(NDEBUG)
 # error "Bitcoin cannot be compiled without assertions."
 #endif
