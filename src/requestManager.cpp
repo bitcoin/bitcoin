@@ -467,7 +467,7 @@ void CRequestManager::SendRequests()
     }
 
     // Get Blocks if we are not in the middle of a re-org
-    while (sendBlkIter != mapBlkInfo.end() && !PV.IsReorgInProgress())
+    while (sendBlkIter != mapBlkInfo.end() && !PV->IsReorgInProgress())
     {
         now = GetTimeMicros();
         OdMap::iterator itemIter = sendBlkIter;

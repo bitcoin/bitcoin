@@ -198,7 +198,7 @@ bool CThinBlock::process(CNode *pfrom, int nSizeThinBlock)
         thindata.UpdateInBound(nSizeThinBlock, blockSize);
         LogPrint("thin", "thin block stats: %s\n", thindata.ToString());
 
-        PV.HandleBlockMessage(pfrom, NetMsgType::THINBLOCK, pfrom->thinBlock, GetInv());
+        PV->HandleBlockMessage(pfrom, NetMsgType::THINBLOCK, pfrom->thinBlock, GetInv());
     }
     else if (pfrom->thinBlockWaitingForTxns > 0)
     {
@@ -428,7 +428,7 @@ bool CXThinBlockTx::HandleMessage(CDataStream &vRecv, CNode *pfrom)
         thindata.UpdateInBound(nSizeThinBlockTx + pfrom->nSizeThinBlock, blockSize);
         LogPrint("thin", "thin block stats: %s\n", thindata.ToString());
 
-        PV.HandleBlockMessage(pfrom, strCommand, pfrom->thinBlock, inv);
+        PV->HandleBlockMessage(pfrom, strCommand, pfrom->thinBlock, inv);
     }
 
     return true;
@@ -661,7 +661,7 @@ bool CXThinBlock::process(CNode *pfrom,
     // In PV we must prevent two thinblocks from simulaneously processing from that were recieved from the
     // same peer. This would only happen as in the example of an expedited block coming in
     // after an xthin request, because we would never explicitly request two xthins from the same peer.
-    if (PV.IsAlreadyValidating(pfrom->id))
+    if (PV->IsAlreadyValidating(pfrom->id))
         return false;
 
     // Xpress Validation - only perform xval if the chaintip matches the last blockhash in the thinblock
@@ -844,7 +844,7 @@ bool CXThinBlock::process(CNode *pfrom,
     LogPrint("thin", "thin block stats: %s\n", thindata.ToString().c_str());
 
     // Process the full block
-    PV.HandleBlockMessage(pfrom, strCommand, pfrom->thinBlock, GetInv());
+    PV->HandleBlockMessage(pfrom, strCommand, pfrom->thinBlock, GetInv());
 
     return true;
 }

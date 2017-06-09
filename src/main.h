@@ -149,7 +149,6 @@ extern CWaitableCriticalSection csBestBlock;
 extern CConditionVariable cvBlockChange;
 extern bool fImporting;
 extern bool fReindex;
-extern int nScriptCheckThreads;
 extern bool fTxIndex;
 extern bool fIsBareMultisigStd;
 extern bool fRequireStandard;

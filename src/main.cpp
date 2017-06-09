@@ -70,7 +70,6 @@ CBlockIndex *pindexBestHeader = NULL;
 int64_t nTimeBestReceived = 0;
 // BU moved CWaitableCriticalSection csBestBlock;
 // BU moved CConditionVariable cvBlockChange;
-int nScriptCheckThreads = 0;
 bool fImporting = false;
 bool fReindex = false;
 bool fTxIndex = false;
@@ -2488,15 +2487,14 @@ bool ConnectBlock(const CBlock &block,
 
     // Get the next available mutex and the associated scriptcheckqueue. Then lock this thread
     // with the mutex so that the checking of inputs can be done with the chosen scriptcheckqueue.
-    CCheckQueue<CScriptCheck> *pScriptQueue = NULL;
-    pScriptQueue = allScriptCheckQueues.GetScriptCheckQueue();
+    CCheckQueue<CScriptCheck> *pScriptQueue(PV->GetScriptCheckQueue());
 
     // Aquire the control that is used to wait for the script threads to finish. Do this after aquiring the
     // scoped lock to ensure the scriptqueue is free and available.
-    CCheckQueueControl<CScriptCheck> control(fScriptChecks && nScriptCheckThreads ? pScriptQueue : NULL);
+    CCheckQueueControl<CScriptCheck> control(fScriptChecks && PV->ThreadCount() ? pScriptQueue : NULL);
 
     // Initialize a PV session.
-    if (!PV.Initialize(this_id, pindex, fParallel))
+    if (!PV->Initialize(this_id, pindex, fParallel))
         return false;
 
     /*********************************************************************************************
@@ -2508,7 +2506,7 @@ bool ConnectBlock(const CBlock &block,
     // Begin Section for Boost Scope Guard
     {
         // Scope guard to make sure cs_main is set and resources released if we encounter an exception.
-        BOOST_SCOPE_EXIT(&PV, &fParallel) { PV.SetLocks(fParallel); }
+        BOOST_SCOPE_EXIT(&PV, &fParallel) { PV->SetLocks(fParallel); }
         BOOST_SCOPE_EXIT_END
 
 
@@ -2517,7 +2515,7 @@ bool ConnectBlock(const CBlock &block,
         bool inVerifiedCache;
         // When in parallel mode then unlock cs_main for this loop to give any other threads
         // a chance to process in parallel. This is crucial for parallel validation to work.
-        // NOTE: the only place where cs_main is needed is if we hit PV.ChainWorkHasChanged, which
+        // NOTE: the only place where cs_main is needed is if we hit PV->ChainWorkHasChanged, which
         //       internally grabs the cs_main lock when needed.
         for (unsigned int i = 0; i < block.vtx.size(); i++)
         {
@@ -2538,7 +2536,7 @@ bool ConnectBlock(const CBlock &block,
                     // and updates the UTXO first, then we may end up here with missing inputs.  Therefore we checke to
                     // see
                     // if the chainwork has advanced or if we recieved a quit and if so return without DOSing the node.
-                    if (PV.ChainWorkHasChanged(nStartingChainWork) || PV.QuitReceived(this_id, fParallel))
+                    if (PV->ChainWorkHasChanged(nStartingChainWork) || PV->QuitReceived(this_id, fParallel))
                     {
                         return false;
                     }
@@ -2595,7 +2593,7 @@ bool ConnectBlock(const CBlock &block,
                         bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks
                                                             (still consult the cache, though) */
                         if (!CheckInputs(tx, state, viewTempCache, fScriptChecks, flags, fCacheResults,
-                                &resourceTracker, nScriptCheckThreads ? &vChecks : NULL))
+                                &resourceTracker, PV->ThreadCount() ? &vChecks : NULL))
                         {
                             return error("ConnectBlock(): CheckInputs on %s failed with %s", tx.GetHash().ToString(),
                                 FormatStateMessage(state));
@@ -2619,7 +2617,7 @@ bool ConnectBlock(const CBlock &block,
             vPos.push_back(std::make_pair(tx.GetHash(), pos));
             pos.nTxOffset += ::GetSerializeSize(tx, SER_DISK, CLIENT_VERSION);
 
-            if (PV.QuitReceived(this_id, fParallel))
+            if (PV->QuitReceived(this_id, fParallel))
             {
                 return false;
             }
@@ -2634,7 +2632,7 @@ bool ConnectBlock(const CBlock &block,
             // if we end up here then the signature verification failed and we must re-lock cs_main before returning.
             return state.DoS(100, false);
         }
-        if (PV.QuitReceived(this_id, fParallel))
+        if (PV->QuitReceived(this_id, fParallel))
         {
             return false;
         }
@@ -2658,13 +2656,13 @@ bool ConnectBlock(const CBlock &block,
     } // cs_main is re-aquired automatically as we go out of scope from the BOOST scope guard
 
     // Last check for chain work just in case the thread manages to get here before being terminated.
-    if (PV.ChainWorkHasChanged(nStartingChainWork) || PV.QuitReceived(this_id, fParallel))
+    if (PV->ChainWorkHasChanged(nStartingChainWork) || PV->QuitReceived(this_id, fParallel))
     {
         return false; // no need to lock cs_main before returning as it should already be locked.
     }
 
     // Quit any competing threads may be validating which have the same previous block before updating the UTXO.
-    PV.QuitCompetingThreads(block.GetBlockHeader().hashPrevBlock);
+    PV->QuitCompetingThreads(block.GetBlockHeader().hashPrevBlock);
 
     // Flush the temporary UTXO view to the base view (the in memory UTXO main cache)
     int64_t nUpdateCoinsTimeBegin = GetTimeMicros();
@@ -2734,7 +2732,7 @@ bool ConnectBlock(const CBlock &block,
     nTimeCallbacks += nTime6 - nTime5;
     LogPrint("bench", "    - Callbacks: %.2fms [%.2fs]\n", 0.001 * (nTime6 - nTime5), nTimeCallbacks * 0.000001);
 
-    PV.Cleanup(block, pindex); // NOTE: this must be run whether in fParallel or not!
+    PV->Cleanup(block, pindex); // NOTE: this must be run whether in fParallel or not!
 
     // Delete hashes from unverified and preverified sets that will no longer be needed after the block is accepted.
     {
@@ -3281,10 +3279,10 @@ static bool ActivateBestChainStep(CValidationState &state,
         // point just after the chaintip had already been advanced.  If that were to happen then it could initiate a
         // re-org when in fact a Quit had already been called on this thread.  So we do a check if Quit was previously
         // called and return if true.
-        if (PV.QuitReceived(this_id, fParallel))
+        if (PV->QuitReceived(this_id, fParallel))
             return false;
 
-        PV.IsReorgInProgress(this_id, true, fParallel); // indicate that this thread has now initiated a re-org
+        PV->IsReorgInProgress(this_id, true, fParallel); // indicate that this thread has now initiated a re-org
 
         // Disconnect active blocks which are no longer in the best chain.
         if (!DisconnectTip(state, chainparams.GetConsensus()))
@@ -3296,7 +3294,7 @@ static bool ActivateBestChainStep(CValidationState &state,
         // to be sure we are not waiting on script threads to finish we can issue the termination here.
         if (fParallel && !fBlocksDisconnected)
         {
-            PV.StopAllValidationThreads(this_id);
+            PV->StopAllValidationThreads(this_id);
         }
         fBlocksDisconnected = true;
     }
@@ -6596,7 +6594,7 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
         // Message consistency checking
         // NOTE: consistency checking is handled by checkblock() which is called during
         //       ProcessNewBlock() during HandleBlockMessage.
-        PV.HandleBlockMessage(pfrom, strCommand, block, inv);
+        PV->HandleBlockMessage(pfrom, strCommand, block, inv);
     }
 
 

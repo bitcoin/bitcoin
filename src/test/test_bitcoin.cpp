@@ -64,8 +64,7 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
         pcoinsTip = new CCoinsViewCache(pcoinsdbview);
         InitBlockIndex(chainparams);
 
-        nScriptCheckThreads = 3;
-        AddAllScriptCheckQueuesAndThreads(nScriptCheckThreads, &threadGroup);
+        PV.reset(new CParallelValidation(3, &threadGroup));
         RegisterNodeSignals(GetNodeSignals());
 }
 

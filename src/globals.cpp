@@ -248,10 +248,6 @@ CTweak<uint64_t> checkScriptDays("blockchain.checkScriptDays",
 
 CRequestManager requester; // after the maps nodes and tweaks
 
-// Parallel Validation Variables
-CParallelValidation PV; // Singleton class
-CAllScriptCheckQueues allScriptCheckQueues; // Singleton class
-
 CStatHistory<unsigned int> txAdded; //"memPool/txAdded");
 CStatHistory<uint64_t, MinValMax<uint64_t> > poolSize; // "memPool/size",STAT_OP_AVE);
 CStatHistory<uint64_t> recvAmt;
