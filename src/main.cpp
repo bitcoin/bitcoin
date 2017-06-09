@@ -7159,10 +7159,9 @@ bool SendMessages(CNode *pto)
             (!state.fFirstHeadersReceived) && !pto->fWhitelisted)
         {
             pto->fDisconnect = true;
-            dosMan.Ban(pto->addr, BanReasonNodeMisbehaving, 4 * 60 * 60); // ban for 4 hours
             LogPrintf(
-                "Banning %s because initial headers were either not received or not received before the timeout\n",
-                pto->addr.ToString());
+                "Initial headers were either not received or not received before the timeout - disconnecting peer=%s\n",
+                pto->GetLogName());
         }
 
         // Start block sync
