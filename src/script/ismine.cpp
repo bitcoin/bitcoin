@@ -64,28 +64,29 @@ std::string getLabelPublic(const CScript& scriptPubKey)
     return "";
 }
 
-bool isFreezeCLTV(const CKeyStore &keystore, const CScript& scriptPubKey, CScriptNum& nFreezeLockTime)
-{
-	vector<valtype> vSolutions;
-	txnouttype whichType;
-	if (Solver(scriptPubKey, whichType, vSolutions))
-	{
-		if (whichType == TX_SCRIPTHASH)
-		{
-			CScriptID scriptID = CScriptID(uint160(vSolutions[0]));
-			CScript subscript;
-			if (keystore.GetCScript(scriptID, subscript))
-				Solver(subscript, whichType, vSolutions);
-		}
 
-		if (whichType == TX_CLTV)
-		{
-			CScriptNum sn(vSolutions[0], true, 5);
-			nFreezeLockTime = sn;
-			return true;
-		}
-	}
-	return false;
+bool isFreezeCLTV(const CKeyStore &keystore, const CScript &scriptPubKey, CScriptNum &nFreezeLockTime)
+{
+    vector<valtype> vSolutions;
+    txnouttype whichType;
+    if (Solver(scriptPubKey, whichType, vSolutions))
+    {
+        if (whichType == TX_SCRIPTHASH)
+        {
+            CScriptID scriptID = CScriptID(uint160(vSolutions[0]));
+            CScript subscript;
+            if (keystore.GetCScript(scriptID, subscript))
+                Solver(subscript, whichType, vSolutions);
+        }
+
+        if (whichType == TX_CLTV)
+        {
+            CScriptNum sn(vSolutions[0], true, 5);
+            nFreezeLockTime = sn;
+            return true;
+        }
+    }
+    return false;
 }
 
 isminetype IsMine(const CKeyStore &keystore, const CTxDestination& dest, CBlockIndex* bestBlock)

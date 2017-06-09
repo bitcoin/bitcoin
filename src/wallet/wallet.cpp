@@ -199,28 +199,27 @@ bool CWallet::LoadCScript(const CScript& redeemScript)
     return CCryptoKeyStore::AddCScript(redeemScript);
 }
 
-bool CWallet::LoadFreezeScript(CPubKey newKey, CScriptNum nFreezeLockTime, std::string strLabel, std::string& address)
+bool CWallet::LoadFreezeScript(CPubKey newKey, CScriptNum nFreezeLockTime, std::string strLabel, std::string &address)
 {
-	// Template rpcdump.cpp::ImportAddress();
+    // Template rpcdump.cpp::ImportAddress();
 
-	// Get Freeze Script
-	CScript freezeScript = GetScriptForFreeze(nFreezeLockTime, newKey);
+    // Get Freeze Script
+    CScript freezeScript = GetScriptForFreeze(nFreezeLockTime, newKey);
 
-	// Test and Add Script to wallet
-	if (!this->HaveCScript(freezeScript) && !this->AddCScript(freezeScript))
-	{
-		LogPrintf("LoadFreezeScript: Error adding p2sh freeze redeemScript to wallet. \n ");
-		return false;
-	}
-	else
-	{
-		// If just added then return P2SH for user
-		CBitcoinAddress freezeP2SH = CBitcoinAddress(CScriptID(freezeScript));
-		address = freezeP2SH.ToString();
-		LogPrintf("CLTV Freeze Script Load \n %s => %s \n ", ::ScriptToAsmStr(freezeScript), address);
-		return true;
-	}
-
+    // Test and Add Script to wallet
+    if (!this->HaveCScript(freezeScript) && !this->AddCScript(freezeScript))
+    {
+        LogPrintf("LoadFreezeScript: Error adding p2sh freeze redeemScript to wallet. \n ");
+        return false;
+    }
+    else
+    {
+        // If just added then return P2SH for user
+        CBitcoinAddress freezeP2SH = CBitcoinAddress(CScriptID(freezeScript));
+        address = freezeP2SH.ToString();
+        LogPrintf("CLTV Freeze Script Load \n %s => %s \n ", ::ScriptToAsmStr(freezeScript), address);
+        return true;
+    }
 }
 
 bool CWallet::AddWatchOnly(const CScript &dest)
@@ -1011,13 +1010,13 @@ isminetype CWallet::IsMine(const CTxIn &txin) const
     return ISMINE_NO;
 }
 
-bool CWallet::IsMine(const CTransaction& tx) const
+bool CWallet::IsMine(const CTransaction &tx) const
 {
-    BOOST_FOREACH(const CTxOut& txout, tx.vout)
-	{
-        if (IsMine(txout) > ISMINE_NO)
+    BOOST_FOREACH (const CTxOut &txout, tx.vout)
+    {
+        if (IsMine(txout) != ISMINE_NO)
             return true;
-	}
+    }
     return false;
 }
 
@@ -1739,11 +1738,11 @@ void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const
                     !IsLockedCoin((*it).first, i) && (pcoin->vout[i].nValue > 0 || fIncludeZeroValue) &&
                     (!coinControl || !coinControl->HasSelected() || coinControl->fAllowOtherInputs || coinControl->IsSelected((*it).first, i)))
                 {
-                		// The UTXO is available
-                		COutput outpoint(pcoin, i, nDepth,
-                				((mine & ISMINE_SPENDABLE) != ISMINE_NO) ||
-								(coinControl && coinControl->fAllowWatchOnly && (mine & ISMINE_WATCH_SOLVABLE) != ISMINE_NO));
-                        vCoins.push_back(outpoint);
+                    // The UTXO is available
+                    COutput outpoint(pcoin, i, nDepth,
+                        ((mine & ISMINE_SPENDABLE) != ISMINE_NO) || (coinControl && coinControl->fAllowWatchOnly &&
+                                                                        (mine & ISMINE_WATCH_SOLVABLE) != ISMINE_NO));
+                    vCoins.push_back(outpoint);
                 }
 
             }
@@ -2238,15 +2237,6 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                 {
                     txNew.vin.push_back(CTxIn(coin.first->GetHash(),coin.second,CScript(),
                                               std::numeric_limits<unsigned int>::max() - 1));
-
-                    // If the input is a Freeze CLTV lock-by-blocktime then update the txNew.nLockTime
-                    CScriptNum nFreezeLockTime(0);
-                    if (isFreezeCLTV(*this, coin.first->vout[coin.second].scriptPubKey, nFreezeLockTime))
-                    {
-                        if (nFreezeLockTime.getint64() > LOCKTIME_THRESHOLD)
-                            txNew.nLockTime = chainActive.Tip()->GetMedianTimePast();
-                    }
-                }
 
                     // If the input is a Freeze CLTV lock-by-blocktime then update the txNew.nLockTime
                     CScriptNum nFreezeLockTime(0);

@@ -35,7 +35,7 @@
       </size>
      </property>
      <property name="text">
-      <string>WARNING! Freezing coins mean they will be UNSPENDABLE until the release specified below.</string>
+      <string>WARNING! Freezing coins means they will be UNSPENDABLE until the release date or block specified below.</string>
      </property>
      <property name="scaledContents">
       <bool>false</bool>
@@ -80,7 +80,7 @@
           </sizepolicy>
          </property>
          <property name="text">
-          <string>Freeze by block :</string>
+          <string>Freeze until block :</string>
          </property>
         </widget>
        </item>
@@ -170,7 +170,7 @@
           </sizepolicy>
          </property>
          <property name="text">
-          <string>Freeze by date and time :</string>
+          <string>Freeze until date and time :</string>
          </property>
         </widget>
        </item>
@@ -192,7 +192,7 @@
           <bool>false</bool>
          </property>
          <property name="toolTip">
-          <string>Specify the future date and time when coins are released from the freeze. Coins are UNSPENDABLE until the freeze date and time.</string>
+          <string>Specify the future date and time when coins are released from the freeze. Coins are UNSPENDABLE until after the freeze date and time.</string>
          </property>
          <property name="inputMethodHints">
           <set>Qt::ImhDate|Qt::ImhTime</set>

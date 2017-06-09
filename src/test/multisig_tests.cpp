@@ -18,7 +18,6 @@
 
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"  // Freeze wallet test
-#include "wallet/wallet_ismine.h"
 #endif
 
 #include <boost/foreach.hpp>
@@ -336,7 +335,7 @@ BOOST_AUTO_TEST_CASE(cltv_freeze)
 
     // Create and unpack a CLTV script
     vector<valtype> solutions;
-	txnouttype whichType;
+    txnouttype whichType;
     vector<CTxDestination> addresses;
     int nRequiredReturn;
     txnouttype type = TX_CLTV;
@@ -347,48 +346,45 @@ BOOST_AUTO_TEST_CASE(cltv_freeze)
     CScriptNum nFreezeLockTime(50000);
     CScript s1 = GetScriptForFreeze(nFreezeLockTime, newKey1);
 
-	BOOST_CHECK(Solver(s1, whichType, solutions));
-	BOOST_CHECK(whichType == TX_CLTV);
-	BOOST_CHECK(solutions.size() == 2);
-	BOOST_CHECK(CScriptNum(solutions[0], false) == nFreezeLockTime);
+    BOOST_CHECK(Solver(s1, whichType, solutions));
+    BOOST_CHECK(whichType == TX_CLTV);
+    BOOST_CHECK(solutions.size() == 2);
+    BOOST_CHECK(CScriptNum(solutions[0], false) == nFreezeLockTime);
 
-	nRequiredReturn = 0;
+    nRequiredReturn = 0;
     ExtractDestinations(s1, type, addresses, nRequiredReturn);
 
-    BOOST_FOREACH(const CTxDestination& addr, addresses)
-		BOOST_CHECK(newAddr1.ToString() == CBitcoinAddress(addr).ToString());
+    BOOST_FOREACH (const CTxDestination &addr, addresses)
+        BOOST_CHECK(newAddr1.ToString() == CBitcoinAddress(addr).ToString());
 
     BOOST_CHECK(nRequiredReturn == 1);
 
 
-	// check cltv solve for datetime
+    // check cltv solve for datetime
     CPubKey newKey2 = ToByteVector(key[0].GetPubKey());
     CBitcoinAddress newAddr2(newKey2.GetID());
-	nFreezeLockTime = CScriptNum(1482255731);
-	CScript s2 = GetScriptForFreeze(nFreezeLockTime, newKey2);
+    nFreezeLockTime = CScriptNum(1482255731);
+    CScript s2 = GetScriptForFreeze(nFreezeLockTime, newKey2);
 
-	BOOST_CHECK(Solver(s2, whichType, solutions));
-	BOOST_CHECK(whichType == TX_CLTV);
-	BOOST_CHECK(solutions.size() == 2);
-	BOOST_CHECK(CScriptNum(solutions[0],false) == nFreezeLockTime);
+    BOOST_CHECK(Solver(s2, whichType, solutions));
+    BOOST_CHECK(whichType == TX_CLTV);
+    BOOST_CHECK(solutions.size() == 2);
+    BOOST_CHECK(CScriptNum(solutions[0], false) == nFreezeLockTime);
 
-	nRequiredReturn = 0;
-	ExtractDestinations(s2, type, addresses, nRequiredReturn);
+    nRequiredReturn = 0;
+    ExtractDestinations(s2, type, addresses, nRequiredReturn);
 
-	BOOST_FOREACH(const CTxDestination& addr, addresses)
-		BOOST_CHECK(newAddr2.ToString() == CBitcoinAddress(addr).ToString());
+    BOOST_FOREACH (const CTxDestination &addr, addresses)
+        BOOST_CHECK(newAddr2.ToString() == CBitcoinAddress(addr).ToString());
 
-	BOOST_CHECK(nRequiredReturn == 1);
-
-
+    BOOST_CHECK(nRequiredReturn == 1);
 }
 
 BOOST_AUTO_TEST_CASE(opreturn_send)
 {
-
     CKey key[4];
     for (int i = 0; i < 2; i++)
-         key[i].MakeNewKey(true);
+        key[i].MakeNewKey(true);
 
     CBasicKeyStore keystore;
 
@@ -405,8 +401,6 @@ BOOST_AUTO_TEST_CASE(opreturn_send)
     BOOST_CHECK(inMsg == outMsg);
     BOOST_CHECK(Solver(s, whichType, solutions));
     BOOST_CHECK(whichType == TX_LABELPUBLIC);
-
-
 }
 #endif
 BOOST_AUTO_TEST_SUITE_END()

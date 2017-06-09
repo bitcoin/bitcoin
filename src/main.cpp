@@ -252,11 +252,6 @@ std::set<CBlockIndex *> setDirtyBlockIndex;
 // Registration of network node signals.
 //
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// Registration of network node signals.
-//
-
 namespace
 {
 int GetHeight()

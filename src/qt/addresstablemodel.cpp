@@ -441,6 +441,7 @@ QString AddressTableModel::labelForAddress(const QString &address) const
             returnLabel = QString::fromStdString(mi->second.name);
         }
 
+
     }
     return returnLabel;
 
