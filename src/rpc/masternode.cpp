@@ -890,13 +890,13 @@ UniValue sentinelping(const JSONRPCRequest& request)
 }
 
 static const CRPCCommand commands[] =
-{ //  category              name                      actor (function)         okSafe argNames
-  //  --------------------- ------------------------  -----------------------  ------ ----------
-    { "chaincoin",          "masternode",             &masternode,             true,  {} },
-    { "chaincoin",          "masternodelist",         &masternodelist,         true,  {} },
-    { "chaincoin",          "masternodebroadcast",    &masternodebroadcast,    true,  {} },
-    { "chaincoin",          "getpoolinfo",            &getpoolinfo,            true,  {} },
-    { "chaincoin",          "sentinelping",           &sentinelping,           true,  {} },
+{ //  category              name                      actor (function)         argNames
+  //  --------------------- ------------------------  -----------------------  ----------
+    { "chaincoin",          "masternode",             &masternode,             {} },
+    { "chaincoin",          "masternodelist",         &masternodelist,         {} },
+    { "chaincoin",          "masternodebroadcast",    &masternodebroadcast,    {} },
+    { "chaincoin",          "getpoolinfo",            &getpoolinfo,            {} },
+    { "chaincoin",          "sentinelping",           &sentinelping,           {} },
 #ifdef ENABLE_WALLET
     { "chaincoin",          "privatesend",            &privatesend,            false, {} },
 #endif // ENABLE_WALLET
