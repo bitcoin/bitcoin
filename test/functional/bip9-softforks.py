@@ -241,6 +241,7 @@ class BIP9SoftForksTest(ComparisonTestFramework):
         # Restart all
         self.test.clear_all_connections()
         self.stop_nodes()
+        self.nodes = []
         shutil.rmtree(self.options.tmpdir + "/node0")
         self.setup_chain()
         self.setup_network()

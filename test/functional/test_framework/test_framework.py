@@ -91,7 +91,8 @@ class BitcoinTestFramework(object):
         extra_args = None
         if hasattr(self, "extra_args"):
             extra_args = self.extra_args
-        self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir, extra_args)
+        self.add_nodes(self.num_nodes, self.options.tmpdir, extra_args)
+        self.start_nodes()
 
     def run_test(self):
         raise NotImplementedError
@@ -204,24 +205,8 @@ class BitcoinTestFramework(object):
 
     # Public helper methods. These can be accessed by the subclass test scripts.
 
-    def start_node(self, i, dirname, extra_args=None, rpchost=None, timewait=None, binary=None, stderr=None):
-        """Start a bitcoind and return RPC connection to it"""
-
-        if extra_args is None:
-            extra_args = []
-        if binary is None:
-            binary = os.getenv("BITCOIND", "bitcoind")
-        node = TestNode(i, dirname, extra_args, rpchost, timewait, binary, stderr, self.mocktime, coverage_dir=self.options.coveragedir)
-        node.start()
-        node.wait_for_rpc_connection()
-
-        if self.options.coveragedir is not None:
-            coverage.write_all_rpc_commands(self.options.coveragedir, node.rpc)
-
-        return node
-
-    def start_nodes(self, num_nodes, dirname, extra_args=None, rpchost=None, timewait=None, binary=None):
-        """Start multiple bitcoinds, return RPC connections to them"""
+    def add_nodes(self, num_nodes, dirname, extra_args=None, rpchost=None, timewait=None, binary=None):
+        """Instantiate TestNode objects"""
 
         if extra_args is None:
             extra_args = [[]] * num_nodes
@@ -229,12 +214,30 @@ class BitcoinTestFramework(object):
             binary = [None] * num_nodes
         assert_equal(len(extra_args), num_nodes)
         assert_equal(len(binary), num_nodes)
-        nodes = []
+        for i in range(num_nodes):
+            self.nodes.append(TestNode(i, dirname, extra_args[i], rpchost, timewait=timewait, binary=binary[i], stderr=None, mocktime=self.mocktime, coverage_dir=self.options.coveragedir))
+
+    def start_node(self, i, extra_args=None, stderr=None):
+        """Start a bitcoind"""
+
+        node = self.nodes[i]
+
+        node.start(extra_args, stderr)
+        node.wait_for_rpc_connection()
+
+        if self.options.coveragedir is not None:
+            coverage.write_all_rpc_commands(self.options.coveragedir, node.rpc)
+
+    def start_nodes(self, extra_args=None):
+        """Start multiple bitcoinds"""
+
+        if extra_args is None:
+            extra_args = [None] * self.num_nodes
+        assert_equal(len(extra_args), self.num_nodes)
         try:
-            for i in range(num_nodes):
-                nodes.append(TestNode(i, dirname, extra_args[i], rpchost, timewait=timewait, binary=binary[i], stderr=None, mocktime=self.mocktime, coverage_dir=self.options.coveragedir))
-                nodes[i].start()
-            for node in nodes:
+            for i, node in enumerate(self.nodes):
+                node.start(extra_args[i])
+            for node in self.nodes:
                 node.wait_for_rpc_connection()
         except:
             # If one node failed to start, stop the others
@@ -242,10 +245,8 @@ class BitcoinTestFramework(object):
             raise
 
         if self.options.coveragedir is not None:
-            for node in nodes:
+            for node in self.nodes:
                 coverage.write_all_rpc_commands(self.options.coveragedir, node.rpc)
-
-        return nodes
 
     def stop_node(self, i):
         """Stop a bitcoind test node"""
@@ -264,10 +265,10 @@ class BitcoinTestFramework(object):
             while not node.is_node_stopped():
                 time.sleep(0.1)
 
-    def assert_start_raises_init_error(self, i, dirname, extra_args=None, expected_msg=None):
+    def assert_start_raises_init_error(self, i, extra_args=None, expected_msg=None):
         with tempfile.SpooledTemporaryFile(max_size=2**16) as log_stderr:
             try:
-                self.start_node(i, dirname, extra_args, stderr=log_stderr)
+                self.start_node(i, extra_args, stderr=log_stderr)
                 self.stop_node(i)
             except Exception as e:
                 assert 'bitcoind exited' in str(e)  # node must have shutdown
@@ -385,7 +386,7 @@ class BitcoinTestFramework(object):
                     args.append("-connect=127.0.0.1:" + str(p2p_port(0)))
                 self.nodes.append(TestNode(i, cachedir, extra_args=[], rpchost=None, timewait=None, binary=None, stderr=None, mocktime=self.mocktime, coverage_dir=None))
                 self.nodes[i].args = args
-                self.nodes[i].start()
+                self.start_node(i)
 
             # Wait for RPC connections to be ready
             for node in self.nodes:
@@ -455,13 +456,13 @@ class ComparisonTestFramework(BitcoinTestFramework):
                           help="bitcoind binary to use for reference nodes (if any)")
 
     def setup_network(self):
-        extra_args = [['-whitelist=127.0.0.1']]*self.num_nodes
+        extra_args = [['-whitelist=127.0.0.1']] * self.num_nodes
         if hasattr(self, "extra_args"):
             extra_args = self.extra_args
-        self.nodes = self.start_nodes(
-            self.num_nodes, self.options.tmpdir, extra_args,
-            binary=[self.options.testbinary] +
-            [self.options.refbinary] * (self.num_nodes - 1))
+        self.add_nodes(self.num_nodes, self.options.tmpdir, extra_args,
+                       binary=[self.options.testbinary] +
+                       [self.options.refbinary] * (self.num_nodes - 1))
+        self.start_nodes()
 
 class SkipTest(Exception):
     """This exception is raised to skip a test"""

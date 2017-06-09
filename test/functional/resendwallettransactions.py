@@ -20,7 +20,7 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
 
         # Should return an empty array if there aren't unconfirmed wallet transactions.
         self.stop_node(0)
-        self.nodes[0] = self.start_node(0, self.options.tmpdir)
+        self.start_node(0, extra_args=[])
         assert_equal(self.nodes[0].resendwallettransactions(), [])
 
         # Should return an array with the unconfirmed wallet transaction.

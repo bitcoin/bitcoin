@@ -18,7 +18,6 @@ class CreateCache(BitcoinTestFramework):
 
         # Test network and test nodes are not required:
         self.num_nodes = 0
-        self.nodes = []
 
     def setup_network(self):
         pass
