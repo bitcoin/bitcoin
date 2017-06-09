@@ -23,17 +23,17 @@ class MultiWalletTest(BitcoinTestFramework):
         self.stop_node(0)
 
         # should not initialize if there are duplicate wallets
-        self.assert_start_raises_init_error(0, self.options.tmpdir, ['-wallet=w1', '-wallet=w1'], 'Error loading wallet w1. Duplicate -wallet filename specified.')
+        self.assert_start_raises_init_error(0, ['-wallet=w1', '-wallet=w1'], 'Error loading wallet w1. Duplicate -wallet filename specified.')
 
         # should not initialize if wallet file is a directory
         os.mkdir(os.path.join(self.options.tmpdir, 'node0', 'regtest', 'w11'))
-        self.assert_start_raises_init_error(0, self.options.tmpdir, ['-wallet=w11'], 'Error loading wallet w11. -wallet filename must be a regular file.')
+        self.assert_start_raises_init_error(0, ['-wallet=w11'], 'Error loading wallet w11. -wallet filename must be a regular file.')
 
         # should not initialize if wallet file is a symlink
         os.symlink(os.path.join(self.options.tmpdir, 'node0', 'regtest', 'w1'), os.path.join(self.options.tmpdir, 'node0', 'regtest', 'w12'))
-        self.assert_start_raises_init_error(0, self.options.tmpdir, ['-wallet=w12'], 'Error loading wallet w12. -wallet filename must be a regular file.')
+        self.assert_start_raises_init_error(0, ['-wallet=w12'], 'Error loading wallet w12. -wallet filename must be a regular file.')
 
-        self.nodes[0] = self.start_node(0, self.options.tmpdir, self.extra_args[0])
+        self.start_node(0, self.extra_args[0])
 
         w1 = self.nodes[0].get_wallet_rpc("w1")
         w2 = self.nodes[0].get_wallet_rpc("w2")
