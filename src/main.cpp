@@ -6353,7 +6353,25 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
 
         bool fCanDirectFetch = CanDirectFetch(chainparams.GetConsensus());
         CNodeState *nodestate = State(pfrom->GetId());
-        nodestate->fFirstHeadersReceived = true;
+
+        // During the initial peer handshake we must receive the initial headers which should be greater
+        // than or equal to our block height at the time of requesting GETHEADERS. This is because the peer has
+        // advertised a height >= to our own. Furthermore, because the headers max returned is as much as 2000 this
+        // could not be a mainnet re-org.
+        if (!nodestate->fFirstHeadersReceived)
+        {
+            // We want to make sure that the peer doesn't just send us any old valid header. The block height of the
+            // last header they send us should be equal to our block height at the time we made the GETHEADERS request.
+            if (pindexLast && nodestate->nFirstHeadersExpectedHeight <= pindexLast->nHeight)
+            {
+                nodestate->fFirstHeadersReceived = true;
+                LogPrint("net", "Initial headers received for peer=%s\n", pfrom->GetLogName());
+            }
+
+            // Allow for very large reorgs (> 2000 blocks) on the nol test chain or other test net.
+            if (Params().NetworkIDString() != "main" && Params().NetworkIDString() != "regtest")
+                nodestate->fFirstHeadersReceived = true;
+        }
 
         // update the syncd status.  This should come before we make calls to requester.AskFor().
         IsChainNearlySyncdInit();
@@ -7190,6 +7208,7 @@ bool SendMessages(CNode *pto)
                     state.fSyncStarted = true;
                     state.fSyncStartTime = GetTime();
                     state.fFirstHeadersReceived = false;
+                    state.nFirstHeadersExpectedHeight = pindexBestHeader->nHeight;
                     nSyncStarted++;
 
                     LogPrint("net", "initial getheaders (%d) to peer=%d (startheight:%d)\n", pindexStart->nHeight,

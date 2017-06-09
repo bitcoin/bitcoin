@@ -62,6 +62,8 @@ struct CNodeState
     int64_t fSyncStartTime;
     //! Were the first headers requested in a sync received
     bool fFirstHeadersReceived;
+    //! Our current block height at the time we requested GETHEADERS
+    int nFirstHeadersExpectedHeight;
 
     std::list<QueuedBlock> vBlocksInFlight;
     //! When the first entry in vBlocksInFlight started downloading. Don't care when vBlocksInFlight is empty.
