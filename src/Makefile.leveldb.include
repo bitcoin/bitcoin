@@ -77,6 +77,7 @@ leveldb_libleveldb_a_SOURCES += leveldb/table/merger.h
 leveldb_libleveldb_a_SOURCES += leveldb/table/format.h
 leveldb_libleveldb_a_SOURCES += leveldb/table/iterator_wrapper.h
 leveldb_libleveldb_a_SOURCES += leveldb/util/crc32c.h
+leveldb_libleveldb_a_SOURCES += leveldb/util/env_posix_test_helper.h
 leveldb_libleveldb_a_SOURCES += leveldb/util/arena.h
 leveldb_libleveldb_a_SOURCES += leveldb/util/random.h
 leveldb_libleveldb_a_SOURCES += leveldb/util/posix_logger.h
