@@ -68,8 +68,8 @@ class DisconnectBanTest(BitcoinTestFramework):
         assert_equal(len(self.nodes[1].listbanned()), 3)
 
         self.stop_node(1)
+        self.start_node(1)
 
-        self.nodes[1] = self.start_node(1, self.options.tmpdir)
         listAfterShutdown = self.nodes[1].listbanned()
         assert_equal("127.0.0.0/24", listAfterShutdown[0]['address'])
         assert_equal("127.0.0.0/32", listAfterShutdown[1]['address'])
