@@ -65,7 +65,8 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
 
     def setup_network(self):
         # Need a bit of extra time for the nodes to start up for this test
-        self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir, self.extra_args, timewait=90)
+        self.add_nodes(self.num_nodes, self.options.tmpdir, self.extra_args, timewait=90)
+        self.start_nodes()
         # Leave them unconnected, we'll use submitblock directly in this test
 
     def restart_node(self, node_index, expected_tip):
@@ -78,7 +79,7 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
         while time.time() - time_start < 120:
             try:
                 # Any of these RPC calls could throw due to node crash
-                self.nodes[node_index] = self.start_node(node_index, self.options.tmpdir, self.extra_args[node_index], timewait=90)
+                self.start_node(node_index)
                 self.nodes[node_index].waitforblock(expected_tip)
                 utxo_hash = self.nodes[node_index].gettxoutsetinfo()['hash_serialized_2']
                 return utxo_hash
