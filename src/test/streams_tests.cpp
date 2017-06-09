@@ -7,7 +7,6 @@
 #include "test/test_chaincoin.h"
 
 #include <boost/assign/std/vector.hpp> // for 'operator+=()'
-#include <boost/assert.hpp>
 #include <boost/test/unit_test.hpp>
                     
 using namespace std;

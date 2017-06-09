@@ -39,8 +39,6 @@
 #include <privatesend-client.h>
 #include <privatesend-server.h>
 
-#include <boost/thread.hpp>
-
 #if defined(NDEBUG)
 # error "Chaincoin Core cannot be compiled without assertions."
 #endif

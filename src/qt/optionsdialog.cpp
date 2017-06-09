@@ -23,8 +23,6 @@
 
 #include <privatesend-client.h>
 
-#include <boost/thread.hpp>
-
 #include <QDataWidgetMapper>
 #include <QDir>
 #include <QIntValidator>

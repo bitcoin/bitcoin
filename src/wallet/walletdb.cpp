@@ -19,7 +19,6 @@
 
 #include <atomic>
 
-#include <boost/version.hpp>
 #include <boost/thread.hpp>
 
 //
