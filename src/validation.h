@@ -33,7 +33,6 @@
 
 class CBlockIndex;
 class CBlockTreeDB;
-class CBloomFilter;
 class CChainParams;
 class CCoinsViewDB;
 class CInv;
@@ -41,7 +40,6 @@ class CConnman;
 class CScriptCheck;
 class CBlockPolicyEstimator;
 class CTxMemPool;
-class CValidationInterface;
 class CValidationState;
 struct ChainTxData;
 

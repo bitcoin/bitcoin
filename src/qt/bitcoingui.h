@@ -33,8 +33,6 @@ class HelpMessageDialog;
 class ModalOverlay;
 class MasternodeList;
 
-class CWallet;
-
 QT_BEGIN_NAMESPACE
 class QAction;
 class QProgressBar;

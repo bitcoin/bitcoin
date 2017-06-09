@@ -8,7 +8,6 @@
 #include <QDialog>
 
 class AddressTableModel;
-class OptionsModel;
 class PlatformStyle;
 
 namespace Ui {
@@ -20,7 +19,6 @@ class QItemSelection;
 class QMenu;
 class QModelIndex;
 class QSortFilterProxyModel;
-class QTableView;
 QT_END_NAMESPACE
 
 /** Widget that shows a list of sending or receiving addresses.

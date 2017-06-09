@@ -15,7 +15,6 @@
 #include <QPoint>
 #include <QVariant>
 
-class OptionsModel;
 class PlatformStyle;
 class WalletModel;
 

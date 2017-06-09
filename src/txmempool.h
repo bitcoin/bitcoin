@@ -28,7 +28,6 @@
 
 #include <boost/signals2/signal.hpp>
 
-class CAutoFile;
 class CBlockIndex;
 
 /** Fake height value used in Coin to signify they are only in the memory pool (since 0.8) */
