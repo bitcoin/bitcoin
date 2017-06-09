@@ -8,11 +8,9 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_jsonrpc
 
 class ResendWalletTransactionsTest(BitcoinTestFramework):
-
-    def __init__(self):
-        super().__init__()
-        self.extra_args = [['--walletbroadcast=false']]
+    def set_test_params(self):
         self.num_nodes = 1
+        self.extra_args = [['--walletbroadcast=false']]
 
     def run_test(self):
         # Should raise RPC_WALLET_ERROR (-4) if walletbroadcast is disabled.

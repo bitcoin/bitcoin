@@ -7,17 +7,8 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
 class WalletTest(BitcoinTestFramework):
-
-    def check_fee_amount(self, curr_balance, balance_with_fee, fee_per_byte, tx_size):
-        """Return curr_balance after asserting the fee was in range"""
-        fee = balance_with_fee - curr_balance
-        assert_fee_amount(fee, tx_size, fee_per_byte * 1000)
-        return curr_balance
-
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.setup_clean_chain = True
-        self.num_nodes = 4
         self.extra_args = [['-usehd={:d}'.format(i%2==0)] for i in range(4)]
 
     def setup_network(self):
@@ -30,8 +21,13 @@ class WalletTest(BitcoinTestFramework):
         connect_nodes_bi(self.nodes,0,2)
         self.sync_all([self.nodes[0:3]])
 
-    def run_test(self):
+    def check_fee_amount(self, curr_balance, balance_with_fee, fee_per_byte, tx_size):
+        """Return curr_balance after asserting the fee was in range"""
+        fee = balance_with_fee - curr_balance
+        assert_fee_amount(fee, tx_size, fee_per_byte * 1000)
+        return curr_balance
 
+    def run_test(self):
         # Check that there's no UTXO on none of the nodes
         assert_equal(len(self.nodes[0].listunspent()), 0)
         assert_equal(len(self.nodes[1].listunspent()), 0)

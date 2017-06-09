@@ -43,8 +43,7 @@ def http_post_call(host, port, path, requestdata = '', response_object = 0):
 class RESTTest (BitcoinTestFramework):
     FORMAT_SEPARATOR = "."
 
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3
 

@@ -9,11 +9,8 @@ import time
 from test_framework.test_framework import BitcoinTestFramework
 
 class ForkNotifyTest(BitcoinTestFramework):
-
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.num_nodes = 2
-        self.setup_clean_chain = False
 
     def setup_network(self):
         self.alert_filename = os.path.join(self.options.tmpdir, "alert.txt")
