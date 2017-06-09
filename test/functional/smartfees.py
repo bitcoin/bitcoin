@@ -141,11 +141,8 @@ def check_estimates(node, fees_seen, max_invalid, print_estimates = True):
 
 
 class EstimateFeeTest(BitcoinTestFramework):
-
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.num_nodes = 3
-        self.setup_clean_chain = False
 
     def setup_network(self):
         """

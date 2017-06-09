@@ -48,58 +48,30 @@ BITCOIND_PROC_WAIT_TIMEOUT = 60
 class BitcoinTestFramework(object):
     """Base class for a bitcoin test script.
 
-    Individual bitcoin test scripts should subclass this class and override the following methods:
+    Individual bitcoin test scripts should subclass this class and override the run_test() method.
 
-    - __init__()
+    Individual tests can also override the following methods to customize the test setup:
+
+    - set_test_params()
     - add_options()
     - setup_chain()
     - setup_network()
-    - run_test()
+    - setup_nodes()
 
-    The main() method should not be overridden.
+    The __init__() and main() methods should not be overridden.
 
     This class also contains various public and private helper methods."""
 
-    # Methods to override in subclass test scripts.
     def __init__(self):
+        """Sets test framework defaults. Do not override this method. Instead, override the set_test_params() method"""
         self.num_nodes = 4
         self.setup_clean_chain = False
         self.nodes = []
         self.mocktime = 0
-
-    def add_options(self, parser):
-        pass
-
-    def setup_chain(self):
-        self.log.info("Initializing test directory " + self.options.tmpdir)
-        if self.setup_clean_chain:
-            self._initialize_chain_clean()
-        else:
-            self._initialize_chain()
-
-    def setup_network(self):
-        self.setup_nodes()
-
-        # Connect the nodes as a "chain".  This allows us
-        # to split the network between nodes 1 and 2 to get
-        # two halves that can work on competing chains.
-        for i in range(self.num_nodes - 1):
-            connect_nodes_bi(self.nodes, i, i + 1)
-        self.sync_all()
-
-    def setup_nodes(self):
-        extra_args = None
-        if hasattr(self, "extra_args"):
-            extra_args = self.extra_args
-        self.add_nodes(self.num_nodes, extra_args)
-        self.start_nodes()
-
-    def run_test(self):
-        raise NotImplementedError
-
-    # Main function. This should not be overridden by the subclass test scripts.
+        self.set_test_params()
 
     def main(self):
+        """Main function. This should not be overridden by the subclass test scripts."""
 
         parser = optparse.OptionParser(usage="%prog [options]")
         parser.add_option("--nocleanup", dest="nocleanup", default=False, action="store_true",
@@ -202,6 +174,46 @@ class BitcoinTestFramework(object):
             self.log.error("Test failed. Test logging available at %s/test_framework.log", self.options.tmpdir)
             logging.shutdown()
             sys.exit(TEST_EXIT_FAILED)
+
+    # Methods to override in subclass test scripts.
+    def set_test_params(self):
+        """Override this method to change default values for number of nodes, topology, etc"""
+        pass
+
+    def add_options(self, parser):
+        """Override this method to add command-line options to the test"""
+        pass
+
+    def setup_chain(self):
+        """Override this method to customize blockchain setup"""
+        self.log.info("Initializing test directory " + self.options.tmpdir)
+        if self.setup_clean_chain:
+            self._initialize_chain_clean()
+        else:
+            self._initialize_chain()
+
+    def setup_network(self):
+        """Override this method to customize test network topology"""
+        self.setup_nodes()
+
+        # Connect the nodes as a "chain".  This allows us
+        # to split the network between nodes 1 and 2 to get
+        # two halves that can work on competing chains.
+        for i in range(self.num_nodes - 1):
+            connect_nodes_bi(self.nodes, i, i + 1)
+        self.sync_all()
+
+    def setup_nodes(self):
+        """Override this method to customize test node setup"""
+        extra_args = None
+        if hasattr(self, "extra_args"):
+            extra_args = self.extra_args
+        self.add_nodes(self.num_nodes, extra_args)
+        self.start_nodes()
+
+    def run_test(self):
+        """Override this method to define test logic"""
+        raise NotImplementedError
 
     # Public helper methods. These can be accessed by the subclass test scripts.
 
@@ -442,8 +454,7 @@ class ComparisonTestFramework(BitcoinTestFramework):
     - 2 binaries: 1 test binary, 1 ref binary
     - n>2 binaries: 1 test binary, n-1 ref binaries"""
 
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True
 

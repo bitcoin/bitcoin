@@ -10,15 +10,8 @@ from test_framework.util import (
     assert_raises_jsonrpc,
 )
 
-
 class NamedArgumentTest(BitcoinTestFramework):
-    """
-    Test named arguments on RPC calls.
-    """
-
-    def __init__(self):
-        super().__init__()
-        self.setup_clean_chain = False
+    def set_test_params(self):
         self.num_nodes = 1
 
     def run_test(self):

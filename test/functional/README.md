@@ -24,8 +24,8 @@ don't have test cases for.
 - Use a module-level docstring to describe what the test is testing, and how it
   is testing it.
 - When subclassing the BitcoinTestFramwork, place overrides for the
-  `__init__()`, and `setup_xxxx()` methods at the top of the subclass, then
-  locally-defined helper methods, then the `run_test()` method.
+  `set_test_params()`, `add_options()` and `setup_xxxx()` methods at the top of
+  the subclass, then locally-defined helper methods, then the `run_test()` method.
 
 #### General test-writing advice
 
@@ -36,7 +36,7 @@ don't have test cases for.
 - Avoid stop-starting the nodes multiple times during the test if possible. A
   stop-start takes several seconds, so doing it several times blows up the
   runtime of the test.
-- Set the `self.setup_clean_chain` variable in `__init__()` to control whether
+- Set the `self.setup_clean_chain` variable in `set_test_params()` to control whether
   or not to use the cached data directories. The cached data directories
   contain a 200-block pre-mined blockchain and wallets for four nodes. Each node
   has 25 mature blocks (25x50=1250 BTC) in its wallet.
