@@ -30,12 +30,8 @@ from test_framework.util import (
     assert_is_hash_string,
 )
 
-
 class BlockchainTest(BitcoinTestFramework):
-
-    def __init__(self):
-        super().__init__()
-        self.setup_clean_chain = False
+    def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [['-stopatheight=207']]
 

@@ -41,13 +41,7 @@ from test_framework.netutil import test_ipv6_local
 
 RANGE_BEGIN = PORT_MIN + 2 * PORT_RANGE  # Start after p2p and rpc ports
 
-
 class ProxyTest(BitcoinTestFramework):
-    def __init__(self):
-        super().__init__()
-        self.num_nodes = 4
-        self.setup_clean_chain = False
-
     def setup_nodes(self):
         self.have_ipv6 = test_ipv6_local()
         # Create two proxies on different ports

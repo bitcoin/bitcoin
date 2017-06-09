@@ -36,12 +36,8 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
 class MempoolPersistTest(BitcoinTestFramework):
-
-    def __init__(self):
-        super().__init__()
-        # We need 3 nodes for this test. Node1 does not have a persistent mempool.
+    def set_test_params(self):
         self.num_nodes = 3
-        self.setup_clean_chain = False
         self.extra_args = [[], ["-persistmempool=0"], []]
 
     def run_test(self):

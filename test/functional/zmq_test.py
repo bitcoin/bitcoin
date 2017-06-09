@@ -13,9 +13,7 @@ from test_framework.util import (assert_equal,
                                  )
 
 class ZMQTest (BitcoinTestFramework):
-
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.num_nodes = 2
 
     def setup_nodes(self):

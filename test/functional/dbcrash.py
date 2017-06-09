@@ -43,8 +43,7 @@ except AttributeError:
     pass
 
 class ChainstateWriteCrashTest(BitcoinTestFramework):
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.num_nodes = 4
         self.setup_clean_chain = False
 

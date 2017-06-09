@@ -28,11 +28,10 @@ from test_framework.comptool import TestInstance, TestManager
 from test_framework.script import CScript, OP_1NEGATE, OP_CHECKSEQUENCEVERIFY, OP_DROP
 
 class BIP9SoftForksTest(ComparisonTestFramework):
-
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [['-whitelist=127.0.0.1']]
+        self.setup_clean_chain = True
 
     def run_test(self):
         self.test = TestManager(self, self.options.tmpdir)

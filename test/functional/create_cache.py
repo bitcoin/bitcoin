@@ -12,11 +12,9 @@ tests are being run in parallel.
 from test_framework.test_framework import BitcoinTestFramework
 
 class CreateCache(BitcoinTestFramework):
+    # Test network and test nodes are not required:
 
-    def __init__(self):
-        super().__init__()
-
-        # Test network and test nodes are not required:
+    def set_test_params(self):
         self.num_nodes = 0
 
     def setup_network(self):

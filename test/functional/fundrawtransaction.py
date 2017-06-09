@@ -14,13 +14,9 @@ def get_unspent(listunspent, amount):
             return utx
     raise AssertionError('Could not find unspent with amount={}'.format(amount))
 
-
 class RawTransactionsTest(BitcoinTestFramework):
-
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.setup_clean_chain = True
-        self.num_nodes = 4
 
     def setup_network(self, split=False):
         self.setup_nodes()

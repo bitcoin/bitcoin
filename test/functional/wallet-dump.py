@@ -56,10 +56,7 @@ def read_dump(file_name, addrs, hd_master_addr_old):
 
 
 class WalletDumpTest(BitcoinTestFramework):
-
-    def __init__(self):
-        super().__init__()
-        self.setup_clean_chain = False
+    def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [["-keypool=90"]]
 

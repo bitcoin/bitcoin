@@ -111,8 +111,7 @@ TIMESTAMP_WINDOW = 2 * 60 * 60
 
 
 class ImportRescanTest(BitcoinTestFramework):
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.num_nodes = 2 + len(IMPORT_NODES)
 
     def setup_network(self):
