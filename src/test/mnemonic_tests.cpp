@@ -25,7 +25,6 @@ BOOST_FIXTURE_TEST_SUITE(mnemonic_tests, BasicTestingSetup)
 BOOST_AUTO_TEST_CASE(mnemonic_test)
 {
     std::string words = "deer clever bitter bonus unable menu satoshi chaos dwarf inmate robot drama exist nuclear raise";
-
     std::string expect_seed = "1da563986981b82c17a76160934f4b532eac77e14b632c6adcf31ba4166913e063ce158164c512cdce0672cbc9256dd81e7be23a8d8eb331de1a497493c382b1";
 
     std::vector<uint8_t> vSeed;
@@ -33,9 +32,6 @@ BOOST_AUTO_TEST_CASE(mnemonic_test)
     BOOST_CHECK(0 == MnemonicToSeed(words, password, vSeed));
 
     BOOST_CHECK(HexStr(vSeed.begin(), vSeed.end()) == expect_seed);
-    BOOST_MESSAGE("vSeed " << HexStr(vSeed.begin(), vSeed.end()));
-    BOOST_MESSAGE("expect_seed " << expect_seed);
-    
 }
 
 BOOST_AUTO_TEST_CASE(mnemonic_test_fails)
@@ -66,7 +62,6 @@ BOOST_AUTO_TEST_CASE(mnemonic_addchecksum)
     BOOST_CHECK_MESSAGE(4 == MnemonicAddChecksum(-1, sWordsInFail, sWordsOut, sError), "MnemonicAddChecksum: " << sError);
     
     
-    
     std::string sWordsInFrench = "zoologie ficeler xénon voyelle village viande vignette sécréter séduire torpille remède";
     
     BOOST_CHECK(0 == MnemonicAddChecksum(-1, sWordsInFrench, sWordsOut, sError));
@@ -81,7 +76,6 @@ void runTests(int nLanguage, UniValue &tests)
     for (unsigned int idx = 0; idx < tests.size(); idx++)
     {
         UniValue test = tests[idx];
-        //BOOST_MESSAGE("idx " << idx);
 
         assert(test.size() > 2);
 
@@ -98,9 +92,6 @@ void runTests(int nLanguage, UniValue &tests)
             sPassphrase = "TREZOR";
             sSeed = test[2].get_str();
         };
-
-        //BOOST_MESSAGE("sEntropy " << sEntropy);
-        //BOOST_MESSAGE("sWords " << sWords);
 
         std::vector<uint8_t> vEntropy = ParseHex(sEntropy);
         std::vector<uint8_t> vEntropyTest;
@@ -129,9 +120,6 @@ void runTests(int nLanguage, UniValue &tests)
 
             eKey58.SetKey(ekTest, CChainParams::EXT_SECRET_KEY_BTC);
             BOOST_CHECK(eKey58.ToString() == sExtKey);
-
-            //BOOST_MESSAGE("sExtKey " << sExtKey);
-            //BOOST_MESSAGE("eKey58  " << eKey58.ToString());
         };
     };
 };

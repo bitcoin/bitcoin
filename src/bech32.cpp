@@ -1,7 +1,8 @@
 // Copyright (c) 2017 Pieter Wuille
-// Copyright (c) 2017 The Particl Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#include "bech32.h"
 
 uint32_t bech32_polymod_step(uint32_t pre) {
     uint8_t b = pre >> 25;
@@ -34,7 +35,8 @@ int bech32_encode(char *output, const char *hrp, const uint8_t *data, size_t dat
         chk = bech32_polymod_step(chk) ^ (hrp[i] >> 5);
         ++i;
     }
-    if (i + 7 + data_len > 90) return 0;
+    //if (i + 7 + data_len > 90) return 0;
+    if (i + 7 + data_len > 192) return 0;
     chk = bech32_polymod_step(chk);
     while (*hrp != 0) {
         chk = bech32_polymod_step(chk) ^ (*hrp & 0x1f);
@@ -63,7 +65,8 @@ int bech32_decode(char* hrp, uint8_t *data, size_t *data_len, const char *input)
     size_t input_len = strlen(input);
     size_t hrp_len;
     int have_lower = 0, have_upper = 0;
-    if (input_len < 8 || input_len > 90) {
+    //if (input_len < 8 || input_len > 90) {
+    if (input_len < 8 || input_len > 192) {
         return 0;
     }
     *data_len = 0;
@@ -114,8 +117,47 @@ int bech32_decode(char* hrp, uint8_t *data, size_t *data_len, const char *input)
     return chk == 1;
 }
 
-CBech32Address::CBech32Address()
-{
-    vchVersion.clear();
-    vchData.clear();
+static int convert_bits(uint8_t* out, size_t* outlen, int outbits, const uint8_t* in, size_t inlen, int inbits, int pad) {
+    uint32_t val = 0;
+    int bits = 0;
+    uint32_t maxv = (((uint32_t)1) << outbits) - 1;
+    while (inlen--) {
+        val = (val << inbits) | *(in++);
+        bits += inbits;
+        while (bits >= outbits) {
+            bits -= outbits;
+            out[(*outlen)++] = (val >> bits) & maxv;
+        }
+    }
+    if (pad) {
+        if (bits) {
+            out[(*outlen)++] = (val << (outbits - bits)) & maxv;
+        }
+    } else if (((val << (outbits - bits)) & maxv) || bits >= inbits) {
+        return 0;
+    }
+    return 1;
 }
+
+
+int Bech32Encode(char *output, const char *hrp, const uint8_t *data, size_t data_len)
+{
+    uint8_t cdata[256];
+    size_t cdatalen = 0;
+    if (!convert_bits(cdata, &cdatalen, 5, data, data_len, 8, 1))
+        return 0;
+    return bech32_encode(output, hrp, cdata, cdatalen);
+}
+
+int Bech32Decode(char* hrp, uint8_t *data, size_t *data_len, const char *input)
+{
+    uint8_t cdata[256];
+    size_t cdatalen = 0;
+    
+    if (!bech32_decode(hrp, cdata, &cdatalen, input))
+        return 0;
+    
+    *data_len = 0;
+    if (!convert_bits(data, data_len, 8, cdata, cdatalen, 5, 0))
+        return 0;
+};

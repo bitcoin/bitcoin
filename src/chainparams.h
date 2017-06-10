@@ -125,9 +125,14 @@ public:
     std::string NetworkIDString() const { return strNetworkID; }
     const std::vector<CDNSSeedData>& DNSSeeds() const { return vSeeds; }
     const std::vector<unsigned char>& Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
+    const std::vector<unsigned char>& Bech32Prefix(Base58Type type) const { return bech32Prefixes[type]; }
     const std::vector<SeedSpec6>& FixedSeeds() const { return vFixedSeeds; }
     const CCheckpointData& Checkpoints() const { return checkpointData; }
     const ChainTxData& TxData() const { return chainTxData; }
+    
+    bool IsBech32Prefix(const std::vector<unsigned char> &vchPrefixIn) const;
+    bool IsBech32Prefix(const std::vector<unsigned char> &vchPrefixIn, CChainParams::Base58Type &rtype) const;
+    bool IsBech32Prefix(const char *ps, size_t slen, CChainParams::Base58Type &rtype) const;
     
     std::string NetworkID() const { return strNetworkID; }
     
@@ -174,6 +179,7 @@ protected:
     uint64_t nPruneAfterHeight;
     std::vector<CDNSSeedData> vSeeds;
     std::vector<unsigned char> base58Prefixes[MAX_BASE58_TYPES];
+    std::vector<unsigned char> bech32Prefixes[MAX_BASE58_TYPES];
     std::string strNetworkID;
     CBlock genesis;
     std::vector<SeedSpec6> vFixedSeeds;
@@ -190,6 +196,7 @@ protected:
  * startup, except for unit tests.
  */
 const CChainParams &Params();
+const CChainParams *pParams();
 
 /**
  * @returns CChainParams for the given BIP70 chain name.

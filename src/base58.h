@@ -22,6 +22,7 @@
 #include "script/script.h"
 #include "script/standard.h"
 #include "support/allocators/zeroafterfree.h"
+#include "bech32.h"
 
 #include <string>
 #include <vector>
@@ -79,6 +80,7 @@ protected:
     //! the actually encoded data
     typedef std::vector<unsigned char, zero_after_free_allocator<unsigned char> > vector_uchar;
     vector_uchar vchData;
+    bool fBech32;
 
     CBase58Data();
     void SetData(const std::vector<unsigned char> &vchVersionIn, const void* pdata, size_t nSize);
@@ -105,12 +107,12 @@ public:
  */
 class CBitcoinAddress : public CBase58Data {
 public:
-    bool Set(const CKeyID &id);
-    bool Set(const CScriptID &id);
-    bool Set(const CKeyID &id, CChainParams::Base58Type prefix);
-    bool Set(const CStealthAddress &sx);
-    bool Set(const CExtKeyPair &ek);
-    bool Set(const CTxDestination &dest);
+    bool Set(const CKeyID &id, bool fBech32 = false);
+    bool Set(const CScriptID &id, bool fBech32 = false);
+    bool Set(const CKeyID &id, CChainParams::Base58Type prefix, bool fBech32 = false);
+    bool Set(const CStealthAddress &sx, bool fBech32 = false);
+    bool Set(const CExtKeyPair &ek, bool fBech32 = false);
+    bool Set(const CTxDestination &dest, bool fBech32 = false);
     
     bool IsValidStealthAddress() const;
     bool IsValidStealthAddress(const CChainParams &params) const;
@@ -120,6 +122,7 @@ public:
 
     CBitcoinAddress() {}
     CBitcoinAddress(const CTxDestination &dest) { Set(dest); }
+    CBitcoinAddress(const CTxDestination &dest, bool fBech32) { Set(dest, fBech32); }
     CBitcoinAddress(const std::string& strAddress) { SetString(strAddress); }
     CBitcoinAddress(const char* pszAddress) { SetString(pszAddress); }
 

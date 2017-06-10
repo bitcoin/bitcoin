@@ -2698,8 +2698,6 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     CAmount nFees = 0;
     int nInputs = 0;
     int64_t nSigOpsCost = 0;
-    int64_t nValueIn = 0;
-    int64_t nValueOut = 0;
     int64_t nStakeReward = 0;
     CDiskTxPos pos(pindex->GetBlockPos(), GetSizeOfCompactSize(block.vtx.size()));
     std::vector<std::pair<uint256, CDiskTxPos> > vPos;

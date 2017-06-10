@@ -24,14 +24,11 @@ BOOST_AUTO_TEST_CASE(oldversion_test)
     
     CMutableTransaction txn;
     blk.vtx.push_back(MakeTransactionRef(txn));
-    //BOOST_MESSAGE("blk.vtx[0]->nVersion "  << blk.vtx[0]->nVersion);
     
     CDataStream ss(SER_DISK, 0);
     
     ss << blk;
     ss >> blkOut;
-    
-    //BOOST_MESSAGE("blkOut.vtx[0]->nVersion "  << blkOut.vtx[0]->nVersion);
     
     BOOST_CHECK(blk.vtx[0]->nVersion == blkOut.vtx[0]->nVersion);
 }
@@ -112,8 +109,6 @@ BOOST_AUTO_TEST_CASE(particlchain_test)
     
     
     blk.vtx.push_back(MakeTransactionRef(txn));
-    
-    BOOST_MESSAGE("blk.vtx.size() " << blk.vtx.size());
     
     bool mutated;
     blk.hashMerkleRoot = BlockMerkleRoot(blk, &mutated);

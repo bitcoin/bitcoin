@@ -3429,9 +3429,9 @@ static const CRPCCommand commands[] =
     { "wallet",             "sendblindtoblind",         &sendblindtoblind,         false,  {"address","amount","comment","comment_to","subtractfeefromamount", "narration"} },
     { "wallet",             "sendblindtoanon",          &sendblindtoanon,          false,  {"address","amount","comment","comment_to","subtractfeefromamount", "narration"} },
     
-    { "wallet",             "sendanontopart",           &sendanontopart,           false,  {"address","amount","comment","comment_to","subtractfeefromamount", "narration"} },
-    { "wallet",             "sendanontoblind",          &sendanontoblind,          false,  {"address","amount","comment","comment_to","subtractfeefromamount", "narration"} },
-    { "wallet",             "sendanontoanon",           &sendanontoanon,           false,  {"address","amount","comment","comment_to","subtractfeefromamount", "narration"} },
+    { "wallet",             "sendanontopart",           &sendanontopart,           false,  {"address","amount","comment","comment_to","subtractfeefromamount", "narration", "ring_size", "num_sigs"} },
+    { "wallet",             "sendanontoblind",          &sendanontoblind,          false,  {"address","amount","comment","comment_to","subtractfeefromamount", "narration", "ring_size", "num_sigs"} },
+    { "wallet",             "sendanontoanon",           &sendanontoanon,           false,  {"address","amount","comment","comment_to","subtractfeefromamount", "narration", "ring_size", "num_sigs"} },
     
     
     

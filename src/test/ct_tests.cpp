@@ -159,8 +159,6 @@ BOOST_AUTO_TEST_CASE(ct_test)
             &txout.commitment, txout.vchRangeproof.data(), txout.vchRangeproof.size(),
             NULL, 0,
             secp256k1_generator_h));
-        BOOST_MESSAGE("min_value " << min_value);
-        BOOST_MESSAGE("max_value " << max_value);
         
         
         CPubKey ephemeral_key(txout.vchNonceCommitment);

@@ -80,6 +80,50 @@ const DevFundSettings *CChainParams::GetDevFundSettings(int64_t nTime) const
     return NULL;
 };
 
+bool CChainParams::IsBech32Prefix(const std::vector<unsigned char> &vchPrefixIn) const
+{
+    for (auto &hrp : bech32Prefixes)
+    {
+        if (vchPrefixIn == hrp)
+            return true;
+    };
+    
+    return false;
+};
+
+bool CChainParams::IsBech32Prefix(const std::vector<unsigned char> &vchPrefixIn, CChainParams::Base58Type &rtype) const
+{
+    for (size_t k = 0; k < MAX_BASE58_TYPES; ++k)
+    {
+        auto &hrp = bech32Prefixes[k];
+        if (vchPrefixIn == hrp)
+        {
+            rtype = static_cast<CChainParams::Base58Type>(k);
+            return true;
+        }
+    };
+    
+    return false;
+};
+
+bool CChainParams::IsBech32Prefix(const char *ps, size_t slen, CChainParams::Base58Type &rtype) const
+{
+    for (size_t k = 0; k < MAX_BASE58_TYPES; ++k)
+    {
+        auto &hrp = bech32Prefixes[k];
+        size_t hrplen = hrp.size();
+        if (hrplen > 0 
+            && slen > hrplen
+            && strncmp(ps, (const char*)&hrp[0], hrplen) == 0)
+        {
+            rtype = static_cast<CChainParams::Base58Type>(k);
+            return true;
+        };
+    };
+    
+    return false;
+};
+
 static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 {
     CMutableTransaction txNew;
@@ -459,6 +503,17 @@ public:
         base58Prefixes[EXT_SECRET_KEY_BTC] = boost::assign::list_of(0x04)(0x88)(0xAD)(0xE4).convert_to_container<std::vector<unsigned char> >(); // xprv
         base58Prefixes[EXT_PUBLIC_KEY_SDC] = boost::assign::list_of(0xEE)(0x80)(0x28)(0x6A).convert_to_container<std::vector<unsigned char> >();
         base58Prefixes[EXT_SECRET_KEY_SDC] = boost::assign::list_of(0xEE)(0x80)(0x31)(0xE8).convert_to_container<std::vector<unsigned char> >();
+        
+        
+        bech32Prefixes[PUBKEY_ADDRESS].assign   ("ph","ph"+2);
+        bech32Prefixes[SCRIPT_ADDRESS].assign   ("pr","pr"+2);
+        bech32Prefixes[SECRET_KEY].assign       ("px","px"+2);
+        bech32Prefixes[EXT_PUBLIC_KEY].assign   ("pep","pep"+3);
+        bech32Prefixes[EXT_SECRET_KEY].assign   ("pex","pex"+3);
+        bech32Prefixes[STEALTH_ADDRESS].assign  ("ps","ps"+2);
+        bech32Prefixes[EXT_KEY_HASH].assign     ("pek","pek"+3);
+        bech32Prefixes[EXT_KEY_HASH].assign     ("pea","pea"+3);
+        
 
         vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_main, pnSeed6_main + ARRAYLEN(pnSeed6_main));
 
@@ -609,6 +664,16 @@ public:
         base58Prefixes[EXT_SECRET_KEY_BTC] = boost::assign::list_of(0x04)(0x35)(0x83)(0x94).convert_to_container<std::vector<unsigned char> >(); // tprv
         base58Prefixes[EXT_PUBLIC_KEY_SDC] = boost::assign::list_of(0x76)(0xC0)(0xFD)(0xFB).convert_to_container<std::vector<unsigned char> >();
         base58Prefixes[EXT_SECRET_KEY_SDC] = boost::assign::list_of(0x76)(0xC1)(0x07)(0x7A).convert_to_container<std::vector<unsigned char> >();
+        
+        bech32Prefixes[PUBKEY_ADDRESS].assign   ("tph","tph"+3);
+        bech32Prefixes[SCRIPT_ADDRESS].assign   ("tpr","tpr"+3);
+        bech32Prefixes[SECRET_KEY].assign       ("tpx","tpx"+3);
+        bech32Prefixes[EXT_PUBLIC_KEY].assign   ("tpep","tpep"+4);
+        bech32Prefixes[EXT_SECRET_KEY].assign   ("tpex","tpex"+4);
+        bech32Prefixes[STEALTH_ADDRESS].assign  ("tps","tps"+3);
+        bech32Prefixes[EXT_KEY_HASH].assign     ("tpek","tpek"+4);
+        bech32Prefixes[EXT_KEY_HASH].assign     ("tpea","tpea"+4);
+        
 
         vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_test, pnSeed6_test + ARRAYLEN(pnSeed6_test));
 
@@ -749,6 +814,10 @@ const CChainParams &Params() {
     assert(pCurrentParams);
     return *pCurrentParams;
 }
+
+const CChainParams *pParams() {
+    return pCurrentParams;
+};
 
 CChainParams& Params(const std::string& chain)
 {

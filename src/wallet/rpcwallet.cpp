@@ -115,14 +115,15 @@ UniValue getnewaddress(const JSONRPCRequest& request)
     if (!EnsureWalletIsAvailable(request.fHelp))
         return NullUniValue;
 
-    if (request.fHelp || request.params.size() > 1)
+    if (request.fHelp || request.params.size() > 2)
         throw runtime_error(
-            "getnewaddress ( \"account\" )\n"
+            "getnewaddress ( \"account\" \"bech32\")\n"
             "\nReturns a new Particl address for receiving payments, key is saved in wallet.\n"
             "If 'account' is specified (DEPRECATED), it is added to the address book \n"
             "so payments received with the address will be credited to 'account'.\n"
             "\nArguments:\n"
             "1. \"account\"        (string, optional) DEPRECATED. The account name for the address to be linked to. If not provided, the default account \"\" is used. It can also be set to the empty string \"\" to represent the default account. The account does not need to exist, it will be created if there is no account by the given name.\n"
+            "2. \"bech32\"         (bool, optional) .\n"
             "\nResult:\n"
             "\"address\"           (string) The new particl address\n"
             "\nExamples:\n"
@@ -139,6 +140,13 @@ UniValue getnewaddress(const JSONRPCRequest& request)
     
     if (fParticlWallet)
     {
+        bool fBech32 = false;
+        if (request.params.size() > 1)
+        {
+            std::string s = request.params[1].get_str();
+            fBech32 = part::IsStringBoolPositive(s);
+        };
+        
         CPubKey newKey;
         CHDWallet *phdw = (CHDWallet*) pwalletMain;
         {
@@ -155,7 +163,7 @@ UniValue getnewaddress(const JSONRPCRequest& request)
         }
         
         keyID = newKey.GetID();
-        return CBitcoinAddress(keyID).ToString();
+        return CBitcoinAddress(keyID, fBech32).ToString();
     };
     
     {
