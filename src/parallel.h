@@ -77,7 +77,7 @@ private:
     std::vector<std::unique_ptr<CCheckQueue<CScriptCheck> > > vQueues;
     unsigned int nThreads;
     // The semaphore limits the number of parallel validation threads
-    CSemaphore semaphore;
+    CSemaphore semThreadCount;
 
     struct CHandleBlockMsgThreads
     {
@@ -135,7 +135,7 @@ public:
     void Erase(const boost::thread::id this_id);
 
     /* Post the semaphore when the thread exits.  */
-    void Post() { semaphore.post(); }
+    void Post() { semThreadCount.post(); }
     /* Was the fQuit flag set to true which causes the PV thread to exit */
     bool QuitReceived(const boost::thread::id this_id, const bool fParallel);
 

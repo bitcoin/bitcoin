@@ -33,7 +33,7 @@ static void AddScriptCheckThreads(int i, CCheckQueue<CScriptCheck> *pqueue)
 }
 
 CParallelValidation::CParallelValidation(int threadCount, boost::thread_group *threadGroup)
-    : semaphore(nScriptCheckQueues)
+    : semThreadCount(nScriptCheckQueues)
 {
     if (threadCount <= 1)
         threadCount = 0;
@@ -409,7 +409,7 @@ void CParallelValidation::HandleBlockMessage(CNode *pfrom,
     // Aquire semaphore grant
     if (IsChainNearlySyncd())
     {
-        if (!semaphore.try_wait())
+        if (!semThreadCount.try_wait())
         {
             /** The following functionality is for the case when ALL thread queues and grants are in use, meaning
              * somehow an attacker
@@ -468,12 +468,12 @@ void CParallelValidation::HandleBlockMessage(CNode *pfrom,
             } // We must not hold the lock here because we could be waiting for a grant, below.
 
             // wait for semaphore grant
-            semaphore.wait();
+            semThreadCount.wait();
         }
     }
     else
     { // for IBD just wait for the next available
-        semaphore.wait();
+        semThreadCount.wait();
     }
 
     // Add a reference here because we are detaching a thread which may run for a long time and
