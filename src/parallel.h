@@ -74,7 +74,7 @@ private:
     CCriticalSection cs_previousblock;
     std::vector<uint256> vPreviousBlock;
     // Vector of script check queues
-    std::vector<std::unique_ptr<CCheckQueue<CScriptCheck> > > vQueues;
+    std::vector<CCheckQueue<CScriptCheck> *> vQueues;
     unsigned int nThreads;
     // The semaphore limits the number of parallel validation threads
     CSemaphore semThreadCount;
@@ -105,6 +105,8 @@ public:
      * @param[in] threadGroup   The thread group threads will be created in
      */
     CParallelValidation(int threadCount, boost::thread_group *threadGroup);
+
+    ~CParallelValidation();
 
     /* Initialize mapBlockValidationThreads*/
     void InitThread(const boost::thread::id this_id, const CNode *pfrom, const CBlock &block, const CInv &inv);

@@ -35,6 +35,7 @@ static void AddScriptCheckThreads(int i, CCheckQueue<CScriptCheck> *pqueue)
 CParallelValidation::CParallelValidation(int threadCount, boost::thread_group *threadGroup)
     : semThreadCount(nScriptCheckQueues)
 {
+    // A single thread has no parallelism so just use the main thread.  Equivalent to parallel being turned off.
     if (threadCount <= 1)
         threadCount = 0;
     else if (threadCount > MAX_SCRIPTCHECK_THREADS)
@@ -45,13 +46,19 @@ CParallelValidation::CParallelValidation(int threadCount, boost::thread_group *t
 
     while (QueueCount() < nScriptCheckQueues)
     {
-        std::unique_ptr<CCheckQueue<CScriptCheck> > queue(new CCheckQueue<CScriptCheck>(128));
+        auto queue = new CCheckQueue<CScriptCheck>(128);
 
         for (unsigned int i = 0; i < nThreads; i++)
-            threadGroup->create_thread(boost::bind(&AddScriptCheckThreads, i + 1, queue.get()));
+            threadGroup->create_thread(boost::bind(&AddScriptCheckThreads, i + 1, queue));
 
-        vQueues.push_back(std::move(queue));
+        vQueues.push_back(queue);
     }
+}
+
+CParallelValidation::~CParallelValidation()
+{
+    for (auto queue : vQueues)
+        delete queue;
 }
 
 unsigned int CParallelValidation::QueueCount()
@@ -630,7 +637,7 @@ CCheckQueue<CScriptCheck> *CParallelValidation::GetScriptCheckQueue()
 
             for (unsigned int i = 0; i < vQueues.size(); i++)
             {
-                auto pqueue(vQueues[i].get());
+                auto pqueue(vQueues[i]);
 
                 if (pqueue->IsIdle())
                 {
