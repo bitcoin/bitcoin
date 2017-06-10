@@ -19,8 +19,6 @@
 #include <boost/thread.hpp>
 
 extern CCriticalSection cs_blockvalidationthread;
-extern CCriticalSection cs_semPV;
-extern CSemaphore *semPV; // semaphore for parallel validation threads
 
 /**
  * Closure representing one script verification
@@ -78,6 +76,8 @@ private:
     // Vector of script check queues
     std::vector<std::unique_ptr<CCheckQueue<CScriptCheck> > > vQueues;
     unsigned int nThreads;
+    // The semaphore limits the number of parallel validation threads
+    CSemaphore semaphore;
 
     struct CHandleBlockMsgThreads
     {
@@ -134,6 +134,8 @@ public:
     /* Clear thread data from mapBlockValidationThreads */
     void Erase(const boost::thread::id this_id);
 
+    /* Post the semaphore when the thread exits.  */
+    void Post() { semaphore.post(); }
     /* Was the fQuit flag set to true which causes the PV thread to exit */
     bool QuitReceived(const boost::thread::id this_id, const bool fParallel);
 
