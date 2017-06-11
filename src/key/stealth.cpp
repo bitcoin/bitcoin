@@ -373,6 +373,16 @@ bool IsStealthAddress(const std::string &encodedAddress)
     return true;
 };
 
+uint32_t FillStealthPrefix(uint8_t nBits, uint32_t nBitfield)
+{
+    uint32_t prefix, mask = SetStealthMask(nBits);
+    GetStrongRandBytes((uint8_t*) &prefix, 4);
+    
+    prefix &= (~mask);
+    prefix |= nBitfield & mask;
+    return prefix;
+};
+
 bool ExtractStealthPrefix(const char *pPrefix, uint32_t &nPrefix)
 {
     int base = 10;

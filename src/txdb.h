@@ -12,6 +12,7 @@
 #include "addressindex.h"
 #include "spentindex.h"
 #include "timestampindex.h"
+#include "rctindex.h"
 
 #include <map>
 #include <string>

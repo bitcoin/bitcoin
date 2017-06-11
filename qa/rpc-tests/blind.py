@@ -26,7 +26,7 @@ class BlindTest(ParticlTestFramework):
     def run_test(self):
         nodes = self.nodes
         
-        # stop staking
+        # Stop staking
         ro = nodes[0].reservebalance(True, 10000000)
         ro = nodes[1].reservebalance(True, 10000000)
         
@@ -119,23 +119,37 @@ class BlindTest(ParticlTestFramework):
         print("2 listtransactions ", json.dumps(ro, indent=4, default=self.jsonDecimal))
         
         
+        
+        sxAddrTo2_3 = nodes[2].getnewstealthaddress("n2 sx+prefix", "4", "0xaaaa");
+        print("sxAddrTo2_3 ", sxAddrTo2_3)
+        #assert(sxAddrTo2_3 == "32eETczfqSdXkByymvCGrwtkUUkwVfiSosd82tu1K4H7MKzFze6L5pyQL6R29qGzBxuUhLaeg1pEaAhvqicVeWScsdN19kH83JYPC1Tn")
+        
+        txnHash5 = nodes[0].sendparttoblind(sxAddrTo2_3, 0.5, '', '', False, 'node0 -> node2 p->b')
+        print("txnHash5 ", txnHash5)
+        
+        assert(self.wait_for_mempool(nodes[2], txnHash5))
+        
+        ro = nodes[2].listtransactions()
+        #print("2 listtransactions ", json.dumps(ro, indent=4, default=self.jsonDecimal))
+        assert(ro[-1]["txid"] == txnHash5)
+        
+        
         ro = nodes[0].getwalletinfo()
-        print("0 getwalletinfo " + json.dumps(ro, indent=4, default=self.jsonDecimal))
-        # some of the balance will have staked
-        assert(isclose(ro['balance'] + ro['staked_balance'], 99996.60079274))
+        #print("0 getwalletinfo " + json.dumps(ro, indent=4, default=self.jsonDecimal))
+        # Some of the balance will have staked
+        assert(isclose(ro['balance'] + ro['staked_balance'], 99996.09498274))
         availableBalance = ro['balance'];
         
         
-        # check node0 can spend remaining coin
+        # Check node0 can spend remaining coin
         addrTo0_2 = nodes[0].getnewaddress()
         txnHash2 = nodes[0].sendtoaddress(addrTo0_2, availableBalance, '', '', True, 'node0 spend remaining')
-        print("txnHash2 ", txnHash2)
+        #print("txnHash2 ", txnHash2)
         txnHashes.append(txnHash2)
         
         ro = nodes[0].getwalletinfo()
-        print("0 getwalletinfo " + json.dumps(ro, indent=4, default=self.jsonDecimal))
-        assert(isclose(ro['total_balance'], 99996.59876474))
-        
+        #print("0 getwalletinfo " + json.dumps(ro, indent=4, default=self.jsonDecimal))
+        assert(isclose(ro['total_balance'], 99996.09294874))
         
         
         #assert(False)

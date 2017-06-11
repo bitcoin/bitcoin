@@ -1437,13 +1437,8 @@ int CHDWallet::ExpandTempRecipients(std::vector<CTempRecipient> &vecSend, CStore
                 if (sx.prefix.number_bits > 0)
                 {
                     rd.vData[o++] = DO_STEALTH_PREFIX;
-                    uint32_t prefix, mask = SetStealthMask(sx.prefix.number_bits);
-                    GetStrongRandBytes((uint8_t*) &prefix, 4);
-                    
-                    prefix = prefix & (~mask);
-                    prefix |= sx.prefix.bitfield & mask;
-                    
-                    memcpy(&rd.vData[o], &prefix, 4);
+                    r.nStealthPrefix = FillStealthPrefix(sx.prefix.number_bits, sx.prefix.bitfield);
+                    memcpy(&rd.vData[o], &r.nStealthPrefix, 4);
                     o+=4;
                 };
                 
@@ -1530,6 +1525,12 @@ int CHDWallet::ExpandTempRecipients(std::vector<CTempRecipient> &vecSend, CStore
                     LogPrint("hdwallet", "Creating output to stealth generated address: %s\n", CBitcoinAddress(idTo).ToString()); // TODO: add output type
                 
                 r.scriptPubKey = GetScriptForDestination(idTo);
+                
+                if (sx.prefix.number_bits > 0)
+                {
+                    r.nStealthPrefix = FillStealthPrefix(sx.prefix.number_bits, sx.prefix.bitfield);
+                };
+                
             } else
             if (r.address.type() == typeid(CExtKeyPair))
             {
@@ -1564,6 +1565,14 @@ int CHDWallet::ExpandTempRecipients(std::vector<CTempRecipient> &vecSend, CStore
         if (r.nType == OUTPUT_RINGCT)
         {
             CKey sEphem;
+            if (r.address.type() == typeid(CStealthAddress))
+            {
+                CStealthAddress sx = boost::get<CStealthAddress>(r.address);
+                
+            } else
+            {
+                return errorN(1, sError, __func__, _("TODO - stealth address only for now.").c_str());
+            }
             
             
             return errorN(1, sError, __func__, _("TODO.").c_str());
@@ -1590,6 +1599,19 @@ int CHDWallet::PostProcessTempRecipients(std::vector<CTempRecipient> &vecSend)
     };
     
     return 0;
+};
+
+static void SetCTOutVData(std::vector<uint8_t> &vData, CPubKey &pkEphem, uint32_t nStealthPrefix)
+{
+    vData.resize(nStealthPrefix > 0 ? 38 : 33);
+    
+    memcpy(&vData[0], pkEphem.begin(), 33);
+    
+    if (nStealthPrefix > 0)
+    {
+        vData[33] = DO_STEALTH_PREFIX;
+        memcpy(&vData[34], &nStealthPrefix, 4);
+    };
 };
 
 int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
@@ -1755,12 +1777,10 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 if (r.nType == OUTPUT_CT)
                 {
                     nLastBlindedOutput = i;
-                    //vBlindedOutputOffsets.push_back(i);
                     OUTPUT_PTR<CTxOutCT> txout = MAKE_OUTPUT<CTxOutCT>();
                     
-                    txout->vData.resize(33);
                     CPubKey pkEphem = r.sEphem.GetPubKey();
-                    memcpy(&txout->vData[0], pkEphem.begin(), 33);
+                    SetCTOutVData(txout->vData, pkEphem, r.nStealthPrefix);
                     
                     txout->scriptPubKey = r.scriptPubKey;
                     
@@ -2273,9 +2293,8 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                     nLastBlindedOutput = i;
                     OUTPUT_PTR<CTxOutCT> txout = MAKE_OUTPUT<CTxOutCT>();
                     
-                    txout->vData.resize(33);
                     CPubKey pkEphem = r.sEphem.GetPubKey();
-                    memcpy(&txout->vData[0], pkEphem.begin(), 33);
+                    SetCTOutVData(txout->vData, pkEphem, r.nStealthPrefix);
                     
                     txout->scriptPubKey = r.scriptPubKey;
                     
@@ -4650,8 +4669,8 @@ int CHDWallet::NewStealthKeyFromAccount(
         CSHA256().Write(kSpend.begin(), 32).Finalize(tmp32);
         memcpy(&nPrefix, tmp32, 4);
     };
-    uint32_t nMask = SetStealthMask(nPrefixBits);
     
+    uint32_t nMask = SetStealthMask(nPrefixBits);
     nPrefix = nPrefix & nMask;
 
     CEKAStealthKey aks(nChain, nScanOut, kScan, nChain, nSpendOut, kSpend, nPrefixBits, nPrefix);
@@ -5446,13 +5465,12 @@ bool CHDWallet::CommitTransaction(CWalletTx &wtxNew, CTransactionRecord &rtx,
                 LogPrintf("CommitTransaction(): Transaction cannot be broadcast immediately, %s\n", state.GetRejectReason());
                 // TODO: if we expect the failure to be long term or permanent, instead delete wtx from the wallet and return failure.
                 
-                
             } else
             {
                 wtxNew.BindWallet(this);
                 wtxNew.RelayWalletTransaction(connman);
-            }
-        }
+            };
+        };
     }
     return true;
 };
@@ -6214,10 +6232,18 @@ bool CHDWallet::AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlockInd
                     continue;
                 };
                 
-                if (ctout->vData.size() != 33) // TODO: prefix
+                if (ctout->vData.size() != 33)
                 {
-                    LogPrint("hdwallet", "bad blind output data size.\n");
-                    continue;
+                    if (ctout->vData.size() == 38 // Have prefix
+                        && ctout->vData[33] == DO_STEALTH_PREFIX)
+                    {
+                        fHavePrefix = true;
+                        memcpy(&prefix, &ctout->vData[34], 4);
+                    } else
+                    {
+                        LogPrint("hdwallet", "Bad blind output data size.\n");
+                        continue;
+                    };
                 };
                 
                 CKey sShared;
@@ -6243,7 +6269,6 @@ bool CHDWallet::AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlockInd
                     fIsMine = true;
             };
         };
-        
         
         if (nCT > 0 || nRingCT > 0)
         {
@@ -6421,13 +6446,13 @@ int CHDWallet::OwnBlindOut(const CTxOutCT *pout, const CStoredExtKey *pc, uint32
     CPubKey pkEphem;
     pkEphem.Set(pout->vData.begin(), pout->vData.begin() + 33);
     
-    // regenerate nonce
+    // Regenerate nonce
     uint256 nonce = key.ECDH(pkEphem);
     CSHA256().Write(nonce.begin(), 32).Finalize(nonce.begin());
     
     uint64_t min_value, max_value;
     uint8_t blindOut[32];
-    unsigned char msg[256]; // currently narration is capped at 32 bytes
+    unsigned char msg[256]; // Currently narration is capped at 32 bytes
     size_t mlen = sizeof(msg);
     memset(msg, 0, mlen);
     uint64_t amountOut;
@@ -7929,12 +7954,7 @@ int ToStealthRecipient(CStealthAddress &sx, CAmount nValue, bool fSubtractFeeFro
     if (sx.prefix.number_bits > 0)
     {
         rData.vData[o++] = DO_STEALTH_PREFIX;
-        uint32_t prefix, mask = SetStealthMask(sx.prefix.number_bits);
-        GetStrongRandBytes((uint8_t*) &prefix, 4);
-        
-        prefix = prefix & (~mask);
-        prefix |= sx.prefix.bitfield & mask;
-        
+        uint32_t prefix = FillStealthPrefix(sx.prefix.number_bits, sx.prefix.bitfield);
         memcpy(&rData.vData[o], &prefix, 4);
         o+=4;
     };

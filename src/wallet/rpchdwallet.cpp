@@ -2993,7 +2993,7 @@ UniValue sendparttoblind(const JSONRPCRequest &request)
     std::vector<CTempRecipient> vecSend;
     std::string sError;
     if (0 != AddOutput(OUTPUT_CT, vecSend, address.Get(), nAmount, fSubtractFeeFromAmount, sNarr, sError))
-        throw JSONRPCError(RPC_MISC_ERROR, strprintf("AddBlindedOutput failed: %s.", sError));
+        throw JSONRPCError(RPC_MISC_ERROR, strprintf("AddOutput failed: %s.", sError));
     
     if (0 != pwallet->AddStandardInputs(wtx, rtx, vecSend, true, sError))
         throw JSONRPCError(RPC_WALLET_ERROR, strprintf("AddStandardInputs failed: %s.", sError));
@@ -3013,7 +3013,7 @@ UniValue sendparttoblind(const JSONRPCRequest &request)
         result.push_back(Pair("txid", wtx.GetHash().GetHex()));
         result.push_back(Pair("errors", vErrors));
         return result;
-    }
+    };
     
     pwallet->PostProcessTempRecipients(vecSend);
     
@@ -3046,6 +3046,7 @@ UniValue sendparttoanon(const JSONRPCRequest &request)
     
     CHDWallet *pwallet = GetHDWallet();
     EnsureWalletIsUnlocked(pwallet);
+    
     throw std::runtime_error("TODO");
     
     CBitcoinAddress address(request.params[0].get_str());
@@ -3095,7 +3096,7 @@ UniValue sendparttoanon(const JSONRPCRequest &request)
     std::vector<CTempRecipient> vecSend;
     std::string sError;
     if (0 != AddOutput(OUTPUT_RINGCT, vecSend, address.Get(), nAmount, fSubtractFeeFromAmount, sNarr, sError))
-        throw JSONRPCError(RPC_MISC_ERROR, strprintf("AddBlindedOutput failed: %s.", sError));
+        throw JSONRPCError(RPC_MISC_ERROR, strprintf("AddOutput failed: %s.", sError));
     
     if (0 != pwallet->AddStandardInputs(wtx, rtx, vecSend, true, sError))
         throw JSONRPCError(RPC_WALLET_ERROR, strprintf("AddStandardInputs failed: %s.", sError));
@@ -3199,7 +3200,7 @@ UniValue sendblindtopart(const JSONRPCRequest &request)
     std::string sError;
     
     if (0 != AddOutput(OUTPUT_STANDARD, vecSend, address.Get(), nAmount, fSubtractFeeFromAmount, sNarr, sError))
-        throw JSONRPCError(RPC_MISC_ERROR, strprintf("AddBlindedOutput failed: %s.", sError));
+        throw JSONRPCError(RPC_MISC_ERROR, strprintf("AddOutput failed: %s.", sError));
     
     if (0 != pwallet->AddBlindedInputs(wtx, rtx, vecSend, true, sError))
         throw JSONRPCError(RPC_WALLET_ERROR, strprintf("AddBlindedInputs failed: %s.", sError));
@@ -3301,7 +3302,7 @@ UniValue sendblindtoblind(const JSONRPCRequest &request)
     std::vector<CTempRecipient> vecSend;
     std::string sError;
     if (0 != AddOutput(OUTPUT_CT, vecSend, address.Get(), nAmount, fSubtractFeeFromAmount, sNarr, sError))
-        throw JSONRPCError(RPC_MISC_ERROR, strprintf("AddBlindedOutput failed: %s.", sError));
+        throw JSONRPCError(RPC_MISC_ERROR, strprintf("AddOutput failed: %s.", sError));
     
     if (0 != pwallet->AddBlindedInputs(wtx, rtx, vecSend, true, sError))
         throw JSONRPCError(RPC_WALLET_ERROR, strprintf("AddBlindedInputs failed: %s.", sError));

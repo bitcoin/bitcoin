@@ -77,7 +77,7 @@ public:
         READWRITE(*(CScriptBase*)(&scriptPubKey));
         READWRITE(sNarration);
         READWRITE(vPath);
-    }
+    };
 };
 
 enum RTxAddonValueTypes
@@ -102,10 +102,7 @@ class CTransactionRecord
 {
 // stored by uint256 txnHash;
 public:
-    CTransactionRecord()
-    {
-        
-    };
+    CTransactionRecord() {};
     
     // Conflicted state is marked by set blockHash and nIndex -1
     uint256 blockHash;
@@ -133,7 +130,7 @@ public:
         };
         vout.push_back(r);
         return 1;
-    }
+    };
     
     COutputRecord *GetOutput(int n) 
     {
@@ -144,9 +141,9 @@ public:
                 return NULL;
             if (r.n == n)
                 return &r;
-        }
+        };
         return NULL;
-    }
+    };
     
     const COutputRecord *GetOutput(int n) const 
     {
@@ -157,9 +154,9 @@ public:
                 return NULL;
             if (r.n == n)
                 return &r;
-        }
+        };
         return NULL;
-    }
+    };
     
     void SetMerkleBranch(const uint256 &blockHash_, int posInBlock)
     {
@@ -187,7 +184,7 @@ public:
         READWRITE(mapValue);
         READWRITE(nFee);
         READWRITE(vout);
-    }
+    };
 };
 
 
@@ -202,6 +199,7 @@ public:
     {
         fChange = false;
         nChildKey = 0;
+        nStealthPrefix = 0;
     }
     
     uint8_t nType;
@@ -223,6 +221,7 @@ public:
     std::string sNarration;
     bool fChange;
     uint32_t nChildKey; // update later
+    uint32_t nStealthPrefix;
 };
 
 
@@ -283,7 +282,7 @@ public:
     {
         READWRITE(tx);
         READWRITE(vBlinds);
-    }
+    };
 };
 
 class CHDWallet : public CWallet
@@ -396,6 +395,8 @@ public:
         bool sign, std::string &sError);
     int AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
         std::vector<CTempRecipient> &vecSend, bool sign, std::string &sError);
+    
+    
     
     
     

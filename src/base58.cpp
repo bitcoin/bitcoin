@@ -184,9 +184,10 @@ bool CBase58Data::SetString(const char* psz, unsigned int nVersionBytes)
         // TODO: can check max length from prefixType
         vchData.resize(256);
         size_t data_len = 0;
-        int rv = Bech32Decode(hrp, &vchData[0], &data_len, psz);
+        if (!Bech32Decode(hrp, &vchData[0], &data_len, psz))
+            return false;
         vchData.resize(data_len);
-        return rv;
+        return true;
     };
     
     std::vector<unsigned char> vchTemp;
@@ -379,7 +380,6 @@ bool CBitcoinAddress::IsValid() const
 
 bool CBitcoinAddress::IsValid(const CChainParams& params) const
 {
-    
     if (fBech32)
     {
         CChainParams::Base58Type prefix;

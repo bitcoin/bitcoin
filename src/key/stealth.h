@@ -139,7 +139,8 @@ inline uint32_t SetStealthMask(uint8_t nBits)
 {
     return (nBits == 32 ? 0xFFFFFFFF : ((1<<nBits)-1));
 };
-        
+
+uint32_t FillStealthPrefix(uint8_t nBits, uint32_t nBitfield);
 
 bool ExtractStealthPrefix(const char *pPrefix, uint32_t &nPrefix);
 

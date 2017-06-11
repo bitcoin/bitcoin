@@ -1,6 +1,23 @@
-// Copyright (c) 2017 Pieter Wuille
-// Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+/* Copyright (c) 2017 Pieter Wuille
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 
 #include "bech32.h"
 
@@ -70,7 +87,7 @@ int bech32_decode(char* hrp, uint8_t *data, size_t *data_len, const char *input)
         return 0;
     }
     *data_len = 0;
-    while (*data_len < input_len && input[(input_len - 1) - *data_len] != '1') {
+    while (*data_len < input_len-1 && input[(input_len - 1) - *data_len] != '1') {
         ++(*data_len);
     }
     hrp_len = input_len - (1 + *data_len);
@@ -147,7 +164,7 @@ int Bech32Encode(char *output, const char *hrp, const uint8_t *data, size_t data
     if (!convert_bits(cdata, &cdatalen, 5, data, data_len, 8, 1))
         return 0;
     return bech32_encode(output, hrp, cdata, cdatalen);
-}
+};
 
 int Bech32Decode(char* hrp, uint8_t *data, size_t *data_len, const char *input)
 {
@@ -160,4 +177,5 @@ int Bech32Decode(char* hrp, uint8_t *data, size_t *data_len, const char *input)
     *data_len = 0;
     if (!convert_bits(data, data_len, 8, cdata, cdatalen, 5, 0))
         return 0;
+    return 1;
 };

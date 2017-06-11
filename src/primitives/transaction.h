@@ -422,20 +422,26 @@ class CTxOutRingCT : public CTxOutBase
 public:
     CTxOutRingCT() : CTxOutBase(OUTPUT_RINGCT) {};
     CPubKey pk;
+    std::vector<uint8_t> vData; // first 33 bytes is always ephemeral pubkey, can contain token for stealth prefix matching
     secp256k1_pedersen_commitment commitment;
-    std::vector<uint8_t> vchRangeproof;
-    std::vector<uint8_t> vchNonceCommitment;
+    std::vector<uint8_t> vRangeproof;
+    std::vector<uint8_t> vSignature; // 
+    //std::vector<uint8_t> vchNonceCommitment;
     
     template<typename Stream>
     void Serialize(Stream &s) const
     {
-        
+        s << vData;
+        s.write((char*)&commitment.data[0], 33);
+        s << vRangeproof;
     };
     
     template<typename Stream>
     void Unserialize(Stream &s)
     {
-        
+        s >> vData;
+        s.read((char*)&commitment.data[0], 33);
+        s >> vRangeproof;
     };
     
     bool PutValue(std::vector<uint8_t> &vchAmount) const

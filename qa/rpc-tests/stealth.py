@@ -28,7 +28,7 @@ class StealthTest(ParticlTestFramework):
         node1 = self.nodes[1]
         node2 = self.nodes[2]
         
-        # stop staking
+        # Stop staking
         ro = node.reservebalance(True, 10000000)
         ro = node1.reservebalance(True, 10000000)
         
@@ -61,7 +61,7 @@ class StealthTest(ParticlTestFramework):
         assert(ro[0]['stealth_address'] == sxAddrTo1)
         assert(isclose(ro[0]['amount'], 1))
         
-        # - Test imported sx address
+        # Test imported sx address
         ro = node1.importstealthaddress("7pJLDnLxoYmkwpMNDX69dWGT7tuZ45LHgMajQDD8JrXb9LHmzfBA",
             "7uk8ELaUsop2r4vMg415wEGBfRd1MmY7JiXX7CRhwuwq5PaWXQ9N", "importedAddr", "5", "0xaaaa")
         sxAddrTo2 = '32eEcCuGkGjP82BTF3kquiCDjZWmZiyhqe7C6isbv6MJZSKAeWNx5g436QuhGNc6DNYpboDm3yNiqYmTmkg76wYr5JCKgdEUPqLCWaMW'
@@ -127,7 +127,7 @@ class StealthTest(ParticlTestFramework):
         node2 = self.nodes[2]
         connect_nodes_bi(self.nodes, 0, 2)
         
-        # - Test send to locked wallet
+        # Test send to locked wallet
         txnHash = node.sendtoaddress(sxAddrTo2_1, 0.4, '', '', False, 'narration test node2')
         txnHashes.append(txnHash)
         
@@ -160,7 +160,7 @@ class StealthTest(ParticlTestFramework):
         
         
         
-        # start staking
+        # Start staking
         ro = node.reservebalance(False)
         
         assert(self.wait_for_height(node, 1))

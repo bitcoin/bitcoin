@@ -599,20 +599,40 @@ bool CheckBlindOutput(CValidationState &state, const CTxOutCT *p)
         NULL, 0,
         secp256k1_generator_h);
     
+    if (fDebug)
+        LogPrintf("CheckBlindOutput rv, min_value, max_value %d, %s, %s\n",
+            rv, FormatMoney((CAmount)min_value), FormatMoney((CAmount)max_value));
+    
     if (rv != 1)
         return state.DoS(100, false, REJECT_INVALID, "bad-ctout-rangeproof-verify");
+    
+    return true;
+}
+
+bool CheckAnonOutput(CValidationState &state, const CTxOutRingCT *p)
+{
+    if (Params().NetworkID() == "main")
+        return state.DoS(100, false, REJECT_INVALID, "AnonOutput in mainnet");
+    
+    if (p->vData.size() < 33 || p->vData.size() > 33 + 5)
+        return state.DoS(100, false, REJECT_INVALID, "bad-rctout-ephem-size");
+    
+    size_t nRangeProofLen = 5134;
+    if (p->vRangeproof.size() > nRangeProofLen)
+        return state.DoS(100, false, REJECT_INVALID, "bad-rctout-rangeproof-size");
+    
+    uint64_t min_value, max_value;
+    int rv = secp256k1_rangeproof_verify(secp256k1_ctx_blind, &min_value, &max_value,
+        &p->commitment, p->vRangeproof.data(), p->vRangeproof.size(),
+        NULL, 0,
+        secp256k1_generator_h);
     
     if (fDebug)
         LogPrintf("CheckBlindOutput rv, min_value, max_value %d, %s, %s\n",
             rv, FormatMoney((CAmount)min_value), FormatMoney((CAmount)max_value));
     
-    return rv;
-}
-
-bool CheckAnonOutput(CValidationState &state, const CTxOutRingCT *p)
-{
-    
-    return state.DoS(100, false, REJECT_INVALID, "CheckAnonOutput");
+    if (rv != 1)
+        return state.DoS(100, false, REJECT_INVALID, "bad-ctout-rangeproof-verify");
     
     return true;
 }
@@ -5943,7 +5963,6 @@ public:
 
 bool CoinStakeCache::GetCoinStake(const uint256 &blockHash, CTransactionRef &tx)
 {
-    
     for (const auto &i : lData)
     {
         if (blockHash != i.first)
@@ -5965,7 +5984,6 @@ bool CoinStakeCache::GetCoinStake(const uint256 &blockHash, CTransactionRef &tx)
 
 bool CoinStakeCache::InsertCoinStake(const uint256 &blockHash, const CTransactionRef &tx)
 {
-    
     lData.emplace_front(blockHash, tx);
     
     
