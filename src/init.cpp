@@ -17,6 +17,7 @@
 #include "chainparams.h"
 #include "checkpoints.h"
 #include "compat/sanity.h"
+#include "connmgr.h"
 #include "consensus/validation.h"
 #include "dosman.h"
 #include "httpserver.h"
@@ -673,6 +674,8 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     }
     fCheckBlockIndex = GetBoolArg("-checkblockindex", chainparams.DefaultConsistencyChecks());
     fCheckpointsEnabled = GetBoolArg("-checkpoints", DEFAULT_CHECKPOINTS_ENABLED);
+
+    connmgr->HandleCommandLine();
 
     // mempool limits
     int64_t nMempoolSizeMax = GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;

@@ -1059,6 +1059,9 @@ void ThreadSocketHandler()
                     // remove from vNodes
                     vNodes.erase(remove(vNodes.begin(), vNodes.end(), pnode), vNodes.end());
 
+                    // inform connection manager
+                    connmgr->RemovedNode(pnode);
+
                     // release outbound grant (if any)
                     pnode->grantOutbound.Release();
 
@@ -2741,7 +2744,7 @@ bool CAddrDB::Read(CAddrMan &addr, CDataStream &ssPeers)
 unsigned int ReceiveFloodSize() { return 1000 * GetArg("-maxreceivebuffer", DEFAULT_MAXRECEIVEBUFFER); }
 unsigned int SendBufferSize() { return 1000 * GetArg("-maxsendbuffer", DEFAULT_MAXSENDBUFFER); }
 CNode::CNode(SOCKET hSocketIn, const CAddress &addrIn, const std::string &addrNameIn, bool fInboundIn)
-    : ssSend(SER_NETWORK, INIT_PROTO_VERSION), id(CConnMgr::nextNodeId()), addrKnown(5000, 0.001),
+    : ssSend(SER_NETWORK, INIT_PROTO_VERSION), id(connmgr->NextNodeId()), addrKnown(5000, 0.001),
       filterInventoryKnown(50000, 0.000001)
 {
     nServices = 0;

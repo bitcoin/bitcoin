@@ -100,9 +100,6 @@ CCriticalSection cs_vOneShots;
 
 CCriticalSection cs_statMap;
 
-// critical sections from expedited.cpp
-CCriticalSection cs_xpedited;
-
 deque<string> vOneShots;
 std::map<CNetAddr, ConnectionHistory> mapInboundConnectionTracker;
 vector<std::string> vUseDNSSeeds;
@@ -252,8 +249,3 @@ CStatHistory<uint64_t> nBlockValidationTime("blockValidationTime", STAT_OP_MAX |
 CCriticalSection cs_blockvalidationtime;
 
 CThinBlockData thindata; // Singleton class
-
-// Expedited blocks
-std::vector<CNode *> xpeditedBlk; // (256,(CNode*)NULL);    // Who requested expedited blocks from us
-std::vector<CNode *> xpeditedBlkUp; //(256,(CNode*)NULL);  // Who we requested expedited blocks from
-std::vector<CNode *> xpeditedTxn; // (256,(CNode*)NULL);
