@@ -7,10 +7,7 @@
 
 #include "tinyformat.h"
 
-#include <cstdlib>
 #include <cstring>
-#include <errno.h>
-#include <limits>
 
 static const std::string CHARS_ALPHA_NUM = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 

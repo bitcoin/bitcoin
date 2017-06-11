@@ -8,7 +8,6 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <assert.h>
 
 typedef struct {
     int keysize;

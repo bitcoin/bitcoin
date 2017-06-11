@@ -5,13 +5,10 @@
 #include "consensus/validation.h"
 #include "wallet/feebumper.h"
 #include "wallet/wallet.h"
-#include "policy/fees.h"
 #include "policy/policy.h"
 #include "policy/rbf.h"
 #include "validation.h" //for mempool access
-#include "txmempool.h"
 #include "utilmoneystr.h"
-#include "util.h"
 #include "net.h"
 
 // Calculate the size of the transaction assuming all signatures are max size

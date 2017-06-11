@@ -9,14 +9,10 @@
 
 #include "netbase.h"
 
-#include "hash.h"
-#include "sync.h"
-#include "uint256.h"
 #include "random.h"
 #include "util.h"
 #include "utilstrencodings.h"
 
-#include <atomic>
 
 #ifndef WIN32
 #include <fcntl.h>

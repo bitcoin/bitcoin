@@ -6,20 +6,14 @@
 #include "db.h"
 
 #include "addrman.h"
-#include "fs.h"
-#include "hash.h"
-#include "protocol.h"
-#include "util.h"
 #include "utilstrencodings.h"
 
-#include <stdint.h>
 
 #ifndef WIN32
 #include <sys/stat.h>
 #endif
 
 #include <boost/foreach.hpp>
-#include <boost/thread.hpp>
 
 //
 // CDB

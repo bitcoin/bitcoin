@@ -2,7 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "winshutdownmonitor.h"
 
 #if defined(Q_OS_WIN) && QT_VERSION >= 0x050000
 #include "init.h"

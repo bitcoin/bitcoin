@@ -7,24 +7,14 @@
 #endif
 
 #include "consensus/merkle.h"
-#include "primitives/block.h"
-#include "script/script.h"
-#include "addrman.h"
 #include "chain.h"
 #include "coins.h"
-#include "compressor.h"
 #include "net.h"
-#include "protocol.h"
-#include "streams.h"
 #include "undo.h"
-#include "version.h"
 #include "pubkey.h"
 
-#include <stdint.h>
 #include <unistd.h>
 
-#include <algorithm>
-#include <vector>
 
 enum TEST_ID {
     CBLOCK_DESERIALIZE=0,

@@ -5,12 +5,8 @@
 
 #include "script/sign.h"
 
-#include "key.h"
 #include "keystore.h"
 #include "policy/policy.h"
-#include "primitives/transaction.h"
-#include "script/standard.h"
-#include "uint256.h"
 
 #include <boost/foreach.hpp>
 
