@@ -3,37 +3,20 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "wallet/wallet.h"
 
 #include "base58.h"
-#include "checkpoints.h"
-#include "chain.h"
 #include "wallet/coincontrol.h"
-#include "consensus/consensus.h"
 #include "consensus/validation.h"
-#include "fs.h"
-#include "key.h"
-#include "keystore.h"
 #include "validation.h"
 #include "net.h"
 #include "policy/fees.h"
 #include "policy/policy.h"
 #include "policy/rbf.h"
-#include "primitives/block.h"
-#include "primitives/transaction.h"
-#include "script/script.h"
-#include "script/sign.h"
 #include "scheduler.h"
-#include "timedata.h"
-#include "txmempool.h"
-#include "util.h"
-#include "ui_interface.h"
 #include "utilmoneystr.h"
 
-#include <assert.h>
 
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/thread.hpp>
 
 CWallet* pwalletMain = NULL;
 /** Transaction fee set by the user */

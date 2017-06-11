@@ -10,13 +10,9 @@
 #include "util.h"
 
 #include "chainparamsbase.h"
-#include "fs.h"
 #include "random.h"
-#include "serialize.h"
 #include "utilstrencodings.h"
-#include "utiltime.h"
 
-#include <stdarg.h>
 
 #if (defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__))
 #include <pthread.h>
@@ -76,11 +72,8 @@
 #include <malloc.h>
 #endif
 
-#include <boost/algorithm/string/case_conv.hpp> // for to_lower()
-#include <boost/algorithm/string/predicate.hpp> // for startswith() and endswith()
 #include <boost/program_options/detail/config_file.hpp>
 #include <boost/thread.hpp>
-#include <openssl/crypto.h>
 #include <openssl/rand.h>
 #include <openssl/conf.h>
 

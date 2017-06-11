@@ -6,8 +6,6 @@
 #include "policy/policy.h"
 #include "txmempool.h"
 
-#include <list>
-#include <vector>
 
 static void AddTx(const CTransaction& tx, const CAmount& nFee, CTxMemPool& pool)
 {

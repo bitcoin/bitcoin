@@ -7,24 +7,16 @@
 #include "utilstrencodings.h"
 #include "netbase.h"
 #include "net.h"
-#include "util.h"
 #include "crypto/hmac_sha256.h"
 
-#include <vector>
-#include <deque>
-#include <set>
 #include <stdlib.h>
 
-#include <boost/bind.hpp>
-#include <boost/signals2/signal.hpp>
-#include <boost/foreach.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/replace.hpp>
 
 #include <event2/bufferevent.h>
 #include <event2/buffer.h>
-#include <event2/util.h>
 #include <event2/event.h>
 #include <event2/thread.h>
 

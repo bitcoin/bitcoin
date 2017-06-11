@@ -6,14 +6,11 @@
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
 #include "chainparams.h"
-#include "hash.h"
-#include "random.h"
 #include "streams.h"
 #include "txmempool.h"
 #include "validation.h"
 #include "util.h"
 
-#include <unordered_map>
 
 #define MIN_TRANSACTION_BASE_SIZE (::GetSerializeSize(CTransaction(), SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS))
 

@@ -12,11 +12,8 @@
 #include <wincrypt.h>
 #endif
 #include "util.h"             // for LogPrint()
-#include "utilstrencodings.h" // for GetTime()
 
 #include <stdlib.h>
-#include <limits>
-#include <chrono>
 #include <thread>
 
 #ifndef WIN32
@@ -36,7 +33,6 @@
 
 #include <mutex>
 
-#include <openssl/err.h>
 #include <openssl/rand.h>
 
 static void RandFailure()

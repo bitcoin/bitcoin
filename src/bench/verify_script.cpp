@@ -7,7 +7,6 @@
 #if defined(HAVE_CONSENSUS_LIB)
 #include "script/bitcoinconsensus.h"
 #endif
-#include "script/script.h"
 #include "script/sign.h"
 #include "streams.h"
 

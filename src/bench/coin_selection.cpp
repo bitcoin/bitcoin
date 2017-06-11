@@ -6,7 +6,6 @@
 #include "wallet/wallet.h"
 
 #include <boost/foreach.hpp>
-#include <set>
 
 static void addCoin(const CAmount& nValue, const CWallet& wallet, std::vector<COutput>& vCoins)
 {

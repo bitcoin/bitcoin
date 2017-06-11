@@ -8,7 +8,6 @@
 #include <shlobj.h>
 #endif
 
-#include "fs.h"
 
 fs::path GetTempPath() {
     return fs::temp_directory_path();

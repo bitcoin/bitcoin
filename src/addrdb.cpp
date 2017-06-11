@@ -8,12 +8,8 @@
 #include "addrman.h"
 #include "chainparams.h"
 #include "clientversion.h"
-#include "fs.h"
 #include "hash.h"
-#include "random.h"
 #include "streams.h"
-#include "tinyformat.h"
-#include "util.h"
 
 
 CBanDB::CBanDB()

@@ -5,10 +5,8 @@
 
 #include "sigcache.h"
 
-#include "memusage.h"
 #include "pubkey.h"
 #include "random.h"
-#include "uint256.h"
 #include "util.h"
 
 #include "cuckoocache.h"

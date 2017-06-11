@@ -7,7 +7,6 @@
 #include "policy/policy.h"
 #include "wallet/crypter.h"
 
-#include <vector>
 
 // FIXME: Dedup with SetupDummyInputs in test/transaction_tests.cpp.
 //
