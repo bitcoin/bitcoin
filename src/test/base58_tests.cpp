@@ -15,7 +15,6 @@
 #include "utilstrencodings.h"
 #include "test/test_dash.h"
 
-#include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <univalue.h>

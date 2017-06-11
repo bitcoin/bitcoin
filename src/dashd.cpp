@@ -22,7 +22,6 @@
 #include "utilstrencodings.h"
 #include "stacktraces.h"
 
-#include <boost/algorithm/string/predicate.hpp>
 #include <boost/thread.hpp>
 
 #include <stdio.h>
