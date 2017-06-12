@@ -1064,7 +1064,6 @@ public:
     bool operator()(const CNoDestination &dest) const { return false; }
 
     bool operator()(const CKeyID &keyID) {
-        CPubKey pubkey;
         if (pwallet) {
             CScript basescript = GetScriptForDestination(keyID);
             isminetype typ;
