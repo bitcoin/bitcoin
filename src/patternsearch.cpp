@@ -197,7 +197,7 @@ namespace patternsearch
 		boost::this_thread::disable_interruption di;
 		std::vector< std::pair<uint32_t,uint32_t> > results;
 
-        bool aes_ni_supported = GetArg("-optimineraes", true);
+        bool aes_ni_supported = GetArg("-optimineraes", false);
         bool avx2_supported = GetArg("-optimineravx2", false);
         LogPrintf("Optiminer Flags: AES-NI = %b, AVX2 = %b\n", aes_ni_supported, avx2_supported);
 
