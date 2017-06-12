@@ -632,11 +632,11 @@ public:
         
         nPruneAfterHeight = 1000;
 
-        
-        genesis = CreateGenesisBlockTestNet(1496340963, 42191, 0x1f00ffff);
+
+        genesis = CreateGenesisBlockTestNet(1497274200, 106862, 0x1f00ffff);
         consensus.hashGenesisBlock = genesis.GetHash();
-        
-        assert(consensus.hashGenesisBlock == uint256S("0x00009950a0d1dfd3697f8597d8efbd1540ca1cbb130c90f7b8132b8ca235708e"));
+
+        assert(consensus.hashGenesisBlock == uint256S("0x00009b02abc61d41cef7a6cb2c4f17ce880f1bfbc2a4681aef8c94359544b699"));
         assert(genesis.hashMerkleRoot == uint256S("0xd6ac057095dd2e88edd28d77c5ea31ba558b6650c645752e6d8810270e3fa7f5"));
         assert(genesis.hashWitnessMerkleRoot == uint256S("0xd6f2171de24fb9e1b8c9943e3bd69d3a9c71d965340380d51a9370b0e150f3e6"));
         

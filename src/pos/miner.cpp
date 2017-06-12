@@ -269,7 +269,6 @@ void ThreadStakeMiner(CHDWallet *pwallet)
     assert(pwallet);
     while (!fStopMinerProc)
     {
-        
         if (pwallet->IsLocked() || !GetBoolArg("-staking", true))
         {
             fIsStaking = false;
