@@ -299,7 +299,6 @@ static void MutateTxAddOutPubKey(CMutableTransaction& tx, const std::string& str
     if (!pubkey.IsFullyValid())
         throw std::runtime_error("invalid TX output pubkey");
     CScript scriptPubKey = GetScriptForRawPubKey(pubkey);
-    CBitcoinAddress addr(scriptPubKey);
 
     // Extract and validate FLAGS
     bool bSegWit = false;
