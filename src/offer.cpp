@@ -3800,13 +3800,13 @@ UniValue offerfilter(const UniValue& params, bool fHelp) {
 	if (params.size() > 0)
 		strRegexp = params[0].get_str();
 
-	if (params.size() > 1 && params[1].size() > 0)
+	if (params.size() > 1 && !params[1].get_str().empty())
 		vchOffer = vchFromValue(params[1]);
 
-	if (params.size() > 2 && params[2].size() > 0)
+	if (params.size() > 2 && !params[2].get_str().empty())
 		safeSearch = params[2].get_str()=="On"? true: false;
 
-	if (params.size() > 3 && params[3].size() > 0)
+	if (params.size() > 3 && !params[3].get_str().empty())
 		strCategory = params[3].get_str();
 
 	UniValue oRes(UniValue::VARR);
