@@ -63,6 +63,7 @@ std::string HelpMessageOpt(const std::string &option, const std::string &message
            FormatParagraph(message, screenWidth - msgIndent, msgIndent) + std::string("\n\n");
 }
 
+AllowedArgs::AllowedArgs(bool permit_unrecognized) : m_permit_unrecognized(permit_unrecognized) {}
 AllowedArgs &AllowedArgs::addHeader(const std::string &strHeader, bool debug)
 {
     m_helpList.push_back(HelpComponent{strHeader + "\n\n", debug});
@@ -119,7 +120,11 @@ AllowedArgs &AllowedArgs::addArg(const std::string &strArgsDefinition,
 void AllowedArgs::checkArg(const std::string &strArg, const std::string &strValue) const
 {
     if (!m_args.count(strArg))
+    {
+        if (m_permit_unrecognized)
+            return;
         throw std::runtime_error(strprintf(_("unrecognized option '%s'"), strArg));
+    }
 
     if (!m_args.at(strArg)(strValue))
         throw std::runtime_error(strprintf(_("invalid value '%s' for option '%s'"), strValue, strArg));
@@ -683,7 +688,8 @@ static void addAllNodeOptions(AllowedArgs &allowedArgs, HelpMessageMode mode, CT
         addUiOptions(allowedArgs);
 }
 
-BitcoinCli::BitcoinCli()
+// bitcoin-cli does not know about tweaks so we have to silently ignore unknown options
+BitcoinCli::BitcoinCli() : AllowedArgs(true)
 {
     addHelpOptions(*this);
     addChainSelectionOptions(*this);
@@ -704,9 +710,9 @@ BitcoinCli::BitcoinCli()
                                          "(recommended for sensitive information such as passphrases)"));
 }
 
-Bitcoind::Bitcoind(CTweakMap *pTweaks) { addAllNodeOptions(*this, HMM_BITCOIND, pTweaks); }
-BitcoinQt::BitcoinQt(CTweakMap *pTweaks) { addAllNodeOptions(*this, HMM_BITCOIN_QT, pTweaks); }
-BitcoinTx::BitcoinTx()
+Bitcoind::Bitcoind(CTweakMap *pTweaks) : AllowedArgs(false) { addAllNodeOptions(*this, HMM_BITCOIND, pTweaks); }
+BitcoinQt::BitcoinQt(CTweakMap *pTweaks) : AllowedArgs(false) { addAllNodeOptions(*this, HMM_BITCOIN_QT, pTweaks); }
+BitcoinTx::BitcoinTx() : AllowedArgs(false)
 {
     addHelpOptions(*this);
     addChainSelectionOptions(*this);
@@ -718,7 +724,7 @@ BitcoinTx::BitcoinTx()
         .addDebugArg("", optionalBool, "Read hex-encoded bitcoin transaction from stdin.");
 }
 
-ConfigFile::ConfigFile(CTweakMap *pTweaks)
+ConfigFile::ConfigFile(CTweakMap *pTweaks) : AllowedArgs(false)
 {
     // Merges all allowed args from BitcoinCli, Bitcoind, and BitcoinQt.
     // Excludes args from BitcoinTx, because bitcoin-tx does not read
