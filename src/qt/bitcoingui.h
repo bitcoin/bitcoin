@@ -32,8 +32,6 @@ class WalletModel;
 class HelpMessageDialog;
 class ModalOverlay;
 
-class CWallet;
-
 QT_BEGIN_NAMESPACE
 class QAction;
 class QProgressBar;

@@ -15,7 +15,6 @@
 static const int MAX_SEND_POPUP_ENTRIES = 10;
 
 class ClientModel;
-class OptionsModel;
 class PlatformStyle;
 class SendCoinsEntry;
 class SendCoinsRecipient;

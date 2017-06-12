@@ -14,13 +14,10 @@
 
 #include <atomic>
 
-class AddressTableModel;
 class BanTableModel;
 class OptionsModel;
 class PeerTableModel;
-class TransactionTableModel;
 
-class CWallet;
 class CBlockIndex;
 
 QT_BEGIN_NAMESPACE

@@ -26,9 +26,6 @@ namespace RPCServer
     void OnPreCommand(std::function<void (const CRPCCommand&)> slot);
 }
 
-class CBlockIndex;
-class CNetAddr;
-
 /** Wrapper for UniValue::VType, which includes typeAny:
  * Used to denote don't care type. Only used by RPCTypeCheckObj */
 struct UniValueType {
