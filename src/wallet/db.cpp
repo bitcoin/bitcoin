@@ -142,7 +142,7 @@ void CDBEnv::MakeMock()
     fMockDb = true;
 }
 
-CDBEnv::VerifyResult CDBEnv::Verify(const std::string& strFile, recoverFunc_type recoverFunc, std::string& out_backup_filename)
+CDBEnv::VerifyResult CDBEnv::Verify(const std::string& strFile, bool (*recoverFunc)(const std::string& strFile))
 {
     LOCK(cs_db);
     assert(mapFileUseCount.count(strFile) == 0);
@@ -155,11 +155,11 @@ CDBEnv::VerifyResult CDBEnv::Verify(const std::string& strFile, recoverFunc_type
         return RECOVER_FAIL;
 
     // Try to recover:
-    bool fRecovered = (*recoverFunc)(strFile, out_backup_filename);
+    bool fRecovered = (*recoverFunc)(strFile);
     return (fRecovered ? RECOVER_OK : RECOVER_FAIL);
 }
 
-bool CDB::Recover(const std::string& filename, void *callbackDataIn, bool (*recoverKVcallback)(void* callbackData, CDataStream ssKey, CDataStream ssValue), std::string& newFilename)
+bool CDB::Recover(const std::string& filename, void *callbackDataIn, bool (*recoverKVcallback)(void* callbackData, CDataStream ssKey, CDataStream ssValue))
 {
     // Recovery procedure:
     // move wallet file to walletfilename.timestamp.bak
@@ -169,7 +169,7 @@ bool CDB::Recover(const std::string& filename, void *callbackDataIn, bool (*reco
     // Set -rescan so any missing transactions will be
     // found.
     int64_t now = GetTime();
-    newFilename = strprintf("%s.%d.bak", filename, now);
+    std::string newFilename = strprintf("wallet.%d.bak", now);
 
     int result = bitdb.dbenv->dbrename(NULL, filename.c_str(), NULL,
                                        newFilename.c_str(), DB_AUTO_COMMIT);
@@ -259,19 +259,18 @@ bool CDB::VerifyEnvironment(const std::string& walletFile, const fs::path& dataD
     return true;
 }
 
-bool CDB::VerifyDatabaseFile(const std::string& walletFile, const fs::path& dataDir, std::string& warningStr, std::string& errorStr, CDBEnv::recoverFunc_type recoverFunc)
+bool CDB::VerifyDatabaseFile(const std::string& walletFile, const fs::path& dataDir, std::string& warningStr, std::string& errorStr, bool (*recoverFunc)(const std::string& strFile))
 {
     if (fs::exists(dataDir / walletFile))
     {
-        std::string backup_filename;
-        CDBEnv::VerifyResult r = bitdb.Verify(walletFile, recoverFunc, backup_filename);
+        CDBEnv::VerifyResult r = bitdb.Verify(walletFile, recoverFunc);
         if (r == CDBEnv::RECOVER_OK)
         {
             warningStr = strprintf(_("Warning: Wallet file corrupt, data salvaged!"
                                      " Original %s saved as %s in %s; if"
                                      " your balance or transactions are incorrect you should"
                                      " restore from a backup."),
-                                   walletFile, backup_filename, dataDir);
+                                   walletFile, "wallet.{timestamp}.bak", dataDir);
         }
         if (r == CDBEnv::RECOVER_FAIL)
         {
