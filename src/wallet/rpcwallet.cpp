@@ -1721,6 +1721,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 			{
 				string strResponseEnglish = "";
 				string strResponseGUID = "";
+				string strResponseGUID1 = "";
 				strResponse = GetSyscoinTransactionDescription(op, vvchArgs, wtx, "send", strResponseEnglish, strResponseGUID, strResponseGUID1);
 				entry.push_back(Pair("systx", strResponse));
 				entry.push_back(Pair("systype", strResponseEnglish));
@@ -1771,6 +1772,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 				{
 					string strResponseEnglish = "";
 					string strResponseGUID = "";
+					string strResponseGUID1 = "";
 					strResponse = GetSyscoinTransactionDescription(op, vvchArgs, wtx, "recv", strResponseEnglish, strResponseGUID, strResponseGUID1);
 					entry.push_back(Pair("systx", strResponse));
 					entry.push_back(Pair("systype", strResponseEnglish));
