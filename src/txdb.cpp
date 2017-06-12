@@ -31,6 +31,7 @@ static const char DB_REINDEX_FLAG = 'R';
 static const char DB_LAST_BLOCK = 'l';
 
 static const char DB_RCTOUTPUT = 'A';
+static const char DB_RCTOUTPUT_LINK = 'L';
 static const char DB_RCTKEYIMAGE = 'K';
 
 

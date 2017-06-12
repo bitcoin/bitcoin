@@ -2227,7 +2227,7 @@ UniValue deriverangekeys(const JSONRPCRequest &request)
         
         CStoredExtKey *sek = NULL;
         CExtKeyAccount *sea = NULL;
-        uint32_t nChain;
+        uint32_t nChain = 0;
         if (sInKey.length() == 0)
         {
             if (pwallet->idDefaultAccount.IsNull())
@@ -2345,6 +2345,7 @@ UniValue clearwallettransactions(const JSONRPCRequest &request)
     
     int rv;
     size_t nRemoved = 0;
+    size_t nRecordsRemoved = 0;
     
     {
         LOCK2(cs_main, pwallet->cs_wallet);
@@ -2396,6 +2397,31 @@ UniValue clearwallettransactions(const JSONRPCRequest &request)
             nRemoved++;
         };
         
+        if (fRemoveAll)
+        {
+            fFlags = DB_SET_RANGE;
+            ssKey.clear();
+            ssKey << std::string("rtx");
+            while (wdb.ReadKeyAtCursor(pcursor, ssKey, fFlags) == 0)
+            {
+                fFlags = DB_NEXT;
+                
+                ssKey >> strType;
+                if (strType != "rtx")
+                    break;
+                ssKey >> hash;
+                
+                pwallet->UnloadTransaction(hash); // ignore failure
+                
+                if ((rv = pcursor->del(0)) != 0)
+                    throw std::runtime_error("pcursor->del failed.");
+                
+                // TODO: Remove CStoredTransaction
+                
+                nRecordsRemoved++;
+            };
+        };
+        
         pcursor->close();
         if (!wdb.TxnCommit())
         {
@@ -2406,6 +2432,7 @@ UniValue clearwallettransactions(const JSONRPCRequest &request)
     UniValue result(UniValue::VOBJ);
     
     result.push_back(Pair("transactions_removed", (int)nRemoved));
+    result.push_back(Pair("records_removed", (int)nRecordsRemoved));
     
     return result;
 }

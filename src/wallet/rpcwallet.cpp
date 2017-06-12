@@ -1868,7 +1868,7 @@ UniValue listtransactions(const JSONRPCRequest& request)
 
     const CWallet::TxItems &txOrdered = pwalletMain->wtxOrdered;
     
-    size_t nCountIter = 0;
+    int nCountIter = 0;
     // iterate backwards until we have nCount items to return:
     for (CWallet::TxItems::const_reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
     {
@@ -1933,7 +1933,7 @@ UniValue listtransactions(const JSONRPCRequest& request)
         if (nFrom > 0 && ret.size() > 0)
             ret.erase(std::max((size_t)0, ret.size() - nFrom), ret.size());
         
-        if (ret.size() > nCount)
+        if (ret.size() > (size_t)nCount)
             ret.erase(0, ret.size() - nCount);
     };
     

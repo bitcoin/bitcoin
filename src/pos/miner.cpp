@@ -158,6 +158,7 @@ bool ImportOutputs(CBlockTemplate *pblocktemplate, int nHeight)
     int nOutput = 0, nAdded = 0;
     char cLine[512];
     char *pAddress, *pAmount;
+    
     while (fgets(cLine, 512, fp))
     { 
         cLine[511] = '\0'; // safety
@@ -173,10 +174,11 @@ bool ImportOutputs(CBlockTemplate *pblocktemplate, int nHeight)
         if (nOutput <= nMaxOutputsPerTxn * (nHeight-1))
             continue;
         
-        long amount = strtol(pAmount, NULL, 10);
-        if (!MoneyRange(amount))
+        errno = 0;
+        uint64_t amount = strtoull(pAmount, NULL, 10);
+        if (errno || !MoneyRange(amount))
         {
-            LogPrintf("Warning: %s - Skipping invalid amount: %s\n", __func__, pAmount);
+            LogPrintf("Warning: %s - Skipping invalid amount: %s, %s\n", __func__, pAmount, strerror(errno));
             continue;
         };
         

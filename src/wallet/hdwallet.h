@@ -396,7 +396,12 @@ public:
     int AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
         std::vector<CTempRecipient> &vecSend, bool sign, std::string &sError);
     
-    
+    int AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
+        std::vector<CTempRecipient> &vecSend,
+        CExtKeyAccount *sea, CStoredExtKey *pc,
+        bool sign, std::string &sError);
+    int AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
+        std::vector<CTempRecipient> &vecSend, bool sign, std::string &sError);
     
     
     
@@ -404,6 +409,7 @@ public:
     bool LoadToWallet(const uint256 &hash, const CTransactionRecord &rtx);
     
     /** Remove txn from mapwallet and TxSpends */
+    void RemoveFromTxSpends(const uint256 &hash, const CTransactionRef pt);
     int UnloadTransaction(const uint256 &hash);
     
     int GetDefaultConfidentialChain(CHDWalletDB *pwdb, CExtKeyAccount *&sea, CStoredExtKey *&pc);
@@ -522,11 +528,13 @@ public:
     void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlyConfirmed=true, const CCoinControl *coinControl = NULL, bool fIncludeZeroValue=false) const;
     bool SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet, const CCoinControl *coinControl = NULL) const;
     
-    
     void AvailableBlindedCoins(std::vector<COutputR>& vCoins, bool fOnlyConfirmed=true, const CCoinControl *coinControl = NULL, bool fIncludeZeroValue=false) const;
-    bool SelectBlindedCoins(const std::vector<COutputR>& vAvailableCoins, const CAmount& nTargetValue, std::vector<std::pair<MapRecords_t::const_iterator,unsigned int> >& setCoinsRet, CAmount& nValueRet, const CCoinControl *coinControl = NULL) const;
+    bool SelectBlindedCoins(const std::vector<COutputR>& vAvailableCoins, const CAmount& nTargetValue, std::vector<std::pair<MapRecords_t::const_iterator,unsigned int> > &setCoinsRet, CAmount &nValueRet, const CCoinControl *coinControl = NULL) const;
     
-    bool SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int nConfTheirs, uint64_t nMaxAncestors, std::vector<COutputR> vCoins, std::vector<std::pair<MapRecords_t::const_iterator,unsigned int> >& setCoinsRet, CAmount& nValueRet) const;
+    void AvailableAnonCoins(std::vector<COutputR> &vCoins, bool fOnlyConfirmed=true, const CCoinControl *coinControl = NULL, bool fIncludeZeroValue=false) const;
+    bool SelectAnonCoins(const std::vector<COutputR> &vAvailableCoins, const CAmount &nTargetValue, std::vector<std::pair<MapRecords_t::const_iterator,unsigned int> > &setCoinsRet, CAmount &nValueRet, const CCoinControl *coinControl = NULL) const;
+    
+    bool SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int nConfTheirs, uint64_t nMaxAncestors, std::vector<COutputR> vCoins, std::vector<std::pair<MapRecords_t::const_iterator,unsigned int> > &setCoinsRet, CAmount &nValueRet) const;
     
     bool IsSpent(const uint256& hash, unsigned int n) const;
     
