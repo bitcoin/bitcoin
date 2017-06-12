@@ -211,9 +211,7 @@ public:
     uint256 GetBestBlock() const override;
     void SetBestBlock(const uint256 &hashBlock);
     bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) override;
-    CCoinsViewCursor* Cursor() const override {
-        throw std::logic_error("CCoinsViewCache cursor iteration not supported.");
-    }
+    CCoinsViewCursor* Cursor() const override;
 
     /**
      * Check if we have the given utxo already loaded in this cache.
@@ -274,6 +272,8 @@ public:
     //! Check whether all prevouts of the transaction are present in the UTXO set represented by this view
     bool HaveInputs(const CTransaction& tx) const;
 
+    friend class CCoinsModifier;
+
 private:
     CCoinsMap::iterator FetchCoin(const COutPoint &outpoint) const;
 
@@ -281,6 +281,8 @@ private:
      * By making the copy constructor private, we prevent accidentally using it when one intends to create a cache on top of a base cache.
      */
     CCoinsViewCache(const CCoinsViewCache &);
+
+    friend class CCoinsViewCacheCursor;
 };
 
 //! Utility function to add all of a transaction's outputs to a cache.
@@ -291,5 +293,31 @@ void AddCoins(CCoinsViewCache& cache, const CTransaction& tx, int nHeight);
 
 //! Utility function to find any unspent output with a given txid.
 const Coin& AccessByTxid(const CCoinsViewCache& cache, const uint256& txid);
+
+/**
+ * Cursor view of cache. First returns dirty, non-pruned rows in cache, then
+ * returns rows from the underlying base cursor.
+ */
+class CCoinsViewCacheCursor : public CCoinsViewCursor
+{
+public:
+    CCoinsViewCacheCursor(const CCoinsViewCache& cache);
+    void AdvanceToNonPruned();
+    bool GetKey(COutPoint &key) const override;
+    bool GetValue(Coin &coin) const override;
+    unsigned int GetValueSize() const override;
+    bool Valid() const override;
+    void Next() override;
+
+private:
+    const CCoinsViewCache& cache;
+    std::unique_ptr<CCoinsViewCursor> base;
+
+    /**
+     * Current cache entry during the initial scan of the cache, before
+     * resorting to underlying base cursor.
+     */
+    CCoinsMap::iterator it;
+};
 
 #endif // BITCOIN_COINS_H

@@ -34,6 +34,72 @@ size_t CCoinsViewCache::DynamicMemoryUsage() const {
     return memusage::DynamicUsage(cacheCoins) + cachedCoinsUsage;
 }
 
+CCoinsViewCacheCursor::CCoinsViewCacheCursor(const CCoinsViewCache& cache)
+    : CCoinsViewCursor(cache.GetBestBlock()), cache(cache), base(cache.base->Cursor()),
+      it(cache.cacheCoins.begin())
+{
+    AdvanceToNonPruned();
+}
+
+void CCoinsViewCacheCursor::AdvanceToNonPruned()
+{
+    // Skip non-dirty cache entries and dirty but pruned entries.
+    for (; it != cache.cacheCoins.end(); ++it)
+        if (it->second.flags & CCoinsCacheEntry::DIRTY && !it->second.coin.IsSpent())
+            return;
+
+    // Skip base entries overridden by dirty cache entries.
+    COutPoint key;
+    CCoinsMap::iterator match;
+    for (; base->Valid(); base->Next())
+        if (!base->GetKey(key) ||
+            (match = cache.cacheCoins.find(key)) == cache.cacheCoins.end() ||
+            !(match->second.flags & CCoinsCacheEntry::DIRTY))
+            return;
+}
+
+bool CCoinsViewCacheCursor::GetKey(COutPoint &key) const
+{
+    if (it != cache.cacheCoins.end()) {
+        key = it->first;
+        return true;
+    }
+    return base->GetKey(key);
+}
+
+bool CCoinsViewCacheCursor::GetValue(Coin &coin) const
+{
+    if (it != cache.cacheCoins.end()) {
+        coin = it->second.coin;
+        return true;
+    }
+    return base->GetValue(coin);
+}
+
+unsigned int CCoinsViewCacheCursor::GetValueSize() const
+{
+    return it != cache.cacheCoins.end() ? 0 : base->GetValueSize();
+}
+
+bool CCoinsViewCacheCursor::Valid() const
+{
+    return it != cache.cacheCoins.end() || base->Valid();
+}
+
+void CCoinsViewCacheCursor::Next()
+{
+    if (it != cache.cacheCoins.end())
+        ++it;
+    else
+        base->Next();
+    AdvanceToNonPruned();
+}
+
+CCoinsViewCursor* CCoinsViewCache::Cursor() const
+{
+    return new CCoinsViewCacheCursor(*this);
+}
+
 CCoinsMap::iterator CCoinsViewCache::FetchCoin(const COutPoint &outpoint) const {
     CCoinsMap::iterator it = cacheCoins.find(outpoint);
     if (it != cacheCoins.end())
