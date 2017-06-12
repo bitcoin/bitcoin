@@ -323,7 +323,7 @@ UniValue setlabel(const JSONRPCRequest& request)
         // and if we wouldn't do this, the record would stick around forever.
         if (pwallet->mapAddressBook.count(dest)) {
             std::string old_label = pwallet->mapAddressBook[dest].name;
-            if (dest == GetLabelDestination(pwallet, old_label)) {
+            if (old_label != label && dest == GetLabelDestination(pwallet, old_label)) {
                 DeleteLabel(*pwallet, old_label);
             }
         }

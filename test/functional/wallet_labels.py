@@ -152,9 +152,7 @@ class WalletLabelsTest(BitcoinTestFramework):
         change_label(node, labels[2].addresses[0], labels[2], labels[2])
 
         # Check that setlabel can set the label of an address which is
-        # already the receiving address of the label. It would probably make
-        # sense for this to be a no-op, but right now it resets the receiving
-        # address, causing getlabeladdress to return a brand new address.
+        # already the receiving address of the label. This is a no-op.
         change_label(node, labels[2].receive_address, labels[2], labels[2])
 
 class Label:
@@ -210,7 +208,7 @@ def change_label(node, address, old_label, new_label):
     # address of a different label should reset the receiving address of
     # the old label, causing getlabeladdress to return a brand new
     # address.
-    if address == old_label.receive_address:
+    if old_label.name != new_label.name and address == old_label.receive_address:
         new_address = node.getlabeladdress(old_label.name)
         assert_equal(new_address not in old_label.addresses, True)
         assert_equal(new_address not in new_label.addresses, True)
