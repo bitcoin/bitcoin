@@ -13,7 +13,6 @@
 #include <QTimer>
 
 class ClientModel;
-class OptionsModel;
 class PlatformStyle;
 class SendCoinsEntry;
 class SendCoinsRecipient;
