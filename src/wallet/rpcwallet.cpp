@@ -1638,7 +1638,7 @@ static void MaybePushAddress(UniValue & entry, const CTxDestination &dest)
 }
 
 // SYSCOIN
-string GetSyscoinTransactionDescription(const int op, const vector<vector<unsigned char> > &vvchArgs, const CWalletTx &wtx, const string &type, string& responseEnglish, string& responseGUID)
+string GetSyscoinTransactionDescription(const int op, const vector<vector<unsigned char> > &vvchArgs, const CWalletTx &wtx, const string &type, string& responseEnglish, string& responseGUID, string& responseGUID1)
 {
 	responseGUID = stringFromVch(vvchArgs[0]);
 	string strResponse = "";
@@ -1716,6 +1716,7 @@ string GetSyscoinTransactionDescription(const int op, const vector<vector<unsign
 			}
 		}
 		responseGUID = stringFromVch(vvchArgs[1]);
+		responseGUID1 = stringFromVch(vvchArgs[0]);
 		strResponse += " " + stringFromVch(vvchArgs[1]) + " (" + stringFromVch(vvchArgs[0]) + ")";
 		return strResponse;
 		break;
@@ -1861,10 +1862,13 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 			{
 				string strResponseEnglish = "";
 				string strResponseGUID = "";
-				strResponse = GetSyscoinTransactionDescription(op, vvchArgs, wtx, "send", strResponseEnglish, strResponseGUID);
+				string strResponseGUID1 = "";
+				strResponse = GetSyscoinTransactionDescription(op, vvchArgs, wtx, "send", strResponseEnglish, strResponseGUID, strResponseGUID1);
 				entry.push_back(Pair("systx", strResponse));
 				entry.push_back(Pair("systype", strResponseEnglish));
 				entry.push_back(Pair("sysguid", strResponseGUID));
+				if(!strResponseGUID1.empty())
+					entry.push_back(Pair("sysguid1", strResponseGUID1));
 			}
             ret.push_back(entry);
         }
@@ -1909,10 +1913,13 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 				{
 					string strResponseEnglish = "";
 					string strResponseGUID = "";
-					strResponse = GetSyscoinTransactionDescription(op, vvchArgs, wtx, "recv", strResponseEnglish, strResponseGUID);
+					string strResponseGUID1 = "";
+					strResponse = GetSyscoinTransactionDescription(op, vvchArgs, wtx, "recv", strResponseEnglish, strResponseGUID, strResponseGUID1);
 					entry.push_back(Pair("systx", strResponse));
 					entry.push_back(Pair("systype", strResponseEnglish));
 					entry.push_back(Pair("sysguid", strResponseGUID));
+					if(!strResponseGUID1.empty())
+						entry.push_back(Pair("sysguid1", strResponseGUID1));
 				}
                 ret.push_back(entry);
             }
