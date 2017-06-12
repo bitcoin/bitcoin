@@ -13,6 +13,7 @@
 #include "sync.h"
 #include "version.h"
 
+#include <atomic>
 #include <map>
 #include <string>
 #include <vector>
