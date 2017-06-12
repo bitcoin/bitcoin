@@ -65,17 +65,23 @@ public:
     bool Unban(const CNetAddr &ip);
     bool Unban(const CSubNet &ip);
     void GetBanned(banmap_t &banmap);
-    void SetBanned(const banmap_t &banmap);
 
-    //! check is the banlist has unwritten changes
+    //! check if the banlist has unwritten changes
     bool BannedSetIsDirty();
-    //! set the "dirty" flag for the banlist
-    void SetBannedSetDirty(bool dirty = true);
     //! clean unused entries (if bantime has expired)
     void SweepBanned();
 
     /** Increase a node's misbehavior score. */
     void Misbehaving(NodeId nodeid, int howmuch);
+
+    //! save banlist to disk
+    void DumpBanlist();
+    //! load banlist from disk
+    void LoadBanlist();
+
+protected:
+    void SweepBannedInternal() EXCLUSIVE_LOCKS_REQUIRED(cs_setBanned);
+    void GetBannedInternal(banmap_t &banmap) EXCLUSIVE_LOCKS_REQUIRED(cs_setBanned);
 };
 
 // actual definition should be in globals.cpp for ordered construction/destruction
