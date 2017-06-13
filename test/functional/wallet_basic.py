@@ -66,7 +66,7 @@ class WalletTest(BitcoinTestFramework):
         assert_equal(txout['value'], 50)
         txout = self.nodes[0].gettxout(txid=confirmed_txid, n=confirmed_index, include_mempool=True)
         assert_equal(txout['value'], 50)
-        
+
         # Send 21 BTC from 0 to 2 using sendtoaddress call.
         # Locked memory should use at least 32 bytes to sign each transaction
         self.log.info("test getmemoryinfo")
@@ -441,6 +441,15 @@ class WalletTest(BitcoinTestFramework):
 
         # Verify nothing new in wallet
         assert_equal(total_txs, len(self.nodes[0].listtransactions("*",99999)))
+
+        # Test getaddressinfo. Note that these addresses are taken from disablewallet.py
+        assert_raises_rpc_error(-5, "Invalid address", self.nodes[0].getaddressinfo, "3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy")
+        address_info = self.nodes[0].getaddressinfo("mneYUmWYsuk7kySiURxCi3AGxrAqZxLgPZ")
+        assert_equal(address_info['address'], "mneYUmWYsuk7kySiURxCi3AGxrAqZxLgPZ")
+        assert_equal(address_info["scriptPubKey"], "76a9144e3854046c7bd1594ac904e4793b6a45b36dea0988ac")
+        assert not address_info["ismine"]
+        assert not address_info["iswatchonly"]
+        assert not address_info["isscript"]
 
 if __name__ == '__main__':
     WalletTest().main()
