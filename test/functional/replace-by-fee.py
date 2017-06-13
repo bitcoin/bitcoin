@@ -521,7 +521,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
 
     def test_rpc(self):
         us0 = self.nodes[0].listunspent()[0]
-        ins = [us0];
+        ins = [us0]
         outs = {self.nodes[0].getnewaddress() : Decimal(1.0000000)}
         rawtx0 = self.nodes[0].createrawtransaction(ins, outs, 0, True)
         rawtx1 = self.nodes[0].createrawtransaction(ins, outs, 0, False)
