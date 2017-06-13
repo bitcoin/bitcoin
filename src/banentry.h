@@ -7,8 +7,8 @@
 #ifndef BITCOIN_BANENTRY_H
 #define BITCOIN_BANENTRY_H
 
-// NOTE: netbase.h includes serialize.h which is required for serialization macros
-#include "netbase.h" // for CSubNet
+// NOTE: netaddress.h includes serialize.h which is required for serialization macros
+#include "netaddress.h" // for CSubNet
 
 typedef enum BanReason { BanReasonUnknown = 0, BanReasonNodeMisbehaving = 1, BanReasonManuallyAdded = 2 } BanReason;
 

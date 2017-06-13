@@ -16,6 +16,8 @@ miner.cpp
 miner.h
 net.cpp
 net.h
+netaddress.cpp
+netaddress.h
 nodestate.cpp
 nodestate.h
 parallel.cpp

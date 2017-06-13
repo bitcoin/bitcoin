@@ -36,6 +36,7 @@
 
 class CAddrMan;
 class CScheduler;
+class CSubNet;
 class CNode;
 class CNodeRef;
 

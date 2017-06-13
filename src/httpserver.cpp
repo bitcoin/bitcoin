@@ -8,7 +8,7 @@
 #include "chainparamsbase.h"
 #include "compat.h"
 #include "util.h"
-#include "netbase.h"
+#include "netaddress.h"
 #include "rpc/protocol.h" // For HTTP status codes
 #include "sync.h"
 #include "ui_interface.h"
@@ -663,4 +663,3 @@ void UnregisterHTTPHandler(const std::string &prefix, bool exactMatch)
         pathHandlers.erase(i);
     }
 }
-
