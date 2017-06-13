@@ -4,8 +4,11 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the Mandatory Activation of Segregated Witness (BIP148) soft-fork logic."""
 
+from test_framework.mininode import wait_until
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
+
+import re
 
 ## Scenario:
 #
@@ -46,9 +49,12 @@ class BIP148Test(BitcoinTestFramework):
              [],           # non-mining user, restarts with -bip148 on Aug 5th
              [],           # well connected, non BIP148 peer
              ["-bip148"]]  # well connected, BIP148 peer
+        for ea in self.extra_args:
+            ea.append('-whitelist=::/0')
 
-        self.day = -30 # 30 days before BIP168 activation
+        self.day = -30 # 30 days before BIP148 activation
         self.blockrate = [0,1,3,4,3,0,0]
+        self.ancestor_cache = {}
 
     def connect_all(self):
         connect_nodes(self.nodes[6],7)
@@ -62,53 +68,137 @@ class BIP148Test(BitcoinTestFramework):
         self.connect_all()
         self.sync_all()
 
+    def is_block_ancestor(self, rpc, tip, ancestor, ancestor_height):
+        cache_key = tip + ancestor
+        if cache_key in self.ancestor_cache:
+            return self.ancestor_cache[cache_key]
+        blockinfo = rpc.getblock(tip)
+        while blockinfo['height'] > ancestor_height:
+            blockinfo = rpc.getblock(blockinfo['previousblockhash'])
+            parent_cache_key = blockinfo['hash'] + ancestor
+            if parent_cache_key in self.ancestor_cache:
+                rv = self.ancestor_cache[parent_cache_key]
+                self.ancestor_cache[cache_key] = rv
+                return rv
+        rv = (blockinfo['hash'] == ancestor)
+        self.ancestor_cache[cache_key] = rv
+        return rv
+
+    def sync_chaintips(self, nodes=None, timeout=60, extra_check=None):
+        if nodes is None:
+            nodes = list(range(len(self.nodes)))
+        statuses_where_node_has_the_block = ('valid-fork', 'active')
+        def chaintip_check():
+            if extra_check is not None:
+                if not extra_check():
+                    return False
+            all_known_tips = {}
+            chaintips_replies = [(r, self.nodes[r].getchaintips()) for r in nodes]
+            for (r, tips) in chaintips_replies:
+                for tip in tips:
+                    if tip['hash'] in all_known_tips and tip['status'] not in statuses_where_node_has_the_block:
+                        continue
+                    all_known_tips[tip['hash']] = (r, tip)
+
+            # Make sure we know a node we can fetch the block from
+            for tip in all_known_tips.keys():
+                if all_known_tips[tip][1]['status'] not in statuses_where_node_has_the_block:
+                    for r in nodes:
+                        try:
+                            all_known_tips[tip] = (r, self.nodes[r].getblock(tip))
+                            break
+                        except:
+                            pass
+
+            self.log.debug('There are %d tips: %s' % (len(all_known_tips), tuple(sorted(all_known_tips.keys()))))
+            for (r, tips) in chaintips_replies:
+                invalid_blocks = []
+                my_known_tips = set()
+                active = None
+                # Ideally, best should use chainwork, but that's not in getchaintips...
+                best = {'height':0}
+                for tip in tips:
+                    my_known_tips.add(tip['hash'])
+                    if tip['status'] == 'invalid':
+                        invalid_blocks.append(tip)
+                    else:
+                        if tip['height'] > best['height']:
+                            best = tip
+                    if tip['status'] == 'active':
+                        active = tip
+                        if tip['height'] == best['height']:
+                            best = tip
+                if best != active:
+                    self.log.debug("Best potentially-valid block is not active on node %s" % (r,))
+                    return False
+                missing_tips = all_known_tips.keys() - my_known_tips
+                for tip in set(missing_tips):
+                    for inv_tip in invalid_blocks:
+                        if self.is_block_ancestor(self.nodes[all_known_tips[tip][0]], tip, inv_tip['hash'], inv_tip['height']):
+                            # One of our invalid tips is a parent of the missing tip
+                            missing_tips.remove(tip)
+                            break
+                    for known_tip in my_known_tips:
+                        # NOTE: Can't assume this node has the block, in case it's invalid
+                        if self.is_block_ancestor(self.nodes[all_known_tips[known_tip][0]], known_tip, tip, all_known_tips[tip][1]['height']):
+                            # We have a valid tip that descends from the missing tip
+                            missing_tips.remove(tip)
+                            break
+                    if tip in missing_tips:
+                        self.log.debug('Node %s missing tip %s' % (r, tip))
+                        return False
+            self.log.debug('All nodes have all syncable tips')
+            return True
+        assert wait_until(chaintip_check, timeout=timeout)
+
+    def get_peerset(self, rpc):
+        def extract_nodenum(subver):
+            m = re.search(r'\((.*?)[;)]', subver)
+            return m.group(1)
+        return {pi['id']: extract_nodenum(pi['subver']) for pi in rpc.getpeerinfo()}
+
     def mining(self):
         time = self.AUG_1 + (self.day*24*60*60)
         to_mine = self.blockrate[:]
-        groups = [ [self.nodes[i] for i in g] for g in self.sync_groups ]
 
         while sum(to_mine) > 0:
             for peer,blks in enumerate(to_mine):
                 if blks == 0: continue
                 set_node_times(self.nodes, time)
+
+                peerset_before = tuple(self.get_peerset(r) for r in self.nodes)
+                def check_peerset():
+                    peerset_after = tuple(self.get_peerset(r) for r in self.nodes)
+                    if peerset_before != peerset_after:
+                        raise AssertionError("Network break!\nBefore=%s\nAfter =%s" % (peerset_before, peerset_after))
+                    return True
+
                 to_mine[peer] -= 1
                 self.nodes[peer].generate(1)
-                for g in groups:
-                    if peer in g:
-                        self.sync_all( [g] )
+
+                self.sync_chaintips(extra_check=check_peerset)
                 time += 10*60
 
         self.day += 1
 
     def bip148_restart(self, peer):
         self.log.info("Restarting node %d with -bip148" % (peer,))
-        stop_node(self.nodes[peer], peer)
+        self.stop_node(peer)
         time = self.AUG_1 + (self.day*24*60*60)
-        self.nodes[peer] = start_node(peer, self.options.tmpdir, self.extra_args[4] + ["-bip148", "-mocktime=%d" % (time)])
+        self.nodes[peer] = self.start_node(peer, self.options.tmpdir, self.extra_args[4] + ["-bip148", "-mocktime=%d" % (time)])
 
         n = self.nodes[peer]
         blk = n.getblock(n.getbestblockhash())
-        worstblock = None
         while blk["mediantime"] >= self.AUG_1:
             if blk["version"] | 0x20000002 != blk["version"]:
-                worstblock = blk
+                raise AssertionError("Invalid BIP148 block in node running with -bip148")
             blk = n.getblock(blk["previousblockhash"])
-        if worstblock is not None:
-            self.log.info("Invalidating block %d:%x:%s" % (worstblock["height"], worstblock["version"], worstblock["hash"]))
-            n.invalidateblock(worstblock["hash"])
 
         self.log.info("Reconnecting nodes")
         self.connect_all()
-        self.log.info("Removing %d from non-BIP148 sync group" % (peer,))
-        self.sync_groups[0].remove(peer)
-        self.log.info("Adding %d to BIP148 sync group" % (peer,))
-        self.sync_groups[1].add(peer)
 
     def run_test(self):
         cnt = self.nodes[0].getblockcount()
-        self.sync_groups = [set(range(self.num_nodes))]
-        # (if nodes aren't synced initially, the non-segwit blocks may get accidentally orphaned
-        #  activating/locking in segwit...)
 
         # Lock in CSV
         self.nodes[0].generate(500)
@@ -126,8 +216,6 @@ class BIP148Test(BitcoinTestFramework):
             if self.day == 0:
                 if swstatus != "started":
                     raise AssertionError("segwit soft-fork in state %s rather than started at day 0" % (swstatus))
-                self.log.info("Splitting sync groups")
-                self.sync_groups = [set((0,1,2,4,5,6)), set((3,7))]
 
             self.mining()
             tips = set(n.getbestblockhash() for n in self.nodes)
