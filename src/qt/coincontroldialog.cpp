@@ -490,6 +490,8 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         else nBytesInputs += 148;
     }
 
+    bool conservative_estimate = CalculateEstimateType(FeeEstimateMode::UNSET);
+
     // calculation
     if (nQuantity > 0)
     {
@@ -510,7 +512,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
                 nBytes -= 34;
 
         // Fee
-        nPayFee = CWallet::GetMinimumFee(nBytes, coinControl->nConfirmTarget, ::mempool, ::feeEstimator, nullptr /* FeeCalculation */, false /* ignoreGlobalPayTxFee */);
+        nPayFee = CWallet::GetMinimumFee(nBytes, coinControl->nConfirmTarget, ::mempool, ::feeEstimator, nullptr /* FeeCalculation */, false /* ignoreGlobalPayTxFee */, conservative_estimate);
 
         if (nPayAmount > 0)
         {
@@ -585,7 +587,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     if (payTxFee.GetFeePerK() > 0)
         dFeeVary = (double)std::max(CWallet::GetRequiredFee(1000), payTxFee.GetFeePerK()) / 1000;
     else {
-        dFeeVary = (double)std::max(CWallet::GetRequiredFee(1000), ::feeEstimator.estimateSmartFee(coinControl->nConfirmTarget, NULL, ::mempool).GetFeePerK()) / 1000;
+        dFeeVary = (double)std::max(CWallet::GetRequiredFee(1000), ::feeEstimator.estimateSmartFee(coinControl->nConfirmTarget, NULL, ::mempool, conservative_estimate).GetFeePerK()) / 1000;
     }
     QString toolTip4 = tr("Can vary +/- %1 satoshi(s) per input.").arg(dFeeVary);
 
