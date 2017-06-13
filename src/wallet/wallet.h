@@ -960,7 +960,7 @@ public:
      * Estimate the minimum fee considering user set parameters
      * and the required fee
      */
-    static CAmount GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarget, const CTxMemPool& pool, const CBlockPolicyEstimator& estimator, FeeCalculation *feeCalc, bool ignoreGlobalPayTxFee);
+    static CAmount GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarget, const CTxMemPool& pool, const CBlockPolicyEstimator& estimator, FeeCalculation *feeCalc, bool ignoreGlobalPayTxFee, bool conservative_estimate);
     /**
      * Return the minimum required fee taking into account the
      * floating relay fee and user set minimum transaction fee
@@ -1208,4 +1208,14 @@ bool CWallet::DummySignTx(CMutableTransaction &txNew, const ContainerType &coins
     }
     return true;
 }
+
+/* Used to determine type of fee estimation requested */
+enum class FeeEstimateMode {
+    UNSET,        //! Use default settings based on other criteria
+    ECONOMICAL,   //! Force estimateSmartFee to use non-conservative estimates
+    CONSERVATIVE, //! Force estimateSmartFee to use conservative estimates
+ };
+
+bool CalculateEstimateType(FeeEstimateMode mode);
+
 #endif // BITCOIN_WALLET_WALLET_H
