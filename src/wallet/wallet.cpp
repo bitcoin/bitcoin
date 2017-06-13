@@ -2725,7 +2725,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                     currentConfirmationTarget = coinControl->nConfirmTarget;
 
                 // Allow to override the default fee estimate mode over the CoinControl instance
-                bool conservative_estimate = CalculateEstimateType(coinControl ? coinControl->m_fee_mode : FeeEstimateMode::UNSET);
+                bool conservative_estimate = CalculateEstimateType(coinControl ? coinControl->m_fee_mode : FeeEstimateMode::UNSET, rbf);
 
                 CAmount nFeeNeeded = GetMinimumFee(nBytes, currentConfirmationTarget, ::mempool, ::feeEstimator, &feeCalc, false /* ignoreGlobalPayTxFee */, conservative_estimate);
                 if (coinControl && coinControl->fOverrideFeeRate)
@@ -4158,9 +4158,10 @@ bool CMerkleTx::AcceptToMemoryPool(const CAmount& nAbsurdFee, CValidationState& 
     return ::AcceptToMemoryPool(mempool, state, tx, true, NULL, NULL, false, nAbsurdFee);
 }
 
-bool CalculateEstimateType(FeeEstimateMode mode) {
+bool CalculateEstimateType(FeeEstimateMode mode, bool opt_in_rbf) {
     switch (mode) {
     case FeeEstimateMode::UNSET:
+        return !opt_in_rbf; // Allow for lower fees if RBF is an option
     case FeeEstimateMode::CONSERVATIVE:
         return true;
     case FeeEstimateMode::ECONOMICAL:
