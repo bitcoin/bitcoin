@@ -14,7 +14,7 @@ rm -rf crown*
 crownd
 echo "Update finished"
 echo "Waiting for crownd to start up..."
-sleep 5
+sleep 15
 VERSION=$(crown-cli getinfo | jq '.version')
 PROTOCOL_VERSION=$(crown-cli getinfo | jq '.protocolversion')
 WALLET_VERSION=$(crown-cli getinfo | jq '.walletversion')
