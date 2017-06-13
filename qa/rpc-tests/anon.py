@@ -42,20 +42,33 @@ class AnonTest(ParticlTestFramework):
         
         
         ro = nodes[1].extkeyimportmaster("drip fog service village program equip minute dentist series hawk crop sphere olympic lazy garbage segment fox library good alley steak jazz force inmate")
-        
         sxAddrTo1_1 = nodes[1].getnewstealthaddress()
         assert(sxAddrTo1_1 == 'TetbYTGv5LiqyFiUD3a5HHbpSinQ9KiRYDGAMvRzPfz4RnHMbKGAwDr1fjLGJ5Eqg1XDwpeGyqWMiwdK3qM3zKWjzHNpaatdoHVzzA')
+        
+        sxAddrTo0_1 = nodes[0].getnewstealthaddress()
         
         
         txnHash = nodes[0].sendparttoanon(sxAddrTo1_1, 1, '', '', False, 'node0 -> node1 p->a')
         print("txnHash ", txnHash)
         txnHashes.append(txnHash)
         
+        txnHash = nodes[0].sendparttoblind(sxAddrTo0_1, 1000, '', '', False, 'node0 -> node0 p->b')
+        print("txnHash ", txnHash)
+        txnHashes.append(txnHash)
+        
+        txnHash = nodes[0].sendblindtoanon(sxAddrTo1_1, 100, '', '', False, 'node0 -> node1 b->a')
+        print("txnHash ", txnHash)
+        txnHashes.append(txnHash)
+        
+        assert(self.wait_for_mempool(nodes[1], txnHash))
+        
+        ro = nodes[1].listtransactions()
+        print("1 listtransactions ", json.dumps(ro, indent=4, default=self.jsonDecimal))
         
         
         
         assert(False)
-        #print(json.dumps(ro, indent=4))
+        #print(json.dumps(ro, indent=4, default=self.jsonDecimal))
         
 
 if __name__ == '__main__':

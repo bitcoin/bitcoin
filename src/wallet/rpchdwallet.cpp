@@ -2444,12 +2444,11 @@ UniValue filtertransactions(const JSONRPCRequest &request)
             "filtertransactions [offset] [count]\n"
             "List transactions.");
     
+    throw std::runtime_error("TODO");
+    
     CHDWallet *pwallet = GetHDWallet();
     
     UniValue result(UniValue::VARR);
-    
-    throw std::runtime_error("TODO");
-    
     
     return result;
 }
@@ -2946,42 +2945,42 @@ static int AddOutput(uint8_t nType, std::vector<CTempRecipient> &vecSend, const 
     return 0;
 };
 
-UniValue sendparttoblind(const JSONRPCRequest &request)
+static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, OutputTypes typeOut)
 {
-    if (request.fHelp || request.params.size() < 2 || request.params.size() > 6)
-        throw std::runtime_error(
-            "sendparttoblind \"address\" amount ( \"comment\" \"comment-to\" subtractfeefromamount, \"narration\")\n"
-            "\nSend an amount of part in a blinded payment to a given address.\n"
-            + HelpRequiringPassphrase() +
-            "\nArguments:\n"
-            "1. \"address\"     (string, required) The particl address to send to.\n"
-            "2. \"amount\"      (numeric or string, required) The amount in " + CURRENCY_UNIT + " to send. eg 0.1\n"
-            "3. \"comment\"     (string, optional) A comment used to store what the transaction is for. \n"
-            "                            This is not part of the transaction, just kept in your wallet.\n"
-            "4. \"comment_to\"  (string, optional) A comment to store the name of the person or organization \n"
-            "                            to which you're sending the transaction. This is not part of the \n"
-            "                            transaction, just kept in your wallet.\n"
-            "5. subtractfeefromamount  (boolean, optional, default=false) The fee will be deducted from the amount being sent.\n"
-            "                            The recipient will receive less " + CURRENCY_UNIT + " than you enter in the amount field.\n"
-            "6. \"narration\"   (string, optional) Up to 24 characters sent with the transaction.\n"
-            "                            The narration is stored in the blockchain and is sent encrypted when destination is a stealth address and uncrypted otherwise.\n"
-            "\nResult:\n"
-            "\"txid\"           (string) The transaction id.\n"
-            "\nExamples:\n"
-            + HelpExampleCli("sendparttoblind", "\"PbpVcjgYatnkKgveaeqhkeQBFwjqR7jKBR\" 0.1"));
-    
     CHDWallet *pwallet = GetHDWallet();
     EnsureWalletIsUnlocked(pwallet);
     
     CBitcoinAddress address(request.params[0].get_str());
+    
+    if (typeOut == OUTPUT_RINGCT
+        && !address.IsValidStealthAddress())
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Particl stealth address");
+    
     if (!address.IsValid())
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Particl address");
 
     CAmount nAmount = AmountFromValue(request.params[1]);
     if (nAmount <= 0)
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send");
-    if (nAmount > pwallet->GetBalance())
-        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds");
+    
+    switch (typeIn)
+    {
+        case OUTPUT_STANDARD:
+            if (nAmount > pwallet->GetBalance())
+                throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds");
+            break;
+        case OUTPUT_CT:
+            if (nAmount > pwallet->GetBlindBalance())
+                throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient blinded funds");
+            break;
+        case OUTPUT_RINGCT:
+            if (nAmount > pwallet->GetAnonBalance())
+                throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient anon funds");
+            break;
+        default:
+            throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Unknown input type: %d.", typeIn));
+    };
+    
     
     // Wallet comments
     CWalletTx wtx;
@@ -3019,11 +3018,26 @@ UniValue sendparttoblind(const JSONRPCRequest &request)
     CReserveKey reservekey(pwallet);
     std::vector<CTempRecipient> vecSend;
     std::string sError;
-    if (0 != AddOutput(OUTPUT_CT, vecSend, address.Get(), nAmount, fSubtractFeeFromAmount, sNarr, sError))
+    if (0 != AddOutput(typeOut, vecSend, address.Get(), nAmount, fSubtractFeeFromAmount, sNarr, sError))
         throw JSONRPCError(RPC_MISC_ERROR, strprintf("AddOutput failed: %s.", sError));
     
-    if (0 != pwallet->AddStandardInputs(wtx, rtx, vecSend, true, sError))
-        throw JSONRPCError(RPC_WALLET_ERROR, strprintf("AddStandardInputs failed: %s.", sError));
+    switch (typeIn)
+    {
+        case OUTPUT_STANDARD:
+            if (0 != pwallet->AddStandardInputs(wtx, rtx, vecSend, true, sError))
+                throw JSONRPCError(RPC_WALLET_ERROR, strprintf("AddStandardInputs failed: %s.", sError));
+            break;
+        case OUTPUT_CT:
+            if (0 != pwallet->AddBlindedInputs(wtx, rtx, vecSend, true, sError))
+                throw JSONRPCError(RPC_WALLET_ERROR, strprintf("AddBlindedInputs failed: %s.", sError));
+            break;
+        case OUTPUT_RINGCT:
+            if (0 != pwallet->AddAnonInputs(wtx, rtx, vecSend, true, sError))
+                throw JSONRPCError(RPC_WALLET_ERROR, strprintf("AddAnonInputs failed: %s.", sError));
+            break;
+        default:
+            throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Unknown input type: %d.", typeIn));
+    };
     
     CValidationState state;
     if (!pwallet->CommitTransaction(wtx, rtx, reservekey, g_connman.get(), state))
@@ -3045,6 +3059,33 @@ UniValue sendparttoblind(const JSONRPCRequest &request)
     pwallet->PostProcessTempRecipients(vecSend);
     
     return wtx.GetHash().GetHex();
+}
+
+UniValue sendparttoblind(const JSONRPCRequest &request)
+{
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 6)
+        throw std::runtime_error(
+            "sendparttoblind \"address\" amount ( \"comment\" \"comment-to\" subtractfeefromamount, \"narration\")\n"
+            "\nSend an amount of part in a blinded payment to a given address.\n"
+            + HelpRequiringPassphrase() +
+            "\nArguments:\n"
+            "1. \"address\"     (string, required) The particl address to send to.\n"
+            "2. \"amount\"      (numeric or string, required) The amount in " + CURRENCY_UNIT + " to send. eg 0.1\n"
+            "3. \"comment\"     (string, optional) A comment used to store what the transaction is for. \n"
+            "                            This is not part of the transaction, just kept in your wallet.\n"
+            "4. \"comment_to\"  (string, optional) A comment to store the name of the person or organization \n"
+            "                            to which you're sending the transaction. This is not part of the \n"
+            "                            transaction, just kept in your wallet.\n"
+            "5. subtractfeefromamount  (boolean, optional, default=false) The fee will be deducted from the amount being sent.\n"
+            "                            The recipient will receive less " + CURRENCY_UNIT + " than you enter in the amount field.\n"
+            "6. \"narration\"   (string, optional) Up to 24 characters sent with the transaction.\n"
+            "                            The narration is stored in the blockchain and is sent encrypted when destination is a stealth address and uncrypted otherwise.\n"
+            "\nResult:\n"
+            "\"txid\"           (string) The transaction id.\n"
+            "\nExamples:\n"
+            + HelpExampleCli("sendparttoblind", "\"PbpVcjgYatnkKgveaeqhkeQBFwjqR7jKBR\" 0.1"));
+    
+    return SendToInner(request, OUTPUT_STANDARD, OUTPUT_CT);
 }
 
 UniValue sendparttoanon(const JSONRPCRequest &request)
@@ -3071,83 +3112,9 @@ UniValue sendparttoanon(const JSONRPCRequest &request)
             "\nExamples:\n"
             + HelpExampleCli("sendparttoblind", "\"SPGyji8uZFip6H15GUfj6bsutRVLsCyBFL3P7k7T7MUDRaYU8GfwUHpfxonLFAvAwr2RkigyGfTgWMfzLAAP8KMRHq7RE8cwpEEekH\" 0.1"));
     
-    CHDWallet *pwallet = GetHDWallet();
-    EnsureWalletIsUnlocked(pwallet);
-    
     throw std::runtime_error("TODO");
     
-    CBitcoinAddress address(request.params[0].get_str());
-    if (!address.IsValidStealthAddress())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Particl stealth address");
-
-    CAmount nAmount = AmountFromValue(request.params[1]);
-    if (nAmount <= 0)
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send");
-    if (nAmount > pwallet->GetBalance())
-        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds");
-    
-    // Wallet comments
-    CWalletTx wtx;
-    CTransactionRecord rtx;
-    if (request.params.size() > 2 && !request.params[2].isNull() && !request.params[2].get_str().empty())
-    {
-        std::string s = request.params[2].get_str();
-        std::vector<uint8_t> v(s.begin(), s.end());
-        wtx.mapValue["comment"] = s;
-        rtx.mapValue[RTXVT_COMMENT] = v;
-    };
-    if (request.params.size() > 3 && !request.params[3].isNull() && !request.params[3].get_str().empty())
-    {
-        std::string s = request.params[3].get_str();
-        std::vector<uint8_t> v(s.begin(), s.end());
-        wtx.mapValue["to"] = s;
-        rtx.mapValue[RTXVT_TO] = v;
-    };
- 
-    bool fSubtractFeeFromAmount = false;
-    if (request.params.size() > 4)
-        fSubtractFeeFromAmount = request.params[4].get_bool();
-    
-    if (fSubtractFeeFromAmount)
-        throw std::runtime_error("TODO");
-    
-    std::string sNarr;
-    if (request.params.size() > 5)
-    {
-        sNarr = request.params[5].get_str();
-        if (sNarr.length() < 1 || sNarr.length() > 24)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Narration can range from 1 to 24 characters.");
-    };
-    
-    CReserveKey reservekey(pwallet);
-    std::vector<CTempRecipient> vecSend;
-    std::string sError;
-    if (0 != AddOutput(OUTPUT_RINGCT, vecSend, address.Get(), nAmount, fSubtractFeeFromAmount, sNarr, sError))
-        throw JSONRPCError(RPC_MISC_ERROR, strprintf("AddOutput failed: %s.", sError));
-    
-    if (0 != pwallet->AddStandardInputs(wtx, rtx, vecSend, true, sError))
-        throw JSONRPCError(RPC_WALLET_ERROR, strprintf("AddStandardInputs failed: %s.", sError));
-    
-    CValidationState state;
-    if (!pwallet->CommitTransaction(wtx, rtx, reservekey, g_connman.get(), state))
-        throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Transaction commit failed: %s", state.GetRejectReason()));
-    
-    UniValue vErrors(UniValue::VARR);
-    if (state.IsInvalid())
-    {
-        // This can happen if the mempool rejected the transaction.  Report
-        // what happened in the "errors" response.
-        vErrors.push_back(strprintf("Error: The transaction was rejected: %s", FormatStateMessage(state)));
-        
-        UniValue result(UniValue::VOBJ);
-        result.push_back(Pair("txid", wtx.GetHash().GetHex()));
-        result.push_back(Pair("errors", vErrors));
-        return result;
-    }
-    
-    pwallet->PostProcessTempRecipients(vecSend);
-    
-    return wtx.GetHash().GetHex();
+    return SendToInner(request, OUTPUT_STANDARD, OUTPUT_RINGCT);
 }
 
 
@@ -3175,83 +3142,7 @@ UniValue sendblindtopart(const JSONRPCRequest &request)
             "\nExamples:\n"
             + HelpExampleCli("sendblindtopart", "\"PbpVcjgYatnkKgveaeqhkeQBFwjqR7jKBR\" 0.1"));
     
-    CHDWallet *pwallet = GetHDWallet();
-    EnsureWalletIsUnlocked(pwallet);
-    
-    CBitcoinAddress address(request.params[0].get_str());
-    if (!address.IsValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Particl address");
-
-    CAmount nAmount = AmountFromValue(request.params[1]);
-    if (nAmount <= 0)
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send");
-    if (nAmount > pwallet->GetBlindBalance())
-        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds");
-    
-    // Wallet comments
-    CWalletTx wtx;
-    CTransactionRecord rtx;
-    if (request.params.size() > 2 && !request.params[2].isNull() && !request.params[2].get_str().empty())
-    {
-        std::string s = request.params[2].get_str();
-        std::vector<uint8_t> v(s.begin(), s.end());
-        wtx.mapValue["comment"] = s;
-        rtx.mapValue[RTXVT_COMMENT] = v;
-    };
-    if (request.params.size() > 3 && !request.params[3].isNull() && !request.params[3].get_str().empty())
-    {
-        std::string s = request.params[3].get_str();
-        std::vector<uint8_t> v(s.begin(), s.end());
-        wtx.mapValue["to"] = s;
-        rtx.mapValue[RTXVT_TO] = v;
-    };
- 
-    bool fSubtractFeeFromAmount = false;
-    if (request.params.size() > 4)
-        fSubtractFeeFromAmount = request.params[4].get_bool();
-    
-    if (fSubtractFeeFromAmount)
-        throw std::runtime_error("TODO: SubtractFeeFromAmount");
-    
-    std::string sNarr = "";
-    if (request.params.size() > 5)
-    {
-        sNarr = request.params[5].get_str();
-        if (sNarr.length() < 1 || sNarr.length() > 24)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Narration can range from 1 to 24 characters.");
-    };
-    
-    
-    CReserveKey reservekey(pwallet);
-    std::vector<CTempRecipient> vecSend;
-    std::string sError;
-    
-    if (0 != AddOutput(OUTPUT_STANDARD, vecSend, address.Get(), nAmount, fSubtractFeeFromAmount, sNarr, sError))
-        throw JSONRPCError(RPC_MISC_ERROR, strprintf("AddOutput failed: %s.", sError));
-    
-    if (0 != pwallet->AddBlindedInputs(wtx, rtx, vecSend, true, sError))
-        throw JSONRPCError(RPC_WALLET_ERROR, strprintf("AddBlindedInputs failed: %s.", sError));
-    
-    CValidationState state;
-    if (!pwallet->CommitTransaction(wtx, rtx, reservekey, g_connman.get(), state))
-        throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Transaction commit failed: %s", state.GetRejectReason()));
-    
-    UniValue vErrors(UniValue::VARR);
-    if (state.IsInvalid())
-    {
-        // This can happen if the mempool rejected the transaction.  Report
-        // what happened in the "errors" response.
-        vErrors.push_back(strprintf("Error: The transaction was rejected: %s", FormatStateMessage(state)));
-        
-        UniValue result(UniValue::VOBJ);
-        result.push_back(Pair("txid", wtx.GetHash().GetHex()));
-        result.push_back(Pair("errors", vErrors));
-        return result;
-    }
-    
-    pwallet->PostProcessTempRecipients(vecSend);
-    
-    return wtx.GetHash().GetHex();
+    return SendToInner(request, OUTPUT_CT, OUTPUT_STANDARD);
 }
 
 UniValue sendblindtoblind(const JSONRPCRequest &request)
@@ -3278,97 +3169,34 @@ UniValue sendblindtoblind(const JSONRPCRequest &request)
             "\nExamples:\n"
             + HelpExampleCli("sendblindtoblind", "\"PbpVcjgYatnkKgveaeqhkeQBFwjqR7jKBR\" 0.1"));
     
-    CHDWallet *pwallet = GetHDWallet();
-    EnsureWalletIsUnlocked(pwallet);
-    
-    CBitcoinAddress address(request.params[0].get_str());
-    if (!address.IsValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Particl address");
-
-    CAmount nAmount = AmountFromValue(request.params[1]);
-    if (nAmount <= 0)
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send");
-    if (nAmount > pwallet->GetBlindBalance())
-        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds");
-    
-    // Wallet comments
-    CWalletTx wtx;
-    CTransactionRecord rtx;
-    if (request.params.size() > 2 && !request.params[2].isNull() && !request.params[2].get_str().empty())
-    {
-        std::string s = request.params[2].get_str();
-        std::vector<uint8_t> v(s.begin(), s.end());
-        wtx.mapValue["comment"] = s;
-        rtx.mapValue[RTXVT_COMMENT] = v;
-    };
-    if (request.params.size() > 3 && !request.params[3].isNull() && !request.params[3].get_str().empty())
-    {
-        std::string s = request.params[3].get_str();
-        std::vector<uint8_t> v(s.begin(), s.end());
-        wtx.mapValue["to"] = s;
-        rtx.mapValue[RTXVT_TO] = v;
-    };
- 
-    bool fSubtractFeeFromAmount = false;
-    if (request.params.size() > 4)
-        fSubtractFeeFromAmount = request.params[4].get_bool();
-    
-    if (fSubtractFeeFromAmount)
-        throw std::runtime_error("TODO: SubtractFeeFromAmount");
-    
-    std::string sNarr = "";
-    if (request.params.size() > 5)
-    {
-        sNarr = request.params[5].get_str();
-        if (sNarr.length() < 1 || sNarr.length() > 24)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Narration can range from 1 to 24 characters.");
-    };
-    
-    
-    CReserveKey reservekey(pwallet);
-    std::vector<CTempRecipient> vecSend;
-    std::string sError;
-    if (0 != AddOutput(OUTPUT_CT, vecSend, address.Get(), nAmount, fSubtractFeeFromAmount, sNarr, sError))
-        throw JSONRPCError(RPC_MISC_ERROR, strprintf("AddOutput failed: %s.", sError));
-    
-    if (0 != pwallet->AddBlindedInputs(wtx, rtx, vecSend, true, sError))
-        throw JSONRPCError(RPC_WALLET_ERROR, strprintf("AddBlindedInputs failed: %s.", sError));
-    
-    CValidationState state;
-    if (!pwallet->CommitTransaction(wtx, rtx, reservekey, g_connman.get(), state))
-        throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Transaction commit failed: %s", state.GetRejectReason()));
-    
-    UniValue vErrors(UniValue::VARR);
-    if (state.IsInvalid())
-    {
-        // This can happen if the mempool rejected the transaction.  Report
-        // what happened in the "errors" response.
-        vErrors.push_back(strprintf("Error: The transaction was rejected: %s", FormatStateMessage(state)));
-        
-        UniValue result(UniValue::VOBJ);
-        result.push_back(Pair("txid", wtx.GetHash().GetHex()));
-        result.push_back(Pair("errors", vErrors));
-        return result;
-    }
-    
-    pwallet->PostProcessTempRecipients(vecSend);
-    
-    return wtx.GetHash().GetHex();
+    return SendToInner(request, OUTPUT_CT, OUTPUT_CT);
 }
 
 UniValue sendblindtoanon(const JSONRPCRequest &request)
 {
-    if (request.fHelp || request.params.size() > 1)
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 6)
         throw std::runtime_error(
-            "sendblindtoanon [fromHeight]\n");
+            "sendblindtoanon \"address\" amount ( \"comment\" \"comment-to\" subtractfeefromamount, \"narration\")\n"
+            "\nSend an amount of blinded part to anon tokens to a given address.\n"
+            + HelpRequiringPassphrase() +
+            "\nArguments:\n"
+            "1. \"address\"     (string, required) The particl address to send to.\n"
+            "2. \"amount\"      (numeric or string, required) The amount in " + CURRENCY_UNIT + " to send. eg 0.1\n"
+            "3. \"comment\"     (string, optional) A comment used to store what the transaction is for. \n"
+            "                            This is not part of the transaction, just kept in your wallet.\n"
+            "4. \"comment_to\"  (string, optional) A comment to store the name of the person or organization \n"
+            "                            to which you're sending the transaction. This is not part of the \n"
+            "                            transaction, just kept in your wallet.\n"
+            "5. subtractfeefromamount  (boolean, optional, default=false) The fee will be deducted from the amount being sent.\n"
+            "                            The recipient will receive less " + CURRENCY_UNIT + " than you enter in the amount field.\n"
+            "6. \"narration\"   (string, optional) Up to 24 characters sent with the transaction.\n"
+            "                            The narration is stored in the blockchain and is sent encrypted when destination is a stealth address and uncrypted otherwise.\n"
+            "\nResult:\n"
+            "\"txid\"           (string) The transaction id.\n"
+            "\nExamples:\n"
+            + HelpExampleCli("sendblindtoanon", "\"SPGyji8uZFip6H15GUfj6bsutRVLsCyBFL3P7k7T7MUDRaYU8GfwUHpfxonLFAvAwr2RkigyGfTgWMfzLAAP8KMRHq7RE8cwpEEekH\" 0.1"));
     
-    CHDWallet *pwallet = GetHDWallet();
-    EnsureWalletIsUnlocked(pwallet);
-    throw std::runtime_error("TODO");
-    
-    UniValue result(UniValue::VOBJ);
-    
-    return result;
+    return SendToInner(request, OUTPUT_CT, OUTPUT_RINGCT);
 }
 
 
@@ -3378,13 +3206,9 @@ UniValue sendanontopart(const JSONRPCRequest &request)
         throw std::runtime_error(
             "sendanontopart [fromHeight]\n");
     
-    CHDWallet *pwallet = GetHDWallet();
-    EnsureWalletIsUnlocked(pwallet);
     throw std::runtime_error("TODO");
     
-    UniValue result(UniValue::VOBJ);
-    
-    return result;
+    return SendToInner(request, OUTPUT_RINGCT, OUTPUT_STANDARD);
 }
 
 UniValue sendanontoblind(const JSONRPCRequest &request)
@@ -3393,13 +3217,9 @@ UniValue sendanontoblind(const JSONRPCRequest &request)
         throw std::runtime_error(
             "sendanontoblind [fromHeight]\n");
     
-    CHDWallet *pwallet = GetHDWallet();
-    EnsureWalletIsUnlocked(pwallet);
     throw std::runtime_error("TODO");
     
-    UniValue result(UniValue::VOBJ);
-    
-    return result;
+    return SendToInner(request, OUTPUT_RINGCT, OUTPUT_CT);
 }
 
 UniValue sendanontoanon(const JSONRPCRequest &request)
@@ -3408,13 +3228,9 @@ UniValue sendanontoanon(const JSONRPCRequest &request)
         throw std::runtime_error(
             "sendanontoanon [fromHeight]\n");
     
-    CHDWallet *pwallet = GetHDWallet();
-    EnsureWalletIsUnlocked(pwallet);
     throw std::runtime_error("TODO");
     
-    UniValue result(UniValue::VOBJ);
-    
-    return result;
+    return SendToInner(request, OUTPUT_RINGCT, OUTPUT_RINGCT);
 }
 
 
@@ -3460,7 +3276,6 @@ static const CRPCCommand commands[] =
     { "wallet",             "sendanontopart",           &sendanontopart,           false,  {"address","amount","comment","comment_to","subtractfeefromamount", "narration", "ring_size", "num_sigs"} },
     { "wallet",             "sendanontoblind",          &sendanontoblind,          false,  {"address","amount","comment","comment_to","subtractfeefromamount", "narration", "ring_size", "num_sigs"} },
     { "wallet",             "sendanontoanon",           &sendanontoanon,           false,  {"address","amount","comment","comment_to","subtractfeefromamount", "narration", "ring_size", "num_sigs"} },
-    
     
     
 };

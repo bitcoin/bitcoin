@@ -264,6 +264,16 @@ public:
         return NULL;
     };
     
+    virtual secp256k1_pedersen_commitment *GetPCommitment()
+    {
+        return NULL;
+    };
+    
+    virtual std::vector<uint8_t> *GetPRangeproof()
+    {
+        return NULL;
+    };
+    
     std::string ToString() const;
 };
 
@@ -415,6 +425,16 @@ public:
     {
         return &scriptPubKey;
     };
+    
+    secp256k1_pedersen_commitment *GetPCommitment()
+    {
+        return &commitment;
+    };
+    
+    std::vector<uint8_t> *GetPRangeproof()
+    {
+        return &vRangeproof;
+    };
 };
 
 class CTxOutRingCT : public CTxOutBase
@@ -429,6 +449,7 @@ public:
     template<typename Stream>
     void Serialize(Stream &s) const
     {
+        s << pk;
         s << vData;
         s.write((char*)&commitment.data[0], 33);
         s << vRangeproof;
@@ -437,6 +458,7 @@ public:
     template<typename Stream>
     void Unserialize(Stream &s)
     {
+        s >> pk;
         s >> vData;
         s.read((char*)&commitment.data[0], 33);
         s >> vRangeproof;
@@ -448,12 +470,24 @@ public:
         memcpy(&vchAmount[0], commitment.data, 33);
         return true;
     };
+    
+    secp256k1_pedersen_commitment *GetPCommitment()
+    {
+        return &commitment;
+    };
+    
+    std::vector<uint8_t> *GetPRangeproof()
+    {
+        return &vRangeproof;
+    };
 };
 
 class CTxOutData : public CTxOutBase
 {
 public:
     CTxOutData() : CTxOutBase(OUTPUT_DATA) {};
+    CTxOutData(const std::vector<uint8_t> &vData_) : CTxOutBase(OUTPUT_DATA), vData(vData_) {};
+    
     std::vector<uint8_t> vData;
     
     template<typename Stream>

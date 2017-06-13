@@ -379,6 +379,9 @@ public:
     void AddOutputRecordMetaData(CTransactionRecord &rtx, std::vector<CTempRecipient> &vecSend);
     int ExpandTempRecipients(std::vector<CTempRecipient> &vecSend, CStoredExtKey *pc, std::string &sError);
     
+    int CreateOutput(OUTPUT_PTR<CTxOutBase> &txbout, CTempRecipient &r, std::string &sError);
+    int AddCTData(CTxOutBase *txout, CTempRecipient &r, std::string &sError);
+    
     /** Update wallet after successfull transaction */
     int PostProcessTempRecipients(std::vector<CTempRecipient> &vecSend);
     

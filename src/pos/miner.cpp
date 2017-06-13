@@ -99,7 +99,7 @@ bool CheckStake(CBlock *pblock)
     if (!CheckProofOfStake(mi->second, *pblock->vtx[0], pblock->nTime, pblock->nBits, proofHash, hashTarget))
         return error("%s: proof-of-stake checking failed.", __func__);
     
-    //// debug print
+    // debug print
     LogPrintf("CheckStake(): New proof-of-stake block found  \n  hash: %s \nproofhash: %s  \ntarget: %s\n", hashBlock.GetHex(), proofHash.GetHex(), hashTarget.GetHex());
     LogPrintf(pblock->ToString());
     LogPrintf("out %s\n", FormatMoney(pblock->vtx[0]->GetValueOut()));
@@ -109,14 +109,6 @@ bool CheckStake(CBlock *pblock)
         LOCK(cs_main);
         if (pblock->hashPrevBlock != chainActive.Tip()->GetBlockHash()) // hashbestchain
             return error("%s: Generated block is stale.", __func__);
-        
-        /* TODO: necessary?
-        // Track how many getdata requests this block gets
-        {
-            LOCK(wallet.cs_wallet);
-            wallet.mapRequestCount[hashBlock] = 0;
-        }
-        */
     }
     
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);

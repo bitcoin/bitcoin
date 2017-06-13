@@ -600,7 +600,7 @@ bool CheckBlindOutput(CValidationState &state, const CTxOutCT *p)
         secp256k1_generator_h);
     
     if (fDebug)
-        LogPrintf("CheckBlindOutput rv, min_value, max_value %d, %s, %s\n",
+        LogPrintf("%s: rv, min_value, max_value %d, %s, %s\n", __func__,
             rv, FormatMoney((CAmount)min_value), FormatMoney((CAmount)max_value));
     
     if (rv != 1)
@@ -628,7 +628,7 @@ bool CheckAnonOutput(CValidationState &state, const CTxOutRingCT *p)
         secp256k1_generator_h);
     
     if (fDebug)
-        LogPrintf("CheckBlindOutput rv, min_value, max_value %d, %s, %s\n",
+        LogPrintf("%s: rv, min_value, max_value %d, %s, %s\n", __func__,
             rv, FormatMoney((CAmount)min_value), FormatMoney((CAmount)max_value));
     
     if (rv != 1)
@@ -1914,11 +1914,13 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
             if (txprevout->nVersion == OUTPUT_CT)
             {
                 const CTxOutCT *ctout = (CTxOutCT*) txprevout;
-                nCt++;
                 vpCommitsIn.push_back(&ctout->commitment);
+                nCt++;
             } else
             if (txprevout->nVersion == OUTPUT_RINGCT)
             {
+                const CTxOutRingCT *rctout = (CTxOutRingCT*) txprevout;
+                vpCommitsIn.push_back(&rctout->commitment);
                 nRingCT++;
             };
         } else
@@ -1963,7 +1965,7 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
             nFees += nTxFee;
             if (!MoneyRange(nFees))
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-outofrange");
-        }
+        };
     } else
     {
         if (nValueIn < tx.GetValueOut())
@@ -2013,8 +2015,13 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
             {
                 const CTxOutCT *ctout = (CTxOutCT*) txout.get();
                 vpCommitsOut.push_back(&ctout->commitment);
+            } else
+            if (txout->IsType(OUTPUT_RINGCT))
+            {
+                const CTxOutRingCT *rctout = (CTxOutRingCT*) txout.get();
+                vpCommitsOut.push_back(&rctout->commitment);
             };
-        }
+        };
         
         
         int rv = secp256k1_pedersen_verify_tally(secp256k1_ctx_blind,

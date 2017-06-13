@@ -1667,8 +1667,6 @@ void ListRecord(const uint256 &hash, const CTransactionRecord &rtx,
                     LogPrintf("%s: Warning, malformed vPath.", __func__);
                 } else
                 {
-                    //CKeyID sid;
-                    //memcpy(sid.begin(), &r.vPath[1], 20);
                     uint32_t sidx;
                     memcpy(&sidx, &r.vPath[1], 4);
                     CStealthAddress sx;
