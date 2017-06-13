@@ -425,6 +425,14 @@ Source code organization
 
   - *Rationale*: Shorter and simpler header files are easier to read, and reduce compile time
 
+- Every `.cpp` and `.h` file should `#include` every header file it directly uses classes, functions or other
+  definitions from, even if those headers are already included indirectly through other headers. One exception
+  is that a `.cpp` file does not need to re-include the includes already included in its corresponding `.h` file.
+
+  - *Rationale*: Excluding headers because they are already indirectly included results in compilation
+    failures when those indirect dependencies change. Furthermore, it obscures what the real code
+    dependencies are.
+
 - Don't import anything into the global namespace (`using namespace ...`). Use
   fully specified types such as `std::string`.
 
