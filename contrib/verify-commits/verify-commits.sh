@@ -17,6 +17,12 @@ HAVE_FAILED=false
 HAVE_GNU_SHA512=1
 [ ! -x "$(which sha512sum)" ] && HAVE_GNU_SHA512=0
 
+GPG=$(git config gpg.program)
+if [ x"$GPG" = "x" ]; then
+	GPG=gpg
+fi
+export GPG
+
 if [ x"$1" = "x" ]; then
 	CURRENT_COMMIT="HEAD"
 else
