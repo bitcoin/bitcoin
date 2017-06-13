@@ -652,7 +652,8 @@ void SendCoinsDialog::updateSmartFeeLabel()
 
     int nBlocksToConfirm = ui->sliderSmartFee->maximum() - ui->sliderSmartFee->value() + 2;
     FeeCalculation feeCalc;
-    CFeeRate feeRate = ::feeEstimator.estimateSmartFee(nBlocksToConfirm, &feeCalc, ::mempool);
+    bool conservative_estimate = CalculateEstimateType(FeeEstimateMode::UNSET);
+    CFeeRate feeRate = ::feeEstimator.estimateSmartFee(nBlocksToConfirm, &feeCalc, ::mempool, conservative_estimate);
     if (feeRate <= CFeeRate(0)) // not enough data => minfee
     {
         ui->labelSmartFee->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(),
