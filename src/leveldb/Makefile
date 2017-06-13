@@ -44,6 +44,7 @@ TESTS = \
 	util/cache_test \
 	util/coding_test \
 	util/crc32c_test \
+	util/env_posix_test \
 	util/env_test \
 	util/hash_test
 
@@ -121,7 +122,7 @@ SHARED_MEMENVLIB = $(SHARED_OUTDIR)/libmemenv.a
 else
 # Update db.h if you change these.
 SHARED_VERSION_MAJOR = 1
-SHARED_VERSION_MINOR = 19
+SHARED_VERSION_MINOR = 20
 SHARED_LIB1 = libleveldb.$(PLATFORM_SHARED_EXT)
 SHARED_LIB2 = $(SHARED_LIB1).$(SHARED_VERSION_MAJOR)
 SHARED_LIB3 = $(SHARED_LIB1).$(SHARED_VERSION_MAJOR).$(SHARED_VERSION_MINOR)
@@ -337,6 +338,9 @@ $(STATIC_OUTDIR)/db_test:db/db_test.cc $(STATIC_LIBOBJECTS) $(TESTHARNESS)
 $(STATIC_OUTDIR)/dbformat_test:db/dbformat_test.cc $(STATIC_LIBOBJECTS) $(TESTHARNESS)
 	$(CXX) $(LDFLAGS) $(CXXFLAGS) db/dbformat_test.cc $(STATIC_LIBOBJECTS) $(TESTHARNESS) -o $@ $(LIBS)
 
+$(STATIC_OUTDIR)/env_posix_test:util/env_posix_test.cc $(STATIC_LIBOBJECTS) $(TESTHARNESS)
+	$(CXX) $(LDFLAGS) $(CXXFLAGS) util/env_posix_test.cc $(STATIC_LIBOBJECTS) $(TESTHARNESS) -o $@ $(LIBS)
+
 $(STATIC_OUTDIR)/env_test:util/env_test.cc $(STATIC_LIBOBJECTS) $(TESTHARNESS)
 	$(CXX) $(LDFLAGS) $(CXXFLAGS) util/env_test.cc $(STATIC_LIBOBJECTS) $(TESTHARNESS) -o $@ $(LIBS)
 
@@ -412,3 +416,9 @@ $(SHARED_OUTDIR)/%.o: %.cc
 
 $(SHARED_OUTDIR)/%.o: %.c
 	$(CC) $(CFLAGS) $(PLATFORM_SHARED_CFLAGS) -c $< -o $@
+
+$(STATIC_OUTDIR)/port/port_posix_sse.o: port/port_posix_sse.cc
+	$(CXX) $(CXXFLAGS) $(PLATFORM_SSEFLAGS) -c $< -o $@
+
+$(SHARED_OUTDIR)/port/port_posix_sse.o: port/port_posix_sse.cc
+	$(CXX) $(CXXFLAGS) $(PLATFORM_SHARED_CFLAGS) $(PLATFORM_SSEFLAGS) -c $< -o $@
