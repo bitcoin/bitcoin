@@ -38,7 +38,6 @@ protected:
     virtual void BlockDisconnected(const std::shared_ptr<const CBlock> &block) {}
     virtual void SetBestChain(const CBlockLocator &locator) {}
     virtual void Inventory(const uint256 &hash) {}
-    virtual void ResendWalletTransactions(int64_t nBestBlockTime, CConnman* connman) {}
     virtual void BlockChecked(const CBlock&, const CValidationState&) {}
     virtual void GetScriptForMining(std::shared_ptr<CReserveScript>&) {};
     virtual void NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& block) {};
