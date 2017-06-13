@@ -2724,7 +2724,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                 if (coinControl && coinControl->nConfirmTarget > 0)
                     currentConfirmationTarget = coinControl->nConfirmTarget;
 
-                CAmount nFeeNeeded = GetMinimumFee(nBytes, currentConfirmationTarget, ::mempool, ::feeEstimator, &feeCalc);
+                CAmount nFeeNeeded = GetMinimumFee(nBytes, currentConfirmationTarget, ::mempool, ::feeEstimator, &feeCalc, false /* ignoreGlobalPayTxFee */);
                 if (coinControl && coinControl->fOverrideFeeRate)
                     nFeeNeeded = coinControl->nFeeRate.GetFee(nBytes);
 
