@@ -6,7 +6,7 @@ Specification
 
 There is a draft specification currently located at
 
-https://github.com/BitcoinUnlimited/BUIP/blob/master/BUIP-UAHF/buip-uahf-technical-spec.md
+https://github.com/BitcoinUnlimited/BUIP/blob/master/BUIP-HF/buip-hf-technical-spec.md
 
 This is still work in progress - please check the `BUIP` repo for active
 PRs on the spec before you implement something.
