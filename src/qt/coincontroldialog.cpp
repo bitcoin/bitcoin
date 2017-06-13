@@ -550,7 +550,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
             txDummy.vin.push_back(CTxIn());
     }
 
-    bool conservative_estimate = CalculateEstimateType(FeeEstimateMode::UNSET);
+    bool conservative_estimate = CalculateEstimateType(FeeEstimateMode::UNSET, coinControl->signalRbf);
 
     // calculation
     if (nQuantity > 0)
