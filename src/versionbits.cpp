@@ -18,6 +18,10 @@ const struct BIP9DeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION
     {
         /*.name =*/ "segwit",
         /*.gbt_force =*/ true,
+    },
+    {
+        /*.name =*/ "segwit2x",
+        /*.gbt_force =*/ true,
     }
 };
 
@@ -148,7 +152,14 @@ protected:
     int64_t BeginTime(const Consensus::Params& params) const { return params.vDeployments[id].nStartTime; }
     int64_t EndTime(const Consensus::Params& params) const { return params.vDeployments[id].nTimeout; }
     int Period(const Consensus::Params& params) const { return params.nMinerConfirmationWindow; }
-    int Threshold(const Consensus::Params& params) const { return params.nRuleChangeActivationThreshold; }
+    int Threshold(const Consensus::Params& params) const {
+        if (params.nRuleChangeActivationThreshold == 1916 && params.nMinerConfirmationWindow == 2016 &&
+            params.vDeployments[id].bit == params.vDeployments[Consensus::DEPLOYMENT_SEGWIT2X].bit &&
+            params.vDeployments[id].nStartTime == params.vDeployments[Consensus::DEPLOYMENT_SEGWIT2X].nStartTime) {
+            return 1612; // 80% threshold for SEGWIT2X only
+        }
+        return params.nRuleChangeActivationThreshold;
+    }
 
     bool Condition(const CBlockIndex* pindex, const Consensus::Params& params) const
     {
