@@ -165,7 +165,7 @@ CFeeBumper::CFeeBumper(const CWallet *pWallet, const uint256 txidIn, int newConf
         nNewFee = totalFee;
         nNewFeeRate = CFeeRate(totalFee, maxNewTxSize);
     } else {
-        bool conservative_estimate = CalculateEstimateType(FeeEstimateMode::UNSET);
+        bool conservative_estimate = CalculateEstimateType(FeeEstimateMode::UNSET, newTxReplaceable);
         nNewFee = CWallet::GetMinimumFee(maxNewTxSize, newConfirmTarget, mempool, ::feeEstimator, nullptr /* FeeCalculation */, ignoreGlobalPayTxFee, conservative_estimate);
         nNewFeeRate = CFeeRate(nNewFee, maxNewTxSize);
 
