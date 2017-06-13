@@ -1216,6 +1216,6 @@ enum class FeeEstimateMode {
     CONSERVATIVE, //! Force estimateSmartFee to use conservative estimates
  };
 
-bool CalculateEstimateType(FeeEstimateMode mode);
+bool CalculateEstimateType(FeeEstimateMode mode, bool opt_in_rbf);
 
 #endif // BITCOIN_WALLET_WALLET_H
