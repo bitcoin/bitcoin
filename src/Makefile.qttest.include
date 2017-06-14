@@ -11,25 +11,25 @@ TEST_QT_MOC_CPP = qt/test/moc_uritests.cpp
 TEST_QT_H = uritests.h
 
 
-qt_test_ppcoin_qt_CPPFLAGS = $(AM_CPPFLAGS) $(QT_INCLUDES) $(QT_TEST_INCLUDES)
+qt_test_test_ppcoin_qt_CPPFLAGS = $(AM_CPPFLAGS) $(QT_INCLUDES) $(QT_TEST_INCLUDES)
 
-qt_test_ppcoin_qt_SOURCES = \
+qt_test_test_ppcoin_qt_SOURCES = \
   qt/test/test_main.cpp \
   qt/test/uritests.cpp \
   $(TEST_QT_H)
 
-nodist_qt_test_ppcoin_qt_SOURCES = $(TEST_QT_MOC_CPP)
+nodist_qt_test_test_ppcoin_qt_SOURCES = $(TEST_QT_MOC_CPP)
 
-qt_test_ppcoin_qt_LDADD = $(LIBPPCOINQT) $(LIBPPCOIN_SERVER) 
+qt_test_test_ppcoin_qt_LDADD = $(LIBPPCOINQT) $(LIBPPCOIN_SERVER) 
 if ENABLE_WALLET
-qt_test_ppcoin_qt_LDADD += $(LIBPPCOIN_WALLET) 
+qt_test_test_ppcoin_qt_LDADD += $(LIBPPCOIN_WALLET) 
 endif
-qt_test_ppcoin_qt_LDADD += $(LIBPPCOIN_CLI) $(LIBPPCOIN_COMMON) $(LIBLEVELDB) \
+qt_test_test_ppcoin_qt_LDADD += $(LIBPPCOIN_CLI) $(LIBPPCOIN_COMMON) $(LIBLEVELDB) \
   $(LIBMEMENV) $(BOOST_LIBS) $(QT_LIBS) $(QT_DBUS_LIBS) $(QT_TEST_LIBS) \
   $(QR_LIBS) $(BDB_LIBS)
 
-qt_test_ppcoin_qt_CXXFLAGS = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
-qt_test_ppcoin_qt_LDFLAGS = $(AM_LDFLAGS)
+qt_test_test_ppcoin_qt_CXXFLAGS = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
+qt_test_test_ppcoin_qt_LDFLAGS = $(AM_LDFLAGS)
 
 CLEAN_PPCOIN_QT_TEST = $(TEST_QT_MOC_CPP) qt/test/*.gcda qt/test/*.gcno
 
