@@ -1762,8 +1762,6 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     fReindex = gArgs.GetBoolArg("-reindex", false);
     bool fReindexChainState = gArgs.GetBoolArg("-reindex-chainstate", false);
 
-    fs::create_directories(GetDataDir() / "blocks");
-
     // cache size calculations
     int64_t nTotalCache = (gArgs.GetArg("-dbcache", nDefaultDbCache) << 20);
     nTotalCache = std::max(nTotalCache, nMinDbCache << 20); // total cache cannot be less than nMinDbCache
