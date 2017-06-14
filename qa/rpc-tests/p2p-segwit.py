@@ -203,7 +203,7 @@ class SegWitTest(BitcoinTestFramework):
         connect_nodes(self.nodes[0], 1)
 
         # Disable segwit's bip9 parameter to simulate upgrading after activation.
-        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug", "-whitelist=127.0.0.1", "-bip9params=segwit:0:0"]))
+        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug", "-whitelist=127.0.0.1", "-bip9params=segwit:0:0", "-bip9params=segwit2x:0:0"]))
         connect_nodes(self.nodes[0], 2)
 
     ''' Helpers '''
