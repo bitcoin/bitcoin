@@ -124,6 +124,7 @@ BASE_SCRIPTS= [
     'p2p-compactblocks.py',
     'sporks.py',
     'p2p-fingerprint.py',
+    'wallet-encryption.py',
 ]
 
 EXTENDED_SCRIPTS = [
