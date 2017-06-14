@@ -229,7 +229,7 @@ bool BlockAssembler::TestPackage(uint64_t packageSize, int64_t packageSigOpsCost
     // TODO: switch to weight-based accounting for packages instead of vsize-based accounting.
     if (nBlockWeight + WITNESS_SCALE_FACTOR * packageSize >= nBlockMaxWeight)
         return false;
-    if (nBlockSigOpsCost + packageSigOpsCost >= MAX_BLOCK_SIGOPS_COST)
+    if (nBlockSigOpsCost + packageSigOpsCost >= MaxBlockSigOpsCost(nHeight, fIncludeWitness))
         return false;
     return true;
 }
@@ -255,6 +255,59 @@ bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries& packa
             nPotentialBlockSize += nTxSize;
         }
     }
+    return true;
+}
+
+bool BlockAssembler::TestForBlock(CTxMemPool::txiter iter)
+{
+    if (nBlockWeight + iter->GetTxWeight() >= nBlockMaxWeight) {
+        // If the block is so close to full that no more txs will fit
+        // or if we've tried more than 50 times to fill remaining space
+        // then flag that the block is finished
+        if (nBlockWeight >  nBlockMaxWeight - 400 || lastFewTxs > 50) {
+             blockFinished = true;
+             return false;
+        }
+        // Once we're within 4000 weight of a full block, only look at 50 more txs
+        // to try to fill the remaining space.
+        if (nBlockWeight > nBlockMaxWeight - 4000) {
+            lastFewTxs++;
+        }
+        return false;
+    }
+
+    if (fNeedSizeAccounting) {
+        if (nBlockSize + ::GetSerializeSize(iter->GetTx(), SER_NETWORK, PROTOCOL_VERSION) >= nBlockMaxSize) {
+            if (nBlockSize >  nBlockMaxSize - 100 || lastFewTxs > 50) {
+                 blockFinished = true;
+                 return false;
+            }
+            if (nBlockSize > nBlockMaxSize - 1000) {
+                lastFewTxs++;
+            }
+            return false;
+        }
+    }
+
+    uint64_t sigOpMax = MaxBlockSigOpsCost(nHeight, fIncludeWitness);
+    if (nBlockSigOpsCost + iter->GetSigOpCost() >= sigOpMax) {
+        // If the block has room for no more sig ops then
+        // flag that the block is finished
+        if (nBlockSigOpsCost > sigOpMax - 8) {
+            blockFinished = true;
+            return false;
+        }
+        // Otherwise attempt to find another tx with fewer sigops
+        // to put in the block.
+        return false;
+    }
+
+    // Must check that lock times are still valid
+    // This can be removed once MTP is always enforced
+    // as long as reorgs keep the mempool consistent.
+    if (!IsFinalTx(iter->GetTx(), nHeight, nLockTimeCutoff))
+        return false;
+
     return true;
 }
 
