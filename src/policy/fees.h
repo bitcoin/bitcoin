@@ -97,6 +97,8 @@ enum class FeeEstimateMode {
     CONSERVATIVE, //! Force estimateSmartFee to use conservative estimates
 };
 
+bool FeeModeFromString(const std::string& mode_string, FeeEstimateMode& fee_estimate_mode);
+
 /* Used to return detailed information about a feerate bucket */
 struct EstimatorBucket
 {
