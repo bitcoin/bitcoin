@@ -1107,12 +1107,11 @@ void static InvalidChainFound(CBlockIndex* pindexNew)
     CheckForkWarningConditions();
 }
 
-void static InvalidBlockFound(CBlockIndex *pindex, const CValidationState &state) {
+void static InvalidBlockFound(CBlockIndex * const pindex, const CValidationState &state) {
     if (!state.CorruptionPossible()) {
-        pindex->nStatus |= BLOCK_FAILED_VALID;
-        setDirtyBlockIndex.insert(pindex);
-        setBlockIndexCandidates.erase(pindex);
-        InvalidChainFound(pindex);
+        CValidationState dummy_state;  // Output from InvalidateBlock
+        bool success = InvalidateBlock(dummy_state, Params(), pindex);
+        assert(success);
     }
 }
 
@@ -2396,38 +2395,57 @@ bool InvalidateBlock(CValidationState& state, const CChainParams& chainparams, C
     setDirtyBlockIndex.insert(pindex);
     setBlockIndexCandidates.erase(pindex);
 
-    DisconnectedBlockTransactions disconnectpool;
-    while (chainActive.Contains(pindex)) {
-        CBlockIndex *pindexWalk = chainActive.Tip();
-        pindexWalk->nStatus |= BLOCK_FAILED_CHILD;
-        setDirtyBlockIndex.insert(pindexWalk);
-        setBlockIndexCandidates.erase(pindexWalk);
-        // ActivateBestChain considers blocks already in chainActive
-        // unconditionally valid already, so force disconnect away from it.
-        if (!DisconnectTip(state, chainparams, &disconnectpool)) {
-            // It's probably hopeless to try to make the mempool consistent
-            // here if DisconnectTip failed, but we can try.
-            UpdateMempoolForReorg(disconnectpool, false);
-            return false;
+    const bool need_reorg = chainActive.Contains(pindex);
+    bool need_new_best_header = (pindex == pindexBestHeader);
+
+    if (need_reorg) {
+        need_new_best_header |= (chainActive.Tip() == pindexBestHeader);
+        DisconnectedBlockTransactions disconnectpool;
+        while (chainActive.Contains(pindex)) {
+            CBlockIndex *pindexWalk = chainActive.Tip();
+            pindexWalk->nStatus |= BLOCK_FAILED_CHILD;
+            setDirtyBlockIndex.insert(pindexWalk);
+            setBlockIndexCandidates.erase(pindexWalk);
+            // ActivateBestChain considers blocks already in chainActive
+            // unconditionally valid already, so force disconnect away from it.
+            if (!DisconnectTip(state, chainparams, &disconnectpool)) {
+                // It's probably hopeless to try to make the mempool consistent
+                // here if DisconnectTip failed, but we can try.
+                UpdateMempoolForReorg(disconnectpool, false);
+                return false;
+            }
         }
+
+        // DisconnectTip will add transactions to disconnectpool; try to add these
+        // back to the mempool.
+        UpdateMempoolForReorg(disconnectpool, true);
     }
 
-    // DisconnectTip will add transactions to disconnectpool; try to add these
-    // back to the mempool.
-    UpdateMempoolForReorg(disconnectpool, true);
-
-    // The resulting new best tip may not be in setBlockIndexCandidates anymore, so
-    // add it again.
-    BlockMap::iterator it = mapBlockIndex.begin();
-    while (it != mapBlockIndex.end()) {
-        if (it->second->IsValid(BLOCK_VALID_TRANSACTIONS) && it->second->nChainTx && !setBlockIndexCandidates.value_comp()(it->second, chainActive.Tip())) {
-            setBlockIndexCandidates.insert(it->second);
+    if (need_reorg || need_new_best_header) {
+        CBlockIndex *new_best_header = chainActive.Tip();
+        // The resulting new best tip may not be in setBlockIndexCandidates anymore, so
+        // add it again.
+        BlockMap::iterator it = mapBlockIndex.begin();
+        while (it != mapBlockIndex.end()) {
+            if (it->second->IsValid(BLOCK_VALID_TRANSACTIONS) && it->second->nChainTx && !setBlockIndexCandidates.value_comp()(it->second, chainActive.Tip())) {
+                setBlockIndexCandidates.insert(it->second);
+            }
+            if (it->second->IsValid(BLOCK_VALID_TREE) && CBlockIndexWorkComparator()(pindexBestHeader, it->second)) {
+                new_best_header = it->second;
+            }
+            it++;
         }
-        it++;
+        pindexBestHeader = new_best_header;
     }
 
     InvalidChainFound(pindex);
-    uiInterface.NotifyBlockTip(IsInitialBlockDownload(), pindex->pprev);
+
+    if (need_reorg) {
+        uiInterface.NotifyBlockTip(IsInitialBlockDownload(), pindex->pprev);
+
+        ActivateBestChain(state, Params());
+    }
+
     return true;
 }
 
@@ -2926,7 +2944,7 @@ static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state
             return state.DoS(10, error("%s: prev block not found", __func__), 0, "prev-blk-not-found");
         pindexPrev = (*mi).second;
         if (pindexPrev->nStatus & BLOCK_FAILED_MASK)
-            return state.DoS(100, error("%s: prev block invalid", __func__), REJECT_INVALID, "bad-prevblk");
+            return state.DoS(0, error("%s: prev block invalid", __func__), REJECT_INVALID, "bad-prevblk");
 
         assert(pindexPrev);
         if (fCheckpointsEnabled && !CheckIndexAgainstCheckpoint(pindexPrev, state, chainparams, hash))
@@ -3009,8 +3027,8 @@ static bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidation
     if (!CheckBlock(block, state, chainparams.GetConsensus()) ||
         !ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindex->pprev)) {
         if (state.IsInvalid() && !state.CorruptionPossible()) {
-            pindex->nStatus |= BLOCK_FAILED_VALID;
-            setDirtyBlockIndex.insert(pindex);
+            CValidationState dummy_state;  // Output from InvalidateBlock
+            InvalidateBlock(dummy_state, chainparams, pindex);
         }
         return error("%s: %s", __func__, FormatStateMessage(state));
     }

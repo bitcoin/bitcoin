@@ -357,6 +357,11 @@ public:
     //! Efficiently find an ancestor of this block.
     CBlockIndex* GetAncestor(int height);
     const CBlockIndex* GetAncestor(int height) const;
+
+    /** (Somewhat) efficiently check whether a block is present in this chain. */
+    const bool Contains(const CBlockIndex * const needle) const {
+        return (GetAncestor(needle->nHeight) == needle);
+    }
 };
 
 arith_uint256 GetBlockProof(const CBlockIndex& block);

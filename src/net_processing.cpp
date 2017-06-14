@@ -220,6 +220,16 @@ struct CNodeState {
         fWantsCmpctWitness = false;
         fSupportsDesiredCmpctVersion = false;
     }
+
+    uint256 CurrentBlockHash() const {
+        if (!hashLastUnknownBlock.IsNull()) {
+            return hashLastUnknownBlock;
+        }
+        if (pindexBestKnownBlock) {
+            return pindexBestKnownBlock->GetBlockHash();
+        }
+        return uint256();
+    }
 };
 
 /** Map maintaining per-node state. Requires cs_main. */
@@ -1188,6 +1198,32 @@ inline void static SendBlockTransactions(const CBlock& block, const BlockTransac
     connman.PushMessage(pfrom, msgMaker.Make(nSendFlags, NetMsgType::BLOCKTXN, resp));
 }
 
+static bool AllowAsMatchingPeerTip(const CBlockIndex * const blockindex)
+{
+    return blockindex && (chainActive.Contains(blockindex) || pindexBestHeader->Contains(blockindex));
+}
+
+static void NetAfterProcessNewBlock(CConnman& connman, const uint256& blockhash)
+{
+    auto blockindex_it = mapBlockIndex.find(blockhash);
+    if (blockindex_it != mapBlockIndex.end() && AllowAsMatchingPeerTip(blockindex_it->second)) {
+        // Block is valid and part of either our main chain or our best-header chain
+        return;
+    }
+
+    // Disconnect any require-matching-tip peers that have this block as their tip
+    connman.ForEachNode([blockhash](CNode* node) {
+        CNodeState *nodestate = State(node->GetId());
+        if (!node->RequireMatchingTip()) {
+            return;
+        }
+        if (nodestate->CurrentBlockHash() != blockhash) {
+            LogPrint(BCLog::NET, "peer=%d has %s as its best block (NetAfterProcessNewBlock), which is unreasonable; disconnecting\n", node->GetId(), blockhash.ToString());
+            node->fDisconnect = true;
+        }
+    });
+}
+
 bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, CConnman& connman, const std::atomic<bool>& interruptMsgProc)
 {
     LogPrint(BCLog::NET, "received: %s (%u bytes) peer=%d\n", SanitizeString(strCommand), vRecv.size(), pfrom->GetId());
@@ -1214,25 +1250,31 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
     if (strCommand == NetMsgType::REJECT)
     {
-        if (LogAcceptCategory(BCLog::NET)) {
-            try {
-                std::string strMsg; unsigned char ccode; std::string strReason;
-                vRecv >> LIMITED_STRING(strMsg, CMessageHeader::COMMAND_SIZE) >> ccode >> LIMITED_STRING(strReason, MAX_REJECT_MESSAGE_LENGTH);
+        try {
+            std::string strMsg; unsigned char ccode; std::string strReason;
+            vRecv >> LIMITED_STRING(strMsg, CMessageHeader::COMMAND_SIZE) >> ccode >> LIMITED_STRING(strReason, MAX_REJECT_MESSAGE_LENGTH);
 
+            uint256 hash;
+            if (strMsg == NetMsgType::BLOCK || strMsg == NetMsgType::TX) {
+                vRecv >> hash;
+
+                if (strMsg == NetMsgType::BLOCK) {
+                    pfrom->TipDoesntMatch(strprintf("peer=%d rejected valid block %s", pfrom->GetId(), hash.ToString()));
+                }
+            }
+
+            if (LogAcceptCategory(BCLog::NET)) {
                 std::ostringstream ss;
                 ss << strMsg << " code " << itostr(ccode) << ": " << strReason;
 
-                if (strMsg == NetMsgType::BLOCK || strMsg == NetMsgType::TX)
-                {
-                    uint256 hash;
-                    vRecv >> hash;
+                if (!hash.IsNull()) {
                     ss << ": hash " << hash.ToString();
                 }
                 LogPrint(BCLog::NET, "Reject %s\n", SanitizeString(ss.str()));
-            } catch (const std::ios_base::failure&) {
-                // Avoid feedback loops by preventing reject messages from triggering a new reject message.
-                LogPrint(BCLog::NET, "Unparseable reject message received\n");
             }
+        } catch (const std::ios_base::failure&) {
+            // Avoid feedback loops by preventing reject messages from triggering a new reject message.
+            LogPrint(BCLog::NET, "Unparseable reject message received\n");
         }
     }
 
@@ -1567,6 +1609,9 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
             if (inv.type == MSG_BLOCK) {
                 UpdateBlockAvailability(pfrom->GetId(), inv.hash);
+                if (fAlreadyHave && !AllowAsMatchingPeerTip(mapBlockIndex[inv.hash])) {
+                    pfrom->TipDoesntMatch(strprintf("peer=%d has %s as its best block (inv), which is unreasonable", pfrom->GetId(), inv.hash.ToString()));
+                }
                 if (!fAlreadyHave && !fImporting && !fReindex && !mapBlocksInFlight.count(inv.hash)) {
                     // We used to request the full block here, but since headers-announcements are now the
                     // primary method of announcement on the network, and since, in the case that a node
@@ -1994,7 +2039,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                     LOCK(cs_main);
                     Misbehaving(pfrom->GetId(), nDoS);
                 }
-                LogPrintf("Peer %d sent us invalid header via cmpctblock\n", pfrom->GetId());
+                pfrom->TipDoesntMatch(strprintf("peer=%d sent us invalid header via cmpctblock", pfrom->GetId()));
                 return true;
             }
         }
@@ -2025,8 +2070,12 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         std::map<uint256, std::pair<NodeId, std::list<QueuedBlock>::iterator> >::iterator blockInFlightIt = mapBlocksInFlight.find(pindex->GetBlockHash());
         bool fAlreadyInFlight = blockInFlightIt != mapBlocksInFlight.end();
 
-        if (pindex->nStatus & BLOCK_HAVE_DATA) // Nothing to do here
+        if (pindex->nStatus & BLOCK_HAVE_DATA) {
+            if (!AllowAsMatchingPeerTip(pindex)) {
+                pfrom->TipDoesntMatch(strprintf("peer=%d has %s as its best block (cmpctblock), which is unreasonable", pfrom->GetId(), pindex->GetBlockHash().ToString()));
+            }
             return true;
+        }
 
         if (pindex->nChainWork <= chainActive.Tip()->nChainWork || // We know something better
                 pindex->nTx != 0) { // We had this block at some point, but pruned it
@@ -2152,6 +2201,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             ProcessNewBlock(chainparams, pblock, true, &fNewBlock);
             if (fNewBlock)
                 pfrom->nLastBlockTime = GetTime();
+            NetAfterProcessNewBlock(connman, pblock->GetHash());
 
             LOCK(cs_main); // hold cs_main for CBlockIndex::IsValid()
             if (pindex->IsValid(BLOCK_VALID_TRANSACTIONS)) {
@@ -2229,6 +2279,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             ProcessNewBlock(chainparams, pblock, true, &fNewBlock);
             if (fNewBlock)
                 pfrom->nLastBlockTime = GetTime();
+            NetAfterProcessNewBlock(connman, pblock->GetHash());
         }
     }
 
@@ -2260,12 +2311,23 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         LOCK(cs_main);
         CNodeState *nodestate = State(pfrom->GetId());
 
+        uint256 hashLastBlock;
+        for (const CBlockHeader& header : headers) {
+            if (!hashLastBlock.IsNull() && header.hashPrevBlock != hashLastBlock) {
+                Misbehaving(pfrom->GetId(), 20);
+                return error("non-continuous headers sequence");
+            }
+            hashLastBlock = header.GetHash();
+            if (!CheckProofOfWork(header.GetHash(), header.nBits, chainparams.GetConsensus())) {
+                Misbehaving(pfrom->GetId(), 50);
+                return error("proof of work failed");
+            }
+        }
+
         // If this looks like it could be a block announcement (nCount <
         // MAX_BLOCKS_TO_ANNOUNCE), use special logic for handling headers that
         // don't connect:
         // - Send a getheaders message in response to try to connect the chain.
-        // - The peer can send up to MAX_UNCONNECTING_HEADERS in a row that
-        //   don't connect before giving DoS points
         // - Once a headers message is received that is valid and does connect,
         //   nUnconnectingHeaders gets reset back to 0.
         if (mapBlockIndex.find(headers[0].hashPrevBlock) == mapBlockIndex.end() && nCount < MAX_BLOCKS_TO_ANNOUNCE) {
@@ -2281,19 +2343,9 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             // we can use this peer to download.
             UpdateBlockAvailability(pfrom->GetId(), headers.back().GetHash());
 
-            if (nodestate->nUnconnectingHeaders % MAX_UNCONNECTING_HEADERS == 0) {
-                Misbehaving(pfrom->GetId(), 20);
-            }
-            return true;
-        }
+            pfrom->TipDoesntMatch(strprintf("peer=%d sent unconnectable headers based on %s", pfrom->GetId(), headers[0].hashPrevBlock.ToString()));
 
-        uint256 hashLastBlock;
-        for (const CBlockHeader& header : headers) {
-            if (!hashLastBlock.IsNull() && header.hashPrevBlock != hashLastBlock) {
-                Misbehaving(pfrom->GetId(), 20);
-                return error("non-continuous headers sequence");
-            }
-            hashLastBlock = header.GetHash();
+            return true;
         }
         }
 
@@ -2319,6 +2371,9 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
         assert(pindexLast);
         UpdateBlockAvailability(pfrom->GetId(), pindexLast->GetBlockHash());
+        if (!AllowAsMatchingPeerTip(pindexLast)) {
+            pfrom->TipDoesntMatch(strprintf("peer=%d has %s as its best block (headers), which is unreasonable", pfrom->GetId(), pindexLast->GetBlockHash().ToString()));
+        }
 
         if (nCount == MAX_HEADERS_RESULTS) {
             // Headers message had its maximum size; the peer may have more headers.
@@ -2408,6 +2463,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         ProcessNewBlock(chainparams, pblock, forceProcessing, &fNewBlock);
         if (fNewBlock)
             pfrom->nLastBlockTime = GetTime();
+        NetAfterProcessNewBlock(connman, pblock->GetHash());
     }
 
 

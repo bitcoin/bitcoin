@@ -811,6 +811,13 @@ public:
         return nLocalServices;
     }
 
+    bool RequireMatchingTip() const
+    {
+        return !(fInbound || fFeeler || fWhitelisted || fAddnode);
+    }
+
+    void TipDoesntMatch(const std::string& msg);
+
     std::string GetAddrName() const;
     //! Sets the addrName only if it was not previously set
     void MaybeSetAddrName(const std::string& addrNameIn);
