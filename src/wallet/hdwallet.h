@@ -402,9 +402,9 @@ public:
     int AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
         std::vector<CTempRecipient> &vecSend,
         CExtKeyAccount *sea, CStoredExtKey *pc,
-        bool sign, std::string &sError);
+        bool sign, size_t nRingSize, size_t nSigs, std::string &sError);
     int AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
-        std::vector<CTempRecipient> &vecSend, bool sign, std::string &sError);
+        std::vector<CTempRecipient> &vecSend, bool sign, size_t nRingSize, size_t nSigs, std::string &sError);
     
     
     

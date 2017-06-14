@@ -155,10 +155,18 @@ static const CRPCConvertParam vRPCConvertParams[] =
     
     { "sendanontopart", 1, "amount" },
     { "sendanontopart", 4, "subtractfeefromamount" },
+    { "sendanontopart", 6, "ringsize" },
+    { "sendanontopart", 7, "numsignatures" },
+    
     { "sendanontoblind", 1, "amount" },
     { "sendanontoblind", 4, "subtractfeefromamount" },
+    { "sendanontoblind", 6, "ringsize" },
+    { "sendanontoblind", 7, "numsignatures" },
+    
     { "sendanontoanon", 1, "amount" },
     { "sendanontoanon", 4, "subtractfeefromamount" },
+    { "sendanontoanon", 6, "ringsize" },
+    { "sendanontoanon", 7, "numsignatures" },
     
     
     // Echo with conversion (For testing only)

@@ -164,6 +164,11 @@ public:
         return !(a == b);
     }
 
+    bool IsAnonInput() const
+    {
+        return prevout.n == 0xffffffff;
+    };
+
     std::string ToString() const;
 };
 

@@ -2625,17 +2625,101 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
 int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
     std::vector<CTempRecipient> &vecSend,
     CExtKeyAccount *sea, CStoredExtKey *pc,
-    bool sign, std::string &sError)
+    bool sign, size_t nRingSize, size_t nSigs, std::string &sError)
 {
+    
+    CAmount nFeeRet = 0;
+    CAmount nValue = 0;
+    for (auto &r : vecSend)
+        nValue += r.nAmount;
+    
+    if (0 != ExpandTempRecipients(vecSend, pc, sError))
+        return 1; // sError is set
+    
+    wtx.fTimeReceivedIsTxTime = true;
+    wtx.BindWallet(this);
+    wtx.fFromMe = true;
+    CMutableTransaction txNew;
+    txNew.nVersion = PARTICL_TXN_VERSION;
+    txNew.vout.clear();
+    
+    txNew.nLockTime = 0;
+    
+    {
+        std::vector<std::pair<MapRecords_t::const_iterator, unsigned int> > setCoins;
+        LOCK2(cs_main, cs_wallet);
+        std::vector<COutputR> vAvailableCoins;
+        AvailableAnonCoins(vAvailableCoins, true);
+        
+        CAmount nValueOutPlain = 0;
+        int nChangePosInOut = -1;
+        
+        // Start with no fee and loop until there is enough fee
+        for (;;)
+        {
+            
+            break;
+        };
+    }
     
     
     return 0;
 };
 
 int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
-    std::vector<CTempRecipient> &vecSend, bool sign, std::string &sError)
+    std::vector<CTempRecipient> &vecSend, bool sign, size_t nRingSize, size_t nSigs, std::string &sError)
 {
     
+    if (vecSend.size() < 1)
+        return errorN(1, sError, __func__, _("Transaction must have at least one recipient.").c_str());
+    
+    CExtKeyAccount *sea;
+    CStoredExtKey *pcC;
+    if (0 != GetDefaultConfidentialChain(NULL, sea, pcC))
+        return errorN(1, sError, __func__, _("Could not get confidential chain from account.").c_str());
+    
+    uint32_t nLastHardened = pcC->nHGenerated;
+    
+    if (0 != AddAnonInputs(wtx, rtx, vecSend, sea, pcC, sign, nRingSize, nSigs, sError))
+    {
+        // sError will be set
+        pcC->nHGenerated = nLastHardened; // reset
+        return 1;
+    };
+    
+    {
+        LOCK(cs_wallet);
+        CHDWalletDB wdb(strWalletFile, "r+");
+        
+        std::vector<uint8_t> vEphemPath;
+        uint32_t idIndex;
+        bool requireUpdateDB;
+        if (0 == ExtKeyGetIndex(&wdb, sea, idIndex, requireUpdateDB))
+        {
+            PushUInt32(vEphemPath, idIndex);
+            
+            if (0 == AppendChainPath(pcC, vEphemPath))
+            {
+                uint32_t nChild = nLastHardened;
+                PushUInt32(vEphemPath, SetHardenedBit(nChild));
+                rtx.mapValue[RTXVT_EPHEM_PATH] = vEphemPath;
+            } else
+            {
+                LogPrintf("Warning: %s - missing path value.\n", __func__);
+                vEphemPath.clear();
+            };
+        } else
+        {
+            LogPrintf("Warning: %s - ExtKeyGetIndex failed %s.\n", __func__, pcC->GetIDString58());
+        };
+        
+        CKeyID idChain = pcC->GetID();
+        if (!wdb.WriteExtKey(idChain, *pcC))
+        {
+            pcC->nHGenerated = nLastHardened;
+            return errorN(1, sError, __func__, "WriteExtKey failed.");
+        };
+    }
     
     return 0;
 };
@@ -6150,7 +6234,8 @@ bool CHDWallet::FindStealthTransactions(const CTransaction& tx, mapValue_t& mapN
         
         if (nOutputId < 1)
         {
-            LogPrint("hdwallet", "%s: Warning, ignoring data output in pos 0, tx: %s.\n", __func__, tx.GetHash().GetHex());
+            if (fDebug) // this is normal for CT / RCT txns
+                LogPrint("hdwallet", "%s: Ignoring data output in pos 0, tx: %s.\n", __func__, tx.GetHash().GetHex());
             continue;
         };
         
@@ -6163,8 +6248,6 @@ bool CHDWallet::FindStealthTransactions(const CTransaction& tx, mapValue_t& mapN
             std::string sKey = strprintf("n%d", nOutputId-1);
             mapNarr[sKey] = sNarr;
         };
-        
-        //const CTxOutStandard *so = (CTxOutStandard*)tx.vpout[nOutputId-1].get();
         
     };
     
@@ -6362,7 +6445,6 @@ bool CHDWallet::AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlockInd
                 wtx.mapValue.insert(mapNarr.begin(), mapNarr.end());
             
             // Get merkle branch if transaction was found in a block
-            //if (posInBlock != -1)
             if (posInBlock > -1)
                 wtx.SetMerkleBranch(pIndex, posInBlock);
             bool rv = AddToWallet(wtx, false);
@@ -6765,7 +6847,7 @@ std::vector<uint256> CHDWallet::ResendRecordTransactionsBefore(int64_t nTime, CC
                 || (twi = mapTempWallet.find(it->second->first)) == mapTempWallet.end())
             {
                 LogPrintf("ERROR: %s - InsertTempTxn failed %s.", __func__, it->second->first.ToString());
-            }
+            };
         };
         
         if (twi != mapTempWallet.end())

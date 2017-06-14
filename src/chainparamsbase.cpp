@@ -98,7 +98,6 @@ std::string ChainNameFromCommandLine()
     // - Force testnet, REMOVE
     if (!fRegTest)
         fTestNet = true;
-    
 
     if (fTestNet && fRegTest)
         throw std::runtime_error("Invalid combination of -regtest and -testnet.");

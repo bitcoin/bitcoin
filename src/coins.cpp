@@ -319,6 +319,12 @@ CAmount CCoinsViewCache::GetPlainValueIn(const CTransaction &tx,
     CAmount nResult = 0;
     for (unsigned int i = 0; i < tx.vin.size(); i++)
     {
+        if (tx.vin[i].IsAnonInput())
+        {
+            nRingCT++;
+            continue;
+        };
+        
         const CTxOutBase *o = GetBaseOutputFor(tx.vin[i]);
         
         switch (o->nVersion)
@@ -329,9 +335,6 @@ CAmount CCoinsViewCache::GetPlainValueIn(const CTransaction &tx,
                 break;
             case OUTPUT_CT:
                 nCT++;
-                break;
-            case OUTPUT_RINGCT:
-                nRingCT++;
                 break;
             default:
                 break;

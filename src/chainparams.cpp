@@ -50,7 +50,7 @@ bool CChainParams::CheckImportCoinbase(int nHeight, uint256 &hash) const
 {
     for (auto &cth : Params().vImportedCoinbaseTxns)
     {
-        if (cth.nHeight != nHeight)
+        if (cth.nHeight != (uint32_t)nHeight)
             continue;
 
         if (hash == cth.hash)

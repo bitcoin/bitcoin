@@ -123,17 +123,7 @@ BOOST_AUTO_TEST_CASE(stake_test)
     BOOST_CHECK_NO_THROW(rv = CallRPC("extkeyimportmaster tprv8ZgxMBicQKsPe3x7bUzkHAJZzCuGqN6y28zFFyg5i7Yqxqm897VCnmMJz6QScsftHDqsyWW5djx6FzrbkF9HSD3ET163z1SzRhfcWxvwL4G"));
     BOOST_CHECK_NO_THROW(rv = CallRPC("getnewextaddress lblHDKey")); 
     
-    
-    //BOOST_CHECK_NO_THROW(rv = CallRPC("extkey import xparFntbLBU6CS8cRXkPWRUcQfQa47aFN8d5VptFZ6scD14zPWsmMutnEcb6wonnk86zxAn6PumC64JnSf6k51kYjtEWEvfngDdgZCd9ES4rLaU"));
-    
-    //BOOST_CHECK_NO_THROW(rv = CallRPC("scanchain"));
-    
-    //BOOST_CHECK_NO_THROW(rv = CallRPC("extkey importAccount xparFntbLBU6CS8cRXkPWRUcQfQa47aFN8d5VptFZ6scD14zPWsmMutnEcb6wonnk86zxAn6PumC64JnSf6k51kYjtEWEvfngDdgZCd9ES4rLaU"));
-    
-    
-    size_t nStaked = 0;
     {
-        //LOCK(pwallet->cs_wallet);
         LOCK2(cs_main, pwallet->cs_wallet);
         BOOST_REQUIRE(pwallet->GetBalance() == 12500000000000);
     }
@@ -175,7 +165,6 @@ BOOST_AUTO_TEST_CASE(stake_test)
     
     // reconnect block
     {
-        
         std::shared_ptr<const CBlock> pblock = std::make_shared<const CBlock>(block);
         BOOST_REQUIRE(ActivateBestChain(state, chainparams, pblock));
     }

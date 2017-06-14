@@ -1715,10 +1715,10 @@ void ListRecord(const uint256 &hash, const CTransactionRecord &rtx,
         if (r.nFlags & ORF_OWNED && r.nFlags & ORF_FROM)
             entry.push_back(Pair("fromself", "true"));
         
-        entry.push_back(Pair("amount", ValueFromAmount(r.nValue)));
+        entry.push_back(Pair("amount", ValueFromAmount(r.nValue * (r.nFlags & ORF_OWNED) ? 1 : -1)));
         
         if (r.nFlags & ORF_FROM)
-            entry.push_back(Pair("fee", ValueFromAmount(rtx.nFee)));
+            entry.push_back(Pair("fee", ValueFromAmount(-rtx.nFee)));
         
         
         entry.push_back(Pair("vout", r.n));

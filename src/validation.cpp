@@ -360,7 +360,8 @@ static std::pair<int, int64_t> CalculateSequenceLocks(const CTransaction &tx, in
         // Sequence numbers with the most significant bit set are not
         // treated as relative lock-times, nor are they given any
         // consensus-enforced meaning at this point.
-        if (txin.nSequence & CTxIn::SEQUENCE_LOCKTIME_DISABLE_FLAG) {
+        if (txin.IsAnonInput()
+            || txin.nSequence & CTxIn::SEQUENCE_LOCKTIME_DISABLE_FLAG) {
             // The height of this input is not relevant for sequence locks
             (*prevHeights)[txinIndex] = 0;
             continue;
@@ -454,6 +455,13 @@ bool CheckSequenceLocks(const CTransaction &tx, int flags, LockPoints* lp, bool 
         prevheights.resize(tx.vin.size());
         for (size_t txinIndex = 0; txinIndex < tx.vin.size(); txinIndex++) {
             const CTxIn& txin = tx.vin[txinIndex];
+
+            if (txin.IsAnonInput())
+            {
+                prevheights[txinIndex] = tip->nHeight + 1;
+                continue;
+            };
+
             CCoins coins;
             if (!viewMemPool.GetCoins(txin.prevout.hash, coins)) {
                 return error("%s: Missing input", __func__);
@@ -956,7 +964,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
         CAmount nFees = 0;
         
         size_t nStandardOut = 0, nCtOut = 0, nRingCTOut = 0;
-        CAmount nPlainValueOut = tx.GetPlainValueOut(nStandardOut, nCtOut, nRingCTOut);
+        tx.GetPlainValueOut(nStandardOut, nCtOut, nRingCTOut); // Count output types
         
         if (nCtOut > 0)
             fBlind = true;
@@ -1574,7 +1582,7 @@ bool ReadTransactionFromDiskBlock(const CBlockIndex* pindex, int nIndex, CTransa
     try {
         filein >> blockHeader;
         
-        int nTxns = ReadVarInt<CAutoFile,int>(filein);
+        int nTxns = ReadCompactSize(filein);
         
         if (nTxns <= nIndex || nIndex < 0)
             return error("%s: Block %s, txn %d not in available range %d.", __func__, pindex->GetBlockPos().ToString(), nIndex, nTxns);
@@ -2354,7 +2362,7 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
         {
             if (!tx.IsCoinBase())
             {
-                if (nVtxundo < 0 || nVtxundo >= blockUndo.vtxundo.size())
+                if (nVtxundo < 0 || nVtxundo >= (int)blockUndo.vtxundo.size())
                     return error("DisconnectBlock(): transaction undo data offset out of range.");
                 
                 const CTxUndo &txundo = blockUndo.vtxundo[nVtxundo--];
@@ -2592,7 +2600,6 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     };
 
     // verify that the view's current state corresponds to the previous block
-    
     uint256 hashPrevBlock = pindex->pprev == NULL ? uint256() : pindex->pprev->GetBlockHash();
     assert(hashPrevBlock == view.GetBestBlock());
     
@@ -2725,6 +2732,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     CAmount nFees = 0;
     int nInputs = 0;
     int64_t nSigOpsCost = 0;
+    int64_t nAnonIn = 0;
     int64_t nStakeReward = 0;
     CDiskTxPos pos(pindex->GetBlockPos(), GetSizeOfCompactSize(block.vtx.size()));
     std::vector<std::pair<uint256, CDiskTxPos> > vPos;
@@ -2776,6 +2784,14 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                     const CTxIn input = tx.vin[j];
                     if (tx.IsParticlVersion())
                     {
+                        if (input.IsAnonInput())
+                        {
+                            nAnonIn++;
+                            assert(false); // TODO
+                            
+                            continue;
+                        };
+                        
                         const CTxOutBase *prevout = view.GetBaseOutputFor(tx.vin[j]);
                         
                         if (!prevout
@@ -2906,9 +2922,21 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             std::vector<CScriptCheck> vChecks;
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
             
-            if (!CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, txdata[i], nScriptCheckThreads ? &vChecks : NULL))
-                return error("ConnectBlock(): CheckInputs on %s failed with %s",
-                    txhash.ToString(), FormatStateMessage(state));
+            if (nRingCT > 0
+                && (nStandard > 0 || nCt > 0))
+                return state.DoS(100, error("ConnectBlock(): Mixed input types"), REJECT_INVALID, "mixed-input-types");
+            
+            if (nRingCT > 0)
+            {
+                // Verify mlsags
+                // TODO
+                
+            } else
+            {
+                if (!CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, txdata[i], nScriptCheckThreads ? &vChecks : NULL))
+                    return error("ConnectBlock(): CheckInputs on %s failed with %s",
+                        txhash.ToString(), FormatStateMessage(state));
+            };
 
             control.Add(vChecks);
 
@@ -2921,6 +2949,20 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             UpdateCoins(tx, view, undoDummy, pindex->nHeight);
             nMoneyCreated += tx.GetValueOut();
         };
+        
+        
+        // Index rct outputs
+        if (fParticlMode)
+        {
+            for (unsigned int k = 0; k < tx.vpout.size(); k++)
+            {
+                if (!tx.vpout[k]->IsType(OUTPUT_RINGCT))
+                    continue;
+                
+                
+            };
+        };
+        
         
         if (fAddressIndex)
         {
@@ -4313,7 +4355,7 @@ unsigned int GetNextTargetRequired(const CBlockIndex *pindexLast)
     unsigned int nProofOfWorkLimit;
     int nHeight = pindexLast ? pindexLast->nHeight+1 : 0;
     
-    if (nHeight < Params().GetLastImportHeight())
+    if (nHeight < (int)Params().GetLastImportHeight())
     {
         if (nHeight == 0)
             return arith_uint256("00ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff").GetCompact();
@@ -4322,6 +4364,7 @@ unsigned int GetNextTargetRequired(const CBlockIndex *pindexLast)
         arith_uint256 nMinProofOfWorkLimit = UintToArith256(consensus.powLimit);
         
         arith_uint256 nStep = (nMaxProofOfWorkLimit - nMinProofOfWorkLimit) / nLastImportHeight;
+        
         
         
         bnProofOfWorkLimit = nMaxProofOfWorkLimit - (nStep * nHeight);
@@ -4600,7 +4643,7 @@ bool ProcessDuplicateStakeHeader(CBlockIndex *pindex, NodeId nodeId)
     StakeConflict &sc = ret.first->second;
     sc.Add(nodeId);
     
-    if (sc.peerCount.size() > GetNumPeers() / 2)
+    if ((int)sc.peerCount.size() > GetNumPeers() / 2)
     {
         LogPrintf("%s: More than half the connected peers are building on block %s,"
             "  marked as duplicate stake, assuming this node has the duplicate.\n", __func__, hash.ToString());
@@ -5970,6 +6013,7 @@ public:
 
 bool CoinStakeCache::GetCoinStake(const uint256 &blockHash, CTransactionRef &tx)
 {
+    
     for (const auto &i : lData)
     {
         if (blockHash != i.first)

@@ -3015,6 +3015,16 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Narration can range from 1 to 24 characters.");
     };
     
+    
+    size_t nRingSize = 0; // TODO: default size?
+    if (request.params.size() > 6)
+        fSubtractFeeFromAmount = request.params[6].get_int();
+    
+    size_t nSigs = 1;
+    if (request.params.size() > 7)
+        fSubtractFeeFromAmount = request.params[7].get_int();
+    
+    
     CReserveKey reservekey(pwallet);
     std::vector<CTempRecipient> vecSend;
     std::string sError;
@@ -3032,7 +3042,7 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
                 throw JSONRPCError(RPC_WALLET_ERROR, strprintf("AddBlindedInputs failed: %s.", sError));
             break;
         case OUTPUT_RINGCT:
-            if (0 != pwallet->AddAnonInputs(wtx, rtx, vecSend, true, sError))
+            if (0 != pwallet->AddAnonInputs(wtx, rtx, vecSend, true, nRingSize, nSigs, sError))
                 throw JSONRPCError(RPC_WALLET_ERROR, strprintf("AddAnonInputs failed: %s.", sError));
             break;
         default:

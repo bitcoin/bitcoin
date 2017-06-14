@@ -178,7 +178,7 @@ public:
 class CoinStakeCache
 {
 public:
-    int nMaxSize = 10;
+    size_t nMaxSize = 10;
     std::list<std::pair<uint256, CTransactionRef> > lData;
     
     bool GetCoinStake(const uint256 &blockHash, CTransactionRef &tx);
