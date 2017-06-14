@@ -33,6 +33,7 @@ extern void noui_connect();
 
 BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
 {
+        RandomInit();
         ECC_Start();
         SetupEnvironment();
         SetupNetworking();
