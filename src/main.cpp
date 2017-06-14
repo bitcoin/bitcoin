@@ -687,7 +687,7 @@ bool AddOrphanTx(const CTransaction &tx, NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(c
     AssertLockHeld(cs_orphancache);
 
     if (mapOrphanTransactions.empty())
-        nBytesOrphanPool = 0;
+        DbgAssert(nBytesOrphanPool == 0, nBytesOrphanPool = 0);
 
     uint256 hash = tx.GetHash();
     if (mapOrphanTransactions.count(hash))
@@ -6172,6 +6172,15 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
                 for (std::set<uint256>::iterator mi = itByPrev->second.begin(); mi != itByPrev->second.end(); ++mi)
                 {
                     const uint256 &orphanHash = *mi;
+
+                    // Make sure we actually have an entry on the orphan cache. While this should never fail because
+                    // we always erase orphans and any mapOrphanTransactionsByPrev at the same time, still we need to
+                    // be sure.
+                    bool fOk = true;
+                    DbgAssert(mapOrphanTransactions.count(orphanHash), fOk = false);
+                    if (!fOk)
+                        continue;
+
                     const CTransaction &orphanTx = mapOrphanTransactions[orphanHash].tx;
                     NodeId fromPeer = mapOrphanTransactions[orphanHash].fromPeer;
                     bool fMissingInputs2 = false;
