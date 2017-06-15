@@ -45,6 +45,15 @@ setting or through the `-upnp` option, as since the last UPnP vulnerability
 If you use this option, it is recommended to upgrade to this version as soon as
 possible.
 
+Known Bugs
+==========
+
+Since 0.14.0 the approximate transaction fee shown in Bitcoin-Qt when using coin
+control and smart fee estimation does not reflect any change in target from the
+smart fee slider. It will only present an approximate fee calculated using the
+default target. The fee calculated using the correct target is still applied to
+the transaction and shown in the final send confirmation dialog.
+
 0.14.2 Change log
 =================
 
