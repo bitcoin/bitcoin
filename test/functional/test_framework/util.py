@@ -226,6 +226,8 @@ def wait_for_bitcoind_start(process, url, i):
                 raise # unknown JSON RPC exception
         time.sleep(0.25)
 
+def wait_for_node_exit(node_index, timeout):
+    bitcoind_processes[node_index].wait(timeout)
 
 def start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=None, stderr=None):
     """
