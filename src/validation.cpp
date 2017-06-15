@@ -3059,6 +3059,7 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Co
     //   {0xaa, 0x21, 0xa9, 0xed}, and the following 32 bytes are SHA256^2(witness root, witness nonce). In case there are
     //   multiple, the last one is used.
     bool fHaveWitness = false;
+    bool fSegwitSeasoned = false;
     bool fSegWitActive = (VersionBitsState(pindexPrev, consensusParams, Consensus::DEPLOYMENT_SEGWIT, versionbitscache) == THRESHOLD_ACTIVE);
     if (fSegWitActive) {
         int commitpos = GetWitnessCommitmentIndex(block);
@@ -3077,9 +3078,12 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Co
             }
             fHaveWitness = true;
         }
+
+        const CBlockIndex* pindexForkBuffer = pindexPrev->GetAncestor(nHeight - BIP102_FORK_BUFFER);
+        fSegwitSeasoned = (VersionBitsState(pindexForkBuffer, consensusParams, Consensus::DEPLOYMENT_SEGWIT, versionbitscache) == THRESHOLD_ACTIVE);
     }
 
-    if (::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) > MaxBlockBaseSize(nHeight, fSegWitActive))
+    if (::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) > MaxBlockBaseSize(nHeight, fSegwitSeasoned))
         return state.DoS(100, false, REJECT_INVALID, "bad-blk-length", false, "size limits failed");
 
     // No witness data is allowed in blocks that don't commit to witness data, as this would otherwise leave room for spam
