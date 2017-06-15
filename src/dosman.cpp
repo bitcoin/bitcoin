@@ -6,12 +6,16 @@
 
 #include "dosman.h"
 #include "bandb.h"
-#include "nodestate.h"
+#include "connmgr.h"
 #include "ui_interface.h"
 
 #include <boost/foreach.hpp>
 
-
+CDoSManager::CDoSManager() : setBannedIsDirty(false), nBanThreshold(DEFAULT_BANSCORE_THRESHOLD) {}
+/**
+ * Call once the command line is parsed so dosman configures itself appropriately.
+ */
+void CDoSManager::HandleCommandLine() { nBanThreshold = GetArg("-banscore", DEFAULT_BANSCORE_THRESHOLD); }
 /**
 * Checks if this CNetAddr is in the whitelist
 *
@@ -253,37 +257,34 @@ bool CDoSManager::BannedSetIsDirty()
 }
 
 /**
-* Set the ban score for this node and if the threshold is exceeded request the node be banned.
-* NOTE: This requires an externally taken lock on cs_main to protect the CNodeState returned by
-*       the internal call to State()
-*
-* REVISIT: There are numerous new calls to Misbehaving which have been recently added.
-*          A subsequent PR will be added to ensure the lock on cs_main is properly taken,
-*          adding unit tests for full coverage of all cases, and adding static analysis
-*          tags and an AsserLockHeld to help catch/prevent future developer mistakes.
-*
-* @param[in] pnode    Id of the node which is misbehaving, used to look up the CNodeState
-* @param[in] howmuch  Ban score for the latest infraction against this node
-*/
-void CDoSManager::Misbehaving(NodeId pnode, int howmuch)
+ * Increment the misbehaving count score for this node.  If the ban threshold is reached, flag the node to be
+ * banned.  No locks are needed to call this function.
+ */
+void CDoSManager::Misbehaving(CNode *pNode, int howmuch)
 {
-    if (howmuch == 0)
+    if (howmuch == 0 || !pNode)
         return;
 
-    CNodeState *state = State(pnode);
-    if (state == NULL)
-        return;
+    int prior(pNode->nMisbehavior.fetch_add(howmuch));
 
-    state->nMisbehavior += howmuch;
-    int banscore = GetArg("-banscore", DEFAULT_BANSCORE_THRESHOLD);
-    if (state->nMisbehavior >= banscore && state->nMisbehavior - howmuch < banscore)
+    if (prior + howmuch >= nBanThreshold && prior < nBanThreshold)
     {
-        LogPrintf("%s: %s (%d -> %d) BAN THRESHOLD EXCEEDED\n", __func__, state->name, state->nMisbehavior - howmuch,
-            state->nMisbehavior);
-        state->fShouldBan = true;
+        LogPrintf("%s: %s (%d -> %d) BAN THRESHOLD EXCEEDED\n", __func__, pNode->GetLogName(), prior, prior + howmuch);
+        pNode->fShouldBan = true;
     }
     else
-        LogPrintf("%s: %s (%d -> %d)\n", __func__, state->name, state->nMisbehavior - howmuch, state->nMisbehavior);
+        LogPrintf("%s: %s (%d -> %d)\n", __func__, pNode->GetLogName(), prior, prior + howmuch);
+}
+
+/**
+ * Increment the misbehaving count score for this node.  If the ban threshold is reached, flag the node to be
+ * banned.  No locks are needed to call this function.
+ */
+void CDoSManager::Misbehaving(NodeId nodeid, int howmuch)
+{
+    CNodeRef nodeRef(connmgr->FindNodeFromId(nodeid));
+
+    Misbehaving(nodeRef.get(), howmuch);
 }
 
 

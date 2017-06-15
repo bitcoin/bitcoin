@@ -39,7 +39,35 @@ protected:
     mutable CCriticalSection cs_setBanned;
     bool setBannedIsDirty;
 
+    // If a node's misbehaving count reaches this value, it is flagged for banning.
+    int nBanThreshold;
+
 public:
+    CDoSManager();
+
+    /**
+     * Call once the command line is parsed so dosman configures itself appropriately.
+     */
+    void HandleCommandLine();
+
+    /**
+     * Increment the misbehaving score for this node.  If the ban threshold is reached, flag the node to be
+     * banned.  No locks are needed to call this function.
+     *
+     * @param[in] pNode    The node which is misbehaving.  No effect if nullptr.
+     * @param[in] howmuch  Incremental misbehaving score for the latest infraction by this node.
+     */
+    void Misbehaving(CNode *pNode, int howmuch);
+
+    /**
+     * Increment the misbehaving score for this node.  If the ban threshold is reached, flag the node to be
+     * banned.  No locks are needed to call this function.
+     *
+     * @param[in] nodeid   The ID of the misbehaving node.  No effect if the CNode is no longer present.
+     * @param[in] howmuch  Incremental misbehaving score for the latest infraction by this node.
+     */
+    void Misbehaving(NodeId nodeid, int howmuch);
+
     bool IsWhitelistedRange(const CNetAddr &ip);
     void AddWhitelistedRange(const CSubNet &subnet);
 
@@ -70,9 +98,6 @@ public:
     bool BannedSetIsDirty();
     //! clean unused entries (if bantime has expired)
     void SweepBanned();
-
-    /** Increase a node's misbehavior score. */
-    void Misbehaving(NodeId nodeid, int howmuch);
 
     //! save banlist to disk
     void DumpBanlist();

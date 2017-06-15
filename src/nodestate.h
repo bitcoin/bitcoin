@@ -38,12 +38,6 @@ struct CNodeState
 {
     //! The peer's address
     CService address;
-    //! Whether we have a fully established connection.
-    bool fCurrentlyConnected;
-    //! Accumulated misbehaviour score for this peer.
-    int nMisbehavior;
-    //! Whether this peer should be disconnected and banned (unless whitelisted).
-    bool fShouldBan;
     //! String name of this peer (debugging/logging purposes).
     std::string name;
     //! List of asynchronously-determined block rejections to notify this peer about.

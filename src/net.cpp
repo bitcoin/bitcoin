@@ -327,7 +327,6 @@ bool IsReachable(const CNetAddr &addr)
     return IsReachable(net);
 }
 
-void AddressCurrentlyConnected(const CService &addr) { addrman.Connected(addr); }
 // BU moved to globals.cpp
 // uint64_t CNode::nTotalBytesRecv = 0;
 // uint64_t CNode::nTotalBytesSent = 0;
@@ -2765,6 +2764,10 @@ CNode::CNode(SOCKET hSocketIn, const CAddress &addrIn, const std::string &addrNa
     addrFromPort = 0; // BU
     nLocalThinBlockBytes = 0;
 
+    nMisbehavior = 0;
+    fShouldBan = false;
+    fCurrentlyConnected = false;
+
     // BU instrumentation
     std::string xmledName;
     if (addrNameIn != "")
@@ -2825,6 +2828,10 @@ CNode::~CNode()
     // BUIP010 - Xtreme Thinblocks - end section
 
     addrFromPort = 0;
+
+    // Update addrman timestamp
+    if (nMisbehavior == 0 && fCurrentlyConnected)
+        addrman.Connected(addr);
 
     GetNodeSignals().FinalizeNode(GetId());
 }
