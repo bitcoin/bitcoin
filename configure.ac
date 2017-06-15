@@ -154,10 +154,6 @@ AC_PATH_PROG([GIT], [git])
 AC_PATH_PROG(CCACHE,ccache)
 AC_PATH_PROG(XGETTEXT,xgettext)
 AC_PATH_PROG(HEXDUMP,hexdump)
-AC_PATH_PROGS([MOC], [moc moc-qt4],, $qt_bin_path:$PATH)
-AC_PATH_PROGS([UIC], [uic uic-qt4],, $qt_bin_path:$PATH)
-AC_PATH_PROG([RCC], [rcc],, $qt_bin_path:$PATH)
-AC_PATH_PROG([LRELEASE], [lrelease],, $qt_bin_path:$PATH)
 PKG_PROG_PKG_CONFIG
 
 # Enable wallet
@@ -509,7 +505,7 @@ AM_CONDITIONAL([BUILD_BITCOIN_CLI], [test x$build_bitcoin_cli = xyes])
 AC_MSG_RESULT($build_bitcoin_cli)
 
 dnl sets $bitcoin_enable_qt, $bitcoin_enable_qt_test, $bitcoin_enable_qt_dbus
-BITCOIN_QT_CONFIGURE([$use_pkgconfig], [qt4])
+BITCOIN_QT_CONFIGURE([$use_pkgconfig], [qt5])
 
 if test x$use_ipv6 = xyes; then
   dnl Check for ipv6 build requirements
