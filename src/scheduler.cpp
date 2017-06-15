@@ -41,7 +41,7 @@ void CScheduler::serviceQueue()
     while (!shouldStop()) {
         try {
             if (!shouldStop() && taskQueue.empty()) {
-                reverse_lock<boost::unique_lock<boost::mutex> > rlock(lock);
+                reverse_lock<boost::unique_lock<boost::mutex>> rlock(lock);
                 // Use this chance to get a tiny bit more entropy
                 RandAddSeedSleep();
             }
@@ -79,7 +79,7 @@ void CScheduler::serviceQueue()
             {
                 // Unlock before calling f, so it can reschedule itself or another task
                 // without deadlocking:
-                reverse_lock<boost::unique_lock<boost::mutex> > rlock(lock);
+                reverse_lock<boost::unique_lock<boost::mutex>> rlock(lock);
                 f();
             }
         } catch (...) {

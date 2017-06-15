@@ -629,7 +629,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
     pwallet->GetAllReserveKeys(setKeyPool);
 
     // sort time/key pairs
-    std::vector<std::pair<int64_t, CKeyID> > vKeyBirth;
+    std::vector<std::pair<int64_t, CKeyID>> vKeyBirth;
     for (const auto& entry : mapKeyBirth) {
         if (const CKeyID* keyID = boost::get<CKeyID>(&entry.first)) { // set and test
             vKeyBirth.push_back(std::make_pair(entry.second, *keyID));
@@ -660,7 +660,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
             file << "# extended private masterkey: " << b58extkey.ToString() << "\n\n";
         }
     }
-    for (std::vector<std::pair<int64_t, CKeyID> >::const_iterator it = vKeyBirth.begin(); it != vKeyBirth.end(); it++) {
+    for (std::vector<std::pair<int64_t, CKeyID>>::const_iterator it = vKeyBirth.begin(); it != vKeyBirth.end(); it++) {
         const CKeyID &keyid = it->second;
         std::string strTime = EncodeDumpTime(it->first);
         std::string strAddr = CBitcoinAddress(keyid).ToString();

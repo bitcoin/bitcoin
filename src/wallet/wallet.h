@@ -292,7 +292,7 @@ public:
      *                         2014 (removed in commit 93a18a3)
      */
     mapValue_t mapValue;
-    std::vector<std::pair<std::string, std::string> > vOrderForm;
+    std::vector<std::pair<std::string, std::string>> vOrderForm;
     unsigned int fTimeReceivedIsTxTime;
     unsigned int nTimeReceived; //!< time received by this node
     /**
@@ -976,7 +976,7 @@ public:
     int64_t GetOldestKeyPoolTime();
     void GetAllReserveKeys(std::set<CKeyID>& setAddress) const;
 
-    std::set< std::set<CTxDestination> > GetAddressGroupings();
+    std::set<std::set<CTxDestination>> GetAddressGroupings();
     std::map<CTxDestination, CAmount> GetAddressBalances();
 
     std::set<CTxDestination> GetAccountAddresses(const std::string& strAccount) const;

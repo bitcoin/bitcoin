@@ -552,7 +552,7 @@ bool PaymentServer::processPaymentRequest(const PaymentRequestPlus& request, Sen
 
     request.getMerchant(certStore.get(), recipient.authenticatedMerchant);
 
-    QList<std::pair<CScript, CAmount> > sendingTos = request.getPayTo();
+    QList<std::pair<CScript, CAmount>> sendingTos = request.getPayTo();
     QStringList addresses;
 
     for (const std::pair<CScript, CAmount>& sendingTo : sendingTos) {

@@ -337,7 +337,7 @@ static Stacks CombineSignatures(const CScript& scriptPubKey, const BaseSignature
             CScript pubKey2(spk.begin(), spk.end());
 
             txnouttype txType2;
-            std::vector<std::vector<unsigned char> > vSolutions2;
+            std::vector<std::vector<unsigned char>> vSolutions2;
             Solver(pubKey2, txType2, vSolutions2);
             sigs1.script.pop_back();
             sigs2.script.pop_back();
@@ -380,7 +380,7 @@ SignatureData CombineSignatures(const CScript& scriptPubKey, const BaseSignature
                           const SignatureData& scriptSig1, const SignatureData& scriptSig2)
 {
     txnouttype txType;
-    std::vector<std::vector<unsigned char> > vSolutions;
+    std::vector<std::vector<unsigned char>> vSolutions;
     Solver(scriptPubKey, txType, vSolutions);
 
     return CombineSignatures(scriptPubKey, checker, txType, vSolutions, Stacks(scriptSig1), Stacks(scriptSig2), SIGVERSION_BASE).Output();

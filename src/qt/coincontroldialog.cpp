@@ -623,7 +623,7 @@ void CoinControlDialog::updateView()
 
     int nDisplayUnit = model->getOptionsModel()->getDisplayUnit();
 
-    std::map<QString, std::vector<COutput> > mapCoins;
+    std::map<QString, std::vector<COutput>> mapCoins;
     model->listCoins(mapCoins);
 
     for (const std::pair<QString, std::vector<COutput>>& coins : mapCoins) {

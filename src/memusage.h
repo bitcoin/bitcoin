@@ -38,7 +38,7 @@ template<typename X> static inline size_t DynamicUsage(X * const &v) { return 0;
 template<typename X> static inline size_t DynamicUsage(const X * const &v) { return 0; }
 
 /** Compute the memory used for dynamically allocated but owned data structures.
- *  For generic data types, this is *not* recursive. DynamicUsage(vector<vector<int> >)
+ *  For generic data types, this is *not* recursive. DynamicUsage(vector<vector<int>>)
  *  will compute the memory used for the vector<int>'s, but not for the ints inside.
  *  This is for efficiency reasons, as these functions are intended to be fast. If
  *  application data structures require more accurate inner accounting, they should
@@ -108,13 +108,13 @@ static inline size_t IncrementalDynamicUsage(const std::set<X, Y>& s)
 template<typename X, typename Y, typename Z>
 static inline size_t DynamicUsage(const std::map<X, Y, Z>& m)
 {
-    return MallocUsage(sizeof(stl_tree_node<std::pair<const X, Y> >)) * m.size();
+    return MallocUsage(sizeof(stl_tree_node<std::pair<const X, Y>>)) * m.size();
 }
 
 template<typename X, typename Y, typename Z>
 static inline size_t IncrementalDynamicUsage(const std::map<X, Y, Z>& m)
 {
-    return MallocUsage(sizeof(stl_tree_node<std::pair<const X, Y> >));
+    return MallocUsage(sizeof(stl_tree_node<std::pair<const X, Y>>));
 }
 
 // indirectmap has underlying map with pointer as key
@@ -122,13 +122,13 @@ static inline size_t IncrementalDynamicUsage(const std::map<X, Y, Z>& m)
 template<typename X, typename Y>
 static inline size_t DynamicUsage(const indirectmap<X, Y>& m)
 {
-    return MallocUsage(sizeof(stl_tree_node<std::pair<const X*, Y> >)) * m.size();
+    return MallocUsage(sizeof(stl_tree_node<std::pair<const X*, Y>>)) * m.size();
 }
 
 template<typename X, typename Y>
 static inline size_t IncrementalDynamicUsage(const indirectmap<X, Y>& m)
 {
-    return MallocUsage(sizeof(stl_tree_node<std::pair<const X*, Y> >));
+    return MallocUsage(sizeof(stl_tree_node<std::pair<const X*, Y>>));
 }
 
 template<typename X>
@@ -162,7 +162,7 @@ static inline size_t DynamicUsage(const std::unordered_set<X, Y>& s)
 template<typename X, typename Y, typename Z>
 static inline size_t DynamicUsage(const std::unordered_map<X, Y, Z>& m)
 {
-    return MallocUsage(sizeof(unordered_node<std::pair<const X, Y> >)) * m.size() + MallocUsage(sizeof(void*) * m.bucket_count());
+    return MallocUsage(sizeof(unordered_node<std::pair<const X, Y>>)) * m.size() + MallocUsage(sizeof(void*) * m.bucket_count());
 }
 
 }

@@ -10,7 +10,7 @@ struct DereferencingComparator { bool operator()(const T a, const T b) const { r
 
 /* Map whose keys are pointers, but are compared by their dereferenced values.
  *
- * Differs from a plain std::map<const K*, T, DereferencingComparator<K*> > in
+ * Differs from a plain std::map<const K*, T, DereferencingComparator<K*>> in
  * that methods that take a key for comparison take a K rather than taking a K*
  * (taking a K* would be confusing, since it's the value rather than the address
  * of the object for comparison that matters due to the dereferencing comparator).
@@ -21,7 +21,7 @@ struct DereferencingComparator { bool operator()(const T a, const T b) const { r
 template <class K, class T>
 class indirectmap {
 private:
-    typedef std::map<const K*, T, DereferencingComparator<const K*> > base;
+    typedef std::map<const K*, T, DereferencingComparator<const K*>> base;
     base m;
 public:
     typedef typename base::iterator iterator;

@@ -3298,10 +3298,10 @@ std::map<CTxDestination, CAmount> CWallet::GetAddressBalances()
     return balances;
 }
 
-std::set< std::set<CTxDestination> > CWallet::GetAddressGroupings()
+std::set<std::set<CTxDestination>> CWallet::GetAddressGroupings()
 {
     AssertLockHeld(cs_wallet); // mapWallet
-    std::set< std::set<CTxDestination> > groupings;
+    std::set<std::set<CTxDestination>> groupings;
     std::set<CTxDestination> grouping;
 
     for (const auto& walletEntry : mapWallet)
@@ -3355,13 +3355,13 @@ std::set< std::set<CTxDestination> > CWallet::GetAddressGroupings()
             }
     }
 
-    std::set< std::set<CTxDestination>* > uniqueGroupings; // a set of pointers to groups of addresses
-    std::map< CTxDestination, std::set<CTxDestination>* > setmap;  // map addresses to the unique group containing it
+    std::set<std::set<CTxDestination>*> uniqueGroupings; // a set of pointers to groups of addresses
+    std::map<CTxDestination, std::set<CTxDestination>*> setmap;  // map addresses to the unique group containing it
     for (std::set<CTxDestination> _grouping : groupings)
     {
         // make a set of all the groups hit by this new group
-        std::set< std::set<CTxDestination>* > hits;
-        std::map< CTxDestination, std::set<CTxDestination>* >::iterator it;
+        std::set<std::set<CTxDestination>*> hits;
+        std::map<CTxDestination, std::set<CTxDestination>*>::iterator it;
         for (CTxDestination address : _grouping)
             if ((it = setmap.find(address)) != setmap.end())
                 hits.insert((*it).second);
@@ -3381,7 +3381,7 @@ std::set< std::set<CTxDestination> > CWallet::GetAddressGroupings()
             setmap[element] = merged;
     }
 
-    std::set< std::set<CTxDestination> > ret;
+    std::set<std::set<CTxDestination>> ret;
     for (std::set<CTxDestination>* uniqueGrouping : uniqueGroupings)
     {
         ret.insert(*uniqueGrouping);

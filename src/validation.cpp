@@ -1619,7 +1619,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     int nInputs = 0;
     int64_t nSigOpsCost = 0;
     CDiskTxPos pos(pindex->GetBlockPos(), GetSizeOfCompactSize(block.vtx.size()));
-    std::vector<std::pair<uint256, CDiskTxPos> > vPos;
+    std::vector<std::pair<uint256, CDiskTxPos>> vPos;
     vPos.reserve(block.vtx.size());
     blockundo.vtxundo.reserve(block.vtx.size() - 1);
     std::vector<PrecomputedTransactionData> txdata;
@@ -1797,7 +1797,7 @@ bool static FlushStateToDisk(const CChainParams& chainparams, CValidationState &
         FlushBlockFile();
         // Then update all block file information (which may refer to block and undo files).
         {
-            std::vector<std::pair<int, const CBlockFileInfo*> > vFiles;
+            std::vector<std::pair<int, const CBlockFileInfo*>> vFiles;
             vFiles.reserve(setDirtyFileInfo.size());
             for (std::set<int>::iterator it = setDirtyFileInfo.begin(); it != setDirtyFileInfo.end(); ) {
                 vFiles.push_back(std::make_pair(*it, &vinfoBlockFile[*it]));
@@ -3328,7 +3328,7 @@ bool static LoadBlockIndexDB(const CChainParams& chainparams)
     boost::this_thread::interruption_point();
 
     // Calculate nChainWork
-    std::vector<std::pair<int, CBlockIndex*> > vSortedByHeight;
+    std::vector<std::pair<int, CBlockIndex*>> vSortedByHeight;
     vSortedByHeight.reserve(mapBlockIndex.size());
     for (const std::pair<uint256, CBlockIndex*>& item : mapBlockIndex)
     {

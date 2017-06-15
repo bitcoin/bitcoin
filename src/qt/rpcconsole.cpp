@@ -146,7 +146,7 @@ public:
 
 bool RPCConsole::RPCParseCommandLine(std::string &strResult, const std::string &strCommand, const bool fExecute, std::string * const pstrFilteredOut)
 {
-    std::vector< std::vector<std::string> > stack;
+    std::vector<std::vector<std::string>> stack;
     stack.push_back(std::vector<std::string>());
 
     enum CmdParseState

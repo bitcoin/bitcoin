@@ -243,7 +243,7 @@ bool static CheckMinimalPush(const valtype& data, opcodetype opcode) {
     return true;
 }
 
-bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptError* serror)
+bool EvalScript(std::vector<std::vector<unsigned char>>& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptError* serror)
 {
     static const CScriptNum bnZero(0);
     static const CScriptNum bnOne(1);
@@ -1353,7 +1353,7 @@ bool TransactionSignatureChecker::CheckSequence(const CScriptNum& nSequence) con
 
 static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, const std::vector<unsigned char>& program, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror)
 {
-    std::vector<std::vector<unsigned char> > stack;
+    std::vector<std::vector<unsigned char>> stack;
     CScript scriptPubKey;
 
     if (witversion == 0) {
@@ -1363,7 +1363,7 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
                 return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_WITNESS_EMPTY);
             }
             scriptPubKey = CScript(witness.stack.back().begin(), witness.stack.back().end());
-            stack = std::vector<std::vector<unsigned char> >(witness.stack.begin(), witness.stack.end() - 1);
+            stack = std::vector<std::vector<unsigned char>>(witness.stack.begin(), witness.stack.end() - 1);
             uint256 hashScriptPubKey;
             CSHA256().Write(&scriptPubKey[0], scriptPubKey.size()).Finalize(hashScriptPubKey.begin());
             if (memcmp(hashScriptPubKey.begin(), &program[0], 32)) {
@@ -1418,7 +1418,7 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
         return set_error(serror, SCRIPT_ERR_SIG_PUSHONLY);
     }
 
-    std::vector<std::vector<unsigned char> > stack, stackCopy;
+    std::vector<std::vector<unsigned char>> stack, stackCopy;
     if (!EvalScript(stack, scriptSig, flags, checker, SIGVERSION_BASE, serror))
         // serror is set
         return false;

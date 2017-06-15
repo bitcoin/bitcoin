@@ -38,7 +38,7 @@ const char* GetTxnOutputType(txnouttype t)
 /**
  * Return public keys or hashes from scriptPubKey, for 'standard' transaction types.
  */
-bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::vector<unsigned char> >& vSolutionsRet)
+bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::vector<unsigned char>>& vSolutionsRet)
 {
     // Templates
     static std::multimap<txnouttype, CScript> mTemplates;
@@ -304,7 +304,7 @@ CScript GetScriptForWitness(const CScript& redeemscript)
     CScript ret;
 
     txnouttype typ;
-    std::vector<std::vector<unsigned char> > vSolutions;
+    std::vector<std::vector<unsigned char>> vSolutions;
     if (Solver(redeemscript, typ, vSolutions)) {
         if (typ == TX_PUBKEY) {
             unsigned char h160[20];

@@ -195,7 +195,7 @@ void PaymentServerTests::paymentServerTests()
     // Ensure the request is initialized
     QVERIFY(r.paymentRequest.IsInitialized());
     // Extract address and amount from the request
-    QList<std::pair<CScript, CAmount> > sendingTos = r.paymentRequest.getPayTo();
+    QList<std::pair<CScript, CAmount>> sendingTos = r.paymentRequest.getPayTo();
     for (const std::pair<CScript, CAmount>& sendingTo : sendingTos) {
         CTxDestination dest;
         if (ExtractDestination(sendingTo.first, dest))
