@@ -124,6 +124,7 @@ EXTENDED_SCRIPTS = [
     # vv Tests less than 5m vv
     'maxuploadtarget.py',
     'mempool_packages.py',
+    'dbcrash.py',
     # vv Tests less than 2m vv
     'bip68-sequence.py',
     'getblocktemplate_longpoll.py',
