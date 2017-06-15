@@ -16,13 +16,21 @@ static const unsigned int MAX_BLOCK_SERIALIZED_SIZE = 4000000;
 /** The maximum allowed weight for a block, see BIP 141 (network rule) */
 static const unsigned int MAX_BLOCK_WEIGHT = 4000000;
 /** The maximum allowed size for a block excluding witness data, in bytes (network rule) */
+static inline bool BIP102active(int nHeight, bool fSegWitActive)
+{
+    if (!fSegWitActive)
+        return false;
+
+    if (nHeight < (int)BIP102_FORK_MIN_HEIGHT)
+        return false;
+
+    return true;
+}
+
 static const unsigned int MAX_LEGACY_BLOCK_SIZE = (1 * 1000 * 1000);
 inline unsigned int MaxBlockBaseSize(int nHeight, bool fSegWitActive)
 {
-    if (!fSegWitActive)
-        return MAX_LEGACY_BLOCK_SIZE;
-
-    if (nHeight < (int)BIP102_FORK_MIN_HEIGHT)
+    if (!BIP102active(nHeight, fSegWitActive))
         return MAX_LEGACY_BLOCK_SIZE;
 
     return (2 * 1000 * 1000);
@@ -38,10 +46,7 @@ inline unsigned int MaxBlockBaseSize()
 static const uint64_t MAX_BLOCK_BASE_SIGOPS = 20000;
 inline int64_t MaxBlockSigOpsCost(int nHeight, bool fSegWitActive)
 {
-    if (!fSegWitActive)
-        return (MAX_BLOCK_BASE_SIGOPS * 4 /* WITNESS_SCALE_FACTOR */);
-
-    if (nHeight < (int)BIP102_FORK_MIN_HEIGHT)
+    if (!BIP102active(nHeight, fSegWitActive))
         return (MAX_BLOCK_BASE_SIGOPS * 4 /* WITNESS_SCALE_FACTOR */);
 
     return ((2 * MAX_BLOCK_BASE_SIGOPS) * 4 /* WITNESS_SCALE_FACTOR */);
