@@ -168,6 +168,9 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "sendanontoanon", 6, "ringsize" },
     { "sendanontoanon", 7, "numsignatures" },
     
+    { "getnewextaddress", 1, "childno" },
+    
+    
     
     // Echo with conversion (For testing only)
     { "echojson", 0, "arg0" },

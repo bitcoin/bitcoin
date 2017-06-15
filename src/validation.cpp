@@ -1055,7 +1055,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
             LogPrint("mempool", "Rate limit dFreeCount: %g => %g\n", dFreeCount, dFreeCount+nSize);
             dFreeCount += nSize;
         }
-        
 
         if (nAbsurdFee && nFees > nAbsurdFee)
             return state.Invalid(false,

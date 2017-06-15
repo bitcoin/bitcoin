@@ -447,9 +447,10 @@ public:
     int ExtKeyLoadAccounts();
     
     int ExtKeySaveAccountToDB(CHDWalletDB *pwdb, CKeyID &idAccount, CExtKeyAccount *sea);
-    int ExtKeyAddAccountToMaps(CKeyID &idAccount, CExtKeyAccount *sea);
+    int ExtKeyAddAccountToMaps(CKeyID &idAccount, CExtKeyAccount *sea, bool fAddToLookAhead = true);
     int ExtKeyRemoveAccountFromMapsAndFree(CExtKeyAccount *sea);
     int ExtKeyLoadAccountPacks();
+    int PrepareLookahead();
 
     int ExtKeyAppendToPack(CHDWalletDB *pwdb, CExtKeyAccount *sea, const CKeyID &idKey, CEKAKey &ak, bool &fUpdateAcc) const;
     int ExtKeyAppendToPack(CHDWalletDB *pwdb, CExtKeyAccount *sea, const CKeyID &idKey, CEKASCKey &asck, bool &fUpdateAcc) const;
@@ -503,6 +504,7 @@ public:
     int CheckForStealthAndNarration(const CTxOutBase *pb, const CTxOutData *pdata, std::string &sNarr);
     bool FindStealthTransactions(const CTransaction &tx, mapValue_t &mapNarr);
     
+    bool ScanForOwnedOutputs(const CTransaction &tx, size_t &nCT, size_t &nRingCT, mapValue_t &mapNarr);
     bool AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlockIndex* pIndex, int posInBlock, bool fUpdate);
     
     CWalletTx *GetTempWalletTx(const uint256& hash);

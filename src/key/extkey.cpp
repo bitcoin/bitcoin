@@ -580,6 +580,16 @@ std::string CExtKeyAccount::GetIDString58() const
     return addr.ToString();
 };
 
+int CExtKeyAccount::HaveSavedKey(const CKeyID &id)
+{
+    LOCK(cs_account);
+
+    AccKeyMap::const_iterator mi = mapKeys.find(id);
+    if (mi != mapKeys.end())
+        return 1;
+    return 0;
+};
+
 int CExtKeyAccount::HaveKey(const CKeyID &id, bool fUpdate, CEKAKey &ak)
 {
     // - rv 0 = no, 1 = yes, 2 = lookahead, 3 = lookahead + updated
@@ -592,9 +602,8 @@ int CExtKeyAccount::HaveKey(const CKeyID &id, bool fUpdate, CEKAKey &ak)
     mi = mapLookAhead.find(id);
     if (mi != mapLookAhead.end())
     {
-        CBitcoinAddress addr(mi->first);
         if (fDebug)
-            LogPrintf("HaveKey in lookAhead %s\n", addr.ToString().c_str());
+            LogPrintf("HaveKey in lookAhead %s\n", CBitcoinAddress(mi->first).ToString());
         if (fUpdate)
         {
             ak = mi->second; // pass up for save to db
@@ -644,12 +653,12 @@ bool CExtKeyAccount::GetKey(const CEKAKey &ak, CKey &keyOut) const
     LOCK(cs_account);
     
     if (ak.nParent >= vExtKeys.size())
-        return error("%s: Account key invalid parent ext key %d, account %s.", __func__, ak.nParent, GetIDString58().c_str());
+        return error("%s: Account key invalid parent ext key %d, account %s.", __func__, ak.nParent, GetIDString58());
     
     const CStoredExtKey *chain = vExtKeys[ak.nParent];
     
     if (chain->fLocked)
-        return error("%s: Chain locked, account %s.", __func__, GetIDString58().c_str());
+        return error("%s: Chain locked, account %s.", __func__, GetIDString58());
     
     if (!chain->kp.Derive(keyOut, ak.nKey))
         return false;
@@ -701,12 +710,12 @@ bool CExtKeyAccount::GetPubKey(const CEKAKey &ak, CPubKey &pkOut) const
     LOCK(cs_account);
     
     if (ak.nParent >= vExtKeys.size())
-        return error("%s: Account key invalid parent ext key %d, account %s.", __func__, ak.nParent, GetIDString58().c_str());
+        return error("%s: Account key invalid parent ext key %d, account %s.", __func__, ak.nParent, GetIDString58());
     
     const CStoredExtKey *chain = GetChain(ak.nParent);
     
     if (!chain)
-        return error("%s: Chain unknown, account %s.", __func__, GetIDString58().c_str());
+        return error("%s: Chain unknown, account %s.", __func__, GetIDString58());
     
     if (!chain->kp.Derive(pkOut, ak.nKey))
         return false;
@@ -734,10 +743,7 @@ bool CExtKeyAccount::SaveKey(const CKeyID &id, CEKAKey &keyIn)
         return false; // already saved
     
     if (mapLookAhead.erase(id) != 1)
-    {
-        CBitcoinAddress addr(id);
-        LogPrintf("Warning: SaveKey %s key not found in look ahead %s.\n", GetIDString58().c_str(), addr.ToString().c_str());
-    };
+        LogPrintf("Warning: SaveKey %s key not found in look ahead %s.\n", GetIDString58(), CBitcoinAddress(id).ToString());
     
     mapKeys[id] = keyIn;
     
@@ -750,7 +756,7 @@ bool CExtKeyAccount::SaveKey(const CKeyID &id, CEKAKey &keyIn)
         else
         if (keyIn.nKey > pc->nGenerated)
         {
-            // incase keys have been processed out of order, go back and check for received keys
+            // Incase keys have been processed out of order, go back and check for received keys
             for (uint32_t i = pc->nGenerated; i <= keyIn.nKey; ++i)
             {
                 uint32_t nChildOut = 0;
@@ -760,6 +766,7 @@ bool CExtKeyAccount::SaveKey(const CKeyID &id, CEKAKey &keyIn)
                     LogPrintf("%s DeriveKey failed %d.\n", __func__, i);
                     break;
                 };
+                
                 CEKAKey ak;
                 if (1 != HaveKey(pk.GetID(), false, ak))
                     break;
@@ -775,8 +782,7 @@ bool CExtKeyAccount::SaveKey(const CKeyID &id, CEKAKey &keyIn)
     
     if (fDebug)
     {
-        CBitcoinAddress addr(id);
-        LogPrintf("Saved key %s, %s.\n", GetIDString58().c_str(), addr.ToString().c_str());
+        LogPrintf("Saved key %s %d, %s.\n", GetIDString58(), keyIn.nParent, CBitcoinAddress(id).ToString());
         
         // - check match
         CStoredExtKey *pa;
@@ -820,10 +826,7 @@ bool CExtKeyAccount::SaveKey(const CKeyID &id, CEKASCKey &keyIn)
     mapStealthChildKeys[id] = keyIn;
     
     if (fDebug)
-    {
-        CBitcoinAddress addr(id);
-        LogPrintf("SaveKey(): CEKASCKey %s, %s.\n", GetIDString58().c_str(), addr.ToString().c_str());
-    };
+        LogPrintf("SaveKey(): CEKASCKey %s, %s.\n", GetIDString58(), CBitcoinAddress(id).ToString());
     
     return true;
 };
@@ -881,7 +884,7 @@ int CExtKeyAccount::AddLookBehind(uint32_t nChain, uint32_t nKeys)
             if ((mi = mapKeys.find(keyId)) != mapKeys.end())
             {
                 if (fDebug)
-                    LogPrint("hdwallet", "%s: key exists in map skipping %s.\n", __func__, CBitcoinAddress(keyId).ToString().c_str());
+                    LogPrint("hdwallet", "%s: key exists in map skipping %s.\n", __func__, CBitcoinAddress(keyId).ToString());
                 continue;
             };
             
@@ -901,7 +904,7 @@ int CExtKeyAccount::AddLookBehind(uint32_t nChain, uint32_t nKeys)
         mapLookAhead[keyId] = CEKAKey(nChain, nChildOut);
         
         if (fDebug)
-            LogPrint("hdwallet", "%s: Added %s, look-ahead size %u.\n", __func__, CBitcoinAddress(keyId).ToString().c_str(), mapLookAhead.size());
+            LogPrint("hdwallet", "%s: Added %s, look-ahead size %u.\n", __func__, CBitcoinAddress(keyId).ToString(), mapLookAhead.size());
     };
     
     return 0;
@@ -927,7 +930,7 @@ int CExtKeyAccount::AddLookAhead(uint32_t nChain, uint32_t nKeys)
     {
         bool fGotKey = false;
         
-        uint32_t nMaxTries = 100; // TODO: link to lookahead size
+        uint32_t nMaxTries = 1000; // TODO: link to lookahead size
         for (uint32_t i = 0; i < nMaxTries; ++i) // nMaxTries > lookahead pool
         {
             if (pc->DeriveKey(pk, nChild, nChildOut, false) != 0)
@@ -942,7 +945,7 @@ int CExtKeyAccount::AddLookAhead(uint32_t nChain, uint32_t nKeys)
             if ((mi = mapKeys.find(keyId)) != mapKeys.end())
             {
                 if (fDebug)
-                    LogPrint("hdwallet", "%s: key exists in map skipping %s.\n", __func__, CBitcoinAddress(keyId).ToString().c_str());
+                    LogPrint("hdwallet", "%s: key exists in map skipping %s.\n", __func__, CBitcoinAddress(keyId).ToString());
                 continue;
             };
             
@@ -963,7 +966,7 @@ int CExtKeyAccount::AddLookAhead(uint32_t nChain, uint32_t nKeys)
         pc->nLastLookAhead = nChildOut;
         
         if (fDebug)
-            LogPrint("hdwallet", "%s: Added %s, look-ahead size %u.\n", __func__, CBitcoinAddress(keyId).ToString().c_str(), mapLookAhead.size());
+            LogPrint("hdwallet", "%s: Added %s, look-ahead size %u.\n", __func__, CBitcoinAddress(keyId).ToString(), mapLookAhead.size());
     };
     
     return 0;

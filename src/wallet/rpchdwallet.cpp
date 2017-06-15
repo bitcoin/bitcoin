@@ -594,11 +594,52 @@ int ManageExtKey(CStoredExtKey &sek, std::string &sOptName, std::string &sOptVal
         
         result.push_back(Pair("receive_on", sek.nFlags & EAF_RECEIVE_ON ? "true" : "false"));
     } else
+    if (sOptName == "look_ahead")
+    {
+        uint64_t nLookAhead = N_DEFAULT_LOOKAHEAD;
+        
+        if (sOptValue.length() > 0)
+        {
+            char *pend;
+            errno = 0;
+            nLookAhead = strtoul(sOptValue.c_str(), &pend, 10);
+            if (errno != 0 || !pend || *pend != '\0')
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Failed: look_ahead invalid number.");
+            
+            if (nLookAhead < 1 || nLookAhead > 1000)
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Failed: look_ahead number out of range.");
+            
+            std::vector<uint8_t> v;
+            sek.mapValue[EKVT_N_LOOKAHEAD] = SetCompressedInt64(v, nLookAhead);
+            result.push_back(Pair("note", "Wallet must be restarted to reload lookahead pool."));
+        };
+        
+        mapEKValue_t::iterator itV = sek.mapValue.find(EKVT_N_LOOKAHEAD);
+        if (itV != sek.mapValue.end())
+        {
+            nLookAhead = GetCompressedInt64(itV->second, nLookAhead);
+            result.push_back(Pair("look_ahead", (int)nLookAhead));
+        } else
+        {
+            result.push_back(Pair("look_ahead", "default"));
+        };
+    } else
     {
         // - list all possible
         result.push_back(Pair("label", sek.sLabel));
         result.push_back(Pair("active", sek.nFlags & EAF_ACTIVE ? "true" : "false"));
         result.push_back(Pair("receive_on", sek.nFlags & EAF_RECEIVE_ON ? "true" : "false"));
+        
+        
+        mapEKValue_t::iterator itV = sek.mapValue.find(EKVT_N_LOOKAHEAD);
+        if (itV != sek.mapValue.end())
+        {
+            uint64_t nLookAhead = GetCompressedInt64(itV->second, nLookAhead);
+            result.push_back(Pair("look_ahead", (int)nLookAhead));
+        } else
+        {
+            result.push_back(Pair("look_ahead", "default"));
+        };
     };
     
     return 0;
@@ -1319,7 +1360,7 @@ UniValue extkey(const JSONRPCRequest &request)
             
             if (fKey)
             {
-                // try key in memory first
+                // Try key in memory first
                 CStoredExtKey *pSek;
                 ExtKeyMap::iterator it = pwallet->mapExtKeys.find(id);
                 
@@ -1333,7 +1374,7 @@ UniValue extkey(const JSONRPCRequest &request)
                 } else
                 {
                     wdb.TxnAbort();
-                    throw std::runtime_error("Account not in wallet.");
+                    throw std::runtime_error("Key not in wallet.");
                 };
                 
                 if (0 != ManageExtKey(*pSek, sOptName, sOptValue, result, sError))
@@ -1343,7 +1384,7 @@ UniValue extkey(const JSONRPCRequest &request)
                 };
                 
                 if (sOptValue.length() > 0
-                    && !wdb.WriteExtKey(id, sek))
+                    && !wdb.WriteExtKey(id, *pSek))
                 {
                     wdb.TxnAbort();
                     throw std::runtime_error("WriteExtKey failed.");
@@ -1374,7 +1415,7 @@ UniValue extkey(const JSONRPCRequest &request)
                 };
                 
                 if (sOptValue.length() > 0
-                    && !wdb.WriteExtAccount(id, sea))
+                    && !wdb.WriteExtAccount(id, *pSea))
                 {
                     wdb.TxnAbort();
                     throw std::runtime_error("Write failed.");
@@ -1694,7 +1735,7 @@ UniValue extkeyaltversion(const JSONRPCRequest &request)
             "extkeyaltversion <ext_key>\n"
             "Returns the provided ext_key encoded with alternate version bytes.\n"
             "If the provided ext_key has a Bitcoin prefix the output will be encoded with a Particl prefix.\n"
-            "If the provided ext_key has a Particl prefix the output will be encoded with a Bitcoin prefix.\n");
+            "If the provided ext_key has a Particl prefix the output will be encoded with a Bitcoin prefix.");
     
     std::string sKeyIn = request.params[0].get_str();
     std::string sKeyOut;
@@ -1721,28 +1762,40 @@ UniValue extkeyaltversion(const JSONRPCRequest &request)
 
 UniValue getnewextaddress(const JSONRPCRequest &request)
 {
-    if (request.fHelp || request.params.size() > 1)
+    if (request.fHelp || request.params.size() > 2)
         throw std::runtime_error(
-            "getnewextaddress [label]\n"
-            "Returns a new Particl ext address for receiving payments."
-            "If [label] is specified, it is added to the address book. ");
+            "getnewextaddress [label] [childNo]\n"
+            "Returns a new Particl ext address for receiving payments.\n"
+            "label   (string, optional), if specified the key is added to the address book.\n"
+            "childNo (int, optional), if specified, the account derive counter is not updated.");
     
     CHDWallet *pwallet = GetHDWallet();
     
+    uint32_t nChild = 0;
+    uint32_t *pChild = NULL;
     std::string strLabel;
+    const char *pLabel = NULL;
     if (request.params.size() > 0)
+    {
         strLabel = request.params[0].get_str();
+        if (strLabel.size() > 0)
+            pLabel = strLabel.c_str();
+    };
+    
+    if (request.params.size() > 1)
+    {
+        nChild = request.params[1].get_int();
+        pChild = &nChild;
+    };
 
-
-    // Generate a new key that is added to wallet
     CStoredExtKey *sek = new CStoredExtKey();
-    if (0 != pwallet->NewExtKeyFromAccount(strLabel, sek, strLabel.c_str()))
+    if (0 != pwallet->NewExtKeyFromAccount(strLabel, sek, pLabel, pChild))
     {
         delete sek;
         throw std::runtime_error("NewExtKeyFromAccount failed.");
     };
 
-    // - CBitcoinAddress displays public key only
+    // CBitcoinAddress displays public key only
     return CBitcoinAddress(sek->kp).ToString();
 }
 

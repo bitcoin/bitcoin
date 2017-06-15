@@ -764,7 +764,6 @@ inline const char* streamStateFromFormat(std::ostream& out, bool& spacePadPositi
     return c+1;
 }
 
-
 //------------------------------------------------------------------------------
 inline void formatImpl(std::ostream& out, const char* fmt,
                        const detail::FormatArg* formatters,
@@ -816,7 +815,7 @@ inline void formatImpl(std::ostream& out, const char* fmt,
     fmt = printFormatStringLiteral(out, fmt);
     if(*fmt != '\0')
         TINYFORMAT_ERROR("tinyformat: Too many conversion specifiers in format string");
-
+    
     // Restore stream state
     out.width(origWidth);
     out.precision(origPrecision);

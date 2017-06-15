@@ -19,8 +19,8 @@ static const uint32_t BIP32_KEY_LEN = 82;       // raw, 74 + 4 bytes id + 4 chec
 static const uint32_t BIP32_KEY_N_BYTES = 74;   // raw without id and checksum
 
 static const uint32_t MAX_KEY_PACK_SIZE = 100;
-static const uint32_t N_DEFAULT_LOOKAHEAD = 10;
-static const uint32_t N_DEFAULT_EKVT_LOOKAHEAD = 30;
+static const uint32_t N_DEFAULT_LOOKAHEAD = 24;
+static const uint32_t N_DEFAULT_EKVT_LOOKAHEAD = 32;
 
 static const uint32_t BIP44_PURPOSE = (((uint32_t)44) | (1 << 31));
 
@@ -322,12 +322,12 @@ public:
     int DeriveNextKey(T &keyOut, uint32_t &nChildOut, bool fHardened = false, bool fUpdate = true)
     {
         uint32_t nChild = fHardened ? nHGenerated : nGenerated;
-        nChildOut = 0; // silence compiler warning, uninitialised
+        nChildOut = 0; // Silence compiler warning, uninitialised
         int rv;
         if ((rv = DeriveKey(keyOut, nChild, nChildOut, fHardened)) != 0)
             return rv;
         
-        nChild = nChildOut & ~(1 << 31); // clear the hardened bit
+        nChild = nChildOut & ~(1 << 31); // Clear the hardened bit
         if (fUpdate)
             SetCounter(nChild+1, fHardened);
         
@@ -645,6 +645,7 @@ public:
         return vExtKeyIDs[0];
     };
     
+    int HaveSavedKey(const CKeyID &id);
     int HaveKey(const CKeyID &id, bool fUpdate, CEKAKey &ak);
     bool GetKey(const CKeyID &id, CKey &keyOut) const;
     bool GetKey(const CEKAKey &ak, CKey &keyOut) const;

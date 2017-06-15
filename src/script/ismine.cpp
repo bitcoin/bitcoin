@@ -65,6 +65,7 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, bool& 
         return ISMINE_NO;
     }
 
+
     CKeyID keyID;
     switch (whichType)
     {
