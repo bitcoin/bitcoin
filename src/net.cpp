@@ -1674,15 +1674,15 @@ void CConnman::ProcessOneShot()
     }
 }
 
-void CConnman::ThreadOpenConnections()
+void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
 {
     // Connect to specific addresses
-    if (gArgs.IsArgSet("-connect"))
+    if (!connect.empty())
     {
         for (int64_t nLoop = 0;; nLoop++)
         {
             ProcessOneShot();
-            for (const std::string& strAddr : gArgs.GetArgs("-connect"))
+            for (const std::string& strAddr : connect)
             {
                 CAddress addr(CService(), NODE_NONE);
                 OpenNetworkConnection(addr, false, NULL, strAddr.c_str());
@@ -2360,9 +2360,16 @@ bool CConnman::Start(CScheduler& scheduler, Options connOptions)
     // Initiate outbound connections from -addnode
     threadOpenAddedConnections = std::thread(&TraceThread<std::function<void()> >, "addcon", std::function<void()>(std::bind(&CConnman::ThreadOpenAddedConnections, this)));
 
-    // Initiate outbound connections unless connect=0
-    if (!gArgs.IsArgSet("-connect") || gArgs.GetArgs("-connect").size() != 1 || gArgs.GetArgs("-connect")[0] != "0")
-        threadOpenConnections = std::thread(&TraceThread<std::function<void()> >, "opencon", std::function<void()>(std::bind(&CConnman::ThreadOpenConnections, this)));
+    if (connOptions.m_use_addrman_outgoing && !connOptions.m_specified_outgoing.empty()) {
+        if (clientInterface) {
+            clientInterface->ThreadSafeMessageBox(
+                _("Cannot provide specific connections and have addrman find outgoing connections at the same."),
+                "", CClientUIInterface::MSG_ERROR);
+        }
+        return false;
+    }
+    if (connOptions.m_use_addrman_outgoing || !connOptions.m_specified_outgoing.empty())
+        threadOpenConnections = std::thread(&TraceThread<std::function<void()> >, "opencon", std::function<void()>(std::bind(&CConnman::ThreadOpenConnections, this, connOptions.m_specified_outgoing)));
 
     // Process messages
     threadMessageHandler = std::thread(&TraceThread<std::function<void()> >, "msghand", std::function<void()>(std::bind(&CConnman::ThreadMessageHandler, this)));
