@@ -3125,45 +3125,50 @@ UniValue bumpfee(const JSONRPCRequest& request)
     LOCK2(cs_main, pwallet->cs_wallet);
     EnsureWalletIsUnlocked(pwallet);
 
-    feebumper::FeeBumper feeBump(pwallet, hash, coin_control, totalFee);
-    feebumper::Result res = feeBump.getResult();
-    if (res != feebumper::Result::OK)
-    {
+
+    std::vector<std::string> errors;
+    CAmount old_fee;
+    CAmount new_fee;
+    CMutableTransaction mtx;
+    feebumper::Result res = feebumper::CreateTransaction(pwallet, hash, coin_control, totalFee, errors, old_fee, new_fee, mtx);
+    if (res != feebumper::Result::OK) {
         switch(res) {
             case feebumper::Result::INVALID_ADDRESS_OR_KEY:
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, feeBump.getErrors()[0]);
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, errors[0]);
                 break;
             case feebumper::Result::INVALID_REQUEST:
-                throw JSONRPCError(RPC_INVALID_REQUEST, feeBump.getErrors()[0]);
+                throw JSONRPCError(RPC_INVALID_REQUEST, errors[0]);
                 break;
             case feebumper::Result::INVALID_PARAMETER:
-                throw JSONRPCError(RPC_INVALID_PARAMETER, feeBump.getErrors()[0]);
+                throw JSONRPCError(RPC_INVALID_PARAMETER, errors[0]);
                 break;
             case feebumper::Result::WALLET_ERROR:
-                throw JSONRPCError(RPC_WALLET_ERROR, feeBump.getErrors()[0]);
+                throw JSONRPCError(RPC_WALLET_ERROR, errors[0]);
                 break;
             default:
-                throw JSONRPCError(RPC_MISC_ERROR, feeBump.getErrors()[0]);
+                throw JSONRPCError(RPC_MISC_ERROR, errors[0]);
                 break;
         }
     }
 
     // sign bumped transaction
-    if (!feeBump.signTransaction(pwallet)) {
+    if (!feebumper::SignTransaction(pwallet, mtx)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Can't sign transaction.");
     }
     // commit the bumped transaction
-    if(!feeBump.commit(pwallet)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, feeBump.getErrors()[0]);
+    uint256 txid;
+    if (feebumper::CommitTransaction(pwallet, hash, std::move(mtx), errors, txid) != feebumper::Result::OK) {
+        throw JSONRPCError(RPC_WALLET_ERROR, errors[0]);
     }
     UniValue result(UniValue::VOBJ);
-    result.push_back(Pair("txid", feeBump.getBumpedTxId().GetHex()));
-    result.push_back(Pair("origfee", ValueFromAmount(feeBump.getOldFee())));
-    result.push_back(Pair("fee", ValueFromAmount(feeBump.getNewFee())));
-    UniValue errors(UniValue::VARR);
-    for (const std::string& err: feeBump.getErrors())
-        errors.push_back(err);
-    result.push_back(Pair("errors", errors));
+    result.push_back(Pair("txid", txid.GetHex()));
+    result.push_back(Pair("origfee", ValueFromAmount(old_fee)));
+    result.push_back(Pair("fee", ValueFromAmount(new_fee)));
+    UniValue result_errors(UniValue::VARR);
+    for (const std::string& error : errors) {
+        result_errors.push_back(error);
+    }
+    result.push_back(Pair("errors", result_errors));
 
     return result;
 }
