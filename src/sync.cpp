@@ -53,9 +53,9 @@ private:
     int sourceLine;
 };
 
-typedef std::vector<std::pair<void*, CLockLocation> > LockStack;
+typedef std::vector<std::pair<void*, CLockLocation>> LockStack;
 typedef std::map<std::pair<void*, void*>, LockStack> LockOrders;
-typedef std::set<std::pair<void*, void*> > InvLockOrders;
+typedef std::set<std::pair<void*, void*>> InvLockOrders;
 
 struct LockData {
     // Very ugly hack: as the global constructs and destructors run single

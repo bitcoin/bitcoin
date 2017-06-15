@@ -13,7 +13,7 @@ namespace
 //   matches the original.
 bool sanity_test_widen(char testchar)
 {
-    const std::ctype<char>& test(std::use_facet<std::ctype<char> >(std::locale()));
+    const std::ctype<char>& test(std::use_facet<std::ctype<char>>(std::locale()));
     return test.narrow(test.widen(testchar), 'b') == testchar;
 }
 

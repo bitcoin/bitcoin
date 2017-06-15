@@ -591,7 +591,7 @@ bool WalletModel::isSpent(const COutPoint& outpoint) const
 }
 
 // AvailableCoins + LockedCoins grouped by wallet address (put change in one group with wallet address)
-void WalletModel::listCoins(std::map<QString, std::vector<COutput> >& mapCoins) const
+void WalletModel::listCoins(std::map<QString, std::vector<COutput>>& mapCoins) const
 {
     for (auto& group : wallet->ListCoins()) {
         auto& resultGroup = mapCoins[QString::fromStdString(CBitcoinAddress(group.first).ToString())];

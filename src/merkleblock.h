@@ -131,7 +131,7 @@ public:
 
 public:
     /** Public only for unit testing and relay testing (not relayed) */
-    std::vector<std::pair<unsigned int, uint256> > vMatchedTxn;
+    std::vector<std::pair<unsigned int, uint256>> vMatchedTxn;
 
     /**
      * Create from a CBlock, filtering transactions according to filter

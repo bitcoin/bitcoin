@@ -311,7 +311,7 @@ static bool ThreadHTTP(struct event_base* base, struct evhttp* http)
 static bool HTTPBindAddresses(struct evhttp* http)
 {
     int defaultPort = GetArg("-rpcport", BaseParams().RPCPort());
-    std::vector<std::pair<std::string, uint16_t> > endpoints;
+    std::vector<std::pair<std::string, uint16_t>> endpoints;
 
     // Determine what addresses to bind to
     if (!IsArgSet("-rpcallowip")) { // Default to loopback if not allowing external IPs
@@ -333,7 +333,7 @@ static bool HTTPBindAddresses(struct evhttp* http)
     }
 
     // Bind addresses
-    for (std::vector<std::pair<std::string, uint16_t> >::iterator i = endpoints.begin(); i != endpoints.end(); ++i) {
+    for (std::vector<std::pair<std::string, uint16_t>>::iterator i = endpoints.begin(); i != endpoints.end(); ++i) {
         LogPrint(BCLog::HTTP, "Binding RPC on address %s port %i\n", i->first, i->second);
         evhttp_bound_socket *bind_handle = evhttp_bind_socket_with_handle(http, i->first.empty() ? NULL : i->first.c_str(), i->second);
         if (bind_handle) {

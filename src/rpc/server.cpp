@@ -33,7 +33,7 @@ static CCriticalSection cs_rpcWarmup;
 /* Timer-creating functions */
 static RPCTimerInterface* timerInterface = NULL;
 /* Map of name to timer. */
-static std::map<std::string, std::unique_ptr<RPCTimerBase> > deadlineTimers;
+static std::map<std::string, std::unique_ptr<RPCTimerBase>> deadlineTimers;
 
 static struct CRPCSignals
 {
@@ -174,7 +174,7 @@ std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest&
     std::string strRet;
     std::string category;
     std::set<rpcfn_type> setDone;
-    std::vector<std::pair<std::string, const CRPCCommand*> > vCommands;
+    std::vector<std::pair<std::string, const CRPCCommand*>> vCommands;
 
     for (std::map<std::string, const CRPCCommand*>::const_iterator mi = mapCommands.begin(); mi != mapCommands.end(); ++mi)
         vCommands.push_back(make_pair(mi->second->category + mi->first, mi->second));

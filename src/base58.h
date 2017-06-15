@@ -75,7 +75,7 @@ protected:
     std::vector<unsigned char> vchVersion;
 
     //! the actually encoded data
-    typedef std::vector<unsigned char, zero_after_free_allocator<unsigned char> > vector_uchar;
+    typedef std::vector<unsigned char, zero_after_free_allocator<unsigned char>> vector_uchar;
     vector_uchar vchData;
 
     CBase58Data();

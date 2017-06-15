@@ -104,7 +104,7 @@ public:
     {
         return mapArgs;
     };
-    const std::map<std::string, std::vector<std::string> >& GetMapMultiArgs()
+    const std::map<std::string, std::vector<std::string>>& GetMapMultiArgs()
     {
         return mapMultiArgs;
     };
