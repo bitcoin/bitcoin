@@ -74,6 +74,22 @@ enum FeeEstimateHorizon {
     LONG_HALFLIFE = 2
 };
 
+/* Enumeration of reason for returned fee estimate */
+enum class FeeReason {
+    NONE,
+    HALF_ESTIMATE,
+    FULL_ESTIMATE,
+    DOUBLE_ESTIMATE,
+    CONSERVATIVE,
+    MEMPOOL_MIN,
+    PAYTXFEE,
+    FALLBACK,
+    REQUIRED,
+    MAXTXFEE,
+};
+
+std::string StringForFeeReason(FeeReason reason);
+
 /* Used to return detailed information about a feerate bucket */
 struct EstimatorBucket
 {
@@ -90,8 +106,16 @@ struct EstimationResult
 {
     EstimatorBucket pass;
     EstimatorBucket fail;
-    double decay;
-    unsigned int scale;
+    double decay = 0;
+    unsigned int scale = 0;
+};
+
+struct FeeCalculation
+{
+    EstimationResult est;
+    FeeReason reason = FeeReason::NONE;
+    int desiredTarget = 0;
+    int returnedTarget = 0;
 };
 
 /**
@@ -173,7 +197,7 @@ public:
      *  the closest target where one can be given.  'conservative' estimates are
      *  valid over longer time horizons also.
      */
-    CFeeRate estimateSmartFee(int confTarget, int *answerFoundAtTarget, const CTxMemPool& pool, bool conservative = true) const;
+    CFeeRate estimateSmartFee(int confTarget, FeeCalculation *feeCalc, const CTxMemPool& pool, bool conservative = true) const;
 
     /** Return a specific fee estimate calculation with a given success
      * threshold and time horizon, and optionally return detailed data about
@@ -223,9 +247,9 @@ private:
     bool processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry* entry);
 
     /** Helper for estimateSmartFee */
-    double estimateCombinedFee(unsigned int confTarget, double successThreshold, bool checkShorterHorizon) const;
+    double estimateCombinedFee(unsigned int confTarget, double successThreshold, bool checkShorterHorizon, EstimationResult *result) const;
     /** Helper for estimateSmartFee */
-    double estimateConservativeFee(unsigned int doubleTarget) const;
+    double estimateConservativeFee(unsigned int doubleTarget, EstimationResult *result) const;
     /** Number of blocks of data recorded while fee estimates have been running */
     unsigned int BlockSpan() const;
     /** Number of blocks of recorded fee estimate data represented in saved data file */
