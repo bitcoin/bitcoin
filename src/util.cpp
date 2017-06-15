@@ -654,8 +654,8 @@ const fs::path &GetDataDir(bool fNetSpecific)
     if (!path.empty())
         return path;
 
-    if (IsArgSet("-datadir")) {
-        path = fs::system_complete(GetArg("-datadir", ""));
+    if (gArgs.IsArgSet("-datadir")) {
+        path = fs::system_complete(gArgs.GetArg("-datadir", ""));
         if (!fs::is_directory(path)) {
             path = "";
             return path;
@@ -730,7 +730,7 @@ void ArgsManager::ReadConfigFile(const std::string& confPath)
 #ifndef WIN32
 fs::path GetPidFile()
 {
-    fs::path pathPidFile(GetArg("-pid", BITCOIN_PID_FILENAME));
+    fs::path pathPidFile(gArgs.GetArg("-pid", BITCOIN_PID_FILENAME));
     if (!pathPidFile.is_complete()) pathPidFile = GetDataDir() / pathPidFile;
     return pathPidFile;
 }

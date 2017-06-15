@@ -304,62 +304,6 @@ void ForceRemoveArg(const std::string& strArg);
 
 extern ArgsManager gArgs;
 
-// wrappers using the global ArgsManager:
-static inline void ParseParameters(int argc, const char*const argv[])
-{
-    gArgs.ParseParameters(argc, argv);
-}
-
-static inline void ReadConfigFile(const std::string& confPath)
-{
-    gArgs.ReadConfigFile(confPath);
-}
-
-static inline bool SoftSetArg(const std::string& strArg, const std::string& strValue)
-{
-    return gArgs.SoftSetArg(strArg, strValue);
-}
-
-static inline void ForceSetArg(const std::string& strArg, const std::string& strValue)
-{
-    gArgs.ForceSetArg(strArg, strValue);
-}
-
-static inline bool IsArgSet(const std::string& strArg)
-{
-    return gArgs.IsArgSet(strArg);
-}
-
-static inline std::string GetArg(const std::string& strArg, const std::string& strDefault)
-{
-    return gArgs.GetArg(strArg, strDefault);
-}
-
-static inline int64_t GetArg(const std::string& strArg, int64_t nDefault)
-{
-    return gArgs.GetArg(strArg, nDefault);
-}
-
-static inline bool GetBoolArg(const std::string& strArg, bool fDefault)
-{
-    return gArgs.GetBoolArg(strArg, fDefault);
-}
-
-static inline bool SoftSetBoolArg(const std::string& strArg, bool fValue)
-{
-    return gArgs.SoftSetBoolArg(strArg, fValue);
-}
-
-static inline void ForceSetMultiArgs(const std::string& strArg, const std::vector<std::string>& values)
-{
-    gArgs.ForceSetMultiArgs(strArg, values);
-}
-
-static inline void ForceRemoveArg(const std::string& strArg)
-{
-    gArgs.ForceRemoveArg(strArg);
-}
-
 /**
  * Format a string to be used as group of options in help messages
  *
