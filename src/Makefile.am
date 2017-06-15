@@ -114,6 +114,7 @@ BITCOIN_CORE_H = \
   net.h \
   nodestate.h \
   leakybucket.h \
+  netaddress.h \
   netbase.h \
   noui.h \
   parallel.h \
@@ -313,6 +314,7 @@ libbitcoin_common_a_SOURCES = \
   core_write.cpp \
   key.cpp \
   keystore.cpp \
+  netaddress.cpp \
   netbase.cpp \
   protocol.cpp \
   scheduler.cpp \

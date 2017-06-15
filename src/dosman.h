@@ -9,7 +9,6 @@
 
 #include "banentry.h" // for banmap_t
 #include "net.h" // for NodeId
-#include "netbase.h" // for CSubNet
 #include "sync.h" // for CCritalSection
 
 #ifdef DEBUG
@@ -19,7 +18,6 @@
 // NOTE: When adjusting this, update rpcnet:setban's help ("24h")
 static const unsigned int DEFAULT_MISBEHAVING_BANTIME = 60 * 60 * 24; // Default 24-hour ban
 static const unsigned int DEFAULT_BANSCORE_THRESHOLD = 100;
-
 
 class CDoSManager
 {
