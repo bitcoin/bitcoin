@@ -225,6 +225,13 @@ class SegWitTest(BitcoinTestFramework):
         # Now try calling getblocktemplate() without segwit support.
         template = self.nodes[0].getblocktemplate()
 
+        # Check that we got a pre-Segwit template
+        assert_equal(template['sizelimit'], 1000000)
+        assert 'weightlimit' not in template
+        assert_equal(template['sigoplimit'], 20000)
+        # TODO: Would be nice to test for non-zero sigops here
+        assert_equal(template['transactions'][0]['sigops'], 0)
+
         # Check that tx1 is the only transaction of the 3 in the template.
         template_txids = [ t['txid'] for t in template['transactions'] ]
         assert(txid2 not in template_txids and txid3 not in template_txids)
