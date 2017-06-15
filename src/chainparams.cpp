@@ -297,6 +297,8 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT2X].bit = 4;
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT2X].nStartTime = 0;
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT2X].nTimeout = 999999999999ULL;
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT2X].nOverrideMinerConfirmationWindow = 48;
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT2X].nOverrideRuleChangeActivationThreshold = 29; // 60%
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00");
