@@ -12,7 +12,13 @@
 static const unsigned int MAX_BLOCK_SERIALIZED_SIZE = 4000000;
 /** The maximum allowed weight for a block, see BIP 141 (network rule) */
 static const unsigned int MAX_BLOCK_WEIGHT = 4000000;
-/** The maximum allowed size for a block excluding witness data, in bytes (network rule) */
+/**
+ * The maximum allowed size for a block excluding witness data, in bytes (network rule).
+ * This parameter is largely superfluous because it is directly implied by the above block
+ *  weight limit, even when BIP 141 is not active.  It continues to exist for use in
+ *  various early tests that run before the witness data has been checked.
+ * All tests related to it could be removed without breaking consensus compatibility.
+ */
 static const unsigned int MAX_BLOCK_BASE_SIZE = 1000000;
 /** The maximum allowed number of signature check operations in a block (network rule) */
 static const int64_t MAX_BLOCK_SIGOPS_COST = 80000;
