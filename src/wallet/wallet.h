@@ -85,7 +85,7 @@ class CScheduler;
 class CTxMemPool;
 class CBlockPolicyEstimator;
 class CWalletTx;
-class FeeCalculation;
+struct FeeCalculation;
 
 /** (client) version numbers for particular wallet features */
 enum WalletFeature
