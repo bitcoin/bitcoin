@@ -13,7 +13,7 @@ static const unsigned int BIP102_FORK_MIN_HEIGHT = 485218;
 static const unsigned int BIP102_FORK_BUFFER = (144 * 90);
 
 /** The maximum allowed size for a serialized block, in bytes (only for buffer size limits) */
-static const unsigned int MAX_BLOCK_SERIALIZED_SIZE = 4000000;
+static const unsigned int MAX_BLOCK_SERIALIZED_SIZE = (8 * 1000 * 1000);
 /** The maximum allowed weight for a block, see BIP 141 (network rule) */
 static const unsigned int MAX_BLOCK_WEIGHT = 4000000;
 /** The maximum allowed size for a block excluding witness data, in bytes (network rule) */
