@@ -492,6 +492,7 @@ class SendHeadersTest(BitcoinTestFramework):
         # Create extra blocks for later
         for b in range(20):
             blocks.append(create_block(tip, create_coinbase(height), block_time))
+            blocks[-1].nVersion = 0x20000002
             blocks[-1].solve()
             tip = blocks[-1].sha256
             block_time += 1
@@ -538,6 +539,7 @@ class SendHeadersTest(BitcoinTestFramework):
             # Create two more blocks.
             for j in range(2):
                 blocks.append(create_block(tip, create_coinbase(height), block_time))
+                blocks[-1].nVersion = 0x20000002
                 blocks[-1].solve()
                 tip = blocks[-1].sha256
                 block_time += 1
