@@ -3100,7 +3100,7 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Co
     {
         nSigOps += GetLegacySigOpCount(*tx);
     }
-    if (nSigOps * WITNESS_SCALE_FACTOR > MaxBlockSigOpsCost(nHeight, fSegWitActive))
+    if (nSigOps * WITNESS_SCALE_FACTOR > MaxBlockSigOpsCost(nHeight, fSegwitSeasoned))
         return state.DoS(100, false, REJECT_INVALID, "bad-blk-sigops", false, "out-of-bounds SigOpCount");
 
     // After the coinbase witness nonce and commitment are verified,
@@ -3109,7 +3109,7 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Co
     // large by filling up the coinbase witness, which doesn't change
     // the block hash, so we couldn't mark the block as permanently
     // failed).
-    if (GetBlockWeight(block) > MAX_BLOCK_WEIGHT) {
+    if (GetBlockWeight(block) > MaxBlockWeight(nHeight, fSegwitSeasoned)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-blk-weight", false, strprintf("%s : weight limit failed", __func__));
     }
 
