@@ -308,6 +308,9 @@ public:
     int Finalise();
     int FreeExtKeyMaps();
     
+    /** Returns the wallets help message */
+    static std::string GetWalletHelpString(bool showDebug);
+    
     static bool InitLoadWallet();
     
     bool LoadAddressBook(CHDWalletDB *pwdb);

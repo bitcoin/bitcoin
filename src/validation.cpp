@@ -38,6 +38,7 @@
 #include "smsg/smessage.h"
 #include "pos/kernel.h"
 #include "blind.h"
+#include "rctindex.h"
 
 #include <secp256k1_rangeproof.h>
 
@@ -515,6 +516,12 @@ unsigned int GetLegacySigOpCount(const CTransaction& tx)
     {
         nSigOps += txout.scriptPubKey.GetSigOpCount(false);
     }
+    for (const auto &txout : tx.vpout)
+    {
+        const CScript *pScriptPubKey = txout->GetPScriptPubKey();
+        if (pScriptPubKey)
+            nSigOps += pScriptPubKey->GetSigOpCount(false);
+    };
     return nSigOps;
 }
 
@@ -537,7 +544,7 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& in
             const CTxOut &prevout = inputs.GetOutputFor(tx.vin[i]);
             if (prevout.scriptPubKey.IsPayToScriptHash())
                 nSigOps += prevout.scriptPubKey.GetSigOpCount(tx.vin[i].scriptSig);
-        }
+        };
     }
     return nSigOps;
 }
@@ -2263,51 +2270,80 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
     
     int nVtxundo = blockUndo.vtxundo.size()-1;
     // undo transactions in reverse order
-    for (int i = block.vtx.size() - 1; i >= 0; i--) {
+    for (int i = block.vtx.size() - 1; i >= 0; i--)
+    {
+        LogPrintf("i %d\n", i);
         const CTransaction &tx = *(block.vtx[i]);
         uint256 hash = tx.GetHash();
-
-        if (fAddressIndex)
+        
+        int64_t nLastRCTOutputIndex = 0;
+        for (size_t k = tx.vpout.size(); k-- > 0;)
         {
-            for (unsigned int k = tx.vpout.size(); k-- > 0;)
+            const CTxOutBase *out = tx.vpout[k].get();
+            
+            if (out->IsType(OUTPUT_RINGCT))
             {
-                const CTxOutBase *out = tx.vpout[k].get();
+                CTxOutRingCT *txout = (CTxOutRingCT*)out;
                 
-                if (!out->IsType(OUTPUT_STANDARD)
-                    && !out->IsType(OUTPUT_CT))
-                    continue;
-                
-                const CScript *pScript;
-                if (!(pScript = out->GetPScriptPubKey()))
+                if (nLastRCTOutputIndex == 0)
                 {
-                    LogPrintf("ERROR: %s - expected script pointer.\n", __func__);
-                    continue;
+                    pblocktree->ReadLastRCTOutput(nLastRCTOutputIndex);
+                    if (nLastRCTOutputIndex == 0)
+                        return error("%s: RCT index missing, txn %s, %d.", __func__, hash.ToString(), k);
+                    
+                    CAnonOutput ao;
+                    if (!pblocktree->ReadRCTOutput(nLastRCTOutputIndex, ao))
+                        return error("%s: RCT output missing, txn %s, %d, index %d.", __func__, hash.ToString(), k, nLastRCTOutputIndex);
+                    if (ao.pubkey != txout->pk)
+                    {
+                        return error("%s: RCT output mismatch, txn %s, %d, index %d.", __func__, hash.ToString(), k, nLastRCTOutputIndex);
+                    };
                 };
                 
-                CAmount nValue = out->IsType(OUTPUT_STANDARD) ? out->GetValue() : -1;
+                if (!pblocktree->EraseRCTOutput(nLastRCTOutputIndex--))
+                    return error("%s: EraseRCTOutput failed, txn %s, %d, index %d.", __func__, hash.ToString(), k, nLastRCTOutputIndex);
                 
-                int scriptType = 0;
-                std::vector<unsigned char> hashBytes;
-                if (pScript->IsPayToScriptHash())
-                {
-                    hashBytes.assign(pScript->begin()+2, pScript->begin()+22);
-                    scriptType = 2;
-                } else
-                if (pScript->IsPayToPublicKeyHash())
-                {
-                    hashBytes.assign(pScript->begin()+3, pScript->begin()+23);
-                    scriptType = 1;
-                } else
-                {
-                    continue;
-                };
-                
-                // undo receiving activity
-                addressIndex.push_back(std::make_pair(CAddressIndexKey(scriptType, uint160(hashBytes), pindex->nHeight, i, hash, k, false), nValue));
-                // undo unspent index
-                addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(scriptType, uint160(hashBytes), hash, k), CAddressUnspentValue()));
+                continue;
             };
             
+            if (!fAddressIndex
+                || (!out->IsType(OUTPUT_STANDARD)
+                && !out->IsType(OUTPUT_CT)))
+                continue;
+            
+            const CScript *pScript;
+            if (!(pScript = out->GetPScriptPubKey()))
+            {
+                LogPrintf("ERROR: %s - expected script pointer.\n", __func__);
+                continue;
+            };
+            
+            CAmount nValue = out->IsType(OUTPUT_STANDARD) ? out->GetValue() : -1;
+            
+            int scriptType = 0;
+            std::vector<unsigned char> hashBytes;
+            if (pScript->IsPayToScriptHash())
+            {
+                hashBytes.assign(pScript->begin()+2, pScript->begin()+22);
+                scriptType = 2;
+            } else
+            if (pScript->IsPayToPublicKeyHash())
+            {
+                hashBytes.assign(pScript->begin()+3, pScript->begin()+23);
+                scriptType = 1;
+            } else
+            {
+                continue;
+            };
+            
+            // undo receiving activity
+            addressIndex.push_back(std::make_pair(CAddressIndexKey(scriptType, uint160(hashBytes), pindex->nHeight, i, hash, k, false), nValue));
+            // undo unspent index
+            addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(scriptType, uint160(hashBytes), hash, k), CAddressUnspentValue()));
+        };
+
+        if (fAddressIndex) // Legacy code - remove
+        {
             for (unsigned int k = tx.vout.size(); k-- > 0;)
             {
                 const CTxOut &out = tx.vout[k];
@@ -2882,25 +2918,27 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             return state.DoS(100, error("ConnectBlock(): too many sigops"),
                              REJECT_INVALID, "bad-blk-sigops");
         txdata.emplace_back(tx);
+        
+        size_t nStandardOut = 0, nCtOut = 0, nRingCTOut = 0;
+        size_t nStandardIn = 0, nCtIn = 0, nRingCTIn = 0;
         if (!tx.IsCoinBase())
         {
-            size_t nStandard = 0, nCt = 0, nRingCT = 0;
             if (fParticlMode)
             {
-                CAmount nPlainValueIn = view.GetPlainValueIn(tx, nStandard, nCt, nRingCT);
-                CAmount nPlainValueOut = tx.GetPlainValueOut(nStandard, nCt, nRingCT);
+                CAmount nPlainValueIn = view.GetPlainValueIn(tx, nStandardIn, nCtIn, nRingCTIn);
+                CAmount nPlainValueOut = tx.GetPlainValueOut(nStandardOut, nCtOut, nRingCTOut);
                 
                 if (tx.IsCoinStake())
                 {
                     nStakeReward += nPlainValueOut - nPlainValueIn;
                     nMoneyCreated += nStakeReward;
                     
-                    if (nCt > 0 || nRingCT > 0)
+                    if (nCtOut > 0 || nRingCTOut > 0 || nCtIn > 0 || nRingCTIn > 0)
                         return state.DoS(100, error("ConnectBlock(): non-standard outputs in coinstake"),
                              REJECT_INVALID, "bad-coinstake-outputs");
                 } else
                 {
-                    if (nCt > 0 || nRingCT > 0)
+                    if (nCtOut > 0 || nRingCTOut > 0 || nCtIn > 0 || nRingCTIn > 0)
                     {
                         // fee is serialised in data output at vpout0
                         CAmount nFee;
@@ -2921,11 +2959,11 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             std::vector<CScriptCheck> vChecks;
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
             
-            if (nRingCT > 0
-                && (nStandard > 0 || nCt > 0))
+            if (nRingCTIn > 0
+                && (nStandardIn > 0 || nCtIn > 0))
                 return state.DoS(100, error("ConnectBlock(): Mixed input types"), REJECT_INVALID, "mixed-input-types");
             
-            if (nRingCT > 0)
+            if (nRingCTIn > 0)
             {
                 // Verify mlsags
                 // TODO
@@ -2951,15 +2989,35 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         
         
         // Index rct outputs
-        if (fParticlMode)
+        if (nRingCTOut > 0)
         {
+            int64_t nLastRCTOutIndex = 0;
+            pblocktree->ReadLastRCTOutput(nLastRCTOutIndex);
+            
+            if (nLastRCTOutIndex == 0)
+            {
+                LogPrint("rct", "Inserting sentinel RCT output.\n");
+                CAnonOutput sentinel;
+                pblocktree->WriteRCTOutput(std::numeric_limits<int64_t>::max(), sentinel);
+            };
+            
+            COutPoint op(txhash, 0);
+            CDBBatch batch(*pblocktree);
             for (unsigned int k = 0; k < tx.vpout.size(); k++)
             {
                 if (!tx.vpout[k]->IsType(OUTPUT_RINGCT))
                     continue;
                 
+                CTxOutRingCT *txout = (CTxOutRingCT*)tx.vpout[k].get();
                 
+                op.n = k;
+                nLastRCTOutIndex++;
+                CAnonOutput ao(txout->pk, op, pindex->nHeight, 0);
+                batch.Write(std::make_pair(DB_RCTOUTPUT, nLastRCTOutIndex), ao);
             };
+            
+            if (!pblocktree->WriteBatch(batch))
+                return error("ConnectBlock(): Write RCT outputs of %s failed.", txhash.ToString());
         };
         
         

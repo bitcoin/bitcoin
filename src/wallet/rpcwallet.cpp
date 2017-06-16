@@ -1312,13 +1312,35 @@ UniValue ListReceived(const UniValue& params, bool fByAccounts)
         int nDepth = wtx.GetDepthInMainChain();
         if (nDepth < nMinDepth)
             continue;
+        
+        for (auto &txout : wtx.tx->vpout)
+        {
+            if (!txout->IsType(OUTPUT_STANDARD))
+                continue;
+            CTxOutStandard *pOut = (CTxOutStandard*)txout.get();
+            
+            CTxDestination address;
+            if (!ExtractDestination(pOut->scriptPubKey, address))
+                continue;
+            
+            isminefilter mine = IsMine(*pwalletMain, address);
+            if (!(mine & filter))
+                continue;
+            
+            tallyitem& item = mapTally[address];
+            item.nAmount += pOut->nValue;
+            item.nConf = min(item.nConf, nDepth);
+            item.txids.push_back(wtx.GetHash());
+            if (mine & ISMINE_WATCH_ONLY)
+                item.fIsWatchonly = true;
+        };
 
         BOOST_FOREACH(const CTxOut& txout, wtx.tx->vout)
         {
             CTxDestination address;
             if (!ExtractDestination(txout.scriptPubKey, address))
                 continue;
-
+            
             isminefilter mine = IsMine(*pwalletMain, address);
             if(!(mine & filter))
                 continue;

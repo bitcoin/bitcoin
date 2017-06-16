@@ -101,7 +101,7 @@ public:
 
 class MessageData
 {
-// -- Decrypted SecureMessage data
+// Decrypted SecureMessage data
 public:
     int64_t               timestamp;
     std::string           sToAddress;
@@ -277,7 +277,6 @@ public:
 
     unsigned int GetSerializeSize(int nType, int nVersion) const
     {
-        
         return 64 + 1 + 2 + 20 + 20 + 
             GetSizeOfCompactSize(vchMessage.size()) + vchMessage.size() * sizeof(uint8_t);
     }
@@ -314,7 +313,7 @@ public:
 
     ~SecMsgDB()
     {
-        // -- deletes only data scoped to this SecMsgDB object.
+        // Deletes only data scoped to this SecMsgDB object.
         if (activeBatch)
             delete activeBatch;
     };

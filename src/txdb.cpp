@@ -30,10 +30,11 @@ static const char DB_FLAG = 'F';
 static const char DB_REINDEX_FLAG = 'R';
 static const char DB_LAST_BLOCK = 'l';
 
+/*
 static const char DB_RCTOUTPUT = 'A';
 static const char DB_RCTOUTPUT_LINK = 'L';
 static const char DB_RCTKEYIMAGE = 'K';
-
+*/
 
 
 CCoinsViewDB::CCoinsViewDB(size_t nCacheSize, bool fMemory, bool fWipe) : db(GetDataDir() / "chainstate", nCacheSize, fMemory, fWipe, true, false, 64)
@@ -400,3 +401,45 @@ bool CBlockTreeDB::LoadBlockIndexGuts(boost::function<CBlockIndex*(const uint256
 
     return true;
 }
+
+bool CBlockTreeDB::ReadLastRCTOutput(int64_t &rv)
+{
+    boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
+
+    pcursor->Seek(std::make_pair(DB_RCTOUTPUT, std::numeric_limits<int64_t>::max()));
+    
+    rv = 0;
+    if (!pcursor->Valid())
+        return true;
+    
+    pcursor->Prev();
+    if (!pcursor->Valid())
+        return true;
+    
+    std::pair<char, int64_t> key;
+    if (pcursor->GetKey(key) && key.first == DB_RCTOUTPUT)
+        rv = key.second;
+    
+    return true;
+};
+
+bool CBlockTreeDB::ReadRCTOutput(int64_t i, CAnonOutput &ao)
+{
+    return Read(std::make_pair(DB_RCTOUTPUT, i), ao);
+};
+
+bool CBlockTreeDB::WriteRCTOutput(int64_t i, const CAnonOutput &ao)
+{
+    CDBBatch batch(*this);
+    batch.Write(std::make_pair(DB_RCTOUTPUT, i), ao);
+    return WriteBatch(batch);
+};
+
+bool CBlockTreeDB::EraseRCTOutput(int64_t i)
+{
+    CDBBatch batch(*this);
+    batch.Erase(std::make_pair(DB_RCTOUTPUT, i));
+    return WriteBatch(batch);
+};
+
+

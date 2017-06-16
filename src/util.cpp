@@ -571,6 +571,12 @@ void ForceSetArg(const std::string& strArg, const std::string& strValue)
     mapArgs[strArg] = strValue;
 }
 
+void ForceAddMultiArg(const std::string& strArg, const std::string& strValue)
+{
+    LOCK(cs_args);
+    _mapMultiArgs[strArg].push_back(strValue);
+};
+
 
 
 static const int screenWidth = 79;

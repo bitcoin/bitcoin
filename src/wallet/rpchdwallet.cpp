@@ -596,7 +596,7 @@ int ManageExtKey(CStoredExtKey &sek, std::string &sOptName, std::string &sOptVal
     } else
     if (sOptName == "look_ahead")
     {
-        uint64_t nLookAhead = N_DEFAULT_LOOKAHEAD;
+        uint64_t nLookAhead = GetArg("-defaultlookaheadsize", N_DEFAULT_LOOKAHEAD);
         
         if (sOptValue.length() > 0)
         {
@@ -1556,8 +1556,6 @@ UniValue extkeyimportinternal(const JSONRPCRequest &request, bool fGenesisChain)
             std::string genesisChainLabel = "Genesis Import";
             uint32_t genesisChainNo = 444444;
             CStoredExtKey *sekGenesisChain = new CStoredExtKey();
-            
-            sekGenesisChain->mapValue[EKVT_N_LOOKAHEAD] = SetCompressedInt64(v, N_DEFAULT_EKVT_LOOKAHEAD);
             
             if (0 != (rv = pwallet->NewExtKeyFromAccount(&wdb, idNewDefaultAccount,
                 genesisChainLabel, sekGenesisChain, NULL, &genesisChainNo)))

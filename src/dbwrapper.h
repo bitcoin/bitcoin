@@ -120,6 +120,7 @@ public:
     }
 
     void Next();
+    void Prev() { piter->Prev(); }
 
     template<typename K> bool GetKey(K& key) {
         leveldb::Slice slKey = piter->key();

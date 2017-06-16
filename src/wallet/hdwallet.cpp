@@ -31,11 +31,9 @@ int CHDWallet::Finalise()
 {
     if (fDebug)
         LogPrint("hdwallet", "%s\n", __func__);
-    
+
     FreeExtKeyMaps();
-    
     mapAddressBook.clear();
-    
     return 0;
 };
 
@@ -43,7 +41,7 @@ int CHDWallet::FreeExtKeyMaps()
 {
     if (fDebug)
         LogPrint("hdwallet", "%s\n", __func__);
-    
+
     ExtKeyAccountMap::iterator it = mapExtAccounts.begin();
     for (it = mapExtAccounts.begin(); it != mapExtAccounts.end(); ++it)
         if (it->second)
@@ -55,17 +53,36 @@ int CHDWallet::FreeExtKeyMaps()
         if (itl->second)
             delete itl->second;
     mapExtKeys.clear();
-    
+
     return 0;
+};
+
+/** Returns the wallets help message */
+std::string CHDWallet::GetWalletHelpString(bool showDebug)
+{
+    std::string strUsage = CWallet::GetWalletHelpString(showDebug);
+    
+    strUsage += HelpMessageGroup(_("Particl wallet options:"));
+    strUsage += HelpMessageOpt("-defaultlookaheadsize=<n>", strprintf(_("Number of keys to load into the lookahead pool per chain. (default: %u)"), N_DEFAULT_LOOKAHEAD));
+    
+    strUsage += HelpMessageGroup(_("Wallet staking options:"));
+    strUsage += HelpMessageOpt("-staking", _("Stake your coins to support network and gain reward (default: 1)"));
+    strUsage += HelpMessageOpt("-minstakeinterval=<n>", _("Minimum time in seconds between successful stakes (default: 30)"));
+    strUsage += HelpMessageOpt("-minersleep=<n>", _("Milliseconds between stake attempts. Lowering this param will not result in more stakes. (default: 500)"));
+    strUsage += HelpMessageOpt("-reservebalance=<amount>", _("Ensure available balance remains above reservebalance. (default: 0)"));
+    strUsage += HelpMessageOpt("-foundationdonationpercent=<n>", _("Percentage of block reward donated to the foundation fund, overridden by system minimum. (default: 0)"));
+    
+    return strUsage;
 };
 
 bool CHDWallet::InitLoadWallet()
 {
-    if (GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
+    if (GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET))
+    {
         pwalletMain = NULL;
         LogPrintf("Wallet disabled!\n");
         return true;
-    }
+    };
 
     std::string walletFile = GetArg("-wallet", DEFAULT_WALLET_DAT);
 
@@ -3420,7 +3437,6 @@ int CHDWallet::ExtKeyCreateAccount(CStoredExtKey *sekAccount, CKeyID &idMaster, 
     vSubKeyPath = vAccountPath;
     sekExternal->mapValue[EKVT_PATH] = PushUInt32(vSubKeyPath, nExternal);
     sekExternal->nFlags |= EAF_ACTIVE | EAF_RECEIVE_ON | EAF_IN_ACCOUNT;
-    sekExternal->mapValue[EKVT_N_LOOKAHEAD] = SetCompressedInt64(v, N_DEFAULT_EKVT_LOOKAHEAD);
 
     CStoredExtKey *sekInternal = new CStoredExtKey();
     sekInternal->kp = evInternal;
@@ -4125,7 +4141,7 @@ int CHDWallet::ExtKeyAddAccountToMaps(CKeyID &idAccount, CExtKeyAccount *sea, bo
         if (sek->nFlags & EAF_ACTIVE
             && sek->nFlags & EAF_RECEIVE_ON)
         {
-            uint64_t nLookAhead = N_DEFAULT_LOOKAHEAD;
+            uint64_t nLookAhead = GetArg("-defaultlookaheadsize", N_DEFAULT_LOOKAHEAD);
 
             mapEKValue_t::iterator itV = sek->mapValue.find(EKVT_N_LOOKAHEAD);
             if (itV != sek->mapValue.end())
@@ -4323,7 +4339,7 @@ int CHDWallet::PrepareLookahead()
             if (sek->nFlags & EAF_ACTIVE
                 && sek->nFlags & EAF_RECEIVE_ON)
             {
-                uint64_t nLookAhead = N_DEFAULT_LOOKAHEAD;
+                uint64_t nLookAhead = GetArg("-defaultlookaheadsize", N_DEFAULT_LOOKAHEAD);
                 mapEKValue_t::iterator itV = sek->mapValue.find(EKVT_N_LOOKAHEAD);
                 if (itV != sek->mapValue.end())
                     nLookAhead = GetCompressedInt64(itV->second, nLookAhead);
@@ -4995,7 +5011,7 @@ int CHDWallet::NewExtKeyFromAccount(CHDWalletDB *pwdb, const CKeyID &idAccount,
         return errorN(1, "DB Write failed.");
     };
 
-    uint64_t nLookAhead = N_DEFAULT_LOOKAHEAD;
+    uint64_t nLookAhead = GetArg("-defaultlookaheadsize", N_DEFAULT_LOOKAHEAD);
     mvi = sekOut->mapValue.find(EKVT_N_LOOKAHEAD);
     if (mvi != sekOut->mapValue.end())
         nLookAhead = GetCompressedInt64(mvi->second, nLookAhead);
@@ -6377,7 +6393,7 @@ bool CHDWallet::ScanForOwnedOutputs(const CTransaction &tx, size_t &nCT, size_t 
         if (txout->IsType(OUTPUT_STANDARD))
         {
             
-            if (nOutputId < tx.vpout.size()-1
+            if (nOutputId < (int)tx.vpout.size()-1
                 && tx.vpout[nOutputId+1]->IsType(OUTPUT_DATA))
             {
                 CTxOutData *txd = (CTxOutData*) tx.vpout[nOutputId+1].get();

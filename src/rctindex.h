@@ -33,7 +33,7 @@ class CAnonOutput
 {
 // Stored in txdb, key is 64bit index
 public:
-    CAnonOutput() {};
+    CAnonOutput() : nBlockHeight(0), nCompromised(0) {};
     CAnonOutput(CPubKey pubkey_, COutPoint &outpoint_, int nBlockHeight_, uint8_t nCompromised_)
         : pubkey(pubkey_), outpoint(outpoint_), nBlockHeight(nBlockHeight_), nCompromised(nCompromised_) {};
 

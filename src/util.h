@@ -216,6 +216,8 @@ bool SoftSetBoolArg(const std::string& strArg, bool fValue);
 // Forces a arg setting, used only in testing
 void ForceSetArg(const std::string& strArg, const std::string& strValue);
 
+void ForceAddMultiArg(const std::string& strArg, const std::string& strValue);
+
 /**
  * Format a string to be used as group of options in help messages
  *

@@ -14,6 +14,7 @@
 #include "coins.h"
 #include "net.h"
 #include "validation.h"
+#include "blind.h"
 
 #include "rpc/server.h"
 #include "consensus/validation.h"
@@ -28,8 +29,7 @@ struct StakeTestingSetup: public TestingSetup {
     StakeTestingSetup(const std::string& chainName = CBaseChainParams::REGTEST):
         TestingSetup(chainName, true) // fParticlMode = true
     {
-        //fPrintToConsole = true;
-        //fDebug = true;
+        ForceAddMultiArg("-debug", "1");
         
         bitdb.MakeMock();
 
@@ -41,6 +41,8 @@ struct StakeTestingSetup: public TestingSetup {
 
         RegisterWalletRPCCommands(tableRPC);
         RegisterHDWalletRPCCommands(tableRPC);
+        ECC_Start_Stealth();
+        ECC_Start_Blinding();
     }
 
     ~StakeTestingSetup()
@@ -54,6 +56,8 @@ struct StakeTestingSetup: public TestingSetup {
         
         mapStakeSeen.clear();
         listStakeSeen.clear();
+        ECC_Stop_Stealth();
+        ECC_Stop_Blinding();
     }
 };
 
@@ -242,7 +246,7 @@ BOOST_AUTO_TEST_CASE(stake_test)
         BOOST_CHECK(prevTipHash == chainActive.Tip()->GetBlockHash());
         
         
-        // reduce the reward 
+        // Reduce the reward 
         RegtestParams().SetCoinYearReward(1 * CENT);
         
         {
@@ -278,6 +282,64 @@ BOOST_AUTO_TEST_CASE(stake_test)
     std::string extaddr = StripQuotes(rv.write());
     
     BOOST_CHECK(pwallet->GetBalance() + pwallet->GetStaked() == 12500000108911);
+    
+    
+    {
+        LOCK2(cs_main, pwallet->cs_wallet);
+        
+        CValidationState state;
+        BOOST_CHECK_NO_THROW(rv = CallRPC("getnewstealthaddress"));
+        std::string sSxAddr = StripQuotes(rv.write());
+        
+        CBitcoinAddress address(sSxAddr);
+        BOOST_CHECK(address.IsValid());
+        
+        std::vector<CTempRecipient> vecSend;
+        std::string sError;
+        CTempRecipient r;
+        r.nType = OUTPUT_RINGCT;
+        r.nAmount = 10;
+        r.address = address.Get();
+        vecSend.push_back(r);
+        
+        CWalletTx wtx;
+        CTransactionRecord rtx;
+        BOOST_CHECK(0 == pwallet->AddStandardInputs(wtx, rtx, vecSend, true, sError));
+        
+        wtx.BindWallet(pwallet);
+        BOOST_CHECK(wtx.AcceptToMemoryPool(maxTxFee, state));
+        
+        StakeNBlocks(pwallet, 1);
+        
+        int64_t nLastRCTOutIndex = 0;
+        pblocktree->ReadLastRCTOutput(nLastRCTOutIndex);
+        BOOST_CHECK(nLastRCTOutIndex == 2);
+        
+        
+        
+        {
+            // Disconnect last block
+            uint256 prevTipHash = chainActive.Tip()->pprev->GetBlockHash();
+            CBlockIndex *pindexDelete = chainActive.Tip();
+            BOOST_REQUIRE(pindexDelete);
+            
+            CBlock block;
+            BOOST_REQUIRE(ReadBlockFromDisk(block, pindexDelete, chainparams.GetConsensus()));
+            
+            CCoinsViewCache view(pcoinsTip, fParticlMode);
+            CValidationState state;
+            BOOST_REQUIRE(DisconnectBlock(block, state, pindexDelete, view));
+            BOOST_REQUIRE(view.Flush());
+            BOOST_REQUIRE(FlushStateToDisk(state, FLUSH_STATE_IF_NEEDED));
+            UpdateTip(pindexDelete->pprev, chainparams);
+            
+            BOOST_CHECK(prevTipHash == chainActive.Tip()->GetBlockHash());
+        }
+        
+        pblocktree->ReadLastRCTOutput(nLastRCTOutIndex);
+        BOOST_CHECK(nLastRCTOutIndex == 0);
+    }
+    
 }
 
 BOOST_AUTO_TEST_SUITE_END()
