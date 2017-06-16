@@ -100,8 +100,8 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT2X].bit = 4;
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT2X].nStartTime = 1496275200; // June 1st, 2017.
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT2X].nTimeout = 1510704000; // November 15th, 2017.
-        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT2X].nOverrideMinerConfirmationWindow = 672; // ~4.67 days
-        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT2X].nOverrideRuleChangeActivationThreshold = 538; // 80%
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT2X].nOverrideMinerConfirmationWindow = 336; // ~2.33 days
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT2X].nOverrideRuleChangeActivationThreshold = 269; // 80%
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000003f94d1ad391682fe038bf5");
