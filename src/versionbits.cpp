@@ -151,13 +151,14 @@ private:
 protected:
     int64_t BeginTime(const Consensus::Params& params) const { return params.vDeployments[id].nStartTime; }
     int64_t EndTime(const Consensus::Params& params) const { return params.vDeployments[id].nTimeout; }
-    int Period(const Consensus::Params& params) const { return params.nMinerConfirmationWindow; }
+    int Period(const Consensus::Params& params) const {
+        if (params.vDeployments[id].nOverrideMinerConfirmationWindow > 0)
+            return params.vDeployments[id].nOverrideMinerConfirmationWindow;
+        return params.nMinerConfirmationWindow;
+    }
     int Threshold(const Consensus::Params& params) const {
-        if (params.nRuleChangeActivationThreshold == 1916 && params.nMinerConfirmationWindow == 2016 &&
-            params.vDeployments[id].bit == params.vDeployments[Consensus::DEPLOYMENT_SEGWIT2X].bit &&
-            params.vDeployments[id].nStartTime == params.vDeployments[Consensus::DEPLOYMENT_SEGWIT2X].nStartTime) {
-            return 1612; // 80% threshold for SEGWIT2X only
-        }
+        if (params.vDeployments[id].nOverrideRuleChangeActivationThreshold > 0)
+            return params.vDeployments[id].nOverrideRuleChangeActivationThreshold;
         return params.nRuleChangeActivationThreshold;
     }
 

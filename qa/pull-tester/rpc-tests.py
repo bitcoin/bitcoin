@@ -155,6 +155,7 @@ testScripts = [
     'rpcnamedargs.py',
     'listsinceblock.py',
     'p2p-leaktests.py',
+    'bip91.py',
 ]
 if ENABLE_ZMQ:
     testScripts.append('zmq_test.py')
