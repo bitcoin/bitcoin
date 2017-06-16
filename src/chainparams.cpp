@@ -96,7 +96,7 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 1479168000; // November 15th, 2016.
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 1510704000; // November 15th, 2017.
 
-        // Deployment of SEGWIT2X
+        // Deployment of SegWit2x
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT2X].bit = 4;
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT2X].nStartTime = 1496275200; // June 1st, 2017.
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT2X].nTimeout = 1510704000; // November 15th, 2017.
@@ -209,6 +209,11 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT2X].bit = 4;
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT2X].nStartTime = 1496275200; // June 1, 2017.
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT2X].nTimeout = 1510704000; // November 15th, 2017
+
+        // Deployment of SegWit2x
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT2X].bit = 4;
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT2X].nStartTime = 1496275200; // June 1st, 2017.
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT2X].nTimeout = 1510704000; // November 15th, 2017.
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000000000000000100");
