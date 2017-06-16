@@ -15,7 +15,8 @@ regtest lock-in with 108/144 for BIP141 and 29/48 for BIP91
 mine 143 blocks to transition from DEFINED to STARTED
 mine 28 blocks signalling readiness and 20 not in order to fail to change state this period for BIP91
 mine 29 blocks signalling readiness and 19 blocks not signalling readiness for BIP91 (STARTED->LOCKED_IN)
-bit 1 is mandatory for the following 192 blocks until BIP141 is locked_in
+bit 1 is optional for the following 48 blocks when BIP91 is LOCKED_IN (LOCKED_IN->ACTIVE)
+bit 1 is mandatory for the following 144 blocks until BIP141 is locked_in
 bit 1 is optional after BIP141 is locked_in
 '''
 
@@ -86,7 +87,25 @@ class BIP91Test(BitcoinTestFramework):
         assert_equal(tmpl['version'], 0x10000001|0x20000012)
 
         # Test 4
-        # bit 1 signalling becomes mandatory after bit 4 locked_in
+        # No restriction when bit 4 is LOCKED_IN
+        self.generate_blocks(5, 4)
+        self.generate_blocks(5, 0x20000000)
+        self.generate_blocks(5, 0x20000010)
+        self.generate_blocks(5, 0x40000002)
+        self.generate_blocks(5, 0x60000002)
+        self.generate_blocks(5, 0x12)
+        self.generate_blocks(5, 0x20000002)
+        self.generate_blocks(5, 0x20000012)
+        self.generate_blocks(8, 0x20000102)
+        assert_equal(self.get_bip9_status('segwit2x')['status'], 'active')
+        assert_equal(self.get_bip9_status('segwit2x')['since'], 288)
+        assert_equal(self.get_bip9_status('segwit')['status'], 'started')
+        assert_equal(self.get_bip9_status('segwit')['since'], 144)
+        tmpl = self.nodes[0].getblocktemplate({})
+        assert_equal(tmpl['version'], 0x10000001|0x20000002)
+
+        # Test 5
+        # bit 1 signalling becomes mandatory after bit 4 is ACTIVE
         self.generate_blocks(1, 4, 'bad-no-segwit')
         self.generate_blocks(1, 0x20000000, 'bad-no-segwit')
         self.generate_blocks(1, 0x20000010, 'bad-no-segwit')
@@ -95,7 +114,7 @@ class BIP91Test(BitcoinTestFramework):
         self.generate_blocks(1, 0x12, 'bad-no-segwit')
         self.generate_blocks(35, 0x20000002)
         self.generate_blocks(35, 0x20000012)
-        self.generate_blocks(121, 0x20000102)
+        self.generate_blocks(73, 0x20000102)
 
         assert_equal(self.get_bip9_status('segwit2x')['status'], 'active')
         assert_equal(self.get_bip9_status('segwit2x')['since'], 288)
@@ -112,7 +131,7 @@ class BIP91Test(BitcoinTestFramework):
         self.generate_blocks(1, 0x12, 'bad-no-segwit')
         self.generate_blocks(1, 0x20000002)
 
-        # Test 4
+        # Test 6
         # bit 1 signalling becomes optional after bit 1 locked_in
 
         assert_equal(self.get_bip9_status('segwit2x')['status'], 'active')
