@@ -3066,6 +3066,7 @@ const std::string& CWallet::GetAccountName(const CScript& scriptPubKey) const
 
 bool CWallet::SetDefaultKey(const CPubKey &vchPubKey)
 {
+    assert(vchPubKey.IsFullyValid());
     if (!CWalletDB(*dbw).WriteDefaultKey(vchPubKey))
         return false;
     vchDefaultKey = vchPubKey;
@@ -3852,14 +3853,9 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
             if (!walletInstance->SetHDMasterKey(masterPubKey))
                 throw std::runtime_error(std::string(__func__) + ": Storing master key failed");
         }
-        CPubKey newDefaultKey;
-        if (walletInstance->GetKeyFromPool(newDefaultKey, false)) {
-            walletInstance->SetDefaultKey(newDefaultKey);
-            if (!walletInstance->SetAddressBook(walletInstance->vchDefaultKey.GetID(), "", "receive")) {
-                InitError(_("Cannot write default address") += "\n");
-                return NULL;
-            }
-        }
+        // Constant key for legacy purposes to mark the wallet as initialized.
+        CPubKey newDefaultKey(ParseHex("037cf8657dd81f60d83afb03168b5a7c024fa174c5c11540b6413c2d39e807c5c6"));
+        walletInstance->SetDefaultKey(newDefaultKey);
 
         walletInstance->SetBestChain(chainActive.GetLocator());
     }

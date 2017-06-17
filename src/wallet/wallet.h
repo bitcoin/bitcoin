@@ -807,6 +807,7 @@ public:
 
     std::map<CTxDestination, CAddressBookData> mapAddressBook;
 
+    // Legacy method of marking wallet as initialized when IsFullyValid()
     CPubKey vchDefaultKey;
 
     std::set<COutPoint> setLockedCoins;
