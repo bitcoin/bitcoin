@@ -217,7 +217,11 @@ HEADERS += src/qt/bitcoingui.h \
     src/leveldb.h \
     src/threadsafety.h \
     src/limitedmap.h \
-    src/qt/splashscreen.h
+    src/qt/splashscreen.h \
+    src/qt/mintingview.h \
+    src/qt/mintingtablemodel.h \
+    src/qt/mintingfilterproxy.h \
+    src/kernelrecord.h
 
 SOURCES += src/qt/bitcoin.cpp \
     src/qt/bitcoingui.cpp \
@@ -267,6 +271,7 @@ SOURCES += src/qt/bitcoin.cpp \
     src/rpcdump.cpp \
     src/rpcnet.cpp \
     src/rpcmining.cpp \
+    src/rpcminting.cpp \
     src/rpcwallet.cpp \
     src/rpcblockchain.cpp \
     src/rpcrawtransaction.cpp \
@@ -287,7 +292,11 @@ SOURCES += src/qt/bitcoin.cpp \
     src/noui.cpp \
     src/leveldb.cpp \
     src/txdb.cpp \
-    src/qt/splashscreen.cpp
+    src/qt/splashscreen.cpp \
+    src/qt/mintingview.cpp \
+    src/qt/mintingtablemodel.cpp \
+    src/qt/mintingfilterproxy.cpp \
+    src/kernelrecord.cpp
 
 RESOURCES += src/qt/bitcoin.qrc
 

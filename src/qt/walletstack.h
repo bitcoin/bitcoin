@@ -69,6 +69,8 @@ public slots:
 
     /** Switch to overview (home) page */
     void gotoOverviewPage();
+    /** Switch to minting page */
+    void gotoMintingPage();
     /** Switch to history (transactions) page */
     void gotoHistoryPage();
     /** Switch to address book page */

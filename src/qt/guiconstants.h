@@ -31,4 +31,9 @@ static const int MAX_URI_LENGTH = 255;
 /* QRCodeDialog -- size of exported QR Code image */
 #define EXPORT_IMAGE_SIZE 256
 
+/* Colors for minting tab for each coin age group */
+#define COLOR_MINT_YOUNG QColor(127, 127, 240)
+#define COLOR_MINT_MATURE QColor(127, 240, 127)
+#define COLOR_MINT_OLD QColor(240, 127, 127)
+
 #endif // GUICONSTANTS_H

@@ -82,6 +82,13 @@ void WalletStack::gotoOverviewPage()
         i.value()->gotoOverviewPage();
 }
 
+void WalletStack::gotoMintingPage()
+{
+    QMap<QString, WalletView*>::const_iterator i;
+    for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
+        i.value()->gotoMintingPage();
+}
+
 void WalletStack::gotoHistoryPage()
 {
     QMap<QString, WalletView*>::const_iterator i;
