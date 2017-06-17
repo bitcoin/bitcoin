@@ -32,14 +32,17 @@ public:
     CMainParams() {
         strNetworkID = "main";
         consensus.nSubsidyHalvingInterval = 80640;
-        consensus.nMajorityEnforceBlockUpgrade = 750;
-        consensus.nMajorityRejectBlockOutdated = 950;
-        consensus.nMajorityWindow = 8000;
+        consensus.nMajorityEnforceBlockUpgrade1 = 750;
+        consensus.nMajorityRejectBlockOutdated1 = 950;
+        consensus.nMajorityWindow1 = 8000;
+        consensus.nMajorityEnforceBlockUpgrade2 = 7500;
+        consensus.nMajorityRejectBlockOutdated2 = 9500;
+        consensus.nMajorityWindow2 = 10000;
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 2 * 60; // two minutes
         consensus.nPowTargetSpacing = 30;
         consensus.fPowAllowMinDifficultyBlocks = false;
-        /** 
+        /**
          * The message start string is designed to be unlikely to occur in normal data.
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
          * a large 32-bit integer with any alignment.
@@ -101,7 +104,7 @@ public:
         vSeeds.push_back(CDNSSeedData("seed7.zetac.org", "seed7.zetac.org"));
         vSeeds.push_back(CDNSSeedData("seed8.zetac.org", "seed8.zetac.org"));
         vSeeds.push_back(CDNSSeedData("zet2.ignorelist.com", "zet2.ignorelist.com"));
-        vSeeds.push_back(CDNSSeedData("zet.strangled.net", "zet.strangled.net"));	
+        vSeeds.push_back(CDNSSeedData("zet.strangled.net", "zet.strangled.net"));
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,80);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,9);
@@ -162,9 +165,12 @@ class CTestNetParams : public CMainParams {
 public:
     CTestNetParams() {
         strNetworkID = "test";
-        consensus.nMajorityEnforceBlockUpgrade = 51;
-        consensus.nMajorityRejectBlockOutdated = 75;
-        consensus.nMajorityWindow = 100;
+        consensus.nMajorityEnforceBlockUpgrade1 = 51;
+        consensus.nMajorityRejectBlockOutdated1 = 75;
+        consensus.nMajorityWindow1 = 100;
+        consensus.nMajorityEnforceBlockUpgrade2 = 51;
+        consensus.nMajorityRejectBlockOutdated2 = 75;
+        consensus.nMajorityWindow2 = 100;
         consensus.fPowAllowMinDifficultyBlocks = true;
         pchMessageStart[0] = 0x05;
         pchMessageStart[1] = 0xfe;
@@ -223,9 +229,12 @@ public:
     CRegTestParams() {
         strNetworkID = "regtest";
         consensus.nSubsidyHalvingInterval = 150;
-        consensus.nMajorityEnforceBlockUpgrade = 750;
-        consensus.nMajorityRejectBlockOutdated = 950;
-        consensus.nMajorityWindow = 1000;
+        consensus.nMajorityEnforceBlockUpgrade1 = 750;
+        consensus.nMajorityRejectBlockOutdated1 = 950;
+        consensus.nMajorityWindow1 = 1000;
+        consensus.nMajorityEnforceBlockUpgrade2 = 750;
+        consensus.nMajorityRejectBlockOutdated2 = 950;
+        consensus.nMajorityWindow2 = 1000;
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         pchMessageStart[0] = 0xfa;
         pchMessageStart[1] = 0x0f;

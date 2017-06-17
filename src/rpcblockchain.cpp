@@ -471,7 +471,7 @@ Object SoftForkMajorityDesc(int minVersion, CBlockIndex* pindex, int nRequired, 
 {
     int nFound = 0;
     CBlockIndex* pstart = pindex;
-    for (int i = 0; i < consensusParams.nMajorityWindow && pstart != NULL; i++)
+    for (int i = 0; i < consensusParams.nMajorityWindow2 && pstart != NULL; i++)
     {
         if (pstart->nVersion >= minVersion)
             ++nFound;
@@ -482,7 +482,7 @@ Object SoftForkMajorityDesc(int minVersion, CBlockIndex* pindex, int nRequired, 
     rv.push_back(Pair("status", nFound >= nRequired));
     rv.push_back(Pair("found", nFound));
     rv.push_back(Pair("required", nRequired));
-    rv.push_back(Pair("window", consensusParams.nMajorityWindow));
+    rv.push_back(Pair("window", consensusParams.nMajorityWindow2));
     return rv;
 }
 
@@ -491,8 +491,8 @@ Object SoftForkDesc(const std::string &name, int version, CBlockIndex* pindex, c
     Object rv;
     rv.push_back(Pair("id", name));
     rv.push_back(Pair("version", version));
-    rv.push_back(Pair("enforce", SoftForkMajorityDesc(version, pindex, consensusParams.nMajorityEnforceBlockUpgrade, consensusParams)));
-    rv.push_back(Pair("reject", SoftForkMajorityDesc(version, pindex, consensusParams.nMajorityRejectBlockOutdated, consensusParams)));
+    rv.push_back(Pair("enforce", SoftForkMajorityDesc(version, pindex, consensusParams.nMajorityEnforceBlockUpgrade2, consensusParams)));
+    rv.push_back(Pair("reject", SoftForkMajorityDesc(version, pindex, consensusParams.nMajorityRejectBlockOutdated2, consensusParams)));
     return rv;
 }
 
@@ -548,6 +548,7 @@ Value getblockchaininfo(const Array& params, bool fHelp)
     softforks.push_back(SoftForkDesc("bip34", 2, tip, consensusParams));
     softforks.push_back(SoftForkDesc("bip66", 3, tip, consensusParams));
     softforks.push_back(SoftForkDesc("bip65", 4, tip, consensusParams));
+    softforks.push_back(SoftForkDesc("v5", 5, tip, consensusParams));
     obj.push_back(Pair("softforks",             softforks));
 
     if (fPruneMode)

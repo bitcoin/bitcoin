@@ -16,9 +16,12 @@ struct Params {
     uint256 hashGenesisBlock;
     int nSubsidyHalvingInterval;
     /** Used to check majorities for block version upgrade */
-    int nMajorityEnforceBlockUpgrade;
-    int nMajorityRejectBlockOutdated;
-    int nMajorityWindow;
+    int nMajorityEnforceBlockUpgrade1;
+    int nMajorityRejectBlockOutdated1;
+    int nMajorityWindow1;
+    int nMajorityEnforceBlockUpgrade2;
+    int nMajorityRejectBlockOutdated2;
+    int nMajorityWindow2;
     /** Proof of work parameters */
     uint256 powLimit;
     bool fPowAllowMinDifficultyBlocks;
