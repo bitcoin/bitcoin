@@ -7,15 +7,14 @@
 #ifndef BITCOIN_PRIMITIVES_TRANSACTION_H
 #define BITCOIN_PRIMITIVES_TRANSACTION_H
 
+<<<<<<< HEAD
+#include <stdint.h>
 #include <amount.h>
-#include <policy/feerate.h>
 #include <script/script.h>
 #include <serialize.h>
 #include <uint256.h>
 
 static const int SERIALIZE_TRANSACTION_NO_WITNESS = 0x40000000;
-
-static const int WITNESS_SCALE_FACTOR = 4;
 
 static const int32_t MSG_TX_VERSION = 2;
 
@@ -440,9 +439,6 @@ struct CMutableTransaction
 typedef std::shared_ptr<const CTransaction> CTransactionRef;
 static inline CTransactionRef MakeTransactionRef() { return std::make_shared<const CTransaction>(); }
 template <typename Tx> static inline CTransactionRef MakeTransactionRef(Tx&& txIn) { return std::make_shared<const CTransaction>(std::forward<Tx>(txIn)); }
-
-/** Compute the weight of a transaction, as defined by BIP 141 */
-int64_t GetTransactionWeight(const CTransaction &tx);
 
 /** Implementation of BIP69
  * https://github.com/bitcoin/bips/blob/master/bip-0069.mediawiki
