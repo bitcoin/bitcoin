@@ -87,14 +87,6 @@ public:
         assert(consensus.hashGenesisBlock == uint256S("0x000006cab7aa2be2da91015902aa4458dd5fbb8778d175c36d429dc986f2bff4"));
         assert(genesis.hashMerkleRoot == uint256S("0xd0227b8c3e3d07bce9656b3d9e474f050d23458aaead93357dcfdac9ab9b79f9"));
 
-        vSeeds.push_back(CDNSSeedData("seed1.zeta-coin.com", "seed1.zeta-coin.com"));
-        vSeeds.push_back(CDNSSeedData("seed2.zeta-coin.com", "seed2.zeta-coin.com"));
-        vSeeds.push_back(CDNSSeedData("seed3.zeta-coin.com", "seed3.zeta-coin.com"));
-        vSeeds.push_back(CDNSSeedData("seed4.zeta-coin.com", "seed4.zeta-coin.com"));
-        vSeeds.push_back(CDNSSeedData("seed5.zeta-coin.com", "seed5.zeta-coin.com"));
-        vSeeds.push_back(CDNSSeedData("seed6.zeta-coin.com", "seed6.zeta-coin.com"));
-        vSeeds.push_back(CDNSSeedData("seed7.zeta-coin.com", "seed7.zeta-coin.com"));
-        vSeeds.push_back(CDNSSeedData("seed8.zeta-coin.com", "seed8.zeta-coin.com"));
         vSeeds.push_back(CDNSSeedData("seed1.zetac.org", "seed1.zetac.org"));
         vSeeds.push_back(CDNSSeedData("seed2.zetac.org", "seed2.zetac.org"));
         vSeeds.push_back(CDNSSeedData("seed3.zetac.org", "seed3.zetac.org"));
@@ -103,8 +95,10 @@ public:
         vSeeds.push_back(CDNSSeedData("seed6.zetac.org", "seed6.zetac.org"));
         vSeeds.push_back(CDNSSeedData("seed7.zetac.org", "seed7.zetac.org"));
         vSeeds.push_back(CDNSSeedData("seed8.zetac.org", "seed8.zetac.org"));
-        vSeeds.push_back(CDNSSeedData("zet2.ignorelist.com", "zet2.ignorelist.com"));
-        vSeeds.push_back(CDNSSeedData("zet.strangled.net", "zet.strangled.net"));
+        vSeeds.push_back(CDNSSeedData("zeta1.twilightparadox.com", "zeta1.twilightparadox.com"));
+        vSeeds.push_back(CDNSSeedData("zeta2.twilightparadox.com", "zeta2.twilightparadox.com"));
+        vSeeds.push_back(CDNSSeedData("zeta3.twilightparadox.com", "zeta3.twilightparadox.com"));
+        vSeeds.push_back(CDNSSeedData("zeta4.twilightparadox.com", "zeta4.twilightparadox.com"));
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,80);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,9);
