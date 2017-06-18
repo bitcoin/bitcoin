@@ -14,7 +14,7 @@
 #include <string>
 #include <vector>
 
-const int MAX_SEED_BLOCK = 460000;
+const int MAX_SEED_BLOCK = 470000;
 
 static std::set<int> GetBlockList()
 {
