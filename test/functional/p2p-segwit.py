@@ -1944,7 +1944,7 @@ class SegWitTest(BitcoinTestFramework):
         self.test_signature_version_1()
         self.test_non_standard_witness()
         sync_blocks(self.nodes)
-        self.test_upgrade_after_activation(2)
+        self.test_upgrade_after_activation(node_id=2)
         self.test_witness_sigops()
 
 
