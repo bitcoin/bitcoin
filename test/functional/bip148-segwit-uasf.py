@@ -42,7 +42,7 @@ class BIP148Test(BitcoinTestFramework):
         self.setup_clean_chain = False
         self.extra_args = [
              [bip9_blockver(0)],   # for initial CSV activation only
-             [bip9_blockver(1)],
+             [bip9_blockver(1), "-bip148=0"],
              [bip9_blockver()],
              [bip9_blockver(1), "-bip148"],
              [bip9_blockver(1)],
@@ -197,7 +197,15 @@ class BIP148Test(BitcoinTestFramework):
         self.log.info("Reconnecting nodes")
         self.connect_all()
 
+    def get_bip148_uacomment(self, subver):
+        m = re.search(r'([+!]BIP148\=?)', subver)
+        return m.group(1)
+
     def run_test(self):
+        assert self.get_bip148_uacomment(self.nodes[0].getnetworkinfo()['subversion']) == '!BIP148='
+        assert self.get_bip148_uacomment(self.nodes[1].getnetworkinfo()['subversion']) == '!BIP148'
+        assert self.get_bip148_uacomment(self.nodes[3].getnetworkinfo()['subversion']) == '+BIP148'
+
         cnt = self.nodes[0].getblockcount()
 
         # Lock in CSV
