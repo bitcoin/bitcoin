@@ -102,6 +102,4 @@ bool static inline IsSelectableSocket(SOCKET s) {
 #endif
 }
 
-#define IPV6_ADDR_SCOPE_GLOBAL          0x0e
-#define IPV6_ADDR_SCOPE_RESERVED        0x0
 #endif // BITCOIN_COMPAT_H

@@ -19,7 +19,7 @@
 #include "leakybucket.h"
 #include "main.h"
 #include "miner.h"
-#include "net.h"
+#include "netbase.h"
 #include "nodestate.h"
 #include "policy/policy.h"
 #include "primitives/block.h"
