@@ -20,6 +20,7 @@ import datetime
 import os
 import time
 import shutil
+import signal
 import sys
 import subprocess
 import tempfile
@@ -85,7 +86,7 @@ BASE_SCRIPTS= [
     'rawtransactions.py',
     'reindex.py',
     # vv Tests less than 30s vv
-    "zmq_test.py",
+    'zmq_test.py',
     'mempool_resurrect_test.py',
     'txn_doublespend.py --mineblock',
     'txn_clone.py',
@@ -404,6 +405,10 @@ class TestHandler:
             time.sleep(.5)
             for j in self.jobs:
                 (name, time0, proc, log_out, log_err) = j
+                if os.getenv('TRAVIS') == 'true' and int(time.time() - time0) > 20 * 60:
+                    # In travis, timeout individual tests after 20 minutes (to stop tests hanging and not
+                    # providing useful output.
+                    proc.send_signal(signal.SIGINT)
                 if proc.poll() is not None:
                     log_out.seek(0), log_err.seek(0)
                     [stdout, stderr] = [l.read().decode('utf-8') for l in (log_out, log_err)]
