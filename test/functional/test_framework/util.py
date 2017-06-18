@@ -192,15 +192,10 @@ def get_datadir_path(dirname, n):
     return os.path.join(dirname, "node"+str(n))
 
 def get_auth_cookie(datadir, n):
-    if os.path.isfile(os.path.join(datadir, "regtest", ".cookie")):
-        with open(os.path.join(datadir, "regtest", ".cookie"), 'r') as f:
-            userpass = f.read()
-            split_userpass = userpass.split(':')
-            return split_userpass[0], split_userpass[1]
-    else:
+    user = None
+    password = None
+    if os.path.isfile(os.path.join(datadir, "bitcoin.conf")):
         with open(os.path.join(datadir, "bitcoin.conf"), 'r') as f:
-            user = None
-            password = None
             for line in f:
                 if line.startswith("rpcuser="):
                     assert user is None # Ensure that there is only one rpcuser line
@@ -208,9 +203,15 @@ def get_auth_cookie(datadir, n):
                 if line.startswith("rpcpassword="):
                     assert password is None # Ensure that there is only one rpcpassword line
                     password = line.split("=")[1].strip("\n")
-            if user is None and password is None:
-                raise ValueError("No RPC credentials")
-            return user, password
+    if os.path.isfile(os.path.join(datadir, "regtest", ".cookie")):
+        with open(os.path.join(datadir, "regtest", ".cookie"), 'r') as f:
+            userpass = f.read()
+            split_userpass = userpass.split(':')
+            user = split_userpass[0]
+            password = split_userpass[1]
+    if user is None or password is None:
+        raise ValueError("No RPC credentials")
+    return user, password
 
 def rpc_url(datadir, i, rpchost=None):
     rpc_u, rpc_p = get_auth_cookie(datadir, i)
