@@ -27,7 +27,8 @@ ThroneList::ThroneList(QWidget *parent) :
     ui->setupUi(this);
 
     ui->startButton->setEnabled(false);
-    ui->voteManyButton->setEnabled(false);
+    ui->voteManyYesButton->setEnabled(false);
+    ui->voteManyNoButton->setEnabled(false);
 
     int columnAliasWidth = 100;
     int columnAddressWidth = 200;
@@ -412,11 +413,10 @@ void ThroneList::on_UpdateVotesButton_clicked()
 
 void ThroneList::updateVoteList()
 {
-    static int64_t lastListUpdate = 0;
+    static int64_t lastVoteListUpdate = 0;
 
     // update only once in THRONELIST_UPDATE_SECONDS seconds to prevent high cpu usage e.g. on filter change
-    if(GetTime() - lastListUpdate < THRONELIST_UPDATE_SECONDS) return;
-    lastListUpdate = GetTime();
+    if(GetTime() - lastVoteListUpdate < THRONELIST_UPDATE_SECONDS) return;
 
     QString strToFilter;
     ui->voteSecondsLabel->setText("Updating...");
@@ -467,6 +467,10 @@ void ThroneList::updateVoteList()
 
     ui->totalAllottedLabel->setText(QString::number(nTotalAllotted));
     ui->tableWidgetVoting->setSortingEnabled(true);
+
+    lastVoteListUpdate = GetTime();
+    int64_t timeTillUpdate = lastVoteListUpdate + MY_THRONELIST_UPDATE_SECONDS - GetTime();
+    ui->voteSecondsLabel->setText(QString::number(timeTillUpdate));
 
 }
 
@@ -608,6 +612,7 @@ void ThroneList::on_tableWidgetVoting_itemSelectionChanged()
 {
     if(ui->tableWidgetVoting->selectedItems().count() > 0)
     {
-        ui->voteManyButton->setEnabled(true);
+        ui->voteManyYesButton->setEnabled(true);
+        ui->voteManyNoButton->setEnabled(true);
     }
 }
