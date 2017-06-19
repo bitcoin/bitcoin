@@ -1589,6 +1589,7 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consens
     bool fStrictPayToScriptHash = (pindex->GetBlockTime() >= nBIP16SwitchTime);
 
     unsigned int flags = fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE;
+    bool fSegwitSeasoned = false;
 
     // Start enforcing the DERSIG (BIP66) rule
     if (pindex->nHeight >= consensusparams.BIP66Height) {
@@ -1725,8 +1726,24 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
         nLockTimeFlags |= LOCKTIME_VERIFY_SEQUENCE;
     }
 
-    // Get the script flags for this block
-    unsigned int flags = GetBlockScriptFlags(pindex, chainparams.GetConsensus());
+    // Start enforcing WITNESS rules using versionbits logic.
+    if (IsWitnessEnabled(pindex->pprev, chainparams.GetConsensus())) {
+        flags |= SCRIPT_VERIFY_WITNESS;
+        flags |= SCRIPT_VERIFY_NULLDUMMY;
+        fSegwitSeasoned = IsWitnessSeasoned(pindex->pprev, chainparams.GetConsensus());
+    }
+
+    // SEGWIT2X signalling.
+    if ( VersionBitsState(pindex->pprev, chainparams.GetConsensus(), Consensus::DEPLOYMENT_SEGWIT2X, versionbitscache) == THRESHOLD_ACTIVE &&
+         !IsWitnessLockedIn(pindex->pprev, chainparams.GetConsensus()) &&  // Segwit is not locked in
+         !IsWitnessEnabled(pindex->pprev, chainparams.GetConsensus()) ) // and is not active.
+    {
+        bool fVersionBits = (pindex->nVersion & VERSIONBITS_TOP_MASK) == VERSIONBITS_TOP_BITS;
+        bool fSegbit = (pindex->nVersion & VersionBitsMask(chainparams.GetConsensus(), Consensus::DEPLOYMENT_SEGWIT)) != 0;
+        if (!(fVersionBits && fSegbit)) {
+            return state.DoS(0, error("ConnectBlock(): relayed block must signal for segwit, please upgrade"), REJECT_INVALID, "bad-no-segwit");
+        }
+    }
 
     int64_t nTime2 = GetTimeMicros(); nTimeForks += nTime2 - nTime1;
     LogPrint(BCLog::BENCH, "    - Fork checks: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1), nTimeForks * 0.000001);
@@ -1776,7 +1793,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
         // * p2sh (when P2SH enabled in flags and excludes coinbase)
         // * witness (when witness enabled in flags and excludes coinbase)
         nSigOpsCost += GetTransactionSigOpCost(tx, view, flags);
-        if (nSigOpsCost > MaxBlockSigOpsCost(pindex->nHeight, (flags & SCRIPT_VERIFY_WITNESS) ? true : false))
+        if (nSigOpsCost > MaxBlockSigOpsCost(pindex->nHeight, fSegwitSeasoned))
             return state.DoS(100, error("ConnectBlock(): too many sigops"),
                              REJECT_INVALID, "bad-blk-sigops");
 
@@ -2852,6 +2869,21 @@ bool IsWitnessEnabled(const CBlockIndex* pindexPrev, const Consensus::Params& pa
     return (VersionBitsState(pindexPrev, params, Consensus::DEPLOYMENT_SEGWIT, versionbitscache) == THRESHOLD_ACTIVE);
 }
 
+bool IsWitnessSeasoned(const CBlockIndex* pindexPrev, const Consensus::Params& params)
+{
+    AssertLockHeld(cs_main);
+    assert(pindexPrev);
+
+    const int nHeight = pindexPrev->nHeight + 1;
+
+    if (nHeight < (int)BIP102_FORK_BUFFER)
+      return false;
+
+    const CBlockIndex* pindexForkBuffer = pindexPrev->GetAncestor(nHeight - BIP102_FORK_BUFFER);
+
+    return (VersionBitsState(pindexForkBuffer, params, Consensus::DEPLOYMENT_SEGWIT, versionbitscache) == THRESHOLD_ACTIVE);
+}
+
 // Compute at which vout of the block's coinbase transaction the witness
 // commitment occurs, or -1 if not found.
 static int GetWitnessCommitmentIndex(const CBlock& block)
@@ -2998,8 +3030,7 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
             fHaveWitness = true;
         }
 
-        const CBlockIndex* pindexForkBuffer = pindexPrev->GetAncestor(nHeight - BIP102_FORK_BUFFER);
-        fSegwitSeasoned = (VersionBitsState(pindexForkBuffer, consensusParams, Consensus::DEPLOYMENT_SEGWIT, versionbitscache) == THRESHOLD_ACTIVE);
+        fSegwitSeasoned = IsWitnessSeasoned(pindexPrev, consensusParams);
     }
 
     if (::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) > MaxBlockBaseSize(nHeight, fSegwitSeasoned))
