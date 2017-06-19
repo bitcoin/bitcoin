@@ -447,17 +447,17 @@ void ThroneList::updateVoteList()
             QTableWidgetItem *totalPaymentItem = new QTableWidgetItem(QString::number((pbudgetProposal->GetAmount()*pbudgetProposal->GetTotalPaymentCount())/100000000 ));
             QTableWidgetItem *monthlyPaymentItem = new QTableWidgetItem(QString::number(pbudgetProposal->GetAmount()/100000000));
 
-            ui->tableWidgetThrones->insertRow(0);
-            ui->tableWidgetThrones->setItem(0, 0, nameItem);
-            ui->tableWidgetThrones->setItem(0, 1, urlItem);
-            ui->tableWidgetThrones->setItem(0, 2, hashItem);
-            ui->tableWidgetThrones->setItem(0, 3, paymentsItem);
-            ui->tableWidgetThrones->setItem(0, 4, remainingPaymentsItem);
-            ui->tableWidgetThrones->setItem(0, 5, yesVotesItem);
-            ui->tableWidgetThrones->setItem(0, 6, noVotesItem);
-            ui->tableWidgetThrones->setItem(0, 7, AddressItem);
-            ui->tableWidgetThrones->setItem(0, 8, totalPaymentItem);
-            ui->tableWidgetThrones->setItem(0, 9, monthlyPaymentItem);
+            ui->tableWidgetVoting->insertRow(0);
+            ui->tableWidgetVoting->setItem(0, 0, nameItem);
+            ui->tableWidgetVoting->setItem(0, 1, urlItem);
+            ui->tableWidgetVoting->setItem(0, 2, hashItem);
+            ui->tableWidgetVoting->setItem(0, 3, paymentsItem);
+            ui->tableWidgetVoting->setItem(0, 4, remainingPaymentsItem);
+            ui->tableWidgetVoting->setItem(0, 5, yesVotesItem);
+            ui->tableWidgetVoting->setItem(0, 6, noVotesItem);
+            ui->tableWidgetVoting->setItem(0, 7, AddressItem);
+            ui->tableWidgetVoting->setItem(0, 8, totalPaymentItem);
+            ui->tableWidgetVoting->setItem(0, 9, monthlyPaymentItem);
 
         }
 
@@ -466,7 +466,7 @@ void ThroneList::updateVoteList()
     ui->superblockLabel->setText(QString::number(nNext));
 
     ui->totalAllottedLabel->setText(QString::number(nTotalAllotted));
-    ui->tableWidgetThrones->setSortingEnabled(true);
+    ui->tableWidgetVoting->setSortingEnabled(true);
 
 }
 
