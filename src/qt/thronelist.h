@@ -67,6 +67,7 @@ private Q_SLOTS:
     void on_UpdateButton_clicked();
     
     void on_voteManyButton_clicked();
+    void on_tableWidgetVoting_itemSelectionChanged();
     void on_UpdateVotesButton_clicked();
 };
 #endif // THRONELIST_H

@@ -407,7 +407,7 @@ void ThroneList::on_UpdateButton_clicked()
 
 void ThroneList::on_UpdateVotesButton_clicked()
 {
-    updateVoteList(true);
+    updateVoteList();
 }
 
 void ThroneList::updateVoteList()
@@ -445,8 +445,8 @@ void ThroneList::updateVoteList()
             QTableWidgetItem *yesVotesItem = new QTableWidgetItem(QString::number((int64_t)pbudgetProposal->GetYeas()));
             QTableWidgetItem *noVotesItem = new QTableWidgetItem(QString::number((int64_t)pbudgetProposal->GetNays()));
             QTableWidgetItem *AddressItem = new QTableWidgetItem(QString::fromStdString(address2.ToString()));
-            QTableWidgetItem *totalPaymentItem = new QTableWidgetItem(QString::number(ValueFromAmount(pbudgetProposal->GetAmount()*pbudgetProposal->GetTotalPaymentCount())));
-            QTableWidgetItem *monthlyPaymentItem = new QTableWidgetItem(QString::number(ValueFromAmount(pbudgetProposal->GetAmount())));
+            QTableWidgetItem *totalPaymentItem = new QTableWidgetItem(QString::number((pbudgetProposal->GetAmount()*pbudgetProposal->GetTotalPaymentCount())/100000000 ));
+            QTableWidgetItem *monthlyPaymentItem = new QTableWidgetItem(QString::number(pbudgetProposal->GetAmount()/100000000));
 
             ui->tableWidgetThrones->insertRow(0);
             ui->tableWidgetThrones->setItem(0, 0, nameItem);
