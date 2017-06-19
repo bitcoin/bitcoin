@@ -181,5 +181,5 @@ knows what they are getting when installing the GUI package.
 
 As far as minor differences, I generally prefer to assign the file permissions
 in the `%files` portion of an RPM spec file rather than specifying the
-permissions of a file during `%install` and other minor things like that that
+permissions of a file during `%install` and other minor things like that
 are largely just cosmetic.

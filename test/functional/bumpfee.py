@@ -10,7 +10,7 @@ its preconditions are met, and returns appropriate errors in other cases.
 This module consists of around a dozen individual test cases implemented in the
 top-level functions named as test_<test_case_description>. The test functions
 can be disabled or reordered if needed for debugging. If new test cases are
-added in the the future, they should try to follow the same convention and not
+added in the future, they should try to follow the same convention and not
 make assumptions about execution order.
 """
 

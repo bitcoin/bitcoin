@@ -11,7 +11,7 @@ Note:
 
 - To avoid unnecessary loads and make use of available registers, two
   'passes' have every time been interleaved, with the odd passes accumulating c' and d' 
-  which will be added to c and d respectively in the the even passes
+  which will be added to c and d respectively in the even passes
 
 */
 

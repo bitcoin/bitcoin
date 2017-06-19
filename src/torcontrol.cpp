@@ -408,7 +408,7 @@ static bool WriteBinaryFile(const fs::path &filename, const std::string &data)
 /****** Bitcoin specific TorController implementation ********/
 
 /** Controller that connects to Tor control socket, authenticate, then create
- * and maintain a ephemeral hidden service.
+ * and maintain an ephemeral hidden service.
  */
 class TorController
 {

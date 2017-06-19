@@ -219,7 +219,7 @@ BOOST_AUTO_TEST_CASE( unaryOperators ) // !    ~    -
 
 
 // Check if doing _A_ _OP_ _B_ results in the same as applying _OP_ onto each
-// element of Aarray and Barray, and then converting the result into a arith_uint256.
+// element of Aarray and Barray, and then converting the result into an arith_uint256.
 #define CHECKBITWISEOPERATOR(_A_,_B_,_OP_)                              \
     for (unsigned int i = 0; i < 32; ++i) { TmpArray[i] = _A_##Array[i] _OP_ _B_##Array[i]; } \
     BOOST_CHECK(arith_uint256V(std::vector<unsigned char>(TmpArray,TmpArray+32)) == (_A_##L _OP_ _B_##L));

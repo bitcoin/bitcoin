@@ -10,7 +10,7 @@ from test_framework.script import CScript, OP_1, OP_DROP, OP_2, OP_HASH160, OP_E
 from test_framework.mininode import CTransaction, CTxIn, CTxOut, COutPoint, ToHex, COIN
 
 # Construct 2 trivial P2SH's and the ScriptSigs that spend them
-# So we can create many many transactions without needing to spend
+# So we can create many transactions without needing to spend
 # time signing.
 redeem_script_1 = CScript([OP_1, OP_DROP])
 redeem_script_2 = CScript([OP_2, OP_DROP])

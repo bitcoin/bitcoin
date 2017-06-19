@@ -3,7 +3,7 @@
 # to independently set assumptions on input or intermediary variables.
 #
 # The general approach is:
-# * A constraint is a tuple of two sets of of symbolic expressions:
+# * A constraint is a tuple of two sets of symbolic expressions:
 #   the first of which are required to evaluate to zero, the second of which
 #   are required to evaluate to nonzero.
 #   - A constraint is said to be conflicting if any of its nonzero expressions

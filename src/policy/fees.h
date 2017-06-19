@@ -48,7 +48,7 @@ class TxConfirmStats;
  * in each bucket and the total amount of feerate paid in each bucket. Then we
  * calculate how many blocks Y it took each transaction to be mined.  We convert
  * from a number of blocks to a number of periods Y' each encompassing "scale"
- * blocks.  This is is tracked in 3 different data sets each up to a maximum
+ * blocks.  This is tracked in 3 different data sets each up to a maximum
  * number of periods. Within each data set we have an array of counters in each
  * feerate bucket and we increment all the counters from Y' up to max periods
  * representing that a tx was successfully confirmed in less than or equal to
