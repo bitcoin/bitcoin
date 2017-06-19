@@ -5,6 +5,7 @@
 #include "clientmodel.h"
 #include "walletmodel.h"
 #include "activethrone.h"
+#include "throne-budget.h"
 #include "throne-sync.h"
 #include "throneconfig.h"
 #include "throneman.h"
@@ -26,6 +27,8 @@ ThroneList::ThroneList(QWidget *parent) :
     ui->setupUi(this);
 
     ui->startButton->setEnabled(false);
+    ui->voteManyYesButton->setEnabled(false);
+    ui->voteManyNoButton->setEnabled(false);
 
     int columnAliasWidth = 100;
     int columnAddressWidth = 200;
@@ -57,10 +60,16 @@ ThroneList::ThroneList(QWidget *parent) :
 
     timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(updateNodeList()));
+    connect(timer, SIGNAL(timeout()), this, SLOT(updateVoteList()));
     connect(timer, SIGNAL(timeout()), this, SLOT(updateMyNodeList()));
     timer->start(1000);
 
     updateNodeList();
+    updateVoteList();
+
+    CBlockIndex* pindexPrev = chainActive.Tip();
+    int nNext = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
+    ui->superblockLabel->setText(QString::number(nNext));
 }
 
 ThroneList::~ThroneList()
@@ -399,4 +408,230 @@ void ThroneList::on_tableWidgetMyThrones_itemSelectionChanged()
 void ThroneList::on_UpdateButton_clicked()
 {
     updateMyNodeList(true);
+}
+
+void ThroneList::on_UpdateVotesButton_clicked()
+{
+    updateVoteList(true);
+}
+
+void ThroneList::updateVoteList(bool reset)
+{
+
+    static int64_t lastVoteListUpdate = 0;
+
+    // automatically update my throne list only once in MY_THRONELIST_UPDATE_SECONDS seconds,
+    // this update still can be triggered manually at any time via button click
+    int64_t timeTillUpdate = lastVoteListUpdate + MY_THRONELIST_UPDATE_SECONDS - GetTime();
+    ui->voteSecondsLabel->setText(QString::number(timeTillUpdate));
+
+    if(timeTillUpdate > 0 && !reset) return;
+    lastVoteListUpdate = GetTime();
+
+    QString strToFilter;
+    ui->tableWidgetVoting->setSortingEnabled(false);
+    ui->tableWidgetVoting->clearContents();
+    ui->tableWidgetVoting->setRowCount(0);
+
+        int64_t nTotalAllotted = 0;
+
+        std::vector<CBudgetProposal*> winningProps = budget.GetAllProposals();
+        BOOST_FOREACH(CBudgetProposal* pbudgetProposal, winningProps)
+        {
+
+            CTxDestination address1;
+            ExtractDestination(pbudgetProposal->GetPayee(), address1);
+            CBitcoinAddress address2(address1);
+
+            if(!pbudgetProposal->fValid || (int64_t)pbudgetProposal->GetRemainingPaymentCount() <= 0) continue;
+            // populate list
+            QTableWidgetItem *nameItem = new QTableWidgetItem(QString::fromStdString(pbudgetProposal->GetName()));
+            QTableWidgetItem *urlItem = new QTableWidgetItem(QString::fromStdString(pbudgetProposal->GetURL()));
+            QTableWidgetItem *hashItem = new QTableWidgetItem(QString::fromStdString(pbudgetProposal->GetHash().ToString()));
+            QTableWidgetItem *blockStartItem = new QTableWidgetItem(QString::number((int64_t)pbudgetProposal->GetBlockStart()));
+            QTableWidgetItem *blockEndItem = new QTableWidgetItem(QString::number((int64_t)pbudgetProposal->GetBlockEnd()));
+            QTableWidgetItem *paymentsItem = new QTableWidgetItem(QString::number((int64_t)pbudgetProposal->GetTotalPaymentCount()));
+            QTableWidgetItem *remainingPaymentsItem = new QTableWidgetItem(QString::number((int64_t)pbudgetProposal->GetRemainingPaymentCount()));
+            QTableWidgetItem *yesVotesItem = new QTableWidgetItem(QString::number((int64_t)pbudgetProposal->GetYeas()));
+            QTableWidgetItem *noVotesItem = new QTableWidgetItem(QString::number((int64_t)pbudgetProposal->GetNays()));
+            QTableWidgetItem *AddressItem = new QTableWidgetItem(QString::fromStdString(address2.ToString()));
+            QTableWidgetItem *totalPaymentItem = new QTableWidgetItem(QString::number((pbudgetProposal->GetAmount()*pbudgetProposal->GetTotalPaymentCount())/100000000 ));
+            QTableWidgetItem *monthlyPaymentItem = new QTableWidgetItem(QString::number(pbudgetProposal->GetAmount()/100000000));
+
+            ui->tableWidgetVoting->insertRow(0);
+            ui->tableWidgetVoting->setItem(0, 0, nameItem);
+            ui->tableWidgetVoting->setItem(0, 1, urlItem);
+            ui->tableWidgetVoting->setItem(0, 2, hashItem);
+            ui->tableWidgetVoting->setItem(0, 3, blockStartItem);
+            ui->tableWidgetVoting->setItem(0, 4, blockEndItem);
+            ui->tableWidgetVoting->setItem(0, 5, paymentsItem);
+            ui->tableWidgetVoting->setItem(0, 6, remainingPaymentsItem);
+            ui->tableWidgetVoting->setItem(0, 7, yesVotesItem);
+            ui->tableWidgetVoting->setItem(0, 8, noVotesItem);
+            ui->tableWidgetVoting->setItem(0, 9, AddressItem);
+            ui->tableWidgetVoting->setItem(0, 10, totalPaymentItem);
+            ui->tableWidgetVoting->setItem(0, 11, monthlyPaymentItem);
+
+            std::string projected;            
+            if ((int64_t)pbudgetProposal->GetYeas() - (int64_t)pbudgetProposal->GetNays() > (ui->tableWidgetThrones->rowCount()/10)){
+                nTotalAllotted += pbudgetProposal->GetAmount()/100000000;
+                projected = "Yes";
+            } else {
+                projected = "No";
+            }
+            QTableWidgetItem *projectedItem = new QTableWidgetItem(QString::fromStdString(projected));
+            ui->tableWidgetVoting->setItem(0, 12, projectedItem);
+        }
+
+    ui->totalAllottedLabel->setText(QString::number(nTotalAllotted));
+    ui->tableWidgetVoting->setSortingEnabled(true);
+
+    // reset "timer"
+    ui->voteSecondsLabel->setText("0");
+
+}
+
+void ThroneList::VoteMany(bool YesNo)
+{
+    std::vector<CThroneConfig::CThroneEntry> mnEntries;
+    mnEntries = throneConfig.getEntries();
+
+    int nVote = VOTE_ABSTAIN;
+    if(YesNo == true) nVote = VOTE_YES;
+    if(YesNo == false) nVote = VOTE_NO;
+
+    // Find selected Budget Hash
+    QItemSelectionModel* selectionModel = ui->tableWidgetVoting->selectionModel();
+    QModelIndexList selected = selectionModel->selectedRows();
+    if(selected.count() == 0)
+        return;
+
+    QModelIndex index = selected.at(0);
+    int r = index.row();
+    std::string strHash = ui->tableWidgetVoting->item(r, 2)->text().toStdString();
+    uint256 hash;
+    hash.SetHex(strHash);
+
+    int success = 0;
+    int failed = 0;
+    std::string statusObj;
+
+    BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
+        std::string errorMessage;
+        std::vector<unsigned char> vchThroNeSignature;
+        std::string strThroNeSignMessage;
+
+        CPubKey pubKeyCollateralAddress;
+        CKey keyCollateralAddress;
+        CPubKey pubKeyThrone;
+        CKey keyThrone;
+
+        if(!darkSendSigner.SetKey(mne.getPrivKey(), errorMessage, keyThrone, pubKeyThrone)){
+            failed++;
+            statusObj += "\nFailed to vote with " + mne.getAlias() + ". Throne signing error, could not set key correctly: " + errorMessage;
+            continue;
+        }
+
+        CThrone* pmn = mnodeman.Find(pubKeyThrone);
+        if(pmn == NULL)
+        {
+            failed++;
+            statusObj += "\nFailed to vote with " + mne.getAlias() + ". Error: Can't find throne by pubkey";
+            continue;
+        }
+
+        CBudgetVote vote(pmn->vin, hash, nVote);
+        if(!vote.Sign(keyThrone, pubKeyThrone)){
+            failed++;
+            statusObj += "\nFailed to vote with " + mne.getAlias() + ". Error: Failure to sign";
+            continue;
+        }
+
+        std::string strError = "";
+        if(budget.UpdateProposal(vote, NULL, strError)) {
+            budget.mapSeenThroneBudgetVotes.insert(make_pair(vote.GetHash(), vote));
+            vote.Relay();
+            success++;
+        } else {
+            failed++;
+            statusObj += "\nFailed to update proposal. Error: " + strError;
+        }
+    }
+    std::string returnObj;
+    returnObj = strprintf("Voted successfully %d time(s) and failed %d time(s).", success, failed);
+    if (failed > 0)
+        returnObj += statusObj;
+
+    QMessageBox msg;
+    msg.setText(QString::fromStdString(returnObj));
+    msg.exec();
+    updateVoteList(true);
+}
+
+void ThroneList::on_voteManyYesButton_clicked()
+{
+    // Display message box
+    QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm vote-many"),
+        tr("Are you sure you want to vote with ALL of your thrones?"),
+        QMessageBox::Yes | QMessageBox::Cancel,
+        QMessageBox::Cancel);
+
+    if(retval != QMessageBox::Yes)
+    {
+        return;
+    }
+
+    WalletModel::EncryptionStatus encStatus = walletModel->getEncryptionStatus();
+    if(encStatus == walletModel->Locked || encStatus == walletModel->UnlockedForAnonymizationOnly)
+    {
+        WalletModel::UnlockContext ctx(walletModel->requestUnlock(true));
+        if(!ctx.isValid())
+        {
+            // Unlock wallet was cancelled
+            return;
+        }
+        VoteMany(true);
+        return;
+    }
+
+    VoteMany(true);
+}
+
+void ThroneList::on_voteManyNoButton_clicked()
+{
+    // Display message box
+    QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm vote-many"),
+        tr("Are you sure you want to vote with ALL of your thrones?"),
+        QMessageBox::Yes | QMessageBox::Cancel,
+        QMessageBox::Cancel);
+
+    if(retval != QMessageBox::Yes)
+    {
+        return;
+    }
+
+    WalletModel::EncryptionStatus encStatus = walletModel->getEncryptionStatus();
+    if(encStatus == walletModel->Locked || encStatus == walletModel->UnlockedForAnonymizationOnly)
+    {
+        WalletModel::UnlockContext ctx(walletModel->requestUnlock(true));
+        if(!ctx.isValid())
+        {
+            // Unlock wallet was cancelled
+            return;
+        }
+        VoteMany(false);
+        return;
+    }
+
+    VoteMany(false);
+}
+
+
+void ThroneList::on_tableWidgetVoting_itemSelectionChanged()
+{
+    if(ui->tableWidgetVoting->selectedItems().count() > 0)
+    {
+        ui->voteManyYesButton->setEnabled(true);
+        ui->voteManyNoButton->setEnabled(true);
+    }
 }
