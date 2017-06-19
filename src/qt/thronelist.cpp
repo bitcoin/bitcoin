@@ -462,7 +462,7 @@ void ThroneList::updateVoteList()
         }
 
     int nNext = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
-    ui->superblockLabel->setText(QString::number(nNext))
+    ui->superblockLabel->setText(QString::number(nNext));
 
     ui->totalAllottedLabel->setText(QString::number(nTotalAllotted));
     ui->tableWidgetThrones->setSortingEnabled(true);
@@ -487,6 +487,8 @@ void ThroneList::VoteMany()
 
     int success = 0;
     int failed = 0;
+    std::string statusObj;
+
     BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
         std::string errorMessage;
         std::vector<unsigned char> vchThroNeSignature;
@@ -497,17 +499,20 @@ void ThroneList::VoteMany()
         CKey keyThrone;
         if(!darkSendSigner.SetKey(mne.getPrivKey(), errorMessage, keyThrone, pubKeyThrone)){
             failed++;
+            statusObj += "\nFailed to vote with " + mne.getAlias() + ". Throne signing error, could not set key correctly: " + errorMessage;
             continue;
         }
         CThrone* pmn = mnodeman.Find(pubKeyThrone);
         if(pmn == NULL)
         {
             failed++;
+            statusObj += "\nFailed to vote with " + mne.getAlias() + ". Error: Can't find throne by pubkey";
             continue;
         }
         CFinalizedBudgetVote vote(pmn->vin, hash);
         if(!vote.Sign(keyThrone, pubKeyThrone)){
             failed++;
+            statusObj += "\nFailed to vote with " + mne.getAlias() + ". Error: Failure to sign";
             continue;
         }
         std::string strError = "";
@@ -517,9 +522,13 @@ void ThroneList::VoteMany()
             success++;
         } else {
             failed++;
+            statusObj += "\n Failed to update finalized Budget. Error: " + strError.c_str();
         }
     }
+    std::string returnObj;
     returnObj = strprintf("Voted successfully %d time(s) and failed %d time(s).", success, failed);
+    if (failed > 0)
+        returnObj += statusObj;
 
     QMessageBox msg;
     msg.setText(QString::fromStdString(returnObj));
