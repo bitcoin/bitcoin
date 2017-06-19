@@ -523,7 +523,7 @@ void ThroneList::VoteMany()
             success++;
         } else {
             failed++;
-            statusObj += "\n Failed to update finalized Budget. Error: " + strError.c_str();
+            statusObj += "\n Failed to update finalized Budget. Error: " + strError;
         }
     }
     std::string returnObj;
