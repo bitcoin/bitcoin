@@ -2506,7 +2506,7 @@
 ],
 
 ["CHECKSEQUENCEVERIFY tests"],
-["", "CHECKSEQUENCEVERIFY", "CHECKSEQUENCEVERIFY", "INVALID_STACK_OPERATION", "CSV automatically fails on a empty stack"],
+["", "CHECKSEQUENCEVERIFY", "CHECKSEQUENCEVERIFY", "INVALID_STACK_OPERATION", "CSV automatically fails on an empty stack"],
 ["-1", "CHECKSEQUENCEVERIFY", "CHECKSEQUENCEVERIFY", "NEGATIVE_LOCKTIME", "CSV automatically fails if stack top is negative"],
 ["0x0100", "CHECKSEQUENCEVERIFY", "CHECKSEQUENCEVERIFY,MINIMALDATA", "UNKNOWN_ERROR", "CSV fails if stack top is not minimally encoded"],
 ["0", "CHECKSEQUENCEVERIFY", "CHECKSEQUENCEVERIFY", "UNSATISFIED_LOCKTIME", "CSV fails if stack top bit 1 << 31 is set and the tx version < 2"],
