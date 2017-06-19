@@ -36,6 +36,7 @@ public:
     void setWalletModel(WalletModel *walletModel);
     void StartAlias(std::string strAlias);
     void StartAll(std::string strCommand = "start-all");
+    void VoteMany();
 
 private:
     QMenu *contextMenu;
@@ -44,6 +45,7 @@ public Q_SLOTS:
     void updateMyThroneInfo(QString alias, QString addr, QString privkey, QString txHash, QString txIndex, CThrone *pmn);
     void updateMyNodeList(bool reset = false);
     void updateNodeList();
+    void updateVoteList();
 
 Q_SIGNALS:
 
@@ -63,5 +65,8 @@ private Q_SLOTS:
     void on_startMissingButton_clicked();
     void on_tableWidgetMyThrones_itemSelectionChanged();
     void on_UpdateButton_clicked();
+    
+    void on_voteManyButton_clicked();
+    void on_UpdateVotesButton_clicked();
 };
 #endif // THRONELIST_H
