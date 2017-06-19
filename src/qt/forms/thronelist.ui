@@ -427,9 +427,16 @@
             <number>0</number>
            </property>
            <item>
-            <widget class="QPushButton" name="voteManyButton">
+            <widget class="QPushButton" name="voteManyYesButton">
              <property name="text">
-              <string>Vote Many</string>
+              <string>Vote Many Yes</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="voteManyNoButton">
+             <property name="text">
+              <string>Vote Many No</string>
              </property>
             </widget>
            </item>

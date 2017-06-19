@@ -470,10 +470,14 @@ void ThroneList::updateVoteList()
 
 }
 
-void ThroneList::VoteMany()
+void ThroneList::VoteMany(bool YesNo)
 {
     std::vector<CThroneConfig::CThroneEntry> mnEntries;
     mnEntries = throneConfig.getEntries();
+
+    int nVote = VOTE_ABSTAIN;
+    if(YesNo == true) nVote = VOTE_YES;
+    if(YesNo == false) nVote = VOTE_NO;
 
     // Find selected Budget Hash
     QItemSelectionModel* selectionModel = ui->tableWidgetMyThrones->selectionModel();
@@ -494,15 +498,18 @@ void ThroneList::VoteMany()
         std::string errorMessage;
         std::vector<unsigned char> vchThroNeSignature;
         std::string strThroNeSignMessage;
+
         CPubKey pubKeyCollateralAddress;
         CKey keyCollateralAddress;
         CPubKey pubKeyThrone;
         CKey keyThrone;
+
         if(!darkSendSigner.SetKey(mne.getPrivKey(), errorMessage, keyThrone, pubKeyThrone)){
             failed++;
             statusObj += "\nFailed to vote with " + mne.getAlias() + ". Throne signing error, could not set key correctly: " + errorMessage;
             continue;
         }
+
         CThrone* pmn = mnodeman.Find(pubKeyThrone);
         if(pmn == NULL)
         {
@@ -510,20 +517,22 @@ void ThroneList::VoteMany()
             statusObj += "\nFailed to vote with " + mne.getAlias() + ". Error: Can't find throne by pubkey";
             continue;
         }
-        CFinalizedBudgetVote vote(pmn->vin, hash);
+
+        CBudgetVote vote(pmn->vin, hash, nVote);
         if(!vote.Sign(keyThrone, pubKeyThrone)){
             failed++;
             statusObj += "\nFailed to vote with " + mne.getAlias() + ". Error: Failure to sign";
             continue;
         }
+
         std::string strError = "";
-        if(budget.UpdateFinalizedBudget(vote, NULL, strError)){
-            budget.mapSeenFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
+        if(budget.UpdateProposal(vote, NULL, strError)) {
+            budget.mapSeenThroneBudgetVotes.insert(make_pair(vote.GetHash(), vote));
             vote.Relay();
             success++;
         } else {
             failed++;
-            statusObj += "\n Failed to update finalized Budget. Error: " + strError;
+            statusObj += "\nFailed to update proposal. Error: " + strError;
         }
     }
     std::string returnObj;
@@ -536,7 +545,7 @@ void ThroneList::VoteMany()
     msg.exec();
 }
 
-void ThroneList::on_voteManyButton_clicked()
+void ThroneList::on_voteManyYesButton_clicked()
 {
     // Display message box
     QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm vote-many"),
@@ -558,12 +567,42 @@ void ThroneList::on_voteManyButton_clicked()
             // Unlock wallet was cancelled
             return;
         }
-        VoteMany();
+        VoteMany(true);
         return;
     }
 
-    VoteMany();
+    VoteMany(true);
 }
+
+void ThroneList::on_voteManyNoButton_clicked()
+{
+    // Display message box
+    QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm vote-many"),
+        tr("Are you sure you want to vote with ALL of your thrones?"),
+        QMessageBox::Yes | QMessageBox::Cancel,
+        QMessageBox::Cancel);
+
+    if(retval != QMessageBox::Yes)
+    {
+        return;
+    }
+
+    WalletModel::EncryptionStatus encStatus = walletModel->getEncryptionStatus();
+    if(encStatus == walletModel->Locked || encStatus == walletModel->UnlockedForAnonymizationOnly)
+    {
+        WalletModel::UnlockContext ctx(walletModel->requestUnlock(true));
+        if(!ctx.isValid())
+        {
+            // Unlock wallet was cancelled
+            return;
+        }
+        VoteMany(false);
+        return;
+    }
+
+    VoteMany(false);
+}
+
 
 void ThroneList::on_tableWidgetVoting_itemSelectionChanged()
 {
