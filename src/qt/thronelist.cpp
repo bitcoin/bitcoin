@@ -424,7 +424,6 @@ void ThroneList::updateVoteList()
     ui->tableWidgetVoting->clearContents();
     ui->tableWidgetVoting->setRowCount(0);
 
-        Object resultObj;
         int64_t nTotalAllotted = 0;
 
         std::vector<CBudgetProposal*> winningProps = budget.GetAllProposals();
@@ -463,7 +462,7 @@ void ThroneList::updateVoteList()
         }
 
     int nNext = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
-    ui->superblockLabel->setTest(QString::number(nNext))
+    ui->superblockLabel->setText(QString::number(nNext))
 
     ui->totalAllottedLabel->setText(QString::number(nTotalAllotted));
     ui->tableWidgetThrones->setSortingEnabled(true);
@@ -488,7 +487,6 @@ void ThroneList::VoteMany()
 
     int success = 0;
     int failed = 0;
-    Object resultsObj;
     BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
         std::string errorMessage;
         std::vector<unsigned char> vchThroNeSignature;
@@ -497,29 +495,19 @@ void ThroneList::VoteMany()
         CKey keyCollateralAddress;
         CPubKey pubKeyThrone;
         CKey keyThrone;
-        Object statusObj;
         if(!darkSendSigner.SetKey(mne.getPrivKey(), errorMessage, keyThrone, pubKeyThrone)){
             failed++;
-            statusObj.push_back(Pair("result", "failed"));
-            statusObj.push_back(Pair("errorMessage", "Throne signing error, could not set key correctly: " + errorMessage));
-            resultsObj.push_back(Pair(mne.getAlias(), statusObj));
             continue;
         }
         CThrone* pmn = mnodeman.Find(pubKeyThrone);
         if(pmn == NULL)
         {
             failed++;
-            statusObj.push_back(Pair("result", "failed"));
-            statusObj.push_back(Pair("errorMessage", "Can't find throne by pubkey"));
-            resultsObj.push_back(Pair(mne.getAlias(), statusObj));
             continue;
         }
         CFinalizedBudgetVote vote(pmn->vin, hash);
         if(!vote.Sign(keyThrone, pubKeyThrone)){
             failed++;
-            statusObj.push_back(Pair("result", "failed"));
-            statusObj.push_back(Pair("errorMessage", "Failure to sign."));
-            resultsObj.push_back(Pair(mne.getAlias(), statusObj));
             continue;
         }
         std::string strError = "";
@@ -527,16 +515,11 @@ void ThroneList::VoteMany()
             budget.mapSeenFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
             vote.Relay();
             success++;
-            statusObj.push_back(Pair("result", "success"));
         } else {
             failed++;
-            statusObj.push_back(Pair("result", strError.c_str()));
         }
-        resultsObj.push_back(Pair(mne.getAlias(), statusObj));
     }
-    Object returnObj;
-    returnObj.push_back(Pair("overall", strprintf("Voted successfully %d time(s) and failed %d time(s).", success, failed)));
-    returnObj.push_back(Pair("detail", resultsObj));
+    returnObj = strprintf("Voted successfully %d time(s) and failed %d time(s).", success, failed);
 
     QMessageBox msg;
     msg.setText(QString::fromStdString(returnObj));
