@@ -66,6 +66,10 @@ ThroneList::ThroneList(QWidget *parent) :
 
     updateNodeList();
     updateVoteList();
+
+    CBlockIndex* pindexPrev = chainActive.Tip();
+    int nNext = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
+    ui->superblockLabel->setText(QString::number(nNext));
 }
 
 ThroneList::~ThroneList()
@@ -478,10 +482,6 @@ void ThroneList::updateVoteList(bool reset)
             QTableWidgetItem *projectedItem = new QTableWidgetItem(QString::fromStdString(projected));
             ui->tableWidgetVoting->setItem(0, 12, projectedItem);
         }
-
-    CBlockIndex* pindexPrev = chainActive.Tip();
-    int nNext = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
-    ui->superblockLabel->setText(QString::number(nNext));
 
     ui->totalAllottedLabel->setText(QString::number(nTotalAllotted));
     ui->tableWidgetVoting->setSortingEnabled(true);
