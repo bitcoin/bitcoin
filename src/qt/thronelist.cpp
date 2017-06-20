@@ -469,7 +469,7 @@ void ThroneList::updateVoteList(bool reset)
                 nTotalAllotted += pbudgetProposal->GetAmount()/100000000;
                 projected = "Yes";
             } else {
-                projected = "No"
+                projected = "No";
             }
             QTableWidgetItem *projectedItem = new QTableWidgetItem(QString::fromStdString(projected));
             ui->tableWidgetVoting->setItem(0, 10, projectedItem);
