@@ -46,11 +46,11 @@ public:
     HTTPRPCTimerInterface(struct event_base* base) : base(base)
     {
     }
-    const char* Name()
+    const char* Name() override
     {
         return "HTTP";
     }
-    RPCTimerBase* NewTimer(std::function<void(void)>& func, int64_t millis)
+    RPCTimerBase* NewTimer(std::function<void(void)>& func, int64_t millis) override
     {
         return new HTTPRPCTimer(base, func, millis);
     }
