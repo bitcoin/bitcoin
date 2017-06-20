@@ -52,21 +52,21 @@ static atomic<uint64_t> nLargestBlockSeen{BLOCKSTREAM_CORE_MAX_BLOCK_SIZE}; // t
 static atomic<bool> fIsChainNearlySyncd{false};
 extern atomic<bool> fIsInitialBlockDownload;
 extern CTweakRef<uint64_t> miningBlockSize;
-extern CTweakRef<unsigned int> ebTweak;
+extern CTweakRef<uint64_t> ebTweak;
 
 int64_t nMaxTipAge = DEFAULT_MAX_TIP_AGE;
 
 bool IsTrafficShapingEnabled();
 UniValue validateblocktemplate(const UniValue &params, bool fHelp);
 
-bool MiningAndExcessiveBlockValidatorRule(const unsigned int newExcessiveBlockSize,
-    const unsigned int newMiningBlockSize)
+bool MiningAndExcessiveBlockValidatorRule(const uint64_t newExcessiveBlockSize, const uint64_t newMiningBlockSize)
 {
     // The mined block size must be less then or equal too the excessive block size.
+    LogPrintf("newMiningBlockSizei: %d - newExcessiveBlockSize: %d", newMiningBlockSize, newExcessiveBlockSize);
     return (newMiningBlockSize <= newExcessiveBlockSize);
 }
 
-std::string ExcessiveBlockValidator(const unsigned int &value, unsigned int *item, bool validate)
+std::string ExcessiveBlockValidator(const uint64_t &value, uint64_t *item, bool validate)
 {
     if (validate)
     {
@@ -346,13 +346,16 @@ void settingsToUserAgentString()
 {
     BUComments.clear();
 
-    double ebInMegaBytes = (double)excessiveBlockSize / 1000000;
     std::stringstream ebss;
-    ebss << std::fixed << std::setprecision(1) << ebInMegaBytes;
+    ebss << (excessiveBlockSize / 100000);
     std::string eb = ebss.str();
-    std::string eb_formatted;
-    eb_formatted = (eb.at(eb.size() - 1) == '0' ? eb.substr(0, eb.size() - 2) : eb); // strip zero decimal
-    BUComments.push_back("EB" + eb_formatted);
+    eb.insert(eb.size() - 1, ".", 1);
+    if (eb.substr(0, 1) == ".")
+        eb = "0" + eb;
+    if (eb.at(eb.size() - 1) == '0')
+        eb = eb.substr(0, eb.size() - 2);
+
+    BUComments.push_back("EB" + eb);
 
     int ad_formatted;
     ad_formatted = (excessiveAcceptDepth >= 9999999 ? 9999999 : excessiveAcceptDepth);

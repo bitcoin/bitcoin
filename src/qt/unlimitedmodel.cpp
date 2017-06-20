@@ -31,7 +31,7 @@
 #include <QStringList>
 
 extern CTweakRef<uint64_t> miningBlockSize;
-extern CTweakRef<unsigned int> ebTweak;
+extern CTweakRef<uint64_t> ebTweak;
 
 UnlimitedModel::UnlimitedModel(QObject *parent) : QAbstractListModel(parent) { Init(); }
 void UnlimitedModel::addOverriddenOption(const std::string &option)
@@ -133,7 +133,7 @@ QVariant UnlimitedModel::data(const QModelIndex &index, int role) const
         case MaxGeneratedBlock:
             return QVariant((unsigned int)maxGeneratedBlock);
         case ExcessiveBlockSize:
-            return QVariant(excessiveBlockSize);
+            return QVariant((unsigned int)excessiveBlockSize);
         case ExcessiveAcceptDepth:
             return QVariant(excessiveAcceptDepth);
         case UseReceiveShaping:
