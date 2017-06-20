@@ -497,7 +497,7 @@ void ThroneList::VoteMany(bool YesNo)
     if(YesNo == false) nVote = VOTE_NO;
 
     // Find selected Budget Hash
-    QItemSelectionModel* selectionModel = ui->tableWidgetMyThrones->selectionModel();
+    QItemSelectionModel* selectionModel = ui->tableWidgetVoting->selectionModel();
     QModelIndexList selected = selectionModel->selectedRows();
     if(selected.count() == 0)
         return;
