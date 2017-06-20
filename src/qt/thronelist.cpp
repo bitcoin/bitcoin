@@ -443,7 +443,7 @@ void ThroneList::updateVoteList(bool reset)
             ExtractDestination(pbudgetProposal->GetPayee(), address1);
             CBitcoinAddress address2(address1);
 
-            if(!pbudgetProposal->fValid && (int64_t)pbudgetProposal->GetRemainingPaymentCount() > 0) continue;
+            if(!pbudgetProposal->fValid || (int64_t)pbudgetProposal->GetRemainingPaymentCount() > 0) continue;
             // populate list
             QTableWidgetItem *nameItem = new QTableWidgetItem(QString::fromStdString(pbudgetProposal->GetName()));
             QTableWidgetItem *urlItem = new QTableWidgetItem(QString::fromStdString(pbudgetProposal->GetURL()));
