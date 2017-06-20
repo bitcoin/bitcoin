@@ -386,6 +386,16 @@
            </column>
            <column>
             <property name="text">
+             <string>Block Start</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Block End</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
              <string>Payments</string>
             </property>
            </column>

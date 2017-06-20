@@ -408,7 +408,7 @@ void ThroneList::on_UpdateButton_clicked()
 
 void ThroneList::on_UpdateVotesButton_clicked()
 {
-    updateVoteList();
+    updateVoteList(true);
 }
 
 void ThroneList::updateVoteList(bool reset)
@@ -444,6 +444,8 @@ void ThroneList::updateVoteList(bool reset)
             QTableWidgetItem *nameItem = new QTableWidgetItem(QString::fromStdString(pbudgetProposal->GetName()));
             QTableWidgetItem *urlItem = new QTableWidgetItem(QString::fromStdString(pbudgetProposal->GetURL()));
             QTableWidgetItem *hashItem = new QTableWidgetItem(QString::fromStdString(pbudgetProposal->GetHash().ToString()));
+            QTableWidgetItem *blockStartItem = new QTableWidgetItem(QString::number((int64_t)pbudgetProposal->GetBlockStart()));
+            QTableWidgetItem *blockEndItem = new QTableWidgetItem(QString::number((int64_t)pbudgetProposal->GetBlockEnd()));
             QTableWidgetItem *paymentsItem = new QTableWidgetItem(QString::number((int64_t)pbudgetProposal->GetTotalPaymentCount()));
             QTableWidgetItem *remainingPaymentsItem = new QTableWidgetItem(QString::number((int64_t)pbudgetProposal->GetRemainingPaymentCount()));
             QTableWidgetItem *yesVotesItem = new QTableWidgetItem(QString::number((int64_t)pbudgetProposal->GetYeas()));
@@ -456,13 +458,15 @@ void ThroneList::updateVoteList(bool reset)
             ui->tableWidgetVoting->setItem(0, 0, nameItem);
             ui->tableWidgetVoting->setItem(0, 1, urlItem);
             ui->tableWidgetVoting->setItem(0, 2, hashItem);
-            ui->tableWidgetVoting->setItem(0, 3, paymentsItem);
-            ui->tableWidgetVoting->setItem(0, 4, remainingPaymentsItem);
-            ui->tableWidgetVoting->setItem(0, 5, yesVotesItem);
-            ui->tableWidgetVoting->setItem(0, 6, noVotesItem);
-            ui->tableWidgetVoting->setItem(0, 7, AddressItem);
-            ui->tableWidgetVoting->setItem(0, 8, totalPaymentItem);
-            ui->tableWidgetVoting->setItem(0, 9, monthlyPaymentItem);
+            ui->tableWidgetVoting->setItem(0, 3, blockStartItem);
+            ui->tableWidgetVoting->setItem(0, 4, blockEndItem);
+            ui->tableWidgetVoting->setItem(0, 5, paymentsItem);
+            ui->tableWidgetVoting->setItem(0, 6, remainingPaymentsItem);
+            ui->tableWidgetVoting->setItem(0, 7, yesVotesItem);
+            ui->tableWidgetVoting->setItem(0, 8, noVotesItem);
+            ui->tableWidgetVoting->setItem(0, 9, AddressItem);
+            ui->tableWidgetVoting->setItem(0, 10, totalPaymentItem);
+            ui->tableWidgetVoting->setItem(0, 11, monthlyPaymentItem);
 
             std::string projected;            
             if ((int64_t)pbudgetProposal->GetYeas() - (int64_t)pbudgetProposal->GetNays() > (ui->tableWidgetThrones->rowCount()/10)){
@@ -472,7 +476,7 @@ void ThroneList::updateVoteList(bool reset)
                 projected = "No";
             }
             QTableWidgetItem *projectedItem = new QTableWidgetItem(QString::fromStdString(projected));
-            ui->tableWidgetVoting->setItem(0, 10, projectedItem);
+            ui->tableWidgetVoting->setItem(0, 12, projectedItem);
         }
 
     CBlockIndex* pindexPrev = chainActive.Tip();
@@ -561,6 +565,7 @@ void ThroneList::VoteMany(bool YesNo)
     QMessageBox msg;
     msg.setText(QString::fromStdString(returnObj));
     msg.exec();
+    updateVoteList(true);
 }
 
 void ThroneList::on_voteManyYesButton_clicked()
