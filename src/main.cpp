@@ -2993,6 +2993,8 @@ bool static FlushStateToDisk(CValidationState &state, FlushStateMode mode)
             if (!pcoinsTip->Flush())
                 return AbortNode(state, "Failed to write to coin database");
             nLastFlush = nNow;
+            // Trim any excess entries from the cache if needed
+            pcoinsTip->Trim(nCoinCacheUsage);
         }
         if (fDoFullFlush || ((mode == FLUSH_STATE_ALWAYS || mode == FLUSH_STATE_PERIODIC) &&
                                 nNow > nLastSetChain + (int64_t)DATABASE_WRITE_INTERVAL * 1000000))

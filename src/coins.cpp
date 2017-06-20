@@ -7,6 +7,7 @@
 
 #include "memusage.h"
 #include "random.h"
+#include "util.h"
 
 #include <assert.h>
 
@@ -45,7 +46,7 @@ bool CCoins::Spend(uint32_t nPos)
 bool CCoinsView::GetCoins(const uint256 &txid, CCoins &coins) const { return false; }
 bool CCoinsView::HaveCoins(const uint256 &txid) const { return false; }
 uint256 CCoinsView::GetBestBlock() const { return uint256(); }
-bool CCoinsView::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) { return false; }
+bool CCoinsView::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, size_t &nChildCachedCoinsUsage) { return false; }
 bool CCoinsView::GetStats(CCoinsStats &stats) const { return false; }
 
 
@@ -54,7 +55,7 @@ bool CCoinsViewBacked::GetCoins(const uint256 &txid, CCoins &coins) const { retu
 bool CCoinsViewBacked::HaveCoins(const uint256 &txid) const { return base->HaveCoins(txid); }
 uint256 CCoinsViewBacked::GetBestBlock() const { return base->GetBestBlock(); }
 void CCoinsViewBacked::SetBackend(CCoinsView &viewIn) { base = &viewIn; }
-bool CCoinsViewBacked::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) { return base->BatchWrite(mapCoins, hashBlock); }
+bool CCoinsViewBacked::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, size_t &nChildCachedCoinsUsage) { return base->BatchWrite(mapCoins, hashBlock, nChildCachedCoinsUsage); }
 bool CCoinsViewBacked::GetStats(CCoinsStats &stats) const { return base->GetStats(stats); }
 
 CCoinsKeyHasher::CCoinsKeyHasher() : salt(GetRandHash()) {}
@@ -170,7 +171,8 @@ void CCoinsViewCache::SetBestBlock(const uint256 &hashBlockIn) {
     hashBlock = hashBlockIn;
 }
 
-bool CCoinsViewCache::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlockIn) {
+bool CCoinsViewCache::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlockIn, size_t &nChildCachedCoinsUsage)
+{
     assert(!hasModifier);
     LOCK(cs_utxo);
     for (CCoinsMap::iterator it = mapCoins.begin(); it != mapCoins.end();) {
@@ -208,9 +210,12 @@ bool CCoinsViewCache::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlockIn
                     itUs->second.flags |= CCoinsCacheEntry::DIRTY;
                 }
             }
+
+            // Update the usage of the child cache before deleting the entry in the child cache
+            nChildCachedCoinsUsage -= it->second.coins.DynamicMemoryUsage();
+            CCoinsMap::iterator itOld = it++;
+            mapCoins.erase(itOld);
         }
-        CCoinsMap::iterator itOld = it++;
-        mapCoins.erase(itOld);
     }
     hashBlock = hashBlockIn;
     return true;
@@ -218,10 +223,35 @@ bool CCoinsViewCache::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlockIn
 
 bool CCoinsViewCache::Flush() {
     LOCK(cs_utxo);
-    bool fOk = base->BatchWrite(cacheCoins, hashBlock);
-    cacheCoins.clear();
-    cachedCoinsUsage = 0;
+    bool fOk = base->BatchWrite(cacheCoins, hashBlock, cachedCoinsUsage);
     return fOk;
+}
+
+void CCoinsViewCache::Trim(size_t nTrimSize) const
+{
+    uint64_t nTrimmed = 0;
+
+    LOCK(cs_utxo);
+    CCoinsMap::iterator iter = cacheCoins.begin();
+    while (cachedCoinsUsage > nTrimSize)
+    {
+        if (iter == cacheCoins.end())
+            break;
+
+        // Only erase entries that have not been modified
+        if (iter->second.flags == 0)
+        {
+            cachedCoinsUsage -= iter->second.coins.DynamicMemoryUsage();
+
+            CCoinsMap::iterator itOld = iter++;
+            cacheCoins.erase(itOld);
+            nTrimmed++;
+        }
+        else
+            iter++;
+    }
+
+    LogPrint("coindb", "Trimmed %ld from the CoinsViewCache, current size after trim: %ld and usage %ld bytes\n", nTrimmed, cacheCoins.size(), cachedCoinsUsage);
 }
 
 void CCoinsViewCache::Uncache(const uint256& hash)
