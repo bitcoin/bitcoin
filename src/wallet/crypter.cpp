@@ -337,7 +337,6 @@ bool CCryptoKeyStore::GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) co
         // Check for watch-only pubkeys
         return CBasicKeyStore::GetPubKey(address, vchPubKeyOut);
     }
-    return false;
 }
 
 bool CCryptoKeyStore::EncryptKeys(CKeyingMaterial& vMasterKeyIn)
