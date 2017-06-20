@@ -36,7 +36,7 @@ public:
     void setWalletModel(WalletModel *walletModel);
     void StartAlias(std::string strAlias);
     void StartAll(std::string strCommand = "start-all");
-    void VoteMany(bool YesNo);
+    void VoteMany(std::string strCommand);
 
 private:
     QMenu *contextMenu;
@@ -68,6 +68,7 @@ private Q_SLOTS:
     
     void on_voteManyYesButton_clicked();
     void on_voteManyNoButton_clicked();
+    void on_voteManyAbstainButton_clicked();
     void on_tableWidgetVoting_itemSelectionChanged();
     void on_UpdateVotesButton_clicked();
 };
