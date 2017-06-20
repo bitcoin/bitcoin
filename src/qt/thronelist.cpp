@@ -464,10 +464,12 @@ void ThroneList::updateVoteList(bool reset)
             ui->tableWidgetVoting->setItem(0, 8, totalPaymentItem);
             ui->tableWidgetVoting->setItem(0, 9, monthlyPaymentItem);
 
-            std::string projected = "No";            
+            std::string projected;            
             if ((int64_t)pbudgetProposal->GetYeas() - (int64_t)pbudgetProposal->GetNays() > (ui->tableWidgetThrones->rowCount()/10)){
                 nTotalAllotted += pbudgetProposal->GetAmount()/100000000;
-                projected == "Yes";
+                projected = "Yes";
+            } else {
+                projected = "No"
             }
             QTableWidgetItem *projectedItem = new QTableWidgetItem(QString::fromStdString(projected));
             ui->tableWidgetVoting->setItem(0, 10, projectedItem);
@@ -503,7 +505,8 @@ void ThroneList::VoteMany(bool YesNo)
     QModelIndex index = selected.at(0);
     int r = index.row();
     std::string strHash = ui->tableWidgetVoting->item(r, 2)->text().toStdString();
-    uint256 hash(uint256S(strHash));
+    uint256 hash;
+    hash.SetHex(strHash);
 
     int success = 0;
     int failed = 0;
