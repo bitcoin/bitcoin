@@ -416,6 +416,11 @@
            </column>
            <column>
             <property name="text">
+             <string>Abstain's</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
              <string>Address</string>
             </property>
            </column>
@@ -452,6 +457,13 @@
             <widget class="QPushButton" name="voteManyNoButton">
              <property name="text">
               <string>Vote Many No</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="voteManyAbstainButton">
+             <property name="text">
+              <string>Vote Many Abstain</string>
              </property>
             </widget>
            </item>

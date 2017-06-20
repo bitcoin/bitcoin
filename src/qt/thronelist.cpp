@@ -454,6 +454,7 @@ void ThroneList::updateVoteList(bool reset)
             QTableWidgetItem *remainingPaymentsItem = new QTableWidgetItem(QString::number((int64_t)pbudgetProposal->GetRemainingPaymentCount()));
             QTableWidgetItem *yesVotesItem = new QTableWidgetItem(QString::number((int64_t)pbudgetProposal->GetYeas()));
             QTableWidgetItem *noVotesItem = new QTableWidgetItem(QString::number((int64_t)pbudgetProposal->GetNays()));
+            QTableWidgetItem *abstainVotesItem = new QTableWidgetItem(QString::number((int64_t)pbudgetProposal->GetAbstains()));
             QTableWidgetItem *AddressItem = new QTableWidgetItem(QString::fromStdString(address2.ToString()));
             QTableWidgetItem *totalPaymentItem = new QTableWidgetItem(QString::number((pbudgetProposal->GetAmount()*pbudgetProposal->GetTotalPaymentCount())/100000000 ));
             QTableWidgetItem *monthlyPaymentItem = new QTableWidgetItem(QString::number(pbudgetProposal->GetAmount()/100000000));
@@ -468,9 +469,10 @@ void ThroneList::updateVoteList(bool reset)
             ui->tableWidgetVoting->setItem(0, 6, remainingPaymentsItem);
             ui->tableWidgetVoting->setItem(0, 7, yesVotesItem);
             ui->tableWidgetVoting->setItem(0, 8, noVotesItem);
-            ui->tableWidgetVoting->setItem(0, 9, AddressItem);
-            ui->tableWidgetVoting->setItem(0, 10, totalPaymentItem);
-            ui->tableWidgetVoting->setItem(0, 11, monthlyPaymentItem);
+            ui->tableWidgetVoting->setItem(0, 9, abstainVotesItem);
+            ui->tableWidgetVoting->setItem(0, 10, AddressItem);
+            ui->tableWidgetVoting->setItem(0, 11, totalPaymentItem);
+            ui->tableWidgetVoting->setItem(0, 12, monthlyPaymentItem);
 
             std::string projected;            
             if ((int64_t)pbudgetProposal->GetYeas() - (int64_t)pbudgetProposal->GetNays() > (ui->tableWidgetThrones->rowCount()/10)){
@@ -480,7 +482,7 @@ void ThroneList::updateVoteList(bool reset)
                 projected = "No";
             }
             QTableWidgetItem *projectedItem = new QTableWidgetItem(QString::fromStdString(projected));
-            ui->tableWidgetVoting->setItem(0, 12, projectedItem);
+            ui->tableWidgetVoting->setItem(0, 13, projectedItem);
         }
 
     ui->totalAllottedLabel->setText(QString::number(nTotalAllotted));
@@ -491,14 +493,14 @@ void ThroneList::updateVoteList(bool reset)
 
 }
 
-void ThroneList::VoteMany(bool YesNo)
+void ThroneList::VoteMany(std::string strCommand)
 {
     std::vector<CThroneConfig::CThroneEntry> mnEntries;
     mnEntries = throneConfig.getEntries();
 
     int nVote = VOTE_ABSTAIN;
-    if(YesNo == true) nVote = VOTE_YES;
-    if(YesNo == false) nVote = VOTE_NO;
+    if(strCommand == "yea") nVote = VOTE_YES;
+    if(strCommand == "nay") nVote = VOTE_NO;
 
     // Find selected Budget Hash
     QItemSelectionModel* selectionModel = ui->tableWidgetVoting->selectionModel();
@@ -590,11 +592,11 @@ void ThroneList::on_voteManyYesButton_clicked()
             // Unlock wallet was cancelled
             return;
         }
-        VoteMany(true);
+        VoteMany("yea");
         return;
     }
 
-    VoteMany(true);
+    VoteMany("yea");
 }
 
 void ThroneList::on_voteManyNoButton_clicked()
@@ -619,13 +621,41 @@ void ThroneList::on_voteManyNoButton_clicked()
             // Unlock wallet was cancelled
             return;
         }
-        VoteMany(false);
+        VoteMany("nay");
         return;
     }
 
-    VoteMany(false);
+    VoteMany("nay");
 }
 
+void ThroneList::on_voteManyAbstainButton_clicked()
+{
+    // Display message box
+    QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm vote-many"),
+        tr("Are you sure you want to vote with ALL of your thrones?"),
+        QMessageBox::Yes | QMessageBox::Cancel,
+        QMessageBox::Cancel);
+
+    if(retval != QMessageBox::Yes)
+    {
+        return;
+    }
+
+    WalletModel::EncryptionStatus encStatus = walletModel->getEncryptionStatus();
+    if(encStatus == walletModel->Locked || encStatus == walletModel->UnlockedForAnonymizationOnly)
+    {
+        WalletModel::UnlockContext ctx(walletModel->requestUnlock(true));
+        if(!ctx.isValid())
+        {
+            // Unlock wallet was cancelled
+            return;
+        }
+        VoteMany("abstain");
+        return;
+    }
+
+    VoteMany("abstain");
+}
 
 void ThroneList::on_tableWidgetVoting_itemSelectionChanged()
 {
