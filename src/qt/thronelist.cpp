@@ -411,7 +411,7 @@ void ThroneList::on_UpdateVotesButton_clicked()
     updateVoteList();
 }
 
-void ThroneList::updateVoteList()
+void ThroneList::updateVoteList(bool reset)
 {
 
     static int64_t lastVoteListUpdate = 0;
@@ -425,7 +425,6 @@ void ThroneList::updateVoteList()
     lastVoteListUpdate = GetTime();
 
     QString strToFilter;
-    ui->voteSecondsLabel->setText("Updating...");
     ui->tableWidgetVoting->setSortingEnabled(false);
     ui->tableWidgetVoting->clearContents();
     ui->tableWidgetVoting->setRowCount(0);
@@ -467,7 +466,7 @@ void ThroneList::updateVoteList()
 
             std::string projected = "No";            
             if ((int64_t)pbudgetProposal->GetYeas() - (int64_t)pbudgetProposal->GetNays() > (ui->tableWidgetThrones->rowCount()/10)){
-                nTotalAllotted += pbudgetProposal->GetAmount()/100000000
+                nTotalAllotted += pbudgetProposal->GetAmount()/100000000;
                 projected == "Yes";
             }
             QTableWidgetItem *projectedItem = new QTableWidgetItem(QString::fromStdString(projected));
@@ -481,7 +480,8 @@ void ThroneList::updateVoteList()
     ui->totalAllottedLabel->setText(QString::number(nTotalAllotted));
     ui->tableWidgetVoting->setSortingEnabled(true);
 
-    ui->voteSecondsLabel->setText(QString::number(timeTillUpdate));
+    // reset "timer"
+    ui->voteSecondsLabel->setText("0");
 
 }
 
