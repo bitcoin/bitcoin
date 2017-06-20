@@ -368,6 +368,8 @@ bool CCoinsViewCache::HaveInputs(const CTransaction& tx) const
 {
     if (!tx.IsCoinBase()) {
         for (unsigned int i = 0; i < tx.vin.size(); i++) {
+            if (tx.vin[i].IsAnonInput())
+                continue;
             const COutPoint &prevout = tx.vin[i].prevout;
             const CCoins* coins = AccessCoins(prevout.hash);
             if (!coins || !coins->IsAvailable(prevout.n)) {
@@ -387,14 +389,20 @@ double CCoinsViewCache::GetPriority(const CTransaction &tx, int nHeight, CAmount
     
     if (tx.IsParticlVersion())
     {
-        for (auto &txin : tx.vin)
+        for (const auto &txin : tx.vin)
         {
+            if (txin.IsAnonInput())
+            {
+                dResult += 1;
+                continue;
+            };
             const CCoins *coins = AccessCoins(txin.prevout.hash);
             assert(coins);
             if (!coins->IsAvailable(txin.prevout.n))
                 continue;
             
-            if (coins->nHeight <= nHeight) {
+            if (coins->nHeight <= nHeight)
+            {
                 if (coins->vpout[txin.prevout.n]->IsStandardOutput())
                 {
                     dResult += (double)(coins->vpout[txin.prevout.n]->GetValue()) * (nHeight-coins->nHeight);
@@ -402,9 +410,8 @@ double CCoinsViewCache::GetPriority(const CTransaction &tx, int nHeight, CAmount
                 } else
                 {
                     dResult += (double)(nHeight-coins->nHeight);
-                }
-                
-            }
+                };
+            };
         };
     } else
     {

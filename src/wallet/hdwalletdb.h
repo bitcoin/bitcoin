@@ -30,6 +30,8 @@ prefixes
     acc
     acentry
     
+    aki                 - anon key image: CPubKey - COutpoint
+    
     bestblock
     bestblockheader
     
@@ -53,7 +55,7 @@ prefixes
     keymeta
     key
     
-    lao                 - locked anon output
+    lao                 - locked anon/blind output: COutpoint
     lastfilteredheight
     lns                 - stealth link, key: keyid, value uint32_t (stealth index)
     lne                 - extkey link key: keyid, value uint32_t (stealth index)
@@ -456,6 +458,13 @@ public:
     bool ReadStoredTx(const uint256 &hash, CStoredTransaction &stx, uint32_t nFlags=DB_READ_UNCOMMITTED);
     bool WriteStoredTx(const uint256 &hash, const CStoredTransaction &stx);
     bool EraseStoredTx(const uint256 &hash);
+    
+    bool ReadAnonKeyImage(const CCmpPubKey &ki, COutPoint &op, uint32_t nFlags=DB_READ_UNCOMMITTED);
+    bool WriteAnonKeyImage(const CCmpPubKey &ki, const COutPoint &op);
+    bool EraseAnonKeyImage(const CCmpPubKey &ki);
+    
+    bool WriteLockedAnonOut(const COutPoint &op);
+    bool EraseLockedAnonOut(const COutPoint &op);
 
 
 };

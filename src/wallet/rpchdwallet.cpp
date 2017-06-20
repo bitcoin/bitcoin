@@ -1,4 +1,4 @@
-// Copyright (c) 2007 The Particl Core developers
+// Copyright (c) 2017 The Particl Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -23,7 +23,6 @@
 #include "key/mnemonic.h"
 #include "pos/miner.h"
 #include "crypto/sha256.h"
-
 
 #include <stdint.h>
 
@@ -3003,6 +3002,9 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
     
     CBitcoinAddress address(request.params[0].get_str());
     
+    if (typeOut == OUTPUT_RINGCT && Params().NetworkID() == "main")
+        throw std::runtime_error("Disabled on mainnet.");
+    
     if (typeOut == OUTPUT_RINGCT
         && !address.IsValidStealthAddress())
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Particl stealth address");
@@ -3067,7 +3069,7 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
     };
     
     
-    size_t nRingSize = 0; // TODO: default size?
+    size_t nRingSize = 4; // TODO: default size?
     if (request.params.size() > 6)
         fSubtractFeeFromAmount = request.params[6].get_int();
     
@@ -3104,8 +3106,10 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
     if (!pwallet->CommitTransaction(wtx, rtx, reservekey, g_connman.get(), state))
         throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Transaction commit failed: %s", state.GetRejectReason()));
     
+    
+    
     UniValue vErrors(UniValue::VARR);
-    if (state.IsInvalid())
+    if (!state.IsValid())
     {
         // This can happen if the mempool rejected the transaction.  Report
         // what happened in the "errors" response.
@@ -3172,8 +3176,6 @@ UniValue sendparttoanon(const JSONRPCRequest &request)
             "\"txid\"           (string) The transaction id.\n"
             "\nExamples:\n"
             + HelpExampleCli("sendparttoblind", "\"SPGyji8uZFip6H15GUfj6bsutRVLsCyBFL3P7k7T7MUDRaYU8GfwUHpfxonLFAvAwr2RkigyGfTgWMfzLAAP8KMRHq7RE8cwpEEekH\" 0.1"));
-    
-    throw std::runtime_error("TODO");
     
     return SendToInner(request, OUTPUT_STANDARD, OUTPUT_RINGCT);
 }
@@ -3267,7 +3269,8 @@ UniValue sendanontopart(const JSONRPCRequest &request)
         throw std::runtime_error(
             "sendanontopart [fromHeight]\n");
     
-    throw std::runtime_error("TODO");
+    if (Params().NetworkID() == "main")
+        throw std::runtime_error("Disabled on mainnet");
     
     return SendToInner(request, OUTPUT_RINGCT, OUTPUT_STANDARD);
 }
@@ -3278,18 +3281,37 @@ UniValue sendanontoblind(const JSONRPCRequest &request)
         throw std::runtime_error(
             "sendanontoblind [fromHeight]\n");
     
-    throw std::runtime_error("TODO");
+    if (Params().NetworkID() == "main")
+        throw std::runtime_error("Disabled on mainnet");
     
     return SendToInner(request, OUTPUT_RINGCT, OUTPUT_CT);
 }
 
 UniValue sendanontoanon(const JSONRPCRequest &request)
 {
-    if (request.fHelp || request.params.size() > 1)
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 8)
         throw std::runtime_error(
-            "sendanontoanon [fromHeight]\n");
-    
-    throw std::runtime_error("TODO");
+            "sendanontoanon \"address\" amount ( \"comment\" \"comment-to\" subtractfeefromamount, \"narration\", \"ringsize\", \"numsignatures\")\n"
+            "\nSend an amount of blinded part to anon tokens to a given address.\n"
+            + HelpRequiringPassphrase() +
+            "\nArguments:\n"
+            "1. \"address\"     (string, required) The particl address to send to.\n"
+            "2. \"amount\"      (numeric or string, required) The amount in " + CURRENCY_UNIT + " to send. eg 0.1\n"
+            "3. \"comment\"     (string, optional) A comment used to store what the transaction is for. \n"
+            "                            This is not part of the transaction, just kept in your wallet.\n"
+            "4. \"comment_to\"  (string, optional) A comment to store the name of the person or organization \n"
+            "                            to which you're sending the transaction. This is not part of the \n"
+            "                            transaction, just kept in your wallet.\n"
+            "5. subtractfeefromamount  (boolean, optional, default=false) The fee will be deducted from the amount being sent.\n"
+            "                            The recipient will receive less " + CURRENCY_UNIT + " than you enter in the amount field.\n"
+            "6. \"narration\"   (string, optional) Up to 24 characters sent with the transaction.\n"
+            "                            The narration is stored in the blockchain and is sent encrypted when destination is a stealth address and uncrypted otherwise.\n"
+            "7. \"ringsize\"      (int, optional).\n"
+            "8. \"numsignatures\" (int, optional).\n"
+            "\nResult:\n"
+            "\"txid\"           (string) The transaction id.\n"
+            "\nExamples:\n"
+            + HelpExampleCli("sendblindtoanon", "\"SPGyji8uZFip6H15GUfj6bsutRVLsCyBFL3P7k7T7MUDRaYU8GfwUHpfxonLFAvAwr2RkigyGfTgWMfzLAAP8KMRHq7RE8cwpEEekH\" 0.1"));
     
     return SendToInner(request, OUTPUT_RINGCT, OUTPUT_RINGCT);
 }

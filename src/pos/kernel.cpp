@@ -82,11 +82,13 @@ bool CheckStakeKernelHash(const CBlockIndex *pindexPrev,
     arith_uint256 bnWeight = arith_uint256(nValueIn);
     bnTarget *= bnWeight;
     
+    
     targetProofOfStake = ArithToUint256(bnTarget);
     
     uint256 bnStakeModifier = pindexPrev->bnStakeModifier;
     int nStakeModifierHeight = pindexPrev->nHeight;
     int64_t nStakeModifierTime = pindexPrev->nTime;
+    
     
     CDataStream ss(SER_GETHASH, 0);
     ss << bnStakeModifier;

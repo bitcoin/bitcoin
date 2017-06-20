@@ -40,6 +40,8 @@ int prepareLastRowMLSAG(size_t nOuts, size_t nBlinded, size_t nCols, size_t nRow
     /*
         Last matrix row is sum of input commitments - sum of output commitments
         
+        Will return after summing commitments if sk or blinds is null
+        
         m[col+(cols*row)]
         pcm_in[col+(cols*row)]
         pcm_out[nOuts]
@@ -49,6 +51,8 @@ int prepareLastRowMLSAG(size_t nOuts, size_t nBlinded, size_t nCols, size_t nRow
         no. of inputs is nRows -1
         
         sum blinds up to nBlinded, pass fee commitment in pcm_out after nBlinded
+        
+        
     */
     
     secp256k1_gej accj;
@@ -58,7 +62,7 @@ int prepareLastRowMLSAG(size_t nOuts, size_t nBlinded, size_t nCols, size_t nRow
     int overflow;
     secp256k1_scalar accos, accis, ts;
     
-    if (!m || !sk
+    if (!m
         || nRows < 2
         || nCols < 1
         || nOuts < 1)
@@ -102,6 +106,9 @@ int prepareLastRowMLSAG(size_t nOuts, size_t nBlinded, size_t nCols, size_t nRow
         secp256k1_eckey_pubkey_serialize(&c, &m[(k+nCols*nIns)*33], &s, 1);
         /* pedersen_commitment_save(&m[(k+nCols*nIns)*33], &c); */
     };
+    
+    if (!sk || !blinds)
+        return 0;
     
     /* sum input blinds */
     secp256k1_scalar_clear(&accis);
@@ -162,6 +169,31 @@ static int hashToCurve(secp256k1_ge *ge, const uint8_t *pd, size_t len)
         return 1; /* failed */
     
     return 0;
+}
+
+int getKeyImage(const secp256k1_context *ctx, const uint8_t *pk, const uint8_t *sk, uint8_t *ki)
+{
+    secp256k1_ge ge1;
+    secp256k1_scalar s, zero;
+    secp256k1_gej gej1, gej2;
+    int overflow;
+    size_t clen;
+    
+    secp256k1_scalar_set_int(&zero, 0);
+    
+    if (0 != hashToCurve(&ge1, pk, 33)) /* H(pk) */
+        return 1;
+    
+    secp256k1_scalar_set_b32(&s, sk, &overflow);
+    if (overflow || secp256k1_scalar_is_zero(&s))
+        return 2;
+    
+    secp256k1_gej_set_ge(&gej1, &ge1);
+    secp256k1_ecmult(&ctx->ecmult_ctx, &gej2, &gej1, &s, &zero);  /* gej2 = H(pk) * sk */
+    secp256k1_ge_set_gej(&ge1, &gej2);
+    secp256k1_eckey_pubkey_serialize(&ge1, ki, &clen, 1);
+    
+    return (clen == 33) ? 0 : 3;
 }
 
 #define MLSAG_MAX_ROWS 33 /* arbitrary max rows, max inputs 32 */

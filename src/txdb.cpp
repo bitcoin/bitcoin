@@ -443,3 +443,43 @@ bool CBlockTreeDB::EraseRCTOutput(int64_t i)
 };
 
 
+bool CBlockTreeDB::ReadRCTOutputLink(const CCmpPubKey &pk, int64_t &i)
+{
+    return Read(std::make_pair(DB_RCTOUTPUT_LINK, pk), i);
+};
+
+bool CBlockTreeDB::WriteRCTOutputLink(const CCmpPubKey &pk, int64_t i)
+{
+    CDBBatch batch(*this);
+    batch.Write(std::make_pair(DB_RCTOUTPUT_LINK, pk), i);
+    return WriteBatch(batch);
+};
+
+bool CBlockTreeDB::EraseRCTOutputLink(const CCmpPubKey &pk)
+{
+    CDBBatch batch(*this);
+    batch.Erase(std::make_pair(DB_RCTOUTPUT_LINK, pk));
+    return WriteBatch(batch);
+};
+
+
+bool CBlockTreeDB::ReadRCTKeyImage(const CCmpPubKey &ki, uint256 &txhash)
+{
+    return Read(std::make_pair(DB_RCTKEYIMAGE, ki), txhash);
+};
+
+bool CBlockTreeDB::WriteRCTKeyImage(const CCmpPubKey &ki, const uint256 &txhash)
+{
+    CDBBatch batch(*this);
+    batch.Write(std::make_pair(DB_RCTKEYIMAGE, ki), txhash);
+    return WriteBatch(batch);
+};
+
+bool CBlockTreeDB::EraseRCTKeyImage(const CCmpPubKey &ki)
+{
+    CDBBatch batch(*this);
+    batch.Erase(std::make_pair(DB_RCTKEYIMAGE, ki));
+    return WriteBatch(batch);
+};
+
+

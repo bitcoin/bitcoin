@@ -125,8 +125,6 @@ public:
 
     SecMsgToken() {};
 
-    ~SecMsgToken() {};
-
     bool operator <(const SecMsgToken &y) const
     {
         // pack and memcmp from timesent?
@@ -150,7 +148,6 @@ public:
         nLockCount      = 0;
         nLockPeerId     = 0;
     };
-    ~SecMsgBucket() {};
 
     void hashBucket();
 
@@ -159,7 +156,6 @@ public:
     uint32_t              nLockCount;     // set when smsgWant first sent, unset at end of smsgMsg, ticks down in ThreadSecureMsg()
     NodeId                nLockPeerId;    // id of peer that bucket is locked for
     std::set<SecMsgToken> setTokens;
-
 };
 
 // -- get at the data
@@ -172,7 +168,7 @@ public:
         if (vchVersion.size() > 0)
             return vchVersion[0];
         return 0;
-    }
+    };
 };
 
 class SecMsgAddress
@@ -190,25 +186,24 @@ public:
     bool        fReceiveEnabled;
     bool        fReceiveAnon;
 
-    
     unsigned int GetSerializeSize(int nType, int nVersion) const
     {
         return 22;
-    }
+    };
     template<typename Stream>
     void Serialize(Stream &s) const
     {
         s << address;
         s << fReceiveEnabled;
         s << fReceiveAnon;
-    }
+    };
     template <typename Stream>
     void Unserialize(Stream& s)
     {
         s >> address;
         s >> fReceiveEnabled;
         s >> fReceiveAnon;
-    }
+    };
 };
 
 // Secure Message Options
@@ -221,7 +216,7 @@ public:
         fNewAddressRecv = true;
         fNewAddressAnon = true;
         fScanIncoming   = true;
-    }
+    };
 
     bool fNewAddressRecv;
     bool fNewAddressAnon;
@@ -245,7 +240,7 @@ public:
         //LockedPageManager::Instance().LockRange(&chKey[0], sizeof chKey);
         //LockedPageManager::Instance().LockRange(&chIV[0], sizeof chIV);
         fKeySet = false;
-    }
+    };
 
     ~SecMsgCrypter()
     {
@@ -256,7 +251,7 @@ public:
 
         //LockedPageManager::Instance().UnlockRange(&chKey[0], sizeof chKey);
         //LockedPageManager::Instance().UnlockRange(&chIV[0], sizeof chIV);
-    }
+    };
 
     bool SetKey(const std::vector<uint8_t> &vchNewKey, const uint8_t *chNewIV);
     bool SetKey(const uint8_t *chNewKey, const uint8_t *chNewIV);
@@ -279,8 +274,7 @@ public:
     {
         return 64 + 1 + 2 + 20 + 20 + 
             GetSizeOfCompactSize(vchMessage.size()) + vchMessage.size() * sizeof(uint8_t);
-    }
-    
+    };
     template<typename Stream>
     void Serialize(Stream &s) const
     {
@@ -290,7 +284,7 @@ public:
         s << addrTo;
         s << addrOutbox;
         s << vchMessage;
-    }
+    };
     template <typename Stream>
     void Unserialize(Stream& s)
     {
@@ -300,7 +294,7 @@ public:
         s >> addrTo;
         s >> addrOutbox;
         s >> vchMessage;
-    }
+    };
 };
 
 class SecMsgDB
@@ -339,7 +333,6 @@ public:
 
     leveldb::DB *pdb;       // points to the global instance
     leveldb::WriteBatch *activeBatch;
-
 };
 
 int SecureMsgBuildBucketSet();

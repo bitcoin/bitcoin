@@ -80,9 +80,6 @@ int SelectRangeProofParameters(uint64_t nValueIn, uint64_t &minValue, int &expon
     };
     
     
-    
-    
-    
     uint64_t nTest = nValueIn;
     size_t nDiv10; // max exponent
     for (nDiv10 = 0; nTest % 10 == 0; nDiv10++, nTest /= 10) ;

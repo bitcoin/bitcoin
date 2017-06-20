@@ -1711,7 +1711,13 @@ void ListRecord(const uint256 &hash, const CTransactionRecord &rtx,
             };
         };
         
-        entry.push_back(Pair("address", addr.ToString()));
+        if (r.nFlags & ORF_LOCKED)
+            entry.push_back(Pair("require_unlock", "true"));
+        
+        if (dest.type() == typeid(CNoDestination))
+            entry.push_back(Pair("address", "none"));
+        else
+            entry.push_back(Pair("address", addr.ToString()));
         
         std::string sCategory;
         if (r.nFlags & ORF_OWNED && r.nFlags & ORF_FROM)
@@ -1737,7 +1743,7 @@ void ListRecord(const uint256 &hash, const CTransactionRecord &rtx,
         if (r.nFlags & ORF_OWNED && r.nFlags & ORF_FROM)
             entry.push_back(Pair("fromself", "true"));
         
-        entry.push_back(Pair("amount", ValueFromAmount(r.nValue * (r.nFlags & ORF_OWNED) ? 1 : -1)));
+        entry.push_back(Pair("amount", ValueFromAmount(r.nValue * ((r.nFlags & ORF_OWNED) ? 1 : -1))));
         
         if (r.nFlags & ORF_FROM)
             entry.push_back(Pair("fee", ValueFromAmount(-rtx.nFee)));
@@ -2797,7 +2803,9 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
         obj.push_back(Pair("immature_balance",    ValueFromAmount(pwalletMain->GetImmatureBalance())));
     };
     
-    obj.push_back(Pair("txcount",       (int)pwalletMain->mapWallet.size()));
+    int nTxCount = (int)pwalletMain->mapWallet.size() + fParticlWallet ? (int)((CHDWallet*)pwalletMain)->mapRecords.size() : 0;
+    
+    obj.push_back(Pair("txcount",       (int)nTxCount));
     obj.push_back(Pair("keypoololdest", pwalletMain->GetOldestKeyPoolTime()));
     obj.push_back(Pair("keypoolsize",   (int)pwalletMain->GetKeyPoolSize()));
     

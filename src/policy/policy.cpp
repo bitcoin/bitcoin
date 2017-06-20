@@ -130,6 +130,8 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
     {
         for (unsigned int i = 0; i < tx.vin.size(); i++)
         {
+            if (tx.vin[i].IsAnonInput())
+                continue;
             const CTxOutBase* prev = mapInputs.GetBaseOutputFor(tx.vin[i]);
             
             if (prev->nVersion == OUTPUT_DATA)
@@ -161,8 +163,6 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
                 }
                 continue;
             };
-            
-            // TODO: other output types
         };
         
         return true;
@@ -204,6 +204,19 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
 
     for (unsigned int i = 0; i < tx.vin.size(); i++)
     {
+        if (tx.vin[i].IsAnonInput())
+        {
+            size_t sizeWitnessStack = tx.vin[i].scriptWitness.stack.size();
+            if (sizeWitnessStack > 3)
+                return false;
+            for (unsigned int j = 0; j < sizeWitnessStack; j++)
+            {
+                if (tx.vin[i].scriptWitness.stack[j].size() > 4096) // TODO: max limits?
+                    return false;
+            };
+            continue;
+        };
+        
         // We don't care if witness for this input is empty, since it must not be bloated.
         // If the script is invalid without witness, it would be caught sooner or later during validation.
         if (tx.vin[i].scriptWitness.IsNull())

@@ -18,6 +18,8 @@
 #include "utiltime.h"
 #include "version.h"
 
+#include "anon.h"
+
 CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef& _tx, const CAmount& _nFee,
                                  int64_t _nTime, double _entryPriority, unsigned int _entryHeight,
                                  CAmount _inChainInputValue,
@@ -707,8 +709,16 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
     NotifyEntryRemoved(it->GetSharedTx(), reason);
     const uint256 hash = it->GetTx().GetHash();
     BOOST_FOREACH(const CTxIn& txin, it->GetTx().vin)
+    {
+        if (txin.IsAnonInput())
+        {
+            RemoveKeyImagesFromMempool(hash, txin, *this);
+            continue;
+        };
+        
         mapNextTx.erase(txin.prevout);
-
+    }
+    
     if (vTxHashes.size() > 1) {
         vTxHashes[it->vTxHashesIdx] = std::move(vTxHashes.back());
         vTxHashes[it->vTxHashesIdx].second->vTxHashesIdx = it->vTxHashesIdx;
@@ -939,7 +949,9 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
         setEntries setParentCheck;
         int64_t parentSizes = 0;
         int64_t parentSigOpCost = 0;
-        BOOST_FOREACH(const CTxIn &txin, tx.vin) {
+        for (const CTxIn &txin : tx.vin) {
+            if (txin.IsAnonInput())
+                continue;
             // Check that every mempool transaction's inputs refer to available coins, or other mempool tx's.
             indexed_transaction_set::const_iterator it2 = mapTx.find(txin.prevout.hash);
             if (it2 != mapTx.end()) {
@@ -1231,6 +1243,22 @@ void CTxMemPool::ClearPrioritisation(const uint256 hash)
 {
     LOCK(cs);
     mapDeltas.erase(hash);
+}
+
+bool CTxMemPool::HaveKeyImage(const CCmpPubKey &ki, uint256 &hash) const
+{
+    LOCK(cs);
+    
+    std::map<CCmpPubKey, uint256>::const_iterator mi;
+    mi = mapKeyImages.find(ki);
+     
+    if (mi != mapKeyImages.end())
+    {
+        hash = mi->second;
+        return true;
+    };
+    
+    return false;
 }
 
 bool CTxMemPool::HasNoInputsOf(const CTransaction &tx) const

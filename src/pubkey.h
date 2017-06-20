@@ -191,6 +191,143 @@ public:
     
     bool Derive(CPubKey& pubkeyChild, unsigned char ccChild[32], unsigned int nChild, const unsigned char cc[32]) const;
 };
+
+/** An encapsulated compressed public key. */
+class CCmpPubKey
+{
+private:
+    /**
+     * Just store the serialized data.
+     * Its length can very cheaply be computed from the first byte.
+     */
+    unsigned char vch[33];
+
+    //! Compute the length of a pubkey with a given first byte.
+    unsigned int static GetLen(unsigned char chHeader)
+    {
+        if (chHeader == 2 || chHeader == 3)
+            return 33;
+        return 0;
+    }
+
+    //! Set this key data to be invalid
+    void Invalidate()
+    {
+        vch[0] = 0xFF;
+    }
+
+public:
+    //! Construct an invalid public key.
+    CCmpPubKey()
+    {
+        Invalidate();
+    }
+
+    //! Initialize a public key using begin/end iterators to byte data.
+    template <typename T>
+    void Set(const T pbegin, const T pend)
+    {
+        int len = pend == pbegin ? 0 : GetLen(pbegin[0]);
+        if (len && len == (pend - pbegin))
+            memcpy(vch, (unsigned char*)&pbegin[0], len);
+        else
+            Invalidate();
+    }
+
+    //! Construct a public key using begin/end iterators to byte data.
+    template <typename T>
+    CCmpPubKey(const T pbegin, const T pend)
+    {
+        Set(pbegin, pend);
+    }
+
+    //! Construct a public key from a byte vector.
+    CCmpPubKey(const std::vector<unsigned char>& _vch)
+    {
+        Set(_vch.begin(), _vch.end());
+    }
+    
+    CCmpPubKey(CPubKey pk)
+    {
+        Set(pk.begin(), pk.end());
+    }
+
+    //! Simple read-only vector-like interface to the pubkey data.
+    unsigned int size() const { return GetLen(vch[0]); }
+    const unsigned char* begin() const { return vch; }
+    unsigned char* ncbegin() { return vch; }
+    const unsigned char* end() const { return vch + size(); }
+    const unsigned char& operator[](unsigned int pos) const { return vch[pos]; }
+
+    //! Comparator implementation.
+    friend bool operator==(const CCmpPubKey& a, const CCmpPubKey& b)
+    {
+        return a.vch[0] == b.vch[0] &&
+               memcmp(a.vch, b.vch, a.size()) == 0;
+    }
+    friend bool operator!=(const CCmpPubKey& a, const CCmpPubKey& b)
+    {
+        return !(a == b);
+    }
+    friend bool operator<(const CCmpPubKey& a, const CCmpPubKey& b)
+    {
+        return a.vch[0] < b.vch[0] ||
+               (a.vch[0] == b.vch[0] && memcmp(a.vch, b.vch, a.size()) < 0);
+    }
+
+    //! Implement serialization, as if this was a byte vector.
+    template <typename Stream>
+    void Serialize(Stream& s) const
+    {
+        unsigned int len = size();
+        ::WriteCompactSize(s, len);
+        s.write((char*)vch, len);
+    }
+    template <typename Stream>
+    void Unserialize(Stream& s)
+    {
+        unsigned int len = ::ReadCompactSize(s);
+        if (len <= 33) {
+            s.read((char*)vch, len);
+        } else {
+            // invalid pubkey, skip available data
+            char dummy;
+            while (len--)
+                s.read(&dummy, 1);
+            Invalidate();
+        }
+    }
+
+    //! Get the KeyID of this public key (hash of its serialization)
+    CKeyID GetID() const
+    {
+        return CKeyID(Hash160(vch, vch + size()));
+    }
+
+    //! Get the 256-bit hash of this public key.
+    uint256 GetHash() const
+    {
+        return Hash(vch, vch + size());
+    }
+
+    /*
+     * Check syntactic correctness.
+     *
+     * Note that this is consensus critical as CheckSig() calls it!
+     */
+    bool IsValid() const
+    {
+        return size() > 0;
+    }
+    
+    //! Check whether this is a compressed public key.
+    bool IsCompressed() const
+    {
+        return true;
+    }
+};
+
+
 /*
 struct CExtPubKey {
     unsigned char nDepth;

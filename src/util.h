@@ -104,7 +104,7 @@ template<typename... Args>
 int errorN(int n, std::string &s, const char *func, const char *fmt, const Args&... args)
 {
     s = tfm::format(fmt, args...);
-    LogPrintStr(_("ERROR, ") + func + ":" + s + "\n");
+    LogPrintStr(_("ERROR, ") + func + ": " + s + "\n");
     return n;
 }
 

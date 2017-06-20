@@ -60,12 +60,38 @@ class AnonTest(ParticlTestFramework):
         print("txnHash ", txnHash)
         txnHashes.append(txnHash)
         
+        for k in range(6):
+                txnHash = nodes[0].sendparttoanon(sxAddrTo1_1, 10, '', '', False, 'node0 -> node1 p->a')
+                print("txnHash ", txnHash)
+                txnHashes.append(txnHash)
+        
         assert(self.wait_for_mempool(nodes[1], txnHash))
+        
+        
         
         ro = nodes[1].listtransactions()
         print("1 listtransactions ", json.dumps(ro, indent=4, default=self.jsonDecimal))
         
+        ro = nodes[0].reservebalance(False)
         
+        assert(self.wait_for_height(nodes[0], 1))
+        
+        ro = nodes[0].reservebalance(True, 10000000)
+        
+        block1_hash = nodes[1].getblockhash(1)
+        ro = nodes[1].getblock(block1_hash)
+        for txnHash in txnHashes:
+            assert(txnHash in ro['tx'])
+        
+        
+        
+        txnHash = nodes[1].sendanontoanon(sxAddrTo0_1, 1, '', '', False, 'node1 -> node0 a->a')
+        print("1 sendanontoanon ", json.dumps(txnHash, indent=4, default=self.jsonDecimal))
+        
+        assert(self.wait_for_mempool(nodes[0], txnHash))
+        
+        ro = nodes[0].listtransactions()
+        print("0 listtransactions ", json.dumps(ro, indent=4, default=self.jsonDecimal))
         
         assert(False)
         #print(json.dumps(ro, indent=4, default=self.jsonDecimal))

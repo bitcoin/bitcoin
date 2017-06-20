@@ -901,7 +901,7 @@ UniValue smsgbuckets(const JSONRPCRequest &request)
 
                 result.push_back(Pair("bucket", objM));
             };
-        }; // LOCK(cs_smsg);
+        }; // cs_smsg
 
 
         std::string snBuckets = boost::lexical_cast<std::string>(nBuckets);

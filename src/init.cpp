@@ -45,6 +45,7 @@
 #include "wallet/hdwallet.h"
 #endif
 #include "warnings.h"
+#include "anon.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <memory>
@@ -640,6 +641,7 @@ void ThreadImport(std::vector<boost::filesystem::path> vImportFiles)
 
     // -reindex
     if (fReindex) {
+        RemoveAnonDBRecords();
         int nFile = 0;
         while (true) {
             CDiskBlockPos pos(nFile, 0);

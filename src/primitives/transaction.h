@@ -106,6 +106,7 @@ public:
     COutPoint prevout;
     CScript scriptSig;
     uint32_t nSequence;
+    CScriptWitness scriptData; // Non prunable
     CScriptWitness scriptWitness; //! Only serialized through CTransaction
 
     /* Setting nSequence to this value for every input in a transaction
@@ -135,6 +136,9 @@ public:
      * 9 bits. */
     static const int SEQUENCE_LOCKTIME_GRANULARITY = 9;
 
+
+    static const uint32_t ANON_MARKER = 0xffffffa0;
+
     CTxIn()
     {
         nSequence = SEQUENCE_FINAL;
@@ -150,6 +154,11 @@ public:
         READWRITE(prevout);
         READWRITE(*(CScriptBase*)(&scriptSig));
         READWRITE(nSequence);
+        
+        if (IsAnonInput())
+        {
+            READWRITE(scriptData.stack);
+        };
     }
 
     friend bool operator==(const CTxIn& a, const CTxIn& b)
@@ -166,7 +175,21 @@ public:
 
     bool IsAnonInput() const
     {
-        return prevout.n == 0xffffffff;
+        return prevout.n == ANON_MARKER;
+    };
+    
+    bool SetAnonInfo(uint32_t nInputs, uint32_t nRingSize)
+    {
+        memcpy(prevout.hash.begin(), &nInputs, 4);
+        memcpy(prevout.hash.begin()+4, &nRingSize, 4);
+        return true;
+    };
+    
+    bool GetAnonInfo(uint32_t &nInputs, uint32_t &nRingSize) const
+    {
+        memcpy(&nInputs, prevout.hash.begin(), 4);
+        memcpy(&nRingSize, prevout.hash.begin()+4, 4);
+        return true;
     };
 
     std::string ToString() const;
@@ -446,7 +469,7 @@ class CTxOutRingCT : public CTxOutBase
 {
 public:
     CTxOutRingCT() : CTxOutBase(OUTPUT_RINGCT) {};
-    CPubKey pk;
+    CCmpPubKey pk;
     std::vector<uint8_t> vData; // first 33 bytes is always ephemeral pubkey, can contain token for stealth prefix matching
     secp256k1_pedersen_commitment commitment;
     std::vector<uint8_t> vRangeproof;

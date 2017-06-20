@@ -762,4 +762,15 @@ BOOST_AUTO_TEST_CASE(ringct_test_2in_fee)
     secp256k1_context_destroy(ctx);
 }
 
+BOOST_AUTO_TEST_CASE(ringct_test_set_have)
+{
+    std::set<int64_t> setHaveI;
+    
+    BOOST_CHECK(setHaveI.insert(1).second == true);
+    BOOST_CHECK(setHaveI.insert(1).second == false);
+    BOOST_CHECK(setHaveI.insert(2).second == true);
+    
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -29,7 +29,6 @@ struct StakeTestingSetup: public TestingSetup {
     StakeTestingSetup(const std::string& chainName = CBaseChainParams::REGTEST):
         TestingSetup(chainName, true) // fParticlMode = true
     {
-        ForceAddMultiArg("-debug", "1");
         
         bitdb.MakeMock();
 
@@ -109,6 +108,27 @@ void StakeNBlocks(CHDWallet *pwallet, size_t nBlocks)
     };
     BOOST_REQUIRE(k < nTries);
 };
+
+static void AddAnonTxn(CHDWallet *pwallet, CBitcoinAddress &address, CAmount amount)
+{
+    CValidationState state;
+    BOOST_REQUIRE(address.IsValid());
+    
+    std::vector<CTempRecipient> vecSend;
+    std::string sError;
+    CTempRecipient r;
+    r.nType = OUTPUT_RINGCT;
+    r.nAmount = 10;
+    r.address = address.Get();
+    vecSend.push_back(r);
+    
+    CWalletTx wtx;
+    CTransactionRecord rtx;
+    BOOST_CHECK(0 == pwallet->AddStandardInputs(wtx, rtx, vecSend, true, sError));
+    
+    wtx.BindWallet(pwallet);
+    BOOST_CHECK(wtx.AcceptToMemoryPool(maxTxFee, state));
+}
 
 BOOST_AUTO_TEST_CASE(stake_test)
 {
@@ -287,34 +307,22 @@ BOOST_AUTO_TEST_CASE(stake_test)
     {
         LOCK2(cs_main, pwallet->cs_wallet);
         
-        CValidationState state;
         BOOST_CHECK_NO_THROW(rv = CallRPC("getnewstealthaddress"));
         std::string sSxAddr = StripQuotes(rv.write());
         
         CBitcoinAddress address(sSxAddr);
-        BOOST_CHECK(address.IsValid());
         
-        std::vector<CTempRecipient> vecSend;
-        std::string sError;
-        CTempRecipient r;
-        r.nType = OUTPUT_RINGCT;
-        r.nAmount = 10;
-        r.address = address.Get();
-        vecSend.push_back(r);
         
-        CWalletTx wtx;
-        CTransactionRecord rtx;
-        BOOST_CHECK(0 == pwallet->AddStandardInputs(wtx, rtx, vecSend, true, sError));
+        AddAnonTxn(pwallet, address, 10);
         
-        wtx.BindWallet(pwallet);
-        BOOST_CHECK(wtx.AcceptToMemoryPool(maxTxFee, state));
+        AddAnonTxn(pwallet, address, 20);
         
         StakeNBlocks(pwallet, 1);
         
+        
         int64_t nLastRCTOutIndex = 0;
         pblocktree->ReadLastRCTOutput(nLastRCTOutIndex);
-        BOOST_CHECK(nLastRCTOutIndex == 2);
-        
+        BOOST_CHECK(nLastRCTOutIndex == 4);
         
         
         {

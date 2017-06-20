@@ -32,6 +32,8 @@ enum OutputRecordFlags
     ORF_OWNED        = (1 << 0),
     ORF_FROM         = (1 << 1),
     ORF_CHANGE       = (1 << 2),
+    ORF_SPENT        = (1 << 3),
+    ORF_LOCKED       = (1 << 4), // Needs wallet to be unlocked for further processing
 };
 
 enum OutputRecordAddressTypes
@@ -47,7 +49,7 @@ public:
     COutputRecord() : nType(0), nFlags(0), nValue(-1) {};
     uint8_t nType;
     uint8_t nFlags;
-    int n;
+    int16_t n;
     CAmount nValue;
     CScript scriptPubKey;
     std::string sNarration;
@@ -100,13 +102,14 @@ enum RTxAddonValueTypes
 typedef std::map<uint8_t, std::vector<uint8_t> > mapRTxValue_t;
 class CTransactionRecord
 {
-// stored by uint256 txnHash;
+// Stored by uint256 txnHash;
 public:
-    CTransactionRecord() {};
+    CTransactionRecord() : nFlags(0) {};
     
     // Conflicted state is marked by set blockHash and nIndex -1
     uint256 blockHash;
-    int nIndex;
+    int16_t nFlags;
+    int16_t nIndex;
     
     int64_t nBlockTime;
     int64_t nTimeReceived;
@@ -178,6 +181,7 @@ public:
     inline void SerializationOp(Stream &s, Operation ser_action)
     {
         READWRITE(blockHash);
+        READWRITE(nFlags);
         READWRITE(nIndex);
         READWRITE(nBlockTime);
         READWRITE(nTimeReceived);
@@ -212,7 +216,7 @@ public:
     std::vector<uint8_t> vRangeproof;
     secp256k1_pedersen_commitment commitment;
     
-    // TODO: range proof parameters
+    // TODO: range proof parameters, try to keep similar
     
     
     CKey sEphem;
@@ -402,6 +406,9 @@ public:
     int AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
         std::vector<CTempRecipient> &vecSend, bool sign, std::string &sError);
     
+    int PickHidingOutputs(std::vector<std::vector<int64_t> > &vMI, size_t &nSecretColumn, size_t nRingSize,
+        const std::vector<std::pair<MapRecords_t::const_iterator,unsigned int> > &vCoins, std::vector<uint8_t> &vInputBlinds, std::string &sError);
+    
     int AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
         std::vector<CTempRecipient> &vecSend,
         CExtKeyAccount *sea, CStoredExtKey *pc,
@@ -501,6 +508,7 @@ public:
     bool GetStealthByIndex(uint32_t sxId, CStealthAddress &sx);
     bool GetStealthLinked(const CKeyID &idK, CStealthAddress &sx);
     bool ProcessLockedStealthOutputs();
+    bool ProcessLockedAnonOutputs();
     bool ProcessStealthOutput(const CTxDestination &address,
         std::vector<uint8_t> &vchEphemPK, uint32_t prefix, bool fHavePrefix, CKey &sShared, bool fNeedShared=false);
     
@@ -518,10 +526,12 @@ public:
     int InsertTempTxn(const uint256 &txid, const uint256 &blockHash, int nIndex) const;
     
     int OwnStandardOut(const CTxOutStandard *pout, const CTxOutData *pdata, COutputRecord &rout, bool &fUpdated);
-    int OwnBlindOut(const CTxOutCT *pout, const CStoredExtKey *pc, uint32_t &nLastChild,
+    int OwnBlindOut(CHDWalletDB *pwdb, const uint256 &txhash, const CTxOutCT *pout, const CStoredExtKey *pc, uint32_t &nLastChild,
         COutputRecord &rout, CStoredTransaction &stx, bool &fUpdated);
-    int OwnAnonOut(const CTxOutRingCT *pout, const CStoredExtKey *pc, uint32_t &nLastChild,
+    int OwnAnonOut(CHDWalletDB *pwdb, const uint256 &txhash, const CTxOutRingCT *pout, const CStoredExtKey *pc, uint32_t &nLastChild,
         COutputRecord &rout, CStoredTransaction &stx, bool &fUpdated);
+    
+    bool AddTxinToSpends(const CTxIn &txin, const uint256 &txhash);
     
     bool AddToRecord(CTransactionRecord &rtxIn, const CTransaction &tx,
         const CBlockIndex *pIndex, int posInBlock, bool fFlushOnClose=true);
@@ -540,7 +550,7 @@ public:
     bool SelectBlindedCoins(const std::vector<COutputR>& vAvailableCoins, const CAmount& nTargetValue, std::vector<std::pair<MapRecords_t::const_iterator,unsigned int> > &setCoinsRet, CAmount &nValueRet, const CCoinControl *coinControl = NULL) const;
     
     void AvailableAnonCoins(std::vector<COutputR> &vCoins, bool fOnlyConfirmed=true, const CCoinControl *coinControl = NULL, bool fIncludeZeroValue=false) const;
-    bool SelectAnonCoins(const std::vector<COutputR> &vAvailableCoins, const CAmount &nTargetValue, std::vector<std::pair<MapRecords_t::const_iterator,unsigned int> > &setCoinsRet, CAmount &nValueRet, const CCoinControl *coinControl = NULL) const;
+    //bool SelectAnonCoins(const std::vector<COutputR> &vAvailableCoins, const CAmount &nTargetValue, std::vector<std::pair<MapRecords_t::const_iterator,unsigned int> > &setCoinsRet, CAmount &nValueRet, const CCoinControl *coinControl = NULL) const;
     
     bool SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int nConfTheirs, uint64_t nMaxAncestors, std::vector<COutputR> vCoins, std::vector<std::pair<MapRecords_t::const_iterator,unsigned int> > &setCoinsRet, CAmount &nValueRet) const;
     

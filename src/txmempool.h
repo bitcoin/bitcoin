@@ -535,6 +535,8 @@ private:
 public:
     indirectmap<COutPoint, const CTransaction*> mapNextTx;
     std::map<uint256, std::pair<double, CAmount> > mapDeltas;
+    
+    std::map<CCmpPubKey, uint256> mapKeyImages;
 
     /** Create a new CTxMemPool.
      */
@@ -588,6 +590,8 @@ public:
     void PrioritiseTransaction(const uint256 hash, const std::string strHash, double dPriorityDelta, const CAmount& nFeeDelta);
     void ApplyDeltas(const uint256 hash, double &dPriorityDelta, CAmount &nFeeDelta) const;
     void ClearPrioritisation(const uint256 hash);
+    
+    bool HaveKeyImage(const CCmpPubKey &ki, uint256 &hash) const;
 
 public:
     /** Remove a set of transactions from the mempool.
