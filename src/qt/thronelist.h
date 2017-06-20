@@ -36,7 +36,7 @@ public:
     void setWalletModel(WalletModel *walletModel);
     void StartAlias(std::string strAlias);
     void StartAll(std::string strCommand = "start-all");
-    void VoteMany(bool);
+    void VoteMany(bool YesNo);
 
 private:
     QMenu *contextMenu;
@@ -45,7 +45,7 @@ public Q_SLOTS:
     void updateMyThroneInfo(QString alias, QString addr, QString privkey, QString txHash, QString txIndex, CThrone *pmn);
     void updateMyNodeList(bool reset = false);
     void updateNodeList();
-    void updateVoteList();
+    void updateVoteList(bool reset = false);
 
 Q_SIGNALS:
 
