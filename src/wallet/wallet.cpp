@@ -205,7 +205,6 @@ bool CWallet::AddCryptedKey(const CPubKey &vchPubKey,
                                                             vchCryptedSecret,
                                                             mapKeyMetadata[vchPubKey.GetID()]);
     }
-    return false;
 }
 
 bool CWallet::LoadKeyMetadata(const CTxDestination& keyID, const CKeyMetadata &meta)
@@ -2708,8 +2707,6 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                 }
 
                 nBytes = GetVirtualTransactionSize(txNew);
-
-                CTransaction txNewConst(txNew);
 
                 // Remove scriptSigs to eliminate the fee calculation dummy signatures
                 for (auto& vin : txNew.vin) {
