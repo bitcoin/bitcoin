@@ -419,6 +419,11 @@
              <string>Monthly</string>
             </property>
            </column>
+           <column>
+            <property name="text">
+             <string>Projected</string>
+            </property>
+           </column>
           </widget>
          </item>
          <item row="2" column="0" colspan="5">

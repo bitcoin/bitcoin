@@ -413,10 +413,16 @@ void ThroneList::on_UpdateVotesButton_clicked()
 
 void ThroneList::updateVoteList()
 {
+
     static int64_t lastVoteListUpdate = 0;
 
-    // update only once in THRONELIST_UPDATE_SECONDS seconds to prevent high cpu usage e.g. on filter change
-    if(GetTime() - lastVoteListUpdate < THRONELIST_UPDATE_SECONDS) return;
+    // automatically update my throne list only once in MY_THRONELIST_UPDATE_SECONDS seconds,
+    // this update still can be triggered manually at any time via button click
+    int64_t timeTillUpdate = lastVoteListUpdate + MY_THRONELIST_UPDATE_SECONDS - GetTime();
+    ui->voteSecondsLabel->setText(QString::number(timeTillUpdate));
+
+    if(timeTillUpdate > 0 && !reset) return;
+    lastVoteListUpdate = GetTime();
 
     QString strToFilter;
     ui->voteSecondsLabel->setText("Updating...");
@@ -459,6 +465,13 @@ void ThroneList::updateVoteList()
             ui->tableWidgetVoting->setItem(0, 8, totalPaymentItem);
             ui->tableWidgetVoting->setItem(0, 9, monthlyPaymentItem);
 
+            std::string projected = "No";            
+            if ((int64_t)pbudgetProposal->GetYeas() - (int64_t)pbudgetProposal->GetNays() > (ui->tableWidgetThrones->rowCount()/10)){
+                nTotalAllotted += pbudgetProposal->GetAmount()/100000000
+                projected == "Yes";
+            }
+            QTableWidgetItem *projectedItem = new QTableWidgetItem(QString::fromStdString(projected));
+            ui->tableWidgetVoting->setItem(0, 10, projectedItem);
         }
 
     CBlockIndex* pindexPrev = chainActive.Tip();
@@ -468,8 +481,6 @@ void ThroneList::updateVoteList()
     ui->totalAllottedLabel->setText(QString::number(nTotalAllotted));
     ui->tableWidgetVoting->setSortingEnabled(true);
 
-    lastVoteListUpdate = GetTime();
-    int64_t timeTillUpdate = lastVoteListUpdate + MY_THRONELIST_UPDATE_SECONDS - GetTime();
     ui->voteSecondsLabel->setText(QString::number(timeTillUpdate));
 
 }
