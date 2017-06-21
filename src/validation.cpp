@@ -1125,7 +1125,8 @@ void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txund
         txundo.vprevout.reserve(tx.vin.size());
         for (const CTxIn &txin : tx.vin) {
             txundo.vprevout.emplace_back();
-            inputs.SpendCoin(txin.prevout, &txundo.vprevout.back());
+            bool is_spent = inputs.SpendCoin(txin.prevout, &txundo.vprevout.back());
+            assert(is_spent);
         }
     }
     // add outputs
@@ -1370,8 +1371,8 @@ static DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* 
             if (!tx.vout[o].scriptPubKey.IsUnspendable()) {
                 COutPoint out(hash, o);
                 Coin coin;
-                view.SpendCoin(out, &coin);
-                if (tx.vout[o] != coin.out) {
+                bool is_spent = view.SpendCoin(out, &coin);
+                if (!is_spent || tx.vout[o] != coin.out) {
                     fClean = false; // transaction output mismatch
                 }
             }
