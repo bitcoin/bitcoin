@@ -691,8 +691,9 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         return state.DoS(0, false, REJECT_NONSTANDARD, "non-final");
 
     // is it already in the memory pool?
-    if (pool.exists(hash))
-        return state.Invalid(false, REJECT_ALREADY_KNOWN, "txn-already-in-mempool");
+    if (pool.exists(hash)) {
+        return state.Invalid(false, REJECT_DUPLICATE, "txn-already-in-mempool");
+    }
 
     llmq::CInstantSendLockPtr conflictLock = llmq::quorumInstantSendManager->GetConflictingLock(tx);
     if (conflictLock) {
@@ -717,7 +718,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
             const CTransaction *ptxConflicting = itConflicting->second;
 
             // Transaction conflicts with mempool and RBF doesn't exist in Dash
-            return state.Invalid(false, REJECT_CONFLICT, "txn-mempool-conflict");
+            return state.Invalid(false, REJECT_DUPLICATE, "txn-mempool-conflict");
         }
     }
     }
@@ -741,7 +742,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
                 if (!had_coin_in_cache) {
                     coins_to_uncache.push_back(outpoint);
                 }
-                return state.Invalid(false, REJECT_ALREADY_KNOWN, "txn-already-known");
+                return state.Invalid(false, REJECT_DUPLICATE, "txn-already-known");
             }
         }
 
