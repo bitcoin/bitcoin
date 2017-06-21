@@ -463,6 +463,8 @@ public:
     bool WriteAnonKeyImage(const CCmpPubKey &ki, const COutPoint &op);
     bool EraseAnonKeyImage(const CCmpPubKey &ki);
     
+    
+    bool HaveLockedAnonOut(const COutPoint &op, uint32_t nFlags=DB_READ_UNCOMMITTED);
     bool WriteLockedAnonOut(const COutPoint &op);
     bool EraseLockedAnonOut(const COutPoint &op);
 

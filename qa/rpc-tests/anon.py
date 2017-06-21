@@ -79,7 +79,7 @@ class AnonTest(ParticlTestFramework):
         ro = nodes[0].reservebalance(True, 10000000)
         
         block1_hash = nodes[1].getblockhash(1)
-        ro = nodes[1].getblock(block1_hash)
+        ro = nodes[0].getblock(block1_hash)
         for txnHash in txnHashes:
             assert(txnHash in ro['tx'])
         
@@ -87,13 +87,29 @@ class AnonTest(ParticlTestFramework):
         
         txnHash = nodes[1].sendanontoanon(sxAddrTo0_1, 1, '', '', False, 'node1 -> node0 a->a')
         print("1 sendanontoanon ", json.dumps(txnHash, indent=4, default=self.jsonDecimal))
+        txnHashes = [txnHash,]
         
         assert(self.wait_for_mempool(nodes[0], txnHash))
         
         ro = nodes[0].listtransactions()
         print("0 listtransactions ", json.dumps(ro, indent=4, default=self.jsonDecimal))
         
-        assert(False)
+        
+        ro = nodes[0].reservebalance(False)
+        
+        assert(self.wait_for_height(nodes[0], 2))
+        
+        ro = nodes[0].reservebalance(True, 10000000)
+        
+        block1_hash = nodes[1].getblockhash(2)
+        ro = nodes[0].getblock(block1_hash)
+        for txnHash in txnHashes:
+            assert(txnHash in ro['tx'])
+        
+        
+        
+        
+        #assert(False)
         #print(json.dumps(ro, indent=4, default=self.jsonDecimal))
         
 

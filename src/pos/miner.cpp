@@ -318,7 +318,7 @@ void ThreadStakeMiner(CHDWallet *pwallet)
         
         if (nSearchTime <= nBestTime)
         {
-            fIsStaking = false;
+            //fIsStaking = false;
             LogPrint("pos", "%s: Can't stake before last block time.\n", __func__);
             condWaitFor(10000);
             continue;
@@ -358,6 +358,7 @@ void ThreadStakeMiner(CHDWallet *pwallet)
             continue;
         };
         
+        fIsStaking = true;
         if (pwallet->SignBlock(pblocktemplate.get(), nBestHeight+1, nSearchTime))
         {
             CBlock *pblock = &pblocktemplate->block;
@@ -378,7 +379,6 @@ void ThreadStakeMiner(CHDWallet *pwallet)
             }
         }
         
-        fIsStaking = true;
         condWaitFor(nMinerSleep);
     };
 };

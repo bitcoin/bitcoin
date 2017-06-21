@@ -92,6 +92,8 @@ size_t nCoinCacheUsage = 5000 * 300;
 uint64_t nPruneTarget = 0;
 int64_t nMaxTipAge = DEFAULT_MAX_TIP_AGE;
 bool fEnableReplacement = DEFAULT_ENABLE_REPLACEMENT;
+static bool fVerifyingDB = false;
+static int64_t nVerifyDBLastRCTIndex = 0;
 
 uint256 hashAssumeValid;
 
@@ -1047,6 +1049,8 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
                 strprintf("%d", nSigOpsCost));
         
         CAmount mempoolRejectFee = pool.GetMinFee(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFee(nSize);
+        if (fAnon)
+            mempoolRejectFee *= ANON_FEE_MULTIPLIER;
         if (mempoolRejectFee > 0 && nModifiedFees < mempoolRejectFee) {
             return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool min fee not met", false, strprintf("%d < %d", nFees, mempoolRejectFee));
         } else if (GetBoolArg("-relaypriority", DEFAULT_RELAYPRIORITY) && nModifiedFees < ::minRelayTxFee.GetFee(nSize) && !AllowFree(entry.GetPriority(chainActive.Height() + 1))) {
@@ -2299,7 +2303,7 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
         uint256 hash = tx.GetHash();
         
         COutPoint op(hash, 0);
-        int64_t nLastRCTOutputIndex = 0;
+        int64_t nLastRCTOutputIndex = fVerifyingDB ? nVerifyDBLastRCTIndex : 0;
         
         for (const auto &txin : tx.vin)
         {
@@ -2312,14 +2316,15 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
                     return error("%s: Bad scriptData stack, %s.", __func__, hash.ToString());
                 
                 const std::vector<uint8_t> &vKeyImages = txin.scriptData.stack[0];
-                
                 for (size_t k = 0; k < nInputs; ++k)
                 {
-                    const uint8_t *p = &vKeyImages[k*33];
-                    CCmpPubKey ki(p, p+33);
+                    const CCmpPubKey &ki = *((CCmpPubKey*)&vKeyImages[k*33]);
                     
-                    if (!pblocktree->EraseRCTKeyImage(ki))
-                        return error("%s: EraseRCTKeyImage failed, txn %s, %d, index %d.", __func__, hash.ToString(), k, nLastRCTOutputIndex);
+                    if (!fVerifyingDB)
+                    {
+                        if (!pblocktree->EraseRCTKeyImage(ki))
+                            return error("%s: EraseRCTKeyImage failed, txn %s, %d.", __func__, hash.ToString(), k);
+                    };
                 };
             };
         };
@@ -2338,6 +2343,7 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
                     if (nLastRCTOutputIndex == 0)
                         return error("%s: RCT index missing, txn %s, %d.", __func__, hash.ToString(), k);
                     
+                    
                     CAnonOutput ao;
                     if (!pblocktree->ReadRCTOutput(nLastRCTOutputIndex, ao))
                         return error("%s: RCT output missing, txn %s, %d, index %d.", __func__, hash.ToString(), k, nLastRCTOutputIndex);
@@ -2347,14 +2353,23 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
                     };
                 };
                 
-                op.n = k;
-                if (!pblocktree->EraseRCTOutput(nLastRCTOutputIndex--))
-                    return error("%s: EraseRCTOutput failed, txn %s, %d, index %d.", __func__, hash.ToString(), k, nLastRCTOutputIndex);
-                if (!pblocktree->EraseRCTOutputLink(txout->pk))
-                    return error("%s: EraseRCTOutputLink failed, txn %s, %d.", __func__, hash.ToString(), k);
+                if (fVerifyingDB)
+                {
+                    nLastRCTOutputIndex--;
+                } else
+                {
+                    op.n = k;
+                    if (!pblocktree->EraseRCTOutput(nLastRCTOutputIndex--))
+                        return error("%s: EraseRCTOutput failed, txn %s, %d, index %d.", __func__, hash.ToString(), k, nLastRCTOutputIndex);
+                    if (!pblocktree->EraseRCTOutputLink(txout->pk))
+                        return error("%s: EraseRCTOutputLink failed, txn %s, %d.", __func__, hash.ToString(), k);
+                };
                 
                 continue;
             };
+            
+            if (fVerifyingDB)
+                nVerifyDBLastRCTIndex = nLastRCTOutputIndex;
             
             if (!fAddressIndex
                 || (!out->IsType(OUTPUT_STANDARD)
@@ -2450,13 +2465,21 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
                 if (nVtxundo < 0 || nVtxundo >= (int)blockUndo.vtxundo.size())
                     return error("DisconnectBlock(): transaction undo data offset out of range.");
                 
+                size_t nExpectUndo = 0;
+                for (const auto &txin : tx.vin)
+                if (!txin.IsAnonInput())
+                    nExpectUndo++;
+                
                 const CTxUndo &txundo = blockUndo.vtxundo[nVtxundo--];
-                if (txundo.vprevout.size() != tx.vin.size())
+                if (txundo.vprevout.size() != nExpectUndo)
                 {
                     return error("DisconnectBlock(): transaction and undo data inconsistent");
                 };
                 for (unsigned int j = tx.vin.size(); j-- > 0;)
                 {
+                    if (tx.vin[j].IsAnonInput())
+                        continue;
+                    
                     const COutPoint &out = tx.vin[j].prevout;
                     const CTxInUndo &undo = txundo.vprevout[j];
                     if (!ApplyTxInUndo(undo, view, out))
@@ -2853,7 +2876,10 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             
             prevheights.resize(tx.vin.size());
             for (size_t j = 0; j < tx.vin.size(); j++) {
-                prevheights[j] = view.AccessCoins(tx.vin[j].prevout.hash)->nHeight;
+                if (tx.vin[j].IsAnonInput())
+                    prevheights[j] = 0;
+                else
+                    prevheights[j] = view.AccessCoins(tx.vin[j].prevout.hash)->nHeight;
             }
 
             if (!SequenceLocks(tx, nLockTimeFlags, &prevheights, *pindex)) {
@@ -2872,8 +2898,6 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                         if (input.IsAnonInput())
                         {
                             nAnonIn++;
-                            assert(false); // TODO
-                            
                             continue;
                         };
                         
@@ -3027,16 +3051,18 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         
         
         // Index rct outputs and keyimages
-        if (nRingCTOut > 0)
+        if (nRingCTOut > 0 || nRingCTIn > 0)
         {
-            int64_t nLastRCTOutIndex = 0;
-            pblocktree->ReadLastRCTOutput(nLastRCTOutIndex);
+            int64_t nLastRCTOutIndex = fVerifyingDB ? nVerifyDBLastRCTIndex : 0;
             
             if (nLastRCTOutIndex == 0)
             {
-                LogPrint("rct", "Inserting sentinel RCT output.\n");
-                CAnonOutput sentinel;
-                pblocktree->WriteRCTOutput(std::numeric_limits<int64_t>::max(), sentinel);
+                if (!pblocktree->ReadLastRCTOutput(nLastRCTOutIndex))
+                {
+                    LogPrint("rct", "Inserting sentinel RCT output.\n");
+                    CAnonOutput sentinel;
+                    pblocktree->WriteRCTOutput(std::numeric_limits<int64_t>::max(), sentinel);
+                };
             };
             
             COutPoint op(txhash, 0);
@@ -3056,9 +3082,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                     
                     for (size_t k = 0; k < nInputs; ++k)
                     {
-                        const uint8_t *p = &vKeyImages[k*33];
-                        CPubKey ki(p, p+33);
-                        
+                        const CCmpPubKey &ki = *((CCmpPubKey*)&vKeyImages[k*33]);
                         
                         batch.Write(std::make_pair(DB_RCTKEYIMAGE, ki), txhash);
                     };
@@ -3079,10 +3103,16 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                 batch.Write(std::make_pair(DB_RCTOUTPUT_LINK, txout->pk), nLastRCTOutIndex);
             };
             
-            if (!pblocktree->WriteBatch(batch))
-                return error("ConnectBlock(): Write RCT outputs of %s failed.", txhash.ToString());
+            if (fVerifyingDB)
+            {
+                nVerifyDBLastRCTIndex = nLastRCTOutIndex;
+                batch.Clear();
+            } else
+            {
+                if (!pblocktree->WriteBatch(batch))
+                    return error("ConnectBlock(): Write RCT outputs of %s failed.", txhash.ToString());
+            };
         };
-        
         
         if (fAddressIndex)
         {
@@ -4486,9 +4516,7 @@ unsigned int GetNextTargetRequired(const CBlockIndex *pindexLast)
         arith_uint256 nStep = (nMaxProofOfWorkLimit - nMinProofOfWorkLimit) / nLastImportHeight;
         
         
-        
         bnProofOfWorkLimit = nMaxProofOfWorkLimit - (nStep * nHeight);
-        
         nProofOfWorkLimit = bnProofOfWorkLimit.GetCompact();
     } else
     {
@@ -5399,6 +5427,9 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
     if (chainActive.Tip() == NULL || chainActive.Tip()->pprev == NULL)
         return true;
 
+    fVerifyingDB = true;
+    nVerifyDBLastRCTIndex = 0;
+
     // Verify blocks in the best chain
     if (nCheckDepth <= 0)
         nCheckDepth = 1000000000; // suffices until the year 19000
@@ -5482,6 +5513,7 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
 
     LogPrintf("[DONE].\n");
     LogPrintf("No coin database inconsistencies in last %i blocks (%i transactions)\n", chainActive.Height() - pindexState->nHeight, nGoodTransactions);
+    fVerifyingDB = false;
 
     return true;
 }

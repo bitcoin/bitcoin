@@ -477,18 +477,26 @@ public:
     template<typename Stream>
     void Serialize(Stream &s) const
     {
-        s << pk;
-        s << vData;
+        const bool fAllowWitness = !(s.GetVersion() & SERIALIZE_TRANSACTION_NO_WITNESS);
+        s.write((char*)pk.begin(), 33);
         s.write((char*)&commitment.data[0], 33);
-        s << vRangeproof;
+        s << vData;
+        
+        if (fAllowWitness)
+        {
+            s << vRangeproof;
+        } else
+        {
+            WriteCompactSize(s, 0);
+        };
     };
     
     template<typename Stream>
     void Unserialize(Stream &s)
     {
-        s >> pk;
-        s >> vData;
+        s.read((char*)pk.ncbegin(), 33);
         s.read((char*)&commitment.data[0], 33);
+        s >> vData;
         s >> vRangeproof;
     };
     
@@ -658,7 +666,6 @@ inline void UnserializeTransaction(TxType& tx, Stream& s) {
         tx.nVersion |= bv<<8; // TransactionTypes
         
         s >> tx.nLockTime;
-        //tx.nLockTime = ReadCompactSize(s);
         
         tx.vin.clear();
         s >> tx.vin;
@@ -685,7 +692,6 @@ inline void UnserializeTransaction(TxType& tx, Stream& s) {
                     break;
                 default:
                     return;
-                    //assert(false);
             };
             
             tx.vpout[k]->nVersion = bv;
@@ -751,9 +757,7 @@ inline void SerializeTransaction(const TxType& tx, Stream& s) {
         bv = (tx.nVersion>>8) & 0xFF;
         s << bv; // TransactionType
         
-        //s << tx.nTime;
         s << tx.nLockTime;
-        //WriteCompactSize(s, tx.nLockTime);
         s << tx.vin;
         
         WriteCompactSize(s, tx.vpout.size());
@@ -922,7 +926,6 @@ public:
         
         return true;
     }
-    
 
     bool GetCTFee(CAmount &nFee) const
     {
@@ -1005,7 +1008,6 @@ struct CMutableTransaction
     inline void Serialize(Stream& s) const {
         SerializeTransaction(*this, s);
     }
-
 
     template <typename Stream>
     inline void Unserialize(Stream& s) {

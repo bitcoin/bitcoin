@@ -60,6 +60,24 @@ void ScriptPubKeyToJSON(const CScript& scriptPubKey, UniValue& out, bool fInclud
     out.push_back(Pair("addresses", a));
 }
 
+static void AddRangeproof(const std::vector<uint8_t> &vRangeproof, UniValue &entry)
+{
+    entry.push_back(Pair("rangeproof", HexStr(vRangeproof.begin(), vRangeproof.end())));
+    
+    if (vRangeproof.size() > 0)
+    {
+        int exponent, mantissa;
+        CAmount min_value, max_value;
+        if (0 == GetRangeProofInfo(vRangeproof, exponent, mantissa, min_value, max_value))
+        {
+            entry.push_back(Pair("rp_exponent", exponent));
+            entry.push_back(Pair("rp_mantissa", mantissa));
+            entry.push_back(Pair("rp_min_value", ValueFromAmount(min_value)));
+            entry.push_back(Pair("rp_max_value", ValueFromAmount(max_value)));
+        };
+    };
+}
+
 void OutputToJSON(uint256 &txid, int i,
     const CTxOutBase *baseOut, UniValue &entry)
 {
@@ -95,26 +113,19 @@ void OutputToJSON(uint256 &txid, int i,
             ScriptPubKeyToJSON(s->scriptPubKey, o, true);
             entry.push_back(Pair("scriptPubKey", o));
             entry.push_back(Pair("data_hex", HexStr(s->vData.begin(), s->vData.end())));
-            entry.push_back(Pair("rangeproof", HexStr(s->vRangeproof.begin(), s->vRangeproof.end())));
             
-            if (s->vRangeproof.size() > 0)
-            {
-                int exponent, mantissa;
-                CAmount min_value, max_value;
-                if (0 == GetRangeProofInfo(s->vRangeproof, exponent, mantissa, min_value, max_value))
-                {
-                    entry.push_back(Pair("rp_exponent", exponent));
-                    entry.push_back(Pair("rp_mantissa", mantissa));
-                    entry.push_back(Pair("rp_min_value", ValueFromAmount(min_value)));
-                    entry.push_back(Pair("rp_max_value", ValueFromAmount(max_value)));
-                };
-            };
-            
+            AddRangeproof(s->vRangeproof, entry);
             }
             break;
         case OUTPUT_RINGCT:
             {
+            CTxOutRingCT *s = (CTxOutRingCT*) baseOut;
             entry.push_back(Pair("type", "anon"));
+            entry.push_back(Pair("pubkey", HexStr(s->pk.begin(), s->pk.end())));
+            entry.push_back(Pair("valueCommitment", HexStr(&s->commitment.data[0], &s->commitment.data[0]+33)));
+            entry.push_back(Pair("data_hex", HexStr(s->vData.begin(), s->vData.end())));
+            
+            AddRangeproof(s->vRangeproof, entry);
             }
             break;
         default:
@@ -148,20 +159,29 @@ void TxToJSONExpanded(const CTransaction& tx, const uint256 hashBlock, UniValue&
     entry.push_back(Pair("locktime", (int64_t)tx.nLockTime));
     
     UniValue vin(UniValue::VARR);
-    for (unsigned int i = 0; i < tx.vin.size(); i++)
+    for (const auto &txin : tx.vin)
     {
-        const CTxIn& txin = tx.vin[i];
         UniValue in(UniValue::VOBJ);
         if (tx.IsCoinBase())
+        {
             in.push_back(Pair("coinbase", HexStr(txin.scriptSig.begin(), txin.scriptSig.end())));
-        else {
+        } else
+        if (txin.IsAnonInput())
+        {
+            in.push_back(Pair("type", "anon"));
+            in.push_back(Pair("valueSat", -1));
+            uint32_t nSigInputs, nSigRingSize;
+            txin.GetAnonInfo(nSigInputs, nSigRingSize);
+            in.push_back(Pair("num_inputs", (int)nSigInputs));
+            in.push_back(Pair("ring_size", (int)nSigRingSize));
+        } else
+        {
             in.push_back(Pair("txid", txin.prevout.hash.GetHex()));
             in.push_back(Pair("vout", (int64_t)txin.prevout.n));
             UniValue o(UniValue::VOBJ);
             o.push_back(Pair("asm", ScriptToAsmStr(txin.scriptSig, true)));
             o.push_back(Pair("hex", HexStr(txin.scriptSig.begin(), txin.scriptSig.end())));
             in.push_back(Pair("scriptSig", o));
-
             // Add address and value info if spentindex enabled
             CSpentIndexValue spentInfo;
             CSpentIndexKey spentKey(txin.prevout.hash, txin.prevout.n);
@@ -178,25 +198,24 @@ void TxToJSONExpanded(const CTransaction& tx, const uint256 hashBlock, UniValue&
                     in.push_back(Pair("address", CBitcoinAddress(CScriptID(spentInfo.addressHash)).ToString()));
                 }
             }
-
-        }
+        };
+        
         if (tx.HasWitness())
         {
-            if (!tx.vin[i].scriptWitness.IsNull())
+            if (!txin.scriptWitness.IsNull())
             {
                 UniValue txinwitness(UniValue::VARR);
-                for (unsigned int j = 0; j < tx.vin[i].scriptWitness.stack.size(); j++)
+                for (unsigned int j = 0; j < txin.scriptWitness.stack.size(); j++)
                 {
-                    std::vector<unsigned char> item = tx.vin[i].scriptWitness.stack[j];
+                    std::vector<unsigned char> item = txin.scriptWitness.stack[j];
                     txinwitness.push_back(HexStr(item.begin(), item.end()));
-                }
+                };
                 in.push_back(Pair("txinwitness", txinwitness));
-            }
-
-        }
+            };
+        };
         in.push_back(Pair("sequence", (int64_t)txin.nSequence));
         vin.push_back(in);
-    }
+    };
     entry.push_back(Pair("vin", vin));
     UniValue vout(UniValue::VARR);
     

@@ -410,7 +410,7 @@ bool CBlockTreeDB::ReadLastRCTOutput(int64_t &rv)
     
     rv = 0;
     if (!pcursor->Valid())
-        return true;
+        return false;
     
     pcursor->Prev();
     if (!pcursor->Valid())

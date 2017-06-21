@@ -125,7 +125,8 @@ bool VerifyMLSAG(const CTransaction &tx, unsigned int i, CValidationState &state
         const CCmpPubKey &ki = *((CCmpPubKey*)&vKeyImages[k*33]);
         
         
-        if (mempool.HaveKeyImage(ki, txhashKI))
+        if (mempool.HaveKeyImage(ki, txhashKI)
+            && txhashKI != txhash)
         {
             if (fDebug)
                 LogPrint("rct", "%s: Duplicate keyimage detected in mempool %s, used in %s.\n", __func__,
@@ -133,7 +134,8 @@ bool VerifyMLSAG(const CTransaction &tx, unsigned int i, CValidationState &state
             return state.DoS(100, false, REJECT_INVALID, "bad-anonin-dup-ki");
         };
         
-        if (pblocktree->ReadRCTKeyImage(ki, txhashKI))
+        if (pblocktree->ReadRCTKeyImage(ki, txhashKI)
+            && txhashKI != txhash)
         {
             if (fDebug)
                 LogPrint("rct", "%s: Duplicate keyimage detected %s, used in %s.\n", __func__,
@@ -204,57 +206,4 @@ bool RemoveKeyImagesFromMempool(const uint256 &hash, const CTxIn &txin, CTxMemPo
     return true;
 };
 
-bool RemoveAnonDBRecords()
-{
-    LogPrint("rct", "%s", __func__);
-    
-    boost::scoped_ptr<CDBIterator> pcursor(pblocktree->NewIterator());
 
-    CDBBatch batch(*pblocktree);
-    CCmpPubKey kiFirst;
-    int64_t nZero = 0;
-    memset(kiFirst.ncbegin(), 0, 33);
-    
-    pcursor->Seek(std::make_pair(DB_RCTOUTPUT, nZero));
-    while (pcursor->Valid())
-    {
-        std::pair<char,int64_t> key;
-        if (!pcursor->GetKey(key) || key.first != DB_RCTOUTPUT)
-            break;
-        batch.Erase(key);
-        pcursor->Next();
-    };
-    
-    if (!pblocktree->WriteBatch(batch))
-        LogPrintf("Error: %s - WriteBatch failed.\n");
-    
-    
-    pcursor->Seek(std::make_pair(DB_RCTOUTPUT_LINK, kiFirst));
-    while (pcursor->Valid())
-    {
-        std::pair<char,CCmpPubKey> key;
-        if (!pcursor->GetKey(key) || key.first != DB_RCTOUTPUT_LINK)
-            break;
-        batch.Erase(key);
-        pcursor->Next();
-    };
-    
-    if (!pblocktree->WriteBatch(batch))
-        LogPrintf("Error: %s - WriteBatch failed.\n");
-    
-    
-    pcursor->Seek(std::make_pair(DB_RCTKEYIMAGE, kiFirst));
-    while (pcursor->Valid())
-    {
-        std::pair<char,CCmpPubKey> key;
-        if (!pcursor->GetKey(key) || key.first != DB_RCTKEYIMAGE)
-            break;
-        batch.Erase(key);
-        pcursor->Next();
-    };
-    
-    if (!pblocktree->WriteBatch(batch))
-        LogPrintf("Error: %s - WriteBatch failed.\n");
-    
-    return true;
-};

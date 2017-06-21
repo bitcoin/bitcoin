@@ -188,6 +188,8 @@ bool CTxMemPool::CalculateMemPoolAncestors(const CTxMemPoolEntry &entry, setEntr
         // GetMemPoolParents() is only valid for entries in the mempool, so we
         // iterate mapTx to find parents.
         for (unsigned int i = 0; i < tx.vin.size(); i++) {
+            if (tx.vin[i].IsAnonInput())
+                continue;
             txiter piter = mapTx.find(tx.vin[i].prevout.hash);
             if (piter != mapTx.end()) {
                 parentHashes.insert(piter);
@@ -427,6 +429,8 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry,
     const CTransaction& tx = newit->GetTx();
     std::set<uint256> setParentTransactions;
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
+        if (tx.vin[i].IsAnonInput())
+            continue;
         mapNextTx.insert(std::make_pair(&tx.vin[i].prevout, &tx));
         setParentTransactions.insert(tx.vin[i].prevout.hash);
     }
@@ -467,6 +471,9 @@ void CTxMemPool::addAddressIndex(const CTxMemPoolEntry &entry, const CCoinsViewC
     for (unsigned int j = 0; j < tx.vin.size(); j++)
     {
         const CTxIn input = tx.vin[j];
+        
+        if (input.IsAnonInput())
+            continue;
         
         if (tx.IsParticlVersion())
         {
@@ -612,6 +619,9 @@ void CTxMemPool::addSpentIndex(const CTxMemPoolEntry &entry, const CCoinsViewCac
     for (unsigned int j = 0; j < tx.vin.size(); j++)
     {
         const CTxIn input = tx.vin[j];
+        
+        if (input.IsAnonInput())
+            continue;
         
         if (tx.IsParticlVersion())
         {
@@ -828,6 +838,8 @@ void CTxMemPool::removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMem
             txToRemove.insert(it);
         } else if (it->GetSpendsCoinbase()) {
             BOOST_FOREACH(const CTxIn& txin, tx.vin) {
+                if (txin.IsAnonInput())
+                    continue;
                 indexed_transaction_set::const_iterator it2 = mapTx.find(txin.prevout.hash);
                 if (it2 != mapTx.end())
                     continue;
@@ -854,7 +866,9 @@ void CTxMemPool::removeConflicts(const CTransaction &tx)
 {
     // Remove transactions which depend on inputs of tx, recursively
     LOCK(cs);
-    BOOST_FOREACH(const CTxIn &txin, tx.vin) {
+    for (const auto &txin : tx.vin) {
+        if (txin.IsAnonInput())
+            continue;
         auto it = mapNextTx.find(txin.prevout);
         if (it != mapNextTx.end()) {
             const CTransaction &txConflict = *it->second;
@@ -1264,8 +1278,12 @@ bool CTxMemPool::HaveKeyImage(const CCmpPubKey &ki, uint256 &hash) const
 bool CTxMemPool::HasNoInputsOf(const CTransaction &tx) const
 {
     for (unsigned int i = 0; i < tx.vin.size(); i++)
+    {
+        if (tx.vin[i].IsAnonInput())
+            continue;
         if (exists(tx.vin[i].prevout.hash))
             return false;
+    }
     return true;
 }
 
@@ -1426,6 +1444,8 @@ void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<uint256>* pvNoSpendsRe
         if (pvNoSpendsRemaining) {
             BOOST_FOREACH(const CTransaction& tx, txn) {
                 BOOST_FOREACH(const CTxIn& txin, tx.vin) {
+                    if (txin.IsAnonInput())
+                        continue;
                     if (exists(txin.prevout.hash))
                         continue;
                     auto iter = mapNextTx.lower_bound(COutPoint(txin.prevout.hash, 0));

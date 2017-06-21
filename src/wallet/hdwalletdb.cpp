@@ -218,6 +218,12 @@ bool CHDWalletDB::EraseAnonKeyImage(const CCmpPubKey &ki)
 };
 
 
+bool CHDWalletDB::HaveLockedAnonOut(const COutPoint &op, uint32_t nFlags)
+{
+    char c;
+    return Read(std::make_pair(std::string("lao"), op), c, nFlags);
+}
+
 bool CHDWalletDB::WriteLockedAnonOut(const COutPoint &op)
 {
     char c = 't';

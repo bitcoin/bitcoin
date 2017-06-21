@@ -17,12 +17,12 @@ const size_t MAX_RINGSIZE = 24;
 
 const size_t MAX_ANON_INPUTS = 32; // To raise see MLSAG_MAX_ROWS also
 
+const size_t ANON_FEE_MULTIPLIER = 2;
+
 
 bool VerifyMLSAG(const CTransaction &tx, unsigned int i, CValidationState &state);
 
 bool AddKeyImagesToMempool(const CTransaction &tx, CTxMemPool &pool);
 bool RemoveKeyImagesFromMempool(const uint256 &hash, const CTxIn &txin, CTxMemPool &pool);
-
-bool RemoveAnonDBRecords();
 
 #endif  // PARTICL_ANON_H

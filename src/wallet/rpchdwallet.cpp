@@ -2947,11 +2947,12 @@ UniValue getstakinginfo(const JSONRPCRequest &request)
     uint64_t nWeight = pwallet->GetStakeWeight();
 
     uint64_t nNetworkWeight = GetPoSKernelPS();
-    bool staking = nLastCoinStakeSearchTime && nWeight && fIsStaking;
-    uint64_t nExpectedTime = staking ? (Params().GetTargetSpacing() * nNetworkWeight / nWeight) : 0;
+    
+    bool fStaking = nLastCoinStakeSearchTime && nWeight && fIsStaking;
+    uint64_t nExpectedTime = fStaking ? (Params().GetTargetSpacing() * nNetworkWeight / nWeight) : 0;
 
     obj.push_back(Pair("enabled", GetBoolArg("-staking", true)));
-    obj.push_back(Pair("staking", staking));
+    obj.push_back(Pair("staking", fStaking));
     obj.push_back(Pair("errors", GetWarnings("statusbar")));
 
     obj.push_back(Pair("percentyearreward", rCoinYearReward));
@@ -3265,34 +3266,10 @@ UniValue sendblindtoanon(const JSONRPCRequest &request)
 
 UniValue sendanontopart(const JSONRPCRequest &request)
 {
-    if (request.fHelp || request.params.size() > 1)
-        throw std::runtime_error(
-            "sendanontopart [fromHeight]\n");
-    
-    if (Params().NetworkID() == "main")
-        throw std::runtime_error("Disabled on mainnet");
-    
-    return SendToInner(request, OUTPUT_RINGCT, OUTPUT_STANDARD);
-}
-
-UniValue sendanontoblind(const JSONRPCRequest &request)
-{
-    if (request.fHelp || request.params.size() > 1)
-        throw std::runtime_error(
-            "sendanontoblind [fromHeight]\n");
-    
-    if (Params().NetworkID() == "main")
-        throw std::runtime_error("Disabled on mainnet");
-    
-    return SendToInner(request, OUTPUT_RINGCT, OUTPUT_CT);
-}
-
-UniValue sendanontoanon(const JSONRPCRequest &request)
-{
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 8)
         throw std::runtime_error(
-            "sendanontoanon \"address\" amount ( \"comment\" \"comment-to\" subtractfeefromamount, \"narration\", \"ringsize\", \"numsignatures\")\n"
-            "\nSend an amount of blinded part to anon tokens to a given address.\n"
+            "sendanontopart \"address\" amount ( \"comment\" \"comment-to\" subtractfeefromamount, \"narration\", \"ringsize\", \"numsignatures\")\n"
+            "\nSend an amount of anon part to a given address in part.\n"
             + HelpRequiringPassphrase() +
             "\nArguments:\n"
             "1. \"address\"     (string, required) The particl address to send to.\n"
@@ -3311,7 +3288,65 @@ UniValue sendanontoanon(const JSONRPCRequest &request)
             "\nResult:\n"
             "\"txid\"           (string) The transaction id.\n"
             "\nExamples:\n"
-            + HelpExampleCli("sendblindtoanon", "\"SPGyji8uZFip6H15GUfj6bsutRVLsCyBFL3P7k7T7MUDRaYU8GfwUHpfxonLFAvAwr2RkigyGfTgWMfzLAAP8KMRHq7RE8cwpEEekH\" 0.1"));
+            + HelpExampleCli("sendanontopart", "\"SPGyji8uZFip6H15GUfj6bsutRVLsCyBFL3P7k7T7MUDRaYU8GfwUHpfxonLFAvAwr2RkigyGfTgWMfzLAAP8KMRHq7RE8cwpEEekH\" 0.1"));
+    
+    return SendToInner(request, OUTPUT_RINGCT, OUTPUT_STANDARD);
+}
+
+UniValue sendanontoblind(const JSONRPCRequest &request)
+{
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 8)
+        throw std::runtime_error(
+            "sendanontoblind \"address\" amount ( \"comment\" \"comment-to\" subtractfeefromamount, \"narration\", \"ringsize\", \"numsignatures\")\n"
+            "\nSend an amount of anon part to a given address in blinded part.\n"
+            + HelpRequiringPassphrase() +
+            "\nArguments:\n"
+            "1. \"address\"     (string, required) The particl address to send to.\n"
+            "2. \"amount\"      (numeric or string, required) The amount in " + CURRENCY_UNIT + " to send. eg 0.1\n"
+            "3. \"comment\"     (string, optional) A comment used to store what the transaction is for. \n"
+            "                            This is not part of the transaction, just kept in your wallet.\n"
+            "4. \"comment_to\"  (string, optional) A comment to store the name of the person or organization \n"
+            "                            to which you're sending the transaction. This is not part of the \n"
+            "                            transaction, just kept in your wallet.\n"
+            "5. subtractfeefromamount  (boolean, optional, default=false) The fee will be deducted from the amount being sent.\n"
+            "                            The recipient will receive less " + CURRENCY_UNIT + " than you enter in the amount field.\n"
+            "6. \"narration\"   (string, optional) Up to 24 characters sent with the transaction.\n"
+            "                            The narration is stored in the blockchain and is sent encrypted when destination is a stealth address and uncrypted otherwise.\n"
+            "7. \"ringsize\"      (int, optional).\n"
+            "8. \"numsignatures\" (int, optional).\n"
+            "\nResult:\n"
+            "\"txid\"           (string) The transaction id.\n"
+            "\nExamples:\n"
+            + HelpExampleCli("sendanontoblind", "\"SPGyji8uZFip6H15GUfj6bsutRVLsCyBFL3P7k7T7MUDRaYU8GfwUHpfxonLFAvAwr2RkigyGfTgWMfzLAAP8KMRHq7RE8cwpEEekH\" 0.1"));
+    
+    return SendToInner(request, OUTPUT_RINGCT, OUTPUT_CT);
+}
+
+UniValue sendanontoanon(const JSONRPCRequest &request)
+{
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 8)
+        throw std::runtime_error(
+            "sendanontoanon \"address\" amount ( \"comment\" \"comment-to\" subtractfeefromamount, \"narration\", \"ringsize\", \"numsignatures\")\n"
+            "\nSend an amount of anon part to a given address in anon part.\n"
+            + HelpRequiringPassphrase() +
+            "\nArguments:\n"
+            "1. \"address\"     (string, required) The particl address to send to.\n"
+            "2. \"amount\"      (numeric or string, required) The amount in " + CURRENCY_UNIT + " to send. eg 0.1\n"
+            "3. \"comment\"     (string, optional) A comment used to store what the transaction is for. \n"
+            "                            This is not part of the transaction, just kept in your wallet.\n"
+            "4. \"comment_to\"  (string, optional) A comment to store the name of the person or organization \n"
+            "                            to which you're sending the transaction. This is not part of the \n"
+            "                            transaction, just kept in your wallet.\n"
+            "5. subtractfeefromamount  (boolean, optional, default=false) The fee will be deducted from the amount being sent.\n"
+            "                            The recipient will receive less " + CURRENCY_UNIT + " than you enter in the amount field.\n"
+            "6. \"narration\"   (string, optional) Up to 24 characters sent with the transaction.\n"
+            "                            The narration is stored in the blockchain and is sent encrypted when destination is a stealth address and uncrypted otherwise.\n"
+            "7. \"ringsize\"      (int, optional).\n"
+            "8. \"numsignatures\" (int, optional).\n"
+            "\nResult:\n"
+            "\"txid\"           (string) The transaction id.\n"
+            "\nExamples:\n"
+            + HelpExampleCli("sendanontoanon", "\"SPGyji8uZFip6H15GUfj6bsutRVLsCyBFL3P7k7T7MUDRaYU8GfwUHpfxonLFAvAwr2RkigyGfTgWMfzLAAP8KMRHq7RE8cwpEEekH\" 0.1"));
     
     return SendToInner(request, OUTPUT_RINGCT, OUTPUT_RINGCT);
 }

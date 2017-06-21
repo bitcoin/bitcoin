@@ -89,6 +89,11 @@ public:
         batch.Delete(slKey);
         ssKey.clear();
     }
+    
+    void Clear()
+    {
+        batch.Clear();
+    }
 };
 
 class CDBIterator

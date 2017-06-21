@@ -522,8 +522,6 @@ public:
     mutable size_t cachedCoinsUsage;
 
 public:
-    
-    
     CCoinsViewCache(CCoinsView *baseIn, bool fParticlModeIn);
     ~CCoinsViewCache();
 

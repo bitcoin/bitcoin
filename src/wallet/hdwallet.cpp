@@ -1810,6 +1810,14 @@ int CHDWallet::PostProcessTempRecipients(std::vector<CTempRecipient> &vecSend)
     return 0;
 };
 
+static bool HaveAnonOutputs(std::vector<CTempRecipient> &vecSend)
+{
+    for (const auto &r : vecSend)
+    if (r.nType == OUTPUT_RINGCT)
+        return true;
+    return false;
+}
+
 int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
     std::vector<CTempRecipient> &vecSend,
     CExtKeyAccount *sea, CStoredExtKey *pc,
@@ -2048,6 +2056,8 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             int currentConfirmationTarget = nTxConfirmTarget;
             
             CAmount nFeeNeeded = GetMinimumFee(nBytes, currentConfirmationTarget, mempool);
+            if (HaveAnonOutputs(vecSend))
+                nFeeNeeded *= ANON_FEE_MULTIPLIER;
             
             // If we made it here and we aren't even able to meet the relay fee on the next pass, give up
             // because we must be at the maximum allowed fee.
@@ -2422,6 +2432,8 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             int currentConfirmationTarget = nTxConfirmTarget;
             
             CAmount nFeeNeeded = GetMinimumFee(nBytes, currentConfirmationTarget, mempool);
+            if (HaveAnonOutputs(vecSend))
+                nFeeNeeded *= ANON_FEE_MULTIPLIER;
             
             
             // If we made it here and we aren't even able to meet the relay fee on the next pass, give up
@@ -2974,6 +2986,9 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             int currentConfirmationTarget = nTxConfirmTarget;
             
             CAmount nFeeNeeded = GetMinimumFee(nBytes, currentConfirmationTarget, mempool);
+            //if (HaveAnonOutputs(vecSend))
+                nFeeNeeded *= ANON_FEE_MULTIPLIER;
+            
             
             // If we made it here and we aren't even able to meet the relay fee on the next pass, give up
             // because we must be at the maximum allowed fee.
@@ -4270,9 +4285,6 @@ int CHDWallet::ExtKeyLock()
     return 0;
 };
 
-
-
-
 int CHDWallet::ExtKeyUnlock(CExtKeyAccount *sea)
 {
     return ExtKeyUnlock(sea, vMasterKey);
@@ -5411,7 +5423,9 @@ int CHDWallet::NewExtKeyFromAccount(CHDWalletDB *pwdb, const CKeyID &idAccount,
 {
     if (fDebug)
     {
-        LogPrint("hdwallet", "%s %s.\n", __func__, CBitcoinAddress(idAccount, CChainParams::EXT_ACC_HASH).ToString());
+        CBitcoinAddress addr;
+        addr.Set(idAccount, CChainParams::EXT_ACC_HASH);
+        LogPrint("hdwallet", "%s %s.\n", __func__, addr.ToString());
         AssertLockHeld(cs_wallet);
     };
 
@@ -6461,10 +6475,8 @@ bool CHDWallet::ProcessLockedAnonOutputs()
         return error("%s: Cannot create DB cursor.", __func__);
 
     CDataStream ssKey(SER_DISK, CLIENT_VERSION);
-    //CDataStream ssValue(SER_DISK, CLIENT_VERSION);
     
     COutPoint op;
-    
     std::string strType;
     
     CStoredTransaction stx;
@@ -6482,7 +6494,6 @@ bool CHDWallet::ProcessLockedAnonOutputs()
         nProcessed++;
         
         ssKey >> op;
-        //ssValue >> op;
         
         int rv = pcursor->del(0);
         if (rv != 0)
@@ -6491,7 +6502,7 @@ bool CHDWallet::ProcessLockedAnonOutputs()
         std::map<uint256, CTransactionRecord>::iterator mir;
         
         mir = mapRecords.find(op.hash);
-        if (mir != mapRecords.end()
+        if (mir == mapRecords.end()
             || !wdb.ReadStoredTx(op.hash, stx))
         {
             LogPrintf("%s: Error: mapRecord not found for %s.\n", __func__, op.ToString());
@@ -6529,6 +6540,7 @@ bool CHDWallet::ProcessLockedAnonOutputs()
                     && !fHave)
                 {
                     fUpdated = true;
+                    pout->nFlags &= ~ORF_LOCKED;
                     rtx.InsertOutput(*pout);
                 };
                 break;
@@ -6537,6 +6549,7 @@ bool CHDWallet::ProcessLockedAnonOutputs()
                     && !fHave)
                 {
                     fUpdated = true;
+                    pout->nFlags &= ~ORF_LOCKED;
                     rtx.InsertOutput(*pout);
                 };
                 break;
@@ -7287,12 +7300,14 @@ int CHDWallet::OwnBlindOut(CHDWalletDB *pwdb, const uint256 &txhash, const CTxOu
         rout.nValue = -1;
         
         COutPoint op(txhash, rout.n);
-        if (fDebug) LogPrint("hdwallet", "%s: Adding locked output %s, %d.\n", __func__, txhash.ToString(), rout.n);
-        if (!pwdb->WriteLockedAnonOut(op))
-            LogPrintf("Error: %s - WriteLockedAnonOut failed.\n");
+        if (!pwdb->HaveLockedAnonOut(op))
+        {
+            if (fDebug) LogPrint("hdwallet", "%s: Adding locked output %s, %d.\n", __func__, txhash.ToString(), rout.n);
+            if (!pwdb->WriteLockedAnonOut(op))
+                LogPrintf("Error: %s - WriteLockedAnonOut failed.\n");
+        };
         
         fUpdated = true;
-        
         return 1;
     };
     
@@ -7360,12 +7375,14 @@ int CHDWallet::OwnAnonOut(CHDWalletDB *pwdb, const uint256 &txhash, const CTxOut
         rout.nValue = -1;
         
         COutPoint op(txhash, rout.n);
-        if (fDebug) LogPrint("hdwallet", "%s: Adding locked output %s, %d\n.", __func__, txhash.ToString(), rout.n);
-        if (!pwdb->WriteLockedAnonOut(op))
-            LogPrintf("Error: %s - WriteLockedAnonOut failed.\n");
+        if (!pwdb->HaveLockedAnonOut(op))
+        {
+            if (fDebug) LogPrint("hdwallet", "%s: Adding locked output %s, %d\n.", __func__, txhash.ToString(), rout.n);
+            if (!pwdb->WriteLockedAnonOut(op))
+                LogPrintf("Error: %s - WriteLockedAnonOut failed.\n");
+        };
         
         fUpdated = true;
-        
         return 1;
     };
     
