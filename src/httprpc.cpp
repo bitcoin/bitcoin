@@ -62,7 +62,7 @@ private:
 /* Pre-base64-encoded authentication token */
 static std::string strRPCUserColonPass;
 /* Stored RPC timer interface (for unregistration) */
-static HTTPRPCTimerInterface* httpRPCTimerInterface = 0;
+static HTTPRPCTimerInterface* httpRPCTimerInterface = nullptr;
 
 static void JSONErrorReply(HTTPRequest* req, const UniValue& objError, const UniValue& id)
 {
@@ -255,6 +255,6 @@ void StopHTTPRPC()
     if (httpRPCTimerInterface) {
         RPCUnsetTimerInterface(httpRPCTimerInterface);
         delete httpRPCTimerInterface;
-        httpRPCTimerInterface = 0;
+        httpRPCTimerInterface = nullptr;
     }
 }
