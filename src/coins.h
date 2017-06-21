@@ -225,8 +225,13 @@ public:
 
     /**
      * Return a reference to Coin in the cache, or a pruned one if not found. This is
-     * more efficient than GetCoin. Modifications to other cache entries are
-     * allowed while accessing the returned pointer.
+     * more efficient than GetCoin.
+     *
+     * Generally, do not hold the reference returned for more than a short scope.
+     * While the current implementation allows for modifications to the contents
+     * of the cache while holding the reference, this behavior should not be relied
+     * on! To be safe, best to not hold the returned reference through any other
+     * calls to this cache.
      */
     const Coin& AccessCoin(const COutPoint &output) const;
 
@@ -241,7 +246,7 @@ public:
      * If no unspent output exists for the passed outpoint, this call
      * has no effect.
      */
-    void SpendCoin(const COutPoint &outpoint, Coin* moveto = nullptr);
+    bool SpendCoin(const COutPoint &outpoint, Coin* moveto = nullptr);
 
     /**
      * Push the modifications applied to this cache to its base.
