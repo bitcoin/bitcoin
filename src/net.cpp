@@ -1718,7 +1718,7 @@ void CConnman::ThreadOpenConnections()
             if (!done) {
                 LogPrintf("Adding fixed seed nodes as DNS doesn't seem to be available.\n");
                 CNetAddr local;
-                LookupHost("127.0.0.1", local, false);
+                local.SetInternal("fixedseeds");
                 addrman.Add(convertSeed6(Params().FixedSeeds()), local);
                 done = true;
             }
