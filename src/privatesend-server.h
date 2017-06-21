@@ -30,9 +30,9 @@ private:
     bool AddScriptSig(const CTxIn& txin);
 
     /// Charge fees to bad actors (Charge clients a fee if they're abusive)
-    void ChargeFees(CConnman& connman);
+    void ChargeFees(CConnman* connman);
     /// Rarely charge fees to pay miners
-    void ChargeRandomFees(CConnman& connman);
+    void ChargeRandomFees(CConnman* connman);
 
     /// Check for process
     void CheckPool(CConnman& connman);

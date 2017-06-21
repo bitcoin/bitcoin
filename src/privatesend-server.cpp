@@ -380,7 +380,7 @@ void CPrivateSendServer::CommitFinalTransaction(CConnman& connman)
 // transaction for the client to be able to enter the pool. This transaction is kept by the Masternode
 // until the transaction is either complete or fails.
 //
-void CPrivateSendServer::ChargeFees(CConnman& connman)
+void CPrivateSendServer::ChargeFees(CConnman* connman)
 {
     if(!fMasternodeMode) return;
 
@@ -432,7 +432,13 @@ void CPrivateSendServer::ChargeFees(CConnman& connman)
         LogPrintf("CPrivateSendServer::ChargeFees -- found uncooperative node (didn't %s transaction), charging fees: %s\n",
                 (nState == POOL_STATE_SIGNING) ? "sign" : "send", vecOffendersCollaterals[0]->ToString());
 
-        connman.RelayTransaction(*vecOffendersCollaterals[0]);
+        if (connman) {
+            CInv inv(MSG_DSTX, *vecOffendersCollaterals[0]->GetHash());
+            connman->ForEachNode([&inv](CNode* pnode)
+            {
+                pnode->PushInventory(inv);
+            });
+        }
     }
 }
 
@@ -448,14 +454,20 @@ void CPrivateSendServer::ChargeFees(CConnman& connman)
     stop these kinds of attacks 1 in 10 successful transactions are charged. This
     adds up to a cost of 0.001CHC per transaction on average.
 */
-void CPrivateSendServer::ChargeRandomFees(CConnman& connman)
+void CPrivateSendServer::ChargeRandomFees(CConnman* connman)
 {
     if(!fMasternodeMode) return;
 
     for (const auto& txCollateral : vecSessionCollaterals) {
         if(GetRandInt(100) > 10) return;
         LogPrintf("CPrivateSendServer::ChargeRandomFees -- charging random fees, txCollateral=%s", txCollateral->GetHash().ToString());
-        connman.RelayTransaction(*txCollateral);
+        if (connman) {
+            CInv inv(MSG_DSTX, *txCollateral->GetHash());
+            connman->ForEachNode([&inv](CNode* pnode)
+            {
+                pnode->PushInventory(inv);
+            });
+        }
     }
 }
 

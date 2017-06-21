@@ -1211,9 +1211,16 @@ bool CTxLockCandidate::IsTimedOut() const
     return GetTime() - nTimeCreated > INSTANTSEND_LOCK_TIMEOUT_SECONDS;
 }
 
-void CTxLockCandidate::Relay(CConnman& connman) const
+void CTxLockCandidate::Relay(CConnman* connman) const
 {
-    connman.RelayTransaction(*txLockRequest.tx);
+    if (connman) {
+        CInv inv(MSG_TXLOCK_REQUEST, GetHash());
+        connman->ForEachNode([&inv](CNode* pnode)
+        {
+            pnode->PushInventory(inv);
+        });
+        return true;
+    }
     std::map<COutPoint, COutPointLock>::const_iterator itOutpointLock = mapOutPointLocks.begin();
     while(itOutpointLock != mapOutPointLocks.end()) {
         itOutpointLock->second.Relay(connman);

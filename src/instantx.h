@@ -296,7 +296,7 @@ public:
     bool IsExpired(int nHeight) const;
     bool IsTimedOut() const;
 
-    void Relay(CConnman& connman) const;
+    void Relay(CConnman* connman) const;
 };
 
 #endif
