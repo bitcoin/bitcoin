@@ -12,6 +12,7 @@
 #include "base58.h"
 #include "bitcoinrpc.h"
 #include "db.h"
+#include "kernelrecord.h"
 
 #include <boost/asio.hpp>
 #include <boost/asio/ip/v6_only.hpp>
@@ -492,6 +493,7 @@ static const CRPCCommand vRPCCommands[] =
     { "sendtoaddress",          &sendtoaddress,          false,     false },
     { "getreceivedbyaddress",   &getreceivedbyaddress,   false,     false },
     { "getreceivedbyaccount",   &getreceivedbyaccount,   false,     false },
+    { "listminting",            &listminting,            false,     false },
     { "listreceivedbyaddress",  &listreceivedbyaddress,  false,     false },
     { "listreceivedbyaccount",  &listreceivedbyaccount,  false,     false },
     { "backupwallet",           &backupwallet,           true,      false },
@@ -1481,6 +1483,8 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
     if (strMethod == "lockunspent"            && n > 0) ConvertTo<bool>(params[0]);
     if (strMethod == "lockunspent"            && n > 1) ConvertTo<Array>(params[1]);
     if (strMethod == "importprivkey"          && n > 2) ConvertTo<bool>(params[2]);
+    if (strMethod == "listminting"            && n > 0) ConvertTo<boost::int64_t>(params[0]);
+    if (strMethod == "listminting"            && n > 1) ConvertTo<boost::int64_t>(params[1]);
 
 #ifdef TESTING
     if (strMethod == "timetravel"             && n > 0) ConvertTo<boost::int64_t>(params[0]);
