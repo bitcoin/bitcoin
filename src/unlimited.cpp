@@ -1624,9 +1624,9 @@ extern UniValue getstructuresizes(const UniValue &params, bool fHelp)
 
     uint32_t nExpeditedBlocks, nExpeditedTxs, nExpeditedUpstream;
     connmgr->ExpeditedNodeCounts(nExpeditedBlocks, nExpeditedTxs, nExpeditedUpstream);
-    ret.push_back(Pair("xpeditedBlk", nExpeditedBlocks));
-    ret.push_back(Pair("xpeditedBlkUp", nExpeditedUpstream));
-    ret.push_back(Pair("xpeditedTxn", nExpeditedTxs));
+    ret.push_back(Pair("xpeditedBlk", (uint64_t) nExpeditedBlocks));
+    ret.push_back(Pair("xpeditedBlkUp", (uint64_t) nExpeditedUpstream));
+    ret.push_back(Pair("xpeditedTxn", (uint64_t) nExpeditedTxs));
 
 #ifdef DEBUG_LOCKORDER
     ret.push_back(Pair("lockorders", lockorders.size()));

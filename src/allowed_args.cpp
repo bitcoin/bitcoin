@@ -662,6 +662,10 @@ static void addTweaks(AllowedArgs &allowedArgs, CTweakMap *pTweaks)
 
         if (dynamic_cast<CTweak<CAmount> *>(tweak))
             allowedArgs.addArg(optName + "=<amt>", requiredAmount, tweak->GetHelp());
+        else if (dynamic_cast<CTweakRef<CAmount> *>(tweak))
+            allowedArgs.addArg(optName + "=<amt>", requiredAmount, tweak->GetHelp());
+        else if (dynamic_cast<CTweak<std::string> *>(tweak))
+            allowedArgs.addArg(optName + "=<str>", requiredStr, tweak->GetHelp());
         else if (dynamic_cast<CTweakRef<std::string> *>(tweak))
             allowedArgs.addArg(optName + "=<str>", requiredStr, tweak->GetHelp());
         else
