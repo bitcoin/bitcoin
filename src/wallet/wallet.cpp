@@ -1465,7 +1465,7 @@ void CWalletTx::GetAmounts(std::list<COutputEntry>& listReceived,
 /**
  * Scan active chain for relevant transactions after importing keys. This should
  * be called whenever new keys are added to the wallet, with the oldest key
- * creation time minus TIMESTAMP_WINDOW.
+ * creation time.
  *
  * @return Earliest timestamp that could be successfully scanned from. Timestamp
  * returned will be higher than startTime if relevant blocks could not be read.
@@ -1478,13 +1478,13 @@ int64_t CWallet::RescanFromTime(int64_t startTime, bool update)
     // Find starting block. May be null if nCreateTime is greater than the
     // highest blockchain timestamp, in which case there is nothing that needs
     // to be scanned.
-    CBlockIndex* const startBlock = chainActive.FindEarliestAtLeast(startTime);
+    CBlockIndex* const startBlock = chainActive.FindEarliestAtLeast(startTime - TIMESTAMP_WINDOW);
     LogPrintf("%s: Rescanning last %i blocks\n", __func__, startBlock ? chainActive.Height() - startBlock->nHeight + 1 : 0);
 
     if (startBlock) {
         const CBlockIndex* const failedBlock = ScanForWalletTransactions(startBlock, update);
         if (failedBlock) {
-            return failedBlock->GetBlockTimeMax() + 1;
+            return failedBlock->GetBlockTimeMax() + TIMESTAMP_WINDOW + 1;
         }
     }
     return startTime;
