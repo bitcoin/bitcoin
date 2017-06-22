@@ -42,10 +42,24 @@ class JSONRPCRequest
 public:
     UniValue id;
     std::string strMethod;
+    /**
+     * Parameters from JSON-RPC request.
+     * This will be either an object or an array when the JSONRPCRequest object is
+     * originally created and parsed. But it will be transformed into an
+     * array before being passed to the RPC method implementation (using the
+     * list of named arguments provided by the implementation).
+     */
     UniValue params;
     bool fHelp;
     std::string URI;
     std::string authUser;
+
+    /**
+     * Optional wallet name, set for backwards compatibility if the RPC method
+     * was called with a named "wallet" parameter and the RPC method
+     * implementation doesn't handle it itself.
+     */
+    std::string wallet;
 
     JSONRPCRequest() : id(NullUniValue), params(NullUniValue), fHelp(false) {}
     void parse(const UniValue& valRequest);
