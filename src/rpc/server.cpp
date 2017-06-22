@@ -456,6 +456,11 @@ static inline JSONRPCRequest transformNamedArguments(const JSONRPCRequest& in, c
             hole += 1;
         }
     }
+    auto wallet = argsIn.find("wallet");
+    if (wallet != argsIn.end() && wallet->second->isStr()) {
+        out.wallet = wallet->second->getValStr();
+        argsIn.erase(wallet);
+    }
     // If there are still arguments in the argsIn map, this is an error.
     if (!argsIn.empty()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown named parameter " + argsIn.begin()->first);
