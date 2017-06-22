@@ -64,6 +64,7 @@ CCoinsViewCache::CCoinsViewCache(CCoinsView *baseIn) : CCoinsViewBacked(baseIn),
 
 CCoinsViewCache::~CCoinsViewCache()
 {
+    LOCK(cs_utxo);
     assert(!hasModifier);
 }
 
@@ -216,6 +217,8 @@ bool CCoinsViewCache::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlockIn
             CCoinsMap::iterator itOld = it++;
             mapCoins.erase(itOld);
         }
+        else
+            it++;
     }
     hashBlock = hashBlockIn;
     return true;
@@ -326,15 +329,15 @@ double CCoinsViewCache::GetPriority(const CTransaction &tx, int nHeight, CAmount
 }
 
 CCoinsModifier::CCoinsModifier(CCoinsViewCache& cache_, CCoinsMap::iterator it_, size_t usage) : cache(cache_), it(it_), cachedCoinUsage(usage) {
-    assert(!cache.hasModifier);
     LOCK(cache.cs_utxo);
+    assert(!cache.hasModifier);
     cache.hasModifier = true;
 }
 
 CCoinsModifier::~CCoinsModifier()
 {
-    assert(cache.hasModifier);
     LOCK(cache.cs_utxo);
+    assert(cache.hasModifier);
     cache.hasModifier = false;
     it->second.coins.Cleanup();
     cache.cachedCoinsUsage -= cachedCoinUsage; // Subtract the old usage
