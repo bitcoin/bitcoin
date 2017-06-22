@@ -558,6 +558,17 @@ bool CXThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom, string strComm
             return false;
         }
 
+        // Is there a previous block or header to connect with?
+        {
+            uint256 prevHash = thinBlock.header.hashPrevBlock;
+            BlockMap::iterator mi = mapBlockIndex.find(prevHash);
+            if (mi == mapBlockIndex.end())
+            {
+                return error("xthinblock from peer %s will not connect, unknown previous block %s", pfrom->GetLogName(),
+                    prevHash.ToString());
+            }
+        }
+
         CValidationState state;
         CBlockIndex *pIndex = NULL;
         if (!AcceptBlockHeader(thinBlock.header, state, Params(), &pIndex))
