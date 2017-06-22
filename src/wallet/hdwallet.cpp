@@ -2901,7 +2901,7 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 vecSend.insert(vecSend.begin()+nChangePosInOut, r);
             }
             
-            int nSigs = std::min(nSigs, (int)setCoins.size());
+            int nSignSigs = std::min((int)nSigs, (int)setCoins.size());
             int nInputs = setCoins.size();
             
             // TODO: Multiple mlsags

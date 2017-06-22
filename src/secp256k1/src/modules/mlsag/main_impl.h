@@ -397,7 +397,7 @@ int verifyMLSAG(const secp256k1_context *ctx,
     secp256k1_ge ge1;
     secp256k1_gej gej1, gej2, L, R;
     size_t dsRows = nRows-1; /* TODO: pass in dsRows explicitly? */
-    uint8_t tmp[32];
+    uint8_t tmp[33];
     size_t i, k, clen;
     int overflow;
     
