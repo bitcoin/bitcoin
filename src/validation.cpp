@@ -3576,6 +3576,9 @@ bool RewindBlockIndex(const CChainParams& params)
             break;
         }
         if (fCheckBIP148 && !CheckBIP148(chainActive[nHeight], params.GetConsensus())) {
+            if (!(chainActive[nHeight]->nStatus & BLOCK_HAVE_DATA)) {
+                return error("RewindBlockIndex: invalid block found violating BIP148 at height %i has already been pruned", nHeight);
+            }
             break;
         }
         nHeight++;
