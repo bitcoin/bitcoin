@@ -1581,12 +1581,6 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 #ifdef ENABLE_WALLET
     if (!OpenWallets())
         return false;
-
-#if ENABLE_ZMQ
-    if (pzmqNotificationInterface)
-        pzmqNotificationInterface->ConnectToWalletSignals();
-#endif
-
 #else
     LogPrintf("No wallet support compiled in!\n");
 #endif

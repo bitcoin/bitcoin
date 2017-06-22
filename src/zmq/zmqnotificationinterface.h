@@ -20,11 +20,6 @@ public:
 
     static CZMQNotificationInterface* Create();
 
-#ifdef ENABLE_WALLET
-    void ConnectToWalletSignals();
-#endif
-
-
 protected:
     bool Initialize();
     void Shutdown();

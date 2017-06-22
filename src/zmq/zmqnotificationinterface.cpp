@@ -81,6 +81,10 @@ bool CZMQNotificationInterface::Initialize()
     LogPrint(BCLog::ZMQ, "zmq: Initialize notification interface\n");
     assert(!pcontext);
 
+#ifdef ENABLE_WALLET
+    CWallet::TransactionAddedToWallet.connect(boost::bind(&CZMQNotificationInterface::TransactionAddedToWallet, this, _1, _2));
+#endif
+
     pcontext = zmq_init(1);
 
     if (!pcontext)
@@ -118,9 +122,7 @@ void CZMQNotificationInterface::Shutdown()
     LogPrint(BCLog::ZMQ, "zmq: Shutdown notification interface\n");
 
 #ifdef ENABLE_WALLET
-    for (CWalletRef pwallet : vpwallets) {
-        pwallet->TransactionAddedToWallet.disconnect(boost::bind(&CZMQNotificationInterface::TransactionAddedToWallet, this, _1, _2));
-    }
+    CWallet::TransactionAddedToWallet.disconnect(boost::bind(&CZMQNotificationInterface::TransactionAddedToWallet, this, _1, _2));
 #endif
 
     if (pcontext)
@@ -136,14 +138,6 @@ void CZMQNotificationInterface::Shutdown()
         pcontext = nullptr;
     }
 }
-
-#ifdef ENABLE_WALLET
-void CZMQNotificationInterface::ConnectToWalletSignals() {
-     for (CWalletRef pwallet : vpwallets) {
-        pwallet->TransactionAddedToWallet.connect(boost::bind(&CZMQNotificationInterface::TransactionAddedToWallet, this, _1, _2));
-    }
-}
-#endif
 
 void CZMQNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
 {

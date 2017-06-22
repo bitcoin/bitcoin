@@ -58,6 +58,10 @@ CFeeRate CWallet::minTxFee = CFeeRate(DEFAULT_TRANSACTION_MINFEE);
  * Override with -fallbackfee
  */
 CFeeRate CWallet::fallbackFee = CFeeRate(DEFAULT_FALLBACK_FEE);
+/*
+ * Signal when transactions are added to wallet
+ */
+boost::signals2::signal<void (const CTransactionRef &ptxn, const uint256 &blockHash)> CWallet::TransactionAddedToWallet;
 
 CFeeRate CWallet::m_discard_rate = CFeeRate(DEFAULT_DISCARD_FEE);
 
@@ -960,7 +964,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
     NotifyTransactionChanged(this, hash, fInsertedNew ? CT_NEW : CT_UPDATED);
 
     // Notify listeners on new wallet transaction
-    TransactionAddedToWallet(wtx.tx, wtx.hashBlock);
+    CWallet::TransactionAddedToWallet(wtx.tx, wtx.hashBlock);
 
     // notify an external script when a wallet transaction comes in or is updated
     std::string strCmd = gArgs.GetArg("-walletnotify", "");
