@@ -64,7 +64,7 @@ mininode_socket_map = dict()
 
 # One lock for synchronizing all data access between the networking thread (see
 # NetworkThread below) and the thread running the test logic.  For simplicity,
-# NodeConn acquires this lock whenever delivering a message to to a NodeConnCB,
+# NodeConn acquires this lock whenever delivering a message to a NodeConnCB,
 # and whenever adding anything to the send buffer (in send_message()).  This
 # lock should be acquired in the thread running the test logic to synchronize
 # access to any data shared with the NodeConnCB or NodeConn.

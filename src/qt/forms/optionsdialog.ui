@@ -434,7 +434,7 @@
             <bool>false</bool>
            </property>
            <property name="toolTip">
-            <string>Shows, if the supplied default SOCKS5 proxy is used to reach peers via this network type.</string>
+            <string>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</string>
            </property>
            <property name="text">
             <string/>
@@ -457,7 +457,7 @@
             <bool>false</bool>
            </property>
            <property name="toolTip">
-            <string>Shows, if the supplied default SOCKS5 proxy is used to reach peers via this network type.</string>
+            <string>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</string>
            </property>
            <property name="text">
             <string/>
@@ -480,7 +480,7 @@
             <bool>false</bool>
            </property>
            <property name="toolTip">
-            <string>Shows, if the supplied default SOCKS5 proxy is used to reach peers via this network type.</string>
+            <string>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</string>
            </property>
            <property name="text">
             <string/>

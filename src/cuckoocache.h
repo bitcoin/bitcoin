@@ -176,7 +176,7 @@ private:
      */
     mutable std::vector<bool> epoch_flags;
 
-    /** epoch_heuristic_counter is used to determine when a epoch might be aged
+    /** epoch_heuristic_counter is used to determine when an epoch might be aged
      * & an expensive scan should be done.  epoch_heuristic_counter is
      * decremented on insert and reset to the new number of inserts which would
      * cause the epoch to reach epoch_size when it reaches zero.
@@ -184,7 +184,7 @@ private:
     uint32_t epoch_heuristic_counter;
 
     /** epoch_size is set to be the number of elements supposed to be in a
-     * epoch. When the number of non-erased elements in a epoch
+     * epoch. When the number of non-erased elements in an epoch
      * exceeds epoch_size, a new epoch should be started and all
      * current entries demoted. epoch_size is set to be 45% of size because
      * we want to keep load around 90%, and we support 3 epochs at once --

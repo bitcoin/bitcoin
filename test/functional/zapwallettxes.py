@@ -70,7 +70,7 @@ class ZapWalletTXesTest (BitcoinTestFramework):
         self.nodes[0] = self.start_node(0,self.options.tmpdir, ["-zapwallettxes=1"])
         
         assert_raises(JSONRPCException, self.nodes[0].gettransaction, [txid3])
-        #there must be a expection because the unconfirmed wallettx0 must be gone by now
+        #there must be an exception because the unconfirmed wallettx0 must be gone by now
 
         tx0 = self.nodes[0].gettransaction(txid0)
         assert_equal(tx0['txid'], txid0) #tx0 (confirmed) must still be available because it was confirmed

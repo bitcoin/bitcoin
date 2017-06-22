@@ -318,7 +318,7 @@ class PruneTest(BitcoinTestFramework):
         self.nodes[2] = self.start_node(2, self.options.tmpdir, ["-litemode","-txindex=0","-prune=550"], stderr=sys.stdout)
         self.log.info("Success")
 
-        # check that wallet loads loads successfully when restarting a pruned node after IBD.
+        # check that wallet loads successfully when restarting a pruned node after IBD.
         # this was reported to fail in #7494.
         self.log.info("Syncing node 5 to test wallet")
         connect_nodes(self.nodes[0], 5)
