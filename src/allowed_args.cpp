@@ -12,7 +12,7 @@
 #include "init.h"
 #include "main.h"
 #include "miner.h"
-#include "net.h"
+#include "netbase.h"
 #include "policy/policy.h"
 #include "qt/guiconstants.h"
 #include "requestManager.h"
