@@ -3476,6 +3476,15 @@ void CWallet::GetAllReserveKeys(std::set<CKeyID>& setAddress) const
 
 void CWallet::GetScriptForMining(std::shared_ptr<CReserveScript> &script)
 {
+    // make sure we only mine via the first wallet
+    // otherwise the used wallet is undefined (depends on the signal registration order)
+    // TODO: allow to pass the via generate/setgenerate used wallet to the signal
+    {
+        LOCK2(cs_main, cs_wallet);
+        if (vpwallets.empty() /* should never be empty at this point */ || vpwallets[0] != this) {
+            return;
+        }
+    }
     std::shared_ptr<CReserveKey> rKey = std::make_shared<CReserveKey>(this);
     CPubKey pubkey;
     if (!rKey->GetReservedKey(pubkey))
