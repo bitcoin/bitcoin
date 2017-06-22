@@ -47,6 +47,14 @@ class CValidationState;
 struct CNodeStateStats;
 struct LockPoints;
 
+enum FlushStateMode
+{
+    FLUSH_STATE_NONE,
+    FLUSH_STATE_IF_NEEDED,
+    FLUSH_STATE_PERIODIC,
+    FLUSH_STATE_ALWAYS
+};
+
 /** Default for DEFAULT_WHITELISTRELAY. */
 static const bool DEFAULT_WHITELISTRELAY = true;
 /** Default for DEFAULT_WHITELISTFORCERELAY. */
@@ -321,6 +329,7 @@ CBlockIndex *InsertBlockIndex(uint256 hash);
 bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
 /** Flush all state, indexes and buffers to disk. */
 void FlushStateToDisk();
+bool FlushStateToDisk(CValidationState &state, FlushStateMode mode);
 /** Prune block files and flush state to disk. */
 void PruneAndFlush();
 

@@ -2868,21 +2868,13 @@ bool ConnectBlock(const CBlock &block,
     return true;
 }
 
-enum FlushStateMode
-{
-    FLUSH_STATE_NONE,
-    FLUSH_STATE_IF_NEEDED,
-    FLUSH_STATE_PERIODIC,
-    FLUSH_STATE_ALWAYS
-};
-
 /**
  * Update the on-disk chain state.
  * The caches and indexes are flushed depending on the mode we're called with
  * if they're too large, if it's been a while since the last write,
  * or always and in all cases if we're in prune mode and are deleting files.
  */
-bool static FlushStateToDisk(CValidationState &state, FlushStateMode mode)
+bool FlushStateToDisk(CValidationState &state, FlushStateMode mode)
 {
     const CChainParams &chainparams = Params();
     LOCK2(cs_main, cs_LastBlockFile);
@@ -2932,8 +2924,7 @@ bool static FlushStateToDisk(CValidationState &state, FlushStateMode mode)
         bool fPeriodicFlush =
             mode == FLUSH_STATE_PERIODIC && nNow > nLastFlush + (int64_t)DATABASE_FLUSH_INTERVAL * 1000000;
         // Combine all conditions that result in a full cache flush.
-        bool fDoFullFlush =
-            (mode == FLUSH_STATE_ALWAYS) || fCacheCritical || fPeriodicFlush || fFlushForPrune;
+        bool fDoFullFlush = (mode == FLUSH_STATE_ALWAYS) || fCacheCritical || fPeriodicFlush || fFlushForPrune;
         // Write blocks and block index to disk.
         if (fDoFullFlush || fPeriodicWrite)
         {
@@ -3213,9 +3204,10 @@ bool static ConnectTip(CValidationState &state,
     int64_t nTime4 = GetTimeMicros();
     nTimeFlush += nTime4 - nTime3;
     LogPrint("bench", "  - Flush: %.2fms [%.2fs]\n", (nTime4 - nTime3) * 0.001, nTimeFlush * 0.000001);
-    // Write the chain state to disk, if necessary.
-    if (!FlushStateToDisk(state, FLUSH_STATE_IF_NEEDED))
-        return false;
+    // Write the chain state to disk, if necessary and only during IBD
+    if (!IsChainNearlySyncd())
+        if (!FlushStateToDisk(state, FLUSH_STATE_IF_NEEDED))
+            return false;
     int64_t nTime5 = GetTimeMicros();
     nTimeChainState += nTime5 - nTime4;
     LogPrint(
@@ -3711,10 +3703,6 @@ bool ActivateBestChain(CValidationState &state, const CChainParams &chainparams,
         fOneDone = true;
     } while (pindexMostWork->nChainWork > chainActive.Tip()->nChainWork);
     CheckBlockIndex(chainparams.GetConsensus());
-
-    // Write changes periodically to disk.
-    if (!FlushStateToDisk(state, FLUSH_STATE_PERIODIC))
-        return false;
 
     return true;
 }
