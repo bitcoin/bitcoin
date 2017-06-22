@@ -1468,7 +1468,7 @@ void CWalletTx::GetAmounts(std::list<COutputEntry>& listReceived,
  * creation time minus TIMESTAMP_WINDOW.
  *
  * @return Earliest timestamp that could be successfully scanned from. Timestamp
- * returned may be higher than startTime if some blocks could not be read.
+ * returned will be higher than startTime if relevant blocks could not be read.
  */
 int64_t CWallet::RescanFromTime(int64_t startTime, bool update)
 {
