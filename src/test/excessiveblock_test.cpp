@@ -164,8 +164,8 @@ BOOST_AUTO_TEST_CASE(check_validator_rule)
 
 BOOST_AUTO_TEST_CASE(check_excessive_validator)
 {
-    unsigned int c_mgb = maxGeneratedBlock;
-    unsigned int c_ebs = excessiveBlockSize;
+    uint64_t c_mgb = maxGeneratedBlock;
+    uint64_t c_ebs = excessiveBlockSize;
 
     // fudge global variables....
     maxGeneratedBlock = 1000000;
@@ -213,8 +213,8 @@ BOOST_AUTO_TEST_CASE(check_excessive_validator)
 
 BOOST_AUTO_TEST_CASE(check_generated_block_validator)
 {
-    unsigned int c_mgb = maxGeneratedBlock;
-    unsigned int c_ebs = excessiveBlockSize;
+    uint64_t c_mgb = maxGeneratedBlock;
+    uint64_t c_ebs = excessiveBlockSize;
 
     // fudge global variables....
     maxGeneratedBlock = 888;
