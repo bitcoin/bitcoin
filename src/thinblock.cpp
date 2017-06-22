@@ -76,7 +76,6 @@ bool CThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom)
         BlockMap::iterator mi = mapBlockIndex.find(prevHash);
         if (mi == mapBlockIndex.end())
         {
-            dosMan.Misbehaving(pfrom, 10);
             return error("thinblock from peer %s will not connect, unknown previous block %s", pfrom->GetLogName(),
                 prevHash.ToString());
         }
@@ -556,6 +555,17 @@ bool CXThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom, string strComm
 
             thindata.ClearThinBlockData(pfrom, thinBlock.header.GetHash());
             return false;
+        }
+
+        // Is there a previous block or header to connect with?
+        {
+            uint256 prevHash = thinBlock.header.hashPrevBlock;
+            BlockMap::iterator mi = mapBlockIndex.find(prevHash);
+            if (mi == mapBlockIndex.end())
+            {
+                return error("xthinblock from peer %s will not connect, unknown previous block %s", pfrom->GetLogName(),
+                    prevHash.ToString());
+            }
         }
 
         CValidationState state;
