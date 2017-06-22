@@ -537,7 +537,7 @@ UniValue importwallet(const JSONRPCRequest& request)
     file.close();
     pwallet->ShowProgress("", 100); // hide progress dialog in GUI
     pwallet->UpdateTimeFirstKey(nTimeBegin);
-    pwallet->RescanFromTime(nTimeBegin - TIMESTAMP_WINDOW, false /* update */);
+    pwallet->RescanFromTime(nTimeBegin, false /* update */);
     pwallet->MarkDirty();
 
     if (!fGood)
@@ -1113,10 +1113,10 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
     }
 
     if (fRescan && fRunScan && requests.size()) {
-        int64_t scannedTime = pwallet->RescanFromTime(nLowestTimestamp - TIMESTAMP_WINDOW, true /* update */);
+        int64_t scannedTime = pwallet->RescanFromTime(nLowestTimestamp, true /* update */);
         pwallet->ReacceptWalletTransactions();
 
-        if (scannedTime > nLowestTimestamp - TIMESTAMP_WINDOW) {
+        if (scannedTime > nLowestTimestamp) {
             std::vector<UniValue> results = response.getValues();
             response.clear();
             response.setArray();
@@ -1126,7 +1126,7 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
                 // range, or if the import result already has an error set, let
                 // the result stand unmodified. Otherwise replace the result
                 // with an error message.
-                if (scannedTime <= GetImportTimestamp(request, now) - TIMESTAMP_WINDOW || results.at(i).exists("error")) {
+                if (scannedTime <= GetImportTimestamp(request, now) || results.at(i).exists("error")) {
                     response.push_back(results.at(i));
                 } else {
                     UniValue result = UniValue(UniValue::VOBJ);
@@ -1142,7 +1142,7 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
                                       "caused by pruning or data corruption (see bitcoind log for details) and could "
                                       "be dealt with by downloading and rescanning the relevant blocks (see -reindex "
                                       "and -rescan options).",
-                                GetImportTimestamp(request, now), scannedTime - 1, TIMESTAMP_WINDOW)));
+                                GetImportTimestamp(request, now), scannedTime - TIMESTAMP_WINDOW - 1, TIMESTAMP_WINDOW)));
                     response.push_back(std::move(result));
                 }
                 ++i;
