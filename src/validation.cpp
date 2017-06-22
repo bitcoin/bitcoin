@@ -1800,7 +1800,21 @@ void static InvalidChainFound(CBlockIndex* pindexNew)
     CheckForkWarningConditions();
 }
 
-void static InvalidBlockFound(CBlockIndex *pindex, const CValidationState &state) {
+void static InvalidBlockFound(CBlockIndex *pindex, const std::shared_ptr<const CBlock>& pblock, const CValidationState &state)
+{
+    if (state.GetRejectReason() == "bad-cs-duplicate")
+    {
+        pindex->SetProofOfStake();
+        pindex->prevoutStake = pblock->vtx[0]->vin[0].prevout;
+        if (pindex->pprev && pindex->pprev->bnStakeModifier.IsNull())
+            LogPrintf("Warning: %s - Previous stake modifier is null.\n", __func__);
+        else
+            pindex->bnStakeModifier = ComputeStakeModifierV2(pindex->pprev, pindex->prevoutStake.hash);
+        
+        pindex->nFlags |= BLOCK_FAILED_DUPLICATE_STAKE;
+        setDirtyBlockIndex.insert(pindex);
+    };
+    
     if (!state.CorruptionPossible()) {
         pindex->nStatus |= BLOCK_FAILED_VALID;
         setDirtyBlockIndex.insert(pindex);
@@ -3659,7 +3673,7 @@ bool static ConnectTip(CValidationState& state, const CChainParams& chainparams,
         GetMainSignals().BlockChecked(blockConnecting, state);
         if (!rv) {
             if (state.IsInvalid())
-                InvalidBlockFound(pindexNew, state);
+                InvalidBlockFound(pindexNew, pblock, state);
             return error("ConnectTip(): ConnectBlock %s failed", pindexNew->GetBlockHash().ToString());
         }
         nTime3 = GetTimeMicros(); nTimeConnectTotal += nTime3 - nTime2;
@@ -4512,7 +4526,6 @@ unsigned int GetNextTargetRequired(const CBlockIndex *pindexLast)
         int nLastImportHeight = (int) Params().GetLastImportHeight();
         arith_uint256 nMaxProofOfWorkLimit = arith_uint256("000000000008ffffffffffffffffffffffffffffffffffffffffffffffffffff");
         arith_uint256 nMinProofOfWorkLimit = UintToArith256(consensus.powLimit);
-        
         arith_uint256 nStep = (nMaxProofOfWorkLimit - nMinProofOfWorkLimit) / nLastImportHeight;
         
         
@@ -4791,7 +4804,7 @@ bool ProcessDuplicateStakeHeader(CBlockIndex *pindex, NodeId nodeId)
     StakeConflict &sc = ret.first->second;
     sc.Add(nodeId);
     
-    if ((int)sc.peerCount.size() > GetNumPeers() / 2)
+    if ((int)sc.peerCount.size() > std::min(GetNumPeers() / 2, 4))
     {
         LogPrintf("%s: More than half the connected peers are building on block %s,"
             "  marked as duplicate stake, assuming this node has the duplicate.\n", __func__, hash.ToString());
@@ -5027,20 +5040,7 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
             // Mark block as invalid to prevent re-requesting from peer.
             // Block will have been added to the block index in AcceptBlockHeader
             CBlockIndex *pindex = AddToBlockIndex(*pblock);
-            InvalidBlockFound(pindex, state);
-            
-            if (state.GetRejectReason() == "bad-cs-duplicate")
-            {
-                pindex->SetProofOfStake();
-                pindex->prevoutStake = pblock->vtx[0]->vin[0].prevout;
-                if (pindex->pprev && pindex->pprev->bnStakeModifier.IsNull())
-                    LogPrintf("Warning: %s - Previous stake modifier is null.\n", __func__);
-                else
-                    pindex->bnStakeModifier = ComputeStakeModifierV2(pindex->pprev, pindex->prevoutStake.hash);
-                
-                pindex->nFlags |= BLOCK_FAILED_DUPLICATE_STAKE;
-                setDirtyBlockIndex.insert(pindex);
-            };
+            InvalidBlockFound(pindex, pblock, state);
             
             GetMainSignals().BlockChecked(*pblock, state);
             

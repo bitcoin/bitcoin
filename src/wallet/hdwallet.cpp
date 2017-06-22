@@ -2677,7 +2677,7 @@ int CHDWallet::PickHidingOutputs(std::vector<std::vector<int64_t> > &vMI, size_t
     
     if (nRingSize < MIN_RINGSIZE
         || nRingSize > MAX_RINGSIZE)
-        return errorN(1, sError, __func__, _("Ring size out of range [%d, %d].").c_str(), MIN_RINGSIZE, MAX_RINGSIZE);
+        return errorN(1, sError, __func__, _("Ring size out of range [%d, %d]").c_str(), MIN_RINGSIZE, MAX_RINGSIZE);
     
     //GetStrongRandBytes((unsigned char*)&nSecretColumn, sizeof(nSecretColumn));
     //nSecretColumn %= nRingSize;
@@ -7297,7 +7297,7 @@ int CHDWallet::OwnBlindOut(CHDWalletDB *pwdb, const uint256 &txhash, const CTxOu
         rout.nType = OUTPUT_CT;
         rout.nFlags |= ORF_OWNED;
         rout.nFlags |= ORF_LOCKED;
-        rout.nValue = -1;
+        rout.nValue = 0;
         
         COutPoint op(txhash, rout.n);
         if (!pwdb->HaveLockedAnonOut(op))
@@ -7372,7 +7372,7 @@ int CHDWallet::OwnAnonOut(CHDWalletDB *pwdb, const uint256 &txhash, const CTxOut
         rout.nType = OUTPUT_RINGCT;
         rout.nFlags |= ORF_OWNED;
         rout.nFlags |= ORF_LOCKED;
-        rout.nValue = -1;
+        rout.nValue = 0;
         
         COutPoint op(txhash, rout.n);
         if (!pwdb->HaveLockedAnonOut(op))

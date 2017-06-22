@@ -3072,11 +3072,11 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
     
     size_t nRingSize = 4; // TODO: default size?
     if (request.params.size() > 6)
-        fSubtractFeeFromAmount = request.params[6].get_int();
+        nRingSize = request.params[6].get_int();
     
     size_t nSigs = 1;
     if (request.params.size() > 7)
-        fSubtractFeeFromAmount = request.params[7].get_int();
+        nSigs = request.params[7].get_int();
     
     
     CReserveKey reservekey(pwallet);

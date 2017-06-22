@@ -13,7 +13,7 @@
 #include "txmempool.h"
 
 const size_t MIN_RINGSIZE = 3;
-const size_t MAX_RINGSIZE = 24;
+const size_t MAX_RINGSIZE = 32;
 
 const size_t MAX_ANON_INPUTS = 32; // To raise see MLSAG_MAX_ROWS also
 

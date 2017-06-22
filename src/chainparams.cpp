@@ -100,7 +100,7 @@ bool CChainParams::IsBech32Prefix(const std::vector<unsigned char> &vchPrefixIn,
         {
             rtype = static_cast<CChainParams::Base58Type>(k);
             return true;
-        }
+        };
     };
     
     return false;
@@ -273,11 +273,11 @@ std::pair<const char*, CAmount> genesisOutputsTestnet[nGenesisOutputs] = {
     std::make_pair("79cc005375e6ce47ee5409e526bc735735533ace", 7500 * COIN),
     std::make_pair("20d3c48848871222cec3d04f8776a80940b0130c", 7500 * COIN),
     
-    std::make_pair("464d8028cd25b1c03630b29326235e46c45a0fce", 20000 * COIN),
-    std::make_pair("8c8c41acd8b3e92ed8afd027af1ac1a01757b324", 7500 * COIN),
-    std::make_pair("cde11c1fa83f4222728260695db973301b07cf43", 7500 * COIN),
-    std::make_pair("5b93cfead42f3bfc035ed7acc63db596c5e44e89", 7500 * COIN),
-    std::make_pair("7f9e5e8933c25faf9614126bfde15a96a1914ee7", 7500 * COIN),
+    std::make_pair("464d8028cd25b1c03630b29326235e46c45a0fce", 200000 * COIN),
+    std::make_pair("8c8c41acd8b3e92ed8afd027af1ac1a01757b324", 75000 * COIN),
+    std::make_pair("cde11c1fa83f4222728260695db973301b07cf43", 75000 * COIN),
+    std::make_pair("5b93cfead42f3bfc035ed7acc63db596c5e44e89", 75000 * COIN),
+    std::make_pair("7f9e5e8933c25faf9614126bfde15a96a1914ee7", 75000 * COIN),
     
     std::make_pair("2903e9dab211039a813c95755b38c0c2e64d9d08", 20000 * COIN),
     std::make_pair("3b6b7f6a69ac1b5ff149ed4c6de17825fc84f219", 7500 * COIN),
@@ -291,13 +291,13 @@ std::pair<const char*, CAmount> genesisOutputsTestnet[nGenesisOutputs] = {
     std::make_pair("7411a25eaf494fe7af6289790632a242450465d1", 7500 * COIN),
     std::make_pair("018b583fa822209faf401bf1a50082c8e042d3ca", 7500 * COIN),
     
-    std::make_pair("12e04025d07661e641493cb6109f2db48b3a3071", 10000 * COIN),
-    std::make_pair("ccd7191dae450081be70337b0047ca82b268c286", 10000 * COIN),
-    std::make_pair("fa97fa3c2fa6f7644ee4f5b775ff5288616a235b", 6000 * COIN),
-    std::make_pair("cf9afe0a99eec9fc19eef45149f62e77d6b91f51", 6000 * COIN),
-    std::make_pair("dc0adbadb3bc83895b86312928fff5ed882617e0", 6000 * COIN),
-    std::make_pair("a0720a81483dd42459470abaa33c455282ce45b0", 6000 * COIN),
-    std::make_pair("e292f976dcb35fad81073db7ad22d70ab217017b", 6000 * COIN),
+    std::make_pair("12e04025d07661e641493cb6109f2db48b3a3071", 100000 * COIN),
+    std::make_pair("ccd7191dae450081be70337b0047ca82b268c286", 100000 * COIN),
+    std::make_pair("fa97fa3c2fa6f7644ee4f5b775ff5288616a235b", 60000 * COIN),
+    std::make_pair("cf9afe0a99eec9fc19eef45149f62e77d6b91f51", 60000 * COIN),
+    std::make_pair("dc0adbadb3bc83895b86312928fff5ed882617e0", 60000 * COIN),
+    std::make_pair("a0720a81483dd42459470abaa33c455282ce45b0", 60000 * COIN),
+    std::make_pair("e292f976dcb35fad81073db7ad22d70ab217017b", 60000 * COIN),
 };
 
 static CBlock CreateGenesisBlockTestNet(uint32_t nTime, uint32_t nNonce, uint32_t nBits)
@@ -634,12 +634,12 @@ public:
         nPruneAfterHeight = 1000;
 
 
-        genesis = CreateGenesisBlockTestNet(1497274200, 106862, 0x1f00ffff);
+        genesis = CreateGenesisBlockTestNet(1498140000, 40978, 0x1f00ffff);
         consensus.hashGenesisBlock = genesis.GetHash();
-
-        assert(consensus.hashGenesisBlock == uint256S("0x00009b02abc61d41cef7a6cb2c4f17ce880f1bfbc2a4681aef8c94359544b699"));
-        assert(genesis.hashMerkleRoot == uint256S("0xd6ac057095dd2e88edd28d77c5ea31ba558b6650c645752e6d8810270e3fa7f5"));
-        assert(genesis.hashWitnessMerkleRoot == uint256S("0xd6f2171de24fb9e1b8c9943e3bd69d3a9c71d965340380d51a9370b0e150f3e6"));
+        
+        assert(consensus.hashGenesisBlock == uint256S("0x00002e66f34e394defd04f5c5933cfa59d822883c1876ba2a8705984ecc52b74"));
+        assert(genesis.hashMerkleRoot == uint256S("0xf720eac163fc0f2e4a9505cafd0b3b74ba3bf5aa735c144c0e0b76349e714544"));
+        assert(genesis.hashWitnessMerkleRoot == uint256S("0x5c78c080b450dfcfb19595815a0ce64578ca6a7a1f56523de17ec1949687e62a"));
         
         vFixedSeeds.clear();
         vSeeds.clear();
