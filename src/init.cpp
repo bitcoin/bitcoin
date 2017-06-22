@@ -165,8 +165,11 @@ static boost::scoped_ptr<ECCVerifyHandle> globalVerifyHandle;
 void Interrupt(boost::thread_group& threadGroup)
 {
     // Interrupt Parallel Block Validation threads if there are any running.
-    PV->StopAllValidationThreads();
-    PV->WaitForAllValidationThreadsToStop();
+    if (PV)
+    {
+        PV->StopAllValidationThreads();
+        PV->WaitForAllValidationThreadsToStop();
+    }
 
     InterruptHTTPServer();
     InterruptHTTPRPC();
