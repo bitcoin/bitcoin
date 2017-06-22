@@ -145,15 +145,15 @@ public:
         assert(genesis.hashMerkleRoot == uint256S("0xfa6ef9872494fa9662cf0fecf8c0135a6932e76d7a8764e1155207f3205c7c88")); // PM-Tech: ChainCoin
 
 
-        vSeeds.emplace_back("seed1.chaincoin.org");
-        vSeeds.emplace_back("seed2.chaincoin.org");
-        vSeeds.emplace_back("seed3.chaincoin.org");
-        vSeeds.emplace_back("seed4.chaincoin.org");
-        vSeeds.emplace_back("seed5.chaincoin.org");
-        vSeeds.emplace_back("seed6.chaincoin.org");
-        vSeeds.emplace_back("seed7.chaincoin.org");
-        vSeeds.emplace_back("seed8.chaincoin.org");
-        vSeeds.emplace_back("chc1.hashunlimited.com");
+        vSeeds.emplace_back("seed1.chaincoin.org", true);
+        vSeeds.emplace_back("seed2.chaincoin.org", true);
+        vSeeds.emplace_back("seed3.chaincoin.org", true);
+        vSeeds.emplace_back("seed4.chaincoin.org", true);
+        vSeeds.emplace_back("seed5.chaincoin.org", true);
+        vSeeds.emplace_back("seed6.chaincoin.org", true);
+        vSeeds.emplace_back("seed7.chaincoin.org", true);
+        vSeeds.emplace_back("seed8.chaincoin.org", true);
+        vSeeds.emplace_back("chc1.hashunlimited.com", true);
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,28); // PM-Tech: ChainCoin
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,4); // PM-Tech: ChainCoin
@@ -271,8 +271,8 @@ public:
         vSeeds.clear();
 
         // nodes with support for servicebits filtering should be at the top
-        vSeeds.emplace_back("test.chaincoin.org");
-        vSeeds.emplace_back("test1.hashunlimited.com");
+        vSeeds.emplace_back("test.chaincoin.org", true);
+        vSeeds.emplace_back("test1.hashunlimited.com", true);
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,80);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,44);
