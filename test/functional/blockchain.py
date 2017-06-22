@@ -18,13 +18,16 @@ Tests correspond to code in rpc/blockchain.cpp.
 """
 
 from decimal import Decimal
+import subprocess
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_raises,
     assert_raises_jsonrpc,
     assert_is_hex_string,
     assert_is_hash_string,
+    bitcoind_processes,
 )
 
 
@@ -34,6 +37,7 @@ class BlockchainTest(BitcoinTestFramework):
         super().__init__()
         self.setup_clean_chain = False
         self.num_nodes = 1
+        self.extra_args = [['-stopatheight=207']]
 
     def run_test(self):
         self._test_getchaintxstats()
@@ -41,7 +45,8 @@ class BlockchainTest(BitcoinTestFramework):
         self._test_getblockheader()
         self._test_getdifficulty()
         self._test_getnetworkhashps()
-        self.nodes[0].verifychain(4, 0)
+        self._test_stopatheight()
+        assert self.nodes[0].verifychain(4, 0)
 
     def _test_getchaintxstats(self):
         chaintxstats = self.nodes[0].getchaintxstats(1)
@@ -127,6 +132,19 @@ class BlockchainTest(BitcoinTestFramework):
         hashes_per_second = self.nodes[0].getnetworkhashps()
         # This should be 2 hashes every 2.6 minutes (156 seconds) or 1/78
         assert abs(hashes_per_second * 78 - 1) < 0.0001
+
+    def _test_stopatheight(self):
+        assert_equal(self.nodes[0].getblockcount(), 200)
+        self.nodes[0].generate(6)
+        assert_equal(self.nodes[0].getblockcount(), 206)
+        self.log.debug('Node should not stop at this height')
+        assert_raises(subprocess.TimeoutExpired, lambda: bitcoind_processes[0].wait(timeout=3))
+        self.nodes[0].generate(1)
+        self.log.debug('Node should stop at this height...')
+        bitcoind_processes[0].wait(timeout=3)
+        self.nodes[0] = self.start_node(0, self.options.tmpdir)
+        assert_equal(self.nodes[0].getblockcount(), 207)
+
 
 if __name__ == '__main__':
     BlockchainTest().main()
