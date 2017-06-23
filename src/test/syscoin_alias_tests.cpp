@@ -17,7 +17,6 @@ BOOST_AUTO_TEST_CASE (generate_sysrates_alias)
 	ECC_Start();
 	CreateSysRatesIfNotExist();
 	CreateSysBanIfNotExist();
-	CreateSysCategoryIfNotExist();
 }
 BOOST_AUTO_TEST_CASE (generate_big_aliasdata)
 {

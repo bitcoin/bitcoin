@@ -392,19 +392,6 @@ void CreateSysBanIfNotExist()
 	}
  	GenerateBlocks(5, "node1");
 }
-void CreateSysCategoryIfNotExist()
-{
-	string data = "\"{\\\"categories\\\":[{\\\"cat\\\":\\\"certificates\\\"},{\\\"cat\\\":\\\"certificates>music\\\"},{\\\"cat\\\":\\\"wanted\\\"},{\\\"cat\\\":\\\"for sale > general\\\"},{\\\"cat\\\":\\\"for sale > wanted\\\"},{\\\"cat\\\":\\\"services\\\"}]}\"";
-	try
-	{
-		AliasNew("node1", "syscategory", "password", data);
-	}
-	catch(const runtime_error &e)
-	{
-		throw runtime_error(e.what());
-	}	
-	
-}
 void AliasBan(const string& node, const string& alias, int severity)
 {
 	string pubdata = "\"{\\\"aliases\\\":[{\\\"id\\\":\\\"" + alias + "\\\",\\\"severity\\\":" + boost::lexical_cast<string>(severity) + "}]}\"";
@@ -614,7 +601,7 @@ string AliasNew(const string& node, const string& aliasname, const string& passw
 	CAmount balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 	BOOST_CHECK(balanceAfter >= 10*COIN);
 	BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == aliasname);
-	if(aliasname != "sysrates.peg" && aliasname != "sysban" && aliasname != "syscategory")
+	if(aliasname != "sysrates.peg" && aliasname != "sysban")
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str(), pubdata);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "privatevalue").get_str() , privdata == "\"\""? "": privdata);
 	BOOST_CHECK(find_value(r.get_obj(), "ismine").get_bool() == true);
@@ -628,7 +615,7 @@ string AliasNew(const string& node, const string& aliasname, const string& passw
 			BOOST_CHECK_NO_THROW(CallRPC(otherNode1, "aliasauthenticate " + aliasname + " " + password + " " + passwordSalt + " true"));
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "password").get_str() , "");
 		BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == aliasname);
-		if(aliasname != "sysrates.peg" && aliasname != "sysban" && aliasname != "syscategory")
+		if(aliasname != "sysrates.peg" && aliasname != "sysban")
 			BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str(), pubdata);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "privatevalue").get_str() , "");
 		BOOST_CHECK(find_value(r.get_obj(), "ismine").get_bool() == false);
@@ -643,7 +630,7 @@ string AliasNew(const string& node, const string& aliasname, const string& passw
 			BOOST_CHECK_NO_THROW(CallRPC(otherNode2, "aliasauthenticate " + aliasname + " " + password + " " + passwordSalt + " true"));
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "password").get_str() , "");
 		BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == aliasname);
-		if(aliasname != "sysrates.peg" && aliasname != "sysban" && aliasname != "syscategory")
+		if(aliasname != "sysrates.peg" && aliasname != "sysban")
 			BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str(), pubdata);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "privatevalue").get_str() , "");
 		BOOST_CHECK(find_value(r.get_obj(), "ismine").get_bool() == false);
@@ -864,7 +851,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == aliasname);
 
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "privatevalue").get_str() , privdata != "\"\""? privdata: oldprivatevalue);
-	if(aliasname != "sysrates.peg" && aliasname != "sysban" && aliasname != "syscategory")
+	if(aliasname != "sysrates.peg" && aliasname != "sysban")
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str() , pubdata != "\"\""? pubdata: oldvalue);
 	
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "password").get_str() , password != "\"\""? password: oldPassword);
@@ -894,7 +881,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), 0);
 
 		
-		if(aliasname != "sysrates.peg" && aliasname != "sysban" && aliasname != "syscategory")
+		if(aliasname != "sysrates.peg" && aliasname != "sysban")
 			BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str() , pubdata != "\"\""? pubdata: oldvalue);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_publickey").get_str() , encryptionkey);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "passwordsalt").get_str() , password != "\"\""? strPasswordSalt: oldPasswordSalt);
@@ -917,7 +904,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 		BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == aliasname);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), 0);
 
-		if(aliasname != "sysrates.peg" && aliasname != "sysban" && aliasname != "syscategory")
+		if(aliasname != "sysrates.peg" && aliasname != "sysban")
 			BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str() , pubdata != "\"\""? pubdata: oldvalue);
 		
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_publickey").get_str() , encryptionkey);
