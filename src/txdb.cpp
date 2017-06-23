@@ -11,6 +11,8 @@
 #include "pow.h"
 #include "uint256.h"
 #include "util.h"
+#include "ui_interface.h"
+#include "init.h"
 
 #include <stdint.h>
 
@@ -366,9 +368,11 @@ bool CCoinsViewDB::Upgrade() {
         return true;
     }
 
+    int64_t count = 0;
     LogPrintf("Upgrading database...\n");
     size_t batch_size = 1 << 24;
     CDBBatch batch(db);
+    uiInterface.SetProgressBreakAction(StartShutdown);
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
         if (ShutdownRequested()) {
@@ -376,6 +380,10 @@ bool CCoinsViewDB::Upgrade() {
         }
         std::pair<unsigned char, uint256> key;
         if (pcursor->GetKey(key) && key.first == DB_COINS) {
+            if (count++ % 256 == 0) {
+                uint32_t high = 0x100 * *key.second.begin() + *(key.second.begin() + 1);
+                uiInterface.ShowProgress(_("Upgrading UTXO database") + "\n"+ _("(press q to shutdown and continue later)") + "\n", (int)(high * 100.0 / 65536.0 + 0.5));
+            }
             CCoins old_coins;
             if (!pcursor->GetValue(old_coins)) {
                 return error("%s: cannot parse CCoins record", __func__);
@@ -400,5 +408,6 @@ bool CCoinsViewDB::Upgrade() {
         }
     }
     db.WriteBatch(batch);
+    uiInterface.SetProgressBreakAction(std::function<void(void)>());
     return true;
 }
