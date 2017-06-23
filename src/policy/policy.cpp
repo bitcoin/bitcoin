@@ -49,7 +49,7 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType, const bool w
             return false;
 	// SYSCOIN check for size of sys tx, normal tx size is checked in isstandardtx now
     } else if (whichType == TX_NULL_DATA &&
-               (!fAcceptDatacarrier || scriptPubKey.size() > nMaxDatacarrierBytes*75))
+               (!fAcceptDatacarrier || scriptPubKey.size() > nMaxDatacarrierBytes*100))
           return false;
 
     else if (!witnessEnabled && (whichType == TX_WITNESS_V0_KEYHASH || whichType == TX_WITNESS_V0_SCRIPTHASH))
@@ -106,7 +106,7 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason, const bool witnes
         if (whichType == TX_NULL_DATA)
 		{
 			// SYSCOIN if not syscoin tx and opreturn size is bigger than maxcarrier bytes, return false
-			// we need this because if it is a sys tx then we allow 75x maxcarrier bytes.
+			// we need this because if it is a sys tx then we allow 100x maxcarrier bytes.
 			if(tx.nVersion != GetSyscoinTxVersion() && txout.scriptPubKey.size() > nMaxDatacarrierBytes)
 			{
 				reason = "scriptpubkey";
