@@ -355,13 +355,6 @@ void CreateSysBanIfNotExist()
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg sysban password " + data));
 	GenerateBlocks(5);
 }
-void CreateSysCategoryIfNotExist()
-{
-	string data = "\"{\\\"categories\\\":[{\\\"cat\\\":\\\"certificates\\\"},{\\\"cat\\\":\\\"certificates>music\\\"},{\\\"cat\\\":\\\"wanted\\\"},{\\\"cat\\\":\\\"for sale > general\\\"},{\\\"cat\\\":\\\"for sale > wanted\\\"},{\\\"cat\\\":\\\"services\\\"}]}\"";
-	
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg syscategory password " + data));
-	GenerateBlocks(5);
-}
 void AliasBan(const string& node, const string& alias, int severity)
 {
 	string data = "{\\\"aliases\\\":[{\\\"id\\\":\\\"" + alias + "\\\",\\\"severity\\\":" + boost::lexical_cast<string>(severity) + "}]}";
