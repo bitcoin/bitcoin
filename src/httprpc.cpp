@@ -151,6 +151,13 @@ static bool HTTPReq_JSONRPC(HTTPRequest* req, const std::string &)
 {
     // JSONRPC handles only POST
     if (req->GetRequestMethod() != HTTPRequest::POST) {
+        if (req->GetRequestMethod() == HTTPRequest::OPTIONS and GetArg("-rpccorsdomain", "") != "") {
+            req->WriteHeader("Access-Control-Allow-Origin", GetArg("-rpccorsdomain", ""));
+            req->WriteHeader("Access-Control-Allow-Headers", "content-type, accept, authorization");
+            req->WriteHeader("Access-Control-Allow-Credentials", "true");
+            req->WriteReply(HTTP_OK);
+            return true;
+        }
         req->WriteReply(HTTP_BAD_METHOD, "JSONRPC server handles only POST requests");
         return false;
     }
@@ -161,7 +168,9 @@ static bool HTTPReq_JSONRPC(HTTPRequest* req, const std::string &)
         req->WriteReply(HTTP_UNAUTHORIZED);
         return false;
     }
-
+    if (GetArg("-rpccorsdomain", "") != "") {
+        req->WriteHeader("Access-Control-Allow-Origin", GetArg("-rpccorsdomain", ""));
+    }
     JSONRPCRequest jreq;
     if (!RPCAuthorized(authHeader.second, jreq.authUser)) {
         LogPrintf("ThreadRPCServer incorrect password attempt from %s\n", req->GetPeer().ToString());
