@@ -1934,11 +1934,9 @@ void CConnman::ThreadOpenAddedConnections()
                     // the addednodeinfo state might change.
                     break;
                 }
-                // If strAddedNode is an IP/port, decode it immediately, so
-                // OpenNetworkConnection can detect existing connections to that IP/port.
                 tried = true;
-                CService service(LookupNumeric(info.strAddedNode.c_str(), Params().GetDefaultPort()));
-                OpenNetworkConnection(CAddress(service, NODE_NONE), false, &grant, info.strAddedNode.c_str(), false, false, true);
+                CAddress addr(CService(), NODE_NONE);
+                OpenNetworkConnection(addr, false, &grant, info.strAddedNode.c_str(), false, false, true);
                 if (!interruptNet.sleep_for(std::chrono::milliseconds(500)))
                     return;
             }
