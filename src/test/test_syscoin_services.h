@@ -32,7 +32,6 @@ bool EscrowFilter(const string& node, const string& regex);
 const string MessageNew(const string& fromnode, const string& tonode, const string& title, const string& data, const string& fromalias, const string& toalias);
 void CreateSysRatesIfNotExist();
 void CreateSysBanIfNotExist();
-void CreateSysCategoryIfNotExist();
 void OfferAcceptFeedback(const string& node, const string &alias, const string& offerguid, const string& acceptguid, const string& feedback, const string& rating, const char& user, const bool israting);
 const UniValue FindOfferAcceptList(const string& node, const string& alias, const string& offerguid, const string& acceptguid, bool nocheck=false);
 const UniValue FindOfferAcceptFeedback(const string& node, const string &alias, const string& offerguid, const string& acceptguid,const string& accepttxid, bool nocheck=false);

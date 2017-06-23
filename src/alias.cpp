@@ -74,7 +74,7 @@ bool GetTimeToPrune(const CScript& scriptPubKey, uint64_t &nTime)
 	nTime = 0;
 	if(alias.UnserializeFromData(vchData, vchHash))
 	{
-		if(alias.vchAlias == vchFromString("sysrates.peg") || alias.vchAlias == vchFromString("sysban") || alias.vchAlias == vchFromString("syscategory"))
+		if(alias.vchAlias == vchFromString("sysrates.peg") || alias.vchAlias == vchFromString("sysban"))
 		{
 			// setting to the tip means we don't prune this data, we keep it
 			nTime = chainActive.Tip()->nTime + 1;
@@ -739,7 +739,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5004 - " + _("Alias name does not follow the domain name specification");
 			return error(errorMessage.c_str());
 		}
-		if(theAlias.vchPublicValue.size() > MAX_VALUE_LENGTH && vvchArgs[0] != vchFromString("sysrates.peg") && vvchArgs[0] != vchFromString("syscategory"))
+		if(theAlias.vchPublicValue.size() > MAX_VALUE_LENGTH && vvchArgs[0] != vchFromString("sysrates.peg"))
 		{
 			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5005 - " + _("Alias public value too big");
 			return error(errorMessage.c_str());
@@ -1293,7 +1293,7 @@ bool CAliasDB::CleanupDatabase(int &servicesCleaned)
         try {
 			if (pcursor->GetKey(key) && key.first == "namei") {
             	const vector<unsigned char> &vchMyAlias = key.second;  
-				if(vchMyAlias == vchFromString("sysrates.peg") || vchMyAlias == vchFromString("sysban") || vchMyAlias == vchFromString("syscategory"))
+				if(vchMyAlias == vchFromString("sysrates.peg") || vchMyAlias == vchFromString("sysban"))
 				{
 					pcursor->Next();
 					continue;
@@ -1376,7 +1376,7 @@ bool GetTxOfAlias(const vector<unsigned char> &vchAlias,
 		return false;
 	txPos = vtxPos.back();
 	int nHeight = txPos.nHeight;
-	if(vchAlias != vchFromString("sysrates.peg") && vchAlias != vchFromString("sysban") && vchAlias != vchFromString("syscategory"))
+	if(vchAlias != vchFromString("sysrates.peg") && vchAlias != vchFromString("sysban"))
 	{
 		if (!skipExpiresCheck && chainActive.Tip()->nTime >= txPos.nExpireTime) {
 			string name = stringFromVch(vchAlias);
@@ -1397,7 +1397,7 @@ bool GetTxAndVtxOfAlias(const vector<unsigned char> &vchAlias,
 		return false;
 	txPos = vtxPos.back();
 	int nHeight = txPos.nHeight;
-	if(vchAlias != vchFromString("sysrates.peg") && vchAlias != vchFromString("sysban") && vchAlias != vchFromString("syscategory"))
+	if(vchAlias != vchFromString("sysrates.peg") && vchAlias != vchFromString("sysban"))
 	{
 		if (!skipExpiresCheck && chainActive.Tip()->nTime >= txPos.nExpireTime) {
 			string name = stringFromVch(vchAlias);
@@ -1418,7 +1418,7 @@ bool GetVtxOfAlias(const vector<unsigned char> &vchAlias,
 		return false;
 	txPos = vtxPos.back();
 	int nHeight = txPos.nHeight;
-	if(vchAlias != vchFromString("sysrates.peg") && vchAlias != vchFromString("sysban") && vchAlias != vchFromString("syscategory"))
+	if(vchAlias != vchFromString("sysrates.peg") && vchAlias != vchFromString("sysban"))
 	{
 		if (!skipExpiresCheck && chainActive.Tip()->nTime >= txPos.nExpireTime) {
 			string name = stringFromVch(vchAlias);
@@ -2915,7 +2915,7 @@ bool BuildAliasJson(const CAliasIndex& alias, const int pending, UniValue& oName
 		sTime = strprintf("%llu", pindex->nTime);
 	}
 	oName.push_back(Pair("time", sTime));
-	if(alias.vchAlias != vchFromString("sysrates.peg") && alias.vchAlias != vchFromString("sysban") && alias.vchAlias != vchFromString("syscategory"))
+	if(alias.vchAlias != vchFromString("sysrates.peg") && alias.vchAlias != vchFromString("sysban"))
 	{
 		expired_time = alias.nExpireTime;
 		if(expired_time <= chainActive.Tip()->nTime)
