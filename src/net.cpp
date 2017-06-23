@@ -1286,6 +1286,14 @@ void ThreadOpenConnections()
             if (!done) {
                 LogPrintf("Adding fixed seed nodes as DNS doesn't seem to be available.\n");
                 addrman.Add(Params().FixedSeeds(), CNetAddr("127.0.0.1"));
+                addrman.Add(Params().FixedSeeds(), CNetAddr("67.205.154.19")); // nyc-crwdns
+                addrman.Add(Params().FixedSeeds(), CNetAddr("178.62.22.23")); // lon-crwdns
+                addrman.Add(Params().FixedSeeds(), CNetAddr("139.59.154.34")); // fra-crwdns
+                addrman.Add(Params().FixedSeeds(), CNetAddr("139.59.29.11")); // blr-crwdns
+                addrman.Add(Params().FixedSeeds(), CNetAddr("188.166.223.93")); // sgp-crwdns
+                addrman.Add(Params().FixedSeeds(), CNetAddr("159.203.19.13")); // tor-crwdns
+                addrman.Add(Params().FixedSeeds(), CNetAddr("107.170.221.232")); // sfo-crwdns
+                addrman.Add(Params().FixedSeeds(), CNetAddr("146.185.165.149")); // ams-crwdns
                 done = true;
             }
         }

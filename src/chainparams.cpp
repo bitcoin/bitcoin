@@ -162,6 +162,9 @@ public:
 	vSeeds.push_back(CDNSSeedData("sgp-crwdns", "sgp-crwdns.infernopool.com"));
         vSeeds.push_back(CDNSSeedData("lon-crwdns", "lon-crwdns.infernopool.com"));
         vSeeds.push_back(CDNSSeedData("nyc-crwdns", "nyc-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("tor-crwdns", "tor-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("sfo-crwdns", "sfo-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("ams-crwdns", "ams-crwdns.infernopool.com"));
         vSeeds.push_back(CDNSSeedData("crw", "crw.infernopool.com"));
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,0);                    // Crown addresses start with 'X'
