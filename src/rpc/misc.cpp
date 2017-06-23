@@ -44,10 +44,12 @@
  **/
 UniValue getinfo(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 0)
+    if (request.fHelp || request.params.size() > 1)
         throw std::runtime_error(
-            "getinfo\n"
+            "getinfo ( \"wallet\" )\n"
             "\nDEPRECATED. Returns an object containing various state info.\n"
+            "\nArguments:\n"
+            "1. \"wallet\"      (string, optional) Optional wallet filename to use non-default wallet.\n"
             "\nResult:\n"
             "{\n"
             "  \"version\": xxxxx,           (numeric) the server version\n"
@@ -73,10 +75,14 @@ UniValue getinfo(const JSONRPCRequest& request)
         );
 
 #ifdef ENABLE_WALLET
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request, request.params[0]);
 
     LOCK2(cs_main, pwallet ? &pwallet->cs_wallet : NULL);
 #else
+    if (!request.params[0].isNull()) {
+        throw std::runtime_error("Wallet support is not enabled.");
+    }
+
     LOCK(cs_main);
 #endif
 
@@ -160,12 +166,13 @@ public:
 
 UniValue validateaddress(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 1)
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
-            "validateaddress \"address\"\n"
+            "validateaddress \"address\" ( \"wallet\" )\n"
             "\nReturn information about the given bitcoin address.\n"
             "\nArguments:\n"
             "1. \"address\"     (string, required) The bitcoin address to validate\n"
+            "2. \"wallet\"      (string, optional) Optional wallet filename to use non-default wallet.\n"
             "\nResult:\n"
             "{\n"
             "  \"isvalid\" : true|false,       (boolean) If the address is valid or not. If not, this is the only property returned.\n"
@@ -187,10 +194,14 @@ UniValue validateaddress(const JSONRPCRequest& request)
         );
 
 #ifdef ENABLE_WALLET
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request, request.params[1]);
 
     LOCK2(cs_main, pwallet ? &pwallet->cs_wallet : NULL);
 #else
+    if (!request.params[1].isNull()) {
+        throw std::runtime_error("Wallet support is not enabled.");
+    }
+
     LOCK(cs_main);
 #endif
 
@@ -307,14 +318,17 @@ CScript _createmultisig_redeemScript(CWallet * const pwallet, const UniValue& pa
 UniValue createmultisig(const JSONRPCRequest& request)
 {
 #ifdef ENABLE_WALLET
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request, request.params[2]);
 #else
+    if (!request.params[2].isNull()) {
+        throw std::runtime_error("Wallet support is not enabled.");
+    }
     CWallet * const pwallet = NULL;
 #endif
 
-    if (request.fHelp || request.params.size() < 2 || request.params.size() > 2)
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 3)
     {
-        std::string msg = "createmultisig nrequired [\"key\",...]\n"
+        std::string msg = "createmultisig nrequired [\"key\",...] ( \"wallet\" )\n"
             "\nCreates a multi-signature address with n signature of m keys required.\n"
             "It returns a json object with the address and redeemScript.\n"
 
@@ -325,6 +339,7 @@ UniValue createmultisig(const JSONRPCRequest& request)
             "       \"key\"    (string) bitcoin address or hex-encoded public key\n"
             "       ,...\n"
             "     ]\n"
+            "3. \"wallet\"     (string, optional) Optional wallet filename to use non-default wallet.\n"
 
             "\nResult:\n"
             "{\n"
@@ -638,10 +653,10 @@ UniValue echo(const JSONRPCRequest& request)
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         okSafeMode
   //  --------------------- ------------------------  -----------------------  ----------
-    { "control",            "getinfo",                &getinfo,                true,  {} }, /* uses wallet if enabled */
+    { "control",            "getinfo",                &getinfo,                true,  {"wallet"} }, /* uses wallet if enabled */
     { "control",            "getmemoryinfo",          &getmemoryinfo,          true,  {"mode"} },
-    { "util",               "validateaddress",        &validateaddress,        true,  {"address"} }, /* uses wallet if enabled */
-    { "util",               "createmultisig",         &createmultisig,         true,  {"nrequired","keys"} },
+    { "util",               "validateaddress",        &validateaddress,        true,  {"address","wallet"} }, /* uses wallet if enabled */
+    { "util",               "createmultisig",         &createmultisig,         true,  {"nrequired","keys","wallet"} },
     { "util",               "verifymessage",          &verifymessage,          true,  {"address","signature","message"} },
     { "util",               "signmessagewithprivkey", &signmessagewithprivkey, true,  {"privkey","message"} },
 
