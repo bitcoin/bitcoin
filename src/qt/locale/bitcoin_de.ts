@@ -1423,6 +1423,10 @@
         <source>%n week(s)</source>
         <translation><numerusform>%n Woche</numerusform><numerusform>%n Wochen</numerusform></translation>
     </message>
+    <message numerus="yes">
+        <source>%n year(s)</source>
+        <translation><numerusform>%n Jahr</numerusform><numerusform>%n Jahre</numerusform></translation>
+    </message>
     <message>
         <source>%1 and %2</source>
         <translation>%1 und %2</translation>
