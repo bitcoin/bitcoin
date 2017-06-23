@@ -162,9 +162,10 @@ static void SetProgressBreakAction(SplashScreen *splash, const std::function<voi
 }
 
 #ifdef ENABLE_WALLET
-static void ConnectWallet(SplashScreen *splash, CWallet* wallet)
+void SplashScreen::ConnectWallet(CWallet* wallet)
 {
-    wallet->ShowProgress.connect(boost::bind(ShowProgress, splash, _1, _2));
+    wallet->ShowProgress.connect(boost::bind(ShowProgress, this, _1, _2));
+    connectedWallets.push_back(wallet);
 }
 #endif
 

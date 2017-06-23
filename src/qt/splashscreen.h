@@ -51,6 +51,8 @@ private:
     QColor curColor;
     int curAlignment;
 
+    QList<CWallet*> connectedWallets;
+
     std::function<void(void)> breakAction;
 };
 
