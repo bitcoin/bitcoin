@@ -371,6 +371,9 @@ bool CCoinsViewDB::Upgrade() {
     CDBBatch batch(db);
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
+        if (ShutdownRequested()) {
+            break;
+        }
         std::pair<unsigned char, uint256> key;
         if (pcursor->GetKey(key) && key.first == DB_COINS) {
             CCoins old_coins;
