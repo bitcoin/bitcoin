@@ -363,6 +363,8 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
                 {
                     wallet->SetAddressBook(dest, strLabel, ""); // "" means don't change purpose
                 }
+
+                wallet->AddDestData(dest, DESTDATA_USED, "1");
             }
         }
         Q_EMIT coinsSent(wallet, rcp, transaction_array);
@@ -588,6 +590,17 @@ bool WalletModel::isSpent(const COutPoint& outpoint) const
 {
     LOCK2(cs_main, wallet->cs_wallet);
     return wallet->IsSpent(outpoint.hash, outpoint.n);
+}
+
+bool WalletModel::isUsed(const std::string& address) const
+{
+    LOCK2(cs_main, wallet->cs_wallet);
+
+    const CTxDestination& dest = CBitcoinAddress(address).Get();
+    std::string ret = "";
+    wallet->GetDestData(dest, DESTDATA_USED, &ret);
+
+    return (ret == "1");
 }
 
 // AvailableCoins + LockedCoins grouped by wallet address (put change in one group with wallet address)
