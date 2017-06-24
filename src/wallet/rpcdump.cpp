@@ -148,7 +148,7 @@ UniValue importprivkey(const JSONRPCRequest& request)
         pwallet->UpdateTimeFirstKey(1);
 
         if (fRescan) {
-            pwallet->ScanForWalletTransactions(chainActive.Genesis(), true);
+            pwallet->RescanFromTime(TIMESTAMP_MIN, true /* update */);
         }
     }
 
@@ -278,7 +278,7 @@ UniValue importaddress(const JSONRPCRequest& request)
 
     if (fRescan)
     {
-        pwallet->ScanForWalletTransactions(chainActive.Genesis(), true);
+        pwallet->RescanFromTime(TIMESTAMP_MIN, true /* update */);
         pwallet->ReacceptWalletTransactions();
     }
 
@@ -436,7 +436,7 @@ UniValue importpubkey(const JSONRPCRequest& request)
 
     if (fRescan)
     {
-        pwallet->ScanForWalletTransactions(chainActive.Genesis(), true);
+        pwallet->RescanFromTime(TIMESTAMP_MIN, true /* update */);
         pwallet->ReacceptWalletTransactions();
     }
 
@@ -536,11 +536,7 @@ UniValue importwallet(const JSONRPCRequest& request)
     file.close();
     pwallet->ShowProgress("", 100); // hide progress dialog in GUI
     pwallet->UpdateTimeFirstKey(nTimeBegin);
-
-    CBlockIndex *pindex = chainActive.FindEarliestAtLeast(nTimeBegin - TIMESTAMP_WINDOW);
-
-    LogPrintf("Rescanning last %i blocks\n", pindex ? chainActive.Height() - pindex->nHeight + 1 : 0);
-    pwallet->ScanForWalletTransactions(pindex);
+    pwallet->RescanFromTime(nTimeBegin, false /* update */);
     pwallet->MarkDirty();
 
     if (!fGood)
@@ -1126,14 +1122,10 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
     }
 
     if (fRescan && fRunScan && requests.size()) {
-        CBlockIndex* pindex = nLowestTimestamp > minimumTimestamp ? chainActive.FindEarliestAtLeast(std::max<int64_t>(nLowestTimestamp - TIMESTAMP_WINDOW, 0)) : chainActive.Genesis();
-        CBlockIndex* scanFailed = nullptr;
-        if (pindex) {
-            scanFailed = pwallet->ScanForWalletTransactions(pindex, true);
-            pwallet->ReacceptWalletTransactions();
-        }
+        int64_t scannedTime = pwallet->RescanFromTime(nLowestTimestamp, true /* update */);
+        pwallet->ReacceptWalletTransactions();
 
-        if (scanFailed) {
+        if (scannedTime > nLowestTimestamp) {
             std::vector<UniValue> results = response.getValues();
             response.clear();
             response.setArray();
@@ -1143,7 +1135,7 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
                 // range, or if the import result already has an error set, let
                 // the result stand unmodified. Otherwise replace the result
                 // with an error message.
-                if (GetImportTimestamp(request, now) - TIMESTAMP_WINDOW > scanFailed->GetBlockTimeMax() || results.at(i).exists("error")) {
+                if (scannedTime <= GetImportTimestamp(request, now) || results.at(i).exists("error")) {
                     response.push_back(results.at(i));
                 } else {
                     UniValue result = UniValue(UniValue::VOBJ);
@@ -1159,7 +1151,7 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
                                       "caused by pruning or data corruption (see bitcoind log for details) and could "
                                       "be dealt with by downloading and rescanning the relevant blocks (see -reindex "
                                       "and -rescan options).",
-                                GetImportTimestamp(request, now), scanFailed->GetBlockTimeMax(), TIMESTAMP_WINDOW)));
+                                GetImportTimestamp(request, now), scannedTime - TIMESTAMP_WINDOW - 1, TIMESTAMP_WINDOW)));
                     response.push_back(std::move(result));
                 }
                 ++i;

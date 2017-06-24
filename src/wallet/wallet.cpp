@@ -220,6 +220,10 @@ bool CWallet::LoadCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigne
     return CCryptoKeyStore::AddCryptedKey(vchPubKey, vchCryptedSecret);
 }
 
+/**
+ * Update wallet first key creation time. This should be called whenever keys
+ * are added to the wallet, with the oldest key creation time.
+ */
 void CWallet::UpdateTimeFirstKey(int64_t nCreateTime)
 {
     AssertLockHeld(cs_wallet);
@@ -1468,6 +1472,34 @@ void CWalletTx::GetAmounts(std::list<COutputEntry>& listReceived,
 }
 
 /**
+ * Scan active chain for relevant transactions after importing keys. This should
+ * be called whenever new keys are added to the wallet, with the oldest key
+ * creation time.
+ *
+ * @return Earliest timestamp that could be successfully scanned from. Timestamp
+ * returned will be higher than startTime if relevant blocks could not be read.
+ */
+int64_t CWallet::RescanFromTime(int64_t startTime, bool update)
+{
+    AssertLockHeld(cs_main);
+    AssertLockHeld(cs_wallet);
+
+    // Find starting block. May be null if nCreateTime is greater than the
+    // highest blockchain timestamp, in which case there is nothing that needs
+    // to be scanned.
+    CBlockIndex* const startBlock = chainActive.FindEarliestAtLeast(startTime - TIMESTAMP_WINDOW);
+    LogPrintf("%s: Rescanning last %i blocks\n", __func__, startBlock ? chainActive.Height() - startBlock->nHeight + 1 : 0);
+
+    if (startBlock) {
+        const CBlockIndex* const failedBlock = ScanForWalletTransactions(startBlock, update);
+        if (failedBlock) {
+            return failedBlock->GetBlockTimeMax() + TIMESTAMP_WINDOW + 1;
+        }
+    }
+    return startTime;
+}
+
+/**
  * Scan the block chain (starting in pindexStart) for transactions
  * from or to us. If fUpdate is true, found transactions that already
  * exist in the wallet will be updated.
@@ -1487,11 +1519,6 @@ CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool f
         LOCK2(cs_main, cs_wallet);
         fAbortRescan = false;
         fScanningWallet = true;
-
-        // no need to read and scan block, if block was created before
-        // our wallet birthday (as adjusted for block time variability)
-        while (pindex && nTimeFirstKey && (pindex->GetBlockTime() < (nTimeFirstKey - TIMESTAMP_WINDOW)))
-            pindex = chainActive.Next(pindex);
 
         ShowProgress(_("Rescanning..."), 0); // show rescan progress in GUI as dialog or on splashscreen, if -rescan on startup
         double dProgressStart = GuessVerificationProgress(chainParams.TxData(), pindex);
@@ -3881,6 +3908,13 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
 
         uiInterface.InitMessage(_("Rescanning..."));
         LogPrintf("Rescanning last %i blocks (from block %i)...\n", chainActive.Height() - pindexRescan->nHeight, pindexRescan->nHeight);
+
+        // No need to read and scan block if block was created before
+        // our wallet birthday (as adjusted for block time variability)
+        while (pindexRescan && walletInstance->nTimeFirstKey && (pindexRescan->GetBlockTime() < (walletInstance->nTimeFirstKey - TIMESTAMP_WINDOW))) {
+            pindexRescan = chainActive.Next(pindexRescan);
+        }
+
         nStart = GetTimeMillis();
         walletInstance->ScanForWalletTransactions(pindexRescan, true);
         LogPrintf(" rescan      %15dms\n", GetTimeMillis() - nStart);
