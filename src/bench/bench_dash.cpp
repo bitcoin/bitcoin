@@ -9,6 +9,7 @@
 #include "stacktraces.h"
 #include "validation.h"
 #include "util.h"
+#include "random.h"
 
 #include "bls/bls.h"
 
@@ -24,6 +25,7 @@ main(int argc, char** argv)
     RegisterPrettySignalHandlers();
     RegisterPrettyTerminateHander();
 
+    RandomInit();
     ECC_Start();
     ECCVerifyHandle verifyHandle;
 
