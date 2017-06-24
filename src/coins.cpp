@@ -174,10 +174,14 @@ void CCoinsViewCache::SetBestBlock(const uint256 &hashBlockIn) {
 
 bool CCoinsViewCache::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlockIn, size_t &nChildCachedCoinsUsage)
 {
-    assert(!hasModifier);
     LOCK(cs_utxo);
+    assert(!hasModifier);
     for (CCoinsMap::iterator it = mapCoins.begin(); it != mapCoins.end();) {
+        
         if (it->second.flags & CCoinsCacheEntry::DIRTY) { // Ignore non-dirty entries (optimization).
+            // Update usage of the chile cache before we do any swapping and deleting
+            nChildCachedCoinsUsage -= it->second.coins.DynamicMemoryUsage();
+
             CCoinsMap::iterator itUs = cacheCoins.find(it->first);
             if (itUs == cacheCoins.end()) {
                 // The parent cache does not have an entry, while the child does
@@ -212,8 +216,6 @@ bool CCoinsViewCache::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlockIn
                 }
             }
 
-            // Update the usage of the child cache before deleting the entry in the child cache
-            nChildCachedCoinsUsage -= it->second.coins.DynamicMemoryUsage();
             CCoinsMap::iterator itOld = it++;
             mapCoins.erase(itOld);
         }
