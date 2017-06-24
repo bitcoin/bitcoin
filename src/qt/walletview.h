@@ -16,6 +16,7 @@ class OverviewPage;
 class ReceiveCoinsDialog;
 class SendCoinsDialog;
 class SendCoinsRecipient;
+class MultisigDialog;
 class TransactionView;
 class WalletModel;
 
@@ -63,6 +64,7 @@ private:
     ReceiveCoinsDialog *receiveCoinsPage;
     SendCoinsDialog *sendCoinsPage;
     ThroneList *throneListPage;
+    MultisigDialog *multisigPage;
 
     TransactionView *transactionView;
 

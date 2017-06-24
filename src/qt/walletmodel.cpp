@@ -719,3 +719,8 @@ bool WalletModel::saveReceiveRequest(const std::string &sAddress, const int64_t 
     else
         return wallet->AddDestData(dest, key, sRequest);
 }
+
+CWallet* WalletModel::getWallet()
+{
+    return wallet;
+}

@@ -66,6 +66,8 @@ WalletView::WalletView(QWidget *parent):
     vbox->addLayout(hbox_buttons);
     transactionsPage->setLayout(vbox);
 
+    multisigPage = new MultisigDialog(this);
+
     receiveCoinsPage = new ReceiveCoinsDialog();
     sendCoinsPage = new SendCoinsDialog();
     if (throneConfig.getCount() >= 0) {
@@ -143,6 +145,7 @@ void WalletView::setWalletModel(WalletModel *walletModel)
     if (throneConfig.getCount() >= 0) {
         throneListPage->setWalletModel(walletModel);
     }
+    multisigPage->setModel(walletModel);
 
     if (walletModel)
     {
@@ -211,6 +214,12 @@ void WalletView::gotoThronePage()
     if (throneConfig.getCount() >= 0) {
         setCurrentWidget(throneListPage);
     }
+}
+
+void BitcoinGUI::gotoMultisigPage()
+{
+    multisigPage->show();
+    multisigPage->setFocus();
 }
 
 void WalletView::gotoSignMessageTab(QString addr)
