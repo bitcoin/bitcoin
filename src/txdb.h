@@ -26,6 +26,7 @@ class CCoinsViewDBCursor;
 class uint256;
 
 const char DB_RCTOUTPUT = 'A';
+const char DB_RCTOUTPUT_LAST = 'I';
 const char DB_RCTOUTPUT_LINK = 'L';
 const char DB_RCTKEYIMAGE = 'K';
 
@@ -142,6 +143,8 @@ public:
     bool LoadBlockIndexGuts(boost::function<CBlockIndex*(const uint256&)> insertBlockIndex);
     
     bool ReadLastRCTOutput(int64_t &rv);
+    bool WriteLastRCTOutput(int64_t i);
+    
     bool ReadRCTOutput(int64_t i, CAnonOutput &ao);
     bool WriteRCTOutput(int64_t i, const CAnonOutput &ao);
     bool EraseRCTOutput(int64_t i);

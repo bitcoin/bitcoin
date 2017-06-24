@@ -345,60 +345,6 @@ public:
         return 0;
     }
     
-    int ReadPrevKeyAtCursor(Dbc *pcursor, CDataStream &ssKey, bool &fMissingToken)
-    {
-        Dbt datKey;
-        memset(&datKey, 0, sizeof(datKey));
-        datKey.set_data(&ssKey[0]);
-        datKey.set_size(ssKey.size());
-        
-        Dbt datValue;
-        memset(&datValue, 0, sizeof(datValue));
-        datValue.set_flags(DB_DBT_PARTIAL); // don't read data, dlen and doff are 0 after memset
-        
-        
-        fMissingToken = false;
-        
-        // - set cursor exactly on last-item token
-        unsigned int fFlags = DB_SET;
-        int ret = pcursor->get(&datKey, &datValue, fFlags);
-        if (ret != 0)
-        {
-            fMissingToken = true;
-            return ret;
-        };
-        if (datKey.get_data() == NULL)
-        {
-            fMissingToken = true;
-            return 99999;
-        };
-        
-        memset(datKey.get_data(), 0, datKey.get_size());
-        memset(datValue.get_data(), 0, datValue.get_size());
-        datValue.set_flags(DB_DBT_PARTIAL);
-        
-        // - set cursor one back from last-item token
-        fFlags = DB_PREV;
-        ret = pcursor->get(&datKey, &datValue, fFlags);
-        if (ret != 0)
-        {
-            return ret;
-        };
-        if (datKey.get_data() == NULL
-            || datKey.get_size() != 8) // 3 char string prefix + 4bytes uint32_t
-        {
-            return 99999;
-        };
-        
-        // Convert to stream
-        ssKey.SetType(SER_DISK);
-        ssKey.clear();
-        ssKey.write((char*)datKey.get_data(), datKey.get_size());
-        
-        return 0;
-    }
-    
-    
     
     bool WriteStealthKeyMeta(const CKeyID &keyId, const CStealthKeyMetadata &sxKeyMeta);
     bool EraseStealthKeyMeta(const CKeyID &keyId);

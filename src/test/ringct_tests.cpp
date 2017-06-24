@@ -769,7 +769,6 @@ BOOST_AUTO_TEST_CASE(ringct_test_set_have)
     BOOST_CHECK(setHaveI.insert(1).second == true);
     BOOST_CHECK(setHaveI.insert(1).second == false);
     BOOST_CHECK(setHaveI.insert(2).second == true);
-    
 }
 
 

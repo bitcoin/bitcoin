@@ -23,6 +23,9 @@ void RegisterRawTransactionRPCCommands(CRPCTable &tableRPC);
 void RegisterSmsgRPCCommands(CRPCTable &tableRPC);
 /** Register mnemonic RPC commands */
 void RegisterMnemonicRPCCommands(CRPCTable &tableRPC);
+/** Register anon RPC commands */
+void RegisterAnonRPCCommands(CRPCTable &tableRPC);
+
 
 static inline void RegisterAllCoreRPCCommands(CRPCTable &t)
 {

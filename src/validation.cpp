@@ -2312,7 +2312,6 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
     // undo transactions in reverse order
     for (int i = block.vtx.size() - 1; i >= 0; i--)
     {
-        LogPrintf("i %d\n", i);
         const CTransaction &tx = *(block.vtx[i]);
         uint256 hash = tx.GetHash();
         
@@ -2377,6 +2376,8 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
                         return error("%s: EraseRCTOutput failed, txn %s, %d, index %d.", __func__, hash.ToString(), k, nLastRCTOutputIndex);
                     if (!pblocktree->EraseRCTOutputLink(txout->pk))
                         return error("%s: EraseRCTOutputLink failed, txn %s, %d.", __func__, hash.ToString(), k);
+                    if (!pblocktree->WriteLastRCTOutput(nLastRCTOutputIndex))
+                        return error("%s: WriteLastRCTOutput failed, txn %s, %d.", __func__, hash.ToString(), k);
                 };
                 
                 continue;
@@ -3123,6 +3124,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                 batch.Clear();
             } else
             {
+                batch.Write(DB_RCTOUTPUT_LAST, nLastRCTOutIndex);
                 if (!pblocktree->WriteBatch(batch))
                     return error("ConnectBlock(): Write RCT outputs of %s failed.", txhash.ToString());
             };

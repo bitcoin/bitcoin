@@ -2277,7 +2277,6 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
             continue;
 
         const CWalletTx *pcoin = output.tx;
-        
 
         if (output.nDepth < (pcoin->IsFromMe(ISMINE_ALL) ? nConfMine : nConfTheirs))
             continue;

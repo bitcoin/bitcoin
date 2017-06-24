@@ -225,6 +225,7 @@ libparticl_server_a_SOURCES = \
   pos/kernel.cpp \
   pos/miner.cpp \
   rest.cpp \
+  rpc/anon.cpp \
   rpc/mnemonic.cpp \
   rpc/smessage.cpp \
   rpc/blockchain.cpp \

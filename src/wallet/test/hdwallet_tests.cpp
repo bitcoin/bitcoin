@@ -186,9 +186,33 @@ BOOST_AUTO_TEST_CASE(stealth_key_index)
     BOOST_CHECK(pwallet->GetStealthKeyIndex(sxi, sxId));
     BOOST_CHECK(sxId == 1);
     
+    
+    CHDWalletDB wdb(pwallet->strWalletFile, "r+");
+    uint160 hash;
+    uint32_t nIndex;
+    for (size_t k = 0; k < 512; ++k)
+    {
+        pwallet->IndexStealthKey(&wdb, hash, sxi, nIndex);
+    }
+    BOOST_CHECK(nIndex == 515);
+    
     //ECC_Stop_Stealth();
 }
 
+BOOST_AUTO_TEST_CASE(ext_key_index)
+{
+    CHDWallet *pwallet = (CHDWallet*) pwalletMain;
+    
+    CHDWalletDB wdb(pwallet->strWalletFile, "r+");
+    CKeyID dummy;
+    uint32_t nIndex;
+    for (size_t k = 0; k < 512; ++k)
+    {
+        pwallet->ExtKeyNewIndex(&wdb, dummy, nIndex);
+    }
+    BOOST_CHECK(nIndex == 512);
+    
+}
 
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -1010,6 +1010,15 @@ CAmount CHDWallet::GetDebit(const CTxIn &txin, const isminefilter &filter) const
                 if (IsMine(prev.tx->vpout[txin.prevout.n].get()) & filter)
                     return prev.tx->vpout[txin.prevout.n]->GetValue();
         };
+        
+        MapRecords_t::const_iterator mri = mapRecords.find(txin.prevout.hash);
+        if (mri != mapRecords.end())
+        {
+            const COutputRecord *oR = mri->second.GetOutput(txin.prevout.n);
+            
+            if (oR && (oR->nFlags & ORF_OWNED))
+                return oR->nValue;
+        };
     } // cs_wallet
     return 0;
 };
@@ -1557,7 +1566,7 @@ int CHDWallet::ExpandTempRecipients(std::vector<CTempRecipient> &vecSend, CStore
                     CTempRecipient rd;
                     rd.nType = OUTPUT_DATA;
                     
-                    std::vector<uint8_t> vNarr();
+                    std::vector<uint8_t> vNarr;
                     rd.vData.push_back(DO_NARR_PLAIN);
                     std::copy(r.sNarration.begin(), r.sNarration.end(), std::back_inserter(rd.vData));
                     
@@ -2674,9 +2683,7 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
 int CHDWallet::PickHidingOutputs(std::vector<std::vector<int64_t> > &vMI, size_t &nSecretColumn, size_t nRingSize,
         const std::vector<std::pair<MapRecords_t::const_iterator,unsigned int> > &vCoins, std::vector<uint8_t> &vInputBlinds, std::string &sError)
 {
-    
-    if (nRingSize < MIN_RINGSIZE
-        || nRingSize > MAX_RINGSIZE)
+    if (nRingSize < MIN_RINGSIZE || nRingSize > MAX_RINGSIZE)
         return errorN(1, sError, __func__, _("Ring size out of range [%d, %d]").c_str(), MIN_RINGSIZE, MAX_RINGSIZE);
     
     //GetStrongRandBytes((unsigned char*)&nSecretColumn, sizeof(nSecretColumn));
@@ -2798,8 +2805,7 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
     CExtKeyAccount *sea, CStoredExtKey *pc,
     bool sign, size_t nRingSize, size_t nSigs, std::string &sError)
 {
-    
-    if (nRingSize < 3 || nRingSize > 24)
+    if (nRingSize < MIN_RINGSIZE || nRingSize > MAX_RINGSIZE)
         return errorN(1, sError, __func__, _("Ring size out of range.").c_str());
     
     if (nSigs != 1)
@@ -5065,51 +5071,21 @@ int CHDWallet::ExtKeyNewIndex(CHDWalletDB *pwdb, const CKeyID &idKey, uint32_t &
     
     std::string sPrefix = "ine";
     uint32_t lastId = 0xFFFFFFFF;
-    bool fInsertLast = false;
+    index = 0;
     
-    CDataStream ssKey(SER_DISK, CLIENT_VERSION);
-    ssKey << std::make_pair(sPrefix, lastId); // set to last possible key
-    
-    Dbc *pcursor = pwdb->InTxn() ? pwdb->GetTxnCursor() : pwdb->GetCursor();
-    if (!pcursor)
-        return errorN(1, "%s: Could not get wallet database %s cursor, inTxn.\n", __func__, pwdb->InTxn() ? "txn" : "");
-    
-    index = 1;
-    if (pwdb->ReadPrevKeyAtCursor(pcursor, ssKey, fInsertLast) == 0)
+    if (!pwdb->ReadFlag("ekLastI", (int32_t&)index))
     {
-        std::string strType;
-        ssKey >> strType;
-        if (strType == sPrefix)
-        {
-            uint32_t prevId;
-            ssKey >> prevId;
-            index = prevId+1;
-        };
-    } else
-    {
-        // ReadPrevKeyAtCursor is not expected to fail if fInsertLast is false
-        if (!fInsertLast)
-        {
-            pcursor->close();
-            return errorN(1, "%s: ReadPrevKeyAtCursor failed.\n", __func__);
-        };
-    };
+        LogPrint("hdwallet", "Warning: %s - ReadFlag ekLastI failed.\n", __func__);
+    }
     
-    pcursor->close();
+    index++;
     
     if (index == lastId)
         return errorN(1, "%s: Wallet extkey index is full!\n", __func__); // expect multiple wallets per node before anyone hits this
     
     LogPrint("hdwallet", "%s: New index %u.\n", __func__, index);
-    
-    if (fInsertLast)
-    {
-        CKeyID dummy;
-        if (!pwdb->WriteExtKeyIndex(lastId, dummy))
-            return errorN(1, "%s: WriteExtKeyIndex failed.\n", __func__);
-    };
-    
-    if (!pwdb->WriteExtKeyIndex(index, idKey))
+    if (!pwdb->WriteExtKeyIndex(index, idKey)
+        || !pwdb->WriteFlag("ekLastI", (int32_t&)index))
         return errorN(1, "%s: WriteExtKeyIndex failed.\n", __func__);
     
     return 0;
@@ -6184,37 +6160,14 @@ bool CHDWallet::IndexStealthKey(CHDWalletDB *pwdb, uint160 &hash, const CStealth
     };
     
     uint32_t lastId = 0xFFFFFFFF;
-    bool fInsertLast = false;
+    id = 0;
     
-    CDataStream ssKey(SER_DISK, CLIENT_VERSION);
-    ssKey << std::make_pair(std::string("ins"), lastId); // set to last possible key
-    
-    Dbc *pcursor = pwdb->InTxn() ? pwdb->GetTxnCursor() : pwdb->GetCursor();
-    if (!pcursor)
-        return error("%s: Could not get wallet database cursor\n", __func__);
-    
-    id = 1;
-    if (pwdb->ReadPrevKeyAtCursor(pcursor, ssKey, fInsertLast) == 0)
+    if (!pwdb->ReadFlag("sxLastI", (int32_t&)id))
     {
-        std::string strType;
-        ssKey >> strType;
-        if (strType == "ins")
-        {
-            uint32_t prevId;
-            ssKey >> prevId;
-            id = prevId+1;
-        };
-    } else
-    {
-        // ReadPrevKeyAtCursor is not expected to fail if fInsertLast is false
-        if (!fInsertLast)
-        {
-            pcursor->close();
-            return error("%s: ReadPrevKeyAtCursor failed.\n", __func__);
-        };
+        LogPrint("hdwallet", "Warning: %s - ReadFlag ekLastI failed.\n", __func__);
     };
     
-    pcursor->close();
+    id++;
     
     if (id == lastId)
         return error("%s: Wallet stealth index is full!\n", __func__); // expect multiple wallets per node before anyone hits this
@@ -6222,15 +6175,9 @@ bool CHDWallet::IndexStealthKey(CHDWalletDB *pwdb, uint160 &hash, const CStealth
     if (fDebug)
         LogPrint("hdwallet", "%s: New index %u.\n", __func__, id);
     
-    if (fInsertLast)
-    {
-        CStealthAddressIndexed dummy;
-        if (!pwdb->WriteStealthAddressIndex(lastId, dummy))
-            return error("%s: WriteStealthAddressIndex failed.\n", __func__);
-    };
-    
     if (!pwdb->WriteStealthAddressIndex(id, sxi)
-        || !pwdb->WriteStealthAddressIndexReverse(hash, id))
+        || !pwdb->WriteStealthAddressIndexReverse(hash, id)
+        || !pwdb->WriteFlag("sxLastI", (int32_t&)id))
         return error("%s: Write failed.\n", __func__);
     
     return true;

@@ -32,6 +32,7 @@ static const char DB_LAST_BLOCK = 'l';
 
 /*
 static const char DB_RCTOUTPUT = 'A';
+static const char DB_RCTOUTPUT_LAST = 'I';
 static const char DB_RCTOUTPUT_LINK = 'L';
 static const char DB_RCTKEYIMAGE = 'K';
 */
@@ -405,22 +406,19 @@ bool CBlockTreeDB::LoadBlockIndexGuts(boost::function<CBlockIndex*(const uint256
 bool CBlockTreeDB::ReadLastRCTOutput(int64_t &rv)
 {
     boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
-
-    pcursor->Seek(std::make_pair(DB_RCTOUTPUT, std::numeric_limits<int64_t>::max()));
     
-    rv = 0;
-    if (!pcursor->Valid())
-        return false;
-    
-    pcursor->Prev();
-    if (!pcursor->Valid())
-        return true;
-    
-    std::pair<char, int64_t> key;
-    if (pcursor->GetKey(key) && key.first == DB_RCTOUTPUT)
-        rv = key.second;
+    if (!Read(DB_RCTOUTPUT_LAST, rv))
+        rv = 0;
     
     return true;
+};
+
+
+bool CBlockTreeDB::WriteLastRCTOutput(int64_t i)
+{
+    CDBBatch batch(*this);
+    batch.Write(DB_RCTOUTPUT_LAST, i);
+    return WriteBatch(batch);
 };
 
 bool CBlockTreeDB::ReadRCTOutput(int64_t i, CAnonOutput &ao)

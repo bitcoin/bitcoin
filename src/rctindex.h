@@ -7,28 +7,6 @@
 
 #include "primitives/transaction.h"
 
-class CKeyImageSpent
-{
-// Stored in txdb, key is keyimage
-public:
-    CKeyImageSpent() {};
-
-    CKeyImageSpent(uint256& txnHash_, uint32_t inputNo_)
-        : txnHash(txnHash_), inputNo(inputNo_) {};
-
-    COutPoint outpoint;
-    uint256 txnHash;    // hash of spending transaction
-    uint32_t inputNo;   // keyimage is for inputNo of txnHash
-
-    ADD_SERIALIZE_METHODS;
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
-    {
-        READWRITE(txnHash);
-        READWRITE(inputNo);
-    };
-};
-
 class CAnonOutput
 {
 // Stored in txdb, key is 64bit index
@@ -48,7 +26,6 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action)
     {
         READWRITE(pubkey);
-        //READWRITE(commitment);
         if (ser_action.ForRead())
             s.read((char*)&commitment.data[0], 33);
         else
