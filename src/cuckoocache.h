@@ -206,6 +206,37 @@ private:
     /** compute_hashes is convenience for not having to write out this
      * expression everywhere we use the hash values of an Element.
      *
+     * We need to map the 32-bit input hash onto a hash bucket in a range [0, size) in a
+     *  manner which preserves as much of the hash's uniformity as possible.  Ideally
+     *  this would be done by bitmasking but the size is usually not a power of two.
+     *
+     * The naive approach would be to use a mod -- which isn't perfectly uniform but so
+     *  long as the hash is much larger than size it is not that bad.  Unfortunately,
+     *  mod/division is fairly slow on ordinary microprocessors (e.g. 90-ish cycles on
+     *  haswell, ARM doesn't even have an instruction for it.); when the divisor is a
+     *  constant the compiler will do clever tricks to turn it into a multiply+add+shift,
+     *  but size is a run-time value so the compiler can't do that here.
+     *
+     * One option would be to implement the same trick the compiler uses and compute the
+     *  constants for exact division based on the size, as described in "{N}-bit Unsigned
+     *  Division via {N}-bit Multiply-Add" by Arch D. Robison in 2005. But that code is
+     *  somewhat complicated and the result is still slower than other options:
+     *
+     * Instead we treat the 32-bit random number as a Q32 fixed-point number in the range
+     *  [0,1) and simply multiply it by the size.  Then we just shift the result down by
+     *  32-bits to get our bucket number.  The results has non-uniformity the same as a
+     *  mod, but it is much faster to compute. More about this technique can be found at
+     *  http://lemire.me/blog/2016/06/27/a-fast-alternative-to-the-modulo-reduction/
+     *
+     * The resulting non-uniformity is also more equally distributed which would be
+     *  advantageous for something like linear probing, though it shouldn't matter
+     *  one way or the other for a cuckoo table.
+     *
+     * The primary disadvantage of this approach is increased intermediate precision is
+     *  required but for a 32-bit random number we only need the high 32 bits of a
+     *  32*32->64 multiply, which means the operation is reasonably fast even on a
+     *  typical 32-bit processor.
+     *
      * @param e the element whose hashes will be returned
      * @returns std::array<uint32_t, 8> of deterministic hashes derived from e
      */
