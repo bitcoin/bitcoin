@@ -16,6 +16,9 @@
 static const unsigned char pchIPv4[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff };
 static const unsigned char pchOnionCat[] = {0xFD,0x87,0xD8,0x7E,0xEB,0x43};
 
+// 0xFD + sha256("bitcoin")[0:5]
+static const unsigned char g_internal_prefix[] = { 0xFD, 0x6B, 0x88, 0xC0, 0x87, 0x24 };
+
 bool fAllowPrivateNet = DEFAULT_ALLOWPRIVATENET;
 
 void CNetAddr::Init()
@@ -43,6 +46,18 @@ void CNetAddr::SetRaw(Network network, const uint8_t *ip_in)
         default:
             assert(!"invalid network");
     }
+}
+
+bool CNetAddr::SetInternal(const std::string &name)
+{
+    if (name.empty()) {
+        return false;
+    }
+    unsigned char hash[32] = {};
+    CSHA256().Write((const unsigned char*)name.data(), name.size()).Finalize(hash);
+    memcpy(ip, g_internal_prefix, sizeof(g_internal_prefix));
+    memcpy(ip + sizeof(g_internal_prefix), hash, sizeof(ip) - sizeof(g_internal_prefix));
+    return true;
 }
 
 bool CNetAddr::SetSpecial(const std::string &strName)
@@ -87,7 +102,7 @@ bool CNetAddr::IsIPv4() const
 
 bool CNetAddr::IsIPv6() const
 {
-    return (!IsIPv4() && !IsTor());
+    return (!IsIPv4() && !IsTor() && !IsInternal());
 }
 
 bool CNetAddr::IsRFC1918() const
@@ -202,6 +217,9 @@ bool CNetAddr::IsValid() const
     if (IsRFC3849())
         return false;
 
+    if (IsInternal())
+        return false;
+
     if (IsIPv4())
     {
         // INADDR_NONE
@@ -224,11 +242,19 @@ bool CNetAddr::IsRoutable() const
         return false;
     if (!fAllowPrivateNet && IsRFC1918())
         return false;
-    return !(IsRFC2544() || IsRFC3927() || IsRFC4862() || IsRFC6598() || IsRFC5737() || (IsRFC4193() && !IsTor()) || IsRFC4843() || IsLocal());
+    return !(IsRFC2544() || IsRFC3927() || IsRFC4862() || IsRFC6598() || IsRFC5737() || (IsRFC4193() && !IsTor()) || IsRFC4843() || IsLocal() || IsInternal());
+}
+
+bool CNetAddr::IsInternal() const
+{
+   return memcmp(ip, g_internal_prefix, sizeof(g_internal_prefix)) == 0;
 }
 
 enum Network CNetAddr::GetNetwork() const
 {
+    if (IsInternal())
+        return NET_INTERNAL;
+
     if (!IsRoutable())
         return NET_UNROUTABLE;
 
@@ -245,6 +271,8 @@ std::string CNetAddr::ToStringIP(bool fUseGetnameinfo) const
 {
     if (IsTor())
         return EncodeBase32(&ip[6], 10) + ".onion";
+    if (IsInternal())
+        return EncodeBase32(ip + sizeof(g_internal_prefix), sizeof(ip) - sizeof(g_internal_prefix)) + ".internal";
     if (fUseGetnameinfo)
     {
         CService serv(*this, 0);
@@ -315,9 +343,15 @@ std::vector<unsigned char> CNetAddr::GetGroup() const
         nClass = 255;
         nBits = 0;
     }
-
-    // all unroutable addresses belong to the same group
-    if (!IsRoutable())
+    // all internal-usage addresses get their own group
+    if (IsInternal())
+    {
+        nClass = NET_INTERNAL;
+        nStartByte = sizeof(g_internal_prefix);
+        nBits = (sizeof(ip) - sizeof(g_internal_prefix)) * 8;
+    }
+    // all other unroutable addresses belong to the same group
+    else if (!IsRoutable())
     {
         nClass = NET_UNROUTABLE;
         nBits = 0;
@@ -403,7 +437,7 @@ int CNetAddr::GetReachabilityFrom(const CNetAddr *paddrPartner) const
         REACH_PRIVATE
     };
 
-    if (!IsRoutable())
+    if (!IsRoutable() || IsInternal())
         return REACH_UNREACHABLE;
 
     int ourNet = GetExtNetwork(this);
@@ -562,7 +596,7 @@ std::string CService::ToStringPort() const
 
 std::string CService::ToStringIPPort(bool fUseGetnameinfo) const
 {
-    if (IsIPv4() || IsTor()) {
+    if (IsIPv4() || IsTor() || IsInternal()) {
         return ToStringIP(fUseGetnameinfo) + ":" + ToStringPort();
     } else {
         return "[" + ToStringIP(fUseGetnameinfo) + "]:" + ToStringPort();
