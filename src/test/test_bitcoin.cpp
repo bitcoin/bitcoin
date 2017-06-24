@@ -129,7 +129,7 @@ TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransaction>&
     while (!CheckProofOfWork(block.GetHash(), block.nBits, chainparams.GetConsensus())) ++block.nNonce;
 
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
-    ProcessNewBlock(chainparams, shared_pblock, true, NULL);
+    ProcessNewBlock(chainparams, shared_pblock, shared_pblock->GetHash(), true, NULL);
 
     CBlock result = block;
     return result;
