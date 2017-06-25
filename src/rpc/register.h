@@ -36,6 +36,7 @@ static inline void RegisterAllCoreRPCCommands(CRPCTable &t)
     RegisterRawTransactionRPCCommands(t);
     RegisterSmsgRPCCommands(t);
     RegisterMnemonicRPCCommands(t);
+    RegisterAnonRPCCommands(t);
 }
 
 #endif

@@ -97,12 +97,12 @@ class AnonTest(ParticlTestFramework):
         
         ro = nodes[0].reservebalance(False)
         
-        assert(self.wait_for_height(nodes[0], 2))
+        assert(self.wait_for_height(nodes[1], 2))
         
         ro = nodes[0].reservebalance(True, 10000000)
         
         block1_hash = nodes[1].getblockhash(2)
-        ro = nodes[0].getblock(block1_hash)
+        ro = nodes[1].getblock(block1_hash)
         for txnHash in txnHashes:
             assert(txnHash in ro['tx'])
         

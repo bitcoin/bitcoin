@@ -1289,6 +1289,81 @@ CAmount CHDWallet::GetStaked()
     return nTotal;
 };
 
+bool CHDWallet::GetBalances(CAmount &nPart, CAmount &nPartUnconf, CAmount &nPartStaked, CAmount &nPartImmature,
+        CAmount &nBlind, CAmount &nBlindUnconf, CAmount &nAnon, CAmount &nAnonUnconf)
+{
+    nPart = nPartUnconf = nPartStaked = nPartImmature = 0;
+    nBlind = nBlindUnconf = 0;
+    nAnon = nAnonUnconf = 0;
+    
+    LOCK2(cs_main, cs_wallet);
+    for (WalletTxMap::iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+    {
+        CWalletTx *pcoin = &(*it).second;
+        
+        nPartImmature += pcoin->GetImmatureCredit();
+        
+        if (pcoin->IsCoinStake()
+            && pcoin->GetDepthInMainChainCached() > 0 // checks for hashunset
+            && pcoin->GetBlocksToMaturity() > 0)
+        {
+            nPartStaked += CHDWallet::GetCredit(*pcoin, ISMINE_SPENDABLE);
+        };
+        
+        if (pcoin->IsTrusted())
+        {
+            nPart += pcoin->GetAvailableCredit();
+        } else
+        {
+            if (pcoin->GetDepthInMainChain() == 0 && pcoin->InMempool())
+                nPartUnconf += pcoin->GetAvailableCredit();
+        };
+    };
+    
+    for (const auto &ri : mapRecords)
+    {
+        const auto &txhash = ri.first;
+        const auto &rtx = ri.second;
+        
+        bool fTrusted = IsTrusted(txhash, rtx.blockHash);
+        
+        for (const auto &r : rtx.vout)
+        {
+            if (r.nFlags & ORF_OWNED && !IsSpent(txhash, r.n))
+            {
+                switch (r.nType)
+                {
+                    case OUTPUT_RINGCT:
+                        if (fTrusted)
+                            nAnon += r.nValue;
+                        else
+                            nAnonUnconf += r.nValue;
+                        break;
+                    case OUTPUT_CT:
+                        if (fTrusted)
+                            nBlind += r.nValue;
+                        else
+                            nBlindUnconf += r.nValue;
+                        break;
+                    case OUTPUT_STANDARD:
+                        if (fTrusted)
+                            nPart += r.nValue;
+                        else
+                            nPartUnconf += r.nValue;
+                        break;
+                    default:
+                        break;
+                };
+            };
+        };
+    };
+    
+    //if (!MoneyRange(nBalance))
+    //    throw std::runtime_error(std::string(__func__) + ": value out of range");
+    
+    return true;
+};
+
 bool CHDWallet::IsChange(const CTxOutBase *txout) const
 {
     // TODO: fix handling of 'change' outputs. The assumption is that any

@@ -2779,24 +2779,29 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
     
     if (fParticlWallet)
     {
-        CAmount balance = pwalletMain->GetBalance();
-        CAmount blind_balance = ((CHDWallet*)pwalletMain)->GetBlindBalance();
-        CAmount anon_balance = ((CHDWallet*)pwalletMain)->GetAnonBalance();
-        CAmount staked_balance = ((CHDWallet*)pwalletMain)->GetStaked();
-        CAmount unconfirmed_balance = pwalletMain->GetUnconfirmedBalance();
-        CAmount immature_balance = pwalletMain->GetImmatureBalance();
+        CAmount part_balance, part_unconfirmed, part_staked, immature_balance;
+        CAmount blind_balance, blind_unconfirmed;
+        CAmount anon_balance, anon_unconfirmed;
         
-        obj.push_back(Pair("total_balance",         ValueFromAmount(balance
-            + blind_balance + anon_balance + staked_balance
-            + unconfirmed_balance + immature_balance)));
-        obj.push_back(Pair("balance",               ValueFromAmount(balance)));
+        ((CHDWallet*)pwalletMain)->GetBalances(part_balance, part_unconfirmed, part_staked, immature_balance,
+            blind_balance, blind_unconfirmed, anon_balance, anon_unconfirmed);
+        
+        obj.push_back(Pair("total_balance",         ValueFromAmount(
+            part_balance + part_unconfirmed + part_staked + immature_balance
+            + blind_balance + blind_unconfirmed
+            + anon_balance + anon_unconfirmed)));
+        
+        obj.push_back(Pair("balance",               ValueFromAmount(part_balance)));
     
         obj.push_back(Pair("blind_balance",         ValueFromAmount(blind_balance)));
         obj.push_back(Pair("anon_balance",          ValueFromAmount(anon_balance)));
-        obj.push_back(Pair("staked_balance",        ValueFromAmount(staked_balance)));
+        obj.push_back(Pair("staked_balance",        ValueFromAmount(part_staked)));
         
-        obj.push_back(Pair("unconfirmed_balance",   ValueFromAmount(unconfirmed_balance)));
+        obj.push_back(Pair("unconfirmed_balance",   ValueFromAmount(part_unconfirmed)));
+        obj.push_back(Pair("unconfirmed_blind",     ValueFromAmount(blind_unconfirmed)));
+        obj.push_back(Pair("unconfirmed_anon",      ValueFromAmount(anon_unconfirmed)));
         obj.push_back(Pair("immature_balance",      ValueFromAmount(immature_balance)));
+        
     } else
     {
         obj.push_back(Pair("balance",       ValueFromAmount(pwalletMain->GetBalance())));

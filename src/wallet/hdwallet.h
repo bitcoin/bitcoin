@@ -377,6 +377,8 @@ public:
     CAmount GetBlindBalance();
     CAmount GetAnonBalance();
     CAmount GetStaked();
+    bool GetBalances(CAmount &nPart, CAmount &nPartUnconf, CAmount &nPartStaked, CAmount &nPartImmature,
+        CAmount &nBlind, CAmount &nBlindUnconf, CAmount &nAnon, CAmount &nAnonUnconf);
     
     
     bool IsChange(const CTxOutBase *txout) const;
