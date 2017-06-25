@@ -3325,7 +3325,7 @@ CBlockIndex * InsertBlockIndex(uint256 hash)
 
 bool static LoadBlockIndexDB(const CChainParams& chainparams)
 {
-    if (!pblocktree->LoadBlockIndexGuts(InsertBlockIndex))
+    if (!pblocktree->LoadBlockIndexGuts(chainparams.GetConsensus(), InsertBlockIndex))
         return false;
 
     boost::this_thread::interruption_point();
