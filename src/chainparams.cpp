@@ -159,7 +159,7 @@ public:
 
         vSeeds.push_back(CDNSSeedData("fra-crwdns", "fra-crwdns.infernopool.com"));
         vSeeds.push_back(CDNSSeedData("blr-crwdns", "blr-crwdns.infernopool.com"));
-	vSeeds.push_back(CDNSSeedData("sgp-crwdns", "sgp-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("sgp-crwdns", "sgp-crwdns.infernopool.com"));
         vSeeds.push_back(CDNSSeedData("lon-crwdns", "lon-crwdns.infernopool.com"));
         vSeeds.push_back(CDNSSeedData("nyc-crwdns", "nyc-crwdns.infernopool.com"));
         vSeeds.push_back(CDNSSeedData("crw", "crw.infernopool.com"));
@@ -169,7 +169,7 @@ public:
         base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,128);                    // Crown private keys start with '7' or 'X'
         base58Prefixes[EXT_PUBLIC_KEY] = list_of(0x04)(0x88)(0xB2)(0x1E).convert_to_container<std::vector<unsigned char> >();
         base58Prefixes[EXT_SECRET_KEY] = list_of(0x04)(0x88)(0xAD)(0xE4).convert_to_container<std::vector<unsigned char> >();
-        base58Prefixes[EXT_COIN_TYPE]  = list_of(0x80000005).convert_to_container<std::vector<unsigned char> >();             // Crown BIP44 coin type is '5'
+        base58Prefixes[EXT_COIN_TYPE]  = list_of(0x80000048).convert_to_container<std::vector<unsigned char> >();             // Crown BIP44 coin type is '72'
 
         convertSeed6(vFixedSeeds, pnSeed6_main, ARRAYLEN(pnSeed6_main));
 
