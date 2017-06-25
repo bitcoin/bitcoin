@@ -131,9 +131,9 @@ QVariant UnlimitedModel::data(const QModelIndex &index, int role) const
         switch (index.row())
         {
         case MaxGeneratedBlock:
-            return QVariant((uint64_t)maxGeneratedBlock);
+            return QVariant((qulonglong)maxGeneratedBlock);
         case ExcessiveBlockSize:
-            return QVariant((uint64_t)excessiveBlockSize);
+            return QVariant((qulonglong)excessiveBlockSize);
         case ExcessiveAcceptDepth:
             return QVariant(excessiveAcceptDepth);
         case UseReceiveShaping:
