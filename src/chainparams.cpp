@@ -164,9 +164,9 @@ public:
         vSeeds.push_back(CDNSSeedData("nyc-crwdns", "nyc-crwdns.infernopool.com"));
         vSeeds.push_back(CDNSSeedData("crw", "crw.infernopool.com"));
 
-        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,0);                    // Crown addresses start with 'X'
-        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,5);                    // Crown script addresses start with '7'
-        base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,128);                    // Crown private keys start with '7' or 'X'
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,0);                    // Crown addresses start with '1'
+        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,5);                    // Crown script addresses start with '3'
+        base58Prefixes[SECRET_KEY]     = std::vector<unsigned char>(1,128);                  // Crown private keys start with '5'
         base58Prefixes[EXT_PUBLIC_KEY] = list_of(0x04)(0x88)(0xB2)(0x1E).convert_to_container<std::vector<unsigned char> >();
         base58Prefixes[EXT_SECRET_KEY] = list_of(0x04)(0x88)(0xAD)(0xE4).convert_to_container<std::vector<unsigned char> >();
         base58Prefixes[EXT_COIN_TYPE]  = list_of(0x80000048).convert_to_container<std::vector<unsigned char> >();             // Crown BIP44 coin type is '72'
