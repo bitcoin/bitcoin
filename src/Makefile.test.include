@@ -56,6 +56,9 @@ BITCOIN_TESTS =\
   test/pmt_tests.cpp \
   test/policyestimator_tests.cpp \
   test/pow_tests.cpp \
+  test/pow_chain_tests.cpp \
+  test/pow_sha256_tests.cpp \
+  test/pow_cuckoo_cycle_tests.cpp \
   test/prevector_tests.cpp \
   test/raii_event_tests.cpp \
   test/random_tests.cpp \

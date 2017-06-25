@@ -29,6 +29,7 @@
 #include "utilmoneystr.h"
 #include "utilstrencodings.h"
 #include "validationinterface.h"
+#include "ados.h"
 
 #if defined(NDEBUG)
 # error "Bitcoin cannot be compiled without assertions."
@@ -272,8 +273,16 @@ void InitializeNode(CNode *pnode, CConnman& connman) {
         LOCK(cs_main);
         mapNodeState.emplace_hint(mapNodeState.end(), std::piecewise_construct, std::forward_as_tuple(nodeid), std::forward_as_tuple(addr, std::move(addrName)));
     }
-    if(!pnode->fInbound)
+    if(!pnode->fInbound) {
+        if (pnode->offer) {
+            connman.PushMessage(pnode, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::SOLUTION, *pnode->offer));
+            // TODO: set flag in pnode that we solved for them
+            pnode->offer = nullptr;
+        }
+        // TODO: verify that above is not at risk of arriving after below version push which would result
+        // TODO: in an invalid disconnect from the peer despite solving their challenge
         PushNodeVersion(pnode, connman, GetTime());
+    }
 }
 
 void FinalizeNode(NodeId nodeid, bool& fUpdateConnectionTime) {
@@ -1236,6 +1245,66 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 LogPrint(BCLog::NET, "Unparseable reject message received\n");
             }
         }
+    }
+
+
+    else if (strCommand == NetMsgType::SOLUTION)
+    {
+        // The node is providing us with a solution to a challenge in order to
+        // connect.
+        LogPrint(BCLog::NET, "We are being given a solution\n");
+        ados::offer_ref offer(new ados::offer(false));
+        vRecv >> *offer;
+        if (!ados::check_solution(offer)) {
+            // bye
+            LogPrint(BCLog::NET, "The provided solution did not pass. Re-challenge and disconnect.\n");
+            ados::challenge_peer(*pfrom, ados::PURPOSE_CONNECT, connman.GetPressure());
+            pfrom->fDisconnect = true;
+            return false;
+        }
+        LogPrint(BCLog::NET, "Solution passed.\n");
+        pfrom->fRequirePOW = false; // no longer required
+        pfrom->fDidPOW = true; // treat them like special snowflakes
+        return true;
+    }
+
+
+    else if (strCommand == NetMsgType::CHALLENGE)
+    {
+        // The node requires us to solve a challenge before they will talk to
+        // us.
+        LogPrint(BCLog::NET, "We are being challenged\n");
+        if (pfrom->fInbound) {
+            // we don't take challenges from incoming connections
+            LogPrint(BCLog::NET, "An inbound connection is asking us to solve a challenge to connect. Only outbound connections may do so.\n");
+            LOCK(cs_main);
+            Misbehaving(pfrom->GetId(), 10);
+            pfrom->fDisconnect = true;
+            return false;
+        }
+        ados::offer_ref offer(new ados::offer());
+        vRecv >> *offer;
+        // Is this solvable?
+        if (!ados::solvable(offer)) {
+            LogPrint(BCLog::NET, "Challenge too hard: expected solve time %.2fs\n", ados::expected_solution_time(offer));
+            return false;
+        } else {
+            LogPrint(BCLog::NET, "Solving challenge: expected solve time %.2fs; expiration in %lus\n", ados::expected_solution_time(offer), offer->expiration - GetTime());
+        }
+        offer->pow->cb.reset(new ados::connection_challenge(*pfrom, offer));
+        ados::begin_solving(offer);
+        return true;
+    }
+
+
+    else if (pfrom->fRequirePOW)
+    {
+        LogPrint(BCLog::NET, "Peer must do POW to connect; challenge and disco\n");
+        // The node did not give a solution and must solve a challenge before we
+        // will establish a connection. Challenge it and disconnect.
+        ados::challenge_peer(*pfrom, ados::PURPOSE_CONNECT, connman.GetPressure());
+        pfrom->fDisconnect = true;
+        return true;
     }
 
     else if (strCommand == NetMsgType::VERSION)

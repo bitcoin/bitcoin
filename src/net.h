@@ -21,6 +21,7 @@
 #include "sync.h"
 #include "uint256.h"
 #include "threadinterrupt.h"
+#include "ados.h"
 
 #include <atomic>
 #include <deque>
@@ -75,6 +76,8 @@ static const size_t MAPASKFOR_MAX_SZ = MAX_INV_SZ;
 static const size_t SETASKFOR_MAX_SZ = 2 * MAX_INV_SZ;
 /** The maximum number of peer connections to maintain. */
 static const unsigned int DEFAULT_MAX_PEER_CONNECTIONS = 125;
+/** The number of proof-of-work connection slots to retain. */
+static const unsigned int DEFAULT_POW_CONNECTION_SLOTS = 50;
 /** The default for -maxuploadtarget. 0 = Unlimited */
 static const uint64_t DEFAULT_MAX_UPLOAD_TARGET = 0;
 /** The default timeframe for -maxuploadtarget. 1 day. */
@@ -134,6 +137,7 @@ public:
         ServiceFlags nLocalServices = NODE_NONE;
         ServiceFlags nRelevantServices = NODE_NONE;
         int nMaxConnections = 0;
+        int nPOWConnectionSlots = 0;
         int nMaxOutbound = 0;
         int nMaxAddnode = 0;
         int nMaxFeeler = 0;
@@ -153,7 +157,7 @@ public:
     bool BindListenPort(const CService &bindAddr, std::string& strError, bool fWhitelisted = false);
     bool GetNetworkActive() const { return fNetworkActive; };
     void SetNetworkActive(bool active);
-    bool OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound = NULL, const char *strDest = NULL, bool fOneShot = false, bool fFeeler = false, bool fAddnode = false);
+    bool OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound = nullptr, const char *strDest = nullptr, bool fOneShot = false, bool fFeeler = false, bool fAddnode = false, const ados::offer_ref offer = nullptr);
     bool CheckIncomingNonce(uint64_t nonce);
 
     bool ForNode(NodeId id, std::function<bool(CNode* pnode)> func);
@@ -272,6 +276,15 @@ public:
     uint64_t GetTotalBytesRecv();
     uint64_t GetTotalBytesSent();
 
+    /**
+     * Calculate the pressure (work load) as a value in the range [0..1], where
+     * 0 means no pressure and 1 means maximum pressure. This is calculated as
+     *      (connections - free) / pow_slots
+     * This reaches the 1.0 point at (nMaxConnections - nMaxOutbound - nMaxFeeler).
+     * @return Pressure value.
+     */
+    double GetPressure();
+
     void SetBestHeight(int height);
     int GetBestHeight() const;
 
@@ -376,6 +389,7 @@ private:
     CSemaphore *semOutbound;
     CSemaphore *semAddnode;
     int nMaxConnections;
+    int nPOWConnectionSlots;
     int nMaxOutbound;
     int nMaxAddnode;
     int nMaxFeeler;
@@ -601,6 +615,9 @@ public:
     std::string strSubVer, cleanSubVer;
     CCriticalSection cs_SubVer; // used for both cleanSubVer and strSubVer
     bool fWhitelisted; // This peer can bypass DoS banning.
+    bool fRequirePOW; // We require this node to solve a POW challenge
+    bool fDidPOW; // This peer solved a POW challenge for us
+    ados::offer_ref offer; // An offer with a challenge that we solved for this peer
     bool fFeeler; // If true this node is being used as a short lived feeler.
     bool fOneShot;
     bool fAddnode;

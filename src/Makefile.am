@@ -78,6 +78,7 @@ endif
 BITCOIN_CORE_H = \
   addrdb.h \
   addrman.h \
+  ados.h \
   base58.h \
   bloom.h \
   blockencodings.h \
@@ -121,6 +122,12 @@ BITCOIN_CORE_H = \
   policy/fees.h \
   policy/policy.h \
   policy/rbf.h \
+  pow/cuckoo_cycle/cuckoo_cycle.h \
+  pow/cuckoo_cycle/cuckoo_miner.h \
+  pow/cuckoo_cycle/cuckoo.h \
+  pow/cuckoo_cycle/siphash.h \
+  pow/pow.h \
+  pow/sha256/sha256.h \
   pow.h \
   protocol.h \
   random.h \
@@ -182,6 +189,7 @@ libbitcoin_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_server_a_SOURCES = \
   addrdb.cpp \
   addrman.cpp \
+  ados.cpp \
   bloom.cpp \
   blockencodings.cpp \
   chain.cpp \
@@ -199,6 +207,7 @@ libbitcoin_server_a_SOURCES = \
   policy/fees.cpp \
   policy/policy.cpp \
   policy/rbf.cpp \
+  pow/pow.cpp \
   pow.cpp \
   rest.cpp \
   rpc/blockchain.cpp \
@@ -315,6 +324,7 @@ libbitcoin_common_a_SOURCES = \
   netaddress.cpp \
   netbase.cpp \
   policy/feerate.cpp \
+  pow/cuckoo_cycle/cuckoo_cycle.cpp \
   protocol.cpp \
   scheduler.cpp \
   script/sign.cpp \

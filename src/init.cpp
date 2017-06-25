@@ -393,6 +393,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-listen", _("Accept connections from outside (default: 1 if no -proxy or -connect)"));
     strUsage += HelpMessageOpt("-listenonion", strprintf(_("Automatically create Tor hidden service (default: %d)"), DEFAULT_LISTEN_ONION));
     strUsage += HelpMessageOpt("-maxconnections=<n>", strprintf(_("Maintain at most <n> connections to peers (default: %u)"), DEFAULT_MAX_PEER_CONNECTIONS));
+    strUsage += HelpMessageOpt("-powconnectionslots=<n>", strprintf(_("Reserve <n> slots for proof of work challenged peers (default: %u)"), DEFAULT_POW_CONNECTION_SLOTS));
     strUsage += HelpMessageOpt("-maxreceivebuffer=<n>", strprintf(_("Maximum per-connection receive buffer, <n>*1000 bytes (default: %u)"), DEFAULT_MAXRECEIVEBUFFER));
     strUsage += HelpMessageOpt("-maxsendbuffer=<n>", strprintf(_("Maximum per-connection send buffer, <n>*1000 bytes (default: %u)"), DEFAULT_MAXSENDBUFFER));
     strUsage += HelpMessageOpt("-maxtimeadjustment", strprintf(_("Maximum allowed median peer time offset adjustment. Local perspective of time may be influenced by peers forward or backward by this amount. (default: %u seconds)"), DEFAULT_MAX_TIME_ADJUSTMENT));
@@ -818,7 +819,9 @@ namespace { // Variables internal to initialization process only
 
 ServiceFlags nRelevantServices = NODE_NETWORK;
 int nMaxConnections;
+int nPOWConnectionSlots;
 int nUserMaxConnections;
+int nUserPOWConnectionSlots;
 int nFD;
 ServiceFlags nLocalServices = NODE_NETWORK;
 
@@ -904,6 +907,8 @@ bool AppInitParameterInteraction()
                 (gArgs.IsArgSet("-whitebind") ? gArgs.GetArgs("-whitebind").size() : 0), size_t(1));
     nUserMaxConnections = GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS);
     nMaxConnections = std::max(nUserMaxConnections, 0);
+    nUserPOWConnectionSlots = GetArg("-powconnectionslots", DEFAULT_POW_CONNECTION_SLOTS);
+    nPOWConnectionSlots = std::max(nUserPOWConnectionSlots, 0);
 
     // Trim requested connection counts, to fit into system limitations
     nMaxConnections = std::max(std::min(nMaxConnections, (int)(FD_SETSIZE - nBind - MIN_CORE_FILEDESCRIPTORS - MAX_ADDNODE_CONNECTIONS)), 0);
@@ -1641,6 +1646,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     connOptions.nLocalServices = nLocalServices;
     connOptions.nRelevantServices = nRelevantServices;
     connOptions.nMaxConnections = nMaxConnections;
+    connOptions.nPOWConnectionSlots = nPOWConnectionSlots;
     connOptions.nMaxOutbound = std::min(MAX_OUTBOUND_CONNECTIONS, connOptions.nMaxConnections);
     connOptions.nMaxAddnode = MAX_ADDNODE_CONNECTIONS;
     connOptions.nMaxFeeler = 1;

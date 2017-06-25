@@ -240,6 +240,20 @@ extern const char *GETBLOCKTXN;
  * @since protocol version 70014 as described by BIP 152
  */
 extern const char *BLOCKTXN;
+/**
+ * Contains a proof of work challenge for elevated privileges.
+ * The challenge is composed of four parts -- a POW specification,
+ * a purpose specifier, an expiration date, and a signature.
+ * If the challenged peer solves the challenge, they are
+ * given the specified reward if it is still available.
+ */
+extern const char *CHALLENGE;
+/**
+ * Contains a solution to a proof of work challenge for elevated
+ * privileges. The solution contains a challenge in its entirety, and solution
+ * to the challenge.
+ */
+extern const char *SOLUTION;
 };
 
 /* Get a vector of all valid message types (see above) */
@@ -267,6 +281,9 @@ enum ServiceFlags : uint64_t {
     // NODE_XTHIN means the node supports Xtreme Thinblocks
     // If this is turned off then the node will not service nor make xthin requests
     NODE_XTHIN = (1 << 4),
+    // NODE_DOSPROT means the node is able to provide and solve challenges intended
+    // to alleviate DoS pressure on the network
+    NODE_DOSPROT = (1 << 5),
 
     // Bits 24-31 are reserved for temporary experiments. Just pick a bit that
     // isn't getting used, or one not being used much, and notify the
