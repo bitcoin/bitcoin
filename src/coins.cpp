@@ -125,7 +125,7 @@ bool CCoinsViewCache::HaveCoin(const COutPoint &outpoint) const {
 
 bool CCoinsViewCache::HaveCoinInCache(const COutPoint &outpoint) const {
     CCoinsMap::const_iterator it = cacheCoins.find(outpoint);
-    return it != cacheCoins.end();
+    return (it != cacheCoins.end() && !it->second.coin.IsSpent());
 }
 
 uint256 CCoinsViewCache::GetBestBlock() const {
