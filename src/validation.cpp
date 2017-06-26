@@ -1576,7 +1576,7 @@ bool AbortNode(CValidationState& state, const std::string& strMessage, const std
     return state.Error(strMessage);
 }
 
-} // anon namespace
+} // namespace
 
 enum DisconnectResult
 {

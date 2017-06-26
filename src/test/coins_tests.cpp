@@ -93,7 +93,7 @@ public:
     size_t& usage() { return cachedCoinsUsage; }
 };
 
-}
+} // namespace
 
 BOOST_FIXTURE_TEST_SUITE(coins_tests, BasicTestingSetup)
 

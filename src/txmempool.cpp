@@ -1162,7 +1162,7 @@ public:
         return counta < countb;
     }
 };
-}
+} // namespace
 
 std::vector<CTxMemPool::indexed_transaction_set::const_iterator> CTxMemPool::GetSortedDepthAndScore() const
 {
