@@ -8,6 +8,7 @@
 #include "governance.h"
 #include "governance-vote.h"
 #include "governance-classes.h"
+#include "governance-validators.h"
 #include "init.h"
 #include "main.h"
 #include "masternode.h"
@@ -29,11 +30,13 @@ UniValue gobject(const UniValue& params, bool fHelp)
 
     if (fHelp  ||
         (strCommand != "vote-many" && strCommand != "vote-conf" && strCommand != "vote-alias" && strCommand != "prepare" && strCommand != "submit" && strCommand != "count" &&
-         strCommand != "deserialize" && strCommand != "get" && strCommand != "getvotes" && strCommand != "getcurrentvotes" && strCommand != "list" && strCommand != "diff"))
+         strCommand != "deserialize" && strCommand != "get" && strCommand != "getvotes" && strCommand != "getcurrentvotes" && strCommand != "list" && strCommand != "diff" &&
+         strCommand != "check" ))
         throw std::runtime_error(
                 "gobject \"command\"...\n"
                 "Manage governance objects\n"
                 "\nAvailable commands:\n"
+                "  check              - Validate governance object data (proposal only)\n"
                 "  prepare            - Prepare governance object by signing and creating tx\n"
                 "  submit             - Submit governance object to network\n"
                 "  deserialize        - Deserialize governance object from hex string to JSON\n"
@@ -75,6 +78,41 @@ UniValue gobject(const UniValue& params, bool fHelp)
         return u.write().c_str();
     }
 
+    // VALIDATE A GOVERNANCE OBJECT PRIOR TO SUBMISSION
+    if(strCommand == "check")
+    {
+        if (params.size() != 2) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'gobject check <data-hex>'");
+        }
+
+        // ASSEMBLE NEW GOVERNANCE OBJECT FROM USER PARAMETERS
+
+        uint256 hashParent;
+
+        int nRevision = 1;
+
+        int64_t nTime = GetTime();
+        std::string strData = params[1].get_str();
+
+        CGovernanceObject govobj(hashParent, nRevision, nTime, uint256(), strData);
+
+        if(govobj.GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL) {
+            CProposalValidator validator(strData);
+            if(!validator.Validate())  {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid proposal data, error messages:" + validator.GetErrorMessages());
+            }
+        }
+        else {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid object type, only proposals can be validated");
+        }
+
+        UniValue objResult(UniValue::VOBJ);
+
+        objResult.push_back(Pair("Object status", "OK"));
+
+        return objResult;
+    }
+
     // PREPARE THE GOVERNANCE OBJECT BY CREATING A COLLATERAL TRANSACTION
     if(strCommand == "prepare")
     {
@@ -102,6 +140,13 @@ UniValue gobject(const UniValue& params, bool fHelp)
         // CREATE A NEW COLLATERAL TRANSACTION FOR THIS SPECIFIC OBJECT
 
         CGovernanceObject govobj(hashParent, nRevision, nTime, uint256(), strData);
+
+        if(govobj.GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL) {
+            CProposalValidator validator(strData);
+            if(!validator.Validate())  {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid proposal data, error messages:" + validator.GetErrorMessages());
+            }
+        }
 
         if((govobj.GetObjectType() == GOVERNANCE_OBJECT_TRIGGER) ||
            (govobj.GetObjectType() == GOVERNANCE_OBJECT_WATCHDOG)) {
@@ -179,6 +224,13 @@ UniValue gobject(const UniValue& params, bool fHelp)
              << ", hash = " << govobj.GetHash().GetHex()
              << ", txidFee = " << txidFee.GetHex()
              << endl; );
+
+        if(govobj.GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL) {
+            CProposalValidator validator(strData);
+            if(!validator.Validate())  {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid proposal data, error messages:" + validator.GetErrorMessages());
+            }
+        }
 
         // Attempt to sign triggers if we are a MN
         if((govobj.GetObjectType() == GOVERNANCE_OBJECT_TRIGGER) ||

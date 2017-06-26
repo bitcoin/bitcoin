@@ -55,6 +55,7 @@ BITCOIN_TESTS =\
   test/crypto_tests.cpp \
   test/DoS_tests.cpp \
   test/getarg_tests.cpp \
+  test/governance_validators_tests.cpp \
   test/hash_tests.cpp \
   test/key_tests.cpp \
   test/limitedmap_tests.cpp \

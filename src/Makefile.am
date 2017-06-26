@@ -106,6 +106,7 @@ BITCOIN_CORE_H = \
   governance-classes.h \
   governance-exceptions.h \
   governance-object.h \
+  governance-validators.h \
   governance-vote.h \
   governance-votedb.h \
   flat-database.h \
@@ -212,6 +213,7 @@ libbitcoin_server_a_SOURCES = \
   governance.cpp \
   governance-classes.cpp \
   governance-object.cpp \
+  governance-validators.cpp \
   governance-vote.cpp \
   governance-votedb.cpp \
   main.cpp \
