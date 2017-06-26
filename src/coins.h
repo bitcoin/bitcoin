@@ -471,6 +471,9 @@ public:
     //! Calculate the size of the cache (in bytes)
     size_t DynamicMemoryUsage() const;
 
+    //! Recalculate and Reset the size of cachedCoinsUsage
+    size_t ResetCachedCoinUsage() const;
+
     /**
      * Amount of bitcoins coming in to a transaction
      * Note that lightweight clients may not know anything besides the hash of previous transactions,

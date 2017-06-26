@@ -73,6 +73,23 @@ size_t CCoinsViewCache::DynamicMemoryUsage() const {
     return memusage::DynamicUsage(cacheCoins) + cachedCoinsUsage;
 }
 
+size_t CCoinsViewCache::ResetCachedCoinUsage() const
+{
+
+    LOCK(cs_utxo);
+    assert(!hasModifier);
+    size_t newCachedCoinsUsage = 0;
+    for (CCoinsMap::iterator it = cacheCoins.begin(); it != cacheCoins.end(); it++)
+        newCachedCoinsUsage += it->second.coins.DynamicMemoryUsage();
+    if (cachedCoinsUsage != newCachedCoinsUsage)
+    {
+        error("Resetting: cachedCoinsUsage has drifted - before %lld after %lld", cachedCoinsUsage,
+            newCachedCoinsUsage);
+        cachedCoinsUsage = newCachedCoinsUsage;
+    }
+    return newCachedCoinsUsage;
+}
+
 CCoinsMap::const_iterator CCoinsViewCache::FetchCoins(const uint256 &txid) const {
     // requires cs_utxo
     CCoinsMap::iterator it = cacheCoins.find(txid);
