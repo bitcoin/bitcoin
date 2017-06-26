@@ -2155,7 +2155,7 @@ void static UpdateTip(CBlockIndex *pindexNew) {
         }
         if (nUpgraded > 10)
             LogPrintf("%s: %d of last 400 blocks above version %d\n", __func__, nUpgraded, (int)CBlock::CURRENT_VERSION);
-        if (nUpgraded > 400/2)
+        if (nUpgraded > 300)
         {
             // strMiscWarning is read by GetWarnings(), called by Qt and the JSON-RPC code to warn the user:
             strMiscWarning = _("Warning: This version is obsolete; upgrade required!");
