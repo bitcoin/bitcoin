@@ -804,8 +804,10 @@ std::vector<uint8_t> &SetChar(std::vector<uint8_t> &v, const uint8_t c);
 std::vector<uint8_t> &PushUInt32(std::vector<uint8_t> &v, const uint32_t i);
 
 
-uint32_t &SetHardenedBit(uint32_t &n);
-uint32_t &ClearHardenedBit(uint32_t &n);
+inline bool IsHardened(uint32_t n)              { return (n & (1 << 31));};
+inline uint32_t &SetHardenedBit(uint32_t &n)    { return (n |= (1 << 31));};
+inline uint32_t &ClearHardenedBit(uint32_t &n)  { return (n &= ~(1 << 31));};
+
 int ExtractExtKeyPath(const std::string &sPath, std::vector<uint32_t> &vPath);
 
 int PathToString(const std::vector<uint8_t> &vPath, std::string &sPath, char cH='\'', size_t nStart = 0);

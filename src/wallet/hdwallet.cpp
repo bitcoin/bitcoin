@@ -68,6 +68,7 @@ std::string CHDWallet::GetWalletHelpString(bool showDebug)
     
     strUsage += HelpMessageGroup(_("Particl wallet options:"));
     strUsage += HelpMessageOpt("-defaultlookaheadsize=<n>", strprintf(_("Number of keys to load into the lookahead pool per chain. (default: %u)"), N_DEFAULT_LOOKAHEAD));
+    strUsage += HelpMessageOpt("-extkeysaveancestors", strprintf(_("On saving a key from the lookahead pool, save all unsaved keys leading up to it too. (default: %s)"), "true"));
     
     strUsage += HelpMessageGroup(_("Wallet staking options:"));
     strUsage += HelpMessageOpt("-staking", _("Stake your coins to support network and gain reward (default: 1)"));

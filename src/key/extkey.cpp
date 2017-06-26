@@ -747,37 +747,79 @@ bool CExtKeyAccount::SaveKey(const CKeyID &id, CEKAKey &keyIn)
     
     mapKeys[id] = keyIn;
     
+    
     CStoredExtKey *pc;
-    if ((pc = GetChain(keyIn.nParent)) != NULL)
+    if (!IsHardened(keyIn.nKey)
+        && (pc = GetChain(keyIn.nParent)) != NULL)
     {
-        // TODO: gaps?
-        if (keyIn.nKey == pc->nGenerated) 
-            pc->nGenerated++;
-        else
-        if (keyIn.nKey > pc->nGenerated)
+        if (GetBoolArg("-extkeysaveancestors", true))
         {
-            // Incase keys have been processed out of order, go back and check for received keys
-            for (uint32_t i = pc->nGenerated; i <= keyIn.nKey; ++i)
+            if (keyIn.nKey == pc->nGenerated) 
+                pc->nGenerated++;
+            else
+            if (pc->nGenerated < keyIn.nKey)
             {
-                uint32_t nChildOut = 0;
-                CPubKey pk;
-                if (0 != pc->DeriveKey(pk, i, nChildOut, false))
+                uint32_t nOldGenerated = pc->nGenerated;
+                pc->nGenerated = keyIn.nKey + 1;
+                for (uint32_t i = nOldGenerated; i < keyIn.nKey; ++i)
                 {
-                    LogPrintf("%s DeriveKey failed %d.\n", __func__, i);
-                    break;
+                    uint32_t nChildOut = 0;
+                    CPubKey pk;
+                    if (0 != pc->DeriveKey(pk, i, nChildOut, false))
+                    {
+                        LogPrintf("%s DeriveKey failed %d.\n", __func__, i);
+                        break;
+                    };
+                    
+                    CKeyID idkOld = pk.GetID();
+                    if (mapLookAhead.erase(idkOld) != 1)
+                        LogPrintf("Warning: SaveKey %s key not found in look ahead %s.\n", GetIDString58(), CBitcoinAddress(idkOld).ToString());
+                    
+                    CEKAKey ak(keyIn.nParent, nChildOut);
+                    mapKeys[idkOld] = ak;
+                    
+                    if (pc->nFlags & EAF_ACTIVE
+                        && pc->nFlags & EAF_RECEIVE_ON)
+                        AddLookAhead(keyIn.nParent, 1);
+                    
+                    if (fDebug)
+                        LogPrintf("Saved key %s %d, %s.\n", GetIDString58(), ak.nParent, CBitcoinAddress(idkOld).ToString());
                 };
-                
-                CEKAKey ak;
-                if (1 != HaveKey(pk.GetID(), false, ak))
-                    break;
-                
-                pc->nGenerated = i;
             };
+            if (pc->nFlags & EAF_ACTIVE
+                && pc->nFlags & EAF_RECEIVE_ON)
+                AddLookAhead(keyIn.nParent, 1);
+        } else
+        {
+            // TODO: gaps?
+            if (keyIn.nKey == pc->nGenerated) 
+                pc->nGenerated++;
+            else
+            if (keyIn.nKey > pc->nGenerated)
+            {
+                // Incase keys have been processed out of order, go back and check for received keys
+                for (uint32_t i = pc->nGenerated; i <= keyIn.nKey; ++i)
+                {
+                    uint32_t nChildOut = 0;
+                    CPubKey pk;
+                    if (0 != pc->DeriveKey(pk, i, nChildOut, false))
+                    {
+                        LogPrintf("%s DeriveKey failed %d.\n", __func__, i);
+                        break;
+                    };
+                    
+                    CEKAKey ak;
+                    if (1 != HaveKey(pk.GetID(), false, ak))
+                        break;
+                    
+                    pc->nGenerated = i;
+                };
+            };
+            
+            if (pc->nFlags & EAF_ACTIVE
+                && pc->nFlags & EAF_RECEIVE_ON)
+                AddLookAhead(keyIn.nParent, 1);
         };
-        
-        if (pc->nFlags & EAF_ACTIVE
-            && pc->nFlags & EAF_RECEIVE_ON)
-            AddLookAhead(keyIn.nParent, 1);
     };
     
     if (fDebug)
@@ -800,9 +842,9 @@ bool CExtKeyAccount::SaveKey(const CKeyID &id, CEKAKey &keyIn)
                 return error("GetPubKey failed.");
             
             if (pk.GetID() != id)
-                return error("Key mismatch!!!");
+                return error("Key mismatch!");
             
-            LogPrintf("key match verified.\n");
+            LogPrintf("Key match verified.\n");
         } else
         {
             return error("Unknown chain.");
@@ -1032,18 +1074,6 @@ int CExtKeyAccount::WipeEncryption()
     return 0;
 };
 
-
-uint32_t &SetHardenedBit(uint32_t &n)
-{
-    n |= (1 << 31);
-    return n;
-};
-
-uint32_t &ClearHardenedBit(uint32_t &n)
-{
-    n &= ~(1 << 31);
-    return n;
-};
 
 inline void AppendPathLink(std::string &s, uint32_t n, char cH)
 {

@@ -935,6 +935,9 @@ bool AppInitParameterInteraction()
     // ********************************************************* Step 3: parameter-to-internal-flags
     
     fParticlMode = !GetBoolArg("-genfirstkey", false); // qa tests
+    if (GetBoolArg("-regtest", false) && !fParticlMode)
+        ResetParams(fParticlMode);
+    
     fDebug = mapMultiArgs.count("-debug");
     // Special-case: if -debug=0/-nodebug is set, turn off debugging messages
     if (fDebug) {

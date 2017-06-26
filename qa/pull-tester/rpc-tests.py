@@ -11,6 +11,7 @@ forward all unrecognized arguments onto the individual test scripts, other
 than:
 
     - `-extended`: run the "extended" test suite in addition to the basic one.
+    - `-particl`: run only Particl specific tests.
     - `-win`: signal that this is running in a Windows environment, and we
       should run the tests.
     - `--coverage`: this generates a basic coverage report for the RPC
