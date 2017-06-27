@@ -1837,7 +1837,6 @@ UniValue omni_getinfo(const UniValue& params, bool fHelp)
             "  \"omnicoreversion\" : \"x.x.x.x-xxx\",     (string) client version\n"
             "  \"mastercoreversion\" : \"x.x.x.x-xxx\",   (string) client version (DEPRECIATED)\n"
             "  \"bitcoincoreversion\" : \"x.x.x\",        (string) Bitcoin Core version\n"
-            "  \"commitinfo\" : \"xxxxxxx\",              (string) build commit identifier\n"
             "  \"block\" : nnnnnn,                      (number) index of the last processed block\n"
             "  \"blocktime\" : nnnnnnnnnn,              (number) timestamp of the last processed block\n"
             "  \"blocktransactions\" : nnnn,            (number) Omni transactions found in the last processed block\n"
@@ -1859,12 +1858,11 @@ UniValue omni_getinfo(const UniValue& params, bool fHelp)
 
     UniValue infoResponse(UniValue::VOBJ);
 
-    // provide the mastercore and bitcoin version and if available commit id
+    // provide the mastercore and bitcoin version
     infoResponse.push_back(Pair("omnicoreversion_int", OMNICORE_VERSION));
     infoResponse.push_back(Pair("omnicoreversion", OmniCoreVersion()));
     infoResponse.push_back(Pair("mastercoreversion", OmniCoreVersion()));
     infoResponse.push_back(Pair("bitcoincoreversion", BitcoinCoreVersion()));
-    infoResponse.push_back(Pair("commitinfo", BuildCommit()));
 
     // provide the current block details
     int block = GetHeight();

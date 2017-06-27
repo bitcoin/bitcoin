@@ -2117,7 +2117,6 @@ int mastercore_init()
 
     PrintToLog("\nInitializing Omni Core v%s [%s]\n", OmniCoreVersion(), Params().NetworkIDString());
     PrintToLog("Startup time: %s\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()));
-    PrintToLog("Build date: %s, based on commit: %s\n", BuildDate(), BuildCommit());
 
     InitDebugLogLevels();
     ShrinkDebugLog();
