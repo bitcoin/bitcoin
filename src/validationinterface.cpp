@@ -45,6 +45,10 @@ void CMainSignals::UnregisterBackgroundSignalScheduler() {
     m_internals.reset(nullptr);
 }
 
+void CMainSignals::FlushBackgroundCallbacks() {
+    m_internals->m_schedulerClient.EmptyQueue();
+}
+
 CMainSignals& GetMainSignals()
 {
     return g_signals;
