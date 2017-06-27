@@ -26,6 +26,8 @@ public:
     int nConfirmTarget;
     //! Signal BIP-125 replace by fee.
     bool signalRbf;
+    //! Fee estimation mode to control arguments to estimateSmartFee
+    FeeEstimateMode m_fee_mode;
 
     CCoinControl()
     {
@@ -42,6 +44,7 @@ public:
         fOverrideFeeRate = false;
         nConfirmTarget = 0;
         signalRbf = fWalletRbf;
+        m_fee_mode = FeeEstimateMode::UNSET;
     }
 
     bool HasSelected() const
