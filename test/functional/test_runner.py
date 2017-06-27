@@ -151,6 +151,7 @@ EXTENDED_SCRIPTS = [
     'bip65-cltv-p2p.py', # NOTE: needs dash_hash to pass
     'bipdersig-p2p.py', # NOTE: needs dash_hash to pass
     'bipdersig.py',
+    'example_test.py',
     'getblocktemplate_proposals.py',
     'txn_doublespend.py',
     'txn_clone.py --mineblock',
