@@ -146,11 +146,13 @@ private:
 class CCoinsView
 {
 public:
-    //! Retrieve the Coin (unspent transaction output) for a given outpoint.
+    /** Retrieve the Coin (unspent transaction output) for a given outpoint.
+     *  Returns true only when an unspent coin was found, which is returned in coin.
+     *  When false is returned, coin's value is unspecified.
+     */
     virtual bool GetCoin(const COutPoint &outpoint, Coin &coin) const;
 
-    //! Just check whether we have data for a given outpoint.
-    //! This may (but cannot always) return true for spent outputs.
+    //! Just check whether a given outpoint is unspent.
     virtual bool HaveCoin(const COutPoint &outpoint) const;
 
     //! Retrieve the block hash whose state this CCoinsView currently represents
