@@ -15,84 +15,152 @@ The util tests are run as part of `make check` target. The functional
 tests are run by the travis continuous build process whenever a pull
 request is opened. Both sets of tests can also be run locally.
 
-Functional Test dependencies
-============================
+# Running tests locally
+
+Build for your system first. Be sure to enable wallet, utils and daemon when you configure. Tests will not run otherwise.
+
+### Functional tests
+
+#### Dependencies
+
 The ZMQ functional test requires a python ZMQ library. To install it:
 
 - on Unix, run `sudo apt-get install python3-zmq`
 - on mac OS, run `pip3 install pyzmq`
 
-Running tests locally
-=====================
+#### Running the tests
 
-Build for your system first. Be sure to enable wallet, utils and daemon when you configure. Tests will not run otherwise.
+Individual tests can be run by directly calling the test script, eg:
 
-Functional tests
-----------------
+```
+test/functional/replace-by-fee.py
+```
 
-You can run any single test by calling
+or can be run through the test_runner harness, eg:
 
-    test/functional/test_runner.py <testname>
+```
+test/functional/test_runner.py replace-by-fee.py
+```
 
-Or you can run any combination (incl. duplicates) of tests by calling
+You can run any combination (incl. duplicates) of tests by calling:
 
-    test/functional/test_runner.py <testname1> <testname2> <testname3> ...
+```
+test/functional/test_runner.py <testname1> <testname2> <testname3> ...
+```
 
-Run the regression test suite with
+Run the regression test suite with:
 
-    test/functional/test_runner.py
+```
+test/functional/test_runner.py
+```
 
 Run all possible tests with
 
-    test/functional/test_runner.py --extended
-
-By default, tests will be run in parallel. To specify how many jobs to run,
-append `--jobs=n` (default n=4).
-
-If you want to create a basic coverage report for the RPC test suite, append `--coverage`.
-
-Possible options, which apply to each individual test run:
-
 ```
-  -h, --help            show this help message and exit
-  --nocleanup           Leave bitcoinds and test.* datadir on exit or error
-  --noshutdown          Don't stop bitcoinds after the test execution
-  --srcdir=SRCDIR       Source directory containing bitcoind/bitcoin-cli
-                        (default: ../../src)
-  --tmpdir=TMPDIR       Root directory for datadirs
-  --tracerpc            Print out all RPC calls as they are made
-  --coveragedir=COVERAGEDIR
-                        Write tested RPC commands into this directory
+test/functional/test_runner.py --extended
 ```
 
-If you set the environment variable `PYTHON_DEBUG=1` you will get some debug
-output (example: `PYTHON_DEBUG=1 test/functional/test_runner.py wallet`).
+By default, up to 4 tests will be run in parallel by test_runner. To specify
+how many jobs to run, append `--jobs=n`
 
-A 200-block -regtest blockchain and wallets for four nodes
-is created the first time a regression test is run and
-is stored in the cache/ directory. Each node has 25 mature
-blocks (25*50=1250 BTC) in its wallet.
+The individual tests and the test_runner harness have many command-line
+options. Run `test_runner.py -h` to see them all.
 
-After the first run, the cache/ blockchain and wallets are
-copied into a temporary directory and used as the initial
-test state.
+#### Troubleshooting and debugging test failures
 
-If you get into a bad state, you should be able
-to recover with:
+##### Resource contention
+
+The P2P and RPC ports used by the bitcoind nodes-under-test are chosen to make
+conflicts with other processes unlikely. However, if there is another bitcoind
+process running on the system (perhaps from a previous test which hasn't successfully
+killed all its bitcoind nodes), then there may be a port conflict which will
+cause the test to fail. It is recommended that you run the tests on a system
+where no other bitcoind processes are running.
+
+On linux, the test_framework will warn if there is another
+bitcoind process running when the tests are started.
+
+If there are zombie bitcoind processes after test failure, you can kill them
+by running the following commands. **Note that these commands will kill all
+bitcoind processes running on the system, so should not be used if any non-test
+bitcoind processes are being run.**
+
+```bash
+killall bitcoind
+```
+
+or
+
+```bash
+pkill -9 bitcoind
+```
+
+
+##### Data directory cache
+
+A pre-mined blockchain with 200 blocks is generated the first time a
+functional test is run and is stored in test/cache. This speeds up
+test startup times since new blockchains don't need to be generated for
+each test. However, the cache may get into a bad state, in which case
+tests will fail. If this happens, remove the cache directory (and make
+sure bitcoind processes are stopped as above):
 
 ```bash
 rm -rf cache
 killall bitcoind
 ```
 
-Util tests
-----------
+##### Test logging
+
+The tests contain logging at different levels (debug, info, warning, etc). By
+default:
+
+- when run through the test_runner harness, *all* logs are written to
+  `test_framework.log` and no logs are output to the console.
+- when run directly, *all* logs are written to `test_framework.log` and INFO
+  level and above are output to the console.
+- when run on Travis, no logs are output to the console. However, if a test
+  fails, the `test_framework.log` and bitcoind `debug.log`s will all be dumped
+  to the console to help troubleshooting.
+
+To change the level of logs output to the console, use the `-l` command line
+argument.
+
+`test_framework.log` and bitcoind `debug.log`s can be combined into a single
+aggregate log by running the `combine_logs.py` script. The output can be plain
+text, colorized text or html. For example:
+
+```
+combine_logs.py -c <test data directory> | less -r
+```
+
+will pipe the colorized logs from the test into less.
+
+Use `--tracerpc` to trace out all the RPC calls and responses to the console. For
+some tests (eg any that use `submitblock` to submit a full block over RPC),
+this can result in a lot of screen output.
+
+By default, the test data directory will be deleted after a successful run.
+Use `--nocleanup` to leave the test data directory intact. The test data
+directory is never deleted after a failed test.
+
+##### Attaching a debugger
+
+A python debugger can be attached to tests at any point. Just add the line:
+
+```py
+import pdb; pdb.set_trace()
+```
+
+anywhere in the test. You will then be able to inspect variables, as well as
+call methods that interact with the bitcoind nodes-under-test.
+
+### Util tests
 
 Util tests can be run locally by running `test/util/bitcoin-util-test.py`. 
 Use the `-v` option for verbose output.
 
-Writing functional tests
-========================
+# Writing functional tests
 
 You are encouraged to write functional tests for new or existing features.
 Further information about the functional test framework and individual 
