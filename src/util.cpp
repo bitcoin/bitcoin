@@ -92,6 +92,8 @@
 #include <openssl/rand.h>
 #include <openssl/conf.h>
 
+// Application startup time (used for uptime calculation)
+const int64_t nStartupTime = GetTime();
 
 //Dash only features
 bool fMasternodeMode = false;
@@ -1099,3 +1101,9 @@ std::string SafeIntVersionToString(uint32_t nVersion)
     }
 }
 
+
+// Obtain the application startup time (used for uptime calculation)
+int64_t GetStartupTime()
+{
+    return nStartupTime;
+}

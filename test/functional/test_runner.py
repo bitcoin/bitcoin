@@ -126,6 +126,7 @@ BASE_SCRIPTS= [
     'sporks.py',
     'p2p-fingerprint.py',
     'wallet-encryption.py',
+    'uptime.py',
 ]
 
 EXTENDED_SCRIPTS = [

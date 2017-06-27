@@ -6,7 +6,7 @@
 
 /**
  * Server/client environment: argument handling, config file parsing,
- * logging, thread wrappers
+ * logging, thread wrappers, startup time
  */
 #ifndef BITCOIN_UTIL_H
 #define BITCOIN_UTIL_H
@@ -48,6 +48,9 @@
 extern bool fMasternodeMode;
 extern bool fLiteMode;
 extern int nWalletBackups;
+
+// Application startup time (used for uptime calculation)
+int64_t GetStartupTime();
 
 static const bool DEFAULT_LOGTIMEMICROS  = false;
 static const bool DEFAULT_LOGIPS         = false;
