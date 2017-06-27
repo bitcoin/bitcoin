@@ -113,6 +113,7 @@ BASE_SCRIPTS= [
     'listsinceblock.py',
     'p2p-leaktests.py',
     'wallet-encryption.py',
+    'uptime.py',
 ]
 
 EXTENDED_SCRIPTS = [
