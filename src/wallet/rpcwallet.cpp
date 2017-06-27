@@ -5,6 +5,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+<<<<<<< HEAD
 #include <amount.h>
 #include <base58.h>
 #include <chain.h>
@@ -29,6 +30,30 @@
 #include <wallet/feebumper.h>
 #include <wallet/wallet.h>
 #include <wallet/walletdb.h>
+=======
+#include "amount.h"
+#include "base58.h"
+#include "chain.h"
+#include "consensus/validation.h"
+#include "core_io.h"
+#include "init.h"
+#include "validation.h"
+#include "net.h"
+#include "policy/feerate.h"
+#include "policy/fees.h"
+#include "policy/policy.h"
+#include "policy/rbf.h"
+#include "rpc/mining.h"
+#include "rpc/server.h"
+#include "script/sign.h"
+#include "timedata.h"
+#include "util.h"
+#include "utilmoneystr.h"
+#include "wallet/coincontrol.h"
+#include "wallet/feebumper.h"
+#include "wallet/wallet.h"
+#include "wallet/walletdb.h"
+>>>>>>> df7e2f0... rpc: Move the `generate` RPC call to rpcwallet
 
 #include <stdint.h>
 
@@ -3073,6 +3098,47 @@ UniValue bumpfee(const JSONRPCRequest& request)
     return result;
 }
 
+UniValue generate(const JSONRPCRequest& request)
+{
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
+
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
+        throw std::runtime_error(
+            "generate nblocks ( maxtries )\n"
+            "\nMine up to nblocks blocks immediately (before the RPC call returns) to an address in the wallet.\n"
+            "\nArguments:\n"
+            "1. nblocks      (numeric, required) How many blocks are generated immediately.\n"
+            "2. maxtries     (numeric, optional) How many iterations to try (default = 1000000).\n"
+            "\nResult:\n"
+            "[ blockhashes ]     (array) hashes of blocks generated\n"
+            "\nExamples:\n"
+            "\nGenerate 11 blocks\n"
+            + HelpExampleCli("generate", "11")
+        );
+
+    int nGenerate = request.params[0].get_int();
+    uint64_t nMaxTries = 1000000;
+    if (request.params.size() > 1) {
+        nMaxTries = request.params[1].get_int();
+    }
+
+    std::shared_ptr<CReserveScript> coinbaseScript;
+    pwallet->GetScriptForMining(coinbaseScript);
+
+    // If the keypool is exhausted, no script is returned at all.  Catch this.
+    if (!coinbaseScript)
+        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
+
+    //throw an error if no script was provided
+    if (coinbaseScript->reserveScript.empty())
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "No coinbase script available (mining requires a wallet)");
+
+    return generateBlocks(coinbaseScript, nGenerate, nMaxTries, true);
+}
+
 UniValue setbip69enabled(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
@@ -3154,8 +3220,12 @@ static const CRPCCommand commands[] =
     { "wallet",             "walletpassphrase",         &walletpassphrase,         true,   {"passphrase","timeout"} },
     { "wallet",             "removeprunedfunds",        &removeprunedfunds,        true,   {"txid"} },
 
+<<<<<<< HEAD
     { "hidden",             "setbip69enabled",          &setbip69enabled,          true,   {} },
 
+=======
+    { "generating",         "generate",                 &generate,                 true,   {"nblocks","maxtries"} },
+>>>>>>> df7e2f0... rpc: Move the `generate` RPC call to rpcwallet
 };
 
 void RegisterWalletRPCCommands(CRPCTable &tableRPC)

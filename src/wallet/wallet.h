@@ -1114,7 +1114,7 @@ public:
         }
     }
 
-    void GetScriptForMining(std::shared_ptr<CReserveScript> &script) override;
+    void GetScriptForMining(std::shared_ptr<CReserveScript> &script);
     
     unsigned int GetKeyPoolSize()
     {
