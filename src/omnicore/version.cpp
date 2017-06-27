@@ -9,24 +9,6 @@
 #    include "build.h"
 #endif
 
-#ifndef COMMIT_ID
-#   ifdef GIT_ARCHIVE
-#       define COMMIT_ID "$Format:%h$"
-#   elif defined(BUILD_SUFFIX)
-#       define COMMIT_ID STRINGIZE(BUILD_SUFFIX)
-#   else
-#       define COMMIT_ID ""
-#   endif
-#endif
-
-#ifndef BUILD_DATE
-#    ifdef GIT_COMMIT_DATE
-#        define BUILD_DATE GIT_COMMIT_DATE
-#    else
-#        define BUILD_DATE __DATE__ ", " __TIME__
-#    endif
-#endif
-
 #ifdef OMNICORE_VERSION_STATUS
 #    define OMNICORE_VERSION_SUFFIX STRINGIZE(OMNICORE_VERSION_STATUS)
 #else
@@ -65,16 +47,4 @@ const std::string BitcoinCoreVersion()
                 CLIENT_VERSION_MINOR,
                 CLIENT_VERSION_REVISION);
     }
-}
-
-//! Returns build date
-const std::string BuildDate()
-{
-    return std::string(BUILD_DATE);
-}
-
-//! Returns commit identifier, if available
-const std::string BuildCommit()
-{
-    return std::string(COMMIT_ID);
 }

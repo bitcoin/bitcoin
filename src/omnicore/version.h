@@ -48,12 +48,6 @@ const std::string OmniCoreVersion();
 //! Returns formatted Bitcoin Core version, e.g. "0.10", "0.9.3"
 const std::string BitcoinCoreVersion();
 
-//! Returns build date
-const std::string BuildDate();
-
-//! Returns commit identifier, if available
-const std::string BuildCommit();
-
 
 #endif // WINDRES_PREPROC
 
