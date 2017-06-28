@@ -24,6 +24,7 @@
 #include "sync.h"
 #include "ui_interface.h"
 #include "util.h" // for GetBoolArg
+#include "wallet/coincontrol.h"
 #include "wallet/feebumper.h"
 #include "wallet/wallet.h"
 #include "wallet/walletdb.h" // for BackupWallet
@@ -667,8 +668,10 @@ bool WalletModel::bumpFee(uint256 hash)
 {
     std::unique_ptr<CFeeBumper> feeBump;
     {
+        CCoinControl coin_control;
+        coin_control.signalRbf = true;
         LOCK2(cs_main, wallet->cs_wallet);
-        feeBump.reset(new CFeeBumper(wallet, hash, nTxConfirmTarget, false, 0, true, FeeEstimateMode::UNSET));
+        feeBump.reset(new CFeeBumper(wallet, hash, coin_control, 0));
     }
     if (feeBump->getResult() != BumpFeeResult::OK)
     {

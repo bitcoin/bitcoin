@@ -2721,17 +2721,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                     vin.scriptWitness.SetNull();
                 }
 
-                // Allow to override the default confirmation target over the CoinControl instance
-                int currentConfirmationTarget = nTxConfirmTarget;
-                if (coin_control.nConfirmTarget > 0)
-                    currentConfirmationTarget = coin_control.nConfirmTarget;
-
-                // Allow to override the default fee estimate mode over the CoinControl instance
-                bool conservative_estimate = CalculateEstimateType(coin_control.m_fee_mode, coin_control.signalRbf);
-
-                CAmount nFeeNeeded = GetMinimumFee(nBytes, currentConfirmationTarget, ::mempool, ::feeEstimator, &feeCalc, false /* ignoreGlobalPayTxFee */, conservative_estimate);
-                if (coin_control.fOverrideFeeRate)
-                    nFeeNeeded = coin_control.nFeeRate.GetFee(nBytes);
+                CAmount nFeeNeeded = GetMinimumFee(nBytes, coin_control, ::mempool, ::feeEstimator, &feeCalc);
 
                 // If we made it here and we aren't even able to meet the relay fee on the next pass, give up
                 // because we must be at the maximum allowed fee.
@@ -2756,7 +2746,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                     // new inputs. We now know we only need the smaller fee
                     // (because of reduced tx size) and so we should add a
                     // change output. Only try this once.
-                    CAmount fee_needed_for_change = GetMinimumFee(change_prototype_size, currentConfirmationTarget, ::mempool, ::feeEstimator, nullptr, false /* ignoreGlobalPayTxFee */, conservative_estimate);
+                    CAmount fee_needed_for_change = GetMinimumFee(change_prototype_size, coin_control, ::mempool, ::feeEstimator, nullptr);
                     CAmount minimum_value_for_change = GetDustThreshold(change_prototype_txout, ::dustRelayFee);
                     CAmount max_excess_fee = fee_needed_for_change + minimum_value_for_change;
                     if (nFeeRet > nFeeNeeded + max_excess_fee && nChangePosInOut == -1 && nSubtractFeeFromAmount == 0 && pick_new_inputs) {
@@ -2932,33 +2922,52 @@ CAmount CWallet::GetRequiredFee(unsigned int nTxBytes)
     return std::max(minTxFee.GetFee(nTxBytes), ::minRelayTxFee.GetFee(nTxBytes));
 }
 
-CAmount CWallet::GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarget, const CTxMemPool& pool, const CBlockPolicyEstimator& estimator, FeeCalculation *feeCalc, bool ignoreGlobalPayTxFee, bool conservative_estimate)
+CAmount CWallet::GetMinimumFee(unsigned int nTxBytes, const CCoinControl& coin_control, const CTxMemPool& pool, const CBlockPolicyEstimator& estimator, FeeCalculation *feeCalc)
 {
-    // payTxFee is the user-set global for desired feerate
-    CAmount nFeeNeeded = payTxFee.GetFee(nTxBytes);
-    // User didn't set: use -txconfirmtarget to estimate...
-    if (nFeeNeeded == 0 || ignoreGlobalPayTxFee) {
-        nFeeNeeded = estimator.estimateSmartFee(nConfirmTarget, feeCalc, pool, conservative_estimate).GetFee(nTxBytes);
-        // ... unless we don't have enough mempool data for estimatefee, then use fallbackFee
-        if (nFeeNeeded == 0) {
-            nFeeNeeded = fallbackFee.GetFee(nTxBytes);
-            if (feeCalc) feeCalc->reason = FeeReason::FALLBACK;
-        }
-    } else {
+    /* User control of how to calculate fee uses the following parameter precedence:
+       1. coin_control.m_feerate
+       2. coin_control.m_confirm_target
+       3. payTxFee (user-set global variable)
+       4. nTxConfirmTarget (user-set global variable)
+       The first parameter that is set is used.
+    */
+    CAmount fee_needed;
+    if (coin_control.m_feerate) { // 1.
+        fee_needed = coin_control.m_feerate->GetFee(nTxBytes);
+        if (feeCalc) feeCalc->reason = FeeReason::PAYTXFEE;
+        // Allow to override automatic min/max check over coin control instance
+        if (coin_control.fOverrideFeeRate) return fee_needed;
+    }
+    else if (!coin_control.m_confirm_target && ::payTxFee != CFeeRate(0)) { // 3. TODO: remove magic value of 0 for global payTxFee
+        fee_needed = ::payTxFee.GetFee(nTxBytes);
         if (feeCalc) feeCalc->reason = FeeReason::PAYTXFEE;
     }
+    else { // 2. or 4.
+        // We will use smart fee estimation
+        unsigned int target = coin_control.m_confirm_target ? *coin_control.m_confirm_target : ::nTxConfirmTarget;
+        // Allow to override the default fee estimate mode over the CoinControl instance
+        bool conservative_estimate = CalculateEstimateType(coin_control.m_fee_mode, coin_control.signalRbf);
+
+        fee_needed = estimator.estimateSmartFee(target, feeCalc, pool, conservative_estimate).GetFee(nTxBytes);
+        if (fee_needed == 0) {
+            // if we don't have enough data for estimateSmartFee, then use fallbackFee
+            fee_needed = fallbackFee.GetFee(nTxBytes);
+            if (feeCalc) feeCalc->reason = FeeReason::FALLBACK;
+        }
+    }
+
     // prevent user from paying a fee below minRelayTxFee or minTxFee
-    CAmount requiredFee = GetRequiredFee(nTxBytes);
-    if (requiredFee > nFeeNeeded) {
-        nFeeNeeded = requiredFee;
+    CAmount required_fee = GetRequiredFee(nTxBytes);
+    if (required_fee > fee_needed) {
+        fee_needed = required_fee;
         if (feeCalc) feeCalc->reason = FeeReason::REQUIRED;
     }
     // But always obey the maximum
-    if (nFeeNeeded > maxTxFee) {
-        nFeeNeeded = maxTxFee;
+    if (fee_needed > maxTxFee) {
+        fee_needed = maxTxFee;
         if (feeCalc) feeCalc->reason = FeeReason::MAXTXFEE;
     }
-    return nFeeNeeded;
+    return fee_needed;
 }
 
 
