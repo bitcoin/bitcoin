@@ -2469,9 +2469,9 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
 
     CReserveKey reservekey(this);
     CWalletTx wtx;
-    if (!CreateTransaction(vecSend, wtx, reservekey, nFeeRet, nChangePosInOut, strFailReason, &coinControl, false))
+    if (!CreateTransaction(vecSend, wtx, reservekey, nFeeRet, nChangePosInOut, strFailReason, coinControl, false)) {
         return false;
-
+    }
     if (nChangePosInOut != -1)
         tx.vout.insert(tx.vout.begin() + nChangePosInOut, wtx.tx->vout[nChangePosInOut]);
 
@@ -2502,7 +2502,7 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
 }
 
 bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet,
-                                int& nChangePosInOut, std::string& strFailReason, const CCoinControl* coinControl, bool sign)
+                                int& nChangePosInOut, std::string& strFailReason, const CCoinControl& coin_control, bool sign)
 {
     CAmount nValue = 0;
     int nChangePosRequest = nChangePosInOut;
@@ -2567,7 +2567,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
         LOCK2(cs_main, cs_wallet);
         {
             std::vector<COutput> vAvailableCoins;
-            AvailableCoins(vAvailableCoins, true, coinControl);
+            AvailableCoins(vAvailableCoins, true, &coin_control);
 
             // Create change script that will be used if we need change
             // TODO: pass in scriptChange instead of reservekey so
@@ -2575,12 +2575,9 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
             CScript scriptChange;
 
             // coin control: send change to custom address
-            if (coinControl && !boost::get<CNoDestination>(&coinControl->destChange))
-                scriptChange = GetScriptForDestination(coinControl->destChange);
-
-            // no coin control: send change to newly generated address
-            else
-            {
+            if (!boost::get<CNoDestination>(&coin_control.destChange)) {
+                scriptChange = GetScriptForDestination(coin_control.destChange);
+            } else { // no coin control: send change to newly generated address
                 // Note: We use a new key here to keep it from being obvious which side is the change.
                 //  The drawback is that by not reusing a previous key, the change may be lost if a
                 //  backup is restored, if the backup doesn't have the new private key for the change.
@@ -2654,7 +2651,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                 if (pick_new_inputs) {
                     nValueIn = 0;
                     setCoins.clear();
-                    if (!SelectCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn, coinControl))
+                    if (!SelectCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn, &coin_control))
                     {
                         strFailReason = _("Insufficient funds");
                         return false;
@@ -2705,8 +2702,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                 // to avoid conflicting with other possible uses of nSequence,
                 // and in the spirit of "smallest possible change from prior
                 // behavior."
-                bool rbf = coinControl ? coinControl->signalRbf : fWalletRbf;
-                const uint32_t nSequence = rbf ? MAX_BIP125_RBF_SEQUENCE : (std::numeric_limits<unsigned int>::max() - 1);
+                const uint32_t nSequence = coin_control.signalRbf ? MAX_BIP125_RBF_SEQUENCE : (std::numeric_limits<unsigned int>::max() - 1);
                 for (const auto& coin : setCoins)
                     txNew.vin.push_back(CTxIn(coin.outpoint,CScript(),
                                               nSequence));
@@ -2727,15 +2723,15 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
 
                 // Allow to override the default confirmation target over the CoinControl instance
                 int currentConfirmationTarget = nTxConfirmTarget;
-                if (coinControl && coinControl->nConfirmTarget > 0)
-                    currentConfirmationTarget = coinControl->nConfirmTarget;
+                if (coin_control.nConfirmTarget > 0)
+                    currentConfirmationTarget = coin_control.nConfirmTarget;
 
                 // Allow to override the default fee estimate mode over the CoinControl instance
-                bool conservative_estimate = CalculateEstimateType(coinControl ? coinControl->m_fee_mode : FeeEstimateMode::UNSET, rbf);
+                bool conservative_estimate = CalculateEstimateType(coin_control.m_fee_mode, coin_control.signalRbf);
 
                 CAmount nFeeNeeded = GetMinimumFee(nBytes, currentConfirmationTarget, ::mempool, ::feeEstimator, &feeCalc, false /* ignoreGlobalPayTxFee */, conservative_estimate);
-                if (coinControl && coinControl->fOverrideFeeRate)
-                    nFeeNeeded = coinControl->nFeeRate.GetFee(nBytes);
+                if (coin_control.fOverrideFeeRate)
+                    nFeeNeeded = coin_control.nFeeRate.GetFee(nBytes);
 
                 // If we made it here and we aren't even able to meet the relay fee on the next pass, give up
                 // because we must be at the maximum allowed fee.
