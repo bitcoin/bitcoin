@@ -1912,7 +1912,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         // * p2sh (when P2SH enabled in flags and excludes coinbase)
         // * witness (when witness enabled in flags and excludes coinbase)
         nSigOpsCost += GetTransactionSigOpCost(tx, view, flags);
-        if (nSigOpsCost > MaxBlockSigOpsCost(pindex->nHeight, fSegwitSeasoned))
+        if (nSigOpsCost > MaxBlockSigOpsCost(fSegwitSeasoned))
             return state.DoS(100, error("ConnectBlock(): too many sigops"),
                              REJECT_INVALID, "bad-blk-sigops");
 
@@ -3091,7 +3091,7 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Co
         fSegwitSeasoned = IsWitnessSeasoned(pindexPrev, consensusParams);
     }
 
-    if (::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) > MaxBlockBaseSize(nHeight, fSegwitSeasoned))
+    if (::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) > MaxBlockBaseSize(fSegwitSeasoned))
         return state.DoS(100, false, REJECT_INVALID, "bad-blk-length", false, "size limits failed");
 
     // No witness data is allowed in blocks that don't commit to witness data, as this would otherwise leave room for spam
@@ -3108,7 +3108,7 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Co
     {
         nSigOps += GetLegacySigOpCount(*tx);
     }
-    if (nSigOps * WITNESS_SCALE_FACTOR > MaxBlockSigOpsCost(nHeight, fSegwitSeasoned))
+    if (nSigOps * WITNESS_SCALE_FACTOR > MaxBlockSigOpsCost(fSegwitSeasoned))
         return state.DoS(100, false, REJECT_INVALID, "bad-blk-sigops", false, "out-of-bounds SigOpCount");
 
     // After the coinbase witness nonce and commitment are verified,
@@ -3117,7 +3117,7 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Co
     // large by filling up the coinbase witness, which doesn't change
     // the block hash, so we couldn't mark the block as permanently
     // failed).
-    if (GetBlockWeight(block) > MaxBlockWeight(nHeight, fSegwitSeasoned)) {
+    if (GetBlockWeight(block) > MaxBlockWeight(fSegwitSeasoned)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-blk-weight", false, strprintf("%s : weight limit failed", __func__));
     }
 
