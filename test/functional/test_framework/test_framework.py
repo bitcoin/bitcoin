@@ -380,8 +380,10 @@ class ComparisonTestFramework(BitcoinTestFramework):
                           help="bitcoind binary to use for reference nodes (if any)")
 
     def setup_network(self):
+        extra_args = [['-whitelist=127.0.0.1']]*self.num_nodes
+        if hasattr(self, "extra_args"):
+            extra_args = self.extra_args
         self.nodes = self.start_nodes(
-            self.num_nodes, self.options.tmpdir,
-            extra_args=[['-whitelist=127.0.0.1']] * self.num_nodes,
+            self.num_nodes, self.options.tmpdir, extra_args,
             binary=[self.options.testbinary] +
             [self.options.refbinary]*(self.num_nodes-1))
