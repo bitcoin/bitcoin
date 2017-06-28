@@ -364,8 +364,7 @@ void PaymentServer::initNetManager()
 {
     if (!optionsModel)
         return;
-    if (netManager != nullptr)
-        delete netManager;
+    delete netManager;
 
     // netManager is used to fetch paymentrequests given in bitcoin: URIs
     netManager = new QNetworkAccessManager(this);
