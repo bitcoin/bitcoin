@@ -216,6 +216,9 @@ public:
     /** Empty mempool transactions on shutdown to record failure to confirm for txs still in mempool */
     void FlushUnconfirmed(CTxMemPool& pool);
 
+    /** Calculation of highest target that estimates are tracked for */
+    unsigned int HighestTargetTracked(FeeEstimateHorizon horizon) const;
+
 private:
     unsigned int nBestSeenHeight;
     unsigned int firstRecordedHeight;
