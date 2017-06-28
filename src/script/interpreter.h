@@ -185,7 +185,27 @@ public:
 using TransactionSignatureChecker = GenericTransactionSignatureChecker<CTransaction>;
 using MutableTransactionSignatureChecker = GenericTransactionSignatureChecker<CMutableTransaction>;
 
-bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptError* error = nullptr);
+class ScriptExecution {
+public:
+    typedef std::vector<unsigned char> StackElementType;
+    typedef std::vector<StackElementType> StackType;
+
+    const CScript& script;
+    StackType& stack;
+    unsigned int flags;
+    const BaseSignatureChecker& checker;
+    SigVersion sigversion;
+
+    ScriptExecution(StackType& stack, const CScript&, unsigned int flags, const BaseSignatureChecker&, SigVersion);
+
+    bool Eval(ScriptError* error = nullptr);
+};
+
+inline bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptError* error = nullptr)
+{
+    return ScriptExecution(stack, script, flags, checker, sigversion).Eval(error);
+}
+
 bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CScriptWitness* witness, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror = nullptr);
 
 size_t CountWitnessSigOps(const CScript& scriptSig, const CScript& scriptPubKey, const CScriptWitness* witness, unsigned int flags);
