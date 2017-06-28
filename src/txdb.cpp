@@ -374,6 +374,7 @@ bool CCoinsViewDB::Upgrade() {
     size_t batch_size = 1 << 24;
     CDBBatch batch(db);
     uiInterface.SetProgressBreakAction(StartShutdown);
+    int reportDone = 0;
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
         if (ShutdownRequested()) {
@@ -383,8 +384,13 @@ bool CCoinsViewDB::Upgrade() {
         if (pcursor->GetKey(key) && key.first == DB_COINS) {
             if (count++ % 256 == 0) {
                 uint32_t high = 0x100 * *key.second.begin() + *(key.second.begin() + 1);
-                uiInterface.ShowProgress(_("Upgrading UTXO database") + "\n"+ _("(press q to shutdown and continue later)") + "\n", (int)(high * 100.0 / 65536.0 + 0.5));
-                LogPrintf("[%d%%]...", (int)(high * 100.0 / 65536.0 + 0.5));
+                int percentageDone = (int)(high * 100.0 / 65536.0 + 0.5);
+                uiInterface.ShowProgress(_("Upgrading UTXO database") + "\n"+ _("(press q to shutdown and continue later)") + "\n", percentageDone);
+                if (reportDone < percentageDone/10) {
+                    // report max. every 10% step
+                    LogPrintf("[%d%%]...", percentageDone);
+                    reportDone = percentageDone/10;
+                }
             }
             CCoins old_coins;
             if (!pcursor->GetValue(old_coins)) {
