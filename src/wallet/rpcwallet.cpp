@@ -460,7 +460,7 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
     }
 
     if (request.params.size() > 6 && !request.params[6].isNull()) {
-        coin_control.nConfirmTarget = request.params[6].get_int();
+        coin_control.m_confirm_target = request.params[6].get_int();
     }
 
     if (request.params.size() > 7 && !request.params[7].isNull()) {
@@ -981,7 +981,7 @@ UniValue sendmany(const JSONRPCRequest& request)
     }
 
     if (request.params.size() > 6 && !request.params[6].isNull()) {
-        coin_control.nConfirmTarget = request.params[6].get_int();
+        coin_control.m_confirm_target = request.params[6].get_int();
     }
 
     if (request.params.size() > 7 && !request.params[7].isNull()) {
@@ -2730,13 +2730,9 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
     RPCTypeCheck(request.params, {UniValue::VSTR});
 
     CCoinControl coinControl;
-    coinControl.destChange = CNoDestination();
     int changePosition = -1;
-    coinControl.fAllowWatchOnly = false;  // include watching
     bool lockUnspents = false;
     bool reserveChangeKey = true;
-    coinControl.nFeeRate = CFeeRate(0);
-    coinControl.fOverrideFeeRate = false;
     UniValue subtractFeeFromOutputs;
     std::set<int> setSubtractFeeFromOutputs;
 
@@ -2788,7 +2784,7 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
 
         if (options.exists("feeRate"))
         {
-            coinControl.nFeeRate = CFeeRate(AmountFromValue(options["feeRate"]));
+            coinControl.m_feerate = CFeeRate(AmountFromValue(options["feeRate"]));
             coinControl.fOverrideFeeRate = true;
         }
 
@@ -2799,7 +2795,7 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
             coinControl.signalRbf = options["replaceable"].get_bool();
         }
         if (options.exists("conf_target")) {
-            coinControl.nConfirmTarget = options["conf_target"].get_int();
+            coinControl.m_confirm_target = options["conf_target"].get_int();
         }
         if (options.exists("estimate_mode")) {
             if (!FeeModeFromString(options["estimate_mode"].get_str(), coinControl.m_fee_mode)) {
@@ -2905,11 +2901,9 @@ UniValue bumpfee(const JSONRPCRequest& request)
     hash.SetHex(request.params[0].get_str());
 
     // optional parameters
-    bool ignoreGlobalPayTxFee = false;
-    int newConfirmTarget = nTxConfirmTarget;
     CAmount totalFee = 0;
-    bool replaceable = true;
-    FeeEstimateMode fee_mode = FeeEstimateMode::UNSET;
+    CCoinControl coin_control;
+    coin_control.signalRbf = true;
     if (request.params.size() > 1) {
         UniValue options = request.params[1];
         RPCTypeCheckObj(options,
@@ -2924,14 +2918,11 @@ UniValue bumpfee(const JSONRPCRequest& request)
         if (options.exists("confTarget") && options.exists("totalFee")) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "confTarget and totalFee options should not both be set. Please provide either a confirmation target for fee estimation or an explicit total fee for the transaction.");
         } else if (options.exists("confTarget")) {
-            // If the user has explicitly set a confTarget in this rpc call,
-            // then override the default logic that uses the global payTxFee
-            // instead of the confirmation target.
-            ignoreGlobalPayTxFee = true;
-            newConfirmTarget = options["confTarget"].get_int();
-            if (newConfirmTarget <= 0) { // upper-bound will be checked by estimatefee/smartfee
+            int target = options["confTarget"].get_int();
+            if (target <= 0) { // FIXME: Check upper bound too
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid confTarget (cannot be <= 0)");
             }
+            coin_control.m_confirm_target = target;
         } else if (options.exists("totalFee")) {
             totalFee = options["totalFee"].get_int64();
             if (totalFee <= 0) {
@@ -2940,10 +2931,10 @@ UniValue bumpfee(const JSONRPCRequest& request)
         }
 
         if (options.exists("replaceable")) {
-            replaceable = options["replaceable"].get_bool();
+            coin_control.signalRbf = options["replaceable"].get_bool();
         }
         if (options.exists("estimate_mode")) {
-            if (!FeeModeFromString(options["estimate_mode"].get_str(), fee_mode)) {
+            if (!FeeModeFromString(options["estimate_mode"].get_str(), coin_control.m_fee_mode)) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid estimate_mode parameter");
             }
         }
@@ -2952,7 +2943,7 @@ UniValue bumpfee(const JSONRPCRequest& request)
     LOCK2(cs_main, pwallet->cs_wallet);
     EnsureWalletIsUnlocked(pwallet);
 
-    CFeeBumper feeBump(pwallet, hash, newConfirmTarget, ignoreGlobalPayTxFee, totalFee, replaceable, fee_mode);
+    CFeeBumper feeBump(pwallet, hash, coin_control, totalFee);
     BumpFeeResult res = feeBump.getResult();
     if (res != BumpFeeResult::OK)
     {

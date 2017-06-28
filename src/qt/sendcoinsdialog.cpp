@@ -274,11 +274,11 @@ void SendCoinsDialog::on_sendButton_clicked()
     CCoinControl ctrl;
     if (model->getOptionsModel()->getCoinControlFeatures())
         ctrl = *CoinControlDialog::coinControl;
-    if (ui->radioSmartFee->isChecked())
-        ctrl.nConfirmTarget = getConfTargetForIndex(ui->confTargetSelector->currentIndex());
-    else
-        ctrl.nConfirmTarget = 0;
-
+    if (ui->radioSmartFee->isChecked()) {
+        ctrl.m_confirm_target = getConfTargetForIndex(ui->confTargetSelector->currentIndex());
+    } else {
+        ctrl.m_confirm_target = boost::none;
+    }
     ctrl.signalRbf = ui->optInRBF->isChecked();
 
     prepareStatus = model->prepareTransaction(currentTransaction, ctrl);
@@ -848,9 +848,9 @@ void SendCoinsDialog::coinControlUpdateLabels()
     CoinControlDialog::payAmounts.clear();
     CoinControlDialog::fSubtractFeeFromAmount = false;
     if (ui->radioSmartFee->isChecked()) {
-        CoinControlDialog::coinControl->nConfirmTarget = getConfTargetForIndex(ui->confTargetSelector->currentIndex());
+        CoinControlDialog::coinControl->m_confirm_target = getConfTargetForIndex(ui->confTargetSelector->currentIndex());
     } else {
-        CoinControlDialog::coinControl->nConfirmTarget = model->getDefaultConfirmTarget();
+        CoinControlDialog::coinControl->m_confirm_target = boost::none;
     }
     CoinControlDialog::coinControl->signalRbf = ui->optInRBF->isChecked();
 
