@@ -102,7 +102,7 @@ BlockAssembler::BlockAssembler(const CChainParams& _chainparams)
     }
 
     // Limit weight to between 4K and MAX_BLOCK_WEIGHT-4K for sanity:
-    nBlockMaxWeight = std::max((unsigned int)4000, std::min((unsigned int)(MaxBlockWeight(0, false)-4000), nBlockMaxWeight));
+    nBlockMaxWeight = std::max((unsigned int)4000, std::min((unsigned int)(MaxBlockWeight(false)-4000), nBlockMaxWeight));
     // Limit size to between 1K and MAX_BLOCK_SERIALIZED_SIZE-1K for sanity:
     nBlockMaxSize = std::max((unsigned int)1000, std::min((unsigned int)(MAX_BLOCK_SERIALIZED_SIZE-1000), nBlockMaxSize));
     // Whether we need to account for byte usage (in addition to weight usage)
@@ -242,7 +242,7 @@ bool BlockAssembler::TestPackage(uint64_t packageSize, int64_t packageSigOpsCost
     // TODO: switch to weight-based accounting for packages instead of vsize-based accounting.
     if (nBlockWeight + WITNESS_SCALE_FACTOR * packageSize >= nBlockMaxWeight)
         return false;
-    if (nBlockSigOpsCost + packageSigOpsCost >= (uint64_t)MaxBlockSigOpsCost(nHeight, fIncludeWitness)) // note - excludes bip102 buffer
+    if (nBlockSigOpsCost + packageSigOpsCost >= (uint64_t)MaxBlockSigOpsCost(fIncludeWitness)) // note - excludes bip102 buffer
         return false;
     return true;
 }
@@ -302,7 +302,7 @@ bool BlockAssembler::TestForBlock(CTxMemPool::txiter iter)
         }
     }
 
-    uint64_t sigOpMax = MaxBlockSigOpsCost(nHeight, fIncludeWitness);
+    uint64_t sigOpMax = MaxBlockSigOpsCost(fIncludeWitness); // excludes bip102 buffer
     if (nBlockSigOpsCost + iter->GetSigOpCost() >= sigOpMax) {
         // If the block has room for no more sig ops then
         // flag that the block is finished
