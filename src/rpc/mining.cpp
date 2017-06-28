@@ -657,6 +657,7 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
     result.push_back(Pair("noncerange", "00000000ffffffff"));
     int64_t nSigOpLimit = MAX_BLOCK_SIGOPS_COST;
     int64_t nSizeLimit = MAX_BLOCK_SERIALIZED_SIZE;
+    int64_t nSigOpLimit = MaxBlockSigOpsCost(fPreSegWit?false:true); // excl bip102 buffer
     if (fPreSegWit) {
         assert(nSigOpLimit % WITNESS_SCALE_FACTOR == 0);
         nSigOpLimit /= WITNESS_SCALE_FACTOR;

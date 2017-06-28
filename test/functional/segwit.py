@@ -120,7 +120,7 @@ class SegWitTest(BitcoinTestFramework):
         assert(tmpl['sigoplimit'] == 20000)
         assert(tmpl['transactions'][0]['hash'] == txid)
         assert(tmpl['transactions'][0]['sigops'] == 2)
-        tmpl = self.nodes[0].getblocktemplate({'rules':['segwit']})
+        tmpl = self.nodes[0].getblocktemplate({'rules':['segwit','segwit2x']})
         assert(tmpl['sizelimit'] == 1000000)
         assert('weightlimit' not in tmpl)
         assert(tmpl['sigoplimit'] == 20000)
@@ -229,10 +229,10 @@ class SegWitTest(BitcoinTestFramework):
 
         self.log.info("Verify sigops are counted in GBT with BIP141 rules after the fork")
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
-        tmpl = self.nodes[0].getblocktemplate({'rules':['segwit']})
+        tmpl = self.nodes[0].getblocktemplate({'rules':['segwit','segwit2x']})
         assert(tmpl['sizelimit'] >= 3999577)  # actual maximum size is lower due to minimum mandatory non-witness data
         assert(tmpl['weightlimit'] == 4000000)  # limit at first step
-        assert(tmpl['sigoplimit'] == 80000)
+        assert(tmpl['sigoplimit'] == 160000)    # limit at first step
         assert(tmpl['transactions'][0]['txid'] == txid)
         assert(tmpl['transactions'][0]['sigops'] == 8)
 
@@ -276,7 +276,7 @@ class SegWitTest(BitcoinTestFramework):
         assert(txid1 in template_txids)
 
         # Check that running with segwit support results in all 3 being included.
-        template = self.nodes[0].getblocktemplate({"rules": ["segwit"]})
+        template = self.nodes[0].getblocktemplate({"rules": ["segwit","segwit2x"]})
         template_txids = [ t['txid'] for t in template['transactions'] ]
         assert(txid1 in template_txids)
         assert(txid2 in template_txids)
