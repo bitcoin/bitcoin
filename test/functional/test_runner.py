@@ -113,6 +113,7 @@ BASE_SCRIPTS= [
     'listsinceblock.py',
     'p2p-leaktests.py',
     'wallet-encryption.py',
+    'bip65-cltv-p2p.py',
     'uptime.py',
 ]
 
@@ -136,8 +137,6 @@ EXTENDED_SCRIPTS = [
     'rpcbind_test.py',
     # vv Tests less than 30s vv
     'assumevalid.py',
-    'bip65-cltv.py',
-    'bip65-cltv-p2p.py',
     'bipdersig-p2p.py',
     'bipdersig.py',
     'example_test.py',
