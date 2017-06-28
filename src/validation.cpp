@@ -1827,6 +1827,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     bool fStrictPayToScriptHash = (pindex->GetBlockTime() >= nBIP16SwitchTime);
 
     unsigned int flags = fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE;
+    bool fSegwitSeasoned = false;
 
     // Start enforcing the DERSIG (BIP66) rule
     if (pindex->nHeight >= chainparams.GetConsensus().BIP66Height) {
@@ -1849,6 +1850,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     if (IsWitnessEnabled(pindex->pprev, chainparams.GetConsensus())) {
         flags |= SCRIPT_VERIFY_WITNESS;
         flags |= SCRIPT_VERIFY_NULLDUMMY;
+        fSegwitSeasoned = IsWitnessSeasoned(pindex->pprev, chainparams.GetConsensus());
     }
 
     // SEGWIT2X signalling.
@@ -1910,7 +1912,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         // * p2sh (when P2SH enabled in flags and excludes coinbase)
         // * witness (when witness enabled in flags and excludes coinbase)
         nSigOpsCost += GetTransactionSigOpCost(tx, view, flags);
-        if (nSigOpsCost > MaxBlockSigOpsCost(pindex->nHeight, (flags & SCRIPT_VERIFY_WITNESS) ? true : false))
+        if (nSigOpsCost > MaxBlockSigOpsCost(pindex->nHeight, fSegwitSeasoned))
             return state.DoS(100, error("ConnectBlock(): too many sigops"),
                              REJECT_INVALID, "bad-blk-sigops");
 
@@ -2929,6 +2931,20 @@ bool IsWitnessEnabled(const CBlockIndex* pindexPrev, const Consensus::Params& pa
     return (VersionBitsState(pindexPrev, params, Consensus::DEPLOYMENT_SEGWIT, versionbitscache) == THRESHOLD_ACTIVE);
 }
 
+bool IsWitnessSeasoned(const CBlockIndex* pindexPrev, const Consensus::Params& params)
+{
+    AssertLockHeld(cs_main);
+    assert(pindexPrev);
+
+    const int nHeight = pindexPrev->nHeight + 1;
+
+    if (nHeight < (int)BIP102_FORK_BUFFER)
+      return false;
+
+    const CBlockIndex* pindexForkBuffer = pindexPrev->GetAncestor(nHeight - BIP102_FORK_BUFFER);
+
+    return (VersionBitsState(pindexForkBuffer, params, Consensus::DEPLOYMENT_SEGWIT, versionbitscache) == THRESHOLD_ACTIVE);
+}
 
 // Compute at which vout of the block's coinbase transaction the witness
 // commitment occurs, or -1 if not found.
@@ -3072,8 +3088,7 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Co
             fHaveWitness = true;
         }
 
-        const CBlockIndex* pindexForkBuffer = pindexPrev->GetAncestor(nHeight - BIP102_FORK_BUFFER);
-        fSegwitSeasoned = (VersionBitsState(pindexForkBuffer, consensusParams, Consensus::DEPLOYMENT_SEGWIT, versionbitscache) == THRESHOLD_ACTIVE);
+        fSegwitSeasoned = IsWitnessSeasoned(pindexPrev, consensusParams);
     }
 
     if (::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) > MaxBlockBaseSize(nHeight, fSegwitSeasoned))
