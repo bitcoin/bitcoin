@@ -196,6 +196,13 @@ public:
     const BaseSignatureChecker& checker;
     SigVersion sigversion;
 
+    CScript::const_iterator pc;
+    CScript::const_iterator pbegincodehash;
+
+    std::vector<bool> vfExec;
+    StackType altstack;
+    int nOpCount;
+
     ScriptExecution(StackType& stack, const CScript&, unsigned int flags, const BaseSignatureChecker&, SigVersion);
 
     bool Eval(ScriptError* error = nullptr);
