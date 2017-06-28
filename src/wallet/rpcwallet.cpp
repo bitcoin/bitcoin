@@ -2809,7 +2809,7 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
         obj.push_back(Pair("immature_balance",    ValueFromAmount(pwalletMain->GetImmatureBalance())));
     };
     
-    int nTxCount = (int)pwalletMain->mapWallet.size() + fParticlWallet ? (int)((CHDWallet*)pwalletMain)->mapRecords.size() : 0;
+    int nTxCount = (int)pwalletMain->mapWallet.size() + (fParticlWallet ? (int)((CHDWallet*)pwalletMain)->mapRecords.size() : 0);
     
     obj.push_back(Pair("txcount",       (int)nTxCount));
     obj.push_back(Pair("keypoololdest", pwalletMain->GetOldestKeyPoolTime()));

@@ -15,6 +15,7 @@ bench_bench_particl_SOURCES = \
   bench/bench.cpp \
   bench/bench.h \
   bench/blind.cpp \
+  bench/mlsag.cpp \
   bench/checkblock.cpp \
   bench/checkqueue.cpp \
   bench/Examples.cpp \

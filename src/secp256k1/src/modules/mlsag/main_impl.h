@@ -52,7 +52,6 @@ int prepareLastRowMLSAG(size_t nOuts, size_t nBlinded, size_t nCols, size_t nRow
         
         sum blinds up to nBlinded, pass fee commitment in pcm_out after nBlinded
         
-        
     */
     
     secp256k1_gej accj;
@@ -216,6 +215,12 @@ int generateMLSAG(const secp256k1_context *ctx, const uint8_t *nonce,
     uint8_t tmp[32 + 32];
     size_t i, k, clen;
     int overflow;
+    
+    if (!pk
+        || nRows < 2
+        || nCols < 1
+        || nRows > MLSAG_MAX_ROWS)
+        return 1;
     
     secp256k1_scalar_set_int(&zero, 0);
     

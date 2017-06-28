@@ -449,7 +449,7 @@ public:
         // By default assume that the signatures in ancestors of this block are valid.
         //consensus.defaultAssumeValid = uint256S("0x0000000000000000030abc968e1bd635736e880b946085c93152969b9a81a6e2"); //447235
 
-        consensus.nMinRCTOutputDepth = 10;
+        consensus.nMinRCTOutputDepth = 12;
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -612,7 +612,7 @@ public:
         // By default assume that the signatures in ancestors of this block are valid.
         //consensus.defaultAssumeValid = uint256S("0x000000000871ee6842d3648317ccc8a435eb8cc3c2429aee94faff9ba26b05a0"); //1043841
 
-        consensus.nMinRCTOutputDepth = 6;
+        consensus.nMinRCTOutputDepth = 12;
         
         pchMessageStart[0] = 0x08;
         pchMessageStart[1] = 0x11;

@@ -15,8 +15,6 @@
 
 static void Blind(benchmark::State& state)
 {
-    uint32_t count = 0;
-    
     ECC_Start_Blinding();
     
     secp256k1_pedersen_commitment commitment;
@@ -54,8 +52,6 @@ static void Blind(benchmark::State& state)
     
     while (state.KeepRunning())
     {
-        count++;
-        
         assert(1 == secp256k1_rangeproof_verify(secp256k1_ctx_blind, &min_value, &max_value,
             &commitment, vchRangeproof.data(), vchRangeproof.size(),
             NULL, 0, secp256k1_generator_h));

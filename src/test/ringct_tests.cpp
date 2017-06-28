@@ -46,8 +46,6 @@ int testCommitmentSum(secp256k1_context *ctx, CAmount nValueIn,
     std::vector<CAmount> &amountsOut, CAmount nValueOutPlain, size_t nCols,
     bool fPass, bool fUnblindedOutputs=false, bool fUnblindedInputs=false)
 {
-    BOOST_MESSAGE("nValueIn: " << nValueIn);
-    
     int rv;
     std::vector<CTxOutValueTest> txins(1);
     
@@ -71,13 +69,10 @@ int testCommitmentSum(secp256k1_context *ctx, CAmount nValueIn,
     pBlinds.push_back(&blindsin[0][0]);
     
     BOOST_CHECK(secp256k1_pedersen_commit(ctx, &txins[0].commitment, &blindsin[0][0], nValueIn, secp256k1_generator_h));
-    //BOOST_MESSAGE("C: " << HexStr(&txins[0].commitment.data[0], &txins[0].commitment.data[0]+33));
     
     size_t nBlinded = 0;
     for (size_t k = 0; k < txouts.size(); ++k)
     {
-        BOOST_MESSAGE("Output " << k << ": " << amountsOut[k]);
-        
         kto_outs[k].MakeNewKey(true);
         pkto_outs[k] = kto_outs[k].GetPubKey();
         
@@ -103,6 +98,7 @@ int testCommitmentSum(secp256k1_context *ctx, CAmount nValueIn,
         CSHA256().Write(nonce.begin(), 32).Finalize(nonce.begin());
         // Create range proof
         size_t nRangeProofLen = 5134;
+        
         // TODO: smarter min_value selection
         
         txout.vchRangeproof.resize(nRangeProofLen);
@@ -127,9 +123,6 @@ int testCommitmentSum(secp256k1_context *ctx, CAmount nValueIn,
     size_t nRows = txins.size() + 1; // last row sums commitments
     size_t index = rand() % nCols;
     
-    //BOOST_MESSAGE("nCols " << nCols);
-    //BOOST_MESSAGE("index " << index);
-    
     uint8_t *m = (uint8_t*) calloc(nCols * nRows, 33); // m[(col+(cols*row))*33]
     BOOST_REQUIRE(m);
     
@@ -150,7 +143,7 @@ int testCommitmentSum(secp256k1_context *ctx, CAmount nValueIn,
             continue;
         };
         
-        // - make fake input
+        // Make fake input
         CKey key;
         key.MakeNewKey(true);
         
@@ -183,7 +176,6 @@ int testCommitmentSum(secp256k1_context *ctx, CAmount nValueIn,
     
     rv = prepareLastRowMLSAG(txouts.size()+haveFee, txouts.size(), nCols, nRows,
         &pcm_in[0], &pcm_out[0], &pBlinds[0], m, blindSum);
-    BOOST_MESSAGE("prepareLastRowMLSAG  " << rv);
     BOOST_REQUIRE(0 == rv);
     
     
@@ -204,9 +196,6 @@ int testCommitmentSum(secp256k1_context *ctx, CAmount nValueIn,
     CPubKey pkTestFromBlindKey;
     pkTestFromBlindKey = kTest.GetPubKey();
     BOOST_REQUIRE(pkTestFromBlindKey.IsValid());
-    
-    //BOOST_MESSAGE("pkTestFromBlindKey       " << HexStr(pkTestFromBlindKey.begin(), pkTestFromBlindKey.end()));
-    //BOOST_MESSAGE("pkTestFromCommitmentSum  " << HexStr(pkTestFromCommitmentSum.begin(), pkTestFromCommitmentSum.end()));
     
     BOOST_REQUIRE(fPass == (pkTestFromCommitmentSum == pkTestFromBlindKey));
     
@@ -271,9 +260,7 @@ BOOST_AUTO_TEST_CASE(ringct_test)
     pBlinds.push_back(&blindsin[0][0]);
     
     CAmount nValueIn = 45.69 * COIN;
-    BOOST_MESSAGE("nValueIn 0: " << nValueIn);
     BOOST_CHECK(secp256k1_pedersen_commit(ctx, &txins[0].commitment, &blindsin[0][0], nValueIn, secp256k1_generator_h));
-    BOOST_MESSAGE("C: " << HexStr(&txins[0].commitment.data[0], &txins[0].commitment.data[0]+33));
     
     
     std::vector<CStealthAddress> txout_addrs(2);
@@ -292,7 +279,6 @@ BOOST_AUTO_TEST_CASE(ringct_test)
     {
         kto_outs[k].MakeNewKey(true);
         pkto_outs[k] = kto_outs[k].GetPubKey();
-        
         
         CTxOutValueTest &txout = txouts[k];
         
@@ -313,6 +299,7 @@ BOOST_AUTO_TEST_CASE(ringct_test)
         CSHA256().Write(nonce.begin(), 32).Finalize(nonce.begin());
         // Create range proof
         size_t nRangeProofLen = 5134;
+        
         // TODO: smarter min_value selection
         
         txout.vchRangeproof.resize(nRangeProofLen);
@@ -332,18 +319,12 @@ BOOST_AUTO_TEST_CASE(ringct_test)
             secp256k1_generator_h));
         
         txout.vchRangeproof.resize(nRangeProofLen);
-        
-        BOOST_MESSAGE("nRangeProofLen: " << nRangeProofLen);
     };
     
     size_t nRows = txins.size() + 1; // last row sums commitments
-    //size_t nCols = 3; // ring size
-    size_t nCols = 1 + (rand() % 31); // ring size
+    size_t nCols = 1 + (rand() % 32); // ring size
     
     size_t index = rand() % nCols;
-    
-    BOOST_MESSAGE("nCols " << nCols);
-    BOOST_MESSAGE("index " << index);
     
     uint8_t *m = (uint8_t*) calloc(nCols * nRows, 33); // m[(col+(cols*row))*33]
     BOOST_REQUIRE(m);
@@ -364,7 +345,7 @@ BOOST_AUTO_TEST_CASE(ringct_test)
             continue;
         };
         
-        // - make fake input
+        // Make fake input
         CKey key;
         key.MakeNewKey(true);
         
@@ -404,17 +385,6 @@ BOOST_AUTO_TEST_CASE(ringct_test)
     BOOST_CHECK(0 == generateMLSAG(ctx, randSeed,
         preimage, nCols, nRows, index, 
         &sk[0], m, &ki[0], pc, &ss[0]));
-    /*
-    for (size_t k = 0; k < txins.size(); ++k)
-        BOOST_MESSAGE("KeyImage " << k << " : " << HexStr(&ki[k], &ki[k]+33));
-    
-    for (size_t k = 0; k < nRows; ++k)
-    for (size_t i = 0; i < nCols; ++i)
-    {
-        BOOST_MESSAGE("SS: Row " << k << ", Col " << i << " : " 
-            << HexStr(&ss[(i+nCols*k)*32], &ss[(i+nCols*k)*32]+32));
-    }
-    */
     BOOST_CHECK(0 == verifyMLSAG(ctx,
         preimage, nCols, nRows, 
         m, &ki[0], pc, &ss[0]));
@@ -423,7 +393,6 @@ BOOST_AUTO_TEST_CASE(ringct_test)
     
     for (size_t k = 0; k < txouts.size(); ++k)
     {
-        BOOST_MESSAGE("output recover: " << k);
         CTxOutValueTest &txout = txouts[k];
         
         int rexp;
@@ -436,10 +405,6 @@ BOOST_AUTO_TEST_CASE(ringct_test)
             &min_value, &max_value,
             &txout.vchRangeproof[0], txout.vchRangeproof.size()) == 1);
         
-        BOOST_MESSAGE("rexp " << rexp);
-        BOOST_MESSAGE("rmantissa " << rmantissa);
-        BOOST_MESSAGE("min_value " << min_value);
-        BOOST_MESSAGE("max_value " << max_value);
 
         min_value = 0;
         max_value = 0;
@@ -447,8 +412,6 @@ BOOST_AUTO_TEST_CASE(ringct_test)
             &txout.commitment, txout.vchRangeproof.data(), txout.vchRangeproof.size(),
             NULL, 0,
             secp256k1_generator_h));
-        BOOST_MESSAGE("min_value " << min_value);
-        BOOST_MESSAGE("max_value " << max_value);
 
         CPubKey ephemeral_key(txout.vchNonceCommitment);
         BOOST_CHECK(ephemeral_key.IsValid());
@@ -465,8 +428,6 @@ BOOST_AUTO_TEST_CASE(ringct_test)
             &txout.commitment, txout.vchRangeproof.data(), txout.vchRangeproof.size(),
             NULL, 0,
             secp256k1_generator_h));
-        
-        BOOST_MESSAGE("amountOut " << amountOut);
     };
     
     secp256k1_context_destroy(ctx);
@@ -492,8 +453,6 @@ static int GetBytes(uint8_t *p, size_t len, bool fDeterministic)
 
 int doTest(secp256k1_context *ctx, size_t nInputs, size_t nOutputs, CAmount nFee, bool fDeterministic)
 {
-    BOOST_MESSAGE("nFee: " << nFee);
-    
     uint8_t tmp[64];
     std::vector<const uint8_t*> pBlinds;
     std::vector<CTxOutValueTest> txins(nInputs);
@@ -506,7 +465,6 @@ int doTest(secp256k1_context *ctx, size_t nInputs, size_t nOutputs, CAmount nFee
     for (size_t k = 0; k < nInputs; ++k)
     {
         CAmount nValueIn = rand() % 4 == 0 ? 0 : nFee * (rand() % 20000);
-        BOOST_MESSAGE("Input " << k << ": " << nValueIn);
         
         // Can't use MakeNewKey if fDeterministic
         GetBytes(tmp, 32, fDeterministic);
@@ -523,7 +481,6 @@ int doTest(secp256k1_context *ctx, size_t nInputs, size_t nOutputs, CAmount nFee
         nInputSum += nValueIn;
         
         BOOST_CHECK(secp256k1_pedersen_commit(ctx, &txins[k].commitment, &blindsIn[k].d[0], nValueIn, secp256k1_generator_h));
-        //BOOST_MESSAGE("C: " << HexStr(&txins[0].vchCommitment[0], &txins[0].vchCommitment[0]+33)); 
     };
 
 
@@ -545,8 +502,6 @@ int doTest(secp256k1_context *ctx, size_t nInputs, size_t nOutputs, CAmount nFee
     
     for (size_t k = 0; k < txouts.size(); ++k)
     {
-        BOOST_MESSAGE("Output " << k << ": " << amountsOut[k]);
-        
         GetBytes(tmp, 32, fDeterministic);
         kto_outs[k].Set(tmp, true);
         pkto_outs[k] = kto_outs[k].GetPubKey();
@@ -555,10 +510,8 @@ int doTest(secp256k1_context *ctx, size_t nInputs, size_t nOutputs, CAmount nFee
         
         GetBytes(&blind[k].d[0], 32, fDeterministic);
         pBlinds.push_back(&blind[k].d[0]);
-        //BOOST_MESSAGE("blind " << HexStr(&blind[k][0], &blind[k][0]+32));
         
         BOOST_CHECK(secp256k1_pedersen_commit(ctx, &txout.commitment, (uint8_t*)pBlinds.back(), amountsOut[k], secp256k1_generator_h));
-        BOOST_MESSAGE("C " << k << ": " << HexStr(&txout.commitment.data[0], &txout.commitment.data[0]+33));
         
         // Generate ephemeral key for ECDH nonce generation
         CKey ephemeral_key;
@@ -572,7 +525,8 @@ int doTest(secp256k1_context *ctx, size_t nInputs, size_t nOutputs, CAmount nFee
         uint256 nonce = ephemeral_key.ECDH(pkto_outs[k]);
         CSHA256().Write(nonce.begin(), 32).Finalize(nonce.begin());
         // Create range proof
-        size_t nRangeProofLen = 5134; 
+        size_t nRangeProofLen = 5134;
+        
         // TODO: smarter min_value selection
 
         txout.vchRangeproof.resize(nRangeProofLen);
@@ -592,15 +546,11 @@ int doTest(secp256k1_context *ctx, size_t nInputs, size_t nOutputs, CAmount nFee
             secp256k1_generator_h));
         
         txout.vchRangeproof.resize(nRangeProofLen);
-
-        //BOOST_MESSAGE("nRangeProofLen: " << nRangeProofLen);
     };
     
     size_t nRows = txins.size() + 1; // last row sums commitments
     size_t nCols = 1 + (rand() % 128); // ring size
     size_t index = rand() % nCols;
-    BOOST_MESSAGE("nCols " << nCols);
-    BOOST_MESSAGE("index " << index);
 
     uint8_t *m = (uint8_t*) calloc(nCols * nRows, 33); // m[(col+(cols*row))*33]
     BOOST_REQUIRE(m);
@@ -622,7 +572,7 @@ int doTest(secp256k1_context *ctx, size_t nInputs, size_t nOutputs, CAmount nFee
             continue;
         };
         
-        // - make fake input
+        // Make fake input
         CKey key;
         GetBytes(tmp, 32, fDeterministic);
         key.Set(tmp, true);
@@ -665,7 +615,6 @@ int doTest(secp256k1_context *ctx, size_t nInputs, size_t nOutputs, CAmount nFee
         &pcm_in[0], &pcm_out[0], &pBlinds[0], m, blindSum));
     
     
-    
     uint8_t randSeed[32], preimage[32], pc[32];
     std::vector<uint8_t> ki(33 * txins.size());
     std::vector<uint8_t> ss(nCols * nRows * 32);
@@ -681,23 +630,9 @@ int doTest(secp256k1_context *ctx, size_t nInputs, size_t nOutputs, CAmount nFee
         m, &ki[0], pc, &ss[0]));
     
     free(m);
-    /*
-    BOOST_MESSAGE("nFee " << nFee);
-    BOOST_MESSAGE("nInputSum " << nInputSum);
-    
-    CAmount nSumOut = 0;
-    for (size_t k = 0; k < amountsOut.size(); ++k)
-    {
-        BOOST_MESSAGE("amountsOut " << k << amountsOut[k]);
-        nSumOut += amountsOut[k];
-    }
-    BOOST_MESSAGE("nSumOut " << nSumOut);
-    BOOST_MESSAGE("nSumOut+ nFee " << nSumOut+ nFee);
-    */
     
     for (size_t k = 0; k < txouts.size(); ++k)
     {
-        //BOOST_MESSAGE("output recover: " << k);
         CTxOutValueTest &txout = txouts[k];
         
         int rexp;
@@ -710,10 +645,6 @@ int doTest(secp256k1_context *ctx, size_t nInputs, size_t nOutputs, CAmount nFee
             &min_value, &max_value,
             &txout.vchRangeproof[0], txout.vchRangeproof.size()));
         
-        BOOST_MESSAGE("rexp " << rexp);
-        BOOST_MESSAGE("rmantissa " << rmantissa);
-        BOOST_MESSAGE("min_value " << min_value);
-        BOOST_MESSAGE("max_value " << max_value);
 
         BOOST_CHECK(1 == secp256k1_rangeproof_verify(ctx, &min_value, &max_value,
             &txout.commitment, txout.vchRangeproof.data(), txout.vchRangeproof.size(),
@@ -737,7 +668,6 @@ int doTest(secp256k1_context *ctx, size_t nInputs, size_t nOutputs, CAmount nFee
             secp256k1_generator_h));
         
         BOOST_CHECK(amountsOut[k] == (CAmount) amountOut);
-        BOOST_MESSAGE("amountOut " << amountOut);
     };
     
     return 0;

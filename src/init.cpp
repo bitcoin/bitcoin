@@ -364,6 +364,7 @@ std::string HelpMessage(HelpMessageMode mode)
             "(default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, >%u = automatically prune block files to stay under the specified target size in MiB)"), MIN_DISK_SPACE_FOR_BLOCK_FILES / 1024 / 1024));
     strUsage += HelpMessageOpt("-reindex-chainstate", _("Rebuild chain state from the currently indexed blocks"));
     strUsage += HelpMessageOpt("-reindex", _("Rebuild chain state and block index from the blk*.dat files on disk"));
+    strUsage += HelpMessageOpt("-skiprangeproofverify", _("Skip verifying rangeproofs when reindexing or importing."));
 #ifndef WIN32
     strUsage += HelpMessageOpt("-sysperms", _("Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)"));
 #endif
@@ -1418,6 +1419,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     // ********************************************************* Step 7: load block chain
 
     fReindex = GetBoolArg("-reindex", false);
+    fSkipRangeproof = GetBoolArg("-skiprangeproofverify", false);
     bool fReindexChainState = GetBoolArg("-reindex-chainstate", false);
     
     boost::filesystem::path blocksDir = GetDataDir() / "blocks";

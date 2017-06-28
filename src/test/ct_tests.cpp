@@ -38,9 +38,7 @@ BOOST_AUTO_TEST_CASE(ct_test)
     blindptrs.push_back(&blindsin[0][0]);
     
     CAmount nValueIn = 45.69 * COIN;
-    BOOST_MESSAGE("nValueIn 0: " << nValueIn);
     BOOST_CHECK(secp256k1_pedersen_commit(ctx, &txins[0].commitment, &blindsin[0][0], nValueIn, secp256k1_generator_h));
-    BOOST_MESSAGE("C: " << HexStr(&txins[0].commitment.data[0], &txins[0].commitment.data[0]+33));
     
     const int nTxOut = 2;
     std::vector<CTxOutValueTest> txouts(nTxOut);
@@ -62,7 +60,6 @@ BOOST_AUTO_TEST_CASE(ct_test)
     size_t nBlinded = 0;
     for (size_t k = 0; k < txouts.size(); ++k)
     {
-        BOOST_MESSAGE("output: " << k);
         CTxOutValueTest &txout = txouts[k];
         
         if (nBlinded + 1 == txouts.size())
@@ -71,17 +68,13 @@ BOOST_AUTO_TEST_CASE(ct_test)
             // sum of output blinding values must equal sum of input blinding values
             BOOST_CHECK(secp256k1_pedersen_blind_sum(ctx, &blind[nBlinded][0], &blindptrs[0], 2, 1));
             blindptrs.push_back(&blind[nBlinded++][0]);
-            BOOST_MESSAGE("secp256k1_pedersen_blind_sum " << HexStr(&blind[nBlinded-1][0], &blind[nBlinded-1][0]+32));
         } else
         {
             GetStrongRandBytes(&blind[nBlinded][0], 32);
             blindptrs.push_back(&blind[nBlinded++][0]);
-            BOOST_MESSAGE("GetStrongRandBytes " << HexStr(&blind[nBlinded-1][0], &blind[nBlinded-1][0]+32));
         };
         
-        BOOST_MESSAGE("output " << k << ": " << amount_outs[k]);
         BOOST_CHECK(secp256k1_pedersen_commit(ctx, &txout.commitment, (uint8_t*)blindptrs.back(), amount_outs[k], secp256k1_generator_h));
-        BOOST_MESSAGE("C " << k << ": " << HexStr(&txout.commitment.data[0], &txout.commitment.data[0]+33));
         
         // Generate ephemeral key for ECDH nonce generation
         CKey ephemeral_key;
@@ -118,25 +111,19 @@ BOOST_AUTO_TEST_CASE(ct_test)
             secp256k1_generator_h));
         
         txout.vchRangeproof.resize(nRangeProofLen);
-        
-        BOOST_MESSAGE("nRangeProofLen: " << nRangeProofLen);
     };
     
     std::vector<secp256k1_pedersen_commitment*> vpCommitsIn, vpCommitsOut;
     vpCommitsIn.push_back(&txins[0].commitment);
-    BOOST_MESSAGE("Cin 1: " << HexStr(&txins[0].commitment.data[0], &txins[0].commitment.data[0]+33));
     
     vpCommitsOut.push_back(&txouts[0].commitment);
     vpCommitsOut.push_back(&txouts[1].commitment);
-    BOOST_MESSAGE("C 1: " << HexStr(&txouts[0].commitment.data[0], &txouts[0].commitment.data[0]+33));
-    BOOST_MESSAGE("C 2: " << HexStr(&txouts[1].commitment.data[0], &txouts[1].commitment.data[0]+33));
     
     BOOST_CHECK(secp256k1_pedersen_verify_tally(ctx, vpCommitsIn.data(), vpCommitsIn.size(), vpCommitsOut.data(), vpCommitsOut.size()));
     
     
     for (size_t k = 0; k < txouts.size(); ++k)
     {
-        BOOST_MESSAGE("output recover: " << k);
         CTxOutValueTest &txout = txouts[k];
         
         int rexp;
@@ -148,10 +135,6 @@ BOOST_AUTO_TEST_CASE(ct_test)
             &min_value, &max_value,
             &txout.vchRangeproof[0], txout.vchRangeproof.size()) == 1);
         
-        BOOST_MESSAGE("rexp " << rexp);
-        BOOST_MESSAGE("rmantissa " << rmantissa);
-        BOOST_MESSAGE("min_value " << min_value);
-        BOOST_MESSAGE("max_value " << max_value);
         
         min_value = 0;
         max_value = 0;
@@ -177,10 +160,7 @@ BOOST_AUTO_TEST_CASE(ct_test)
             NULL, 0,
             secp256k1_generator_h));
         
-        BOOST_MESSAGE("amountOut " << amountOut);
-        BOOST_MESSAGE("msg_size " << msg_size);
         msg[9] = '\0';
-        BOOST_MESSAGE("msg " << msg);
         BOOST_CHECK(memcmp(msg, "narration", 9) == 0);
     };
     

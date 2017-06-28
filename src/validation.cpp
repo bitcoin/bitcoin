@@ -78,6 +78,7 @@ CConditionVariable cvBlockChange;
 int nScriptCheckThreads = 0;
 std::atomic_bool fImporting(false);
 bool fReindex = false;
+bool fSkipRangeproof = false;
 bool fTxIndex = true;
 bool fAddressIndex = false;
 bool fTimestampIndex = false;
@@ -606,7 +607,6 @@ bool CheckStandardOutput(CValidationState &state, const CTxOutStandard *p, CAmou
     if (!CheckValue(state, p->nValue, nValueOut))
         return false;
     
-    
     return true;
 }
 
@@ -618,6 +618,9 @@ bool CheckBlindOutput(CValidationState &state, const CTxOutCT *p)
     size_t nRangeProofLen = 5134;
     if (p->vRangeproof.size() > nRangeProofLen)
         return state.DoS(100, false, REJECT_INVALID, "bad-ctout-rangeproof-size");
+    
+    if ((fReindex || fImporting) && fSkipRangeproof)
+        return true;
     
     uint64_t min_value, max_value;
     int rv = secp256k1_rangeproof_verify(secp256k1_ctx_blind, &min_value, &max_value,
@@ -646,6 +649,9 @@ bool CheckAnonOutput(CValidationState &state, const CTxOutRingCT *p)
     size_t nRangeProofLen = 5134;
     if (p->vRangeproof.size() > nRangeProofLen)
         return state.DoS(100, false, REJECT_INVALID, "bad-rctout-rangeproof-size");
+    
+    if ((fReindex || fImporting) && fSkipRangeproof)
+        return true;
     
     uint64_t min_value, max_value;
     int rv = secp256k1_rangeproof_verify(secp256k1_ctx_blind, &min_value, &max_value,
@@ -4238,7 +4244,6 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
 
 bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW)
 {
-    
     // Check timestamp
     if (fParticlMode
         && !block.hashPrevBlock.IsNull() // allow genesis block to be created in the future
@@ -4262,15 +4267,15 @@ bool CheckBlockSignature(const CBlock &block)
         return false;
     if (block.vtx[0]->vin.size() < 1)
         return false;
+    
     const auto &txin = block.vtx[0]->vin[0];
     if (txin.scriptWitness.stack.size() != 2)
         return false;
     
-    
     if (txin.scriptWitness.stack[1].size() != 33)
         return false;
-    CPubKey pubKey(txin.scriptWitness.stack[1]);
     
+    CPubKey pubKey(txin.scriptWitness.stack[1]);
     return pubKey.Verify(block.GetHash(), block.vchBlockSig);
 };
 

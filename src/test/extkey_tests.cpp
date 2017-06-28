@@ -88,7 +88,6 @@ void RunPathTest()
         BOOST_MESSAGE("Fail test " << i << ", path '"  << ft.sTest << "', expect return " << ft.rv);
         rv = ExtractExtKeyPath(ft.sTest, vPath);
         BOOST_CHECK(rv == ft.rv);
-        //BOOST_CHECK_MESSAGE(rv != ft.rv, "rv   " << rv);
     };
     
     char tooMuchData[513];
@@ -132,9 +131,6 @@ void RunPathTest()
         BOOST_CHECK(rv == pt.rv);
         BOOST_CHECK(vPath == pt.vExpect);
     };
-    
-    //for (std::vector<uint32_t>::iterator it = vPath.begin(); it != vPath.end(); ++it)
-    //    BOOST_MESSAGE("vPath " << *it);
 }
 
 class DeriveTestData
@@ -160,7 +156,7 @@ void RunDeriveTest(std::vector<DeriveTestData> &vData)
         
         if (dt.nDerives == 0)
         {
-            // - set master
+            // Set master
             
             BOOST_CHECK(0 == (rv = extKey58.Set58(dt.vKey58.c_str())));
             BOOST_CHECK(0 == (rv += abs(strcmp(extKey58.ToString().c_str(), dt.vKey58.c_str()))));
@@ -239,32 +235,31 @@ void RunDeriveTests()
     };
     CBitcoinExtKey extKey58;
     
-    // - valid string
+    // Valid string
     BOOST_CHECK(0 == extKey58.Set58(vMainNetPairs[0].vKey58.c_str()));
     BOOST_CHECK(strcmp(extKey58.ToString().c_str(), vMainNetPairs[0].vKey58.c_str()) == 0);
-    // - invalid string
+    // Invalid string
     BOOST_CHECK(0 != extKey58.Set58(vMainNetPairs[0].vKey58.c_str()+3));
     
     RunDeriveTest(vMainNetPairs);
     
     
-    // - fail testnet key on main
+    // Fail testnet key on main
     BOOST_CHECK(0 != extKey58.Set58(vTestNetPairs[0].vKey58.c_str()));
     
     
-    
-    // - switch to testnet
+    // Switch to testnet
     BOOST_MESSAGE("Entering Testnet");
     SelectParams(CBaseChainParams::TESTNET);
     
-    // - pass testnet key on testnet
+    // Pass testnet key on testnet
     BOOST_CHECK(0 == extKey58.Set58(vTestNetPairs[0].vKey58.c_str()));
     BOOST_CHECK(strcmp(extKey58.ToString().c_str(), vTestNetPairs[0].vKey58.c_str()) == 0);
     
     RunDeriveTest(vTestNetPairs);
     
     
-    // -return to mainnet
+    // Return to mainnet
     SelectParams(CBaseChainParams::MAIN);
     
     return;
@@ -284,8 +279,6 @@ void RunSerialiseTests()
     BOOST_CHECK(4 == GetNumBytesReqForInt(nTest4_1)); // expect 4, no sign bit
     BOOST_CHECK(5 == GetNumBytesReqForInt(nTest5));
     BOOST_CHECK(8 == GetNumBytesReqForInt(nTest8));
-    
-    //BOOST_MESSAGE(GetNumBytesReqForInt(nTest5));
     
     std::vector<uint8_t> v;
     SetCompressedInt64(v, nTest0);
@@ -373,7 +366,7 @@ void RunSerialiseTests()
     BOOST_CHECK_MESSAGE(addr.ToString() == "XCUfUzXMYkXYvP9RVtdzibVVpMP2bhfWRQ", addr.ToString());
     
     
-    // - test DeriveNextKey
+    // Test DeriveNextKey
     
     CExtKey ev;
     CExtPubKey ep;
@@ -443,7 +436,7 @@ void RunSerialiseTests()
     BOOST_CHECK_MESSAGE(nChild == 2147483650, "nChild " << nChild);
     BOOST_CHECK_MESSAGE(HexStr(k.GetPubKey()) == "0355825cbaf4365a2f7015d9c9bae4ecaf9b57a05e063237256f1565b20104c183", "HexStr(k.GetPubKey()) " << HexStr(k.GetPubKey()));
     
-    // - can't derive keys from pubkeys
+    // Can't derive keys from pubkeys
     skp.nGenerated = 1;
     BOOST_CHECK(1 == skp.DeriveNextKey(k, nChild, false));
     
@@ -468,12 +461,12 @@ void RunSerialiseTests()
     BOOST_CHECK_MESSAGE(nChild == 2, "nChild " << nChild);
     BOOST_CHECK_MESSAGE(HexStr(pk) == "02f430d7efc4d1ecbac888fb49446ec0b13ec4196512be93054a9b5b30df238910", "HexStr(pk) " << HexStr(pk));
     
-    // - can't derive hardened pubkeys from pubkeys
+    // Can't derive hardened pubkeys from pubkeys
     skp.nHGenerated = 1;
     BOOST_CHECK(1 == skp.DeriveNextKey(pk, nChild, true));
     
     
-    // - CBitcoinAddress tests
+    // CBitcoinAddress tests
     // CBitcoinAddress always deals in public keys - should never expose a secret in an address
     
 
@@ -497,7 +490,7 @@ void RunSerialiseTests()
     BOOST_CHECK(kpT == kp);
     
     
-    // - switch to testnet
+    // Switch to testnet
     BOOST_MESSAGE("Entering Testnet");
     SelectParams(CBaseChainParams::TESTNET);
     
@@ -526,7 +519,7 @@ void RunSerialiseTests()
     kpT = boost::get<CExtKeyPair>(dest);
     BOOST_CHECK(kpT == kp);
     
-    // - return to mainnet
+    // Return to mainnet
     SelectParams(CBaseChainParams::MAIN);
     
 };
@@ -550,7 +543,7 @@ BOOST_AUTO_TEST_CASE(extkey_regtest_keys)
 {
     CExtKey58 ek58;
     
-    // - switch to testnet
+    // Switch to testnet
     BOOST_MESSAGE("Entering RegTest");
     SelectParams(CBaseChainParams::REGTEST);
     
@@ -569,13 +562,21 @@ BOOST_AUTO_TEST_CASE(extkey_regtest_keys)
         
         if (k == 9)
             BOOST_CHECK(CBitcoinAddress(id).ToString() == "paKfZFn7TQaZKoY8nnwq5dNxyNG7dkrmpD");
-        //BOOST_MESSAGE("k " << k << " " << CBitcoinAddress(id).ToString().c_str());
     };
     
-    // - return to mainnet
+    // Return to mainnet
     SelectParams(CBaseChainParams::MAIN);
 }
-    
+
+BOOST_AUTO_TEST_CASE(extkey_misc_keys)
+{
+    uint32_t nTest = 1;
+    BOOST_CHECK(!IsHardened(nTest));
+    SetHardenedBit(nTest);
+    BOOST_CHECK(IsHardened(nTest));
+    ClearHardenedBit(nTest);
+    BOOST_CHECK(!IsHardened(nTest));
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 
