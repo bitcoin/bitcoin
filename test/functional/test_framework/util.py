@@ -273,6 +273,8 @@ def wait_for_bitcoind_start(process, datadir, i, rpchost=None):
                 raise
         time.sleep(0.25)
 
+def wait_for_node_exit(node_index, timeout):
+    bitcoind_processes[node_index].wait(timeout)
 
 def _start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=None, stderr=None):
     """Start a dashd and return RPC connection to it
