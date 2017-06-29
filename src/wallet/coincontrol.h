@@ -43,9 +43,9 @@ public:
         fAllowOtherInputs = false;
         fAllowWatchOnly = false;
         setSelected.clear();
-        m_feerate = boost::none;
+        m_feerate.reset();
         fOverrideFeeRate = false;
-        m_confirm_target = boost::none;
+        m_confirm_target.reset();
         signalRbf = fWalletRbf;
         m_fee_mode = FeeEstimateMode::UNSET;
     }
