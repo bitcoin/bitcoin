@@ -138,6 +138,12 @@ void ModalOverlay::tipUpdate(int count, const QDateTime& blockDate, double nVeri
     ui->numberBlocksRequested->setText(QString::number(getAmountOfBlocksInFlight()));
     eventuallyShowHeaderSyncing(count);
     updatePauseState(verificationPauseActive);
+
+    // disable pause button when we can fetch directly
+    // avoid using the core-layer's existing CanFetchDirectly()
+    bool canFetchDirectly = (blockDate.toTime_t() > GetAdjustedTime() - Params().GetConsensus().nPowTargetSpacing * 20);
+    ui->pauseResumeVerification->setEnabled(!canFetchDirectly);
+    ui->infoLabel->setVisible(!canFetchDirectly);
 }
 
 void ModalOverlay::eventuallyShowHeaderSyncing(int count)
