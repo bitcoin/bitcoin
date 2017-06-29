@@ -2683,8 +2683,6 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	CRecipient paymentCommissionRecipient = {scriptPubKeyCommission, nTotalCommission, false};
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
-	for(unsigned int i =numResults;i<=MAX_ALIAS_UPDATES_PER_BLOCK;i++)
-		vecSend.push_back(aliasRecipient);
 
 
 	if(vchExtTxId.empty())
@@ -2697,6 +2695,8 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	else
 		vecSend.push_back(acceptRecipient);
 
+	for (unsigned int i = numResults; i <= MAX_ALIAS_UPDATES_PER_BLOCK; i++)
+		vecSend.push_back(aliasRecipient);
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
