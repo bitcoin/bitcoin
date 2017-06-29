@@ -2945,8 +2945,11 @@ CAmount CWallet::GetMinimumFee(unsigned int nTxBytes, const CCoinControl& coin_c
     else { // 2. or 4.
         // We will use smart fee estimation
         unsigned int target = coin_control.m_confirm_target ? *coin_control.m_confirm_target : ::nTxConfirmTarget;
+        // By default estimates are economical iff we are signaling opt-in-RBF
+        bool conservative_estimate = !coin_control.signalRbf;
         // Allow to override the default fee estimate mode over the CoinControl instance
-        bool conservative_estimate = CalculateEstimateType(coin_control.m_fee_mode, coin_control.signalRbf);
+        if (coin_control.m_fee_mode == FeeEstimateMode::CONSERVATIVE) conservative_estimate = true;
+        else if (coin_control.m_fee_mode == FeeEstimateMode::ECONOMICAL) conservative_estimate = false;
 
         fee_needed = estimator.estimateSmartFee(target, feeCalc, pool, conservative_estimate).GetFee(nTxBytes);
         if (fee_needed == 0) {
@@ -4193,16 +4196,4 @@ int CMerkleTx::GetBlocksToMaturity() const
 bool CMerkleTx::AcceptToMemoryPool(const CAmount& nAbsurdFee, CValidationState& state)
 {
     return ::AcceptToMemoryPool(mempool, state, tx, true, NULL, NULL, false, nAbsurdFee);
-}
-
-bool CalculateEstimateType(FeeEstimateMode mode, bool opt_in_rbf) {
-    switch (mode) {
-    case FeeEstimateMode::UNSET:
-        return !opt_in_rbf; // Allow for lower fees if RBF is an option
-    case FeeEstimateMode::CONSERVATIVE:
-        return true;
-    case FeeEstimateMode::ECONOMICAL:
-        return false;
-    }
-    return true;
 }
