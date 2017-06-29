@@ -47,9 +47,9 @@ public:
         setSelected.clear();
         fUseInstantSend = false;
         fUsePrivateSend = true;
-        m_feerate = boost::none;
+        m_feerate.reset();
         fOverrideFeeRate = false;
-        m_confirm_target = boost::none;
+        m_confirm_target.reset();
         signalRbf = fWalletRbf;
         m_fee_mode = FeeEstimateMode::UNSET;
     }
