@@ -2013,9 +2013,10 @@ class ConnectTrace {
 private:
     std::vector<PerBlockConnectTrace> blocksConnected;
     CTxMemPool &pool;
+    int num_connected;
 
 public:
-    ConnectTrace(CTxMemPool &_pool) : blocksConnected(1), pool(_pool) {
+    ConnectTrace(CTxMemPool &_pool) : blocksConnected(1), pool(_pool), num_connected(0) {
         pool.NotifyEntryRemoved.connect(boost::bind(&ConnectTrace::NotifyEntryRemoved, this, _1, _2));
     }
 
@@ -2029,6 +2030,12 @@ public:
         assert(pblock);
         blocksConnected.back().pindex = pindex;
         blocksConnected.back().pblock = std::move(pblock);
+        if (++num_connected >= MAX_CONNECT_TRACE_BLOCKS_IN_MEMORY) {
+            // Clear out a block
+            int idx = blocksConnected.size() - num_connected;
+            assert(idx >= 0);
+            blocksConnected.at(idx).pblock = NULL;
+        }
         blocksConnected.emplace_back();
     }
 
@@ -2336,8 +2343,18 @@ bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams,
             fInitialDownload = IsInitialBlockDownload();
 
             for (const PerBlockConnectTrace& trace : connectTrace.GetBlocksConnected()) {
-                assert(trace.pblock && trace.pindex);
-                GetMainSignals().BlockConnected(trace.pblock, trace.pindex, *trace.conflictedTxs);
+                assert(trace.pindex);
+                std::shared_ptr<const CBlock> pthisBlock;
+                if (trace.pblock == NULL) {
+                    std::shared_ptr<CBlock> pblockNew = std::make_shared<CBlock>();
+                    if (!ReadBlockFromDisk(*pblockNew, trace.pindex, chainparams.GetConsensus()))
+                        return AbortNode(state, "Failed to re-read block from disk for wallet callback");
+                    pthisBlock = pblockNew;
+                } else {
+                    pthisBlock = trace.pblock;
+                }
+                assert(pthisBlock);
+                GetMainSignals().BlockConnected(pthisBlock, trace.pindex, *trace.conflictedTxs);
             }
         }
         // When we reach this point, we switched to a new tip (stored in pindexNewTip).
