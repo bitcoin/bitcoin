@@ -302,11 +302,6 @@ private:
 
     uint64_t CalculateKeyedNetGroup(const CAddress& ad) const;
 
-    CNode* FindNode(const CNetAddr& ip);
-    CNode* FindNode(const CSubNet& subNet);
-    CNode* FindNode(const std::string& addrName);
-    CNode* FindNode(const CService& addr);
-
     bool AttemptToEvictConnection();
     CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure);
     bool IsWhitelistedRange(const CNetAddr &addr);
@@ -332,6 +327,19 @@ private:
 
     // Whether the node should be passed out in ForEach* callbacks
     static bool NodeFullyConnected(const CNode* pnode);
+
+    template <typename Callable>
+    CNode* FindNode(Callable&& func)
+    {
+        LOCK(cs_vNodes);
+        for (auto& node : vNodes) {
+            if(func(node)) {
+                return node;
+            }
+        }
+        return nullptr;
+    }
+
 
     // Network usage totals
     CCriticalSection cs_totalBytesRecv;

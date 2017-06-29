@@ -299,51 +299,11 @@ bool IsReachable(const CNetAddr& addr)
     return IsReachable(net);
 }
 
-
-CNode* CConnman::FindNode(const CNetAddr& ip)
-{
-    LOCK(cs_vNodes);
-    for (CNode* pnode : vNodes)
-        if ((CNetAddr)pnode->addr == ip)
-            return (pnode);
-    return NULL;
-}
-
-CNode* CConnman::FindNode(const CSubNet& subNet)
-{
-    LOCK(cs_vNodes);
-    for (CNode* pnode : vNodes)
-    if (subNet.Match((CNetAddr)pnode->addr))
-        return (pnode);
-    return NULL;
-}
-
-CNode* CConnman::FindNode(const std::string& addrName)
-{
-    LOCK(cs_vNodes);
-    for (CNode* pnode : vNodes) {
-        if (pnode->GetAddrName() == addrName) {
-            return (pnode);
-        }
-    }
-    return NULL;
-}
-
-CNode* CConnman::FindNode(const CService& addr)
-{
-    LOCK(cs_vNodes);
-    for (CNode* pnode : vNodes)
-        if ((CService)pnode->addr == addr)
-            return (pnode);
-    return NULL;
-}
-
 bool CConnman::CheckIncomingNonce(uint64_t nonce)
 {
     LOCK(cs_vNodes);
-    for (CNode* pnode : vNodes) {
-        if (!pnode->fSuccessfullyConnected && !pnode->fInbound && pnode->GetLocalNonce() == nonce)
-            return false;
+    if (FindNode([nonce](const CNode* pnode) { return !pnode->fSuccessfullyConnected && !pnode->fInbound && pnode->GetLocalNonce() == nonce; })) {
+        return false;
     }
     return true;
 }
@@ -371,8 +331,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
             return NULL;
 
         // Look for an existing connection
-        CNode* pnode = FindNode((CService)addrConnect);
-        if (pnode)
+        if (FindNode([&addrConnect](const CNode* pnode) { return (CService)pnode->addr == addrConnect; }))
         {
             LogPrintf("Failed to open new connection, already connected\n");
             return NULL;
@@ -402,8 +361,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
             // Also store the name we used to connect in that CNode, so that future FindNode() calls to that
             // name catch this early.
             LOCK(cs_vNodes);
-            CNode* pnode = FindNode((CService)addrConnect);
-            if (pnode)
+            if (auto pnode = FindNode([&addrConnect](const CNode* pnode) { return (CService)pnode->addr == addrConnect; }))
             {
                 pnode->MaybeSetAddrName(std::string(pszDest));
                 CloseSocket(hSocket);
@@ -1034,11 +992,9 @@ bool CConnman::AttemptToEvictConnection()
     // Disconnect from the network group with the most connections
     NodeId evicted = vEvictionCandidates.front().id;
     LOCK(cs_vNodes);
-    for(std::vector<CNode*>::const_iterator it(vNodes.begin()); it != vNodes.end(); ++it) {
-        if ((*it)->GetId() == evicted) {
-            (*it)->fDisconnect = true;
-            return true;
-        }
+    if (auto pnode = FindNode([evicted](const CNode* pnode) { return pnode->GetId() == evicted; })) {
+        pnode->fDisconnect = true;
+        return true;
     }
     return false;
 }
@@ -1946,12 +1902,13 @@ bool CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
         return false;
     }
     if (!pszDest) {
-        if (IsLocal(addrConnect) ||
-            FindNode((CNetAddr)addrConnect) || IsBanned(addrConnect) ||
-            FindNode(addrConnect.ToStringIPPort()))
+        std::string addr_name = addrConnect.ToStringIPPort();
+        if (IsLocal(addrConnect) || IsBanned(addrConnect) ||
+            FindNode([&addrConnect, &addr_name](const CNode* pnode) { return (CNetAddr)pnode->addr == addrConnect || addr_name == pnode->GetAddrName(); }))
             return false;
-    } else if (FindNode(std::string(pszDest)))
+    } else if (FindNode([&pszDest](const CNode* pnode) { return pnode->GetAddrName() == pszDest; })) {
         return false;
+    }
 
     CNode* pnode = ConnectNode(addrConnect, pszDest, fCountFailure);
 
@@ -2549,7 +2506,7 @@ void CConnman::GetNodeStats(std::vector<CNodeStats>& vstats)
 bool CConnman::DisconnectNode(const std::string& strNode)
 {
     LOCK(cs_vNodes);
-    if (CNode* pnode = FindNode(strNode)) {
+    if (auto pnode = FindNode([&strNode](const CNode* pnode) { return pnode->GetAddrName() == strNode; })) {
         pnode->fDisconnect = true;
         return true;
     }
@@ -2558,11 +2515,9 @@ bool CConnman::DisconnectNode(const std::string& strNode)
 bool CConnman::DisconnectNode(NodeId id)
 {
     LOCK(cs_vNodes);
-    for(CNode* pnode : vNodes) {
-        if (id == pnode->GetId()) {
-            pnode->fDisconnect = true;
-            return true;
-        }
+    if (auto pnode = FindNode([id](const CNode* pnode) { return pnode->GetId() == id; })) {
+        pnode->fDisconnect = true;
+        return true;
     }
     return false;
 }
@@ -2852,15 +2807,11 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
 
 bool CConnman::ForNode(NodeId id, std::function<bool(CNode* pnode)> func)
 {
-    CNode* found = nullptr;
     LOCK(cs_vNodes);
-    for (auto&& pnode : vNodes) {
-        if(pnode->GetId() == id) {
-            found = pnode;
-            break;
-        }
+    if (auto pnode = FindNode([id](const CNode* pnode) { return pnode->GetId() == id; })) {
+        return NodeFullyConnected(pnode) && func(pnode);
     }
-    return found != nullptr && NodeFullyConnected(found) && func(found);
+    return false;
 }
 
 int64_t PoissonNextSend(int64_t nNow, int average_interval_seconds) {
