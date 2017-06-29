@@ -255,8 +255,8 @@ class BitcoinTestFramework(object):
         except http.client.CannotSendRequest as e:
             self.log.exception("Unable to stop node")
         return_code = self.bitcoind_processes[i].wait(timeout=BITCOIND_PROC_WAIT_TIMEOUT)
-        assert_equal(return_code, 0)
         del self.bitcoind_processes[i]
+        assert_equal(return_code, 0)
 
     def stop_nodes(self):
         """Stop multiple bitcoind test nodes"""
