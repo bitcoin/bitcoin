@@ -401,6 +401,9 @@ bool GetAddressIndex(uint160 addressHash, int type,
                      int start = 0, int end = 0);
 bool GetAddressUnspent(uint160 addressHash, int type,
                        std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > &unspentOutputs);
+/** Initializes the script-execution cache */
+void InitScriptExecutionCache();
+
 
 /** Functions for disk access for blocks */
 bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos, const Consensus::Params& consensusParams);
