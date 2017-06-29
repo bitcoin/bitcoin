@@ -63,7 +63,8 @@ const struct {
     {nullptr, nullptr}
 };
 
-namespace {
+namespace
+{
 
 // don't add private key handling cmd's to the history
 const QStringList historyFilter = QStringList()
@@ -75,7 +76,7 @@ const QStringList historyFilter = QStringList()
     << "walletpassphrasechange"
     << "encryptwallet";
 
-}
+}  // namespace
 
 /* Object for executing console RPC commands in a separate thread.
 */

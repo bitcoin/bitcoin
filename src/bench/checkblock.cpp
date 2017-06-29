@@ -9,7 +9,8 @@
 #include "streams.h"
 #include "consensus/validation.h"
 
-namespace block_bench {
+namespace block_bench
+{
 #include "bench/data/block413567.raw.h"
 } // namespace block_bench
 

@@ -21,7 +21,8 @@ class WalletModel;
 
 class CCoinControl;
 
-namespace Ui {
+namespace Ui
+{
     class CoinControlDialog;
 }
 

@@ -450,11 +450,13 @@ Source code organization
   should be placed on the same line as the brace closing the namespace, e.g.
 
 ```c++
-namespace mynamespace {
+namespace mynamespace
+{
     ...
 } // namespace mynamespace
 
-namespace {
+namespace
+{
     ...
 } // namespace
 ```

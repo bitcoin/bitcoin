@@ -10,7 +10,8 @@
 #include "script/interpreter.h"
 #include "version.h"
 
-namespace {
+namespace
+{
 
 /** A class that deserializes a single CTransaction one time. */
 class TxInputStream

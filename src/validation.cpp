@@ -99,7 +99,8 @@ CScript COINBASE_FLAGS;
 const std::string strMessageMagic = "Bitcoin Signed Message:\n";
 
 // Internal stuff
-namespace {
+namespace
+{
 
     struct CBlockIndexWorkComparator
     {
@@ -161,7 +162,7 @@ namespace {
 
     /** Dirty block file entries. */
     std::set<int> setDirtyFileInfo;
-} // anon namespace
+} // namespace
 
 CBlockIndex* FindForkInGlobalIndex(const CChain& chain, const CBlockLocator& locator)
 {
@@ -1328,7 +1329,8 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
     return true;
 }
 
-namespace {
+namespace
+{
 
 bool UndoWriteToDisk(const CBlockUndo& blockundo, CDiskBlockPos& pos, const uint256& hashBlock, const CMessageHeader::MessageStartChars& messageStart)
 {

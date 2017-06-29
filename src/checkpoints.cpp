@@ -13,7 +13,8 @@
 #include <stdint.h>
 
 
-namespace Checkpoints {
+namespace Checkpoints
+{
 
     CBlockIndex* GetLastCheckpoint(const CCheckpointData& data)
     {

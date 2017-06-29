@@ -16,9 +16,10 @@
 namespace fs = boost::filesystem;
 
 /** Bridge operations to C stdio */
-namespace fsbridge {
+namespace fsbridge
+{
     FILE *fopen(const fs::path& p, const char *mode);
     FILE *freopen(const fs::path& p, const char *mode, FILE *stream);
-};
+} // namespace fsbridge
 
 #endif // BITCOIN_FS_H

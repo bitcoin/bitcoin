@@ -15,7 +15,8 @@
 #include "tinyformat.h"
 #include "util.h"
 
-namespace {
+namespace
+{
 
 template <typename Stream, typename Data>
 bool SerializeDB(Stream& stream, const Data& data)
@@ -103,7 +104,7 @@ bool DeserializeFileDB(const fs::path& path, Data& data)
     return DeserializeDB(filein, data);
 }
 
-}
+}  // namespace
 
 CBanDB::CBanDB()
 {

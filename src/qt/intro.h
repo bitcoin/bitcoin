@@ -13,7 +13,8 @@ static const bool DEFAULT_CHOOSE_DATADIR = false;
 
 class FreespaceChecker;
 
-namespace Ui {
+namespace Ui
+{
     class Intro;
 }
 

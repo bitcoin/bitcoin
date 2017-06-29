@@ -18,7 +18,8 @@
 class PlatformStyle;
 class WalletModel;
 
-namespace Ui {
+namespace Ui
+{
     class ReceiveCoinsDialog;
 }
 

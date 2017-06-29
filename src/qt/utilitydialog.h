@@ -10,7 +10,8 @@
 
 class BitcoinGUI;
 
-namespace Ui {
+namespace Ui
+{
     class HelpMessageDialog;
 }
 

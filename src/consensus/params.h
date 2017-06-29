@@ -10,7 +10,8 @@
 #include <map>
 #include <string>
 
-namespace Consensus {
+namespace Consensus
+{
 
 enum DeploymentPos
 {

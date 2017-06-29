@@ -66,7 +66,7 @@ struct X509Deleter {
       void operator()(X509* b) { X509_free(b); }
 };
 
-namespace // Anon namespace
+namespace
 {
     std::unique_ptr<X509_STORE, X509StoreDeleter> certStore;
 }
