@@ -42,7 +42,7 @@ class BumpFeeTest(BitcoinTestFramework):
 
         # Encrypt wallet for test_locked_wallet_fails test
         self.nodes[1].encryptwallet(WALLET_PASSPHRASE)
-        bitcoind_processes[1].wait()
+        self.bitcoind_processes[1].wait()
         self.nodes[1] = self.start_node(1, self.options.tmpdir, extra_args[1])
         self.nodes[1].walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
 
