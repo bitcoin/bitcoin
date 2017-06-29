@@ -169,7 +169,6 @@ BOOST_AUTO_TEST_CASE(ct_test)
 
 BOOST_AUTO_TEST_CASE(ct_parameters_test)
 {
-    
     //for (size_t k = 0; k < 10000; ++k)
     for (size_t k = 0; k < 100; ++k)
     {
@@ -180,7 +179,27 @@ BOOST_AUTO_TEST_CASE(ct_parameters_test)
         
         SelectRangeProofParameters(nValue, min_value, ct_exponent, ct_bits);
     };
+}
+
+BOOST_AUTO_TEST_CASE(ct_commitment_test)
+{
+    secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
     
+    secp256k1_pedersen_commitment commitment;
+    uint8_t blind[32];
+    memset(blind, 0, 32);
+    
+    BOOST_CHECK(secp256k1_pedersen_commit(ctx, &commitment, blind, 10, secp256k1_generator_h));
+    BOOST_CHECK(HexStr(commitment.data, commitment.data+32) == "093806b3e479859dc6dd508eca22257d796bba3e32a6616cc97b51723b50a5f4");
+    
+    memset(blind, 1, 32);
+    
+    BOOST_CHECK(secp256k1_pedersen_commit(ctx, &commitment, blind, 10, secp256k1_generator_h));
+    BOOST_CHECK(HexStr(commitment.data, commitment.data+32) == "09badd85325926c329aa62f5a7d37d0a015aabfb52608052d277530bd025ddc9");
+    
+    
+    
+    secp256k1_context_destroy(ctx);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

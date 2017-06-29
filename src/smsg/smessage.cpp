@@ -1789,7 +1789,7 @@ int SecureMsgReceiveData(CNode *pfrom, const std::string &strCommand, CDataStrea
             pfrom->smsgData.lastMatched = time;
         }*/
         if (fDebugSmsg)
-            LogPrintf("[BLOCKED] Peer buckets matched in smsgWant at %d.\n", time);
+            LogPrintf("Peer buckets matched in smsgWant at %d.\n", time);
 
     } else
     if (strCommand == "smsgPing")

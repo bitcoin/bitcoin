@@ -3351,6 +3351,75 @@ UniValue sendanontoanon(const JSONRPCRequest &request)
     return SendToInner(request, OUTPUT_RINGCT, OUTPUT_RINGCT);
 }
 
+UniValue debugwallet(const JSONRPCRequest &request)
+{
+    if (request.fHelp || request.params.size() > 1)
+        throw std::runtime_error(
+            "debugwallet [attempt_repair]\n"
+            "Detect problems in wallet.\n");
+    
+    bool fAttemptRepair = false;
+    if (request.params.size() > 0)
+    {
+        std::string s = request.params[0].get_str();
+        if (part::IsStringBoolPositive(s))
+            fAttemptRepair = true;
+    };
+    
+    CHDWallet *pwallet = GetHDWallet();
+    EnsureWalletIsUnlocked(pwallet);
+    
+    size_t nUnabandonedOrphans = 0;
+    size_t nCoinStakes = 0;
+    size_t nAbandonedOrphans = 0;
+    size_t nMapWallet = 0;
+    
+    {
+        LOCK2(cs_main, pwallet->cs_wallet);
+        
+        std::map<uint256, CWalletTx>::const_iterator it;
+        for (it = pwallet->mapWallet.begin(); it != pwallet->mapWallet.end(); ++it)
+        {
+            const uint256 &wtxid = it->first;
+            const CWalletTx &wtx = it->second;
+            
+            nMapWallet++;
+            
+            if (wtx.IsCoinStake())
+            {
+                nCoinStakes++;
+                if (wtx.GetDepthInMainChain() < 1)
+                {
+                    if (wtx.isAbandoned())
+                    {
+                        nAbandonedOrphans++;
+                    } else
+                    {
+                        nUnabandonedOrphans++;
+                        LogPrintf("Unabandoned orphaned stake: %s\n", wtxid.ToString());
+                        
+                        if (fAttemptRepair)
+                        {
+                            if (!pwallet->AbandonTransaction(wtxid))
+                                LogPrintf("ERROR: %s - Orphaning stake, AbandonTransaction failed for %s\n", __func__, wtxid.ToString());
+                        };
+                    };
+                };
+            };
+        };
+    }
+    
+    LogPrintf("nUnabandonedOrphans %d\n", nUnabandonedOrphans);
+    LogPrintf("nCoinStakes %d\n", nCoinStakes);
+    LogPrintf("nAbandonedOrphans %d\n", nAbandonedOrphans);
+    LogPrintf("nMapWallet %d\n", nMapWallet);
+    
+    UniValue obj(UniValue::VOBJ);
+    
+    obj.push_back(Pair("unabandoned_orphans", (int)nUnabandonedOrphans));
+    
+    return obj;
+}
 
 
 
@@ -3395,6 +3464,8 @@ static const CRPCCommand commands[] =
     { "wallet",             "sendanontoblind",          &sendanontoblind,          false,  {"address","amount","comment","comment_to","subtractfeefromamount", "narration", "ring_size", "num_sigs"} },
     { "wallet",             "sendanontoanon",           &sendanontoanon,           false,  {"address","amount","comment","comment_to","subtractfeefromamount", "narration", "ring_size", "num_sigs"} },
     
+    
+    { "wallet",             "debugwallet",              &debugwallet,               false,  {"attempt_repair"} },
     
 };
 

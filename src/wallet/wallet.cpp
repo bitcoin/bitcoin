@@ -1131,7 +1131,7 @@ bool CWallet::AbandonTransaction(const uint256& hashTx)
             }
         } else
         {
-        }
+        };
     }
 
     return true;

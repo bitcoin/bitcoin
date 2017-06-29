@@ -7071,7 +7071,7 @@ bool CHDWallet::AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlockInd
                         if (wtxConflicted && wtxConflicted->isAbandoned() && wtxConflicted->IsCoinStake())
                         {
                             // Respending input from orphaned coinstake, leave abandoned
-                            LogPrint("pos", "Reusing kernel from orphaned stake %s, new tx %s, \n    (kernel %s:%i).\n",
+                            LogPrintf("Reusing kernel from orphaned stake %s, new tx %s, \n    (kernel %s:%i).\n",
                                 range.first->second.ToString(), tx.GetHash().ToString(), range.first->first.hash.ToString(), range.first->first.n);
                         } else
                         {
@@ -7174,7 +7174,7 @@ bool CHDWallet::AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlockInd
             if (fExisted && tx.IsCoinStake() && posInBlock < 0)
             {
                 uint256 hashTx = tx.GetHash();
-                LogPrint("pos", "Orphaning stake txn: %s\n", hashTx.ToString());
+                LogPrintf("Orphaning stake txn: %s\n", hashTx.ToString());
                 
                 // If block is later reconnected tx will be unabandoned by AddToWallet
                 if (!AbandonTransaction(hashTx))
@@ -7669,6 +7669,7 @@ std::vector<uint256> CHDWallet::ResendRecordTransactionsBefore(int64_t nTime, CC
         if (it->first > nTime)
             continue;
         
+        const uint256 &txhash = it->second->first;
         CTransactionRecord &rtx = it->second->second;
         
         if (rtx.IsAbandoned())
@@ -7676,21 +7677,21 @@ std::vector<uint256> CHDWallet::ResendRecordTransactionsBefore(int64_t nTime, CC
         if (GetDepthInMainChain(rtx.blockHash) != 0)
             continue;
         
-        std::map<uint256, CWalletTx>::iterator twi = mapTempWallet.find(it->second->first);
+        std::map<uint256, CWalletTx>::iterator twi = mapTempWallet.find(txhash);
         
         if (twi == mapTempWallet.end())
         {
-            if (0 != InsertTempTxn(it->second->first, rtx.blockHash, rtx.nIndex)
-                || (twi = mapTempWallet.find(it->second->first)) == mapTempWallet.end())
+            if (0 != InsertTempTxn(txhash, rtx.blockHash, rtx.nIndex)
+                || (twi = mapTempWallet.find(txhash)) == mapTempWallet.end())
             {
-                LogPrintf("ERROR: %s - InsertTempTxn failed %s.", __func__, it->second->first.ToString());
+                LogPrintf("ERROR: %s - InsertTempTxn failed %s.", __func__, txhash.ToString());
             };
         };
         
         if (twi != mapTempWallet.end())
         {
             if (twi->second.RelayWalletTransaction(connman))
-                result.push_back(it->second->first);
+                result.push_back(txhash);
         };
     };
     
