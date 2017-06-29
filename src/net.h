@@ -166,8 +166,8 @@ public:
     {
         LOCK(cs_vNodes);
         for (auto&& node : vNodes) {
-            if (NodeFullyConnected(node))
-                func(node);
+            if (NodeFullyConnected(node.get()))
+                func(node.get());
         }
     };
 
@@ -176,8 +176,8 @@ public:
     {
         LOCK(cs_vNodes);
         for (auto&& node : vNodes) {
-            if (NodeFullyConnected(node))
-                func(node);
+            if (NodeFullyConnected(node.get()))
+                func(node.get());
         }
     };
 
@@ -186,8 +186,8 @@ public:
     {
         LOCK(cs_vNodes);
         for (auto&& node : vNodes) {
-            if (NodeFullyConnected(node))
-                pre(node);
+            if (NodeFullyConnected(node.get()))
+                pre(node.get());
         }
         post();
     };
@@ -197,8 +197,8 @@ public:
     {
         LOCK(cs_vNodes);
         for (auto&& node : vNodes) {
-            if (NodeFullyConnected(node))
-                pre(node);
+            if (NodeFullyConnected(node.get()))
+                pre(node.get());
         }
         post();
     };
@@ -303,10 +303,10 @@ private:
     uint64_t CalculateKeyedNetGroup(const CAddress& ad) const;
 
     bool AttemptToEvictConnection();
-    CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure);
+    std::shared_ptr<CNode> ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure);
     bool IsWhitelistedRange(const CNetAddr &addr);
 
-    void DeleteNode(CNode* pnode);
+    void DeleteNode(std::shared_ptr<CNode>&& pnode);
 
     NodeId GetNewNodeId();
 
@@ -329,11 +329,11 @@ private:
     static bool NodeFullyConnected(const CNode* pnode);
 
     template <typename Callable>
-    CNode* FindNode(Callable&& func)
+    std::shared_ptr<CNode> FindNode(Callable&& func)
     {
         LOCK(cs_vNodes);
         for (auto& node : vNodes) {
-            if(func(node)) {
+            if(func(node.get())) {
                 return node;
             }
         }
@@ -371,8 +371,8 @@ private:
     CCriticalSection cs_vOneShots;
     std::vector<std::string> vAddedNodes;
     CCriticalSection cs_vAddedNodes;
-    std::vector<CNode*> vNodes;
-    std::list<CNode*> vNodesDisconnected;
+    std::vector<std::shared_ptr<CNode>> vNodes;
+    std::list<std::shared_ptr<CNode>> vNodesDisconnected;
     mutable CCriticalSection cs_vNodes;
     std::atomic<NodeId> nLastNodeId;
 

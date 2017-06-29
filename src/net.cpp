@@ -324,7 +324,7 @@ static CAddress GetBindAddress(SOCKET sock)
     return addr_bind;
 }
 
-CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure)
+std::shared_ptr<CNode> CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure)
 {
     if (pszDest == NULL) {
         if (IsLocal(addrConnect))
@@ -376,7 +376,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
         NodeId id = GetNewNodeId();
         uint64_t nonce = GetDeterministicRandomizer(RANDOMIZER_ID_LOCALHOSTNONCE).Write(id).Finalize();
         CAddress addr_bind = GetBindAddress(hSocket);
-        CNode* pnode = new CNode(id, nLocalServices, GetBestHeight(), hSocket, addrConnect, CalculateKeyedNetGroup(addrConnect), nonce, addr_bind, pszDest ? pszDest : "", false);
+        auto pnode(std::make_shared<CNode>(id, nLocalServices, GetBestHeight(), hSocket, addrConnect, CalculateKeyedNetGroup(addrConnect), nonce, addr_bind, pszDest ? pszDest : "", false));
         pnode->nServicesExpected = ServiceFlags(addrConnect.nServices & nRelevantServices);
         pnode->AddRef();
 
@@ -490,7 +490,7 @@ void CConnman::Ban(const CSubNet& subNet, const BanReason &banReason, int64_t ba
         clientInterface->BannedListChanged();
     {
         LOCK(cs_vNodes);
-        for (CNode* pnode : vNodes) {
+        for (auto& pnode : vNodes) {
             if (subNet.Match((CNetAddr)pnode->addr))
                 pnode->fDisconnect = true;
         }
@@ -914,7 +914,7 @@ bool CConnman::AttemptToEvictConnection()
     {
         LOCK(cs_vNodes);
 
-        for (CNode *node : vNodes) {
+        for (auto& node : vNodes) {
             if (node->fWhitelisted)
                 continue;
             if (!node->fInbound)
@@ -1016,7 +1016,7 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     bool whitelisted = hListenSocket.whitelisted || IsWhitelistedRange(addr);
     {
         LOCK(cs_vNodes);
-        for (CNode* pnode : vNodes)
+        for (const auto& pnode : vNodes)
             if (pnode->fInbound)
                 nInbound++;
     }
@@ -1067,16 +1067,16 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     uint64_t nonce = GetDeterministicRandomizer(RANDOMIZER_ID_LOCALHOSTNONCE).Write(id).Finalize();
     CAddress addr_bind = GetBindAddress(hSocket);
 
-    CNode* pnode = new CNode(id, nLocalServices, GetBestHeight(), hSocket, addr, CalculateKeyedNetGroup(addr), nonce, addr_bind, "", true);
+    auto pnode(std::make_shared<CNode>(id, nLocalServices, GetBestHeight(), hSocket, addr, CalculateKeyedNetGroup(addr), nonce, addr_bind, "", true));
     pnode->AddRef();
     pnode->fWhitelisted = whitelisted;
-    GetNodeSignals().InitializeNode(pnode, *this);
+    GetNodeSignals().InitializeNode(pnode.get(), *this);
 
     LogPrint(BCLog::NET, "connection from %s accepted\n", addr.ToString());
 
     {
         LOCK(cs_vNodes);
-        vNodes.push_back(pnode);
+        vNodes.push_back(std::move(pnode));
     }
 }
 
@@ -1091,8 +1091,8 @@ void CConnman::ThreadSocketHandler()
         {
             LOCK(cs_vNodes);
             // Disconnect unused nodes
-            std::vector<CNode*> vNodesCopy = vNodes;
-            for (CNode* pnode : vNodesCopy)
+            std::vector<std::shared_ptr<CNode>> vNodesCopy = vNodes;
+            for (auto& pnode : vNodesCopy)
             {
                 if (pnode->fDisconnect)
                 {
@@ -1113,8 +1113,8 @@ void CConnman::ThreadSocketHandler()
         }
         {
             // Delete disconnected nodes
-            std::list<CNode*> vNodesDisconnectedCopy = vNodesDisconnected;
-            for (CNode* pnode : vNodesDisconnectedCopy)
+            std::list<std::shared_ptr<CNode>> vNodesDisconnectedCopy = vNodesDisconnected;
+            for (auto& pnode : vNodesDisconnectedCopy)
             {
                 // wait until threads are done using it
                 if (pnode->GetRefCount() <= 0) {
@@ -1130,7 +1130,7 @@ void CConnman::ThreadSocketHandler()
                     }
                     if (fDelete) {
                         vNodesDisconnected.remove(pnode);
-                        DeleteNode(pnode);
+                        DeleteNode(std::move(pnode));
                     }
                 }
             }
@@ -1170,7 +1170,7 @@ void CConnman::ThreadSocketHandler()
 
         {
             LOCK(cs_vNodes);
-            for (CNode* pnode : vNodes)
+            for (auto& pnode : vNodes)
             {
                 // Implement the following logic:
                 // * If there is data to send, select() for sending data. As this only
@@ -1242,14 +1242,14 @@ void CConnman::ThreadSocketHandler()
         //
         // Service each socket
         //
-        std::vector<CNode*> vNodesCopy;
+        std::vector<std::shared_ptr<CNode>> vNodesCopy;
         {
             LOCK(cs_vNodes);
             vNodesCopy = vNodes;
-            for (CNode* pnode : vNodesCopy)
+            for (auto& pnode : vNodesCopy)
                 pnode->AddRef();
         }
-        for (CNode* pnode : vNodesCopy)
+        for (auto& pnode : vNodesCopy)
         {
             if (interruptNet)
                 return;
@@ -1329,7 +1329,7 @@ void CConnman::ThreadSocketHandler()
             if (sendSet)
             {
                 LOCK(pnode->cs_vSend);
-                size_t nBytes = SocketSendData(pnode);
+                size_t nBytes = SocketSendData(pnode.get());
                 if (nBytes) {
                     RecordBytesSent(nBytes);
                 }
@@ -1370,7 +1370,7 @@ void CConnman::ThreadSocketHandler()
         }
         {
             LOCK(cs_vNodes);
-            for (CNode* pnode : vNodesCopy)
+            for (auto& pnode : vNodesCopy)
                 pnode->Release();
         }
     }
@@ -1537,7 +1537,7 @@ void CConnman::ThreadDNSAddressSeed()
 
         LOCK(cs_vNodes);
         int nRelevant = 0;
-        for (auto pnode : vNodes) {
+        for (const auto& pnode : vNodes) {
             nRelevant += pnode->fSuccessfullyConnected && ((pnode->nServices & nRelevantServices) == nRelevantServices);
         }
         if (nRelevant >= 2) {
@@ -1693,7 +1693,7 @@ void CConnman::ThreadOpenConnections()
         std::set<std::vector<unsigned char> > setConnected;
         {
             LOCK(cs_vNodes);
-            for (CNode* pnode : vNodes) {
+            for (auto& pnode : vNodes) {
                 if (!pnode->fInbound && !pnode->fAddnode) {
 
                     // Count the peers that have all relevant services
@@ -1820,7 +1820,7 @@ std::vector<AddedNodeInfo> CConnman::GetAddedNodeInfo()
     std::map<std::string, std::pair<bool, CService>> mapConnectedByName;
     {
         LOCK(cs_vNodes);
-        for (const CNode* pnode : vNodes) {
+        for (const auto& pnode : vNodes) {
             if (pnode->addr.IsValid()) {
                 mapConnected[pnode->addr] = pnode->fInbound;
             }
@@ -1910,7 +1910,7 @@ bool CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
         return false;
     }
 
-    CNode* pnode = ConnectNode(addrConnect, pszDest, fCountFailure);
+    std::shared_ptr<CNode> pnode(ConnectNode(addrConnect, pszDest, fCountFailure));
 
     if (!pnode)
         return false;
@@ -1923,10 +1923,10 @@ bool CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     if (fAddnode)
         pnode->fAddnode = true;
 
-    GetNodeSignals().InitializeNode(pnode, *this);
+    GetNodeSignals().InitializeNode(pnode.get(), *this);
     {
         LOCK(cs_vNodes);
-        vNodes.push_back(pnode);
+        vNodes.push_back(std::move(pnode));
     }
 
     return true;
@@ -1936,24 +1936,24 @@ void CConnman::ThreadMessageHandler()
 {
     while (!flagInterruptMsgProc)
     {
-        std::vector<CNode*> vNodesCopy;
+        std::vector<std::shared_ptr<CNode>> vNodesCopy;
         {
             LOCK(cs_vNodes);
             vNodesCopy = vNodes;
-            for (CNode* pnode : vNodesCopy) {
+            for (auto& pnode : vNodesCopy) {
                 pnode->AddRef();
             }
         }
 
         bool fMoreWork = false;
 
-        for (CNode* pnode : vNodesCopy)
+        for (auto& pnode : vNodesCopy)
         {
             if (pnode->fDisconnect)
                 continue;
 
             // Receive messages
-            bool fMoreNodeWork = GetNodeSignals().ProcessMessages(pnode, *this, flagInterruptMsgProc);
+            bool fMoreNodeWork = GetNodeSignals().ProcessMessages(pnode.get(), *this, flagInterruptMsgProc);
             fMoreWork |= (fMoreNodeWork && !pnode->fPauseSend);
             if (flagInterruptMsgProc)
                 return;
@@ -1961,7 +1961,7 @@ void CConnman::ThreadMessageHandler()
             // Send messages
             {
                 LOCK(pnode->cs_sendProcessing);
-                GetNodeSignals().SendMessages(pnode, *this, flagInterruptMsgProc);
+                GetNodeSignals().SendMessages(pnode.get(), *this, flagInterruptMsgProc);
             }
             if (flagInterruptMsgProc)
                 return;
@@ -1969,7 +1969,7 @@ void CConnman::ThreadMessageHandler()
 
         {
             LOCK(cs_vNodes);
-            for (CNode* pnode : vNodesCopy)
+            for (auto& pnode : vNodesCopy)
                 pnode->Release();
         }
 
@@ -2144,7 +2144,7 @@ void CConnman::SetNetworkActive(bool active)
 
         LOCK(cs_vNodes);
         // Close sockets to all nodes
-        for (CNode* pnode : vNodes) {
+        for (auto& pnode : vNodes) {
             pnode->CloseSocketDisconnect();
         }
     } else {
@@ -2389,7 +2389,7 @@ void CConnman::Stop()
     }
 
     // Close sockets
-    for (CNode* pnode : vNodes)
+    for (auto& pnode : vNodes)
         pnode->CloseSocketDisconnect();
     for (ListenSocket& hListenSocket : vhListenSocket)
         if (hListenSocket.socket != INVALID_SOCKET)
@@ -2397,11 +2397,11 @@ void CConnman::Stop()
                 LogPrintf("CloseSocket(hListenSocket) failed with error %s\n", NetworkErrorString(WSAGetLastError()));
 
     // clean up some globals (to help leak detection)
-    for (CNode *pnode : vNodes) {
-        DeleteNode(pnode);
+    for (auto& pnode : vNodes) {
+        DeleteNode(std::move(pnode));
     }
-    for (CNode *pnode : vNodesDisconnected) {
-        DeleteNode(pnode);
+    for (auto& pnode : vNodesDisconnected) {
+        DeleteNode(std::move(pnode));
     }
     vNodes.clear();
     vNodesDisconnected.clear();
@@ -2412,14 +2412,14 @@ void CConnman::Stop()
     semAddnode = NULL;
 }
 
-void CConnman::DeleteNode(CNode* pnode)
+void CConnman::DeleteNode(std::shared_ptr<CNode>&& pnode)
 {
     assert(pnode);
     bool fUpdateConnectionTime = false;
     GetNodeSignals().FinalizeNode(pnode->GetId(), fUpdateConnectionTime);
     if(fUpdateConnectionTime)
         addrman.Connected(pnode->addr);
-    delete pnode;
+    pnode.reset();
 }
 
 CConnman::~CConnman()
@@ -2810,7 +2810,7 @@ bool CConnman::ForNode(NodeId id, std::function<bool(CNode* pnode)> func)
 {
     LOCK(cs_vNodes);
     if (auto pnode = FindNode([id](const CNode* pnode) { return pnode->GetId() == id; })) {
-        return NodeFullyConnected(pnode) && func(pnode);
+        return NodeFullyConnected(pnode.get()) && func(pnode.get());
     }
     return false;
 }
