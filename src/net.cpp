@@ -1084,66 +1084,47 @@ void CConnman::ThreadSocketHandler()
     unsigned int nPrevNodeCount = 0;
     while (!interruptNet)
     {
-        //
-        // Disconnect nodes
-        //
+        std::vector<decay_ptr<CNode>> nodes_to_disconnect;
+        std::vector<std::shared_ptr<CNode>> nodes_copy;
+        // Separate nodes scheduled for disconnection
         {
             LOCK(cs_vNodes);
-            // Disconnect unused nodes
             for (auto it = vNodes.begin(); it != vNodes.end();)
             {
                 if ((*it)->fDisconnect)
                 {
-                    strong_ptr<CNode> pnode(std::move(*it));
-
                     // remove from vNodes
+                    nodes_to_disconnect.emplace_back(std::move(*it));
                     it = vNodes.erase(it);
-
-                    // release outbound grant (if any)
-                    pnode->grantOutbound.Release();
-
-                    // close socket and cleanup
-                    pnode->CloseSocketDisconnect();
-
-                    // hold in disconnected pool until all refs are released
-                    vNodesDisconnected.emplace_back(std::move(pnode));
                 } else {
+                    nodes_copy.push_back(it->get_shared());
                     ++it;
                 }
             }
         }
+        // Disconnect nodes
+        for (auto& pnode : nodes_to_disconnect) {
+            assert(pnode->fDisconnect);
+            // release outbound grant (if any)
+            pnode->grantOutbound.Release();
+
+            // close socket and cleanup
+            pnode->CloseSocketDisconnect();
+            vNodesDisconnected.push_back(std::move(pnode));
+        }
+
+        // Destroy the node when only one instance remains
+        for (auto it = vNodesDisconnected.begin(); it != vNodesDisconnected.end();)
         {
-            // Delete disconnected nodes
-            for (auto it = vNodesDisconnected.begin(); it != vNodesDisconnected.end();)
-            {
-                // wait until threads are done using it
-                bool fDelete = false;
-                if (it->decayed()) {
-                    CNode* pnode = it->get();
-                    {
-                        TRY_LOCK(pnode->cs_inventory, lockInv);
-                        if (lockInv) {
-                            TRY_LOCK(pnode->cs_vSend, lockSend);
-                            if (lockSend) {
-                                fDelete = true;
-                            }
-                        }
-                    }
-                }
-                if (fDelete) {
-                    decay_ptr<CNode> node(std::move(*it));
-                    it = vNodesDisconnected.erase(it);
-                    DeleteNode(std::move(node));
-                } else {
-                    ++it;
-                }
+            if (it->decayed()) {
+                decay_ptr<CNode> pnode(std::move(*it));
+                it = vNodesDisconnected.erase(it);
+                DeleteNode(std::move(pnode));
+            } else {
+                ++it;
             }
         }
-        size_t vNodesSize;
-        {
-            LOCK(cs_vNodes);
-            vNodesSize = vNodes.size();
-        }
+        size_t vNodesSize = nodes_copy.size();
         if(vNodesSize != nPrevNodeCount) {
             nPrevNodeCount = vNodesSize;
             if(clientInterface)
@@ -1173,8 +1154,7 @@ void CConnman::ThreadSocketHandler()
         }
 
         {
-            LOCK(cs_vNodes);
-            for (auto& pnode : vNodes)
+            for (auto& pnode : nodes_copy)
             {
                 // Implement the following logic:
                 // * If there is data to send, select() for sending data. As this only
@@ -1246,15 +1226,7 @@ void CConnman::ThreadSocketHandler()
         //
         // Service each socket
         //
-        std::vector<std::shared_ptr<CNode>> vNodesCopy;
-        {
-            LOCK(cs_vNodes);
-            vNodesCopy.reserve(vNodes.size());
-            for (auto& pnode : vNodes) {
-                vNodesCopy.push_back(pnode.get_shared());
-            }
-        }
-        for (auto& pnode : vNodesCopy)
+        for (auto& pnode : nodes_copy)
         {
             if (interruptNet)
                 return;
