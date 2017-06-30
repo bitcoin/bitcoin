@@ -28,6 +28,54 @@ namespace {
     c1 = 0; \
 }
 
+#if defined(__amd64__) || defined(__x86_64__)
+
+/** [c0,c1] = a * b */
+#define mul(c0,c1,a,b) { \
+    __asm__ ("mulq %3" : "=d"(c1), "=a"(c0) : "a"(a), "g"(b) : "cc"); \
+}
+
+/** [c0,c1,c2] += a * b */
+#define muladd3(c0,c1,c2,a,b) { \
+    uint64_t tl, th; \
+    __asm__ ("mulq %3" : "=a"(tl), "=d"(th) : "a"(a), "g"(b) : "cc"); \
+    __asm__ ("addq %3,%0; adcq %4,%1; adcq $0,%2" : "+r"(c0), "+r"(c1), "+r"(c2) : "a"(tl), "d"(th) : "cc"); \
+}
+
+/** [c0,c1,c2] += 2 * a * b */
+#define muldbladd3(c0,c1,c2,a,b) { \
+    uint64_t tl, th; \
+    __asm__ ("mulq %3" : "=a"(tl), "=d"(th) : "a"(a), "g"(b) : "cc"); \
+    __asm__ ("addq %3,%0; adcq %4,%1; adcq $0,%2" : "+r"(c0), "+r"(c1), "+r"(c2) : "a"(tl), "d"(th) : "cc"); \
+    __asm__ ("addq %3,%0; adcq %4,%1; adcq $0,%2" : "+r"(c0), "+r"(c1), "+r"(c2) : "a"(tl), "d"(th) : "cc"); \
+}
+
+/* [c0,c1,c2] += n * [d0,d1,d2]. c0 is initially 0 */
+#define mulnadd3(c0,c1,c2,d0,d1,d2,n) { \
+    uint64_t tl1, th1, tl2, th2, tl3; \
+    __asm__ ("mulq %3" : "=a"(tl1), "=d"(th1) : "a"(d0), "r"((Num3072::limb_type)n) : "cc"); \
+    __asm__ ("addq %3,%0; adcq %4,%1; adcq $0,%2" : "+r"(c0), "+r"(c1), "+r"(c2) : "g"(tl1), "g"(th1) : "cc"); \
+    __asm__ ("mulq %3" : "=a"(tl2), "=d"(th2) : "a"(d1), "r"((Num3072::limb_type)n) : "cc"); \
+    __asm__ ("addq %2,%0; adcq %3,%1" : "+r"(c1), "+r"(c2) : "g"(tl2), "g"(th2) : "cc"); \
+    __asm__ ("imulq %2,%1,%0" : "=r"(tl3) : "g"(d2), "i"(n) : "cc"); \
+    __asm__ ("addq %1,%0" : "+r"(c2) : "g"(tl3) : "cc"); \
+}
+
+/* [c0,c1] *= n */
+#define muln2(c0,c1,n) { \
+    uint64_t th; \
+    __asm__ ("mulq %2" : "+a"(c0), "=d"(th) : "r"((Num3072::limb_type)n) : "cc"); \
+    __asm__ ("imul %1,%0,%0" : "+r"(c1) : "i"(n) : "cc"); \
+    __asm__ ("addq %1,%0" : "+r"(c1) : "g"(th) : "cc"); \
+}
+
+/** [c0,c1] += a */
+#define add2(c0,c1,a) { \
+    __asm__ ("add %2,%0; adc $0,%1" : "+r"(c0), "+r"(c1) : "r"(a) : "cc"); \
+}
+
+#else
+
 /** [c0,c1] = a * b */
 #define mul(c0,c1,a,b) { \
     Num3072::double_limb_type t = (Num3072::double_limb_type)a * b; \
@@ -94,6 +142,8 @@ namespace {
     c0 += (a); \
     c1 += (c0 < (a)) ? 1 : 0; \
 }
+
+#endif
 
 bool IsOverflow(const Num3072* d)
 {
