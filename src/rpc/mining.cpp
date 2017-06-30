@@ -498,6 +498,7 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
     // to select witness transactions, after segwit activates (otherwise
     // don't).
     bool fSupportsSegwit = setClientRules.find(segwit_info.name) != setClientRules.end();
+    bool fSupportsSegwit2x = setClientRules.find(segwit2x_info.name) != setClientRules.end();
 
     // Update block
     static CBlockIndex* pindexPrev;
@@ -657,7 +658,7 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
     result.push_back(Pair("noncerange", "00000000ffffffff"));
     int64_t nSigOpLimit = MAX_BLOCK_SIGOPS_COST;
     int64_t nSizeLimit = MAX_BLOCK_SERIALIZED_SIZE;
-    int64_t nSigOpLimit = MaxBlockSigOpsCost(fPreSegWit?false:true); // excl bip102 buffer
+    int64_t nSigOpLimit = MaxBlockSigOpsCost(fSupportsSegwit2x); // excl bip102 buffer
     if (fPreSegWit) {
         assert(nSigOpLimit % WITNESS_SCALE_FACTOR == 0);
         nSigOpLimit /= WITNESS_SCALE_FACTOR;
@@ -667,7 +668,7 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
     result.push_back(Pair("sigoplimit", nSigOpLimit));
     result.push_back(Pair("sizelimit", nSizeLimit));
     if (!fPreSegWit) {
-        result.push_back(Pair("weightlimit", (int64_t)MaxBlockWeight(0, false)));
+        result.push_back(Pair("weightlimit", (int64_t)MaxBlockWeight(fSupportsSegwit2x)));
     }
     result.push_back(Pair("curtime", pblock->GetBlockTime()));
     result.push_back(Pair("bits", strprintf("%08x", pblock->nBits)));
