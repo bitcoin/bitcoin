@@ -751,19 +751,6 @@ public:
     //! May not be called more than once
     void SetAddrLocal(const CService& addrLocalIn);
 
-    CNode* AddRef()
-    {
-        nRefCount++;
-        return this;
-    }
-
-    void Release()
-    {
-        nRefCount--;
-    }
-
-
-
     void AddAddressKnown(const CAddress& _addr)
     {
         addrKnown.insert(_addr.GetKey());

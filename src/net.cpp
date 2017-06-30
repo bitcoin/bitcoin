@@ -378,7 +378,6 @@ strong_ptr<CNode> CConnman::ConnectNode(CAddress addrConnect, const char *pszDes
         CAddress addr_bind = GetBindAddress(hSocket);
         auto pnode(make_strong<CNode>(id, nLocalServices, GetBestHeight(), hSocket, addrConnect, CalculateKeyedNetGroup(addrConnect), nonce, addr_bind, pszDest ? pszDest : "", false));
         pnode->nServicesExpected = ServiceFlags(addrConnect.nServices & nRelevantServices);
-        pnode->AddRef();
 
         return pnode;
     } else if (!proxyConnectionFailed) {
@@ -1068,7 +1067,6 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     CAddress addr_bind = GetBindAddress(hSocket);
 
     auto pnode(make_strong<CNode>(id, nLocalServices, GetBestHeight(), hSocket, addr, CalculateKeyedNetGroup(addr), nonce, addr_bind, "", true));
-    pnode->AddRef();
     pnode->fWhitelisted = whitelisted;
     GetNodeSignals().InitializeNode(pnode.get(), *this);
 
@@ -1107,7 +1105,6 @@ void CConnman::ThreadSocketHandler()
                     pnode->CloseSocketDisconnect();
 
                     // hold in disconnected pool until all refs are released
-                    pnode->Release();
                     vNodesDisconnected.emplace_back(std::move(pnode));
                 } else {
                     ++it;
@@ -1118,10 +1115,10 @@ void CConnman::ThreadSocketHandler()
             // Delete disconnected nodes
             for (auto it = vNodesDisconnected.begin(); it != vNodesDisconnected.end();)
             {
-                CNode* pnode = it->get();
                 // wait until threads are done using it
                 bool fDelete = false;
-                if (pnode->GetRefCount() <= 0) {
+                if (it->decayed()) {
+                    CNode* pnode = it->get();
                     {
                         TRY_LOCK(pnode->cs_inventory, lockInv);
                         if (lockInv) {
@@ -1254,7 +1251,6 @@ void CConnman::ThreadSocketHandler()
             vNodesCopy.reserve(vNodes.size());
             for (auto& pnode : vNodes) {
                 vNodesCopy.push_back(pnode.get_shared());
-                pnode->AddRef();
             }
         }
         for (auto& pnode : vNodesCopy)
@@ -1375,11 +1371,6 @@ void CConnman::ThreadSocketHandler()
                     pnode->fDisconnect = true;
                 }
             }
-        }
-        {
-            LOCK(cs_vNodes);
-            for (auto& pnode : vNodesCopy)
-                pnode->Release();
         }
     }
 }
@@ -1950,7 +1941,6 @@ void CConnman::ThreadMessageHandler()
             vNodesCopy.reserve(vNodes.size());
             for (auto& pnode : vNodes) {
                 vNodesCopy.push_back(pnode.get_shared());
-                pnode->AddRef();
             }
         }
 
@@ -1974,12 +1964,6 @@ void CConnman::ThreadMessageHandler()
             }
             if (flagInterruptMsgProc)
                 return;
-        }
-
-        {
-            LOCK(cs_vNodes);
-            for (auto& pnode : vNodesCopy)
-                pnode->Release();
         }
 
         std::unique_lock<std::mutex> lock(mutexMsgProc);
@@ -2424,6 +2408,7 @@ void CConnman::Stop()
 void CConnman::DeleteNode(decay_ptr<CNode>&& pnode)
 {
     assert(pnode);
+    assert(pnode.decayed());
     bool fUpdateConnectionTime = false;
     GetNodeSignals().FinalizeNode(pnode->GetId(), fUpdateConnectionTime);
     if(fUpdateConnectionTime)
