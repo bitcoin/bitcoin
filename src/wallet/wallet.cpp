@@ -3533,9 +3533,13 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
 
                 scriptChange = GetScriptForDestination(vchPubKey.GetID());
             }
+            CTxOut change_prototype_txout(0, scriptChange);
+            size_t change_prototype_size = GetSerializeSize(change_prototype_txout, SER_DISK, 0);
 
             nFeeRet = 0;
             if(nFeePay > 0) nFeeRet = nFeePay;
+            bool pick_new_inputs = true;
+            CAmount nValueIn = 0;
             // Start with no fee and loop until there is enough fee
             while (true)
             {
@@ -3581,10 +3585,10 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                 }
 
                 // Choose coins to use
-                CAmount nValueIn = 0;
+                nValueIn = 0;
                 setCoins.clear();
 
-                if (!SelectCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn, coinControl, nCoinType, fUseInstantSend))
+                if (!SelectCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn, &coin_control, nCoinType, fUseInstantSend))
                 {
                     if (nCoinType == ONLY_NONDENOMINATED) {
                         strFailReason = _("Unable to locate enough PrivateSend non-denominated funds for this transaction that are not equal 1000 CHC.");
@@ -3601,6 +3605,17 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
 
                     return false;
                 }
+
+                if (pick_new_inputs) {
+                    nValueIn = 0;
+                    setCoins.clear();
+                    if (!SelectCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn, coinControl))
+                    {
+                        strFailReason = _("Insufficient funds");
+                        return false;
+                    }
+                }
+
                 if (fUseInstantSend && nValueIn > INSTANTSEND_MAX_VALUE*COIN) {
                     strFailReason += " " + strprintf(_("InstantSend doesn't support sending values that high yet. Transactions are currently limited to %1 CHC."), INSTANTSEND_MAX_VALUE);
                     return false;
@@ -3729,16 +3744,30 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                 }
 
                 if (nFeeRet >= nFeeNeeded) {
-                    // Reduce fee to only the needed amount if we have change
-                    // output to increase.  This prevents potential overpayment
-                    // in fees if the coins selected to meet nFeeNeeded result
-                    // in a transaction that requires less fee than the prior
-                    // iteration.
+                    // Reduce fee to only the needed amount if possible. This
+                    // prevents potential overpayment in fees if the coins
+                    // selected to meet nFeeNeeded result in a transaction that
+                    // requires less fee than the prior iteration.
+
                     // TODO: The case where nSubtractFeeFromAmount > 0 remains
                     // to be addressed because it requires returning the fee to
                     // the payees and not the change output.
-                    // TODO: The case where there is no change output remains
-                    // to be addressed so we avoid creating too small an output.
+
+                    // If we have no change and a big enough excess fee, then
+                    // try to construct transaction again only without picking
+                    // new inputs. We now know we only need the smaller fee
+                    // (because of reduced tx size) and so we should add a
+                    // change output. Only try this once.
+                    CAmount fee_needed_for_change = GetMinimumFee(change_prototype_size, currentConfirmationTarget, ::mempool, ::feeEstimator, nullptr, false /* ignoreGlobalPayTxFee */, conservative_estimate);
+                    CAmount minimum_value_for_change = GetDustThreshold(change_prototype_txout, ::dustRelayFee);
+                    CAmount max_excess_fee = fee_needed_for_change + minimum_value_for_change;
+                    if (nFeeRet > nFeeNeeded + max_excess_fee && nChangePosInOut == -1 && nSubtractFeeFromAmount == 0 && pick_new_inputs) {
+                        pick_new_inputs = false;
+                        nFeeRet = nFeeNeeded + fee_needed_for_change;
+                        continue;
+                    }
+
+                    // If we have change output already, just increase it
                     if (nFeeRet > nFeeNeeded && nChangePosInOut != -1 && nSubtractFeeFromAmount == 0) {
                         CAmount extraFeePaid = nFeeRet - nFeeNeeded;
                         std::vector<CTxOut>::iterator change_position = txNew.vout.begin()+nChangePosInOut;
@@ -3746,6 +3775,12 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                         nFeeRet -= extraFeePaid;
                     }
                     break; // Done, enough fee included.
+                }
+                else if (!pick_new_inputs) {
+                    // This shouldn't happen, we should have had enough excess
+                    // fee to pay for the new output and still meet nFeeNeeded
+                    strFailReason = _("Transaction fee and change calculation failed");
+                    return false;
                 }
 
                 // Try to reduce change to include necessary fee
