@@ -29,7 +29,7 @@ extern CPrivateSendClient privateSendClient;
 
 /** Used to keep track of current status of mixing pool
  */
-class CPrivateSendClient : public CPrivateSend
+class CPrivateSendClient : public CPrivateSendBase
 {
 private:
     mutable CCriticalSection cs_darksend;

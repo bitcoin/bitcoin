@@ -40,7 +40,7 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, std::string& strCommand, C
         CTransaction txCollateral;
         vRecv >> nDenom >> txCollateral;
 
-        LogPrint("privatesend", "DSACCEPT -- nDenom %d (%s)  txCollateral %s", nDenom, GetDenominationsToString(nDenom), txCollateral.ToString());
+        LogPrint("privatesend", "DSACCEPT -- nDenom %d (%s)  txCollateral %s", nDenom, CPrivateSend::GetDenominationsToString(nDenom), txCollateral.ToString());
 
         CMasternode* pmn = mnodeman.Find(activeMasternode.vin);
         if(pmn == NULL) {
@@ -272,7 +272,7 @@ void CPrivateSendServer::SetNull()
     // MN side
     vecSessionCollaterals.clear();
 
-    CPrivateSend::SetNull();
+    CPrivateSendBase::SetNull();
 }
 
 //
@@ -284,7 +284,7 @@ void CPrivateSendServer::CheckPool()
         LogPrint("privatesend", "CPrivateSendServer::CheckPool -- entries count %lu\n", GetEntriesCount());
 
         // If entries are full, create finalized transaction
-        if(nState == POOL_STATE_ACCEPTING_ENTRIES && GetEntriesCount() >= GetMaxPoolTransactions()) {
+        if(nState == POOL_STATE_ACCEPTING_ENTRIES && GetEntriesCount() >= CPrivateSend::GetMaxPoolTransactions()) {
             LogPrint("privatesend", "CPrivateSendServer::CheckPool -- FINALIZE TRANSACTIONS\n");
             CreateFinalTransaction();
             return;
@@ -359,10 +359,10 @@ void CPrivateSendServer::CommitFinalTransaction()
     LogPrintf("CPrivateSendServer::CommitFinalTransaction -- CREATING DSTX\n");
 
     // create and sign masternode dstx transaction
-    if(!mapDarksendBroadcastTxes.count(hashTx)) {
-        CDarksendBroadcastTx dstx(finalTransaction, activeMasternode.vin, GetAdjustedTime());
-        dstx.Sign();
-        mapDarksendBroadcastTxes.insert(std::make_pair(hashTx, dstx));
+    if(CPrivateSend::GetDSTX(hashTx)) {
+        CDarksendBroadcastTx dstxNew(finalTransaction, activeMasternode.vin, GetAdjustedTime());
+        dstxNew.Sign();
+        CPrivateSend::AddDSTX(dstxNew);
     }
 
     LogPrintf("CPrivateSendServer::CommitFinalTransaction -- TRANSMITTING DSTX\n");
@@ -604,13 +604,13 @@ bool CPrivateSendServer::AddEntry(const CDarkSendEntry& entryNew, PoolMessage& n
         }
     }
 
-    if(!IsCollateralValid(entryNew.txCollateral)) {
+    if(!CPrivateSend::IsCollateralValid(entryNew.txCollateral)) {
         LogPrint("privatesend", "CPrivateSendServer::AddEntry -- collateral not valid!\n");
         nMessageIDRet = ERR_INVALID_COLLATERAL;
         return false;
     }
 
-    if(GetEntriesCount() >= GetMaxPoolTransactions()) {
+    if(GetEntriesCount() >= CPrivateSend::GetMaxPoolTransactions()) {
         LogPrint("privatesend", "CPrivateSendServer::AddEntry -- entries is full!\n");
         nMessageIDRet = ERR_ENTRIES_FULL;
         return false;
@@ -688,11 +688,12 @@ bool CPrivateSendServer::IsSignaturesComplete()
 
 bool CPrivateSendServer::IsOutputsCompatibleWithSessionDenom(const std::vector<CTxDSOut>& vecTxDSOut)
 {
-    if(GetDenominations(vecTxDSOut) == 0) return false;
+    if(CPrivateSend::GetDenominations(vecTxDSOut) == 0) return false;
 
     BOOST_FOREACH(const CDarkSendEntry entry, vecEntries) {
-        LogPrintf("CPrivateSendServer::IsOutputsCompatibleWithSessionDenom -- vecTxDSOut denom %d, entry.vecTxDSOut denom %d\n", GetDenominations(vecTxDSOut), GetDenominations(entry.vecTxDSOut));
-        if(GetDenominations(vecTxDSOut) != GetDenominations(entry.vecTxDSOut)) return false;
+        LogPrintf("CPrivateSendServer::IsOutputsCompatibleWithSessionDenom -- vecTxDSOut denom %d, entry.vecTxDSOut denom %d\n",
+                CPrivateSend::GetDenominations(vecTxDSOut), CPrivateSend::GetDenominations(entry.vecTxDSOut));
+        if(CPrivateSend::GetDenominations(vecTxDSOut) != CPrivateSend::GetDenominations(entry.vecTxDSOut)) return false;
     }
 
     return true;
@@ -704,14 +705,14 @@ bool CPrivateSendServer::IsAcceptableDenomAndCollateral(int nDenom, CTransaction
 
     // is denom even smth legit?
     std::vector<int> vecBits;
-    if(!GetDenominationsBits(nDenom, vecBits)) {
+    if(!CPrivateSend::GetDenominationsBits(nDenom, vecBits)) {
         LogPrint("privatesend", "CPrivateSendServer::IsAcceptableDenomAndCollateral -- denom not valid!\n");
         nMessageIDRet = ERR_DENOM;
         return false;
     }
 
     // check collateral
-    if(!fUnitTest && !IsCollateralValid(txCollateral)) {
+    if(!fUnitTest && !CPrivateSend::IsCollateralValid(txCollateral)) {
         LogPrint("privatesend", "CPrivateSendServer::IsAcceptableDenomAndCollateral -- collateral not valid!\n");
         nMessageIDRet = ERR_INVALID_COLLATERAL;
         return false;
@@ -754,7 +755,7 @@ bool CPrivateSendServer::CreateNewSession(int nDenom, CTransaction txCollateral,
 
     vecSessionCollaterals.push_back(txCollateral);
     LogPrintf("CPrivateSendServer::CreateNewSession -- new session created, nSessionID: %d  nSessionDenom: %d (%s)  vecSessionCollaterals.size(): %d\n",
-            nSessionID, nSessionDenom, GetDenominationsToString(nSessionDenom), vecSessionCollaterals.size());
+            nSessionID, nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom), vecSessionCollaterals.size());
 
     return true;
 }
@@ -776,7 +777,7 @@ bool CPrivateSendServer::AddUserToExistingSession(int nDenom, CTransaction txCol
 
     if(nDenom != nSessionDenom) {
         LogPrintf("CPrivateSendServer::AddUserToExistingSession -- incompatible denom %d (%s) != nSessionDenom %d (%s)\n",
-                    nDenom, GetDenominationsToString(nDenom), nSessionDenom, GetDenominationsToString(nSessionDenom));
+                    nDenom, CPrivateSend::GetDenominationsToString(nDenom), nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom));
         nMessageIDRet = ERR_DENOM;
         return false;
     }
@@ -788,7 +789,7 @@ bool CPrivateSendServer::AddUserToExistingSession(int nDenom, CTransaction txCol
     vecSessionCollaterals.push_back(txCollateral);
 
     LogPrintf("CPrivateSendServer::AddUserToExistingSession -- new user accepted, nSessionID: %d  nSessionDenom: %d (%s)  vecSessionCollaterals.size(): %d\n",
-            nSessionID, nSessionDenom, GetDenominationsToString(nSessionDenom), vecSessionCollaterals.size());
+            nSessionID, nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom), vecSessionCollaterals.size());
 
     return true;
 }

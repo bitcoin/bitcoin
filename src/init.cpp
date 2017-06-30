@@ -1895,8 +1895,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     LogPrintf("PrivateSend rounds %d\n", privateSendClient.nPrivateSendRounds);
     LogPrintf("PrivateSend amount %d\n", privateSendClient.nPrivateSendAmount);
 
-    privateSendClient.InitDenominations();
-    privateSendServer.InitDenominations();
+    CPrivateSend::InitStandardDenominations();
 
     // ********************************************************* Step 11b: Load cache data
 

@@ -98,8 +98,8 @@ BITCOIN_CORE_H = \
   consensus/validation.h \
   core_io.h \
   core_memusage.h \
-  privatesend-client.h \
   privatesend.h \
+  privatesend-client.h \
   privatesend-server.h \
   dsnotificationinterface.h \
   governance.h \

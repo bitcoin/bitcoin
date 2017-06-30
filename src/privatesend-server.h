@@ -15,7 +15,7 @@ extern CPrivateSendServer privateSendServer;
 
 /** Used to keep track of current status of mixing pool
  */
-class CPrivateSendServer : public CPrivateSend
+class CPrivateSendServer : public CPrivateSendBase
 {
 private:
     mutable CCriticalSection cs_darksend;
@@ -47,7 +47,7 @@ private:
     bool CreateNewSession(int nDenom, CTransaction txCollateral, PoolMessage &nMessageIDRet);
     bool AddUserToExistingSession(int nDenom, CTransaction txCollateral, PoolMessage &nMessageIDRet);
     /// Do we have enough users to take entries?
-    bool IsSessionReady() { return (int)vecSessionCollaterals.size() >= GetMaxPoolTransactions(); }
+    bool IsSessionReady() { return (int)vecSessionCollaterals.size() >= CPrivateSend::GetMaxPoolTransactions(); }
 
     /// Check that all inputs are signed. (Are all inputs signed?)
     bool IsSignaturesComplete();

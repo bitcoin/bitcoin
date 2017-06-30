@@ -83,7 +83,7 @@ std::string COutput::ToString() const
 
 int COutput::Priority() const
 {
-    BOOST_FOREACH(CAmount d, vecPrivateSendDenominations)
+    BOOST_FOREACH(CAmount d, CPrivateSend::GetStandardDenominations())
         if(tx->vout[i].nValue == d) return 10000;
     if(tx->vout[i].nValue < 1*COIN) return 20000;
 
@@ -1336,7 +1336,7 @@ bool CWallet::IsDenominated(const CTxIn &txin) const
 
 bool CWallet::IsDenominatedAmount(CAmount nInputAmount) const
 {
-    BOOST_FOREACH(CAmount d, vecPrivateSendDenominations)
+    BOOST_FOREACH(CAmount d, CPrivateSend::GetStandardDenominations())
         if(nInputAmount == d)
             return true;
     return false;
@@ -2153,11 +2153,13 @@ CAmount CWallet::GetAnonymizableBalance(bool fSkipDenominated, bool fSkipUnconfi
 
     CAmount nTotal = 0;
 
+    const CAmount nSmallestDenom = CPrivateSend::GetSmallestDenomination();
+    const CAmount nMixingCollateral = CPrivateSend::GetCollateralAmount();
     BOOST_FOREACH(CompactTallyItem& item, vecTally) {
         bool fIsDenominated = IsDenominatedAmount(item.nAmount);
         if(fSkipDenominated && fIsDenominated) continue;
-        // assume that the fee to create denoms be PRIVATESEND_COLLATERAL at max
-        if(item.nAmount >= vecPrivateSendDenominations.back() + (fIsDenominated ? 0 : PRIVATESEND_COLLATERAL))
+        // assume that the fee to create denoms should be mixing collateral at max
+        if(item.nAmount >= nSmallestDenom + (fIsDenominated ? 0 : nMixingCollateral))
             nTotal += item.nAmount;
     }
 
@@ -2268,7 +2270,7 @@ CAmount CWallet::GetNeedsToBeAnonymizedBalance(CAmount nMinBalance) const
     if(nNeedsToAnonymizeBalance > nAnonymizableBalance) nNeedsToAnonymizeBalance = nAnonymizableBalance;
 
     // we should never exceed the pool max
-    if (nNeedsToAnonymizeBalance > privateSendClient.GetMaxPoolAmount()) nNeedsToAnonymizeBalance = privateSendClient.GetMaxPoolAmount();
+    if (nNeedsToAnonymizeBalance > CPrivateSend::GetMaxPoolAmount()) nNeedsToAnonymizeBalance = CPrivateSend::GetMaxPoolAmount();
 
     return nNeedsToAnonymizeBalance;
 }
@@ -2491,7 +2493,7 @@ bool less_then_denom (const COutput& out1, const COutput& out2)
 
     bool found1 = false;
     bool found2 = false;
-    BOOST_FOREACH(CAmount d, vecPrivateSendDenominations) // loop through predefined denoms
+    BOOST_FOREACH(CAmount d, CPrivateSend::GetStandardDenominations()) // loop through predefined denoms
     {
         if(pcoin1->vout[out1.i].nValue == d) found1 = true;
         if(pcoin2->vout[out2.i].nValue == d) found2 = true;
@@ -2652,6 +2654,7 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
 
     //if we're doing only denominated, we need to round up to the nearest smallest denomination
     if(nCoinType == ONLY_DENOMINATED) {
+        std::vector<CAmount> vecPrivateSendDenominations = CPrivateSend::GetStandardDenominations();
         CAmount nSmallestDenom = vecPrivateSendDenominations.back();
         // Make outputs by looping through denominations, from large to small
         BOOST_FOREACH(CAmount nDenom, vecPrivateSendDenominations)
@@ -2787,12 +2790,13 @@ bool CWallet::SelectCoinsByDenominations(int nDenom, CAmount nValueMin, CAmount 
     // bit 3 - .1DASH+1
 
     std::vector<int> vecBits;
-    if (!privateSendClient.GetDenominationsBits(nDenom, vecBits)) {
+    if (!CPrivateSend::GetDenominationsBits(nDenom, vecBits)) {
         return false;
     }
 
     int nDenomResult = 0;
 
+    std::vector<CAmount> vecPrivateSendDenominations = CPrivateSend::GetStandardDenominations();
     InsecureRand insecureRand;
     BOOST_FOREACH(const COutput& out, vCoins)
     {
@@ -2857,6 +2861,8 @@ bool CWallet::SelectCoinsGrouppedByAddresses(std::vector<CompactTallyItem>& vecT
         }
     }
 
+    CAmount nSmallestDenom = CPrivateSend::GetSmallestDenomination();
+
     // Tally
     map<CBitcoinAddress, CompactTallyItem> mapTally;
     for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it) {
@@ -2882,7 +2888,7 @@ bool CWallet::SelectCoinsGrouppedByAddresses(std::vector<CompactTallyItem>& vecT
                 if(fMasterNode && wtx.vout[i].nValue == 1000*COIN) continue;
                 // ignore outputs that are 10 times smaller then the smallest denomination
                 // otherwise they will just lead to higher fee / lower priority
-                if(wtx.vout[i].nValue <= vecPrivateSendDenominations.back()/10) continue;
+                if(wtx.vout[i].nValue <= nSmallestDenom/10) continue;
                 // ignore anonymized
                 if(GetInputPrivateSendRounds(CTxIn(wtx.GetHash(), i)) >= privateSendClient.nPrivateSendRounds) continue;
             }
@@ -2897,7 +2903,7 @@ bool CWallet::SelectCoinsGrouppedByAddresses(std::vector<CompactTallyItem>& vecT
     // construct resulting vector
     vecTallyRet.clear();
     BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, CompactTallyItem)& item, mapTally) {
-        if(fAnonymizable && item.second.nAmount < vecPrivateSendDenominations.back()) continue;
+        if(fAnonymizable && item.second.nAmount < nSmallestDenom) continue;
         vecTallyRet.push_back(item.second);
     }
 
@@ -3076,10 +3082,10 @@ bool CWallet::HasCollateralInputs(bool fOnlyConfirmed) const
 
 bool CWallet::IsCollateralAmount(CAmount nInputAmount) const
 {
-    // collateral inputs should always be a 2x..4x of PRIVATESEND_COLLATERAL
-    return  nInputAmount >= PRIVATESEND_COLLATERAL * 2 &&
-            nInputAmount <= PRIVATESEND_COLLATERAL * 4 &&
-            nInputAmount %  PRIVATESEND_COLLATERAL == 0;
+    // collateral inputs should always be a 2x..4x of mixing collateral
+    return  nInputAmount >  CPrivateSend::GetCollateralAmount() &&
+            nInputAmount <= CPrivateSend::GetMaxCollateralAmount() &&
+            nInputAmount %  CPrivateSend::GetCollateralAmount() == 0;
 }
 
 bool CWallet::CreateCollateralTransaction(CMutableTransaction& txCollateral, std::string& strReason)
@@ -3106,7 +3112,7 @@ bool CWallet::CreateCollateralTransaction(CMutableTransaction& txCollateral, std
     txCollateral.vin.push_back(txinCollateral);
 
     //pay collateral charge in fees
-    CTxOut txout = CTxOut(nValue - PRIVATESEND_COLLATERAL, scriptChange);
+    CTxOut txout = CTxOut(nValue - CPrivateSend::GetCollateralAmount(), scriptChange);
     txCollateral.vout.push_back(txout);
 
     if(!SignSignature(*this, txinCollateral.prevPubKey, txCollateral, 0, int(SIGHASH_ALL|SIGHASH_ANYONECANPAY))) {

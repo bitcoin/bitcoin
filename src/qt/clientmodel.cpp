@@ -20,7 +20,7 @@
 
 #include "masternodeman.h"
 #include "masternode-sync.h"
-#include "privatesend-client.h"
+#include "privatesend.h"
 
 #include <stdint.h>
 

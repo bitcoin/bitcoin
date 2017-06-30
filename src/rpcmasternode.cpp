@@ -68,7 +68,7 @@ UniValue getpoolinfo(const UniValue& params, bool fHelp)
             "getpoolinfo\n"
             "Returns an object containing mixing pool related information.\n");
 
-    CPrivateSend privateSend = fMasterNode ? (CPrivateSend)privateSendServer : (CPrivateSend)privateSendClient;
+    CPrivateSendBase privateSend = fMasterNode ? (CPrivateSendBase)privateSendServer : (CPrivateSendBase)privateSendClient;
 
     UniValue obj(UniValue::VOBJ);
     obj.push_back(Pair("state",             privateSend.GetStateString()));
