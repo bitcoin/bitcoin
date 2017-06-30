@@ -18,6 +18,7 @@
 #include "protocol.h"
 #include "random.h"
 #include "streams.h"
+#include "strong_ptr.h"
 #include "sync.h"
 #include "uint256.h"
 #include "threadinterrupt.h"
@@ -303,10 +304,10 @@ private:
     uint64_t CalculateKeyedNetGroup(const CAddress& ad) const;
 
     bool AttemptToEvictConnection();
-    std::shared_ptr<CNode> ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure);
+    strong_ptr<CNode> ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure);
     bool IsWhitelistedRange(const CNetAddr &addr);
 
-    void DeleteNode(std::shared_ptr<CNode>&& pnode);
+    void DeleteNode(decay_ptr<CNode>&& pnode);
 
     NodeId GetNewNodeId();
 
@@ -334,7 +335,7 @@ private:
         LOCK(cs_vNodes);
         for (auto& node : vNodes) {
             if(func(node.get())) {
-                return node;
+                return node.get_shared();
             }
         }
         return nullptr;
@@ -371,8 +372,8 @@ private:
     CCriticalSection cs_vOneShots;
     std::vector<std::string> vAddedNodes;
     CCriticalSection cs_vAddedNodes;
-    std::vector<std::shared_ptr<CNode>> vNodes;
-    std::list<std::shared_ptr<CNode>> vNodesDisconnected;
+    std::vector<strong_ptr<CNode>> vNodes;
+    std::list<decay_ptr<CNode>> vNodesDisconnected;
     mutable CCriticalSection cs_vNodes;
     std::atomic<NodeId> nLastNodeId;
 
