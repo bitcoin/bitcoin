@@ -2580,24 +2580,7 @@ UniValue aliaslist(const UniValue& params, bool fHelp) {
 			continue;
 		if (!paliasdb->ReadAlias(alias.vchAlias, vtxPos) || vtxPos.empty())
 		{
-			pending = 1;
-			if(!IsSyscoinTxMine(wtx, "alias"))
-				continue;
-		}
-		else
-		{
-			alias = vtxPos.back();
-			CTransaction tx;
-			if (!GetSyscoinTransaction(alias.nHeight, alias.txHash, tx, Params().GetConsensus()))
-			{
-				pending = 1;
-				if(!IsSyscoinTxMine(wtx, "alias"))
-					continue;
-			}
-			else{
-				if(!IsMyAlias(alias))
-					continue;
-			}
+			continue;
 		}
 		// get last active name only
 		if (vNamesI.find(alias.vchAlias) != vNamesI.end() && (alias.nHeight <= vNamesI[alias.vchAlias] || vNamesI[alias.vchAlias] < 0))
