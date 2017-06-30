@@ -301,7 +301,6 @@ bool IsReachable(const CNetAddr& addr)
 
 bool CConnman::CheckIncomingNonce(uint64_t nonce)
 {
-    LOCK(cs_vNodes);
     if (FindNode([nonce](const CNode* pnode) { return !pnode->fSuccessfullyConnected && !pnode->fInbound && pnode->GetLocalNonce() == nonce; })) {
         return false;
     }
@@ -360,7 +359,6 @@ strong_ptr<CNode> CConnman::ConnectNode(CAddress addrConnect, const char *pszDes
             // In that case, drop the connection that was just created, and return the existing CNode instead.
             // Also store the name we used to connect in that CNode, so that future FindNode() calls to that
             // name catch this early.
-            LOCK(cs_vNodes);
             if (auto pnode = FindNode([&addrConnect](const CNode* pnode) { return (CService)pnode->addr == addrConnect; }))
             {
                 pnode->MaybeSetAddrName(std::string(pszDest));
@@ -488,7 +486,6 @@ void CConnman::Ban(const CSubNet& subNet, const BanReason &banReason, int64_t ba
     if(clientInterface)
         clientInterface->BannedListChanged();
     {
-        LOCK(cs_vNodes);
         for (auto& pnode : GetNodesCopy()) {
             if (subNet.Match((CNetAddr)pnode->addr)) {
                 pnode->fDisconnect = true;
@@ -991,7 +988,6 @@ bool CConnman::AttemptToEvictConnection()
 
     // Disconnect from the network group with the most connections
     NodeId evicted = vEvictionCandidates.front().id;
-    LOCK(cs_vNodes);
     if (auto pnode = FindNode([evicted](const CNode* pnode) { return pnode->GetId() == evicted; })) {
         pnode->fDisconnect = true;
         return true;
@@ -1908,14 +1904,8 @@ void CConnman::ThreadMessageHandler()
 {
     while (!flagInterruptMsgProc)
     {
-        std::vector<std::shared_ptr<CNode>> vNodesCopy;
-        {
-            LOCK(cs_vNodes);
-            vNodesCopy = GetNodesCopy();
-        }
         bool fMoreWork = false;
-
-        for (auto& pnode : vNodesCopy)
+        for (auto& pnode : GetNodesCopy())
         {
             if (pnode->fDisconnect)
                 continue;
@@ -2104,7 +2094,6 @@ void CConnman::SetNetworkActive(bool active)
     if (!active) {
         fNetworkActive = false;
 
-        LOCK(cs_vNodes);
         // Close sockets to all nodes
         for (auto& pnode : GetNodesCopy()) {
             pnode->CloseSocketDisconnect();
@@ -2459,7 +2448,6 @@ size_t CConnman::GetNodeCount(NumConnections flags)
 void CConnman::GetNodeStats(std::vector<CNodeStats>& vstats)
 {
     vstats.clear();
-    LOCK(cs_vNodes);
     std::vector<std::shared_ptr<CNode>> nodes_copy = GetNodesCopy();
     vstats.reserve(nodes_copy.size());
     for (const auto& pnode : nodes_copy) {
@@ -2470,7 +2458,6 @@ void CConnman::GetNodeStats(std::vector<CNodeStats>& vstats)
 
 bool CConnman::DisconnectNode(const std::string& strNode)
 {
-    LOCK(cs_vNodes);
     if (auto pnode = FindNode([&strNode](const CNode* pnode) { return pnode->GetAddrName() == strNode; })) {
         pnode->fDisconnect = true;
         return true;
@@ -2479,7 +2466,6 @@ bool CConnman::DisconnectNode(const std::string& strNode)
 }
 bool CConnman::DisconnectNode(NodeId id)
 {
-    LOCK(cs_vNodes);
     if (auto pnode = FindNode([id](const CNode* pnode) { return pnode->GetId() == id; })) {
         pnode->fDisconnect = true;
         return true;
@@ -2772,7 +2758,6 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
 
 bool CConnman::ForNode(NodeId id, std::function<bool(CNode* pnode)> func)
 {
-    LOCK(cs_vNodes);
     if (auto pnode = FindNode([id](const CNode* pnode) { return pnode->GetId() == id; })) {
         return NodeFullyConnected(pnode.get()) && func(pnode.get());
     }

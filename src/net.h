@@ -165,7 +165,6 @@ public:
     template<typename Callable>
     void ForEachNode(Callable&& func)
     {
-        LOCK(cs_vNodes);
         for (auto&& node : GetNodesCopy()) {
             if (NodeFullyConnected(node.get()))
                 func(node.get());
@@ -175,7 +174,6 @@ public:
     template<typename Callable>
     void ForEachNode(Callable&& func) const
     {
-        LOCK(cs_vNodes);
         for (auto&& node : GetNodesCopy()) {
             if (NodeFullyConnected(node.get()))
                 func(node.get());
@@ -185,7 +183,6 @@ public:
     template<typename Callable, typename CallableAfter>
     void ForEachNodeThen(Callable&& pre, CallableAfter&& post)
     {
-        LOCK(cs_vNodes);
         for (auto&& node : GetNodesCopy()) {
             if (NodeFullyConnected(node.get()))
                 pre(node.get());
@@ -196,7 +193,6 @@ public:
     template<typename Callable, typename CallableAfter>
     void ForEachNodeThen(Callable&& pre, CallableAfter&& post) const
     {
-        LOCK(cs_vNodes);
         for (auto&& node : GetNodesCopy()) {
             if (NodeFullyConnected(node.get()))
                 pre(node.get());
