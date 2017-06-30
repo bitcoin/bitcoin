@@ -887,14 +887,17 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
 					continue;
 
 				CMessage message(tx);
-				if(!message.IsNull() && message.vchAliasFrom == vchAlias)
+				if(!message.IsNull())
 				{
 					if (vNamesI.find(message.vchMessage) != vNamesI.end())
 						continue;
 					if (vchNameUniq.size() > 0 && vchNameUniq != message.vchMessage)
 						continue;
-					vector<CMessage> vtxPos;
-					if (!pmessagedb->ReadMessage(message.vchMessage, vtxPos) || vtxPos.empty())
+					vector<CMessage> vtxMessagePos;
+					if (!pmessagedb->ReadMessage(message.vchMessage, vtxMessagePos) || vtxMessagePos.empty())
+						continue;
+					const CMessage &theMessage = vtxMessagePos.back();
+					if (theMessage.vchAliasFrom != theAlias.vchAlias)
 						continue;
 					message.txHash = theAlias.txHash;
 					messageScan.push_back(message);
@@ -918,6 +921,9 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
 				if (vNamesI.find(message.vchMessage) != vNamesI.end())
 					continue;
 				if (vchNameUniq.size() > 0 && vchNameUniq != message.vchMessage)
+					continue;
+				vector<CMessage> vtxMessagePos;
+				if (!pmessagedb->ReadMessage(message.vchMessage, vtxMessagePos) || vtxMessagePos.empty())
 					continue;
 				message.txHash = wtx.GetHash();
 				messageScan.push_back(message);
