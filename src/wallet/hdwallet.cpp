@@ -691,14 +691,14 @@ bool CHDWallet::ImportStealthAddress(const CStealthAddress &sxAddr, const CKey &
 
     LOCK(cs_wallet);
 
-    // - must add before changing spend_secret
+    // Must add before changing spend_secret
     stealthAddresses.insert(sxAddr);
 
     bool fOwned = skSpend.IsValid();
 
     if (fOwned)
     {
-        // -- owned addresses can only be added when wallet is unlocked
+        // Owned addresses can only be added when wallet is unlocked
         if (IsLocked())
         {
             stealthAddresses.erase(sxAddr);
@@ -712,7 +712,7 @@ bool CHDWallet::ImportStealthAddress(const CStealthAddress &sxAddr, const CKey &
             return error("%s: AddKeyPubKey failed.", __func__);
         };
     };
-
+    
     if (!CHDWalletDB(strWalletFile).WriteStealthAddress(sxAddr))
     {
         stealthAddresses.erase(sxAddr);
@@ -808,6 +808,7 @@ bool CHDWallet::SetAddressBook(CHDWalletDB *pwdb, const CTxDestination &address,
 
 bool CHDWallet::SetAddressBook(const CTxDestination &address, const std::string &strName, const std::string &purpose)
 {
+    LogPrintf("%s: Deprecated.\n", __func__);
     bool fOwned;
     ChangeType nMode;
     
@@ -828,6 +829,7 @@ bool CHDWallet::SetAddressBook(const CTxDestination &address, const std::string 
     return CWallet::SetAddressBook(address, strName, purpose);
 };
 
+
 bool CHDWallet::DelAddressBook(const CTxDestination &address)
 {
     if (address.type() == typeid(CStealthAddress))
@@ -841,22 +843,24 @@ bool CHDWallet::DelAddressBook(const CTxDestination &address)
             std::set<CStealthAddress>::iterator si = stealthAddresses.find(sxAddr);
             if (si == stealthAddresses.end())
             {
-                LogPrintf("%s: Error: Stealth address not found in wallet.\n", __func__);
-                return false;
-            };
-
-            fOwned = si->scan_secret.size() < 32 ? false : true;
-
-            if (stealthAddresses.erase(sxAddr) < 1
-                || !CHDWalletDB(strWalletFile).EraseStealthAddress(sxAddr))
+                LogPrintf("%s: Stealth address not found in wallet.\n", __func__);
+                //return false;
+            } else
             {
-                LogPrintf("%s: Error: Remove stealthAddresses failed.\n", __func__);
-                return false;
-            };
+                fOwned = si->scan_secret.size() < 32 ? false : true;
+
+                if (stealthAddresses.erase(sxAddr) < 1
+                    || !CHDWalletDB(strWalletFile).EraseStealthAddress(sxAddr))
+                {
+                    LogPrintf("%s: Error: Remove stealthAddresses failed.\n", __func__);
+                    return false;
+                };
+                
+            }
         }
         
-        NotifyAddressBookChanged(this, address, "", fOwned, "", CT_DELETED);
-        return true;
+        //NotifyAddressBookChanged(this, address, "", fOwned, "", CT_DELETED);
+        //return true;
     };
     
     if (::IsMine(*this, address) == ISMINE_SPENDABLE
@@ -866,7 +870,14 @@ bool CHDWallet::DelAddressBook(const CTxDestination &address)
         SecureMsgWalletKeyChanged(id, "", CT_DELETED);
     };
     
-    return CWallet::DelAddressBook(address);
+    bool fErased = false; // CWallet::DelAddressBook can return false
+    if (fFileBacked)
+    {
+        fErased = CHDWalletDB(strWalletFile).EraseAddressBookEntry(CBitcoinAddress(address).ToString()) ? true : fErased;
+    };
+    fErased = CWallet::DelAddressBook(address) ? true : fErased;
+    
+    return fErased;
 };
 
 isminetype CHDWallet::IsMine(const CScript &scriptPubKey, CKeyID &keyID,

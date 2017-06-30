@@ -163,6 +163,11 @@ bool CHDWalletDB::WriteAddressBookEntry(const std::string &sKey, const CAddressB
     return Write(std::make_pair(std::string("abe"), sKey), data, true);
 };
 
+bool CHDWalletDB::EraseAddressBookEntry(const std::string &sKey)
+{
+    return Erase(std::make_pair(std::string("abe"), sKey));
+};
+
 
 bool CHDWalletDB::ReadVoteTokens(std::vector<CVoteToken> &vVoteTokens, uint32_t nFlags)
 {

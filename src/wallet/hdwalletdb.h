@@ -393,6 +393,7 @@ public:
     bool WriteStealthAddressLink(const CKeyID &keyId, uint32_t id);
     
     bool WriteAddressBookEntry(const std::string &sKey, const CAddressBookData &data);
+    bool EraseAddressBookEntry(const std::string &sKey);
     
     bool ReadVoteTokens(std::vector<CVoteToken> &vVoteTokens, uint32_t nFlags=DB_READ_UNCOMMITTED);
     bool WriteVoteTokens(const std::vector<CVoteToken> &vVoteTokens);

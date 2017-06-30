@@ -190,12 +190,11 @@ BOOST_AUTO_TEST_CASE(ct_commitment_test)
     memset(blind, 0, 32);
     
     BOOST_CHECK(secp256k1_pedersen_commit(ctx, &commitment, blind, 10, secp256k1_generator_h));
-    BOOST_CHECK(HexStr(commitment.data, commitment.data+32) == "093806b3e479859dc6dd508eca22257d796bba3e32a6616cc97b51723b50a5f4");
-    
+    BOOST_CHECK(HexStr(commitment.data, commitment.data+33) == "093806b3e479859dc6dd508eca22257d796bba3e32a6616cc97b51723b50a5f429");
     memset(blind, 1, 32);
     
     BOOST_CHECK(secp256k1_pedersen_commit(ctx, &commitment, blind, 10, secp256k1_generator_h));
-    BOOST_CHECK(HexStr(commitment.data, commitment.data+32) == "09badd85325926c329aa62f5a7d37d0a015aabfb52608052d277530bd025ddc9");
+    BOOST_CHECK(HexStr(commitment.data, commitment.data+33) == "09badd85325926c329aa62f5a7d37d0a015aabfb52608052d277530bd025ddc971");
     
     
     

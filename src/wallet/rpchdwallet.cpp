@@ -2722,6 +2722,105 @@ UniValue filteraddresses(const JSONRPCRequest &request)
     return result;
 }
 
+UniValue manageaddressbook(const JSONRPCRequest &request)
+{
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 4)
+        throw std::runtime_error(
+            "manageaddressbook <action> <address> [label] [purpose]\n"
+            "Manage the address book."
+            "\nArguments:\n"
+            "1. \"action\"      (string, required) 'add/edit/del' The action to take.\n"
+            "2. \"address\"     (string, required) The address to affect.\n"
+            "3. \"label\"       (string, optional) Optional label.\n"
+            "4. \"purpose\"     (string, optional) Optional purpose label.\n");
+    
+    CHDWallet *pwallet = GetHDWallet();
+    EnsureWalletIsUnlocked(pwallet);
+    
+    std::string sAction = request.params[0].get_str();
+    std::string sAddress = request.params[1].get_str();
+    std::string sLabel, sPurpose;
+    
+    bool fHavePurpose = false;
+    if (request.params.size() > 2)
+        sLabel = request.params[2].get_str();
+    if (request.params.size() > 3)
+    {
+        sPurpose = request.params[3].get_str();
+        fHavePurpose = true;
+    };
+    
+    CBitcoinAddress address(sAddress);
+    
+    if (!address.IsValid())
+        throw JSONRPCError(RPC_INVALID_PARAMETER, _("Invalid Particl address."));
+    
+    CTxDestination dest = address.Get();
+    
+    std::map<CTxDestination, CAddressBookData>::iterator mabi;
+    mabi = pwallet->mapAddressBook.find(dest);
+    
+    std::vector<uint32_t> vPath;
+    
+    UniValue objDestData(UniValue::VOBJ);
+    
+    if (sAction == "add")
+    {
+        if (mabi != pwallet->mapAddressBook.end())
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf(_("Address '%s' is recorded in the address book."), sAddress));
+        
+        if (!pwallet->SetAddressBook(NULL, dest, sLabel, sPurpose, vPath, true))
+            throw JSONRPCError(RPC_WALLET_ERROR, "SetAddressBook failed.");
+    } else
+    if (sAction == "edit")
+    {
+        if (request.params.size() < 3)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, _("Need a parameter to change."));
+        if (mabi == pwallet->mapAddressBook.end())
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf(_("Address '%s' is not in the address book."), sAddress));
+        
+        if (!pwallet->SetAddressBook(NULL, dest, sLabel,
+            fHavePurpose ? sPurpose : mabi->second.purpose, mabi->second.vPath, true))
+            throw JSONRPCError(RPC_WALLET_ERROR, "SetAddressBook failed.");
+        
+        sLabel = mabi->second.name;
+        sPurpose = mabi->second.purpose;
+        
+        for (const auto &pair : mabi->second.destdata)
+            objDestData.push_back(Pair(pair.first, pair.second));
+        
+    } else
+    if (sAction == "del")
+    {
+        if (mabi == pwallet->mapAddressBook.end())
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf(_("Address '%s' is not in the address book."), sAddress));
+        sLabel = mabi->second.name;
+        sPurpose = mabi->second.purpose;
+        
+        if (!pwallet->DelAddressBook(dest))
+            throw JSONRPCError(RPC_WALLET_ERROR, "DelAddressBook failed.");
+    } else
+    {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, _("Unknown action, must be one of 'add/edit/del'."));
+    };
+    
+    UniValue result(UniValue::VOBJ);
+    
+    result.push_back(Pair("action", sAction));
+    result.push_back(Pair("address", sAddress));
+    
+    if (sLabel.size() > 0)
+        result.push_back(Pair("label", sLabel));
+    if (sPurpose.size() > 0)
+        result.push_back(Pair("purpose", sPurpose));
+    if (objDestData.size() > 0)
+        result.push_back(Pair("destdata", objDestData));
+    
+    result.push_back(Pair("result", "success"));
+    
+    return result;
+}
+
 UniValue setvote(const JSONRPCRequest &request)
 {
     if (request.fHelp || request.params.size() != 4)
@@ -3443,12 +3542,17 @@ static const CRPCCommand commands[] =
     
     { "wallet",             "filtertransactions",       &filtertransactions,       false,  {"offset","count","sort_code"} },
     { "wallet",             "filteraddresses",          &filteraddresses,          false,  {"offset","count","sort_code"} },
+    { "wallet",             "manageaddressbook",        &manageaddressbook,        true,   {"action","address","label","purpose"} },
     
     { "governance",         "setvote",                  &setvote,                  false,  {"proposal","option","height_start","height_end"} },
     { "governance",         "votehistory",              &votehistory,              false,  {"current_only"} },
     { "governance",         "tallyvotes",               &tallyvotes,               false,  {"proposal","height_start","height_end"} },
     
     { "wallet",             "getstakinginfo",           &getstakinginfo,           true,  {} },
+    
+    
+    
+    
     
     
     
