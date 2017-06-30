@@ -791,21 +791,18 @@ struct CCoinsStats
     CCoinsStats() : nHeight(0), nTransactions(0), nTransactionOutputs(0), nBogoSize(0), nDiskSize(0), nTotalAmount(0) {}
 };
 
-static void ApplyStats(CCoinsStats &stats, MuHash3072& acc, const uint256& hash, const std::map<uint32_t, Coin>& outputs)
+static void ApplyStats(CCoinsStats &stats, MuHash3072& acc, const COutPoint outpoint, const Coin& coin)
 {
-    assert(!outputs.empty());
     stats.nTransactions++;
-    for (const auto output : outputs) {
-        TruncatedSHA512Writer ss(SER_DISK, 0);
-        ss << COutPoint(hash, output.first);
-        ss << (uint32_t)(output.second.nHeight * 2 + output.second.fCoinBase);
-        ss << output.second.out;
-        acc *= MuHash3072(ss.GetHash().begin());
-        stats.nTransactionOutputs++;
-        stats.nTotalAmount += output.second.out.nValue;
-        stats.nBogoSize += 32 /* txid */ + 4 /* vout index */ + 4 /* height + coinbase */ + 8 /* amount */ +
-                           2 /* scriptPubKey len */ + output.second.out.scriptPubKey.size() /* scriptPubKey */;
-    }
+    TruncatedSHA512Writer ss(SER_DISK, 0);
+    ss << outpoint;
+    ss << (uint32_t)(coin.nHeight * 2 + coin.fCoinBase);
+    ss << coin.out;
+    acc *= MuHash3072(ss.GetHash().begin());
+    stats.nTransactionOutputs++;
+    stats.nTotalAmount += coin.out.nValue;
+    stats.nBogoSize += 32 /* txid */ + 4 /* vout index */ + 4 /* height + coinbase */ + 8 /* amount */ +
+                       2 /* scriptPubKey len */ + coin.out.scriptPubKey.size() /* scriptPubKey */;
 }
 
 //! Calculate statistics about the unspent transaction output set
@@ -819,26 +816,16 @@ static bool GetUTXOStats(CCoinsView *view, CCoinsStats &stats)
         stats.nHeight = mapBlockIndex.find(stats.hashBlock)->second->nHeight;
     }
     MuHash3072 acc;
-    std::map<uint32_t, Coin> outputs;
-    uint256 prevkey;
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
         COutPoint key;
         Coin coin;
         if (pcursor->GetKey(key) && pcursor->GetValue(coin)) {
-            if (!outputs.empty() && key.hash != prevkey) {
-                ApplyStats(stats, acc, prevkey, outputs);
-                outputs.clear();
-            }
-            prevkey = key.hash;
-            outputs[key.n] = std::move(coin);
+            ApplyStats(stats, acc, key, coin);
         } else {
             return error("%s: unable to read value", __func__);
         }
         pcursor->Next();
-    }
-    if (!outputs.empty()) {
-        ApplyStats(stats, acc, prevkey, outputs);
     }
     unsigned char data[384];
     acc.Finalize(data);
