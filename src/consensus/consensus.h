@@ -8,19 +8,13 @@
 
 #include <stdint.h>
 
-/** BIP102 block size increase - time until HF activated */
-static const unsigned int BIP102_FORK_BUFFER = (144 * 90);
-
 /** The maximum allowed size for a serialized block, in bytes (only for buffer size limits) */
 static const unsigned int MAX_BLOCK_SERIALIZED_SIZE = (8 * 1000 * 1000);
 
 /** The maximum allowed size for a block excluding witness data, in bytes (network rule) */
 static inline bool BIP102active(bool fSegwitSeasoned)
 {
-    if (!fSegwitSeasoned)
-        return false;
-
-    return true;
+    return fSegwitSeasoned;
 }
 
 static const unsigned int MAX_LEGACY_BLOCK_SIZE = (1 * 1000 * 1000);
