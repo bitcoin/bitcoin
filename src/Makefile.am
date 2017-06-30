@@ -137,6 +137,7 @@ BITCOIN_CORE_H = \
   script/standard.h \
   script/ismine.h \
   streams.h \
+  strong_ptr.h \
   support/allocators/secure.h \
   support/allocators/zeroafterfree.h \
   support/cleanse.h \

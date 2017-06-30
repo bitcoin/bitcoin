@@ -71,6 +71,7 @@ BITCOIN_TESTS =\
   test/sigopcount_tests.cpp \
   test/skiplist_tests.cpp \
   test/streams_tests.cpp \
+  test/strong_ptr.cpp \
   test/test_bitcoin.cpp \
   test/test_bitcoin.h \
   test/test_bitcoin_main.cpp \
