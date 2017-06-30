@@ -270,7 +270,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         mempool.addUnchecked(hash, entry.Fee(LOWFEE).Time(GetTime()).SpendsCoinbase(spendsCoinbase).SigOpsCost(80).FromTx(tx));
         tx.vin[0].prevout.hash = hash;
     }
-    // BOOST_CHECK(pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKey)); TODO
+    BOOST_CHECK(pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKey));
     mempool.clear();
 
     // block size > limit
