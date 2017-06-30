@@ -1836,6 +1836,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
     bool involvesWatchonly = wtx.IsFromMe(ISMINE_WATCH_ONLY);
 	// SYSCOIN
     vector<vector<unsigned char> > vvchArgs;
+	map<uint256, bool> mapSysTx = map<uint256, bool>();
     int op, nOut;
 	string strResponse = "";
     // Sent
@@ -1860,6 +1861,9 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 			// SYSCOIN
 			if(wtx.nVersion == GetSyscoinTxVersion() && (IsSyscoinScript(wtx.vout[s.vout].scriptPubKey, op, vvchArgs) || (wtx.vout[s.vout].scriptPubKey[0] == OP_RETURN && DecodeAndParseSyscoinTx(wtx, op, nOut, vvchArgs))))
 			{
+				if (mapSysTx[wtx.GetHash()])
+					continue;
+				mapSysTx[wtx.GetHash()] = true;
 				string strResponseEnglish = "";
 				string strResponseGUID = "";
 				string strResponseGUID1 = "";
@@ -1911,6 +1915,9 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 				// SYSCOIN
 				if(wtx.nVersion == GetSyscoinTxVersion() && (IsSyscoinScript(wtx.vout[r.vout].scriptPubKey, op, vvchArgs) || (wtx.vout[r.vout].scriptPubKey[0] == OP_RETURN && DecodeAndParseSyscoinTx(wtx, op, nOut, vvchArgs))))
 				{
+					if (mapSysTx[wtx.GetHash()])
+						continue;
+					mapSysTx[wtx.GetHash()] = true;
 					string strResponseEnglish = "";
 					string strResponseGUID = "";
 					string strResponseGUID1 = "";
