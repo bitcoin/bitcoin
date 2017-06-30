@@ -520,10 +520,12 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
     }
 
     const struct BIP9DeploymentInfo& segwit_info = VersionBitsDeploymentInfo[Consensus::DEPLOYMENT_SEGWIT];
+    const struct BIP9DeploymentInfo& segwit2x_info = VersionBitsDeploymentInfo[Consensus::DEPLOYMENT_SEGWIT2X];
     // If the caller is indicating segwit support, then allow CreateNewBlock()
     // to select witness transactions, after segwit activates (otherwise
     // don't).
     bool fSupportsSegwit = setClientRules.find(segwit_info.name) != setClientRules.end();
+    bool fSupportsSegwit2x = setClientRules.find(segwit2x_info.name) != setClientRules.end();
 
     // Update block
     static CBlockIndex* pindexPrev;
@@ -681,7 +683,7 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
     result.push_back(Pair("mintime", (int64_t)pindexPrev->GetMedianTimePast()+1));
     result.push_back(Pair("mutable", aMutable));
     result.push_back(Pair("noncerange", "00000000ffffffff"));
-    int64_t nSigOpLimit = MaxBlockSigOpsCost(fPreSegWit?false:true); // excl bip102 buffer
+    int64_t nSigOpLimit = MaxBlockSigOpsCost(fSupportsSegwit2x); // excl bip102 buffer
     if (fPreSegWit) {
         assert(nSigOpLimit % WITNESS_SCALE_FACTOR == 0);
         nSigOpLimit /= WITNESS_SCALE_FACTOR;
@@ -691,7 +693,7 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
         result.push_back(Pair("sizelimit", (int64_t)MAX_LEGACY_BLOCK_SIZE));
     } else {
         result.push_back(Pair("sizelimit", (int64_t)MAX_BLOCK_SERIALIZED_SIZE));
-        result.push_back(Pair("weightlimit", (int64_t)MaxBlockWeight(false)));
+        result.push_back(Pair("weightlimit", (int64_t)MaxBlockWeight(fSupportsSegwit2x)));
     }
     result.push_back(Pair("curtime", pblock->GetBlockTime()));
     result.push_back(Pair("bits", strprintf("%08x", pblock->nBits)));

@@ -64,6 +64,11 @@ inline unsigned int MaxBlockWeight()
     return MaxBlockWeight(true);
 }
 
+inline unsigned int MaxBlockSerSize(bool fSegwitSeasoned)
+{
+    return (MaxBlockBaseSize(fSegwitSeasoned) * 4);
+}
+
 /** The maximum allowed number of transactions per block */
 static const unsigned int MAX_BLOCK_VTX_SIZE = 1000000;
 
