@@ -166,7 +166,7 @@ public:
     void ForEachNode(Callable&& func)
     {
         LOCK(cs_vNodes);
-        for (auto&& node : vNodes) {
+        for (auto&& node : GetNodesCopy()) {
             if (NodeFullyConnected(node.get()))
                 func(node.get());
         }
@@ -176,7 +176,7 @@ public:
     void ForEachNode(Callable&& func) const
     {
         LOCK(cs_vNodes);
-        for (auto&& node : vNodes) {
+        for (auto&& node : GetNodesCopy()) {
             if (NodeFullyConnected(node.get()))
                 func(node.get());
         }
@@ -186,7 +186,7 @@ public:
     void ForEachNodeThen(Callable&& pre, CallableAfter&& post)
     {
         LOCK(cs_vNodes);
-        for (auto&& node : vNodes) {
+        for (auto&& node : GetNodesCopy()) {
             if (NodeFullyConnected(node.get()))
                 pre(node.get());
         }
@@ -197,7 +197,7 @@ public:
     void ForEachNodeThen(Callable&& pre, CallableAfter&& post) const
     {
         LOCK(cs_vNodes);
-        for (auto&& node : vNodes) {
+        for (auto&& node : GetNodesCopy()) {
             if (NodeFullyConnected(node.get()))
                 pre(node.get());
         }
@@ -328,6 +328,19 @@ private:
 
     // Whether the node should be passed out in ForEach* callbacks
     static bool NodeFullyConnected(const CNode* pnode);
+
+    std::vector<std::shared_ptr<CNode>> GetNodesCopy() const
+    {
+        std::vector<std::shared_ptr<CNode>> nodes_copy;
+        {
+            LOCK(cs_vNodes);
+            nodes_copy.reserve(vNodes.size());
+            for (auto&& node : vNodes) {
+                nodes_copy.push_back(node.get_shared());
+            }
+        }
+        return nodes_copy;
+    }
 
     template <typename Callable>
     std::shared_ptr<CNode> FindNode(Callable&& func)

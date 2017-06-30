@@ -489,9 +489,10 @@ void CConnman::Ban(const CSubNet& subNet, const BanReason &banReason, int64_t ba
         clientInterface->BannedListChanged();
     {
         LOCK(cs_vNodes);
-        for (auto& pnode : vNodes) {
-            if (subNet.Match((CNetAddr)pnode->addr))
+        for (auto& pnode : GetNodesCopy()) {
+            if (subNet.Match((CNetAddr)pnode->addr)) {
                 pnode->fDisconnect = true;
+            }
         }
     }
     if(banReason == BanReasonManuallyAdded)
@@ -1938,12 +1939,8 @@ void CConnman::ThreadMessageHandler()
         std::vector<std::shared_ptr<CNode>> vNodesCopy;
         {
             LOCK(cs_vNodes);
-            vNodesCopy.reserve(vNodes.size());
-            for (auto& pnode : vNodes) {
-                vNodesCopy.push_back(pnode.get_shared());
-            }
+            vNodesCopy = GetNodesCopy();
         }
-
         bool fMoreWork = false;
 
         for (auto& pnode : vNodesCopy)
@@ -2137,7 +2134,7 @@ void CConnman::SetNetworkActive(bool active)
 
         LOCK(cs_vNodes);
         // Close sockets to all nodes
-        for (auto& pnode : vNodes) {
+        for (auto& pnode : GetNodesCopy()) {
             pnode->CloseSocketDisconnect();
         }
     } else {
@@ -2491,8 +2488,9 @@ void CConnman::GetNodeStats(std::vector<CNodeStats>& vstats)
 {
     vstats.clear();
     LOCK(cs_vNodes);
-    vstats.reserve(vNodes.size());
-    for (auto& pnode : vNodes) {
+    std::vector<std::shared_ptr<CNode>> nodes_copy = GetNodesCopy();
+    vstats.reserve(nodes_copy.size());
+    for (const auto& pnode : nodes_copy) {
         vstats.emplace_back();
         pnode->copyStats(vstats.back());
     }
