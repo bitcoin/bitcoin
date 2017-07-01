@@ -2830,8 +2830,10 @@ bool FlushStateToDisk(CValidationState &state, FlushStateMode mode)
             nLastSetChain = nNow;
         }
         size_t cacheSize = pcoinsTip->DynamicMemoryUsage();
+        static int64_t nSizeAfterLastFlush = 0;
         // The cache is close to the limit. Try to flush and trim.
-        bool fCacheCritical = mode == FLUSH_STATE_IF_NEEDED && cacheSize > (nCoinCacheUsage * 0.99);
+        bool fCacheCritical = (mode == FLUSH_STATE_IF_NEEDED) && (cacheSize > nCoinCacheUsage * 0.995) ||
+                              (cacheSize - nSizeAfterLastFlush > nMaxCacheIncreaseSinceLastFlush);
         // It's been a while since we wrote the block index to disk. Do this frequently, so we don't need to redownload
         // after a crash.
         bool fPeriodicWrite =
@@ -2889,8 +2891,19 @@ bool FlushStateToDisk(CValidationState &state, FlushStateMode mode)
             if (!pcoinsTip->Flush())
                 return AbortNode(state, "Failed to write to coin database");
             nLastFlush = nNow;
-            // Trim any excess entries from the cache if needed
-            pcoinsTip->Trim(nCoinCacheUsage);
+            // Trim any excess entries from the cache if needed.  If chain is not syncd then
+            // trim extra so that we don't flush as often during IBD.
+            if (IsChainNearlySyncd() && !fReindex && !fImporting)
+                pcoinsTip->Trim(nCoinCacheUsage);
+            else
+            {
+                // Trim, but never trim more than nMaxCacheIncreaseSinceLastFlush
+                size_t nTrimSize = nCoinCacheUsage * .90;
+                if (nCoinCacheUsage - nMaxCacheIncreaseSinceLastFlush > nTrimSize)
+                    nTrimSize = nCoinCacheUsage - nMaxCacheIncreaseSinceLastFlush;
+                pcoinsTip->Trim(nTrimSize);
+            }
+            nSizeAfterLastFlush = pcoinsTip->DynamicMemoryUsage();
         }
         if (fDoFullFlush || ((mode == FLUSH_STATE_ALWAYS || mode == FLUSH_STATE_PERIODIC) &&
                                 nNow > nLastSetChain + (int64_t)DATABASE_WRITE_INTERVAL * 1000000))
@@ -4311,7 +4324,7 @@ bool ProcessNewBlock(CValidationState &state,
         // demerit the sender
         return error("%s: CheckBlockHeader FAILED", __func__);
     }
-    if (IsChainNearlySyncd())
+    if (IsChainNearlySyncd() && !fImporting && !fReindex)
         SendExpeditedBlock(*pblock, pfrom);
 
     bool checked = CheckBlock(*pblock, state);
@@ -5997,7 +6010,7 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
     }
 
 
-    else if (strCommand == NetMsgType::INV)
+    else if (strCommand == NetMsgType::INV && !fImporting && !fReindex)
     {
         std::vector<CInv> vInv;
         vRecv >> vInv;
@@ -6047,9 +6060,8 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
                 // throughout older block files.  This will stop those files from being pruned.
                 // !IsInitialBlockDownload() can be removed if
                 // a better block storage system is devised.
-                if ((!fAlreadyHave && !fImporting && !fReindex && !IsInitialBlockDownload()) ||
-                    // BU request && !mapBlocksInFlight.count(inv.hash)) {
-                    (!fAlreadyHave && !fImporting && !fReindex && Params().NetworkIDString() == "regtest"))
+                if ((!fAlreadyHave && !IsInitialBlockDownload()) ||
+                    (!fAlreadyHave && Params().NetworkIDString() == "regtest"))
                 {
                     requester.AskFor(inv, pfrom);
                 }
@@ -6069,7 +6081,7 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
                 // RE !IsInitialBlockDownload(): during IBD, its a waste of bandwidth to grab transactions, they will
                 // likely be included
                 // in blocks that we IBD download anyway.  This is especially important as transaction volumes increase.
-                else if (!fAlreadyHave && !fImporting && !fReindex && !IsInitialBlockDownload())
+                else if (!fAlreadyHave && !IsInitialBlockDownload())
                     requester.AskFor(inv, pfrom); // BU manage outgoing requests.  was: pfrom->AskFor(inv);
             }
 
@@ -6085,7 +6097,7 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
     }
 
 
-    else if (strCommand == NetMsgType::GETDATA)
+    else if (strCommand == NetMsgType::GETDATA && !fImporting && !fReindex)
     {
         std::vector<CInv> vInv;
         vRecv >> vInv;
@@ -6121,7 +6133,7 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
     }
 
 
-    else if (strCommand == NetMsgType::GETBLOCKS)
+    else if (strCommand == NetMsgType::GETBLOCKS && !fImporting && !fReindex)
     {
         CBlockLocator locator;
         uint256 hashStop;

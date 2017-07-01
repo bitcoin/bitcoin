@@ -61,15 +61,36 @@ bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, siz
         if (it->second.flags & CCoinsCacheEntry::DIRTY)
         {
             if (it->second.coins.IsPruned())
+            {
                 batch.Erase(make_pair(DB_COINS, it->first));
-            else
-                batch.Write(make_pair(DB_COINS, it->first), it->second.coins);
-            changed++;
 
-            // Update the usage of the child cache before deleting the entry in the child cache
-            nChildCachedCoinsUsage -= it->second.coins.DynamicMemoryUsage();
-            CCoinsMap::iterator itOld = it++;
-            mapCoins.erase(itOld);
+                // Update the usage of the child cache before deleting the entry in the child cache
+                nChildCachedCoinsUsage -= it->second.coins.DynamicMemoryUsage();
+                CCoinsMap::iterator itOld = it++;
+                mapCoins.erase(itOld);
+            }
+            else
+            {
+                batch.Write(make_pair(DB_COINS, it->first), it->second.coins);
+
+                // Only delete valid coins from the cache when we're nearly syncd.  During IBD, and also
+                // if BlockOnly mode is turned on, these coins will be used, whereas, once the chain is
+                // syncd we only need the coins that have come from accepting txns into the memory pool.
+                bool fBlocksOnly = GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY);
+                if (IsChainNearlySyncd() && !fImporting && !fReindex && !fBlocksOnly)
+                {
+                    // Update the usage of the child cache before deleting the entry in the child cache
+                    nChildCachedCoinsUsage -= it->second.coins.DynamicMemoryUsage();
+                    CCoinsMap::iterator itOld = it++;
+                    mapCoins.erase(itOld);
+                }
+                else
+                {
+                    it->second.flags = 0;
+                    it++;
+                }
+            }
+            changed++;
         }
         else
             it++;
