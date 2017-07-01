@@ -231,7 +231,7 @@ void CActiveMasternode::ManageStateRemote()
     LogPrint("masternode", "CActiveMasternode::ManageStateRemote -- Start status = %s, type = %s, pinger enabled = %d, pubKeyMasternode.GetID() = %s\n", 
              GetStatus(), GetTypeString(), fPingerEnabled, pubKeyMasternode.GetID().ToString());
 
-    mnodeman.CheckMasternode(pubKeyMasternode);
+    mnodeman.CheckMasternode(pubKeyMasternode, true);
     masternode_info_t infoMn = mnodeman.GetMasternodeInfo(pubKeyMasternode);
     if(infoMn.fInfoValid) {
         if(infoMn.nProtocolVersion != PROTOCOL_VERSION) {
