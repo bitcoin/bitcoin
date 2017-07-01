@@ -63,8 +63,6 @@ inline unsigned int MaxBlockSerSize(bool fSegwitSeasoned)
     return (MaxBlockBaseSize(fSegwitSeasoned) * 4);
 }
 
-/** The maximum allowed number of transactions per block */
-static const unsigned int MAX_BLOCK_VTX_SIZE = 1000000;
 
 /** The minimum allowed size for a transaction */
 static const unsigned int MIN_TRANSACTION_BASE_SIZE = 10;
