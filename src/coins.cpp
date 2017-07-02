@@ -255,7 +255,7 @@ void CCoinsViewCache::Trim(size_t nTrimSize) const
 
     LOCK(cs_utxo);
     CCoinsMap::iterator iter = cacheCoins.begin();
-    while (cachedCoinsUsage > nTrimSize)
+    while (DynamicMemoryUsage() > nTrimSize)
     {
         if (iter == cacheCoins.end())
             break;
