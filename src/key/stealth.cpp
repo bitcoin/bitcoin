@@ -135,13 +135,12 @@ int CStealthAddress::SetScanPubKey(CPubKey pk)
 
 CKeyID CStealthAddress::GetSpendKeyID() const
 {
-    //return CPubKey(spend_pubkey.begin(), spend_pubkey.end()).GetID();
     return CKeyID(Hash160(spend_pubkey.begin(), spend_pubkey.end()));
 };
 
 int SecretToPublicKey(const CKey &secret, ec_point &out)
 {
-    // -- public key = private * G
+    // Public key = private * G
     
     CPubKey pkTemp = secret.GetPubKey();
     out.resize(EC_COMPRESSED_SIZE);
@@ -163,7 +162,6 @@ int SecretToPublicKey(const CKey &secret, ec_point &out)
     if (!secp256k1_ec_pubkey_parse(secp256k1_ctx_stealth, &P, &out[0], EC_COMPRESSED_SIZE))
         return errorN(1, "%s: secp256k1_ec_pubkey_parse R failed.", __func__);
     */
-    
     return 0;
 };
 

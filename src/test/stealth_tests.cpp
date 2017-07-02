@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(stealth_key_serialise)
     ss.clear();
     BOOST_CHECK(ss.empty());
     
-    // -- add 2nd spend pubkey
+    // Add 2nd spend pubkey
     sxAddr.number_signatures = 1;
     
     sxAddr.spend_pubkey.resize(EC_COMPRESSED_SIZE * 2);

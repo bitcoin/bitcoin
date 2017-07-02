@@ -624,7 +624,7 @@ int ManageExtKey(CStoredExtKey &sek, std::string &sOptName, std::string &sOptVal
         };
     } else
     {
-        // - list all possible
+        // List all possible
         result.push_back(Pair("label", sek.sLabel));
         result.push_back(Pair("active", sek.nFlags & EAF_ACTIVE ? "true" : "false"));
         result.push_back(Pair("receive_on", sek.nFlags & EAF_RECEIVE_ON ? "true" : "false"));
@@ -666,7 +666,7 @@ int ManageExtAccount(CExtKeyAccount &sea, std::string &sOptName, std::string &sO
         result.push_back(Pair("set_active", sea.nFlags & EAF_ACTIVE ? "true" : "false"));
     } else
     {
-        // - list all possible
+        // List all possible
         result.push_back(Pair("label", sea.sLabel));
         result.push_back(Pair("active", sea.nFlags & EAF_ACTIVE ? "true" : "false"));
     };
@@ -888,7 +888,7 @@ UniValue extkey(const JSONRPCRequest &request)
             ExtractExtKeyId(sInKey, keyId, mode == "account" ? CChainParams::EXT_ACC_HASH : CChainParams::EXT_KEY_HASH);
         } else
         {
-            // - display default account
+            // Display default account
             if (mode == "account")
                 keyId = pwallet->idDefaultAccount;
             
@@ -924,8 +924,8 @@ UniValue extkey(const JSONRPCRequest &request)
     } else
     if (mode == "gen")
     {
-        // - make a new master key
-        //   from random or passphrase + int + seed string
+        // Make a new master key
+        // from random or passphrase + int + seed string
         
         CExtKey newKey;
         
@@ -937,7 +937,7 @@ UniValue extkey(const JSONRPCRequest &request)
             int32_t nHashes = 100;
             std::string sSeed = "Bitcoin seed";
             
-            // - generate from passphrase
+            // Generate from passphrase
             //   allow generator string and nhashes to be specified
             //   To allow importing of bip32 strings from other systems
             //   Match bip32.org: bip32 gen "pass" 50000 "Bitcoin seed"
@@ -1076,7 +1076,7 @@ UniValue extkey(const JSONRPCRequest &request)
             } else
             if (part::IsStrOnlyDigits(sVar))
             {
-                // - setting timestamp directly
+                // Setting timestamp directly
                 errno = 0;
                 nTimeStartScan = strtoimax(sVar.c_str(), NULL, 10);
                 if (errno != 0)
@@ -1484,13 +1484,13 @@ UniValue extkeyimportinternal(const JSONRPCRequest &request, bool fGenesisChain)
             && !eKey58.IsValid(CChainParams::EXT_SECRET_KEY_BTC))
             throw std::runtime_error("Please specify a private extkey or mnemonic phrase.");
         
-        // - key was provided directly
+        // Key was provided directly
         ekp = eKey58.GetKey();
     } else
     {
         std::vector<uint8_t> vSeed, vEntropy;
         
-        // - first check the mnemonic is valid
+        // First check the mnemonic is valid
         if (0 != MnemonicDecode(-1, sMnemonic, vEntropy, sError))
             throw std::runtime_error(strprintf("MnemonicDecode failed: %s", sError.c_str()));
         
@@ -1607,7 +1607,7 @@ UniValue extkeyimportmaster(const JSONRPCRequest &request)
         "   extkeyimportmaster -stdin -stdin false label_master label_account\n"
         "\n";
     
-    // - Doesn't generate key, require users to run mnemonic new, more likely they'll save the phrase
+    // Doesn't generate key, require users to run mnemonic new, more likely they'll save the phrase
     
     if (request.fHelp)
         throw std::runtime_error(help);
@@ -1667,7 +1667,7 @@ UniValue keyinfo(const JSONRPCRequest &request)
     CExtKeyPair ekp;
     if (eKey58.Set58(sKey.c_str()) == 0)
     {
-        // - key was provided directly
+        // Key was provided directly
         ekp = eKey58.GetKey();
         result.push_back(Pair("key_type", "extaddress"));
         result.push_back(Pair("mode", ekp.IsValidV() ? "private" : "public"));
@@ -1969,7 +1969,7 @@ UniValue importstealthaddress(const JSONRPCRequest &request)
 
     UniValue result(UniValue::VOBJ);
     bool fFound = false;
-    // -- find if address already exists, can update 
+    // Find if address already exists, can update 
     std::set<CStealthAddress>::iterator it;
     for (it = pwallet->stealthAddresses.begin(); it != pwallet->stealthAddresses.end(); ++it)
     {
@@ -2729,13 +2729,13 @@ UniValue manageaddressbook(const JSONRPCRequest &request)
             "manageaddressbook <action> <address> [label] [purpose]\n"
             "Manage the address book."
             "\nArguments:\n"
-            "1. \"action\"      (string, required) 'add/edit/del' The action to take.\n"
+            "1. \"action\"      (string, required) 'add/edit/del/info' The action to take.\n"
             "2. \"address\"     (string, required) The address to affect.\n"
             "3. \"label\"       (string, optional) Optional label.\n"
             "4. \"purpose\"     (string, optional) Optional purpose label.\n");
     
     CHDWallet *pwallet = GetHDWallet();
-    EnsureWalletIsUnlocked(pwallet);
+    
     
     std::string sAction = request.params[0].get_str();
     std::string sAddress = request.params[1].get_str();
@@ -2766,6 +2766,8 @@ UniValue manageaddressbook(const JSONRPCRequest &request)
     
     if (sAction == "add")
     {
+        EnsureWalletIsUnlocked(pwallet);
+        
         if (mabi != pwallet->mapAddressBook.end())
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf(_("Address '%s' is recorded in the address book."), sAddress));
         
@@ -2774,6 +2776,8 @@ UniValue manageaddressbook(const JSONRPCRequest &request)
     } else
     if (sAction == "edit")
     {
+        EnsureWalletIsUnlocked(pwallet);
+        
         if (request.params.size() < 3)
             throw JSONRPCError(RPC_INVALID_PARAMETER, _("Need a parameter to change."));
         if (mabi == pwallet->mapAddressBook.end())
@@ -2792,6 +2796,8 @@ UniValue manageaddressbook(const JSONRPCRequest &request)
     } else
     if (sAction == "del")
     {
+        EnsureWalletIsUnlocked(pwallet);
+        
         if (mabi == pwallet->mapAddressBook.end())
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf(_("Address '%s' is not in the address book."), sAddress));
         sLabel = mabi->second.name;
@@ -2799,6 +2805,40 @@ UniValue manageaddressbook(const JSONRPCRequest &request)
         
         if (!pwallet->DelAddressBook(dest))
             throw JSONRPCError(RPC_WALLET_ERROR, "DelAddressBook failed.");
+    } else
+    if (sAction == "info")
+    {
+        if (mabi == pwallet->mapAddressBook.end())
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf(_("Address '%s' is not in the address book."), sAddress));
+        
+        UniValue result(UniValue::VOBJ);
+    
+        result.push_back(Pair("action", sAction));
+        result.push_back(Pair("address", sAddress));
+        
+        result.push_back(Pair("label", mabi->second.name));
+        result.push_back(Pair("purpose", mabi->second.purpose));
+        
+        if (mabi->second.nOwned == 0)
+            mabi->second.nOwned = pwallet->HaveAddress(address) ? 1 : 2;
+        
+        result.push_back(Pair("owned", mabi->second.nOwned == 1 ? "true" : "false"));
+        
+        if (mabi->second.vPath.size() > 1)
+        {
+            std::string sPath;
+            if (0 == PathToString(mabi->second.vPath, sPath, '\'', 1))
+                result.push_back(Pair("path", sPath));
+        };
+        
+        for (const auto &pair : mabi->second.destdata)
+            objDestData.push_back(Pair(pair.first, pair.second));
+        if (objDestData.size() > 0)
+            result.push_back(Pair("destdata", objDestData));
+        
+        result.push_back(Pair("result", "success"));
+        
+        return result;
     } else
     {
         throw JSONRPCError(RPC_INVALID_PARAMETER, _("Unknown action, must be one of 'add/edit/del'."));
@@ -3164,7 +3204,7 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
     if (request.params.size() > 5)
     {
         sNarr = request.params[5].get_str();
-        if (sNarr.length() < 1 || sNarr.length() > 24)
+        if (sNarr.length() > 24)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Narration can range from 1 to 24 characters.");
     };
     
@@ -3173,9 +3213,9 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
     if (request.params.size() > 6)
         nRingSize = request.params[6].get_int();
     
-    size_t nSigs = 1;
+    size_t nInputsPerSig = 64;
     if (request.params.size() > 7)
-        nSigs = request.params[7].get_int();
+        nInputsPerSig = request.params[7].get_int();
     
     
     CReserveKey reservekey(pwallet);
@@ -3195,7 +3235,7 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
                 throw JSONRPCError(RPC_WALLET_ERROR, strprintf("AddBlindedInputs failed: %s.", sError));
             break;
         case OUTPUT_RINGCT:
-            if (0 != pwallet->AddAnonInputs(wtx, rtx, vecSend, true, nRingSize, nSigs, sError))
+            if (0 != pwallet->AddAnonInputs(wtx, rtx, vecSend, true, nRingSize, nInputsPerSig, sError))
                 throw JSONRPCError(RPC_WALLET_ERROR, strprintf("AddAnonInputs failed: %s.", sError));
             break;
         default:
@@ -3205,7 +3245,6 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
     CValidationState state;
     if (!pwallet->CommitTransaction(wtx, rtx, reservekey, g_connman.get(), state))
         throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Transaction commit failed: %s", state.GetRejectReason()));
-    
     
     
     UniValue vErrors(UniValue::VARR);
@@ -3382,8 +3421,8 @@ UniValue sendanontopart(const JSONRPCRequest &request)
             "                            The recipient will receive less " + CURRENCY_UNIT + " than you enter in the amount field.\n"
             "6. \"narration\"   (string, optional) Up to 24 characters sent with the transaction.\n"
             "                            The narration is stored in the blockchain and is sent encrypted when destination is a stealth address and uncrypted otherwise.\n"
-            "7. \"ringsize\"      (int, optional).\n"
-            "8. \"numsignatures\" (int, optional).\n"
+            "7. \"ringsize\"       (int, optional).\n"
+            "8. \"inputs_per_sig\" (int, optional).\n"
             "\nResult:\n"
             "\"txid\"           (string) The transaction id.\n"
             "\nExamples:\n"
@@ -3411,8 +3450,8 @@ UniValue sendanontoblind(const JSONRPCRequest &request)
             "                            The recipient will receive less " + CURRENCY_UNIT + " than you enter in the amount field.\n"
             "6. \"narration\"   (string, optional) Up to 24 characters sent with the transaction.\n"
             "                            The narration is stored in the blockchain and is sent encrypted when destination is a stealth address and uncrypted otherwise.\n"
-            "7. \"ringsize\"      (int, optional).\n"
-            "8. \"numsignatures\" (int, optional).\n"
+            "7. \"ringsize\"       (int, optional).\n"
+            "8. \"inputs_per_sig\" (int, optional).\n"
             "\nResult:\n"
             "\"txid\"           (string) The transaction id.\n"
             "\nExamples:\n"
@@ -3440,8 +3479,8 @@ UniValue sendanontoanon(const JSONRPCRequest &request)
             "                            The recipient will receive less " + CURRENCY_UNIT + " than you enter in the amount field.\n"
             "6. \"narration\"   (string, optional) Up to 24 characters sent with the transaction.\n"
             "                            The narration is stored in the blockchain and is sent encrypted when destination is a stealth address and uncrypted otherwise.\n"
-            "7. \"ringsize\"      (int, optional).\n"
-            "8. \"numsignatures\" (int, optional).\n"
+            "7. \"ringsize\"       (int, optional).\n"
+            "8. \"inputs_per_sig\" (int, optional).\n"
             "\nResult:\n"
             "\"txid\"           (string) The transaction id.\n"
             "\nExamples:\n"
@@ -3564,9 +3603,9 @@ static const CRPCCommand commands[] =
     { "wallet",             "sendblindtoblind",         &sendblindtoblind,         false,  {"address","amount","comment","comment_to","subtractfeefromamount", "narration"} },
     { "wallet",             "sendblindtoanon",          &sendblindtoanon,          false,  {"address","amount","comment","comment_to","subtractfeefromamount", "narration"} },
     
-    { "wallet",             "sendanontopart",           &sendanontopart,           false,  {"address","amount","comment","comment_to","subtractfeefromamount", "narration", "ring_size", "num_sigs"} },
-    { "wallet",             "sendanontoblind",          &sendanontoblind,          false,  {"address","amount","comment","comment_to","subtractfeefromamount", "narration", "ring_size", "num_sigs"} },
-    { "wallet",             "sendanontoanon",           &sendanontoanon,           false,  {"address","amount","comment","comment_to","subtractfeefromamount", "narration", "ring_size", "num_sigs"} },
+    { "wallet",             "sendanontopart",           &sendanontopart,           false,  {"address","amount","comment","comment_to","subtractfeefromamount", "narration", "ring_size", "inputs_per_sig"} },
+    { "wallet",             "sendanontoblind",          &sendanontoblind,          false,  {"address","amount","comment","comment_to","subtractfeefromamount", "narration", "ring_size", "inputs_per_sig"} },
+    { "wallet",             "sendanontoanon",           &sendanontoanon,           false,  {"address","amount","comment","comment_to","subtractfeefromamount", "narration", "ring_size", "inputs_per_sig"} },
     
     
     { "wallet",             "debugwallet",              &debugwallet,               false,  {"attempt_repair"} },

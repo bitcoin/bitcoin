@@ -286,7 +286,7 @@ public:
     
     bool operator ==(const CStoredExtKey& y) const
     {
-        // - Compare pubkeys instead of CExtKeyPair for speed
+        // Compare pubkeys instead of CExtKeyPair for speed
         return kp.pubkey == y.kp.pubkey;
     };
     
@@ -350,7 +350,7 @@ public:
     template<typename Stream>
     void Serialize(Stream &s) const
     {
-        // - Never save secret data when key is encrypted
+        // Never save secret data when key is encrypted
         if (vchCryptedSecret.size() > 0)
         {
             CExtKeyPair kpt = kp.Neutered();
@@ -380,7 +380,7 @@ public:
         s >> mapValue;
     };
     
-    // - when encrypted, pk can't be derived from vk
+    // When encrypted, pk can't be derived from vk
     CExtKeyPair kp;
     std::vector<uint8_t> vchCryptedSecret;
     
@@ -428,7 +428,7 @@ public:
 
 class CEKASCKey
 {
-// - key derived from stealth key
+// Key derived from stealth key
 public:
     CEKASCKey() {};
     CEKASCKey(CKeyID &idStealthKey_, CKey &sShared_) : idStealthKey(idStealthKey_), sShared(sShared_) {};
@@ -462,7 +462,7 @@ public:
     CEKAStealthKey() {};
     CEKAStealthKey(uint32_t nScanParent_, uint32_t nScanKey_, CKey scanSecret_, uint32_t nSpendParent_, uint32_t nSpendKey_, CKey spendSecret_, uint8_t nPrefixBits_, uint32_t nPrefix_)
     {
-        // - spend secret is not stored
+        // Spend secret is not stored
         nFlags = 0;
         nScanParent = nScanParent_;
         nScanKey = nScanKey_;
@@ -487,7 +487,7 @@ public:
     
     CKeyID GetID() const
     {
-        // - not likely to be called very often
+        // Not likely to be called very often
         return skScan.GetPubKey().GetID();
     };
     
@@ -625,7 +625,7 @@ public:
     
     int FreeChains()
     {
-        // - Keys are normally freed by the wallet
+        // Keys are normally freed by the wallet
         std::vector<CStoredExtKey*>::iterator it;
         for (it = vExtKeys.begin(); it != vExtKeys.end(); ++it)
         {
@@ -765,7 +765,7 @@ public:
     
     mutable CCriticalSection cs_account;
     
-    // - 0th key is always the account key
+    // 0th key is always the account key
     std::vector<CStoredExtKey*> vExtKeys;
     std::vector<CKeyID> vExtKeyIDs;
     

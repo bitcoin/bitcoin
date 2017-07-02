@@ -18,7 +18,7 @@ uint32_t BitcoinChecksum(uint8_t *p, uint32_t nBytes)
     uint8_t hash2[32];
     CSHA256().Write((uint8_t*)hash1, sizeof(hash1)).Finalize((uint8_t*)hash2);
     
-    // -- checksum is the 1st 4 bytes of the hash
+    // Checksum is the 1st 4 bytes of the hash
     uint32_t checksum;
     memcpy(&checksum, &hash2[0], 4);
     

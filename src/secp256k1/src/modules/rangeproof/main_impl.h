@@ -117,6 +117,28 @@ int secp256k1_pedersen_blind_sum(const secp256k1_context* ctx, unsigned char *bl
     return 1;
 }
 
+/** Takes a list of n pointers to 33 byte commitment values, returns sum.
+ */
+int secp256k1_pedersen_commitment_sum(const secp256k1_context* ctx, secp256k1_pedersen_commitment *sum_out, const secp256k1_pedersen_commitment * const* commits, size_t n) {
+    secp256k1_gej accj;
+    secp256k1_ge add;
+    size_t i;
+    ARG_CHECK(ctx != NULL);
+    ARG_CHECK(sum_out != NULL);
+    ARG_CHECK(commits != NULL);
+    
+    secp256k1_gej_set_infinity(&accj);
+    for (i = 0; i < n; i++) {
+        secp256k1_pedersen_commitment_load(&add, commits[i]);
+        secp256k1_gej_add_ge_var(&accj, &accj, &add, NULL);
+    }
+    
+    secp256k1_ge_set_gej(&add, &accj);
+    secp256k1_pedersen_commitment_save(sum_out, &add);
+    
+    return 1;
+}
+
 /* Takes two lists of commitments and sums the first set and subtracts the second and verifies that they sum to excess. */
 int secp256k1_pedersen_verify_tally(const secp256k1_context* ctx, const secp256k1_pedersen_commitment * const* commits, size_t pcnt, const secp256k1_pedersen_commitment * const* ncommits, size_t ncnt) {
     secp256k1_gej accj;

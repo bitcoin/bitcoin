@@ -208,7 +208,7 @@ int ExtractExtKeyPath(const std::string &sPath, std::vector<uint32_t> &vPath)
         {
             nSlashes++;
             
-            // - catch start or end '/', and '//'
+            // Catch start or end '/', and '//'
             if (k == 0
                 || k == sPath.length()-1
                 || (k < sPath.length()-1 && sPath[k+1] == '/'))
@@ -231,7 +231,7 @@ int ExtractExtKeyPath(const std::string &sPath, std::vector<uint32_t> &vPath)
             
             bool fHarden = false;
             
-            // - don't allow octal, only hex and binary
+            // Don't allow octal, only hex and binary
             int nBase = *p == '0' && (*(p+1) == 'b' || *(p+1) == 'B') ? 2
                 : *p == '0' && (*(p+1) == 'x' || *(p+1) == 'X') ? 16 : 10;
             if (nBase != 10)
@@ -239,7 +239,7 @@ int ExtractExtKeyPath(const std::string &sPath, std::vector<uint32_t> &vPath)
             char *ps = p;
             for (; *p; ++p)
             {
-                // -last char can be (h, H ,')
+                // Last char can be (h, H ,')
                 if (!*(p+1) && (tolower(*p) == 'h' || *p == '\''))
                 {
                     fHarden = true;
@@ -536,7 +536,7 @@ int CExtKeyPair::SetKeyCode(const unsigned char *pkey, const unsigned char *pcod
 
 std::string CEKAStealthKey::ToStealthAddress() const
 {
-    // - return base58 encoded public stealth address
+    // Return base58 encoded public stealth address
     
     CStealthAddress sxAddr;
     SetSxAddr(sxAddr);
@@ -572,7 +572,7 @@ std::string CStoredExtKey::GetIDString58() const
 
 std::string CExtKeyAccount::GetIDString58() const
 {
-    // - 0th chain is always account chain
+    // 0th chain is always account chain
     if (vExtKeyIDs.size() < 1)
         return "Not Set";
     CBitcoinAddress addr;
@@ -592,9 +592,9 @@ int CExtKeyAccount::HaveSavedKey(const CKeyID &id)
 
 int CExtKeyAccount::HaveKey(const CKeyID &id, bool fUpdate, CEKAKey &ak)
 {
-    // - rv 0 = no, 1 = yes, 2 = lookahead, 3 = lookahead + updated
+    // rv 0 = no, 1 = yes, 2 = lookahead, 3 = lookahead + updated
     LOCK(cs_account);
-    // - if fUpdate, promote key if found in look ahead
+    // If fUpdate, promote key if found in look ahead
     AccKeyMap::const_iterator mi = mapKeys.find(id);
     if (mi != mapKeys.end())
         return 1;
@@ -826,7 +826,7 @@ bool CExtKeyAccount::SaveKey(const CKeyID &id, CEKAKey &keyIn)
     {
         LogPrintf("Saved key %s %d, %s.\n", GetIDString58(), keyIn.nParent, CBitcoinAddress(id).ToString());
         
-        // - check match
+        // Check match
         CStoredExtKey *pa;
         if ((pa = GetChain(keyIn.nParent)) != NULL)
         {
@@ -954,7 +954,7 @@ int CExtKeyAccount::AddLookBehind(uint32_t nChain, uint32_t nKeys)
 
 int CExtKeyAccount::AddLookAhead(uint32_t nChain, uint32_t nKeys)
 {
-    // - must start from key 0
+    // Must start from key 0
     CStoredExtKey *pc = GetChain(nChain);
     if (!pc)
         return errorN(1, "%s: Unknown chain, %d.", __func__, nChain);
@@ -1017,7 +1017,7 @@ int CExtKeyAccount::AddLookAhead(uint32_t nChain, uint32_t nKeys)
 
 int CExtKeyAccount::ExpandStealthChildKey(const CEKAStealthKey *aks, const CKey &sShared, CKey &kOut) const
 {
-    // - derive the secret key of the stealth address and then the secret key out
+    // Derive the secret key of the stealth address and then the secret key out
     
     LOCK(cs_account);
     
@@ -1036,7 +1036,7 @@ int CExtKeyAccount::ExpandStealthChildKey(const CEKAStealthKey *aks, const CKey 
 
 int CExtKeyAccount::ExpandStealthChildPubKey(const CEKAStealthKey *aks, const CKey &sShared, CPubKey &pkOut) const
 {
-    // - works with locked wallet
+    // Works with locked wallet
     
     LOCK(cs_account);
     

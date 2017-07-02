@@ -161,7 +161,7 @@ UniValue mnemonic(const JSONRPCRequest &request)
             result.push_back(Pair("master", eKey58.ToString()));
         };
         
-        // - in c++11 strings are definitely contiguous, and before they're very unlikely not to be
+        // In c++11 strings are definitely contiguous, and before they're very unlikely not to be
         if (sMnemonic.size() > 0)
             memory_cleanse(&sMnemonic[0], sMnemonic.size());
         if (sPassword.size() > 0)
@@ -199,7 +199,7 @@ UniValue mnemonic(const JSONRPCRequest &request)
         std::vector<uint8_t> vEntropy;
         std::vector<uint8_t> vSeed;
         
-        // - decode to determine validity of mnemonic
+        // Decode to determine validity of mnemonic
         if (0 != MnemonicDecode(-1, sMnemonic, vEntropy, sError))
             throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("MnemonicDecode failed %s.", sError.c_str()).c_str());
         
@@ -231,7 +231,6 @@ UniValue mnemonic(const JSONRPCRequest &request)
             result.push_back(Pair("master", eKey58.ToString()));
         };
         
-        // - in c++11 strings are definitely contiguous, and before they're very unlikely not to be
         if (sMnemonic.size() > 0)
             memory_cleanse(&sMnemonic[0], sMnemonic.size());
         if (sPassword.size() > 0)

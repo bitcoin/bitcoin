@@ -395,8 +395,6 @@ public:
     {
         return &scriptPubKey;
     };
-    
-    
 };
 
 class CTxOutCT : public CTxOutBase

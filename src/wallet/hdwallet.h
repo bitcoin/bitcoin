@@ -302,6 +302,8 @@ public:
         pEKMaster = NULL;
         
         fUnlockForStakingOnly = false;
+        nRCTOutSelectionGroup1 = 2400;
+        nRCTOutSelectionGroup2 = 24000;
     };
     
     ~CHDWallet()
@@ -408,15 +410,18 @@ public:
     int AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
         std::vector<CTempRecipient> &vecSend, bool sign, std::string &sError);
     
-    int PickHidingOutputs(std::vector<std::vector<int64_t> > &vMI, size_t &nSecretColumn, size_t nRingSize,
+    
+    int PlaceRealOutputs(std::vector<std::vector<int64_t> > &vMI, size_t &nSecretColumn, size_t nRingSize, std::set<int64_t> &setHave,
         const std::vector<std::pair<MapRecords_t::const_iterator,unsigned int> > &vCoins, std::vector<uint8_t> &vInputBlinds, std::string &sError);
+    int PickHidingOutputs(std::vector<std::vector<int64_t> > &vMI, size_t nSecretColumn, size_t nRingSize, std::set<int64_t> &setHave,
+        std::string &sError);
     
     int AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
         std::vector<CTempRecipient> &vecSend,
         CExtKeyAccount *sea, CStoredExtKey *pc,
-        bool sign, size_t nRingSize, size_t nSigs, std::string &sError);
+        bool sign, size_t nRingSize, size_t nInputsPerSig, std::string &sError);
     int AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
-        std::vector<CTempRecipient> &vecSend, bool sign, size_t nRingSize, size_t nSigs, std::string &sError);
+        std::vector<CTempRecipient> &vecSend, bool sign, size_t nRingSize, size_t nInputsPerSig, std::string &sError);
     
     
     
@@ -589,6 +594,9 @@ public:
     
     int nUserDevFundCedePercent;
     bool fUnlockForStakingOnly; // temporary, non-optimal solution.
+    
+    int64_t nRCTOutSelectionGroup1;
+    int64_t nRCTOutSelectionGroup2;
     
 };
 

@@ -33,7 +33,7 @@ std::vector<Test1> vTestVector1 = {
 
 BOOST_AUTO_TEST_CASE(new_ext_key)
 {
-    // - match keys from http://bip32.org/
+    // Match keys from http://bip32.org/
     
     CHDWallet *pwallet = (CHDWallet*) pwalletMain;
     
@@ -46,7 +46,6 @@ BOOST_AUTO_TEST_CASE(new_ext_key)
         CExtKeyPair ekp(ekTest);
         CExtKey58 ek58;
         ek58.SetKey(ekp, CChainParams::EXT_SECRET_KEY_BTC);
-        //BOOST_MESSAGE("ek58 " << ek58.ToString());
         BOOST_CHECK(ek58.ToString() == it->sOutput);
     };
 }
@@ -67,13 +66,13 @@ BOOST_AUTO_TEST_CASE(stealth)
     std::string sNarr;
     
     
-    // - no bitfield, no narration
+    // No bitfield, no narration
     BOOST_CHECK(0 == ToStealthRecipient(sx, nValue, false, vecSend, sNarr, strError));
     BOOST_CHECK(2 == vecSend.size());
     BOOST_CHECK(34 == vecSend[1].vData.size());
     
     
-    // - no bitfield, with narration
+    // No bitfield, with narration
     vecSend.clear();
     sNarr = "test narration";
     BOOST_CHECK(0 == ToStealthRecipient(sx, nValue, false, vecSend, sNarr, strError));
@@ -103,7 +102,7 @@ BOOST_AUTO_TEST_CASE(stealth)
     BOOST_CHECK(sNarr == sNarrRecovered);
     
     
-    // - with bitfield, no narration
+    // With bitfield, no narration
     vecSend.clear();
     sNarr = ""; 
     sx.prefix.number_bits = 5;
@@ -118,7 +117,7 @@ BOOST_AUTO_TEST_CASE(stealth)
     BOOST_CHECK((prefix & mask) == (sx.prefix.bitfield & mask));
     
     
-    // - with bitfield, with narration
+    // With bitfield, with narration
     vecSend.clear();
     sNarr = "another test narration"; 
     sx.prefix.number_bits = 18;

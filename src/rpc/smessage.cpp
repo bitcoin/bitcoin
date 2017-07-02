@@ -880,7 +880,7 @@ UniValue smsgbuckets(const JSONRPCRequest &request)
 
                 if (!boost::filesystem::exists(fullPath))
                 {
-                    // -- If there is a file for an empty bucket something is wrong.
+                    // If there is a file for an empty bucket something is wrong.
                     if (tokenSet.size() == 0)
                         objM.push_back(Pair("file size", "Empty bucket."));
                     else
@@ -1044,7 +1044,7 @@ UniValue smsgview(const JSONRPCRequest &request)
                 vMatchAddress.push_back(ki);
             } else
             {
-                // - Lookup address by label, can match multiple addresses
+                // Lookup address by label, can match multiple addresses
 
                 // TODO: Use Boost.Regex?
                 int matchType = 0; // 0 full match, 1 startswith, 2 endswith
@@ -1203,7 +1203,7 @@ UniValue smsgview(const JSONRPCRequest &request)
                             continue;
                     };
 
-                    // - Get labels for addresses, cache found labels.
+                    // Get labels for addresses, cache found labels.
                     std::string lblFrom, lblTo;
                     std::map<CKeyID, std::string>::iterator itl;
 

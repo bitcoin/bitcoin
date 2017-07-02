@@ -26,7 +26,7 @@ extern CWallet *pwalletMain;
 
 void RewindHdSxChain()
 {
-    // - rewind the chain to get the same key next request
+    // Rewind the chain to get the same key next request
     CHDWallet *pwallet = (CHDWallet*) pwalletMain;
     ExtKeyAccountMap::iterator mi = pwallet->mapExtAccounts.find(pwallet->idDefaultAccount);
     BOOST_REQUIRE(mi != pwallet->mapExtAccounts.end());
@@ -72,13 +72,13 @@ BOOST_AUTO_TEST_CASE(rpc_hdwallet)
     BOOST_CHECK(s2.prefix.number_bits == 32);
     BOOST_CHECK(s2.prefix.bitfield == 4215576597);
     
-    // - check the key is the same
+    // Check the key is the same
     BOOST_CHECK(s2.scan_pubkey == s1.scan_pubkey);
     BOOST_CHECK(s2.spend_pubkey == s1.spend_pubkey);
     
     RewindHdSxChain();
     
-    // - check the same prefix is generated
+    // Check the same prefix is generated
     BOOST_CHECK_NO_THROW(rv = CallRPC("getnewstealthaddress onebit 32"));
     BOOST_CHECK(StripQuotes(rv.write()) == "3s73gdiUKMVi4tHMTdker9YzHAS2r6F2CJvC12GfimDdTTn9CLEnEeWW8vdXXkeZouWLgxFGqzbPsnSShNRMsW3j3yL6ssEtjc3gwNSkbBfy");
     

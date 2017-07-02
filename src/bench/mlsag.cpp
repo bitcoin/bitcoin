@@ -99,22 +99,22 @@ static void Mlsag(benchmark::State& state)
     uint8_t blindSum[32];
     pkeys[nInputs] = blindSum;
     
-    assert(0 == prepareLastRowMLSAG(nOutputs, nBlinded, nCols, nRows,
-        pcm_in, pcm_out, pblinds,
-        m, blindSum));
+    assert(0 == secp256k1_prepare_mlsag(m, blindSum,
+        nOutputs, nBlinded, nCols, nRows,
+        pcm_in, pcm_out, pblinds));
     
     GetRandBytes(tmp32, 32);
     GetRandBytes(preimage, 32);
     
-    assert(0 == generateMLSAG(secp256k1_ctx_blind, tmp32,
-        preimage, nCols, nRows, nRealCol,
-        pkeys, m, ki, pc, ss));
+    assert(0 == secp256k1_generate_mlsag(secp256k1_ctx_blind, ki, pc, ss,
+        tmp32, preimage, nCols, nRows, nRealCol,
+        pkeys, m));
     
     
     
     while (state.KeepRunning())
     {
-        assert(0 == verifyMLSAG(secp256k1_ctx_blind,
+        assert(0 == secp256k1_verify_mlsag(secp256k1_ctx_blind,
             preimage, nCols, nRows, 
             m, ki, pc, ss));
     };

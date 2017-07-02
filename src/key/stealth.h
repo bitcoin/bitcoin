@@ -117,7 +117,7 @@ public:
             s.read((char*)scan_secret.begin(), EC_SECRET_SIZE);
             scan_secret.SetFlags(true, true);
             
-            // - only derive spend_secret_id if also have the scan secret.
+            // Only derive spend_secret_id if also have the scan secret.
             if (spend_pubkey.size() == EC_COMPRESSED_SIZE) // TODO: won't work for multiple spend pubkeys
                 spend_secret_id = GetSpendKeyID();
         };

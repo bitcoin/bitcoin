@@ -763,7 +763,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fChe
             if (!txin.IsAnonInput()
                 && !vInOutPoints.insert(txin.prevout).second)
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputs-duplicate");
-        }
+        };
     }
 
     if (tx.IsCoinBase())
@@ -997,12 +997,16 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
         if (nCtOut > 0)
             fBlind = true;
         if (nRingCTOut > 0)
+        {
             fAnon = true;
+            
+            if (!AllAnonOutputsUnknown(tx, state))
+                return false;
+        };
         
         if (fBlind || fAnon)
         {
-            // plain fee is sent in data output at vpout[0]
-            
+            // Plain fee is encoded in data output at vpout[0]
             if (!tx.GetCTFee(nFees))
                 return state.DoS(100, false, REJECT_INVALID, "bad-fee-output");
             
@@ -2105,13 +2109,12 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
         // Of course, if an assumed valid block is invalid due to false scriptSigs
         // this optimization would allow an invalid chain to be accepted.
         if (fScriptChecks) {
+            
+            bool fHaveAnonIn = false;
             for (unsigned int i = 0; i < tx.vin.size(); i++) {
                 if (tx.vin[i].IsAnonInput())
                 {
-                    if (fAnonChecks // AcceptToMemoryPool calls CheckInputs twice
-                        && !VerifyMLSAG(tx, i, state))
-                        return false;
-                    
+                    fHaveAnonIn = true;
                     continue;
                 };
                 
@@ -2147,6 +2150,10 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
                     return state.DoS(100,false, REJECT_INVALID, strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(check.GetScriptError())));
                 }
             }
+            
+            if (fHaveAnonIn && fAnonChecks
+                && !VerifyMLSAG(tx, state))
+                    return false;
         }
     }
 
@@ -2375,6 +2382,7 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
                 if (fVerifyingDB)
                 {
                     nLastRCTOutputIndex--;
+                    nVerifyDBLastRCTIndex = nLastRCTOutputIndex;
                 } else
                 {
                     op.n = k;
@@ -2388,9 +2396,6 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
                 
                 continue;
             };
-            
-            if (fVerifyingDB)
-                nVerifyDBLastRCTIndex = nLastRCTOutputIndex;
             
             if (!fAddressIndex
                 || (!out->IsType(OUTPUT_STANDARD)
@@ -3116,6 +3121,11 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                     continue;
                 
                 CTxOutRingCT *txout = (CTxOutRingCT*)tx.vpout[k].get();
+                
+                int64_t nTestExists;
+                if (!fVerifyingDB
+                    && pblocktree->ReadRCTOutputLink(txout->pk, nTestExists))
+                    return error("%s: Duplicate anon-output %s, index %d.", __func__, HexStr(txout->pk.begin(), txout->pk.end()), nTestExists);
                 
                 op.n = k;
                 nLastRCTOutIndex++;

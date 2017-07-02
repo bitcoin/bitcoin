@@ -174,8 +174,9 @@ int testCommitmentSum(secp256k1_context *ctx, CAmount nValueIn,
         pcm_out[txouts.size()] = feeCommitment.data;
     };
     
-    rv = prepareLastRowMLSAG(txouts.size()+haveFee, txouts.size(), nCols, nRows,
-        &pcm_in[0], &pcm_out[0], &pBlinds[0], m, blindSum);
+    rv = secp256k1_prepare_mlsag(m, blindSum,
+        txouts.size()+haveFee, txouts.size(), nCols, nRows,
+        &pcm_in[0], &pcm_out[0], &pBlinds[0]);
     BOOST_REQUIRE(0 == rv);
     
     
@@ -371,8 +372,9 @@ BOOST_AUTO_TEST_CASE(ringct_test)
     
     for (size_t k = 0; k < txouts.size(); ++k)
         pcm_out[k] = txouts[k].commitment.data;
-    BOOST_CHECK(0 == prepareLastRowMLSAG(txouts.size(), txouts.size(), nCols, nRows,
-        &pcm_in[0], &pcm_out[0], &pBlinds[0], m, blindSum));
+    BOOST_CHECK(0 == secp256k1_prepare_mlsag(m, blindSum,
+        txouts.size(), txouts.size(), nCols, nRows,
+        &pcm_in[0], &pcm_out[0], &pBlinds[0]));
     uint8_t randSeed[32];
     GetStrongRandBytes(randSeed, 32);
     uint8_t preimage[32];
@@ -382,10 +384,10 @@ BOOST_AUTO_TEST_CASE(ringct_test)
     std::vector<uint8_t> ss(nCols * nRows * 32);
     
     
-    BOOST_CHECK(0 == generateMLSAG(ctx, randSeed,
-        preimage, nCols, nRows, index, 
-        &sk[0], m, &ki[0], pc, &ss[0]));
-    BOOST_CHECK(0 == verifyMLSAG(ctx,
+    BOOST_CHECK(0 == secp256k1_generate_mlsag(ctx, &ki[0], pc, &ss[0],
+        randSeed, preimage, nCols, nRows, index, 
+        &sk[0], m));
+    BOOST_CHECK(0 == secp256k1_verify_mlsag(ctx,
         preimage, nCols, nRows, 
         m, &ki[0], pc, &ss[0]));
     
@@ -611,8 +613,9 @@ int doTest(secp256k1_context *ctx, size_t nInputs, size_t nOutputs, CAmount nFee
         pcm_out[txouts.size()] = feeCommitment.data;
     };
     
-    BOOST_CHECK(0 == prepareLastRowMLSAG(txouts.size()+haveFee, txouts.size(), nCols, nRows,
-        &pcm_in[0], &pcm_out[0], &pBlinds[0], m, blindSum));
+    BOOST_CHECK(0 == secp256k1_prepare_mlsag(m, blindSum,
+        txouts.size()+haveFee, txouts.size(), nCols, nRows,
+        &pcm_in[0], &pcm_out[0], &pBlinds[0]));
     
     
     uint8_t randSeed[32], preimage[32], pc[32];
@@ -621,11 +624,11 @@ int doTest(secp256k1_context *ctx, size_t nInputs, size_t nOutputs, CAmount nFee
     
     GetBytes(randSeed, 32, fDeterministic);
     
-    BOOST_CHECK(0 == generateMLSAG(ctx, randSeed,
-        preimage, nCols, nRows, index, 
-        &sk[0], m, &ki[0], pc, &ss[0]));
+    BOOST_CHECK(0 == secp256k1_generate_mlsag(ctx, &ki[0], pc, &ss[0],
+        randSeed, preimage, nCols, nRows, index, 
+        &sk[0], m));
     
-    BOOST_CHECK(0 == verifyMLSAG(ctx,
+    BOOST_CHECK(0 == secp256k1_verify_mlsag(ctx,
         preimage, nCols, nRows, 
         m, &ki[0], pc, &ss[0]));
     

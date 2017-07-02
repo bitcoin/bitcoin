@@ -93,7 +93,7 @@ class CStoredTransaction;
 
 class CStealthKeyMetadata
 {
-// -- used to get secret for keys created by stealth transaction with wallet locked
+// Used to get secret for keys created by stealth transaction with wallet locked
 public:
     CStealthKeyMetadata() {}
 

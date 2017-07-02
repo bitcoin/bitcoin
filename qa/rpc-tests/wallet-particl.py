@@ -519,6 +519,9 @@ class WalletParticlTest(ParticlTestFramework):
                 fPass = True
         assert(fPass)
         
+        ro = nodes[0].manageaddressbook('info', sTestAddress)
+        print(json.dumps(ro, indent=4, default=self.jsonDecimal))
+        
         #print(json.dumps(ro, indent=4, default=self.jsonDecimal))
         #assert(false)
         

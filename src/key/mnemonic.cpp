@@ -76,7 +76,7 @@ int GetWord(int o, const char *pwl, int max, std::string &sWord)
 
 int GetWordOffset(const char *p, const char *pwl, int max, int &o)
 {
-    // - list must end with \n
+    // List must end with \n
     char *pt = (char*)pwl;
     int l = strlen(p);
     int i = 0;
@@ -124,7 +124,7 @@ int MnemonicDetectLanguage(const std::string &sWordList)
         char *pwl = (char*) mnLanguages[l];
         int m = mnLanguageLens[l];
         
-        // - The chinese dialects have many words in common, match full phrase
+        // The chinese dialects have many words in common, match full phrase
         int maxTries = l == WLL_CHINESE_S || l == WLL_CHINESE_T ? 24 : 8;
         
         int nHit = 0;
@@ -144,7 +144,7 @@ int MnemonicDetectLanguage(const std::string &sWordList)
             p = strtok(NULL, " ");
         };
         
-        // - chinese dialects overlap too much to tolerate failures
+        // Chinese dialects overlap too much to tolerate failures
         if ((l == WLL_CHINESE_S || l == WLL_CHINESE_T)
             && nMiss > 0)
             continue;
@@ -169,7 +169,7 @@ int MnemonicEncode(int nLanguage, const std::vector<uint8_t> &vEntropy, std::str
         return errorN(1, "%s: %s", __func__, sError.c_str());
     };
     
-    // -- checksum is 1st n bytes of the sha256 hash
+    // Checksum is 1st n bytes of the sha256 hash
     uint8_t hash[32];
     CSHA256().Write(&vEntropy[0], vEntropy.size()).Finalize((uint8_t*)hash);
     
@@ -347,7 +347,7 @@ int MnemonicDecode(int nLanguage, const std::string &sWordListIn, std::vector<ui
     if (fIgnoreChecksum)
         return 0;
     
-    // -- checksum
+    // Checksum
     int nLenChecksum = nBits / 32;
     int nLenEntropy = nBits - nLenChecksum;
     

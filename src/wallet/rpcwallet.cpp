@@ -531,7 +531,7 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
     if (request.params.size() > 5)
     {
         sNarr = request.params[5].get_str();
-        if (sNarr.length() < 1 || sNarr.length() > 24)
+        if (sNarr.length() > 24)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Narration can range from 1 to 24 characters.");
     };
     EnsureWalletIsUnlocked();

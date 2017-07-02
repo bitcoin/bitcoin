@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(mnemonic_test)
 
 BOOST_AUTO_TEST_CASE(mnemonic_test_fails)
 {
-    // -- fail tests
+    // Fail tests
     
     std::string sError;
     std::vector<uint8_t> vEntropy;
@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(mnemonic_addchecksum)
     
     BOOST_CHECK_MESSAGE(sWordsOut == "abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb", "sWordsOut: " << sWordsOut);
     
-    // - must fail, len % 3 != 0
+    // Must fail, len % 3 != 0
     std::string sWordsInFail = "abandon baby cabbage dad eager fabric gadget habit ice kangaroo";
     BOOST_CHECK_MESSAGE(4 == MnemonicAddChecksum(-1, sWordsInFail, sWordsOut, sError), "MnemonicAddChecksum: " << sError);
     

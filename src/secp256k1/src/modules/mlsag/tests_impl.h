@@ -111,16 +111,16 @@ void test_mlsag(void)
     
     pkeys[n_inputs] = &keys_in[n_inputs * 32]; /* blind sum */
     
-    CHECK(0 == prepareLastRowMLSAG(n_outputs, n_blinded, n_columns, n_inputs+1,
-        pcm_in, pcm_out, pblinds,
-        m, pkeys[n_inputs]));
+    CHECK(0 == secp256k1_prepare_mlsag(m, pkeys[n_inputs],
+        n_outputs, n_blinded, n_columns, n_inputs+1,
+        pcm_in, pcm_out, pblinds));
     
     secp256k1_rand256(tmp32); /* random seed */
-    CHECK(0 == generateMLSAG(ctx, tmp32,
-        preimage, n_columns, n_rows, n_real_col, 
-        (const uint8_t**)pkeys, m, ki, pc, ss));
+    CHECK(0 == secp256k1_generate_mlsag(ctx, ki, pc, ss,
+        tmp32, preimage, n_columns, n_rows, n_real_col,
+        (const uint8_t**)pkeys, m));
     
-    CHECK(0 == verifyMLSAG(ctx,
+    CHECK(0 == secp256k1_verify_mlsag(ctx,
         preimage, n_columns, n_rows, 
         m, ki, pc, ss));
     
@@ -128,13 +128,13 @@ void test_mlsag(void)
     /* --- Test for failure --- */
     
     /* Bad preimage */
-    CHECK(2 == verifyMLSAG(ctx,
+    CHECK(2 == secp256k1_verify_mlsag(ctx,
         tmp32, n_columns, n_rows,
         m, ki, pc, ss));
     
     
     /* Bad c */
-    CHECK(2 == verifyMLSAG(ctx,
+    CHECK(2 == secp256k1_verify_mlsag(ctx,
         preimage, n_columns, n_rows,
         m, ki, tmp32, ss));
     
@@ -142,26 +142,26 @@ void test_mlsag(void)
     /* Bad sum */
     value[0] -= 1;
     CHECK(secp256k1_pedersen_commit(ctx, &cm_in[n_real_col+0*n_columns], pblinds[0], value[0], secp256k1_generator_h));
-    CHECK(0 == prepareLastRowMLSAG(n_outputs, n_blinded, n_columns, n_inputs+1,
-        pcm_in, pcm_out, pblinds,
-        m, pkeys[n_inputs]));
-    CHECK(0 == generateMLSAG(ctx, tmp32,
-        preimage, n_columns, n_rows, n_real_col,
-        (const uint8_t**)pkeys, m, ki, pc, ss));
-    CHECK(2 == verifyMLSAG(ctx,
+    CHECK(0 == secp256k1_prepare_mlsag(m, pkeys[n_inputs],
+        n_outputs, n_blinded, n_columns, n_inputs+1,
+        pcm_in, pcm_out, pblinds));
+    CHECK(0 == secp256k1_generate_mlsag(ctx, ki, pc, ss,
+        tmp32, preimage, n_columns, n_rows, n_real_col,
+        (const uint8_t**)pkeys, m));
+    CHECK(2 == secp256k1_verify_mlsag(ctx,
         preimage, n_columns, n_rows,
         m, ki, pc, ss));
     
     /* Pass repaired bad sum */
     value[0] += 1;
     CHECK(secp256k1_pedersen_commit(ctx, &cm_in[n_real_col+0*n_columns], pblinds[0], value[0], secp256k1_generator_h));
-    CHECK(0 == prepareLastRowMLSAG(n_outputs, n_blinded, n_columns, n_inputs+1,
-        pcm_in, pcm_out, pblinds,
-        m, pkeys[n_inputs]));
-    CHECK(0 == generateMLSAG(ctx, tmp32,
-        preimage, n_columns, n_rows, n_real_col,
-        (const uint8_t**)pkeys, m, ki, pc, ss));
-    CHECK(0 == verifyMLSAG(ctx,
+    CHECK(0 == secp256k1_prepare_mlsag(m, pkeys[n_inputs],
+        n_outputs, n_blinded, n_columns, n_inputs+1,
+        pcm_in, pcm_out, pblinds));
+    CHECK(0 == secp256k1_generate_mlsag(ctx, ki, pc, ss,
+        tmp32, preimage, n_columns, n_rows, n_real_col,
+        (const uint8_t**)pkeys, m));
+    CHECK(0 == secp256k1_verify_mlsag(ctx,
         preimage, n_columns, n_rows,
         m, ki, pc, ss));
     
@@ -170,10 +170,10 @@ void test_mlsag(void)
     random_scalar_order(&s);
     secp256k1_scalar_get_b32(&keys_in[0], &s);
     pkeys[0] = &keys_in[0];
-    CHECK(0 == generateMLSAG(ctx, tmp32,
-        preimage, n_columns, n_rows, n_real_col,
-        (const uint8_t**)pkeys, m, ki, pc, ss));
-    CHECK(2 == verifyMLSAG(ctx,
+    CHECK(0 == secp256k1_generate_mlsag(ctx, ki, pc, ss,
+        tmp32, preimage, n_columns, n_rows, n_real_col,
+        (const uint8_t**)pkeys, m));
+    CHECK(2 == secp256k1_verify_mlsag(ctx,
         preimage, n_columns, n_rows,
         m, ki, pc, ss));
 }

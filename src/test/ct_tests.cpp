@@ -185,17 +185,22 @@ BOOST_AUTO_TEST_CASE(ct_commitment_test)
 {
     secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
     
-    secp256k1_pedersen_commitment commitment;
+    secp256k1_pedersen_commitment commitment1, commitment2, commitment3;
     uint8_t blind[32];
     memset(blind, 0, 32);
     
-    BOOST_CHECK(secp256k1_pedersen_commit(ctx, &commitment, blind, 10, secp256k1_generator_h));
-    BOOST_CHECK(HexStr(commitment.data, commitment.data+33) == "093806b3e479859dc6dd508eca22257d796bba3e32a6616cc97b51723b50a5f429");
+    BOOST_CHECK(secp256k1_pedersen_commit(ctx, &commitment1, blind, 10, secp256k1_generator_h));
+    BOOST_CHECK(HexStr(commitment1.data, commitment1.data+33) == "093806b3e479859dc6dd508eca22257d796bba3e32a6616cc97b51723b50a5f429");
+    
     memset(blind, 1, 32);
+    BOOST_CHECK(secp256k1_pedersen_commit(ctx, &commitment2, blind, 10, secp256k1_generator_h));
+    BOOST_CHECK(HexStr(commitment2.data, commitment2.data+33) == "09badd85325926c329aa62f5a7d37d0a015aabfb52608052d277530bd025ddc971");
     
-    BOOST_CHECK(secp256k1_pedersen_commit(ctx, &commitment, blind, 10, secp256k1_generator_h));
-    BOOST_CHECK(HexStr(commitment.data, commitment.data+33) == "09badd85325926c329aa62f5a7d37d0a015aabfb52608052d277530bd025ddc971");
-    
+    secp256k1_pedersen_commitment *pc[2];
+    pc[0] = &commitment1;
+    pc[1] = &commitment2;
+    BOOST_CHECK(secp256k1_pedersen_commitment_sum(ctx, &commitment3, pc, 2));
+    BOOST_CHECK(HexStr(commitment3.data, commitment3.data+33) == "09e922a6c61aecd734d79ce41dbf09f71779bfcca6d3f30e4495923eb9801fb9a2");
     
     
     secp256k1_context_destroy(ctx);

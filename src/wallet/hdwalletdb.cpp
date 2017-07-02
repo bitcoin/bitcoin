@@ -27,7 +27,7 @@ bool CHDWalletDB::WriteStealthAddress(const CStealthAddress &sxAddr)
 
 bool CHDWalletDB::ReadStealthAddress(CStealthAddress& sxAddr)
 {
-    // -- set scan_pubkey before reading
+    // Set scan_pubkey before reading
     return Read(std::make_pair(std::string("sxad"), sxAddr.scan_pubkey), sxAddr);
 };
 

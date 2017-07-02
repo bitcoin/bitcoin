@@ -158,7 +158,7 @@ public:
     std::set<SecMsgToken> setTokens;
 };
 
-// -- get at the data
+// Get at the data
 class CBitcoinAddress_B : public CBitcoinAddress
 {
 public:
@@ -212,7 +212,7 @@ class SecMsgOptions
 public:
     SecMsgOptions()
     {
-        // -- default options
+        // Default options
         fNewAddressRecv = true;
         fNewAddressAnon = true;
         fScanIncoming   = true;
@@ -244,7 +244,7 @@ public:
 
     ~SecMsgCrypter()
     {
-        // clean key
+        // Clean key
         memset(&chKey, 0, sizeof chKey);
         memset(&chIV, 0, sizeof chIV);
         fKeySet = false;

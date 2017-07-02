@@ -204,9 +204,9 @@ bool CBase58Data::SetString(const char* psz, unsigned int nVersionBytes)
         {
             nVersionBytes = 4;
             
-            // - never display secret in a CBitcoinAddress
+            // Never display secret in a CBitcoinAddress
             
-            // - length already checked
+            // Length already checked
             vchVersion = Params().Base58Prefix(CChainParams::EXT_PUBLIC_KEY);
             CExtKeyPair ekp;
             ekp.DecodeV(&vchTemp[4]);
@@ -320,7 +320,7 @@ bool CBitcoinAddress::Set(const CExtKeyPair &ek, bool fBech32)
     std::vector<unsigned char> vchVersion;
     uint8_t data[74];
     
-    // - use public key only, should never need to reveal the secret key in an address
+    // Use public key only, should never need to reveal the secret key in an address
     
     /*
     if (ek.IsValidV())

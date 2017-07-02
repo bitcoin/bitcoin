@@ -33,9 +33,9 @@ static int load_ge(secp256k1_ge *ge, const uint8_t *data, size_t len)
     return secp256k1_eckey_pubkey_parse(ge, data, len);
 }
 
-int prepareLastRowMLSAG(size_t nOuts, size_t nBlinded, size_t nCols, size_t nRows,
-    const uint8_t **pcm_in, const uint8_t **pcm_out, const uint8_t **blinds, 
-    uint8_t *m, uint8_t *sk)
+int secp256k1_prepare_mlsag(uint8_t *m, uint8_t *sk,
+    size_t nOuts, size_t nBlinded, size_t nCols, size_t nRows,
+    const uint8_t **pcm_in, const uint8_t **pcm_out, const uint8_t **blinds)
 {
     /*
         Last matrix row is sum of input commitments - sum of output commitments
@@ -141,7 +141,7 @@ int prepareLastRowMLSAG(size_t nOuts, size_t nBlinded, size_t nCols, size_t nRow
     return 0;
 }
 
-static int hashToCurve(secp256k1_ge *ge, const uint8_t *pd, size_t len)
+static int hash_to_curve(secp256k1_ge *ge, const uint8_t *pd, size_t len)
 {
     secp256k1_fe x;
     uint8_t hash[32];
@@ -170,7 +170,7 @@ static int hashToCurve(secp256k1_ge *ge, const uint8_t *pd, size_t len)
     return 0;
 }
 
-int getKeyImage(const secp256k1_context *ctx, const uint8_t *pk, const uint8_t *sk, uint8_t *ki)
+int secp256k1_get_keyimage(const secp256k1_context *ctx, uint8_t *ki, const uint8_t *pk, const uint8_t *sk)
 {
     secp256k1_ge ge1;
     secp256k1_scalar s, zero;
@@ -180,7 +180,7 @@ int getKeyImage(const secp256k1_context *ctx, const uint8_t *pk, const uint8_t *
     
     secp256k1_scalar_set_int(&zero, 0);
     
-    if (0 != hashToCurve(&ge1, pk, 33)) /* H(pk) */
+    if (0 != hash_to_curve(&ge1, pk, 33)) /* H(pk) */
         return 1;
     
     secp256k1_scalar_set_b32(&s, sk, &overflow);
@@ -196,9 +196,10 @@ int getKeyImage(const secp256k1_context *ctx, const uint8_t *pk, const uint8_t *
 }
 
 #define MLSAG_MAX_ROWS 33 /* arbitrary max rows, max inputs 32 */
-int generateMLSAG(const secp256k1_context *ctx, const uint8_t *nonce, 
-    const uint8_t *preimage, size_t nCols, size_t nRows, size_t index,
-    const uint8_t **sk, const uint8_t *pk, uint8_t *ki, uint8_t *pc, uint8_t *ps)
+int secp256k1_generate_mlsag(const secp256k1_context *ctx, 
+    uint8_t *ki, uint8_t *pc, uint8_t *ps,
+    const uint8_t *nonce, const uint8_t *preimage, size_t nCols,
+    size_t nRows, size_t index, const uint8_t **sk, const uint8_t *pk)
 {
     /* nRows == nInputs + 1, last row sums commitments
     */
@@ -251,7 +252,7 @@ int generateMLSAG(const secp256k1_context *ctx, const uint8_t *nonce,
         secp256k1_sha256_write(&sha256_m, &pk[(index + k*nCols)*33], 33); /* pk_ind[col] */
         secp256k1_sha256_write(&sha256_m, tmp, 33); /* G * alpha[col] */
         
-        if (0 != hashToCurve(&ge1, &pk[(index + k*nCols)*33], 33)) /* H(pk_ind[col]) */
+        if (0 != hash_to_curve(&ge1, &pk[(index + k*nCols)*33], 33)) /* H(pk_ind[col]) */
             return 1;
         
         secp256k1_gej_set_ge(&gej1, &ge1);
@@ -317,7 +318,7 @@ int generateMLSAG(const secp256k1_context *ctx, const uint8_t *nonce,
             
             
             /* R = H(pk[k][i]) * ss + ki[k] * clast */
-            if (0 != hashToCurve(&ge1, &pk[(i + k*nCols)*33], 33)) /* H(pk[k][i]) */
+            if (0 != hash_to_curve(&ge1, &pk[(i + k*nCols)*33], 33)) /* H(pk[k][i]) */
                 return 1;
             secp256k1_gej_set_ge(&gej1, &ge1);
             secp256k1_ecmult(&ctx->ecmult_ctx, &gej1, &gej1, &ss, &zero); /* gej1 = H(pk[k][i]) * ss */
@@ -393,7 +394,7 @@ int generateMLSAG(const secp256k1_context *ctx, const uint8_t *nonce,
     return 0;
 }
 
-int verifyMLSAG(const secp256k1_context *ctx,
+int secp256k1_verify_mlsag(const secp256k1_context *ctx,
     const uint8_t *preimage, size_t nCols, size_t nRows,
     const uint8_t *pk, const uint8_t *ki, const uint8_t *pc, const uint8_t *ps)
 {
@@ -434,7 +435,7 @@ int verifyMLSAG(const secp256k1_context *ctx,
             secp256k1_ecmult(&ctx->ecmult_ctx, &L, &gej1, &clast, &ss);
             
             /* R = H(pk[k][i]) * ss + ki[k] * clast */
-            if (0 != hashToCurve(&ge1, &pk[(i + k*nCols)*33], 33)) /* H(pk[k][i]) */
+            if (0 != hash_to_curve(&ge1, &pk[(i + k*nCols)*33], 33)) /* H(pk[k][i]) */
                 return 1;
             secp256k1_gej_set_ge(&gej1, &ge1);
             secp256k1_ecmult(&ctx->ecmult_ctx, &gej1, &gej1, &ss, &zero); /* gej1 = H(pk[k][i]) * ss */
