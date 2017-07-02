@@ -6,12 +6,15 @@
 #ifndef BITCOIN_SCRIPT_SCRIPT_FLAGS_H
 #define BITCOIN_SCRIPT_SCRIPT_FLAGS_H
 
+#include <string>
+#include <vector>
+
 /** Script verification flags.
  *
  *  All flags are intended to be soft forks: the set of acceptable scripts under
  *  flags (A | B) is a subset of the acceptable scripts under flag (A).
  */
-enum
+enum CScriptFlag
 {
     SCRIPT_VERIFY_NONE      = 0,
 
@@ -91,5 +94,8 @@ enum
     //
     SCRIPT_VERIFY_WITNESS_PUBKEYTYPE = (1U << 15),
 };
+
+CScriptFlag ParseScriptFlag(const std::string flag_name);
+std::vector<std::string> ScriptFlagsToStrings(unsigned int flags);
 
 #endif // BITCOIN_SCRIPT_SCRIPT_FLAGS_H
