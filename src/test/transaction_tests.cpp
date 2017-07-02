@@ -394,7 +394,7 @@ static CScript PushAll(const std::vector<valtype>& values)
 {
     CScript result;
     for (const valtype& v : values) {
-        if (v.size() == 0) {
+        if (v.empty()) {
             result << OP_0;
         } else if (v.size() == 1 && v[0] >= 1 && v[0] <= 16) {
             result << CScript::EncodeOP_N(v[0]);

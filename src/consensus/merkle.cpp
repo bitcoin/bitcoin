@@ -45,7 +45,7 @@
 /* This implements a constant-space merkle root/path calculator, limited to 2^32 leaves. */
 static void MerkleComputation(const std::vector<uint256>& leaves, uint256* proot, bool* pmutated, uint32_t branchpos, std::vector<uint256>* pbranch) {
     if (pbranch) pbranch->clear();
-    if (leaves.size() == 0) {
+    if (leaves.empty()) {
         if (pmutated) *pmutated = false;
         if (proot) *proot = uint256();
         return;

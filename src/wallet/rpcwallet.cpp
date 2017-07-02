@@ -727,7 +727,7 @@ UniValue getbalance(const JSONRPCRequest& request)
 
     LOCK2(cs_main, pwallet->cs_wallet);
 
-    if (request.params.size() == 0)
+    if (request.params.empty())
         return  ValueFromAmount(pwallet->GetBalance());
 
     const std::string& account_param = request.params[0].get_str();
@@ -2753,7 +2753,7 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
     if (!DecodeHexTx(tx, request.params[0].get_str(), true))
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
 
-    if (tx.vout.size() == 0)
+    if (tx.vout.empty())
         throw JSONRPCError(RPC_INVALID_PARAMETER, "TX must have at least one output");
 
     if (changePosition != -1 && (changePosition < 0 || (unsigned int)changePosition > tx.vout.size()))

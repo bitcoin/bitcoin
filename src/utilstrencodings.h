@@ -128,7 +128,7 @@ std::string FormatParagraph(const std::string& in, size_t width = 79, size_t ind
 template <typename T>
 bool TimingResistantEqual(const T& a, const T& b)
 {
-    if (b.size() == 0) return a.size() == 0;
+    if (b.empty()) return a.empty();
     size_t accumulator = a.size() ^ b.size();
     for (size_t i = 0; i < a.size(); i++)
         accumulator |= a[i] ^ b[i%b.size()];

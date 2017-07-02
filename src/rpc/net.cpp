@@ -237,7 +237,7 @@ UniValue addnode(const JSONRPCRequest& request)
 
 UniValue disconnectnode(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() == 0 || request.params.size() >= 3)
+    if (request.fHelp || request.params.empty() || request.params.size() >= 3)
         throw std::runtime_error(
             "disconnectnode \"[address]\" [nodeid]\n"
             "\nImmediately disconnects from the specified peer node.\n"

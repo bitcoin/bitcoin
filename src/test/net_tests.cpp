@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(caddrdb_read)
     bool exceptionThrown = false;
     CAddrMan addrman1;
 
-    BOOST_CHECK(addrman1.size() == 0);
+    BOOST_CHECK(addrman1.empty());
     try {
         unsigned char pchMsgTmp[4];
         ssPeers1 >> FLATDATA(pchMsgTmp);
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(caddrdb_read)
 
     CAddrMan addrman2;
     CAddrDB adb;
-    BOOST_CHECK(addrman2.size() == 0);
+    BOOST_CHECK(addrman2.empty());
     adb.Read(addrman2, ssPeers2);
     BOOST_CHECK(addrman2.size() == 3);
 }
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(caddrdb_read_corrupted)
     CDataStream ssPeers1 = AddrmanToStream(addrmanCorrupted);
     bool exceptionThrown = false;
     CAddrMan addrman1;
-    BOOST_CHECK(addrman1.size() == 0);
+    BOOST_CHECK(addrman1.empty());
     try {
         unsigned char pchMsgTmp[4];
         ssPeers1 >> FLATDATA(pchMsgTmp);
@@ -156,9 +156,9 @@ BOOST_AUTO_TEST_CASE(caddrdb_read_corrupted)
 
     CAddrMan addrman2;
     CAddrDB adb;
-    BOOST_CHECK(addrman2.size() == 0);
+    BOOST_CHECK(addrman2.empty());
     adb.Read(addrman2, ssPeers2);
-    BOOST_CHECK(addrman2.size() == 0);
+    BOOST_CHECK(addrman2.empty());
 }
 
 BOOST_AUTO_TEST_CASE(cnode_simple_test)

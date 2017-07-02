@@ -415,7 +415,7 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
 
     // throw exception in case of an empty request
     std::string strRequestMutable = req->ReadBody();
-    if (strRequestMutable.length() == 0 && uriParts.size() == 0)
+    if (strRequestMutable.length() == 0 && uriParts.empty())
         return RESTERR(req, HTTP_BAD_REQUEST, "Error: empty request");
 
     bool fInputParsed = false;
