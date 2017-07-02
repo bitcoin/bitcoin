@@ -491,6 +491,11 @@ public:
         return vRandom.size();
     }
 
+    bool empty() const
+    {
+        return size() == 0;
+    }
+
     //! Consistency check
     void Check()
     {
