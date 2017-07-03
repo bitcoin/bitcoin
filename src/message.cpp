@@ -741,10 +741,10 @@ UniValue messagereceivelist(const UniValue& params, bool fHelp) {
 			found++;
 			if (found < from)
 				continue;
+			vNamesI[message.vchMessage] = message.nHeight;
 			if (BuildMessageJson(message, oName))
 			{
 				oRes.push_back(oName);
-				vNamesI[message.vchMessage] = message.nHeight;
 			}
 		}
 	}
@@ -885,10 +885,11 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
 					if (found < from)
 						continue;
 					message.txHash = theAlias.txHash;
+					vNamesI[message.vchMessage] = message.nHeight;
+					UniValue oName(UniValue::VOBJ);
 					if (BuildMessageJson(message, oName))
 					{
 						oRes.push_back(oName);
-						vNamesI[message.vchMessage] = message.nHeight;
 					}
 				}
 			}
@@ -919,10 +920,11 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
 				if (found < from)
 					continue;
 				message.txHash = wtx.GetHash();
+				vNamesI[message.vchMessage] = message.nHeight;
+				UniValue oName(UniValue::VOBJ);
 				if (BuildMessageJson(message, oName))
 				{
 					oRes.push_back(oName);
-					vNamesI[message.vchMessage] = message.nHeight;
 				}
 			}
 		}
