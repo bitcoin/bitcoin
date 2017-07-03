@@ -66,6 +66,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "listaccounts", 0, "minconf" },
     { "listaccounts", 1, "include_watchonly" },
     { "walletpassphrase", 1, "timeout" },
+    { "walletpassphrase", 2, "stakingonly" },
     { "getblocktemplate", 0, "template_request" },
     { "listsinceblock", 1, "target_confirmations" },
     { "listsinceblock", 2, "include_watchonly" },
@@ -156,17 +157,21 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "sendanontopart", 1, "amount" },
     { "sendanontopart", 4, "subtractfeefromamount" },
     { "sendanontopart", 6, "ringsize" },
-    { "sendanontopart", 7, "numsignatures" },
+    { "sendanontopart", 7, "inputs_per_sig" },
     
     { "sendanontoblind", 1, "amount" },
     { "sendanontoblind", 4, "subtractfeefromamount" },
     { "sendanontoblind", 6, "ringsize" },
-    { "sendanontoblind", 7, "numsignatures" },
+    { "sendanontoblind", 7, "inputs_per_sig" },
     
     { "sendanontoanon", 1, "amount" },
     { "sendanontoanon", 4, "subtractfeefromamount" },
     { "sendanontoanon", 6, "ringsize" },
-    { "sendanontoanon", 7, "numsignatures" },
+    { "sendanontoanon", 7, "inputs_per_sig" },
+    
+    { "sendtypeto", 2, "outputs" },
+    { "sendtypeto", 5, "ringsize" },
+    { "sendtypeto", 6, "inputs_per_sig" },
     
     { "getnewextaddress", 1, "childno" },
     

@@ -3140,89 +3140,154 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
     CHDWallet *pwallet = GetHDWallet();
     EnsureWalletIsUnlocked(pwallet);
     
-    CBitcoinAddress address(request.params[0].get_str());
-    
     if (typeOut == OUTPUT_RINGCT && Params().NetworkID() == "main")
         throw std::runtime_error("Disabled on mainnet.");
     
-    if (typeOut == OUTPUT_RINGCT
-        && !address.IsValidStealthAddress())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Particl stealth address");
+    CAmount nTotal = 0;
     
-    if (!address.IsValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Particl address");
+    std::vector<CTempRecipient> vecSend;
+    std::string sError;
+    
+    
+    size_t nCommentOfs = 2;
+    size_t nRingSizeOfs = 6;
+    
+    if (request.params[0].isArray())
+    {
+        const UniValue &outputs = request.params[0].get_array();
+        
+        for (size_t k = 0; k < outputs.size(); ++k)
+        {
+            if (!outputs[k].isObject())
+                throw JSONRPCError(RPC_TYPE_ERROR, "Not an object");
+            const UniValue &obj = outputs[k].get_obj();
+            
+            std::string sAddress;
+            CAmount nAmount;
+            
+            if (obj.exists("address"))
+                sAddress = obj["address"].get_str();
+            else
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Must provide an address.");
+            
+            CBitcoinAddress address(sAddress);
+            
+            if (typeOut == OUTPUT_RINGCT
+                && !address.IsValidStealthAddress())
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Particl stealth address");
+            
+            if (!address.IsValid())
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Particl address");
+                
+            
+            if (obj.exists("amount"))
+                nAmount = AmountFromValue(obj["amount"]);
+            else
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Must provide an address.");
+            
+            if (nAmount <= 0)
+                throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
+            nTotal += nAmount;
+            
+            bool fSubtractFeeFromAmount = false;
+            if (obj.exists("subfee"))
+                fSubtractFeeFromAmount = obj["subfee"].get_bool();
+            
+            std::string sNarr;
+            if (obj.exists("narr"))
+                sNarr = obj["narr"].get_str();
+            
+            if (0 != AddOutput(typeOut, vecSend, address.Get(), nAmount, fSubtractFeeFromAmount, sNarr, sError))
+                throw JSONRPCError(RPC_MISC_ERROR, strprintf("AddOutput failed: %s.", sError));
+        };
+        nCommentOfs = 1;
+        nRingSizeOfs = 3;
+    } else
+    {
+        std::string sAddress = request.params[0].get_str();
+        CBitcoinAddress address(sAddress);
+        
+        if (typeOut == OUTPUT_RINGCT
+            && !address.IsValidStealthAddress())
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Particl stealth address");
+        
+        if (!address.IsValid())
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Particl address");
 
-    CAmount nAmount = AmountFromValue(request.params[1]);
-    if (nAmount <= 0)
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send");
+        CAmount nAmount = AmountFromValue(request.params[1]);
+        if (nAmount <= 0)
+            throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
+        nTotal += nAmount;
+        
+        bool fSubtractFeeFromAmount = false;
+        if (request.params.size() > 4)
+            fSubtractFeeFromAmount = request.params[4].get_bool();
+        
+        if (fSubtractFeeFromAmount)
+            throw std::runtime_error("TODO");
+        
+        std::string sNarr;
+        if (request.params.size() > 5)
+        {
+            sNarr = request.params[5].get_str();
+            if (sNarr.length() > 24)
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Narration can range from 1 to 24 characters.");
+        };
+        
+        if (0 != AddOutput(typeOut, vecSend, address.Get(), nAmount, fSubtractFeeFromAmount, sNarr, sError))
+            throw JSONRPCError(RPC_MISC_ERROR, strprintf("AddOutput failed: %s.", sError));
+    };
     
     switch (typeIn)
     {
         case OUTPUT_STANDARD:
-            if (nAmount > pwallet->GetBalance())
+            if (nTotal > pwallet->GetBalance())
                 throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds");
             break;
         case OUTPUT_CT:
-            if (nAmount > pwallet->GetBlindBalance())
+            if (nTotal > pwallet->GetBlindBalance())
                 throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient blinded funds");
             break;
         case OUTPUT_RINGCT:
-            if (nAmount > pwallet->GetAnonBalance())
+            if (nTotal > pwallet->GetAnonBalance())
                 throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient anon funds");
             break;
         default:
             throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Unknown input type: %d.", typeIn));
     };
     
-    
     // Wallet comments
     CWalletTx wtx;
     CTransactionRecord rtx;
-    if (request.params.size() > 2 && !request.params[2].isNull() && !request.params[2].get_str().empty())
+    
+    size_t nv = nCommentOfs;
+    if (request.params.size() > nv && !request.params[nv].isNull() && !request.params[nv].get_str().empty())
     {
-        std::string s = request.params[2].get_str();
+        std::string s = request.params[nv].get_str();
         std::vector<uint8_t> v(s.begin(), s.end());
         wtx.mapValue["comment"] = s;
         rtx.mapValue[RTXVT_COMMENT] = v;
     };
-    if (request.params.size() > 3 && !request.params[3].isNull() && !request.params[3].get_str().empty())
+    nv++;
+    if (request.params.size() > nv && !request.params[nv].isNull() && !request.params[nv].get_str().empty())
     {
-        std::string s = request.params[3].get_str();
+        std::string s = request.params[nv].get_str();
         std::vector<uint8_t> v(s.begin(), s.end());
         wtx.mapValue["to"] = s;
         rtx.mapValue[RTXVT_TO] = v;
     };
- 
-    bool fSubtractFeeFromAmount = false;
-    if (request.params.size() > 4)
-        fSubtractFeeFromAmount = request.params[4].get_bool();
     
-    if (fSubtractFeeFromAmount)
-        throw std::runtime_error("TODO");
-    
-    std::string sNarr;
-    if (request.params.size() > 5)
-    {
-        sNarr = request.params[5].get_str();
-        if (sNarr.length() > 24)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Narration can range from 1 to 24 characters.");
-    };
-    
-    
+    nv = nRingSizeOfs;
     size_t nRingSize = 4; // TODO: default size?
-    if (request.params.size() > 6)
-        nRingSize = request.params[6].get_int();
-    
+    if (request.params.size() > nv)
+        nRingSize = request.params[nv].get_int();
+    nv++;
     size_t nInputsPerSig = 64;
-    if (request.params.size() > 7)
-        nInputsPerSig = request.params[7].get_int();
+    if (request.params.size() > nv)
+        nInputsPerSig = request.params[nv].get_int();
     
     
     CReserveKey reservekey(pwallet);
-    std::vector<CTempRecipient> vecSend;
-    std::string sError;
-    if (0 != AddOutput(typeOut, vecSend, address.Get(), nAmount, fSubtractFeeFromAmount, sNarr, sError))
-        throw JSONRPCError(RPC_MISC_ERROR, strprintf("AddOutput failed: %s.", sError));
     
     switch (typeIn)
     {
@@ -3265,14 +3330,52 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
     return wtx.GetHash().GetHex();
 }
 
-UniValue sendparttoblind(const JSONRPCRequest &request)
+static const char *TypeToWord(OutputTypes type)
 {
-    if (request.fHelp || request.params.size() < 2 || request.params.size() > 6)
-        throw std::runtime_error(
-            "sendparttoblind \"address\" amount ( \"comment\" \"comment-to\" subtractfeefromamount, \"narration\")\n"
-            "\nSend an amount of part in a blinded payment to a given address.\n"
-            + HelpRequiringPassphrase() +
-            "\nArguments:\n"
+    switch (type)
+    {
+        case OUTPUT_STANDARD:
+            return "part";
+        case OUTPUT_CT:
+            return "blind";
+        case OUTPUT_RINGCT:
+            return "anon";
+        default:
+            break;
+    };
+    return "unknown";
+};
+
+static OutputTypes WordToType(std::string &s)
+{
+    if (s == "part")
+        return OUTPUT_STANDARD;
+    if (s == "blind")
+        return OUTPUT_CT;
+    if (s == "anon")
+        return OUTPUT_RINGCT;
+    return OUTPUT_NULL;
+};
+
+static std::string SendHelp(OutputTypes typeIn, OutputTypes typeOut)
+{
+    std::string rv;
+    
+    std::string cmd = std::string("send") + TypeToWord(typeIn) + "to" + TypeToWord(typeOut);
+    
+    rv = cmd + "\"address\" amount ( \"comment\" \"comment-to\" subtractfeefromamount, \"narration\"";
+    if (typeIn == OUTPUT_RINGCT)
+        rv += ", \"ringsize\", \"numsignatures\"";
+    rv += ")\n";
+    
+    rv += "\nSend an amount of ";
+    rv += typeIn == OUTPUT_RINGCT ? "anon" : typeIn == OUTPUT_CT ? "blinded" : "";
+    rv += std::string(" part in a") + (typeOut == OUTPUT_RINGCT || typeOut == OUTPUT_CT ? " blinded" : "") + " payment to a given address"
+        + (typeOut == OUTPUT_CT ? " in anon part": "") + ".\n";
+    
+    rv += HelpRequiringPassphrase();
+    
+    rv +=   "\nArguments:\n"
             "1. \"address\"     (string, required) The particl address to send to.\n"
             "2. \"amount\"      (numeric or string, required) The amount in " + CURRENCY_UNIT + " to send. eg 0.1\n"
             "3. \"comment\"     (string, optional) A comment used to store what the transaction is for. \n"
@@ -3283,11 +3386,26 @@ UniValue sendparttoblind(const JSONRPCRequest &request)
             "5. subtractfeefromamount  (boolean, optional, default=false) The fee will be deducted from the amount being sent.\n"
             "                            The recipient will receive less " + CURRENCY_UNIT + " than you enter in the amount field.\n"
             "6. \"narration\"   (string, optional) Up to 24 characters sent with the transaction.\n"
-            "                            The narration is stored in the blockchain and is sent encrypted when destination is a stealth address and uncrypted otherwise.\n"
+            "                            The narration is stored in the blockchain and is sent encrypted when destination is a stealth address and uncrypted otherwise.\n";
+    if (typeIn == OUTPUT_RINGCT)
+        rv +=
+            "7. \"ringsize\"       (int, optional).\n"
+            "8. \"inputs_per_sig\" (int, optional).\n";
+    
+    rv +=   
             "\nResult:\n"
-            "\"txid\"           (string) The transaction id.\n"
-            "\nExamples:\n"
-            + HelpExampleCli("sendparttoblind", "\"PbpVcjgYatnkKgveaeqhkeQBFwjqR7jKBR\" 0.1"));
+            "\"txid\"           (string) The transaction id.\n";
+    
+    rv +=   "\nExamples:\n"
+            + HelpExampleCli(cmd, "\"SPGyji8uZFip6H15GUfj6bsutRVLsCyBFL3P7k7T7MUDRaYU8GfwUHpfxonLFAvAwr2RkigyGfTgWMfzLAAP8KMRHq7RE8cwpEEekH\" 0.1");
+    
+    return rv;
+};
+
+UniValue sendparttoblind(const JSONRPCRequest &request)
+{
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 6)
+        throw std::runtime_error(SendHelp(OUTPUT_STANDARD, OUTPUT_CT));
     
     return SendToInner(request, OUTPUT_STANDARD, OUTPUT_CT);
 }
@@ -3295,26 +3413,7 @@ UniValue sendparttoblind(const JSONRPCRequest &request)
 UniValue sendparttoanon(const JSONRPCRequest &request)
 {
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 6)
-        throw std::runtime_error(
-            "sendparttoblind \"address\" amount ( \"comment\" \"comment-to\" subtractfeefromamount, \"narration\")\n"
-            "\nSend an amount of part in a blinded payment to a given address.\n"
-            + HelpRequiringPassphrase() +
-            "\nArguments:\n"
-            "1. \"address\"     (string, required) The particl stealth address to send to.\n"
-            "2. \"amount\"      (numeric or string, required) The amount in " + CURRENCY_UNIT + " to send. eg 0.1\n"
-            "3. \"comment\"     (string, optional) A comment used to store what the transaction is for. \n"
-            "                            This is not part of the transaction, just kept in your wallet.\n"
-            "4. \"comment_to\"  (string, optional) A comment to store the name of the person or organization \n"
-            "                            to which you're sending the transaction. This is not part of the \n"
-            "                            transaction, just kept in your wallet.\n"
-            "5. subtractfeefromamount  (boolean, optional, default=false) The fee will be deducted from the amount being sent.\n"
-            "                            The recipient will receive less " + CURRENCY_UNIT + " than you enter in the amount field.\n"
-            "6. \"narration\"   (string, optional) Up to 24 characters sent with the transaction.\n"
-            "                            The narration is stored in the blockchain and is sent encrypted when destination is a stealth address and uncrypted otherwise.\n"
-            "\nResult:\n"
-            "\"txid\"           (string) The transaction id.\n"
-            "\nExamples:\n"
-            + HelpExampleCli("sendparttoblind", "\"SPGyji8uZFip6H15GUfj6bsutRVLsCyBFL3P7k7T7MUDRaYU8GfwUHpfxonLFAvAwr2RkigyGfTgWMfzLAAP8KMRHq7RE8cwpEEekH\" 0.1"));
+        throw std::runtime_error(SendHelp(OUTPUT_STANDARD, OUTPUT_RINGCT));
     
     return SendToInner(request, OUTPUT_STANDARD, OUTPUT_RINGCT);
 }
@@ -3323,26 +3422,7 @@ UniValue sendparttoanon(const JSONRPCRequest &request)
 UniValue sendblindtopart(const JSONRPCRequest &request)
 {
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 6)
-        throw std::runtime_error(
-            "sendblindtopart \"address\" amount ( \"comment\" \"comment-to\" subtractfeefromamount, \"narration\")\n"
-            "\nSend an amount of blinded part in payment to a given address.\n"
-            + HelpRequiringPassphrase() +
-            "\nArguments:\n"
-            "1. \"address\"     (string, required) The particl address to send to.\n"
-            "2. \"amount\"      (numeric or string, required) The amount in " + CURRENCY_UNIT + " to send. eg 0.1\n"
-            "3. \"comment\"     (string, optional) A comment used to store what the transaction is for. \n"
-            "                            This is not part of the transaction, just kept in your wallet.\n"
-            "4. \"comment_to\"  (string, optional) A comment to store the name of the person or organization \n"
-            "                            to which you're sending the transaction. This is not part of the \n"
-            "                            transaction, just kept in your wallet.\n"
-            "5. subtractfeefromamount  (boolean, optional, default=false) The fee will be deducted from the amount being sent.\n"
-            "                            The recipient will receive less " + CURRENCY_UNIT + " than you enter in the amount field.\n"
-            "6. \"narration\"   (string, optional) Up to 24 characters sent with the transaction.\n"
-            "                            The narration is stored in the blockchain and is sent encrypted when destination is a stealth address and uncrypted otherwise.\n"
-            "\nResult:\n"
-            "\"txid\"           (string) The transaction id.\n"
-            "\nExamples:\n"
-            + HelpExampleCli("sendblindtopart", "\"PbpVcjgYatnkKgveaeqhkeQBFwjqR7jKBR\" 0.1"));
+        throw std::runtime_error(SendHelp(OUTPUT_CT, OUTPUT_STANDARD));
     
     return SendToInner(request, OUTPUT_CT, OUTPUT_STANDARD);
 }
@@ -3350,26 +3430,7 @@ UniValue sendblindtopart(const JSONRPCRequest &request)
 UniValue sendblindtoblind(const JSONRPCRequest &request)
 {
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 6)
-        throw std::runtime_error(
-            "sendblindtoblind \"address\" amount ( \"comment\" \"comment-to\" subtractfeefromamount, \"narration\")\n"
-            "\nSend an amount of blinded part in a blinded payment to a given address.\n"
-            + HelpRequiringPassphrase() +
-            "\nArguments:\n"
-            "1. \"address\"     (string, required) The particl address to send to.\n"
-            "2. \"amount\"      (numeric or string, required) The amount in " + CURRENCY_UNIT + " to send. eg 0.1\n"
-            "3. \"comment\"     (string, optional) A comment used to store what the transaction is for. \n"
-            "                            This is not part of the transaction, just kept in your wallet.\n"
-            "4. \"comment_to\"  (string, optional) A comment to store the name of the person or organization \n"
-            "                            to which you're sending the transaction. This is not part of the \n"
-            "                            transaction, just kept in your wallet.\n"
-            "5. subtractfeefromamount  (boolean, optional, default=false) The fee will be deducted from the amount being sent.\n"
-            "                            The recipient will receive less " + CURRENCY_UNIT + " than you enter in the amount field.\n"
-            "6. \"narration\"   (string, optional) Up to 24 characters sent with the transaction.\n"
-            "                            The narration is stored in the blockchain and is sent encrypted when destination is a stealth address and uncrypted otherwise.\n"
-            "\nResult:\n"
-            "\"txid\"           (string) The transaction id.\n"
-            "\nExamples:\n"
-            + HelpExampleCli("sendblindtoblind", "\"PbpVcjgYatnkKgveaeqhkeQBFwjqR7jKBR\" 0.1"));
+        throw std::runtime_error(SendHelp(OUTPUT_CT, OUTPUT_CT));
     
     return SendToInner(request, OUTPUT_CT, OUTPUT_CT);
 }
@@ -3377,26 +3438,7 @@ UniValue sendblindtoblind(const JSONRPCRequest &request)
 UniValue sendblindtoanon(const JSONRPCRequest &request)
 {
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 6)
-        throw std::runtime_error(
-            "sendblindtoanon \"address\" amount ( \"comment\" \"comment-to\" subtractfeefromamount, \"narration\")\n"
-            "\nSend an amount of blinded part to anon tokens to a given address.\n"
-            + HelpRequiringPassphrase() +
-            "\nArguments:\n"
-            "1. \"address\"     (string, required) The particl address to send to.\n"
-            "2. \"amount\"      (numeric or string, required) The amount in " + CURRENCY_UNIT + " to send. eg 0.1\n"
-            "3. \"comment\"     (string, optional) A comment used to store what the transaction is for. \n"
-            "                            This is not part of the transaction, just kept in your wallet.\n"
-            "4. \"comment_to\"  (string, optional) A comment to store the name of the person or organization \n"
-            "                            to which you're sending the transaction. This is not part of the \n"
-            "                            transaction, just kept in your wallet.\n"
-            "5. subtractfeefromamount  (boolean, optional, default=false) The fee will be deducted from the amount being sent.\n"
-            "                            The recipient will receive less " + CURRENCY_UNIT + " than you enter in the amount field.\n"
-            "6. \"narration\"   (string, optional) Up to 24 characters sent with the transaction.\n"
-            "                            The narration is stored in the blockchain and is sent encrypted when destination is a stealth address and uncrypted otherwise.\n"
-            "\nResult:\n"
-            "\"txid\"           (string) The transaction id.\n"
-            "\nExamples:\n"
-            + HelpExampleCli("sendblindtoanon", "\"SPGyji8uZFip6H15GUfj6bsutRVLsCyBFL3P7k7T7MUDRaYU8GfwUHpfxonLFAvAwr2RkigyGfTgWMfzLAAP8KMRHq7RE8cwpEEekH\" 0.1"));
+        throw std::runtime_error(SendHelp(OUTPUT_CT, OUTPUT_RINGCT));
     
     return SendToInner(request, OUTPUT_CT, OUTPUT_RINGCT);
 }
@@ -3405,28 +3447,7 @@ UniValue sendblindtoanon(const JSONRPCRequest &request)
 UniValue sendanontopart(const JSONRPCRequest &request)
 {
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 8)
-        throw std::runtime_error(
-            "sendanontopart \"address\" amount ( \"comment\" \"comment-to\" subtractfeefromamount, \"narration\", \"ringsize\", \"numsignatures\")\n"
-            "\nSend an amount of anon part to a given address in part.\n"
-            + HelpRequiringPassphrase() +
-            "\nArguments:\n"
-            "1. \"address\"     (string, required) The particl address to send to.\n"
-            "2. \"amount\"      (numeric or string, required) The amount in " + CURRENCY_UNIT + " to send. eg 0.1\n"
-            "3. \"comment\"     (string, optional) A comment used to store what the transaction is for. \n"
-            "                            This is not part of the transaction, just kept in your wallet.\n"
-            "4. \"comment_to\"  (string, optional) A comment to store the name of the person or organization \n"
-            "                            to which you're sending the transaction. This is not part of the \n"
-            "                            transaction, just kept in your wallet.\n"
-            "5. subtractfeefromamount  (boolean, optional, default=false) The fee will be deducted from the amount being sent.\n"
-            "                            The recipient will receive less " + CURRENCY_UNIT + " than you enter in the amount field.\n"
-            "6. \"narration\"   (string, optional) Up to 24 characters sent with the transaction.\n"
-            "                            The narration is stored in the blockchain and is sent encrypted when destination is a stealth address and uncrypted otherwise.\n"
-            "7. \"ringsize\"       (int, optional).\n"
-            "8. \"inputs_per_sig\" (int, optional).\n"
-            "\nResult:\n"
-            "\"txid\"           (string) The transaction id.\n"
-            "\nExamples:\n"
-            + HelpExampleCli("sendanontopart", "\"SPGyji8uZFip6H15GUfj6bsutRVLsCyBFL3P7k7T7MUDRaYU8GfwUHpfxonLFAvAwr2RkigyGfTgWMfzLAAP8KMRHq7RE8cwpEEekH\" 0.1"));
+        throw std::runtime_error(SendHelp(OUTPUT_RINGCT, OUTPUT_STANDARD));
     
     return SendToInner(request, OUTPUT_RINGCT, OUTPUT_STANDARD);
 }
@@ -3434,28 +3455,7 @@ UniValue sendanontopart(const JSONRPCRequest &request)
 UniValue sendanontoblind(const JSONRPCRequest &request)
 {
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 8)
-        throw std::runtime_error(
-            "sendanontoblind \"address\" amount ( \"comment\" \"comment-to\" subtractfeefromamount, \"narration\", \"ringsize\", \"numsignatures\")\n"
-            "\nSend an amount of anon part to a given address in blinded part.\n"
-            + HelpRequiringPassphrase() +
-            "\nArguments:\n"
-            "1. \"address\"     (string, required) The particl address to send to.\n"
-            "2. \"amount\"      (numeric or string, required) The amount in " + CURRENCY_UNIT + " to send. eg 0.1\n"
-            "3. \"comment\"     (string, optional) A comment used to store what the transaction is for. \n"
-            "                            This is not part of the transaction, just kept in your wallet.\n"
-            "4. \"comment_to\"  (string, optional) A comment to store the name of the person or organization \n"
-            "                            to which you're sending the transaction. This is not part of the \n"
-            "                            transaction, just kept in your wallet.\n"
-            "5. subtractfeefromamount  (boolean, optional, default=false) The fee will be deducted from the amount being sent.\n"
-            "                            The recipient will receive less " + CURRENCY_UNIT + " than you enter in the amount field.\n"
-            "6. \"narration\"   (string, optional) Up to 24 characters sent with the transaction.\n"
-            "                            The narration is stored in the blockchain and is sent encrypted when destination is a stealth address and uncrypted otherwise.\n"
-            "7. \"ringsize\"       (int, optional).\n"
-            "8. \"inputs_per_sig\" (int, optional).\n"
-            "\nResult:\n"
-            "\"txid\"           (string) The transaction id.\n"
-            "\nExamples:\n"
-            + HelpExampleCli("sendanontoblind", "\"SPGyji8uZFip6H15GUfj6bsutRVLsCyBFL3P7k7T7MUDRaYU8GfwUHpfxonLFAvAwr2RkigyGfTgWMfzLAAP8KMRHq7RE8cwpEEekH\" 0.1"));
+        throw std::runtime_error(SendHelp(OUTPUT_RINGCT, OUTPUT_CT));
     
     return SendToInner(request, OUTPUT_RINGCT, OUTPUT_CT);
 }
@@ -3463,30 +3463,54 @@ UniValue sendanontoblind(const JSONRPCRequest &request)
 UniValue sendanontoanon(const JSONRPCRequest &request)
 {
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 8)
-        throw std::runtime_error(
-            "sendanontoanon \"address\" amount ( \"comment\" \"comment-to\" subtractfeefromamount, \"narration\", \"ringsize\", \"numsignatures\")\n"
-            "\nSend an amount of anon part to a given address in anon part.\n"
-            + HelpRequiringPassphrase() +
-            "\nArguments:\n"
-            "1. \"address\"     (string, required) The particl address to send to.\n"
-            "2. \"amount\"      (numeric or string, required) The amount in " + CURRENCY_UNIT + " to send. eg 0.1\n"
-            "3. \"comment\"     (string, optional) A comment used to store what the transaction is for. \n"
-            "                            This is not part of the transaction, just kept in your wallet.\n"
-            "4. \"comment_to\"  (string, optional) A comment to store the name of the person or organization \n"
-            "                            to which you're sending the transaction. This is not part of the \n"
-            "                            transaction, just kept in your wallet.\n"
-            "5. subtractfeefromamount  (boolean, optional, default=false) The fee will be deducted from the amount being sent.\n"
-            "                            The recipient will receive less " + CURRENCY_UNIT + " than you enter in the amount field.\n"
-            "6. \"narration\"   (string, optional) Up to 24 characters sent with the transaction.\n"
-            "                            The narration is stored in the blockchain and is sent encrypted when destination is a stealth address and uncrypted otherwise.\n"
-            "7. \"ringsize\"       (int, optional).\n"
-            "8. \"inputs_per_sig\" (int, optional).\n"
-            "\nResult:\n"
-            "\"txid\"           (string) The transaction id.\n"
-            "\nExamples:\n"
-            + HelpExampleCli("sendanontoanon", "\"SPGyji8uZFip6H15GUfj6bsutRVLsCyBFL3P7k7T7MUDRaYU8GfwUHpfxonLFAvAwr2RkigyGfTgWMfzLAAP8KMRHq7RE8cwpEEekH\" 0.1"));
+        throw std::runtime_error(SendHelp(OUTPUT_RINGCT, OUTPUT_RINGCT));
     
     return SendToInner(request, OUTPUT_RINGCT, OUTPUT_RINGCT);
+}
+
+UniValue sendtypeto(const JSONRPCRequest &request)
+{
+    if (request.fHelp || request.params.size() < 3 || request.params.size() > 7)
+        throw std::runtime_error(
+            "sendtypeto \"typein\" \"typeout\" [{address: , amount: , narr: , subfee:},...] (\"comment\" \"comment-to\" ringsize inputs_per_sig)\n"
+            "\nSend part to multiple outputs.\n"
+            + HelpRequiringPassphrase() +
+            "\nArguments:\n"
+            "1. \"typein\"          (string, required) part/blind/anon\n"
+            "2. \"typeout\"         (string, required) part/blind/anon\n"
+            "3. \"outputs\"         (json, required) Array of output objects\n"
+            "    3.1 \"address\"    (string, required) The particl address to send to.\n"
+            "    3.2 \"amount\"     (numeric or string, required) The amount in " + CURRENCY_UNIT + " to send. eg 0.1\n"
+            "    3.3 \"narr\"       (string, optional) Up to 24 character narration sent with the transaction.\n"
+            "    3.4 \"subfee\"     (boolean, optional, default=false) The fee will be deducted from the amount being sent.\n"
+            "4. \"comment\"         (string, optional) A comment used to store what the transaction is for. \n"
+            "                            This is not part of the transaction, just kept in your wallet.\n"
+            "5. \"comment_to\"      (string, optional) A comment to store the name of the person or organization \n"
+            "                            to which you're sending the transaction. This is not part of the \n"
+            "                            transaction, just kept in your wallet.\n"
+            "6. \"ringsize\"       (int, optional) Only applies when typein is anon.\n"
+            "7. \"inputs_per_sig\" (int, optional) Only applies when typein is anon.\n"
+            "\nResult:\n"
+            "\"txid\"              (string) The transaction id.\n"
+            "\nExamples:\n"
+            + HelpExampleCli("sendtypeto", "anon part \"[{\\\"address\\\":\\\"PbpVcjgYatnkKgveaeqhkeQBFwjqR7jKBR\\\",\\\"amount\\\":0.1}]\""));
+    
+    std::string sTypeIn = request.params[0].get_str();
+    std::string sTypeOut = request.params[1].get_str();
+    
+    
+    OutputTypes typeIn = WordToType(sTypeIn);
+    OutputTypes typeOut = WordToType(sTypeOut);
+    
+    if (typeIn == OUTPUT_NULL)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown input type.");
+    if (typeOut == OUTPUT_NULL)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown output type.");
+    
+    JSONRPCRequest req = request;
+    req.params.erase(0, 2);
+    
+    return SendToInner(req, typeIn, typeOut);
 }
 
 UniValue debugwallet(const JSONRPCRequest &request)
@@ -3590,11 +3614,6 @@ static const CRPCCommand commands[] =
     { "wallet",             "getstakinginfo",           &getstakinginfo,           true,  {} },
     
     
-    
-    
-    
-    
-    
     //sendparttopart // normal txn
     { "wallet",             "sendparttoblind",          &sendparttoblind,          false,  {"address","amount","comment","comment_to","subtractfeefromamount", "narration"} },
     { "wallet",             "sendparttoanon",           &sendparttoanon,           false,  {"address","amount","comment","comment_to","subtractfeefromamount", "narration"} },
@@ -3606,6 +3625,10 @@ static const CRPCCommand commands[] =
     { "wallet",             "sendanontopart",           &sendanontopart,           false,  {"address","amount","comment","comment_to","subtractfeefromamount", "narration", "ring_size", "inputs_per_sig"} },
     { "wallet",             "sendanontoblind",          &sendanontoblind,          false,  {"address","amount","comment","comment_to","subtractfeefromamount", "narration", "ring_size", "inputs_per_sig"} },
     { "wallet",             "sendanontoanon",           &sendanontoanon,           false,  {"address","amount","comment","comment_to","subtractfeefromamount", "narration", "ring_size", "inputs_per_sig"} },
+    
+    { "wallet",             "sendtypeto",               &sendtypeto,               false,  {"outputs","comment","comment_to", "ring_size", "inputs_per_sig"} },
+    
+    
     
     
     { "wallet",             "debugwallet",              &debugwallet,               false,  {"attempt_repair"} },

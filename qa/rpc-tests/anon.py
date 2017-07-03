@@ -86,7 +86,7 @@ class AnonTest(ParticlTestFramework):
         
         
         txnHash = nodes[1].sendanontoanon(sxAddrTo0_1, 1, '', '', False, 'node1 -> node0 a->a')
-        #print("1 sendanontoanon ", json.dumps(txnHash, indent=4, default=self.jsonDecimal))
+        print("1 sendanontoanon ", json.dumps(txnHash, indent=4, default=self.jsonDecimal))
         txnHashes = [txnHash,]
         
         assert(self.wait_for_mempool(nodes[0], txnHash))

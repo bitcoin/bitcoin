@@ -520,7 +520,25 @@ class WalletParticlTest(ParticlTestFramework):
         assert(fPass)
         
         ro = nodes[0].manageaddressbook('info', sTestAddress)
-        print(json.dumps(ro, indent=4, default=self.jsonDecimal))
+        
+        
+        
+        ro = nodes[1].walletlock()
+        time.sleep(1)
+        ro = nodes[1].getwalletinfo()
+        assert(ro['encryptionstatus'] == 'Locked')
+        
+        ro = nodes[1].walletpassphrase('changedPass', 2)
+        ro = nodes[1].getwalletinfo()
+        assert(ro['encryptionstatus'] == 'Unlocked')
+        
+        time.sleep(4)
+        ro = nodes[1].getwalletinfo()
+        assert(ro['encryptionstatus'] == 'Locked')
+        
+        ro = nodes[1].walletpassphrase('changedPass', 2)
+        
+        
         
         #print(json.dumps(ro, indent=4, default=self.jsonDecimal))
         #assert(false)

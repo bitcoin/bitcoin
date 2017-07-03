@@ -2340,6 +2340,7 @@ UniValue keypoolrefill(const JSONRPCRequest& request)
 
 static void LockWallet(CWallet* pWallet)
 {
+    LOCK(pWallet->cs_wallet);
     LOCK(cs_nWalletUnlockTime);
     nWalletUnlockTime = 0;
     pWallet->Lock();
@@ -3558,7 +3559,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "signmessage",              &signmessage,              true,   {"address","message"} },
     { "wallet",             "walletlock",               &walletlock,               true,   {} },
     { "wallet",             "walletpassphrasechange",   &walletpassphrasechange,   true,   {"oldpassphrase","newpassphrase"} },
-    { "wallet",             "walletpassphrase",         &walletpassphrase,         true,   {"passphrase","timeout"} },
+    { "wallet",             "walletpassphrase",         &walletpassphrase,         true,   {"passphrase","timeout","stakingonly"} },
     { "wallet",             "removeprunedfunds",        &removeprunedfunds,        true,   {"txid"} },
 };
 
@@ -3566,7 +3567,7 @@ void RegisterWalletRPCCommands(CRPCTable &t)
 {
     if (GetBoolArg("-disablewallet", false))
         return;
-
+    
     for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)
         t.appendCommand(commands[vcidx].name, &commands[vcidx]);
 }

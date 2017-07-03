@@ -216,7 +216,7 @@ public:
     std::vector<uint8_t> vRangeproof;
     secp256k1_pedersen_commitment commitment;
     
-    // TODO: range proof parameters, try to keep similar
+    // TODO: range proof parameters, try to keep similar for fee
     
     
     CKey sEphem;

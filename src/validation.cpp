@@ -4808,24 +4808,39 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Co
 
 bool ProcessDuplicateStakeHeader(CBlockIndex *pindex, NodeId nodeId)
 {
-    if (!pindex
-        || nodeId < 0)
+    if (!pindex)
         return false;
     
     uint256 hash = pindex->GetBlockHash();
-    // StakeConflict &sc = it->second;
-    // sc.Add(nodeId);
     
-    std::pair<std::map<uint256, StakeConflict>::iterator,bool> ret;
-    ret = mapStakeConflict.insert(std::pair<uint256, StakeConflict>(hash, StakeConflict()));
-    StakeConflict &sc = ret.first->second;
-    sc.Add(nodeId);
-    
-    if ((int)sc.peerCount.size() > std::min(GetNumPeers() / 2, 4))
+    bool fMakeValid = false;
+    if (nodeId == -1
+        && chainActive.Tip()->nHeight < GetNumBlocksOfPeers() - 4)
     {
-        LogPrintf("%s: More than half the connected peers are building on block %s,"
-            "  marked as duplicate stake, assuming this node has the duplicate.\n", __func__, hash.ToString());
+        LogPrintf("%s: Duplicate stake block %s was received in a group, marking valid.\n",
+            __func__, hash.ToString());
         
+        fMakeValid = true;
+    };
+    
+    if (nodeId > -1)
+    {
+        std::pair<std::map<uint256, StakeConflict>::iterator,bool> ret;
+        ret = mapStakeConflict.insert(std::pair<uint256, StakeConflict>(hash, StakeConflict()));
+        StakeConflict &sc = ret.first->second;
+        sc.Add(nodeId);
+        
+        if ((int)sc.peerCount.size() > std::min(GetNumPeers() / 2, 4))
+        {
+            LogPrintf("%s: More than half the connected peers are building on block %s,"
+                "  marked as duplicate stake, assuming this node has the duplicate.\n", __func__, hash.ToString());
+            
+            fMakeValid = true;
+        };
+    };
+    
+    if (fMakeValid)
+    {
         pindex->nFlags &= (~BLOCK_FAILED_DUPLICATE_STAKE);
         pindex->nStatus = BLOCK_VALID_HEADER;
         setDirtyBlockIndex.insert(pindex);

@@ -1921,8 +1921,13 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
 {
     CAmount nFeeRet = 0;
     CAmount nValue = 0;
+    bool fOnlyStandardOutputs = true;
     for (auto &r : vecSend)
+    {
         nValue += r.nAmount;
+        if (r.nType != OUTPUT_STANDARD && r.nType != OUTPUT_DATA)
+            fOnlyStandardOutputs = false;
+    };
     
     if (0 != ExpandTempRecipients(vecSend, pc, sError))
         return 1; // sError is set
@@ -2047,10 +2052,14 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             int nChangePosInOut = -1;
             
             
-            OUTPUT_PTR<CTxOutData> outFee = MAKE_OUTPUT<CTxOutData>();
-            outFee->vData.push_back(DO_FEE);
-            outFee->vData.resize(9); // resize to more bytes than varint fee could take
-            txNew.vpout.push_back(outFee);
+            if (!fOnlyStandardOutputs)
+            {
+                OUTPUT_PTR<CTxOutData> outFee = MAKE_OUTPUT<CTxOutData>();
+                outFee->vData.push_back(DO_FEE);
+                outFee->vData.resize(9); // resize to more bytes than varint fee could take
+                txNew.vpout.push_back(outFee);
+            };
+            
             
             for (size_t i = 0; i < vecSend.size(); ++i)
             {
@@ -2210,10 +2219,13 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             continue;
         };
         
-        std::vector<uint8_t> &vData = ((CTxOutData*)txNew.vpout[0].get())->vData;
-        vData.resize(1);
-        if (0 != PutVarInt(vData, nFeeRet))
-            return errorN(1, "%s: PutVarInt %d failed\n", __func__, nFeeRet);
+        if (!fOnlyStandardOutputs)
+        {
+            std::vector<uint8_t> &vData = ((CTxOutData*)txNew.vpout[0].get())->vData;
+            vData.resize(1);
+            if (0 != PutVarInt(vData, nFeeRet))
+                return errorN(1, "%s: PutVarInt %d failed\n", __func__, nFeeRet);
+        };
         
         if (sign)
         {
@@ -3034,7 +3046,6 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             vSecretColumns.resize(nSignSigs);
             
             
-            
             // The fee will come out of the change
             nValueOutPlain = 0;
             nChangePosInOut = -1;
@@ -3255,6 +3266,7 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 txin.GetAnonInfo(nSigInputs, nSigRingSize);
                 
                 std::vector<uint8_t> &vKeyImages = txin.scriptData.stack[0];
+                vKeyImages.resize(33 * nSigInputs);
                 
                 for (size_t k = 0; k < nSigInputs; ++k)
                 {
