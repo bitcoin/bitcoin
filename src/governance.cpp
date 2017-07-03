@@ -1154,10 +1154,10 @@ int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& 
         }
         bool fAsked = false;
         BOOST_FOREACH(CNode* pnode, vNodesCopy) {
-            // Only use reqular peers, don't try to ask from outbound "masternode" connections -
+            // Only use regular peers, don't try to ask from outbound "masternode" connections -
             // they stay connected for a short period of time and it's possible that we won't get everything we should.
             // Only use outbound connections - inbound connection could be a "masternode" connection
-            // initialted from another node, so skip it too.
+            // initiated from another node, so skip it too.
             if(pnode->fMasternode || (fMasterNode && pnode->fInbound)) continue;
             // only use up to date peers
             if(pnode->nVersion < MIN_GOVERNANCE_PEER_PROTO_VERSION) continue;

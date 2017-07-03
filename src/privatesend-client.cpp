@@ -13,6 +13,7 @@
 #include "txmempool.h"
 #include "util.h"
 #include "utilmoneystr.h"
+
 #include <memory>
 
 CPrivateSendClient privateSendClient;

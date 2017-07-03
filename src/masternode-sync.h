@@ -50,9 +50,6 @@ private:
     // ... or failed
     int64_t nTimeLastFailure;
 
-    // How many times we failed
-    int nCountFailures;
-
     // Keep track of current block index
     const CBlockIndex *pCurrentBlockIndex;
 

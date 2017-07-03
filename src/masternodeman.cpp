@@ -565,7 +565,7 @@ CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight
     {
         if(!mn.IsValidForPayment()) continue;
 
-        // //check protocol version
+        //check protocol version
         if(mn.nProtocolVersion < mnpayments.GetMinMasternodePaymentsProto()) continue;
 
         //it's in the list (up to 8 entries ahead of current block to allow propagation) -- so let's skip it
@@ -885,14 +885,11 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             bool isLocal = (pfrom->addr.IsRFC1918() || pfrom->addr.IsLocal());
 
             if(!isLocal && Params().NetworkIDString() == CBaseChainParams::MAIN) {
-                std::map<CNetAddr, int64_t>::iterator i = mAskedUsForMasternodeList.find(pfrom->addr);
-                if (i != mAskedUsForMasternodeList.end()){
-                    int64_t t = (*i).second;
-                    if (GetTime() < t) {
-                        Misbehaving(pfrom->GetId(), 34);
-                        LogPrintf("DSEG -- peer already asked me for the list, peer=%d\n", pfrom->id);
-                        return;
-                    }
+                std::map<CNetAddr, int64_t>::iterator it = mAskedUsForMasternodeList.find(pfrom->addr);
+                if (it != mAskedUsForMasternodeList.end() && it->second > GetTime()) {
+                    Misbehaving(pfrom->GetId(), 34);
+                    LogPrintf("DSEG -- peer already asked me for the list, peer=%d\n", pfrom->id);
+                    return;
                 }
                 int64_t askAgain = GetTime() + DSEG_UPDATE_SECONDS;
                 mAskedUsForMasternodeList[pfrom->addr] = askAgain;
