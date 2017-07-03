@@ -23,7 +23,7 @@
 X509 *parse_b64der_cert(const char* cert_data)
 {
     std::vector<unsigned char> data = DecodeBase64(cert_data);
-    assert(data.size() > 0);
+    assert(!data.empty());
     const unsigned char* dptr = &data[0];
     X509 *cert = d2i_X509(NULL, &dptr, data.size());
     assert(cert);

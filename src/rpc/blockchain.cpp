@@ -210,7 +210,7 @@ UniValue waitfornewblock(const JSONRPCRequest& request)
             + HelpExampleRpc("waitfornewblock", "1000")
         );
     int timeout = 0;
-    if (request.params.size() > 0)
+    if (!request.params.empty())
         timeout = request.params[0].get_int();
 
     CUpdatedBlock block;
@@ -434,7 +434,7 @@ UniValue getrawmempool(const JSONRPCRequest& request)
         );
 
     bool fVerbose = false;
-    if (request.params.size() > 0)
+    if (!request.params.size())
         fVerbose = request.params[0].get_bool();
 
     return mempoolToJSON(fVerbose);
@@ -1037,7 +1037,7 @@ UniValue verifychain(const JSONRPCRequest& request)
 
     LOCK(cs_main);
 
-    if (request.params.size() > 0)
+    if (!request.params.empty())
         nCheckLevel = request.params[0].get_int();
     if (request.params.size() > 1)
         nCheckDepth = request.params[1].get_int();

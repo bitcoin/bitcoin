@@ -525,7 +525,7 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
 {
     int nHashType = SIGHASH_ALL;
 
-    if (flagStr.size() > 0)
+    if (!flagStr.empty())
         if (!findSighashFlags(nHashType, flagStr))
             throw std::runtime_error("unknown sighash flag/sign option");
 

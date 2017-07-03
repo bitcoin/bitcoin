@@ -799,7 +799,7 @@ UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, const int6
             }
 
             // Import private keys.
-            if (keys.size()) {
+            if (!keys.empty()) {
                 for (size_t i = 0; i < keys.size(); i++) {
                     const std::string& privkey = keys[i].get_str();
 
@@ -840,7 +840,7 @@ UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, const int6
             success = true;
         } else {
             // Import public keys.
-            if (pubKeys.size() && keys.empty()) {
+            if (!pubKeys.empty() && keys.empty()) {
                 const std::string& strPubKey = pubKeys[0].get_str();
 
                 if (!IsHex(strPubKey)) {
@@ -908,7 +908,7 @@ UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, const int6
             }
 
             // Import private keys.
-            if (keys.size()) {
+            if (!keys.empty()) {
                 const std::string& strPrivkey = keys[0].get_str();
 
                 // Checks.

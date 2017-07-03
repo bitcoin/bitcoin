@@ -131,7 +131,7 @@ bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, unsign
 
     freeaddrinfo(aiRes);
 
-    return (vIP.size() > 0);
+    return !vIP.empty();
 }
 
 bool LookupHost(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowLookup)
@@ -603,7 +603,7 @@ bool ConnectSocketByName(CService &addr, SOCKET& hSocketRet, const char *pszDest
 
     std::vector<CService> addrResolved;
     if (Lookup(strDest.c_str(), addrResolved, port, fNameLookup && !HaveNameProxy(), 256)) {
-        if (addrResolved.size() > 0) {
+        if (!addrResolved.empty()) {
             addr = addrResolved[GetRand(addrResolved.size())];
             return ConnectSocket(addr, hSocketRet, nTimeout);
         }

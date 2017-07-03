@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE(coins_cache_simulation_test)
         }
         if (InsecureRandRange(100) == 0) {
             // Every 100 iterations, change the cache stack.
-            if (stack.size() > 0 && InsecureRandBool() == 0) {
+            if (!stack.empty() && InsecureRandBool() == 0) {
                 //Remove the top cache
                 stack.back()->Flush();
                 delete stack.back();
@@ -224,10 +224,10 @@ BOOST_AUTO_TEST_CASE(coins_cache_simulation_test)
             if (stack.empty() || (stack.size() < 4 && InsecureRandBool())) {
                 //Add a new cache
                 CCoinsView* tip = &base;
-                if (stack.size() > 0) {
-                    tip = stack.back();
-                } else {
+                if (stack.empty()) {
                     removed_all_caches = true;
+                } else {
+                    tip = stack.back();
                 }
                 stack.push_back(new CCoinsViewCacheTest(tip));
                 if (stack.size() == 4) {
@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE(coins_cache_simulation_test)
     }
 
     // Clean up the stack.
-    while (stack.size() > 0) {
+    while (!stack.empty()) {
         delete stack.back();
         stack.pop_back();
     }
@@ -383,7 +383,7 @@ BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
 
             // Track this tx and undo info to use later
             utxoData.emplace(outpoint, std::make_tuple(tx,undo,old_coin));
-        } else if (utxoset.size()) {
+        } else if (!utxoset.empty()) {
             //1/20 times undo a previous transaction
             auto utxod = FindRandomFrom(utxoset);
 
@@ -448,14 +448,14 @@ BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
         }
         if (InsecureRandRange(100) == 0) {
             // Every 100 iterations, change the cache stack.
-            if (stack.size() > 0 && InsecureRandBool() == 0) {
+            if (!stack.empty() && InsecureRandBool() == 0) {
                 stack.back()->Flush();
                 delete stack.back();
                 stack.pop_back();
             }
             if (stack.empty() || (stack.size() < 4 && InsecureRandBool())) {
                 CCoinsView* tip = &base;
-                if (stack.size() > 0) {
+                if (!stack.empty()) {
                     tip = stack.back();
                 }
                 stack.push_back(new CCoinsViewCacheTest(tip));
@@ -464,7 +464,7 @@ BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
     }
 
     // Clean up the stack.
-    while (stack.size() > 0) {
+    while (!stack.empty()) {
         delete stack.back();
         stack.pop_back();
     }
