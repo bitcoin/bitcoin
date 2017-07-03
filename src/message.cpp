@@ -700,6 +700,10 @@ UniValue messagereceivelist(const UniValue& params, bool fHelp) {
 	vector<string> aliases;
 	
 
+	vector<unsigned char> vchNameUniq;
+	if (params.size() >= 2 && !params[1].get_str().empty())
+		vchNameUniq = vchFromValue(params[1]);
+
 	int count = 10;
 	int from = 0;
 	if (params.size() > 2 && !params[2].get_str().empty())
