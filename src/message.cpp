@@ -695,7 +695,7 @@ UniValue messageinfo(const UniValue& params, bool fHelp) {
 UniValue messagereceivelist(const UniValue& params, bool fHelp) {
     if (fHelp || 4 < params.size())
         throw runtime_error("messagereceivelist [\"alias\",...] [message] [count] [from]\n"
-                "list received messages that an array of aliases own. Set of aliases to look up based on alias, and private key to decrypt any data found in message.");
+                "list received messages that an array of aliases own. Set of aliases to look up based on alias.");
 	UniValue aliasesValue(UniValue::VARR);
 	vector<string> aliases;
 	
