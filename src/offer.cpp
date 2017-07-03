@@ -3760,7 +3760,7 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 	{
 		for(unsigned int aliasIndex =0;aliasIndex<aliases.size();aliasIndex++)
 		{
-			if (found >= count)
+			if (oRes.size() >= count)
 				break;
 			string name = aliases[aliasIndex];
 			vector<unsigned char> vchAlias = vchFromString(name);

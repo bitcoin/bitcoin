@@ -2569,7 +2569,7 @@ UniValue aliaslist(const UniValue& params, bool fHelp) {
 	int pending = 0;
 	
 	BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet) {
-		if (found >= count)
+		if (vNamesI.size() >= count)
 			break;
 
 		pending = 0;
