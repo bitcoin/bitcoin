@@ -2562,14 +2562,13 @@ UniValue aliaslist(const UniValue& params, bool fHelp) {
 	int found = 0;
 	UniValue oRes(UniValue::VARR);
 	map<vector<unsigned char>, int> vNamesI;
-	map<vector<unsigned char>, UniValue> vNamesO;
 
 	uint256 hash;
 	CTransaction tx;
 	int pending = 0;
 	
 	BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet) {
-		if (found >= count)
+		if (oRes.size() >= count)
 			break;
 
 		pending = 0;
@@ -2601,11 +2600,10 @@ UniValue aliaslist(const UniValue& params, bool fHelp) {
 		if (BuildAliasJson(alias, pending, oName))
 		{
 			vNamesI[alias.vchAlias] = alias.nHeight;
-			vNamesO[alias.vchAlias] = oName;
+			oRes.push_back(oName);
 		}
 	}
-	BOOST_FOREACH(const PAIRTYPE(vector<unsigned char>, UniValue)& item, vNamesO)
-		oRes.push_back(item.second);
+
 	return oRes;
 }
 UniValue aliasaffiliates(const UniValue& params, bool fHelp) {
