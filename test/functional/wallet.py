@@ -42,6 +42,9 @@ class WalletTest(BitcoinTestFramework):
         assert_equal(walletinfo['immature_balance'], 50)
         assert_equal(walletinfo['balance'], 0)
 
+        # Check wallet path
+        assert_equal(walletinfo['wallet_path'], "wallet.dat")
+
         self.sync_all()
         self.nodes[1].generate(101)
         self.sync_all()
