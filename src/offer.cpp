@@ -3608,8 +3608,6 @@ UniValue offercount(const UniValue& params, bool fHelp) {
 						if (!paliasdb->ReadAlias(acceptOffer.vchAlias, vtxAliasPos) || vtxAliasPos.empty())
 							continue;
 						found++;
-						if (found < from)
-							continue;
 					}
 					// for accepts its the same as acceptheight because its the height from transaction
 					vNamesI[vchKey] = nHeight;
