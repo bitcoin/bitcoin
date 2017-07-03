@@ -717,7 +717,7 @@ UniValue messagereceivelist(const UniValue& params, bool fHelp) {
 
 	BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
 	{
-		if (found >= count)
+		if (oRes.size() >= count)
 			break;
 		const CWalletTx &wtx = item.second; 
 		if (wtx.nVersion != SYSCOIN_TX_VERSION)
@@ -736,13 +736,16 @@ UniValue messagereceivelist(const UniValue& params, bool fHelp) {
 			if (!pmessagedb->ReadMessage(message.vchMessage, vtxPos) || vtxPos.empty())
 				continue;
 			message.txHash = wtx.GetHash();
-			vNamesI[message.vchMessage] = message.nHeight;
+			
 			UniValue oName(UniValue::VOBJ);
 			found++;
 			if (found < from)
 				continue;
-			if(BuildMessageJson(message, oName))
+			if (BuildMessageJson(message, oName))
+			{
 				oRes.push_back(oName);
+				vNamesI[message.vchMessage] = message.nHeight;
+			}
 		}
 	}
 	
@@ -839,12 +842,11 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
 	int found = 0;
 	UniValue oRes(UniValue::VARR);
 	map< vector<unsigned char>, int > vNamesI;
-	vector<CMessage> messageScan;
 	if(aliases.size() > 0)
 	{
 		for(unsigned int aliasIndex =0;aliasIndex<aliases.size();aliasIndex++)
 		{
-			if (found >= count)
+			if (oRes.size() >= count)
 				break;
 			string name = aliases[aliasIndex];
 			vector<unsigned char> vchAlias = vchFromString(name);
@@ -883,8 +885,11 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
 					if (found < from)
 						continue;
 					message.txHash = theAlias.txHash;
-					messageScan.push_back(message);
-					vNamesI[message.vchMessage] = message.nHeight;
+					if (BuildMessageJson(message, oName))
+					{
+						oRes.push_back(oName);
+						vNamesI[message.vchMessage] = message.nHeight;
+					}
 				}
 			}
 		}
@@ -893,7 +898,7 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
 	{
 		BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
 		{
-			if (found >= count)
+			if (oRes.size() >= count)
 				break;
 			const CWalletTx &wtx = item.second; 
 			if (wtx.nVersion != SYSCOIN_TX_VERSION)
@@ -914,17 +919,15 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
 				if (found < from)
 					continue;
 				message.txHash = wtx.GetHash();
-				messageScan.push_back(message);
-				vNamesI[message.vchMessage] = message.nHeight;
+				if (BuildMessageJson(message, oName))
+				{
+					oRes.push_back(oName);
+					vNamesI[message.vchMessage] = message.nHeight;
+				}
 			}
 		}
 	}
-	BOOST_FOREACH(const CMessage &message, messageScan) {
-		// build the output
-		UniValue oName(UniValue::VOBJ);
-		if(BuildMessageJson(message, oName))
-			oRes.push_back(oName);
-	}
+
     return oRes;
 }
 

@@ -3731,7 +3731,7 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 	}
 	pair<CEscrow, CEscrow> pairScan;
 	BOOST_FOREACH(pairScan, escrowScan) {
-		if (found >= count)
+		if (oRes.size() >= count)
 			break;
 		found++;
 		if (found < from)
