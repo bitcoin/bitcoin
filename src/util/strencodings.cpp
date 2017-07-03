@@ -22,6 +22,7 @@ static const std::string SAFE_CHARS[] =
     CHARS_ALPHA_NUM + " .,;-_?@", // SAFE_CHARS_UA_COMMENT
     CHARS_ALPHA_NUM + ".-_", // SAFE_CHARS_FILENAME
     CHARS_ALPHA_NUM + "!*'();:@&=+$,/?#[]-_.~%", // SAFE_CHARS_URI
+    CHARS_ALPHA_NUM + " .,;-_/:?@()!\"#$%&'*+<=>[\\]^`{|}~"  // SAFE_CHARS_PRINTABLE
 };
 
 std::string SanitizeString(const std::string& str, int rule, bool escape)
