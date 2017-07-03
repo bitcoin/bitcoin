@@ -3778,7 +3778,7 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
 
 	vector<unsigned char> vchEscrow;
 	string strRegexp;
-
+	int count = 10;
 	if (params.size() > 0)
 		strRegexp = params[0].get_str();
 
