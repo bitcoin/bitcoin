@@ -3547,8 +3547,6 @@ UniValue offercount(const UniValue& params, bool fHelp) {
 	{
 		for (unsigned int aliasIndex = 0; aliasIndex<aliases.size(); aliasIndex++)
 		{
-			if (found >= count)
-				break;
 			vtxTx.clear();
 			vtxHeight.clear();
 			const string &name = aliases[aliasIndex];
