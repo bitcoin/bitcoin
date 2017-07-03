@@ -3590,9 +3590,11 @@ bool BuildEscrowJson(const CEscrow &escrow, UniValue& oEscrow, const string &str
 	return true;
 }
 UniValue escrowlist(const UniValue& params, bool fHelp) {
-	if (fHelp || 3 < params.size())
-        throw runtime_error("escrowlist [\"alias\",...] [<escrow>] [walletless=false]\n"
-                "list escrows that an array of aliases are involved in. Set of aliases to look up based on alias.");
+	if (fHelp || 5 < params.size())
+        throw runtime_error("escrowlist [\"alias\",...] [<escrow>] [walletless=false] [count] [from]\n"
+                "list escrows that an array of aliases are involved in. Set of aliases to look up based on alias.\n"
+				"[count]          (numeric, optional, default=10) The number of results to return\n"
+				"[from]           (numeric, optional, default=0) The number of results to skip\n");
 	UniValue aliasesValue(UniValue::VARR);
 	vector<string> aliases;
 	if(CheckParam(params, 0))
@@ -3616,6 +3618,15 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 	string strWalletless = "false";
 	if(CheckParam(params, 2))
 		strWalletless = params[2].get_str();
+
+	int count = 10;
+	int from = 0;
+	if (CheckParam(params, 3))
+		count = atoi(params[3].get_str());
+	if (CheckParam(params, 4))
+		from = atoi(params[4].get_str());
+	int found = 0;
+
 	map<uint256, CTransaction> vtxTx;
 	map<uint256, uint64_t> vtxHeight;
 	CTransaction tx;
@@ -3629,6 +3640,8 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 	{
 		for(unsigned int aliasIndex =0;aliasIndex<aliases.size();aliasIndex++)
 		{
+			if (found >= count)
+				break;
 			vtxTx.clear();
 			vtxHeight.clear();
 			const string &name = aliases[aliasIndex];
@@ -3670,7 +3683,9 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 					const CEscrow &theEscrow = vtxEscrowPos.back();
 					if(theEscrow.vchBuyerAlias != vchAlias && theEscrow.vchSellerAlias != vchAlias && theEscrow.vchArbiterAlias != vchAlias)
 						continue;
-					
+					found++;
+					if (found < from)
+						continue;
 					UniValue oEscrow(UniValue::VOBJ);
 					vNamesI[escrow.vchEscrow] = nHeight;
 					if(BuildEscrowJson(theEscrow, oEscrow, strWalletless))
@@ -3688,12 +3703,13 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 }
 
 UniValue escrowfilter(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() > 2)
+	if (fHelp || params.size() > 3)
 		throw runtime_error(
-		"escrowfilter [searchterm] [escrowpage]\n"
+			"escrowfilter [searchterm] [escrowpage] [count]\n"
 						"scan and filter escrows\n"
 						"[searchterm] : find searchterm on escrows, empty means all escrows\n"
-						"[escrowpage] : page with this escrow guid, starting from this escrow 25 max results are returned. Empty for first 25 escrows.\n");
+						"[escrowpage] : page with this escrow guid, starting from this escrow 'count' max results are returned. Empty for first 'count' escrows.\n"
+						"[count]	  : The number of results to return. Defaults to 10\n");
 
 	vector<unsigned char> vchEscrowPage;
 	string strSearchTerm;
@@ -3704,11 +3720,15 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
 	if(CheckParam(params, 1))
 		vchEscrowPage = vchFromValue(params[1]);
 
+	int count = 10;
+	if (CheckParam(params, 2))
+		count = atoi(params[2].get_str());
+
 	UniValue oRes(UniValue::VARR);
 
 	vector<CEscrow> escrowScan;
 	vector<string> aliases;
-	if (!pescrowdb->ScanEscrows(vchEscrowPage, strSearchTerm, aliases, 25, escrowScan))
+	if (!pescrowdb->ScanEscrows(vchEscrowPage, strSearchTerm, aliases, count, escrowScan))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4607 - " + _("Scan failed"));
 
 	BOOST_FOREACH(const CEscrow& escrow, escrowScan) {

@@ -3179,11 +3179,12 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 UniValue aliasfilter(const UniValue& params, bool fHelp) {
 	if (fHelp || params.size() > 3)
 		throw runtime_error(
-		"aliasfilter [searchterm] [aliaspage] [safesearch='true']\n"
+			"aliasfilter [searchterm] [aliaspage] [safesearch='true'] [count]\n"
 						"scan and filter aliases\n"
 						"[searchterm] : find searchterm in alias name, empty means all aliases\n"
-						"[aliaspage] : page with this alias name, starting from this alias 25 max results are returned. Empty for first 25 aliases.\n"
-						"[safesearch] : shows all aliases that are safe to display (not on the ban list). Defaults to true.\n");
+						"[aliaspage]  : page with this alias name, starting from this alias 'count' max results are returned. Empty for first 'count' aliases.\n"
+						"[safesearch] : shows all aliases that are safe to display (not on the ban list). Defaults to true.\n"
+						"[count]	  : The number of results to return. Defaults to 10.\n");
 
 	vector<unsigned char> vchAliasPage;
 	string strSearchTerm;
@@ -3199,6 +3200,9 @@ UniValue aliasfilter(const UniValue& params, bool fHelp) {
 	
 	if(CheckParam(params, 2))
 		safeSearch = params[2].get_str()=="true"? true: false;
+	int count = 10;
+	if (CheckParam(params, 3))
+		count = atoi(params[3].get_str());
 
 	UniValue oRes(UniValue::VARR);
 
@@ -3207,7 +3211,7 @@ UniValue aliasfilter(const UniValue& params, bool fHelp) {
 	boost::algorithm::to_lower(strAliasPage);
 	vchAliasPage = vchFromString(strAliasPage);
 	CTransaction aliastx;
-	if (!paliasdb->ScanNames(vchAliasPage, strSearchTerm, safeSearch, 25, nameScan))
+	if (!paliasdb->ScanNames(vchAliasPage, strSearchTerm, safeSearch, count, nameScan))
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5538 - " + _("Scan failed"));
 
 	BOOST_FOREACH(const CAliasIndex &alias, nameScan) {

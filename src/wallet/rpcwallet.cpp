@@ -3152,6 +3152,7 @@ extern UniValue offerwhitelist(const UniValue& params, bool fHelp);
 extern UniValue offerinfo(const UniValue& params, bool fHelp);
 extern UniValue offerstats(const UniValue& params, bool fHelp);
 extern UniValue offerlist(const UniValue& params, bool fHelp);
+extern UniValue offercount(const UniValue& params, bool fHelp);
 extern UniValue offerhistory(const UniValue& params, bool fHelp);
 extern UniValue offerfilter(const UniValue& params, bool fHelp);
 
@@ -3160,6 +3161,7 @@ extern UniValue certnew(const UniValue& params, bool fHelp);
 extern UniValue certtransfer(const UniValue& params, bool fHelp);
 extern UniValue certinfo(const UniValue& params, bool fHelp);
 extern UniValue certlist(const UniValue& params, bool fHelp);
+extern UniValue certcount(const UniValue& params, bool fHelp);
 extern UniValue certhistory(const UniValue& params, bool fHelp);
 extern UniValue certfilter(const UniValue& params, bool fHelp);
 extern UniValue certstats(const UniValue& params, bool fHelp);
@@ -3267,6 +3269,7 @@ static const CRPCCommand commands[] =
 	{ "wallet", "offerclearwhitelist",	&offerclearwhitelist,  false },
 	{ "wallet", "offerwhitelist",		&offerwhitelist,	   false },
     { "wallet", "offerlist",            &offerlist,            false },
+	{ "wallet", "offercount",            &offercount,            false },
     { "wallet", "offerinfo",            &offerinfo,            false },
     { "wallet", "offerhistory",         &offerhistory,         false },
 	{ "wallet", "offerstats",           &offerstats,           false },
@@ -3277,6 +3280,7 @@ static const CRPCCommand commands[] =
 	{ "wallet", "certupdate",      &certupdate,  false },
 	{ "wallet", "certtransfer",          &certtransfer,      false },
 	{ "wallet", "certlist",              &certlist,          false },
+	{ "wallet", "certcount",              &certcount,          false },
 	{ "wallet", "certinfo",              &certinfo,          false },
 	{ "wallet", "certhistory",     &certhistory, false },
 	{ "wallet", "certfilter",      &certfilter,  false },

@@ -1240,14 +1240,76 @@ UniValue certinfo(const UniValue& params, bool fHelp) {
 		oCert.clear();
     return oCert;
 }
-
-UniValue certlist(const UniValue& params, bool fHelp) {
-    if (fHelp || 3 < params.size())
-        throw runtime_error("certlist [\"alias\",...] [<cert>] [walletless=false]\n"
-                "list certs that an array of aliases own. Set of aliases to look up based on alias.");
+UniValue certcount(const UniValue& params, bool fHelp) {
+	if (fHelp || 1< params.size())
+		throw runtime_error("certcount [\"alias\",...]\n"
+			"Count certs that an array of aliases own. Set of aliases to look up based on alias.\n");
 	UniValue aliasesValue(UniValue::VARR);
 	vector<string> aliases;
-	if(CheckParam(params, 1))
+	if (CheckParam(params, 0))
+	{
+		if (params[0].isArray())
+		{
+			aliasesValue = params[0].get_array();
+			for (unsigned int aliasIndex = 0; aliasIndex<aliasesValue.size(); aliasIndex++)
+			{
+				string lowerStr = aliasesValue[aliasIndex].get_str();
+				boost::algorithm::to_lower(lowerStr);
+				if (!lowerStr.empty())
+					aliases.push_back(lowerStr);
+			}
+		}
+	}
+
+
+	int found = 0;
+
+	UniValue oRes(UniValue::VARR);
+	map< vector<unsigned char>, int > vNamesI;
+	map< vector<unsigned char>, UniValue > vNamesO;
+	if (aliases.size() > 0)
+	{
+		for (unsigned int aliasIndex = 0; aliasIndex<aliases.size(); aliasIndex++)
+		{
+			const string &name = aliases[aliasIndex];
+			const vector<unsigned char> &vchAlias = vchFromString(name);
+			vector<CAliasIndex> vtxPos;
+			if (!paliasdb->ReadAlias(vchAlias, vtxPos) || vtxPos.empty())
+				continue;
+			CTransaction tx;
+			for (auto& it : boost::adaptors::reverse(vtxPos)) {
+				const CAliasIndex& theAlias = it;
+				if (!GetSyscoinTransaction(theAlias.nHeight, theAlias.txHash, tx, Params().GetConsensus()))
+					continue;
+				CCert cert(tx);
+				if (!cert.IsNull())
+				{
+					if (vNamesI.find(cert.vchCert) != vNamesI.end() && (theAlias.nHeight <= vNamesI[cert.vchCert] || vNamesI[cert.vchCert] < 0))
+						continue;
+					vector<CCert> vtxCertPos;
+					if (!pcertdb->ReadCert(cert.vchCert, vtxCertPos) || vtxCertPos.empty())
+						continue;
+					const CCert &theCert = vtxCertPos.back();
+					if (theCert.vchAlias != theAlias.vchAlias)
+						continue;
+
+					vNamesI[cert.vchCert] = theAlias.nHeight;
+					found++;
+				}
+			}
+		}
+	}
+	return found;
+}
+UniValue certlist(const UniValue& params, bool fHelp) {
+    if (fHelp || 5 < params.size())
+        throw runtime_error("certlist [\"alias\",...] [cert] [walletless=false] [count] [from]\n"
+                "list certs that an array of aliases own. Set of aliases to look up based on alias.\n"
+				"[count]          (numeric, optional, default=10) The number of results to return\n"
+				"[from]           (numeric, optional, default=0) The number of results to skip\n");
+	UniValue aliasesValue(UniValue::VARR);
+	vector<string> aliases;
+	if(CheckParam(params, 0))
 	{
 		if(params[0].isArray())
 		{
@@ -1269,6 +1331,14 @@ UniValue certlist(const UniValue& params, bool fHelp) {
 	if(CheckParam(params, 2))
 		strWalletless = params[2].get_str();
 
+	int count = 10;
+	int from = 0;
+	if (CheckParam(params, 3))
+		count = atoi(params[3].get_str());
+	if (CheckParam(params, 4))
+		from = atoi(params[4].get_str());
+	int found = 0;
+
 	UniValue oRes(UniValue::VARR);
 	map< vector<unsigned char>, int > vNamesI;
 	map< vector<unsigned char>, UniValue > vNamesO;
@@ -1276,6 +1346,8 @@ UniValue certlist(const UniValue& params, bool fHelp) {
 	{
 		for(unsigned int aliasIndex =0;aliasIndex<aliases.size();aliasIndex++)
 		{
+			if (found >= count)
+				break;
 			const string &name = aliases[aliasIndex];
 			const vector<unsigned char> &vchAlias = vchFromString(name);
 			vector<CAliasIndex> vtxPos;
@@ -1302,6 +1374,9 @@ UniValue certlist(const UniValue& params, bool fHelp) {
 					
 					UniValue oCert(UniValue::VOBJ);
 					vNamesI[cert.vchCert] = theAlias.nHeight;
+					found++;
+					if (found < from)
+						continue;
 					if(BuildCertJson(theCert, theAlias, oCert, strWalletless))
 					{
 						oRes.push_back(oCert);
@@ -1383,14 +1458,15 @@ bool BuildCertJson(const CCert& cert, const CAliasIndex& alias, UniValue& oCert,
 	return true;
 }
 UniValue certfilter(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() > 4)
+	if (fHelp || params.size() > 5)
 		throw runtime_error(
-		"certfilter [searchterm] [certpage] [safesearch='true'] [category]\n"
+			"certfilter [searchterm] [certpage] [safesearch='true'] [category] [count]\n"
 						"scan and filter certs\n"
 						"[searchterm] : find searchterm on certs, empty means all certs\n"
-						"[certpage] : page with this cert guid, starting from this cert 25 max results are returned. Empty for first 25 certs.\n"
+						"[certpage] : page with this cert guid, starting from this cert 'count' max results are returned. Empty for first 'count' certs.\n"
 						"[safesearch] : shows all certs that are safe to display (not on the ban list). Defaults to true.\n"
-						"[category] : category you want to search in, empty for all\n");
+						"[category] : category you want to search in, empty for all\n"
+						"[count]	: The number of results to return. Defaults to 10\n");
 
 	vector<unsigned char> vchCertPage;
 	string strSearchTerm;
@@ -1410,11 +1486,15 @@ UniValue certfilter(const UniValue& params, bool fHelp) {
 	if(CheckParam(params, 3))
 		strCategory = params[3].get_str();
 
+	int count = 10;
+	if (CheckParam(params, 4))
+		count = atoi(params[4].get_str());
+
     UniValue oRes(UniValue::VARR);
     
     vector<CCert> certScan;
 	vector<string> aliases;
-    if (!pcertdb->ScanCerts(vchCertPage, strSearchTerm, aliases, safeSearch, strCategory, 25, certScan))
+    if (!pcertdb->ScanCerts(vchCertPage, strSearchTerm, aliases, safeSearch, strCategory, count, certScan))
 		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2520 - " + _("Scan failed"));
   
 	CTransaction aliastx;

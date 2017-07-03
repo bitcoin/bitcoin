@@ -565,8 +565,8 @@ UniValue messageinfo(const UniValue& params, bool fHelp) {
 }
 
 UniValue messagereceivelist(const UniValue& params, bool fHelp) {
-    if (fHelp || 3 < params.size())
-        throw runtime_error("messagereceivelist [\"alias\",...] [<message>] [walletless=false]\n"
+    if (fHelp || 5 < params.size())
+        throw runtime_error("messagereceivelist [\"alias\",...] [<message>] [walletless=false] [count] [from]\n"
                 "list messages that an array of aliases has recieved. Set of aliases to look up based on alias.");
 	UniValue aliasesValue(UniValue::VARR);
 	vector<string> aliases;
@@ -592,6 +592,14 @@ UniValue messagereceivelist(const UniValue& params, bool fHelp) {
 	if(CheckParam(params, 2))
 		strWalletless = params[2].get_str();
 
+	int count = 10;
+	int from = 0;
+	if (CheckParam(params, 3))
+		count = atoi(params[3].get_str());
+	if (CheckParam(params, 4))
+		from = atoi(params[4].get_str());
+	int found = 0;
+
 	UniValue oRes(UniValue::VARR);
 	map< vector<unsigned char>, int > vNamesI;
 	map< vector<unsigned char>, UniValue > vNamesO;
@@ -599,6 +607,8 @@ UniValue messagereceivelist(const UniValue& params, bool fHelp) {
 	{
 		for(unsigned int aliasIndex =0;aliasIndex<aliases.size();aliasIndex++)
 		{
+			if (found >= count)
+				break;
 			const string &name = aliases[aliasIndex];
 			const vector<unsigned char> &vchAlias = vchFromString(name);
 			vector<CAliasIndex> vtxPos;
@@ -625,6 +635,9 @@ UniValue messagereceivelist(const UniValue& params, bool fHelp) {
 					
 					UniValue oMessage(UniValue::VOBJ);
 					vNamesI[message.vchMessage] = theMessage.nHeight;
+					found++;
+					if (found < from)
+						continue;
 					if(BuildMessageJson(theMessage, oMessage, strWalletless))
 					{
 						oRes.push_back(oMessage);
@@ -715,9 +728,11 @@ bool BuildMessageJson(const CMessage& message, UniValue& oName, const string &st
 }
 
 UniValue messagesentlist(const UniValue& params, bool fHelp) {
-    if (fHelp || 3 < params.size())
-        throw runtime_error("messagesentlist [\"alias\",...] [<message>] [walletless=false]\n"
-                "list messages that an array of aliases has sent. Set of aliases to look up based on alias.");
+    if (fHelp || 5 < params.size())
+        throw runtime_error("messagesentlist [\"alias\",...] [<message>] [walletless=false] [count] [from]\n"
+                "list messages that an array of aliases has sent. Set of aliases to look up based on alias.\n"
+				"[count]          (numeric, optional, default=10) The number of results to return\n"
+				"[from]           (numeric, optional, default=0) The number of results to skip\n");
 	UniValue aliasesValue(UniValue::VARR);
 	vector<string> aliases;
 	if(CheckParam(params, 0))
@@ -742,6 +757,14 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
 	if(CheckParam(params, 2))
 		strWalletless = params[2].get_str();
 
+	int count = 10;
+	int from = 0;
+	if (CheckParam(params, 3))
+		count = atoi(params[3].get_str());
+	if (CheckParam(params, 4))
+		from = atoi(params[4].get_str());
+	int found = 0;
+
 	UniValue oRes(UniValue::VARR);
 	map< vector<unsigned char>, int > vNamesI;
 	map< vector<unsigned char>, UniValue > vNamesO;
@@ -749,6 +772,8 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
 	{
 		for(unsigned int aliasIndex =0;aliasIndex<aliases.size();aliasIndex++)
 		{
+			if (found >= count)
+				break;
 			const string &name = aliases[aliasIndex];
 			const vector<unsigned char> &vchAlias = vchFromString(name);
 			vector<CAliasIndex> vtxPos;
@@ -775,6 +800,9 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
 					
 					UniValue oMessage(UniValue::VOBJ);
 					vNamesI[message.vchMessage] = theMessage.nHeight;
+					found++;
+					if (found < from)
+						continue;
 					if(BuildMessageJson(theMessage, oMessage, strWalletless))
 					{
 						oRes.push_back(oMessage);

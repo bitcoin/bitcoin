@@ -3507,10 +3507,124 @@ bool BuildOfferAcceptJson(const COffer& theOffer, const CAliasIndex& theAlias, c
 	oOfferAccept.push_back(Pair("pay_message", strData));
 	return true;
 }
+UniValue offercount(const UniValue& params, bool fHelp) {
+	if (fHelp || 6 < params.size())
+		throw runtime_error("offercount [\"alias\",...] [accepts=false]\n"
+			"Count offers that an array of aliases own. Set of aliases to look up based on alias.\n");
+	UniValue aliasesValue(UniValue::VARR);
+	vector<string> aliases;
+	if (CheckParam(params, 0))
+	{
+		if (params[0].isArray())
+		{
+			aliasesValue = params[0].get_array();
+			for (unsigned int aliasIndex = 0; aliasIndex<aliasesValue.size(); aliasIndex++)
+			{
+				string lowerStr = aliasesValue[aliasIndex].get_str();
+				boost::algorithm::to_lower(lowerStr);
+				if (!lowerStr.empty())
+					aliases.push_back(lowerStr);
+			}
+		}
+	}
+
+	string strAccepts = "false";
+	if (CheckParam(params, 2))
+		strAccepts = params[2].get_str();
+
+	int found = 0;
+
+
+	map<uint256, CTransaction> vtxTx;
+	map<uint256, uint64_t> vtxHeight;
+	CTransaction tx;
+	CAliasIndex txPos;
+	CAliasPayment txPaymentPos;
+	UniValue oRes(UniValue::VARR);
+	map< vector<unsigned char>, int > vNamesI;
+	map< vector<unsigned char>, UniValue > vNamesO;
+	if (aliases.size() > 0)
+	{
+		for (unsigned int aliasIndex = 0; aliasIndex<aliases.size(); aliasIndex++)
+		{
+			if (found >= count)
+				break;
+			vtxTx.clear();
+			vtxHeight.clear();
+			const string &name = aliases[aliasIndex];
+			const vector<unsigned char> &vchAlias = vchFromString(name);
+			vector<CAliasIndex> vtxPos;
+			if (!paliasdb->ReadAlias(vchAlias, vtxPos) || vtxPos.empty())
+				continue;
+			vector<CAliasPayment> vtxPaymentPos;
+			if (!paliasdb->ReadAliasPayment(vchAlias, vtxPaymentPos) || vtxPaymentPos.empty())
+				continue;
+			BOOST_FOREACH(txPos, vtxPos) {
+				if (!GetSyscoinTransaction(txPos.nHeight, txPos.txHash, tx, Params().GetConsensus()))
+					continue;
+				vtxTx[txPos.txHash] = tx;
+				vtxHeight[txPos.txHash] = txPos.nHeight;
+			}
+			BOOST_FOREACH(txPaymentPos, vtxPaymentPos) {
+				if (vtxTx.find(txPaymentPos.txHash) != vtxTx.end())
+					continue;
+				if (!GetSyscoinTransaction(txPaymentPos.nHeight, txPaymentPos.txHash, tx, Params().GetConsensus()))
+					continue;
+				vtxTx[txPaymentPos.txHash] = tx;
+				vtxHeight[txPaymentPos.txHash] = txPaymentPos.nHeight;
+			}
+			CTransaction tx;
+			for (auto& it : boost::adaptors::reverse(vtxTx)) {
+				const uint64_t& nHeight = vtxHeight[it.first];
+				const CTransaction& tx = it.second;
+
+				COffer offer(tx);
+				if (!offer.IsNull() && ((strAccepts == "true" && !offer.accept.IsNull()) || (strAccepts == "false" && offer.accept.IsNull())))
+				{
+					const vector<unsigned char> &vchKey = strAccepts == "true" ? offer.accept.vchAcceptRand : offer.vchOffer;
+					if (vNamesI.find(vchKey) != vNamesI.end() && (nHeight <= vNamesI[vchKey] || vNamesI[vchKey] < 0))
+						continue;
+					if (strAccepts == "false")
+					{
+						vector<COffer> vtxOfferPos;
+						if (!pofferdb->ReadOffer(offer.vchOffer, vtxOfferPos) || vtxOfferPos.empty())
+							continue;
+
+						COffer theOffer = vtxOfferPos.back();
+						UniValue oOffer(UniValue::VOBJ);
+						vector<CAliasIndex> vtxAliasPos;
+						if (!paliasdb->ReadAlias(theOffer.vchAlias, vtxAliasPos) || vtxAliasPos.empty())
+							continue;
+						found++;
+					}
+					else if (strAccepts == "true")
+					{
+						COffer acceptOffer;
+						COfferAccept offerAccept;
+						if (!GetOfferAccept(offer.vchOffer, offer.accept.vchAcceptRand, acceptOffer, offerAccept))
+							continue;
+						UniValue oOffer(UniValue::VOBJ);
+						vector<CAliasIndex> vtxAliasPos;
+						if (!paliasdb->ReadAlias(acceptOffer.vchAlias, vtxAliasPos) || vtxAliasPos.empty())
+							continue;
+						found++;
+						if (found < from)
+							continue;
+					}
+					// for accepts its the same as acceptheight because its the height from transaction
+					vNamesI[vchKey] = nHeight;
+				}
+			}
+		}
+	}
+	return found;
+}
 UniValue offerlist(const UniValue& params, bool fHelp) {
-    if (fHelp || 4 < params.size())
-        throw runtime_error("offerlist [\"alias\",...] [<guid>] [accepts=false] [walletless=false]\n"
-                "list offers that an array of aliases own. Set of aliases to look up based on alias.");
+    if (fHelp || 6 < params.size())
+        throw runtime_error("offerlist [\"alias\",...] [guid] [accepts=false] [walletless=false] [count] [from]\n"
+                "list offers that an array of aliases own. Set of aliases to look up based on alias.\n
+				"[count]          (numeric, optional, default=10) The number of results to return\n"
+				"[from]           (numeric, optional, default=0) The number of results to skip\n");
 	UniValue aliasesValue(UniValue::VARR);
 	vector<string> aliases;
 	if(CheckParam(params, 0))
@@ -3538,6 +3652,16 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 	string strWalletless = "false";
 	if(CheckParam(params, 3))
 		strWalletless = params[3].get_str();
+
+	int count = 10;
+	int from = 0;
+	if (CheckParam(params, 4))
+		count = atoi(params[4].get_str());
+	if (CheckParam(params, 5))
+		from = atoi(params[5].get_str());
+	int found = 0;
+
+
 	map<uint256, CTransaction> vtxTx;
 	map<uint256, uint64_t> vtxHeight;
 	CTransaction tx;
@@ -3550,6 +3674,8 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 	{
 		for(unsigned int aliasIndex =0;aliasIndex<aliases.size();aliasIndex++)
 		{
+			if (found >= count)
+				break;
 			vtxTx.clear();
 			vtxHeight.clear();
 			const string &name = aliases[aliasIndex];
@@ -3598,7 +3724,9 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 						vector<CAliasIndex> vtxAliasPos;
 						if (!paliasdb->ReadAlias(theOffer.vchAlias, vtxAliasPos) || vtxAliasPos.empty())
 							continue;
-
+						found++;
+						if (found < from)
+							continue;
 						if(BuildOfferJson(theOffer, vtxAliasPos.back(), oOffer, strWalletless))
 							oRes.push_back(oOffer);
 					}
@@ -3611,6 +3739,9 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 						UniValue oOffer(UniValue::VOBJ);
 						vector<CAliasIndex> vtxAliasPos;
 						if (!paliasdb->ReadAlias(acceptOffer.vchAlias, vtxAliasPos) || vtxAliasPos.empty())
+							continue;
+						found++;
+						if (found < from)
 							continue;
 						// we need to get the alias at the time of the accept
 						CAliasIndex offerAcceptAlias;
@@ -3685,12 +3816,13 @@ UniValue offerhistory(const UniValue& params, bool fHelp) {
 UniValue offerfilter(const UniValue& params, bool fHelp) {
 	if (fHelp || params.size() > 4)
 		throw runtime_error(
-		"offerfilter [searchterm] [offerpage] [safesearch='true'] [category]\n"
+			"offerfilter [searchterm] [offerpage] [safesearch='true'] [category] [count]\n"
 						"scan and filter offers\n"
 						"[searchterm] : find searchterm on offers, empty means all offers\n"
-						"[offerpage] : page with this offer guid, starting from this offer 25 max results are returned. Empty for first 25 offers.\n"
+						"[offerpage] : page with this offer guid, starting from this offer 'count' max results are returned. Empty for first 'count' offers.\n"
 						"[safesearch] : shows all offers that are safe to display (not on the ban list). Defaults to true\n"
-						"[category] : category you want to search in, empty for all\n");
+						"[category] : category you want to search in, empty for all\n"
+						"[count]	: The number of results to return. Defaults to 10\n");
 
 	string strSearchTerm;
 	vector<unsigned char> vchOfferPage;
@@ -3709,11 +3841,15 @@ UniValue offerfilter(const UniValue& params, bool fHelp) {
 	if(CheckParam(params, 3))
 		strCategory = params[3].get_str();
 
+	int count = 10;
+	if (CheckParam(params, 4))
+		count = atoi(params[4].get_str());
+
 	UniValue oRes(UniValue::VARR);
 
 
 	vector<COffer> offerScan;
-	if (!pofferdb->ScanOffers(vchOfferPage, strSearchTerm, safeSearch, strCategory, 25, offerScan))
+	if (!pofferdb->ScanOffers(vchOfferPage, strSearchTerm, safeSearch, strCategory, count, offerScan))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1596 - " + _("Scan failed"));
 	CTransaction aliastx;
 	BOOST_FOREACH(const COffer &txOffer, offerScan) {
