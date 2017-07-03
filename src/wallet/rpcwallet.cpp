@@ -1497,7 +1497,7 @@ static void MaybePushAddress(UniValue & entry, const CTxDestination &dest)
         entry.push_back(Pair("v2address", addr.ToString()));
 }
 // SYSCOIN
-string GetSyscoinTransactionDescription(const int op, const vector<vector<unsigned char> > &vvchArgs, const string &type, string& responseEnglish, string& responseGUID, string& responseGUID1)
+string GetSyscoinTransactionDescription(const int op, const vector<vector<unsigned char> > &vvchArgs, const CWalletTx& wtx, const string &type, string& responseEnglish, string& responseGUID, string& responseGUID1)
 {
 	responseGUID = stringFromVch(vvchArgs[0]);
 	string strResponse = "";
@@ -1725,7 +1725,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 				string strResponseEnglish = "";
 				string strResponseGUID = "";
 				string strResponseGUID1 = "";
-				strResponse = GetSyscoinTransactionDescription(op, vvchArgs, "send", strResponseEnglish, strResponseGUID, strResponseGUID1);
+				strResponse = GetSyscoinTransactionDescription(op, vvchArgs, "send", wtx, strResponseEnglish, strResponseGUID, strResponseGUID1);
 				entry.push_back(Pair("systx", strResponse));
 				entry.push_back(Pair("systype", strResponseEnglish));
 				entry.push_back(Pair("sysguid", strResponseGUID));
@@ -1779,7 +1779,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 					string strResponseEnglish = "";
 					string strResponseGUID = "";
 					string strResponseGUID1 = "";
-					strResponse = GetSyscoinTransactionDescription(op, vvchArgs, "recv", strResponseEnglish, strResponseGUID, strResponseGUID1);
+					strResponse = GetSyscoinTransactionDescription(op, vvchArgs, "recv", wtx, strResponseEnglish, strResponseGUID, strResponseGUID1);
 					entry.push_back(Pair("systx", strResponse));
 					entry.push_back(Pair("systype", strResponseEnglish));
 					entry.push_back(Pair("sysguid", strResponseGUID));
@@ -3007,6 +3007,7 @@ extern UniValue offerclearwhitelist(const UniValue& params, bool fHelp);
 extern UniValue offerwhitelist(const UniValue& params, bool fHelp);
 extern UniValue offerinfo(const UniValue& params, bool fHelp);
 extern UniValue offerlist(const UniValue& params, bool fHelp);
+extern UniValue offercount(const UniValue& params, bool fHelp);
 extern UniValue offeracceptlist(const UniValue& params, bool fHelp);
 extern UniValue offerhistory(const UniValue& params, bool fHelp);
 extern UniValue offerfilter(const UniValue& params, bool fHelp);
@@ -3016,6 +3017,7 @@ extern UniValue certnew(const UniValue& params, bool fHelp);
 extern UniValue certtransfer(const UniValue& params, bool fHelp);
 extern UniValue certinfo(const UniValue& params, bool fHelp);
 extern UniValue certlist(const UniValue& params, bool fHelp);
+extern UniValue certcount(const UniValue& params, bool fHelp);
 extern UniValue certhistory(const UniValue& params, bool fHelp);
 extern UniValue certfilter(const UniValue& params, bool fHelp);
 extern UniValue generateescrowmultisig(const UniValue& params, bool fHelp);
@@ -3028,6 +3030,7 @@ extern UniValue escrowclaimrefund(const UniValue& params, bool fHelp);
 extern UniValue escrowcompleterefund(const UniValue& params, bool fHelp);
 extern UniValue escrowinfo(const UniValue& params, bool fHelp);
 extern UniValue escrowlist(const UniValue& params, bool fHelp);
+extern UniValue escrowcount(const UniValue& params, bool fHelp);
 extern UniValue escrowhistory(const UniValue& params, bool fHelp);
 extern UniValue escrowfilter(const UniValue& params, bool fHelp);
 extern UniValue escrowfeedback(const UniValue& params, bool fHelp);
