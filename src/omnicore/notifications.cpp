@@ -89,14 +89,11 @@ bool CheckAlertAuthorization(const std::string& sender)
 {
     std::set<std::string> whitelisted;
 
-    // TODO: check email addresses
-
     // Mainnet
-    whitelisted.insert("16Zwbujf1h3v1DotKcn9XXt1m7FZn2o4mj"); // Craig   <craig@omni.foundation>
-    whitelisted.insert("1MicH2Vu4YVSvREvxW1zAx2XKo2GQomeXY"); // Michael <michael@omni.foundation>
-    whitelisted.insert("1zAtHRASgdHvZDfHs6xJquMghga4eG7gy");  // Zathras <zathras@omni.foundation>
-    whitelisted.insert("1dexX7zmPen1yBz2H9ZF62AK5TGGqGTZH");  // dexX7   <dexx@bitwatch.co>
-    whitelisted.insert("1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P"); // Exodus (who has access?)
+    whitelisted.insert("17xr7sbehYY4YSZX9yuJe6gK9rrdRrZx26"); // Craig   <craig@omni.foundation>
+    whitelisted.insert("16oDZYCspsczfgKXVj3xyvsxH21NpEj94F"); // Adam    <adam@omni.foundation>
+    whitelisted.insert("1883ZMsRJfzKNozUBJBTCxQ7EaiNioNDWz"); // Zathras <zathras@omni.foundation>
+    whitelisted.insert("1HHv91gRxqBzQ3gydMob3LU8hqXcWoLfvd"); // dexX7   <dexx@bitwatch.co>
 
     // Testnet
     whitelisted.insert("mpDex4kSX4iscrmiEQ8fBiPoyeTH55z23j"); // Michael <michael@omni.foundation>
