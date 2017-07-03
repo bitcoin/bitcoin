@@ -1244,7 +1244,7 @@ UniValue certcount(const UniValue& params, bool fHelp) {
 	vector<CCert> certScan;
 	if(aliases.size() > 0)
 	{
-		if (!pcertdb->ScanCerts(stringFromVch(""), stringFromVch(""), aliases, false, "", 1000,certScan))
+		if (!pcertdb->ScanCerts(vchFromString(""), stringFromVch(""), aliases, false, "", 1000,certScan))
 			throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2517 - " + _("Scan failed"));
 	}
 

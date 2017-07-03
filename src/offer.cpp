@@ -3636,7 +3636,7 @@ bool BuildOfferAcceptJson(const COffer& theOffer, const CAliasIndex& theAlias, c
 	oOfferAccept.push_back(Pair("pay_message", strMessage));
 	return true;
 }
-UniValue offerlist(const UniValue& params, bool fHelp) {
+UniValue offercount(const UniValue& params, bool fHelp) {
 	if (fHelp || 4 < params.size())
 		throw runtime_error("offerlist [\"alias\",...]\n"
 			"list offers that an array of aliases own.\n");
@@ -3694,8 +3694,6 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 				if (!offer.IsNull() && offer.accept.IsNull())
 				{
 					if (vNamesI.find(offer.vchOffer) != vNamesI.end())
-						continue;
-					if (vchNameUniq.size() > 0 && vchNameUniq != offer.vchOffer)
 						continue;
 					vector<COffer> vtxOfferPos;
 					if (!pofferdb->ReadOffer(offer.vchOffer, vtxOfferPos) || vtxOfferPos.empty())
