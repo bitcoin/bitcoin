@@ -3135,6 +3135,7 @@ extern UniValue aliasfilter(const UniValue& params, bool fHelp);
 extern UniValue aliaspay(const UniValue& params, bool fHelp);
 extern UniValue aliasstats(const UniValue& params, bool fHelp);
 extern UniValue aliasdecodemultisigredeemscript(const UniValue& params, bool fHelp);
+extern UniValue aliasconvertcurrency(const UniValue& params, bool fHelp);
 extern UniValue aliasaddscript(const UniValue& params, bool fHelp);
 extern UniValue syscoinsignrawtransaction(const UniValue& params, bool fHelp);
 extern UniValue syscoindecoderawtransaction(const UniValue& params, bool fHelp);
