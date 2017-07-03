@@ -2558,7 +2558,7 @@ UniValue aliaslist(const UniValue& params, bool fHelp) {
 	if (params.size() > 1 && !params[1].get_str().empty())
 		count = atoi(params[1].get_str());
 	if (params.size() > 2 && !params[2].get_str().empty())
-		count = atoi(params[2].get_str());
+		from = atoi(params[2].get_str());
 	int found = 0;
 	UniValue oRes(UniValue::VARR);
 	map<vector<unsigned char>, int> vNamesI;
