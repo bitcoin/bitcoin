@@ -2597,9 +2597,9 @@ UniValue aliaslist(const UniValue& params, bool fHelp) {
 		if (found < from)
 			continue;
 		UniValue oName(UniValue::VOBJ);
+		vNamesI[alias.vchAlias] = alias.nHeight;
 		if (BuildAliasJson(alias, pending, oName))
 		{
-			vNamesI[alias.vchAlias] = alias.nHeight;
 			oRes.push_back(oName);
 		}
 	}

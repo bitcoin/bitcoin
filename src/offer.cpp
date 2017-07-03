@@ -3799,10 +3799,10 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 					found++;
 					if (found < from)
 						continue;
+					vNamesI[offer.vchOffer] = theOffer.nHeight;
 					if(BuildOfferJson(theOffer, theAlias, oOffer))
 					{
 						oRes.push_back(oOffer);
-						vNamesI[offer.vchOffer] = theOffer.nHeight;
 					}
 				}
 					
