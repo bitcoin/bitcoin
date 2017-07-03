@@ -1301,7 +1301,7 @@ UniValue certlist(const UniValue& params, bool fHelp) {
 	}
 	CTransaction aliastx;
 	BOOST_FOREACH(const CCert& cert, certScan) {
-		if (oRes.size() >= count)
+		if (found >= count)
 			break;
 		vector<CAliasIndex> vtxPos;
 		if (!paliasdb->ReadAlias(cert.vchAlias, vtxPos) || vtxPos.empty())
