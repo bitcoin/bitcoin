@@ -12,7 +12,7 @@
 
 static const std::map<std::string, CScriptFlag> mapFlagNames = {
     {std::string("NONE"), SCRIPT_VERIFY_NONE},
-    {std::string("P2SH"), SCRIPT_VERIFY_P2SH},
+    {std::string("BIP16"), SCRIPT_VERIFY_P2SH},
     {std::string("STRICTENC"), SCRIPT_VERIFY_STRICTENC},
     {std::string("DERSIG"), SCRIPT_VERIFY_DERSIG},
     {std::string("LOW_S"), SCRIPT_VERIFY_LOW_S},
