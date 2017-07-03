@@ -717,7 +717,7 @@ UniValue messagereceivelist(const UniValue& params, bool fHelp) {
 
 	BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
 	{
-		if (found >= count)
+		if (oRes.size() >= count)
 			break;
 		const CWalletTx &wtx = item.second; 
 		if (wtx.nVersion != SYSCOIN_TX_VERSION)
@@ -844,7 +844,7 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
 	{
 		for(unsigned int aliasIndex =0;aliasIndex<aliases.size();aliasIndex++)
 		{
-			if (found >= count)
+			if (messageScan.size() >= count)
 				break;
 			string name = aliases[aliasIndex];
 			vector<unsigned char> vchAlias = vchFromString(name);
@@ -893,7 +893,7 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
 	{
 		BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
 		{
-			if (found >= count)
+			if (messageScan.size() >= count)
 				break;
 			const CWalletTx &wtx = item.second; 
 			if (wtx.nVersion != SYSCOIN_TX_VERSION)
