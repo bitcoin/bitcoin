@@ -124,6 +124,6 @@ public:
 };
 
 bool GetTxOfMessage(const std::vector<unsigned char> &vchMessage, CTransaction& tx);
-bool BuildMessageJson(const CMessage& message, UniValue& oName, const std::string &strPrivKey="");
+bool BuildMessageJson(const CMessage& message, UniValue& oName);
 uint64_t GetMessageExpiration(const CMessage& message);
 #endif // MESSAGE_H

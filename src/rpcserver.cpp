@@ -376,60 +376,7 @@ static const CRPCCommand vRPCCommands[] =
     { "wallet",             "signmessage",            &signmessage,            true  },
     { "wallet",             "walletlock",             &walletlock,             true  },
     { "wallet",             "walletpassphrasechange", &walletpassphrasechange, true  },
-    { "wallet",             "walletpassphrase",       &walletpassphrase,       true  },
-	// SYSCOIN rpc functions
-	{ "wallet", "aliasnew",          &aliasnew,          false },
-    { "wallet", "aliasupdate",       &aliasupdate,       false },
-    { "wallet", "aliaslist",         &aliaslist,         false },
-	{ "wallet", "aliasaffiliates",   &aliasaffiliates,         false },
-    { "wallet", "aliasinfo",         &aliasinfo,         false },
-    { "wallet", "aliashistory",      &aliashistory,      false },
-    { "wallet", "aliasfilter",       &aliasfilter,       false },
-    { "wallet", "aliaspay",          &aliaspay,          false },
-	{ "wallet", "generatepublickey", &generatepublickey, false },
-
-    // use the blockchain as a distributed marketplace
-    { "wallet", "offernew",             &offernew,             false },
-    { "wallet", "offerupdate",          &offerupdate,          false },
-    { "wallet", "offeraccept",          &offeraccept,          false },
-	{ "wallet", "offerlink",		    &offerlink,            false },
-	{ "wallet", "offeraddwhitelist",    &offeraddwhitelist,	   false },
-	{ "wallet", "offerremovewhitelist",	&offerremovewhitelist, false },
-	{ "wallet", "offerclearwhitelist",	&offerclearwhitelist,  false },
-	{ "wallet", "offerwhitelist",		&offerwhitelist,	   false },
-    { "wallet", "offerlist",            &offerlist,            false },
-	{ "wallet", "offeracceptlist",      &offeracceptlist,      false },
-    { "wallet", "offerinfo",            &offerinfo,            false },
-    { "wallet", "offerhistory",         &offerhistory,         false },
-    { "wallet", "offerfilter",          &offerfilter,          false },
-
-  // use the blockchain as a certificate issuance platform
-  { "wallet", "certnew",         &certnew,     false },
-  { "wallet", "certupdate",      &certupdate,  false },
-  { "wallet", "certtransfer",          &certtransfer,      false },
-  { "wallet", "certlist",              &certlist,          false },
-  { "wallet", "certinfo",              &certinfo,          false },
-  { "wallet", "certhistory",     &certhistory, false },
-  { "wallet", "certfilter",      &certfilter,  false },
-
-  // use the blockchain for escrow linked to offers
-  { "wallet", "escrownew",         &escrownew,     false },
-  { "wallet", "escrowrelease",      &escrowrelease,  false },
-  { "wallet", "escrowclaimrelease",      &escrowclaimrelease,  false },
-  { "wallet", "escrowcomplete",      &escrowcomplete,  false },
-  { "wallet", "escrowrefund",          &escrowrefund,      false },
-  { "wallet", "escrowclaimrefund",          &escrowclaimrefund,      false },
-  { "wallet", "escrowlist",              &escrowlist,          false },
-  { "wallet", "escrowinfo",              &escrowinfo,          false },
-  { "wallet", "escrowhistory",     &escrowhistory, false },
-  { "wallet", "escrowfilter",      &escrowfilter,  false },
-
-  // use the blockchain for encrypted messaging
-  { "wallet", "messagenew",         &messagenew,     false },
-  { "wallet", "messagelist",              &messagelist,          false },
-  { "wallet", "messagesentlist",              &messagesentlist,          false },
-  { "wallet", "messageinfo",              &messageinfo,          false },
-  { "wallet", "messagehistory",     &messagehistory, false },
+    { "wallet",             "walletpassphrase",       &walletpassphrase,       true  }
 #endif // ENABLE_WALLET
 };
 

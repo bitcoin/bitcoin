@@ -1497,7 +1497,7 @@ static void MaybePushAddress(UniValue & entry, const CTxDestination &dest)
         entry.push_back(Pair("v2address", addr.ToString()));
 }
 // SYSCOIN
-string GetSyscoinTransactionDescription(const int op, const vector<vector<unsigned char> > &vvchArgs, const CWalletTx &wtx, const string &type, string& responseEnglish, string& responseGUID, string& responseGUID1)
+string GetSyscoinTransactionDescription(const int op, const vector<vector<unsigned char> > &vvchArgs, const string &type, string& responseEnglish, string& responseGUID, string& responseGUID1)
 {
 	responseGUID = stringFromVch(vvchArgs[0]);
 	string strResponse = "";
@@ -1725,7 +1725,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 				string strResponseEnglish = "";
 				string strResponseGUID = "";
 				string strResponseGUID1 = "";
-				strResponse = GetSyscoinTransactionDescription(op, vvchArgs, wtx, "send", strResponseEnglish, strResponseGUID, strResponseGUID1);
+				strResponse = GetSyscoinTransactionDescription(op, vvchArgs, "send", strResponseEnglish, strResponseGUID, strResponseGUID1);
 				entry.push_back(Pair("systx", strResponse));
 				entry.push_back(Pair("systype", strResponseEnglish));
 				entry.push_back(Pair("sysguid", strResponseGUID));
@@ -1779,7 +1779,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 					string strResponseEnglish = "";
 					string strResponseGUID = "";
 					string strResponseGUID1 = "";
-					strResponse = GetSyscoinTransactionDescription(op, vvchArgs, wtx, "recv", strResponseEnglish, strResponseGUID, strResponseGUID1);
+					strResponse = GetSyscoinTransactionDescription(op, vvchArgs, "recv", strResponseEnglish, strResponseGUID, strResponseGUID1);
 					entry.push_back(Pair("systx", strResponse));
 					entry.push_back(Pair("systype", strResponseEnglish));
 					entry.push_back(Pair("sysguid", strResponseGUID));
@@ -3037,6 +3037,8 @@ extern UniValue messagenew(const UniValue& params, bool fHelp);
 extern UniValue messageinfo(const UniValue& params, bool fHelp);
 extern UniValue messagereceivelist(const UniValue& params, bool fHelp);
 extern UniValue messagesentlist(const UniValue& params, bool fHelp);
+extern UniValue messagereceivecount(const UniValue& params, bool fHelp);
+extern UniValue messagesentcount(const UniValue& params, bool fHelp);
 static const CRPCCommand commands[] =
 { //  category              name                        actor (function)           okSafeMode
     //  --------------------- ------------------------    -----------------------    ----------
@@ -3116,6 +3118,7 @@ static const CRPCCommand commands[] =
 	{ "wallet", "offerclearwhitelist",	&offerclearwhitelist,  false },
 	{ "wallet", "offerwhitelist",		&offerwhitelist,	   false },
     { "wallet", "offerlist",            &offerlist,            false },
+	{ "wallet", "offercount",            &offercount,            false },
 	{ "wallet", "offeracceptlist",      &offeracceptlist,      false },
     { "wallet", "offerinfo",            &offerinfo,            false },
     { "wallet", "offerhistory",         &offerhistory,         false },
@@ -3126,6 +3129,7 @@ static const CRPCCommand commands[] =
 	{ "wallet", "certupdate",      &certupdate,  false },
 	{ "wallet", "certtransfer",          &certtransfer,      false },
 	{ "wallet", "certlist",              &certlist,          false },
+	{ "wallet", "certcount",              &certcount,          false },
 	{ "wallet", "certinfo",              &certinfo,          false },
 	{ "wallet", "certhistory",     &certhistory, false },
 	{ "wallet", "certfilter",      &certfilter,  false },

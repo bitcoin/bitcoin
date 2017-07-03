@@ -2542,19 +2542,24 @@ bool IsMyAlias(const CAliasIndex& alias)
 		return IsMine(*pwalletMain, address.Get());
 }
 UniValue aliaslist(const UniValue& params, bool fHelp) {
-	if (fHelp || 2 < params.size())
-		throw runtime_error("aliaslist [<aliasname>] [<privatekey>]\n"
-				"list my own aliases.\n"
-				"<aliasname> alias name to use as filter.\n");
+	if (fHelp || 3 < params.size())
+		throw runtime_error("aliaslist [aliasname] [count] [from]\n"
+			"list my own aliases.\n"
+			"<aliasname> alias name to use as filter.\n"
+			"[count]          (numeric, optional, default=10) The number of results to return\n"
+			"[from]           (numeric, optional, default=0) The number of results to skip\n");
 
 	vector<unsigned char> vchAlias;
 	if (params.size() >= 1)
 		vchAlias = vchFromValue(params[0]);
 
-	string strPrivateKey;
-	if(params.size() >= 2)
-		strPrivateKey = params[1].get_str();	
-
+	int count = 10;
+	int from = 0;
+	if (params.size() > 1 && !params[1].get_str().empty())
+		count = atoi(params[1].get_str());
+	if (params.size() > 2 && !params[2].get_str().empty())
+		count = atoi(params[2].get_str());
+	int found = 0;
 	UniValue oRes(UniValue::VARR);
 	map<vector<unsigned char>, int> vNamesI;
 	map<vector<unsigned char>, UniValue> vNamesO;
@@ -2562,7 +2567,11 @@ UniValue aliaslist(const UniValue& params, bool fHelp) {
 	uint256 hash;
 	CTransaction tx;
 	int pending = 0;
+	
 	BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet) {
+		if (found >= count)
+			break;
+
 		pending = 0;
 		// get txn hash, read txn index
 		hash = item.second.GetHash();
@@ -2573,7 +2582,7 @@ UniValue aliaslist(const UniValue& params, bool fHelp) {
 
 		vector<CAliasIndex> vtxPos;
 		CAliasIndex alias(wtx);
-		if(alias.IsNull())
+		if (alias.IsNull())
 			continue;
 		// skip this alias if it doesn't match the given filter value
 		if (vchAlias.size() > 0 && alias.vchAlias != vchAlias)
@@ -2584,19 +2593,21 @@ UniValue aliaslist(const UniValue& params, bool fHelp) {
 		}
 		// get last active name only
 		if (vNamesI.find(alias.vchAlias) != vNamesI.end() && (alias.nHeight <= vNamesI[alias.vchAlias] || vNamesI[alias.vchAlias] < 0))
-			continue;	
+			continue;
+		found++;
+		if (found < from)
+			continue;
 		UniValue oName(UniValue::VOBJ);
-		if(BuildAliasJson(alias, pending, oName, strPrivateKey))
+		if (BuildAliasJson(alias, pending, oName))
 		{
 			vNamesI[alias.vchAlias] = alias.nHeight;
-			vNamesO[alias.vchAlias] = oName;	
+			vNamesO[alias.vchAlias] = oName;
 		}
 	}
 	BOOST_FOREACH(const PAIRTYPE(vector<unsigned char>, UniValue)& item, vNamesO)
 		oRes.push_back(item.second);
 	return oRes;
 }
-
 UniValue aliasaffiliates(const UniValue& params, bool fHelp) {
 	if (fHelp || 1 < params.size())
 		throw runtime_error("aliasaffiliates \n"
@@ -2798,41 +2809,39 @@ int aliasunspent(const vector<unsigned char> &vchAlias, COutPoint& outpoint)
  * @return        [description]
  */
 UniValue aliasinfo(const UniValue& params, bool fHelp) {
-	if (fHelp || 2 < params.size())
-		throw runtime_error("aliasinfo <aliasname> [<privatekey>]\n"
+	if (fHelp || 1 < params.size())
+		throw runtime_error("aliasinfo <aliasname>\n"
 				"Show values of an alias.\n");
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
-	string strPrivateKey;
-	if(params.size() >= 2)
-		strPrivateKey = params[1].get_str();
 
 	vector<CAliasIndex> vtxPos;
 	if (!paliasdb->ReadAlias(vchAlias, vtxPos) || vtxPos.empty())
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5535 - " + _("Failed to read from alias DB"));
 
 	UniValue oName(UniValue::VOBJ);
-	if(!BuildAliasJson(vtxPos.back(), 0, oName, strPrivateKey))
+	if(!BuildAliasJson(vtxPos.back(), 0, oName))
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5536 - " + _("Could not find this alias"));
 		
 	return oName;
 }
-bool BuildAliasJson(const CAliasIndex& alias, const int pending, UniValue& oName, const string &strPrivKey)
+bool BuildAliasJson(const CAliasIndex& alias, const int pending, UniValue& oName)
 {
 	uint64_t nHeight;
 	int expired = 0;
 	int64_t expires_in = 0;
 	int64_t expired_time = 0;
 	nHeight = alias.nHeight;
-	oName.push_back(Pair("name", stringFromVch(alias.vchAlias)));
+	
 
 	if(alias.safetyLevel >= SAFETY_LEVEL2)
 		return false;
+	oName.push_back(Pair("name", stringFromVch(alias.vchAlias)));
 	oName.push_back(Pair("value", stringFromVch(alias.vchPublicValue)));
 	string strPrivateValue = "";
 	if(!alias.vchPrivateValue.empty())
 		strPrivateValue = _("Encrypted for alias owner");
 	string strDecrypted = "";
-	if(DecryptMessage(alias, alias.vchPrivateValue, strDecrypted, strPrivKey))
+	if(DecryptMessage(alias, alias.vchPrivateValue, strDecrypted))
 		strPrivateValue = strDecrypted;		
 	oName.push_back(Pair("privatevalue", strPrivateValue));
 
@@ -2840,7 +2849,7 @@ bool BuildAliasJson(const CAliasIndex& alias, const int pending, UniValue& oName
 	if(!alias.vchPassword.empty())
 		strPassword = _("Encrypted for alias owner");
 	strDecrypted = "";
-	if(DecryptPrivateKey(alias.vchPubKey, alias.vchPassword, strDecrypted, strPrivKey))
+	if(DecryptPrivateKey(alias.vchPubKey, alias.vchPassword, strDecrypted))
 		strPassword = strDecrypted;		
 	oName.push_back(Pair("password", strPassword));
 
@@ -3015,6 +3024,7 @@ UniValue aliasfilter(const UniValue& params, bool fHelp) {
 						"scan and filter aliases\n"
 						"[regexp] : apply [regexp] on aliases, empty means all aliases\n"
 						"[from] : show results from this GUID [from], empty means first.\n"
+						"[count] : number of results to return.\n"
 						"[aliasfilter] : shows all aliases that are safe to display (not on the ban list)\n"
 						"aliasfilter \"\" 5 # list aliases updated in last 5 blocks\n"
 						"aliasfilter \"^alias\" # list all aliases starting with \"alias\"\n"
@@ -3034,9 +3044,14 @@ UniValue aliasfilter(const UniValue& params, bool fHelp) {
 		vchAlias = vchFromValue(params[1]);
 		strName = params[1].get_str();
 	}
-
+	int count = 10;
+	int from = 0;
 	if (params.size() > 2 && !params[2].get_str().empty())
-		safeSearch = params[2].get_str()=="On"? true: false;
+		count = atoi(params[2].get_str());
+
+
+	if (params.size() > 3 && !params[3].get_str().empty())
+		safeSearch = params[3].get_str()=="On"? true: false;
 
 	UniValue oRes(UniValue::VARR);
 
@@ -3045,7 +3060,7 @@ UniValue aliasfilter(const UniValue& params, bool fHelp) {
 	boost::algorithm::to_lower(strName);
 	vchAlias = vchFromString(strName);
 	CTransaction aliastx;
-	if (!paliasdb->ScanNames(vchAlias, strRegexp, safeSearch, 25, nameScan))
+	if (!paliasdb->ScanNames(vchAlias, strRegexp, safeSearch, count, nameScan))
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5538 - " + _("Scan failed"));
 
 	BOOST_FOREACH(const CAliasIndex &alias, nameScan) {

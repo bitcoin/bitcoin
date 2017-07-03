@@ -693,88 +693,58 @@ UniValue messageinfo(const UniValue& params, bool fHelp) {
 }
 
 UniValue messagereceivelist(const UniValue& params, bool fHelp) {
-    if (fHelp || 3 < params.size())
-        throw runtime_error("messagereceivelist [\"alias\",...] [<message>] [<privatekey>]\n"
+    if (fHelp || 4 < params.size())
+        throw runtime_error("messagereceivelist [\"alias\",...] [message] [count] [from]\n"
                 "list received messages that an array of aliases own. Set of aliases to look up based on alias, and private key to decrypt any data found in message.");
 	UniValue aliasesValue(UniValue::VARR);
 	vector<string> aliases;
-	if(params.size() >= 1)
-	{
-		if(params[0].isArray())
-		{
-			aliasesValue = params[0].get_array();
-			for(unsigned int aliasIndex =0;aliasIndex<aliasesValue.size();aliasIndex++)
-			{
-				string lowerStr = aliasesValue[aliasIndex].get_str();
-				boost::algorithm::to_lower(lowerStr);
-				if(!lowerStr.empty())
-					aliases.push_back(lowerStr);
-			}
-		}
-		else
-		{
-			string aliasName =  params[0].get_str();
-			boost::algorithm::to_lower(aliasName);
-			if(!aliasName.empty())
-				aliases.push_back(aliasName);
-		}
-	}
-	vector<unsigned char> vchNameUniq;
-    if (params.size() >= 2 && !params[1].get_str().empty())
-        vchNameUniq = vchFromValue(params[1]);
+	
 
-	string strPrivateKey;
-	if(params.size() >= 3)
-		strPrivateKey = params[2].get_str();
+	int count = 10;
+	int from = 0;
+	if (params.size() > 2 && !params[2].get_str().empty())
+		count = atoi(params[2].get_str());
+	if (params.size() > 3 && !params[3].get_str().empty())
+		count = atoi(params[3].get_str());
+	int found = 0;
 
 	UniValue oRes(UniValue::VARR);
 	map< vector<unsigned char>, int > vNamesI;
-	vector<CMessage > messageScan;
-	if(aliases.size() > 0)
-	{
-		if (!pmessagedb->ScanRecvMessages(vchNameUniq, aliases, 1000, messageScan))
-			throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3508 - " + _("Scan failed"));
-	}
-	else
-	{
-		BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
-		{
-			const CWalletTx &wtx = item.second; 
-			if (wtx.nVersion != SYSCOIN_TX_VERSION)
-				continue;
-			if(!IsSyscoinTxMine(wtx, "message"))
-				continue;
 
-			CMessage message(wtx);
-			if(!message.IsNull())
-			{
-				if (vNamesI.find(message.vchMessage) != vNamesI.end())
-					continue;
-				if (vchNameUniq.size() > 0 && vchNameUniq != message.vchMessage)
-					continue;
-				vector<CMessage> vtxPos;
-				if (!pmessagedb->ReadMessage(message.vchMessage, vtxPos) || vtxPos.empty())
-					continue;
-				message.txHash = wtx.GetHash();
-				messageScan.push_back(message);
-				vNamesI[message.vchMessage] = message.nHeight;
-				UniValue oName(UniValue::VOBJ);
-				if(BuildMessageJson(message, oName, strPrivateKey))
-					oRes.push_back(oName);
-			}
+	BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
+	{
+		if (found >= count)
+			break;
+		const CWalletTx &wtx = item.second; 
+		if (wtx.nVersion != SYSCOIN_TX_VERSION)
+			continue;
+		if(!IsSyscoinTxMine(wtx, "message"))
+			continue;
+
+		CMessage message(wtx);
+		if(!message.IsNull())
+		{
+			if (vNamesI.find(message.vchMessage) != vNamesI.end())
+				continue;
+			if (vchNameUniq.size() > 0 && vchNameUniq != message.vchMessage)
+				continue;
+			vector<CMessage> vtxPos;
+			if (!pmessagedb->ReadMessage(message.vchMessage, vtxPos) || vtxPos.empty())
+				continue;
+			message.txHash = wtx.GetHash();
+			vNamesI[message.vchMessage] = message.nHeight;
+			UniValue oName(UniValue::VOBJ);
+			found++;
+			if (found < from)
+				continue;
+			if(BuildMessageJson(message, oName))
+				oRes.push_back(oName);
 		}
 	}
-	BOOST_FOREACH(const CMessage &message, messageScan) {
-		// build the output
-		UniValue oName(UniValue::VOBJ);
-		if(BuildMessageJson(message, oName, strPrivateKey))
-			oRes.push_back(oName);
-	}
 	
-
     return oRes;
 }
-bool BuildMessageJson(const CMessage& message, UniValue& oName, const string &strPrivKey)
+bool BuildMessageJson(const CMessage& message, UniValue& oName)
 {
 	CAliasIndex aliasFrom, aliasTo;
 	CTransaction aliastxtmp;
@@ -810,24 +780,25 @@ bool BuildMessageJson(const CMessage& message, UniValue& oName, const string &st
 	oName.push_back(Pair("subject", stringFromVch(message.vchSubject)));
 	string strDecrypted = "";
 	string strData = _("Encrypted for recipient of message");
-	if(DecryptMessage(aliasTo, message.vchMessageTo, strDecrypted, strPrivKey))
+	if(DecryptMessage(aliasTo, message.vchMessageTo, strDecrypted))
 	{
 		if(message.bHex)
 			strData = HexStr(strDecrypted);
 		else
 			strData = strDecrypted;
 	}
-	else if(!message.bHex && DecryptMessage(aliasFrom, message.vchMessageFrom, strDecrypted, strPrivKey))
+	else if(!message.bHex && DecryptMessage(aliasFrom, message.vchMessageFrom, strDecrypted))
 		strData = strDecrypted;
 
 	oName.push_back(Pair("message", strData));
 	return true;
 }
-
 UniValue messagesentlist(const UniValue& params, bool fHelp) {
-    if (fHelp || 3 < params.size())
-        throw runtime_error("messagesentlist [\"alias\",...] [<message>] [<privatekey>]\n"
-                "list sent messages that an array of aliases own. Set of aliases to look up based on alias, and private key to decrypt any data found in message.");
+    if (fHelp || 4 < params.size())
+        throw runtime_error("messagesentlist [\"alias\",...] [message] [count] [from]\n"
+                "list sent messages that an array of aliases own. Set of aliases to look up based on alias\n"
+				"[count]          (numeric, optional, default=10) The number of results to return\n"
+				"[from]           (numeric, optional, default=0) The number of results to skip\n");
 	UniValue aliasesValue(UniValue::VARR);
 	vector<string> aliases;
 	if(params.size() >= 1)
@@ -855,10 +826,13 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
     if (params.size() >= 2 && !params[1].get_str().empty())
         vchNameUniq = vchFromValue(params[1]);
 
-	string strPrivateKey;
-	if(params.size() >= 3)
-		strPrivateKey = params[2].get_str();
-
+	int count = 10;
+	int from = 0;
+	if (params.size() > 2 && !params[2].get_str().empty())
+		count = atoi(params[2].get_str());
+	if (params.size() > 3 && !params[3].get_str().empty())
+		count = atoi(params[3].get_str());
+	int found = 0;
 	UniValue oRes(UniValue::VARR);
 	map< vector<unsigned char>, int > vNamesI;
 	vector<CMessage> messageScan;
@@ -866,6 +840,8 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
 	{
 		for(unsigned int aliasIndex =0;aliasIndex<aliases.size();aliasIndex++)
 		{
+			if (found >= count)
+				break;
 			string name = aliases[aliasIndex];
 			vector<unsigned char> vchAlias = vchFromString(name);
 			vector<CAliasIndex> vtxPos;
@@ -899,6 +875,9 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
 					const CMessage &theMessage = vtxMessagePos.back();
 					if (theMessage.vchAliasFrom != theAlias.vchAlias)
 						continue;
+					found++;
+					if (found < from)
+						continue;
 					message.txHash = theAlias.txHash;
 					messageScan.push_back(message);
 					vNamesI[message.vchMessage] = message.nHeight;
@@ -910,6 +889,8 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
 	{
 		BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
 		{
+			if (found >= count)
+				break;
 			const CWalletTx &wtx = item.second; 
 			if (wtx.nVersion != SYSCOIN_TX_VERSION)
 				continue;
@@ -925,6 +906,9 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
 				vector<CMessage> vtxMessagePos;
 				if (!pmessagedb->ReadMessage(message.vchMessage, vtxMessagePos) || vtxMessagePos.empty())
 					continue;
+				found++;
+				if (found < from)
+					continue;
 				message.txHash = wtx.GetHash();
 				messageScan.push_back(message);
 				vNamesI[message.vchMessage] = message.nHeight;
@@ -934,7 +918,7 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
 	BOOST_FOREACH(const CMessage &message, messageScan) {
 		// build the output
 		UniValue oName(UniValue::VOBJ);
-		if(BuildMessageJson(message, oName, strPrivateKey))
+		if(BuildMessageJson(message, oName))
 			oRes.push_back(oName);
 	}
     return oRes;
