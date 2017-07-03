@@ -3622,7 +3622,7 @@ UniValue offercount(const UniValue& params, bool fHelp) {
 UniValue offerlist(const UniValue& params, bool fHelp) {
     if (fHelp || 6 < params.size())
         throw runtime_error("offerlist [\"alias\",...] [guid] [accepts=false] [walletless=false] [count] [from]\n"
-                "list offers that an array of aliases own. Set of aliases to look up based on alias.\n
+                "list offers that an array of aliases own. Set of aliases to look up based on alias.\n"
 				"[count]          (numeric, optional, default=10) The number of results to return\n"
 				"[from]           (numeric, optional, default=0) The number of results to skip\n");
 	UniValue aliasesValue(UniValue::VARR);
