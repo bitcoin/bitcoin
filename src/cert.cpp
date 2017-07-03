@@ -1346,7 +1346,7 @@ UniValue certlist(const UniValue& params, bool fHelp) {
 	{
 		for(unsigned int aliasIndex =0;aliasIndex<aliases.size();aliasIndex++)
 		{
-			if (found >= count)
+			if (oRes.size() >= count)
 				break;
 			const string &name = aliases[aliasIndex];
 			const vector<unsigned char> &vchAlias = vchFromString(name);
