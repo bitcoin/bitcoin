@@ -392,7 +392,7 @@ void RemoveSyscoinScript(const CScript& scriptPubKeyIn, CScript& scriptPubKeyOut
 void PutToAliasList(std::vector<CAliasIndex> &aliasList, CAliasIndex& index);
 void SysTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry);
 void AliasTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry);
-bool BuildAliasJson(const CAliasIndex& alias, const int pending, UniValue& oName, const std::string &strPrivKey="");
+bool BuildAliasJson(const CAliasIndex& alias, const int pending, UniValue& oName);
 void CleanupSyscoinServiceDatabases(int &servicesCleaned);
 int aliasunspent(const std::vector<unsigned char> &vchAlias, COutPoint& outpoint);
 bool IsMyAlias(const CAliasIndex& alias);

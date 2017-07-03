@@ -39,55 +39,28 @@ bool EncryptMessage(const CAliasIndex& alias, const vector<unsigned char> &vchMe
 
 	return true;
 }
-bool DecryptPrivateKey(const vector<unsigned char> &vchPubKey, const vector<unsigned char> &vchCipherText, string &strMessage, const string &strPrivKey)
+bool DecryptPrivateKey(const vector<unsigned char> &vchPubKey, const vector<unsigned char> &vchCipherText, string &strMessage)
 {
 	strMessage.clear();
 	std::vector<unsigned char> vchPrivateKey;
 	CMessageCrypter crypter;
-	// if priv key passed in try to use that, fallback to private key from wallet of pubkey passed in
-	if(!strPrivKey.empty())
-	{
-		CSyscoinSecret vchSecret;
-		bool fGood = vchSecret.SetString(strPrivKey);
-		if (!fGood) return false;
-		CKey key = vchSecret.GetKey();
-		vchPrivateKey = std::vector<unsigned char>(key.begin(), key.end());
-		
-		if(!crypter.Decrypt(stringFromVch(vchPrivateKey), stringFromVch(vchCipherText), strMessage))
-		{
-			// backup plan try to get priv key from pubkey in wallet
-			CKey PrivateKey;
-			CPubKey PubKey(vchPubKey);
-			CKeyID pubKeyID = PubKey.GetID();
-			if (!pwalletMain->GetKey(pubKeyID, PrivateKey))
-				return false;
-			CSyscoinSecret Secret(PrivateKey);
-			PrivateKey = Secret.GetKey();
-			vchPrivateKey = std::vector<unsigned char>(PrivateKey.begin(), PrivateKey.end());
-			strMessage.clear();
-			if(!crypter.Decrypt(stringFromVch(vchPrivateKey), stringFromVch(vchCipherText), strMessage))
-				return false;
-		}
-	}
-	// otherwise try to get private key from wallet from pubkey passed in
-	else
-	{
-		CKey PrivateKey;
-		CPubKey PubKey(vchPubKey);
-		CKeyID pubKeyID = PubKey.GetID();
-		if (!pwalletMain->GetKey(pubKeyID, PrivateKey))
-			return false;
-		CSyscoinSecret Secret(PrivateKey);
-		PrivateKey = Secret.GetKey();
-		vchPrivateKey = std::vector<unsigned char>(PrivateKey.begin(), PrivateKey.end());
-		strMessage.clear();
-		if(!crypter.Decrypt(stringFromVch(vchPrivateKey), stringFromVch(vchCipherText), strMessage))
-			return false;
-	}
+	
+	CKey PrivateKey;
+	CPubKey PubKey(vchPubKey);
+	CKeyID pubKeyID = PubKey.GetID();
+	if (!pwalletMain->GetKey(pubKeyID, PrivateKey))
+		return false;
+	CSyscoinSecret Secret(PrivateKey);
+	PrivateKey = Secret.GetKey();
+	vchPrivateKey = std::vector<unsigned char>(PrivateKey.begin(), PrivateKey.end());
+	strMessage.clear();
+	if(!crypter.Decrypt(stringFromVch(vchPrivateKey), stringFromVch(vchCipherText), strMessage))
+		return false;
+	
 	
 	return true;
 }
-bool DecryptMessage(const CAliasIndex& alias, const vector<unsigned char> &vchCipherText, string &strMessage, const string &strPrivKey)
+bool DecryptMessage(const CAliasIndex& alias, const vector<unsigned char> &vchCipherText, string &strMessage)
 {
 	strMessage.clear();
 	// get private key from alias or use one passed in to get the encryption private key
@@ -99,12 +72,12 @@ bool DecryptMessage(const CAliasIndex& alias, const vector<unsigned char> &vchCi
 			vector<CAliasIndex> vtxPos;
 			if (!paliasdb->ReadAlias(vchFromString(alias.multiSigInfo.vchAliases[i]), vtxPos) || vtxPos.empty())
 				continue;
-			if(DecryptPrivateKey(vtxPos.back().vchPubKey, vchFromString(alias.multiSigInfo.vchEncryptionPrivateKeys[i]), strKey, strPrivKey))
+			if(DecryptPrivateKey(vtxPos.back().vchPubKey, vchFromString(alias.multiSigInfo.vchEncryptionPrivateKeys[i]), strKey))
 				break;
 		}	
 	}
 	else
-		DecryptPrivateKey(alias.vchPubKey, alias.vchEncryptionPrivateKey, strKey, strPrivKey);
+		DecryptPrivateKey(alias.vchPubKey, alias.vchEncryptionPrivateKey, strKey);
 	// use encryption private key to get data
 	CMessageCrypter crypter;
 	if(!crypter.Decrypt(strKey, stringFromVch(vchCipherText), strMessage))
@@ -1238,10 +1211,10 @@ UniValue certinfo(const UniValue& params, bool fHelp) {
     return oCert;
 }
 
-UniValue certlist(const UniValue& params, bool fHelp) {
-    if (fHelp || 3 < params.size())
-        throw runtime_error("certlist [\"alias\",...] [<cert>] [<privatekey>]\n"
-                "list certificates that an array of aliases own. Set of aliases to look up based on alias, and private key to decrypt any data found in certificates.");
+UniValue certcount(const UniValue& params, bool fHelp) {
+    if (fHelp || 1 < params.size())
+        throw runtime_error("certlist [\"alias\",...]\n"
+                "Count certificates that an array of aliases own.\n");
 	UniValue aliasesValue(UniValue::VARR);
 	vector<string> aliases;
 	if(params.size() >= 1)
@@ -1265,36 +1238,87 @@ UniValue certlist(const UniValue& params, bool fHelp) {
 				aliases.push_back(aliasName);
 		}
 	}
-	vector<unsigned char> vchNameUniq;
-    if (params.size() >= 2 && !params[1].get_str().empty())
-        vchNameUniq = vchFromValue(params[1]);
 
-	string strPrivateKey;
-	if(params.size() >= 3)
-		strPrivateKey = params[2].get_str();
-	
-	
 	UniValue oRes(UniValue::VARR);
 	map< vector<unsigned char>, int > vNamesI;
 	vector<CCert> certScan;
 	if(aliases.size() > 0)
 	{
-		if (!pcertdb->ScanCerts(vchNameUniq, stringFromVch(vchNameUniq), aliases, false, "", 1000,certScan))
+		if (!pcertdb->ScanCerts(stringFromVch(""), stringFromVch(""), aliases, false, "", 1000,certScan))
+			throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2517 - " + _("Scan failed"));
+	}
+
+    return certScan.size();
+}
+UniValue certlist(const UniValue& params, bool fHelp) {
+	if (fHelp || 4 < params.size())
+		throw runtime_error("certlist [\"alias\",...] [cert] [count] [from]\n"
+			"list certificates that an array of aliases own.\n"
+			"[count]          (numeric, optional, default=10) The number of results to return\n"
+			"[from]           (numeric, optional, default=0) The number of results to skip\n");
+	UniValue aliasesValue(UniValue::VARR);
+	vector<string> aliases;
+	if (params.size() >= 1)
+	{
+		if (params[0].isArray())
+		{
+			aliasesValue = params[0].get_array();
+			for (unsigned int aliasIndex = 0; aliasIndex<aliasesValue.size(); aliasIndex++)
+			{
+				string lowerStr = aliasesValue[aliasIndex].get_str();
+				boost::algorithm::to_lower(lowerStr);
+				if (!lowerStr.empty())
+					aliases.push_back(lowerStr);
+			}
+		}
+		else
+		{
+			string aliasName = params[0].get_str();
+			boost::algorithm::to_lower(aliasName);
+			if (!aliasName.empty())
+				aliases.push_back(aliasName);
+		}
+	}
+	vector<unsigned char> vchNameUniq;
+	if (params.size() >= 2 && !params[1].get_str().empty())
+		vchNameUniq = vchFromValue(params[1]);
+
+	int count = 10;
+	int from = 0;
+	if (params.size() > 2 && !params[2].get_str().empty())
+		count = atoi(params[2].get_str());
+	if (params.size() > 3 && !params[3].get_str().empty())
+		count = atoi(params[3].get_str());
+	int found = 0;
+
+	UniValue oRes(UniValue::VARR);
+	map< vector<unsigned char>, int > vNamesI;
+	vector<CCert> certScan;
+	if (aliases.size() > 0)
+	{
+		if (!pcertdb->ScanCerts(vchNameUniq, stringFromVch(vchNameUniq), aliases, false, "", 1000, certScan))
 			throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2517 - " + _("Scan failed"));
 	}
 	CTransaction aliastx;
 	BOOST_FOREACH(const CCert& cert, certScan) {
+		if (found >= count)
+			break;
 		vector<CAliasIndex> vtxPos;
 		if (!paliasdb->ReadAlias(cert.vchAlias, vtxPos) || vtxPos.empty())
 			continue;
 		const CAliasIndex &alias = vtxPos.back();
 		UniValue oCert(UniValue::VOBJ);
-		if(BuildCertJson(cert, alias, oCert, strPrivateKey))
+		found++;
+		if (found < from)
+			continue;
+		if (BuildCertJson(cert, alias, oCert))
+		{
 			oRes.push_back(oCert);
+		}
 	}
-    return oRes;
+	return oRes;
 }
-bool BuildCertJson(const CCert& cert, const CAliasIndex& alias, UniValue& oCert, const string &strPrivKey)
+bool BuildCertJson(const CCert& cert, const CAliasIndex& alias, UniValue& oCert)
 {
 	if(cert.safetyLevel >= SAFETY_LEVEL2)
 		return false;
@@ -1318,7 +1342,7 @@ bool BuildCertJson(const CCert& cert, const CAliasIndex& alias, UniValue& oCert,
 		strData = _("Encrypted for owner of certificate private data");
 		if(!cert.vchData.empty() && strDecrypted == "")
 		{
-			if(DecryptMessage(alias, cert.vchData, strDecrypted, strPrivKey))
+			if(DecryptMessage(alias, cert.vchData, strDecrypted))
 				strData = strDecrypted;		
 		}
 	}
@@ -1399,6 +1423,7 @@ UniValue certfilter(const UniValue& params, bool fHelp) {
 						"scan and filter certs\n"
 						"[regexp] : apply [regexp] on certs, empty means all certs\n"
 						"[from] : show results from this GUID [from], 0 means first.\n"
+						"[count] : number of results to return.\n"
 						"[certfilter] : shows all certs that are safe to display (not on the ban list)\n"
 						"[safesearch] : shows all certs that are safe to display (not on the ban list)\n"
 						"[category] : category you want to search in, empty for all\n"
@@ -1418,17 +1443,21 @@ UniValue certfilter(const UniValue& params, bool fHelp) {
 	if (params.size() > 1 && !params[1].get_str().empty())
 		vchCert = vchFromValue(params[1]);
 
+	int count = 10;
 	if (params.size() > 2 && !params[2].get_str().empty())
-		safeSearch = params[2].get_str()=="On"? true: false;
+		count = atoi(params[2].get_str());
 
 	if (params.size() > 3 && !params[3].get_str().empty())
-		strCategory = params[3].get_str();
+		safeSearch = params[3].get_str()=="On"? true: false;
+
+	if (params.size() > 4 && !params[4].get_str().empty())
+		strCategory = params[4].get_str();
 
     UniValue oRes(UniValue::VARR);
     
     vector<CCert> certScan;
 	vector<string> aliases;
-    if (!pcertdb->ScanCerts(vchCert, strRegexp, aliases, safeSearch, strCategory, 25, certScan))
+    if (!pcertdb->ScanCerts(vchCert, strRegexp, aliases, safeSearch, strCategory, count, certScan))
 		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2520 - " + _("Scan failed"));
   
 	CTransaction aliastx;

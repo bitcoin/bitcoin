@@ -3215,7 +3215,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 	return oOffer;
 
 }
-bool BuildOfferJson(const COffer& theOffer, const CAliasIndex &alias, UniValue& oOffer, const string &strPrivKey)
+bool BuildOfferJson(const COffer& theOffer, const CAliasIndex &alias, UniValue& oOffer)
 {
 	if(theOffer.safetyLevel >= SAFETY_LEVEL2)
 		return false;
@@ -3228,9 +3228,9 @@ bool BuildOfferJson(const COffer& theOffer, const CAliasIndex &alias, UniValue& 
 	CAliasIndex linkAlias;
 	if( !theOffer.vchLinkOffer.empty())
 	{
-		if(!GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, linkTx, myLinkedVtxPos, true))
+		if (!GetTxAndVtxOfOffer(theOffer.vchLinkOffer, linkOffer, linkTx, myLinkedVtxPos, true))
 			return false;
-		if(!GetTxOfAlias(linkOffer.vchAlias, linkAlias, linkaliastx, true))
+		if (!GetTxOfAlias(linkOffer.vchAlias, linkAlias, linkaliastx, true))
 			return false;
 		if(linkOffer.safetyLevel >= SAFETY_LEVEL2)
 			return false;
@@ -3343,8 +3343,8 @@ bool BuildOfferJson(const COffer& theOffer, const CAliasIndex &alias, UniValue& 
 	return true;
 }
 UniValue offeracceptlist(const UniValue& params, bool fHelp) {
-    if (fHelp || 3 < params.size())
-        throw runtime_error("offeracceptlist [\"alias\",...] [<acceptguid>] [<privatekey>]\n"
+    if (fHelp || 2 < params.size())
+        throw runtime_error("offeracceptlist [\"alias\",...] [<acceptguid>]\n"
                 "list offer purchases that an array of aliases own. Set of aliases to look up based on alias, and private key to decrypt any data found in offer purchase.");
 	UniValue aliasesValue(UniValue::VARR);
 	vector<string> aliases;
@@ -3372,10 +3372,6 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchNameUniq;
     if (params.size() >= 2 && !params[1].get_str().empty())
         vchNameUniq = vchFromValue(params[1]);
-
-	string strPrivateKey;
-	if(params.size() >= 3)
-		strPrivateKey = params[2].get_str();
 
 	UniValue aoOfferAccepts(UniValue::VARR);
 	map< vector<unsigned char>, int > vNamesI;
@@ -3436,7 +3432,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 						continue;
 					UniValue oAccept(UniValue::VOBJ);
 					vNamesA[theOffer.accept.vchAcceptRand] = theOffer.accept.nAcceptHeight;
-					if(BuildOfferAcceptJson(theOffer, theAlias, tx, oAccept, strPrivateKey))
+					if(BuildOfferAcceptJson(theOffer, theAlias, tx, oAccept))
 					{
 						aoOfferAccepts.push_back(oAccept);
 					}
@@ -3448,7 +3444,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 	}
     return aoOfferAccepts;
 }
-bool BuildOfferAcceptJson(const COffer& theOffer, const CAliasIndex& theAlias, const CTransaction &aliastx, UniValue& oOfferAccept, const string &strPrivKey)
+bool BuildOfferAcceptJson(const COffer& theOffer, const CAliasIndex& theAlias, const CTransaction &aliastx, UniValue& oOfferAccept)
 {
 	CTransaction offerTx;
 	COffer linkOffer;
@@ -3635,15 +3631,95 @@ bool BuildOfferAcceptJson(const COffer& theOffer, const CAliasIndex& theAlias, c
 	oOfferAccept.push_back(Pair("avg_rating", totalAvgRating));
 	oOfferAccept.push_back(Pair("avg_rating_display", strprintf("%.1f/5 (%d %s)", totalAvgRating, ratingCount, _("Votes"))));
 	string strMessage = string("");
-	if(!DecryptMessage(theAlias, theOffer.accept.vchMessage, strMessage, strPrivKey))
+	if(!DecryptMessage(theAlias, theOffer.accept.vchMessage, strMessage))
 		strMessage = _("Encrypted for owner of offer");
 	oOfferAccept.push_back(Pair("pay_message", strMessage));
 	return true;
 }
 UniValue offerlist(const UniValue& params, bool fHelp) {
-    if (fHelp || 3 < params.size())
-        throw runtime_error("offerlist [\"alias\",...] [<offer>] [<privatekey>]\n"
-                "list offers that an array of aliases own. Set of aliases to look up based on alias, and private key to decrypt any data found in offer.");
+	if (fHelp || 4 < params.size())
+		throw runtime_error("offerlist [\"alias\",...]\n"
+			"list offers that an array of aliases own.\n");
+	UniValue aliasesValue(UniValue::VARR);
+	vector<string> aliases;
+	if (params.size() >= 1)
+	{
+		if (params[0].isArray())
+		{
+			aliasesValue = params[0].get_array();
+			for (unsigned int aliasIndex = 0; aliasIndex<aliasesValue.size(); aliasIndex++)
+			{
+				string lowerStr = aliasesValue[aliasIndex].get_str();
+				boost::algorithm::to_lower(lowerStr);
+				if (!lowerStr.empty())
+					aliases.push_back(lowerStr);
+			}
+		}
+		else
+		{
+			string aliasName = params[0].get_str();
+			boost::algorithm::to_lower(aliasName);
+			if (!aliasName.empty())
+				aliases.push_back(aliasName);
+		}
+	}
+	int found = 0;
+
+	UniValue oRes(UniValue::VARR);
+	map< vector<unsigned char>, int > vNamesI;
+	map< vector<unsigned char>, UniValue > vNamesO;
+	if (aliases.size() > 0)
+	{
+		for (unsigned int aliasIndex = 0; aliasIndex<aliases.size(); aliasIndex++)
+		{
+			string name = aliases[aliasIndex];
+			vector<unsigned char> vchAlias = vchFromString(name);
+
+
+			vector<CAliasIndex> vtxPos;
+			if (!paliasdb->ReadAlias(vchAlias, vtxPos) || vtxPos.empty())
+				continue;
+			const CAliasIndex &alias = vtxPos.back();
+			CTransaction aliastx;
+			uint256 txHash;
+			if (!GetSyscoinTransaction(alias.nHeight, alias.txHash, aliastx, Params().GetConsensus()))
+				continue;
+
+			CTransaction tx;
+			for (std::vector<CAliasIndex>::reverse_iterator it = vtxPos.rbegin(); it != vtxPos.rend(); ++it) {
+				const CAliasIndex& theAlias = *it;
+				if (!GetSyscoinTransaction(theAlias.nHeight, theAlias.txHash, tx, Params().GetConsensus()))
+					continue;
+				COffer offer(tx);
+				if (!offer.IsNull() && offer.accept.IsNull())
+				{
+					if (vNamesI.find(offer.vchOffer) != vNamesI.end())
+						continue;
+					if (vchNameUniq.size() > 0 && vchNameUniq != offer.vchOffer)
+						continue;
+					vector<COffer> vtxOfferPos;
+					if (!pofferdb->ReadOffer(offer.vchOffer, vtxOfferPos) || vtxOfferPos.empty())
+						continue;
+					const COffer &theOffer = vtxOfferPos.back();
+					if (theOffer.vchAlias != theAlias.vchAlias)
+						continue;
+
+					UniValue oOffer(UniValue::VOBJ);
+					vNamesI[offer.vchOffer] = theOffer.nHeight;
+					found++;
+				}
+
+			}
+		}
+	}
+	return found;
+}
+UniValue offerlist(const UniValue& params, bool fHelp) {
+    if (fHelp || 4 < params.size())
+        throw runtime_error("offerlist [\"alias\",...] [offer] [count] [from]\n"
+                "list offers that an array of aliases own.\n"
+				"[count]          (numeric, optional, default=10) The number of results to return\n"
+				"[from]           (numeric, optional, default=0) The number of results to skip\n");
 	UniValue aliasesValue(UniValue::VARR);
 	vector<string> aliases;
 	if(params.size() >= 1)
@@ -3671,18 +3747,23 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
     if (params.size() >= 2 && !params[1].get_str().empty())
         vchNameUniq = vchFromValue(params[1]);
 
-	string strPrivateKey;
-	if(params.size() >= 3)
-		strPrivateKey = params[2].get_str();
+	int count = 10;
+	int from = 0;
+	if (params.size() > 2 && !params[2].get_str().empty())
+		count = atoi(params[2].get_str());
+	if (params.size() > 3 && !params[3].get_str().empty())
+		count = atoi(params[3].get_str());
+	int found = 0;
 
 	UniValue oRes(UniValue::VARR);
-	vector<COffer> offerScan;
 	map< vector<unsigned char>, int > vNamesI;
 	map< vector<unsigned char>, UniValue > vNamesO;
 	if(aliases.size() > 0)
 	{
 		for(unsigned int aliasIndex =0;aliasIndex<aliases.size();aliasIndex++)
 		{
+			if (found >= count)
+				break;
 			string name = aliases[aliasIndex];
 			vector<unsigned char> vchAlias = vchFromString(name);
 
@@ -3714,11 +3795,13 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 					const COffer &theOffer = vtxOfferPos.back();
 					if(theOffer.vchAlias != theAlias.vchAlias)
 						continue;
-					offerScan.push_back(theOffer);
-					
+	
 					UniValue oOffer(UniValue::VOBJ);
 					vNamesI[offer.vchOffer] = theOffer.nHeight;
-					if(BuildOfferJson(theOffer, theAlias, oOffer, strPrivateKey))
+					found++;
+					if (found < from)
+						continue;
+					if(BuildOfferJson(theOffer, theAlias, oOffer))
 					{
 						oRes.push_back(oOffer);
 					}
@@ -3786,6 +3869,7 @@ UniValue offerfilter(const UniValue& params, bool fHelp) {
 						"scan and filter offers\n"
 						"[regexp] : apply [regexp] on offers, empty means all offers\n"
 						"[from] : show results from this GUID [from], 0 means first.\n"
+						"[count]: (numeric, optional, default=10) The number of results to return\n"
 						"[safesearch] : shows all offers that are safe to display (not on the ban list)\n"
 						"[category] : category you want to search in, empty for all\n"
 						"offerfilter \"\" 5 # list offers updated in last 5 blocks\n"
@@ -3796,7 +3880,7 @@ UniValue offerfilter(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchOffer;
 	string strCategory;
 	bool safeSearch = true;
-
+	int count = 10;
 	if (params.size() > 0)
 		strRegexp = params[0].get_str();
 
@@ -3804,16 +3888,19 @@ UniValue offerfilter(const UniValue& params, bool fHelp) {
 		vchOffer = vchFromValue(params[1]);
 
 	if (params.size() > 2 && !params[2].get_str().empty())
-		safeSearch = params[2].get_str()=="On"? true: false;
+		count = atoi(params[2].get_str());
 
 	if (params.size() > 3 && !params[3].get_str().empty())
-		strCategory = params[3].get_str();
+		safeSearch = params[3].get_str()=="On"? true: false;
+
+	if (params.size() > 4 && !params[4].get_str().empty())
+		strCategory = params[4].get_str();
 
 	UniValue oRes(UniValue::VARR);
 
 
 	vector<COffer> offerScan;
-	if (!pofferdb->ScanOffers(vchOffer, strRegexp, safeSearch, strCategory, 25, offerScan))
+	if (!pofferdb->ScanOffers(vchOffer, strRegexp, safeSearch, strCategory, count, offerScan))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1596 - " + _("Scan failed"));
 	CTransaction aliastx;
 	BOOST_FOREACH(const COffer &txOffer, offerScan) {
