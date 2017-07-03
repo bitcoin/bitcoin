@@ -25,7 +25,7 @@
 #include "net.h"
 #include "netfulfilledman.h"
 #include "policy/policy.h"
-#include "rpcserver.h"
+#include "rpc/server.h"
 #include "script/standard.h"
 #include "script/sigcache.h"
 #include "scheduler.h"

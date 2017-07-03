@@ -13,7 +13,7 @@
 #include "main.h"
 #include "policy/policy.h"
 #include "primitives/transaction.h"
-#include "rpcserver.h"
+#include "rpc/server.h"
 #include "streams.h"
 #include "sync.h"
 #include "txmempool.h"

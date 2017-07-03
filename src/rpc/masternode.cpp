@@ -11,7 +11,7 @@
 #include "masternodeman.h"
 #include "privatesend-client.h"
 #include "privatesend-server.h"
-#include "rpcserver.h"
+#include "rpc/server.h"
 #include "util.h"
 #include "utilmoneystr.h"
 

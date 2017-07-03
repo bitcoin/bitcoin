@@ -16,7 +16,7 @@
 #include "masternodeconfig.h"
 #include "masternodeman.h"
 #include "messagesigner.h"
-#include "rpcserver.h"
+#include "rpc/server.h"
 #include "util.h"
 #include "utilmoneystr.h"
 
