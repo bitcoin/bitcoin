@@ -3814,7 +3814,7 @@ UniValue offerhistory(const UniValue& params, bool fHelp) {
 	return oRes;
 }
 UniValue offerfilter(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() > 4)
+	if (fHelp || params.size() > 5)
 		throw runtime_error(
 			"offerfilter [searchterm] [offerpage] [safesearch='true'] [category] [count]\n"
 						"scan and filter offers\n"
