@@ -96,8 +96,8 @@ static void TestPassphraseSingle(const std::vector<unsigned char>& vchSalt, cons
                  const std::vector<unsigned char>& correctKey = std::vector<unsigned char>(),
                  const std::vector<unsigned char>& correctIV=std::vector<unsigned char>())
 {
-    unsigned char chKey[WALLET_CRYPTO_KEY_SIZE];
-    unsigned char chIV[WALLET_CRYPTO_IV_SIZE];
+    unsigned char chKey[WALLET_CRYPTO_KEY_SIZE] = {};
+    unsigned char chIV[WALLET_CRYPTO_IV_SIZE] = {};
 
     CCrypter crypt;
     crypt.SetKeyFromPassphrase(passphrase, vchSalt, rounds, 0);

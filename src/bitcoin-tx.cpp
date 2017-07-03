@@ -157,7 +157,7 @@ static void RegisterLoad(const std::string& strInput)
     // load file chunks into one big buffer
     std::string valStr;
     while ((!feof(f)) && (!ferror(f))) {
-        char buf[4096];
+        char buf[4096] = {};
         int bread = fread(buf, 1, sizeof(buf), f);
         if (bread <= 0)
             break;
@@ -747,7 +747,7 @@ static void OutputTx(const CTransaction& tx)
 
 static std::string readStdin()
 {
-    char buf[4096];
+    char buf[4096] = {};
     std::string ret;
 
     while (!feof(stdin)) {
