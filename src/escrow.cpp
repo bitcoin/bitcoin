@@ -3681,69 +3681,7 @@ bool BuildEscrowJson(const CEscrow &escrow, const CEscrow &firstEscrow, UniValue
 	return true;
 }
 UniValue escrowlist(const UniValue& params, bool fHelp) {
-   if (fHelp || 3 < params.size())
-        throw runtime_error("escrowlist [\"alias\",...] [escrow] [count] [from]\n"
-                "list escrows that an array of aliases are involved in.\n"
-				"[count]          (numeric, optional, default=10) The number of results to return\n"
-				"[from]           (numeric, optional, default=0) The number of results to skip\n");
-	UniValue aliasesValue(UniValue::VARR);
-	vector<string> aliases;
-	if(params.size() >= 1)
-	{
-		if(params[0].isArray())
-		{
-			aliasesValue = params[0].get_array();
-			for(unsigned int aliasIndex =0;aliasIndex<aliasesValue.size();aliasIndex++)
-			{
-				string lowerStr = aliasesValue[aliasIndex].get_str();
-				boost::algorithm::to_lower(lowerStr);
-				if(!lowerStr.empty())
-					aliases.push_back(lowerStr);
-			}
-		}
-		else
-		{
-			string aliasName =  params[0].get_str();
-			boost::algorithm::to_lower(aliasName);
-			if(!aliasName.empty())
-				aliases.push_back(aliasName);
-		}
-	}
-	vector<unsigned char> vchNameUniq;
-    if (params.size() >= 2 && !params[1].get_str().empty())
-        vchNameUniq = vchFromValue(params[1]);
-
-	int count = 10;
-	int from = 0;
-	if (params.size() > 2 && !params[2].get_str().empty())
-		count = atoi(params[2].get_str());
-	if (params.size() > 3 && !params[3].get_str().empty())
-		count = atoi(params[3].get_str());
-	int found = 0;
-	UniValue oRes(UniValue::VARR);
-	map< vector<unsigned char>, int > vNamesI;
-	vector<pair<CEscrow, CEscrow> > escrowScan;
-	if(aliases.size() > 0)
-	{
-		if (!pescrowdb->ScanEscrows(vchNameUniq, stringFromVch(vchNameUniq), aliases, 1000, escrowScan))
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4606 - " + _("Scan failed"));
-	
-	}
-	pair<CEscrow, CEscrow> pairScan;
-	BOOST_FOREACH(pairScan, escrowScan) {
-		if (found >= count)
-			break;
-		found++;
-		if (found < from)
-			continue;
-		UniValue oEscrow(UniValue::VOBJ);
-		if(BuildEscrowJson(pairScan.first, pairScan.second, oEscrow))
-			oRes.push_back(oEscrow);
-	}
-    return oRes;
-}
-UniValue escrowlist(const UniValue& params, bool fHelp) {
-   if (fHelp || 3 < params.size())
+   if (fHelp || 4 < params.size())
         throw runtime_error("escrowlist [\"alias\",...] [escrow] [count] [from]\n"
                 "list escrows that an array of aliases are involved in.\n"
 				"[count]          (numeric, optional, default=10) The number of results to return\n"
