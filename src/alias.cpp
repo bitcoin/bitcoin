@@ -3177,7 +3177,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
  * @return        [description]
  */
 UniValue aliasfilter(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() > 3)
+	if (fHelp || params.size() > 4)
 		throw runtime_error(
 			"aliasfilter [searchterm] [aliaspage] [safesearch='true'] [count]\n"
 						"scan and filter aliases\n"
