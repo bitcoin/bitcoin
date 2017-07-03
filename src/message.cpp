@@ -835,7 +835,7 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
 	if (params.size() > 2 && !params[2].get_str().empty())
 		count = atoi(params[2].get_str());
 	if (params.size() > 3 && !params[3].get_str().empty())
-		count = atoi(params[3].get_str());
+		from = atoi(params[3].get_str());
 	int found = 0;
 	UniValue oRes(UniValue::VARR);
 	map< vector<unsigned char>, int > vNamesI;
