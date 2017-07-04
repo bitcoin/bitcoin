@@ -3654,7 +3654,7 @@ bool BuildOfferAcceptJson(const COffer& theOffer, const CAliasIndex& theAlias, c
 UniValue offercount(const UniValue& params, bool fHelp) {
 	if (fHelp || 4 < params.size())
 		throw runtime_error("offercount [\"alias\",...]\n"
-			"list offers that an array of aliases own.\n");
+			"Count offers that an array of aliases own.\n");
 	UniValue aliasesValue(UniValue::VARR);
 	vector<string> aliases;
 	if (params.size() >= 1)
