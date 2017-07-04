@@ -1248,7 +1248,7 @@ UniValue certcount(const UniValue& params, bool fHelp) {
 			throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2517 - " + _("Scan failed"));
 	}
 
-    return certScan.size();
+    return (int)certScan.size();
 }
 UniValue certlist(const UniValue& params, bool fHelp) {
 	if (fHelp || 4 < params.size())
