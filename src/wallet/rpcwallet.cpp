@@ -1688,7 +1688,6 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
     string strSentAccount;
     list<COutputEntry> listReceived;
     list<COutputEntry> listSent;
-	map<uint256, bool> mapSysTx = map<uint256, bool>();
     wtx.GetAmounts(listReceived, listSent, nFee, strSentAccount, filter);
 
     bool fAllAccounts = (strAccount == string("*"));
@@ -1718,16 +1717,14 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
             entry.push_back(Pair("abandoned", wtx.isAbandoned()));
 			// SYSCOIN
 			bool decodedAndParsed = DecodeAndParseSyscoinTx(wtx, op, nOut, vvchArgs);
-			if(wtx.nVersion == GetSyscoinTxVersion() && ((IsSyscoinScript(wtx.vout[s.vout].scriptPubKey, op, vvchArgs) && !decodedAndParsed) || (wtx.vout[s.vout].scriptPubKey[0] == OP_RETURN && decodedAndParsed)))
+			bool isSysScript = IsSyscoinScript(wtx.vout[s.vout].scriptPubKey, op, vvchArgs);
+			if(wtx.nVersion == GetSyscoinTxVersion() && ((isSysScript && !decodedAndParsed) || (wtx.vout[s.vout].scriptPubKey[0] == OP_RETURN && decodedAndParsed)))
 			{
-				if (mapSysTx[wtx.GetHash()])
-					continue;
-				mapSysTx[wtx.GetHash()] = true;
 				string strResponseEnglish = "";
 				string strResponseGUID = "";
 				string strResponseGUID1 = "";
 				strResponse = GetSyscoinTransactionDescription(op, vvchArgs, "send", wtx, strResponseEnglish, strResponseGUID, strResponseGUID1);
-				if(IsSyscoinScript(wtx.vout[s.vout].scriptPubKey, op, vvchArgs))
+				if(isSysScript)
 					entry.push_back(Pair("amount", ValueFromAmount(-s.amount)));
 				else
 					entry.push_back(Pair("amount", ValueFromAmount(-wtx.GetValueOut())));
@@ -1778,17 +1775,15 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
                     WalletTxToJSON(wtx, entry);
 				// SYSCOIN
 				bool decodedAndParsed = DecodeAndParseSyscoinTx(wtx, op, nOut, vvchArgs);
-				if(wtx.nVersion == GetSyscoinTxVersion() && ((IsSyscoinScript(wtx.vout[s.vout].scriptPubKey, op, vvchArgs) && !decodedAndParsed) || (wtx.vout[r.vout].scriptPubKey[0] == OP_RETURN && decodedAndParsed)))
+				bool isSysScript = IsSyscoinScript(wtx.vout[r.vout].scriptPubKey, op, vvchArgs);
+				if(wtx.nVersion == GetSyscoinTxVersion() && ((isSysScript && !decodedAndParsed) || (wtx.vout[r.vout].scriptPubKey[0] == OP_RETURN && decodedAndParsed)))
 				{
-					if (mapSysTx[wtx.GetHash()])
-						continue;
-					mapSysTx[wtx.GetHash()] = true;
 					string strResponseEnglish = "";
 					string strResponseGUID = "";
 					string strResponseGUID1 = "";
 					strResponse = GetSyscoinTransactionDescription(op, vvchArgs, "recv", wtx, strResponseEnglish, strResponseGUID, strResponseGUID1);
-					if (IsSyscoinScript(wtx.vout[s.vout].scriptPubKey, op, vvchArgs))
-						entry.push_back(Pair("amount", ValueFromAmount(s.amount)));
+					if (isSysScript)
+						entry.push_back(Pair("amount", ValueFromAmount(r.amount)));
 					else
 						entry.push_back(Pair("amount", ValueFromAmount(wtx.GetValueOut())));
 					entry.push_back(Pair("systx", strResponse));
