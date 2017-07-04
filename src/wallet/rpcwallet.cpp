@@ -1836,7 +1836,6 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
     bool involvesWatchonly = wtx.IsFromMe(ISMINE_WATCH_ONLY);
 	// SYSCOIN
     vector<vector<unsigned char> > vvchArgs;
-	map<uint256, bool> mapSysTx = map<uint256, bool>();
     int op, nOut;
 	string strResponse = "";
     // Sent
@@ -1850,7 +1849,6 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
             entry.push_back(Pair("account", strSentAccount));
             MaybePushAddress(entry, s.destination);
             entry.push_back(Pair("category", "send"));
-            entry.push_back(Pair("amount", ValueFromAmount(-s.amount)));
             if (pwalletMain->mapAddressBook.count(s.destination))
                 entry.push_back(Pair("label", pwalletMain->mapAddressBook[s.destination].name));
             entry.push_back(Pair("vout", s.vout));
@@ -1859,21 +1857,26 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
                 WalletTxToJSON(wtx, entry);
             entry.push_back(Pair("abandoned", wtx.isAbandoned()));
 			// SYSCOIN
-			if(wtx.nVersion == GetSyscoinTxVersion() && (IsSyscoinScript(wtx.vout[s.vout].scriptPubKey, op, vvchArgs) || (wtx.vout[s.vout].scriptPubKey[0] == OP_RETURN && DecodeAndParseSyscoinTx(wtx, op, nOut, vvchArgs))))
+			bool decodedAndParsed = DecodeAndParseSyscoinTx(wtx, op, nOut, vvchArgs);
+			bool isSysScript = IsSyscoinScript(wtx.vout[s.vout].scriptPubKey, op, vvchArgs);
+			if (wtx.nVersion == GetSyscoinTxVersion() && ((isSysScript && !decodedAndParsed) || (wtx.vout[s.vout].scriptPubKey[0] == OP_RETURN && decodedAndParsed)))
 			{
-				if (mapSysTx[wtx.GetHash()])
-					continue;
-				mapSysTx[wtx.GetHash()] = true;
 				string strResponseEnglish = "";
 				string strResponseGUID = "";
 				string strResponseGUID1 = "";
 				strResponse = GetSyscoinTransactionDescription(op, vvchArgs, wtx, "send", strResponseEnglish, strResponseGUID, strResponseGUID1);
+				if (isSysScript)
+					entry.push_back(Pair("amount", ValueFromAmount(-s.amount)));
+				else
+					entry.push_back(Pair("amount", ValueFromAmount(-wtx.GetValueOut())));
 				entry.push_back(Pair("systx", strResponse));
 				entry.push_back(Pair("systype", strResponseEnglish));
 				entry.push_back(Pair("sysguid", strResponseGUID));
 				if(!strResponseGUID1.empty())
 					entry.push_back(Pair("sysguid1", strResponseGUID1));
 			}
+			else
+				entry.push_back(Pair("amount", ValueFromAmount(-s.amount)));
             ret.push_back(entry);
         }
     }
@@ -1906,28 +1909,33 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
                 {
                     entry.push_back(Pair("category", "receive"));
                 }
-                entry.push_back(Pair("amount", ValueFromAmount(r.amount)));
+                
                 if (pwalletMain->mapAddressBook.count(r.destination))
                     entry.push_back(Pair("label", account));
                 entry.push_back(Pair("vout", r.vout));
                 if (fLong)
                     WalletTxToJSON(wtx, entry);
 				// SYSCOIN
-				if(wtx.nVersion == GetSyscoinTxVersion() && (IsSyscoinScript(wtx.vout[r.vout].scriptPubKey, op, vvchArgs) || (wtx.vout[r.vout].scriptPubKey[0] == OP_RETURN && DecodeAndParseSyscoinTx(wtx, op, nOut, vvchArgs))))
+				bool decodedAndParsed = DecodeAndParseSyscoinTx(wtx, op, nOut, vvchArgs);
+				bool isSysScript = IsSyscoinScript(wtx.vout[r.vout].scriptPubKey, op, vvchArgs);
+				if (wtx.nVersion == GetSyscoinTxVersion() && ((isSysScript && !decodedAndParsed) || (wtx.vout[r.vout].scriptPubKey[0] == OP_RETURN && decodedAndParsed)))
 				{
-					if (mapSysTx[wtx.GetHash()])
-						continue;
-					mapSysTx[wtx.GetHash()] = true;
 					string strResponseEnglish = "";
 					string strResponseGUID = "";
 					string strResponseGUID1 = "";
 					strResponse = GetSyscoinTransactionDescription(op, vvchArgs, wtx, "recv", strResponseEnglish, strResponseGUID, strResponseGUID1);
+					if (isSysScript)
+						entry.push_back(Pair("amount", ValueFromAmount(r.amount)));
+					else
+						entry.push_back(Pair("amount", ValueFromAmount(wtx.GetValueOut())));
 					entry.push_back(Pair("systx", strResponse));
 					entry.push_back(Pair("systype", strResponseEnglish));
 					entry.push_back(Pair("sysguid", strResponseGUID));
 					if(!strResponseGUID1.empty())
 						entry.push_back(Pair("sysguid1", strResponseGUID1));
 				}
+				else
+					entry.push_back(Pair("amount", ValueFromAmount(r.amount)));
                 ret.push_back(entry);
             }
         }
