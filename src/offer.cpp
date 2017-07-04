@@ -3347,7 +3347,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
         throw runtime_error("offeracceptlist [\"alias\",...] [acceptguid] [count] [from]\n"
                 "list offer purchases that an array of aliases own.\n"
 				"[count]          (numeric, optional, default=10) The number of results to return\n"
-				"[from]           (numeric, optional, default=0) The number of results to skip\n"");
+				"[from]           (numeric, optional, default=0) The number of results to skip\n");
 	UniValue aliasesValue(UniValue::VARR);
 	vector<string> aliases;
 	if(params.size() >= 1)
