@@ -1638,6 +1638,10 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
                 return error("%s: Consensus::CheckTxInputs: %s, %s", __func__, tx.GetHash().ToString(), FormatStateMessage(state));
             }
             nFees += txfee;
+            if (!MoneyRange(nFees)) {
+                return state.DoS(100, error("%s: accumulated fee in the block out of range.", __func__),
+                                 REJECT_INVALID, "bad-txns-accumulated-fee-outofrange");
+            }
 
             // Check that transaction is BIP68 final
             // BIP68 lock checks (as opposed to nLockTime checks) must
