@@ -21,6 +21,7 @@
 #include "util.h" // for GetBoolArg
 #include "wallet/wallet.h"
 #include "wallet/walletdb.h" // for BackupWallet
+#include "wallet/hdwallet.h"
 
 #include <stdint.h>
 
@@ -49,6 +50,9 @@ WalletModel::WalletModel(const PlatformStyle *platformStyle, CWallet *_wallet, O
     pollTimer = new QTimer(this);
     connect(pollTimer, SIGNAL(timeout()), this, SLOT(pollBalanceChanged()));
     pollTimer->start(MODEL_UPDATE_DELAY);
+    
+    cachedBlindBalance = 0;
+    cachedAnonBalance = 0;
 
     subscribeToCoreSignals();
 }
@@ -140,12 +144,33 @@ void WalletModel::pollBalanceChanged()
 
 void WalletModel::checkBalanceChanged()
 {
-    CAmount newBalance = getBalance();
-    CAmount newUnconfirmedBalance = getUnconfirmedBalance();
-    CAmount newImmatureBalance = getImmatureBalance();
+    
+    CAmount newBalance = 0;
+    CAmount newAnonBalance = 0;
+    CAmount newBlindBalance = 0;
+    CAmount nPartUnconf = 0, nPartStaked = 0, nPartImmature = 0;
+    CAmount nBlindUnconf = 0, nAnonUnconf = 0;
+    
+    CAmount newUnconfirmedBalance = 0;
+    CAmount newImmatureBalance = 0;
     CAmount newWatchOnlyBalance = 0;
     CAmount newWatchUnconfBalance = 0;
     CAmount newWatchImmatureBalance = 0;
+    
+    if (fParticlWallet)
+    {
+        CHDWallet *pw = getParticlWallet();
+        
+        pw->GetBalances(newBalance, nPartUnconf, nPartStaked, nPartImmature,
+            newBlindBalance, nBlindUnconf, newAnonBalance, nAnonUnconf);
+        
+        newImmatureBalance = nPartImmature;
+        newUnconfirmedBalance = nPartUnconf + nBlindUnconf + nAnonUnconf;
+    };
+    
+    
+    
+    
     if (haveWatchOnly())
     {
         newWatchOnlyBalance = getWatchBalance();
@@ -154,7 +179,8 @@ void WalletModel::checkBalanceChanged()
     }
 
     if(cachedBalance != newBalance || cachedUnconfirmedBalance != newUnconfirmedBalance || cachedImmatureBalance != newImmatureBalance ||
-        cachedWatchOnlyBalance != newWatchOnlyBalance || cachedWatchUnconfBalance != newWatchUnconfBalance || cachedWatchImmatureBalance != newWatchImmatureBalance)
+        cachedWatchOnlyBalance != newWatchOnlyBalance || cachedWatchUnconfBalance != newWatchUnconfBalance || cachedWatchImmatureBalance != newWatchImmatureBalance
+        || newBlindBalance != cachedBlindBalance || newAnonBalance != cachedAnonBalance)
     {
         cachedBalance = newBalance;
         cachedUnconfirmedBalance = newUnconfirmedBalance;
@@ -162,7 +188,9 @@ void WalletModel::checkBalanceChanged()
         cachedWatchOnlyBalance = newWatchOnlyBalance;
         cachedWatchUnconfBalance = newWatchUnconfBalance;
         cachedWatchImmatureBalance = newWatchImmatureBalance;
-        Q_EMIT balanceChanged(newBalance, newUnconfirmedBalance, newImmatureBalance,
+        cachedBlindBalance = newBlindBalance;
+        cachedAnonBalance = newAnonBalance;
+        Q_EMIT balanceChanged(newBalance, newBlindBalance, newAnonBalance, newUnconfirmedBalance, newImmatureBalance,
                             newWatchOnlyBalance, newWatchUnconfBalance, newWatchImmatureBalance);
     }
 }
@@ -706,3 +734,11 @@ int WalletModel::getDefaultConfirmTarget() const
 {
     return nTxConfirmTarget;
 }
+
+CHDWallet *WalletModel::getParticlWallet()
+{
+    CHDWallet *rv;
+    if (!wallet || !(rv = dynamic_cast<CHDWallet*>(wallet)))
+        throw std::runtime_error("wallet is not an instance of class CHDWallet.");
+    return rv;
+};

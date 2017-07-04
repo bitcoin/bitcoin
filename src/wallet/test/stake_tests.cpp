@@ -124,7 +124,8 @@ static void AddAnonTxn(CHDWallet *pwallet, CBitcoinAddress &address, CAmount amo
     
     CWalletTx wtx;
     CTransactionRecord rtx;
-    BOOST_CHECK(0 == pwallet->AddStandardInputs(wtx, rtx, vecSend, true, sError));
+    CAmount nFee;
+    BOOST_CHECK(0 == pwallet->AddStandardInputs(wtx, rtx, vecSend, true, nFee, sError));
     
     wtx.BindWallet(pwallet);
     BOOST_CHECK(wtx.AcceptToMemoryPool(maxTxFee, state));

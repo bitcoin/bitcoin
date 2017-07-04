@@ -73,7 +73,7 @@
                </size>
               </property>
               <property name="toolTip">
-               <string>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</string>
+               <string>The displayed information may be out of date. Your wallet automatically synchronizes with the Particl network after a connection is established, but this process has not completed yet.</string>
               </property>
               <property name="text">
                <string/>
@@ -129,7 +129,7 @@
                <string>Unconfirmed transactions to watch-only addresses</string>
               </property>
               <property name="text">
-               <string notr="true">0.000 000 00 BTC</string>
+               <string notr="true">0.000 000 00 PART</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -154,7 +154,7 @@
                <string>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</string>
               </property>
               <property name="text">
-               <string notr="true">0.000 000 00 BTC</string>
+               <string notr="true">0.000 000 00 PART</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -179,7 +179,7 @@
                <string>Mined balance in watch-only addresses that has not yet matured</string>
               </property>
               <property name="text">
-               <string notr="true">0.000 000 00 BTC</string>
+               <string notr="true">0.000 000 00 PART</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -189,14 +189,14 @@
               </property>
              </widget>
             </item>
-            <item row="4" column="0" colspan="2">
+            <item row="6" column="0" colspan="2">
              <widget class="Line" name="line">
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
               </property>
              </widget>
             </item>
-            <item row="4" column="2">
+            <item row="6" column="2">
              <widget class="Line" name="lineWatchBalance">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -215,7 +215,7 @@
               </property>
              </widget>
             </item>
-            <item row="5" column="0">
+            <item row="7" column="0">
              <widget class="QLabel" name="labelTotalText">
               <property name="text">
                <string>Total:</string>
@@ -237,7 +237,7 @@
                <string>Mined balance that has not yet matured</string>
               </property>
               <property name="text">
-               <string notr="true">0.000 000 00 BTC</string>
+               <string notr="true">0.000 000 00 PART</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -267,7 +267,7 @@
               </property>
              </widget>
             </item>
-            <item row="5" column="1">
+            <item row="7" column="1">
              <widget class="QLabel" name="labelTotal">
               <property name="font">
                <font>
@@ -282,7 +282,7 @@
                <string>Your current total balance</string>
               </property>
               <property name="text">
-               <string notr="true">0.000 000 00 BTC</string>
+               <string notr="true">0.000 000 00 PART</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -292,7 +292,7 @@
               </property>
              </widget>
             </item>
-            <item row="5" column="2">
+            <item row="7" column="2">
              <widget class="QLabel" name="labelWatchTotal">
               <property name="font">
                <font>
@@ -307,7 +307,7 @@
                <string>Current total balance in watch-only addresses</string>
               </property>
               <property name="text">
-               <string notr="true">0.000 000 00 BTC</string>
+               <string notr="true">0.000 000 00 PART</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -349,7 +349,7 @@
                <string>Your current spendable balance</string>
               </property>
               <property name="text">
-               <string notr="true">0.000 000 00 BTC</string>
+               <string notr="true">0.000 000 00 PART</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -374,7 +374,7 @@
                <string>Your current balance in watch-only addresses</string>
               </property>
               <property name="text">
-               <string notr="true">0.000 000 00 BTC</string>
+               <string notr="true">0.000 000 00 PART</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -401,6 +401,72 @@
               </property>
              </widget>
             </item>
+            
+            <item row="4" column="0">
+             <widget class="QLabel" name="labelBlindBalanceText">
+              <property name="text">
+               <string>Blind:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="1">
+             <widget class="QLabel" name="labelBlindBalance">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="cursor">
+               <cursorShape>IBeamCursor</cursorShape>
+              </property>
+              <property name="toolTip">
+               <string>Your current spendable blinded balance</string>
+              </property>
+              <property name="text">
+               <string notr="true">0.000 000 00 PART</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+              <property name="textInteractionFlags">
+               <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="0">
+             <widget class="QLabel" name="labelAnonText">
+              <property name="text">
+               <string>Anon:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="1">
+             <widget class="QLabel" name="labelAnonBalance">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="cursor">
+               <cursorShape>IBeamCursor</cursorShape>
+              </property>
+              <property name="toolTip">
+               <string>Your current spendable anon balance</string>
+              </property>
+              <property name="text">
+               <string notr="true">0.000 000 00 PART</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+              <property name="textInteractionFlags">
+               <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+              </property>
+             </widget>
+            </item>
+            
            </layout>
           </item>
          </layout>
@@ -459,7 +525,7 @@
                </size>
               </property>
               <property name="toolTip">
-               <string>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</string>
+               <string>The displayed information may be out of date. Your wallet automatically synchronizes with the Particl network after a connection is established, but this process has not completed yet.</string>
               </property>
               <property name="text">
                <string/>

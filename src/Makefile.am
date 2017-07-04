@@ -149,6 +149,7 @@ BITCOIN_CORE_H = \
   rpc/client.h \
   rpc/protocol.h \
   rpc/server.h \
+  rpc/rpcutil.h \
   rpc/register.h \
   scheduler.h \
   script/sigcache.h \
@@ -234,6 +235,7 @@ libparticl_server_a_SOURCES = \
   rpc/net.cpp \
   rpc/rawtransaction.cpp \
   rpc/server.cpp \
+  rpc/rpcutil.cpp \
   script/sigcache.cpp \
   script/ismine.cpp \
   timedata.cpp \

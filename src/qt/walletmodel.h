@@ -29,6 +29,7 @@ class COutput;
 class CPubKey;
 class CWallet;
 class uint256;
+class CHDWallet;
 
 QT_BEGIN_NAMESPACE
 class QTimer;
@@ -51,6 +52,8 @@ public:
     CAmount amount;
     // If from a payment request, this is used for storing the memo
     QString message;
+    
+    QString narration;
 
     // If from a payment request, paymentRequest.IsInitialized() will be true
     PaymentRequestPlus paymentRequest;
@@ -212,6 +215,10 @@ public:
     bool hdEnabled() const;
 
     int getDefaultConfirmTarget() const;
+    
+    CHDWallet *getParticlWallet();
+
+    void checkBalanceChanged();
 
 private:
     CWallet *wallet;
@@ -233,6 +240,8 @@ private:
     CAmount cachedWatchOnlyBalance;
     CAmount cachedWatchUnconfBalance;
     CAmount cachedWatchImmatureBalance;
+    CAmount cachedBlindBalance;
+    CAmount cachedAnonBalance;
     EncryptionStatus cachedEncryptionStatus;
     int cachedNumBlocks;
 
@@ -240,11 +249,10 @@ private:
 
     void subscribeToCoreSignals();
     void unsubscribeFromCoreSignals();
-    void checkBalanceChanged();
 
 Q_SIGNALS:
     // Signal that balance in wallet changed
-    void balanceChanged(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
+    void balanceChanged(const CAmount& balance, const CAmount& blindBalance, const CAmount& anonBalance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
                         const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance);
 
     // Encryption status of wallet changed

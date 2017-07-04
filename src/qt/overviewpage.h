@@ -38,7 +38,7 @@ public:
     void showOutOfSyncWarning(bool fShow);
 
 public Q_SLOTS:
-    void setBalance(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
+    void setBalance(const CAmount& balance, const CAmount& blindBalance, const CAmount& anonBalance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
                     const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance);
 
 Q_SIGNALS:
@@ -50,6 +50,8 @@ private:
     ClientModel *clientModel;
     WalletModel *walletModel;
     CAmount currentBalance;
+    CAmount currentBlindBalance;
+    CAmount currentAnonBalance;
     CAmount currentUnconfirmedBalance;
     CAmount currentImmatureBalance;
     CAmount currentWatchOnlyBalance;

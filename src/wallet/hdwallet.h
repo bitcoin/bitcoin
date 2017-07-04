@@ -319,6 +319,9 @@ public:
     
     static bool InitLoadWallet();
     
+    /* Returns true if HD is enabled, and default account set */
+    bool IsHDEnabled() override;
+    
     bool LoadAddressBook(CHDWalletDB *pwdb);
     
     bool LoadVoteTokens(CHDWalletDB *pwdb);
@@ -349,7 +352,7 @@ public:
     bool AddressBookChangedNotify(const CTxDestination &address, ChangeType nMode);
     bool SetAddressBook(CHDWalletDB *pwdb, const CTxDestination &address, const std::string &strName,
         const std::string &purpose, const std::vector<uint32_t> &vPath, bool fNotifyChanged=true);
-    bool SetAddressBook(const CTxDestination &address, const std::string &strName, const std::string &purpose);
+    bool SetAddressBook(const CTxDestination &address, const std::string &strName, const std::string &strPurpose);
     bool DelAddressBook(const CTxDestination &address);
     
     
@@ -370,7 +373,7 @@ public:
     CAmount GetCredit(const CTxOutBase *txout, const isminefilter &filter) const;
     CAmount GetCredit(const CTransaction &tx, const isminefilter &filter) const;
     
-    int GetDepthInMainChain(const uint256 &blockhash) const;
+    int GetDepthInMainChain(const uint256 &blockhash, int nIndex = 0) const;
     bool InMempool(const uint256 &hash) const;
     bool IsTrusted(const uint256 &hash, const uint256 &blockhash) const;
     
@@ -399,16 +402,16 @@ public:
     int AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
         std::vector<CTempRecipient> &vecSend,
         CExtKeyAccount *sea, CStoredExtKey *pc,
-        bool sign, std::string &sError);
+        bool sign, CAmount &nFeeRet, std::string &sError);
     int AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
-        std::vector<CTempRecipient> &vecSend, bool sign, std::string &sError);
+        std::vector<CTempRecipient> &vecSend, bool sign, CAmount &nFeeRet, std::string &sError);
     
     int AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
         std::vector<CTempRecipient> &vecSend,
         CExtKeyAccount *sea, CStoredExtKey *pc,
-        bool sign, std::string &sError);
+        bool sign, CAmount &nFeeRet, std::string &sError);
     int AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
-        std::vector<CTempRecipient> &vecSend, bool sign, std::string &sError);
+        std::vector<CTempRecipient> &vecSend, bool sign, CAmount &nFeeRet, std::string &sError);
     
     
     int PlaceRealOutputs(std::vector<std::vector<int64_t> > &vMI, size_t &nSecretColumn, size_t nRingSize, std::set<int64_t> &setHave,
@@ -419,9 +422,9 @@ public:
     int AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
         std::vector<CTempRecipient> &vecSend,
         CExtKeyAccount *sea, CStoredExtKey *pc,
-        bool sign, size_t nRingSize, size_t nInputsPerSig, std::string &sError);
+        bool sign, size_t nRingSize, size_t nInputsPerSig, CAmount &nFeeRet, std::string &sError);
     int AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
-        std::vector<CTempRecipient> &vecSend, bool sign, size_t nRingSize, size_t nInputsPerSig, std::string &sError);
+        std::vector<CTempRecipient> &vecSend, bool sign, size_t nRingSize, size_t nInputsPerSig, CAmount &nFeeRet, std::string &sError);
     
     
     

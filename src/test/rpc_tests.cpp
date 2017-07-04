@@ -4,6 +4,7 @@
 
 #include "rpc/server.h"
 #include "rpc/client.h"
+#include "rpc/rpcutil.h"
 
 #include "base58.h"
 #include "netbase.h"
@@ -16,28 +17,6 @@
 
 
 #include <univalue.h>
-
-UniValue CallRPC(std::string args)
-{
-    std::vector<std::string> vArgs;
-    boost::split(vArgs, args, boost::is_any_of(" \t"));
-    std::string strMethod = vArgs[0];
-    vArgs.erase(vArgs.begin());
-    JSONRPCRequest request;
-    request.strMethod = strMethod;
-    request.params = RPCConvertValues(strMethod, vArgs);
-    
-    request.fHelp = false;
-    BOOST_CHECK(tableRPC[strMethod]);
-    rpcfn_type method = tableRPC[strMethod]->actor;
-    try {
-        UniValue result = (*method)(request);
-        return result;
-    }
-    catch (const UniValue& objError) {
-        throw std::runtime_error(find_value(objError, "message").get_str());
-    }
-}
 
 
 BOOST_FIXTURE_TEST_SUITE(rpc_tests, TestingSetup)

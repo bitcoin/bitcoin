@@ -1767,6 +1767,7 @@ UniValue getnewextaddress(const JSONRPCRequest &request)
             "childNo (int, optional), if specified, the account derive counter is not updated.");
     
     CHDWallet *pwallet = GetHDWallet();
+    EnsureWalletIsUnlocked(pwallet);
     
     uint32_t nChild = 0;
     uint32_t *pChild = NULL;
@@ -1813,7 +1814,6 @@ UniValue getnewstealthaddress(const JSONRPCRequest &request)
             + HelpRequiringPassphrase());
     
     CHDWallet *pwallet = GetHDWallet();
-    
     EnsureWalletIsUnlocked(pwallet);
     
     std::string sLabel;
@@ -3151,6 +3151,7 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
     
     size_t nCommentOfs = 2;
     size_t nRingSizeOfs = 6;
+    size_t nTestFeeOfs = 99;
     
     if (request.params[0].isArray())
     {
@@ -3202,6 +3203,7 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
         };
         nCommentOfs = 1;
         nRingSizeOfs = 3;
+        nTestFeeOfs = 5;
     } else
     {
         std::string sAddress = request.params[0].get_str();
@@ -3286,31 +3288,50 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
     if (request.params.size() > nv)
         nInputsPerSig = request.params[nv].get_int();
     
+    bool fCheckFeeOnly = false;
+    nv = nTestFeeOfs;
+    if (request.params.size() > nv)
+        fCheckFeeOnly = request.params[nv].get_bool();
     
     CReserveKey reservekey(pwallet);
     
+    CAmount nFeeRet = 0;
     switch (typeIn)
     {
         case OUTPUT_STANDARD:
-            if (0 != pwallet->AddStandardInputs(wtx, rtx, vecSend, true, sError))
+            if (0 != pwallet->AddStandardInputs(wtx, rtx, vecSend, !fCheckFeeOnly, nFeeRet, sError))
                 throw JSONRPCError(RPC_WALLET_ERROR, strprintf("AddStandardInputs failed: %s.", sError));
             break;
         case OUTPUT_CT:
-            if (0 != pwallet->AddBlindedInputs(wtx, rtx, vecSend, true, sError))
+            if (0 != pwallet->AddBlindedInputs(wtx, rtx, vecSend, !fCheckFeeOnly, nFeeRet, sError))
                 throw JSONRPCError(RPC_WALLET_ERROR, strprintf("AddBlindedInputs failed: %s.", sError));
             break;
         case OUTPUT_RINGCT:
-            if (0 != pwallet->AddAnonInputs(wtx, rtx, vecSend, true, nRingSize, nInputsPerSig, sError))
+            if (0 != pwallet->AddAnonInputs(wtx, rtx, vecSend, !fCheckFeeOnly, nRingSize, nInputsPerSig, nFeeRet, sError))
                 throw JSONRPCError(RPC_WALLET_ERROR, strprintf("AddAnonInputs failed: %s.", sError));
             break;
         default:
             throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Unknown input type: %d.", typeIn));
     };
     
-    CValidationState state;
-    if (!pwallet->CommitTransaction(wtx, rtx, reservekey, g_connman.get(), state))
-        throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Transaction commit failed: %s", state.GetRejectReason()));
+    if (fCheckFeeOnly)
+    {
+        UniValue result(UniValue::VOBJ);
+        result.push_back(Pair("fee", ValueFromAmount(nFeeRet)));
+        return result;
+    };
     
+    CValidationState state;
+    
+    if (typeIn == OUTPUT_STANDARD && typeOut == OUTPUT_STANDARD)
+    {
+        if (!pwallet->CommitTransaction(wtx, reservekey, g_connman.get(), state))
+            throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Transaction commit failed: %s", state.GetRejectReason()));
+    } else
+    {
+        if (!pwallet->CommitTransaction(wtx, rtx, reservekey, g_connman.get(), state))
+            throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Transaction commit failed: %s", state.GetRejectReason()));
+    }
     
     UniValue vErrors(UniValue::VARR);
     if (!state.IsValid())
@@ -3470,7 +3491,7 @@ UniValue sendanontoanon(const JSONRPCRequest &request)
 
 UniValue sendtypeto(const JSONRPCRequest &request)
 {
-    if (request.fHelp || request.params.size() < 3 || request.params.size() > 7)
+    if (request.fHelp || request.params.size() < 3 || request.params.size() > 8)
         throw std::runtime_error(
             "sendtypeto \"typein\" \"typeout\" [{address: , amount: , narr: , subfee:},...] (\"comment\" \"comment-to\" ringsize inputs_per_sig)\n"
             "\nSend part to multiple outputs.\n"
@@ -3490,6 +3511,7 @@ UniValue sendtypeto(const JSONRPCRequest &request)
             "                            transaction, just kept in your wallet.\n"
             "6. \"ringsize\"       (int, optional) Only applies when typein is anon.\n"
             "7. \"inputs_per_sig\" (int, optional) Only applies when typein is anon.\n"
+            "8. \"test_fee\"       (bool, optional, default=false) Only return the fee it would cost to send.\n"
             "\nResult:\n"
             "\"txid\"              (string) The transaction id.\n"
             "\nExamples:\n"
@@ -3626,8 +3648,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "sendanontoblind",          &sendanontoblind,          false,  {"address","amount","comment","comment_to","subtractfeefromamount", "narration", "ring_size", "inputs_per_sig"} },
     { "wallet",             "sendanontoanon",           &sendanontoanon,           false,  {"address","amount","comment","comment_to","subtractfeefromamount", "narration", "ring_size", "inputs_per_sig"} },
     
-    { "wallet",             "sendtypeto",               &sendtypeto,               false,  {"outputs","comment","comment_to", "ring_size", "inputs_per_sig"} },
-    
+    { "wallet",             "sendtypeto",               &sendtypeto,               false,  {"typein", "typeout", "outputs","comment","comment_to", "ring_size", "inputs_per_sig", "test_fee"} },
     
     
     

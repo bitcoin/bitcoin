@@ -118,8 +118,8 @@
         <translation>Kõvakettal olevate plokkide reindekseerimine...</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
+        <source>Particl</source>
+        <translation>Particl</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -728,8 +728,8 @@
         <translation>Valikud:</translation>
     </message>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
+        <source>Particl Core</source>
+        <translation>Particl Core</translation>
     </message>
     <message>
         <source>Information</source>

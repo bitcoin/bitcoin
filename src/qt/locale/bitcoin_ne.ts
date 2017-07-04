@@ -166,7 +166,7 @@
         <translation>डिस्कमा ब्लकलाई पुनः सूचीकरण गरिँदै...</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
+        <source>Send coins to a Particl address</source>
         <translation>बिटकोइन ठेगानामा सिक्का पठाउनुहोस्</translation>
     </message>
     <message>
@@ -217,7 +217,7 @@
 <context>
     <name>OverviewPage</name>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Particl network after a connection is established, but this process has not completed yet.</source>
         <translation>देखाइएको सूचना पूरानो हुन सक्छ । कनेक्सन स्थापित भएपछि, तपाईंको वालेट बिटकोइन नेटवर्कमा स्वचालित रूपमा समिकरण हुन्छ , तर यो प्रक्रिया अहिले सम्म पूरा भएको छैन ।</translation>
     </message>
     <message>
@@ -318,7 +318,7 @@
         <translation>पठाइँदै गरेको रकमबाट शुल्क कटौती गरिनेछ । प्राप्तकर्ताले तपाईंले रकम क्षेत्रमा प्रवेष गरेको भन्दा थोरै बिटकोइन प्राप्त गर्ने छन् । धेरै प्राप्तकर्ता चयन गरिएको छ भने समान रूपमा शुल्क विभाजित गरिनेछ ।</translation>
     </message>
     <message>
-        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
+        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Particl network.</source>
         <translation>बिटकोइनमा संलग्न गरिएको सन्देश: तपाईंको मध्यस्थको लागि कारोबारको साथमा भण्डारण गरिने URI । नोट: यो सन्देश बिटकोइन नेटवर्क मार्फत पठाइने छैन ।</translation>
     </message>
     </context>

@@ -9,6 +9,11 @@
 
 #include "base58.h"
 #include "wallet/wallet.h"
+#include "wallet/hdwallet.h"
+#include "wallet/rpchdwallet.h"
+#include "rpc/rpcutil.h"
+#include "util.h"
+#include "univalue.h"
 
 #include <boost/foreach.hpp>
 
@@ -369,23 +374,32 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
     else if(type == Receive)
     {
         // Generate a new address to associate with given label
-        CPubKey newKey;
-        if(!wallet->GetKeyFromPool(newKey))
+        
+        
+       
+        //strAddress = CBitcoinAddress(newKey.GetID()).ToString();
+        
+        UniValue rv;
+        try {
+            rv = CallRPC("getnewaddress " + strLabel);
+        } catch (UniValue& objError)
         {
-            WalletModel::UnlockContext ctx(walletModel->requestUnlock());
-            if(!ctx.isValid())
-            {
-                // Unlock wallet failed or was cancelled
-                editStatus = WALLET_UNLOCK_FAILURE;
-                return QString();
+            try { // Nice formatting for standard-format error
+                int code = find_value(objError, "code").get_int();
+                std::string message = find_value(objError, "message").get_str();
+                qWarning() << QString::fromStdString(message) + " (code " + QString::number(code) + ")";
+            } catch (const std::runtime_error&) // raised when converting to invalid type, i.e. missing code or message
+            {   // Show raw JSON object
+                qWarning() << QString::fromStdString(objError.write());
             }
-            if(!wallet->GetKeyFromPool(newKey))
-            {
-                editStatus = KEY_GENERATION_FAILURE;
-                return QString();
-            }
+            
+            return QString();
+        } catch (const std::exception& e)
+        {
+            qWarning() << e.what();
+            return QString();
         }
-        strAddress = CBitcoinAddress(newKey.GetID()).ToString();
+        return QString::fromStdString(rv.get_str());
     }
     else
     {

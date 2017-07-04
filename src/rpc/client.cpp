@@ -172,6 +172,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "sendtypeto", 2, "outputs" },
     { "sendtypeto", 5, "ringsize" },
     { "sendtypeto", 6, "inputs_per_sig" },
+    { "sendtypeto", 7, "test_fee" },
     
     { "getnewextaddress", 1, "childno" },
     

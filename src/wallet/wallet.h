@@ -1041,7 +1041,7 @@ public:
     const CHDChain& GetHDChain() { return hdChain; }
 
     /* Returns true if HD is enabled */
-    bool IsHDEnabled();
+    virtual bool IsHDEnabled();
 
     /* Generates a new HD master key (will not be activated) */
     CPubKey GenerateNewHDMasterKey();

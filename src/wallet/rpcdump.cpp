@@ -633,6 +633,14 @@ UniValue dumpwallet(const JSONRPCRequest& request)
             file << strprintf(" # addr=%s%s\n", strAddr, (pwalletMain->mapKeyMetadata[keyid].hdKeypath.size() > 0 ? " hdkeypath="+pwalletMain->mapKeyMetadata[keyid].hdKeypath : ""));
         }
     }
+    
+    if (fParticlWallet)
+    {
+        
+    };
+    
+    
+    
     file << "\n";
     file << "# End of dump\n";
     file.close();

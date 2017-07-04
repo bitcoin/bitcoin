@@ -23,6 +23,11 @@
 #include "txmempool.h"
 #include "wallet/wallet.h"
 
+#include "rpc/rpcutil.h"
+#include "util.h"
+#include "univalue.h"
+
+
 #include <QMessageBox>
 #include <QScrollBar>
 #include <QSettings>
@@ -142,7 +147,7 @@ void SendCoinsDialog::setModel(WalletModel *_model)
 
         setBalance(_model->getBalance(), _model->getUnconfirmedBalance(), _model->getImmatureBalance(),
                    _model->getWatchBalance(), _model->getWatchUnconfirmedBalance(), _model->getWatchImmatureBalance());
-        connect(_model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(setBalance(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)));
+        connect(_model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(setBalance(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)));
         connect(_model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
         updateDisplayUnit();
 
@@ -195,6 +200,15 @@ SendCoinsDialog::~SendCoinsDialog()
     delete ui;
 }
 
+void SendCoinsDialog::warningBox(QString msg)
+{
+    QPair<QString, CClientUIInterface::MessageBoxFlags> msgParams;
+    msgParams.second = CClientUIInterface::MSG_WARNING;
+    msgParams.first = msg;
+
+    Q_EMIT message(tr("Send Coins"), msgParams.first, msgParams.second);
+}
+
 void SendCoinsDialog::on_sendButton_clicked()
 {
     if(!model || !model->getOptionsModel())
@@ -233,6 +247,7 @@ void SendCoinsDialog::on_sendButton_clicked()
         return;
     }
 
+
     // prepare transaction for getting txFee earlier
     WalletModelTransaction currentTransaction(recipients);
     WalletModel::SendCoinsReturn prepareStatus;
@@ -246,7 +261,52 @@ void SendCoinsDialog::on_sendButton_clicked()
     else
         ctrl.nConfirmTarget = 0;
 
-    prepareStatus = model->prepareTransaction(currentTransaction, &ctrl);
+    //prepareStatus = model->prepareTransaction(currentTransaction, &ctrl);
+    
+    QString sCommand = "sendtypeto part part \"[";
+    
+    int nRecipient = 0;
+    for (const auto &rcp : currentTransaction.getRecipients())
+    {
+        //sCommand
+        
+        if (nRecipient > 0)
+            sCommand += ",";
+        
+        sCommand += "{\\\"address\\\":\\\""+rcp.address+"\\\",\\\"amount\\\":"
+            + BitcoinUnits::format(BitcoinUnits::BTC, rcp.amount, false, BitcoinUnits::separatorNever)+"}";
+        
+        nRecipient++;
+    };
+    
+    
+    sCommand += "]\" \"\" \"\" 3 12 ";
+    
+    
+    UniValue rv;
+    try {
+        rv = CallRPC((sCommand + " true").toStdString());
+    } catch (UniValue& objError)
+    {
+        try { // Nice formatting for standard-format error
+            int code = find_value(objError, "code").get_int();
+            std::string message = find_value(objError, "message").get_str();
+            warningBox(QString::fromStdString(message) + " (code " + QString::number(code) + ")");
+            return;
+        } catch (const std::runtime_error&) // raised when converting to invalid type, i.e. missing code or message
+        {   // Show raw JSON object
+            warningBox(QString::fromStdString(objError.write()));
+            return;
+        };
+    } catch (const std::exception& e) {
+        warningBox(QString::fromStdString(e.what()));
+        return;
+    };
+    
+    CAmount nFee = rv["fee"].get_int();
+    
+    
+    /*
 
     // process prepareStatus and on error generate message shown to user
     processSendCoinsReturn(prepareStatus,
@@ -335,10 +395,14 @@ void SendCoinsDialog::on_sendButton_clicked()
         fNewRecipientAllowed = true;
         return;
     }
-
+    */
+    /*
     // now send the prepared transaction
     WalletModel::SendCoinsReturn sendStatus = model->sendCoins(currentTransaction);
     // process sendStatus and on error generate message shown to user
+    */
+    
+    WalletModel::SendCoinsReturn sendStatus = WalletModel::TransactionCreationFailed;
     processSendCoinsReturn(sendStatus);
 
     if (sendStatus.status == WalletModel::OK)
@@ -764,7 +828,7 @@ void SendCoinsDialog::coinControlChangeEdited(const QString& text)
         }
         else if (!addr.IsValid()) // Invalid address
         {
-            ui->labelCoinControlChangeLabel->setText(tr("Warning: Invalid Bitcoin address"));
+            ui->labelCoinControlChangeLabel->setText(tr("Warning: Invalid Particl address"));
         }
         else // Valid address
         {

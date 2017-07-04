@@ -5076,10 +5076,12 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
             
             GetMainSignals().BlockChecked(*pblock, state);
             
+            bool fPass = false;
             if (pindex->nFlags & BLOCK_FAILED_DUPLICATE_STAKE)
-                ProcessDuplicateStakeHeader(pindex, state.nodeId);
+                fPass = ProcessDuplicateStakeHeader(pindex, state.nodeId);
             
-            return error("%s: AcceptBlock FAILED", __func__);
+            if (!fPass)
+                return error("%s: AcceptBlock FAILED", __func__);
         }
     }
 

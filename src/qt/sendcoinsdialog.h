@@ -69,6 +69,8 @@ private:
     void processSendCoinsReturn(const WalletModel::SendCoinsReturn &sendCoinsReturn, const QString &msgArg = QString());
     void minimizeFeeSection(bool fMinimize);
     void updateFeeMinimizedLabel();
+    
+    void warningBox(QString msg);
 
 private Q_SLOTS:
     void on_sendButton_clicked();
