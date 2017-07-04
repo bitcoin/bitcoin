@@ -795,3 +795,23 @@ UniValue masternodebroadcast(const UniValue& params, bool fHelp)
 
     return NullUniValue;
 }
+
+UniValue sentinelping(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1) {
+        throw std::runtime_error(
+            "sentinelping version\n"
+            "\nSentinel ping.\n"
+            "\nArguments:\n"
+            "1. version           (string, required) Sentinel version in the form \"x.x.x\"\n"
+            "\nResult:\n"
+            "state                (boolean) Ping result\n"
+            "\nExamples:\n"
+            + HelpExampleCli("sentinelping", "1.0.2")
+            + HelpExampleRpc("sentinelping", "1.0.2")
+        );
+    }
+
+    activeMasternode.UpdateSentinelPing(StringVersionToInt(params[0].get_str()));
+    return true;
+}

@@ -108,6 +108,9 @@ bool CActiveMasternode::SendMasternodePing()
     }
 
     CMasternodePing mnp(vin);
+    mnp.nSentinelVersion = nSentinelVersion;
+    mnp.fSentinelIsCurrent =
+            (abs(GetAdjustedTime() - nSentinelPingTime) < MASTERNODE_WATCHDOG_MAX_SECONDS);
     if(!mnp.Sign(keyMasternode, pubKeyMasternode)) {
         LogPrintf("CActiveMasternode::SendMasternodePing -- ERROR: Couldn't sign Masternode Ping\n");
         return false;
@@ -123,6 +126,14 @@ bool CActiveMasternode::SendMasternodePing()
 
     LogPrintf("CActiveMasternode::SendMasternodePing -- Relaying ping, collateral=%s\n", vin.ToString());
     mnp.Relay();
+
+    return true;
+}
+
+bool CActiveMasternode::UpdateSentinelPing(int version)
+{
+    nSentinelVersion = version;
+    nSentinelPingTime = GetAdjustedTime();
 
     return true;
 }

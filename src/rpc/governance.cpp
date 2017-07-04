@@ -972,3 +972,4 @@ UniValue getsuperblockbudget(const UniValue& params, bool fHelp)
 
     return strBudget;
 }
+

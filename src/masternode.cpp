@@ -735,7 +735,9 @@ void CMasternodeBroadcast::Relay()
     RelayInv(inv);
 }
 
-CMasternodePing::CMasternodePing(CTxIn& vinNew)
+CMasternodePing::CMasternodePing(CTxIn& vinNew) :
+    fSentinelIsCurrent(false),
+    nSentinelVersion(0)
 {
     LOCK(cs_main);
     if (!chainActive.Tip() || chainActive.Height() < 12) return;
@@ -751,6 +753,7 @@ bool CMasternodePing::Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode)
     std::string strError;
     std::string strMasterNodeSignMessage;
 
+    // TODO: add sentinel data
     sigTime = GetAdjustedTime();
     std::string strMessage = vin.ToString() + blockHash.ToString() + boost::lexical_cast<std::string>(sigTime);
 
@@ -769,6 +772,7 @@ bool CMasternodePing::Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode)
 
 bool CMasternodePing::CheckSignature(CPubKey& pubKeyMasternode, int &nDos)
 {
+    // TODO: add sentinel data
     std::string strMessage = vin.ToString() + blockHash.ToString() + boost::lexical_cast<std::string>(sigTime);
     std::string strError = "";
     nDos = 0;
@@ -909,10 +913,10 @@ void CMasternode::RemoveGovernanceObject(uint256 nGovernanceObjectHash)
     mapGovernanceObjectsVotedOn.erase(it);
 }
 
-void CMasternode::UpdateWatchdogVoteTime()
+void CMasternode::UpdateWatchdogVoteTime(uint64_t nVoteTime)
 {
     LOCK(cs);
-    nTimeLastWatchdogVote = GetTime();
+    nTimeLastWatchdogVote = (nVoteTime == 0) ? GetTime() : nVoteTime;
 }
 
 /**

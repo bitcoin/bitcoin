@@ -353,6 +353,7 @@ static const CRPCCommand vRPCCommands[] =
     { "dash",               "mnsync",                 &mnsync,                 true  },
     { "dash",               "spork",                  &spork,                  true  },
     { "dash",               "getpoolinfo",            &getpoolinfo,            true  },
+    { "dash",               "sentinelping",           &sentinelping,           true  },
 #ifdef ENABLE_WALLET
     { "dash",               "privatesend",            &privatesend,            false },
 
