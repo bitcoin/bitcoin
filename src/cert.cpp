@@ -1417,7 +1417,7 @@ UniValue certhistory(const UniValue& params, bool fHelp) {
     return oRes;
 }
 UniValue certfilter(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() > 4)
+	if (fHelp || params.size() > 5)
 		throw runtime_error(
 				"certfilter [[[[[regexp]] from=0]] safesearch='Yes' category]\n"
 						"scan and filter certs\n"

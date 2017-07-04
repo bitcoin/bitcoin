@@ -3764,7 +3764,7 @@ UniValue escrowhistory(const UniValue& params, bool fHelp) {
     return oRes;
 }
 UniValue escrowfilter(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() > 2)
+	if (fHelp || params.size() > 3)
 		throw runtime_error(
 				"escrowfilter [[[[[regexp]] from=0]}\n"
 						"scan and filter escrows\n"
