@@ -319,7 +319,7 @@ bool CheckSequenceLocks(const CTransaction &tx, int flags, LockPoints* lp, bool 
  * It encapsulates activations older than versionbits and bip9.
  * @TODO incomplete, not all consensus flags yet.
  */
-static unsigned int GetConsensusFlags(const CBlockIndex* pindex, const Consensus::Params& consensusparams);
+static unsigned int GetConsensusFlags(const CBlockIndex* pindex, const Consensus::Params& consensusparams, VersionBitsCache& versionbitscache);
 
 static void LimitMempoolSize(CTxMemPool& pool, size_t limit, unsigned long age) {
     int expired = pool.Expire(GetTime() - age);
@@ -824,7 +824,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         // There is a similar check in CreateNewBlock() to prevent creating
         // invalid blocks (using TestBlockValidity), however allowing such
         // transactions into the mempool can be exploited as a DoS attack.
-        const unsigned int flags = GetConsensusFlags(chainActive.Tip(), Params().GetConsensus());
+        const unsigned int flags = GetConsensusFlags(chainActive.Tip(), Params().GetConsensus(), versionbitscache);
         const unsigned int currentBlockScriptVerifyFlags = ScriptFlagsFromConsensus(flags);
         if (!CheckInputsFromMempoolAndCache(tx, state, view, pool, currentBlockScriptVerifyFlags, true, txdata))
         {
@@ -1589,7 +1589,7 @@ public:
 // Protected by cs_main
 static ThresholdConditionCache warningcache[VERSIONBITS_NUM_BITS];
 
-static unsigned int GetConsensusFlags(const CBlockIndex* pindex, const Consensus::Params& consensusparams)
+static unsigned int GetConsensusFlags(const CBlockIndex* pindex, const Consensus::Params& consensusparams, VersionBitsCache& versionbitscache)
 {
     AssertLockHeld(cs_main);
 
@@ -1655,7 +1655,7 @@ static unsigned int GetConsensusFlags(const CBlockIndex* pindex, const Consensus
     }
 
     // Start enforcing WITNESS rules using versionbits logic.
-    if (IsWitnessEnabled(pindex->pprev, consensusparams)) {
+    if (VersionBitsState(pindex->pprev, consensusparams, Consensus::DEPLOYMENT_SEGWIT, versionbitscache) == THRESHOLD_ACTIVE) {
         flags |= bitcoinconsensus_SCRIPT_FLAGS_VERIFY_WITNESS;
         flags |= bitcoinconsensus_SCRIPT_FLAGS_VERIFY_NULLDUMMY;
     }
@@ -1731,7 +1731,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     int64_t nTime1 = GetTimeMicros(); nTimeCheck += nTime1 - nTimeStart;
     LogPrint(BCLog::BENCH, "    - Sanity checks: %.2fms [%.2fs]\n", 0.001 * (nTime1 - nTimeStart), nTimeCheck * 0.000001);
 
-    const unsigned int flags = GetConsensusFlags(pindex, chainparams.GetConsensus());
+    const unsigned int flags = GetConsensusFlags(pindex, chainparams.GetConsensus(), versionbitscache);
 
     if (flags & bitcoinconsensus_TX_VERIFY_BIP30) {
         for (const auto& tx : block.vtx) {
@@ -3138,7 +3138,7 @@ static bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidation
     }
     if (fNewBlock) *fNewBlock = true;
 
-    const int64_t flags = GetConsensusFlags(pindex, chainparams.GetConsensus());
+    const int64_t flags = GetConsensusFlags(pindex, chainparams.GetConsensus(), versionbitscache);
     if (!CheckBlock(block, state, chainparams.GetConsensus()) ||
         !ContextualCheckBlock(block, state, chainparams.GetConsensus(), flags, pindex->pprev)) {
         if (state.IsInvalid() && !state.CorruptionPossible()) {
@@ -3221,7 +3221,7 @@ bool TestBlockValidity(CValidationState& state, const CChainParams& chainparams,
     CBlockIndex indexDummy(block);
     indexDummy.pprev = pindexPrev;
     indexDummy.nHeight = pindexPrev->nHeight + 1;
-    const int64_t flags = GetConsensusFlags(&indexDummy, chainparams.GetConsensus());
+    const int64_t flags = GetConsensusFlags(&indexDummy, chainparams.GetConsensus(), versionbitscache);
 
     // NOTE: CheckBlockHeader is called by CheckBlock
     if (!ContextualCheckBlockHeader(block, state, chainparams.GetConsensus(), pindexPrev, GetAdjustedTime()))
