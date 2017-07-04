@@ -1724,8 +1724,10 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 				string strResponseGUID = "";
 				string strResponseGUID1 = "";
 				strResponse = GetSyscoinTransactionDescription(op, vvchArgs, "send", wtx, strResponseEnglish, strResponseGUID, strResponseGUID1);
-				if(isSysScript)
+				if (isSysScript)
 					entry.push_back(Pair("amount", ValueFromAmount(-s.amount)));
+				else if (decodedAndParsed)
+					entry.push_back(Pair("amount", ValueFromAmount(-wtx.vout[nOut])));
 				else
 					entry.push_back(Pair("amount", ValueFromAmount(-wtx.GetValueOut())));
 				entry.push_back(Pair("systx", strResponse));
@@ -1784,6 +1786,8 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 					strResponse = GetSyscoinTransactionDescription(op, vvchArgs, "recv", wtx, strResponseEnglish, strResponseGUID, strResponseGUID1);
 					if (isSysScript)
 						entry.push_back(Pair("amount", ValueFromAmount(r.amount)));
+					else if(decodedAndParsed)
+						entry.push_back(Pair("amount", ValueFromAmount(wtx.vout[nOut])));
 					else
 						entry.push_back(Pair("amount", ValueFromAmount(wtx.GetValueOut())));
 					entry.push_back(Pair("systx", strResponse));
