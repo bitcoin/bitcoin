@@ -42,13 +42,36 @@ if [ -n "$1" ]; then
       VERSION="$VERSIONPREFIX$1"
    fi
 
-   #now let's see if the version string contains "rc", and strip it off if it does
-   #  and simultaneously add RCSUBDIR to BASEDIR, where we will look for SIGNATUREFILENAME
-   if [[ $VERSION == *"$RCVERSIONSTRING"* ]]; then
-      BASEDIR="$BASEDIR${VERSION/%-$RCVERSIONSTRING*}/"
-      BASEDIR="$BASEDIR$RCSUBDIR.$RCVERSIONSTRING${VERSION: -1}/"
-   else
+   STRIPPEDLAST="${VERSION%-*}"
+
+   #now let's see if the version string contains "rc" or a platform name (e.g. "osx")
+   if [[ "$STRIPPEDLAST-" == "$VERSIONPREFIX" ]]; then
       BASEDIR="$BASEDIR$VERSION/"
+   else
+      # let's examine the last part to see if it's rc and/or platform name
+      STRIPPEDNEXTTOLAST="${STRIPPEDLAST%-*}"
+      if [[ "$STRIPPEDNEXTTOLAST-" == "$VERSIONPREFIX" ]]; then
+
+         LASTSUFFIX="${VERSION##*-}"
+         VERSION="$STRIPPEDLAST"
+
+         if [[ $LASTSUFFIX == *"$RCVERSIONSTRING"* ]]; then
+            RCVERSION="$LASTSUFFIX"
+         else
+            PLATFORM="$LASTSUFFIX"
+         fi
+
+      else
+         RCVERSION="${STRIPPEDLAST##*-}"
+         PLATFORM="${VERSION##*-}"
+
+         VERSION="$STRIPPEDNEXTTOLAST"
+      fi
+
+      BASEDIR="$BASEDIR$VERSION/"
+      if [[ $RCVERSION == *"$RCVERSIONSTRING"* ]]; then
+         BASEDIR="$BASEDIR$RCSUBDIR.$RCVERSION/"
+      fi
    fi
 
    SIGNATUREFILE="$BASEDIR$SIGNATUREFILENAME"
@@ -92,12 +115,22 @@ if [ $RET -ne 0 ]; then
    exit "$RET"
 fi
 
+if [ -n "$PLATFORM" ]; then
+   grep $PLATFORM $TMPFILE > "$TMPFILE-plat"
+   TMPFILESIZE=$(stat -c%s "$TMPFILE-plat")
+   if [ $TMPFILESIZE -eq 0 ]; then
+      echo "error: no files matched the platform specified" && exit 3
+   fi
+   mv "$TMPFILE-plat" $TMPFILE
+fi
+
 #here we extract the filenames from the signature file
 FILES=$(awk '{print $2}' "$TMPFILE")
 
 #and download these one by one
 for file in $FILES
 do
+   echo "Downloading $file"
    wget --quiet -N "$BASEDIR$file"
 done
 

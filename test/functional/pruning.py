@@ -315,17 +315,17 @@ class PruneTest(BitcoinTestFramework):
         # check that the pruning node's wallet is still in good shape
         self.log.info("Stop and start pruning node to trigger wallet rescan")
         self.stop_node(2)
-        self.start_node(2, self.options.tmpdir, ["-prune=550"])
+        self.nodes[2] = self.start_node(2, self.options.tmpdir, ["-prune=550"])
         self.log.info("Success")
 
-        # check that wallet loads loads successfully when restarting a pruned node after IBD.
+        # check that wallet loads successfully when restarting a pruned node after IBD.
         # this was reported to fail in #7494.
         self.log.info("Syncing node 5 to test wallet")
         connect_nodes(self.nodes[0], 5)
         nds = [self.nodes[0], self.nodes[5]]
         sync_blocks(nds, wait=5, timeout=300)
         self.stop_node(5) #stop and start to trigger rescan
-        self.start_node(5, self.options.tmpdir, ["-prune=550"])
+        self.nodes[5] = self.start_node(5, self.options.tmpdir, ["-prune=550"])
         self.log.info("Success")
 
     def run_test(self):

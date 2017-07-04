@@ -225,7 +225,7 @@ public:
     bool operator()(const CNoDestination& no) const { return false; }
 };
 
-} // anon namespace
+} // namespace
 
 bool CBitcoinAddress::Set(const CKeyID& id)
 {
