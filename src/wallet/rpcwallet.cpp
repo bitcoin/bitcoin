@@ -1688,12 +1688,12 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
     string strSentAccount;
     list<COutputEntry> listReceived;
     list<COutputEntry> listSent;
+	map<uint256, bool> mapSysTx = map<uint256, bool>();
     wtx.GetAmounts(listReceived, listSent, nFee, strSentAccount, filter);
 
     bool fAllAccounts = (strAccount == string("*"));
     bool involvesWatchonly = wtx.IsFromMe(ISMINE_WATCH_ONLY);
 	// SYSCOIN
-	map<uint256, bool> mapSysTx = map<uint256, bool>();
     vector<vector<unsigned char> > vvchArgs;
     int op, nOut;
 	string strResponse = "";
@@ -1702,29 +1702,26 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
     {
         BOOST_FOREACH(const COutputEntry& s, listSent)
         {
-			// SYSCOIN
-			if (mapSysTx[wtx.GetHash()])
-				continue;
             UniValue entry(UniValue::VOBJ);
             if(involvesWatchonly || (::IsMine(*pwalletMain, s.destination) & ISMINE_WATCH_ONLY))
                 entry.push_back(Pair("involvesWatchonly", true));
             entry.push_back(Pair("account", strSentAccount));
             MaybePushAddress(entry, s.destination);
             entry.push_back(Pair("category", "send"));
-			entry.push_back(Pair("amount", ValueFromAmount(-s.amount)));
+            entry.push_back(Pair("amount", ValueFromAmount(-s.amount)));
             if (pwalletMain->mapAddressBook.count(s.destination))
                 entry.push_back(Pair("label", pwalletMain->mapAddressBook[s.destination].name));
-            
+            entry.push_back(Pair("vout", s.vout));
             entry.push_back(Pair("fee", ValueFromAmount(-nFee)));
             if (fLong)
                 WalletTxToJSON(wtx, entry);
             entry.push_back(Pair("abandoned", wtx.isAbandoned()));
 			// SYSCOIN
-			bool isSysScript = IsSyscoinScript(wtx.vout[s.vout].scriptPubKey, op, vvchArgs);
-			bool decodedAndParsed = DecodeAndParseSyscoinTx(wtx, op, nOut, vvchArgs);
-			if(wtx.nVersion == GetSyscoinTxVersion() && ((isSysScript && !decodedAndParsed) || (wtx.vout[s.vout].scriptPubKey[0] == OP_RETURN && decodedAndParsed)))
+			if(wtx.nVersion == GetSyscoinTxVersion() && (IsSyscoinScript(wtx.vout[s.vout].scriptPubKey, op, vvchArgs) || (wtx.vout[s.vout].scriptPubKey[0] == OP_RETURN && DecodeAndParseSyscoinTx(wtx, op, nOut, vvchArgs))))
 			{
-				mapSysTx[wtx.GetHash()] = decodedAndParsed;
+				if (mapSysTx[wtx.GetHash()])
+					continue;
+				mapSysTx[wtx.GetHash()] = true;
 				string strResponseEnglish = "";
 				string strResponseGUID = "";
 				string strResponseGUID1 = "";
@@ -1735,7 +1732,6 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 				if(!strResponseGUID1.empty())
 					entry.push_back(Pair("sysguid1", strResponseGUID1));
 			}
-
             ret.push_back(entry);
         }
     }
@@ -1745,9 +1741,6 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
     {
         BOOST_FOREACH(const COutputEntry& r, listReceived)
         {
-			// SYSCOIN
-			if (mapSysTx[wtx.GetHash()])
-				continue;
             string account;
             if (pwalletMain->mapAddressBook.count(r.destination))
                 account = pwalletMain->mapAddressBook[r.destination].name;
@@ -1771,18 +1764,18 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
                 {
                     entry.push_back(Pair("category", "receive"));
                 }
-				entry.push_back(Pair("amount", ValueFromAmount(r.amount)));
+                entry.push_back(Pair("amount", ValueFromAmount(r.amount)));
                 if (pwalletMain->mapAddressBook.count(r.destination))
                     entry.push_back(Pair("label", account));
                 entry.push_back(Pair("vout", r.vout));
                 if (fLong)
                     WalletTxToJSON(wtx, entry);
 				// SYSCOIN
-				bool isSysScript = IsSyscoinScript(wtx.vout[r.vout].scriptPubKey, op, vvchArgs);
-				bool decodedAndParsed = DecodeAndParseSyscoinTx(wtx, op, nOut, vvchArgs);
-				if(wtx.nVersion == GetSyscoinTxVersion() && ((isSysScript && !decodedAndParsed) || (wtx.vout[r.vout].scriptPubKey[0] == OP_RETURN && decodedAndParsed)))
+				if(wtx.nVersion == GetSyscoinTxVersion() && (IsSyscoinScript(wtx.vout[r.vout].scriptPubKey, op, vvchArgs) || (wtx.vout[r.vout].scriptPubKey[0] == OP_RETURN && DecodeAndParseSyscoinTx(wtx, op, nOut, vvchArgs))))
 				{
-					mapSysTx[wtx.GetHash()] = decodedAndParsed;
+					if (mapSysTx[wtx.GetHash()])
+						continue;
+					mapSysTx[wtx.GetHash()] = true;
 					string strResponseEnglish = "";
 					string strResponseGUID = "";
 					string strResponseGUID1 = "";

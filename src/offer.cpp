@@ -2687,8 +2687,8 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 
 	if(vchExtTxId.empty())
 	{
-		vecSend.push_back(paymentRecipient);
 		vecSend.push_back(acceptRecipient);
+		vecSend.push_back(paymentRecipient);
 		if(!copyOffer.vchLinkOffer.empty() && nTotalCommission > 0)
 			vecSend.push_back(paymentCommissionRecipient);
 	}
