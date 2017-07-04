@@ -2593,11 +2593,11 @@ UniValue aliaslist(const UniValue& params, bool fHelp) {
 		// get last active name only
 		if (vNamesI.find(alias.vchAlias) != vNamesI.end() && (alias.nHeight <= vNamesI[alias.vchAlias] || vNamesI[alias.vchAlias] < 0))
 			continue;
+		UniValue oName(UniValue::VOBJ);
+		vNamesI[alias.vchAlias] = alias.nHeight;
 		found++;
 		if (found < from)
 			continue;
-		UniValue oName(UniValue::VOBJ);
-		vNamesI[alias.vchAlias] = alias.nHeight;
 		if (BuildAliasJson(alias, pending, oName))
 		{
 			oRes.push_back(oName);

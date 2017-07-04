@@ -3343,9 +3343,11 @@ bool BuildOfferJson(const COffer& theOffer, const CAliasIndex &alias, UniValue& 
 	return true;
 }
 UniValue offeracceptlist(const UniValue& params, bool fHelp) {
-    if (fHelp || 2 < params.size())
-        throw runtime_error("offeracceptlist [\"alias\",...] [<acceptguid>]\n"
-                "list offer purchases that an array of aliases own. Set of aliases to look up based on alias.");
+    if (fHelp || 4 < params.size())
+        throw runtime_error("offeracceptlist [\"alias\",...] [acceptguid] [count] [from]\n"
+                "list offer purchases that an array of aliases own.\n"
+				"[count]          (numeric, optional, default=10) The number of results to return\n"
+				"[from]           (numeric, optional, default=0) The number of results to skip\n"");
 	UniValue aliasesValue(UniValue::VARR);
 	vector<string> aliases;
 	if(params.size() >= 1)
@@ -3373,6 +3375,14 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
     if (params.size() >= 2 && !params[1].get_str().empty())
         vchNameUniq = vchFromValue(params[1]);
 
+	int count = 10;
+	int from = 0;
+	if (params.size() > 2 && !params[2].get_str().empty())
+		count = atoi(params[2].get_str());
+	if (params.size() > 3 && !params[3].get_str().empty())
+		from = atoi(params[3].get_str());
+	int found = 0;
+
 	UniValue aoOfferAccepts(UniValue::VARR);
 	map< vector<unsigned char>, int > vNamesI;
 	map< vector<unsigned char>, int > vNamesA;
@@ -3381,6 +3391,8 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 	{
 		for(unsigned int aliasIndex =0;aliasIndex<aliases.size();aliasIndex++)
 		{
+			if (aoOfferAccepts.size() >= count)
+				break;
 			string name = aliases[aliasIndex];
 			vector<unsigned char> vchAlias = vchFromString(name);
 			vector<CAliasIndex> vtxPos;
@@ -3432,6 +3444,9 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 						continue;
 					UniValue oAccept(UniValue::VOBJ);
 					vNamesA[theOffer.accept.vchAcceptRand] = theOffer.accept.nAcceptHeight;
+					found++;
+					if (found < from)
+						continue;
 					if(BuildOfferAcceptJson(theOffer, theAlias, tx, oAccept))
 					{
 						aoOfferAccepts.push_back(oAccept);
@@ -3638,7 +3653,7 @@ bool BuildOfferAcceptJson(const COffer& theOffer, const CAliasIndex& theAlias, c
 }
 UniValue offercount(const UniValue& params, bool fHelp) {
 	if (fHelp || 4 < params.size())
-		throw runtime_error("offerlist [\"alias\",...]\n"
+		throw runtime_error("offercount [\"alias\",...]\n"
 			"list offers that an array of aliases own.\n");
 	UniValue aliasesValue(UniValue::VARR);
 	vector<string> aliases;
@@ -3796,10 +3811,10 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 	
 					UniValue oOffer(UniValue::VOBJ);
 					
+					vNamesI[offer.vchOffer] = theOffer.nHeight;
 					found++;
 					if (found < from)
 						continue;
-					vNamesI[offer.vchOffer] = theOffer.nHeight;
 					if(BuildOfferJson(theOffer, theAlias, oOffer))
 					{
 						oRes.push_back(oOffer);

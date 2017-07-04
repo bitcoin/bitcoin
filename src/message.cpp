@@ -738,10 +738,10 @@ UniValue messagereceivelist(const UniValue& params, bool fHelp) {
 			message.txHash = wtx.GetHash();
 			
 			UniValue oName(UniValue::VOBJ);
+			vNamesI[message.vchMessage] = message.nHeight;
 			found++;
 			if (found < from)
 				continue;
-			vNamesI[message.vchMessage] = message.nHeight;
 			if (BuildMessageJson(message, oName))
 			{
 				oRes.push_back(oName);
@@ -881,11 +881,11 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
 					const CMessage &theMessage = vtxMessagePos.back();
 					if (theMessage.vchAliasFrom != theAlias.vchAlias)
 						continue;
+					message.txHash = theAlias.txHash;
+					vNamesI[message.vchMessage] = message.nHeight;
 					found++;
 					if (found < from)
 						continue;
-					message.txHash = theAlias.txHash;
-					vNamesI[message.vchMessage] = message.nHeight;
 					UniValue oName(UniValue::VOBJ);
 					if (BuildMessageJson(message, oName))
 					{
@@ -916,11 +916,11 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
 				vector<CMessage> vtxMessagePos;
 				if (!pmessagedb->ReadMessage(message.vchMessage, vtxMessagePos) || vtxMessagePos.empty())
 					continue;
+				message.txHash = wtx.GetHash();
+				vNamesI[message.vchMessage] = message.nHeight;
 				found++;
 				if (found < from)
 					continue;
-				message.txHash = wtx.GetHash();
-				vNamesI[message.vchMessage] = message.nHeight;
 				UniValue oName(UniValue::VOBJ);
 				if (BuildMessageJson(message, oName))
 				{

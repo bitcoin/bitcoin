@@ -1213,7 +1213,7 @@ UniValue certinfo(const UniValue& params, bool fHelp) {
 
 UniValue certcount(const UniValue& params, bool fHelp) {
     if (fHelp || 1 < params.size())
-        throw runtime_error("certlist [\"alias\",...]\n"
+        throw runtime_error("certcount [\"alias\",...]\n"
                 "Count certificates that an array of aliases own.\n");
 	UniValue aliasesValue(UniValue::VARR);
 	vector<string> aliases;
