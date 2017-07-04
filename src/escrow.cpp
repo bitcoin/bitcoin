@@ -3683,11 +3683,11 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 					const CEscrow &theEscrow = vtxEscrowPos.back();
 					if(theEscrow.vchBuyerAlias != vchAlias && theEscrow.vchSellerAlias != vchAlias && theEscrow.vchArbiterAlias != vchAlias)
 						continue;
+					UniValue oEscrow(UniValue::VOBJ);
+					vNamesI[escrow.vchEscrow] = nHeight;
 					found++;
 					if (found < from)
 						continue;
-					UniValue oEscrow(UniValue::VOBJ);
-					vNamesI[escrow.vchEscrow] = nHeight;
 					if(BuildEscrowJson(theEscrow, oEscrow, strWalletless))
 					{
 						oRes.push_back(oEscrow);

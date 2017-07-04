@@ -3738,7 +3738,10 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 							continue;
 						found++;
 						if (found < from)
+						{
+							vNamesI[vchKey] = nHeight;
 							continue;
+						}
 						// we need to get the alias at the time of the accept
 						CAliasIndex offerAcceptAlias;
 						offerAcceptAlias.nHeight = offer.accept.nAcceptHeight;
