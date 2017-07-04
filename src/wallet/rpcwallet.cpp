@@ -1682,7 +1682,7 @@ string GetSyscoinTransactionDescription(const int op, const vector<vector<unsign
 	strResponse += " " + stringFromVch(vvchArgs[0]);
 	return strResponse;
 }
-void what doListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDepth, bool fLong, UniValue& ret, const isminefilter& filter)
+void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDepth, bool fLong, UniValue& ret, const isminefilter& filter)
 {
     CAmount nFee;
     string strSentAccount;
