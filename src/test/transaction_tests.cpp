@@ -394,7 +394,7 @@ static CScript PushAll(const std::vector<valtype>& values)
 {
     CScript result;
     for (const valtype& v : values) {
-        if (v.size() == 0) {
+        if (v.empty()) {
             result << OP_0;
         } else if (v.size() == 1 && v[0] >= 1 && v[0] <= 16) {
             result << CScript::EncodeOP_N(v[0]);
@@ -409,7 +409,7 @@ void ReplaceRedeemScript(CScript& script, const CScript& redeemScript)
 {
     std::vector<valtype> stack;
     EvalScript(stack, script, SCRIPT_VERIFY_STRICTENC, BaseSignatureChecker(), SIGVERSION_BASE);
-    assert(stack.size() > 0);
+    assert(!stack.empty());
     stack.back() = std::vector<unsigned char>(redeemScript.begin(), redeemScript.end());
     script = PushAll(stack);
 }

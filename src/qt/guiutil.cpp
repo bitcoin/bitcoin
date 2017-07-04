@@ -936,10 +936,9 @@ QString formatServicesStr(quint64 mask)
         }
     }
 
-    if (strList.size())
-        return strList.join(" & ");
-    else
+    if (strList.empty())
         return QObject::tr("None");
+    return strList.join(" & ");
 }
 
 QString formatPingTime(double dPingTime)

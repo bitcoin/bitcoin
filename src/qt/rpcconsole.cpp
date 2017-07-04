@@ -249,12 +249,12 @@ bool RPCConsole::RPCParseCommandLine(std::string &strResult, const std::string &
                             curarg = lastResult.write(2);
 
                         // if we have a non empty result, use it as stack argument otherwise as general result
-                        if (curarg.size())
+                        if (!curarg.empty())
                         {
-                            if (stack.size())
-                                add_to_current_stack(curarg);
-                            else
+                            if (stack.empty())
                                 strResult = curarg;
+                            else
+                                add_to_current_stack(curarg);
                         }
                         curarg.clear();
                         // assume eating space state

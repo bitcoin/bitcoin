@@ -415,7 +415,7 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
 
     // throw exception in case of an empty request
     std::string strRequestMutable = req->ReadBody();
-    if (strRequestMutable.length() == 0 && uriParts.size() == 0)
+    if (strRequestMutable.empty() && uriParts.empty())
         return RESTERR(req, HTTP_BAD_REQUEST, "Error: empty request");
 
     bool fInputParsed = false;
@@ -425,7 +425,7 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
     // parse/deserialize input
     // input-format = output-format, rest/getutxos/bin requires binary input, gives binary output, ...
 
-    if (uriParts.size() > 0)
+    if (!uriParts.empty())
     {
 
         //inputs is sent over URI scheme (/rest/getutxos/checkmempool/txid1-n/txid2-n/...)
@@ -446,10 +446,9 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
             vOutPoints.push_back(COutPoint(txid, (uint32_t)nOutput));
         }
 
-        if (vOutPoints.size() > 0)
-            fInputParsed = true;
-        else
+        if (vOutPoints.empty())
             return RESTERR(req, HTTP_BAD_REQUEST, "Error: empty request");
+        fInputParsed = true;
     }
 
     switch (rf) {
@@ -462,7 +461,7 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
     case RF_BINARY: {
         try {
             //deserialize only if user sent a request
-            if (strRequestMutable.size() > 0)
+            if (!strRequestMutable.empty())
             {
                 if (fInputParsed) //don't allow sending input over URI and HTTP RAW DATA
                     return RESTERR(req, HTTP_BAD_REQUEST, "Combination of URI scheme inputs and raw post data is not allowed");

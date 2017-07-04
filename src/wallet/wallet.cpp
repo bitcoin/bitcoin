@@ -3356,7 +3356,7 @@ std::set< std::set<CTxDestination> > CWallet::GetAddressGroupings()
                        grouping.insert(txoutAddr);
                    }
             }
-            if (grouping.size() > 0)
+            if (!grouping.empty())
             {
                 groupings.insert(grouping);
                 grouping.clear();

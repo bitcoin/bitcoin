@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_CASE(limitedmap_test)
     BOOST_CHECK(map.max_size() == 10);
 
     // check that it's empty
-    BOOST_CHECK(map.size() == 0);
+    BOOST_CHECK(map.empty());
 
     // insert (-1, -1)
     map.insert(std::pair<int, int>(-1, -1));

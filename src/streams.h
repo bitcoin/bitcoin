@@ -420,7 +420,7 @@ public:
      */
     void Xor(const std::vector<unsigned char>& key)
     {
-        if (key.size() == 0) {
+        if (key.empty()) {
             return;
         }
 

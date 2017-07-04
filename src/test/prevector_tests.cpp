@@ -151,8 +151,12 @@ public:
         pre_vector.assign(n, value);
     }
 
-    Size size() {
+    Size size() const {
         return real_vector.size();
+    }
+
+    bool empty() const {
+        return size() == 0;
     }
 
     Size capacity() {
@@ -201,7 +205,7 @@ BOOST_AUTO_TEST_CASE(PrevectorTestInt)
             if (InsecureRandBits(2) == 0) {
                 test.insert(InsecureRandRange(test.size() + 1), InsecureRand32());
             }
-            if (test.size() > 0 && InsecureRandBits(2) == 1) {
+            if (!test.empty() && InsecureRandBits(2) == 1) {
                 test.erase(InsecureRandRange(test.size()));
             }
             if (InsecureRandBits(3) == 2) {
@@ -219,7 +223,7 @@ BOOST_AUTO_TEST_CASE(PrevectorTestInt)
             if (InsecureRandBits(4) == 5) {
                 test.push_back(InsecureRand32());
             }
-            if (test.size() > 0 && InsecureRandBits(4) == 6) {
+            if (!test.empty() && InsecureRandBits(4) == 6) {
                 test.pop_back();
             }
             if (InsecureRandBits(5) == 7) {
@@ -241,7 +245,7 @@ BOOST_AUTO_TEST_CASE(PrevectorTestInt)
             if (InsecureRandBits(6) == 10) {
                 test.shrink_to_fit();
             }
-            if (test.size() > 0) {
+            if (!test.empty()) {
                 test.update(InsecureRandRange(test.size()), InsecureRand32());
             }
             if (InsecureRandBits(10) == 11) {

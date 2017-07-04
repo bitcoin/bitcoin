@@ -448,9 +448,9 @@ int CAddrMan::Check_()
         }
     }
 
-    if (setTried.size())
+    if (!setTried.empty())
         return -13;
-    if (mapNew.size())
+    if (!mapNew.empty())
         return -15;
     if (nKey.IsNull())
         return -16;

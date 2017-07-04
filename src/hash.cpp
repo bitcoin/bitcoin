@@ -17,7 +17,7 @@ unsigned int MurmurHash3(unsigned int nHashSeed, const std::vector<unsigned char
 {
     // The following is MurmurHash3 (x86_32), see http://code.google.com/p/smhasher/source/browse/trunk/MurmurHash3.cpp
     uint32_t h1 = nHashSeed;
-    if (vDataToHash.size() > 0)
+    if (!vDataToHash.empty())
     {
         const uint32_t c1 = 0xcc9e2d51;
         const uint32_t c2 = 0x1b873593;

@@ -62,7 +62,7 @@ bool IsHex(const std::string& str)
         if (HexDigit(*it) < 0)
             return false;
     }
-    return (str.size() > 0) && (str.size()%2 == 0);
+    return !str.empty() && str.size() % 2 == 0;
 }
 
 std::vector<unsigned char> ParseHex(const char* psz)
@@ -228,7 +228,7 @@ std::vector<unsigned char> DecodeBase64(const char* p, bool* pfInvalid)
 std::string DecodeBase64(const std::string& str)
 {
     std::vector<unsigned char> vchRet = DecodeBase64(str.c_str());
-    return (vchRet.size() == 0) ? std::string() : std::string((const char*)&vchRet[0], vchRet.size());
+    return vchRet.empty() ? std::string() : std::string((const char*)&vchRet[0], vchRet.size());
 }
 
 std::string EncodeBase32(const unsigned char* pch, size_t len)
@@ -415,7 +415,7 @@ std::vector<unsigned char> DecodeBase32(const char* p, bool* pfInvalid)
 std::string DecodeBase32(const std::string& str)
 {
     std::vector<unsigned char> vchRet = DecodeBase32(str.c_str());
-    return (vchRet.size() == 0) ? std::string() : std::string((const char*)&vchRet[0], vchRet.size());
+    return vchRet.empty() ? std::string() : std::string((const char*)&vchRet[0], vchRet.size());
 }
 
 static bool ParsePrechecks(const std::string& str)

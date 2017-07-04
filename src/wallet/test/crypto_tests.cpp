@@ -148,7 +148,7 @@ static void TestDecrypt(const CCrypter& crypt, const std::vector<unsigned char>&
 
     BOOST_CHECK_MESSAGE(vchDecrypted1 == vchDecrypted2, HexStr(vchDecrypted1.begin(), vchDecrypted1.end()) + " != " + HexStr(vchDecrypted2.begin(), vchDecrypted2.end()));
 
-    if (vchPlaintext.size())
+    if (!vchPlaintext.empty())
         BOOST_CHECK(CKeyingMaterial(vchPlaintext.begin(), vchPlaintext.end()) == vchDecrypted2);
 }
 

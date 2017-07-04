@@ -799,7 +799,7 @@ UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, const int6
             }
 
             // Import private keys.
-            if (keys.size()) {
+            if (!keys.empty()) {
                 for (size_t i = 0; i < keys.size(); i++) {
                     const std::string& privkey = keys[i].get_str();
 
@@ -840,7 +840,7 @@ UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, const int6
             success = true;
         } else {
             // Import public keys.
-            if (pubKeys.size() && keys.size() == 0) {
+            if (!pubKeys.empty() && keys.empty()) {
                 const std::string& strPubKey = pubKeys[0].get_str();
 
                 if (!IsHex(strPubKey)) {
@@ -908,7 +908,7 @@ UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, const int6
             }
 
             // Import private keys.
-            if (keys.size()) {
+            if (!keys.empty()) {
                 const std::string& strPrivkey = keys[0].get_str();
 
                 // Checks.
@@ -967,7 +967,7 @@ UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, const int6
             }
 
             // Import scriptPubKey only.
-            if (pubKeys.size() == 0 && keys.size() == 0) {
+            if (pubKeys.empty() && keys.empty()) {
                 if (::IsMine(*pwallet, script) == ISMINE_SPENDABLE) {
                     throw JSONRPCError(RPC_WALLET_ERROR, "The wallet already contains the private key for this address or script");
                 }

@@ -39,10 +39,10 @@ std::string FormatScript(const CScript& script)
                     continue;
                 }
             }
-            if (vch.size() > 0) {
-                ret += strprintf("0x%x 0x%x ", HexStr(it2, it - vch.size()), HexStr(it - vch.size(), it));
-            } else {
+            if (vch.empty()) {
                 ret += strprintf("0x%x ", HexStr(it2, it));
+            } else {
+                ret += strprintf("0x%x 0x%x ", HexStr(it2, it - vch.size()), HexStr(it - vch.size(), it));
             }
             continue;
         }

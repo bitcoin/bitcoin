@@ -134,7 +134,7 @@ UniValue getnewaddress(const JSONRPCRequest& request)
 
     // Parse the account first so we don't generate a key if there's an error
     std::string strAccount;
-    if (request.params.size() > 0)
+    if (!request.params.empty())
         strAccount = AccountFromValue(request.params[0]);
 
     if (!pwallet->IsLocked()) {
@@ -727,7 +727,7 @@ UniValue getbalance(const JSONRPCRequest& request)
 
     LOCK2(cs_main, pwallet->cs_wallet);
 
-    if (request.params.size() == 0)
+    if (request.params.empty())
         return  ValueFromAmount(pwallet->GetBalance());
 
     const std::string& account_param = request.params[0].get_str();
@@ -751,7 +751,7 @@ UniValue getunconfirmedbalance(const JSONRPCRequest &request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() > 0)
+    if (request.fHelp || !request.params.empty())
         throw std::runtime_error(
                 "getunconfirmedbalance\n"
                 "Returns the server's total unconfirmed balance\n");
@@ -1165,7 +1165,7 @@ UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bool fByA
 {
     // Minimum confirmations
     int nMinDepth = 1;
-    if (params.size() > 0)
+    if (!params.empty())
         nMinDepth = params[0].get_int();
 
     // Whether to include empty accounts
@@ -1536,7 +1536,7 @@ UniValue listtransactions(const JSONRPCRequest& request)
     LOCK2(cs_main, pwallet->cs_wallet);
 
     std::string strAccount = "*";
-    if (request.params.size() > 0)
+    if (!request.params.empty())
         strAccount = request.params[0].get_str();
     int nCount = 10;
     if (request.params.size() > 1)
@@ -1629,7 +1629,7 @@ UniValue listaccounts(const JSONRPCRequest& request)
     LOCK2(cs_main, pwallet->cs_wallet);
 
     int nMinDepth = 1;
-    if (request.params.size() > 0)
+    if (!request.params.empty())
         nMinDepth = request.params[0].get_int();
     isminefilter includeWatchonly = ISMINE_SPENDABLE;
     if(request.params.size() > 1)
@@ -1732,7 +1732,7 @@ UniValue listsinceblock(const JSONRPCRequest& request)
     int target_confirms = 1;
     isminefilter filter = ISMINE_SPENDABLE;
 
-    if (request.params.size() > 0)
+    if (!request.params.empty())
     {
         uint256 blockId;
 
@@ -1965,7 +1965,7 @@ UniValue keypoolrefill(const JSONRPCRequest& request)
 
     // 0 is interpreted by TopUpKeyPool() as the default keypool size given by -keypool
     unsigned int kpSize = 0;
-    if (request.params.size() > 0) {
+    if (!request.params.empty()) {
         if (request.params[0].get_int() < 0)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected valid size.");
         kpSize = (unsigned int)request.params[0].get_int();
@@ -2753,7 +2753,7 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
     if (!DecodeHexTx(tx, request.params[0].get_str(), true))
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
 
-    if (tx.vout.size() == 0)
+    if (tx.vout.empty())
         throw JSONRPCError(RPC_INVALID_PARAMETER, "TX must have at least one output");
 
     if (changePosition != -1 && (changePosition < 0 || (unsigned int)changePosition > tx.vout.size()))
