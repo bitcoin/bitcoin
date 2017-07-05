@@ -217,7 +217,7 @@ def test_rebumping(rbf_node, dest_address):
 def test_rebumping_not_replaceable(rbf_node, dest_address):
     # check that re-bumping a non-replaceable bump tx fails
     rbfid = spend_one_input(rbf_node, dest_address)
-    bumped = rbf_node.bumpfee(rbfid, {"totalFee": 10000, "replaceable": False})
+    bumped = rbf_node.bumpfee(rbfid, {"totalFee": 10000, "opt_into_rbf": False})
     assert_raises_jsonrpc(-4, "Transaction is not BIP 125 replaceable", rbf_node.bumpfee, bumped["txid"],
                           {"totalFee": 20000})
 
