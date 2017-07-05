@@ -819,7 +819,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         if (CheckMnbAndUpdateMasternodeList(pfrom, mnb, nDos)) {
             // use announced Masternode as a peer
-            addrman.Add(CAddress(mnb.addr), pfrom->addr, 2*60*60);
+            addrman.Add(CAddress(mnb.addr, NODE_NETWORK), pfrom->addr, 2*60*60);
         } else if(nDos > 0) {
             Misbehaving(pfrom->GetId(), nDos);
         }
@@ -1020,7 +1020,7 @@ void CMasternodeMan::DoFullVerificationStep()
         }
         LogPrint("masternode", "CMasternodeMan::DoFullVerificationStep -- Verifying masternode %s rank %d/%d address %s\n",
                     it->second.vin.prevout.ToStringShort(), it->first, nRanksTotal, it->second.addr.ToString());
-        if(SendVerifyRequest((CAddress)it->second.addr, vSortedByAddr)) {
+        if(SendVerifyRequest(CAddress(it->second.addr, NODE_NETWORK), vSortedByAddr)) {
             nCount++;
             if(nCount >= MAX_POSE_CONNECTIONS) break;
         }
@@ -1203,7 +1203,7 @@ void CMasternodeMan::ProcessVerifyReply(CNode* pnode, CMasternodeVerification& m
         std::vector<CMasternode>::iterator it = vMasternodes.begin();
         std::string strMessage1 = strprintf("%s%d%s", pnode->addr.ToString(false), mnv.nonce, blockHash.ToString());
         while(it != vMasternodes.end()) {
-            if((CAddress)it->addr == pnode->addr) {
+            if(CAddress(it->addr, NODE_NETWORK) == pnode->addr) {
                 if(CMessageSigner::VerifyMessage(it->pubKeyMasternode, mnv.vchSig1, strMessage1, strError)) {
                     // found it!
                     prealMasternode = &(*it);

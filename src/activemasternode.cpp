@@ -199,7 +199,7 @@ void CActiveMasternode::ManageStateInitial()
 
     LogPrintf("CActiveMasternode::ManageStateInitial -- Checking inbound connection to '%s'\n", service.ToString());
 
-    if(!ConnectNode((CAddress)service, NULL, true)) {
+    if(!ConnectNode(CAddress(service, NODE_NETWORK), NULL, true)) {
         nState = ACTIVE_MASTERNODE_NOT_CAPABLE;
         strNotCapableReason = "Could not connect to " + service.ToString();
         LogPrintf("CActiveMasternode::ManageStateInitial -- %s: %s\n", GetStateString(), strNotCapableReason);

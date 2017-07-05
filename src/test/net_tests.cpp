@@ -44,7 +44,7 @@ public:
         int nUBuckets = ADDRMAN_NEW_BUCKET_COUNT ^ (1 << 30);
         s << nUBuckets;
 
-        CAddress addr = CAddress(CService("252.1.1.1", 7777));
+        CAddress addr = CAddress(CService("252.1.1.1", 7777), NODE_NONE);
         CAddrInfo info = CAddrInfo(addr, CNetAddr("252.2.2.2"));
         s << info;
     }
@@ -71,9 +71,9 @@ BOOST_AUTO_TEST_CASE(caddrdb_read)
     CService addr3 = CService("250.7.3.3", 9999);
 
     // Add three addresses to new table.
-    addrmanUncorrupted.Add(CAddress(addr1), CService("252.5.1.1", 8333));
-    addrmanUncorrupted.Add(CAddress(addr2), CService("252.5.1.1", 8333));
-    addrmanUncorrupted.Add(CAddress(addr3), CService("252.5.1.1", 8333));
+    addrmanUncorrupted.Add(CAddress(addr1, NODE_NONE), CService("252.5.1.1", 8333));
+    addrmanUncorrupted.Add(CAddress(addr2, NODE_NONE), CService("252.5.1.1", 8333));
+    addrmanUncorrupted.Add(CAddress(addr3, NODE_NONE), CService("252.5.1.1", 8333));
 
     // Test that the de-serialization does not throw an exception.
     CDataStream ssPeers1 = AddrmanToStream(addrmanUncorrupted);
