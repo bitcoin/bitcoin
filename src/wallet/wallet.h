@@ -1093,7 +1093,7 @@ public:
     bool MarkReplaced(const uint256& originalHash, const uint256& newHash);
 
     /* Returns the wallets help message */
-    static std::string GetWalletHelpString(bool showDebug);
+    static std::string GetWalletHelpString();
 
     /* Initializes the wallet, returns a new CWallet instance or a null pointer in case of an error */
     static CWallet* CreateWalletFromFile(const std::string walletFile);
