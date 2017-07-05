@@ -6,6 +6,7 @@
 #define BITCOIN_WALLET_FEEBUMPER_H
 
 #include <primitives/transaction.h>
+#include "policy/fees.h"
 
 class CWallet;
 class CWalletTx;
@@ -24,7 +25,7 @@ enum class BumpFeeResult
 class CFeeBumper
 {
 public:
-    CFeeBumper(const CWallet *pWalletIn, const uint256 txidIn, int newConfirmTarget, bool ignoreGlobalPayTxFee, CAmount totalFee, bool newTxReplaceable);
+    CFeeBumper(const CWallet *pWalletIn, const uint256 txidIn, int newConfirmTarget, bool ignoreGlobalPayTxFee, CFeeRate feeRate, bool newTxReplaceable);
     BumpFeeResult getResult() const { return currentResult; }
     const std::vector<std::string>& getErrors() const { return vErrors; }
     CAmount getOldFee() const { return nOldFee; }

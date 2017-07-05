@@ -175,10 +175,11 @@ def test_bumpfee_with_descendant_fails(rbf_node, rbf_node_address, dest_address)
 def test_small_output_fails(rbf_node, dest_address):
     # cannot bump fee with a too-small output
     rbfid = spend_one_input(rbf_node, dest_address)
-    rbf_node.bumpfee(rbfid, {"totalFee": 50000})
-
+    feerate = get_target_feerate(rbf_node, 50000, rbfid, 1)
+    rbf_node.bumpfee(rbfid, {"feeRate": feerate})
     rbfid = spend_one_input(rbf_node, dest_address)
-    assert_raises_jsonrpc(-4, "Change output is too small", rbf_node.bumpfee, rbfid, {"totalFee": 50001})
+    feerate = get_target_feerate(rbf_node, 50001, rbfid, -1)
+    assert_raises_jsonrpc(-4, "Change output is too small", rbf_node.bumpfee, rbfid, {"feeRate": feerate})
 
 
 def test_dust_to_fee(rbf_node, dest_address):
@@ -186,7 +187,8 @@ def test_dust_to_fee(rbf_node, dest_address):
     # the bumped tx sets fee=49,900, but it converts to 50,000
     rbfid = spend_one_input(rbf_node, dest_address)
     fulltx = rbf_node.getrawtransaction(rbfid, 1)
-    bumped_tx = rbf_node.bumpfee(rbfid, {"totalFee": 49900})
+    feerate = get_target_feerate(rbf_node, 49900, rbfid, 1)
+    bumped_tx = rbf_node.bumpfee(rbfid, {"feeRate": feerate})
     full_bumped_tx = rbf_node.getrawtransaction(bumped_tx["txid"], 1)
     assert_equal(bumped_tx["fee"], Decimal("0.00050000"))
     assert_equal(len(fulltx["vout"]), 2)
@@ -209,17 +211,19 @@ def test_settxfee(rbf_node, dest_address):
 def test_rebumping(rbf_node, dest_address):
     # check that re-bumping the original tx fails, but bumping the bumper succeeds
     rbfid = spend_one_input(rbf_node, dest_address)
-    bumped = rbf_node.bumpfee(rbfid, {"totalFee": 2000})
-    assert_raises_jsonrpc(-4, "already bumped", rbf_node.bumpfee, rbfid, {"totalFee": 3000})
-    rbf_node.bumpfee(bumped["txid"], {"totalFee": 3000})
+    feerate = get_target_feerate(rbf_node, 2000, rbfid, 0)
+    bumped = rbf_node.bumpfee(rbfid, {"feeRate": feerate})
+    assert_raises_jsonrpc(-4, "already bumped", rbf_node.bumpfee, rbfid, {"feeRate": feerate})
+    feerate = get_target_feerate(rbf_node, 3000, bumped["txid"], 1)
+    rbf_node.bumpfee(bumped["txid"], {"feeRate": feerate})
 
 
 def test_rebumping_not_replaceable(rbf_node, dest_address):
     # check that re-bumping a non-replaceable bump tx fails
     rbfid = spend_one_input(rbf_node, dest_address)
-    bumped = rbf_node.bumpfee(rbfid, {"totalFee": 10000, "replaceable": False})
-    assert_raises_jsonrpc(-4, "Transaction is not BIP 125 replaceable", rbf_node.bumpfee, bumped["txid"],
-                          {"totalFee": 20000})
+    feerate = get_target_feerate(rbf_node, 10000, rbfid, 0)
+    bumped = rbf_node.bumpfee(rbfid, {"feeRate": feerate, "replaceable": False})
+    assert_raises_jsonrpc(-4, "Transaction is not BIP 125 replaceable", rbf_node.bumpfee, bumped["txid"])
 
 
 def test_unconfirmed_not_spendable(rbf_node, rbf_node_address):
@@ -299,6 +303,11 @@ def submit_block_with_tx(node, tx):
     node.submitblock(bytes_to_hex_str(block.serialize(True)))
     return block
 
+def get_target_feerate(node, totalFeeTarget, tx, sizeTweak):
+    txdata = node.gettransaction(tx)
+    txsize = len(txdata["hex"])/2
+    return round(totalFeeTarget/(txsize+sizeTweak))
+    #tweak required to ensure bumped tx is accepted/rejected even with sig size variation
 
 if __name__ == "__main__":
     BumpFeeTest().main()
