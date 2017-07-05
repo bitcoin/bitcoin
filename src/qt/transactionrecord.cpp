@@ -9,6 +9,7 @@
 #include "validation.h"
 #include "timedata.h"
 #include "wallet/wallet.h"
+#include "wallet/hdwallet.h"
 
 #include <stdint.h>
 
@@ -167,6 +168,18 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
 
     return parts;
 }
+
+QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CHDWallet *wallet, const uint256 &hash, const CTransactionRecord &rtx)
+{
+    QList<TransactionRecord> parts;
+    int64_t nTime = rtx.nTimeReceived;
+    
+    CAmount nNet =  10000;
+    
+    parts.append(TransactionRecord(hash, nTime, TransactionRecord::Other, "", nNet, 0));
+    
+    return parts;
+};
 
 void TransactionRecord::updateStatus(const CWalletTx &wtx)
 {

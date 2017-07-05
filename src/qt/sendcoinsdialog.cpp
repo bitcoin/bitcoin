@@ -263,7 +263,13 @@ void SendCoinsDialog::on_sendButton_clicked()
 
     //prepareStatus = model->prepareTransaction(currentTransaction, &ctrl);
     
-    QString sCommand = "sendtypeto part part \"[";
+    QString sCommand = "sendtypeto ";
+    
+    sCommand += ui->cbxTypeFrom->currentText().toLower() + " ";
+    
+    sCommand += ui->cbxTypeTo->currentText().toLower();
+    
+    sCommand += " [";
     
     int nRecipient = 0;
     for (const auto &rcp : currentTransaction.getRecipients())
@@ -273,21 +279,25 @@ void SendCoinsDialog::on_sendButton_clicked()
         if (nRecipient > 0)
             sCommand += ",";
         
-        sCommand += "{\\\"address\\\":\\\""+rcp.address+"\\\",\\\"amount\\\":"
-            + BitcoinUnits::format(BitcoinUnits::BTC, rcp.amount, false, BitcoinUnits::separatorNever)+"}";
+        sCommand += "{\"address\":\""+rcp.address+"\",\"amount\":"
+            + BitcoinUnits::format(BitcoinUnits::BTC, rcp.amount, false, BitcoinUnits::separatorNever);
+        
+        if (!rcp.narration.isEmpty())
+            sCommand += ",\"narr\":\""+rcp.narration+"\"";
+        
+        sCommand += "}";
         
         nRecipient++;
     };
     
     
-    sCommand += "]\" \"\" \"\" 3 12 ";
+    sCommand += "] \"\" \"\" 3 12";
     
     
     UniValue rv;
     try {
         rv = CallRPC((sCommand + " true").toStdString());
-    } catch (UniValue& objError)
-    {
+    } catch (UniValue& objError) {
         try { // Nice formatting for standard-format error
             int code = find_value(objError, "code").get_int();
             std::string message = find_value(objError, "message").get_str();
@@ -303,22 +313,12 @@ void SendCoinsDialog::on_sendButton_clicked()
         return;
     };
     
-    CAmount nFee = rv["fee"].get_int();
+    
+    double rFee = rv["fee"].get_real();
     
     
-    /*
-
-    // process prepareStatus and on error generate message shown to user
-    processSendCoinsReturn(prepareStatus,
-        BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), currentTransaction.getTransactionFee()));
-
-    if(prepareStatus.status != WalletModel::OK) {
-        fNewRecipientAllowed = true;
-        return;
-    }
-
-    CAmount txFee = currentTransaction.getTransactionFee();
-
+    CAmount txFee = rFee * COIN;
+    
     // Format confirmation message
     QStringList formatted;
     Q_FOREACH(const SendCoinsRecipient &rcp, currentTransaction.getRecipients())
@@ -363,14 +363,14 @@ void SendCoinsDialog::on_sendButton_clicked()
     {
         // append fee string if a fee is required
         questionString.append("<hr /><span style='color:#aa0000;'>");
-        questionString.append(BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), txFee));
+        questionString.append("Estimated "+BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), txFee));
         questionString.append("</span> ");
         questionString.append(tr("added as transaction fee"));
 
         // append transaction size
-        questionString.append(" (" + QString::number((double)currentTransaction.getTransactionSize() / 1000) + " kB)");
+        //questionString.append(" (" + QString::number((double)currentTransaction.getTransactionSize() / 1000) + " kB)");
     }
-
+    
     // add total amount in all subdivision units
     questionString.append("<hr />");
     CAmount totalAmount = currentTransaction.getTotalTransactionAmount() + txFee;
@@ -395,14 +395,29 @@ void SendCoinsDialog::on_sendButton_clicked()
         fNewRecipientAllowed = true;
         return;
     }
-    */
-    /*
-    // now send the prepared transaction
-    WalletModel::SendCoinsReturn sendStatus = model->sendCoins(currentTransaction);
-    // process sendStatus and on error generate message shown to user
-    */
     
-    WalletModel::SendCoinsReturn sendStatus = WalletModel::TransactionCreationFailed;
+    
+    WalletModel::SendCoinsReturn sendStatus = WalletModel::OK;
+    
+    try {
+        rv = CallRPC((sCommand).toStdString());
+    } catch (UniValue& objError) {
+        try { // Nice formatting for standard-format error
+            int code = find_value(objError, "code").get_int();
+            std::string message = find_value(objError, "message").get_str();
+            warningBox(QString::fromStdString(message) + " (code " + QString::number(code) + ")");
+        } catch (const std::runtime_error&) // raised when converting to invalid type, i.e. missing code or message
+        {   // Show raw JSON object
+            warningBox(QString::fromStdString(objError.write()));
+        };
+        sendStatus = WalletModel::TransactionCreationFailed;
+    } catch (const std::exception& e) {
+        warningBox(QString::fromStdString(e.what()));
+        sendStatus = WalletModel::TransactionCreationFailed;
+    };
+    
+    
+    
     processSendCoinsReturn(sendStatus);
 
     if (sendStatus.status == WalletModel::OK)

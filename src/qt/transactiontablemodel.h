@@ -33,7 +33,9 @@ public:
         Date = 2,
         Type = 3,
         ToAddress = 4,
-        Amount = 5
+        AmountAnon = 5,
+        AmountBlind = 6,
+        Amount = 7
     };
 
     /** Roles to get specific information from a transaction row.

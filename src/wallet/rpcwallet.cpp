@@ -1772,7 +1772,7 @@ void ListRecord(const uint256 &hash, const CTransactionRecord &rtx,
             conflicts.push_back(conflict.GetHex());
         entry.push_back(Pair("walletconflicts", conflicts));
         
-        entry.push_back(Pair("time", rtx.nTimeReceived));
+        entry.push_back(Pair("time", (int64_t)rtx.nTimeReceived));
         
         if (!r.sNarration.empty())
             entry.push_back(Pair("narration", r.sNarration));

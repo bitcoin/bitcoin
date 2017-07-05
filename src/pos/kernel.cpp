@@ -82,7 +82,6 @@ bool CheckStakeKernelHash(const CBlockIndex *pindexPrev,
     arith_uint256 bnWeight = arith_uint256(nValueIn);
     bnTarget *= bnWeight;
     
-    
     targetProofOfStake = ArithToUint256(bnTarget);
     
     uint256 bnStakeModifier = pindexPrev->bnStakeModifier;

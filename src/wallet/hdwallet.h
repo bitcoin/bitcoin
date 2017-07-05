@@ -19,8 +19,7 @@ typedef std::map<CKeyID, CStealthKeyMetadata> StealthKeyMetaMap;
 typedef std::map<CKeyID, CExtKeyAccount*> ExtKeyAccountMap;
 typedef std::map<CKeyID, CStoredExtKey*> ExtKeyMap;
 
-typedef std::map<uint256, CWalletTx> WalletTxMap;
-
+typedef std::map<uint256, CWalletTx> MapWallet_t;
 typedef std::map<uint256, CTransactionRecord> MapRecords_t;
 
 typedef std::multimap<int64_t, std::map<uint256, CTransactionRecord>::iterator> RtxOrdered_t;
@@ -375,7 +374,7 @@ public:
     
     int GetDepthInMainChain(const uint256 &blockhash, int nIndex = 0) const;
     bool InMempool(const uint256 &hash) const;
-    bool IsTrusted(const uint256 &hash, const uint256 &blockhash) const;
+    bool IsTrusted(const uint256 &hash, const uint256 &blockhash, int nIndex = 0) const;
     
     CAmount GetBalance() const;
     CAmount GetUnconfirmedBalance() const;
@@ -588,7 +587,7 @@ public:
     ExtKeyAccountMap mapExtAccounts;
     ExtKeyMap mapExtKeys;
     
-    mutable std::map<uint256, CWalletTx> mapTempWallet;
+    mutable MapWallet_t mapTempWallet;
     
     MapRecords_t mapRecords;
     RtxOrdered_t rtxOrdered;

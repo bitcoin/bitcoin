@@ -11,9 +11,9 @@ particl add more bitcoind tests, add `BOOST_AUTO_TEST_CASE` functions to the exi
 .cpp files in the `test/` directory or add new .cpp files that
 implement new BOOST_AUTO_TEST_SUITE sections.
 
-particl run the bitcoin-qt tests manually, launch `src/qt/test/test_bitcoin-qt`
+particl run the particl-qt tests manually, launch `src/qt/test/test_particl-qt`
 
-particl add more bitcoin-qt tests, add them to the `src/qt/test/` directory and
+particl add more particl-qt tests, add them to the `src/qt/test/` directory and
 the `src/qt/test/test_main.cpp` file.
 
 ### particlning individual tests

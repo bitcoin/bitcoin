@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>850</width>
-    <height>526</height>
+    <height>537</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -587,8 +587,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>830</width>
-        <height>104</height>
+        <width>832</width>
+        <height>63</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,1">
@@ -664,6 +664,54 @@
       <property name="bottomMargin">
        <number>0</number>
       </property>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <item>
+         <widget class="QComboBox" name="cbxTypeFrom">
+          <property name="toolTip">
+           <string>Balance type to send from.</string>
+          </property>
+          <item>
+           <property name="text">
+            <string>Part</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Blind</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Anon</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="cbxTypeTo">
+          <property name="toolTip">
+           <string>Balance type to send to.</string>
+          </property>
+          <item>
+           <property name="text">
+            <string>Part</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Blind</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Anon</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+       </layout>
+      </item>
       <item>
        <layout class="QVBoxLayout" name="verticalLayoutFee2" stretch="0,0,0">
         <property name="spacing">
@@ -1321,7 +1369,7 @@
  </resources>
  <connections/>
  <buttongroups>
-  <buttongroup name="groupFee"/>
   <buttongroup name="groupCustomFee"/>
+  <buttongroup name="groupFee"/>
  </buttongroups>
 </ui>

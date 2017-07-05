@@ -19,6 +19,8 @@
 #include "uint256.h"
 #include "util.h"
 #include "wallet/wallet.h"
+#include "wallet/hdwallet.h"
+#include "rpc/rpcutil.h"
 
 #include <QColor>
 #include <QDateTime>
@@ -28,13 +30,15 @@
 
 #include <boost/foreach.hpp>
 
-// Amount column is right-aligned it contains numbers
+// Amount columns are right-aligned it contains numbers
 static int column_alignments[] = {
         Qt::AlignLeft|Qt::AlignVCenter, /* status */
         Qt::AlignLeft|Qt::AlignVCenter, /* watchonly */
         Qt::AlignLeft|Qt::AlignVCenter, /* date */
         Qt::AlignLeft|Qt::AlignVCenter, /* type */
         Qt::AlignLeft|Qt::AlignVCenter, /* address */
+        Qt::AlignRight|Qt::AlignVCenter, /* amountAnon */
+        Qt::AlignRight|Qt::AlignVCenter, /* amountBlind */
         Qt::AlignRight|Qt::AlignVCenter /* amount */
     };
 
@@ -87,7 +91,16 @@ public:
                 if(TransactionRecord::showTransaction(it->second))
                     cachedWallet.append(TransactionRecord::decomposeTransaction(wallet, it->second));
             }
+            
+            CHDWallet *phdw = (CHDWallet*)wallet;
+            for (MapRecords_t::iterator it = phdw->mapRecords.begin(); it != phdw->mapRecords.end(); ++it)
+            {
+                //if (TransactionRecord::showTransaction(it->second))
+                    cachedWallet.append(TransactionRecord::decomposeTransaction(phdw, it->first, it->second));
+            };
         }
+        
+        
     }
 
     /* Update our model of the wallet incrementally, to synchronize our model of the wallet
@@ -243,7 +256,7 @@ TransactionTableModel::TransactionTableModel(const PlatformStyle *_platformStyle
         fProcessingQueuedTransactions(false),
         platformStyle(_platformStyle)
 {
-    columns << QString() << QString() << tr("Date") << tr("Type") << tr("Label") << BitcoinUnits::getAmountColumnTitle(walletModel->getOptionsModel()->getDisplayUnit());
+    columns << QString() << QString() << tr("Date") << tr("Type") << tr("Label") << tr("Anon") << tr("Blind") << BitcoinUnits::getAmountColumnTitle(walletModel->getOptionsModel()->getDisplayUnit());
     priv->refreshWallet();
 
     connect(walletModel->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
@@ -551,6 +564,10 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
             return formatTxType(rec);
         case ToAddress:
             return formatTxToAddress(rec, false);
+        case AmountAnon:
+            return formatTxAmount(rec, true, BitcoinUnits::separatorAlways);
+        case AmountBlind:
+            return formatTxAmount(rec, true, BitcoinUnits::separatorAlways);
         case Amount:
             return formatTxAmount(rec, true, BitcoinUnits::separatorAlways);
         }
@@ -569,6 +586,10 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
             return (rec->involvesWatchAddress ? 1 : 0);
         case ToAddress:
             return formatTxToAddress(rec, true);
+        case AmountAnon:
+            return qint64(rec->credit + rec->debit);
+        case AmountBlind:
+            return qint64(rec->credit + rec->debit);
         case Amount:
             return qint64(rec->credit + rec->debit);
         }
@@ -683,6 +704,10 @@ QVariant TransactionTableModel::headerData(int section, Qt::Orientation orientat
                 return tr("Whether or not a watch-only address is involved in this transaction.");
             case ToAddress:
                 return tr("User-defined intent/purpose of the transaction.");
+            case AmountAnon:
+                return tr("Anon amount removed from or added to balance.");
+            case AmountBlind:
+                return tr("Blind amount removed from or added to balance.");
             case Amount:
                 return tr("Amount removed from or added to balance.");
             }
@@ -738,10 +763,18 @@ static std::vector< TransactionNotification > vQueueNotifications;
 static void NotifyTransactionChanged(TransactionTableModel *ttm, CWallet *wallet, const uint256 &hash, ChangeType status)
 {
     // Find transaction in wallet
-    std::map<uint256, CWalletTx>::iterator mi = wallet->mapWallet.find(hash);
+    MapWallet_t::iterator mi = wallet->mapWallet.find(hash);
     // Determine whether to show transaction or not (determine this here so that no relocking is needed in GUI thread)
     bool inWallet = mi != wallet->mapWallet.end();
     bool showTransaction = (inWallet && TransactionRecord::showTransaction(mi->second));
+    
+    if (!inWallet)
+    {
+        CHDWallet *phdw = (CHDWallet*)wallet;
+        MapRecords_t::const_iterator mri = phdw->mapRecords.find(hash);
+        inWallet = mri != phdw->mapRecords.end();
+        showTransaction = true;
+    };
 
     TransactionNotification notification(hash, status, showTransaction);
 

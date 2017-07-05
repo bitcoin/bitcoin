@@ -3691,7 +3691,7 @@ bool static ConnectTip(CValidationState& state, const CChainParams& chainparams,
         GetMainSignals().BlockChecked(blockConnecting, state);
         if (!rv) {
             if (state.IsInvalid())
-                InvalidBlockFound(pindexNew, pblock, state);
+                InvalidBlockFound(pindexNew, connectTrace.blocksConnected.back().second, state);
             return error("ConnectTip(): ConnectBlock %s failed", pindexNew->GetBlockHash().ToString());
         }
         nTime3 = GetTimeMicros(); nTimeConnectTotal += nTime3 - nTime2;
@@ -4392,6 +4392,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
             && block.vtx[0]->IsCoinStake()
             && !CheckStakeUnique(block))
         {
+            /*
             // TODO: ask peers which stake kernel they have
             if (chainActive.Tip()->nHeight < GetNumBlocksOfPeers() - 8) // peers have significantly longer chain, this node must've got the wrong stake 1st
             {
@@ -4399,6 +4400,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
                 const COutPoint &kernel = block.vtx[0]->vin[0].prevout;
                 mapStakeSeen[kernel] = block.GetHash();
             } else
+            */
                 return state.DoS(20, false, REJECT_INVALID, "bad-cs-duplicate", false, "duplicate coinstake");
         };
         
@@ -4814,8 +4816,7 @@ bool ProcessDuplicateStakeHeader(CBlockIndex *pindex, NodeId nodeId)
     uint256 hash = pindex->GetBlockHash();
     
     bool fMakeValid = false;
-    if (nodeId == -1
-        && chainActive.Tip()->nHeight < GetNumBlocksOfPeers() - 4)
+    if (nodeId == -1)
     {
         LogPrintf("%s: Duplicate stake block %s was received in a group, marking valid.\n",
             __func__, hash.ToString());
