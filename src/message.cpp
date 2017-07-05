@@ -865,6 +865,8 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
 			vector<unsigned char> vchValue;
 			BOOST_FOREACH(const CAliasIndex &theAlias, vtxPos)
 			{
+				if (oRes.size() >= count)
+					break;
 				if(!GetSyscoinTransaction(theAlias.nHeight, theAlias.txHash, tx, Params().GetConsensus()))
 					continue;
 
