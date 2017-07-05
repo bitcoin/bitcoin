@@ -19,6 +19,8 @@ CGovernanceManager governance;
 int nSubmittedFinalBudget;
 
 const std::string CGovernanceManager::SERIALIZATION_VERSION_STRING = "CGovernanceManager-Version-11";
+const int CGovernanceManager::MAX_TIME_FUTURE_DEVIATION = 60*60;
+const int CGovernanceManager::RELIABLE_PROPAGATION_TIME = 60;
 
 CGovernanceManager::CGovernanceManager()
     : pCurrentBlockIndex(NULL),
@@ -42,7 +44,7 @@ CGovernanceManager::CGovernanceManager()
 // Accessors for thread-safe access to maps
 bool CGovernanceManager::HaveObjectForHash(uint256 nHash) {
     LOCK(cs);
-    return (mapObjects.count(nHash) == 1);
+    return (mapObjects.count(nHash) == 1 || mapPostponedObjects.count(nHash) == 1);
 }
 
 bool CGovernanceManager::SerializeObjectForHash(uint256 nHash, CDataStream& ss)
@@ -50,7 +52,9 @@ bool CGovernanceManager::SerializeObjectForHash(uint256 nHash, CDataStream& ss)
     LOCK(cs);
     object_m_it it = mapObjects.find(nHash);
     if (it == mapObjects.end()) {
-        return false;
+        it = mapPostponedObjects.find(nHash);
+        if (it == mapPostponedObjects.end())
+            return false;
     }
     ss << it->second;
     return true;
@@ -195,51 +199,32 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
         // CHECK OBJECT AGAINST LOCAL BLOCKCHAIN
 
         bool fMasternodeMissing = false;
-        bool fIsValid = govobj.IsValidLocally(strError, fMasternodeMissing, true);
+        bool fMissingConfirmations = false;
+        bool fIsValid = govobj.IsValidLocally(strError, fMasternodeMissing, fMissingConfirmations, true);
 
-        if(fMasternodeMissing) {
-            mapMasternodeOrphanObjects.insert(std::make_pair(nHash, object_time_pair_t(govobj, GetAdjustedTime() + GOVERNANCE_ORPHAN_EXPIRATION_TIME)));
-            LogPrintf("MNGOVERNANCEOBJECT -- Missing masternode for: %s, strError = %s\n", strHash, strError);
-            // fIsValid must also be false here so we will return early in the next if block
-        }
-        if(!fIsValid) {
-            mapSeenGovernanceObjects.insert(std::make_pair(nHash, SEEN_OBJECT_ERROR_INVALID));
-            LogPrintf("MNGOVERNANCEOBJECT -- Governance object is invalid - %s\n", strError);
-            return;
-        }
-
-        if(fRateCheckBypassed) {
-            if(!MasternodeRateCheck(govobj, UPDATE_FAIL_ONLY, true, fRateCheckBypassed)) {
+        if(fRateCheckBypassed && (fIsValid || fMasternodeMissing)) {
+            if(!MasternodeRateCheck(govobj, UPDATE_FAIL_ONLY)) {
                 LogPrintf("MNGOVERNANCEOBJECT -- masternode rate check failed (after signature verification) - %s - (current block height %d) \n", strHash, nCachedBlockHeight);
                 return;
             }
         }
 
-        // UPDATE CACHED VARIABLES FOR THIS OBJECT AND ADD IT TO OUR MANANGED DATA
+        if(!fIsValid) {
+            if(fMasternodeMissing) {
+                mapMasternodeOrphanObjects.insert(std::make_pair(nHash, object_time_pair_t(govobj, GetAdjustedTime() + GOVERNANCE_ORPHAN_EXPIRATION_TIME)));
+                LogPrintf("MNGOVERNANCEOBJECT -- Missing masternode for: %s, strError = %s\n", strHash, strError);
+            } else if(fMissingConfirmations) {
+                AddPostponedObject(govobj);
+                LogPrintf("MNGOVERNANCEOBJECT -- Not enough fee confirmations for: %s, strError = %s\n", strHash, strError);
+            } else {
+                LogPrintf("MNGOVERNANCEOBJECT -- Governance object is invalid - %s\n", strError);
+            }
 
-        govobj.UpdateSentinelVariables(); //this sets local vars in object
-
-        bool fAddToSeen = true;
-        if(AddGovernanceObject(govobj, fAddToSeen, pfrom))
-        {
-            LogPrintf("MNGOVERNANCEOBJECT -- %s new\n", strHash);
-            govobj.Relay();
+            mapSeenGovernanceObjects.insert(std::make_pair(nHash, SEEN_OBJECT_ERROR_INVALID));
+            return;
         }
 
-        if(fAddToSeen) {
-            // UPDATE THAT WE'VE SEEN THIS OBJECT
-            mapSeenGovernanceObjects.insert(std::make_pair(nHash, SEEN_OBJECT_IS_VALID));
-            // Update the rate buffer
-            MasternodeRateCheck(govobj, UPDATE_TRUE, true, fRateCheckBypassed);
-        }
-
-        masternodeSync.AddedGovernanceItem();
-
-
-        // WE MIGHT HAVE PENDING/ORPHAN VOTES FOR THIS OBJECT
-
-        CGovernanceException exception;
-        CheckOrphanVotes(govobj, exception);
+        AddGovernanceObject(govobj, pfrom);
     }
 
     // A NEW GOVERNANCE OBJECT VOTE HAS ARRIVED
@@ -290,7 +275,8 @@ void CGovernanceManager::CheckOrphanVotes(CGovernanceObject& govobj, CGovernance
     std::vector<vote_time_pair_t> vecVotePairs;
     mapOrphanVotes.GetAll(nHash, vecVotePairs);
 
-    fRateChecksEnabled = false;
+    CRateChecksGuard guard(false, *this);
+
     int64_t nNow = GetAdjustedTime();
     for(size_t i = 0; i < vecVotePairs.size(); ++i) {
         bool fRemove = false;
@@ -308,7 +294,39 @@ void CGovernanceManager::CheckOrphanVotes(CGovernanceObject& govobj, CGovernance
             mapOrphanVotes.Erase(nHash, pairVote);
         }
     }
-    fRateChecksEnabled = true;
+}
+
+void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, CNode* pfrom)
+{
+    uint256 nHash = govobj.GetHash();
+    std::string strHash = nHash.ToString();
+
+    // UPDATE CACHED VARIABLES FOR THIS OBJECT AND ADD IT TO OUR MANANGED DATA
+
+    govobj.UpdateSentinelVariables(); //this sets local vars in object
+
+    bool fAddToSeen = true;
+    if(AddGovernanceObject(govobj, fAddToSeen, pfrom))
+    {
+        LogPrintf("AddGovernanceObject -- %s new, received form %s\n", strHash, pfrom? pfrom->addrName : "NULL");
+        govobj.Relay();
+    }
+
+    // PROCESS OBJECT EXACTLY THE SAME WAY AS USUAL
+
+    if(fAddToSeen) {
+        // UPDATE THAT WE'VE SEEN THIS OBJECT
+        mapSeenGovernanceObjects.insert(std::make_pair(nHash, SEEN_OBJECT_IS_VALID));
+        // Update the rate buffer
+        MasternodeRateCheck(govobj, UPDATE_TRUE);
+    }
+
+    masternodeSync.AddedGovernanceItem();
+
+    // WE MIGHT HAVE PENDING/ORPHAN VOTES FOR THIS OBJECT
+
+    CGovernanceException exception;
+    CheckOrphanVotes(govobj, exception);
 }
 
 bool CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, bool& fAddToSeen, CNode* pfrom)
@@ -336,7 +354,7 @@ bool CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, bool& fA
         return false;
     }
 
-    LogPrint("gobject", "CGovernanceManager::AddGovernanceObject -- Adding object: hash = %s, type = %d\n", nHash.ToString(), govobj.GetObjectType()); 
+    LogPrint("gobject", "CGovernanceManager::AddGovernanceObject -- Adding object: hash = %s, type = %d\n", nHash.ToString(), govobj.GetObjectType());
 
     if(govobj.nObjectType == GOVERNANCE_OBJECT_WATCHDOG) {
         // If it's a watchdog, make sure it fits required time bounds
@@ -471,7 +489,7 @@ void CGovernanceManager::UpdateCachesAndClean()
 
     if(!pCurrentBlockIndex) return;
 
-    fRateChecksEnabled = false;
+    CRateChecksGuard guard(false, *this);
 
     LogPrint("gobject", "CGovernanceManager::UpdateCachesAndClean -- After pCurrentBlockIndex (not NULL)\n");
 
@@ -541,7 +559,6 @@ void CGovernanceManager::UpdateCachesAndClean()
         }
     }
 
-    fRateChecksEnabled = true;
     LogPrintf("CGovernanceManager::UpdateCachesAndClean -- %s\n", ToString());
 }
 
@@ -689,8 +706,7 @@ bool CGovernanceManager::ConfirmInventoryRequest(const CInv& inv)
     switch(inv.type) {
     case MSG_GOVERNANCE_OBJECT:
     {
-        object_m_it it = mapObjects.find(inv.hash);
-        if(it != mapObjects.end()) {
+        if(mapObjects.count(inv.hash) == 1 || mapPostponedObjects.count(inv.hash) == 1) {
             LogPrint("gobject", "CGovernanceManager::ConfirmInventoryRequest already have governance object, returning false\n");
             return false;
         }
@@ -819,7 +835,7 @@ void CGovernanceManager::Sync(CNode* pfrom, const uint256& nProp, const CBloomFi
 
 bool CGovernanceManager::MasternodeRateCheck(const CGovernanceObject& govobj, update_mode_enum_t eUpdateLast)
 {
-    bool fRateCheckBypassed = false;
+    bool fRateCheckBypassed;
     return MasternodeRateCheck(govobj, eUpdateLast, true, fRateCheckBypassed);
 }
 
@@ -880,12 +896,16 @@ bool CGovernanceManager::MasternodeRateCheck(const CGovernanceObject& govobj, up
         return false;
     }
 
-    if(nTimestamp > nNow + 60*60) {
+    bool fAdditionalRelay = false;
+    if(nTimestamp > nNow + MAX_TIME_FUTURE_DEVIATION) {
         LogPrintf("CGovernanceManager::MasternodeRateCheck -- object %s rejected due to too new (future) timestamp, masternode vin = %s, timestamp = %d, current time = %d\n",
                  strHash, vin.prevout.ToStringShort(), nTimestamp, nNow);
         return false;
+    } else if (nTimestamp > nNow + MAX_TIME_FUTURE_DEVIATION - RELIABLE_PROPAGATION_TIME) {
+        // schedule additional relay for the object
+        fAdditionalRelay = true;
     }
-    
+
     double dMaxRate = 1.1 / nSuperblockCycleSeconds;
     double dRate = 0.0;
     CRateCheckBuffer buffer;
@@ -915,6 +935,9 @@ bool CGovernanceManager::MasternodeRateCheck(const CGovernanceObject& govobj, up
     dRate = buffer.GetRate();
 
     bool fRateOK = ( dRate < dMaxRate );
+
+    if (eUpdateLast == UPDATE_TRUE && fAdditionalRelay)
+        setAdditionalRelayObjects.insert(govobj.GetHash());
 
     switch(eUpdateLast) {
     case UPDATE_TRUE:
@@ -994,18 +1017,19 @@ bool CGovernanceManager::ProcessVote(CNode* pfrom, const CGovernanceVote& vote, 
 void CGovernanceManager::CheckMasternodeOrphanVotes()
 {
     LOCK2(cs_main, cs);
-    fRateChecksEnabled = false;
+
+    CRateChecksGuard guard(false, *this);
+
     for(object_m_it it = mapObjects.begin(); it != mapObjects.end(); ++it) {
         it->second.CheckOrphanVotes();
     }
-    fRateChecksEnabled = true;
 }
 
 void CGovernanceManager::CheckMasternodeOrphanObjects()
 {
     LOCK2(cs_main, cs);
     int64_t nNow = GetAdjustedTime();
-    fRateChecksEnabled = false;
+    CRateChecksGuard guard(false, *this);
     object_time_m_it it = mapMasternodeOrphanObjects.begin();
     while(it != mapMasternodeOrphanObjects.end()) {
         object_time_pair_t& pair = it->second;
@@ -1018,7 +1042,8 @@ void CGovernanceManager::CheckMasternodeOrphanObjects()
 
         string strError;
         bool fMasternodeMissing = false;
-        bool fIsValid = govobj.IsValidLocally(strError, fMasternodeMissing, true);
+        bool fConfirmationsMissing = false;
+        bool fIsValid = govobj.IsValidLocally(strError, fMasternodeMissing, fConfirmationsMissing, true);
         if(!fIsValid) {
             if(!fMasternodeMissing) {
                 mapMasternodeOrphanObjects.erase(it++);
@@ -1029,17 +1054,76 @@ void CGovernanceManager::CheckMasternodeOrphanObjects()
             continue;
         }
 
-        bool fAddToSeen = true;
-        if(AddGovernanceObject(govobj, fAddToSeen)) {
-            LogPrintf("CGovernanceManager::CheckMasternodeOrphanObjects -- %s new\n", govobj.GetHash().ToString());
-            govobj.Relay();
-            mapMasternodeOrphanObjects.erase(it++);
-        }
-        else {
-            ++it;
-        }
+        AddGovernanceObject(govobj);
+        mapMasternodeOrphanObjects.erase(it++);
     }
-    fRateChecksEnabled = true;
+}
+
+void CGovernanceManager::CheckPostponedObjects()
+{
+    LOCK2(cs_main, cs);
+
+    // Check postponed proposals
+    for(object_m_it it = mapPostponedObjects.begin(); it != mapPostponedObjects.end();) {
+
+        const uint256& nHash = it->first;
+        CGovernanceObject& govobj = it->second;
+
+        assert(govobj.GetObjectType() != GOVERNANCE_OBJECT_WATCHDOG &&
+               govobj.GetObjectType() != GOVERNANCE_OBJECT_TRIGGER);
+
+        std::string strError;
+        bool fMissingConfirmations;
+        if (govobj.IsCollateralValid(strError, fMissingConfirmations))
+        {
+            if(govobj.IsValidLocally(strError, false))
+                AddGovernanceObject(govobj);
+            else
+                LogPrintf("CGovernanceManager::CheckPostponedObjects -- %s invalid\n", nHash.ToString());
+
+        } else if(fMissingConfirmations) {
+            // wait for more confirmations
+            ++it;
+            continue;
+        }
+
+        // remove processed or invalid object from the queue
+        mapPostponedObjects.erase(it++);
+    }
+
+
+    // Perform additional relays for triggers/watchdogs
+    int64_t nNow = GetTime();
+    int64_t nSuperblockCycleSeconds = Params().GetConsensus().nSuperblockCycle * Params().GetConsensus().nPowTargetSpacing;
+
+    for(hash_s_it it = setAdditionalRelayObjects.begin(); it != setAdditionalRelayObjects.end();) {
+
+        object_m_it itObject = mapObjects.find(*it);
+        if(itObject != mapObjects.end()) {
+
+            CGovernanceObject& govobj = itObject->second;
+
+            int64_t nTimestamp = govobj.GetCreationTime();
+
+            bool fValid = (nTimestamp <= nNow + MAX_TIME_FUTURE_DEVIATION) && (nTimestamp >= nNow - 2 * nSuperblockCycleSeconds);
+            bool fReady = (nTimestamp <= nNow + MAX_TIME_FUTURE_DEVIATION - RELIABLE_PROPAGATION_TIME);
+
+            if(fValid) {
+                if(fReady) {
+                    LogPrintf("CGovernanceManager::CheckPostponedObjects -- additional relay: hash = %s\n", govobj.GetHash().ToString());
+                    govobj.Relay();
+                } else {
+                    it++;
+                    continue;
+                }
+            }
+
+        } else {
+            LogPrintf("CGovernanceManager::CheckPostponedObjects -- additional relay of unknown object: %s\n", it->ToString());
+        }
+
+        setAdditionalRelayObjects.erase(it++);
+    }
 }
 
 void CGovernanceManager::RequestGovernanceObject(CNode* pfrom, const uint256& nHash, bool fUseFilter)
@@ -1252,7 +1336,7 @@ void CGovernanceManager::AddCachedTriggers()
 
     for(object_m_it it = mapObjects.begin(); it != mapObjects.end(); ++it) {
         CGovernanceObject& govobj = it->second;
-        
+
         if(govobj.nObjectType != GOVERNANCE_OBJECT_TRIGGER) {
             continue;
         }
@@ -1324,6 +1408,8 @@ void CGovernanceManager::UpdatedBlockTip(const CBlockIndex *pindex)
         nCachedBlockHeight = pCurrentBlockIndex->nHeight;
         LogPrint("gobject", "CGovernanceManager::UpdatedBlockTip pCurrentBlockIndex->nHeight: %d\n", pCurrentBlockIndex->nHeight);
     }
+
+    CheckPostponedObjects();
 }
 
 void CGovernanceManager::RequestOrphanObjects()

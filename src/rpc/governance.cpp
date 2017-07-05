@@ -254,7 +254,9 @@ UniValue gobject(const UniValue& params, bool fHelp)
         std::string strHash = govobj.GetHash().ToString();
 
         std::string strError = "";
-        if(!govobj.IsValidLocally(strError, true)) {
+        bool fMissingMasternode;
+        bool fMissingConfirmations;
+        if(!govobj.IsValidLocally(strError, fMissingMasternode, fMissingConfirmations, true) && !fMissingConfirmations) {
             LogPrintf("gobject(submit) -- Object submission rejected because object is not valid - hash = %s, strError = %s\n", strHash, strError);
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Governance object is not valid - " + strHash + " - " + strError);
         }
@@ -270,11 +272,15 @@ UniValue gobject(const UniValue& params, bool fHelp)
             LogPrintf("gobject(submit) -- Object submission rejected because of rate check failure (buffer updated) - hash = %s\n", strHash);
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Object creation rate limit exceeded");
         }
-        governance.AddSeenGovernanceObject(govobj.GetHash(), SEEN_OBJECT_IS_VALID);
-        govobj.Relay();
+
         LogPrintf("gobject(submit) -- Adding locally created governance object - %s\n", strHash);
-        bool fAddToSeen = true;
-        governance.AddGovernanceObject(govobj, fAddToSeen);
+
+        if(fMissingConfirmations) {
+            governance.AddPostponedObject(govobj);
+            govobj.Relay();
+        } else {
+            governance.AddGovernanceObject(govobj);
+        }
 
         return govobj.GetHash().ToString();
     }

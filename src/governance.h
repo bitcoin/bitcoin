@@ -226,6 +226,9 @@ private:
 
     static const std::string SERIALIZATION_VERSION_STRING;
 
+    static const int MAX_TIME_FUTURE_DEVIATION;
+    static const int RELIABLE_PROPAGATION_TIME;
+
     // Keep track of current block index
     const CBlockIndex *pCurrentBlockIndex;
 
@@ -238,6 +241,9 @@ private:
     count_m_t mapSeenGovernanceObjects;
 
     object_time_m_t mapMasternodeOrphanObjects;
+
+    object_m_t mapPostponedObjects;
+    hash_s_t setAdditionalRelayObjects;
 
     hash_time_m_t mapWatchdogObjects;
 
@@ -258,6 +264,26 @@ private:
     hash_s_t setRequestedVotes;
 
     bool fRateChecksEnabled;
+
+    class CRateChecksGuard
+    {
+        CGovernanceManager& govman;
+        bool fRateChecksPrev;
+
+    public:
+        CRateChecksGuard(bool value, CGovernanceManager& gm) : govman(gm)
+        {
+            ENTER_CRITICAL_SECTION(govman.cs)
+            fRateChecksPrev = govman.fRateChecksEnabled;
+            govman.fRateChecksEnabled = value;
+        }
+
+        ~CRateChecksGuard()
+        {
+            govman.fRateChecksEnabled = fRateChecksPrev;
+            LEAVE_CRITICAL_SECTION(govman.cs)
+        }
+    };
 
 public:
     // critical section to protect the inner data structures
@@ -294,6 +320,7 @@ public:
     std::vector<CGovernanceObject*> GetAllNewerThan(int64_t nMoreThanTime);
 
     bool IsBudgetPaymentBlock(int nBlockHeight);
+    void AddGovernanceObject(CGovernanceObject& govobj, CNode* pfrom = NULL);
     bool AddGovernanceObject(CGovernanceObject& govobj, bool& fAddToSeen, CNode* pfrom = NULL);
 
     std::string GetRequiredPaymentsString(int nBlockHeight);
@@ -364,6 +391,12 @@ public:
 
     bool SerializeVoteForHash(uint256 nHash, CDataStream& ss);
 
+    void AddPostponedObject(const CGovernanceObject& govobj)
+    {
+        LOCK(cs);
+        mapPostponedObjects.insert(std::make_pair(govobj.GetHash(), govobj));
+    }
+
     void AddSeenGovernanceObject(uint256 nHash, int status);
 
     void AddSeenVote(uint256 nHash, int status);
@@ -383,6 +416,8 @@ public:
     void CheckMasternodeOrphanVotes();
 
     void CheckMasternodeOrphanObjects();
+
+    void CheckPostponedObjects();
 
     bool AreRateChecksEnabled() const {
         LOCK(cs);
