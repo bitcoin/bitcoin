@@ -2803,7 +2803,7 @@ UniValue bumpfee(const JSONRPCRequest& request)
             "The command will fail if the wallet or mempool contains a transaction that spends one of T's outputs.\n"
             "By default, the new fee will be calculated automatically using estimatefee.\n"
             "The user can specify a confirmation target for estimatefee.\n"
-            "Alternatively, the user can specify totalFee, or use RPC settxfee to set a higher fee rate.\n"
+            "Alternatively, the user can specify feeRate, or use RPC settxfee to set a higher fee rate.\n"
             "At a minimum, the new fee rate must be high enough to pay an additional new relay fee (incrementalfee\n"
             "returned by getnetworkinfo) to enter the node's mempool.\n"
             "\nArguments:\n"
@@ -2811,9 +2811,9 @@ UniValue bumpfee(const JSONRPCRequest& request)
             "2. options               (object, optional)\n"
             "   {\n"
             "     \"confTarget\"        (numeric, optional) Confirmation target (in blocks)\n"
-            "     \"totalFee\"          (numeric, optional) Total fee (NOT feerate) to pay, in satoshis.\n"
+            "     \"feeRate\"           (numeric, optional) Fee rate to pay, in satoshis per byte.\n"
             "                         In rare cases, the actual fee paid might be slightly higher than the specified\n"
-            "                         totalFee if the tx change output has to be removed because it is too close to\n"
+            "                         feeRate if the tx change output has to be removed because it is too close to\n"
             "                         the dust threshold.\n"
             "     \"replaceable\"       (boolean, optional, default true) Whether the new transaction should still be\n"
             "                         marked bip-125 replaceable. If true, the sequence numbers in the transaction will\n"
@@ -2842,20 +2842,20 @@ UniValue bumpfee(const JSONRPCRequest& request)
     // optional parameters
     bool ignoreGlobalPayTxFee = false;
     int newConfirmTarget = nTxConfirmTarget;
-    CAmount totalFee = 0;
+    CFeeRate feeRate;
     bool replaceable = true;
     if (request.params.size() > 1) {
         UniValue options = request.params[1];
         RPCTypeCheckObj(options,
             {
                 {"confTarget", UniValueType(UniValue::VNUM)},
-                {"totalFee", UniValueType(UniValue::VNUM)},
+                {"feeRate",  UniValueType(UniValue::VNUM)},
                 {"replaceable", UniValueType(UniValue::VBOOL)},
             },
             true, true);
 
-        if (options.exists("confTarget") && options.exists("totalFee")) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "confTarget and totalFee options should not both be set. Please provide either a confirmation target for fee estimation or an explicit total fee for the transaction.");
+        if (options.exists("confTarget") && options.exists("feeRate")) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "confTarget and feeRate options should not both be set. Please provide either a confirmation target for fee estimation or an explicit total fee for the transaction.");
         } else if (options.exists("confTarget")) {
             // If the user has explicitly set a confTarget in this rpc call,
             // then override the default logic that uses the global payTxFee
@@ -2865,11 +2865,8 @@ UniValue bumpfee(const JSONRPCRequest& request)
             if (newConfirmTarget <= 0) { // upper-bound will be checked by estimatefee/smartfee
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid confTarget (cannot be <= 0)");
             }
-        } else if (options.exists("totalFee")) {
-            totalFee = options["totalFee"].get_int64();
-            if (totalFee <= 0) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid totalFee %s (must be greater than 0)", FormatMoney(totalFee)));
-            }
+        } else if (options.exists("feeRate")) {
+            feeRate = CFeeRate(options["feeRate"].get_int()*1000);
         }
 
         if (options.exists("replaceable")) {
@@ -2880,7 +2877,7 @@ UniValue bumpfee(const JSONRPCRequest& request)
     LOCK2(cs_main, pwallet->cs_wallet);
     EnsureWalletIsUnlocked(pwallet);
 
-    CFeeBumper feeBump(pwallet, hash, newConfirmTarget, ignoreGlobalPayTxFee, totalFee, replaceable);
+    CFeeBumper feeBump(pwallet, hash, newConfirmTarget, ignoreGlobalPayTxFee, feeRate, replaceable);
     BumpFeeResult res = feeBump.getResult();
     if (res != BumpFeeResult::OK)
     {

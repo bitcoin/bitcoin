@@ -66,7 +66,7 @@ bool CFeeBumper::preconditionChecks(const CWallet *pWallet, const CWalletTx& wtx
     return true;
 }
 
-CFeeBumper::CFeeBumper(const CWallet *pWallet, const uint256 txidIn, int newConfirmTarget, bool ignoreGlobalPayTxFee, CAmount totalFee, bool newTxReplaceable)
+CFeeBumper::CFeeBumper(const CWallet *pWallet, const uint256 txidIn, int newConfirmTarget, bool ignoreGlobalPayTxFee, CFeeRate fee_rate, bool newTxReplaceable)
     :
     txid(std::move(txidIn)),
     nOldFee(0),
@@ -147,23 +147,25 @@ CFeeBumper::CFeeBumper(const CWallet *pWallet, const uint256 txidIn, int newConf
         walletIncrementalRelayFee = ::incrementalRelayFee;
     }
 
-    if (totalFee > 0) {
+    CAmount totalFee(fee_rate.GetFee(maxNewTxSize));
+
+    if (fee_rate > CFeeRate(0)) {
         CAmount minTotalFee = nOldFeeRate.GetFee(maxNewTxSize) + ::incrementalRelayFee.GetFee(maxNewTxSize);
         if (totalFee < minTotalFee) {
-            vErrors.push_back(strprintf("Insufficient totalFee, must be at least %s (oldFee %s + incrementalFee %s)",
+            vErrors.push_back(strprintf("Insufficient total fee, must be at least %s (oldFee %s + incrementalFee %s)",
                                                                 FormatMoney(minTotalFee), FormatMoney(nOldFeeRate.GetFee(maxNewTxSize)), FormatMoney(::incrementalRelayFee.GetFee(maxNewTxSize))));
             currentResult = BumpFeeResult::INVALID_PARAMETER;
             return;
         }
-        CAmount requiredFee = CWallet::GetRequiredFee(maxNewTxSize);
-        if (totalFee < requiredFee) {
-            vErrors.push_back(strprintf("Insufficient totalFee (cannot be less than required fee %s)",
-                                                                FormatMoney(requiredFee)));
+        CFeeRate required_rate = CWallet::GetRequiredFeeRate();
+        if (fee_rate < required_rate) {
+            vErrors.push_back(strprintf("Insufficient feeRate (cannot be less than required rate %s)",
+                                                                FormatMoney(fee_rate.GetFeePerK())));
             currentResult = BumpFeeResult::INVALID_PARAMETER;
             return;
         }
         nNewFee = totalFee;
-        nNewFeeRate = CFeeRate(totalFee, maxNewTxSize);
+        nNewFeeRate = fee_rate;
     } else {
         nNewFee = CWallet::GetMinimumFee(maxNewTxSize, newConfirmTarget, mempool, ::feeEstimator, nullptr, ignoreGlobalPayTxFee);
         nNewFeeRate = CFeeRate(nNewFee, maxNewTxSize);
@@ -189,12 +191,12 @@ CFeeBumper::CFeeBumper(const CWallet *pWallet, const uint256 txidIn, int newConf
 
     // check that fee rate is higher than mempool's minimum fee
     // (no point in bumping fee if we know that the new tx won't be accepted to the mempool)
-    // This may occur if the user set TotalFee or paytxfee too low, if fallbackfee is too low, or, perhaps,
+    // This may occur if the user set feeRate or paytxfee too low, if fallbackfee is too low, or, perhaps,
     // in a rare situation where the mempool minimum fee increased significantly since the fee estimation just a
-    // moment earlier. In this case, we report an error to the user, who may use totalFee to make an adjustment.
+    // moment earlier. In this case, we report an error to the user, who may use feeRate to make an adjustment.
     CFeeRate minMempoolFeeRate = mempool.GetMinFee(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000);
-    if (nNewFeeRate.GetFeePerK() < minMempoolFeeRate.GetFeePerK()) {
-        vErrors.push_back(strprintf("New fee rate (%s) is less than the minimum fee rate (%s) to get into the mempool. totalFee value should to be at least %s or settxfee value should be at least %s to add transaction.", FormatMoney(nNewFeeRate.GetFeePerK()), FormatMoney(minMempoolFeeRate.GetFeePerK()), FormatMoney(minMempoolFeeRate.GetFee(maxNewTxSize)), FormatMoney(minMempoolFeeRate.GetFeePerK())));
+    if (nNewFeeRate < minMempoolFeeRate) {
+        vErrors.push_back(strprintf("New fee rate (%s) is less than the minimum fee rate (%s) to get into the mempool. feeRate value or settxfee value should be at least %s to add transaction.", FormatMoney(nNewFeeRate.GetFeePerK()), FormatMoney(minMempoolFeeRate.GetFeePerK()), FormatMoney(minMempoolFeeRate.GetFeePerK())));
         currentResult = BumpFeeResult::WALLET_ERROR;
         return;
     }
