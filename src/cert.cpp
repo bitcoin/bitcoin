@@ -1355,6 +1355,8 @@ UniValue certlist(const UniValue& params, bool fHelp) {
 				continue;
 			CTransaction tx;
 			for(auto& it : boost::adaptors::reverse(vtxPos)) {
+				if (oRes.size() >= count)
+					break;
 				const CAliasIndex& theAlias = it;
 				if(!GetSyscoinTransaction(theAlias.nHeight, theAlias.txHash, tx, Params().GetConsensus()))
 					continue;

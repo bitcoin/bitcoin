@@ -3668,6 +3668,8 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 			}
 			CTransaction tx;
 			for(auto& it : boost::adaptors::reverse(vtxTx)) {
+				if (oRes.size() >= count)
+					break;
 				const uint64_t& nHeight = vtxHeight[it.first];
 				const CTransaction& tx = it.second;
 				CEscrow escrow(tx);
