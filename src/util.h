@@ -44,6 +44,9 @@ public:
     boost::signals2::signal<std::string (const char* psz)> Translate;
 };
 
+const int HELP_MESSAGE_FILTER_NONE = 0;
+const int HELP_MESSAGE_FILTER_DEBUG = 1 << 0;
+
 extern bool fPrintToConsole;
 extern bool fPrintToDebugLog;
 
@@ -313,18 +316,20 @@ static inline bool SoftSetBoolArg(const std::string& strArg, bool fValue)
  * Format a string to be used as group of options in help messages
  *
  * @param message Group name (e.g. "RPC server options:")
+ * @param filter bitfield filter for whether to display the message
  * @return the formatted string
  */
-std::string HelpMessageGroup(const std::string& message);
+std::string HelpMessageGroup(const std::string& message, const int filter=HELP_MESSAGE_FILTER_NONE);
 
 /**
  * Format a string to be used as option description in help messages
  *
  * @param option Option message (e.g. "-rpcuser=<user>")
  * @param message Option description (e.g. "Username for JSON-RPC connections")
+ * @param filter bitfield filter for whether to display the message
  * @return the formatted string
  */
-std::string HelpMessageOpt(const std::string& option, const std::string& message);
+std::string HelpMessageOpt(const std::string& option, const std::string& message, const int filter=HELP_MESSAGE_FILTER_NONE);
 
 /**
  * Return the number of physical cores available on the current system.

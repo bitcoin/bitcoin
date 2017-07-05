@@ -482,17 +482,17 @@ void ArgsManager::ForceSetArg(const std::string& strArg, const std::string& strV
     mapMultiArgs[strArg].push_back(strValue);
 }
 
-
-
 static const int screenWidth = 79;
 static const int optIndent = 2;
 static const int msgIndent = 7;
 
-std::string HelpMessageGroup(const std::string &message) {
+std::string HelpMessageGroup(const std::string &message, const int filter) {
+    if (filter & HELP_MESSAGE_FILTER_DEBUG && !GetBoolArg("-help-debug", false)) return std::string("");
     return std::string(message) + std::string("\n\n");
 }
 
-std::string HelpMessageOpt(const std::string &option, const std::string &message) {
+std::string HelpMessageOpt(const std::string &option, const std::string &message, const int filter) {
+    if (filter & HELP_MESSAGE_FILTER_DEBUG && !GetBoolArg("-help-debug", false)) return std::string("");
     return std::string(optIndent,' ') + std::string(option) +
            std::string("\n") + std::string(msgIndent,' ') +
            FormatParagraph(message, screenWidth - msgIndent, msgIndent) +
