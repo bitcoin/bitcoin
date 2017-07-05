@@ -3756,7 +3756,6 @@ std::string CWallet::GetWalletHelpString()
                                " " + _("(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)"));
 
     strUsage += HelpMessageGroup(_("Wallet debugging/testing options:"), HELP_MESSAGE_FILTER_DEBUG);
-
     strUsage += HelpMessageOpt("-dblogsize=<n>", strprintf("Flush wallet database activity from memory to disk log every <n> megabytes (default: %u)", DEFAULT_WALLET_DBLOGSIZE), HELP_MESSAGE_FILTER_DEBUG);
     strUsage += HelpMessageOpt("-flushwallet", strprintf("Run a thread to flush wallet periodically (default: %u)", DEFAULT_FLUSHWALLET), HELP_MESSAGE_FILTER_DEBUG);
     strUsage += HelpMessageOpt("-privdb", strprintf("Sets the DB_PRIVATE flag in the wallet db environment (default: %u)", DEFAULT_WALLET_PRIVDB), HELP_MESSAGE_FILTER_DEBUG);
