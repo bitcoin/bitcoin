@@ -3414,6 +3414,8 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 
 			
 			for(std::vector<CAliasIndex>::reverse_iterator it = vtxPos.rbegin(); it != vtxPos.rend(); ++it) {
+				if (aoOfferAccepts.size() >= count)
+					break;
 				CAliasIndex theAlias = *it;
 				if(!GetSyscoinTransaction(theAlias.nHeight, theAlias.txHash, tx, Params().GetConsensus()))
 					continue;
@@ -3431,7 +3433,8 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				vNamesI[vvch[0]] = offerTmp.nHeight;
 				// this is needed because offer accepts dont use seller alias as input (they use buyers obviously) and we dont them in our alias history but they exist in our offer history
 				for(int i=vtxOfferPos.size()-1;i>=0;i--) {
-
+					if (aoOfferAccepts.size() >= count)
+						break;
 					const COffer &theOffer = vtxOfferPos[i];
 					if(theOffer.accept.IsNull())
 						continue;
@@ -3792,6 +3795,8 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 
 			CTransaction tx;
 			for(std::vector<CAliasIndex>::reverse_iterator it = vtxPos.rbegin(); it != vtxPos.rend(); ++it) {
+				if (oRes.size() >= count)
+					break;
 				const CAliasIndex& theAlias = *it;
 				if(!GetSyscoinTransaction(theAlias.nHeight, theAlias.txHash, tx, Params().GetConsensus()))
 					continue;
