@@ -463,10 +463,6 @@ std::string HelpMessage()
     strUsage += HelpMessageOpt("-rpcworkqueue=<n>", strprintf("Set the depth of the work queue to service RPC calls (default: %d)", DEFAULT_HTTP_WORKQUEUE), HELP_MESSAGE_FILTER_DEBUG);
     strUsage += HelpMessageOpt("-server", _("Accept command line and JSON-RPC commands"));
 
-#ifdef ENABLE_WALLET
-    strUsage += CWallet::GetWalletHelpString();  // "Wallet options" / "Wallet debugging/testing options"
-#endif
-
 #if ENABLE_ZMQ
     strUsage += HelpMessageGroup(_("ZeroMQ notification options:"));
     strUsage += HelpMessageOpt("-zmqpubhashblock=<address>", _("Enable publish hash block in <address>"));

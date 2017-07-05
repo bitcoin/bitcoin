@@ -19,6 +19,9 @@
 #include "httpserver.h"
 #include "httprpc.h"
 #include "utilstrencodings.h"
+#ifdef ENABLE_WALLET
+#include "wallet/wallet.h"
+#endif
 
 #include <boost/thread.hpp>
 
@@ -93,6 +96,11 @@ bool AppInit(int argc, char* argv[])
             strUsage += HelpMessageGroup(_("Server options:"));
             strUsage += HelpMessageOpt("-daemon", _("Run in the background as a daemon and accept commands"));
 #endif
+
+#ifdef ENABLE_WALLET
+            strUsage += CWallet::GetWalletHelpString();  // "Wallet options" / "Wallet debugging/testing options"
+#endif
+
         }
 
         fprintf(stdout, "%s", strUsage.c_str());
