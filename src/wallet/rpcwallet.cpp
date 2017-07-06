@@ -1638,7 +1638,7 @@ static void MaybePushAddress(UniValue & entry, const CTxDestination &dest)
 }
 
 // SYSCOIN
-string GetSyscoinTransactionDescription(const int op, const vector<vector<unsigned char> > &vvchArgs, const CWalletTx &wtx, const string &type, string& responseEnglish, string& responseGUID, string& responseGUID1)
+string GetSyscoinTransactionDescription(const int op, const vector<vector<unsigned char> > &vvchArgs, const string &type, const CWalletTx &wtx, string& responseEnglish, string& responseGUID, string& responseGUID1)
 {
 	responseGUID = stringFromVch(vvchArgs[0]);
 	string strResponse = "";
