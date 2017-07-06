@@ -3717,7 +3717,7 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 						if (!pofferdb->ReadOffer(offer.vchOffer, vtxOfferPos) || vtxOfferPos.empty())
 							continue;
 						
-						COffer theOffer = vtxOfferPos.back();
+						const COffer &theOffer = vtxOfferPos.back();
 						UniValue oOffer(UniValue::VOBJ);
 						vector<CAliasIndex> vtxAliasPos;
 						if (!paliasdb->ReadAlias(theOffer.vchAlias, vtxAliasPos) || vtxAliasPos.empty())
