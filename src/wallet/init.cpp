@@ -13,7 +13,7 @@
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
 
-std::string GetWalletHelpString(bool showDebug)
+std::string WalletInit::GetHelpString(bool showDebug)
 {
     std::string strUsage = HelpMessageGroup(_("Wallet options:"));
     strUsage += HelpMessageOpt("-addresstype", strprintf("What type of addresses to use (\"legacy\", \"p2sh-segwit\", or \"bech32\", default: \"%s\")", FormatOutputType(OUTPUT_TYPE_DEFAULT)));
@@ -55,7 +55,7 @@ std::string GetWalletHelpString(bool showDebug)
     return strUsage;
 }
 
-bool WalletParameterInteraction()
+bool WalletInit::ParameterInteraction()
 {
     if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
         for (const std::string& wallet : gArgs.GetArgs("-wallet")) {
@@ -192,7 +192,7 @@ bool WalletParameterInteraction()
     return true;
 }
 
-void RegisterWalletRPC(CRPCTable &t)
+void WalletInit::RegisterRPC(CRPCTable &t)
 {
     if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
         return;
@@ -201,7 +201,7 @@ void RegisterWalletRPC(CRPCTable &t)
     RegisterWalletRPCCommands(t);
 }
 
-bool VerifyWallets()
+bool WalletInit::Verify()
 {
     if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
         return true;
@@ -272,7 +272,7 @@ bool VerifyWallets()
     return true;
 }
 
-bool OpenWallets()
+bool WalletInit::Open()
 {
     if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
         LogPrintf("Wallet disabled!\n");
@@ -290,25 +290,29 @@ bool OpenWallets()
     return true;
 }
 
-void StartWallets(CScheduler& scheduler) {
+void WalletInit::Start(CScheduler& scheduler)
+{
     for (CWalletRef pwallet : vpwallets) {
         pwallet->postInitProcess(scheduler);
     }
 }
 
-void FlushWallets() {
+void WalletInit::Flush()
+{
     for (CWalletRef pwallet : vpwallets) {
         pwallet->Flush(false);
     }
 }
 
-void StopWallets() {
+void WalletInit::Stop()
+{
     for (CWalletRef pwallet : vpwallets) {
         pwallet->Flush(true);
     }
 }
 
-void CloseWallets() {
+void WalletInit::Close()
+{
     for (CWalletRef pwallet : vpwallets) {
         delete pwallet;
     }
