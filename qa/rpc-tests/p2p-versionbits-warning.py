@@ -74,7 +74,8 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         # Open and close to create zero-length file
         with open(self.alert_filename, 'w', encoding='utf8') as _:
             pass
-        self.extra_args = [["-debug", "-logtimemicros=1", "-alertnotify=echo %s >> \"" + self.alert_filename + "\""]]
+        self.extra_args = [["-blockversion=4", "-debug", "-logtimemicros=1", "-alertnotify=echo %s >> \"" + self.alert_filename + "\""]]
+        # Have to use version 4 as the default version will trigger BIP91 and make the subsequent tests fail
         self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, self.extra_args)
 
     # Send numblocks blocks via peer with nVersionToUse set.

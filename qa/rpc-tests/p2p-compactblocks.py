@@ -123,7 +123,7 @@ class CompactBlocksTest(BitcoinTestFramework):
 
         # Start up node0 to be a version 1, pre-segwit node.
         self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, 
-                [["-debug", "-logtimemicros=1", "-bip9params=segwit:0:0"], 
+                [["-debug", "-logtimemicros=1", "-bip9params=segwit:0:0", "-blockversion=536870915"], # signal segwit and csv
                  ["-debug", "-logtimemicros", "-txindex"]])
         connect_nodes(self.nodes[0], 1)
 
