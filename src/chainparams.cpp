@@ -249,10 +249,10 @@ public:
     }
 };
 
-class CC4Params : public CChainParams {
+class CBC2Params : public CChainParams {
 public:
-    CC4Params() {
-        strNetworkID = "c4";
+    CBC2Params() {
+        strNetworkID = "bc2";
         consensus.nSubsidyHalvingInterval = 210000;
         consensus.BIP34Height = 0;
         consensus.BIP34Hash = uint256S("0x000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8");
@@ -327,10 +327,10 @@ public:
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,0);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,5);
         base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,128);
-        base58Prefixes[EXT_PUBLIC_KEY] = boost::assign::list_of(0x04)(0x88)(0xB2)(0x1E).convert_to_container<std::vector<unsigned char> >();
-        base58Prefixes[EXT_SECRET_KEY] = boost::assign::list_of(0x04)(0x88)(0xAD)(0xE4).convert_to_container<std::vector<unsigned char> >();
+        base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x88, 0xB2, 0x1E};
+        base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x88, 0xAD, 0xE4};
 
-        vFixedSeeds.clear();
+        vFixedSeeds.clear(); // = std::vector<SeedSpec6>(pnSeed6_main, pnSeed6_main + ARRAYLEN(pnSeed6_main));
         vSeeds.clear();
 
         fDefaultConsistencyChecks = false;
@@ -338,8 +338,9 @@ public:
         fMineBlocksOnDemand = false;
 
         checkpointData = (CCheckpointData) {
-            boost::assign::map_list_of
-            ( 0, uint256S("0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206"))
+            {
+                { 0, uint256S("0x437840ad883e641b9659c8a70cb0e2c19466d9d0386dc323ee73e36c252694b0")}
+            }
         };
 
         chainTxData = ChainTxData{
@@ -526,8 +527,8 @@ std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain)
 {
     if (chain == CBaseChainParams::MAIN)
         return std::unique_ptr<CChainParams>(new CMainParams());
-    else if (chain == CBaseChainParams::C4)
-        return std::unique_ptr<CChainParams>(new CC4Params());
+    else if (chain == CBaseChainParams::BC2)
+        return std::unique_ptr<CChainParams>(new CBC2Params());
     else if (chain == CBaseChainParams::TESTNET)
         return std::unique_ptr<CChainParams>(new CTestNetParams());
     else if (chain == CBaseChainParams::REGTEST)
