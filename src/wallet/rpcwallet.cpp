@@ -2656,7 +2656,7 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
                             "                              Those recipients will receive less bitcoins than you enter in their corresponding amount field.\n"
                             "                              If no outputs are specified here, the sender pays the fee.\n"
                             "                                  [vout_index,...]\n"
-                            "     \"optIntoRbf\"             (boolean, optional) Allow this transaction to be replaced by a transaction with higher fees\n"
+                            "     \"opt_into_rbf\"           (boolean, optional) Allow this transaction to be replaced by a transaction with higher fees\n"
                             "   }\n"
                             "                         for backward compatibility: passing in a true instead of an object will result in {\"includeWatching\":true}\n"
                             "\nResult:\n"
@@ -2708,6 +2708,7 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
                 {"reserveChangeKey", UniValueType(UniValue::VBOOL)},
                 {"feeRate", UniValueType()}, // will be checked below
                 {"subtractFeeFromOutputs", UniValueType(UniValue::VARR)},
+                {"opt_into_rbf", UniValueType(UniValue::VBOOL)},
                 {"optIntoRbf", UniValueType(UniValue::VBOOL)},
             },
             true, true);
@@ -2742,7 +2743,9 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
         if (options.exists("subtractFeeFromOutputs"))
             subtractFeeFromOutputs = options["subtractFeeFromOutputs"].get_array();
 
-        if (options.exists("optIntoRbf")) {
+        if (options.exists("opt_into_rbf")) {
+            coinControl.signalRbf = options["opt_into_rbf"].get_bool();
+        } else if (options.exists("optIntoRbf")) {
             coinControl.signalRbf = options["optIntoRbf"].get_bool();
         }
       }
@@ -2815,7 +2818,7 @@ UniValue bumpfee(const JSONRPCRequest& request)
             "                         In rare cases, the actual fee paid might be slightly higher than the specified\n"
             "                         totalFee if the tx change output has to be removed because it is too close to\n"
             "                         the dust threshold.\n"
-            "     \"replaceable\"       (boolean, optional, default true) Whether the new transaction should still be\n"
+            "     \"opt_into_rbf\"      (boolean, optional, default true) Whether the new transaction should still be\n"
             "                         marked bip-125 replaceable. If true, the sequence numbers in the transaction will\n"
             "                         be left unchanged from the original. If false, any input sequence numbers in the\n"
             "                         original transaction that were less than 0xfffffffe will be increased to 0xfffffffe\n"
@@ -2850,6 +2853,7 @@ UniValue bumpfee(const JSONRPCRequest& request)
             {
                 {"confTarget", UniValueType(UniValue::VNUM)},
                 {"totalFee", UniValueType(UniValue::VNUM)},
+                {"opt_into_rbf", UniValueType(UniValue::VBOOL)},
                 {"replaceable", UniValueType(UniValue::VBOOL)},
             },
             true, true);
@@ -2872,7 +2876,9 @@ UniValue bumpfee(const JSONRPCRequest& request)
             }
         }
 
-        if (options.exists("replaceable")) {
+        if (options.exists("opt_into_rbf")) {
+            replaceable = options["opt_into_rbf"].get_bool();
+        } else if (options.exists("replaceable")) {
             replaceable = options["replaceable"].get_bool();
         }
     }

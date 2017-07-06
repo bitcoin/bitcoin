@@ -531,8 +531,8 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         assert_equal(json1["vin"][0]["sequence"], 4294967295)
 
         rawtx2 = self.nodes[0].createrawtransaction([], outs)
-        frawtx2a = self.nodes[0].fundrawtransaction(rawtx2, {"optIntoRbf": True})
-        frawtx2b = self.nodes[0].fundrawtransaction(rawtx2, {"optIntoRbf": False})
+        frawtx2a = self.nodes[0].fundrawtransaction(rawtx2, {"opt_into_rbf": True})
+        frawtx2b = self.nodes[0].fundrawtransaction(rawtx2, {"opt_into_rbf": False})
 
         json0  = self.nodes[0].decoderawtransaction(frawtx2a['hex'])
         json1  = self.nodes[0].decoderawtransaction(frawtx2b['hex'])
