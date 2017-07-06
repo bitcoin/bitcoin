@@ -40,11 +40,13 @@ Only supports JSON as output format.
 * headers : (numeric) the current number of headers we have validated
 * bestblockhash : (string) the hash of the currently best block
 * difficulty : (numeric) the current difficulty
+* mediantime : (numeric) the median time of the 11 blocks before the most recent block on the blockchain
 * verificationprogress : (numeric) estimate of verification progress [0..1]
 * chainwork : (string) total amount of work in active chain, in hexadecimal
 * pruned : (boolean) if the blocks are subject to pruning
 * pruneheight : (numeric) heighest block available
 * softforks : (array) status of softforks in progress
+* bip9_softforks : (object) status of BIP9 softforks in progress
 
 #### Query UTXO set
 `GET /rest/getutxos/<checkmempool>/<txid>-<n>/<txid>-<n>/.../<txid>-<n>.<bin|hex|json>`
@@ -57,25 +59,25 @@ Example:
 ```
 $ curl localhost:18332/rest/getutxos/checkmempool/b2cdfd7b89def827ff8af7cd9bff7627ff72e5e8b0f71210f92ea7a4000c5d75-0.json 2>/dev/null | json_pp
 {
-   "chaintipHash" : "00000000fb01a7f3745a717f8caebee056c484e6e0bfe4a9591c235bb70506fb",
    "chainHeight" : 325347,
+   "chaintipHash" : "00000000fb01a7f3745a717f8caebee056c484e6e0bfe4a9591c235bb70506fb",
+   "bitmap": "1",
    "utxos" : [
       {
+         "txvers" : 1
+         "height" : 2147483647,
+         "value" : 8.8687,		 
          "scriptPubKey" : {
-            "addresses" : [
-               "mi7as51dvLJsizWnTMurtRmrP8hG2m1XvD"
-            ],
-            "type" : "pubkeyhash",
+            "asm" : "OP_DUP OP_HASH160 1c7cebb529b86a04c683dfa87be49de35bcf589e OP_EQUALVERIFY OP_CHECKSIG",
             "hex" : "76a9141c7cebb529b86a04c683dfa87be49de35bcf589e88ac",
             "reqSigs" : 1,
-            "asm" : "OP_DUP OP_HASH160 1c7cebb529b86a04c683dfa87be49de35bcf589e OP_EQUALVERIFY OP_CHECKSIG"
-         },
-         "value" : 8.8687,
-         "height" : 2147483647,
-         "txvers" : 1
+            "type" : "pubkeyhash",
+            "addresses" : [
+               "mi7as51dvLJsizWnTMurtRmrP8hG2m1XvD"
+            ]
+         }
       }
-   ],
-   "bitmap" : "1"
+   ]
 }
 ```
 
@@ -87,6 +89,8 @@ Only supports JSON as output format.
 * size : (numeric) the number of transactions in the TX mempool
 * bytes : (numeric) size of the TX mempool in bytes
 * usage : (numeric) total TX mempool memory usage
+* maxmempool : (numeric) maximum memory usage for the mempool in bytes
+* mempoolminfee : (numeric) minimum feerate (BTC per KB) for tx to be accepted
 
 `GET /rest/mempool/contents.json`
 
