@@ -2545,11 +2545,11 @@ UniValue aliaslist(const UniValue& params, bool fHelp) {
 	if (fHelp || 3 < params.size())
 		throw runtime_error("aliaslist [aliasname] [count] [from]\n"
 			"list my own aliases.\n"
-			"<aliasname> alias name to use as filter.\n"
-			"[count]          (numeric, optional, default=10) The number of results to return\n"
-			"[from]           (numeric, optional, default=0) The number of results to skip\n");
+			"[aliasname] alias name to use as filter.\n"
+			"[count]    (numeric, optional, default=10) The number of results to return\n"
+			"[from]     (numeric, optional, default=0) The number of results to skip\n"");
 
-	vector<unsigned char> vchAlias;
+			vector<unsigned char> vchAlias;
 	if (params.size() >= 1)
 		vchAlias = vchFromValue(params[0]);
 
@@ -2560,17 +2560,16 @@ UniValue aliaslist(const UniValue& params, bool fHelp) {
 	if (params.size() > 2 && !params[2].get_str().empty())
 		from = atoi(params[2].get_str());
 	int found = 0;
+
 	UniValue oRes(UniValue::VARR);
 	map<vector<unsigned char>, int> vNamesI;
 
 	uint256 hash;
 	CTransaction tx;
 	int pending = 0;
-	
 	BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet) {
 		if (oRes.size() >= count)
 			break;
-
 		pending = 0;
 		// get txn hash, read txn index
 		hash = item.second.GetHash();
@@ -2590,20 +2589,20 @@ UniValue aliaslist(const UniValue& params, bool fHelp) {
 		{
 			continue;
 		}
+		const CAliasIndex &theAlias = vtxPos.back();
 		// get last active name only
-		if (vNamesI.find(alias.vchAlias) != vNamesI.end() && (alias.nHeight <= vNamesI[alias.vchAlias] || vNamesI[alias.vchAlias] < 0))
+		if (vNamesI.find(theAlias.vchAlias) != vNamesI.end() && (theAlias.nHeight <= vNamesI[theAlias.vchAlias] || vNamesI[theAlias.vchAlias] < 0))
 			continue;
 		UniValue oName(UniValue::VOBJ);
-		vNamesI[alias.vchAlias] = alias.nHeight;
+		vNamesI[theAlias.vchAlias] = theAlias.nHeight;
 		found++;
 		if (found < from)
 			continue;
-		if (BuildAliasJson(alias, pending, oName))
+		if (BuildAliasJson(theAlias, pending, oName))
 		{
 			oRes.push_back(oName);
 		}
 	}
-
 	return oRes;
 }
 UniValue aliasaffiliates(const UniValue& params, bool fHelp) {
