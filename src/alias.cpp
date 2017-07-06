@@ -2590,6 +2590,8 @@ UniValue aliaslist(const UniValue& params, bool fHelp) {
 			continue;
 		}
 		const CAliasIndex &theAlias = vtxPos.back();
+		if (!IsMyAlias(theAlias))
+			continue;
 		// get last active name only
 		if (vNamesI.find(theAlias.vchAlias) != vNamesI.end() && (theAlias.nHeight <= vNamesI[theAlias.vchAlias] || vNamesI[theAlias.vchAlias] < 0))
 			continue;
