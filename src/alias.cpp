@@ -2419,7 +2419,7 @@ UniValue aliaslist(const UniValue& params, bool fHelp) {
 				"list my own aliases.\n"
 				"[aliasname] alias name to use as filter.\n"
 				"[count]    (numeric, optional, default=10) The number of results to return\n"
-				"[from]     (numeric, optional, default=0) The number of results to skip\n"");
+				"[from]     (numeric, optional, default=0) The number of results to skip\n");
 
 	vector<unsigned char> vchAlias;
 	if(CheckParam(params, 0))
