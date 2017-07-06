@@ -7,6 +7,7 @@
 
 class CRPCTable;
 class JSONRPCRequest;
+class UniValue;
 
 void RegisterWalletRPCCommands(CRPCTable &t);
 
@@ -14,9 +15,10 @@ void RegisterWalletRPCCommands(CRPCTable &t);
  * Figures out what wallet, if any, to use for a JSONRPCRequest.
  *
  * @param[in] request JSONRPCRequest that wishes to access a wallet
+ * @param[in] param   optional parameter requesting a specific wallet
  * @return NULL if no wallet should be used, or a pointer to the CWallet
  */
-CWallet *GetWalletForJSONRPCRequest(const JSONRPCRequest&);
+CWallet *GetWalletForJSONRPCRequest(const JSONRPCRequest& request, const UniValue& param);
 
 std::string HelpRequiringPassphrase(CWallet *);
 void EnsureWalletIsUnlocked(CWallet *);

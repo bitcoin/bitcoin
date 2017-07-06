@@ -557,12 +557,16 @@ static void TxInErrorToJSON(const CTxIn& txin, UniValue& vErrorsRet, const std::
 UniValue signrawtransaction(const JSONRPCRequest& request)
 {
 #ifdef ENABLE_WALLET
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request, request.params[4]);
+#else
+    if (!request.params[4].isNull()) {
+        throw std::runtime_error("Wallet support is not enabled.");
+    }
 #endif
 
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 4)
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 5)
         throw std::runtime_error(
-            "signrawtransaction \"hexstring\" ( [{\"txid\":\"id\",\"vout\":n,\"scriptPubKey\":\"hex\",\"redeemScript\":\"hex\"},...] [\"privatekey1\",...] sighashtype )\n"
+            "signrawtransaction \"hexstring\" ( [{\"txid\":\"id\",\"vout\":n,\"scriptPubKey\":\"hex\",\"redeemScript\":\"hex\"},...] [\"privatekey1\",...] sighashtype ) ( \"wallet\" )\n"
             "\nSign inputs for raw transaction (serialized, hex-encoded).\n"
             "The second optional argument (may be null) is an array of previous transaction outputs that\n"
             "this transaction depends on but may not yet be in the block chain.\n"
@@ -597,6 +601,7 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
             "       \"ALL|ANYONECANPAY\"\n"
             "       \"NONE|ANYONECANPAY\"\n"
             "       \"SINGLE|ANYONECANPAY\"\n"
+            "5. \"wallet\"        (string, optional) Optional wallet filename to use non-default wallet.\n"
 
             "\nResult:\n"
             "{\n"
@@ -905,7 +910,7 @@ static const CRPCCommand commands[] =
     { "rawtransactions",    "decoderawtransaction",   &decoderawtransaction,   true,  {"hexstring"} },
     { "rawtransactions",    "decodescript",           &decodescript,           true,  {"hexstring"} },
     { "rawtransactions",    "sendrawtransaction",     &sendrawtransaction,     false, {"hexstring","allowhighfees"} },
-    { "rawtransactions",    "signrawtransaction",     &signrawtransaction,     false, {"hexstring","prevtxs","privkeys","sighashtype"} }, /* uses wallet if enabled */
+    { "rawtransactions",    "signrawtransaction",     &signrawtransaction,     false, {"hexstring","prevtxs","privkeys","sighashtype","wallet"} }, /* uses wallet if enabled */
 
     { "blockchain",         "gettxoutproof",          &gettxoutproof,          true,  {"txids", "blockhash"} },
     { "blockchain",         "verifytxoutproof",       &verifytxoutproof,       true,  {"proof"} },

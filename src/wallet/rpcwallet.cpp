@@ -30,9 +30,16 @@
 
 #include <univalue.h>
 
-CWallet *GetWalletForJSONRPCRequest(const JSONRPCRequest& request)
+CWallet *GetWalletForJSONRPCRequest(const JSONRPCRequest& request, const UniValue& param)
 {
-    // TODO: Some way to access secondary wallets
+    if (!param.isNull()) {
+        for (const auto& wallet : ::vpwallets) {
+            if (param.getValStr() == wallet->GetName()) {
+                return wallet;
+            }
+        }
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Requested wallet does not exist or is not loaded");
+    }
     return vpwallets.empty() ? nullptr : vpwallets[0];
 }
 
@@ -110,19 +117,20 @@ std::string AccountFromValue(const UniValue& value)
 
 UniValue getnewaddress(const JSONRPCRequest& request)
 {
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request, request.params[1]);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() > 1)
+    if (request.fHelp || request.params.size() > 2)
         throw std::runtime_error(
-            "getnewaddress ( \"account\" )\n"
+            "getnewaddress ( \"account\" ) ( \"wallet\" )\n"
             "\nReturns a new Bitcoin address for receiving payments.\n"
             "If 'account' is specified (DEPRECATED), it is added to the address book \n"
             "so payments received with the address will be credited to 'account'.\n"
             "\nArguments:\n"
             "1. \"account\"        (string, optional) DEPRECATED. The account name for the address to be linked to. If not provided, the default account \"\" is used. It can also be set to the empty string \"\" to represent the default account. The account does not need to exist, it will be created if there is no account by the given name.\n"
+            "2. \"wallet\"         (string, optional) Optional wallet filename to use non-default wallet.\n"
             "\nResult:\n"
             "\"address\"    (string) The new bitcoin address\n"
             "\nExamples:\n"
@@ -166,17 +174,18 @@ CBitcoinAddress GetAccountAddress(CWallet* const pwallet, std::string strAccount
 
 UniValue getaccountaddress(const JSONRPCRequest& request)
 {
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request, request.params[1]);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() != 1)
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
-            "getaccountaddress \"account\"\n"
+            "getaccountaddress \"account\" ( \"wallet\" )\n"
             "\nDEPRECATED. Returns the current Bitcoin address for receiving payments to this account.\n"
             "\nArguments:\n"
             "1. \"account\"       (string, required) The account name for the address. It can also be set to the empty string \"\" to represent the default account. The account does not need to exist, it will be created and a new address created  if there is no account by the given name.\n"
+            "2. \"wallet\"        (string, optional) Optional wallet filename to use non-default wallet.\n"
             "\nResult:\n"
             "\"address\"          (string) The account bitcoin address\n"
             "\nExamples:\n"
@@ -200,16 +209,18 @@ UniValue getaccountaddress(const JSONRPCRequest& request)
 
 UniValue getrawchangeaddress(const JSONRPCRequest& request)
 {
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request, request.params[0]);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
 
     if (request.fHelp || request.params.size() > 1)
         throw std::runtime_error(
-            "getrawchangeaddress\n"
+            "getrawchangeaddress ( \"wallet\" )\n"
             "\nReturns a new Bitcoin address, for receiving change.\n"
             "This is for use with raw transactions, NOT normal use.\n"
+            "\nArguments:\n"
+            "1. \"wallet\"  (string, optional) Optional wallet filename to use non-default wallet.\n"
             "\nResult:\n"
             "\"address\"    (string) The address\n"
             "\nExamples:\n"
@@ -238,18 +249,19 @@ UniValue getrawchangeaddress(const JSONRPCRequest& request)
 
 UniValue setaccount(const JSONRPCRequest& request)
 {
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request, request.params[2]);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
         throw std::runtime_error(
-            "setaccount \"address\" \"account\"\n"
+            "setaccount \"address\" \"account\" ( \"wallet\" )\n"
             "\nDEPRECATED. Sets the account associated with the given address.\n"
             "\nArguments:\n"
             "1. \"address\"         (string, required) The bitcoin address to be associated with an account.\n"
             "2. \"account\"         (string, required) The account to assign the address to.\n"
+            "3. \"wallet\"          (string, optional) Optional wallet filename to use non-default wallet.\n"
             "\nExamples:\n"
             + HelpExampleCli("setaccount", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\" \"tabby\"")
             + HelpExampleRpc("setaccount", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\", \"tabby\"")
@@ -285,17 +297,18 @@ UniValue setaccount(const JSONRPCRequest& request)
 
 UniValue getaccount(const JSONRPCRequest& request)
 {
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request, request.params[1]);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() != 1)
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
-            "getaccount \"address\"\n"
+            "getaccount \"address\" ( \"wallet\" )\n"
             "\nDEPRECATED. Returns the account associated with the given address.\n"
             "\nArguments:\n"
             "1. \"address\"         (string, required) The bitcoin address for account lookup.\n"
+            "2. \"wallet\"          (string, optional) Optional wallet filename to use non-default wallet.\n"
             "\nResult:\n"
             "\"accountname\"        (string) the account address\n"
             "\nExamples:\n"
@@ -320,17 +333,18 @@ UniValue getaccount(const JSONRPCRequest& request)
 
 UniValue getaddressesbyaccount(const JSONRPCRequest& request)
 {
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request, request.params[1]);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() != 1)
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
-            "getaddressesbyaccount \"account\"\n"
+            "getaddressesbyaccount \"account\" ( \"wallet\" )\n"
             "\nDEPRECATED. Returns the list of addresses for the given account.\n"
             "\nArguments:\n"
             "1. \"account\"        (string, required) The account name.\n"
+            "2. \"wallet\"         (string, optional) Optional wallet filename to use non-default wallet.\n"
             "\nResult:\n"
             "[                     (json array of string)\n"
             "  \"address\"         (string) a bitcoin address associated with the given account\n"
@@ -396,14 +410,14 @@ static void SendMoney(CWallet * const pwallet, const CTxDestination &address, CA
 
 UniValue sendtoaddress(const JSONRPCRequest& request)
 {
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request, request.params[5]);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 2 || request.params.size() > 5)
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 6)
         throw std::runtime_error(
-            "sendtoaddress \"address\" amount ( \"comment\" \"comment_to\" subtractfeefromamount )\n"
+            "sendtoaddress \"address\" amount ( \"comment\" \"comment_to\" subtractfeefromamount ) ( \"wallet\" )\n"
             "\nSend an amount to a given address.\n"
             + HelpRequiringPassphrase(pwallet) +
             "\nArguments:\n"
@@ -416,6 +430,7 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
             "                             transaction, just kept in your wallet.\n"
             "5. subtractfeefromamount  (boolean, optional, default=false) The fee will be deducted from the amount being sent.\n"
             "                             The recipient will receive less bitcoins than you enter in the amount field.\n"
+            "6. \"wallet\"             (string, optional) Optional wallet filename to use non-default wallet.\n"
             "\nResult:\n"
             "\"txid\"                  (string) The transaction id.\n"
             "\nExamples:\n"
@@ -456,17 +471,19 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
 
 UniValue listaddressgroupings(const JSONRPCRequest& request)
 {
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request, request.params[0]);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
 
     if (request.fHelp)
         throw std::runtime_error(
-            "listaddressgroupings\n"
+            "listaddressgroupings ( \"wallet\" )\n"
             "\nLists groups of addresses which have had their common ownership\n"
             "made public by common use as inputs or as the resulting change\n"
             "in past transactions\n"
+            "\nArguments:\n"
+            "1. \"wallet\"  (string, optional) Optional wallet filename to use non-default wallet.\n"
             "\nResult:\n"
             "[\n"
             "  [\n"
@@ -509,19 +526,20 @@ UniValue listaddressgroupings(const JSONRPCRequest& request)
 
 UniValue signmessage(const JSONRPCRequest& request)
 {
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request, request.params[2]);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() != 2)
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 3)
         throw std::runtime_error(
-            "signmessage \"address\" \"message\"\n"
+            "signmessage \"address\" \"message\" ( \"wallet\" )\n"
             "\nSign a message with the private key of an address"
             + HelpRequiringPassphrase(pwallet) + "\n"
             "\nArguments:\n"
             "1. \"address\"         (string, required) The bitcoin address to use for the private key.\n"
             "2. \"message\"         (string, required) The message to create a signature of.\n"
+            "3. \"wallet\"          (string, optional) Optional wallet filename to use non-default wallet.\n"
             "\nResult:\n"
             "\"signature\"          (string) The signature of the message encoded in base 64\n"
             "\nExamples:\n"
@@ -568,18 +586,19 @@ UniValue signmessage(const JSONRPCRequest& request)
 
 UniValue getreceivedbyaddress(const JSONRPCRequest& request)
 {
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request, request.params[2]);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
         throw std::runtime_error(
-            "getreceivedbyaddress \"address\" ( minconf )\n"
+            "getreceivedbyaddress \"address\" ( minconf ) ( \"wallet\" )\n"
             "\nReturns the total amount received by the given address in transactions with at least minconf confirmations.\n"
             "\nArguments:\n"
             "1. \"address\"         (string, required) The bitcoin address for transactions.\n"
             "2. minconf             (numeric, optional, default=1) Only include transactions confirmed at least this many times.\n"
+            "3. \"wallet\"          (string, optional) Optional wallet filename to use non-default wallet.\n"
             "\nResult:\n"
             "amount   (numeric) The total amount in " + CURRENCY_UNIT + " received at this address.\n"
             "\nExamples:\n"
@@ -628,18 +647,19 @@ UniValue getreceivedbyaddress(const JSONRPCRequest& request)
 
 UniValue getreceivedbyaccount(const JSONRPCRequest& request)
 {
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request, request.params[2]);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
         throw std::runtime_error(
-            "getreceivedbyaccount \"account\" ( minconf )\n"
+            "getreceivedbyaccount \"account\" ( minconf ) ( \"wallet\" )\n"
             "\nDEPRECATED. Returns the total amount received by addresses with <account> in transactions with at least [minconf] confirmations.\n"
             "\nArguments:\n"
             "1. \"account\"      (string, required) The selected account, may be the default account using \"\".\n"
             "2. minconf          (numeric, optional, default=1) Only include transactions confirmed at least this many times.\n"
+            "3. \"wallet\"       (string, optional) Optional wallet filename to use non-default wallet.\n"
             "\nResult:\n"
             "amount              (numeric) The total amount in " + CURRENCY_UNIT + " received for this account.\n"
             "\nExamples:\n"
@@ -687,14 +707,14 @@ UniValue getreceivedbyaccount(const JSONRPCRequest& request)
 
 UniValue getbalance(const JSONRPCRequest& request)
 {
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request, request.params[3]);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() > 3)
+    if (request.fHelp || request.params.size() > 4)
         throw std::runtime_error(
-            "getbalance ( \"account\" minconf include_watchonly )\n"
+            "getbalance ( \"account\" minconf include_watchonly ) ( \"wallet\" )\n"
             "\nIf account is not specified, returns the server's total available balance.\n"
             "If account is specified (DEPRECATED), returns the balance in the account.\n"
             "Note that the account \"\" is not the same as leaving the parameter out.\n"
@@ -714,6 +734,7 @@ UniValue getbalance(const JSONRPCRequest& request)
             "                     avoid passing this argument.\n"
             "2. minconf           (numeric, optional, default=1) Only include transactions confirmed at least this many times.\n"
             "3. include_watchonly (bool, optional, default=false) Also include balance in watch-only addresses (see 'importaddress')\n"
+            "4. \"wallet\"        (string, optional) Optional wallet filename to use non-default wallet.\n"
             "\nResult:\n"
             "amount              (numeric) The total amount in " + CURRENCY_UNIT + " received for this account.\n"
             "\nExamples:\n"
@@ -727,17 +748,17 @@ UniValue getbalance(const JSONRPCRequest& request)
 
     LOCK2(cs_main, pwallet->cs_wallet);
 
-    if (request.params.size() == 0)
+    if (request.params[0].isNull() && request.params[1].isNull() && request.params[2].isNull())
         return  ValueFromAmount(pwallet->GetBalance());
 
     const std::string& account_param = request.params[0].get_str();
     const std::string* account = account_param != "*" ? &account_param : nullptr;
 
     int nMinDepth = 1;
-    if (request.params.size() > 1)
+    if (!request.params[1].isNull())
         nMinDepth = request.params[1].get_int();
     isminefilter filter = ISMINE_SPENDABLE;
-    if(request.params.size() > 2)
+    if(!request.params[2].isNull())
         if(request.params[2].get_bool())
             filter = filter | ISMINE_WATCH_ONLY;
 
@@ -746,14 +767,16 @@ UniValue getbalance(const JSONRPCRequest& request)
 
 UniValue getunconfirmedbalance(const JSONRPCRequest &request)
 {
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request, request.params[0]);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() > 0)
+    if (request.fHelp || request.params.size() > 1)
         throw std::runtime_error(
-                "getunconfirmedbalance\n"
+                "getunconfirmedbalance ( \"wallet\" )\n"
+                "\nArguments:\n"
+                "1. \"wallet\"  (string, optional) Optional wallet filename to use non-default wallet.\n"
                 "Returns the server's total unconfirmed balance\n");
 
     LOCK2(cs_main, pwallet->cs_wallet);
@@ -764,14 +787,14 @@ UniValue getunconfirmedbalance(const JSONRPCRequest &request)
 
 UniValue movecmd(const JSONRPCRequest& request)
 {
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request, request.params[5]);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 3 || request.params.size() > 5)
+    if (request.fHelp || request.params.size() < 3 || request.params.size() > 6)
         throw std::runtime_error(
-            "move \"fromaccount\" \"toaccount\" amount ( minconf \"comment\" )\n"
+            "move \"fromaccount\" \"toaccount\" amount ( minconf \"comment\" ) ( \"wallet\" )\n"
             "\nDEPRECATED. Move a specified amount from one account in your wallet to another.\n"
             "\nArguments:\n"
             "1. \"fromaccount\"   (string, required) The name of the account to move funds from. May be the default account using \"\".\n"
@@ -779,6 +802,7 @@ UniValue movecmd(const JSONRPCRequest& request)
             "3. amount            (numeric) Quantity of " + CURRENCY_UNIT + " to move between accounts.\n"
             "4. (dummy)           (numeric, optional) Ignored. Remains for backward compatibility.\n"
             "5. \"comment\"       (string, optional) An optional comment, stored in the wallet only.\n"
+            "6. \"wallet\"        (string, optional) Optional wallet filename to use non-default wallet.\n"
             "\nResult:\n"
             "true|false           (boolean) true if successful.\n"
             "\nExamples:\n"
@@ -814,14 +838,14 @@ UniValue movecmd(const JSONRPCRequest& request)
 
 UniValue sendfrom(const JSONRPCRequest& request)
 {
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request, request.params[6]);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 3 || request.params.size() > 6)
+    if (request.fHelp || request.params.size() < 3 || request.params.size() > 7)
         throw std::runtime_error(
-            "sendfrom \"fromaccount\" \"toaddress\" amount ( minconf \"comment\" \"comment_to\" )\n"
+            "sendfrom \"fromaccount\" \"toaddress\" amount ( minconf \"comment\" \"comment_to\" ) ( \"wallet\" )\n"
             "\nDEPRECATED (use sendtoaddress). Sent an amount from an account to a bitcoin address."
             + HelpRequiringPassphrase(pwallet) + "\n"
             "\nArguments:\n"
@@ -837,6 +861,7 @@ UniValue sendfrom(const JSONRPCRequest& request)
             "6. \"comment_to\"        (string, optional) An optional comment to store the name of the person or organization \n"
             "                                     to which you're sending the transaction. This is not part of the transaction, \n"
             "                                     it is just kept in your wallet.\n"
+            "7. \"wallet\"            (string, optional) Optional wallet filename to use non-default wallet.\n"
             "\nResult:\n"
             "\"txid\"                 (string) The transaction id.\n"
             "\nExamples:\n"
@@ -883,14 +908,14 @@ UniValue sendfrom(const JSONRPCRequest& request)
 
 UniValue sendmany(const JSONRPCRequest& request)
 {
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request, request.params[5]);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 2 || request.params.size() > 5)
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 6)
         throw std::runtime_error(
-            "sendmany \"fromaccount\" {\"address\":amount,...} ( minconf \"comment\" [\"address\",...] )\n"
+            "sendmany \"fromaccount\" {\"address\":amount,...} ( minconf \"comment\" [\"address\",...] ) ( \"wallet\" )\n"
             "\nSend multiple times. Amounts are double-precision floating point numbers."
             + HelpRequiringPassphrase(pwallet) + "\n"
             "\nArguments:\n"
@@ -910,6 +935,7 @@ UniValue sendmany(const JSONRPCRequest& request)
             "      \"address\"          (string) Subtract fee from this address\n"
             "      ,...\n"
             "    ]\n"
+            "6. \"wallet\"              (string, optional) Optional wallet filename to use non-default wallet.\n"
             "\nResult:\n"
             "\"txid\"                   (string) The transaction id for the send. Only 1 transaction is created regardless of \n"
             "                                    the number of addresses.\n"
@@ -1006,14 +1032,14 @@ extern CScript _createmultisig_redeemScript(CWallet * const pwallet, const UniVa
 
 UniValue addmultisigaddress(const JSONRPCRequest& request)
 {
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request, request.params[3]);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 2 || request.params.size() > 3)
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 4)
     {
-        std::string msg = "addmultisigaddress nrequired [\"key\",...] ( \"account\" )\n"
+        std::string msg = "addmultisigaddress nrequired [\"key\",...] ( \"account\" ) ( \"wallet\" )\n"
             "\nAdd a nrequired-to-sign multisignature address to the wallet.\n"
             "Each key is a Bitcoin address or hex-encoded public key.\n"
             "If 'account' is specified (DEPRECATED), assign address to that account.\n"
@@ -1026,6 +1052,7 @@ UniValue addmultisigaddress(const JSONRPCRequest& request)
             "       ...,\n"
             "     ]\n"
             "3. \"account\"      (string, optional) DEPRECATED. An account to assign the addresses to.\n"
+            "4. \"wallet\"       (string, optional) Optional wallet filename to use non-default wallet.\n"
 
             "\nResult:\n"
             "\"address\"         (string) A bitcoin address associated with the keys.\n"
@@ -1103,19 +1130,20 @@ public:
 
 UniValue addwitnessaddress(const JSONRPCRequest& request)
 {
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request, request.params[1]);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 1)
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
     {
-        std::string msg = "addwitnessaddress \"address\"\n"
+        std::string msg = "addwitnessaddress \"address\" ( \"wallet\" )\n"
             "\nAdd a witness address for a script (with pubkey or redeemscript known).\n"
             "It returns the witness script.\n"
 
             "\nArguments:\n"
             "1. \"address\"       (string, required) An address known to the wallet\n"
+            "2. \"wallet\"        (string, optional) Optional wallet filename to use non-default wallet.\n"
 
             "\nResult:\n"
             "\"witnessaddress\",  (string) The value of the new address (P2SH of witness script).\n"
@@ -1281,19 +1309,20 @@ UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bool fByA
 
 UniValue listreceivedbyaddress(const JSONRPCRequest& request)
 {
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request, request.params[3]);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() > 3)
+    if (request.fHelp || request.params.size() > 4)
         throw std::runtime_error(
-            "listreceivedbyaddress ( minconf include_empty include_watchonly)\n"
+            "listreceivedbyaddress ( minconf include_empty include_watchonly ) ( \"wallet\" )\n"
             "\nList balances by receiving address.\n"
             "\nArguments:\n"
             "1. minconf           (numeric, optional, default=1) The minimum number of confirmations before payments are included.\n"
             "2. include_empty     (bool, optional, default=false) Whether to include addresses that haven't received any payments.\n"
             "3. include_watchonly (bool, optional, default=false) Whether to include watch-only addresses (see 'importaddress').\n"
+            "4. \"wallet\"        (string, optional) Optional wallet filename to use non-default wallet.\n"
 
             "\nResult:\n"
             "[\n"
@@ -1325,19 +1354,20 @@ UniValue listreceivedbyaddress(const JSONRPCRequest& request)
 
 UniValue listreceivedbyaccount(const JSONRPCRequest& request)
 {
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request, request.params[3]);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() > 3)
+    if (request.fHelp || request.params.size() > 4)
         throw std::runtime_error(
-            "listreceivedbyaccount ( minconf include_empty include_watchonly)\n"
+            "listreceivedbyaccount ( minconf include_empty include_watchonly ) ( \"wallet\" )\n"
             "\nDEPRECATED. List balances by account.\n"
             "\nArguments:\n"
             "1. minconf           (numeric, optional, default=1) The minimum number of confirmations before payments are included.\n"
             "2. include_empty     (bool, optional, default=false) Whether to include accounts that haven't received any payments.\n"
             "3. include_watchonly (bool, optional, default=false) Whether to include watch-only addresses (see 'importaddress').\n"
+            "4. \"wallet\"          (string, optional) Optional wallet filename to use non-default wallet.\n"
 
             "\nResult:\n"
             "[\n"
@@ -1468,20 +1498,21 @@ void AcentryToJSON(const CAccountingEntry& acentry, const std::string& strAccoun
 
 UniValue listtransactions(const JSONRPCRequest& request)
 {
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request, request.params[4]);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() > 4)
+    if (request.fHelp || request.params.size() > 5)
         throw std::runtime_error(
-            "listtransactions ( \"account\" count skip include_watchonly)\n"
+            "listtransactions ( \"account\" count skip include_watchonly ) ( \"wallet\" )\n"
             "\nReturns up to 'count' most recent transactions skipping the first 'from' transactions for account 'account'.\n"
             "\nArguments:\n"
             "1. \"account\"    (string, optional) DEPRECATED. The account name. Should be \"*\".\n"
             "2. count          (numeric, optional, default=10) The number of transactions to return\n"
             "3. skip           (numeric, optional, default=0) The number of transactions to skip\n"
             "4. include_watchonly (bool, optional, default=false) Include transactions to watch-only addresses (see 'importaddress')\n"
+            "5. \"wallet\"     (string, optional) Optional wallet filename to use non-default wallet.\n"
             "\nResult:\n"
             "[\n"
             "  {\n"
@@ -1598,18 +1629,19 @@ UniValue listtransactions(const JSONRPCRequest& request)
 
 UniValue listaccounts(const JSONRPCRequest& request)
 {
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request, request.params[2]);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() > 2)
+    if (request.fHelp || request.params.size() > 3)
         throw std::runtime_error(
-            "listaccounts ( minconf include_watchonly)\n"
+            "listaccounts ( minconf include_watchonly) ( \"wallet\" )\n"
             "\nDEPRECATED. Returns Object that has account names as keys, account balances as values.\n"
             "\nArguments:\n"
             "1. minconf             (numeric, optional, default=1) Only include transactions with at least this many confirmations\n"
             "2. include_watchonly   (bool, optional, default=false) Include balances in watch-only addresses (see 'importaddress')\n"
+            "3. \"wallet\"            (string, optional) Optional wallet filename to use non-default wallet.\n"
             "\nResult:\n"
             "{                      (json object where keys are account names, and values are numeric balances\n"
             "  \"account\": x.xxx,  (numeric) The property name is the account name, and the value is the total balance for the account.\n"
@@ -1680,19 +1712,20 @@ UniValue listaccounts(const JSONRPCRequest& request)
 
 UniValue listsinceblock(const JSONRPCRequest& request)
 {
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request, request.params[3]);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
 
     if (request.fHelp)
         throw std::runtime_error(
-            "listsinceblock ( \"blockhash\" target_confirmations include_watchonly)\n"
+            "listsinceblock ( \"blockhash\" target_confirmations include_watchonly) ( \"wallet\" )\n"
             "\nGet all transactions in blocks since block [blockhash], or all transactions if omitted\n"
             "\nArguments:\n"
             "1. \"blockhash\"            (string, optional) The block hash to list transactions since\n"
             "2. target_confirmations:    (numeric, optional) The confirmations required, must be 1 or more\n"
             "3. include_watchonly:       (bool, optional, default=false) Include transactions to watch-only addresses (see 'importaddress')"
+            "4. \"wallet\"               (string, optional) Optional wallet filename to use non-default wallet.\n"
             "\nResult:\n"
             "{\n"
             "  \"transactions\": [\n"
@@ -1787,18 +1820,19 @@ UniValue listsinceblock(const JSONRPCRequest& request)
 
 UniValue gettransaction(const JSONRPCRequest& request)
 {
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request, request.params[2]);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
         throw std::runtime_error(
-            "gettransaction \"txid\" ( include_watchonly )\n"
+            "gettransaction \"txid\" ( include_watchonly ) ( \"wallet\" )\n"
             "\nGet detailed information about in-wallet transaction <txid>\n"
             "\nArguments:\n"
             "1. \"txid\"                  (string, required) The transaction id\n"
             "2. \"include_watchonly\"     (bool, optional, default=false) Whether to include watch-only addresses in balance calculation and details[]\n"
+            "3. \"wallet\"                (string, optional) Optional wallet filename to use non-default wallet.\n"
             "\nResult:\n"
             "{\n"
             "  \"amount\" : x.xxx,        (numeric) The transaction amount in " + CURRENCY_UNIT + "\n"
@@ -1876,14 +1910,14 @@ UniValue gettransaction(const JSONRPCRequest& request)
 
 UniValue abandontransaction(const JSONRPCRequest& request)
 {
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request, request.params[1]);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() != 1)
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
-            "abandontransaction \"txid\"\n"
+            "abandontransaction \"txid\" ( \"wallet\" )\n"
             "\nMark in-wallet transaction <txid> as abandoned\n"
             "This will mark this transaction and all its in-wallet descendants as abandoned which will allow\n"
             "for their inputs to be respent.  It can be used to replace \"stuck\" or evicted transactions.\n"
@@ -1891,6 +1925,7 @@ UniValue abandontransaction(const JSONRPCRequest& request)
             "It has no effect on transactions which are already conflicted or abandoned.\n"
             "\nArguments:\n"
             "1. \"txid\"    (string, required) The transaction id\n"
+            "2. \"wallet\"  (string, optional) Optional wallet filename to use non-default wallet.\n"
             "\nResult:\n"
             "\nExamples:\n"
             + HelpExampleCli("abandontransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
@@ -1915,17 +1950,18 @@ UniValue abandontransaction(const JSONRPCRequest& request)
 
 UniValue backupwallet(const JSONRPCRequest& request)
 {
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request, request.params[1]);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() != 1)
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
-            "backupwallet \"destination\"\n"
+            "backupwallet \"destination\" ( \"wallet\" )\n"
             "\nSafely copies current wallet file to destination, which can be a directory or a path with filename.\n"
             "\nArguments:\n"
             "1. \"destination\"   (string) The destination directory or file\n"
+            "2. \"wallet\"           (string, optional) Optional wallet filename to use non-default wallet.\n"
             "\nExamples:\n"
             + HelpExampleCli("backupwallet", "\"backup.dat\"")
             + HelpExampleRpc("backupwallet", "\"backup.dat\"")
@@ -1944,18 +1980,19 @@ UniValue backupwallet(const JSONRPCRequest& request)
 
 UniValue keypoolrefill(const JSONRPCRequest& request)
 {
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request, request.params[1]);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() > 1)
+    if (request.fHelp || request.params.size() > 2)
         throw std::runtime_error(
-            "keypoolrefill ( newsize )\n"
+            "keypoolrefill ( newsize ) ( \"wallet\" )\n"
             "\nFills the keypool."
             + HelpRequiringPassphrase(pwallet) + "\n"
             "\nArguments\n"
             "1. newsize     (numeric, optional, default=100) The new keypool size\n"
+            "2. \"wallet\"  (string, optional) Optional wallet filename to use non-default wallet.\n"
             "\nExamples:\n"
             + HelpExampleCli("keypoolrefill", "")
             + HelpExampleRpc("keypoolrefill", "")
@@ -1991,19 +2028,20 @@ static void LockWallet(CWallet* pWallet)
 
 UniValue walletpassphrase(const JSONRPCRequest& request)
 {
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request, request.params[2]);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
 
-    if (pwallet->IsCrypted() && (request.fHelp || request.params.size() != 2)) {
+    if (pwallet->IsCrypted() && (request.fHelp || request.params.size() < 2 || request.params.size() > 3)) {
         throw std::runtime_error(
-            "walletpassphrase \"passphrase\" timeout\n"
+            "walletpassphrase \"passphrase\" timeout ( \"wallet\" )\n"
             "\nStores the wallet decryption key in memory for 'timeout' seconds.\n"
             "This is needed prior to performing transactions related to private keys such as sending bitcoins\n"
             "\nArguments:\n"
             "1. \"passphrase\"     (string, required) The wallet passphrase\n"
             "2. timeout            (numeric, required) The time to keep the decryption key in seconds.\n"
+            "3. \"wallet\"         (string, optional) Optional wallet filename to use non-default wallet.\n"
             "\nNote:\n"
             "Issuing the walletpassphrase command while the wallet is already unlocked will set a new unlock\n"
             "time that overrides the old one.\n"
@@ -2055,18 +2093,19 @@ UniValue walletpassphrase(const JSONRPCRequest& request)
 
 UniValue walletpassphrasechange(const JSONRPCRequest& request)
 {
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request, request.params[2]);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
 
-    if (pwallet->IsCrypted() && (request.fHelp || request.params.size() != 2)) {
+    if (pwallet->IsCrypted() && (request.fHelp || request.params.size() < 2 || request.params.size() > 3)) {
         throw std::runtime_error(
-            "walletpassphrasechange \"oldpassphrase\" \"newpassphrase\"\n"
+            "walletpassphrasechange \"oldpassphrase\" \"newpassphrase\" ( \"wallet\" )\n"
             "\nChanges the wallet passphrase from 'oldpassphrase' to 'newpassphrase'.\n"
             "\nArguments:\n"
             "1. \"oldpassphrase\"      (string) The current passphrase\n"
             "2. \"newpassphrase\"      (string) The new passphrase\n"
+            "3. \"wallet\"             (string, optional) Optional wallet filename to use non-default wallet.\n"
             "\nExamples:\n"
             + HelpExampleCli("walletpassphrasechange", "\"old one\" \"new one\"")
             + HelpExampleRpc("walletpassphrasechange", "\"old one\", \"new one\"")
@@ -2106,17 +2145,19 @@ UniValue walletpassphrasechange(const JSONRPCRequest& request)
 
 UniValue walletlock(const JSONRPCRequest& request)
 {
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request, request.params[0]);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
 
-    if (pwallet->IsCrypted() && (request.fHelp || request.params.size() != 0)) {
+    if (pwallet->IsCrypted() && (request.fHelp || request.params.size() > 1)) {
         throw std::runtime_error(
-            "walletlock\n"
+            "walletlock ( \"wallet\" )\n"
             "\nRemoves the wallet encryption key from memory, locking the wallet.\n"
             "After calling this method, you will need to call walletpassphrase again\n"
             "before being able to call any methods which require the wallet to be unlocked.\n"
+            "\nArguments:\n"
+            "1. \"wallet\"  (string, optional) Optional wallet filename to use non-default wallet.\n"
             "\nExamples:\n"
             "\nSet the passphrase for 2 minutes to perform a transaction\n"
             + HelpExampleCli("walletpassphrase", "\"my pass phrase\" 120") +
@@ -2146,14 +2187,14 @@ UniValue walletlock(const JSONRPCRequest& request)
 
 UniValue encryptwallet(const JSONRPCRequest& request)
 {
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request, request.params[1]);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
 
-    if (!pwallet->IsCrypted() && (request.fHelp || request.params.size() != 1)) {
+    if (!pwallet->IsCrypted() && (request.fHelp || request.params.size() < 1 || request.params.size() > 2)) {
         throw std::runtime_error(
-            "encryptwallet \"passphrase\"\n"
+           "encryptwallet \"passphrase\" ( \"wallet\" )\n"
             "\nEncrypts the wallet with 'passphrase'. This is for first time encryption.\n"
             "After this, any calls that interact with private keys such as sending or signing \n"
             "will require the passphrase to be set prior the making these calls.\n"
@@ -2162,6 +2203,7 @@ UniValue encryptwallet(const JSONRPCRequest& request)
             "Note that this will shutdown the server.\n"
             "\nArguments:\n"
             "1. \"passphrase\"    (string) The pass phrase to encrypt the wallet with. It must be at least 1 character, but should be long.\n"
+            "2. \"wallet\"        (string, optional) Optional wallet filename to use non-default wallet.\n"
             "\nExamples:\n"
             "\nEncrypt you wallet\n"
             + HelpExampleCli("encryptwallet", "\"my pass phrase\"") +
@@ -2208,14 +2250,14 @@ UniValue encryptwallet(const JSONRPCRequest& request)
 
 UniValue lockunspent(const JSONRPCRequest& request)
 {
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request, request.params[2]);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
         throw std::runtime_error(
-            "lockunspent unlock ([{\"txid\":\"txid\",\"vout\":n},...])\n"
+            "lockunspent unlock ([{\"txid\":\"txid\",\"vout\":n},...]) ( \"wallet\" )\n"
             "\nUpdates list of temporarily unspendable outputs.\n"
             "Temporarily lock (unlock=false) or unlock (unlock=true) specified transaction outputs.\n"
             "If no transaction outputs are specified when unlocking then all current locked transaction outputs are unlocked.\n"
@@ -2233,6 +2275,7 @@ UniValue lockunspent(const JSONRPCRequest& request)
             "       }\n"
             "       ,...\n"
             "     ]\n"
+            "3. \"wallet\"        (string, optional) Optional wallet filename to use non-default wallet.\n"
 
             "\nResult:\n"
             "true|false    (boolean) Whether the command was successful or not\n"
@@ -2252,18 +2295,17 @@ UniValue lockunspent(const JSONRPCRequest& request)
 
     LOCK2(cs_main, pwallet->cs_wallet);
 
-    if (request.params.size() == 1)
-        RPCTypeCheck(request.params, {UniValue::VBOOL});
-    else
-        RPCTypeCheck(request.params, {UniValue::VBOOL, UniValue::VARR});
+    RPCTypeCheckArgument(request.params[0], UniValue::VBOOL);
 
     bool fUnlock = request.params[0].get_bool();
 
-    if (request.params.size() == 1) {
+    if (request.params[1].isNull()) {
         if (fUnlock)
             pwallet->UnlockAllCoins();
         return true;
     }
+
+    RPCTypeCheckArgument(request.params[1], UniValue::VARR);
 
     UniValue outputs = request.params[1].get_array();
     for (unsigned int idx = 0; idx < outputs.size(); idx++) {
@@ -2299,15 +2341,17 @@ UniValue lockunspent(const JSONRPCRequest& request)
 
 UniValue listlockunspent(const JSONRPCRequest& request)
 {
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request, request.params[0]);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() > 0)
+    if (request.fHelp || request.params.size() > 1)
         throw std::runtime_error(
-            "listlockunspent\n"
+            "listlockunspent ( \"wallet\" )\n"
             "\nReturns list of temporarily unspendable outputs.\n"
+            "\nArguments:\n"
+            "1. \"wallet\"  (string, optional) Optional wallet filename to use non-default wallet.\n"
             "See the lockunspent call to lock and unlock transactions for spending.\n"
             "\nResult:\n"
             "[\n"
@@ -2350,17 +2394,18 @@ UniValue listlockunspent(const JSONRPCRequest& request)
 
 UniValue settxfee(const JSONRPCRequest& request)
 {
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request, request.params[1]);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 1)
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
-            "settxfee amount\n"
+            "settxfee amount ( \"wallet\" )\n"
             "\nSet the transaction fee per kB. Overwrites the paytxfee parameter.\n"
             "\nArguments:\n"
             "1. amount         (numeric or string, required) The transaction fee in " + CURRENCY_UNIT + "/kB\n"
+            "2. \"wallet\"       (string, optional) Optional wallet filename to use non-default wallet.\n"
             "\nResult\n"
             "true|false        (boolean) Returns true if successful\n"
             "\nExamples:\n"
@@ -2379,14 +2424,16 @@ UniValue settxfee(const JSONRPCRequest& request)
 
 UniValue getwalletinfo(const JSONRPCRequest& request)
 {
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request, request.params[0]);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() != 0)
+    if (request.fHelp || request.params.size() > 1)
         throw std::runtime_error(
-            "getwalletinfo\n"
+            "getwalletinfo ( \"wallet\" )\n"
+            "\nArguments:\n"
+            "1. \"wallet\"  (string, optional) Optional wallet filename to use non-default wallet.\n"
             "Returns an object containing various wallet state info.\n"
             "\nResult:\n"
             "{\n"
@@ -2434,14 +2481,16 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
 
 UniValue resendwallettransactions(const JSONRPCRequest& request)
 {
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request, request.params[0]);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() != 0)
+    if (request.fHelp || request.params.size() > 1)
         throw std::runtime_error(
-            "resendwallettransactions\n"
+            "resendwallettransactions ( \"wallet\" )\n"
+            "\nArguments:\n"
+            "1. \"wallet\"  (string, optional) Optional wallet filename to use non-default wallet.\n"
             "Immediately re-broadcast unconfirmed wallet transactions to all peers.\n"
             "Intended only for testing; the wallet code periodically re-broadcasts\n"
             "automatically.\n"
@@ -2464,14 +2513,14 @@ UniValue resendwallettransactions(const JSONRPCRequest& request)
 
 UniValue listunspent(const JSONRPCRequest& request)
 {
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request, request.params[5]);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() > 5)
+    if (request.fHelp || request.params.size() > 6)
         throw std::runtime_error(
-            "listunspent ( minconf maxconf  [\"addresses\",...] [include_unsafe] [query_options])\n"
+            "listunspent ( minconf maxconf  [\"addresses\",...] [include_unsafe] [query_options] ) ( \"wallet\" )\n"
             "\nReturns array of unspent transaction outputs\n"
             "with between minconf and maxconf (inclusive) confirmations.\n"
             "Optionally filter to only include txouts paid to specified addresses.\n"
@@ -2492,6 +2541,7 @@ UniValue listunspent(const JSONRPCRequest& request)
             "      \"maximumCount\"     (numeric or string, default=unlimited) Maximum number of UTXOs\n"
             "      \"minimumSumAmount\" (numeric or string, default=unlimited) Minimum sum value of all UTXOs in " + CURRENCY_UNIT + "\n"
             "    }\n"
+            "6. \"wallet\"         (string, optional) Optional wallet filename to use non-default wallet.\n"
             "\nResult\n"
             "[                   (array of json object)\n"
             "  {\n"
@@ -2622,14 +2672,14 @@ UniValue listunspent(const JSONRPCRequest& request)
 
 UniValue fundrawtransaction(const JSONRPCRequest& request)
 {
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request, request.params[2]);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
 
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
         throw std::runtime_error(
-                            "fundrawtransaction \"hexstring\" ( options )\n"
+                            "fundrawtransaction \"hexstring\" ( options ) ( \"wallet\" )\n"
                             "\nAdd inputs to a transaction until it has enough in value to meet its out value.\n"
                             "This will not modify existing inputs, and will add at most one change output to the outputs.\n"
                             "No existing outputs will be modified unless \"subtractFeeFromOutputs\" is specified.\n"
@@ -2660,6 +2710,7 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
                             "                              Allows this transaction to be replaced by a transaction with higher fees\n"
                             "   }\n"
                             "                         for backward compatibility: passing in a true instead of an object will result in {\"includeWatching\":true}\n"
+                            "3. \"wallet\"              (string, optional) Optional wallet filename to use non-default wallet.\n"
                             "\nResult:\n"
                             "{\n"
                             "  \"hex\":       \"value\", (string)  The resulting raw transaction (hex-encoded string)\n"
@@ -2788,14 +2839,14 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
 
 UniValue bumpfee(const JSONRPCRequest& request)
 {
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request, request.params[2]);
 
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
         return NullUniValue;
 
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2) {
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 3) {
         throw std::runtime_error(
-            "bumpfee \"txid\" ( options ) \n"
+            "bumpfee \"txid\" ( options ) ( \"wallet\" )\n"
             "\nBumps the fee of an opt-in-RBF transaction T, replacing it with a new transaction B.\n"
             "An opt-in RBF transaction with the given txid must be in the wallet.\n"
             "The command will pay the additional fee by decreasing (or perhaps removing) its change output.\n"
@@ -2823,6 +2874,7 @@ UniValue bumpfee(const JSONRPCRequest& request)
             "                         so the new transaction will not be explicitly bip-125 replaceable (though it may\n"
             "                         still be replaceable in practice, for example if it has unconfirmed ancestors which\n"
             "                         are replaceable).\n"
+            "3. \"wallet\"              (string, optional) Optional wallet filename to use non-default wallet.\n"
             "   }\n"
             "\nResult:\n"
             "{\n"
@@ -2926,19 +2978,20 @@ UniValue bumpfee(const JSONRPCRequest& request)
 
 UniValue generate(const JSONRPCRequest& request)
 {
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request, request.params[2]);
 
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2) {
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 3) {
         throw std::runtime_error(
-            "generate nblocks ( maxtries )\n"
+            "generate nblocks ( maxtries ) ( \"wallet\" )\n"
             "\nMine up to nblocks blocks immediately (before the RPC call returns) to an address in the wallet.\n"
             "\nArguments:\n"
             "1. nblocks      (numeric, required) How many blocks are generated immediately.\n"
             "2. maxtries     (numeric, optional) How many iterations to try (default = 1000000).\n"
+            "3. \"wallet\"     (string, optional) Optional wallet filename to use non-default wallet.\n"
             "\nResult:\n"
             "[ blockhashes ]     (array) hashes of blocks generated\n"
             "\nExamples:\n"
@@ -2983,57 +3036,57 @@ extern UniValue importmulti(const JSONRPCRequest& request);
 static const CRPCCommand commands[] =
 { //  category              name                        actor (function)           okSafeMode
     //  --------------------- ------------------------    -----------------------    ----------
-    { "rawtransactions",    "fundrawtransaction",       &fundrawtransaction,       false,  {"hexstring","options"} },
-    { "hidden",             "resendwallettransactions", &resendwallettransactions, true,   {} },
-    { "wallet",             "abandontransaction",       &abandontransaction,       false,  {"txid"} },
-    { "wallet",             "abortrescan",              &abortrescan,              false,  {} },
-    { "wallet",             "addmultisigaddress",       &addmultisigaddress,       true,   {"nrequired","keys","account"} },
-    { "wallet",             "addwitnessaddress",        &addwitnessaddress,        true,   {"address"} },
-    { "wallet",             "backupwallet",             &backupwallet,             true,   {"destination"} },
-    { "wallet",             "bumpfee",                  &bumpfee,                  true,   {"txid", "options"} },
-    { "wallet",             "dumpprivkey",              &dumpprivkey,              true,   {"address"}  },
-    { "wallet",             "dumpwallet",               &dumpwallet,               true,   {"filename"} },
-    { "wallet",             "encryptwallet",            &encryptwallet,            true,   {"passphrase"} },
-    { "wallet",             "getaccountaddress",        &getaccountaddress,        true,   {"account"} },
-    { "wallet",             "getaccount",               &getaccount,               true,   {"address"} },
-    { "wallet",             "getaddressesbyaccount",    &getaddressesbyaccount,    true,   {"account"} },
-    { "wallet",             "getbalance",               &getbalance,               false,  {"account","minconf","include_watchonly"} },
-    { "wallet",             "getnewaddress",            &getnewaddress,            true,   {"account"} },
-    { "wallet",             "getrawchangeaddress",      &getrawchangeaddress,      true,   {} },
-    { "wallet",             "getreceivedbyaccount",     &getreceivedbyaccount,     false,  {"account","minconf"} },
-    { "wallet",             "getreceivedbyaddress",     &getreceivedbyaddress,     false,  {"address","minconf"} },
-    { "wallet",             "gettransaction",           &gettransaction,           false,  {"txid","include_watchonly"} },
-    { "wallet",             "getunconfirmedbalance",    &getunconfirmedbalance,    false,  {} },
-    { "wallet",             "getwalletinfo",            &getwalletinfo,            false,  {} },
-    { "wallet",             "importmulti",              &importmulti,              true,   {"requests","options"} },
-    { "wallet",             "importprivkey",            &importprivkey,            true,   {"privkey","label","rescan"} },
-    { "wallet",             "importwallet",             &importwallet,             true,   {"filename"} },
-    { "wallet",             "importaddress",            &importaddress,            true,   {"address","label","rescan","p2sh"} },
-    { "wallet",             "importprunedfunds",        &importprunedfunds,        true,   {"rawtransaction","txoutproof"} },
-    { "wallet",             "importpubkey",             &importpubkey,             true,   {"pubkey","label","rescan"} },
-    { "wallet",             "keypoolrefill",            &keypoolrefill,            true,   {"newsize"} },
-    { "wallet",             "listaccounts",             &listaccounts,             false,  {"minconf","include_watchonly"} },
-    { "wallet",             "listaddressgroupings",     &listaddressgroupings,     false,  {} },
-    { "wallet",             "listlockunspent",          &listlockunspent,          false,  {} },
-    { "wallet",             "listreceivedbyaccount",    &listreceivedbyaccount,    false,  {"minconf","include_empty","include_watchonly"} },
-    { "wallet",             "listreceivedbyaddress",    &listreceivedbyaddress,    false,  {"minconf","include_empty","include_watchonly"} },
-    { "wallet",             "listsinceblock",           &listsinceblock,           false,  {"blockhash","target_confirmations","include_watchonly"} },
-    { "wallet",             "listtransactions",         &listtransactions,         false,  {"account","count","skip","include_watchonly"} },
-    { "wallet",             "listunspent",              &listunspent,              false,  {"minconf","maxconf","addresses","include_unsafe","query_options"} },
-    { "wallet",             "lockunspent",              &lockunspent,              true,   {"unlock","transactions"} },
-    { "wallet",             "move",                     &movecmd,                  false,  {"fromaccount","toaccount","amount","minconf","comment"} },
-    { "wallet",             "sendfrom",                 &sendfrom,                 false,  {"fromaccount","toaddress","amount","minconf","comment","comment_to"} },
-    { "wallet",             "sendmany",                 &sendmany,                 false,  {"fromaccount","amounts","minconf","comment","subtractfeefrom"} },
-    { "wallet",             "sendtoaddress",            &sendtoaddress,            false,  {"address","amount","comment","comment_to","subtractfeefromamount"} },
-    { "wallet",             "setaccount",               &setaccount,               true,   {"address","account"} },
-    { "wallet",             "settxfee",                 &settxfee,                 true,   {"amount"} },
-    { "wallet",             "signmessage",              &signmessage,              true,   {"address","message"} },
-    { "wallet",             "walletlock",               &walletlock,               true,   {} },
-    { "wallet",             "walletpassphrasechange",   &walletpassphrasechange,   true,   {"oldpassphrase","newpassphrase"} },
-    { "wallet",             "walletpassphrase",         &walletpassphrase,         true,   {"passphrase","timeout"} },
-    { "wallet",             "removeprunedfunds",        &removeprunedfunds,        true,   {"txid"} },
+    { "rawtransactions",    "fundrawtransaction",       &fundrawtransaction,       false,  {"hexstring","options","wallet"} },
+    { "hidden",             "resendwallettransactions", &resendwallettransactions, true,   {"wallet"} },
+    { "wallet",             "abandontransaction",       &abandontransaction,       false,  {"txid","wallet"} },
+    { "wallet",             "abortrescan",              &abortrescan,              false,  {"wallet"} },
+    { "wallet",             "addmultisigaddress",       &addmultisigaddress,       true,   {"nrequired","keys","account","wallet"} },
+    { "wallet",             "addwitnessaddress",        &addwitnessaddress,        true,   {"address","wallet"} },
+    { "wallet",             "backupwallet",             &backupwallet,             true,   {"destination","wallet"} },
+    { "wallet",             "bumpfee",                  &bumpfee,                  true,   {"txid", "options","wallet"} },
+    { "wallet",             "dumpprivkey",              &dumpprivkey,              true,   {"address","wallet"} },
+    { "wallet",             "dumpwallet",               &dumpwallet,               true,   {"filename","wallet"} },
+    { "wallet",             "encryptwallet",            &encryptwallet,            true,   {"passphrase","wallet"} },
+    { "wallet",             "getaccountaddress",        &getaccountaddress,        true,   {"account","wallet"} },
+    { "wallet",             "getaccount",               &getaccount,               true,   {"address","wallet"} },
+    { "wallet",             "getaddressesbyaccount",    &getaddressesbyaccount,    true,   {"account","wallet"} },
+    { "wallet",             "getbalance",               &getbalance,               false,  {"account","minconf","include_watchonly","wallet"} },
+    { "wallet",             "getnewaddress",            &getnewaddress,            true,   {"account","wallet"} },
+    { "wallet",             "getrawchangeaddress",      &getrawchangeaddress,      true,   {"wallet"} },
+    { "wallet",             "getreceivedbyaccount",     &getreceivedbyaccount,     false,  {"account","minconf","wallet"} },
+    { "wallet",             "getreceivedbyaddress",     &getreceivedbyaddress,     false,  {"address","minconf","wallet"} },
+    { "wallet",             "gettransaction",           &gettransaction,           false,  {"txid","include_watchonly","wallet"} },
+    { "wallet",             "getunconfirmedbalance",    &getunconfirmedbalance,    false,  {"wallet"} },
+    { "wallet",             "getwalletinfo",            &getwalletinfo,            false,  {"wallet"} },
+    { "wallet",             "importmulti",              &importmulti,              true,   {"requests","options","wallet"} },
+    { "wallet",             "importprivkey",            &importprivkey,            true,   {"privkey","label","rescan","wallet"} },
+    { "wallet",             "importwallet",             &importwallet,             true,   {"filename","wallet"} },
+    { "wallet",             "importaddress",            &importaddress,            true,   {"address","label","rescan","p2sh","wallet"} },
+    { "wallet",             "importprunedfunds",        &importprunedfunds,        true,   {"rawtransaction","txoutproof","wallet"} },
+    { "wallet",             "importpubkey",             &importpubkey,             true,   {"pubkey","label","rescan","wallet"} },
+    { "wallet",             "keypoolrefill",            &keypoolrefill,            true,   {"newsize","wallet"} },
+    { "wallet",             "listaccounts",             &listaccounts,             false,  {"minconf","include_watchonly","wallet"} },
+    { "wallet",             "listaddressgroupings",     &listaddressgroupings,     false,  {"wallet"} },
+    { "wallet",             "listlockunspent",          &listlockunspent,          false,  {"wallet"} },
+    { "wallet",             "listreceivedbyaccount",    &listreceivedbyaccount,    false,  {"minconf","include_empty","include_watchonly","wallet"} },
+    { "wallet",             "listreceivedbyaddress",    &listreceivedbyaddress,    false,  {"minconf","include_empty","include_watchonly","wallet"} },
+    { "wallet",             "listsinceblock",           &listsinceblock,           false,  {"blockhash","target_confirmations","include_watchonly","wallet"} },
+    { "wallet",             "listtransactions",         &listtransactions,         false,  {"account","count","skip","include_watchonly","wallet"} },
+    { "wallet",             "listunspent",              &listunspent,              false,  {"minconf","maxconf","addresses","include_unsafe","query_options","wallet"} },
+    { "wallet",             "lockunspent",              &lockunspent,              true,   {"unlock","transactions","wallet"} },
+    { "wallet",             "move",                     &movecmd,                  false,  {"fromaccount","toaccount","amount","minconf","comment","wallet"} },
+    { "wallet",             "sendfrom",                 &sendfrom,                 false,  {"fromaccount","toaddress","amount","minconf","comment","comment_to","wallet"} },
+    { "wallet",             "sendmany",                 &sendmany,                 false,  {"fromaccount","amounts","minconf","comment","subtractfeefrom","wallet"} },
+    { "wallet",             "sendtoaddress",            &sendtoaddress,            false,  {"address","amount","comment","comment_to","subtractfeefromamount","wallet"} },
+    { "wallet",             "setaccount",               &setaccount,               true,   {"address","account","wallet"} },
+    { "wallet",             "settxfee",                 &settxfee,                 true,   {"amount","wallet"} },
+    { "wallet",             "signmessage",              &signmessage,              true,   {"address","message","wallet"} },
+    { "wallet",             "walletlock",               &walletlock,               true,   {"wallet"} },
+    { "wallet",             "walletpassphrasechange",   &walletpassphrasechange,   true,   {"oldpassphrase","newpassphrase","wallet"} },
+    { "wallet",             "walletpassphrase",         &walletpassphrase,         true,   {"passphrase","timeout","wallet"} },
+    { "wallet",             "removeprunedfunds",        &removeprunedfunds,        true,   {"txid","wallet"} },
 
-    { "generating",         "generate",                 &generate,                 true,   {"nblocks","maxtries"} },
+    { "generating",         "generate",                 &generate,                 true,   {"nblocks","maxtries","wallet"} },
 };
 
 void RegisterWalletRPCCommands(CRPCTable &t)
