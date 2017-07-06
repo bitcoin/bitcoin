@@ -1051,6 +1051,7 @@ public:
 
     static CFeeRate minTxFee;
     static CFeeRate fallbackFee;
+    static CFeeRate m_discard_rate;
     /**
      * Estimate the minimum fee considering user set parameters
      * and the required fee
