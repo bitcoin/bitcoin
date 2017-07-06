@@ -32,7 +32,14 @@
 
 CWallet *GetWalletForJSONRPCRequest(const JSONRPCRequest& request)
 {
-    // TODO: Some way to access secondary wallets
+    if (!request.wallet.empty()) {
+        for (const auto& wallet : ::vpwallets) {
+            if (request.wallet == wallet->GetName()) {
+                return wallet;
+            }
+        }
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Requested wallet does not exist or is not loaded");
+    }
     return vpwallets.empty() ? nullptr : vpwallets[0];
 }
 
