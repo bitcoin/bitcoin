@@ -35,19 +35,18 @@ public:
     void NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& pblock) override;
 
 
-    void InitializeNode(CNode* pnode, CConnman* connman) override;
+    void InitializeNode(CNode* pnode) override;
     void FinalizeNode(NodeId nodeid, bool& fUpdateConnectionTime) override;
     /** Process protocol messages received from a given node */
-    bool ProcessMessages(CNode* pfrom, CConnman* connman, std::atomic<bool>& interrupt) override;
+    bool ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt) override;
     /**
     * Send queued protocol messages to be sent to a give node.
     *
     * @param[in]   pto             The node which we are sending messages to.
-    * @param[in]   connman         The connection manager for that node.
     * @param[in]   interrupt       Interrupt condition for processing threads
     * @return                      True if there is more work to be done
     */
-    bool SendMessages(CNode* pto, CConnman* connman, std::atomic<bool>& interrupt) override;
+    bool SendMessages(CNode* pto, std::atomic<bool>& interrupt) override;
 };
 
 struct CNodeStateStats {
