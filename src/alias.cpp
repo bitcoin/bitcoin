@@ -2414,24 +2414,34 @@ bool IsMyAlias(const CAliasIndex& alias)
 	return IsMine(*pwalletMain, address.Get());
 }
 UniValue aliaslist(const UniValue& params, bool fHelp) {
-	if (fHelp || 1 < params.size())
-		throw runtime_error("aliaslist [<aliasname>]\n"
+	if (fHelp || 3 < params.size())
+		throw runtime_error("aliaslist [aliasname] [count] [from]\n"
 				"list my own aliases.\n"
-				"<aliasname> alias name to use as filter.\n");
+				"[aliasname] alias name to use as filter.\n"
+				"[count]    (numeric, optional, default=10) The number of results to return\n"
+				"[from]     (numeric, optional, default=0) The number of results to skip\n"");
 
 	vector<unsigned char> vchAlias;
 	if(CheckParam(params, 0))
 		vchAlias = vchFromValue(params[0]);
 
+	int count = 10;
+	int from = 0;
+	if (CheckParam(params, 1))
+		count = atoi(params[1].get_str());
+	if (CheckParam(params, 2))
+		from = atoi(params[2].get_str());
+	int found = 0;
 
 	UniValue oRes(UniValue::VARR);
 	map<vector<unsigned char>, int> vNamesI;
-	map<vector<unsigned char>, UniValue> vNamesO;
 
 	uint256 hash;
 	CTransaction tx;
 	bool pending = false;
 	BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet) {
+		if (oRes.size() >= count)
+			break;
 		pending = 0;
 		// get txn hash, read txn index
 		hash = item.second.GetHash();
@@ -2451,19 +2461,20 @@ UniValue aliaslist(const UniValue& params, bool fHelp) {
 		{
 			continue;
 		}
-
+		const CAliasIndex &theAlias = vtxPos.back();
 		// get last active name only
-		if (vNamesI.find(alias.vchAlias) != vNamesI.end() && (alias.nHeight <= vNamesI[alias.vchAlias] || vNamesI[alias.vchAlias] < 0))
+		if (vNamesI.find(theAlias.vchAlias) != vNamesI.end() && (theAlias.nHeight <= vNamesI[theAlias.vchAlias] || vNamesI[theAlias.vchAlias] < 0))
 			continue;	
 		UniValue oName(UniValue::VOBJ);
-		if(BuildAliasJson(alias, pending, oName))
+		vNamesI[theAlias.vchAlias] = theAlias.nHeight;
+		found++;
+		if (found < from)
+			continue;
+		if(BuildAliasJson(theAlias, pending, oName))
 		{
-			vNamesI[alias.vchAlias] = alias.nHeight;
-			vNamesO[alias.vchAlias] = oName;	
+			oRes.push_back(oName);
 		}
 	}
-	BOOST_FOREACH(const PAIRTYPE(vector<unsigned char>, UniValue)& item, vNamesO)
-		oRes.push_back(item.second);
 	return oRes;
 }
 UniValue aliasaffiliates(const UniValue& params, bool fHelp) {

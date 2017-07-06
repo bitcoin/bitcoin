@@ -1341,7 +1341,6 @@ UniValue certlist(const UniValue& params, bool fHelp) {
 
 	UniValue oRes(UniValue::VARR);
 	map< vector<unsigned char>, int > vNamesI;
-	map< vector<unsigned char>, UniValue > vNamesO;
 	if(aliases.size() > 0)
 	{
 		for(unsigned int aliasIndex =0;aliasIndex<aliases.size();aliasIndex++)
