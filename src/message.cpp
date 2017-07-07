@@ -565,33 +565,12 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 	
 	
 
-	string strCipherTextTo;
-	if(!EncryptMessage(aliasTo, vchMessageByte, strCipherTextTo))
-	{
-		BOOST_FOREACH(const COutPoint& outpoint, lockedOutputs)
-		{
-			 LOCK2(cs_main, pwalletMain->cs_wallet);
-			 pwalletMain->UnlockCoin(outpoint);
-		}
-		throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3504 - " + _("Could not encrypt message data for receiver"));
-	}
-	string strCipherTextFrom;
-	if(!EncryptMessage(aliasFrom, vchMessageByte, strCipherTextFrom))
-	{
-		BOOST_FOREACH(const COutPoint& outpoint, lockedOutputs)
-		{
-			 LOCK2(cs_main, pwalletMain->cs_wallet);
-			 pwalletMain->UnlockCoin(outpoint);
-		}
-		throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3505 - " + _("Could not encrypt message data for sender"));
-	}
-
     // build message
     CMessage newMessage;
 	newMessage.vchMessage = vchMessage;
 	if(!bHex)
-		newMessage.vchMessageFrom = vchFromString(strCipherTextFrom);
-	newMessage.vchMessageTo = vchFromString(strCipherTextTo);
+		newMessage.vchMessageFrom = vchMessageByte;
+	newMessage.vchMessageTo = vchMessageByte;
 	newMessage.vchSubject = vchMySubject;
 	newMessage.vchAliasFrom = aliasFrom.vchAlias;
 	newMessage.bHex = bHex;
@@ -785,19 +764,9 @@ bool BuildMessageJson(const CMessage& message, UniValue& oName)
 	oName.push_back(Pair("to", stringFromVch(message.vchAliasTo)));
 
 	oName.push_back(Pair("subject", stringFromVch(message.vchSubject)));
-	string strDecrypted = "";
-	string strData = _("Encrypted for recipient of message");
-	if(DecryptMessage(aliasTo, message.vchMessageTo, strDecrypted))
-	{
-		if(message.bHex)
-			strData = HexStr(strDecrypted);
-		else
-			strData = strDecrypted;
-	}
-	else if(!message.bHex && DecryptMessage(aliasFrom, message.vchMessageFrom, strDecrypted))
-		strData = strDecrypted;
 
-	oName.push_back(Pair("message", strData));
+
+	oName.push_back(Pair("message", stringFromVch(message.vchMessageTo)));
 	return true;
 }
 UniValue messagesentlist(const UniValue& params, bool fHelp) {
@@ -969,14 +938,7 @@ void MessageTxToJSON(const int op, const std::vector<unsigned char> &vchData, co
 	string subjectValue = stringFromVch(message.vchSubject);
 	entry.push_back(Pair("subject", subjectValue));
 
-	string strMessage =_("Encrypted for recipient of message");
-	string strDecrypted = "";
-	if(DecryptMessage(dbAliasTo, message.vchMessageTo, strDecrypted))
-		strMessage = strDecrypted;
-	else if(DecryptMessage(dbAliasFrom, message.vchMessageFrom, strDecrypted))
-		strMessage = strDecrypted;	
-
-	entry.push_back(Pair("message", strMessage));
+	entry.push_back(Pair("message", stringFromVch(message.vchMessageTo)));
 
 
 }

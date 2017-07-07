@@ -2612,18 +2612,8 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 		if (!GetTxOfAlias(linkOffer.vchAlias, theLinkedAlias, aliastx))
 			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1564 - " + _("Could not find an alias with this name"));
 
-		// encrypt to root offer owner if this is a linked offer you are accepting
-		if(!EncryptMessage(theLinkedAlias, vchMessage, strCipherText))
-			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1565 - " + _("Could not encrypt message to seller"));
-	}
-	else
-	{
-		// encrypt to offer owner
-		if(!EncryptMessage(theAlias, vchMessage, strCipherText))
-			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1566 - " + _("Could not encrypt message to seller"));
 	}
 
-	vector<unsigned char> vchPaymentMessage = vchFromString(strCipherText);
 	COfferAccept txAccept;
 	txAccept.vchAcceptRand = vchAccept;
 	txAccept.nQty = nQty;
@@ -2631,7 +2621,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	// We need to do this to make sure we convert price at the time of initial buyer's accept.
 	txAccept.nAcceptHeight = nHeight;
 	txAccept.vchBuyerAlias = vchAlias;
-	txAccept.vchMessage = vchPaymentMessage;
+	txAccept.vchMessage = vchMessage;
 	txAccept.nPaymentOption = paymentOptionsMask;
     CAmount nTotalValue = ( nPrice * nQty );
 	CAmount nTotalCommission = ( nCommission * nQty );
@@ -3648,10 +3638,7 @@ bool BuildOfferAcceptJson(const COffer& theOffer, const CAliasIndex& theAlias, c
 	totalAvgRating = floor(totalAvgRating * 10) / 10;
 	oOfferAccept.push_back(Pair("avg_rating", totalAvgRating));
 	oOfferAccept.push_back(Pair("avg_rating_display", strprintf("%.1f/5 (%d %s)", totalAvgRating, ratingCount, _("Votes"))));
-	string strMessage = string("");
-	if(!DecryptMessage(theAlias, theOffer.accept.vchMessage, strMessage))
-		strMessage = _("Encrypted for owner of offer");
-	oOfferAccept.push_back(Pair("pay_message", strMessage));
+	oOfferAccept.push_back(Pair("pay_message", stringFromVch(theOffer.accept.vchMessage)));
 	return true;
 }
 UniValue offercount(const UniValue& params, bool fHelp) {

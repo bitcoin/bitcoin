@@ -1374,13 +1374,6 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	EnsureWalletIsUnlocked();
     CScript scriptPubKey, scriptPubKeyBuyer, scriptPubKeySeller, scriptPubKeyRootSeller, scriptPubKeyArbiter,scriptBuyer, scriptSeller,scriptRootSeller,scriptArbiter;
 
-	string strCipherText = "";
-	// encrypt to offer owner
-	if(!EncryptMessage(selleralias, vchMessage, strCipherText))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4520 - " + _("Could not encrypt message to seller"));
-
-	if (strCipherText.size() > MAX_ENCRYPTED_VALUE_LENGTH)
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4521 - " + _("Payment message length cannot exceed 1024 characters"));
 
 	CSyscoinAddress arbiterAddress;
 	GetAddress(arbiteralias, &arbiterAddress, scriptArbiter);
@@ -1448,7 +1441,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	newEscrow.extTxId = uint256S(extTxIdStr);
 	newEscrow.vchSellerAlias = selleralias.vchAlias;
 	newEscrow.vchLinkSellerAlias = reselleralias.vchAlias;
-	newEscrow.vchPaymentMessage = vchFromString(strCipherText);
+	newEscrow.vchPaymentMessage = vchMessage;
 	newEscrow.nQty = nQty;
 	newEscrow.nPaymentOption = paymentOptionsMask;
 	newEscrow.nHeight = nHeight;
@@ -3563,10 +3556,8 @@ bool BuildEscrowJson(const CEscrow &escrow, const CEscrow &firstEscrow, UniValue
 	oEscrow.push_back(Pair("redeem_txid", strRedeemTxId));
     oEscrow.push_back(Pair("txid", escrow.txHash.GetHex()));
     oEscrow.push_back(Pair("height", sHeight));
-	string strMessage = string("");
-	if(!DecryptMessage(theSellerAlias, escrow.vchPaymentMessage, strMessage))
-		strMessage = _("Encrypted for owner of offer");
-	oEscrow.push_back(Pair("pay_message", strMessage));
+
+	oEscrow.push_back(Pair("pay_message", stringFromVch(escrow.vchPaymentMessage)));
 	int64_t expired_time = GetEscrowExpiration(escrow);
 	int expired = 0;
     if(expired_time <= chainActive.Tip()->nTime)

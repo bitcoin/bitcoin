@@ -1,6 +1,0 @@
-AlgorithmType: FileList
-Name: SHA3 FIPS 202 collection
-Test: TestVectors/sha3_224_fips_202.txt
-Test: TestVectors/sha3_256_fips_202.txt
-Test: TestVectors/sha3_384_fips_202.txt
-Test: TestVectors/sha3_512_fips_202.txt

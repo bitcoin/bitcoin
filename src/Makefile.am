@@ -29,7 +29,6 @@ LIBSYSCOIN_UTIL=libsyscoin_util.a
 LIBSYSCOIN_CRYPTO=crypto/libsyscoin_crypto.a
 LIBSYSCOINQT=qt/libsyscoinqt.a
 LIBSECP256K1=secp256k1/libsecp256k1.la
-LIBCRYPTOPP=cryptopp/libcryptopp.a
 
 if ENABLE_ZMQ
 LIBSYSCOIN_ZMQ=libsyscoin_zmq.a
@@ -44,9 +43,6 @@ endif
 $(LIBSECP256K1): $(wildcard secp256k1/src/*) $(wildcard secp256k1/include/*)
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
 
-$(LIBCRYPTOPP):
-	@echo "Building LibCryptoPP ..." && $(MAKE) -C $(@D) $(@F) CXX="$(CXX)" CC="$(CC)" OPT="$(AM_CXXFLAGS) $(PIE_FLAGS) $(CXXFLAGS) $(AM_CPPFLAGS) $(CPPFLAGS)"
- 
 # Make is not made aware of per-object dependencies to avoid limiting building parallelization
 # But to build the less dependent modules first, we manually select their order here:
 EXTRA_LIBRARIES += \
@@ -82,7 +78,6 @@ SYSCOIN_CORE_H = \
   cert.h \
   escrow.h \
   feedback.h \
-  messagecrypter.h \
   auxpow.h \
   addrman.h \
   base58.h \
@@ -184,7 +179,6 @@ libsyscoin_server_a_SOURCES = \
   message.cpp \
   cert.cpp \
   escrow.cpp \
-  messagecrypter.cpp \
   auxpow.cpp \
   addrman.cpp \
   bloom.cpp \
@@ -381,8 +375,7 @@ syscoind_LDADD = \
   $(LIBSYSCOIN_CRYPTO) \
   $(LIBLEVELDB) \
   $(LIBMEMENV) \
-  $(LIBSECP256K1) \
-  $(LIBCRYPTOPP)
+  $(LIBSECP256K1)
 
 syscoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS)
 
@@ -426,8 +419,7 @@ syscoin_tx_LDADD = \
   $(LIBSYSCOIN_CRYPTO) \
   $(LIBLEVELDB) \
   $(LIBMEMENV) \
-  $(LIBSECP256K1) \
-  $(LIBCRYPTOPP)
+  $(LIBSECP256K1)
 
 syscoin_tx_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS)
 
@@ -478,7 +470,6 @@ EXTRA_DIST = $(CTAES_DIST)
 clean-local:
 	-$(MAKE) -C secp256k1 clean
 	-$(MAKE) -C univalue clean
-	-$(MAKE) -C cryptopp clean
 	-rm -f leveldb/*/*.gcda leveldb/*/*.gcno leveldb/helpers/memenv/*.gcda leveldb/helpers/memenv/*.gcno
 	-rm -f config.h
 	-rm -rf test/__pycache__
