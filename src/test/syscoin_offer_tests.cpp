@@ -413,7 +413,7 @@ BOOST_AUTO_TEST_CASE (generate_offeraccept)
 	string encryptionkey = find_value(r.get_obj(), "encryption_publickey").get_str();	
 	string strCipherDataBad = s1024bytes + "a";
 
-	BOOST_CHECK_THROW(r = CallRPC("node2", "offeraccept buyeralias3 " + offerguid + " 1 " + strCipherDataBad, runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node2", "offeraccept buyeralias3 " + offerguid + " 1 " + strCipherDataBad), runtime_error);
 	
 	// perform an accept on negative quantity
 	BOOST_CHECK_THROW(r = CallRPC("node2", "offeraccept buyeralias3 " + offerguid + " -1 " + HexStr(vchFromString("message"))), runtime_error);
