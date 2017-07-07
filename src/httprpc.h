@@ -32,4 +32,6 @@ void InterruptREST();
  */
 void StopREST();
 
+void RegisterJSONEndpoint(const std::string& endpoint, bool exactMatch);
+
 #endif
