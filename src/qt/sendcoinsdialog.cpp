@@ -31,6 +31,25 @@
 #include <QTextDocument>
 #include <QTimer>
 
+static const std::array<int, 9> confTargets = { {2, 4, 6, 12, 24, 48, 144, 504, 1008} };
+int getConfTargetForIndex(int index) {
+    if (index+1 > static_cast<int>(confTargets.size())) {
+        return confTargets.back();
+    }
+    if (index < 0) {
+        return confTargets[0];
+    }
+    return confTargets[index];
+}
+int getIndexForConfTarget(int target) {
+    for (unsigned int i = 0; i < confTargets.size(); i++) {
+        if (confTargets[i] >= target) {
+            return i;
+        }
+    }
+    return confTargets.size() - 1;
+}
+
 SendCoinsDialog::SendCoinsDialog(const PlatformStyle *_platformStyle, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SendCoinsDialog),
@@ -152,9 +171,12 @@ void SendCoinsDialog::setModel(WalletModel *_model)
         coinControlUpdateLabels();
 
         // fee section
-        connect(ui->sliderSmartFee, SIGNAL(valueChanged(int)), this, SLOT(updateSmartFeeLabel()));
-        connect(ui->sliderSmartFee, SIGNAL(valueChanged(int)), this, SLOT(updateGlobalFeeVariables()));
-        connect(ui->sliderSmartFee, SIGNAL(valueChanged(int)), this, SLOT(coinControlUpdateLabels()));
+        for (const int &n : confTargets) {
+            ui->confTargetSelector->addItem(tr("%1 (%2 blocks)").arg(GUIUtil::formatNiceTimeOffset(n*Params().GetConsensus().nPowTargetSpacing)).arg(n));
+        }
+        connect(ui->confTargetSelector, SIGNAL(currentIndexChanged(int)), this, SLOT(updateSmartFeeLabel()));
+        connect(ui->confTargetSelector, SIGNAL(currentIndexChanged(int)), this, SLOT(updateGlobalFeeVariables()));
+        connect(ui->confTargetSelector, SIGNAL(currentIndexChanged(int)), this, SLOT(coinControlUpdateLabels()));
         connect(ui->groupFee, SIGNAL(buttonClicked(int)), this, SLOT(updateFeeSectionControls()));
         connect(ui->groupFee, SIGNAL(buttonClicked(int)), this, SLOT(updateGlobalFeeVariables()));
         connect(ui->groupFee, SIGNAL(buttonClicked(int)), this, SLOT(coinControlUpdateLabels()));
@@ -177,10 +199,10 @@ void SendCoinsDialog::setModel(WalletModel *_model)
 
         // set the smartfee-sliders default value (wallets default conf.target or last stored value)
         QSettings settings;
-        if (settings.value("nSmartFeeSliderPosition").toInt() == 0)
-            ui->sliderSmartFee->setValue(ui->sliderSmartFee->maximum() - model->getDefaultConfirmTarget() + 2);
+        if (settings.value("nConfTarget").toInt() == 0)
+            ui->confTargetSelector->setCurrentIndex(getIndexForConfTarget(model->getDefaultConfirmTarget()));
         else
-            ui->sliderSmartFee->setValue(settings.value("nSmartFeeSliderPosition").toInt());
+            ui->confTargetSelector->setCurrentIndex(getIndexForConfTarget(settings.value("nConfTarget").toInt()));
     }
 }
 
@@ -190,7 +212,7 @@ SendCoinsDialog::~SendCoinsDialog()
     settings.setValue("fFeeSectionMinimized", fFeeMinimized);
     settings.setValue("nFeeRadio", ui->groupFee->checkedId());
     settings.setValue("nCustomFeeRadio", ui->groupCustomFee->checkedId());
-    settings.setValue("nSmartFeeSliderPosition", ui->sliderSmartFee->value());
+    settings.setValue("nConfTarget", getConfTargetForIndex(ui->confTargetSelector->currentIndex()));
     settings.setValue("nTransactionFee", (qint64)ui->customFee->value());
     settings.setValue("fPayOnlyMinFee", ui->checkBoxMinimumFee->isChecked());
 
@@ -244,7 +266,7 @@ void SendCoinsDialog::on_sendButton_clicked()
     if (model->getOptionsModel()->getCoinControlFeatures())
         ctrl = *CoinControlDialog::coinControl;
     if (ui->radioSmartFee->isChecked())
-        ctrl.nConfirmTarget = ui->sliderSmartFee->maximum() - ui->sliderSmartFee->value() + 2;
+        ctrl.nConfirmTarget = getConfTargetForIndex(ui->confTargetSelector->currentIndex());
     else
         ctrl.nConfirmTarget = 0;
 
@@ -594,14 +616,11 @@ void SendCoinsDialog::setMinimumFee()
 
 void SendCoinsDialog::updateFeeSectionControls()
 {
-    ui->sliderSmartFee          ->setEnabled(ui->radioSmartFee->isChecked());
+    ui->confTargetSelector      ->setEnabled(ui->radioSmartFee->isChecked());
     ui->labelSmartFee           ->setEnabled(ui->radioSmartFee->isChecked());
     ui->labelSmartFee2          ->setEnabled(ui->radioSmartFee->isChecked());
     ui->labelSmartFee3          ->setEnabled(ui->radioSmartFee->isChecked());
     ui->labelFeeEstimation      ->setEnabled(ui->radioSmartFee->isChecked());
-    ui->labelSmartFeeNormal     ->setEnabled(ui->radioSmartFee->isChecked());
-    ui->labelSmartFeeFast       ->setEnabled(ui->radioSmartFee->isChecked());
-    ui->confirmationTargetLabel ->setEnabled(ui->radioSmartFee->isChecked());
     ui->checkBoxMinimumFee      ->setEnabled(ui->radioCustomFee->isChecked());
     ui->labelMinFeeWarning      ->setEnabled(ui->radioCustomFee->isChecked());
     ui->radioCustomPerKilobyte  ->setEnabled(ui->radioCustomFee->isChecked() && !ui->checkBoxMinimumFee->isChecked());
@@ -612,11 +631,7 @@ void SendCoinsDialog::updateGlobalFeeVariables()
 {
     if (ui->radioSmartFee->isChecked())
     {
-        int nConfirmTarget = ui->sliderSmartFee->maximum() - ui->sliderSmartFee->value() + 2;
         payTxFee = CFeeRate(0);
-
-        // show the estimated required time for confirmation
-        ui->confirmationTargetLabel->setText(GUIUtil::formatDurationStr(nConfirmTarget * Params().GetConsensus().nPowTargetSpacing) + " / " + tr("%n block(s)", "", nConfirmTarget));
     }
     else
     {
@@ -650,7 +665,7 @@ void SendCoinsDialog::updateSmartFeeLabel()
     if(!model || !model->getOptionsModel())
         return;
 
-    int nBlocksToConfirm = ui->sliderSmartFee->maximum() - ui->sliderSmartFee->value() + 2;
+    int nBlocksToConfirm = getConfTargetForIndex(ui->confTargetSelector->currentIndex());
     FeeCalculation feeCalc;
     CFeeRate feeRate = ::feeEstimator.estimateSmartFee(nBlocksToConfirm, &feeCalc, ::mempool);
     if (feeRate <= CFeeRate(0)) // not enough data => minfee
@@ -823,7 +838,7 @@ void SendCoinsDialog::coinControlUpdateLabels()
     CoinControlDialog::payAmounts.clear();
     CoinControlDialog::fSubtractFeeFromAmount = false;
     if (ui->radioSmartFee->isChecked()) {
-        CoinControlDialog::coinControl->nConfirmTarget = ui->sliderSmartFee->maximum() - ui->sliderSmartFee->value() + 2;
+        CoinControlDialog::coinControl->nConfirmTarget = getConfTargetForIndex(ui->confTargetSelector->currentIndex());
     } else {
         CoinControlDialog::coinControl->nConfirmTarget = model->getDefaultConfirmTarget();
     }
