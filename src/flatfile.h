@@ -16,12 +16,10 @@ struct FlatFilePos
     int nFile;
     unsigned int nPos;
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(VARINT(nFile, VarIntMode::NONNEGATIVE_SIGNED));
-        READWRITE(VARINT(nPos));
+    SERIALIZE_METHODS(FlatFilePos, obj)
+    {
+        READWRITE(VARINT(obj.nFile, VarIntMode::NONNEGATIVE_SIGNED));
+        READWRITE(VARINT(obj.nPos));
     }
 
     FlatFilePos() : nFile(-1), nPos(0) {}

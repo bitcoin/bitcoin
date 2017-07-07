@@ -39,14 +39,7 @@ struct DBVal {
     uint256 header;
     FlatFilePos pos;
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(hash);
-        READWRITE(header);
-        READWRITE(pos);
-    }
+    SERIALIZE_METHODS(DBVal, obj) { READWRITE(obj.hash, obj.header, obj.pos); }
 };
 
 struct DBHeightKey {
@@ -78,17 +71,14 @@ struct DBHashKey {
 
     explicit DBHashKey(const uint256& hash_in) : hash(hash_in) {}
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
+    SERIALIZE_METHODS(DBHashKey, obj) {
         char prefix = DB_BLOCK_HASH;
         READWRITE(prefix);
         if (prefix != DB_BLOCK_HASH) {
             throw std::ios_base::failure("Invalid format for block filter index DB hash key");
         }
 
-        READWRITE(hash);
+        READWRITE(obj.hash);
     }
 };
 
