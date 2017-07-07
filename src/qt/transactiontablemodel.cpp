@@ -21,6 +21,7 @@
 #include "wallet/wallet.h"
 #include "wallet/hdwallet.h"
 #include "rpc/rpcutil.h"
+#include "primitives/transaction.h"
 
 #include <QColor>
 #include <QDateTime>
@@ -37,9 +38,9 @@ static int column_alignments[] = {
         Qt::AlignLeft|Qt::AlignVCenter, /* date */
         Qt::AlignLeft|Qt::AlignVCenter, /* type */
         Qt::AlignLeft|Qt::AlignVCenter, /* address */
-        Qt::AlignRight|Qt::AlignVCenter, /* amountAnon */
-        Qt::AlignRight|Qt::AlignVCenter, /* amountBlind */
-        Qt::AlignRight|Qt::AlignVCenter /* amount */
+        Qt::AlignLeft|Qt::AlignVCenter, /* typeIn */
+        Qt::AlignLeft|Qt::AlignVCenter, /* typeOut */
+        Qt::AlignRight|Qt::AlignVCenter, /* amount */
     };
 
 // Comparison operator for sort/binary search of model tx list
@@ -146,14 +147,22 @@ public:
                 LOCK2(cs_main, wallet->cs_wallet);
                 // Find transaction in wallet
                 std::map<uint256, CWalletTx>::iterator mi = wallet->mapWallet.find(hash);
-                if(mi == wallet->mapWallet.end())
+                MapRecords_t::iterator mri;
+                CHDWallet *phdw = (CHDWallet*)wallet;
+                QList<TransactionRecord> toInsert;
+                if (mi != wallet->mapWallet.end())
+                {
+                    toInsert = TransactionRecord::decomposeTransaction(wallet, mi->second);
+                } else
+                if ((mri = phdw->mapRecords.find(hash)) != phdw->mapRecords.end())
+                {
+                    toInsert = TransactionRecord::decomposeTransaction(phdw, mri->first, mri->second);
+                } else
                 {
                     qWarning() << "TransactionTablePriv::updateWallet: Warning: Got CT_NEW, but transaction is not in wallet";
                     break;
                 }
                 // Added -- insert at the right position
-                QList<TransactionRecord> toInsert =
-                        TransactionRecord::decomposeTransaction(wallet, mi->second);
                 if(!toInsert.isEmpty()) /* only if something to insert */
                 {
                     parent->beginInsertRows(QModelIndex(), lowerIndex, lowerIndex+toInsert.size()-1);
@@ -209,12 +218,20 @@ public:
                 TRY_LOCK(wallet->cs_wallet, lockWallet);
                 if(lockWallet && rec->statusUpdateNeeded())
                 {
+                    CHDWallet *phdw = (CHDWallet*)wallet;
                     std::map<uint256, CWalletTx>::iterator mi = wallet->mapWallet.find(rec->hash);
-
+                    MapRecords_t::iterator mri;
+                    
                     if(mi != wallet->mapWallet.end())
                     {
                         rec->updateStatus(mi->second);
+                    } else
+                    if ((mri = phdw->mapRecords.find(rec->hash)) != phdw->mapRecords.end())
+                    {
+                        rec->updateStatus(phdw, mri->second);
                     }
+                    
+                    
                 }
             }
             return rec;
@@ -227,9 +244,15 @@ public:
         {
             LOCK2(cs_main, wallet->cs_wallet);
             std::map<uint256, CWalletTx>::iterator mi = wallet->mapWallet.find(rec->hash);
-            if(mi != wallet->mapWallet.end())
+            CHDWallet *phdw = (CHDWallet*)wallet;
+            MapRecords_t::iterator mri;
+            if (mi != wallet->mapWallet.end())
             {
                 return TransactionDesc::toHTML(wallet, mi->second, rec, unit);
+            } else
+            if ((mri = phdw->mapRecords.find(rec->hash)) != phdw->mapRecords.end())
+            {
+                return TransactionDesc::toHTML(phdw, mri->second, rec, unit);
             }
         }
         return QString();
@@ -256,7 +279,7 @@ TransactionTableModel::TransactionTableModel(const PlatformStyle *_platformStyle
         fProcessingQueuedTransactions(false),
         platformStyle(_platformStyle)
 {
-    columns << QString() << QString() << tr("Date") << tr("Type") << tr("Label") << tr("Anon") << tr("Blind") << BitcoinUnits::getAmountColumnTitle(walletModel->getOptionsModel()->getDisplayUnit());
+    columns << QString() << QString() << tr("Date") << tr("Type") << tr("Label") << tr("In") << tr("Out") << BitcoinUnits::getAmountColumnTitle(walletModel->getOptionsModel()->getDisplayUnit());
     priv->refreshWallet();
 
     connect(walletModel->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
@@ -393,6 +416,8 @@ QString TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
         return tr("Payment to yourself");
     case TransactionRecord::Generated:
         return tr("Mined");
+    case TransactionRecord::Staked:
+        return tr("Staked");
     default:
         return QString();
     }
@@ -403,6 +428,7 @@ QVariant TransactionTableModel::txAddressDecoration(const TransactionRecord *wtx
     switch(wtx->type)
     {
     case TransactionRecord::Generated:
+    case TransactionRecord::Staked:
         return QIcon(":/icons/tx_mined");
     case TransactionRecord::RecvWithAddress:
     case TransactionRecord::RecvFromOther:
@@ -447,6 +473,7 @@ QVariant TransactionTableModel::addressColor(const TransactionRecord *wtx) const
     case TransactionRecord::RecvWithAddress:
     case TransactionRecord::SendToAddress:
     case TransactionRecord::Generated:
+    case TransactionRecord::Staked:
         {
         QString label = walletModel->getAddressTableModel()->labelForAddress(QString::fromStdString(wtx->address));
         if(label.isEmpty())
@@ -564,10 +591,10 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
             return formatTxType(rec);
         case ToAddress:
             return formatTxToAddress(rec, false);
-        case AmountAnon:
-            return formatTxAmount(rec, true, BitcoinUnits::separatorAlways);
-        case AmountBlind:
-            return formatTxAmount(rec, true, BitcoinUnits::separatorAlways);
+        case TypeIn:
+            return QString(QChar(rec->typeIn));
+        case TypeOut:
+            return QString(QChar(rec->typeOut));
         case Amount:
             return formatTxAmount(rec, true, BitcoinUnits::separatorAlways);
         }
@@ -586,10 +613,10 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
             return (rec->involvesWatchAddress ? 1 : 0);
         case ToAddress:
             return formatTxToAddress(rec, true);
-        case AmountAnon:
-            return qint64(rec->credit + rec->debit);
-        case AmountBlind:
-            return qint64(rec->credit + rec->debit);
+        case TypeIn:
+            return QString(QChar(rec->typeIn));
+        case TypeOut:
+            return QString(QChar(rec->typeOut));
         case Amount:
             return qint64(rec->credit + rec->debit);
         }
@@ -704,10 +731,10 @@ QVariant TransactionTableModel::headerData(int section, Qt::Orientation orientat
                 return tr("Whether or not a watch-only address is involved in this transaction.");
             case ToAddress:
                 return tr("User-defined intent/purpose of the transaction.");
-            case AmountAnon:
-                return tr("Anon amount removed from or added to balance.");
-            case AmountBlind:
-                return tr("Blind amount removed from or added to balance.");
+            case TypeIn:
+                return tr("Type of input coin.");
+            case TypeOut:
+                return tr("Type of output coin.");
             case Amount:
                 return tr("Amount removed from or added to balance.");
             }

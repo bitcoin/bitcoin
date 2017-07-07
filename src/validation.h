@@ -206,6 +206,7 @@ extern CConditionVariable cvBlockChange;
 extern std::atomic_bool fImporting;
 extern bool fReindex;
 extern bool fSkipRangeproof;
+extern bool fBusyImporting;
 extern int nScriptCheckThreads;
 extern bool fTxIndex;
 extern bool fAddressIndex;

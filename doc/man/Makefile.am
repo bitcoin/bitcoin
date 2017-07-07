@@ -5,7 +5,7 @@ if BUILD_BITCOIND
 endif
 
 if ENABLE_QT
-  dist_man1_MANS+=bitcoin-qt.1
+  dist_man1_MANS+=particl-qt.1
 endif
 
 if BUILD_BITCOIN_UTILS

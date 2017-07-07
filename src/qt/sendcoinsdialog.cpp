@@ -202,6 +202,7 @@ SendCoinsDialog::~SendCoinsDialog()
 
 void SendCoinsDialog::warningBox(QString msg)
 {
+    //qWarning() << msg;
     QPair<QString, CClientUIInterface::MessageBoxFlags> msgParams;
     msgParams.second = CClientUIInterface::MSG_WARNING;
     msgParams.first = msg;
@@ -290,8 +291,12 @@ void SendCoinsDialog::on_sendButton_clicked()
         nRecipient++;
     };
     
+    int nRingSize = ui->spinRingSize->value();
+    int nMaxInputs = ui->spinMaxInputs->value();
     
-    sCommand += "] \"\" \"\" 3 12";
+    
+    
+    sCommand += "] \"\" \"\" "+QString::number(nRingSize)+" "+QString::number(nMaxInputs);
     
     
     UniValue rv;

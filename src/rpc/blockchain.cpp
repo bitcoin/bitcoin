@@ -978,11 +978,12 @@ struct CCoinsStats
     uint256 hashBlock;
     uint64_t nTransactions;
     uint64_t nTransactionOutputs;
+    uint64_t nBlindedTransactionOutputs;
     uint64_t nSerializedSize;
     uint256 hashSerialized;
     CAmount nTotalAmount;
 
-    CCoinsStats() : nHeight(0), nTransactions(0), nTransactionOutputs(0), nSerializedSize(0), nTotalAmount(0) {}
+    CCoinsStats() : nHeight(0), nTransactions(0), nTransactionOutputs(0), nBlindedTransactionOutputs(0), nSerializedSize(0), nTotalAmount(0) {}
 };
 
 //! Calculate statistics about the unspent transaction output set
@@ -1005,13 +1006,34 @@ static bool GetUTXOStats(CCoinsView *view, CCoinsStats &stats)
         if (pcursor->GetKey(key) && pcursor->GetValue(coins)) {
             stats.nTransactions++;
             ss << key;
-            for (unsigned int i=0; i<coins.vout.size(); i++) {
-                const CTxOut &out = coins.vout[i];
-                if (!out.IsNull()) {
-                    stats.nTransactionOutputs++;
+            if (!fParticlMode)
+            {
+                for (unsigned int i=0; i<coins.vout.size(); i++) {
+                    const CTxOut &out = coins.vout[i];
+                    if (!out.IsNull()) {
+                        stats.nTransactionOutputs++;
+                        ss << VARINT(i+1);
+                        ss << out;
+                        nTotalAmount += out.nValue;
+                    }
+                }
+            } else
+            {
+                for (unsigned int i=0; i<coins.vpout.size(); i++) {
+                    if (coins.vpout[i] == nullptr)
+                        continue;
+                    
+                    const CTxOutBase *out = coins.vpout[i].get();
+                    if (out->IsType(OUTPUT_CT))
+                    {
+                        stats.nBlindedTransactionOutputs++;
+                    } else
+                    {
+                        stats.nTransactionOutputs++;
+                        nTotalAmount += out->GetValue();
+                    };
                     ss << VARINT(i+1);
-                    ss << out;
-                    nTotalAmount += out.nValue;
+                    ss << *out;
                 }
             }
             stats.nSerializedSize += 32 + pcursor->GetValueSize();
@@ -1106,6 +1128,8 @@ UniValue gettxoutsetinfo(const JSONRPCRequest& request)
         ret.push_back(Pair("bestblock", stats.hashBlock.GetHex()));
         ret.push_back(Pair("transactions", (int64_t)stats.nTransactions));
         ret.push_back(Pair("txouts", (int64_t)stats.nTransactionOutputs));
+        if (fParticlMode)
+            ret.push_back(Pair("txouts_blinded", (int64_t)stats.nBlindedTransactionOutputs));
         ret.push_back(Pair("bytes_serialized", (int64_t)stats.nSerializedSize));
         ret.push_back(Pair("hash_serialized", stats.hashSerialized.GetHex()));
         ret.push_back(Pair("total_amount", ValueFromAmount(stats.nTotalAmount)));

@@ -159,10 +159,13 @@ OverviewPage::~OverviewPage()
     delete ui;
 }
 
-void OverviewPage::setBalance(const CAmount& balance, const CAmount& blindBalance, const CAmount& anonBalance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance, const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance)
+void OverviewPage::setBalance(const CAmount& balance, const CAmount& staked,
+    const CAmount& blindBalance,const CAmount& anonBalance, const CAmount& unconfirmedBalance,
+    const CAmount& immatureBalance, const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance)
 {
     int unit = walletModel->getOptionsModel()->getDisplayUnit();
     currentBalance = balance;
+    currentStaked = staked;
     currentBlindBalance = blindBalance;
     currentAnonBalance = anonBalance;
     currentUnconfirmedBalance = unconfirmedBalance;
@@ -171,6 +174,7 @@ void OverviewPage::setBalance(const CAmount& balance, const CAmount& blindBalanc
     currentWatchUnconfBalance = watchUnconfBalance;
     currentWatchImmatureBalance = watchImmatureBalance;
     ui->labelBalance->setText(BitcoinUnits::formatWithUnit(unit, balance, false, BitcoinUnits::separatorAlways));
+    ui->labelStaked->setText(BitcoinUnits::formatWithUnit(unit, staked, false, BitcoinUnits::separatorAlways));
     ui->labelBlindBalance->setText(BitcoinUnits::formatWithUnit(unit, blindBalance, false, BitcoinUnits::separatorAlways));
     ui->labelAnonBalance->setText(BitcoinUnits::formatWithUnit(unit, anonBalance, false, BitcoinUnits::separatorAlways));
     ui->labelUnconfirmed->setText(BitcoinUnits::formatWithUnit(unit, unconfirmedBalance, false, BitcoinUnits::separatorAlways));
@@ -235,7 +239,7 @@ void OverviewPage::setWalletModel(WalletModel *model)
         ui->listTransactions->setModelColumn(TransactionTableModel::ToAddress);
 
         // Keep up to date with wallet
-        connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(setBalance(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)));
+        connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(setBalance(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)));
         model->checkBalanceChanged();
 
         connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
@@ -253,7 +257,7 @@ void OverviewPage::updateDisplayUnit()
     if(walletModel && walletModel->getOptionsModel())
     {
         if(currentBalance != -1)
-            setBalance(currentBalance, currentBlindBalance, currentAnonBalance, currentUnconfirmedBalance, currentImmatureBalance,
+            setBalance(currentBalance, currentStaked, currentBlindBalance, currentAnonBalance, currentUnconfirmedBalance, currentImmatureBalance,
                        currentWatchOnlyBalance, currentWatchUnconfBalance, currentWatchImmatureBalance);
 
         // Update txdelegate->unit with the current unit

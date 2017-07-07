@@ -124,8 +124,9 @@ bool VerifyMLSAG(const CTransaction &tx, CValidationState &state)
             
             CAnonOutput ao;
             if (!pblocktree->ReadRCTOutput(nIndex, ao))
+            {
                 return state.DoS(100, false, REJECT_MALFORMED, "bad-anonin-unknown-i");
-            
+            };
             memcpy(&vM[(i+k*nCols)*33], ao.pubkey.begin(), 33);
             vCommitments.push_back(ao.commitment);
             vpInCommits[i+k*nCols] = vCommitments.back().data;
@@ -259,12 +260,63 @@ bool AllAnonOutputsUnknown(const CTransaction &tx, CValidationState &state)
         
         int64_t nTestExists;
         if (pblocktree->ReadRCTOutputLink(txout->pk, nTestExists))
-            return state.DoS(100, 
-                error("%s: Duplicate anon-output %s, index %d.", __func__, HexStr(txout->pk.begin(), txout->pk.end()), nTestExists),
-                REJECT_INVALID, "duplicate-anon-output");
+        {
+            COutPoint op(tx.GetHash(), k);
+            CAnonOutput ao;
+            if (!pblocktree->ReadRCTOutput(nTestExists, ao) || ao.outpoint != op)
+            {
+                return state.DoS(100, 
+                    error("%s: Duplicate anon-output %s, index %d - existing: %s,%d.",
+                        __func__, HexStr(txout->pk.begin(), txout->pk.end()), nTestExists, ao.outpoint.hash.ToString(), ao.outpoint.n),
+                    REJECT_INVALID, "duplicate-anon-output");
+            } else
+            {
+                // Already in the blockchain, containing block could have been received before loose tx
+                return state.DoS(1, 
+                    error("%s: Duplicate anon-output %s, index %d - existing at same outpoint.",
+                        __func__, HexStr(txout->pk.begin(), txout->pk.end()), nTestExists),
+                    REJECT_INVALID, "duplicate-anon-output");
+            };
+        };
     };
     
     return true;
 };
 
+
+bool RollBackRCTIndex(int64_t nLastValidRCTOutput, std::set<CCmpPubKey> &setKi)
+{
+    LogPrint("rct", "%s: Last valid %d, num ki %d\n", __func__, nLastValidRCTOutput, setKi.size());
+    // This should hardly happen, if ever
+    
+    AssertLockHeld(cs_main);
+    
+    int64_t nLastRCTOutput = 0;
+    if (!pblocktree->ReadLastRCTOutput(nLastRCTOutput))
+        return error("%s: ReadLastRCTOutput failed.", __func__);
+    
+    if (nLastRCTOutput == nLastValidRCTOutput)
+        return true;
+    
+    while (nLastRCTOutput > nLastValidRCTOutput)
+    {
+        CAnonOutput ao;
+        if (!pblocktree->ReadRCTOutput(nLastRCTOutput, ao))
+            break;
+        pblocktree->EraseRCTOutput(nLastRCTOutput);
+        pblocktree->EraseRCTOutputLink(ao.pubkey);
+        
+        nLastRCTOutput--;
+    };
+    
+    for (const auto &ki : setKi)
+    {
+        pblocktree->EraseRCTKeyImage(ki);
+    };
+    
+    if (!pblocktree->WriteLastRCTOutput(nLastValidRCTOutput))
+        return error("%s: WriteLastRCTOutput failed.", __func__);
+    
+    return true;
+};
 

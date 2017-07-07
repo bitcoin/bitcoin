@@ -819,6 +819,8 @@ void PeerLogicValidation::NewPoWValidBlock(const CBlockIndex *pindex, const std:
             return;
         ProcessBlockAvailability(pnode->GetId());
         CNodeState &state = *State(pnode->GetId());
+        
+        
         // If the peer has, or we announced to them the previous block already,
         // but we don't think they have this one, go ahead and announce it
         if (state.fPreferHeaderAndIDs && (!fWitnessEnabled || state.fWantsCmpctWitness) &&
@@ -872,7 +874,6 @@ void PeerLogicValidation::UpdatedBlockTip(const CBlockIndex *pindexNew, const CB
 }
 
 void PeerLogicValidation::BlockChecked(const CBlock& block, CValidationState& state) {
-    
     LOCK(cs_main);
 
     const uint256 hash(block.GetHash());
@@ -888,6 +889,11 @@ void PeerLogicValidation::BlockChecked(const CBlock& block, CValidationState& st
             if (nDoS > 0 && it->second.second)
                 Misbehaving(it->second.first, nDoS);
         }
+    } else
+    if (state.nFlags & BLOCK_FAILED_DUPLICATE_STAKE)
+    {
+        if (it != mapBlockSource.end() && State(it->second.first))
+            Misbehaving(it->second.first, 10);
     }
     // Check that:
     // 1. The block is valid
@@ -1778,6 +1784,11 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         LogPrint("net", "getheaders %d to %s from peer=%d\n", (pindex ? pindex->nHeight : -1), hashStop.IsNull() ? "end" : hashStop.ToString(), pfrom->id);
         for (; pindex; pindex = chainActive.Next(pindex))
         {
+            if (pindex == chainActive.Tip()
+                && pindex->nFlags & BLOCK_FAILED_DUPLICATE_STAKE)
+            {
+                break;
+            };
             vHeaders.push_back(pindex->GetBlockHeader());
             if (--nLimit <= 0 || pindex->GetBlockHash() == hashStop)
                 break;

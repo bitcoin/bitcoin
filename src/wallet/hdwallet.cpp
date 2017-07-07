@@ -315,46 +315,52 @@ bool CHDWallet::LoadTxRecords(CHDWalletDB *pwdb)
         nCount++;
     };
     
+    // Must load all records before marking spent.
     
-    MapRecords_t::iterator mri;
-    MapWallet_t::iterator mwi;
-    
-    ssKey.clear();
-    sPrefix = "stx";
-    fFlags = DB_SET_RANGE;
-    ssKey << sPrefix;
-    while (pwdb->ReadAtCursor(pcursor, ssKey, ssValue, fFlags) == 0)
     {
-        fFlags = DB_NEXT;
-        ssKey >> strType;
-        if (strType != sPrefix)
-            break;
-
-        ssKey >> txhash;
+        MapRecords_t::iterator mri;
+        MapWallet_t::iterator mwi;
         
-        CStoredTransaction data;
-        ssValue >> data;
-        
-        for (auto &txin : data.tx->vin)
+        CHDWalletDB wdb(strWalletFile, "r");
+        for (const auto &ri : mapRecords)
         {
-            //AddToSpends(txin.prevout, txhash);
-            AddTxinToSpends(txin, txhash);
+            const uint256 &txhash = ri.first;
+            const CTransactionRecord &rtx = ri.second;
             
-            if ((mri = mapRecords.find(txhash)) != mapRecords.end())
+            for (const auto &prevout : rtx.vin)
             {
-                CTransactionRecord &prevtx = mri->second;
-                if (prevtx.nIndex == -1 && !prevtx.HashUnset())
-                    MarkConflicted(prevtx.blockHash, txhash);
-            } else
-            if ((mwi = mapWallet.find(txhash)) != mapWallet.end())
-            {
-                CWalletTx &prevtx = mwi->second;
-                if (prevtx.nIndex == -1 && !prevtx.hashUnset())
-                    MarkConflicted(prevtx.hashBlock, txhash);
+                if (rtx.nFlags & ORF_ANON_IN)
+                {
+                    CCmpPubKey ki;
+                    memcpy(ki.ncbegin(), prevout.hash.begin(), 32);
+                    *(ki.ncbegin()+32) = prevout.n;
+                    
+                    COutPoint kiPrevout;
+                    // TODO: Keep keyimages in memory
+                    if (!wdb.ReadAnonKeyImage(ki, kiPrevout))
+                        continue;
+                    AddToSpends(kiPrevout, txhash);
+                    
+                    continue;
+                };
+                
+                AddToSpends(prevout, txhash);
+                
+                if ((mri = mapRecords.find(prevout.hash)) != mapRecords.end())
+                {
+                    CTransactionRecord &prevtx = mri->second;
+                    if (prevtx.nIndex == -1 && !prevtx.HashUnset())
+                        MarkConflicted(prevtx.blockHash, txhash);
+                } else
+                if ((mwi = mapWallet.find(prevout.hash)) != mapWallet.end())
+                {
+                    CWalletTx &prevtx = mwi->second;
+                    if (prevtx.nIndex == -1 && !prevtx.hashUnset())
+                        MarkConflicted(prevtx.hashBlock, txhash);
+                };
             };
         };
-        //nCount++;
-    };
+    }
     
     
     pcursor->close();
@@ -2874,6 +2880,8 @@ int CHDWallet::PickHidingOutputs(std::vector<std::vector<int64_t> > &vMI, size_t
     if (nLastRCTOutIndex < (int64_t)(nInputs * nRingSize))
         return errorN(1, sError, __func__, _("Not enough anon outputs exist, last: %d, required: %d").c_str(), nLastRCTOutIndex, nInputs * nRingSize);
     
+    int nExtraDepth = GetBoolArg("-regtest", false) ? -1 : 2; // if not on regtest pick outputs deeper than consensus checks to prevent banning
+    
     // Must add real outputs to setHave before adding the decoys.
     for (size_t k = 0; k < nInputs; ++k)
     for (size_t i = 0; i < nRingSize; ++i)
@@ -2896,7 +2904,11 @@ int CHDWallet::PickHidingOutputs(std::vector<std::vector<int64_t> > &vMI, size_t
         const static size_t nMaxTries = 1000;
         for (j = 0; j < nMaxTries; ++j)
         {
+            if (nLastRCTOutIndex <= nMinIndex)
+                return errorN(1, sError, __func__, _("Not enough anon outputs exist, min: %d lastpick: %d, required: %d").c_str(), nMinIndex, nLastRCTOutIndex, nInputs * nRingSize);
+            
             int64_t nDecoy = nMinIndex + GetRand((nLastRCTOutIndex - nMinIndex) + 1);
+            
             if (setHave.count(nDecoy) > 0)
             {
                 if (nDecoy == nLastRCTOutIndex)
@@ -2910,7 +2922,7 @@ int CHDWallet::PickHidingOutputs(std::vector<std::vector<int64_t> > &vMI, size_t
                 if (!pblocktree->ReadRCTOutput(nDecoy, ao))
                     return errorN(1, sError, __func__, _("Anon output not found in db, %d").c_str(), nDecoy);
                 
-                if (ao.nBlockHeight-1 > nBestHeight - consensusParams.nMinRCTOutputDepth)
+                if (ao.nBlockHeight > nBestHeight - (consensusParams.nMinRCTOutputDepth+nExtraDepth))
                 {
                     if (nLastRCTOutIndex > nDecoy)
                         nLastRCTOutIndex = nDecoy-1;
@@ -3553,14 +3565,13 @@ bool CHDWallet::LoadToWallet(const CWalletTx& wtxIn)
 
 bool CHDWallet::LoadToWallet(const uint256 &hash, const CTransactionRecord &rtx)
 {
-    
     std::pair<MapRecords_t::iterator, bool> ret = mapRecords.insert(std::make_pair(hash, rtx));
     
     MapRecords_t::iterator mri = ret.first;
     rtxOrdered.insert(std::make_pair(rtx.nTimeReceived, mri));
     
     // TODO: Spend only owned inputs?
-    // AddToSpends is called from LoadTxRecords
+    
     
     return true;
 };
@@ -6345,6 +6356,8 @@ bool CHDWallet::CommitTransaction(CWalletTx &wtxNew, CTransactionRecord &rtx,
     {
         LOCK2(cs_main, cs_wallet);
         
+        LogPrintf("CommitTransaction:\n%s", wtxNew.tx->ToString());
+        
         AddToRecord(rtx, *wtxNew.tx, NULL, -1);
         
         // Track how many getdata requests our transaction gets
@@ -7330,7 +7343,7 @@ bool CHDWallet::AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlockInd
                 {
                     fIsFromMe = true;
                     break; // only need one match
-                }; 
+                };
             };
         };
         
@@ -7716,10 +7729,12 @@ bool CHDWallet::AddToRecord(CTransactionRecord &rtxIn, const CTransaction &tx,
     bool fUpdated = false;
     if (pIndex)
     {
-        if (rtx.blockHash != pIndex->GetBlockHash())
+        if (rtx.blockHash != pIndex->GetBlockHash()
+            || rtx.nIndex != posInBlock)
             fUpdated = true;
         rtx.blockHash = pIndex->GetBlockHash();
         rtx.nIndex = posInBlock;
+        rtx.nBlockTime = pIndex->nTime;
         
         // Update blockhash of mapTempWallet if exists
         CWalletTx *ptwtx = GetTempWalletTx(txhash);
@@ -7737,9 +7752,57 @@ bool CHDWallet::AddToRecord(CTransactionRecord &rtxIn, const CTransaction &tx,
         
         for (auto &txin : tx.vin)
         {
+            if (txin.IsAnonInput())
+                rtx.nFlags |= ORF_ANON_IN;
             AddTxinToSpends(txin, txhash);
         };
+        
+        if (rtx.nFlags & ORF_ANON_IN)
+        {
+            COutPoint op;
+            for (auto &txin : tx.vin)
+            {
+                if (!txin.IsAnonInput())
+                    continue;
+                
+                uint32_t nInputs, nRingSize;
+                txin.GetAnonInfo(nInputs, nRingSize);
+                const std::vector<uint8_t> &vKeyImages = txin.scriptData.stack[0];
+                
+                assert(vKeyImages.size() == nInputs * 33);
+                
+                for (size_t k = 0; k < nInputs; ++k)
+                {
+                    const CCmpPubKey &ki = *((CCmpPubKey*)&vKeyImages[k*33]);
+                    op.n = 0;
+                    memcpy(op.hash.begin(), ki.begin(), 32);
+                    op.n = *(ki.begin()+32);
+                    
+                    
+                    rtx.vin.push_back(op);
+                };
+            };
+        } else
+        {
+            rtx.vin.resize(tx.vin.size());
+            for (size_t k = 0; k < tx.vin.size(); ++k)
+                rtx.vin[k] = tx.vin[k].prevout;
+            
+            // Lookup 1st input to set type
+            CCoins coins;
+            const auto &txin0 = tx.vin[0];
+            if (pcoinsTip->GetCoins(txin0.prevout.hash, coins))
+            {
+                if (coins.IsAvailable(txin0.prevout.n))
+                {
+                    if (coins.vpout[txin0.prevout.n]->IsType(OUTPUT_CT))
+                        rtx.nFlags |= ORF_BLIND_IN;
+                };
+            };
+        };
     };
+    
+    
     
     CExtKeyAccount *seaC = NULL;
     CStoredExtKey *pcC = NULL;
@@ -7851,6 +7914,44 @@ bool CHDWallet::AddToRecord(CTransactionRecord &rtxIn, const CTransaction &tx,
     }
     
     return true;
+};
+
+int CHDWallet::GetRequestCount(const uint256 &hash, const CTransactionRecord &rtx)
+{
+    // Returns -1 if it wasn't being tracked
+    int nRequests = -1;
+    {
+        LOCK(cs_wallet);
+        if (rtx.IsCoinBase() || rtx.IsCoinStake())
+        {
+            // Generated block
+            if (!rtx.HashUnset())
+            {
+                std::map<uint256, int>::const_iterator mi = mapRequestCount.find(rtx.blockHash);
+                if (mi != mapRequestCount.end())
+                    nRequests = (*mi).second;
+            }
+        } else
+        {
+            // Did anyone request this transaction?
+            std::map<uint256, int>::const_iterator mi = mapRequestCount.find(hash);
+            if (mi != mapRequestCount.end())
+            {
+                nRequests = (*mi).second;
+
+                // How about the block it's in?
+                if (nRequests == 0 && !rtx.HashUnset())
+                {
+                    std::map<uint256, int>::const_iterator _mi = mapRequestCount.find(rtx.blockHash);
+                    if (_mi != mapRequestCount.end())
+                        nRequests = (*_mi).second;
+                    else
+                        nRequests = 1; // If it's in someone else's block it must have got out
+                };
+            };
+        };
+    }
+    return nRequests;
 };
 
 std::vector<uint256> CHDWallet::ResendRecordTransactionsBefore(int64_t nTime, CConnman *connman)

@@ -33,6 +33,9 @@ enum OutputRecordFlags
     ORF_CHANGE       = (1 << 2),
     ORF_SPENT        = (1 << 3),
     ORF_LOCKED       = (1 << 4), // Needs wallet to be unlocked for further processing
+    
+    ORF_BLIND_IN     = (1 << 14),
+    ORF_ANON_IN      = (1 << 15),
 };
 
 enum OutputRecordAddressTypes
@@ -95,7 +98,6 @@ enum RTxAddonValueTypes
     RTXVT_STEALTH_KEYID     = 2,
     RTXVT_STEALTH_KEYID_N   = 3, // n0:pk0:n1:pk1:...
     */
-    
 };
 
 typedef std::map<uint8_t, std::vector<uint8_t> > mapRTxValue_t;
@@ -103,7 +105,7 @@ class CTransactionRecord
 {
 // Stored by uint256 txnHash;
 public:
-    CTransactionRecord() : nFlags(0) {};
+    CTransactionRecord() : nFlags(0), nBlockTime(0) {};
     
     // Conflicted state is marked by set blockHash and nIndex -1
     uint256 blockHash;
@@ -115,6 +117,7 @@ public:
     CAmount nFee;
     mapRTxValue_t mapValue;
     
+    std::vector<COutPoint> vin;
     std::vector<COutputRecord> vout;
     
     int InsertOutput(COutputRecord &r)
@@ -169,11 +172,21 @@ public:
     bool IsAbandoned() const { return (blockHash == ABANDON_HASH); }
     bool HashUnset() const { return (blockHash.IsNull() || blockHash == ABANDON_HASH); }
     
+    int64_t GetTxTime() const
+    {
+        if (HashUnset() || nIndex > 0)
+            return nTimeReceived;
+        return std::min(nTimeReceived, nBlockTime);
+    };
+    
     
     mutable uint32_t nCacheFlags;
 
     bool InMempool() const;
     bool IsTrusted() const;
+    
+    bool IsCoinBase() const {return false;}; 
+    bool IsCoinStake() const {return false;};
 
     ADD_SERIALIZE_METHODS;
     template <typename Stream, typename Operation>
@@ -186,6 +199,7 @@ public:
         READWRITE(nTimeReceived);
         READWRITE(mapValue);
         READWRITE(nFee);
+        READWRITE(vin);
         READWRITE(vout);
     };
 };
@@ -544,6 +558,8 @@ public:
     
     bool AddToRecord(CTransactionRecord &rtxIn, const CTransaction &tx,
         const CBlockIndex *pIndex, int posInBlock, bool fFlushOnClose=true);
+    
+    int GetRequestCount(const uint256 &hash, const CTransactionRecord &rtx);
     
     std::vector<uint256> ResendRecordTransactionsBefore(int64_t nTime, CConnman *connman);
     void ResendWalletTransactions(int64_t nBestBlockTime, CConnman *connman) override;

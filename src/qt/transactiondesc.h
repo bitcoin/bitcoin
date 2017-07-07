@@ -12,6 +12,8 @@ class TransactionRecord;
 
 class CWallet;
 class CWalletTx;
+class CHDWallet;
+class CTransactionRecord;
 
 /** Provide a human-readable extended HTML description of a transaction.
  */
@@ -21,6 +23,7 @@ class TransactionDesc: public QObject
 
 public:
     static QString toHTML(CWallet *wallet, CWalletTx &wtx, TransactionRecord *rec, int unit);
+    static QString toHTML(CHDWallet *wallet, CTransactionRecord &rtx, TransactionRecord *rec, int unit);
 
 private:
     TransactionDesc() {}

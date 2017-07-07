@@ -6,6 +6,7 @@
 #define BITCOIN_QT_TRANSACTIONTABLEMODEL_H
 
 #include "bitcoinunits.h"
+#include "primitives/transaction.h"
 
 #include <QAbstractTableModel>
 #include <QStringList>
@@ -33,8 +34,8 @@ public:
         Date = 2,
         Type = 3,
         ToAddress = 4,
-        AmountAnon = 5,
-        AmountBlind = 6,
+        TypeIn = 5,
+        TypeOut = 6,
         Amount = 7
     };
 
@@ -70,6 +71,10 @@ public:
         ConfirmedRole,
         /** Formatted amount, without brackets when unconfirmed */
         FormattedAmountRole,
+        /** Formatted amount, without brackets when unconfirmed */
+        FormattedAmountRoleA,
+        /** Formatted amount, without brackets when unconfirmed */
+        FormattedAmountRoleB,
         /** Transaction status (TransactionRecord::Status) */
         StatusRole,
         /** Unprocessed icon */

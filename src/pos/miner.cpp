@@ -270,6 +270,14 @@ void ThreadStakeMiner(CHDWallet *pwallet)
             continue;
         };
         
+        if (fReindex || fImporting || fBusyImporting)
+        {
+            fIsStaking = false;
+            condWaitFor(30000);
+            continue;
+        };
+        
+        
         if (g_connman->vNodes.empty() || IsInitialBlockDownload())
         {
             fIsStaking = false;

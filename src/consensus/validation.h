@@ -33,8 +33,9 @@ private:
     std::string strDebugMessage;
 public:
     int nodeId;
+    int nFlags;
     
-    CValidationState() : mode(MODE_VALID), nDoS(0), chRejectCode(0), corruptionPossible(false) { nodeId = -1; }
+    CValidationState() : mode(MODE_VALID), nDoS(0), chRejectCode(0), corruptionPossible(false) { nodeId = -1; nFlags = 0;}
     bool DoS(int level, bool ret = false,
              unsigned int chRejectCodeIn=0, const std::string &strRejectReasonIn="",
              bool corruptionIn=false,

@@ -637,10 +637,11 @@ void ThreadImport(std::vector<boost::filesystem::path> vImportFiles)
 {
     const CChainParams& chainparams = Params();
     RenameThread("particl-loadblk");
-
+    
+    fBusyImporting = true;
     {
     CImportingNow imp;
-
+    
     // -reindex
     if (fReindex) {
         int nFile = 0;
@@ -706,6 +707,8 @@ void ThreadImport(std::vector<boost::filesystem::path> vImportFiles)
     
     LoadMempool();
     fDumpMempoolLater = !fRequestShutdown;
+    fBusyImporting = false;
+    LogPrintf("Block import complete.\n");
 }
 
 /** Sanity checks

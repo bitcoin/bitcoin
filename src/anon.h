@@ -27,4 +27,6 @@ bool RemoveKeyImagesFromMempool(const uint256 &hash, const CTxIn &txin, CTxMemPo
 
 bool AllAnonOutputsUnknown(const CTransaction &tx, CValidationState &state);
 
+bool RollBackRCTIndex(int64_t nLastValidRCTOutput, std::set<CCmpPubKey> &setKi);
+
 #endif  // PARTICL_ANON_H

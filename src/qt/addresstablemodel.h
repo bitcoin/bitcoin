@@ -42,6 +42,12 @@ public:
         WALLET_UNLOCK_FAILURE,  /**< Wallet could not be unlocked to create new receiving address */
         KEY_GENERATION_FAILURE  /**< Generating a new public key for a receiving address failed */
     };
+    
+    enum AddrType {
+        ADDR_STANDARD,
+        ADDR_STEALTH,
+        ADDR_EXT
+    };
 
     static const QString Send;      /**< Specifies send address */
     static const QString Receive;   /**< Specifies receive address */
@@ -61,7 +67,7 @@ public:
     /* Add an address to the model.
        Returns the added address on success, and an empty string otherwise.
      */
-    QString addRow(const QString &type, const QString &label, const QString &address);
+    QString addRow(const QString &type, const QString &label, const QString &address, int addrType = ADDR_STANDARD);
 
     /* Look up label for address in address book, if not found return empty string.
      */
@@ -83,6 +89,7 @@ private:
 
     /** Notify listeners that data changed. */
     void emitDataChanged(int index);
+    void warningBox(QString msg);
 
 public Q_SLOTS:
     /* Update address list from core.

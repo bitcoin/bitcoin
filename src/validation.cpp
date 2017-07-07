@@ -70,6 +70,7 @@ std::map<COutPoint, uint256> mapStakeSeen;
 std::list<COutPoint> listStakeSeen;
 
 CoinStakeCache coinStakeCache;
+std::set<CCmpPubKey> setConnectKi; // hacky workaround
 
 CChain chainActive;
 CBlockIndex *pindexBestHeader = NULL;
@@ -79,6 +80,7 @@ int nScriptCheckThreads = 0;
 std::atomic_bool fImporting(false);
 bool fReindex = false;
 bool fSkipRangeproof = false;
+bool fBusyImporting = false;        // covers ActivateBestChain too
 bool fTxIndex = true;
 bool fAddressIndex = false;
 bool fTimestampIndex = false;
@@ -109,6 +111,8 @@ static void CheckBlockIndex(const Consensus::Params& consensusParams);
 CScript COINBASE_FLAGS;
 
 const std::string strMessageMagic = "Bitcoin Signed Message:\n";
+
+extern void Misbehaving(NodeId pnode, int howmuch);
 
 // Internal stuff
 namespace {
@@ -902,7 +906,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
     }
     }
     
-    bool fBlind = false, fAnon = false;
+    bool fBlind = false, fAnon = false, fAnonIn = false;
     {
         CCoinsView dummy;
         CCoinsViewCache view(&dummy, fParticlMode);
@@ -928,7 +932,10 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
         for (const auto &txin : tx.vin)
         {
             if (txin.IsAnonInput())
+            {
+                fAnonIn = true;
                 continue;
+            };
             if (!pcoinsTip->HaveCoinsInCache(txin.prevout.hash))
                 vHashTxnToUncache.push_back(txin.prevout.hash);
             if (!view.HaveCoins(txin.prevout.hash)) {
@@ -936,6 +943,14 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
                     *pfMissingInputs = true;
                 return false; // fMissingInputs and !state.IsInvalid() is used to detect this condition, don't set state.Invalid()
             }
+        };
+        
+        if (fAnonIn
+             && (chainActive.Height() < GetNumBlocksOfPeers()-1))
+        {
+            LogPrintf("%s: Ignoring anon transaction while chain syncs height %d - peers %d.\n",    
+                __func__, chainActive.Height(), GetNumBlocksOfPeers());
+            return false; // Might be missing inputs
         }
 
         // are the actual inputs available?
@@ -3075,7 +3090,6 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             nMoneyCreated += tx.GetValueOut();
         };
         
-        
         // Index rct outputs and keyimages
         if (nRingCTOut > 0 || nRingCTIn > 0)
         {
@@ -3085,9 +3099,8 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             {
                 if (!pblocktree->ReadLastRCTOutput(nLastRCTOutIndex))
                 {
-                    LogPrint("rct", "Inserting sentinel RCT output.\n");
-                    CAnonOutput sentinel;
-                    pblocktree->WriteRCTOutput(std::numeric_limits<int64_t>::max(), sentinel);
+                    LogPrint("rct", "%s: Writing 0 to LastRCTOutput\n", __func__);
+                    pblocktree->WriteLastRCTOutput(0);
                 };
             };
             
@@ -3111,6 +3124,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                         const CCmpPubKey &ki = *((CCmpPubKey*)&vKeyImages[k*33]);
                         
                         batch.Write(std::make_pair(DB_RCTKEYIMAGE, ki), txhash);
+                        setConnectKi.insert(ki);
                     };
                 };
             };
@@ -3685,13 +3699,25 @@ bool static ConnectTip(CValidationState& state, const CChainParams& chainparams,
     int64_t nTime2 = GetTimeMicros(); nTimeReadFromDisk += nTime2 - nTime1;
     int64_t nTime3;
     LogPrint("bench", "  - Load block from disk: %.2fms [%.2fs]\n", (nTime2 - nTime1) * 0.001, nTimeReadFromDisk * 0.000001);
+    int64_t nLastValidRCTOutput = 0;
+    setConnectKi.clear();
     {
+        if (!pblocktree->ReadLastRCTOutput(nLastValidRCTOutput))
+        {
+            LogPrint("rct", "%s: Writing 0 to LastRCTOutput\n", __func__);
+            pblocktree->WriteLastRCTOutput(0);
+        };
+        
         CCoinsViewCache view(pcoinsTip, fParticlMode);
         bool rv = ConnectBlock(blockConnecting, state, pindexNew, view, chainparams);
+        if (pindexNew->nFlags & BLOCK_FAILED_DUPLICATE_STAKE)
+            state.nFlags |= BLOCK_FAILED_DUPLICATE_STAKE;
         GetMainSignals().BlockChecked(blockConnecting, state);
         if (!rv) {
             if (state.IsInvalid())
                 InvalidBlockFound(pindexNew, connectTrace.blocksConnected.back().second, state);
+            
+            RollBackRCTIndex(nLastValidRCTOutput, setConnectKi);
             return error("ConnectTip(): ConnectBlock %s failed", pindexNew->GetBlockHash().ToString());
         }
         nTime3 = GetTimeMicros(); nTimeConnectTotal += nTime3 - nTime2;
@@ -3703,7 +3729,10 @@ bool static ConnectTip(CValidationState& state, const CChainParams& chainparams,
     LogPrint("bench", "  - Flush: %.2fms [%.2fs]\n", (nTime4 - nTime3) * 0.001, nTimeFlush * 0.000001);
     // Write the chain state to disk, if necessary.
     if (!FlushStateToDisk(state, FLUSH_STATE_IF_NEEDED))
+    {
+        RollBackRCTIndex(nLastValidRCTOutput, setConnectKi);
         return false;
+    }
     int64_t nTime5 = GetTimeMicros(); nTimeChainState += nTime5 - nTime4;
     LogPrint("bench", "  - Writing chainstate: %.2fms [%.2fs]\n", (nTime5 - nTime4) * 0.001, nTimeChainState * 0.000001);
     // Remove conflicting transactions from the mempool.;
@@ -3746,6 +3775,7 @@ static CBlockIndex* FindMostWorkChain() {
             // to a chain unless we have all the non-active-chain parent blocks.
             bool fFailedChain = pindexTest->nStatus & BLOCK_FAILED_MASK;
             bool fMissingData = !(pindexTest->nStatus & BLOCK_HAVE_DATA);
+            
             if (fFailedChain || fMissingData) {
                 // Candidate chain is not usable (either invalid or missing data)
                 if (fFailedChain && (pindexBestInvalid == NULL || pindexNew->nChainWork > pindexBestInvalid->nChainWork))
@@ -3754,6 +3784,10 @@ static CBlockIndex* FindMostWorkChain() {
                 // Remove the entire chain from the set.
                 while (pindexTest != pindexFailed) {
                     if (fFailedChain) {
+                        
+                        if (pindexTest->nFlags & BLOCK_FAILED_DUPLICATE_STAKE)
+                            pindexFailed->nFlags |= BLOCK_FAILED_DUPLICATE_STAKE;
+                        
                         pindexFailed->nStatus |= BLOCK_FAILED_CHILD;
                     } else if (fMissingData) {
                         // If we're missing data, then add back to mapBlocksUnlinked,
@@ -4392,6 +4426,12 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
             && block.vtx[0]->IsCoinStake()
             && !CheckStakeUnique(block))
         {
+            //state.DoS(10, false, REJECT_INVALID, "bad-cs-duplicate", false, "duplicate coinstake");
+            
+            state.nFlags |= BLOCK_FAILED_DUPLICATE_STAKE;
+            if (state.nodeId > -1)
+                Misbehaving(state.nodeId, 10);
+            
             /*
             // TODO: ask peers which stake kernel they have
             if (chainActive.Tip()->nHeight < GetNumBlocksOfPeers() - 8) // peers have significantly longer chain, this node must've got the wrong stake 1st
@@ -4400,8 +4440,8 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
                 const COutPoint &kernel = block.vtx[0]->vin[0].prevout;
                 mapStakeSeen[kernel] = block.GetHash();
             } else
-            */
                 return state.DoS(20, false, REJECT_INVALID, "bad-cs-duplicate", false, "duplicate coinstake");
+            */
         };
         
         // First transaction must be coinbase (genesis only) or coinstake
@@ -4843,8 +4883,39 @@ bool ProcessDuplicateStakeHeader(CBlockIndex *pindex, NodeId nodeId)
     if (fMakeValid)
     {
         pindex->nFlags &= (~BLOCK_FAILED_DUPLICATE_STAKE);
-        pindex->nStatus = BLOCK_VALID_HEADER;
+        pindex->nStatus |= BLOCK_VALID_HEADER;
+        pindex->nStatus &= (~BLOCK_FAILED_VALID);
         setDirtyBlockIndex.insert(pindex);
+        
+        //if (pindex->nStatus & BLOCK_FAILED_CHILD)
+        //{
+            CBlockIndex *pindexPrev = pindex->pprev;
+            while (pindexPrev)
+            {
+                if (pindexPrev->nStatus & BLOCK_VALID_MASK)
+                    break;
+                
+                if (pindexPrev->nFlags & BLOCK_FAILED_DUPLICATE_STAKE)
+                {
+                    pindexPrev->nFlags &= (~BLOCK_FAILED_DUPLICATE_STAKE);
+                    pindexPrev->nStatus |= BLOCK_VALID_HEADER;
+                    pindexPrev->nStatus &= (~BLOCK_FAILED_VALID);
+                    setDirtyBlockIndex.insert(pindexPrev);
+                    
+                    if (!pindexPrev->prevoutStake.IsNull())
+                    {
+                        uint256 prevhash = pindexPrev->GetBlockHash();
+                        AddToMapStakeSeen(pindexPrev->prevoutStake, prevhash);
+                    };
+                    
+                    pindexPrev->nStatus &= (~BLOCK_FAILED_CHILD);
+                };
+                
+                pindexPrev = pindexPrev->pprev;
+            };
+            
+            pindex->nStatus &= (~BLOCK_FAILED_CHILD);
+        //};
         
         if (!pindex->prevoutStake.IsNull())
         {
@@ -4873,11 +4944,12 @@ static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state
             
             if (pindex->nStatus & BLOCK_FAILED_MASK)
             {
+                /*
                 if (pindex->nFlags & BLOCK_FAILED_DUPLICATE_STAKE
                     && ProcessDuplicateStakeHeader(pindex, state.nodeId))
                 {
                     // pass
-                } else
+                } else */
                 {
                     return state.Invalid(error("%s: block %s is marked invalid", __func__, hash.ToString()), 0, "duplicate");
                 };
@@ -4898,6 +4970,7 @@ static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state
         bool fPass = false;
         if (pindexPrev->nStatus & BLOCK_FAILED_MASK)
         {
+            /*
             if (pindexPrev->nFlags & BLOCK_FAILED_DUPLICATE_STAKE)
             {
                 fPass = ProcessDuplicateStakeHeader(pindexPrev, state.nodeId);
@@ -4905,7 +4978,7 @@ static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state
                 if (!fPass)
                     return state.DoS(10, error("%s: prev block invalid, duplicate cs", __func__), REJECT_INVALID, "bad-prevblk_dup_cs");
             };
-            if (!fPass)
+            if (!fPass) */
                 return state.DoS(60, error("%s: prev block invalid", __func__), REJECT_INVALID, "bad-prevblk");
         };
 
@@ -5014,7 +5087,13 @@ static bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidation
     // Header is valid/has work, merkle tree and segwit merkle tree are good...RELAY NOW
     // (but if it does not build on our best tip, let the SendMessages loop relay it)
     if (!IsInitialBlockDownload() && chainActive.Tip() == pindex->pprev)
-        GetMainSignals().NewPoWValidBlock(pindex, pblock);
+    {
+        //LogPrintf("[rm] (state.nFlags & BLOCK_FAILED_DUPLICATE_STAKE) %d\n", state.nFlags & BLOCK_FAILED_DUPLICATE_STAKE);
+        //LogPrintf("[rm] pindex->GetBlockHash() %s\n", pindex->GetBlockHash().ToString());
+        if (!(state.nFlags & BLOCK_FAILED_DUPLICATE_STAKE))
+            GetMainSignals().NewPoWValidBlock(pindex, pblock);
+        
+    }
 
     int nHeight = pindex->nHeight;
 
@@ -5076,14 +5155,17 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
             InvalidBlockFound(pindex, pblock, state);
             
             GetMainSignals().BlockChecked(*pblock, state);
-            
-            bool fPass = false;
-            if (pindex->nFlags & BLOCK_FAILED_DUPLICATE_STAKE)
-                fPass = ProcessDuplicateStakeHeader(pindex, state.nodeId);
-            
-            if (!fPass)
-                return error("%s: AcceptBlock FAILED", __func__);
+            return error("%s: AcceptBlock FAILED", __func__);
         }
+        
+        if (pindex && state.nFlags & BLOCK_FAILED_DUPLICATE_STAKE)
+        {
+            pindex->nFlags |= BLOCK_FAILED_DUPLICATE_STAKE;
+            setDirtyBlockIndex.insert(pindex);
+            LogPrint("pos", "%s Marking duplicate stake: %s.\n", __func__, pindex->GetBlockHash().ToString());
+            GetMainSignals().BlockChecked(*pblock, state);
+        };
+        
     }
 
     NotifyHeaderTip();

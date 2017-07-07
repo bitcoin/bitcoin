@@ -17,6 +17,7 @@
 #include "util.h"
 #include "wallet/db.h"
 #include "wallet/wallet.h"
+#include "wallet/hdwallet.h"
 
 #include <stdint.h>
 #include <string>
@@ -288,29 +289,45 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
 
         strHTML += "<br><b>" + tr("Inputs") + ":</b>";
         strHTML += "<ul>";
-
-        BOOST_FOREACH(const CTxIn& txin, wtx.tx->vin)
+        
+        CHDWallet *phdw = (CHDWallet*) wallet;
+        for (const auto &txin : wtx.tx->vin)
         {
             COutPoint prevout = txin.prevout;
 
             CCoins prev;
-            if(pcoinsTip->GetCoins(prevout.hash, prev))
+            if (pcoinsTip->GetCoins(prevout.hash, prev)
+                && prev.IsAvailable(prevout.n))
             {
-                if (prevout.n < prev.vout.size())
+                strHTML += "<li>";
+                const CTxOutBase *vout = prev.vpout[prevout.n].get();
+                CTxDestination address;
+                if (!vout->IsType(OUTPUT_STANDARD)
+                    && !vout->IsType(OUTPUT_CT))
+                    continue;
+                
+                const CScript *pScript;
+                if (!(pScript = vout->GetPScriptPubKey()))
                 {
-                    strHTML += "<li>";
-                    const CTxOut &vout = prev.vout[prevout.n];
-                    CTxDestination address;
-                    if (ExtractDestination(vout.scriptPubKey, address))
-                    {
-                        if (wallet->mapAddressBook.count(address) && !wallet->mapAddressBook[address].name.empty())
-                            strHTML += GUIUtil::HtmlEscape(wallet->mapAddressBook[address].name) + " ";
-                        strHTML += QString::fromStdString(CBitcoinAddress(address).ToString());
-                    }
-                    strHTML = strHTML + " " + tr("Amount") + "=" + BitcoinUnits::formatHtmlWithUnit(unit, vout.nValue);
-                    strHTML = strHTML + " IsMine=" + (wallet->IsMine(vout) & ISMINE_SPENDABLE ? tr("true") : tr("false")) + "</li>";
-                    strHTML = strHTML + " IsWatchOnly=" + (wallet->IsMine(vout) & ISMINE_WATCH_ONLY ? tr("true") : tr("false")) + "</li>";
-                }
+                    LogPrintf("ERROR: %s - expected script pointer.\n", __func__);
+                    continue;
+                };
+                
+                
+                if (ExtractDestination(*pScript, address))
+                {
+                    if (wallet->mapAddressBook.count(address) && !wallet->mapAddressBook[address].name.empty())
+                        strHTML += GUIUtil::HtmlEscape(wallet->mapAddressBook[address].name) + " ";
+                    strHTML += QString::fromStdString(CBitcoinAddress(address).ToString());
+                };
+                
+                
+                if (vout->IsType(OUTPUT_STANDARD))
+                    strHTML = strHTML + " " + tr("Amount") + "=" + BitcoinUnits::formatHtmlWithUnit(unit, vout->GetValue());
+                else
+                    strHTML = strHTML + " " + tr("Amount") + "=" + "Blinded";
+                strHTML = strHTML + " IsMine=" + (phdw->IsMine(vout) & ISMINE_SPENDABLE ? tr("true") : tr("false")) + "</li>";
+                strHTML = strHTML + " IsWatchOnly=" + (phdw->IsMine(vout) & ISMINE_WATCH_ONLY ? tr("true") : tr("false")) + "</li>";
             }
         }
 
@@ -320,3 +337,33 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
     strHTML += "</font></html>";
     return strHTML;
 }
+
+
+QString TransactionDesc::toHTML(CHDWallet *wallet, CTransactionRecord &rtx, TransactionRecord *rec, int unit)
+{
+    QString strHTML;
+
+    LOCK2(cs_main, wallet->cs_wallet);
+    strHTML.reserve(4000);
+    strHTML += "<html><font face='verdana, arial, helvetica, sans-serif'>";
+    
+    int64_t nTime = rtx.GetTxTime();
+
+    //strHTML += "<b>" + tr("Status") + ":</b> " + FormatTxStatus(wtx);
+    int nRequests = wallet->GetRequestCount(rec->hash, rtx);
+    if (nRequests != -1)
+    {
+        if (nRequests == 0)
+            strHTML += tr(", has not been successfully broadcast yet");
+        else if (nRequests > 0)
+            strHTML += tr(", broadcast through %n node(s)", "", nRequests);
+    }
+    strHTML += "<br>";
+
+    strHTML += "<b>" + tr("Date") + ":</b> " + (nTime ? GUIUtil::dateTimeStr(nTime) : "") + "<br>";
+    strHTML += "<b>" + tr("Transaction ID") + ":</b> " + rec->getTxID() + "<br>";
+    
+    strHTML += "</font></html>";
+    return strHTML;
+};
+
