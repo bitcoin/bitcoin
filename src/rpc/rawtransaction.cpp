@@ -898,17 +898,17 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
 }
 
 static const CRPCCommand commands[] =
-{ //  category              name                      actor (function)         okSafeMode
-  //  --------------------- ------------------------  -----------------------  ----------
-    { "rawtransactions",    "getrawtransaction",      &getrawtransaction,      true,  {"txid","verbose"} },
-    { "rawtransactions",    "createrawtransaction",   &createrawtransaction,   true,  {"inputs","outputs","locktime","replaceable"} },
-    { "rawtransactions",    "decoderawtransaction",   &decoderawtransaction,   true,  {"hexstring"} },
-    { "rawtransactions",    "decodescript",           &decodescript,           true,  {"hexstring"} },
-    { "rawtransactions",    "sendrawtransaction",     &sendrawtransaction,     false, {"hexstring","allowhighfees"} },
-    { "rawtransactions",    "signrawtransaction",     &signrawtransaction,     false, {"hexstring","prevtxs","privkeys","sighashtype"} }, /* uses wallet if enabled */
+{ //  category              endpoint      name                      actor (function)         okSafeMode  named args
+  //  ------------------    ------------  ----------------------    -----------------------  ----------  ------------------
+    { "rawtransactions",    "/v1/node/",  "getrawtransaction",      &getrawtransaction,      true,       {"txid","verbose"} },
+    { "rawtransactions",    "/v1/node/",  "createrawtransaction",   &createrawtransaction,   true,       {"inputs","outputs","locktime","replaceable"} },
+    { "rawtransactions",    "/v1/node/",  "decoderawtransaction",   &decoderawtransaction,   true,       {"hexstring"} },
+    { "rawtransactions",    "/v1/node/",  "decodescript",           &decodescript,           true,       {"hexstring"} },
+    { "rawtransactions",    "/v1/node/",  "sendrawtransaction",     &sendrawtransaction,     false,      {"hexstring","allowhighfees"} },
+    { "rawtransactions",    "/v1/*",      "signrawtransaction",     &signrawtransaction,     false,      {"hexstring","prevtxs","privkeys","sighashtype"} }, /* uses wallet if enabled */
 
-    { "blockchain",         "gettxoutproof",          &gettxoutproof,          true,  {"txids", "blockhash"} },
-    { "blockchain",         "verifytxoutproof",       &verifytxoutproof,       true,  {"proof"} },
+    { "blockchain",         "/v1/node/",  "gettxoutproof",          &gettxoutproof,          true,       {"txids", "blockhash"} },
+    { "blockchain",         "/v1/node/",  "verifytxoutproof",       &verifytxoutproof,       true,       {"proof"} },
 };
 
 void RegisterRawTransactionRPCCommands(CRPCTable &t)

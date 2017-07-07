@@ -648,7 +648,11 @@ HTTPRequest::RequestMethod HTTPRequest::GetRequestMethod()
 void RegisterHTTPHandler(const std::string &prefix, bool exactMatch, const HTTPRequestHandler &handler)
 {
     LogPrint(BCLog::HTTP, "Registering HTTP handler for %s (exactmatch %d)\n", prefix, exactMatch);
-    pathHandlers.push_back(HTTPPathHandler(prefix, exactMatch, handler));
+    HTTPPathHandler pathHandler(prefix, exactMatch, handler);
+    if (std::find_if(pathHandlers.begin(), pathHandlers.end(), [pathHandler](const HTTPPathHandler a){ return (a.prefix == pathHandler.prefix && a.exactMatch == pathHandler.exactMatch); }) == pathHandlers.end()) {
+        // only add handlers if they do not exists yet
+        pathHandlers.push_back(pathHandler);
+    }
 }
 
 void UnregisterHTTPHandler(const std::string &prefix, bool exactMatch)

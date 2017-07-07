@@ -942,20 +942,20 @@ UniValue estimaterawfee(const JSONRPCRequest& request)
 }
 
 static const CRPCCommand commands[] =
-{ //  category              name                      actor (function)         okSafeMode
-  //  --------------------- ------------------------  -----------------------  ----------
-    { "mining",             "getnetworkhashps",       &getnetworkhashps,       true,  {"nblocks","height"} },
-    { "mining",             "getmininginfo",          &getmininginfo,          true,  {} },
-    { "mining",             "prioritisetransaction",  &prioritisetransaction,  true,  {"txid","dummy","fee_delta"} },
-    { "mining",             "getblocktemplate",       &getblocktemplate,       true,  {"template_request"} },
-    { "mining",             "submitblock",            &submitblock,            true,  {"hexdata","dummy"} },
+{ //  category              endpoint      name                      actor (function)         okSafeMode   named args
+  //  ------------------    ------------  ------------------------  -----------------------  ----------   ------------------
+    { "mining",             "/v1/node/",  "getnetworkhashps",       &getnetworkhashps,       true,        {"nblocks","height"} },
+    { "mining",             "/v1/node/",  "getmininginfo",          &getmininginfo,          true,        {} },
+    { "mining",             "/v1/node/",  "prioritisetransaction",  &prioritisetransaction,  true,        {"txid","dummy","fee_delta"} },
+    { "mining",             "/v1/node/",  "getblocktemplate",       &getblocktemplate,       true,        {"template_request"} },
+    { "mining",             "/v1/node/",  "submitblock",            &submitblock,            true,        {"hexdata","dummy"} },
 
-    { "generating",         "generatetoaddress",      &generatetoaddress,      true,  {"nblocks","address","maxtries"} },
+    { "generating",         "/v1/node/",  "generatetoaddress",      &generatetoaddress,      true,        {"nblocks","address","maxtries"} },
 
-    { "util",               "estimatefee",            &estimatefee,            true,  {"nblocks"} },
-    { "util",               "estimatesmartfee",       &estimatesmartfee,       true,  {"nblocks", "conservative"} },
+    { "util",               "/v1/node/",  "estimatefee",            &estimatefee,            true,        {"nblocks"} },
+    { "util",               "/v1/node/",  "estimatesmartfee",       &estimatesmartfee,       true,        {"nblocks", "conservative"} },
 
-    { "hidden",             "estimaterawfee",         &estimaterawfee,         true,  {"nblocks", "threshold"} },
+    { "hidden",             "/v1/node/",  "estimaterawfee",         &estimaterawfee,         true,        {"nblocks", "threshold"} },
 };
 
 void RegisterMiningRPCCommands(CRPCTable &t)

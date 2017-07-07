@@ -8,6 +8,7 @@
 #include "base58.h"
 #include "fs.h"
 #include "init.h"
+#include "httprpc.h"
 #include "random.h"
 #include "sync.h"
 #include "ui_interface.h"
@@ -280,9 +281,9 @@ static const CRPCCommand vRPCCommands[] =
 { //  category              name                      actor (function)         okSafe argNames
   //  --------------------- ------------------------  -----------------------  ------ ----------
     /* Overall control/query calls */
-    { "control",            "help",                   &help,                   true,  {"command"}  },
-    { "control",            "stop",                   &stop,                   true,  {}  },
-    { "control",            "uptime",                 &uptime,                 true,  {}  },
+    { "control",            "/v1/*"    , "help",                   &help,                   true,  {"command"}  },
+    { "control",            "/v1/node/", "stop",                   &stop,                   true,  {}  },
+    { "control",            "/v1/node/", "uptime",                 &uptime,                 true,  {}  },
 };
 
 CRPCTable::CRPCTable()
@@ -309,6 +310,9 @@ bool CRPCTable::appendCommand(const std::string& name, const CRPCCommand* pcmd)
 {
     if (IsRPCRunning())
         return false;
+
+    // make sure we register the command endpoint
+    RegisterJSONEndpoint(pcmd->endpoint, false);
 
     // don't allow overwriting for now
     std::map<std::string, const CRPCCommand*>::const_iterator it = mapCommands.find(name);
@@ -494,6 +498,13 @@ UniValue CRPCTable::execute(const JSONRPCRequest &request) const
     if (!pcmd)
         throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Method not found");
 
+    // enfore endpoint only for non / and "" endpoint (the later is used by the GUI)
+    if (request.URI != "" && request.URI != "/") {
+        // enforce correct endpoint usage
+        if (pcmd->endpoint != "/v1/*" && (request.URI.size() < pcmd->endpoint.size() || request.URI.substr(0, pcmd->endpoint.size()) != pcmd->endpoint)) {
+            throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Incorrect endpoint used (called method has "+pcmd->endpoint+" as endpoint)");
+        }
+    }
     g_rpcSignals.PreCommand(*pcmd);
 
     try
