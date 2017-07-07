@@ -1718,7 +1718,7 @@ CAmount CWalletTx::GetAvailableCredit(bool fUseCache) const
             const CTxOut &txout = tx->vout[i];
             nCredit += pwallet->GetCredit(txout, ISMINE_SPENDABLE);
             if (!MoneyRange(nCredit))
-                throw std::runtime_error("CWalletTx::GetAvailableCredit() : value out of range");
+                throw std::runtime_error(std::string(__func__) + " : value out of range");
         }
     }
 
@@ -1761,7 +1761,7 @@ CAmount CWalletTx::GetAvailableWatchOnlyCredit(const bool& fUseCache) const
             const CTxOut &txout = tx->vout[i];
             nCredit += pwallet->GetCredit(txout, ISMINE_WATCH_ONLY);
             if (!MoneyRange(nCredit))
-                throw std::runtime_error("CWalletTx::GetAvailableCredit() : value out of range");
+                throw std::runtime_error(std::string(__func__) + ": value out of range");
         }
     }
 
