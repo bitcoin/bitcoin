@@ -76,8 +76,6 @@ if [ -n "$1" ]; then
          BASEDIR="$BASEDIR$RCSUBDIR.$RCVERSION/"
       fi
    fi
-
-   SIGNATUREFILE="$BASEDIR$SIGNATUREFILENAME"
 else
    echo "Error: need to specify a version on the command line"
    exit 2
