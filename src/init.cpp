@@ -1391,23 +1391,19 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                 delete pblocktree;
 
                 pblocktree = new CBlockTreeDB(nBlockTreeDBCache, false, fReindex);
-                pcoinsdbview = new CCoinsViewDB(nCoinDBCache, false, fReindex || fReindexChainState);
-                pcoinscatcher = new CCoinsViewErrorCatcher(pcoinsdbview);
 
                 if (fReindex) {
                     pblocktree->WriteReindexing(true);
                     //If we're reindexing in prune mode, wipe away unusable block files and all undo data files
                     if (fPruneMode)
                         CleanupBlockRevFiles();
-                } else {
-                    // If necessary, upgrade from older database format.
-                    if (!pcoinsdbview->Upgrade()) {
-                        strLoadError = _("Error upgrading chainstate database");
-                        break;
-                    }
                 }
+
                 if (fRequestShutdown) break;
 
+                // LoadBlockIndex will load fTxIndex from the db, or set it if
+                // we're reindexing. It will also load fHavePruned if we've
+                // ever removed a block file from disk.
                 if (!LoadBlockIndex(chainparams)) {
                     strLoadError = _("Error loading block database");
                     break;
@@ -1417,12 +1413,6 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                 // (we're likely using a testnet datadir, or the other way around).
                 if (!mapBlockIndex.empty() && mapBlockIndex.count(chainparams.GetConsensus().hashGenesisBlock) == 0)
                     return InitError(_("Incorrect or no genesis block found. Wrong datadir for network?"));
-
-                // Initialize the block index (no-op if non-empty database was already loaded)
-                if (!fReindex && !LoadGenesisBlock(chainparams)) {
-                    strLoadError = _("Error initializing block database");
-                    break;
-                }
 
                 // Check for changed -txindex state
                 if (fTxIndex != GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
@@ -1437,10 +1427,34 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                     break;
                 }
 
+                // At this point blocktree args are consistent with what's on disk.
+                // If we're not mid-reindex (based on disk + args), add a genesis block on disk.
+                // This is called again in ThreadImport in the reindex completes.
+                if (!fReindex && !LoadGenesisBlock(chainparams)) {
+                    strLoadError = _("Error initializing block database");
+                    break;
+                }
+
+                // At this point we're either in reindex or we've loaded a useful
+                // block tree into mapBlockIndex!
+
+                pcoinsdbview = new CCoinsViewDB(nCoinDBCache, false, fReindex || fReindexChainState);
+                pcoinscatcher = new CCoinsViewErrorCatcher(pcoinsdbview);
+
+                // If necessary, upgrade from older database format.
+                // This is a no-op if we cleared the coinsviewdb with -reindex or -reindex-chainstate
+                if (!pcoinsdbview->Upgrade()) {
+                    strLoadError = _("Error upgrading chainstate database");
+                    break;
+                }
+
+                // ReplayBlocks is a no-op if we cleared the coinsviewdb with -reindex or -reindex-chainstate
                 if (!ReplayBlocks(chainparams, pcoinsdbview)) {
                     strLoadError = _("Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.");
                     break;
                 }
+
+                // The on-disk coinsdb is now in a good state, create the cache
                 pcoinsTip = new CCoinsViewCache(pcoinscatcher);
 
                 if (!fReindex && !fReindexChainState) {
@@ -1463,28 +1477,30 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                     }
                 }
 
-                uiInterface.InitMessage(_("Verifying blocks..."));
-                if (fHavePruned && GetArg("-checkblocks", DEFAULT_CHECKBLOCKS) > MIN_BLOCKS_TO_KEEP) {
-                    LogPrintf("Prune: pruned datadir may not have more than %d blocks; only checking available blocks",
-                        MIN_BLOCKS_TO_KEEP);
-                }
+                if (!fReindex && !fReindexChainState) {
+                    uiInterface.InitMessage(_("Verifying blocks..."));
+                    if (fHavePruned && GetArg("-checkblocks", DEFAULT_CHECKBLOCKS) > MIN_BLOCKS_TO_KEEP) {
+                        LogPrintf("Prune: pruned datadir may not have more than %d blocks; only checking available blocks",
+                            MIN_BLOCKS_TO_KEEP);
+                    }
 
-                {
-                    LOCK(cs_main);
-                    CBlockIndex* tip = chainActive.Tip();
-                    RPCNotifyBlockChange(true, tip);
-                    if (tip && tip->nTime > GetAdjustedTime() + 2 * 60 * 60) {
-                        strLoadError = _("The block database contains a block which appears to be from the future. "
-                                "This may be due to your computer's date and time being set incorrectly. "
-                                "Only rebuild the block database if you are sure that your computer's date and time are correct");
+                    {
+                        LOCK(cs_main);
+                        CBlockIndex* tip = chainActive.Tip();
+                        RPCNotifyBlockChange(true, tip);
+                        if (tip && tip->nTime > GetAdjustedTime() + 2 * 60 * 60) {
+                            strLoadError = _("The block database contains a block which appears to be from the future. "
+                                    "This may be due to your computer's date and time being set incorrectly. "
+                                    "Only rebuild the block database if you are sure that your computer's date and time are correct");
+                            break;
+                        }
+                    }
+
+                    if (!CVerifyDB().VerifyDB(chainparams, pcoinsdbview, GetArg("-checklevel", DEFAULT_CHECKLEVEL),
+                                  GetArg("-checkblocks", DEFAULT_CHECKBLOCKS))) {
+                        strLoadError = _("Corrupted block database detected");
                         break;
                     }
-                }
-
-                if (!CVerifyDB().VerifyDB(chainparams, pcoinsdbview, GetArg("-checklevel", DEFAULT_CHECKLEVEL),
-                              GetArg("-checkblocks", DEFAULT_CHECKBLOCKS))) {
-                    strLoadError = _("Corrupted block database detected");
-                    break;
                 }
             } catch (const std::exception& e) {
                 LogPrintf("%s\n", e.what());
