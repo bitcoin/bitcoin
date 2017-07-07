@@ -219,7 +219,7 @@ def get_auth_cookie(datadir, n):
     user = None
     password = None
     if os.path.isfile(os.path.join(datadir, "dash.conf")):
-        with open(os.path.join(datadir, "dash.conf"), 'r') as f:
+        with open(os.path.join(datadir, "dash.conf"), 'r', encoding='utf8') as f:
             for line in f:
                 if line.startswith("rpcuser="):
                     assert user is None # Ensure that there is only one rpcuser line
