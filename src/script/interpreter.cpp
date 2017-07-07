@@ -1099,7 +1099,7 @@ public:
         // Serialize the script
         if (nInput != nIn)
             // Blank out other inputs' signatures
-            ::Serialize(s, CScriptBase());
+            ::Serialize(s, CScript());
         else
             SerializeScriptCode(s);
         // Serialize the nSequence
@@ -1207,7 +1207,7 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
         // The prevout may already be contained in hashPrevout, and the nSequence
         // may already be contain in hashSequence.
         ss << txTo.vin[nIn].prevout;
-        ss << static_cast<const CScriptBase&>(scriptCode);
+        ss << scriptCode;
         ss << amount;
         ss << txTo.vin[nIn].nSequence;
         // Outputs (none/one/all, depending on flags)
