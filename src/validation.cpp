@@ -3538,14 +3538,24 @@ bool static LoadBlockIndexDB(const CChainParams& chainparams)
     return true;
 }
 
-void LoadChainTip(const CChainParams& chainparams)
+bool LoadChainTip(const CChainParams& chainparams)
 {
-    if (chainActive.Tip() && chainActive.Tip()->GetBlockHash() == pcoinsTip->GetBestBlock()) return;
+    if (chainActive.Tip() && chainActive.Tip()->GetBlockHash() == pcoinsTip->GetBestBlock()) return true;
+
+    if (pcoinsTip->GetBestBlock().IsNull() && mapBlockIndex.size() == 1) {
+        // In case we just added the genesis block, connect it now, so
+        // that we always have a chainActive.Tip() when we return.
+        LogPrintf("%s: Connecting genesis block...\n", __func__);
+        CValidationState state;
+        if (!ActivateBestChain(state, chainparams)) {
+            return false;
+        }
+    }
 
     // Load pointer to end of best chain
     BlockMap::iterator it = mapBlockIndex.find(pcoinsTip->GetBestBlock());
     if (it == mapBlockIndex.end())
-        return;
+        return false;
     chainActive.SetTip(it->second);
 
     PruneBlockIndexCandidates();
@@ -3554,6 +3564,7 @@ void LoadChainTip(const CChainParams& chainparams)
         chainActive.Tip()->GetBlockHash().ToString(), chainActive.Height(),
         DateTimeStrFormat("%Y-%m-%d %H:%M:%S", chainActive.Tip()->GetBlockTime()),
         GuessVerificationProgress(chainparams.TxData(), chainActive.Tip()));
+    return true;
 }
 
 CVerifyDB::CVerifyDB()

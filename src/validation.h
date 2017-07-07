@@ -262,7 +262,7 @@ bool LoadGenesisBlock(const CChainParams& chainparams);
  * initializing state if we're running with -reindex. */
 bool LoadBlockIndex(const CChainParams& chainparams);
 /** Update the chain tip based on database information. */
-void LoadChainTip(const CChainParams& chainparams);
+bool LoadChainTip(const CChainParams& chainparams);
 /** Unload database information */
 void UnloadBlockIndex();
 /** Run an instance of the script checking thread */
