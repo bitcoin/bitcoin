@@ -52,12 +52,7 @@ BOOST_AUTO_TEST_CASE (generate_escrow_big)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo " + goodname2));
 	string encryptionkey = find_value(r.get_obj(), "encryption_publickey").get_str();
 
-	string strCipherPrivateData = "";
-	BOOST_CHECK_EQUAL(EncryptMessage(ParseHex(encryptionkey), baddata, strCipherPrivateData), true);
-	if(strCipherPrivateData.empty())
-		strCipherPrivateData = "\"\"";
-	else
-		strCipherPrivateData = HexStr(strCipherPrivateData);
+	string strCipherPrivateData = baddata;
 	BOOST_CHECK_THROW(r = CallRPC("node1", "escrownew " + goodname1 + " " + offerguid + " " + qty + " " + strCipherPrivateData + " " + goodname3), runtime_error);
 	string guid = EscrowNew("node1", "node2", goodname1, offerguid, qty, gooddata, goodname3, goodname2);
 	EscrowRelease("node1", "buyer", guid);	

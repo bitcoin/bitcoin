@@ -1,8 +1,0 @@
-libscrypt {
-	global: libscrypt_check; 
-libscrypt_hash; 
-libscrypt_mcf; 
-libscrypt_salt_gen; 
-libscrypt_scrypt;
-	local: *;
-};

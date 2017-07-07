@@ -31,15 +31,15 @@ BOOST_AUTO_TEST_CASE (generate_big_aliasdata)
 	CKey privKey;
 	privKey.MakeNewKey(true);
 	CPubKey pubKey = privKey.GetPubKey();
-	vector<unsigned char> vchPubKey(pubKey.begin(), pubKey.end());
-	BOOST_CHECK_EQUAL(EncryptMessage(vchPubKey, baddata, strCipherBadPrivData), true);		
-	BOOST_CHECK_EQUAL(EncryptMessage(vchPubKey, gooddata, strCipherGoodPrivData), true);
+	vector<unsigned char> vchPubKey(pubKey.begin(), pubKey.end());	
+	strCipherBadPrivData = baddata;
+	strCipherGoodPrivData = gooddata;
 
 	AliasNew("node1", "jag1", "password", gooddata, gooddata);
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg jag2 \"\" " + gooddata + " " + HexStr(vchFromString(strCipherBadPrivData))));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg jag2 \"\" " + gooddata + " " + strCipherBadPrivData));
 	GenerateBlocks(5);
 	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg jag2 \"\" \"\""), runtime_error);	
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg jag2 \"\" " + baddata + " " + HexStr(vchFromString(strCipherGoodPrivData))));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg jag2 \"\" " + baddata + " " + strCipherGoodPrivData));
 	GenerateBlocks(5);
 	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg jag2 \"\" \"\""), runtime_error);		
 }
@@ -86,10 +86,9 @@ BOOST_AUTO_TEST_CASE (generate_big_aliaspassword)
 	// 257 bytes long
 	string baddata = "SfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfddz";	
 		
-	string strCipherBadPassword = "";
-	BOOST_CHECK_EQUAL(EncryptMessage(vchPubKey, baddata, strCipherBadPassword), true);	
+	string strCipherBadPassword = baddata;
 	AliasNew("node1", "aliasname", gooddata, "a");
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasname1 " + HexStr(vchFromString(strCipherBadPassword)) + " pubdata"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasname1 " + strCipherBadPassword + " pubdata"));
 	GenerateBlocks(5);
 	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasname1 \"\" \"\""), runtime_error);		
 }
@@ -607,21 +606,6 @@ BOOST_AUTO_TEST_CASE (generate_aliasbalancewithtransfermultisig)
 	// edit and balance should remain the same
 	// transfer again and balance is 0 again
 
-}
-BOOST_AUTO_TEST_CASE (generate_aliasauthentication)
-{
-	// create alias with some password and try to get authentication key
-	// update the password and try again
-
-	// edit alias with authentication key from wallet that doesnt own that alias
-}
-BOOST_AUTO_TEST_CASE (generate_aliasauthenticationmultisig)
-{
-	// create 2 of 3 alias with some password and try to get authentication key
-	// update the password and try again
-
-	// edit alias with authentication key from wallet that doesnt own that alias
-	// pass that tx to another alias and verify it got signed and pushed to network
 }
 BOOST_AUTO_TEST_CASE (generate_aliassafesearch)
 {

@@ -11,7 +11,6 @@
 #include "wallet/wallet.h"
 #include "chainparams.h"
 #include "coincontrol.h"
-#include "messagecrypter.h"
 #include <boost/algorithm/hex.hpp>
 #include <boost/xpressive/xpressive_dynamic.hpp>
 #include <boost/foreach.hpp>
@@ -541,14 +540,11 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 }
 
 UniValue messageinfo(const UniValue& params, bool fHelp) {
-    if (fHelp || 1 > params.size() || 2 < params.size())
-        throw runtime_error("messageinfo <guid> [walletless=false]\n"
+    if (fHelp || 1 > params.size())
+        throw runtime_error("messageinfo <guid>\n"
                 "Show stored values of a single message.\n");
 
     vector<unsigned char> vchMessage = vchFromValue(params[0]);
-	string strWalletless = "false";
-	if(CheckParam(params, 1))
-		strWalletless = params[1].get_str();
 
 	vector<CMessage> vtxPos;
 
@@ -558,15 +554,15 @@ UniValue messageinfo(const UniValue& params, bool fHelp) {
 	if (!pmessagedb->ReadMessage(vchMessage, vtxPos) || vtxPos.empty())
 		throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3506 - " + _("Failed to read from message DB"));
 
-	if(!BuildMessageJson(vtxPos.back(), oMessage, strWalletless))
+	if(!BuildMessageJson(vtxPos.back(), oMessage))
 		throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3507 - " + _("Could not find this message"));
 
     return oMessage;
 }
 
 UniValue messagereceivelist(const UniValue& params, bool fHelp) {
-    if (fHelp || 5 < params.size())
-        throw runtime_error("messagereceivelist [\"alias\",...] [<message>] [walletless=false] [count] [from]\n"
+    if (fHelp || 4 < params.size())
+        throw runtime_error("messagereceivelist [\"alias\",...] [<message>] [count] [from]\n"
                 "list messages that an array of aliases has recieved. Set of aliases to look up based on alias.");
 	UniValue aliasesValue(UniValue::VARR);
 	vector<string> aliases;
@@ -588,16 +584,12 @@ UniValue messagereceivelist(const UniValue& params, bool fHelp) {
     if(CheckParam(params, 1))
         vchNameUniq = vchFromValue(params[1]);
 
-	string strWalletless = "false";
-	if(CheckParam(params, 2))
-		strWalletless = params[2].get_str();
-
 	int count = 10;
 	int from = 0;
+	if (CheckParam(params, 2))
+		count = atoi(params[2].get_str());
 	if (CheckParam(params, 3))
-		count = atoi(params[3].get_str());
-	if (CheckParam(params, 4))
-		from = atoi(params[4].get_str());
+		from = atoi(params[3].get_str());
 	int found = 0;
 
 	UniValue oRes(UniValue::VARR);
@@ -640,7 +632,7 @@ UniValue messagereceivelist(const UniValue& params, bool fHelp) {
 					found++;
 					if (found < from)
 						continue;
-					if(BuildMessageJson(theMessage, oMessage, strWalletless))
+					if(BuildMessageJson(theMessage, oMessage))
 					{
 						oRes.push_back(oMessage);
 					}
@@ -653,7 +645,7 @@ UniValue messagereceivelist(const UniValue& params, bool fHelp) {
 	}
     return oRes;
 }
-bool BuildMessageJson(const CMessage& message, UniValue& oName, const string &strWalletless)
+bool BuildMessageJson(const CMessage& message, UniValue& oName)
 {
 	oName.push_back(Pair("GUID", stringFromVch(message.vchMessage)));
 	string sTime;
@@ -666,72 +658,17 @@ bool BuildMessageJson(const CMessage& message, UniValue& oName, const string &st
 	oName.push_back(Pair("time", sTime));
 	oName.push_back(Pair("from", stringFromVch(message.vchAliasFrom)));
 	oName.push_back(Pair("to", stringFromVch(message.vchAliasTo)));
-
-	string strEncryptionPrivateKeyFrom = "";
-	string strEncryptionPrivateKeyTo = "";
-	string strKey = "";
-	if(strWalletless == "true")
-	{
-		strEncryptionPrivateKeyFrom = HexStr(message.vchEncryptionPrivateKeyFrom);
-		strEncryptionPrivateKeyTo = HexStr(message.vchEncryptionPrivateKeyTo);
-	}
-	else
-	{
-		CAliasIndex aliasFrom, aliasTo;
-		CTransaction aliastxtmp;
-		bool isExpired = false;
-		vector<CAliasIndex> aliasVtxPos;
-		if(GetTxAndVtxOfAlias(message.vchAliasFrom, aliasFrom, aliastxtmp, aliasVtxPos, isExpired, true))
-		{
-			aliasFrom.nHeight = message.nHeight;
-			aliasFrom.GetAliasFromList(aliasVtxPos);
-		}
-		else
-			return false;
-		aliasVtxPos.clear();
-		if(GetTxAndVtxOfAlias(message.vchAliasTo, aliasTo, aliastxtmp, aliasVtxPos, isExpired, true))
-		{
-			aliasTo.nHeight = message.nHeight;
-			aliasTo.GetAliasFromList(aliasVtxPos);
-		}
-		else
-			return false;
-		if(DecryptMessage(aliasFrom, message.vchEncryptionPrivateKeyFrom, strKey))
-			strEncryptionPrivateKeyFrom = HexStr(strKey);	
-		else if(DecryptMessage(aliasTo, message.vchEncryptionPrivateKeyTo, strKey))
-			strEncryptionPrivateKeyTo = HexStr(strKey);	
-	}
-	oName.push_back(Pair("encryption_privatekey_from", strEncryptionPrivateKeyFrom));
-	oName.push_back(Pair("encryption_privatekey_to", strEncryptionPrivateKeyTo));
+	oName.push_back(Pair("encryption_privatekey_from", HexStr(message.vchEncryptionPrivateKeyFrom)));
+	oName.push_back(Pair("encryption_privatekey_to", HexStr(message.vchEncryptionPrivateKeyTo)));
 	oName.push_back(Pair("encryption_publickey", HexStr(message.vchEncryptionPublicKey)));
-
-	string strDecrypted = "";
-	string strData = "";
-	
-	if(strWalletless == "true")
-		strData = HexStr(message.vchData);
-	else
-	{
-		CMessageCrypter crypter;
-		if(!strEncryptionPrivateKeyFrom.empty())
-		{
-			if(crypter.Decrypt(stringFromVch(ParseHex(strEncryptionPrivateKeyFrom)), stringFromVch(message.vchData), strDecrypted))
-				strData = strDecrypted;
-		}
-		else if(!strEncryptionPrivateKeyTo.empty())
-		{
-			if(crypter.Decrypt(stringFromVch(ParseHex(strEncryptionPrivateKeyTo)), stringFromVch(message.vchData), strDecrypted))
-				strData = strDecrypted;
-		}
-	}
-	oName.push_back(Pair("privatevalue", strData));
+	oName.push_back(Pair("privatevalue", HexStr(message.vchData)));
 	oName.push_back(Pair("publicvalue", stringFromVch(message.vchPubData)));
 	return true;
 }
 
 UniValue messagesentlist(const UniValue& params, bool fHelp) {
-    if (fHelp || 5 < params.size())
-        throw runtime_error("messagesentlist [\"alias\",...] [<message>] [walletless=false] [count] [from]\n"
+    if (fHelp || 4 < params.size())
+        throw runtime_error("messagesentlist [\"alias\",...] [<message>] [count] [from]\n"
                 "list messages that an array of aliases has sent. Set of aliases to look up based on alias.\n"
 				"[count]          (numeric, optional, default=10) The number of results to return\n"
 				"[from]           (numeric, optional, default=0) The number of results to skip\n");
@@ -755,16 +692,12 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
    if(CheckParam(params, 1))
         vchNameUniq = vchFromValue(params[1]);
 
-	string strWalletless = "false";
-	if(CheckParam(params, 2))
-		strWalletless = params[2].get_str();
-
 	int count = 10;
 	int from = 0;
+	if (CheckParam(params, 2))
+		count = atoi(params[2].get_str());
 	if (CheckParam(params, 3))
-		count = atoi(params[3].get_str());
-	if (CheckParam(params, 4))
-		from = atoi(params[4].get_str());
+		from = atoi(params[3].get_str());
 	int found = 0;
 
 	UniValue oRes(UniValue::VARR);
@@ -807,7 +740,7 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
 					found++;
 					if (found < from)
 						continue;
-					if(BuildMessageJson(theMessage, oMessage, strWalletless))
+					if(BuildMessageJson(theMessage, oMessage))
 					{
 						oRes.push_back(oMessage);
 					}

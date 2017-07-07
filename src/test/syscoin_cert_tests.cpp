@@ -22,18 +22,18 @@ BOOST_AUTO_TEST_CASE (generate_big_certdata)
 	privKey.MakeNewKey(true);
 	CPubKey pubKey = privKey.GetPubKey();
 	vector<unsigned char> vchPubKey(pubKey.begin(), pubKey.end());
-	BOOST_CHECK_EQUAL(EncryptMessage(vchPubKey, baddata, strCipherBadData), true);	
-	BOOST_CHECK_EQUAL(EncryptMessage(vchPubKey, gooddata, strCipherGoodData), true);	
+	strCipherBadData = baddata;
+	strCipherGoodData = gooddata;
 	string guid = CertNew("node1", "jagcertbig1", "title", gooddata, gooddata);
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "certnew jagcertbig1 title \"\" " + HexStr(vchFromString(strCipherGoodData))));
-	BOOST_CHECK_THROW(CallRPC("node1", "certnew jagcertbig1 title \"\" " + HexStr(vchFromString(strCipherBadData))), runtime_error);
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "certnew jagcertbig1 title \"\" " + strCipherGoodData));
+	BOOST_CHECK_THROW(CallRPC("node1", "certnew jagcertbig1 title \"\" " + strCipherBadData, runtime_error);
 	// unencrypted 1025 bytes should cause us to trip 1025+80 bytes once encrypted
-	BOOST_CHECK_THROW(CallRPC("node1", "certnew jagcertbig1 title " + gooddata + " " + HexStr(vchFromString(strCipherBadData))), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "certnew jagcertbig1 title " + gooddata + " " + strCipherBadData, runtime_error);
 	// update cert with long pub data
-	BOOST_CHECK_THROW(CallRPC("node1", "certupdate " + guid + " title " + baddata + " " + HexStr(vchFromString(strCipherGoodData))), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "certupdate " + guid + " title " + baddata + " " + strCipherGoodData, runtime_error);
 	MilliSleep(2500);
 	// trying to update to bad data for pub and priv
-	BOOST_CHECK_THROW(CallRPC("node1", "certupdate " + guid + " title " + baddata + " " + HexStr(vchFromString(strCipherBadData))), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "certupdate " + guid + " title " + baddata + " " + strCipherBadData, runtime_error);
 
 }
 BOOST_AUTO_TEST_CASE (generate_big_certtitle)

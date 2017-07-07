@@ -10,7 +10,6 @@
 #include "rpc/server.h"
 #include "wallet/wallet.h"
 #include "chainparams.h"
-#include "messagecrypter.h"
 #include "coincontrol.h"
 #include <boost/algorithm/hex.hpp>
 #include <boost/algorithm/string/case_conv.hpp> // for to_lower()
@@ -21,62 +20,6 @@
 #include <boost/range/adaptor/reversed.hpp>
 using namespace std;
 extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const vector<unsigned char> &vchAliasPeg, const string &currencyCode, const CRecipient &aliasRecipient, const CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool useOnlyAliasPaymentToFund=true, bool transferAlias=false);
-bool EncryptMessage(const vector<unsigned char> &vchPubKey, const string &strMessage, string &strCipherText)
-{
-	strCipherText.clear();
-	CMessageCrypter crypter;
-	if(!crypter.Encrypt(stringFromVch(vchPubKey), strMessage, strCipherText))
-		return false;
-	return true;
-}
-bool DecryptPrivateKey(const vector<unsigned char> &vchPubKey, const vector<unsigned char> &vchCipherText, string &strMessage)
-{
-	strMessage.clear();
-	std::vector<unsigned char> vchPrivateKey;
-	CMessageCrypter crypter;
-
-	CKey PrivateKey;
-	CPubKey PubKey(vchPubKey);
-	CKeyID pubKeyID = PubKey.GetID();
-	if (!pwalletMain->GetKey(pubKeyID, PrivateKey))
-		return false;
-	CSyscoinSecret Secret(PrivateKey);
-	PrivateKey = Secret.GetKey();
-	vchPrivateKey = std::vector<unsigned char>(PrivateKey.begin(), PrivateKey.end());
-	strMessage.clear();
-	if(!crypter.Decrypt(stringFromVch(vchPrivateKey), stringFromVch(vchCipherText), strMessage))
-		return false;
-	
-	
-	return true;
-}
-bool DecryptPrivateKey(const CAliasIndex& alias, string &strKey)
-{
-	strKey.clear();
-	CKey PrivateKey;
-	CPubKey PubKey(alias.vchEncryptionPublicKey);
-	CKeyID pubKeyID = PubKey.GetID();
-	if (!pwalletMain->GetKey(pubKeyID, PrivateKey))
-		return false;
-	CSyscoinSecret Secret(PrivateKey);
-	PrivateKey = Secret.GetKey();
-	const vector<unsigned char> vchPrivateKey(PrivateKey.begin(), PrivateKey.end());
-	strKey = stringFromVch(vchPrivateKey);
-	return true;
-}
-bool DecryptMessage(const CAliasIndex& alias, const vector<unsigned char> &vchCipherText, string &strMessage)
-{
-	strMessage.clear();
-	// get private key from alias or use one passed in to get the encryption private key
-	string strKey;
-	if(!DecryptPrivateKey(alias, strKey))
-		return false;
-	// use encryption private key to get data
-	CMessageCrypter crypter;
-	if(!crypter.Decrypt(strKey, stringFromVch(vchCipherText), strMessage))
-		return false;
-	return true;
-}
 void PutToCertList(std::vector<CCert> &certList, CCert& index) {
 	int i = certList.size() - 1;
 	BOOST_REVERSE_FOREACH(CCert &o, certList) {
@@ -1213,15 +1156,12 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 
 
 UniValue certinfo(const UniValue& params, bool fHelp) {
-    if (fHelp || 1 > params.size() || 2 < params.size())
-        throw runtime_error("certinfo <guid> [walletless=false]\n"
+    if (fHelp || 1 > params.size())
+        throw runtime_error("certinfo <guid>\n"
                 "Show stored values of a single certificate and its .\n");
 
     vector<unsigned char> vchCert = vchFromValue(params[0]);
 
-	string strWalletless = "false";
-	if(CheckParam(params, 1))
-		strWalletless = params[1].get_str();
 
 	vector<CCert> vtxPos;
 
@@ -1236,7 +1176,7 @@ UniValue certinfo(const UniValue& params, bool fHelp) {
 	if (!GetTxOfAlias(vtxPos.back().vchAlias, alias, aliastx, true))
 		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2516 - " + _("Failed to read xfer alias from alias DB"));
 
-	if(!BuildCertJson(vtxPos.back(), alias, oCert, strWalletless))
+	if(!BuildCertJson(vtxPos.back(), alias, oCert))
 		oCert.clear();
     return oCert;
 }
@@ -1302,8 +1242,8 @@ UniValue certcount(const UniValue& params, bool fHelp) {
 	return found;
 }
 UniValue certlist(const UniValue& params, bool fHelp) {
-    if (fHelp || 5 < params.size())
-        throw runtime_error("certlist [\"alias\",...] [cert] [walletless=false] [count] [from]\n"
+    if (fHelp || 4 < params.size())
+        throw runtime_error("certlist [\"alias\",...] [cert] [count] [from]\n"
                 "list certs that an array of aliases own. Set of aliases to look up based on alias.\n"
 				"[count]          (numeric, optional, default=10) The number of results to return\n"
 				"[from]           (numeric, optional, default=0) The number of results to skip\n");
@@ -1327,16 +1267,12 @@ UniValue certlist(const UniValue& params, bool fHelp) {
     if(CheckParam(params, 1))
         vchNameUniq = vchFromValue(params[1]);
 
-	string strWalletless = "false";
-	if(CheckParam(params, 2))
-		strWalletless = params[2].get_str();
-
 	int count = 10;
 	int from = 0;
+	if (CheckParam(params, 2))
+		count = atoi(params[2].get_str());
 	if (CheckParam(params, 3))
-		count = atoi(params[3].get_str());
-	if (CheckParam(params, 4))
-		from = atoi(params[4].get_str());
+		from = atoi(params[3].get_str());
 	int found = 0;
 
 	UniValue oRes(UniValue::VARR);
@@ -1378,7 +1314,7 @@ UniValue certlist(const UniValue& params, bool fHelp) {
 					found++;
 					if (found < from)
 						continue;
-					if(BuildCertJson(theCert, theAlias, oCert, strWalletless))
+					if(BuildCertJson(theCert, theAlias, oCert))
 					{
 						oRes.push_back(oCert);
 					}
@@ -1391,7 +1327,7 @@ UniValue certlist(const UniValue& params, bool fHelp) {
 	}
     return oRes;
 }
-bool BuildCertJson(const CCert& cert, const CAliasIndex& alias, UniValue& oCert, const string &strWalletless)
+bool BuildCertJson(const CCert& cert, const CAliasIndex& alias, UniValue& oCert)
 {
 	if(cert.safetyLevel >= SAFETY_LEVEL2)
 		return false;
@@ -1408,34 +1344,9 @@ bool BuildCertJson(const CCert& cert, const CAliasIndex& alias, UniValue& oCert,
 	}
 	oCert.push_back(Pair("time", sTime));
 	oCert.push_back(Pair("title", stringFromVch(cert.vchTitle)));
-	string strEncryptionPrivateKey = "";
-	string strData = "";
-	if(!cert.vchData.empty())
-	{
-		string strKey = "";
-		string strDecrypted = "";
-		if(strWalletless == "true")
-			strEncryptionPrivateKey = HexStr(cert.vchEncryptionPrivateKey);
-		else
-		{
-			if(DecryptMessage(alias, cert.vchEncryptionPrivateKey, strKey))
-				strEncryptionPrivateKey = HexStr(strKey);	
-		}
-		if(strWalletless == "true")
-			strData = HexStr(cert.vchData);
-		else
-		{
-			CMessageCrypter crypter;
-			if(!strEncryptionPrivateKey.empty())
-			{
-				if(crypter.Decrypt(strKey, stringFromVch(cert.vchData), strDecrypted))
-					strData = strDecrypted;
-			}
-		}
-	}
-	oCert.push_back(Pair("encryption_privatekey", strEncryptionPrivateKey));
+	oCert.push_back(Pair("encryption_privatekey", HexStr(cert.vchEncryptionPrivateKey)));
 	oCert.push_back(Pair("encryption_publickey", HexStr(cert.vchEncryptionPublicKey)));
-    oCert.push_back(Pair("privatevalue", strData));
+    oCert.push_back(Pair("privatevalue", HexStr(cert.vchData)));
 	oCert.push_back(Pair("publicvalue", stringFromVch(cert.vchPubData)));
 	oCert.push_back(Pair("category", stringFromVch(cert.sCategory)));
 	oCert.push_back(Pair("safesearch", cert.safeSearch? "true" : "false"));
@@ -1514,15 +1425,12 @@ UniValue certfilter(const UniValue& params, bool fHelp) {
 	return oRes;
 }
 UniValue certhistory(const UniValue& params, bool fHelp) {
-    if (fHelp || 1 > params.size() || 2 < params.size())
-        throw runtime_error("certhistory <guid> [walletless=false]\n"
+    if (fHelp || 1 > params.size())
+        throw runtime_error("certhistory <guid>\n"
                  "List all stored values of an cert.\n");
 
     vector<unsigned char> vchCert = vchFromValue(params[0]);
 
-	string strWalletless = "false";
-	if(CheckParam(params, 1))
-		strWalletless = params[1].get_str();
 
     UniValue oRes(UniValue::VARR);
  
@@ -1555,7 +1463,7 @@ UniValue certhistory(const UniValue& params, bool fHelp) {
 		UniValue oCert(UniValue::VOBJ);
 		string opName = certFromOp(op);
 		oCert.push_back(Pair("certtype", opName));
-		if(BuildCertJson(txPos2, alias, oCert, strWalletless))
+		if(BuildCertJson(txPos2, alias, oCert))
 			oRes.push_back(oCert);
     }
     

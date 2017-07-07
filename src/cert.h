@@ -18,10 +18,6 @@ bool DecodeAndParseCertTx(const CTransaction& tx, int& op, int& nOut, std::vecto
 bool DecodeCertScript(const CScript& script, int& op, std::vector<std::vector<unsigned char> > &vvch);
 bool IsCertOp(int op);
 int IndexOfCertOutput(const CTransaction& tx);
-bool EncryptMessage(const std::vector<unsigned char> &strPublicKey, const std::string &strMessage, std::string &strCipherText);
-bool DecryptPrivateKey(const std::vector<unsigned char> &vchPubKey, const std::vector<unsigned char> &vchCipherText, std::string &strMessage);
-bool DecryptPrivateKey(const CAliasIndex& alias, std::string &strKey);
-bool DecryptMessage(const CAliasIndex& alias, const std::vector<unsigned char> &vchCipherText, std::string &strMessage);
 void CertTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry);
 std::string certFromOp(int op);
 bool RemoveCertScriptPrefix(const CScript& scriptIn, CScript& scriptOut);
@@ -183,7 +179,7 @@ bool GetTxAndVtxOfCert(const std::vector<unsigned char> &vchCert,
 bool GetVtxOfCert(const std::vector<unsigned char> &vchCert,
 					   CCert& txPos, std::vector<CCert> &vtxPos, bool skipExpiresCheck=false);
 void PutToCertList(std::vector<CCert> &certList, CCert& index);
-bool BuildCertJson(const CCert& cert, const CAliasIndex& alias, UniValue& oName, const std::string &strWalletless="");
+bool BuildCertJson(const CCert& cert, const CAliasIndex& alias, UniValue& oName);
 bool BuildCertStatsJson(const std::vector<CCert> &certs, UniValue& oCertStats);
 uint64_t GetCertExpiration(const CCert& cert);
 #endif // CERT_H

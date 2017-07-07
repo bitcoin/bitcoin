@@ -411,10 +411,9 @@ BOOST_AUTO_TEST_CASE (generate_offeraccept)
 	// should fail: generate an offer accept with too-large message
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo selleralias3"));
 	string encryptionkey = find_value(r.get_obj(), "encryption_publickey").get_str();	
-	string strCipherDataBad = "";
-	BOOST_CHECK_EQUAL(EncryptMessage(ParseHex(encryptionkey), s1024bytes+"a", strCipherDataBad), true);
+	string strCipherDataBad = s1024bytes + "a";
 
-	BOOST_CHECK_THROW(r = CallRPC("node2", "offeraccept buyeralias3 " + offerguid + " 1 " + HexStr(vchFromString(strCipherDataBad))), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node2", "offeraccept buyeralias3 " + offerguid + " 1 " + strCipherDataBad, runtime_error);
 	
 	// perform an accept on negative quantity
 	BOOST_CHECK_THROW(r = CallRPC("node2", "offeraccept buyeralias3 " + offerguid + " -1 " + HexStr(vchFromString("message"))), runtime_error);

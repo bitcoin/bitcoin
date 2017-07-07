@@ -127,7 +127,7 @@ public:
 };
 
 bool GetTxOfMessage(const std::vector<unsigned char> &vchMessage, CTransaction& tx);
-bool BuildMessageJson(const CMessage& message, UniValue& oName, const std::string &strWalletless="");
+bool BuildMessageJson(const CMessage& message, UniValue& oName);
 uint64_t GetMessageExpiration(const CMessage& message);
 bool BuildMessageStatsJson(const std::vector<CMessage> &messages, UniValue& oMessageStats);
 #endif // MESSAGE_H

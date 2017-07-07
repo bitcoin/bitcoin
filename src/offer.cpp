@@ -3159,15 +3159,13 @@ UniValue offeracceptacknowledge(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue offerinfo(const UniValue& params, bool fHelp) {
-	if (fHelp || 1 > params.size() || 2 < params.size())
-		throw runtime_error("offerinfo <guid> [walletless=false]\n"
+	if (fHelp || 1 > params.size())
+		throw runtime_error("offerinfo <guid>\n"
 				"Show offer details\n");
 
 	UniValue oOffer(UniValue::VOBJ);
 	vector<unsigned char> vchOffer = vchFromValue(params[0]);
-	string strWalletless = "false";
-	if(CheckParam(params, 1))
-		strWalletless = params[1].get_str();
+
 	vector<COffer> vtxPos;
 	if (!pofferdb->ReadOffer(vchOffer, vtxPos) || vtxPos.empty())
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR: ERRCODE: 1591 - " + _("Failed to read from offer DB"));
@@ -3178,13 +3176,13 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 	if(!GetTxOfAlias(vtxPos.back().vchAlias, alias, aliastx, true))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1592 - " + _("Could not find the alias associated with this offer"));
 
-	if(!BuildOfferJson(vtxPos.back(), alias, oOffer, strWalletless))
+	if(!BuildOfferJson(vtxPos.back(), alias, oOffer))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1593 - " + _("Could not find this offer"));
 
 	return oOffer;
 
 }
-bool BuildOfferJson(const COffer& theOffer, const CAliasIndex &alias, UniValue& oOffer, const string &strWalletless)
+bool BuildOfferJson(const COffer& theOffer, const CAliasIndex &alias, UniValue& oOffer)
 {
 	if(theOffer.vchAlias != alias.vchAlias)
 		return false;
@@ -3307,7 +3305,7 @@ bool BuildOfferJson(const COffer& theOffer, const CAliasIndex &alias, UniValue& 
 	oOffer.push_back(Pair("offer_units", theOffer.fUnits));
 	return true;
 }
-bool BuildOfferAcceptJson(const COffer& theOffer, const CAliasIndex& theAlias, const CAliasIndex& offerAlias, UniValue& oOfferAccept, const string &strWalletless)
+bool BuildOfferAcceptJson(const COffer& theOffer, const CAliasIndex& theAlias, const CAliasIndex& offerAlias, UniValue& oOfferAccept)
 {
 	COffer linkOffer;
 	CTransaction linkTx;
@@ -3495,16 +3493,7 @@ bool BuildOfferAcceptJson(const COffer& theOffer, const CAliasIndex& theAlias, c
 	totalAvgRating = floor(totalAvgRating * 10) / 10;
 	oOfferAccept.push_back(Pair("avg_rating", totalAvgRating));
 	oOfferAccept.push_back(Pair("avg_rating_display", strprintf("%.1f/5 (%d %s)", totalAvgRating, ratingCount, _("Votes"))));
-	string strData = "";
-	string strDecrypted = "";
-	if(!theOffer.accept.vchMessage.empty())
-	{
-		if(strWalletless == "true")
-			strData = HexStr(theOffer.accept.vchMessage);		
-		else if(DecryptMessage(theAlias, theOffer.accept.vchMessage, strDecrypted))
-			strData = strDecrypted;			
-	}
-	oOfferAccept.push_back(Pair("pay_message", strData));
+	oOfferAccept.push_back(Pair("pay_message", HexStr(theOffer.accept.vchMessage)));
 	return true;
 }
 UniValue offercount(const UniValue& params, bool fHelp) {
@@ -3616,8 +3605,8 @@ UniValue offercount(const UniValue& params, bool fHelp) {
 	return found;
 }
 UniValue offerlist(const UniValue& params, bool fHelp) {
-    if (fHelp || 6 < params.size())
-        throw runtime_error("offerlist [\"alias\",...] [guid] [accepts=false] [walletless=false] [count] [from]\n"
+    if (fHelp || 5 < params.size())
+        throw runtime_error("offerlist [\"alias\",...] [guid] [accepts=false] [count] [from]\n"
                 "list offers that an array of aliases own. Set of aliases to look up based on alias.\n"
 				"[count]          (numeric, optional, default=10) The number of results to return\n"
 				"[from]           (numeric, optional, default=0) The number of results to skip\n");
@@ -3645,16 +3634,12 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 	if(CheckParam(params, 2))
 		strAccepts = params[2].get_str();
 
-	string strWalletless = "false";
-	if(CheckParam(params, 3))
-		strWalletless = params[3].get_str();
-
 	int count = 10;
 	int from = 0;
+	if (CheckParam(params, 3))
+		count = atoi(params[3].get_str());
 	if (CheckParam(params, 4))
-		count = atoi(params[4].get_str());
-	if (CheckParam(params, 5))
-		from = atoi(params[5].get_str());
+		from = atoi(params[4].get_str());
 	int found = 0;
 
 
@@ -3725,7 +3710,7 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 						found++;
 						if (found < from)
 							continue;
-						if(BuildOfferJson(theOffer, vtxAliasPos.back(), oOffer, strWalletless))
+						if(BuildOfferJson(theOffer, vtxAliasPos.back(), oOffer))
 							oRes.push_back(oOffer);
 					}
 					else if(strAccepts == "true")
@@ -3748,7 +3733,7 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 						CAliasIndex offerAcceptAlias;
 						offerAcceptAlias.nHeight = offer.accept.nAcceptHeight;
 						offerAcceptAlias.GetAliasFromList(vtxAliasPos);
-						if(BuildOfferAcceptJson(acceptOffer, vtxPos.back(), vtxAliasPos.back(), oOffer, strWalletless))
+						if(BuildOfferAcceptJson(acceptOffer, vtxPos.back(), vtxAliasPos.back(), oOffer))
 							oRes.push_back(oOffer);
 					}
 					// for accepts its the same as acceptheight because its the height from transaction
@@ -3763,15 +3748,13 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
     return oRes;
 }
 UniValue offerhistory(const UniValue& params, bool fHelp) {
-	if (fHelp || 1 > params.size() || 2 < params.size())
-		throw runtime_error("offerhistory <offer> [walletless=false]\n"
+	if (fHelp || 1 > params.size())
+		throw runtime_error("offerhistory <offer>\n"
 				"List all stored values of an offer.\n");
 
 	UniValue oRes(UniValue::VARR);
 	vector<unsigned char> vchOffer = vchFromValue(params[0]);
-	string strWalletless = "false";
-	if(CheckParam(params, 1))
-		strWalletless = params[1].get_str();
+
 	vector<COffer> vtxPos;
 	if (!pofferdb->ReadOffer(vchOffer, vtxPos) || vtxPos.empty())
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1594 - " + _("Failed to read from offer DB"));
@@ -3808,7 +3791,7 @@ UniValue offerhistory(const UniValue& params, bool fHelp) {
 
 		
 		oOffer.push_back(Pair("offertype", opName));
-		if(BuildOfferJson(txPos2, theAlias, oOffer, strWalletless))
+		if(BuildOfferJson(txPos2, theAlias, oOffer))
 			oRes.push_back(oOffer);
 	}
 	

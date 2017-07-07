@@ -22,7 +22,6 @@
 #include "policy/policy.h"
 #include "utiltime.h"
 #include "coincontrol.h"
-#include "messagecrypter.h"
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/case_conv.hpp> // for to_lower()
 #include <boost/xpressive/xpressive_dynamic.hpp>
@@ -1745,61 +1744,6 @@ CAmount GetDataFee(const CScript& scriptPubKey, const vector<unsigned char>& vch
 	recipient.nAmount = nFee;
 	return recipient.nAmount;
 }
-UniValue aliasauthenticate(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() < 3 || params.size() > 4)
-		throw runtime_error("aliasauthenticate <alias> <password> <salt> [unittest]\n"
-		"Authenticates an alias with a provided password/salt combination and returns the private key if successful. Warning: Calling this function over a network can lead to an external party reading your salt/password/private key in plain text.\n");
-	vector<unsigned char> vchAlias = vchFromString(params[0].get_str());
-	const SecureString &strPassword = params[1].get_str().c_str();
-	string strSalt = params[2].get_str();
-    string strUnitTest = "";
-	if(CheckParam(params, 3))
-		strUnitTest = params[3].get_str();	
-	CTransaction tx;
-	CAliasIndex theAlias;
-	if (!GetTxOfAlias(vchAlias, theAlias, tx, true))
-		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5500 - " + _("Could not find an alias with this name"));
-
-	CCrypter crypt;
-	if(strPassword.empty())
-		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5501 - " + _("Password cannot be empty"));
-
-	if(!crypt.SetKeyFromPassphrase(strPassword, ParseHex(strSalt), 1, strUnitTest == "true"? 2: 1))
-		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5502 - " + _("Could not determine key from password"));
-
-	CKey key;
-	key.Set(crypt.chKey, crypt.chKey + (sizeof crypt.chKey), true);
-	CPubKey defaultKey = key.GetPubKey();
-	if(!defaultKey.IsFullyValid())
-		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5503 - " + _("Generated public key not fully valid"));
-
-	CSyscoinAddress defaultAddress(defaultKey.GetID());
-	CPubKey encryptionPubKey(theAlias.vchEncryptionPublicKey);
-	if(!encryptionPubKey.IsFullyValid())
-		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5503 - " + _("Encryption public key not fully valid"));
-
-	CSyscoinAddress encryptionAddress(encryptionPubKey.GetID());
-	CSyscoinSecret Secret(key);
-
-	bool readonly = false;
-	if(EncodeBase58(theAlias.vchAddress) != defaultAddress.ToString())
-	{
-		CKey PrivateKey = Secret.GetKey();
-		const vector<unsigned char> vchPrivateKey(PrivateKey.begin(), PrivateKey.end());
-		string strPrivateKey = "";
-		CMessageCrypter crypter;
-		if(!crypter.Decrypt(stringFromVch(vchPrivateKey), stringFromVch(theAlias.vchEncryptionPrivateKey), strPrivateKey))
-			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5504 - " + _("Password is incorrect"));	
-		readonly = true;
-	}
-
-
-	UniValue res(UniValue::VOBJ);
-	res.push_back(Pair("privatekey", Secret.ToString()));
-	res.push_back(Pair("readonly", readonly));
-	return res;
-
-}
 bool CheckParam(const UniValue& params, const unsigned int index)
 {
 	if(params.size() > index)
@@ -2753,25 +2697,22 @@ int aliasunspent(const vector<unsigned char> &vchAlias, COutPoint& outpoint)
  * @return        [description]
  */
 UniValue aliasinfo(const UniValue& params, bool fHelp) {
-	if (fHelp || 1 > params.size() || 2 < params.size())
-		throw runtime_error("aliasinfo <aliasname> [walletless=false]\n"
+	if (fHelp || 1 > params.size())
+		throw runtime_error("aliasinfo <aliasname>\n"
 				"Show values of an alias.\n");
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
-	string strWalletless = "false";
-	if(CheckParam(params, 1))
-		strWalletless = params[1].get_str();
 
 	vector<CAliasIndex> vtxPos;
 	if (!paliasdb->ReadAlias(vchAlias, vtxPos) || vtxPos.empty())
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5535 - " + _("Failed to read from alias DB"));
 
 	UniValue oName(UniValue::VOBJ);
-	if(!BuildAliasJson(vtxPos.back(), false, oName, strWalletless))
+	if(!BuildAliasJson(vtxPos.back(), false, oName))
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5536 - " + _("Could not find this alias"));
 		
 	return oName;
 }
-bool BuildAliasJson(const CAliasIndex& alias, const bool pending, UniValue& oName, const string &strWalletless)
+bool BuildAliasJson(const CAliasIndex& alias, const bool pending, UniValue& oName)
 {
 	uint64_t nHeight;
 	bool expired = false;
@@ -2782,44 +2723,13 @@ bool BuildAliasJson(const CAliasIndex& alias, const bool pending, UniValue& oNam
 	
 	if(alias.safetyLevel >= SAFETY_LEVEL2)
 		return false;
-	string strEncryptionPrivateKey = "";
-	string strData = "";
-	string strPassword = "";
-	string strDecrypted = "";
-	if(strWalletless == "true")
-		strEncryptionPrivateKey = HexStr(alias.vchEncryptionPrivateKey);
-	else
-	{
-		DecryptPrivateKey(alias, strEncryptionPrivateKey);
-	}
-	if(!alias.vchPrivateValue.empty() || !alias.vchPassword.empty())
-	{
-		if(strWalletless == "true")
-		{
-			strData = HexStr(alias.vchPrivateValue);
-			strPassword = HexStr(alias.vchPassword);
-		}
-		else
-		{
-			CMessageCrypter crypter;
-			if(!strEncryptionPrivateKey.empty())
-			{
-				if(!alias.vchPrivateValue.empty() && crypter.Decrypt(strEncryptionPrivateKey, stringFromVch(alias.vchPrivateValue), strDecrypted))
-					strData = strDecrypted;
-				strDecrypted = "";
-				if(!alias.vchPassword.empty() && crypter.Decrypt(strEncryptionPrivateKey, stringFromVch(alias.vchPassword), strDecrypted))
-					strPassword = strDecrypted;
-			}
-		}
-	}
-
-	oName.push_back(Pair("password", strPassword));
+	oName.push_back(Pair("password", HexStr(alias.vchPassword)));
 	oName.push_back(Pair("passwordsalt", HexStr(alias.vchPasswordSalt)));
-	oName.push_back(Pair("encryption_privatekey", HexStr(strEncryptionPrivateKey)));
+	oName.push_back(Pair("encryption_privatekey", HexStr(alias.vchEncryptionPrivateKey)));
 	oName.push_back(Pair("encryption_publickey", HexStr(alias.vchEncryptionPublicKey)));
 	oName.push_back(Pair("alias_peg", stringFromVch(alias.vchAliasPeg)));
 	oName.push_back(Pair("publicvalue", stringFromVch(alias.vchPublicValue)));	
-	oName.push_back(Pair("privatevalue", strData));
+	oName.push_back(Pair("privatevalue", HexStr(alias.vchPrivateValue)));
 	oName.push_back(Pair("txid", alias.txHash.GetHex()));
 	string sTime;
 	CBlockIndex *pindex = chainActive[alias.nHeight];
@@ -2894,14 +2804,11 @@ bool BuildAliasJson(const CAliasIndex& alias, const bool pending, UniValue& oNam
  * @return        [description]
  */
 UniValue aliashistory(const UniValue& params, bool fHelp) {
-	if (fHelp || 1 > params.size() || 2 < params.size())
-		throw runtime_error("aliashistory <aliasname> [walletless=false]\n"
+	if (fHelp || 1 > params.size())
+		throw runtime_error("aliashistory <aliasname>\n"
 				"List all stored values of an alias.\n");
 	UniValue oRes(UniValue::VARR);
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
-	string strWalletless = "false";
-	if(CheckParam(params, 1))
-		strWalletless = params[1].get_str();	
 	vector<CAliasIndex> vtxPos;
 	if (!paliasdb->ReadAlias(vchAlias, vtxPos) || vtxPos.empty())
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5537 - " + _("Failed to read from alias DB"));
@@ -3107,7 +3014,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 					continue;
 				oPaymentDetails[tx.GetHash()] = 1;
 				alias.txHash = tx.GetHash();
-				if(BuildAliasJson(alias, false, oName, strWalletless))
+				if(BuildAliasJson(alias, false, oName))
 					oUpdates.push_back(oName);
 			}
 		}

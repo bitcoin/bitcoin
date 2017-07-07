@@ -28,19 +28,10 @@ BOOST_AUTO_TEST_CASE (generate_big_msgdata)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo " + toalias));
 	string encryptionkey = find_value(r.get_obj(), "encryption_publickey").get_str();
 
-	string strCipherGoodPrivateData = "";
-	BOOST_CHECK_EQUAL(EncryptMessage(ParseHex(encryptionkey), gooddata, strCipherGoodPrivateData), true);
-	if(strCipherGoodPrivateData.empty())
-		strCipherGoodPrivateData = "\"\"";
-	else
-		strCipherGoodPrivateData = HexStr(strCipherGoodPrivateData);
+	string strCipherGoodPrivateData = gooddata
 
-	string strCipherBadPrivateData = "";
-	BOOST_CHECK_EQUAL(EncryptMessage(ParseHex(encryptionkey), baddata, strCipherBadPrivateData), true);
-	if(strCipherBadPrivateData.empty())
-		strCipherBadPrivateData = "\"\"";
-	else
-		strCipherBadPrivateData = HexStr(strCipherBadPrivateData);
+	string strCipherBadPrivateData = baddata;
+
 
 	
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "messagenew " + strCipherGoodPrivateData + " " + goodtitle + " " + fromalias + " " + toalias +  " 01 01 01"));
@@ -62,12 +53,8 @@ BOOST_AUTO_TEST_CASE (generate_big_msgsubject)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo " + toalias));
 	string encryptionkey = find_value(r.get_obj(), "encryption_publickey").get_str();
 
-	string strCipherGoodPrivateData = "";
-	BOOST_CHECK_EQUAL(EncryptMessage(ParseHex(encryptionkey), gooddata, strCipherGoodPrivateData), true);
-	if(strCipherGoodPrivateData.empty())
-		strCipherGoodPrivateData = "\"\"";
-	else
-		strCipherGoodPrivateData = HexStr(strCipherGoodPrivateData);
+	string strCipherGoodPrivateData = gooddata;
+
 
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "messagenew " + strCipherGoodPrivateData + " " + goodtitle + " jagmsg1 jagmsg2" + " 01 01 01"));
 	GenerateBlocks(5);

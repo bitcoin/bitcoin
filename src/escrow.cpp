@@ -3342,14 +3342,11 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue escrowinfo(const UniValue& params, bool fHelp) {
-    if (fHelp || 1 > params.size() || 2 < params.size())
-        throw runtime_error("escrowinfo <guid> [walletless=false]\n"
+    if (fHelp || 1 > params.size())
+        throw runtime_error("escrowinfo <guid>\n"
                 "Show stored values of a single escrow\n");
 
     vector<unsigned char> vchEscrow = vchFromValue(params[0]);
-	string strWalletless = "false";
-	if(CheckParam(params, 1))
-		strWalletless = params[1].get_str();
 	vector<CEscrow> vtxPos;
 
     UniValue oEscrow(UniValue::VOBJ);
@@ -3357,11 +3354,11 @@ UniValue escrowinfo(const UniValue& params, bool fHelp) {
 	if (!pescrowdb->ReadEscrow(vchEscrow, vtxPos) || vtxPos.empty())
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4604 - " + _("Failed to read from escrow DB"));
 
-	if(!BuildEscrowJson(vtxPos.back(), oEscrow, strWalletless))
+	if(!BuildEscrowJson(vtxPos.back(), oEscrow))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4605 - " + _("Could not find this escrow"));
     return oEscrow;
 }
-bool BuildEscrowJson(const CEscrow &escrow, UniValue& oEscrow, const string &strWalletless)
+bool BuildEscrowJson(const CEscrow &escrow, UniValue& oEscrow)
 {
 	vector<CEscrow> vtxPos;
 	if (!pescrowdb->ReadEscrow(escrow.vchEscrow, vtxPos) || vtxPos.empty())
@@ -3466,16 +3463,7 @@ bool BuildEscrowJson(const CEscrow &escrow, UniValue& oEscrow, const string &str
 	oEscrow.push_back(Pair("redeem_txid", strRedeemTxId));
     oEscrow.push_back(Pair("txid", escrow.txHash.GetHex()));
     oEscrow.push_back(Pair("height", sHeight));
-	string strData = "";
-	string strDecrypted = "";
-	if(!escrow.vchPaymentMessage.empty())
-	{
-		if(strWalletless == "true")
-			strData = HexStr(escrow.vchPaymentMessage);		
-		else if(DecryptMessage(sellerAlias, escrow.vchPaymentMessage, strDecrypted))
-			strData = strDecrypted;			
-	}
-	oEscrow.push_back(Pair("pay_message", strData));
+	oEscrow.push_back(Pair("pay_message", HexStr(escrow.vchPaymentMessage)));
 	int64_t expired_time = GetEscrowExpiration(escrow);
 	bool expired = false;
     if(expired_time <= chainActive.Tip()->nTime)
@@ -3590,8 +3578,8 @@ bool BuildEscrowJson(const CEscrow &escrow, UniValue& oEscrow, const string &str
 	return true;
 }
 UniValue escrowlist(const UniValue& params, bool fHelp) {
-	if (fHelp || 5 < params.size())
-        throw runtime_error("escrowlist [\"alias\",...] [<escrow>] [walletless=false] [count] [from]\n"
+	if (fHelp || 4 < params.size())
+        throw runtime_error("escrowlist [\"alias\",...] [<escrow>] [count] [from]\n"
                 "list escrows that an array of aliases are involved in. Set of aliases to look up based on alias.\n"
 				"[count]          (numeric, optional, default=10) The number of results to return\n"
 				"[from]           (numeric, optional, default=0) The number of results to skip\n");
@@ -3615,16 +3603,13 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
     if(CheckParam(params, 1))
         vchNameUniq = vchFromValue(params[1]);
 
-	string strWalletless = "false";
-	if(CheckParam(params, 2))
-		strWalletless = params[2].get_str();
 
 	int count = 10;
 	int from = 0;
+	if (CheckParam(params, 2))
+		count = atoi(params[2].get_str());
 	if (CheckParam(params, 3))
-		count = atoi(params[3].get_str());
-	if (CheckParam(params, 4))
-		from = atoi(params[4].get_str());
+		from = atoi(params[3].get_str());
 	int found = 0;
 
 	map<uint256, CTransaction> vtxTx;
@@ -3690,7 +3675,7 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 					found++;
 					if (found < from)
 						continue;
-					if(BuildEscrowJson(theEscrow, oEscrow, strWalletless))
+					if(BuildEscrowJson(theEscrow, oEscrow))
 					{
 						oRes.push_back(oEscrow);
 					}
@@ -3742,15 +3727,12 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
 	return oRes;
 }
 UniValue escrowhistory(const UniValue& params, bool fHelp) {
-    if (fHelp || 1 > params.size() || 2 < params.size())
-        throw runtime_error("escrowhistory <escrow> [walletless=false]\n"
+    if (fHelp || 1 > params.size())
+        throw runtime_error("escrowhistory <escrow>\n"
                 "List all stored values of an escrow.\n");
 
     UniValue oRes(UniValue::VARR);
     vector<unsigned char> vchEscrow = vchFromValue(params[0]);
-	string strWalletless = "false";
-	if(CheckParam(params, 1))
-		strWalletless = params[1].get_str();
 
     vector<CEscrow> vtxPos;
     if (!pescrowdb->ReadEscrow(vchEscrow, vtxPos) || vtxPos.empty())
@@ -3758,7 +3740,7 @@ UniValue escrowhistory(const UniValue& params, bool fHelp) {
 
     BOOST_FOREACH(const CEscrow& escrow, vtxPos) {
 		UniValue oEscrow(UniValue::VOBJ);
-        if(BuildEscrowJson(escrow, oEscrow, strWalletless))
+        if(BuildEscrowJson(escrow, oEscrow))
 			oRes.push_back(oEscrow);
     }
     return oRes;
