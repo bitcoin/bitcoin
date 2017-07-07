@@ -150,6 +150,12 @@ enum
 
 #define READWRITE(...)      (::SerReadWriteMany(s, ser_action, __VA_ARGS__))
 
+//! Convert the reference base type to X, without changing constness or reference type.
+template<typename X> X& AsType(X& x) { return x; }
+template<typename X> const X& AsType(const X& x) { return x; }
+template<typename X> X&& AsType(X&& x) { return std::move(x); }
+template<typename X> const X&& AsType(const X&& x) { return std::move(x); }
+
 /** 
  * Implement three methods for serializable objects. These are actually wrappers over
  * "SerializationOp" template, which implements the body of each class' serialization
