@@ -10,7 +10,6 @@
 #include "rpc/server.h"
 #include "wallet/wallet.h"
 #include "chainparams.h"
-#include "messagecrypter.h"
 #include <boost/algorithm/hex.hpp>
 #include <boost/algorithm/string/case_conv.hpp> // for to_lower()
 #include <boost/xpressive/xpressive_dynamic.hpp>
@@ -21,70 +20,6 @@
 using namespace std;
 extern void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CWalletTx* wtxInAlias=NULL, int nTxOutAlias = 0, bool syscoinMultiSigTx=false, const CCoinControl* coinControl=NULL, const CWalletTx* wtxInLinkAlias=NULL,  int nTxOutLinkAlias = 0)
 ;
-bool EncryptMessage(const vector<unsigned char> &vchPubKey, const vector<unsigned char> &vchMessage, string &strCipherText)
-{
-	strCipherText.clear();
-	CMessageCrypter crypter;
-	if(!crypter.Encrypt(stringFromVch(vchPubKey), stringFromVch(vchMessage), strCipherText))
-		return false;
-
-	return true;
-}
-bool EncryptMessage(const CAliasIndex& alias, const vector<unsigned char> &vchMessage, string &strCipherText)
-{
-	strCipherText.clear();
-	CMessageCrypter crypter;
-	if(!crypter.Encrypt(stringFromVch(alias.vchEncryptionPublicKey), stringFromVch(vchMessage), strCipherText))
-		return false;
-
-	return true;
-}
-bool DecryptPrivateKey(const vector<unsigned char> &vchPubKey, const vector<unsigned char> &vchCipherText, string &strMessage)
-{
-	strMessage.clear();
-	std::vector<unsigned char> vchPrivateKey;
-	CMessageCrypter crypter;
-	
-	CKey PrivateKey;
-	CPubKey PubKey(vchPubKey);
-	CKeyID pubKeyID = PubKey.GetID();
-	if (!pwalletMain->GetKey(pubKeyID, PrivateKey))
-		return false;
-	CSyscoinSecret Secret(PrivateKey);
-	PrivateKey = Secret.GetKey();
-	vchPrivateKey = std::vector<unsigned char>(PrivateKey.begin(), PrivateKey.end());
-	strMessage.clear();
-	if(!crypter.Decrypt(stringFromVch(vchPrivateKey), stringFromVch(vchCipherText), strMessage))
-		return false;
-	
-	
-	return true;
-}
-bool DecryptMessage(const CAliasIndex& alias, const vector<unsigned char> &vchCipherText, string &strMessage)
-{
-	strMessage.clear();
-	// get private key from alias or use one passed in to get the encryption private key
-	string strKey = "";
-	if(!alias.multiSigInfo.IsNull())
-	{
-		for(int i =0;i<alias.multiSigInfo.vchAliases.size();i++)
-		{
-			vector<CAliasIndex> vtxPos;
-			if (!paliasdb->ReadAlias(vchFromString(alias.multiSigInfo.vchAliases[i]), vtxPos) || vtxPos.empty())
-				continue;
-			if(DecryptPrivateKey(vtxPos.back().vchPubKey, vchFromString(alias.multiSigInfo.vchEncryptionPrivateKeys[i]), strKey))
-				break;
-		}	
-	}
-	else
-		DecryptPrivateKey(alias.vchPubKey, alias.vchEncryptionPrivateKey, strKey);
-	// use encryption private key to get data
-	CMessageCrypter crypter;
-	if(!crypter.Decrypt(strKey, stringFromVch(vchCipherText), strMessage))
-		return false;
-	
-	return true;
-}
 void PutToCertList(std::vector<CCert> &certList, CCert& index) {
 	int i = certList.size() - 1;
 	BOOST_REVERSE_FOREACH(CCert &o, certList) {
@@ -782,15 +717,7 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 
 
     CScript scriptPubKey,scriptPubKeyAlias;
-	if(!vchData.empty())
-	{
-		string strCipherText;
-		if(!EncryptMessage(theAlias, vchData, strCipherText))
-		{
-			throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2503 - " + _("Could not encrypt certificate data"));
-		}	
-		vchData = vchFromString(strCipherText);	
-	}
+
 
 	// calculate net
     // build cert object
@@ -938,32 +865,7 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 
     // create CERTUPDATE txn keys
     CScript scriptPubKey;
-	// if we want to make data private, encrypt it
-	if(!vchData.empty())
-	{
-		string strCipherText;
-		if(!EncryptMessage(theAlias, vchData, strCipherText))
-		{
-			throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2508 - " + _("Could not encrypt certificate data"));
-		}
-		// decrypt old alias data if private
-		// detect if data payload changed
-		if(!copyCert.vchData.empty() && copyCert.vchAlias == vchAlias)
-		{
-			string strDecryptedText = "";
-			if(DecryptMessage(theAlias, copyCert.vchData, strDecryptedText))
-			{
-				if(vchData == vchFromString(strDecryptedText))
-					vchData = copyCert.vchData;
-				else
-					vchData = vchFromString(strCipherText);
-			}
-			else
-				vchData = vchFromString(strCipherText);
-		}
-		else
-			vchData = vchFromString(strCipherText);
-	}
+	
 
 
     if(copyCert.vchTitle != vchTitle)
@@ -1087,26 +989,7 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	if (wtxAliasIn == NULL)
 		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR ERRCODE: 2513 - " + _("This alias is not in your wallet"));
 
-	// if cert is private, decrypt the data
 	vector<unsigned char> vchData = theCert.vchData;
-	if(!theCert.vchData.empty())
-	{		
-		string strData = "";
-		string strCipherText = "";
-		
-		// decrypt using old key
-		if(DecryptMessage(fromAlias, theCert.vchData, strData))
-		{
-			// encrypt using new key
-			if(!EncryptMessage(toAlias, vchFromString(strData), strCipherText))
-			{
-				throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2514 - " + _("Could not encrypt certificate data"));
-			}
-			vchData = vchFromString(strCipherText);
-		}
-		else
-			vchData = theCert.vchData;	
-	}	
 	CSyscoinAddress sendAddr;
 	GetAddress(toAlias, &sendAddr, scriptPubKeyOrig);
 	CSyscoinAddress fromAddr;
@@ -1336,16 +1219,6 @@ bool BuildCertJson(const CCert& cert, const CAliasIndex& alias, UniValue& oCert)
 	}
 	oCert.push_back(Pair("time", sTime));
 	string strData = stringFromVch(cert.vchData);
-	string strDecrypted = "";
-	if(!cert.vchData.empty())
-	{
-		strData = _("Encrypted for owner of certificate private data");
-		if(!cert.vchData.empty() && strDecrypted == "")
-		{
-			if(DecryptMessage(alias, cert.vchData, strDecrypted))
-				strData = strDecrypted;		
-		}
-	}
     oCert.push_back(Pair("data", strData));
 	oCert.push_back(Pair("pubdata", stringFromVch(cert.vchPubData)));
 	oCert.push_back(Pair("category", stringFromVch(cert.sCategory)));
@@ -1509,16 +1382,9 @@ void CertTxToJSON(const int op, const std::vector<unsigned char> &vchData, const
 	entry.push_back(Pair("title", titleValue));
 
 	string strDataValue = "";
-	if(cert.vchData.empty())
-	{
-		strDataValue = _("Encrypted for owner of certificate private data");
-		string strDecrypted = "";
-		if(DecryptMessage(dbAlias, cert.vchData, strDecrypted))
-			strDataValue = strDecrypted;		
-	}
 	string dataValue = noDifferentStr;
 	if(!cert.vchData.empty() && cert.vchData != dbCert.vchData)
-		dataValue = strDataValue;
+		dataValue = stringFromVch(cert.vchData);
 
 	entry.push_back(Pair("data", dataValue));
 

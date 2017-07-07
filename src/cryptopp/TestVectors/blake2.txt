@@ -1,4 +1,0 @@
-AlgorithmType: FileList
-Name: blake2.txt collection
-Test: TestVectors/blake2s.txt
-Test: TestVectors/blake2b.txt

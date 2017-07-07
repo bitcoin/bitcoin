@@ -18,10 +18,6 @@ bool DecodeAndParseCertTx(const CTransaction& tx, int& op, int& nOut, std::vecto
 bool DecodeCertScript(const CScript& script, int& op, std::vector<std::vector<unsigned char> > &vvch);
 bool IsCertOp(int op);
 int IndexOfCertOutput(const CTransaction& tx);
-bool EncryptMessage(const std::vector<unsigned char> &vchPublicKey, const std::vector<unsigned char> &vchMessage, std::string &strCipherText);
-bool EncryptMessage(const CAliasIndex& alias, const std::vector<unsigned char> &vchMessage, std::string &strCipherText);
-bool DecryptPrivateKey(const std::vector<unsigned char> &vchPubKey, const std::vector<unsigned char> &vchCipherText, std::string &strMessage);
-bool DecryptMessage(const CAliasIndex& alias, const std::vector<unsigned char> &vchCipherText, std::string &strMessage);
 void CertTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry);
 std::string certFromOp(int op);
 bool RemoveCertScriptPrefix(const CScript& scriptIn, CScript& scriptOut);

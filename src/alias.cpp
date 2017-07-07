@@ -1899,10 +1899,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 			CPubKey pubkey(multiSigAlias.vchPubKey);
 			pubkeys.push_back(pubkey);
 			multiSigInfo.vchAliases.push_back(aliasNames[i].get_str());
-			vector<unsigned char> vchMSPubKey(pubkey.begin(), pubkey.end());
-			if(!EncryptMessage(vchMSPubKey, vchEncryptionPrivateKey, strCipherText))
-				throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5513 - " + _("Could not encrypt private encryption key!"));
-			multiSigInfo.vchEncryptionPrivateKeys.push_back(strCipherText);
+			multiSigInfo.vchEncryptionPrivateKeys.push_back(stringFromVch(vchEncryptionPrivateKey));
 		}
 		scriptPubKeyOrig = GetScriptForMultisig(nMultiSig, pubkeys);
 		std::vector<unsigned char> vchRedeemScript(scriptPubKeyOrig.begin(), scriptPubKeyOrig.end());
@@ -1916,26 +1913,6 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 
 	std::vector<unsigned char> vchPubKey(defaultKey.begin(), defaultKey.end());
 	
-	if(!EncryptMessage(vchEncryptionPublicKey, vchPrivateValue, strCipherText))
-	{
-		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5514 - " + _("Could not encrypt private alias value!"));
-	}
-	vchPrivateValue = vchFromString(strCipherText);
-
-	if(!EncryptMessage(vchPubKey, vchEncryptionPrivateKey, strCipherText))
-	{
-		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5515 - " + _("Could not encrypt private encryption key!"));
-	}
-	vchEncryptionPrivateKey = vchFromString(strCipherText);
-	
-	if(!strPassword.empty())
-	{
-		if(!EncryptMessage(vchPubKey, vchFromString(strPassword), strCipherText))
-		{
-			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5516 - " + _("Could not encrypt alias password"));
-		}
-		strPassword = strCipherText;
-	}
 	vector<unsigned char> vchRandAlias = vchFromString(GenerateSyscoinGuid());
 
     // build alias
@@ -2146,50 +2123,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	string strCipherText;
 	vector<unsigned char> vchEncryptionPrivateKey = copyAlias.vchEncryptionPrivateKey;
 	vector<unsigned char> vchEncryptionPublicKey = copyAlias.vchEncryptionPublicKey;
-	string strDecryptedText = "";
-	if(!DecryptPrivateKey(copyAlias.vchPubKey, vchEncryptionPrivateKey, strDecryptedText))
-	{
-		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5523 - " + _("Could not decrypt alias encryption private key"));
-	}
-	vchEncryptionPrivateKey = vchFromString(strDecryptedText);
-	if(!vchPrivateValue.empty())
-	{
-		// see if data changed, if not dont send payload
-		if(!copyAlias.vchPrivateValue.empty() && !transferAlias)
-		{
-			if(!DecryptMessage(copyAlias, copyAlias.vchPrivateValue, strDecryptedText))
-			{
-				throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5524 - " + _("Could not decrypt alias private data"));
-			}
-			if(vchPrivateValue == vchFromString(strDecryptedText))
-				vchPrivateValue = copyAlias.vchPrivateValue;
-			else
-			{
-				if(!EncryptMessage(vchEncryptionPublicKey, vchPrivateValue, strCipherText))
-				{
-					throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5525 - " + _("Could not encrypt alias private data"));
-				}
-				vchPrivateValue = vchFromString(strCipherText);
-			}
-		}
-		else
-		{
-			if(!EncryptMessage(vchEncryptionPublicKey, vchPrivateValue, strCipherText))
-			{
-				throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5526 - " + _("Could not encrypt alias private data"));
-			}
-			vchPrivateValue = vchFromString(strCipherText);
-		}
-	}
-	if(!strPassword.empty())
-	{
-		// encrypt using new key
-		if(!EncryptMessage(vchPubKeyByte, vchFromString(strPassword), strCipherText))
-		{
-			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5527 - " + _("Could not encrypt alias password"));
-		}
-		strPassword = strCipherText;
-	}
+
 	CMultiSigAliasInfo multiSigInfo;
 	if(aliasNames.size() > 0)
 	{
@@ -2206,21 +2140,14 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 			CPubKey pubkey(multiSigAlias.vchPubKey);
 			pubkeys.push_back(pubkey);
 			multiSigInfo.vchAliases.push_back(aliasNames[i].get_str());
-			vector<unsigned char> vchMSPubKey(pubkey.begin(), pubkey.end());
-			if(!EncryptMessage(vchMSPubKey, vchEncryptionPrivateKey, strCipherText))
-				throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5529 - " + _("Could not encrypt private encryption key!"));
-			multiSigInfo.vchEncryptionPrivateKeys.push_back(strCipherText);
+			multiSigInfo.vchEncryptionPrivateKeys.push_back(stringFromVch(vchEncryptionPrivateKey));
 		}	
 		CScript script = GetScriptForMultisig(nMultiSig, pubkeys);
 		std::vector<unsigned char> vchRedeemScript(script.begin(), script.end());
 		multiSigInfo.vchRedeemScript = vchRedeemScript;
 	}
 
-	if(!EncryptMessage(vchPubKeyByte, vchEncryptionPrivateKey, strCipherText))
-	{
-		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5530 - " + _("Could not encrypt private encryption key!"));
-	}
-	vchEncryptionPrivateKey = vchFromString(strCipherText);
+
 
 	theAlias.nHeight = chainActive.Tip()->nHeight;
 	if(copyAlias.vchPublicValue != vchPublicValue)
@@ -2393,29 +2320,12 @@ void AliasTxToJSON(const int op, const vector<unsigned char> &vchData, const vec
 		publicValue = stringFromVch(alias.vchPublicValue);
 	entry.push_back(Pair("publicvalue", publicValue));
 
-	string strPrivateValue = "";
-	if(!alias.vchPrivateValue.empty())
-		strPrivateValue = _("Encrypted for alias owner");
-	string strDecrypted = "";
-	if(DecryptMessage(alias, alias.vchPrivateValue, strDecrypted))
-		strPrivateValue = strDecrypted;		
 
-	string privateValue = noDifferentStr;
-	if(!alias.vchPrivateValue.empty() && alias.vchPrivateValue != dbAlias.vchPrivateValue)
-		privateValue = strPrivateValue;
-
-	entry.push_back(Pair("privatevalue", privateValue));
-
-	string strPassword = "";
-	if(!alias.vchPassword.empty())
-		strPassword = _("Encrypted for alias owner");
-	strDecrypted = "";
-	if(DecryptPrivateKey(alias.vchPubKey, alias.vchPassword, strDecrypted))
-		strPassword = strDecrypted;		
+	entry.push_back(Pair("privatevalue", stringFromVch(alias.vchPrivateValue)));
 
 	string password = noDifferentStr;
 	if(!alias.vchPassword.empty() && alias.vchPassword != dbAlias.vchPassword)
-		password = strPassword;
+		password = stringFromVch(alias.vchPassword);
 
 	entry.push_back(Pair("password", password));
 
@@ -2836,21 +2746,8 @@ bool BuildAliasJson(const CAliasIndex& alias, const int pending, UniValue& oName
 		return false;
 	oName.push_back(Pair("name", stringFromVch(alias.vchAlias)));
 	oName.push_back(Pair("value", stringFromVch(alias.vchPublicValue)));
-	string strPrivateValue = "";
-	if(!alias.vchPrivateValue.empty())
-		strPrivateValue = _("Encrypted for alias owner");
-	string strDecrypted = "";
-	if(DecryptMessage(alias, alias.vchPrivateValue, strDecrypted))
-		strPrivateValue = strDecrypted;		
-	oName.push_back(Pair("privatevalue", strPrivateValue));
-
-	string strPassword = "";
-	if(!alias.vchPassword.empty())
-		strPassword = _("Encrypted for alias owner");
-	strDecrypted = "";
-	if(DecryptPrivateKey(alias.vchPubKey, alias.vchPassword, strDecrypted))
-		strPassword = strDecrypted;		
-	oName.push_back(Pair("password", strPassword));
+	oName.push_back(Pair("privatevalue", stringFromVch(alias.vchPrivateValue)));
+	oName.push_back(Pair("password", stringFromVch(alias.vchPassword)));
 
 
 	oName.push_back(Pair("txid", alias.txHash.GetHex()));
