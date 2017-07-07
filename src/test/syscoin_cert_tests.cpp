@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_CASE (generate_big_certdata)
 	strCipherGoodData = gooddata;
 	string guid = CertNew("node1", "jagcertbig1", "title", gooddata, gooddata);
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "certnew jagcertbig1 title \"\" " + strCipherGoodData));
-	BOOST_CHECK_THROW(CallRPC("node1", "certnew jagcertbig1 title \"\" " + strCipherBadData, runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "certnew jagcertbig1 title \"\" " + strCipherBadData), runtime_error);
 	// unencrypted 1025 bytes should cause us to trip 1025+80 bytes once encrypted
 	BOOST_CHECK_THROW(CallRPC("node1", "certnew jagcertbig1 title " + gooddata + " " + strCipherBadData, runtime_error);
 	// update cert with long pub data

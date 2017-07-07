@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_CASE (generate_big_msgdata)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo " + toalias));
 	string encryptionkey = find_value(r.get_obj(), "encryption_publickey").get_str();
 
-	string strCipherGoodPrivateData = gooddata
+	string strCipherGoodPrivateData = gooddata;
 
 	string strCipherBadPrivateData = baddata;
 
