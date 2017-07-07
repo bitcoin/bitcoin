@@ -203,6 +203,30 @@ template<typename X> const X& ReadWriteAsHelper(const X& x) { return x; }
         SerializationOp(s, CSerActionUnserialize());                  \
     }
 
+/**
+ * Implement the Serialize and Unserialize methods by delegating to a single templated
+ * static method that takes the to-be-(de)serialized object as a parameter. This approach
+ * has the advantage that the constness of the object becomes a template parameter, and
+ * thus allows a single implementation that sees the object as const for serializing
+ * and non-const for deserializing, without casts.
+ */
+#define SERIALIZE_METHODS(cls, obj)                                                 \
+    template<typename Stream>                                                       \
+    void Serialize(Stream& s) const                                                 \
+    {                                                                               \
+        static_assert(std::is_same<const cls&, decltype(*this)>::value, "Serialize type mismatch"); \
+        SerializationOps(*this, s, CSerActionSerialize());                          \
+    }                                                                               \
+    template<typename Stream>                                                       \
+    void Unserialize(Stream& s)                                                     \
+    {                                                                               \
+        static_assert(std::is_same<cls&, decltype(*this)>::value, "Unserialize type mismatch"); \
+        SerializationOps(*this, s, CSerActionUnserialize());                        \
+    }                                                                               \
+    template<typename Stream, typename Type, typename Operation>                    \
+    static inline void SerializationOps(Type& obj, Stream& s, Operation ser_action) \
+
+
 #ifndef CHAR_EQUALS_INT8
 template<typename Stream> inline void Serialize(Stream& s, char a    ) { ser_writedata8(s, a); } // TODO Get rid of bare char
 #endif
