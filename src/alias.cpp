@@ -3175,7 +3175,7 @@ bool BuildAliasStatsJson(const std::vector<CAliasIndex> &aliases, UniValue& oAli
 	UniValue oAliases(UniValue::VARR);
 	BOOST_REVERSE_FOREACH(const CAliasIndex& alias, aliases) {
 		UniValue oAlias(UniValue::VOBJ);
-		if(!BuildAliasJson(alias, false, oAlias, "true"))
+		if(!BuildAliasJson(alias, false, oAlias))
 			continue;
 		oAliases.push_back(oAlias);
 	}

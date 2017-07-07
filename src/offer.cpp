@@ -4055,7 +4055,7 @@ bool BuildOfferStatsJson(const std::vector<std::vector<COffer> > &offers, UniVal
 		if(!GetTxOfAlias(offer.vchAlias, alias, aliastx, true))
 			continue;
 
-		if(!BuildOfferJson(offer, alias, oOffer, "true"))
+		if(!BuildOfferJson(offer, alias, oOffer))
 			continue;
 		totalOffers++;
 		oOffers.push_back(oOffer);	

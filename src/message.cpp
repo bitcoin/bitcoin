@@ -848,7 +848,7 @@ bool BuildMessageStatsJson(const std::vector<CMessage> &messages, UniValue& oMes
 	UniValue oMessages(UniValue::VARR);
 	BOOST_REVERSE_FOREACH(const CMessage &message, messages) {
 		UniValue oMessage(UniValue::VOBJ);
-		if(!BuildMessageJson(message, oMessage, "true"))
+		if(!BuildMessageJson(message, oMessage))
 			continue;
 		oMessages.push_back(oMessage);
 	}
