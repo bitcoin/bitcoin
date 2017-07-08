@@ -2729,7 +2729,7 @@ UniValue manageaddressbook(const JSONRPCRequest &request)
             "manageaddressbook <action> <address> [label] [purpose]\n"
             "Manage the address book."
             "\nArguments:\n"
-            "1. \"action\"      (string, required) 'add/edit/del/info' The action to take.\n"
+            "1. \"action\"      (string, required) 'add/edit/del/info/newsend' The action to take.\n"
             "2. \"address\"     (string, required) The address to affect.\n"
             "3. \"label\"       (string, optional) Optional label.\n"
             "4. \"purpose\"     (string, optional) Optional purpose label.\n");
@@ -2740,6 +2740,9 @@ UniValue manageaddressbook(const JSONRPCRequest &request)
     std::string sAction = request.params[0].get_str();
     std::string sAddress = request.params[1].get_str();
     std::string sLabel, sPurpose;
+    
+    if (sAction != "info")
+        EnsureWalletIsUnlocked(pwallet);
     
     bool fHavePurpose = false;
     if (request.params.size() > 2)
@@ -2766,8 +2769,6 @@ UniValue manageaddressbook(const JSONRPCRequest &request)
     
     if (sAction == "add")
     {
-        EnsureWalletIsUnlocked(pwallet);
-        
         if (mabi != pwallet->mapAddressBook.end())
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf(_("Address '%s' is recorded in the address book."), sAddress));
         
@@ -2776,8 +2777,6 @@ UniValue manageaddressbook(const JSONRPCRequest &request)
     } else
     if (sAction == "edit")
     {
-        EnsureWalletIsUnlocked(pwallet);
-        
         if (request.params.size() < 3)
             throw JSONRPCError(RPC_INVALID_PARAMETER, _("Need a parameter to change."));
         if (mabi == pwallet->mapAddressBook.end())
@@ -2796,8 +2795,6 @@ UniValue manageaddressbook(const JSONRPCRequest &request)
     } else
     if (sAction == "del")
     {
-        EnsureWalletIsUnlocked(pwallet);
-        
         if (mabi == pwallet->mapAddressBook.end())
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf(_("Address '%s' is not in the address book."), sAddress));
         sLabel = mabi->second.name;
@@ -2839,6 +2836,18 @@ UniValue manageaddressbook(const JSONRPCRequest &request)
         result.push_back(Pair("result", "success"));
         
         return result;
+    } else
+    if (sAction == "newsend")
+    {
+        // Only update the purpose field if address does not yet exist
+        if (mabi != pwallet->mapAddressBook.end())
+            sPurpose = "";// "" means don't change purpose
+        
+        if (!pwallet->SetAddressBook(dest, sLabel, sPurpose))
+            throw JSONRPCError(RPC_WALLET_ERROR, "SetAddressBook failed.");
+        
+        if (mabi != pwallet->mapAddressBook.end())
+            sPurpose = mabi->second.purpose;
     } else
     {
         throw JSONRPCError(RPC_INVALID_PARAMETER, _("Unknown action, must be one of 'add/edit/del'."));
@@ -3120,6 +3129,7 @@ UniValue getstakinginfo(const JSONRPCRequest &request)
     return obj;
 };
 
+/*
 UniValue gettransactionsummary(const JSONRPCRequest &request)
 {
     if (request.fHelp || request.params.size() != 1)
@@ -3165,7 +3175,7 @@ UniValue gettransactionsummary(const JSONRPCRequest &request)
     
     return obj;
 };
-
+*/
 
 
 static int AddOutput(uint8_t nType, std::vector<CTempRecipient> &vecSend, const CTxDestination &address, CAmount nValue,
@@ -3309,20 +3319,28 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
     CTransactionRecord rtx;
     
     size_t nv = nCommentOfs;
-    if (request.params.size() > nv && !request.params[nv].isNull() && !request.params[nv].get_str().empty())
+    if (request.params.size() > nv && !request.params[nv].isNull())
     {
         std::string s = request.params[nv].get_str();
-        std::vector<uint8_t> v(s.begin(), s.end());
-        wtx.mapValue["comment"] = s;
-        rtx.mapValue[RTXVT_COMMENT] = v;
+        part::TrimQuotes(s);
+        if (!s.empty())
+        {
+            std::vector<uint8_t> v(s.begin(), s.end());
+            wtx.mapValue["comment"] = s;
+            rtx.mapValue[RTXVT_COMMENT] = v;
+        };
     };
     nv++;
-    if (request.params.size() > nv && !request.params[nv].isNull() && !request.params[nv].get_str().empty())
+    if (request.params.size() > nv && !request.params[nv].isNull())
     {
         std::string s = request.params[nv].get_str();
-        std::vector<uint8_t> v(s.begin(), s.end());
-        wtx.mapValue["to"] = s;
-        rtx.mapValue[RTXVT_TO] = v;
+        part::TrimQuotes(s);
+        if (!s.empty())
+        {
+            std::vector<uint8_t> v(s.begin(), s.end());
+            wtx.mapValue["to"] = s;
+            rtx.mapValue[RTXVT_TO] = v;
+        };
     };
     
     nv = nRingSizeOfs;
@@ -3681,7 +3699,7 @@ static const CRPCCommand commands[] =
     
     { "wallet",             "getstakinginfo",           &getstakinginfo,           true,  {} },
     
-    { "wallet",             "gettransactionsummary",    &gettransactionsummary,    true,  {} },
+    //{ "wallet",             "gettransactionsummary",    &gettransactionsummary,    true,  {} },
     
     
     //sendparttopart // normal txn

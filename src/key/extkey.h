@@ -25,6 +25,7 @@ static const uint32_t BIP44_PURPOSE = (((uint32_t)44) | (1 << 31));
 
 typedef std::map<uint8_t, std::vector<uint8_t> > mapEKValue_t;
 
+
 enum EKAddonValueTypes
 {
     EKVT_CREATED_AT         = 1, // up to 8 bytes of int64_t
@@ -44,6 +45,10 @@ enum MainExtKeyTypes
 {
     EKT_MASTER,
     EKT_BIP44_MASTER, // display with btc prefix (xprv)
+    EKT_INTERNAL,
+    EKT_EXTERNAL,
+    EKT_STEALTH,
+    EKT_CONFIDENTIAL,
     EKT_MAX_TYPES,
 };
 
@@ -400,7 +405,7 @@ public:
 class CEKAKey
 {
 public:
-    CEKAKey() {};
+    CEKAKey() : nParent(0), nKey(0) {};
     CEKAKey(uint32_t nParent_, uint32_t nKey_) : nParent(nParent_), nKey(nKey_) {};
     
     template<typename Stream>

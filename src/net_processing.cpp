@@ -912,6 +912,40 @@ void PeerLogicValidation::BlockChecked(const CBlock& block, CValidationState& st
         mapBlockSource.erase(it);
 }
 
+bool IncomingBlockChecked(const CBlock &block, CValidationState &state)
+{
+    LOCK(cs_main);
+
+    const uint256 hash(block.GetHash());
+    std::map<uint256, std::pair<NodeId, bool>>::iterator it = mapBlockSource.find(hash);
+
+    bool rv = true;
+    int nDoS = 0;
+    if (state.IsInvalid(nDoS)) {
+        if (it != mapBlockSource.end() && State(it->second.first)) {
+            assert (state.GetRejectCode() < REJECT_INTERNAL); // Blocks are never rejected with internal reject codes
+            CBlockReject reject = {(unsigned char)state.GetRejectCode(), state.GetRejectReason().substr(0, MAX_REJECT_MESSAGE_LENGTH), hash};
+            State(it->second.first)->rejects.push_back(reject);
+            state.nodeId = it->second.first;
+            if (nDoS > 0 && it->second.second)
+                Misbehaving(it->second.first, nDoS);
+        }
+        rv = false;
+    } else
+    if (state.nFlags & BLOCK_FAILED_DUPLICATE_STAKE)
+    {
+        if (it != mapBlockSource.end() && State(it->second.first))
+            Misbehaving(it->second.first, 10);
+        rv = false;
+    };
+    
+    if (!rv)
+    if (it != mapBlockSource.end())
+        mapBlockSource.erase(it);
+    
+    return rv;
+}
+
 //////////////////////////////////////////////////////////////////////////////
 //
 // Messages

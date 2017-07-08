@@ -210,6 +210,32 @@ void SendCoinsDialog::warningBox(QString msg)
     Q_EMIT message(tr("Send Coins"), msgParams.first, msgParams.second);
 }
 
+bool SendCoinsDialog::tryCallRpc(const QString &sCommand, UniValue &rv)
+{
+    try {
+        rv = CallRPC(sCommand.toStdString());
+    } catch (UniValue& objError)
+    {
+        try { // Nice formatting for standard-format error
+            int code = find_value(objError, "code").get_int();
+            std::string message = find_value(objError, "message").get_str();
+            warningBox(QString::fromStdString(message) + " (code " + QString::number(code) + ")");
+            return false;
+        } catch (const std::runtime_error&) // raised when converting to invalid type, i.e. missing code or message
+        {   // Show raw JSON object
+            warningBox(QString::fromStdString(objError.write()));
+            return false;
+        };
+    } catch (const std::exception& e)
+    {
+        warningBox(QString::fromStdString(e.what()));
+        return false;
+    };
+    
+    return true;
+};
+
+
 void SendCoinsDialog::on_sendButton_clicked()
 {
     if(!model || !model->getOptionsModel())
@@ -275,8 +301,6 @@ void SendCoinsDialog::on_sendButton_clicked()
     int nRecipient = 0;
     for (const auto &rcp : currentTransaction.getRecipients())
     {
-        //sCommand
-        
         if (nRecipient > 0)
             sCommand += ",";
         
@@ -285,7 +309,6 @@ void SendCoinsDialog::on_sendButton_clicked()
         
         if (!rcp.narration.isEmpty())
             sCommand += ",\"narr\":\""+rcp.narration+"\"";
-        
         sCommand += "}";
         
         nRecipient++;
@@ -300,23 +323,9 @@ void SendCoinsDialog::on_sendButton_clicked()
     
     
     UniValue rv;
-    try {
-        rv = CallRPC((sCommand + " true").toStdString());
-    } catch (UniValue& objError) {
-        try { // Nice formatting for standard-format error
-            int code = find_value(objError, "code").get_int();
-            std::string message = find_value(objError, "message").get_str();
-            warningBox(QString::fromStdString(message) + " (code " + QString::number(code) + ")");
-            return;
-        } catch (const std::runtime_error&) // raised when converting to invalid type, i.e. missing code or message
-        {   // Show raw JSON object
-            warningBox(QString::fromStdString(objError.write()));
-            return;
-        };
-    } catch (const std::exception& e) {
-        warningBox(QString::fromStdString(e.what()));
+    QString sGetFeeCommand = sCommand + " true";
+    if (!tryCallRpc(sGetFeeCommand, rv))
         return;
-    };
     
     
     double rFee = rv["fee"].get_real();
@@ -326,7 +335,7 @@ void SendCoinsDialog::on_sendButton_clicked()
     
     // Format confirmation message
     QStringList formatted;
-    Q_FOREACH(const SendCoinsRecipient &rcp, currentTransaction.getRecipients())
+    for (const auto &rcp : currentTransaction.getRecipients())
     {
         // generate bold amount string
         QString amount = "<b>" + BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp.amount);
@@ -404,21 +413,19 @@ void SendCoinsDialog::on_sendButton_clicked()
     
     WalletModel::SendCoinsReturn sendStatus = WalletModel::OK;
     
-    try {
-        rv = CallRPC((sCommand).toStdString());
-    } catch (UniValue& objError) {
-        try { // Nice formatting for standard-format error
-            int code = find_value(objError, "code").get_int();
-            std::string message = find_value(objError, "message").get_str();
-            warningBox(QString::fromStdString(message) + " (code " + QString::number(code) + ")");
-        } catch (const std::runtime_error&) // raised when converting to invalid type, i.e. missing code or message
-        {   // Show raw JSON object
-            warningBox(QString::fromStdString(objError.write()));
-        };
+    if (!tryCallRpc(sCommand, rv))
         sendStatus = WalletModel::TransactionCreationFailed;
-    } catch (const std::exception& e) {
-        warningBox(QString::fromStdString(e.what()));
-        sendStatus = WalletModel::TransactionCreationFailed;
+    
+    // Update Addressbook
+    for (const auto &rcp : currentTransaction.getRecipients())
+    {
+        sCommand = "manageaddressbook newsend ";
+        sCommand += rcp.address;
+        QString strLabel = rcp.label;
+        sCommand += strLabel.isEmpty() ? " \"\"" : (" \"" + strLabel + "\"");
+        sCommand += " send";
+        
+        tryCallRpc(sCommand, rv);
     };
     
     

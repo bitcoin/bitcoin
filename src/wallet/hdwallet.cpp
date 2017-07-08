@@ -566,7 +566,7 @@ bool CHDWallet::HaveAddress(const CBitcoinAddress &address)
     return false;
 };
 
-bool CHDWallet::HaveKey(const CKeyID &address, CEKAKey &ak, CExtKeyAccount *pa) const
+bool CHDWallet::HaveKey(const CKeyID &address, CEKAKey &ak, CExtKeyAccount *&pa) const
 {
     if (fDebug)
         AssertLockHeld(cs_wallet);
@@ -913,7 +913,7 @@ bool CHDWallet::DelAddressBook(const CTxDestination &address)
 };
 
 isminetype CHDWallet::IsMine(const CScript &scriptPubKey, CKeyID &keyID,
-    CEKAKey &ak, CExtKeyAccount *pa, bool &isInvalid, SigVersion sigversion)
+    CEKAKey &ak, CExtKeyAccount *&pa, bool &isInvalid, SigVersion sigversion)
 {
     
     std::vector<valtype> vSolutions;
@@ -2436,7 +2436,7 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             
             for (const auto &pcoin : setCoins)
             {
-                int age = GetDepthInMainChain(pcoin.first->second.blockHash);
+                int age = GetDepthInMainChain(pcoin.first->second.blockHash, pcoin.first->second.nIndex);
                 if (age != 0)
                     age += 1;
                 
@@ -3568,10 +3568,9 @@ bool CHDWallet::LoadToWallet(const uint256 &hash, const CTransactionRecord &rtx)
     std::pair<MapRecords_t::iterator, bool> ret = mapRecords.insert(std::make_pair(hash, rtx));
     
     MapRecords_t::iterator mri = ret.first;
-    rtxOrdered.insert(std::make_pair(rtx.nTimeReceived, mri));
+    rtxOrdered.insert(std::make_pair(rtx.GetTxTime(), mri));
     
     // TODO: Spend only owned inputs?
-    
     
     return true;
 };
@@ -3699,6 +3698,7 @@ int CHDWallet::GetDefaultConfidentialChain(CHDWalletDB *pwdb, CExtKeyAccount *&s
     SetHardenedBit(nChild);
     sekConfidential->mapValue[EKVT_PATH] = PushUInt32(vSubKeyPath, nChild);
     sekConfidential->nFlags |= EAF_ACTIVE | EAF_IN_ACCOUNT;
+    sekConfidential->mapValue[EKVT_KEY_TYPE] = SetChar(v, EKT_CONFIDENTIAL);
     
     sea->vExtKeyIDs.push_back(sekConfidential->GetID());
     sea->vExtKeys.push_back(sekConfidential);
@@ -4234,6 +4234,10 @@ int CHDWallet::ExtKeyCreateAccount(CStoredExtKey *sekAccount, CKeyID &idMaster, 
     ekaOut.vExtKeys.push_back(sekExternal);
     ekaOut.vExtKeys.push_back(sekInternal);
     ekaOut.vExtKeys.push_back(sekStealth);
+    
+    sekExternal->mapValue[EKVT_KEY_TYPE] = SetChar(v, EKT_INTERNAL);
+    sekInternal->mapValue[EKVT_KEY_TYPE] = SetChar(v, EKT_EXTERNAL);
+    sekStealth->mapValue[EKVT_KEY_TYPE] = SetChar(v, EKT_STEALTH);
 
     ekaOut.nActiveExternal = 1;
     ekaOut.nActiveInternal = 2;
@@ -6496,9 +6500,11 @@ bool CHDWallet::UpdateStealthAddressIndex(const CKeyID &idK, const CStealthAddre
     return true;
 };
 
-bool CHDWallet::GetStealthByIndex(uint32_t sxId, CStealthAddress &sx)
+bool CHDWallet::GetStealthByIndex(uint32_t sxId, CStealthAddress &sx) const
 {
     LOCK(cs_wallet);
+    
+    // TODO: cache stealth addresses
     
     CHDWalletDB wdb(strWalletFile);
     
@@ -7477,6 +7483,10 @@ int CHDWallet::OwnStandardOut(const CTxOutStandard *pout, const CTxOutData *pdat
         return 0;
     };
     
+    if (pa && pa->nActiveInternal == ak.nParent) // TODO: could check EKVT_KEY_TYPE
+        rout.nFlags |= ORF_CHANGE | ORF_FROM;
+    
+    
     rout.nType = OUTPUT_STANDARD;
     rout.nFlags |= ORF_OWNED;
     rout.nValue = pout->nValue;
@@ -7512,6 +7522,10 @@ int CHDWallet::OwnBlindOut(CHDWalletDB *pwdb, const uint256 &txhash, const CTxOu
     {
         return 0;
     };
+    
+    if (pa && pa->nActiveInternal == ak.nParent)
+        rout.nFlags |= ORF_CHANGE | ORF_FROM;
+    
     
     if (IsLocked())
     {
@@ -7581,6 +7595,8 @@ int CHDWallet::OwnBlindOut(CHDWalletDB *pwdb, const uint256 &txhash, const CTxOu
 int CHDWallet::OwnAnonOut(CHDWalletDB *pwdb, const uint256 &txhash, const CTxOutRingCT *pout, const CStoredExtKey *pc, uint32_t &nLastChild,
     COutputRecord &rout, CStoredTransaction &stx, bool &fUpdated)
 {
+    
+    // TODO: Detect change
     
     CKeyID idk = pout->pk.GetID();
     CKey key;
@@ -7790,19 +7806,26 @@ bool CHDWallet::AddToRecord(CTransactionRecord &rtxIn, const CTransaction &tx,
             
             // Lookup 1st input to set type
             CCoins coins;
-            const auto &txin0 = tx.vin[0];
-            if (pcoinsTip->GetCoins(txin0.prevout.hash, coins))
+            const auto &prevout0 = tx.vin[0].prevout;
+            if (pcoinsTip->GetCoins(prevout0.hash, coins)
+                && coins.IsAvailable(prevout0.n))
             {
-                if (coins.IsAvailable(txin0.prevout.n))
+                if (coins.vpout[prevout0.n]->IsType(OUTPUT_CT))
+                    rtx.nFlags |= ORF_BLIND_IN;
+            } else
+            {
+                uint256 hashBlock;
+                CTransactionRef txPrev;
+                if (GetTransaction(prevout0.hash, txPrev, Params().GetConsensus(), hashBlock, true))
                 {
-                    if (coins.vpout[txin0.prevout.n]->IsType(OUTPUT_CT))
+                    
+                    if (txPrev->vpout.size() > prevout0.n
+                        && txPrev->vpout[prevout0.n]->IsType(OUTPUT_CT))
                         rtx.nFlags |= ORF_BLIND_IN;
                 };
             };
         };
     };
-    
-    
     
     CExtKeyAccount *seaC = NULL;
     CStoredExtKey *pcC = NULL;
@@ -7896,6 +7919,20 @@ bool CHDWallet::AddToRecord(CTransactionRecord &rtxIn, const CTransaction &tx,
     
     if (fInsertedNew || fUpdated)
     {
+        // If txn has change, it must have been sent by this wallet
+        if (rtx.HaveChange())
+        {
+            for (auto &r : rtx.vout)
+            {
+                if (!(r.nFlags & ORF_CHANGE))
+                    r.nFlags |= ORF_FROM;
+            };
+        };
+        
+        // Plain to plain will always be a wtx, revisit if adding p2p to rtx
+        if (!tx.GetCTFee(rtx.nFee))
+            LogPrintf("%s: ERROR - GetCTFee failed %s.\n", __func__, txhash.ToString());
+        
         stx.tx = MakeTransactionRef(tx);
         if (!wdb.WriteTxRecord(txhash, rtx)
             || !wdb.WriteStoredTx(txhash, stx))
@@ -7970,7 +8007,7 @@ std::vector<uint256> CHDWallet::ResendRecordTransactionsBefore(int64_t nTime, CC
         
         if (rtx.IsAbandoned())
             continue;
-        if (GetDepthInMainChain(rtx.blockHash) != 0)
+        if (GetDepthInMainChain(rtx.blockHash, rtx.nIndex) != 0)
             continue;
         
         MapWallet_t::iterator twi = mapTempWallet.find(txhash);
@@ -8543,7 +8580,7 @@ bool CHDWallet::IsSpent(const uint256& hash, unsigned int n) const
             if (rit->second.IsAbandoned())
                 continue;
             
-            int depth = GetDepthInMainChain(rit->second.blockHash);
+            int depth = GetDepthInMainChain(rit->second.blockHash, rit->second.nIndex);
             if (depth >= 0)
                 return true; // Spent
         };
@@ -8561,20 +8598,15 @@ std::set<uint256> CHDWallet::GetConflicts(const uint256 &txid) const
     
     if (mri != mapRecords.end())
     {
-        CStoredTransaction stx;
-        if (!CHDWalletDB(strWalletFile).ReadStoredTx(txid, stx)) // TODO: cache / use mapTempWallet
-        {
-            LogPrintf("%s: ReadStoredTx failed for %s.\n", __func__, txid.ToString());
-            return result;
-        };
-        
+        const CTransactionRecord &rtx = mri->second;
         std::pair<TxSpends::const_iterator, TxSpends::const_iterator> range;
         
-        for (const auto &txin : stx.tx->vin)
+        if (!(rtx.nFlags & ORF_ANON_IN))
+        for (const auto &prevout : rtx.vin)
         {
-            if (mapTxSpends.count(txin.prevout) <= 1)
+            if (mapTxSpends.count(prevout) <= 1)
                 continue;  // No conflict if zero or one spends
-            range = mapTxSpends.equal_range(txin.prevout);
+            range = mapTxSpends.equal_range(prevout);
             for (TxSpends::const_iterator _it = range.first; _it != range.second; ++_it)
                 result.insert(_it->second);
         };
@@ -8624,7 +8656,7 @@ void CHDWallet::MarkConflicted(const uint256 &hashBlock, const uint256 &hashTx)
         {
             CTransactionRecord &rtx = mri->second;
             
-            int currentconfirm = GetDepthInMainChain(rtx.blockHash);
+            int currentconfirm = GetDepthInMainChain(rtx.blockHash, rtx.nIndex);
             
             if (conflictconfirms < currentconfirm)
             {
@@ -8820,7 +8852,7 @@ void CHDWallet::AvailableCoinsForStaking(std::vector<COutput> &vCoins, int64_t n
             const uint256 &txid = it->first;
             const CTransactionRecord &rtx = it->second;
             
-            int nDepth = GetDepthInMainChain(rtx.blockHash);
+            int nDepth = GetDepthInMainChain(rtx.blockHash, rtx.nIndex);
             if (nDepth > deepestTxnDepth)
                 deepestTxnDepth = nDepth;
             

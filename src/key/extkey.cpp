@@ -597,7 +597,10 @@ int CExtKeyAccount::HaveKey(const CKeyID &id, bool fUpdate, CEKAKey &ak)
     // If fUpdate, promote key if found in look ahead
     AccKeyMap::const_iterator mi = mapKeys.find(id);
     if (mi != mapKeys.end())
+    {
+        ak = mi->second;
         return 1;
+    };
     
     mi = mapLookAhead.find(id);
     if (mi != mapLookAhead.end())

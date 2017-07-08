@@ -112,7 +112,7 @@ CScript COINBASE_FLAGS;
 
 const std::string strMessageMagic = "Bitcoin Signed Message:\n";
 
-extern void Misbehaving(NodeId pnode, int howmuch);
+extern bool IncomingBlockChecked(const CBlock &block, CValidationState &state);
 
 // Internal stuff
 namespace {
@@ -4429,8 +4429,6 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
             //state.DoS(10, false, REJECT_INVALID, "bad-cs-duplicate", false, "duplicate coinstake");
             
             state.nFlags |= BLOCK_FAILED_DUPLICATE_STAKE;
-            if (state.nodeId > -1)
-                Misbehaving(state.nodeId, 10);
             
             /*
             // TODO: ask peers which stake kernel they have
@@ -4967,18 +4965,8 @@ static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state
             return state.DoS(10, error("%s: prev block not found", __func__), 0, "bad-prevblk");
         pindexPrev = (*mi).second;
         
-        bool fPass = false;
         if (pindexPrev->nStatus & BLOCK_FAILED_MASK)
         {
-            /*
-            if (pindexPrev->nFlags & BLOCK_FAILED_DUPLICATE_STAKE)
-            {
-                fPass = ProcessDuplicateStakeHeader(pindexPrev, state.nodeId);
-                
-                if (!fPass)
-                    return state.DoS(10, error("%s: prev block invalid, duplicate cs", __func__), REJECT_INVALID, "bad-prevblk_dup_cs");
-            };
-            if (!fPass) */
                 return state.DoS(60, error("%s: prev block invalid", __func__), REJECT_INVALID, "bad-prevblk");
         };
 
@@ -5154,7 +5142,9 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
             CBlockIndex *pindex = AddToBlockIndex(*pblock);
             InvalidBlockFound(pindex, pblock, state);
             
-            GetMainSignals().BlockChecked(*pblock, state);
+            if (IncomingBlockChecked(*pblock, state)) // returns true if it did nothing
+                GetMainSignals().BlockChecked(*pblock, state);
+            
             return error("%s: AcceptBlock FAILED", __func__);
         }
         
@@ -5163,7 +5153,8 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
             pindex->nFlags |= BLOCK_FAILED_DUPLICATE_STAKE;
             setDirtyBlockIndex.insert(pindex);
             LogPrint("pos", "%s Marking duplicate stake: %s.\n", __func__, pindex->GetBlockHash().ToString());
-            GetMainSignals().BlockChecked(*pblock, state);
+            //GetMainSignals().BlockChecked(*pblock, state);
+            IncomingBlockChecked(*pblock, state);
         };
         
     }

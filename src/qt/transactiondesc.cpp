@@ -19,8 +19,15 @@
 #include "wallet/wallet.h"
 #include "wallet/hdwallet.h"
 
+#include "univalue.h"
+#include "rpc/server.h"
+#include "rpc/client.h"
+
 #include <stdint.h>
 #include <string>
+
+
+extern UniValue gettransaction(const JSONRPCRequest& request);
 
 QString TransactionDesc::FormatTxStatus(const CWalletTx& wtx)
 {
@@ -362,6 +369,33 @@ QString TransactionDesc::toHTML(CHDWallet *wallet, CTransactionRecord &rtx, Tran
 
     strHTML += "<b>" + tr("Date") + ":</b> " + (nTime ? GUIUtil::dateTimeStr(nTime) : "") + "<br>";
     strHTML += "<b>" + tr("Transaction ID") + ":</b> " + rec->getTxID() + "<br>";
+    
+    
+    JSONRPCRequest request;
+    request.fHelp = false;
+    UniValue params(UniValue::VARR);
+    params.push_back(rec->getTxID().toStdString());
+    request.params = params;
+    UniValue rv = gettransaction(request);
+    
+    strHTML += "<b>" + tr("Confirmations") + ":</b> " + QString::number(rv["confirmations"].get_int()) + "<br>";
+    
+    if (!rv["blockhash"].isNull())
+    {
+        strHTML += "<b>" + tr("Block hash") + ":</b> " + QString::fromStdString(rv["blockhash"].get_str()) + "<br>";
+        strHTML += "<b>" + tr("Block index") + ":</b> " + QString::number(rv["blockindex"].get_int()) + "<br>";
+        strHTML += "<b>" + tr("Block time") + ":</b> " + GUIUtil::dateTimeStr(rv["blocktime"].get_int()) + "<br>";
+    };
+    
+    strHTML += "<b>Details:</b><br>";
+    strHTML += "<p>";
+    
+    std::string sDetails = rv["details"].write(1);
+    part::ReplaceStrInPlace(sDetails, "\n", "<br>");
+    strHTML += QString::fromStdString(sDetails);
+    
+    strHTML += "</p>";
+    
     
     strHTML += "</font></html>";
     return strHTML;

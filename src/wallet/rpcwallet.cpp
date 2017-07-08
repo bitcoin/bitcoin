@@ -102,6 +102,58 @@ void WalletTxToJSON(const CWalletTx& wtx, UniValue& entry)
         entry.push_back(Pair(item.first, item.second));
 }
 
+void RecordTxToJSON(CHDWallet *phdw, const uint256 &hash, const CTransactionRecord& rtx, UniValue &entry)
+{
+    int confirms = phdw->GetDepthInMainChain(rtx.blockHash, rtx.nIndex);
+    entry.push_back(Pair("confirmations", confirms));
+    
+    if (rtx.IsCoinBase())
+        entry.push_back(Pair("generated", true));
+    if (rtx.IsCoinStake())
+        entry.push_back(Pair("coinstake", true));
+    
+    if (confirms > 0)
+    {
+        entry.push_back(Pair("blockhash", rtx.blockHash.GetHex()));
+        entry.push_back(Pair("blockindex", rtx.nIndex));
+        entry.push_back(Pair("blocktime", rtx.nBlockTime));
+    } else {
+        entry.push_back(Pair("trusted", phdw->IsTrusted(hash, rtx.blockHash)));
+    }
+    
+    entry.push_back(Pair("txid", hash.GetHex()));
+    UniValue conflicts(UniValue::VARR);
+    for (const auto &conflict : phdw->GetConflicts(hash))
+        conflicts.push_back(conflict.GetHex());
+    entry.push_back(Pair("walletconflicts", conflicts));
+    entry.push_back(Pair("time", rtx.GetTxTime()));
+    entry.push_back(Pair("timereceived", (int64_t)rtx.nTimeReceived));
+    
+    for (const auto &item : rtx.mapValue)
+    {
+        if (item.first == RTXVT_COMMENT)
+            entry.push_back(Pair("comment", std::string(item.second.begin(), item.second.end())));
+        else
+        if (item.first == RTXVT_TO)
+            entry.push_back(Pair("comment_to", std::string(item.second.begin(), item.second.end())));
+    };
+    
+    /*
+    // Add opt-in RBF status
+    std::string rbfStatus = "no";
+    if (confirms <= 0) {
+        LOCK(mempool.cs);
+        RBFTransactionState rbfState = IsRBFOptIn(wtx, mempool);
+        if (rbfState == RBF_TRANSACTIONSTATE_UNKNOWN)
+            rbfStatus = "unknown";
+        else if (rbfState == RBF_TRANSACTIONSTATE_REPLACEABLE_BIP125)
+            rbfStatus = "yes";
+    }
+    entry.push_back(Pair("bip125_replaceable", rbfStatus));
+    */
+}
+
+
 string AccountFromValue(const UniValue& value)
 {
     string strAccount = value.get_str();
@@ -2216,7 +2268,34 @@ UniValue gettransaction(const JSONRPCRequest& request)
 
     UniValue entry(UniValue::VOBJ);
     if (!pwalletMain->mapWallet.count(hash))
+    {
+        if (fParticlWallet)
+        {
+            CHDWallet *phdw = (CHDWallet*) pwalletMain;
+            MapRecords_t::const_iterator mri = phdw->mapRecords.find(hash);
+            
+            if (mri != phdw->mapRecords.end())
+            {
+                const CTransactionRecord &rtx = mri->second;
+                RecordTxToJSON(phdw, mri->first, rtx, entry);
+                
+                UniValue details(UniValue::VARR);
+                ListRecord(hash, rtx, "*", 0, false, details, filter);
+                entry.push_back(Pair("details", details));
+                
+                CStoredTransaction stx;
+                if (CHDWalletDB(phdw->strWalletFile).ReadStoredTx(hash, stx)) // TODO: cache / use mapTempWallet
+                {
+                    string strHex = EncodeHexTx(*(stx.tx.get()), RPCSerializationFlags());
+                    entry.push_back(Pair("hex", strHex));
+                };
+                
+                return entry;
+            };
+        };
+        
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id");
+    }
     const CWalletTx& wtx = pwalletMain->mapWallet[hash];
 
     CAmount nCredit = wtx.GetCredit(filter);

@@ -521,6 +521,23 @@ std::string AmountToString(CAmount nValue)
     return strprintf("%s%d.%08d", sign ? "-" : "", quotient, remainder);
 };
 
+std::string &TrimQuotes(std::string &s)
+{
+    if (s.size() < 1)
+        return s;
+    if (s.front() == '"')
+        s.erase(0, 1);
+    
+    size_t n = s.size();
+    if (n < 1)
+        return s;
+    if (n > 1 && s[n-2] == '\\') // don't strip \"
+        return s;
+    if (s.back() == '"')
+        s.erase(n - 1);
+    return s;
+};
+
 } // namespace part
 
 

@@ -43,6 +43,8 @@ struct CNodeStateStats {
     std::vector<int> vHeightInFlight;
 };
 
+bool IncomingBlockChecked(const CBlock &block, CValidationState &state);
+
 /** Get statistics from node state */
 bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
 /** Increase a node's misbehavior score. */

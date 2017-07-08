@@ -9,13 +9,34 @@
 #include "rpc/rpcutil.h"
 #include "util.h"
 
-#include <boost/algorithm/string.hpp>
-#include <boost/assign/list_of.hpp>
 
 UniValue CallRPC(std::string args)
 {
     std::vector<std::string> vArgs;
-    boost::split(vArgs, args, boost::is_any_of(" \t"));
+    
+    bool fInQuotes = false;
+    std::string s;
+    for (size_t i = 0; i < args.size(); ++i)
+    {
+        char c = args[i];
+        if (!fInQuotes
+            && !s.empty()
+            && (c == ' ' || c == '\t'))
+        {
+            vArgs.push_back(part::TrimQuotes(s));
+            s.clear();
+            continue;
+        };
+        
+        if (c == '"' && (i == 0 || args[i-1] != '\\'))
+            fInQuotes = !fInQuotes;
+        
+        s.push_back(c);
+    };
+    if (!s.empty())
+        vArgs.push_back(part::TrimQuotes(s));
+    
+    
     std::string strMethod = vArgs[0];
     vArgs.erase(vArgs.begin());
     JSONRPCRequest request;

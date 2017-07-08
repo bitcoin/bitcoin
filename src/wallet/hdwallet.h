@@ -48,7 +48,7 @@ enum OutputRecordAddressTypes
 class COutputRecord
 {
 public:
-    COutputRecord() : nType(0), nFlags(0), nValue(-1) {};
+    COutputRecord() : nType(0), nFlags(0), n(0), nValue(-1) {};
     uint8_t nType;
     uint8_t nFlags;
     int16_t n;
@@ -105,7 +105,8 @@ class CTransactionRecord
 {
 // Stored by uint256 txnHash;
 public:
-    CTransactionRecord() : nFlags(0), nBlockTime(0) {};
+    CTransactionRecord() :
+        nFlags(0), nIndex(0), nBlockTime(0) , nTimeReceived(0) , nFee(0) {};
     
     // Conflicted state is marked by set blockHash and nIndex -1
     uint256 blockHash;
@@ -174,10 +175,19 @@ public:
     
     int64_t GetTxTime() const
     {
-        if (HashUnset() || nIndex > 0)
+        if (HashUnset() || nIndex < 0)
             return nTimeReceived;
         return std::min(nTimeReceived, nBlockTime);
     };
+    
+    bool HaveChange() const
+    {
+        for (const auto &r : vout)
+            if (r.nFlags & ORF_CHANGE)
+                return true;
+        return false;
+    };
+    
     
     
     mutable uint32_t nCacheFlags;
@@ -348,7 +358,7 @@ public:
     
     
     bool HaveAddress(const CBitcoinAddress &address);
-    bool HaveKey(const CKeyID &address, CEKAKey &ak, CExtKeyAccount *pa) const;
+    bool HaveKey(const CKeyID &address, CEKAKey &ak, CExtKeyAccount *&pa) const;
     bool HaveKey(const CKeyID &address) const;
     
     bool HaveExtKey(const CKeyID &address) const;
@@ -370,7 +380,7 @@ public:
     
     
     isminetype IsMine(const CScript &scriptPubKey, CKeyID &keyID,
-        CEKAKey &ak, CExtKeyAccount *pa, bool &isInvalid, SigVersion = SIGVERSION_BASE);
+        CEKAKey &ak, CExtKeyAccount *&pa, bool &isInvalid, SigVersion = SIGVERSION_BASE);
     
     isminetype IsMine(const CTxOutBase *txout) const;
     bool IsMine(const CTransaction& tx) const;
@@ -528,7 +538,7 @@ public:
     bool IndexStealthKey(CHDWalletDB *pwdb, uint160 &hash, const CStealthAddressIndexed &sxi, uint32_t &id);
     bool GetStealthKeyIndex(const CStealthAddressIndexed &sxi, uint32_t &id);
     bool UpdateStealthAddressIndex(const CKeyID &idK, const CStealthAddressIndexed &sxi, uint32_t &id); // Get stealth index or create new index if none found
-    bool GetStealthByIndex(uint32_t sxId, CStealthAddress &sx);
+    bool GetStealthByIndex(uint32_t sxId, CStealthAddress &sx) const;
     bool GetStealthLinked(const CKeyID &idK, CStealthAddress &sx);
     bool ProcessLockedStealthOutputs();
     bool ProcessLockedAnonOutputs();

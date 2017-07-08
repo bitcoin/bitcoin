@@ -148,14 +148,12 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 }
 
                 CTxDestination address;
-                
                 if (ExtractDestination(*txout->GetPScriptPubKey(), address))
                 {
                     // Sent to Bitcoin Address
                     sub.type = TransactionRecord::SendToAddress;
                     sub.address = CBitcoinAddress(address).ToString();
-                }
-                else
+                } else
                 {
                     // Sent to IP, or other non-address transaction like OP_EVAL
                     sub.type = TransactionRecord::SendToOther;
@@ -198,6 +196,8 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CHDWallet
     CAmount nNet = 0;
     TransactionRecord sub(hash, nTime);
     
+    
+    CTxDestination address = CNoDestination();
     uint8_t nFlags = 0;
     for (auto &r : rtx.vout)
     {
@@ -205,6 +205,28 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CHDWallet
             continue;
         
         nFlags |= r.nFlags;
+        
+        if (r.vPath.size() > 0)
+        {
+            if (r.vPath[0] == ORA_STEALTH)
+            {
+                if (r.vPath.size() < 5)
+                {
+                    LogPrintf("%s: Warning, malformed vPath.", __func__);
+                } else
+                {
+                    uint32_t sidx;
+                    memcpy(&sidx, &r.vPath[1], 4);
+                    CStealthAddress sx;
+                    if (wallet->GetStealthByIndex(sidx, sx))
+                        address = sx;
+                };
+            };
+        } else
+        {
+            if (address.type() == typeid(CNoDestination))
+                ExtractDestination(r.scriptPubKey, address);
+        };
         
         if (r.nType == OUTPUT_STANDARD)
         {
@@ -224,6 +246,9 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CHDWallet
         if (nFlags & ORF_FROM)
             sub.debit -= r.nValue;
     };
+    
+    if (address.type() != typeid(CNoDestination))
+        sub.address = CBitcoinAddress(address).ToString();
     
     
     if (sub.debit != 0)
