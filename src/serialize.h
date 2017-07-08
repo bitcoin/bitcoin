@@ -448,7 +448,7 @@ static inline typename W::template Wrapper<typename std::remove_reference<T>::ty
 
 #define VARINT(obj, ...) Wrap<VarIntFormat<__VA_ARGS__>>(obj)
 #define COMPACTSIZE(obj) Wrap<CompactSize>(obj)
-#define LIMITED_STRING(obj,n) LimitedString< n >(REF(obj))
+#define LIMITED_STRING(obj,n) Wrap<LimitedString<n>>(obj)
 
 /** Serialization wrapper class for integers in VarInt format. */
 template<VarIntMode Mode=VarIntMode::DEFAULT>
@@ -543,33 +543,37 @@ struct CompactSize
     };
 };
 
+/** Serialization wrapper class for strings of limited length. */
 template<size_t Limit>
-class LimitedString
+struct LimitedString
 {
-protected:
-    std::string& string;
-public:
-    explicit LimitedString(std::string& _string) : string(_string) {}
-
-    template<typename Stream>
-    void Unserialize(Stream& s)
+    template<typename T>
+    class Wrapper
     {
-        size_t size = ReadCompactSize(s);
-        if (size > Limit) {
-            throw std::ios_base::failure("String length limit exceeded");
+    protected:
+        T& m_string;
+    public:
+        explicit Wrapper(T& string) : m_string(string) {}
+
+        template<typename Stream>
+        void Unserialize(Stream& s)
+        {
+            size_t size = ReadCompactSize(s);
+            if (size > Limit) {
+                throw std::ios_base::failure("String length limit exceeded");
+            }
+            m_string.resize(size);
+            if (size != 0) {
+                s.read(&m_string[0], size);
+            }
         }
-        string.resize(size);
-        if (size != 0)
-            s.read((char*)string.data(), size);
-    }
 
-    template<typename Stream>
-    void Serialize(Stream& s) const
-    {
-        WriteCompactSize(s, string.size());
-        if (!string.empty())
-            s.write((char*)string.data(), string.size());
-    }
+        template<typename Stream>
+        void Serialize(Stream& s) const
+        {
+            s << m_string;
+        }
+    };
 };
 
 template<typename I>
