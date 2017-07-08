@@ -44,7 +44,7 @@ static std::mutex cs_blockchange;
 static std::condition_variable cond_blockchange;
 static CUpdatedBlock latestblock;
 
-extern void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry);
+extern void TxToJSON(const CTransaction& tx, const uint256& hashBlock, UniValue& entry);
 
 double GetDifficulty(const CBlockIndex* blockindex)
 {
@@ -796,7 +796,7 @@ static void ApplyStats(CCoinsStats &stats, CHashWriter& ss, const uint256& hash,
     ss << hash;
     ss << VARINT(outputs.begin()->second.nHeight * 2 + outputs.begin()->second.fCoinBase);
     stats.nTransactions++;
-    for (const auto output : outputs) {
+    for (const auto& output : outputs) {
         ss << VARINT(output.first + 1);
         ss << *(const CScriptBase*)(&output.second.out.scriptPubKey);
         ss << VARINT(output.second.out.nValue);

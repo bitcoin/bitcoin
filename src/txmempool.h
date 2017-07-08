@@ -539,8 +539,8 @@ public:
 
     /** Affect CreateNewBlock prioritisation of transactions */
     void PrioritiseTransaction(const uint256& hash, const CAmount& nFeeDelta);
-    void ApplyDelta(const uint256 hash, CAmount &nFeeDelta) const;
-    void ClearPrioritisation(const uint256 hash);
+    void ApplyDelta(const uint256& hash, CAmount &nFeeDelta) const;
+    void ClearPrioritisation(const uint256& hash);
 
 public:
     /** Remove a set of transactions from the mempool.
