@@ -83,7 +83,7 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
     for (size_t i = 0; i < cmpctblock.shorttxids.size(); i++) {
         while (txn_available[i + index_offset])
             index_offset++;
-        shorttxids[cmpctblock.shorttxids[i]] = i + index_offset;
+        shorttxids[cmpctblock.shorttxids[i]] = uint16_t(i + index_offset);
         // To determine the chance that the number of entries in a bucket exceeds N,
         // we use the fact that the number of elements in a single bucket is
         // binomially distributed (with n = the number of shorttxids S, and p =
