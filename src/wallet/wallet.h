@@ -1096,7 +1096,7 @@ public:
     static std::string GetWalletHelpString(bool showDebug);
 
     /* Initializes the wallet, returns a new CWallet instance or a null pointer in case of an error */
-    static CWallet* CreateWalletFromFile(const std::string walletFile);
+    static CWallet* CreateWalletFromFile(const std::string& walletFile);
     static bool InitLoadWallet();
 
     /**

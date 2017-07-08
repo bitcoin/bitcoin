@@ -74,12 +74,12 @@ void CTxMemPool::UpdateForDescendants(txiter updateIt, cacheMap &cachedDescendan
         setAllDescendants.insert(cit);
         stageEntries.erase(cit);
         const setEntries &setChildren = GetMemPoolChildren(cit);
-        for (const txiter childEntry : setChildren) {
+        for (const txiter& childEntry : setChildren) {
             cacheMap::iterator cacheIt = cachedDescendants.find(childEntry);
             if (cacheIt != cachedDescendants.end()) {
                 // We've already calculated this one, just add the entries for this set
                 // but don't traverse again.
-                for (const txiter cacheEntry : cacheIt->second) {
+                for (const txiter& cacheEntry : cacheIt->second) {
                     setAllDescendants.insert(cacheEntry);
                 }
             } else if (!setAllDescendants.count(childEntry)) {
@@ -865,7 +865,7 @@ void CTxMemPool::PrioritiseTransaction(const uint256& hash, const CAmount& nFeeD
     LogPrintf("PrioritiseTransaction: %s feerate += %s\n", hash.ToString(), FormatMoney(nFeeDelta));
 }
 
-void CTxMemPool::ApplyDelta(const uint256 hash, CAmount &nFeeDelta) const
+void CTxMemPool::ApplyDelta(const uint256& hash, CAmount &nFeeDelta) const
 {
     LOCK(cs);
     std::map<uint256, CAmount>::const_iterator pos = mapDeltas.find(hash);
@@ -875,7 +875,7 @@ void CTxMemPool::ApplyDelta(const uint256 hash, CAmount &nFeeDelta) const
     nFeeDelta += delta;
 }
 
-void CTxMemPool::ClearPrioritisation(const uint256 hash)
+void CTxMemPool::ClearPrioritisation(const uint256& hash)
 {
     LOCK(cs);
     mapDeltas.erase(hash);

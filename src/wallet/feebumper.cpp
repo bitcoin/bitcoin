@@ -66,7 +66,7 @@ bool CFeeBumper::preconditionChecks(const CWallet *pWallet, const CWalletTx& wtx
     return true;
 }
 
-CFeeBumper::CFeeBumper(const CWallet *pWallet, const uint256 txidIn, int newConfirmTarget, bool ignoreGlobalPayTxFee, CAmount totalFee, bool newTxReplaceable)
+CFeeBumper::CFeeBumper(const CWallet *pWallet, const uint256& txidIn, int newConfirmTarget, bool ignoreGlobalPayTxFee, CAmount totalFee, bool newTxReplaceable)
     :
     txid(std::move(txidIn)),
     nOldFee(0),
