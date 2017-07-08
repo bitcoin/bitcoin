@@ -446,27 +446,34 @@ I ReadVarInt(Stream& is)
 template<typename W, typename T>
 static inline typename W::template Wrapper<typename std::remove_reference<T>::type> Wrap(T&& t) { return typename W::template Wrapper<typename std::remove_reference<T>::type>(t); }
 
-#define VARINT(obj, ...) WrapVarInt<__VA_ARGS__>(REF(obj))
+#define VARINT(obj, ...) Wrap<VarIntFormat<__VA_ARGS__>>(obj)
 #define COMPACTSIZE(obj) Wrap<CompactSize>(obj)
 #define LIMITED_STRING(obj,n) LimitedString< n >(REF(obj))
 
-template<VarIntMode Mode, typename I>
-class CVarInt
+/** Serialization wrapper class for integers in VarInt format. */
+template<VarIntMode Mode=VarIntMode::DEFAULT>
+struct VarIntFormat
 {
-protected:
-    I &n;
-public:
-    explicit CVarInt(I& nIn) : n(nIn) { }
+    template<typename I>
+    class Wrapper
+    {
+    protected:
+        I &m_n;
+    public:
+        explicit Wrapper(I& n) : m_n(n) { }
 
-    template<typename Stream>
-    void Serialize(Stream &s) const {
-        WriteVarInt<Stream,Mode,I>(s, n);
-    }
+        template<typename Stream>
+        void Serialize(Stream &s) const
+        {
+            WriteVarInt<Stream,Mode,typename std::remove_cv<I>::type>(s, m_n);
+        }
 
-    template<typename Stream>
-    void Unserialize(Stream& s) {
-        n = ReadVarInt<Stream,Mode,I>(s);
-    }
+        template<typename Stream>
+        void Unserialize(Stream& s)
+        {
+            m_n = ReadVarInt<Stream,Mode,typename std::remove_cv<I>::type>(s);
+        }
+    };
 };
 
 /** Serialization wrapper class for big-endian integers.
@@ -564,9 +571,6 @@ public:
             s.write((char*)string.data(), string.size());
     }
 };
-
-template<VarIntMode Mode=VarIntMode::DEFAULT, typename I>
-CVarInt<Mode, I> WrapVarInt(I& n) { return CVarInt<Mode, I>{n}; }
 
 template<typename I>
 BigEndian<I> WrapBigEndian(I& n) { return BigEndian<I>(n); }
