@@ -16,7 +16,7 @@ release cycle, overall merging, moderation and appointment of maintainers.
 
 Filing Issues
 -------------
-Issues are primarily for btc1 members.   Non-members' issues will normally be closed automatically, as a matter of policy.
+Anybody is welcome to file an issue.
 
 Issues are not intended as a generalized free support avenue.
 
