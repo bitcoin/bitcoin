@@ -447,7 +447,7 @@ template<typename W, typename T>
 static inline typename W::template Wrapper<typename std::remove_reference<T>::type> Wrap(T&& t) { return typename W::template Wrapper<typename std::remove_reference<T>::type>(t); }
 
 #define VARINT(obj, ...) WrapVarInt<__VA_ARGS__>(REF(obj))
-#define COMPACTSIZE(obj) CCompactSize(REF(obj))
+#define COMPACTSIZE(obj) Wrap<CompactSize>(obj)
 #define LIMITED_STRING(obj,n) LimitedString< n >(REF(obj))
 
 template<VarIntMode Mode, typename I>
@@ -503,22 +503,37 @@ public:
     }
 };
 
-class CCompactSize
+/** Serialization wrapper class for integers in CompactSize format. */
+struct CompactSize
 {
-protected:
-    uint64_t &n;
-public:
-    explicit CCompactSize(uint64_t& nIn) : n(nIn) { }
+    template<typename I>
+    class Wrapper
+    {
+    protected:
+        I &m_n;
+    public:
+        explicit Wrapper(I& n) : m_n(n)
+        {
+            static_assert(std::is_unsigned<I>::value, "CompactSize only supported for unsigned integers");
+            static_assert(std::numeric_limits<I>::max() <= std::numeric_limits<uint64_t>::max(), "CompactSize only supports 64-bit integers and below");
+        }
 
-    template<typename Stream>
-    void Serialize(Stream &s) const {
-        WriteCompactSize<Stream>(s, n);
-    }
+        template<typename Stream>
+        void Unserialize(Stream& s)
+        {
+            uint64_t n = ReadCompactSize<Stream>(s);
+            if (n > std::numeric_limits<I>::max()) {
+                throw std::ios_base::failure("CompactSize exceeds limit of type");
+            }
+            m_n = n;
+        }
 
-    template<typename Stream>
-    void Unserialize(Stream& s) {
-        n = ReadCompactSize<Stream>(s);
-    }
+        template<typename Stream>
+        void Serialize(Stream& s) const
+        {
+            WriteCompactSize<Stream>(s, m_n);
+        }
+    };
 };
 
 template<size_t Limit>
