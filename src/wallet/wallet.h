@@ -228,15 +228,13 @@ struct COutputEntry
 class CMerkleTx
 {
 public:
-    template<typename Stream>
-    void Unserialize(Stream& s)
+    SERIALIZE_METHODS(CMerkleTx, obj)
     {
         CTransactionRef tx;
         uint256 hashBlock;
-        std::vector<uint256> vMerkleBranch;
+        std::vector<uint256> vMerkleBranch; // For compatibility with older versions.
         int nIndex;
-
-        s >> tx >> hashBlock >> vMerkleBranch >> nIndex;
+        READWRITE(tx, hashBlock, vMerkleBranch, nIndex);
     }
 };
 
