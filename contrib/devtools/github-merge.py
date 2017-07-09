@@ -254,12 +254,12 @@ def main():
             first_sha512 = tree_sha512sum()
             message += '\n\nTree-SHA512: ' + first_sha512
         except subprocess.CalledProcessError as e:
-            printf("ERROR: Unable to compute tree hash")
+            print("ERROR: Unable to compute tree hash")
             sys.exit(4)
         try:
             subprocess.check_call([GIT,'commit','--amend','-m',message.encode('utf-8')])
         except subprocess.CalledProcessError as e:
-            printf("ERROR: Cannot update message.",file=stderr)
+            print("ERROR: Cannot update message.", file=stderr)
             sys.exit(4)
 
         print_merge_details(pull, title, branch, base_branch, head_branch)
