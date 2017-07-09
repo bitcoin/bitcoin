@@ -1,5 +1,14 @@
-Bitcoin Core integration/staging tree
+new project 
+(old title: Bitcoin Core integration/staging tree)
 =====================================
+
+WHAT IS THE PURPOSE OF THIS GIT?
+
+This is an experiment for exploring the use of the Bitcoin blockchain for tokenization of assets.
+
+THANK YOU to all of the 448 Bitcoin devs who made 14,368 contributions to Bitcoin which is the foundation for this repository.
+
+
 
 [![Build Status](https://travis-ci.org/bitcoin/bitcoin.svg?branch=master)](https://travis-ci.org/bitcoin/bitcoin)
 
