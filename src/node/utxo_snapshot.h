@@ -35,14 +35,11 @@ public:
             m_coins_count(coins_count),
             m_nchaintx(nchaintx) { }
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(SnapshotMetadata, obj)
     {
-        READWRITE(m_base_blockhash);
-        READWRITE(m_coins_count);
-        READWRITE(m_nchaintx);
+        READWRITE(obj.m_base_blockhash);
+        READWRITE(obj.m_coins_count);
+        READWRITE(obj.m_nchaintx);
     }
 
 };
