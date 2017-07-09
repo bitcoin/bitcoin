@@ -37,14 +37,56 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
 {
     QList<TransactionRecord> parts;
     int64_t nTime = wtx.GetTxTime();
-    CAmount nCredit = wtx.GetCredit(ISMINE_ALL);
+    
     CAmount nDebit = wtx.GetDebit(ISMINE_ALL);
-    CAmount nNet = nCredit - nDebit;
     uint256 hash = wtx.GetHash();
     std::map<std::string, std::string> mapValue = wtx.mapValue;
     
     
     CHDWallet *phdw = (CHDWallet*) wallet;
+    
+    
+    
+    if (wtx.IsCoinStake())
+    {
+        TransactionRecord sub(hash, nTime);
+        
+        sub.type = TransactionRecord::Staked;
+        
+        sub.debit = -nDebit;
+        
+        CAmount nCredit = 0;
+        for (size_t i = 0; i < wtx.tx->vpout.size(); ++i)
+        {
+            const CTxOutBase *txout = wtx.tx->vpout[i].get();
+            if (!txout->IsType(OUTPUT_STANDARD))
+                continue;
+            
+            isminetype mine = phdw->IsMine(txout);
+            if (!mine)
+                continue;
+            
+            nCredit += txout->GetValue();
+            
+            if (sub.address.empty())
+            {
+                CTxDestination address;
+                sub.involvesWatchAddress = mine & ISMINE_WATCH_ONLY;
+                if (ExtractDestination(*txout->GetPScriptPubKey(), address))
+                {
+                    sub.address = CBitcoinAddress(address).ToString();
+                };
+            }
+        };
+        
+        sub.credit = nCredit;
+        parts.append(sub);
+        
+        return parts;
+    };
+    
+    CAmount nCredit = wtx.GetCredit(ISMINE_ALL);
+    CAmount nNet = nCredit - nDebit;
     
     if (nNet > 0 || wtx.IsCoinBase())
     {

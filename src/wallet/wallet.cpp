@@ -1490,19 +1490,28 @@ void CWalletTx::GetAmounts(
     // staked
     if (tx->IsCoinStake())
     {
-        const CTxOutBase *txout = tx->vpout[1].get();
-        if (!txout->IsStandardOutput())
-            return;
-        const CScript &scriptPubKey = ((CTxOutStandard*)txout)->scriptPubKey;
-        CTxDestination address;
-
-        if (!ExtractDestination(scriptPubKey, address) && !scriptPubKey.IsUnspendable())
+        CAmount nCredit = 0;
+        CTxDestination address = CNoDestination();
+        
+        for (const auto txout : tx->vpout)
         {
-            LogPrintf("CWalletTx::GetAmounts: Unknown transaction type found, txid %s\n",
-                     this->GetHash().ToString());
-            address = CNoDestination();
+            if (!txout->IsType(OUTPUT_STANDARD))
+                continue;
+            isminetype mine = pwallet->IsMine(txout.get());
+            if (!mine)
+                continue;
+            
+            nCredit += txout->GetValue();
+            
+            if (address.type() == typeid(CNoDestination))
+                ExtractDestination(*txout->GetPScriptPubKey(), address);
         };
-        COutputEntry output = {address, txout->GetValue(), 1};
+        
+        // Recalc fee as GetValueOut might include foundation fund output
+        nFee = nDebit - nCredit;
+        
+        COutputEntry output = {address, nCredit, 1};
+        
         listStaked.push_back(output);
         return;
     };

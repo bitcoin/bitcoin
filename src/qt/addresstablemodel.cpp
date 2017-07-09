@@ -376,7 +376,6 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
     {
         // Generate a new address to associate with given label
         
-        //strAddress = CBitcoinAddress(newKey.GetID()).ToString();
         
         std::string sCommand;
         switch (addrType)
@@ -391,7 +390,7 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
         
         UniValue rv;
         try {
-            rv = CallRPC(sCommand + strLabel);
+            rv = CallRPC(sCommand + "\""+strLabel+ "\"");
         } catch (UniValue& objError)
         {
             try { // Nice formatting for standard-format error

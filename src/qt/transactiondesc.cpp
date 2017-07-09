@@ -378,6 +378,9 @@ QString TransactionDesc::toHTML(CHDWallet *wallet, CTransactionRecord &rtx, Tran
     request.params = params;
     UniValue rv = gettransaction(request);
     
+    if (!rv["hex"].isNull())
+        strHTML += "<b>" + tr("Transaction total size") + ":</b> " + QString::number(rv["hex"].get_str().length() / 2) + " bytes<br>";
+    
     strHTML += "<b>" + tr("Confirmations") + ":</b> " + QString::number(rv["confirmations"].get_int()) + "<br>";
     
     if (!rv["blockhash"].isNull())
