@@ -20,6 +20,8 @@ Dependencies
 
 See [dependencies.md](dependencies.md) for a complete overview.
 
+See [dependencies.md](dependencies.md) for a complete overview.
+
 If you want to build the disk image with `make deploy` (.dmg / optional), you need RSVG
 
     brew install librsvg
