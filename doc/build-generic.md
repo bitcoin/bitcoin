@@ -34,6 +34,8 @@ Please read the [depends](../depends/README.md) documentation for more details o
 options. If no host is specified (as in the above example) when calling `make`, the depends system will default to your
 local host system. 
 
+See [dependencies.md](dependencies.md) for a complete overview.
+
 Building Dash Core
 ---------------------
 

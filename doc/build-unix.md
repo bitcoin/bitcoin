@@ -39,6 +39,8 @@ pkg_add automake # (select highest version, e.g. 1.15)
 pkg_add python # (select highest version, e.g. 3.5)
 ```
 
+For the versions used, see [dependencies.md](dependencies.md)
+
 Building
 --------
 
