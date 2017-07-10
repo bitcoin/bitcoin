@@ -607,6 +607,65 @@ template<typename F> struct Convert
     };
 };
 
+/** Serialization wrapper for custom-element vectors.
+ *
+ * This allows (de)serialization of vectors of type V while using a custom
+ * serializer W for the entries inside.
+ *
+ * Example:
+ *   struct X {
+ *     std::vector<uint64_t> v;
+ *     SERIALIZE_METHODS(X, obj) { READWRITE(Wrap<VectorApply<VarInt>>(obj.v)); }
+ *   };
+ * will define a struct that contains a vector of uint64_t, which is serialized
+ * as a vector of VarInt-encoded integers.
+ *
+ * V is not required to be an std::vector type. It works for any class that
+ * exposes a value_type, size, reserve, push_back, and const operator[].
+ */
+template<class W>
+struct VectorApply
+{
+    template<typename V> class Wrapper
+    {
+    protected:
+        typedef typename V::value_type value_type;
+        V& m_vector;
+    public:
+        explicit Wrapper(V& vector) : m_vector(vector) {}
+
+        template<typename Stream>
+        void Serialize(Stream& s) const
+        {
+            WriteCompactSize(s, m_vector.size());
+            for (size_t i = 0; i < m_vector.size(); ++i) {
+                s << typename W::template Wrapper<const value_type>(m_vector[i]);
+            }
+        }
+
+        template<typename Stream>
+        void Unserialize(Stream& s)
+        {
+            m_vector.clear();
+            size_t size = ReadCompactSize(s);
+            size_t allocated = 0;
+            while (allocated < size) {
+                // For DoS prevention, do not blindly allocate as much as the stream claims to contain.
+                // Instead, allocate in 5MiB batches, so that an attacker actually needs to provide
+                // X MiB of data to make us allocate X+5 Mib.
+                allocated = std::min(size, allocated + MAX_VECTOR_ALLOCATE / sizeof(value_type));
+                m_vector.reserve(allocated);
+                while (m_vector.size() < allocated) {
+                    value_type val;
+                    typename W::template Wrapper<value_type> elem(val);
+                    s >> elem;
+                    m_vector.push_back(std::move(val));
+                }
+            }
+        }
+    };
+};
+
 /**
  * Forward declarations
  */
