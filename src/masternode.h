@@ -28,6 +28,9 @@ static const int MASTERNODE_POSE_BAN_MAX_SCORE          = 5;
 // The Masternode Ping Class : Contains a different serialize method for sending pings from masternodes throughout the network
 //
 
+// sentinel version before sentinel ping implementation
+#define DEFAULT_SENTINEL_VERSION 0x010001
+
 class CMasternodePing
 {
 public:
@@ -45,7 +48,7 @@ public:
         sigTime(0),
         vchSig(),
         fSentinelIsCurrent(false),
-        nSentinelVersion(0)
+        nSentinelVersion(DEFAULT_SENTINEL_VERSION)
         {}
 
     CMasternodePing(CTxIn& vinNew);
@@ -59,7 +62,11 @@ public:
         READWRITE(sigTime);
         READWRITE(vchSig);
         if(ser_action.ForRead() && (s.size() == 0))
+        {
+            fSentinelIsCurrent = false;
+            nSentinelVersion = DEFAULT_SENTINEL_VERSION;
             return;
+        }
         READWRITE(fSentinelIsCurrent);
         READWRITE(nSentinelVersion);
     }

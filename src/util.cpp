@@ -990,3 +990,16 @@ std::string IntVersionToString(uint32_t nVersion)
     }
     return boost::join(tokens, ".");
 }
+
+std::string SafeIntVersionToString(uint32_t nVersion)
+{
+    try
+    {
+        return IntVersionToString(nVersion);
+    }
+    catch(const std::bad_cast&)
+    {
+        return "Invalid version";
+    }
+}
+

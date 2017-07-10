@@ -452,7 +452,7 @@ UniValue masternodelist(const UniValue& params, bool fHelp)
     if (params.size() == 2) strFilter = params[1].get_str();
 
     if (fHelp || (
-                strMode != "activeseconds" && strMode != "addr" && strMode != "full" &&
+                strMode != "activeseconds" && strMode != "addr" && strMode != "full" && strMode != "info" &&
                 strMode != "lastseen" && strMode != "lastpaidtime" && strMode != "lastpaidblock" &&
                 strMode != "protocol" && strMode != "payee" && strMode != "rank" && strMode != "status"))
     {
@@ -468,6 +468,8 @@ UniValue masternodelist(const UniValue& params, bool fHelp)
                 "                   (since latest issued \"masternode start/start-many/start-alias\")\n"
                 "  addr           - Print ip address associated with a masternode (can be additionally filtered, partial match)\n"
                 "  full           - Print info in format 'status protocol payee lastseen activeseconds lastpaidtime lastpaidblock IP'\n"
+                "                   (can be additionally filtered, partial match)\n"
+                "  info           - Print info in format 'status protocol payee lastseen activeseconds sentinelversion sentinelstate IP'\n"
                 "                   (can be additionally filtered, partial match)\n"
                 "  lastpaidblock  - Print the last block height a node was paid on the network\n"
                 "  lastpaidtime   - Print the last time a node was paid on the network\n"
@@ -520,6 +522,21 @@ UniValue masternodelist(const UniValue& params, bool fHelp)
                 if (strFilter !="" && strFull.find(strFilter) == std::string::npos &&
                     strOutpoint.find(strFilter) == std::string::npos) continue;
                 obj.push_back(Pair(strOutpoint, strFull));
+            } else if (strMode == "info") {
+                std::ostringstream streamInfo;
+                streamInfo << std::setw(18) <<
+                               mn.GetStatus() << " " <<
+                               mn.nProtocolVersion << " " <<
+                               CBitcoinAddress(mn.pubKeyCollateralAddress.GetID()).ToString() << " " <<
+                               (int64_t)mn.lastPing.sigTime << " " << std::setw(8) <<
+                               (int64_t)(mn.lastPing.sigTime - mn.sigTime) << " " <<
+                               SafeIntVersionToString(mn.lastPing.nSentinelVersion) << " "  <<
+                               (mn.lastPing.fSentinelIsCurrent ? "current" : "expired") << " " <<
+                               mn.addr.ToString();
+                std::string strInfo = streamInfo.str();
+                if (strFilter !="" && strInfo.find(strFilter) == std::string::npos &&
+                    strOutpoint.find(strFilter) == std::string::npos) continue;
+                obj.push_back(Pair(strOutpoint, strInfo));
             } else if (strMode == "lastpaidblock") {
                 if (strFilter !="" && strOutpoint.find(strFilter) == std::string::npos) continue;
                 obj.push_back(Pair(strOutpoint, mn.GetLastPaidBlock()));
