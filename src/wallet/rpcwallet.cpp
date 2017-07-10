@@ -224,7 +224,7 @@ UniValue getrawchangeaddress(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() > 1)
+    if (request.fHelp || request.params.size() > 0)
         throw std::runtime_error(
             "getrawchangeaddress\n"
             "\nReturns a new Dash address, for receiving change.\n"
@@ -593,7 +593,7 @@ UniValue listaddressgroupings(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp)
+    if (request.fHelp || request.params.size() != 0)
         throw std::runtime_error(
             "listaddressgroupings\n"
             "\nLists groups of addresses which have had their common ownership\n"
@@ -1857,7 +1857,7 @@ UniValue listsinceblock(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp)
+    if (request.fHelp || request.params.size() > 3)
         throw std::runtime_error(
             "listsinceblock ( \"blockhash\" target_confirmations include_watchonly)\n"
             "\nGet all transactions in blocks since block [blockhash], or all transactions if omitted\n"
@@ -2855,7 +2855,7 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
                             "fundrawtransaction \"hexstring\" ( options )\n"
                             "\nAdd inputs to a transaction until it has enough in value to meet its out value.\n"
