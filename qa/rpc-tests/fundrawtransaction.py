@@ -3,7 +3,7 @@
 # Copyright (c) 2015-2017 The Bitcoin Unlimited developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
+import pdb
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
@@ -617,6 +617,26 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert(signedtx["complete"])
         self.nodes[0].sendrawtransaction(signedtx["hex"])
 
+        self.nodes[0].generate(1)
+        self.sync_all()
+
+        ################################
+        # Test no address reuse occurs #
+        ################################
+
+        inputs = []
+        outputs = {self.nodes[2].getnewaddress() : 1}
+        rawtx = self.nodes[3].createrawtransaction(inputs, outputs)
+        result3 = self.nodes[3].fundrawtransaction(rawtx)
+        res_dec = self.nodes[0].decoderawtransaction(result3["hex"])
+        changeaddress = ""
+        for out in res_dec['vout']:
+            if out['value'] > 1.0:
+                changeaddress += out['scriptPubKey']['addresses'][0]
+        assert(changeaddress != "")
+        nextaddr = self.nodes[3].getnewaddress()
+        # Now the change address key should be removed from the keypool
+        assert(changeaddress != nextaddr)
 
 if __name__ == '__main__':
     RawTransactionsTest().main(None,{"keypool":1})
