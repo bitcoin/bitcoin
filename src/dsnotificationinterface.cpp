@@ -3,12 +3,12 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "dsnotificationinterface.h"
-#include "privatesend-client.h"
 #include "instantx.h"
 #include "governance.h"
 #include "masternodeman.h"
 #include "masternode-payments.h"
 #include "masternode-sync.h"
+#include "privatesend-client.h"
 
 CDSNotificationInterface::CDSNotificationInterface()
 {
@@ -31,4 +31,5 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindex)
 void CDSNotificationInterface::SyncTransaction(const CTransaction &tx, const CBlock *pblock)
 {
     instantsend.SyncTransaction(tx, pblock);
+    CPrivateSend::SyncTransaction(tx, pblock);
 }

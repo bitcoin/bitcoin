@@ -214,6 +214,11 @@ public:
  */
 class CDarksendBroadcastTx
 {
+private:
+    // memory only
+    // when corresponding tx is 0-confirmed or conflicted, nConfirmedHeight is -1
+    int nConfirmedHeight;
+
 public:
     CTransaction tx;
     CTxIn vin;
@@ -221,16 +226,18 @@ public:
     int64_t sigTime;
 
     CDarksendBroadcastTx() :
-        tx(CTransaction()),
-        vin(CTxIn()),
-        vchSig(std::vector<unsigned char>()),
+        nConfirmedHeight(-1),
+        tx(),
+        vin(),
+        vchSig(),
         sigTime(0)
         {}
 
     CDarksendBroadcastTx(CTransaction tx, CTxIn vin, int64_t sigTime) :
+        nConfirmedHeight(-1),
         tx(tx),
         vin(vin),
-        vchSig(std::vector<unsigned char>()),
+        vchSig(),
         sigTime(sigTime)
         {}
 
@@ -259,6 +266,9 @@ public:
 
     bool Sign();
     bool CheckSignature(const CPubKey& pubKeyMasternode);
+
+    void SetConfirmedHeight(int nConfirmedHeightIn) { nConfirmedHeight = nConfirmedHeightIn; }
+    bool IsExpired(int nHeight);
 };
 
 // base class
@@ -337,6 +347,9 @@ public:
 
     static void AddDSTX(const CDarksendBroadcastTx& dstx);
     static CDarksendBroadcastTx GetDSTX(const uint256& hash);
+    static void CheckDSTXes(int nHeight);
+
+    static void SyncTransaction(const CTransaction& tx, const CBlock* pblock);
 };
 
 void ThreadCheckPrivateSend();

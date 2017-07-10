@@ -110,6 +110,12 @@ bool CDarksendBroadcastTx::CheckSignature(const CPubKey& pubKeyMasternode)
     return true;
 }
 
+bool CDarksendBroadcastTx::IsExpired(int nHeight)
+{
+    // expire confirmed DSTXes after ~1h since confirmation
+    return (nConfirmedHeight != -1) && (nHeight - nConfirmedHeight > 24);
+}
+
 void CPrivateSendBase::SetNull()
 {
     // Both sides
@@ -378,6 +384,45 @@ CDarksendBroadcastTx CPrivateSend::GetDSTX(const uint256& hash)
     LOCK(cs_mapdstx);
     auto it = mapDSTX.find(hash);
     return (it == mapDSTX.end()) ? CDarksendBroadcastTx() : it->second;
+}
+
+void CPrivateSend::CheckDSTXes(int nHeight)
+{
+    LOCK(cs_mapdstx);
+    std::map<uint256, CDarksendBroadcastTx>::iterator it = mapDSTX.begin();
+    while(it != mapDSTX.end()) {
+        if (it->second.IsExpired(nHeight)) {
+            mapDSTX.erase(it++);
+        } else {
+            ++it;
+        }
+    }
+    LogPrint("privatesend", "CPrivateSend::CheckDSTXes -- mapDSTX.size()=%llu\n", mapDSTX.size());
+}
+
+void CPrivateSend::SyncTransaction(const CTransaction& tx, const CBlock* pblock)
+{
+    if (tx.IsCoinBase()) return;
+
+    LOCK2(cs_main, cs_mapdstx);
+
+    uint256 txHash = tx.GetHash();
+    if (!mapDSTX.count(txHash)) return;
+
+    // When tx is 0-confirmed or conflicted, pblock is NULL and nConfirmedHeight should be set to -1
+    CBlockIndex* pblockindex = NULL;
+    if(pblock) {
+        uint256 blockHash = pblock->GetHash();
+        BlockMap::iterator mi = mapBlockIndex.find(blockHash);
+        if(mi == mapBlockIndex.end() || !mi->second) {
+            // shouldn't happen
+            LogPrint("privatesend", "CPrivateSendClient::SyncTransaction -- Failed to find block %s\n", blockHash.ToString());
+            return;
+        }
+        pblockindex = mi->second;
+    }
+    mapDSTX[txHash].SetConfirmedHeight(pblockindex ? pblockindex->nHeight : -1);
+    LogPrint("privatesend", "CPrivateSendClient::SyncTransaction -- txid=%s\n", txHash.ToString());
 }
 
 //TODO: Rename/move to core
