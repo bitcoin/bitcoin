@@ -581,7 +581,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2016 - " + _("Alias input mismatch");
 				return error(errorMessage.c_str());
 			}
-			if(theCert.sCategory.size() > 0 && !boost::algorithm::starts_with(stringFromVch(theCert.sCategory), "certificates"))
+			if(theCert.sCategory.size() > 0 && !boost::algorithm::istarts_with(stringFromVch(theCert.sCategory), "certificates"))
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2017 - " + _("Must use a certificate category");
 				return true;
@@ -599,7 +599,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2019 - " + _("Alias input mismatch");
 				return error(errorMessage.c_str());
 			}
-			if(theCert.sCategory.size() > 0 && !boost::algorithm::starts_with(stringFromVch(theCert.sCategory), "certificates"))
+			if(theCert.sCategory.size() > 0 && !boost::algorithm::istarts_with(stringFromVch(theCert.sCategory), "certificates"))
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2020 - " + _("Must use a certificate category");
 				return true;
