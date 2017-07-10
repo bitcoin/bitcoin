@@ -176,6 +176,8 @@ private:
 protected:
     int64_t BeginTime(const Consensus::Params& params) const override { return params.vDeployments[id].nStartTime; }
     int64_t EndTime(const Consensus::Params& params) const override { return params.vDeployments[id].nTimeout; }
+    int64_t BeginHeight(const Consensus::Params& params) const override { return params.vDeployments[id].nStartHeight; }
+    int64_t EndHeight(const Consensus::Params& params) const override { return params.vDeployments[id].nTimeoutHeight; }
     int Period(const Consensus::Params& params) const override { return params.nMinerConfirmationWindow; }
     int Threshold(const Consensus::Params& params) const override { return params.nRuleChangeActivationThreshold; }
 
