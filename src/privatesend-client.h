@@ -71,7 +71,7 @@ private:
 
     /// Split up large inputs or make fee sized inputs
     bool MakeCollateralAmounts();
-    bool MakeCollateralAmounts(const CompactTallyItem& tallyItem);
+    bool MakeCollateralAmounts(const CompactTallyItem& tallyItem, bool fTryDenominated);
 
     /// As a client, submit part of a future mixing transaction to a Masternode to start the process
     bool SubmitDenominate();

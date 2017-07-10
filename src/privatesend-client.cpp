@@ -1129,18 +1129,28 @@ bool CPrivateSendClient::MakeCollateralAmounts()
         return false;
     }
 
+    // First try to use only non-denominated funds
     BOOST_FOREACH(CompactTallyItem& item, vecTally) {
-        if(!MakeCollateralAmounts(item)) continue;
+        if(!MakeCollateralAmounts(item, false)) continue;
         return true;
     }
 
-    LogPrintf("CPrivateSendClient::MakeCollateralAmounts -- failed!\n");
+    // There should be at least some denominated funds we should be able to break in pieces to continue mixing
+    BOOST_FOREACH(CompactTallyItem& item, vecTally) {
+        if(!MakeCollateralAmounts(item, true)) continue;
+        return true;
+    }
+
+    // If we got here then smth is terribly broken actually
+    LogPrintf("CPrivateSendClient::MakeCollateralAmounts -- ERROR: Can't make collaterals!\n");
     return false;
 }
 
 // Split up large inputs or create fee sized inputs
-bool CPrivateSendClient::MakeCollateralAmounts(const CompactTallyItem& tallyItem)
+bool CPrivateSendClient::MakeCollateralAmounts(const CompactTallyItem& tallyItem, bool fTryDenominated)
 {
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+
     CWalletTx wtx;
     CAmount nFeeRet = 0;
     int nChangePosRet = -1;
@@ -1171,14 +1181,19 @@ bool CPrivateSendClient::MakeCollateralAmounts(const CompactTallyItem& tallyItem
     bool fSuccess = pwalletMain->CreateTransaction(vecSend, wtx, reservekeyChange,
             nFeeRet, nChangePosRet, strFail, &coinControl, true, ONLY_NONDENOMINATED_NOT1000IFMN);
     if(!fSuccess) {
-        // if we failed (most likeky not enough funds), try to use all coins instead -
-        // MN-like funds should not be touched in any case and we can't mix denominated without collaterals anyway
         LogPrintf("CPrivateSendClient::MakeCollateralAmounts -- ONLY_NONDENOMINATED_NOT1000IFMN Error: %s\n", strFail);
-        CCoinControl *coinControlNull = NULL;
-        fSuccess = pwalletMain->CreateTransaction(vecSend, wtx, reservekeyChange,
-                nFeeRet, nChangePosRet, strFail, coinControlNull, true, ONLY_NOT1000IFMN);
-        if(!fSuccess) {
-            LogPrintf("CPrivateSendClient::MakeCollateralAmounts -- ONLY_NOT1000IFMN Error: %s\n", strFail);
+        // If we failed then most likeky there are not enough funds on this address.
+        if(fTryDenominated) {
+            // Try to also use denominated coins (we can't mix denominated without collaterals anyway).
+            // MN-like funds should not be touched in any case.
+            if(!pwalletMain->CreateTransaction(vecSend, wtx, reservekeyChange,
+                                nFeeRet, nChangePosRet, strFail, &coinControl, true, ONLY_NOT1000IFMN)) {
+                LogPrintf("CPrivateSendClient::MakeCollateralAmounts -- ONLY_NOT1000IFMN Error: %s\n", strFail);
+                reservekeyCollateral.ReturnKey();
+                return false;
+            }
+        } else {
+            // Nothing else we can do.
             reservekeyCollateral.ReturnKey();
             return false;
         }
