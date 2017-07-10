@@ -724,6 +724,9 @@
           <property name="maximum">
            <number>32</number>
           </property>
+          <property name="value">
+           <number>4</number>
+          </property>
          </widget>
         </item>
         <item>
@@ -1401,7 +1404,7 @@
  </resources>
  <connections/>
  <buttongroups>
-  <buttongroup name="groupCustomFee"/>
   <buttongroup name="groupFee"/>
+  <buttongroup name="groupCustomFee"/>
  </buttongroups>
 </ui>

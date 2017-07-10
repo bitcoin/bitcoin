@@ -7266,6 +7266,8 @@ bool CHDWallet::AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlockInd
         {
             for (const auto &txin : tx.vin)
             {
+                if (txin.IsAnonInput())
+                    continue;
                 std::pair<TxSpends::const_iterator, TxSpends::const_iterator> range = mapTxSpends.equal_range(txin.prevout);
                 while (range.first != range.second)
                 {

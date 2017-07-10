@@ -3129,6 +3129,260 @@ UniValue getstakinginfo(const JSONRPCRequest &request)
     return obj;
 };
 
+
+UniValue listunspentanon(const JSONRPCRequest &request)
+{
+    if (request.fHelp || request.params.size() > 4)
+        throw std::runtime_error(
+            "listunspentanon ( minconf maxconf  [\"addresses\",...] [include_unsafe] )\n"
+            "\nReturns array of unspent transaction anon outputs\n"
+            "with between minconf and maxconf (inclusive) confirmations.\n"
+            "Optionally filter to only include txouts paid to specified addresses.\n"
+            "\nArguments:\n"
+            "1. minconf          (numeric, optional, default=1) The minimum confirmations to filter\n"
+            "2. maxconf          (numeric, optional, default=9999999) The maximum confirmations to filter\n"
+            "3. \"addresses\"    (string) A json array of particl addresses to filter\n"
+            "    [\n"
+            "      \"address\"   (string) particl address\n"
+            "      ,...\n"
+            "    ]\n"
+            "4. include_unsafe (bool, optional, default=true) Include outputs that are not safe to spend\n"
+            "                  because they come from unconfirmed untrusted transactions or unconfirmed\n"
+            "                  replacement transactions (cases where we are less sure that a conflicting\n"
+            "                  transaction won't be mined).\n"
+            "\nResult\n"
+            "[                   (array of json object)\n"
+            "  {\n"
+            "    \"txid\" : \"txid\",          (string) the transaction id \n"
+            "    \"vout\" : n,               (numeric) the vout value\n"
+            "    \"address\" : \"address\",    (string) the particl address\n"
+            "    \"account\" : \"account\",    (string) DEPRECATED. The associated account, or \"\" for the default account\n"
+            //"    \"scriptPubKey\" : \"key\",   (string) the script key\n"
+            "    \"amount\" : x.xxx,         (numeric) the transaction output amount in " + CURRENCY_UNIT + "\n"
+            "    \"confirmations\" : n,      (numeric) The number of confirmations\n"
+            //"    \"redeemScript\" : n        (string) The redeemScript if scriptPubKey is P2SH\n"
+            //"    \"spendable\" : xxx,        (bool) Whether we have the private keys to spend this output\n"
+            //"    \"solvable\" : xxx          (bool) Whether we know how to spend this output, ignoring the lack of keys\n"
+            "  }\n"
+            "  ,...\n"
+            "]\n"
+
+            "\nExamples\n"
+            + HelpExampleCli("listunspentanon", "")
+            + HelpExampleCli("listunspentanon", "6 9999999 \"[\\\"PfqK97PXYfqRFtdYcZw82x3dzPrZbEAcYa\\\",\\\"Pka9M2Bva8WetQhQ4ngC255HAbMJf5P5Dc\\\"]\"")
+            + HelpExampleRpc("listunspentanon", "6, 9999999 \"[\\\"PfqK97PXYfqRFtdYcZw82x3dzPrZbEAcYa\\\",\\\"Pka9M2Bva8WetQhQ4ngC255HAbMJf5P5Dc\\\"]\"")
+        );
+    
+    CHDWallet *pwallet = GetHDWallet();
+    
+    int nMinDepth = 1;
+    if (request.params.size() > 0 && !request.params[0].isNull()) {
+        RPCTypeCheckArgument(request.params[0], UniValue::VNUM);
+        nMinDepth = request.params[0].get_int();
+    }
+
+    int nMaxDepth = 9999999;
+    if (request.params.size() > 1 && !request.params[1].isNull()) {
+        RPCTypeCheckArgument(request.params[1], UniValue::VNUM);
+        nMaxDepth = request.params[1].get_int();
+    }
+
+    std::set<CBitcoinAddress> setAddress;
+    if (request.params.size() > 2 && !request.params[2].isNull()) {
+        RPCTypeCheckArgument(request.params[2], UniValue::VARR);
+        UniValue inputs = request.params[2].get_array();
+        for (unsigned int idx = 0; idx < inputs.size(); idx++) {
+            const UniValue& input = inputs[idx];
+            CBitcoinAddress address(input.get_str());
+            if (!address.IsValidStealthAddress())
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Particl stealth address: ")+input.get_str());
+            if (setAddress.count(address))
+                throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, duplicated address: ")+input.get_str());
+           setAddress.insert(address);
+        }
+    }
+    
+    bool include_unsafe = true;
+    if (request.params.size() > 3 && !request.params[3].isNull()) {
+        RPCTypeCheckArgument(request.params[3], UniValue::VBOOL);
+        include_unsafe = request.params[3].get_bool();
+    }
+    
+    UniValue results(UniValue::VARR);
+    std::vector<COutputR> vecOutputs;
+    assert(pwalletMain != NULL);
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+    
+    
+    // TODO: filter on stealth address
+    pwallet->AvailableAnonCoins(vecOutputs, !include_unsafe, NULL, true);
+    
+    for (const auto &out : vecOutputs)
+    {
+        if (out.nDepth < nMinDepth || out.nDepth > nMaxDepth)
+            continue;
+        
+        const COutputRecord *pout = out.rtx->second.GetOutput(out.i);
+        
+        if (!pout)
+        {
+            LogPrintf("%s: ERROR - Missing output %s %d\n", __func__, out.txhash.ToString(), out.i);
+            continue;
+        };
+        
+        CAmount nValue = pout->nValue;
+        
+        
+        UniValue entry(UniValue::VOBJ);
+        entry.push_back(Pair("txid", out.txhash.GetHex()));
+        entry.push_back(Pair("vout", out.i));
+
+        entry.push_back(Pair("amount", ValueFromAmount(nValue)));
+        entry.push_back(Pair("confirmations", out.nDepth));
+        //entry.push_back(Pair("spendable", out.fSpendable));
+        //entry.push_back(Pair("solvable", out.fSolvable));
+        results.push_back(entry);
+    }
+
+    return results;
+};
+
+UniValue listunspentblind(const JSONRPCRequest &request)
+{
+    if (request.fHelp || request.params.size() > 4)
+        throw std::runtime_error(
+            "listunspentblind ( minconf maxconf  [\"addresses\",...] [include_unsafe] )\n"
+            "\nReturns array of unspent transaction blind outputs\n"
+            "with between minconf and maxconf (inclusive) confirmations.\n"
+            "Optionally filter to only include txouts paid to specified addresses.\n"
+            "\nArguments:\n"
+            "1. minconf          (numeric, optional, default=1) The minimum confirmations to filter\n"
+            "2. maxconf          (numeric, optional, default=9999999) The maximum confirmations to filter\n"
+            "3. \"addresses\"    (string) A json array of particl addresses to filter\n"
+            "    [\n"
+            "      \"address\"   (string) particl address\n"
+            "      ,...\n"
+            "    ]\n"
+            "4. include_unsafe (bool, optional, default=true) Include outputs that are not safe to spend\n"
+            "                  because they come from unconfirmed untrusted transactions or unconfirmed\n"
+            "                  replacement transactions (cases where we are less sure that a conflicting\n"
+            "                  transaction won't be mined).\n"
+            "\nResult\n"
+            "[                   (array of json object)\n"
+            "  {\n"
+            "    \"txid\" : \"txid\",          (string) the transaction id \n"
+            "    \"vout\" : n,               (numeric) the vout value\n"
+            "    \"address\" : \"address\",    (string) the particl address\n"
+            "    \"account\" : \"account\",    (string) DEPRECATED. The associated account, or \"\" for the default account\n"
+            "    \"scriptPubKey\" : \"key\",   (string) the script key\n"
+            "    \"amount\" : x.xxx,         (numeric) the transaction output amount in " + CURRENCY_UNIT + "\n"
+            "    \"confirmations\" : n,      (numeric) The number of confirmations\n"
+            "    \"redeemScript\" : n        (string) The redeemScript if scriptPubKey is P2SH\n"
+            //"    \"spendable\" : xxx,        (bool) Whether we have the private keys to spend this output\n"
+            //"    \"solvable\" : xxx          (bool) Whether we know how to spend this output, ignoring the lack of keys\n"
+            "  }\n"
+            "  ,...\n"
+            "]\n"
+
+            "\nExamples\n"
+            + HelpExampleCli("listunspentblind", "")
+            + HelpExampleCli("listunspentblind", "6 9999999 \"[\\\"PfqK97PXYfqRFtdYcZw82x3dzPrZbEAcYa\\\",\\\"Pka9M2Bva8WetQhQ4ngC255HAbMJf5P5Dc\\\"]\"")
+            + HelpExampleRpc("listunspentblind", "6, 9999999 \"[\\\"PfqK97PXYfqRFtdYcZw82x3dzPrZbEAcYa\\\",\\\"Pka9M2Bva8WetQhQ4ngC255HAbMJf5P5Dc\\\"]\"")
+        );
+    
+    CHDWallet *pwallet = GetHDWallet();
+    
+    int nMinDepth = 1;
+    if (request.params.size() > 0 && !request.params[0].isNull()) {
+        RPCTypeCheckArgument(request.params[0], UniValue::VNUM);
+        nMinDepth = request.params[0].get_int();
+    }
+
+    int nMaxDepth = 9999999;
+    if (request.params.size() > 1 && !request.params[1].isNull()) {
+        RPCTypeCheckArgument(request.params[1], UniValue::VNUM);
+        nMaxDepth = request.params[1].get_int();
+    }
+
+    std::set<CBitcoinAddress> setAddress;
+    if (request.params.size() > 2 && !request.params[2].isNull()) {
+        RPCTypeCheckArgument(request.params[2], UniValue::VARR);
+        UniValue inputs = request.params[2].get_array();
+        for (unsigned int idx = 0; idx < inputs.size(); idx++) {
+            const UniValue& input = inputs[idx];
+            CBitcoinAddress address(input.get_str());
+            if (!address.IsValidStealthAddress())
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Particl stealth address: ")+input.get_str());
+            if (setAddress.count(address))
+                throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, duplicated address: ")+input.get_str());
+           setAddress.insert(address);
+        }
+    }
+    
+    bool include_unsafe = true;
+    if (request.params.size() > 3 && !request.params[3].isNull()) {
+        RPCTypeCheckArgument(request.params[3], UniValue::VBOOL);
+        include_unsafe = request.params[3].get_bool();
+    }
+    
+    UniValue results(UniValue::VARR);
+    std::vector<COutputR> vecOutputs;
+    assert(pwalletMain != NULL);
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+    
+    pwallet->AvailableBlindedCoins(vecOutputs, !include_unsafe, NULL, true);
+    
+    for (const auto &out : vecOutputs)
+    {
+        if (out.nDepth < nMinDepth || out.nDepth > nMaxDepth)
+            continue;
+        
+        const COutputRecord *pout = out.rtx->second.GetOutput(out.i);
+        
+        if (!pout)
+        {
+            LogPrintf("%s: ERROR - Missing output %s %d\n", __func__, out.txhash.ToString(), out.i);
+            continue;
+        };
+        
+        CAmount nValue = pout->nValue;
+        
+        CTxDestination address;
+        const CScript *scriptPubKey = &pout->scriptPubKey;
+        bool fValidAddress;
+        
+        fValidAddress = ExtractDestination(*scriptPubKey, address);
+        if (setAddress.size() && (!fValidAddress || !setAddress.count(address)))
+            continue;
+        
+        UniValue entry(UniValue::VOBJ);
+        entry.push_back(Pair("txid", out.txhash.GetHex()));
+        entry.push_back(Pair("vout", out.i));
+
+        if (fValidAddress) {
+            entry.push_back(Pair("address", CBitcoinAddress(address).ToString()));
+
+            if (pwallet->mapAddressBook.count(address))
+                entry.push_back(Pair("account", pwallet->mapAddressBook[address].name));
+
+            if (scriptPubKey->IsPayToScriptHash()) {
+                const CScriptID& hash = boost::get<CScriptID>(address);
+                CScript redeemScript;
+                if (pwallet->GetCScript(hash, redeemScript))
+                    entry.push_back(Pair("redeemScript", HexStr(redeemScript.begin(), redeemScript.end())));
+            }
+        }
+
+        entry.push_back(Pair("scriptPubKey", HexStr(scriptPubKey->begin(), scriptPubKey->end())));
+        entry.push_back(Pair("amount", ValueFromAmount(nValue)));
+        entry.push_back(Pair("confirmations", out.nDepth));
+        //entry.push_back(Pair("spendable", out.fSpendable));
+        //entry.push_back(Pair("solvable", out.fSolvable));
+        results.push_back(entry);
+    }
+
+    return results;
+};
 /*
 UniValue gettransactionsummary(const JSONRPCRequest &request)
 {
@@ -3700,6 +3954,10 @@ static const CRPCCommand commands[] =
     { "wallet",             "getstakinginfo",           &getstakinginfo,           true,  {} },
     
     //{ "wallet",             "gettransactionsummary",    &gettransactionsummary,    true,  {} },
+    
+    { "wallet",             "listunspentanon",          &listunspentanon,          true,  {} },
+    { "wallet",             "listunspentblind",         &listunspentblind,         true,  {} },
+    
     
     
     //sendparttopart // normal txn

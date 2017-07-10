@@ -1284,6 +1284,7 @@
   <tabstop>payAmount_is</tabstop>
   <tabstop>deleteButton_is</tabstop>
   <tabstop>payAmount_s</tabstop>
+  <tabstop>edtNarration</tabstop>
   <tabstop>deleteButton_s</tabstop>
  </tabstops>
  <resources>

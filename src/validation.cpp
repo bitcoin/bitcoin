@@ -825,6 +825,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
     AssertLockHeld(cs_main);
     if (pfMissingInputs)
         *pfMissingInputs = false;
+    
 
     if (!CheckTransaction(tx, state))
         return false; // state filled in by CheckTransaction
