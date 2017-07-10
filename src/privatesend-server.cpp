@@ -320,9 +320,8 @@ void CPrivateSendServer::CreateFinalTransaction()
             txNew.vin.push_back(txdsin);
     }
 
-    // BIP69 https://github.com/kristovatlas/bips/blob/master/bip-0069.mediawiki
-    sort(txNew.vin.begin(), txNew.vin.end());
-    sort(txNew.vout.begin(), txNew.vout.end());
+    sort(txNew.vin.begin(), txNew.vin.end(), CompareInputBIP69());
+    sort(txNew.vout.begin(), txNew.vout.end(), CompareOutputBIP69());
 
     finalMutableTransaction = txNew;
     LogPrint("privatesend", "CPrivateSendServer::CreateFinalTransaction -- finalMutableTransaction=%s", txNew.ToString());
