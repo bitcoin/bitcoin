@@ -3211,21 +3211,17 @@ bool CWallet::TopUpKeyPool(unsigned int kpSize)
                 internal = true;
             }
 
-            if (!setInternalKeyPool.empty()) {
-                nEnd = *(setInternalKeyPool.rbegin()) + 1;
-            }
-            if (!setExternalKeyPool.empty()) {
-                nEnd = std::max(nEnd, *(setExternalKeyPool.rbegin()) + 1);
-            }
+            assert(m_max_keypool_index < std::numeric_limits<int64_t>::max()); // How in the hell did you use so many keys?
+            int64_t index = ++m_max_keypool_index;
 
-            if (!walletdb.WritePool(nEnd, CKeyPool(GenerateNewKey(walletdb, internal), internal))) {
+            if (!walletdb.WritePool(index, CKeyPool(GenerateNewKey(walletdb, internal), internal))) {
                 throw std::runtime_error(std::string(__func__) + ": writing generated key failed");
             }
 
             if (internal) {
-                setInternalKeyPool.insert(nEnd);
+                setInternalKeyPool.insert(index);
             } else {
-                setExternalKeyPool.insert(nEnd);
+                setExternalKeyPool.insert(index);
             }
         }
         if (missingInternal + missingExternal > 0) {
