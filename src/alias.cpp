@@ -1898,7 +1898,6 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	newAlias.safetyLevel = 0;
 	newAlias.safeSearch = strSafeSearch == "Yes"? true: false;
 	newAlias.acceptCertTransfers = strAcceptCertTransfers == "Yes"? true: false;
-	newAlias.multiSigInfo = multiSigInfo;
 	
 	vector<unsigned char> data;
 	newAlias.Serialize(data);
