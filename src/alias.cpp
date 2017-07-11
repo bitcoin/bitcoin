@@ -1841,12 +1841,6 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	CWalletTx wtx;
 
 	EnsureWalletIsUnlocked();
-	CPubKey defaultKey, encryptionKey;
-	encryptionKey = pwalletMain->GenerateNewKey();
-	CKey privateEncryptionKey;
-	pwalletMain->GetKey(encryptionKey.GetID(), privateEncryptionKey);
-	std::vector<unsigned char> vchEncryptionPublicKey(encryptionKey.begin(), encryptionKey.end());
-	std::vector<unsigned char> vchEncryptionPrivateKey(privateEncryptionKey.begin(), privateEncryptionKey.end());
 
 	CAliasIndex oldAlias;
 	vector<CAliasIndex> vtxPos;
@@ -1922,8 +1916,6 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	newAlias.vchAlias = vchAlias;
 	newAlias.nHeight = chainActive.Tip()->nHeight;
 	newAlias.vchPubKey = vchPubKey;
-	newAlias.vchEncryptionPublicKey = vchEncryptionPublicKey;
-	newAlias.vchEncryptionPrivateKey = vchEncryptionPrivateKey;
 	newAlias.vchPublicValue = vchPublicValue;
 	newAlias.vchPrivateValue = vchPrivateValue;
 	newAlias.nExpireTime = nTime;
@@ -2757,7 +2749,7 @@ bool BuildAliasJson(const CAliasIndex& alias, const int pending, UniValue& oName
 		return false;
 
 	oName.push_back(Pair("address", address.ToString()));
-
+	oName.push_back(Pair("pubkey", stringFromVch(alias.vchPubKey)));
 	oName.push_back(Pair("alias_peg", stringFromVch(alias.vchAliasPeg)));
 
 	UniValue balanceParams(UniValue::VARR);
