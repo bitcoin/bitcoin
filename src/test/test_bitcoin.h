@@ -10,6 +10,7 @@
 #include "key.h"
 #include "pubkey.h"
 #include "random.h"
+#include "scheduler.h"
 #include "txdb.h"
 #include "txmempool.h"
 
@@ -53,6 +54,7 @@ struct TestingSetup: public BasicTestingSetup {
     fs::path pathTemp;
     boost::thread_group threadGroup;
     CConnman* connman;
+    CScheduler scheduler;
 
     TestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
     ~TestingSetup();
