@@ -209,6 +209,7 @@ testScripts = [ RpcTest(t) for t in [
 testScriptsExt = [ RpcTest(t) for t in [
     'txPerf',
     'excessive --extensive',
+    'parallel --extensive',
     'bip9-softforks',
     'bip65-cltv',
     'bip65-cltv-p2p',

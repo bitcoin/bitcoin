@@ -11,6 +11,7 @@ from test_framework.util import *
 class ParallelTest (BitcoinTestFramework):
     def __init__(self):
       self.rep = False
+      #self.extensive = False
       BitcoinTestFramework.__init__(self)
 
     def setup_chain(self):
@@ -67,7 +68,7 @@ class ParallelTest (BitcoinTestFramework):
         if self.rep:
             self.repetitiveTest()
             return
-        
+
         print ("Mining blocks with PV off...")
 
         # Mine some blocks on node2 which we will need at the end to generate a few transactions from that node
@@ -345,7 +346,7 @@ class ParallelTest (BitcoinTestFramework):
         for i in range(num_range):
             self.nodes[5].sendtoaddress(self.nodes[5].getnewaddress(), 0.01)
 
-        # Mine 5 competing blocks. This should not cause a crash or failure to sync nodes.
+        # Mine 5 competing blocks.
         print ("Mine 5 competing blocks...")
         self.nodes[0].generate(1)
         self.nodes[2].generate(1)
@@ -379,9 +380,394 @@ class ParallelTest (BitcoinTestFramework):
         self.nodes[5].generate(1)
         sync_blocks(self.nodes)
 
+        # Mine another block which will cause the nodes to sync to one chain
+        print ("Mine another block...")
+        self.nodes[0].generate(1)
+        sync_blocks(self.nodes)
+
         #stop nodes
         stop_nodes(self.nodes)
         wait_bitcoinds()
+
+ 
+
+        ################################################
+        # Begin extended tests
+        ################################################
+        if self.longTest == False:
+            return
+ 
+    #def run_attack_block_scenario (self):
+
+        ###########################################################################################
+        # Test the 4 block attack scenarios - use -pvtest=true to slow down the checking of inputs.
+        ###########################################################################################
+
+        ####################################################################
+        # Mine 4 blocks of all different sizes
+        # - the smallest block should win
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(3, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(4, self.options.tmpdir, ["-debug","-pvtest=0"]))
+
+        print ("Send more transactions...")
+        num_range = 15
+        for i in range(num_range):
+            self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 0.01)
+        num_range = 14
+        for i in range(num_range):
+            self.nodes[2].sendtoaddress(self.nodes[2].getnewaddress(), 0.01)
+        num_range = 13
+        for i in range(num_range):
+            self.nodes[3].sendtoaddress(self.nodes[3].getnewaddress(), 0.01)
+        num_range = 2
+        for i in range(num_range):
+            self.nodes[4].sendtoaddress(self.nodes[4].getnewaddress(), 0.01)
+
+        # Mine 4 competing blocks.
+        print ("Mine 4 competing blocks...")
+        self.nodes[0].generate(1)
+        self.nodes[2].generate(1)
+        self.nodes[3].generate(1)
+        self.nodes[4].generate(1)
+
+        # stop nodes
+        stop_nodes(self.nodes)
+        wait_bitcoinds()
+
+        # start nodes with -pvtest set to true.
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug","-pvtest=1"]))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug","-pvtest=1"]))
+        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug","-pvtest=1"]))
+        self.nodes.append(start_node(3, self.options.tmpdir, ["-debug","-pvtest=1"]))
+        self.nodes.append(start_node(4, self.options.tmpdir, ["-debug","-pvtest=1"]))
+
+        # Connect nodes so that all blocks are sent at same time to node1.
+        connect_nodes(self.nodes[1],0)
+        connect_nodes(self.nodes[1],2)
+        connect_nodes(self.nodes[1],3)
+        connect_nodes(self.nodes[1],4)
+        sync_blocks(self.nodes)
+        assert_equal(self.nodes[1].getbestblockhash(), self.nodes[4].getbestblockhash())
+ 
+        # stop nodes
+        stop_nodes(self.nodes)
+        wait_bitcoinds()
+
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(3, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(4, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(5, self.options.tmpdir, ["-debug","-pvtest=0"]))
+
+        connect_nodes(self.nodes[1],0)
+        connect_nodes(self.nodes[1],2)
+        connect_nodes(self.nodes[1],3)
+        connect_nodes(self.nodes[1],4)
+        connect_nodes(self.nodes[1],5)
+        sync_blocks(self.nodes)
+
+        # Mine a block which will cause all nodes to update their chains
+        print ("Mine another block...")
+        self.nodes[1].generate(1)
+        time.sleep(2) #wait for blocks to propagate
+        sync_blocks(self.nodes)
+        assert_equal(self.nodes[1].getbestblockhash(), self.nodes[0].getbestblockhash())
+        assert_equal(self.nodes[1].getbestblockhash(), self.nodes[2].getbestblockhash())
+        assert_equal(self.nodes[1].getbestblockhash(), self.nodes[3].getbestblockhash())
+        assert_equal(self.nodes[1].getbestblockhash(), self.nodes[4].getbestblockhash())
+ 
+
+        print ("Mine more blocks on each node...")
+        self.nodes[0].generate(25)
+        sync_blocks(self.nodes)
+        self.nodes[1].generate(25)
+        sync_blocks(self.nodes)
+        self.nodes[2].generate(25)
+        sync_blocks(self.nodes)
+        self.nodes[3].generate(25)
+        sync_blocks(self.nodes)
+        self.nodes[4].generate(25)
+        sync_blocks(self.nodes)
+        self.nodes[5].generate(25)
+        sync_blocks(self.nodes)
+
+        #stop nodes
+        stop_nodes(self.nodes)
+        wait_bitcoinds()
+
+        ########################################################################################################
+        # Mine 4 blocks all the same size and get them to start validating and then send a 5th that is smaller
+        # - the last smallest and last block arriving should win.
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(3, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(4, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(5, self.options.tmpdir, ["-debug","-pvtest=0"]))
+
+        print ("Send more transactions...")
+        num_range = 15
+        for i in range(num_range):
+            self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 0.01)
+        num_range = 15
+        for i in range(num_range):
+            self.nodes[2].sendtoaddress(self.nodes[2].getnewaddress(), 0.01)
+        num_range = 15
+        for i in range(num_range):
+            self.nodes[3].sendtoaddress(self.nodes[3].getnewaddress(), 0.01)
+        num_range = 15
+        for i in range(num_range):
+            self.nodes[4].sendtoaddress(self.nodes[4].getnewaddress(), 0.01)
+        num_range = 2
+        for i in range(num_range):
+            self.nodes[5].sendtoaddress(self.nodes[5].getnewaddress(), 0.01)
+
+        # stop nodes
+        stop_nodes(self.nodes)
+        wait_bitcoinds()
+
+        # start nodes with -pvtest set to true.
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug","-pvtest=1"]))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug","-pvtest=1"]))
+        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug","-pvtest=1"]))
+        self.nodes.append(start_node(3, self.options.tmpdir, ["-debug","-pvtest=1"]))
+        self.nodes.append(start_node(4, self.options.tmpdir, ["-debug","-pvtest=1"]))
+        self.nodes.append(start_node(5, self.options.tmpdir, ["-debug","-pvtest=1"]))
+
+        # Connect nodes so that first 4 blocks are sent at same time to node1.
+        connect_nodes(self.nodes[1],0)
+        connect_nodes(self.nodes[1],2)
+        connect_nodes(self.nodes[1],3)
+        connect_nodes(self.nodes[1],4)
+        time.sleep(5) #wait for blocks to start processing
+        
+        # Connect 5th block and this one should win the race
+        connect_nodes(self.nodes[1],5)
+        sync_blocks(self.nodes)
+        assert_equal(self.nodes[1].getbestblockhash(), self.nodes[5].getbestblockhash())
+ 
+        #stop nodes
+        stop_nodes(self.nodes)
+        wait_bitcoinds()
+
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(3, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(4, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(5, self.options.tmpdir, ["-debug","-pvtest=0"]))
+
+        connect_nodes(self.nodes[1],0)
+        connect_nodes(self.nodes[1],2)
+        connect_nodes(self.nodes[1],3)
+        connect_nodes(self.nodes[1],4)
+        connect_nodes(self.nodes[1],5)
+
+        # Mine a block which will cause all nodes to update their chains
+        print ("Mine another block...")
+        self.nodes[1].generate(1)
+        time.sleep(2) #wait for blocks to propagate
+        sync_blocks(self.nodes)
+        assert_equal(self.nodes[1].getbestblockhash(), self.nodes[0].getbestblockhash())
+        assert_equal(self.nodes[1].getbestblockhash(), self.nodes[2].getbestblockhash())
+        assert_equal(self.nodes[1].getbestblockhash(), self.nodes[3].getbestblockhash())
+        assert_equal(self.nodes[1].getbestblockhash(), self.nodes[4].getbestblockhash())
+        assert_equal(self.nodes[1].getbestblockhash(), self.nodes[5].getbestblockhash())
+ 
+        print ("Mine more blocks on each node...")
+        self.nodes[0].generate(25)
+        sync_blocks(self.nodes)
+        self.nodes[1].generate(25)
+        sync_blocks(self.nodes)
+        self.nodes[2].generate(25)
+        sync_blocks(self.nodes)
+        self.nodes[3].generate(25)
+        sync_blocks(self.nodes)
+        self.nodes[4].generate(25)
+        sync_blocks(self.nodes)
+        self.nodes[5].generate(25)
+        sync_blocks(self.nodes)
+
+        # stop nodes
+        stop_nodes(self.nodes)
+        wait_bitcoinds()
+
+        ############################################################################################################
+        # Mine 4 blocks all the same size and get them to start validating and then send a 5th that is the same size
+        # - the first block arriving should win
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(3, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(4, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(5, self.options.tmpdir, ["-debug","-pvtest=0"]))
+
+        print ("Send more transactions...")
+        num_range = 10
+        for i in range(num_range):
+            self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 0.01)
+        num_range = 10
+        for i in range(num_range):
+            self.nodes[2].sendtoaddress(self.nodes[2].getnewaddress(), 0.01)
+        num_range = 10
+        for i in range(num_range):
+            self.nodes[3].sendtoaddress(self.nodes[3].getnewaddress(), 0.01)
+        num_range = 10
+        for i in range(num_range):
+            self.nodes[4].sendtoaddress(self.nodes[4].getnewaddress(), 0.01)
+        num_range = 10
+        for i in range(num_range):
+            self.nodes[5].sendtoaddress(self.nodes[5].getnewaddress(), 0.01)
+
+        # stop nodes
+        stop_nodes(self.nodes)
+        wait_bitcoinds()
+
+        # start nodes with -pvtest set to true.
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug","-pvtest=1"]))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug","-pvtest=1"]))
+        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug","-pvtest=1"]))
+        self.nodes.append(start_node(3, self.options.tmpdir, ["-debug","-pvtest=1"]))
+        self.nodes.append(start_node(4, self.options.tmpdir, ["-debug","-pvtest=1"]))
+        self.nodes.append(start_node(5, self.options.tmpdir, ["-debug","-pvtest=1"]))
+
+        # Connect nodes so that first 4 blocks are sent 1 second apart to node1.
+        connect_nodes(self.nodes[1],0)
+        time.sleep(1)
+        connect_nodes(self.nodes[1],2)
+        time.sleep(1)
+        connect_nodes(self.nodes[1],3)
+        time.sleep(1)
+        connect_nodes(self.nodes[1],4)
+        time.sleep(1) #wait for blocks to start processing
+        
+        # Connect 5th block and this one be terminated and the first block to connect from node0 should win the race
+        connect_nodes(self.nodes[1],5)
+        sync_blocks(self.nodes)
+        assert_equal(self.nodes[1].getbestblockhash(), self.nodes[0].getbestblockhash())
+ 
+        #stop nodes
+        stop_nodes(self.nodes)
+        wait_bitcoinds()
+
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(3, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(4, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(5, self.options.tmpdir, ["-debug","-pvtest=0"]))
+
+        connect_nodes(self.nodes[1],0)
+        connect_nodes(self.nodes[1],2)
+        connect_nodes(self.nodes[1],3)
+        connect_nodes(self.nodes[1],4)
+        connect_nodes(self.nodes[1],5)
+
+        # Mine a block which will cause all nodes to update their chains
+        print ("Mine another block...")
+        self.nodes[1].generate(1)
+        time.sleep(2) #wait for blocks to propagate
+        sync_blocks(self.nodes)
+        assert_equal(self.nodes[1].getbestblockhash(), self.nodes[0].getbestblockhash())
+        assert_equal(self.nodes[1].getbestblockhash(), self.nodes[2].getbestblockhash())
+        assert_equal(self.nodes[1].getbestblockhash(), self.nodes[3].getbestblockhash())
+        assert_equal(self.nodes[1].getbestblockhash(), self.nodes[4].getbestblockhash())
+        assert_equal(self.nodes[1].getbestblockhash(), self.nodes[5].getbestblockhash())
+ 
+        # stop nodes
+        stop_nodes(self.nodes)
+        wait_bitcoinds()
+
+        #########################################################################################################
+        # Mine 4 blocks all the same size and get them to start validating and then send a 5th that is bigger
+        # - the first block arriving should win
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(3, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(4, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(5, self.options.tmpdir, ["-debug","-pvtest=0"]))
+
+        print ("Send more transactions...")
+        num_range = 10
+        for i in range(num_range):
+            self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 0.01)
+        num_range = 10
+        for i in range(num_range):
+            self.nodes[2].sendtoaddress(self.nodes[2].getnewaddress(), 0.01)
+        num_range = 10
+        for i in range(num_range):
+            self.nodes[3].sendtoaddress(self.nodes[3].getnewaddress(), 0.01)
+        num_range = 10
+        for i in range(num_range):
+            self.nodes[4].sendtoaddress(self.nodes[4].getnewaddress(), 0.01)
+        num_range = 20
+        for i in range(num_range):
+            self.nodes[5].sendtoaddress(self.nodes[5].getnewaddress(), 0.01)
+
+        # stop nodes
+        stop_nodes(self.nodes)
+        wait_bitcoinds()
+
+        # start nodes with -pvtest set to true.
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug","-pvtest=1"]))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug","-pvtest=1"]))
+        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug","-pvtest=1"]))
+        self.nodes.append(start_node(3, self.options.tmpdir, ["-debug","-pvtest=1"]))
+        self.nodes.append(start_node(4, self.options.tmpdir, ["-debug","-pvtest=1"]))
+        self.nodes.append(start_node(5, self.options.tmpdir, ["-debug","-pvtest=1"]))
+
+        # Connect nodes so that first 4 blocks are sent 1 second apart to node1.
+        connect_nodes(self.nodes[1],0)
+        time.sleep(1)
+        connect_nodes(self.nodes[1],2)
+        time.sleep(1)
+        connect_nodes(self.nodes[1],3)
+        time.sleep(1)
+        connect_nodes(self.nodes[1],4)
+        time.sleep(1) #wait for blocks to start processing
+        
+        # Connect 5th block and this one be terminated and the first block to connect from node0 should win the race
+        connect_nodes(self.nodes[1],5)
+        sync_blocks(self.nodes)
+        assert_equal(self.nodes[1].getbestblockhash(), self.nodes[0].getbestblockhash())
+ 
+        # stop nodes
+        stop_nodes(self.nodes)
+        wait_bitcoinds()
+
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(3, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(4, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(5, self.options.tmpdir, ["-debug","-pvtest=0"]))
+
+        connect_nodes(self.nodes[1],0)
+        connect_nodes(self.nodes[1],2)
+        connect_nodes(self.nodes[1],3)
+        connect_nodes(self.nodes[1],4)
+        connect_nodes(self.nodes[1],5)
+
+        # Mine a block which will cause all nodes to update their chains
+        print ("Mine another block...")
+        self.nodes[1].generate(1)
+        time.sleep(2) #wait for blocks to propagate
+        sync_blocks(self.nodes)
+        assert_equal(self.nodes[1].getbestblockhash(), self.nodes[0].getbestblockhash())
+        assert_equal(self.nodes[1].getbestblockhash(), self.nodes[2].getbestblockhash())
+        assert_equal(self.nodes[1].getbestblockhash(), self.nodes[3].getbestblockhash())
+        assert_equal(self.nodes[1].getbestblockhash(), self.nodes[4].getbestblockhash())
+        assert_equal(self.nodes[1].getbestblockhash(), self.nodes[5].getbestblockhash())
+ 
+        # stop nodes
+        stop_nodes(self.nodes)
+        wait_bitcoinds()
+
 
 
 def Test():
@@ -389,7 +775,8 @@ def Test():
     t.rep = True
     t.main(["--tmpdir=/ramdisk/test", "--nocleanup","--noshutdown"])
 
-if __name__ == '__main__':
+if __name__ == '__main__':  
+
     p = ParallelTest()  
     if "--rep" in sys.argv:
         print("Repetitive test")
@@ -397,6 +784,19 @@ if __name__ == '__main__':
         sys.argv.remove("--rep")
     else:
         p.rep = False
-        
+
+    if "--extensive" in sys.argv:
+      p.longTest = True
+      # we must remove duplicate 'extensive' arg here
+      while True:
+          try:
+              sys.argv.remove('--extensive')
+          except:
+              break
+      print ("Running extensive tests")
+    else:
+      p.longTest = False
+
+
     p.main ()
     
