@@ -2723,7 +2723,7 @@ bool BuildAliasJson(const CAliasIndex& alias, const int pending, UniValue& oName
 		return false;
 
 	oName.push_back(Pair("address", address.ToString()));
-	oName.push_back(Pair("pubkey", stringFromVch(alias.vchPubKey)));
+	oName.push_back(Pair("pubkey", EncodeBase58(alias.vchPubKey)));
 	oName.push_back(Pair("alias_peg", stringFromVch(alias.vchAliasPeg)));
 
 	UniValue balanceParams(UniValue::VARR);
