@@ -90,6 +90,15 @@ enum class FeeReason {
 
 std::string StringForFeeReason(FeeReason reason);
 
+/* Used to determine type of fee estimation requested */
+enum class FeeEstimateMode {
+    UNSET,        //! Use default settings based on other criteria
+    ECONOMICAL,   //! Force estimateSmartFee to use non-conservative estimates
+    CONSERVATIVE, //! Force estimateSmartFee to use conservative estimates
+};
+
+bool FeeModeFromString(const std::string& mode_string, FeeEstimateMode& fee_estimate_mode);
+
 /* Used to return detailed information about a feerate bucket */
 struct EstimatorBucket
 {
@@ -197,7 +206,7 @@ public:
      *  the closest target where one can be given.  'conservative' estimates are
      *  valid over longer time horizons also.
      */
-    CFeeRate estimateSmartFee(int confTarget, FeeCalculation *feeCalc, const CTxMemPool& pool, bool conservative = true) const;
+    CFeeRate estimateSmartFee(int confTarget, FeeCalculation *feeCalc, const CTxMemPool& pool, bool conservative) const;
 
     /** Return a specific fee estimate calculation with a given success
      * threshold and time horizon, and optionally return detailed data about
