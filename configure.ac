@@ -205,6 +205,12 @@ AC_ARG_ENABLE([werror],
     [enable_werror=$enableval],
     [enable_werror=no])
 
+AC_ARG_ENABLE([lto],
+    [AS_HELP_STRING([--enable-lto],
+                    [enable link-time-optimization (default is no)])],
+    [enable_lto=$enableval],
+    [enable_lto=no])
+
 AC_LANG_PUSH([C++])
 AX_CHECK_COMPILE_FLAG([-Werror],[CXXFLAG_WERROR="-Werror"],[CXXFLAG_WERROR=""])
 
@@ -217,6 +223,12 @@ if test "x$enable_debug" = xyes; then
     if test "x$GXX" = xyes; then
         CXXFLAGS="$CXXFLAGS -g3 -O0"
     fi
+fi
+
+if test "x$enable_lto" = "xyes"; then
+  AX_CHECK_COMPILE_FLAG([-flto],[LTO_CXXFLAGS="$LTO_CXXFLAGS -flto"],[AC_MSG_ERROR(compile failed with -flto)],[[$CXXFLAG_WERROR]])
+  AX_CHECK_COMPILE_FLAG([$LTO_CXXFLAGS -fno-fat-lto-objects],[LTO_CXXFLAGS="$LTO_CXXFLAGS -fno-fat-lto-objects"],,[[$CXXFLAG_WERROR]])
+  AX_CHECK_LINK_FLAG([-flto],[LTO_LDFLAGS="$LTO_LDFLAGS -flto"],[AC_MSG_ERROR(link failed with -flto)],[[$CXXFLAG_WERROR]])
 fi
 
 ERROR_CXXFLAGS=
@@ -1159,6 +1171,8 @@ AC_SUBST(BITCOIN_CLI_NAME)
 AC_SUBST(BITCOIN_TX_NAME)
 
 AC_SUBST(RELDFLAGS)
+AC_SUBST(LTO_CXXFLAGS)
+AC_SUBST(LTO_LDFLAGS)
 AC_SUBST(ERROR_CXXFLAGS)
 AC_SUBST(HARDENED_CXXFLAGS)
 AC_SUBST(HARDENED_CPPFLAGS)
