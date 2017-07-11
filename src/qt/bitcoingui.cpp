@@ -21,9 +21,11 @@
 #include "platformstyle.h"
 #include "rpcconsole.h"
 #include "utilitydialog.h"
+#include "mnemonicdialog.h"
 
 #ifdef ENABLE_WALLET
 #include "walletframe.h"
+#include "walletview.h"
 #include "walletmodel.h"
 #endif // ENABLE_WALLET
 
@@ -113,6 +115,7 @@ BitcoinGUI::BitcoinGUI(const PlatformStyle *_platformStyle, const NetworkStyle *
     openRPCConsoleAction(0),
     openAction(0),
     showHelpMessageAction(0),
+    mnemonicAction(0),
     trayIcon(0),
     trayIconMenu(0),
     notificator(0),
@@ -376,6 +379,9 @@ void BitcoinGUI::createActions()
     showHelpMessageAction = new QAction(platformStyle->TextColorIcon(":/icons/info"), tr("&Command-line options"), this);
     showHelpMessageAction->setMenuRole(QAction::NoRole);
     showHelpMessageAction->setStatusTip(tr("Show the %1 help message to get a list with possible Particl command-line options").arg(tr(PACKAGE_NAME)));
+    
+    mnemonicAction = new QAction(platformStyle->TextColorIcon(":/icons/info"), tr("&Mnemonic seed..."), this);
+    mnemonicAction->setMenuRole(QAction::NoRole);
 
     connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
     connect(aboutAction, SIGNAL(triggered()), this, SLOT(aboutClicked()));
@@ -383,6 +389,7 @@ void BitcoinGUI::createActions()
     connect(optionsAction, SIGNAL(triggered()), this, SLOT(optionsClicked()));
     connect(toggleHideAction, SIGNAL(triggered()), this, SLOT(toggleHidden()));
     connect(showHelpMessageAction, SIGNAL(triggered()), this, SLOT(showHelpMessageClicked()));
+    connect(mnemonicAction, SIGNAL(triggered()), this, SLOT(showMnemonicClicked()));
     connect(openRPCConsoleAction, SIGNAL(triggered()), this, SLOT(showDebugWindow()));
     // prevents an open debug window from becoming stuck/unusable on client shutdown
     connect(quitAction, SIGNAL(triggered()), rpcConsole, SLOT(hide()));
@@ -426,6 +433,8 @@ void BitcoinGUI::createMenuBar()
         file->addSeparator();
         file->addAction(usedSendingAddressesAction);
         file->addAction(usedReceivingAddressesAction);
+        file->addSeparator();
+        file->addAction(mnemonicAction);
         file->addSeparator();
     }
     file->addAction(quitAction);
@@ -541,7 +550,21 @@ bool BitcoinGUI::setCurrentWallet(const QString& name)
 {
     if(!walletFrame)
         return false;
-    return walletFrame->setCurrentWallet(name);
+    
+    if (!walletFrame->setCurrentWallet(name))
+        return false;
+    
+    WalletView *walletView = walletFrame->currentWalletView();
+    if (!walletView)
+        return true;
+    WalletModel *walletModel = walletView->getWalletModel();
+    if (!walletModel)
+        return true;
+    
+    if (!walletModel->hdEnabled())
+        showMnemonicClicked();
+    
+    return true;
 }
 
 void BitcoinGUI::removeAllWallets()
@@ -662,6 +685,25 @@ void BitcoinGUI::showDebugWindowActivateConsole()
 {
     rpcConsole->setTabFocus(RPCConsole::TAB_CONSOLE);
     showDebugWindow();
+}
+
+void BitcoinGUI::showMnemonicClicked()
+{
+    #ifdef ENABLE_WALLET
+    if (!walletFrame)
+        return;
+    WalletView *walletView = walletFrame->currentWalletView();
+    if (!walletView)
+        return;
+    WalletModel *walletModel = walletView->getWalletModel();
+    if (!walletModel)
+        return;
+    MnemonicDialog dlg(this, walletModel);
+    dlg.exec();
+    
+    
+    setHDStatus(walletModel->hdEnabled());
+    #endif // ENABLE_WALLET
 }
 
 void BitcoinGUI::showHelpMessageClicked()

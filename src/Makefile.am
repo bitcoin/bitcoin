@@ -478,7 +478,7 @@ particl_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 
 # bitcoinconsensus library #
 if BUILD_BITCOIN_LIBS
-include_HEADERS = script/bitcoinconsensus.h
+include_HEADERS = script/particlconsensus.h
 libparticlconsensus_la_SOURCES = $(crypto_libparticl_crypto_a_SOURCES) $(libparticl_consensus_a_SOURCES)
 
 if GLIBC_BACK_COMPAT

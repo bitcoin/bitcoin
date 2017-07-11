@@ -1060,8 +1060,17 @@ CAmount CHDWallet::GetDebit(const CTxIn &txin, const isminefilter &filter) const
         {
             const COutputRecord *oR = mri->second.GetOutput(txin.prevout.n);
             
-            if (oR && (oR->nFlags & ORF_OWNED))
-                return oR->nValue;
+            if (oR)
+            {
+                if ((filter & ISMINE_SPENDABLE)
+                    && (oR->nFlags & ORF_OWNED))
+                    return oR->nValue;
+                /* TODO
+                if ((filter & ISMINE_WATCH_ONLY)
+                    && (oR->nFlags & ORF_WATCH_ONLY))
+                    return oR->nValue;
+                */
+            }
         };
     } // cs_wallet
     return 0;

@@ -107,6 +107,7 @@ void ReceiveCoinsDialog::clear()
     ui->reqLabel->setText("");
     ui->reqMessage->setText("");
     ui->reuseAddress->setChecked(false);
+    ui->cbxAddressType->setCurrentIndex(ui->cbxAddressType->findText("Standard"));
     updateDisplayUnit();
 }
 

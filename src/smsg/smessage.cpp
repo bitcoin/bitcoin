@@ -127,6 +127,7 @@ bool SecMsgCrypter::Encrypt(uint8_t *chPlaintext, uint32_t nPlain, std::vector<u
     if (!fKeySet)
         return false;
 
+#ifdef ENABLE_WALLET
     // Max ciphertext len for a n bytes of plaintext is n + AES_BLOCKSIZE - 1 bytes
     vchCiphertext = std::vector<uint8_t> (nPlain + AES_BLOCKSIZE);
 
@@ -136,6 +137,7 @@ bool SecMsgCrypter::Encrypt(uint8_t *chPlaintext, uint32_t nPlain, std::vector<u
     if (nCLen < (int)nPlain)
         return false;
     vchCiphertext.resize(nCLen);
+#endif
     return true;
 };
 
@@ -144,6 +146,7 @@ bool SecMsgCrypter::Decrypt(uint8_t *chCiphertext, uint32_t nCipher, std::vector
     if (!fKeySet)
         return false;
 
+#ifdef ENABLE_WALLET
     // plaintext will always be equal to or lesser than length of ciphertext
     vchPlaintext.resize(nCipher);
 
@@ -154,6 +157,7 @@ bool SecMsgCrypter::Decrypt(uint8_t *chCiphertext, uint32_t nCipher, std::vector
         return false;
 
     vchPlaintext.resize(nPLen);
+#endif
     return true;
 };
 

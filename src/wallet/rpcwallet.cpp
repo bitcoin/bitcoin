@@ -1951,9 +1951,6 @@ UniValue listtransactions(const JSONRPCRequest& request)
     for (CWallet::TxItems::const_reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
     {
         nCountIter++;
-        //LogPrintf("[rm] nCountIter, nFrom %d %d\n", nCountIter, nFrom);
-        //if (nFrom >= nCountIter)
-        //    continue;
         
         CWalletTx *const pwtx = (*it).second.first;
         if (pwtx != 0)
@@ -1976,25 +1973,27 @@ UniValue listtransactions(const JSONRPCRequest& request)
     {
         const RtxOrdered_t &txOrdered = ((CHDWallet*)pwalletMain)->rtxOrdered;
         
+        // TODO: Combine finding and inserting into ret loops 
+        
         UniValue retRecords(UniValue::VARR);
         nCountIter = 0;
         for (RtxOrdered_t::const_reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
         {
             nCountIter++;
-            //if (nFrom >= nCountIter)
-            //    continue;
             
             ListRecord(it->second->first, it->second->second, strAccount, 0, true, retRecords, filter);
             if (nCountIter >= nCount + nFrom)
                 break;
         };
         
+        size_t nSearchStart = 0;
         for (size_t i = retRecords.size(); i-- > 0; )
         {
-            int64_t nInsertTime = find_value(retRecords[i], "time").get_int64();
+            int64_t nInsertTime = find_value(retRecords[i], "time").get_int64(); 
             bool fFound = false;
-            for (size_t k = ret.size(); k-- > 0; )
+            for (size_t k = nSearchStart; k < ret.size(); k++)
             {
+                nSearchStart = k;
                 int64_t nTime = find_value(ret[k], "time").get_int64();
                 if (nTime > nInsertTime)
                 {

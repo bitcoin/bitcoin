@@ -27,7 +27,13 @@ UniValue smsgenable(const JSONRPCRequest &request)
         throw std::runtime_error("Secure messaging is already enabled.");
 
     UniValue result(UniValue::VOBJ);
-    result.push_back(Pair("result", (SecureMsgEnable(pwalletMain) ? "Enabled secure messaging." : "Failed to enable secure messaging.")));
+    
+    CWallet *pwallet = NULL;
+#ifdef ENABLE_WALLET
+    pwallet = pwalletMain;
+#endif
+    
+    result.push_back(Pair("result", (SecureMsgEnable(pwallet) ? "Enabled secure messaging." : "Failed to enable secure messaging.")));
 
     return result;
 }

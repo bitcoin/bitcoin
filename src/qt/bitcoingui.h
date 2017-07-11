@@ -29,6 +29,7 @@ class UnitDisplayStatusBarControl;
 class WalletFrame;
 class WalletModel;
 class HelpMessageDialog;
+class MnemonicDialog;
 class ModalOverlay;
 
 class CWallet;
@@ -113,6 +114,7 @@ private:
     QAction *openRPCConsoleAction;
     QAction *openAction;
     QAction *showHelpMessageAction;
+    QAction *mnemonicAction;
 
     QSystemTrayIcon *trayIcon;
     QMenu *trayIconMenu;
@@ -220,6 +222,8 @@ private Q_SLOTS:
     void showDebugWindowActivateConsole();
     /** Show help message dialog */
     void showHelpMessageClicked();
+    /** Show mnemonic dialog */
+    void showMnemonicClicked();
 #ifndef Q_OS_MAC
     /** Handle tray icon clicked */
     void trayIconActivated(QSystemTrayIcon::ActivationReason reason);

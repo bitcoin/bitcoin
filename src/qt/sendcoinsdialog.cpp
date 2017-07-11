@@ -292,9 +292,13 @@ void SendCoinsDialog::on_sendButton_clicked()
     
     QString sCommand = "sendtypeto ";
     
-    sCommand += ui->cbxTypeFrom->currentText().toLower() + " ";
+    // TODO: Translations?
+    QString sTypeFrom = ui->cbxTypeFrom->currentText();
+    QString sTypeTo = ui->cbxTypeTo->currentText();
     
-    sCommand += ui->cbxTypeTo->currentText().toLower();
+    sCommand += sTypeFrom.toLower() + " ";
+    
+    sCommand += sTypeTo.toLower();
     
     sCommand += " [";
     
@@ -371,7 +375,7 @@ void SendCoinsDialog::on_sendButton_clicked()
     }
 
     QString questionString = tr("Are you sure you want to send?");
-    questionString.append("<br /><br />%1");
+    questionString.append("<br /><b>"+sTypeFrom+ "</b> to <b>" +sTypeTo+"</b><br /><br />%1");
 
     if(txFee > 0)
     {
@@ -448,6 +452,10 @@ void SendCoinsDialog::clear()
     {
         ui->entries->takeAt(0)->widget()->deleteLater();
     }
+    
+    ui->cbxTypeFrom->setCurrentIndex(ui->cbxTypeFrom->findText("Part"));
+    ui->cbxTypeTo->setCurrentIndex(ui->cbxTypeTo->findText("Part"));
+    
     addEntry();
 
     updateTabsAndLabels();

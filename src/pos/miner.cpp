@@ -251,6 +251,7 @@ static inline void condWaitFor(int ms)
 
 void ThreadStakeMiner(CHDWallet *pwallet)
 {
+#ifdef ENABLE_WALLET
     fStopMinerProc = false;
     
     int nBestHeight; // TODO: set from new block signal?
@@ -389,5 +390,6 @@ void ThreadStakeMiner(CHDWallet *pwallet)
         
         condWaitFor(nMinerSleep);
     };
+#endif
 };
 

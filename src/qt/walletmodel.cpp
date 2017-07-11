@@ -744,3 +744,4 @@ CHDWallet *WalletModel::getParticlWallet()
         throw std::runtime_error("wallet is not an instance of class CHDWallet.");
     return rv;
 };
+

@@ -186,6 +186,16 @@
       </item>
      </layout>
     </item>
+    <item row="4" column="1">
+     <widget class="QLineEdit" name="edtNarration">
+      <property name="toolTip">
+       <string>A short message sent over the Particl network, encrypted if sending to a stealth address or in a blind or anon transaction.</string>
+      </property>
+      <property name="maxLength">
+       <number>24</number>
+      </property>
+     </widget>
+    </item>
     <item row="5" column="0">
      <widget class="QLabel" name="messageLabel">
       <property name="text">
@@ -210,16 +220,6 @@
      <widget class="Line" name="line">
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
-      </property>
-     </widget>
-    </item>
-    <item row="4" column="1">
-     <widget class="QLineEdit" name="edtNarration">
-      <property name="toolTip">
-       <string>A short message sent over the Particl network, encrypted if sending to a stealth address or in a blind or anon transaction.</string>
-      </property>
-      <property name="maxLength">
-       <number>24</number>
       </property>
      </widget>
     </item>

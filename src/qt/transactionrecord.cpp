@@ -46,13 +46,11 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
     CHDWallet *phdw = (CHDWallet*) wallet;
     
     
-    
     if (wtx.IsCoinStake())
     {
         TransactionRecord sub(hash, nTime);
         
         sub.type = TransactionRecord::Staked;
-        
         sub.debit = -nDebit;
         
         CAmount nCredit = 0;
@@ -237,7 +235,6 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CHDWallet
     
     CAmount nNet = 0;
     TransactionRecord sub(hash, nTime);
-    
     
     CTxDestination address = CNoDestination();
     uint8_t nFlags = 0;

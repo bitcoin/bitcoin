@@ -12,6 +12,9 @@
 
 UniValue CallRPC(std::string args)
 {
+    if (args.empty())
+        throw std::runtime_error("No input.");
+    
     std::vector<std::string> vArgs;
     
     bool fInQuotes = false;
