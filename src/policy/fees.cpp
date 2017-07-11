@@ -15,6 +15,19 @@
 
 static constexpr double INF_FEERATE = 1e99;
 
+std::string StringForFeeEstimateHorizon(FeeEstimateHorizon horizon) {
+    static const std::map<FeeEstimateHorizon, std::string> horizon_strings = {
+        {FeeEstimateHorizon::SHORT_HALFLIFE, "short"},
+        {FeeEstimateHorizon::MED_HALFLIFE, "medium"},
+        {FeeEstimateHorizon::LONG_HALFLIFE, "long"},
+    };
+    auto horizon_string = horizon_strings.find(horizon);
+
+    if (horizon_string == horizon_strings.end()) return "unknown";
+
+    return horizon_string->second;
+}
+
 std::string StringForFeeReason(FeeReason reason) {
     static const std::map<FeeReason, std::string> fee_reason_strings = {
         {FeeReason::NONE, "None"},
@@ -669,7 +682,7 @@ CFeeRate CBlockPolicyEstimator::estimateRawFee(int confTarget, double successThr
         break;
     }
     default: {
-        return CFeeRate(0);
+        throw std::out_of_range("CBlockPoicyEstimator::estimateRawFee unknown FeeEstimateHorizon");
     }
     }
 
@@ -686,6 +699,24 @@ CFeeRate CBlockPolicyEstimator::estimateRawFee(int confTarget, double successThr
         return CFeeRate(0);
 
     return CFeeRate(median);
+}
+
+unsigned int CBlockPolicyEstimator::HighestTargetTracked(FeeEstimateHorizon horizon) const
+{
+    switch (horizon) {
+    case FeeEstimateHorizon::SHORT_HALFLIFE: {
+        return shortStats->GetMaxConfirms();
+    }
+    case FeeEstimateHorizon::MED_HALFLIFE: {
+        return feeStats->GetMaxConfirms();
+    }
+    case FeeEstimateHorizon::LONG_HALFLIFE: {
+        return longStats->GetMaxConfirms();
+    }
+    default: {
+        throw std::out_of_range("CBlockPoicyEstimator::HighestTargetTracked unknown FeeEstimateHorizon");
+    }
+    }
 }
 
 unsigned int CBlockPolicyEstimator::BlockSpan() const
