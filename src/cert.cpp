@@ -1218,7 +1218,8 @@ bool BuildCertJson(const CCert& cert, const CAliasIndex& alias, UniValue& oCert)
 		sTime = strprintf("%llu", pindex->nTime);
 	}
 	oCert.push_back(Pair("time", sTime));
-	oCert.push_back(Pair("data", cert.vchData.size() > 0 ? EncodeBase64(&cert.vchData[0], cert.vchData.size()) : ""));
+	string strData = stringFromVch(cert.vchData);
+    oCert.push_back(Pair("data", strData));
 	oCert.push_back(Pair("pubdata", stringFromVch(cert.vchPubData)));
 	oCert.push_back(Pair("category", stringFromVch(cert.sCategory)));
 	oCert.push_back(Pair("safesearch", cert.safeSearch? "Yes" : "No"));
@@ -1383,7 +1384,7 @@ void CertTxToJSON(const int op, const std::vector<unsigned char> &vchData, const
 	string strDataValue = "";
 	string dataValue = noDifferentStr;
 	if(!cert.vchData.empty() && cert.vchData != dbCert.vchData)
-		dataValue = EncodeBase64(&cert.vchData[0], cert.vchData.size());
+		dataValue = stringFromVch(cert.vchData);
 
 	entry.push_back(Pair("data", dataValue));
 

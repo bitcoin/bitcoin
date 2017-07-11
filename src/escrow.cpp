@@ -3556,8 +3556,7 @@ bool BuildEscrowJson(const CEscrow &escrow, const CEscrow &firstEscrow, UniValue
 	oEscrow.push_back(Pair("redeem_txid", strRedeemTxId));
     oEscrow.push_back(Pair("txid", escrow.txHash.GetHex()));
     oEscrow.push_back(Pair("height", sHeight));
-
-	oEscrow.push_back(Pair("pay_message", escrow.vchPaymentMessage.size() > 0 ? EncodeBase64(&escrow.vchPaymentMessage[0], escrow.vchPaymentMessage.size()) : ""));
+	oEscrow.push_back(Pair("pay_message", stringFromVch(escrow.vchPaymentMessage)));
 
 	int64_t expired_time = GetEscrowExpiration(escrow);
 	int expired = 0;

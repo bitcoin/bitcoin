@@ -2320,13 +2320,12 @@ void AliasTxToJSON(const int op, const vector<unsigned char> &vchData, const vec
 		publicValue = stringFromVch(alias.vchPublicValue);
 	entry.push_back(Pair("publicvalue", publicValue));
 
-	entry.push_back(Pair("privatevalue", alias.vchPrivateValue.size() > 0 ? EncodeBase64(&alias.vchPrivateValue[0], alias.vchPrivateValue.size()) : ""));
-	
+
+	entry.push_back(Pair("privatevalue", stringFromVch(alias.vchPrivateValue)));
 
 	string password = noDifferentStr;
 	if(!alias.vchPassword.empty() && alias.vchPassword != dbAlias.vchPassword)
-		password = EncodeBase64(&alias.vchPassword[0], alias.vchPassword.size());
-
+		password = stringFromVch(alias.vchPassword);
 
 	entry.push_back(Pair("password", password));
 
@@ -2747,8 +2746,8 @@ bool BuildAliasJson(const CAliasIndex& alias, const int pending, UniValue& oName
 		return false;
 	oName.push_back(Pair("name", stringFromVch(alias.vchAlias)));
 	oName.push_back(Pair("value", stringFromVch(alias.vchPublicValue)));
-	oName.push_back(Pair("privatevalue", alias.vchPrivateValue.size() > 0 ? EncodeBase64(&alias.vchPrivateValue[0], alias.vchPrivateValue.size()) : ""));
-	oName.push_back(Pair("password", alias.vchPassword.size() > 0? EncodeBase64(&alias.vchPassword[0], alias.vchPassword.size()): ""));
+	oName.push_back(Pair("privatevalue", stringFromVch(alias.vchPrivateValue)));
+	oName.push_back(Pair("password", stringFromVch(alias.vchPassword)));
 
 
 	oName.push_back(Pair("txid", alias.txHash.GetHex()));
