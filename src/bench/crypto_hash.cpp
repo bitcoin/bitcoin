@@ -47,7 +47,7 @@ static void SHA256_32b(benchmark::State& state)
     std::vector<uint8_t> in(32,0);
     while (state.KeepRunning()) {
         for (int i = 0; i < 1000000; i++) {
-            CSHA256().Write(in.data(), in.size()).Finalize(&in[0]);
+            CSHA256().Write(in.data(), in.size()).Finalize(in.data());
         }
     }
 }
