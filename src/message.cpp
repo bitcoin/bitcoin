@@ -660,7 +660,7 @@ bool BuildMessageJson(const CMessage& message, UniValue& oName)
 	oName.push_back(Pair("to", stringFromVch(message.vchAliasTo)));
 	oName.push_back(Pair("encryption_privatekey_from", EncodeBase58(message.vchEncryptionPrivateKeyFrom)));
 	oName.push_back(Pair("encryption_privatekey_to", EncodeBase58(message.vchEncryptionPrivateKeyTo)));
-	oName.push_back(Pair("encryption_publickey", EncodeBase58(message.vchEncryptionPublicKey)));
+	oName.push_back(Pair("encryption_publickey", HexStr(message.vchEncryptionPublicKey)));
 	oName.push_back(Pair("privatevalue", stringFromVch(message.vchData)));
 	oName.push_back(Pair("publicvalue", stringFromVch(message.vchPubData)));
 	return true;
