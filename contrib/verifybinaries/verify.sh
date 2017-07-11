@@ -3,7 +3,8 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-###   This script attempts to download the signature file SHA256SUMS.asc from bitcoin.org
+###   This script attempts to download the signature file SHA256SUMS.asc from
+###   bitcoincore.org and bitcoin.org and compares them.
 ###   It first checks if the signature passes, and then downloads the files specified in
 ###   the file, and checks if the hashes of these files match those that are specified
 ###   in the signature file.
@@ -22,7 +23,9 @@ TMPFILE="hashes.tmp"
 
 SIGNATUREFILENAME="SHA256SUMS.asc"
 RCSUBDIR="test"
-BASEDIR="https://bitcoin.org/bin/"
+HOST1="https://bitcoincore.org"
+HOST2="https://bitcoin.org"
+BASEDIR="/bin/"
 VERSIONPREFIX="bitcoin-core-"
 RCVERSIONSTRING="rc"
 
@@ -81,7 +84,7 @@ else
 fi
 
 #first we fetch the file containing the signature
-WGETOUT=$(wget -N "$BASEDIR$SIGNATUREFILENAME" 2>&1)
+WGETOUT=$(wget -N "$HOST1$BASEDIR$SIGNATUREFILENAME" 2>&1)
 
 #and then see if wget completed successfully
 if [ $? -ne 0 ]; then
@@ -90,6 +93,22 @@ if [ $? -ne 0 ]; then
    echo "wget output:"
    echo "$WGETOUT"|sed 's/^/\t/g'
    exit 2
+fi
+
+WGETOUT=$(wget -N -O "$SIGNATUREFILENAME.2" "$HOST2$BASEDIR$SIGNATUREFILENAME" 2>&1)
+if [ $? -ne 0 ]; then
+   echo "bitcoin.org failed to provide signature file, but bitcoincore.org did?"
+   echo "wget output:"
+   echo "$WGETOUT"|sed 's/^/\t/g'
+   clean_up $SIGNATUREFILENAME
+   exit 3
+fi
+
+SIGFILEDIFFS="$(diff $SIGNATUREFILENAME $SIGNATUREFILENAME.2)"
+if [ "$SIGFILEDIFFS" != "" ]; then
+   echo "bitcoin.org and bitcoincore.org signature files were not equal?"
+   clean_up $SIGNATUREFILENAME $SIGNATUREFILENAME.2
+   exit 4
 fi
 
 #then we check it
@@ -111,7 +130,7 @@ if [ $RET -ne 0 ]; then
 
    echo "gpg output:"
    echo "$GPGOUT"|sed 's/^/\t/g'
-   clean_up $SIGNATUREFILENAME $TMPFILE
+   clean_up $SIGNATUREFILENAME $SIGNATUREFILENAME.2 $TMPFILE
    exit "$RET"
 fi
 
@@ -131,7 +150,7 @@ FILES=$(awk '{print $2}' "$TMPFILE")
 for file in $FILES
 do
    echo "Downloading $file"
-   wget --quiet -N "$BASEDIR$file"
+   wget --quiet -N "$HOST1$BASEDIR$file"
 done
 
 #check hashes
@@ -149,7 +168,7 @@ fi
 
 if [ -n "$2" ]; then
    echo "Clean up the binaries"
-   clean_up $FILES $SIGNATUREFILENAME $TMPFILE
+   clean_up $FILES $SIGNATUREFILENAME $SIGNATUREFILENAME.2 $TMPFILE
 else
    echo "Keep the binaries in $WORKINGDIR"
    clean_up $TMPFILE
