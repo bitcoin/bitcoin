@@ -280,6 +280,19 @@ void PrepareShutdown()
         fFeeEstimatesInitialized = false;
     }
 
+    // FlushStateToDisk generates a SetBestChain callback, which we should avoid missing
+    FlushStateToDisk();
+
+    // After there are no more peers/RPC left to give us new data which may generate
+    // CValidationInterface callbacks, flush them...
+    GetMainSignals().FlushBackgroundCallbacks();
+
+    // Any future callbacks will be dropped. This should absolutely be safe - if
+    // missing a callback results in an unrecoverable situation, unclean shutdown
+    // would too. The only reason to do the above flushes is to let the wallet catch
+    // up with our current chain to avoid any strange pruning edge cases and make
+    // next startup faster by avoiding rescan.
+
     {
         LOCK(cs_main);
         if (pcoinsTip != nullptr) {
@@ -334,6 +347,7 @@ void PrepareShutdown()
     }
 #endif
     UnregisterAllValidationInterfaces();
+    GetMainSignals().UnregisterBackgroundSignalScheduler();
 }
 
 /**
@@ -1531,6 +1545,8 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     // Start the lightweight task scheduler thread
     CScheduler::Function serviceLoop = boost::bind(&CScheduler::serviceQueue, &scheduler);
     threadGroup.create_thread(boost::bind(&TraceThread<CScheduler::Function>, "scheduler", serviceLoop));
+
+    GetMainSignals().RegisterBackgroundSignalScheduler(scheduler);
 
     /* Start the RPC server already.  It will be started in "warmup" mode
      * and not really process calls already (but it will signify connections
