@@ -2610,7 +2610,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	txAccept.nAcceptHeight = nHeight;
 	txAccept.vchBuyerAlias = vchAlias;
 	if(!strMessage.empty())
-		txAccept.vchMessage = DecodeBase64(strMessage);
+		txAccept.vchMessage = ParseHex(strMessage);
 	txAccept.nPaymentOption = paymentOptionsMask;
     CAmount nTotalValue = ( nPrice * nQty );
 	CAmount nTotalCommission = ( nCommission * nQty );
@@ -3195,6 +3195,7 @@ bool BuildOfferJson(const COffer& theOffer, const CAliasIndex &alias, UniValue& 
 	vector<COffer> myLinkedVtxPos;
 	CTransaction linkaliastx;
 	CAliasIndex linkAlias;
+	vector<unsigned char> vchEncryptionPublicKey = alias.vchEncryptionPublicKey;
 	if( !theOffer.vchLinkOffer.empty())
 	{
 		if(!GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, linkTx, myLinkedVtxPos, true))
@@ -3205,6 +3206,7 @@ bool BuildOfferJson(const COffer& theOffer, const CAliasIndex &alias, UniValue& 
 			return false;
 		if(linkAlias.safetyLevel >= SAFETY_LEVEL2)
 			return false;
+		vchEncryptionPublicKey = linkAlias.vchEncryptionPublicKey;
 	}
 
 	uint64_t nHeight;
@@ -3282,6 +3284,7 @@ bool BuildOfferJson(const COffer& theOffer, const CAliasIndex &alias, UniValue& 
 	oOffer.push_back(Pair("alias_peg", stringFromVch(alias.vchAliasPeg)));
 	oOffer.push_back(Pair("description", stringFromVch(theOffer.sDescription)));
 	oOffer.push_back(Pair("alias", stringFromVch(theOffer.vchAlias)));
+	oOffer.push_back(Pair("encryption_publickey", HexStr(vchEncryptionPublicKey)));
 	oOffer.push_back(Pair("address", EncodeBase58(alias.vchAddress)));
 
 	float rating = 0;
@@ -3490,7 +3493,7 @@ bool BuildOfferAcceptJson(const COffer& theOffer, const CAliasIndex& theAlias, c
 	totalAvgRating = floor(totalAvgRating * 10) / 10;
 	oOfferAccept.push_back(Pair("avg_rating", totalAvgRating));
 	oOfferAccept.push_back(Pair("avg_rating_display", strprintf("%.1f/5 (%d %s)", totalAvgRating, ratingCount, _("Votes"))));
-	oOfferAccept.push_back(Pair("pay_message", theOffer.accept.vchMessage.size() > 0 ? EncodeBase64(&theOffer.accept.vchMessage[0], theOffer.accept.vchMessage.size()) : ""));
+	oOfferAccept.push_back(Pair("pay_message", HexStr(theOffer.accept.vchMessage)));
 	return true;
 }
 UniValue offercount(const UniValue& params, bool fHelp) {

@@ -1490,7 +1490,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	newEscrow.vchSellerAlias = selleralias.vchAlias;
 	newEscrow.vchLinkSellerAlias = reselleralias.vchAlias;
 	if(!strMessage.empty())
-		newEscrow.vchPaymentMessage = DecodeBase64(strMessage);
+		newEscrow.vchPaymentMessage = ParseHex(strMessage);
 	newEscrow.nQty = nQty;
 	newEscrow.nPaymentOption = paymentOptionsMask;
 	newEscrow.nHeight = nHeight;
@@ -3463,7 +3463,7 @@ bool BuildEscrowJson(const CEscrow &escrow, UniValue& oEscrow)
 	oEscrow.push_back(Pair("redeem_txid", strRedeemTxId));
     oEscrow.push_back(Pair("txid", escrow.txHash.GetHex()));
     oEscrow.push_back(Pair("height", sHeight));
-	oEscrow.push_back(Pair("pay_message", escrow.vchPaymentMessage.size() > 0 ? EncodeBase64(&escrow.vchPaymentMessage[0], escrow.vchPaymentMessage.size()) : ""));
+	oEscrow.push_back(Pair("pay_message", HexStr(escrow.vchPaymentMessage)));
 	int64_t expired_time = GetEscrowExpiration(escrow);
 	bool expired = false;
     if(expired_time <= chainActive.Tip()->nTime)
