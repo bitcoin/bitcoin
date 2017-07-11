@@ -6,6 +6,7 @@
 #define BITCOIN_WALLET_COINCONTROL_H
 
 #include "policy/feerate.h"
+#include "policy/fees.h"
 #include "primitives/transaction.h"
 #include "wallet/wallet.h"
 
@@ -26,6 +27,8 @@ public:
     int nConfirmTarget;
     //! Signal BIP-125 replace by fee.
     bool signalRbf;
+    //! Fee estimation mode to control arguments to estimateSmartFee
+    FeeEstimateMode m_fee_mode;
 
     CCoinControl()
     {
@@ -42,6 +45,7 @@ public:
         fOverrideFeeRate = false;
         nConfirmTarget = 0;
         signalRbf = fWalletRbf;
+        m_fee_mode = FeeEstimateMode::UNSET;
     }
 
     bool HasSelected() const
