@@ -548,16 +548,16 @@ fs::path GetDefaultDataDir()
 #endif
 }
 
-static fs::path pathCached;
-static fs::path pathCachedNetSpecific;
+static fs::path::string_type pathCached;
+static fs::path::string_type pathCachedNetSpecific;
 static CCriticalSection csPathCached;
 
-const fs::path &GetDataDir(bool fNetSpecific)
+fs::path GetDataDir(bool fNetSpecific)
 {
 
     LOCK(csPathCached);
 
-    fs::path &path = fNetSpecific ? pathCachedNetSpecific : pathCached;
+    fs::path path = fNetSpecific ? pathCachedNetSpecific : pathCached;
 
     // This can be called during exceptions by LogPrintf(), so we cache the
     // value so we don't have to do memory allocations after that.
@@ -585,8 +585,8 @@ void ClearDatadirCache()
 {
     LOCK(csPathCached);
 
-    pathCached = fs::path();
-    pathCachedNetSpecific = fs::path();
+    pathCached = fs::path().native();
+    pathCachedNetSpecific = fs::path().native();
 }
 
 fs::path GetConfigFile(const std::string& confPath)
