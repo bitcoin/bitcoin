@@ -1848,6 +1848,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	bool aliasExists = GetVtxOfAlias(vchAlias, oldAlias, vtxPos, isExpired);
 	if(aliasExists && !isExpired)
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5508 - " + _("This alias already exists"));
+	CPubKey defaultKey;
 	if(IsMyAlias(oldAlias))
 	{
 		defaultKey = CPubKey(oldAlias.vchPubKey);	
