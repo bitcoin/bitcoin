@@ -2371,7 +2371,10 @@ bool ConnectBlock(const CBlock &block,
     // real online nodes have checked the scripts.  Therefore, during initial block
     // download we don't need to check most of those scripts except for the most
     // recent ones.
-    bool fScriptChecks = !fCheckpointsEnabled || block.nTime > timeBarrier;
+    bool fScriptChecks = true;
+    if (pindexBestHeader)
+        fScriptChecks = !fCheckpointsEnabled || block.nTime > timeBarrier ||
+                        pindex->nHeight > pindexBestHeader->nHeight - (144 * checkScriptDays.value);
 
     int64_t nTime1 = GetTimeMicros();
     nTimeCheck += nTime1 - nTimeStart;
