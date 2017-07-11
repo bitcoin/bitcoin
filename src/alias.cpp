@@ -1876,33 +1876,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 		if(!pwalletMain->GetKey(defaultKey.GetID(), keyTmp) && !pwalletMain->AddKeyPubKey(key, defaultKey))	
 			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5511 - " + _("Please choose a different password"));
 	}
-	CScript scriptPubKeyOrig;
-	CMultiSigAliasInfo multiSigInfo;
-	string strCipherText;
-	if(aliasNames.size() > 0)
-	{
-		multiSigInfo.nRequiredSigs = nMultiSig;
-		std::vector<CPubKey> pubkeys; 
-		pubkeys.push_back(defaultKey);
-		for(int i =0;i<aliasNames.size();i++)
-		{
-			CAliasIndex multiSigAlias;
-			CTransaction txMultiSigAlias;
-			if (!GetTxOfAlias( vchFromString(aliasNames[i].get_str()), multiSigAlias, txMultiSigAlias))
-				throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5512 - " + _("Could not find multisig alias with the name: ") + aliasNames[i].get_str());
-
-			CPubKey pubkey(multiSigAlias.vchPubKey);
-			pubkeys.push_back(pubkey);
-			multiSigInfo.vchAliases.push_back(aliasNames[i].get_str());
-			multiSigInfo.vchEncryptionPrivateKeys.push_back(stringFromVch(vchEncryptionPrivateKey));
-		}
-		scriptPubKeyOrig = GetScriptForMultisig(nMultiSig, pubkeys);
-		std::vector<unsigned char> vchRedeemScript(scriptPubKeyOrig.begin(), scriptPubKeyOrig.end());
-		multiSigInfo.vchRedeemScript = vchRedeemScript;
-
-	}	
-	else
-		scriptPubKeyOrig = GetScriptForDestination(defaultKey.GetID());
+	CScript scriptPubKeyOrig = GetScriptForDestination(defaultKey.GetID());
 
 	CSyscoinAddress newAddress = CSyscoinAddress(CScriptID(scriptPubKeyOrig));	
 
