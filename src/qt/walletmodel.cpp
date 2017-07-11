@@ -18,6 +18,7 @@
 #include "keystore.h"
 #include "validation.h"
 #include "net.h" // for g_connman
+#include "policy/fees.h"
 #include "sync.h"
 #include "ui_interface.h"
 #include "util.h" // for GetBoolArg
