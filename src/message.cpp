@@ -765,8 +765,8 @@ bool BuildMessageJson(const CMessage& message, UniValue& oName)
 
 	oName.push_back(Pair("subject", stringFromVch(message.vchSubject)));
 
-	oName.push_back(Pair("messageto", message.vchMessageTo.size() > 0 ? EncodeBase64(&message.vchMessageTo[0], message.vchMessageTo.size()) : ""));
-	oName.push_back(Pair("messagefrom", message.vchMessageFrom.size() > 0 ? EncodeBase64(&message.vchMessageFrom[0], message.vchMessageFrom.size()) : ""));
+
+	oName.push_back(Pair("message", stringFromVch(message.vchMessageTo)));
 	return true;
 }
 UniValue messagesentlist(const UniValue& params, bool fHelp) {
@@ -938,8 +938,7 @@ void MessageTxToJSON(const int op, const std::vector<unsigned char> &vchData, co
 	string subjectValue = stringFromVch(message.vchSubject);
 	entry.push_back(Pair("subject", subjectValue));
 
-	entry.push_back(Pair("messageto", message.vchMessageTo.size() > 0 ? EncodeBase64(&message.vchMessageTo[0], message.vchMessageTo.size()) : ""));
-	entry.push_back(Pair("messagefrom", message.vchMessageFrom.size() > 0 ? EncodeBase64(&message.vchMessageFrom[0], message.vchMessageFrom.size()) : ""));
+	entry.push_back(Pair("message", stringFromVch(message.vchMessageTo)));
 
 
 }
