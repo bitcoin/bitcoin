@@ -81,6 +81,7 @@ BASE_SCRIPTS= [
     # vv Tests less than 30s vv
     'keypool-topup.py',
     'zmq_test.py',
+    'bitcoin_cli.py',
     'mempool_resurrect_test.py',
     'txn_doublespend.py --mineblock',
     'txn_clone.py',
