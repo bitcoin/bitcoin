@@ -3141,10 +3141,10 @@ bool CWallet::TopUpKeyPool(unsigned int kpSize)
             }
 
             if (!setInternalKeyPool.empty()) {
-                nEnd = *(--setInternalKeyPool.end()) + 1;
+                nEnd = *(setInternalKeyPool.rbegin()) + 1;
             }
             if (!setExternalKeyPool.empty()) {
-                nEnd = std::max(nEnd, *(--setExternalKeyPool.end()) + 1);
+                nEnd = std::max(nEnd, *(setExternalKeyPool.rbegin()) + 1);
             }
 
             if (!walletdb.WritePool(nEnd, CKeyPool(GenerateNewKey(internal), internal)))
