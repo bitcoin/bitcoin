@@ -42,7 +42,7 @@ class TestNode():
     To make things easier for the test writer, any unrecognised messages will
     be dispatched to the RPC connection."""
 
-    def __init__(self, i, dirname, extra_args, rpchost, timewait, binary, stderr, mocktime, coverage_dir):
+    def __init__(self, i, dirname, extra_args, rpchost, timewait, binary, stderr, mocktime, coverage_dir, use_cli=False):
         self.index = i
         self.datadir = os.path.join(dirname, "node" + str(i))
         self.rpchost = rpchost
@@ -62,6 +62,7 @@ class TestNode():
         self.args = [self.binary, "-datadir=" + self.datadir, "-server", "-keypool=1", "-discover=0", "-rest", "-logtimemicros", "-debug", "-debugexclude=libevent", "-debugexclude=leveldb", "-mocktime=" + str(mocktime), "-uacomment=testnode%d" % i]
 
         self.cli = TestNodeCLI(os.getenv("BITCOINCLI", "bitcoin-cli"), self.datadir)
+        self.use_cli = use_cli
 
         self.running = False
         self.process = None
@@ -73,9 +74,12 @@ class TestNode():
         self.p2ps = []
 
     def __getattr__(self, name):
-        """Dispatches any unrecognised messages to the RPC connection."""
-        assert self.rpc_connected and self.rpc is not None, "Error: no RPC connection"
-        return getattr(self.rpc, name)
+        """Dispatches any unrecognised messages to the RPC connection or a CLI instance."""
+        if self.use_cli:
+            return getattr(self.cli, name)
+        else:
+            assert self.rpc_connected and self.rpc is not None, "Error: no RPC connection"
+            return getattr(self.rpc, name)
 
     def start(self, extra_args=None, stderr=None):
         """Start the node."""
@@ -114,10 +118,13 @@ class TestNode():
         raise AssertionError("Unable to connect to bitcoind")
 
     def get_wallet_rpc(self, wallet_name):
-        assert self.rpc_connected
-        assert self.rpc
-        wallet_path = "wallet/%s" % wallet_name
-        return self.rpc / wallet_path
+        if self.use_cli:
+            return self.cli("-rpcwallet={}".format(wallet_name))
+        else:
+            assert self.rpc_connected
+            assert self.rpc
+            wallet_path = "wallet/%s" % wallet_name
+            return self.rpc / wallet_path
 
     def stop_node(self):
         """Stop the node."""
@@ -210,6 +217,7 @@ class TestNodeCLI():
         self.binary = binary
         self.datadir = datadir
         self.input = None
+        self.log = logging.getLogger('TestFramework.bitcoincli')
 
     def __call__(self, *args, input=None):
         # TestNodeCLI is callable with bitcoin-cli command-line args
@@ -240,6 +248,7 @@ class TestNodeCLI():
         if named_args:
             p_args += ["-named"]
         p_args += [command] + pos_args + named_args
+        self.log.debug("Running bitcoin-cli command: %s" % command)
         process = subprocess.Popen(p_args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         cli_stdout, cli_stderr = process.communicate(input=self.input)
         returncode = process.poll()
