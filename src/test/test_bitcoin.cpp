@@ -62,6 +62,12 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
         pathTemp = GetTempPath() / strprintf("test_bitcoin_%lu_%i", (unsigned long)GetTime(), (int)(InsecureRandRange(100000)));
         fs::create_directories(pathTemp);
         ForceSetArg("-datadir", pathTemp.string());
+
+        // Note that because we don't bother running a scheduler thread here,
+        // callbacks via CValidationInterface are unreliable, but that's OK,
+        // our unit tests aren't testing multiple parts of the code at once.
+        GetMainSignals().RegisterBackgroundSignalScheduler(scheduler);
+
         mempool.setSanityCheck(1.0);
         pblocktree = new CBlockTreeDB(1 << 20, true);
         pcoinsdbview = new CCoinsViewDB(1 << 23, true);
@@ -88,6 +94,8 @@ TestingSetup::~TestingSetup()
         UnregisterNodeSignals(GetNodeSignals());
         threadGroup.interrupt_all();
         threadGroup.join_all();
+        GetMainSignals().FlushBackgroundCallbacks();
+        GetMainSignals().UnregisterBackgroundSignalScheduler();
         UnloadBlockIndex();
         delete pcoinsTip;
         delete pcoinsdbview;
