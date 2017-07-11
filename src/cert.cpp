@@ -516,16 +516,6 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2006 - " + _("Certificate private data too big");
 			return error(errorMessage.c_str());
 		}
-		if(theCert.vchEncryptionPrivateKey.size() > MAX_ENCRYPTED_GUID_LENGTH)
-		{
-			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 3006 - " + _("Encryption private to key too long");
-			return error(errorMessage.c_str());
-		}
-		if(theCert.vchEncryptionPublicKey.size() > MAX_GUID_LENGTH)
-		{
-			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 3006 - " + _("Encryption public key too long");
-			return error(errorMessage.c_str());
-		}
 		if(theCert.vchPubData.size() > MAX_VALUE_LENGTH)
 		{
 			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2007 - " + _("Certificate public data too big");
@@ -630,10 +620,6 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				theCert.vchTitle = dbCert.vchTitle;
 			if(theCert.sCategory.empty())
 				theCert.sCategory = dbCert.sCategory;
-			if(theCert.vchEncryptionPrivateKey.empty())
-				theCert.vchEncryptionPrivateKey = dbCert.vchEncryptionPrivateKey;
-			if(theCert.vchEncryptionPublicKey.empty())
-				theCert.vchEncryptionPublicKey = dbCert.vchEncryptionPublicKey;
 			
 			// user can't update safety level after creation
 			theCert.safetyLevel = dbCert.safetyLevel;
@@ -721,25 +707,21 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 
 
 UniValue certnew(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() < 3 || params.size() > 9)
+    if (fHelp || params.size() < 3 || params.size() > 7)
         throw runtime_error(
-		"certnew <alias> <title> <public> [private] [safe search=true] [category=certificates] [encryption_publickey] [encryption_privatekey] [witness]\n"
+		"certnew <alias> <title> <public> [private] [safe search=true] [category=certificates] [witness]\n"
 						"<alias> An alias you own.\n"
 						"<title> title, 256 characters max.\n"
                         "<public> public data, 256 characters max.\n"
 						"<private> private data, 1024 characters max.\n"
 						"<safe search> set to No if this cert should only show in the search when safe search is not selected. Defaults to Yes (cert shows with or without safe search selected in search lists).\n"                     
 						"<category> category, 25 characters max. Defaults to certificates\n"
-						"<encryption_publickey> Encryption public key. Certificate private data is encrypted to this key, anyone who has access to private key can read message.\n"	
-						"<encryption_privatekey> Encrypted private key to alias used for encryption/decryption of this message. Should be encrypted to encryption_publickey of alias.\n"	
 						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"	
 						+ HelpRequiringPassphrase());
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
     vector<unsigned char> vchTitle = vchFromString(params[1].get_str());
 	vector<unsigned char> vchPubData = vchFromString(params[2].get_str());
 	string strCategory = "certificates";
-	string strEncryptionPublicKey = "";
-	string strEncryptionPrivateKey = "";
 	string strSafeSearch = "true";
 	string strData = "";
 	if(CheckParam(params, 3))
@@ -748,13 +730,9 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 		strSafeSearch = params[4].get_str();
 	if(CheckParam(params, 5))
 		strCategory = params[5].get_str();
-	if(CheckParam(params, 6))
-		strEncryptionPublicKey = params[6].get_str();
-	if(CheckParam(params, 7))
-		strEncryptionPrivateKey = params[7].get_str();
 	vector<unsigned char> vchWitness;
-	if(CheckParam(params, 8))
-		vchWitness = vchFromValue(params[8]);
+	if(CheckParam(params, 6))
+		vchWitness = vchFromValue(params[6]);
 	// check for alias existence in DB
 	CTransaction aliastx;
 	CAliasIndex theAlias;
@@ -782,12 +760,8 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 	newCert.sCategory = vchFromString(strCategory);
 	newCert.vchTitle = vchTitle;
 	if(!strData.empty())
-		newCert.vchData = ParseHex(strData);
+		newCert.vchData = vchFromString(strData);
 	newCert.vchPubData = vchPubData;
-	if(!strEncryptionPublicKey.empty())
-		newCert.vchEncryptionPublicKey = ParseHex(strEncryptionPublicKey);
-	if(!strEncryptionPrivateKey.empty())
-		newCert.vchEncryptionPrivateKey = ParseHex(strEncryptionPrivateKey);
 	newCert.nHeight = chainActive.Tip()->nHeight;
 	newCert.vchAlias = vchAlias;
 	newCert.safetyLevel = 0;
@@ -858,9 +832,9 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 }
 
 UniValue certupdate(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() < 1 || params.size() > 9)
+    if (fHelp || params.size() < 1 || params.size() > 7)
         throw runtime_error(
-		"certupdate <guid> [title] [public] [private] [safesearch=true] [category=certificates] [encryption_publickey] [encryption_privatekey] [witness]\n"
+		"certupdate <guid> [title] [public] [private] [safesearch=true] [category=certificates] [witness]\n"
 						"Perform an update on an certificate you control.\n"
 						"<guid> certificate guidkey.\n"
 						"<title> certificate title, 256 characters max.\n"
@@ -868,14 +842,10 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 						"<private> private data, 256 characters max.\n"
 						"<safe search> set to No if this cert should only show in the search when safe search is not selected. Defaults to Yes (cert shows with or without safe search selected in search lists).\n"                     
 						"<category> category, 256 characters max. Defaults to certificates\n"
-						"<encryption_publickey> Encryption public key. Certificate private data is encrypted to this key, anyone who has access to private key can read message.\n"	
-						"<encryption_privatekey> Encrypted private key to alias used for encryption/decryption of this message. Should be encrypted to encryption_publickey of alias.\n"	
 						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"	
 						+ HelpRequiringPassphrase());
 	vector<unsigned char> vchCert = vchFromValue(params[0]);
 
-	string strEncryptionPublicKey = "";
-	string strEncryptionPrivateKey = "";
 	string strData = "";
 	string strTitle = "";
 	string strPubData = "";
@@ -891,14 +861,10 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 		strSafeSearch = params[4].get_str();
 	if(CheckParam(params, 5))
 		strCategory = params[5].get_str();
-	if(CheckParam(params, 6))
-		strEncryptionPublicKey = params[6].get_str();
-	if(CheckParam(params, 7))
-		strEncryptionPrivateKey = params[7].get_str();
 
 	vector<unsigned char> vchWitness;
-	if(CheckParam(params, 8))
-		vchWitness = vchFromValue(params[8]);
+	if(CheckParam(params, 6))
+		vchWitness = vchFromValue(params[6]);
 
     // this is a syscoind txn
     CWalletTx wtx;
@@ -927,7 +893,7 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
     CScript scriptPubKey;
 
 	if(!strData.empty())
-		theCert.vchData = ParseHex(strData);
+		theCert.vchData = vchFromString(strData);
 	if(!strPubData.empty())
 		theCert.vchPubData = vchFromString(strPubData);
 	if(!strSafeSearch.empty())
@@ -938,10 +904,6 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 		theCert.sCategory = vchFromString(strCategory);
 	if(!strTitle.empty())
 		theCert.vchTitle = vchFromString(strTitle);
-	if(!strEncryptionPublicKey.empty())
-		theCert.vchEncryptionPublicKey = ParseHex(strEncryptionPublicKey);
-	if(!strEncryptionPrivateKey.empty())
-		theCert.vchEncryptionPrivateKey = ParseHex(strEncryptionPrivateKey);
 	theCert.vchAlias = theAlias.vchAlias;
 	theCert.nHeight = chainActive.Tip()->nHeight;
 	vector<unsigned char> data;
@@ -1007,16 +969,14 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 
 
 UniValue certtransfer(const UniValue& params, bool fHelp) {
- if (fHelp || params.size() < 2 || params.size() > 8)
+ if (fHelp || params.size() < 2 || params.size() > 6)
         throw runtime_error(
-		"certtransfer <guid> <alias> [public] [private] [encryption_publickey] [encryption_privatekey] [accessflags=2] [witness]\n"
+		"certtransfer <guid> <alias> [public] [private] [accessflags=2] [witness]\n"
 						"Transfer a certificate you own to another alias.\n"
 						"<guid> certificate guidkey.\n"
 						"<alias> alias to transfer to.\n"
                         "<public> public data, 256 characters max.\n"
-						"<private> private data, 256 characters max.\n"
-						"<encryption_publickey> Encryption public key. Certificate private data is encrypted to this key, anyone who has access to private key can read message.\n"	
-						"<encryption_privatekey> Encrypted private key to alias used for encryption/decryption of this message. Should be encrypted to encryption_publickey of alias.\n"					
+						"<private> private data, 256 characters max.\n"				
 						"<accessflags> Set new access flags for new owner for this certificate, 0 for read-only, 1 for edit, 2 for edit and transfer access.\n"
 						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"	
 						+ HelpRequiringPassphrase());
@@ -1025,8 +985,6 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchCert = vchFromValue(params[0]);
 	vector<unsigned char> vchAlias = vchFromValue(params[1]);
 
-	string strEncryptionPublicKey = "";
-	string strEncryptionPrivateKey = "";
 	string strData = "";
 	string strPubData = "";
 	string strAccessFlags = "";
@@ -1035,14 +993,10 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	if(CheckParam(params, 3))
 		strData = params[3].get_str();
 	if(CheckParam(params, 4))
-		strEncryptionPublicKey = params[4].get_str();
-	if(CheckParam(params, 5))
-		strEncryptionPrivateKey = params[5].get_str();
-	if(CheckParam(params, 6))
-		strAccessFlags = params[6].get_str();
+		strAccessFlags = params[4].get_str();
 	vector<unsigned char> vchWitness;
-	if(CheckParam(params, 7))
-		vchWitness = vchFromValue(params[7]);
+	if(CheckParam(params, 5))
+		vchWitness = vchFromValue(params[5]);
 	// check for alias existence in DB
 	CTransaction tx;
 	CAliasIndex toAlias;
@@ -1078,13 +1032,10 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	theCert.safetyLevel = copyCert.safetyLevel;
 
 	if(!strData.empty())
-		theCert.vchData = ParseHex(strData);
+		theCert.vchData = vchFromString(strData);
 	if(!strPubData.empty())
 		theCert.vchPubData = vchFromString(strPubData);
-	if(!strEncryptionPublicKey.empty())
-		theCert.vchEncryptionPublicKey = ParseHex(strEncryptionPublicKey);
-	if(!strEncryptionPrivateKey.empty())
-		theCert.vchEncryptionPrivateKey = ParseHex(strEncryptionPrivateKey);
+
 
 
 	if(strAccessFlags.empty())
@@ -1344,9 +1295,7 @@ bool BuildCertJson(const CCert& cert, const CAliasIndex& alias, UniValue& oCert)
 	}
 	oCert.push_back(Pair("time", sTime));
 	oCert.push_back(Pair("title", stringFromVch(cert.vchTitle)));
-	oCert.push_back(Pair("encryption_privatekey", HexStr(cert.vchEncryptionPrivateKey)));
-	oCert.push_back(Pair("encryption_publickey", HexStr(cert.vchEncryptionPublicKey)));
-    oCert.push_back(Pair("privatevalue", HexStr(cert.vchData)));
+    oCert.push_back(Pair("privatevalue", stringFromVch(cert.vchData)));
 	oCert.push_back(Pair("publicvalue", stringFromVch(cert.vchPubData)));
 	oCert.push_back(Pair("category", stringFromVch(cert.sCategory)));
 	oCert.push_back(Pair("safesearch", cert.safeSearch? "true" : "false"));
@@ -1500,7 +1449,7 @@ void CertTxToJSON(const int op, const std::vector<unsigned char> &vchData, const
 		entry.push_back(Pair("title", stringFromVch(cert.vchTitle)));
 
 	if(!cert.vchData.empty() && cert.vchData != dbCert.vchData)
-		entry.push_back(Pair("privatedata", HexStr(cert.vchData)));
+		entry.push_back(Pair("privatedata", stringFromVch(cert.vchData)));
 
 	if(!cert.vchPubData.empty() && cert.vchPubData != dbCert.vchPubData)
 		entry.push_back(Pair("publicdata", stringFromVch(cert.vchPubData)));
