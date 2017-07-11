@@ -1874,17 +1874,17 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	newAlias.vchAlias = vchAlias;
 	newAlias.nHeight = chainActive.Tip()->nHeight;
 	if(!strEncryptionPublicKey.empty())
-		newAlias.vchEncryptionPublicKey = ParseHex(strEncryptionPublicKey);
+		newAlias.vchEncryptionPublicKey = DecodeBase64(strEncryptionPublicKey);
 	if(!strEncryptionPrivateKey.empty())
-		newAlias.vchEncryptionPrivateKey = ParseHex(strEncryptionPrivateKey);
+		newAlias.vchEncryptionPrivateKey = DecodeBase64(strEncryptionPrivateKey);
 	newAlias.vchPublicValue = vchPublicValue;
 	if(!strPrivateValue.empty())
-		newAlias.vchPrivateValue = ParseHex(strPrivateValue);
+		newAlias.vchPrivateValue = DecodeBase64(strPrivateValue);
 	newAlias.nExpireTime = nTime;
 	if(!strPassword.empty())
-		newAlias.vchPassword = ParseHex(strPassword);
+		newAlias.vchPassword = DecodeBase64(strPassword);
 	if(!strPasswordSalt.empty())
-		newAlias.vchPasswordSalt = ParseHex(strPasswordSalt);
+		newAlias.vchPasswordSalt = DecodeBase64(strPasswordSalt);
 	newAlias.safeSearch = strSafeSearch == "true"? true: false;
 	newAlias.acceptCertTransfers = strAcceptCertTransfers == "true"? true: false;
 	if(strAddress.empty())
@@ -2082,15 +2082,15 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	if(!strPublicValue.empty())
 		theAlias.vchPublicValue = vchFromString(strPublicValue);
 	if(!strPrivateValue.empty())
-		theAlias.vchPrivateValue = ParseHex(strPrivateValue);
+		theAlias.vchPrivateValue = DecodeBase64(strPrivateValue);
 	if(!strEncryptionPrivateKey.empty())
-		theAlias.vchEncryptionPrivateKey = ParseHex(strEncryptionPrivateKey);
+		theAlias.vchEncryptionPrivateKey = DecodeBase64(strEncryptionPrivateKey);
 	if(!strEncryptionPublicKey.empty())
-		theAlias.vchEncryptionPublicKey = ParseHex(strEncryptionPublicKey);
+		theAlias.vchEncryptionPublicKey = DecodeBase64(strEncryptionPublicKey);
 	if(!strPassword.empty())
-		theAlias.vchPassword = ParseHex(strPassword);
+		theAlias.vchPassword = DecodeBase64(strPassword);
 	if(!strPasswordSalt.empty())
-		theAlias.vchPasswordSalt = ParseHex(strPasswordSalt);
+		theAlias.vchPasswordSalt = DecodeBase64(strPasswordSalt);
 	if(!strSafeSearch.empty())
 		theAlias.safeSearch = strSafeSearch == "true"? true: false;
 	else
@@ -2259,10 +2259,10 @@ void AliasTxToJSON(const int op, const vector<unsigned char> &vchData, const vec
 		entry.push_back(Pair("publicvalue", stringFromVch(alias.vchPublicValue)));
 	
 	if(!alias.vchPrivateValue.empty() && alias.vchPrivateValue != dbAlias.vchPrivateValue)
-		entry.push_back(Pair("privatevalue", HexStr(alias.vchPrivateValue)));
+		entry.push_back(Pair("privatevalue", EncodeBase64(&alias.vchPrivateValue[0], alias.vchPrivateValue.size())));
 	
 	if(!alias.vchPassword.empty() && alias.vchPassword != dbAlias.vchPassword)
-		entry.push_back(Pair("password", HexStr(alias.vchPassword)));
+		entry.push_back(Pair("password", EncodeBase64(&alias.vchPassword[0], alias.vchPassword.size())));
 
 	if(EncodeBase58(alias.vchAddress) != EncodeBase58(dbAlias.vchAddress))
 		entry.push_back(Pair("address", EncodeBase58(alias.vchAddress))); 
@@ -2723,13 +2723,14 @@ bool BuildAliasJson(const CAliasIndex& alias, const bool pending, UniValue& oNam
 	
 	if(alias.safetyLevel >= SAFETY_LEVEL2)
 		return false;
-	oName.push_back(Pair("password", HexStr(alias.vchPassword)));
-	oName.push_back(Pair("passwordsalt", HexStr(alias.vchPasswordSalt)));
-	oName.push_back(Pair("encryption_privatekey", HexStr(alias.vchEncryptionPrivateKey)));
-	oName.push_back(Pair("encryption_publickey", HexStr(alias.vchEncryptionPublicKey)));
+	oName.push_back(Pair("password", alias.vchPassword.size() > 0 ? EncodeBase64(&alias.vchPassword[0], alias.vchPassword.size()) : ""));
+	oName.push_back(Pair("passwordsalt", alias.vchPasswordSalt.size() > 0 ? EncodeBase64(&alias.vchPasswordSalt[0], alias.vchPasswordSalt.size()) : ""));
+	oName.push_back(Pair("encryption_privatekey", alias.vchEncryptionPrivateKey.size() > 0 ? EncodeBase64(&alias.vchEncryptionPrivateKey[0], alias.vchEncryptionPrivateKey.size()) : ""));
+	oName.push_back(Pair("encryption_publickey", alias.vchEncryptionPublicKey.size() > 0 ? EncodeBase64(&alias.vchEncryptionPublicKey[0], alias.vchEncryptionPublicKey.size()) : ""));
 	oName.push_back(Pair("alias_peg", stringFromVch(alias.vchAliasPeg)));
 	oName.push_back(Pair("publicvalue", stringFromVch(alias.vchPublicValue)));	
-	oName.push_back(Pair("privatevalue", HexStr(alias.vchPrivateValue)));
+	oName.push_back(Pair("privatevalue", alias.vchPrivateValue.size() > 0 ? EncodeBase64(&alias.vchPrivateValue[0], alias.vchPrivateValue.size()) : ""));
+	
 	oName.push_back(Pair("txid", alias.txHash.GetHex()));
 	string sTime;
 	CBlockIndex *pindex = chainActive[alias.nHeight];

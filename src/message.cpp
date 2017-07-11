@@ -470,14 +470,14 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
     // build message
     CMessage newMessage;
 	newMessage.vchMessage = vchMessage;
-	newMessage.vchData = ParseHex(strMessage);
+	newMessage.vchData = DecodeBase64(strMessage);
 	newMessage.vchPubData = vchFromString(strPubData);
 	newMessage.vchAliasFrom = aliasFrom.vchAlias;
 	newMessage.vchAliasTo = aliasTo.vchAlias;
 	newMessage.nHeight = chainActive.Tip()->nHeight;
-	newMessage.vchEncryptionPublicKey = ParseHex(strEncryptionPublicKey);
-	newMessage.vchEncryptionPrivateKeyFrom = ParseHex(strEncryptionPrivateKeyFrom);
-	newMessage.vchEncryptionPrivateKeyTo = ParseHex(strEncryptionPrivateKeyTo);
+	newMessage.vchEncryptionPublicKey = DecodeBase64(strEncryptionPublicKey);
+	newMessage.vchEncryptionPrivateKeyFrom = DecodeBase64(strEncryptionPrivateKeyFrom);
+	newMessage.vchEncryptionPrivateKeyTo = DecodeBase64(strEncryptionPrivateKeyTo);
 
 	vector<unsigned char> data;
 	newMessage.Serialize(data);
@@ -658,10 +658,10 @@ bool BuildMessageJson(const CMessage& message, UniValue& oName)
 	oName.push_back(Pair("time", sTime));
 	oName.push_back(Pair("from", stringFromVch(message.vchAliasFrom)));
 	oName.push_back(Pair("to", stringFromVch(message.vchAliasTo)));
-	oName.push_back(Pair("encryption_privatekey_from", HexStr(message.vchEncryptionPrivateKeyFrom)));
-	oName.push_back(Pair("encryption_privatekey_to", HexStr(message.vchEncryptionPrivateKeyTo)));
-	oName.push_back(Pair("encryption_publickey", HexStr(message.vchEncryptionPublicKey)));
-	oName.push_back(Pair("privatevalue", HexStr(message.vchData)));
+	oName.push_back(Pair("encryption_privatekey_from", message.vchEncryptionPrivateKeyFrom.size() > 0 ? EncodeBase64(&message.vchEncryptionPrivateKeyFrom[0], message.vchEncryptionPrivateKeyFrom.size()) : ""));
+	oName.push_back(Pair("encryption_privatekey_to", message.vchEncryptionPrivateKeyTo.size() > 0 ? EncodeBase64(&message.vchEncryptionPrivateKeyTo[0], message.vchEncryptionPrivateKeyTo.size()) : ""));
+	oName.push_back(Pair("encryption_publickey", message.vchEncryptionPublicKey.size() > 0 ? EncodeBase64(&message.vchEncryptionPublicKey[0], message.vchEncryptionPublicKey.size()) : ""));
+	oName.push_back(Pair("privatevalue", message.vchData.size() > 0 ? EncodeBase64(&message.vchData[0], message.vchData.size()) : ""));
 	oName.push_back(Pair("publicvalue", stringFromVch(message.vchPubData)));
 	return true;
 }
@@ -785,23 +785,10 @@ void MessageTxToJSON(const int op, const std::vector<unsigned char> &vchData, co
 	string aliasToValue = stringFromVch(message.vchAliasTo);
 	entry.push_back(Pair("to", aliasToValue));
 
-
-	string strEncryptionPrivateKeyFrom = "";
-	string strEncryptionPrivateKeyTo = "";
-	string strKey = "";
-
-	strEncryptionPrivateKeyFrom = HexStr(message.vchEncryptionPrivateKeyFrom);
-	strEncryptionPrivateKeyTo = HexStr(message.vchEncryptionPrivateKeyTo);
-
-	entry.push_back(Pair("encryption_privatekey_from", strEncryptionPrivateKeyFrom));
-	entry.push_back(Pair("encryption_privatekey_to", strEncryptionPrivateKeyTo));
-	entry.push_back(Pair("encryption_publickey", HexStr(message.vchEncryptionPublicKey)));
-
-	string strDecrypted = "";
-	string strData = "";
-	strData = HexStr(message.vchData);
-
-	entry.push_back(Pair("privatevalue", strData));
+	entry.push_back(Pair("encryption_privatekey_from", message.vchEncryptionPrivateKeyFrom.size() > 0 ? EncodeBase64(&message.vchEncryptionPrivateKeyFrom[0], message.vchEncryptionPrivateKeyFrom.size()) : ""));
+	entry.push_back(Pair("encryption_privatekey_to", message.vchEncryptionPrivateKeyTo.size() > 0 ? EncodeBase64(&message.vchEncryptionPrivateKeyTo[0], message.vchEncryptionPrivateKeyTo.size()) : ""));
+	entry.push_back(Pair("encryption_publickey", message.vchEncryptionPublicKey.size() > 0 ? EncodeBase64(&message.vchEncryptionPublicKey[0], message.vchEncryptionPublicKey.size()) : ""));
+	entry.push_back(Pair("privatevalue", message.vchData.size() > 0 ? EncodeBase64(&message.vchData[0], message.vchData.size()) : ""));
 	entry.push_back(Pair("publicvalue", stringFromVch(message.vchPubData)));
 
 
