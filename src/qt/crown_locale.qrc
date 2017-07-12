@@ -1,7 +1,7 @@
 <!DOCTYPE RCC><RCC version="1.0">
     <qresource prefix="/translations">
         <file alias="bg">locale/crown_bg.qm</file>
-        <file alias="de">locale/crown_cs.qm</file>
+        <file alias="cs">locale/crown_cs.qm</file>
         <file alias="de">locale/crown_de.qm</file>
         <file alias="en">locale/crown_en.qm</file>
         <file alias="es">locale/crown_es.qm</file>
