@@ -58,7 +58,7 @@ Notes:
 #include "support/allocators/secure.h"
 
 #include "base58.h"
-#include "dbwrapper.h"
+#include "wallet/wallet.h"
 #include "sync.h"
 #include "random.h"
 #include "chain.h"

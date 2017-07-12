@@ -11,11 +11,10 @@
 
 #include "support/allocators/secure.h"
 #include "net.h"
-#include "dbwrapper.h"
-#include "wallet/wallet.h"
 #include "lz4/lz4.h"
 #include "base58.h"
 #include "serialize.h"
+#include "ui_interface.h"
 
 
 
@@ -43,6 +42,7 @@ const unsigned int SMSG_MAX_MSG_WORST = LZ4_COMPRESSBOUND(SMSG_MAX_MSG_BYTES+SMS
 extern bool fDebugSmsg;
 extern bool fSecMsgEnabled;
 
+class CWallet;
 class SecMsgStored;
 
 // Inbox db changed, called with lock cs_smsgDB held.

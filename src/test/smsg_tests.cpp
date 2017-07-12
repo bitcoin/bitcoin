@@ -6,6 +6,7 @@
 
 #include "test/test_particl.h"
 #include "net.h"
+#include "wallet/wallet.h"
 
 #include <boost/test/unit_test.hpp>
 

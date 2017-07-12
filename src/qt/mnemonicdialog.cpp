@@ -24,17 +24,23 @@ MnemonicDialog::MnemonicDialog(QWidget *parent, WalletModel *wm) :
     ui(new Ui::MnemonicDialog)
 {
     ui->setupUi(this);
-}
+};
 
 MnemonicDialog::~MnemonicDialog()
 {
     
-}
+};
 
 void MnemonicDialog::on_btnCancel_clicked()
 {
     close();
-}
+};
+
+void MnemonicDialog::on_btnCancel2_clicked()
+{
+    close();
+};
+
 
 void MnemonicDialog::on_btnImport_clicked()
 {
@@ -51,9 +57,8 @@ void MnemonicDialog::on_btnImport_clicked()
     UniValue rv;
     if (tryCallRpc(sCommand, rv))
     {
-        
         close();
-    }
+    };
 #endif
 }
 
@@ -69,14 +74,10 @@ void MnemonicDialog::on_btnGenerate_clicked()
     UniValue rv;
     if (tryCallRpc(sCommand, rv))
     {
-        QMessageBox::information(this, tr("New Seed"),
-            QString::fromStdString(rv["mnemonic"].get_str()),
-            QMessageBox::Ok,
-            QMessageBox::Ok);
-    }
-    
+        ui->tbxMnemonicOut->setText(QString::fromStdString(rv["mnemonic"].get_str()));
+    };
 #endif
-}
+};
 
 bool MnemonicDialog::tryCallRpc(const QString &sCommand, UniValue &rv)
 {
@@ -94,7 +95,7 @@ bool MnemonicDialog::tryCallRpc(const QString &sCommand, UniValue &rv)
             warningBox(QString::fromStdString(objError.write()));
             return false;
         };
-    } catch (const std::exception& e)
+    } catch (const std::exception &e)
     {
         warningBox(QString::fromStdString(e.what()));
         return false;
@@ -106,12 +107,9 @@ bool MnemonicDialog::tryCallRpc(const QString &sCommand, UniValue &rv)
 void MnemonicDialog::warningBox(QString msg)
 {
     qWarning() << msg;
-#ifdef ENABLE_WALLET
-    QPair<QString, CClientUIInterface::MessageBoxFlags> msgParams;
-    msgParams.second = CClientUIInterface::MSG_WARNING;
-    msgParams.first = msg;
-
-    Q_EMIT walletModel->message(tr("HD Wallet Dialog"), msgParams.first, msgParams.second);
-#endif
-}
+    QMessageBox::warning(this, tr("HD Wallet Dialog"),
+        msg,
+        QMessageBox::Ok,
+        QMessageBox::Ok);
+};
 
