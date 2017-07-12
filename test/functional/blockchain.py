@@ -25,7 +25,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises,
-    assert_raises_jsonrpc,
+    assert_raises_rpc_error,
     assert_is_hex_string,
     assert_is_hash_string,
 )
@@ -101,7 +101,7 @@ class BlockchainTest(BitcoinTestFramework):
         assert('window_interval' not in chaintxstats)
         assert('txrate' not in chaintxstats)
 
-        assert_raises_jsonrpc(-8, "Invalid block count: should be between 0 and the block's height - 1", self.nodes[0].getchaintxstats, 201)
+        assert_raises_rpc_error(-8, "Invalid block count: should be between 0 and the block's height - 1", self.nodes[0].getchaintxstats, 201)
 
     def _test_gettxoutsetinfo(self):
         node = self.nodes[0]
@@ -147,7 +147,7 @@ class BlockchainTest(BitcoinTestFramework):
     def _test_getblockheader(self):
         node = self.nodes[0]
 
-        assert_raises_jsonrpc(-5, "Block not found",
+        assert_raises_rpc_error(-5, "Block not found",
                               node.getblockheader, "nonsense")
 
         besthash = node.getbestblockhash()
