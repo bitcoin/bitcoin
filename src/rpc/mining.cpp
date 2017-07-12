@@ -30,6 +30,16 @@
 
 #include <univalue.h>
 
+unsigned int ParseConfirmTarget(const UniValue& value)
+{
+    int target = value.get_int();
+    unsigned int max_target = ::feeEstimator.HighestTargetTracked(FeeEstimateHorizon::LONG_HALFLIFE);
+    if (target < 1 || (unsigned int)target > max_target) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid conf_target, must be between %u - %u", 1, max_target));
+    }
+    return (unsigned int)target;
+}
+
 /**
  * Return average network hashes per second based on the last 'lookup' blocks,
  * or from the last difficulty change if 'lookup' is nonpositive.
