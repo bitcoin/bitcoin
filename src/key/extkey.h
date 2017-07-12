@@ -655,6 +655,9 @@ public:
     bool GetKey(const CEKAKey &ak, CKey &keyOut) const;
     bool GetKey(const CEKASCKey &asck, CKey &keyOut) const;
     
+    int GetKey(const CKeyID &id, CKey &keyOut, CEKAKey &ak, CKeyID &idStealth) const; // retuurns 1: chain, 2: stealth address
+    
+    
     bool GetPubKey(const CKeyID &id, CPubKey &pkOut) const;
     bool GetPubKey(const CEKAKey &ak, CPubKey &pkOut) const;
     bool GetPubKey(const CEKASCKey &asck, CPubKey &pkOut) const;

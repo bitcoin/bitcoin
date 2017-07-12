@@ -233,7 +233,6 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CHDWallet
     int64_t nTime = rtx.GetTxTime();
     
     
-    CAmount nNet = 0;
     TransactionRecord sub(hash, nTime);
     
     CTxDestination address = CNoDestination();

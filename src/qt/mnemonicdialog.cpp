@@ -68,7 +68,12 @@ void MnemonicDialog::on_btnGenerate_clicked()
     
     UniValue rv;
     if (tryCallRpc(sCommand, rv))
-        warningBox(QString::fromStdString(rv["mnemonic"].get_str()));
+    {
+        QMessageBox::information(this, tr("New Seed"),
+            QString::fromStdString(rv["mnemonic"].get_str()),
+            QMessageBox::Ok,
+            QMessageBox::Ok);
+    }
     
 #endif
 }

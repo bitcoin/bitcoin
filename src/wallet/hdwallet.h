@@ -25,7 +25,7 @@ typedef std::map<uint256, CTransactionRecord> MapRecords_t;
 typedef std::multimap<int64_t, std::map<uint256, CTransactionRecord>::iterator> RtxOrdered_t;
 
 
-
+const uint16_t PLACEHOLDER_N = 0xFFFF;
 enum OutputRecordFlags
 {
     ORF_OWNED        = (1 << 0),
@@ -51,7 +51,7 @@ public:
     COutputRecord() : nType(0), nFlags(0), n(0), nValue(-1) {};
     uint8_t nType;
     uint8_t nFlags;
-    int16_t n;
+    uint16_t n;
     CAmount nValue;
     CScript scriptPubKey;
     std::string sNarration;
@@ -121,48 +121,13 @@ public:
     std::vector<COutPoint> vin;
     std::vector<COutputRecord> vout;
     
-    int InsertOutput(COutputRecord &r)
-    {
-        for (size_t i = 0; i < vout.size(); ++i)
-        {
-            if (vout[i].n == r.n)
-                return 0; // duplicate
-            
-            if (vout[i].n < r.n)
-                continue;
-            
-            vout.insert(vout.begin() + i, r);
-            return 1;
-        };
-        vout.push_back(r);
-        return 1;
-    };
+    int InsertOutput(COutputRecord &r);
+    bool EraseOutput(uint16_t n);
     
-    COutputRecord *GetOutput(int n) 
-    {
-        // vout is always in order by asc n
-        for (auto &r : vout)
-        {
-            if (r.n > n)
-                return NULL;
-            if (r.n == n)
-                return &r;
-        };
-        return NULL;
-    };
+    COutputRecord *GetOutput(int n);
+    const COutputRecord *GetOutput(int n) const;
     
-    const COutputRecord *GetOutput(int n) const 
-    {
-        // vout is always in order by asc n
-        for (auto &r : vout)
-        {
-            if (r.n > n)
-                return NULL;
-            if (r.n == n)
-                return &r;
-        };
-        return NULL;
-    };
+    const COutputRecord *GetChangeOutput() const;
     
     void SetMerkleBranch(const uint256 &blockHash_, int posInBlock)
     {
@@ -188,7 +153,13 @@ public:
         return false;
     };
     
-    
+    CAmount TotalOutput()
+    {
+        CAmount nTotal = 0;
+        for (auto &r : vout)
+            nTotal += r.nValue;
+        return nTotal;
+    };
     
     mutable uint32_t nCacheFlags;
 
@@ -363,6 +334,7 @@ public:
     
     bool HaveExtKey(const CKeyID &address) const;
     
+    int GetKey(const CKeyID &address, CKey &keyOut, CExtKeyAccount *&pa, CEKAKey &ak, CKeyID &idStealth) const;
     bool GetKey(const CKeyID &address, CKey &keyOut) const;
     
     bool GetPubKey(const CKeyID &address, CPubKey &pkOut) const;
@@ -392,6 +364,8 @@ public:
      */
     CAmount GetDebit(const CTxIn& txin, const isminefilter& filter) const;
     CAmount GetDebit(const CTransaction& tx, const isminefilter& filter) const;
+    CAmount GetDebit(CHDWalletDB *pwdb, const CTransactionRecord &rtx, const isminefilter& filter) const;
+    
     
     CAmount GetCredit(const CTxOutBase *txout, const isminefilter &filter) const;
     CAmount GetCredit(const CTransaction &tx, const isminefilter &filter) const;

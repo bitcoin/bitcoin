@@ -624,32 +624,10 @@ int CExtKeyAccount::HaveKey(const CKeyID &id, bool fUpdate, CEKAKey &ak)
 
 bool CExtKeyAccount::GetKey(const CKeyID &id, CKey &keyOut) const
 {
-    LOCK(cs_account);
-    
-    AccKeyMap::const_iterator mi;
-    AccKeySCMap::const_iterator miSck;
-    if ((mi = mapKeys.find(id)) != mapKeys.end())
-    {
-        if (!GetKey(mi->second, keyOut))
-            return false;
-    } else
-    if ((miSck = mapStealthChildKeys.find(id)) != mapStealthChildKeys.end())
-    {
-        if (!GetKey(miSck->second, keyOut))
-            return false;
-    } else
-    {
-        return false;
-    };
-    
-    // [rm] necessary?
-    if (fDebug && keyOut.GetPubKey().GetID() != id)
-    {
-        return error("Stored key mismatch.");
-    };
-    
-    return true;
-}
+    CEKAKey ak;
+    CKeyID idStealth;
+    return GetKey(id, keyOut, ak, idStealth);
+};
 
 bool CExtKeyAccount::GetKey(const CEKAKey &ak, CKey &keyOut) const
 {
@@ -678,6 +656,39 @@ bool CExtKeyAccount::GetKey(const CEKASCKey &asck, CKey &keyOut) const
         return error("%s: CEKASCKey Stealth key not in this account!", __func__);
     
     return (0 == ExpandStealthChildKey(&miSk->second, asck.sShared, keyOut));
+};
+
+int CExtKeyAccount::GetKey(const CKeyID &id, CKey &keyOut, CEKAKey &ak, CKeyID &idStealth) const
+{
+    LOCK(cs_account);
+    
+    int rv = 0;
+    AccKeyMap::const_iterator mi;
+    AccKeySCMap::const_iterator miSck;
+    if ((mi = mapKeys.find(id)) != mapKeys.end())
+    {
+        ak = mi->second;
+        if (!GetKey(ak, keyOut))
+            return 0;
+        rv = 1;
+    } else
+    if ((miSck = mapStealthChildKeys.find(id)) != mapStealthChildKeys.end())
+    {
+        idStealth = miSck->second.idStealthKey;
+        if (!GetKey(miSck->second, keyOut))
+            return 0;
+        rv = 2;
+    } else
+    {
+        return 0;
+    };
+    
+    // [rm] necessary?
+    if (fDebug && keyOut.GetPubKey().GetID() != id)
+    {
+        return error("Stored key mismatch.");
+    };
+    return rv;
 };
 
 bool CExtKeyAccount::GetPubKey(const CKeyID &id, CPubKey &pkOut) const
