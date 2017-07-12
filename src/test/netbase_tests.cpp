@@ -4,6 +4,7 @@
 
 #include "netbase.h"
 #include "test/test_bitcoin.h"
+#include "utilstrencodings.h"
 
 #include <string>
 
