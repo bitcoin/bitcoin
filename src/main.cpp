@@ -6426,7 +6426,7 @@ bool ProcessMessage(CNode *pfrom, string strCommand, CDataStream &vRecv, int64_t
             // check if the header is equal to some other header in the list. If so then remove it from the cache.
             else
             {
-                for (const CBlockHeader &header : headers)
+                BOOST_FOREACH (const CBlockHeader &header, headers)
                 {
                     if (header.GetHash() == headerHash)
                     {
