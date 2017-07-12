@@ -1,0 +1,100 @@
+.Dd July 12, 2017
+.Dt BITCOIN-CLI 1
+.Os
+.Sh NAME
+.Nm bitcoin-cli
+.Nd Bitcoin Core RPC client
+.Sh SYNOPSIS
+.Nm
+.Op options
+.Ic command
+.Ar args
+.Nm
+.Op options
+.Fl named
+.Ic command
+.Ar name=value
+.Nm
+.Op options
+.Ic help
+.Nm
+.Op options
+.Ic help
+.Ar command
+.Sh DESCRIPTION
+.Nm
+is a Bitcoin Core RPC client.
+It sends commands to a running Bitcoin Core RPC server
+and displays the results.
+With the
+.Fl named
+option, named arguments can be passed to the
+.Ic command ,
+as opposed to positional arguments.
+The
+.Ic help
+command displays available commands, while
+.Ic help Ic command
+displays help for the given
+.Ic command .
+.Pp
+The option are as follows:
+.Bl -tag -width datadirdirXX
+.It Fl ?
+Display a short help message.
+.It Fl conf Ar file
+Use
+.Ar file
+as the config file instead of
+.Pa bitcoin.conf .
+.It Fl datadir Ar dir
+Specify data directory.
+.It Fl testnet
+Use the test chain
+.It Fl regtest
+Enter regression test mode, which uses a special chain
+in which blocks can be solved instantly.
+This is intended for regression testing and development.
+.It Fl named
+Pass named instead of positional arguments (default: false)
+.It Fl rpcconnect Ar ip
+Send commands to node running on
+.Ar ip
+(default: 127.0.0.1).
+.It Fl rpcport Ar port
+Connect to
+.Ar port
+(default: 8332 or testnet: 18332)
+.It Fl rpcwait
+Wait for the RPC server to start
+.It Fl rpcuser Ar user
+Username for JSON\-RPC connections
+.It Fl rpcpassword Ar pass
+Password for JSON\-RPC connections
+.It Fl rpcclienttimeout Ar sec
+Timeout for HTTP requests (default: 900)
+.It Fl stdin
+Read extra arguments from standard input, one per line, until EOF
+(recommended for sensitive information such as passphrases).
+.El
+.Sh FILES
+.Bl -tag -compact -width "$HOME/bitcoin/bitcoin.confXXX"
+.It Pa $HOME/.bitcoin/bitcoin.conf
+the default configuration file
+.El
+.Sh SEE ALSO
+.Bl -hang -compact
+.It Lk https://bitcoincore.org
+for further information about the software
+.It Lk https://github.com/bitcoin/bitcoin
+for the source code
+.El
+.Sh AUTHORS
+.An -nosplit
+Bitcoin Core is maintained by The Bitcoin Core developers.
+This product includes software developed by the OpenSSL Project
+for use in the OpenSSL Toolkit <https://www.openssl.org>
+and cryptographic software written by
+.An Eric Young
+and UPnP software written by
+.An Thomas Bernard .
