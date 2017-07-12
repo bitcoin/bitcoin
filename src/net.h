@@ -417,6 +417,10 @@ public:
     // Also protected by cs_inventory
     std::vector<uint256> vBlockHashesToAnnounce;
 
+    // Block and TXN accept times
+    std::atomic<int64_t> nLastBlockTime;
+    std::atomic<int64_t> nLastTXTime;
+
     // Ping time measurement:
     // The pong reply we're expecting, or 0 if no pong expected.
     uint64_t nPingNonceSent;
