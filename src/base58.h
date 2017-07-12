@@ -149,7 +149,7 @@ public:
         K ret;
         if (vchData.size() == Size) {
             // If base58 encoded data does not hold an ext key, return a !IsValid() key
-            ret.Decode(&vchData[0]);
+            ret.Decode(vchData.data());
         }
         return ret;
     }

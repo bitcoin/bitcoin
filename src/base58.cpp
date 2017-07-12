@@ -110,7 +110,7 @@ std::string EncodeBase58(const unsigned char* pbegin, const unsigned char* pend)
 
 std::string EncodeBase58(const std::vector<unsigned char>& vch)
 {
-    return EncodeBase58(&vch[0], &vch[0] + vch.size());
+    return EncodeBase58(vch.data(), vch.data() + vch.size());
 }
 
 bool DecodeBase58(const std::string& str, std::vector<unsigned char>& vchRet)
@@ -160,7 +160,7 @@ void CBase58Data::SetData(const std::vector<unsigned char>& vchVersionIn, const 
     vchVersion = vchVersionIn;
     vchData.resize(nSize);
     if (!vchData.empty())
-        memcpy(&vchData[0], pdata, nSize);
+        memcpy(vchData.data(), pdata, nSize);
 }
 
 void CBase58Data::SetData(const std::vector<unsigned char>& vchVersionIn, const unsigned char* pbegin, const unsigned char* pend)
@@ -180,8 +180,8 @@ bool CBase58Data::SetString(const char* psz, unsigned int nVersionBytes)
     vchVersion.assign(vchTemp.begin(), vchTemp.begin() + nVersionBytes);
     vchData.resize(vchTemp.size() - nVersionBytes);
     if (!vchData.empty())
-        memcpy(&vchData[0], &vchTemp[nVersionBytes], vchData.size());
-    memory_cleanse(&vchTemp[0], vchTemp.size());
+        memcpy(vchData.data(), vchTemp.data() + nVersionBytes, vchData.size());
+    memory_cleanse(vchTemp.data(), vchTemp.size());
     return true;
 }
 
@@ -262,7 +262,7 @@ CTxDestination CBitcoinAddress::Get() const
     if (!IsValid())
         return CNoDestination();
     uint160 id;
-    memcpy(&id, &vchData[0], 20);
+    memcpy(&id, vchData.data(), 20);
     if (vchVersion == Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS))
         return CKeyID(id);
     else if (vchVersion == Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS))
@@ -293,7 +293,7 @@ bool CBitcoinAddress::GetKeyID(CKeyID& keyID) const
     if (!IsValid() || vchVersion != Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS))
         return false;
     uint160 id;
-    memcpy(&id, &vchData[0], 20);
+    memcpy(&id, vchData.data(), 20);
     keyID = CKeyID(id);
     return true;
 }

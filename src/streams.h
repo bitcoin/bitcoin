@@ -346,7 +346,7 @@ public:
     {
         // Special case: stream << stream concatenates like stream += stream
         if (!vch.empty())
-            s.write((char*)&vch[0], vch.size() * sizeof(vch[0]));
+            s.write((char*)vch.data(), vch.size() * sizeof(value_type));
     }
 
     template<typename T>
