@@ -10,6 +10,7 @@
 #include "chainparamsbase.h"
 #include "clientversion.h"
 #include "fs.h"
+#include "utilstrencodings.h"
 #include "rpc/client.h"
 #include "rpc/protocol.h"
 #include "util.h"
@@ -191,8 +192,14 @@ static void http_error_cb(enum evhttp_request_error err, void *ctx)
 
 UniValue CallRPC(const std::string& strMethod, const UniValue& params)
 {
-    std::string host = GetArg("-rpcconnect", DEFAULT_RPCCONNECT);
-    int port = GetArg("-rpcport", BaseParams().RPCPort());
+    std::string host;
+    // In preference order, we choose the following for the port:
+    //     1. -rpcport
+    //     2. port in -rpcconnect (ie following : in ipv4 or ]: in ipv6)
+    //     3. default port for chain
+    int port = BaseParams().RPCPort();
+    SplitHostPort(GetArg("-rpcconnect", DEFAULT_RPCCONNECT), port, host);
+    port = GetArg("-rpcport", port);
 
     // Obtain event base
     raii_event_base base = obtain_event_base();
