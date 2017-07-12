@@ -49,7 +49,7 @@ class CChainParams;
 
 extern uint32_t blockVersion; // Overrides the mined block version if non-zero
 extern uint64_t maxGeneratedBlock;
-extern unsigned int excessiveBlockSize;
+extern uint64_t excessiveBlockSize;
 extern unsigned int excessiveAcceptDepth;
 extern unsigned int maxMessageSizeMultiplier;
 /** BU Default maximum number of Outbound connections to simultaneously allow*/
@@ -229,9 +229,8 @@ extern CStatHistory<unsigned int> txAdded;
 extern CStatHistory<uint64_t, MinValMax<uint64_t> > poolSize;
 
 // Configuration variable validators
-bool MiningAndExcessiveBlockValidatorRule(const unsigned int newExcessiveBlockSize,
-    const unsigned int newMiningBlockSize);
-std::string ExcessiveBlockValidator(const unsigned int &value, unsigned int *item, bool validate);
+bool MiningAndExcessiveBlockValidatorRule(const uint64_t newExcessiveBlockSize, const uint64_t newMiningBlockSize);
+std::string ExcessiveBlockValidator(const uint64_t &value, uint64_t *item, bool validate);
 std::string OutboundConnectionValidator(const int &value, int *item, bool validate);
 std::string SubverValidator(const std::string &value, std::string *item, bool validate);
 std::string MiningBlockSizeValidator(const uint64_t &value, uint64_t *item, bool validate);
