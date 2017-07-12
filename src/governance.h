@@ -179,12 +179,6 @@ public: // Types
 
     typedef CacheMap<uint256, CGovernanceObject*> object_ref_cache_t;
 
-    typedef std::map<uint256, int> count_m_t;
-
-    typedef count_m_t::iterator count_m_it;
-
-    typedef count_m_t::const_iterator count_m_cit;
-
     typedef std::map<uint256, CGovernanceVote> vote_m_t;
 
     typedef vote_m_t::iterator vote_m_it;
@@ -238,7 +232,10 @@ private:
     // keep track of the scanning errors
     object_m_t mapObjects;
 
-    count_m_t mapSeenGovernanceObjects;
+    // mapErasedGovernanceObjects contains key-value pairs, where
+    //   key   - governance object's hash
+    //   value - expiration time for deleted objects
+    hash_time_m_t mapErasedGovernanceObjects;
 
     object_time_m_t mapMasternodeOrphanObjects;
 
@@ -293,13 +290,6 @@ public:
 
     virtual ~CGovernanceManager() {}
 
-    int CountProposalInventoryItems()
-    {
-        // TODO What is this for ?
-        return mapSeenGovernanceObjects.size();
-        //return mapSeenGovernanceObjects.size() + mapSeenVotes.size();
-    }
-
     /**
      * This is called by AlreadyHave in main.cpp as part of the inventory
      * retrieval process.  Returns true if we want to retrieve the object, otherwise
@@ -321,7 +311,6 @@ public:
 
     bool IsBudgetPaymentBlock(int nBlockHeight);
     void AddGovernanceObject(CGovernanceObject& govobj, CNode* pfrom = NULL);
-    bool AddGovernanceObject(CGovernanceObject& govobj, bool& fAddToSeen, CNode* pfrom = NULL);
 
     std::string GetRequiredPaymentsString(int nBlockHeight);
 
@@ -335,7 +324,7 @@ public:
 
         LogPrint("gobject", "Governance object manager was cleared\n");
         mapObjects.clear();
-        mapSeenGovernanceObjects.clear();
+        mapErasedGovernanceObjects.clear();
         mapWatchdogObjects.clear();
         nHashWatchdogCurrent = uint256();
         nTimeWatchdogCurrent = 0;
@@ -360,7 +349,8 @@ public:
             strVersion = SERIALIZATION_VERSION_STRING;
             READWRITE(strVersion);
         }
-        READWRITE(mapSeenGovernanceObjects);
+
+        READWRITE(mapErasedGovernanceObjects);
         READWRITE(mapInvalidVotes);
         READWRITE(mapOrphanVotes);
         READWRITE(mapObjects);

@@ -18,7 +18,7 @@ CGovernanceManager governance;
 
 int nSubmittedFinalBudget;
 
-const std::string CGovernanceManager::SERIALIZATION_VERSION_STRING = "CGovernanceManager-Version-11";
+const std::string CGovernanceManager::SERIALIZATION_VERSION_STRING = "CGovernanceManager-Version-12";
 const int CGovernanceManager::MAX_TIME_FUTURE_DEVIATION = 60*60;
 const int CGovernanceManager::RELIABLE_PROPAGATION_TIME = 60;
 
@@ -27,7 +27,7 @@ CGovernanceManager::CGovernanceManager()
       nTimeLastDiff(0),
       nCachedBlockHeight(0),
       mapObjects(),
-      mapSeenGovernanceObjects(),
+      mapErasedGovernanceObjects(),
       mapMasternodeOrphanObjects(),
       mapWatchdogObjects(),
       nHashWatchdogCurrent(),
@@ -97,12 +97,6 @@ bool CGovernanceManager::SerializeVoteForHash(uint256 nHash, CDataStream& ss)
 
     ss << vote;
     return true;
-}
-
-void CGovernanceManager::AddSeenGovernanceObject(uint256 nHash, int status)
-{
-    LOCK(cs);
-    mapSeenGovernanceObjects[nHash] = status;
 }
 
 void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
@@ -183,7 +177,8 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
 
         LOCK2(cs_main, cs);
 
-        if(mapSeenGovernanceObjects.count(nHash)) {
+        if(mapObjects.count(nHash) || mapPostponedObjects.count(nHash) ||
+           mapErasedGovernanceObjects.count(nHash) || mapMasternodeOrphanObjects.count(nHash)) {
             // TODO - print error code? what if it's GOVOBJ_ERROR_IMMATURE?
             LogPrint("gobject", "MNGOVERNANCEOBJECT -- Received already seen object: %s\n", strHash);
             return;
@@ -218,9 +213,9 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
                 LogPrintf("MNGOVERNANCEOBJECT -- Not enough fee confirmations for: %s, strError = %s\n", strHash, strError);
             } else {
                 LogPrintf("MNGOVERNANCEOBJECT -- Governance object is invalid - %s\n", strError);
+                // TODO: apply node's ban score if object is invalid
             }
 
-            mapSeenGovernanceObjects.insert(std::make_pair(nHash, SEEN_OBJECT_ERROR_INVALID));
             return;
         }
 
@@ -298,6 +293,8 @@ void CGovernanceManager::CheckOrphanVotes(CGovernanceObject& govobj, CGovernance
 
 void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, CNode* pfrom)
 {
+    DBG( cout << "CGovernanceManager::AddGovernanceObject START" << endl; );
+
     uint256 nHash = govobj.GetHash();
     std::string strHash = nHash.ToString();
 
@@ -305,53 +302,21 @@ void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, CNode* p
 
     govobj.UpdateSentinelVariables(); //this sets local vars in object
 
-    bool fAddToSeen = true;
-    if(AddGovernanceObject(govobj, fAddToSeen, pfrom))
-    {
-        LogPrintf("AddGovernanceObject -- %s new, received form %s\n", strHash, pfrom? pfrom->addrName : "NULL");
-        govobj.Relay();
-    }
-
-    // PROCESS OBJECT EXACTLY THE SAME WAY AS USUAL
-
-    if(fAddToSeen) {
-        // UPDATE THAT WE'VE SEEN THIS OBJECT
-        mapSeenGovernanceObjects.insert(std::make_pair(nHash, SEEN_OBJECT_IS_VALID));
-        // Update the rate buffer
-        MasternodeRateCheck(govobj, UPDATE_TRUE);
-    }
-
-    masternodeSync.AddedGovernanceItem();
-
-    // WE MIGHT HAVE PENDING/ORPHAN VOTES FOR THIS OBJECT
-
-    CGovernanceException exception;
-    CheckOrphanVotes(govobj, exception);
-}
-
-bool CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, bool& fAddToSeen, CNode* pfrom)
-{
     LOCK2(cs_main, cs);
     std::string strError = "";
-
-    DBG( cout << "CGovernanceManager::AddGovernanceObject START" << endl; );
-
-    fAddToSeen = true;
-
-    uint256 nHash = govobj.GetHash();
 
     // MAKE SURE THIS OBJECT IS OK
 
     if(!govobj.IsValidLocally(strError, true)) {
         LogPrintf("CGovernanceManager::AddGovernanceObject -- invalid governance object - %s - (nCachedBlockHeight %d) \n", strError, nCachedBlockHeight);
-        return false;
+        return;
     }
 
     // IF WE HAVE THIS OBJECT ALREADY, WE DON'T WANT ANOTHER COPY
 
     if(mapObjects.count(nHash)) {
         LogPrintf("CGovernanceManager::AddGovernanceObject -- already have governance object %s\n", nHash.ToString());
-        return false;
+        return;
     }
 
     LogPrint("gobject", "CGovernanceManager::AddGovernanceObject -- Adding object: hash = %s, type = %d\n", nHash.ToString(), govobj.GetObjectType());
@@ -363,17 +328,16 @@ bool CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, bool& fA
             ) {
             // drop it
             LogPrint("gobject", "CGovernanceManager::AddGovernanceObject -- CreationTime is out of bounds: hash = %s\n", nHash.ToString());
-            return false;
+            return;
         }
 
         if(!UpdateCurrentWatchdog(govobj)) {
             // Allow wd's which are not current to be reprocessed
-            fAddToSeen = false;
             if(pfrom && (nHashWatchdogCurrent != uint256())) {
                 pfrom->PushInventory(CInv(MSG_GOVERNANCE_OBJECT, nHashWatchdogCurrent));
             }
             LogPrint("gobject", "CGovernanceManager::AddGovernanceObject -- Watchdog not better than current: hash = %s\n", nHash.ToString());
-            return false;
+            return;
         }
     }
 
@@ -401,9 +365,20 @@ bool CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, bool& fA
         break;
     }
 
-    DBG( cout << "CGovernanceManager::AddGovernanceObject END" << endl; );
+    LogPrintf("AddGovernanceObject -- %s new, received form %s\n", strHash, pfrom? pfrom->addrName : "NULL");
+    govobj.Relay();
 
-    return true;
+    // Update the rate buffer
+    MasternodeRateCheck(govobj, UPDATE_TRUE);
+
+    masternodeSync.AddedGovernanceItem();
+
+    // WE MIGHT HAVE PENDING/ORPHAN VOTES FOR THIS OBJECT
+
+    CGovernanceException exception;
+    CheckOrphanVotes(govobj, exception);
+
+    DBG( cout << "CGovernanceManager::AddGovernanceObject END" << endl; );
 }
 
 bool CGovernanceManager::UpdateCurrentWatchdog(CGovernanceObject& watchdogNew)
@@ -550,13 +525,31 @@ void CGovernanceManager::UpdateCachesAndClean()
                     ++lit;
                 }
             }
-            if(pObj->nObjectType == GOVERNANCE_OBJECT_WATCHDOG) {
-                mapWatchdogObjects.erase(it->first);
+
+            int64_t nSuperblockCycleSeconds = Params().GetConsensus().nSuperblockCycle * Params().GetConsensus().nPowTargetSpacing;
+            int64_t nTimeExpired = pObj->GetCreationTime() + 2 * nSuperblockCycleSeconds + GOVERNANCE_DELETION_DELAY;
+
+            if(pObj->GetObjectType() == GOVERNANCE_OBJECT_WATCHDOG) {
+                mapWatchdogObjects.erase(nHash);
+            } else if(pObj->GetObjectType() != GOVERNANCE_OBJECT_TRIGGER) {
+                // keep hashes of deleted proposals forever
+                nTimeExpired = std::numeric_limits<int64_t>::max();
             }
+
+            mapErasedGovernanceObjects.insert(std::make_pair(nHash, nTimeExpired));
             mapObjects.erase(it++);
         } else {
             ++it;
         }
+    }
+
+    // forget about expired deleted objects
+    hash_time_m_it s_it = mapErasedGovernanceObjects.begin();
+    while(s_it != mapErasedGovernanceObjects.end()) {
+        if(s_it->second < GetTime())
+            mapErasedGovernanceObjects.erase(s_it++);
+        else
+            ++s_it;
     }
 
     LogPrintf("CGovernanceManager::UpdateCachesAndClean -- %s\n", ToString());
@@ -1385,9 +1378,9 @@ std::string CGovernanceManager::ToString() const
         ++it;
     }
 
-    return strprintf("Governance Objects: %d (Proposals: %d, Triggers: %d, Watchdogs: %d/%d, Other: %d; Seen: %d), Votes: %d",
+    return strprintf("Governance Objects: %d (Proposals: %d, Triggers: %d, Watchdogs: %d/%d, Other: %d; Erased: %d), Votes: %d",
                     (int)mapObjects.size(),
-                    nProposalCount, nTriggerCount, nWatchdogCount, mapWatchdogObjects.size(), nOtherCount, (int)mapSeenGovernanceObjects.size(),
+                    nProposalCount, nTriggerCount, nWatchdogCount, mapWatchdogObjects.size(), nOtherCount, (int)mapErasedGovernanceObjects.size(),
                     (int)mapVoteToObject.GetSize());
 }
 
