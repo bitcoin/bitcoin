@@ -1,4 +1,5 @@
-new project 
+Project Barcelona
+
 (old title: Bitcoin Core integration/staging tree)
 =====================================
 
