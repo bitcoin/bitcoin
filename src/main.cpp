@@ -1773,15 +1773,21 @@ void static InvalidBlockFound(CBlockIndex *pindex, const CValidationState &state
     int nDoS = 0;
     if (state.IsInvalid(nDoS))
     {
+        assert(state.GetRejectCode() < REJECT_INTERNAL); // Blocks are never rejected with internal reject codes
+
         std::map<uint256, NodeId>::iterator it = mapBlockSource.find(pindex->GetBlockHash());
-        if (it != mapBlockSource.end() && State(it->second))
+        if (it != mapBlockSource.end())
         {
-            assert(state.GetRejectCode() < REJECT_INTERNAL); // Blocks are never rejected with internal reject codes
-            CBlockReject reject = {(unsigned char)state.GetRejectCode(),
-                state.GetRejectReason().substr(0, MAX_REJECT_MESSAGE_LENGTH), pindex->GetBlockHash()};
-            State(it->second)->rejects.push_back(reject);
-            if (nDoS > 0)
-                dosMan.Misbehaving(it->second, nDoS);
+            CNodeRef node(connmgr->FindNodeFromId(it->second));
+
+            if (node)
+            {
+                node->PushMessage(NetMsgType::REJECT, (std::string)NetMsgType::BLOCK,
+                    (unsigned char)state.GetRejectCode(), state.GetRejectReason().substr(0, MAX_REJECT_MESSAGE_LENGTH),
+                    pindex->GetBlockHash());
+                if (nDoS > 0)
+                    dosMan.Misbehaving(node.get(), nDoS);
+            }
         }
     }
     if (!state.CorruptionPossible())
@@ -7031,9 +7037,12 @@ bool SendMessages(CNode *pto)
 {
     const Consensus::Params &consensusParams = Params().GetConsensus();
     {
-        // Don't send anything until we get its version message otherwise we may
-        // end up geting ourselves banned by the receiving peer.
-        if (pto->nVersion == 0)
+        // First set fDisconnect if appropriate.
+        pto->DisconnectIfBanned();
+
+        // Now exit early if disconnecting or the version handshake is not complete.  We must not send PING or other
+        // connection maintenance messages before the handshake is done.
+        if (pto->fDisconnect || !pto->fSuccessfullyConnected)
             return true;
 
         //
@@ -7146,27 +7155,6 @@ bool SendMessages(CNode *pto)
         }
 
         CNodeState &state = *State(pto->GetId());
-        if (pto->fShouldBan)
-        {
-            if (pto->fWhitelisted)
-                LogPrintf("Warning: not punishing whitelisted peer %s!\n", pto->addr.ToString());
-            else
-            {
-                pto->fDisconnect = true;
-                if (pto->addr.IsLocal())
-                    LogPrintf("Warning: not banning local peer %s!\n", pto->addr.ToString());
-                else
-                {
-                    dosMan.Ban(pto->addr, BanReasonNodeMisbehaving);
-                }
-            }
-            pto->fShouldBan = false;
-        }
-
-        BOOST_FOREACH (const CBlockReject &reject, state.rejects)
-            pto->PushMessage(NetMsgType::REJECT, (std::string)NetMsgType::BLOCK, reject.chRejectCode,
-                reject.strRejectReason, reject.hashBlock);
-        state.rejects.clear();
 
         // If a sync has been started check whether we received the first batch of headers requested within the timeout
         // period.
