@@ -1,3 +1,5 @@
+bitnodes.cpp
+bitnodes.h
 stat.h
 tweak.cpp
 tweak.h
