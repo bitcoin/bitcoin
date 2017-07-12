@@ -460,7 +460,7 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
     }
 
     if (request.params.size() > 6 && !request.params[6].isNull()) {
-        coin_control.m_confirm_target = request.params[6].get_int();
+        coin_control.m_confirm_target = ParseConfirmTarget(request.params[6]);
     }
 
     if (request.params.size() > 7 && !request.params[7].isNull()) {
@@ -981,7 +981,7 @@ UniValue sendmany(const JSONRPCRequest& request)
     }
 
     if (request.params.size() > 6 && !request.params[6].isNull()) {
-        coin_control.m_confirm_target = request.params[6].get_int();
+        coin_control.m_confirm_target = ParseConfirmTarget(request.params[6]);
     }
 
     if (request.params.size() > 7 && !request.params[7].isNull()) {
@@ -2795,7 +2795,7 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
             coinControl.signalRbf = options["replaceable"].get_bool();
         }
         if (options.exists("conf_target")) {
-            coinControl.m_confirm_target = options["conf_target"].get_int();
+            coinControl.m_confirm_target = ParseConfirmTarget(options["conf_target"]);
         }
         if (options.exists("estimate_mode")) {
             if (!FeeModeFromString(options["estimate_mode"].get_str(), coinControl.m_fee_mode)) {
@@ -2917,12 +2917,8 @@ UniValue bumpfee(const JSONRPCRequest& request)
 
         if (options.exists("confTarget") && options.exists("totalFee")) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "confTarget and totalFee options should not both be set. Please provide either a confirmation target for fee estimation or an explicit total fee for the transaction.");
-        } else if (options.exists("confTarget")) {
-            int target = options["confTarget"].get_int();
-            if (target <= 0) { // FIXME: Check upper bound too
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid confTarget (cannot be <= 0)");
-            }
-            coin_control.m_confirm_target = target;
+        } else if (options.exists("confTarget")) { // TODO: alias this to conf_target
+            coin_control.m_confirm_target = ParseConfirmTarget(options["confTarget"]);
         } else if (options.exists("totalFee")) {
             totalFee = options["totalFee"].get_int64();
             if (totalFee <= 0) {
