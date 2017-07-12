@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test deprecation of RPC calls."""
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_raises_jsonrpc
+from test_framework.util import assert_raises_rpc_error
 
 class DeprecatedRpcTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -14,7 +14,7 @@ class DeprecatedRpcTest(BitcoinTestFramework):
 
     def run_test(self):
         self.log.info("estimatefee: Shows deprecated message")
-        assert_raises_jsonrpc(-32, 'estimatefee is deprecated', self.nodes[0].estimatefee, 1)
+        assert_raises_rpc_error(-32, 'estimatefee is deprecated', self.nodes[0].estimatefee, 1)
 
         self.log.info("Using -deprecatedrpc=estimatefee bypasses the error")
         self.nodes[1].estimatefee(1)
