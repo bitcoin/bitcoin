@@ -142,7 +142,7 @@ leveldb_libmemenv_a_SOURCES += leveldb/helpers/memenv/memenv.h
 
 leveldb_libleveldb_sse42_a_CPPFLAGS = $(leveldb_libleveldb_a_CPPFLAGS)
 leveldb_libleveldb_sse42_a_CXXFLAGS = $(leveldb_libleveldb_a_CXXFLAGS)
-if ENABLE_SSE42
+if ENABLE_HWCRC32
 leveldb_libleveldb_sse42_a_CPPFLAGS += -DLEVELDB_PLATFORM_POSIX_SSE
 leveldb_libleveldb_sse42_a_CXXFLAGS += $(SSE42_CXXFLAGS)
 endif
