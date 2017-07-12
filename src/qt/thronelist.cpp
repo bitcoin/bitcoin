@@ -194,7 +194,7 @@ void ThroneList::updateMyThroneInfo(QString alias, QString addr, QString privkey
     QTableWidgetItem *protocolItem = new QTableWidgetItem(QString::number(pmn ? pmn->protocolVersion : -1));
     QTableWidgetItem *statusItem = new QTableWidgetItem(QString::fromStdString(pmn ? pmn->Status() : "MISSING"));
     QTableWidgetItem *activeSecondsItem = new QTableWidgetItem(QString::fromStdString(DurationToDHMS(pmn ? (pmn->lastPing.sigTime - pmn->sigTime) : 0)));
-    QTableWidgetItem *lastSeenItem = new QTableWidgetItem(GUIUtil::dateTimeStr(pmn ? pmn->lastPing.sigTime : 0));
+    QTableWidgetItem *lastSeenItem = new QTableWidgetItem(QString::fromStdString(DateTimeStrFormat("%Y-%m-%d %H:%M", pmn ? pmn->lastPing.sigTime : 0)));
     QTableWidgetItem *pubkeyItem = new QTableWidgetItem(QString::fromStdString(pmn ? CBitcoinAddress(pmn->pubkey.GetID()).ToString() : ""));
 
     ui->tableWidgetMyThrones->setItem(nodeRow, 0, aliasItem);
@@ -233,11 +233,19 @@ void ThroneList::updateMyNodeList(bool reset) {
 
 void ThroneList::updateNodeList()
 {
-    static int64_t lastListUpdate = 0;
+    static int64_t nTimeListUpdate = 0;
 
-    // update only once in THRONELIST_UPDATE_SECONDS seconds to prevent high cpu usage e.g. on filter change
-    if(GetTime() - lastListUpdate < THRONELIST_UPDATE_SECONDS) return;
-    lastListUpdate = GetTime();
+      // to prevent high cpu usage update only once in THRONELIST_UPDATE_SECONDS secondsLabel
+      // or THRONELIST_FILTER_COOLDOWN_SECONDS seconds after filter was last changed
+      int64_t nTimeToWait =   fFilterUpdated
+                              ? nTimeFilterUpdate - GetTime() + THRONELIST_FILTER_COOLDOWN_SECONDS
+                              : nTimeListUpdate - GetTime() + THRONELIST_UPDATE_SECONDS;
+
+    if(fFilterUpdated) ui->countLabel->setText(QString::fromStdString(strprintf("Please wait... %d", nTimeToWait)));
+    if(nTimeToWait > 0) return;
+
+    nTimeListUpdate = GetTime();
+    fFilterUpdated = false;
 
     TRY_LOCK(cs_thrones, lockThrones);
     if(!lockThrones)
@@ -258,7 +266,7 @@ void ThroneList::updateNodeList()
         QTableWidgetItem *protocolItem = new QTableWidgetItem(QString::number(mn.protocolVersion));
         QTableWidgetItem *statusItem = new QTableWidgetItem(QString::fromStdString(mn.Status()));
         QTableWidgetItem *activeSecondsItem = new QTableWidgetItem(QString::fromStdString(DurationToDHMS(mn.lastPing.sigTime - mn.sigTime)));
-        QTableWidgetItem *lastSeenItem = new QTableWidgetItem(GUIUtil::dateTimeStr(mn.lastPing.sigTime));
+        QTableWidgetItem *lastSeenItem = new QTableWidgetItem(QString::fromStdString(DateTimeStrFormat("%Y-%m-%d %H:%M", mn.lastPing.sigTime)));
         QTableWidgetItem *pubkeyItem = new QTableWidgetItem(QString::fromStdString(CBitcoinAddress(mn.pubkey.GetID()).ToString()));
 
         if (strCurrentFilter != "")
@@ -288,7 +296,9 @@ void ThroneList::updateNodeList()
 
 void ThroneList::on_filterLineEdit_textChanged(const QString &filterString) {
     strCurrentFilter = filterString;
-    ui->countLabel->setText("Please wait...");
+    nTimeFilterUpdate = GetTime();
+    fFilterUpdated = true;
+    ui->countLabel->setText(QString::fromStdString(strprintf("Please wait... %d", THRONELIST_FILTER_COOLDOWN_SECONDS)));
 }
 
 void ThroneList::on_startButton_clicked()
