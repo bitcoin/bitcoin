@@ -220,7 +220,7 @@ public:
         }
     }
 
-    prevector() : _size(0) {}
+    prevector() : _size(0), _union{{}} {}
 
     explicit prevector(size_type n) : _size(0) {
         resize(n);
