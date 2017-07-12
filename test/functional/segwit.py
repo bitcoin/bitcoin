@@ -452,11 +452,7 @@ class SegWitTest(BitcoinTestFramework):
         for i in importlist:
             # import all generated addresses. The wallet already has the private keys for some of these, so catch JSON RPC
             # exceptions and continue.
-            try:
-                self.nodes[0].importaddress(i,"",False,True)
-            except JSONRPCException as exp:
-                assert_equal(exp.error["message"], "The wallet already contains the private key for this address or script")
-                assert_equal(exp.error["code"], -4)
+            try_rpc(-4, "The wallet already contains the private key for this address or script", self.nodes[0].importaddress, i, "", False, True)
 
         self.nodes[0].importaddress(script_to_p2sh(op0)) # import OP_0 as address only
         self.nodes[0].importaddress(multisig_without_privkey_address) # Test multisig_without_privkey
