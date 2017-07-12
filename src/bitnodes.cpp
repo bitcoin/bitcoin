@@ -53,23 +53,46 @@ class client
             X509_NAME_oneline(X509_get_subject_name(cert), subject_name, 256);
             std::string s(subject_name);
             std::string pattern = "/CN=" + cert_hostname_;
-            bool b = s.find(pattern) != std::string::npos;
-            if (b) {
+
+            if (s.find(pattern) != std::string::npos)
+            {
                 found_cert_ = true;
             }
+            else
+            {
+                GENERAL_NAMES *altNames = (GENERAL_NAMES *)X509_get_ext_d2i(cert, NID_subject_alt_name, NULL, NULL);
+                int numNames = sk_GENERAL_NAME_num(altNames);
+                for (int i = 0; i < numNames; ++i)
+                {
+                    GENERAL_NAME *generalName = sk_GENERAL_NAME_value(altNames, i);
+                    if ((generalName->type == GEN_URI) || (generalName->type == GEN_DNS))
+                    {
+                        std::string san = std::string(
+                            reinterpret_cast<char *>(ASN1_STRING_data(generalName->d.uniformResourceIdentifier)),
+                            ASN1_STRING_length(generalName->d.uniformResourceIdentifier));
+                        if (san.find(cert_hostname_) != std::string::npos)
+                        {
+                            found_cert_ = true;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        LogPrintf("Unknown Subject Alternate Name type: %d.  This may cause a bitnodes cert error.\n",
+                            generalName->type);
+                    }
+                }
+            }
+
             return true;
         }
 
-        ~client()
-        {
-            timer_.get()->cancel();
-        }
-
-        void run(boost::asio::io_service& io_service)
-        {
-            timer_.get()->async_wait(boost::bind(&client::timeout_handler, this, boost::asio::placeholders::error));
-            io_service.run();
-            timer_.get()->cancel();
+            ~client() { timer_.get()->cancel(); }
+            void run(boost::asio::io_service & io_service)
+            {
+                timer_.get()->async_wait(boost::bind(&client::timeout_handler, this, boost::asio::placeholders::error));
+                io_service.run();
+                timer_.get()->cancel();
         }
 
         void timeout_handler(const boost::system::error_code& error)
@@ -160,6 +183,10 @@ class client
 
         void handle_read(const boost::system::error_code& error, size_t bytes_transferred)
         {
+            // If EOF / no bytes transferred, exit to avoid "short read" error
+            if (bytes_transferred==0) {
+                return;
+            }
             if (!error){
                 std::ostringstream ss ;
                 ss << &response_;
@@ -172,7 +199,7 @@ class client
             } else {
                 timer_.get()->cancel();
                 if (error != boost::asio::error::eof) {
-                    throw runtime_error(strprintf("Bitnodes HTTP read error: %s\n", error.message().c_str()));
+                    throw runtime_error(strprintf("Bitnodes HTTP read error: %s. Bytes received: %d\n", error.message().c_str(),bytes_transferred));
                 }
             }
         }
@@ -202,7 +229,7 @@ bool GetLeaderboardFromBitnodes(vector<string>& vIPs)
     string url_host = "bitnodes.21.co";
     string url_port = "443";
     string url_path = "/api/v1/nodes/leaderboard/?limit=100";
-    string cert_hostname = "dazzlepod.com";
+    string cert_hostname = "21.co";
     int timeout = 30;
 
     int count = 0;
