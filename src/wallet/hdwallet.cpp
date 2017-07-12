@@ -26,6 +26,8 @@
 #include "anon.h"
 #include "txdb.h"
 
+#include "univalue.h"
+
 #include <secp256k1_mlsag.h>
 
 #include <algorithm>
@@ -231,6 +233,46 @@ bool CHDWallet::IsHDEnabled()
     
     return false;
 }
+
+extern int ListLooseExtKeys(int nShowKeys, UniValue &ret, size_t &nKeys);
+extern int ListAccountExtKeys(int nShowKeys, UniValue &ret, size_t &nKeys);
+bool CHDWallet::DumpJson(UniValue &rv, std::string &sError)
+{
+    LogPrintf("Dumping wallet to JSON.\n");
+    
+    if (IsLocked())
+        return errorN(false, sError, __func__, _("Wallet must be unlocked.").c_str());
+    
+    LOCK(cs_wallet);
+    
+    size_t nKeys, nAcc;
+    UniValue extkeys(UniValue::VARR);
+    UniValue extaccs(UniValue::VARR);
+    ListLooseExtKeys(2, extkeys, nKeys);
+    ListAccountExtKeys(2, extaccs, nAcc);
+    
+    rv.pushKV("loose_extkeys", extkeys);
+    rv.pushKV("accounts", extaccs);
+    
+    
+    return true;
+};
+
+bool CHDWallet::LoadJson(const UniValue &rv, std::string &sError)
+{
+    LogPrintf("Loading wallet from JSON.\n");
+    
+    if (IsLocked())
+        return errorN(false, sError, __func__, _("Wallet must be unlocked.").c_str());
+    
+    LOCK(cs_wallet);
+    
+    
+    
+    
+    return true;
+};
+
 
 bool CHDWallet::LoadAddressBook(CHDWalletDB *pwdb)
 {
@@ -4635,7 +4677,6 @@ int CHDWallet::ExtKeyEncryptAll(CHDWalletDB *pwdb, const CKeyingMaterial &vMKey)
     CKeyID ckeyId;
     CBitcoinAddress addr;
     CStoredExtKey sek;
-    CExtKeyAccount sea;
     CExtKey58 eKey58;
     std::string strType;
 
@@ -4677,7 +4718,7 @@ int CHDWallet::ExtKeyEncryptAll(CHDWalletDB *pwdb, const CKeyingMaterial &vMKey)
     pcursor->close();
 
     if (fDebug)
-        LogPrint("hdwallet", "%s : Encrypted %u keys, %u accounts.", __func__, nKeys, nAccounts);
+        LogPrint("hdwallet", "%s : Encrypted %u keys.\n", __func__, nKeys, nAccounts);
 
     return 0;
 };

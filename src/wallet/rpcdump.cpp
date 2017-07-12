@@ -13,6 +13,7 @@
 #include "util.h"
 #include "utiltime.h"
 #include "wallet.h"
+#include "hdwallet.h"
 #include "merkleblock.h"
 #include "core_io.h"
 
@@ -636,7 +637,15 @@ UniValue dumpwallet(const JSONRPCRequest& request)
     
     if (fParticlWallet)
     {
+        std::string sError;
+        file << "\n# --- Begin JSON --- \n";
         
+        UniValue rv(UniValue::VOBJ);
+        if (!((CHDWallet*)pwalletMain)->DumpJson(rv, sError))
+            throw JSONRPCError(RPC_WALLET_ERROR, "DumpJson failed " + sError);
+        file << rv.write(1);
+        
+        file << "\n# --- End JSON --- \n";
     };
     
     

@@ -2416,7 +2416,7 @@ UniValue keypoolrefill(const JSONRPCRequest& request)
 }
 
 
-static void LockWallet(CWallet* pWallet)
+void LockWallet(CWallet* pWallet)
 {
     LOCK(pWallet->cs_wallet);
     LOCK(cs_nWalletUnlockTime);

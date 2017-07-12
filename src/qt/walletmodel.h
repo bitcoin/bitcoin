@@ -35,6 +35,8 @@ QT_BEGIN_NAMESPACE
 class QTimer;
 QT_END_NAMESPACE
 
+extern void LockWallet(CWallet* pWallet);
+
 class SendCoinsRecipient
 {
 public:
@@ -124,7 +126,8 @@ public:
     {
         Unencrypted,  // !wallet->IsCrypted()
         Locked,       // wallet->IsCrypted() && wallet->IsLocked()
-        Unlocked      // wallet->IsCrypted() && !wallet->IsLocked()
+        Unlocked,     // wallet->IsCrypted() && !wallet->IsLocked()
+        UnlockedForStaking
     };
 
     OptionsModel *getOptionsModel();
@@ -165,7 +168,7 @@ public:
     // Wallet encryption
     bool setWalletEncrypted(bool encrypted, const SecureString &passphrase);
     // Passphrase only needed when unlocking
-    bool setWalletLocked(bool locked, const SecureString &passPhrase=SecureString());
+    bool setWalletLocked(bool locked, const SecureString &passPhrase=SecureString(), bool stakingOnly=false);
     bool changePassphrase(const SecureString &oldPass, const SecureString &newPass);
     // Wallet backup
     bool backupWallet(const QString &filename);
@@ -216,6 +219,7 @@ public:
 
     int getDefaultConfirmTarget() const;
     
+    void lockWallet();
     CHDWallet *getParticlWallet();
 
     void checkBalanceChanged();

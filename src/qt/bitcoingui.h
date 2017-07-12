@@ -246,6 +246,9 @@ private Q_SLOTS:
     /** Toggle networking */
     void toggleNetworkActive();
 
+    /** Manage lock state */
+    void toggleLockState();
+
     void showModalOverlay();
 };
 

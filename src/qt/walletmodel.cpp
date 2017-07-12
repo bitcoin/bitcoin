@@ -425,6 +425,7 @@ RecentRequestsTableModel *WalletModel::getRecentRequestsTableModel()
 
 WalletModel::EncryptionStatus WalletModel::getEncryptionStatus() const
 {
+    LOCK(wallet->cs_wallet); // Wait for unlock to complete
     if(!wallet->IsCrypted())
     {
         return Unencrypted;
@@ -435,6 +436,9 @@ WalletModel::EncryptionStatus WalletModel::getEncryptionStatus() const
     }
     else
     {
+        if (((CHDWallet*)wallet)->fUnlockForStakingOnly)
+            return UnlockedForStaking;
+        
         return Unlocked;
     }
 }
@@ -453,7 +457,7 @@ bool WalletModel::setWalletEncrypted(bool encrypted, const SecureString &passphr
     }
 }
 
-bool WalletModel::setWalletLocked(bool locked, const SecureString &passPhrase)
+bool WalletModel::setWalletLocked(bool locked, const SecureString &passPhrase, bool stakingOnly)
 {
     if(locked)
     {
@@ -463,6 +467,8 @@ bool WalletModel::setWalletLocked(bool locked, const SecureString &passPhrase)
     else
     {
         // Unlock
+        if (fParticlWallet)
+            ((CHDWallet*)wallet)->fUnlockForStakingOnly = stakingOnly;
         return wallet->Unlock(passPhrase);
     }
 }
@@ -552,14 +558,15 @@ void WalletModel::unsubscribeFromCoreSignals()
 // WalletModel::UnlockContext implementation
 WalletModel::UnlockContext WalletModel::requestUnlock()
 {
-    bool was_locked = getEncryptionStatus() == Locked;
+    bool was_locked = getEncryptionStatus() == Locked || getEncryptionStatus() == UnlockedForStaking;
     if(was_locked)
     {
         // Request UI to unlock wallet
         Q_EMIT requireUnlock();
     }
     // If wallet is still locked, unlock was failed or cancelled, mark context as invalid
-    bool valid = getEncryptionStatus() != Locked;
+    //bool valid = getEncryptionStatus() != Locked;
+    bool valid = getEncryptionStatus() == Unlocked;
 
     return UnlockContext(this, valid, was_locked);
 }
@@ -736,6 +743,12 @@ int WalletModel::getDefaultConfirmTarget() const
 {
     return nTxConfirmTarget;
 }
+
+void WalletModel::lockWallet()
+{
+    if (wallet)
+        LockWallet(wallet);
+};
 
 CHDWallet *WalletModel::getParticlWallet()
 {

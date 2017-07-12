@@ -268,18 +268,27 @@ void WalletView::changePassphrase()
     dlg.exec();
 }
 
-void WalletView::unlockWallet()
+void WalletView::unlockWallet(bool iconClicked)
 {
     if(!walletModel)
         return;
     // Unlock wallet when requested by wallet model
-    if (walletModel->getEncryptionStatus() == WalletModel::Locked)
+    if (walletModel->getEncryptionStatus() == WalletModel::Locked
+        || (!iconClicked && walletModel->getEncryptionStatus() == WalletModel::UnlockedForStaking))
     {
-        AskPassphraseDialog dlg(AskPassphraseDialog::Unlock, this);
+        AskPassphraseDialog dlg(
+            iconClicked ? AskPassphraseDialog::UnlockManual : AskPassphraseDialog::Unlock, this);
         dlg.setModel(walletModel);
         dlg.exec();
     }
 }
+
+void WalletView::lockWallet()
+{
+    if(!walletModel)
+        return;
+    walletModel->lockWallet();
+};
 
 void WalletView::usedSendingAddresses()
 {

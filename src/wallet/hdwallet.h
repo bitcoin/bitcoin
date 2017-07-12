@@ -24,6 +24,7 @@ typedef std::map<uint256, CTransactionRecord> MapRecords_t;
 
 typedef std::multimap<int64_t, std::map<uint256, CTransactionRecord>::iterator> RtxOrdered_t;
 
+class UniValue;
 
 const uint16_t PLACEHOLDER_N = 0xFFFF;
 enum OutputRecordFlags
@@ -315,6 +316,9 @@ public:
     
     /* Returns true if HD is enabled, and default account set */
     bool IsHDEnabled() override;
+    
+    bool DumpJson(UniValue &rv, std::string &sError);
+    bool LoadJson(const UniValue &rv, std::string &sError);
     
     bool LoadAddressBook(CHDWalletDB *pwdb);
     
