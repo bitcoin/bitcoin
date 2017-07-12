@@ -111,7 +111,7 @@ void MnemonicDialog::warningBox(QString msg)
     msgParams.second = CClientUIInterface::MSG_WARNING;
     msgParams.first = msg;
 
-    Q_EMIT walletModel->message(tr("Mnemonic Dialog"), msgParams.first, msgParams.second);
+    Q_EMIT walletModel->message(tr("HD Wallet Dialog"), msgParams.first, msgParams.second);
 #endif
 }
 

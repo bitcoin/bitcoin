@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Import Mnemonic Seed</string>
+   <string>HD Wallet Setup</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="14" column="0">
@@ -72,7 +72,7 @@
    <item row="4" column="0">
     <widget class="QLabel" name="mnemonicLabel">
      <property name="text">
-      <string>Mnemonic</string>
+      <string>Import Recovery Phrase</string>
      </property>
     </widget>
    </item>
@@ -104,7 +104,7 @@
       </size>
      </property>
      <property name="title">
-      <string>New Mnemonic</string>
+      <string>Create Recovery Phrase</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -216,7 +216,7 @@
      <item row="0" column="0">
       <widget class="QLabel" name="passwordLabel">
        <property name="text">
-        <string>Password</string>
+        <string>Recovery Passphrase</string>
        </property>
       </widget>
      </item>
@@ -243,7 +243,7 @@
      <item row="2" column="1">
       <widget class="QLabel" name="label_2">
        <property name="text">
-        <string>Ensure you backup your mnemonic and password - they are not recoverable.</string>
+        <string>Please ensure you backup your Recovery Phrase and Passphrase - they are not recoverable!</string>
        </property>
       </widget>
      </item>
