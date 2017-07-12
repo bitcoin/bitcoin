@@ -2664,6 +2664,100 @@ UniValue listunspent(const JSONRPCRequest& request)
     return results;
 }
 
+UniValue histunspent(const JSONRPCRequest& request)
+{
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp || request.params.size() > 5)
+        throw std::runtime_error(
+            "histunspent [ranges] ( min_depth max_depth )\n"
+            "\nReturns an histogram of unspent transaction output amounts\n"
+            "with between min_depth and max_depth (inclusive) confirmations.\n"
+            "\nArguments:\n"
+            "1. ranges             (array) A json array of amounts that define the histogram bins\n"
+            "2. min_depth          (numeric, optional, default=1) The minimum confirmations to filter\n"
+            "3. max_depth          (numeric, optional, default=9999999) The maximum confirmations to filter\n"
+            "\nResult\n"
+            "{\n"
+            "  \"bins\" : \"[]\",           (array) A json array of counts of amounts in each bin\n"
+            "  \"ranges\" : \"[]\",         (array) A json array of amounts that define the histogram bins\n"
+            "}\n"
+
+            "\nExamples\n"
+            + HelpExampleCli("histunspent", "\"[0,1,10,100,1000,10000]\"")
+        );
+
+    std::vector<unsigned int> bins;
+    std::map<CAmount, unsigned int> ranges;
+    CAmount min_amount = 0;
+    CAmount max_amount = MAX_MONEY;
+
+    if (!request.params[0].isNull()) {
+        const std::vector<UniValue>& values = request.params[0].getValues();
+
+        if (values.size() < 2) {
+            // throw invalid range (minimum 2 amounts);
+        }
+
+        CAmount last = 0;
+        for (unsigned int bin = 0; bin <= values.size()-1; ++bin) {
+            CAmount amount = AmountFromValue(values[bin]);
+            if (amount <= last) {
+                // throw invalid range (not sorted);
+            }
+            printf(" -- %" PRIu64 " -> %u\n", amount, bin);
+            histogram.ranges.insert(std::make_pair(amount, bin));
+        }
+
+        min_amount = histogram.ranges.begin()->first;
+        max_amount = histogram.ranges.rbegin()->first;
+    }
+
+    int min_depth = 1;
+    if (RPCTypeCheckArgument(request.params[1], UniValue::VNUM)) {
+        min_depth = request.params[0].get_int();
+    }
+
+    int max_depth = 9999999;
+    if (RPCTypeCheckArgument(request.params[2], UniValue::VNUM)) {
+        max_depth = request.params[1].get_int();
+    }
+
+    assert(pwallet != NULL);
+    LOCK2(cs_main, pwallet->cs_wallet);
+
+    std::vector<COutput> outputs;
+    pwallet->AvailableCoins(outputs, false, NULL, min_amount, max_amount, MAX_MONEY, 0, min_depth, max_depth);
+
+    histogram.bins.resize(histogram.ranges.size()-1, 0);
+    for (const COutput& out : outputs) {
+        CAmount amount = out.tx->tx->vout[out.i].nValue;
+
+        std::map<CAmount, unsigned int>::const_iterator it = --histogram.ranges.lower_bound(amount);
+        if (it != histogram.ranges.end()) {
+            histogram.bins[it->second]++;
+        }
+    }
+
+    UniValue bins(UniValue::VARR);
+    for (unsigned int bin : histogram.bins) {
+       bins.push_back(UniValue(bin));
+    }
+
+    UniValue ranges(UniValue::VARR);
+    for (const auto& range : histogram.ranges) {
+       ranges.push_back(ValueFromAmount(range.first));
+    }
+
+    UniValue result(UniValue::VOBJ);
+    result.push_back(Pair("bins", bins));
+    result.push_back(Pair("ranges", ranges));
+    return result;
+}
+
 UniValue fundrawtransaction(const JSONRPCRequest& request)
 {
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
@@ -3090,6 +3184,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "listsinceblock",           &listsinceblock,           false,  {"blockhash","target_confirmations","include_watchonly"} },
     { "wallet",             "listtransactions",         &listtransactions,         false,  {"account","count","skip","include_watchonly"} },
     { "wallet",             "listunspent",              &listunspent,              false,  {"minconf","maxconf","addresses","include_unsafe","query_options"} },
+    { "wallet",             "histunspent",              &histunspent,              false,  {"ranges","min_depth","max_depth","include_unsafe"} },
     { "wallet",             "lockunspent",              &lockunspent,              true,   {"unlock","transactions"} },
     { "wallet",             "move",                     &movecmd,                  false,  {"fromaccount","toaccount","amount","minconf","comment"} },
     { "wallet",             "sendfrom",                 &sendfrom,                 false,  {"fromaccount","toaddress","amount","minconf","comment","comment_to"} },
