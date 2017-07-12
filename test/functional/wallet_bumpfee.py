@@ -15,6 +15,7 @@ make assumptions about execution order.
 """
 from decimal import Decimal
 import io
+import time
 
 from test_framework.blocktools import add_witness_commitment, create_block, create_coinbase, send_to_witness
 from test_framework.messages import BIP125_SEQUENCE_NUMBER, CTransaction
@@ -63,6 +64,8 @@ class BumpFeeTest(BitcoinTestFramework):
         test_simple_bumpfee_succeeds(rbf_node, peer_node, dest_address)
         test_segwit_bumpfee_succeeds(rbf_node, dest_address)
         test_nonrbf_bumpfee_fails(peer_node, dest_address)
+        test_nonrbf_bumpfee_fails_then_succeeds(self, dest_address)
+        test_mempool_replacement_timeout(self)
         test_notmine_bumpfee_fails(rbf_node, peer_node, dest_address)
         test_bumpfee_with_descendant_fails(rbf_node, rbf_node_address, dest_address)
         test_small_output_fails(rbf_node, dest_address)
@@ -132,6 +135,29 @@ def test_nonrbf_bumpfee_fails(peer_node, dest_address):
     # cannot replace a non RBF transaction (from node which did not enable RBF)
     not_rbfid = peer_node.sendtoaddress(dest_address, Decimal("0.00090000"))
     assert_raises_rpc_error(-4, "not BIP 125 replaceable", peer_node.bumpfee, not_rbfid)
+
+
+def test_mempool_replacement_timeout(self):
+    self.stop_node(0)
+    err_msg = "Error: mempoolreplacementtimeout has to be a non negative number below or equal to mempoolexpiry (in seconds)"
+    self.nodes[0].assert_start_raises_init_error(["-mempoolreplacementtimeout=-1"], err_msg)
+    beyond_expiry = 60 * 60 + 1
+    self.nodes[0].assert_start_raises_init_error(["-mempoolexpiry=1",
+                                                 "-mempoolreplacementtimeout=%d" % (beyond_expiry)], err_msg)
+    self.start_node(0)
+
+
+def test_nonrbf_bumpfee_fails_then_succeeds(self, dest_address):
+    self.restart_node(0, extra_args=["-mempoolreplacementtimeout=30", "-enablewalletreplacementtimeout=1"])
+    not_rbfid = self.nodes[0].sendtoaddress(dest_address, Decimal("0.00090000"))
+    assert_raises_rpc_error(-4, "not BIP 125 replaceable", self.nodes[0].bumpfee, not_rbfid)
+    self.nodes[0].setmocktime(int(time.time()) + 30 + 5 * 60)
+    bumped_tx = self.nodes[0].bumpfee(not_rbfid)
+    rawmempool = self.nodes[0].getrawmempool()
+    assert bumped_tx["txid"] in rawmempool
+    assert not_rbfid not in rawmempool
+    self.nodes[0].setmocktime(0)
+    self.restart_node(0)
 
 
 def test_notmine_bumpfee_fails(rbf_node, peer_node, dest_address):

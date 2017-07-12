@@ -201,8 +201,11 @@ public:
     }
     RBFTransactionState isRBFOptIn(const CTransaction& tx) override
     {
+        const int64_t replacement_timeout = gArgs.GetArg("-mempoolreplacementtimeout", DEFAULT_REPLACEMENT_TIMEOUT);
+        const bool enabled_replacement_timeout = gArgs.GetArg("-enablewalletreplacementtimeout", DEFAULT_WALLET_REPLACEMENT_TIMEOUT);
+
         LOCK(::mempool.cs);
-        return IsRBFOptIn(tx, ::mempool);
+        return IsRBFOptIn(tx, ::mempool, GetTime(), replacement_timeout, enabled_replacement_timeout);
     }
     bool hasDescendantsInMempool(const uint256& txid) override
     {

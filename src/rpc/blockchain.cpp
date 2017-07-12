@@ -455,7 +455,10 @@ static void entryToJSON(const CTxMemPool& pool, UniValue& info, const CTxMemPool
 
     // Add opt-in RBF status
     bool rbfStatus = false;
-    RBFTransactionState rbfState = IsRBFOptIn(tx, pool);
+    const int64_t replacement_timeout = gArgs.GetArg("-mempoolreplacementtimeout", DEFAULT_REPLACEMENT_TIMEOUT);
+    const bool enabled_replacement_timeout = gArgs.GetArg("-enablewalletreplacementtimeout", DEFAULT_WALLET_REPLACEMENT_TIMEOUT);
+
+    RBFTransactionState rbfState = IsRBFOptIn(tx, pool, GetTime(), replacement_timeout, enabled_replacement_timeout);
     if (rbfState == RBFTransactionState::UNKNOWN) {
         throw JSONRPCError(RPC_MISC_ERROR, "Transaction is not in mempool");
     } else if (rbfState == RBFTransactionState::REPLACEABLE_BIP125) {

@@ -377,7 +377,8 @@ public:
  * - a transaction which doesn't meet the minimum fee requirements.
  * - a new transaction that double-spends an input of a transaction already in
  * the pool where the new transaction does not meet the Replace-By-Fee
- * requirements as defined in BIP 125.
+ * requirements as defined in BIP 125 and the transaction(s) being replaced
+ * has not been in mempool for over a timeout defaulting to 6 hours.
  * - a non-standard transaction.
  *
  * CTxMemPool::mapTx, and CTxMemPoolEntry bookkeeping:

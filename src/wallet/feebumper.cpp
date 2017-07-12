@@ -38,7 +38,9 @@ static feebumper::Result PreconditionChecks(interfaces::Chain::Lock& locked_chai
         return feebumper::Result::WALLET_ERROR;
     }
 
-    if (!SignalsOptInRBF(*wtx.tx)) {
+    const int64_t replacement_timeout = gArgs.GetArg("-mempoolreplacementtimeout", DEFAULT_REPLACEMENT_TIMEOUT);
+    const bool replacement_timeout_enabled = gArgs.GetArg("-enablewalletreplacementtimeout", DEFAULT_WALLET_REPLACEMENT_TIMEOUT);
+    if (!(replacement_timeout_enabled && ExpiredOptInRBFPolicy(GetTime(), wtx.nTimeReceived, replacement_timeout + REPLACEMENT_TIMEOUT_BUFFER)) && !SignalsOptInRBF(*wtx.tx)) {
         errors.push_back("Transaction is not BIP 125 replaceable");
         return feebumper::Result::WALLET_ERROR;
     }

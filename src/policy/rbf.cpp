@@ -14,14 +14,20 @@ bool SignalsOptInRBF(const CTransaction &tx)
     return false;
 }
 
-RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool)
+bool ExpiredOptInRBFPolicy(const int64_t now, const int64_t accepted, const int64_t timeout)
+{
+    return now - accepted >= timeout;
+}
+
+RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool, const int64_t now, const int64_t timeout, const bool enabled_replacement_timeout)
 {
     AssertLockHeld(pool.cs);
 
     CTxMemPool::setEntries setAncestors;
 
     // First check the transaction itself.
-    if (SignalsOptInRBF(tx)) {
+    const int64_t conflicting_time = pool.info(tx.GetHash()).nTime;
+    if ((enabled_replacement_timeout && ExpiredOptInRBFPolicy(now, conflicting_time, timeout)) || SignalsOptInRBF(tx)) {
         return RBFTransactionState::REPLACEABLE_BIP125;
     }
 
@@ -33,13 +39,14 @@ RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool)
 
     // If all the inputs have nSequence >= maxint-1, it still might be
     // signaled for RBF if any unconfirmed parents have signaled.
-    uint64_t noLimit = std::numeric_limits<uint64_t>::max();
+    const uint64_t noLimit = std::numeric_limits<uint64_t>::max();
     std::string dummy;
-    CTxMemPoolEntry entry = *pool.mapTx.find(tx.GetHash());
+    const CTxMemPoolEntry entry = *pool.mapTx.find(tx.GetHash());
     pool.CalculateMemPoolAncestors(entry, setAncestors, noLimit, noLimit, noLimit, noLimit, dummy, false);
 
-    for (CTxMemPool::txiter it : setAncestors) {
-        if (SignalsOptInRBF(it->GetTx())) {
+    for (const CTxMemPool::txiter it : setAncestors) {
+        const int64_t ancestor_time = pool.info(it->GetTx().GetHash()).nTime;
+        if ((enabled_replacement_timeout && ExpiredOptInRBFPolicy(now, ancestor_time, timeout)) || SignalsOptInRBF(it->GetTx())) {
             return RBFTransactionState::REPLACEABLE_BIP125;
         }
     }

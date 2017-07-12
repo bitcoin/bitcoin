@@ -19,10 +19,13 @@ enum class RBFTransactionState {
 // opt-in to replace-by-fee, according to BIP 125
 bool SignalsOptInRBF(const CTransaction &tx);
 
-// Determine whether an in-mempool transaction is signaling opt-in to RBF
-// according to BIP 125
+// Check whether the replacement policy has expired
+bool ExpiredOptInRBFPolicy(const int64_t now, const int64_t accepted, const int64_t timeout);
+
+// Determine whether an in-mempool transaction has hit the expired replacement policy or
+// is signaling opt-in to RBF according to BIP 125
 // This involves checking sequence numbers of the transaction, as well
 // as the sequence numbers of all in-mempool ancestors.
-RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool) EXCLUSIVE_LOCKS_REQUIRED(pool.cs);
+RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool, const int64_t now, const int64_t timeout, const bool enabled_replacement_timeout) EXCLUSIVE_LOCKS_REQUIRED(pool.cs);
 
 #endif // BITCOIN_POLICY_RBF_H

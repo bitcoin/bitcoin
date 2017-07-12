@@ -516,6 +516,8 @@ void SetupServerArgs()
     gArgs.AddArg("-datacarrier", strprintf("Relay and mine data carrier transactions (default: %u)", DEFAULT_ACCEPT_DATACARRIER), false, OptionsCategory::NODE_RELAY);
     gArgs.AddArg("-datacarriersize", strprintf("Maximum size of data in data carrier transactions we relay and mine (default: %u)", MAX_OP_RETURN_RELAY), false, OptionsCategory::NODE_RELAY);
     gArgs.AddArg("-mempoolreplacement", strprintf("Enable transaction replacement in the memory pool (default: %u)", DEFAULT_ENABLE_REPLACEMENT), false, OptionsCategory::NODE_RELAY);
+    gArgs.AddArg("-mempoolreplacementtimeout=<n>", strprintf("Number of seconds after which transactions in mempool can be replaced (default: %u)", DEFAULT_REPLACEMENT_TIMEOUT), false, OptionsCategory::NODE_RELAY);
+    gArgs.AddArg("-enablewalletreplacementtimeout", strprintf("Whether to enable wallet replacement timeout (default: %u)", DEFAULT_WALLET_REPLACEMENT_TIMEOUT), true, OptionsCategory::OPTIONS);
     gArgs.AddArg("-minrelaytxfee=<amt>", strprintf("Fees (in %s/kB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)",
         CURRENCY_UNIT, FormatMoney(DEFAULT_MIN_RELAY_TX_FEE)), false, OptionsCategory::NODE_RELAY);
     gArgs.AddArg("-whitelistforcerelay", strprintf("Force relay of transactions from whitelisted peers even if they violate local relay policy (default: %d)", DEFAULT_WHITELISTFORCERELAY), false, OptionsCategory::NODE_RELAY);
@@ -1169,6 +1171,12 @@ bool AppInitParameterInteraction()
         std::vector<std::string> vstrReplacementModes;
         boost::split(vstrReplacementModes, strReplacementModeList, boost::is_any_of(","));
         fEnableReplacement = (std::find(vstrReplacementModes.begin(), vstrReplacementModes.end(), "fee") != vstrReplacementModes.end());
+    }
+
+    const int64_t replacement_timeout = gArgs.GetArg("-mempoolreplacementtimeout", DEFAULT_REPLACEMENT_TIMEOUT);
+    const int64_t expiry = gArgs.GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60;
+    if (replacement_timeout < 0 || replacement_timeout > expiry) {
+        return InitError("mempoolreplacementtimeout has to be a non negative number below or equal to mempoolexpiry (in seconds)");
     }
 
     return true;
