@@ -1717,23 +1717,20 @@ static void LockWallet(CWallet* pWallet)
 
 Value walletpassphrase(const Array& params, bool fHelp)
 {
-    if (pwalletMain->IsCrypted() && (fHelp || params.size() < 2 || params.size() > 3))
+    if (pwalletMain->IsCrypted() && (fHelp || params.size() < 1 || params.size() > 2))
         throw runtime_error(
-            "walletpassphrase \"passphrase\" timeout ( anonymizeonly )\n"
+            "walletpassphrase \"passphrase\" timeout \n"
             "\nStores the wallet decryption key in memory for 'timeout' seconds.\n"
             "This is needed prior to performing transactions related to private keys such as sending crowns\n"
             "\nArguments:\n"
             "1. \"passphrase\"     (string, required) The wallet passphrase\n"
             "2. timeout            (numeric, required) The time to keep the decryption key in seconds.\n"
-            "3. anonymizeonly      (boolean, optional, default=flase) If is true sending functions are disabled."
             "\nNote:\n"
             "Issuing the walletpassphrase command while the wallet is already unlocked will set a new unlock\n"
             "time that overrides the old one.\n"
             "\nExamples:\n"
             "\nUnlock the wallet for 60 seconds\n"
             + HelpExampleCli("walletpassphrase", "\"my pass phrase\" 60") +
-            "\nUnlock the wallet for 60 seconds but allow Darksend mixing only\n"
-            + HelpExampleCli("walletpassphrase", "\"my pass phrase\" 60 true") +
             "\nLock the wallet again (before 60 seconds)\n"
             + HelpExampleCli("walletlock", "") +
             "\nAs json rpc call\n"
@@ -1753,8 +1750,6 @@ Value walletpassphrase(const Array& params, bool fHelp)
     strWalletPass = params[0].get_str().c_str();
 
     bool anonymizeOnly = false;
-    if (params.size() == 3)
-        anonymizeOnly = params[2].get_bool();
 
     if (!pwalletMain->IsLocked() && pwalletMain->fWalletUnlockAnonymizeOnly && anonymizeOnly)
         throw JSONRPCError(RPC_WALLET_ALREADY_UNLOCKED, "Error: Wallet is already unlocked.");
