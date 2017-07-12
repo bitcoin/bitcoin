@@ -84,4 +84,11 @@ struct CNodeStateStats {
 /** Get statistics from node state */
 bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
 
+/**
+ * Prioritize a block for downloading
+ * Blocks requested with priority will be downloaded and processed first
+ * Downloaded blocks will not trigger ActivateBestChain
+ */
+void AddPriorityDownload(const std::vector<const CBlockIndex*>& blocksToDownload);
+
 #endif // BITCOIN_NET_PROCESSING_H
