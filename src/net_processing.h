@@ -97,4 +97,11 @@ bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
 /** Increase a node's misbehavior score. */
 void Misbehaving(NodeId nodeid, int howmuch, const std::string& message="");
 
+/**
+ * Prioritize a block for downloading
+ * Blocks requested with priority will be downloaded and processed first
+ * Downloaded blocks will not trigger ActivateBestChain
+ */
+void AddPriorityDownload(const std::vector<const CBlockIndex*>& blocksToDownload);
+
 #endif // BITCOIN_NET_PROCESSING_H
