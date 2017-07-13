@@ -238,9 +238,17 @@ UniValue CallRPC(const std::string& strMethod, const UniValue& params)
 
     // check if we should use a special wallet endpoint
     std::string endpoint = "/";
-    if (GetArg("-usewallet", "") != "") {
+    std::string walletName = GetArg("-usewallet", "");
+    if (walletName != "") {
         // always use v1 endpoint if -usewallet has been provided
-        endpoint = "/v1/wallet/"+GetArg("-usewallet", "");
+        char *encodedURI = evhttp_uriencode(walletName.c_str(), walletName.size(), false);
+        if (encodedURI) {
+            endpoint = "/v1/wallet/"+ std::string(encodedURI);
+            free(encodedURI);
+        }
+        else {
+            throw CConnectionFailed("uri-encode failed");
+        }
     }
     int r = evhttp_make_request(evcon.get(), req.get(), EVHTTP_REQ_POST, endpoint.c_str());
     req.release(); // ownership moved to evcon in above call
