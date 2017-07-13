@@ -466,8 +466,8 @@ void CRequestManager::SendRequests()
         txReqRetryInterval *= (12 * 2);
     }
 
-    // Get Blocks if we are not in the middle of a re-org
-    while (sendBlkIter != mapBlkInfo.end() && !PV->IsReorgInProgress())
+    // Get Blocks
+    while (sendBlkIter != mapBlkInfo.end())
     {
         now = GetTimeMicros();
         OdMap::iterator itemIter = sendBlkIter;

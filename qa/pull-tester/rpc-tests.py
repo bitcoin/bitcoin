@@ -365,7 +365,8 @@ def runtests():
                     if additional_opt not in double_opts:
                         continue
 
-            if fullscriptcmd not in execution_time.keys():
+            #if fullscriptcmd not in execution_time.keys():
+            if 1:
                 if t in testScripts:
                     print("Running testscript %s%s%s ..." % (bold[1], t, bold[0]))
                 else:

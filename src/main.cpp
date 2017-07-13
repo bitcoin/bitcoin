@@ -2382,7 +2382,7 @@ bool ConnectBlock(const CBlock &block,
     bool fScriptChecks = true;
     if (pindexBestHeader)
         fScriptChecks = !fCheckpointsEnabled || block.nTime > timeBarrier ||
-                        pindex->nHeight > pindexBestHeader->nHeight - (144 * checkScriptDays.value);
+                        pindex->nHeight > (int)(pindexBestHeader->nHeight - (144 * checkScriptDays.value));
 
     int64_t nTime1 = GetTimeMicros();
     nTimeCheck += nTime1 - nTimeStart;
@@ -3517,6 +3517,24 @@ bool ActivateBestChain(CValidationState &state, const CChainParams &chainparams,
                 }
             }
 
+            // If there is a reorg happening then we can not activate this chain *unless* it
+            // has more work that the currently processing reorg chain.  In that case we must terminate the reorg
+            // extend this chain instead.
+            if (PV && PV->IsReorgInProgress())
+            {
+                // find out if this block and chain are more work than the chain
+                // being reorg'd to.  If not then just return.  If so then kill the reorg and
+                // start connecting this chain.
+                if (pindexMostWork->nChainWork > PV->MaxWorkChainBeingProcessed())
+                {
+                    // kill all validating threads except our own.
+                    boost::thread::id this_id(boost::this_thread::get_id());
+                    PV->StopAllValidationThreads(this_id);
+                }
+                else
+                    return true;
+            }
+
             if (!ActivateBestChainStep(state, chainparams, pindexMostWork,
                     pblock && pblock->GetHash() == pindexMostWork->GetBlockHash() ? pblock : NULL, fParallel))
                 return false;
@@ -3529,8 +3547,6 @@ bool ActivateBestChain(CValidationState &state, const CChainParams &chainparams,
         // Relay Inventory
         if (pindexFork != pindexNewTip)
         {
-            // BU move to activatebestchainstep  uiInterface.NotifyBlockTip(fInitialDownload, pindexNewTip);
-
             if (!IsInitialBlockDownload())
             {
                 // Find the hashes of all blocks that weren't previously in the best chain.
@@ -3565,11 +3581,6 @@ bool ActivateBestChain(CValidationState &state, const CChainParams &chainparams,
                         }
                     }
                 }
-                // BU: commented out and added in ActivateBestChainStep to support PV
-                // Notify external listeners about the new tip.
-                // if (!vHashes.empty()) {
-                // GetMainSignals().UpdatedBlockTip(pindexNewTip);
-                //}
             }
         }
     } while (pindexMostWork > chainActive.Tip());
@@ -6425,6 +6436,7 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
                     return error("invalid header received");
                 }
             }
+            PV->UpdateMostWorkOurFork(header);
         }
 
         if (pindexLast)

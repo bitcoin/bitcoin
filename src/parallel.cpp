@@ -96,9 +96,8 @@ bool CParallelValidation::Initialize(const boost::thread::id this_id, const CBlo
         }
 
         // Check whether a thread is aleady validating this very same block.  It can happen at times when a block
-        // arrives
-        // while a previous blocks is still validating or just finishing it's validation and grabs the next block to
-        // validate.
+        // arrives while a previous blocks is still validating or just finishing it's validation and grabs the next
+        // block to validate.
         map<boost::thread::id, CParallelValidation::CHandleBlockMsgThreads>::iterator iter =
             mapBlockValidationThreads.begin();
         while (iter != mapBlockValidationThreads.end())
@@ -251,7 +250,8 @@ void CParallelValidation::StopAllValidationThreads(const uint32_t nChainWork)
         // Kill any threads that have less than or equal to our own chain work we are working on.  We use
         // this method when we're mining our own block.  In that event we want to give priority to our own
         // block rather than any competing block or chain.
-        if (((*mi).first != this_id) && (*mi).second.nChainWork <= nChainWork)
+        if (((*mi).first != this_id) && (*mi).second.nChainWork <= nChainWork &&
+            (*mi).second.nMostWorkOurFork <= nChainWork)
         {
             if ((*mi).second.pScriptQueue != NULL)
                 (*mi).second.pScriptQueue->Quit(); // quit any active script queue threads
@@ -283,12 +283,15 @@ void CParallelValidation::InitThread(const boost::thread::id this_id,
     const CBlock &block,
     const CInv &inv)
 {
+    const CBlockHeader &header = block.GetBlockHeader();
+
     LOCK(cs_blockvalidationthread);
     assert(mapBlockValidationThreads.count(this_id) == 0); // this id should not already be in use
     mapBlockValidationThreads[this_id].pScriptQueue = NULL;
     mapBlockValidationThreads[this_id].hash = inv.hash;
-    mapBlockValidationThreads[this_id].hashPrevBlock = block.GetBlockHeader().hashPrevBlock;
-    mapBlockValidationThreads[this_id].nChainWork = block.GetBlockHeader().nBits;
+    mapBlockValidationThreads[this_id].hashPrevBlock = header.hashPrevBlock;
+    mapBlockValidationThreads[this_id].nChainWork = header.nBits;
+    mapBlockValidationThreads[this_id].nMostWorkOurFork = header.nBits;
     mapBlockValidationThreads[this_id].nSequenceId = INT_MAX;
     mapBlockValidationThreads[this_id].nStartTime = GetTimeMillis();
     mapBlockValidationThreads[this_id].nBlockSize = ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION);
@@ -370,6 +373,33 @@ bool CParallelValidation::IsReorgInProgress()
         mi++;
     }
     return false;
+}
+
+void CParallelValidation::UpdateMostWorkOurFork(const CBlockHeader &header)
+{
+    LOCK(cs_blockvalidationthread);
+    map<boost::thread::id, CHandleBlockMsgThreads>::iterator mi = mapBlockValidationThreads.begin();
+    while (mi != mapBlockValidationThreads.end())
+    {
+        // check if this new header connects to this block and if so then update the nMostWorkOurFork
+        if ((*mi).second.hash == header.hashPrevBlock && (*mi).second.nMostWorkOurFork < header.nBits)
+            (*mi).second.nMostWorkOurFork = header.nBits;
+        mi++;
+    }
+}
+
+uint32_t CParallelValidation::MaxWorkChainBeingProcessed()
+{
+    uint32_t nMaxWork = 0;
+    LOCK(cs_blockvalidationthread);
+    map<boost::thread::id, CHandleBlockMsgThreads>::iterator mi = mapBlockValidationThreads.begin();
+    while (mi != mapBlockValidationThreads.end())
+    {
+        if ((*mi).second.nChainWork > nMaxWork)
+            nMaxWork = (*mi).second.nChainWork;
+        mi++;
+    }
+    return nMaxWork;
 }
 
 void CParallelValidation::ClearOrphanCache(const CBlock &block)
