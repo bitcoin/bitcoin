@@ -9,15 +9,27 @@ from test_framework.util import *
 
 def read_dump(file_name):
     nLines = 0
+    sJson = ''
+    isJson = False
     with open(file_name, encoding='utf8') as inputfile:
         for line in inputfile:
             # only read non comment lines
-            if line[0] == "#" or len(line) <= 10:
+            
+            if line.startswith('# --- Begin JSON --- '):
+                isJson = True
+            elif line.startswith('# --- End JSON --- '):
+                isJson = False
+            if line[0] == "#":
                 continue
-            print("line", line)
-            nLines+=1
+            #print("line", line)
+            
+            if isJson:
+                sJson += line
+            elif len(line) > 10:
+                nLines+=1
+            
     
-    return nLines
+    return sJson, nLines
 
 
 class WalletParticlTest(ParticlTestFramework):
@@ -38,9 +50,11 @@ class WalletParticlTest(ParticlTestFramework):
         
         # Wallet must initially contain no keys at all
         nodes[0].dumpwallet(tmpdir + "/node0/wallet.unencrypted.dump")
-        nLines = read_dump(tmpdir + "/node0/wallet.unencrypted.dump")
+        sJson, nLines = read_dump(tmpdir + "/node0/wallet.unencrypted.dump")
         assert(nLines == 0)
-        
+        o = json.loads(sJson)
+        assert(len(o['loose_extkeys']) == 0)
+        assert(len(o['accounts']) == 0)
         
         # Try get a new address without a master key:
         try:
@@ -220,8 +234,11 @@ class WalletParticlTest(ParticlTestFramework):
         
         # test encrypting empty wallet
         nodes[1].dumpwallet(tmpdir + "/node1/wallet.unencrypted.dump")
-        nLines = read_dump(tmpdir + "/node1/wallet.unencrypted.dump")
+        sJson, nLines = read_dump(tmpdir + "/node1/wallet.unencrypted.dump")
         assert(nLines == 0)
+        o = json.loads(sJson)
+        assert(len(o['loose_extkeys']) == 0)
+        assert(len(o['accounts']) == 0)
         
         ro = nodes[1].encryptwallet('qwerty234')
         assert('wallet encrypted' in ro)

@@ -4681,7 +4681,6 @@ int CHDWallet::ExtKeyEncryptAll(CHDWalletDB *pwdb, const CKeyingMaterial &vMKey)
     std::string strType;
 
     size_t nKeys = 0;
-    size_t nAccounts = 0;
 
     uint32_t fFlags = DB_SET_RANGE;
     ssKey << std::string("ek32");
@@ -4718,7 +4717,7 @@ int CHDWallet::ExtKeyEncryptAll(CHDWalletDB *pwdb, const CKeyingMaterial &vMKey)
     pcursor->close();
 
     if (fDebug)
-        LogPrint("hdwallet", "%s : Encrypted %u keys.\n", __func__, nKeys, nAccounts);
+        LogPrint("hdwallet", "%s : Encrypted %u keys.\n", __func__, nKeys);
 
     return 0;
 };
