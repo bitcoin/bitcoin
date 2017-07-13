@@ -206,14 +206,27 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
 
         if(!fIsValid) {
             if(fMasternodeMissing) {
-                mapMasternodeOrphanObjects.insert(std::make_pair(nHash, object_time_pair_t(govobj, GetAdjustedTime() + GOVERNANCE_ORPHAN_EXPIRATION_TIME)));
+
+                int& count = mapMasternodeOrphanCounter[govobj.GetMasternodeVin().prevout];
+                if (count >= 10) {
+                    LogPrint("gobject", "MNGOVERNANCEOBJECT -- Too many orphan objects, missing masternode=%s\n", govobj.GetMasternodeVin().prevout.ToStringShort());
+                    // ask for this object again in 2 minutes
+                    CInv inv(MSG_GOVERNANCE_OBJECT, govobj.GetHash());
+                    pfrom->AskFor(inv);
+                    return;
+                }
+
+                count++;
+                ExpirationInfo info(pfrom->GetId(), GetAdjustedTime() + GOVERNANCE_ORPHAN_EXPIRATION_TIME);
+                mapMasternodeOrphanObjects.insert(std::make_pair(nHash, object_info_pair_t(govobj, info)));
                 LogPrintf("MNGOVERNANCEOBJECT -- Missing masternode for: %s, strError = %s\n", strHash, strError);
             } else if(fMissingConfirmations) {
                 AddPostponedObject(govobj);
                 LogPrintf("MNGOVERNANCEOBJECT -- Not enough fee confirmations for: %s, strError = %s\n", strHash, strError);
             } else {
                 LogPrintf("MNGOVERNANCEOBJECT -- Governance object is invalid - %s\n", strError);
-                // TODO: apply node's ban score if object is invalid
+                // apply node's ban score
+                Misbehaving(pfrom->GetId(), 20);
             }
 
             return;
@@ -1023,31 +1036,32 @@ void CGovernanceManager::CheckMasternodeOrphanObjects()
     LOCK2(cs_main, cs);
     int64_t nNow = GetAdjustedTime();
     CRateChecksGuard guard(false, *this);
-    object_time_m_it it = mapMasternodeOrphanObjects.begin();
+    object_info_m_it it = mapMasternodeOrphanObjects.begin();
     while(it != mapMasternodeOrphanObjects.end()) {
-        object_time_pair_t& pair = it->second;
+        object_info_pair_t& pair = it->second;
         CGovernanceObject& govobj = pair.first;
 
-        if(pair.second < nNow) {
-            mapMasternodeOrphanObjects.erase(it++);
-            continue;
-        }
+        if(pair.second.nExpirationTime >= nNow) {
+            string strError;
+            bool fMasternodeMissing = false;
+            bool fConfirmationsMissing = false;
+            bool fIsValid = govobj.IsValidLocally(strError, fMasternodeMissing, fConfirmationsMissing, true);
 
-        string strError;
-        bool fMasternodeMissing = false;
-        bool fConfirmationsMissing = false;
-        bool fIsValid = govobj.IsValidLocally(strError, fMasternodeMissing, fConfirmationsMissing, true);
-        if(!fIsValid) {
-            if(!fMasternodeMissing) {
-                mapMasternodeOrphanObjects.erase(it++);
-            }
-            else {
+            if(fIsValid) {
+                AddGovernanceObject(govobj);
+            } else if(fMasternodeMissing) {
                 ++it;
+                continue;
             }
-            continue;
+        } else {
+            // apply node's ban score
+            Misbehaving(pair.second.idFrom, 20);
         }
 
-        AddGovernanceObject(govobj);
+        auto it_count = mapMasternodeOrphanCounter.find(govobj.GetMasternodeVin().prevout);
+        if(--it_count->second == 0)
+            mapMasternodeOrphanCounter.erase(it_count);
+
         mapMasternodeOrphanObjects.erase(it++);
     }
 }

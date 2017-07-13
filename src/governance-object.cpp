@@ -427,6 +427,7 @@ std::string CGovernanceObject::GetDataAsString()
 
 void CGovernanceObject::UpdateLocalValidity()
 {
+    LOCK(cs_main);
     // THIS DOES NOT CHECK COLLATERAL, THIS IS CHECKED UPON ORIGINAL ARRIVAL
     fCachedLocalValidity = IsValidLocally(strLocalValidityError, false);
 };
@@ -469,8 +470,17 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingMast
             std::string strOutpoint = vinMasternode.prevout.ToStringShort();
             masternode_info_t infoMn = mnodeman.GetMasternodeInfo(vinMasternode);
             if(!infoMn.fInfoValid) {
-                fMissingMasternode = true;
-                strError = "Masternode not found: " + strOutpoint;
+
+                CMasternode::CollateralStatus err = CMasternode::CheckCollateral(GetMasternodeVin());
+                if (err == CMasternode::COLLATERAL_OK) {
+                    fMissingMasternode = true;
+                    strError = "Masternode not found: " + strOutpoint;
+                } else if (err == CMasternode::COLLATERAL_UTXO_NOT_FOUND) {
+                    strError = "Failed to find Masternode UTXO, missing masternode=" + GetMasternodeVin().prevout.ToStringShort() + "\n";
+                } else if (err == CMasternode::COLLATERAL_INVALID_AMOUNT) {
+                    strError = "Masternode UTXO should have 1000 DASH, missing masternode=" + GetMasternodeVin().prevout.ToStringShort() + "\n";
+                }
+
                 return false;
             }
 
@@ -579,7 +589,7 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
 
     // GET CONFIRMATIONS FOR TRANSACTION
 
-    LOCK(cs_main);
+    AssertLockHeld(cs_main);
     int nConfirmationsIn = GetIXConfirmations(nCollateralHash);
     if (nBlockHash != uint256()) {
         BlockMap::iterator mi = mapBlockIndex.find(nBlockHash);

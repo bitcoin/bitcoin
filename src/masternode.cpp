@@ -161,6 +161,31 @@ arith_uint256 CMasternode::CalculateScore(const uint256& blockHash)
     return (hash3 > hash2 ? hash3 - hash2 : hash2 - hash3);
 }
 
+CMasternode::CollateralStatus CMasternode::CheckCollateral(CTxIn vin)
+{
+    int nHeight;
+    return CheckCollateral(vin, nHeight);
+}
+
+CMasternode::CollateralStatus CMasternode::CheckCollateral(CTxIn vin, int& nHeight)
+{
+    AssertLockHeld(cs_main);
+
+    CCoins coins;
+    if(!pcoinsTip->GetCoins(vin.prevout.hash, coins) ||
+       (unsigned int)vin.prevout.n>=coins.vout.size() ||
+       coins.vout[vin.prevout.n].IsNull()) {
+        return COLLATERAL_UTXO_NOT_FOUND;
+    }
+
+    if(coins.vout[vin.prevout.n].nValue != 1000 * COIN) {
+        return COLLATERAL_INVALID_AMOUNT;
+    }
+
+    nHeight = coins.nHeight;
+    return COLLATERAL_OK;
+}
+
 void CMasternode::Check(bool fForce)
 {
     LOCK(cs);
@@ -180,10 +205,8 @@ void CMasternode::Check(bool fForce)
         TRY_LOCK(cs_main, lockMain);
         if(!lockMain) return;
 
-        CCoins coins;
-        if(!pcoinsTip->GetCoins(vin.prevout.hash, coins) ||
-           (unsigned int)vin.prevout.n>=coins.vout.size() ||
-           coins.vout[vin.prevout.n].IsNull()) {
+        CollateralStatus err = CheckCollateral(vin);
+        if (err == COLLATERAL_UTXO_NOT_FOUND) {
             nActiveState = MASTERNODE_OUTPOINT_SPENT;
             LogPrint("masternode", "CMasternode::Check -- Failed to find Masternode UTXO, masternode=%s\n", vin.prevout.ToStringShort());
             return;
@@ -632,18 +655,19 @@ bool CMasternodeBroadcast::CheckOutpoint(int& nDos)
             return false;
         }
 
-        CCoins coins;
-        if(!pcoinsTip->GetCoins(vin.prevout.hash, coins) ||
-           (unsigned int)vin.prevout.n>=coins.vout.size() ||
-           coins.vout[vin.prevout.n].IsNull()) {
+        int nHeight;
+        CollateralStatus err = CheckCollateral(vin, nHeight);
+        if (err == COLLATERAL_UTXO_NOT_FOUND) {
             LogPrint("masternode", "CMasternodeBroadcast::CheckOutpoint -- Failed to find Masternode UTXO, masternode=%s\n", vin.prevout.ToStringShort());
             return false;
         }
-        if(coins.vout[vin.prevout.n].nValue != 1000 * COIN) {
+
+        if (err == COLLATERAL_INVALID_AMOUNT) {
             LogPrint("masternode", "CMasternodeBroadcast::CheckOutpoint -- Masternode UTXO should have 1000 DASH, masternode=%s\n", vin.prevout.ToStringShort());
             return false;
         }
-        if(chainActive.Height() - coins.nHeight + 1 < Params().GetConsensus().nMasternodeMinimumConfirmations) {
+
+        if(chainActive.Height() - nHeight + 1 < Params().GetConsensus().nMasternodeMinimumConfirmations) {
             LogPrintf("CMasternodeBroadcast::CheckOutpoint -- Masternode UTXO must have at least %d confirmations, masternode=%s\n",
                     Params().GetConsensus().nMasternodeMinimumConfirmations, vin.prevout.ToStringShort());
             // maybe we miss few blocks, let this mnb to be checked again later

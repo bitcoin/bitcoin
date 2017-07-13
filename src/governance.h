@@ -26,7 +26,14 @@ class CGovernanceVote;
 
 extern CGovernanceManager governance;
 
-typedef std::pair<CGovernanceObject, int64_t> object_time_pair_t;
+struct ExpirationInfo {
+    ExpirationInfo(int64_t _nExpirationTime, int _idFrom) : nExpirationTime(_nExpirationTime), idFrom(_idFrom) {}
+
+    int64_t nExpirationTime;
+    NodeId idFrom;
+};
+
+typedef std::pair<CGovernanceObject, ExpirationInfo> object_info_pair_t;
 
 static const int RATE_BUFFER_SIZE = 5;
 
@@ -197,17 +204,19 @@ public: // Types
 
     typedef txout_m_t::const_iterator txout_m_cit;
 
+    typedef std::map<COutPoint, int> txout_int_m_t;
+
     typedef std::set<uint256> hash_s_t;
 
     typedef hash_s_t::iterator hash_s_it;
 
     typedef hash_s_t::const_iterator hash_s_cit;
 
-    typedef std::map<uint256, object_time_pair_t> object_time_m_t;
+    typedef std::map<uint256, object_info_pair_t> object_info_m_t;
 
-    typedef object_time_m_t::iterator object_time_m_it;
+    typedef object_info_m_t::iterator object_info_m_it;
 
-    typedef object_time_m_t::const_iterator object_time_m_cit;
+    typedef object_info_m_t::const_iterator object_info_m_cit;
 
     typedef std::map<uint256, int64_t> hash_time_m_t;
 
@@ -237,7 +246,8 @@ private:
     //   value - expiration time for deleted objects
     hash_time_m_t mapErasedGovernanceObjects;
 
-    object_time_m_t mapMasternodeOrphanObjects;
+    object_info_m_t mapMasternodeOrphanObjects;
+    txout_int_m_t mapMasternodeOrphanCounter;
 
     object_m_t mapPostponedObjects;
     hash_s_t setAdditionalRelayObjects;
