@@ -55,7 +55,7 @@ static const unsigned int MAX_INV_SZ = 50000;
 static const unsigned int MAX_ADDR_TO_SEND = 1000;
 /** Maximum length of incoming protocol messages (no message over 4 MB is currently acceptable). */
 static const unsigned int MAX_PROTOCOL_MESSAGE_LENGTH = 4 * 1000 * 1000;
-/** Maximum length of strSubVer in `version` message */
+/** Maximum length of subversion in `version` message */
 static const unsigned int MAX_SUBVERSION_LENGTH = 256;
 /** Maximum number of automatic outgoing nodes */
 static const int MAX_OUTBOUND_CONNECTIONS = 8;
@@ -595,12 +595,11 @@ public:
     // Bind address of our side of the connection
     const CAddress addrBind;
     std::atomic<int> nVersion;
-    // strSubVer is whatever byte array we read from the wire. However, this field is intended
-    // to be printed out, displayed to humans in various forms and so on. So we sanitize it and
-    // store the sanitized version in cleanSubVer. The original should be used when dealing with
-    // the network or wire types and the cleaned string used when displayed or logged.
-    std::string strSubVer, cleanSubVer;
-    CCriticalSection cs_SubVer; // used for both cleanSubVer and strSubVer
+    // The subversion is intended to be printed out, displayed to humans in
+    // various forms and so on. So we sanitize it and store the sanitized
+    // version in cleanSubVer. Additional escaping is done when logging.
+    std::string cleanSubVer;
+    CCriticalSection cs_SubVer; // used for cleanSubVer
     bool fWhitelisted; // This peer can bypass DoS banning.
     bool fFeeler; // If true this node is being used as a short lived feeler.
     bool fOneShot;

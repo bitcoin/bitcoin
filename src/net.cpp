@@ -2718,7 +2718,6 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
     nTimeOffset = 0;
     addrName = addrNameIn == "" ? addr.ToStringIPPort() : addrNameIn;
     nVersion = 0;
-    strSubVer = "";
     fWhitelisted = false;
     fOneShot = false;
     fAddnode = false;
