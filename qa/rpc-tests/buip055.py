@@ -248,7 +248,15 @@ class BUIP055Test (BitcoinTestFramework):
 
         # TEST REQ-3: that a <= 1 MB block is rejected by the fork nodes
         # the rejection happens for the first block whose nTime is
-        self.nodes[3].generate(15)
+
+        # If I generate lots of blocks at once, via generate(15) it is possible that
+        # the small block fork nodes will disconnect from the large block nodes before
+        # fully syncing because they get the invalid fork block.
+        # This won't happen in mainnet because blocks aren't solved instantly and because
+        # other fork nodes will relay the blocks.
+        for i in range(0,15):
+          self.nodes[3].generate(1)
+          time.sleep(2)
 
         sync_blocks(self.nodes[2:])
         sync_blocks(self.nodes[0:2])
