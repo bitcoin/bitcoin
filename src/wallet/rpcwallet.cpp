@@ -9,6 +9,7 @@
 #include "consensus/validation.h"
 #include "core_io.h"
 #include "init.h"
+#include "httpserver.h"
 #include "validation.h"
 #include "net.h"
 #include "policy/feerate.h"
@@ -30,10 +31,29 @@
 
 #include <univalue.h>
 
+static const std::string WALLET_ENDPOINT_BASE = "/v1/wallet/";
+
 CWallet *GetWalletForJSONRPCRequest(const JSONRPCRequest& request)
 {
-    // TODO: Some way to access secondary wallets
-    return vpwallets.empty() ? nullptr : vpwallets[0];
+    if (request.URI.substr(0, WALLET_ENDPOINT_BASE.size()) == WALLET_ENDPOINT_BASE) {
+        // wallet endpoint was used
+        std::string requestedWallet = urlDecode(request.URI.substr(WALLET_ENDPOINT_BASE.size()));
+        for (CWalletRef pwallet : vpwallets) {
+            if (pwallet->GetName() == requestedWallet) {
+                return pwallet;
+            }
+        }
+        // no wallet found with the given endpoint
+        throw JSONRPCError(RPC_WALLET_NOT_FOUND, "Wallet file does not exist or is not loaded");
+    }
+    else {
+        if (vpwallets.size() > 1 && !request.fHelp) {
+            // don't allow to use a default wallet in multiwallet
+            return nullptr;
+        }
+        // default endpoint, use first wallet if possible
+        return vpwallets.empty() ? nullptr : vpwallets[0];
+    }
 }
 
 std::string HelpRequiringPassphrase(CWallet * const pwallet)
