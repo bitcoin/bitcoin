@@ -75,6 +75,9 @@ static const bool DEFAULT_STOPAFTERBLOCKIMPORT = false;
 std::unique_ptr<CConnman> g_connman;
 std::unique_ptr<PeerLogicValidation> peerLogic;
 
+/** Set at startup if the data directory was succesfully locked */
+bool g_locked_data_directory = false;
+
 #if ENABLE_ZMQ
 static CZMQNotificationInterface* pzmqNotificationInterface = NULL;
 #endif
@@ -158,6 +161,11 @@ static std::unique_ptr<ECCVerifyHandle> globalVerifyHandle;
 
 void Interrupt(boost::thread_group& threadGroup)
 {
+    if (!g_locked_data_directory) {
+        // If we never succeeded in locking the data directory, do not interrupt anything.
+        // Nothing will have been started anyway.
+        return;
+    }
     InterruptHTTPServer();
     InterruptHTTPRPC();
     InterruptRPC();
@@ -170,6 +178,11 @@ void Interrupt(boost::thread_group& threadGroup)
 
 void Shutdown()
 {
+    if (!g_locked_data_directory) {
+        // If we never succeeded in locking the data directory, do not clean up anything.
+        // This avoids deleting RPC cookies of the running instance and worse.
+        return;
+    }
     LogPrintf("%s: In progress...\n", __func__);
     static CCriticalSection cs_Shutdown;
     TRY_LOCK(cs_Shutdown, lockShutdown);
@@ -1184,6 +1197,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         // Detailed error printed inside LockDataDirectory
         return false;
     }
+    g_locked_data_directory = true;
 
 #ifndef WIN32
     CreatePidFile(GetPidFile(), getpid());
