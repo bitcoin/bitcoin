@@ -24,13 +24,16 @@ static const std::string SAFE_CHARS[] =
     CHARS_ALPHA_NUM + "!*'();:@&=+$,/?#[]-_.~%", // SAFE_CHARS_URI
 };
 
-std::string SanitizeString(const std::string& str, int rule)
+std::string SanitizeString(const std::string& str, int rule, bool escape)
 {
     std::string strResult;
     for (std::string::size_type i = 0; i < str.size(); i++)
     {
-        if (SAFE_CHARS[rule].find(str[i]) != std::string::npos)
+        if (SAFE_CHARS[rule].find(str[i]) != std::string::npos || (str[i] == '%' && escape)) {
             strResult.push_back(str[i]);
+        } else if (escape) {
+            strResult += strprintf("%%%02X", str[i]);
+        }
     }
     return strResult;
 }

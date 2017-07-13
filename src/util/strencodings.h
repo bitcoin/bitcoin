@@ -33,7 +33,7 @@ enum SafeChars
 * @param[in] rule   The set of safe chars to choose (default: least restrictive)
 * @return           A new string without unsafe chars
 */
-std::string SanitizeString(const std::string& str, int rule = SAFE_CHARS_DEFAULT);
+std::string SanitizeString(const std::string& str, int rule = SAFE_CHARS_DEFAULT, bool escape = false);
 std::vector<unsigned char> ParseHex(const char* psz);
 std::vector<unsigned char> ParseHex(const std::string& str);
 signed char HexDigit(char c);
