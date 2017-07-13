@@ -591,8 +591,9 @@ class SendHeadersTest(BitcoinTestFramework):
         [ test_node.send_message(msg_block(x)) for x in blocks ]
 
         print("Part 5: Testing handling of unconnecting headers")
-        # First we test that receipt of a single unconnecting header doesn't cause an immediate ban.
-        # Do this two times only which will give a DOS misbeviour of 40.
+        # Test1: We test that receipt of a single unconnecting header doesn't cause a problem
+        #        Send an out of order header.  Then send both headers in the correct order.
+        # Result: Block chain updates correctly.
         for i in range(2):
             test_node.last_getdata = []
             blocks = []
@@ -621,8 +622,40 @@ class SendHeadersTest(BitcoinTestFramework):
             # Block chain should have updated correctly and all blocks connected
             assert_equal(int(self.nodes[0].getbestblockhash(), 16), blocks[1].sha256)
 
+        # Test2: We test that receipt of a single unconnecting header doesn't cause a problem
+        #        Send an out of order header.  Then send the first header.
+        # Result: Block chain updates correctly.
+        for i in range(2):
+            test_node.last_getdata = []
+            blocks = []
+            # Create two more blocks.
+            for j in range(2):
+                blocks.append(create_block(tip, create_coinbase(height), block_time))
+                blocks[-1].solve()
+                tip = blocks[-1].sha256
+                block_time += 1
+                height += 1
 
-        # Check that multiple unconnecting headers don't cause any issues.
+            # Send the header of the second block -> this won't connect.
+            test_node.send_header_for_blocks([blocks[1]])
+            test_node.sync_with_ping()
+            assert_not_equal(int(self.nodes[0].getbestblockhash(), 16), blocks[1].sha256)
+
+            # Now send the first header only
+            test_node.send_header_for_blocks([blocks[0]])
+            test_node.sync_with_ping()
+
+            # Wait for getdata and send blocks
+            test_node.wait_for_getdata([x.sha256 for x in blocks], timeout=5)
+            [ test_node.send_message(msg_block(x)) for x in blocks ]
+            test_node.sync_with_ping()
+
+            # Block chain should have updated correctly and all blocks connected
+            assert_equal(int(self.nodes[0].getbestblockhash(), 16), blocks[1].sha256)
+
+        # Test3: We test that receipt of a multiple unconnecting header doesn't cause a problem
+        #        Send several out of order headers.  Then send ALL the missing headers in order.
+        # Result: Block chain updates correctly.
         for i in range(2):
             test_node.last_getdata = []
             blocks = []
@@ -646,14 +679,14 @@ class SendHeadersTest(BitcoinTestFramework):
             if i == 1:
                 blocks_reverse.append(blocks[0])
                 blocks_reverse.append(blocks[1])
-                blocks_reverse.append(blocks[3])
                 blocks_reverse.append(blocks[2])
                 blocks_reverse.append(blocks[4])
+                blocks_reverse.append(blocks[3])
 
-            # Send the header of the second block -> this won't connect.
+            # Send the header of the second block out of order-> this won't connect.
             test_node.send_header_for_blocks(blocks_reverse)
             test_node.sync_with_ping()
-            assert_not_equal(int(self.nodes[0].getbestblockhash(), 16), blocks[1].sha256)
+            assert_not_equal(int(self.nodes[0].getbestblockhash(), 16), blocks[4].sha256)
 
             # Now send them in the right order
             test_node.send_header_for_blocks(blocks)
@@ -667,6 +700,139 @@ class SendHeadersTest(BitcoinTestFramework):
             # Block chain should have updated correctly and all blocks connected
             assert_equal(int(self.nodes[0].getbestblockhash(), 16), blocks[4].sha256)
 
+        # Test4: We test that receipt of a multiple unconnecting header doesn't cause a problem
+        #        Send several out of order headers.  Then send only the missing header.
+        # Result: Block chain updates correctly.
+        for i in range(1):
+            test_node.last_getdata = []
+            blocks = []
+            # Create two more blocks.
+            for j in range(5):
+                blocks.append(create_block(tip, create_coinbase(height), block_time))
+                blocks[-1].solve()
+                tip = blocks[-1].sha256
+                block_time += 1
+                height += 1
+
+            # Reverse order of one of the blocks
+            blocks_reverse = []
+            if i == 0:
+                blocks_reverse.append(blocks[1])
+                blocks_reverse.append(blocks[0])
+                blocks_reverse.append(blocks[2])
+                blocks_reverse.append(blocks[3])
+                blocks_reverse.append(blocks[4])
+
+            # Send the header of the second block -> this won't connect.
+            test_node.send_header_for_blocks(blocks_reverse)
+            test_node.sync_with_ping()
+            assert_not_equal(int(self.nodes[0].getbestblockhash(), 16), blocks[1].sha256)
+
+            # Now send them in the right order
+            test_node.send_header_for_blocks([blocks[0]])
+            test_node.sync_with_ping()
+
+            # Wait for getdata and send blocks
+            test_node.wait_for_getdata([x.sha256 for x in blocks], timeout=5)
+            [ test_node.send_message(msg_block(x)) for x in blocks ]
+            test_node.sync_with_ping()
+
+            # Block chain should have updated correctly and all blocks connected
+            assert_equal(int(self.nodes[0].getbestblockhash(), 16), blocks[4].sha256)
+
+        # Test5: test that old unconnected headers will get deleted from the cache
+        #        1) Send and unconnecting header.
+        #        Advance the time beyond the timeout.
+        #        Send the first header.
+        #        Result:  both headers should connect.
+        #        2) Send an unconnecting header that is at height 3.
+        #        Advance the time beyond the timeout.
+        #        Send a second unconnecting header at height 2.
+        #        Send the first header.
+        #        Result: The first two headers should connected with the 3rd having been deleted and the
+        #                chain will have only the first two blocks connected.
+        for i in range(2):
+            test_node.last_getdata = []
+            blocks = []
+            # Create two more blocks.
+            for j in range(2):
+                blocks.append(create_block(tip, create_coinbase(height), block_time))
+                blocks[-1].solve()
+                tip = blocks[-1].sha256
+                block_time += 1
+                height += 1
+
+            # Send the header of the second block -> this won't connect.
+            test_node.send_header_for_blocks([blocks[1]])
+            test_node.sync_with_ping()
+            assert_not_equal(int(self.nodes[0].getbestblockhash(), 16), blocks[1].sha256)
+
+            cur_time = int(time.time())
+            self.nodes[0].setmocktime(cur_time + 120)
+            self.nodes[1].setmocktime(cur_time + 120)
+
+            # Now send them in the right order
+            test_node.send_header_for_blocks([blocks[0]])
+            test_node.sync_with_ping()
+
+            # Wait for getdata and send blocks
+            test_node.wait_for_getdata([x.sha256 for x in blocks], timeout=5)
+            [ test_node.send_message(msg_block(x)) for x in blocks ]
+            test_node.sync_with_ping()
+
+            # Block chain should have updated correctly and all blocks connected
+            assert_equal(int(self.nodes[0].getbestblockhash(), 16), blocks[1].sha256)
+
+        for i in range(2):
+            test_node.last_getdata = []
+            blocks = []
+            # Create two more blocks.
+            for j in range(3):
+                blocks.append(create_block(tip, create_coinbase(height), block_time))
+                blocks[-1].solve()
+                tip = blocks[-1].sha256
+                block_time += 1
+                height += 1
+
+            self.nodes[0].setmocktime(block_time)
+            self.nodes[1].setmocktime(block_time)
+
+            # Send the header of the third block -> this won't connect.
+            test_node.send_header_for_blocks([blocks[2]])
+            test_node.sync_with_ping()
+            assert_not_equal(int(self.nodes[0].getbestblockhash(), 16), blocks[2].sha256)
+
+            #setting time to 120 seconds in the future will cause the unconnecting header to be deleted
+            self.nodes[0].setmocktime(block_time + 120)
+            self.nodes[1].setmocktime(block_time + 120)
+
+            # Send the header of the second block -> this won't connect.
+            test_node.send_header_for_blocks([blocks[1]])
+            test_node.sync_with_ping()
+            assert_not_equal(int(self.nodes[0].getbestblockhash(), 16), blocks[1].sha256)
+
+            # Now send the first header
+            test_node.send_header_for_blocks([blocks[0]])
+            test_node.sync_with_ping()
+
+            # Wait for getdata and send blocks
+            test_node.wait_for_getdata([x.sha256 for x in [blocks[0], blocks[1]]], timeout=5)
+            [ test_node.send_message(msg_block(x)) for x in [blocks[0], blocks[1]] ]
+            test_node.sync_with_ping()
+
+            # Block chain should have updated correctly and all blocks connected to the second block
+            assert_equal(int(self.nodes[0].getbestblockhash(), 16), blocks[1].sha256)
+
+            # Send the header of the third block again -> this will connect.
+            test_node.send_header_for_blocks([blocks[2]])
+            test_node.sync_with_ping()
+
+            # Wait for getdata and send blocks
+            test_node.wait_for_getdata([x.sha256 for x in [blocks[2]]], timeout=5)
+            [ test_node.send_message(msg_block(x)) for x in [blocks[2]] ]
+            test_node.sync_with_ping()
+
+            assert_equal(int(self.nodes[0].getbestblockhash(), 16), blocks[2].sha256)
 
         # Send one more out of order header which should not cause any problems
         test_node.last_getdata = []

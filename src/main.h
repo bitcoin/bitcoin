@@ -119,6 +119,10 @@ static const int64_t BLOCK_DOWNLOAD_TIMEOUT_BASE = 1000000;
 static const int64_t BLOCK_DOWNLOAD_TIMEOUT_PER_PEER = 500000;
 /** Timeout in secs for the initial sync. If we don't receive the first batch of headers */
 static const uint32_t INITIAL_HEADERS_TIMEOUT = 30;
+/** The maximum number of headers in the mapUnconnectedHeaders cache **/
+static const uint32_t MAX_UNCONNECTED_HEADERS = 144;
+/** The maximum length of time, in seconds, we keep unconnected headers in the cache **/
+static const uint32_t UNCONNECTED_HEADERS_TIMEOUT = 120;
 
 static const unsigned int DEFAULT_LIMITFREERELAY = 15;
 static const bool DEFAULT_RELAYPRIORITY = true;
