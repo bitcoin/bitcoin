@@ -14,11 +14,17 @@
 #include "base58.h"
 #include "crypto/sha256.h"
 
+#ifdef ENABLE_WALLET
+#include "wallet/hdwallet.h"
+#endif
+
 #include <boost/filesystem/operations.hpp>
 #include <atomic>
 #include <stdint.h>
 #include <thread>
 #include <condition_variable>
+
+
 
 std::atomic<bool> fStopMinerProc;
 

@@ -573,6 +573,7 @@ public:
     void MarkConflicted(const uint256 &hashBlock, const uint256 &hashTx);
     void SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator>);
     
+    bool SetReserveBalance(CAmount nNewReserveBalance);
     uint64_t GetStakeWeight() const;
     void AvailableCoinsForStaking(std::vector<COutput> &vCoins, int64_t nTime, int nHeight) const;
     bool SelectCoinsForStaking(int64_t nTargetValue, int64_t nTime, int nHeight, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet) const;

@@ -312,6 +312,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CHDWallet
     if (rtx.nFlags & ORF_BLIND_IN)
         sub.typeIn = 'B';
     
+    sub.involvesWatchAddress = false;
     parts.append(sub);
     //parts.append(TransactionRecord(hash, nTime, TransactionRecord::Other, "", nNet, 0));
     

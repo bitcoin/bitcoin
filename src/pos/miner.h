@@ -5,9 +5,10 @@
 #ifndef POS_MINER_H
 #define POS_MINER_H
 
-#include "wallet/hdwallet.h"
-
+#include "primitives/block.h"
 #include <thread>
+
+class CHDWallet;
 
 extern std::thread threadStakeMiner;
 

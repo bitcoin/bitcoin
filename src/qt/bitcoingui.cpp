@@ -382,7 +382,7 @@ void BitcoinGUI::createActions()
     showHelpMessageAction->setMenuRole(QAction::NoRole);
     showHelpMessageAction->setStatusTip(tr("Show the %1 help message to get a list with possible Particl command-line options").arg(tr(PACKAGE_NAME)));
     
-    mnemonicAction = new QAction(platformStyle->TextColorIcon(":/icons/info"), tr("&Mnemonic seed..."), this);
+    mnemonicAction = new QAction(platformStyle->TextColorIcon(":/icons/info"), tr("&HD Wallet..."), this);
     mnemonicAction->setMenuRole(QAction::NoRole);
 
     connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));

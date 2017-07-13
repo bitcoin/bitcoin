@@ -142,7 +142,7 @@ bool VerifyMLSAG(const CTransaction &tx, CValidationState &state)
                 if (fDebug)
                     LogPrint("rct", "%s: Duplicate keyimage detected in txn %s.\n", __func__,
                         HexStr(ki.begin(), ki.end()));
-                return state.DoS(100, false, REJECT_MALFORMED, "bad-anonin-dup-ki");
+                return state.DoS(100, false, REJECT_INVALID, "bad-anonin-dup-ki");
             };
             
             if (mempool.HaveKeyImage(ki, txhashKI)

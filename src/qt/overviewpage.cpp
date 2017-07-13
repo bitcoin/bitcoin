@@ -196,6 +196,18 @@ void OverviewPage::setBalance(const CAmount& balance, const CAmount& staked,
     ui->labelWatchImmature->setVisible(showWatchOnlyImmature); // show watch-only immature balance
 }
 
+void OverviewPage::setReservedBalance(CAmount reservedBalance)
+{
+    if (!walletModel || !walletModel->getOptionsModel())
+        return;
+    
+    int unit = walletModel->getOptionsModel()->getDisplayUnit();
+    currentReservedBalance = reservedBalance;
+    ui->labelReservedText->setVisible(reservedBalance);
+    ui->labelReserved->setVisible(reservedBalance);
+    ui->labelReserved->setText(BitcoinUnits::formatWithUnit(unit, reservedBalance, false, BitcoinUnits::separatorAlways));
+};
+
 // show/hide watch-only labels
 void OverviewPage::updateWatchOnlyLabels(bool showWatchOnly)
 {
@@ -241,6 +253,9 @@ void OverviewPage::setWalletModel(WalletModel *model)
         // Keep up to date with wallet
         connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(setBalance(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)));
         model->checkBalanceChanged();
+        
+        connect(walletModel->getOptionsModel(), SIGNAL(reserveBalanceChanged(CAmount)), this, SLOT(setReservedBalance(CAmount)));
+        setReservedBalance(model->getReserveBalance());
 
         connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
 
@@ -257,9 +272,12 @@ void OverviewPage::updateDisplayUnit()
     if(walletModel && walletModel->getOptionsModel())
     {
         if(currentBalance != -1)
+        {
             setBalance(currentBalance, currentStaked, currentBlindBalance, currentAnonBalance, currentUnconfirmedBalance, currentImmatureBalance,
                        currentWatchOnlyBalance, currentWatchUnconfBalance, currentWatchImmatureBalance);
-
+            setReservedBalance(currentReservedBalance);
+        };
+        
         // Update txdelegate->unit with the current unit
         txdelegate->unit = walletModel->getOptionsModel()->getDisplayUnit();
 

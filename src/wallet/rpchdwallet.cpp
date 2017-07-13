@@ -2184,12 +2184,12 @@ UniValue reservebalance(const JSONRPCRequest &request)
             nAmount = (nAmount / CENT) * CENT;  // round to cent
             if (nAmount < 0)
                 throw std::runtime_error("amount cannot be negative.\n");
-            pwallet->nReserveBalance = nAmount;
+            pwallet->SetReserveBalance(nAmount);
         } else
         {
             if (request.params.size() > 1)
                 throw std::runtime_error("cannot specify amount to turn off reserve.\n");
-            pwallet->nReserveBalance = 0;
+            pwallet->SetReserveBalance(0);
         };
         WakeThreadStakeMiner();
     };

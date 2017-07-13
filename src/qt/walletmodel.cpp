@@ -11,6 +11,7 @@
 #include "paymentserver.h"
 #include "recentrequeststablemodel.h"
 #include "transactiontablemodel.h"
+#include "optionsmodel.h"
 
 #include "base58.h"
 #include "keystore.h"
@@ -53,7 +54,10 @@ WalletModel::WalletModel(const PlatformStyle *platformStyle, CWallet *_wallet, O
     
     cachedBlindBalance = 0;
     cachedAnonBalance = 0;
-
+    
+    
+    connect(getOptionsModel(), SIGNAL(reserveBalanceChanged(CAmount)), this, SLOT(reserveBalanceChanged(CAmount)));
+    
     subscribeToCoreSignals();
 }
 
@@ -141,6 +145,13 @@ void WalletModel::pollBalanceChanged()
             transactionTableModel->updateConfirmations();
     }
 }
+
+void WalletModel::reserveBalanceChanged(CAmount nReserveBalanceNew)
+{
+    CHDWallet *phdw = getParticlWallet();
+    if (phdw)
+        phdw->SetReserveBalance(nReserveBalanceNew);
+};
 
 void WalletModel::checkBalanceChanged()
 {
@@ -566,7 +577,8 @@ WalletModel::UnlockContext WalletModel::requestUnlock()
     }
     // If wallet is still locked, unlock was failed or cancelled, mark context as invalid
     //bool valid = getEncryptionStatus() != Locked;
-    bool valid = getEncryptionStatus() == Unlocked;
+    EncryptionStatus newStatus = getEncryptionStatus();
+    bool valid = newStatus == Unlocked || newStatus == Unencrypted;
 
     return UnlockContext(this, valid, was_locked);
 }
@@ -756,5 +768,13 @@ CHDWallet *WalletModel::getParticlWallet()
     if (!wallet || !(rv = dynamic_cast<CHDWallet*>(wallet)))
         throw std::runtime_error("wallet is not an instance of class CHDWallet.");
     return rv;
+};
+
+CAmount WalletModel::getReserveBalance()
+{
+    CHDWallet *rv;
+    if (!wallet || !(rv = dynamic_cast<CHDWallet*>(wallet)))
+        return 0;
+    return rv->nReserveBalance;
 };
 

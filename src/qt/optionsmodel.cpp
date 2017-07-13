@@ -7,6 +7,7 @@
 #endif
 
 #include "optionsmodel.h"
+#include "utilmoneystr.h"
 
 #include "bitcoinunits.h"
 #include "guiutil.h"
@@ -147,8 +148,14 @@ void OptionsModel::Init(bool resetSettings)
         settings.setValue("language", "");
     if (!SoftSetArg("-lang", settings.value("language").toString().toStdString()))
         addOverriddenOption("-lang");
-
     language = settings.value("language").toString();
+    
+    // Reserve Balance
+    if (!settings.contains("reservebalance"))
+        settings.setValue("reservebalance", "0");
+    if (!SoftSetArg("-reservebalance", FormatMoney(settings.value("reservebalance").toLongLong())))
+        addOverriddenOption("-reservebalance");
+    nReserveBalance = settings.value("reservebalance").toLongLong();
 }
 
 void OptionsModel::Reset()
@@ -247,6 +254,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return settings.value("nThreadsScriptVerif");
         case Listen:
             return settings.value("fListen");
+        case ReserveBalance:
+            return settings.value("reservebalance");
         default:
             return QVariant();
         }
@@ -269,7 +278,7 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
         case HideTrayIcon:
             fHideTrayIcon = value.toBool();
             settings.setValue("fHideTrayIcon", fHideTrayIcon);
-    		Q_EMIT hideTrayIconChanged(fHideTrayIcon);
+            Q_EMIT hideTrayIconChanged(fHideTrayIcon);
             break;
         case MinimizeToTray:
             fMinimizeToTray = value.toBool();
@@ -370,6 +379,13 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             if (settings.value("language") != value) {
                 settings.setValue("language", value);
                 setRestartRequired(true);
+            }
+            break;
+        case ReserveBalance:
+            if (settings.value("reservebalance") != value) {
+                settings.setValue("reservebalance", value);
+                //setRestartRequired(true);
+                Q_EMIT reserveBalanceChanged(value.toLongLong());
             }
             break;
         case CoinControlFeatures:

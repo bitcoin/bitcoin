@@ -8991,6 +8991,15 @@ void CHDWallet::SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator> r
     }
 }
 
+bool CHDWallet::SetReserveBalance(CAmount nNewReserveBalance)
+{
+    LogPrintf("SetReserveBalance %d\n", nReserveBalance);
+    LOCK(cs_wallet);
+    
+    nReserveBalance = nNewReserveBalance;
+    return true;
+};
+
 uint64_t CHDWallet::GetStakeWeight() const
 {
     // Choose coins to use

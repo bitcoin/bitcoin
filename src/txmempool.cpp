@@ -868,7 +868,33 @@ void CTxMemPool::removeConflicts(const CTransaction &tx)
     LOCK(cs);
     for (const auto &txin : tx.vin) {
         if (txin.IsAnonInput())
+        {
+            uint32_t nInputs, nRingSize;
+            txin.GetAnonInfo(nInputs, nRingSize);
+            
+            const std::vector<uint8_t> &vKeyImages = txin.scriptData.stack[0];
+            for (size_t k = 0; k < nInputs; ++k)
+            {
+                const CCmpPubKey &ki = *((CCmpPubKey*)&vKeyImages[k*33]);
+                uint256 txhashKI;
+                if (HaveKeyImage(ki, txhashKI))
+                {
+                    txiter origit = mapTx.find(txhashKI);
+                    
+                    if (origit != mapTx.end())
+                    {
+                        const CTransaction& txConflict = origit->GetTx();
+                        if (txConflict != tx)
+                        {
+                            if (fDebug) LogPrint("rct", "Clearing conflicting anon tx from mempool, removed:%s, tx:%s\n", txhashKI.ToString(), tx.GetHash().ToString());
+                            ClearPrioritisation(txConflict.GetHash());
+                            removeRecursive(txConflict, MemPoolRemovalReason::CONFLICT);
+                        };
+                    };
+                };
+            };
             continue;
+        };
         auto it = mapNextTx.find(txin.prevout);
         if (it != mapNextTx.end()) {
             const CTransaction &txConflict = *it->second;
