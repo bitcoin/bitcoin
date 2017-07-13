@@ -374,16 +374,9 @@ CNode* FindNode(const std::string& addrName)
 CNode* FindNode(const CService& addr)
 {
     LOCK(cs_vNodes);
-    BOOST_FOREACH(CNode* pnode, vNodes){
-        if(Params().NetworkIDString() == CBaseChainParams::REGTEST){
-            //if using regtest, just check the IP
-            if((CNetAddr)pnode->addr == (CNetAddr)addr)
-                return (pnode);
-        } else {
-            if((CService)pnode->addr == addr)
-                return (pnode);
-        }
-    }
+    BOOST_FOREACH(CNode* pnode, vNodes)
+        if((CService)pnode->addr == addr)
+            return (pnode);
     return NULL;
 }
 
