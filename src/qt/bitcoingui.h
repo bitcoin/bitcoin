@@ -211,6 +211,10 @@ private Q_SLOTS:
 
     /** Show open dialog */
     void openClicked();
+    
+    /** Manage lock state */
+    void toggleLockState();
+    
 #endif // ENABLE_WALLET
     /** Show configuration dialog */
     void optionsClicked();
@@ -224,6 +228,7 @@ private Q_SLOTS:
     void showHelpMessageClicked();
     /** Show mnemonic dialog */
     void showMnemonicClicked();
+    
 #ifndef Q_OS_MAC
     /** Handle tray icon clicked */
     void trayIconActivated(QSystemTrayIcon::ActivationReason reason);
@@ -245,9 +250,6 @@ private Q_SLOTS:
 
     /** Toggle networking */
     void toggleNetworkActive();
-
-    /** Manage lock state */
-    void toggleLockState();
 
     void showModalOverlay();
 };

@@ -58,11 +58,18 @@ Notes:
 #include "support/allocators/secure.h"
 
 #include "base58.h"
-#include "wallet/wallet.h"
 #include "sync.h"
 #include "random.h"
 #include "chain.h"
 #include "netmessagemaker.h"
+
+#ifdef ENABLE_WALLET
+#include "wallet/wallet.h"
+#endif
+
+#include "utilstrencodings.h"
+#include "clientversion.h"
+
 
 #include "lz4/lz4.c"
 
@@ -932,6 +939,7 @@ int SecureMsgAddWalletAddresses()
     if (fDebugSmsg)
         LogPrintf("SecureMsgAddWalletAddresses()\n");
     
+#ifdef ENABLE_WALLET
     if (!pwalletSmsg)
         return errorN(1, "No wallet.");
 
@@ -951,17 +959,11 @@ int SecureMsgAddWalletAddresses()
 
         // TODO: skip addresses for stealth transactions
 
-        CBitcoinAddress coinAddress(entry.first);
-        if (!coinAddress.IsValid())
-            continue;
-
         CKeyID keyID;
-        if (!coinAddress.GetKeyID(keyID))
+        CBitcoinAddress coinAddress(entry.first);
+        if (!coinAddress.IsValid()
+            || !coinAddress.GetKeyID(keyID))
             continue;
-
-        //std::string address;
-        //std::string strPublicKey;
-        //address = coinAddress.ToString();
 
         bool fExists = 0;
         for (std::vector<SecMsgAddress>::iterator it = smsgAddresses.begin(); it != smsgAddresses.end(); ++it)
@@ -984,7 +986,7 @@ int SecureMsgAddWalletAddresses()
 
     if (fDebugSmsg)
         LogPrintf("Added %u addresses to whitelist.\n", nAdded);
-
+#endif
     return 0;
 };
 
@@ -2282,6 +2284,7 @@ bool SecureMsgScanBuckets()
     if (fDebugSmsg)
         LogPrintf("SecureMsgScanBuckets()\n");
 
+#ifdef ENABLE_WALLET
     if (!fSecMsgEnabled
         || !pwalletSmsg
         || pwalletSmsg->IsLocked())
@@ -2421,13 +2424,14 @@ bool SecureMsgScanBuckets()
 
     LogPrintf("Processed %u files, scanned %u messages, received %u messages.\n", nFiles, nMessages, nFoundMessages);
     LogPrintf("Took %d ms\n", GetTimeMillis() - mStart);
-
+#endif
     return true;
 }
 
 
 int SecureMsgWalletUnlocked()
 {
+#ifdef ENABLE_WALLET
     /*
     When the wallet is unlocked, scan messages received while wallet was locked.
     */
@@ -2568,6 +2572,7 @@ int SecureMsgWalletUnlocked()
 
     // Notify gui
     NotifySecMsgWalletUnlocked();
+#endif
     return 0;
 };
 
@@ -2618,6 +2623,7 @@ int SecureMsgWalletKeyChanged(CKeyID &keyId, const std::string &sLabel, ChangeTy
 
 int SecureMsgScanMessage(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload, bool reportToGui)
 {
+#ifdef ENABLE_WALLET
     /*
     Check if message belongs to this node.
     If so add to inbox db.
@@ -2745,12 +2751,13 @@ int SecureMsgScanMessage(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload,
             boost::thread t(runCommand, strCmd); // thread runs free
         };
     };
-
+#endif
     return 0;
 };
 
 int SecureMsgGetLocalKey(CKeyID &ckid, CPubKey &cpkOut)
 {
+#ifdef ENABLE_WALLET
     if (fDebugSmsg)
         LogPrintf("SecureMsgGetLocalKey()\n");
     
@@ -2768,6 +2775,9 @@ int SecureMsgGetLocalKey(CKeyID &ckid, CPubKey &cpkOut)
     };
 
     return 0;
+#else
+    return 1;
+#endif
 };
 
 int SecureMsgGetLocalPublicKey(std::string &strAddress, std::string &strPublicKey)
@@ -3382,6 +3392,7 @@ int SecureMsgSetHash(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload)
 
 int SecureMsgEncrypt(SecureMessage &smsg, const CKeyID &addressFrom, const CKeyID &addressTo, const std::string &message)
 {
+#ifdef ENABLE_WALLET
     /* Create a secure message
 
     Using similar method to bitmessage.
@@ -3434,7 +3445,6 @@ int SecureMsgEncrypt(SecureMessage &smsg, const CKeyID &addressFrom, const CKeyI
         if (!coinAddrFrom.GetKeyID(ckidFrom))
             return errorN(4, "%s: coinAddrFrom.GetKeyID failed: %s.", __func__, coinAddrFrom.ToString().c_str());
     };
-
 
     CBitcoinAddress coinAddrDest;
     CKeyID ckidDest = addressTo;
@@ -3578,11 +3588,13 @@ int SecureMsgEncrypt(SecureMessage &smsg, const CKeyID &addressFrom, const CKeyI
     ctx.Write((uint8_t*) &vchCiphertext[0], vchCiphertext.size());
     ctx.Finalize(smsg.mac);
 
+#endif
     return 0;
 };
 
 int SecureMsgSend(CKeyID &addressFrom, CKeyID &addressTo, std::string &message, std::string &sError)
 {
+#ifdef ENABLE_WALLET
     /* Encrypt secure message, and place it on the network
         Make a copy of the message to sender's first address and place in send queue db
         proof of work thread will pick up messages from  send queue db
@@ -3746,12 +3758,14 @@ int SecureMsgSend(CKeyID &addressFrom, CKeyID &addressTo, std::string &message, 
     if (fDebugSmsg)
         LogPrintf("Secure message queued for sending to %s.\n", CBitcoinAddress(addressTo).ToString().c_str());
 
+#endif
     return 0;
 };
 
 
 int SecureMsgDecrypt(bool fTestOnly, CKeyID &address, uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload, MessageData &msg)
 {
+#ifdef ENABLE_WALLET
     /* Decrypt secure message
 
         address is the owned address to decrypt with.
@@ -3932,6 +3946,7 @@ int SecureMsgDecrypt(bool fTestOnly, CKeyID &address, uint8_t *pHeader, uint8_t 
     if (fDebugSmsg)
         LogPrintf("Decrypted message for %s.\n", CBitcoinAddress(address).ToString().c_str());
 
+#endif
     return 0;
 };
 

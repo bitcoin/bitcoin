@@ -272,10 +272,13 @@ bool AllAnonOutputsUnknown(const CTransaction &tx, CValidationState &state)
             } else
             {
                 // Already in the blockchain, containing block could have been received before loose tx
+                return false;
+                /*
                 return state.DoS(1, 
                     error("%s: Duplicate anon-output %s, index %d - existing at same outpoint.",
                         __func__, HexStr(txout->pk.begin(), txout->pk.end()), nTestExists),
                     REJECT_INVALID, "duplicate-anon-output");
+                */
             };
         };
     };

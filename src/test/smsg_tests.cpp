@@ -6,7 +6,10 @@
 
 #include "test/test_particl.h"
 #include "net.h"
+
+#ifdef ENABLE_WALLET
 #include "wallet/wallet.h"
+#endif
 
 #include <boost/test/unit_test.hpp>
 
@@ -22,6 +25,7 @@ BOOST_AUTO_TEST_CASE(smsg_test_ckeyId_inits_null)
 
 BOOST_AUTO_TEST_CASE(smsg_test)
 {
+#ifdef ENABLE_WALLET
     fParticlMode = true;
     g_connman = std::unique_ptr<CConnman>(new CConnman(GetRand(std::numeric_limits<uint64_t>::max()), GetRand(std::numeric_limits<uint64_t>::max())));
     
@@ -92,6 +96,7 @@ BOOST_AUTO_TEST_CASE(smsg_test)
     
     CConnman *p = g_connman.release();
     delete p;
+#endif
 }
 
 BOOST_AUTO_TEST_SUITE_END()
