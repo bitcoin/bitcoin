@@ -8,6 +8,7 @@
 
 sudo: required
 dist: trusty
+group: deprecated-2017Q3
 
 os: linux
 language: generic
