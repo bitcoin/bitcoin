@@ -5,8 +5,9 @@
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
-from test_framework.mininode import NetworkThread
-from test_framework.blocktools import create_coinbase, create_block
+from test_framework.mininode import NetworkThread, CTransaction, FromHex
+from test_framework.blocktools import create_coinbase, create_block, create_transaction
+from test_framework.script import *
 import time
 
 '''
@@ -174,10 +175,38 @@ class BIP91Test(BitcoinTestFramework):
         self.generate_blocks(1, 0x60000002)
         self.generate_blocks(1, 4)
 
-    def generate_blocks(self, number, version, error = None):
+        # Test 7
+        # Test hard fork at block 1583
+        b = [self.nodes[0].getblockhash(n) for n in range(1, 10)]
+        txids = [self.nodes[0].getblock(h)['tx'][0] for h in b]
+        spend_txs = [FromHex(CTransaction(), self.nodes[0].getrawtransaction(txid)) for txid in txids]
+        for tx in spend_txs:
+            tx.rehash()
+
+        self.generate_blocks(998, 4)
+
+        tx0 = self.create_tx(spend_txs[0], 0, 1, length=500000)
+        tx1 = self.create_tx(spend_txs[1], 0, 1, length=500000)
+        self.generate_blocks(1, 4, "bad-blk-length", txs=[tx0, tx1]) # block too large
+        self.generate_blocks(1, 4, txs=[tx0]) # large txs is ok
+
+        assert_equal(self.height, 1583)
+
+        self.generate_blocks(1, 4, "bad-blk-length-toosmall") # block too small
+
+        tx2 = self.create_tx(spend_txs[2], 0, 1, length=500000)
+        tx3 = self.create_tx(spend_txs[3], 0, 1, length=500000)
+        self.generate_blocks(1, 4, txs=[tx1, tx2, tx3]) # mined large block
+
+        assert_equal(self.height, 1584)
+
+    def generate_blocks(self, number, version, error = None, txs = []):
         for i in range(number):
             block = create_block(self.tip, create_coinbase(self.height), self.last_block_time + 1)
             block.nVersion = version
+            if len(txs) > 0:
+                block.vtx.extend(txs)
+                block.hashMerkleRoot = block.calc_merkle_root()
             block.rehash()
             block.solve()
             assert_equal(self.nodes[0].submitblock(bytes_to_hex_str(block.serialize())), error)
@@ -189,6 +218,15 @@ class BIP91Test(BitcoinTestFramework):
     def get_bip9_status(self, key):
         info = self.nodes[0].getblockchaininfo()
         return info['bip9_softforks'][key]
+
+    def create_tx(self, spend_tx, n, value, script=CScript([OP_TRUE]), length=0):
+        tx = create_transaction(spend_tx, n, b"", value, script)
+        if length > 0:
+            script_length = length
+            script_output = CScript([b'\x00' * script_length])
+            tx.vout.append(CTxOut(0, script_output))
+            tx.rehash()
+        return tx
 
 
 if __name__ == '__main__':
