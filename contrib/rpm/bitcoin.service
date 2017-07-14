@@ -1,0 +1,20 @@
+[Unit]
+Description=Bitcoin daemon
+After=syslog.target network.target
+
+[Service]
+Type=forking
+ExecStart=/usr/sbin/bitcoind -daemon -conf=${CONFIG_FILE} -datadir=${DATA_DIR} -pid=${PID_FILE} $OPTIONS
+EnvironmentFile=/etc/sysconfig/bitcoin
+User=bitcoin
+Group=bitcoin
+
+Restart=on-failure
+PrivateTmp=true
+TimeoutStopSec=120
+TimeoutStartSec=60
+StartLimitInterval=240
+StartLimitBurst=5
+
+[Install]
+WantedBy=multi-user.target

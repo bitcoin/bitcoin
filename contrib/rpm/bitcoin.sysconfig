@@ -1,0 +1,10 @@
+# Provide options to the bitcoin daemon here, for example
+# OPTIONS="-testnet -disable-wallet"
+
+OPTIONS=""
+
+# System service defaults.
+# Don't change these unless you know what you're doing.
+CONFIG_FILE="/etc/bitcoin/bitcoin.conf"
+DATA_DIR="/var/lib/bitcoin"
+PID_FILE="/run/bitcoind/bitcoind.pid"
