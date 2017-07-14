@@ -8,6 +8,8 @@
 
 #include <string.h>
 
+#include <atomic>
+
 // Internal implementation code.
 namespace
 {
@@ -131,8 +133,15 @@ void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks)
 }
 
 } // namespace sha256
+
+void (*Transform)(uint32_t*, const unsigned char*, size_t) = sha256::Transform;
+
 } // namespace
 
+std::string SHA256AutoDetect()
+{
+    return "standard";
+}
 
 ////// SHA-256
 
@@ -150,12 +159,12 @@ CSHA256& CSHA256::Write(const unsigned char* data, size_t len)
         memcpy(buf + bufsize, data, 64 - bufsize);
         bytes += 64 - bufsize;
         data += 64 - bufsize;
-        sha256::Transform(s, buf, 1);
+        Transform(s, buf, 1);
         bufsize = 0;
     }
     if (end - data >= 64) {
         size_t blocks = (end - data) / 64;
-        sha256::Transform(s, data, blocks);
+        Transform(s, data, blocks);
         data += 64 * blocks;
         bytes += 64 * blocks;
     }
