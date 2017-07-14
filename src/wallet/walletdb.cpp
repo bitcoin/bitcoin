@@ -747,7 +747,7 @@ DBErrors CWalletDB::ZapWalletTx(std::vector<CWalletTx>& vWtx)
 
 void MaybeCompactWalletDB()
 {
-    static std::atomic<bool> fOneThread;
+    static std::atomic<bool> fOneThread(false);
     if (fOneThread.exchange(true)) {
         return;
     }
