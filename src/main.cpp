@@ -1022,7 +1022,8 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 
         // Check for non-standard pay-to-script-hash in inputs
         if (Params().RequireStandard() && !AreInputsStandard(tx, view))
-            return error("AcceptToMemoryPool: nonstandard transaction input");
+            return state.Invalid(error("AcceptToMemoryPool: nonstandard transaction input"),
+                                  REJECT_NONSTANDARD, "bad-txns-nonstandard-inputs");
 
         // Check that the transaction doesn't have an excessive number of
         // sigops, making it impossible to mine. Since the coinbase transaction
@@ -1081,15 +1082,15 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         }
 
         if (fRejectAbsurdFee && nFees > ::minRelayTxFee.GetFee(nSize) * 10000)
-            return error("AcceptToMemoryPool: absurdly high fees %s, %d > %d",
+             return state.DoS(0, error("AcceptToMemoryPool: absurdly high fees %s, %d > %d",
                          hash.ToString(),
-                         nFees, ::minRelayTxFee.GetFee(nSize) * 10000);
+                         nFees, ::minRelayTxFee.GetFee(nSize) * 10000), REJECT_INSUFFICIENTFEE, "absurdly high fees");
 
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
         if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true))
         {
-            return error("AcceptToMemoryPool: ConnectInputs failed %s", hash.ToString());
+            return state.DoS(0, error("AcceptToMemoryPool: ConnectInputs failed %s", hash.ToString()), REJECT_INVALID, "ConnectInputs failed"); 
         }
 
         // Check again against just the consensus-critical mandatory script
@@ -1103,7 +1104,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         // can be exploited as a DoS attack.
         if (!CheckInputs(tx, state, view, true, MANDATORY_SCRIPT_VERIFY_FLAGS, true))
         {
-            return error("AcceptToMemoryPool: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags %s", hash.ToString());
+            return state.DoS(0, error("AcceptToMemoryPool: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags %s", hash.ToString()), REJECT_NONSTANDARD, "ConnectInputs failed against MANDATORY but not STANDARD flags");
         }
 
         // Store transaction in memory
