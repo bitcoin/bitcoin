@@ -87,7 +87,7 @@ const CWalletTx* CWallet::GetWalletTx(const uint256& hash) const
     return &(it->second);
 }
 
-CPubKey CWallet::GenerateNewKey(bool internal)
+CPubKey CWallet::GenerateNewKey(CWalletDB &walletdb, bool internal)
 {
     AssertLockHeld(cs_wallet); // mapKeyMetadata
     bool fCompressed = CanSupportFeature(FEATURE_COMPRPUBKEY); // default to compressed public keys if we want 0.6.0 wallets
@@ -100,7 +100,7 @@ CPubKey CWallet::GenerateNewKey(bool internal)
 
     // use HD key derivation if HD was enabled during wallet creation
     if (IsHDEnabled()) {
-        DeriveNewChildKey(metadata, secret, (CanSupportFeature(FEATURE_HD_SPLIT) ? internal : false));
+        DeriveNewChildKey(walletdb, metadata, secret, (CanSupportFeature(FEATURE_HD_SPLIT) ? internal : false));
     } else {
         secret.MakeNewKey(fCompressed);
     }
@@ -120,7 +120,7 @@ CPubKey CWallet::GenerateNewKey(bool internal)
     return pubkey;
 }
 
-void CWallet::DeriveNewChildKey(CKeyMetadata& metadata, CKey& secret, bool internal)
+void CWallet::DeriveNewChildKey(CWalletDB &walletdb, CKeyMetadata& metadata, CKey& secret, bool internal)
 {
     // for now we use a fixed keypath scheme of m/0'/0'/k
     CKey key;                      //master key seed (256bit)
@@ -162,7 +162,7 @@ void CWallet::DeriveNewChildKey(CKeyMetadata& metadata, CKey& secret, bool inter
     secret = childKey.key;
     metadata.hdMasterKeyID = hdChain.masterKeyID;
     // update the chain model in the database
-    if (!CWalletDB(*dbw).WriteHDChain(hdChain))
+    if (!walletdb.WriteHDChain(hdChain))
         throw std::runtime_error(std::string(__func__) + ": Writing HD chain model failed");
 }
 
@@ -3183,8 +3183,9 @@ bool CWallet::TopUpKeyPool(unsigned int kpSize)
                 nEnd = std::max(nEnd, *(setExternalKeyPool.rbegin()) + 1);
             }
 
-            if (!walletdb.WritePool(nEnd, CKeyPool(GenerateNewKey(internal), internal)))
+            if (!walletdb.WritePool(nEnd, CKeyPool(GenerateNewKey(walletdb, internal), internal))) {
                 throw std::runtime_error(std::string(__func__) + ": writing generated key failed");
+            }
 
             if (internal) {
                 setInternalKeyPool.insert(nEnd);
@@ -3266,7 +3267,8 @@ bool CWallet::GetKeyFromPool(CPubKey& result, bool internal)
         if (nIndex == -1)
         {
             if (IsLocked()) return false;
-            result = GenerateNewKey(internal);
+            CWalletDB walletdb(*dbw);
+            result = GenerateNewKey(walletdb, internal);
             return true;
         }
         KeepKey(nIndex);
