@@ -18,12 +18,13 @@ static inline bool BIP102active(bool fSegwitSeasoned)
 }
 
 static const unsigned int MAX_LEGACY_BLOCK_SIZE = (1 * 1000 * 1000);
+static const unsigned int MAX_BASE_BLOCK_SIZE = (2 * 1000 * 1000);
 inline unsigned int MaxBlockBaseSize(bool fSegwitSeasoned)
 {
     if (!BIP102active(fSegwitSeasoned))
         return MAX_LEGACY_BLOCK_SIZE;
 
-    return (2 * 1000 * 1000);
+    return MAX_BASE_BLOCK_SIZE;
 }
 
 inline unsigned int MaxBlockBaseSize()
@@ -69,7 +70,7 @@ static const unsigned int MIN_TRANSACTION_BASE_SIZE = 10;
 /** The maximum allowed size for a transaction, excluding witness data, in bytes */
 static const unsigned int MAX_TX_BASE_SIZE = 1000000;
 /** The maximum allowed number of transactions per block */
-static const unsigned int MAX_BLOCK_VTX = (MaxBlockBaseSize() / MIN_TRANSACTION_BASE_SIZE);
+static const unsigned int MAX_BLOCK_VTX = MAX_BASE_BLOCK_SIZE / MIN_TRANSACTION_BASE_SIZE;
 
 /** Coinbase transaction outputs can only be spent after this number of new blocks (network rule) */
 static const int COINBASE_MATURITY = 100;
