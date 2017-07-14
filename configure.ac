@@ -734,6 +734,26 @@ if test x$use_tests = xyes; then
     AC_MSG_ERROR(hexdump is required for tests)
   fi
 
+AC_ARG_WITH([gmp_include],
+            [AC_HELP_STRING([--with-gmp-include=DIR],
+                            [GMP include directory])],
+            [CPPFLAGS="-I$withval $CPPFLAGS"])
+AC_ARG_WITH([gmp_lib],
+            [AC_HELP_STRING([--with-gmp-lib=DIR],
+                            [GMP lib directory])],
+            [LDFLAGS="-L$withval $LDFLAGS"])
+AC_ARG_WITH([gmp],
+            [AC_HELP_STRING([--with-gmp=DIR],
+                           [GMP install directory])],
+            [
+            if test -z "$with_gmp_lib" -a -z "$with_gmp_include" ; then
+               CPPFLAGS="-I$withval/include $CPPFLAGS"
+               LDFLAGS="-L$withval/lib $LDFLAGS"
+            else
+               AC_MSG_FAILURE([Do not use --with-gmp and --with-gmp-include/--with-gmp-lib options simultaneously.])
+            fi
+            ])
+
 
   if test x$use_boost = xyes; then
 
@@ -926,6 +946,19 @@ else
     BITCOIN_QT_CHECK([AC_CHECK_HEADER([qrencode.h],, have_qrencode=no)])
   fi
 fi
+
+# Check GMP Header
+AC_MSG_CHECKING(for gmp.h)
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
+#include "gmp.h"
+]])],[AC_MSG_RESULT(yes)],[
+ AC_MSG_RESULT(no)
+ AC_MSG_ERROR([gmp.h cannot be found or is unusable.])
+])
+
+AC_CHECK_LIB([gmp], [__gmpz_init],
+             [LIBS="-lgmp -lgmpxx $LIBS"],
+             [AC_MSG_ERROR([libgmp not found or uses a different ABI.])])
 
 save_CXXFLAGS="${CXXFLAGS}"
 CXXFLAGS="${CXXFLAGS} ${CRYPTO_CFLAGS} ${SSL_CFLAGS}"
