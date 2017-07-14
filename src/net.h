@@ -886,4 +886,14 @@ std::vector<CNode*> CopyNodeVector();
 
 void ReleaseNodeVector(const std::vector<CNode*>& vecNodes);
 
+struct AddedNodeInfo
+{
+    std::string strAddedNode;
+    CService resolvedAddress;
+    bool fConnected;
+    bool fInbound;
+};
+
+std::vector<AddedNodeInfo> GetAddedNodeInfo();
+
 #endif // BITCOIN_NET_H
