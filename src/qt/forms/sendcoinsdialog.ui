@@ -1068,44 +1068,15 @@
                     <number>30</number>
                    </property>
                    <item>
-                    <widget class="QSlider" name="sliderSmartFee">
-                     <property name="minimum">
+                    <layout class="QHBoxLayout" name="horizontalLayoutConfTarget">
+                     <property name="bottomMargin">
                       <number>0</number>
                      </property>
-                     <property name="maximum">
-                      <number>23</number>
-                     </property>
-                     <property name="pageStep">
-                      <number>1</number>
-                     </property>
-                     <property name="value">
-                      <number>0</number>
-                     </property>
-                     <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
-                     </property>
-                     <property name="invertedAppearance">
-                      <bool>false</bool>
-                     </property>
-                     <property name="invertedControls">
-                      <bool>false</bool>
-                     </property>
-                     <property name="tickPosition">
-                      <enum>QSlider::NoTicks</enum>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <layout class="QHBoxLayout" name="horizontalLayoutFee10">
                      <item>
-                      <widget class="QLabel" name="labelSmartFeeNormal">
-                       <property name="text">
-                        <string>normal</string>
-                       </property>
-                      </widget>
+                      <widget class="QComboBox" name="confTargetSelector"/>
                      </item>
                      <item>
-                      <spacer name="horizontalSpacer_7">
+                      <spacer name="horizontalSpacerConfTarget">
                        <property name="orientation">
                         <enum>Qt::Horizontal</enum>
                        </property>
@@ -1116,33 +1087,6 @@
                         </size>
                        </property>
                       </spacer>
-                     </item>
-                     <item>
-                      <widget class="QLabel" name="confirmationTargetLabel">
-                       <property name="text">
-                        <string notr="true">(count)</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <spacer name="horizontalSpacer_3">
-                       <property name="orientation">
-                        <enum>Qt::Horizontal</enum>
-                       </property>
-                       <property name="sizeHint" stdset="0">
-                        <size>
-                         <width>40</width>
-                         <height>20</height>
-                        </size>
-                       </property>
-                      </spacer>
-                     </item>
-                     <item>
-                      <widget class="QLabel" name="labelSmartFeeFast">
-                       <property name="text">
-                        <string>fast</string>
-                       </property>
-                      </widget>
                      </item>
                     </layout>
                    </item>
