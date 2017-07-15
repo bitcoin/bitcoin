@@ -43,9 +43,6 @@ extern bool bSpendZeroConfChange;
 extern bool fWalletRbf;
 extern bool bBIP69Enabled;
 
-extern bool fLargeWorkForkFound;
-extern bool fLargeWorkInvalidChainFound;
-
 static const unsigned int DEFAULT_KEYPOOL_SIZE = 1000;
 //! -paytxfee default
 static const CAmount DEFAULT_TRANSACTION_FEE = 0;
