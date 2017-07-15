@@ -125,8 +125,9 @@ CPubKey CWallet::GenerateNewKey(CWalletDB &walletdb, bool internal)
     }
 
     // Compressed public keys were introduced in version 0.6.0
-    if (fCompressed)
+    if (fCompressed) {
         SetMinVersion(FEATURE_COMPRPUBKEY);
+    }
 
     CPubKey pubkey = secret.GetPubKey();
     assert(secret.VerifyPubKey(pubkey));
@@ -134,8 +135,9 @@ CPubKey CWallet::GenerateNewKey(CWalletDB &walletdb, bool internal)
     mapKeyMetadata[pubkey.GetID()] = metadata;
     UpdateTimeFirstKey(nCreationTime);
 
-    if (!AddKeyPubKey(secret, pubkey))
+    if (!AddKeyPubKeyWithDB(walletdb, secret, pubkey)) {
         throw std::runtime_error(std::string(__func__) + ": AddKey failed");
+    }
     return pubkey;
 }
 
@@ -185,27 +187,46 @@ void CWallet::DeriveNewChildKey(CWalletDB &walletdb, CKeyMetadata& metadata, CKe
         throw std::runtime_error(std::string(__func__) + ": Writing HD chain model failed");
 }
 
-bool CWallet::AddKeyPubKey(const CKey& secret, const CPubKey &pubkey)
+bool CWallet::AddKeyPubKeyWithDB(CWalletDB &walletdb, const CKey& secret, const CPubKey &pubkey)
 {
     AssertLockHeld(cs_wallet); // mapKeyMetadata
-    if (!CCryptoKeyStore::AddKeyPubKey(secret, pubkey))
+
+    // CCryptoKeyStore has no concept of wallet databases, but calls AddCryptedKey
+    // which is overridden below.  To avoid flushes, the database handle is
+    // tunneled through to it.
+    bool needsDB = !pwalletdbEncryption;
+    if (needsDB) {
+        pwalletdbEncryption = &walletdb;
+    }
+    if (!CCryptoKeyStore::AddKeyPubKey(secret, pubkey)) {
+        if (needsDB) pwalletdbEncryption = NULL;
         return false;
+    }
+    if (needsDB) pwalletdbEncryption = NULL;
 
     // check if we need to remove from watch-only
     CScript script;
     script = GetScriptForDestination(pubkey.GetID());
-    if (HaveWatchOnly(script))
+    if (HaveWatchOnly(script)) {
         RemoveWatchOnly(script);
+    }
     script = GetScriptForRawPubKey(pubkey);
-    if (HaveWatchOnly(script))
+    if (HaveWatchOnly(script)) {
         RemoveWatchOnly(script);
+    }
 
     if (!IsCrypted()) {
-        return CWalletDB(*dbw).WriteKey(pubkey,
+        return walletdb.WriteKey(pubkey,
                                                  secret.GetPrivKey(),
                                                  mapKeyMetadata[pubkey.GetID()]);
     }
     return true;
+}
+
+bool CWallet::AddKeyPubKey(const CKey& secret, const CPubKey &pubkey)
+{
+    CWalletDB walletdb(*dbw);
+    return CWallet::AddKeyPubKeyWithDB(walletdb, secret, pubkey);
 }
 
 bool CWallet::AddCryptedKey(const CPubKey &vchPubKey,
