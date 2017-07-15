@@ -1225,6 +1225,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     // sanitize comments per BIP-0014, format user agent and check total size
     std::vector<std::string> uacomments;
+    uacomments.push_back("2x");
     if (mapMultiArgs.count("-uacomment")) {
         BOOST_FOREACH(std::string cmt, mapMultiArgs.at("-uacomment"))
         {
