@@ -93,6 +93,14 @@ CScript COINBASE_FLAGS;
 
 const std::string strMessageMagic = "Bitcoin Signed Message:\n";
 
+/** if enable, blocks will not be requested automatically */
+static const bool DEFAULT_BLOCK_REQUESTS_PAUSED = false;
+std::atomic<bool> fPauseBlockRequests(DEFAULT_BLOCK_REQUESTS_PAUSED);
+
+/** if enable, ActiveBestChain will ignore/refuse to do tip updates */
+static const bool DEFAULT_TIP_UPDATE_PAUSED = false;
+std::atomic<bool> fPauseTipUpdates(DEFAULT_TIP_UPDATE_PAUSED);
+
 // Internal stuff
 namespace {
 
@@ -2413,6 +2421,12 @@ bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams,
     // us in the middle of ProcessNewBlock - do not assume pblock is set
     // sanely for performance or correctness!
 
+    if (isTipUpdatesPaused()) {
+        LogPrintf("%s: ignore ActivateBestChain, tip update are disabled\n", std::string(__func__));
+
+        // we will abort with a return value of true to not trigger error routines/shutdown
+        return true;
+    }
     CBlockIndex *pindexMostWork = NULL;
     CBlockIndex *pindexNewTip = NULL;
     int nStopAtHeight = GetArg("-stopatheight", DEFAULT_STOPATHEIGHT);
@@ -2449,9 +2463,18 @@ bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams,
             pindexFork = chainActive.FindFork(pindexOldTip);
             fInitialDownload = IsInitialBlockDownload();
 
+            bool requestPause = false;
             for (const PerBlockConnectTrace& trace : connectTrace.GetBlocksConnected()) {
                 assert(trace.pblock && trace.pindex);
-                GetMainSignals().BlockConnected(trace.pblock, trace.pindex, *trace.conflictedTxs);
+                GetMainSignals().BlockConnected(trace.pblock, trace.pindex, *trace.conflictedTxs, requestPause);
+                if (requestPause) {
+                    // in case we are in pruned mode, we have to halt verification and block requests
+                    // to ensure the signal listener can keep up with the updates
+                    if (fPruneMode) {
+                        setBlockRequestsPaused(true);
+                        setTipUpdatesPaused(true);
+                    }
+                }
             }
         }
         // When we reach this point, we switched to a new tip (stored in pindexNewTip).
@@ -2467,7 +2490,7 @@ bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams,
         }
 
         if (nStopAtHeight && pindexNewTip && pindexNewTip->nHeight >= nStopAtHeight) StartShutdown();
-    } while (pindexNewTip != pindexMostWork);
+    } while (pindexNewTip != pindexMostWork && !isTipUpdatesPaused());
     CheckBlockIndex(chainparams.GetConsensus());
 
     // Write changes periodically to disk, after relay.
@@ -4347,6 +4370,24 @@ void DumpMempool(void)
     } catch (const std::exception& e) {
         LogPrintf("Failed to dump mempool: %s. Continuing anyway.\n", e.what());
     }
+}
+
+bool isBlockRequestsPaused() {
+    return fPauseBlockRequests;
+}
+
+void setBlockRequestsPaused(bool state) {
+    LogPrintf("%s Block Requests\n", (state ? "Pause" : "Resume"));
+    fPauseBlockRequests = state;
+}
+
+bool isTipUpdatesPaused() {
+    return fPauseTipUpdates;
+}
+
+void setTipUpdatesPaused(bool state) {
+    LogPrintf("%s Tip Updates\n", (state ? "Pause" : "Resume"));
+    fPauseTipUpdates = state;
 }
 
 //! Guess how far we are in the verification process at the given block index

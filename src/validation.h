@@ -286,6 +286,20 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams);
 double GuessVerificationProgress(const ChainTxData& data, CBlockIndex* pindex);
 
 /**
+ * Pausing block requests will temporarily pause the verification process.
+ * Pausing won't prevent ActivateBestChain from connecting blocks (that are in flight or already on disk)
+ */
+bool isBlockRequestsPaused();
+void setBlockRequestsPaused(bool state);
+
+/**
+ * Pausing tip updates temporarily pauses connecting new blocks
+ * Pausing won't prevent the net logic from requesting more blocks for download (up to BLOCK_DOWNLOAD_WINDOW)
+ */
+bool isTipUpdatesPaused();
+void setTipUpdatesPaused(bool state);
+
+/**
  *  Mark one block file as pruned.
  */
 void PruneOneBlockFile(const int fileNumber);

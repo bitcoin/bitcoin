@@ -40,7 +40,7 @@ protected:
      * Notifies listeners of a block being connected.
      * Provides a vector of transactions evicted from the mempool as a result.
      */
-    virtual void BlockConnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex *pindex, const std::vector<CTransactionRef> &txnConflicted) {}
+    virtual void BlockConnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex *pindex, const std::vector<CTransactionRef> &txnConflicted, bool &requestPause) {}
     /** Notifies listeners of a block being disconnected */
     virtual void BlockDisconnected(const std::shared_ptr<const CBlock> &block) {}
     /** Notifies listeners of the new active block chain on-disk. */
@@ -84,7 +84,7 @@ public:
 
     void UpdatedBlockTip(const CBlockIndex *, const CBlockIndex *, bool fInitialDownload);
     void TransactionAddedToMempool(const CTransactionRef &);
-    void BlockConnected(const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex, const std::vector<CTransactionRef> &);
+    void BlockConnected(const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex, const std::vector<CTransactionRef> &, bool &);
     void BlockDisconnected(const std::shared_ptr<const CBlock> &);
     void UpdatedTransaction(const uint256 &);
     void SetBestChain(const CBlockLocator &);
