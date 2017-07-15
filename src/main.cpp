@@ -3425,7 +3425,7 @@ static bool ActivateBestChainStep(CValidationState &state,
 
     // Relay Inventory
     CBlockIndex *pindexNewTip = chainActive.Tip();
-    if (pindexFork != pindexNewTip )
+    if (pindexFork != pindexNewTip)
     {
         if (!IsInitialBlockDownload())
         {
@@ -3493,97 +3493,92 @@ bool ActivateBestChain(CValidationState &state, const CChainParams &chainparams,
 {
     CBlockIndex *pindexMostWork = NULL;
     LOCK(cs_main);
+
+    boost::this_thread::interruption_point();
+    if (ShutdownRequested())
+        return false;
+
+    CBlockIndex *pindexOldTip = chainActive.Tip();
+    pindexMostWork = FindMostWorkChain();
+
+    // This is needed for PV because FindMostWorkChain does not necessarily return the block with the lowest
+    // nSequenceId
+    if (fParallel)
     {
-        boost::this_thread::interruption_point();
-        if (ShutdownRequested())
-            return false;
-
+        std::set<CBlockIndex *, CBlockIndexWorkComparator>::reverse_iterator it = setBlockIndexCandidates.rbegin();
+        while (it != setBlockIndexCandidates.rend())
         {
-            CBlockIndex *pindexOldTip = chainActive.Tip();
-            pindexMostWork = FindMostWorkChain();
-
-            // This is needed for PV because FindMostWorkChain does not necessarily return the block with the lowest
-            // nSequenceId
-            if (fParallel)
-            {
-                std::set<CBlockIndex *, CBlockIndexWorkComparator>::reverse_iterator it =
-                    setBlockIndexCandidates.rbegin();
-                while (it != setBlockIndexCandidates.rend())
-                {
-                    if ((*it)->nChainWork == pindexMostWork->nChainWork)
-                        if ((*it)->nSequenceId < pindexMostWork->nSequenceId)
-                            pindexMostWork = *it;
-                    it++;
-                }
-            }
-
-            // Whether we have anything to do at all.
-            if (pindexMostWork == NULL)
-                return true;
-            else if (chainActive.Tip() != NULL)
-            {
-                if (pindexMostWork->nChainWork <= chainActive.Tip()->nChainWork)
-                    return true;
-            }
-
-            //** PARALLEL BLOCK VALIDATION
-            // Find the CBlockIndex of this block if this blocks previous hash matches the old chaintip.  In the
-            // case of parallel block validation we may have two or more blocks processing at the same time however
-            // their block headers may not represent what is considered the best block as returned by pindexMostWork.
-            // Therefore we must supply the blockindex of this block explicitly as being the one with potentially
-            // the most work and which will subsequently advance the chain tip if it wins the validation race.
-            if (pblock != NULL && pindexOldTip != NULL && chainActive.Tip() != chainActive.Genesis() && fParallel)
-            {
-                if (pblock->GetBlockHeader().hashPrevBlock == *pindexOldTip->phashBlock)
-                {
-                    BlockMap::iterator mi = mapBlockIndex.find(pblock->GetHash());
-                    if (mi == mapBlockIndex.end())
-                    {
-                        LogPrintf("Could not find block in mapBlockIndex: %s\n", pblock->GetHash().ToString());
-                        return false;
-                    }
-                    else
-                    {
-                        // Because we are potentially working with a block that is not the pindexMostWork as returned by
-                        // FindMostWorkChain() but rather are forcing it to point to this block we must check again if
-                        // this block has enough work to advance the tip.
-                        pindexMostWork = (*mi).second;
-                        if (pindexMostWork->nChainWork <= pindexOldTip->nChainWork)
-                        {
-                            return false;
-                        }
-                    }
-                }
-            }
-
-            // If there is a reorg happening then we can not activate this chain *unless* it
-            // has more work that the currently processing reorg chain.  In that case we must terminate the reorg
-            // extend this chain instead.
-            if (PV && PV->IsReorgInProgress())
-            {
-                // find out if this block and chain are more work than the chain
-                // being reorg'd to.  If not then just return.  If so then kill the reorg and
-                // start connecting this chain.
-                if (pindexMostWork->nChainWork > PV->MaxWorkChainBeingProcessed())
-                {
-                    // kill all validating threads except our own.
-                    boost::thread::id this_id(boost::this_thread::get_id());
-                    PV->StopAllValidationThreads(this_id);
-                }
-                else
-                    return true;
-            }
-
-            if (!ActivateBestChainStep(state, chainparams, pindexMostWork,
-                    pblock && pblock->GetHash() == pindexMostWork->GetBlockHash() ? pblock : NULL, fParallel))
-                return false;
+            if ((*it)->nChainWork == pindexMostWork->nChainWork)
+                if ((*it)->nSequenceId < pindexMostWork->nSequenceId)
+                    pindexMostWork = *it;
+            it++;
         }
-        // When we reach this point, we switched to a new tip (stored in pindexNewTip).
-
     }
+
+    // Whether we have anything to do at all.
+    if (pindexMostWork == NULL)
+        return true;
+    else if (chainActive.Tip() != NULL)
+    {
+        if (pindexMostWork->nChainWork <= chainActive.Tip()->nChainWork)
+            return true;
+    }
+
+    //** PARALLEL BLOCK VALIDATION
+    // Find the CBlockIndex of this block if this blocks previous hash matches the old chaintip.  In the
+    // case of parallel block validation we may have two or more blocks processing at the same time however
+    // their block headers may not represent what is considered the best block as returned by pindexMostWork.
+    // Therefore we must supply the blockindex of this block explicitly as being the one with potentially
+    // the most work and which will subsequently advance the chain tip if it wins the validation race.
+    if (pblock != NULL && pindexOldTip != NULL && chainActive.Tip() != chainActive.Genesis() && fParallel)
+    {
+        if (pblock->GetBlockHeader().hashPrevBlock == *pindexOldTip->phashBlock)
+        {
+            BlockMap::iterator mi = mapBlockIndex.find(pblock->GetHash());
+            if (mi == mapBlockIndex.end())
+            {
+                LogPrintf("Could not find block in mapBlockIndex: %s\n", pblock->GetHash().ToString());
+                return false;
+            }
+            else
+            {
+                // Because we are potentially working with a block that is not the pindexMostWork as returned by
+                // FindMostWorkChain() but rather are forcing it to point to this block we must check again if
+                // this block has enough work to advance the tip.
+                pindexMostWork = (*mi).second;
+                if (pindexMostWork->nChainWork <= pindexOldTip->nChainWork)
+                {
+                    return false;
+                }
+            }
+        }
+    }
+
+    // If there is a reorg happening then we can not activate this chain *unless* it
+    // has more work that the currently processing reorg chain.  In that case we must terminate the reorg
+    // extend this chain instead.
+    if (PV && PV->IsReorgInProgress())
+    {
+        // find out if this block and chain are more work than the chain
+        // being reorg'd to.  If not then just return.  If so then kill the reorg and
+        // start connecting this chain.
+        if (pindexMostWork->nChainWork > PV->MaxWorkChainBeingProcessed())
+        {
+            // kill all validating threads except our own.
+            boost::thread::id this_id(boost::this_thread::get_id());
+            PV->StopAllValidationThreads(this_id);
+        }
+        else
+            return true;
+    }
+
+    if (!ActivateBestChainStep(state, chainparams, pindexMostWork,
+            pblock && pblock->GetHash() == pindexMostWork->GetBlockHash() ? pblock : NULL, fParallel))
+        return false;
+
     CheckBlockIndex(chainparams.GetConsensus());
 
-    // Write changes periodically to disk, after relay.
+    // Write changes periodically to disk.
     if (!FlushStateToDisk(state, FLUSH_STATE_PERIODIC))
         return false;
 
