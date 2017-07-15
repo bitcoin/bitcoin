@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(dbwrapper_iterator)
         uint256 in2 = InsecureRand256();
         BOOST_CHECK(dbw.Write(key2, in2));
 
-        std::unique_ptr<CDBIterator> it(const_cast<CDBWrapper*>(&dbw)->NewIterator());
+        std::unique_ptr<CDBIterator> it(const_cast<CDBWrapper&>(dbw).NewIterator());
 
         // Be sure to seek past the obfuscation key (if it exists)
         it->Seek(key);
@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(iterator_ordering)
         BOOST_CHECK(dbw.Write(key, value));
     }
 
-    std::unique_ptr<CDBIterator> it(const_cast<CDBWrapper*>(&dbw)->NewIterator());
+    std::unique_ptr<CDBIterator> it(const_cast<CDBWrapper&>(dbw).NewIterator());
     for (int c=0; c<2; ++c) {
         int seek_start;
         if (c == 0)
@@ -286,7 +286,7 @@ BOOST_AUTO_TEST_CASE(iterator_string_ordering)
         }
     }
 
-    std::unique_ptr<CDBIterator> it(const_cast<CDBWrapper*>(&dbw)->NewIterator());
+    std::unique_ptr<CDBIterator> it(const_cast<CDBWrapper&>(dbw).NewIterator());
     for (int c=0; c<2; ++c) {
         int seek_start;
         if (c == 0)
