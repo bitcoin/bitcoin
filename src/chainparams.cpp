@@ -128,6 +128,10 @@ public:
         assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
 
         // Note that of those with the service bits flag, most only support a subset of possible options
+        vSeeds.push_back(CDNSSeedData("seed.b-pay.net", "seed.mainnet.b-pay.net", false)); // BitPay seed
+        vSeeds.push_back(CDNSSeedData("seed.ob1.io", "seed.ob1.io", false)); // OB1 seed
+        vSeeds.push_back(CDNSSeedData("seed.blockchain.info", "seed.blockchain.info", false)); // blockchain.info seed
+        vSeeds.push_back(CDNSSeedData("bloqseeds.net", "bitcoin.bloqseeds.net", false)); // bloq.com seed
         vSeeds.push_back(CDNSSeedData("bitcoin.sipa.be", "seed.bitcoin.sipa.be", true)); // Pieter Wuille, only supports x1, x5, x9, and xd
         vSeeds.push_back(CDNSSeedData("bluematt.me", "dnsseed.bluematt.me", true)); // Matt Corallo, only supports x9
         vSeeds.push_back(CDNSSeedData("dashjr.org", "dnsseed.bitcoin.dashjr.org")); // Luke Dashjr
@@ -236,6 +240,7 @@ public:
         vSeeds.clear();
         // nodes with support for servicebits filtering should be at the top
         vSeeds.push_back(CDNSSeedData("testnet5.b-pay.net", "seed.testnet5.b-pay.net"));
+        vSeeds.push_back(CDNSSeedData("bloqseeds.net", "bitcoin-testnet.bloqseeds.net", false)); // bloq.com seed
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,111);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,196);
