@@ -5131,20 +5131,24 @@ bool CWallet::ParameterInteraction()
         LogPrintf("%s: parameter interaction: -blocksonly=1 -> setting -walletbroadcast=0\n", __func__);
     }
 
-    if (gArgs.GetBoolArg("-salvagewallet", false) && gArgs.SoftSetBoolArg("-rescan", true)) {
+    if (gArgs.GetBoolArg("-salvagewallet", false)) {
         if (is_multiwallet) {
             return InitError(strprintf("%s is only allowed with a single wallet file", "-salvagewallet"));
         }
         // Rewrite just private keys: rescan to find transactions
-        LogPrintf("%s: parameter interaction: -salvagewallet=1 -> setting -rescan=1\n", __func__);
+        if (gArgs.SoftSetBoolArg("-rescan", true)) {
+            LogPrintf("%s: parameter interaction: -salvagewallet=1 -> setting -rescan=1\n", __func__);
+        }
     }
 
     // -zapwallettx implies a rescan
-    if (gArgs.GetBoolArg("-zapwallettxes", false) && gArgs.SoftSetBoolArg("-rescan", true)) {
+    if (gArgs.GetBoolArg("-zapwallettxes", false)) {
         if (is_multiwallet) {
             return InitError(strprintf("%s is only allowed with a single wallet file", "-zapwallettxes"));
         }
-        LogPrintf("%s: parameter interaction: -zapwallettxes=<mode> -> setting -rescan=1\n", __func__);
+        if (gArgs.SoftSetBoolArg("-rescan", true)) {
+            LogPrintf("%s: parameter interaction: -zapwallettxes=<mode> -> setting -rescan=1\n", __func__);
+        }
     }
 
     if (is_multiwallet) {
