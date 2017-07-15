@@ -397,8 +397,7 @@ class ParallelTest (BitcoinTestFramework):
         if self.longTest == False:
             return
  
-    #def run_attack_block_scenario (self):
-
+ 
         ###########################################################################################
         # Test the 4 block attack scenarios - use -pvtest=true to slow down the checking of inputs.
         ###########################################################################################
@@ -768,6 +767,48 @@ class ParallelTest (BitcoinTestFramework):
         stop_nodes(self.nodes)
         wait_bitcoinds()
 
+
+        #################################################################################
+        # Repeated 5 block mined scenario
+        #################################################################################
+        
+        # Repeatedly mine 5 blocks at a time on each node to have many blocks both arriving
+        # at the same time and racing each other to see which can extend the chain the fastest.
+        # This is intented just a stress test of the 4 block scenario but also while blocks
+        # are in the process of being both mined and with reorgs sometimes happening at the same time.
+        print ("Starting repeating many competing blocks test")
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug=","-pvtest=0"]))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug=","-pvtest=0"]))
+        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug=","-pvtest=0"]))
+        self.nodes.append(start_node(3, self.options.tmpdir, ["-debug=","-pvtest=0"]))
+        self.nodes.append(start_node(4, self.options.tmpdir, ["-debug=","-pvtest=0"]))
+        self.nodes.append(start_node(5, self.options.tmpdir, ["-debug=","-pvtest=0"]))
+
+        connect_nodes(self.nodes[1],0)
+        connect_nodes(self.nodes[1],2)
+        connect_nodes(self.nodes[1],3)
+        connect_nodes(self.nodes[1],4)
+        connect_nodes(self.nodes[1],5)
+        sync_blocks(self.nodes)
+
+        for i in range(100):
+
+            print ("Mine many more competing blocks...")
+            self.nodes[0].generate(1)
+            self.nodes[2].generate(1)
+            self.nodes[3].generate(1)
+            self.nodes[4].generate(1)
+            self.nodes[5].generate(1)
+            sync_blocks(self.nodes)
+
+            # Mine another block which will cause the nodes to sync to one chain
+            print ("Mine another block...")
+            self.nodes[0].generate(1)
+            sync_blocks(self.nodes)
+
+        # stop nodes
+        stop_nodes(self.nodes)
+        wait_bitcoinds()
 
 
 def Test():
