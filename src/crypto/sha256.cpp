@@ -5,6 +5,7 @@
 #include "crypto/sha256.h"
 #include "crypto/common.h"
 
+#include <assert.h>
 #include <string.h>
 #include <atomic>
 
@@ -140,7 +141,36 @@ void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks)
 
 } // namespace sha256
 
-void (*Transform)(uint32_t*, const unsigned char*, size_t) = sha256::Transform;
+typedef void (*TransformType)(uint32_t*, const unsigned char*, size_t);
+
+bool SelfTest(TransformType tr) {
+    static const unsigned char in1[65] = {0, 0x80};
+    static const unsigned char in2[129] = {
+        0,
+        32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 
+        32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 
+        0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0
+    };
+    static const uint32_t init[8] = {0x6a09e667ul, 0xbb67ae85ul, 0x3c6ef372ul, 0xa54ff53aul, 0x510e527ful, 0x9b05688cul, 0x1f83d9abul, 0x5be0cd19ul};
+    static const uint32_t out1[8] = {0xe3b0c442ul, 0x98fc1c14ul, 0x9afbf4c8ul, 0x996fb924ul, 0x27ae41e4ul, 0x649b934cul, 0xa495991bul, 0x7852b855ul};
+    static const uint32_t out2[8] = {0xce4153b0ul, 0x147c2a86ul, 0x3ed4298eul, 0xe0676bc8ul, 0x79fc77a1ul, 0x2abe1f49ul, 0xb2b055dful, 0x1069523eul};
+    uint32_t buf[8];
+    memcpy(buf, init, sizeof(buf));
+    // Process nothing, and check we remain in the initial state.
+    tr(buf, nullptr, 0);
+    if (memcmp(buf, init, sizeof(buf))) return false;
+    // Process the padded empty string (unaligned)
+    tr(buf, in1 + 1, 1);
+    if (memcmp(buf, out1, sizeof(buf))) return false;
+    // Process 64 spaces (unaligned)
+    memcpy(buf, init, sizeof(buf));
+    tr(buf, in2 + 1, 2);
+    if (memcmp(buf, out2, sizeof(buf))) return false;
+    return true;
+}
+
+TransformType Transform = sha256::Transform;
 
 } // namespace
 
@@ -150,10 +180,12 @@ std::string SHA256AutoDetect()
     uint32_t eax, ebx, ecx, edx;
     if (__get_cpuid(1, &eax, &ebx, &ecx, &edx) && (ecx >> 19) & 1) {
         Transform = sha256_sse4::Transform;
+        assert(SelfTest(Transform));
         return "sse4";
     }
 #endif
 
+    assert(SelfTest(Transform));
     return "standard";
 }
 
