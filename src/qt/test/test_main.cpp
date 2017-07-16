@@ -23,6 +23,8 @@
 
 #include <openssl/ssl.h>
 
+#include <stdlib.h>
+
 #if defined(QT_STATICPLUGIN)
 #include <QtPlugin>
 #if QT_VERSION < 0x050000
