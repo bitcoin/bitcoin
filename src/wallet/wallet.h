@@ -1134,7 +1134,7 @@ public:
 };
 
 /** A key allocated from the key pool. */
-class CReserveKey : public CReserveScript
+class CReserveKey final : public CReserveScript
 {
 protected:
     CWallet* pwallet;
