@@ -72,6 +72,10 @@ UniValue getinfo(const JSONRPCRequest& request)
             + HelpExampleRpc("getinfo", "")
         );
 
+    if (!GetBoolArg("-enablegetinfo", false)) {
+        return "getinfo is deprecated and will be fully removed in v0.16. To use getinfo in v0.15, restart bitcoind with -enablegetinfo.\n"
+           "Projects should transition to using getblockchaininfo, getnetworkinfo and getwalletinfo before upgrading to v0.16";
+    }
 #ifdef ENABLE_WALLET
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
 
