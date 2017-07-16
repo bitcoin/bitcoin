@@ -34,7 +34,7 @@
        <item row="1" column="0">
         <widget class="QTextEdit" name="tbxMnemonic">
          <property name="toolTip">
-          <string>[add toolTip]</string>
+          <string>Enter your BIP39 compliant Recovery Phrase/Mnemonic - Typing your own words will probably not work how you expect, since the words require a particular structure (the last word is a checksum).</string>
          </property>
          <property name="lineWrapMode">
           <enum>QTextEdit::WidgetWidth</enum>
@@ -53,7 +53,7 @@
          <item row="0" column="1">
           <widget class="QLineEdit" name="edtPassword">
            <property name="toolTip">
-            <string>[add toolTip]</string>
+            <string>Enter a passphrase to protect your Recovery Phrase (optional)</string>
            </property>
           </widget>
          </item>
@@ -168,7 +168,7 @@
        <item row="1" column="0">
         <widget class="QTextEdit" name="tbxMnemonicOut">
          <property name="toolTip">
-          <string>[add toolTip]</string>
+          <string>This is your randomly generated Recovery Phrase/Mnemonic</string>
          </property>
          <property name="lineWrapMode">
           <enum>QTextEdit::WidgetWidth</enum>
@@ -196,7 +196,7 @@
             </size>
            </property>
            <property name="toolTip">
-            <string>[add toolTip]</string>
+            <string>Entropy is an advanced feature. Your mnemonic may be insecure if this feature is used incorrectly.</string>
            </property>
            <property name="minimum">
             <number>16</number>
@@ -218,7 +218,7 @@
             </size>
            </property>
            <property name="toolTip">
-            <string>[add toolTip]</string>
+            <string>Select your language</string>
            </property>
            <item>
             <property name="text">
