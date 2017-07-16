@@ -19,6 +19,7 @@ class WalletTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 4
         self.extra_args = [['-usehd={:d}'.format(i%2==0)] for i in range(4)]
+        self.extra_args[0].append('-txindex')
 
     def setup_network(self):
         self.nodes = self.start_nodes(3, self.options.tmpdir, self.extra_args[:3])
@@ -71,6 +72,8 @@ class WalletTest(BitcoinTestFramework):
         confirmed_txid, confirmed_index = utxos[0]["txid"], utxos[0]["vout"]
         txout = self.nodes[0].gettxout(confirmed_txid, confirmed_index, False)
         assert_equal(txout['value'], 50)
+        assert_equal(txout['confirmations'], 102)
+        assert_equal(txout['spent'], False)
         txout = self.nodes[0].gettxout(confirmed_txid, confirmed_index, True)
         assert txout is None
         # new utxo from mempool should be invisible if you exclude mempool
@@ -83,13 +86,29 @@ class WalletTest(BitcoinTestFramework):
         # but 10 will go to node2 and the rest will go to node0
         balance = self.nodes[0].getbalance()
         assert_equal(set([txout1['value'], txout2['value']]), set([10, balance]))
+        assert_equal(txout1['spent'], False)
         walletinfo = self.nodes[0].getwalletinfo()
         assert_equal(walletinfo['immature_balance'], 0)
+        assert_raises_jsonrpc(-5, 'No such blockchain transaction', self.nodes[0].gettxout, mempool_txid, 0, False, True)
 
         # Have node0 mine a block, thus it will collect its own fee.
         self.nodes[0].generate(1)
         self.sync_all()
 
+        # Now the txo should be visible only if you include spent outputs
+        txout = self.nodes[0].gettxout(confirmed_txid, confirmed_index, False, False)
+        assert txout is None
+        txout = self.nodes[0].gettxout(confirmed_txid, confirmed_index, True, False)
+        assert txout is None
+        txout = self.nodes[0].gettxout(confirmed_txid, confirmed_index, True, True)
+        assert txout is None
+        txout = self.nodes[0].gettxout(confirmed_txid, confirmed_index, False, True)
+        assert_equal(txout['value'], 50)
+        assert_equal(txout['confirmations'], 103)
+        assert_equal(txout['spent'], True)
+        assert_raises_jsonrpc(-5, 'No output %d for tx %s' % (100, confirmed_txid), self.nodes[0].gettxout, confirmed_txid, 100, False, True)
+        assert_raises_jsonrpc(-5, 'No such utxo blockchain transaction. Use -txindex to enable spent output queries', self.nodes[1].gettxout, confirmed_txid, confirmed_index, False, True)
+        
         # Exercise locking of unspent outputs
         unspent_0 = self.nodes[2].listunspent()[0]
         unspent_0 = {"txid": unspent_0["txid"], "vout": unspent_0["vout"]}
