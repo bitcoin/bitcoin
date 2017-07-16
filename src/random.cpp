@@ -46,10 +46,10 @@
 #include <openssl/err.h>
 #include <openssl/rand.h>
 
-static void RandFailure()
+[[noreturn]] static void RandFailure()
 {
     LogPrintf("Failed to read randomness, aborting\n");
-    abort();
+    std::abort();
 }
 
 static inline int64_t GetPerformanceCounter()
