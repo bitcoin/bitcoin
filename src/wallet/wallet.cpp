@@ -2081,7 +2081,7 @@ CAmount CWalletTx::GetAvailableCredit(bool fUseCache) const
     return nCredit;
 }
 
-CAmount CWalletTx::GetImmatureWatchOnlyCredit(const bool& fUseCache) const
+CAmount CWalletTx::GetImmatureWatchOnlyCredit(const bool fUseCache) const
 {
     if (IsCoinBase() && GetBlocksToMaturity() > 0 && IsInMainChain())
     {
@@ -2095,7 +2095,7 @@ CAmount CWalletTx::GetImmatureWatchOnlyCredit(const bool& fUseCache) const
     return 0;
 }
 
-CAmount CWalletTx::GetAvailableWatchOnlyCredit(const bool& fUseCache) const
+CAmount CWalletTx::GetAvailableWatchOnlyCredit(const bool fUseCache) const
 {
     if (pwallet == nullptr)
         return 0;
@@ -2595,7 +2595,7 @@ CAmount CWallet::GetAvailableBalance(const CCoinControl* coinControl) const
     return balance;
 }
 
-void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const CCoinControl *coinControl, AvailableCoinsType nCoinType, bool fUseInstantSend, const CAmount &nMinimumAmount, const CAmount &nMaximumAmount, const CAmount &nMinimumSumAmount, const uint64_t &nMaximumCount, const int &nMinDepth, const int &nMaxDepth) const
+void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const CCoinControl *coinControl, AvailableCoinsType nCoinType, bool fUseInstantSend, const CAmount &nMinimumAmount, const CAmount &nMaximumAmount, const CAmount &nMinimumSumAmount, const uint64_t nMaximumCount, const int nMinDepth, const int nMaxDepth) const
 {
     vCoins.clear();
 
