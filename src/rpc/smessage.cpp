@@ -10,9 +10,12 @@
 #include <string>
 
 #include "smsg/smessage.h"
-#include "wallet/wallet.h"
+
 #include "script/ismine.h"
 
+#ifdef ENABLE_WALLET
+#include "wallet/wallet.h"
+#endif
 
 #include <univalue.h>
 
@@ -169,6 +172,7 @@ UniValue smsglocalkeys(const JSONRPCRequest &request)
 
     UniValue result(UniValue::VOBJ);
 
+#ifdef ENABLE_WALLET
     std::string mode = "whitelist";
     if (request.params.size() > 0)
     {
@@ -377,7 +381,9 @@ UniValue smsglocalkeys(const JSONRPCRequest &request)
         result.push_back(Pair("result", "Unknown Mode."));
         result.push_back(Pair("expected", "smsglocalkeys [whitelist|all|wallet|recv <+/-> <address>|anon <+/-> <address>]"));
     };
-
+#else
+    throw std::runtime_error("No wallet.");
+#endif
     return result;
 };
 
@@ -629,6 +635,7 @@ UniValue smsginbox(const JSONRPCRequest &request)
     if (!fSecMsgEnabled)
         throw std::runtime_error("Secure messaging is disabled.");
 
+#ifdef ENABLE_WALLET
     if (pwalletSmsg->IsLocked())
         throw std::runtime_error("Wallet is locked.");
 
@@ -730,7 +737,9 @@ UniValue smsginbox(const JSONRPCRequest &request)
             result.push_back(Pair("expected", "[all|unread|clear]."));
         };
     } // cs_smsgDB
-
+#else
+    throw std::runtime_error("No wallet.");
+#endif
     return result;
 };
 
@@ -745,6 +754,7 @@ UniValue smsgoutbox(const JSONRPCRequest &request)
     if (!fSecMsgEnabled)
         throw std::runtime_error("Secure messaging is disabled.");
 
+#ifdef ENABLE_WALLET
     if (pwalletSmsg->IsLocked())
         throw std::runtime_error("Wallet is locked.");
 
@@ -828,7 +838,9 @@ UniValue smsgoutbox(const JSONRPCRequest &request)
             result.push_back(Pair("expected", "[all|clear]."));
         };
     }
-
+#else
+    throw std::runtime_error("No wallet.");
+#endif
     return result;
 };
 
@@ -1018,6 +1030,7 @@ UniValue smsgview(const JSONRPCRequest &request)
     if (!fSecMsgEnabled)
         throw std::runtime_error("Secure messaging is disabled.");
 
+#ifdef ENABLE_WALLET
     if (pwalletSmsg->IsLocked())
         throw std::runtime_error("Wallet is locked.");
 
@@ -1284,7 +1297,9 @@ UniValue smsgview(const JSONRPCRequest &request)
         result.push_back(Pair("from", part::GetTimeString(tFrom, cbuf, sizeof(cbuf))));
     if (tTo > 0)
         result.push_back(Pair("to", part::GetTimeString(tTo, cbuf, sizeof(cbuf))));
-
+#else
+    throw std::runtime_error("No wallet.");
+#endif
     return result;
 };
 

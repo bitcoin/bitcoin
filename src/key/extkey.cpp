@@ -766,74 +766,34 @@ bool CExtKeyAccount::SaveKey(const CKeyID &id, CEKAKey &keyIn)
     if (!IsHardened(keyIn.nKey)
         && (pc = GetChain(keyIn.nParent)) != NULL)
     {
-        if (GetBoolArg("-extkeysaveancestors", true))
+        // TODO: gaps?
+        if (keyIn.nKey == pc->nGenerated) 
+            pc->nGenerated++;
+        else
+        if (keyIn.nKey > pc->nGenerated)
         {
-            if (keyIn.nKey == pc->nGenerated) 
-                pc->nGenerated++;
-            else
-            if (pc->nGenerated < keyIn.nKey)
+            // Incase keys have been processed out of order, go back and check for received keys
+            for (uint32_t i = pc->nGenerated; i <= keyIn.nKey; ++i)
             {
-                uint32_t nOldGenerated = pc->nGenerated;
-                pc->nGenerated = keyIn.nKey + 1;
-                for (uint32_t i = nOldGenerated; i < keyIn.nKey; ++i)
+                uint32_t nChildOut = 0;
+                CPubKey pk;
+                if (0 != pc->DeriveKey(pk, i, nChildOut, false))
                 {
-                    uint32_t nChildOut = 0;
-                    CPubKey pk;
-                    if (0 != pc->DeriveKey(pk, i, nChildOut, false))
-                    {
-                        LogPrintf("%s DeriveKey failed %d.\n", __func__, i);
-                        break;
-                    };
-                    
-                    CKeyID idkOld = pk.GetID();
-                    if (mapLookAhead.erase(idkOld) != 1)
-                        LogPrintf("Warning: SaveKey %s key not found in look ahead %s.\n", GetIDString58(), CBitcoinAddress(idkOld).ToString());
-                    
-                    CEKAKey ak(keyIn.nParent, nChildOut);
-                    mapKeys[idkOld] = ak;
-                    
-                    if (pc->nFlags & EAF_ACTIVE
-                        && pc->nFlags & EAF_RECEIVE_ON)
-                        AddLookAhead(keyIn.nParent, 1);
-                    
-                    if (fDebug)
-                        LogPrintf("Saved key %s %d, %s.\n", GetIDString58(), ak.nParent, CBitcoinAddress(idkOld).ToString());
+                    LogPrintf("%s DeriveKey failed %d.\n", __func__, i);
+                    break;
                 };
+                
+                CEKAKey ak;
+                if (1 != HaveKey(pk.GetID(), false, ak))
+                    break;
+                
+                pc->nGenerated = i;
             };
-            if (pc->nFlags & EAF_ACTIVE
-                && pc->nFlags & EAF_RECEIVE_ON)
-                AddLookAhead(keyIn.nParent, 1);
-        } else
-        {
-            // TODO: gaps?
-            if (keyIn.nKey == pc->nGenerated) 
-                pc->nGenerated++;
-            else
-            if (keyIn.nKey > pc->nGenerated)
-            {
-                // Incase keys have been processed out of order, go back and check for received keys
-                for (uint32_t i = pc->nGenerated; i <= keyIn.nKey; ++i)
-                {
-                    uint32_t nChildOut = 0;
-                    CPubKey pk;
-                    if (0 != pc->DeriveKey(pk, i, nChildOut, false))
-                    {
-                        LogPrintf("%s DeriveKey failed %d.\n", __func__, i);
-                        break;
-                    };
-                    
-                    CEKAKey ak;
-                    if (1 != HaveKey(pk.GetID(), false, ak))
-                        break;
-                    
-                    pc->nGenerated = i;
-                };
-            };
-            
-            if (pc->nFlags & EAF_ACTIVE
-                && pc->nFlags & EAF_RECEIVE_ON)
-                AddLookAhead(keyIn.nParent, 1);
         };
+        
+        if (pc->nFlags & EAF_ACTIVE
+            && pc->nFlags & EAF_RECEIVE_ON)
+            AddLookAhead(keyIn.nParent, 1);
     };
     
     if (fDebug)

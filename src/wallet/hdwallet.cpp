@@ -5382,18 +5382,89 @@ int CHDWallet::ExtKeySaveKey(CHDWalletDB *pwdb, CExtKeyAccount *sea, const CKeyI
         AssertLockHeld(cs_wallet);
     };
 
-    if (!sea->SaveKey(keyId, ak))
-        return errorN(1, "%s SaveKey failed.", __func__);
+    size_t nChain = ak.nParent;
+    bool fUpdateAccTmp, fUpdateAcc = false;
+    if (GetBoolArg("-extkeysaveancestors", true))
+    {
+        LOCK(sea->cs_account);
+        AccKeyMap::const_iterator mi = sea->mapKeys.find(keyId);
+        if (mi != sea->mapKeys.end())
+            return false; // already saved
+        
+        if (sea->mapLookAhead.erase(keyId) != 1)
+            LogPrintf("Warning: SaveKey %s key not found in look ahead %s.\n", sea->GetIDString58(), CBitcoinAddress(keyId).ToString());
+        
+        sea->mapKeys[keyId] = ak;
+        
+        if (0 != ExtKeyAppendToPack(pwdb, sea, keyId, ak, fUpdateAccTmp))
+            return errorN(1, "%s ExtKeyAppendToPack failed.", __func__);
+        fUpdateAcc = fUpdateAccTmp ? true : fUpdateAcc;
+        
+        CStoredExtKey *pc;
+        if (!IsHardened(ak.nKey)
+            && (pc = sea->GetChain(nChain)) != NULL)
+        {
+            
+            if (ak.nKey == pc->nGenerated) 
+                pc->nGenerated++;
+            else
+            if (pc->nGenerated < ak.nKey)
+            {
+                uint32_t nOldGenerated = pc->nGenerated;
+                pc->nGenerated = ak.nKey + 1;
+                
+                for (uint32_t i = nOldGenerated; i < ak.nKey; ++i)
+                {
+                    uint32_t nChildOut = 0;
+                    CPubKey pk;
+                    if (0 != pc->DeriveKey(pk, i, nChildOut, false))
+                    {
+                        LogPrintf("%s DeriveKey failed %d.\n", __func__, i);
+                        break;
+                    };
+                    
+                    CKeyID idkExtra = pk.GetID();
+                    if (sea->mapLookAhead.erase(idkExtra) != 1)
+                        LogPrintf("Warning: SaveKey %s key not found in look ahead %s.\n", sea->GetIDString58(), CBitcoinAddress(idkExtra).ToString());
+                    
+                    CEKAKey akExtra(nChain, nChildOut);
+                    sea->mapKeys[idkExtra] = akExtra;
+                    
+                    if (0 != ExtKeyAppendToPack(pwdb, sea, idkExtra, akExtra, fUpdateAccTmp))
+                        return errorN(1, "%s ExtKeyAppendToPack failed.", __func__);
+                    fUpdateAcc = fUpdateAccTmp ? true : fUpdateAcc;
+                    
+                    
+                    if (pc->nFlags & EAF_ACTIVE
+                        && pc->nFlags & EAF_RECEIVE_ON)
+                        sea->AddLookAhead(nChain, 1);
+                    
+                    if (fDebug)
+                        LogPrintf("Saved key %s %d, %s.\n", sea->GetIDString58(), nChain, CBitcoinAddress(idkExtra).ToString());
+                };
+            };
+            if (pc->nFlags & EAF_ACTIVE
+                && pc->nFlags & EAF_RECEIVE_ON)
+                sea->AddLookAhead(nChain, 1);
+            if (fDebug)
+                LogPrintf("Saved key %s %d, %s.\n", sea->GetIDString58(), nChain, CBitcoinAddress(keyId).ToString());
+        };
+    } else
+    {
+        if (!sea->SaveKey(keyId, ak))
+            return errorN(1, "%s SaveKey failed.", __func__);
+        
+        if (0 != ExtKeyAppendToPack(pwdb, sea, keyId, ak, fUpdateAcc))
+            return errorN(1, "%s ExtKeyAppendToPack failed.", __func__);
+    };
 
-    bool fUpdateAcc;
-    if (0 != ExtKeyAppendToPack(pwdb, sea, keyId, ak, fUpdateAcc))
-        return errorN(1, "%s ExtKeyAppendToPack failed.", __func__);
 
-    CStoredExtKey *pc = sea->GetChain(ak.nParent);
+    // Save chain, nGenerated changed
+    CStoredExtKey *pc = sea->GetChain(nChain);
     if (!pc)
         return errorN(1, "%s GetChain failed.", __func__);
 
-    CKeyID idChain = sea->vExtKeyIDs[ak.nParent];
+    CKeyID idChain = sea->vExtKeyIDs[nChain];
     if (!pwdb->WriteExtKey(idChain, *pc))
         return errorN(1, "%s WriteExtKey failed.", __func__);
 

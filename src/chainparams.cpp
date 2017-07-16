@@ -360,26 +360,26 @@ static CBlock CreateGenesisBlockMainNet(uint32_t nTime, uint32_t nNonce, uint32_
     // RHFKJkrB4H38APUDVckr7TDwrK11N7V7mx
     OUTPUT_PTR<CTxOutStandard> out = MAKE_OUTPUT<CTxOutStandard>();
     out->nValue = 397364 * COIN;
-    out->scriptPubKey = CScript() << OP_HASH160<< ParseHex("5766354dcb13caff682ed9451b9fe5bbb786996c") << OP_EQUAL;
+    out->scriptPubKey = CScript() << OP_HASH160 << ParseHex("5766354dcb13caff682ed9451b9fe5bbb786996c") << OP_EQUAL;
     txNew.vpout.push_back(out);
     
     out = MAKE_OUTPUT<CTxOutStandard>();
     out->nValue = 296138 * COIN;
-    out->scriptPubKey = CScript() << OP_HASH160<< ParseHex("5766354dcb13caff682ed9451b9fe5bbb786996c") << OP_EQUAL;
+    out->scriptPubKey = CScript() << OP_HASH160 << ParseHex("5766354dcb13caff682ed9451b9fe5bbb786996c") << OP_EQUAL;
     txNew.vpout.push_back(out);
     
     // Community Initative
     // RKKgSiQcMjbC8TABRoyyny1gTU4fAEiQz9
     out = MAKE_OUTPUT<CTxOutStandard>();
     out->nValue = 156675 * COIN;
-    out->scriptPubKey = CScript() << OP_HASH160<< ParseHex("6e29c4a11fd54916d024af16ca913cdf8f89cb31") << OP_EQUAL;
+    out->scriptPubKey = CScript() << OP_HASH160 << ParseHex("6e29c4a11fd54916d024af16ca913cdf8f89cb31") << OP_EQUAL;
     txNew.vpout.push_back(out);
     
     // Contributors Left Over Funds
     // RKiaVeyLUp7EmwHtCP92j8Vc1AodhpWi2U
     out = MAKE_OUTPUT<CTxOutStandard>();
     out->nValue = 216346 * COIN;
-    out->scriptPubKey = CScript() << OP_HASH160<< ParseHex("727e5e75929bbf26912dd7833971d77e7450a33e") << OP_EQUAL;
+    out->scriptPubKey = CScript() << OP_HASH160 << ParseHex("727e5e75929bbf26912dd7833971d77e7450a33e") << OP_EQUAL;
     txNew.vpout.push_back(out);
     
     // Reserved Particl for primary round
