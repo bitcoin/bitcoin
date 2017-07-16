@@ -15,9 +15,15 @@ class TestBitcoinCli(BitcoinTestFramework):
     def run_test(self):
         """Main test logic"""
 
-        self.log.info("Compare responses from getinfo RPC and `bitcoin-cli getinfo`")
-        cli_get_info = self.nodes[0].cli.getinfo()
-        rpc_get_info = self.nodes[0].getinfo()
+        self.log.info("Compare responses from gewalletinfo RPC and `bitcoin-cli getwalletinfo`")
+        cli_get_info = self.nodes[0].cli.getwalletinfo()
+        rpc_get_info = self.nodes[0].getwalletinfo()
+
+        assert_equal(cli_get_info, rpc_get_info)
+
+        self.log.info("Compare responses from getblockchaininfo RPC and `bitcoin-cli getblockchaininfo`")
+        cli_get_info = self.nodes[0].cli.getblockchaininfo()
+        rpc_get_info = self.nodes[0].getblockchaininfo()
 
         assert_equal(cli_get_info, rpc_get_info)
 
