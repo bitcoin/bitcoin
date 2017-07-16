@@ -216,7 +216,9 @@ void Shutdown()
     }
 
     // FlushStateToDisk generates a SetBestChain callback, which we should avoid missing
-    FlushStateToDisk();
+    if (pcoinsTip != nullptr) {
+        FlushStateToDisk();
+    }
 
     // After there are no more peers/RPC left to give us new data which may generate
     // CValidationInterface callbacks, flush them...
