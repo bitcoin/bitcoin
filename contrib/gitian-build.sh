@@ -35,7 +35,7 @@ Run this script from the directory containing the bitcoin, gitian-builder, gitia
 
 Arguments:
 signer          GPG signer to sign each build assert file
-version		Version number, commit, or branch to build. If building a commit or branch, the -c option must be specified
+version         Version number, commit, or branch to build. If building a commit or branch, the -c option must be specified
 
 Options:
 -c|--commit	Indicate that the version argument is for a commit or branch

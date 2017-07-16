@@ -95,10 +95,6 @@ std::string ChainNameFromCommandLine()
     bool fRegTest = GetBoolArg("-regtest", false);
     bool fTestNet = GetBoolArg("-testnet", false);
 
-    // - Force testnet, REMOVE
-    if (!fRegTest)
-        fTestNet = true;
-
     if (fTestNet && fRegTest)
         throw std::runtime_error("Invalid combination of -regtest and -testnet.");
     if (fRegTest)

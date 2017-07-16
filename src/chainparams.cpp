@@ -219,45 +219,37 @@ static CBlock CreateGenesisBlockRegTest(uint32_t nTime, uint32_t nNonce, uint32_
     return genesis;
 }
 
-const size_t nGenesisOutputs = 32;
+const size_t nGenesisOutputs = 29;
 std::pair<const char*, CAmount> genesisOutputs[nGenesisOutputs] = {
-    std::make_pair("9a9231e5c0a554a685db12aecee333c7cf046013", 20000 * COIN),
-    std::make_pair("94f5c1e7ac73e1b89fb6fd18d3f3e373ef29f22c", 7500 * COIN),
-    std::make_pair("6e070085c66ad7eca2e2f28f2ab7373247c62b88", 7500 * COIN),
-    std::make_pair("6747608f079d1c3f403112786a7276f2ced7cb13", 7500 * COIN),
-    std::make_pair("779ba0f403e8c37cea0a8146a5cda3278ab769b7", 7500 * COIN),
-    
-    std::make_pair("b15dd479bf821822da7266f4cfcc05f721867710", 20000 * COIN),
-    std::make_pair("a8d3e21a00bd62dc87145c86e781ab2ccc820100", 7500 * COIN),
-    std::make_pair("abe9da9dd90b8b10b7ad54e0f0d57f06dfdb1dc9", 7500 * COIN),
-    std::make_pair("28ae24813c29d41bb40c3d98f575fe1ff39fa1c8", 7500 * COIN),
-    std::make_pair("2ef75d74fb829945dc590bb5c94a398f59e94b42", 7500 * COIN),
-    
-    std::make_pair("41eac8f22825e177c5652e6b3ec203410b74d8cf", 20000 * COIN),
-    std::make_pair("ae58bcafcb7b314a329f470f6e233b011882ab18", 7500 * COIN),
-    std::make_pair("4668b80445a43f42353cff1a28dbf879fd56ea4c", 7500 * COIN),
-    std::make_pair("82285d1ed2466a01e3bd02458457bbc38d9ae054", 7500 * COIN),
-    std::make_pair("76577cfa41dee36e9e0e77e797312c7ffbdb28f8", 7500 * COIN),
-    
-    std::make_pair("6d403ec086b10f274f809534b8c0b346bc0d67be", 20000 * COIN),
-    std::make_pair("1a152fbcd5b2bc13aa5d4c69520c4b6222f12c4d", 7500 * COIN),
-    std::make_pair("6fb9ed5d8d27b708464f36bb578f6ea3e3b9e0db", 7500 * COIN),
-    std::make_pair("9188cbd49aaed91d3ff14dd6f128d8e9087cbc81", 7500 * COIN),
-    std::make_pair("e306a3dd4e35a864ea14bcb1df46a44599554cb4", 7500 * COIN),
-    
-    std::make_pair("a0315fcc94465c1171621e95dae1c893f6260cd6", 20000 * COIN),
-    std::make_pair("f2554bb0d11a097d90f44e171fa1ea3fe9589fd6", 7500 * COIN),
-    std::make_pair("0403bd751b8c1a2bd8eb3b32dc7ed70cacaf1e28", 7500 * COIN),
-    std::make_pair("ee578062b47417b0b44b2ce0ebb63fe73d77d51f", 7500 * COIN),
-    std::make_pair("a107f606d54803401ebf9040886e3de683a36e9f", 7500 * COIN),
-    
-    std::make_pair("d080dbed1a3ff44ad332fb29a5e83befbf72a86a", 10000 * COIN),
-    std::make_pair("d19a7fc0134502c51a2ff7ead665d37599402111", 10000 * COIN),
-    std::make_pair("ca81e51bc7656a865c5e2a920bd3e38d7977e3d8", 6000 * COIN),
-    std::make_pair("9cacfee0ebdd5160c4058010227efff20fdd3b7e", 6000 * COIN),
-    std::make_pair("db79c38f850e73e6d871fbbec5a40af5176393a3", 6000 * COIN),
-    std::make_pair("b3fd2dc0f3bf2cd03bdd51d91412f11f5eef8a40", 6000 * COIN),
-    std::make_pair("7d9327e6f6542fe826ff50a457a7d1bcb8db1765", 6000 * COIN),
+    std::make_pair("62a62c80e0b41f2857ba83eb438d5caa46e36bcb",7017084118),
+    std::make_pair("c515c636ae215ebba2a98af433a3fa6c74f84415",221897417980),
+    std::make_pair("711b5e1fd0b0f4cdf92cb53b00061ef742dda4fb",120499999),
+    std::make_pair("20c17c53337d80408e0b488b5af7781320a0a311",18074999),
+    std::make_pair("aba8c6f8dbcf4ecfb598e3c08e12321d884bfe0b",92637054909),
+    std::make_pair("1f3277a84a18f822171d720f0132f698bcc370ca",3100771006662),
+    std::make_pair("8fff14bea695ffa6c8754a3e7d518f8c53c3979a",465115650998),
+    std::make_pair("e54967b4067d91a777587c9f54ee36dd9f1947c4",669097504996),
+    std::make_pair("7744d2ac08f2e1d108b215935215a4e66d0262d2",802917005996),
+    std::make_pair("a55a17e86246ea21cb883c12c709476a09b4885c",267639001997),
+    std::make_pair("4e00dce8ab44fd4cafa34839edf8f68ba7839881",267639001997),
+    std::make_pair("702cae5d2537bfdd5673ac986f910d6adb23510a",254257051898),
+    std::make_pair("b19e494b0033c5608a7d153e57d7fdf3dfb51bb7",1204260290404),
+    std::make_pair("6909b0f1c94ea1979ed76e10a5a49ec795a8f498",1204270995964),
+    std::make_pair("05a06af3b29dade9f304244d934381ac495646c1",236896901156),
+    std::make_pair("557e2b3205719931e22853b27920d2ebd6147531",155127107700),
+    std::make_pair("ad16fb301bd21c60c5cb580b322aa2c61b6c5df2",115374999),
+    std::make_pair("182c5cfb9d17aa8d8ff78940135ca8d822022f32",17306249),
+    std::make_pair("b8a374a75f6d44a0bd1bf052da014efe564ae412",133819500998),
+    std::make_pair("fadee7e2878172dad55068c8696621b1788dccb3",133713917412),
+    std::make_pair("eacc4b108c28ed73b111ff149909aacffd2cdf78",173382671567),
+    std::make_pair("dd87cc0b8e0fc119061f33f161104ce691d23657",245040727620),
+    std::make_pair("1c8b0435eda1d489e9f0a16d3b9d65182f885377",200226012806),
+    std::make_pair("15a724f2bc643041cb35c9475cd67b897d62ca52",436119839355),
+    std::make_pair("626f86e9033026be7afbb2b9dbe4972ef4b3e085",156118097804),
+    std::make_pair("a4a73d99269639541cb7e845a4c6ef3e3911fcd6",108968353176),
+    std::make_pair("27929b31f11471aa4b77ca74bb66409ff76d24a2",126271503135),
+    std::make_pair("2d6248888c7f72cc88e4883e4afd1025c43a7f0e",35102718156),
+    std::make_pair("25d8debc253f5c3f70010f41c53348ed156e7baa",80306152234),
 };
 
 const size_t nGenesisOutputsTestnet = 17;
@@ -364,18 +356,38 @@ static CBlock CreateGenesisBlockMainNet(uint32_t nTime, uint32_t nNonce, uint32_
         txNew.vpout[k] = out;
     };
     
-    // Reserved Particl for primary round
+    // Foundation Fund Raiser Funds
+    // RHFKJkrB4H38APUDVckr7TDwrK11N7V7mx
     OUTPUT_PTR<CTxOutStandard> out = MAKE_OUTPUT<CTxOutStandard>();
-    out->nValue = 996000 * COIN;
-    out->scriptPubKey = CScript() << 1515016800 << OP_CHECKLOCKTIMEVERIFY << OP_DROP << OP_HASH160<< ParseHex("616fec56cfcc7a6b7a5fcc844b9d73c532321b59") << OP_EQUAL; // 2018-01-04
+    out->nValue = 397364 * COIN;
+    out->scriptPubKey = CScript() << OP_HASH160<< ParseHex("5766354dcb13caff682ed9451b9fe5bbb786996c") << OP_EQUAL;
     txNew.vpout.push_back(out);
     
-    // Test
     out = MAKE_OUTPUT<CTxOutStandard>();
-    out->nValue = 1 * COIN;
-    out->scriptPubKey = CScript() << 1496509287 << OP_CHECKLOCKTIMEVERIFY << OP_DROP << OP_HASH160<< ParseHex("616fec56cfcc7a6b7a5fcc844b9d73c532321b59") << OP_EQUAL; // 2017-06-03
+    out->nValue = 296138 * COIN;
+    out->scriptPubKey = CScript() << OP_HASH160<< ParseHex("5766354dcb13caff682ed9451b9fe5bbb786996c") << OP_EQUAL;
     txNew.vpout.push_back(out);
     
+    // Community Initative
+    // RKKgSiQcMjbC8TABRoyyny1gTU4fAEiQz9
+    out = MAKE_OUTPUT<CTxOutStandard>();
+    out->nValue = 156675 * COIN;
+    out->scriptPubKey = CScript() << OP_HASH160<< ParseHex("6e29c4a11fd54916d024af16ca913cdf8f89cb31") << OP_EQUAL;
+    txNew.vpout.push_back(out);
+    
+    // Contributors Left Over Funds
+    // RKiaVeyLUp7EmwHtCP92j8Vc1AodhpWi2U
+    out = MAKE_OUTPUT<CTxOutStandard>();
+    out->nValue = 216346 * COIN;
+    out->scriptPubKey = CScript() << OP_HASH160<< ParseHex("727e5e75929bbf26912dd7833971d77e7450a33e") << OP_EQUAL;
+    txNew.vpout.push_back(out);
+    
+    // Reserved Particl for primary round
+    // RNnoeeqBTkpPQH8d29Gf45dszVj9RtbmCu
+    out = MAKE_OUTPUT<CTxOutStandard>();
+    out->nValue = 996000 * COIN;
+    out->scriptPubKey = CScript() << 1512000000 << OP_CHECKLOCKTIMEVERIFY << OP_DROP << OP_HASH160<< ParseHex("9433643b4fd5de3ebd7fdd68675f978f34585af1") << OP_EQUAL; // 2017-11-30
+    txNew.vpout.push_back(out);
     
     
     CBlock genesis;
@@ -417,7 +429,6 @@ public:
         consensus.BIP66Height = 0; // 00000000000000000379eaa19dce8c9b722d46ae6a57c2f1a988119488b50931
         
         consensus.powLimit = uint256S("000000000000bfffffffffffffffffffffffffffffffffffffffffffffffffff");
-        
         
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         consensus.nPowTargetSpacing = 10 * 60;
@@ -471,12 +482,12 @@ public:
         nPruneAfterHeight = 100000;
         
         
-        genesis = CreateGenesisBlockMainNet(1496688512, 71369, 0x1f00ffff);
+        genesis = CreateGenesisBlockMainNet(1496688512, 89272, 0x1f00ffff);
         consensus.hashGenesisBlock = genesis.GetHash();
         
-        assert(consensus.hashGenesisBlock == uint256S("0x0000f984ddf25dba80e9444362bac1ee3f00d3ffcd2a2019e667129c227655e2"));
-        assert(genesis.hashMerkleRoot == uint256S("0x0554f546627bdbdbe7c1ee64fe63ad285527f78ad017fd719c21a635267b0fd5"));
-        assert(genesis.hashWitnessMerkleRoot == uint256S("0xc48ed361f2dda2579964e8bb5d409521f0f75a7600390f85581ce7fd468932a7"));
+        assert(consensus.hashGenesisBlock == uint256S("0x000091f2da08f779d3311b878fa2c0f821818a54595403e57c8899fe964bdded"));
+        assert(genesis.hashMerkleRoot == uint256S("0x35623ac8695f40ee8c1376cc324be5bc2ef4cc9c277e4c6a0760cc213dbcad8a"));
+        assert(genesis.hashWitnessMerkleRoot == uint256S("0x69736e608a613ff773d5031a34d41d4d0080f674f75391b91b5c8986eb889f17"));
 
         // Note that of those with the service bits flag, most only support a subset of possible options
         vSeeds.push_back(CDNSSeedData("mainnet-seed.particl.io",  "mainnet-seed.particl.io", true));

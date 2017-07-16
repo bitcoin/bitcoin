@@ -1156,14 +1156,17 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
                 ProduceSignature(MutableTransactionSignatureCreator(&keystore, &mergedTx, i, vchAmount, nHashType), prevPubKey, sigdata);
         };
 
+        
         // ... and merge in other signatures:
         BOOST_FOREACH(const CMutableTransaction& txv, txVariants) {
+            
             if (txv.vin.size() > i) {
                 sigdata = CombineSignatures(prevPubKey, TransactionSignatureChecker(&txConst, i, vchAmount), sigdata, DataFromTransaction(txv, i));
             }
         }
 
         UpdateTransaction(mergedTx, i, sigdata);
+        
 
         ScriptError serror = SCRIPT_ERR_OK;
         if (!VerifyScript(txin.scriptSig, prevPubKey, &txin.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, TransactionSignatureChecker(&txConst, i, vchAmount), &serror)) {

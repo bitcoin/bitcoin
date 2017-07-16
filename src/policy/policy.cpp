@@ -238,14 +238,22 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
             prevScript = prev.scriptPubKey;
         };
 
-        
         if (prevScript.IsPayToScriptHash()) {
             std::vector <std::vector<unsigned char> > stack;
+            
             // If the scriptPubKey is P2SH, we try to extract the redeemScript casually by converting the scriptSig
             // into a stack. We do not check IsPushOnly nor compare the hash as these will be done later anyway.
             // If the check fails at this stage, we know that this txid must be a bad one.
-            if (!EvalScript(stack, tx.vin[i].scriptSig, SCRIPT_VERIFY_NONE, BaseSignatureChecker(), SIGVERSION_BASE))
-                return false;
+            
+            if (!tx.IsParticlVersion())
+            {
+                if (!EvalScript(stack, tx.vin[i].scriptSig, SCRIPT_VERIFY_NONE, BaseSignatureChecker(), SIGVERSION_BASE))
+                    return false;
+            } else
+            {
+                stack = tx.vin[i].scriptWitness.stack;
+            };
+            
             if (stack.empty())
                 return false;
             prevScript = CScript(stack.back().begin(), stack.back().end());
@@ -261,9 +269,11 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
         
         // Check P2WSH standard limits
         if (witnessversion == 0 && witnessprogram.size() == 32) {
+            
             if (tx.vin[i].scriptWitness.stack.back().size() > MAX_STANDARD_P2WSH_SCRIPT_SIZE)
                 return false;
             size_t sizeWitnessStack = tx.vin[i].scriptWitness.stack.size() - 1;
+            
             if (sizeWitnessStack > MAX_STANDARD_P2WSH_STACK_ITEMS)
                 return false;
             for (unsigned int j = 0; j < sizeWitnessStack; j++) {

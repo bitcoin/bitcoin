@@ -623,7 +623,7 @@ bool CheckBlindOutput(CValidationState &state, const CTxOutCT *p)
     if (p->vRangeproof.size() > nRangeProofLen)
         return state.DoS(100, false, REJECT_INVALID, "bad-ctout-rangeproof-size");
     
-    if ((fReindex || fImporting) && fSkipRangeproof)
+    if ((fBusyImporting) && fSkipRangeproof)
         return true;
     
     uint64_t min_value, max_value;
@@ -654,7 +654,7 @@ bool CheckAnonOutput(CValidationState &state, const CTxOutRingCT *p)
     if (p->vRangeproof.size() > nRangeProofLen)
         return state.DoS(100, false, REJECT_INVALID, "bad-rctout-rangeproof-size");
     
-    if ((fReindex || fImporting) && fSkipRangeproof)
+    if ((fBusyImporting) && fSkipRangeproof)
         return true;
     
     uint64_t min_value, max_value;

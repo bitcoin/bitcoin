@@ -205,8 +205,6 @@ public:
     COutPoint prevoutStake;
     //uint256 hashProof;
     CAmount nMoneySupply;
-    
-    
 
     //! Verification status of this block. See enum BlockStatus
     unsigned int nStatus;
