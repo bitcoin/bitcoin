@@ -117,7 +117,7 @@ public:
      * Create new TxConfirmStats. This is called by BlockPolicyEstimator's
      * constructor with default values.
      * @param defaultBuckets contains the upper limits for the bucket boundaries
-     * @param maxConfirms max number of confirms to track
+     * @param maxPeriods max number of periods to track
      * @param decay how much to decay the historical moving average per block
      */
     TxConfirmStats(const std::vector<double>& defaultBuckets, const std::map<double, unsigned int>& defaultBucketMap,
