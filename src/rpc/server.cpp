@@ -213,6 +213,12 @@ std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest&
                     std::string firstLetter = category.substr(0,1);
                     boost::to_upper(firstLetter);
                     strRet += "== " + firstLetter + category.substr(1) + " ==\n";
+                    if (category == "wallet") {
+                        strRet += "\nWhen more than one wallet is loaded (multiple -`wallet=filename` options passed\n"
+                                  "to bitcoind), wallet RPCs must be called with an extra named JSON-RPC `wallet`\n"
+                                  "parameter containing the wallet filename to disambiguate which wallet file the\n"
+                                  "RPC is intended for. Failure to specify will result in method disabled errors.\n\n";
+                    }
                 }
             }
             strRet += strHelp + "\n";
@@ -471,6 +477,11 @@ static inline JSONRPCRequest transformNamedArguments(const JSONRPCRequest& in, c
         } else {
             hole += 1;
         }
+    }
+    auto wallet = argsIn.find("wallet");
+    if (wallet != argsIn.end() && wallet->second->isStr()) {
+        out.wallet = wallet->second->getValStr();
+        argsIn.erase(wallet);
     }
     // If there are still arguments in the argsIn map, this is an error.
     if (!argsIn.empty()) {
