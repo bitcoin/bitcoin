@@ -185,19 +185,19 @@ void OverviewPage::setBalance(const CAmount& balance, const CAmount& unconfirmed
     ui->labelWatchImmature->setVisible(showWatchOnlyImmature); // show watch-only immature balance
 
     ui->hodlTable->setRowCount(termDepositInfo.size());
-    //ui->hodlTable->setColumnCount(12);
 
     // actually update labels
     int nDisplayUnit = BitcoinUnits::HODL;
-    //if (model && model->getOptionsModel())
-    //    nDisplayUnit = model->getOptionsModel()->getDisplayUnit();
     // Disable sorting outside the for loop 
     ui->hodlTable->setSortingEnabled(false);
-
+    
+    uint64_t totalLocked  = 0;
+    uint64_t totalAccrued = 0;
+    uint64_t totalMatured = 0;
+     
     for(int i=0;i<termDepositInfo.size();i++){
         COutput ctermDeposit=termDepositInfo[i];
         CTxOut termDeposit=ctermDeposit.tx->vout[ctermDeposit.i];
-        //QString nval=QString(""+termDeposit.nValue);
         int curHeight=this->clientModel->getNumBlocks();
         int lockHeight=curHeight-ctermDeposit.nDepth;
         int releaseBlock=termDeposit.scriptPubKey.GetTermDepositReleaseBlock();
@@ -212,15 +212,19 @@ void OverviewPage::setBalance(const CAmount& balance, const CAmount& unconfirmed
         
         if(curHeight>=releaseBlock){
             ui->hodlTable->setItem(i, 0, new QTableWidgetItem(QString("Matured (Warning: this amount is no longer earning interest of any kind)")));
+            totalMatured += matureValue;
         }else{
             ui->hodlTable->setItem(i, 0, new QTableWidgetItem(QString("HOdled")));
+            totalAccrued += (withInterest-termDeposit.nValue);
+	    totalLocked  += termDeposit.nValue;
         }
+
         ui->hodlTable->setItem(i, 1, new QTableWidgetItem(BitcoinUnits::format(nDisplayUnit, termDeposit.nValue)));
         ui->hodlTable->setItem(i, 2, new QTableWidgetItem(BitcoinUnits::format(nDisplayUnit, withInterest-termDeposit.nValue)));
-        //ui->hodlTable->setItem(i, 3, new QTableWidgetItem(QString::number(interestRate)+QString("%")));
         ui->hodlTable->setItem(i, 3, new QTableWidgetItem(BitcoinUnits::format(nDisplayUnit, withInterest)));
         ui->hodlTable->setItem(i, 4, new QTableWidgetItem(BitcoinUnits::format(nDisplayUnit, matureValue)));
         ui->hodlTable->setItem(i, 5, new QTableWidgetItem(QString::number((term)/561)));
+
         if(!sort_flag){
             ui->hodlTable->setItem(i, 6, new QTableWidgetItem(QString::number(lockHeight)));
             ui->hodlTable->setItem(i, 7, new QTableWidgetItem(QString::number(releaseBlock)));
@@ -228,7 +232,6 @@ void OverviewPage::setBalance(const CAmount& balance, const CAmount& unconfirmed
             ui->hodlTable->setItem(i, 6, new QTableWidgetItem(QString::number(lockHeight).rightJustified(7,'0')));
             ui->hodlTable->setItem(i, 7, new QTableWidgetItem(QString::number(releaseBlock).rightJustified(7,'0')));
         }
-        //time_t releaseDate = time(0)+blocksRemaining*154;
 
         time_t rawtime;
         struct tm * timeinfo;
@@ -240,8 +243,12 @@ void OverviewPage::setBalance(const CAmount& balance, const CAmount& unconfirmed
         std::string str(buffer);
 
         ui->hodlTable->setItem(i, 8, new QTableWidgetItem(QString(buffer)));
-        //ui->hodlTable->setItem(i, 9, new QTableWidgetItem(QString::number(interestRatePerBlock)+QString("%")));
     }
+   
+    ui->labellocked->setText(BitcoinUnits::formatWithUnit(unit, totalLocked, false, BitcoinUnits::separatorAlways));
+    ui->labelaccrued->setText(BitcoinUnits::formatWithUnit(unit, totalAccrued, false, BitcoinUnits::separatorAlways));
+    ui->labelMatured->setText(BitcoinUnits::formatWithUnit(unit, totalMatured, false, BitcoinUnits::separatorAlways));
+ 
     if(sort_flag){
      ui->hodlTable->setSortingEnabled(true);
     }
