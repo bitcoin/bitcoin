@@ -482,7 +482,13 @@ void ArgsManager::ForceSetArg(const std::string& strArg, const std::string& strV
     mapMultiArgs[strArg].push_back(strValue);
 }
 
-
+bool ArgsManager::ClearArg(const std::string& strArg)
+{
+    LOCK(cs_args);
+    return mapArgs.erase(strArg) | mapMultiArgs.erase(strArg);
+    // bitwise or is deliberate. erase() returns number of items erased. We don't want
+    // to short-circuit the mapMultiArgs erase().
+}
 
 static const int screenWidth = 79;
 static const int optIndent = 2;
