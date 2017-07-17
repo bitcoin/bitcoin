@@ -4,77 +4,73 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the zapwallettxes functionality.
 
-- start three bitcoind nodes
-- create four transactions on node 0 - two are confirmed and two are
-  unconfirmed.
-- restart node 1 and verify that both the confirmed and the unconfirmed
+- start two bitcoind nodes
+- create two transactions on node 0 - one is confirmed and one is unconfirmed.
+- restart node 0 and verify that both the confirmed and the unconfirmed
   transactions are still available.
-- restart node 0 and verify that the confirmed transactions are still
-  available, but that the unconfirmed transaction has been zapped.
+- restart node 0 with zapwallettxes and persistmempool, and verify that both
+  the confirmed and the unconfirmed transactions are still available.
+- restart node 0 with just zapwallettxed and verify that the confirmed
+  transactions are still available, but that the unconfirmed transaction has
+  been zapped.
 """
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
-
+from test_framework.util import (assert_equal,
+                                 assert_raises_jsonrpc,
+                                 )
 
 class ZapWalletTXesTest (BitcoinTestFramework):
 
     def __init__(self):
         super().__init__()
         self.setup_clean_chain = True
-        self.num_nodes = 3
+        self.num_nodes = 2
 
-    def setup_network(self):
-        super().setup_network()
-        connect_nodes_bi(self.nodes,0,2)
-
-    def run_test (self):
+    def run_test(self):
         self.log.info("Mining blocks...")
         self.nodes[0].generate(1)
         self.sync_all()
-        self.nodes[1].generate(101)
+        self.nodes[1].generate(100)
         self.sync_all()
-        
-        assert_equal(self.nodes[0].getbalance(), 500)
-        
-        txid0 = self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 11)
-        txid1 = self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 10)
-        self.sync_all()
+
+        # This transaction will be confirmed
+        txid1 = self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 10)
+
         self.nodes[0].generate(1)
         self.sync_all()
-        
-        txid2 = self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 11)
-        txid3 = self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 10)
-        
-        tx0 = self.nodes[0].gettransaction(txid0)
-        assert_equal(tx0['txid'], txid0) #tx0 must be available (confirmed)
-        
-        tx1 = self.nodes[0].gettransaction(txid1)
-        assert_equal(tx1['txid'], txid1) #tx1 must be available (confirmed)
-        
-        tx2 = self.nodes[0].gettransaction(txid2)
-        assert_equal(tx2['txid'], txid2) #tx2 must be available (unconfirmed)
-        
-        tx3 = self.nodes[0].gettransaction(txid3)
-        assert_equal(tx3['txid'], txid3) #tx3 must be available (unconfirmed)
-        
-        #restart bitcoind
-        self.stop_node(0)
-        self.nodes[0] = self.start_node(0,self.options.tmpdir)
-        
-        tx3 = self.nodes[0].gettransaction(txid3)
-        assert_equal(tx3['txid'], txid3) #tx must be available (unconfirmed)
-        
-        self.stop_node(0)
-        
-        #restart bitcoind with zapwallettxes
-        self.nodes[0] = self.start_node(0,self.options.tmpdir, ["-zapwallettxes=1"])
-        
-        assert_raises(JSONRPCException, self.nodes[0].gettransaction, [txid3])
-        #there must be an exception because the unconfirmed wallettx0 must be gone by now
 
-        tx0 = self.nodes[0].gettransaction(txid0)
-        assert_equal(tx0['txid'], txid0) #tx0 (confirmed) must still be available because it was confirmed
+        # This transaction will not be confirmed
+        txid2 = self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 20)
 
+        # Confirmed and unconfirmed transactions are now in the wallet.
+        assert_equal(self.nodes[0].gettransaction(txid1)['txid'], txid1)
+        assert_equal(self.nodes[0].gettransaction(txid2)['txid'], txid2)
+
+        # Stop-start node0. Both confirmed and unconfirmed transactions remain in the wallet.
+        self.stop_node(0)
+        self.nodes[0] = self.start_node(0, self.options.tmpdir)
+
+        assert_equal(self.nodes[0].gettransaction(txid1)['txid'], txid1)
+        assert_equal(self.nodes[0].gettransaction(txid2)['txid'], txid2)
+
+        # Stop node0 and restart with zapwallettxes and persistmempool. The unconfirmed
+        # transaction is zapped from the wallet, but is re-added when the mempool is reloaded.
+        self.stop_node(0)
+        self.nodes[0] = self.start_node(0, self.options.tmpdir, ["-persistmempool=1", "-zapwallettxes=2"])
+
+        assert_equal(self.nodes[0].gettransaction(txid1)['txid'], txid1)
+        assert_equal(self.nodes[0].gettransaction(txid2)['txid'], txid2)
+
+        # Stop node0 and restart with zapwallettxes, but not persistmempool.
+        # The unconfirmed transaction is zapped and is no longer in the wallet.
+        self.stop_node(0)
+        self.nodes[0] = self.start_node(0, self.options.tmpdir, ["-zapwallettxes=2"])
+
+        # tx1 is still be available because it was confirmed
+        assert_equal(self.nodes[0].gettransaction(txid1)['txid'], txid1)
+
+        # This will raise an exception because the unconfirmed transaction has been zapped
+        assert_raises_jsonrpc(-5, 'Invalid or non-wallet transaction id', self.nodes[0].gettransaction, txid2)
 
 if __name__ == '__main__':
-    ZapWalletTXesTest ().main ()
+    ZapWalletTXesTest().main()
