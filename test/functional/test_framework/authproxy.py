@@ -42,9 +42,8 @@ import socket
 import time
 import urllib.parse
 
-USER_AGENT = "AuthServiceProxy/0.1"
-
 HTTP_TIMEOUT = 30
+USER_AGENT = "AuthServiceProxy/0.1"
 
 log = logging.getLogger("BitcoinRPC")
 
@@ -70,7 +69,7 @@ class AuthServiceProxy(object):
     def __init__(self, service_url, service_name=None, timeout=HTTP_TIMEOUT, connection=None, ensure_ascii=True):
         self.__service_url = service_url
         self._service_name = service_name
-        self.ensure_ascii = ensure_ascii # can be toggled on the fly by tests
+        self.ensure_ascii = ensure_ascii  # can be toggled on the fly by tests
         self.__url = urllib.parse.urlparse(service_url)
         if self.__url.port is None:
             port = 80
@@ -92,11 +91,9 @@ class AuthServiceProxy(object):
             # Callables re-use the connection of the original proxy
             self.__conn = connection
         elif self.__url.scheme == 'https':
-            self.__conn = http.client.HTTPSConnection(self.__url.hostname, port,
-                                                  timeout=timeout)
+            self.__conn = http.client.HTTPSConnection(self.__url.hostname, port, timeout=timeout)
         else:
-            self.__conn = http.client.HTTPConnection(self.__url.hostname, port,
-                                                 timeout=timeout)
+            self.__conn = http.client.HTTPConnection(self.__url.hostname, port, timeout=timeout)
 
     def __getattr__(self, name):
         if name.startswith('__') and name.endswith('__'):
@@ -119,13 +116,13 @@ class AuthServiceProxy(object):
             self.__conn.request(method, path, postdata, headers)
             return self._get_response()
         except http.client.BadStatusLine as e:
-            if e.line == "''": # if connection was closed, try again
+            if e.line == "''":  # if connection was closed, try again
                 self.__conn.close()
                 self.__conn.request(method, path, postdata, headers)
                 return self._get_response()
             else:
                 raise
-        except (BrokenPipeError,ConnectionResetError):
+        except (BrokenPipeError, ConnectionResetError):
             # Python 3.5+ raises BrokenPipeError instead of BadStatusLine when the connection was reset
             # ConnectionResetError happens on FreeBSD with Python 3.4
             self.__conn.close()
@@ -135,8 +132,8 @@ class AuthServiceProxy(object):
     def get_request(self, *args, **argsn):
         AuthServiceProxy.__id_count += 1
 
-        log.debug("-%s-> %s %s"%(AuthServiceProxy.__id_count, self._service_name,
-                                 json.dumps(args, default=EncodeDecimal, ensure_ascii=self.ensure_ascii)))
+        log.debug("-%s-> %s %s" % (AuthServiceProxy.__id_count, self._service_name,
+                                   json.dumps(args, default=EncodeDecimal, ensure_ascii=self.ensure_ascii)))
         if args and argsn:
             raise ValueError('Cannot handle both named and positional arguments')
         return {'version': '1.1',
@@ -157,7 +154,7 @@ class AuthServiceProxy(object):
 
     def batch(self, rpc_call_list):
         postdata = json.dumps(list(rpc_call_list), default=EncodeDecimal, ensure_ascii=self.ensure_ascii)
-        log.debug("--> "+postdata)
+        log.debug("--> " + postdata)
         return self._request('POST', self.__url.path, postdata.encode('utf-8'))
 
     def _get_response(self):
@@ -184,9 +181,9 @@ class AuthServiceProxy(object):
         response = json.loads(responsedata, parse_float=decimal.Decimal)
         elapsed = time.time() - req_start_time
         if "error" in response and response["error"] is None:
-            log.debug("<-%s- [%.6f] %s"%(response["id"], elapsed, json.dumps(response["result"], default=EncodeDecimal, ensure_ascii=self.ensure_ascii)))
+            log.debug("<-%s- [%.6f] %s" % (response["id"], elapsed, json.dumps(response["result"], default=EncodeDecimal, ensure_ascii=self.ensure_ascii)))
         else:
-            log.debug("<-- [%.6f] %s"%(elapsed,responsedata))
+            log.debug("<-- [%.6f] %s" % (elapsed, responsedata))
         return response
 
     def __truediv__(self, relative_uri):
