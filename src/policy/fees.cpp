@@ -824,8 +824,10 @@ double CBlockPolicyEstimator::estimateConservativeFee(unsigned int doubleTarget,
  * estimates, however, required the 95% threshold at 2 * target be met for any
  * longer time horizons also.
  */
-CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation *feeCalc, const CTxMemPool& pool, bool conservative) const
+CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation *feeCalc, bool conservative) const
 {
+    LOCK(cs_feeEstimator);
+
     if (feeCalc) {
         feeCalc->desiredTarget = confTarget;
         feeCalc->returnedTarget = confTarget;
@@ -833,79 +835,69 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation 
 
     double median = -1;
     EstimationResult tempResult;
-    {
-        LOCK(cs_feeEstimator);
 
-        // Return failure if trying to analyze a target we're not tracking
-        if (confTarget <= 0 || (unsigned int)confTarget > longStats->GetMaxConfirms())
-            return CFeeRate(0);
+    // Return failure if trying to analyze a target we're not tracking
+    if (confTarget <= 0 || (unsigned int)confTarget > longStats->GetMaxConfirms())
+        return CFeeRate(0);
 
-        // It's not possible to get reasonable estimates for confTarget of 1
-        if (confTarget == 1)
-            confTarget = 2;
+    // It's not possible to get reasonable estimates for confTarget of 1
+    if (confTarget == 1)
+        confTarget = 2;
 
-        unsigned int maxUsableEstimate = MaxUsableEstimate();
-        if (maxUsableEstimate <= 1)
-            return CFeeRate(0);
+    unsigned int maxUsableEstimate = MaxUsableEstimate();
+    if (maxUsableEstimate <= 1)
+        return CFeeRate(0);
 
-        if ((unsigned int)confTarget > maxUsableEstimate) {
-            confTarget = maxUsableEstimate;
-        }
+    if ((unsigned int)confTarget > maxUsableEstimate) {
+        confTarget = maxUsableEstimate;
+    }
 
-        assert(confTarget > 0); //estimateCombinedFee and estimateConservativeFee take unsigned ints
-        /** true is passed to estimateCombined fee for target/2 and target so
-         * that we check the max confirms for shorter time horizons as well.
-         * This is necessary to preserve monotonically increasing estimates.
-         * For non-conservative estimates we do the same thing for 2*target, but
-         * for conservative estimates we want to skip these shorter horizons
-         * checks for 2*target because we are taking the max over all time
-         * horizons so we already have monotonically increasing estimates and
-         * the purpose of conservative estimates is not to let short term
-         * fluctuations lower our estimates by too much.
-         */
-        double halfEst = estimateCombinedFee(confTarget/2, HALF_SUCCESS_PCT, true, &tempResult);
+    assert(confTarget > 0); //estimateCombinedFee and estimateConservativeFee take unsigned ints
+    /** true is passed to estimateCombined fee for target/2 and target so
+     * that we check the max confirms for shorter time horizons as well.
+     * This is necessary to preserve monotonically increasing estimates.
+     * For non-conservative estimates we do the same thing for 2*target, but
+     * for conservative estimates we want to skip these shorter horizons
+     * checks for 2*target because we are taking the max over all time
+     * horizons so we already have monotonically increasing estimates and
+     * the purpose of conservative estimates is not to let short term
+     * fluctuations lower our estimates by too much.
+     */
+    double halfEst = estimateCombinedFee(confTarget/2, HALF_SUCCESS_PCT, true, &tempResult);
+    if (feeCalc) {
+        feeCalc->est = tempResult;
+        feeCalc->reason = FeeReason::HALF_ESTIMATE;
+    }
+    median = halfEst;
+    double actualEst = estimateCombinedFee(confTarget, SUCCESS_PCT, true, &tempResult);
+    if (actualEst > median) {
+        median = actualEst;
         if (feeCalc) {
             feeCalc->est = tempResult;
-            feeCalc->reason = FeeReason::HALF_ESTIMATE;
+            feeCalc->reason = FeeReason::FULL_ESTIMATE;
         }
-        median = halfEst;
-        double actualEst = estimateCombinedFee(confTarget, SUCCESS_PCT, true, &tempResult);
-        if (actualEst > median) {
-            median = actualEst;
-            if (feeCalc) {
-                feeCalc->est = tempResult;
-                feeCalc->reason = FeeReason::FULL_ESTIMATE;
-            }
+    }
+    double doubleEst = estimateCombinedFee(2 * confTarget, DOUBLE_SUCCESS_PCT, !conservative, &tempResult);
+    if (doubleEst > median) {
+        median = doubleEst;
+        if (feeCalc) {
+            feeCalc->est = tempResult;
+            feeCalc->reason = FeeReason::DOUBLE_ESTIMATE;
         }
-        double doubleEst = estimateCombinedFee(2 * confTarget, DOUBLE_SUCCESS_PCT, !conservative, &tempResult);
-        if (doubleEst > median) {
-            median = doubleEst;
-            if (feeCalc) {
-                feeCalc->est = tempResult;
-                feeCalc->reason = FeeReason::DOUBLE_ESTIMATE;
-            }
-        }
+    }
 
-        if (conservative || median == -1) {
-            double consEst =  estimateConservativeFee(2 * confTarget, &tempResult);
-            if (consEst > median) {
-                median = consEst;
-                if (feeCalc) {
-                    feeCalc->est = tempResult;
-                    feeCalc->reason = FeeReason::CONSERVATIVE;
-                }
+    if (conservative || median == -1) {
+        double consEst =  estimateConservativeFee(2 * confTarget, &tempResult);
+        if (consEst > median) {
+            median = consEst;
+            if (feeCalc) {
+                feeCalc->est = tempResult;
+                feeCalc->reason = FeeReason::CONSERVATIVE;
             }
         }
-    } // Must unlock cs_feeEstimator before taking mempool locks
+    }
 
     if (feeCalc) feeCalc->returnedTarget = confTarget;
-
-    // If mempool is limiting txs , return at least the min feerate from the mempool
-    CAmount minPoolFee = pool.GetMinFee(gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFeePerK();
-    if (minPoolFee > 0 && minPoolFee > median) {
-        if (feeCalc) feeCalc->reason = FeeReason::MEMPOOL_MIN;
-        return CFeeRate(minPoolFee);
-    }
 
     if (median < 0)
         return CFeeRate(0);

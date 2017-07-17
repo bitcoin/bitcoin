@@ -375,7 +375,7 @@ UniValue getaddressesbyaccount(const JSONRPCRequest& request)
     return ret;
 }
 
-static void SendMoney(CWallet * const pwallet, const CTxDestination &address, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, bool fUsePrivateSend = false, CCoinControl *coin_control = nullptr)
+static void SendMoney(CWallet * const pwallet, const CTxDestination &address, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, bool fUsePrivateSend = false, const CCoinControl& coin_control)
 {
     CAmount curBalance = pwallet->GetBalance();
 
@@ -483,7 +483,7 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
     }
 
     if (request.params.size() > 7 && !request.params[7].isNull()) {
-        coin_control.nConfirmTarget = request.params[7].get_int();
+        coin_control.m_confirm_target = ParseConfirmTarget(request.params[7]);
     }
 
     if (request.params.size() > 8 && !request.params[8].isNull()) {
@@ -494,7 +494,7 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
 
     EnsureWalletIsUnlocked(pwallet);
 
-    SendMoney(pwallet, address.Get(), nAmount, fSubtractFeeFromAmount, wtx, fUsePrivateSend, &coin_control);
+    SendMoney(pwallet, address.Get(), nAmount, fSubtractFeeFromAmount, wtx, fUsePrivateSend, coin_control);
 
     return wtx.GetHash().GetHex();
 }
@@ -969,7 +969,8 @@ UniValue sendfrom(const JSONRPCRequest& request)
     if (nAmount > nBalance)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Account has insufficient funds");
 
-    SendMoney(pwallet, address.Get(), nAmount, false, wtx);
+    CCoinControl no_coin_control; // This is a deprecated API
+    SendMoney(pwallet, address.Get(), nAmount, false, wtx, no_coin_control);
 
     return wtx.GetHash().GetHex();
 }
@@ -1054,7 +1055,7 @@ UniValue sendmany(const JSONRPCRequest& request)
     }
 
     if (request.params.size() > 8 && !request.params[8].isNull()) {
-        coin_control.nConfirmTarget = request.params[8].get_int();
+        coin_control.m_confirm_target = ParseConfirmTarget(request.params[8]);
     }
 
     if (request.params.size() > 9 && !request.params[9].isNull()) {
@@ -1109,7 +1110,7 @@ UniValue sendmany(const JSONRPCRequest& request)
     std::string strFailReason;
 
     bool fCreated = pwallet->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired, nChangePosRet, strFailReason,
-                                               &coin_control, true, fUsePrivateSend ? ONLY_DENOMINATED : ALL_COINS);
+                                               coin_control, true, fUsePrivateSend ? ONLY_DENOMINATED : ALL_COINS);
     if (!fCreated)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, strFailReason);
     CValidationState state;
@@ -2953,13 +2954,9 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
     RPCTypeCheck(request.params, {UniValue::VSTR});
 
     CCoinControl coinControl;
-    coinControl.destChange = CNoDestination();
     int changePosition = -1;
-    coinControl.fAllowWatchOnly = false;  // include watching
     bool lockUnspents = false;
     bool reserveChangeKey = true;
-    coinControl.nFeeRate = CFeeRate(0);
-    coinControl.fOverrideFeeRate = false;
     UniValue subtractFeeFromOutputs;
     std::set<int> setSubtractFeeFromOutputs;
 
@@ -3010,14 +3007,14 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
 
         if (options.exists("feeRate"))
         {
-            coinControl.nFeeRate = CFeeRate(AmountFromValue(options["feeRate"]));
+            coinControl.m_feerate = CFeeRate(AmountFromValue(options["feeRate"]));
             coinControl.fOverrideFeeRate = true;
         }
 
         if (options.exists("subtractFeeFromOutputs"))
             subtractFeeFromOutputs = options["subtractFeeFromOutputs"].get_array();
         if (options.exists("conf_target")) {
-            coinControl.nConfirmTarget = options["conf_target"].get_int();
+            coinControl.m_confirm_target = ParseConfirmTarget(options["conf_target"]);
         }
         if (options.exists("estimate_mode")) {
             if (!FeeModeFromString(options["estimate_mode"].get_str(), coinControl.m_fee_mode)) {
