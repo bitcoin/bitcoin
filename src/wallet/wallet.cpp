@@ -3701,7 +3701,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                 // and in the spirit of "smallest possible change from prior
                 // behavior."
                 vecTxDSInTmp.clear();
-                const uint32_t nSequence = coin_control.signalRbf ? MAX_BIP125_RBF_SEQUENCE : (std::numeric_limits<unsigned int>::max() - 1);
+                const uint32_t nSequence = coin_control.signalRbf ? MAX_BIP125_RBF_SEQUENCE : (CTxIn::SEQUENCE_FINAL - 1);
                 for (const auto& coin : setCoins) {
                     CTxIn txin = CTxIn(coin.outpoint,CScript(), nSequence);
                     vecTxDSInTmp.push_back(CTxDSIn(txin, coin.txout.scriptPubKey));
