@@ -132,6 +132,7 @@ class CRPCCommand
 {
 public:
     std::string category;
+    std::string endpoint;
     std::string name;
     rpcfn_type actor;
     bool okSafeMode;

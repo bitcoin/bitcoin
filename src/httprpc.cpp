@@ -226,6 +226,11 @@ static bool InitRPCAuthentication()
     return true;
 }
 
+void RegisterJSONEndpoint(const std::string& endpoint, bool exactMatch)
+{
+    RegisterHTTPHandler(endpoint, exactMatch, HTTPReq_JSONRPC);
+}
+
 bool StartHTTPRPC()
 {
     LogPrint(BCLog::RPC, "Starting HTTP RPC server\n");

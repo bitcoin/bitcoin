@@ -622,20 +622,20 @@ UniValue setnetworkactive(const JSONRPCRequest& request)
 }
 
 static const CRPCCommand commands[] =
-{ //  category              name                      actor (function)         okSafeMode
-  //  --------------------- ------------------------  -----------------------  ----------
-    { "network",            "getconnectioncount",     &getconnectioncount,     true,  {} },
-    { "network",            "ping",                   &ping,                   true,  {} },
-    { "network",            "getpeerinfo",            &getpeerinfo,            true,  {} },
-    { "network",            "addnode",                &addnode,                true,  {"node","command"} },
-    { "network",            "disconnectnode",         &disconnectnode,         true,  {"address", "nodeid"} },
-    { "network",            "getaddednodeinfo",       &getaddednodeinfo,       true,  {"node"} },
-    { "network",            "getnettotals",           &getnettotals,           true,  {} },
-    { "network",            "getnetworkinfo",         &getnetworkinfo,         true,  {} },
-    { "network",            "setban",                 &setban,                 true,  {"subnet", "command", "bantime", "absolute"} },
-    { "network",            "listbanned",             &listbanned,             true,  {} },
-    { "network",            "clearbanned",            &clearbanned,            true,  {} },
-    { "network",            "setnetworkactive",       &setnetworkactive,       true,  {"state"} },
+{ //  category              endpoint      name                      actor (function)         okSafeMode  named args
+  //  ------------------    ------------  ----------------------    -----------------------  ----------  ------------------
+    { "network",            "/v1/node/",  "getconnectioncount",     &getconnectioncount,     true,       {} },
+    { "network",            "/v1/node/",  "ping",                   &ping,                   true,       {} },
+    { "network",            "/v1/node/",  "getpeerinfo",            &getpeerinfo,            true,       {} },
+    { "network",            "/v1/node/",  "addnode",                &addnode,                true,       {"node","command"} },
+    { "network",            "/v1/node/",  "disconnectnode",         &disconnectnode,         true,       {"address", "nodeid"} },
+    { "network",            "/v1/node/",  "getaddednodeinfo",       &getaddednodeinfo,       true,       {"node"} },
+    { "network",            "/v1/node/",  "getnettotals",           &getnettotals,           true,       {} },
+    { "network",            "/v1/node/",  "getnetworkinfo",         &getnetworkinfo,         true,       {} },
+    { "network",            "/v1/node/",  "setban",                 &setban,                 true,       {"subnet", "command", "bantime", "absolute"} },
+    { "network",            "/v1/node/",  "listbanned",             &listbanned,             true,       {} },
+    { "network",            "/v1/node/",  "clearbanned",            &clearbanned,            true,       {} },
+    { "network",            "/v1/node/",  "setnetworkactive",       &setnetworkactive,       true,       {"state"} },
 };
 
 void RegisterNetRPCCommands(CRPCTable &t)

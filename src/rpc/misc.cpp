@@ -644,20 +644,20 @@ UniValue echo(const JSONRPCRequest& request)
 }
 
 static const CRPCCommand commands[] =
-{ //  category              name                      actor (function)         okSafeMode
-  //  --------------------- ------------------------  -----------------------  ----------
-    { "control",            "getinfo",                &getinfo,                true,  {} }, /* uses wallet if enabled */
-    { "control",            "getmemoryinfo",          &getmemoryinfo,          true,  {"mode"} },
-    { "util",               "validateaddress",        &validateaddress,        true,  {"address"} }, /* uses wallet if enabled */
-    { "util",               "createmultisig",         &createmultisig,         true,  {"nrequired","keys"} },
-    { "util",               "verifymessage",          &verifymessage,          true,  {"address","signature","message"} },
-    { "util",               "signmessagewithprivkey", &signmessagewithprivkey, true,  {"privkey","message"} },
+{ //  category              endpoint      name                      actor (function)         okSafeMode  named args
+  //  ------------------    ------------  ----------------------    -----------------------  ----------  ------------------
+    { "control",            "/v1/node/",  "getinfo",                &getinfo,                true,       {} }, /* uses wallet if enabled */
+    { "control",            "/v1/node/",  "getmemoryinfo",          &getmemoryinfo,          true,       {"mode"} },
+    { "util",               "/v1/*",      "validateaddress",        &validateaddress,        true,       {"address"} }, /* uses wallet if enabled */
+    { "util",               "/v1/*",      "createmultisig",         &createmultisig,         true,       {"nrequired","keys"} },
+    { "util",               "/v1/node/",  "verifymessage",          &verifymessage,          true,       {"address","signature","message"} },
+    { "util",               "/v1/node/",  "signmessagewithprivkey", &signmessagewithprivkey, true,       {"privkey","message"} },
 
     /* Not shown in help */
-    { "hidden",             "setmocktime",            &setmocktime,            true,  {"timestamp"}},
-    { "hidden",             "echo",                   &echo,                   true,  {"arg0","arg1","arg2","arg3","arg4","arg5","arg6","arg7","arg8","arg9"}},
-    { "hidden",             "echojson",               &echo,                   true,  {"arg0","arg1","arg2","arg3","arg4","arg5","arg6","arg7","arg8","arg9"}},
-    { "hidden",             "logging",                &logging,                true,  {"include", "exclude"}},
+    { "hidden",             "/v1/node/",  "setmocktime",            &setmocktime,            true,       {"timestamp"}},
+    { "hidden",             "/v1/node/",  "echo",                   &echo,                   true,       {"arg0","arg1","arg2","arg3","arg4","arg5","arg6","arg7","arg8","arg9"}},
+    { "hidden",             "/v1/node/",  "echojson",               &echo,                   true,       {"arg0","arg1","arg2","arg3","arg4","arg5","arg6","arg7","arg8","arg9"}},
+    { "hidden",             "/v1/node/",  "logging",                &logging,                true,       {"include", "exclude"}},
 };
 
 void RegisterMiscRPCCommands(CRPCTable &t)

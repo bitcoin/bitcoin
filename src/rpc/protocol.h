@@ -82,6 +82,7 @@ enum RPCErrorCode
     RPC_WALLET_WRONG_ENC_STATE      = -15, //!< Command given in wrong wallet encryption state (encrypting an encrypted wallet etc.)
     RPC_WALLET_ENCRYPTION_FAILED    = -16, //!< Failed to encrypt the wallet
     RPC_WALLET_ALREADY_UNLOCKED     = -17, //!< Wallet is already unlocked
+    RPC_WALLET_NOT_FOUND            = -18, //!< Wallet not found (multiwallet)
 };
 
 UniValue JSONRPCRequestObj(const std::string& strMethod, const UniValue& params, const UniValue& id);

@@ -649,7 +649,11 @@ HTTPRequest::RequestMethod HTTPRequest::GetRequestMethod()
 void RegisterHTTPHandler(const std::string &prefix, bool exactMatch, const HTTPRequestHandler &handler)
 {
     LogPrint(BCLog::HTTP, "Registering HTTP handler for %s (exactmatch %d)\n", prefix, exactMatch);
-    pathHandlers.push_back(HTTPPathHandler(prefix, exactMatch, handler));
+    HTTPPathHandler pathHandler(prefix, exactMatch, handler);
+    if (std::find_if(pathHandlers.begin(), pathHandlers.end(), [pathHandler](const HTTPPathHandler a){ return (a.prefix == pathHandler.prefix && a.exactMatch == pathHandler.exactMatch); }) == pathHandlers.end()) {
+        // only add handlers if they do not exists yet
+        pathHandlers.push_back(pathHandler);
+    }
 }
 
 void UnregisterHTTPHandler(const std::string &prefix, bool exactMatch)
@@ -666,3 +670,14 @@ void UnregisterHTTPHandler(const std::string &prefix, bool exactMatch)
     }
 }
 
+std::string urlDecode(const std::string &urlEncoded) {
+    std::string res;
+    if (!urlEncoded.empty()) {
+        char *decoded = evhttp_uridecode(urlEncoded.c_str(), false, NULL);
+        if (decoded) {
+            res = std::string(decoded);
+            free(decoded);
+        }
+    }
+    return res;
+}
