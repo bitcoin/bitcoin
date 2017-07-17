@@ -74,11 +74,17 @@ void RPCTypeCheck(const UniValue& params,
     }
 }
 
-void RPCTypeCheckArgument(const UniValue& value, UniValue::VType typeExpected)
+bool RPCTypeCheckArgument(const UniValue& value, UniValue::VType typeExpected)
 {
+    if (value.isNull()) {
+        return false;
+    }
+
     if (value.type() != typeExpected) {
         throw JSONRPCError(RPC_TYPE_ERROR, strprintf("Expected type %s, got %s", uvTypeName(typeExpected), uvTypeName(value.type())));
     }
+
+    return true;
 }
 
 void RPCTypeCheckObj(const UniValue& o,
