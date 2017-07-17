@@ -821,7 +821,7 @@ bool CMasternodePing::SimpleCheck(int& nDos)
     }
 
     {
-        LOCK(cs_main);
+        AssertLockHeld(cs_main);
         BlockMap::iterator mi = mapBlockIndex.find(blockHash);
         if (mi == mapBlockIndex.end()) {
             LogPrint("masternode", "CMasternodePing::SimpleCheck -- Masternode ping is invalid, unknown block hash: masternode=%s blockHash=%s\n", vin.prevout.ToStringShort(), blockHash.ToString());
