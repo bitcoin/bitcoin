@@ -419,6 +419,7 @@ UniValue smsgscanbuckets(const JSONRPCRequest &request)
     if (!fSecMsgEnabled)
         throw std::runtime_error("Secure messaging is disabled.");
 
+#ifdef ENABLE_WALLET
     if (pwalletSmsg->IsLocked())
         throw std::runtime_error("Wallet is locked.");
 
@@ -430,6 +431,10 @@ UniValue smsgscanbuckets(const JSONRPCRequest &request)
     {
         result.push_back(Pair("result", "Scan Buckets Completed."));
     };
+#else
+    UniValue result(UniValue::VOBJ);
+    throw std::runtime_error("No wallet.");
+#endif
     return result;
 }
 
@@ -739,6 +744,7 @@ UniValue smsginbox(const JSONRPCRequest &request)
         };
     } // cs_smsgDB
 #else
+    UniValue result(UniValue::VOBJ);
     throw std::runtime_error("No wallet.");
 #endif
     return result;
@@ -840,6 +846,7 @@ UniValue smsgoutbox(const JSONRPCRequest &request)
         };
     }
 #else
+    UniValue result(UniValue::VOBJ);
     throw std::runtime_error("No wallet.");
 #endif
     return result;
@@ -1299,6 +1306,7 @@ UniValue smsgview(const JSONRPCRequest &request)
     if (tTo > 0)
         result.push_back(Pair("to", part::GetTimeString(tTo, cbuf, sizeof(cbuf))));
 #else
+    UniValue result(UniValue::VOBJ);
     throw std::runtime_error("No wallet.");
 #endif
     return result;

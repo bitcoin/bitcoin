@@ -9,8 +9,6 @@
 #include "util.h"
 #include "base58.h"
 #include "crypto/hmac_sha512.h"
-#include "wallet/hdwallet.h"
-#include "wallet/crypter.h"
 
 #include <stdint.h>
 
