@@ -337,7 +337,7 @@ static CBlock CreateGenesisBlockTestNet(uint32_t nTime, uint32_t nNonce, uint32_
 
 static CBlock CreateGenesisBlockMainNet(uint32_t nTime, uint32_t nNonce, uint32_t nBits)
 {
-    const char *pszTimestamp = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks";
+    const char *pszTimestamp = "BTC 000000000000000000c679bc2209676d05129834627c7b1c02d1018b224c6f37";
     
     CMutableTransaction txNew;
     txNew.nVersion = PARTICL_TXN_VERSION;
@@ -482,12 +482,12 @@ public:
         nPruneAfterHeight = 100000;
         
         
-        genesis = CreateGenesisBlockMainNet(1496688512, 89272, 0x1f00ffff);
+        genesis = CreateGenesisBlockMainNet(1500296400, 31429, 0x1f00ffff);
         consensus.hashGenesisBlock = genesis.GetHash();
         
-        assert(consensus.hashGenesisBlock == uint256S("0x000091f2da08f779d3311b878fa2c0f821818a54595403e57c8899fe964bdded"));
-        assert(genesis.hashMerkleRoot == uint256S("0x35623ac8695f40ee8c1376cc324be5bc2ef4cc9c277e4c6a0760cc213dbcad8a"));
-        assert(genesis.hashWitnessMerkleRoot == uint256S("0x69736e608a613ff773d5031a34d41d4d0080f674f75391b91b5c8986eb889f17"));
+        assert(consensus.hashGenesisBlock == uint256S("0x0000ee0784c195317ac95623e22fddb8c7b8825dc3998e0bb924d66866eccf4c"));
+        assert(genesis.hashMerkleRoot == uint256S("0xc95fb023cf4bc02ddfed1a59e2b2f53edd1a726683209e2780332edf554f1e3e"));
+        assert(genesis.hashWitnessMerkleRoot == uint256S("0x619e94a7f9f04c8a1d018eb8bcd9c42d3c23171ebed8f351872256e36959d66c"));
 
         // Note that of those with the service bits flag, most only support a subset of possible options
         vSeeds.push_back(CDNSSeedData("mainnet-seed.particl.io",  "mainnet-seed.particl.io", true));

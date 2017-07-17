@@ -10,14 +10,15 @@
 #include <string>
 
 #include "smsg/smessage.h"
-
 #include "script/ismine.h"
+#include "utilstrencodings.h"
 
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"
 #endif
 
 #include <univalue.h>
+
 
 UniValue smsgenable(const JSONRPCRequest &request)
 {
@@ -1322,9 +1323,6 @@ static const CRPCCommand commands[] =
     { "smsg",               "smsgoutbox",             &smsgoutbox,             true, {} },
     { "smsg",               "smsgbuckets",            &smsgbuckets,            true, {} },
     { "smsg",               "smsgview",               &smsgview,               true, {} },
-    
-    
-
 
     /* Not shown in help */
     //{ "hidden",             "setmocktime",            &setmocktime,            true  },

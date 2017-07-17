@@ -154,6 +154,8 @@ bool ProduceSignature(const BaseSignatureCreator& creator, const CScript& fromPu
     std::vector<valtype> result;
     txnouttype whichType;
     solved = SignStep(creator, script, result, whichType, SIGVERSION_BASE);
+    
+    
     bool P2SH = false;
     CScript subscript;
     sigdata.scriptWitness.stack.clear();
@@ -302,7 +304,7 @@ static vector<valtype> CombineMultisig(const CScript& scriptPubKey, const BaseSi
             const valtype& pubkey = vSolutions[i+1];
             if (sigs.count(pubkey))
                 continue; // Already got a sig for this pubkey
-
+            
             if (checker.CheckSig(sig, pubkey, scriptPubKey, sigversion))
             {
                 sigs[pubkey] = sig;
@@ -326,6 +328,7 @@ static vector<valtype> CombineMultisig(const CScript& scriptPubKey, const BaseSi
     // Fill any missing with OP_0:
     for (unsigned int i = nSigsHave; i < nSigsRequired; i++)
         result.push_back(valtype());
+    
 
     return result;
 }
@@ -416,6 +419,7 @@ static Stacks CombineSignatures(const CScript& scriptPubKey, const BaseSignature
     case TX_TIMELOCKED_MULTISIG:
             return Stacks(CombineMultisig(scriptPubKey, checker, vSolutions, sigs1.script, sigs2.script, sigversion));
     case TX_WITNESS_V0_SCRIPTHASH:
+        
         
         if (sigs1.witness.empty() || sigs1.witness.back().empty())
             return sigs2;
