@@ -434,7 +434,7 @@ void CGovernanceManager::UpdateCachesAndClean()
 
     std::vector<uint256> vecDirtyHashes = mnodeman.GetAndClearDirtyGovernanceObjectHashes();
 
-    LOCK(cs);
+    LOCK2(cs_main, cs);
 
     // Flag expired watchdogs for removal
     int64_t nNow = GetAdjustedTime();
