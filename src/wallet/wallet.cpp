@@ -3213,7 +3213,9 @@ bool CWallet::TopUpKeyPool(unsigned int kpSize)
             } else {
                 setExternalKeyPool.insert(nEnd);
             }
-            LogPrintf("keypool added key %d, size=%u (%u internal), new key is %s\n", nEnd, setInternalKeyPool.size() + setExternalKeyPool.size(), setInternalKeyPool.size(), internal ? "internal" : "external");
+        }
+        if (missingInternal + missingExternal > 0) {
+            LogPrintf("keypool added %d keys (%d internal), size=%u (%u internal)\n", missingInternal + missingExternal, missingInternal, setInternalKeyPool.size() + setExternalKeyPool.size(), setInternalKeyPool.size());
         }
     }
     return true;
