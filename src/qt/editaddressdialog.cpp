@@ -21,6 +21,17 @@ EditAddressDialog::EditAddressDialog(Mode _mode, QWidget *parent) :
     ui->setupUi(this);
 
     GUIUtil::setupAddressWidget(ui->addressEdit, this);
+    
+    ui->cbxType->setCurrentIndex(ui->cbxType->findText("Standard"));
+    if (mode == NewReceivingAddress)
+    {
+        ui->lblType->show();
+        ui->cbxType->show();
+    } else
+    {
+        ui->lblType->hide();
+        ui->cbxType->hide();
+    };
 
     switch(mode)
     {
@@ -73,9 +84,17 @@ bool EditAddressDialog::saveCurrentRow()
     switch(mode)
     {
     case NewReceivingAddress:
+        address = model->addRow(
+                AddressTableModel::Receive,
+                ui->labelEdit->text(),
+                ui->addressEdit->text(),
+                ui->cbxType->currentText() == "Stealth" ? AddressTableModel::ADDR_STEALTH
+                    : ui->cbxType->currentText() == "Extended" ? AddressTableModel::ADDR_EXT
+                    : AddressTableModel::ADDR_STANDARD);
+        break;
     case NewSendingAddress:
         address = model->addRow(
-                mode == NewSendingAddress ? AddressTableModel::Send : AddressTableModel::Receive,
+                AddressTableModel::Send,
                 ui->labelEdit->text(),
                 ui->addressEdit->text());
         break;
@@ -107,7 +126,7 @@ void EditAddressDialog::accept()
             break;
         case AddressTableModel::INVALID_ADDRESS:
             QMessageBox::warning(this, windowTitle(),
-                tr("The entered address \"%1\" is not a valid Bitcoin address.").arg(ui->addressEdit->text()),
+                tr("The entered address \"%1\" is not a valid Particl address.").arg(ui->addressEdit->text()),
                 QMessageBox::Ok, QMessageBox::Ok);
             break;
         case AddressTableModel::DUPLICATE_ADDRESS:

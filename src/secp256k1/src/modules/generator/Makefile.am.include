@@ -1,0 +1,8 @@
+include_HEADERS += include/secp256k1_generator.h
+noinst_HEADERS += src/modules/generator/main_impl.h
+if USE_BENCHMARK
+noinst_PROGRAMS += bench_generator
+bench_generator_SOURCES = src/bench_generator.c
+bench_generator_LDADD = libsecp256k1.la $(SECP_LIBS)
+bench_generator_LDFLAGS = -static
+endif

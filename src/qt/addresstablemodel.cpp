@@ -9,9 +9,15 @@
 
 #include "base58.h"
 #include "wallet/wallet.h"
+#include "wallet/hdwallet.h"
+#include "wallet/rpchdwallet.h"
+#include "rpc/rpcutil.h"
+#include "util.h"
+#include "univalue.h"
 
 #include <boost/foreach.hpp>
 
+#include <QMessageBox>
 #include <QFont>
 #include <QDebug>
 
@@ -342,7 +348,7 @@ void AddressTableModel::updateEntry(const QString &address,
     priv->updateEntry(address, label, isMine, purpose, status);
 }
 
-QString AddressTableModel::addRow(const QString &type, const QString &label, const QString &address)
+QString AddressTableModel::addRow(const QString &type, const QString &label, const QString &address, int addrType)
 {
     std::string strLabel = label.toStdString();
     std::string strAddress = address.toStdString();
@@ -369,23 +375,39 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
     else if(type == Receive)
     {
         // Generate a new address to associate with given label
-        CPubKey newKey;
-        if(!wallet->GetKeyFromPool(newKey))
+        
+        
+        std::string sCommand;
+        switch (addrType)
         {
-            WalletModel::UnlockContext ctx(walletModel->requestUnlock());
-            if(!ctx.isValid())
-            {
-                // Unlock wallet failed or was cancelled
-                editStatus = WALLET_UNLOCK_FAILURE;
-                return QString();
+            case ADDR_STEALTH:
+                sCommand = "getnewstealthaddress ";     break;
+            case ADDR_EXT:
+                sCommand = "getnewextaddress ";         break;
+            default:
+                sCommand = "getnewaddress ";            break;
+        };
+        
+        UniValue rv;
+        try {
+            rv = CallRPC(sCommand + "\""+strLabel+ "\"");
+        } catch (UniValue& objError)
+        {
+            try { // Nice formatting for standard-format error
+                int code = find_value(objError, "code").get_int();
+                std::string message = find_value(objError, "message").get_str();
+                warningBox(QString::fromStdString(message) + " (code " + QString::number(code) + ")");
+            } catch (const std::runtime_error&) // raised when converting to invalid type, i.e. missing code or message
+            {   // Show raw JSON object
+                warningBox(QString::fromStdString(objError.write()));
             }
-            if(!wallet->GetKeyFromPool(newKey))
-            {
-                editStatus = KEY_GENERATION_FAILURE;
-                return QString();
-            }
+            return QString();
+        } catch (const std::exception& e)
+        {
+            warningBox(e.what());
+            return QString();
         }
-        strAddress = CBitcoinAddress(newKey.GetID()).ToString();
+        return QString::fromStdString(rv.get_str());
     }
     else
     {
@@ -451,4 +473,14 @@ int AddressTableModel::lookupAddress(const QString &address) const
 void AddressTableModel::emitDataChanged(int idx)
 {
     Q_EMIT dataChanged(index(idx, 0, QModelIndex()), index(idx, columns.length()-1, QModelIndex()));
+}
+
+void AddressTableModel::warningBox(QString msg)
+{
+    qWarning() << msg;
+    QPair<QString, CClientUIInterface::MessageBoxFlags> msgParams;
+    msgParams.second = CClientUIInterface::MSG_WARNING;
+    msgParams.first = msg;
+
+    Q_EMIT walletModel->message(tr("Address Table"), msgParams.first, msgParams.second);
 }

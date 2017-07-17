@@ -144,6 +144,11 @@ public:
     void write(const char *pch, size_t size) {
         ctx.Write((const unsigned char*)pch, size);
     }
+    
+    void read(const char *psz, size_t _nSize)
+    {
+        // do nothing, needed by CTxOutBaseCompressor
+    }
 
     // invalidates the object
     uint256 GetHash() {
@@ -172,6 +177,7 @@ uint256 SerializeHash(const T& obj, int nType=SER_GETHASH, int nVersion=PROTOCOL
 unsigned int MurmurHash3(unsigned int nHashSeed, const std::vector<unsigned char>& vDataToHash);
 
 void BIP32Hash(const ChainCode &chainCode, unsigned int nChild, unsigned char header, const unsigned char data[32], unsigned char output[64]);
+void BIP32Hash(const unsigned char chainCode[32], unsigned int nChild, unsigned char header, const unsigned char data[32], unsigned char output[64]);
 
 /** SipHash-2-4 */
 class CSipHasher

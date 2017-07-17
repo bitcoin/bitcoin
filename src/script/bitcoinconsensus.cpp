@@ -3,7 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "bitcoinconsensus.h"
+#include "particlconsensus.h"
 
 #include "primitives/transaction.h"
 #include "pubkey.h"
@@ -76,7 +76,7 @@ static bool verify_flags(unsigned int flags)
     return (flags & ~(bitcoinconsensus_SCRIPT_FLAGS_VERIFY_ALL)) == 0;
 }
 
-static int verify_script(const unsigned char *scriptPubKey, unsigned int scriptPubKeyLen, CAmount amount,
+static int verify_script(const unsigned char *scriptPubKey, unsigned int scriptPubKeyLen, std::vector<uint8_t> amount,
                                     const unsigned char *txTo        , unsigned int txToLen,
                                     unsigned int nIn, unsigned int flags, bitcoinconsensus_error* err)
 {
@@ -93,7 +93,6 @@ static int verify_script(const unsigned char *scriptPubKey, unsigned int scriptP
 
         // Regardless of the verification result, the tx did not error.
         set_error(err, bitcoinconsensus_ERR_OK);
-
         PrecomputedTransactionData txdata(tx);
         return VerifyScript(tx.vin[nIn].scriptSig, CScript(scriptPubKey, scriptPubKey + scriptPubKeyLen), &tx.vin[nIn].scriptWitness, flags, TransactionSignatureChecker(&tx, nIn, amount, txdata), NULL);
     } catch (const std::exception&) {
@@ -105,7 +104,8 @@ int bitcoinconsensus_verify_script_with_amount(const unsigned char *scriptPubKey
                                     const unsigned char *txTo        , unsigned int txToLen,
                                     unsigned int nIn, unsigned int flags, bitcoinconsensus_error* err)
 {
-    CAmount am(amount);
+    std::vector<uint8_t> am(8);
+    memcpy(&am[0], &amount, 8);
     return ::verify_script(scriptPubKey, scriptPubKeyLen, am, txTo, txToLen, nIn, flags, err);
 }
 
@@ -118,7 +118,8 @@ int bitcoinconsensus_verify_script(const unsigned char *scriptPubKey, unsigned i
         return set_error(err, bitcoinconsensus_ERR_AMOUNT_REQUIRED);
     }
 
-    CAmount am(0);
+    //CAmount am(0); [aml]
+    std::vector<uint8_t> am;
     return ::verify_script(scriptPubKey, scriptPubKeyLen, am, txTo, txToLen, nIn, flags, err);
 }
 

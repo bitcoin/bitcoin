@@ -116,10 +116,6 @@
         <translation>رمزگشایی کیف پول</translation>
     </message>
     <message>
-        <source>Change passphrase</source>
-        <translation>تغییر گذرواژه</translation>
-    </message>
-    <message>
         <source>Confirm wallet encryption</source>
         <translation>تأیید رمزنگاری کیف پول</translation>
     </message>
@@ -258,7 +254,7 @@
         <translation>بازنشانی بلوک‌ها روی دیسک...</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
+        <source>Send coins to a Particl address</source>
         <translation>ارسال وجه به نشانی بیت‌کوین</translation>
     </message>
     <message>
@@ -282,7 +278,7 @@
         <translation>با&amp;زبینی پیام...</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
+        <source>Particl</source>
         <translation>بیت‌کوین</translation>
     </message>
     <message>
@@ -310,11 +306,11 @@
         <translation>رمزنگاری کلیدهای خصوصی متعلق به کیف پول شما</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
+        <source>Sign messages with your Particl addresses to prove you own them</source>
         <translation>برای اثبات اینکه پیام‌ها به شما تعلق دارند، آن‌ها را با نشانی بیت‌کوین خود امضا کنید</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
+        <source>Verify messages to ensure they were signed with specified Particl addresses</source>
         <translation>برای حصول اطمینان از اینکه پیام با نشانی بیت‌کوین مشخص شده امضا است یا خیر، پیام را شناسایی کنید</translation>
     </message>
     <message>
@@ -354,7 +350,7 @@
         <translation>گزینه‌های خط‌فرمان</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network</source>
+        <source>%n active connection(s) to Particl network</source>
         <translation><numerusform>%n ارتباط فعال با شبکهٔ بیت‌کوین</numerusform></translation>
     </message>
     <message>
@@ -511,10 +507,6 @@
         <translation>تأیید شده</translation>
     </message>
     <message>
-        <source>Copy address</source>
-        <translation>کپی ادرس</translation>
-    </message>
-    <message>
         <source>Copy label</source>
         <translation>کپی برچسب</translation>
     </message>
@@ -537,10 +529,6 @@
     <message>
         <source>Copy quantity</source>
         <translation>کپی تعداد</translation>
-    </message>
-    <message>
-        <source>Copy fee</source>
-        <translation>رونوشت کارمزد</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
@@ -594,7 +582,7 @@
         <translation>ویرایش آدرس قرستنده</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid Bitcoin address.</source>
+        <source>The entered address "%1" is not a valid Particl address.</source>
         <translation>نشانی وارد شده "%1" یک نشانی معتبر بیت‌کوین نیست.</translation>
     </message>
     <message>
@@ -710,10 +698,6 @@
         <translation>فرم</translation>
     </message>
     <message>
-        <source>Unknown...</source>
-        <translation>مشخص نیست</translation>
-    </message>
-    <message>
         <source>Last block time</source>
         <translation>زمان آخرین بلوک</translation>
     </message>
@@ -788,7 +772,7 @@
         <translation>استخراج</translation>
     </message>
     <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <source>Automatically open the Particl client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>باز کردن خودکار درگاه شبکهٔ بیت‌کوین روی روترها. تنها زمانی کار می‌کند که روتر از پروتکل UPnP پشتیبانی کند و این پروتکل فعال باشد.</translation>
     </message>
     <message>
@@ -887,7 +871,7 @@
         <translation>فرم</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Particl network after a connection is established, but this process has not completed yet.</source>
         <translation>اطلاعات نمایش‌داده شده ممکن است قدیمی باشند. بعد از این که یک اتصال با شبکه برقرار شد، کیف پول شما به‌صورت خودکار با شبکهٔ بیت‌کوین همگام‌سازی می‌شود. اما این روند هنوز کامل نشده است.</translation>
     </message>
     <message>
@@ -948,7 +932,7 @@
         <translation>مبلغ</translation>
     </message>
     <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
+        <source>Enter a Particl address (e.g. %1)</source>
         <translation>یک آدرس بیت‌کوین وارد کنید (مثلاً %1)</translation>
     </message>
     <message>
@@ -1345,10 +1329,6 @@
         <translation>کپی مقدار</translation>
     </message>
     <message>
-        <source>Copy fee</source>
-        <translation>رونوشت کارمزد</translation>
-    </message>
-    <message>
         <source>(no label)</source>
         <translation>(بدون برچسب)</translation>
     </message>
@@ -1376,7 +1356,7 @@
         <translation>این یک پرداخت عادی است</translation>
     </message>
     <message>
-        <source>The Bitcoin address to send the payment to</source>
+        <source>The Particl address to send the payment to</source>
         <translation>نشانی بیت‌کوین برای ارسال پرداخت به آن</translation>
     </message>
     <message>
@@ -1429,7 +1409,7 @@
         <translation>ا&amp;مضای پیام</translation>
     </message>
     <message>
-        <source>The Bitcoin address to sign the message with</source>
+        <source>The Particl address to sign the message with</source>
         <translation>نشانی بیت‌کوین برای امضاء پیغام با آن</translation>
     </message>
     <message>
@@ -1461,7 +1441,7 @@
         <translation>امضای فعلی را به حافظهٔ سیستم کپی کن</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Bitcoin address</source>
+        <source>Sign the message to prove you own this Particl address</source>
         <translation>برای اثبات تعلق این نشانی به شما، پیام را امضا کنید</translation>
     </message>
     <message>
@@ -1481,11 +1461,11 @@
         <translation>&amp;شناسایی پیام</translation>
     </message>
     <message>
-        <source>The Bitcoin address the message was signed with</source>
+        <source>The Particl address the message was signed with</source>
         <translation>نشانی بیت‌کوین که پیغام با آن امضاء شده</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
+        <source>Verify the message to ensure it was signed with the specified Particl address</source>
         <translation>برای حصول اطمینان از اینکه پیام با نشانی بیت‌کوین مشخص شده امضا است یا خیر، پیام را شناسایی کنید</translation>
     </message>
     <message>
@@ -1534,10 +1514,6 @@
     </context>
 <context>
     <name>TransactionView</name>
-    <message>
-        <source>Copy address</source>
-        <translation>کپی ادرس</translation>
-    </message>
     <message>
         <source>Copy label</source>
         <translation>کپی برچسب</translation>
@@ -1598,8 +1574,8 @@
         <translation>اجرا در پشت زمینه به‌صورت یک سرویس و پذیرش دستورات</translation>
     </message>
     <message>
-        <source>Bitcoin Core</source>
-        <translation> هسته Bitcoin </translation>
+        <source>Particl Core</source>
+        <translation> هسته Particl </translation>
     </message>
     <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>

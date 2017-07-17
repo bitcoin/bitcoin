@@ -7,8 +7,10 @@
 
 #include "paymentrequestplus.h"
 #include "walletmodeltransaction.h"
+#include "amount.h"
 
 #include "support/allocators/secure.h"
+
 
 #include <map>
 #include <vector>
@@ -29,10 +31,13 @@ class COutput;
 class CPubKey;
 class CWallet;
 class uint256;
+class CHDWallet;
 
 QT_BEGIN_NAMESPACE
 class QTimer;
 QT_END_NAMESPACE
+
+extern void LockWallet(CWallet* pWallet);
 
 class SendCoinsRecipient
 {
@@ -51,6 +56,8 @@ public:
     CAmount amount;
     // If from a payment request, this is used for storing the memo
     QString message;
+    
+    QString narration;
 
     // If from a payment request, paymentRequest.IsInitialized() will be true
     PaymentRequestPlus paymentRequest;
@@ -121,7 +128,8 @@ public:
     {
         Unencrypted,  // !wallet->IsCrypted()
         Locked,       // wallet->IsCrypted() && wallet->IsLocked()
-        Unlocked      // wallet->IsCrypted() && !wallet->IsLocked()
+        Unlocked,     // wallet->IsCrypted() && !wallet->IsLocked()
+        UnlockedForStaking
     };
 
     OptionsModel *getOptionsModel();
@@ -162,7 +170,7 @@ public:
     // Wallet encryption
     bool setWalletEncrypted(bool encrypted, const SecureString &passphrase);
     // Passphrase only needed when unlocking
-    bool setWalletLocked(bool locked, const SecureString &passPhrase=SecureString());
+    bool setWalletLocked(bool locked, const SecureString &passPhrase=SecureString(), bool stakingOnly=false);
     bool changePassphrase(const SecureString &oldPass, const SecureString &newPass);
     // Wallet backup
     bool backupWallet(const QString &filename);
@@ -212,6 +220,12 @@ public:
     bool hdEnabled() const;
 
     int getDefaultConfirmTarget() const;
+    
+    void lockWallet();
+    CHDWallet *getParticlWallet();
+    CAmount getReserveBalance();
+
+    void checkBalanceChanged();
 
 private:
     CWallet *wallet;
@@ -228,11 +242,14 @@ private:
 
     // Cache some values to be able to detect changes
     CAmount cachedBalance;
+    CAmount cachedStaked;
     CAmount cachedUnconfirmedBalance;
     CAmount cachedImmatureBalance;
     CAmount cachedWatchOnlyBalance;
     CAmount cachedWatchUnconfBalance;
     CAmount cachedWatchImmatureBalance;
+    CAmount cachedBlindBalance;
+    CAmount cachedAnonBalance;
     EncryptionStatus cachedEncryptionStatus;
     int cachedNumBlocks;
 
@@ -240,11 +257,10 @@ private:
 
     void subscribeToCoreSignals();
     void unsubscribeFromCoreSignals();
-    void checkBalanceChanged();
 
 Q_SIGNALS:
     // Signal that balance in wallet changed
-    void balanceChanged(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
+    void balanceChanged(const CAmount& balance, const CAmount& staked, const CAmount& blindBalance, const CAmount& anonBalance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
                         const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance);
 
     // Encryption status of wallet changed
@@ -278,6 +294,9 @@ public Q_SLOTS:
     void updateWatchOnlyFlag(bool fHaveWatchonly);
     /* Current, immature or unconfirmed balance might have changed - emit 'balanceChanged' if so */
     void pollBalanceChanged();
+    
+    void reserveBalanceChanged(CAmount nReserveBalanceNew);
+    
 };
 
 #endif // BITCOIN_QT_WALLETMODEL_H

@@ -17,6 +17,7 @@ class OptionsModel;
 class PlatformStyle;
 class SendCoinsEntry;
 class SendCoinsRecipient;
+class UniValue;
 
 namespace Ui {
     class SendCoinsDialog;
@@ -69,6 +70,9 @@ private:
     void processSendCoinsReturn(const WalletModel::SendCoinsReturn &sendCoinsReturn, const QString &msgArg = QString());
     void minimizeFeeSection(bool fMinimize);
     void updateFeeMinimizedLabel();
+    
+    void warningBox(QString msg);
+    bool tryCallRpc(const QString &sCommand, UniValue &rv);
 
 private Q_SLOTS:
     void on_sendButton_clicked();

@@ -46,6 +46,7 @@ public:
         DatabaseCache,          // int
         SpendZeroConfChange,    // bool
         Listen,                 // bool
+        ReserveBalance,         // int
         OptionIDRowCount,
     };
 
@@ -83,6 +84,8 @@ private:
     bool fCoinControlFeatures;
     /* settings that were overridden by command-line */
     QString strOverriddenByCommandLine;
+    
+    CAmount nReserveBalance;
 
     // Add option to list of GUI options overridden through command line/config file
     void addOverriddenOption(const std::string &option);
@@ -93,6 +96,7 @@ Q_SIGNALS:
     void displayUnitChanged(int unit);
     void coinControlFeaturesChanged(bool);
     void hideTrayIconChanged(bool);
+    void reserveBalanceChanged(CAmount);
 };
 
 #endif // BITCOIN_QT_OPTIONSMODEL_H

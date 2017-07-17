@@ -50,7 +50,7 @@ class WalletBackupTest(BitcoinTestFramework):
 
     # This mirrors how the network was setup in the bash test
     def setup_network(self, split=False):
-        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, self.extra_args)
+        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, self.extra_args, genfirstkey=True)
         connect_nodes(self.nodes[0], 3)
         connect_nodes(self.nodes[1], 3)
         connect_nodes(self.nodes[2], 3)
@@ -83,9 +83,9 @@ class WalletBackupTest(BitcoinTestFramework):
 
     # As above, this mirrors the original bash test.
     def start_three(self):
-        self.nodes[0] = start_node(0, self.options.tmpdir)
-        self.nodes[1] = start_node(1, self.options.tmpdir)
-        self.nodes[2] = start_node(2, self.options.tmpdir)
+        self.nodes[0] = start_node(0, self.options.tmpdir, genfirstkey=True)
+        self.nodes[1] = start_node(1, self.options.tmpdir, genfirstkey=True)
+        self.nodes[2] = start_node(2, self.options.tmpdir, genfirstkey=True)
         connect_nodes(self.nodes[0], 3)
         connect_nodes(self.nodes[1], 3)
         connect_nodes(self.nodes[2], 3)

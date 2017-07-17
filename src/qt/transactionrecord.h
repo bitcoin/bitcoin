@@ -13,6 +13,8 @@
 
 class CWallet;
 class CWalletTx;
+class CHDWallet;
+class CTransactionRecord;
 
 /** UI model for transaction status. The transaction status is the part of a transaction that will change over time.
  */
@@ -77,20 +79,22 @@ public:
         SendToOther,
         RecvWithAddress,
         RecvFromOther,
-        SendToSelf
+        SendToSelf,
+        Staked
     };
 
     /** Number of confirmation recommended for accepting a transaction */
     static const int RecommendedNumConfirmations = 6;
 
     TransactionRecord():
-            hash(), time(0), type(Other), address(""), debit(0), credit(0), idx(0)
+            hash(), time(0), type(Other), address(""), debit(0), credit(0),
+            typeIn('P'), typeOut('P'), idx(0)
     {
     }
 
     TransactionRecord(uint256 _hash, qint64 _time):
-            hash(_hash), time(_time), type(Other), address(""), debit(0),
-            credit(0), idx(0)
+            hash(_hash), time(_time), type(Other), address(""), debit(0), credit(0),
+            typeIn('P'), typeOut('P'), idx(0)
     {
     }
 
@@ -98,7 +102,7 @@ public:
                 Type _type, const std::string &_address,
                 const CAmount& _debit, const CAmount& _credit):
             hash(_hash), time(_time), type(_type), address(_address), debit(_debit), credit(_credit),
-            idx(0)
+            typeIn('P'), typeOut('P'), idx(0)
     {
     }
 
@@ -106,6 +110,7 @@ public:
      */
     static bool showTransaction(const CWalletTx &wtx);
     static QList<TransactionRecord> decomposeTransaction(const CWallet *wallet, const CWalletTx &wtx);
+    static QList<TransactionRecord> decomposeTransaction(const CHDWallet *wallet, const uint256 &hash, const CTransactionRecord &rtx);
 
     /** @name Immutable transaction attributes
       @{*/
@@ -115,6 +120,11 @@ public:
     std::string address;
     CAmount debit;
     CAmount credit;
+    
+    char typeIn;
+    char typeOut;
+    
+    
     /**@}*/
 
     /** Subtransaction index, for sort key */
@@ -135,6 +145,9 @@ public:
     /** Update status from core wallet tx.
      */
     void updateStatus(const CWalletTx &wtx);
+    
+    void updateStatus(CHDWallet *phdw, const CTransactionRecord &rtx);
+    
 
     /** Return whether a status update is needed.
      */

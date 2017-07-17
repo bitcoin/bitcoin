@@ -1,4 +1,4 @@
-Bitcoin Core 0.14.1
+Bitcoin Core 0.14.0
 =====================
 
 Setup
@@ -48,6 +48,7 @@ Development
 The Bitcoin repo's [root README](/README.md) contains relevant information on the development process and automated testing.
 
 - [Developer Notes](developer-notes.md)
+- [Multiwallet Qt Development](multiwallet-qt.md)
 - [Release Notes](release-notes.md)
 - [Release Process](release-process.md)
 - [Source Code Documentation (External Link)](https://dev.visucore.com/bitcoin/doxygen/)

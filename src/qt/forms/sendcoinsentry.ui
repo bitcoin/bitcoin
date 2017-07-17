@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>729</width>
-    <height>150</height>
+    <height>254</height>
    </rect>
   </property>
   <property name="focusPolicy">
@@ -36,6 +36,13 @@
     <property name="verticalSpacing">
      <number>8</number>
     </property>
+    <item row="4" column="0">
+     <widget class="QLabel" name="lblNarration">
+      <property name="text">
+       <string>Narration</string>
+      </property>
+     </widget>
+    </item>
     <item row="0" column="0">
      <widget class="QLabel" name="payToLabel">
       <property name="text">
@@ -49,6 +56,19 @@
       </property>
      </widget>
     </item>
+    <item row="3" column="0">
+     <widget class="QLabel" name="amountLabel">
+      <property name="text">
+       <string>A&amp;mount:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+      <property name="buddy">
+       <cstring>payAmount</cstring>
+      </property>
+     </widget>
+    </item>
     <item row="0" column="1">
      <layout class="QHBoxLayout" name="payToLayout">
       <property name="spacing">
@@ -57,7 +77,7 @@
       <item>
        <widget class="QValidatedLineEdit" name="payTo">
         <property name="toolTip">
-         <string>The Bitcoin address to send the payment to</string>
+         <string>The Particl address to send the payment to</string>
         </property>
        </widget>
       </item>
@@ -129,6 +149,13 @@
       </item>
      </layout>
     </item>
+    <item row="1" column="1">
+     <widget class="QLineEdit" name="addAsLabel">
+      <property name="toolTip">
+       <string>Enter a label for this address to add it to the list of used addresses</string>
+      </property>
+     </widget>
+    </item>
     <item row="1" column="0">
      <widget class="QLabel" name="labellLabel">
       <property name="text">
@@ -142,27 +169,7 @@
       </property>
      </widget>
     </item>
-    <item row="1" column="1">
-     <widget class="QLineEdit" name="addAsLabel">
-      <property name="toolTip">
-       <string>Enter a label for this address to add it to the list of used addresses</string>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="0">
-     <widget class="QLabel" name="amountLabel">
-      <property name="text">
-       <string>A&amp;mount:</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-      </property>
-      <property name="buddy">
-       <cstring>payAmount</cstring>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="1">
+    <item row="3" column="1">
      <layout class="QHBoxLayout" name="horizontalLayoutAmount" stretch="0,1">
       <item>
        <widget class="BitcoinAmountField" name="payAmount"/>
@@ -170,7 +177,7 @@
       <item>
        <widget class="QCheckBox" name="checkboxSubtractFeeFromAmount">
         <property name="toolTip">
-         <string>The fee will be deducted from the amount being sent. The recipient will receive less bitcoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</string>
+         <string>The fee will be deducted from the amount being sent. The recipient will receive less particl than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</string>
         </property>
         <property name="text">
          <string>S&amp;ubtract fee from amount</string>
@@ -179,7 +186,17 @@
       </item>
      </layout>
     </item>
-    <item row="3" column="0">
+    <item row="4" column="1">
+     <widget class="QLineEdit" name="edtNarration">
+      <property name="toolTip">
+       <string>A short message sent over the Particl network, encrypted if sending to a stealth address or in a blind or anon transaction.</string>
+      </property>
+      <property name="maxLength">
+       <number>24</number>
+      </property>
+     </widget>
+    </item>
+    <item row="5" column="0">
      <widget class="QLabel" name="messageLabel">
       <property name="text">
        <string>Message:</string>
@@ -189,17 +206,17 @@
       </property>
      </widget>
     </item>
-    <item row="3" column="1">
+    <item row="5" column="1">
      <widget class="QLabel" name="messageTextLabel">
       <property name="toolTip">
-       <string>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</string>
+       <string>A message that was attached to the particl: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Particl network.</string>
       </property>
       <property name="textFormat">
        <enum>Qt::PlainText</enum>
       </property>
      </widget>
     </item>
-    <item row="4" column="0" colspan="2">
+    <item row="6" column="0" colspan="2">
      <widget class="Line" name="line">
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
@@ -1254,6 +1271,7 @@
    <class>BitcoinAmountField</class>
    <extends>QLineEdit</extends>
    <header>bitcoinamountfield.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <tabstops>
@@ -1266,6 +1284,7 @@
   <tabstop>payAmount_is</tabstop>
   <tabstop>deleteButton_is</tabstop>
   <tabstop>payAmount_s</tabstop>
+  <tabstop>edtNarration</tabstop>
   <tabstop>deleteButton_s</tabstop>
  </tabstops>
  <resources>

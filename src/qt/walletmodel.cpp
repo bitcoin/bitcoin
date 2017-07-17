@@ -11,6 +11,7 @@
 #include "paymentserver.h"
 #include "recentrequeststablemodel.h"
 #include "transactiontablemodel.h"
+#include "optionsmodel.h"
 
 #include "base58.h"
 #include "keystore.h"
@@ -21,6 +22,7 @@
 #include "util.h" // for GetBoolArg
 #include "wallet/wallet.h"
 #include "wallet/walletdb.h" // for BackupWallet
+#include "wallet/hdwallet.h"
 
 #include <stdint.h>
 
@@ -34,7 +36,7 @@ WalletModel::WalletModel(const PlatformStyle *platformStyle, CWallet *_wallet, O
     QObject(parent), wallet(_wallet), optionsModel(_optionsModel), addressTableModel(0),
     transactionTableModel(0),
     recentRequestsTableModel(0),
-    cachedBalance(0), cachedUnconfirmedBalance(0), cachedImmatureBalance(0),
+    cachedBalance(0), cachedStaked(0), cachedUnconfirmedBalance(0), cachedImmatureBalance(0),
     cachedEncryptionStatus(Unencrypted),
     cachedNumBlocks(0)
 {
@@ -49,7 +51,13 @@ WalletModel::WalletModel(const PlatformStyle *platformStyle, CWallet *_wallet, O
     pollTimer = new QTimer(this);
     connect(pollTimer, SIGNAL(timeout()), this, SLOT(pollBalanceChanged()));
     pollTimer->start(MODEL_UPDATE_DELAY);
-
+    
+    cachedBlindBalance = 0;
+    cachedAnonBalance = 0;
+    
+    
+    connect(getOptionsModel(), SIGNAL(reserveBalanceChanged(CAmount)), this, SLOT(reserveBalanceChanged(CAmount)));
+    
     subscribeToCoreSignals();
 }
 
@@ -138,14 +146,42 @@ void WalletModel::pollBalanceChanged()
     }
 }
 
+void WalletModel::reserveBalanceChanged(CAmount nReserveBalanceNew)
+{
+    CHDWallet *phdw = getParticlWallet();
+    if (phdw)
+        phdw->SetReserveBalance(nReserveBalanceNew);
+};
+
 void WalletModel::checkBalanceChanged()
 {
-    CAmount newBalance = getBalance();
-    CAmount newUnconfirmedBalance = getUnconfirmedBalance();
-    CAmount newImmatureBalance = getImmatureBalance();
+    
+    CAmount newBalance = 0;
+    CAmount newAnonBalance = 0;
+    CAmount newBlindBalance = 0;
+    CAmount nPartUnconf = 0, nPartStaked = 0, nPartImmature = 0;
+    CAmount nBlindUnconf = 0, nAnonUnconf = 0;
+    
+    CAmount newUnconfirmedBalance = 0;
+    CAmount newImmatureBalance = 0;
     CAmount newWatchOnlyBalance = 0;
     CAmount newWatchUnconfBalance = 0;
     CAmount newWatchImmatureBalance = 0;
+    
+    if (fParticlWallet)
+    {
+        CHDWallet *pw = getParticlWallet();
+        
+        pw->GetBalances(newBalance, nPartUnconf, nPartStaked, nPartImmature,
+            newBlindBalance, nBlindUnconf, newAnonBalance, nAnonUnconf);
+        
+        newImmatureBalance = nPartImmature;
+        newUnconfirmedBalance = nPartUnconf + nBlindUnconf + nAnonUnconf;
+    };
+    
+    
+    
+    
     if (haveWatchOnly())
     {
         newWatchOnlyBalance = getWatchBalance();
@@ -153,16 +189,21 @@ void WalletModel::checkBalanceChanged()
         newWatchImmatureBalance = getWatchImmatureBalance();
     }
 
-    if(cachedBalance != newBalance || cachedUnconfirmedBalance != newUnconfirmedBalance || cachedImmatureBalance != newImmatureBalance ||
-        cachedWatchOnlyBalance != newWatchOnlyBalance || cachedWatchUnconfBalance != newWatchUnconfBalance || cachedWatchImmatureBalance != newWatchImmatureBalance)
+    if(cachedBalance != newBalance || cachedStaked != nPartStaked
+        || cachedUnconfirmedBalance != newUnconfirmedBalance || cachedImmatureBalance != newImmatureBalance
+        || cachedWatchOnlyBalance != newWatchOnlyBalance || cachedWatchUnconfBalance != newWatchUnconfBalance || cachedWatchImmatureBalance != newWatchImmatureBalance
+        || newBlindBalance != cachedBlindBalance || newAnonBalance != cachedAnonBalance)
     {
         cachedBalance = newBalance;
+        cachedStaked = nPartStaked;
         cachedUnconfirmedBalance = newUnconfirmedBalance;
         cachedImmatureBalance = newImmatureBalance;
         cachedWatchOnlyBalance = newWatchOnlyBalance;
         cachedWatchUnconfBalance = newWatchUnconfBalance;
         cachedWatchImmatureBalance = newWatchImmatureBalance;
-        Q_EMIT balanceChanged(newBalance, newUnconfirmedBalance, newImmatureBalance,
+        cachedBlindBalance = newBlindBalance;
+        cachedAnonBalance = newAnonBalance;
+        Q_EMIT balanceChanged(newBalance, nPartStaked, newBlindBalance, newAnonBalance, newUnconfirmedBalance, newImmatureBalance,
                             newWatchOnlyBalance, newWatchUnconfBalance, newWatchImmatureBalance);
     }
 }
@@ -395,6 +436,7 @@ RecentRequestsTableModel *WalletModel::getRecentRequestsTableModel()
 
 WalletModel::EncryptionStatus WalletModel::getEncryptionStatus() const
 {
+    LOCK(wallet->cs_wallet); // Wait for unlock to complete
     if(!wallet->IsCrypted())
     {
         return Unencrypted;
@@ -405,6 +447,9 @@ WalletModel::EncryptionStatus WalletModel::getEncryptionStatus() const
     }
     else
     {
+        if (((CHDWallet*)wallet)->fUnlockForStakingOnly)
+            return UnlockedForStaking;
+        
         return Unlocked;
     }
 }
@@ -423,7 +468,7 @@ bool WalletModel::setWalletEncrypted(bool encrypted, const SecureString &passphr
     }
 }
 
-bool WalletModel::setWalletLocked(bool locked, const SecureString &passPhrase)
+bool WalletModel::setWalletLocked(bool locked, const SecureString &passPhrase, bool stakingOnly)
 {
     if(locked)
     {
@@ -433,6 +478,8 @@ bool WalletModel::setWalletLocked(bool locked, const SecureString &passPhrase)
     else
     {
         // Unlock
+        if (fParticlWallet)
+            ((CHDWallet*)wallet)->fUnlockForStakingOnly = stakingOnly;
         return wallet->Unlock(passPhrase);
     }
 }
@@ -522,14 +569,16 @@ void WalletModel::unsubscribeFromCoreSignals()
 // WalletModel::UnlockContext implementation
 WalletModel::UnlockContext WalletModel::requestUnlock()
 {
-    bool was_locked = getEncryptionStatus() == Locked;
+    bool was_locked = getEncryptionStatus() == Locked || getEncryptionStatus() == UnlockedForStaking;
     if(was_locked)
     {
         // Request UI to unlock wallet
         Q_EMIT requireUnlock();
     }
     // If wallet is still locked, unlock was failed or cancelled, mark context as invalid
-    bool valid = getEncryptionStatus() != Locked;
+    //bool valid = getEncryptionStatus() != Locked;
+    EncryptionStatus newStatus = getEncryptionStatus();
+    bool valid = newStatus == Unlocked || newStatus == Unencrypted;
 
     return UnlockContext(this, valid, was_locked);
 }
@@ -706,3 +755,26 @@ int WalletModel::getDefaultConfirmTarget() const
 {
     return nTxConfirmTarget;
 }
+
+void WalletModel::lockWallet()
+{
+    if (wallet)
+        LockWallet(wallet);
+};
+
+CHDWallet *WalletModel::getParticlWallet()
+{
+    CHDWallet *rv;
+    if (!wallet || !(rv = dynamic_cast<CHDWallet*>(wallet)))
+        throw std::runtime_error("wallet is not an instance of class CHDWallet.");
+    return rv;
+};
+
+CAmount WalletModel::getReserveBalance()
+{
+    CHDWallet *rv;
+    if (!wallet || !(rv = dynamic_cast<CHDWallet*>(wallet)))
+        return 0;
+    return rv->nReserveBalance;
+};
+

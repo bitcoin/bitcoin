@@ -20,6 +20,8 @@
 
 #include <univalue.h>
 
+extern bool fParticlMode;
+
 static const size_t MAX_GETUTXOS_OUTPOINTS = 15; //allow a max of 15 outpoints to be queried at once
 
 enum RetFormat {
@@ -505,7 +507,7 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
         LOCK2(cs_main, mempool.cs);
 
         CCoinsView viewDummy;
-        CCoinsViewCache view(&viewDummy);
+        CCoinsViewCache view(&viewDummy, fParticlMode);
 
         CCoinsViewCache& viewChain = *pcoinsTip;
         CCoinsViewMemPool viewMempool(&viewChain, mempool);

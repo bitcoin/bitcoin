@@ -5,6 +5,8 @@
 
 #include "script/standard.h"
 
+#include "key/extkey.h"
+#include "key/stealth.h"
 #include "pubkey.h"
 #include "script/script.h"
 #include "util.h"
@@ -30,9 +32,15 @@ const char* GetTxnOutputType(txnouttype t)
     case TX_PUBKEYHASH: return "pubkeyhash";
     case TX_SCRIPTHASH: return "scripthash";
     case TX_MULTISIG: return "multisig";
+    
     case TX_NULL_DATA: return "nulldata";
     case TX_WITNESS_V0_KEYHASH: return "witness_v0_keyhash";
     case TX_WITNESS_V0_SCRIPTHASH: return "witness_v0_scripthash";
+    
+    case TX_PUBKEY256HASH: return "pubkey256hash";
+    case TX_TIMELOCKED_SCRIPTHASH: return "timelocked_scripthash";
+    case TX_TIMELOCKED_PUBKEYHASH: return "timelocked_pubkeyhash";
+    case TX_TIMELOCKED_MULTISIG: return "timelocked_multisig";
     }
     return NULL;
 }
@@ -54,12 +62,77 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
 
         // Sender provides N pubkeys, receivers provides M signatures
         mTemplates.insert(make_pair(TX_MULTISIG, CScript() << OP_SMALLINTEGER << OP_PUBKEYS << OP_SMALLINTEGER << OP_CHECKMULTISIG));
+        
+        //mTemplates.insert(make_pair(TX_TIMELOCKED_PUBKEYHASH, CScript() << OP_INTEGER << OP_CHECKLOCKTIMEVERIFY << OP_DROP << OP_DUP << OP_HASH160 << OP_PUBKEYHASH << OP_EQUALVERIFY << OP_CHECKSIG));
     }
 
     vSolutionsRet.clear();
-
+    
+    opcodetype opcode;
+    vector<unsigned char> vch1;
+    CScript::const_iterator pc1 = scriptPubKey.begin();
+    size_t k;
+    for (k = 0; k < 3; ++k)
+    {
+        if (!scriptPubKey.GetOp(pc1, opcode, vch1))
+            break;
+        
+        if (k == 0)
+        {
+            if (0 <= opcode && opcode <= OP_PUSHDATA4)
+            {
+                //str += strprintf("%d", CScriptNum(vch, false).getint());
+            } else
+            {
+                break;
+            };
+        } else
+        if (k == 1)
+        {
+            if (opcode != OP_CHECKLOCKTIMEVERIFY
+                && opcode != OP_CHECKSEQUENCEVERIFY)
+                break;
+        } else
+        if (k == 2)
+        {
+             if (opcode != OP_DROP)
+                break;
+        };
+    };
+    bool fIsTimeLocked = k == 3;
+    CScript::const_iterator tli = pc1;
+    
+    if (fIsTimeLocked) // Check further for TX_TIMELOCKED_SCRIPTHASH
+    for (k = 0; k < 3; ++k)
+    {
+        if (!scriptPubKey.GetOp(pc1, opcode, vch1))
+            break;
+        
+        if (k == 0)
+        {
+            if (opcode != OP_HASH160)
+                break;
+        }  else
+        if (k == 1)
+        {
+            if (vch1.size() != sizeof(uint160))
+                break;
+            vSolutionsRet.push_back(vch1);
+        } else
+        if (k == 2)
+        {
+            if (opcode != OP_EQUAL)
+                break;
+            typeRet = TX_TIMELOCKED_SCRIPTHASH;
+            return true;
+        }
+    };
+    
+    vSolutionsRet.clear();
+    
     // Shortcut for pay-to-script-hash, which are more constrained than the other types:
     // it is always OP_HASH160 20 [20 byte hash] OP_EQUAL
+    if (!fIsTimeLocked)
     if (scriptPubKey.IsPayToScriptHash())
     {
         typeRet = TX_SCRIPTHASH;
@@ -68,20 +141,23 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
         return true;
     }
 
-    int witnessversion;
-    std::vector<unsigned char> witnessprogram;
-    if (scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram)) {
-        if (witnessversion == 0 && witnessprogram.size() == 20) {
-            typeRet = TX_WITNESS_V0_KEYHASH;
-            vSolutionsRet.push_back(witnessprogram);
-            return true;
+    if (!fIsTimeLocked) // avoid checking for witness programs
+    {
+        int witnessversion;
+        std::vector<unsigned char> witnessprogram;
+        if (scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram)) {
+            if (witnessversion == 0 && witnessprogram.size() == 20) {
+                typeRet = TX_WITNESS_V0_KEYHASH;
+                vSolutionsRet.push_back(witnessprogram);
+                return true;
+            }
+            if (witnessversion == 0 && witnessprogram.size() == 32) {
+                typeRet = TX_WITNESS_V0_SCRIPTHASH;
+                vSolutionsRet.push_back(witnessprogram);
+                return true;
+            }
+            return false;
         }
-        if (witnessversion == 0 && witnessprogram.size() == 32) {
-            typeRet = TX_WITNESS_V0_SCRIPTHASH;
-            vSolutionsRet.push_back(witnessprogram);
-            return true;
-        }
-        return false;
     }
 
     // Provably prunable, data-carrying output
@@ -105,7 +181,7 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
         vector<unsigned char> vch1, vch2;
 
         // Compare
-        CScript::const_iterator pc1 = script1.begin();
+        CScript::const_iterator pc1 = fIsTimeLocked ? tli : script1.begin();
         CScript::const_iterator pc2 = script2.begin();
         while (true)
         {
@@ -113,7 +189,7 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
             {
                 // Found a match
                 typeRet = tplate.first;
-                if (typeRet == TX_MULTISIG)
+                if (typeRet == TX_MULTISIG || typeRet == TX_TIMELOCKED_MULTISIG)
                 {
                     // Additional checks for TX_MULTISIG:
                     unsigned char m = vSolutionsRet.front()[0];
@@ -121,13 +197,23 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
                     if (m < 1 || n < 1 || m > n || vSolutionsRet.size()-2 != n)
                         return false;
                 }
+                
+                if (fIsTimeLocked)
+                switch (typeRet)
+                {
+                    case TX_SCRIPTHASH: typeRet = TX_TIMELOCKED_SCRIPTHASH; break;
+                    case TX_PUBKEYHASH: typeRet = TX_TIMELOCKED_PUBKEYHASH; break;
+                    case TX_MULTISIG:   typeRet = TX_TIMELOCKED_MULTISIG;   break;
+                    default: break;
+                };
+                
                 return true;
             }
             if (!script1.GetOp(pc1, opcode1, vch1))
                 break;
             if (!script2.GetOp(pc2, opcode2, vch2))
                 break;
-
+            
             // Template matching opcodes:
             if (opcode2 == OP_PUBKEYS)
             {
@@ -183,6 +269,7 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
 {
     vector<valtype> vSolutions;
     txnouttype whichType;
+
     if (!Solver(scriptPubKey, whichType, vSolutions))
         return false;
 
@@ -195,12 +282,12 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
         addressRet = pubKey.GetID();
         return true;
     }
-    else if (whichType == TX_PUBKEYHASH)
+    else if (whichType == TX_PUBKEYHASH || whichType == TX_TIMELOCKED_PUBKEYHASH)
     {
         addressRet = CKeyID(uint160(vSolutions[0]));
         return true;
     }
-    else if (whichType == TX_SCRIPTHASH)
+    else if (whichType == TX_SCRIPTHASH || whichType == TX_TIMELOCKED_SCRIPTHASH)
     {
         addressRet = CScriptID(uint160(vSolutions[0]));
         return true;
@@ -216,12 +303,13 @@ bool ExtractDestinations(const CScript& scriptPubKey, txnouttype& typeRet, vecto
     vector<valtype> vSolutions;
     if (!Solver(scriptPubKey, typeRet, vSolutions))
         return false;
+
     if (typeRet == TX_NULL_DATA){
         // This is data, not addresses
         return false;
     }
 
-    if (typeRet == TX_MULTISIG)
+    if (typeRet == TX_MULTISIG || typeRet == TX_TIMELOCKED_MULTISIG)
     {
         nRequiredRet = vSolutions.front()[0];
         for (unsigned int i = 1; i < vSolutions.size()-1; i++)
@@ -274,6 +362,18 @@ public:
         *script << OP_HASH160 << ToByteVector(scriptID) << OP_EQUAL;
         return true;
     }
+    
+    bool operator()(const CStealthAddress &ek) const {
+        script->clear();
+        LogPrintf("CScriptVisitor(CStealthAddress) TODO\n");
+        return false;
+    }
+    
+    bool operator()(const CExtKeyPair &ek) const {
+        script->clear();
+        LogPrintf("CScriptVisitor(CExtKeyPair) TODO\n");
+        return false;
+    }
 };
 }
 
@@ -313,7 +413,7 @@ CScript GetScriptForWitness(const CScript& redeemscript)
             CHash160().Write(&vSolutions[0][0], vSolutions[0].size()).Finalize(h160);
             ret << OP_0 << std::vector<unsigned char>(&h160[0], &h160[20]);
             return ret;
-        } else if (typ == TX_PUBKEYHASH) {
+        } else if (typ == TX_PUBKEYHASH || typ == TX_TIMELOCKED_PUBKEYHASH) {
            ret << OP_0 << vSolutions[0];
            return ret;
         }

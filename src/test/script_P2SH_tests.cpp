@@ -3,6 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "core_io.h"
+#include "key/extkey.h"
+#include "key/stealth.h"
 #include "key.h"
 #include "keystore.h"
 #include "validation.h"
@@ -11,7 +13,7 @@
 #include "script/script_error.h"
 #include "script/sign.h"
 #include "script/ismine.h"
-#include "test/test_bitcoin.h"
+#include "test/test_particl.h"
 
 #include <vector>
 
@@ -40,8 +42,10 @@ Verify(const CScript& scriptSig, const CScript& scriptPubKey, bool fStrict, Scri
     txTo.vin[0].prevout.hash = txFrom.GetHash();
     txTo.vin[0].scriptSig = scriptSig;
     txTo.vout[0].nValue = 1;
-
-    return VerifyScript(scriptSig, scriptPubKey, NULL, fStrict ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE, MutableTransactionSignatureChecker(&txTo, 0, txFrom.vout[0].nValue), &err);
+    
+    std::vector<uint8_t> vchAmount(8);
+    memcpy(&vchAmount[0], &txFrom.vout[0].nValue, 8);
+    return VerifyScript(scriptSig, scriptPubKey, NULL, fStrict ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE, MutableTransactionSignatureChecker(&txTo, 0, vchAmount), &err);
 }
 
 
@@ -258,7 +262,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
 {
     LOCK(cs_main);
     CCoinsView coinsDummy;
-    CCoinsViewCache coins(&coinsDummy);
+    CCoinsViewCache coins(&coinsDummy, false);
     CBasicKeyStore keystore;
     CKey key[6];
     std::vector<CPubKey> keys;

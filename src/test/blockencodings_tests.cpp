@@ -7,7 +7,7 @@
 #include "chainparams.h"
 #include "random.h"
 
-#include "test/test_bitcoin.h"
+#include "test/test_particl.h"
 
 #include <boost/test/unit_test.hpp>
 
@@ -21,6 +21,7 @@ BOOST_FIXTURE_TEST_SUITE(blockencodings_tests, RegtestingSetup)
 
 static CBlock BuildBlockTestCase() {
     CBlock block;
+    block.nTime = 1490559792;
     CMutableTransaction tx;
     tx.vin.resize(1);
     tx.vin[0].scriptSig.resize(10);
@@ -104,6 +105,7 @@ BOOST_AUTO_TEST_CASE(SimpleRoundTripTest)
 
         CBlock block3;
         BOOST_CHECK(partialBlock.FillBlock(block3, {block.vtx[1]}) == READ_STATUS_OK);
+        
         BOOST_CHECK_EQUAL(block.GetHash().ToString(), block3.GetHash().ToString());
         BOOST_CHECK_EQUAL(block.hashMerkleRoot.ToString(), BlockMerkleRoot(block3, &mutated).ToString());
         BOOST_CHECK(!mutated);
@@ -189,6 +191,7 @@ BOOST_AUTO_TEST_CASE(NonCoinbasePreforwardRTTest)
         BOOST_CHECK_EQUAL(pool.mapTx.find(block.vtx[2]->GetHash())->GetSharedTx().use_count(), SHARED_TX_OFFSET + 1);
 
         CBlock block2;
+        
         {
             PartiallyDownloadedBlock tmp = partialBlock;
             BOOST_CHECK(partialBlock.FillBlock(block2, {}) == READ_STATUS_INVALID); // No transactions
@@ -280,6 +283,7 @@ BOOST_AUTO_TEST_CASE(EmptyBlockRoundTripTest)
     coinbase.vout[0].nValue = 42;
 
     CBlock block;
+    block.nTime = 1490559792;
     block.vtx.resize(1);
     block.vtx[0] = MakeTransactionRef(std::move(coinbase));
     block.nVersion = 42;

@@ -1,15 +1,15 @@
 *.tar.gz
 
 *.exe
-src/bitcoin
-src/bitcoind
-src/bitcoin-cli
-src/bitcoin-tx
-src/test/test_bitcoin
-src/test/test_bitcoin_fuzzy
-src/qt/test/test_bitcoin-qt
+src/particl
+src/particld
+src/particl-cli
+src/particl-tx
+src/test/test_particl
+src/qt/test/test_particl-qt
 
 # autoreconf
+src/Makefile.in
 Makefile.in
 aclocal.m4
 autom4te.cache/
@@ -74,12 +74,12 @@ src/qt/test/moc*.cpp
 # Compilation and Qt preprocessor part
 *.qm
 Makefile
-bitcoin-qt
-Bitcoin-Qt.app
+particl-qt
+Particl-Qt.app
 
 # Unit-tests
 Makefile.test
-bitcoin-qt_test
+particl-qt_test
 src/test/buildenv.py
 
 # Resources cpp
@@ -93,7 +93,7 @@ build
 *.gcno
 *.gcda
 /*.info
-test_bitcoin.coverage/
+test_particl.coverage/
 total.coverage/
 coverage_percent.txt
 
@@ -108,5 +108,5 @@ qa/cache/*
 
 /doc/doxygen/
 
-libbitcoinconsensus.pc
+libparticlconsensus.pc
 contrib/devtools/split-debug.sh

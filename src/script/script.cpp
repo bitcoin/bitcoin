@@ -201,6 +201,17 @@ unsigned int CScript::GetSigOpCount(const CScript& scriptSig) const
     return subscript.GetSigOpCount(true);
 }
 
+bool CScript::IsPayToPublicKeyHash() const
+{
+    // Extra-fast test for pay-to-pubkey-hash CScripts:
+    return (this->size() == 25 &&
+        (*this)[0] == OP_DUP &&
+        (*this)[1] == OP_HASH160 &&
+        (*this)[2] == 0x14 &&
+        (*this)[23] == OP_EQUALVERIFY &&
+        (*this)[24] == OP_CHECKSIG);
+}
+
 bool CScript::IsPayToScriptHash() const
 {
     // Extra-fast test for pay-to-script-hash CScripts:
@@ -208,6 +219,17 @@ bool CScript::IsPayToScriptHash() const
             (*this)[0] == OP_HASH160 &&
             (*this)[1] == 0x14 &&
             (*this)[22] == OP_EQUAL);
+}
+
+bool CScript::IsPayToTimeLockedScriptHash() const
+{
+    // Extra-fast test for pay-to-script-hash CScripts:
+    
+    int offset = 7;
+    return (this->size() == 30 &&
+            (*this)[offset + 0] == OP_HASH160 &&
+            (*this)[offset + 1] == 0x14 &&
+            (*this)[offset + 22] == OP_EQUAL);
 }
 
 bool CScript::IsPayToWitnessScriptHash() const

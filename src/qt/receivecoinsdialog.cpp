@@ -107,6 +107,7 @@ void ReceiveCoinsDialog::clear()
     ui->reqLabel->setText("");
     ui->reqMessage->setText("");
     ui->reuseAddress->setChecked(false);
+    ui->cbxAddressType->setCurrentIndex(ui->cbxAddressType->findText("Standard"));
     updateDisplayUnit();
 }
 
@@ -152,7 +153,18 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
         }
     } else {
         /* Generate new receiving address */
-        address = model->getAddressTableModel()->addRow(AddressTableModel::Receive, label, "");
+        int addrType = AddressTableModel::ADDR_STANDARD;
+        
+        if (ui->cbxAddressType->currentText() == "Stealth")
+            addrType = AddressTableModel::ADDR_STEALTH;
+        else
+        if (ui->cbxAddressType->currentText() == "Extended")
+            addrType = AddressTableModel::ADDR_EXT;
+        
+        address = model->getAddressTableModel()->addRow(AddressTableModel::Receive, label, "", addrType);
+        
+        if (address == "")
+            return;
     }
     SendCoinsRecipient info(address, label,
         ui->reqAmount->value(), ui->reqMessage->text());

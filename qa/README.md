@@ -37,6 +37,10 @@ Run the regression test suite with
 
     qa/pull-tester/rpc-tests.py
 
+Run only particl specific tests with
+
+    qa/pull-tester/rpc-tests.py -particl
+
 Run all possible tests with
 
     qa/pull-tester/rpc-tests.py -extended
@@ -56,6 +60,7 @@ Possible options, which apply to each individual test run:
                         (default: ../../src)
   --tmpdir=TMPDIR       Root directory for datadirs
   --tracerpc            Print out all RPC calls as they are made
+  --withstdout          Don't suppress stdout
   --coveragedir=COVERAGEDIR
                         Write tested RPC commands into this directory
 ```

@@ -13,6 +13,8 @@
 #include <utility>
 #include <string>
 
+#include "addressindex.h"
+#include "spentindex.h"
 #include "amount.h"
 #include "coins.h"
 #include "indirectmap.h"
@@ -29,6 +31,12 @@
 
 class CAutoFile;
 class CBlockIndex;
+
+enum eMemPoolFlags
+{
+    MPE_CT                 = (1 << 1),
+    MPE_RINGCT             = (1 << 2),
+};
 
 inline double AllowFreeThreshold()
 {
@@ -115,7 +123,7 @@ public:
     CTxMemPoolEntry(const CTransactionRef& _tx, const CAmount& _nFee,
                     int64_t _nTime, double _entryPriority, unsigned int _entryHeight,
                     CAmount _inChainInputValue, bool spendsCoinbase,
-                    int64_t nSigOpsCost, LockPoints lp);
+                    int64_t nSigOpsCost, LockPoints lp, uint32_t nFlags_ = 0);
 
     CTxMemPoolEntry(const CTxMemPoolEntry& other);
 
@@ -158,6 +166,7 @@ public:
     int64_t GetSigOpCostWithAncestors() const { return nSigOpCostWithAncestors; }
 
     mutable size_t vTxHashesIdx; //!< Index in mempool's vTxHashes
+    uint32_t nFlags;
 };
 
 // Helpers for modifying CTxMemPool::mapTx, which is a boost multi_index.
@@ -506,6 +515,18 @@ private:
     typedef std::map<txiter, TxLinks, CompareIteratorByHash> txlinksMap;
     txlinksMap mapLinks;
 
+    typedef std::map<CMempoolAddressDeltaKey, CMempoolAddressDelta, CMempoolAddressDeltaKeyCompare> addressDeltaMap;
+    addressDeltaMap mapAddress;
+
+    typedef std::map<uint256, std::vector<CMempoolAddressDeltaKey> > addressDeltaMapInserted;
+    addressDeltaMapInserted mapAddressInserted;
+
+    typedef std::map<CSpentIndexKey, CSpentIndexValue, CSpentIndexKeyCompare> mapSpentIndex;
+    mapSpentIndex mapSpent;
+
+    typedef std::map<uint256, std::vector<CSpentIndexKey> > mapSpentIndexInserted;
+    mapSpentIndexInserted mapSpentInserted;
+
     void UpdateParent(txiter entry, txiter parent, bool add);
     void UpdateChild(txiter entry, txiter child, bool add);
 
@@ -514,6 +535,8 @@ private:
 public:
     indirectmap<COutPoint, const CTransaction*> mapNextTx;
     std::map<uint256, std::pair<double, CAmount> > mapDeltas;
+    
+    std::map<CCmpPubKey, uint256> mapKeyImages;
 
     /** Create a new CTxMemPool.
      */
@@ -535,6 +558,15 @@ public:
     // then invoke the second version.
     bool addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry, bool validFeeEstimate = true);
     bool addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry, setEntries &setAncestors, bool validFeeEstimate = true);
+    
+    void addAddressIndex(const CTxMemPoolEntry &entry, const CCoinsViewCache &view);
+    bool getAddressIndex(std::vector<std::pair<uint160, int> > &addresses,
+                         std::vector<std::pair<CMempoolAddressDeltaKey, CMempoolAddressDelta> > &results);
+    bool removeAddressIndex(const uint256 txhash);
+
+    void addSpentIndex(const CTxMemPoolEntry &entry, const CCoinsViewCache &view);
+    bool getSpentIndex(CSpentIndexKey &key, CSpentIndexValue &value);
+    bool removeSpentIndex(const uint256 txhash);
 
     void removeRecursive(const CTransaction &tx, MemPoolRemovalReason reason = MemPoolRemovalReason::UNKNOWN);
     void removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMemPoolHeight, int flags);
@@ -558,6 +590,8 @@ public:
     void PrioritiseTransaction(const uint256 hash, const std::string strHash, double dPriorityDelta, const CAmount& nFeeDelta);
     void ApplyDeltas(const uint256 hash, double &dPriorityDelta, CAmount &nFeeDelta) const;
     void ClearPrioritisation(const uint256 hash);
+    
+    bool HaveKeyImage(const CCmpPubKey &ki, uint256 &hash) const;
 
 public:
     /** Remove a set of transactions from the mempool.

@@ -1575,7 +1575,7 @@ class SegWitTest(BitcoinTestFramework):
 
         # Restart with the new binary
         stop_node(node, node_id)
-        self.nodes[node_id] = start_node(node_id, self.options.tmpdir, ["-debug"])
+        self.nodes[node_id] = start_node(node_id, self.options.tmpdir, ["-debug"], genfirstkey=True)
         connect_nodes(self.nodes[0], node_id)
 
         sync_blocks(self.nodes)

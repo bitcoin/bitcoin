@@ -6,6 +6,8 @@
 #include "coins.h"
 #include "policy/policy.h"
 #include "wallet/crypter.h"
+#include "key/extkey.h"
+#include "key/stealth.h"
 
 #include <vector>
 
@@ -55,9 +57,11 @@ SetupDummyInputs(CBasicKeyStore& keystoreRet, CCoinsViewCache& coinsRet)
 // (https://github.com/bitcoin/bitcoin/issues/7883#issuecomment-224807484)
 static void CCoinsCaching(benchmark::State& state)
 {
+    fParticlMode = false;
+    
     CBasicKeyStore keystore;
     CCoinsView coinsDummy;
-    CCoinsViewCache coins(&coinsDummy);
+    CCoinsViewCache coins(&coinsDummy, false);
     std::vector<CMutableTransaction> dummyTransactions = SetupDummyInputs(keystore, coins);
 
     CMutableTransaction t1;

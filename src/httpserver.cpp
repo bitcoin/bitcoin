@@ -240,6 +240,9 @@ static std::string RequestMethodString(HTTPRequest::RequestMethod m)
     case HTTPRequest::PUT:
         return "PUT";
         break;
+    case HTTPRequest::OPTIONS:
+        return "OPTIONS";
+        break;
     default:
         return "unknown";
     }
@@ -307,7 +310,7 @@ static void http_reject_request_cb(struct evhttp_request* req, void*)
 /** Event dispatcher thread */
 static bool ThreadHTTP(struct event_base* base, struct evhttp* http)
 {
-    RenameThread("bitcoin-http");
+    RenameThread("particl-http");
     LogPrint("http", "Entering http event loop\n");
     event_base_dispatch(base);
     // Event loop will be interrupted by InterruptHTTPServer()
@@ -357,7 +360,7 @@ static bool HTTPBindAddresses(struct evhttp* http)
 /** Simple wrapper to set thread name and run work queue */
 static void HTTPWorkQueueRun(WorkQueue<HTTPClosure>* queue)
 {
-    RenameThread("bitcoin-httpworker");
+    RenameThread("particl-httpworker");
     queue->Run();
 }
 
@@ -418,7 +421,8 @@ bool InitHTTPServer()
         event_base_free(base);
         return false;
     }
-
+    evhttp_set_allowed_methods(http, EVHTTP_REQ_GET | EVHTTP_REQ_POST |
+        EVHTTP_REQ_HEAD | EVHTTP_REQ_PUT | EVHTTP_REQ_OPTIONS);
     evhttp_set_timeout(http, GetArg("-rpcservertimeout", DEFAULT_HTTP_SERVER_TIMEOUT));
     evhttp_set_max_headers_size(http, MAX_HEADERS_SIZE);
     evhttp_set_max_body_size(http, MAX_SIZE);
@@ -643,6 +647,9 @@ HTTPRequest::RequestMethod HTTPRequest::GetRequestMethod()
         break;
     case EVHTTP_REQ_PUT:
         return PUT;
+        break;
+    case EVHTTP_REQ_OPTIONS:
+        return OPTIONS;
         break;
     default:
         return UNKNOWN;

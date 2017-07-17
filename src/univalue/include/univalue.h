@@ -84,6 +84,9 @@ public:
     bool isObject() const { return (typ == VOBJ); }
 
     bool push_back(const UniValue& val);
+    bool insert(size_t pos, const UniValue& val_);
+    bool erase(size_t from, size_t to);
+    
     bool push_back(const std::string& val_) {
         UniValue tmpVal(VSTR, val_);
         return push_back(tmpVal);

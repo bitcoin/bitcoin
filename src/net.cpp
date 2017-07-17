@@ -645,6 +645,11 @@ void CNode::copyStats(CNodeStats &stats)
     X(fInbound);
     X(fAddnode);
     X(nStartingHeight);
+    X(nChainHeight);
+    X(nSendBytes);
+    X(mapSendBytesPerMsgCmd);
+    X(nRecvBytes);
+    X(mapRecvBytesPerMsgCmd);
     {
         LOCK(cs_vSend);
         X(mapSendBytesPerMsgCmd);
@@ -1378,7 +1383,7 @@ void CConnman::ThreadSocketHandler()
                     LogPrintf("socket sending timeout: %is\n", nTime - pnode->nLastSend);
                     pnode->fDisconnect = true;
                 }
-                else if (nTime - pnode->nLastRecv > (pnode->nVersion > BIP0031_VERSION ? TIMEOUT_INTERVAL : 90*60))
+                else if (nTime - pnode->nLastRecv > TIMEOUT_INTERVAL)
                 {
                     LogPrintf("socket receive timeout: %is\n", nTime - pnode->nLastRecv);
                     pnode->fDisconnect = true;
@@ -1466,7 +1471,7 @@ void ThreadMapPort()
             }
         }
 
-        std::string strDesc = "Bitcoin " + FormatFullVersion();
+        std::string strDesc = "Particl " + FormatFullVersion();
 
         try {
             while (true) {
@@ -1679,6 +1684,13 @@ void CConnman::ThreadOpenConnections()
                 return;
         }
     }
+    
+    
+    if (!GetBoolArg("-findpeers", true))
+    {
+        LogPrintf("%s: findpeers is negative, thread ending.\n", __func__);
+        return;
+    };
 
     // Initiate network connections
     int64_t nStart = GetTime();
@@ -1942,6 +1954,9 @@ bool CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
 
 void CConnman::ThreadMessageHandler()
 {
+    const int64_t nTimeDecBanThreshold = 60; // TODO: make option
+    int64_t nTimeNextBanReduced = GetTime() + nTimeDecBanThreshold;
+    
     while (!flagInterruptMsgProc)
     {
         std::vector<CNode*> vNodesCopy;
@@ -1975,10 +1990,21 @@ void CConnman::ThreadMessageHandler()
                 return;
         }
 
+        int64_t nTimeNow = GetTime();
+        if (nTimeNextBanReduced < nTimeNow)
+        {
+            LOCK(cs_main);
+            for (auto *pnode : vNodesCopy)
+                DecMisbehaving(pnode->id, 1);
+            nTimeNextBanReduced = nTimeNow + nTimeDecBanThreshold;
+        };
+        
         {
             LOCK(cs_vNodes);
             BOOST_FOREACH(CNode* pnode, vNodesCopy)
+            {
                 pnode->Release();
+            };
         }
 
         std::unique_lock<std::mutex> lock(mutexMsgProc);
@@ -2180,6 +2206,8 @@ CConnman::CConnman(uint64_t nSeed0In, uint64_t nSeed1In) : nSeed0(nSeed0In), nSe
     nBestHeight = 0;
     clientInterface = NULL;
     flagInterruptMsgProc = false;
+    
+    cPeerBlockCounts.set(5, 0);
 }
 
 NodeId CConnman::GetNewNodeId()
@@ -2604,6 +2632,11 @@ ServiceFlags CConnman::GetLocalServices() const
     return nLocalServices;
 }
 
+void CConnman::SetLocalServices(ServiceFlags f)
+{
+    nLocalServices = f;
+};
+
 void CConnman::SetBestHeight(int height)
 {
     nBestHeight.store(height, std::memory_order_release);
@@ -2654,6 +2687,7 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
     nSendOffset = 0;
     hashContinue = uint256();
     nStartingHeight = -1;
+    nChainHeight = -1;
     filterInventoryKnown.reset();
     fSendMempool = false;
     fGetAddr = false;

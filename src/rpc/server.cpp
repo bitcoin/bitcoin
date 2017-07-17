@@ -193,6 +193,7 @@ std::string CRPCTable::help(const std::string& strCommand) const
     {
         const CRPCCommand *pcmd = command.second;
         string strMethod = pcmd->name;
+        
         // We already filter duplicates, but these deprecated screw up the sort order
         if (strMethod.find("label") != string::npos)
             continue;
@@ -260,11 +261,11 @@ UniValue stop(const JSONRPCRequest& jsonRequest)
     if (jsonRequest.fHelp || jsonRequest.params.size() > 1)
         throw runtime_error(
             "stop\n"
-            "\nStop Bitcoin server.");
+            "\nStop Particl server.");
     // Event loop will exit after current HTTP requests have been handled, so
     // this reply will get back to the client.
     StartShutdown();
-    return "Bitcoin server stopping";
+    return "Particl server stopping";
 }
 
 /**
@@ -331,7 +332,6 @@ void StopRPC()
 {
     LogPrint("rpc", "Stopping RPC\n");
     deadlineTimers.clear();
-    DeleteAuthCookie();
     g_rpcSignals.Stopped();
 }
 
@@ -512,13 +512,13 @@ std::vector<std::string> CRPCTable::listCommands() const
 
 std::string HelpExampleCli(const std::string& methodname, const std::string& args)
 {
-    return "> bitcoin-cli " + methodname + " " + args + "\n";
+    return "> particl-cli " + methodname + " " + args + "\n";
 }
 
 std::string HelpExampleRpc(const std::string& methodname, const std::string& args)
 {
     return "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", "
-        "\"method\": \"" + methodname + "\", \"params\": [" + args + "] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n";
+        "\"method\": \"" + methodname + "\", \"params\": [" + args + "] }' -H 'content-type: text/plain;' http://127.0.0.1:51736/\n";
 }
 
 void RPCSetTimerInterfaceIfUnset(RPCTimerInterface *iface)
@@ -545,6 +545,11 @@ void RPCRunLater(const std::string& name, boost::function<void(void)> func, int6
     deadlineTimers.erase(name);
     LogPrint("rpc", "queue run of timer %s in %i seconds (using %s)\n", name, nSeconds, timerInterface->Name());
     deadlineTimers.emplace(name, std::unique_ptr<RPCTimerBase>(timerInterface->NewTimer(func, nSeconds*1000)));
+}
+
+void RPCRunLaterErase(const std::string &name)
+{
+    deadlineTimers.erase(name);
 }
 
 int RPCSerializationFlags()

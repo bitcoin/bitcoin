@@ -23,6 +23,9 @@
 
 #include "prevector.h"
 
+#include <boost/type_traits/is_fundamental.hpp>
+#include <boost/tuple/tuple.hpp>
+
 static const unsigned int MAX_SIZE = 0x02000000;
 
 /**
@@ -77,6 +80,11 @@ template<typename Stream> inline void ser_writedata32(Stream &s, uint32_t obj)
     obj = htole32(obj);
     s.write((char*)&obj, 4);
 }
+template<typename Stream> inline void ser_writedata32be(Stream &s, uint32_t obj)
+{
+    obj = htobe32(obj);
+    s.write((char*)&obj, 4);
+}
 template<typename Stream> inline void ser_writedata64(Stream &s, uint64_t obj)
 {
     obj = htole64(obj);
@@ -99,6 +107,12 @@ template<typename Stream> inline uint32_t ser_readdata32(Stream &s)
     uint32_t obj;
     s.read((char*)&obj, 4);
     return le32toh(obj);
+}
+template<typename Stream> inline uint32_t ser_readdata32be(Stream &s)
+{
+    uint32_t obj;
+    s.read((char*)&obj, 4);
+    return be32toh(obj);
 }
 template<typename Stream> inline uint64_t ser_readdata64(Stream &s)
 {
@@ -268,8 +282,8 @@ uint64_t ReadCompactSize(Stream& is)
         if (nSizeRet < 0x100000000ULL)
             throw std::ios_base::failure("non-canonical ReadCompactSize()");
     }
-    if (nSizeRet > (uint64_t)MAX_SIZE)
-        throw std::ios_base::failure("ReadCompactSize(): size too large");
+    //if (nSizeRet > (uint64_t)MAX_SIZE)
+    //    throw std::ios_base::failure("ReadCompactSize(): size too large");
     return nSizeRet;
 }
 
@@ -343,6 +357,40 @@ I ReadVarInt(Stream& is)
             return n;
     }
 }
+
+inline int PutVarInt(std::vector<uint8_t> &v, uint64_t i)
+{
+    uint8_t b = i & 0x7F;
+    while ((i = i >> 7) > 0)
+    {
+        v.push_back(b | 0x80);
+        b = i & 0x7F;
+    };
+    v.push_back(b);
+    return i; // 0 == success
+};
+
+inline int GetVarInt(const std::vector<uint8_t> &v, size_t ofs, uint64_t &i, size_t &nB)
+{
+    size_t ml = v.size() - ofs;
+    if (ml <= 0)
+        return 0;
+    
+    const uint8_t *p = &v[ofs];
+    
+    nB = 0;
+    i = p[nB++] & 0x7F;
+    
+    while (p[nB-1] & 0x80)
+    {
+        if (nB >= ml)
+            return 1;
+        i += ((uint64_t(p[nB]& 0x7F)) << (7*nB));
+        nB++;
+    };
+    
+    return 0; // 0 == success
+};
 
 #define FLATDATA(obj) REF(CFlatData((char*)&(obj), (char*)&(obj) + sizeof(obj)))
 #define VARINT(obj) REF(WrapVarInt(REF(obj)))
@@ -495,6 +543,21 @@ template<typename Stream, typename T, typename A> inline void Unserialize(Stream
  */
 template<typename Stream, typename K, typename T> void Serialize(Stream& os, const std::pair<K, T>& item);
 template<typename Stream, typename K, typename T> void Unserialize(Stream& is, std::pair<K, T>& item);
+
+/**
+ * 3 tuple
+ */
+template<typename T0, typename T1, typename T2> unsigned int GetSerializeSize(const boost::tuple<T0, T1, T2>& item);
+template<typename Stream, typename T0, typename T1, typename T2> void Serialize(Stream& os, const boost::tuple<T0, T1, T2>& item);
+template<typename Stream, typename T0, typename T1, typename T2> void Unserialize(Stream& is, boost::tuple<T0, T1, T2>& item);
+
+/**
+ * 4 tuple
+ */
+template<typename T0, typename T1, typename T2, typename T3> unsigned int GetSerializeSize(const boost::tuple<T0, T1, T2, T3>& item);
+template<typename Stream, typename T0, typename T1, typename T2, typename T3> void Serialize(Stream& os, const boost::tuple<T0, T1, T2, T3>& item);
+template<typename Stream, typename T0, typename T1, typename T2, typename T3> void Unserialize(Stream& is, boost::tuple<T0, T1, T2, T3>& item);
+
 
 /**
  * map
@@ -717,6 +780,68 @@ void Unserialize(Stream& is, std::pair<K, T>& item)
 }
 
 
+/**
+ * 3 tuple
+ */
+template<typename T0, typename T1, typename T2>
+unsigned int GetSerializeSize(const boost::tuple<T0, T1, T2>& item)
+{
+    unsigned int nSize = 0;
+    nSize += GetSerializeSize(boost::get<0>(item));
+    nSize += GetSerializeSize(boost::get<1>(item));
+    nSize += GetSerializeSize(boost::get<2>(item));
+    return nSize;
+}
+
+template<typename Stream, typename T0, typename T1, typename T2>
+void Serialize(Stream& os, const boost::tuple<T0, T1, T2>& item)
+{
+    Serialize(os, boost::get<0>(item));
+    Serialize(os, boost::get<1>(item));
+    Serialize(os, boost::get<2>(item));
+}
+
+template<typename Stream, typename T0, typename T1, typename T2>
+void Unserialize(Stream& is, boost::tuple<T0, T1, T2>& item)
+{
+    Unserialize(is, boost::get<0>(item));
+    Unserialize(is, boost::get<1>(item));
+    Unserialize(is, boost::get<2>(item));
+}
+
+
+/**
+ * 4 tuple
+ */
+template<typename T0, typename T1, typename T2, typename T3>
+unsigned int GetSerializeSize(const boost::tuple<T0, T1, T2, T3>& item, int nType, int nVersion)
+{
+    unsigned int nSize = 0;
+    nSize += GetSerializeSize(boost::get<0>(item), nType, nVersion);
+    nSize += GetSerializeSize(boost::get<1>(item), nType, nVersion);
+    nSize += GetSerializeSize(boost::get<2>(item), nType, nVersion);
+    nSize += GetSerializeSize(boost::get<3>(item), nType, nVersion);
+    return nSize;
+}
+
+template<typename Stream, typename T0, typename T1, typename T2, typename T3>
+void Serialize(Stream& os, const boost::tuple<T0, T1, T2, T3>& item, int nType, int nVersion)
+{
+    Serialize(os, boost::get<0>(item), nType, nVersion);
+    Serialize(os, boost::get<1>(item), nType, nVersion);
+    Serialize(os, boost::get<2>(item), nType, nVersion);
+    Serialize(os, boost::get<3>(item), nType, nVersion);
+}
+
+template<typename Stream, typename T0, typename T1, typename T2, typename T3>
+void Unserialize(Stream& is, boost::tuple<T0, T1, T2, T3>& item, int nType, int nVersion)
+{
+    Unserialize(is, boost::get<0>(item), nType, nVersion);
+    Unserialize(is, boost::get<1>(item), nType, nVersion);
+    Unserialize(is, boost::get<2>(item), nType, nVersion);
+    Unserialize(is, boost::get<3>(item), nType, nVersion);
+}
+
 
 /**
  * map
@@ -862,6 +987,11 @@ public:
     void write(const char *psz, size_t _nSize)
     {
         this->nSize += _nSize;
+    }
+    
+    void read(const char *psz, size_t _nSize)
+    {
+        // do nothing, needed by CTxOutBaseCompressor
     }
 
     /** Pretend _nSize bytes are written, without specifying them. */

@@ -39,7 +39,9 @@ import copy
 from test_framework.siphash import siphash256
 
 BIP0031_VERSION = 60000
-MY_VERSION = 70014  # past bip-31 for ping/pong
+#MY_VERSION = 70014  # past bip-31 for ping/pong
+MY_VERSION = 90003
+
 MY_SUBVERSION = b"/python-mininode-tester:0.0.3/"
 MY_RELAY = 1 # from version 70001 onwards, fRelay should be appended to version messages (BIP37)
 
@@ -1612,7 +1614,8 @@ class NodeConn(asyncore.dispatcher):
     MAGIC_BYTES = {
         "mainnet": b"\xf9\xbe\xb4\xd9",   # mainnet
         "testnet3": b"\x0b\x11\x09\x07",  # testnet3
-        "regtest": b"\xfa\xbf\xb5\xda",   # regtest
+        #"regtest": b"\xfa\xbf\xb5\xda",   # regtest
+        "regtest": b"\x09\x12\x06\x0c",   # regtest
     }
 
     def __init__(self, dstaddr, dstport, rpc, callback, net="regtest", services=NODE_NETWORK, send_version=True):

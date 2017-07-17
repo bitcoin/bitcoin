@@ -23,6 +23,11 @@
 #include "txmempool.h"
 #include "wallet/wallet.h"
 
+#include "rpc/rpcutil.h"
+#include "util.h"
+#include "univalue.h"
+
+
 #include <QMessageBox>
 #include <QScrollBar>
 #include <QSettings>
@@ -142,7 +147,7 @@ void SendCoinsDialog::setModel(WalletModel *_model)
 
         setBalance(_model->getBalance(), _model->getUnconfirmedBalance(), _model->getImmatureBalance(),
                    _model->getWatchBalance(), _model->getWatchUnconfirmedBalance(), _model->getWatchImmatureBalance());
-        connect(_model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(setBalance(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)));
+        connect(_model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(setBalance(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)));
         connect(_model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
         updateDisplayUnit();
 
@@ -195,6 +200,42 @@ SendCoinsDialog::~SendCoinsDialog()
     delete ui;
 }
 
+void SendCoinsDialog::warningBox(QString msg)
+{
+    //qWarning() << msg;
+    QPair<QString, CClientUIInterface::MessageBoxFlags> msgParams;
+    msgParams.second = CClientUIInterface::MSG_WARNING;
+    msgParams.first = msg;
+
+    Q_EMIT message(tr("Send Coins"), msgParams.first, msgParams.second);
+}
+
+bool SendCoinsDialog::tryCallRpc(const QString &sCommand, UniValue &rv)
+{
+    try {
+        rv = CallRPC(sCommand.toStdString());
+    } catch (UniValue& objError)
+    {
+        try { // Nice formatting for standard-format error
+            int code = find_value(objError, "code").get_int();
+            std::string message = find_value(objError, "message").get_str();
+            warningBox(QString::fromStdString(message) + " (code " + QString::number(code) + ")");
+            return false;
+        } catch (const std::runtime_error&) // raised when converting to invalid type, i.e. missing code or message
+        {   // Show raw JSON object
+            warningBox(QString::fromStdString(objError.write()));
+            return false;
+        };
+    } catch (const std::exception& e)
+    {
+        warningBox(QString::fromStdString(e.what()));
+        return false;
+    };
+    
+    return true;
+};
+
+
 void SendCoinsDialog::on_sendButton_clicked()
 {
     if(!model || !model->getOptionsModel())
@@ -233,6 +274,7 @@ void SendCoinsDialog::on_sendButton_clicked()
         return;
     }
 
+
     // prepare transaction for getting txFee earlier
     WalletModelTransaction currentTransaction(recipients);
     WalletModel::SendCoinsReturn prepareStatus;
@@ -246,22 +288,58 @@ void SendCoinsDialog::on_sendButton_clicked()
     else
         ctrl.nConfirmTarget = 0;
 
-    prepareStatus = model->prepareTransaction(currentTransaction, &ctrl);
-
-    // process prepareStatus and on error generate message shown to user
-    processSendCoinsReturn(prepareStatus,
-        BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), currentTransaction.getTransactionFee()));
-
-    if(prepareStatus.status != WalletModel::OK) {
-        fNewRecipientAllowed = true;
+    //prepareStatus = model->prepareTransaction(currentTransaction, &ctrl);
+    
+    QString sCommand = "sendtypeto ";
+    
+    // TODO: Translations?
+    QString sTypeFrom = ui->cbxTypeFrom->currentText();
+    QString sTypeTo = ui->cbxTypeTo->currentText();
+    
+    sCommand += sTypeFrom.toLower() + " ";
+    
+    sCommand += sTypeTo.toLower();
+    
+    sCommand += " [";
+    
+    int nRecipient = 0;
+    for (const auto &rcp : currentTransaction.getRecipients())
+    {
+        if (nRecipient > 0)
+            sCommand += ",";
+        
+        sCommand += "{\"address\":\""+rcp.address+"\",\"amount\":"
+            + BitcoinUnits::format(BitcoinUnits::BTC, rcp.amount, false, BitcoinUnits::separatorNever);
+        
+        if (!rcp.narration.isEmpty())
+            sCommand += ",\"narr\":\""+rcp.narration+"\"";
+        sCommand += "}";
+        
+        nRecipient++;
+    };
+    
+    int nRingSize = ui->spinRingSize->value();
+    int nMaxInputs = ui->spinMaxInputs->value();
+    
+    
+    
+    sCommand += "] \"\" \"\" "+QString::number(nRingSize)+" "+QString::number(nMaxInputs);
+    
+    
+    UniValue rv;
+    QString sGetFeeCommand = sCommand + " true";
+    if (!tryCallRpc(sGetFeeCommand, rv))
         return;
-    }
-
-    CAmount txFee = currentTransaction.getTransactionFee();
-
+    
+    
+    double rFee = rv["fee"].get_real();
+    
+    
+    CAmount txFee = rFee * COIN;
+    
     // Format confirmation message
     QStringList formatted;
-    Q_FOREACH(const SendCoinsRecipient &rcp, currentTransaction.getRecipients())
+    for (const auto &rcp : currentTransaction.getRecipients())
     {
         // generate bold amount string
         QString amount = "<b>" + BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp.amount);
@@ -297,20 +375,20 @@ void SendCoinsDialog::on_sendButton_clicked()
     }
 
     QString questionString = tr("Are you sure you want to send?");
-    questionString.append("<br /><br />%1");
+    questionString.append("<br /><b>"+sTypeFrom+ "</b> to <b>" +sTypeTo+"</b><br /><br />%1");
 
     if(txFee > 0)
     {
         // append fee string if a fee is required
         questionString.append("<hr /><span style='color:#aa0000;'>");
-        questionString.append(BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), txFee));
+        questionString.append("Estimated "+BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), txFee));
         questionString.append("</span> ");
         questionString.append(tr("added as transaction fee"));
 
         // append transaction size
-        questionString.append(" (" + QString::number((double)currentTransaction.getTransactionSize() / 1000) + " kB)");
+        //questionString.append(" (" + QString::number((double)currentTransaction.getTransactionSize() / 1000) + " kB)");
     }
-
+    
     // add total amount in all subdivision units
     questionString.append("<hr />");
     CAmount totalAmount = currentTransaction.getTotalTransactionAmount() + txFee;
@@ -335,10 +413,27 @@ void SendCoinsDialog::on_sendButton_clicked()
         fNewRecipientAllowed = true;
         return;
     }
-
-    // now send the prepared transaction
-    WalletModel::SendCoinsReturn sendStatus = model->sendCoins(currentTransaction);
-    // process sendStatus and on error generate message shown to user
+    
+    
+    WalletModel::SendCoinsReturn sendStatus = WalletModel::OK;
+    
+    if (!tryCallRpc(sCommand, rv))
+        sendStatus = WalletModel::TransactionCreationFailed;
+    
+    // Update Addressbook
+    for (const auto &rcp : currentTransaction.getRecipients())
+    {
+        sCommand = "manageaddressbook newsend ";
+        sCommand += rcp.address;
+        QString strLabel = rcp.label;
+        sCommand += strLabel.isEmpty() ? " \"\"" : (" \"" + strLabel + "\"");
+        sCommand += " send";
+        
+        tryCallRpc(sCommand, rv);
+    };
+    
+    
+    
     processSendCoinsReturn(sendStatus);
 
     if (sendStatus.status == WalletModel::OK)
@@ -357,6 +452,10 @@ void SendCoinsDialog::clear()
     {
         ui->entries->takeAt(0)->widget()->deleteLater();
     }
+    
+    ui->cbxTypeFrom->setCurrentIndex(ui->cbxTypeFrom->findText("Part"));
+    ui->cbxTypeTo->setCurrentIndex(ui->cbxTypeTo->findText("Part"));
+    
     addEntry();
 
     updateTabsAndLabels();
@@ -764,7 +863,7 @@ void SendCoinsDialog::coinControlChangeEdited(const QString& text)
         }
         else if (!addr.IsValid()) // Invalid address
         {
-            ui->labelCoinControlChangeLabel->setText(tr("Warning: Invalid Bitcoin address"));
+            ui->labelCoinControlChangeLabel->setText(tr("Warning: Invalid Particl address"));
         }
         else // Valid address
         {

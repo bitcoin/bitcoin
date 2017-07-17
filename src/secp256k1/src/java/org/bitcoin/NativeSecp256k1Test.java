@@ -167,6 +167,22 @@ public class NativeSecp256k1Test {
         assertEquals( result, true, "testRandomize");
     }
 
+    /**
+      * This tests signSchnorr() for a valid secretkey
+      */
+    public static void testSchnorrSign() throws AssertFailException{
+
+        byte[] data = BaseEncoding.base16().lowerCase().decode("CF80CD8AED482D5D1527D7DC72FCEFF84E6326592848447D2DC0B0E87DFC9A90".toLowerCase()); //sha256hash of "testing"
+        byte[] sec = BaseEncoding.base16().lowerCase().decode("67E56582298859DDAE725F972992A07C6C4FB9F62A8FFF58CE3CA926A1063530".toLowerCase());
+
+        byte[] resultArr = NativeSecp256k1.schnorrSign(data, sec);
+        String sigString = javax.xml.bind.DatatypeConverter.printHexBinary(resultArr);
+        assertEquals( sigString, "C5E929AA058B982048760422D3B563749B7D0E50C5EBD8CD2FFC23214BD6A2F1B072C13880997EBA847CF20F2F90FCE07C1CA33A890A4127095A351127F8D95F" , "testSchnorrSign");
+    }
+
+    /**
+      * This tests signSchnorr() for a valid secretkey
+      */
     public static void testCreateECDHSecret() throws AssertFailException{
 
         byte[] sec = BaseEncoding.base16().lowerCase().decode("67E56582298859DDAE725F972992A07C6C4FB9F62A8FFF58CE3CA926A1063530".toLowerCase());
@@ -199,6 +215,11 @@ public class NativeSecp256k1Test {
         //Test sign() success/fail
         testSignPos();
         testSignNeg();
+
+        //Test Schnorr (partial support) //TODO
+        testSchnorrSign();
+        //testSchnorrVerify
+        //testSchnorrRecovery
 
         //Test privKeyTweakAdd() 1
         testPrivKeyTweakAdd_1();

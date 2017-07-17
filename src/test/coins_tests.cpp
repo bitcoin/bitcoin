@@ -3,13 +3,15 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "coins.h"
+#include "key/extkey.h"
+#include "key/stealth.h"
 #include "script/standard.h"
 #include "uint256.h"
 #include "undo.h"
 #include "utilstrencodings.h"
-#include "test/test_bitcoin.h"
 #include "test/test_random.h"
 #include "validation.h"
+#include "test/test_particl.h"
 #include "consensus/validation.h"
 
 #include <vector>
@@ -72,7 +74,7 @@ public:
 class CCoinsViewCacheTest : public CCoinsViewCache
 {
 public:
-    CCoinsViewCacheTest(CCoinsView* base) : CCoinsViewCache(base) {}
+    CCoinsViewCacheTest(CCoinsView* base) : CCoinsViewCache(base, false) {}
 
     void SelfTest() const
     {

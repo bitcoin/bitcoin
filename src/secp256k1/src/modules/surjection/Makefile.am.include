@@ -1,0 +1,6 @@
+include_HEADERS += include/secp256k1_surjectionproof.h
+noinst_HEADERS += src/modules/surjection/main_impl.h
+noinst_HEADERS += src/modules/surjection/surjection.h
+noinst_HEADERS += src/modules/surjection/surjection_impl.h
+noinst_HEADERS += src/modules/surjection/tests_impl.h
+

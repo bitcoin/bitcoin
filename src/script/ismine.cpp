@@ -6,6 +6,8 @@
 #include "ismine.h"
 
 #include "key.h"
+#include "key/extkey.h"
+#include "key/stealth.h"
 #include "keystore.h"
 #include "script/script.h"
 #include "script/standard.h"
@@ -15,7 +17,7 @@
 
 using namespace std;
 
-typedef vector<unsigned char> valtype;
+//typedef vector<unsigned char> valtype;
 
 unsigned int HaveKeys(const vector<valtype>& pubkeys, const CKeyStore& keystore)
 {
@@ -43,6 +45,12 @@ isminetype IsMine(const CKeyStore& keystore, const CTxDestination& dest, SigVers
 
 isminetype IsMine(const CKeyStore &keystore, const CTxDestination& dest, bool& isInvalid, SigVersion sigversion)
 {
+    if (dest.type() == typeid(CStealthAddress))
+    {
+        const CStealthAddress &sxAddr = boost::get<CStealthAddress>(dest);
+        return sxAddr.scan_secret.size() == EC_SECRET_SIZE ? ISMINE_SPENDABLE : ISMINE_NO; // TODO: watch only?
+    };
+    
     CScript script = GetScriptForDestination(dest);
     return IsMine(keystore, script, isInvalid, sigversion);
 }
@@ -86,6 +94,7 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, bool& 
         break;
     }
     case TX_PUBKEYHASH:
+    case TX_TIMELOCKED_PUBKEYHASH:
         keyID = CKeyID(uint160(vSolutions[0]));
         if (sigversion != SIGVERSION_BASE) {
             CPubKey pubkey;
@@ -98,6 +107,7 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, bool& 
             return ISMINE_SPENDABLE;
         break;
     case TX_SCRIPTHASH:
+    case TX_TIMELOCKED_SCRIPTHASH:
     {
         CScriptID scriptID = CScriptID(uint160(vSolutions[0]));
         CScript subscript;
@@ -126,6 +136,7 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, bool& 
     }
 
     case TX_MULTISIG:
+    case TX_TIMELOCKED_MULTISIG:
     {
         // Only consider transactions "mine" if we own ALL the
         // keys involved. Multi-signature transactions that are
@@ -145,6 +156,8 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, bool& 
             return ISMINE_SPENDABLE;
         break;
     }
+    default:
+        break;
     }
 
     if (keystore.HaveWatchOnly(scriptPubKey)) {
