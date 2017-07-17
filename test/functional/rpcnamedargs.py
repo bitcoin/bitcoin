@@ -23,10 +23,10 @@ class NamedArgumentTest(BitcoinTestFramework):
 
     def run_test(self):
         node = self.nodes[0]
-        h = node.help(command='getinfo')
-        assert(h.startswith('getinfo\n'))
+        h = node.help(command='getmininginfo')
+        assert(h.startswith('getmininginfo\n'))
 
-        assert_raises_jsonrpc(-8, 'Unknown named parameter', node.help, random='getinfo')
+        assert_raises_jsonrpc(-8, 'Unknown named parameter', node.help, random='getmininginfo')
 
         h = node.getblockhash(height=0)
         node.getblock(blockhash=h)
