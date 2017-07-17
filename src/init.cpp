@@ -1453,13 +1453,13 @@ bool AppInitSanityChecks()
         return InitError(strprintf(_("Initialization sanity check failed. %s is shutting down."), _(PACKAGE_NAME)));
 
     // Probe the data directory lock to give an early error message, if possible
+    // We cannot hold the data directory lock here, as the forking for daemon() hasn't yet happened,
+    // and a fork will cause weird behavior to it.
     return LockDataDirectory(true);
 }
 
-bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
+bool AppInitLockDataDirectory()
 {
-    const CChainParams& chainparams = Params();
-    // ********************************************************* Step 4a: application initialization
     // After daemonization get the data directory lock again and hold on to it until exit
     // This creates a slight window for a race condition to happen, however this condition is harmless: it
     // will at most make us exit without printing a message to console.
@@ -1467,7 +1467,13 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         // Detailed error printed inside LockDataDirectory
         return false;
     }
+    return true;
+}
 
+bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
+{
+    const CChainParams& chainparams = Params();
+    // ********************************************************* Step 4a: application initialization
 #ifndef WIN32
     CreatePidFile(GetPidFile(), getpid());
 #endif

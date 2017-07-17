@@ -172,7 +172,12 @@ bool AppInit(int argc, char* argv[])
             return false;
 #endif // HAVE_DECL_DAEMON
         }
-
+        // Lock data directory after daemonization
+        if (!AppInitLockDataDirectory())
+        {
+            // If locking the data directory failed, exit immediately
+            exit(EXIT_FAILURE);
+        }
         fRet = AppInitMain(threadGroup, scheduler);
     } catch (...) {
         PrintExceptionContinue(std::current_exception(), "AppInit()");

@@ -181,6 +181,10 @@ class BitcoinCore: public QObject
     Q_OBJECT
 public:
     explicit BitcoinCore();
+    /** Basic initialization, before starting initialization/shutdown thread.
+     * Return true on success.
+     */
+    static bool baseInitialize();
 
 public Q_SLOTS:
     void initialize();
@@ -275,26 +279,32 @@ void BitcoinCore::handleRunawayException(const std::exception_ptr e)
     Q_EMIT runawayException(QString::fromStdString(GetWarnings("gui")));
 }
 
+bool BitcoinCore::baseInitialize()
+{
+    if (!AppInitBasicSetup())
+    {
+        return false;
+    }
+    if (!AppInitParameterInteraction())
+    {
+        return false;
+    }
+    if (!AppInitSanityChecks())
+    {
+        return false;
+    }
+    if (!AppInitLockDataDirectory())
+    {
+        return false;
+    }
+    return true;
+}
+
 void BitcoinCore::initialize()
 {
     try
     {
         qDebug() << __func__ << ": Running initialization in thread";
-        if (!AppInitBasicSetup())
-        {
-            Q_EMIT initializeResult(false);
-            return;
-        }
-        if (!AppInitParameterInteraction())
-        {
-            Q_EMIT initializeResult(false);
-            return;
-        }
-        if (!AppInitSanityChecks())
-        {
-            Q_EMIT initializeResult(false);
-            return;
-        }
         bool rv = AppInitMain(threadGroup, scheduler);
         Q_EMIT initializeResult(rv);
     } catch (...) {
@@ -725,20 +735,30 @@ int main(int argc, char *argv[])
     if (gArgs.GetBoolArg("-splash", DEFAULT_SPLASHSCREEN) && !gArgs.GetBoolArg("-min", false))
         app.createSplashScreen(networkStyle.data());
 
+    int rv = EXIT_SUCCESS;
     try
     {
         app.createWindow(networkStyle.data());
-        app.requestInitialize();
+        // Perform base initialization before spinning up initialization/shutdown thread
+        // This is acceptable because this function only contains steps that are quick to execute,
+        // so the GUI thread won't be held up.
+        if (BitcoinCore::baseInitialize()) {
+            app.requestInitialize();
 #if defined(Q_OS_WIN) && QT_VERSION >= 0x050000
-        WinShutdownMonitor::registerShutdownBlockReason(QObject::tr("%1 didn't yet exit safely...").arg(QObject::tr(PACKAGE_NAME)), (HWND)app.getMainWinId());
+            WinShutdownMonitor::registerShutdownBlockReason(QObject::tr("%1 didn't yet exit safely...").arg(QObject::tr(PACKAGE_NAME)), (HWND)app.getMainWinId());
 #endif
-        app.exec();
-        app.requestShutdown();
-        app.exec();
+            app.exec();
+            app.requestShutdown();
+            app.exec();
+            rv = app.getReturnValue();
+        } else {
+            // A dialog with detailed error will have been shown by InitError()
+            rv = EXIT_FAILURE;
+        }
     } catch (...) {
         PrintExceptionContinue(std::current_exception(), "Runaway exception");
         app.handleRunawayException(QString::fromStdString(GetWarnings("gui")));
     }
-    return app.getReturnValue();
+    return rv;
 }
 #endif // BITCOIN_QT_TEST
