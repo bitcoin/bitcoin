@@ -1162,6 +1162,7 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
             "        }\n"
             "     }\n"
             "  }\n"
+            "  \"warnings\" : \"...\",         (string) any network and blockchain errors.\n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("getblockchaininfo", "")
@@ -1201,6 +1202,7 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
 
         obj.push_back(Pair("pruneheight",        block->nHeight));
     }
+    obj.push_back(Pair("warnings", GetWarnings("statusbar")));
     return obj;
 }
 
