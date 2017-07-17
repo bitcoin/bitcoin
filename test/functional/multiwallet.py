@@ -21,8 +21,11 @@ class MultiWalletTest(BitcoinTestFramework):
         w1 = self.nodes[0] / "wallet/w1"
         w1.generate(1)
 
+        # accessing invalid wallet fails
+        assert_raises_jsonrpc(-18, "Requested wallet does not exist or is not loaded", (self.nodes[0] / "wallet/bad").getwalletinfo)
+
         # accessing wallet RPC without using wallet endpoint fails
-        assert_raises_jsonrpc(-32601, "Method not found", self.nodes[0].getwalletinfo)
+        assert_raises_jsonrpc(-19, "Wallet file not specified", self.nodes[0].getwalletinfo)
 
         # check w1 wallet balance
         w1_info = w1.getwalletinfo()
