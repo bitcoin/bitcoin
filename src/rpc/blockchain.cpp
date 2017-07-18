@@ -46,6 +46,33 @@ static CUpdatedBlock latestblock;
 
 extern void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry);
 
+static bool ReadTxoFromOutpoint(Coin& coin, bool& is_spent, const CBlockIndex* pindex, const COutPoint& out, bool include_spent)
+{
+    is_spent = false;
+    if (pcoinsTip->GetCoin(out, coin)) {
+        return true;
+    } else if (!include_spent) {
+        return false;
+    }
+    is_spent = true;
+
+    uint256 hashblock;
+    CTransactionRef tx_ref;
+    if (!GetBlockchainTx(out.hash, tx_ref, Params().GetConsensus(), hashblock, true)) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string(fTxIndex ? "No such blockchain transaction"
+            : "No such utxo blockchain transaction. Use -txindex to enable spent output queries"));
+    }
+    if (out.n >= tx_ref->vout.size()) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string(strprintf("No output %d for tx %s", out.n, out.hash.GetHex())));
+    }
+    const CTxOut& prevoutput = tx_ref->vout[out.n];
+    coin.out = prevoutput;
+    coin.fCoinBase = tx_ref->IsCoinBase();
+    coin.nHeight = mapBlockIndex[hashblock]->nHeight;
+
+    return true;
+}
+
 double GetDifficulty(const CBlockIndex* blockindex)
 {
     if (blockindex == NULL)
@@ -939,14 +966,15 @@ UniValue gettxoutsetinfo(const JSONRPCRequest& request)
 
 UniValue gettxout(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() < 2 || request.params.size() > 3)
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 4)
         throw std::runtime_error(
             "gettxout \"txid\" n ( include_mempool )\n"
-            "\nReturns details about an unspent transaction output.\n"
+            "\nReturns details about a transaction output.\n"
             "\nArguments:\n"
-            "1. \"txid\"       (string, required) The transaction id\n"
-            "2. n              (numeric, required) vout number\n"
-            "3. include_mempool  (boolean, optional) Whether to include the mempool\n"
+            "1. \"txid\"             (string, required) The transaction id\n"
+            "2. \"n\"                (numeric, required) vout number\n"
+            "3. \"include_mempool\"  (boolean, optional) Only search in the mempool. Default: true\n"
+            "4. \"include_spent\"    (boolean, optional) Whether to include spent outputs. Default: false\n"
             "\nResult:\n"
             "{\n"
             "  \"bestblock\" : \"hash\",    (string) the block hash\n"
@@ -964,6 +992,7 @@ UniValue gettxout(const JSONRPCRequest& request)
             "  },\n"
             "  \"version\" : n,            (numeric) The version\n"
             "  \"coinbase\" : true|false   (boolean) Coinbase or not\n"
+            "  \"spent\" : true|false      (boolean) Is the output spent with the current tip or not\n"
             "}\n"
 
             "\nExamples:\n"
@@ -987,6 +1016,12 @@ UniValue gettxout(const JSONRPCRequest& request)
     if (request.params.size() > 2)
         fMempool = request.params[2].get_bool();
 
+    bool include_spent = false;
+    if (request.params.size() > 3) {
+        include_spent = request.params[3].get_bool();
+    }
+
+    bool is_spent = false;
     Coin coin;
     if (fMempool) {
         LOCK(mempool.cs);
@@ -995,7 +1030,7 @@ UniValue gettxout(const JSONRPCRequest& request)
             return NullUniValue;
         }
     } else {
-        if (!pcoinsTip->GetCoin(out, coin)) {
+        if (!ReadTxoFromOutpoint(coin, is_spent, chainActive.Tip(), out, include_spent)) {
             return NullUniValue;
         }
     }
@@ -1013,6 +1048,7 @@ UniValue gettxout(const JSONRPCRequest& request)
     ScriptPubKeyToUniv(coin.out.scriptPubKey, o, true);
     ret.push_back(Pair("scriptPubKey", o));
     ret.push_back(Pair("coinbase", (bool)coin.fCoinBase));
+    ret.push_back(Pair("spent", (bool)is_spent));
 
     return ret;
 }
