@@ -96,4 +96,52 @@ BOOST_AUTO_TEST_CASE(GetBlockProofEquivalentTime_test)
     }
 }
 
+static CBlockIndex GetBlockIndex(CBlockIndex *pindexPrev, int64_t nTimeInterval,
+                                 uint32_t nBits) {
+    CBlockIndex block;
+    block.pprev = pindexPrev;
+    block.nHeight = pindexPrev->nHeight + 1;
+    block.nTime = pindexPrev->nTime + nTimeInterval;
+    block.nBits = nBits;
+
+    return block;
+}
+
+BOOST_AUTO_TEST_CASE(retargeting_test) {
+    SelectParams(CBaseChainParams::MAIN);
+    const Consensus::Params &params = Params().GetConsensus();
+
+    std::vector<CBlockIndex> blocks(1013);
+
+    // Genesis block?
+    blocks[0] = CBlockIndex();
+    blocks[0].nHeight = 0;
+    blocks[0].nTime = 1269211443;
+    blocks[0].nBits = 0x207fffff;
+
+    // Pile up some blocks.
+    for (size_t i = 1; i < 1000; i++) {
+        blocks[i] =
+            GetBlockIndex(&blocks[i - 1], params.nPowTargetSpacing, 0x207fffff);
+    }
+
+    CBlockHeader blkHeaderDummy;
+
+    // We start getting 2h blocks time. For the first 5 blocks, it doesn't
+    // matter as the MTP is not affected. For the next 5 block, MTP difference
+    // increases but stays bellow 12h.
+    for (size_t i = 1000; i < 1010; i++) {
+        blocks[i] = GetBlockIndex(&blocks[i - 1], 2 * 3600, 0x207fffff);
+        BOOST_CHECK_EQUAL(
+            GetNextWorkRequired(&blocks[i], &blkHeaderDummy, params),
+            0x207fffff);
+    }
+
+    // Now we expect the difficulty to decrease.
+    blocks[1010] = GetBlockIndex(&blocks[1009], 2 * 3600, 0x207fffff);
+    BOOST_CHECK_EQUAL(
+        GetNextWorkRequired(&blocks[1010], &blkHeaderDummy, params),
+        0x1d00ffff);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
