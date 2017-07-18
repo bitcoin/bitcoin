@@ -227,10 +227,12 @@ void GetOSRand(unsigned char *ent32)
             RandFailure();
         }
     }
-#elif defined(HAVE_GETENTROPY)
+#elif defined(HAVE_GETENTROPY) && defined(__OpenBSD__)
     /* On OpenBSD this can return up to 256 bytes of entropy, will return an
      * error if more are requested.
      * The call cannot return less than the requested number of bytes.
+       getentropy is explicitly limited to openbsd here, as a similar (but not
+       the same) function may exist on other platforms via glibc.
      */
     if (getentropy(ent32, NUM_OS_RANDOM_BYTES) != 0) {
         RandFailure();
