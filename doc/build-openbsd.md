@@ -41,7 +41,7 @@ Do not use `pkg_add boost`! The boost version installed thus is compiled using t
 
 This makes it necessary to build boost, or at least the parts used by Bitcoin Core, manually:
 
-```
+```bash
 # Pick some path to install boost to, here we create a directory within the bitcoin directory
 BITCOIN_ROOT=$(pwd)
 BOOST_PREFIX="${BITCOIN_ROOT}/boost"

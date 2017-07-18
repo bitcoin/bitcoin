@@ -9,7 +9,9 @@ Note
 Always use absolute paths to configure and compile bitcoin and the dependencies,
 for example, when specifying the path of the dependency:
 
-	../dist/configure --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX
+```bash
+../dist/configure --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX
+```
 
 Here BDB_PREFIX must be an absolute path - it is defined using $(pwd) which ensures
 the usage of the absolute path.
@@ -58,8 +60,9 @@ C++ compilers are memory-hungry. It is recommended to have at least 1.5 GB of
 memory available when compiling Bitcoin Core. On systems with less, gcc can be
 tuned to conserve memory with additional CXXFLAGS:
 
-
-    ./configure CXXFLAGS="--param ggc-min-expand=1 --param ggc-min-heapsize=32768"
+```bash
+./configure CXXFLAGS="--param ggc-min-expand=1 --param ggc-min-heapsize=32768"
+```
 
 Dependency Build Instructions: Ubuntu & Debian
 ----------------------------------------------
@@ -198,7 +201,7 @@ Boost
 -----
 If you need to build Boost yourself:
 
-	sudo su
+	sudo -i
 	./bootstrap.sh
 	./bjam install
 
@@ -303,11 +306,13 @@ Then, install the toolchain and curl:
 
 To build executables for ARM:
 
-    cd depends
-    make HOST=arm-linux-gnueabihf NO_QT=1
-    cd ..
-    ./configure --prefix=$PWD/depends/arm-linux-gnueabihf --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++
-    make
+```bash
+cd depends
+make HOST=arm-linux-gnueabihf NO_QT=1
+cd ..
+./configure --prefix=$PWD/depends/arm-linux-gnueabihf --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++
+make
+```
 
 
 For further documentation on the depends system see [README.md](../depends/README.md) in the depends directory.
@@ -338,9 +343,11 @@ with 4.8-built Bitcoin Core is needed follow the steps under "Berkeley DB" above
 
 Then build using:
 
-    ./autogen.sh
-    ./configure --with-incompatible-bdb BDB_CFLAGS="-I/usr/local/include/db5" BDB_LIBS="-L/usr/local/lib -ldb_cxx-5"
-    gmake
+```bash
+./autogen.sh
+./configure --with-incompatible-bdb BDB_CFLAGS="-I/usr/local/include/db5" BDB_LIBS="-L/usr/local/lib -ldb_cxx-5"
+gmake
+```
 
 *Note on debugging*: The version of `gdb` installed by default is [ancient and considered harmful](https://wiki.freebsd.org/GdbRetirement).
 It is not suitable for debugging a multi-threaded C++ program, not even for getting backtraces. Please install the package `gdb` and
