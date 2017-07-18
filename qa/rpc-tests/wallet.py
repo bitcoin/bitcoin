@@ -69,7 +69,6 @@ class WalletTest (BitcoinTestFramework):
         assert_equal(walletinfo['immature_balance'], 0)
 
         # Have node0 mine a block, thus it will collect its own fee.
-        pdb.set_trace()
         self.nodes[0].generate(1)
         self.sync_all()
 
@@ -359,13 +358,3 @@ class WalletTest (BitcoinTestFramework):
 
 if __name__ == '__main__':
     WalletTest ().main ()
-
-def Test():
-    t = WalletTest()
-    bitcoinConf = {
-        "debug": ["net", "blk", "thin", "mempool", "req", "bench", "evict"],  # "lck"
-        "blockprioritysize": 2000000,  # we don't want any transactions rejected due to insufficient fees...
-        "parallel":0
-    }
-# "--tmpdir=/ramdisk/test", "--nocleanup","--noshutdown"
-    t.main(["--tmpdir=/ramdisk/test","--nocleanup","--noshutdown"], bitcoinConf, None)

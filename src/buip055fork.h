@@ -11,7 +11,6 @@
 #include "univalue/include/univalue.h"
 #include <vector>
 
-
 class CValidationState;
 class CBlock;
 class CTransaction;

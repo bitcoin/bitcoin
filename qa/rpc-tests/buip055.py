@@ -410,7 +410,6 @@ class BUIP055Test (BitcoinTestFramework):
         self.nodes[2].generate(2)
         sync_blocks(self.nodes[2:])
         counts = [x.getblockcount() for x in self.nodes]
-        print(counts)
         assert(counts == [forkHeight + 6, forkHeight + 6, base[3] + 15 + 3, base[3] + 15 + 3])
         forkBest = self.nodes[0].getbestblockhash()
         origBest = self.nodes[3].getbestblockhash()

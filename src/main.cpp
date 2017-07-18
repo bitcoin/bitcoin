@@ -1442,7 +1442,8 @@ bool AcceptToMemoryPoolWorker(CTxMemPool &pool,
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
 
-        if (!CheckInputsAnalyzeTx(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS | forkVerifyFlags, true, &resourceTracker))
+        if (!CheckInputsAnalyzeTx(
+                tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS | forkVerifyFlags, true, &resourceTracker))
         {
             LogPrint("mempool", "txn CheckInputs failed");
             return false;
@@ -1860,7 +1861,7 @@ bool CScriptCheck::operator()()
     const CScript &scriptSig = ptxTo->vin[nIn].scriptSig;
     CachingTransactionSignatureChecker checker(ptxTo, nIn, amount, cacheStore);
     unsigned int sighashtype = 0;
-    if (!VerifyScript(scriptSig, scriptPubKey, nFlags, checker, &error,&sighashtype))
+    if (!VerifyScript(scriptSig, scriptPubKey, nFlags, checker, &error, &sighashtype))
         return false;
     if (resourceTracker)
         resourceTracker->Update(ptxTo->GetHash(), checker.GetNumSigops(), checker.GetBytesHashed());
@@ -1872,7 +1873,7 @@ bool CScriptCheckAndAnalyze::operator()()
     const CScript &scriptSig = ptxTo->vin[nIn].scriptSig;
     CachingTransactionSignatureChecker checker(ptxTo, nIn, amount, cacheStore);
     unsigned int sighashtype = 0;
-    if (!VerifyScript(scriptSig, scriptPubKey, nFlags, checker, &error,&sighashtype))
+    if (!VerifyScript(scriptSig, scriptPubKey, nFlags, checker, &error, &sighashtype))
         return false;
     ptxToNonConst->sighashType |= sighashtype;
     if (resourceTracker)

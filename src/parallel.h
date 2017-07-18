@@ -38,7 +38,8 @@ protected:
 
 public:
     CScriptCheck()
-        : resourceTracker(NULL), ptxTo(0), nIn(0), nFlags(0), cacheStore(false), error(SCRIPT_ERR_UNKNOWN_ERROR), amount(0)
+        : resourceTracker(NULL), ptxTo(0), nIn(0), nFlags(0), cacheStore(false), error(SCRIPT_ERR_UNKNOWN_ERROR),
+          amount(0)
     {
     }
     CScriptCheck(ValidationResourceTracker *resourceTrackerIn,
@@ -70,25 +71,23 @@ public:
     ScriptError GetScriptError() const { return error; }
 };
 
-class CScriptCheckAndAnalyze:public CScriptCheck
+class CScriptCheckAndAnalyze : public CScriptCheck
 {
-   CTransaction *ptxToNonConst;
+    CTransaction *ptxToNonConst;
+
 public:
-       CScriptCheckAndAnalyze()
-           : CScriptCheck(), ptxToNonConst(0)
-    {
-    }
+    CScriptCheckAndAnalyze() : CScriptCheck(), ptxToNonConst(0) {}
     CScriptCheckAndAnalyze(ValidationResourceTracker *resourceTrackerIn,
         const CCoins &txFromIn,
         CTransaction &txToIn,
         unsigned int nInIn,
         unsigned int nFlagsIn,
         bool cacheIn)
-        : CScriptCheck(resourceTrackerIn,txFromIn,txToIn,nInIn,nFlagsIn,cacheIn), ptxToNonConst(&txToIn)
+        : CScriptCheck(resourceTrackerIn, txFromIn, txToIn, nInIn, nFlagsIn, cacheIn), ptxToNonConst(&txToIn)
     {
     }
 
-   bool operator()();
+    bool operator()();
 };
 
 class CParallelValidation

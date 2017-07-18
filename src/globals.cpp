@@ -186,7 +186,8 @@ CTweak<uint64_t> miningForkMG("mining.forkBlockSize",
     2000000); // 2MB, uahf-technical-spec.md REQ-4-2
 
 CTweak<bool> walletSignWithForkSig("wallet.useNewSig",
-    "Once the fork occurs, sign transactions using the new signature scheme so that they will only be valid on the fork.",
+    "Once the fork occurs, sign transactions using the new signature scheme so that they will only be valid on the "
+    "fork.",
     true);
 
 CTweak<unsigned int> maxTxSize("net.excessiveTx", "Largest transaction size in bytes", DEFAULT_LARGEST_TRANSACTION);
