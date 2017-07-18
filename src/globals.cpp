@@ -107,7 +107,7 @@ vector<std::string> vAddedNodes;
 set<CNetAddr> setservAddNodeAddresses;
 
 uint64_t maxGeneratedBlock = DEFAULT_MAX_GENERATED_BLOCK_SIZE;
-unsigned int excessiveBlockSize = DEFAULT_EXCESSIVE_BLOCK_SIZE;
+uint64_t excessiveBlockSize = DEFAULT_EXCESSIVE_BLOCK_SIZE;
 unsigned int excessiveAcceptDepth = DEFAULT_EXCESSIVE_ACCEPT_DEPTH;
 unsigned int maxMessageSizeMultiplier = DEFAULT_MAX_MESSAGE_SIZE_MULTIPLIER;
 int nMaxOutConnections = DEFAULT_MAX_OUTBOUND_CONNECTIONS;
@@ -154,7 +154,7 @@ CCriticalSection cs_orphancache;
 map<uint256, COrphanTx> mapOrphanTransactions GUARDED_BY(cs_orphancache);
 map<uint256, set<uint256> > mapOrphanTransactionsByPrev GUARDED_BY(cs_orphancache);
 
-CTweakRef<unsigned int> ebTweak("net.excessiveBlock",
+CTweakRef<uint64_t> ebTweak("net.excessiveBlock",
     "Excessive block size in bytes",
     &excessiveBlockSize,
     &ExcessiveBlockValidator);

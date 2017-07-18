@@ -117,6 +117,8 @@ extern CTweak<uint64_t> reindexTypicalBlockSize;
 extern std::map<CNetAddr, ConnectionHistory> mapInboundConnectionTracker;
 extern CCriticalSection cs_mapInboundConnectionTracker;
 
+/** A cache to store headers that have arrived but can not yet be connected **/
+std::map<uint256, std::pair<CBlockHeader, int64_t> > mapUnConnectedHeaders;
 
 /**
  * Returns true if there are nRequired or more blocks of minVersion or above
@@ -1791,15 +1793,21 @@ void static InvalidBlockFound(CBlockIndex *pindex, const CValidationState &state
     int nDoS = 0;
     if (state.IsInvalid(nDoS))
     {
+        assert(state.GetRejectCode() < REJECT_INTERNAL); // Blocks are never rejected with internal reject codes
+
         std::map<uint256, NodeId>::iterator it = mapBlockSource.find(pindex->GetBlockHash());
-        if (it != mapBlockSource.end() && State(it->second))
+        if (it != mapBlockSource.end())
         {
-            assert(state.GetRejectCode() < REJECT_INTERNAL); // Blocks are never rejected with internal reject codes
-            CBlockReject reject = {(unsigned char)state.GetRejectCode(),
-                state.GetRejectReason().substr(0, MAX_REJECT_MESSAGE_LENGTH), pindex->GetBlockHash()};
-            State(it->second)->rejects.push_back(reject);
-            if (nDoS > 0)
-                dosMan.Misbehaving(it->second, nDoS);
+            CNodeRef node(connmgr->FindNodeFromId(it->second));
+
+            if (node)
+            {
+                node->PushMessage(NetMsgType::REJECT, (std::string)NetMsgType::BLOCK,
+                    (unsigned char)state.GetRejectCode(), state.GetRejectReason().substr(0, MAX_REJECT_MESSAGE_LENGTH),
+                    pindex->GetBlockHash());
+                if (nDoS > 0)
+                    dosMan.Misbehaving(node.get(), nDoS);
+            }
         }
     }
     if (!state.CorruptionPossible())
@@ -2479,7 +2487,10 @@ bool ConnectBlock(const CBlock &block,
     // real online nodes have checked the scripts.  Therefore, during initial block
     // download we don't need to check most of those scripts except for the most
     // recent ones.
-    bool fScriptChecks = !fCheckpointsEnabled || block.nTime > timeBarrier;
+    bool fScriptChecks = true;
+    if (pindexBestHeader)
+        fScriptChecks = !fCheckpointsEnabled || block.nTime > timeBarrier ||
+                        pindex->nHeight > pindexBestHeader->nHeight - (144 * checkScriptDays.value);
 
     int64_t nTime1 = GetTimeMicros();
     nTimeCheck += nTime1 - nTimeStart;
@@ -4901,6 +4912,7 @@ void UnloadBlockIndex()
     }
 
     LOCK(cs_main);
+    mapUnConnectedHeaders.clear();
     setBlockIndexCandidates.clear();
     chainActive.SetTip(NULL);
     pindexBestInvalid = NULL;
@@ -6437,8 +6449,7 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
         // Check all headers to make sure they are continuous before attempting to accept them.
         // This prevents and attacker from keeping us from doing direct fetch by giving us out
         // of order headers.
-
-
+        bool fNewUnconnectedHeaders = false;
         uint256 hashLastBlock;
         hashLastBlock.SetNull();
         for (const CBlockHeader &header : headers)
@@ -6451,11 +6462,81 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
                     hashLastBlock = header.hashPrevBlock;
             }
 
+            // Add this header to the map if it doesn't connect to a previous header
             if (header.hashPrevBlock != hashLastBlock)
             {
-                return error("non-continuous headers sequence");
+                // If we still haven't finished downloading the initial headers during node sync and we get
+                // an out of order header then we must disconnect the node so that we can finish downloading
+                // initial headers from a diffeent peer. An out of order header at this point is likely an attack
+                // to prevent the node from syncing.
+                if (header.GetBlockTime() < GetAdjustedTime() - 24 * 60 * 60)
+                {
+                    pfrom->fDisconnect = true;
+                    return error("non-continuous-headers sequence during node sync - disconnecting peer=%s",
+                        pfrom->GetLogName());
+                }
+                fNewUnconnectedHeaders = true;
             }
+
+            // if we have an unconnected header then add every following header to the unconnected headers cache.
+            if (fNewUnconnectedHeaders)
+            {
+                uint256 hash = header.GetHash();
+                if (mapUnConnectedHeaders.size() < MAX_UNCONNECTED_HEADERS)
+                    mapUnConnectedHeaders[hash] = std::make_pair(header, GetTime());
+
+                // update hashLastUnknownBlock so that we'll be able to download the block from this peer even
+                // if we receive the headers, which will connect this one, from a different peer.
+                UpdateBlockAvailability(pfrom->GetId(), hash);
+            }
+
             hashLastBlock = header.GetHash();
+        }
+        // return without error if we have an unconnected header.  This way we can try to connect it when the next
+        // header arrives.
+        if (fNewUnconnectedHeaders)
+            return true;
+
+        // If possible add any previously unconnected headers to the headers vector and remove any expired entries.
+        std::map<uint256, std::pair<CBlockHeader, int64_t> >::iterator mi = mapUnConnectedHeaders.begin();
+        while (mi != mapUnConnectedHeaders.end())
+        {
+            std::map<uint256, std::pair<CBlockHeader, int64_t> >::iterator toErase = mi;
+
+            // Add the header if it connects to the previous header
+            if (headers.back().GetHash() == (*mi).second.first.hashPrevBlock)
+            {
+                headers.push_back((*mi).second.first);
+                mapUnConnectedHeaders.erase(toErase);
+
+                // if you found one to connect then search from the beginning again in case there is another
+                // that will connect to this new header that was added.
+                mi = mapUnConnectedHeaders.begin();
+                continue;
+            }
+
+            // Remove any entries that have been in the cache too long.  Unconnected headers should only exist
+            // for a very short while, typically just a second or two.
+            int64_t nTimeHeaderArrived = (*mi).second.second;
+            uint256 headerHash = (*mi).first;
+            mi++;
+            if (GetTime() - nTimeHeaderArrived >= UNCONNECTED_HEADERS_TIMEOUT)
+            {
+                mapUnConnectedHeaders.erase(toErase);
+            }
+            // At this point we know the headers in the list received are known to be in order, therefore,
+            // check if the header is equal to some other header in the list. If so then remove it from the cache.
+            else
+            {
+                for (const CBlockHeader &header : headers)
+                {
+                    if (header.GetHash() == headerHash)
+                    {
+                        mapUnConnectedHeaders.erase(toErase);
+                        break;
+                    }
+                }
+            }
         }
 
         // Check and accept each header in order from youngest block to oldest
@@ -7162,9 +7243,12 @@ bool SendMessages(CNode *pto)
 {
     const Consensus::Params &consensusParams = Params().GetConsensus();
     {
-        // Don't send anything until we get its version message otherwise we may
-        // end up geting ourselves banned by the receiving peer.
-        if (pto->nVersion == 0)
+        // First set fDisconnect if appropriate.
+        pto->DisconnectIfBanned();
+
+        // Now exit early if disconnecting or the version handshake is not complete.  We must not send PING or other
+        // connection maintenance messages before the handshake is done.
+        if (pto->fDisconnect || !pto->fSuccessfullyConnected)
             return true;
 
         //
@@ -7277,27 +7361,6 @@ bool SendMessages(CNode *pto)
         }
 
         CNodeState &state = *State(pto->GetId());
-        if (pto->fShouldBan)
-        {
-            if (pto->fWhitelisted)
-                LogPrintf("Warning: not punishing whitelisted peer %s!\n", pto->addr.ToString());
-            else
-            {
-                pto->fDisconnect = true;
-                if (pto->addr.IsLocal())
-                    LogPrintf("Warning: not banning local peer %s!\n", pto->addr.ToString());
-                else
-                {
-                    dosMan.Ban(pto->addr, BanReasonNodeMisbehaving);
-                }
-            }
-            pto->fShouldBan = false;
-        }
-
-        BOOST_FOREACH (const CBlockReject &reject, state.rejects)
-            pto->PushMessage(NetMsgType::REJECT, (std::string)NetMsgType::BLOCK, reject.chRejectCode,
-                reject.strRejectReason, reject.hashBlock);
-        state.rejects.clear();
 
         // If a sync has been started check whether we received the first batch of headers requested within the timeout
         // period.
