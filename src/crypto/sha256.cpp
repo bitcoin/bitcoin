@@ -10,11 +10,13 @@
 #include <atomic>
 
 #if defined(__x86_64__) || defined(__amd64__)
+#if defined(EXPERIMENTAL_ASM)
 #include <cpuid.h>
 namespace sha256_sse4
 {
 void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks);
 }
+#endif
 #endif
 
 // Internal implementation code.
@@ -176,7 +178,7 @@ TransformType Transform = sha256::Transform;
 
 std::string SHA256AutoDetect()
 {
-#if defined(__x86_64__) || defined(__amd64__)
+#if defined(EXPERIMENTAL_ASM) && (defined(__x86_64__) || defined(__amd64__))
     uint32_t eax, ebx, ecx, edx;
     if (__get_cpuid(1, &eax, &ebx, &ecx, &edx) && (ecx >> 19) & 1) {
         Transform = sha256_sse4::Transform;
