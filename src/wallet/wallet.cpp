@@ -1644,6 +1644,10 @@ CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool f
 
         fScanningWallet = false;
     }
+
+    // Check that we haven't dropped below the keypool_critical threshold.
+    ShutdownIfKeypoolCritical();
+
     return ret;
 }
 
@@ -3641,6 +3645,25 @@ void CReserveKey::ReturnKey()
     vchPubKey = CPubKey();
 }
 
+void CWallet::ShutdownIfKeypoolCritical() {
+    LOCK(cs_wallet);
+    unsigned int keypool_critical = GetArg("-keypoolcritical", DEFAULT_KEYPOOL_CRITICAL);
+    if (IsHDEnabled() && !HasUnusedKeys(keypool_critical)) {
+        // if the remaining keypool size is below the gap limit, shutdown
+        LogPrintf("%s: Number of keys in keypool is below critical minimum. Shutting down. internal keypool: %d, external keypool: %d, keypool minimum: %d\n",
+                  __func__, setInternalKeyPool.size(), setExternalKeyPool.size(), keypool_critical);
+        const std::string error_msg = "Number of keys in keypool is below critical minimum and the wallet is encrypted. Bitcoin will now shutdown to avoid loss of funds.\n"
+                                      "This is probably because you are restoring an old backup wallet file which has not been topped up with the most recently "
+                                      "derived keys, and so you would not detect transactions involving those keys.\n"
+                                      "You can manually top-up your wallet keypool as follows:\n"
+                                      " - restart bitcoin with -keypoolcritical set to 0 (to prevent bitcoind from shutting down again)\n"
+                                      " - unlock the wallet using walletpassphrase (to top up the keypool)\n"
+                                      " - restart with -rescan. This will redownload the blockchain if you are running a pruned node.";
+        uiInterface.ThreadSafeMessageBox(error_msg, "", CClientUIInterface::MSG_ERROR);
+        StartShutdown();
+    }
+}
+
 void CWallet::MarkReserveKeysAsUsed(int64_t keypool_id)
 {
     AssertLockHeld(cs_wallet);
@@ -3921,6 +3944,7 @@ std::string CWallet::GetWalletHelpString(bool showDebug)
 
         strUsage += HelpMessageOpt("-dblogsize=<n>", strprintf("Flush wallet database activity from memory to disk log every <n> megabytes (default: %u)", DEFAULT_WALLET_DBLOGSIZE));
         strUsage += HelpMessageOpt("-flushwallet", strprintf("Run a thread to flush wallet periodically (default: %u)", DEFAULT_FLUSHWALLET));
+        strUsage += HelpMessageOpt("-keypoolcritical", strprintf(_("If the keypool drops below this number of keys and we are unable to generate new keys, shutdown (default: %u)"), DEFAULT_KEYPOOL_CRITICAL));
         strUsage += HelpMessageOpt("-privdb", strprintf("Sets the DB_PRIVATE flag in the wallet db environment (default: %u)", DEFAULT_WALLET_PRIVDB));
         strUsage += HelpMessageOpt("-walletrejectlongchains", strprintf(_("Wallet will not create transactions that violate mempool chain limits (default: %u)"), DEFAULT_WALLET_REJECT_LONG_CHAINS));
     }
@@ -4041,6 +4065,16 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
 
     RegisterValidationInterface(walletInstance);
 
+    // Make sure we have enough keys in our keypool if HD is enabled
+    if (walletInstance->IsHDEnabled()) {
+        unsigned int keypool_size = GetArg("-keypool", DEFAULT_KEYPOOL_SIZE);
+        unsigned int keypool_critical = GetArg("-keypoolcritical", DEFAULT_KEYPOOL_CRITICAL);
+        if (keypool_size < keypool_critical) {
+            LogPrintf("Parameter Interaction: keypool critical size (%d) must be smaller than keypool size (%d)\n", keypool_critical, keypool_size);
+            ForceSetArg("-keypool", std::to_string(keypool_critical));
+        }
+
+    }
     // Try to top up keypool. No-op if the wallet is locked.
     walletInstance->TopUpKeyPool();
 

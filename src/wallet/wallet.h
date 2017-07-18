@@ -41,6 +41,8 @@ extern bool bSpendZeroConfChange;
 extern bool fWalletRbf;
 
 static const unsigned int DEFAULT_KEYPOOL_SIZE = 1000;
+//! Shut down if the keypool falls below this size
+static const unsigned int DEFAULT_KEYPOOL_CRITICAL = 500;
 //! -paytxfee default
 static const CAmount DEFAULT_TRANSACTION_FEE = 0;
 //! -fallbackfee default
@@ -979,6 +981,7 @@ public:
     void ReturnKey(int64_t nIndex, bool fInternal, const CPubKey& pubkey);
     bool GetKeyFromPool(CPubKey &key, bool internal = false);
     int64_t GetOldestKeyPoolTime();
+    void ShutdownIfKeypoolCritical();
     /**
      * Marks all keys in the keypool up to and including reserve_key as used.
      */
