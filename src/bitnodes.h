@@ -8,7 +8,6 @@
 #include <string>
 #include <vector>
 
-bool GetLeaderboardFromBitnodes(std::vector<std::string>& vIPs);
+bool GetLeaderboardFromBitnodes(std::vector<std::string> &vIPs);
 
 #endif // BITCOIN_BITNODES_H
-

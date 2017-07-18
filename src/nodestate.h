@@ -20,14 +20,6 @@ struct QueuedBlock
 
 extern std::map<uint256, std::pair<NodeId, std::list<QueuedBlock>::iterator> > mapBlocksInFlight;
 
-
-struct CBlockReject
-{
-    unsigned char chRejectCode;
-    std::string strRejectReason;
-    uint256 hashBlock;
-};
-
 /**
 * Maintain validation-specific state about nodes, protected by cs_main, instead
 * by CNode's own locks. This simplifies asynchronous operation, where
@@ -40,8 +32,6 @@ struct CNodeState
     CService address;
     //! String name of this peer (debugging/logging purposes).
     std::string name;
-    //! List of asynchronously-determined block rejections to notify this peer about.
-    std::vector<CBlockReject> rejects;
     //! The best known block we know this peer has announced.
     CBlockIndex *pindexBestKnownBlock;
     //! The hash of the last unknown block this peer has announced.

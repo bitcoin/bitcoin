@@ -72,8 +72,8 @@ BOOST_AUTO_TEST_CASE(buip005)
     BOOST_CHECK_MESSAGE(BUComments.front() == exceptedEB,
                         "EB ought to have been " << exceptedEB << " when excessiveBlockSize = "
                         << excessiveBlockSize << " but was " << BUComments.front());
-    excessiveBlockSize = 150000;
-    exceptedEB = "EB0.1";
+    excessiveBlockSize = 1670000;
+    exceptedEB = "EB1.6";
     settingsToUserAgentString();
     BOOST_CHECK_MESSAGE(BUComments.front() == exceptedEB,
                         "EB ought to have been rounded to " << exceptedEB << " when excessiveBlockSize = "
@@ -84,7 +84,24 @@ BOOST_AUTO_TEST_CASE(buip005)
     BOOST_CHECK_MESSAGE(BUComments.front() == exceptedEB,
                         "EB ought to have been rounded to " << exceptedEB << " when excessiveBlockSize = "
                         << excessiveBlockSize << " but was " << BUComments.front());
-
+    excessiveBlockSize = 0;
+    exceptedEB = "EB0";
+    settingsToUserAgentString();
+    BOOST_CHECK_MESSAGE(BUComments.front() == exceptedEB,
+                        "EB ought to have been rounded to " << exceptedEB << " when excessiveBlockSize = "
+                        << excessiveBlockSize << " but was " << BUComments.front());
+    excessiveBlockSize = 3800000000;
+    exceptedEB = "EB3800";
+    settingsToUserAgentString();
+    BOOST_CHECK_MESSAGE(BUComments.front() == exceptedEB,
+                        "EB ought to have been rounded to " << exceptedEB << " when excessiveBlockSize = "
+                        << excessiveBlockSize << " but was " << BUComments.front());
+    excessiveBlockSize = 49200000000;
+    exceptedEB = "EB49200";
+    settingsToUserAgentString();
+    BOOST_CHECK_MESSAGE(BUComments.front() == exceptedEB,
+                        "EB ought to have been rounded to " << exceptedEB << " when excessiveBlockSize = "
+                        << excessiveBlockSize << " but was " << BUComments.front());
     // set back to defaults
     excessiveBlockSize = 1000000;
     excessiveAcceptDepth = 4;
@@ -147,8 +164,8 @@ BOOST_AUTO_TEST_CASE(check_validator_rule)
 
 BOOST_AUTO_TEST_CASE(check_excessive_validator)
 {
-    unsigned int c_mgb = maxGeneratedBlock;
-    unsigned int c_ebs = excessiveBlockSize;
+    uint64_t c_mgb = maxGeneratedBlock;
+    uint64_t c_ebs = excessiveBlockSize;
 
     // fudge global variables....
     maxGeneratedBlock = 1000000;
@@ -164,7 +181,7 @@ BOOST_AUTO_TEST_CASE(check_excessive_validator)
     str = ExcessiveBlockValidator(tmpExcessive, NULL, false);
     BOOST_CHECK(str.empty());
 
-    str = ExcessiveBlockValidator(tmpExcessive, (unsigned int *) 42, true);
+    str = ExcessiveBlockValidator(tmpExcessive, (uint64_t *) 42, true);
     BOOST_CHECK(str.empty());
 
     tmpExcessive = maxGeneratedBlock + 1;
@@ -176,7 +193,7 @@ BOOST_AUTO_TEST_CASE(check_excessive_validator)
     str = ExcessiveBlockValidator(tmpExcessive, NULL, false);
     BOOST_CHECK(str.empty());
 
-    str = ExcessiveBlockValidator(tmpExcessive, (unsigned int *) 42, true);
+    str = ExcessiveBlockValidator(tmpExcessive, (uint64_t *) 42, true);
     BOOST_CHECK(str.empty());
 
     tmpExcessive = maxGeneratedBlock - 1;
@@ -187,7 +204,7 @@ BOOST_AUTO_TEST_CASE(check_excessive_validator)
     str = ExcessiveBlockValidator(tmpExcessive, NULL, false);
     BOOST_CHECK(str.empty());
 
-    str = ExcessiveBlockValidator(tmpExcessive, (unsigned int *) 42, true);
+    str = ExcessiveBlockValidator(tmpExcessive, (uint64_t *) 42, true);
     BOOST_CHECK(! str.empty());
 
     maxGeneratedBlock = c_mgb;
@@ -196,8 +213,8 @@ BOOST_AUTO_TEST_CASE(check_excessive_validator)
 
 BOOST_AUTO_TEST_CASE(check_generated_block_validator)
 {
-    unsigned int c_mgb = maxGeneratedBlock;
-    unsigned int c_ebs = excessiveBlockSize;
+    uint64_t c_mgb = maxGeneratedBlock;
+    uint64_t c_ebs = excessiveBlockSize;
 
     // fudge global variables....
     maxGeneratedBlock = 888;
