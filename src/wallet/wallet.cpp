@@ -3206,7 +3206,6 @@ bool CWallet::TopUpKeyPool(unsigned int kpSize)
         CWalletDB walletdb(*dbw);
         for (int64_t i = missingInternal + missingExternal; i--;)
         {
-            int64_t nEnd = 1;
             if (i < missingInternal) {
                 internal = true;
             }
