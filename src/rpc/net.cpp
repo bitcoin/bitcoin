@@ -20,6 +20,7 @@
 #include <utilstrencodings.h>
 #include <validation.h>
 #include <version.h>
+#include <warnings.h>
 
 #include <univalue.h>
 
