@@ -191,3 +191,6 @@ class AuthServiceProxy(object):
         else:
             log.debug("<-- [%.6f] %s"%(elapsed,responsedata))
         return response
+
+    def __truediv__(self, relative_uri):
+        return AuthServiceProxy("{}/{}".format(self.__service_url, relative_uri), self._service_name, connection=self.__conn)

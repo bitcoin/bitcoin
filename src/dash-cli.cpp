@@ -48,6 +48,7 @@ std::string HelpMessageCli()
     strUsage += HelpMessageOpt("-rpcpassword=<pw>", _("Password for JSON-RPC connections"));
     strUsage += HelpMessageOpt("-rpcclienttimeout=<n>", strprintf(_("Timeout in seconds during HTTP requests, or 0 for no timeout. (default: %d)"), DEFAULT_HTTP_CLIENT_TIMEOUT));
     strUsage += HelpMessageOpt("-stdin", _("Read extra arguments from standard input, one per line until EOF/Ctrl-D (recommended for sensitive information such as passphrases)"));
+    strUsage += HelpMessageOpt("-usewallet=<walletname>", _("Send RPC for non-default wallet on RPC server (argument is wallet filename in bitcoind directory, required if bitcoind/-Qt runs with multiple wallets)"));
 
     return strUsage;
 }
@@ -254,7 +255,20 @@ UniValue CallRPC(const std::string& strMethod, const UniValue& params)
     assert(output_buffer);
     evbuffer_add(output_buffer, strRequest.data(), strRequest.size());
 
-    int r = evhttp_make_request(evcon.get(), req.get(), EVHTTP_REQ_POST, "/");
+    // check if we should use a special wallet endpoint
+    std::string endpoint = "/";
+    std::string walletName = GetArg("-usewallet", "");
+    if (!walletName.empty()) {
+        char *encodedURI = evhttp_uriencode(walletName.c_str(), walletName.size(), false);
+        if (encodedURI) {
+            endpoint = "/wallet/"+ std::string(encodedURI);
+            free(encodedURI);
+        }
+        else {
+            throw CConnectionFailed("uri-encode failed");
+        }
+    }
+    int r = evhttp_make_request(evcon.get(), req.get(), EVHTTP_REQ_POST, endpoint.c_str());
     req.release(); // ownership moved to evcon in above call
     if (r != 0) {
         throw CConnectionFailed("send http request failed");
