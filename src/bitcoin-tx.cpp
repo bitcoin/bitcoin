@@ -486,7 +486,7 @@ static void MutateTxSign(CMutableTransaction& tx, const string& flagStr)
         txin.scriptSig.clear();
         // Only sign SIGHASH_SINGLE if there's a corresponding output:
         if (!fHashSingle || (i < mergedTx.vout.size()))
-            SignSignature(keystore, prevPubKey, mergedTx, i, nHashType);
+            SignSignature(keystore, prevPubKey, mergedTx, i, amount, nHashType);
 
         // ... and merge in other signatures:
         BOOST_FOREACH(const CTransaction& txv, txVariants) {

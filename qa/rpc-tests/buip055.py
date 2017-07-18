@@ -161,6 +161,8 @@ class BUIP055Test (BitcoinTestFramework):
             assert(t['mining.forkBlockSize'] == 3000000)
             assert(t['mining.forkExcessiveBlock'] == 9000000)
             assert(t['mining.forkTime'] == now)
+
+        self.nodes[3].set("mining.forkTime=0")
         return now
 
     def createUtxos(self, node, addrs, amt):
@@ -323,7 +325,7 @@ class BUIP055Test (BitcoinTestFramework):
         commonAncestor = node.getbestblockhash()
         node.generate(1)
         forkHeight = node.getblockcount()
-
+        print("forkHeight: %d" % forkHeight)
         # Test that the forked nodes accept this block as the fork block
         sync_blocks(self.nodes[0:2])
         # counts = [ x.getblockcount() for x in self.nodes[0:2] ]
@@ -331,15 +333,84 @@ class BUIP055Test (BitcoinTestFramework):
         logging.info(counts)
 
         # generate blocks and ensure that the other node syncs them
-        self.nodes[1].generate(3)
+        self.nodes[1].generate(1)
+        wallet = self.nodes[1].listunspent()
+        utxo = wallet.pop()
+        txn = createrawtransaction([utxo], {addrs1[0]:utxo["amount"]}, wastefulOutput)
+        signedtxn = self.nodes[1].signrawtransaction(txn)
+        signedtxn2 = self.nodes[1].signrawtransaction(txn,None,None,"ALL|FORKID")
+        assert(signedtxn["hex"] != signedtxn2["hex"])  # they should use a different sighash method
+        try:
+            self.nodes[3].sendrawtransaction(signedtxn2["hex"])
+        except JSONRPCException as e:
+            assert("mandatory-script-verify-flag-failed" in e.error["message"])
+            logging.info("PASS: New sighash rejected from 1MB chain")
+        self.nodes[1].sendrawtransaction(signedtxn2["hex"])
+        try:
+           self.nodes[1].sendrawtransaction(signedtxn["hex"])
+        except JSONRPCException as e:
+            assert("txn-mempool-conflict" in e.error["message"])
+            logging.info("PASS: submission of new and old sighash txn rejected")
+        self.nodes[1].generate(1)
+
+        # connect 1 to 3 to propagate these transactions
+        connect_nodes(self.nodes[1],3)
+
+        # Issue sendtoaddress commands using both the new sighash and the ond and ensure that they work.
+        self.nodes[1].set("wallet.useNewSig=False")
+        txhash2 = self.nodes[1].sendtoaddress(addrs[0], 2.345)
+        self.nodes[1].set("wallet.useNewSig=True")
+        # produce a new sighash transaction using the sendtoaddress API
+        txhash = self.nodes[1].sendtoaddress(addrs[0], 1.234)
+        rawtx = self.nodes[1].getrawtransaction(txhash)
+        try:
+            self.nodes[3].sendrawtransaction(rawtx)
+            print("ERROR!") # error assert(0)
+        except JSONRPCException as e:
+            assert("mandatory-script-verify-flag-failed" in e.error["message"])
+            # hitting this exception verifies that the new format was rejected by the unforked node and that the new format was generated
+
+        rawtx = self.nodes[1].getrawtransaction(txhash2)
+        self.nodes[3].sendrawtransaction(rawtx)  # should replay on the small block fork, since its an old sighash tx
+
+        self.nodes[1].generate(1)
+        txinfo = self.nodes[1].gettransaction(txhash)
+        assert(txinfo["blockindex"] > 0) # ensure that the new-style tx was included in the block
+        txinfo = self.nodes[1].gettransaction(txhash2)
+        assert(txinfo["blockindex"] > 0) # ensure that the old-style tx was included in the block
+
+        # small block node should have gotten this cross-chain replayable tx
+        txsIn3 = self.nodes[3].getrawmempool()
+        assert(txhash2 in txsIn3)
+        self.nodes[3].generate(1)
+        txsIn3 = self.nodes[3].getrawmempool()
+        assert(txsIn3 == []) # all transactions were included in the block
+
+        # Issue sendmany commands using both the new sighash and the ond and ensure that they work.
+        self.nodes[1].set("wallet.useNewSig=False")
+        txhash2 = self.nodes[1].sendmany("",{addrs[0]:2.345, addrs[1]:1.23})
+        self.nodes[1].set("wallet.useNewSig=True")
+        # produce a new sighash transaction using the sendtoaddress API
+        txhash = self.nodes[1].sendmany("",{addrs[0]:0.345, addrs[1]:0.23})
+        rawtx = self.nodes[1].getrawtransaction(txhash)
+        try:
+            self.nodes[3].sendrawtransaction(rawtx)
+            print("ERROR!") # error assert(0)
+        except JSONRPCException as e:
+            assert("mandatory-script-verify-flag-failed" in e.error["message"])
+            # hitting this exception verifies that the new format was rejected by the unforked node and that the new format was generated
+        self.nodes[1].generate(1)
+
         sync_blocks(self.nodes[0:2])
-        self.nodes[0].generate(3)
+
+        self.nodes[0].generate(2)
         sync_blocks(self.nodes[0:2])
 
         # generate blocks on the original side
-        self.nodes[2].generate(3)
+        self.nodes[2].generate(2)
         sync_blocks(self.nodes[2:])
         counts = [x.getblockcount() for x in self.nodes]
+        print(counts)
         assert(counts == [forkHeight + 6, forkHeight + 6, base[3] + 15 + 3, base[3] + 15 + 3])
         forkBest = self.nodes[0].getbestblockhash()
         origBest = self.nodes[3].getbestblockhash()

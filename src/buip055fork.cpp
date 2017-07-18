@@ -80,6 +80,16 @@ bool ValidateBUIP055Tx(const CTransaction& tx)
     return ret;
 }
 
+bool IsTxBUIP055Only(const CTransaction& tx)
+{
+    if (tx.sighashType & SIGHASH_FORKID)
+    {
+        LogPrintf("txn is BUIP055-specific\n");
+        return true;
+    }
+    return false;
+}
+
 bool IsTxOpReturnInvalid(const CTransaction &tx)
 {
     for (auto txout : tx.vout)
@@ -113,3 +123,4 @@ bool IsTxOpReturnInvalid(const CTransaction &tx)
     }
     return false;
 }
+

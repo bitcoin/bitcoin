@@ -7,6 +7,7 @@
 #include "wallet/wallet.h"
 
 #include "base58.h"
+#include "buip055fork.h"
 #include "checkpoints.h"
 #include "chain.h"
 #include "coincontrol.h"
@@ -2192,15 +2193,20 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                                               std::numeric_limits<unsigned int>::max() - 1));
 
                 // Sign
+                unsigned int sighashType = SIGHASH_ALL;
+                if (chainActive.Tip()->IsforkActiveOnNextBlock(miningForkTime.value) && walletSignWithForkSig.value) sighashType |= SIGHASH_FORKID;
                 int nIn = 0;
                 CTransaction txNewConst(txNew);
                 BOOST_FOREACH(const PAIRTYPE(const CWalletTx*,unsigned int)& coin, setCoins)
                 {
                     bool signSuccess;
                     const CScript& scriptPubKey = coin.first->vout[coin.second].scriptPubKey;
+                    CAmount amountIn = coin.first->vout[coin.second].nValue;
                     CScript& scriptSigRes = txNew.vin[nIn].scriptSig;
                     if (sign)
-                        signSuccess = ProduceSignature(TransactionSignatureCreator(this, &txNewConst, nIn, SIGHASH_ALL), scriptPubKey, scriptSigRes);
+                    {
+                        signSuccess = ProduceSignature(TransactionSignatureCreator(this, &txNewConst, nIn, amountIn, sighashType), scriptPubKey, scriptSigRes);
+                    }
                     else
                         signSuccess = ProduceSignature(DummySignatureCreator(this), scriptPubKey, scriptSigRes);
 

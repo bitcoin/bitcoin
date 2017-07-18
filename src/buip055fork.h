@@ -5,14 +5,18 @@
 #ifndef BUIP055FORK_H
 #define BUIP055FORK_H
 
+#include "amount.h"
+#include "arith_uint256.h"
 #include "tweak.h"
-#include <univalue.h>
+#include "univalue/include/univalue.h"
 #include <vector>
+
 
 class CValidationState;
 class CBlock;
 class CTransaction;
 class CBlockIndex;
+class CScript;
 
 // OP_RETURN magic invalid value:
 extern std::vector<unsigned char> invalidOpReturn;
@@ -31,8 +35,12 @@ extern bool IsTxOpReturnInvalid(const CTransaction &tx);
 // Update global variables based on whether the next block is the fork block
 extern bool UpdateBUIP055Globals(CBlockIndex *activeTip);
 
+// Return true if this transaction can only be committed post-fork
+extern bool IsTxBUIP055Only(const CTransaction& tx);
+
 extern CTweak<uint64_t> miningForkTime;
 extern CTweak<uint64_t> miningForkEB;
 extern CTweak<uint64_t> miningForkMG;
+extern CTweak<bool> walletSignWithForkSig;
 
 #endif
