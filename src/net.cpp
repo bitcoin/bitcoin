@@ -2961,6 +2961,29 @@ void CNode::EndMessage() UNLOCK_FUNCTION(cs_vSend)
     LEAVE_CRITICAL_SECTION(cs_vSend);
 }
 
+/**
+ * Check if it is flagged for banning, and if so ban it and disconnect.
+ */
+void CNode::DisconnectIfBanned()
+{
+    if (fShouldBan)
+    {
+        fShouldBan = false;
+
+        if (fWhitelisted)
+            LogPrintf("Warning: not punishing whitelisted peer %s!\n", GetLogName());
+        else
+        {
+            fDisconnect = true;
+            if (addr.IsLocal())
+                LogPrintf("Warning: not banning local peer %s!\n", GetLogName());
+            else
+                dosMan.Ban(addr, BanReasonNodeMisbehaving);
+        }
+    }
+}
+
+
 int64_t PoissonNextSend(int64_t nNow, int average_interval_seconds)
 {
     return nNow + (int64_t)(log1p(GetRand(1ULL << 48) * -0.0000000000000035527136788 /* -1/2^48 */) *

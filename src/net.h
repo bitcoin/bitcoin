@@ -766,6 +766,11 @@ public:
         }
     }
 
+    /**
+     * Check if it is flagged for banning, and if so ban it and disconnect.
+     */
+    void DisconnectIfBanned();
+
     void CloseSocketDisconnect();
 
     //! returns the name of this node for logging.  Respects the user's choice to not log the node's IP

@@ -2,6 +2,8 @@ bandb.cpp
 bandb.h
 banentry.cpp
 banentry.h
+bitnodes.cpp
+bitnodes.h
 connmgr.cpp
 connmgr.h
 dosman.cpp
