@@ -420,8 +420,6 @@ class ParallelTest (BitcoinTestFramework):
  
         # Cleanup by mining more blocks if we need to run extended tests
         if self.longTest == True:
-
-            # cleanup and sync chains for next tests
             self.cleanup_and_reset()
 
         ################################################
@@ -761,15 +759,13 @@ class ParallelTest (BitcoinTestFramework):
         # Wait for a little while before connecting node 3 (fork3)
         time.sleep(3)
         print ("Connect node3 - fork3...")
-        self.nodes.append(start_node(3, self.options.tmpdir, ["-debug","-pvtest=1", "-whitelist=127.0.0.1"]))
+        self.nodes.append(start_node(3, self.options.tmpdir, ["-debug=","-pvtest=1", "-whitelist=127.0.0.1"]))
         counts = [ x.getblockcount() for x in self.nodes ]
         interconnect_nodes(self.nodes)
         print (str(counts))
         assert_equal(counts, [basecount-1,basecount-1,basecount+1, basecount+2])  
         interconnect_nodes(self.nodes)
 
-
-        # All chains will sync to node3
         sync_blocks(self.nodes)
         assert_equal(self.nodes[0].getbestblockhash(), bestblock)
         assert_equal(self.nodes[1].getbestblockhash(), bestblock)
@@ -783,19 +779,15 @@ class ParallelTest (BitcoinTestFramework):
         self.cleanup_and_reset()
 
         
-####### take this out later
-        if self.longTest == True:
-            return
-
         ###########################################################################################
-        # 1) Large reorg - can we do a 288 block reorg?
+        # 1) Large reorg - can we do a 144 block reorg?
         print ("Starting repeating many competing blocks test")
         self.nodes.append(start_node(0, self.options.tmpdir, ["-debug=","-pvtest=0"]))
         self.nodes.append(start_node(1, self.options.tmpdir, ["-debug=","-pvtest=0"]))
 
         print ("Mine 144 blocks on each chain...")
-        self.nodes[0].generate(288)
-        self.nodes[1].generate(288)
+        self.nodes[0].generate(144)
+        self.nodes[1].generate(144)
  
         print ("Connect nodes for larg reorg...")
         connect_nodes(self.nodes[1],0)
@@ -1176,12 +1168,12 @@ class ParallelTest (BitcoinTestFramework):
         # This is intented just a stress test of the 4 block scenario but also while blocks
         # are in the process of being both mined and with reorgs sometimes happening at the same time.
         print ("Starting repeating many competing blocks test")
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug=","-pvtest=0"]))
-        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug=","-pvtest=0"]))
-        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug=","-pvtest=0"]))
-        self.nodes.append(start_node(3, self.options.tmpdir, ["-debug=","-pvtest=0"]))
-        self.nodes.append(start_node(4, self.options.tmpdir, ["-debug=","-pvtest=0"]))
-        self.nodes.append(start_node(5, self.options.tmpdir, ["-debug=","-pvtest=0"]))
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(3, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(4, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(5, self.options.tmpdir, ["-debug","-pvtest=0"]))
 
         connect_nodes(self.nodes[1],0)
         connect_nodes(self.nodes[1],2)

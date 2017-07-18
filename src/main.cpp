@@ -3286,9 +3286,11 @@ static bool ActivateBestChainStep(CValidationState &state,
     bool fInvalidFound = false;
     const CBlockIndex *pindexOldTip = chainActive.Tip();
     const CBlockIndex *pindexFork = chainActive.FindFork(pindexMostWork);
+    CBlockIndex *pindexNewMostWork;
 
     bool fBlocksDisconnected = false;
     boost::thread::id this_id(boost::this_thread::get_id()); // get this thread's id
+
     while (chainActive.Tip() && chainActive.Tip() != pindexFork)
     {
         // When running in parallel block validation mode it is possible that this competing block could get to this
@@ -3304,14 +3306,9 @@ static bool ActivateBestChainStep(CValidationState &state,
         if (!DisconnectTip(state, chainparams.GetConsensus()))
             return false;
 
-        // Once the first block has been disconnected and a re-org has begun then we need to terminate any
-        // currently running PV threads that are validating.  They will likely have self terminated
-        // at this point anyway because the chain tip and UTXO base view will have changed but just
-        // to be sure we are not waiting on script threads to finish we can issue the termination here.
         if (fParallel && !fBlocksDisconnected)
-        {
             PV->StopAllValidationThreads(this_id);
-        }
+
         fBlocksDisconnected = true;
     }
 
@@ -3349,6 +3346,15 @@ static bool ActivateBestChainStep(CValidationState &state,
         CBlockIndex *pindexNewTip;
         BOOST_REVERSE_FOREACH (CBlockIndex *pindexConnect, vpindexToConnect)
         {
+            // Check if the best chain has changed while we were disconnecting or processing blocks.
+            // If so then we need to return and continue processing the newer chain.
+            pindexNewMostWork = FindMostWorkChain();
+            if (pindexNewMostWork->nChainWork > pindexMostWork->nChainWork)
+            {
+                LogPrint("parallel", "Returning because chain work has changed while connecting blocks\n");
+                return true;
+            }
+
             if (!ConnectTip(state, chainparams, pindexConnect,
                     pindexConnect == pindexMostWork && fBlock ? pblock : NULL, fParallel))
             {
@@ -3423,6 +3429,7 @@ static bool ActivateBestChainStep(CValidationState &state,
         IsInitialBlockDownloadInit();
     }
 
+
     // Relay Inventory
     CBlockIndex *pindexNewTip = chainActive.Tip();
     if (pindexFork != pindexNewTip)
@@ -3494,6 +3501,9 @@ bool ActivateBestChain(CValidationState &state, const CChainParams &chainparams,
     CBlockIndex *pindexMostWork = NULL;
     LOCK(cs_main);
 
+    bool fOneDone = false;
+    do
+    {
     boost::this_thread::interruption_point();
     if (ShutdownRequested())
         return false;
@@ -3501,9 +3511,10 @@ bool ActivateBestChain(CValidationState &state, const CChainParams &chainparams,
     CBlockIndex *pindexOldTip = chainActive.Tip();
     pindexMostWork = FindMostWorkChain();
 
+
     // This is needed for PV because FindMostWorkChain does not necessarily return the block with the lowest
     // nSequenceId
-    if (fParallel)
+    if (fParallel && pblock)
     {
         std::set<CBlockIndex *, CBlockIndexWorkComparator>::reverse_iterator it = setBlockIndexCandidates.rbegin();
         while (it != setBlockIndexCandidates.rend())
@@ -3557,7 +3568,7 @@ bool ActivateBestChain(CValidationState &state, const CChainParams &chainparams,
     // If there is a reorg happening then we can not activate this chain *unless* it
     // has more work that the currently processing reorg chain.  In that case we must terminate the reorg
     // extend this chain instead.
-    if (PV && PV->IsReorgInProgress())
+    if (!fOneDone && PV && PV->IsReorgInProgress())
     {
         // find out if this block and chain are more work than the chain
         // being reorg'd to.  If not then just return.  If so then kill the reorg and
@@ -3576,6 +3587,14 @@ bool ActivateBestChain(CValidationState &state, const CChainParams &chainparams,
             pblock && pblock->GetHash() == pindexMostWork->GetBlockHash() ? pblock : NULL, fParallel))
         return false;
 
+    // Check if the best chain has changed while we were processing blocks.  If so then we need to
+    // continue processing the newer chain.  This satisfies a rare edge case where we have initiated
+    // a reorg to another chain but before the reorg is complete we end up reorging to a different
+    // chain. Set pblock to NULL here to make sure as we continue we get blocks from disk.
+    pindexMostWork = FindMostWorkChain();
+    pblock = NULL;
+    fOneDone = true;
+    } while(pindexMostWork->nChainWork > chainActive.Tip()->nChainWork);
     CheckBlockIndex(chainparams.GetConsensus());
 
     // Write changes periodically to disk.
@@ -6494,6 +6513,8 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
             {
                 // pindex must be nonnull because we populated vToFetch a few lines above
                 CInv inv(MSG_BLOCK, pindex->GetBlockHash());
+                if (AlreadyHave(inv))
+                        LogPrintf("already have\n");
                 if (!AlreadyHave(inv))
                 {
                     requester.AskFor(inv, pfrom);
