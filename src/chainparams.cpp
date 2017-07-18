@@ -163,7 +163,7 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
     return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward);
 }
 
-std::pair<const char*, CAmount> regTestOutputs[15] = {
+const std::pair<const char*, CAmount> regTestOutputs[] = {
     std::make_pair("585c2b3914d9ee51f8e710304e386531c3abcc82", 10000 * COIN),
     std::make_pair("c33f3603ce7c46b423536f0434155dad8ee2aa1f", 10000 * COIN),
     std::make_pair("72d83540ed1dcf28bfaca3fa2ed77100c2808825", 10000 * COIN),
@@ -181,46 +181,9 @@ std::pair<const char*, CAmount> regTestOutputs[15] = {
     std::make_pair("27189afe71ca423856de5f17538a069f22385422", 5000 * COIN),
     std::make_pair("0e7f6fe0c4a5a6a9bfd18f7effdd5898b1f40b80", 5000 * COIN),
 };
+const size_t nGenesisOutputsRegtest = sizeof(regTestOutputs) / sizeof(regTestOutputs[0]);
 
-static CBlock CreateGenesisBlockRegTest(uint32_t nTime, uint32_t nNonce, uint32_t nBits)
-{
-    const char *pszTimestamp = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks";
-    
-    CMutableTransaction txNew;
-    txNew.nVersion = PARTICL_TXN_VERSION;
-    txNew.SetType(TXN_COINBASE);
-    txNew.vin.resize(1);
-    uint32_t nHeight = 0;  // bip34
-    txNew.vin[0].scriptSig = CScript() << 486604799 << CScriptNum(4) << std::vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp)) << OP_RETURN << nHeight;
-    
-    size_t nOutputs = 15;
-    
-    txNew.vpout.resize(nOutputs);
-    
-    for (size_t k = 0; k < nOutputs; ++k)
-    {
-        OUTPUT_PTR<CTxOutStandard> out = MAKE_OUTPUT<CTxOutStandard>();
-        out->nValue = regTestOutputs[k].second;
-        out->scriptPubKey = CScript() << OP_DUP << OP_HASH160 << ParseHex(regTestOutputs[k].first) << OP_EQUALVERIFY << OP_CHECKSIG;
-        txNew.vpout[k] = out;
-    };
-    
-    CBlock genesis;
-    genesis.nTime    = nTime;
-    genesis.nBits    = nBits;
-    genesis.nNonce   = nNonce;
-    genesis.nVersion = PARTICL_BLOCK_VERSION;
-    genesis.vtx.push_back(MakeTransactionRef(std::move(txNew)));
-    
-    genesis.hashPrevBlock.SetNull();
-    genesis.hashMerkleRoot = BlockMerkleRoot(genesis);
-    genesis.hashWitnessMerkleRoot = BlockWitnessMerkleRoot(genesis);
-    
-    return genesis;
-}
-
-const size_t nGenesisOutputs = 29;
-std::pair<const char*, CAmount> genesisOutputs[nGenesisOutputs] = {
+const std::pair<const char*, CAmount> genesisOutputs[] = {
     std::make_pair("62a62c80e0b41f2857ba83eb438d5caa46e36bcb",7017084118),
     std::make_pair("c515c636ae215ebba2a98af433a3fa6c74f84415",221897417980),
     std::make_pair("711b5e1fd0b0f4cdf92cb53b00061ef742dda4fb",120499999),
@@ -251,9 +214,9 @@ std::pair<const char*, CAmount> genesisOutputs[nGenesisOutputs] = {
     std::make_pair("2d6248888c7f72cc88e4883e4afd1025c43a7f0e",35102718156),
     std::make_pair("25d8debc253f5c3f70010f41c53348ed156e7baa",80306152234),
 };
+const size_t nGenesisOutputs = sizeof(genesisOutputs) / sizeof(genesisOutputs[0]);
 
-const size_t nGenesisOutputsTestnet = 17;
-std::pair<const char*, CAmount> genesisOutputsTestnet[nGenesisOutputsTestnet] = {
+const std::pair<const char*, CAmount> genesisOutputsTestnet[] = {
     
     std::make_pair("118a92e28242a73244fb03c96b7e1429c06f979f",308609552916),
     std::make_pair("cae4bf990ce39624e2f77c140c543d4b15428ce7",308609552916),
@@ -274,6 +237,42 @@ std::pair<const char*, CAmount> genesisOutputsTestnet[nGenesisOutputsTestnet] = 
     std::make_pair("687e7cf063cd106c6098f002fa1ea91d8aee302a",236896901156),
     
 };
+const size_t nGenesisOutputsTestnet = sizeof(genesisOutputsTestnet) / sizeof(genesisOutputsTestnet[0]);
+
+
+static CBlock CreateGenesisBlockRegTest(uint32_t nTime, uint32_t nNonce, uint32_t nBits)
+{
+    const char *pszTimestamp = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks";
+    
+    CMutableTransaction txNew;
+    txNew.nVersion = PARTICL_TXN_VERSION;
+    txNew.SetType(TXN_COINBASE);
+    txNew.vin.resize(1);
+    uint32_t nHeight = 0;  // bip34
+    txNew.vin[0].scriptSig = CScript() << 486604799 << CScriptNum(4) << std::vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp)) << OP_RETURN << nHeight;
+    
+    txNew.vpout.resize(nGenesisOutputsRegtest);
+    for (size_t k = 0; k < nGenesisOutputsRegtest; ++k)
+    {
+        OUTPUT_PTR<CTxOutStandard> out = MAKE_OUTPUT<CTxOutStandard>();
+        out->nValue = regTestOutputs[k].second;
+        out->scriptPubKey = CScript() << OP_DUP << OP_HASH160 << ParseHex(regTestOutputs[k].first) << OP_EQUALVERIFY << OP_CHECKSIG;
+        txNew.vpout[k] = out;
+    };
+    
+    CBlock genesis;
+    genesis.nTime    = nTime;
+    genesis.nBits    = nBits;
+    genesis.nNonce   = nNonce;
+    genesis.nVersion = PARTICL_BLOCK_VERSION;
+    genesis.vtx.push_back(MakeTransactionRef(std::move(txNew)));
+    
+    genesis.hashPrevBlock.SetNull();
+    genesis.hashMerkleRoot = BlockMerkleRoot(genesis);
+    genesis.hashWitnessMerkleRoot = BlockWitnessMerkleRoot(genesis);
+    
+    return genesis;
+}
 
 static CBlock CreateGenesisBlockTestNet(uint32_t nTime, uint32_t nNonce, uint32_t nBits)
 {
