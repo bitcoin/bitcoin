@@ -56,6 +56,15 @@ class WalletTest(BitcoinTestFramework):
         assert_equal(len(self.nodes[1].listunspent()), 1)
         assert_equal(len(self.nodes[2].listunspent()), 0)
 
+        self.log.info("test gettxout")
+        confirmed_txid, confirmed_index = utxos[0]["txid"], utxos[0]["vout"]
+        # First, outputs that are unspent both in the chain and in the
+        # mempool should appear with or without include_mempool
+        txout = self.nodes[0].gettxout(txid=confirmed_txid, n=confirmed_index, include_mempool=False)
+        assert_equal(txout['value'], 50)
+        txout = self.nodes[0].gettxout(txid=confirmed_txid, n=confirmed_index, include_mempool=True)
+        assert_equal(txout['value'], 50)
+        
         # Send 21 BTC from 0 to 2 using sendtoaddress call.
         # Locked memory should use at least 32 bytes to sign each transaction
         self.log.info("test getmemoryinfo")
@@ -65,10 +74,9 @@ class WalletTest(BitcoinTestFramework):
         memory_after = self.nodes[0].getmemoryinfo()
         assert(memory_before['locked']['used'] + 64 <= memory_after['locked']['used'])
 
-        self.log.info("test gettxout")
+        self.log.info("test gettxout (second part)")
         # utxo spent in mempool should be visible if you exclude mempool
         # but invisible if you include mempool
-        confirmed_txid, confirmed_index = utxos[0]["txid"], utxos[0]["vout"]
         txout = self.nodes[0].gettxout(confirmed_txid, confirmed_index, False)
         assert_equal(txout['value'], 50)
         txout = self.nodes[0].gettxout(confirmed_txid, confirmed_index, True)
