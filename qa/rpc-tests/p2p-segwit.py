@@ -1954,16 +1954,16 @@ class SegWitTest(BitcoinTestFramework):
 
     def run_test(self):
         # Setup the p2p connections and start up the network thread.
-        self.test_node = TestNode() # sets NODE_WITNESS|NODE_NETWORK
+        self.test_node = TestNode() # sets NODE_WITNESS|NODE_NETWORK|NODE_SEGWIT2X
         self.old_node = TestNode()  # only NODE_NETWORK
         self.std_node = TestNode() # for testing node1 (fRequireStandard=true)
 
         self.p2p_connections = [self.test_node, self.old_node]
 
         self.connections = []
-        self.connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], self.test_node, services=NODE_NETWORK|NODE_WITNESS))
+        self.connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], self.test_node, services=NODE_NETWORK|NODE_WITNESS|NODE_SEGWIT2X))
         self.connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], self.old_node, services=NODE_NETWORK))
-        self.connections.append(NodeConn('127.0.0.1', p2p_port(1), self.nodes[1], self.std_node, services=NODE_NETWORK|NODE_WITNESS))
+        self.connections.append(NodeConn('127.0.0.1', p2p_port(1), self.nodes[1], self.std_node, services=NODE_NETWORK|NODE_WITNESS|NODE_SEGWIT2X))
         self.test_node.add_connection(self.connections[0])
         self.old_node.add_connection(self.connections[1])
         self.std_node.add_connection(self.connections[2])
