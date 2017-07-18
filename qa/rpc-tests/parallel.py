@@ -11,7 +11,6 @@ from test_framework.util import *
 class ParallelTest (BitcoinTestFramework):
     def __init__(self):
       self.rep = False
-      #self.extensive = False
       BitcoinTestFramework.__init__(self)
 
     def setup_chain(self):
@@ -27,6 +26,36 @@ class ParallelTest (BitcoinTestFramework):
         interconnect_nodes(self.nodes)
         self.is_network_split=False
         self.sync_all()
+
+    def cleanup_and_reset(self):
+
+        # Cleanup - start and connect the other nodes so that we have syncd chains before proceeding
+        # to other tests.
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug=", "-pvtest=0", "-whitelist=127.0.0.1"]))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug=", "-pvtest=0", "-whitelist=127.0.0.1"]))
+        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug=", "-pvtest=0", "-whitelist=127.0.0.1"]))
+        self.nodes.append(start_node(3, self.options.tmpdir, ["-debug=", "-pvtest=0", "-whitelist=127.0.0.1"]))
+        self.nodes.append(start_node(4, self.options.tmpdir, ["-debug=", "-pvtest=0", "-whitelist=127.0.0.1"]))
+        self.nodes.append(start_node(5, self.options.tmpdir, ["-debug=", "-pvtest=0", "-whitelist=127.0.0.1"]))
+        interconnect_nodes(self.nodes)
+        sync_blocks(self.nodes)
+
+        print ("Mine more blocks on each node...")
+        self.nodes[0].generate(25)
+        sync_blocks(self.nodes)
+        self.nodes[1].generate(25)
+        sync_blocks(self.nodes)
+        self.nodes[2].generate(25)
+        sync_blocks(self.nodes)
+        self.nodes[3].generate(25)
+        sync_blocks(self.nodes)
+        self.nodes[4].generate(25)
+        sync_blocks(self.nodes)
+        self.nodes[5].generate(25)
+        sync_blocks(self.nodes)
+
+        stop_nodes(self.nodes)
+        wait_bitcoinds()
 
     def repetitiveTest(self):
         # get some coins
@@ -388,8 +417,12 @@ class ParallelTest (BitcoinTestFramework):
         #stop nodes
         stop_nodes(self.nodes)
         wait_bitcoinds()
-
  
+        # Cleanup by mining more blocks if we need to run extended tests
+        if self.longTest == True:
+
+            # cleanup and sync chains for next tests
+            self.cleanup_and_reset()
 
         ################################################
         # Begin extended tests
@@ -397,6 +430,392 @@ class ParallelTest (BitcoinTestFramework):
         if self.longTest == False:
             return
  
+        ###########################################################################################
+        # Test reorgs
+        ###########################################################################################
+
+        ###########################################################################################
+        # Basic reorg - see section below on 4 block attack scenarios.  At the end there is a
+        # repeated test that does basic reorgs multiple times.
+
+
+        ###########################################################################################
+        # 1) Start a slow to validate block race then mine another block pulling one chain ahead.
+        # - threads on the chain that is now not the most proof of work should be stopped and the
+        #   most proof of work block should proceed.
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug","-pvtest=0"]))
+        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug","-pvtest=0"]))
+
+        print ("Send more transactions...")
+        num_range = 15
+        for i in range(num_range):
+            self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 0.01)
+        for i in range(num_range):
+            self.nodes[1].sendtoaddress(self.nodes[1].getnewaddress(), 0.01)
+        for i in range(num_range):
+            self.nodes[2].sendtoaddress(self.nodes[2].getnewaddress(), 0.01)
+
+        # Mine a block on each node
+        print ("Mine a block on each node..")
+        self.nodes[0].generate(1)
+        self.nodes[1].generate(1)
+        self.nodes[2].generate(1)
+        basecount = self.nodes[0].getblockcount()
+
+        # Mine another block on node2 so that it's chain will be the longest when we connect it
+        print ("Mine another block on node2..")
+        self.nodes[2].generate(1)
+        bestblock = self.nodes[2].getbestblockhash()
+
+        stop_nodes(self.nodes)
+        wait_bitcoinds()
+
+        # Restart nodes with pvtest=1
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug","-pvtest=1"]))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug","-pvtest=1"]))
+        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug","-pvtest=1"]))
+
+        # Connect node 0 and 1 so that a block validation race begins
+        print ("Connect nodes0 and 1...")
+        connect_nodes(self.nodes[1],0)
+
+        # Wait for a little while before connecting node 2
+        time.sleep(3)
+        print ("Connect node2...")
+        counts = [ x.getblockcount() for x in self.nodes ]
+        print (str(counts))
+        assert_equal(counts, [basecount,basecount,basecount+1])  
+        interconnect_nodes(self.nodes)
+
+        # All chains will sync to node2
+        sync_blocks(self.nodes)
+        assert_equal(self.nodes[0].getbestblockhash(), bestblock)
+        assert_equal(self.nodes[1].getbestblockhash(), bestblock)
+        assert_equal(self.nodes[2].getbestblockhash(), bestblock)
+
+        stop_nodes(self.nodes)
+        wait_bitcoinds()
+
+        # cleanup and sync chains for next tests
+        self.cleanup_and_reset()
+
+
+        ###########################################################################################
+        # Mine two forks of equal work and start slow to validate block race on fork1. Then another
+        # block arrives on fork2
+        # - the slow to validate blocks will still continue
+        # Mine another block on fork2 two pulling that fork ahead.
+        # - threads on the fork1 should be stopped allowing fork2 to connect blocks and pull ahead
+
+        print ("Mine two forks.")
+        # fork 1 (both nodes on fork1 should be syncd)
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug","-pvtest=0", "-whitelist=127.0.0.1"]))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug","-pvtest=0", "-whitelist=127.0.0.1"]))
+        interconnect_nodes(self.nodes)
+        self.nodes[0].generate(1)
+        sync_blocks(self.nodes)
+
+        # fork 2
+        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug","-pvtest=0", "-whitelist=127.0.0.1"]))
+        self.nodes[2].generate(1)
+
+        stop_nodes(self.nodes)
+        wait_bitcoinds()
+
+        # restart nodes but don't connect them yet
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug","-pvtest=0", "-whitelist=127.0.0.1"]))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug","-pvtest=0", "-whitelist=127.0.0.1"]))
+        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug","-pvtest=0", "-whitelist=127.0.0.1"]))
+
+        # Create txns on node0 and 1 to setup for a slow to validate race between those nodes.
+        print ("Send more transactions...")
+        num_range = 15
+        for i in range(num_range):
+            self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 0.01)
+        for i in range(num_range):
+            self.nodes[1].sendtoaddress(self.nodes[1].getnewaddress(), 0.01)
+
+        # Mine a block on each node
+        print ("Mine a block on each node..")
+        self.nodes[0].generate(1)
+        self.nodes[1].generate(1)
+        self.nodes[2].generate(1)
+        basecount = self.nodes[0].getblockcount()
+
+        # Mine another block on node2 so that it's chain will be the longest when we connect it
+        print ("Mine another block on node2..")
+        self.nodes[2].generate(1)
+        bestblock = self.nodes[2].getbestblockhash()
+
+        stop_nodes(self.nodes)
+        wait_bitcoinds()
+
+        # Restart nodes with pvtest=1
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug","-pvtest=1", "-whitelist=127.0.0.1"]))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug","-pvtest=1", "-whitelist=127.0.0.1"]))
+        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug","-pvtest=1", "-whitelist=127.0.0.1"]))
+
+        # Connect node 0 and 1 so that a block validation race begins
+        print ("Connect nodes0 and 1...")
+        connect_nodes(self.nodes[1],0)
+
+        # Wait for a little while before connecting node 2
+        time.sleep(3)
+        print ("Connect node2...")
+        counts = [ x.getblockcount() for x in self.nodes ]
+        print (str(counts))
+        assert_equal(counts, [basecount,basecount,basecount+1])  
+        interconnect_nodes(self.nodes)
+
+        # All chains will sync to node2
+        sync_blocks(self.nodes)
+        assert_equal(self.nodes[0].getbestblockhash(), bestblock)
+        assert_equal(self.nodes[1].getbestblockhash(), bestblock)
+        assert_equal(self.nodes[2].getbestblockhash(), bestblock)
+
+        stop_nodes(self.nodes)
+        wait_bitcoinds()
+
+        # cleanup and sync chains for next tests
+        self.cleanup_and_reset()
+
+
+        ##############################################################################################
+        # Mine two forks of equal work and start slow to validate 4 block race on fork1. Then another
+        # block arrives on fork2
+        # - the slow to validate blocks will still continue
+        # Mine another block on fork2 two pulling that fork ahead.
+        # - threads on the fork1 should be stopped allowing fork2 to connect blocks and pull ahead
+
+        print ("Mine two forks.")
+        # fork 1 (both nodes on fork1 should be syncd)
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug","-pvtest=0", "-whitelist=127.0.0.1"]))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug","-pvtest=0", "-whitelist=127.0.0.1"]))
+        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug","-pvtest=0", "-whitelist=127.0.0.1"]))
+        self.nodes.append(start_node(3, self.options.tmpdir, ["-debug","-pvtest=0", "-whitelist=127.0.0.1"]))
+        interconnect_nodes(self.nodes)
+        self.nodes[0].generate(1)
+        sync_blocks(self.nodes)
+
+        # fork 2
+        self.nodes.append(start_node(4, self.options.tmpdir, ["-debug","-pvtest=0", "-whitelist=127.0.0.1"]))
+        self.nodes[4].generate(1)
+
+        stop_nodes(self.nodes)
+        wait_bitcoinds()
+
+        # restart nodes but don't connect them yet
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug","-pvtest=0", "-whitelist=127.0.0.1"]))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug","-pvtest=0", "-whitelist=127.0.0.1"]))
+        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug","-pvtest=0", "-whitelist=127.0.0.1"]))
+        self.nodes.append(start_node(3, self.options.tmpdir, ["-debug","-pvtest=0", "-whitelist=127.0.0.1"]))
+        self.nodes.append(start_node(4, self.options.tmpdir, ["-debug","-pvtest=0", "-whitelist=127.0.0.1"]))
+
+        # Create txns on node0 and 1 to setup for a slow to validate race between those nodes.
+        print ("Send more transactions...")
+        num_range = 15
+        for i in range(num_range):
+            self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 0.01)
+        for i in range(num_range):
+            self.nodes[1].sendtoaddress(self.nodes[1].getnewaddress(), 0.01)
+        for i in range(num_range):
+            self.nodes[3].sendtoaddress(self.nodes[1].getnewaddress(), 0.01)
+        for i in range(num_range):
+            self.nodes[4].sendtoaddress(self.nodes[1].getnewaddress(), 0.01)
+
+        # Mine a block on each node
+        print ("Mine a block on each node..")
+        self.nodes[0].generate(1)
+        self.nodes[1].generate(1)
+        self.nodes[2].generate(1)
+        self.nodes[3].generate(1)
+        self.nodes[4].generate(1)
+        basecount = self.nodes[0].getblockcount()
+
+        # Mine another block on node4 so that it's chain will be the longest when we connect it
+        print ("Mine another block on node4..")
+        self.nodes[4].generate(1)
+        bestblock = self.nodes[4].getbestblockhash()
+
+        stop_nodes(self.nodes)
+        wait_bitcoinds()
+
+        # Restart nodes with pvtest=1
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug","-pvtest=1", "-whitelist=127.0.0.1"]))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug","-pvtest=1", "-whitelist=127.0.0.1"]))
+        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug","-pvtest=1", "-whitelist=127.0.0.1"]))
+        self.nodes.append(start_node(3, self.options.tmpdir, ["-debug","-pvtest=1", "-whitelist=127.0.0.1"]))
+        self.nodes.append(start_node(4, self.options.tmpdir, ["-debug","-pvtest=1", "-whitelist=127.0.0.1"]))
+
+        # Connect node 0 and 1 so that a block validation race begins
+        print ("Connect nodes0, 1, 2 and 3...")
+        connect_nodes(self.nodes[1],0)
+
+        # Wait for a little while before connecting node 4
+        time.sleep(3)
+        print ("Connect node4...")
+        counts = [ x.getblockcount() for x in self.nodes ]
+        print (str(counts))
+        assert_equal(counts, [basecount,basecount,basecount, basecount, basecount+1])  
+        interconnect_nodes(self.nodes)
+
+        # All chains will sync to node2
+        sync_blocks(self.nodes)
+        assert_equal(self.nodes[0].getbestblockhash(), bestblock)
+        assert_equal(self.nodes[1].getbestblockhash(), bestblock)
+        assert_equal(self.nodes[2].getbestblockhash(), bestblock)
+        assert_equal(self.nodes[3].getbestblockhash(), bestblock)
+        assert_equal(self.nodes[4].getbestblockhash(), bestblock)
+
+        stop_nodes(self.nodes)
+        wait_bitcoinds()
+
+        # cleanup and sync chains for next tests
+        self.cleanup_and_reset()
+
+
+        ###########################################################################################
+        # 1) Mine two forks of equal work and start slow to validate block race on fork1. Then another
+        # block arrives on fork2 pulling that fork ahead.
+        # - threads on the fork1 should be stopped allowing fork2 to connect blocks and pull ahead
+        # 2) As fork2 is being validated, fork 1 pulls ahead
+        # - fork 2 is now stopped and fork 1 begins to validate
+        # 3) do step 2 repeatedely, going back and forth between forks
+
+        print ("Mine three forks.")
+        # fork 1 (both nodes on fork1 should be syncd)
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug","-pvtest=0", "-whitelist=127.0.0.1"]))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug","-pvtest=0", "-whitelist=127.0.0.1"]))
+        interconnect_nodes(self.nodes)
+        self.nodes[0].generate(1)
+        sync_blocks(self.nodes)
+
+        # fork 2
+        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug","-pvtest=0", "-whitelist=127.0.0.1"]))
+        self.nodes[2].generate(1)
+
+        # fork 3
+        self.nodes.append(start_node(3, self.options.tmpdir, ["-debug","-pvtest=0", "-whitelist=127.0.0.1"]))
+        self.nodes[3].generate(1)
+
+        stop_nodes(self.nodes)
+        wait_bitcoinds()
+
+        # restart nodes but don't connect them yet
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug","-pvtest=0", "-whitelist=127.0.0.1"]))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug","-pvtest=0", "-whitelist=127.0.0.1"]))
+        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug","-pvtest=0", "-whitelist=127.0.0.1"]))
+        self.nodes.append(start_node(3, self.options.tmpdir, ["-debug","-pvtest=0", "-whitelist=127.0.0.1"]))
+
+        # Create txns on node0 and 1 to setup for a slow to validate race between those nodes.
+        print ("Send more transactions...")
+        num_range = 15
+        for i in range(num_range):
+            self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 0.01)
+        for i in range(num_range):
+            self.nodes[1].sendtoaddress(self.nodes[1].getnewaddress(), 0.01)
+
+        # in this test we also generate txns on node 2 so that all nodes will validate slowly.
+        for i in range(num_range):
+            self.nodes[2].sendtoaddress(self.nodes[1].getnewaddress(), 0.01)
+
+        # Mine a block on each node
+        print ("Mine a block on each node..")
+        self.nodes[0].generate(1)
+        self.nodes[1].generate(1)
+        self.nodes[2].generate(1)
+        self.nodes[3].generate(1)
+        basecount = self.nodes[0].getblockcount()
+
+        # Mine another block on node2 so that it's chain will be the longest when we connect it
+        print ("Mine another block on node2..")
+        self.nodes[2].generate(1)
+
+        # Mine two blocks on node3 so that it's chain will be the longest when we connect it
+        print ("Mine 2 blocks on node3..")
+        self.nodes[3].generate(1)
+        self.nodes[3].generate(1)
+        bestblock = self.nodes[3].getbestblockhash()
+
+        stop_nodes(self.nodes)
+        wait_bitcoinds()
+
+        # Restart nodes with pvtest=1
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug","-pvtest=1", "-whitelist=127.0.0.1"]))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug","-pvtest=1", "-whitelist=127.0.0.1"]))
+        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug","-pvtest=1", "-whitelist=127.0.0.1"]))
+
+        # Connect node 0 and 1 so that a block validation race begins
+        print ("Connect nodes 0 and 1...")
+        connect_nodes(self.nodes[1],0)
+
+        # Wait for a little while before connecting node 2 (fork2)
+        time.sleep(3)
+        print ("Connect node2 - fork2...")
+        counts = [ x.getblockcount() for x in self.nodes ]
+        print (str(counts))
+        assert_equal(counts, [basecount,basecount,basecount+1])  
+        interconnect_nodes(self.nodes)
+
+        # Wait for a little while before connecting node 3 (fork3)
+        time.sleep(3)
+        print ("Connect node3 - fork3...")
+        self.nodes.append(start_node(3, self.options.tmpdir, ["-debug","-pvtest=1", "-whitelist=127.0.0.1"]))
+        counts = [ x.getblockcount() for x in self.nodes ]
+        interconnect_nodes(self.nodes)
+        print (str(counts))
+        assert_equal(counts, [basecount-1,basecount-1,basecount+1, basecount+2])  
+        interconnect_nodes(self.nodes)
+
+
+        # All chains will sync to node3
+        sync_blocks(self.nodes)
+        assert_equal(self.nodes[0].getbestblockhash(), bestblock)
+        assert_equal(self.nodes[1].getbestblockhash(), bestblock)
+        assert_equal(self.nodes[2].getbestblockhash(), bestblock)
+        assert_equal(self.nodes[3].getbestblockhash(), bestblock)
+
+        stop_nodes(self.nodes)
+        wait_bitcoinds()
+
+        # cleanup and sync chains for next tests
+        self.cleanup_and_reset()
+
+        
+####### take this out later
+        if self.longTest == True:
+            return
+
+        ###########################################################################################
+        # 1) Large reorg - can we do a 288 block reorg?
+        print ("Starting repeating many competing blocks test")
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug=","-pvtest=0"]))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug=","-pvtest=0"]))
+
+        print ("Mine 144 blocks on each chain...")
+        self.nodes[0].generate(288)
+        self.nodes[1].generate(288)
+ 
+        print ("Connect nodes for larg reorg...")
+        connect_nodes(self.nodes[1],0)
+        sync_blocks(self.nodes)
+
+        print ("Mine another block on node5 causing large reorg...")
+        self.nodes[1].generate(1)
+        sync_blocks(self.nodes)
+
+        # Mine another block which will cause some nodes to reorg and sync to the same chain.
+        print ("Mine another block on node0...")
+        self.nodes[0].generate(1)
+        sync_blocks(self.nodes)
+
+        # stop nodes
+        stop_nodes(self.nodes)
+        wait_bitcoinds()
+
+        # cleanup and sync chains for next tests
+        self.cleanup_and_reset()
  
         ###########################################################################################
         # Test the 4 block attack scenarios - use -pvtest=true to slow down the checking of inputs.
@@ -479,24 +898,12 @@ class ParallelTest (BitcoinTestFramework):
         assert_equal(self.nodes[1].getbestblockhash(), self.nodes[3].getbestblockhash())
         assert_equal(self.nodes[1].getbestblockhash(), self.nodes[4].getbestblockhash())
  
-
-        print ("Mine more blocks on each node...")
-        self.nodes[0].generate(25)
-        sync_blocks(self.nodes)
-        self.nodes[1].generate(25)
-        sync_blocks(self.nodes)
-        self.nodes[2].generate(25)
-        sync_blocks(self.nodes)
-        self.nodes[3].generate(25)
-        sync_blocks(self.nodes)
-        self.nodes[4].generate(25)
-        sync_blocks(self.nodes)
-        self.nodes[5].generate(25)
-        sync_blocks(self.nodes)
-
         #stop nodes
         stop_nodes(self.nodes)
         wait_bitcoinds()
+
+        # cleanup and sync chains for next tests
+        self.cleanup_and_reset()
 
         ########################################################################################################
         # Mine 4 blocks all the same size and get them to start validating and then send a 5th that is smaller
@@ -577,23 +984,12 @@ class ParallelTest (BitcoinTestFramework):
         assert_equal(self.nodes[1].getbestblockhash(), self.nodes[4].getbestblockhash())
         assert_equal(self.nodes[1].getbestblockhash(), self.nodes[5].getbestblockhash())
  
-        print ("Mine more blocks on each node...")
-        self.nodes[0].generate(25)
-        sync_blocks(self.nodes)
-        self.nodes[1].generate(25)
-        sync_blocks(self.nodes)
-        self.nodes[2].generate(25)
-        sync_blocks(self.nodes)
-        self.nodes[3].generate(25)
-        sync_blocks(self.nodes)
-        self.nodes[4].generate(25)
-        sync_blocks(self.nodes)
-        self.nodes[5].generate(25)
-        sync_blocks(self.nodes)
-
         # stop nodes
         stop_nodes(self.nodes)
         wait_bitcoinds()
+
+        # cleanup and sync chains for next tests
+        self.cleanup_and_reset()
 
         ############################################################################################################
         # Mine 4 blocks all the same size and get them to start validating and then send a 5th that is the same size
@@ -767,9 +1163,12 @@ class ParallelTest (BitcoinTestFramework):
         stop_nodes(self.nodes)
         wait_bitcoinds()
 
+        # cleanup and sync chains for next tests
+        self.cleanup_and_reset()
+
 
         #################################################################################
-        # Repeated 5 block mined scenario
+        # Repeated 5 blocks mined with a reorg after
         #################################################################################
         
         # Repeatedly mine 5 blocks at a time on each node to have many blocks both arriving
@@ -801,7 +1200,7 @@ class ParallelTest (BitcoinTestFramework):
             self.nodes[5].generate(1)
             sync_blocks(self.nodes)
 
-            # Mine another block which will cause the nodes to sync to one chain
+            # Mine another block which will cause some nodes to reorg and sync to the same chain.
             print ("Mine another block...")
             self.nodes[0].generate(1)
             sync_blocks(self.nodes)
@@ -810,6 +1209,8 @@ class ParallelTest (BitcoinTestFramework):
         stop_nodes(self.nodes)
         wait_bitcoinds()
 
+        # cleanup and sync chains for next tests
+        self.cleanup_and_reset()
 
 def Test():
     t = ParallelTest()
