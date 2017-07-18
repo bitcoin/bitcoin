@@ -13,6 +13,7 @@
 #include "consensus/consensus.h"
 #include "consensus/merkle.h"
 #include "consensus/validation.h"
+#include "governance-classes.h"
 #include "hash.h"
 #include "main.h"
 #include "net.h"
@@ -124,7 +125,8 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
     CAmount nFees = 0;
 
     {
-        LOCK2(cs_main, mempool.cs);
+        LOCK2(cs_main, governance.cs);
+        LOCK(mempool.cs);
         CBlockIndex* pindexPrev = chainActive.Tip();
         const int nHeight = pindexPrev->nHeight + 1;
         pblock->nTime = GetAdjustedTime();
