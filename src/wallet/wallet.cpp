@@ -4333,21 +4333,18 @@ bool CWallet::TopUpKeyPool(unsigned int kpSize)
             if (i < missingInternal) {
                 fInternal = true;
             }
-            if (!setInternalKeyPool.empty()) {
-                nEnd = *(--setInternalKeyPool.end()) + 1;
-            }
-            if (!setExternalKeyPool.empty()) {
-                nEnd = std::max(nEnd, *(--setExternalKeyPool.end()) + 1);
-            }
-            // TODO: implement keypools for all accounts?
-            if (!walletdb.WritePool(nEnd, CKeyPool(GenerateNewKey(walletdb, 0, fInternal), fInternal))) {
+
+            assert(m_max_keypool_index < std::numeric_limits<int64_t>::max()); // How in the hell did you use so many keys?
+            int64_t index = ++m_max_keypool_index;
+
+            if (!walletdb.WritePool(index, CKeyPool(GenerateNewKey(walletdb, internal), internal))) {
                 throw std::runtime_error(std::string(__func__) + ": writing generated key failed");
             }
 
             if (fInternal) {
-                setInternalKeyPool.insert(nEnd);
+                setInternalKeyPool.insert(index);
             } else {
-                setExternalKeyPool.insert(nEnd);
+                setExternalKeyPool.insert(index);
             }
 
             if (missingInternal + missingExternal > 0) {
