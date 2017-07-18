@@ -927,6 +927,9 @@ QString formatServicesStr(quint64 mask)
             case NODE_WITNESS:
                 strList.append("WITNESS");
                 break;
+            case NODE_SEGWIT2X:
+                strList.append("SEGWIT2X");
+                break;
             case NODE_XTHIN:
                 strList.append("XTHIN");
                 break;
