@@ -116,16 +116,38 @@ static const char* FEE_ESTIMATES_FILENAME="fee_estimates.dat";
 // shutdown thing.
 //
 
-std::atomic<bool> fRequestShutdown(false);
-std::atomic<bool> fDumpMempoolLater(false);
+// g_request_shutdown is true when bitcoin should be shutting down, and access
+// is guarded by g_shutdown_mut.
+static std::mutex g_shutdown_mut;
+static std::condition_variable g_shutdown_cond;
+static bool g_request_shutdown{false};
 
-void StartShutdown()
+static std::atomic<bool> g_dump_mempool_later(false);
+
+static void SetShutdown(bool value)
 {
-    fRequestShutdown = true;
+    {
+        std::lock_guard<std::mutex> lk(g_shutdown_mut);
+        g_request_shutdown = value;
+    }
+    g_shutdown_cond.notify_all();
 }
+
+void StartShutdown() {
+    SetShutdown(true);
+}
+
+// Threads can use this method to wait for a shutdown request, without polling.
+void WaitForShutdownNotify()
+{
+    std::unique_lock<std::mutex> lk(g_shutdown_mut);
+    g_shutdown_cond.wait(lk, []{ return g_request_shutdown; });
+}
+
 bool ShutdownRequested()
 {
-    return fRequestShutdown;
+    std::lock_guard<std::mutex> lk(g_shutdown_mut);
+    return g_request_shutdown;
 }
 
 /**
@@ -199,7 +221,7 @@ void Shutdown()
 
     StopTorControl();
     UnregisterNodeSignals(GetNodeSignals());
-    if (fDumpMempoolLater && GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
+    if (g_dump_mempool_later && GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
         DumpMempool();
     }
 
@@ -283,7 +305,7 @@ void Shutdown()
  */
 static void HandleSIGTERM(int)
 {
-    fRequestShutdown = true;
+    StartShutdown();
 }
 
 static void HandleSIGHUP(int)
@@ -688,7 +710,7 @@ void ThreadImport(std::vector<fs::path> vImportFiles)
     } // End scope of CImportingNow
     if (GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
         LoadMempool();
-        fDumpMempoolLater = !fRequestShutdown;
+        g_dump_mempool_later = !ShutdownRequested();
     }
 }
 
@@ -1381,7 +1403,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     LogPrintf("* Using %.1fMiB for in-memory UTXO set (plus up to %.1fMiB of unused mempool space)\n", nCoinCacheUsage * (1.0 / 1024 / 1024), nMempoolSizeMax * (1.0 / 1024 / 1024));
 
     bool fLoaded = false;
-    while (!fLoaded && !fRequestShutdown) {
+    while (!fLoaded && !ShutdownRequested()) {
         bool fReset = fReindex;
         std::string strLoadError;
 
@@ -1412,7 +1434,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                         break;
                     }
                 }
-                if (fRequestShutdown) break;
+                if (ShutdownRequested()) break;
 
                 if (!LoadBlockIndex(chainparams)) {
                     strLoadError = _("Error loading block database");
@@ -1490,7 +1512,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
             fLoaded = true;
         } while(false);
 
-        if (!fLoaded && !fRequestShutdown) {
+        if (!fLoaded && !ShutdownRequested()) {
             // first suggest a reindex
             if (!fReset) {
                 bool fRet = uiInterface.ThreadSafeQuestion(
@@ -1499,7 +1521,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                     "", CClientUIInterface::MSG_ERROR | CClientUIInterface::BTN_ABORT);
                 if (fRet) {
                     fReindex = true;
-                    fRequestShutdown = false;
+                    SetShutdown(false);
                 } else {
                     LogPrintf("Aborted block database rebuild. Exiting.\n");
                     return false;
@@ -1513,7 +1535,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     // As LoadBlockIndex can take several minutes, it's possible the user
     // requested to kill the GUI during the last operation. If so, exit.
     // As the program has not fully started yet, Shutdown() is possibly overkill.
-    if (fRequestShutdown)
+    if (ShutdownRequested())
     {
         LogPrintf("Shutdown requested. Exiting.\n");
         return false;
@@ -1667,5 +1689,5 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     }
 #endif
 
-    return !fRequestShutdown;
+    return !ShutdownRequested();
 }
