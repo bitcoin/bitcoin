@@ -12,6 +12,7 @@
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
 #include "fs.h"
+#include "init.h"
 #include "key.h"
 #include "keystore.h"
 #include "validation.h"
@@ -1053,6 +1054,30 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const CBlockI
         if (fExisted && !fUpdate) return false;
         if (fExisted || IsMine(tx) || IsFromMe(tx))
         {
+            /* Check if any keys in the wallet keypool that were supposed to be unused
+             * have appeared in a new transaction. If so, remove those keys from the keypool.
+             * This can happen when restoring an old wallet backup that does not contain
+             * the mostly recently created transactions from newer versions of the wallet.
+             */
+
+            // loop though all outputs
+            for (const CTxOut& txout: tx.vout) {
+                // extract addresses and check if they match with an unused keypool key
+                std::vector<CKeyID> vAffected;
+                CAffectedKeysVisitor(*this, vAffected).Process(txout.scriptPubKey);
+                for (const CKeyID &keyid : vAffected) {
+                    std::map<CKeyID, int64_t>::const_iterator mi = m_pool_key_to_index.find(keyid);
+                    if (mi != m_pool_key_to_index.end()) {
+                        LogPrintf("%s: Detected a used keypool key, mark all keypool key up to this key as used\n", __func__);
+                        MarkReserveKeysAsUsed(mi->second);
+
+                        if (!TopUpKeyPool()) {
+                            LogPrintf("%s: Topping up keypool failed (locked wallet)\n", __func__);
+                        }
+                    }
+                }
+            }
+
             CWalletTx wtx(this, ptx);
 
             // Get merkle branch if transaction was found in a block
@@ -3611,6 +3636,28 @@ void CReserveKey::ReturnKey()
     vchPubKey = CPubKey();
 }
 
+void CWallet::MarkReserveKeysAsUsed(int64_t keypool_id)
+{
+    AssertLockHeld(cs_wallet);
+    bool internal = setInternalKeyPool.count(keypool_id);
+    if (!internal) assert(setExternalKeyPool.count(keypool_id));
+    std::set<int64_t> *setKeyPool = internal ? &setInternalKeyPool : &setExternalKeyPool;
+    auto it = setKeyPool->begin();
+
+    CWalletDB walletdb(*dbw);
+    while (it != std::end(*setKeyPool)) {
+        const int64_t& index = *(it);
+        if (index > keypool_id) break; // set*KeyPool is ordered
+
+        CKeyPool keypool;
+        if (walletdb.ReadPool(index, keypool)) { //TODO: This should be unnecessary
+            m_pool_key_to_index.erase(keypool.vchPubKey.GetID());
+        }
+        walletdb.ErasePool(index);
+        it = setKeyPool->erase(it);
+    }
+}
+
 bool CWallet::HasUnusedKeys(int min_keys) const
 {
     return setExternalKeyPool.size() >= min_keys && (setInternalKeyPool.size() >= min_keys || !CanSupportFeature(FEATURE_HD_SPLIT));
@@ -3988,6 +4035,9 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
     LogPrintf(" wallet      %15dms\n", GetTimeMillis() - nStart);
 
     RegisterValidationInterface(walletInstance);
+
+    // Try to top up keypool. No-op if the wallet is locked.
+    walletInstance->TopUpKeyPool();
 
     CBlockIndex *pindexRescan = chainActive.Genesis();
     if (!GetBoolArg("-rescan", false))
