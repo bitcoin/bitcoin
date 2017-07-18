@@ -977,6 +977,10 @@ public:
     void ReturnKey(int64_t nIndex, bool fInternal, const CPubKey& pubkey);
     bool GetKeyFromPool(CPubKey &key, bool internal = false);
     int64_t GetOldestKeyPoolTime();
+    /**
+     * Marks all keys in the keypool up to and including reserve_key as used.
+     */
+    void MarkReserveKeysAsUsed(int64_t keypool_id);
     const std::map<CKeyID, int64_t>& GetAllReserveKeys() const { return m_pool_key_to_index; }
     /** Does the wallet have at least min_keys in the keypool? */
     bool HasUnusedKeys(int min_keys) const;
