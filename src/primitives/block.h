@@ -9,6 +9,7 @@
 #include "primitives/transaction.h"
 #include "serialize.h"
 #include "uint256.h"
+#include "pow/pow.h"
 
 /** Nodes collect new transactions into a block, hash them into a hash tree,
  * and scan through nonce values to make the block's hash satisfy proof-of-work
@@ -17,7 +18,7 @@
  * in the block is a special one that creates a new coin owned by the creator
  * of the block.
  */
-class CBlockHeader
+class CBlockHeader : powa::callback
 {
 public:
     // header
@@ -27,6 +28,8 @@ public:
     uint32_t nTime;
     uint32_t nBits;
     uint32_t nNonce;
+    std::vector<uint32_t> vEdges; // cuckoo cycle edges
+    std::shared_ptr<powa::pow> solver; // solver, if currently finding a solution, otherwise NULL
 
     CBlockHeader()
     {
@@ -43,6 +46,11 @@ public:
         READWRITE(nTime);
         READWRITE(nBits);
         READWRITE(nNonce);
+        READWRITE(vEdges);
+        if (ser_action.ForRead())
+            printf("CBlockHeader (prev=%s) read %lu edges\n", hashPrevBlock.ToString().c_str(), vEdges.size());
+        else
+            printf("CBlockHeader (prev=%s) writing %lu edges\n", hashPrevBlock.ToString().c_str(), vEdges.size());
     }
 
     void SetNull()
@@ -53,6 +61,7 @@ public:
         nTime = 0;
         nBits = 0;
         nNonce = 0;
+        solver = nullptr;
     }
 
     bool IsNull() const
@@ -61,6 +70,17 @@ public:
     }
 
     uint256 GetHash() const;
+
+    std::vector<uint8_t> GetData() const;
+
+    bool found_solution(const powa::pow& p, powa::challenge_ref c, powa::solution_ref s) override;
+
+    bool CheckProofOfWork(bool searchCycle = false, bool background = false);
+
+    bool ProofAvailable() { return vEdges.size() > 0; }
+    bool IsSolving() { return !ProofAvailable() && solver != nullptr && solver->state == powa::state_running; }
+
+    void StopSolving() { if (solver != nullptr) solver->abort(); }
 
     int64_t GetBlockTime() const
     {
@@ -113,6 +133,7 @@ public:
         block.nTime          = nTime;
         block.nBits          = nBits;
         block.nNonce         = nNonce;
+        block.vEdges         = vEdges;
         return block;
     }
 

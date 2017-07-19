@@ -212,6 +212,7 @@ public:
     unsigned int nTime;
     unsigned int nBits;
     unsigned int nNonce;
+    std::vector<uint32_t> vEdges;
 
     //! (memory only) Sequential id assigned to distinguish order in which blocks are received.
     int32_t nSequenceId;
@@ -240,6 +241,7 @@ public:
         nTime          = 0;
         nBits          = 0;
         nNonce         = 0;
+        vEdges.clear();
     }
 
     CBlockIndex()
@@ -256,6 +258,7 @@ public:
         nTime          = block.nTime;
         nBits          = block.nBits;
         nNonce         = block.nNonce;
+        vEdges         = block.vEdges;
     }
 
     CDiskBlockPos GetBlockPos() const {
@@ -286,6 +289,7 @@ public:
         block.nTime          = nTime;
         block.nBits          = nBits;
         block.nNonce         = nNonce;
+        block.vEdges         = vEdges;
         return block;
     }
 
@@ -405,6 +409,7 @@ public:
         READWRITE(nTime);
         READWRITE(nBits);
         READWRITE(nNonce);
+        READWRITE(vEdges);
     }
 
     uint256 GetBlockHash() const
@@ -416,6 +421,7 @@ public:
         block.nTime           = nTime;
         block.nBits           = nBits;
         block.nNonce          = nNonce;
+        block.vEdges          = vEdges;
         return block.GetHash();
     }
 

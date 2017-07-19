@@ -46,6 +46,9 @@ struct Params {
     int BIP65Height;
     /** Block height at which BIP66 becomes active */
     int BIP66Height;
+    /** FIR difficulty filter parameters */
+    int nFIRDiffFilterThreshold;
+    bool UseDiffFilter(int nHeight) const { return (nHeight >= nFIRDiffFilterThreshold); }
     /**
      * Minimum blocks including miner confirmation of the total of 2016 blocks in a retargeting period,
      * (nPowTargetTimespan / nPowTargetSpacing) which is also used for BIP9 deployments.
@@ -59,8 +62,9 @@ struct Params {
     bool fPowAllowMinDifficultyBlocks;
     bool fPowNoRetargeting;
     int64_t nPowTargetSpacing;
-    int64_t nPowTargetTimespan;
-    int64_t DifficultyAdjustmentInterval() const { return nPowTargetTimespan / nPowTargetSpacing; }
+    int64_t nPowOriginalTargetTimespan;
+    int64_t nPowFilteredTargetTimespan;
+    int64_t DifficultyAdjustmentInterval(int nHeight) const { return (UseDiffFilter(nHeight)? nPowFilteredTargetTimespan: nPowOriginalTargetTimespan) / nPowTargetSpacing; }
     uint256 nMinimumChainWork;
     uint256 defaultAssumeValid;
 };

@@ -56,7 +56,7 @@ UniValue GetNetworkHashPS(int lookup, int height) {
 
     // If lookup is -1, then use blocks since last difficulty change.
     if (lookup <= 0)
-        lookup = pb->nHeight % Params().GetConsensus().DifficultyAdjustmentInterval() + 1;
+        lookup = pb->nHeight % Params().GetConsensus().DifficultyAdjustmentInterval(pb->nHeight) + 1;
 
     // If lookup is larger than chain, then set it to chain length.
     if (lookup > pb->nHeight)
@@ -104,6 +104,22 @@ UniValue getnetworkhashps(const JSONRPCRequest& request)
     return GetNetworkHashPS(request.params.size() > 0 ? request.params[0].get_int() : 120, request.params.size() > 1 ? request.params[1].get_int() : -1);
 }
 
+bool processNonce(CBlock* pblock)
+{
+    boost::unique_lock<boost::mutex> lock(csBestBlock);
+    CBlockIndex* tip = chainActive.Tip();
+
+    pblock->CheckProofOfWork(true, true);
+
+    boost::system_time checkblktime = boost::get_system_time() + boost::posix_time::seconds(5);
+    while (chainActive.Tip() == tip && !pblock->ProofAvailable() && pblock->IsSolving()) {
+        cvBlockChange.timed_wait(lock, checkblktime);
+        checkblktime += boost::posix_time::seconds(5);
+        LogPrintf("processNonce: same tip: %s, got proof: %s, is solving: %s\n", chainActive.Tip() == tip ? "true" : "false", pblock->ProofAvailable() ? "true" : "false", pblock->IsSolving() ? "true" : "false");
+    }
+    return pblock->CheckProofOfWork();
+}
+
 UniValue generateBlocks(std::shared_ptr<CReserveScript> coinbaseScript, int nGenerate, uint64_t nMaxTries, bool keepScript)
 {
     static const int nInnerLoopCount = 0x10000;
@@ -127,7 +143,8 @@ UniValue generateBlocks(std::shared_ptr<CReserveScript> coinbaseScript, int nGen
             LOCK(cs_main);
             IncrementExtraNonce(pblock, chainActive.Tip(), nExtraNonce);
         }
-        while (nMaxTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus())) {
+        while (nMaxTries > 0 && pblock->nNonce < nInnerLoopCount && (!processNonce(pblock) || !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus()))) {
+            printf("[mining] incrementing nonce (hash=%s, CheckPOW=%s)\n", pblock->GetHash().ToString().c_str(), CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus()) ? "true" : "false");
             ++pblock->nNonce;
             --nMaxTries;
         }

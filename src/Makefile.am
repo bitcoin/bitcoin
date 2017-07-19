@@ -121,6 +121,12 @@ BITCOIN_CORE_H = \
   policy/fees.h \
   policy/policy.h \
   policy/rbf.h \
+  pow/cuckoo_cycle/cuckoo_cycle.h \
+  pow/cuckoo_cycle/cuckoo_miner.h \
+  pow/cuckoo_cycle/cuckoo.h \
+  pow/cuckoo_cycle/siphash.h \
+  pow/pow.h \
+  pow/sha256/sha256.h \
   pow.h \
   protocol.h \
   random.h \
@@ -201,6 +207,7 @@ libbitcoin_server_a_SOURCES = \
   policy/fees.cpp \
   policy/policy.cpp \
   policy/rbf.cpp \
+  pow/pow.cpp \
   pow.cpp \
   rest.cpp \
   rpc/blockchain.cpp \
@@ -280,6 +287,10 @@ libbitcoin_consensus_a_SOURCES = \
   consensus/validation.h \
   hash.cpp \
   hash.h \
+  pow/cuckoo_cycle/cuckoo_cycle.cpp \
+  pow/cuckoo_cycle/cuckoo_cycle.h \
+  pow/pow.cpp \
+  pow/pow.h \
   prevector.h \
   primitives/block.cpp \
   primitives/block.h \
@@ -317,6 +328,8 @@ libbitcoin_common_a_SOURCES = \
   netaddress.cpp \
   netbase.cpp \
   policy/feerate.cpp \
+  pow/cuckoo_cycle/cuckoo_cycle.cpp \
+  pow/pow.cpp \
   protocol.cpp \
   scheduler.cpp \
   script/sign.cpp \

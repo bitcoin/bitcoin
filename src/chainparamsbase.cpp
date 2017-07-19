@@ -13,6 +13,7 @@
 const std::string CBaseChainParams::MAIN = "main";
 const std::string CBaseChainParams::TESTNET = "test";
 const std::string CBaseChainParams::REGTEST = "regtest";
+const std::string CBaseChainParams::BC2 = "bc2";
 
 void AppendParamsHelpMessages(std::string& strUsage, bool debugHelp)
 {
@@ -33,6 +34,19 @@ public:
     CBaseMainParams()
     {
         nRPCPort = 8332;
+    }
+};
+
+/**
+ * Main network
+ */
+class CBaseBC2Params : public CBaseChainParams
+{
+public:
+    CBaseBC2Params()
+    {
+        nRPCPort = 9232;
+        strDataDir = "bc2";
     }
 };
 
@@ -74,6 +88,8 @@ std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const std::string& chain
 {
     if (chain == CBaseChainParams::MAIN)
         return std::unique_ptr<CBaseChainParams>(new CBaseMainParams());
+    else if (chain == CBaseChainParams::BC2)
+        return std::unique_ptr<CBaseBC2Params>(new CBaseBC2Params());
     else if (chain == CBaseChainParams::TESTNET)
         return std::unique_ptr<CBaseChainParams>(new CBaseTestNetParams());
     else if (chain == CBaseChainParams::REGTEST)
@@ -89,14 +105,18 @@ void SelectBaseParams(const std::string& chain)
 
 std::string ChainNameFromCommandLine()
 {
+    bool fBC2 = GetBoolArg("-bc2", true);
     bool fRegTest = GetBoolArg("-regtest", false);
     bool fTestNet = GetBoolArg("-testnet", false);
+    int nets = fBC2 + fRegTest + fTestNet;
 
-    if (fTestNet && fRegTest)
-        throw std::runtime_error("Invalid combination of -regtest and -testnet.");
+    if (nets > 1)
+        throw std::runtime_error("Invalid combination of -regtest, -testnet, and -bc2.");
     if (fRegTest)
         return CBaseChainParams::REGTEST;
     if (fTestNet)
         return CBaseChainParams::TESTNET;
+    if (fBC2)
+        return CBaseChainParams::BC2;
     return CBaseChainParams::MAIN;
 }
