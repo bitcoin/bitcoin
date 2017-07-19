@@ -1,6 +1,6 @@
-Bitcoin Core version 0.14.1 is now available from:
+Bitcoin Core version 0.14.2 is now available from:
 
-  <https://bitcoin.org/bin/bitcoin-core-0.14.1/>
+  <https://bitcoin.org/bin/bitcoin-core-0.14.2/>
 
 This is a new minor version release, including various bugfixes and
 performance improvements, as well as updated translations.
@@ -30,54 +30,31 @@ frequently tested on them.
 Notable changes
 ===============
 
-RPC changes
------------
+miniupnp CVE-2017-8798
+----------------------------
 
-- The first positional argument of `createrawtransaction` was renamed from
-  `transactions` to `inputs`.
+Bundled miniupnpc was updated to 2.0.20170509. This fixes an integer signedness error
+(present in MiniUPnPc v1.4.20101221 through v2.0) that allows remote attackers
+(within the LAN) to cause a denial of service or possibly have unspecified
+other impact.
 
-- The argument of `disconnectnode` was renamed from `node` to `address`.
+This only affects users that have explicitly enabled UPnP through the GUI
+setting or through the `-upnp` option, as since the last UPnP vulnerability
+(in Bitcoin Core 0.10.3) it has been disabled by default.
 
-These interface changes break compatibility with 0.14.0, when the named
-arguments functionality, introduced in 0.14.0, is used. Client software
-using these calls with named arguments needs to be updated.
+If you use this option, it is recommended to upgrade to this version as soon as
+possible.
 
-Mining
-------
+Known Bugs
+==========
 
-In previous versions, getblocktemplate required segwit support from downstream
-clients/miners once the feature activated on the network. In this version, it
-now supports non-segwit clients even after activation, by removing all segwit
-transactions from the returned block template. This allows non-segwit miners to
-continue functioning correctly even after segwit has activated.
+Since 0.14.0 the approximate transaction fee shown in Bitcoin-Qt when using coin
+control and smart fee estimation does not reflect any change in target from the
+smart fee slider. It will only present an approximate fee calculated using the
+default target. The fee calculated using the correct target is still applied to
+the transaction and shown in the final send confirmation dialog.
 
-Due to the limitations in previous versions, getblocktemplate also recommended
-non-segwit clients to not signal for the segwit version-bit. Since this is no
-longer an issue, getblocktemplate now always recommends signalling segwit for
-all miners. This is safe because ability to enforce the rule is the only
-required criteria for safe activation, not actually producing segwit-enabled
-blocks.
-
-UTXO memory accounting
-----------------------
-
-Memory usage for the UTXO cache is being calculated more accurately, so that
-the configured limit (`-dbcache`) will be respected when memory usage peaks
-during cache flushes.  The memory accounting in prior releases is estimated to
-only account for half the actual peak utilization.
-
-The default `-dbcache` has also been changed in this release to 450MiB.  Users
-who currently set `-dbcache` to a high value (e.g. to keep the UTXO more fully
-cached in memory) should consider increasing this setting in order to achieve
-the same cache performance as prior releases.  Users on low-memory systems
-(such as systems with 1GB or less) should consider specifying a lower value for
-this parameter.
-
-Additional information relating to running on low-memory systems can be found
-here:
-[reducing-bitcoind-memory-usage.md](https://gist.github.com/laanwj/efe29c7661ce9b6620a7).
-
-0.14.1 Change log
+0.14.2 Change log
 =================
 
 Detailed release notes follow. This overview includes changes that affect
@@ -86,38 +63,25 @@ the code changes and accompanying discussion, both the pull request and
 git merge commit are mentioned.
 
 ### RPC and other APIs
-- #10084 `142fbb2` Rename first named arg of createrawtransaction (MarcoFalke)
-- #10139 `f15268d` Remove auth cookie on shutdown (practicalswift)
-- #10146 `2fea10a` Better error handling for submitblock (rawodb, gmaxwell)
-- #10144 `d947afc` Prioritisetransaction wasn't always updating ancestor fee (sdaftuar)
-- #10204 `3c79602` Rename disconnectnode argument (jnewbery)
-
-### Block and transaction handling
-- #10126 `0b5e162` Compensate for memory peak at flush time (sipa)
-- #9912 `fc3d7db` Optimize GetWitnessHash() for non-segwit transactions (sdaftuar)
-- #10133 `ab864d3` Clean up calculations of pcoinsTip memory usage (morcos)
+- #10410 `321419b` Fix importwallet edge case rescan bug (ryanofsky)
 
 ### P2P protocol and network code
-- #9953/#10013 `d2548a4` Fix shutdown hang with >= 8 -addnodes set (TheBlueMatt)
-- #10176 `30fa231` net: gracefully handle NodeId wrapping (theuni)
+- #10424 `37a8fc5` Populate services in GetLocalAddress (morcos)
+- #10441 `9e3ad50` Only enforce expected services for half of outgoing connections (theuni)
 
 ### Build system
-- #9973 `e9611d1` depends: fix zlib build on osx (theuni)
-
-### GUI
-- #10060 `ddc2dd1` Ensure an item exists on the rpcconsole stack before adding (achow101)
-
-### Mining
-- #9955/#10006 `569596c` Don't require segwit in getblocktemplate for segwit signalling or mining (sdaftuar)
-- #9959/#10127 `b5c3440` Prevent slowdown in CreateNewBlock on large mempools (sdaftuar)
-
-### Tests and QA
-- #10157 `55f641c` Fix the `mempool_packages.py` test (sdaftuar)
+- #10414 `ffb0c4b` miniupnpc 2.0.20170509 (fanquake)
+- #10228 `ae479bc` Regenerate bitcoin-config.h as necessary (theuni)
 
 ### Miscellaneous
-- #10037 `4d8e660` Trivial: Fix typo in help getrawtransaction RPC (keystrike)
-- #10120 `e4c9a90` util: Work around (virtual) memory exhaustion on 32-bit w/ glibc (laanwj)
-- #10130 `ecc5232` bitcoin-tx input verification (awemany, jnewbery)
+- #10245 `44a17f2` Minor fix in build documentation for FreeBSD 11 (shigeya)
+- #10215 `0aee4a1` Check interruptNet during dnsseed lookups (TheBlueMatt)
+
+### GUI
+- #10231 `1e936d7` Reduce a significant cs_main lock freeze (jonasschnelli)
+
+### Wallet
+- #10294 `1847642` Unset change position when there is no change (instagibbs)
 
 Credits
 =======
@@ -125,18 +89,13 @@ Credits
 Thanks to everyone who directly contributed to this release:
 
 - Alex Morcos
-- Andrew Chow
-- Awemany
 - Cory Fields
-- Gregory Maxwell
-- James Evans
-- John Newbery
-- MarcoFalke
+- fanquake
+- Gregory Sanders
+- Jonas Schnelli
 - Matt Corallo
-- Pieter Wuille
-- practicalswift
-- rawodb
-- Suhas Daftuar
+- Russell Yanofsky
+- Shigeya Suzuki
 - Wladimir J. van der Laan
 
 As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
