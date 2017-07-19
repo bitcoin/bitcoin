@@ -25,6 +25,7 @@
 #include "util.h"
 #include "utilstrencodings.h"
 #include "validationinterface.h"
+#include "warnings.h"
 
 #include "governance/governance-classes.h"
 #include "masternode/masternode-payments.h"

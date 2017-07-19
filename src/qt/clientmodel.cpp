@@ -19,6 +19,7 @@
 #include "txmempool.h"
 #include "ui_interface.h"
 #include "util.h"
+#include "warnings.h"
 
 #include "masternode/masternode-sync.h"
 #include "privatesend/privatesend.h"
