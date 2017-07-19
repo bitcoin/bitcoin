@@ -83,11 +83,13 @@ bool GetTimeToPrune(const CScript& scriptPubKey, uint64_t &nTime)
 		CAliasUnprunable aliasUnprunable;
 		// we only prune things that we have in our db and that we can verify the last tx is expired
 		// nHeight is set to the height at which data is pruned, if the tip is newer than nHeight it won't send data to other nodes
+		// we want to keep history of all of the old tx's related to aliases that were renewed, we can't delete its history otherwise we won't know 
+		// to tell nodes that aliases were renewed and to update their info pertaining to that alias.
 		if (paliasdb->ReadAliasUnprunable(alias.vchAlias, aliasUnprunable) && !aliasUnprunable.IsNull())
 		{	
-			// if we are renewing alias then prune based on expiry of alias in tx
+			// if we are renewing alias then prune based on max of expiry of alias in tx vs the stored alias expiry time of latest alias tx
 			if(!alias.vchGUID.empty() && aliasUnprunable.vchGUID != alias.vchGUID)
-				nTime = alias.nExpireTime;
+				nTime = max(alias.nExpireTime, aliasUnprunable.nExpireTime);
 			else
 				nTime = aliasUnprunable.nExpireTime;
 			
