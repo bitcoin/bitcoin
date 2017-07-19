@@ -300,8 +300,12 @@ int CommandLineRPC(int argc, char *argv[])
             while (std::getline(std::cin,line))
                 args.push_back(line);
         }
-        if (args.size() < 1)
+        if (args.size() < 1) {
             throw std::runtime_error("too few parameters (need at least command)");
+        }
+        if (gArgs.GetArgs("-usewallet").size() > 1) {
+            throw std::runtime_error("Only one -usewallet arguments is allowed");
+        }
         std::string strMethod = args[0];
         args.erase(args.begin()); // Remove trailing method name from arguments vector
 
