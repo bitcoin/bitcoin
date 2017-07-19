@@ -358,7 +358,7 @@ void CPrivateSendServer::CommitFinalTransaction()
     LogPrintf("CPrivateSendServer::CommitFinalTransaction -- CREATING DSTX\n");
 
     // create and sign masternode dstx transaction
-    if(CPrivateSend::GetDSTX(hashTx)) {
+    if(!CPrivateSend::GetDSTX(hashTx)) {
         CDarksendBroadcastTx dstxNew(finalTransaction, activeMasternode.vin, GetAdjustedTime());
         dstxNew.Sign();
         CPrivateSend::AddDSTX(dstxNew);
