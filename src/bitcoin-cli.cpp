@@ -46,7 +46,7 @@ std::string HelpMessageCli()
     strUsage += HelpMessageOpt("-rpcpassword=<pw>", _("Password for JSON-RPC connections"));
     strUsage += HelpMessageOpt("-rpcclienttimeout=<n>", strprintf(_("Timeout in seconds during HTTP requests, or 0 for no timeout. (default: %d)"), DEFAULT_HTTP_CLIENT_TIMEOUT));
     strUsage += HelpMessageOpt("-stdin", _("Read extra arguments from standard input, one per line until EOF/Ctrl-D (recommended for sensitive information such as passphrases)"));
-    strUsage += HelpMessageOpt("-usewallet=<walletname>", _("Send RPC for non-default wallet on RPC server (argument is wallet filename in bitcoind directory, required if bitcoind/-Qt runs with multiple wallets)"));
+    strUsage += HelpMessageOpt("-wallet=<walletname>", _("Send RPC for non-default wallet on RPC server (argument is wallet filename in bitcoind directory, required if bitcoind/-Qt runs with multiple wallets)"));
 
     return strUsage;
 }
@@ -103,8 +103,27 @@ static int AppInitRPC(int argc, char* argv[])
         fprintf(stderr, "Error: Specified data directory \"%s\" does not exist.\n", GetArg("-datadir", "").c_str());
         return EXIT_FAILURE;
     }
+    // For bitcoin-cli, the -wallet parameter can only be specified from the
+    // command line, not in the conf file. This is because the conf file can
+    // contain multiple -wallet args, so it's not possible to determine which
+    // one to use.
+    //
+    // Store the command line -wallet arg here so we can restore it after
+    // parsing the conf file.
+    std::string wallet;
+    if (gArgs.GetArgs("-wallet").size() > 1) {
+        fprintf(stderr, "Error: Only one -wallet option may be used.\n");
+        return EXIT_FAILURE;
+    } else if (gArgs.GetArgs("-wallet").size() == 1) {
+        wallet = (gArgs.GetArgs("-wallet"))[0];
+    }
     try {
         ReadConfigFile(GetArg("-conf", BITCOIN_CONF_FILENAME));
+        // restore the command line -wallet argument
+        gArgs.ClearArg("-wallet");
+        if (!wallet.empty()) {
+            gArgs.SoftSetArg("-wallet", wallet);
+        }
     } catch (const std::exception& e) {
         fprintf(stderr,"Error reading configuration file: %s\n", e.what());
         return EXIT_FAILURE;
@@ -244,7 +263,7 @@ UniValue CallRPC(const std::string& strMethod, const UniValue& params)
 
     // check if we should use a special wallet endpoint
     std::string endpoint = "/";
-    std::string walletName = GetArg("-usewallet", "");
+    std::string walletName = GetArg("-wallet", "");
     if (!walletName.empty()) {
         char *encodedURI = evhttp_uriencode(walletName.c_str(), walletName.size(), false);
         if (encodedURI) {

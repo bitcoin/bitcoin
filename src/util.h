@@ -259,6 +259,14 @@ public:
     // Forces an arg setting. Called by SoftSetArg() if the arg hasn't already
     // been set. Also called directly in testing.
     void ForceSetArg(const std::string& strArg, const std::string& strValue);
+
+    /**
+     * Clears an argument if it is already set
+     *
+     * @param strArg Argument to set (e.g. "-foo")
+     * @return true if argument gets cleared, false if there was no argument
+     */
+    bool ClearArg(const std::string& strArg);
 };
 
 extern ArgsManager gArgs;
