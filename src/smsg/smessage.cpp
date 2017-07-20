@@ -7,25 +7,15 @@
 Notes:
     Running with -debug could leave to and from address hashes and public keys in the log.
 
-
-    parameters:
-        -nosmsg             Disable secure messaging (fNoSmsg)
-        -debugsmsg          Show extra debug messages (fDebugSmsg)
-        -smsgscanchain      Scan the block chain for public key addresses on startup
-        -smsgnotify         notify an external script when a message comes in
-
-
     Wallet Locked
         A copy of each incoming message is stored in bucket files ending in _wl.dat
         wl (wallet locked) bucket files are deleted if they expire, like normal buckets
         When the wallet is unlocked all the messages in wl files are scanned.
 
-
     Address Whitelist
         Owned Addresses are stored in smsgAddresses vector
         Saved to smsg.ini
         Modify options using the smsglocalkeys rpc command or edit the smsg.ini file (with client closed)
-
 
     TODO:
         For buckets older than current, only need to store no. messages and hash in memory

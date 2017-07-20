@@ -52,7 +52,8 @@ UniValue getinfo(const JSONRPCRequest& request)
             "  \"version\": xxxxx,           (numeric) the server version\n"
             "  \"protocolversion\": xxxxx,   (numeric) the protocol version\n"
             "  \"walletversion\": xxxxx,     (numeric) the wallet version\n"
-            "  \"total_balance\": xxxxxxx,   (numeric) the total particl balance of the wallet, including immature coin\n"
+            "  \"total_balance\": xxxxxxx,   (numeric) the total particl balance of the wallet, including immature, staked and unconfirmed coin of all types\n"
+            "  \"balance\": xxxxxxx,         (numeric) the standard particl balance of the wallet, including immature coin\n"
             "  \"moneysupply\": xxxxxxx,     (numeric) the total amount of particl in the network\n"
             "  \"blocks\": xxxxxx,           (numeric) the current number of blocks processed in the server\n"
             "  \"timeoffset\": xxxxx,        (numeric) the time offset\n"
@@ -95,16 +96,19 @@ UniValue getinfo(const JSONRPCRequest& request)
         
         if (fParticlMode)
         {
-            CAmount balance = pwalletMain->GetBalance();
-            CAmount blind_balance = ((CHDWallet*)pwalletMain)->GetBlindBalance();
-            CAmount anon_balance = ((CHDWallet*)pwalletMain)->GetAnonBalance();
-            CAmount staked_balance = ((CHDWallet*)pwalletMain)->GetStaked();
-            CAmount unconfirmed_balance = pwalletMain->GetUnconfirmedBalance();
-            CAmount immature_balance = pwalletMain->GetImmatureBalance();
+            CAmount part_balance, part_unconfirmed, part_staked, immature_balance;
+            CAmount blind_balance, blind_unconfirmed;
+            CAmount anon_balance, anon_unconfirmed;
             
-            obj.push_back(Pair("total_balance",         ValueFromAmount(balance
-                + blind_balance + anon_balance + staked_balance
-                + unconfirmed_balance + immature_balance)));
+            ((CHDWallet*)pwalletMain)->GetBalances(part_balance, part_unconfirmed, part_staked, immature_balance,
+                blind_balance, blind_unconfirmed, anon_balance, anon_unconfirmed);
+            
+            CAmount nTotalBalance = part_balance + part_unconfirmed + part_staked + immature_balance
+                + blind_balance + blind_unconfirmed
+                + anon_balance + anon_unconfirmed;
+            
+            obj.pushKV("total_balance",         ValueFromAmount(nTotalBalance));
+            obj.pushKV("balance",               ValueFromAmount(part_balance + immature_balance));
         } else
         {
             obj.push_back(Pair("balance",       ValueFromAmount(pwalletMain->GetBalance())));
