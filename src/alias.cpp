@@ -89,7 +89,7 @@ bool GetTimeToPrune(const CScript& scriptPubKey, uint64_t &nTime)
 		{	
 			// if we are renewing alias then prune based on max of expiry of alias in tx vs the stored alias expiry time of latest alias tx
 			if(!alias.vchGUID.empty() && aliasUnprunable.vchGUID != alias.vchGUID)
-				nTime = max(alias.nExpireTime, aliasUnprunable.nExpireTime);
+				nTime = alias.nExpireTime;
 			else
 				nTime = aliasUnprunable.nExpireTime;
 			
