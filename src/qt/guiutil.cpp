@@ -927,6 +927,9 @@ QString formatServicesStr(quint64 mask)
             case NODE_XTHIN:
                 strList.append("XTHIN");
                 break;
+            case NODE_UAHF:
+                strList.append("UAHF");
+                break;
             default:
                 strList.append(QString("%1[%2]").arg("UNKNOWN").arg(check));
             }

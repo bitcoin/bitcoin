@@ -772,6 +772,10 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
         nLocalServices |= NODE_XTHIN;
     // BUIP010 Xtreme Thinblocks: end section
 
+    // BUIP055 - UAHF
+    // this can later be removed after the hardfork has happened
+    nLocalServices |= NODE_UAHF;
+
     nMaxTipAge = GetArg("-maxtipage", DEFAULT_MAX_TIP_AGE);
 
     // ********************************************************* Step 4: application initialization: dir lock, daemonize, pidfile, debug log
