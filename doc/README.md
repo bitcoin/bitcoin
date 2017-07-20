@@ -1,4 +1,4 @@
-#**HOdlcoin - Windows Wallet**
+# **HOdlcoin - Windows Wallet**
 <img src="http://i.imgur.com/P1956So.png" width="500">
 ## **Mining**
 To start mining using the wallets built-in mininer simply follow these steps
@@ -10,10 +10,10 @@ To start mining using the wallets built-in mininer simply follow these steps
 
 Once you have done this in the lower right corner, you will see the <img src="http://i.imgur.com/9KpvXMe.png" width="25"> switch to the Pickaxe <img src="http://i.imgur.com/5pOgxXK.png" width="30">
 
-#####**From this**
+##### **From this**
 <img src="http://i.imgur.com/EPlUflR.png" width="90">
 
-#####**To this**
+##### **To this**
 <img src="http://i.imgur.com/NIgOssp.png" width="90">
 
 >***Note** This will use 1GB of Ram and well put your CPU to 100%
