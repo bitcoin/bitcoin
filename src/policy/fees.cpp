@@ -838,7 +838,7 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation 
 
     // Return failure if trying to analyze a target we're not tracking
     if (confTarget <= 0 || (unsigned int)confTarget > longStats->GetMaxConfirms()) {
-        return CFeeRate(0);  // error conditon
+        return CFeeRate(0);  // error condition
     }
 
     // It's not possible to get reasonable estimates for confTarget of 1
@@ -850,7 +850,7 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation 
     }
     if (feeCalc) feeCalc->returnedTarget = confTarget;
 
-    if (confTarget <= 1) return CFeeRate(0); // error conditon
+    if (confTarget <= 1) return CFeeRate(0); // error condition
 
     assert(confTarget > 0); //estimateCombinedFee and estimateConservativeFee take unsigned ints
     /** true is passed to estimateCombined fee for target/2 and target so
@@ -897,7 +897,7 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation 
         }
     }
 
-    if (median < 0) return CFeeRate(0); // error conditon
+    if (median < 0) return CFeeRate(0); // error condition
 
     return CFeeRate(median);
 }
