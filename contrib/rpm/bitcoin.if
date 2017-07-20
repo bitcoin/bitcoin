@@ -121,7 +121,7 @@ interface(`bitcoin_manage_lib_dirs',`
 ########################################
 ## <summary>
 ##	All of the rules required to administrate
-##	an bitcoin environment
+##	a bitcoin environment
 ## </summary>
 ## <param name="domain">
 ##	<summary>

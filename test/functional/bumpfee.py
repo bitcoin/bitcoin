@@ -10,7 +10,7 @@ its preconditions are met, and returns appropriate errors in other cases.
 This module consists of around a dozen individual test cases implemented in the
 top-level functions named as test_<test_case_description>. The test functions
 can be disabled or reordered if needed for debugging. If new test cases are
-added in the the future, they should try to follow the same convention and not
+added in the future, they should try to follow the same convention and not
 make assumptions about execution order.
 """
 
@@ -42,7 +42,7 @@ class BumpFeeTest(BitcoinTestFramework):
 
         # Encrypt wallet for test_locked_wallet_fails test
         self.nodes[1].encryptwallet(WALLET_PASSPHRASE)
-        bitcoind_processes[1].wait()
+        self.bitcoind_processes[1].wait()
         self.nodes[1] = self.start_node(1, self.options.tmpdir, extra_args[1])
         self.nodes[1].walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
 

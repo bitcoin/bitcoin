@@ -5,7 +5,8 @@
 #include "core_io.h"
 
 #include "base58.h"
-#include "primitives/transaction.h"
+#include "consensus/consensus.h"
+#include "consensus/validation.h"
 #include "script/script.h"
 #include "script/standard.h"
 #include "serialize.h"
@@ -14,8 +15,6 @@
 #include "util.h"
 #include "utilmoneystr.h"
 #include "utilstrencodings.h"
-
-#include <boost/foreach.hpp>
 
 std::string FormatScript(const CScript& script)
 {
@@ -139,7 +138,7 @@ void ScriptPubKeyToUniv(const CScript& scriptPubKey,
     out.pushKV("type", GetTxnOutputType(type));
 
     UniValue a(UniValue::VARR);
-    BOOST_FOREACH(const CTxDestination& addr, addresses)
+    for (const CTxDestination& addr : addresses)
         a.push_back(CBitcoinAddress(addr).ToString());
     out.pushKV("addresses", a);
 }

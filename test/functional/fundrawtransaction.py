@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the fundrawtransaction RPC."""
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BitcoinTestFramework, BITCOIND_PROC_WAIT_TIMEOUT
 from test_framework.util import *
 
 
@@ -452,7 +452,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.stop_node(2)
         self.stop_node(3)
         self.nodes[1].encryptwallet("test")
-        bitcoind_processes[1].wait(timeout=BITCOIND_PROC_WAIT_TIMEOUT)
+        self.bitcoind_processes[1].wait(timeout=BITCOIND_PROC_WAIT_TIMEOUT)
 
         self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir)
         # This test is not meant to test fee estimation and we'd like
@@ -636,20 +636,9 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_fee_amount(result2['fee'], count_bytes(result2['hex']), 2 * result_fee_rate)
         assert_fee_amount(result3['fee'], count_bytes(result3['hex']), 10 * result_fee_rate)
 
-        #############################
-        # Test address reuse option #
-        #############################
-
-        result3 = self.nodes[3].fundrawtransaction(rawtx, {"reserveChangeKey": False})
-        res_dec = self.nodes[0].decoderawtransaction(result3["hex"])
-        changeaddress = ""
-        for out in res_dec['vout']:
-            if out['value'] > 1.0:
-                changeaddress += out['scriptPubKey']['addresses'][0]
-        assert(changeaddress != "")
-        nextaddr = self.nodes[3].getrawchangeaddress()
-        # frt should not have removed the key from the keypool
-        assert(changeaddress == nextaddr)
+        ################################
+        # Test no address reuse occurs #
+        ################################
 
         result3 = self.nodes[3].fundrawtransaction(rawtx)
         res_dec = self.nodes[0].decoderawtransaction(result3["hex"])

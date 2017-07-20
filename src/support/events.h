@@ -27,26 +27,26 @@ MAKE_RAII(evhttp);
 MAKE_RAII(evhttp_request);
 MAKE_RAII(evhttp_connection);
 
-raii_event_base obtain_event_base() {
+inline raii_event_base obtain_event_base() {
     auto result = raii_event_base(event_base_new());
     if (!result.get())
         throw std::runtime_error("cannot create event_base");
     return result;
 }
 
-raii_event obtain_event(struct event_base* base, evutil_socket_t s, short events, event_callback_fn cb, void* arg) {
+inline raii_event obtain_event(struct event_base* base, evutil_socket_t s, short events, event_callback_fn cb, void* arg) {
     return raii_event(event_new(base, s, events, cb, arg));
 }
 
-raii_evhttp obtain_evhttp(struct event_base* base) {
+inline raii_evhttp obtain_evhttp(struct event_base* base) {
     return raii_evhttp(evhttp_new(base));
 }
 
-raii_evhttp_request obtain_evhttp_request(void(*cb)(struct evhttp_request *, void *), void *arg) {
+inline raii_evhttp_request obtain_evhttp_request(void(*cb)(struct evhttp_request *, void *), void *arg) {
     return raii_evhttp_request(evhttp_request_new(cb, arg));
 }
 
-raii_evhttp_connection obtain_evhttp_connection_base(struct event_base* base, std::string host, uint16_t port) {
+inline raii_evhttp_connection obtain_evhttp_connection_base(struct event_base* base, std::string host, uint16_t port) {
     auto result = raii_evhttp_connection(evhttp_connection_base_new(base, NULL, host.c_str(), port));
     if (!result.get())
         throw std::runtime_error("create connection failed");

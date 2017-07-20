@@ -36,7 +36,7 @@ class CCoinsViewTest : public CCoinsView
     std::map<COutPoint, Coin> map_;
 
 public:
-    bool GetCoin(const COutPoint& outpoint, Coin& coin) const
+    bool GetCoin(const COutPoint& outpoint, Coin& coin) const override
     {
         std::map<COutPoint, Coin>::const_iterator it = map_.find(outpoint);
         if (it == map_.end()) {
@@ -50,15 +50,9 @@ public:
         return true;
     }
 
-    bool HaveCoin(const COutPoint& outpoint) const
-    {
-        Coin coin;
-        return GetCoin(outpoint, coin);
-    }
+    uint256 GetBestBlock() const override { return hashBestBlock_; }
 
-    uint256 GetBestBlock() const { return hashBestBlock_; }
-
-    bool BatchWrite(CCoinsMap& mapCoins, const uint256& hashBlock)
+    bool BatchWrite(CCoinsMap& mapCoins, const uint256& hashBlock) override
     {
         for (CCoinsMap::iterator it = mapCoins.begin(); it != mapCoins.end(); ) {
             if (it->second.flags & CCoinsCacheEntry::DIRTY) {
@@ -99,7 +93,7 @@ public:
     size_t& usage() { return cachedCoinsUsage; }
 };
 
-}
+} // namespace
 
 BOOST_FIXTURE_TEST_SUITE(coins_tests, BasicTestingSetup)
 
@@ -147,8 +141,22 @@ BOOST_AUTO_TEST_CASE(coins_cache_simulation_test)
         {
             uint256 txid = txids[InsecureRandRange(txids.size())]; // txid we're going to modify in this iteration.
             Coin& coin = result[COutPoint(txid, 0)];
+
+            // Determine whether to test HaveCoin before or after Access* (or both). As these functions
+            // can influence each other's behaviour by pulling things into the cache, all combinations
+            // are tested.
+            bool test_havecoin_before = InsecureRandBits(2) == 0;
+            bool test_havecoin_after = InsecureRandBits(2) == 0;
+
+            bool result_havecoin = test_havecoin_before ? stack.back()->HaveCoin(COutPoint(txid, 0)) : false;
             const Coin& entry = (InsecureRandRange(500) == 0) ? AccessByTxid(*stack.back(), txid) : stack.back()->AccessCoin(COutPoint(txid, 0));
             BOOST_CHECK(coin == entry);
+            BOOST_CHECK(!test_havecoin_before || result_havecoin == !entry.IsSpent());
+
+            if (test_havecoin_after) {
+                bool ret = stack.back()->HaveCoin(COutPoint(txid, 0));
+                BOOST_CHECK(ret == !entry.IsSpent());
+            }
 
             if (InsecureRandRange(5) == 0 || coin.IsSpent()) {
                 Coin newcoin;
@@ -193,7 +201,7 @@ BOOST_AUTO_TEST_CASE(coins_cache_simulation_test)
                     found_an_entry = true;
                 }
             }
-            BOOST_FOREACH(const CCoinsViewCacheTest *test, stack) {
+            for (const CCoinsViewCacheTest *test : stack) {
                 test->SelfTest();
             }
         }
@@ -628,7 +636,7 @@ BOOST_AUTO_TEST_CASE(ccoins_access)
     CheckAccessCoin(ABSENT, VALUE2, VALUE2, FRESH      , FRESH      );
     CheckAccessCoin(ABSENT, VALUE2, VALUE2, DIRTY      , DIRTY      );
     CheckAccessCoin(ABSENT, VALUE2, VALUE2, DIRTY|FRESH, DIRTY|FRESH);
-    CheckAccessCoin(PRUNED, ABSENT, PRUNED, NO_ENTRY   , FRESH      );
+    CheckAccessCoin(PRUNED, ABSENT, ABSENT, NO_ENTRY   , NO_ENTRY   );
     CheckAccessCoin(PRUNED, PRUNED, PRUNED, 0          , 0          );
     CheckAccessCoin(PRUNED, PRUNED, PRUNED, FRESH      , FRESH      );
     CheckAccessCoin(PRUNED, PRUNED, PRUNED, DIRTY      , DIRTY      );

@@ -20,7 +20,6 @@
 #include "httprpc.h"
 #include "utilstrencodings.h"
 
-#include <boost/algorithm/string/predicate.hpp>
 #include <boost/thread.hpp>
 
 #include <stdio.h>
@@ -160,7 +159,12 @@ bool AppInit(int argc, char* argv[])
             return false;
 #endif // HAVE_DECL_DAEMON
         }
-
+        // Lock data directory after daemonization
+        if (!AppInitLockDataDirectory())
+        {
+            // If locking the data directory failed, exit immediately
+            exit(EXIT_FAILURE);
+        }
         fRet = AppInitMain(threadGroup, scheduler);
     }
     catch (const std::exception& e) {
