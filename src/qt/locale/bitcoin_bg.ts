@@ -314,6 +314,18 @@
         <translation>Отвори &amp;URI...</translation>
     </message>
     <message>
+        <source>Click to disable network activity.</source>
+        <translation>Натиснете за деактивиране на мрежата</translation>
+    </message>
+    <message>
+        <source>Network activity disabled.</source>
+        <translation>Мрежата деактивирана</translation>
+    </message>
+    <message>
+        <source>Click to enable network activity again.</source>
+        <translation>Натиснете за повторно активиране на мрежата</translation>
+    </message>
+    <message>
         <source>Reindexing blocks on disk...</source>
         <translation>Повторно индексиране на блоковете на диска...</translation>
     </message>
@@ -456,6 +468,10 @@
     <message>
         <source>%1 client</source>
         <translation>%1 клиент</translation>
+    </message>
+    <message>
+        <source>Connecting to peers...</source>
+        <translation>Свързване с пиъри</translation>
     </message>
     <message>
         <source>Catching up...</source>
@@ -795,6 +811,10 @@
         <translation>Добре дошли в %1.</translation>
     </message>
     <message>
+        <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
+        <translation>Програмата се стартира за първи път вие може да изберете къде %1 ще се запаметят данните.</translation>
+    </message>
+    <message>
         <source>Use the default data directory</source>
         <translation>Използване на директория по подразбиране</translation>
     </message>
@@ -816,6 +836,10 @@
     <message>
         <source>Last block time</source>
         <translation>Време на последния блок</translation>
+    </message>
+    <message>
+        <source>calculating...</source>
+        <translation>Изчисляване...</translation>
     </message>
     <message>
         <source>Hide</source>
