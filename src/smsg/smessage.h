@@ -335,6 +335,8 @@ public:
     leveldb::WriteBatch *activeBatch;
 };
 
+std::string SecureMsgGetHelpString(bool showDebug);
+
 int SecureMsgBuildBucketSet();
 int SecureMsgAddWalletAddresses();
 

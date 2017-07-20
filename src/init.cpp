@@ -424,6 +424,8 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-whitelistforcerelay", strprintf(_("Force relay of transactions from whitelisted peers even if they violate local relay policy (default: %d)"), DEFAULT_WHITELISTFORCERELAY));
     strUsage += HelpMessageOpt("-maxuploadtarget=<n>", strprintf(_("Tries to keep outbound traffic under the given target (in MiB per 24h), 0 = no limit (default: %d)"), DEFAULT_MAX_UPLOAD_TARGET));
 
+    strUsage += SecureMsgGetHelpString(showDebug);
+
 #ifdef ENABLE_WALLET
     if (fParticlMode)
         strUsage += CHDWallet::GetWalletHelpString(showDebug);
@@ -1700,7 +1702,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     // ********************************************************* Step 10.1: start secure messaging
 
 #ifdef ENABLE_WALLET
-    SecureMsgStart(pwalletMain, GetBoolArg("-nosmsg", false), GetBoolArg("-smsgscanchain", false));
+    SecureMsgStart(pwalletMain, !GetBoolArg("-smsg", true), GetBoolArg("-smsgscanchain", false));
 #endif
 
     // ********************************************************* Step 11: start node

@@ -72,6 +72,10 @@ public:
     bool checkObject(const std::map<std::string,UniValue::VType>& memberTypes);
     const UniValue& operator[](const std::string& key) const;
     const UniValue& operator[](unsigned int index) const;
+    
+    UniValue& get(const std::string& key);
+    UniValue& get(unsigned int index);
+    
     bool exists(const std::string& key) const { return (findKey(key) >= 0); }
 
     bool isNull() const { return (typ == VNULL); }

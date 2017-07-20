@@ -45,7 +45,7 @@ UniValue getinfo(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0)
         throw runtime_error(
-            "getinfo\n"
+            std::string("getinfo\n"
             "\nDEPRECATED. Returns an object containing various state info.\n"
             "\nResult:\n"
             "{\n"
@@ -59,9 +59,14 @@ UniValue getinfo(const JSONRPCRequest& request)
             "  \"connections\": xxxxx,       (numeric) the number of connections\n"
             "  \"proxy\": \"host:port\",     (string, optional) the proxy used by the server\n"
             "  \"difficulty\": xxxxxx,       (numeric) the current difficulty\n"
-            "  \"testnet\": true|false,      (boolean) if the server is using testnet or not\n"
+            "  \"testnet\": true|false,      (boolean) if the server is using testnet or not\n")
+            + (fParticlWallet ?
+            "  \"keypoololdest\": xxxxxx,    (numeric) the timestamp (seconds since Unix epoch) of the oldest account in the wallet\n"
+            "  \"keypoolsize\": xxxx,        (numeric) the total number of keys in the active accounts\n"
+            :
             "  \"keypoololdest\": xxxxxx,    (numeric) the timestamp (seconds since Unix epoch) of the oldest pre-generated key in the key pool\n"
             "  \"keypoolsize\": xxxx,        (numeric) how many new keys are pre-generated\n"
+            ) +
             "  \"unlocked_until\": ttt,      (numeric) the timestamp in seconds since epoch (midnight Jan 1 1970 GMT) that the wallet is unlocked for transfers, or 0 if the wallet is locked\n"
             "  \"paytxfee\": x.xxxx,         (numeric) the transaction fee set in " + CURRENCY_UNIT + "/kB\n"
             "  \"relayfee\": x.xxxx,         (numeric) minimum relay fee for non-free transactions in " + CURRENCY_UNIT + "/kB\n"
@@ -117,8 +122,17 @@ UniValue getinfo(const JSONRPCRequest& request)
     obj.push_back(Pair("testnet",       Params().NetworkIDString() == CBaseChainParams::TESTNET));
 #ifdef ENABLE_WALLET
     if (pwalletMain) {
-        obj.push_back(Pair("keypoololdest", pwalletMain->GetOldestKeyPoolTime()));
-        obj.push_back(Pair("keypoolsize",   (int)pwalletMain->GetKeyPoolSize()));
+        
+        if (fParticlWallet)
+        {
+            CHDWallet *phdw = (CHDWallet*)pwalletMain;
+            obj.pushKV("keypoololdest", phdw->GetOldestActiveAccountTime());
+            obj.pushKV("keypoolsize",   phdw->CountActiveAccountKeys());
+        } else
+        {
+            obj.pushKV("keypoololdest", pwalletMain->GetOldestKeyPoolTime());
+            obj.pushKV("keypoolsize",   (int)pwalletMain->GetKeyPoolSize());
+        };
     }
     if (pwalletMain && pwalletMain->IsCrypted())
         obj.push_back(Pair("unlocked_until", nWalletUnlockTime));

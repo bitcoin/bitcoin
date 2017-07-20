@@ -37,7 +37,7 @@ UniValue smsgenable(const JSONRPCRequest &request)
     pwallet = pwalletMain;
 #endif
     
-    result.push_back(Pair("result", (SecureMsgEnable(pwallet) ? "Enabled secure messaging." : "Failed to enable secure messaging.")));
+    result.pushKV("result", (SecureMsgEnable(pwallet) ? "Enabled secure messaging." : "Failed to enable secure messaging."));
 
     return result;
 }
@@ -53,7 +53,7 @@ UniValue smsgdisable(const JSONRPCRequest &request)
         throw std::runtime_error("Secure messaging is already disabled.");
 
     UniValue result;
-    result.push_back(Pair("result", (SecureMsgDisable() ? "Disabled secure messaging." : "Failed to disable secure messaging.")));
+    result.pushKV("result", (SecureMsgDisable() ? "Disabled secure messaging." : "Failed to disable secure messaging."));
 
     return result;
 }
@@ -82,27 +82,27 @@ UniValue smsgoptions(const JSONRPCRequest &request)
             fDescriptions     = part::IsStringBoolPositive(value);
         };
 
-        result.push_back(Pair("option", std::string("newAddressRecv = ") + (smsgOptions.fNewAddressRecv ? "true" : "false")));
+        result.pushKV("option", std::string("newAddressRecv = ") + (smsgOptions.fNewAddressRecv ? "true" : "false"));
 
         if (fDescriptions)
-            result.push_back(Pair("newAddressRecv", "Enable receiving messages for newly created addresses."));
-        result.push_back(Pair("option", std::string("newAddressAnon = ") + (smsgOptions.fNewAddressAnon ? "true" : "false")));
+            result.pushKV("newAddressRecv", "Enable receiving messages for newly created addresses.");
+        result.pushKV("option", std::string("newAddressAnon = ") + (smsgOptions.fNewAddressAnon ? "true" : "false"));
 
         if (fDescriptions)
-            result.push_back(Pair("newAddressAnon", "Enable receiving anonymous messages for newly created addresses."));
-        result.push_back(Pair("option", std::string("scanIncoming = ") + (smsgOptions.fScanIncoming ? "true" : "false")));
+            result.pushKV("newAddressAnon", "Enable receiving anonymous messages for newly created addresses.");
+        result.pushKV("option", std::string("scanIncoming = ") + (smsgOptions.fScanIncoming ? "true" : "false"));
 
         if (fDescriptions)
-            result.push_back(Pair("scanIncoming", "Scan incoming blocks for public keys."));
+            result.pushKV("scanIncoming", "Scan incoming blocks for public keys.");
 
-        result.push_back(Pair("result", "Success."));
+        result.pushKV("result", "Success.");
     } else
     if (mode == "set")
     {
         if (request.params.size() < 3)
         {
-            result.push_back(Pair("result", "Too few parameters."));
-            result.push_back(Pair("expected", "set <optname> <value>"));
+            result.pushKV("result", "Too few parameters.");
+            result.pushKV("expected", "set <optname> <value>");
             return result;
         };
 
@@ -119,10 +119,10 @@ UniValue smsgoptions(const JSONRPCRequest &request)
                 smsgOptions.fNewAddressRecv = fValue;
             } else
             {
-                result.push_back(Pair("result", "Unknown value."));
+                result.pushKV("result", "Unknown value.");
                 return result;
             };
-            result.push_back(Pair("set option", std::string("newAddressRecv = ") + (smsgOptions.fNewAddressRecv ? "true" : "false")));
+            result.pushKV("set option", std::string("newAddressRecv = ") + (smsgOptions.fNewAddressRecv ? "true" : "false"));
         } else
         if (optname == "newaddressanon")
         {
@@ -131,10 +131,10 @@ UniValue smsgoptions(const JSONRPCRequest &request)
                 smsgOptions.fNewAddressAnon = fValue;
             } else
             {
-                result.push_back(Pair("result", "Unknown value."));
+                result.pushKV("result", "Unknown value.");
                 return result;
             };
-            result.push_back(Pair("set option", std::string("newAddressAnon = ") + (smsgOptions.fNewAddressAnon ? "true" : "false")));
+            result.pushKV("set option", std::string("newAddressAnon = ") + (smsgOptions.fNewAddressAnon ? "true" : "false"));
         } else
         if (optname == "scanincoming")
         {
@@ -143,19 +143,19 @@ UniValue smsgoptions(const JSONRPCRequest &request)
                 smsgOptions.fScanIncoming = fValue;
             } else
             {
-                result.push_back(Pair("result", "Unknown value."));
+                result.pushKV("result", "Unknown value.");
                 return result;
             };
-            result.push_back(Pair("set option", std::string("scanIncoming = ") + (smsgOptions.fScanIncoming ? "true" : "false")));
+            result.pushKV("set option", std::string("scanIncoming = ") + (smsgOptions.fScanIncoming ? "true" : "false"));
         } else
         {
-            result.push_back(Pair("result", "Option not found."));
+            result.pushKV("result", "Option not found.");
             return result;
         };
     } else
     {
-        result.push_back(Pair("result", "Unknown Mode."));
-        result.push_back(Pair("expected", "smsgoption [list|set <optname> <value>]"));
+        result.pushKV("result", "Unknown Mode.");
+        result.pushKV("expected", "smsgoption [list|set <optname> <value>]");
     };
     
     return result;
@@ -214,25 +214,25 @@ UniValue smsglocalkeys(const JSONRPCRequest &request)
             if (all)
                 sInfo = std::string("Receive ") + (it->fReceiveEnabled ? "on,  " : "off, ");
             sInfo += std::string("Anon ") + (it->fReceiveAnon ? "on" : "off");
-            //result.push_back(Pair("key", it->sAddress + " - " + sPublicKey + " " + sInfo + " - " + sLabel));
-            objM.push_back(Pair("address", CBitcoinAddress(keyID).ToString()));
-            objM.push_back(Pair("public_key", sPublicKey));
-            objM.push_back(Pair("receive", (it->fReceiveEnabled ? "1" : "0")));
-            objM.push_back(Pair("anon", (it->fReceiveAnon ? "1" : "0")));
-            objM.push_back(Pair("label", sLabel));
+            //result.pushKV("key", it->sAddress + " - " + sPublicKey + " " + sInfo + " - " + sLabel);
+            objM.pushKV("address", CBitcoinAddress(keyID).ToString());
+            objM.pushKV("public_key", sPublicKey);
+            objM.pushKV("receive", (it->fReceiveEnabled ? "1" : "0"));
+            objM.pushKV("anon", (it->fReceiveAnon ? "1" : "0"));
+            objM.pushKV("label", sLabel);
             keys.push_back(objM);
 
             nKeys++;
         };
-        result.push_back(Pair("keys", keys));
-        result.push_back(Pair("result", strprintf("%u", nKeys)));
+        result.pushKV("keys", keys);
+        result.pushKV("result", strprintf("%u", nKeys));
     } else
     if (mode == "recv")
     {
         if (request.params.size() < 3)
         {
-            result.push_back(Pair("result", "Too few parameters."));
-            result.push_back(Pair("expected", "recv <+/-> <address>"));
+            result.pushKV("result", "Too few parameters.");
+            result.pushKV("expected", "recv <+/-> <address>");
             return result;
         };
 
@@ -256,7 +256,7 @@ UniValue smsglocalkeys(const JSONRPCRequest &request)
 
         if (it == smsgAddresses.end())
         {
-            result.push_back(Pair("result", "Address not found."));
+            result.pushKV("result", "Address not found.");
             return result;
         };
 
@@ -269,15 +269,15 @@ UniValue smsglocalkeys(const JSONRPCRequest &request)
             it->fReceiveEnabled = false;
         } else
         {
-            result.push_back(Pair("result", "Unknown operation."));
+            result.pushKV("result", "Unknown operation.");
             return result;
         };
 
         std::string sInfo;
         sInfo = std::string("Receive ") + (it->fReceiveEnabled ? "on, " : "off,");
         sInfo += std::string("Anon ") + (it->fReceiveAnon ? "on" : "off");
-        result.push_back(Pair("result", "Success."));
-        result.push_back(Pair("key", coinAddress.ToString() + " " + sInfo));
+        result.pushKV("result", "Success.");
+        result.pushKV("key", coinAddress.ToString() + " " + sInfo);
         return result;
 
     } else
@@ -285,8 +285,8 @@ UniValue smsglocalkeys(const JSONRPCRequest &request)
     {
         if (request.params.size() < 3)
         {
-            result.push_back(Pair("result", "Too few parameters."));
-            result.push_back(Pair("expected", "anon <+/-> <address>"));
+            result.pushKV("result", "Too few parameters.");
+            result.pushKV("expected", "anon <+/-> <address>");
             return result;
         };
 
@@ -310,7 +310,7 @@ UniValue smsglocalkeys(const JSONRPCRequest &request)
 
         if (it == smsgAddresses.end())
         {
-            result.push_back(Pair("result", "Address not found."));
+            result.pushKV("result", "Address not found.");
             return result;
         };
 
@@ -323,15 +323,15 @@ UniValue smsglocalkeys(const JSONRPCRequest &request)
             it->fReceiveAnon = false;
         } else
         {
-            result.push_back(Pair("result", "Unknown operation."));
+            result.pushKV("result", "Unknown operation.");
             return result;
         };
 
         std::string sInfo;
         sInfo = std::string("Receive ") + (it->fReceiveEnabled ? "on, " : "off,");
         sInfo += std::string("Anon ") + (it->fReceiveAnon ? "on" : "off");
-        result.push_back(Pair("result", "Success."));
-        result.push_back(Pair("key", coinAddress.ToString() + " " + sInfo));
+        result.pushKV("result", "Success.");
+        result.pushKV("key", coinAddress.ToString() + " " + sInfo);
         return result;
 
     } else
@@ -368,19 +368,19 @@ UniValue smsglocalkeys(const JSONRPCRequest &request)
             sPublicKey = EncodeBase58(pubKey.begin(), pubKey.end());
             UniValue objM(UniValue::VOBJ);
 
-            objM.push_back(Pair("key", address));
-            objM.push_back(Pair("publickey", sPublicKey));
-            objM.push_back(Pair("label", entry.second.name));
+            objM.pushKV("key", address);
+            objM.pushKV("publickey", sPublicKey);
+            objM.pushKV("label", entry.second.name);
 
             keys.push_back(objM);
             nKeys++;
         };
-        result.push_back(Pair("keys", keys));
-        result.push_back(Pair("result", strprintf("%u", nKeys)));
+        result.pushKV("keys", keys);
+        result.pushKV("result", strprintf("%u", nKeys));
     } else
     {
-        result.push_back(Pair("result", "Unknown Mode."));
-        result.push_back(Pair("expected", "smsglocalkeys [whitelist|all|wallet|recv <+/-> <address>|anon <+/-> <address>]"));
+        result.pushKV("result", "Unknown Mode.");
+        result.pushKV("expected", "smsglocalkeys [whitelist|all|wallet|recv <+/-> <address>|anon <+/-> <address>]");
     };
 #else
     throw std::runtime_error("No wallet.");
@@ -401,10 +401,10 @@ UniValue smsgscanchain(const JSONRPCRequest &request)
     UniValue result(UniValue::VOBJ);
     if (!SecureMsgScanBlockChain())
     {
-        result.push_back(Pair("result", "Scan Chain Failed."));
+        result.pushKV("result", "Scan Chain Failed.");
     } else
     {
-        result.push_back(Pair("result", "Scan Chain Completed."));
+        result.pushKV("result", "Scan Chain Completed.");
     };
     return result;
 }
@@ -426,10 +426,10 @@ UniValue smsgscanbuckets(const JSONRPCRequest &request)
     UniValue result(UniValue::VOBJ);
     if (!SecureMsgScanBuckets())
     {
-        result.push_back(Pair("result", "Scan Buckets Failed."));
+        result.pushKV("result", "Scan Buckets Failed.");
     } else
     {
-        result.push_back(Pair("result", "Scan Buckets Completed."));
+        result.pushKV("result", "Scan Buckets Completed.");
     };
 #else
     UniValue result(UniValue::VOBJ);
@@ -455,18 +455,18 @@ UniValue smsgaddkey(const JSONRPCRequest &request)
     int rv = SecureMsgAddAddress(addr, pubk);
     if (rv != 0)
     {
-        result.push_back(Pair("result", "Public key not added to db."));
+        result.pushKV("result", "Public key not added to db.");
         switch (rv)
         {
-            case 2:     result.push_back(Pair("reason", "publicKey is invalid."));                  break;
-            case 3:     result.push_back(Pair("reason", "publicKey does not match address."));      break;
-            case 4:     result.push_back(Pair("reason", "address is already in db."));              break;
-            case 5:     result.push_back(Pair("reason", "address is invalid."));                    break;
-            default:    result.push_back(Pair("reason", "error."));                                 break;
+            case 2:     result.pushKV("reason", "publicKey is invalid.");                  break;
+            case 3:     result.pushKV("reason", "publicKey does not match address.");      break;
+            case 4:     result.pushKV("reason", "address is already in db.");              break;
+            case 5:     result.pushKV("reason", "address is invalid.");                    break;
+            default:    result.pushKV("reason", "error.");                                 break;
         };
     } else
     {
-        result.push_back(Pair("result", "Added public key to db."));
+        result.pushKV("result", "Added public key to db.");
     };
 
     return result;
@@ -491,21 +491,21 @@ UniValue smsggetpubkey(const JSONRPCRequest &request)
     switch (rv)
     {
         case 0:
-            result.push_back(Pair("result", "Success."));
-            result.push_back(Pair("address", address));
-            result.push_back(Pair("publickey", publicKey));
+            result.pushKV("result", "Success.");
+            result.pushKV("address", address);
+            result.pushKV("publickey", publicKey);
             return result; // success, don't check db
         case 2:
         case 3:
-            result.push_back(Pair("result", "Failed."));
-            result.push_back(Pair("message", "Invalid address."));
+            result.pushKV("result", "Failed.");
+            result.pushKV("message", "Invalid address.");
             return result;
         case 4:
             break; // check db
         //case 1:
         default:
-            result.push_back(Pair("result", "Failed."));
-            result.push_back(Pair("message", "Error."));
+            result.pushKV("result", "Failed.");
+            result.pushKV("message", "Error.");
             return result;
     };
 
@@ -515,8 +515,8 @@ UniValue smsggetpubkey(const JSONRPCRequest &request)
     CKeyID keyID;
     if (!coinAddress.GetKeyID(keyID))
     {
-        result.push_back(Pair("result", "Failed."));
-        result.push_back(Pair("message", "Invalid address."));
+        result.pushKV("result", "Failed.");
+        result.pushKV("message", "Invalid address.");
         return result;
     };
 
@@ -529,26 +529,26 @@ UniValue smsggetpubkey(const JSONRPCRequest &request)
             if (!cpkFromDB.IsValid()
                 || !cpkFromDB.IsCompressed())
             {
-                result.push_back(Pair("result", "Failed."));
-                result.push_back(Pair("message", "Invalid address."));
+                result.pushKV("result", "Failed.");
+                result.pushKV("message", "Invalid address.");
             } else
             {
                 //cpkFromDB.SetCompressedPubKey(); // make sure key is compressed
                 publicKey = EncodeBase58(cpkFromDB.begin(), cpkFromDB.end());
 
-                result.push_back(Pair("result", "Success."));
-                result.push_back(Pair("address", address));
-                result.push_back(Pair("publickey", publicKey));
+                result.pushKV("result", "Success.");
+                result.pushKV("address", address);
+                result.pushKV("publickey", publicKey);
             };
             break;
         case 2:
-            result.push_back(Pair("result", "Failed."));
-            result.push_back(Pair("message", "Address not found in wallet or db."));
+            result.pushKV("result", "Failed.");
+            result.pushKV("message", "Address not found in wallet or db.");
             return result;
         //case 1:
         default:
-            result.push_back(Pair("result", "Failed."));
-            result.push_back(Pair("message", "Error, GetStoredKey()."));
+            result.pushKV("result", "Failed.");
+            result.pushKV("message", "Error, GetStoredKey().");
             return result;
     };
 
@@ -586,11 +586,11 @@ UniValue smsgsend(const JSONRPCRequest &request)
     std::string sError;
     if (SecureMsgSend(kiFrom, kiTo, msg, sError) != 0)
     {
-        result.push_back(Pair("result", "Send failed."));
-        result.push_back(Pair("error", sError));
+        result.pushKV("result", "Send failed.");
+        result.pushKV("error", sError);
     } else
     {
-        result.push_back(Pair("result", "Sent."));
+        result.pushKV("result", "Sent.");
     };
 
     return result;
@@ -620,11 +620,11 @@ UniValue smsgsendanon(const JSONRPCRequest &request)
     std::string sError;
     if (SecureMsgSend(kiFrom, kiTo, msg, sError) != 0)
     {
-        result.push_back(Pair("result", "Send failed."));
-        result.push_back(Pair("error", sError));
+        result.pushKV("result", "Send failed.");
+        result.pushKV("error", sError);
     } else
     {
-        result.push_back(Pair("result", "Sent."));
+        result.pushKV("result", "Sent.");
     };
 
     return result;
@@ -684,7 +684,7 @@ UniValue smsginbox(const JSONRPCRequest &request)
             delete it;
             dbInbox.TxnCommit();
 
-            result.push_back(Pair("result", strprintf("Deleted %u messages.", nMessages)));
+            result.pushKV("result", strprintf("Deleted %u messages.", nMessages));
         } else
         if (mode == "all"
             || mode == "unread")
@@ -709,18 +709,18 @@ UniValue smsginbox(const JSONRPCRequest &request)
                 if (SecureMsgDecrypt(false, smsgStored.addrTo, &smsgStored.vchMessage[0], &smsgStored.vchMessage[SMSG_HDR_LEN], nPayload, msg) == 0)
                 {
                     UniValue objM(UniValue::VOBJ);
-                    objM.push_back(Pair("success", "1"));
-                    objM.push_back(Pair("received", part::GetTimeString(smsgStored.timeReceived, cbuf, sizeof(cbuf))));
-                    objM.push_back(Pair("sent", part::GetTimeString(msg.timestamp, cbuf, sizeof(cbuf))));
-                    objM.push_back(Pair("from", msg.sFromAddress));
-                    objM.push_back(Pair("to", CBitcoinAddress(smsgStored.addrTo).ToString()));
-                    objM.push_back(Pair("text", std::string((char*)&msg.vchMessage[0]))); // ugh
+                    objM.pushKV("success", "1");
+                    objM.pushKV("received", part::GetTimeString(smsgStored.timeReceived, cbuf, sizeof(cbuf)));
+                    objM.pushKV("sent", part::GetTimeString(msg.timestamp, cbuf, sizeof(cbuf)));
+                    objM.pushKV("from", msg.sFromAddress);
+                    objM.pushKV("to", CBitcoinAddress(smsgStored.addrTo).ToString());
+                    objM.pushKV("text", std::string((char*)&msg.vchMessage[0])); // ugh
 
                     messageList.push_back(objM);
                 } else
                 {
                     UniValue objM(UniValue::VOBJ);
-                    objM.push_back(Pair("success", "0"));
+                    objM.pushKV("success", "0");
                     messageList.push_back(objM);
                 };
 
@@ -734,13 +734,13 @@ UniValue smsginbox(const JSONRPCRequest &request)
             delete it;
             dbInbox.TxnCommit();
 
-            result.push_back(Pair("messages", messageList));
-            result.push_back(Pair("result", strprintf("%u", nMessages)));
+            result.pushKV("messages", messageList);
+            result.pushKV("result", strprintf("%u", nMessages));
 
         } else
         {
-            result.push_back(Pair("result", "Unknown Mode."));
-            result.push_back(Pair("expected", "[all|unread|clear]."));
+            result.pushKV("result", "Unknown Mode.");
+            result.pushKV("expected", "[all|unread|clear].");
         };
     } // cs_smsgDB
 #else
@@ -803,7 +803,7 @@ UniValue smsgoutbox(const JSONRPCRequest &request)
             dbOutbox.TxnCommit();
 
 
-            result.push_back(Pair("result", strprintf("Deleted %u messages.", nMessages)));
+            result.pushKV("result", strprintf("Deleted %u messages.", nMessages));
         } else
         if (mode == "all")
         {
@@ -820,29 +820,29 @@ UniValue smsgoutbox(const JSONRPCRequest &request)
                 if (SecureMsgDecrypt(false, smsgStored.addrOutbox, &smsgStored.vchMessage[0], &smsgStored.vchMessage[SMSG_HDR_LEN], nPayload, msg) == 0)
                 {
                     UniValue objM(UniValue::VOBJ);
-                    objM.push_back(Pair("success", "1"));
-                    objM.push_back(Pair("sent", part::GetTimeString(msg.timestamp, cbuf, sizeof(cbuf))));
-                    objM.push_back(Pair("from", msg.sFromAddress));
-                    objM.push_back(Pair("to", CBitcoinAddress(smsgStored.addrTo).ToString()));
-                    objM.push_back(Pair("text", std::string((char*)&msg.vchMessage[0]))); // ugh
+                    objM.pushKV("success", "1");
+                    objM.pushKV("sent", part::GetTimeString(msg.timestamp, cbuf, sizeof(cbuf)));
+                    objM.pushKV("from", msg.sFromAddress);
+                    objM.pushKV("to", CBitcoinAddress(smsgStored.addrTo).ToString());
+                    objM.pushKV("text", std::string((char*)&msg.vchMessage[0])); // ugh
 
                     messageList.push_back(objM);
                 } else
                 {
                     UniValue objM(UniValue::VOBJ);
-                    objM.push_back(Pair("success", "0"));
+                    objM.pushKV("success", "0");
                     messageList.push_back(objM);
                 };
                 nMessages++;
             };
             delete it;
 
-            result.push_back(Pair("messages" ,messageList));
-            result.push_back(Pair("result", strprintf("%u", nMessages)));
+            result.pushKV("messages" ,messageList);
+            result.pushKV("result", strprintf("%u", nMessages));
         } else
         {
-            result.push_back(Pair("result", "Unknown Mode."));
-            result.push_back(Pair("expected", "[all|clear]."));
+            result.pushKV("result", "Unknown Mode.");
+            result.pushKV("expected", "[all|clear].");
         };
     }
 #else
@@ -895,11 +895,11 @@ UniValue smsgbuckets(const JSONRPCRequest &request)
                 nMessages += tokenSet.size();
 
                 UniValue objM(UniValue::VOBJ);
-                objM.push_back(Pair("bucket", sBucket));
-                objM.push_back(Pair("time", part::GetTimeString(it->first, cbuf, sizeof(cbuf))));
-                objM.push_back(Pair("no. messages", strprintf("%u", tokenSet.size())));
-                objM.push_back(Pair("hash", sHash));
-                objM.push_back(Pair("last changed", part::GetTimeString(it->second.timeChanged, cbuf, sizeof(cbuf))));
+                objM.pushKV("bucket", sBucket);
+                objM.pushKV("time", part::GetTimeString(it->first, cbuf, sizeof(cbuf)));
+                objM.pushKV("no. messages", strprintf("%u", tokenSet.size()));
+                objM.pushKV("hash", sHash);
+                objM.pushKV("last changed", part::GetTimeString(it->second.timeChanged, cbuf, sizeof(cbuf)));
 
                 boost::filesystem::path fullPath = GetDataDir() / "smsgstore" / sFile;
 
@@ -908,9 +908,9 @@ UniValue smsgbuckets(const JSONRPCRequest &request)
                 {
                     // If there is a file for an empty bucket something is wrong.
                     if (tokenSet.size() == 0)
-                        objM.push_back(Pair("file size", "Empty bucket."));
+                        objM.pushKV("file size", "Empty bucket.");
                     else
-                        objM.push_back(Pair("file size, error", "File not found."));
+                        objM.pushKV("file size, error", "File not found.");
                 } else
                 {
                     try {
@@ -918,14 +918,14 @@ UniValue smsgbuckets(const JSONRPCRequest &request)
                         uint64_t nFBytes = 0;
                         nFBytes = boost::filesystem::file_size(fullPath);
                         nBytes += nFBytes;
-                        objM.push_back(Pair("file size", part::BytesReadable(nFBytes)));
+                        objM.pushKV("file size", part::BytesReadable(nFBytes));
                     } catch (const boost::filesystem::filesystem_error& ex)
                     {
-                        objM.push_back(Pair("file size, error", ex.what()));
+                        objM.pushKV("file size, error", ex.what());
                     };
                 };
 
-                result.push_back(Pair("bucket", objM));
+                result.pushKV("bucket", objM);
             };
         }; // cs_smsg
 
@@ -934,10 +934,10 @@ UniValue smsgbuckets(const JSONRPCRequest &request)
         std::string snMessages = boost::lexical_cast<std::string>(nMessages);
 
         UniValue objM(UniValue::VOBJ);
-        objM.push_back(Pair("buckets", snBuckets));
-        objM.push_back(Pair("messages", snMessages));
-        objM.push_back(Pair("size", part::BytesReadable(nBytes)));
-        result.push_back(Pair("total", objM));
+        objM.pushKV("buckets", snBuckets);
+        objM.pushKV("messages", snMessages);
+        objM.pushKV("size", part::BytesReadable(nBytes));
+        result.pushKV("total", objM);
 
     } else
     if (mode == "dump")
@@ -963,12 +963,12 @@ UniValue smsgbuckets(const JSONRPCRequest &request)
             smsgBuckets.clear();
         }; // cs_smsg
 
-        result.push_back(Pair("result", "Removed all buckets."));
+        result.pushKV("result", "Removed all buckets.");
 
     } else
     {
-        result.push_back(Pair("result", "Unknown Mode."));
-        result.push_back(Pair("expected", "[stats|dump]."));
+        result.pushKV("result", "Unknown Mode.");
+        result.pushKV("expected", "[stats|dump].");
     };
 
 
@@ -1268,10 +1268,10 @@ UniValue smsgview(const JSONRPCRequest &request)
                         sTo += " (" + lblTo + ")";
 
                     UniValue objM(UniValue::VOBJ);
-                    objM.push_back(Pair("sent", part::GetTimeString(msg.timestamp, cbuf, sizeof(cbuf))));
-                    objM.push_back(Pair("from", sFrom));
-                    objM.push_back(Pair("to", sTo));
-                    objM.push_back(Pair("text", std::string((char*)&msg.vchMessage[0])));
+                    objM.pushKV("sent", part::GetTimeString(msg.timestamp, cbuf, sizeof(cbuf)));
+                    objM.pushKV("from", sFrom);
+                    objM.pushKV("to", sTo);
+                    objM.pushKV("text", std::string((char*)&msg.vchMessage[0]));
                     
                     vMessages.push_back(std::make_pair(msg.timestamp, objM));
                 } else
@@ -1295,16 +1295,16 @@ UniValue smsgview(const JSONRPCRequest &request)
         nMessages++;
     };
 
-    result.push_back(Pair("messages", messageList));
+    result.pushKV("messages", messageList);
     
     if (fDebugSmsg)
-        result.push_back(Pair("debug empty sent", (int)debugEmptySent));
+        result.pushKV("debug empty sent", (int)debugEmptySent);
 
-    result.push_back(Pair("result", strprintf("Displayed %u messages.", nMessages)));
+    result.pushKV("result", strprintf("Displayed %u messages.", nMessages));
     if (tFrom > 0)
-        result.push_back(Pair("from", part::GetTimeString(tFrom, cbuf, sizeof(cbuf))));
+        result.pushKV("from", part::GetTimeString(tFrom, cbuf, sizeof(cbuf)));
     if (tTo > 0)
-        result.push_back(Pair("to", part::GetTimeString(tTo, cbuf, sizeof(cbuf))));
+        result.pushKV("to", part::GetTimeString(tTo, cbuf, sizeof(cbuf)));
 #else
     UniValue result(UniValue::VOBJ);
     throw std::runtime_error("No wallet.");

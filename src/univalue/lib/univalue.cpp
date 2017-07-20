@@ -284,6 +284,28 @@ const UniValue& UniValue::operator[](unsigned int index) const
     return values.at(index);
 }
 
+UniValue& UniValue::get(const std::string& key)
+{
+    if (typ != VOBJ)
+        throw std::runtime_error("Not an object.");
+
+    int index = findKey(key);
+    if (index < 0)
+        throw std::runtime_error("Key not found.");
+
+    return values.at(index);
+};
+
+UniValue& UniValue::get(unsigned int index)
+{
+    if (typ != VOBJ && typ != VARR)
+        throw std::runtime_error("Not an object or array.");
+    if (index >= values.size())
+        throw std::runtime_error("Index out of range.");
+
+    return values.at(index);
+};
+
 const char *uvTypeName(UniValue::VType t)
 {
     switch (t) {

@@ -100,7 +100,6 @@ public:
     {
         s >> options;
         
-        
         s >> number_signatures;
         s >> prefix.number_bits;
         s >> prefix.bitfield;

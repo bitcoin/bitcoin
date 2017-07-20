@@ -59,11 +59,11 @@ UniValue anonoutput(const JSONRPCRequest &request)
     if (!pblocktree->ReadRCTOutput(nIndex, ao))
         throw JSONRPCError(RPC_MISC_ERROR, "Unknown index.");
     
-    result.push_back(Pair("index", (int)nIndex));
-    result.push_back(Pair("publickey", HexStr(ao.pubkey.begin(), ao.pubkey.end())));
-    result.push_back(Pair("txnhash", HexStr(ao.outpoint.hash.begin(), ao.outpoint.hash.end())));
-    result.push_back(Pair("n", (int)ao.outpoint.n));
-    result.push_back(Pair("blockheight", ao.nBlockHeight));
+    result.pushKV("index", (int)nIndex);
+    result.pushKV("publickey", HexStr(ao.pubkey.begin(), ao.pubkey.end()));
+    result.pushKV("txnhash", HexStr(ao.outpoint.hash.begin(), ao.outpoint.hash.end()));
+    result.pushKV("n", (int)ao.outpoint.n);
+    result.pushKV("blockheight", ao.nBlockHeight);
     
     return result;
 };

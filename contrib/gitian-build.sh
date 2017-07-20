@@ -295,7 +295,7 @@ then
         echo ""
         echo "Compiling ${VERSION} Mac OSX"
         echo ""
-        ./bin/gbuild -j ${proc} -m ${mem} --commit bitcoin=${COMMIT} --url particl-core=${url} ../particl-core/contrib/gitian-descriptors/gitian-osx.yml
+        ./bin/gbuild -j ${proc} -m ${mem} --commit particl-core=${COMMIT} --url particl-core=${url} ../particl-core/contrib/gitian-descriptors/gitian-osx.yml
         ./bin/gsign -p $signProg --signer $SIGNER --release ${VERSION}-osx-unsigned --destination ../gitian.sigs/ ../particl-core/contrib/gitian-descriptors/gitian-osx.yml
         mv build/out/particl-*-osx-unsigned.tar.gz inputs/particl-osx-unsigned.tar.gz
         mv build/out/particl-*.tar.gz build/out/particl-*.dmg ../particl-binaries/${VERSION}

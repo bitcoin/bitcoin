@@ -394,8 +394,9 @@ class WalletParticlTest(ParticlTestFramework):
         assert(len(ro) == 2)
         assert(len(ro[1]['Stealth Addresses']) == 1)
         assert(ro[1]['Stealth Addresses'][0]['Label'] == 'testImported')
-        assert(ro[1]['Stealth Addresses'][0]['Scan Secret'] == '0189cd6197d570740e88974ebeb8bd48484c1ca2361159cccc6c36ca99372e5b')
-        assert(ro[1]['Stealth Addresses'][0]['Spend Secret'] == 'b9e7fa5f7d6fdd3ea4b1c9bc339292e2af6dc183c7ab2734ad5bf41485e87efe')
+        
+        assert(ro[1]['Stealth Addresses'][0]['Scan Secret'] == '7oizjaJXPSuaXRsBKP3NXyazwp6LDE5NHLuw9qT2uM7kgGHCWJ5z')
+        assert(ro[1]['Stealth Addresses'][0]['Spend Secret'] == '7uuPBdNM8GiUT16uV2BGMGTSmJ8inJCbVGMcuToHH1fWPZ8u3apk')
         
         ro = nodes[2].getnewstealthaddress('testLabel2')
         assert(ro == 'TetbJKQcmWW74aRDDfNnALb7jaAw8KQ2ubWYsSprpqSQvbSTJZMaednJWN4EKGGaBFBzkaL1iQMtiAvKKZMj7rVusYWL76iRwx87cy')
@@ -439,7 +440,6 @@ class WalletParticlTest(ParticlTestFramework):
         evkBtc = nodes[2].extkeyaltversion(evkPart)
         evkPartOut = nodes[2].extkeyaltversion(evkBtc)
         assert(evkPartOut == evkPart)
-        
         
         
         

@@ -65,39 +65,39 @@ int ExtractBip32InfoV(std::vector<unsigned char> &vchKey, UniValue &keyInfo, std
     
     CChainParams::Base58Type typePk = CChainParams::EXT_PUBLIC_KEY;
     if (memcmp(&vchKey[0], &Params().Base58Prefix(CChainParams::EXT_SECRET_KEY)[0], 4) == 0)
-        keyInfo.push_back(Pair("type", "Particl extended secret key"));
+        keyInfo.pushKV("type", "Particl extended secret key");
     else
     if (memcmp(&vchKey[0], &Params().Base58Prefix(CChainParams::EXT_SECRET_KEY_BTC)[0], 4) == 0)
     {
-        keyInfo.push_back(Pair("type", "Bitcoin extended secret key"));
+        keyInfo.pushKV("type", "Bitcoin extended secret key");
         typePk = CChainParams::EXT_PUBLIC_KEY_BTC;
     } else
-        keyInfo.push_back(Pair("type", "Unknown extended secret key"));
+        keyInfo.pushKV("type", "Unknown extended secret key");
     
-    keyInfo.push_back(Pair("version", strprintf("%02X", reversePlace(&vchKey[0]))));
-    keyInfo.push_back(Pair("depth", strprintf("%u", vchKey[4])));
-    keyInfo.push_back(Pair("parent_fingerprint", strprintf("%08X", reversePlace(&vchKey[5]))));
-    keyInfo.push_back(Pair("child_index", strprintf("%u", reversePlace(&vchKey[9]))));
-    keyInfo.push_back(Pair("chain_code", strprintf("%s", HexStr(&vchKey[13], &vchKey[13+32]))));
-    keyInfo.push_back(Pair("key", strprintf("%s", HexStr(&vchKey[46], &vchKey[46+32]))));
+    keyInfo.pushKV("version", strprintf("%02X", reversePlace(&vchKey[0])));
+    keyInfo.pushKV("depth", strprintf("%u", vchKey[4]));
+    keyInfo.pushKV("parent_fingerprint", strprintf("%08X", reversePlace(&vchKey[5])));
+    keyInfo.pushKV("child_index", strprintf("%u", reversePlace(&vchKey[9])));
+    keyInfo.pushKV("chain_code", strprintf("%s", HexStr(&vchKey[13], &vchKey[13+32])));
+    keyInfo.pushKV("key", strprintf("%s", HexStr(&vchKey[46], &vchKey[46+32])));
     
     // don't display raw secret ??
     // TODO: add option
     
     CKey key;
     key.Set(&vchKey[46], true);
-    keyInfo.push_back(Pair("privkey", strprintf("%s", CBitcoinSecret(key).ToString())));
+    keyInfo.pushKV("privkey", strprintf("%s", CBitcoinSecret(key).ToString()));
     CKeyID id = key.GetPubKey().GetID();
     CBitcoinAddress addr;
     addr.Set(id, CChainParams::EXT_KEY_HASH);
     
-    keyInfo.push_back(Pair("id", addr.ToString().c_str()));
+    keyInfo.pushKV("id", addr.ToString().c_str());
     addr.Set(id);
-    keyInfo.push_back(Pair("address", addr.ToString().c_str()));
-    keyInfo.push_back(Pair("checksum", strprintf("%02X", reversePlace(&vchKey[78]))));
+    keyInfo.pushKV("address", addr.ToString().c_str());
+    keyInfo.pushKV("checksum", strprintf("%02X", reversePlace(&vchKey[78])));
     
     ek58.SetKey(vk, typePk);
-    keyInfo.push_back(Pair("ext_public_key", ek58.ToString()));
+    keyInfo.pushKV("ext_public_key", ek58.ToString());
     
     return 0;
 };
@@ -107,19 +107,19 @@ int ExtractBip32InfoP(std::vector<unsigned char> &vchKey, UniValue &keyInfo, std
     CExtPubKey pk;
     
     if (memcmp(&vchKey[0], &Params().Base58Prefix(CChainParams::EXT_PUBLIC_KEY)[0], 4) == 0)
-        keyInfo.push_back(Pair("type", "Particl extended public key"));
+        keyInfo.pushKV("type", "Particl extended public key");
     else
     if (memcmp(&vchKey[0], &Params().Base58Prefix(CChainParams::EXT_PUBLIC_KEY_BTC)[0], 4) == 0)
-        keyInfo.push_back(Pair("type", "Bitcoin extended public key"));
+        keyInfo.pushKV("type", "Bitcoin extended public key");
     else
-        keyInfo.push_back(Pair("type", "Unknown extended public key"));
+        keyInfo.pushKV("type", "Unknown extended public key");
         
-    keyInfo.push_back(Pair("version", strprintf("%02X", reversePlace(&vchKey[0]))));
-    keyInfo.push_back(Pair("depth", strprintf("%u", vchKey[4])));
-    keyInfo.push_back(Pair("parent_fingerprint", strprintf("%08X", reversePlace(&vchKey[5]))));
-    keyInfo.push_back(Pair("child_index", strprintf("%u", reversePlace(&vchKey[9]))));
-    keyInfo.push_back(Pair("chain_code", strprintf("%s", HexStr(&vchKey[13], &vchKey[13+32]))));
-    keyInfo.push_back(Pair("key", strprintf("%s", HexStr(&vchKey[45], &vchKey[45+33]))));
+    keyInfo.pushKV("version", strprintf("%02X", reversePlace(&vchKey[0])));
+    keyInfo.pushKV("depth", strprintf("%u", vchKey[4]));
+    keyInfo.pushKV("parent_fingerprint", strprintf("%08X", reversePlace(&vchKey[5])));
+    keyInfo.pushKV("child_index", strprintf("%u", reversePlace(&vchKey[9])));
+    keyInfo.pushKV("chain_code", strprintf("%s", HexStr(&vchKey[13], &vchKey[13+32])));
+    keyInfo.pushKV("key", strprintf("%s", HexStr(&vchKey[45], &vchKey[45+33])));
     
     CPubKey key;
     key.Set(&vchKey[45], &vchKey[78]);
@@ -127,10 +127,10 @@ int ExtractBip32InfoP(std::vector<unsigned char> &vchKey, UniValue &keyInfo, std
     CBitcoinAddress addr;
     addr.Set(id, CChainParams::EXT_KEY_HASH);
     
-    keyInfo.push_back(Pair("id", addr.ToString().c_str()));
+    keyInfo.pushKV("id", addr.ToString().c_str());
     addr.Set(id);
-    keyInfo.push_back(Pair("address", addr.ToString().c_str()));
-    keyInfo.push_back(Pair("checksum", strprintf("%02X", reversePlace(&vchKey[78]))));
+    keyInfo.pushKV("address", addr.ToString().c_str());
+    keyInfo.pushKV("checksum", strprintf("%02X", reversePlace(&vchKey[78])));
     
     return 0;
 };
@@ -170,7 +170,7 @@ int ExtKeyPathV(std::string &sPath, std::vector<uint8_t> &vchKey, UniValue &keyI
     
     CBitcoinExtKey ekOut;
     ekOut.SetKey(vkOut);
-    keyInfo.push_back(Pair("result", ekOut.ToString()));
+    keyInfo.pushKV("result", ekOut.ToString());
     
     return 0;
 };
@@ -215,7 +215,7 @@ int ExtKeyPathP(std::string &sPath, std::vector<uint8_t> &vchKey, UniValue &keyI
     
     CBitcoinExtPubKey ekOut;
     ekOut.SetKey(pkOut);
-    keyInfo.push_back(Pair("result", ekOut.ToString()));
+    keyInfo.pushKV("result", ekOut.ToString());
     
     return 0;
 };
@@ -225,41 +225,41 @@ int AccountInfo(CExtKeyAccount *pa, int nShowKeys, bool fAllChains, UniValue &ob
     CHDWallet *pwallet = (CHDWallet*) pwalletMain;
     CExtKey58 eKey58;
     
-    obj.push_back(Pair("type", "Account"));
-    obj.push_back(Pair("active", pa->nFlags & EAF_ACTIVE ? "true" : "false"));
-    obj.push_back(Pair("label", pa->sLabel));
+    obj.pushKV("type", "Account");
+    obj.pushKV("active", pa->nFlags & EAF_ACTIVE ? "true" : "false");
+    obj.pushKV("label", pa->sLabel);
     
     if (pwallet->idDefaultAccount == pa->GetID())
-        obj.push_back(Pair("default_account", "true"));
+        obj.pushKV("default_account", "true");
     
     mapEKValue_t::iterator mvi = pa->mapValue.find(EKVT_CREATED_AT);
     if (mvi != pa->mapValue.end())
     {
         int64_t nCreatedAt;
         GetCompressedInt64(mvi->second, (uint64_t&)nCreatedAt);
-        obj.push_back(Pair("created_at", nCreatedAt));
+        obj.pushKV("created_at", nCreatedAt);
     };
     
-    obj.push_back(Pair("id", pa->GetIDString58()));
-    obj.push_back(Pair("has_secret", pa->nFlags & EAF_HAVE_SECRET ? "true" : "false"));
+    obj.pushKV("id", pa->GetIDString58());
+    obj.pushKV("has_secret", pa->nFlags & EAF_HAVE_SECRET ? "true" : "false");
     
     CStoredExtKey *sekAccount = pa->ChainAccount();
     if (!sekAccount)
     {
-        obj.push_back(Pair("error", "chain account not set."));
+        obj.pushKV("error", "chain account not set.");
         return 0;
     };
     
     CBitcoinAddress addr;
     addr.Set(pa->idMaster, CChainParams::EXT_KEY_HASH);
-    obj.push_back(Pair("root_key_id", addr.ToString()));
+    obj.pushKV("root_key_id", addr.ToString());
     
     mvi = sekAccount->mapValue.find(EKVT_PATH);
     if (mvi != sekAccount->mapValue.end())
     {
         std::string sPath;
         if (0 == PathToString(mvi->second, sPath, 'h'))
-            obj.push_back(Pair("path", sPath));
+            obj.pushKV("path", sPath);
     };
     // TODO: separate passwords for accounts
     if (pa->nFlags & EAF_HAVE_SECRET
@@ -267,14 +267,21 @@ int AccountInfo(CExtKeyAccount *pa, int nShowKeys, bool fAllChains, UniValue &ob
         && pwallet->ExtKeyUnlock(sekAccount) == 0)
     {
         eKey58.SetKeyV(sekAccount->kp);
-        obj.push_back(Pair("evkey", eKey58.ToString()));
+        obj.pushKV("evkey", eKey58.ToString());
     };
     
     if (nShowKeys > 0)
     {
         eKey58.SetKeyP(sekAccount->kp);
-        obj.push_back(Pair("epkey", eKey58.ToString()));
+        obj.pushKV("epkey", eKey58.ToString());
     };
+    
+    if (nShowKeys > 2) // dumpwallet
+    {
+        obj.pushKV("stealth_address_pack", (int)pa->nPackStealth);
+        obj.pushKV("stealth_keys_received_pack", (int)pa->nPackStealthKeys);
+    };
+    
     
     if (fAllChains)
     {
@@ -286,31 +293,62 @@ int AccountInfo(CExtKeyAccount *pa, int nShowKeys, bool fAllChains, UniValue &ob
             eKey58.SetKeyP(sek->kp);
             
             if (pa->nActiveExternal == i)
-                objC.push_back(Pair("function", "active_external"));
+                objC.pushKV("function", "active_external");
             if (pa->nActiveInternal == i)
-                objC.push_back(Pair("function", "active_internal"));
+                objC.pushKV("function", "active_internal");
             if (pa->nActiveStealth == i)
-                objC.push_back(Pair("function", "active_stealth"));
+                objC.pushKV("function", "active_stealth");
             
-            objC.push_back(Pair("id", sek->GetIDString58()));
-            objC.push_back(Pair("chain", eKey58.ToString()));
-            objC.push_back(Pair("label", sek->sLabel));
-            objC.push_back(Pair("active", sek->nFlags & EAF_ACTIVE ? "true" : "false"));
-            objC.push_back(Pair("receive_on", sek->nFlags & EAF_RECEIVE_ON ? "true" : "false"));
-            objC.push_back(Pair("num_derives", strprintf("%u", sek->nGenerated)));
-            objC.push_back(Pair("num_derives_h", strprintf("%u", sek->nHGenerated)));
+            objC.pushKV("id", sek->GetIDString58());
+            objC.pushKV("chain", eKey58.ToString());
+            objC.pushKV("label", sek->sLabel);
+            objC.pushKV("active", sek->nFlags & EAF_ACTIVE ? "true" : "false");
+            objC.pushKV("receive_on", sek->nFlags & EAF_RECEIVE_ON ? "true" : "false");
+            
+            mapEKValue_t::iterator it = sek->mapValue.find(EKVT_KEY_TYPE);
+            if (it != sek->mapValue.end() && it->second.size() > 0)
+            {
+                std::string(sUseType);
+                switch(it->second[0])
+                {
+                    case EKT_EXTERNAL:      sUseType = "external";      break;
+                    case EKT_INTERNAL:      sUseType = "internal";      break;
+                    case EKT_STEALTH:       sUseType = "stealth";       break;
+                    case EKT_CONFIDENTIAL:  sUseType = "confidential";  break;
+                    default:                sUseType = "unknown";       break;
+                }
+                objC.pushKV("use_type", sUseType);
+            };
+            
+            objC.pushKV("num_derives", strprintf("%u", sek->nGenerated));
+            objC.pushKV("num_derives_h", strprintf("%u", sek->nHGenerated));
+            
+            if (nShowKeys > 2 // dumpwallet
+                && pa->nFlags & EAF_HAVE_SECRET)
+            {
+                eKey58.SetKeyV(sek->kp);
+                objC.pushKV("evkey", eKey58.ToString());
+                
+                mvi = sek->mapValue.find(EKVT_CREATED_AT);
+                if (mvi != sek->mapValue.end())
+                {
+                    int64_t nCreatedAt;
+                    GetCompressedInt64(mvi->second, (uint64_t&)nCreatedAt);
+                    objC.pushKV("created_at", nCreatedAt);
+                };
+            };
             
             mvi = sek->mapValue.find(EKVT_PATH);
             if (mvi != sek->mapValue.end())
             {
                 std::string sPath;
                 if (0 == PathToString(mvi->second, sPath, 'h'))
-                    objC.push_back(Pair("path", sPath));
+                    objC.pushKV("path", sPath);
             };
             
             arChains.push_back(objC);
         };
-        obj.push_back(Pair("chains", arChains));
+        obj.pushKV("chains", arChains);
     } else
     {
         if (pa->nActiveExternal < pa->vExtKeys.size())
@@ -319,10 +357,10 @@ int AccountInfo(CExtKeyAccount *pa, int nShowKeys, bool fAllChains, UniValue &ob
             if (nShowKeys > 0)
             {
                 eKey58.SetKeyP(sekE->kp);
-                obj.push_back(Pair("external_chain", eKey58.ToString()));
+                obj.pushKV("external_chain", eKey58.ToString());
             };
-            obj.push_back(Pair("num_derives_external", strprintf("%u", sekE->nGenerated)));
-            obj.push_back(Pair("num_derives_external_h", strprintf("%u", sekE->nHGenerated)));
+            obj.pushKV("num_derives_external", strprintf("%u", sekE->nGenerated));
+            obj.pushKV("num_derives_external_h", strprintf("%u", sekE->nHGenerated));
         };
         
         if (pa->nActiveInternal < pa->vExtKeys.size())
@@ -331,19 +369,19 @@ int AccountInfo(CExtKeyAccount *pa, int nShowKeys, bool fAllChains, UniValue &ob
             if (nShowKeys > 0)
             {
                 eKey58.SetKeyP(sekI->kp);
-                obj.push_back(Pair("internal_chain", eKey58.ToString()));
+                obj.pushKV("internal_chain", eKey58.ToString());
             };
-            obj.push_back(Pair("num_derives_internal", strprintf("%u", sekI->nGenerated)));
-            obj.push_back(Pair("num_derives_internal_h", strprintf("%u", sekI->nHGenerated)));
+            obj.pushKV("num_derives_internal", strprintf("%u", sekI->nGenerated));
+            obj.pushKV("num_derives_internal_h", strprintf("%u", sekI->nHGenerated));
         };
         
         if (pa->nActiveStealth < pa->vExtKeys.size())
         {
             CStoredExtKey *sekS = pa->vExtKeys[pa->nActiveStealth];
-            obj.push_back(Pair("num_derives_stealth", strprintf("%u", sekS->nGenerated)));
-            obj.push_back(Pair("num_derives_stealth_h", strprintf("%u", sekS->nHGenerated)));
+            obj.pushKV("num_derives_stealth", strprintf("%u", sekS->nGenerated));
+            obj.pushKV("num_derives_stealth_h", strprintf("%u", sekS->nHGenerated));
         };
-    }
+    };
     
     return 0;
 };
@@ -370,15 +408,15 @@ int KeyInfo(CKeyID &idMaster, CKeyID &idKey, CStoredExtKey &sek, int nShowKeys, 
     CExtKey58 eKey58;
     
     bool fBip44Root = false;
-    obj.push_back(Pair("type", "Loose"));
-    obj.push_back(Pair("active", sek.nFlags & EAF_ACTIVE ? "true" : "false"));
-    obj.push_back(Pair("receive_on", sek.nFlags & EAF_RECEIVE_ON ? "true" : "false"));
-    obj.push_back(Pair("encrypted", sek.nFlags & EAF_IS_CRYPTED ? "true" : "false"));
-    obj.push_back(Pair("label", sek.sLabel));
+    obj.pushKV("type", "Loose");
+    obj.pushKV("active", sek.nFlags & EAF_ACTIVE ? "true" : "false");
+    obj.pushKV("receive_on", sek.nFlags & EAF_RECEIVE_ON ? "true" : "false");
+    obj.pushKV("encrypted", sek.nFlags & EAF_IS_CRYPTED ? "true" : "false");
+    obj.pushKV("label", sek.sLabel);
     
     if (reversePlace(&sek.kp.vchFingerprint[0]) == 0)
     {
-        obj.push_back(Pair("path", "Root"));
+        obj.pushKV("path", "Root");
     } else
     {
         mapEKValue_t::iterator mvi = sek.mapValue.find(EKVT_PATH);
@@ -386,7 +424,7 @@ int KeyInfo(CKeyID &idMaster, CKeyID &idKey, CStoredExtKey &sek, int nShowKeys, 
         {
             std::string sPath;
             if (0 == PathToString(mvi->second, sPath, 'h'))
-                obj.push_back(Pair("path", sPath));
+                obj.pushKV("path", sPath);
         };
     };
     
@@ -407,11 +445,11 @@ int KeyInfo(CKeyID &idMaster, CKeyID &idKey, CStoredExtKey &sek, int nShowKeys, 
                 break;
             default              : sType = "Unknown"; break;
         };
-        obj.push_back(Pair("key_type", sType));
+        obj.pushKV("key_type", sType);
     };
     
     if (idMaster == idKey)
-        obj.push_back(Pair("current_master", "true"));
+        obj.pushKV("current_master", "true");
     
     CBitcoinAddress addr;
     mvi = sek.mapValue.find(EKVT_ROOT_ID);
@@ -422,10 +460,10 @@ int KeyInfo(CKeyID &idMaster, CKeyID &idKey, CStoredExtKey &sek, int nShowKeys, 
         if (GetCKeyID(mvi->second, idRoot))
         {
             addr.Set(idRoot, CChainParams::EXT_KEY_HASH);
-            obj.push_back(Pair("root_key_id", addr.ToString()));
+            obj.pushKV("root_key_id", addr.ToString());
         } else
         {
-            obj.push_back(Pair("root_key_id", "malformed"));
+            obj.pushKV("root_key_id", "malformed");
         };
     };
     
@@ -434,12 +472,11 @@ int KeyInfo(CKeyID &idMaster, CKeyID &idKey, CStoredExtKey &sek, int nShowKeys, 
     {
         int64_t nCreatedAt;
         GetCompressedInt64(mvi->second, (uint64_t&)nCreatedAt);
-        obj.push_back(Pair("created_at", nCreatedAt));
+        obj.pushKV("created_at", nCreatedAt);
     };
     
-    
     addr.Set(idKey, CChainParams::EXT_KEY_HASH);
-    obj.push_back(Pair("id", addr.ToString()));
+    obj.pushKV("id", addr.ToString());
     
     if (nShowKeys > 1
         && pwallet->ExtKeyUnlock(&sek) == 0)
@@ -448,7 +485,7 @@ int KeyInfo(CKeyID &idMaster, CKeyID &idKey, CStoredExtKey &sek, int nShowKeys, 
             eKey58.SetKey(sek.kp, CChainParams::EXT_SECRET_KEY_BTC);
         else
             eKey58.SetKeyV(sek.kp);
-        obj.push_back(Pair("evkey", eKey58.ToString()));
+        obj.pushKV("evkey", eKey58.ToString());
     };
     
     if (nShowKeys > 0)
@@ -458,11 +495,11 @@ int KeyInfo(CKeyID &idMaster, CKeyID &idKey, CStoredExtKey &sek, int nShowKeys, 
         else
             eKey58.SetKeyP(sek.kp);
         
-        obj.push_back(Pair("epkey", eKey58.ToString()));
+        obj.pushKV("epkey", eKey58.ToString());
     };
     
-    obj.push_back(Pair("num_derives", strprintf("%u", sek.nGenerated)));
-    obj.push_back(Pair("num_derives_hardened", strprintf("%u", sek.nHGenerated)));
+    obj.pushKV("num_derives", strprintf("%u", sek.nGenerated));
+    obj.pushKV("num_derives_hardened", strprintf("%u", sek.nHGenerated));
     
     return 0;
 };
@@ -496,7 +533,6 @@ public:
         rvArray = arr;
         nShowKeys = _nShowKeys;
         
-        
         if (pwallet && pwallet->pEKMaster)
             idMaster = pwallet->pEKMaster->GetID();
     };
@@ -507,8 +543,8 @@ public:
         UniValue obj(UniValue::VOBJ);
         if (0 != KeyInfo(idMaster, id, sek, nShowKeys, obj, sError))
         {
-            obj.push_back(Pair("id", sek.GetIDString58()));
-            obj.push_back(Pair("error", sError));
+            obj.pushKV("id", sek.GetIDString58());
+            obj.pushKV("error", sError);
         };
         
         rvArray->push_back(obj);
@@ -519,10 +555,12 @@ public:
     {
         nItems++;
         UniValue obj(UniValue::VOBJ);
-        if (0 != AccountInfo(&sea, nShowKeys, false, obj, sError))
+        
+        bool fAllChains = nShowKeys > 2 ? true : false;
+        if (0 != AccountInfo(&sea, nShowKeys, fAllChains, obj, sError))
         {
-            obj.push_back(Pair("id", sea.GetIDString58()));
-            obj.push_back(Pair("error", sError));
+            obj.pushKV("id", sea.GetIDString58());
+            obj.pushKV("error", sError);
         };
         
         rvArray->push_back(obj);
@@ -567,7 +605,7 @@ int ManageExtKey(CStoredExtKey &sek, std::string &sOptName, std::string &sOptVal
         if (sOptValue.length() == 0)
             sek.sLabel = sOptValue;
         
-        result.push_back(Pair("set_label", sek.sLabel));
+        result.pushKV("set_label", sek.sLabel);
     } else
     if (sOptName == "active")
     {
@@ -579,7 +617,7 @@ int ManageExtKey(CStoredExtKey &sek, std::string &sOptName, std::string &sOptVal
                 sek.nFlags &= ~EAF_ACTIVE;
         };
         
-        result.push_back(Pair("set_active", sek.nFlags & EAF_ACTIVE ? "true" : "false"));
+        result.pushKV("set_active", sek.nFlags & EAF_ACTIVE ? "true" : "false");
     } else
     if (sOptName == "receive_on")
     {
@@ -591,7 +629,7 @@ int ManageExtKey(CStoredExtKey &sek, std::string &sOptName, std::string &sOptVal
                 sek.nFlags &= ~EAF_RECEIVE_ON;
         };
         
-        result.push_back(Pair("receive_on", sek.nFlags & EAF_RECEIVE_ON ? "true" : "false"));
+        result.pushKV("receive_on", sek.nFlags & EAF_RECEIVE_ON ? "true" : "false");
     } else
     if (sOptName == "look_ahead")
     {
@@ -610,34 +648,34 @@ int ManageExtKey(CStoredExtKey &sek, std::string &sOptName, std::string &sOptVal
             
             std::vector<uint8_t> v;
             sek.mapValue[EKVT_N_LOOKAHEAD] = SetCompressedInt64(v, nLookAhead);
-            result.push_back(Pair("note", "Wallet must be restarted to reload lookahead pool."));
+            result.pushKV("note", "Wallet must be restarted to reload lookahead pool.");
         };
         
         mapEKValue_t::iterator itV = sek.mapValue.find(EKVT_N_LOOKAHEAD);
         if (itV != sek.mapValue.end())
         {
             nLookAhead = GetCompressedInt64(itV->second, nLookAhead);
-            result.push_back(Pair("look_ahead", (int)nLookAhead));
+            result.pushKV("look_ahead", (int)nLookAhead);
         } else
         {
-            result.push_back(Pair("look_ahead", "default"));
+            result.pushKV("look_ahead", "default");
         };
     } else
     {
         // List all possible
-        result.push_back(Pair("label", sek.sLabel));
-        result.push_back(Pair("active", sek.nFlags & EAF_ACTIVE ? "true" : "false"));
-        result.push_back(Pair("receive_on", sek.nFlags & EAF_RECEIVE_ON ? "true" : "false"));
+        result.pushKV("label", sek.sLabel);
+        result.pushKV("active", sek.nFlags & EAF_ACTIVE ? "true" : "false");
+        result.pushKV("receive_on", sek.nFlags & EAF_RECEIVE_ON ? "true" : "false");
         
         
         mapEKValue_t::iterator itV = sek.mapValue.find(EKVT_N_LOOKAHEAD);
         if (itV != sek.mapValue.end())
         {
             uint64_t nLookAhead = GetCompressedInt64(itV->second, nLookAhead);
-            result.push_back(Pair("look_ahead", (int)nLookAhead));
+            result.pushKV("look_ahead", (int)nLookAhead);
         } else
         {
-            result.push_back(Pair("look_ahead", "default"));
+            result.pushKV("look_ahead", "default");
         };
     };
     
@@ -651,7 +689,7 @@ int ManageExtAccount(CExtKeyAccount &sea, std::string &sOptName, std::string &sO
         if (sOptValue.length() > 0)
             sea.sLabel = sOptValue;
         
-        result.push_back(Pair("set_label", sea.sLabel));
+        result.pushKV("set_label", sea.sLabel);
     } else
     if (sOptName == "active")
     {
@@ -663,12 +701,12 @@ int ManageExtAccount(CExtKeyAccount &sea, std::string &sOptName, std::string &sO
                 sea.nFlags &= ~EAF_ACTIVE;
         };
         
-        result.push_back(Pair("set_active", sea.nFlags & EAF_ACTIVE ? "true" : "false"));
+        result.pushKV("set_active", sea.nFlags & EAF_ACTIVE ? "true" : "false");
     } else
     {
         // List all possible
-        result.push_back(Pair("label", sea.sLabel));
-        result.push_back(Pair("active", sea.nFlags & EAF_ACTIVE ? "true" : "false"));
+        result.pushKV("label", sea.sLabel);
+        result.pushKV("active", sea.nFlags & EAF_ACTIVE ? "true" : "false");
     };
     
     return 0;
@@ -847,7 +885,7 @@ UniValue extkey(const JSONRPCRequest &request)
             throw std::runtime_error(strprintf("Unknown prefix '%s'", sInKey.substr(0, 4)));
         };
         
-        result.push_back(Pair("key_info", keyInfo));
+        result.pushKV("key_info", keyInfo);
     } else
     if (mode == "list")
     {
@@ -874,7 +912,7 @@ UniValue extkey(const JSONRPCRequest &request)
         if (nKeys + nAcc > 0)
             return ret;
         
-        result.push_back(Pair("result", "No keys to list."));
+        result.pushKV("result", "No keys to list.");
     } else
     if (mode == "account"
         || mode == "key")
@@ -964,9 +1002,9 @@ UniValue extkey(const JSONRPCRequest &request)
             
             pwallet->ExtKeyNew32(newKey, sPassphrase.c_str(), nHashes, sSeed.c_str());
             
-            result.push_back(Pair("warning",
+            result.pushKV("warning",
                 "If the same passphrase is used by another your privacy and coins will be compromised.\n"
-                "It is not recommended to use this feature - if you must, pick very unique values for passphrase, num hashes and generator parameters."));
+                "It is not recommended to use this feature - if you must, pick very unique values for passphrase, num hashes and generator parameters.");
         } else
         {
              pwallet->ExtKeyNew32(newKey);
@@ -974,7 +1012,7 @@ UniValue extkey(const JSONRPCRequest &request)
         
         b58Key.SetKey(newKey);
         
-        result.push_back(Pair("result", b58Key.ToString()));
+        result.pushKV("result", b58Key.ToString());
     } else
     if (mode == "import")
     {
@@ -1048,9 +1086,9 @@ UniValue extkey(const JSONRPCRequest &request)
             
             if (!wdb.TxnCommit())
                 throw std::runtime_error("TxnCommit failed.");
-            result.push_back(Pair("result", "Success."));
-            result.push_back(Pair("key_label", sek.sLabel));
-            result.push_back(Pair("note", "Please backup your wallet.")); // TODO: check for child of existing key? 
+            result.pushKV("result", "Success.");
+            result.pushKV("key_label", sek.sLabel);
+            result.pushKV("note", "Please backup your wallet."); // TODO: check for child of existing key? 
         } // cs_wallet
     } else
     if (mode == "importaccount")
@@ -1136,14 +1174,14 @@ UniValue extkey(const JSONRPCRequest &request)
             {
                 if (!wdb.TxnCommit())
                     throw std::runtime_error("TxnCommit failed.");
-                result.push_back(Pair("result", "Success."));
+                result.pushKV("result", "Success.");
                 
                 if (rv == 3)
-                    result.push_back(Pair("result", "secret added to existing account."));
+                    result.pushKV("result", "secret added to existing account.");
                 
-                result.push_back(Pair("account_label", sLabel));
-                result.push_back(Pair("scanned_from", nTimeStartScan));
-                result.push_back(Pair("note", "Please backup your wallet.")); // TODO: check for child of existing key?
+                result.pushKV("account_label", sLabel);
+                result.pushKV("scanned_from", nTimeStartScan);
+                result.pushKV("note", "Please backup your wallet."); // TODO: check for child of existing key?
             };
             
         } // cs_wallet
@@ -1177,7 +1215,7 @@ UniValue extkey(const JSONRPCRequest &request)
             };
             if (!wdb.TxnCommit())
                 throw std::runtime_error("TxnCommit failed.");
-            result.push_back(Pair("result", "Success."));
+            result.pushKV("result", "Success.");
         } // cs_wallet
         
     } else
@@ -1229,7 +1267,7 @@ UniValue extkey(const JSONRPCRequest &request)
                 throw std::runtime_error("TxnCommit failed.");
             };
             
-            result.push_back(Pair("result", "Success."));
+            result.pushKV("result", "Success.");
         } // cs_wallet
         
     } else
@@ -1268,25 +1306,25 @@ UniValue extkey(const JSONRPCRequest &request)
             if ((rv = pwallet->ExtKeyDeriveNewAccount(&wdb, sea, sLabel, sPath)) != 0)
             {
                 wdb.TxnAbort();
-                result.push_back(Pair("result", "Failed."));
-                result.push_back(Pair("reason", ExtKeyGetString(rv)));
+                result.pushKV("result", "Failed.");
+                result.pushKV("reason", ExtKeyGetString(rv));
             } else
             {
                 if (!wdb.TxnCommit())
                     throw std::runtime_error("TxnCommit failed.");
                 
-                result.push_back(Pair("result", "Success."));
-                result.push_back(Pair("account", sea->GetIDString58()));
+                result.pushKV("result", "Success.");
+                result.pushKV("account", sea->GetIDString58());
                 CStoredExtKey *sekAccount = sea->ChainAccount();
                 if (sekAccount)
                 {
                     CExtKey58 eKey58;
                     eKey58.SetKeyP(sekAccount->kp);
-                    result.push_back(Pair("public key", eKey58.ToString()));
+                    result.pushKV("public key", eKey58.ToString());
                 };
                 
                 if (sLabel != "")
-                    result.push_back(Pair("label", sLabel));
+                    result.pushKV("label", sLabel);
             };
         } // cs_wallet
     } else
@@ -1428,7 +1466,7 @@ UniValue extkey(const JSONRPCRequest &request)
             {
                 if (!wdb.TxnCommit())
                     throw std::runtime_error("TxnCommit failed.");
-                result.push_back(Pair("result", "Success."));
+                result.pushKV("result", "Success.");
             };
         } // cs_wallet
         
@@ -1562,7 +1600,7 @@ UniValue extkeyimportinternal(const JSONRPCRequest &request, bool fGenesisChain)
                 delete sekGenesisChain;
                 pwallet->ExtKeyRemoveAccountFromMapsAndFree(sea);
                 wdb.TxnAbort();
-                throw std::runtime_error(strprintf("NewExtKeyFromAccount failed, %s.", ExtKeyGetString(rv)));
+                throw JSONRPCError(RPC_WALLET_ERROR, strprintf(_("NewExtKeyFromAccount failed, %s."), ExtKeyGetString(rv)));
             };
         };
         
@@ -1579,14 +1617,14 @@ UniValue extkeyimportinternal(const JSONRPCRequest &request, bool fGenesisChain)
     
     CBitcoinAddress addr;
     addr.Set(idDerived, CChainParams::EXT_KEY_HASH);
-    result.push_back(Pair("result", "Success."));
-    result.push_back(Pair("master_id", addr.ToString()));
-    result.push_back(Pair("master_label", sek.sLabel));
+    result.pushKV("result", "Success.");
+    result.pushKV("master_id", addr.ToString());
+    result.pushKV("master_label", sek.sLabel);
     
-    result.push_back(Pair("account_id", sea->GetIDString58()));
-    result.push_back(Pair("account_label", sea->sLabel));
+    result.pushKV("account_id", sea->GetIDString58());
+    result.pushKV("account_label", sea->sLabel);
     
-    result.push_back(Pair("note", "Please backup your wallet."));
+    result.pushKV("note", "Please backup your wallet.");
     
     return result;
 }
@@ -1652,7 +1690,7 @@ UniValue keyinfo(const JSONRPCRequest &request)
     CHDWallet *pwallet = GetHDWallet();
     
     if (request.params.size() < 1)
-        throw std::runtime_error("Please specify a key.");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, _("Please specify a key."));
     
     // TODO: show public keys with unlocked wallet?
     EnsureWalletIsUnlocked(pwallet);
@@ -1669,12 +1707,12 @@ UniValue keyinfo(const JSONRPCRequest &request)
     {
         // Key was provided directly
         ekp = eKey58.GetKey();
-        result.push_back(Pair("key_type", "extaddress"));
-        result.push_back(Pair("mode", ekp.IsValidV() ? "private" : "public"));
+        result.pushKV("key_type", "extaddress");
+        result.pushKV("mode", ekp.IsValidV() ? "private" : "public");
         
         CKeyID id = ekp.GetID();
         
-        result.push_back(Pair("owned", pwallet->HaveExtKey(id) ? "true" : "false"));
+        result.pushKV("owned", pwallet->HaveExtKey(id) ? "true" : "false");
         
         std::string sError;
         
@@ -1701,28 +1739,27 @@ UniValue keyinfo(const JSONRPCRequest &request)
     CBitcoinAddress addr;
     if (addr.SetString(sKey))
     {
-        result.push_back(Pair("key_type", "address"));
+        result.pushKV("key_type", "address");
         
         CKeyID id;
         CPubKey pk;
         if (!addr.GetKeyID(id))
-            throw std::runtime_error("GetKeyID failed.");
-        
+            throw JSONRPCError(RPC_INTERNAL_ERROR, _("GetKeyID failed."));
         
         if (!pwallet->GetPubKey(id, pk))
         {
-            result.push_back(Pair("result", "Address not in wallet."));
+            result.pushKV("result", "Address not in wallet.");
             return result;
         };
         
-        result.push_back(Pair("public_key", HexStr(pk.begin(), pk.end())));
+        result.pushKV("public_key", HexStr(pk.begin(), pk.end()));
         
         
-        result.push_back(Pair("result", "Success."));
+        result.pushKV("result", "Success.");
         return result;
     }
     
-    throw std::runtime_error("Unknown keytype.");
+    throw JSONRPCError(RPC_INVALID_PARAMETER, _("Unknown keytype."));
 };
 
 UniValue extkeyaltversion(const JSONRPCRequest &request)
@@ -1740,7 +1777,7 @@ UniValue extkeyaltversion(const JSONRPCRequest &request)
     CExtKey58 eKey58;
     CExtKeyPair ekp;
     if (eKey58.Set58(sKeyIn.c_str()) != 0)
-        throw std::runtime_error("Invalid input key.");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, _("Invalid input key."));
     
     // TODO: handle testnet keys on main etc
     if (eKey58.IsValid(CChainParams::EXT_SECRET_KEY_BTC))
@@ -1753,7 +1790,7 @@ UniValue extkeyaltversion(const JSONRPCRequest &request)
     if (eKey58.IsValid(CChainParams::EXT_PUBLIC_KEY))
         return eKey58.ToStringVersion(CChainParams::EXT_PUBLIC_KEY_BTC);
     
-    throw std::runtime_error("Unknown input key version.");
+    throw JSONRPCError(RPC_INVALID_PARAMETER, _("Unknown input key version."));
 }
 
 
@@ -1790,7 +1827,7 @@ UniValue getnewextaddress(const JSONRPCRequest &request)
     if (0 != pwallet->NewExtKeyFromAccount(strLabel, sek, pLabel, pChild))
     {
         delete sek;
-        throw std::runtime_error("NewExtKeyFromAccount failed.");
+        throw JSONRPCError(RPC_WALLET_ERROR, _("NewExtKeyFromAccount failed."));
     };
 
     // CBitcoinAddress displays public key only
@@ -1828,11 +1865,11 @@ UniValue getnewstealthaddress(const JSONRPCRequest &request)
         errno = 0;
         num_prefix_bits = strtoul(sTemp.c_str(), &pend, 10);
         if (errno != 0 || !pend || *pend != '\0')
-            throw std::runtime_error("Failed: num_prefix_bits invalid number.");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, _("num_prefix_bits invalid number."));
     };
     
     if (num_prefix_bits > 32)
-        throw std::runtime_error("Failed: num_prefix_bits must be <= 32.");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, _("num_prefix_bits must be <= 32."));
     
     std::string sPrefix_num;
     if (request.params.size() > 2)
@@ -1842,7 +1879,7 @@ UniValue getnewstealthaddress(const JSONRPCRequest &request)
     std::string sError;
 
     if (0 != pwallet->NewStealthKeyFromAccount(sLabel, akStealth, num_prefix_bits, sPrefix_num.empty() ? NULL : sPrefix_num.c_str()))
-        throw std::runtime_error("NewStealthKeyFromAccount failed.");
+        throw JSONRPCError(RPC_WALLET_ERROR, _("NewStealthKeyFromAccount failed."));
     
     CStealthAddress sxAddr;
     akStealth.SetSxAddr(sxAddr);
@@ -1884,11 +1921,11 @@ UniValue importstealthaddress(const JSONRPCRequest &request)
         errno = 0;
         num_prefix_bits = strtoul(sTemp.c_str(), &pend, 10);
         if (errno != 0 || !pend || *pend != '\0')
-            throw std::runtime_error("Failed: num_prefix_bits invalid number.");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, _("num_prefix_bits invalid number."));
     };
     
     if (num_prefix_bits > 32)
-        throw std::runtime_error("Failed: num_prefix_bits must be <= 32.");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, _("num_prefix_bits must be <= 32."));
     
     uint32_t nPrefix = 0;
     std::string sPrefix_num;
@@ -1896,7 +1933,7 @@ UniValue importstealthaddress(const JSONRPCRequest &request)
     {
         sPrefix_num = request.params[4].get_str();
         if (!ExtractStealthPrefix(sPrefix_num.c_str(), nPrefix))
-            throw std::runtime_error("Failed: Could not convert prefix to number.");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, _("Could not convert prefix to number."));
     };
 
     std::vector<uint8_t> vchScanSecret;
@@ -1913,12 +1950,12 @@ UniValue importstealthaddress(const JSONRPCRequest &request)
     } else
     {
         if (!DecodeBase58(sScanSecret, vchScanSecret))
-            throw std::runtime_error("Could not decode scan secret as wif, hex or base58.");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, _("Could not decode scan secret as wif, hex or base58."));
     };
     if (vchScanSecret.size() > 0)
     {
         if (vchScanSecret.size() != 32)
-            throw std::runtime_error("Scan secret is not 32 bytes.");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, _("Scan secret is not 32 bytes."));
         skScan.Set(&vchScanSecret[0], true);
     };
 
@@ -1932,12 +1969,12 @@ UniValue importstealthaddress(const JSONRPCRequest &request)
     } else
     {
         if (!DecodeBase58(sSpendSecret, vchSpendSecret))
-            throw std::runtime_error("Could not decode spend secret as hex or base58.");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, _("Could not decode spend secret as hex or base58."));
     };
     if (vchSpendSecret.size() > 0)
     {
         if (vchSpendSecret.size() != 32)
-            throw std::runtime_error("Spend secret is not 32 bytes.");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, _("Spend secret is not 32 bytes."));
         skSpend.Set(&vchSpendSecret[0], true);
     };
 
@@ -1963,9 +2000,9 @@ UniValue importstealthaddress(const JSONRPCRequest &request)
     };
     
     if (0 != SecretToPublicKey(sxAddr.scan_secret, sxAddr.scan_pubkey))
-        throw std::runtime_error("Could not get scan public key.");
+        throw JSONRPCError(RPC_INTERNAL_ERROR, _("Could not get scan public key."));
     if (0 != SecretToPublicKey(skSpend, sxAddr.spend_pubkey))
-        throw std::runtime_error("Could not get spend public key.");
+        throw JSONRPCError(RPC_INTERNAL_ERROR, _("Could not get spend public key."));
 
     UniValue result(UniValue::VOBJ);
     bool fFound = false;
@@ -1983,36 +2020,81 @@ UniValue importstealthaddress(const JSONRPCRequest &request)
             {
                 CPubKey pk = skSpend.GetPubKey();
                 if (!pwallet->AddKeyPubKey(skSpend, pk))
-                    throw std::runtime_error("Import failed - AddKeyPubKey failed.");
+                    throw JSONRPCError(RPC_WALLET_ERROR, _("Import failed - AddKeyPubKey failed."));
                 fFound = true; // update stealth address with secret
                 break;
             };
 
-            throw std::runtime_error("Import failed - stealth address exists.");
+            throw JSONRPCError(RPC_WALLET_ERROR, _("Import failed - stealth address exists."));
         };
     };
     
     {
         LOCK(pwallet->cs_wallet);
         if (pwallet->HaveStealthAddress(sxAddr)) // check for extkeys, no update possible
-            throw std::runtime_error("Import failed - stealth address exists.");
+            throw JSONRPCError(RPC_WALLET_ERROR, _("Import failed - stealth address exists."));
         
         pwallet->SetAddressBook(sxAddr, sLabel, "");
     }
     
     if (fFound)
     {
-        result.push_back(Pair("result", "Success, updated " + sxAddr.Encoded()));
+        result.pushKV("result", "Success, updated " + sxAddr.Encoded());
     } else
     {
         if (!pwallet->ImportStealthAddress(sxAddr, skSpend))
             throw std::runtime_error("Could not save to wallet.");
-        result.push_back(Pair("result", "Success"));
-        result.push_back(Pair("stealth_address", sxAddr.Encoded()));
+        result.pushKV("result", "Success");
+        result.pushKV("stealth_address", sxAddr.Encoded());
     };
 
     return result;
 }
+
+int ListLooseStealthAddresses(UniValue &arr, CHDWallet *pwallet, bool fShowSecrets, bool fAddressBookInfo)
+{
+    std::set<CStealthAddress>::iterator it;
+    for (it = pwallet->stealthAddresses.begin(); it != pwallet->stealthAddresses.end(); ++it)
+    {
+        UniValue obj(UniValue::VOBJ);
+        obj.pushKV("Label", it->label);
+        obj.pushKV("Address", it->Encoded());
+        
+        if (fShowSecrets)
+        {
+            obj.pushKV("Scan Secret", CBitcoinSecret(it->scan_secret).ToString());
+            
+            CKeyID sid = it->GetSpendKeyID();
+            CKey skSpend;
+            if (pwallet->GetKey(sid, skSpend))
+                obj.pushKV("Spend Secret", CBitcoinSecret(skSpend).ToString());
+        };
+        
+        if (fAddressBookInfo)
+        {
+            std::map<CTxDestination, CAddressBookData>::const_iterator mi = pwallet->mapAddressBook.find(*it);
+            if (mi != pwallet->mapAddressBook.end())
+            {
+                // TODO: confirm vPath?
+                
+                if (mi->second.name != it->label)
+                    obj.pushKV("addr_book_label", mi->second.name);
+                if (!mi->second.purpose.empty())
+                    obj.pushKV("purpose", mi->second.purpose);
+                
+                UniValue objDestData(UniValue::VOBJ);
+                for (const auto &pair : mi->second.destdata)
+                    obj.pushKV(pair.first, pair.second);
+                if (objDestData.size() > 0)
+                    obj.pushKV("destdata", objDestData);
+            };
+        };
+        
+        arr.push_back(obj);
+    };
+    
+    return 0;
+};
 
 UniValue liststealthaddresses(const JSONRPCRequest &request)
 {
@@ -2051,7 +2133,7 @@ UniValue liststealthaddresses(const JSONRPCRequest &request)
         UniValue rAcc(UniValue::VOBJ);
         UniValue arrayKeys(UniValue::VARR);
         
-        rAcc.push_back(Pair("Account", ea->sLabel));
+        rAcc.pushKV("Account", ea->sLabel);
 
         AccStealthKeyMap::iterator it;
         for (it = ea->mapStealthKeys.begin(); it != ea->mapStealthKeys.end(); ++it)
@@ -2059,12 +2141,12 @@ UniValue liststealthaddresses(const JSONRPCRequest &request)
             const CEKAStealthKey &aks = it->second;
             
             UniValue objA(UniValue::VOBJ);
-            objA.push_back(Pair("Label", aks.sLabel));
-            objA.push_back(Pair("Address", aks.ToStealthAddress()));
+            objA.pushKV("Label", aks.sLabel);
+            objA.pushKV("Address", aks.ToStealthAddress());
             
             if (fShowSecrets)
             {
-                objA.push_back(Pair("Scan Secret", HexStr(aks.skScan.begin(), aks.skScan.end())));
+                objA.pushKV("Scan Secret", HexStr(aks.skScan.begin(), aks.skScan.end()));
                 std::string sSpend;
                 CStoredExtKey *sekAccount = ea->ChainAccount();
                 if (sekAccount && !sekAccount->fLocked)
@@ -2078,7 +2160,7 @@ UniValue liststealthaddresses(const JSONRPCRequest &request)
                 {
                     sSpend = "Account Locked.";
                 };
-                objA.push_back(Pair("Spend Secret", sSpend));
+                objA.pushKV("Spend Secret", sSpend);
             };
             
             arrayKeys.push_back(objA);
@@ -2086,7 +2168,7 @@ UniValue liststealthaddresses(const JSONRPCRequest &request)
         
         if (arrayKeys.size() > 0)
         {
-            rAcc.push_back(Pair("Stealth Addresses", arrayKeys));
+            rAcc.pushKV("Stealth Addresses", arrayKeys);
             result.push_back(rAcc);
         };
     };
@@ -2097,33 +2179,13 @@ UniValue liststealthaddresses(const JSONRPCRequest &request)
         UniValue rAcc(UniValue::VOBJ);
         UniValue arrayKeys(UniValue::VARR);
         
-        rAcc.push_back(Pair("Account", "Loose Keys"));
+        rAcc.pushKV("Account", "Loose Keys");
         
-        std::set<CStealthAddress>::iterator it;
-        for (it = pwallet->stealthAddresses.begin(); it != pwallet->stealthAddresses.end(); ++it)
-        {
-            UniValue objA(UniValue::VOBJ);
-            objA.push_back(Pair("Label", it->label));
-            objA.push_back(Pair("Address", it->Encoded()));
-            
-            if (fShowSecrets)
-            {
-                objA.push_back(Pair("Scan Secret", HexStr(it->scan_secret.begin(), it->scan_secret.end())));
-                
-                CKeyID sid = it->GetSpendKeyID();
-                CKey skSpend;
-                if (!pwallet->GetKey(sid, skSpend))
-                    throw std::runtime_error("Unknown spend key!");
-                
-                objA.push_back(Pair("Spend Secret", HexStr(skSpend.begin(), skSpend.end())));
-            };
-            
-            arrayKeys.push_back(objA);
-        };
+        ListLooseStealthAddresses(arrayKeys, pwallet, fShowSecrets, false);
         
         if (arrayKeys.size() > 0)
         {
-            rAcc.push_back(Pair("Stealth Addresses", arrayKeys));
+            rAcc.pushKV("Stealth Addresses", arrayKeys);
             result.push_back(rAcc);
         };
     };
@@ -2151,7 +2213,7 @@ UniValue scanchain(const JSONRPCRequest &request)
     
     pwallet->ScanChainFromHeight(nFromHeight);
     
-    result.push_back(Pair("result", "Scan complete."));
+    result.pushKV("result", "Scan complete.");
     
     return result;
 }
@@ -2179,24 +2241,24 @@ UniValue reservebalance(const JSONRPCRequest &request)
         if (fReserve)
         {
             if (request.params.size() == 1)
-                throw std::runtime_error("must provide amount to reserve balance.\n");
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "must provide amount to reserve balance.");
             int64_t nAmount = AmountFromValue(request.params[1]);
             nAmount = (nAmount / CENT) * CENT;  // round to cent
             if (nAmount < 0)
-                throw std::runtime_error("amount cannot be negative.\n");
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "amount cannot be negative.");
             pwallet->SetReserveBalance(nAmount);
         } else
         {
             if (request.params.size() > 1)
-                throw std::runtime_error("cannot specify amount to turn off reserve.\n");
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "cannot specify amount to turn off reserve.");
             pwallet->SetReserveBalance(0);
         };
         WakeThreadStakeMiner();
     };
 
     UniValue result(UniValue::VOBJ);
-    result.push_back(Pair("reserve", (pwallet->nReserveBalance > 0)));
-    result.push_back(Pair("amount", ValueFromAmount(pwallet->nReserveBalance)));
+    result.pushKV("reserve", (pwallet->nReserveBalance > 0));
+    result.pushKV("amount", ValueFromAmount(pwallet->nReserveBalance));
     return result;
 }
 
@@ -2481,8 +2543,8 @@ UniValue clearwallettransactions(const JSONRPCRequest &request)
     
     UniValue result(UniValue::VOBJ);
     
-    result.push_back(Pair("transactions_removed", (int)nRemoved));
-    result.push_back(Pair("records_removed", (int)nRecordsRemoved));
+    result.pushKV("transactions_removed", (int)nRemoved);
+    result.pushKV("records_removed", (int)nRecordsRemoved);
     
     return result;
 }
@@ -2552,10 +2614,10 @@ UniValue filteraddresses(const JSONRPCRequest &request)
     if (request.params.size() == 1 && nOffset == -1)
     {
         LOCK(pwallet->cs_wallet);
-        // count addresses
+        // Count addresses
         UniValue result(UniValue::VOBJ);
         
-        result.push_back(Pair("total", (int)pwallet->mapAddressBook.size()));
+        result.pushKV("total", (int)pwallet->mapAddressBook.size());
         
         int nReceive = 0, nSend = 0;
         for (it = pwallet->mapAddressBook.begin(); it != pwallet->mapAddressBook.end(); ++it)
@@ -2573,8 +2635,8 @@ UniValue filteraddresses(const JSONRPCRequest &request)
                 nSend++;
         };
         
-        result.push_back(Pair("num_receive", nReceive));
-        result.push_back(Pair("num_send", nSend));
+        result.pushKV("num_receive", nReceive);
+        result.pushKV("num_send", nSend);
         
         return result;
     };
@@ -2675,9 +2737,9 @@ UniValue filteraddresses(const JSONRPCRequest &request)
             UniValue entry(UniValue::VOBJ);
             
             CBitcoinAddress address(item->first);
-            entry.push_back(Pair("address", address.ToString()));
-            entry.push_back(Pair("label", item->second.name));
-            entry.push_back(Pair("owned", item->second.nOwned == 1 ? "true" : "false"));
+            entry.pushKV("address", address.ToString());
+            entry.pushKV("label", item->second.name);
+            entry.pushKV("owned", item->second.nOwned == 1 ? "true" : "false");
             
             if (nShowPath > 0)
             {
@@ -2688,19 +2750,19 @@ UniValue filteraddresses(const JSONRPCRequest &request)
                     
                     if (mi != mapKeyIndexCache.end())
                     {
-                        entry.push_back(Pair("root", mi->second));
+                        entry.pushKV("root", mi->second);
                     } else
                     {
                         CKeyID accId;
                         if (!wdb.ReadExtKeyIndex(index, accId))
                         {
-                            entry.push_back(Pair("root", "error"));
+                            entry.pushKV("root", "error");
                         } else
                         {
                             CBitcoinAddress addr;
                             addr.Set(accId, CChainParams::EXT_ACC_HASH);
                             std::string sTmp = addr.ToString();
-                            entry.push_back(Pair("root", sTmp));
+                            entry.pushKV("root", sTmp);
                             mapKeyIndexCache[index] = sTmp;
                         };
                     };
@@ -2710,7 +2772,7 @@ UniValue filteraddresses(const JSONRPCRequest &request)
                 {
                     std::string sPath;
                     if (0 == PathToString(item->second.vPath, sPath, '\'', 1))
-                        entry.push_back(Pair("path", sPath));
+                        entry.pushKV("path", sPath);
                 };
             };
             
@@ -2790,7 +2852,7 @@ UniValue manageaddressbook(const JSONRPCRequest &request)
         sPurpose = mabi->second.purpose;
         
         for (const auto &pair : mabi->second.destdata)
-            objDestData.push_back(Pair(pair.first, pair.second));
+            objDestData.pushKV(pair.first, pair.second);
         
     } else
     if (sAction == "del")
@@ -2810,30 +2872,30 @@ UniValue manageaddressbook(const JSONRPCRequest &request)
         
         UniValue result(UniValue::VOBJ);
     
-        result.push_back(Pair("action", sAction));
-        result.push_back(Pair("address", sAddress));
+        result.pushKV("action", sAction);
+        result.pushKV("address", sAddress);
         
-        result.push_back(Pair("label", mabi->second.name));
-        result.push_back(Pair("purpose", mabi->second.purpose));
+        result.pushKV("label", mabi->second.name);
+        result.pushKV("purpose", mabi->second.purpose);
         
         if (mabi->second.nOwned == 0)
             mabi->second.nOwned = pwallet->HaveAddress(address) ? 1 : 2;
         
-        result.push_back(Pair("owned", mabi->second.nOwned == 1 ? "true" : "false"));
+        result.pushKV("owned", mabi->second.nOwned == 1 ? "true" : "false");
         
         if (mabi->second.vPath.size() > 1)
         {
             std::string sPath;
             if (0 == PathToString(mabi->second.vPath, sPath, '\'', 1))
-                result.push_back(Pair("path", sPath));
+                result.pushKV("path", sPath);
         };
         
         for (const auto &pair : mabi->second.destdata)
-            objDestData.push_back(Pair(pair.first, pair.second));
+            objDestData.pushKV(pair.first, pair.second);
         if (objDestData.size() > 0)
-            result.push_back(Pair("destdata", objDestData));
+            result.pushKV("destdata", objDestData);
         
-        result.push_back(Pair("result", "success"));
+        result.pushKV("result", "success");
         
         return result;
     } else
@@ -2855,17 +2917,17 @@ UniValue manageaddressbook(const JSONRPCRequest &request)
     
     UniValue result(UniValue::VOBJ);
     
-    result.push_back(Pair("action", sAction));
-    result.push_back(Pair("address", sAddress));
+    result.pushKV("action", sAction);
+    result.pushKV("address", sAddress);
     
     if (sLabel.size() > 0)
-        result.push_back(Pair("label", sLabel));
+        result.pushKV("label", sLabel);
     if (sPurpose.size() > 0)
-        result.push_back(Pair("purpose", sPurpose));
+        result.pushKV("purpose", sPurpose);
     if (objDestData.size() > 0)
-        result.push_back(Pair("destdata", objDestData));
+        result.pushKV("destdata", objDestData);
     
-    result.push_back(Pair("result", "success"));
+    result.pushKV("result", "success");
     
     return result;
 }
@@ -2922,12 +2984,12 @@ UniValue setvote(const JSONRPCRequest &request)
     UniValue result(UniValue::VOBJ);
     
     if (issue < 1)
-        result.push_back(Pair("result", _("Cleared vote token.")));
+        result.pushKV("result", _("Cleared vote token."));
     else
-        result.push_back(Pair("result", strprintf(_("Voting for option %u on proposal %u"), option, issue)));
+        result.pushKV("result", strprintf(_("Voting for option %u on proposal %u"), option, issue));
     
-    result.push_back(Pair("from_height", nStartHeight));
-    result.push_back(Pair("to_height", nEndHeight));
+    result.pushKV("from_height", nStartHeight);
+    result.pushKV("to_height", nEndHeight);
     
     return result;
 }
@@ -2963,10 +3025,10 @@ UniValue votehistory(const JSONRPCRequest &request)
                     || (v.nToken & 0xFFFF) < 1)
                     continue;
                 UniValue vote(UniValue::VOBJ);
-                vote.push_back(Pair("proposal", (int)(v.nToken & 0xFFFF)));
-                vote.push_back(Pair("option", (int)(v.nToken >> 16)));
-                vote.push_back(Pair("from_height", v.nStart));
-                vote.push_back(Pair("to_height", v.nEnd));
+                vote.pushKV("proposal", (int)(v.nToken & 0xFFFF));
+                vote.pushKV("option", (int)(v.nToken >> 16));
+                vote.pushKV("from_height", v.nStart);
+                vote.pushKV("to_height", v.nEnd);
                 result.push_back(vote);
             };
             return result;
@@ -2985,11 +3047,11 @@ UniValue votehistory(const JSONRPCRequest &request)
     {
         auto &v = vVoteTokens[i];
         UniValue vote(UniValue::VOBJ);
-        vote.push_back(Pair("proposal", (int)(v.nToken & 0xFFFF)));
-        vote.push_back(Pair("option", (int)(v.nToken >> 16)));
-        vote.push_back(Pair("from_height", v.nStart));
-        vote.push_back(Pair("to_height", v.nEnd));
-        vote.push_back(Pair("added", v.nTimeAdded));
+        vote.pushKV("proposal", (int)(v.nToken & 0xFFFF));
+        vote.pushKV("option", (int)(v.nToken >> 16));
+        vote.pushKV("from_height", v.nStart);
+        vote.pushKV("to_height", v.nEnd);
+        vote.pushKV("added", v.nTimeAdded);
         result.push_back(vote);
     };
     
@@ -3056,16 +3118,16 @@ UniValue tallyvotes(const JSONRPCRequest &request)
     } while ((pindex = pindex->pprev));
     
     UniValue result(UniValue::VOBJ);
-    result.push_back(Pair("proposal", issue));
-    result.push_back(Pair("height_start", nStartHeight));
-    result.push_back(Pair("height_end", nEndHeight));
-    result.push_back(Pair("blocks_counted", nBlocks));
+    result.pushKV("proposal", issue);
+    result.pushKV("height_start", nStartHeight);
+    result.pushKV("height_end", nEndHeight);
+    result.pushKV("blocks_counted", nBlocks);
     
     float fnBlocks = (float) nBlocks;
     for (auto &i : mapVotes)
     {
         std::string sKey = i.first == 0 ? "Abstain" : strprintf("Option %d", i.first);
-        result.push_back(Pair(sKey, strprintf("%d, %.02f%%", i.second, ((float) i.second / fnBlocks) * 100.0)));
+        result.pushKV(sKey, strprintf("%d, %.02f%%", i.second, ((float) i.second / fnBlocks) * 100.0));
     };
     
     return result;
@@ -3099,32 +3161,32 @@ UniValue getstakinginfo(const JSONRPCRequest &request)
     bool fStaking = nLastCoinStakeSearchTime && nWeight && fIsStaking;
     uint64_t nExpectedTime = fStaking ? (Params().GetTargetSpacing() * nNetworkWeight / nWeight) : 0;
 
-    obj.push_back(Pair("enabled", GetBoolArg("-staking", true)));
-    obj.push_back(Pair("staking", fStaking));
-    obj.push_back(Pair("errors", GetWarnings("statusbar")));
+    obj.pushKV("enabled", GetBoolArg("-staking", true));
+    obj.pushKV("staking", fStaking);
+    obj.pushKV("errors", GetWarnings("statusbar"));
 
-    obj.push_back(Pair("percentyearreward", rCoinYearReward));
-    obj.push_back(Pair("moneysupply", ValueFromAmount(nMoneySupply)));
+    obj.pushKV("percentyearreward", rCoinYearReward);
+    obj.pushKV("moneysupply", ValueFromAmount(nMoneySupply));
 
     if (pwallet->nUserDevFundCedePercent > 0)
-        obj.push_back(Pair("userfoundationdonationpercent", pwallet->nUserDevFundCedePercent));
+        obj.pushKV("userfoundationdonationpercent", pwallet->nUserDevFundCedePercent);
 
     const DevFundSettings *pDevFundSettings = Params().GetDevFundSettings(nTipTime);
     if (pDevFundSettings && pDevFundSettings->nMinDevStakePercent > 0)
-        obj.push_back(Pair("foundationdonationpercent", pDevFundSettings->nMinDevStakePercent));
+        obj.pushKV("foundationdonationpercent", pDevFundSettings->nMinDevStakePercent);
     
 
-    obj.push_back(Pair("currentblocksize", (uint64_t)nLastBlockSize));
-    obj.push_back(Pair("currentblocktx", (uint64_t)nLastBlockTx));
-    obj.push_back(Pair("pooledtx", (uint64_t)mempool.size()));
+    obj.pushKV("currentblocksize", (uint64_t)nLastBlockSize);
+    obj.pushKV("currentblocktx", (uint64_t)nLastBlockTx);
+    obj.pushKV("pooledtx", (uint64_t)mempool.size());
 
-    obj.push_back(Pair("difficulty", GetDifficulty()));
-    obj.push_back(Pair("search-interval", (int)nLastCoinStakeSearchInterval));
+    obj.pushKV("difficulty", GetDifficulty());
+    obj.pushKV("search-interval", (int)nLastCoinStakeSearchInterval);
 
-    obj.push_back(Pair("weight", (uint64_t)nWeight));
-    obj.push_back(Pair("netstakeweight", (uint64_t)nNetworkWeight));
+    obj.pushKV("weight", (uint64_t)nWeight);
+    obj.pushKV("netstakeweight", (uint64_t)nNetworkWeight);
 
-    obj.push_back(Pair("expectedtime", nExpectedTime));
+    obj.pushKV("expectedtime", nExpectedTime);
     
     return obj;
 };
@@ -3234,13 +3296,13 @@ UniValue listunspentanon(const JSONRPCRequest &request)
         
         
         UniValue entry(UniValue::VOBJ);
-        entry.push_back(Pair("txid", out.txhash.GetHex()));
-        entry.push_back(Pair("vout", out.i));
+        entry.pushKV("txid", out.txhash.GetHex());
+        entry.pushKV("vout", out.i);
 
-        entry.push_back(Pair("amount", ValueFromAmount(nValue)));
-        entry.push_back(Pair("confirmations", out.nDepth));
-        //entry.push_back(Pair("spendable", out.fSpendable));
-        //entry.push_back(Pair("solvable", out.fSolvable));
+        entry.pushKV("amount", ValueFromAmount(nValue));
+        entry.pushKV("confirmations", out.nDepth);
+        //entry.pushKV("spendable", out.fSpendable);
+        //entry.pushKV("solvable", out.fSolvable);
         results.push_back(entry);
     }
 
@@ -3356,26 +3418,26 @@ UniValue listunspentblind(const JSONRPCRequest &request)
             continue;
         
         UniValue entry(UniValue::VOBJ);
-        entry.push_back(Pair("txid", out.txhash.GetHex()));
-        entry.push_back(Pair("vout", out.i));
+        entry.pushKV("txid", out.txhash.GetHex());
+        entry.pushKV("vout", out.i);
 
         if (fValidAddress) {
-            entry.push_back(Pair("address", CBitcoinAddress(address).ToString()));
+            entry.pushKV("address", CBitcoinAddress(address).ToString());
 
             if (pwallet->mapAddressBook.count(address))
-                entry.push_back(Pair("account", pwallet->mapAddressBook[address].name));
+                entry.pushKV("account", pwallet->mapAddressBook[address].name);
 
             if (scriptPubKey->IsPayToScriptHash()) {
                 const CScriptID& hash = boost::get<CScriptID>(address);
                 CScript redeemScript;
                 if (pwallet->GetCScript(hash, redeemScript))
-                    entry.push_back(Pair("redeemScript", HexStr(redeemScript.begin(), redeemScript.end())));
+                    entry.pushKV("redeemScript", HexStr(redeemScript.begin(), redeemScript.end()));
             }
         }
 
-        entry.push_back(Pair("scriptPubKey", HexStr(scriptPubKey->begin(), scriptPubKey->end())));
-        entry.push_back(Pair("amount", ValueFromAmount(nValue)));
-        entry.push_back(Pair("confirmations", out.nDepth));
+        entry.pushKV("scriptPubKey", HexStr(scriptPubKey->begin(), scriptPubKey->end()));
+        entry.pushKV("amount", ValueFromAmount(nValue));
+        entry.pushKV("confirmations", out.nDepth);
         //entry.push_back(Pair("spendable", out.fSpendable));
         //entry.push_back(Pair("solvable", out.fSolvable));
         results.push_back(entry);
@@ -3635,7 +3697,7 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
     if (fCheckFeeOnly)
     {
         UniValue result(UniValue::VOBJ);
-        result.push_back(Pair("fee", ValueFromAmount(nFeeRet)));
+        result.pushKV("fee", ValueFromAmount(nFeeRet));
         return result;
     };
     
@@ -3659,8 +3721,8 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
         vErrors.push_back(strprintf("Error: The transaction was rejected: %s", FormatStateMessage(state)));
         
         UniValue result(UniValue::VOBJ);
-        result.push_back(Pair("txid", wtx.GetHash().GetHex()));
-        result.push_back(Pair("errors", vErrors));
+        result.pushKV("txid", wtx.GetHash().GetHex());
+        result.pushKV("errors", vErrors);
         return result;
     };
     
@@ -3918,7 +3980,7 @@ UniValue debugwallet(const JSONRPCRequest &request)
     
     UniValue obj(UniValue::VOBJ);
     
-    obj.push_back(Pair("unabandoned_orphans", (int)nUnabandonedOrphans));
+    obj.pushKV("unabandoned_orphans", (int)nUnabandonedOrphans);
     
     return obj;
 }

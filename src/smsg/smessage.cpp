@@ -12,6 +12,7 @@ Notes:
         -nosmsg             Disable secure messaging (fNoSmsg)
         -debugsmsg          Show extra debug messages (fDebugSmsg)
         -smsgscanchain      Scan the block chain for public key addresses on startup
+        -smsgnotify         notify an external script when a message comes in
 
 
     Wallet Locked
@@ -700,7 +701,7 @@ void ThreadSecureMsg()
             } // g_connman->cs_vNodes
 
             if(fDebugSmsg)
-                LogPrintf("shadow-smsg thread: ignoring - looked peer %d, status on search %u\n", nPeerId, fExists);
+                LogPrintf("smsg-thread: ignoring - looked peer %d, status on search %u\n", nPeerId, fExists);
         };
 
         MilliSleep(SMSG_THREAD_DELAY * 1000); //  // check every SMSG_THREAD_DELAY seconds
@@ -786,6 +787,19 @@ void ThreadSecureMsgPow()
         // Shutdown thread waits 5 seconds, this should be less
         MilliSleep(2000); // seconds
     };
+};
+
+std::string SecureMsgGetHelpString(bool showDebug)
+{
+    std::string strUsage;
+    
+    strUsage += HelpMessageGroup(_("Secure messaging options:"));
+    strUsage += HelpMessageOpt("-smsg", _("Enable secure messaging (default: true)"));
+    strUsage += HelpMessageOpt("-debugsmsg", _("Show extra debug messages (default: false)"));
+    strUsage += HelpMessageOpt("-smsgscanchain", _("Scan the block chain for public key addresses on startup (default: false)"));
+    strUsage += HelpMessageOpt("-smsgnotify=<cmd>", _("Execute command when a message is received (%s in cmd is replaced by receiving address)"));
+    
+    return strUsage;
 };
 
 int SecureMsgBuildBucketSet()
@@ -1363,11 +1377,17 @@ int SecureMsgReceiveData(CNode *pfrom, const std::string &strCommand, CDataStrea
         + smsgPong = pong response
         + smsgMatch =
             Obsolete, it used tell a node up to which time their messages were synced in response to smsg, but this is overhead because we know exactly when we sent them
-
     */
 
     if (fDebugSmsg)
         LogPrintf("SecureMsgReceiveData() %s %s.\n", pfrom->addrName.c_str(), strCommand.c_str());
+
+    if (!fSecMsgEnabled)
+    {
+        if (strCommand == "smsgPing") // ignore smsgPing
+            return 0;
+        return 2;
+    };
 
     if (strCommand == "smsgInv")
     {

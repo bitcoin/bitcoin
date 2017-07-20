@@ -236,6 +236,7 @@ bool CHDWallet::IsHDEnabled()
 
 extern int ListLooseExtKeys(int nShowKeys, UniValue &ret, size_t &nKeys);
 extern int ListAccountExtKeys(int nShowKeys, UniValue &ret, size_t &nKeys);
+extern int ListLooseStealthAddresses(UniValue &arr, CHDWallet *pwallet, bool fShowSecrets, bool fAddressBookInfo);
 bool CHDWallet::DumpJson(UniValue &rv, std::string &sError)
 {
     LogPrintf("Dumping wallet to JSON.\n");
@@ -245,15 +246,237 @@ bool CHDWallet::DumpJson(UniValue &rv, std::string &sError)
     
     LOCK(cs_wallet);
     
+    CHDWalletDB wdb(strWalletFile, "r");
+    
     size_t nKeys, nAcc;
     UniValue extkeys(UniValue::VARR);
     UniValue extaccs(UniValue::VARR);
     ListLooseExtKeys(2, extkeys, nKeys);
-    ListAccountExtKeys(2, extaccs, nAcc);
+    ListAccountExtKeys(3, extaccs, nAcc);
+    
+    
+    CExtKey58 eKey58;
+    for (size_t k = 0; k < extaccs.size(); ++k)
+    {
+        UniValue &acc = extaccs.get(k);
+        size_t nChains = acc["chains"].size();
+        
+        std::vector<CExtKeyPair> vChains;
+        vChains.resize(nChains);
+        for (size_t c = 0; c < nChains; ++c)
+        {
+            UniValue &chain = acc.get("chains").get(c);
+            
+            const std::string &sEvkey = chain["evkey"].get_str();
+            
+            size_t nDerives = 0;
+            size_t nDerivesH = 0;
+            
+            if (chain["num_derives"].isStr())
+                nDerives = std::stoi(chain["num_derives"].get_str());
+            if (chain["num_derives_h"].isStr())
+                nDerivesH = std::stoi(chain["num_derives_h"].get_str());
+            
+            
+            eKey58.Set58(sEvkey.c_str());
+            CExtKeyPair kp = eKey58.GetKey();
+            vChains[c] = kp;
+            
+            bool fIsStealth = false;
+            if (chain["use_type"].isStr())
+            {
+                if (chain["use_type"].get_str() == "stealth")
+                    fIsStealth = true;
+            };
+            
+            UniValue derivedKeys(UniValue::VARR);
+            UniValue derivedKeysH(UniValue::VARR);
+            
+            
+            if (fIsStealth)
+            {
+                // Dump from pack instead
+            } else
+            {
+                CKey key;
+                uint32_t nChild = 0;
+                for (size_t k = 0; k < nDerives; ++k)
+                {
+                    if (kp.Derive(key, nChild))
+                    {
+                        UniValue keyobj(UniValue::VOBJ);
+                        
+                        CKeyID idk = key.GetPubKey().GetID();
+                        keyobj.pushKV("path", std::to_string(nChild));
+                        keyobj.pushKV("address", CBitcoinAddress(idk).ToString());
+                        keyobj.pushKV("privkey", CBitcoinSecret(key).ToString());
+                        
+                        std::map<CTxDestination, CAddressBookData>::const_iterator mi = mapAddressBook.find(idk);
+                        if (mi != mapAddressBook.end())
+                        {
+                            // TODO: confirm vPath?
+                            keyobj.pushKV("label", mi->second.name);
+                            if (!mi->second.purpose.empty())
+                                keyobj.pushKV("purpose", mi->second.purpose);
+                            
+                            UniValue objDestData(UniValue::VOBJ);
+                            for (const auto &pair : mi->second.destdata)
+                                objDestData.push_back(Pair(pair.first, pair.second));
+                            if (objDestData.size() > 0)
+                                keyobj.pushKV("destdata", objDestData);
+                        };
+                        derivedKeys.push_back(keyobj);
+                    };
+                    nChild++;
+                };
+                chain.pushKV("derived_keys", derivedKeys);
+            };
+        };
+        // Read stealth keys from packs to keep metadata such as prefix
+        size_t nPackStealthAddrs = 0;
+        size_t nPackStealthKeys = 0;
+        
+        if (acc["stealth_address_pack"].isNum())
+            nPackStealthAddrs = acc["stealth_address_pack"].get_int();
+        if (acc["stealth_keys_received_pack"].isNum())
+            nPackStealthKeys = acc["stealth_keys_received_pack"].get_int();
+            
+        
+        CKeyID idAcc;
+        CBitcoinAddress accIdAddr(acc["id"].get_str());
+        
+        if (!accIdAddr.IsValid(CChainParams::EXT_ACC_HASH))
+        {
+            LogPrintf("%s: ERROR - Invalid account id %s\n", __func__, acc["id"].get_str());
+            acc.pushKV("ERROR", "Invalid account id");
+            continue;
+        };
+        
+        accIdAddr.GetKeyID(idAcc, CChainParams::EXT_ACC_HASH);
+        
+        
+        std::map<CKeyID, std::pair<CKey, std::string> > mapStealthKeySpend;
+        UniValue stealthAddresses(UniValue::VARR);
+        std::vector<CEKAStealthKeyPack> aksPak;
+        for (uint32_t i = 0; i <= nPackStealthAddrs; ++i)
+        {
+            if (!wdb.ReadExtStealthKeyPack(idAcc, i, aksPak))
+                continue;
+            
+            for (const auto &sxPacked : aksPak)
+            {
+                UniValue sxAddr(UniValue::VOBJ);
+                
+                if (!sxPacked.aks.sLabel.empty())
+                    sxAddr.pushKV("label", sxPacked.aks.sLabel);
+                
+                CStealthAddress sx;
+                sxPacked.aks.SetSxAddr(sx);
+                std::string sxStr = sx.ToString();
+                
+                sxAddr.pushKV("address", sxStr);
+                sxAddr.pushKV("scan_priv", CBitcoinSecret(sxPacked.aks.skScan).ToString());
+                
+                size_t p = sxPacked.aks.akSpend.nParent;
+                if (p >= vChains.size()+1)
+                {
+                    LogPrintf("%s: ERROR - chain out of range %d\n", __func__, p);
+                    acc.pushKV("ERROR", "Invalid chain offset.");
+                    continue;
+                };
+                
+                // Chain0 is the account key
+                CExtKeyPair &kp = vChains[p-1];
+                
+                CKey kSpend;
+                uint32_t nChild = sxPacked.aks.akSpend.nKey;
+                if (kp.Derive(kSpend, nChild))
+                {
+                    sxAddr.pushKV("spend_priv", CBitcoinSecret(kSpend).ToString());
+                } else
+                {
+                    LogPrintf("%s: ERROR - Derive failed %u\n", __func__, nChild);
+                    acc.pushKV("ERROR", "Derive spend key failed.");
+                };
+                mapStealthKeySpend[sxPacked.id] = std::make_pair(kSpend, sxStr);
+                
+                sxAddr.pushKV("account_chain", (int)sxPacked.aks.akSpend.nParent);
+                
+                uint32_t nScanKey = sxPacked.aks.nScanKey;
+                ClearHardenedBit(nScanKey);
+                sxAddr.pushKV("scan_key_offset", std::to_string(nScanKey)+"'");
+                
+                std::map<CTxDestination, CAddressBookData>::const_iterator mi = mapAddressBook.find(sx);
+                if (mi != mapAddressBook.end())
+                {
+                    // TODO: confirm vPath?
+                    
+                    if (mi->second.name != sxPacked.aks.sLabel)
+                        sxAddr.pushKV("addr_book_label", mi->second.name);
+                    if (!mi->second.purpose.empty())
+                        sxAddr.pushKV("purpose", mi->second.purpose);
+                    
+                    UniValue objDestData(UniValue::VOBJ);
+                    for (const auto &pair : mi->second.destdata)
+                        sxAddr.push_back(Pair(pair.first, pair.second));
+                    if (objDestData.size() > 0)
+                        sxAddr.pushKV("destdata", objDestData);
+                };
+                
+                
+                stealthAddresses.push_back(sxAddr);
+            };
+        };
+        
+        acc.pushKV("stealth_addresses", stealthAddresses);
+        
+        UniValue stealthReceivedKeys(UniValue::VARR);
+        std::vector<CEKASCKeyPack> asckPak;
+        for (uint32_t i = 0; i <= nPackStealthKeys; ++i)
+        {
+            if (!wdb.ReadExtStealthKeyChildPack(idAcc, i, asckPak))
+                continue;
+            
+            for (const auto &keyPacked : asckPak)
+            {
+                UniValue obj(UniValue::VOBJ);
+                obj.pushKV("address", CBitcoinAddress(keyPacked.id).ToString());
+                
+                CKey kOut, kSpend;
+                
+                std::map<CKeyID, std::pair<CKey, std::string> >::const_iterator mi;
+                if ((mi = mapStealthKeySpend.find(keyPacked.asck.idStealthKey)) == mapStealthKeySpend.end())
+                {
+                    LogPrintf("%s: ERROR - Unknown stealth key %s\n", __func__, HexStr(keyPacked.asck.idStealthKey.begin(), keyPacked.asck.idStealthKey.end()));
+                    acc.pushKV("ERROR", "Unknown stealth key.");
+                } else
+                {
+                    obj.pushKV("stealth_address", mi->second.second);
+                    
+                    if (0 != StealthSharedToSecretSpend(keyPacked.asck.sShared, mi->second.first, kOut))
+                    {
+                        LogPrintf("%s: ERROR - StealthSharedToSecretSpend failed\n", __func__);
+                        acc.pushKV("ERROR", "StealthSharedToSecretSpend failed.");
+                    } else
+                    {
+                        obj.pushKV("privkey", CBitcoinSecret(kOut).ToString());
+                    };
+                };
+                stealthReceivedKeys.push_back(obj);
+            };
+            
+        };
+        
+        acc.pushKV("keys_received_on_stealth_addresses", stealthReceivedKeys);
+    };
+    
     
     rv.pushKV("loose_extkeys", extkeys);
     rv.pushKV("accounts", extaccs);
     
+    UniValue stealthAddresses(UniValue::VARR);
+    ListLooseStealthAddresses(stealthAddresses, this, true, true);
+    rv.pushKV("imported_stealth_addresses", stealthAddresses);
     
     return true;
 };
@@ -1041,6 +1264,45 @@ bool CHDWallet::DelAddressBook(const CTxDestination &address)
     fErased = CWallet::DelAddressBook(address) ? true : fErased;
     
     return fErased;
+};
+
+int64_t CHDWallet::GetOldestActiveAccountTime()
+{
+    LOCK(cs_wallet);
+    
+    int64_t nTime = GetTime();
+    
+    for (const auto &mi : mapExtAccounts)
+    {
+        CExtKeyAccount *pa = mi.second;
+        mapEKValue_t::iterator mvi = pa->mapValue.find(EKVT_CREATED_AT);
+        if (mvi != pa->mapValue.end())
+        {
+            int64_t nCreatedAt;
+            GetCompressedInt64(mvi->second, (uint64_t&)nCreatedAt);
+            if (nTime > nCreatedAt)
+                nTime = nCreatedAt;
+        };
+    };
+    
+    return nTime;
+};
+
+int64_t CHDWallet::CountActiveAccountKeys()
+{
+    LOCK(cs_wallet);
+    int64_t nKeys = 0;
+    
+    for (const auto &mi : mapExtAccounts)
+    {
+        CExtKeyAccount *pa = mi.second;
+        nKeys += pa->mapKeys.size();
+        nKeys += pa->mapStealthChildKeys.size();
+        //nKeys += pa->mapLookAhead.size();
+    };
+    
+    
+    return nKeys;
 };
 
 isminetype CHDWallet::IsMine(const CScript &scriptPubKey, CKeyID &keyID,
@@ -4091,7 +4353,7 @@ int CHDWallet::ExtKeyImportAccount(CHDWalletDB *pwdb, CStoredExtKey &sekIn, int6
     CStoredExtKey sekExist;
     if (pwdb->ReadExtKey(idAccount, sekExist))
     {
-        // add secret if exists in db
+        // Add secret if exists in db
         *sek = sekExist;
         if (!sek->kp.IsValidV()
             && sekIn.kp.IsValidV())
@@ -4301,7 +4563,7 @@ int CHDWallet::ExtKeyNewMaster(CHDWalletDB *pwdb, CKeyID &idMaster, bool fAutoGe
     // Must pair with ExtKeySetMaster
 
     //  This creates two keys, a root key and a master key derived according
-    //  to BIP44 (path 44'/22'), The root (bip44) key only stored in the system
+    //  to BIP44 (path 44'/44'), The root (bip44) key only stored in the system
     //  and the derived key is set as the system master key.
 
     LogPrintf("ExtKeyNewMaster.\n");
@@ -5882,15 +6144,20 @@ int CHDWallet::NewStealthKeyFromAccount(
         sek->SetCounter(nChildBkp, true);
         return errorN(1, "%s Save key pack %u failed.", __func__, sea->nPackStealth);
     };
-    
-    if ((uint32_t)aksPak.size() >= MAX_KEY_PACK_SIZE-1)
-        sea->nPackStealth++;
 
     if (!pwdb->WriteExtKey(sea->vExtKeyIDs[nChain], *sek))
     {
         sea->mapStealthKeys.erase(idKey);
         sek->SetCounter(nChildBkp, true);
         return errorN(1, "%s Save account chain failed.", __func__);
+    };
+    
+    if ((uint32_t)aksPak.size() >= MAX_KEY_PACK_SIZE-1)
+    {
+        sea->nPackStealth++;
+        CKeyID idAccount = sea->GetID();
+        if (!pwdb->WriteExtAccount(idAccount, *sea))
+            return errorN(1, "%s WriteExtAccount failed.", __func__);
     };
     
     SetAddressBook(pwdb, sxAddr, sLabel, "receive", vPath, false);

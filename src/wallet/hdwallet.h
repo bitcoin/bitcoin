@@ -355,6 +355,10 @@ public:
     bool DelAddressBook(const CTxDestination &address);
     
     
+    int64_t GetOldestActiveAccountTime();
+    int64_t CountActiveAccountKeys();
+    
+    
     isminetype IsMine(const CScript &scriptPubKey, CKeyID &keyID,
         CEKAKey &ak, CExtKeyAccount *&pa, bool &isInvalid, SigVersion = SIGVERSION_BASE);
     

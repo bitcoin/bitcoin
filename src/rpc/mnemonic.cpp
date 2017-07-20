@@ -146,19 +146,19 @@ UniValue mnemonic(const JSONRPCRequest &request)
         };
         
         CExtKey58 eKey58;
-        result.push_back(Pair("mnemonic", sMnemonic));
+        result.pushKV("mnemonic", sMnemonic);
         
         if (fBip44)
         {
             eKey58.SetKey(ekMaster, CChainParams::EXT_SECRET_KEY_BTC);
-            result.push_back(Pair("master", eKey58.ToString()));
+            result.pushKV("master", eKey58.ToString());
             
             // m / purpose' / coin_type' / account' / change / address_index
             // path "44' Params().BIP44ID()
         } else
         {
             eKey58.SetKey(ekMaster, CChainParams::EXT_SECRET_KEY);
-            result.push_back(Pair("master", eKey58.ToString()));
+            result.pushKV("master", eKey58.ToString());
         };
         
         // In c++11 strings are definitely contiguous, and before they're very unlikely not to be
@@ -216,7 +216,7 @@ UniValue mnemonic(const JSONRPCRequest &request)
         if (fBip44)
         {
             eKey58.SetKey(ekMaster, CChainParams::EXT_SECRET_KEY_BTC);
-            result.push_back(Pair("master", eKey58.ToString()));
+            result.pushKV("master", eKey58.ToString());
             
             // m / purpose' / coin_type' / account' / change / address_index
             CExtKey ekDerived;
@@ -224,11 +224,11 @@ UniValue mnemonic(const JSONRPCRequest &request)
             ekDerived.Derive(ekDerived, Params().BIP44ID());
             
             eKey58.SetKey(ekDerived, CChainParams::EXT_SECRET_KEY);
-            result.push_back(Pair("derived", eKey58.ToString()));
+            result.pushKV("derived", eKey58.ToString());
         } else
         {
             eKey58.SetKey(ekMaster, CChainParams::EXT_SECRET_KEY);
-            result.push_back(Pair("master", eKey58.ToString()));
+            result.pushKV("master", eKey58.ToString());
         };
         
         if (sMnemonic.size() > 0)
@@ -248,7 +248,7 @@ UniValue mnemonic(const JSONRPCRequest &request)
         
         if (0 != MnemonicAddChecksum(-1, sMnemonicIn, sMnemonicOut, sError))
             throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("MnemonicAddChecksum failed %s", sError.c_str()).c_str());
-        result.push_back(Pair("result", sMnemonicOut));
+        result.pushKV("result", sMnemonicOut);
     } else
     if (mode == "dumpwords")
     {
@@ -267,8 +267,8 @@ UniValue mnemonic(const JSONRPCRequest &request)
             nWords++;
         };
         
-        result.push_back(Pair("words", arrayWords));
-        result.push_back(Pair("num_words", nWords));
+        result.pushKV("words", arrayWords);
+        result.pushKV("num_words", nWords);
     } else
     if (mode == "listlanguages")
     {
@@ -280,7 +280,7 @@ UniValue mnemonic(const JSONRPCRequest &request)
                 throw JSONRPCError(RPC_INTERNAL_ERROR, "GetWord failed.");
             
             std::string sDesc(mnLanguagesDesc[k]);
-            result.push_back(Pair(sName, sDesc));
+            result.pushKV(sName, sDesc);
         };
     } else
     {
