@@ -97,6 +97,7 @@ static std::vector<ListenSocket> vhListenSocket;
 extern CAddrMan addrman;
 int nMaxConnections = DEFAULT_MAX_PEER_CONNECTIONS;
 int nMinXthinNodes = MIN_XTHIN_NODES;
+int nMinUAHFNodes = MIN_UAHF_NODES;
 
 bool fAddressesInitialized = false;
 std::string strSubVersion;
@@ -1711,6 +1712,7 @@ void ThreadOpenConnections()
         // we don't have enough connections to XTHIN capable nodes yet.
         int nOutbound = 0;
         int nThinBlockCapable = 0;
+        int nUAHF = 0;
         set<vector<unsigned char> > setConnected;
         CNode *ptemp = nullptr;
         bool fDisconnected = false;
@@ -1725,6 +1727,8 @@ void ThreadOpenConnections()
 
                     if (pnode->ThinBlockCapable())
                         nThinBlockCapable++;
+                    else if (pnode->UAHFCapable())
+                        nUAHF++;
                     else
                         ptemp = pnode;
                 }
@@ -1732,8 +1736,21 @@ void ThreadOpenConnections()
             // Disconnect a node that is not XTHIN capable if all outbound slots are full and we
             // have not yet connected to enough XTHIN nodes.
             nMinXthinNodes = GetArg("-min-xthin-nodes", MIN_XTHIN_NODES);
+            nMinUAHFNodes = GetArg("-min-uahf-nodes", MIN_UAHF_NODES);
             if (nOutbound >= nMaxOutConnections && nThinBlockCapable <= min(nMinXthinNodes, nMaxOutConnections) &&
                 nDisconnects < MAX_DISCONNECTS && IsThinBlocksEnabled() && IsChainNearlySyncd())
+            {
+                if (ptemp != nullptr)
+                {
+                    ptemp->fDisconnect = true;
+                    fDisconnected = true;
+                    nDisconnects++;
+                }
+            }
+            // Disconnect a node that is not UAHF capable if all outbound slots are full and we
+            // have not yet connected to enough UAHF nodes.
+            else if (nOutbound >= nMaxOutConnections && nUAHF <= min(nMinUAHFNodes, nMaxOutConnections) &&
+                     nDisconnects < MAX_DISCONNECTS && IsChainNearlySyncd())
             {
                 if (ptemp != nullptr)
                 {
@@ -1810,6 +1827,7 @@ void ThreadOpenConnections()
         //    connections.
         //  * Only make a feeler connection once every few minutes.
         //
+
         bool fFeeler = false;
         if (nOutbound >= nMaxOutConnections)
         {
