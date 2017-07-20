@@ -318,6 +318,22 @@
         <translation>Otwórz URI...</translation>
     </message>
     <message>
+        <source>Click to disable network activity.</source>
+        <translation>Kliknij aby wyłączyć aktywność sieciową.</translation>
+    </message>
+    <message>
+        <source>Network activity disabled.</source>
+        <translation>Aktywność sieciowa została wyłączona.</translation>
+    </message>
+    <message>
+        <source>Click to enable network activity again.</source>
+        <translation>Kliknij, aby ponownie włączyć aktywności sieciową.</translation>
+    </message>
+    <message>
+        <source>Syncing Headers (%1%)...</source>
+        <translation>Synchronizowanie headerów (%1%)...</translation>
+    </message>
+    <message>
         <source>Reindexing blocks on disk...</source>
         <translation>Ponowne indeksowanie bloków na dysku...</translation>
     </message>
@@ -419,7 +435,7 @@
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network</source>
-        <translation><numerusform>%n aktywnych połączeń do sieci Bitcoin</numerusform><numerusform>%n aktywnych połączeń do sieci Bitcoin</numerusform><numerusform>%n aktywnych połączeń do sieci Bitcoin</numerusform></translation>
+        <translation><numerusform>%n aktywnych połączeń do sieci Bitcoin</numerusform><numerusform>%n aktywnych połączeń do sieci Bitcoin</numerusform><numerusform>%n aktywnych połączeń do sieci Bitcoin</numerusform><numerusform>%n aktywnych połączeń do sieci Bitcoin</numerusform></translation>
     </message>
     <message>
         <source>Indexing blocks on disk...</source>
@@ -431,7 +447,7 @@
     </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
-        <translation><numerusform>Przetworzono %n bloków historii transakcji.</numerusform><numerusform>Przetworzono %n bloków historii transakcji.</numerusform><numerusform>Przetworzono %n bloków historii transakcji.</numerusform></translation>
+        <translation><numerusform>Przetworzono %n bloków historii transakcji.</numerusform><numerusform>Przetworzono %n bloków historii transakcji.</numerusform><numerusform>Przetworzono %n bloków historii transakcji.</numerusform><numerusform>Przetworzono %n bloków historii transakcji.</numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -468,6 +484,10 @@
     <message>
         <source>%1 client</source>
         <translation>%1 klient</translation>
+    </message>
+    <message>
+        <source>Connecting to peers...</source>
+        <translation>Łączenie z peerami...</translation>
     </message>
     <message>
         <source>Catching up...</source>
@@ -519,7 +539,11 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Portfel jest &lt;b&gt;zaszyfrowany&lt;/b&gt; i obecnie &lt;b&gt;zablokowany&lt;/b&gt;</translation>
     </message>
-    </context>
+    <message>
+        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
+        <translation>Wystąpił krytyczny błąd. Bitcoin nie jest w stanie kontynuować bezpiecznie i zostanie zamknięty.</translation>
+    </message>
+</context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -710,6 +734,14 @@
         <translation>Zmień adres wysyłania</translation>
     </message>
     <message>
+        <source>The entered address "%1" is not a valid Bitcoin address.</source>
+        <translation>Wprowadzony adres "%1" nie jest prawidłowym adresem Bitcoin.</translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is already in the address book.</source>
+        <translation>Wprowadzony adres "%1" znajduje się już w książce adresowej.</translation>
+    </message>
+    <message>
         <source>Could not unlock wallet.</source>
         <translation>Nie można było odblokować portfela.</translation>
     </message>
@@ -832,11 +864,11 @@
     </message>
     <message numerus="yes">
         <source>%n GB of free space available</source>
-        <translation><numerusform>%n GB dostępnego wolnego miejsca</numerusform><numerusform>%n GB dostępnego wolnego miejsca</numerusform><numerusform>%n GB dostępnego wolnego miejsca</numerusform></translation>
+        <translation><numerusform>%n GB dostępnego wolnego miejsca</numerusform><numerusform>%n GB dostępnego wolnego miejsca</numerusform><numerusform>%n GB dostępnego wolnego miejsca</numerusform><numerusform>%n GB dostępnego wolnego miejsca</numerusform></translation>
     </message>
     <message numerus="yes">
         <source>(of %n GB needed)</source>
-        <translation><numerusform>(z %n GB potrzebnych)</numerusform><numerusform>(z %n GB potrzebnych)</numerusform><numerusform>(z %n GB potrzebnych)</numerusform></translation>
+        <translation><numerusform>(z %n GB potrzebnych)</numerusform><numerusform>(z %n GB potrzebnych)</numerusform><numerusform>(z %n GB potrzebnych)</numerusform><numerusform>(z %n GB potrzebnych)</numerusform></translation>
     </message>
 </context>
 <context>
@@ -844,6 +876,10 @@
     <message>
         <source>Form</source>
         <translation>Formularz</translation>
+    </message>
+    <message>
+        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</source>
+        <translation>Świeże transakcje mogą nie być jeszcze widoczne, a zatem saldo portfela może być nieprawidłowe. Te detale będą poprawne, gdy portfel zakończy synchronizację z siecią bitcoin, zgodnie z poniższym opisem.</translation>
     </message>
     <message>
         <source>Number of blocks left</source>
@@ -1230,6 +1266,14 @@
         <translation>Obsługa URI</translation>
     </message>
     <message>
+        <source>Invalid payment address %1</source>
+        <translation>błędny adres płatności %1</translation>
+    </message>
+    <message>
+        <source>Payment request rejected</source>
+        <translation>Żądanie płatności odrzucone</translation>
+    </message>
+    <message>
         <source>Payment request expired.</source>
         <translation>Żądanie płatności upłynęło.</translation>
     </message>
@@ -1248,6 +1292,10 @@
     <message>
         <source>Refund from %1</source>
         <translation>Zwrot z %1</translation>
+    </message>
+    <message>
+        <source>Error communicating with %1: %2</source>
+        <translation>Błąd komunikacji z %1 : %2</translation>
     </message>
     <message>
         <source>Payment request cannot be parsed!</source>
@@ -1325,11 +1373,11 @@
     </message>
     <message numerus="yes">
         <source>%n second(s)</source>
-        <translation><numerusform>%n sekunda</numerusform><numerusform>%n sekund</numerusform><numerusform>%n sekund</numerusform></translation>
+        <translation><numerusform>%n sekunda</numerusform><numerusform>%n sekund</numerusform><numerusform>%n sekund</numerusform><numerusform>%n sekund</numerusform></translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
-        <translation><numerusform>%n minuta</numerusform><numerusform>%n minut</numerusform><numerusform>%n minut</numerusform></translation>
+        <translation><numerusform>%n minuta</numerusform><numerusform>%n minut</numerusform><numerusform>%n minut</numerusform><numerusform>%n minut</numerusform></translation>
     </message>
     <message>
         <source>%1 and %2</source>
@@ -1814,6 +1862,10 @@
         <translation>(brak wiadomości)</translation>
     </message>
     <message>
+        <source>(no amount requested)</source>
+        <translation>(brak kwoty)</translation>
+    </message>
+    <message>
         <source>Requested</source>
         <translation>Zażądano</translation>
     </message>
@@ -1997,12 +2049,28 @@
         <translation>%1 do %2</translation>
     </message>
     <message>
+        <source>Are you sure you want to send?</source>
+        <translation>Czy na pewno chcesz wysłać?</translation>
+    </message>
+    <message>
+        <source>added as transaction fee</source>
+        <translation>dodano jako opłata transakcyjna</translation>
+    </message>
+    <message>
+        <source>Total Amount %1</source>
+        <translation>Łączna kwota %1</translation>
+    </message>
+    <message>
         <source>or</source>
         <translation>lub</translation>
     </message>
     <message>
         <source>The amount to pay must be larger than 0.</source>
         <translation>Kwota do zapłacenia musi być większa od 0.</translation>
+    </message>
+    <message>
+        <source>The amount exceeds your balance.</source>
+        <translation>Kwota przekracza twoje saldo.</translation>
     </message>
     <message>
         <source>Transaction creation failed!</source>
@@ -2214,6 +2282,14 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation>Resetuje wszystkie pola weryfikacji wiadomości</translation>
     </message>
     <message>
+        <source>The entered address is invalid.</source>
+        <translation>Podany adres jest nieprawidłowy.</translation>
+    </message>
+    <message>
+        <source>Please check the address and try again.</source>
+        <translation>Proszę sprawdzić adres i spróbować ponownie.</translation>
+    </message>
+    <message>
         <source>Wallet unlock was cancelled.</source>
         <translation>Odblokowanie portfela zostało anulowane.</translation>
     </message>
@@ -2229,7 +2305,11 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <source>Message signed.</source>
         <translation>Wiadomość podpisana.</translation>
     </message>
-    </context>
+    <message>
+        <source>Message verified.</source>
+        <translation>Wiadomość zweryfikowana.</translation>
+    </message>
+</context>
 <context>
     <name>SplashScreen</name>
     <message>
@@ -2246,6 +2326,10 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
 </context>
 <context>
     <name>TransactionDesc</name>
+    <message>
+        <source>abandoned</source>
+        <translation>porzucone</translation>
+    </message>
     <message>
         <source>Date</source>
         <translation>Data</translation>
@@ -2283,14 +2367,34 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation>etykieta</translation>
     </message>
     <message>
+        <source>Transaction fee</source>
+        <translation>Opłata transakcyjna</translation>
+    </message>
+    <message>
         <source>Message</source>
         <translation>Wiadomość</translation>
+    </message>
+    <message>
+        <source>Transaction</source>
+        <translation>Transakcja</translation>
+    </message>
+    <message>
+        <source>Inputs</source>
+        <translation>Wejścia</translation>
     </message>
     <message>
         <source>Amount</source>
         <translation>Kwota</translation>
     </message>
-    </context>
+    <message>
+        <source>true</source>
+        <translation>prawda</translation>
+    </message>
+    <message>
+        <source>false</source>
+        <translation>fałsz</translation>
+    </message>
+</context>
 <context>
     <name>TransactionDescDialog</name>
     <message>
@@ -2303,6 +2407,10 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     <message>
         <source>Date</source>
         <translation>Data</translation>
+    </message>
+    <message>
+        <source>Type</source>
+        <translation>Typ</translation>
     </message>
     <message>
         <source>Label</source>
@@ -2392,12 +2500,20 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation>Skopiuj ID transakcji</translation>
     </message>
     <message>
+        <source>Edit label</source>
+        <translation>Zmień etykietę</translation>
+    </message>
+    <message>
         <source>Comma separated file (*.csv)</source>
         <translation>Plik *.CSV (dane rozdzielane przecinkami)</translation>
     </message>
     <message>
         <source>Date</source>
         <translation>Data</translation>
+    </message>
+    <message>
+        <source>Type</source>
+        <translation>Typ</translation>
     </message>
     <message>
         <source>Label</source>
@@ -2411,7 +2527,15 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <source>Exporting Failed</source>
         <translation>Eksportowanie nie powiodło się</translation>
     </message>
-    </context>
+    <message>
+        <source>Range:</source>
+        <translation>Zakres:</translation>
+    </message>
+    <message>
+        <source>to</source>
+        <translation>do</translation>
+    </message>
+</context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
     <message>
@@ -2427,7 +2551,23 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     </context>
 <context>
     <name>WalletView</name>
-    </context>
+    <message>
+        <source>Backup Wallet</source>
+        <translation>Kopia zapasowa portfela</translation>
+    </message>
+    <message>
+        <source>Backup Failed</source>
+        <translation>Nie udało się wykonać kopii zapasowej</translation>
+    </message>
+    <message>
+        <source>Backup Successful</source>
+        <translation>Wykonano kopię zapasową</translation>
+    </message>
+    <message>
+        <source>The wallet data was successfully saved to %1.</source>
+        <translation>Dane portfela zostały poprawnie zapisane w %1.</translation>
+    </message>
+</context>
 <context>
     <name>bitcoin-core</name>
     <message>

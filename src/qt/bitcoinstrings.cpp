@@ -170,10 +170,18 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "rebuild the block database if you are sure that your computer's date and "
 "time are correct"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
+"The fee rate (in %s/kB) used to discard change (to fee) if it would be dust "
+"at this fee rate (default: %s) Note: We will always discard up to the dust "
+"relay fee and a discard fee above that is limited by the longest target fee "
+"estimate"),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
 "The transaction amount is too small to send after the fee has been deducted"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "This is a pre-release test build - use at your own risk - do not use for "
 "mining or merchant applications"),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
+"This is the transaction fee you may discard if change is smaller than dust "
+"at this level"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "This is the transaction fee you may pay when fee estimates are not available."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
@@ -305,6 +313,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Insufficient funds"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Invalid -onion address or hostname: '%s'"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Invalid -proxy address or hostname: '%s'"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Invalid amount for -%s=<amount>: '%s'"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Invalid amount for -discardfee=<amount>: '%s'"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Invalid amount for -fallbackfee=<amount>: '%s'"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Invalid amount for -paytxfee=<amount>: '%s' (must be at least %s)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Invalid characters in -wallet filename"),
@@ -375,6 +384,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Tor control port password (default: empty)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Tor control port to use if onion listening enabled (default: %s)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Transaction amount too small"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Transaction amounts must not be negative"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Transaction fee and change calculation failed"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Transaction has too long of a mempool chain"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Transaction must have at least one recipient"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Transaction too large for fee policy"),
