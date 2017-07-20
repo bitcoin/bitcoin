@@ -1,7 +1,8 @@
 # **HOdlcoin - Windows Wallet**
 <img src="http://i.imgur.com/P1956So.png" width="500">
+
 ## **Mining**
-To start mining using the wallets built-in mininer simply follow these steps
+To start mining using the wallets built-in miner simply follow these steps
 > **Click the "Mining" menu**
 
 <img src="http://i.imgur.com/SS7JY6E.png" width="320">
