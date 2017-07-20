@@ -74,6 +74,10 @@
         <translation>&amp;Dupliseer Adres</translation>
     </message>
     <message>
+        <source>Copy &amp;Label</source>
+        <translation>Kopieer &amp;Etiket</translation>
+    </message>
+    <message>
         <source>&amp;Edit</source>
         <translation>&amp;Verander</translation>
     </message>
@@ -200,6 +204,14 @@
         <translation>U het die verkeerde wagwoord ingetik.</translation>
     </message>
     <message>
+        <source>Wallet decryption failed</source>
+        <translation>Beursie-dekripsie het misluk</translation>
+    </message>
+    <message>
+        <source>Wallet passphrase was successfully changed.</source>
+        <translation>Beursie wagwoordfrase is suksesvol verander.</translation>
+    </message>
+    <message>
         <source>Warning: The Caps Lock key is on!</source>
         <translation>WAARSKUWING:  Outomatiese Kapitalisering is aktief op u sleutelbord!</translation>
     </message>
@@ -207,12 +219,20 @@
 <context>
     <name>BanTableModel</name>
     <message>
+        <source>IP/Netmask</source>
+        <translation>IP/Netmasker</translation>
+    </message>
+    <message>
         <source>Banned Until</source>
         <translation>Verban tot</translation>
     </message>
 </context>
 <context>
     <name>BitcoinGUI</name>
+    <message>
+        <source>Sign &amp;message...</source>
+        <translation>Teken &amp;boodskap...</translation>
+    </message>
     <message>
         <source>Synchronizing with network...</source>
         <translation>Netwerk-sinkronisasie...</translation>
@@ -294,6 +314,18 @@
         <translation>Oop &amp; URI...</translation>
     </message>
     <message>
+        <source>Click to disable network activity.</source>
+        <translation>Kliek om netwerkaktiwiteit af te skakel.</translation>
+    </message>
+    <message>
+        <source>Network activity disabled.</source>
+        <translation>Netwerkaktiwiteit gedeaktiveer.</translation>
+    </message>
+    <message>
+        <source>Click to enable network activity again.</source>
+        <translation>Kliek om netwerkaktiwiteit weer aan te skakel.</translation>
+    </message>
+    <message>
         <source>Reindexing blocks on disk...</source>
         <translation>Besig met herindeksering van blokke op hardeskyf...</translation>
     </message>
@@ -308,6 +340,14 @@
     <message>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>Verander die wagwoord wat ek vir kodifikasie van my beursie gebruik</translation>
+    </message>
+    <message>
+        <source>&amp;Debug window</source>
+        <translation>&amp;Ontfout venster</translation>
+    </message>
+    <message>
+        <source>Open debugging and diagnostic console</source>
+        <translation>Maak ontfouting en diagnostiese konsole oop</translation>
     </message>
     <message>
         <source>Bitcoin</source>
