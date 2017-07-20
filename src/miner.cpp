@@ -13,7 +13,6 @@
 #include "consensus/consensus.h"
 #include "consensus/merkle.h"
 #include "consensus/validation.h"
-#include "governance-classes.h"
 #include "hash.h"
 #include "main.h"
 #include "net.h"
@@ -125,8 +124,8 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
     CAmount nFees = 0;
 
     {
-        LOCK2(cs_main, governance.cs);
-        LOCK(mempool.cs);
+        LOCK(cs_main);
+
         CBlockIndex* pindexPrev = chainActive.Tip();
         const int nHeight = pindexPrev->nHeight + 1;
         pblock->nTime = GetAdjustedTime();
@@ -146,136 +145,140 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
                                 ? nMedianTimePast
                                 : pblock->GetBlockTime();
 
-
-        bool fPriorityBlock = nBlockPrioritySize > 0;
-        if (fPriorityBlock) {
-            vecPriority.reserve(mempool.mapTx.size());
-            for (CTxMemPool::indexed_transaction_set::iterator mi = mempool.mapTx.begin();
-                 mi != mempool.mapTx.end(); ++mi)
-            {
-                double dPriority = mi->GetPriority(nHeight);
-                CAmount dummy;
-                mempool.ApplyDeltas(mi->GetTx().GetHash(), dPriority, dummy);
-                vecPriority.push_back(TxCoinAgePriority(dPriority, mi));
-            }
-            std::make_heap(vecPriority.begin(), vecPriority.end(), pricomparer);
-        }
-
-        CTxMemPool::indexed_transaction_set::nth_index<3>::type::iterator mi = mempool.mapTx.get<3>().begin();
-        CTxMemPool::txiter iter;
-
-        while (mi != mempool.mapTx.get<3>().end() || !clearedTxs.empty())
         {
-            bool priorityTx = false;
-            if (fPriorityBlock && !vecPriority.empty()) { // add a tx from priority queue to fill the blockprioritysize
-                priorityTx = true;
-                iter = vecPriority.front().second;
-                actualPriority = vecPriority.front().first;
-                std::pop_heap(vecPriority.begin(), vecPriority.end(), pricomparer);
-                vecPriority.pop_back();
-            }
-            else if (clearedTxs.empty()) { // add tx with next highest score
-                iter = mempool.mapTx.project<0>(mi);
-                mi++;
-            }
-            else {  // try to add a previously postponed child tx
-                iter = clearedTxs.top();
-                clearedTxs.pop();
+            LOCK(mempool.cs);
+
+            bool fPriorityBlock = nBlockPrioritySize > 0;
+            if (fPriorityBlock) {
+                vecPriority.reserve(mempool.mapTx.size());
+                for (CTxMemPool::indexed_transaction_set::iterator mi = mempool.mapTx.begin();
+                     mi != mempool.mapTx.end(); ++mi)
+                {
+                    double dPriority = mi->GetPriority(nHeight);
+                    CAmount dummy;
+                    mempool.ApplyDeltas(mi->GetTx().GetHash(), dPriority, dummy);
+                    vecPriority.push_back(TxCoinAgePriority(dPriority, mi));
+                }
+                std::make_heap(vecPriority.begin(), vecPriority.end(), pricomparer);
             }
 
-            if (inBlock.count(iter))
-                continue; // could have been added to the priorityBlock
+            CTxMemPool::indexed_transaction_set::nth_index<3>::type::iterator mi = mempool.mapTx.get<3>().begin();
+            CTxMemPool::txiter iter;
 
-            const CTransaction& tx = iter->GetTx();
-
-            bool fOrphan = false;
-            BOOST_FOREACH(CTxMemPool::txiter parent, mempool.GetMemPoolParents(iter))
+            while (mi != mempool.mapTx.get<3>().end() || !clearedTxs.empty())
             {
-                if (!inBlock.count(parent)) {
-                    fOrphan = true;
-                    break;
+                bool priorityTx = false;
+                if (fPriorityBlock && !vecPriority.empty()) { // add a tx from priority queue to fill the blockprioritysize
+                    priorityTx = true;
+                    iter = vecPriority.front().second;
+                    actualPriority = vecPriority.front().first;
+                    std::pop_heap(vecPriority.begin(), vecPriority.end(), pricomparer);
+                    vecPriority.pop_back();
                 }
-            }
-            if (fOrphan) {
-                if (priorityTx)
-                    waitPriMap.insert(std::make_pair(iter,actualPriority));
-                else
-                    waitSet.insert(iter);
-                continue;
-            }
-
-            unsigned int nTxSize = iter->GetTxSize();
-            if (fPriorityBlock &&
-                (nBlockSize + nTxSize >= nBlockPrioritySize || !AllowFree(actualPriority))) {
-                fPriorityBlock = false;
-                waitPriMap.clear();
-            }
-            if (!priorityTx &&
-                (iter->GetModifiedFee() < ::minRelayTxFee.GetFee(nTxSize) && nBlockSize >= nBlockMinSize)) {
-                break;
-            }
-            if (nBlockSize + nTxSize >= nBlockMaxSize) {
-                if (nBlockSize >  nBlockMaxSize - 100 || lastFewTxs > 50) {
-                    break;
+                else if (clearedTxs.empty()) { // add tx with next highest score
+                    iter = mempool.mapTx.project<0>(mi);
+                    mi++;
                 }
-                // Once we're within 1000 bytes of a full block, only look at 50 more txs
-                // to try to fill the remaining space.
-                if (nBlockSize > nBlockMaxSize - 1000) {
-                    lastFewTxs++;
+                else {  // try to add a previously postponed child tx
+                    iter = clearedTxs.top();
+                    clearedTxs.pop();
                 }
-                continue;
-            }
 
-            if (!IsFinalTx(tx, nHeight, nLockTimeCutoff))
-                continue;
+                if (inBlock.count(iter))
+                    continue; // could have been added to the priorityBlock
 
-            unsigned int nTxSigOps = iter->GetSigOpCount();
-            if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS) {
-                if (nBlockSigOps > MAX_BLOCK_SIGOPS - 2) {
-                    break;
-                }
-                continue;
-            }
+                const CTransaction& tx = iter->GetTx();
 
-            CAmount nTxFees = iter->GetFee();
-            // Added
-            pblock->vtx.push_back(tx);
-            pblocktemplate->vTxFees.push_back(nTxFees);
-            pblocktemplate->vTxSigOps.push_back(nTxSigOps);
-            nBlockSize += nTxSize;
-            ++nBlockTx;
-            nBlockSigOps += nTxSigOps;
-            nFees += nTxFees;
-
-            if (fPrintPriority)
-            {
-                double dPriority = iter->GetPriority(nHeight);
-                CAmount dummy;
-                mempool.ApplyDeltas(tx.GetHash(), dPriority, dummy);
-                LogPrintf("priority %.1f fee %s txid %s\n",
-                          dPriority , CFeeRate(iter->GetModifiedFee(), nTxSize).ToString(), tx.GetHash().ToString());
-            }
-
-            inBlock.insert(iter);
-
-            // Add transactions that depend on this one to the priority queue
-            BOOST_FOREACH(CTxMemPool::txiter child, mempool.GetMemPoolChildren(iter))
-            {
-                if (fPriorityBlock) {
-                    waitPriIter wpiter = waitPriMap.find(child);
-                    if (wpiter != waitPriMap.end()) {
-                        vecPriority.push_back(TxCoinAgePriority(wpiter->second,child));
-                        std::push_heap(vecPriority.begin(), vecPriority.end(), pricomparer);
-                        waitPriMap.erase(wpiter);
+                bool fOrphan = false;
+                BOOST_FOREACH(CTxMemPool::txiter parent, mempool.GetMemPoolParents(iter))
+                {
+                    if (!inBlock.count(parent)) {
+                        fOrphan = true;
+                        break;
                     }
                 }
-                else {
-                    if (waitSet.count(child)) {
-                        clearedTxs.push(child);
-                        waitSet.erase(child);
+                if (fOrphan) {
+                    if (priorityTx)
+                        waitPriMap.insert(std::make_pair(iter,actualPriority));
+                    else
+                        waitSet.insert(iter);
+                    continue;
+                }
+
+                unsigned int nTxSize = iter->GetTxSize();
+                if (fPriorityBlock &&
+                    (nBlockSize + nTxSize >= nBlockPrioritySize || !AllowFree(actualPriority))) {
+                    fPriorityBlock = false;
+                    waitPriMap.clear();
+                }
+                if (!priorityTx &&
+                    (iter->GetModifiedFee() < ::minRelayTxFee.GetFee(nTxSize) && nBlockSize >= nBlockMinSize)) {
+                    break;
+                }
+                if (nBlockSize + nTxSize >= nBlockMaxSize) {
+                    if (nBlockSize >  nBlockMaxSize - 100 || lastFewTxs > 50) {
+                        break;
+                    }
+                    // Once we're within 1000 bytes of a full block, only look at 50 more txs
+                    // to try to fill the remaining space.
+                    if (nBlockSize > nBlockMaxSize - 1000) {
+                        lastFewTxs++;
+                    }
+                    continue;
+                }
+
+                if (!IsFinalTx(tx, nHeight, nLockTimeCutoff))
+                    continue;
+
+                unsigned int nTxSigOps = iter->GetSigOpCount();
+                if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS) {
+                    if (nBlockSigOps > MAX_BLOCK_SIGOPS - 2) {
+                        break;
+                    }
+                    continue;
+                }
+
+                CAmount nTxFees = iter->GetFee();
+                // Added
+                pblock->vtx.push_back(tx);
+                pblocktemplate->vTxFees.push_back(nTxFees);
+                pblocktemplate->vTxSigOps.push_back(nTxSigOps);
+                nBlockSize += nTxSize;
+                ++nBlockTx;
+                nBlockSigOps += nTxSigOps;
+                nFees += nTxFees;
+
+                if (fPrintPriority)
+                {
+                    double dPriority = iter->GetPriority(nHeight);
+                    CAmount dummy;
+                    mempool.ApplyDeltas(tx.GetHash(), dPriority, dummy);
+                    LogPrintf("priority %.1f fee %s txid %s\n",
+                              dPriority , CFeeRate(iter->GetModifiedFee(), nTxSize).ToString(), tx.GetHash().ToString());
+                }
+
+                inBlock.insert(iter);
+
+                // Add transactions that depend on this one to the priority queue
+                BOOST_FOREACH(CTxMemPool::txiter child, mempool.GetMemPoolChildren(iter))
+                {
+                    if (fPriorityBlock) {
+                        waitPriIter wpiter = waitPriMap.find(child);
+                        if (wpiter != waitPriMap.end()) {
+                            vecPriority.push_back(TxCoinAgePriority(wpiter->second,child));
+                            std::push_heap(vecPriority.begin(), vecPriority.end(), pricomparer);
+                            waitPriMap.erase(wpiter);
+                        }
+                    }
+                    else {
+                        if (waitSet.count(child)) {
+                            clearedTxs.push(child);
+                            waitSet.erase(child);
+                        }
                     }
                 }
             }
+
         }
 
         // NOTE: unlike in bitcoin, we need to pass PREVIOUS block height here
