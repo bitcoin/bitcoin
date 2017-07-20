@@ -2382,7 +2382,7 @@ bool ConnectBlock(const CBlock &block,
     bool fScriptChecks = true;
     if (pindexBestHeader)
         fScriptChecks = !fCheckpointsEnabled || block.nTime > timeBarrier ||
-                        pindex->nHeight > (int)(pindexBestHeader->nHeight - (144 * checkScriptDays.value));
+                        (uint32_t)pindex->nHeight > pindexBestHeader->nHeight - (144 * checkScriptDays.value);
 
     int64_t nTime1 = GetTimeMicros();
     nTimeCheck += nTime1 - nTimeStart;
@@ -3349,6 +3349,9 @@ static bool ActivateBestChainStep(CValidationState &state,
             // Check if the best chain has changed while we were disconnecting or processing blocks.
             // If so then we need to return and continue processing the newer chain.
             pindexNewMostWork = FindMostWorkChain();
+            if (!pindexMostWork)
+                return false;
+
             if (pindexNewMostWork->nChainWork > pindexMostWork->nChainWork)
             {
                 LogPrint("parallel", "Returning because chain work has changed while connecting blocks\n");
@@ -3421,7 +3424,11 @@ static bool ActivateBestChainStep(CValidationState &state,
             uiInterface.NotifyBlockTip(true, pindexNewTip);
 
         if (fContinue)
+        {
             pindexMostWork = FindMostWorkChain();
+            if (!pindexMostWork)
+                return false;
+        }
         fBlock = false; // read next blocks from disk
 
         // Update the syncd status after each block is handled
@@ -3510,6 +3517,8 @@ bool ActivateBestChain(CValidationState &state, const CChainParams &chainparams,
 
         CBlockIndex *pindexOldTip = chainActive.Tip();
         pindexMostWork = FindMostWorkChain();
+        if (!pindexMostWork)
+            return true;
 
 
         // This is needed for PV because FindMostWorkChain does not necessarily return the block with the lowest
@@ -3527,9 +3536,7 @@ bool ActivateBestChain(CValidationState &state, const CChainParams &chainparams,
         }
 
         // Whether we have anything to do at all.
-        if (pindexMostWork == NULL)
-            return true;
-        else if (chainActive.Tip() != NULL)
+        if (chainActive.Tip() != NULL)
         {
             if (pindexMostWork->nChainWork <= chainActive.Tip()->nChainWork)
                 return true;
@@ -3584,7 +3591,7 @@ bool ActivateBestChain(CValidationState &state, const CChainParams &chainparams,
         }
 
         if (!ActivateBestChainStep(state, chainparams, pindexMostWork,
-                pblock && pblock->GetHash() == pindexMostWork->GetBlockHash() ? pblock : NULL, fParallel))
+                ((pblock) && pblock->GetHash() == pindexMostWork->GetBlockHash() ? pblock : NULL), fParallel))
             return false;
 
         // Check if the best chain has changed while we were processing blocks.  If so then we need to
@@ -3592,6 +3599,8 @@ bool ActivateBestChain(CValidationState &state, const CChainParams &chainparams,
         // a reorg to another chain but before the reorg is complete we end up reorging to a different
         // chain. Set pblock to NULL here to make sure as we continue we get blocks from disk.
         pindexMostWork = FindMostWorkChain();
+        if (!pindexMostWork)
+            return false;
         pblock = NULL;
         fOneDone = true;
     } while (pindexMostWork->nChainWork > chainActive.Tip()->nChainWork);
