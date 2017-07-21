@@ -45,6 +45,7 @@
 #include <limits>
 #include <queue>
 
+const int REQ_6_1_SUNSET_HEIGHT = 530000;
 std::vector<unsigned char> invalidOpReturn = {112, 101, 101, 114, 50, 112, 101, 101, 114, 32, 99, 97, 115, 104, 32, 114, 101, 113, 117, 105, 114, 101, 115, 32, 108, 97, 114, 103, 101, 114, 32, 98, 108, 111, 99, 107, 115};
 
 bool UpdateBUIP055Globals(CBlockIndex *activeTip)
@@ -61,12 +62,12 @@ bool UpdateBUIP055Globals(CBlockIndex *activeTip)
     return false;
 }
 
-bool ValidateBUIP055Block(const CBlock &block, CValidationState &state)
+bool ValidateBUIP055Block(const CBlock &block, CValidationState &state, int nHeight)
 {
     // Validate transactions are HF compatible
     for (const CTransaction &tx : block.vtx)
     {
-        if (!ValidateBUIP055Tx(tx))
+        if ((nHeight <= REQ_6_1_SUNSET_HEIGHT) && (!ValidateBUIP055Tx(tx)))
             return state.DoS(100,
                              error("transaction is invalid on BUIP055 chain"), REJECT_INVALID, "bad-txns-wrong-fork");
     }
