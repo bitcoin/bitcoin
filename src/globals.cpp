@@ -174,10 +174,16 @@ CTweakRef<uint64_t> miningBlockSize("mining.blockSize",
     &maxGeneratedBlock,
     &MiningBlockSizeValidator);
 
-
+#ifdef BITCOIN_CASH
 CTweak<uint64_t> miningForkTime("mining.forkTime",
     "Time in seconds since the epoch to initiate a hard fork as per BUIP055.",
     1501590000); // Tue 1 Aug 2017 12:20:00 UTC, uahf-technical-spec.md REQ-2
+#else
+CTweak<uint64_t> miningForkTime("mining.forkTime",
+    "Time in seconds since the epoch to initiate a hard fork as per BUIP055.",
+    0);
+#endif
+
 CTweak<uint64_t> miningForkEB("mining.forkExcessiveBlock",
     "Set the excessive block to this value at the time of the fork.",
     8000000); // 8MB, uahf-technical-spec.md REQ-4-1

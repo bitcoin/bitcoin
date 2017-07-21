@@ -25,9 +25,6 @@ extern std::vector<unsigned char> invalidOpReturn;
 // know whether this is the fork block.
 extern bool ValidateBUIP055Block(const CBlock &block, CValidationState &state);
 
-// Validate that a transaction adheres to the BUIP055 hard fork requirements.
-extern bool ValidateBUIP055Tx(const CTransaction& tx);
-
 // Return true if this transaction is invalid on the BUIP055 fork due to a special OP_RETURN code
 extern bool IsTxOpReturnInvalid(const CTransaction &tx);
 

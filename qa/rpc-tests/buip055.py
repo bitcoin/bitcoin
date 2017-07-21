@@ -21,7 +21,7 @@ import logging
 logging.basicConfig(format='%(asctime)s.%(levelname)s: %(message)s', level=logging.INFO)
 
 
-invalidOpReturn = hexlify(b'peer2peer cash requires larger blocks')
+invalidOpReturn = hexlify(b'Bitcoin: A Peer-to-Peer Electronic Cash System')
 
 def bitcoinAddress2bin(btcAddress):
     """convert a bitcoin address to binary data capable of being put in a CScript"""
@@ -144,7 +144,8 @@ class BUIP055Test (BitcoinTestFramework):
             t = n.get("mining.fork*")
             assert(t['mining.forkBlockSize'] == 2000000)  # REQ-4-2
             assert(t['mining.forkExcessiveBlock'] == 8000000)  # REQ-4-1
-            assert(t['mining.forkTime'] == 1501590000)  # REQ-2
+            #assert(t['mining.forkTime'] == 1501590000)  # Bitcoin Cash release REQ-2
+            assert(t['mining.forkTime'] == 0)  # main release default
 
     def testCli(self):
         n = self.nodes[0]

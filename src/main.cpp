@@ -1166,7 +1166,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool &pool,
     if ((miningForkTime.value != 0) && (start / 1000000 >= miningForkTime.value))
     {
         forkVerifyFlags = SCRIPT_ENABLE_SIGHASH_FORKID;
-        if (!ValidateBUIP055Tx(tx))
+        if (IsTxOpReturnInvalid(tx))
             return state.DoS(0, false, REJECT_WRONG_FORK, "wrong-fork");
     }
 

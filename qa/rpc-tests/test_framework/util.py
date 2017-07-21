@@ -171,14 +171,14 @@ def sync_mempools(rpc_connections, wait=1,verbose=1):
     while True:
         pool = set(rpc_connections[0].getrawmempool())
         num_match = 1
-        poolLen = [len(pool)]
+        pool_len = [len(pool)]
         for i in range(1, len(rpc_connections)):
             tmp = set(rpc_connections[i].getrawmempool())
             if tmp == pool:
                 num_match = num_match+1
-            poolLen.append(len(tmp))
+            pool_len.append(len(tmp))
         if verbose:
-            logging.info("sync mempool: " + str(poolLen))
+            logging.info("sync mempool: " + str(pool_len))
         if num_match == len(rpc_connections):
             break
         time.sleep(wait)
@@ -189,7 +189,7 @@ def initialize_datadir(dirname, n,bitcoinConfDict=None,wallet=None):
     datadir = os.path.join(dirname, "node"+str(n))
     if not os.path.isdir(datadir):
         os.makedirs(datadir)
-    
+
     defaults = {"server":1, "discover":0, "regtest":1,"rpcuser":"rt","rpcpassword":"rt",
                 "port":p2p_port(n),"rpcport":str(rpc_port(n)),"listenonion":0,"maxlimitertxfee":0}
     if bitcoinConfDict: defaults.update(bitcoinConfDict)
