@@ -300,7 +300,6 @@ enum {
     // a temporary service bit until the fork actually happens.  After the for it can be 
     // removed.
     // If this is turned off then the node will not follow the UAHF hardfork
-    // make xthin requests
     NODE_UAHF = (1 << 5),
 
     // Bits 24-31 are reserved for temporary experiments. Just pick a bit that
