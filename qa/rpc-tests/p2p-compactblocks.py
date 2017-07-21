@@ -834,7 +834,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         connections = []
         connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], self.test_node))
         connections.append(NodeConn('127.0.0.1', p2p_port(1), self.nodes[1],
-                    self.segwit_node, services=NODE_NETWORK|NODE_WITNESS))
+                    self.segwit_node, services=NODE_NETWORK|NODE_WITNESS|NODE_SEGWIT2X))
         connections.append(NodeConn('127.0.0.1', p2p_port(1), self.nodes[1],
                     self.old_node, services=NODE_NETWORK))
         self.test_node.add_connection(connections[0])
