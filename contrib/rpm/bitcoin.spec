@@ -2,7 +2,7 @@
 %global selinux_variants mls strict targeted
 
 Name:     bitcoin
-Version:  1.14.3
+Version:  1.14.5
 Release:  1%{?prerelease}%{?dist}
 Summary:  Peer to Peer Cryptographic Currency
 
@@ -22,8 +22,6 @@ BuildRequires:  libtool java
 BuildRequires:  python2
 
 BuildRequires:  python3-zmq zeromq-devel
-
-BuildRequires:  zeromq-devel python3-zmq
 
 
 %description
@@ -273,5 +271,9 @@ fi
 
 
 %changelog
+* Fri Jul 21 2017 Ismael Bejarano <ismael.bejarano@coinfabrik.com> 1.14.5-1
+- Update version for btc1 1.14.5
+- Remove duplicate dependency line
+
 * Mon Jul 10 2017 Ismael Bejarano <ismael.bejarano@coinfabrik.com> 1.14.3-1
 - Packages for btc1 1.14.3 based on packages from https://www.ringingliberty.com/bitcoin/
