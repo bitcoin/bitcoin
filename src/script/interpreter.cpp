@@ -1166,6 +1166,7 @@ uint256 GetOutputsHash(const CTransaction &txTo) {
     return ss.GetHash();
 }
 
+<<<<<<< HEAD
 uint256 SignatureHashForkAlg(const CScript &scriptCode, const CTransaction &txTo, unsigned int nIn, uint32_t nHashType,
     const CAmount &amount, size_t *nHashedOut)
 {

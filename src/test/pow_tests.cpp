@@ -96,4 +96,93 @@ BOOST_AUTO_TEST_CASE(GetBlockProofEquivalentTime_test)
     }
 }
 
+static CBlockIndex GetBlockIndex(CBlockIndex *pindexPrev, int64_t nTimeInterval,
+                                 uint32_t nBits) {
+    CBlockIndex block;
+    block.pprev = pindexPrev;
+    block.nHeight = pindexPrev->nHeight + 1;
+    block.nTime = pindexPrev->nTime + nTimeInterval;
+    block.nBits = nBits;
+
+    return block;
+}
+
+BOOST_AUTO_TEST_CASE(retargeting_test) {
+    SelectParams(CBaseChainParams::MAIN);
+    const Consensus::Params &params = Params().GetConsensus();
+
+    std::vector<CBlockIndex> blocks(115);
+
+    const arith_uint256 powLimit = UintToArith256(params.powLimit);
+    arith_uint256 currentPow = powLimit >> 1;
+    uint32_t initialBits = currentPow.GetCompact();
+
+    // Genesis block?
+    blocks[0] = CBlockIndex();
+    blocks[0].nHeight = 0;
+    blocks[0].nTime = 1269211443;
+    blocks[0].nBits = initialBits;
+
+    // Pile up some blocks.
+    for (size_t i = 1; i < 100; i++) {
+        blocks[i] = GetBlockIndex(&blocks[i - 1], params.nPowTargetSpacing,
+                                  initialBits);
+    }
+
+    CBlockHeader blkHeaderDummy;
+
+    // We start getting 2h blocks time. For the first 5 blocks, it doesn't
+    // matter as the MTP is not affected. For the next 5 block, MTP difference
+    // increases but stays below 12h.
+    for (size_t i = 100; i < 110; i++) {
+        blocks[i] = GetBlockIndex(&blocks[i - 1], 2 * 3600, initialBits);
+        BOOST_CHECK_EQUAL(
+            GetNextWorkRequired(&blocks[i], &blkHeaderDummy, params),
+            initialBits);
+    }
+
+    // Now we expect the difficulty to decrease.
+    blocks[110] = GetBlockIndex(&blocks[109], 2 * 3600, initialBits);
+    currentPow.SetCompact(currentPow.GetCompact());
+    currentPow += (currentPow >> 2);
+    BOOST_CHECK_EQUAL(
+        GetNextWorkRequired(&blocks[110], &blkHeaderDummy, params),
+        currentPow.GetCompact());
+
+    // As we continue with 2h blocks, difficulty continue to decrease.
+    blocks[111] =
+        GetBlockIndex(&blocks[110], 2 * 3600, currentPow.GetCompact());
+    currentPow.SetCompact(currentPow.GetCompact());
+    currentPow += (currentPow >> 2);
+    BOOST_CHECK_EQUAL(
+        GetNextWorkRequired(&blocks[111], &blkHeaderDummy, params),
+        currentPow.GetCompact());
+
+    // We decrease again.
+    blocks[112] =
+        GetBlockIndex(&blocks[111], 2 * 3600, currentPow.GetCompact());
+    currentPow.SetCompact(currentPow.GetCompact());
+    currentPow += (currentPow >> 2);
+    BOOST_CHECK_EQUAL(
+        GetNextWorkRequired(&blocks[112], &blkHeaderDummy, params),
+        currentPow.GetCompact());
+
+    // We check that we do not go below the minimal difficulty.
+    blocks[113] =
+        GetBlockIndex(&blocks[112], 2 * 3600, currentPow.GetCompact());
+    currentPow.SetCompact(currentPow.GetCompact());
+    currentPow += (currentPow >> 2);
+    BOOST_CHECK(powLimit.GetCompact() != currentPow.GetCompact());
+    BOOST_CHECK_EQUAL(
+        GetNextWorkRequired(&blocks[113], &blkHeaderDummy, params),
+        powLimit.GetCompact());
+
+    // Once we reached the minimal difficulty, we stick with it.
+    blocks[114] = GetBlockIndex(&blocks[113], 2 * 3600, powLimit.GetCompact());
+    BOOST_CHECK(powLimit.GetCompact() != currentPow.GetCompact());
+    BOOST_CHECK_EQUAL(
+        GetNextWorkRequired(&blocks[114], &blkHeaderDummy, params),
+        powLimit.GetCompact());
+}
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -249,5 +249,4 @@ extern CCriticalSection cs_blockvalidationthread;
 void InterruptBlockValidationThreads();
 
 extern CTweak<uint64_t> miningForkTime;
-
 #endif

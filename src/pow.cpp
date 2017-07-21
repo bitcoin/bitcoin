@@ -20,34 +20,65 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
         return nProofOfWorkLimit;
 
     // Only change once per difficulty adjustment interval
-    if ((pindexLast->nHeight+1) % params.DifficultyAdjustmentInterval() != 0)
-    {
-        if (params.fPowAllowMinDifficultyBlocks)
-        {
-            // Special difficulty rule for testnet:
-            // If the new block's timestamp is more than 2* 10 minutes
-            // then allow mining of a min-difficulty block.
-            if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + params.nPowTargetSpacing*2)
-                return nProofOfWorkLimit;
-            else
-            {
-                // Return the last non-special-min-difficulty-rules-block
-                const CBlockIndex* pindex = pindexLast;
-                while (pindex->pprev && pindex->nHeight % params.DifficultyAdjustmentInterval() != 0 && pindex->nBits == nProofOfWorkLimit)
-                    pindex = pindex->pprev;
-                return pindex->nBits;
-            }
-        }
-        return pindexLast->nBits;
+    uint32_t nHeight = pindexLast->nHeight + 1;
+    if (nHeight % params.DifficultyAdjustmentInterval() == 0) {
+        // Go back by what we want to be 14 days worth of blocks
+        assert(nHeight >= params.DifficultyAdjustmentInterval());
+        uint32_t nHeightFirst = nHeight - params.DifficultyAdjustmentInterval();
+        const CBlockIndex *pindexFirst = pindexLast->GetAncestor(nHeightFirst);
+        assert(pindexFirst);
+
+        return CalculateNextWorkRequired(pindexLast,
+                                         pindexFirst->GetBlockTime(), params);
     }
 
-    // Go back by what we want to be 14 days worth of blocks
-    int nHeightFirst = pindexLast->nHeight - (params.DifficultyAdjustmentInterval()-1);
-    assert(nHeightFirst >= 0);
-    const CBlockIndex* pindexFirst = pindexLast->GetAncestor(nHeightFirst);
-    assert(pindexFirst);
+    if (params.fPowAllowMinDifficultyBlocks) {
+        // Special difficulty rule for testnet:
+        // If the new block's timestamp is more than 2* 10 minutes then allow
+        // mining of a min-difficulty block.
+        if (pblock->GetBlockTime() >
+            pindexLast->GetBlockTime() + 2 * params.nPowTargetSpacing) {
+            return nProofOfWorkLimit;
+        }
 
-    return CalculateNextWorkRequired(pindexLast, pindexFirst->GetBlockTime(), params);
+        // Return the last non-special-min-difficulty-rules-block
+        const CBlockIndex *pindex = pindexLast;
+        while (pindex->pprev &&
+               pindex->nHeight % params.DifficultyAdjustmentInterval() != 0 &&
+               pindex->nBits == nProofOfWorkLimit) {
+            pindex = pindex->pprev;
+        }
+
+        return pindex->nBits;
+    }
+
+    // Do not go lower than the POW limit.
+    uint32_t nBits = pindexLast->nBits;
+    if (nBits == nProofOfWorkLimit) {
+        return nProofOfWorkLimit;
+    }
+
+    // If producing the last 6 block took less than 12h, we keep the same difficulty.
+    const CBlockIndex *pindex6 = pindexLast->GetAncestor(nHeight - 7);
+    assert(pindex6);
+    int64_t mtp6blocks =
+        pindexLast->GetMedianTimePast() - pindex6->GetMedianTimePast();
+    if (mtp6blocks < 12 * 3600) {
+        return nBits;
+    }
+
+    // If producing the last 6 block took more than 12h, increase the difficulty
+    // target by 25% (which reduces the difficulty by 20%). This ensure the
+    // chain do not get stuck in case we lose hashrate abruptly.
+    arith_uint256 nPow;
+    nPow.SetCompact(nBits);
+    nPow += (nPow >> 2);
+
+    // Make sure we do not go below allowed values.
+    const arith_uint256 bnPowLimit = UintToArith256(params.powLimit);
+    if (nPow > bnPowLimit) nPow = bnPowLimit;
+
+    return nPow.GetCompact();
 }
 
 unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params& params)

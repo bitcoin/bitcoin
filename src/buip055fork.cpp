@@ -11,8 +11,12 @@
 #include <inttypes.h>
 #include <vector>
 
-static std::string invalidOpRetString("Bitcoin: A Peer-to-Peer Electronic Cash System");
-std::vector<unsigned char> invalidOpReturn(invalidOpRetString.begin(), invalidOpRetString.end());
+const int REQ_6_1_SUNSET_HEIGHT = 530000;
+
+static const std::string ANTI_REPLAY_MAGIC_VALUE = "Bitcoin: A Peer-to-Peer Electronic Cash System";
+
+std::vector<unsigned char> invalidOpReturn =
+    std::vector<unsigned char>(std::begin(ANTI_REPLAY_MAGIC_VALUE), std::end(ANTI_REPLAY_MAGIC_VALUE));
 
 bool UpdateBUIP055Globals(CBlockIndex *activeTip)
 {
@@ -28,12 +32,12 @@ bool UpdateBUIP055Globals(CBlockIndex *activeTip)
     return false;
 }
 
-bool ValidateBUIP055Block(const CBlock &block, CValidationState &state)
+bool ValidateBUIP055Block(const CBlock &block, CValidationState &state, int nHeight)
 {
     // Validate transactions are HF compatible
     for (const CTransaction &tx : block.vtx)
     {
-        if (IsTxOpReturnInvalid(tx))
+        if ((nHeight <= REQ_6_1_SUNSET_HEIGHT) && IsTxOpReturnInvalid(tx))
             return state.DoS(100,
                              error("transaction is invalid on BUIP055 chain"), REJECT_INVALID, "bad-txns-wrong-fork");
     }

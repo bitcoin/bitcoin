@@ -4221,7 +4221,7 @@ bool ContextualCheckBlock(const CBlock &block, CValidationState &state, CBlockIn
     // BUIP055 check soft-fork items, such as tx targeted to the 1MB chain
     if (pindexPrev && pindexPrev->IsforkActiveOnNextBlock(miningForkTime.value))
     {
-        return ValidateBUIP055Block(block, state);
+        return ValidateBUIP055Block(block, state, nHeight);
     }
 
     return true;
