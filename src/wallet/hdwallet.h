@@ -318,7 +318,7 @@ public:
     bool IsHDEnabled() override;
     
     bool DumpJson(UniValue &rv, std::string &sError);
-    bool LoadJson(const UniValue &rv, std::string &sError);
+    bool LoadJson(const UniValue &inj, std::string &sError);
     
     bool LoadAddressBook(CHDWalletDB *pwdb);
     

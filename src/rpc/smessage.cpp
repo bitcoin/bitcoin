@@ -340,7 +340,7 @@ UniValue smsglocalkeys(const JSONRPCRequest &request)
         uint32_t nKeys = 0;
         UniValue keys(UniValue::VOBJ);
 
-        BOOST_FOREACH(const PAIRTYPE(CTxDestination, CAddressBookData) &entry, pwalletSmsg->mapAddressBook)
+        for (const auto &entry : pwalletSmsg->mapAddressBook)
         {
             if (!IsMine(*pwalletSmsg, entry.first))
                 continue;

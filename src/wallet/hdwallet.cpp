@@ -481,7 +481,7 @@ bool CHDWallet::DumpJson(UniValue &rv, std::string &sError)
     return true;
 };
 
-bool CHDWallet::LoadJson(const UniValue &rv, std::string &sError)
+bool CHDWallet::LoadJson(const UniValue &inj, std::string &sError)
 {
     LogPrintf("Loading wallet from JSON.\n");
     
@@ -489,8 +489,6 @@ bool CHDWallet::LoadJson(const UniValue &rv, std::string &sError)
         return errorN(false, sError, __func__, _("Wallet must be unlocked.").c_str());
     
     LOCK(cs_wallet);
-    
-    
     
     
     return true;
@@ -848,6 +846,7 @@ bool CHDWallet::Unlock(const SecureString &strWalletPassphrase)
     LogPrintf("Unlocking wallet.\n");
 
     {
+        bool fFoundKey = false;
         LOCK2(cs_main, cs_wallet);
         BOOST_FOREACH(const MasterKeyMap::value_type& pMasterKey, mapMasterKeys)
         {
@@ -857,10 +856,15 @@ bool CHDWallet::Unlock(const SecureString &strWalletPassphrase)
                 continue; // try another master key
             if (!CCryptoKeyStore::Unlock(vMasterKey))
                 return false;
+            if (0 != ExtKeyUnlock(vMasterKey))
+                return false;
+            fFoundKey = true;
             break;
         };
+        
+        if (!fFoundKey)
+            return false;
 
-        ExtKeyUnlock(vMasterKey);
         ProcessLockedStealthOutputs();
         ProcessLockedAnonOutputs();
         SecureMsgWalletUnlocked();

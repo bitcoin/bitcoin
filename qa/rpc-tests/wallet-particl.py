@@ -15,9 +15,9 @@ def read_dump(file_name):
         for line in inputfile:
             # only read non comment lines
             
-            if line.startswith('# --- Begin JSON --- '):
+            if line.startswith('# --- Begin JSON ---'):
                 isJson = True
-            elif line.startswith('# --- End JSON --- '):
+            elif line.startswith('# --- End JSON ---'):
                 isJson = False
             if line[0] == "#":
                 continue

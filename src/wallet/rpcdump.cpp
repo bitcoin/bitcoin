@@ -447,11 +447,40 @@ UniValue importwallet(const JSONRPCRequest& request)
     int64_t nFilesize = std::max((int64_t)1, (int64_t)file.tellg());
     file.seekg(0, file.beg);
 
+    std::string sJson;
+    bool fJson = false;
     pwalletMain->ShowProgress(_("Importing..."), 0); // show progress dialog in GUI
     while (file.good()) {
         pwalletMain->ShowProgress("", std::max(1, std::min(99, (int)(((double)file.tellg() / (double)nFilesize) * 100))));
         std::string line;
         std::getline(file, line);
+        
+        if (line.rfind("# --- Begin JSON ---", 0) == 0)
+        {
+            fJson = true;
+            continue;
+        };
+        if (line.rfind("# --- End JSON ---", 0) == 0)
+        {
+            fJson = false;
+            
+            if (!sJson.empty())
+            {
+                std::string sError;
+                UniValue inj;
+                inj.read(sJson);
+                if (!((CHDWallet*)pwalletMain)->LoadJson(inj, sError))
+                    throw JSONRPCError(RPC_WALLET_ERROR, "LoadJson failed " + sError);
+            };
+            
+            continue;
+        };
+        if (fJson)
+        {
+            sJson += line;
+            continue;
+        };
+        
         if (line.empty() || line[0] == '#')
             continue;
 
