@@ -46,7 +46,12 @@
 #include <queue>
 
 const int REQ_6_1_SUNSET_HEIGHT = 530000;
-std::vector<unsigned char> invalidOpReturn = {112, 101, 101, 114, 50, 112, 101, 101, 114, 32, 99, 97, 115, 104, 32, 114, 101, 113, 117, 105, 114, 101, 115, 32, 108, 97, 114, 103, 101, 114, 32, 98, 108, 111, 99, 107, 115};
+
+static const std::string ANTI_REPLAY_MAGIC_VALUE = "Bitcoin: A Peer-to-Peer Electronic Cash System";
+
+std::vector<unsigned char> invalidOpReturn =
+    std::vector<unsigned char>(std::begin(ANTI_REPLAY_MAGIC_VALUE), std::end(ANTI_REPLAY_MAGIC_VALUE));
+
 
 bool UpdateBUIP055Globals(CBlockIndex *activeTip)
 {

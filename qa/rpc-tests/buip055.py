@@ -21,7 +21,7 @@ import logging
 logging.basicConfig(format='%(asctime)s.%(levelname)s: %(message)s', level=logging.INFO)
 
 
-invalidOpReturn = hexlify(b'peer2peer cash requires larger blocks')
+invalidOpReturn = hexlify(b'Bitcoin: A Peer-to-Peer Electronic Cash System')
 
 def bitcoinAddress2bin(btcAddress):
     """convert a bitcoin address to binary data capable of being put in a CScript"""
