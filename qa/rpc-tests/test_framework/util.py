@@ -592,12 +592,14 @@ def split_transaction(node, prevouts, toAddrs, txfeePer=DEFAULT_TX_FEE_PER_BYTE,
                   except JSONRPCException as e:
                       tmp = e.error["message"]
                       (code, msg) = tmp.split(":")
-                      if code == 64: raise # bad transaction
+                      if int(code) == 64: raise # bad transaction
+                      if int(code) == 258: # txn-mempool-conflict
+                          # we are reusing inputs so this is all the splitting we can do
+                          return (txn,inp,outp,txid)
                       # print tmp
                       if e.error["code"] == -26:  # insufficient priority
                           txfeePer = txfeePer * 2
                           print(str(e))
-                          pdb.set_trace()
                           print("Insufficient priority, raising tx fee per byte to: ", txfeePer)
                           continue
                       else:

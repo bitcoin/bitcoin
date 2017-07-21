@@ -18,7 +18,6 @@
 
 #include <boost/thread.hpp>
 
-extern CCriticalSection cs_blockvalidationthread;
 
 /**
  * Closure representing one script verification
@@ -107,7 +106,8 @@ private:
         CCheckQueue<CScriptCheck> *pScriptQueue;
         uint256 hash;
         uint256 hashPrevBlock;
-        uint32_t nChainWork;
+        uint32_t nChainWork; // chain work for this block.
+        uint32_t nMostWorkOurFork; // most work for the chain we are on.
         uint32_t nSequenceId;
         int64_t nStartTime;
         uint64_t nBlockSize;
@@ -173,6 +173,12 @@ public:
     /* Is there a re-org in progress */
     void IsReorgInProgress(const boost::thread::id this_id, const bool fReorg, const bool fParallel);
     bool IsReorgInProgress();
+
+    /* Update the nMostWorkOurFork when a new header arrives */
+    void UpdateMostWorkOurFork(const CBlockHeader &header);
+
+    /* Update the nMostWorkOurFork when a new header arrives */
+    uint32_t MaxWorkChainBeingProcessed();
 
     /* Clear orphans from the orphan cache that are no longer needed*/
     void ClearOrphanCache(const CBlock &block);
