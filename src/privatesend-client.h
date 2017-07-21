@@ -10,6 +10,7 @@
 #include "wallet/wallet.h"
 
 class CPrivateSendClient;
+class CConnman;
 
 static const int DENOMS_COUNT_MAX                   = 100;
 
@@ -66,12 +67,12 @@ private:
     bool StartNewQueue(CAmount nValueMin, CAmount nBalanceNeedsAnonymized);
 
     /// Create denominations
-    bool CreateDenominated();
-    bool CreateDenominated(const CompactTallyItem& tallyItem, bool fCreateMixingCollaterals);
+    bool CreateDenominated(CConnman& connman);
+    bool CreateDenominated(const CompactTallyItem& tallyItem, bool fCreateMixingCollaterals, CConnman& connman);
 
     /// Split up large inputs or make fee sized inputs
-    bool MakeCollateralAmounts();
-    bool MakeCollateralAmounts(const CompactTallyItem& tallyItem, bool fTryDenominated);
+    bool MakeCollateralAmounts(CConnman& connman);
+    bool MakeCollateralAmounts(const CompactTallyItem& tallyItem, bool fTryDenominated, CConnman& connman);
 
     /// As a client, submit part of a future mixing transaction to a Masternode to start the process
     bool SubmitDenominate();
@@ -128,7 +129,7 @@ public:
     std::string GetStatus();
 
     /// Passively run mixing in the background according to the configuration in settings
-    bool DoAutomaticDenominating(bool fDryRun=false);
+    bool DoAutomaticDenominating(CConnman& connman, bool fDryRun=false);
 
     void CheckTimeout();
 
@@ -138,6 +139,6 @@ public:
     void UpdatedBlockTip(const CBlockIndex *pindex);
 };
 
-void ThreadCheckPrivateSendClient();
+void ThreadCheckPrivateSendClient(CConnman& connman);
 
 #endif

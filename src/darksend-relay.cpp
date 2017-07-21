@@ -103,7 +103,8 @@ void CDarkSendRelay::RelayThroughNode(int nRank)
 
     if(pmn != NULL){
         //printf("RelayThroughNode %s\n", pmn->addr.ToString().c_str());
-        CNode* pnode = ConnectNode((CAddress)pmn->addr, NULL);
+        // TODO: Pass CConnman instance somehow and don't use global variable.
+        CNode* pnode = g_connman->ConnectNode((CAddress)pmn->addr, NULL);
         if(pnode) {
             //printf("Connected\n");
             pnode->PushMessage("dsr", (*this));

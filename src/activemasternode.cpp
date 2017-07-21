@@ -151,27 +151,23 @@ void CActiveMasternode::ManageStateInitial()
         return;
     }
 
-    bool fFoundLocal = false;
-    {
-        LOCK(cs_vNodes);
-
-        // First try to find whatever local address is specified by externalip option
-        fFoundLocal = GetLocal(service) && CMasternode::IsValidNetAddr(service);
-        if(!fFoundLocal) {
-            // nothing and no live connections, can't do anything for now
-            if (vNodes.empty()) {
-                nState = ACTIVE_MASTERNODE_NOT_CAPABLE;
-                strNotCapableReason = "Can't detect valid external address. Will retry when there are some connections available.";
-                LogPrintf("CActiveMasternode::ManageStateInitial -- %s: %s\n", GetStateString(), strNotCapableReason);
-                return;
-            }
-            // We have some peers, let's try to find our local address from one of them
-            BOOST_FOREACH(CNode* pnode, vNodes) {
-                if (pnode->fSuccessfullyConnected && pnode->addr.IsIPv4()) {
-                    fFoundLocal = GetLocal(service, &pnode->addr) && CMasternode::IsValidNetAddr(service);
-                    if(fFoundLocal) break;
-                }
-            }
+    // First try to find whatever local address is specified by externalip option
+    bool fFoundLocal = GetLocal(service) && CMasternode::IsValidNetAddr(service);
+    if(!fFoundLocal) {
+        bool empty = true;
+        // If we have some peers, let's try to find our local address from one of them
+        g_connman->ForEachNodeContinueIf([&fFoundLocal, &empty, this](CNode* pnode) {
+            empty = false;
+            if (pnode->fSuccessfullyConnected && pnode->addr.IsIPv4())
+                fFoundLocal = GetLocal(service, &pnode->addr) && CMasternode::IsValidNetAddr(service);
+            return !fFoundLocal;
+        });
+        // nothing and no live connections, can't do anything for now
+        if (empty) {
+            nState = ACTIVE_MASTERNODE_NOT_CAPABLE;
+            strNotCapableReason = "Can't detect valid external address. Will retry when there are some connections available.";
+            LogPrintf("CActiveMasternode::ManageStateInitial -- %s: %s\n", GetStateString(), strNotCapableReason);
+            return;
         }
     }
 
@@ -199,7 +195,8 @@ void CActiveMasternode::ManageStateInitial()
 
     LogPrintf("CActiveMasternode::ManageStateInitial -- Checking inbound connection to '%s'\n", service.ToString());
 
-    if(!ConnectNode(CAddress(service, NODE_NETWORK), NULL, true)) {
+    // TODO: Pass CConnman instance somehow and don't use global variable.
+    if(!g_connman->ConnectNode(CAddress(service, NODE_NETWORK), NULL, true)) {
         nState = ACTIVE_MASTERNODE_NOT_CAPABLE;
         strNotCapableReason = "Could not connect to " + service.ToString();
         LogPrintf("CActiveMasternode::ManageStateInitial -- %s: %s\n", GetStateString(), strNotCapableReason);

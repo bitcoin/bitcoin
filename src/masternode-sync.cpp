@@ -90,7 +90,7 @@ bool CMasternodeSync::IsBlockchainSynced(bool fBlockAccepted)
     if(fCheckpointsEnabled && pCurrentBlockIndex->nHeight < Checkpoints::GetTotalBlocksEstimate(Params().Checkpoints()))
         return false;
 
-    std::vector<CNode*> vNodesCopy = CopyNodeVector();
+    std::vector<CNode*> vNodesCopy = g_connman->CopyNodeVector();
 
     // We have enough peers and assume most of them are synced
     if(vNodesCopy.size() >= MASTERNODE_SYNC_ENOUGH_PEERS) {
@@ -105,12 +105,12 @@ bool CMasternodeSync::IsBlockchainSynced(bool fBlockAccepted)
             if(nNodesAtSameHeight >= MASTERNODE_SYNC_ENOUGH_PEERS) {
                 LogPrintf("CMasternodeSync::IsBlockchainSynced -- found enough peers on the same height as we are, done\n");
                 fBlockchainSynced = true;
-                ReleaseNodeVector(vNodesCopy);
+                g_connman->ReleaseNodeVector(vNodesCopy);
                 return true;
             }
         }
     }
-    ReleaseNodeVector(vNodesCopy);
+    g_connman->ReleaseNodeVector(vNodesCopy);
 
     // wait for at least one new block to be accepted
     if(!fFirstBlockAccepted) return false;
@@ -192,12 +192,13 @@ void CMasternodeSync::SwitchToNextAsset()
             //try to activate our masternode if possible
             activeMasternode.ManageState();
 
-            TRY_LOCK(cs_vNodes, lockRecv);
-            if(lockRecv) {
-                BOOST_FOREACH(CNode* pnode, vNodes) {
-                    netfulfilledman.AddFulfilledRequest(pnode->addr, "full-sync");
-                }
-            }
+            // TODO: Find out whether we can just use LOCK instead of:
+            // TRY_LOCK(cs_vNodes, lockRecv);
+            // if(lockRecv) { ... }
+
+            g_connman->ForEachNode([](CNode* pnode) {
+                netfulfilledman.AddFulfilledRequest(pnode->addr, "full-sync");
+            });
             LogPrintf("CMasternodeSync::SwitchToNextAsset -- Sync has finished\n");
 
             break;
@@ -237,17 +238,17 @@ void CMasternodeSync::ProcessMessage(CNode* pfrom, std::string& strCommand, CDat
 
 void CMasternodeSync::ClearFulfilledRequests()
 {
-    TRY_LOCK(cs_vNodes, lockRecv);
-    if(!lockRecv) return;
+    // TODO: Find out whether we can just use LOCK instead of:
+    // TRY_LOCK(cs_vNodes, lockRecv);
+    // if(!lockRecv) return;
 
-    BOOST_FOREACH(CNode* pnode, vNodes)
-    {
+    g_connman->ForEachNode([](CNode* pnode) {
         netfulfilledman.RemoveFulfilledRequest(pnode->addr, "spork-sync");
         netfulfilledman.RemoveFulfilledRequest(pnode->addr, "masternode-list-sync");
         netfulfilledman.RemoveFulfilledRequest(pnode->addr, "masternode-payment-sync");
         netfulfilledman.RemoveFulfilledRequest(pnode->addr, "governance-sync");
         netfulfilledman.RemoveFulfilledRequest(pnode->addr, "full-sync");
-    }
+    });
 }
 
 void CMasternodeSync::ProcessTick()
@@ -271,9 +272,9 @@ void CMasternodeSync::ProcessTick()
                 LogPrintf("CMasternodeSync::ProcessTick -- WARNING: not enough data, restarting sync\n");
                 Reset();
             } else {
-                std::vector<CNode*> vNodesCopy = CopyNodeVector();
+                std::vector<CNode*> vNodesCopy = g_connman->CopyNodeVector();
                 governance.RequestGovernanceObjectVotes(vNodesCopy);
-                ReleaseNodeVector(vNodesCopy);
+                g_connman->ReleaseNodeVector(vNodesCopy);
                 return;
             }
         }
@@ -309,7 +310,7 @@ void CMasternodeSync::ProcessTick()
         SwitchToNextAsset();
     }
 
-    std::vector<CNode*> vNodesCopy = CopyNodeVector();
+    std::vector<CNode*> vNodesCopy = g_connman->CopyNodeVector();
 
     BOOST_FOREACH(CNode* pnode, vNodesCopy)
     {
@@ -334,7 +335,7 @@ void CMasternodeSync::ProcessTick()
                 nRequestedMasternodeAssets = MASTERNODE_SYNC_FINISHED;
             }
             nRequestedMasternodeAttempt++;
-            ReleaseNodeVector(vNodesCopy);
+            g_connman->ReleaseNodeVector(vNodesCopy);
             return;
         }
 
@@ -370,11 +371,11 @@ void CMasternodeSync::ProcessTick()
                         LogPrintf("CMasternodeSync::ProcessTick -- ERROR: failed to sync %s\n", GetAssetName());
                         // there is no way we can continue without masternode list, fail here and try later
                         Fail();
-                        ReleaseNodeVector(vNodesCopy);
+                        g_connman->ReleaseNodeVector(vNodesCopy);
                         return;
                     }
                     SwitchToNextAsset();
-                    ReleaseNodeVector(vNodesCopy);
+                    g_connman->ReleaseNodeVector(vNodesCopy);
                     return;
                 }
 
@@ -387,7 +388,7 @@ void CMasternodeSync::ProcessTick()
 
                 mnodeman.DsegUpdate(pnode);
 
-                ReleaseNodeVector(vNodesCopy);
+                g_connman->ReleaseNodeVector(vNodesCopy);
                 return; //this will cause each peer to get one request each six seconds for the various assets we need
             }
 
@@ -404,11 +405,11 @@ void CMasternodeSync::ProcessTick()
                         LogPrintf("CMasternodeSync::ProcessTick -- ERROR: failed to sync %s\n", GetAssetName());
                         // probably not a good idea to proceed without winner list
                         Fail();
-                        ReleaseNodeVector(vNodesCopy);
+                        g_connman->ReleaseNodeVector(vNodesCopy);
                         return;
                     }
                     SwitchToNextAsset();
-                    ReleaseNodeVector(vNodesCopy);
+                    g_connman->ReleaseNodeVector(vNodesCopy);
                     return;
                 }
 
@@ -418,7 +419,7 @@ void CMasternodeSync::ProcessTick()
                 if(nRequestedMasternodeAttempt > 1 && mnpayments.IsEnoughData()) {
                     LogPrintf("CMasternodeSync::ProcessTick -- nTick %d nRequestedMasternodeAssets %d -- found enough data\n", nTick, nRequestedMasternodeAssets);
                     SwitchToNextAsset();
-                    ReleaseNodeVector(vNodesCopy);
+                    g_connman->ReleaseNodeVector(vNodesCopy);
                     return;
                 }
 
@@ -434,7 +435,7 @@ void CMasternodeSync::ProcessTick()
                 // ask node for missing pieces only (old nodes will not be asked)
                 mnpayments.RequestLowDataPaymentBlocks(pnode);
 
-                ReleaseNodeVector(vNodesCopy);
+                g_connman->ReleaseNodeVector(vNodesCopy);
                 return; //this will cause each peer to get one request each six seconds for the various assets we need
             }
 
@@ -451,7 +452,7 @@ void CMasternodeSync::ProcessTick()
                         // it's kind of ok to skip this for now, hopefully we'll catch up later?
                     }
                     SwitchToNextAsset();
-                    ReleaseNodeVector(vNodesCopy);
+                    g_connman->ReleaseNodeVector(vNodesCopy);
                     return;
                 }
 
@@ -480,7 +481,7 @@ void CMasternodeSync::ProcessTick()
                             // reset nTimeNoObjectsLeft to be able to use the same condition on resync
                             nTimeNoObjectsLeft = 0;
                             SwitchToNextAsset();
-                            ReleaseNodeVector(vNodesCopy);
+                            g_connman->ReleaseNodeVector(vNodesCopy);
                             return;
                         }
                         nLastTick = nTick;
@@ -495,13 +496,13 @@ void CMasternodeSync::ProcessTick()
 
                 SendGovernanceSyncRequest(pnode);
 
-                ReleaseNodeVector(vNodesCopy);
+                g_connman->ReleaseNodeVector(vNodesCopy);
                 return; //this will cause each peer to get one request each six seconds for the various assets we need
             }
         }
     }
     // looped through all nodes, release them
-    ReleaseNodeVector(vNodesCopy);
+    g_connman->ReleaseNodeVector(vNodesCopy);
 }
 
 void CMasternodeSync::SendGovernanceSyncRequest(CNode* pnode)

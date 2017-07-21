@@ -259,5 +259,5 @@ bool CSporkMessage::CheckSignature()
 void CSporkMessage::Relay()
 {
     CInv inv(MSG_SPORK, GetHash());
-    RelayInv(inv);
+    g_connman->RelayInv(inv);
 }

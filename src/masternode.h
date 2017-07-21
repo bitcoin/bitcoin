@@ -472,7 +472,7 @@ public:
     void Relay() const
     {
         CInv inv(MSG_MASTERNODE_VERIFY, GetHash());
-        RelayInv(inv);
+        g_connman->RelayInv(inv);
     }
 };
 

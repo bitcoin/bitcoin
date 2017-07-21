@@ -367,7 +367,7 @@ void CPrivateSendServer::CommitFinalTransaction()
     LogPrintf("CPrivateSendServer::CommitFinalTransaction -- TRANSMITTING DSTX\n");
 
     CInv inv(MSG_DSTX, hashTx);
-    RelayInv(inv);
+    g_connman->RelayInv(inv);
 
     // Tell the clients it was successful
     RelayCompletedTransaction(MSG_SUCCESS);
@@ -452,7 +452,7 @@ void CPrivateSendServer::ChargeFees()
             // should never really happen
             LogPrintf("CPrivateSendServer::ChargeFees -- ERROR: AcceptToMemoryPool failed!\n");
         } else {
-            RelayTransaction(vecOffendersCollaterals[0]);
+            g_connman->RelayTransaction(vecOffendersCollaterals[0]);
         }
     }
 }
@@ -487,7 +487,7 @@ void CPrivateSendServer::ChargeRandomFees()
             // should never really happen
             LogPrintf("CPrivateSendServer::ChargeRandomFees -- ERROR: AcceptToMemoryPool failed!\n");
         } else {
-            RelayTransaction(txCollateral);
+            g_connman->RelayTransaction(txCollateral);
         }
     }
 }
@@ -795,10 +795,10 @@ bool CPrivateSendServer::AddUserToExistingSession(int nDenom, CTransaction txCol
 
 void CPrivateSendServer::RelayFinalTransaction(const CTransaction& txFinal)
 {
-    LOCK(cs_vNodes);
-    BOOST_FOREACH(CNode* pnode, vNodes)
+    g_connman->ForEachNode([&txFinal, this](CNode* pnode) {
         if(pnode->nVersion >= MIN_PRIVATESEND_PEER_PROTO_VERSION)
             pnode->PushMessage(NetMsgType::DSFINALTX, nSessionID, txFinal);
+    });
 }
 
 void CPrivateSendServer::PushStatus(CNode* pnode, PoolStatusUpdate nStatusUpdate, PoolMessage nMessageID)
@@ -809,18 +809,18 @@ void CPrivateSendServer::PushStatus(CNode* pnode, PoolStatusUpdate nStatusUpdate
 
 void CPrivateSendServer::RelayStatus(PoolStatusUpdate nStatusUpdate, PoolMessage nMessageID)
 {
-    LOCK(cs_vNodes);
-    BOOST_FOREACH(CNode* pnode, vNodes)
+    g_connman->ForEachNode([nStatusUpdate, nMessageID, this](CNode* pnode) {
         if(pnode->nVersion >= MIN_PRIVATESEND_PEER_PROTO_VERSION)
             PushStatus(pnode, nStatusUpdate, nMessageID);
+    });
 }
 
 void CPrivateSendServer::RelayCompletedTransaction(PoolMessage nMessageID)
 {
-    LOCK(cs_vNodes);
-    BOOST_FOREACH(CNode* pnode, vNodes)
+    g_connman->ForEachNode([nMessageID, this](CNode* pnode) {
         if(pnode->nVersion >= MIN_PRIVATESEND_PEER_PROTO_VERSION)
             pnode->PushMessage(NetMsgType::DSCOMPLETE, nSessionID, (int)nMessageID);
+    });
 }
 
 void CPrivateSendServer::SetState(PoolState nStateNew)

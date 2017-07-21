@@ -569,7 +569,7 @@ void OverviewPage::privateSendStatus()
 }
 
 void OverviewPage::privateSendAuto(){
-    privateSendClient.DoAutomaticDenominating();
+    privateSendClient.DoAutomaticDenominating(*g_connman);
 }
 
 void OverviewPage::privateSendReset(){
