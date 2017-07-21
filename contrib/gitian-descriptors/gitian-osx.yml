@@ -1,5 +1,5 @@
 ---
-name: "bitcoin-osx-1.14.4-segwit2x"
+name: "bitcoin-osx-1.14.5-segwit2x"
 enable_cache: true
 suites:
 - "trusty"
