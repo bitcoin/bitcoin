@@ -437,7 +437,7 @@ void CMasternodeMan::DsegUpdate(CNode* pnode)
             }
         }
     }
-    
+
     pnode->PushMessage(NetMsgType::DSEG, CTxIn());
     int64_t askAgain = GetTime() + DSEG_UPDATE_SECONDS;
     mWeAskedForMasternodeList[pnode->addr] = askAgain;
@@ -1405,88 +1405,92 @@ void CMasternodeMan::UpdateMasternodeList(CMasternodeBroadcast mnb)
 
 bool CMasternodeMan::CheckMnbAndUpdateMasternodeList(CNode* pfrom, CMasternodeBroadcast mnb, int& nDos)
 {
-    // Need LOCK2 here to ensure consistent locking order because the SimpleCheck call below locks cs_main
-    LOCK2(cs_main, cs);
+    // Need to lock cs_main here to ensure consistent locking order because the SimpleCheck call below locks cs_main
+    LOCK(cs_main);
 
-    nDos = 0;
-    LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- masternode=%s\n", mnb.vin.prevout.ToStringShort());
+    {
+        LOCK(cs);
+        nDos = 0;
+        LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- masternode=%s\n", mnb.vin.prevout.ToStringShort());
 
-    uint256 hash = mnb.GetHash();
-    if(mapSeenMasternodeBroadcast.count(hash) && !mnb.fRecovery) { //seen
-        LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- masternode=%s seen\n", mnb.vin.prevout.ToStringShort());
-        // less then 2 pings left before this MN goes into non-recoverable state, bump sync timeout
-        if(GetTime() - mapSeenMasternodeBroadcast[hash].first > MASTERNODE_NEW_START_REQUIRED_SECONDS - MASTERNODE_MIN_MNP_SECONDS * 2) {
-            LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- masternode=%s seen update\n", mnb.vin.prevout.ToStringShort());
-            mapSeenMasternodeBroadcast[hash].first = GetTime();
-            masternodeSync.AddedMasternodeList();
-        }
-        // did we ask this node for it?
-        if(pfrom && IsMnbRecoveryRequested(hash) && GetTime() < mMnbRecoveryRequests[hash].first) {
-            LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- mnb=%s seen request\n", hash.ToString());
-            if(mMnbRecoveryRequests[hash].second.count(pfrom->addr)) {
-                LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- mnb=%s seen request, addr=%s\n", hash.ToString(), pfrom->addr.ToString());
-                // do not allow node to send same mnb multiple times in recovery mode
-                mMnbRecoveryRequests[hash].second.erase(pfrom->addr);
-                // does it have newer lastPing?
-                if(mnb.lastPing.sigTime > mapSeenMasternodeBroadcast[hash].second.lastPing.sigTime) {
-                    // simulate Check
-                    CMasternode mnTemp = CMasternode(mnb);
-                    mnTemp.Check();
-                    LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- mnb=%s seen request, addr=%s, better lastPing: %d min ago, projected mn state: %s\n", hash.ToString(), pfrom->addr.ToString(), (GetTime() - mnb.lastPing.sigTime)/60, mnTemp.GetStateString());
-                    if(mnTemp.IsValidStateForAutoStart(mnTemp.nActiveState)) {
-                        // this node thinks it's a good one
-                        LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- masternode=%s seen good\n", mnb.vin.prevout.ToStringShort());
-                        mMnbRecoveryGoodReplies[hash].push_back(mnb);
+        uint256 hash = mnb.GetHash();
+        if(mapSeenMasternodeBroadcast.count(hash) && !mnb.fRecovery) { //seen
+            LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- masternode=%s seen\n", mnb.vin.prevout.ToStringShort());
+            // less then 2 pings left before this MN goes into non-recoverable state, bump sync timeout
+            if(GetTime() - mapSeenMasternodeBroadcast[hash].first > MASTERNODE_NEW_START_REQUIRED_SECONDS - MASTERNODE_MIN_MNP_SECONDS * 2) {
+                LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- masternode=%s seen update\n", mnb.vin.prevout.ToStringShort());
+                mapSeenMasternodeBroadcast[hash].first = GetTime();
+                masternodeSync.AddedMasternodeList();
+            }
+            // did we ask this node for it?
+            if(pfrom && IsMnbRecoveryRequested(hash) && GetTime() < mMnbRecoveryRequests[hash].first) {
+                LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- mnb=%s seen request\n", hash.ToString());
+                if(mMnbRecoveryRequests[hash].second.count(pfrom->addr)) {
+                    LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- mnb=%s seen request, addr=%s\n", hash.ToString(), pfrom->addr.ToString());
+                    // do not allow node to send same mnb multiple times in recovery mode
+                    mMnbRecoveryRequests[hash].second.erase(pfrom->addr);
+                    // does it have newer lastPing?
+                    if(mnb.lastPing.sigTime > mapSeenMasternodeBroadcast[hash].second.lastPing.sigTime) {
+                        // simulate Check
+                        CMasternode mnTemp = CMasternode(mnb);
+                        mnTemp.Check();
+                        LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- mnb=%s seen request, addr=%s, better lastPing: %d min ago, projected mn state: %s\n", hash.ToString(), pfrom->addr.ToString(), (GetTime() - mnb.lastPing.sigTime)/60, mnTemp.GetStateString());
+                        if(mnTemp.IsValidStateForAutoStart(mnTemp.nActiveState)) {
+                            // this node thinks it's a good one
+                            LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- masternode=%s seen good\n", mnb.vin.prevout.ToStringShort());
+                            mMnbRecoveryGoodReplies[hash].push_back(mnb);
+                        }
                     }
                 }
             }
+            return true;
         }
-        return true;
-    }
-    mapSeenMasternodeBroadcast.insert(std::make_pair(hash, std::make_pair(GetTime(), mnb)));
+        mapSeenMasternodeBroadcast.insert(std::make_pair(hash, std::make_pair(GetTime(), mnb)));
 
-    LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- masternode=%s new\n", mnb.vin.prevout.ToStringShort());
+        LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- masternode=%s new\n", mnb.vin.prevout.ToStringShort());
 
-    if(!mnb.SimpleCheck(nDos)) {
-        LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- SimpleCheck() failed, masternode=%s\n", mnb.vin.prevout.ToStringShort());
-        return false;
-    }
-
-    // search Masternode list
-    CMasternode* pmn = Find(mnb.vin);
-    if(pmn) {
-        CMasternodeBroadcast mnbOld = mapSeenMasternodeBroadcast[CMasternodeBroadcast(*pmn).GetHash()].second;
-        if(!mnb.Update(pmn, nDos)) {
-            LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- Update() failed, masternode=%s\n", mnb.vin.prevout.ToStringShort());
+        if(!mnb.SimpleCheck(nDos)) {
+            LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- SimpleCheck() failed, masternode=%s\n", mnb.vin.prevout.ToStringShort());
             return false;
         }
-        if(hash != mnbOld.GetHash()) {
-            mapSeenMasternodeBroadcast.erase(mnbOld.GetHash());
-        }
-    } else {
-        if(mnb.CheckOutpoint(nDos)) {
-            Add(mnb);
-            masternodeSync.AddedMasternodeList();
-            // if it matches our Masternode privkey...
-            if(fMasterNode && mnb.pubKeyMasternode == activeMasternode.pubKeyMasternode) {
-                mnb.nPoSeBanScore = -MASTERNODE_POSE_BAN_MAX_SCORE;
-                if(mnb.nProtocolVersion == PROTOCOL_VERSION) {
-                    // ... and PROTOCOL_VERSION, then we've been remotely activated ...
-                    LogPrintf("CMasternodeMan::CheckMnbAndUpdateMasternodeList -- Got NEW Masternode entry: masternode=%s  sigTime=%lld  addr=%s\n",
-                                mnb.vin.prevout.ToStringShort(), mnb.sigTime, mnb.addr.ToString());
-                    activeMasternode.ManageState();
-                } else {
-                    // ... otherwise we need to reactivate our node, do not add it to the list and do not relay
-                    // but also do not ban the node we get this message from
-                    LogPrintf("CMasternodeMan::CheckMnbAndUpdateMasternodeList -- wrong PROTOCOL_VERSION, re-activate your MN: message nProtocolVersion=%d  PROTOCOL_VERSION=%d\n", mnb.nProtocolVersion, PROTOCOL_VERSION);
-                    return false;
-                }
+
+        // search Masternode list
+        CMasternode* pmn = Find(mnb.vin);
+        if(pmn) {
+            CMasternodeBroadcast mnbOld = mapSeenMasternodeBroadcast[CMasternodeBroadcast(*pmn).GetHash()].second;
+            if(!mnb.Update(pmn, nDos)) {
+                LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- Update() failed, masternode=%s\n", mnb.vin.prevout.ToStringShort());
+                return false;
             }
-            mnb.Relay();
-        } else {
-            LogPrintf("CMasternodeMan::CheckMnbAndUpdateMasternodeList -- Rejected Masternode entry: %s  addr=%s\n", mnb.vin.prevout.ToStringShort(), mnb.addr.ToString());
-            return false;
+            if(hash != mnbOld.GetHash()) {
+                mapSeenMasternodeBroadcast.erase(mnbOld.GetHash());
+            }
+            return true;
         }
+    }
+
+    if(mnb.CheckOutpoint(nDos)) {
+        Add(mnb);
+        masternodeSync.AddedMasternodeList();
+        // if it matches our Masternode privkey...
+        if(fMasterNode && mnb.pubKeyMasternode == activeMasternode.pubKeyMasternode) {
+            mnb.nPoSeBanScore = -MASTERNODE_POSE_BAN_MAX_SCORE;
+            if(mnb.nProtocolVersion == PROTOCOL_VERSION) {
+                // ... and PROTOCOL_VERSION, then we've been remotely activated ...
+                LogPrintf("CMasternodeMan::CheckMnbAndUpdateMasternodeList -- Got NEW Masternode entry: masternode=%s  sigTime=%lld  addr=%s\n",
+                            mnb.vin.prevout.ToStringShort(), mnb.sigTime, mnb.addr.ToString());
+                activeMasternode.ManageState();
+            } else {
+                // ... otherwise we need to reactivate our node, do not add it to the list and do not relay
+                // but also do not ban the node we get this message from
+                LogPrintf("CMasternodeMan::CheckMnbAndUpdateMasternodeList -- wrong PROTOCOL_VERSION, re-activate your MN: message nProtocolVersion=%d  PROTOCOL_VERSION=%d\n", mnb.nProtocolVersion, PROTOCOL_VERSION);
+                return false;
+            }
+        }
+        mnb.Relay();
+    } else {
+        LogPrintf("CMasternodeMan::CheckMnbAndUpdateMasternodeList -- Rejected Masternode entry: %s  addr=%s\n", mnb.vin.prevout.ToStringShort(), mnb.addr.ToString());
+        return false;
     }
 
     return true;
