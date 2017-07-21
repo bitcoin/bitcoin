@@ -536,8 +536,8 @@ static bool ProcessBlockFound(const CBlock *pblock, const CChainParams &chainpar
 
         // In we are mining our own block or not running in parallel for any reason
         // we must terminate any block validation threads that are currently running,
-        // Unless they have more work than our own block.
-        // TODO: we need a better way to determine if a reorg is in progress.
+        // Unless they have more work than our own block or are processing a chain
+        // that has more work than our block.
         PV->StopAllValidationThreads(pblock->GetBlockHeader().nBits);
 
         // Process this block the same as if we had received it from another node

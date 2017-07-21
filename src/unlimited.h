@@ -242,10 +242,5 @@ extern CTweak<uint64_t> blockMiningSigopsPerMb;
 
 extern std::list<CStatBase *> mallocedStats;
 
-/**  Parallel Block Validation - begin **/
-
-extern CCriticalSection cs_blockvalidationthread;
-void InterruptBlockValidationThreads();
-
 
 #endif
