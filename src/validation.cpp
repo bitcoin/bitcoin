@@ -1706,7 +1706,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     // If we're on the known chain at height greater than where BIP34 activated, we can save the db accesses needed for the BIP30 check.
     CBlockIndex *pindexBIP34height = pindex->pprev->GetAncestor(chainparams.GetConsensus().BIP34Height);
     //Only continue to enforce if we're below BIP34 activation height or the block hash at that height doesn't correspond.
-    fEnforceBIP30 = fEnforceBIP30 && (!pindexBIP34height || !(pindexBIP34height->GetBlockHash() == chainparams.GetConsensus().BIP34Hash));
+    fEnforceBIP30 = fEnforceBIP30 && (!pindexBIP34height /* || !(pindexBIP34height->GetBlockHash() == chainparams.GetConsensus().BIP34Hash) Disabled because Blocks with V.2 should be longer active. */);
 
     if (fEnforceBIP30) {
         for (const auto& tx : block.vtx) {

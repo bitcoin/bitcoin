@@ -76,10 +76,10 @@ public:
     CMainParams() {
         strNetworkID = "main";
         consensus.nSubsidyHalvingInterval = 840000;
-        consensus.BIP34Height = 1;
-        consensus.BIP34Hash = uint256S("0x0000000097fcef2abcd5b827feffb2625fa50ef1794d8efc75ddbfaa3daeb499");
-        consensus.BIP65Height = 280000; // not hashed yet ...
-        consensus.BIP66Height = 260000; // not hashed yet ...
+        consensus.BIP34Height = 299999;
+        // consensus.BIP34Hash = uint256S("0x0000000097fcef2abcd5b827feffb2625fa50ef1794d8efc75ddbfaa3daeb499"); rejected because Version 2 Blocks should be active now
+        consensus.BIP65Height = 380000; // not hashed yet ...
+        consensus.BIP66Height = 360000; // not hashed yet ...
         consensus.powLimit = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 10 * 60; // ten minutes
         consensus.nPowTargetSpacing = 60;

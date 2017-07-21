@@ -897,13 +897,13 @@ std::string CopyrightHolders(const std::string& strPrefix)
 
 std::string CopyrightHoldersGLT(const std::string& strPrefix)
 {
-    std::string strCopyrightHolders = strPrefix + strprintf(_(COPYRIGHT_HOLDERS), _(COPYRIGHT_HOLDERS_SUBSTITUTION_GLT));
+    std::string strCopyrightHoldersGLT = strPrefix + strprintf(_(COPYRIGHT_HOLDERS), _(COPYRIGHT_HOLDERS_SUBSTITUTION_GLT));
 
     // Check for untranslated substitution to make sure Bitcoin Core copyright is not removed by accident
     if (strprintf(COPYRIGHT_HOLDERS, COPYRIGHT_HOLDERS_SUBSTITUTION_GLT).find("Globaltoken Core") == std::string::npos) {
-        strCopyrightHolders += "\n" + strPrefix + "The Globaltoken Core developers";
+        strCopyrightHoldersGLT += "\n" + strPrefix + "The Globaltoken Core developers";
     }
-    return strCopyrightHolders;
+    return strCopyrightHoldersGLT;
 }
 
 // Obtain the application startup time (used for uptime calculation)
