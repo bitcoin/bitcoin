@@ -584,6 +584,7 @@ public:
 
         return nFound;
     }
+    /** Return the number of times this opcode is found in the script */
     int Find(opcodetype op) const
     {
         int nFound = 0;

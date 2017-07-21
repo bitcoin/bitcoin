@@ -112,3 +112,42 @@ void CBlockIndex::BuildSkip()
     if (pprev)
         pskip = pprev->GetAncestor(GetSkipHeight(nHeight));
 }
+
+bool CBlockIndex::forkActivated(int time)
+{
+    if (time==0) return false;
+
+    if (pprev && pprev->GetMedianTimePast() >= time)
+    {
+        return true;
+    }
+    return false;
+}
+
+bool CBlockIndex::forkActivateNow(int time)
+{
+    if (time==0) return false;
+    return (pprev && pprev->forkAtNextBlock(time));
+}
+
+bool CBlockIndex::IsforkActiveOnNextBlock(int time)
+{
+    if (time==0) return false;
+    // if the fork is already activated
+    if (forkActivated(time)) return true;
+    if (GetMedianTimePast() >= time) return true;
+    return false;
+}
+
+bool CBlockIndex::forkAtNextBlock(int time)
+{
+    if (time==0) return false;
+
+    // if the fork is already activated
+    if (forkActivated(time)) return false;
+
+    if (GetMedianTimePast() >= time) return true;
+    return false;
+}
+
+

@@ -218,6 +218,18 @@ public:
         return block;
     }
 
+    // was the fork activated on this or any prior block?
+    bool forkActivated(int time);
+
+    // Is THIS the fork block?
+    bool forkActivateNow(int time);
+
+    // Is the next block the fork block?
+    bool forkAtNextBlock(int time);
+
+    // Is the fork active on the next block?
+    bool IsforkActiveOnNextBlock(int time);
+
     uint256 GetBlockHash() const
     {
         return *phashBlock;

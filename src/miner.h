@@ -57,6 +57,8 @@ private:
     int lastFewTxs;
     bool blockFinished;
 
+    bool buip055ChainBlock;
+
 public:
     BlockAssembler(const CChainParams &chainparams);
     /** Construct a new block template with coinbase to scriptPubKeyIn */
