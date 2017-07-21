@@ -774,7 +774,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     // BUIP055 - UAHF
     // this can later be removed after the hardfork has happened
-    nLocalServices |= NODE_UAHF;
+    nLocalServices |= NODE_BITCOIN_CASH;
 
     nMaxTipAge = GetArg("-maxtipage", DEFAULT_MAX_TIP_AGE);
 

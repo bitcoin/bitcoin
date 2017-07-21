@@ -80,8 +80,8 @@ static const unsigned int DEFAULT_MAX_PEER_CONNECTIONS = 125;
 static const unsigned int DEFAULT_MAX_OUTBOUND_CONNECTIONS = 12;
 /** BU: The minimum number of xthin nodes to connect */
 static const uint8_t MIN_XTHIN_NODES = 8;
-/** BU: The minimum number of uahf nodes to connect */
-static const uint8_t MIN_UAHF_NODES = 4;
+/** BU: The minimum number of BitcoinCash nodes to connect */
+static const uint8_t MIN_BITCOIN_CASH_NODES = 4;
 /** BU: The daily maximum disconnects while searching for xthin nodes to connect */
 static const unsigned int MAX_DISCONNECTS = 200;
 /** The default for -maxuploadtarget. 0 = Unlimited */
@@ -188,8 +188,8 @@ extern CAddrMan addrman;
 extern int nMaxConnections;
 /** The minimum number of xthin nodes to connect to */
 extern int nMinXthinNodes;
-/** The minimum number of UAHF nodes to connect to */
-extern int nMinUAHFNodes;
+/** The minimum number of BitcoinCash nodes to connect to */
+extern int nMinBitcoinCashNodes;
 extern std::vector<CNode *> vNodes;
 extern CCriticalSection cs_vNodes;
 extern std::map<CInv, CDataStream> mapRelay;
@@ -517,9 +517,9 @@ public:
     }
 
     // BUIP055:
-    bool UAHFCapable()
+    bool BitcoinCashCapable()
     {
-        if (nServices & NODE_UAHF)
+        if (nServices & NODE_BITCOIN_CASH)
             return true;
         return false;
     }

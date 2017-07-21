@@ -97,7 +97,7 @@ static std::vector<ListenSocket> vhListenSocket;
 extern CAddrMan addrman;
 int nMaxConnections = DEFAULT_MAX_PEER_CONNECTIONS;
 int nMinXthinNodes = MIN_XTHIN_NODES;
-int nMinUAHFNodes = MIN_UAHF_NODES;
+int nMinBitcoinCashNodes = MIN_BITCOIN_CASH_NODES;
 
 bool fAddressesInitialized = false;
 std::string strSubVersion;
@@ -1712,7 +1712,7 @@ void ThreadOpenConnections()
         // we don't have enough connections to XTHIN capable nodes yet.
         int nOutbound = 0;
         int nThinBlockCapable = 0;
-        int nUAHF = 0;
+        int nBitcoinCash = 0;
         set<vector<unsigned char> > setConnected;
         CNode *ptemp = nullptr;
         bool fDisconnected = false;
@@ -1727,8 +1727,8 @@ void ThreadOpenConnections()
 
                     if (pnode->ThinBlockCapable())
                         nThinBlockCapable++;
-                    else if (pnode->UAHFCapable())
-                        nUAHF++;
+                    else if (pnode->BitcoinCashCapable())
+                        nBitcoinCash++;
                     else
                         ptemp = pnode;
                 }
@@ -1736,7 +1736,7 @@ void ThreadOpenConnections()
             // Disconnect a node that is not XTHIN capable if all outbound slots are full and we
             // have not yet connected to enough XTHIN nodes.
             nMinXthinNodes = GetArg("-min-xthin-nodes", MIN_XTHIN_NODES);
-            nMinUAHFNodes = GetArg("-min-uahf-nodes", MIN_UAHF_NODES);
+            nMinBitcoinCashNodes = GetArg("-min-bitcoin-cash-nodes", MIN_BITCOIN_CASH_NODES);
             if (nOutbound >= nMaxOutConnections && nThinBlockCapable <= min(nMinXthinNodes, nMaxOutConnections) &&
                 nDisconnects < MAX_DISCONNECTS && IsThinBlocksEnabled() && IsChainNearlySyncd())
             {
@@ -1747,9 +1747,10 @@ void ThreadOpenConnections()
                     nDisconnects++;
                 }
             }
-            // Disconnect a node that is not UAHF capable if all outbound slots are full and we
-            // have not yet connected to enough UAHF nodes.
-            else if (nOutbound >= nMaxOutConnections && nUAHF <= min(nMinUAHFNodes, nMaxOutConnections) &&
+#ifdef BITCOIN_CASH
+            // Disconnect a node that is not BitcoinCash capable if all outbound slots are full and we
+            // have not yet connected to enough BitcoinCash nodes.
+            else if (nOutbound >= nMaxOutConnections && nBitcoinCash <= min(nMinBitcoinCashNodes, nMaxOutConnections) &&
                      nDisconnects < MAX_DISCONNECTS && IsChainNearlySyncd())
             {
                 if (ptemp != nullptr)
@@ -1759,6 +1760,7 @@ void ThreadOpenConnections()
                     nDisconnects++;
                 }
             }
+#endif
 
             // In the event that outbound nodes restart or drop off the network over time we need to
             // replenish the number of disconnects allowed once per day.

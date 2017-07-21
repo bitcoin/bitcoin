@@ -927,9 +927,11 @@ QString formatServicesStr(quint64 mask)
             case NODE_XTHIN:
                 strList.append("XTHIN");
                 break;
-            case NODE_UAHF:
-                strList.append("UAHF");
+#ifdef BITCOIN_CASH
+            case NODE_BITCOIN_CASH:
+                strList.append("CASH");
                 break;
+#endif
             default:
                 strList.append(QString("%1[%2]").arg("UNKNOWN").arg(check));
             }
