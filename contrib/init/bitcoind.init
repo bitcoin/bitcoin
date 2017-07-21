@@ -1,36 +1,36 @@
 #!/bin/bash
 #
-#  bitcoind The bitcoin core server.
+#  globaltokend The bitcoin core server.
 #
 #
 # chkconfig: 345 80 20
-# description: bitcoind
-# processname: bitcoind
+# description: globaltokend
+# processname: globaltokend
 #
 
 # Source function library.
 . /etc/init.d/functions
 
-# you can override defaults in /etc/sysconfig/bitcoind, see below
-if [ -f /etc/sysconfig/bitcoind ]; then
-        . /etc/sysconfig/bitcoind
+# you can override defaults in /etc/sysconfig/globaltokend, see below
+if [ -f /etc/sysconfig/globaltokend ]; then
+        . /etc/sysconfig/globaltokend
 fi
 
 RETVAL=0
 
-prog=bitcoind
-# you can override the lockfile via BITCOIND_LOCKFILE in /etc/sysconfig/bitcoind
-lockfile=${BITCOIND_LOCKFILE-/var/lock/subsys/bitcoind}
+prog=globaltokend
+# you can override the lockfile via BITCOIND_LOCKFILE in /etc/sysconfig/globaltokend
+lockfile=${BITCOIND_LOCKFILE-/var/lock/subsys/globaltokend}
 
-# bitcoind defaults to /usr/bin/bitcoind, override with BITCOIND_BIN
-bitcoind=${BITCOIND_BIN-/usr/bin/bitcoind}
+# globaltokend defaults to /usr/bin/globaltokend, override with BITCOIND_BIN
+globaltokend=${BITCOIND_BIN-/usr/bin/globaltokend}
 
-# bitcoind opts default to -disablewallet, override with BITCOIND_OPTS
-bitcoind_opts=${BITCOIND_OPTS--disablewallet}
+# globaltokend opts default to -disablewallet, override with BITCOIND_OPTS
+globaltokend_opts=${BITCOIND_OPTS--disablewallet}
 
 start() {
     echo -n $"Starting $prog: "
-    daemon $DAEMONOPTS $bitcoind $bitcoind_opts
+    daemon $DAEMONOPTS $globaltokend $globaltokend_opts
     RETVAL=$?
     echo
     [ $RETVAL -eq 0 ] && touch $lockfile

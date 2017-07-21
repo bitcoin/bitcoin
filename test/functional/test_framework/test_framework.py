@@ -69,7 +69,7 @@ class BitcoinTestFramework(object):
         self.num_nodes = 4
         self.setup_clean_chain = False
         self.nodes = []
-        self.bitcoind_processes = {}
+        self.globaltokend_processes = {}
         self.mocktime = 0
 
     def add_options(self, parser):
@@ -107,11 +107,11 @@ class BitcoinTestFramework(object):
 
         parser = optparse.OptionParser(usage="%prog [options]")
         parser.add_option("--nocleanup", dest="nocleanup", default=False, action="store_true",
-                          help="Leave bitcoinds and test.* datadir on exit or error")
+                          help="Leave globaltokends and test.* datadir on exit or error")
         parser.add_option("--noshutdown", dest="noshutdown", default=False, action="store_true",
-                          help="Don't stop bitcoinds after the test execution")
+                          help="Don't stop globaltokends after the test execution")
         parser.add_option("--srcdir", dest="srcdir", default=os.path.normpath(os.path.dirname(os.path.realpath(__file__)) + "/../../../src"),
-                          help="Source directory containing bitcoind/bitcoin-cli (default: %default)")
+                          help="Source directory containing globaltokend/bitcoin-cli (default: %default)")
         parser.add_option("--cachedir", dest="cachedir", default=os.path.normpath(os.path.dirname(os.path.realpath(__file__)) + "/../../cache"),
                           help="Directory for caching pregenerated datadirs")
         parser.add_option("--tmpdir", dest="tmpdir", help="Root directory for datadirs")
@@ -167,7 +167,7 @@ class BitcoinTestFramework(object):
             if self.nodes:
                 self.stop_nodes()
         else:
-            self.log.info("Note: bitcoinds were not stopped and may still be running")
+            self.log.info("Note: globaltokends were not stopped and may still be running")
 
         if not self.options.nocleanup and not self.options.noshutdown and success != TestStatus.FAILED:
             self.log.info("Cleaning up")
@@ -204,17 +204,17 @@ class BitcoinTestFramework(object):
     # Public helper methods. These can be accessed by the subclass test scripts.
 
     def start_node(self, i, dirname, extra_args=None, rpchost=None, timewait=None, binary=None, stderr=None):
-        """Start a bitcoind and return RPC connection to it"""
+        """Start a globaltokend and return RPC connection to it"""
 
         datadir = os.path.join(dirname, "node" + str(i))
         if binary is None:
-            binary = os.getenv("BITCOIND", "bitcoind")
+            binary = os.getenv("BITCOIND", "globaltokend")
         args = [binary, "-datadir=" + datadir, "-server", "-keypool=1", "-discover=0", "-rest", "-logtimemicros", "-debug", "-debugexclude=libevent", "-debugexclude=leveldb", "-mocktime=" + str(self.mocktime), "-uacomment=testnode%d" % i]
         if extra_args is not None:
             args.extend(extra_args)
-        self.bitcoind_processes[i] = subprocess.Popen(args, stderr=stderr)
-        self.log.debug("initialize_chain: bitcoind started, waiting for RPC to come up")
-        self._wait_for_bitcoind_start(self.bitcoind_processes[i], datadir, i, rpchost)
+        self.globaltokend_processes[i] = subprocess.Popen(args, stderr=stderr)
+        self.log.debug("initialize_chain: globaltokend started, waiting for RPC to come up")
+        self._wait_for_globaltokend_start(self.globaltokend_processes[i], datadir, i, rpchost)
         self.log.debug("initialize_chain: RPC successfully started")
         proxy = get_rpc_proxy(rpc_url(datadir, i, rpchost), i, timeout=timewait)
 
@@ -224,7 +224,7 @@ class BitcoinTestFramework(object):
         return proxy
 
     def start_nodes(self, num_nodes, dirname, extra_args=None, rpchost=None, timewait=None, binary=None):
-        """Start multiple bitcoinds, return RPC connections to them"""
+        """Start multiple globaltokends, return RPC connections to them"""
 
         if extra_args is None:
             extra_args = [None] * num_nodes
@@ -247,23 +247,23 @@ class BitcoinTestFramework(object):
         return rpcs
 
     def stop_node(self, i):
-        """Stop a bitcoind test node"""
+        """Stop a globaltokend test node"""
 
         self.log.debug("Stopping node %d" % i)
         try:
             self.nodes[i].stop()
         except http.client.CannotSendRequest as e:
             self.log.exception("Unable to stop node")
-        return_code = self.bitcoind_processes[i].wait(timeout=BITCOIND_PROC_WAIT_TIMEOUT)
-        del self.bitcoind_processes[i]
+        return_code = self.globaltokend_processes[i].wait(timeout=BITCOIND_PROC_WAIT_TIMEOUT)
+        del self.globaltokend_processes[i]
         assert_equal(return_code, 0)
 
     def stop_nodes(self):
-        """Stop multiple bitcoind test nodes"""
+        """Stop multiple globaltokend test nodes"""
 
         for i in range(len(self.nodes)):
             self.stop_node(i)
-        assert not self.bitcoind_processes.values()  # All connections must be gone now
+        assert not self.globaltokend_processes.values()  # All connections must be gone now
 
     def assert_start_raises_init_error(self, i, dirname, extra_args=None, expected_msg=None):
         with tempfile.SpooledTemporaryFile(max_size=2**16) as log_stderr:
@@ -271,7 +271,7 @@ class BitcoinTestFramework(object):
                 self.start_node(i, dirname, extra_args, stderr=log_stderr)
                 self.stop_node(i)
             except Exception as e:
-                assert 'bitcoind exited' in str(e)  # node must have shutdown
+                assert 'globaltokend exited' in str(e)  # node must have shutdown
                 if expected_msg is not None:
                     log_stderr.seek(0)
                     stderr = log_stderr.read().decode('utf-8')
@@ -279,13 +279,13 @@ class BitcoinTestFramework(object):
                         raise AssertionError("Expected error \"" + expected_msg + "\" not found in:\n" + stderr)
             else:
                 if expected_msg is None:
-                    assert_msg = "bitcoind should have exited with an error"
+                    assert_msg = "globaltokend should have exited with an error"
                 else:
-                    assert_msg = "bitcoind should have exited with expected error " + expected_msg
+                    assert_msg = "globaltokend should have exited with expected error " + expected_msg
                 raise AssertionError(assert_msg)
 
     def wait_for_node_exit(self, i, timeout):
-        self.bitcoind_processes[i].wait(timeout)
+        self.globaltokend_processes[i].wait(timeout)
 
     def split_network(self):
         """
@@ -339,7 +339,7 @@ class BitcoinTestFramework(object):
         # User can provide log level as a number or string (eg DEBUG). loglevel was caught as a string, so try to convert it to an int
         ll = int(self.options.loglevel) if self.options.loglevel.isdigit() else self.options.loglevel.upper()
         ch.setLevel(ll)
-        # Format logs the same as bitcoind's debug.log with microprecision (so log files can be concatenated and sorted)
+        # Format logs the same as globaltokend's debug.log with microprecision (so log files can be concatenated and sorted)
         formatter = logging.Formatter(fmt='%(asctime)s.%(msecs)03d000 %(name)s (%(levelname)s): %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
         formatter.converter = time.gmtime
         fh.setFormatter(formatter)
@@ -376,15 +376,15 @@ class BitcoinTestFramework(object):
                 if os.path.isdir(os.path.join(cachedir, "node" + str(i))):
                     shutil.rmtree(os.path.join(cachedir, "node" + str(i)))
 
-            # Create cache directories, run bitcoinds:
+            # Create cache directories, run globaltokends:
             for i in range(MAX_NODES):
                 datadir = initialize_datadir(cachedir, i)
-                args = [os.getenv("BITCOIND", "bitcoind"), "-server", "-keypool=1", "-datadir=" + datadir, "-discover=0"]
+                args = [os.getenv("BITCOIND", "globaltokend"), "-server", "-keypool=1", "-datadir=" + datadir, "-discover=0"]
                 if i > 0:
                     args.append("-connect=127.0.0.1:" + str(p2p_port(0)))
-                self.bitcoind_processes[i] = subprocess.Popen(args)
-                self.log.debug("initialize_chain: bitcoind started, waiting for RPC to come up")
-                self._wait_for_bitcoind_start(self.bitcoind_processes[i], datadir, i)
+                self.globaltokend_processes[i] = subprocess.Popen(args)
+                self.log.debug("initialize_chain: globaltokend started, waiting for RPC to come up")
+                self._wait_for_globaltokend_start(self.globaltokend_processes[i], datadir, i)
                 self.log.debug("initialize_chain: RPC successfully started")
 
             self.nodes = []
@@ -437,14 +437,14 @@ class BitcoinTestFramework(object):
         for i in range(num_nodes):
             initialize_datadir(test_dir, i)
 
-    def _wait_for_bitcoind_start(self, process, datadir, i, rpchost=None):
-        """Wait for bitcoind to start.
+    def _wait_for_globaltokend_start(self, process, datadir, i, rpchost=None):
+        """Wait for globaltokend to start.
 
         This means that RPC is accessible and fully initialized.
-        Raise an exception if bitcoind exits during initialization."""
+        Raise an exception if globaltokend exits during initialization."""
         while True:
             if process.poll() is not None:
-                raise Exception('bitcoind exited with status %i during initialization' % process.returncode)
+                raise Exception('globaltokend exited with status %i during initialization' % process.returncode)
             try:
                 # Check if .cookie file to be created
                 rpc = get_rpc_proxy(rpc_url(datadir, i, rpchost), i, coveragedir=self.options.coveragedir)
@@ -456,7 +456,7 @@ class BitcoinTestFramework(object):
             except JSONRPCException as e:  # Initialization phase
                 if e.error['code'] != -28:  # RPC in warmup?
                     raise  # unknown JSON RPC exception
-            except ValueError as e:  # cookie file not found and no rpcuser or rpcassword. bitcoind still starting
+            except ValueError as e:  # cookie file not found and no rpcuser or rpcassword. globaltokend still starting
                 if "No RPC credentials" not in str(e):
                     raise
             time.sleep(0.25)
@@ -464,7 +464,7 @@ class BitcoinTestFramework(object):
 class ComparisonTestFramework(BitcoinTestFramework):
     """Test framework for doing p2p comparison testing
 
-    Sets up some bitcoind binaries:
+    Sets up some globaltokend binaries:
     - 1 binary: test binary
     - 2 binaries: 1 test binary, 1 ref binary
     - n>2 binaries: 1 test binary, n-1 ref binaries"""
@@ -476,11 +476,11 @@ class ComparisonTestFramework(BitcoinTestFramework):
 
     def add_options(self, parser):
         parser.add_option("--testbinary", dest="testbinary",
-                          default=os.getenv("BITCOIND", "bitcoind"),
-                          help="bitcoind binary to test")
+                          default=os.getenv("BITCOIND", "globaltokend"),
+                          help="globaltokend binary to test")
         parser.add_option("--refbinary", dest="refbinary",
-                          default=os.getenv("BITCOIND", "bitcoind"),
-                          help="bitcoind binary to use for reference nodes (if any)")
+                          default=os.getenv("BITCOIND", "globaltokend"),
+                          help="globaltokend binary to use for reference nodes (if any)")
 
     def setup_network(self):
         extra_args = [['-whitelist=127.0.0.1']]*self.num_nodes
