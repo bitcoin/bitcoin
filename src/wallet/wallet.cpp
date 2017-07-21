@@ -3870,6 +3870,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
         DBErrors nZapWalletRet = tempWallet->ZapWalletTx(vWtx);
         if (nZapWalletRet != DB_LOAD_OK) {
             InitError(strprintf(_("Error loading %s: Wallet corrupted"), walletFile));
+            delete tempWallet;
             return NULL;
         }
 
@@ -3888,6 +3889,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
     {
         if (nLoadWalletRet == DB_CORRUPT) {
             InitError(strprintf(_("Error loading %s: Wallet corrupted"), walletFile));
+            delete walletInstance;
             return NULL;
         }
         else if (nLoadWalletRet == DB_NONCRITICAL_ERROR)
@@ -3898,15 +3900,18 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
         }
         else if (nLoadWalletRet == DB_TOO_NEW) {
             InitError(strprintf(_("Error loading %s: Wallet requires newer version of %s"), walletFile, _(PACKAGE_NAME)));
+            delete walletInstance;
             return NULL;
         }
         else if (nLoadWalletRet == DB_NEED_REWRITE)
         {
             InitError(strprintf(_("Wallet needed to be rewritten: restart %s to complete"), _(PACKAGE_NAME)));
+            delete walletInstance;
             return NULL;
         }
         else {
             InitError(strprintf(_("Error loading %s"), walletFile));
+            delete walletInstance;
             return NULL;
         }
     }
@@ -3925,6 +3930,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
         if (nMaxVersion < walletInstance->GetVersion())
         {
             InitError(_("Cannot downgrade wallet"));
+            delete walletInstance;
             return NULL;
         }
         walletInstance->SetMaxVersion(nMaxVersion);
@@ -3948,6 +3954,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
             walletInstance->SetDefaultKey(newDefaultKey);
             if (!walletInstance->SetAddressBook(walletInstance->vchDefaultKey.GetID(), "", "receive")) {
                 InitError(_("Cannot write default address") += "\n");
+                delete walletInstance;
                 return NULL;
             }
         }
@@ -3958,10 +3965,12 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
         bool useHD = GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET);
         if (walletInstance->IsHDEnabled() && !useHD) {
             InitError(strprintf(_("Error loading %s: You can't disable HD on an already existing HD wallet"), walletFile));
+            delete walletInstance;
             return NULL;
         }
         if (!walletInstance->IsHDEnabled() && useHD) {
             InitError(strprintf(_("Error loading %s: You can't enable HD on an already existing non-HD wallet"), walletFile));
+            delete walletInstance;
             return NULL;
         }
     }
@@ -3991,6 +4000,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
 
             if (pindexRescan != block) {
                 InitError(_("Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)"));
+                delete walletInstance;
                 return NULL;
             }
         }
