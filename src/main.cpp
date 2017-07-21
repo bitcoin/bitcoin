@@ -1135,13 +1135,15 @@ std::string FormatStateMessage(const CValidationState &state)
 
 bool AcceptToMemoryPoolWorker(CTxMemPool &pool,
     CValidationState &state,
-    const CTransaction &tx,
+    const CTransaction &consttx,
     bool fLimitFree,
     bool *pfMissingInputs,
     bool fOverrideMempoolLimit,
     bool fRejectAbsurdFee,
     std::vector<uint256> &vHashTxnToUncache)
 {
+    unsigned int forkVerifyFlags = 0;
+    CTransaction tx = consttx;
     unsigned int nSigOps = 0;
     ValidationResourceTracker resourceTracker;
     unsigned int nSize = 0;
@@ -1163,7 +1165,8 @@ bool AcceptToMemoryPoolWorker(CTxMemPool &pool,
     // But its ok to reject these transactions from the mempool a little early (or late).
     if ((miningForkTime.value != 0) && (start / 1000000 >= miningForkTime.value))
     {
-        if (!ValidateBUIP055Tx(tx))
+        forkVerifyFlags = SCRIPT_ENABLE_SIGHASH_FORKID;
+        if (IsTxOpReturnInvalid(tx))
             return state.DoS(0, false, REJECT_WRONG_FORK, "wrong-fork");
     }
 
@@ -1440,8 +1443,13 @@ bool AcceptToMemoryPoolWorker(CTxMemPool &pool,
 
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
-        if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true, &resourceTracker))
+
+        if (!CheckInputsAnalyzeTx(
+                tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS | forkVerifyFlags, true, &resourceTracker))
+        {
+            LogPrint("mempool", "txn CheckInputs failed");
             return false;
+        }
         entry.UpdateRuntimeSigOps(resourceTracker.GetSigOps(), resourceTracker.GetSighashBytes());
 
         // Check again against just the consensus-critical mandatory script
@@ -1453,7 +1461,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool &pool,
         // There is a similar check in CreateNewBlock() to prevent creating
         // invalid blocks, however allowing such transactions into the mempool
         // can be exploited as a DoS attack.
-        if (!CheckInputs(tx, state, view, true, MANDATORY_SCRIPT_VERIFY_FLAGS, true, NULL))
+        if (!CheckInputsAnalyzeTx(tx, state, view, true, MANDATORY_SCRIPT_VERIFY_FLAGS | forkVerifyFlags, true, NULL))
         {
             return error(
                 "%s: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags %s, %s",
@@ -1859,10 +1867,23 @@ void UpdateCoins(const CTransaction &tx, CValidationState &state, CCoinsViewCach
 bool CScriptCheck::operator()()
 {
     const CScript &scriptSig = ptxTo->vin[nIn].scriptSig;
-    CachingTransactionSignatureChecker checker(ptxTo, nIn, cacheStore);
-
-    if (!VerifyScript(scriptSig, scriptPubKey, nFlags, checker, &error))
+    CachingTransactionSignatureChecker checker(ptxTo, nIn, amount, cacheStore);
+    unsigned int sighashtype = 0;
+    if (!VerifyScript(scriptSig, scriptPubKey, nFlags, checker, &error, &sighashtype))
         return false;
+    if (resourceTracker)
+        resourceTracker->Update(ptxTo->GetHash(), checker.GetNumSigops(), checker.GetBytesHashed());
+    return true;
+}
+
+bool CScriptCheckAndAnalyze::operator()()
+{
+    const CScript &scriptSig = ptxTo->vin[nIn].scriptSig;
+    CachingTransactionSignatureChecker checker(ptxTo, nIn, amount, cacheStore);
+    unsigned int sighashtype = 0;
+    if (!VerifyScript(scriptSig, scriptPubKey, nFlags, checker, &error, &sighashtype))
+        return false;
+    ptxToNonConst->sighashType |= sighashtype;
     if (resourceTracker)
         resourceTracker->Update(ptxTo->GetHash(), checker.GetNumSigops(), checker.GetBytesHashed());
     return true;
@@ -1930,6 +1951,83 @@ bool CheckTxInputs(const CTransaction &tx, CValidationState &state, const CCoins
     return true;
 }
 } // namespace Consensus
+
+bool CheckInputsAnalyzeTx(CTransaction &tx,
+    CValidationState &state,
+    const CCoinsViewCache &inputs,
+    bool fScriptChecks,
+    unsigned int flags,
+    bool cacheStore,
+    ValidationResourceTracker *resourceTracker,
+    std::vector<CScriptCheck> *pvChecks)
+{
+    if (!tx.IsCoinBase())
+    {
+        if (!Consensus::CheckTxInputs(tx, state, inputs, GetSpendHeight(inputs)))
+            return false;
+        if (pvChecks)
+            pvChecks->reserve(tx.vin.size());
+
+        // The first loop above does all the inexpensive checks.
+        // Only if ALL inputs pass do we perform expensive ECDSA signature checks.
+        // Helps prevent CPU exhaustion attacks.
+
+        // Skip ECDSA signature verification when connecting blocks before the
+        // last block chain checkpoint. Assuming the checkpoints are valid this
+        // is safe because block merkle hashes are still computed and checked,
+        // and any change will be caught at the next checkpoint. Of course, if
+        // the checkpoint is for a chain that's invalid due to false scriptSigs
+        // this optimisation would allow an invalid chain to be accepted.
+        if (fScriptChecks)
+        {
+            for (unsigned int i = 0; i < tx.vin.size(); i++)
+            {
+                const COutPoint &prevout = tx.vin[i].prevout;
+                const CCoins *coins = inputs.AccessCoins(prevout.hash);
+                if (!coins)
+                    LogPrintf("ASSERTION: no inputs available\n");
+                assert(coins);
+
+                // Verify signature
+                CScriptCheckAndAnalyze check(resourceTracker, *coins, tx, i, flags, cacheStore);
+                if (pvChecks)
+                {
+                    pvChecks->push_back(CScriptCheck());
+                    check.swap(pvChecks->back());
+                }
+                else if (!check())
+                {
+                    if (flags & STANDARD_NOT_MANDATORY_VERIFY_FLAGS)
+                    {
+                        // Check whether the failure was caused by a
+                        // non-mandatory script verification check, such as
+                        // non-standard DER encodings or non-null dummy
+                        // arguments; if so, don't trigger DoS protection to
+                        // avoid splitting the network between upgraded and
+                        // non-upgraded nodes.
+                        CScriptCheck check2(
+                            NULL, *coins, tx, i, flags & ~STANDARD_NOT_MANDATORY_VERIFY_FLAGS, cacheStore);
+                        if (check2())
+                            return state.Invalid(
+                                false, REJECT_NONSTANDARD, strprintf("non-mandatory-script-verify-flag (%s)",
+                                                               ScriptErrorString(check.GetScriptError())));
+                    }
+                    // Failures of other flags indicate a transaction that is
+                    // invalid in new blocks, e.g. a invalid P2SH. We DoS ban
+                    // such nodes as they are not following the protocol. That
+                    // said during an upgrade careful thought should be taken
+                    // as to the correct behavior - we may want to continue
+                    // peering with non-upgraded nodes even after a soft-fork
+                    // super-majority vote has passed.
+                    return state.DoS(100, false, REJECT_INVALID, strprintf("mandatory-script-verify-flag-failed (%s)",
+                                                                     ScriptErrorString(check.GetScriptError())));
+                }
+            }
+        }
+    }
+
+    return true;
+}
 
 bool CheckInputs(const CTransaction &tx,
     CValidationState &state,
@@ -2452,6 +2550,11 @@ bool ConnectBlock(const CBlock &block,
     bool fStrictPayToScriptHash = (pindex->GetBlockTime() >= nBIP16SwitchTime);
 
     unsigned int flags = fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE;
+
+    if (pindex->forkActivated(miningForkTime.value))
+    {
+        flags |= SCRIPT_ENABLE_SIGHASH_FORKID;
+    }
 
     // Start enforcing the DERSIG (BIP66) rules, for block.nVersion=3 blocks,
     // when 75% of the network has upgraded:
@@ -3156,7 +3259,7 @@ bool static ConnectTip(CValidationState &state,
  * Return the tip of the chain with the most work in it, that isn't
  * known to be invalid (it's however far from certain to be valid).
  */
-static CBlockIndex *FindMostWorkChain()
+CBlockIndex *FindMostWorkChain()
 {
     do
     {

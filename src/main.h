@@ -39,6 +39,7 @@ class CBloomFilter;
 class CChainParams;
 class CInv;
 class CScriptCheck;
+class CScriptCheckAndAnalyze;
 class CTxMemPool;
 class CValidationInterface;
 class CValidationState;
@@ -404,6 +405,19 @@ bool CheckInputs(const CTransaction &tx,
     ValidationResourceTracker *resourceTracker,
     std::vector<CScriptCheck> *pvChecks = NULL);
 
+/**
+  same as above except modifies data in the tx to describe its properties.
+ */
+bool CheckInputsAnalyzeTx(CTransaction &tx,
+    CValidationState &state,
+    const CCoinsViewCache &inputs,
+    bool fScriptChecks,
+    unsigned int flags,
+    bool cacheStore,
+    ValidationResourceTracker *resourceTracker,
+    std::vector<CScriptCheck> *pvChecks = NULL);
+
+
 /** Apply the effects of this transaction on the UTXO set represented by view */
 void UpdateCoins(const CTransaction &tx, CValidationState &state, CCoinsViewCache &inputs, int nHeight);
 
@@ -665,6 +679,8 @@ extern std::map<uint256, std::set<uint256> > mapOrphanTransactionsByPrev GUARDED
 
 void EraseOrphanTx(uint256 hash) EXCLUSIVE_LOCKS_REQUIRED(cs_orphancache);
 // BU: end
+
+CBlockIndex *FindMostWorkChain();
 
 // BU cleaning up at destuction time creates many global variable dependencies.  Instead clean up in a function called
 // in main()

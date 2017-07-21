@@ -238,7 +238,7 @@ bool static CheckMinimalPush(const valtype& data, opcodetype opcode) {
     return true;
 }
 
-bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror)
+bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror, unsigned int* sighashtype)
 {
     static const CScriptNum bnZero(0);
     static const CScriptNum bnOne(1);
@@ -255,12 +255,13 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
     valtype vchPushValue;
     vector<bool> vfExec;
     vector<valtype> altstack;
+    if (sighashtype) *sighashtype=0;
+
     set_error(serror, SCRIPT_ERR_UNKNOWN_ERROR);
     if (script.size() > 10000)
         return set_error(serror, SCRIPT_ERR_SCRIPT_SIZE);
     int nOpCount = 0;
     bool fRequireMinimal = (flags & SCRIPT_VERIFY_MINIMALDATA) != 0;
-
     try
     {
         while (pc < pend)
@@ -880,6 +881,8 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                     // Drop the signature in scripts when SIGHASH_FORKID is
                     // not used.
                     uint32_t nHashType = GetHashType(vchSig);
+                    // BU remember the sighashtype so we can use it to choose when to allow this tx
+                    if (sighashtype) *sighashtype |= nHashType;
                     if (nHashType & SIGHASH_FORKID)
                     {
                         if (!(flags & SCRIPT_ENABLE_SIGHASH_FORKID))
@@ -949,6 +952,8 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                         // Drop the signature in scripts when SIGHASH_FORKID
                         // is not used.
                         uint32_t nHashType = GetHashType(vchSig);
+                        // BU remember the sighashtype so we can use it to choose when to allow this tx
+                        if (sighashtype) *sighashtype |= nHashType;
                         if (nHashType & SIGHASH_FORKID)
                         {
                             if (!(flags & SCRIPT_ENABLE_SIGHASH_FORKID))
@@ -1161,30 +1166,34 @@ uint256 GetOutputsHash(const CTransaction &txTo) {
     return ss.GetHash();
 }
 
-} // anon namespace
-
-uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsigned int nIn, uint32_t nHashType, const CAmount &amount, size_t* nHashedOut)
+uint256 SignatureHashForkAlg(const CScript &scriptCode, const CTransaction &txTo, unsigned int nIn, uint32_t nHashType,
+    const CAmount &amount, size_t *nHashedOut)
 {
-    if (nHashType & SIGHASH_FORKID) {
+    static const uint256 one(uint256S("0000000000000000000000000000000000000000000000000000000000000001"));
+
+    if (nHashType & SIGHASH_FORKID)
+    {
         uint256 hashPrevouts;
         uint256 hashSequence;
         uint256 hashOutputs;
 
-        if (!(nHashType & SIGHASH_ANYONECANPAY)) {
+        if (!(nHashType & SIGHASH_ANYONECANPAY))
+        {
             hashPrevouts = GetPrevoutHash(txTo);
         }
 
-        if (!(nHashType & SIGHASH_ANYONECANPAY) &&
-            (nHashType & 0x1f) != SIGHASH_SINGLE &&
-            (nHashType & 0x1f) != SIGHASH_NONE) {
+        if (!(nHashType & SIGHASH_ANYONECANPAY) && (nHashType & 0x1f) != SIGHASH_SINGLE &&
+            (nHashType & 0x1f) != SIGHASH_NONE)
+        {
             hashSequence = GetSequenceHash(txTo);
         }
 
-        if ((nHashType & 0x1f) != SIGHASH_SINGLE &&
-            (nHashType & 0x1f) != SIGHASH_NONE) {
+        if ((nHashType & 0x1f) != SIGHASH_SINGLE && (nHashType & 0x1f) != SIGHASH_NONE)
+        {
             hashOutputs = GetOutputsHash(txTo);
-        } else if ((nHashType & 0x1f) == SIGHASH_SINGLE &&
-                   nIn < txTo.vout.size()) {
+        }
+        else if ((nHashType & 0x1f) == SIGHASH_SINGLE && nIn < txTo.vout.size())
+        {
             CHashWriter ss(SER_GETHASH, 0);
             ss << txTo.vout[nIn];
             hashOutputs = ss.GetHash();
@@ -1211,6 +1220,17 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
         ss << nHashType;
 
         return ss.GetHash();
+    }
+    return one;
+}
+
+} // anon namespace
+
+
+uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsigned int nIn, uint32_t nHashType, const CAmount &amount, size_t* nHashedOut)
+{
+    if (nHashType & SIGHASH_FORKID) {
+        return SignatureHashForkAlg(scriptCode, txTo, nIn, nHashType, amount, nHashedOut);
     }
 
     static const uint256 one(uint256S("0000000000000000000000000000000000000000000000000000000000000001"));
@@ -1349,7 +1369,7 @@ bool TransactionSignatureChecker::CheckSequence(const CScriptNum& nSequence) con
     return true;
 }
 
-bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror)
+bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror, unsigned int* sighashtype)
 {
     set_error(serror, SCRIPT_ERR_UNKNOWN_ERROR);
 
@@ -1358,12 +1378,12 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, unsigne
     }
 
     vector<vector<unsigned char> > stack, stackCopy;
-    if (!EvalScript(stack, scriptSig, flags, checker, serror))
+    if (!EvalScript(stack, scriptSig, flags, checker, serror, sighashtype))
         // serror is set
         return false;
     if (flags & SCRIPT_VERIFY_P2SH)
         stackCopy = stack;
-    if (!EvalScript(stack, scriptPubKey, flags, checker, serror))
+    if (!EvalScript(stack, scriptPubKey, flags, checker, serror, sighashtype))
         // serror is set
         return false;
     if (stack.empty())
@@ -1390,7 +1410,7 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, unsigne
         CScript pubKey2(pubKeySerialized.begin(), pubKeySerialized.end());
         popstack(stack);
 
-        if (!EvalScript(stack, pubKey2, flags, checker, serror))
+        if (!EvalScript(stack, pubKey2, flags, checker, serror, sighashtype))
             // serror is set
             return false;
         if (stack.empty())

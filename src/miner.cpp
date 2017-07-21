@@ -374,8 +374,13 @@ void BlockAssembler::addScoreTxs(CBlockTemplate *pblocktemplate)
             continue;
         }
 
-        // If tx is not applicable to this chain, skip it
-        if (buip055ChainBlock && !ValidateBUIP055Tx(iter->GetTx()))
+        // If tx is not applicable to this (forked) chain, skip it
+        if (buip055ChainBlock && IsTxOpReturnInvalid(iter->GetTx()))
+        {
+            continue;
+        }
+        // if tx is not applicable to this (unforked) chain, skip it
+        if (!buip055ChainBlock && IsTxBUIP055Only(iter->GetTx()))
         {
             continue;
         }
@@ -466,8 +471,13 @@ void BlockAssembler::addPriorityTxs(CBlockTemplate *pblocktemplate)
             continue;
         }
 
-        // If tx is not applicable to this chain, skip it
-        if (buip055ChainBlock && !ValidateBUIP055Tx(iter->GetTx()))
+        // If tx is not applicable to this (forked) chain, skip it
+        if (buip055ChainBlock && IsTxOpReturnInvalid(iter->GetTx()))
+        {
+            continue;
+        }
+        // if tx is not applicable to this (unforked) chain, skip it
+        if (!buip055ChainBlock && IsTxBUIP055Only(iter->GetTx()))
         {
             continue;
         }

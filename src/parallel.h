@@ -25,7 +25,7 @@
  */
 class CScriptCheck
 {
-private:
+protected:
     ValidationResourceTracker *resourceTracker;
     CScript scriptPubKey;
     const CTransaction *ptxTo;
@@ -33,10 +33,12 @@ private:
     unsigned int nFlags;
     bool cacheStore;
     ScriptError error;
+    CAmount amount;
 
 public:
     CScriptCheck()
-        : resourceTracker(NULL), ptxTo(0), nIn(0), nFlags(0), cacheStore(false), error(SCRIPT_ERR_UNKNOWN_ERROR)
+        : resourceTracker(NULL), ptxTo(0), nIn(0), nFlags(0), cacheStore(false), error(SCRIPT_ERR_UNKNOWN_ERROR),
+          amount(0)
     {
     }
     CScriptCheck(ValidationResourceTracker *resourceTrackerIn,
@@ -48,6 +50,7 @@ public:
         : resourceTracker(resourceTrackerIn), scriptPubKey(txFromIn.vout[txToIn.vin[nInIn].prevout.n].scriptPubKey),
           ptxTo(&txToIn), nIn(nInIn), nFlags(nFlagsIn), cacheStore(cacheIn), error(SCRIPT_ERR_UNKNOWN_ERROR)
     {
+        amount = txFromIn.vout[txToIn.vin[nInIn].prevout.n].nValue;
     }
 
     bool operator()();
@@ -61,9 +64,29 @@ public:
         std::swap(nFlags, check.nFlags);
         std::swap(cacheStore, check.cacheStore);
         std::swap(error, check.error);
+        std::swap(amount, check.amount);
     }
 
     ScriptError GetScriptError() const { return error; }
+};
+
+class CScriptCheckAndAnalyze : public CScriptCheck
+{
+    CTransaction *ptxToNonConst;
+
+public:
+    CScriptCheckAndAnalyze() : CScriptCheck(), ptxToNonConst(0) {}
+    CScriptCheckAndAnalyze(ValidationResourceTracker *resourceTrackerIn,
+        const CCoins &txFromIn,
+        CTransaction &txToIn,
+        unsigned int nInIn,
+        unsigned int nFlagsIn,
+        bool cacheIn)
+        : CScriptCheck(resourceTrackerIn, txFromIn, txToIn, nInIn, nFlagsIn, cacheIn), ptxToNonConst(&txToIn)
+    {
+    }
+
+    bool operator()();
 };
 
 class CParallelValidation

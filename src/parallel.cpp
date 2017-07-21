@@ -582,7 +582,16 @@ void HandleBlockMessageThread(CNode *pfrom, const string strCommand, const CBloc
 
         // the current fork is bad due to this block so reset the best header to the best fully-validated block
         // so we can download another fork of headers (and blocks).
-        pindexBestHeader = chainActive.Tip();
+        CBlockIndex *mostWork = FindMostWorkChain();
+        CBlockIndex *tip = chainActive.Tip();
+        if (mostWork && tip && (mostWork->nChainWork > tip->nChainWork))
+        {
+            pindexBestHeader = mostWork;
+        }
+        else
+        {
+            pindexBestHeader = tip;
+        }
     }
     else
     {

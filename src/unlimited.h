@@ -18,9 +18,9 @@
 #include "stat.h"
 #include "thinblock.h"
 #include "tweak.h"
+#include "univalue/include/univalue.h"
 #include <boost/thread.hpp>
 #include <list>
-#include <univalue.h>
 #include <vector>
 
 enum

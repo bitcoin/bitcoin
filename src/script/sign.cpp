@@ -124,7 +124,7 @@ bool ProduceSignature(const BaseSignatureCreator& creator, const CScript& fromPu
     }
 
     // Test solution
-    return VerifyScript(scriptSig, fromPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, creator.Checker());
+    return VerifyScript(scriptSig, fromPubKey, STANDARD_SCRIPT_VERIFY_FLAGS | SCRIPT_ENABLE_SIGHASH_FORKID, creator.Checker());
 }
 
 bool SignSignature(const CKeyStore &keystore, const CScript& fromPubKey, CMutableTransaction& txTo, unsigned int nIn, const CAmount &amount, uint32_t nHashType)

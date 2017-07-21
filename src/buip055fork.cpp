@@ -2,48 +2,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "unlimited.h"
 #include "buip055fork.h"
 #include "chain.h"
-#include "chainparams.h"
-#include "checkpoints.h"
-#include "clientversion.h"
-#include "consensus/consensus.h"
-#include "consensus/params.h"
-#include "consensus/validation.h"
-#include "core_io.h"
-#include "expedited.h"
-#include "hash.h"
-#include "leakybucket.h"
-#include "main.h"
-#include "miner.h"
-#include "net.h"
-#include "parallel.h"
-#include "policy/policy.h"
 #include "primitives/block.h"
-#include "requestManager.h"
-#include "rpc/server.h"
-#include "stat.h"
-#include "thinblock.h"
-#include "timedata.h"
-#include "tinyformat.h"
-#include "tweak.h"
-#include "txmempool.h"
-#include "ui_interface.h"
-#include "util.h"
-#include "utilmoneystr.h"
-#include "utilstrencodings.h"
-#include "validationinterface.h"
-#include "version.h"
+#include "script/interpreter.h"
+#include "unlimited.h"
 
-#include <atomic>
-#include <boost/foreach.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/thread.hpp>
 #include <inttypes.h>
-#include <iomanip>
-#include <limits>
-#include <queue>
+#include <vector>
 
 const int REQ_6_1_SUNSET_HEIGHT = 530000;
 
@@ -51,7 +17,6 @@ static const std::string ANTI_REPLAY_MAGIC_VALUE = "Bitcoin: A Peer-to-Peer Elec
 
 std::vector<unsigned char> invalidOpReturn =
     std::vector<unsigned char>(std::begin(ANTI_REPLAY_MAGIC_VALUE), std::end(ANTI_REPLAY_MAGIC_VALUE));
-
 
 bool UpdateBUIP055Globals(CBlockIndex *activeTip)
 {
@@ -72,18 +37,22 @@ bool ValidateBUIP055Block(const CBlock &block, CValidationState &state, int nHei
     // Validate transactions are HF compatible
     for (const CTransaction &tx : block.vtx)
     {
-        if ((nHeight <= REQ_6_1_SUNSET_HEIGHT) && (!ValidateBUIP055Tx(tx)))
+        if ((nHeight <= REQ_6_1_SUNSET_HEIGHT) && IsTxOpReturnInvalid(tx))
             return state.DoS(100,
                              error("transaction is invalid on BUIP055 chain"), REJECT_INVALID, "bad-txns-wrong-fork");
     }
     return true;
 }
 
-bool ValidateBUIP055Tx(const CTransaction& tx)
+
+bool IsTxBUIP055Only(const CTransaction& tx)
 {
-    bool ret = !IsTxOpReturnInvalid(tx);
-    // TODO: validate new signature (REQ-6-2, REQ-6-3)
-    return ret;
+    if (tx.sighashType & SIGHASH_FORKID)
+    {
+        LogPrintf("txn is BUIP055-specific\n");
+        return true;
+    }
+    return false;
 }
 
 bool IsTxOpReturnInvalid(const CTransaction &tx)
@@ -119,3 +88,4 @@ bool IsTxOpReturnInvalid(const CTransaction &tx)
     }
     return false;
 }
+

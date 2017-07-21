@@ -9,7 +9,7 @@
 #include <boost/bind.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 // c++11 #include <type_traits>
-#include <univalue.h>
+#include "univalue/include/univalue.h"
 
 #include "sync.h"
 
