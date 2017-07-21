@@ -54,19 +54,19 @@ namespace
     static_assert(sizeof(ShortIdIndexPair) == 8, "");
 
     struct ShortIdIndexPairHasher {
-        uint64_t operator()(const ShortIdIndexPair& elem) {
+        uint64_t operator()(const ShortIdIndexPair& elem) const {
             return elem.shortid;
         }
     };
 
     struct ShortIdIndexPairEqual {
-        bool operator()(const ShortIdIndexPair& a, const ShortIdIndexPair& b) {
+        bool operator()(const ShortIdIndexPair& a, const ShortIdIndexPair& b) const {
             return a.shortid == b.shortid;
         }
     };
 
     struct ShortIdIndexPairIsNull {
-        bool operator()(const ShortIdIndexPair& elem) {
+        bool operator()(const ShortIdIndexPair& elem) const {
             return elem.shortid == 0 && elem.index == 0;
         }
     };
@@ -131,18 +131,18 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
         if (i + 1 < vTxHashes.size()) {
             next_shortid = cmpctblock.GetShortID(vTxHashes[i + 1].first);
         }
-        auto idit = shorttxids.find(ShortIdIndexPair(shortid));
-        if (idit != shorttxids.end()) {
-            if (!have_txn[idit->index]) {
-                txn_available[idit->index] = vTxHashes[i].second->GetSharedTx();
-                have_txn[idit->index]  = true;
+        const ShortIdIndexPair *p = shorttxids.find_fast(ShortIdIndexPair(shortid));
+        if (p) {
+            if (!have_txn[p->index]) {
+                txn_available[p->index] = vTxHashes[i].second->GetSharedTx();
+                have_txn[p->index] = true;
                 mempool_count++;
             } else {
                 // If we find two mempool txn that match the short id, just request it.
                 // This should be rare enough that the extra bandwidth doesn't matter,
                 // but eating a round-trip due to FillBlock failure would be annoying
-                if (txn_available[idit->index]) {
-                    txn_available[idit->index].reset();
+                if (txn_available[p->index]) {
+                    txn_available[p->index].reset();
                     mempool_count--;
                 }
             }
@@ -162,11 +162,11 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
         if (i + 1 < extra_txn.size()) {
             next_shortid = cmpctblock.GetShortID(extra_txn[i + 1].first);
         }
-        auto idit = shorttxids.find(ShortIdIndexPair(shortid));
-        if (idit != shorttxids.end()) {
-            if (!have_txn[idit->index]) {
-                txn_available[idit->index] = extra_txn[i].second;
-                have_txn[idit->index]  = true;
+        const ShortIdIndexPair *p = shorttxids.find_fast(ShortIdIndexPair(shortid));
+        if (p) {
+            if (!have_txn[p->index]) {
+                txn_available[p->index] = extra_txn[i].second;
+                have_txn[p->index]  = true;
                 mempool_count++;
                 extra_count++;
             } else {
@@ -176,9 +176,9 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
                 // but eating a round-trip due to FillBlock failure would be annoying
                 // Note that we don't want duplication between extra_txn and mempool to
                 // trigger this case, so we compare witness hashes first
-                if (txn_available[idit->index] &&
-                        txn_available[idit->index]->GetWitnessHash() != extra_txn[i].second->GetWitnessHash()) {
-                    txn_available[idit->index].reset();
+                if (txn_available[p->index] &&
+                        txn_available[p->index]->GetWitnessHash() != extra_txn[i].second->GetWitnessHash()) {
+                    txn_available[p->index].reset();
                     mempool_count--;
                     extra_count--;
                 }
