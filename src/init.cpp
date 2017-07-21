@@ -772,6 +772,11 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
         nLocalServices |= NODE_XTHIN;
     // BUIP010 Xtreme Thinblocks: end section
 
+    // BUIP055 - BitcoinCash
+#ifdef BITCOIN_CASH
+    nLocalServices |= NODE_BITCOIN_CASH;
+#endif
+
     nMaxTipAge = GetArg("-maxtipage", DEFAULT_MAX_TIP_AGE);
 
     // ********************************************************* Step 4: application initialization: dir lock, daemonize, pidfile, debug log
