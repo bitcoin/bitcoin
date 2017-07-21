@@ -84,7 +84,7 @@ bool CProposalValidator::ValidateName()
         return false;
     }
 
-    static const std::string strAllowedChars = "-_abcdefghijklmnopqrstuvwxyz012345789";
+    static const std::string strAllowedChars = "-_abcdefghijklmnopqrstuvwxyz0123456789";
 
     std::transform(strName.begin(), strName.end(), strName.begin(), ::tolower);
 
