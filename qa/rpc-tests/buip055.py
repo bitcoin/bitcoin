@@ -20,7 +20,7 @@ if sys.version_info[0] < 3:
 import logging
 logging.basicConfig(format='%(asctime)s.%(levelname)s: %(message)s', level=logging.INFO)
 
-
+NODE_BITCOIN_CASH = (1 << 5)
 invalidOpReturn = hexlify(b'Bitcoin: A Peer-to-Peer Electronic Cash System')
 
 def bitcoinAddress2bin(btcAddress):
@@ -141,11 +141,15 @@ class BUIP055Test (BitcoinTestFramework):
 
     def testDefaults(self):
         for n in self.nodes:
+            nodeInfo = n.getnetworkinfo()
             t = n.get("mining.fork*")
             assert(t['mining.forkBlockSize'] == 2000000)  # REQ-4-2
             assert(t['mining.forkExcessiveBlock'] == 8000000)  # REQ-4-1
-            #assert(t['mining.forkTime'] == 1501590000)  # Bitcoin Cash release REQ-2
-            assert(t['mining.forkTime'] == 0)  # main release default
+
+            if int(nodeInfo["localservices"],16)&NODE_BITCOIN_CASH:
+                assert(t['mining.forkTime'] == 1501590000)  # Bitcoin Cash release REQ-2
+            else:
+                assert(t['mining.forkTime'] == 0)  # main release default
 
     def testCli(self):
         n = self.nodes[0]
