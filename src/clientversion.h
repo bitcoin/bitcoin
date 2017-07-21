@@ -6,6 +6,8 @@
 #ifndef BITCOIN_CLIENTVERSION_H
 #define BITCOIN_CLIENTVERSION_H
 
+#define BITCOIN_CASH
+
 #if defined(HAVE_CONFIG_H)
 #include "config/bitcoin-config.h"
 #else
@@ -30,6 +32,8 @@
 #define COPYRIGHT_YEAR 2017
 
 #endif //HAVE_CONFIG_H
+
+/** Client flavor */
 
 /**
  * Converts the parameter X to a string after macro replacement on X has been performed.
