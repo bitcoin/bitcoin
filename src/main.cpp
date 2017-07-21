@@ -3259,7 +3259,7 @@ bool static ConnectTip(CValidationState &state,
  * Return the tip of the chain with the most work in it, that isn't
  * known to be invalid (it's however far from certain to be valid).
  */
-static CBlockIndex *FindMostWorkChain()
+CBlockIndex *FindMostWorkChain()
 {
     do
     {

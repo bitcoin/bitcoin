@@ -680,6 +680,8 @@ extern std::map<uint256, std::set<uint256> > mapOrphanTransactionsByPrev GUARDED
 void EraseOrphanTx(uint256 hash) EXCLUSIVE_LOCKS_REQUIRED(cs_orphancache);
 // BU: end
 
+CBlockIndex *FindMostWorkChain();
+
 // BU cleaning up at destuction time creates many global variable dependencies.  Instead clean up in a function called
 // in main()
 #if 0

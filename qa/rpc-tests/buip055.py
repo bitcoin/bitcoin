@@ -250,7 +250,9 @@ class BUIP055Test (BitcoinTestFramework):
         assert_equal(base, [base[0]] * 4)
 
         # TEST REQ-3: that a <= 1 MB block is rejected by the fork nodes
-        # the rejection happens for the first block whose nTime is
+        # the rejection happens for the block after the block whose median time of the prior
+        # 11 blocks is >= the fork time.  This is tricky to test exactly because we cannot
+        # control a block's nTime from this python code.
 
         # If I generate lots of blocks at once, via generate(15) it is possible that
         # the small block fork nodes will disconnect from the large block nodes before

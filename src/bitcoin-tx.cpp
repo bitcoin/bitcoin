@@ -339,31 +339,33 @@ static void MutateTxDelOutput(CMutableTransaction& tx, const string& strOutIdx)
     tx.vout.erase(tx.vout.begin() + outIdx);
 }
 
-static const unsigned int N_SIGHASH_OPTS = 6;
-static const struct {
-    const char *flagStr;
-    int flags;
-} sighashOptions[N_SIGHASH_OPTS] = {
-    {"ALL", SIGHASH_ALL},
-    {"NONE", SIGHASH_NONE},
-    {"SINGLE", SIGHASH_SINGLE},
-    {"ALL|ANYONECANPAY", SIGHASH_ALL|SIGHASH_ANYONECANPAY},
-    {"NONE|ANYONECANPAY", SIGHASH_NONE|SIGHASH_ANYONECANPAY},
-    {"SINGLE|ANYONECANPAY", SIGHASH_SINGLE|SIGHASH_ANYONECANPAY},
-};
 
-static bool findSighashFlags(int& flags, const string& flagStr)
+static bool findSighashFlags(int &flags, const string &flagStr)
 {
     flags = 0;
 
-    for (unsigned int i = 0; i < N_SIGHASH_OPTS; i++) {
-        if (flagStr == sighashOptions[i].flagStr) {
-            flags = sighashOptions[i].flags;
-            return true;
+    std::vector<string> strings;
+    std::istringstream ss(flagStr);
+    std::string s;
+    while (getline(ss, s, '|'))
+    {
+        boost::trim(s);
+        if (boost::iequals(s, "ALL"))
+            flags = SIGHASH_ALL;
+        else if (boost::iequals(s, "NONE"))
+            flags = SIGHASH_NONE;
+        else if (boost::iequals(s, "SINGLE"))
+            flags = SIGHASH_SINGLE;
+        else if (boost::iequals(s, "ANYONECANPAY"))
+            flags |= SIGHASH_ANYONECANPAY;
+        else if (boost::iequals(s, "FORKID"))
+            flags |= SIGHASH_FORKID;
+        else
+        {
+            return false;
         }
     }
-
-    return false;
+    return true;
 }
 
 uint256 ParseHashUO(map<string,UniValue>& o, string strKey)
@@ -470,7 +472,7 @@ static void MutateTxSign(CMutableTransaction& tx, const string& flagStr)
 
     const CKeyStore& keystore = tempKeystore;
 
-    bool fHashSingle = ((nHashType & ~SIGHASH_ANYONECANPAY) == SIGHASH_SINGLE);
+    bool fHashSingle = ((nHashType & ~(SIGHASH_ANYONECANPAY | SIGHASH_FORKID)) == SIGHASH_SINGLE);
 
     // Sign what we can:
     for (unsigned int i = 0; i < mergedTx.vin.size(); i++) {
