@@ -26,6 +26,7 @@ import time
 import re
 import urllib.parse as urlparse
 import errno
+import logging
 
 from . import coverage
 from .authproxy import AuthServiceProxy, JSONRPCException
@@ -150,18 +151,19 @@ def hex_str_to_bytes(hex_str):
 def str_to_b64str(string):
     return b64encode(string.encode('utf-8')).decode('ascii')
 
-def sync_blocks(rpc_connections, wait=1):
+def sync_blocks(rpc_connections, wait=1,verbose=1):
     """
     Wait until everybody has the same block count
     """
     while True:
         counts = [ x.getblockcount() for x in rpc_connections ]
-        print(counts)
+        if verbose:
+            logging.info("sync blocks: " + str(counts))
         if counts == [ counts[0] ]*len(counts):
             break
         time.sleep(wait)
 
-def sync_mempools(rpc_connections, wait=1):
+def sync_mempools(rpc_connections, wait=1,verbose=1):
     """
     Wait until everybody has the same transactions in their memory
     pools
@@ -169,9 +171,14 @@ def sync_mempools(rpc_connections, wait=1):
     while True:
         pool = set(rpc_connections[0].getrawmempool())
         num_match = 1
+        poolLen = [len(pool)]
         for i in range(1, len(rpc_connections)):
-            if set(rpc_connections[i].getrawmempool()) == pool:
+            tmp = set(rpc_connections[i].getrawmempool())
+            if tmp == pool:
                 num_match = num_match+1
+            poolLen.append(len(tmp))
+        if verbose:
+            logging.info("sync mempool: " + str(poolLen))
         if num_match == len(rpc_connections):
             break
         time.sleep(wait)
@@ -545,7 +552,7 @@ def split_transaction(node, prevouts, toAddrs, txfeePer=DEFAULT_TX_FEE_PER_BYTE,
           outp = {}
           if amount - Decimal(txfeePer*txLen) < 0:  # fee too big, find something smaller
             txfeePer = (float(amount)/txLen)/1.5
-          
+
           txfee = int(math.ceil(txfeePer*txLen))
           amtPer = (Decimal(amount-txfee)/len(toAddrs)).to_integral_value()
           # print "amount: ", amount, " amount per: ", amtPer, "from :", len(prevouts), "to: ", len(toAddrs), "tx fee: ", txfeePer, txfee

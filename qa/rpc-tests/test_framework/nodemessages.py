@@ -366,6 +366,7 @@ class CTxIn(object):
             self.prevout = COutPoint()
         else:
             self.prevout = outpoint
+
         self.scriptSig = scriptSig
         self.nSequence = nSequence
 

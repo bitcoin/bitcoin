@@ -9,6 +9,7 @@
 
 #include "addrman.h"
 #include "arith_uint256.h"
+#include "buip055fork.h"
 #include "chainparams.h"
 #include "checkpoints.h"
 #include "checkqueue.h"
@@ -1155,6 +1156,16 @@ bool AcceptToMemoryPoolWorker(CTxMemPool &pool,
     // Coinbase is only valid in a block, not as a loose transaction
     if (tx.IsCoinBase())
         return state.DoS(100, false, REJECT_INVALID, "coinbase");
+
+    // BUIP055: reject transactions that won't work on the fork.
+    // This code uses the system time to determine when to start rejecting which is inaccurate relative to the
+    // actual activation time (defined by times in the blocks).
+    // But its ok to reject these transactions from the mempool a little early (or late).
+    if ((miningForkTime.value != 0) && (start / 1000000 >= miningForkTime.value))
+    {
+        if (!ValidateBUIP055Tx(tx))
+            return state.DoS(0, false, REJECT_WRONG_FORK, "wrong-fork");
+    }
 
     // Rather not work on nonstandard transactions (unless -testnet/-regtest)
     std::string reason;
@@ -2925,6 +2936,7 @@ void static UpdateTip(CBlockIndex *pindexNew)
         Checkpoints::GuessVerificationProgress(chainParams.Checkpoints(), chainActive.Tip()),
         pcoinsTip->DynamicMemoryUsage() * (1.0 / (1 << 20)), pcoinsTip->GetCacheSize());
 
+    UpdateBUIP055Globals(pindexNew);
     cvBlockChange.notify_all();
 
     // Check the version of the last 100 blocks to see if we need to upgrade:
@@ -4087,6 +4099,26 @@ bool ContextualCheckBlock(const CBlock &block, CValidationState &state, CBlockIn
                                       pindexPrev->phashBlock->ToString()),
                 REJECT_INVALID, "bad-cb-height");
         }
+    }
+
+    // BUIP055 enforce that the fork block is > 1MB
+    // (note subsequent blocks can be <= 1MB...)
+    if (pindexPrev && pindexPrev->forkAtNextBlock(miningForkTime.value))
+    {
+        DbgAssert(block.nBlockSize, );
+        if (block.nBlockSize <= BLOCKSTREAM_CORE_MAX_BLOCK_SIZE)
+        {
+            uint256 hash = block.GetHash();
+            return state.DoS(100,
+                error("%s: BUIP055 fork block (%s, height %d) must exceed %d, but this block is %d bytes", __func__,
+                                 hash.ToString(), nHeight, BLOCKSTREAM_CORE_MAX_BLOCK_SIZE, block.nBlockSize),
+                REJECT_INVALID, "bad-blk-too-small");
+        }
+    }
+    // BUIP055 check soft-fork items, such as tx targeted to the 1MB chain
+    if (pindexPrev && pindexPrev->IsforkActiveOnNextBlock(miningForkTime.value))
+    {
+        return ValidateBUIP055Block(block, state, nHeight);
     }
 
     return true;
@@ -6467,8 +6499,8 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
             // Headers message had its maximum size; the peer may have more headers.
             // TODO: optimize: if pindexLast is an ancestor of chainActive.Tip or pindexBestHeader, continue
             // from there instead.
-            LogPrint("net", "more getheaders (%d) to end to peer=%d (startheight:%d)\n", pindexLast->nHeight, pfrom->id,
-                pfrom->nStartingHeight);
+            LogPrint("net", "more getheaders (%d) to end to peer=%s (startheight:%d)\n", pindexLast->nHeight,
+                pfrom->GetLogName(), pfrom->nStartingHeight);
             pfrom->PushMessage(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexLast), uint256());
         }
 
@@ -7307,8 +7339,8 @@ bool SendMessages(CNode *pto)
                     state.nFirstHeadersExpectedHeight = pindexBestHeader->nHeight;
                     nSyncStarted++;
 
-                    LogPrint("net", "initial getheaders (%d) to peer=%d (startheight:%d)\n", pindexStart->nHeight,
-                        pto->id, pto->nStartingHeight);
+                    LogPrint("net", "initial getheaders (%d) to peer=%s (startheight:%d)\n", pindexStart->nHeight,
+                        pto->GetLogName(), pto->nStartingHeight);
                     pto->PushMessage(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexStart), uint256());
                 }
             }
