@@ -40,7 +40,13 @@ extern unsigned int nTxConfirmTarget;
 extern bool bSpendZeroConfChange;
 extern bool fWalletRbf;
 
+//! Default size for the keypool. Always try to top up the keypool to have this
+//  many keys. For an HD split wallet, have this many keys in each of the
+//  internal/external chains
 static const unsigned int DEFAULT_KEYPOOL_SIZE = 1000;
+//! Don't update wallet's best block if keypool falls below this size (to avoid
+//  not detecting transactions)
+static const unsigned int DEFAULT_KEYPOOL_MIN = 500;
 //! Shut down if the keypool falls below this size
 static const unsigned int DEFAULT_KEYPOOL_CRITICAL = 500;
 //! -paytxfee default
