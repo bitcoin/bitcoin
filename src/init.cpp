@@ -772,9 +772,10 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
         nLocalServices |= NODE_XTHIN;
     // BUIP010 Xtreme Thinblocks: end section
 
-    // BUIP055 - UAHF
-    // this can later be removed after the hardfork has happened
+    // BUIP055 - BitcoinCash
+#ifdef BITCOIN_CASH
     nLocalServices |= NODE_BITCOIN_CASH;
+#endif
 
     nMaxTipAge = GetArg("-maxtipage", DEFAULT_MAX_TIP_AGE);
 
