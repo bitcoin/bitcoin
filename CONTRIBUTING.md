@@ -187,7 +187,7 @@ other kinds of patches because of increased peer review and consensus building
 requirements.
 
 
-###Peer Review
+### Peer Review
 
 Anyone may participate in peer review which is expressed by comments in the pull
 request. Typically reviewers will review the code for obvious errors, as well as
