@@ -2,8 +2,8 @@
     "txid": "bf7c8b55745d4f9d9b2e33b5fbec5d08e38f3dcfc1838cb424a16db3ebc52f13",
     "hash": "bf7c8b55745d4f9d9b2e33b5fbec5d08e38f3dcfc1838cb424a16db3ebc52f13",
     "version": 1,
-    "size": 224,
-    "vsize": 224,
+    "size": 85,
+    "vsize": 85,
     "locktime": 0,
     "vin": [
         {

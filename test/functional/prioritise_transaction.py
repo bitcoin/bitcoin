@@ -12,7 +12,7 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
-        self.extra_args = [["-printpriority=1"], ["-printpriority=1"]]
+        self.extra_args = [["-printpriority=1", "-maxmempool=10"], ["-printpriority=1", "-maxmempool=10"]]
 
     def run_test(self):
         self.txouts = gen_return_txouts()
