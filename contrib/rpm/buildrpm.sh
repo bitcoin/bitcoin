@@ -1,7 +1,7 @@
 #!/bin/sh
 # Based on Marco Mornati script https://blog.mornati.net/build-rpms-for-a-git-github-project-with-jenkins/
 
-VERSION=1.14.3
+VERSION=1.14.5
 JOB_NAME=bitcoin-${VERSION}
 WORKSPACE=`pwd`
 
