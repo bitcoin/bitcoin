@@ -1279,6 +1279,7 @@ UniValue getchaintips(const JSONRPCRequest& request)
 
     // Always report the currently active tip.
     setTips.insert(chainActive.Tip());
+    setTips.insert(headersChainActive.Tip());
 
     /* Construct the output array.  */
     UniValue res(UniValue::VARR);
@@ -1300,7 +1301,7 @@ UniValue getchaintips(const JSONRPCRequest& request)
             status = "invalid";
         } else if (block->nChainTx == 0) {
             // This block cannot be connected because full block data for it or one of its parents is missing.
-            status = "headers-only";
+            status = headersChainActive.Contains(block) ? "headers-only-fork" : "headers-only";
         } else if (block->IsValid(BLOCK_VALID_SCRIPTS)) {
             // This block is fully validated, but no longer part of the active chain. It was probably the active block once, but was reorganized.
             status = "valid-fork";
