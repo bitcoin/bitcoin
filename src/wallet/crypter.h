@@ -181,7 +181,7 @@ public:
         CryptedKeyMap::const_iterator mi = mapCryptedKeys.begin();
         while (mi != mapCryptedKeys.end())
         {
-            setAddress.insert((*mi).first);
+            setAddress.insert(mi->first);
             mi++;
         }
     }

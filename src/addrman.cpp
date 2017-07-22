@@ -71,10 +71,10 @@ CAddrInfo* CAddrMan::Find(const CNetAddr& addr, int* pnId)
     if (it == mapAddr.end())
         return NULL;
     if (pnId)
-        *pnId = (*it).second;
-    std::map<int, CAddrInfo>::iterator it2 = mapInfo.find((*it).second);
+        *pnId = it->second;
+    std::map<int, CAddrInfo>::iterator it2 = mapInfo.find(it->second);
     if (it2 != mapInfo.end())
-        return &(*it2).second;
+        return &it2->second;
     return NULL;
 }
 
@@ -344,7 +344,7 @@ CAddrInfo CAddrMan::Select_(bool newOnly)
 
     // Use a 50% chance for choosing between tried and new table entries.
     if (!newOnly &&
-       (nTried > 0 && (nNew == 0 || RandomInt(2) == 0))) { 
+       (nTried > 0 && (nNew == 0 || RandomInt(2) == 0))) {
         // use a tried node
         double fChanceFactor = 1.0;
         while (1) {
@@ -391,8 +391,8 @@ int CAddrMan::Check_()
         return -7;
 
     for (std::map<int, CAddrInfo>::iterator it = mapInfo.begin(); it != mapInfo.end(); it++) {
-        int n = (*it).first;
-        CAddrInfo& info = (*it).second;
+        int n = it->first;
+        CAddrInfo& info = it->second;
         if (info.fInTried) {
             if (!info.nLastSuccess)
                 return -1;

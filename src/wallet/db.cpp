@@ -569,8 +569,8 @@ void CDBEnv::Flush(bool fShutdown)
         LOCK(cs_db);
         std::map<std::string, int>::iterator mi = mapFileUseCount.begin();
         while (mi != mapFileUseCount.end()) {
-            std::string strFile = (*mi).first;
-            int nRefCount = (*mi).second;
+            std::string strFile = mi->first;
+            int nRefCount = mi->second;
             LogPrint(BCLog::DB, "CDBEnv::Flush: Flushing %s (refcount = %d)...\n", strFile, nRefCount);
             if (nRefCount == 0) {
                 // Move log data to the dat file
@@ -614,7 +614,7 @@ bool CDB::PeriodicFlush(CWalletDBWrapper& dbw)
         std::map<std::string, int>::iterator mit = env->mapFileUseCount.begin();
         while (mit != env->mapFileUseCount.end())
         {
-            nRefCount += (*mit).second;
+            nRefCount += mit->second;
             mit++;
         }
 

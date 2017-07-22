@@ -570,9 +570,9 @@ UniValue listbanned(const JSONRPCRequest& request)
     UniValue bannedAddresses(UniValue::VARR);
     for (banmap_t::iterator it = banMap.begin(); it != banMap.end(); it++)
     {
-        CBanEntry banEntry = (*it).second;
+        CBanEntry banEntry = it->second;
         UniValue rec(UniValue::VOBJ);
-        rec.push_back(Pair("address", (*it).first.ToString()));
+        rec.push_back(Pair("address", it->first.ToString()));
         rec.push_back(Pair("banned_until", banEntry.nBanUntil));
         rec.push_back(Pair("ban_created", banEntry.nCreateTime));
         rec.push_back(Pair("ban_reason", banEntry.banReasonToString()));

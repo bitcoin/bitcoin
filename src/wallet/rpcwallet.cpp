@@ -323,8 +323,8 @@ UniValue getaccount(const JSONRPCRequest& request)
 
     std::string strAccount;
     std::map<CTxDestination, CAddressBookData>::iterator mi = pwallet->mapAddressBook.find(address.Get());
-    if (mi != pwallet->mapAddressBook.end() && !(*mi).second.name.empty()) {
-        strAccount = (*mi).second.name;
+    if (mi != pwallet->mapAddressBook.end() && !mi->second.name.empty()) {
+        strAccount = mi->second.name;
     }
     return strAccount;
 }
@@ -1281,9 +1281,9 @@ UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bool fByA
         bool fIsWatchonly = false;
         if (it != mapTally.end())
         {
-            nAmount = (*it).second.nAmount;
-            nConf = (*it).second.nConf;
-            fIsWatchonly = (*it).second.fIsWatchonly;
+            nAmount = it->second.nAmount;
+            nConf = it->second.nConf;
+            fIsWatchonly = it->second.fIsWatchonly;
         }
 
         if (fByAccounts)
@@ -1307,7 +1307,7 @@ UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bool fByA
             UniValue transactions(UniValue::VARR);
             if (it != mapTally.end())
             {
-                for (const uint256& _item : (*it).second.txids)
+                for (const uint256& _item : it->second.txids)
                 {
                     transactions.push_back(_item.GetHex());
                 }
@@ -1321,12 +1321,12 @@ UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bool fByA
     {
         for (std::map<std::string, tallyitem>::iterator it = mapAccountTally.begin(); it != mapAccountTally.end(); ++it)
         {
-            CAmount nAmount = (*it).second.nAmount;
-            int nConf = (*it).second.nConf;
+            CAmount nAmount = it->second.nAmount;
+            int nConf = it->second.nConf;
             UniValue obj(UniValue::VOBJ);
-            if((*it).second.fIsWatchonly)
+            if(it->second.fIsWatchonly)
                 obj.push_back(Pair("involvesWatchonly", true));
-            obj.push_back(Pair("account",       (*it).first));
+            obj.push_back(Pair("account",       it->first));
             obj.push_back(Pair("amount",        ValueFromAmount(nAmount)));
             obj.push_back(Pair("confirmations", (nConf == std::numeric_limits<int>::max() ? 0 : nConf)));
             ret.push_back(obj);
@@ -1618,10 +1618,10 @@ UniValue listtransactions(const JSONRPCRequest& request)
     // iterate backwards until we have nCount items to return:
     for (CWallet::TxItems::const_reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
     {
-        CWalletTx *const pwtx = (*it).second.first;
+        CWalletTx *const pwtx = it->second.first;
         if (pwtx != 0)
             ListTransactions(pwallet, *pwtx, strAccount, 0, true, ret, filter);
-        CAccountingEntry *const pacentry = (*it).second.second;
+        CAccountingEntry *const pacentry = it->second.second;
         if (pacentry != 0)
             AcentryToJSON(*pacentry, strAccount, ret);
 
