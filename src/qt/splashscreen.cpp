@@ -111,7 +111,7 @@ SplashScreen::SplashScreen(Qt::WindowFlags f, const NetworkStyle *networkStyle) 
         QRect copyrightRect(x, y, pixmap.width() - x - paddingRight, pixmap.height() - y);
 		QRect copyrightRect_GLT(x, y_glt, pixmap.width() - x - paddingRight, pixmap.height() - y_glt);
         pixPaint.drawText(copyrightRect, Qt::AlignLeft | Qt::AlignTop | Qt::TextWordWrap, copyrightText);
-		pixPaint.drawText(copyrightRect, Qt::AlignLeft | Qt::AlignTop | Qt::TextWordWrap, globaltokenText);
+		pixPaint.drawText(copyrightRect_GLT, Qt::AlignLeft | Qt::AlignTop | Qt::TextWordWrap, globaltokenText);
     }
 
     // draw additional text if special network
