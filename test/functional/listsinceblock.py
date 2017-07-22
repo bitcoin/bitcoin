@@ -5,7 +5,11 @@
 """Test the listsincelast RPC."""
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from decimal import Decimal
+from test_framework.util import assert_equal, start_nodes, sync_mempools
+
+# Sequence number that is BIP 125 opt-in and BIP 68-compliant
+BIP125_SEQUENCE_NUMBER = 0xfffffffd
 
 class ListSinceBlockTest (BitcoinTestFramework):
 
@@ -15,6 +19,10 @@ class ListSinceBlockTest (BitcoinTestFramework):
         self.num_nodes = 4
 
     def run_test (self):
+        self.list_since_reorg()
+        self.double_spends_filtered()
+
+    def list_since_reorg (self):
         '''
         `listsinceblock` did not behave correctly when handed a block that was
         no longer in the main chain:
@@ -74,6 +82,52 @@ class ListSinceBlockTest (BitcoinTestFramework):
                 found = True
                 break
         assert_equal(found, True)
+
+    def double_spends_filtered(self):
+        '''
+        `listsinceblock` was returning conflicted transactions even if they 
+        occurred before the specified cutoff blockhash
+        '''
+        spending_node = self.nodes[2];
+        dest_address = spending_node.getnewaddress()
+
+        tx_input = dict(
+            sequence=BIP125_SEQUENCE_NUMBER, **next(u for u in spending_node.listunspent()))
+        rawtx = spending_node.createrawtransaction(
+            [tx_input], {dest_address: tx_input["amount"] - Decimal("0.00051000"),
+                         spending_node.getrawchangeaddress(): Decimal("0.00050000")})
+        signedtx = spending_node.signrawtransaction(rawtx)
+        orig_tx_id = spending_node.sendrawtransaction(signedtx["hex"])
+        original_tx = spending_node.gettransaction(orig_tx_id)
+
+        double_tx = spending_node.bumpfee(orig_tx_id);
+
+        # check that both transactions exist
+        block_hash = spending_node.listsinceblock(
+            spending_node.getblockhash(spending_node.getblockcount()))
+        original_found = False;
+        double_found = False
+        for tx in block_hash['transactions']:
+            if tx['txid'] == original_tx['txid']:
+                original_found = True
+            if tx['txid'] == double_tx['txid']:
+                double_found = True
+        assert_equal(original_found, True)
+        assert_equal(double_found, True)
+
+        lastblockhash = spending_node.generate(6)[5]
+
+        # check that neither transaction exists
+        block_hash = spending_node.listsinceblock(lastblockhash)
+        original_found = False;
+        double_found = False
+        for tx in block_hash['transactions']:
+            if tx['txid'] == original_tx['txid']:
+                original_found = True
+            if tx['txid'] == double_tx['txid']:
+                double_found = True
+        assert_equal(original_found, False)
+        assert_equal(double_found, False)
 
 if __name__ == '__main__':
     ListSinceBlockTest().main()
