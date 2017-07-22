@@ -1,0 +1,22 @@
+version: '2'
+
+services:
+  bitcoind:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: bitcoind
+    # By default, run the bitcoind daemon. This can be overridden with
+    # additional arguments to `docker-compose run bitcoind`.
+    command: "src/bitcoind -printtoconsole"
+    volumes:
+      # Mount `pwd` into the container to support immediate code updates.
+      - .:/code
+      # Persist bash history in the web container.
+      - .docker_bash_history:/root/.bash_history
+    ports:
+      - "8333:8333"
+    environment:
+      CC:
+      CXX:
+      CXX_FLAGS:

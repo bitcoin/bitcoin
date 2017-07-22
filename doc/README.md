@@ -39,6 +39,7 @@ The following are developer notes on how to build Bitcoin on your native platfor
 
 - [OS X Build Notes](build-osx.md)
 - [Unix Build Notes](build-unix.md)
+- [Docker Build Notes](build-docker.md)
 - [Windows Build Notes](build-windows.md)
 - [OpenBSD Build Notes](build-openbsd.md)
 - [Gitian Building Guide](gitian-building.md)
