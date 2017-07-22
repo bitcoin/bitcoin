@@ -26,8 +26,8 @@ bool OldSetKeyFromPassphrase(const SecureString& strKeyData, const std::vector<u
 
     if (i != (int)WALLET_CRYPTO_KEY_SIZE)
     {
-        memory_cleanse(chKey, sizeof(chKey));
-        memory_cleanse(chIV, sizeof(chIV));
+        memory_cleanse(chKey, WALLET_CRYPTO_KEY_SIZE);
+        memory_cleanse(chIV, WALLET_CRYPTO_IV_SIZE);
         return false;
     }
     return true;
