@@ -444,6 +444,10 @@ void ThroneList::updateVoteList(bool reset)
     ui->tableWidgetVoting->setRowCount(0);
 
         int64_t nTotalAllotted = 0;
+        CBlockIndex* pindexPrev = chainActive.Tip();
+        if(pindexPrev == NULL) return;
+        int nBlockStart = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
+        int nBlockEnd  =  nBlockStart + GetBudgetPaymentCycleBlocks() - 1;
 
         std::vector<CBudgetProposal*> winningProps = budget.GetAllProposals();
         BOOST_FOREACH(CBudgetProposal* pbudgetProposal, winningProps)
@@ -453,7 +457,13 @@ void ThroneList::updateVoteList(bool reset)
             ExtractDestination(pbudgetProposal->GetPayee(), address1);
             CBitcoinAddress address2(address1);
 
-            if(!pbudgetProposal->fValid || (int64_t)pbudgetProposal->GetRemainingPaymentCount() <= 0) continue;
+            if((int64_t)pbudgetProposal->GetRemainingPaymentCount() <= 0 ||
+                !pbudgetProposal->fValid
+                !(pbudgetProposal->nBlockStart <= nBlockStart) &&
+                !(pbudgetProposal->nBlockEnd >= nBlockEnd) &&
+                !pbudgetProposal->IsEstablished()) 
+                continue;
+
             // populate list
             QTableWidgetItem *nameItem = new QTableWidgetItem(QString::fromStdString(pbudgetProposal->GetName()));
             QTableWidgetItem *urlItem = new QTableWidgetItem(QString::fromStdString(pbudgetProposal->GetURL()));
