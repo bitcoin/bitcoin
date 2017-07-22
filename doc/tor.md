@@ -46,7 +46,7 @@ config file):
 	HiddenServicePort 18333 127.0.0.1:18333
 
 The directory can be different of course, but (both) port numbers should be equal to
-your bitcoind's P2P listen port (8333 by default).
+your globaltokend's P2P listen port (8333 by default).
 
 	-externalip=X   You can tell bitcoin about its publicly reachable address using
 	                this option, and this can be a .onion address. Given the above
@@ -68,18 +68,18 @@ your bitcoind's P2P listen port (8333 by default).
 
 In a typical situation, where you're only reachable via Tor, this should suffice:
 
-	./bitcoind -proxy=127.0.0.1:9050 -externalip=57qr3yd1nyntf5k.onion -listen
+	./globaltokend -proxy=127.0.0.1:9050 -externalip=57qr3yd1nyntf5k.onion -listen
 
 (obviously, replace the Onion address with your own). It should be noted that you still
 listen on all devices and another node could establish a clearnet connection, when knowing
 your address. To mitigate this, additionally bind the address of your Tor proxy:
 
-	./bitcoind ... -bind=127.0.0.1
+	./globaltokend ... -bind=127.0.0.1
 
 If you don't care too much about hiding your node, and want to be reachable on IPv4
 as well, use `discover` instead:
 
-	./bitcoind ... -discover
+	./globaltokend ... -discover
 
 and open port 8333 on your firewall (or use -upnp).
 
@@ -105,12 +105,12 @@ and, if not disabled, configured using the `-torcontrol` and `-torpassword` sett
 To show verbose debugging information, pass `-debug=tor`.
 
 Connecting to Tor's control socket API requires one of two authentication methods to be 
-configured. For cookie authentication the user running bitcoind must have write access 
+configured. For cookie authentication the user running globaltokend must have write access 
 to the `CookieAuthFile` specified in Tor configuration. In some cases this is 
 preconfigured and the creation of a hidden service is automatic. If permission problems 
 are seen with `-debug=tor` they can be resolved by adding both the user running tor and 
-the user running bitcoind to the same group and setting permissions appropriately. On 
-Debian-based systems the user running bitcoind can be added to the debian-tor group, 
+the user running globaltokend to the same group and setting permissions appropriately. On 
+Debian-based systems the user running globaltokend can be added to the debian-tor group, 
 which has the appropriate permissions. An alternative authentication method is the use 
 of the `-torpassword` flag and a `hash-password` which can be enabled and specified in 
 Tor configuration.

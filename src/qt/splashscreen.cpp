@@ -1,4 +1,5 @@
 // Copyright (c) 2011-2016 The Bitcoin Core developers
+// Copyright (c) 2017 The Globaltoken Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -45,6 +46,7 @@ SplashScreen::SplashScreen(Qt::WindowFlags f, const NetworkStyle *networkStyle) 
     QString titleText       = tr(PACKAGE_NAME);
     QString versionText     = QString("Version %1").arg(QString::fromStdString(FormatFullVersion()));
     QString copyrightText   = QString::fromUtf8(CopyrightHolders(strprintf("\xc2\xA9 %u-%u ", 2009, COPYRIGHT_YEAR)).c_str());
+	QString globaltokenText = QString::fromUtf8(CopyrightHoldersGLT(strprintf("\xc2\xA9 %u ", COPYRIGHT_YEAR)).c_str());
     QString titleAddText    = networkStyle->getTitleAddText();
 
     QString font            = QApplication::font().toString();
@@ -105,8 +107,11 @@ SplashScreen::SplashScreen(Qt::WindowFlags f, const NetworkStyle *networkStyle) 
         pixPaint.setFont(QFont(font, 10*fontFactor));
         const int x = pixmap.width()/devicePixelRatio-titleTextWidth-paddingRight;
         const int y = paddingTop+titleCopyrightVSpace;
+		const int y_glt = paddingTop+titleCopyrightVSpace+12;
         QRect copyrightRect(x, y, pixmap.width() - x - paddingRight, pixmap.height() - y);
+		QRect copyrightRect_GLT(x, y_glt, pixmap.width() - x - paddingRight, pixmap.height() - y_glt);
         pixPaint.drawText(copyrightRect, Qt::AlignLeft | Qt::AlignTop | Qt::TextWordWrap, copyrightText);
+		pixPaint.drawText(copyrightRect_GLT, Qt::AlignLeft | Qt::AlignTop | Qt::TextWordWrap, globaltokenText);
     }
 
     // draw additional text if special network

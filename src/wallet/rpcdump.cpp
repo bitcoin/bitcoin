@@ -597,7 +597,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
             "dumpwallet \"filename\"\n"
             "\nDumps all wallet keys in a human-readable format.\n"
             "\nArguments:\n"
-            "1. \"filename\"    (string, required) The filename with path (either absolute or relative to bitcoind)\n"
+            "1. \"filename\"    (string, required) The filename with path (either absolute or relative to globaltokend)\n"
             "\nResult:\n"
             "{                           (json object)\n"
             "  \"filename\" : {        (string) The filename with full absolute path\n"
@@ -1147,7 +1147,7 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
                                       "block from time %d, which is after or within %d seconds of key creation, and "
                                       "could contain transactions pertaining to the key. As a result, transactions "
                                       "and coins using this key may not appear in the wallet. This error could be "
-                                      "caused by pruning or data corruption (see bitcoind log for details) and could "
+                                      "caused by pruning or data corruption (see globaltokend log for details) and could "
                                       "be dealt with by downloading and rescanning the relevant blocks (see -reindex "
                                       "and -rescan options).",
                                 GetImportTimestamp(request, now), scannedTime - TIMESTAMP_WINDOW - 1, TIMESTAMP_WINDOW)));

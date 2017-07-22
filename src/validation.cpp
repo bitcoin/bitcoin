@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2016 The Bitcoin Core developers
+// Copyright (c) 2017 The Globaltoken Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -91,7 +92,7 @@ static void CheckBlockIndex(const Consensus::Params& consensusParams);
 /** Constant stuff for coinbase transactions we create: */
 CScript COINBASE_FLAGS;
 
-const std::string strMessageMagic = "Bitcoin Signed Message:\n";
+const std::string strMessageMagic = "Globaltoken Signed Message:\n";
 
 // Internal stuff
 namespace {
@@ -1023,8 +1024,8 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
     if (halvings >= 64)
         return 0;
 
-    CAmount nSubsidy = 50 * COIN;
-    // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
+    CAmount nSubsidy = 100 * COIN;
+    // Subsidy is cut in half every 840,000 blocks
     nSubsidy >>= halvings;
     return nSubsidy;
 }
@@ -1694,8 +1695,8 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     // two in the chain that violate it. This prevents exploiting the issue against nodes during their
     // initial block download.
     bool fEnforceBIP30 = (!pindex->phashBlock) || // Enforce on CreateNewBlock invocations which don't have a hash.
-                          !((pindex->nHeight==91842 && pindex->GetBlockHash() == uint256S("0x00000000000a4d0a398161ffc163c503763b1f4360639393e0e4c8e300e0caec")) ||
-                           (pindex->nHeight==91880 && pindex->GetBlockHash() == uint256S("0x00000000000743f190a18c5577a3c2d2a1f610ae9601ac046a38084ccb7cd721")));
+                          !((pindex->nHeight==0 && pindex->GetBlockHash() == uint256S("0x00000000fe3e3e93344a6b73888137397413eb11f601b4231b5196390d24d3b6")) ||
+                           (pindex->nHeight==0 && pindex->GetBlockHash() == uint256S("0x00000000fe3e3e93344a6b73888137397413eb11f601b4231b5196390d24d3b6")));
 
     // Once BIP34 activated it was not possible to create new duplicate coinbases and thus other than starting
     // with the 2 existing duplicate coinbase pairs, not possible to create overwriting txs.  But by the
@@ -1705,7 +1706,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     // If we're on the known chain at height greater than where BIP34 activated, we can save the db accesses needed for the BIP30 check.
     CBlockIndex *pindexBIP34height = pindex->pprev->GetAncestor(chainparams.GetConsensus().BIP34Height);
     //Only continue to enforce if we're below BIP34 activation height or the block hash at that height doesn't correspond.
-    fEnforceBIP30 = fEnforceBIP30 && (!pindexBIP34height || !(pindexBIP34height->GetBlockHash() == chainparams.GetConsensus().BIP34Hash));
+    fEnforceBIP30 = fEnforceBIP30 && (!pindexBIP34height /* || !(pindexBIP34height->GetBlockHash() == chainparams.GetConsensus().BIP34Hash) Disabled because Blocks with V.2 should be longer active. */);
 
     if (fEnforceBIP30) {
         for (const auto& tx : block.vtx) {

@@ -40,8 +40,8 @@ OSX_QT_TRANSLATIONS = da,de,es,hu,ru,uk,zh_CN,zh_TW
 
 DIST_DOCS = $(wildcard doc/*.md) $(wildcard doc/release-notes/*.md)
 DIST_CONTRIB = $(top_srcdir)/contrib/bitcoin-cli.bash-completion \
-	       $(top_srcdir)/contrib/bitcoin-tx.bash-completion \
-	       $(top_srcdir)/contrib/bitcoind.bash-completion \
+	       $(top_srcdir)/contrib/globaltoken-tx.bash-completion \
+	       $(top_srcdir)/contrib/globaltokend.bash-completion \
 	       $(top_srcdir)/contrib/init \
 	       $(top_srcdir)/contrib/rpm
 

@@ -1,23 +1,25 @@
 dnl require autoconf 2.60 (AS_ECHO/AS_ECHO_N)
 AC_PREREQ([2.60])
-define(_CLIENT_VERSION_MAJOR, 0)
-define(_CLIENT_VERSION_MINOR, 14)
-define(_CLIENT_VERSION_REVISION, 99)
+define(_CLIENT_VERSION_MAJOR, 1)
+define(_CLIENT_VERSION_MINOR, 0)
+define(_CLIENT_VERSION_REVISION, 4)
 define(_CLIENT_VERSION_BUILD, 0)
 define(_CLIENT_VERSION_IS_RELEASE, false)
+define(_COPYRIGHT_GLT_START, 2017)
 define(_COPYRIGHT_YEAR, 2017)
 define(_COPYRIGHT_HOLDERS,[The %s developers])
 define(_COPYRIGHT_HOLDERS_SUBSTITUTION,[[Bitcoin Core]])
-AC_INIT([Bitcoin Core],[_CLIENT_VERSION_MAJOR._CLIENT_VERSION_MINOR._CLIENT_VERSION_REVISION],[https://github.com/bitcoin/bitcoin/issues],[bitcoin],[https://bitcoincore.org/])
+define(_COPYRIGHT_HOLDERS_SUBSTITUTION_GLT,[[Globaltoken Core]])
+AC_INIT([Globaltoken Core],[_CLIENT_VERSION_MAJOR._CLIENT_VERSION_MINOR._CLIENT_VERSION_REVISION],[https://github.com/bitcoin/bitcoin/issues],[bitcoin],[https://bitcoincore.org/])
 AC_CONFIG_SRCDIR([src/validation.cpp])
 AC_CONFIG_HEADERS([src/config/bitcoin-config.h])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([build-aux/m4])
 
-BITCOIN_DAEMON_NAME=bitcoind
-BITCOIN_GUI_NAME=bitcoin-qt
-BITCOIN_CLI_NAME=bitcoin-cli
-BITCOIN_TX_NAME=bitcoin-tx
+BITCOIN_DAEMON_NAME=globaltokend
+BITCOIN_GUI_NAME=globaltoken-qt
+BITCOIN_CLI_NAME=globaltoken-cli
+BITCOIN_TX_NAME=globaltoken-tx
 
 dnl Unless the user specified ARFLAGS, force it to be cr
 AC_ARG_VAR(ARFLAGS, [Flags for the archiver, defaults to <cr> if not set])
@@ -292,7 +294,7 @@ CPPFLAGS="$CPPFLAGS -DHAVE_BUILD_INFO -D__STDC_FORMAT_MACROS"
 
 AC_ARG_WITH([utils],
   [AS_HELP_STRING([--with-utils],
-  [build bitcoin-cli bitcoin-tx (default=yes)])],
+  [build bitcoin-cli globaltoken-tx (default=yes)])],
   [build_bitcoin_utils=$withval],
   [build_bitcoin_utils=yes])
 
@@ -304,9 +306,9 @@ AC_ARG_WITH([libs],
 
 AC_ARG_WITH([daemon],
   [AS_HELP_STRING([--with-daemon],
-  [build bitcoind daemon (default=yes)])],
-  [build_bitcoind=$withval],
-  [build_bitcoind=yes])
+  [build globaltokend daemon (default=yes)])],
+  [build_globaltokend=$withval],
+  [build_globaltokend=yes])
 
 use_pkgconfig=yes
 case $host in
@@ -717,7 +719,7 @@ BITCOIN_QT_INIT
 dnl sets $bitcoin_enable_qt, $bitcoin_enable_qt_test, $bitcoin_enable_qt_dbus
 BITCOIN_QT_CONFIGURE([$use_pkgconfig], [qt5])
 
-if test x$build_bitcoin_utils$build_bitcoind$bitcoin_enable_qt$use_tests$use_bench = xnonononono; then
+if test x$build_bitcoin_utils$build_globaltokend$bitcoin_enable_qt$use_tests$use_bench = xnonononono; then
     use_boost=no
 else
     use_boost=yes
@@ -903,7 +905,7 @@ if test x$use_pkgconfig = xyes; then
       if test x$use_qr != xno; then
         BITCOIN_QT_CHECK([PKG_CHECK_MODULES([QR], [libqrencode], [have_qrencode=yes], [have_qrencode=no])])
       fi
-      if test x$build_bitcoin_utils$build_bitcoind$bitcoin_enable_qt$use_tests != xnononono; then
+      if test x$build_bitcoin_utils$build_globaltokend$bitcoin_enable_qt$use_tests != xnononono; then
         PKG_CHECK_MODULES([EVENT], [libevent],, [AC_MSG_ERROR(libevent not found.)])
         if test x$TARGET_OS != xwindows; then
           PKG_CHECK_MODULES([EVENT_PTHREADS], [libevent_pthreads],, [AC_MSG_ERROR(libevent_pthreads not found.)])
@@ -928,7 +930,7 @@ else
   AC_CHECK_HEADER([openssl/ssl.h],, AC_MSG_ERROR(libssl headers missing),)
   AC_CHECK_LIB([ssl],         [main],SSL_LIBS=-lssl, AC_MSG_ERROR(libssl missing))
 
-  if test x$build_bitcoin_utils$build_bitcoind$bitcoin_enable_qt$use_tests != xnononono; then
+  if test x$build_bitcoin_utils$build_globaltokend$bitcoin_enable_qt$use_tests != xnononono; then
     AC_CHECK_HEADER([event2/event.h],, AC_MSG_ERROR(libevent headers missing),)
     AC_CHECK_LIB([event],[main],EVENT_LIBS=-levent,AC_MSG_ERROR(libevent missing))
     if test x$TARGET_OS != xwindows; then
@@ -977,7 +979,7 @@ dnl univalue check
 
 need_bundled_univalue=yes
 
-if test x$build_bitcoin_utils$build_bitcoind$bitcoin_enable_qt$use_tests$use_bench = xnonononono; then
+if test x$build_bitcoin_utils$build_globaltokend$bitcoin_enable_qt$use_tests$use_bench = xnonononono; then
   need_bundled_univalue=no
 else
 
@@ -1023,11 +1025,11 @@ AC_SUBST(UNIVALUE_LIBS)
 
 BITCOIN_QT_PATH_PROGS([PROTOC], [protoc],$protoc_bin_path)
 
-AC_MSG_CHECKING([whether to build bitcoind])
-AM_CONDITIONAL([BUILD_BITCOIND], [test x$build_bitcoind = xyes])
-AC_MSG_RESULT($build_bitcoind)
+AC_MSG_CHECKING([whether to build globaltokend])
+AM_CONDITIONAL([BUILD_BITCOIND], [test x$build_globaltokend = xyes])
+AC_MSG_RESULT($build_globaltokend)
 
-AC_MSG_CHECKING([whether to build utils (bitcoin-cli bitcoin-tx)])
+AC_MSG_CHECKING([whether to build utils (bitcoin-cli globaltoken-tx)])
 AM_CONDITIONAL([BUILD_BITCOIN_UTILS], [test x$build_bitcoin_utils = xyes])
 AC_MSG_RESULT($build_bitcoin_utils)
 
@@ -1128,7 +1130,7 @@ if test x$bitcoin_enable_qt != xno; then
     AC_MSG_WARN("xgettext is required to update qt translations")
   fi
 
-  AC_MSG_CHECKING([whether to build test_bitcoin-qt])
+  AC_MSG_CHECKING([whether to build test_globaltoken-qt])
   if test x$use_gui_tests$bitcoin_enable_qt_test = xyesyes; then
     AC_MSG_RESULT([yes])
     BUILD_TEST_QT="yes"
@@ -1155,7 +1157,7 @@ else
   AC_MSG_RESULT([no])
 fi
 
-if test x$build_bitcoin_utils$build_bitcoin_libs$build_bitcoind$bitcoin_enable_qt$use_bench$use_tests = xnononononono; then
+if test x$build_bitcoin_utils$build_bitcoin_libs$build_globaltokend$bitcoin_enable_qt$use_bench$use_tests = xnononononono; then
   AC_MSG_ERROR([No targets! Please specify at least one of: --with-utils --with-libs --with-daemon --with-gui --enable-bench or --enable-tests])
 fi
 
@@ -1180,18 +1182,24 @@ AC_DEFINE(CLIENT_VERSION_REVISION, _CLIENT_VERSION_REVISION, [Build revision])
 AC_DEFINE(CLIENT_VERSION_BUILD, _CLIENT_VERSION_BUILD, [Version Build])
 AC_DEFINE(CLIENT_VERSION_IS_RELEASE, _CLIENT_VERSION_IS_RELEASE, [Version is release])
 AC_DEFINE(COPYRIGHT_YEAR, _COPYRIGHT_YEAR, [Copyright year])
+AC_DEFINE(COPYRIGHT_GLT_START, _COPYRIGHT_GLT_START, [Copyright year of GLT Start])
 AC_DEFINE(COPYRIGHT_HOLDERS, "_COPYRIGHT_HOLDERS", [Copyright holder(s) before %s replacement])
 AC_DEFINE(COPYRIGHT_HOLDERS_SUBSTITUTION, "_COPYRIGHT_HOLDERS_SUBSTITUTION", [Replacement for %s in copyright holders string])
+AC_DEFINE(COPYRIGHT_HOLDERS_SUBSTITUTION_GLT, "_COPYRIGHT_HOLDERS_SUBSTITUTION_GLT", [Replacement for %s in copyright holders string])
 define(_COPYRIGHT_HOLDERS_FINAL, [patsubst(_COPYRIGHT_HOLDERS, [%s], [_COPYRIGHT_HOLDERS_SUBSTITUTION])])
+define(_COPYRIGHT_HOLDERS_FINAL_GLT, [patsubst(_COPYRIGHT_HOLDERS, [%s], [_COPYRIGHT_HOLDERS_SUBSTITUTION_GLT])])
 AC_DEFINE(COPYRIGHT_HOLDERS_FINAL, "_COPYRIGHT_HOLDERS_FINAL", [Copyright holder(s)])
+AC_DEFINE(COPYRIGHT_HOLDERS_FINAL_GLT, "_COPYRIGHT_HOLDERS_FINAL_GLT", [Copyright holder(s) GLT])
 AC_SUBST(CLIENT_VERSION_MAJOR, _CLIENT_VERSION_MAJOR)
 AC_SUBST(CLIENT_VERSION_MINOR, _CLIENT_VERSION_MINOR)
 AC_SUBST(CLIENT_VERSION_REVISION, _CLIENT_VERSION_REVISION)
 AC_SUBST(CLIENT_VERSION_BUILD, _CLIENT_VERSION_BUILD)
 AC_SUBST(CLIENT_VERSION_IS_RELEASE, _CLIENT_VERSION_IS_RELEASE)
 AC_SUBST(COPYRIGHT_YEAR, _COPYRIGHT_YEAR)
+AC_SUBST(COPYRIGHT_GLT_START, _COPYRIGHT_GLT_START)
 AC_SUBST(COPYRIGHT_HOLDERS, "_COPYRIGHT_HOLDERS")
 AC_SUBST(COPYRIGHT_HOLDERS_SUBSTITUTION, "_COPYRIGHT_HOLDERS_SUBSTITUTION")
+AC_SUBST(COPYRIGHT_HOLDERS_SUBSTITUTION_GLT, "_COPYRIGHT_HOLDERS_SUBSTITUTION_GLT")
 AC_SUBST(COPYRIGHT_HOLDERS_FINAL, "_COPYRIGHT_HOLDERS_FINAL")
 AC_SUBST(BITCOIN_DAEMON_NAME)
 AC_SUBST(BITCOIN_GUI_NAME)

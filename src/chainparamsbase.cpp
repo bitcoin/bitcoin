@@ -1,5 +1,6 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2017 The Globaltoken Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -32,7 +33,7 @@ class CBaseMainParams : public CBaseChainParams
 public:
     CBaseMainParams()
     {
-        nRPCPort = 8332;
+        nRPCPort = 9320;
     }
 };
 
@@ -44,7 +45,7 @@ class CBaseTestNetParams : public CBaseChainParams
 public:
     CBaseTestNetParams()
     {
-        nRPCPort = 18332;
+        nRPCPort = 19320;
         strDataDir = "testnet3";
     }
 };
@@ -57,7 +58,7 @@ class CBaseRegTestParams : public CBaseChainParams
 public:
     CBaseRegTestParams()
     {
-        nRPCPort = 18332;
+        nRPCPort = 18443;
         strDataDir = "regtest";
     }
 };

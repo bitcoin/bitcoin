@@ -43,7 +43,7 @@ bitcoin (0.13.1-trusty2) trusty; urgency=medium
 bitcoin (0.13.1-trusty1) trusty; urgency=medium
 
   * New upstream release.
-  * Backport updated bitcoin-qt.desktop from upstream master
+  * Backport updated globaltoken-qt.desktop from upstream master
   * Add zmq dependency
   * Switch to Qt5 (breaks precise, but that was already broken by C++11)
 
@@ -278,7 +278,7 @@ bitcoin (0.6.1-natty0) natty; urgency=low
 bitcoin (0.6.0-natty0) natty; urgency=low
 
   * New upstream release.
-  * Add GNOME/KDE support for bitcoin-qt's bitcoin: URI support.
+  * Add GNOME/KDE support for globaltoken-qt's bitcoin: URI support.
     Thanks to luke-jr for the KDE .protocol file.
 
  -- Matt Corallo <matt@bluematt.me>  Sat, 31 Mar 2012 15:35:00 -0500
@@ -331,7 +331,7 @@ bitcoin (0.5.0~rc7-natty0) natty; urgency=low
 bitcoin (0.5.0~rc3-natty0) natty; urgency=low
 
   * New upstream release candidate.
-  * Don't set rpcpassword for bitcoin-qt.
+  * Don't set rpcpassword for globaltoken-qt.
 
  -- Matt Corallo <matt@bluematt.me>  Tue, 8 Nov 2011 11:56:00 -0400
 
@@ -354,7 +354,7 @@ bitcoin (0.5.0~rc1-natty0) natty; urgency=low
 
 bitcoin (0.5.0~rc1-2) experimental; urgency=low
 
-  * Add bitcoin-qt
+  * Add globaltoken-qt
 
  -- Matt Corallo <matt@bluematt.me>  Tue, 25 Oct 2011 15:24:18 -0400
 
@@ -403,7 +403,7 @@ bitcoin (0.3.24~dfsg-1) unstable; urgency=low
 
   [ Jonas Smedegaard ]
   * Improve various usage hints:
-    + Explicitly mention in long description that bitcoind contains
+    + Explicitly mention in long description that globaltokend contains
       daemon and command-line interface.
     + Extend README.Debian with section on lack of GUI, and add primary
       headline.
@@ -484,7 +484,7 @@ bitcoin (0.3.20.01~dfsg-1) unstable; urgency=low
   * Add myself as uploader.
 
   [ Jonas Smedegaard ]
-  * Add wrapper for bitcoind to ease initial startup.
+  * Add wrapper for globaltokend to ease initial startup.
   * Update patches:
     + Drop patch 2002: Applied upstream.
     + Add patch 1005 to add phtread linker option.
@@ -492,7 +492,7 @@ bitcoin (0.3.20.01~dfsg-1) unstable; urgency=low
     + Refresh patches.
   * Extend copyright years in rules file header.
   * Rewrite copyright file using draft svn166 of DEP5 format.
-  * Rename binary package to bitcoind (from bincoin-cli).
+  * Rename binary package to globaltokend (from bincoin-cli).
     Closes: bug#614025. Thanks to Luke-Jr.
 
  -- Jonas Smedegaard <dr@jones.dk>  Tue, 01 Mar 2011 15:55:04 +0100
@@ -527,7 +527,7 @@ bitcoin (0.3.19~dfsg-4) unstable; urgency=low
 
   [ Micah Anderson ]
   * Provide example bitcoin.conf.
-  * Add bitcoind(1) and bitcoin.conf(5) man pages.
+  * Add globaltokend(1) and bitcoin.conf(5) man pages.
 
   [ Jonas Smedegaard ]
   * Ease backporting:

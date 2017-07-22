@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2016 The Bitcoin Core developers
+// Copyright (c) 2017 The Globaltoken Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -46,7 +47,7 @@ std::string HelpMessageCli()
     strUsage += HelpMessageOpt("-rpcpassword=<pw>", _("Password for JSON-RPC connections"));
     strUsage += HelpMessageOpt("-rpcclienttimeout=<n>", strprintf(_("Timeout in seconds during HTTP requests, or 0 for no timeout. (default: %d)"), DEFAULT_HTTP_CLIENT_TIMEOUT));
     strUsage += HelpMessageOpt("-stdin", _("Read extra arguments from standard input, one per line until EOF/Ctrl-D (recommended for sensitive information such as passphrases)"));
-    strUsage += HelpMessageOpt("-rpcwallet=<walletname>", _("Send RPC for non-default wallet on RPC server (argument is wallet filename in bitcoind directory, required if bitcoind/-Qt runs with multiple wallets)"));
+    strUsage += HelpMessageOpt("-rpcwallet=<walletname>", _("Send RPC for non-default wallet on RPC server (argument is wallet filename in globaltokend directory, required if globaltokend/-Qt runs with multiple wallets)"));
 
     return strUsage;
 }
@@ -84,10 +85,10 @@ static int AppInitRPC(int argc, char* argv[])
         std::string strUsage = strprintf(_("%s RPC client version"), _(PACKAGE_NAME)) + " " + FormatFullVersion() + "\n";
         if (!IsArgSet("-version")) {
             strUsage += "\n" + _("Usage:") + "\n" +
-                  "  bitcoin-cli [options] <command> [params]  " + strprintf(_("Send command to %s"), _(PACKAGE_NAME)) + "\n" +
-                  "  bitcoin-cli [options] -named <command> [name=value] ... " + strprintf(_("Send command to %s (with named arguments)"), _(PACKAGE_NAME)) + "\n" +
-                  "  bitcoin-cli [options] help                " + _("List commands") + "\n" +
-                  "  bitcoin-cli [options] help <command>      " + _("Get help for a command") + "\n";
+                  "  globaltoken-cli [options] <command> [params]  " + strprintf(_("Send command to %s"), _(PACKAGE_NAME)) + "\n" +
+                  "  globaltoken-cli [options] -named <command> [name=value] ... " + strprintf(_("Send command to %s (with named arguments)"), _(PACKAGE_NAME)) + "\n" +
+                  "  globaltoken-cli [options] help                " + _("List commands") + "\n" +
+                  "  globaltoken-cli [options] help <command>      " + _("Get help for a command") + "\n";
 
             strUsage += "\n" + HelpMessageCli();
         }

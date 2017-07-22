@@ -15,12 +15,12 @@ The following are some helpful notes on how to run Bitcoin on your native platfo
 
 Unpack the files into a directory and run:
 
-- `bin/bitcoin-qt` (GUI) or
-- `bin/bitcoind` (headless)
+- `bin/globaltoken-qt` (GUI) or
+- `bin/globaltokend` (headless)
 
 ### Windows
 
-Unpack the files into a directory, and then run bitcoin-qt.exe.
+Unpack the files into a directory, and then run globaltoken-qt.exe.
 
 ### OS X
 

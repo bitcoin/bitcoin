@@ -1,4 +1,5 @@
 // Copyright (c) 2011-2016 The Bitcoin Core developers
+// Copyright (c) 2017 The Globaltoken Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -127,7 +128,7 @@ Intro::Intro(QWidget *parent) :
         .arg(tr(PACKAGE_NAME))
         .arg(BLOCK_CHAIN_SIZE)
         .arg(2009)
-        .arg(tr("Bitcoin"))
+        .arg(tr("Globaltoken"))
     );
     ui->lblExplanation2->setText(ui->lblExplanation2->text().arg(tr(PACKAGE_NAME)));
 
@@ -228,7 +229,7 @@ bool Intro::pickDataDirectory()
     }
     /* Only override -datadir if different from the default, to make it possible to
      * override -datadir in the bitcoin.conf file in the default data directory
-     * (to be consistent with bitcoind behavior)
+     * (to be consistent with globaltokend behavior)
      */
     if(dataDir != getDefaultDataDirectory())
         SoftSetArg("-datadir", GUIUtil::qstringToBoostPath(dataDir).string()); // use OS locale for path setting

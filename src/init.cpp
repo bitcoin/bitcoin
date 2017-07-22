@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2016 The Bitcoin Core developers
+// Copyright (c) 2017 The Globaltoken Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -131,7 +132,7 @@ bool ShutdownRequested()
 /**
  * This is a minimally invasive approach to shutdown on LevelDB read errors from the
  * chainstate, while keeping user interface out of the common library, which is shared
- * between bitcoind, and bitcoin-qt and non-server tools.
+ * between globaltokend, and globaltoken-qt and non-server tools.
 */
 class CCoinsViewErrorCatcher : public CCoinsViewBacked
 {
@@ -519,10 +520,10 @@ std::string HelpMessage(HelpMessageMode mode)
 
 std::string LicenseInfo()
 {
-    const std::string URL_SOURCE_CODE = "<https://github.com/bitcoin/bitcoin>";
-    const std::string URL_WEBSITE = "<https://bitcoincore.org>";
+    const std::string URL_SOURCE_CODE = "<https://github.com/globaltoken/globaltoken>";
+    const std::string URL_WEBSITE = "<https://globaltoken.org>";
 
-    return CopyrightHolders(strprintf(_("Copyright (C) %i-%i"), 2009, COPYRIGHT_YEAR) + " ") + "\n" +
+    return CopyrightHolders(strprintf(_("Copyright (C) %i-%i"), 2009, COPYRIGHT_YEAR) + " ") + "\n" + CopyrightHoldersGLT(strprintf(_("Copyright (C) %i"), COPYRIGHT_YEAR) + " ") + "\n" +
            "\n" +
            strprintf(_("Please contribute if you find %s useful. "
                        "Visit %s for further information about the software."),

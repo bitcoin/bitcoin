@@ -2,6 +2,7 @@
 # Copyright (c) 2010 ArtForz -- public domain half-a-node
 # Copyright (c) 2012 Jeff Garzik
 # Copyright (c) 2010-2016 The Bitcoin Core developers
+# Copyright (c) 2017 The Globaltoken Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Bitcoin P2P network half-a-node.
@@ -215,7 +216,7 @@ def FromHex(obj, hex_string):
 def ToHex(obj):
     return bytes_to_hex_str(obj.serialize())
 
-# Objects that map to bitcoind objects, which can be serialized/deserialized
+# Objects that map to globaltokend objects, which can be serialized/deserialized
 
 class CAddress(object):
     def __init__(self):
@@ -447,7 +448,7 @@ class CTransaction(object):
         if len(self.vin) == 0:
             flags = struct.unpack("<B", f.read(1))[0]
             # Not sure why flags can't be zero, but this
-            # matches the implementation in bitcoind
+            # matches the implementation in globaltokend
             if (flags != 0):
                 self.vin = deser_vector(f, CTxIn)
                 self.vout = deser_vector(f, CTxOut)
@@ -515,7 +516,7 @@ class CTransaction(object):
     def is_valid(self):
         self.calc_sha256()
         for tout in self.vout:
-            if tout.nValue < 0 or tout.nValue > 21000000 * COIN:
+            if tout.nValue < 0 or tout.nValue > 168000000 * COIN:
                 return False
         return True
 
@@ -1312,7 +1313,7 @@ class msg_headers(object):
         self.headers = []
 
     def deserialize(self, f):
-        # comment in bitcoind indicates these should be deserialized as blocks
+        # comment in globaltokend indicates these should be deserialized as blocks
         blocks = deser_vector(f, CBlock)
         for x in blocks:
             self.headers.append(CBlockHeader(x))
@@ -1470,7 +1471,7 @@ class msg_witness_blocktxn(msg_blocktxn):
         return r
 
 class NodeConnCB(object):
-    """Callback and helper functions for P2P connection to a bitcoind node.
+    """Callback and helper functions for P2P connection to a globaltokend node.
 
     Individual testcases should subclass this and override the on_* methods
     if they want to alter message handling behaviour.
