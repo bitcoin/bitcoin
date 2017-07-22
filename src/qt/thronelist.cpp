@@ -458,7 +458,7 @@ void ThroneList::updateVoteList(bool reset)
             CBitcoinAddress address2(address1);
 
             if((int64_t)pbudgetProposal->GetRemainingPaymentCount() <= 0 ||
-                !pbudgetProposal->fValid
+                !pbudgetProposal->fValid &&
                 !(pbudgetProposal->nBlockStart <= nBlockStart) &&
                 !(pbudgetProposal->nBlockEnd >= nBlockEnd) &&
                 !pbudgetProposal->IsEstablished()) 
