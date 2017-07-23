@@ -81,7 +81,6 @@ static const uint64_t RANDOMIZER_ID_LOCALHOSTNONCE = 0xd93e69e2bbfa5735ULL; // S
 //
 bool fDiscover = true;
 bool fListen = true;
-bool fRelayTxes = true;
 CCriticalSection cs_mapLocalHost;
 std::map<CNetAddr, LocalServiceInfo> mapLocalHost;
 static bool vfLimited[NET_MAX] = {};
@@ -2202,6 +2201,7 @@ void CConnman::SetNetworkActive(bool active)
 
 CConnman::CConnman(uint64_t nSeed0In, uint64_t nSeed1In) : nSeed0(nSeed0In), nSeed1(nSeed1In)
 {
+    m_relay_txes = false;
     fNetworkActive = true;
     setBannedIsDirty = false;
     fAddressesInitialized = false;
@@ -2256,6 +2256,7 @@ bool CConnman::InitBinds(const std::vector<CService>& binds, const std::vector<C
 
 bool CConnman::Start(CScheduler& scheduler, Options connOptions)
 {
+    m_relay_txes = connOptions.m_relay_txes;
     nTotalBytesRecv = 0;
     nTotalBytesSent = 0;
     nMaxOutboundTotalBytesSentInCycle = 0;
@@ -2692,6 +2693,8 @@ int CConnman::GetBestHeight() const
 {
     return nBestHeight.load(std::memory_order_acquire);
 }
+
+bool CConnman::GetRelayTxes() const { return m_relay_txes; }
 
 unsigned int CConnman::GetReceiveFloodSize() const { return nReceiveFloodSize; }
 
