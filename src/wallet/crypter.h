@@ -185,28 +185,25 @@ public:
     {
         {
             LOCK(cs_KeyStore);
-            if (!IsCrypted())
+            if (!IsCrypted()) {
                 return CBasicKeyStore::HaveKey(address);
+            }
             return mapCryptedKeys.count(address) > 0;
         }
         return false;
     }
     bool GetKey(const CKeyID &address, CKey& keyOut) const override;
     bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const override;
-    void GetKeys(std::set<CKeyID> &setAddress) const override
+    std::set<CKeyID> GetKeys() const override
     {
-        if (!IsCrypted())
-        {
-            CBasicKeyStore::GetKeys(setAddress);
-            return;
+        if (!IsCrypted()) {
+            return CBasicKeyStore::GetKeys();
         }
-        setAddress.clear();
-        CryptedKeyMap::const_iterator mi = mapCryptedKeys.begin();
-        while (mi != mapCryptedKeys.end())
-        {
-            setAddress.insert((*mi).first);
-            mi++;
+        std::set<CKeyID> set_address;
+        for (const auto& mi : mapCryptedKeys) {
+            set_address.insert(mi.first);
         }
+        return set_address;
     }
 
     /**
