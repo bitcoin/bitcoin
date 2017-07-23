@@ -58,6 +58,7 @@ int64_t nMaxTipAge = DEFAULT_MAX_TIP_AGE;
 
 bool IsTrafficShapingEnabled();
 UniValue validateblocktemplate(const UniValue &params, bool fHelp);
+UniValue validatechainhistory(const UniValue &params, bool fHelp);
 
 bool MiningAndExcessiveBlockValidatorRule(const uint64_t newExcessiveBlockSize, const uint64_t newMiningBlockSize)
 {
@@ -1476,6 +1477,7 @@ static const CRPCCommand commands[] =
     { "util",               "getstat",                &getstat,                true  },
     { "util",               "get",                    &gettweak,               true  },
     { "util",               "set",                    &settweak,               true  },
+    { "util",               "validatechainhistory",   &validatechainhistory,   true  },
 #ifdef DEBUG
     { "util",               "getstructuresizes",      &getstructuresizes,      true  },  // BU
 #endif
@@ -1490,6 +1492,67 @@ void RegisterUnlimitedRPCCommands(CRPCTable &tableRPC)
 {
     for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)
         tableRPC.appendCommand(commands[vcidx].name, &commands[vcidx]);
+}
+
+
+UniValue validatechainhistory(const UniValue &params, bool fHelp)
+{
+    if (fHelp)
+        throw runtime_error("validatechainhistory [hash]\n"
+                            "\nUpdates a chain's valid/invalid status based on parent blocks.\n");
+
+    std::stack<CBlockIndex *> stk;
+    CBlockIndex *pos = pindexBestHeader;
+    bool failedChain = false;
+    UniValue ret = NullUniValue;
+
+    LOCK(cs_main);
+
+    if (params.size() >= 1)
+    {
+        std::string strHash = params[0].get_str();
+        uint256 hash(uint256S(strHash));
+
+        if (mapBlockIndex.count(hash) == 0)
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+
+        CBlock block;
+        pos = mapBlockIndex[hash];
+    }
+
+    LogPrintf("validatechainhistory starting at %d %s\n", pos->nHeight, pos->phashBlock->ToString());
+    while (pos && !failedChain)
+    {
+        // LogPrintf("validate %d %s\n", pos->nHeight, pos->phashBlock->ToString());
+        failedChain = pos->nStatus & BLOCK_FAILED_MASK;
+        if (!failedChain)
+        {
+            stk.push(pos);
+        }
+        pos = pos->pprev;
+    }
+    if (failedChain)
+    {
+        ret = UniValue("Chain has a bad ancestor");
+        while (!stk.empty())
+        {
+            pos = stk.top();
+            if (pos)
+            {
+                pos->nStatus |= BLOCK_FAILED_CHILD;
+            }
+            setDirtyBlockIndex.insert(pos);
+            stk.pop();
+        }
+        FlushStateToDisk();
+        pindexBestHeader = FindMostWorkChain();
+    }
+    else
+    {
+        ret = UniValue("Chain is ok");
+    }
+
+    return ret;
 }
 
 

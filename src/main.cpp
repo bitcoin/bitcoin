@@ -237,9 +237,6 @@ uint256 hashRecentRejectsChainTip;
 /** Number of preferable block download peers. */
 int nPreferredDownload = 0;
 
-/** Dirty block index entries. */
-std::set<CBlockIndex *> setDirtyBlockIndex;
-
 /** Dirty block file entries. */
 std::set<int> setDirtyFileInfo;
 
@@ -247,6 +244,8 @@ std::set<int> setDirtyFileInfo;
 int nPeersWithValidatedDownloads = 0;
 } // anon namespace
 
+/** Dirty block index entries. */
+std::set<CBlockIndex *> setDirtyBlockIndex;
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -3838,10 +3837,15 @@ CBlockIndex *AddToBlockIndex(const CBlockHeader &block)
         pindexNew->pprev = (*miPrev).second;
         pindexNew->nHeight = pindexNew->pprev->nHeight + 1;
         pindexNew->BuildSkip();
+        // BU If the prior block or an ancestor has failed, mark this one failed
+        if (pindexNew->pprev && pindexNew->pprev->nStatus & BLOCK_FAILED_MASK)
+            pindexNew->nStatus |= BLOCK_FAILED_CHILD;
     }
     pindexNew->nChainWork = (pindexNew->pprev ? pindexNew->pprev->nChainWork : 0) + GetBlockProof(*pindexNew);
     pindexNew->RaiseValidity(BLOCK_VALID_TREE);
-    if (pindexBestHeader == NULL || pindexBestHeader->nChainWork < pindexNew->nChainWork)
+
+    if ((!(pindexNew->nStatus & BLOCK_FAILED_MASK)) &&
+        (pindexBestHeader == NULL || pindexBestHeader->nChainWork < pindexNew->nChainWork))
         pindexBestHeader = pindexNew;
 
     setDirtyBlockIndex.insert(pindexNew);
@@ -4246,7 +4250,9 @@ bool AcceptBlockHeader(const CBlockHeader &block,
             if (ppindex)
                 *ppindex = pindex;
             if (pindex->nStatus & BLOCK_FAILED_MASK)
-                return state.Invalid(error("%s: block %s height %d is marked invalid", __func__, hash.ToString(), pindex->nHeight), 0, "duplicate");
+                return state.Invalid(
+                    error("%s: block %s height %d is marked invalid", __func__, hash.ToString(), pindex->nHeight), 0,
+                    "duplicate");
             return true;
         }
 
@@ -6253,7 +6259,6 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
         CBlockLocator locator;
         uint256 hashStop;
         vRecv >> locator >> hashStop;
-
 
         if (IsInitialBlockDownload() && !pfrom->fWhitelisted)
         {

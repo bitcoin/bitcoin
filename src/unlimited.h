@@ -9,10 +9,10 @@
 #include "buip055fork.h"
 #include "chain.h"
 #include "checkqueue.h"
+#include "clientversion.h"
 #include "coins.h"
 #include "consensus/params.h"
 #include "consensus/validation.h"
-#include "clientversion.h"
 #include "leakybucket.h"
 #include "net.h"
 #include "script/script_error.h"
@@ -39,11 +39,11 @@ enum
     DEFAULT_CHECKPOINT_DAYS =
         30, // Default for the number of days in the past we check scripts during initial block download
 
-    // if the blockchain is this far (in seconds) behind the current time, only request headers from a single
-    // peer.  This makes IBD more efficient.  We make BITCOIN_CASH more lenient here because mining could be
-    // more erratic and this node is likely to connect to non-BCC nodes.
+// if the blockchain is this far (in seconds) behind the current time, only request headers from a single
+// peer.  This makes IBD more efficient.  We make BITCOIN_CASH more lenient here because mining could be
+// more erratic and this node is likely to connect to non-BCC nodes.
 #ifdef BITCOIN_CASH
-    SINGLE_PEER_REQUEST_MODE_AGE = (7* 24 * 60 * 60),
+    SINGLE_PEER_REQUEST_MODE_AGE = (7 * 24 * 60 * 60),
 #else
     SINGLE_PEER_REQUEST_MODE_AGE = (24 * 60 * 60),
 #endif
@@ -57,7 +57,7 @@ class CNode;
 class CNodeRef;
 class CChainParams;
 
-
+extern std::set<CBlockIndex *> setDirtyBlockIndex;
 extern uint32_t blockVersion; // Overrides the mined block version if non-zero
 extern uint64_t maxGeneratedBlock;
 extern uint64_t excessiveBlockSize;
