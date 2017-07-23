@@ -141,6 +141,7 @@ size_t CScheduler::getQueueInfo(boost::chrono::system_clock::time_point &first,
 }
 
 bool CScheduler::AreThreadsServicingQueue() const {
+    boost::unique_lock<boost::mutex> lock(newTaskMutex);
     return nThreadsServicingQueue;
 }
 
