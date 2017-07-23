@@ -136,6 +136,9 @@ extern int isChainExcessive(const CBlockIndex *blk, unsigned int checkDepth = ex
 // Check whether any block N back in this chain is an excessive block
 extern int chainContainsExcessive(const CBlockIndex *blk, unsigned int goBack = 0);
 
+// Given an invalid block, find all chains containing this block and mark all children invalid
+void MarkAllContainingChainsInvalid(CBlockIndex* invalidBlock);
+
 //// Internal CPU miner
 
 static const bool DEFAULT_GENERATE = false;

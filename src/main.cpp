@@ -1788,6 +1788,8 @@ void static InvalidChainFound(CBlockIndex *pindexNew)
     CheckForkWarningConditions();
 }
 
+
+
 void static InvalidBlockFound(CBlockIndex *pindex, const CValidationState &state)
 {
     int nDoS = 0;
@@ -1816,6 +1818,9 @@ void static InvalidBlockFound(CBlockIndex *pindex, const CValidationState &state
         setDirtyBlockIndex.insert(pindex);
         setBlockIndexCandidates.erase(pindex);
         InvalidChainFound(pindex);
+
+        // Now mark every block index on every chain that contains pindex as child of invalid
+        MarkAllContainingChainsInvalid(pindex);
     }
 }
 
@@ -3768,6 +3773,8 @@ bool InvalidateBlock(CValidationState &state, const Consensus::Params &consensus
     }
 
     InvalidChainFound(pindex);
+    // Now mark every block index on every chain that contains pindex as child of invalid
+    MarkAllContainingChainsInvalid(pindex);
     mempool.removeForReorg(pcoinsTip, chainActive.Tip()->nHeight + 1, STANDARD_LOCKTIME_VERIFY_FLAGS);
     uiInterface.NotifyBlockTip(IsInitialBlockDownload(), pindex->pprev);
     return true;
@@ -4336,6 +4343,8 @@ static bool AcceptBlock(const CBlock &block,
         {
             pindex->nStatus |= BLOCK_FAILED_VALID;
             setDirtyBlockIndex.insert(pindex);
+            // Now mark every block index on every chain that contains pindex as child of invalid
+            MarkAllContainingChainsInvalid(pindex);
         }
         return false;
     }
