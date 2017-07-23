@@ -1789,7 +1789,6 @@ void static InvalidChainFound(CBlockIndex *pindexNew)
 }
 
 
-
 void static InvalidBlockFound(CBlockIndex *pindex, const CValidationState &state)
 {
     int nDoS = 0;

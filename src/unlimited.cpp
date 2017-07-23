@@ -1744,41 +1744,43 @@ extern UniValue getstructuresizes(const UniValue &params, bool fHelp)
 /** Comparison function for sorting the getchaintips heads.  */
 struct CompareBlocksByHeight
 {
-    bool operator()(const CBlockIndex* a, const CBlockIndex* b) const
+    bool operator()(const CBlockIndex *a, const CBlockIndex *b) const
     {
         /* Make sure that unequal blocks with the same height do not compare
            equal. Use the pointers themselves to make a distinction. */
 
         if (a->nHeight != b->nHeight)
-          return (a->nHeight > b->nHeight);
+            return (a->nHeight > b->nHeight);
 
         return a < b;
     }
 };
 
-void MarkAllContainingChainsInvalid(CBlockIndex* invalidBlock)
+void MarkAllContainingChainsInvalid(CBlockIndex *invalidBlock)
 {
     LOCK(cs_main);
 
     bool dirty = false;
-    DbgAssert(invalidBlock->nStatus&BLOCK_FAILED_MASK, return);
+    DbgAssert(invalidBlock->nStatus & BLOCK_FAILED_MASK, return );
 
     // Find all the chain tips:
-    std::set<CBlockIndex*, CompareBlocksByHeight> setTips;
-    std::set<CBlockIndex*> setOrphans;
-    std::set<CBlockIndex*> setPrevs;
+    std::set<CBlockIndex *, CompareBlocksByHeight> setTips;
+    std::set<CBlockIndex *> setOrphans;
+    std::set<CBlockIndex *> setPrevs;
 
-    BOOST_FOREACH(const PAIRTYPE(const uint256, CBlockIndex*)& item, mapBlockIndex)
+    BOOST_FOREACH (const PAIRTYPE(const uint256, CBlockIndex *) & item, mapBlockIndex)
     {
-        if (!chainActive.Contains(item.second)) {
+        if (!chainActive.Contains(item.second))
+        {
             setOrphans.insert(item.second);
             setPrevs.insert(item.second->pprev);
         }
     }
 
-    for (std::set<CBlockIndex*>::iterator it = setOrphans.begin(); it != setOrphans.end(); ++it)
+    for (std::set<CBlockIndex *>::iterator it = setOrphans.begin(); it != setOrphans.end(); ++it)
     {
-        if (setPrevs.erase(*it) == 0) {
+        if (setPrevs.erase(*it) == 0)
+        {
             setTips.insert(*it);
         }
     }
@@ -1786,21 +1788,22 @@ void MarkAllContainingChainsInvalid(CBlockIndex* invalidBlock)
     // Always report the currently active tip.
     setTips.insert(chainActive.Tip());
 
-    BOOST_FOREACH(CBlockIndex* tip, setTips)
+    BOOST_FOREACH (CBlockIndex *tip, setTips)
     {
         if (tip->GetAncestor(invalidBlock->nHeight) == invalidBlock)
         {
-            for(CBlockIndex* blk = tip; blk != invalidBlock; blk=blk->pprev)
+            for (CBlockIndex *blk = tip; blk != invalidBlock; blk = blk->pprev)
             {
-                if ((blk->nStatus&BLOCK_FAILED_CHILD)==0)
+                if ((blk->nStatus & BLOCK_FAILED_CHILD) == 0)
                 {
                     blk->nStatus |= BLOCK_FAILED_CHILD;
                     setDirtyBlockIndex.insert(blk);
-                    dirty=true;
+                    dirty = true;
                 }
             }
         }
     }
 
-    if (dirty) FlushStateToDisk();
+    if (dirty)
+        FlushStateToDisk();
 }
