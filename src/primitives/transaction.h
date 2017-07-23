@@ -302,6 +302,11 @@ public:
         return NULL;
     };
     
+    virtual bool IsDust(const CFeeRate &minRelayTxFee) const
+    {
+        return true;
+    };
+    
     std::string ToString() const;
 };
 

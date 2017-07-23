@@ -190,19 +190,27 @@ public:
 class CTempRecipient
 {
 public:
-    CTempRecipient() : nType(0), nAmount(0), fSubtractFeeFromAmount(false) {SetNull();};
+    CTempRecipient() : nType(0), nAmount(0), nAmountSelected(0), fSubtractFeeFromAmount(false) {SetNull();};
     CTempRecipient(CAmount nAmount_, bool fSubtractFeeFromAmount_, CScript scriptPubKey_)
-        : nAmount(nAmount_), fSubtractFeeFromAmount(fSubtractFeeFromAmount_), scriptPubKey(scriptPubKey_) {SetNull();};
+        : nAmount(nAmount_), nAmountSelected(nAmount_), fSubtractFeeFromAmount(fSubtractFeeFromAmount_), scriptPubKey(scriptPubKey_) {SetNull();};
     
     void SetNull()
     {
         fChange = false;
         nChildKey = 0;
         nStealthPrefix = 0;
-    }
+    };
+    
+    void SetAmount(CAmount nValue)
+    {
+        nAmount = nValue;
+        nAmountSelected = nValue;
+    };
+    
     
     uint8_t nType;
-    CAmount nAmount;
+    CAmount nAmount; // if fSubtractFeeFromAmount, nAmount = nAmountSelected - feeForOutput
+    CAmount nAmountSelected; 
     bool fSubtractFeeFromAmount;
     CTxDestination address;
     CScript scriptPubKey;

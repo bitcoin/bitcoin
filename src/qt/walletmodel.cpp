@@ -299,7 +299,8 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
     {
         return DuplicateAddress;
     }
-
+    
+    /*
     CAmount nBalance = getBalance(coinControl);
 
     if(total > nBalance)
@@ -307,6 +308,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
         return AmountExceedsBalance;
     }
 
+    
     {
         LOCK2(cs_main, wallet->cs_wallet);
 
@@ -340,7 +342,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
         if (nFeeRequired > maxTxFee)
             return AbsurdFee;
     }
-
+    */
     return SendCoinsReturn(OK);
 }
 

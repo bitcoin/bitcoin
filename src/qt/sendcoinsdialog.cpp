@@ -288,7 +288,14 @@ void SendCoinsDialog::on_sendButton_clicked()
     else
         ctrl.nConfirmTarget = 0;
 
-    //prepareStatus = model->prepareTransaction(currentTransaction, &ctrl);
+    prepareStatus = model->prepareTransaction(currentTransaction, &ctrl);
+    if (prepareStatus.status != WalletModel::OK)
+    {
+        processSendCoinsReturn(prepareStatus.status);
+        fNewRecipientAllowed = true;
+        return;
+    };
+    
     
     QString sCommand = "sendtypeto ";
     
@@ -297,7 +304,6 @@ void SendCoinsDialog::on_sendButton_clicked()
     QString sTypeTo = ui->cbxTypeTo->currentText();
     
     sCommand += sTypeFrom.toLower() + " ";
-    
     sCommand += sTypeTo.toLower();
     
     sCommand += " [";
@@ -311,6 +317,9 @@ void SendCoinsDialog::on_sendButton_clicked()
         sCommand += "{\"address\":\""+rcp.address+"\",\"amount\":"
             + BitcoinUnits::format(BitcoinUnits::BTC, rcp.amount, false, BitcoinUnits::separatorNever);
         
+        if (rcp.fSubtractFeeFromAmount)
+            sCommand += ",\"subfee\":true";
+        
         if (!rcp.narration.isEmpty())
             sCommand += ",\"narr\":\""+rcp.narration+"\"";
         sCommand += "}";
@@ -320,8 +329,6 @@ void SendCoinsDialog::on_sendButton_clicked()
     
     int nRingSize = ui->spinRingSize->value();
     int nMaxInputs = ui->spinMaxInputs->value();
-    
-    
     
     sCommand += "] \"\" \"\" "+QString::number(nRingSize)+" "+QString::number(nMaxInputs);
     
@@ -334,6 +341,10 @@ void SendCoinsDialog::on_sendButton_clicked()
     
     double rFee = rv["fee"].get_real();
     
+    bool fSubbedFee = rv["outputs_fee"].size() > 0 ? true : false;
+    
+    size_t nBytes = rv["bytes"].get_int();
+    
     
     CAmount txFee = rFee * COIN;
     
@@ -342,7 +353,13 @@ void SendCoinsDialog::on_sendButton_clicked()
     for (const auto &rcp : currentTransaction.getRecipients())
     {
         // generate bold amount string
-        QString amount = "<b>" + BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp.amount);
+        CAmount nValue = rcp.amount;
+        
+        const UniValue &uv = rv["outputs_fee"][rcp.address.toStdString().c_str()];
+        if (uv.isNum())
+            nValue = uv.get_int();
+        
+        QString amount = "<b>" + BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), nValue);
         amount.append("</b>");
         // generate monospace address string
         QString address = "<span style='font-family: monospace;'>" + rcp.address;
@@ -383,15 +400,23 @@ void SendCoinsDialog::on_sendButton_clicked()
         questionString.append("<hr /><span style='color:#aa0000;'>");
         questionString.append("Estimated "+BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), txFee));
         questionString.append("</span> ");
-        questionString.append(tr("added as transaction fee"));
+        
+        if (fSubbedFee)
+            questionString.append(tr("removed for transaction fee"));
+        else
+            questionString.append(tr("added as transaction fee"));
 
         // append transaction size
-        //questionString.append(" (" + QString::number((double)currentTransaction.getTransactionSize() / 1000) + " kB)");
+        questionString.append(" (" + QString::number((double)nBytes / 1000) + " kB)");
     }
     
     // add total amount in all subdivision units
     questionString.append("<hr />");
-    CAmount totalAmount = currentTransaction.getTotalTransactionAmount() + txFee;
+    
+    CAmount totalAmount = currentTransaction.getTotalTransactionAmount();
+    if (!fSubbedFee)
+        totalAmount += txFee;
+    
     QStringList alternativeUnits;
     Q_FOREACH(BitcoinUnits::Unit u, BitcoinUnits::availableUnits())
     {

@@ -491,6 +491,8 @@ bool CHDWallet::LoadJson(const UniValue &inj, std::string &sError)
     LOCK(cs_wallet);
     
     
+    return errorN(false, sError, __func__, _("TODO: LoadJson.").c_str());
+    
     return true;
 };
 
@@ -848,7 +850,7 @@ bool CHDWallet::Unlock(const SecureString &strWalletPassphrase)
     {
         bool fFoundKey = false;
         LOCK2(cs_main, cs_wallet);
-        BOOST_FOREACH(const MasterKeyMap::value_type& pMasterKey, mapMasterKeys)
+        for (const auto &pMasterKey : mapMasterKeys)
         {
             if (!crypter.SetKeyFromPassphrase(strWalletPassphrase, pMasterKey.second.vchSalt, pMasterKey.second.nDeriveIterations, pMasterKey.second.nDerivationMethod))
                 return false;
@@ -861,7 +863,7 @@ bool CHDWallet::Unlock(const SecureString &strWalletPassphrase)
             fFoundKey = true;
             break;
         };
-        
+
         if (!fFoundKey)
             return false;
 
@@ -2286,7 +2288,6 @@ static void SetCTOutVData(std::vector<uint8_t> &vData, CPubKey &pkEphem, uint32_
 
 int CHDWallet::CreateOutput(OUTPUT_PTR<CTxOutBase> &txbout, CTempRecipient &r, std::string &sError)
 {
-    
     switch (r.nType)
     {
         case OUTPUT_DATA:
@@ -2403,11 +2404,14 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
     nFeeRet = 0;
     CAmount nValue = 0;
     bool fOnlyStandardOutputs = true;
+    size_t nSubtractFeeFromAmount = 0;
     for (auto &r : vecSend)
     {
         nValue += r.nAmount;
         if (r.nType != OUTPUT_STANDARD && r.nType != OUTPUT_DATA)
             fOnlyStandardOutputs = false;
+        if (r.fSubtractFeeFromAmount)
+            nSubtractFeeFromAmount++;
     };
     
     if (0 != ExpandTempRecipients(vecSend, pc, sError))
@@ -2444,7 +2448,9 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             txNew.vpout.clear();
             wtx.fFromMe = true;
             
-            CAmount nValueToSelect = nValue + nFeeRet;
+            CAmount nValueToSelect = nValue;
+            if (nSubtractFeeFromAmount == 0)
+                nValueToSelect += nFeeRet;
             
             double dPriority = 0;
             
@@ -2462,7 +2468,6 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 //a chance at a free transaction.
                 //But mempool inputs might still be in the mempool, so their age stays 0
                 int age = pcoin.first->GetDepthInMainChain();
-                if (age < 0)
                 assert(age >= 0);
                 if (age != 0)
                     age += 1;
@@ -2491,7 +2496,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 
                 CTempRecipient r;
                 r.nType = OUTPUT_STANDARD;
-                r.nAmount = nChange;
+                r.SetAmount(nChange);
                 
                 CKeyID idChange = pkChange.GetID();
                 r.address = idChange;
@@ -2533,7 +2538,6 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             int nLastBlindedOutput = -1;
             int nChangePosInOut = -1;
             
-            
             if (!fOnlyStandardOutputs)
             {
                 OUTPUT_PTR<CTxOutData> outFee = MAKE_OUTPUT<CTxOutData>();
@@ -2542,15 +2546,48 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 txNew.vpout.push_back(outFee);
             };
             
-            
+            bool fFirst = true;
             for (size_t i = 0; i < vecSend.size(); ++i)
             {
                 auto &r = vecSend[i];
                 
                 OUTPUT_PTR<CTxOutBase> txbout;
                 
+                if (r.nType != OUTPUT_DATA)
+                {
+                    r.nAmount = r.nAmountSelected;
+                    if (r.fSubtractFeeFromAmount)
+                    {
+                        r.nAmount -= nFeeRet / nSubtractFeeFromAmount; // Subtract fee equally from each selected recipient
+
+                        if (fFirst) // first receiver pays the remainder not divisible by output count
+                        {
+                            fFirst = false;
+                            r.nAmount -= nFeeRet % nSubtractFeeFromAmount;
+                        };
+                    };
+                };
+                
                 if (0 != CreateOutput(txbout, r, sError))
                     return 1; // sError will be set
+                
+                if ((r.nType == OUTPUT_STANDARD
+                        && txbout->IsDust(dustRelayFee))
+                    || (r.nType != OUTPUT_DATA
+                        && r.nAmount < 0))
+                {
+                    if (r.fSubtractFeeFromAmount && nFeeRet > 0)
+                    {
+                        if (r.nAmount < 0)
+                            sError = _("The transaction amount is too small to pay the fee");
+                        else
+                            sError = _("The transaction amount is too small to send after the fee has been deducted");
+                    } else
+                    {
+                        sError = _("Transaction amount too small");
+                    };
+                    return 1;
+                };
                 
                 if (r.nType == OUTPUT_STANDARD)
                 {
@@ -2580,7 +2617,6 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             vpBlinds.push_back(&vBlindPlain[0]);
             if (!secp256k1_pedersen_commit(secp256k1_ctx_blind, &plainInputCommitment, &vBlindPlain[0], (uint64_t) nValueIn, secp256k1_generator_h))
                 return errorN(1, sError, __func__, "secp256k1_pedersen_commit failed for plain in.");
-            
             
             if (nValueOutPlain > 0)
             {
@@ -2664,7 +2700,8 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 // the payees and not the change output.
                 // TODO: The case where there is no change output remains
                 // to be addressed so we avoid creating too small an output.
-                if (nFeeRet > nFeeNeeded && nChangePosInOut != -1)
+                if (nFeeRet > nFeeNeeded && nChangePosInOut != -1
+                    && nSubtractFeeFromAmount == 0)
                 {
                     auto &r = vecSend[nChangePosInOut];
                     
@@ -2679,7 +2716,8 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             };
             
             // Try to reduce change to include necessary fee
-            if (nChangePosInOut != -1)
+            if (nChangePosInOut != -1
+                && nSubtractFeeFromAmount == 0)
             {
                 auto &r = vecSend[nChangePosInOut];
                 
@@ -2731,6 +2769,10 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             };
         };
         
+        
+        
+        
+        
         rtx.nFee = nFeeRet;
         AddOutputRecordMetaData(rtx, vecSend);
         
@@ -2770,9 +2812,12 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
         CTempRecipient rN;
         rN.nType = r0.nType;
         rN.nAmount = r0.nAmount * ((float)GetRandInt(100) / 100.0);
+        rN.nAmountSelected = rN.nAmount;
         rN.address = r0.address;
         
         r0.nAmount -= rN.nAmount;
+        r0.nAmountSelected = r0.nAmount;
+        
         vecSend.push_back(rN);
     };
     
@@ -3989,7 +4034,7 @@ bool CHDWallet::LoadToWallet(const CWalletTx& wtxIn)
     wtx.BindWallet(this);
     wtxOrdered.insert(make_pair(wtx.nOrderPos, TxPair(&wtx, (CAccountingEntry*)0)));
     AddToSpends(hash);
-    BOOST_FOREACH(const CTxIn& txin, wtx.tx->vin) {
+    for (const auto &txin : wtx.tx->vin) {
         if (mapWallet.count(txin.prevout.hash)) {
             CWalletTx& prevtx = mapWallet[txin.prevout.hash];
             if (prevtx.nIndex == -1 && !prevtx.hashUnset()) {
@@ -6849,7 +6894,7 @@ bool CHDWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey, CC
             AddToWallet(wtxNew);
 
             // Notify that old coins are spent
-            BOOST_FOREACH(const CTxIn& txin, wtxNew.tx->vin)
+            for (const auto &txin : wtxNew.tx->vin)
             {
                 const uint256 &txhash = txin.prevout.hash;
                 MapWallet_t::iterator it = mapWallet.find(txhash);

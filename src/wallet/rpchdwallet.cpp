@@ -3499,7 +3499,8 @@ static int AddOutput(uint8_t nType, std::vector<CTempRecipient> &vecSend, const 
 {
     CTempRecipient r;
     r.nType = nType;
-    r.nAmount = nValue;
+    r.SetAmount(nValue);
+    r.fSubtractFeeFromAmount = fSubtractFeeFromAmount;
     r.address = address;
     r.sNarration = sNarr;
     
@@ -3566,6 +3567,10 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
             if (obj.exists("subfee"))
                 fSubtractFeeFromAmount = obj["subfee"].get_bool();
             
+            if (typeIn != OUTPUT_STANDARD
+                && fSubtractFeeFromAmount)
+            throw std::runtime_error("TODO: SubtractFeeFromAmount");
+            
             std::string sNarr;
             if (obj.exists("narr"))
                 sNarr = obj["narr"].get_str();
@@ -3597,8 +3602,9 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
         if (request.params.size() > 4)
             fSubtractFeeFromAmount = request.params[4].get_bool();
         
-        if (fSubtractFeeFromAmount)
-            throw std::runtime_error("TODO");
+        if (typeIn != OUTPUT_STANDARD
+            && fSubtractFeeFromAmount)
+            throw std::runtime_error("TODO: SubtractFeeFromAmount");
         
         std::string sNarr;
         if (request.params.size() > 5)
@@ -3698,6 +3704,23 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
     {
         UniValue result(UniValue::VOBJ);
         result.pushKV("fee", ValueFromAmount(nFeeRet));
+        result.pushKV("bytes", (int)GetVirtualTransactionSize(*(wtx.tx)));
+        
+        
+        UniValue objChangedOutputs(UniValue::VOBJ);
+        
+        for (const auto &r : vecSend)
+        {
+            if (!r.fChange
+                && r.nAmount != r.nAmountSelected)
+            {
+                UniValue obj(UniValue::VOBJ);
+                objChangedOutputs.pushKV(CBitcoinAddress(r.address).ToString(), r.nAmount);
+            };
+        };
+        
+        result.pushKV("outputs_fee", objChangedOutputs);
+        
         return result;
     };
     

@@ -118,7 +118,7 @@ static void AddAnonTxn(CHDWallet *pwallet, CBitcoinAddress &address, CAmount amo
     std::string sError;
     CTempRecipient r;
     r.nType = OUTPUT_RINGCT;
-    r.nAmount = 10;
+    r.SetAmount(10);
     r.address = address.Get();
     vecSend.push_back(r);
     
