@@ -112,7 +112,7 @@ bool AppInit(int argc, char* argv[])
         }
         try
         {
-            ReadConfigFile(mapArgs, mapMultiArgs, &tweaks);
+            ReadConfigFile(mapArgs, mapMultiArgs, allowedArgs);
         } catch (const std::exception& e) {
             fprintf(stderr,"Error reading configuration file: %s\n", e.what());
             return false;

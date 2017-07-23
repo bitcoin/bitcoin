@@ -7,11 +7,13 @@
 #include "primitives/block.h"
 #include "script/interpreter.h"
 #include "unlimited.h"
+#include "chainparams.h"
 
 #include <inttypes.h>
 #include <vector>
 
 const int REQ_6_1_SUNSET_HEIGHT = 530000;
+const int TESTNET_REQ_6_1_SUNSET_HEIGHT = 1250000;
 
 static const std::string ANTI_REPLAY_MAGIC_VALUE = "Bitcoin: A Peer-to-Peer Electronic Cash System";
 
@@ -37,7 +39,8 @@ bool ValidateBUIP055Block(const CBlock &block, CValidationState &state, int nHei
     // Validate transactions are HF compatible
     for (const CTransaction &tx : block.vtx)
     {
-        if ((nHeight <= REQ_6_1_SUNSET_HEIGHT) && IsTxOpReturnInvalid(tx))
+        int sunsetHeight = (Params().NetworkIDString() == "testnet") ? TESTNET_REQ_6_1_SUNSET_HEIGHT : REQ_6_1_SUNSET_HEIGHT;
+        if ((nHeight <= sunsetHeight) && IsTxOpReturnInvalid(tx))
             return state.DoS(100,
                              error("transaction is invalid on BUIP055 chain"), REJECT_INVALID, "bad-txns-wrong-fork");
     }
