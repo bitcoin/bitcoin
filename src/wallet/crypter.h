@@ -196,6 +196,7 @@ public:
     bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const override;
     std::set<CKeyID> GetKeys() const override
     {
+        LOCK(cs_KeyStore);
         if (!IsCrypted()) {
             return CBasicKeyStore::GetKeys();
         }
