@@ -1299,6 +1299,34 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						return true;
 					}
 				}
+				// autonomously transfer certificate to new owner (buyer) if paid in full amount with SYS
+				if (!myPriceOffer.vchCert.empty())
+				{
+					vector<CCert> certVtxPos;
+					if (pcertdb->ExistsCert(myPriceOffer.vchCert)) {
+						if (pcertdb->ReadCert(myPriceOffer.vchCert, certVtxPos) && !certVtxPos.empty())
+						{
+							CCert cert = certVtxPos.back();
+							cert.vchAlias = theOfferAccept.vchBuyerAlias;
+							theCert.nHeight = nHeight;
+							theCert.txHash = tx.GetHash();
+							cert.PutToCertList(certVtxPos);
+							if (!dontaddtodb && !pcertdb->WriteCert(myPriceOffer.vchCert, certVtxPos))
+							{
+								errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1090 - " + _("Failed to write to certificate to DB");
+								return error(errorMessage.c_str());
+							}
+						}
+						else {
+							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1088 - " + _("Cannot read certificate from database");
+							return true;
+						}
+					}
+					else {
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1088 - " + _("Certificate does not exist");
+						return true;
+					}
+				}
 			}
 			// check that the script for the offer update is sent to the correct destination
 			if (!ExtractDestination(tx.vout[nOut].scriptPubKey, dest))
@@ -1312,6 +1340,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1088 - " + _("Payment address does not match merchant address");
 				return true;
 			}
+
 			theOfferAccept.vchAcceptRand = vvchArgs[1];
 			// decrease qty + increase # sold
 			if(theOfferAccept.nQty <= 0)
