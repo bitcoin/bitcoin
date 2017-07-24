@@ -153,10 +153,10 @@ BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
 	GenerateBlocks(10, "node2");
 	GenerateBlocks(10, "node2");
 	// transfer sends utxo's to new owner
-	hex_str = AliasTransfer("node2", "jagmultiupdate", "node1", "changeddata7", "");
+	hex_str = AliasTransfer("node2", "jagmultiupdate", "node1", "changeddata7");
 	BOOST_CHECK(hex_str.empty());
 	// ensure can't update after transfer
-	hex_str = AliasTransfer("node2", "jagmultiupdate", "node1", "changedata8", "");
+	hex_str = AliasTransfer("node2", "jagmultiupdate", "node1", "changedata8");
 	BOOST_CHECK(!hex_str.empty());
 	for(unsigned int i=0;i<MAX_ALIAS_UPDATES_PER_BLOCK;i++)
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate sysrates.peg jagmultiupdate changedata9"));
