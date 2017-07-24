@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE (generate_aliaswitness)
 	UniValue r;
 	AliasNew("node1", "witness1", "pub");
 	AliasNew("node2", "witness2", "pub");
-	string hex_str = AliasUpdate("node1", "witness1", "newpubdata"", "\"\"", "\"\"", "\"\"", "witness2");
+	string hex_str = AliasUpdate("node1", "witness1", "newpubdata"", "\"\"", "\"\"", "witness2");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo witness1"));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str(), "pub");
 	BOOST_CHECK(!hex_str.empty());
@@ -639,7 +639,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpiredbuyback)
 	
 	AliasNew("node1", "aliasexpirebuyback", "somedata", "data");
 	// can't renew aliases that aren't expired
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasexpirebuyback " + " data"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasexpirebuyback data"), runtime_error);
 	ExpireAlias("aliasexpirebuyback");
 	// expired aliases shouldnt be searchable
 	BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasexpirebuyback", "true"), false);
@@ -701,8 +701,8 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpiredbuyback)
 	GenerateBlocks(10, "node1");
 	GenerateBlocks(10, "node2");
 	AliasNew("node2", "aliasexpirebuyback", "somedata", "data");
-	BOOST_CHECK_THROW(CallRPC("node2", "aliasnew sysrates.peg aliasexpirebuyback " + " data"), runtime_error);
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasexpirebuyback " + " data"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "aliasnew sysrates.peg aliasexpirebuyback data"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasexpirebuyback data"), runtime_error);
 	string hex_str = AliasUpdate("node2", "aliasexpirebuyback", "changedata1", "pvtdata");
 	BOOST_CHECK(hex_str.empty());
 	BOOST_CHECK_THROW(CallRPC("node2", "aliasnew sysrates.peg aliasexpirebuyback \"\""), runtime_error);
@@ -717,7 +717,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpiredbuyback)
 	hex_str = AliasUpdate("node2", "aliasexpirebuyback", "changedata4", "pvtdata4");
 	BOOST_CHECK(hex_str.empty());
 	GenerateBlocks(5,"node2");
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasexpirebuyback " + " data2"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasexpirebuyback data2"), runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE (generate_aliasban)
