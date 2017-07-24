@@ -543,8 +543,8 @@ string AliasNew(const string& node, const string& aliasname, const string& passw
 	vector<unsigned char> vchPasswordSalt;
 	if(password != "\"\"")
 	{
-		vchPasswordSalt.resize(WALLET_CRYPTO_KEY_SIZE);
-		GetStrongRandBytes(&vchPasswordSalt[0], WALLET_CRYPTO_KEY_SIZE);
+		vchPasswordSalt.resize(WALLET_CRYPTO_SALT_SIZE);
+		GetStrongRandBytes(&vchPasswordSalt[0], WALLET_CRYPTO_SALT_SIZE);
 		CCrypter crypt;
 		string pwStr = password;
 		SecureString passwordss = pwStr.c_str();
@@ -751,8 +751,8 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	vector<unsigned char> vchPasswordSalt;
 	if(password != "\"\"")
 	{
-		vchPasswordSalt.resize(WALLET_CRYPTO_KEY_SIZE);
-		GetStrongRandBytes(&vchPasswordSalt[0], WALLET_CRYPTO_KEY_SIZE);
+		vchPasswordSalt.resize(WALLET_CRYPTO_SALT_SIZE);
+		GetStrongRandBytes(&vchPasswordSalt[0], WALLET_CRYPTO_SALT_SIZE);
 		CCrypter crypt;
 		string pwStr = password;
 		SecureString scpassword = pwStr.c_str();
