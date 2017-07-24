@@ -642,14 +642,10 @@ string AliasTransfer(const string& node, const string& aliasname, const string& 
 	vector<unsigned char> vchPubKey(pubKey.begin(), pubKey.end());
 	CSyscoinAddress aliasAddress(pubKey.GetID());
 	vector<unsigned char> vchPrivKey(privKey.begin(), privKey.end());
-	vector<unsigned char> vchEncryptionPrivKey;
-	DecodeBase58(encryptionprivkey, vchEncryptionPrivKey);
-	encryptionPrivKey.Set(vchEncryptionPrivKey.begin(), vchEncryptionPrivKey.end(), true);
 	BOOST_CHECK(privKey.IsValid());
-	BOOST_CHECK(encryptionPrivKey.IsValid());
 	BOOST_CHECK(pubKey.IsFullyValid());
 	BOOST_CHECK_NO_THROW(CallRPC(tonode, "importprivkey " + CSyscoinSecret(privKey).ToString() + " \"\" false", true, false));	
-	BOOST_CHECK_NO_THROW(CallRPC(tonode, "importprivkey " + CSyscoinSecret(encryptionPrivKey).ToString() + " \"\" false", true, false));	
+	BOOST_CHECK_NO_THROW(CallRPC(tonode, "importprivkey " + encryptionprivkey + " \"\" false", true, false));
 
 
 	string strCipherPrivateData = privdata;
@@ -760,14 +756,10 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 		if(addressStr == "\"\"")
 			addressStr = aliasAddress.ToString();
 		vector<unsigned char> vchPrivKey(privKey.begin(), privKey.end());
-		vector<unsigned char> vchEncryptionPrivKey;
-		DecodeBase58(encryptionprivkey, vchEncryptionPrivKey);
-		encryptionPrivKey.Set(vchEncryptionPrivKey.begin(), vchEncryptionPrivKey.end(), true);
-		BOOST_CHECK(encryptionPrivKey.IsValid());
 		BOOST_CHECK(privKey.IsValid());
 		BOOST_CHECK(pubKey.IsFullyValid());
 		BOOST_CHECK_NO_THROW(r = CallRPC(node, "importprivkey " + CSyscoinSecret(privKey).ToString() + " \"\" false", true, false));	
-		BOOST_CHECK_NO_THROW(r = CallRPC(node, "importprivkey " + CSyscoinSecret(encryptionPrivKey).ToString() + " \"\" false", true, false));	
+		BOOST_CHECK_NO_THROW(r = CallRPC(node, "importprivkey " + encryptionprivkey + " \"\" false", true, false));
 		strCipherPassword = password;
 		strCipherEncryptionPrivateKey = stringFromVch(vchEncryptionPrivKey);
 	}
