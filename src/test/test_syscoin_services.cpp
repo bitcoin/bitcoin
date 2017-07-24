@@ -1481,8 +1481,6 @@ const string LinkOfferAccept(const string& ownernode, const string& buyernode, c
 	strCipherPrivateData = pay_message;
 	if(strCipherPrivateData.empty())
 		strCipherPrivateData = "\"\"";
-	else
-		strCipherPrivateData = HexStr(strCipherPrivateData);
 
 	CAmount balanceOwnerBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
 	BOOST_CHECK_NO_THROW(r = CallRPC(resellernode, "aliasinfo " + selleralias));
@@ -1556,8 +1554,7 @@ const string EscrowNew(const string& node, const string& sellernode, const strin
 	strCipherPrivateData = message;
 	if(strCipherPrivateData.empty())
 		strCipherPrivateData = "\"\"";
-	else
-		strCipherPrivateData = HexStr(strCipherPrivateData);
+
 	int nQty = atoi(qty.c_str());
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offerguid));
 	int nQtyBefore = atoi(find_value(r.get_obj(), "quantity").get_str().c_str());
