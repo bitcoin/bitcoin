@@ -643,7 +643,8 @@ string AliasTransfer(const string& node, const string& aliasname, const string& 
 	vector<unsigned char> vchPubKey(pubKey.begin(), pubKey.end());
 	CSyscoinAddress aliasAddress(pubKey.GetID());
 	vector<unsigned char> vchPrivKey(privKey.begin(), privKey.end());
-	vector<unsigned char> vchEncryptionPrivKey = ParseHex(encryptionprivkey);
+	vector<unsigned char> vchEncryptionPrivKey;
+	DecodeBase58(encryptionprivkey, vchEncryptionPrivKey);
 	encryptionPrivKey.Set(vchEncryptionPrivKey.begin(), vchEncryptionPrivKey.end(), true);
 	BOOST_CHECK(privKey.IsValid());
 	BOOST_CHECK(encryptionPrivKey.IsValid());
@@ -760,7 +761,8 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 		if(addressStr == "\"\"")
 			addressStr = aliasAddress.ToString();
 		vector<unsigned char> vchPrivKey(privKey.begin(), privKey.end());
-		vector<unsigned char> vchEncryptionPrivKey = ParseHex(encryptionprivkey);
+		vector<unsigned char> vchEncryptionPrivKey;
+		DecodeBase58(encryptionprivkey, vchEncryptionPrivKey);
 		encryptionPrivKey.Set(vchEncryptionPrivKey.begin(), vchEncryptionPrivKey.end(), true);
 		BOOST_CHECK(encryptionPrivKey.IsValid());
 		BOOST_CHECK(privKey.IsValid());
