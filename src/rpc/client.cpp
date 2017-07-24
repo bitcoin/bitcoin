@@ -85,6 +85,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "getblocktemplate", 0, "template_request" },
     { "listsinceblock", 1, "target_confirmations" },
     { "listsinceblock", 2, "include_watchonly" },
+    { "listsinceblock", 3, "include_removed" },
     { "sendmany", 1, "amounts" },
     { "sendmany", 2, "minconf" },
     { "sendmany", 3, "addlocked" },
