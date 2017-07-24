@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE (generate_certupdate)
 {
 	printf("Running generate_certupdate...\n");
 	AliasNew("node1", "jagcertupdate", "data");
-	string guid = CertNew("node1", "jagcertupdate", "title", "data");
+	string guid = CertNew("node1", "jagcertupdate", "private", "title", "data");
 	// update an cert that isn't yours
 	UniValue r;
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "certupdate " + guid + " title pubdata data"));
