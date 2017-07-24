@@ -731,7 +731,6 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	string strCipherPrivateData = privdata;
 	
 	string strCipherPassword = "";
-	string strCipherEncryptionPrivateKey = "";
 	vector<unsigned char> vchPubKey;
 	vector<unsigned char> vchPasswordSalt;
 	if(password != "\"\"")
@@ -756,12 +755,11 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 		BOOST_CHECK_NO_THROW(r = CallRPC(node, "importprivkey " + CSyscoinSecret(privKey).ToString() + " \"\" false", true, false));	
 		BOOST_CHECK_NO_THROW(r = CallRPC(node, "importprivkey " + encryptionprivkey + " \"\" false", true, false));
 		strCipherPassword = password;
-		strCipherEncryptionPrivateKey = encryptionprivkey;
 	}
 	string strPubKey = HexStr(vchPubKey);
 	if(strPubKey.empty())
 		strPubKey = "\"\"";
-	string strPasswordSalt = stringFromVch(vchPasswordSalt);
+	string strPasswordSalt = HexStr(vchPasswordSalt);
 	if(vchPasswordSalt.empty())
 		strPasswordSalt = "\"\"";
 	string strPasswordHex = strCipherPassword;
@@ -770,14 +768,11 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	string strPrivateHex = strCipherPrivateData;
 	if(strCipherPrivateData.empty())
 		strPrivateHex = "\"\"";
-	string strEncryptionPrivateKeyHex = strCipherEncryptionPrivateKey;
-	if(strCipherEncryptionPrivateKey.empty())
-		strEncryptionPrivateKeyHex = "\"\"";
 	string acceptTransfers = "\"\"";
 	string expires = "\"\"";
 	string encryptionpubkey = "\"\"";
 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdate sysrates.peg " + aliasname + " " + pubdata + " " + strPrivateHex +  " " + safesearch + " " + addressStr + " " + strPasswordHex + " " + acceptTransfers + " " + expires + " " + strPasswordSalt + " " + strEncryptionPrivateKeyHex + " " + encryptionpubkey + " " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdate sysrates.peg " + aliasname + " " + pubdata + " " + strPrivateHex +  " " + safesearch + " " + addressStr + " " + strPasswordHex + " " + acceptTransfers + " " + expires + " " + strPasswordSalt + " " + encryptionpubkey + " " + encryptionpubkey + " " + witness));
 	const UniValue& resArray = r.get_array();
 	if(resArray.size() > 1)
 	{
