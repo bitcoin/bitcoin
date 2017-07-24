@@ -1,5 +1,5 @@
 # File Partition:
-Since the blockchain is around 130GB, storage of large files on an external drive is convenient.  
+Since the blockchain is around 140GB, storage of large files on an external drive is convenient.  
 If this is not done properly though, the external drive will also contain high i/o-frequency LevelDB index
 files, protracting time for initial blockchain synchronization. This document describes how partition datadir files between the high-frequency/low-capacity "index" files and the low-frequency/high-capacity "blocks" files. Examples are given for macOS, but Linux / Windows should be similar. These instructions result in the following physical folder rearrangement:
 
@@ -45,4 +45,4 @@ Finally, set up soft links to restore the original folder structure:
           ln -s /Volumes/WD-Passport-Mac/bitcoin/blocks /Users/coinadm/local/bitcoin/data/blocks
 
  注意 - Nota - Note - ध्यान दें - ﻢﻠﺣﻮﻇﺓ - метка 
-These instructions are confusing due to the way the index folder is nested within the blocks folder.
+These instructions are confusing due to the way the LevelDB "index" folder is nested within the blockchain "blocks" folder by default.
