@@ -5,9 +5,12 @@
 
 #include "mnemonic.h"
 
-#include "../util.h"
-#include "../crypto/hmac_sha512.h"
-#include "../crypto/sha256.h"
+#include "util.h"
+#include "crypto/hmac_sha512.h"
+#include "crypto/sha256.h"
+
+#include "unilib/uninorms.h"
+#include "unilib/utf8.h"
 
 #include "key/wordlists/english.h"
 #include "key/wordlists/french.h"
@@ -15,6 +18,7 @@
 #include "key/wordlists/spanish.h"
 #include "key/wordlists/chinese_simplified.h"
 #include "key/wordlists/chinese_traditional.h"
+
 
 static const unsigned char *mnLanguages[] =
 {
@@ -426,6 +430,14 @@ static int mnemonicKdf(const uint8_t *password, size_t lenPassword,
     return 0;
 };
 
+static void NormaliseUnicode(std::string &str)
+{
+    std::u32string u32;
+    ufal::unilib::utf8::decode(str, u32);
+    ufal::unilib::uninorms::nfkd(u32);
+    ufal::unilib::utf8::encode(u32, str);
+}
+
 int MnemonicToSeed(const std::string &sMnemonic, const std::string &sPasswordIn, std::vector<uint8_t> &vSeed)
 {
     if (fDebug)
@@ -434,10 +446,11 @@ int MnemonicToSeed(const std::string &sMnemonic, const std::string &sPasswordIn,
     vSeed.resize(64);
     
     std::string sWordList = sMnemonic;
-    part::ReplaceStrInPlace(sWordList, "\u3000", " ");
+    NormaliseUnicode(sWordList);
     
     std::string sPassword = sPasswordIn;
-    part::ReplaceStrInPlace(sPassword, "\u3000", " ");
+    NormaliseUnicode(sPassword);
+    
     
     int nIterations = 2048;
     

@@ -116,6 +116,8 @@ BITCOIN_CORE_H = \
   key/stealth.h \
   key/extkey.h \
   key/mnemonic.h \
+  unilib/uninorms.h \
+  unilib/utf8.h \
   key/types.h \
   key/keyutil.h \
   key/wordlists/chinese_simplified.h \
@@ -303,6 +305,7 @@ crypto_libparticl_crypto_a_SOURCES = \
 libparticl_consensus_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libparticl_consensus_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libparticl_consensus_a_SOURCES = \
+  amount.cpp \
   amount.h \
   arith_uint256.cpp \
   arith_uint256.h \
@@ -353,6 +356,8 @@ libparticl_common_a_SOURCES = \
   key/extkey.cpp \
   key/stealth.cpp \
   key/mnemonic.cpp \
+  unilib/uninorms.cpp \
+  unilib/utf8.cpp \
   keystore.cpp \
   netaddress.cpp \
   netbase.cpp \

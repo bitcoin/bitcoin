@@ -37,7 +37,7 @@ void EnsureWalletIsUnlocked(CHDWallet *pwallet)
     
     if (pwallet->fUnlockForStakingOnly)
         throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Wallet is unlocked for staking only.");
-}
+};
 
 static CHDWallet *GetHDWallet()
 {
@@ -72,7 +72,9 @@ int ExtractBip32InfoV(std::vector<unsigned char> &vchKey, UniValue &keyInfo, std
         keyInfo.pushKV("type", "Bitcoin extended secret key");
         typePk = CChainParams::EXT_PUBLIC_KEY_BTC;
     } else
+    {
         keyInfo.pushKV("type", "Unknown extended secret key");
+    };
     
     keyInfo.pushKV("version", strprintf("%02X", reversePlace(&vchKey[0])));
     keyInfo.pushKV("depth", strprintf("%u", vchKey[4]));
@@ -316,7 +318,7 @@ int AccountInfo(CExtKeyAccount *pa, int nShowKeys, bool fAllChains, UniValue &ob
                     case EKT_STEALTH:       sUseType = "stealth";       break;
                     case EKT_CONFIDENTIAL:  sUseType = "confidential";  break;
                     default:                sUseType = "unknown";       break;
-                }
+                };
                 objC.pushKV("use_type", sUseType);
             };
             
@@ -966,7 +968,6 @@ UniValue extkey(const JSONRPCRequest &request)
         // from random or passphrase + int + seed string
         
         CExtKey newKey;
-        
         CBitcoinExtKey b58Key;
         
         if (request.params.size() > 1)
@@ -1496,6 +1497,7 @@ UniValue extkeyimportinternal(const JSONRPCRequest &request, bool fGenesisChain)
     
     if (request.params.size() > 1)
         sPassphrase = request.params[1].get_str();
+    
     
     if (request.params.size() > 2)
     {
