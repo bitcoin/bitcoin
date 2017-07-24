@@ -26,22 +26,14 @@ BOOST_AUTO_TEST_CASE (generate_big_aliasdata)
 	string gooddata = "dasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfssdsfsdfsdfsdfsdfsdsdfdfsdfsdfsdfsd";
 	// 1110 bytes long
 	string baddata =   "dasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadddfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfssdsfsdfsdfsdfsdfsdsdfdfsdfsdfsdfsddfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdf";
-	string strCipherBadPrivData = "";
-	string strCipherGoodPrivData = "";
-	CKey privKey;
-	privKey.MakeNewKey(true);
-	CPubKey pubKey = privKey.GetPubKey();
-	vector<unsigned char> vchPubKey(pubKey.begin(), pubKey.end());	
-	strCipherBadPrivData = baddata;
-	strCipherGoodPrivData = gooddata;
 
 	AliasNew("node1", "jag1", gooddata, gooddata);
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg jag2 \"\" " + gooddata + " " + strCipherBadPrivData));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg jag2 " + gooddata + " " + baddata));
 	GenerateBlocks(5);
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg jag2 \"\" \"\""), runtime_error);	
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg jag2 \"\" " + baddata + " " + strCipherGoodPrivData));
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg jag2"), runtime_error);	
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg jag2 " + baddata + " " + baddata));
 	GenerateBlocks(5);
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg jag2 \"\" \"\""), runtime_error);		
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg jag2"), runtime_error);		
 }
 BOOST_AUTO_TEST_CASE (generate_aliaswitness)
 {
@@ -50,7 +42,7 @@ BOOST_AUTO_TEST_CASE (generate_aliaswitness)
 	UniValue r;
 	AliasNew("node1", "witness1", "pub");
 	AliasNew("node2", "witness2", "pub");
-	string hex_str = AliasUpdate("node1", "witness1", "newpubdata", "\"\"", "\"\"", "witness2");
+	string hex_str = AliasUpdate("node1", "witness1", "newpubdata", "\"\"", "\"\"", "\"\"", "witness2");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo witness1"));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str(), "pub");
 	BOOST_CHECK(!hex_str.empty());
