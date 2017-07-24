@@ -237,9 +237,6 @@ uint256 hashRecentRejectsChainTip;
 /** Number of preferable block download peers. */
 int nPreferredDownload = 0;
 
-/** Dirty block index entries. */
-std::set<CBlockIndex *> setDirtyBlockIndex;
-
 /** Dirty block file entries. */
 std::set<int> setDirtyFileInfo;
 
@@ -247,6 +244,8 @@ std::set<int> setDirtyFileInfo;
 int nPeersWithValidatedDownloads = 0;
 } // anon namespace
 
+/** Dirty block index entries. */
+std::set<CBlockIndex *> setDirtyBlockIndex;
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -1789,6 +1788,7 @@ void static InvalidChainFound(CBlockIndex *pindexNew)
     CheckForkWarningConditions();
 }
 
+
 void static InvalidBlockFound(CBlockIndex *pindex, const CValidationState &state)
 {
     int nDoS = 0;
@@ -1817,6 +1817,9 @@ void static InvalidBlockFound(CBlockIndex *pindex, const CValidationState &state
         setDirtyBlockIndex.insert(pindex);
         setBlockIndexCandidates.erase(pindex);
         InvalidChainFound(pindex);
+
+        // Now mark every block index on every chain that contains pindex as child of invalid
+        MarkAllContainingChainsInvalid(pindex);
     }
 }
 
@@ -3769,6 +3772,8 @@ bool InvalidateBlock(CValidationState &state, const Consensus::Params &consensus
     }
 
     InvalidChainFound(pindex);
+    // Now mark every block index on every chain that contains pindex as child of invalid
+    MarkAllContainingChainsInvalid(pindex);
     mempool.removeForReorg(pcoinsTip, chainActive.Tip()->nHeight + 1, STANDARD_LOCKTIME_VERIFY_FLAGS);
     uiInterface.NotifyBlockTip(IsInitialBlockDownload(), pindex->pprev);
     return true;
@@ -3838,10 +3843,15 @@ CBlockIndex *AddToBlockIndex(const CBlockHeader &block)
         pindexNew->pprev = (*miPrev).second;
         pindexNew->nHeight = pindexNew->pprev->nHeight + 1;
         pindexNew->BuildSkip();
+        // BU If the prior block or an ancestor has failed, mark this one failed
+        if (pindexNew->pprev && pindexNew->pprev->nStatus & BLOCK_FAILED_MASK)
+            pindexNew->nStatus |= BLOCK_FAILED_CHILD;
     }
     pindexNew->nChainWork = (pindexNew->pprev ? pindexNew->pprev->nChainWork : 0) + GetBlockProof(*pindexNew);
     pindexNew->RaiseValidity(BLOCK_VALID_TREE);
-    if (pindexBestHeader == NULL || pindexBestHeader->nChainWork < pindexNew->nChainWork)
+
+    if ((!(pindexNew->nStatus & BLOCK_FAILED_MASK)) &&
+        (pindexBestHeader == NULL || pindexBestHeader->nChainWork < pindexNew->nChainWork))
         pindexBestHeader = pindexNew;
 
     setDirtyBlockIndex.insert(pindexNew);
@@ -4246,7 +4256,9 @@ bool AcceptBlockHeader(const CBlockHeader &block,
             if (ppindex)
                 *ppindex = pindex;
             if (pindex->nStatus & BLOCK_FAILED_MASK)
-                return state.Invalid(error("%s: block is marked invalid", __func__), 0, "duplicate");
+                return state.Invalid(
+                    error("%s: block %s height %d is marked invalid", __func__, hash.ToString(), pindex->nHeight), 0,
+                    "duplicate");
             return true;
         }
 
@@ -4330,6 +4342,8 @@ static bool AcceptBlock(const CBlock &block,
         {
             pindex->nStatus |= BLOCK_FAILED_VALID;
             setDirtyBlockIndex.insert(pindex);
+            // Now mark every block index on every chain that contains pindex as child of invalid
+            MarkAllContainingChainsInvalid(pindex);
         }
         return false;
     }
@@ -7421,9 +7435,10 @@ bool SendMessages(CNode *pto)
         if (!state.fSyncStarted && !pto->fClient && !fImporting && !fReindex)
         {
             // Only actively request headers from a single peer, unless we're close to today.
-            if ((nSyncStarted == 0 && fFetch) || pindexBestHeader->GetBlockTime() > GetAdjustedTime() - 24 * 60 * 60)
+            if ((nSyncStarted == 0 && fFetch) ||
+                chainActive.Tip()->GetBlockTime() > GetAdjustedTime() - SINGLE_PEER_REQUEST_MODE_AGE)
             {
-                const CBlockIndex *pindexStart = pindexBestHeader;
+                const CBlockIndex *pindexStart = chainActive.Tip(); // pindexBestHeader;
                 /* If possible, start at the block preceding the currently
                    best known header.  This ensures that we always get a
                    non-empty list of headers back as long as the peer

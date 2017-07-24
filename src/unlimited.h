@@ -9,6 +9,7 @@
 #include "buip055fork.h"
 #include "chain.h"
 #include "checkqueue.h"
+#include "clientversion.h"
 #include "coins.h"
 #include "consensus/params.h"
 #include "consensus/validation.h"
@@ -37,6 +38,15 @@ enum
     EXCESSIVE_BLOCK_CHAIN_RESET = 6 * 24, // After 1 day of non-excessive blocks, reset the checker
     DEFAULT_CHECKPOINT_DAYS =
         30, // Default for the number of days in the past we check scripts during initial block download
+
+// if the blockchain is this far (in seconds) behind the current time, only request headers from a single
+// peer.  This makes IBD more efficient.  We make BITCOIN_CASH more lenient here because mining could be
+// more erratic and this node is likely to connect to non-BCC nodes.
+#ifdef BITCOIN_CASH
+    SINGLE_PEER_REQUEST_MODE_AGE = (7 * 24 * 60 * 60),
+#else
+    SINGLE_PEER_REQUEST_MODE_AGE = (24 * 60 * 60),
+#endif
 };
 
 class CBlock;
@@ -47,7 +57,7 @@ class CNode;
 class CNodeRef;
 class CChainParams;
 
-
+extern std::set<CBlockIndex *> setDirtyBlockIndex;
 extern uint32_t blockVersion; // Overrides the mined block version if non-zero
 extern uint64_t maxGeneratedBlock;
 extern uint64_t excessiveBlockSize;
@@ -73,6 +83,9 @@ static const unsigned int DEFAULT_MIN_LIMITFREERELAY = 1;
 
 // The number of days in the past we check scripts during initial block download
 extern CTweak<uint64_t> checkScriptDays;
+
+// Allow getblocktemplate to succeed even if this node chain tip blocks are old or this node is not connected
+extern CTweak<bool> unsafeGetBlockTemplate;
 
 // print out a configuration warning during initialization
 // bool InitWarning(const std::string &str);
@@ -122,6 +135,9 @@ extern int isChainExcessive(const CBlockIndex *blk, unsigned int checkDepth = ex
 
 // Check whether any block N back in this chain is an excessive block
 extern int chainContainsExcessive(const CBlockIndex *blk, unsigned int goBack = 0);
+
+// Given an invalid block, find all chains containing this block and mark all children invalid
+void MarkAllContainingChainsInvalid(CBlockIndex *invalidBlock);
 
 //// Internal CPU miner
 

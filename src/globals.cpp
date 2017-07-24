@@ -184,6 +184,10 @@ CTweak<uint64_t> miningForkTime("mining.forkTime",
     0);
 #endif
 
+CTweak<bool> unsafeGetBlockTemplate("mining.unsafeGetBlockTemplate",
+    "Allow getblocktemplate to succeed even if the chain tip is old or this node is not connected to other nodes",
+    false);
+
 CTweak<uint64_t> miningForkEB("mining.forkExcessiveBlock",
     "Set the excessive block to this value at the time of the fork.",
     8000000); // 8MB, uahf-technical-spec.md REQ-4-1
