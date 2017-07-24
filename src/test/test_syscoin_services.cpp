@@ -701,9 +701,6 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 
 
 	string strPasswordSalt = "\"\"";
-	string strPasswordHex = strCipherPassword;
-	if(strCipherPassword.empty())
-		strPasswordHex = "\"\"";
 	string strPrivateHex = strCipherPrivateData;
 	if(strCipherPrivateData.empty())
 		strPrivateHex = "\"\"";
