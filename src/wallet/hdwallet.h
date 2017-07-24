@@ -199,6 +199,8 @@ public:
         fChange = false;
         nChildKey = 0;
         nStealthPrefix = 0;
+        fSplitBlindOutput = false;
+        fExemptFeeSub = false;
     };
     
     void SetAmount(CAmount nValue)
@@ -207,11 +209,15 @@ public:
         nAmountSelected = nValue;
     };
     
+    bool ApplySubFee(CAmount nFee, size_t nSubtractFeeFromAmount, bool &fFirst);
+    
     
     uint8_t nType;
-    CAmount nAmount; // if fSubtractFeeFromAmount, nAmount = nAmountSelected - feeForOutput
+    CAmount nAmount;            // If fSubtractFeeFromAmount, nAmount = nAmountSelected - feeForOutput
     CAmount nAmountSelected; 
     bool fSubtractFeeFromAmount;
+    bool fSplitBlindOutput;
+    bool fExemptFeeSub;         // Value too low to sub fee when blinded value split into two outputs
     CTxDestination address;
     CScript scriptPubKey;
     std::vector<uint8_t> vData;

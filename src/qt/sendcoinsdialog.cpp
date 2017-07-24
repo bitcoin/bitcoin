@@ -343,7 +343,7 @@ void SendCoinsDialog::on_sendButton_clicked()
     
     bool fSubbedFee = rv["outputs_fee"].size() > 0 ? true : false;
     
-    size_t nBytes = rv["bytes"].get_int();
+    size_t nBytes = rv["bytes"].get_int64();
     
     
     CAmount txFee = rFee * COIN;
@@ -357,7 +357,7 @@ void SendCoinsDialog::on_sendButton_clicked()
         
         const UniValue &uv = rv["outputs_fee"][rcp.address.toStdString().c_str()];
         if (uv.isNum())
-            nValue = uv.get_int();
+            nValue = uv.get_int64();
         
         QString amount = "<b>" + BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), nValue);
         amount.append("</b>");

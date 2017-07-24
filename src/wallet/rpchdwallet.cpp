@@ -3569,10 +3569,6 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
             if (obj.exists("subfee"))
                 fSubtractFeeFromAmount = obj["subfee"].get_bool();
             
-            if (typeIn != OUTPUT_STANDARD
-                && fSubtractFeeFromAmount)
-            throw std::runtime_error("TODO: SubtractFeeFromAmount");
-            
             std::string sNarr;
             if (obj.exists("narr"))
                 sNarr = obj["narr"].get_str();
@@ -3708,18 +3704,25 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
         result.pushKV("fee", ValueFromAmount(nFeeRet));
         result.pushKV("bytes", (int)GetVirtualTransactionSize(*(wtx.tx)));
         
-        
         UniValue objChangedOutputs(UniValue::VOBJ);
-        
+        std::map<std::string, CAmount> mapChanged; // Blinded outputs are split, join the values for display
         for (const auto &r : vecSend)
         {
             if (!r.fChange
                 && r.nAmount != r.nAmountSelected)
             {
-                UniValue obj(UniValue::VOBJ);
-                objChangedOutputs.pushKV(CBitcoinAddress(r.address).ToString(), r.nAmount);
+                CAmount nValue = r.nAmount;
+                std::string sAddr = CBitcoinAddress(r.address).ToString();
+                
+                if (mapChanged.count(sAddr))
+                    mapChanged[sAddr] += r.nAmount;
+                else
+                    mapChanged[sAddr] = r.nAmount;
             };
         };
+        
+        for (const auto &v : mapChanged)
+            objChangedOutputs.pushKV(v.first, v.second);
         
         result.pushKV("outputs_fee", objChangedOutputs);
         

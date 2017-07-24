@@ -2396,23 +2396,84 @@ static bool HaveAnonOutputs(std::vector<CTempRecipient> &vecSend)
     return false;
 }
 
+static bool CheckOutputValue(const CTempRecipient &r, const CTxOutBase *txbout, CAmount nFeeRet, std::string sError)
+{
+    if ((r.nType == OUTPUT_STANDARD
+            && txbout->IsDust(dustRelayFee))
+        || (r.nType != OUTPUT_DATA
+            && r.nAmount < 0))
+    {
+        if (r.fSubtractFeeFromAmount && nFeeRet > 0)
+        {
+            if (r.nAmount < 0)
+                sError = _("The transaction amount is too small to pay the fee");
+            else
+                sError = _("The transaction amount is too small to send after the fee has been deducted");
+        } else
+        {
+            sError = _("Transaction amount too small");
+        };
+        LogPrintf("%s: Failed %s.\n", __func__, sError);
+        return false;
+    };
+    return true;
+};
+
+void InspectOutputs(std::vector<CTempRecipient> &vecSend,
+    CAmount &nValue, size_t &nSubtractFeeFromAmount, bool &fOnlyStandardOutputs)
+{
+    nValue = 0;
+    nSubtractFeeFromAmount = 0;
+    fOnlyStandardOutputs = true;
+    
+    for (auto &r : vecSend)
+    {
+        nValue += r.nAmount;
+        if (r.nType != OUTPUT_STANDARD && r.nType != OUTPUT_DATA)
+            fOnlyStandardOutputs = false;
+        
+        if (r.fSubtractFeeFromAmount)
+        {
+            if (r.fSplitBlindOutput && r.nAmount < 0.1)
+                r.fExemptFeeSub = true;
+            else
+                nSubtractFeeFromAmount++;
+        };
+    };
+};
+
+bool CTempRecipient::ApplySubFee(CAmount nFee, size_t nSubtractFeeFromAmount, bool &fFirst)
+{
+    if (nType != OUTPUT_DATA)
+    {
+        nAmount = nAmountSelected;
+        if (fSubtractFeeFromAmount && !fExemptFeeSub)
+        {
+            nAmount -= nFee / nSubtractFeeFromAmount; // Subtract fee equally from each selected recipient
+            
+            if (fFirst) // first receiver pays the remainder not divisible by output count
+            {
+                fFirst = false;
+                nAmount -= nFee % nSubtractFeeFromAmount;
+            };
+            return true;
+        };
+    };
+    return false;
+};
+
+
 int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
     std::vector<CTempRecipient> &vecSend,
     CExtKeyAccount *sea, CStoredExtKey *pc,
     bool sign, CAmount &nFeeRet, std::string &sError)
 {
     nFeeRet = 0;
-    CAmount nValue = 0;
-    bool fOnlyStandardOutputs = true;
-    size_t nSubtractFeeFromAmount = 0;
-    for (auto &r : vecSend)
-    {
-        nValue += r.nAmount;
-        if (r.nType != OUTPUT_STANDARD && r.nType != OUTPUT_DATA)
-            fOnlyStandardOutputs = false;
-        if (r.fSubtractFeeFromAmount)
-            nSubtractFeeFromAmount++;
-    };
+    CAmount nValue;
+    size_t nSubtractFeeFromAmount;
+    bool fOnlyStandardOutputs;
+    InspectOutputs(vecSend, nValue, nSubtractFeeFromAmount, fOnlyStandardOutputs);
+    
     
     if (0 != ExpandTempRecipients(vecSend, pc, sError))
         return 1; // sError is set
@@ -2532,7 +2593,6 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 txNew.vin.push_back(CTxIn(coin.first->GetHash(),coin.second,CScript(),
                     std::numeric_limits<unsigned int>::max() - (fWalletRbf ? 2 : 1)));
             
-            // The fee will come out of the change
             CAmount nValueOutPlain = 0;
             
             int nLastBlindedOutput = -1;
@@ -2542,7 +2602,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             {
                 OUTPUT_PTR<CTxOutData> outFee = MAKE_OUTPUT<CTxOutData>();
                 outFee->vData.push_back(DO_FEE);
-                outFee->vData.resize(9); // resize to more bytes than varint fee could take
+                outFee->vData.resize(9); // More bytes than varint fee could use
                 txNew.vpout.push_back(outFee);
             };
             
@@ -2551,43 +2611,14 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             {
                 auto &r = vecSend[i];
                 
+                r.ApplySubFee(nFeeRet, nSubtractFeeFromAmount, fFirst);
+                
                 OUTPUT_PTR<CTxOutBase> txbout;
-                
-                if (r.nType != OUTPUT_DATA)
-                {
-                    r.nAmount = r.nAmountSelected;
-                    if (r.fSubtractFeeFromAmount)
-                    {
-                        r.nAmount -= nFeeRet / nSubtractFeeFromAmount; // Subtract fee equally from each selected recipient
-
-                        if (fFirst) // first receiver pays the remainder not divisible by output count
-                        {
-                            fFirst = false;
-                            r.nAmount -= nFeeRet % nSubtractFeeFromAmount;
-                        };
-                    };
-                };
-                
                 if (0 != CreateOutput(txbout, r, sError))
                     return 1; // sError will be set
                 
-                if ((r.nType == OUTPUT_STANDARD
-                        && txbout->IsDust(dustRelayFee))
-                    || (r.nType != OUTPUT_DATA
-                        && r.nAmount < 0))
-                {
-                    if (r.fSubtractFeeFromAmount && nFeeRet > 0)
-                    {
-                        if (r.nAmount < 0)
-                            sError = _("The transaction amount is too small to pay the fee");
-                        else
-                            sError = _("The transaction amount is too small to send after the fee has been deducted");
-                    } else
-                    {
-                        sError = _("Transaction amount too small");
-                    };
-                    return 1;
-                };
+                if (!CheckOutputValue(r, &*txbout, nFeeRet, sError))
+                    return 1; // sError set
                 
                 if (r.nType == OUTPUT_STANDARD)
                 {
@@ -2771,8 +2802,6 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
         
         
         
-        
-        
         rtx.nFee = nFeeRet;
         AddOutputRecordMetaData(rtx, vecSend);
         
@@ -2814,9 +2843,16 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
         rN.nAmount = r0.nAmount * ((float)GetRandInt(100) / 100.0);
         rN.nAmountSelected = rN.nAmount;
         rN.address = r0.address;
+        rN.fSubtractFeeFromAmount = r0.fSubtractFeeFromAmount;
         
         r0.nAmount -= rN.nAmount;
         r0.nAmountSelected = r0.nAmount;
+        
+        // Tag the smaller amount, might be too small to sub the fee from
+        if (r0.nAmount < rN.nAmount)
+            r0.fSplitBlindOutput = true;
+        else
+            rN.fSplitBlindOutput = true;
         
         vecSend.push_back(rN);
     };
@@ -2879,9 +2915,10 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
     bool sign, CAmount &nFeeRet, std::string &sError)
 {
     nFeeRet = 0;
-    CAmount nValue = 0;
-    for (auto &r : vecSend)
-        nValue += r.nAmount;
+    CAmount nValue;
+    size_t nSubtractFeeFromAmount;
+    bool fOnlyStandardOutputs;
+    InspectOutputs(vecSend, nValue, nSubtractFeeFromAmount, fOnlyStandardOutputs);
     
     if (0 != ExpandTempRecipients(vecSend, pc, sError))
         return 1; // sError is set
@@ -2920,7 +2957,9 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             txNew.vpout.clear();
             wtx.fFromMe = true;
             
-            CAmount nValueToSelect = nValue + nFeeRet;
+            CAmount nValueToSelect = nValue;
+            if (nSubtractFeeFromAmount == 0)
+                nValueToSelect += nFeeRet;
             
             double dPriority = 0;
             
@@ -2952,7 +2991,8 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             };
             
             nChangePosInOut = -1;
-            // Insert a sender-owned 0 value output that becomes the change output if needed
+            
+            // Insert a sender-owned 0 value output which becomes the change output if needed
             {
                 // Fill an output to ourself
                 CPubKey pkChange;
@@ -2969,14 +3009,15 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 
                 if (nChange > ::minRelayTxFee.GetFee(2048)) // TODO: better output size estimate
                 {
-                    r.nAmount = nChange;
+                    r.SetAmount(nChange);
                 } else
                 {
-                    r.nAmount = 0;
+                    r.SetAmount(0);
                     nFeeRet += nChange;
                 };
                 
                 CKeyID idChange = pkChange.GetID();
+                
                 r.address = idChange;
                 r.pkTo = pkChange;
                 r.scriptPubKey = GetScriptForDestination(idChange);
@@ -3002,29 +3043,32 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             // behavior."
             for (const auto &coin : setCoins)
             {
-                // coin.first->first is txhash
-                txNew.vin.push_back(CTxIn(coin.first->first,coin.second,CScript(),
+                const uint256 &txhash = coin.first->first;
+                txNew.vin.push_back(CTxIn(txhash, coin.second, CScript(),
                     std::numeric_limits<unsigned int>::max() - (fWalletRbf ? 2 : 1)));
             };
             
-            
-            // The fee will come out of the change
             nValueOutPlain = 0;
             nChangePosInOut = -1;
             
             OUTPUT_PTR<CTxOutData> outFee = MAKE_OUTPUT<CTxOutData>();
             outFee->vData.push_back(DO_FEE);
-            outFee->vData.resize(9); // resize to more bytes than varint fee could take
+            outFee->vData.resize(9); // More bytes than varint fee could use
             txNew.vpout.push_back(outFee);
             
+            bool fFirst = true;
             for (size_t i = 0; i < vecSend.size(); ++i)
             {
                 auto &r = vecSend[i];
                 
-                OUTPUT_PTR<CTxOutBase> txbout;
+                r.ApplySubFee(nFeeRet, nSubtractFeeFromAmount, fFirst);
                 
+                OUTPUT_PTR<CTxOutBase> txbout;
                 if (0 != CreateOutput(txbout, r, sError))
                     return 1; // sError will be set
+                
+                if (!CheckOutputValue(r, &*txbout, nFeeRet, sError))
+                    return 1; // sError set
                 
                 if (r.nType == OUTPUT_STANDARD)
                     nValueOutPlain += r.nAmount;
@@ -3044,7 +3088,6 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                     if (0 != AddCTData(txbout.get(), r, sError))
                         return 1; // sError will be set
                 };
-                
             };
             
             // Fill in dummy signatures for fee calculation.
@@ -3090,7 +3133,8 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 // the payees and not the change output.
                 // TODO: The case where there is no change output remains
                 // to be addressed so we avoid creating too small an output.
-                if (nFeeRet > nFeeNeeded && nChangePosInOut != -1)
+                if (nFeeRet > nFeeNeeded && nChangePosInOut != -1
+                    && nSubtractFeeFromAmount == 0)
                 {
                     auto &r = vecSend[nChangePosInOut];
                     
@@ -3103,7 +3147,8 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             };
             
             // Try to reduce change to include necessary fee
-            if (nChangePosInOut != -1)
+            if (nChangePosInOut != -1
+                && nSubtractFeeFromAmount == 0)
             {
                 auto &r = vecSend[nChangePosInOut];
                 
@@ -3116,7 +3161,6 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                     break; // Done, able to increase fee from change
                 };
             };
-            
             
             // Include more fee and try again.
             nFeeRet = nFeeNeeded;
@@ -3255,6 +3299,13 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
     if (vecSend.size() < 1)
         return errorN(1, sError, __func__, _("Transaction must have at least one recipient.").c_str());
     
+    CAmount nValue = 0;
+    for (auto &r : vecSend)
+    {
+        nValue += r.nAmount;
+        if (nValue < 0 || r.nAmount < 0)
+            return errorN(1, sError, __func__, _("Transaction amounts must not be negative.").c_str());
+    };
     
     CExtKeyAccount *sea;
     CStoredExtKey *pcC;
@@ -3452,9 +3503,10 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
         return errorN(1, sError, __func__, _("Num inputs per signature out of range").c_str());
     
     nFeeRet = 0;
-    CAmount nValue = 0;
-    for (auto &r : vecSend)
-        nValue += r.nAmount;
+    CAmount nValue;
+    size_t nSubtractFeeFromAmount;
+    bool fOnlyStandardOutputs;
+    InspectOutputs(vecSend, nValue, nSubtractFeeFromAmount, fOnlyStandardOutputs);
     
     if (0 != ExpandTempRecipients(vecSend, pc, sError))
         return 1; // sError is set
@@ -3489,7 +3541,9 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             txNew.vpout.clear();
             wtx.fFromMe = true;
             
-            CAmount nValueToSelect = nValue + nFeeRet;
+            CAmount nValueToSelect = nValue;
+            if (nSubtractFeeFromAmount == 0)
+                nValueToSelect += nFeeRet;
             
             // Choose coins to use
             CAmount nValueIn = 0;
@@ -3528,10 +3582,10 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 
                 if (nChange > ::minRelayTxFee.GetFee(2048)) // TODO: better output size estimate
                 {
-                    r.nAmount = nChange;
+                    r.SetAmount(nChange);
                 } else
                 {
-                    r.nAmount = 0;
+                    r.SetAmount(0);
                     nFeeRet += nChange;
                 };
                 
@@ -3579,18 +3633,20 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             vSecretColumns.resize(nSignSigs);
             
             
-            // The fee will come out of the change
             nValueOutPlain = 0;
             nChangePosInOut = -1;
             
             OUTPUT_PTR<CTxOutData> outFee = MAKE_OUTPUT<CTxOutData>();
             outFee->vData.push_back(DO_FEE);
-            outFee->vData.resize(9); // resize to more bytes than varint fee could take
+            outFee->vData.resize(9); // More bytes than varint fee could use
             txNew.vpout.push_back(outFee);
             
+            bool fFirst = true;
             for (size_t i = 0; i < vecSend.size(); ++i)
             {
                 auto &r = vecSend[i];
+                
+                r.ApplySubFee(nFeeRet, nSubtractFeeFromAmount, fFirst);
                 
                 OUTPUT_PTR<CTxOutBase> txbout;
                 
@@ -3692,7 +3748,8 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 // the payees and not the change output.
                 // TODO: The case where there is no change output remains
                 // to be addressed so we avoid creating too small an output.
-                if (nFeeRet > nFeeNeeded && nChangePosInOut != -1)
+                if (nFeeRet > nFeeNeeded && nChangePosInOut != -1
+                    && nSubtractFeeFromAmount == 0)
                 {
                     auto &r = vecSend[nChangePosInOut];
                     
@@ -3705,7 +3762,8 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             };
             
             // Try to reduce change to include necessary fee
-            if (nChangePosInOut != -1)
+            if (nChangePosInOut != -1
+                && nSubtractFeeFromAmount == 0)
             {
                 auto &r = vecSend[nChangePosInOut];
                 
@@ -3973,6 +4031,14 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
 {
     if (vecSend.size() < 1)
         return errorN(1, sError, __func__, _("Transaction must have at least one recipient.").c_str());
+    
+    CAmount nValue = 0;
+    for (auto &r : vecSend)
+    {
+        nValue += r.nAmount;
+        if (nValue < 0 || r.nAmount < 0)
+            return errorN(1, sError, __func__, _("Transaction amounts must not be negative.").c_str());
+    };
     
     CExtKeyAccount *sea;
     CStoredExtKey *pcC;
