@@ -650,7 +650,7 @@ string AliasTransfer(const string& node, const string& aliasname, const string& 
 
 	string strCipherPrivateData = privdata;
 
-	string strEncryptionPrivateKeyHex = EncodeBase58(vchEncryptionPrivKey);
+	string strEncryptionPrivateKeyHex = encryptionprivkey;
 
 	string strPrivateHex = HexStr(vchFromString(strCipherPrivateData));
 	if(strCipherPrivateData.empty())
