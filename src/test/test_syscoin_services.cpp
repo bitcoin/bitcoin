@@ -537,7 +537,6 @@ string AliasNew(const string& node, const string& aliasname, const string& passw
 	string strCipherPrivateData = privdata;
 
 	string strCipherPassword = "";
-	string strCipherEncryptionPrivateKey = "";
 	vector<unsigned char> vchPubKey;
 	CKey privKey;
 	vector<unsigned char> vchPasswordSalt;
@@ -573,7 +572,7 @@ string AliasNew(const string& node, const string& aliasname, const string& passw
 	if(strCipherPrivateData.empty())
 		strPrivateHex = "\"\"";
 	string strEncryptionPrivateKeyHex = EncodeBase58(vchPrivEncryptionKey);
-	if(strCipherEncryptionPrivateKey.empty())
+	if(strEncryptionPrivateKeyHex.empty())
 		strEncryptionPrivateKeyHex = "\"\"";
 	string expires = "\"\"";
 	string aliases = "\"\"";
