@@ -663,7 +663,7 @@ string AliasTransfer(const string& node, const string& aliasname, const string& 
 	string strPrivateHex = HexStr(vchFromString(strCipherPrivateData));
 	if(strCipherPrivateData.empty())
 		strPrivateHex = "\"\"";
-	if(strCipherEncryptionPrivateKey.empty())
+	if(strEncryptionPrivateKeyHex.empty())
 		strEncryptionPrivateKeyHex = "\"\"";
 	string acceptTransfers = "\"\"";
 	string expires = "\"\"";
