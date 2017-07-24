@@ -3,7 +3,7 @@ Since the blockchain is around ~140GB, storage of large files on an external dri
 If this is not done properly though, the external drive will also contain high i/o-frequency LevelDB index
 files, protracting time for initial blockchain synchronization. This document describes how partition datadir files between the high-frequency/low-capacity "index" files and the low-frequency/high-capacity "blocks" files. Examples are given for macOS, but Linux / Windows should be similar. These instructions result in the following physical folder rearrangement:
 
-| Original Location       | New Location | Capacity Needs | IO Frequency        |
+| Original Location       | New Location | Capacity Needs | i/o Frequency        |
 | ----------------------- | ------------ | -------------- | ------------------- |
 | ${datadir}/blocks/index | ${datadir}   | low            | high                |
 | ${datadir}/blocks       | ${EXTERAL}   | high           | low                 |
