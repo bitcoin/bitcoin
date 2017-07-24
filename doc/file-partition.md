@@ -1,8 +1,12 @@
-Since the blockchain is around 130GB many developers may find it 
-convenient to store the blockchain on an external drive.  This
-document describes how to partitioning of datadir files between 
-the high-frequency/low-capacity "index" files and the low-frequency/high-capacity "blocks" files. 
-Examples are given for macOS, but Linux / Windows should be similar. 
+# File Partition:
+Since the blockchain is around 130GB, storage of large files on an external drive is convenient.  
+If this is not done properly though, the external drive will also contain high i/o-frequency LevelDB index
+files, protracting time for initial blockchain synchronization. This document describes how partition datadir files between the high-frequency/low-capacity "index" files and the low-frequency/high-capacity "blocks" files. Examples are given for macOS, but Linux / Windows should be similar. These instructions result in the following physical folder rearrangement:
+
+| Original Location       | New Location | Capacity Needs | IO Frequency        |
+| ----------------------- | ------------ | -------------- | ------------------- |
+| ${datadir}/blocks/index | ${datadir}   | low            | high                |
+| ${datadir}/blocks       | ${EXTERAL}   | high           | low                 |
 
 Change "username" in the follows as appropriate for your macOS Bitcoin
 administrative account ("coinadm" in this example conf file).
@@ -18,32 +22,25 @@ administrative account ("coinadm" in this example conf file).
 2) Stop bitcoind, so that we can rearrange some datadir folders:
 
        kill -QUIT `cat /Volumes/WD-Passport-Mac/bitcoin/data/bitcoind.pid`
-3) Rearrange the datadir folders as follows:
 
-| Original Location       | New Location | Capacity Needs | IO Frequency        |
-| ----------------------- | ------------ | -------------- | ------------------- |
-| ${datadir}/blocks/index | ${datadir}   | low            | high                |
-| ${datadir}/blocks       | ${EXTERAL}   | high           | low                 |
-
-   a) Move the Bitcoin LevelDB index folder up one level (so that it may
-      remain on the internal drive).
+3) Move the Bitcoin LevelDB index folder up one level (so that it may remain on the internal drive).
       
           mv -f /Users/coinadm/local/bitcoin/data/blocks/index /Users/coinadm/local/bitcoin/data/
-   b) Next, move the Bitcoin blockchain blocks folder off the internal drive:
+4) Next, move the Bitcoin blockchain blocks folder off the internal drive:
    
           mkdir /Volumes/WD-Passport-Mac/bitcoin 
           mv -f /Users/coinadm/local/bitcoin/data/blocks /Volumes/WD-Passport-Mac/bitcoin 
-   Finally, set up soft links to restore the original folder structure:
+Finally, set up soft links to restore the original folder structure:
    
 | Folder Name              | Link Name           |
 | ------------------------ | ------------------- |
 | ${EXTERNAL}/blocks/index | ${datadir}/../index |
 | ${datadir}/blocks        | ${EXTERAL}/blocks   |
 
-    c) Replace the original index folder location with a soft link:
+5) Replace the original index folder location with a soft link:
       
           ln -s /Users/coinadm/local/bitcoin/index /Volumes/WD-Passport-Mac/bitcoin/blocks/index 
-    d) Replace the original index folder location with a soft link:
+6) Replace the original index folder location with a soft link:
       
           ln -s /Volumes/WD-Passport-Mac/bitcoin/blocks /Users/coinadm/local/bitcoin/data/blocks
 
