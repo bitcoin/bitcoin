@@ -565,7 +565,6 @@ string AliasNew(const string& node, const string& aliasname, const string& passw
 	BOOST_CHECK_NO_THROW(CallRPC(node, "importprivkey " + CSyscoinSecret(privKey).ToString() + " \"\" false", true, false));
 	BOOST_CHECK_NO_THROW(CallRPC(node, "importprivkey " + CSyscoinSecret(privEncryptionKey).ToString() + " \"\" false", true, false));
 	strCipherPassword = password;
-	strCipherEncryptionPrivateKey = stringFromVch(vchPrivEncryptionKey);
 
 	string strPasswordHex = strCipherPassword;
 	if(strCipherPassword.empty())
@@ -573,7 +572,7 @@ string AliasNew(const string& node, const string& aliasname, const string& passw
 	string strPrivateHex = strCipherPrivateData;
 	if(strCipherPrivateData.empty())
 		strPrivateHex = "\"\"";
-	string strEncryptionPrivateKeyHex = strCipherEncryptionPrivateKey;
+	string strEncryptionPrivateKeyHex = HexStr(vchPrivEncryptionKey);
 	if(strCipherEncryptionPrivateKey.empty())
 		strEncryptionPrivateKeyHex = "\"\"";
 	string expires = "\"\"";
@@ -659,12 +658,11 @@ string AliasTransfer(const string& node, const string& aliasname, const string& 
 
 	string strCipherPrivateData = privdata;
 
-	string strCipherEncryptionPrivateKey = stringFromVch(vchEncryptionPrivKey);
+	string strCipherEncryptionPrivateKey = HexStr(vchEncryptionPrivKey);
 
 	string strPrivateHex = HexStr(vchFromString(strCipherPrivateData));
 	if(strCipherPrivateData.empty())
 		strPrivateHex = "\"\"";
-	string strEncryptionPrivateKeyHex = HexStr(vchFromString(strCipherEncryptionPrivateKey));
 	if(strCipherEncryptionPrivateKey.empty())
 		strEncryptionPrivateKeyHex = "\"\"";
 	string acceptTransfers = "\"\"";
@@ -788,7 +786,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	string strPrivateHex = strCipherPrivateData;
 	if(strCipherPrivateData.empty())
 		strPrivateHex = "\"\"";
-	string strEncryptionPrivateKeyHex = strCipherEncryptionPrivateKey;
+	string strEncryptionPrivateKeyHex = HexStr(vchFromString(strCipherEncryptionPrivateKey));
 	if(strCipherEncryptionPrivateKey.empty())
 		strEncryptionPrivateKeyHex = "\"\"";
 	string acceptTransfers = "\"\"";
