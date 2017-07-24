@@ -1308,9 +1308,9 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						{
 							CCert cert = certVtxPos.back();
 							cert.vchAlias = theOfferAccept.vchBuyerAlias;
-							theCert.nHeight = nHeight;
-							theCert.txHash = tx.GetHash();
-							cert.PutToCertList(certVtxPos);
+							cert.nHeight = nHeight;
+							cert.txHash = tx.GetHash();
+							PutToCertList(certVtxPos, cert);
 							if (!dontaddtodb && !pcertdb->WriteCert(myPriceOffer.vchCert, certVtxPos))
 							{
 								errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1090 - " + _("Failed to write to certificate to DB");
