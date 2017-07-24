@@ -67,6 +67,7 @@ bool IsTxOpReturnInvalid(const CTransaction &tx)
         {
             CScript::const_iterator pc(txout.scriptPubKey.begin());
             opcodetype op;
+#if 0 // Allow OP_RETURN anywhere
             for (;pc != txout.scriptPubKey.end();)
             {
                 if (txout.scriptPubKey.GetOp(pc, op))
@@ -74,6 +75,12 @@ bool IsTxOpReturnInvalid(const CTransaction &tx)
                     if (op == OP_RETURN) break;
                 }
             }
+#else // OP_RETURN must be the first instruction
+            if (txout.scriptPubKey.GetOp(pc, op))
+                {
+                    if (op != OP_RETURN) return false;
+                }
+#endif
             if (pc != txout.scriptPubKey.end())
             {
                 std::vector<unsigned char> data;

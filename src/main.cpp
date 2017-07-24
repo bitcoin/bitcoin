@@ -7708,8 +7708,8 @@ bool SendMessages(CNode *pto)
                 if (!AlreadyHave(inv))
                 {
                     requester.AskFor(inv, pto);
-                    LogPrint("req", "AskFor block %s (%d) peer=%d\n", pindex->GetBlockHash().ToString(),
-                        pindex->nHeight, pto->id);
+                    //LogPrint("req", "AskFor block %s (%d) peer=%d\n", pindex->GetBlockHash().ToString(),
+                    //    pindex->nHeight, pto->id);
                 }
             }
         }
