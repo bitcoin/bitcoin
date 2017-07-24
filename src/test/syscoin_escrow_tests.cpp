@@ -15,9 +15,9 @@ BOOST_AUTO_TEST_CASE (generate_escrow_release)
 	GenerateBlocks(5);
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5, "node3");
-	AliasNew("node1", "buyeralias", "password", "changeddata1");
-	AliasNew("node2", "selleralias", "password", "changeddata2");
-	AliasNew("node3", "arbiteralias", "password", "changeddata3");
+	AliasNew("node1", "buyeralias", "changeddata1");
+	AliasNew("node2", "selleralias", "changeddata2");
+	AliasNew("node3", "arbiteralias", "changeddata3");
 	string qty = "3";
 	string message = "paymentmessage";
 	string offerguid = OfferNew("node2", "selleralias", "category", "title", "100", "0.05", "description", "USD");
@@ -40,9 +40,9 @@ BOOST_AUTO_TEST_CASE (generate_escrow_big)
 	// 1024 + 1 bytes long
 	string baddata =   "asdfasdfdsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfssdsfsdfsdfsdfsdfsdsdfdfsdfsdfsdfsdz";
 			
-	AliasNew("node1", goodname1, "password1", "changeddata1");
-	AliasNew("node2", goodname2, "password2", "changeddata2");
-	AliasNew("node3", goodname3, "password3", "changeddata3");
+	AliasNew("node1", goodname1, "changeddata1");
+	AliasNew("node2", goodname2, "changeddata2");
+	AliasNew("node3", goodname3, "changeddata3");
 	string qty = "3";
 
 	string offerguid = OfferNew("node2", goodname2, "category", "title", "100", "0.05", "description", "USD");
@@ -60,9 +60,9 @@ BOOST_AUTO_TEST_CASE (generate_escrow_big)
 }
 BOOST_AUTO_TEST_CASE (generate_escrowrefund_seller)
 {
-	AliasNew("node1", "buyeraliasrefund", "password", "changeddata1");
-	AliasNew("node2", "selleraliasrefund", "password", "changeddata2");
-	AliasNew("node3", "arbiteraliasrefund", "password", "changeddata3");
+	AliasNew("node1", "buyeraliasrefund", "changeddata1");
+	AliasNew("node2", "selleraliasrefund", "changeddata2");
+	AliasNew("node3", "arbiteraliasrefund", "changeddata3");
 	printf("Running generate_escrowrefund_seller...\n");
 	string qty = "4";
 	string message = "paymentmessage";
@@ -93,9 +93,9 @@ BOOST_AUTO_TEST_CASE (generate_escrowrefund_invalid)
 {
 	UniValue r;
 	printf("Running generate_escrowrefund_invalid...\n");
-	AliasNew("node1", "buyeraliasrefund2", "password", "changeddata1");
-	AliasNew("node2", "selleraliasrefund2", "password", "changeddata2");
-	AliasNew("node3", "arbiteraliasrefund2", "password", "changeddata3");
+	AliasNew("node1", "buyeraliasrefund2", "changeddata1");
+	AliasNew("node2", "selleraliasrefund2", "changeddata2");
+	AliasNew("node3", "arbiteraliasrefund2", "changeddata3");
 	string qty = "2";
 	string offerguid = OfferNew("node2", "selleraliasrefund2", "category", "title", "100", "1.45", "description", "EUR");
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyeraliasrefund2 10000"), runtime_error);
@@ -124,9 +124,9 @@ BOOST_AUTO_TEST_CASE (generate_escrowrelease_invalid)
 	UniValue r;
 	printf("Running generate_escrowrelease_invalid...\n");
 	string qty = "4";
-	AliasNew("node1", "buyeraliasrefund3", "password", "changeddata1");
-	AliasNew("node2", "selleraliasrefund3", "password", "changeddata2");
-	AliasNew("node3", "arbiteraliasrefund3", "password", "changeddata3");
+	AliasNew("node1", "buyeraliasrefund3", "changeddata1");
+	AliasNew("node2", "selleraliasrefund3", "changeddata2");
+	AliasNew("node3", "arbiteraliasrefund3", "changeddata3");
 	string offerguid = OfferNew("node2", "selleraliasrefund3", "category", "title", "100", "1.45", "description", "SYS");
 	string guid = EscrowNew("node1", "node2", "buyeraliasrefund3", offerguid, qty, "message", "arbiteraliasrefund3", "selleraliasrefund3");
 	// try to claim release even if not released
@@ -153,9 +153,9 @@ BOOST_AUTO_TEST_CASE (generate_escrowrelease_arbiter)
 	GenerateBlocks(5);
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5, "node3");
-	AliasNew("node1", "buyeralias1", "password", "changeddata1");
-	AliasNew("node2", "selleralias111", "password", "changeddata2");
-	AliasNew("node3", "arbiteralias1", "password", "changeddata3");
+	AliasNew("node1", "buyeralias1", "changeddata1");
+	AliasNew("node2", "selleralias111", "changeddata2");
+	AliasNew("node3", "arbiteralias1", "changeddata3");
 	UniValue r;
 	string qty = "1";
 	string offerguid = OfferNew("node2", "selleralias111", "category", "title", "100", "0.05", "description", "GBP");
@@ -174,9 +174,9 @@ BOOST_AUTO_TEST_CASE (generate_escrowfeedback)
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5, "node3");
 
-	AliasNew("node1", "sellerescrowfeedback", "password", "somedata");
-	AliasNew("node2", "buyerescrowfeedback", "password", "somedata");
-	AliasNew("node3", "arbiterescrowfeedback", "password", "somedata");
+	AliasNew("node1", "sellerescrowfeedback", "somedata");
+	AliasNew("node2", "buyerescrowfeedback", "somedata");
+	AliasNew("node3", "arbiterescrowfeedback", "somedata");
 
 	string qty = "1";
 	string offerguid = OfferNew("node1", "sellerescrowfeedback", "category", "title", "100", "0.05", "description", "GBP");
@@ -209,9 +209,9 @@ BOOST_AUTO_TEST_CASE (generate_escrow_linked_release)
 	GenerateBlocks(5);
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5, "node3");
-	AliasNew("node1", "buyeralias2", "password", "changeddata1");
-	AliasNew("node2", "selleralias22", "password", "changeddata2");
-	AliasNew("node3", "arbiteralias2", "password", "changeddata3");
+	AliasNew("node1", "buyeralias2", "changeddata1");
+	AliasNew("node2", "selleralias22", "changeddata2");
+	AliasNew("node3", "arbiteralias2", "changeddata3");
 	string qty = "3";
 	string message = "paymentmessage";
 	string offerguid = OfferNew("node2", "selleralias22", "category", "title", "100", "0.04", "description", "EUR");
@@ -244,9 +244,9 @@ BOOST_AUTO_TEST_CASE (generate_escrow_linked_release_with_peg_update)
 	GenerateBlocks(5);
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5, "node3");
-	AliasNew("node1", "buyeralias33", "password", "changeddata1");
-	AliasNew("node2", "selleralias33", "password", "changeddata2");
-	AliasNew("node3", "arbiteralias333", "password", "changeddata3");
+	AliasNew("node1", "buyeralias33", "changeddata1");
+	AliasNew("node2", "selleralias33", "changeddata2");
+	AliasNew("node3", "arbiteralias333", "changeddata3");
 	string qty = "3";
 	string message = "paymentmessage";
 	string offerguid = OfferNew("node2", "selleralias33", "category", "title", "100", "0.05", "description", "EUR");
@@ -288,8 +288,8 @@ BOOST_AUTO_TEST_CASE (generate_escrowpruning)
 	UniValue r;
 	// makes sure services expire in 100 blocks instead of 1 year of blocks for testing purposes
 	printf("Running generate_escrowpruning...\n");
-	AliasNew("node1", "selleraliasprune", "password", "changeddata2");
-	AliasNew("node2", "buyeraliasprune", "password", "changeddata2");
+	AliasNew("node1", "selleraliasprune", "changeddata2");
+	AliasNew("node2", "buyeraliasprune", "changeddata2");
 	string offerguid = OfferNew("node1", "selleraliasprune", "category", "title", "100", "0.05", "description", "USD");
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyeraliasprune 200"), runtime_error);
 	GenerateBlocks(10);

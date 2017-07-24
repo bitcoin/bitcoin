@@ -119,13 +119,9 @@ public:
     uint64_t nHeight;
 	uint64_t nExpireTime;
 	std::vector<unsigned char> vchAliasPeg;
-    std::vector<unsigned char> vchPublicValue;
-	std::vector<unsigned char> vchPrivateValue;
 	std::vector<unsigned char> vchAddress;
 	std::vector<unsigned char> vchEncryptionPublicKey;
 	std::vector<unsigned char> vchEncryptionPrivateKey;
-	std::vector<unsigned char> vchPassword;
-	std::vector<unsigned char> vchPasswordSalt;
 	unsigned char safetyLevel;
 	unsigned int nRatingAsBuyer;
 	unsigned int nRatingCountAsBuyer;
@@ -137,6 +133,11 @@ public:
 	bool acceptCertTransfers;
 	// 1 can edit, 2 can edit/transfer
 	unsigned char nAccessFlags;
+
+	std::vector<unsigned char> vchPasswordSalt;
+
+	std::vector<unsigned char> vchPublicValue;
+	std::vector<unsigned char> vchPrivateValue;
     CAliasIndex() { 
         SetNull();
     }
@@ -152,7 +153,6 @@ public:
 		vchPrivateValue.clear();
 		vchGUID.clear();
 		vchAddress.clear();
-		vchPassword.clear();
 		vchPasswordSalt.clear();
 	}
     bool GetAliasFromList(std::vector<CAliasIndex> &aliasList) {
@@ -185,7 +185,6 @@ public:
 		READWRITE(vchPrivateValue);
 		READWRITE(vchEncryptionPublicKey);
 		READWRITE(vchEncryptionPrivateKey);
-		READWRITE(vchPassword);
 		READWRITE(vchAlias);
 		READWRITE(vchAliasPeg);
 		READWRITE(vchGUID);
@@ -219,7 +218,6 @@ public:
         nHeight = b.nHeight;
         vchPublicValue = b.vchPublicValue;
         vchPrivateValue = b.vchPrivateValue;
-		vchPassword = b.vchPassword;
 		vchPasswordSalt = b.vchPasswordSalt;
 		vchAddress = b.vchAddress;
 		safetyLevel = b.safetyLevel;
@@ -236,8 +234,8 @@ public:
 		safeSearch = b.safeSearch;
         return *this;
     }   
-    void SetNull() {nAccessFlags = 2; vchAddress.clear(); vchEncryptionPublicKey.clear();vchEncryptionPrivateKey.clear();vchAliasPeg.clear();vchPassword.clear(); vchPasswordSalt.clear();acceptCertTransfers = true; nExpireTime = 0; vchGUID.clear(); vchAlias.clear(); nRatingCountAsBuyer = 0; nRatingAsBuyer = 0; nRatingCountAsSeller = 0; nRatingAsSeller = 0; nRatingCountAsArbiter = 0; nRatingAsArbiter = 0; safetyLevel = 0; txHash.SetNull(); nHeight = 0; vchPublicValue.clear(); vchPrivateValue.clear(); safeSearch = true;}
-    bool IsNull() const { return (safeSearch && nAccessFlags == 2 && vchAddress.empty() && vchEncryptionPublicKey.empty() && vchEncryptionPrivateKey.empty() && vchAliasPeg.empty() && vchPassword.empty() && vchPasswordSalt.empty() && acceptCertTransfers && nExpireTime == 0 && vchGUID.empty() && vchAlias.empty() && nRatingCountAsBuyer == 0 && nRatingAsBuyer == 0 && nRatingCountAsArbiter == 0 && nRatingAsArbiter == 0 && nRatingCountAsSeller == 0 && nRatingAsSeller == 0 && safetyLevel == 0 && nHeight == 0 && txHash.IsNull() && vchPublicValue.empty() && vchPrivateValue.empty()); }
+    void SetNull() {nAccessFlags = 2; vchAddress.clear(); vchEncryptionPublicKey.clear();vchEncryptionPrivateKey.clear();vchAliasPeg.clear(); vchPasswordSalt.clear();acceptCertTransfers = true; nExpireTime = 0; vchGUID.clear(); vchAlias.clear(); nRatingCountAsBuyer = 0; nRatingAsBuyer = 0; nRatingCountAsSeller = 0; nRatingAsSeller = 0; nRatingCountAsArbiter = 0; nRatingAsArbiter = 0; safetyLevel = 0; txHash.SetNull(); nHeight = 0; vchPublicValue.clear(); vchPrivateValue.clear(); safeSearch = true;}
+    bool IsNull() const { return (safeSearch && nAccessFlags == 2 && vchAddress.empty() && vchEncryptionPublicKey.empty() && vchEncryptionPrivateKey.empty() && vchAliasPeg.empty() && vchPasswordSalt.empty() && acceptCertTransfers && nExpireTime == 0 && vchGUID.empty() && vchAlias.empty() && nRatingCountAsBuyer == 0 && nRatingAsBuyer == 0 && nRatingCountAsArbiter == 0 && nRatingAsArbiter == 0 && nRatingCountAsSeller == 0 && nRatingAsSeller == 0 && safetyLevel == 0 && nHeight == 0 && txHash.IsNull() && vchPublicValue.empty() && vchPrivateValue.empty()); }
 	bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
 	void Serialize(std::vector<unsigned char>& vchData);

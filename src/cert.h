@@ -27,16 +27,16 @@ public:
 	std::vector<unsigned char> vchAlias;
 	// to modify vchAlias in certtransfer
 	std::vector<unsigned char> vchLinkAlias;
-	std::vector<unsigned char> vchTitle;
-    std::vector<unsigned char> vchData;
-	std::vector<unsigned char> vchPubData;
-	std::vector<unsigned char> sCategory;
     uint256 txHash;
     uint64_t nHeight;
 	unsigned char safetyLevel;
 	bool safeSearch;
 	// 1 can edit, 2 can edit/transfer
 	unsigned char nAccessFlags;
+	std::vector<unsigned char> vchTitle;
+	std::vector<unsigned char> vchData;
+	std::vector<unsigned char> vchPubData;
+	std::vector<unsigned char> sCategory;
     CCert() {
         SetNull();
     }

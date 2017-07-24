@@ -27,7 +27,6 @@ public:
 	std::vector<unsigned char> vchArbiterAlias;
 	std::vector<unsigned char> vchRedeemScript;
 	std::vector<unsigned char> vchOffer;
-	std::vector<unsigned char> vchPaymentMessage;
 	std::vector<unsigned char> rawTx;
 	std::vector<unsigned char> vchBuyerAlias;
 	std::vector<unsigned char> vchLinkAlias;
@@ -41,6 +40,7 @@ public:
 	unsigned int nQty;
 	unsigned int op;
 	bool bPaymentAck;
+	std::vector<unsigned char> vchPaymentMessage;
 	void ClearEscrow()
 	{
 		feedback.clear();

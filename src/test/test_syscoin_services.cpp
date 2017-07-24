@@ -362,7 +362,7 @@ void CreateSysRatesIfNotExist()
 			BOOST_CHECK(hex_str.empty());
 		}
 		else
-			AliasNew("node1", "sysrates.peg", "password", data);
+			AliasNew("node1", "sysrates.peg", data);
 	}
 	catch(const runtime_error& err)
 	{
@@ -371,7 +371,7 @@ void CreateSysRatesIfNotExist()
 		GenerateBlocks(200, "node3");
 		try
 		{
-			AliasNew("node1", "sysrates.peg", "password", data);
+			AliasNew("node1", "sysrates.peg", data);
 		}
 		catch(const runtime_error &e)
 		{
@@ -384,7 +384,7 @@ void CreateSysBanIfNotExist()
 	string data = "{}";
 	try
 	{
-		AliasNew("node1", "sysban", "password", data);
+		AliasNew("node1", "sysban", data);
 	}
 	catch(const runtime_error &e)
 	{
@@ -523,7 +523,7 @@ void GetOtherNodes(const string& node, string& otherNode1, string& otherNode2)
 	}
 
 }
-string AliasNew(const string& node, const string& aliasname, const string& password, const string& pubdata, string privdata, string safesearch, string witness)
+string AliasNew(const string& node, const string& aliasname, const string& pubdata, string privdata, string safesearch, string witness)
 {
 	string otherNode1, otherNode2;
 	GetOtherNodes(node, otherNode1, otherNode2);
@@ -536,24 +536,12 @@ string AliasNew(const string& node, const string& aliasname, const string& passw
 	
 	string strCipherPrivateData = privdata;
 
-	string strCipherPassword = "";
 	vector<unsigned char> vchPubKey;
 	CKey privKey;
 	vector<unsigned char> vchPasswordSalt;
-	if(password != "\"\"")
-	{
-		vchPasswordSalt.resize(WALLET_CRYPTO_SALT_SIZE);
-		GetStrongRandBytes(&vchPasswordSalt[0], WALLET_CRYPTO_SALT_SIZE);
-		CCrypter crypt;
-		string pwStr = password;
-		SecureString passwordss = pwStr.c_str();
-		BOOST_CHECK(crypt.SetKeyFromPassphrase(passwordss, vchPasswordSalt, 25000, 0));
-		privKey.Set(crypt.chKey, crypt.chKey + (sizeof crypt.chKey), true);
-	}
-	else
-	{
-		privKey.MakeNewKey(true);
-	}
+
+	privKey.MakeNewKey(true);
+	
 	CPubKey pubKey = privKey.GetPubKey();
 	vchPubKey = vector<unsigned char>(pubKey.begin(), pubKey.end());
 	CSyscoinAddress aliasAddress(pubKey.GetID());
@@ -563,11 +551,7 @@ string AliasNew(const string& node, const string& aliasname, const string& passw
 	BOOST_CHECK(pubKey.IsFullyValid());
 	BOOST_CHECK_NO_THROW(CallRPC(node, "importprivkey " + CSyscoinSecret(privKey).ToString() + " \"\" false", true, false));
 	BOOST_CHECK_NO_THROW(CallRPC(node, "importprivkey " + CSyscoinSecret(privEncryptionKey).ToString() + " \"\" false", true, false));
-	strCipherPassword = password;
 
-	string strPasswordHex = strCipherPassword;
-	if(strCipherPassword.empty())
-		strPasswordHex = "\"\"";
 	string strPrivateHex = strCipherPrivateData;
 	if(strCipherPrivateData.empty())
 		strPrivateHex = "\"\"";
@@ -576,10 +560,11 @@ string AliasNew(const string& node, const string& aliasname, const string& passw
 	string aliases = "\"\"";
 	string acceptTransfers = "\"\"";
 	string expireTime = "\"\"";
+	string salt = "\"\"";
 
 	UniValue r;
 	// registration
-	BOOST_CHECK_NO_THROW(CallRPC(node, "aliasnew sysrates.peg " + aliasname + " " + strPasswordHex + " " + pubdata + " " + strPrivateHex + " " + safesearch + " " + acceptTransfers +  " " + expireTime + " " + aliasAddress.ToString() + " " + HexStr(vchPasswordSalt) + " " + strEncryptionPrivateKeyHex + " " + HexStr(vchPubEncryptionKey) + " " + witness));
+	BOOST_CHECK_NO_THROW(CallRPC(node, "aliasnew sysrates.peg " + aliasname + " " + pubdata + " " + strPrivateHex + " " + safesearch + " " + acceptTransfers +  " " + expireTime + " " + aliasAddress.ToString() + " " + salt + " " + strEncryptionPrivateKeyHex + " " + HexStr(vchPubEncryptionKey) + " " + witness));
 	GenerateBlocks(5, node);
 	// activation
 	BOOST_CHECK_NO_THROW(CallRPC(node, "aliasnew sysrates.peg " + aliasname + " \"\" \"\""));
@@ -587,8 +572,6 @@ string AliasNew(const string& node, const string& aliasname, const string& passw
 	BOOST_CHECK_THROW(CallRPC(node, "sendtoaddress " + aliasname + " 10"), runtime_error);
 	GenerateBlocks(5, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasinfo " + aliasname));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "password").get_str() , password == "\"\""? "": password);
-	const string &passwordSalt = find_value(r.get_obj(), "passwordsalt").get_str();
 	CAmount balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 	BOOST_CHECK(balanceAfter >= 10*COIN);
 	BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == aliasname);
@@ -627,10 +610,10 @@ string AliasTransfer(const string& node, const string& aliasname, const string& 
 {
 	UniValue r;
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasinfo " + aliasname));
-	string oldPassword = find_value(r.get_obj(), "password").get_str();
+
 	string oldvalue = find_value(r.get_obj(), "publicvalue").get_str();
 	string oldprivatevalue = find_value(r.get_obj(), "privatevalue").get_str();
-	string oldPasswordSalt = find_value(r.get_obj(), "passwordsalt").get_str();
+
 	string encryptionkey = find_value(r.get_obj(), "encryption_publickey").get_str();
 	string encryptionprivkey = find_value(r.get_obj(), "encryption_privatekey").get_str();
 	CAmount balanceBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
@@ -657,7 +640,7 @@ string AliasTransfer(const string& node, const string& aliasname, const string& 
 	string passwordsalt = "\"\"";
 	string encryptionpubkey = "\"\"";
 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdate sysrates.peg " + aliasname + " " + pubdata + " " + strPrivateHex + " " + safesearch + " " + address + " " + password + " " + acceptTransfers + " " + expires + " " + passwordsalt + " " + encryptionpubkey + " " + encryptionpubkey + " " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdate sysrates.peg " + aliasname + " " + pubdata + " " + strPrivateHex + " " + safesearch + " " + address + " " + acceptTransfers + " " + expires + " " + passwordsalt + " " + encryptionpubkey + " " + encryptionpubkey + " " + witness));
 	const UniValue& resArray = r.get_array();
 	if(resArray.size() > 1)
 	{
@@ -675,89 +658,49 @@ string AliasTransfer(const string& node, const string& aliasname, const string& 
 	GenerateBlocks(5, node);
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasinfo " + aliasname));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "password").get_str(), "");
-
 	CAmount balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 	BOOST_CHECK(balanceAfter >= (balanceBefore-COIN));
 	BOOST_CHECK(find_value(r.get_obj(), "ismine").get_bool() == false);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str() , pubdata != "\"\""? pubdata: oldvalue);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_publickey").get_str() , encryptionkey);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_privatekey").get_str() , encryptionprivkey);
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "passwordsalt").get_str() , "");
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , aliasAddress.ToString());
 
 	// check xferred right person and data changed
 	BOOST_CHECK_NO_THROW(r = CallRPC(tonode, "aliasinfo " + aliasname));
 	balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 	BOOST_CHECK(balanceAfter >= (balanceBefore-COIN));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "password").get_str(), "");
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "privatevalue").get_str() , privdata != "\"\""? privdata: oldprivatevalue);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str() , pubdata != "\"\""? pubdata: oldvalue);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_publickey").get_str() , encryptionkey);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_privatekey").get_str() , encryptionprivkey);
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "passwordsalt").get_str() , "");
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , aliasAddress.ToString());
 	BOOST_CHECK(find_value(r.get_obj(), "ismine").get_bool() == true);
 	return "";
 }
-string AliasUpdate(const string& node, const string& aliasname, const string& pubdata, const string& privdata, string password, string safesearch, string addressStr, string witness)
+string AliasUpdate(const string& node, const string& aliasname, const string& pubdata, const string& privdata, string safesearch, string addressStr, string witness)
 {
 	string addressStr1 = addressStr;
 	string otherNode1, otherNode2;
 	GetOtherNodes(node, otherNode1, otherNode2);
 	UniValue r;
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasinfo " + aliasname));
-	string myPassword = "";
-	if(password != "\"\"")
-		myPassword = password;
-	string oldPassword = find_value(r.get_obj(), "password").get_str();
+
 	string oldvalue = find_value(r.get_obj(), "publicvalue").get_str();
 	string oldprivatevalue = find_value(r.get_obj(), "privatevalue").get_str();
-	string oldPasswordSalt = find_value(r.get_obj(), "passwordsalt").get_str();
 	string oldAddressStr = find_value(r.get_obj(), "address").get_str();
 	string oldsafesearch = find_value(r.get_obj(), "safesearch").get_str();
 	string encryptionkey = find_value(r.get_obj(), "encryption_publickey").get_str();
 	string encryptionprivkey = find_value(r.get_obj(), "encryption_privatekey").get_str();
 	
-	if(myPassword.empty())
-		myPassword = oldPassword;
 
 	CAmount balanceBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
 
 	string strCipherPrivateData = privdata;
 	
-	string strCipherPassword = "";
-	vector<unsigned char> vchPubKey;
-	vector<unsigned char> vchPasswordSalt;
-	if(password != "\"\"")
-	{
-		vchPasswordSalt.resize(WALLET_CRYPTO_SALT_SIZE);
-		GetStrongRandBytes(&vchPasswordSalt[0], WALLET_CRYPTO_SALT_SIZE);
-		CCrypter crypt;
-		string pwStr = password;
-		SecureString scpassword = pwStr.c_str();
-		BOOST_CHECK(crypt.SetKeyFromPassphrase(scpassword, vchPasswordSalt, 25000, 0));
-		CKey privKey, encryptionPrivKey;
-		privKey.Set(crypt.chKey, crypt.chKey + (sizeof crypt.chKey), true);
-		CPubKey pubKey = privKey.GetPubKey();
-		vchPubKey = vector<unsigned char>(pubKey.begin(), pubKey.end());
-		CSyscoinAddress aliasAddress(pubKey.GetID());
-		// only set address from password if address isn't passed in
-		if(addressStr == "\"\"")
-			addressStr = aliasAddress.ToString();
-		vector<unsigned char> vchPrivKey(privKey.begin(), privKey.end());
-		BOOST_CHECK(privKey.IsValid());
-		BOOST_CHECK(pubKey.IsFullyValid());
-		BOOST_CHECK_NO_THROW(r = CallRPC(node, "importprivkey " + CSyscoinSecret(privKey).ToString() + " \"\" false", true, false));	
-		BOOST_CHECK_NO_THROW(r = CallRPC(node, "importprivkey " + encryptionprivkey + " \"\" false", true, false));
-		strCipherPassword = password;
-	}
-	string strPubKey = HexStr(vchPubKey);
-	if(strPubKey.empty())
-		strPubKey = "\"\"";
-	string strPasswordSalt = HexStr(vchPasswordSalt);
-	if(vchPasswordSalt.empty())
-		strPasswordSalt = "\"\"";
+
+
+	string strPasswordSalt = "\"\"";
 	string strPasswordHex = strCipherPassword;
 	if(strCipherPassword.empty())
 		strPasswordHex = "\"\"";
@@ -768,7 +711,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	string expires = "\"\"";
 	string encryptionpubkey = "\"\"";
 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdate sysrates.peg " + aliasname + " " + pubdata + " " + strPrivateHex +  " " + safesearch + " " + addressStr + " " + strPasswordHex + " " + acceptTransfers + " " + expires + " " + strPasswordSalt + " " + encryptionpubkey + " " + encryptionpubkey + " " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdate sysrates.peg " + aliasname + " " + pubdata + " " + strPrivateHex +  " " + safesearch + " " + addressStr + " " + acceptTransfers + " " + expires + " " + strPasswordSalt + " " + encryptionpubkey + " " + encryptionpubkey + " " + witness));
 	const UniValue& resArray = r.get_array();
 	if(resArray.size() > 1)
 	{
@@ -785,11 +728,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	GenerateBlocks(5, node);
 	GenerateBlocks(5, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasinfo " + aliasname));
-	string newPassword = find_value(r.get_obj(), "password").get_str();
-	string newPasswordSalt = find_value(r.get_obj(), "passwordsalt").get_str();
 
-	BOOST_CHECK_EQUAL(newPassword, myPassword);
-	
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , addressStr != "\"\""? addressStr: oldAddressStr);
 	CAmount balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 	BOOST_CHECK(abs(balanceBefore-balanceAfter) < COIN);
@@ -799,11 +738,11 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	if(aliasname != "sysrates.peg" && aliasname != "sysban")
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str() , pubdata != "\"\""? pubdata: oldvalue);
 	
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "password").get_str() , password != "\"\""? password: oldPassword);
+
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_publickey").get_str() , encryptionkey);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_privatekey").get_str() , encryptionprivkey);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "safesearch").get_str(), safesearch != "\"\""? safesearch: oldsafesearch);
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "passwordsalt").get_str() , password != "\"\""? strPasswordSalt: oldPasswordSalt);
+
 
 	
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), 0);
@@ -821,7 +760,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 		if(aliasname != "sysrates.peg" && aliasname != "sysban")
 			BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str() , pubdata != "\"\""? pubdata: oldvalue);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_publickey").get_str() , encryptionkey);
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "passwordsalt").get_str() , password != "\"\""? strPasswordSalt: oldPasswordSalt);
+
 	}
 	if(!otherNode2.empty())
 	{
@@ -836,7 +775,6 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 			BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str() , pubdata != "\"\""? pubdata: oldvalue);
 		
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_publickey").get_str() , encryptionkey);
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "passwordsalt").get_str() , password != "\"\""? strPasswordSalt: oldPasswordSalt);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "safesearch").get_str(), safesearch != "\"\""? safesearch: oldsafesearch);
 	}
 	return "";

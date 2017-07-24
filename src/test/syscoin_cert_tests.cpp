@@ -11,7 +11,7 @@ BOOST_AUTO_TEST_CASE (generate_big_certdata)
 {
 	printf("Running generate_big_certdata...\n");
 	GenerateBlocks(5);
-	AliasNew("node1", "jagcertbig1", "password", "data");
+	AliasNew("node1", "jagcertbig1", "data");
 	// 1024 bytes long
 	string gooddata = "dasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfssdsfsdfsdfsdfsdfsdsdfdfsdfsdfsdfsd";
 	// 1025 bytes long
@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE (generate_big_certtitle)
 {
 	printf("Running generate_big_certtitle...\n");
 	GenerateBlocks(5);
-	AliasNew("node1", "jagcertbig2", "password", "data");
+	AliasNew("node1", "jagcertbig2", "data");
 	// 256 bytes long
 	string goodtitle = "SfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfdd";
 	// 1024 bytes long
@@ -53,8 +53,8 @@ BOOST_AUTO_TEST_CASE (generate_big_certtitle)
 BOOST_AUTO_TEST_CASE (generate_certupdate)
 {
 	printf("Running generate_certupdate...\n");
-	AliasNew("node1", "jagcertupdate", "password", "data");
-	string guid = CertNew("node1", "jagcertupdate", "password", "title", "data");
+	AliasNew("node1", "jagcertupdate", "data");
+	string guid = CertNew("node1", "jagcertupdate", "title", "data");
 	// update an cert that isn't yours
 	UniValue r;
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "certupdate " + guid + " title pubdata data"));
@@ -77,9 +77,9 @@ BOOST_AUTO_TEST_CASE (generate_certtransfer)
 	printf("Running generate_certtransfer...\n");
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5, "node3");
-	AliasNew("node1", "jagcert1", "password", "changeddata1");
-	AliasNew("node2", "jagcert2", "password", "changeddata2");
-	AliasNew("node3", "jagcert3", "password", "changeddata3");
+	AliasNew("node1", "jagcert1", "changeddata1");
+	AliasNew("node2", "jagcert2", "changeddata2");
+	AliasNew("node3", "jagcert3", "changeddata3");
 	string guid, pvtguid, certtitle, certdata;
 	certtitle = "certtitle";
 	certdata = "certdata";
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE (generate_certsafesearch)
 	printf("Running generate_certsafesearch...\n");
 	UniValue r;
 	GenerateBlocks(1);
-	AliasNew("node1", "jagsafesearch1", "password", "changeddata1");
+	AliasNew("node1", "jagsafesearch1", "changeddata1");
 	// cert is safe to search
 	string certguidsafe = CertNew("node1", "jagsafesearch1", "certtitle", "certdata", "public", "true");
 	// not safe to search
@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE (generate_certpruning)
 	UniValue r;
 	// makes sure services expire in 100 blocks instead of 1 year of blocks for testing purposes
 	printf("Running generate_certpruning...\n");
-	AliasNew("node1", "jagprune1", "password", "changeddata1");
+	AliasNew("node1", "jagprune1", "changeddata1");
 	// stop node2 create a service,  mine some blocks to expire the service, when we restart the node the service data won't be synced with node2
 	StopNode("node2");
 	string guid = CertNew("node1", "jagprune1", "jag1", "privdata", "pubdata");
@@ -234,7 +234,7 @@ BOOST_AUTO_TEST_CASE (generate_certpruning)
 	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate sysrates.peg jagprune1 newdata"), runtime_error);
 	GenerateBlocks(5, "node1");
 	// create a new service
-	AliasNew("node1", "jagprune1", "password1", "temp", "data");
+	AliasNew("node1", "jagprune1", "temp", "data");
 	string guid1 = CertNew("node1", "jagprune1", "title", "privdata", "pubdata");
 	// stop and start node1
 	StopNode("node1");

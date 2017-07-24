@@ -772,7 +772,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					continue;
 				}
 				// match 4th element in scriptpubkey of alias update with witness input scriptpubkey, if names match then sig is provided
-				if (IsAliasOp(pop, true) && vvchArgs.size() >= 4 && vvchArgs[3] == vvch[0]) {
+				if (IsAliasOp(pop, true) && vvchArgs[3] == vvch[0]) {
 					bWitnessSigFound = true;
 					break;
 				}
@@ -809,11 +809,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5007 - " + _("Alias peg too long");
 			return error(errorMessage.c_str());
 		}
-		if(theAlias.vchPassword.size() > MAX_ENCRYPTED_NAME_LENGTH)
-		{
-			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5008 - " + _("Alias password too long");
-			return error(errorMessage.c_str());
-		}
+
 		if(theAlias.nHeight > nHeight)
 		{
 			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5009 - " + _("Bad alias height");
@@ -989,10 +985,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						theAlias.vchEncryptionPublicKey = dbAlias.vchEncryptionPublicKey;
 					if(theAlias.vchPasswordSalt.empty())
 						theAlias.vchPasswordSalt = dbAlias.vchPasswordSalt;
-					if(theAlias.vchPassword.empty())
-						theAlias.vchPassword = dbAlias.vchPassword;
-					else
-						pwChange = true;
+
 					if(theAlias.vchAddress.empty())
 						theAlias.vchAddress = dbAlias.vchAddress;
 					// user can't update safety level or rating after creation
@@ -1008,12 +1001,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					// if transfer
 					if(dbAlias.vchAddress != theAlias.vchAddress)
 					{
-						// if transfer clear pw
-						if(!pwChange)
-						{
-							theAlias.vchPassword.clear();
-							theAlias.vchPasswordSalt.clear();
-						}
 						// make sure xfer to pubkey doesn't point to an alias already, otherwise don't assign pubkey to alias
 						// we want to avoid aliases with duplicate addresses
 						if (paliasdb->ExistsAddress(theAlias.vchAddress))
@@ -1883,8 +1870,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	if(!strPrivateValue.empty())
 		newAlias.vchPrivateValue = vchFromString(strPrivateValue);
 	newAlias.nExpireTime = nTime;
-	if(!strPassword.empty())
-		newAlias.vchPassword = vchFromString(strPassword);
+
 	if(!strPasswordSalt.empty())
 		newAlias.vchPasswordSalt = vchFromString(strPasswordSalt);
 	newAlias.safeSearch = strSafeSearch == "true"? true: false;
@@ -1998,15 +1984,14 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue aliasupdate(const UniValue& params, bool fHelp) {
-	if (fHelp || 2 > params.size() || 13 < params.size())
+	if (fHelp || 2 > params.size() || 12 < params.size())
 		throw runtime_error(
-		"aliasupdate <aliaspeg> <aliasname> [public value] [private value] [safesearch=true] [address] [password] [accept_transfers=true] [expire_timestamp] [password_salt] [encryption_privatekey] [encryption_publickey] [witness]\n"
+		"aliasupdate <aliaspeg> <aliasname> [public value] [private value] [safesearch=true] [address] [accept_transfers=true] [expire_timestamp] [password_salt] [encryption_privatekey] [encryption_publickey] [witness]\n"
 						"Update and possibly transfer an alias.\n"
 						"<aliasname> alias name.\n"
 						"<public_value> alias public profile data, 1024 chars max.\n"
 						"<private_value> alias private profile data, 1024 chars max. Will be private and readable by anyone with encryption_privatekey.\n"				
-						"<address> Address of alias.\n"
-						"<password> used to generate your public/private key that controls this alias.\n"						
+						"<address> Address of alias.\n"		
 						"<safesearch> is this alias safe to search. Defaults to Yes, No for not safe and to hide in GUI search queries\n"
 						"<accept_transfers> set to No if this alias should not allow a certificate to be transferred to it. Defaults to Yes.\n"		
 						"<expire_timestamp> String. Time in seconds. Future time when to expire alias. It is exponentially more expensive per year, calculation is 2.88^years. FEERATE is the dynamic satoshi per byte fee set in the rate peg alias used for this alias. Defaults to 1 year.\n"		
@@ -2035,19 +2020,15 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	if(CheckParam(params, 5))
 		strAddress = params[5].get_str();
 	
-	string strPassword = "";
-	
-	if(CheckParam(params, 6))
-		strPassword = params[6].get_str();
 	string strAcceptCertTransfers = "";
-	if(CheckParam(params, 7))
-		strAcceptCertTransfers = params[7].get_str();
+	if(CheckParam(params, 6))
+		strAcceptCertTransfers = params[6].get_str();
 	
 	uint64_t nTime = chainActive.Tip()->nTime+ONE_YEAR_IN_SECONDS;
 	bool timeSet = false;
-	if(CheckParam(params, 8))
+	if(CheckParam(params, 7))
 	{
-		nTime = boost::lexical_cast<uint64_t>(params[8].get_str());
+		nTime = boost::lexical_cast<uint64_t>(params[7].get_str());
 		timeSet = true;
 	}
 	// sanity check set to 1 hr
@@ -2055,21 +2036,21 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 		nTime = chainActive.Tip()->nTime+3600;
 
 	string strPasswordSalt = "";
-	if(CheckParam(params, 9))
-		strPasswordSalt = params[9].get_str();
+	if(CheckParam(params, 8))
+		strPasswordSalt = params[8].get_str();
 	
 
 	string strEncryptionPrivateKey = "";
-	if(CheckParam(params, 10))
-		strEncryptionPrivateKey = params[10].get_str();
+	if(CheckParam(params, 9))
+		strEncryptionPrivateKey = params[9].get_str();
 	
 	string strEncryptionPublicKey = "";
-	if(CheckParam(params, 11))
-		strEncryptionPublicKey = params[11].get_str();
+	if(CheckParam(params, 10))
+		strEncryptionPublicKey = params[10].get_str();
 	
 	vector<unsigned char> vchWitness;
-	if(CheckParam(params, 12))
-		vchWitness = vchFromValue(params[12]);
+	if(CheckParam(params, 11))
+		vchWitness = vchFromValue(params[11]);
 
 	CTransaction tx;
 	CAliasIndex theAlias;
@@ -2089,8 +2070,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 		theAlias.vchEncryptionPrivateKey = vchFromString(strEncryptionPrivateKey);
 	if(!strEncryptionPublicKey.empty())
 		theAlias.vchEncryptionPublicKey = vchFromString(strEncryptionPublicKey);
-	if(!strPassword.empty())
-		theAlias.vchPassword = vchFromString(strPassword);
+
 	if(!strPasswordSalt.empty())
 		theAlias.vchPasswordSalt = vchFromString(strPasswordSalt);
 	if(!strSafeSearch.empty())
@@ -2262,9 +2242,6 @@ void AliasTxToJSON(const int op, const vector<unsigned char> &vchData, const vec
 	
 	if(!alias.vchPrivateValue.empty() && alias.vchPrivateValue != dbAlias.vchPrivateValue)
 		entry.push_back(Pair("privatevalue", stringFromVch(alias.vchPrivateValue)));
-	
-	if(!alias.vchPassword.empty() && alias.vchPassword != dbAlias.vchPassword)
-		entry.push_back(Pair("password", stringFromVch(alias.vchPassword)));
 
 	if(EncodeBase58(alias.vchAddress) != EncodeBase58(dbAlias.vchAddress))
 		entry.push_back(Pair("address", EncodeBase58(alias.vchAddress))); 
@@ -2725,7 +2702,6 @@ bool BuildAliasJson(const CAliasIndex& alias, const bool pending, UniValue& oNam
 	
 	if(alias.safetyLevel >= SAFETY_LEVEL2)
 		return false;
-	oName.push_back(Pair("password", stringFromVch(alias.vchPassword)));
 	oName.push_back(Pair("passwordsalt", stringFromVch(alias.vchPasswordSalt)));
 	oName.push_back(Pair("encryption_privatekey", stringFromVch(alias.vchEncryptionPrivateKey)));
 	oName.push_back(Pair("encryption_publickey", stringFromVch(alias.vchEncryptionPublicKey)));

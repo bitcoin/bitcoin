@@ -46,9 +46,9 @@ public:
 	uint256 txExtId;
 	uint32_t nPaymentOption;
 	std::vector<unsigned char> vchBuyerAlias;
-	std::vector<unsigned char> vchMessage;
 	std::vector<CFeedback> feedback;
 	bool bPaymentAck;
+	std::vector<unsigned char> vchMessage;
 	COfferAccept() {
         SetNull();
     }
@@ -209,9 +209,6 @@ public:
 	std::vector<unsigned char> vchAlias;
     uint256 txHash;
     uint64_t nHeight;
-	std::vector<unsigned char> sCategory;
-	std::vector<unsigned char> sTitle;
-	std::vector<unsigned char> sDescription;
 	CAmount nPrice;
 	float fUnits;
 	char nCommission;
@@ -227,8 +224,11 @@ public:
 	unsigned int paymentOptions;
 	unsigned char safetyLevel;
 	unsigned int nSold;
-	std::vector<unsigned char> vchGeoLocation;
 	bool safeSearch;
+	std::vector<unsigned char> vchGeoLocation;
+	std::vector<unsigned char> sCategory;
+	std::vector<unsigned char> sTitle;
+	std::vector<unsigned char> sDescription;
 	COffer() {
         SetNull();
     }
