@@ -572,7 +572,7 @@ string AliasNew(const string& node, const string& aliasname, const string& passw
 	string strPrivateHex = strCipherPrivateData;
 	if(strCipherPrivateData.empty())
 		strPrivateHex = "\"\"";
-	string strEncryptionPrivateKeyHex = HexStr(vchPrivEncryptionKey);
+	string strEncryptionPrivateKeyHex = EncodeBase58(vchPrivEncryptionKey);
 	if(strCipherEncryptionPrivateKey.empty())
 		strEncryptionPrivateKeyHex = "\"\"";
 	string expires = "\"\"";
@@ -655,7 +655,7 @@ string AliasTransfer(const string& node, const string& aliasname, const string& 
 
 	string strCipherPrivateData = privdata;
 
-	string strEncryptionPrivateKeyHex = HexStr(vchEncryptionPrivKey);
+	string strEncryptionPrivateKeyHex = EncodeBase58(vchEncryptionPrivKey);
 
 	string strPrivateHex = HexStr(vchFromString(strCipherPrivateData));
 	if(strCipherPrivateData.empty())
@@ -784,7 +784,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	string strPrivateHex = strCipherPrivateData;
 	if(strCipherPrivateData.empty())
 		strPrivateHex = "\"\"";
-	string strEncryptionPrivateKeyHex = HexStr(vchFromString(strCipherEncryptionPrivateKey));
+	string strEncryptionPrivateKeyHex = EncodeBase58(vchFromString(strCipherEncryptionPrivateKey));
 	if(strCipherEncryptionPrivateKey.empty())
 		strEncryptionPrivateKeyHex = "\"\"";
 	string acceptTransfers = "\"\"";
