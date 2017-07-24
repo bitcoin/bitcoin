@@ -691,7 +691,7 @@ string AliasTransfer(const string& node, const string& aliasname, const string& 
 	balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 	BOOST_CHECK(balanceAfter >= (balanceBefore-COIN));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "password").get_str(), "");
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "privatevalue").get_str() , oldprivatevalue);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "privatevalue").get_str() , privdata != "\"\""? privdata: oldprivatevalue);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str() , pubdata != "\"\""? pubdata: oldvalue);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_publickey").get_str() , encryptionkey);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_privatekey").get_str() , encryptionprivkey);
