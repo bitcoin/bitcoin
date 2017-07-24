@@ -1748,11 +1748,10 @@ bool CheckParam(const UniValue& params, const unsigned int index)
 	return false;
 }
 UniValue aliasnew(const UniValue& params, bool fHelp) {
-	if (fHelp || 4 > params.size() || 13 < params.size())
+	if (fHelp || 3 > params.size() || 12 < params.size())
 		throw runtime_error(
-		"aliasnew <aliaspeg> <aliasname> <password> <public value> [private value] [safe search=true] [accept transfers=true] [expire_timestamp] [address] [password_salt] [encryption_privatekey] [encryption_publickey] [witness]\n"
+		"aliasnew <aliaspeg> <aliasname> <public value> [private value] [safe search=true] [accept transfers=true] [expire_timestamp] [address] [password_salt] [encryption_privatekey] [encryption_publickey] [witness]\n"
 						"<aliasname> alias name.\n"
-						"<password> used to generate your public/private key that controls this alias. Should be encrypted to publickey.\n"
 						"<public value> alias public profile data, 1024 chars max.\n"
 						"<private value> alias private profile data, 1024 chars max. Will be private and readable by anyone with encryption_privatekey. Should be encrypted to encryption_publickey.\n"
 						"<safe search> set to No if this alias should only show in the search when safe search is not selected. Defaults to Yes (alias shows with or without safe search selected in search lists).\n"
@@ -1802,48 +1801,43 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 
 	vector<unsigned char> vchPublicValue;
 	vector<unsigned char> vchPrivateValue;
-	string strPassword = "";
-	if(CheckParam(params, 2))
-		strPassword = params[2].get_str();
-	if(strPassword.size() < 4 && strPassword.size() > 0)
-		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5507 - " + _("Invalid Syscoin Identity. Please enter a password atleast 4 characters long"));
-	string strPublicValue = params[3].get_str();
+	string strPublicValue = params[2].get_str();
 	vchPublicValue = vchFromString(strPublicValue);
 
 	string strPrivateValue = "";
 	string strSafeSearch = "true";
+	if(CheckParam(params, 3))
+		strPrivateValue = params[3].get_str();
 	if(CheckParam(params, 4))
-		strPrivateValue = params[4].get_str();
-	if(CheckParam(params, 5))
-		strSafeSearch = params[5].get_str();
+		strSafeSearch = params[4].get_str();
 	string strAcceptCertTransfers = "true";
 
-	if(CheckParam(params, 6))
-		strAcceptCertTransfers = params[6].get_str();
+	if(CheckParam(params, 5))
+		strAcceptCertTransfers = params[5].get_str();
 	uint64_t nTime = chainActive.Tip()->nTime+ONE_YEAR_IN_SECONDS;
-	if(CheckParam(params, 7))
-		nTime = boost::lexical_cast<uint64_t>(params[7].get_str());
+	if(CheckParam(params, 6))
+		nTime = boost::lexical_cast<uint64_t>(params[6].get_str());
 	// sanity check set to 1 hr
 	if(nTime < chainActive.Tip()->nTime+3600)
 		nTime = chainActive.Tip()->nTime+3600;
 
 	string strAddress = "";
-	if(CheckParam(params, 8))
-		strAddress = params[8].get_str();
+	if(CheckParam(params, 7))
+		strAddress = params[7].get_str();
 	string strPasswordSalt = "";
 
-	if(CheckParam(params, 9))
-		strPasswordSalt = params[9].get_str();
+	if(CheckParam(params, 98))
+		strPasswordSalt = params[8].get_str();
 	
 	string strEncryptionPrivateKey = "";
-	if(CheckParam(params, 10))
-		strEncryptionPrivateKey = params[10].get_str();
+	if(CheckParam(params, 9))
+		strEncryptionPrivateKey = params[9].get_str();
 	string strEncryptionPublicKey = "";
-	if(CheckParam(params, 11))
-		strEncryptionPublicKey = params[11].get_str();
+	if(CheckParam(params, 10))
+		strEncryptionPublicKey = params[10].get_str();
 	vector<unsigned char> vchWitness;
-	if(CheckParam(params, 12))
-		vchWitness = vchFromValue(params[12]);
+	if(CheckParam(params, 11))
+		vchWitness = vchFromValue(params[11]);
 
 	CWalletTx wtx;
 
