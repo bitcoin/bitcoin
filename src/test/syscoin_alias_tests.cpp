@@ -532,7 +532,7 @@ BOOST_AUTO_TEST_CASE (generate_multisigalias)
 	BOOST_CHECK(address_value.isStr());
 	redeemScript = redeemScript_value.get_str();
 	addressStr = address_value.get_str();
-	tmp = AliasUpdate("node1", "jagnodemultisig1", "pubdata", "privdata", addressStr);
+	tmp = AliasUpdate("node1", "jagnodemultisig1", "pubdata", "privdata", "\"\"", addressStr);
 	BOOST_CHECK_EQUAL(tmp, "");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo jagnodemultisig1"));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str(), addressStr);
