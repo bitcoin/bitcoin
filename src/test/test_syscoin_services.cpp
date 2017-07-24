@@ -644,12 +644,8 @@ string AliasTransfer(const string& node, const string& aliasname, const string& 
 	BOOST_CHECK(pubKey.IsFullyValid());
 	BOOST_CHECK_NO_THROW(CallRPC(tonode, "importprivkey " + CSyscoinSecret(privKey).ToString() + " \"\" false", true, false));	
 
-
-	string strCipherPrivateData = privdata;
-
-
-	string strPrivateHex = HexStr(vchFromString(strCipherPrivateData));
-	if(strCipherPrivateData.empty())
+	string strPrivateHex = privdata;
+	if(privdata.empty())
 		strPrivateHex = "\"\"";
 
 	string acceptTransfers = "\"\"";
