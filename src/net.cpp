@@ -2076,6 +2076,7 @@ bool CConnman::BindListenPort(const CService &addrBind, std::string& strError, b
 
     // Set to non-blocking, incoming connections will also inherit this
     if (!SetSocketNonBlocking(hListenSocket, true)) {
+        CloseSocket(hListenSocket);
         strError = strprintf("BindListenPort: Setting listening socket to non-blocking failed, error %s\n", NetworkErrorString(WSAGetLastError()));
         LogPrintf("%s\n", strError);
         return false;
