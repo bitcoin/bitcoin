@@ -1748,7 +1748,7 @@ bool CheckParam(const UniValue& params, const unsigned int index)
 	return false;
 }
 UniValue aliasnew(const UniValue& params, bool fHelp) {
-	if (fHelp || 3 > params.size() || 12 < params.size())
+	if (fHelp || 2 > params.size() || 12 < params.size())
 		throw runtime_error(
 		"aliasnew <aliaspeg> <aliasname> <public value> [private value] [safe search=true] [accept transfers=true] [expire_timestamp] [address] [password_salt] [encryption_privatekey] [encryption_publickey] [witness]\n"
 						"<aliasname> alias name.\n"
@@ -1801,7 +1801,9 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 
 	vector<unsigned char> vchPublicValue;
 	vector<unsigned char> vchPrivateValue;
-	string strPublicValue = params[2].get_str();
+	string strPublicValue = "";
+	if (CheckParam(params, 2))
+		strPublicValue = params[2].get_str();
 	vchPublicValue = vchFromString(strPublicValue);
 
 	string strPrivateValue = "";
