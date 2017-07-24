@@ -2727,8 +2727,8 @@ bool BuildAliasJson(const CAliasIndex& alias, const bool pending, UniValue& oNam
 		return false;
 	oName.push_back(Pair("password", stringFromVch(alias.vchPassword)));
 	oName.push_back(Pair("passwordsalt", stringFromVch(alias.vchPasswordSalt)));
-	oName.push_back(Pair("encryption_privatekey", EncodeBase58(alias.vchEncryptionPrivateKey)));
-	oName.push_back(Pair("encryption_publickey", HexStr(alias.vchEncryptionPublicKey)));
+	oName.push_back(Pair("encryption_privatekey", stringFromVch(alias.vchEncryptionPrivateKey)));
+	oName.push_back(Pair("encryption_publickey", stringFromVch(alias.vchEncryptionPublicKey)));
 	oName.push_back(Pair("alias_peg", stringFromVch(alias.vchAliasPeg)));
 	oName.push_back(Pair("publicvalue", stringFromVch(alias.vchPublicValue)));	
 	oName.push_back(Pair("privatevalue", stringFromVch(alias.vchPrivateValue)));
