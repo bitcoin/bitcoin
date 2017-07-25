@@ -130,7 +130,7 @@ pull requests which attempt to do too much, are overly large, or overly complex
 as this makes review difficult.
 
 
-###Features
+### Features
 
 When adding a new feature, thought must be given to the long term technical debt
 and maintenance that feature may require after inclusion. Before proposing a new
@@ -139,7 +139,7 @@ maintain it (including bug fixing). If features get orphaned with no maintainer
 in the future, they may be removed by the Repository Maintainer.
 
 
-###Refactoring
+### Refactoring
 
 Refactoring is a necessary part of any software project's evolution. The
 following guidelines cover refactoring pull requests for the project.
@@ -187,7 +187,7 @@ other kinds of patches because of increased peer review and consensus building
 requirements.
 
 
-###Peer Review
+### Peer Review
 
 Anyone may participate in peer review which is expressed by comments in the pull
 request. Typically reviewers will review the code for obvious errors, as well as
