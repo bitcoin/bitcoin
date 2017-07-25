@@ -1158,11 +1158,13 @@ bool AcceptToMemoryPoolWorker(CTxMemPool &pool,
     if (tx.IsCoinBase())
         return state.DoS(100, false, REJECT_INVALID, "coinbase");
 
-    // BUIP055: reject transactions that won't work on the fork.
+    // BUIP055: reject transactions that won't work on the fork, starting 2 hours before the fork
+    // based on op_return.
+    // But accept both sighashtypes because we will need all the tx types during the transition.
     // This code uses the system time to determine when to start rejecting which is inaccurate relative to the
     // actual activation time (defined by times in the blocks).
     // But its ok to reject these transactions from the mempool a little early (or late).
-    if ((miningForkTime.value != 0) && (start / 1000000 >= miningForkTime.value))
+    if ((miningForkTime.value != 0) && (start / 1000000 >= miningForkTime.value - (2 * 60 * 60)))
     {
         forkVerifyFlags = SCRIPT_ENABLE_SIGHASH_FORKID;
         if (IsTxOpReturnInvalid(tx))
@@ -1442,9 +1444,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool &pool,
 
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
-
-        if (!CheckInputsAnalyzeTx(
-                tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS | forkVerifyFlags, true, &resourceTracker))
+        unsigned char sighashType = 0;
+        if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS | forkVerifyFlags, true, &resourceTracker,
+                NULL, &sighashType))
         {
             LogPrint("mempool", "txn CheckInputs failed");
             return false;
@@ -1460,7 +1462,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool &pool,
         // There is a similar check in CreateNewBlock() to prevent creating
         // invalid blocks, however allowing such transactions into the mempool
         // can be exploited as a DoS attack.
-        if (!CheckInputsAnalyzeTx(tx, state, view, true, MANDATORY_SCRIPT_VERIFY_FLAGS | forkVerifyFlags, true, NULL))
+        unsigned char sighashType2 = 0;
+        if (!CheckInputs(tx, state, view, true, MANDATORY_SCRIPT_VERIFY_FLAGS | forkVerifyFlags, true, NULL, NULL,
+                &sighashType2))
         {
             return error(
                 "%s: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags %s, %s",
@@ -1468,6 +1472,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool &pool,
         }
 
         // Store transaction in memory
+        entry.sighashType = sighashType | sighashType2;
         pool.addUnchecked(hash, entry, setAncestors, !IsInitialBlockDownload());
 
         // trim mempool and check if tx was trimmed
@@ -1871,22 +1876,8 @@ bool CScriptCheck::operator()()
 {
     const CScript &scriptSig = ptxTo->vin[nIn].scriptSig;
     CachingTransactionSignatureChecker checker(ptxTo, nIn, amount, cacheStore);
-    unsigned int sighashtype = 0;
-    if (!VerifyScript(scriptSig, scriptPubKey, nFlags, checker, &error, &sighashtype))
+    if (!VerifyScript(scriptSig, scriptPubKey, nFlags, checker, &error, &sighashType))
         return false;
-    if (resourceTracker)
-        resourceTracker->Update(ptxTo->GetHash(), checker.GetNumSigops(), checker.GetBytesHashed());
-    return true;
-}
-
-bool CScriptCheckAndAnalyze::operator()()
-{
-    const CScript &scriptSig = ptxTo->vin[nIn].scriptSig;
-    CachingTransactionSignatureChecker checker(ptxTo, nIn, amount, cacheStore);
-    unsigned int sighashtype = 0;
-    if (!VerifyScript(scriptSig, scriptPubKey, nFlags, checker, &error, &sighashtype))
-        return false;
-    ptxToNonConst->sighashType |= sighashtype;
     if (resourceTracker)
         resourceTracker->Update(ptxTo->GetHash(), checker.GetNumSigops(), checker.GetBytesHashed());
     return true;
@@ -1955,83 +1946,6 @@ bool CheckTxInputs(const CTransaction &tx, CValidationState &state, const CCoins
 }
 } // namespace Consensus
 
-bool CheckInputsAnalyzeTx(CTransaction &tx,
-    CValidationState &state,
-    const CCoinsViewCache &inputs,
-    bool fScriptChecks,
-    unsigned int flags,
-    bool cacheStore,
-    ValidationResourceTracker *resourceTracker,
-    std::vector<CScriptCheck> *pvChecks)
-{
-    if (!tx.IsCoinBase())
-    {
-        if (!Consensus::CheckTxInputs(tx, state, inputs, GetSpendHeight(inputs)))
-            return false;
-        if (pvChecks)
-            pvChecks->reserve(tx.vin.size());
-
-        // The first loop above does all the inexpensive checks.
-        // Only if ALL inputs pass do we perform expensive ECDSA signature checks.
-        // Helps prevent CPU exhaustion attacks.
-
-        // Skip ECDSA signature verification when connecting blocks before the
-        // last block chain checkpoint. Assuming the checkpoints are valid this
-        // is safe because block merkle hashes are still computed and checked,
-        // and any change will be caught at the next checkpoint. Of course, if
-        // the checkpoint is for a chain that's invalid due to false scriptSigs
-        // this optimisation would allow an invalid chain to be accepted.
-        if (fScriptChecks)
-        {
-            for (unsigned int i = 0; i < tx.vin.size(); i++)
-            {
-                const COutPoint &prevout = tx.vin[i].prevout;
-                const CCoins *coins = inputs.AccessCoins(prevout.hash);
-                if (!coins)
-                    LogPrintf("ASSERTION: no inputs available\n");
-                assert(coins);
-
-                // Verify signature
-                CScriptCheckAndAnalyze check(resourceTracker, *coins, tx, i, flags, cacheStore);
-                if (pvChecks)
-                {
-                    pvChecks->push_back(CScriptCheck());
-                    check.swap(pvChecks->back());
-                }
-                else if (!check())
-                {
-                    if (flags & STANDARD_NOT_MANDATORY_VERIFY_FLAGS)
-                    {
-                        // Check whether the failure was caused by a
-                        // non-mandatory script verification check, such as
-                        // non-standard DER encodings or non-null dummy
-                        // arguments; if so, don't trigger DoS protection to
-                        // avoid splitting the network between upgraded and
-                        // non-upgraded nodes.
-                        CScriptCheck check2(
-                            NULL, *coins, tx, i, flags & ~STANDARD_NOT_MANDATORY_VERIFY_FLAGS, cacheStore);
-                        if (check2())
-                            return state.Invalid(
-                                false, REJECT_NONSTANDARD, strprintf("non-mandatory-script-verify-flag (%s)",
-                                                               ScriptErrorString(check.GetScriptError())));
-                    }
-                    // Failures of other flags indicate a transaction that is
-                    // invalid in new blocks, e.g. a invalid P2SH. We DoS ban
-                    // such nodes as they are not following the protocol. That
-                    // said during an upgrade careful thought should be taken
-                    // as to the correct behavior - we may want to continue
-                    // peering with non-upgraded nodes even after a soft-fork
-                    // super-majority vote has passed.
-                    return state.DoS(100, false, REJECT_INVALID, strprintf("mandatory-script-verify-flag-failed (%s)",
-                                                                     ScriptErrorString(check.GetScriptError())));
-                }
-            }
-        }
-    }
-
-    return true;
-}
-
 bool CheckInputs(const CTransaction &tx,
     CValidationState &state,
     const CCoinsViewCache &inputs,
@@ -2039,7 +1953,8 @@ bool CheckInputs(const CTransaction &tx,
     unsigned int flags,
     bool cacheStore,
     ValidationResourceTracker *resourceTracker,
-    std::vector<CScriptCheck> *pvChecks)
+    std::vector<CScriptCheck> *pvChecks,
+    unsigned char *sighashType)
 {
     if (!tx.IsCoinBase())
     {
@@ -2102,6 +2017,8 @@ bool CheckInputs(const CTransaction &tx,
                     return state.DoS(100, false, REJECT_INVALID, strprintf("mandatory-script-verify-flag-failed (%s)",
                                                                      ScriptErrorString(check.GetScriptError())));
                 }
+                if (sighashType)
+                    *sighashType = check.sighashType;
             }
         }
     }
@@ -5728,15 +5645,20 @@ void static ProcessGetData(CNode *pfrom, const Consensus::Params &consensusParam
                 }
                 if (!pushed && inv.type == MSG_TX)
                 {
-                    CTransaction tx;
-                    if (mempool.lookup(inv.hash, tx))
+                    CTxMemPoolEntry txe;
+                    if (mempool.lookup(inv.hash, txe))
                     {
-                        CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-                        ss.reserve(1000);
-                        ss << tx;
-                        pfrom->PushMessage(NetMsgType::TX, ss);
-                        pushed = true;
-                        pfrom->txsSent += 1;
+                        // Only offer a TX to the fork if its signed properly
+                        if (!(onlyAcceptForkSig.value && !IsTxBUIP055Only(txe) &&
+                                chainActive.Tip()->IsforkActiveOnNextBlock(miningForkTime.value)))
+                        {
+                            CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+                            ss.reserve(1000);
+                            ss << txe.GetTx();
+                            pfrom->PushMessage(NetMsgType::TX, ss);
+                            pushed = true;
+                            pfrom->txsSent += 1;
+                        }
                     }
                 }
                 if (!pushed)
@@ -6928,11 +6850,15 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
             CInv inv(MSG_TX, hash);
             if (pfrom->pfilter)
             {
-                CTransaction tx;
-                bool fInMemPool = mempool.lookup(hash, tx);
+                CTxMemPoolEntry txe;
+                bool fInMemPool = mempool.lookup(hash, txe);
                 if (!fInMemPool)
                     continue; // another thread removed since queryHashes, maybe...
-                if (!pfrom->pfilter->IsRelevantAndUpdate(tx))
+                if (!pfrom->pfilter->IsRelevantAndUpdate(txe.GetTx()))
+                    continue;
+                // don't relay old-style transactions after the fork.
+                if (onlyAcceptForkSig.value && !IsTxBUIP055Only(txe) &&
+                    chainActive.Tip()->IsforkActiveOnNextBlock(miningForkTime.value))
                     continue;
             }
             vInv.push_back(inv);
@@ -7708,7 +7634,7 @@ bool SendMessages(CNode *pto)
                 if (!AlreadyHave(inv))
                 {
                     requester.AskFor(inv, pto);
-                    //LogPrint("req", "AskFor block %s (%d) peer=%d\n", pindex->GetBlockHash().ToString(),
+                    // LogPrint("req", "AskFor block %s (%d) peer=%d\n", pindex->GetBlockHash().ToString(),
                     //    pindex->nHeight, pto->id);
                 }
             }

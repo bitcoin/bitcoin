@@ -228,8 +228,6 @@ public:
     const std::vector<CTxOut> vout;
     const uint32_t nLockTime;
 
-    unsigned char sighashType; // BU memory only
-    
     /** Construct a CTransaction that qualifies as IsNull() */
     CTransaction();
 

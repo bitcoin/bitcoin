@@ -379,8 +379,13 @@ void BlockAssembler::addScoreTxs(CBlockTemplate *pblocktemplate)
         {
             continue;
         }
+        // Reject the tx if we are on the fork, but the tx is not fork-signed
+        if (buip055ChainBlock && onlyAcceptForkSig.value && !IsTxBUIP055Only(*iter))
+        {
+            continue;
+        }
         // if tx is not applicable to this (unforked) chain, skip it
-        if (!buip055ChainBlock && IsTxBUIP055Only(iter->GetTx()))
+        if (!buip055ChainBlock && IsTxBUIP055Only(*iter))
         {
             continue;
         }
@@ -476,8 +481,13 @@ void BlockAssembler::addPriorityTxs(CBlockTemplate *pblocktemplate)
         {
             continue;
         }
+        // Reject the tx if we are on the fork, but the tx is not fork-signed
+        if (buip055ChainBlock && onlyAcceptForkSig.value && !IsTxBUIP055Only(*iter))
+        {
+            continue;
+        }
         // if tx is not applicable to this (unforked) chain, skip it
-        if (!buip055ChainBlock && IsTxBUIP055Only(iter->GetTx()))
+        if (!buip055ChainBlock && IsTxBUIP055Only(*iter))
         {
             continue;
         }

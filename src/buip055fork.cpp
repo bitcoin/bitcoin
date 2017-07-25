@@ -8,6 +8,7 @@
 #include "script/interpreter.h"
 #include "unlimited.h"
 #include "chainparams.h"
+#include "txmempool.h"
 
 #include <inttypes.h>
 #include <vector>
@@ -48,9 +49,9 @@ bool ValidateBUIP055Block(const CBlock &block, CValidationState &state, int nHei
 }
 
 
-bool IsTxBUIP055Only(const CTransaction& tx)
+bool IsTxBUIP055Only(const CTxMemPoolEntry& txentry)
 {
-    if (tx.sighashType & SIGHASH_FORKID)
+    if (txentry.sighashType & SIGHASH_FORKID)
     {
         LogPrintf("txn is BUIP055-specific\n");
         return true;
