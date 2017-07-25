@@ -603,9 +603,9 @@ BOOST_AUTO_TEST_CASE (generate_aliassafesearch)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo jagnonsafesearch"));
 
 	// reverse the rolls
-	string hex_str = AliasUpdate("node1", "jagsafesearch", "pubdata1", "privdata1","\"\"", "false");
+	string hex_str = AliasUpdate("node1", "jagsafesearch", "pubdata1", "privdata1", "false");
 	BOOST_CHECK(hex_str.empty());
-	hex_str = AliasUpdate("node1", "jagnonsafesearch", "pubdata2", "privdata2", "\"\"", "true");
+	hex_str = AliasUpdate("node1", "jagnonsafesearch", "pubdata2", "privdata2", "true");
 	BOOST_CHECK(hex_str.empty());
 	// should include result in both safe search mode on and off
 	BOOST_CHECK_EQUAL(AliasFilter("node1", "jagsafesearch", "false"), true);
@@ -699,8 +699,8 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpiredbuyback)
 	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasexpirebuyback data"), runtime_error);
 	string hex_str = AliasUpdate("node2", "aliasexpirebuyback", "changedata1", "pvtdata");
 	BOOST_CHECK(hex_str.empty());
-	BOOST_CHECK_THROW(CallRPC("node2", "aliasnew sysrates.peg aliasexpirebuyback \"\""), runtime_error);
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasexpirebuyback \"\""), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "aliasnew sysrates.peg aliasexpirebuyback"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasexpirebuyback"), runtime_error);
 	// this time steal the alias and try to recreate at the same time
 	ExpireAlias("aliasexpirebuyback");
 	AliasNew("node1", "aliasexpirebuyback", "somedata", "data");
@@ -798,9 +798,9 @@ BOOST_AUTO_TEST_CASE (generate_aliasbanwithoffers)
 	BOOST_CHECK_EQUAL(OfferFilter("node1", offerguidunsafe, "false"), true);
 
 	// swap safe search fields on the aliases
-	string hex_str = AliasUpdate("node1", "jagbansafesearchoffer", "pubdata1", "privatedata1", "\"\"", "false");
+	string hex_str = AliasUpdate("node1", "jagbansafesearchoffer", "pubdata1", "privatedata1", "false");
 	BOOST_CHECK(hex_str.empty());
-	hex_str = AliasUpdate("node1", "jagbannonsafesearchoffer", "pubdata1", "privatedata1", "\"\"", "true");
+	hex_str = AliasUpdate("node1", "jagbannonsafesearchoffer", "pubdata1", "privatedata1", "true");
 	BOOST_CHECK(hex_str.empty());
 
 	// safe offer with unsafe alias should show only in safe search off mode
@@ -817,9 +817,9 @@ BOOST_AUTO_TEST_CASE (generate_aliasbanwithoffers)
 	OfferUpdate("node1", "jagbansafesearchoffer", offerguidsafe1, "category", "titlenew", "10", "1.00", "descriptionnew", "USD", "\"\"", "\"\"", "\"\"", "true");
 	OfferUpdate("node1", "jagbansafesearchoffer", offerguidsafe2, "category", "titlenew", "90", "0.15", "descriptionnew", "USD", "\"\"", "\"\"", "\"\"", "false");
 	// swap them back and check filters again
-	hex_str = AliasUpdate("node1", "jagbansafesearchoffer", "pubdata1", "privatedata1", "\"\"","true");	
+	hex_str = AliasUpdate("node1", "jagbansafesearchoffer", "pubdata1", "privatedata1", "true");	
 	BOOST_CHECK(hex_str.empty());
-	hex_str = AliasUpdate("node1", "jagbannonsafesearchoffer", "pubdata1", "privatedata1", "\"\"","false");
+	hex_str = AliasUpdate("node1", "jagbannonsafesearchoffer", "pubdata1", "privatedata1", "false");
 	BOOST_CHECK(hex_str.empty());
 
 	// safe offer with safe alias should show regardless of safe search
@@ -849,9 +849,9 @@ BOOST_AUTO_TEST_CASE (generate_aliasbanwithoffers)
 
 	// keep alive and revert settings
 	OfferUpdate("node1", "jagbansafesearchoffer", offerguidsafe1, "category", "titlenew", "10", "1.00", "descriptionnew", "USD", "\"\"", "\"\"", "\"\"", "true");
-	hex_str = AliasUpdate("node1", "jagbansafesearchoffer", "pubdata1", "privatedata1", "\"\"","true");	
+	hex_str = AliasUpdate("node1", "jagbansafesearchoffer", "pubdata1", "privatedata1", "true");	
 	BOOST_CHECK(hex_str.empty());
-	hex_str = AliasUpdate("node1", "jagbannonsafesearchoffer", "pubdata1", "privatedata1", "\"\"","false");
+	hex_str = AliasUpdate("node1", "jagbannonsafesearchoffer", "pubdata1", "privatedata1", "false");
 	BOOST_CHECK(hex_str.empty());
 
 	// unsafe offer with safe alias should show in safe off mode only
@@ -1089,7 +1089,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	AliasNew("node1", "aliasexpire0", "pubdata", "privdata");
 	AliasNew("node2", "aliasexpire1", "pubdata", "privdata");
 	// should already exist and not be expired
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasexpire2 \"\""), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasexpire2"), runtime_error);
 	CKey privKey;
 	privKey.MakeNewKey(true);
 	CPubKey pubKey = privKey.GetPubKey();
