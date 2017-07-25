@@ -8,6 +8,7 @@ files, protracting time for initial blockchain synchronization. This document de
 | ${datadir}/blocks/index | ${datadir}   | low            | high           |
 | ${datadir}/blocks       | ${EXTERAL}   | high           | low            |
 | ${datadir}/chainstate   | n/a          | low            | high           |
+
 Note: the chainstate folder will not move if these instructions are followed closely.  Like the index folder, chainstate contains very high frequency LevelDB files and must remain on a fast (internal) disk if reasonable syncronization time is to be expected.
 
 Change "coinadm" in the following as appropriate for your Bitcoin administrative account.
