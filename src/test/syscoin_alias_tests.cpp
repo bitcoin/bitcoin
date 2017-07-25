@@ -1087,7 +1087,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	
 	AliasNew("node1", "aliasexpire", "pubdata", "privdata");
 	AliasNew("node1", "aliasexpire0", "pubdata", "privdata");
-	AliasNew("node2", "aliasexpire1", "pubdata", "privdata");
+	string aliasexpire1address =  AliasNew("node2", "aliasexpire1", "pubdata", "privdata");
 	// should already exist and not be expired
 	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasexpire2"), runtime_error);
 	CKey privKey;
@@ -1101,8 +1101,10 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate sysrates.peg aliasexpirednode2 newdata1"), runtime_error);
 	// should fail: alias transfer from expired alias
 	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate sysrates.peg aliasexpirednode2 changedata1 \"\" " + aliasAddress.ToString()), runtime_error);
-	// should fail: alias transfer to another alias
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate sysrates.peg aliasexpire2 changedata1 \"\" " + aliasexpire2node2address), runtime_error);
+	// should fail: alias transfer to another non-expired alias address
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate sysrates.peg aliasexpire2 changedata1 \"\" " + aliasexpire1address), runtime_error);
+	// should pass: alias transfer to another expired alias address
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate sysrates.peg aliasexpire2 changedata1 \"\" " + aliasexpire2node2address));
 
 	// should fail: link to an expired alias in offer
 	BOOST_CHECK_THROW(CallRPC("node2", "offerlink aliasexpirednode2 " + offerguid + " 5 newdetails"), runtime_error);

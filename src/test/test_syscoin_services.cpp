@@ -955,8 +955,8 @@ const string MessageNew(const string& fromnode, const string& tonode, const stri
 	string strCipherEncryptionPrivateKeyTo = "";
 	string strCipherEncryptionPrivateKeyFrom = "";
 
-	strCipherEncryptionPrivateKeyTo = stringFromVch(vchPrivEncryptionKey);
-	strCipherEncryptionPrivateKeyFrom = stringFromVch(vchPrivEncryptionKey);
+	strCipherEncryptionPrivateKeyTo = HexStr(vchPrivEncryptionKey);
+	strCipherEncryptionPrivateKeyFrom = HexStr(vchPrivEncryptionKey);
 
 	strCipherPrivateData = privdata;
 
