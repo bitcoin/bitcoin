@@ -555,7 +555,7 @@ string AliasNew(const string& node, const string& aliasname, const string& pubda
 	string strPrivateHex = strCipherPrivateData;
 	if(strCipherPrivateData.empty())
 		strPrivateHex = "\"\"";
-	string strEncryptionPrivateKeyHex = CSyscoinSecret(privEncryptionKey).ToString();
+	string strEncryptionPrivateKeyHex = HexStr(vchPrivEncryptionKey);
 	string expires = "\"\"";
 	string aliases = "\"\"";
 	string acceptTransfers = "\"\"";

@@ -1859,16 +1859,16 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	newAlias.vchAlias = vchAlias;
 	newAlias.nHeight = chainActive.Tip()->nHeight;
 	if(!strEncryptionPublicKey.empty())
-		newAlias.vchEncryptionPublicKey = vchFromString(strEncryptionPublicKey);
+		newAlias.vchEncryptionPublicKey = ParseHex(strEncryptionPublicKey);
 	if(!strEncryptionPrivateKey.empty())
-		newAlias.vchEncryptionPrivateKey = vchFromString(strEncryptionPrivateKey);
+		newAlias.vchEncryptionPrivateKey = ParseHex(strEncryptionPrivateKey);
 	newAlias.vchPublicValue = vchPublicValue;
 	if(!strPrivateValue.empty())
 		newAlias.vchPrivateValue = vchFromString(strPrivateValue);
 	newAlias.nExpireTime = nTime;
 
 	if(!strPasswordSalt.empty())
-		newAlias.vchPasswordSalt = vchFromString(strPasswordSalt);
+		newAlias.vchPasswordSalt = ParseHex(strPasswordSalt);
 	newAlias.safeSearch = strSafeSearch == "true"? true: false;
 	newAlias.acceptCertTransfers = strAcceptCertTransfers == "true"? true: false;
 	if(strAddress.empty())
@@ -2063,12 +2063,12 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	if(!strPrivateValue.empty())
 		theAlias.vchPrivateValue = vchFromString(strPrivateValue);
 	if(!strEncryptionPrivateKey.empty())
-		theAlias.vchEncryptionPrivateKey = vchFromString(strEncryptionPrivateKey);
+		theAlias.vchEncryptionPrivateKey = ParseHex(strEncryptionPrivateKey);
 	if(!strEncryptionPublicKey.empty())
-		theAlias.vchEncryptionPublicKey = vchFromString(strEncryptionPublicKey);
+		theAlias.vchEncryptionPublicKey = ParseHex(strEncryptionPublicKey);
 
 	if(!strPasswordSalt.empty())
-		theAlias.vchPasswordSalt = vchFromString(strPasswordSalt);
+		theAlias.vchPasswordSalt = ParseHex(strPasswordSalt);
 	if(!strSafeSearch.empty())
 		theAlias.safeSearch = strSafeSearch == "true"? true: false;
 	else
@@ -2698,9 +2698,9 @@ bool BuildAliasJson(const CAliasIndex& alias, const bool pending, UniValue& oNam
 	
 	if(alias.safetyLevel >= SAFETY_LEVEL2)
 		return false;
-	oName.push_back(Pair("passwordsalt", stringFromVch(alias.vchPasswordSalt)));
-	oName.push_back(Pair("encryption_privatekey", stringFromVch(alias.vchEncryptionPrivateKey)));
-	oName.push_back(Pair("encryption_publickey", stringFromVch(alias.vchEncryptionPublicKey)));
+	oName.push_back(Pair("passwordsalt", HexStr(alias.vchPasswordSalt)));
+	oName.push_back(Pair("encryption_privatekey", HexStr(alias.vchEncryptionPrivateKey)));
+	oName.push_back(Pair("encryption_publickey", HexStr(alias.vchEncryptionPublicKey)));
 	oName.push_back(Pair("alias_peg", stringFromVch(alias.vchAliasPeg)));
 	oName.push_back(Pair("publicvalue", stringFromVch(alias.vchPublicValue)));	
 	oName.push_back(Pair("privatevalue", stringFromVch(alias.vchPrivateValue)));
