@@ -117,11 +117,14 @@ public:
     std::vector<CTxDSIn> vecTxDSIn;
     std::vector<CTxDSOut> vecTxDSOut;
     CTransaction txCollateral;
+    // memory only
+    CService addr;
 
     CDarkSendEntry() :
         vecTxDSIn(std::vector<CTxDSIn>()),
         vecTxDSOut(std::vector<CTxDSOut>()),
-        txCollateral(CTransaction())
+        txCollateral(CTransaction()),
+        addr(CService())
         {}
 
     CDarkSendEntry(const std::vector<CTxIn>& vecTxIn, const std::vector<CTxOut>& vecTxOut, const CTransaction& txCollateral);

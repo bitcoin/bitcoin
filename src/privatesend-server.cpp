@@ -229,6 +229,7 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, std::string& strCommand, C
 
         PoolMessage nMessageID = MSG_NOERR;
 
+        entry.addr = pfrom->addr;
         if(AddEntry(entry, nMessageID)) {
             PushStatus(pfrom, STATUS_ACCEPTED, nMessageID);
             CheckPool();
@@ -795,10 +796,21 @@ bool CPrivateSendServer::AddUserToExistingSession(int nDenom, CTransaction txCol
 
 void CPrivateSendServer::RelayFinalTransaction(const CTransaction& txFinal)
 {
-    g_connman->ForEachNode([&txFinal, this](CNode* pnode) {
-        if(pnode->nVersion >= MIN_PRIVATESEND_PEER_PROTO_VERSION)
+    LogPrint("privatesend", "CPrivateSendServer::%s -- nSessionID: %d  nSessionDenom: %d (%s)\n",
+            __func__, nSessionID, nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom));
+
+    // final mixing tx with empty signatures should be relayed to mixing participants only
+    for (const auto entry : vecEntries) {
+        bool fOk = g_connman->ForNode(entry.addr, [&txFinal, this](CNode* pnode) {
             pnode->PushMessage(NetMsgType::DSFINALTX, nSessionID, txFinal);
-    });
+            return true;
+        });
+        if(!fOk) {
+            // no such node? maybe this client disconnected or our own connection went down
+            RelayStatus(STATUS_REJECTED);
+            break;
+        }
+    }
 }
 
 void CPrivateSendServer::PushStatus(CNode* pnode, PoolStatusUpdate nStatusUpdate, PoolMessage nMessageID)
@@ -809,18 +821,57 @@ void CPrivateSendServer::PushStatus(CNode* pnode, PoolStatusUpdate nStatusUpdate
 
 void CPrivateSendServer::RelayStatus(PoolStatusUpdate nStatusUpdate, PoolMessage nMessageID)
 {
-    g_connman->ForEachNode([nStatusUpdate, nMessageID, this](CNode* pnode) {
-        if(pnode->nVersion >= MIN_PRIVATESEND_PEER_PROTO_VERSION)
+    unsigned int nDisconnected{};
+    // status updates should be relayed to mixing participants only
+    for (const auto entry : vecEntries) {
+        // make sure everyone is still connected
+        bool fOk = g_connman->ForNode(entry.addr, [&nStatusUpdate, &nMessageID, this](CNode* pnode) {
             PushStatus(pnode, nStatusUpdate, nMessageID);
-    });
+            return true;
+        });
+        if(!fOk) {
+            // no such node? maybe this client disconnected or our own connection went down
+            ++nDisconnected;
+        }
+    }
+    if (nDisconnected == 0) return; // all is clear
+
+    // smth went wrong
+    LogPrintf("CPrivateSendServer::%s -- can't continue, %llu client(s) disconnected, nSessionID: %d  nSessionDenom: %d (%s)\n",
+            __func__, nDisconnected, nSessionID, nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom));
+
+    // notify everyone else that this session should be terminated
+    for (const auto entry : vecEntries) {
+        g_connman->ForNode(entry.addr, [this](CNode* pnode) {
+            PushStatus(pnode, STATUS_REJECTED, MSG_NOERR);
+            return true;
+        });
+    }
+
+    if(nDisconnected == vecEntries.size()) {
+        // all clients disconnected, there is probably some issues with our own connection
+        // do not charge any fees, just reset the pool
+        SetNull();
+    }
 }
 
 void CPrivateSendServer::RelayCompletedTransaction(PoolMessage nMessageID)
 {
-    g_connman->ForEachNode([nMessageID, this](CNode* pnode) {
-        if(pnode->nVersion >= MIN_PRIVATESEND_PEER_PROTO_VERSION)
+    LogPrint("privatesend", "CPrivateSendServer::%s -- nSessionID: %d  nSessionDenom: %d (%s)\n",
+            __func__, nSessionID, nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom));
+
+    // final mixing tx with empty signatures should be relayed to mixing participants only
+    for (const auto entry : vecEntries) {
+        bool fOk = g_connman->ForNode(entry.addr, [&nMessageID, this](CNode* pnode) {
             pnode->PushMessage(NetMsgType::DSCOMPLETE, nSessionID, (int)nMessageID);
-    });
+            return true;
+        });
+        if(!fOk) {
+            // no such node? maybe client disconnected or our own connection went down
+            RelayStatus(STATUS_REJECTED);
+            break;
+        }
+    }
 }
 
 void CPrivateSendServer::SetState(PoolState nStateNew)

@@ -60,7 +60,7 @@ void CPrivateSendClient::ProcessMessage(CNode* pfrom, std::string& strCommand, C
         // if the queue is ready, submit if we can
         if(dsq.fReady) {
             if(!infoMixingMasternode.fInfoValid) return;
-            if((CNetAddr)infoMixingMasternode.addr != (CNetAddr)infoMn.addr) {
+            if(infoMixingMasternode.addr != infoMn.addr) {
                 LogPrintf("DSQUEUE -- message doesn't match current Masternode: infoMixingMasternode=%s, addr=%s\n", infoMixingMasternode.addr.ToString(), infoMn.addr.ToString());
                 return;
             }
@@ -105,7 +105,7 @@ void CPrivateSendClient::ProcessMessage(CNode* pfrom, std::string& strCommand, C
         }
 
         if(!infoMixingMasternode.fInfoValid) return;
-        if((CNetAddr)infoMixingMasternode.addr != (CNetAddr)pfrom->addr) {
+        if(infoMixingMasternode.addr != pfrom->addr) {
             //LogPrintf("DSSTATUSUPDATE -- message doesn't match current Masternode: infoMixingMasternode %s addr %s\n", infoMixingMasternode.addr.ToString(), pfrom->addr.ToString());
             return;
         }
@@ -149,7 +149,7 @@ void CPrivateSendClient::ProcessMessage(CNode* pfrom, std::string& strCommand, C
         }
 
         if(!infoMixingMasternode.fInfoValid) return;
-        if((CNetAddr)infoMixingMasternode.addr != (CNetAddr)pfrom->addr) {
+        if(infoMixingMasternode.addr != pfrom->addr) {
             //LogPrintf("DSFINALTX -- message doesn't match current Masternode: infoMixingMasternode %s addr %s\n", infoMixingMasternode.addr.ToString(), pfrom->addr.ToString());
             return;
         }
@@ -176,7 +176,7 @@ void CPrivateSendClient::ProcessMessage(CNode* pfrom, std::string& strCommand, C
         }
 
         if(!infoMixingMasternode.fInfoValid) return;
-        if((CNetAddr)infoMixingMasternode.addr != (CNetAddr)pfrom->addr) {
+        if(infoMixingMasternode.addr != pfrom->addr) {
             LogPrint("privatesend", "DSCOMPLETE -- message doesn't match current Masternode: infoMixingMasternode=%s  addr=%s\n", infoMixingMasternode.addr.ToString(), pfrom->addr.ToString());
             return;
         }
