@@ -124,8 +124,6 @@ CDNSSeedData("bitcoinunlimited.info", "btccash-seeder.bitcoinunlimited.info", tr
 CDNSSeedData("bitcoinabc.org", "seed.bitcoinabc.org", true));
 
         vSeeds.push_back(CDNSSeedData("bitcoinforks.org", "seed-abc.bitcoinforks.org", true));
-        vSeeds.push_back(CDNSSeedData("bitcoinunlimited.info",
- "seed.bitcoinunlimited.info", true));
         vSeeds.push_back(CDNSSeedData("bitprim.org", "seed.bitprim.org", true));
  // Bitprim
 
