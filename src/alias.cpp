@@ -1347,7 +1347,7 @@ bool CAliasDB::CleanupDatabaseLinks(const vector<vector<unsigned char> > &cleanu
 		boost::this_thread::interruption_point();
 		try {
 			if (pcursor->GetKey(key) && key.first == "namea") {
-				const vector<unsigned char> &vchMyAlias;
+				vector<unsigned char> vchMyAlias;
 				pcursor->GetValue(vchMyAlias);
 				if (std::find(cleanupAliases.begin(), cleanupAliases.end(), vchMyAlias) != cleanupAliases.end()) {
 					EraseAliasAddress(key.second);
