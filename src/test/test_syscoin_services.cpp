@@ -837,8 +837,6 @@ const string CertNew(const string& node, const string& alias, const string& titl
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "certinfo " + guid));
 		BOOST_CHECK(find_value(r.get_obj(), "cert").get_str() == guid);
-		if(privdata != "\"\"")
-			BOOST_CHECK(find_value(r.get_obj(), "privatevalue").get_str() != privdata);
 		BOOST_CHECK(find_value(r.get_obj(), "publicvalue").get_str() == pubdata);
 		BOOST_CHECK(find_value(r.get_obj(), "title").get_str() == title);
 	}
@@ -846,8 +844,6 @@ const string CertNew(const string& node, const string& alias, const string& titl
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "certinfo " + guid));
 		BOOST_CHECK(find_value(r.get_obj(), "cert").get_str() == guid);
-		if(privdata != "\"\"")
-			BOOST_CHECK(find_value(r.get_obj(), "privatevalue").get_str() != privdata);
 		BOOST_CHECK(find_value(r.get_obj(), "publicvalue").get_str() == pubdata);
 		BOOST_CHECK(find_value(r.get_obj(), "title").get_str() == title);
 	}
@@ -894,7 +890,6 @@ void CertUpdate(const string& node, const string& guid, const string& title, con
 		BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == oldalias);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str() , pubdata != "\"\""? pubdata: oldpubdata);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "title").get_str(), title != "\"\""? title: oldtitle);
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "privatevalue").get_str() , "");
 
 	}
 	if(!otherNode2.empty())
@@ -904,7 +899,6 @@ void CertUpdate(const string& node, const string& guid, const string& title, con
 		BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == oldalias);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str() , pubdata != "\"\""? pubdata: oldpubdata);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "title").get_str(), title != "\"\""? title: oldtitle);
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "privatevalue").get_str() , "");
 
 	}
 }
@@ -933,8 +927,6 @@ void CertTransfer(const string& node, const string &tonode, const string& guid, 
 	GenerateBlocks(5, node);
 	GenerateBlocks(5, tonode);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certinfo " + guid));
-	if(!privdata.empty())
-		BOOST_CHECK(find_value(r.get_obj(), "privatevalue").get_str() != privdata);
 	BOOST_CHECK(find_value(r.get_obj(), "publicvalue").get_str() == pubdata);
 	BOOST_CHECK(find_value(r.get_obj(), "cert").get_str() == guid);
 
@@ -1411,7 +1403,7 @@ const string LinkOfferAccept(const string& ownernode, const string& buyernode, c
 	balanceResellerBefore += nCommission;
 	BOOST_CHECK_EQUAL(balanceResellerBefore ,  balanceResellerAfter);
 	nSellerTotal += nCommission;
-	BOOST_CHECK(find_value(acceptReSellerValue, "pay_message").get_str() != pay_message);
+
 	GenerateBlocks(2, "node1");
 	GenerateBlocks(2, "node2");
 	GenerateBlocks(2, "node3");

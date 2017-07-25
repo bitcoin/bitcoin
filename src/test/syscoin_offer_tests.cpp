@@ -411,7 +411,7 @@ BOOST_AUTO_TEST_CASE (generate_offeraccept)
 	// should fail: generate an offer accept with too-large message
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo selleralias3"));
 	string encryptionkey = find_value(r.get_obj(), "encryption_publickey").get_str();	
-	string strCipherDataBad = s1024bytes + "a";
+	string strCipherDataBad = s1024bytes + "asdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfdddddd";
 
 	BOOST_CHECK_THROW(r = CallRPC("node2", "offeraccept buyeralias3 " + offerguid + " 1 " + strCipherDataBad), runtime_error);
 	
@@ -478,9 +478,9 @@ BOOST_AUTO_TEST_CASE (generate_cert_linkedaccept)
 	LinkOfferAccept("node1", "node3", "node3alias", lofferguid, "1", "message", "node2");
 	GenerateBlocks(5, "node1");
 	GenerateBlocks(5, "node3");
-	// cert does not get transferred, need to do it manually after the sale
+	// cert transferred autonomously
 	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "certinfo " + certguid));
-	BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == "node1alias");
+	BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == "node3alias");
 }
 BOOST_AUTO_TEST_CASE (generate_offeracceptfeedback)
 {
