@@ -299,8 +299,8 @@ public:
             unsigned int nMax,
             std::vector<CAliasIndex>& nameScan);
 	bool GetDBAliases(std::vector<CAliasIndex>& aliases,const uint64_t& nExpireFilter);
-	bool CleanupDatabase(int &servicesCleaned);
-	bool CleanupDatabaseLinks(int &servicesCleaned);
+	bool CleanupDatabase(int &servicesCleaned, vector<vector<unsigned char> > &cleanupAliases);
+	bool CleanupDatabaseLinks(const vector<vector<unsigned char> > &cleanupAliases);
 
 };
 

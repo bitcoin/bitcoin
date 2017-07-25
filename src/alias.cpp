@@ -1337,7 +1337,7 @@ bool CAliasDB::CleanupDatabase(int &servicesCleaned, vector<vector<unsigned char
 	return true;
 }
 // remove all address indexes from aliases that have been removed on cleanup from cleanupdatabase function
-bool CAliasDB::CleanupDatabaseLinks(int &servicesCleaned, const vector<vector<unsigned char> > &cleanupAliases)
+bool CAliasDB::CleanupDatabaseLinks(const vector<vector<unsigned char> > &cleanupAliases)
 {
 	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
 	pcursor->SeekToFirst();
