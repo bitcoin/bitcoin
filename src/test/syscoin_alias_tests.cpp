@@ -1160,8 +1160,16 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	BOOST_CHECK(aliasexpirenode2address != AliasNew("node2", "aliasexpirednode2", "somedata"));
 
 	// should fail: cert alias not owned by node1
-	BOOST_CHECK_THROW(r = CallRPC("node1", "certtransfer " + certgoodguid + " aliasexpirednode2"), runtime_error);
-
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certtransfer " + certgoodguid + " aliasexpirednode2"));
+	const UniValue& resArray = r.get_array();
+	if (resArray.size() > 1)
+	{
+		const UniValue& complete_value = resArray[1];
+		bool bComplete = false;
+		if (complete_value.isStr())
+			bComplete = complete_value.get_str() == "true";
+		BOOST_CHECK(!bComplete);
+	}
 	ExpireAlias("aliasexpire2");
 	// should fail: update cert with expired alias
 	BOOST_CHECK_THROW(CallRPC("node1", "certupdate " + certgoodguid + " title pubdata"), runtime_error);
