@@ -1350,7 +1350,7 @@ bool CAliasDB::CleanupDatabaseLinks(const vector<vector<unsigned char> > &cleanu
 				vector<unsigned char> vchMyAlias;
 				pcursor->GetValue(vchMyAlias);
 				if (std::find(cleanupAliases.begin(), cleanupAliases.end(), vchMyAlias) != cleanupAliases.end()) {
-					EraseAliasAddress(key.second);
+					EraseAddress(key.second);
 				}
 			}
 			pcursor->Next();
