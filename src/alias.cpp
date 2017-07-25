@@ -1008,8 +1008,14 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							vector<unsigned char> vchMyAlias;
 							if (paliasdb->ReadAddress(theAlias.vchAddress, vchMyAlias) && !vchMyAlias.empty() && vchMyAlias != dbAlias.vchAlias)
 							{
-								errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5026 - " + _("An alias already exists with that address, try another public key");
-								theAlias = dbAlias;
+								vector<CAliasIndex> vtxReadAlias;
+								bool readExpired;
+								CAliasIndex dbReadAlias;
+								// ensure that you block transferring only if the recv address has an active alias associated with it
+								if (GetVtxOfAlias(vchMyAlias, dbReadAlias, vtxReadAlias, readExpired)) {
+									errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5026 - " + _("An alias already exists with that address, try another public key");
+									theAlias = dbAlias;
+								}
 							}
 						}
 						if(dbAlias.nAccessFlags < 2)
