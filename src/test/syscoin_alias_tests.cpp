@@ -1152,6 +1152,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	// should cleanup db for node1 and remove aliasexpirenode2address from alias address db
 	ExpireAlias("aliasexpirednode2");
 	StopNode("node1");
+	MilliSleep(3000);
 	GenerateBlocks(5, "node2");
 	StartNode("node1");
 	ExpireAlias("aliasexpirednode2");
@@ -1160,6 +1161,9 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate sysrates.peg aliasexpire2 changedata1 \"\" \"\" " + aliasexpire2node2address));
 	GenerateBlocks(5);
 	BOOST_CHECK(aliasexpirenode2address != AliasNew("node2", "aliasexpirednode2", "somedata"));
+
+	// should fail: cert alias not owned by node1
+	BOOST_CHECK_THROW(r = CallRPC("node1", "certtransfer " + certgoodguid + " aliasexpirednode2"), runtime_error);
 
 	ExpireAlias("aliasexpire2");
 	// should fail: update cert with expired alias
@@ -1170,8 +1174,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	BOOST_CHECK_THROW(CallRPC("node1", "certtransfer " + certguid + " aliasexpire2"), runtime_error);
 
 	AliasNew("node2", "aliasexpire2", "somedata");
-	// should fail: cert alias not owned by node1
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certtransfer " + certgoodguid + " aliasexpirednode2"));
+
 	const UniValue& resArray = r.get_array();
 	if(resArray.size() > 1)
 	{
