@@ -1151,11 +1151,13 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 
 	// should cleanup db for node1 and remove aliasexpirenode2address from alias address db
 	ExpireAlias("aliasexpirednode2");
+	GenerateBlocks(5, "node3");
+	GenerateBlocks(5, "node2");
+	GenerateBlocks(5, "node1");
 	StopNode("node1");
 	MilliSleep(3000);
-	GenerateBlocks(5, "node2");
 	StartNode("node1");
-	ExpireAlias("aliasexpirednode2");
+	
 	BOOST_CHECK_NO_THROW(AliasNew("node1", "aliasexpire2", "somedata"));
 	// should pass: alias transfer to another expired alias address
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate sysrates.peg aliasexpire2 changedata1 \"\" \"\" " + aliasexpire2node2address));
@@ -1175,15 +1177,6 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 
 	AliasNew("node2", "aliasexpire2", "somedata");
 
-	const UniValue& resArray = r.get_array();
-	if(resArray.size() > 1)
-	{
-		const UniValue& complete_value = resArray[1];
-		bool bComplete = false;
-		if (complete_value.isStr())
-			bComplete = complete_value.get_str() == "true";
-		BOOST_CHECK(!bComplete);
-	}
 	ExpireAlias("aliasexpire2");
 	AliasNew("node2", "aliasexpirednode2", "somedataa");
 	AliasNew("node1", "aliasexpire2", "somedatab");
