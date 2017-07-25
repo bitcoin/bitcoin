@@ -27,8 +27,7 @@ import tempfile
 import re
 import logging
 
-# Formatting. Default colors to empty strings.
-BOLD, BLUE, RED, GREY = ("", ""), ("", ""), ("", ""), ("", "")
+# Formatting.
 try:
     # Make sure python thinks it can write unicode to its stdout
     "\u2713".encode("utf_8").decode(sys.stdout.encoding)
@@ -40,16 +39,27 @@ except UnicodeDecodeError:
     CROSS = "x "
     CIRCLE = "o "
 
+# Default colors to empty strings.
+BOLD, BLUE, RED, GREY, MAGENTA = [("", "")] * 5
 if os.name == 'posix':
     # primitive formatting on supported
     # terminal via ANSI escape sequences:
     BOLD = ('\033[0m', '\033[1m')
-    BLUE = ('\033[0m', '\033[0;34m')
-    RED = ('\033[0m', '\033[0;31m')
     GREY = ('\033[0m', '\033[1;30m')
+    RED = ('\033[0m', '\033[0;31m')
+    BLUE = ('\033[0m', '\033[0;34m')
+    MAGENTA = ('\033[0m', '\033[0;35m')
 
 TEST_EXIT_PASSED = 0
 TEST_EXIT_SKIPPED = 77
+
+STATUS_PASSED = "Passed"
+STATUS_PASSED_WITH_WARNINGS = "Passed with warnings"
+STATUS_SKIPPED = "Skipped"
+STATUS_FAILED = "Failed"
+STATUSES = [STATUS_PASSED, STATUS_PASSED_WITH_WARNINGS, STATUS_SKIPPED, STATUS_FAILED]
+
+STATUS_MAX_LEN = max([len(st) for st in STATUSES])
 
 BASE_SCRIPTS= [
     # Scripts that are run by the travis build process.
@@ -307,9 +317,11 @@ def run_tests(test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_cove
         test_result, stdout, stderr = job_queue.get_next()
         test_results.append(test_result)
 
-        if test_result.status == "Passed":
+        if test_result.status == STATUS_PASSED:
             logging.debug("\n%s%s%s passed, Duration: %s s" % (BOLD[1], test_result.name, BOLD[0], test_result.time))
-        elif test_result.status == "Skipped":
+        elif test_result.status == STATUS_PASSED_WITH_WARNINGS:
+            logging.debug("\n%s%s%s passed with warnings, Duration: %s s" % (BOLD[1], test_result.name, BOLD[0], test_result.time))
+        elif test_result.status == STATUS_SKIPPED:
             logging.debug("\n%s%s%s skipped" % (BOLD[1], test_result.name, BOLD[0]))
         else:
             print("\n%s%s%s failed, Duration: %s s\n" % (BOLD[1], test_result.name, BOLD[0], test_result.time))
@@ -333,7 +345,7 @@ def run_tests(test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_cove
     sys.exit(not all_passed)
 
 def print_results(test_results, max_len_name, runtime):
-    results = "\n" + BOLD[1] + "%s | %s | %s\n\n" % ("TEST".ljust(max_len_name), "STATUS   ", "DURATION") + BOLD[0]
+    results = "\n" + BOLD[1] + "%s | %s | %s\n\n" % ("TEST".ljust(max_len_name), "  STATUS".ljust(STATUS_MAX_LEN + 2), "DURATION") + BOLD[0]
 
     test_results.sort(key=lambda result: result.name.lower())
     all_passed = True
@@ -346,7 +358,7 @@ def print_results(test_results, max_len_name, runtime):
         results += str(test_result)
 
     status = TICK + "Passed" if all_passed else CROSS + "Failed"
-    results += BOLD[1] + "\n%s | %s | %s s (accumulated) \n" % ("ALL".ljust(max_len_name), status.ljust(9), time_sum) + BOLD[0]
+    results += BOLD[1] + "\n%s | %s | %s s (accumulated) \n" % ("ALL".ljust(max_len_name), status.ljust(STATUS_MAX_LEN + 2), time_sum) + BOLD[0]
     results += "Runtime: %s s\n" % (runtime)
     print(results)
 
@@ -404,11 +416,13 @@ class TestHandler:
                     [stdout, stderr] = [l.read().decode('utf-8') for l in (log_out, log_err)]
                     log_out.close(), log_err.close()
                     if proc.returncode == TEST_EXIT_PASSED and stderr == "":
-                        status = "Passed"
+                        status = STATUS_PASSED
+                    elif proc.returncode == TEST_EXIT_PASSED:
+                        status = STATUS_PASSED_WITH_WARNINGS
                     elif proc.returncode == TEST_EXIT_SKIPPED:
-                        status = "Skipped"
+                        status = STATUS_SKIPPED
                     else:
-                        status = "Failed"
+                        status = STATUS_FAILED
                     self.num_running -= 1
                     self.jobs.remove(j)
 
@@ -423,17 +437,20 @@ class TestResult():
         self.padding = 0
 
     def __repr__(self):
-        if self.status == "Passed":
+        if self.status == STATUS_PASSED:
             color = BLUE
             glyph = TICK
-        elif self.status == "Failed":
-            color = RED
-            glyph = CROSS
-        elif self.status == "Skipped":
+        if self.status == STATUS_PASSED_WITH_WARNINGS:
+            color = MAGENTA
+            glyph = TICK
+        elif self.status == STATUS_SKIPPED:
             color = GREY
             glyph = CIRCLE
+        elif self.status == STATUS_FAILED:
+            color = RED
+            glyph = CROSS
 
-        return color[1] + "%s | %s%s | %s s\n" % (self.name.ljust(self.padding), glyph, self.status.ljust(7), self.time) + color[0]
+        return color[1] + "%s | %s%s | %s s\n" % (self.name.ljust(self.padding), glyph, self.status.ljust(STATUS_MAX_LEN), self.time) + color[0]
 
     @property
     def was_successful(self):
