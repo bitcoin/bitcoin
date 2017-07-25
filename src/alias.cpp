@@ -1296,7 +1296,7 @@ bool CAliasDB::ScanNames(const std::vector<unsigned char>& vchAliasPage, const s
     return true;
 }
 // TODO: need to cleanout CTxOuts (transactions stored on disk) which have data stored in them after expiry, erase at same time on startup so pruning can happen properly
-bool CAliasDB::CleanupDatabase(int &servicesCleaned)
+bool CAliasDB::CleanupDatabase(int &servicesCleaned, vector<vector<unsigned char> > &cleanupAliases)
 {
 	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
 	pcursor->SeekToFirst();
@@ -1316,6 +1316,7 @@ bool CAliasDB::CleanupDatabase(int &servicesCleaned)
 				if (vtxPos.empty()){
 					servicesCleaned++;
 					EraseAlias(vchMyAlias);
+					cleanupAliases.push_back(vchMyAlias);
 					pcursor->Next();
 					continue;
 				}
@@ -1324,6 +1325,7 @@ bool CAliasDB::CleanupDatabase(int &servicesCleaned)
 				{
 					servicesCleaned++;
 					EraseAliasAndAddress(vchMyAlias, txPos.vchAddress);
+					cleanupAliases.push_back(vchMyAlias);
 				} 
 				
             }
@@ -1332,6 +1334,29 @@ bool CAliasDB::CleanupDatabase(int &servicesCleaned)
             return error("%s() : deserialize error", __PRETTY_FUNCTION__);
         }
     }
+	return true;
+}
+// remove all address indexes from aliases that have been removed on cleanup from cleanupdatabase function
+bool CAliasDB::CleanupDatabaseLinks(int &servicesCleaned, const vector<vector<unsigned char> > &cleanupAliases)
+{
+	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
+	pcursor->SeekToFirst();
+	vector<CAliasIndex> vtxPos;
+	pair<string, vector<unsigned char> > key;
+	while (pcursor->Valid()) {
+		boost::this_thread::interruption_point();
+		try {
+			if (pcursor->GetKey(key) && key.first == "namea") {
+				if (std::find(cleanupAliases.begin(), cleanupAliases.end(), key.value) != cleanupAliases.end()) {
+					EraseAliasAddress(key.second);
+				}
+			}
+			pcursor->Next();
+		}
+		catch (std::exception &e) {
+			return error("%s() : deserialize error", __PRETTY_FUNCTION__);
+		}
+	}
 	return true;
 }
 bool CAliasDB::GetDBAliases(std::vector<CAliasIndex>& aliases, const uint64_t &nExpireFilter)
@@ -1385,8 +1410,11 @@ void CleanupSyscoinServiceDatabases(int &numServicesCleaned)
 		pmessagedb->CleanupDatabase(numServicesCleaned);
 	if(pcertdb!= NULL)
 		pcertdb->CleanupDatabase(numServicesCleaned);
-	if(paliasdb!= NULL)
-		paliasdb->CleanupDatabase(numServicesCleaned);
+	if (paliasdb != NULL) {
+		vector<vector<unsigned char > > cleanupAliases;
+		paliasdb->CleanupDatabase(numServicesCleaned, cleanupAliases);
+		paliasdb->CleanupDatabaseLinks(cleanupAliases);
+	}
 	if(paliasdb != NULL)
 	{
 		if (!paliasdb->Flush())

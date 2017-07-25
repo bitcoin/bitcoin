@@ -300,6 +300,7 @@ public:
             std::vector<CAliasIndex>& nameScan);
 	bool GetDBAliases(std::vector<CAliasIndex>& aliases,const uint64_t& nExpireFilter);
 	bool CleanupDatabase(int &servicesCleaned);
+	bool CleanupDatabaseLinks(int &servicesCleaned);
 
 };
 
