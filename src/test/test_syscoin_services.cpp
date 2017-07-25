@@ -810,36 +810,19 @@ const string CertNew(const string& node, const string& alias, const string& titl
 	string otherNode1, otherNode2;
 	GetOtherNodes(node, otherNode1, otherNode2);
 	UniValue r;
-
-	CKey privEncryptionKey;
-	privEncryptionKey.MakeNewKey(true);
-	CPubKey pubEncryptionKey = privEncryptionKey.GetPubKey();
-	vector<unsigned char> vchPrivEncryptionKey(privEncryptionKey.begin(), privEncryptionKey.end());
-	
-	BOOST_CHECK(pubEncryptionKey.IsFullyValid());
-	vector<unsigned char> vchPubEncryptionKey(pubEncryptionKey.begin(), pubEncryptionKey.end());
-	
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasinfo " + alias));
-	string encryptionpublickey = find_value(r.get_obj(), "encryption_publickey").get_str();
-	string strCipherEncryptionPrivateKey = "";
-	string strCipherEncryptionPublicKey = "";
+
 	string strCipherPrivateData = "";
 	if(privdata != "\"\"")
 	{
 		strCipherPrivateData = privdata;
-		strCipherEncryptionPrivateKey = stringFromVch(vchPrivEncryptionKey);
 	}
 	if (strCipherPrivateData.empty())
 		strCipherPrivateData = "\"\"";
 
-	if(strCipherEncryptionPrivateKey.empty())
-	{
-		strCipherEncryptionPrivateKey = "\"\"";
-		strCipherEncryptionPublicKey = "\"\"";
-	}
 
 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certnew " + alias + " " + title + " " + pubdata + " " + strCipherPrivateData + " " + safesearch + " certificates " + strCipherEncryptionPublicKey + " " + strCipherEncryptionPrivateKey + " " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certnew " + alias + " " + title + " " + pubdata + " " + strCipherPrivateData + " " + safesearch + " certificates " + witness));
 	const UniValue &arr = r.get_array();
 	string guid = arr[1].get_str();
 	GenerateBlocks(10, node);
@@ -880,37 +863,22 @@ void CertUpdate(const string& node, const string& guid, const string& title, con
 	string olddata = find_value(r.get_obj(), "privatevalue").get_str();
 	string oldpubdata = find_value(r.get_obj(), "publicvalue").get_str();
 	string oldtitle = find_value(r.get_obj(), "title").get_str();
-	CKey privEncryptionKey;
-	privEncryptionKey.MakeNewKey(true);
-	CPubKey pubEncryptionKey = privEncryptionKey.GetPubKey();
-	vector<unsigned char> vchPrivEncryptionKey(privEncryptionKey.begin(), privEncryptionKey.end());
-	
-	BOOST_CHECK(pubEncryptionKey.IsFullyValid());
-	vector<unsigned char> vchPubEncryptionKey(pubEncryptionKey.begin(), pubEncryptionKey.end());
-	
+
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasinfo " + oldalias));
-	string encryptionpublickey = find_value(r.get_obj(), "encryption_publickey").get_str();
-	string strCipherEncryptionPrivateKey = "";
-	string strCipherEncryptionPublicKey = "";
 	string strCipherPrivateData = "";
 	// regenerate pub/priv encryption keypair on every update of pvt data
 	if(privdata != "\"\"")
 	{
 		strCipherPrivateData = privdata;
-		strCipherEncryptionPrivateKey = stringFromVch(vchPrivEncryptionKey);
+
 	}
 
 	if(strCipherPrivateData.empty())
 		strCipherPrivateData = "\"\"";
 
-	if(strCipherEncryptionPrivateKey.empty())
-	{
-		strCipherEncryptionPrivateKey = "\"\"";
-		strCipherEncryptionPublicKey = "\"\"";
-	}
 
 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certupdate " + guid + " " + title + " " + pubdata + " " + strCipherPrivateData + " " + safesearch + " certificates " + strCipherEncryptionPublicKey + " " + strCipherEncryptionPrivateKey + " " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certupdate " + guid + " " + title + " " + pubdata + " " + strCipherPrivateData + " " + safesearch + " certificates " + witness));
 	GenerateBlocks(10, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certinfo " + guid));
 	BOOST_CHECK(find_value(r.get_obj(), "cert").get_str() == guid);
@@ -943,42 +911,25 @@ void CertUpdate(const string& node, const string& guid, const string& title, con
 void CertTransfer(const string& node, const string &tonode, const string& guid, const string& toalias, const string& witness)
 {
 	UniValue r;
-	CKey privEncryptionKey;
-	privEncryptionKey.MakeNewKey(true);
-	CPubKey pubEncryptionKey = privEncryptionKey.GetPubKey();
-	vector<unsigned char> vchPrivEncryptionKey(privEncryptionKey.begin(), privEncryptionKey.end());
-	BOOST_CHECK(privEncryptionKey.IsValid());
-	BOOST_CHECK(pubEncryptionKey.IsFullyValid());
-	BOOST_CHECK_NO_THROW(CallRPC(node, "importprivkey " + CSyscoinSecret(privEncryptionKey).ToString() + " \"\" false", true, false));	
-	vector<unsigned char> vchPubEncryptionKey(pubEncryptionKey.begin(), pubEncryptionKey.end());
-	
+
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certinfo " + guid));
 	string privdata = find_value(r.get_obj(), "privatevalue").get_str();
 	string pubdata = find_value(r.get_obj(), "publicvalue").get_str();
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasinfo " + toalias));
-	string encryptionpublickey = find_value(r.get_obj(), "encryption_publickey").get_str();
-	string strCipherEncryptionPrivateKey = "";
-	string strCipherEncryptionPublicKey = "";
+
 	string strCipherPrivateData = "";
 	if(privdata != "\"\"")
 	{
 		strCipherPrivateData = privdata;
-		strCipherEncryptionPrivateKey = stringFromVch(vchPrivEncryptionKey);
+		
 	}
 
 	if(strCipherPrivateData.empty())
 		strCipherPrivateData = "\"\"";
 
-	if(strCipherEncryptionPrivateKey.empty())
-	{
-		strCipherEncryptionPrivateKey = "\"\"";
-		strCipherEncryptionPublicKey = "\"\"";
-	}
 
-
-
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certtransfer " + guid + " " + toalias + " " + pubdata + " " + strCipherPrivateData + " " + strCipherEncryptionPublicKey + " " + strCipherEncryptionPrivateKey + " " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certtransfer " + guid + " " + toalias + " " + pubdata + " " + strCipherPrivateData + " " + witness));
 	GenerateBlocks(5, node);
 	GenerateBlocks(5, tonode);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certinfo " + guid));
@@ -1516,7 +1467,6 @@ const string EscrowNew(const string& node, const string& sellernode, const strin
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "systotal").get_int64() , nTotal);
 	BOOST_CHECK(find_value(r.get_obj(), "arbiter").get_str() == arbiteralias);
 	BOOST_CHECK(find_value(r.get_obj(), "seller").get_str() == selleralias);
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "pay_message").get_str() , "");
 	if(!otherNode1.empty())
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "escrowinfo " + guid));
