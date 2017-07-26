@@ -6,6 +6,8 @@
 
 Verify that a bitcoind node can load multiple wallet files
 """
+import os
+
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_jsonrpc
 
@@ -22,6 +24,14 @@ class MultiWalletTest(BitcoinTestFramework):
 
         # should not initialize if there are duplicate wallets
         self.assert_start_raises_init_error(0, self.options.tmpdir, ['-wallet=w1', '-wallet=w1'], 'Duplicate -wallet filename')
+
+        # should not initialize if wallet file is a directory
+        os.mkdir(os.path.join(self.options.tmpdir, 'node0', 'regtest', 'w11'))
+        self.assert_start_raises_init_error(0, self.options.tmpdir, ['-wallet=w11'], 'Invalid -wallet file')
+
+        # should not initialize if wallet file is a symlink
+        os.symlink(os.path.join(self.options.tmpdir, 'node0', 'regtest', 'w1'), os.path.join(self.options.tmpdir, 'node0', 'regtest', 'w12'))
+        self.assert_start_raises_init_error(0, self.options.tmpdir, ['-wallet=w12'], 'Invalid -wallet file')
 
         self.nodes[0] = self.start_node(0, self.options.tmpdir, self.extra_args[0])
 
