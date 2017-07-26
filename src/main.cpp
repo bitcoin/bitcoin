@@ -2415,7 +2415,7 @@ bool DisconnectAlias(const CBlockIndex *pindex, const CTransaction &tx, int op, 
 	paliasdb->ReadAlias(vvchArgs[0], vtxPos);
 	if(vtxPos.empty())
 		return true;
-	while (!vtxPos.empty() && vtxPos.back().txHash == tx.GetHash()){
+	while (!vtxPos.empty() && vtxPos.back().txHash == tx.GetHash())
 		vtxPos.pop_back();
 	while (!vtxPaymentPos.empty() && vtxPaymentPos.back().txHash == tx.GetHash())	
 		vtxPaymentPos.pop_back();	
