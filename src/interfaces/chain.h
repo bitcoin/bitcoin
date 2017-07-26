@@ -18,6 +18,26 @@ class Chain
 {
 public:
     virtual ~Chain() {}
+
+    //! Interface for querying locked chain state, used by legacy code that
+    //! assumes state won't change between calls. New code should avoid using
+    //! the Lock interface and instead call higher-level Chain methods
+    //! that return more information so the chain doesn't need to stay locked
+    //! between calls.
+    class Lock
+    {
+    public:
+        virtual ~Lock() {}
+    };
+
+    //! Return Lock interface. Chain is locked when this is called, and
+    //! unlocked when the returned interface is freed.
+    virtual std::unique_ptr<Lock> lock(bool try_lock = false) = 0;
+
+    //! Return Lock interface assuming chain is already locked. This
+    //! method is temporary and is only used in a few places to avoid changing
+    //! behavior while code is transitioned to use the Chain::Lock interface.
+    virtual std::unique_ptr<Lock> assumeLocked() = 0;
 };
 
 //! Interface to let node manage chain clients (wallets, or maybe tools for

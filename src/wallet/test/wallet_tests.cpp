@@ -11,6 +11,7 @@
 #include <vector>
 
 #include <consensus/validation.h>
+#include <interfaces/chain.h>
 #include <rpc/server.h>
 #include <test/test_bitcoin.h>
 #include <validation.h>
@@ -43,7 +44,7 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
     CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
     CBlockIndex* newTip = chainActive.Tip();
 
-    LOCK(cs_main);
+    auto locked_chain = chain->lock();
 
     // Verify ScanForWalletTransactions picks up transactions in both the old
     // and new block files.
@@ -132,7 +133,7 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
     SetMockTime(KEY_TIME);
     m_coinbase_txns.emplace_back(CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey())).vtx[0]);
 
-    LOCK(cs_main);
+    auto locked_chain = chain->lock();
 
     std::string backup_file = (SetDataDir("importwallet_rescan") / "wallet.backup").string();
 
@@ -187,7 +188,8 @@ BOOST_FIXTURE_TEST_CASE(coin_mark_dirty_immature_credit, TestChain100Setup)
     auto chain = interfaces::MakeChain();
     CWallet wallet(*chain, WalletLocation(), WalletDatabase::CreateDummy());
     CWalletTx wtx(&wallet, m_coinbase_txns.back());
-    LOCK2(cs_main, wallet.cs_wallet);
+    auto locked_chain = chain->lock();
+    LOCK(wallet.cs_wallet);
     wtx.hashBlock = chainActive.Tip()->GetBlockHash();
     wtx.nIndex = 0;
 
@@ -209,7 +211,7 @@ static int64_t AddTx(CWallet& wallet, uint32_t lockTime, int64_t mockTime, int64
     SetMockTime(mockTime);
     CBlockIndex* block = nullptr;
     if (blockTime > 0) {
-        LOCK(cs_main);
+        auto locked_chain = wallet.chain().lock();
         auto inserted = mapBlockIndex.emplace(GetRandHash(), new CBlockIndex);
         assert(inserted.second);
         const uint256& hash = inserted.first->first;
@@ -317,6 +319,7 @@ public:
     }
 
     std::unique_ptr<interfaces::Chain> m_chain = interfaces::MakeChain();
+    std::unique_ptr<interfaces::Chain::Lock> m_locked_chain = m_chain->assumeLocked();  // Temporary. Removed in upcoming lock cleanup
     std::unique_ptr<CWallet> wallet;
 };
 
