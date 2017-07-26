@@ -90,8 +90,8 @@ void CRequestManager::cleanup(OdMap::iterator &itemIt)
         if (node)
         {
             i->clear();
-            LogPrint("req", "ReqMgr: %s cleanup - removed ref to %d count %d.\n", item.obj.ToString(), node->GetId(),
-                node->GetRefCount());
+            //LogPrint("req", "ReqMgr: %s cleanup - removed ref to %d count %d.\n", item.obj.ToString(), node->GetId(),
+            //    node->GetRefCount());
             node->Release();
         }
     }
@@ -149,7 +149,7 @@ void CRequestManager::AskFor(const CInv &obj, CNode *from, unsigned int priority
         data.priority = max(priority, data.priority);
         if (data.AddSource(from))
         {
-            LogPrint("blk", "%s available at %s\n", obj.ToString().c_str(), from->addrName.c_str());
+            //LogPrint("blk", "%s available at %s\n", obj.ToString().c_str(), from->addrName.c_str());
         }
     }
     else
@@ -318,8 +318,7 @@ bool CUnknownObj::AddSource(CNode *from)
     // node is not in the request list
     if (std::find_if(availableFrom.begin(), availableFrom.end(), MatchCNodeRequestData(from)) == availableFrom.end())
     {
-        LogPrint("req", "%s added ref to node %d.  Current count %d.\n",
-                 obj.ToString(), from->GetId(), from->GetRefCount());
+        LogPrint("req", "AddSource %s is available at %s.\n", obj.ToString(), from->GetLogName());
         {
             LOCK(cs_vNodes); // This lock is needed to ensure that AddRef happens atomically
             from->AddRef();
@@ -334,6 +333,7 @@ bool CUnknownObj::AddSource(CNode *from)
             }
         }
         availableFrom.push_back(req);
+        return true;
     }
   return false;
 }
@@ -355,8 +355,12 @@ bool RequestBlock(CNode *pfrom, CInv obj)
     //        here.
     if (IsChainNearlySyncd() || chainParams.NetworkIDString() == "regtest")
     {
-        LogPrint("net", "getheaders (%d) %s to peer=%d\n", pindexBestHeader->nHeight, obj.hash.ToString(), pfrom->id);
-        pfrom->PushMessage(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexBestHeader), obj.hash);
+        BlockMap::iterator idxIt = mapBlockIndex.find(obj.hash);
+        if (idxIt == mapBlockIndex.end())  // only request if we don't already have the header
+        {
+            LogPrint("net", "getheaders (%d) %s to peer=%d\n", pindexBestHeader->nHeight, obj.hash.ToString(), pfrom->id);
+            pfrom->PushMessage(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexBestHeader), obj.hash);
+        }
     }
 
     {
@@ -560,8 +564,8 @@ void CRequestManager::SendRequests()
                     // Instead we'll forget about it -- the node is already popped of of the available list so now we'll
                     // release our reference.
                     LOCK(cs_vNodes);
-                    LogPrint("req", "ReqMgr: %s removed block ref to %d count %d\n", obj.ToString(),
-                        next.node->GetId(), next.node->GetRefCount());
+                    //LogPrint("req", "ReqMgr: %s removed block ref to %d count %d\n", obj.ToString(),
+                    //    next.node->GetId(), next.node->GetRefCount());
                     next.node->Release();
                     next.node = NULL;
                 }

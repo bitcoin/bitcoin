@@ -53,7 +53,7 @@ bool IsTxBUIP055Only(const CTxMemPoolEntry& txentry)
 {
     if (txentry.sighashType & SIGHASH_FORKID)
     {
-        LogPrintf("txn is BUIP055-specific\n");
+        // LogPrintf("txn is BUIP055-specific\n");
         return true;
     }
     return false;
