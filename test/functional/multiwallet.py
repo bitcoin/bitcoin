@@ -18,6 +18,13 @@ class MultiWalletTest(BitcoinTestFramework):
         self.extra_args = [['-wallet=w1', '-wallet=w2', '-wallet=w3']]
 
     def run_test(self):
+        self.stop_node(0)
+
+        # should not initialize if there are duplicate wallets
+        self.assert_start_raises_init_error(0, self.options.tmpdir, ['-wallet=w1', '-wallet=w1'], 'Duplicate -wallet filename')
+
+        self.nodes[0] = self.start_node(0, self.options.tmpdir, self.extra_args[0])
+
         w1 = self.nodes[0] / "wallet/w1"
         w1.generate(1)
 
