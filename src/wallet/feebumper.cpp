@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <consensus/validation.h>
+#include <interfaces/chain.h>
 #include <wallet/coincontrol.h>
 #include <wallet/feebumper.h>
 #include <wallet/fees.h>
@@ -64,7 +65,8 @@ namespace feebumper {
 
 bool TransactionCanBeBumped(const CWallet* wallet, const uint256& txid)
 {
-    LOCK2(cs_main, wallet->cs_wallet);
+    auto locked_chain = wallet->chain().lock();
+    LOCK(wallet->cs_wallet);
     const CWalletTx* wtx = wallet->GetWalletTx(txid);
     if (wtx == nullptr) return false;
 
@@ -76,7 +78,8 @@ bool TransactionCanBeBumped(const CWallet* wallet, const uint256& txid)
 Result CreateTransaction(const CWallet* wallet, const uint256& txid, const CCoinControl& coin_control, CAmount total_fee, std::vector<std::string>& errors,
                          CAmount& old_fee, CAmount& new_fee, CMutableTransaction& mtx)
 {
-    LOCK2(cs_main, wallet->cs_wallet);
+    auto locked_chain = wallet->chain().lock();
+    LOCK(wallet->cs_wallet);
     errors.clear();
     auto it = wallet->mapWallet.find(txid);
     if (it == wallet->mapWallet.end()) {
@@ -212,13 +215,15 @@ Result CreateTransaction(const CWallet* wallet, const uint256& txid, const CCoin
 }
 
 bool SignTransaction(CWallet* wallet, CMutableTransaction& mtx) {
-    LOCK2(cs_main, wallet->cs_wallet);
+    auto locked_chain = wallet->chain().lock();
+    LOCK(wallet->cs_wallet);
     return wallet->SignTransaction(mtx);
 }
 
 Result CommitTransaction(CWallet* wallet, const uint256& txid, CMutableTransaction&& mtx, std::vector<std::string>& errors, uint256& bumped_txid)
 {
-    LOCK2(cs_main, wallet->cs_wallet);
+    auto locked_chain = wallet->chain().lock();
+    LOCK(wallet->cs_wallet);
     if (!errors.empty()) {
         return Result::MISC_ERROR;
     }
