@@ -59,7 +59,11 @@ int main(int argc, char *argv[])
     // Prefer the "minimal" platform for the test instead of the normal default
     // platform ("xcb", "windows", or "cocoa") so tests can't unintentially
     // interfere with any background GUIs and don't require extra resources.
-    setenv("QT_QPA_PLATFORM", "minimal", 0);
+    #if defined(WIN32)
+        _putenv_s("QT_QPA_PLATFORM", "minimal");
+    #else
+        setenv("QT_QPA_PLATFORM", "minimal", 0);
+    #endif
 
     // Don't remove this, it's needed to access
     // QApplication:: and QCoreApplication:: in the tests
