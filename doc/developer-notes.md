@@ -28,12 +28,12 @@ tool to clean up patches automatically before submission.
 required when doing so would need changes to significant pieces of existing
 code.
   - Variable and namespace names are all lowercase, and may use `_` to
-    separate words.
+    separate words (snake_case).
     - Class member variables have a `m_` prefix.
     - Global variables have a `g_` prefix.
   - Constant names are all uppercase, and use `_` to separate words.
-  - Class names, function names and method names are CamelCase. Do not prefix
-    class names with `C`.
+  - Class names, function names and method names are UpperCamelCase
+    (PascalCase). Do not prefix class names with `C`.
 
 - **Miscellaneous**
   - `++i` is preferred over `i++`.
