@@ -3240,6 +3240,23 @@ size_t CWallet::KeypoolCountExternalKeys()
     return setExternalKeyPool.size();
 }
 
+void CWallet::LoadKeyPool(int64_t nIndex, const CKeyPool &keypool)
+{
+    if (keypool.fInternal) {
+        setInternalKeyPool.insert(nIndex);
+    } else {
+        setExternalKeyPool.insert(nIndex);
+    }
+    m_max_keypool_index = std::max(m_max_keypool_index, nIndex);
+
+    // If no metadata exists yet, create a default with the pool key's
+    // creation time. Note that this may be overwritten by actually
+    // stored metadata for that key later, which is fine.
+    CKeyID keyid = keypool.vchPubKey.GetID();
+    if (mapKeyMetadata.count(keyid) == 0)
+        mapKeyMetadata[keyid] = CKeyMetadata(keypool.nTime);
+}
+
 bool CWallet::TopUpKeyPool(unsigned int kpSize)
 {
     {
