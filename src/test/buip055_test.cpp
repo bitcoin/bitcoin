@@ -59,9 +59,10 @@ BOOST_AUTO_TEST_CASE(buip055_op_return)
     tx.vout[1].nValue = 0;
     BOOST_CHECK(IsTxOpReturnInvalid(tx) == true);
 
+    // OP_RETURN must be the first instruction for it to could as an invalid tx on the new fork
     tx.vout[1].scriptPubKey = CScript() << OP_DUP << OP_HASH160 << ToByteVector(key.GetPubKey().GetID()) << OP_EQUALVERIFY << OP_RETURN << invalidOpReturn;
     tx.vout[1].nValue = 0;
-    BOOST_CHECK(IsTxOpReturnInvalid(tx) == true);
+    BOOST_CHECK(IsTxOpReturnInvalid(tx) == false);
 
     tx.vout[1].scriptPubKey = CScript() << OP_DUP << OP_HASH160 << ToByteVector(key.GetPubKey().GetID()) << OP_EQUALVERIFY << invalidOpReturn;
     tx.vout[1].nValue = 0;

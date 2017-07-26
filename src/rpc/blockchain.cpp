@@ -369,7 +369,7 @@ UniValue getblock(const UniValue& params, bool fHelp)
             "\nIf verbose is false, returns a string that is serialized, hex-encoded data for block 'hash'.\n"
             "If verbose is true, returns an Object with information about block <hash>.\n"
             "\nArguments:\n"
-            "1. \"hash\"          (string, required) The block hash\n"
+            "1. \"hash\"          (string, required) The block hash or height\n"
             "2. verbose           (boolean, optional, default=true) true for a json object, false for the hex encoded data\n"
             "\nResult (for verbose = true):\n"
             "{\n"
@@ -404,16 +404,30 @@ UniValue getblock(const UniValue& params, bool fHelp)
 
     std::string strHash = params[0].get_str();
     uint256 hash(uint256S(strHash));
-
+    CBlockIndex* pblockindex = NULL;
     bool fVerbose = true;
     if (params.size() > 1)
         fVerbose = params[1].get_bool();
 
     if (mapBlockIndex.count(hash) == 0)
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+    {
+        arith_uint256 h = UintToArith256(hash);
+        if (h.bits() < 65)
+        {
+            uint64_t height = boost::lexical_cast<unsigned int>(strHash);
+            if (height > (uint64_t) chainActive.Height())
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block index out of range");
+            pblockindex = chainActive[height];
+        }
+        else
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+    }
+    else
+    {
+        pblockindex = mapBlockIndex[hash];
+    }
 
     CBlock block;
-    CBlockIndex* pblockindex = mapBlockIndex[hash];
 
     if (fHavePruned && !(pblockindex->nStatus & BLOCK_HAVE_DATA) && pblockindex->nTx > 0)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Block not available (pruned data)");

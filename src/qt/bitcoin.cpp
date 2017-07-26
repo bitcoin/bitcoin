@@ -681,10 +681,11 @@ int main(int argc, char *argv[])
     qRegisterMetaType< CAmount >("CAmount");
 
     /// 2. Parse command-line options. Command-line options take precedence:
+    AllowedArgs::BitcoinQt allowedArgs(&tweaks);
     try {
-        ParseParameters(argc, argv, AllowedArgs::BitcoinQt(&tweaks));
+        ParseParameters(argc, argv, allowedArgs);
     } catch (const std::exception& e) {
-        QMessageBox::critical(0, QObject::tr("Bitcoin Classic"),
+        QMessageBox::critical(0, QObject::tr("Bitcoin"),
                               QObject::tr("Error: Cannot parse program options: %1.").arg(e.what()));
         return EXIT_FAILURE;
     }
@@ -732,7 +733,7 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
     try {
-        ReadConfigFile(mapArgs, mapMultiArgs, &tweaks);
+        ReadConfigFile(mapArgs, mapMultiArgs, allowedArgs);
     } catch (const std::exception& e) {
         QMessageBox::critical(0, QObject::tr(PACKAGE_NAME),
                               QObject::tr("Error: Cannot parse configuration file: %1. Only use key=value syntax.").arg(e.what()));

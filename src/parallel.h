@@ -36,11 +36,13 @@ protected:
     CAmount amount;
 
 public:
+    unsigned char sighashType;
     CScriptCheck()
         : resourceTracker(NULL), ptxTo(0), nIn(0), nFlags(0), cacheStore(false), error(SCRIPT_ERR_UNKNOWN_ERROR),
-          amount(0)
+          amount(0), sighashType(0)
     {
     }
+
     CScriptCheck(ValidationResourceTracker *resourceTrackerIn,
         const CCoins &txFromIn,
         const CTransaction &txToIn,
@@ -48,7 +50,8 @@ public:
         unsigned int nFlagsIn,
         bool cacheIn)
         : resourceTracker(resourceTrackerIn), scriptPubKey(txFromIn.vout[txToIn.vin[nInIn].prevout.n].scriptPubKey),
-          ptxTo(&txToIn), nIn(nInIn), nFlags(nFlagsIn), cacheStore(cacheIn), error(SCRIPT_ERR_UNKNOWN_ERROR)
+          ptxTo(&txToIn), nIn(nInIn), nFlags(nFlagsIn), cacheStore(cacheIn), error(SCRIPT_ERR_UNKNOWN_ERROR),
+          sighashType(0)
     {
         amount = txFromIn.vout[txToIn.vin[nInIn].prevout.n].nValue;
     }
@@ -65,28 +68,10 @@ public:
         std::swap(cacheStore, check.cacheStore);
         std::swap(error, check.error);
         std::swap(amount, check.amount);
+        std::swap(sighashType, check.sighashType);
     }
 
     ScriptError GetScriptError() const { return error; }
-};
-
-class CScriptCheckAndAnalyze : public CScriptCheck
-{
-    CTransaction *ptxToNonConst;
-
-public:
-    CScriptCheckAndAnalyze() : CScriptCheck(), ptxToNonConst(0) {}
-    CScriptCheckAndAnalyze(ValidationResourceTracker *resourceTrackerIn,
-        const CCoins &txFromIn,
-        CTransaction &txToIn,
-        unsigned int nInIn,
-        unsigned int nFlagsIn,
-        bool cacheIn)
-        : CScriptCheck(resourceTrackerIn, txFromIn, txToIn, nInIn, nFlagsIn, cacheIn), ptxToNonConst(&txToIn)
-    {
-    }
-
-    bool operator()();
 };
 
 class CParallelValidation

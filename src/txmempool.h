@@ -103,6 +103,8 @@ private:
     CAmount nModFeesWithDescendants;  //! ... and total fees (all including us)
 
 public:
+    unsigned char sighashType;
+    CTxMemPoolEntry();
     CTxMemPoolEntry(const CTransaction& _tx, const CAmount& _nFee,
                     int64_t _nTime, double _entryPriority, unsigned int _entryHeight,
                     bool poolHasNoInputsOf, CAmount _inChainInputValue, bool spendsCoinbase,
@@ -572,6 +574,7 @@ public:
     }
     // BU: end
 
+    bool lookup(uint256 hash, CTxMemPoolEntry& result) const;
     bool lookup(uint256 hash, CTransaction& result) const;
 
     /** Estimate fee rate needed to get into the next nBlocks

@@ -118,19 +118,11 @@ public:
 
 #ifdef BITCOIN_CASH
         // List of Bitcoin Cash compatible seeders
-        vSeeds.push_back(
-CDNSSeedData("bitcoinunlimited.info", "btccash-seeder.bitcoinunlimited.info", true));
-        vSeeds.push_back(
-CDNSSeedData("bitcoinabc.org", "seed.bitcoinabc.org", true));
-
+        vSeeds.push_back(CDNSSeedData("bitcoinunlimited.info", "btccash-seeder.bitcoinunlimited.info", true));
+        vSeeds.push_back(CDNSSeedData("bitcoinabc.org", "seed.bitcoinabc.org", true));
         vSeeds.push_back(CDNSSeedData("bitcoinforks.org", "seed-abc.bitcoinforks.org", true));
-        vSeeds.push_back(CDNSSeedData("bitcoinunlimited.info",
- "seed.bitcoinunlimited.info", true));
-        vSeeds.push_back(CDNSSeedData("bitprim.org", "seed.bitprim.org", true));
- // Bitprim
-
-        vSeeds.push_back(
-CDNSSeedData("deadalnix.me", "seed.deadalnix.me", true)); // Amaury SÉCHET
+        vSeeds.push_back(CDNSSeedData("bitprim.org", "seed.bitprim.org", true)); // Bitprim
+        vSeeds.push_back(CDNSSeedData("deadalnix.me", "seed.deadalnix.me", true)); // Amaury SÉCHET
 
 #else
         // List of BitcoinUnlimited seeders

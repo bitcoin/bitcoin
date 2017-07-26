@@ -7,11 +7,14 @@
 #include "primitives/block.h"
 #include "script/interpreter.h"
 #include "unlimited.h"
+#include "chainparams.h"
+#include "txmempool.h"
 
 #include <inttypes.h>
 #include <vector>
 
 const int REQ_6_1_SUNSET_HEIGHT = 530000;
+const int TESTNET_REQ_6_1_SUNSET_HEIGHT = 1250000;
 
 static const std::string ANTI_REPLAY_MAGIC_VALUE = "Bitcoin: A Peer-to-Peer Electronic Cash System";
 
@@ -37,7 +40,8 @@ bool ValidateBUIP055Block(const CBlock &block, CValidationState &state, int nHei
     // Validate transactions are HF compatible
     for (const CTransaction &tx : block.vtx)
     {
-        if ((nHeight <= REQ_6_1_SUNSET_HEIGHT) && IsTxOpReturnInvalid(tx))
+        int sunsetHeight = (Params().NetworkIDString() == "testnet") ? TESTNET_REQ_6_1_SUNSET_HEIGHT : REQ_6_1_SUNSET_HEIGHT;
+        if ((nHeight <= sunsetHeight) && IsTxOpReturnInvalid(tx))
             return state.DoS(100,
                              error("transaction is invalid on BUIP055 chain"), REJECT_INVALID, "bad-txns-wrong-fork");
     }
@@ -45,11 +49,11 @@ bool ValidateBUIP055Block(const CBlock &block, CValidationState &state, int nHei
 }
 
 
-bool IsTxBUIP055Only(const CTransaction& tx)
+bool IsTxBUIP055Only(const CTxMemPoolEntry& txentry)
 {
-    if (tx.sighashType & SIGHASH_FORKID)
+    if (txentry.sighashType & SIGHASH_FORKID)
     {
-        LogPrintf("txn is BUIP055-specific\n");
+        // LogPrintf("txn is BUIP055-specific\n");
         return true;
     }
     return false;
@@ -64,6 +68,7 @@ bool IsTxOpReturnInvalid(const CTransaction &tx)
         {
             CScript::const_iterator pc(txout.scriptPubKey.begin());
             opcodetype op;
+#if 0 // Allow OP_RETURN anywhere
             for (;pc != txout.scriptPubKey.end();)
             {
                 if (txout.scriptPubKey.GetOp(pc, op))
@@ -71,6 +76,12 @@ bool IsTxOpReturnInvalid(const CTransaction &tx)
                     if (op == OP_RETURN) break;
                 }
             }
+#else // OP_RETURN must be the first instruction
+            if (txout.scriptPubKey.GetOp(pc, op))
+                {
+                    if (op != OP_RETURN) return false;
+                }
+#endif
             if (pc != txout.scriptPubKey.end())
             {
                 std::vector<unsigned char> data;

@@ -237,9 +237,6 @@ uint256 hashRecentRejectsChainTip;
 /** Number of preferable block download peers. */
 int nPreferredDownload = 0;
 
-/** Dirty block index entries. */
-std::set<CBlockIndex *> setDirtyBlockIndex;
-
 /** Dirty block file entries. */
 std::set<int> setDirtyFileInfo;
 
@@ -247,6 +244,8 @@ std::set<int> setDirtyFileInfo;
 int nPeersWithValidatedDownloads = 0;
 } // anon namespace
 
+/** Dirty block index entries. */
+std::set<CBlockIndex *> setDirtyBlockIndex;
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -1159,11 +1158,13 @@ bool AcceptToMemoryPoolWorker(CTxMemPool &pool,
     if (tx.IsCoinBase())
         return state.DoS(100, false, REJECT_INVALID, "coinbase");
 
-    // BUIP055: reject transactions that won't work on the fork.
+    // BUIP055: reject transactions that won't work on the fork, starting 2 hours before the fork
+    // based on op_return.
+    // But accept both sighashtypes because we will need all the tx types during the transition.
     // This code uses the system time to determine when to start rejecting which is inaccurate relative to the
     // actual activation time (defined by times in the blocks).
     // But its ok to reject these transactions from the mempool a little early (or late).
-    if ((miningForkTime.value != 0) && (start / 1000000 >= miningForkTime.value))
+    if ((miningForkTime.value != 0) && (start / 1000000 >= miningForkTime.value - (2 * 60 * 60)))
     {
         forkVerifyFlags = SCRIPT_ENABLE_SIGHASH_FORKID;
         if (IsTxOpReturnInvalid(tx))
@@ -1443,9 +1444,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool &pool,
 
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
-
-        if (!CheckInputsAnalyzeTx(
-                tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS | forkVerifyFlags, true, &resourceTracker))
+        unsigned char sighashType = 0;
+        if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS | forkVerifyFlags, true, &resourceTracker,
+                NULL, &sighashType))
         {
             LogPrint("mempool", "txn CheckInputs failed");
             return false;
@@ -1461,7 +1462,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool &pool,
         // There is a similar check in CreateNewBlock() to prevent creating
         // invalid blocks, however allowing such transactions into the mempool
         // can be exploited as a DoS attack.
-        if (!CheckInputsAnalyzeTx(tx, state, view, true, MANDATORY_SCRIPT_VERIFY_FLAGS | forkVerifyFlags, true, NULL))
+        unsigned char sighashType2 = 0;
+        if (!CheckInputs(tx, state, view, true, MANDATORY_SCRIPT_VERIFY_FLAGS | forkVerifyFlags, true, NULL, NULL,
+                &sighashType2))
         {
             return error(
                 "%s: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags %s, %s",
@@ -1469,6 +1472,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool &pool,
         }
 
         // Store transaction in memory
+        entry.sighashType = sighashType | sighashType2;
         pool.addUnchecked(hash, entry, setAncestors, !IsInitialBlockDownload());
 
         // trim mempool and check if tx was trimmed
@@ -1789,6 +1793,7 @@ void static InvalidChainFound(CBlockIndex *pindexNew)
     CheckForkWarningConditions();
 }
 
+
 void static InvalidBlockFound(CBlockIndex *pindex, const CValidationState &state)
 {
     int nDoS = 0;
@@ -1817,6 +1822,9 @@ void static InvalidBlockFound(CBlockIndex *pindex, const CValidationState &state
         setDirtyBlockIndex.insert(pindex);
         setBlockIndexCandidates.erase(pindex);
         InvalidChainFound(pindex);
+
+        // Now mark every block index on every chain that contains pindex as child of invalid
+        MarkAllContainingChainsInvalid(pindex);
     }
 }
 
@@ -1868,22 +1876,8 @@ bool CScriptCheck::operator()()
 {
     const CScript &scriptSig = ptxTo->vin[nIn].scriptSig;
     CachingTransactionSignatureChecker checker(ptxTo, nIn, amount, cacheStore);
-    unsigned int sighashtype = 0;
-    if (!VerifyScript(scriptSig, scriptPubKey, nFlags, checker, &error, &sighashtype))
+    if (!VerifyScript(scriptSig, scriptPubKey, nFlags, checker, &error, &sighashType))
         return false;
-    if (resourceTracker)
-        resourceTracker->Update(ptxTo->GetHash(), checker.GetNumSigops(), checker.GetBytesHashed());
-    return true;
-}
-
-bool CScriptCheckAndAnalyze::operator()()
-{
-    const CScript &scriptSig = ptxTo->vin[nIn].scriptSig;
-    CachingTransactionSignatureChecker checker(ptxTo, nIn, amount, cacheStore);
-    unsigned int sighashtype = 0;
-    if (!VerifyScript(scriptSig, scriptPubKey, nFlags, checker, &error, &sighashtype))
-        return false;
-    ptxToNonConst->sighashType |= sighashtype;
     if (resourceTracker)
         resourceTracker->Update(ptxTo->GetHash(), checker.GetNumSigops(), checker.GetBytesHashed());
     return true;
@@ -1952,83 +1946,6 @@ bool CheckTxInputs(const CTransaction &tx, CValidationState &state, const CCoins
 }
 } // namespace Consensus
 
-bool CheckInputsAnalyzeTx(CTransaction &tx,
-    CValidationState &state,
-    const CCoinsViewCache &inputs,
-    bool fScriptChecks,
-    unsigned int flags,
-    bool cacheStore,
-    ValidationResourceTracker *resourceTracker,
-    std::vector<CScriptCheck> *pvChecks)
-{
-    if (!tx.IsCoinBase())
-    {
-        if (!Consensus::CheckTxInputs(tx, state, inputs, GetSpendHeight(inputs)))
-            return false;
-        if (pvChecks)
-            pvChecks->reserve(tx.vin.size());
-
-        // The first loop above does all the inexpensive checks.
-        // Only if ALL inputs pass do we perform expensive ECDSA signature checks.
-        // Helps prevent CPU exhaustion attacks.
-
-        // Skip ECDSA signature verification when connecting blocks before the
-        // last block chain checkpoint. Assuming the checkpoints are valid this
-        // is safe because block merkle hashes are still computed and checked,
-        // and any change will be caught at the next checkpoint. Of course, if
-        // the checkpoint is for a chain that's invalid due to false scriptSigs
-        // this optimisation would allow an invalid chain to be accepted.
-        if (fScriptChecks)
-        {
-            for (unsigned int i = 0; i < tx.vin.size(); i++)
-            {
-                const COutPoint &prevout = tx.vin[i].prevout;
-                const CCoins *coins = inputs.AccessCoins(prevout.hash);
-                if (!coins)
-                    LogPrintf("ASSERTION: no inputs available\n");
-                assert(coins);
-
-                // Verify signature
-                CScriptCheckAndAnalyze check(resourceTracker, *coins, tx, i, flags, cacheStore);
-                if (pvChecks)
-                {
-                    pvChecks->push_back(CScriptCheck());
-                    check.swap(pvChecks->back());
-                }
-                else if (!check())
-                {
-                    if (flags & STANDARD_NOT_MANDATORY_VERIFY_FLAGS)
-                    {
-                        // Check whether the failure was caused by a
-                        // non-mandatory script verification check, such as
-                        // non-standard DER encodings or non-null dummy
-                        // arguments; if so, don't trigger DoS protection to
-                        // avoid splitting the network between upgraded and
-                        // non-upgraded nodes.
-                        CScriptCheck check2(
-                            NULL, *coins, tx, i, flags & ~STANDARD_NOT_MANDATORY_VERIFY_FLAGS, cacheStore);
-                        if (check2())
-                            return state.Invalid(
-                                false, REJECT_NONSTANDARD, strprintf("non-mandatory-script-verify-flag (%s)",
-                                                               ScriptErrorString(check.GetScriptError())));
-                    }
-                    // Failures of other flags indicate a transaction that is
-                    // invalid in new blocks, e.g. a invalid P2SH. We DoS ban
-                    // such nodes as they are not following the protocol. That
-                    // said during an upgrade careful thought should be taken
-                    // as to the correct behavior - we may want to continue
-                    // peering with non-upgraded nodes even after a soft-fork
-                    // super-majority vote has passed.
-                    return state.DoS(100, false, REJECT_INVALID, strprintf("mandatory-script-verify-flag-failed (%s)",
-                                                                     ScriptErrorString(check.GetScriptError())));
-                }
-            }
-        }
-    }
-
-    return true;
-}
-
 bool CheckInputs(const CTransaction &tx,
     CValidationState &state,
     const CCoinsViewCache &inputs,
@@ -2036,7 +1953,8 @@ bool CheckInputs(const CTransaction &tx,
     unsigned int flags,
     bool cacheStore,
     ValidationResourceTracker *resourceTracker,
-    std::vector<CScriptCheck> *pvChecks)
+    std::vector<CScriptCheck> *pvChecks,
+    unsigned char *sighashType)
 {
     if (!tx.IsCoinBase())
     {
@@ -2099,6 +2017,8 @@ bool CheckInputs(const CTransaction &tx,
                     return state.DoS(100, false, REJECT_INVALID, strprintf("mandatory-script-verify-flag-failed (%s)",
                                                                      ScriptErrorString(check.GetScriptError())));
                 }
+                if (sighashType)
+                    *sighashType = check.sighashType;
             }
         }
     }
@@ -3769,6 +3689,8 @@ bool InvalidateBlock(CValidationState &state, const Consensus::Params &consensus
     }
 
     InvalidChainFound(pindex);
+    // Now mark every block index on every chain that contains pindex as child of invalid
+    MarkAllContainingChainsInvalid(pindex);
     mempool.removeForReorg(pcoinsTip, chainActive.Tip()->nHeight + 1, STANDARD_LOCKTIME_VERIFY_FLAGS);
     uiInterface.NotifyBlockTip(IsInitialBlockDownload(), pindex->pprev);
     return true;
@@ -3838,10 +3760,15 @@ CBlockIndex *AddToBlockIndex(const CBlockHeader &block)
         pindexNew->pprev = (*miPrev).second;
         pindexNew->nHeight = pindexNew->pprev->nHeight + 1;
         pindexNew->BuildSkip();
+        // BU If the prior block or an ancestor has failed, mark this one failed
+        if (pindexNew->pprev && pindexNew->pprev->nStatus & BLOCK_FAILED_MASK)
+            pindexNew->nStatus |= BLOCK_FAILED_CHILD;
     }
     pindexNew->nChainWork = (pindexNew->pprev ? pindexNew->pprev->nChainWork : 0) + GetBlockProof(*pindexNew);
     pindexNew->RaiseValidity(BLOCK_VALID_TREE);
-    if (pindexBestHeader == NULL || pindexBestHeader->nChainWork < pindexNew->nChainWork)
+
+    if ((!(pindexNew->nStatus & BLOCK_FAILED_MASK)) &&
+        (pindexBestHeader == NULL || pindexBestHeader->nChainWork < pindexNew->nChainWork))
         pindexBestHeader = pindexNew;
 
     setDirtyBlockIndex.insert(pindexNew);
@@ -4246,7 +4173,9 @@ bool AcceptBlockHeader(const CBlockHeader &block,
             if (ppindex)
                 *ppindex = pindex;
             if (pindex->nStatus & BLOCK_FAILED_MASK)
-                return state.Invalid(error("%s: block is marked invalid", __func__), 0, "duplicate");
+                return state.Invalid(
+                    error("%s: block %s height %d is marked invalid", __func__, hash.ToString(), pindex->nHeight), 0,
+                    "duplicate");
             return true;
         }
 
@@ -4330,6 +4259,8 @@ static bool AcceptBlock(const CBlock &block,
         {
             pindex->nStatus |= BLOCK_FAILED_VALID;
             setDirtyBlockIndex.insert(pindex);
+            // Now mark every block index on every chain that contains pindex as child of invalid
+            MarkAllContainingChainsInvalid(pindex);
         }
         return false;
     }
@@ -5714,15 +5645,20 @@ void static ProcessGetData(CNode *pfrom, const Consensus::Params &consensusParam
                 }
                 if (!pushed && inv.type == MSG_TX)
                 {
-                    CTransaction tx;
-                    if (mempool.lookup(inv.hash, tx))
+                    CTxMemPoolEntry txe;
+                    if (mempool.lookup(inv.hash, txe))
                     {
-                        CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-                        ss.reserve(1000);
-                        ss << tx;
-                        pfrom->PushMessage(NetMsgType::TX, ss);
-                        pushed = true;
-                        pfrom->txsSent += 1;
+                        // Only offer a TX to the fork if its signed properly
+                        if (!(onlyAcceptForkSig.value && !IsTxBUIP055Only(txe) &&
+                                chainActive.Tip()->IsforkActiveOnNextBlock(miningForkTime.value)))
+                        {
+                            CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+                            ss.reserve(1000);
+                            ss << txe.GetTx();
+                            pfrom->PushMessage(NetMsgType::TX, ss);
+                            pushed = true;
+                            pfrom->txsSent += 1;
+                        }
                     }
                 }
                 if (!pushed)
@@ -6914,11 +6850,15 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
             CInv inv(MSG_TX, hash);
             if (pfrom->pfilter)
             {
-                CTransaction tx;
-                bool fInMemPool = mempool.lookup(hash, tx);
+                CTxMemPoolEntry txe;
+                bool fInMemPool = mempool.lookup(hash, txe);
                 if (!fInMemPool)
                     continue; // another thread removed since queryHashes, maybe...
-                if (!pfrom->pfilter->IsRelevantAndUpdate(tx))
+                if (!pfrom->pfilter->IsRelevantAndUpdate(txe.GetTx()))
+                    continue;
+                // don't relay old-style transactions after the fork.
+                if (onlyAcceptForkSig.value && !IsTxBUIP055Only(txe) &&
+                    chainActive.Tip()->IsforkActiveOnNextBlock(miningForkTime.value))
                     continue;
             }
             vInv.push_back(inv);
@@ -7421,9 +7361,10 @@ bool SendMessages(CNode *pto)
         if (!state.fSyncStarted && !pto->fClient && !fImporting && !fReindex)
         {
             // Only actively request headers from a single peer, unless we're close to today.
-            if ((nSyncStarted == 0 && fFetch) || pindexBestHeader->GetBlockTime() > GetAdjustedTime() - 24 * 60 * 60)
+            if ((nSyncStarted == 0 && fFetch) ||
+                chainActive.Tip()->GetBlockTime() > GetAdjustedTime() - SINGLE_PEER_REQUEST_MODE_AGE)
             {
-                const CBlockIndex *pindexStart = pindexBestHeader;
+                const CBlockIndex *pindexStart = chainActive.Tip();
                 /* If possible, start at the block preceding the currently
                    best known header.  This ensures that we always get a
                    non-empty list of headers back as long as the peer
@@ -7693,8 +7634,8 @@ bool SendMessages(CNode *pto)
                 if (!AlreadyHave(inv))
                 {
                     requester.AskFor(inv, pto);
-                    LogPrint("req", "AskFor block %s (%d) peer=%d\n", pindex->GetBlockHash().ToString(),
-                        pindex->nHeight, pto->id);
+                    // LogPrint("req", "AskFor block %s (%d) peer=%d\n", pindex->GetBlockHash().ToString(),
+                    //    pindex->nHeight, pto->id);
                 }
             }
         }

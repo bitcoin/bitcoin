@@ -403,19 +403,8 @@ bool CheckInputs(const CTransaction &tx,
     unsigned int flags,
     bool cacheStore,
     ValidationResourceTracker *resourceTracker,
-    std::vector<CScriptCheck> *pvChecks = NULL);
-
-/**
-  same as above except modifies data in the tx to describe its properties.
- */
-bool CheckInputsAnalyzeTx(CTransaction &tx,
-    CValidationState &state,
-    const CCoinsViewCache &inputs,
-    bool fScriptChecks,
-    unsigned int flags,
-    bool cacheStore,
-    ValidationResourceTracker *resourceTracker,
-    std::vector<CScriptCheck> *pvChecks = NULL);
+    std::vector<CScriptCheck> *pvChecks = NULL,
+    unsigned char *sighashType = NULL);
 
 
 /** Apply the effects of this transaction on the UTXO set represented by view */
