@@ -199,6 +199,7 @@ public:
 
     bool getPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const;
     bool havePrivKey(const CKeyID &address) const;
+    bool ownAddress(const CBitcoinAddress &address) const;
     bool getPrivKey(const CKeyID &address, CKey& vchPrivKeyOut) const;
     void getOutputs(const std::vector<COutPoint>& vOutpoints, std::vector<COutput>& vOutputs);
     bool isSpent(const COutPoint& outpoint) const;
@@ -222,7 +223,7 @@ public:
     int getDefaultConfirmTarget() const;
     
     void lockWallet();
-    CHDWallet *getParticlWallet();
+    CHDWallet *getParticlWallet() const;
     CAmount getReserveBalance();
 
     void checkBalanceChanged();

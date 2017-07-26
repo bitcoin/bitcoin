@@ -1096,10 +1096,8 @@ bool CWallet::AbandonTransaction(const uint256& hashTx)
         todo.erase(now);
         done.insert(now);
         
-        
         assert(mapWallet.count(now));
         CWalletTx& wtx = mapWallet[now];
-        
         
         int currentconfirm = wtx.GetDepthInMainChain();
         // If the orig tx was not in block, none of its spends can be

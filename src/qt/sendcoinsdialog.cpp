@@ -332,9 +332,38 @@ void SendCoinsDialog::on_sendButton_clicked()
     
     sCommand += "] \"\" \"\" "+QString::number(nRingSize)+" "+QString::number(nMaxInputs);
     
+    QString sCoinControl;
+    if (!boost::get<CNoDestination>(&ctrl.destChange) || ctrl.NumSelected() > 0)
+    {
+        sCoinControl += " {";
+        bool fNeedComma = false;
+        if (!boost::get<CNoDestination>(&ctrl.destChange))
+        {
+            CBitcoinAddress addrChange(ctrl.destChange);
+            sCoinControl += "\"changeaddress\":\""+QString::fromStdString(addrChange.ToString())+"\"";
+            fNeedComma = true;
+        };
+        
+        if (ctrl.NumSelected() > 0)
+        {
+            if (fNeedComma)
+                sCoinControl += ",\"inputs\":[";
+            for (const auto &op : ctrl.setSelected)
+            {
+                
+            };
+            sCoinControl += "]";
+            fNeedComma = true;
+        };
+        
+        
+        
+        sCoinControl += "} ";
+    };
+    
     
     UniValue rv;
-    QString sGetFeeCommand = sCommand + " true";
+    QString sGetFeeCommand = sCommand + " true" + sCoinControl;
     if (!tryCallRpc(sGetFeeCommand, rv))
         return;
     
@@ -441,6 +470,9 @@ void SendCoinsDialog::on_sendButton_clicked()
     
     
     WalletModel::SendCoinsReturn sendStatus = WalletModel::OK;
+    
+    sCommand += " false";
+    sCommand += sCoinControl;
     
     if (!tryCallRpc(sCommand, rv))
         sendStatus = WalletModel::TransactionCreationFailed;
@@ -892,9 +924,7 @@ void SendCoinsDialog::coinControlChangeEdited(const QString& text)
         }
         else // Valid address
         {
-            CKeyID keyid;
-            addr.GetKeyID(keyid);
-            if (!model->havePrivKey(keyid)) // Unknown change address
+            if (!model->ownAddress(addr)) // Unknown change address
             {
                 ui->labelCoinControlChangeLabel->setText(tr("Warning: Unknown change address"));
 

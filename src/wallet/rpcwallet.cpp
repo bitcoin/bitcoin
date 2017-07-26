@@ -533,18 +533,18 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 6)
         throw runtime_error(
-            "sendtoaddress \"address\" amount ( \"comment\" \"comment-to\" subtractfeefromamount, \"narration\")\n"
+            "sendtoaddress \"address\" amount ( \"comment\" \"comment-to\" subtractfeefromamount \"narration\")\n"
             "\nSend an amount to a given address.\n"
             + HelpRequiringPassphrase() +
             "\nArguments:\n"
             "1. \"address\"     (string, required) The particl address to send to.\n"
-            "2. \"amount\"      (numeric or string, required) The amount in " + CURRENCY_UNIT + " to send. eg 0.1\n"
+            "2. amount          (numeric or string, required) The amount in " + CURRENCY_UNIT + " to send. eg 0.1\n"
             "3. \"comment\"     (string, optional) A comment used to store what the transaction is for. \n"
             "                            This is not part of the transaction, just kept in your wallet.\n"
             "4. \"comment_to\"  (string, optional) A comment to store the name of the person or organization \n"
             "                            to which you're sending the transaction. This is not part of the \n"
             "                            transaction, just kept in your wallet.\n"
-            "5. \"subtractfeefromamount\"  (boolean, optional, default=false) The fee will be deducted from the amount being sent.\n"
+            "5. subtractfeefromamount  (boolean, optional, default=false) The fee will be deducted from the amount being sent.\n"
             "                            The recipient will receive less " + CURRENCY_UNIT + " than you enter in the amount field.\n"
             "6. \"narration\"   (string, optional) Up to 24 characters sent with the transaction.\n"
             "                            The narration is stored in the blockchain and is sent encrypted when destination is a stealth address and unencrypted otherwise.\n"
@@ -2345,7 +2345,10 @@ UniValue abandontransaction(const JSONRPCRequest& request)
     hash.SetHex(request.params[0].get_str());
 
     if (!pwalletMain->mapWallet.count(hash))
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id");
+    {
+        if (!fParticlWallet || !((CHDWallet*)pwalletMain)->HaveTransaction(hash))
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id");
+    };
     if (!pwalletMain->AbandonTransaction(hash))
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not eligible for abandonment");
 

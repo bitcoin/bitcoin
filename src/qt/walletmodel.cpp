@@ -617,6 +617,14 @@ bool WalletModel::havePrivKey(const CKeyID &address) const
     return wallet->HaveKey(address);
 }
 
+bool WalletModel::ownAddress(const CBitcoinAddress &address) const
+{
+    CHDWallet *phdw = getParticlWallet();
+    if (!phdw)
+        return false;
+    return phdw->HaveAddress(address);
+}
+
 bool WalletModel::getPrivKey(const CKeyID &address, CKey& vchPrivKeyOut) const
 {
     return wallet->GetKey(address, vchPrivKeyOut);
@@ -764,7 +772,7 @@ void WalletModel::lockWallet()
         LockWallet(wallet);
 };
 
-CHDWallet *WalletModel::getParticlWallet()
+CHDWallet *WalletModel::getParticlWallet() const
 {
     CHDWallet *rv;
     if (!wallet || !(rv = dynamic_cast<CHDWallet*>(wallet)))

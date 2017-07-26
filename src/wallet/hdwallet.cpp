@@ -955,6 +955,15 @@ bool CHDWallet::HaveExtKey(const CKeyID &keyID) const
     return false;
 };
 
+bool CHDWallet::HaveTransaction(const uint256 &txhash) const
+{
+    if (mapWallet.count(txhash))
+        return true;
+    if (mapRecords.count(txhash))
+        return true;
+    return false;
+};
+
 int CHDWallet::GetKey(const CKeyID &address, CKey &keyOut, CExtKeyAccount *&pa, CEKAKey &ak, CKeyID &idStealth) const
 {
     int rv = 0;
@@ -1934,7 +1943,7 @@ void CHDWallet::AddOutputRecordMetaData(CTransactionRecord &rtx, std::vector<CTe
             COutputRecord rec;
             
             rec.n = r.n;
-            if (r.fChange)
+            if (r.fChange && HaveAddress(r.address))
                 rec.nFlags |= ORF_CHANGE;
             rec.nType = r.nType;
             rec.nValue = r.nAmount;
@@ -1951,7 +1960,7 @@ void CHDWallet::AddOutputRecordMetaData(CTransactionRecord &rtx, std::vector<CTe
             rec.nValue = r.nAmount;
             rec.nFlags |= ORF_FROM;
             rec.scriptPubKey = r.scriptPubKey;
-            if (r.fChange)
+            if (r.fChange && HaveAddress(r.address))
                 rec.nFlags |= ORF_CHANGE;
             rec.sNarration = r.sNarration;
             
@@ -1996,7 +2005,7 @@ void CHDWallet::AddOutputRecordMetaData(CTransactionRecord &rtx, std::vector<CTe
             rec.nType = r.nType;
             rec.nValue = r.nAmount;
             rec.nFlags |= ORF_FROM;
-            if (r.fChange)
+            if (r.fChange && HaveAddress(r.address))
                 rec.nFlags |= ORF_CHANGE;
             rec.sNarration = r.sNarration;
             
@@ -2060,7 +2069,6 @@ int CHDWallet::ExpandTempRecipients(std::vector<CTempRecipient> &vecSend, CStore
                 if (k >= nTries)
                     return errorN(1, sError, __func__, "Could not generate receiving public key.");
                 
-                r.sEphem.GetPubKey();
                 CPubKey pkEphem = r.sEphem.GetPubKey();
                 r.pkTo = CPubKey(pkSendTo);
                 CKeyID idTo = r.pkTo.GetID();
@@ -2267,7 +2275,6 @@ int CHDWallet::ExpandTempRecipients(std::vector<CTempRecipient> &vecSend, CStore
             };
             
             r.sEphem = sEphem;
-            //return errorN(1, sError, __func__, _("TODO.").c_str());
         };
     };
     
@@ -2462,11 +2469,164 @@ bool CTempRecipient::ApplySubFee(CAmount nFee, size_t nSubtractFeeFromAmount, bo
     return false;
 };
 
+bool CHDWallet::SetChangeDest(CTempRecipient &r, std::string &sError)
+{
+    
+    if (r.nType == OUTPUT_CT || r.nType == OUTPUT_RINGCT
+        || r.address.type() == typeid(CStealthAddress))
+    {
+        /*
+        // TODO: Make optional
+        if (0 != pc->DeriveNextKey(r.sEphem, nChild, true))
+            return errorN(1, sError, __func__, "TryDeriveNext failed.");
+        */
+        r.sEphem.MakeNewKey(true);
+    };
+    
+    if (r.address.type() == typeid(CStealthAddress))
+    {
+        CStealthAddress sx = boost::get<CStealthAddress>(r.address);
+        
+        CKey sShared;
+        ec_point pkSendTo;
+        
+        int k, nTries = 24;
+        for (k = 0; k < nTries; ++k)
+        {
+            if (StealthSecret(r.sEphem, sx.scan_pubkey, sx.spend_pubkey, sShared, pkSendTo) == 0)
+                break;
+            // if StealthSecret fails try again with new ephem key
+            /* TODO: Make optional
+            if (0 != pc->DeriveNextKey(sEphem, nChild, true))
+                return errorN(1, sError, __func__, "DeriveNextKey failed.");
+            */
+            r.sEphem.MakeNewKey(true);
+        };
+        if (k >= nTries)
+            return errorN(1, sError, __func__, "Could not generate receiving public key.");
+        
+        CPubKey pkEphem = r.sEphem.GetPubKey();
+        r.pkTo = CPubKey(pkSendTo);
+        CKeyID idTo = r.pkTo.GetID();
+        r.scriptPubKey = GetScriptForDestination(idTo);
+        
+        if (fDebug)
+            LogPrint("hdwallet", "Stealth send to generated change address: %s\n", CBitcoinAddress(idTo).ToString());
+        
+        if (r.nType == OUTPUT_CT || r.nType == OUTPUT_RINGCT)
+        {
+            if (sx.prefix.number_bits > 0)
+            {
+                r.nStealthPrefix = FillStealthPrefix(sx.prefix.number_bits, sx.prefix.bitfield);
+            };
+        } else
+        {
+            // TODO: dedupicate
+            std::vector<uint8_t> vchNarr;
+            if (r.sNarration.length() > 0)
+            {
+                SecMsgCrypter crypter;
+                crypter.SetKey(sShared.begin(), pkEphem.begin());
+                
+                if (!crypter.Encrypt((uint8_t*)r.sNarration.data(), r.sNarration.length(), vchNarr))
+                    return errorN(1, sError, __func__, "Narration encryption failed.");
+                
+                if (vchNarr.size() > MAX_STEALTH_NARRATION_SIZE)
+                    return errorN(1, sError, __func__, "Encrypted narration is too long.");
+            };
+            
+            r.vData.resize(34
+                + (sx.prefix.number_bits > 0 ? 5 : 0)
+                + (vchNarr.size() + (vchNarr.size() > 0 ? 1 : 0)));
+            
+            size_t o = 0;
+            r.vData[o++] = DO_STEALTH;
+            memcpy(&r.vData[o], pkEphem.begin(), 33);
+            o += 33;
+            
+            if (sx.prefix.number_bits > 0)
+            {
+                r.vData[o++] = DO_STEALTH_PREFIX;
+                r.nStealthPrefix = FillStealthPrefix(sx.prefix.number_bits, sx.prefix.bitfield);
+                memcpy(&r.vData[o], &r.nStealthPrefix, 4);
+                o+=4;
+            };
+            
+            if (vchNarr.size() > 0)
+            {
+                r.vData[o++] = DO_NARR_CRYPT;
+                memcpy(&r.vData[o], &vchNarr[0], vchNarr.size());
+                o += vchNarr.size();
+            };
+        };
+        return true;
+    };
+    
+    if (r.address.type() == typeid(CExtKeyPair))
+    {
+        CExtKeyPair ek = boost::get<CExtKeyPair>(r.address);
+        CExtKey58 ek58;
+        ek58.SetKeyP(ek);
+        uint32_t nChildKey;
+        
+        if (0 != ((CHDWallet*)pwalletMain)->ExtKeyGetDestination(ek, r.pkTo, nChildKey))
+            return errorN(false, sError, __func__, "ExtKeyGetDestination failed.");
+        
+        CKeyID idTo = r.pkTo.GetID();
+        r.scriptPubKey = GetScriptForDestination(idTo);
+        
+        return true;
+    };
+    
+    if (r.address.type() == typeid(CKeyID))
+    {
+        CKeyID idk = boost::get<CKeyID>(r.address);
+        
+        if (!GetPubKey(idk, r.pkTo))
+            return errorN(false, sError, __func__, "GetPubKey failed.");
+        r.scriptPubKey = GetScriptForDestination(idk);
+        
+        return true;
+    };
+    
+    if (r.address.type() != typeid(CNoDestination)
+        // TODO OUTPUT_CT?
+        && r.nType == OUTPUT_STANDARD)
+    {
+        r.scriptPubKey = GetScriptForDestination(r.address);
+        return r.scriptPubKey.size() > 0;
+    };
+    
+    return false;
+};
+
+static bool InsertChangeAddress(CTempRecipient &r, std::vector<CTempRecipient> &vecSend, int &nChangePosInOut)
+{
+    nChangePosInOut = GetRandInt(vecSend.size()+1);
+    if (nChangePosInOut < (int)vecSend.size()
+        && vecSend[nChangePosInOut].nType == OUTPUT_DATA)
+        nChangePosInOut++;
+    vecSend.insert(vecSend.begin()+nChangePosInOut, r);
+    
+    // Insert data output for stealth address if required
+    if (r.vData.size() > 0)
+    {
+        CTempRecipient rd;
+        rd.nType = OUTPUT_DATA;
+        rd.fChange = true;
+        rd.vData = r.vData;
+        r.vData.clear();
+        vecSend.insert(vecSend.begin()+nChangePosInOut+1, rd);
+    };
+    
+    return true;
+};
+
 
 int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
     std::vector<CTempRecipient> &vecSend,
     CExtKeyAccount *sea, CStoredExtKey *pc,
-    bool sign, CAmount &nFeeRet, std::string &sError)
+    bool sign, CAmount &nFeeRet, const CCoinControl *coinControl, std::string &sError)
 {
     nFeeRet = 0;
     CAmount nValue;
@@ -2500,7 +2660,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
         
         std::set<std::pair<const CWalletTx*,unsigned int> > setCoins;
         std::vector<COutput> vAvailableCoins;
-        AvailableCoins(vAvailableCoins, true);
+        AvailableCoins(vAvailableCoins, true, coinControl);
         
         // Start with no fee and loop until there is enough fee
         for (;;)
@@ -2518,7 +2678,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             // Choose coins to use
             CAmount nValueIn = 0;
             setCoins.clear();
-            if (!SelectCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn))
+            if (!SelectCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn, coinControl))
                 return errorN(1, sError, __func__, _("Insufficient funds.").c_str());
             
             for (const auto &pcoin : setCoins)
@@ -2535,47 +2695,61 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 dPriority += (double)nCredit * age;
             };
             
+            int nChangePosInOut = -1;
+            
             const CAmount nChange = nValueIn - nValueToSelect;
             
-            // Remove last fee output
+            // Remove fee outputs from last round
             for (size_t i = 0; i < vecSend.size(); ++i)
             {
                 if (vecSend[i].fChange)
                 {
                     vecSend.erase(vecSend.begin() + i);
-                    break;
+                    i--;
                 };
             };
             
             if (nChange > 0)
             {
                 // Fill an output to ourself
-                CTxOutStandard tempOut;
-                CPubKey pkChange;
-                if (0 != GetChangeAddress(pkChange))
-                    return errorN(1, sError, __func__, "GetChangeAddress failed.");
-                
                 CTempRecipient r;
                 r.nType = OUTPUT_STANDARD;
+                r.fChange = true;
                 r.SetAmount(nChange);
                 
-                CKeyID idChange = pkChange.GetID();
-                r.address = idChange;
-                r.scriptPubKey = GetScriptForDestination(idChange);
-                tempOut.scriptPubKey = r.scriptPubKey;
                 
+                CPubKey pkChange;
+                
+                // coin control: send change to custom address
+                if (coinControl && !boost::get<CNoDestination>(&coinControl->destChange))
+                {
+                    r.address = coinControl->destChange;
+                    if (!SetChangeDest(r, sError))
+                        return errorN(1, sError, __func__, ("SetChangeDest failed: " + sError).c_str());
+                } else
+                if (0 == GetChangeAddress(pkChange))
+                {
+                    CKeyID idChange = pkChange.GetID();
+                    r.address = idChange;
+                    r.scriptPubKey = GetScriptForDestination(idChange);
+                } else
+                {
+                    return errorN(1, sError, __func__, "GetChangeAddress failed.");
+                };
+                
+                CTxOutStandard tempOut;
+                tempOut.scriptPubKey = r.scriptPubKey;
                 tempOut.nValue = nChange;
                 
                 // Never create dust outputs; if we would, just
                 // add the dust to the fee.
                 if (tempOut.IsDust(dustRelayFee))
                 {
-                    //nChangePosInOut = -1;
+                    nChangePosInOut = -1;
                     nFeeRet += nChange;
                 } else
                 {
-                    r.fChange = true;
-                    vecSend.push_back(r);
+                    InsertChangeAddress(r, vecSend, nChangePosInOut);
                 };
             };
             
@@ -2596,7 +2770,6 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             CAmount nValueOutPlain = 0;
             
             int nLastBlindedOutput = -1;
-            int nChangePosInOut = -1;
             
             if (!fOnlyStandardOutputs)
             {
@@ -2814,7 +2987,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
 }
 
 int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
-    std::vector<CTempRecipient> &vecSend, bool sign, CAmount &nFeeRet, std::string &sError)
+    std::vector<CTempRecipient> &vecSend, bool sign, CAmount &nFeeRet, const CCoinControl *coinControl, std::string &sError)
 {
     if (vecSend.size() < 1)
         return errorN(1, sError, __func__, _("Transaction must have at least one recipient.").c_str());
@@ -2864,7 +3037,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
     
     uint32_t nLastHardened = pcC->nHGenerated;
     
-    if (0 != AddStandardInputs(wtx, rtx, vecSend, sea, pcC, sign, nFeeRet, sError))
+    if (0 != AddStandardInputs(wtx, rtx, vecSend, sea, pcC, sign, nFeeRet, coinControl, sError))
     {
         // sError will be set
         pcC->nHGenerated = nLastHardened; // reset
@@ -2912,7 +3085,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
 int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
     std::vector<CTempRecipient> &vecSend,
     CExtKeyAccount *sea, CStoredExtKey *pc,
-    bool sign, CAmount &nFeeRet, std::string &sError)
+    bool sign, CAmount &nFeeRet, const CCoinControl *coinControl, std::string &sError)
 {
     nFeeRet = 0;
     CAmount nValue;
@@ -2945,7 +3118,7 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
         
         std::vector<std::pair<MapRecords_t::const_iterator, unsigned int> > setCoins;
         std::vector<COutputR> vAvailableCoins;
-        AvailableBlindedCoins(vAvailableCoins, true);
+        AvailableBlindedCoins(vAvailableCoins, true, coinControl);
         
         CAmount nValueOutPlain = 0;
         int nChangePosInOut = -1;
@@ -2966,7 +3139,7 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             // Choose coins to use
             CAmount nValueIn = 0;
             setCoins.clear();
-            if (!SelectBlindedCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn))
+            if (!SelectBlindedCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn, coinControl))
                 return errorN(1, sError, __func__, _("Insufficient funds.").c_str());
             
             for (const auto &pcoin : setCoins)
@@ -2980,13 +3153,13 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             
             const CAmount nChange = nValueIn - nValueToSelect;
             
-            // Remove fee output added during last iteration
+            // Remove fee outputs from last round
             for (size_t i = 0; i < vecSend.size(); ++i)
             {
                 if (vecSend[i].fChange)
                 {
                     vecSend.erase(vecSend.begin() + i);
-                    break;
+                    i--;
                 };
             };
             
@@ -2995,17 +3168,34 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             // Insert a sender-owned 0 value output which becomes the change output if needed
             {
                 // Fill an output to ourself
-                CPubKey pkChange;
-                if (0 != GetChangeAddress(pkChange))
-                    return errorN(1, sError, __func__, "GetChangeAddress failed.");
-                
-                CKey sEphem;
-                uint32_t nDiscard; // Derive the same ephemeral secret each iteration
-                if (0 != pc->DeriveNextKey(sEphem, nDiscard, true))
-                    return errorN(1, sError, __func__, "TryDeriveNext failed.");
-                
                 CTempRecipient r;
                 r.nType = OUTPUT_CT;
+                r.fChange = true;
+                
+                CPubKey pkChange;
+                
+                // coin control: send change to custom address
+                if (coinControl && !boost::get<CNoDestination>(&coinControl->destChange))
+                {
+                    r.address = coinControl->destChange;
+                    if (!SetChangeDest(r, sError))
+                        return errorN(1, sError, __func__, ("SetChangeDest failed: " + sError).c_str());
+                } else
+                if (0 == GetChangeAddress(pkChange))
+                {
+                    CKeyID idChange = pkChange.GetID();
+                    r.address = idChange;
+                    r.pkTo = pkChange;
+                    r.scriptPubKey = GetScriptForDestination(idChange);
+                    
+                    r.sEphem.MakeNewKey(true);
+                    //uint32_t nDiscard; // Derive the same ephemeral secret each iteration
+                    //if (0 != pc->DeriveNextKey(sEphem, nDiscard, true))
+                    //    return errorN(1, sError, __func__, "TryDeriveNext failed.");
+                } else
+                {
+                    return errorN(1, sError, __func__, "GetChangeAddress failed.");
+                };
                 
                 if (nChange > ::minRelayTxFee.GetFee(2048)) // TODO: better output size estimate
                 {
@@ -3016,19 +3206,7 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                     nFeeRet += nChange;
                 };
                 
-                CKeyID idChange = pkChange.GetID();
-                
-                r.address = idChange;
-                r.pkTo = pkChange;
-                r.scriptPubKey = GetScriptForDestination(idChange);
-                r.fChange = true;
-                r.sEphem = sEphem;
-                
-                nChangePosInOut = GetRandInt(vecSend.size()+1);
-                if (nChangePosInOut < (int)vecSend.size()
-                    && vecSend[nChangePosInOut].nType == OUTPUT_DATA)
-                    nChangePosInOut++;
-                vecSend.insert(vecSend.begin()+nChangePosInOut, r);
+                InsertChangeAddress(r, vecSend, nChangePosInOut);
             }
             
             // Fill vin
@@ -3294,7 +3472,7 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
 };
 
 int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
-    std::vector<CTempRecipient> &vecSend, bool sign, CAmount &nFeeRet, std::string &sError)
+    std::vector<CTempRecipient> &vecSend, bool sign, CAmount &nFeeRet, const CCoinControl *coinControl, std::string &sError)
 {
     if (vecSend.size() < 1)
         return errorN(1, sError, __func__, _("Transaction must have at least one recipient.").c_str());
@@ -3314,7 +3492,7 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
     
     uint32_t nLastHardened = pcC->nHGenerated;
     
-    if (0 != AddBlindedInputs(wtx, rtx, vecSend, sea, pcC, sign, nFeeRet, sError))
+    if (0 != AddBlindedInputs(wtx, rtx, vecSend, sea, pcC, sign, nFeeRet, coinControl, sError))
     {
         // sError will be set
         pcC->nHGenerated = nLastHardened; // reset
@@ -3494,7 +3672,7 @@ int CHDWallet::PickHidingOutputs(std::vector<std::vector<int64_t> > &vMI, size_t
 int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
     std::vector<CTempRecipient> &vecSend,
     CExtKeyAccount *sea, CStoredExtKey *pc,
-    bool sign, size_t nRingSize, size_t nInputsPerSig, CAmount &nFeeRet, std::string &sError)
+    bool sign, size_t nRingSize, size_t nInputsPerSig, CAmount &nFeeRet, const CCoinControl *coinControl, std::string &sError)
 {
     if (nRingSize < MIN_RINGSIZE || nRingSize > MAX_RINGSIZE)
         return errorN(1, sError, __func__, _("Ring size out of range").c_str());
@@ -3525,7 +3703,7 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
         
         std::vector<std::pair<MapRecords_t::const_iterator, unsigned int> > setCoins;
         std::vector<COutputR> vAvailableCoins;
-        AvailableAnonCoins(vAvailableCoins, true);
+        AvailableAnonCoins(vAvailableCoins, true, coinControl);
         
         CAmount nValueOutPlain = 0;
         int nChangePosInOut = -1;
@@ -3548,18 +3726,18 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             // Choose coins to use
             CAmount nValueIn = 0;
             setCoins.clear();
-            if (!SelectBlindedCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn))
+            if (!SelectBlindedCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn, coinControl))
                 return errorN(1, sError, __func__, _("Insufficient funds.").c_str());
             
             const CAmount nChange = nValueIn - nValueToSelect;
             
-            // Remove fee output added during last iteration
+            // Remove fee outputs from last round
             for (size_t i = 0; i < vecSend.size(); ++i)
             {
                 if (vecSend[i].fChange)
                 {
                     vecSend.erase(vecSend.begin() + i);
-                    break;
+                    i--;
                 };
             };
             
@@ -3568,17 +3746,33 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             // Insert a sender-owned 0 value output that becomes the change output if needed
             {
                 // Fill an output to ourself
-                CPubKey pkChange;
-                if (0 != GetChangeAddress(pkChange))
-                    return errorN(1, sError, __func__, "GetChangeAddress failed.");
-                
-                CKey sEphem;
-                uint32_t nDiscard; // Derive the same ephemeral secret each iteration
-                if (0 != pc->DeriveNextKey(sEphem, nDiscard, true))
-                    return errorN(1, sError, __func__, "TryDeriveNext failed.");
-                
                 CTempRecipient r;
                 r.nType = OUTPUT_RINGCT;
+                r.fChange = true;
+                
+                CPubKey pkChange;
+                
+                // coin control: send change to custom address
+                if (coinControl && !boost::get<CNoDestination>(&coinControl->destChange))
+                {
+                    r.address = coinControl->destChange;
+                    if (!SetChangeDest(r, sError))
+                        return errorN(1, sError, __func__, ("SetChangeDest failed: " + sError).c_str());
+                } else
+                if (0 == GetChangeAddress(pkChange))
+                {
+                    CKeyID idChange = pkChange.GetID();
+                    r.pkTo = pkChange;
+                    r.address = idChange;
+                    
+                    r.sEphem.MakeNewKey(true);
+                    //uint32_t nDiscard; // Derive the same ephemeral secret each iteration
+                    //if (0 != pc->DeriveNextKey(sEphem, nDiscard, true))
+                    //    return errorN(1, sError, __func__, "TryDeriveNext failed.");
+                } else
+                {
+                    return errorN(1, sError, __func__, "GetChangeAddress failed.");
+                };
                 
                 if (nChange > ::minRelayTxFee.GetFee(2048)) // TODO: better output size estimate
                 {
@@ -3589,17 +3783,7 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                     nFeeRet += nChange;
                 };
                 
-                CKeyID idChange = pkChange.GetID();
-                r.address = idChange;
-                r.pkTo = pkChange;
-                r.fChange = true;
-                r.sEphem = sEphem;
-                
-                nChangePosInOut = GetRandInt(vecSend.size()+1);
-                if (nChangePosInOut < (int)vecSend.size()
-                    && vecSend[nChangePosInOut].nType == OUTPUT_DATA)
-                    nChangePosInOut++;
-                vecSend.insert(vecSend.begin()+nChangePosInOut, r);
+                InsertChangeAddress(r, vecSend, nChangePosInOut);
             }
             
             
@@ -4027,7 +4211,7 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
 };
 
 int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
-    std::vector<CTempRecipient> &vecSend, bool sign, size_t nRingSize, size_t nSigs, CAmount &nFeeRet, std::string &sError)
+    std::vector<CTempRecipient> &vecSend, bool sign, size_t nRingSize, size_t nSigs, CAmount &nFeeRet, const CCoinControl *coinControl, std::string &sError)
 {
     if (vecSend.size() < 1)
         return errorN(1, sError, __func__, _("Transaction must have at least one recipient.").c_str());
@@ -4047,7 +4231,7 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
     
     uint32_t nLastHardened = pcC->nHGenerated;
     
-    if (0 != AddAnonInputs(wtx, rtx, vecSend, sea, pcC, sign, nRingSize, nSigs, nFeeRet, sError))
+    if (0 != AddAnonInputs(wtx, rtx, vecSend, sea, pcC, sign, nRingSize, nSigs, nFeeRet, coinControl, sError))
     {
         // sError will be set
         pcC->nHGenerated = nLastHardened; // reset
@@ -6457,9 +6641,7 @@ int CHDWallet::ExtKeyGetDestination(const CExtKeyPair &ek, CPubKey &pkDest, uint
         for (uint32_t i = 0; i < MAX_DERIVE_TRIES; ++i)
         {
             if (ek.Derive(pkDest, nKey))
-            {
                 return 0;
-            };
             nKey++;
         };
     };
@@ -8859,7 +9041,7 @@ void CHDWallet::AvailableCoins(std::vector<COutput>& vCoins, bool fOnlyConfirmed
     
 };
 
-bool CHDWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet, const CCoinControl* coinControl) const
+bool CHDWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet, const CCoinControl *coinControl) const
 {
     if (!fParticlWallet)
         return CWallet::SelectCoins(vAvailableCoins, nTargetValue, setCoinsRet, nValueRet, coinControl);
@@ -9289,6 +9471,119 @@ std::set<uint256> CHDWallet::GetConflicts(const uint256 &txid) const
     
     return CWallet::GetConflicts(txid);
 }
+
+/* Mark a transaction (and it in-wallet descendants) as abandoned so its inputs may be respent. */
+bool CHDWallet::AbandonTransaction(const uint256 &hashTx)
+{
+    LOCK2(cs_main, cs_wallet);
+
+    CHDWalletDB walletdb(strWalletFile, "r+");
+
+    std::set<uint256> todo, done;
+    
+    MapRecords_t::iterator mri;
+    MapWallet_t::iterator mwi;
+    
+    // Can't mark abandoned if confirmed or in mempool
+    
+    if ((mri = mapRecords.find(hashTx)) != mapRecords.end())
+    {
+        CTransactionRecord &rtx = mri->second;
+        if (GetDepthInMainChain(rtx.blockHash, rtx.nIndex) > 0 || InMempool(hashTx))
+        {
+            return false;
+        };
+    } else
+    if ((mwi = mapWallet.find(hashTx)) != mapWallet.end())
+    {
+        CWalletTx &wtx = mwi->second;
+        if (wtx.GetDepthInMainChain() > 0 || InMempool(hashTx))
+        {
+            return false;
+        };
+    } else
+    {
+        // hashTx not in wallet
+        return false;
+    };
+
+    todo.insert(hashTx);
+
+    while (!todo.empty())
+    {
+        uint256 now = *todo.begin();
+        todo.erase(now);
+        done.insert(now);
+        
+        if ((mri = mapRecords.find(now)) != mapRecords.end())
+        {
+            CTransactionRecord &rtx = mri->second;
+            int currentconfirm = GetDepthInMainChain(rtx.blockHash, rtx.nIndex);
+            if (currentconfirm > 0)
+            {
+                LogPrintf("ERROR: %s - Txn %s is %d blocks deep.\n", now.ToString(), currentconfirm);
+                continue;
+            };
+            
+            if (!rtx.IsAbandoned()
+                && currentconfirm == 0)
+            {
+                // If the orig tx was not in block/mempool, none of its spends can be in mempool
+                assert(!InMempool(now));
+                rtx.nIndex = -1;
+                rtx.SetAbandoned();
+                walletdb.WriteTxRecord(now, rtx);
+                NotifyTransactionChanged(this, now, CT_UPDATED);
+            };
+            
+        } else
+        if ((mwi = mapWallet.find(now)) != mapWallet.end())
+        {
+            CWalletTx &wtx = mwi->second;
+            int currentconfirm = wtx.GetDepthInMainChain();
+            if (currentconfirm > 0)
+            {
+                LogPrintf("ERROR: %s - Txn %s is %d blocks deep.\n", now.ToString(), currentconfirm);
+                continue;
+            };
+            
+            if (!wtx.isAbandoned()
+                && currentconfirm == 0)
+            {
+                // If the orig tx was not in block/mempool, none of its spends can be in mempool
+                assert(!wtx.InMempool());
+                wtx.nIndex = -1;
+                wtx.setAbandoned();
+                wtx.MarkDirty();
+                walletdb.WriteTx(wtx);
+                NotifyTransactionChanged(this, now, CT_UPDATED);
+                
+                // If a transaction changes 'conflicted' state, that changes the balance
+                // available of the outputs it spends. So force those to be recomputed
+                for (const auto &txin : wtx.tx->vin)
+                {
+                    if (mapWallet.count(txin.prevout.hash))
+                        mapWallet[txin.prevout.hash].MarkDirty();
+                };
+            };
+        } else
+        {
+            // Not in wallet
+            continue;
+        };
+        
+        
+        TxSpends::const_iterator iter = mapTxSpends.lower_bound(COutPoint(hashTx, 0));
+        while (iter != mapTxSpends.end() && iter->first.hash == now)
+        {
+            if (!done.count(iter->second))
+                todo.insert(iter->second);
+            iter++;
+        };
+    };
+
+    return true;
+};
 
 void CHDWallet::MarkConflicted(const uint256 &hashBlock, const uint256 &hashTx)
 {

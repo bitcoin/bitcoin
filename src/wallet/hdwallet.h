@@ -139,6 +139,11 @@ public:
     bool IsAbandoned() const { return (blockHash == ABANDON_HASH); }
     bool HashUnset() const { return (blockHash.IsNull() || blockHash == ABANDON_HASH); }
     
+    void SetAbandoned()
+    {
+        blockHash = ABANDON_HASH;
+    };
+    
     int64_t GetTxTime() const
     {
         if (HashUnset() || nIndex < 0)
@@ -210,7 +215,6 @@ public:
     };
     
     bool ApplySubFee(CAmount nFee, size_t nSubtractFeeFromAmount, bool &fFirst);
-    
     
     uint8_t nType;
     CAmount nAmount;            // If fSubtractFeeFromAmount, nAmount = nAmountSelected - feeForOutput
@@ -352,6 +356,8 @@ public:
     
     bool HaveExtKey(const CKeyID &address) const;
     
+    bool HaveTransaction(const uint256 &txhash) const;
+    
     int GetKey(const CKeyID &address, CKey &keyOut, CExtKeyAccount *&pa, CEKAKey &ak, CKeyID &idStealth) const;
     bool GetKey(const CKeyID &address, CKey &keyOut) const;
     
@@ -415,22 +421,24 @@ public:
     int CreateOutput(OUTPUT_PTR<CTxOutBase> &txbout, CTempRecipient &r, std::string &sError);
     int AddCTData(CTxOutBase *txout, CTempRecipient &r, std::string &sError);
     
+    bool SetChangeDest(CTempRecipient &r, std::string &sError);
+    
     /** Update wallet after successfull transaction */
     int PostProcessTempRecipients(std::vector<CTempRecipient> &vecSend);
     
     int AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
         std::vector<CTempRecipient> &vecSend,
         CExtKeyAccount *sea, CStoredExtKey *pc,
-        bool sign, CAmount &nFeeRet, std::string &sError);
+        bool sign, CAmount &nFeeRet, const CCoinControl *coinControl, std::string &sError);
     int AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
-        std::vector<CTempRecipient> &vecSend, bool sign, CAmount &nFeeRet, std::string &sError);
+        std::vector<CTempRecipient> &vecSend, bool sign, CAmount &nFeeRet, const CCoinControl *coinControl, std::string &sError);
     
     int AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
         std::vector<CTempRecipient> &vecSend,
         CExtKeyAccount *sea, CStoredExtKey *pc,
-        bool sign, CAmount &nFeeRet, std::string &sError);
+        bool sign, CAmount &nFeeRet, const CCoinControl *coinControl, std::string &sError);
     int AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
-        std::vector<CTempRecipient> &vecSend, bool sign, CAmount &nFeeRet, std::string &sError);
+        std::vector<CTempRecipient> &vecSend, bool sign, CAmount &nFeeRet, const CCoinControl *coinControl, std::string &sError);
     
     
     int PlaceRealOutputs(std::vector<std::vector<int64_t> > &vMI, size_t &nSecretColumn, size_t nRingSize, std::set<int64_t> &setHave,
@@ -441,9 +449,9 @@ public:
     int AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
         std::vector<CTempRecipient> &vecSend,
         CExtKeyAccount *sea, CStoredExtKey *pc,
-        bool sign, size_t nRingSize, size_t nInputsPerSig, CAmount &nFeeRet, std::string &sError);
+        bool sign, size_t nRingSize, size_t nInputsPerSig, CAmount &nFeeRet, const CCoinControl *coinControl, std::string &sError);
     int AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
-        std::vector<CTempRecipient> &vecSend, bool sign, size_t nRingSize, size_t nInputsPerSig, CAmount &nFeeRet, std::string &sError);
+        std::vector<CTempRecipient> &vecSend, bool sign, size_t nRingSize, size_t nInputsPerSig, CAmount &nFeeRet, const CCoinControl *coinControl, std::string &sError);
     
     
     
@@ -588,6 +596,10 @@ public:
     bool IsSpent(const uint256& hash, unsigned int n) const;
     
     std::set<uint256> GetConflicts(const uint256 &txid) const;
+    
+    /* Mark a transaction (and it in-wallet descendants) as abandoned so its inputs may be respent. */
+    bool AbandonTransaction(const uint256 &hashTx) override;
+    
     void MarkConflicted(const uint256 &hashBlock, const uint256 &hashTx);
     void SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator>);
     
