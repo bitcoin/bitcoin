@@ -1469,7 +1469,8 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                 // The on-disk coinsdb is now in a good state, create the cache
                 pcoinsTip = new CCoinsViewCache(pcoinscatcher);
 
-                if (!fReset && !fReindexChainState) {
+                bool is_coinsview_empty = fReset || fReindexChainState || pcoinsTip->GetBestBlock().IsNull();
+                if (!is_coinsview_empty) {
                     // LoadChainTip sets chainActive based on pcoinsTip's best block
                     if (!LoadChainTip(chainparams)) {
                         strLoadError = _("Error initializing block database");
@@ -1489,7 +1490,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                     }
                 }
 
-                if (!fReset && !fReindexChainState) {
+                if (!is_coinsview_empty) {
                     uiInterface.InitMessage(_("Verifying blocks..."));
                     if (fHavePruned && GetArg("-checkblocks", DEFAULT_CHECKBLOCKS) > MIN_BLOCKS_TO_KEEP) {
                         LogPrintf("Prune: pruned datadir may not have more than %d blocks; only checking available blocks",
