@@ -685,7 +685,7 @@ int main(int argc, char *argv[])
     try {
         ParseParameters(argc, argv, allowedArgs);
     } catch (const std::exception& e) {
-        QMessageBox::critical(0, QObject::tr("Bitcoin Classic"),
+        QMessageBox::critical(0, QObject::tr("Bitcoin"),
                               QObject::tr("Error: Cannot parse program options: %1.").arg(e.what()));
         return EXIT_FAILURE;
     }

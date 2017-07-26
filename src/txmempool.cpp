@@ -20,6 +20,18 @@
 #include "version.h"
 
 using namespace std;
+CTxMemPoolEntry::CTxMemPoolEntry():
+    tx(), nFee(), nTime(0), entryPriority(0), entryHeight(0),
+    hadNoDependencies(0), inChainInputValue(0),
+    spendsCoinbase(false), sigOpCount(0), lockPoints()
+{
+    nTxSize = 0;
+    nModSize = 0;
+    nUsageSize = 0;
+    nCountWithDescendants = 0;
+    feeDelta = 0;
+    sighashType = 0;
+}
 
 CTxMemPoolEntry::CTxMemPoolEntry(const CTransaction& _tx, const CAmount& _nFee,
                                  int64_t _nTime, double _entryPriority, unsigned int _entryHeight,
@@ -38,7 +50,7 @@ CTxMemPoolEntry::CTxMemPoolEntry(const CTransaction& _tx, const CAmount& _nFee,
     nModFeesWithDescendants = nFee;
     CAmount nValueIn = tx.GetValueOut()+nFee;
     assert(inChainInputValue <= nValueIn);
-
+    sighashType = 0;
     feeDelta = 0;
 }
 
@@ -735,6 +747,15 @@ void CTxMemPool::queryHashes(vector<uint256>& vtxid)
     vtxid.reserve(mapTx.size());
     for (indexed_transaction_set::iterator mi = mapTx.begin(); mi != mapTx.end(); ++mi)
         vtxid.push_back(mi->GetTx().GetHash());
+}
+
+bool CTxMemPool::lookup(uint256 hash, CTxMemPoolEntry& result) const
+{
+    LOCK(cs);
+    indexed_transaction_set::const_iterator i = mapTx.find(hash);
+    if (i == mapTx.end()) return false;
+    result = *i;
+    return true;
 }
 
 bool CTxMemPool::lookup(uint256 hash, CTransaction& result) const

@@ -16,6 +16,7 @@ class CBlock;
 class CTransaction;
 class CBlockIndex;
 class CScript;
+class CTxMemPoolEntry;
 
 // OP_RETURN magic invalid value:
 extern std::vector<unsigned char> invalidOpReturn;
@@ -32,7 +33,7 @@ extern bool IsTxOpReturnInvalid(const CTransaction &tx);
 extern bool UpdateBUIP055Globals(CBlockIndex *activeTip);
 
 // Return true if this transaction can only be committed post-fork
-extern bool IsTxBUIP055Only(const CTransaction& tx);
+extern bool IsTxBUIP055Only(const CTxMemPoolEntry& tx);
 
 extern CTweak<uint64_t> miningForkTime;
 extern CTweak<uint64_t> miningForkEB;

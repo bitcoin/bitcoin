@@ -178,10 +178,18 @@ CTweakRef<uint64_t> miningBlockSize("mining.blockSize",
 CTweak<uint64_t> miningForkTime("mining.forkTime",
     "Time in seconds since the epoch to initiate a hard fork as per BUIP055.",
     1501590000); // Tue 1 Aug 2017 12:20:00 UTC, uahf-technical-spec.md REQ-2
+CTweak<bool> onlyAcceptForkSig("net.onlyRelayForkSig",
+    "Once the fork occurs, only relay transactions signed using the new signature scheme",
+    true);
+
 #else
 CTweak<uint64_t> miningForkTime("mining.forkTime",
     "Time in seconds since the epoch to initiate a hard fork as per BUIP055.",
     0);
+CTweak<bool> onlyAcceptForkSig("net.onlyRelayForkSig",
+    "Once the fork occurs, only accept transactions signed using the new signature scheme",
+    false);
+
 #endif
 
 CTweak<bool> unsafeGetBlockTemplate("mining.unsafeGetBlockTemplate",

@@ -754,7 +754,7 @@ UniValue signrawtransaction(const UniValue& params, bool fHelp)
     }
     else  // If the user didn't specify, use the configured default for the hash type
     {
-        // if (chainActive.Tip()->IsforkActiveOnNextBlock(miningForkTime.value)) nHashType |= SIGHASH_FORKID;
+        if (chainActive.Tip()->IsforkActiveOnNextBlock(miningForkTime.value)) nHashType |= SIGHASH_FORKID;
     }
 
     bool fHashSingle = ((nHashType & ~(SIGHASH_ANYONECANPAY | SIGHASH_FORKID)) == SIGHASH_SINGLE);
