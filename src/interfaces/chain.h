@@ -5,11 +5,14 @@
 #ifndef BITCOIN_INTERFACES_CHAIN_H
 #define BITCOIN_INTERFACES_CHAIN_H
 
+#include <optional.h>
+
 #include <memory>
 #include <string>
 #include <vector>
 
 class CScheduler;
+class uint256;
 
 namespace interfaces {
 
@@ -28,6 +31,23 @@ public:
     {
     public:
         virtual ~Lock() {}
+
+        //! Get current chain height, not including genesis block (returns 0 if
+        //! chain only contains genesis block, nullopt if chain does not contain
+        //! any blocks).
+        virtual Optional<int> getHeight() = 0;
+
+        //! Get block height above genesis block. Returns 0 for genesis block,
+        //! 1 for following block, and so on. Returns nullopt for a block not
+        //! included in the current chain.
+        virtual Optional<int> getBlockHeight(const uint256& hash) = 0;
+
+        //! Get block depth. Returns 1 for chain tip, 2 for preceding block, and
+        //! so on. Returns 0 for a block not included in the current chain.
+        virtual int getBlockDepth(const uint256& hash) = 0;
+
+        //! Get block hash. Height must be valid or this function will abort.
+        virtual uint256 getBlockHash(int height) = 0;
     };
 
     //! Return Lock interface. Chain is locked when this is called, and
