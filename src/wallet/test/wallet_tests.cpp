@@ -276,7 +276,7 @@ static int64_t AddTx(CWallet& wallet, uint32_t lockTime, int64_t mockTime, int64
 
     CWalletTx wtx(&wallet, MakeTransactionRef(tx));
     if (block) {
-        wtx.SetMerkleBranch(block, 0);
+        wtx.SetMerkleBranch(block->GetBlockHash(), 0);
     }
     {
         LOCK(cs_main);
@@ -372,7 +372,7 @@ public:
         LOCK(wallet->cs_wallet);
         auto it = wallet->mapWallet.find(tx->GetHash());
         BOOST_CHECK(it != wallet->mapWallet.end());
-        it->second.SetMerkleBranch(chainActive.Tip(), 1);
+        it->second.SetMerkleBranch(chainActive.Tip()->GetBlockHash(), 1);
         return it->second;
     }
 

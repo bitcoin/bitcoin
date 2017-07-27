@@ -379,8 +379,7 @@ UniValue importprunedfunds(const JSONRPCRequest& request)
     if (merkleBlock.txn.ExtractMatches(vMatch, vIndex) == merkleBlock.header.hashMerkleRoot) {
 
         auto locked_chain = pwallet->chain().lock();
-        const CBlockIndex* pindex = LookupBlockIndex(merkleBlock.header.GetHash());
-        if (!pindex || !chainActive.Contains(pindex)) {
+        if (locked_chain->getBlockHeight(merkleBlock.header.GetHash()) == nullopt) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found in chain");
         }
 
@@ -773,7 +772,8 @@ UniValue dumpwallet(const JSONRPCRequest& request)
     // produce output
     file << strprintf("# Wallet dump created by Bitcoin %s\n", CLIENT_BUILD);
     file << strprintf("# * Created on %s\n", FormatISO8601DateTime(GetTime()));
-    file << strprintf("# * Best block at time of backup was %i (%s),\n", chainActive.Height(), chainActive.Tip()->GetBlockHash().ToString());
+    const Optional<int> tip_height = locked_chain->getHeight();
+    file << strprintf("# * Best block at time of backup was %i (%s),\n", tip_height.value_or(-1), tip_height ? locked_chain->getBlockHash(*tip_height).ToString() : "(missing block hash)");
     file << strprintf("#   mined on %s\n", FormatISO8601DateTime(chainActive.Tip()->GetBlockTime()));
     file << "\n";
 
