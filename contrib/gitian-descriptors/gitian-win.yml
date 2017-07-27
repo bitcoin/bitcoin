@@ -131,7 +131,7 @@ script: |
     make ${MAKEOPTS} -C src check-security
     make deploy
     make install-strip
-    cp -f bitcoin*setup*.exe $OUTDIR/
+    cp -f BUcash*setup*.exe $OUTDIR/
     cd installed
     mv ${DISTNAME}/bin/*.dll ${DISTNAME}/lib/
     find . -name "lib*.la" -delete
