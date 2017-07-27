@@ -1,5 +1,5 @@
 ---
-name: "BitcoinUnlimited-win-1.0"
+name: "BUcash-win-1.0"
 enable_cache: true
 suites:
 - "trusty"
@@ -103,7 +103,8 @@ script: |
   ./autogen.sh
   ./configure --prefix=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`
   make dist
-  SOURCEDIST=`echo bitcoinUnlimited-*.tar.gz`
+  # cp bitcoinUnlimited-*.tar.gz BUcash-1.1.0.tar.gz
+  SOURCEDIST=`echo BUcash-*.tar.gz`
   DISTNAME=`echo ${SOURCEDIST} | sed 's/.tar.*//'`
 
   # Correct tar file order

@@ -1,5 +1,5 @@
 ---
-name: "BitcoinUnlimited-linux-1.0"
+name: "BUcash-linux-1.1"
 enable_cache: true
 suites:
 - "trusty"
@@ -138,7 +138,7 @@ script: |
   ./configure --prefix=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`
   CONFIG_SITE=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`/share/config.site ./configure --prefix=/
   make dist
-  SOURCEDIST=`echo bitcoinUnlimited-*.tar.gz`
+  SOURCEDIST=`echo BUcash-*.tar.gz`
   DISTNAME=`echo ${SOURCEDIST} | sed 's/.tar.*//'`
   # Correct tar file order
   mkdir -p temp
