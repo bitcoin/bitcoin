@@ -83,10 +83,9 @@ CTransaction::CTransaction(CMutableTransaction &&tx) : nVersion(tx.nVersion), vi
 CAmount CTransaction::GetValueOut() const
 {
     CAmount nValueOut = 0;
-    for (std::vector<CTxOut>::const_iterator it(vout.begin()); it != vout.end(); ++it)
-    {
-        nValueOut += it->nValue;
-        if (!MoneyRange(it->nValue) || !MoneyRange(nValueOut))
+    for (const auto& tx_out : vout) {
+        nValueOut += tx_out.nValue;
+        if (!MoneyRange(tx_out.nValue) || !MoneyRange(nValueOut))
             throw std::runtime_error(std::string(__func__) + ": value out of range");
     }
     return nValueOut;
@@ -106,11 +105,11 @@ std::string CTransaction::ToString() const
         vin.size(),
         vout.size(),
         nLockTime);
-    for (unsigned int i = 0; i < vin.size(); i++)
-        str += "    " + vin[i].ToString() + "\n";
-    for (unsigned int i = 0; i < vin.size(); i++)
-        str += "    " + vin[i].scriptWitness.ToString() + "\n";
-    for (unsigned int i = 0; i < vout.size(); i++)
-        str += "    " + vout[i].ToString() + "\n";
+    for (const auto& tx_in : vin)
+        str += "    " + tx_in.ToString() + "\n";
+    for (const auto& tx_in : vin)
+        str += "    " + tx_in.scriptWitness.ToString() + "\n";
+    for (const auto& tx_out : vout)
+        str += "    " + tx_out.ToString() + "\n";
     return str;
 }
