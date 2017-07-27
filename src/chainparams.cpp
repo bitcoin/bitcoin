@@ -79,11 +79,11 @@ static const Checkpoints::CCheckpointData data = {
 
 static Checkpoints::MapCheckpoints mapCheckpointsTestnet =
         boost::assign::map_list_of
-        ( 0, uint256S("0x00000000145b811e66b1af003095cce0958ced65e355a579b567882a5ddbb80d"))
+        ( 0, uint256S("0x0000000085370d5e122f64f4ab19c68614ff3df78c8d13cb814fd7e69a1dc6da"))
         ;
 static const Checkpoints::CCheckpointData dataTestnet = {
         &mapCheckpointsTestnet,
-        1496462996, // * UNIX timestamp of last checkpoint block
+        1412760826, // * UNIX timestamp of last checkpoint block
         0,          // * total number of transactions between genesis and last checkpoint
                     //   (the tx=... number in the SetBestChain debug.log lines)
         0           // * estimated number of transactions per day after checkpoint
@@ -216,19 +216,23 @@ public:
     CTestNetParams() {
         networkID = CBaseChainParams::TESTNET;
         strNetworkID = "test";
-        pchMessageStart[0] = 0x0c;
-        pchMessageStart[1] = 0x17;
-        pchMessageStart[2] = 0x0f;
-        pchMessageStart[3] = 0x05;
+        pchMessageStart[0] = 0x0f;
+        pchMessageStart[1] = 0x18;
+        pchMessageStart[2] = 0x0e;
+        pchMessageStart[3] = 0x06;
         vAlertPubKey = ParseHex("04517d8a699cb43d3938d7b24faaff7cda448ca4ea267723ba614784de661949bf632d6304316b244646dea079735b9a6fc4af804efb4752075b9fe2245e14e412");
         nDefaultPort = 19340;
         nEnforceBlockUpgradeMajority = 51;
         nRejectBlockOutdatedMajority = 75;
         nToCheckBlockUpgradeMajority = 100;
         nMinerThreads = 0;
-        nTargetTimespan = 14 * 24 * 60 * 60; // Crown: 1 day
-        nTargetSpacing = 1 * 60; // Crown: 2.5 minutes
+        nTargetTimespan = 2 * 24 * 60 * 60; // Crown: 2 day
+        nTargetSpacing = 1.5 * 60; // Crown: 1.5 minutes
         nMaxTipAge = 0x7fffffff;
+
+        //! Modify the testnet genesis block so the timestamp is valid for a later start.
+        genesis.nTime    = 1412760826;
+        genesis.nNonce   = 1612467894;
 
 	/*if (true && genesis.GetHash() != hashGenesisBlock)
                        {
@@ -258,24 +262,9 @@ public:
                            printf("genesis.hashMerkleRoot = %s \n", genesis.hashMerkleRoot.ToString().c_str()); //improvised. worked for me, to find merkle root/
                        }*/
 
-        const char* pszTimestamp = "3. June, when you need a testnet";
-        CMutableTransaction txNew;
-        txNew.vin.resize(1);
-        txNew.vout.resize(1);
-        txNew.vin[0].scriptSig = CScript() << 486604799 << CScriptNum(4) << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
-        txNew.vout[0].nValue = 10 * COIN;
-        txNew.vout[0].scriptPubKey = CScript() << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f") << OP_CHECKSIG;
-        genesis.vtx.push_back(txNew);
-        genesis.hashPrevBlock.SetNull();
-        genesis.hashMerkleRoot = genesis.BuildMerkleTree();
-        genesis.nVersion.SetGenesisVersion(1);
-        genesis.nTime    = 1496462996;
-        genesis.nBits    = 0x1d00ffff;
-        genesis.nNonce   = 1855437720;
-
         hashGenesisBlock = genesis.GetHash();
-        assert(hashGenesisBlock == uint256S("0x00000000145b811e66b1af003095cce0958ced65e355a579b567882a5ddbb80d"));
-        assert(genesis.hashMerkleRoot == uint256S("0x8e7af3840a749c6ff8cae70536d5ad6ef9d8a54cde305f438bc72ae41e3f1d7e"));
+        assert(hashGenesisBlock == uint256S("0x0000000085370d5e122f64f4ab19c68614ff3df78c8d13cb814fd7e69a1dc6da"));
+        assert(genesis.hashMerkleRoot == uint256S("0x80ad356118a9ab8db192db66ef77146cc36d958f959251feace550e4ca3d1446"));
 
         vFixedSeeds.clear();
         vSeeds.clear();
