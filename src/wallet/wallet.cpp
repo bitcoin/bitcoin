@@ -419,7 +419,8 @@ void CWallet::SetBestChain(const CBlockLocator& loc)
 {
     LOCK(cs_wallet); //nWalletMaxVersion
     unsigned int keypool_min = GetArg("-keypoolmin", DEFAULT_KEYPOOL_MIN);
-    if (IsHDEnabled() && (!m_update_best_block || !HasUnusedKeys(keypool_min))) {
+    if (GetBoolArg("-bypasskeypoolcritical", false) || 
+        (IsHDEnabled() && (!m_update_best_block || !HasUnusedKeys(keypool_min)))) {
         // If the keypool has dropped below -keypoolmin, then don't update the bestblock height. We can rescan later once the wallet is unlocked.
 
         if (m_update_best_block) {
@@ -3677,7 +3678,9 @@ void CReserveKey::ReturnKey()
 void CWallet::ShutdownIfKeypoolCritical() {
     LOCK(cs_wallet);
     unsigned int keypool_critical = GetArg("-keypoolcritical", DEFAULT_KEYPOOL_CRITICAL);
-    if (IsHDEnabled() && !HasUnusedKeys(keypool_critical)) {
+    if (!GetBoolArg("-bypasskeypoolcritical", false) &&
+        IsHDEnabled() &&
+        !HasUnusedKeys(keypool_critical)) {
         // if the remaining keypool size is below the gap limit, shutdown
         LogPrintf("%s: Number of keys in keypool is below critical minimum. Shutting down. internal keypool: %d, external keypool: %d, keypool minimum: %d\n",
                   __func__, setInternalKeyPool.size(), setExternalKeyPool.size(), keypool_critical);
@@ -3685,9 +3688,11 @@ void CWallet::ShutdownIfKeypoolCritical() {
                                       "This is probably because you are restoring an old backup wallet file which has not been topped up with the most recently "
                                       "derived keys, and so you would not detect transactions involving those keys.\n"
                                       "You can manually top-up your wallet keypool as follows:\n"
-                                      " - restart bitcoin with -keypoolcritical set to 0 (to prevent bitcoind from shutting down again)\n"
+                                      " - restart bitcoin with -bypasskeypoolcritical (to prevent bitcoind from shutting down again)\n"
                                       " - unlock the wallet using walletpassphrase (to top up the keypool)\n"
-                                      " - restart with -rescan. This will redownload the blockchain if you are running a pruned node.";
+                                      " - restart without -bypasskeypoolcritical.\n"
+                                      "NOTE: if you have a pruned node that prunes blocks your wallet hasn't scanned yet when restarting with -bypasskeypoolcritical "
+                                      "then you may need to do a complete reindex. Consider raising the prune limit temporarily for both restarts to avoid this.";
         uiInterface.ThreadSafeMessageBox(error_msg, "", CClientUIInterface::MSG_ERROR);
         StartShutdown();
     }
@@ -3971,6 +3976,7 @@ std::string CWallet::GetWalletHelpString(bool showDebug)
     {
         strUsage += HelpMessageGroup(_("Wallet debugging/testing options:"));
 
+        strUsage += HelpMessageOpt("-bypasskeypoolcritical", _("Bypass keypool critical limit. Don't shutdown the node if keypool drops below keypoolcritical limit (but don't advance BestBlock)"));
         strUsage += HelpMessageOpt("-dblogsize=<n>", strprintf("Flush wallet database activity from memory to disk log every <n> megabytes (default: %u)", DEFAULT_WALLET_DBLOGSIZE));
         strUsage += HelpMessageOpt("-flushwallet", strprintf("Run a thread to flush wallet periodically (default: %u)", DEFAULT_FLUSHWALLET));
         strUsage += HelpMessageOpt("-keypoolcritical", strprintf(_("If the keypool drops below this number of keys and we are unable to generate new keys, shutdown (default: %u)"), DEFAULT_KEYPOOL_CRITICAL));
