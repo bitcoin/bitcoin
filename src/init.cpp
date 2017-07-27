@@ -228,7 +228,6 @@ void PrepareShutdown()
 #endif
     GenerateBitcoins(false, 0, Params(), *g_connman);
     MapPort(false);
-    g_connman->Stop();
     g_connman.reset();
 
     // STORE DATA CACHES INTO SERIALIZED DAT FILES
