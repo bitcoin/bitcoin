@@ -28,6 +28,7 @@ struct MainSignalsInstance {
     boost::signals2::signal<void (int64_t nBestBlockTime, CConnman* connman)> Broadcast;
     boost::signals2::signal<void (const CBlock&, const CValidationState&)> BlockChecked;
     boost::signals2::signal<void (const CBlockIndex *, const std::shared_ptr<const CBlock>&)> NewPoWValidBlock;
+    boost::signals2::signal<void (const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex)> ProcessPriorityRequest;
 
     // We are not allowed to assume the scheduler only runs in one thread,
     // but must ensure all callbacks happen in-order, so we end up creating
@@ -82,9 +83,12 @@ void RegisterValidationInterface(CValidationInterface* pwalletIn) {
     g_signals.m_internals->Broadcast.connect(boost::bind(&CValidationInterface::ResendWalletTransactions, pwalletIn, _1, _2));
     g_signals.m_internals->BlockChecked.connect(boost::bind(&CValidationInterface::BlockChecked, pwalletIn, _1, _2));
     g_signals.m_internals->NewPoWValidBlock.connect(boost::bind(&CValidationInterface::NewPoWValidBlock, pwalletIn, _1, _2));
+    g_signals.m_internals->ProcessPriorityRequest.connect(boost::bind(&CValidationInterface::ProcessPriorityRequest, pwalletIn, _1, _2));
+
 }
 
 void UnregisterValidationInterface(CValidationInterface* pwalletIn) {
+    g_signals.m_internals->ProcessPriorityRequest.disconnect(boost::bind(&CValidationInterface::ProcessPriorityRequest, pwalletIn, _1, _2));
     g_signals.m_internals->BlockChecked.disconnect(boost::bind(&CValidationInterface::BlockChecked, pwalletIn, _1, _2));
     g_signals.m_internals->Broadcast.disconnect(boost::bind(&CValidationInterface::ResendWalletTransactions, pwalletIn, _1, _2));
     g_signals.m_internals->ChainStateFlushed.disconnect(boost::bind(&CValidationInterface::ChainStateFlushed, pwalletIn, _1));
@@ -100,6 +104,7 @@ void UnregisterAllValidationInterfaces() {
     if (!g_signals.m_internals) {
         return;
     }
+    g_signals.m_internals->ProcessPriorityRequest.disconnect_all_slots();
     g_signals.m_internals->BlockChecked.disconnect_all_slots();
     g_signals.m_internals->Broadcast.disconnect_all_slots();
     g_signals.m_internals->ChainStateFlushed.disconnect_all_slots();
@@ -177,4 +182,8 @@ void CMainSignals::BlockChecked(const CBlock& block, const CValidationState& sta
 
 void CMainSignals::NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock> &block) {
     m_internals->NewPoWValidBlock(pindex, block);
+}
+
+void CMainSignals::ProcessPriorityRequest(const std::shared_ptr<const CBlock> &pblock, const CBlockIndex *pindex) {
+    m_internals->ProcessPriorityRequest(pblock, pindex);
 }
