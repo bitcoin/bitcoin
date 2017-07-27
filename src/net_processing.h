@@ -90,5 +90,6 @@ bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
  * Downloaded blocks will not trigger ActivateBestChain
  */
 void AddPriorityDownload(const std::vector<const CBlockIndex*>& blocksToDownload);
+void ProcessPriorityRequests(const std::shared_ptr<CBlock> block);
 
 #endif // BITCOIN_NET_PROCESSING_H
