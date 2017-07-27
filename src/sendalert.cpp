@@ -101,7 +101,7 @@ void ThreadSendAlert(CConnman& connman)
     int nSent = 0;
     {
         g_connman->ForEachNode([&alert2, &nSent](CNode* pnode) {
-            if (alert2.RelayTo(pnode))
+            if (alert2.RelayTo(pnode, *g_connman))
             {
                 printf("ThreadSendAlert() : Sent alert to %s\n", pnode->addr.ToString().c_str());
                 nSent++;
