@@ -141,6 +141,9 @@ public:
     //! Check if transaction has descendants in mempool.
     virtual bool hasDescendantsInMempool(const uint256& txid) = 0;
 
+    //! Relay transaction.
+    virtual void relayTransaction(const uint256& txid) = 0;
+
     //! Calculate mempool ancestor and descendant counts for the given transaction.
     virtual void getTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants) = 0;
 
