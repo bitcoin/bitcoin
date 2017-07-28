@@ -1378,6 +1378,9 @@ UniValue ListReceived(const UniValue& params, bool fByAccounts)
             obj.push_back(Pair("account",       strAccount));
             obj.push_back(Pair("amount",        ValueFromAmount(nAmount)));
             obj.push_back(Pair("confirmations", (nConf == std::numeric_limits<int>::max() ? 0 : nConf)));
+			// SYSCOIN
+			isminefilter mine = IsMine(*pwalletMain, address);
+			obj.push_back(Pair("mine", (mine & filter));
             if (!fByAccounts)
                 obj.push_back(Pair("label", strAccount));
             UniValue transactions(UniValue::VARR);
@@ -1435,6 +1438,8 @@ UniValue listreceivedbyaddress(const UniValue& params, bool fHelp)
             "    \"amount\" : x.xxx,                  (numeric) The total amount in " + CURRENCY_UNIT + " received by the address\n"
             "    \"confirmations\" : n,               (numeric) The number of confirmations of the most recent transaction included\n"
             "    \"label\" : \"label\"                (string) A comment for the address/transaction, if any\n"
+			// SYSCOIN
+			"    \"mine\" : true					(bool) Is this address mine?\n"
             "  }\n"
             "  ,...\n"
             "]\n"
