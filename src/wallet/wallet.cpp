@@ -3637,9 +3637,17 @@ public:
             vKeys.push_back(keyId);
     }
 
+    void operator()(const CWitKeyID &keyId) {}
+
     void operator()(const CScriptID &scriptId) {
         CScript script;
         if (keystore.GetCScript(scriptId, script))
+            Process(script);
+    }
+
+    void operator()(const CWitScriptID &scriptId) {
+        CScript script;
+        if (keystore.GetCScript(scriptId.ToP2SH(), script))
             Process(script);
     }
 

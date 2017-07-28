@@ -8,6 +8,7 @@
 
 #include "script/interpreter.h"
 #include "uint256.h"
+#include "pubkey.h"
 
 #include <boost/variant.hpp>
 
@@ -15,7 +16,7 @@
 
 static const bool DEFAULT_ACCEPT_DATACARRIER = true;
 
-class CKeyID;
+class CWitKeyID;
 class CScript;
 
 /** A reference to a CScript: the Hash160 of its serialization (see script.h) */
@@ -25,6 +26,45 @@ public:
     CScriptID() : uint160() {}
     CScriptID(const CScript& in);
     CScriptID(const uint160& in) : uint160(in) {}
+};
+
+/** A reference to a CScript: the SHA256 of its serialization (see script.h) */
+class CWitScriptID : public uint256
+{
+public:
+    CWitScriptID() : uint256() {}
+    CWitScriptID(const uint256& in) : uint256(in) {}
+
+    CScriptID ToP2SH() const
+    {
+        return CScriptID(CScript() << OP_0 << std::vector<unsigned char>(this->begin(), this->end()));
+    }
+
+    CScriptID ToScriptID() const
+    {
+        uint160 hash;
+        auto value = std::vector<unsigned char>(this->begin(), this->end());
+        CRIPEMD160().Write(&value[0], value.size()).Finalize(hash.begin());
+        return CScriptID(hash);
+    }
+};
+
+/** A reference to a CKey: the Hash160 of its serialized witness public key */
+class CWitKeyID : public uint160
+{
+public:
+    CWitKeyID() : uint160() {}
+    CWitKeyID(const uint160& in) : uint160(in) {}
+
+    /** keystore is indexing keys of p2wpkh by CScriptID, so we need a way to transform this CWitKeyID into CKeyID */
+    CKeyID ToKeyID() const
+    {
+        return CKeyID(uint160(std::vector<unsigned char>(this->begin(), this->end())));
+    }
+    CScriptID ToP2SH() const
+    {
+        return CScriptID(CScript() << OP_0 << std::vector<unsigned char>(this->begin(), this->end()));
+    }
 };
 
 static const unsigned int MAX_OP_RETURN_RELAY = 83; //!< bytes (+1 for OP_RETURN, +2 for the pushdata opcodes)
@@ -66,9 +106,11 @@ public:
  *  * CNoDestination: no destination set
  *  * CKeyID: TX_PUBKEYHASH destination
  *  * CScriptID: TX_SCRIPTHASH destination
+ *  * CWitKeyID: TX_WITNESS_V0_KEYHASH destination
+ *  * CWitScriptID: TX_WITNESS_V0_SCRIPTHASH destination
  *  A CTxDestination is the internal data type encoded in a CBitcoinAddress
  */
-typedef boost::variant<CNoDestination, CKeyID, CScriptID> CTxDestination;
+typedef boost::variant<CNoDestination, CKeyID, CScriptID, CWitKeyID, CWitScriptID> CTxDestination;
 
 const char* GetTxnOutputType(txnouttype t);
 

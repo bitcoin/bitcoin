@@ -23,7 +23,7 @@ class SegWitTest2(BitcoinTestFramework):
         self.nodes[0].generate(101)
         sync_blocks(self.nodes)
 
-        use_p2wsh = False
+        use_p2wsh = True
 
         transaction = ""
         scriptPubKey = ""
