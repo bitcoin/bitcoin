@@ -1528,6 +1528,7 @@ UniValue getchaintxstats(const JSONRPCRequest& request)
     ret.push_back(Pair("time", (int64_t)pindex->nTime));
     ret.push_back(Pair("txcount", (int64_t)pindex->nChainTx));
     ret.push_back(Pair("txrate", ((double)nTxDiff) / nTimeDiff));
+    ret.push_back(Pair("chainwork", ArithToUint256(pindex->nChainWork).ToString()));
 
     return ret;
 }
