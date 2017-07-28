@@ -10,14 +10,14 @@ can be found in the contrib/init folder.
     contrib/init/bitcoind.conf:       Upstart service configuration file
     contrib/init/bitcoind.init:       CentOS compatible SysV style init script
 
-1. Service User
+Service User
 ---------------------------------
 
 All three Linux startup configurations assume the existence of a "bitcoin" user
 and group.  They must be created before attempting to use these scripts.
 The OS X configuration assumes bitcoind will be set up for the current user.
 
-2. Configuration
+Configuration
 ---------------------------------
 
 At a bare minimum, bitcoind requires that the rpcpassword setting be set
@@ -46,10 +46,10 @@ relative to the data directory. `wallet` *only* supports relative paths.
 For an example configuration file that describes the configuration settings,
 see `contrib/debian/examples/bitcoin.conf`.
 
-3. Paths
+Paths
 ---------------------------------
 
-3a) Linux
+### Linux
 
 All three configurations assume several paths that might need to be adjusted.
 
@@ -65,17 +65,17 @@ reasons to make the configuration file and data directory only readable by the
 bitcoin user and group.  Access to bitcoin-cli and other bitcoind rpc clients
 can then be controlled by group membership.
 
-3b) Mac OS X
+### Mac OS X
 
 Binary:              `/usr/local/bin/bitcoind`  
 Configuration file:  `~/Library/Application Support/Bitcoin/bitcoin.conf`  
 Data directory:      `~/Library/Application Support/Bitcoin`  
 Lock file:           `~/Library/Application Support/Bitcoin/.lock`  
 
-4. Installing Service Configuration
+Installing Service Configuration
 -----------------------------------
 
-4a) systemd
+### systemd
 
 Installing this .service file consists of just copying it to
 /usr/lib/systemd/system directory, followed by the command
@@ -84,14 +84,14 @@ Installing this .service file consists of just copying it to
 To test, run `systemctl start bitcoind` and to enable for system startup run
 `systemctl enable bitcoind`
 
-4b) OpenRC
+### OpenRC
 
 Rename bitcoind.openrc to bitcoind and drop it in /etc/init.d.  Double
 check ownership and permissions and make it executable.  Test it with
 `/etc/init.d/bitcoind start` and configure it to run on startup with
 `rc-update add bitcoind`
 
-4c) Upstart (for Debian/Ubuntu based distributions)
+### Upstart (for Debian/Ubuntu based distributions)
 
 Drop bitcoind.conf in /etc/init.  Test by running `service bitcoind start`
 it will automatically start on reboot.
@@ -99,7 +99,7 @@ it will automatically start on reboot.
 NOTE: This script is incompatible with CentOS 5 and Amazon Linux 2014 as they
 use old versions of Upstart and do not supply the start-stop-daemon utility.
 
-4d) CentOS
+### CentOS
 
 Copy bitcoind.init to /etc/init.d/bitcoind. Test by running `service bitcoind start`.
 
@@ -107,7 +107,7 @@ Using this script, you can adjust the path and flags to the bitcoind program by
 setting the BITCOIND and FLAGS environment variables in the file
 /etc/sysconfig/bitcoind. You can also use the DAEMONOPTS environment variable here.
 
-4e) Mac OS X
+### Mac OS X
 
 Copy org.bitcoin.bitcoind.plist into ~/Library/LaunchAgents. Load the launch agent by
 running `launchctl load ~/Library/LaunchAgents/org.bitcoin.bitcoind.plist`.
@@ -118,7 +118,7 @@ NOTE: This approach is intended for those wanting to run bitcoind as the current
 You will need to modify org.bitcoin.bitcoind.plist if you intend to use it as a
 Launch Daemon with a dedicated bitcoin user.
 
-5. Auto-respawn
+Auto-respawn
 -----------------------------------
 
 Auto respawning is currently only configured for Upstart and systemd.
