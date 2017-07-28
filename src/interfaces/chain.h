@@ -135,6 +135,9 @@ public:
 
     //! Check if transaction is RBF opt in.
     virtual RBFTransactionState isRBFOptIn(const CTransaction& tx) = 0;
+
+    //! Check if transaction has descendants in mempool.
+    virtual bool hasDescendantsInMempool(const uint256& txid) = 0;
 };
 
 //! Interface to let node manage chain clients (wallets, or maybe tools for

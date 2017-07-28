@@ -190,6 +190,12 @@ public:
         LOCK(::mempool.cs);
         return IsRBFOptIn(tx, ::mempool);
     }
+    bool hasDescendantsInMempool(const uint256& txid) override
+    {
+        LOCK(::mempool.cs);
+        auto it_mp = ::mempool.mapTx.find(txid);
+        return it_mp != ::mempool.mapTx.end() && it_mp->GetCountWithDescendants() > 1;
+    }
 };
 
 } // namespace
