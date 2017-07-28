@@ -6,9 +6,11 @@
 
 #include <chain.h>
 #include <chainparams.h>
+#include <policy/rbf.h>
 #include <primitives/block.h>
 #include <sync.h>
 #include <threadsafety.h>
+#include <txmempool.h>
 #include <uint256.h>
 #include <util/system.h>
 #include <validation.h>
@@ -182,6 +184,11 @@ public:
     {
         LOCK(cs_main);
         return GuessVerificationProgress(Params().TxData(), LookupBlockIndex(block_hash));
+    }
+    RBFTransactionState isRBFOptIn(const CTransaction& tx) override
+    {
+        LOCK(::mempool.cs);
+        return IsRBFOptIn(tx, ::mempool);
     }
 };
 
