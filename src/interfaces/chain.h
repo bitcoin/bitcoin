@@ -14,6 +14,7 @@
 
 class CBlock;
 class CScheduler;
+class CTransaction;
 class uint256;
 struct CBlockLocator;
 
@@ -102,6 +103,9 @@ public:
         //! is guaranteed to be an ancestor of the block used to create the
         //! locator.
         virtual Optional<int> findLocatorFork(const CBlockLocator& locator) = 0;
+
+        //! Check if transaction will be final given chain height current time.
+        virtual bool checkFinalTx(const CTransaction& tx) = 0;
     };
 
     //! Return Lock interface. Chain is locked when this is called, and
