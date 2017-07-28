@@ -1380,7 +1380,7 @@ UniValue ListReceived(const UniValue& params, bool fByAccounts)
             obj.push_back(Pair("confirmations", (nConf == std::numeric_limits<int>::max() ? 0 : nConf)));
 			// SYSCOIN
 			isminefilter mine = IsMine(*pwalletMain, address);
-			obj.push_back(Pair("mine", (mine & filter));
+			obj.push_back(Pair("mine", (mine & filter)));
             if (!fByAccounts)
                 obj.push_back(Pair("label", strAccount));
             UniValue transactions(UniValue::VARR);
