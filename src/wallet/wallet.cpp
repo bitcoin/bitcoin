@@ -4094,20 +4094,11 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
         }
     }
 
-    {
-        LOCK2(cs_main, cs_wallet);
-        for (auto& pair : mapWallet) {
-            for(int i = 0; i < pair.second.tx->vout.size(); ++i) {
-                if (IsMine(pair.second.tx->vout[i]) && !IsSpent(pair.first, i)) {
-                    setWalletUTXO.insert(COutPoint(pair.first, i));
-                }
-            }
-        }
-    }
+    // This wallet is in its first run if all of these are empty
+    fFirstRunRet = mapKeys.empty() && mapCryptedKeys.empty() && mapWatchKeys.empty() && setWatchOnly.empty() && mapScripts.empty();
 
     if (nLoadWalletRet != DB_LOAD_OK)
         return nLoadWalletRet;
-    fFirstRunRet = !vchDefaultKey.IsValid();
 
     uiInterface.LoadWallet(this);
 
@@ -4117,7 +4108,6 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
 DBErrors CWallet::ZapSelectTx(std::vector<uint256>& vHashIn, std::vector<uint256>& vHashOut)
 {
     AssertLockHeld(cs_wallet); // mapWallet
-    vchDefaultKey = CPubKey();
     DBErrors nZapSelectTxRet = CWalletDB(*dbw,"cr+").ZapSelectTx(vHashIn, vHashOut);
     for (uint256 hash : vHashOut)
         mapWallet.erase(hash);
@@ -4146,7 +4136,6 @@ DBErrors CWallet::ZapSelectTx(std::vector<uint256>& vHashIn, std::vector<uint256
 
 DBErrors CWallet::ZapWalletTx(std::vector<CWalletTx>& vWtx)
 {
-    vchDefaultKey = CPubKey();
     DBErrors nZapWalletTxRet = CWalletDB(*dbw,"cr+").ZapWalletTx(vWtx);
     if (nZapWalletTxRet == DB_NEED_REWRITE)
     {
@@ -4220,14 +4209,6 @@ const std::string& CWallet::GetAccountName(const CScript& scriptPubKey) const
     // associated with the default account ("").
     const static std::string DEFAULT_ACCOUNT_NAME;
     return DEFAULT_ACCOUNT_NAME;
-}
-
-bool CWallet::SetDefaultKey(const CPubKey &vchPubKey)
-{
-    if (!CWalletDB(*dbw).WriteDefaultKey(vchPubKey))
-        return false;
-    vchDefaultKey = vchPubKey;
-    return true;
 }
 
 /**
@@ -5010,13 +4991,11 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
             if (!walletInstance->SetHDMasterKey(masterPubKey))
                 throw std::runtime_error(std::string(__func__) + ": Storing master key failed");
         }
-        CPubKey newDefaultKey;
-        if (walletInstance->GetKeyFromPool(newDefaultKey, false)) {
-            walletInstance->SetDefaultKey(newDefaultKey);
-            if (!walletInstance->SetAddressBook(walletInstance->vchDefaultKey.GetID(), "", "receive")) {
-                InitError(_("Cannot write default address") += "\n");
-                return nullptr;
-            }
+
+        // Top up the keypool
+        if (!walletInstance->TopUpKeyPool()) {
+            InitError(_("Unable to generate initial keys") += "\n");
+            return NULL;
         }
 
         walletInstance->SetBestChain(chainActive.GetLocator());
