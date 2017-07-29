@@ -164,6 +164,9 @@ public:
 
     //! Check if p2p enabled.
     virtual bool p2pEnabled() = 0;
+
+    //! Get adjusted time.
+    virtual int64_t getAdjustedTime() = 0;
 };
 
 //! Interface to let node manage chain clients (wallets, or maybe tools for
