@@ -213,7 +213,7 @@ void WalletView::gotoThronePage()
     }
 }
 
-void BitcoinGUI::gotoMultisigTab()
+void WalletView::gotoMultisigTab()
 {
     // calls show() in showTab_SM()
     MultisigDialog *multisigDialog = new MultisigDialog(this);
