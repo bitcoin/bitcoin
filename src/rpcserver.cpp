@@ -319,7 +319,6 @@ static const CRPCCommand vRPCCommands[] =
     { "crown",               "mnsync",                 &mnsync,                 true,      true,       false },
     { "crown",               "spork",                  &spork,                  true,      true,       false },
 #ifdef ENABLE_WALLET
-    { "crown",               "darksend",               &darksend,               false,     false,      true  }, /* not threadSafe because of SendMoney */
 
     /* Wallet */
     { "wallet",             "addmultisigaddress",     &addmultisigaddress,     true,      false,      true },

@@ -206,11 +206,6 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->unit, OptionsModel::DisplayUnit);
     mapper->addMapping(ui->thirdPartyTxUrls, OptionsModel::ThirdPartyTxUrls);
 
-
-    /* Darksend Rounds */
-    //mapper->addMapping(ui->darksendRounds, OptionsModel::DarksendRounds);
-    //mapper->addMapping(ui->anonymizeCrown, OptionsModel::AnonymizeCrownAmount);
-
 }
 
 void OptionsDialog::enableOkButton()

@@ -79,11 +79,11 @@ static const Checkpoints::CCheckpointData data = {
 
 static Checkpoints::MapCheckpoints mapCheckpointsTestnet =
         boost::assign::map_list_of
-        ( 0, uint256S("0x000000004daeaebf6182d09b7b40b81bc72caab1a13c79cef2669b0b5686b7b8"))
+        ( 0, uint256S("0x0000000085370d5e122f64f4ab19c68614ff3df78c8d13cb814fd7e69a1dc6da"))
         ;
 static const Checkpoints::CCheckpointData dataTestnet = {
         &mapCheckpointsTestnet,
-        1483492562, // * UNIX timestamp of last checkpoint block
+        1412760826, // * UNIX timestamp of last checkpoint block
         0,          // * total number of transactions between genesis and last checkpoint
                     //   (the tx=... number in the SetBestChain debug.log lines)
         0           // * estimated number of transactions per day after checkpoint
@@ -159,7 +159,7 @@ public:
 
         vSeeds.push_back(CDNSSeedData("fra-crwdns", "fra-crwdns.infernopool.com"));
         vSeeds.push_back(CDNSSeedData("blr-crwdns", "blr-crwdns.infernopool.com"));
-	vSeeds.push_back(CDNSSeedData("sgp-crwdns", "sgp-crwdns.infernopool.com"));
+        vSeeds.push_back(CDNSSeedData("sgp-crwdns", "sgp-crwdns.infernopool.com"));
         vSeeds.push_back(CDNSSeedData("lon-crwdns", "lon-crwdns.infernopool.com"));
         vSeeds.push_back(CDNSSeedData("nyc-crwdns", "nyc-crwdns.infernopool.com"));
         vSeeds.push_back(CDNSSeedData("tor-crwdns", "tor-crwdns.infernopool.com"));
@@ -167,12 +167,12 @@ public:
         vSeeds.push_back(CDNSSeedData("ams-crwdns", "ams-crwdns.infernopool.com"));
         vSeeds.push_back(CDNSSeedData("crw", "crw.infernopool.com"));
 
-        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,0);                    // Crown addresses start with 'X'
-        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,5);                    // Crown script addresses start with '7'
-        base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,128);                    // Crown private keys start with '7' or 'X'
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,0);                    // Crown addresses start with '1'
+        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,5);                    // Crown script addresses start with '3'
+        base58Prefixes[SECRET_KEY]     = std::vector<unsigned char>(1,128);                  // Crown private keys start with '5'
         base58Prefixes[EXT_PUBLIC_KEY] = list_of(0x04)(0x88)(0xB2)(0x1E).convert_to_container<std::vector<unsigned char> >();
         base58Prefixes[EXT_SECRET_KEY] = list_of(0x04)(0x88)(0xAD)(0xE4).convert_to_container<std::vector<unsigned char> >();
-        base58Prefixes[EXT_COIN_TYPE]  = list_of(0x80000005).convert_to_container<std::vector<unsigned char> >();             // Crown BIP44 coin type is '5'
+        base58Prefixes[EXT_COIN_TYPE]  = list_of(0x80000048).convert_to_container<std::vector<unsigned char> >();             // Crown BIP44 coin type is '72'
 
         convertSeed6(vFixedSeeds, pnSeed6_main, ARRAYLEN(pnSeed6_main));
 
@@ -219,23 +219,23 @@ public:
     CTestNetParams() {
         networkID = CBaseChainParams::TESTNET;
         strNetworkID = "test";
-        pchMessageStart[0] = 0x0c;
-        pchMessageStart[1] = 0x17;
-        pchMessageStart[2] = 0x0f;
-        pchMessageStart[3] = 0x05;
+        pchMessageStart[0] = 0x0f;
+        pchMessageStart[1] = 0x18;
+        pchMessageStart[2] = 0x0e;
+        pchMessageStart[3] = 0x06;
         vAlertPubKey = ParseHex("04517d8a699cb43d3938d7b24faaff7cda448ca4ea267723ba614784de661949bf632d6304316b244646dea079735b9a6fc4af804efb4752075b9fe2245e14e412");
         nDefaultPort = 19340;
         nEnforceBlockUpgradeMajority = 51;
         nRejectBlockOutdatedMajority = 75;
         nToCheckBlockUpgradeMajority = 100;
         nMinerThreads = 0;
-        nTargetTimespan = 14 * 24 * 60 * 60; // Crown: 1 day
-        nTargetSpacing = 1 * 60; // Crown: 2.5 minutes
+        nTargetTimespan = 2 * 24 * 60 * 60; // Crown: 2 day
+        nTargetSpacing = 1.5 * 60; // Crown: 1.5 minutes
         nMaxTipAge = 0x7fffffff;
 
         //! Modify the testnet genesis block so the timestamp is valid for a later start.
-        genesis.nTime = 1483492562;
-        genesis.nNonce = 2574547475;
+        genesis.nTime    = 1412760826;
+        genesis.nNonce   = 1612467894;
 
 	/*if (true && genesis.GetHash() != hashGenesisBlock)
                        {
@@ -266,7 +266,7 @@ public:
                        }*/
 
         hashGenesisBlock = genesis.GetHash();
-        assert(hashGenesisBlock == uint256S("0x000000004daeaebf6182d09b7b40b81bc72caab1a13c79cef2669b0b5686b7b8"));
+        assert(hashGenesisBlock == uint256S("0x0000000085370d5e122f64f4ab19c68614ff3df78c8d13cb814fd7e69a1dc6da"));
         assert(genesis.hashMerkleRoot == uint256S("0x80ad356118a9ab8db192db66ef77146cc36d958f959251feace550e4ca3d1446"));
 
         vFixedSeeds.clear();
