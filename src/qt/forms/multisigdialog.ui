@@ -284,26 +284,6 @@
            </property>
           </spacer>
          </item>
-         <item>
-          <widget class="QPushButton" name="saveRedeemScriptButton">
-           <property name="toolTip">
-            <string>The redeem script will be required to spend the funds sent to the multisig address</string>
-           </property>
-           <property name="text">
-            <string>Save redeem script</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="saveMultisigAddressButton">
-           <property name="toolTip">
-            <string>Add the multisig address to your personal addresses</string>
-           </property>
-           <property name="text">
-            <string>Add address to wallet</string>
-           </property>
-          </widget>
-         </item>
         </layout>
        </item>
       </layout>

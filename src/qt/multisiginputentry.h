@@ -4,7 +4,7 @@
 #include <QFrame>
 
 #include "uint256.h"
-
+#include "amount.h"
 
 class CTxIn;
 class WalletModel;
@@ -29,11 +29,11 @@ class MultisigInputEntry : public QFrame
     void setTransactionId(QString transactionId);
     void setTransactionOutputIndex(int index);
 
-  public slots:
+  public Q_SLOTS:
     void setRemoveEnabled(bool enabled);
     void clear();
 
-  signals:
+  Q_SIGNALS:
     void removeEntry(MultisigInputEntry *entry);
     void updateAmount();
 
@@ -42,7 +42,7 @@ class MultisigInputEntry : public QFrame
     WalletModel *model;
     uint256 txHash;
 
-  private slots:
+  private Q_SLOTS:
     void on_transactionId_textChanged(const QString &transactionId);
     void on_pasteTransactionIdButton_clicked();
     void on_deleteButton_clicked();

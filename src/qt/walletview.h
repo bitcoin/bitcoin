@@ -7,6 +7,7 @@
 
 #include "amount.h"
 #include "thronelist.h"
+#include "multisigdialog.h"
 
 #include <QStackedWidget>
 
@@ -80,8 +81,10 @@ public slots:
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */
     void gotoSendCoinsPage(QString addr = "");
-    /** Switch to receive coins page */
+    /** Switch to throne page */
     void gotoThronePage();
+    /** Switch to multisig page*/
+    void gotoMultisigTab();
 
     /** Show Sign/Verify Message dialog and switch to sign message tab */
     void gotoSignMessageTab(QString addr = "");
