@@ -6,6 +6,7 @@
 
 #include <chain.h>
 #include <chainparams.h>
+#include <net.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <policy/rbf.h>
@@ -229,6 +230,7 @@ public:
         return ::mempool.GetMinFee(gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000);
     }
     bool getPruneMode() override { return ::fPruneMode; }
+    bool p2pEnabled() override { return g_connman != nullptr; }
 };
 
 } // namespace
