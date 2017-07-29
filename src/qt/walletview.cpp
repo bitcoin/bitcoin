@@ -213,6 +213,15 @@ void WalletView::gotoThronePage()
     }
 }
 
+void WalletView::gotoMultisigTab()
+{
+    // calls show() in showTab_SM()
+    MultisigDialog *multisigDialog = new MultisigDialog(this);
+    multisigDialog->setAttribute(Qt::WA_DeleteOnClose);
+    multisigDialog->setModel(walletModel);
+    multisigDialog->showTab(true);
+}
+
 void WalletView::gotoSignMessageTab(QString addr)
 {
     // calls show() in showTab_SM()

@@ -98,6 +98,7 @@ private:
     QAction *usedReceivingAddressesAction;
     QAction *signMessageAction;
     QAction *verifyMessageAction;
+    QAction *multisigAction;
     QAction *aboutAction;
     QAction *receiveCoinsAction;
     QAction *optionsAction;
@@ -204,6 +205,8 @@ private slots:
     void gotoVerifyMessageTab(QString addr = "");
     /** Switch to throne manager page */
     void gotoThronePage();
+    /** Switch to multisig tab */
+    void gotoMultisigTab();
 
     /** Show open dialog */
     void openClicked();

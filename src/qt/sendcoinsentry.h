@@ -47,6 +47,7 @@ public:
 
 public slots:
     void clear();
+    void setRemoveEnabled(bool enabled);
 
 signals:
     void removeEntry(SendCoinsEntry *entry);

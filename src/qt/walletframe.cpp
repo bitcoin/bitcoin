@@ -140,6 +140,13 @@ void WalletFrame::gotoThronePage()
         i.value()->gotoThronePage();
 }
 
+void WalletFrame::gotoMultisigTab()
+{
+    WalletView *walletView = currentWalletView();
+    if (walletView)
+        walletView->gotoMultisigTab();
+}
+
 void WalletFrame::gotoSignMessageTab(QString addr)
 {
     WalletView *walletView = currentWalletView();
