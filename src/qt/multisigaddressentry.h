@@ -24,7 +24,7 @@ class MultisigAddressEntry : public QFrame
     ~MultisigAddressEntry();
     void setModel(WalletModel *model);
     bool validate();
-    QString getWalletAddress();
+    QString getPubKey();
 
   public Q_SLOTS:
     void setRemoveEnabled(bool enabled);

@@ -37,7 +37,7 @@ void MultisigAddressEntry::setModel(WalletModel *model)
 void MultisigAddressEntry::clear()
 {
     ui->pubkey->clear();
-    ui-walletaddress->clear();
+    ui->walletaddress->clear();
     ui->label->clear();
     ui->pubkey->setFocus();
 }
@@ -108,8 +108,8 @@ void MultisigAddressEntry::on_pubkey_textChanged(const QString &pubkey)
     std::vector<unsigned char> vchPubKey(ParseHex(pubkey.toStdString().c_str()));
     CPubKey pkey(vchPubKey);
     CKeyID keyID = pkey.GetID();
-    CTransfercoinAddress address(keyID);
-    ui->address->setText(address.ToString().c_str());
+    CBitcoinAddress address(keyID);
+    ui->walletaddress->setText(address.ToString().c_str());
 
     // Get label of address
     QString associatedLabel = model->getAddressTableModel()->labelForAddress(address.ToString().c_str());
