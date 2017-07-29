@@ -194,7 +194,7 @@ void ThroneList::updateMyThroneInfo(QString alias, QString addr, QString privkey
     QTableWidgetItem *protocolItem = new QTableWidgetItem(QString::number(pmn ? pmn->protocolVersion : -1));
     QTableWidgetItem *statusItem = new QTableWidgetItem(QString::fromStdString(pmn ? pmn->Status() : "MISSING"));
     QTableWidgetItem *activeSecondsItem = new QTableWidgetItem(QString::fromStdString(DurationToDHMS(pmn ? (pmn->lastPing.sigTime - pmn->sigTime) : 0)));
-    QTableWidgetItem *lastSeenItem = new QTableWidgetItem(GUIUtil::dateTimeStr(pmn ? pmn->lastPing.sigTime : 0));
+    QTableWidgetItem *lastSeenItem = new QTableWidgetItem(QString::fromStdString(DateTimeStrFormat("%Y-%m-%d %H:%M", pmn ? pmn->lastPing.sigTime : 0)));
     QTableWidgetItem *pubkeyItem = new QTableWidgetItem(QString::fromStdString(pmn ? CBitcoinAddress(pmn->pubkey.GetID()).ToString() : ""));
 
     ui->tableWidgetMyThrones->setItem(nodeRow, 0, aliasItem);
@@ -233,11 +233,19 @@ void ThroneList::updateMyNodeList(bool reset) {
 
 void ThroneList::updateNodeList()
 {
-    static int64_t lastListUpdate = 0;
+    static int64_t nTimeListUpdate = 0;
 
-    // update only once in THRONELIST_UPDATE_SECONDS seconds to prevent high cpu usage e.g. on filter change
-    if(GetTime() - lastListUpdate < THRONELIST_UPDATE_SECONDS) return;
-    lastListUpdate = GetTime();
+      // to prevent high cpu usage update only once in THRONELIST_UPDATE_SECONDS secondsLabel
+      // or THRONELIST_FILTER_COOLDOWN_SECONDS seconds after filter was last changed
+      int64_t nTimeToWait =   fFilterUpdated
+                              ? nTimeFilterUpdate - GetTime() + THRONELIST_FILTER_COOLDOWN_SECONDS
+                              : nTimeListUpdate - GetTime() + THRONELIST_UPDATE_SECONDS;
+
+    if(fFilterUpdated) ui->countLabel->setText(QString::fromStdString(strprintf("Please wait... %d", nTimeToWait)));
+    if(nTimeToWait > 0) return;
+
+    nTimeListUpdate = GetTime();
+    fFilterUpdated = false;
 
     TRY_LOCK(cs_thrones, lockThrones);
     if(!lockThrones)
@@ -258,7 +266,7 @@ void ThroneList::updateNodeList()
         QTableWidgetItem *protocolItem = new QTableWidgetItem(QString::number(mn.protocolVersion));
         QTableWidgetItem *statusItem = new QTableWidgetItem(QString::fromStdString(mn.Status()));
         QTableWidgetItem *activeSecondsItem = new QTableWidgetItem(QString::fromStdString(DurationToDHMS(mn.lastPing.sigTime - mn.sigTime)));
-        QTableWidgetItem *lastSeenItem = new QTableWidgetItem(GUIUtil::dateTimeStr(mn.lastPing.sigTime));
+        QTableWidgetItem *lastSeenItem = new QTableWidgetItem(QString::fromStdString(DateTimeStrFormat("%Y-%m-%d %H:%M", mn.lastPing.sigTime)));
         QTableWidgetItem *pubkeyItem = new QTableWidgetItem(QString::fromStdString(CBitcoinAddress(mn.pubkey.GetID()).ToString()));
 
         if (strCurrentFilter != "")
@@ -288,7 +296,9 @@ void ThroneList::updateNodeList()
 
 void ThroneList::on_filterLineEdit_textChanged(const QString &filterString) {
     strCurrentFilter = filterString;
-    ui->countLabel->setText("Please wait...");
+    nTimeFilterUpdate = GetTime();
+    fFilterUpdated = true;
+    ui->countLabel->setText(QString::fromStdString(strprintf("Please wait... %d", THRONELIST_FILTER_COOLDOWN_SECONDS)));
 }
 
 void ThroneList::on_startButton_clicked()
@@ -434,6 +444,10 @@ void ThroneList::updateVoteList(bool reset)
     ui->tableWidgetVoting->setRowCount(0);
 
         int64_t nTotalAllotted = 0;
+        CBlockIndex* pindexPrev = chainActive.Tip();
+        if(pindexPrev == NULL) return;
+        int nBlockStart = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
+        int nBlockEnd  =  nBlockStart + GetBudgetPaymentCycleBlocks() - 1;
 
         std::vector<CBudgetProposal*> winningProps = budget.GetAllProposals();
         BOOST_FOREACH(CBudgetProposal* pbudgetProposal, winningProps)
@@ -443,46 +457,54 @@ void ThroneList::updateVoteList(bool reset)
             ExtractDestination(pbudgetProposal->GetPayee(), address1);
             CBitcoinAddress address2(address1);
 
-            if(!pbudgetProposal->fValid || (int64_t)pbudgetProposal->GetRemainingPaymentCount() <= 0) continue;
-            // populate list
-            QTableWidgetItem *nameItem = new QTableWidgetItem(QString::fromStdString(pbudgetProposal->GetName()));
-            QTableWidgetItem *urlItem = new QTableWidgetItem(QString::fromStdString(pbudgetProposal->GetURL()));
-            QTableWidgetItem *hashItem = new QTableWidgetItem(QString::fromStdString(pbudgetProposal->GetHash().ToString()));
-            QTableWidgetItem *blockStartItem = new QTableWidgetItem(QString::number((int64_t)pbudgetProposal->GetBlockStart()));
-            QTableWidgetItem *blockEndItem = new QTableWidgetItem(QString::number((int64_t)pbudgetProposal->GetBlockEnd()));
-            QTableWidgetItem *paymentsItem = new QTableWidgetItem(QString::number((int64_t)pbudgetProposal->GetTotalPaymentCount()));
-            QTableWidgetItem *remainingPaymentsItem = new QTableWidgetItem(QString::number((int64_t)pbudgetProposal->GetRemainingPaymentCount()));
-            QTableWidgetItem *yesVotesItem = new QTableWidgetItem(QString::number((int64_t)pbudgetProposal->GetYeas()));
-            QTableWidgetItem *noVotesItem = new QTableWidgetItem(QString::number((int64_t)pbudgetProposal->GetNays()));
-            QTableWidgetItem *abstainVotesItem = new QTableWidgetItem(QString::number((int64_t)pbudgetProposal->GetAbstains()));
-            QTableWidgetItem *AddressItem = new QTableWidgetItem(QString::fromStdString(address2.ToString()));
-            QTableWidgetItem *totalPaymentItem = new QTableWidgetItem(QString::number((pbudgetProposal->GetAmount()*pbudgetProposal->GetTotalPaymentCount())/100000000 ));
-            QTableWidgetItem *monthlyPaymentItem = new QTableWidgetItem(QString::number(pbudgetProposal->GetAmount()/100000000));
+            if((int64_t)pbudgetProposal->GetRemainingPaymentCount() <= 0) continue;
 
-            ui->tableWidgetVoting->insertRow(0);
-            ui->tableWidgetVoting->setItem(0, 0, nameItem);
-            ui->tableWidgetVoting->setItem(0, 1, urlItem);
-            ui->tableWidgetVoting->setItem(0, 2, hashItem);
-            ui->tableWidgetVoting->setItem(0, 3, blockStartItem);
-            ui->tableWidgetVoting->setItem(0, 4, blockEndItem);
-            ui->tableWidgetVoting->setItem(0, 5, paymentsItem);
-            ui->tableWidgetVoting->setItem(0, 6, remainingPaymentsItem);
-            ui->tableWidgetVoting->setItem(0, 7, yesVotesItem);
-            ui->tableWidgetVoting->setItem(0, 8, noVotesItem);
-            ui->tableWidgetVoting->setItem(0, 9, abstainVotesItem);
-            ui->tableWidgetVoting->setItem(0, 10, AddressItem);
-            ui->tableWidgetVoting->setItem(0, 11, totalPaymentItem);
-            ui->tableWidgetVoting->setItem(0, 12, monthlyPaymentItem);
+            if (pbudgetProposal->fValid &&
+                pbudgetProposal->nBlockStart <= nBlockStart &&
+                pbudgetProposal->nBlockEnd >= nBlockEnd &&
+                pbudgetProposal->IsEstablished()) 
+            {
 
-            std::string projected;            
-            if ((int64_t)pbudgetProposal->GetYeas() - (int64_t)pbudgetProposal->GetNays() > (ui->tableWidgetThrones->rowCount()/10)){
-                nTotalAllotted += pbudgetProposal->GetAmount()/100000000;
-                projected = "Yes";
-            } else {
-                projected = "No";
+                // populate list
+                QTableWidgetItem *nameItem = new QTableWidgetItem(QString::fromStdString(pbudgetProposal->GetName()));
+                QTableWidgetItem *urlItem = new QTableWidgetItem(QString::fromStdString(pbudgetProposal->GetURL()));
+                QTableWidgetItem *hashItem = new QTableWidgetItem(QString::fromStdString(pbudgetProposal->GetHash().ToString()));
+                QTableWidgetItem *blockStartItem = new QTableWidgetItem(QString::number((int64_t)pbudgetProposal->GetBlockStart()));
+                QTableWidgetItem *blockEndItem = new QTableWidgetItem(QString::number((int64_t)pbudgetProposal->GetBlockEnd()));
+                QTableWidgetItem *paymentsItem = new QTableWidgetItem(QString::number((int64_t)pbudgetProposal->GetTotalPaymentCount()));
+                QTableWidgetItem *remainingPaymentsItem = new QTableWidgetItem(QString::number((int64_t)pbudgetProposal->GetRemainingPaymentCount()));
+                QTableWidgetItem *yesVotesItem = new QTableWidgetItem(QString::number((int64_t)pbudgetProposal->GetYeas()));
+                QTableWidgetItem *noVotesItem = new QTableWidgetItem(QString::number((int64_t)pbudgetProposal->GetNays()));
+                QTableWidgetItem *abstainVotesItem = new QTableWidgetItem(QString::number((int64_t)pbudgetProposal->GetAbstains()));
+                QTableWidgetItem *AddressItem = new QTableWidgetItem(QString::fromStdString(address2.ToString()));
+                QTableWidgetItem *totalPaymentItem = new QTableWidgetItem(QString::number((pbudgetProposal->GetAmount()*pbudgetProposal->GetTotalPaymentCount())/100000000 ));
+                QTableWidgetItem *monthlyPaymentItem = new QTableWidgetItem(QString::number(pbudgetProposal->GetAmount()/100000000));
+
+                ui->tableWidgetVoting->insertRow(0);
+                ui->tableWidgetVoting->setItem(0, 0, nameItem);
+                ui->tableWidgetVoting->setItem(0, 1, urlItem);
+                ui->tableWidgetVoting->setItem(0, 2, hashItem);
+                ui->tableWidgetVoting->setItem(0, 3, blockStartItem);
+                ui->tableWidgetVoting->setItem(0, 4, blockEndItem);
+                ui->tableWidgetVoting->setItem(0, 5, paymentsItem);
+                ui->tableWidgetVoting->setItem(0, 6, remainingPaymentsItem);
+                ui->tableWidgetVoting->setItem(0, 7, yesVotesItem);
+                ui->tableWidgetVoting->setItem(0, 8, noVotesItem);
+                ui->tableWidgetVoting->setItem(0, 9, abstainVotesItem);
+                ui->tableWidgetVoting->setItem(0, 10, AddressItem);
+                ui->tableWidgetVoting->setItem(0, 11, totalPaymentItem);
+                ui->tableWidgetVoting->setItem(0, 12, monthlyPaymentItem);
+
+                std::string projected;            
+                if ((int64_t)pbudgetProposal->GetYeas() - (int64_t)pbudgetProposal->GetNays() > (ui->tableWidgetThrones->rowCount()/10)){
+                    nTotalAllotted += pbudgetProposal->GetAmount()/100000000;
+                    projected = "Yes";
+                } else {
+                    projected = "No";
+                }
+                QTableWidgetItem *projectedItem = new QTableWidgetItem(QString::fromStdString(projected));
+                ui->tableWidgetVoting->setItem(0, 13, projectedItem);
             }
-            QTableWidgetItem *projectedItem = new QTableWidgetItem(QString::fromStdString(projected));
-            ui->tableWidgetVoting->setItem(0, 13, projectedItem);
         }
 
     ui->totalAllottedLabel->setText(QString::number(nTotalAllotted));

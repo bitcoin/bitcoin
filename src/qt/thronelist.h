@@ -9,8 +9,9 @@
 #include <QTimer>
 #include <QWidget>
 
-#define THRONELIST_UPDATE_SECONDS            5
-#define MY_THRONELIST_UPDATE_SECONDS        60
+#define THRONELIST_UPDATE_SECONDS            60
+#define MY_THRONELIST_UPDATE_SECONDS         15
+#define THRONELIST_FILTER_COOLDOWN_SECONDS   3
 
 namespace Ui {
     class ThroneList;
@@ -40,7 +41,8 @@ public:
 
 private:
     QMenu *contextMenu;
-
+    int64_t nTimeFilterUpdate;
+    bool fFilterUpdated;
 public Q_SLOTS:
     void updateMyThroneInfo(QString alias, QString addr, QString privkey, QString txHash, QString txIndex, CThrone *pmn);
     void updateMyNodeList(bool reset = false);
