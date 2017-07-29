@@ -167,6 +167,15 @@ public:
 
     //! Get adjusted time.
     virtual int64_t getAdjustedTime() = 0;
+
+    //! Send init message.
+    virtual void initMessage(const std::string& message) = 0;
+
+    //! Send init warning.
+    virtual void initWarning(const std::string& message) = 0;
+
+    //! Send init error.
+    virtual void initError(const std::string& message) = 0;
 };
 
 //! Interface to let node manage chain clients (wallets, or maybe tools for
