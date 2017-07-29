@@ -158,6 +158,9 @@ public:
 
     //! Check if pruning is enabled.
     virtual bool getPruneMode() = 0;
+
+    //! Check if p2p enabled.
+    virtual bool p2pEnabled() = 0;
 };
 
 //! Interface to let node manage chain clients (wallets, or maybe tools for
