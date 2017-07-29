@@ -36,10 +36,10 @@ class MultisigAddressEntry : public QFrame
   private:
     Ui::MultisigAddressEntry *ui;
     WalletModel *model;
-    bool updateLabel(const QString &address);
 
   private Q_SLOTS:
     void on_walletaddress_textChanged(const QString &address);
+    void on_pubkey_textChanged(const QString &pubkey);
     void on_pasteButton_clicked();
     void on_deleteButton_clicked();
     void on_addressBookButton_clicked();

@@ -20,6 +20,67 @@
       <enum>QFrame::Sunken</enum>
     </property>
     <layout class="QGridLayout" name="gridLayout">
+     <item row="0" column="0">
+      <widget class="QLabel" name="pubkeyLabel">
+       <property name="text">
+        <string>Public &amp;key:</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+       <property name="buddy">
+        <cstring>pubkey</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <layout class="QHBoxLayout" name="pubkeyLayout">
+       <property name="spacing">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QValidatedLineEdit" name="pubkey">
+         <property name="toolTip">
+          <string>The public key of an address</string>
+         </property>
+         <property name="placeholderText">
+          <string>Enter a public key</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="pasteButton">
+         <property name="toolTip">
+          <string>Paste public key from clipboard</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset resource="../bitcoin.qrc">
+           <normaloff>:/icons/editpaste</normaloff>:/icons/editpaste</iconset>
+         </property>
+         <property name="shortcut">
+          <string>Alt+P</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="deleteButton">
+         <property name="toolTip">
+          <string>Remove this public key</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset resource="../bitcoin.qrc">
+           <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
       <item row="0" column="0">
         <widget class="QLabel" name="walletaddressLabel">
           <property name="text">

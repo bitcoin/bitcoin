@@ -139,7 +139,7 @@ void MultisigDialog::on_createAddressButton_clicked()
     for(int i = 0; i < ui->pubkeyEntries->count(); i++)
     {
         MultisigAddressEntry *entry = qobject_cast<MultisigAddressEntry *>(ui->pubkeyEntries->itemAt(i)->widget());
-	std::string strAddressEntered = entry->getWalletAddress().toUtf8().constData();
+	std::string strAddressEntered = entry->getPubKey().toUtf8().constData();
         CBitcoinAddress address(strAddressEntered);
         if(pwalletMain && address.IsValid())
         {

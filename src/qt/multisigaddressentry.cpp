@@ -36,19 +36,20 @@ void MultisigAddressEntry::setModel(WalletModel *model)
 
 void MultisigAddressEntry::clear()
 {
-    ui->walletaddress->clear();
+    ui->pubkey->clear();
+    ui-walletaddress->clear();
     ui->label->clear();
-    ui->walletaddress->setFocus();
+    ui->pubkey->setFocus();
 }
 
 bool MultisigAddressEntry::validate()
 {
-    return !ui->walletaddress->text().isEmpty();
+    return !ui->pubkey->text().isEmpty();
 }
 
-QString MultisigAddressEntry::getWalletAddress()
+QString MultisigAddressEntry::getPubKey()
 {
-    return ui->walletaddress->text();
+    return ui->pubkey->text();
 }
 
 void MultisigAddressEntry::setRemoveEnabled(bool enabled)
@@ -80,21 +81,40 @@ void MultisigAddressEntry::on_addressBookButton_clicked()
 
 void MultisigAddressEntry::on_walletaddress_textChanged(const QString &address)
 {
-    updateLabel(address);
-}
-
-bool MultisigAddressEntry::updateLabel(const QString &address)
-{
-    if(!model)
-        return false;
-
-    // Fill in label from address book, if address has an associated label
-    QString associatedLabel = model->getAddressTableModel()->labelForAddress(address);
-    if(!associatedLabel.isEmpty())
+    // Get public key of address
+    CBitcoinAddress addr(address.toStdString().c_str());
+    CKeyID keyID;
+    if(addr.GetKeyID(keyID))
     {
-        ui->label->setText(associatedLabel);
-        return true;
+        CPubKey vchPubKey;
+        model->getPubKey(keyID, vchPubKey);
+        std::string pubkey = HexStr(vchPubKey.Raw());
+        if(!pubkey.empty())
+            ui->pubkey->setText(pubkey.c_str());
     }
 
-    return false;
+    // Get label of address
+    QString associatedLabel = model->getAddressTableModel()->labelForAddress(address);
+    if(!associatedLabel.isEmpty())
+        ui->label->setText(associatedLabel);
+}
+
+void MultisigAddressEntry::on_pubkey_textChanged(const QString &pubkey)
+{
+    if(!model)
+        return;
+
+    // Compute address from public key
+    std::vector<unsigned char> vchPubKey(ParseHex(pubkey.toStdString().c_str()));
+    CPubKey pkey(vchPubKey);
+    CKeyID keyID = pkey.GetID();
+    CTransfercoinAddress address(keyID);
+    ui->address->setText(address.ToString().c_str());
+
+    // Get label of address
+    QString associatedLabel = model->getAddressTableModel()->labelForAddress(address.ToString().c_str());
+    if(!associatedLabel.isEmpty())
+        ui->label->setText(associatedLabel);
+    else
+        ui->label->setText(QString());
 }
