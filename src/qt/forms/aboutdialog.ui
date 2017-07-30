@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>About PPCoin</string>
+   <string>About Peercoin</string>
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout_2">
    <item>
@@ -50,7 +50,7 @@
           <cursorShape>IBeamCursor</cursorShape>
          </property>
          <property name="text">
-          <string>&lt;b&gt;PPCoin&lt;/b&gt; version</string>
+          <string>&lt;b&gt;Peercoin&lt;/b&gt; version</string>
          </property>
          <property name="textInteractionFlags">
           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -86,12 +86,12 @@
       </layout>
      </item>
      <item>
-      <widget class="QLabel" name="PPCoinCopyrightLabel">
+      <widget class="QLabel" name="PeercoinCopyrightLabel">
        <property name="cursor">
         <cursorShape>IBeamCursor</cursorShape>
        </property>
        <property name="text">
-        <string>Copyright &amp;copy; 2011-YYYY Peercoin (PPCoin) Developers</string>
+        <string>Copyright &amp;copy; 2011-YYYY Peercoin Developers</string>
        </property>
        <property name="textFormat">
         <enum>Qt::RichText</enum>

@@ -4,13 +4,13 @@
     <name>AboutDialog</name>
     <message>
         <location filename="../forms/aboutdialog.ui" line="+14"/>
-        <source>About PPCoin</source>
-        <translation>Sobre PPCoin</translation>
+        <source>About Peercoin</source>
+        <translation>Sobre Peercoin</translation>
     </message>
     <message>
         <location line="+39"/>
-        <source>&lt;b&gt;PPCoin&lt;/b&gt; version</source>
-        <translation>&lt;b&gt;PPCoin&lt;/b&gt; versió</translation>
+        <source>&lt;b&gt;Peercoin&lt;/b&gt; version</source>
+        <translation>&lt;b&gt;Peercoin&lt;/b&gt; versió</translation>
     </message>
     <message>
         <location line="+57"/>
@@ -243,8 +243,8 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location line="+1"/>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR PPCOINS&lt;/b&gt;!</source>
-        <translation>Advertència: Si encripteu el vostre moneder i perdeu la constrasenya, &lt;b&gt;PERDREU TOTS ELS VOSTRES PPCOINS&lt;/b&gt;!</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR PEERCOINS&lt;/b&gt;!</source>
+        <translation>Advertència: Si encripteu el vostre moneder i perdeu la constrasenya, &lt;b&gt;PERDREU TOTS ELS VOSTRES PEERCOINS&lt;/b&gt;!</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -316,7 +316,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
 </context>
 <context>
-    <name>PPCoinGUI</name>
+    <name>PeercoinGUI</name>
     <message>
         <location filename="../bitcoingui.cpp" line="+233"/>
         <source>Sign &amp;message...</source>
@@ -369,8 +369,8 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location line="+4"/>
-        <source>Show information about PPCoin</source>
-        <translation>Mostra informació sobre PPCoin</translation>
+        <source>Show information about Peercoin</source>
+        <translation>Mostra informació sobre Peercoin</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -419,8 +419,8 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location line="+49"/>
-        <source>Modify configuration options for PPCoin</source>
-        <translation>Modificar les opcions de configuració per ppcoin</translation>
+        <source>Modify configuration options for Peercoin</source>
+        <translation>Modificar les opcions de configuració per peercoin</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -531,13 +531,13 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location line="+47"/>
-        <source>PPCoin client</source>
-        <translation>Client PPCoin</translation>
+        <source>Peercoin client</source>
+        <translation>Client Peercoin</translation>
     </message>
     <message numerus="yes">
         <location line="+141"/>
-        <source>%n active connection(s) to PPCoin network</source>
-        <translation><numerusform>%n connexió activa a la xarxa PPCoin</numerusform><numerusform>%n connexions actives a la xarxa PPCoin</numerusform></translation>
+        <source>%n active connection(s) to Peercoin network</source>
+        <translation><numerusform>%n connexió activa a la xarxa Peercoin</numerusform><numerusform>%n connexions actives a la xarxa Peercoin</numerusform></translation>
     </message>
     <message>
         <location line="+22"/>
@@ -728,8 +728,8 @@ Address: %4
     </message>
     <message>
         <location line="-5"/>
-        <source>The entered address &quot;%1&quot; is not a valid PPCoin address.</source>
-        <translation>L&apos;adreça introduida &quot;%1&quot; no és una adreça PPCoin valida.</translation>
+        <source>The entered address &quot;%1&quot; is not a valid Peercoin address.</source>
+        <translation>L&apos;adreça introduida &quot;%1&quot; no és una adreça Peercoin valida.</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -747,8 +747,8 @@ Address: %4
     <message>
         <location filename="../guiutil.cpp" line="+424"/>
         <location line="+12"/>
-        <source>PPCoin-Qt</source>
-        <translation>PPCoin-Qt</translation>
+        <source>Peercoin-Qt</source>
+        <translation>Peercoin-Qt</translation>
     </message>
     <message>
         <location line="-12"/>
@@ -815,7 +815,7 @@ Address: %4
     </message>
     <message>
         <location line="+3"/>
-        <source>&amp;Start Bitcoin on system login</source>
+        <source>&amp;Start Peercoin on system login</source>
         <translation>&amp;Iniciar Bitcoin al inici de sessió del sistema.</translation>
     </message>
     <message>
@@ -1439,8 +1439,8 @@ Address: %4
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="+1"/>
-        <source>Enter a PPCoin address</source>
-        <translation>Introdueixi una adreça de PPCoin</translation>
+        <source>Enter a Peercoin address</source>
+        <translation>Introdueixi una adreça de Peercoin</translation>
     </message>
 </context>
 <context>
@@ -1556,7 +1556,7 @@ Address: %4
     <message>
         <location filename="../signverifymessagedialog.cpp" line="+27"/>
         <location line="+3"/>
-        <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <source>Enter a Peercoin address</source>
         <translation>Introdueixi una adreça de Bitcoin (per exemple 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
@@ -1566,7 +1566,7 @@ Address: %4
     </message>
     <message>
         <location line="+3"/>
-        <source>Enter Bitcoin signature</source>
+        <source>Enter Peercoin signature</source>
         <translation>Introduïr una clau Bitcoin</translation>
     </message>
     <message>
@@ -2798,13 +2798,13 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <location line="+1"/>
-        <source>Error loading wallet.dat: Wallet requires newer version of PPCoin</source>
-        <translation>Error carregant wallet.dat: El moneder requereix una versió de PPCoin més moderna</translation>
+        <source>Error loading wallet.dat: Wallet requires newer version of Peercoin</source>
+        <translation>Error carregant wallet.dat: El moneder requereix una versió de Peercoin més moderna</translation>
     </message>
     <message>
         <location line="+93"/>
-        <source>Wallet needed to be rewritten: restart PPCoin to complete</source>
-        <translation>El moneder necesita ser re-escrit: re-inicia PPCoin per a completar la tasca</translation>
+        <source>Wallet needed to be rewritten: restart Peercoin to complete</source>
+        <translation>El moneder necesita ser re-escrit: re-inicia Peercoin per a completar la tasca</translation>
     </message>
     <message>
         <location line="-95"/>

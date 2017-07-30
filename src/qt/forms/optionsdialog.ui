@@ -82,7 +82,7 @@
           <string>Automatically start Bitcoin after logging in to the system.</string>
          </property>
          <property name="text">
-          <string>&amp;Start Bitcoin on system login</string>
+          <string>&amp;Start Peercoin on system login</string>
          </property>
         </widget>
        </item>

@@ -9,7 +9,7 @@ Authors
 * Colin Dean <cad@cad.cx>
 * Gavin Andresen <gavinandresen@gmail.com>
 
-Modified for PPCoin by Jeff Larkin <jefflarkin@gmail.com>
+Modified for Peercoin by Jeff Larkin <jefflarkin@gmail.com>
 
 License
 -------

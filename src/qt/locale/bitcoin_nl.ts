@@ -820,11 +820,11 @@ Adres: %4
     <message>
         <location line="+31"/>
         <source>Automatically start Bitcoin after logging in to the system.</source>
-        <translation>Start Bitcoin automatisch na inloggen in het systeem</translation>
+        <translation>Start Peercoin automatisch na inloggen in het systeem</translation>
     </message>
     <message>
         <location line="+3"/>
-        <source>&amp;Start Bitcoin on system login</source>
+        <source>&amp;Start Peercoin on system login</source>
         <translation>Start &amp;Bitcoin bij het inloggen in het systeem</translation>
     </message>
     <message>
@@ -1448,7 +1448,7 @@ Adres: %4
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="+1"/>
-        <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <source>Enter a Peercoin address</source>
         <translation>Vul een Bitcoinadres in (bijv. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
 </context>
@@ -1565,7 +1565,7 @@ Adres: %4
     <message>
         <location filename="../signverifymessagedialog.cpp" line="+27"/>
         <location line="+3"/>
-        <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <source>Enter a Peercoin address</source>
         <translation>Vul een Bitcoinadres in (bijv. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
@@ -1575,7 +1575,7 @@ Adres: %4
     </message>
     <message>
         <location line="+3"/>
-        <source>Enter Bitcoin signature</source>
+        <source>Enter Peercoin signature</source>
         <translation>Voer Bitcoin-handtekening in</translation>
     </message>
     <message>

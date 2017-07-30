@@ -1,4 +1,4 @@
-Name PPCoin
+Name Peercoin
 
 RequestExecutionLevel highest
 SetCompressor /SOLID lzma
@@ -19,7 +19,7 @@ SetCompressor /SOLID lzma
 !define MUI_STARTMENUPAGE_REGISTRY_ROOT HKLM
 !define MUI_STARTMENUPAGE_REGISTRY_KEY ${REGKEY}
 !define MUI_STARTMENUPAGE_REGISTRY_VALUENAME StartMenuGroup
-!define MUI_STARTMENUPAGE_DEFAULTFOLDER PPCoin
+!define MUI_STARTMENUPAGE_DEFAULTFOLDER Peercoin
 !define MUI_FINISHPAGE_RUN $INSTDIR\ppcoin-qt.exe
 !define MUI_UNICON "${NSISDIR}\Contrib\Graphics\Icons\modern-uninstall.ico"
 !define MUI_UNWELCOMEFINISHPAGE_BITMAP "../share/pixmaps/nsis-wizard.bmp"
@@ -45,14 +45,14 @@ Var StartMenuGroup
 !insertmacro MUI_LANGUAGE English
 
 # Installer attributes
-OutFile ppcoin-0.6.0-win32-setup.exe
-InstallDir $PROGRAMFILES\PPCoin
+OutFile peercoin-0.6.0-win32-setup.exe
+InstallDir $PROGRAMFILES\Peercoin
 CRCCheck on
 XPStyle on
 BrandingText " "
 ShowInstDetails show
 VIProductVersion 0.6.0.0
-VIAddVersionKey ProductName PPCoin
+VIAddVersionKey ProductName Peercoin
 VIAddVersionKey ProductVersion "${VERSION}"
 VIAddVersionKey CompanyName "${COMPANY}"
 VIAddVersionKey CompanyWebsite "${URL}"
@@ -139,7 +139,7 @@ Section -un.post UNSEC0001
     DeleteRegValue HKCU "${REGKEY}" Path
     DeleteRegKey /IfEmpty HKCU "${REGKEY}\Components"
     DeleteRegKey /IfEmpty HKCU "${REGKEY}"
-    DeleteRegKey HKCR "ppcoin"
+    DeleteRegKey HKCR "peercoin"
     RmDir /REBOOTOK $SMPROGRAMS\$StartMenuGroup
     RmDir /REBOOTOK $INSTDIR
     Push $R0

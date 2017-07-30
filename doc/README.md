@@ -1,6 +1,6 @@
-Peercoin (PPCoin) 0.6.0 BETA
+Peercoin 0.6.0 BETA
 
-Copyright (c) 2011-2017 Peercoin (PPCoin) Developers
+Copyright (c) 2011-2017 Peercoin Developers
 Distributed under the MIT/X11 software license, see the accompanying
 file license.txt or http://www.opensource.org/licenses/mit-license.php.
 This product includes software developed by the OpenSSL Project for use in
@@ -10,7 +10,7 @@ cryptographic software written by Eric Young (eay@cryptsoft.com).
 
 Intro
 -----
-PPCoin is a free open source project derived from Bitcoin, with
+Peercoin is a free open source project derived from Bitcoin, with
 the goal of providing a long-term energy-efficient crypto-currency.
 Built on the foundation of Bitcoin, innovations such as proof-of-stake
 help further advance the field of crypto-currency.
@@ -27,8 +27,8 @@ Unpack the files into a directory and run:
 The software automatically finds other nodes to connect to.  You can
 enable Universal Plug and Play (UPnP) with your router/firewall
 or forward port 9901 (TCP) to your computer so you can receive
-incoming connections.  PPCoin works without incoming connections,
-but allowing incoming connections helps the PPCoin network.
+incoming connections.  Peercoin works without incoming connections,
+but allowing incoming connections helps the Peercoin network.
 
 
 Upgrade

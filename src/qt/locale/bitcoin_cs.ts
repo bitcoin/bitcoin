@@ -4,13 +4,13 @@
     <name>AboutDialog</name>
     <message>
         <location filename="../forms/aboutdialog.ui" line="+14"/>
-        <source>About PPCoin</source>
-        <translation>O PPCoinu</translation>
+        <source>About Peercoin</source>
+        <translation>O Peercoinu</translation>
     </message>
     <message>
         <location line="+39"/>
-        <source>&lt;b&gt;PPCoin&lt;/b&gt; version</source>
-        <translation>&lt;b&gt;PPCoin&lt;/b&gt; verze</translation>
+        <source>&lt;b&gt;Peercoin&lt;/b&gt; version</source>
+        <translation>&lt;b&gt;Peercoin&lt;/b&gt; verze</translation>
     </message>
     <message>
         <location line="+57"/>
@@ -248,8 +248,8 @@ Tento produkt zahrnuje programy vyvinuté OpenSSL Projektem pro použití v Open
     </message>
     <message>
         <location line="+1"/>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR PPCOINS&lt;/b&gt;!</source>
-        <translation>Varování: Pokud si zašifruješ peněženku a ztratíš či zapomeneš heslo, &lt;b&gt;PŘIJDEŠ O VŠECHNY PPCOINY&lt;/b&gt;!</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR PEERCOINS&lt;/b&gt;!</source>
+        <translation>Varování: Pokud si zašifruješ peněženku a ztratíš či zapomeneš heslo, &lt;b&gt;PŘIJDEŠ O VŠECHNY PEERCOINY&lt;/b&gt;!</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -275,8 +275,8 @@ Tento produkt zahrnuje programy vyvinuté OpenSSL Projektem pro použití v Open
     </message>
     <message>
         <location line="-56"/>
-        <source>PPCoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your ppcoins from being stolen by malware infecting your computer.</source>
-        <translation>PPCoin se teď ukončí, aby dokončil zašifrování. Pamatuj však, že pouhé zašifrování peněženky úplně nezabraňuje krádeži tvých ppcoinů malwarem, kterým se může počítač nakazit.</translation>
+        <source>Peercoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your peercoins from being stolen by malware infecting your computer.</source>
+        <translation>Peercoin se teď ukončí, aby dokončil zašifrování. Pamatuj však, že pouhé zašifrování peněženky úplně nezabraňuje krádeži tvých peercoinů malwarem, kterým se může počítač nakazit.</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -321,7 +321,7 @@ Tento produkt zahrnuje programy vyvinuté OpenSSL Projektem pro použití v Open
     </message>
 </context>
 <context>
-    <name>PPCoinGUI</name>
+    <name>PeercoinGUI</name>
     <message>
         <location filename="../bitcoingui.cpp" line="+233"/>
         <source>Sign &amp;message...</source>
@@ -374,8 +374,8 @@ Tento produkt zahrnuje programy vyvinuté OpenSSL Projektem pro použití v Open
     </message>
     <message>
         <location line="+4"/>
-        <source>Show information about PPCoin</source>
-        <translation>Zobraz informace o PPCoinu</translation>
+        <source>Show information about Peercoin</source>
+        <translation>Zobraz informace o Peercoinu</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -419,13 +419,13 @@ Tento produkt zahrnuje programy vyvinuté OpenSSL Projektem pro použití v Open
     </message>
     <message>
         <location line="-347"/>
-        <source>Send coins to a PPCoin address</source>
-        <translation>Pošli mince na PPCoinovou adresu</translation>
+        <source>Send coins to a Peercoin address</source>
+        <translation>Pošli mince na Peercoinovou adresu</translation>
     </message>
     <message>
         <location line="+49"/>
-        <source>Modify configuration options for PPCoin</source>
-        <translation>Uprav nastavení PPCoinu</translation>
+        <source>Modify configuration options for Peercoin</source>
+        <translation>Uprav nastavení Peercoinu</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -455,8 +455,8 @@ Tento produkt zahrnuje programy vyvinuté OpenSSL Projektem pro použití v Open
     <message>
         <location line="-165"/>
         <location line="+530"/>
-        <source>PPCoin</source>
-        <translation>PPCoin</translation>
+        <source>Peercoin</source>
+        <translation>Peercoin</translation>
     </message>
     <message>
         <location line="-530"/>
@@ -536,13 +536,13 @@ Tento produkt zahrnuje programy vyvinuté OpenSSL Projektem pro použití v Open
     </message>
     <message>
         <location line="+47"/>
-        <source>PPCoin client</source>
-        <translation>PPCoin klient</translation>
+        <source>Peercoin client</source>
+        <translation>Peercoin klient</translation>
     </message>
     <message numerus="yes">
         <location line="+141"/>
-        <source>%n active connection(s) to PPCoin network</source>
-        <translation><numerusform>%n aktivní spojení do PPCoinové sítě</numerusform><numerusform>%n aktivní spojení do PPCoinové sítě</numerusform><numerusform>%n aktivních spojení do PPCoinové sítě</numerusform></translation>
+        <source>%n active connection(s) to Peercoin network</source>
+        <translation><numerusform>%n aktivní spojení do Peercoinové sítě</numerusform><numerusform>%n aktivní spojení do Peercoinové sítě</numerusform><numerusform>%n aktivních spojení do Peercoinové sítě</numerusform></translation>
     </message>
     <message>
         <location line="+22"/>
@@ -737,8 +737,8 @@ Adresa: %4
     </message>
     <message>
         <location line="-5"/>
-        <source>The entered address &quot;%1&quot; is not a valid PPCoin address.</source>
-        <translation>Zadaná adresa &quot;%1&quot; není platná PPCoinová adresa.</translation>
+        <source>The entered address &quot;%1&quot; is not a valid Peercoin address.</source>
+        <translation>Zadaná adresa &quot;%1&quot; není platná Peercoinová adresa.</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -756,8 +756,8 @@ Adresa: %4
     <message>
         <location filename="../guiutil.cpp" line="+424"/>
         <location line="+12"/>
-        <source>PPCoin-Qt</source>
-        <translation>PPCoin-Qt</translation>
+        <source>Peercoin-Qt</source>
+        <translation>Peercoin-Qt</translation>
     </message>
     <message>
         <location line="-12"/>
@@ -824,7 +824,7 @@ Adresa: %4
     </message>
     <message>
         <location line="+3"/>
-        <source>&amp;Start Bitcoin on system login</source>
+        <source>&amp;Start Peercoin on system login</source>
         <translation>S&amp;pustit Bitcoin po přihlášení do systému</translation>
     </message>
     <message>
@@ -1448,8 +1448,8 @@ Adresa: %4
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="+1"/>
-        <source>Enter a PPCoin address</source>
-        <translation>Zadej PPCoinovou adresu</translation>
+        <source>Enter a Peercoin address</source>
+        <translation>Zadej Peercoinovou adresu</translation>
     </message>
 </context>
 <context>
@@ -1565,7 +1565,7 @@ Adresa: %4
     <message>
         <location filename="../signverifymessagedialog.cpp" line="+27"/>
         <location line="+3"/>
-        <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <source>Enter a Peercoin address</source>
         <translation>Zadej Bitcoinovou adresu (např. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
@@ -1575,7 +1575,7 @@ Adresa: %4
     </message>
     <message>
         <location line="+3"/>
-        <source>Enter Bitcoin signature</source>
+        <source>Enter Peercoin signature</source>
         <translation>Vlož Bitcoinový podpis</translation>
     </message>
     <message>
@@ -2184,11 +2184,11 @@ Adresa: %4
     </message>
 </context>
 <context>
-    <name>PPCoin-core</name>
+    <name>Peercoin-core</name>
     <message>
         <location filename="../bitcoinstrings.cpp" line="+94"/>
-        <source>PPCoin version</source>
-        <translation>Verze PPCoinu</translation>
+        <source>Peercoin version</source>
+        <translation>Verze Peercoinu</translation>
     </message>
     <message>
         <location line="+102"/>
@@ -2197,8 +2197,8 @@ Adresa: %4
     </message>
     <message>
         <location line="-29"/>
-        <source>Send command to -server or ppcoind</source>
-        <translation>Poslat příkaz pro -server nebo ppcoind</translation>
+        <source>Send command to -server or peercoind</source>
+        <translation>Poslat příkaz pro -server nebo peercoind</translation>
     </message>
     <message>
         <location line="-23"/>
@@ -2217,13 +2217,13 @@ Adresa: %4
     </message>
     <message>
         <location line="+24"/>
-        <source>Specify configuration file (default: ppcoin.conf)</source>
-        <translation>Konfigurační soubor (výchozí: ppcoin.conf)</translation>
+        <source>Specify configuration file (default: peercoin.conf)</source>
+        <translation>Konfigurační soubor (výchozí: peercoin.conf)</translation>
     </message>
     <message>
         <location line="+3"/>
-        <source>Specify pid file (default: ppcoind.pid)</source>
-        <translation>PID soubor (výchozí: ppcoind.pid)</translation>
+        <source>Specify pid file (default: peercoind.pid)</source>
+        <translation>PID soubor (výchozí: peercoind.pid)</translation>
     </message>
     <message>
         <location line="-1"/>
@@ -2817,13 +2817,13 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <location line="+1"/>
-        <source>Error loading wallet.dat: Wallet requires newer version of PPCoin</source>
-        <translation>Chyba při načítání wallet.dat: peněženka vyžaduje novější verzi PPCoinu</translation>
+        <source>Error loading wallet.dat: Wallet requires newer version of Peercoin</source>
+        <translation>Chyba při načítání wallet.dat: peněženka vyžaduje novější verzi Peercoinu</translation>
     </message>
     <message>
         <location line="+93"/>
-        <source>Wallet needed to be rewritten: restart PPCoin to complete</source>
-        <translation>Soubor s peněženkou potřeboval přepsat: restartuj PPCoin, aby se operace dokončila</translation>
+        <source>Wallet needed to be rewritten: restart Peercoin to complete</source>
+        <translation>Soubor s peněženkou potřeboval přepsat: restartuj Peercoin, aby se operace dokončila</translation>
     </message>
     <message>
         <location line="-95"/>

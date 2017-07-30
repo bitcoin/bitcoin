@@ -4,13 +4,13 @@
     <name>AboutDialog</name>
     <message>
         <location filename="../forms/aboutdialog.ui" line="+14"/>
-        <source>About PPCoin</source>
-        <translation>Tietoa PPCoinista</translation>
+        <source>About Peercoin</source>
+        <translation>Tietoa Peercoinista</translation>
     </message>
     <message>
         <location line="+39"/>
-        <source>&lt;b&gt;PPCoin&lt;/b&gt; version</source>
-        <translation>&lt;b&gt;PPCoin&lt;/b&gt; versio</translation>
+        <source>&lt;b&gt;Peercoin&lt;/b&gt; version</source>
+        <translation>&lt;b&gt;Peercoin&lt;/b&gt; versio</translation>
     </message>
     <message>
         <location line="+57"/>
@@ -276,8 +276,8 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     </message>
     <message>
         <location line="-56"/>
-        <source>PPCoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your ppcoins from being stolen by malware infecting your computer.</source>
-        <translation>PPCoin sulkeutuu lopettaakseen salausprosessin. Muista, että salattukaan lompakko ei täysin suojaa sitä haittaohjelmien aiheuttamilta varkauksilta.</translation>
+        <source>Peercoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your peercoins from being stolen by malware infecting your computer.</source>
+        <translation>Peercoin sulkeutuu lopettaakseen salausprosessin. Muista, että salattukaan lompakko ei täysin suojaa sitä haittaohjelmien aiheuttamilta varkauksilta.</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -322,7 +322,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     </message>
 </context>
 <context>
-    <name>PPCoinGUI</name>
+    <name>PeercoinGUI</name>
     <message>
         <location filename="../bitcoingui.cpp" line="+233"/>
         <source>Sign &amp;message...</source>
@@ -361,7 +361,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location line="-14"/>
         <source>Show the list of addresses for receiving payments</source>
-        <translation>Näytä PPCoinien vastaanottamiseen käytetyt osoitteet</translation>
+        <translation>Näytä Peercoinien vastaanottamiseen käytetyt osoitteet</translation>
     </message>
     <message>
         <location line="+31"/>
@@ -375,8 +375,8 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     </message>
     <message>
         <location line="+4"/>
-        <source>Show information about PPCoin</source>
-        <translation>Näytä tietoa PPCoin-projektista</translation>
+        <source>Show information about Peercoin</source>
+        <translation>Näytä tietoa Peercoin-projektista</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -537,13 +537,13 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     </message>
     <message>
         <location line="+47"/>
-        <source>PPCoin client</source>
-        <translation>PPCoin-asiakas</translation>
+        <source>Peercoin client</source>
+        <translation>Peercoin-asiakas</translation>
     </message>
     <message numerus="yes">
         <location line="+141"/>
-        <source>%n active connection(s) to PPCoin network</source>
-        <translation><numerusform>%n aktiivinen yhteys PPCoin-verkkoon</numerusform><numerusform>%n aktiivista yhteyttä PPCoin-verkkoon</numerusform></translation>
+        <source>%n active connection(s) to Peercoin network</source>
+        <translation><numerusform>%n aktiivinen yhteys Peercoin-verkkoon</numerusform><numerusform>%n aktiivista yhteyttä Peercoin-verkkoon</numerusform></translation>
     </message>
     <message>
         <location line="+22"/>
@@ -737,8 +737,8 @@ Osoite: %4</translation>
     </message>
     <message>
         <location line="-5"/>
-        <source>The entered address &quot;%1&quot; is not a valid PPCoin address.</source>
-        <translation>Antamasi osoite &quot;%1&quot; ei ole validi PPCoin-osoite.</translation>
+        <source>The entered address &quot;%1&quot; is not a valid Peercoin address.</source>
+        <translation>Antamasi osoite &quot;%1&quot; ei ole validi Peercoin-osoite.</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -756,8 +756,8 @@ Osoite: %4</translation>
     <message>
         <location filename="../guiutil.cpp" line="+424"/>
         <location line="+12"/>
-        <source>PPCoin-Qt</source>
-        <translation>PPCoin-Qt</translation>
+        <source>Peercoin-Qt</source>
+        <translation>Peercoin-Qt</translation>
     </message>
     <message>
         <location line="-12"/>
@@ -819,13 +819,13 @@ Osoite: %4</translation>
     </message>
     <message>
         <location line="+31"/>
-        <source>Automatically start PPCoin after logging in to the system.</source>
-        <translation>Käynnistä PPCoin kirjautumisen yhteydessä.</translation>
+        <source>Automatically start Peercoin after logging in to the system.</source>
+        <translation>Käynnistä Peercoin kirjautumisen yhteydessä.</translation>
     </message>
     <message>
         <location line="+3"/>
-        <source>&amp;Start PPCoin on system login</source>
-        <translation>&amp;Käynnistä PPCoin kirjautumisen yhteydessä</translation>
+        <source>&amp;Start Peercoin on system login</source>
+        <translation>&amp;Käynnistä Peercoin kirjautumisen yhteydessä</translation>
     </message>
     <message>
         <location line="+35"/>
@@ -844,8 +844,8 @@ Osoite: %4</translation>
     </message>
     <message>
         <location line="+6"/>
-        <source>Automatically open the PPCoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Avaa PPCoin-asiakasohjelman portti reitittimellä automaattisesti. Tämä toimii vain, jos reitittimesi tukee UPnP:tä ja se on käytössä.</translation>
+        <source>Automatically open the Peercoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>Avaa Peercoin-asiakasohjelman portti reitittimellä automaattisesti. Tämä toimii vain, jos reitittimesi tukee UPnP:tä ja se on käytössä.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -854,8 +854,8 @@ Osoite: %4</translation>
     </message>
     <message>
         <location line="+7"/>
-        <source>Connect to the PPCoin network through a SOCKS proxy (e.g. when connecting through Tor).</source>
-        <translation>Ota yhteys PPCoin-verkkoon SOCKS-proxyn läpi (esimerkiksi kun haluat käyttää Tor-verkkoa).</translation>
+        <source>Connect to the Peercoin network through a SOCKS proxy (e.g. when connecting through Tor).</source>
+        <translation>Ota yhteys Peercoin-verkkoon SOCKS-proxyn läpi (esimerkiksi kun haluat käyttää Tor-verkkoa).</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1051,12 +1051,12 @@ Osoite: %4</translation>
     <message>
         <location line="-101"/>
         <source>Your current balance</source>
-        <translation>Tililläsi tällä hetkellä olevien PPCoinien määrä</translation>
+        <translation>Tililläsi tällä hetkellä olevien Peercoinien määrä</translation>
     </message>
     <message>
         <location line="+29"/>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the current balance</source>
-        <translation>Niiden saapuvien rahansiirtojen määrä, joita PPCoin-verkko ei vielä ole ehtinyt vahvistaa ja siten eivät vielä näy saldossa.</translation>
+        <translation>Niiden saapuvien rahansiirtojen määrä, joita Peercoin-verkko ei vielä ole ehtinyt vahvistaa ja siten eivät vielä näy saldossa.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="+116"/>
@@ -1360,7 +1360,7 @@ Osoite: %4</translation>
     <message>
         <location line="+5"/>
         <source>The amount to pay must be larger than 0.</source>
-        <translation>Maksettavan summan tulee olla suurempi kuin 0 PPCoinia.</translation>
+        <translation>Maksettavan summan tulee olla suurempi kuin 0 Peercoinia.</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -1448,8 +1448,8 @@ Osoite: %4</translation>
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="+1"/>
-        <source>Enter a PPCoin address</source>
-        <translation>Anna PPCoin-osoite</translation>
+        <source>Enter a Peercoin address</source>
+        <translation>Anna Peercoin-osoite</translation>
     </message>
 </context>
 <context>
@@ -1565,7 +1565,7 @@ Osoite: %4</translation>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="+27"/>
         <location line="+3"/>
-        <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <source>Enter a Peercoin address</source>
         <translation>Anna Bitcoin-osoite (esim. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
@@ -1575,7 +1575,7 @@ Osoite: %4</translation>
     </message>
     <message>
         <location line="+3"/>
-        <source>Enter Bitcoin signature</source>
+        <source>Enter Peercoin signature</source>
         <translation>Syötä Bitcoin-allekirjoitus</translation>
     </message>
     <message>
@@ -1955,7 +1955,7 @@ Osoite: %4</translation>
     <message>
         <location line="+2"/>
         <source>Destination address of transaction.</source>
-        <translation>Rahansiirron kohteen PPCoin-osoite</translation>
+        <translation>Rahansiirron kohteen Peercoin-osoite</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -2184,11 +2184,11 @@ Osoite: %4</translation>
     </message>
 </context>
 <context>
-    <name>PPCoin-core</name>
+    <name>Peercoin-core</name>
     <message>
         <location filename="../bitcoinstrings.cpp" line="+94"/>
-        <source>PPCoin version</source>
-        <translation>PPCoinin versio</translation>
+        <source>Peercoin version</source>
+        <translation>Peercoinin versio</translation>
     </message>
     <message>
         <location line="+102"/>
@@ -2197,8 +2197,8 @@ Osoite: %4</translation>
     </message>
     <message>
         <location line="-29"/>
-        <source>Send command to -server or ppcoind</source>
-        <translation>Lähetä käsky palvelimelle tai ppcoind:lle</translation>
+        <source>Send command to -server or peercoind</source>
+        <translation>Lähetä käsky palvelimelle tai peercoind:lle</translation>
     </message>
     <message>
         <location line="-23"/>
@@ -2217,13 +2217,13 @@ Osoite: %4</translation>
     </message>
     <message>
         <location line="+24"/>
-        <source>Specify configuration file (default: ppcoin.conf)</source>
-        <translation>Määritä asetustiedosto (oletus: ppcoin.conf)</translation>
+        <source>Specify configuration file (default: peercoin.conf)</source>
+        <translation>Määritä asetustiedosto (oletus: peercoin.conf)</translation>
     </message>
     <message>
         <location line="+3"/>
-        <source>Specify pid file (default: ppcoind.pid)</source>
-        <translation>Määritä pid-tiedosto (oletus: ppcoind.pid)</translation>
+        <source>Specify pid file (default: peercoind.pid)</source>
+        <translation>Määritä pid-tiedosto (oletus: peercoind.pid)</translation>
     </message>
     <message>
         <location line="-1"/>
@@ -2808,13 +2808,13 @@ TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Error loading wallet.dat: Wallet requires newer version of PPCoin</source>
-        <translation>Virhe ladattaessa wallet.dat-tiedostoa: Tarvitset uudemman version PPCoinista</translation>
+        <source>Error loading wallet.dat: Wallet requires newer version of Peercoin</source>
+        <translation>Virhe ladattaessa wallet.dat-tiedostoa: Tarvitset uudemman version Peercoinista</translation>
     </message>
     <message>
         <location line="+93"/>
-        <source>Wallet needed to be rewritten: restart PPCoin to complete</source>
-        <translation>Lompakko tarvitsee uudelleenkirjoittaa: käynnistä PPCoin uudelleen</translation>
+        <source>Wallet needed to be rewritten: restart Peercoin to complete</source>
+        <translation>Lompakko tarvitsee uudelleenkirjoittaa: käynnistä Peercoin uudelleen</translation>
     </message>
     <message>
         <location line="-95"/>
