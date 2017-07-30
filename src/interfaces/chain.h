@@ -25,6 +25,7 @@ struct FeeCalculation;
 
 namespace interfaces {
 
+class Handler;
 class Wallet;
 
 //! Interface giving clients (wallet processes, maybe other analysis tools in
@@ -39,6 +40,12 @@ class Wallet;
 //!   should be removed when clients are able to respond to updates
 //!   asynchronously
 //!   (https://github.com/bitcoin/bitcoin/pull/10973#issuecomment-380101269).
+//!
+//! * The isPotentialTip() and waitForNotifications() methods are too low-level
+//!   and should be replaced with a higher level
+//!   waitForNotificationsUpTo(block_hash) method that the wallet can call
+//!   instead
+//!   (https://github.com/bitcoin/bitcoin/pull/10973#discussion_r266995234).
 //!
 //! * The relayTransactions() and submitToMemoryPool() methods could be replaced
 //!   with a higher-level broadcastTransaction method
@@ -217,6 +224,25 @@ public:
 
     //! Send wallet load notification to the GUI.
     virtual void loadWallet(std::unique_ptr<Wallet> wallet) = 0;
+
+    //! Chain notifications.
+    class Notifications
+    {
+    public:
+        virtual ~Notifications() {}
+        virtual void TransactionAddedToMempool(const CTransactionRef& tx) {}
+        virtual void TransactionRemovedFromMempool(const CTransactionRef& ptx) {}
+        virtual void BlockConnected(const CBlock& block, const std::vector<CTransactionRef>& tx_conflicted) {}
+        virtual void BlockDisconnected(const CBlock& block) {}
+        virtual void ChainStateFlushed(const CBlockLocator& locator) {}
+        virtual void ResendWalletTransactions(Lock& locked_chain, int64_t best_block_time) {}
+    };
+
+    //! Register handler for notifications.
+    virtual std::unique_ptr<Handler> handleNotifications(Notifications& notifications) = 0;
+
+    //! Wait for pending notifications to be handled.
+    virtual void waitForNotifications() = 0;
 };
 
 //! Interface to let node manage chain clients (wallets, or maybe tools for
