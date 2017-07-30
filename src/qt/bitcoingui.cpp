@@ -79,8 +79,8 @@ BitcoinGUI::BitcoinGUI(QWidget *parent) :
     this->setStyleSheet(styleSheet);
 
 #ifndef Q_OS_MAC
-    QApplication::setWindowIcon(QIcon(":icons/ppcoin"));
-    setWindowIcon(QIcon(":icons/ppcoin"));
+    QApplication::setWindowIcon(QIcon(":icons/peercoin"));
+    setWindowIcon(QIcon(":icons/peercoin"));
 #else
     setUnifiedTitleAndToolBarOnMac(true);
     QApplication::setAttribute(Qt::AA_DontShowIconsInMenus);
@@ -140,7 +140,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent) :
     QString curStyle = QApplication::style()->metaObject()->className();
     if(curStyle == "QWindowsStyle" || curStyle == "QWindowsXPStyle")
     {
-        progressBar->setStyleSheet("QProgressBar { background-color: #e8e8e8; border: 1px solid grey; border-radius: 7px; padding: 1px; text-align: center; } QProgressBar::chunk { background: QLinearGradient(x1: 0, y1: 0, x2: 1, y2: 0, stop: 0 #FF8000, stop: 1 orange); border-radius: 7px; margin: 0px; }");
+        progressBar->setStyleSheet("QProgressBar { background-color: #333333; text-align: center; color: white; border: 1px solid #4b4b4b; } QProgressBar::chunk { background: #3cb054; margin: 0px; }");
     }
 
     statusBar()->addWidget(progressBarLabel);
@@ -229,8 +229,8 @@ void BitcoinGUI::createActions()
     quitAction->setStatusTip(tr("Quit application"));
     quitAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q));
     quitAction->setMenuRole(QAction::QuitRole);
-    aboutAction = new QAction(QIcon(":/icons/ppcoin"), tr("&About PPCoin"), this);
-    aboutAction->setStatusTip(tr("Show information about PPCoin"));
+    aboutAction = new QAction(QIcon(":/icons/peercoin"), tr("&About Peercoin"), this);
+    aboutAction->setStatusTip(tr("Show information about Peercoin"));
     aboutAction->setMenuRole(QAction::AboutRole);
     aboutQtAction = new QAction(QIcon(":/trolltech/qmessagebox/images/qtlogo-64.png"), tr("About &Qt"), this);
     aboutQtAction->setStatusTip(tr("Show information about Qt"));
@@ -238,7 +238,7 @@ void BitcoinGUI::createActions()
     optionsAction = new QAction(QIcon(":/icons/options"), tr("&Options..."), this);
     optionsAction->setStatusTip(tr("Modify configuration options for PPCoin"));
     optionsAction->setMenuRole(QAction::PreferencesRole);
-    toggleHideAction = new QAction(QIcon(":/icons/ppcoin"), tr("&Show / Hide"), this);
+    toggleHideAction = new QAction(QIcon(":/icons/peercoin"), tr("&Show / Hide"), this);
     toggleHideAction->setStatusTip(tr("Show or hide the main Window"));
 
     encryptWalletAction = new QAction(QIcon(":/icons/lock_closed"), tr("&Encrypt Wallet..."), this);
@@ -248,9 +248,9 @@ void BitcoinGUI::createActions()
     backupWalletAction->setStatusTip(tr("Backup wallet to another location"));
     changePassphraseAction = new QAction(QIcon(":/icons/key"), tr("&Change Passphrase..."), this);
     changePassphraseAction->setStatusTip(tr("Change the passphrase used for wallet encryption"));
-    signMessageAction = new QAction(QIcon(":/icons/edit"), tr("Sign &message..."), this);
+    signMessageAction = new QAction(QIcon(":/icons/sign"), tr("Sign &message..."), this);
     signMessageAction->setStatusTip(tr("Sign messages with your Bitcoin addresses to prove you own them"));
-    verifyMessageAction = new QAction(QIcon(":/icons/transaction_0"), tr("&Verify message..."), this);
+    verifyMessageAction = new QAction(QIcon(":/icons/verify"), tr("&Verify message..."), this);
     verifyMessageAction->setStatusTip(tr("Verify messages to ensure they were signed with specified Bitcoin addresses"));
 
     openRPCConsoleAction = new QAction(QIcon(":/icons/debugwindow"), tr("&Debug window"), this);
@@ -303,6 +303,7 @@ void BitcoinGUI::createToolBars()
 {
     QLabel *imageLogo = new QLabel;
     imageLogo->setPixmap(QPixmap(":/images/logo"));
+    imageLogo->setObjectName("logo");
     QToolBar *toolbar = addToolBar(tr("Tabs toolbar"));
     toolbar->setMovable(false);
     toolbar->setToolButtonStyle(Qt::ToolButtonTextOnly);
@@ -325,10 +326,10 @@ void BitcoinGUI::setClientModel(ClientModel *clientModel)
         {
             setWindowTitle(windowTitle() + QString(" ") + tr("[testnet]"));
 #ifndef Q_OS_MAC
-            QApplication::setWindowIcon(QIcon(":icons/ppcoin_testnet"));
-            setWindowIcon(QIcon(":icons/ppcoin_testnet"));
+            QApplication::setWindowIcon(QIcon(":icons/peercoin_testnet"));
+            setWindowIcon(QIcon(":icons/peercoin_testnet"));
 #else
-            MacDockIconHandler::instance()->setIcon(QIcon(":icons/ppcoin_testnet"));
+            MacDockIconHandler::instance()->setIcon(QIcon(":icons/peercoin_testnet"));
 #endif
             if(trayIcon)
             {
@@ -447,7 +448,7 @@ void BitcoinGUI::restoreWindowGeometry()
 {
     QSettings settings;
     QPoint pos = settings.value("nWindowPos").toPoint();
-    QSize size = settings.value("nWindowSize", QSize(850, 550)).toSize();
+    QSize size = settings.value("nWindowSize", QSize(950, 650)).toSize();
     if (!pos.x() && !pos.y())
     {
         QRect screen = QApplication::desktop()->screenGeometry();

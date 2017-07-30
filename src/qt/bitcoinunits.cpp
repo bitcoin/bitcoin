@@ -85,7 +85,7 @@ int BitcoinUnits::decimals(int unit)
     }
 }
 
-QString BitcoinUnits::format(int unit, qint64 n, bool fPlus)
+QString BitcoinUnits::format(int unit, qint64 n, bool fPlus, bool trimzeros)
 {
     // Note: not using straight sprintf here because we do NOT want
     // localized number formatting.
@@ -99,11 +99,14 @@ QString BitcoinUnits::format(int unit, qint64 n, bool fPlus)
     QString quotient_str = QString::number(quotient);
     QString remainder_str = QString::number(remainder).rightJustified(num_decimals, '0');
 
-    // Right-trim excess zeros after the decimal point
-    int nTrim = 0;
-    for (int i = remainder_str.size()-1; i>=2 && (remainder_str.at(i) == '0'); --i)
-        ++nTrim;
-    remainder_str.chop(nTrim);
+    if (trimzeros)
+    {
+        // Right-trim excess zeros after the decimal point
+        int nTrim = 0;
+        for (int i = remainder_str.size()-1; i>=2 && (remainder_str.at(i) == '0'); --i)
+            ++nTrim;
+        remainder_str.chop(nTrim);
+    }
 
     if (n < 0)
         quotient_str.insert(0, '-');
@@ -112,9 +115,9 @@ QString BitcoinUnits::format(int unit, qint64 n, bool fPlus)
     return quotient_str + QString(".") + remainder_str;
 }
 
-QString BitcoinUnits::formatWithUnit(int unit, qint64 amount, bool plussign)
+QString BitcoinUnits::formatWithUnit(int unit, qint64 amount, bool plussign, bool trimzeros)
 {
-    return format(unit, amount, plussign) + QString(" ") + name(unit);
+    return format(unit, amount, plussign, trimzeros) + QString(" ") + name(unit);
 }
 
 bool BitcoinUnits::parse(int unit, const QString &value, qint64 *val_out)

@@ -10,7 +10,7 @@ SetCompressor /SOLID lzma
 !define URL http://github.com/peercoin/peercoin/
 
 # MUI Symbol Definitions
-!define MUI_ICON "../share/pixmaps/ppcoin.ico"
+!define MUI_ICON "../share/pixmaps/peercoin.ico"
 !define MUI_WELCOMEFINISHPAGE_BITMAP "../share/pixmaps/nsis-wizard.bmp"
 !define MUI_HEADERIMAGE
 !define MUI_HEADERIMAGE_RIGHT
