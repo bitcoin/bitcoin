@@ -216,7 +216,7 @@ public:
     //! (memory only) Sequential id assigned to distinguish order in which blocks are received.
     int32_t nSequenceId;
 
-    //! (memory only) Maximum nTime in the chain upto and including this block.
+    //! (memory only) Maximum nTime in the chain up to and including this block.
     unsigned int nTimeMax;
 
     void SetNull()
