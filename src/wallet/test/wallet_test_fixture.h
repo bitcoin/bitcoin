@@ -17,7 +17,6 @@
  */
 struct WalletTestingSetup: public TestingSetup {
     explicit WalletTestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
-    ~WalletTestingSetup();
 
     std::unique_ptr<interfaces::Chain> m_chain = interfaces::MakeChain();
     CWallet m_wallet;
