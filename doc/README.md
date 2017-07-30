@@ -40,7 +40,7 @@ Then shutdown peercoind by
 peercoind stop
 Uninstall v0.5 client, download and install v0.6 client.
 Remove all files and subdirectory in your wallet directory EXCEPT FOR
-wallet.dat (wallet file) and ppcoin.conf (configuration file).
+wallet.dat (wallet file) and peercoin.conf (configuration file).
 Start up the new peercoind (0.6).
 For this upgrade blockchain re-download is required.
 

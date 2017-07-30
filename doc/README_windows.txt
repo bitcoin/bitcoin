@@ -22,7 +22,7 @@ After completing windows setup then run peercoin-qt.
 Alternatively you can run windows command line (cmd) in peercoin program dir.
   cd daemon
   peercoind
-You would need to create a configuration file ppcoin.conf in the default
+You would need to create a configuration file peercoin.conf in the default
 wallet directory. Grant access to peercoind/peercoin-qt in anti-virus and firewall
 applications if necessary.
 
@@ -42,7 +42,7 @@ Then shutdown peercoind by
 peercoind stop
 Uninstall v0.5 client, download and install v0.6 client.
 Remove all files and subdirectory in your wallet directory EXCEPT FOR
-wallet.dat (wallet file) and ppcoin.conf (configuration file).
+wallet.dat (wallet file) and peercoin.conf (configuration file).
 For this upgrade blockchain re-download is required.
 
 

@@ -13,6 +13,7 @@ src/test_peercoin
 *.o
 *.patch
 .ppcoin
+.peercoin
 
 # Compilation and Qt preprocessor part
 *.qm
