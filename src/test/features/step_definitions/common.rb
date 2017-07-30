@@ -5,6 +5,8 @@ Before do
   @tx = {}
 end
 
+START_TIME = Time.utc(2017, 1, 1, 12, 0, 0)
+
 Given(/^a network with nodes? (.+) able to mint$/) do |node_names|
   node_names = node_names.scan(/"(.*?)"/).map(&:first)
   available_nodes = %w( a b c d e )
@@ -12,12 +14,13 @@ Given(/^a network with nodes? (.+) able to mint$/) do |node_names|
   @nodes = {}
 
   node_names.each_with_index do |name, i|
+    shift = (START_TIME - Time.now).to_i
     options = {
       image: "peercoinnet/#{available_nodes[i]}",
       links: @nodes.values.map(&:name),
       args: {
         debug: true,
-        timetravel: 30*24*3600,
+        timetravel: shift,
       },
     }
     node = CoinContainer.new(options)

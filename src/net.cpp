@@ -1029,6 +1029,7 @@ void ThreadSocketHandler()
                     SocketSendData(pnode);
             }
 
+#ifndef TESTING
             //
             // Inactivity checking
             //
@@ -1052,6 +1053,7 @@ void ThreadSocketHandler()
                     pnode->fDisconnect = true;
                 }
             }
+#endif
         }
         {
             LOCK(cs_vNodes);

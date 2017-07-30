@@ -72,14 +72,14 @@ class CoinContainer
       bash_cmd += "echo Environment:; env; "
     end
 
-    bash_cmd += "./ppcoind " + cmd_args.join(" ")
+    bash_cmd += "./peercoind " + cmd_args.join(" ")
 
     if options[:remove_addr_after_shutdown]
-      bash_cmd += "; rm /.ppcoin/testnet/addr.dat"
+      bash_cmd += "; rm -f /root/.peercoin/testnet/peers.dat"
     end
 
     if options[:remove_wallet_after_shutdown]
-      bash_cmd += "; rm /.ppcoin/testnet/wallet.dat"
+      bash_cmd += "; rm /root/.peercoin/testnet/wallet.dat"
     end
 
     command = [
@@ -115,8 +115,8 @@ class CoinContainer
     node_container.start(
       'Binds' => ["#{File.expand_path('../../..', __FILE__)}:/code"],
       'PortBindings' => {
-        "9904/tcp" => ['127.0.0.1'],
-        "9903/tcp" => ['127.0.0.1'],
+        "9904/tcp" => [{}],
+        "9903/tcp" => [{}],
       },
       'Links' => links.map { |link_name, alias_name| "#{link_name}:#{alias_name}" },
     )
