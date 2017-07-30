@@ -1,6 +1,6 @@
 TEMPLATE = app
-TARGET = ppcoin-qt
-macx:TARGET = "PPCoin-Qt"
+TARGET = peercoin-qt
+macx:TARGET = "Peercoin-Qt"
 VERSION = 0.4.0
 INCLUDEPATH += src src/json src/qt
 QT += network

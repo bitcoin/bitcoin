@@ -1,7 +1,10 @@
 src/*.exe
 src/ppcoin
+src/peercoin
 src/ppcoind
+src/peercoind
 src/test_ppcoin
+src/test_peercoin
 .*.swp
 *.*~*
 *.bak
@@ -15,11 +18,14 @@ src/test_ppcoin
 *.qm
 Makefile
 ppcoin-qt
+peercoin-qt
 PPCoin-Qt.app
+Peercoin-Qt.app
 
 # Unit-tests
 Makefile.test
 ppcoin-qt_test
+peercoin-qt_test
 
 # Resources cpp
 qrc_*.cpp
@@ -32,3 +38,4 @@ qrc_*.cpp
 build
 
 !src/leveldb-*/Makefile
+peercoin-qt

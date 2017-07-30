@@ -97,7 +97,7 @@ OBJS= \
     obj/leveldb.o \
     obj/txdb.o
 
-all: ppcoind.exe
+all: peercoind.exe
 
 DEFS += -I"$(CURDIR)/leveldb/include"
 DEFS += -I"$(CURDIR)/leveldb/helpers"
@@ -112,8 +112,9 @@ DEFS += -DHAVE_BUILD_INFO
 obj/%.o: %.cpp $(HEADERS)
 	$(CXX) -c $(xCXXFLAGS) -o $@ $<
 
-ppcoind.exe: $(OBJS:obj/%=obj/%)
+peercoind.exe: $(OBJS:obj/%=obj/%)
 	$(CXX) $(xCXXFLAGS) $(xLDFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
+	@cp $@ ppcoind.exe
 
 TESTOBJS := $(patsubst test/%.cpp,obj-test/%.o,$(wildcard test/*.cpp))
 
@@ -126,6 +127,7 @@ test_bitcoin.exe: $(TESTOBJS) $(filter-out obj/init.o,$(OBJS:obj/%=obj/%))
 
 clean:
 	-rm -f obj/*.o
+	-rm -f peercoind.exe
 	-rm -f ppcoind.exe
 	-rm -f obj-test/*.o
 	-rm -f test_bitcoin.exe

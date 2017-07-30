@@ -82,21 +82,21 @@ Optional:
 Dependency Build Instructions: Gentoo
 -------------------------------------
 
-Note: Currently, there is no ppcoin ebuild available in overlay 
+Note: Currently, there is no peercoin ebuild available in overlay 
 
 	emerge -av1 --noreplace dev-libs/boost dev-libs/glib dev-libs/openssl sys-libs/db:4.8
 
 Note: If you like to have UPnP support, you need to install net-libs/miniupnpc.
  
 Take the following steps to build (no UPnP support):
-	cd ${PPCOIN_DIR}/src
+	cd ${PEERCOIN_DIR}/src
 	make -f makefile.unix USE_UPNP= USE_IPV6=1 BDB_INCLUDE_PATH='/usr/include/db4.8'
-	strip ppcoind
+	strip peercoind
 
 
 Notes
 -----
-The release is built with GCC and then "strip ppcoind" to strip the debug
+The release is built with GCC and then "strip peercoind" to strip the debug
 symbols, which reduces the executable size by about 90%.
 
 

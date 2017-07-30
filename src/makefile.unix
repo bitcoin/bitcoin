@@ -149,10 +149,10 @@ OBJS= \
     obj/txdb.o
 
 
-all: ppcoind
+all: peercoind
 
-test check: test_ppcoin FORCE
-	./test_ppcoin
+test check: test_peercoin FORCE
+	./test_peercoin
 
 #
 # LevelDB support
@@ -180,8 +180,9 @@ obj/%.o: %.cpp
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
 
-ppcoind: $(OBJS:obj/%=obj/%)
+peercoind: $(OBJS:obj/%=obj/%)
 	$(LINK) $(xCXXFLAGS) -o $@ $^ $(xLDFLAGS) $(LIBS)
+	@cp $@ ppcoind
 
 TESTOBJS := $(patsubst test/%.cpp,obj-test/%.o,$(wildcard test/*.cpp))
 
@@ -192,11 +193,12 @@ obj-test/%.o: test/%.cpp
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
 
-test_ppcoin: $(TESTOBJS) $(filter-out obj/init.o,$(OBJS:obj/%=obj/%))
+test_peercoin: $(TESTOBJS) $(filter-out obj/init.o,$(OBJS:obj/%=obj/%))
 	$(LINK) $(xCXXFLAGS) -o $@ $(LIBPATHS) $^ $(TESTLIBS) $(xLDFLAGS) $(LIBS)
 
 clean:
-	-rm -f ppcoind test_ppcoin
+	-rm -f peercoind test_peercoin
+	-rm -f ppcoind
 	-rm -f obj/*.o
 	-rm -f obj-test/*.o
 	-rm -f obj/*.P

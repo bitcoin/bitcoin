@@ -18,28 +18,28 @@ help further advance the field of crypto-currency.
 
 Setup
 -----
-After completing windows setup then run ppcoin-qt.
-Alternatively you can run windows command line (cmd) in ppcoin program dir.
+After completing windows setup then run peercoin-qt.
+Alternatively you can run windows command line (cmd) in peercoin program dir.
   cd daemon
-  ppcoind
+  peercoind
 You would need to create a configuration file ppcoin.conf in the default
-wallet directory. Grant access to ppcoind/ppcoin-qt in anti-virus and firewall
+wallet directory. Grant access to peercoind/peercoin-qt in anti-virus and firewall
 applications if necessary.
 
 The software automatically finds other nodes to connect to.  You can
 enable Universal Plug and Play (UPnP) with your router/firewall
 or forward port 9901 (TCP) to your computer so you can receive
-incoming connections.  PPCoin works without incoming connections,
-but allowing incoming connections helps the PPCoin network.
+incoming connections.  Peercoin works without incoming connections,
+but allowing incoming connections helps the Peercoin network.
 
 
 Upgrade
 -------
 All your existing coins/transactions should be intact with the upgrade.
 To upgrade from 0.5, first backup wallet in qt menu or by command line
-ppcoind backupwallet <destination_backup_file>
-Then shutdown ppcoind by
-ppcoind stop
+peercoind backupwallet <destination_backup_file>
+Then shutdown peercoind by
+peercoind stop
 Uninstall v0.5 client, download and install v0.6 client.
 Remove all files and subdirectory in your wallet directory EXCEPT FOR
 wallet.dat (wallet file) and ppcoin.conf (configuration file).

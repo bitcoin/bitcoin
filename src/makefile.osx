@@ -4,7 +4,7 @@
 # Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-# Mac OS X makefile for ppcoin
+# Mac OS X makefile for peercoin
 # Originally by Laszlo Hanyecz (solar@heliacal.net)
 
 CXX=llvm-g++
@@ -130,7 +130,7 @@ ifneq (${USE_IPV6}, -)
 	DEFS += -DUSE_IPV6=$(USE_IPV6)
 endif
 
-all: ppcoind
+all: peercoind
 
 test check: test_bitcoin FORCE
 	./test_bitcoin
@@ -160,8 +160,9 @@ obj/%.o: %.cpp
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
 
-ppcoind: $(OBJS:obj/%=obj/%)
+peercoind: $(OBJS:obj/%=obj/%)
 	$(CXX) $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
+	@cp $@ ppcoind
 
 TESTOBJS := $(patsubst test/%.cpp,obj-test/%.o,$(wildcard test/*.cpp))
 
@@ -172,11 +173,12 @@ obj-test/%.o: test/%.cpp
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
 
-test_ppcoin: $(TESTOBJS) $(filter-out obj/init.o,$(OBJS:obj/%=obj/%))
+test_peercoin: $(TESTOBJS) $(filter-out obj/init.o,$(OBJS:obj/%=obj/%))
 	$(CXX) $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS) $(TESTLIBS)
 
 clean:
-	-rm -f ppcoind test_ppcoin
+	-rm -f peercoind test_peercoin
+	-rm -f ppcoind
 	-rm -f obj/*.o
 	-rm -f obj-test/*.o
 	-rm -f obj/*.P
