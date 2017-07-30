@@ -25,4 +25,4 @@ end
 container = containers[n]
 id = container.id
 
-exec "docker logs #{id} | less"
+exec "docker attach #{id}"
