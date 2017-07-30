@@ -23,6 +23,11 @@
 #include "wallet/wallet.h"
 #include "wallet/walletdb.h" // for BackupWallet
 #include "wallet/hdwallet.h"
+#include "wallet/coincontrol.h"
+
+#include "rpc/rpcutil.h"
+#include "util.h"
+#include "univalue.h"
 
 #include <stdint.h>
 
@@ -71,14 +76,19 @@ CAmount WalletModel::getBalance(const CCoinControl *coinControl) const
     if (coinControl)
     {
         CAmount nBalance = 0;
-        std::vector<COutput> vCoins;
-        wallet->AvailableCoins(vCoins, true, coinControl);
-        BOOST_FOREACH(const COutput& out, vCoins)
-            if(out.fSpendable)
-                nBalance += out.tx->tx->vout[out.i].nValue;
-
+        
+        if (coinControl->nCoinType == OUTPUT_STANDARD)
+        {
+            std::vector<COutput> vCoins;
+            wallet->AvailableCoins(vCoins, true, coinControl);
+            for (const auto &out : vCoins)
+                if (out.fSpendable)
+                    nBalance += out.tx->tx->vpout[out.i]->GetValue();
+        };
+        
+        
         return nBalance;
-    }
+    };
 
     return wallet->GetBalance();
 }
@@ -636,6 +646,16 @@ void WalletModel::getOutputs(const std::vector<COutPoint>& vOutpoints, std::vect
     LOCK2(cs_main, wallet->cs_wallet);
     BOOST_FOREACH(const COutPoint& outpoint, vOutpoints)
     {
+        CHDWallet *phdw = getParticlWallet();
+        if (phdw && phdw->mapTempWallet.count(outpoint.hash))
+        {
+            int nDepth = phdw->mapTempWallet[outpoint.hash].GetDepthInMainChain();
+            if (nDepth < 0) continue;
+            COutput out(&phdw->mapTempWallet[outpoint.hash], outpoint.n, nDepth, true, true);
+            vOutputs.push_back(out);
+            continue;
+        };
+        
         if (!wallet->mapWallet.count(outpoint.hash)) continue;
         int nDepth = wallet->mapWallet[outpoint.hash].GetDepthInMainChain();
         if (nDepth < 0) continue;
@@ -650,13 +670,90 @@ bool WalletModel::isSpent(const COutPoint& outpoint) const
     return wallet->IsSpent(outpoint.hash, outpoint.n);
 }
 
+bool WalletModel::tryCallRpc(const QString &sCommand, UniValue &rv) const
+{
+    try {
+        rv = CallRPC(sCommand.toStdString());
+    } catch (UniValue& objError)
+    {
+        try { // Nice formatting for standard-format error
+            int code = find_value(objError, "code").get_int();
+            std::string message = find_value(objError, "message").get_str();
+            warningBox(tr("Wallet Model"), QString::fromStdString(message) + " (code " + QString::number(code) + ")");
+            return false;
+        } catch (const std::runtime_error&) // raised when converting to invalid type, i.e. missing code or message
+        {   // Show raw JSON object
+            warningBox(tr("Wallet Model"), QString::fromStdString(objError.write()));
+            return false;
+        };
+    } catch (const std::exception& e)
+    {
+        warningBox(tr("Wallet Model"), QString::fromStdString(e.what()));
+        return false;
+    };
+    
+    return true;
+};
+
+void WalletModel::warningBox(QString heading, QString msg) const
+{
+    qWarning() << msg;
+    QPair<QString, CClientUIInterface::MessageBoxFlags> msgParams;
+    msgParams.second = CClientUIInterface::MSG_WARNING;
+    msgParams.first = msg;
+
+    Q_EMIT message(heading, msgParams.first, msgParams.second);
+};
+
 // AvailableCoins + LockedCoins grouped by wallet address (put change in one group with wallet address)
-void WalletModel::listCoins(std::map<QString, std::vector<COutput> >& mapCoins) const
+void WalletModel::listCoins(std::map<QString, std::vector<CCoinControlEntry> >& mapCoins, OutputTypes nType) const
 {
     std::vector<COutput> vCoins;
     wallet->AvailableCoins(vCoins);
 
     LOCK2(cs_main, wallet->cs_wallet); // ListLockedCoins, mapWallet
+    
+    UniValue rv;
+    QString sCommand;
+    
+    if (nType == OUTPUT_RINGCT)
+        sCommand =  + "listunspentanon 1 9999999 [] false true";
+    else
+    if (nType == OUTPUT_CT)
+        sCommand =  + "listunspentblind 1 9999999 [] false true";
+    else
+        sCommand =  + "listunspent 1 9999999 [] false true";
+    
+    if (!tryCallRpc(sCommand, rv))
+        return;
+    
+    for (size_t i = 0; i < rv.size(); ++i)
+    {
+        const UniValue &uvi = rv[i];
+        
+        CCoinControlEntry entry;
+        entry.nType = nType;
+        entry.op.hash.SetHex(uvi["txid"].get_str());
+        entry.op.n = uvi["vout"].get_int();
+        entry.nDepth = uvi["confirmations"].get_int();
+        entry.nValue = uvi["amount"].get_int64();
+        entry.nTxTime = uvi["time"].get_int64();
+        
+        const UniValue &uvs = uvi["scriptPubKey"];
+        if (uvs.isStr())
+        {
+            std::vector<uint8_t> vScript = ParseHex(uvs.get_str());
+            entry.scriptPubKey = CScript(vScript.begin(), vScript.end());
+        };
+        
+        const UniValue &uvb = uvi["spendable"];
+        if (!uvb.isNull() && !uvb.get_bool())
+            continue;
+        mapCoins[QString::fromStdString(uvi["address"].get_str())].push_back(entry);
+    };
+    
+    
+    /*
     std::vector<COutPoint> vLockedCoins;
     wallet->ListLockedCoins(vLockedCoins);
 
@@ -670,7 +767,10 @@ void WalletModel::listCoins(std::map<QString, std::vector<COutput> >& mapCoins) 
         if (outpoint.n < out.tx->tx->vout.size() && wallet->IsMine(out.tx->tx->vout[outpoint.n]) == ISMINE_SPENDABLE)
             vCoins.push_back(out);
     }
-
+    */
+    
+    
+    /*
     BOOST_FOREACH(const COutput& out, vCoins)
     {
         COutput cout = out;
@@ -686,6 +786,7 @@ void WalletModel::listCoins(std::map<QString, std::vector<COutput> >& mapCoins) 
             continue;
         mapCoins[QString::fromStdString(CBitcoinAddress(address).ToString())].push_back(out);
     }
+    */
 }
 
 bool WalletModel::isLockedCoin(uint256 hash, unsigned int n) const

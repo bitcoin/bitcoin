@@ -319,10 +319,29 @@
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayoutPanel" stretch="0,0,0,0,0">
+       <layout class="QHBoxLayout" name="horizontalLayoutPanel" stretch="0,0,0,0,0,0">
         <property name="spacing">
          <number>14</number>
         </property>
+        <item>
+         <widget class="QComboBox" name="cbxType">
+          <item>
+           <property name="text">
+            <string>Standard</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Blind</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Anon</string>
+           </property>
+          </item>
+         </widget>
+        </item>
         <item>
          <widget class="QPushButton" name="pushButtonSelectAll">
           <property name="sizePolicy">

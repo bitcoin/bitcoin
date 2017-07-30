@@ -80,6 +80,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "listunspent", 0, "minconf" },
     { "listunspent", 1, "maxconf" },
     { "listunspent", 2, "addresses" },
+    { "listunspent", 3, "include_unsafe" },
+    { "listunspent", 4, "cc_format" },
     { "getblock", 1, "verbose" },
     { "getblockheader", 1, "verbose" },
     { "gettransaction", 1, "include_watchonly" },
@@ -176,6 +178,18 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "sendtypeto", 8, "coincontrol" },
     
     { "getnewextaddress", 1, "childno" },
+    
+    { "listunspentanon", 0, "minconf" },
+    { "listunspentanon", 1, "maxconf" },
+    { "listunspentanon", 2, "addresses" },
+    { "listunspentanon", 3, "include_unsafe" },
+    { "listunspentanon", 4, "cc_format" },
+    
+    { "listunspentblind", 0, "minconf" },
+    { "listunspentblind", 1, "maxconf" },
+    { "listunspentblind", 2, "addresses" },
+    { "listunspentblind", 3, "include_unsafe" },
+    { "listunspentblind", 4, "cc_format" },
     
     
     

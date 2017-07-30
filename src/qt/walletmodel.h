@@ -28,10 +28,12 @@ class CCoinControl;
 class CKeyID;
 class COutPoint;
 class COutput;
+class CCoinControlEntry;
 class CPubKey;
 class CWallet;
 class uint256;
 class CHDWallet;
+class UniValue;
 
 QT_BEGIN_NAMESPACE
 class QTimer;
@@ -203,7 +205,7 @@ public:
     bool getPrivKey(const CKeyID &address, CKey& vchPrivKeyOut) const;
     void getOutputs(const std::vector<COutPoint>& vOutpoints, std::vector<COutput>& vOutputs);
     bool isSpent(const COutPoint& outpoint) const;
-    void listCoins(std::map<QString, std::vector<COutput> >& mapCoins) const;
+    void listCoins(std::map<QString, std::vector<CCoinControlEntry> >& mapCoins, OutputTypes nType) const;
 
     bool isLockedCoin(uint256 hash, unsigned int n) const;
     void lockCoin(COutPoint& output);
@@ -227,6 +229,9 @@ public:
     CAmount getReserveBalance();
 
     void checkBalanceChanged();
+    
+    bool tryCallRpc(const QString &sCommand, UniValue &rv) const;
+    void warningBox(QString heading, QString msg) const;
 
 private:
     CWallet *wallet;
@@ -273,7 +278,7 @@ Q_SIGNALS:
     void requireUnlock();
 
     // Fired when a message should be reported to the user
-    void message(const QString &title, const QString &message, unsigned int style);
+    void message(const QString &title, const QString &message, unsigned int style) const;
 
     // Coins sent: from wallet, to recipient, in (serialized) transaction:
     void coinsSent(CWallet* wallet, SendCoinsRecipient recipient, QByteArray transaction);

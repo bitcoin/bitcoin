@@ -870,7 +870,6 @@ bool CHDWallet::Unlock(const SecureString &strWalletPassphrase)
         ProcessLockedStealthOutputs();
         ProcessLockedAnonOutputs();
         SecureMsgWalletUnlocked();
-        
     } // cs_main, cs_wallet
     
     WakeThreadStakeMiner();
@@ -1256,8 +1255,7 @@ bool CHDWallet::DelAddressBook(const CTxDestination &address)
                     LogPrintf("%s: Error: Remove stealthAddresses failed.\n", __func__);
                     return false;
                 };
-                
-            }
+            };
         }
         
         //NotifyAddressBookChanged(this, address, "", fOwned, "", CT_DELETED);
@@ -1315,7 +1313,6 @@ int64_t CHDWallet::CountActiveAccountKeys()
         nKeys += pa->mapStealthChildKeys.size();
         //nKeys += pa->mapLookAhead.size();
     };
-    
     
     return nKeys;
 };
@@ -2042,6 +2039,50 @@ void CHDWallet::AddOutputRecordMetaData(CTransactionRecord &rtx, std::vector<CTe
     };
 };
 
+static int MakeStealthData(const std::string &sNarration, stealth_prefix prefix, const CKey &sShared, const CPubKey &pkEphem,
+    std::vector<uint8_t> &vData, uint32_t &nStealthPrefix, std::string &sError)
+{
+    
+    std::vector<uint8_t> vchNarr;
+    if (sNarration.length() > 0)
+    {
+        SecMsgCrypter crypter;
+        crypter.SetKey(sShared.begin(), pkEphem.begin());
+        
+        if (!crypter.Encrypt((uint8_t*)sNarration.data(), sNarration.length(), vchNarr))
+            return errorN(1, sError, __func__, "Narration encryption failed.");
+        
+        if (vchNarr.size() > MAX_STEALTH_NARRATION_SIZE)
+            return errorN(1, sError, __func__, "Encrypted narration is too long.");
+    };
+    
+    vData.resize(34
+        + (prefix.number_bits > 0 ? 5 : 0)
+        + (vchNarr.size() + (vchNarr.size() > 0 ? 1 : 0)));
+    
+    size_t o = 0;
+    vData[o++] = DO_STEALTH;
+    memcpy(&vData[o], pkEphem.begin(), 33);
+    o += 33;
+    
+    if (prefix.number_bits > 0)
+    {
+        vData[o++] = DO_STEALTH_PREFIX;
+        nStealthPrefix = FillStealthPrefix(prefix.number_bits, prefix.bitfield);
+        memcpy(&vData[o], &nStealthPrefix, 4);
+        o+=4;
+    };
+    
+    if (vchNarr.size() > 0)
+    {
+        vData[o++] = DO_NARR_CRYPT;
+        memcpy(&vData[o], &vchNarr[0], vchNarr.size());
+        o += vchNarr.size();
+    };
+    
+    return 0;
+};
+
 int CHDWallet::ExpandTempRecipients(std::vector<CTempRecipient> &vecSend, CStoredExtKey *pc, std::string &sError)
 {
     LOCK(cs_wallet);
@@ -2080,43 +2121,8 @@ int CHDWallet::ExpandTempRecipients(std::vector<CTempRecipient> &vecSend, CStore
                 CTempRecipient rd;
                 rd.nType = OUTPUT_DATA;
                 
-                std::vector<uint8_t> vchNarr;
-                if (r.sNarration.length() > 0)
-                {
-                    SecMsgCrypter crypter;
-                    crypter.SetKey(sShared.begin(), pkEphem.begin());
-                    
-                    if (!crypter.Encrypt((uint8_t*)r.sNarration.data(), r.sNarration.length(), vchNarr))
-                        return errorN(1, sError, __func__, "Narration encryption failed.");
-                    
-                    if (vchNarr.size() > MAX_STEALTH_NARRATION_SIZE)
-                        return errorN(1, sError, __func__, "Encrypted narration is too long.");
-                };
-                
-                rd.vData.resize(34
-                    + (sx.prefix.number_bits > 0 ? 5 : 0)
-                    + (vchNarr.size() + (vchNarr.size() > 0 ? 1 : 0)));
-                
-                size_t o = 0;
-                rd.vData[o++] = DO_STEALTH;
-                memcpy(&rd.vData[o], pkEphem.begin(), 33);
-                o += 33;
-                
-                if (sx.prefix.number_bits > 0)
-                {
-                    rd.vData[o++] = DO_STEALTH_PREFIX;
-                    r.nStealthPrefix = FillStealthPrefix(sx.prefix.number_bits, sx.prefix.bitfield);
-                    memcpy(&rd.vData[o], &r.nStealthPrefix, 4);
-                    o+=4;
-                };
-                
-                if (vchNarr.size() > 0)
-                {
-                    rd.vData[o++] = DO_NARR_CRYPT;
-                    memcpy(&rd.vData[o], &vchNarr[0], vchNarr.size());
-                    o += vchNarr.size();
-                };
-                
+                if (0 != MakeStealthData(r.sNarration, sx.prefix, sShared, pkEphem, rd.vData, r.nStealthPrefix, sError))
+                    return 1;
                 vecSend.insert(vecSend.begin() + (i+1), rd);
                 i++; // skip over inserted output
             } else
@@ -2521,43 +2527,9 @@ bool CHDWallet::SetChangeDest(CTempRecipient &r, std::string &sError)
             };
         } else
         {
-            // TODO: dedupicate
-            std::vector<uint8_t> vchNarr;
-            if (r.sNarration.length() > 0)
-            {
-                SecMsgCrypter crypter;
-                crypter.SetKey(sShared.begin(), pkEphem.begin());
-                
-                if (!crypter.Encrypt((uint8_t*)r.sNarration.data(), r.sNarration.length(), vchNarr))
-                    return errorN(1, sError, __func__, "Narration encryption failed.");
-                
-                if (vchNarr.size() > MAX_STEALTH_NARRATION_SIZE)
-                    return errorN(1, sError, __func__, "Encrypted narration is too long.");
-            };
+            if (0 != MakeStealthData(r.sNarration, sx.prefix, sShared, pkEphem, r.vData, r.nStealthPrefix, sError))
+                return 1;
             
-            r.vData.resize(34
-                + (sx.prefix.number_bits > 0 ? 5 : 0)
-                + (vchNarr.size() + (vchNarr.size() > 0 ? 1 : 0)));
-            
-            size_t o = 0;
-            r.vData[o++] = DO_STEALTH;
-            memcpy(&r.vData[o], pkEphem.begin(), 33);
-            o += 33;
-            
-            if (sx.prefix.number_bits > 0)
-            {
-                r.vData[o++] = DO_STEALTH_PREFIX;
-                r.nStealthPrefix = FillStealthPrefix(sx.prefix.number_bits, sx.prefix.bitfield);
-                memcpy(&r.vData[o], &r.nStealthPrefix, 4);
-                o+=4;
-            };
-            
-            if (vchNarr.size() > 0)
-            {
-                r.vData[o++] = DO_NARR_CRYPT;
-                memcpy(&r.vData[o], &vchNarr[0], vchNarr.size());
-                o += vchNarr.size();
-            };
         };
         return true;
     };
@@ -9053,13 +9025,16 @@ bool CHDWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const C
     {
         for (auto &out : vCoins)
         {
+            COutPoint op(out.tx->GetHash(), out.i);
+            if (!coinControl->IsSelected(op))
+                continue;
             if (!out.fSpendable)
                  continue;
             nValueRet += out.tx->tx->vpout[out.i]->GetValue();
             setCoinsRet.insert(std::make_pair(out.tx, out.i));
-        }
+        };
         return (nValueRet >= nTargetValue);
-    }
+    };
 
     // calculate value from preset inputs and store them
     std::set<std::pair<const CWalletTx*, uint32_t> > setPresetCoins;
@@ -9071,8 +9046,8 @@ bool CHDWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const C
     
     for (auto &outpoint : vPresetInputs)
     {
-        MapWallet_t::const_iterator it = mapWallet.find(outpoint.hash);
-        if (it != mapWallet.end())
+        MapWallet_t::const_iterator it = mapTempWallet.find(outpoint.hash);
+        if (it != mapTempWallet.end())
         {
             const CWalletTx *pcoin = &it->second;
             // Clearly invalid input, fail
@@ -9081,8 +9056,20 @@ bool CHDWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const C
             nValueFromPresetInputs += pcoin->tx->vpout[outpoint.n]->GetValue();
             setPresetCoins.insert(std::make_pair(pcoin, outpoint.n));
         } else
-            return false; // TODO: Allow non-wallet inputs
-    }
+        {
+            it = mapWallet.find(outpoint.hash);
+            if (it != mapWallet.end())
+            {
+                const CWalletTx *pcoin = &it->second;
+                // Clearly invalid input, fail
+                if (pcoin->tx->vpout.size() <= outpoint.n)
+                    return false;
+                nValueFromPresetInputs += pcoin->tx->vpout[outpoint.n]->GetValue();
+                setPresetCoins.insert(std::make_pair(pcoin, outpoint.n));
+            } else
+                return false; // TODO: Allow non-wallet inputs
+        };
+    };
 
     // remove preset inputs from vCoins
     for (std::vector<COutput>::iterator it = vCoins.begin(); it != vCoins.end() && coinControl && coinControl->HasSelected();)
@@ -9091,7 +9078,7 @@ bool CHDWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const C
             it = vCoins.erase(it);
         else
             ++it;
-    }
+    };
 
     size_t nMaxChainLength = std::min(GetArg("-limitancestorcount", DEFAULT_ANCESTOR_LIMIT), GetArg("-limitdescendantcount", DEFAULT_DESCENDANT_LIMIT));
     bool fRejectLongChains = GetBoolArg("-walletrejectlongchains", DEFAULT_WALLET_REJECT_LONG_CHAINS);
@@ -9162,8 +9149,73 @@ bool CHDWallet::SelectBlindedCoins(const std::vector<COutputR> &vAvailableCoins,
 {
     std::vector<COutputR> vCoins(vAvailableCoins);
     
+    // coin control -> return all selected outputs (we want all selected to go into the transaction for sure)
+    if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs)
+    {
+        for (auto &out : vCoins)
+        {
+            COutPoint op(out.txhash, out.i);
+            if (!coinControl->IsSelected(op))
+                continue;
+            //if (!out.fSpendable)
+            //     continue;
+            
+            const COutputRecord *oR = out.rtx->second.GetOutput(out.i);
+            if (!oR)
+                continue;
+            
+            nValueRet += oR->nValue;
+            setCoinsRet.push_back(std::make_pair(out.rtx, out.i));
+        };
+        return (nValueRet >= nTargetValue);
+    };
+    
+    // calculate value from preset inputs and store them
+    std::vector<std::pair<MapRecords_t::const_iterator,unsigned int> > vPresetCoins;
     CAmount nValueFromPresetInputs = 0;
-    // TODO: Add coincontrol
+    
+    std::vector<COutPoint> vPresetInputs;
+    if (coinControl)
+        coinControl->ListSelected(vPresetInputs);
+    
+    for (auto &outpoint : vPresetInputs)
+    {
+        MapRecords_t::const_iterator it = mapRecords.find(outpoint.hash);
+        if (it != mapRecords.end())
+        {
+            const CTransactionRecord &rtx = it->second;
+            const COutputRecord *oR = rtx.GetOutput(outpoint.n);
+            if (!oR)
+                continue;
+            
+            nValueFromPresetInputs += oR->nValue;
+            vPresetCoins.push_back(std::make_pair(it, outpoint.n));
+        } else
+            return false; // TODO: Allow non-wallet inputs
+    };
+    
+    // Remove preset inputs from vCoins
+    if (vPresetCoins.size() > 0)
+    {
+        for (std::vector<COutputR>::iterator it = vCoins.begin(); it != vCoins.end();)
+        {
+            std::vector<std::pair<MapRecords_t::const_iterator,unsigned int> >::const_iterator it2;
+            bool fFound = false;
+            for (it2 = vPresetCoins.begin(); it2 != vPresetCoins.end(); it2++)
+            {
+                if (it2->first->first == it->txhash && it2->second == (uint32_t) it->i)
+                {
+                    fFound = true;
+                    break;
+                };
+            };
+            //if (std::find(vPresetCoins.begin(), vPresetCoins.end(), std::make_pair(it->rtx, it->i)) != vPresetCoins.end())
+            if (fFound)
+                it = vCoins.erase(it);
+            else
+                ++it;
+        };
+    };
     
     size_t nMaxChainLength = std::min(GetArg("-limitancestorcount", DEFAULT_ANCESTOR_LIMIT), GetArg("-limitdescendantcount", DEFAULT_DESCENDANT_LIMIT));
     bool fRejectLongChains = GetBoolArg("-walletrejectlongchains", DEFAULT_WALLET_REJECT_LONG_CHAINS);
@@ -9178,7 +9230,7 @@ bool CHDWallet::SelectBlindedCoins(const std::vector<COutputR> &vAvailableCoins,
         (bSpendZeroConfChange && !fRejectLongChains && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, std::numeric_limits<uint64_t>::max(), vCoins, setCoinsRet, nValueRet));
     
     // because SelectCoinsMinConf clears the setCoinsRet, we now add the possible inputs to the coinset
-    //setCoinsRet.insert(setPresetCoins.begin(), setPresetCoins.end());
+    setCoinsRet.insert(setCoinsRet.end(), vPresetCoins.begin(), vPresetCoins.end());
 
     // add preset inputs to the total value selected
     nValueRet += nValueFromPresetInputs;
@@ -10234,7 +10286,6 @@ bool CHDWallet::SignBlock(CBlockTemplate *pblocktemplate, int nHeight, int64_t n
         {
             // make sure coinstake would meet timestamp protocol
             //    as it would be the same as the block timestamp
-            //pblock->nTime = txCoinStake.nTime;
             pblock->nTime = nSearchTime;
             
             // Remove coinbasetxn
@@ -10294,50 +10345,12 @@ int ToStealthRecipient(CStealthAddress &sx, CAmount nValue, bool fSubtractFeeFro
     CRecipient recipient(scriptPubKey, nValue, fSubtractFeeFromAmount);
     vecSend.push_back(recipient);
     
-    std::vector<uint8_t> vchNarr;
-    if (sNarr.length() > 0)
-    {
-        SecMsgCrypter crypter;
-        crypter.SetKey(sShared.begin(), pkEphem.begin());
-        
-        if (!crypter.Encrypt((uint8_t*)sNarr.data(), sNarr.length(), vchNarr))
-        {
-            strError = "Narration encryption failed.";
-            return 1;
-        };
-
-        if (vchNarr.size() > MAX_STEALTH_NARRATION_SIZE)
-        {
-            strError = "Encrypted narration is too long.";
-            return 1;
-        };
-    };
-    
     vecSend.push_back(CRecipient());
     CRecipient &rData = vecSend.back();
-    rData.vData.resize(34
-        + (sx.prefix.number_bits > 0 ? 5 : 0)
-        + (vchNarr.size() + (vchNarr.size() > 0 ? 1 : 0)));
     
-    size_t o = 0;
-    rData.vData[o++] = DO_STEALTH;
-    memcpy(&rData.vData[o], pkEphem.begin(), 33);
-    o += 33;
-    
-    if (sx.prefix.number_bits > 0)
-    {
-        rData.vData[o++] = DO_STEALTH_PREFIX;
-        uint32_t prefix = FillStealthPrefix(sx.prefix.number_bits, sx.prefix.bitfield);
-        memcpy(&rData.vData[o], &prefix, 4);
-        o+=4;
-    };
-    
-    if (vchNarr.size() > 0)
-    {
-        rData.vData[o++] = DO_NARR_CRYPT;
-        memcpy(&rData.vData[o], &vchNarr[0], vchNarr.size());
-        o += vchNarr.size();
-    };
+    uint32_t nStealthPrefix;
+    if (0 != MakeStealthData(sNarr, sx.prefix, sShared, pkEphem, rData.vData, nStealthPrefix, strError))
+        return 1;
     
     return 0;
 };

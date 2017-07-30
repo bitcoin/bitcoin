@@ -23,8 +23,6 @@
 #include "txmempool.h"
 #include "wallet/wallet.h"
 
-#include "rpc/rpcutil.h"
-#include "util.h"
 #include "univalue.h"
 
 
@@ -84,6 +82,9 @@ SendCoinsDialog::SendCoinsDialog(const PlatformStyle *_platformStyle, QWidget *p
     connect(clipboardBytesAction, SIGNAL(triggered()), this, SLOT(coinControlClipboardBytes()));
     connect(clipboardLowOutputAction, SIGNAL(triggered()), this, SLOT(coinControlClipboardLowOutput()));
     connect(clipboardChangeAction, SIGNAL(triggered()), this, SLOT(coinControlClipboardChange()));
+    
+    connect(ui->cbxTypeFrom, SIGNAL(currentIndexChanged(int)), this, SLOT(cbxTypeFromChanged(int)));
+    
     ui->labelCoinControlQuantity->addAction(clipboardQuantityAction);
     ui->labelCoinControlAmount->addAction(clipboardAmountAction);
     ui->labelCoinControlFee->addAction(clipboardFeeAction);
@@ -200,42 +201,6 @@ SendCoinsDialog::~SendCoinsDialog()
     delete ui;
 }
 
-void SendCoinsDialog::warningBox(QString msg)
-{
-    //qWarning() << msg;
-    QPair<QString, CClientUIInterface::MessageBoxFlags> msgParams;
-    msgParams.second = CClientUIInterface::MSG_WARNING;
-    msgParams.first = msg;
-
-    Q_EMIT message(tr("Send Coins"), msgParams.first, msgParams.second);
-}
-
-bool SendCoinsDialog::tryCallRpc(const QString &sCommand, UniValue &rv)
-{
-    try {
-        rv = CallRPC(sCommand.toStdString());
-    } catch (UniValue& objError)
-    {
-        try { // Nice formatting for standard-format error
-            int code = find_value(objError, "code").get_int();
-            std::string message = find_value(objError, "message").get_str();
-            warningBox(QString::fromStdString(message) + " (code " + QString::number(code) + ")");
-            return false;
-        } catch (const std::runtime_error&) // raised when converting to invalid type, i.e. missing code or message
-        {   // Show raw JSON object
-            warningBox(QString::fromStdString(objError.write()));
-            return false;
-        };
-    } catch (const std::exception& e)
-    {
-        warningBox(QString::fromStdString(e.what()));
-        return false;
-    };
-    
-    return true;
-};
-
-
 void SendCoinsDialog::on_sendButton_clicked()
 {
     if(!model || !model->getOptionsModel())
@@ -346,11 +311,15 @@ void SendCoinsDialog::on_sendButton_clicked()
         
         if (ctrl.NumSelected() > 0)
         {
-            if (fNeedComma)
-                sCoinControl += ",\"inputs\":[";
+            sCoinControl += QString(fNeedComma ? "," : "") + "\"inputs\":[";
+            bool fNeedCommaInputs = false;
             for (const auto &op : ctrl.setSelected)
             {
-                
+                sCoinControl += fNeedCommaInputs ? ",{" : "{";
+                sCoinControl += "\"tx\":\"" + QString::fromStdString(op.hash.ToString()) + "\"";
+                sCoinControl += ",\"n\":" + QString::number(op.n);
+                sCoinControl += "}";
+                fNeedCommaInputs = true;
             };
             sCoinControl += "]";
             fNeedComma = true;
@@ -364,7 +333,7 @@ void SendCoinsDialog::on_sendButton_clicked()
     
     UniValue rv;
     QString sGetFeeCommand = sCommand + " true" + sCoinControl;
-    if (!tryCallRpc(sGetFeeCommand, rv))
+    if (!model->tryCallRpc(sGetFeeCommand, rv))
         return;
     
     
@@ -474,7 +443,7 @@ void SendCoinsDialog::on_sendButton_clicked()
     sCommand += " false";
     sCommand += sCoinControl;
     
-    if (!tryCallRpc(sCommand, rv))
+    if (!model->tryCallRpc(sCommand, rv))
         sendStatus = WalletModel::TransactionCreationFailed;
     
     // Update Addressbook
@@ -486,7 +455,7 @@ void SendCoinsDialog::on_sendButton_clicked()
         sCommand += strLabel.isEmpty() ? " \"\"" : (" \"" + strLabel + "\"");
         sCommand += " send";
         
-        tryCallRpc(sCommand, rv);
+        model->tryCallRpc(sCommand, rv);
     };
     
     
@@ -865,6 +834,12 @@ void SendCoinsDialog::coinControlClipboardChange()
 {
     GUIUtil::setClipboard(ui->labelCoinControlChange->text().left(ui->labelCoinControlChange->text().indexOf(" ")).replace(ASYMP_UTF8, ""));
 }
+
+void SendCoinsDialog::cbxTypeFromChanged(int index)
+{
+    if (model && model->getOptionsModel()->getCoinControlFeatures())
+        CoinControlDialog::coinControl->nCoinType = index+1;
+};
 
 // Coin Control: settings menu - coin control enabled/disabled by user
 void SendCoinsDialog::coinControlFeatureChanged(bool checked)

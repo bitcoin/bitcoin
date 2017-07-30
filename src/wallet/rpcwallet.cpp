@@ -1729,7 +1729,6 @@ void ListRecord(const uint256 &hash, const CTransactionRecord &rtx,
             continue;
         
         UniValue entry(UniValue::VOBJ);
-        
         entry.push_back(Pair("account", account));
         
         if (r.vPath.size() > 0)
@@ -2967,15 +2966,15 @@ UniValue listunspent(const JSONRPCRequest& request)
     if (!EnsureWalletIsAvailable(request.fHelp))
         return NullUniValue;
 
-    if (request.fHelp || request.params.size() > 4)
+    if (request.fHelp || request.params.size() > 5)
         throw runtime_error(
             "listunspent ( minconf maxconf  [\"addresses\",...] [include_unsafe] )\n"
             "\nReturns array of unspent transaction outputs\n"
             "with between minconf and maxconf (inclusive) confirmations.\n"
             "Optionally filter to only include txouts paid to specified addresses.\n"
             "\nArguments:\n"
-            "1. \"minconf\"        (numeric, optional, default=1) The minimum confirmations to filter\n"
-            "2. \"maxconf\"        (numeric, optional, default=9999999) The maximum confirmations to filter\n"
+            "1. minconf        (numeric, optional, default=1) The minimum confirmations to filter\n"
+            "2. maxconf        (numeric, optional, default=9999999) The maximum confirmations to filter\n"
             "3. \"addresses\"      (string) A json array of particl addresses to filter\n"
             "    [\n"
             "      \"address\"     (string) particl address\n"
@@ -2985,6 +2984,7 @@ UniValue listunspent(const JSONRPCRequest& request)
             "                  because they come from unconfirmed untrusted transactions or unconfirmed\n"
             "                  replacement transactions (cases where we are less sure that a conflicting\n"
             "                  transaction won't be mined).\n"
+            "5. cc_format      (bool, optional, default=false) format for coincontrol\n"
             "\nResult\n"
             "[                     (array of json object)\n"
             "  {\n"
@@ -3040,6 +3040,13 @@ UniValue listunspent(const JSONRPCRequest& request)
         RPCTypeCheckArgument(request.params[3], UniValue::VBOOL);
         include_unsafe = request.params[3].get_bool();
     }
+    
+    bool fCCFormat = false;
+    if (request.params.size() > 4 && !request.params[4].isNull()) {
+        RPCTypeCheckArgument(request.params[4], UniValue::VBOOL);
+        fCCFormat = request.params[4].get_bool();
+    }
+    
 
     UniValue results(UniValue::VARR);
     vector<COutput> vecOutputs;
@@ -3095,7 +3102,16 @@ UniValue listunspent(const JSONRPCRequest& request)
         }
 
         entry.push_back(Pair("scriptPubKey", HexStr(scriptPubKey->begin(), scriptPubKey->end())));
-        entry.push_back(Pair("amount", ValueFromAmount(nValue)));
+        
+        if (fCCFormat)
+        {
+            entry.push_back(Pair("time", out.tx->GetTxTime()));
+            entry.push_back(Pair("amount", nValue));
+        } else
+        {
+            entry.push_back(Pair("amount", ValueFromAmount(nValue)));
+        };
+        
         entry.push_back(Pair("confirmations", out.nDepth));
         entry.push_back(Pair("spendable", out.fSpendable));
         entry.push_back(Pair("solvable", out.fSolvable));
@@ -3629,7 +3645,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "listreceivedbyaddress",    &listreceivedbyaddress,    false,  {"minconf","include_empty","include_watchonly"} },
     { "wallet",             "listsinceblock",           &listsinceblock,           false,  {"blockhash","target_confirmations","include_watchonly"} },
     { "wallet",             "listtransactions",         &listtransactions,         false,  {"account","count","skip","include_watchonly"} },
-    { "wallet",             "listunspent",              &listunspent,              false,  {"minconf","maxconf","addresses","include_unsafe"} },
+    { "wallet",             "listunspent",              &listunspent,              false,  {"minconf","maxconf","addresses","include_unsafe","cc_format"} },
     { "wallet",             "lockunspent",              &lockunspent,              true,   {"unlock","transactions"} },
     { "wallet",             "move",                     &movecmd,                  false,  {"fromaccount","toaccount","amount","minconf","comment"} },
     //{ "wallet",             "sendfrom",                 &sendfrom,                 false,  {"fromaccount","toaddress","amount","minconf","comment","comment_to"} },

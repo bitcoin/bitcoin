@@ -18,6 +18,7 @@
 #include "policy/policy.h"
 #include "validation.h" // For mempool
 #include "wallet/wallet.h"
+#include "wallet/hdwallet.h"
 
 #include <boost/assign/list_of.hpp> // for 'map_list_of()'
 
@@ -106,6 +107,8 @@ CoinControlDialog::CoinControlDialog(const PlatformStyle *_platformStyle, QWidge
     // toggle tree/list mode
     connect(ui->radioTreeMode, SIGNAL(toggled(bool)), this, SLOT(radioTreeMode(bool)));
     connect(ui->radioListMode, SIGNAL(toggled(bool)), this, SLOT(radioListMode(bool)));
+    
+    connect(ui->cbxType, SIGNAL(currentIndexChanged(int)), this, SLOT(cbxTypeChanged(int)));
 
     // click on checkbox
     connect(ui->treeWidget, SIGNAL(itemChanged(QTreeWidgetItem*, int)), this, SLOT(viewItemChanged(QTreeWidgetItem*, int)));
@@ -146,6 +149,12 @@ CoinControlDialog::CoinControlDialog(const PlatformStyle *_platformStyle, QWidge
         ui->radioTreeMode->click();
     if (settings.contains("nCoinControlSortColumn") && settings.contains("nCoinControlSortOrder"))
         sortView(settings.value("nCoinControlSortColumn").toInt(), ((Qt::SortOrder)settings.value("nCoinControlSortOrder").toInt()));
+    
+    if (coinControl->nCoinType == OUTPUT_CT)
+        ui->cbxType->setCurrentIndex(1);
+    else
+    if (coinControl->nCoinType == OUTPUT_RINGCT)
+        ui->cbxType->setCurrentIndex(2);
 }
 
 CoinControlDialog::~CoinControlDialog()
@@ -373,6 +382,15 @@ void CoinControlDialog::radioListMode(bool checked)
         updateView();
 }
 
+void CoinControlDialog::cbxTypeChanged(int index)
+{
+    if (model)
+    {
+        coinControl->nCoinType = index+1;
+        updateView();
+    };
+}
+
 // checkbox clicked by user
 void CoinControlDialog::viewItemChanged(QTreeWidgetItem* item, int column)
 {
@@ -454,6 +472,32 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     std::vector<COutPoint> vCoinControl;
     std::vector<COutput>   vOutputs;
     coinControl->ListSelected(vCoinControl);
+    
+    
+    //model->getOutputRecords(vCoinControl, vOutputs);
+    if (coinControl->nCoinType != OUTPUT_STANDARD)
+    {
+        CHDWallet *phdw = model->getParticlWallet();
+        
+        for (const auto &op : vCoinControl)
+        {
+            MapRecords_t::const_iterator mri = phdw->mapRecords.find(op.hash);
+            if (mri == phdw->mapRecords.end())
+                continue;
+            
+            const COutputRecord *oR = mri->second.GetOutput(op.n);
+            
+            if (!oR)
+                continue;
+            
+            nQuantity++;
+            
+            nAmount += oR->nValue;
+        };
+    };
+    
+    
+    
     model->getOutputs(vCoinControl, vOutputs);
 
     BOOST_FOREACH(const COutput& out, vOutputs) {
@@ -471,21 +515,31 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         nQuantity++;
 
         // Amount
-        nAmount += out.tx->tx->vout[out.i].nValue;
+        CAmount nOutputValue = out.tx->tx->vpout[out.i]->GetValue();
+        nAmount += nOutputValue;
+        
 
         // Priority
-        dPriorityInputs += (double)out.tx->tx->vout[out.i].nValue * (out.nDepth+1);
+        dPriorityInputs += (double)nOutputValue * (out.nDepth+1);
 
         // Bytes
         CTxDestination address;
         int witnessversion = 0;
         std::vector<unsigned char> witnessprogram;
-        if (out.tx->tx->vout[out.i].scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram))
+        
+        
+        const CScript *pScriptPubKey = out.tx->tx->vpout[out.i]->GetPScriptPubKey();
+        
+        if (!pScriptPubKey)
+        {
+            nBytesInputs += 148;
+        } else
+        if (pScriptPubKey->IsWitnessProgram(witnessversion, witnessprogram))
         {
             nBytesInputs += (32 + 4 + 1 + (107 / WITNESS_SCALE_FACTOR) + 4);
             fWitness = true;
         }
-        else if(ExtractDestination(out.tx->tx->vout[out.i].scriptPubKey, address))
+        else if(ExtractDestination(*pScriptPubKey, address))
         {
             CPubKey pubkey;
             CKeyID *keyid = boost::get<CKeyID>(&address);
@@ -647,10 +701,15 @@ void CoinControlDialog::updateView()
 
     int nDisplayUnit = model->getOptionsModel()->getDisplayUnit();
 
-    std::map<QString, std::vector<COutput> > mapCoins;
-    model->listCoins(mapCoins);
-
-    BOOST_FOREACH(const PAIRTYPE(QString, std::vector<COutput>)& coins, mapCoins) {
+    std::map<QString, std::vector<CCoinControlEntry> > mapCoins;
+    
+    QString sType = ui->cbxType->currentText().toLower();
+    
+    model->listCoins(mapCoins,
+        sType == "anon" ? OUTPUT_RINGCT : sType == "blind" ? OUTPUT_CT : OUTPUT_STANDARD);
+    
+    for (const auto &coins : mapCoins)
+    {
         CCoinControlWidgetItem *itemWalletAddress = new CCoinControlWidgetItem();
         itemWalletAddress->setCheckState(COLUMN_CHECKBOX, Qt::Unchecked);
         QString sWalletAddress = coins.first;
@@ -675,8 +734,9 @@ void CoinControlDialog::updateView()
 
         CAmount nSum = 0;
         int nChildren = 0;
-        BOOST_FOREACH(const COutput& out, coins.second) {
-            nSum += out.tx->tx->vout[out.i].nValue;
+        for (const CCoinControlEntry& out : coins.second)
+        {
+            nSum += out.nValue;
             nChildren++;
 
             CCoinControlWidgetItem *itemOutput;
@@ -688,7 +748,7 @@ void CoinControlDialog::updateView()
             // address
             CTxDestination outputAddress;
             QString sAddress = "";
-            if(ExtractDestination(out.tx->tx->vout[out.i].scriptPubKey, outputAddress))
+            if(ExtractDestination(out.scriptPubKey, outputAddress))
             {
                 sAddress = QString::fromStdString(CBitcoinAddress(outputAddress).ToString());
 
@@ -713,35 +773,35 @@ void CoinControlDialog::updateView()
             }
 
             // amount
-            itemOutput->setText(COLUMN_AMOUNT, BitcoinUnits::format(nDisplayUnit, out.tx->tx->vout[out.i].nValue));
-            itemOutput->setData(COLUMN_AMOUNT, Qt::UserRole, QVariant((qlonglong)out.tx->tx->vout[out.i].nValue)); // padding so that sorting works correctly
+            itemOutput->setText(COLUMN_AMOUNT, BitcoinUnits::format(nDisplayUnit, out.nValue));
+            itemOutput->setData(COLUMN_AMOUNT, Qt::UserRole, QVariant((qlonglong)out.nValue)); // padding so that sorting works correctly
 
             // date
-            itemOutput->setText(COLUMN_DATE, GUIUtil::dateTimeStr(out.tx->GetTxTime()));
-            itemOutput->setData(COLUMN_DATE, Qt::UserRole, QVariant((qlonglong)out.tx->GetTxTime()));
+            itemOutput->setText(COLUMN_DATE, GUIUtil::dateTimeStr(out.nTxTime));
+            itemOutput->setData(COLUMN_DATE, Qt::UserRole, QVariant((qlonglong)out.nTxTime));
 
             // confirmations
             itemOutput->setText(COLUMN_CONFIRMATIONS, QString::number(out.nDepth));
             itemOutput->setData(COLUMN_CONFIRMATIONS, Qt::UserRole, QVariant((qlonglong)out.nDepth));
 
             // transaction hash
-            uint256 txhash = out.tx->GetHash();
+            uint256 txhash = out.op.hash;
             itemOutput->setText(COLUMN_TXHASH, QString::fromStdString(txhash.GetHex()));
 
             // vout index
-            itemOutput->setText(COLUMN_VOUT_INDEX, QString::number(out.i));
+            itemOutput->setText(COLUMN_VOUT_INDEX, QString::number(out.op.n));
 
              // disable locked coins
-            if (model->isLockedCoin(txhash, out.i))
+            if (model->isLockedCoin(txhash, out.op.n))
             {
-                COutPoint outpt(txhash, out.i);
-                coinControl->UnSelect(outpt); // just to be sure
+                //COutPoint outpt(txhash, out.i);
+                coinControl->UnSelect(out.op); // just to be sure
                 itemOutput->setDisabled(true);
                 itemOutput->setIcon(COLUMN_CHECKBOX, platformStyle->SingleColorIcon(":/icons/lock_closed"));
-            }
+            };
 
             // set checkbox
-            if (coinControl->IsSelected(COutPoint(txhash, out.i)))
+            if (coinControl->IsSelected(out.op))
                 itemOutput->setCheckState(COLUMN_CHECKBOX, Qt::Checked);
         }
 
@@ -753,6 +813,7 @@ void CoinControlDialog::updateView()
             itemWalletAddress->setData(COLUMN_AMOUNT, Qt::UserRole, QVariant((qlonglong)nSum));
         }
     }
+    
 
     // expand all partially selected
     if (treeMode)

@@ -67,7 +67,7 @@ void MnemonicDialog::on_btnGenerate_clicked()
 #ifdef ENABLE_WALLET
     
     int nBytesEntropy = ui->spinEntropy->value();
-    QString sLanguage = ui->cbxLanguage->currentText().toLower();;
+    QString sLanguage = ui->cbxLanguage->currentText().toLower();
     
     QString sCommand = "mnemonic new  \"\" " + sLanguage + " " + QString::number(nBytesEntropy);
     

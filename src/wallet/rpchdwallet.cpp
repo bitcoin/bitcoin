@@ -3197,7 +3197,7 @@ UniValue getstakinginfo(const JSONRPCRequest &request)
 
 UniValue listunspentanon(const JSONRPCRequest &request)
 {
-    if (request.fHelp || request.params.size() > 4)
+    if (request.fHelp || request.params.size() > 5)
         throw std::runtime_error(
             "listunspentanon ( minconf maxconf  [\"addresses\",...] [include_unsafe] )\n"
             "\nReturns array of unspent transaction anon outputs\n"
@@ -3215,6 +3215,7 @@ UniValue listunspentanon(const JSONRPCRequest &request)
             "                  because they come from unconfirmed untrusted transactions or unconfirmed\n"
             "                  replacement transactions (cases where we are less sure that a conflicting\n"
             "                  transaction won't be mined).\n"
+            "5. cc_format      (bool, optional, default=false) format for coincontrol\n"
             "\nResult\n"
             "[                   (array of json object)\n"
             "  {\n"
@@ -3273,6 +3274,12 @@ UniValue listunspentanon(const JSONRPCRequest &request)
         include_unsafe = request.params[3].get_bool();
     }
     
+    bool fCCFormat = false;
+    if (request.params.size() > 4 && !request.params[4].isNull()) {
+        RPCTypeCheckArgument(request.params[4], UniValue::VBOOL);
+        fCCFormat = request.params[4].get_bool();
+    }
+    
     UniValue results(UniValue::VARR);
     std::vector<COutputR> vecOutputs;
     assert(pwalletMain != NULL);
@@ -3302,7 +3309,31 @@ UniValue listunspentanon(const JSONRPCRequest &request)
         entry.pushKV("txid", out.txhash.GetHex());
         entry.pushKV("vout", out.i);
 
-        entry.pushKV("amount", ValueFromAmount(nValue));
+        if (pout->vPath.size() > 0 && pout->vPath[0] == ORA_STEALTH)
+        {
+            if (pout->vPath.size() < 5)
+            {
+                LogPrintf("%s: Warning, malformed vPath.", __func__);
+            } else
+            {
+                uint32_t sidx;
+                memcpy(&sidx, &pout->vPath[1], 4);
+                CStealthAddress sx;
+                if (pwallet->GetStealthByIndex(sidx, sx))
+                    entry.pushKV("address", sx.Encoded());
+            };
+        };
+        
+        if (!entry.exists("address"))
+            entry.pushKV("address", "unknown");
+        if (fCCFormat)
+        {
+            entry.pushKV("time", out.rtx->second.GetTxTime());
+            entry.pushKV("amount", nValue);
+        } else
+        {
+            entry.pushKV("amount", ValueFromAmount(nValue));
+        };
         entry.pushKV("confirmations", out.nDepth);
         //entry.pushKV("spendable", out.fSpendable);
         //entry.pushKV("solvable", out.fSolvable);
@@ -3314,7 +3345,7 @@ UniValue listunspentanon(const JSONRPCRequest &request)
 
 UniValue listunspentblind(const JSONRPCRequest &request)
 {
-    if (request.fHelp || request.params.size() > 4)
+    if (request.fHelp || request.params.size() > 5)
         throw std::runtime_error(
             "listunspentblind ( minconf maxconf  [\"addresses\",...] [include_unsafe] )\n"
             "\nReturns array of unspent transaction blind outputs\n"
@@ -3332,6 +3363,7 @@ UniValue listunspentblind(const JSONRPCRequest &request)
             "                  because they come from unconfirmed untrusted transactions or unconfirmed\n"
             "                  replacement transactions (cases where we are less sure that a conflicting\n"
             "                  transaction won't be mined).\n"
+            "5. cc_format      (bool, optional, default=false) format for coincontrol\n"
             "\nResult\n"
             "[                   (array of json object)\n"
             "  {\n"
@@ -3367,6 +3399,12 @@ UniValue listunspentblind(const JSONRPCRequest &request)
     if (request.params.size() > 1 && !request.params[1].isNull()) {
         RPCTypeCheckArgument(request.params[1], UniValue::VNUM);
         nMaxDepth = request.params[1].get_int();
+    }
+    
+    bool fCCFormat = false;
+    if (request.params.size() > 4 && !request.params[4].isNull()) {
+        RPCTypeCheckArgument(request.params[4], UniValue::VBOOL);
+        fCCFormat = request.params[4].get_bool();
     }
 
     std::set<CBitcoinAddress> setAddress;
@@ -3439,7 +3477,15 @@ UniValue listunspentblind(const JSONRPCRequest &request)
         }
 
         entry.pushKV("scriptPubKey", HexStr(scriptPubKey->begin(), scriptPubKey->end()));
-        entry.pushKV("amount", ValueFromAmount(nValue));
+        
+        if (fCCFormat)
+        {
+            entry.pushKV("time", out.rtx->second.GetTxTime());
+            entry.pushKV("amount", nValue);
+        } else
+        {
+            entry.pushKV("amount", ValueFromAmount(nValue));
+        };
         entry.pushKV("confirmations", out.nDepth);
         //entry.push_back(Pair("spendable", out.fSpendable));
         //entry.push_back(Pair("solvable", out.fSolvable));
@@ -3692,7 +3738,23 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
             std::string sChangeAddress = uvCoinControl["changeaddress"].get_str();
             CBitcoinAddress addrChange(sChangeAddress);
             coincontrol.destChange = addrChange.Get();
-            
+        };
+        
+        const UniValue &uvInputs = uvCoinControl["inputs"];
+        if (uvInputs.isArray())
+        {
+            for (size_t i = 0; i < uvInputs.size(); ++i)
+            {
+                const UniValue &uvi = uvInputs[i];
+                RPCTypeCheckObj(uvi,
+                {
+                    {"tx", UniValueType(UniValue::VSTR)},
+                    {"n", UniValueType(UniValue::VNUM)},
+                });
+                
+                COutPoint op(uint256S(uvi["tx"].get_str()), uvi["n"].get_int());
+                coincontrol.setSelected.insert(op);
+            };
         };
         
         pCoinControl = &coincontrol;
@@ -4067,8 +4129,8 @@ static const CRPCCommand commands[] =
     
     //{ "wallet",             "gettransactionsummary",    &gettransactionsummary,    true,  {} },
     
-    { "wallet",             "listunspentanon",          &listunspentanon,          true,  {} },
-    { "wallet",             "listunspentblind",         &listunspentblind,         true,  {} },
+    { "wallet",             "listunspentanon",          &listunspentanon,          true,  {"minconf","maxconf","addresses","include_unsafe","cc_format"} },
+    { "wallet",             "listunspentblind",         &listunspentblind,         true,  {"minconf","maxconf","addresses","include_unsafe","cc_format"} },
     
     
     

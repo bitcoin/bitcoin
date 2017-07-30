@@ -71,8 +71,6 @@ private:
     void minimizeFeeSection(bool fMinimize);
     void updateFeeMinimizedLabel();
     
-    void warningBox(QString msg);
-    bool tryCallRpc(const QString &sCommand, UniValue &rv);
 
 private Q_SLOTS:
     void on_sendButton_clicked();
@@ -92,6 +90,7 @@ private Q_SLOTS:
     void coinControlClipboardBytes();
     void coinControlClipboardLowOutput();
     void coinControlClipboardChange();
+    void cbxTypeFromChanged(int);
     void setMinimumFee();
     void updateFeeSectionControls();
     void updateMinFeeLabel();

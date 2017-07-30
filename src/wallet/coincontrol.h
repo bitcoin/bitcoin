@@ -7,6 +7,17 @@
 
 #include "primitives/transaction.h"
 
+class CCoinControlEntry
+{
+public:
+    COutPoint op;
+    int nType;
+    int nDepth;
+    CAmount nValue;
+    CScript scriptPubKey;
+    int64_t nTxTime;
+};
+
 /** Coin Control Features. */
 class CCoinControl
 {
@@ -24,6 +35,8 @@ public:
     CFeeRate nFeeRate;
     //! Override the default confirmation target, 0 = use default
     int nConfirmTarget;
+    
+    int nCoinType;
 
     CCoinControl()
     {
@@ -40,6 +53,8 @@ public:
         nFeeRate = CFeeRate(0);
         fOverrideFeeRate = false;
         nConfirmTarget = 0;
+        
+        nCoinType = OUTPUT_STANDARD;
     }
 
     bool HasSelected() const
