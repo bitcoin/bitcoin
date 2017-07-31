@@ -11,6 +11,7 @@
 #include <policy/policy.h>
 #include <policy/rbf.h>
 #include <primitives/block.h>
+#include <primitives/transaction.h>
 #include <protocol.h>
 #include <sync.h>
 #include <threadsafety.h>
@@ -146,6 +147,12 @@ class LockImpl : public Chain::Lock
         LockAnnotation lock(::cs_main);
         return CheckFinalTx(tx);
     }
+    bool submitToMemoryPool(CTransactionRef tx, CAmount absurd_fee, CValidationState& state) override
+    {
+        LockAnnotation lock(::cs_main);
+        return AcceptToMemoryPool(::mempool, state, tx, nullptr /* missing inputs */, nullptr /* txn replaced */,
+            false /* bypass limits */, absurd_fee);
+    }
 };
 
 class LockingStateImpl : public LockImpl, public UniqueLock<CCriticalSection>
@@ -237,6 +244,7 @@ public:
     {
         return ::mempool.GetMinFee(gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000);
     }
+    CAmount maxTxFee() override { return ::maxTxFee; }
     bool getPruneMode() override { return ::fPruneMode; }
     bool p2pEnabled() override { return g_connman != nullptr; }
     int64_t getAdjustedTime() override { return GetAdjustedTime(); }
