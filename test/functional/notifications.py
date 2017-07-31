@@ -2,25 +2,40 @@
 # Copyright (c) 2014-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Test the -alertnotify option."""
+"""Test the -alertnotify and -blocknotify options."""
 import os
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, wait_until
 
-class ForkNotifyTest(BitcoinTestFramework):
+class NotificationsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
 
     def setup_network(self):
         self.alert_filename = os.path.join(self.options.tmpdir, "alert.txt")
-        self.extra_args = [["-alertnotify=echo %%s >> %s" % self.alert_filename],
+        self.block_filename = os.path.join(self.options.tmpdir, 'blocks.txt')
+        self.extra_args = [["-blockversion=2",
+                            "-alertnotify=echo %%s >> %s" % self.alert_filename,
+                            "-blocknotify=echo %%s >> %s" % self.block_filename],
                            ["-blockversion=211"]]
         super().setup_network()
 
     def run_test(self):
-        # Mine 51 up-version blocks. -alertnotify should trigger on the 51st.
-        self.nodes[1].generate(51)
+        self.log.info("test -blocknotify")
+        block_count = 10
+        blocks = self.nodes[1].generate(block_count)
+
+        # wait at most 10 seconds for expected file size before reading the content
+        wait_until(lambda: os.path.isfile(self.block_filename) and os.stat(self.block_filename).st_size >= (block_count * 65), timeout=10)
+
+        # file content should equal the generated blocks hashes
+        with open(self.block_filename, 'r') as f:
+            assert_equal(sorted(blocks), sorted(f.read().splitlines()))
+
+        # Mine another 41 up-version blocks. -alertnotify should trigger on the 51st.
+        self.log.info("test -alertnotify")
+        self.nodes[1].generate(41)
         self.sync_all()
 
         # Give bitcoind 10 seconds to write the alert notification
@@ -40,4 +55,4 @@ class ForkNotifyTest(BitcoinTestFramework):
         assert_equal(alert_text, alert_text2)
 
 if __name__ == '__main__':
-    ForkNotifyTest().main()
+    NotificationsTest().main()
