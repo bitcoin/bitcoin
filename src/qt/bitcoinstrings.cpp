@@ -63,6 +63,9 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Error loading %s: You can't enable HD on an already existing non-HD wallet"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
+"Error loading wallet %s. -wallet parameter must only specify a filename (not "
+"a path)."),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Error reading %s! All keys read correctly, but transaction data or address "
 "book entries might be missing or incorrect."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
@@ -170,10 +173,10 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "rebuild the block database if you are sure that your computer's date and "
 "time are correct"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"The fee rate (in %s/kB) used to discard change (to fee) if it would be dust "
-"at this fee rate (default: %s) Note: We will always discard up to the dust "
-"relay fee and a discard fee above that is limited by the longest target fee "
-"estimate"),
+"The fee rate (in %s/kB) that indicates your tolerance for discarding change "
+"by adding it to the fee (default: %s). Note: An output is discarded if it is "
+"dust at this rate, but we will always discard up to the dust relay fee and a "
+"discard fee above that is limited by the fee estimate for the longest target"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "The transaction amount is too small to send after the fee has been deducted"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
@@ -256,7 +259,6 @@ QT_TRANSLATE_NOOP("bitcoin-core", "(default: %s)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "(default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "(press q to shutdown and continue later)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "-maxmempool must be at least %d MB"),
-QT_TRANSLATE_NOOP("bitcoin-core", "-wallet parameter must only specify a filename (not a path)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "<category> can be:"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Accept command line and JSON-RPC commands"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Accept connections from outside (default: 1 if no -proxy or -connect)"),
@@ -294,6 +296,9 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Error loading %s: Wallet corrupted"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error loading %s: Wallet requires newer version of %s"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error loading %s: You can't disable HD on an already existing HD wallet"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error loading block database"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Error loading wallet %s. -wallet filename must be a regular file."),
+QT_TRANSLATE_NOOP("bitcoin-core", "Error loading wallet %s. Duplicate -wallet filename specified."),
+QT_TRANSLATE_NOOP("bitcoin-core", "Error loading wallet %s. Invalid characters in -wallet filename."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error opening block database"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error reading from database, shutting down."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error upgrading chainstate database"),
@@ -316,7 +321,6 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Invalid amount for -%s=<amount>: '%s'"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Invalid amount for -discardfee=<amount>: '%s'"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Invalid amount for -fallbackfee=<amount>: '%s'"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Invalid amount for -paytxfee=<amount>: '%s' (must be at least %s)"),
-QT_TRANSLATE_NOOP("bitcoin-core", "Invalid characters in -wallet filename"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Invalid netmask specified in -whitelist: '%s'"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Keep at most <n> unconnectable transactions in memory (default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Keep the transaction memory pool below <n> megabytes (default: %u)"),
