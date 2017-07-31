@@ -1064,7 +1064,12 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     // scan for better chains in the block chain database, that are not yet connected in the active best chain
     CValidationState state;
     if (!ActivateBestChain(state, chainparams))
-        strErrors << "Failed to connect best block";
+    {
+        if (fRequestShutdown)
+            return false;
+        else
+            strErrors << "Failed to connect best block";
+    }
     IsChainNearlySyncdInit(); // BUIP010 XTHIN: initialize fIsChainNearlySyncd
     IsInitialBlockDownloadInit();
 

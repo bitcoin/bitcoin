@@ -3095,6 +3095,12 @@ bool static ConnectTip(CValidationState &state,
 {
     AssertLockHeld(cs_main);
 
+    // During IBD if there are many blocks to connect still it could be a while before shutting down
+    // and the user may think the shutdown has hung, so return here and stop connecting any remaining
+    // blocks.
+    if (ShutdownRequested())
+        return false;
+
     // With PV there is a special case where one chain may be in the process of connecting several blocks but then
     // a second chain also begins to connect blocks and its block beat the first chains block to advance the tip.
     // As a result pindexNew->prev on the first chain will no longer match the chaintip as the second chain continues
@@ -3359,12 +3365,6 @@ static bool ActivateBestChainStep(CValidationState &state,
     int nHeight = pindexFork ? pindexFork->nHeight : -1;
     while (fContinue && nHeight < pindexMostWork->nHeight)
     {
-        // During IBD if there are many blocks to connect still it could be a while before shutting down
-        // and the user may think the shutdown has hung, so return here and stop connecting any remaining
-        // blocks.
-        if (ShutdownRequested())
-            return false;
-
         // Don't iterate the entire list of potential improvements toward the best tip, as we likely only need
         // a few blocks along the way.
         int nTargetHeight = std::min(nHeight + (int)BLOCK_DOWNLOAD_WINDOW, pindexMostWork->nHeight);
