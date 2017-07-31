@@ -2,12 +2,24 @@
 <context>
     <name>AddressBookPage</name>
     <message>
+        <source>Right-click to edit address or label</source>
+        <translation>पते या लेबल को संपादित करने के लिए राइट-क्लिक करें</translation>
+    </message>
+    <message>
         <source>Create a new address</source>
         <translation>नया पता लिखिए !</translation>
     </message>
     <message>
+        <source>&amp;New</source>
+        <translation>नया</translation>
+    </message>
+    <message>
         <source>Copy the currently selected address to the system clipboard</source>
         <translation>चुनिन्दा पते को सिस्टम क्लिपबोर्ड पर कापी करे !</translation>
+    </message>
+    <message>
+        <source>Delete the currently selected address from the list</source>
+        <translation>सूची से वर्तमान में चयनित पता हटाएं</translation>
     </message>
     <message>
         <source>&amp;Delete</source>

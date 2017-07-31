@@ -887,6 +887,10 @@ Var vänlig och försök igen.</translation>
         <translation>Formulär</translation>
     </message>
     <message>
+        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</source>
+        <translation>Nyligen gjorda transaktioner visas inte korrekt och därför kan ditt din plånboks saldo visas felaktigt. Denna information kommer att visas korrekt så snart din plånbok har synkroniserat klart med bitcoin nätverket, enligt detaljer nedan.</translation>
+    </message>
+    <message>
         <source>Number of blocks left</source>
         <translation>Antal block kvar</translation>
     </message>
@@ -1688,6 +1692,14 @@ Var vänlig och försök igen.</translation>
     <message>
         <source>&amp;Disconnect</source>
         <translation>&amp;Koppla ner</translation>
+    </message>
+    <message>
+        <source>Ban for</source>
+        <translation>Blockera i</translation>
+    </message>
+    <message>
+        <source>&amp;Unban</source>
+        <translation>&amp;Ta bort blockering</translation>
     </message>
     <message>
         <source>Welcome to the %1 RPC console.</source>
@@ -2645,6 +2657,10 @@ Var vänlig och försök igen.</translation>
         <translation>Bekräftad (%1 bekräftelser)</translation>
     </message>
     <message>
+        <source>Conflicted</source>
+        <translation>Konflikt</translation>
+    </message>
+    <message>
         <source>Immature (%1 confirmations, will be available after %2)</source>
         <translation>Omogen (%1 bekräftelser, blir tillgänglig efter %2)</translation>
     </message>
@@ -2814,6 +2830,10 @@ Var vänlig och försök igen.</translation>
     <message>
         <source>Confirmed</source>
         <translation>Bekräftad</translation>
+    </message>
+    <message>
+        <source>Watch-only</source>
+        <translation>Enbart granskning</translation>
     </message>
     <message>
         <source>Date</source>
