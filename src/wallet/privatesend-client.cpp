@@ -755,13 +755,14 @@ bool CPrivateSendClient::DoOnceDenominating(std::string walletIn)
     if (fEnablePrivateSend || nSessionID) return false;
     getWallet(walletIn);
     fEnablePrivateSend = false;
-    return DoAutomaticDenominating();
+    auto locked_chain = pmixingwallet->chain().lock();
+    return DoAutomaticDenominating(*locked_chain);
 }
 
 //
 // Passively run mixing in the background to anonymize funds based on the given configuration.
 //
-bool CPrivateSendClient::DoAutomaticDenominating()
+bool CPrivateSendClient::DoAutomaticDenominating(interfaces::Chain::Lock& locked_chain)
 {
     if(nState != POOL_STATE_IDLE) {
         fEnablePrivateSend = true;
@@ -868,7 +869,7 @@ bool CPrivateSendClient::DoAutomaticDenominating()
 
     //check if we have the collateral sized inputs
     if(!pmixingwallet->HasCollateralInputs())
-        return !pmixingwallet->HasCollateralInputs(false) && MakeCollateralAmounts();
+        return !pmixingwallet->HasCollateralInputs(false) && MakeCollateralAmounts(locked_chain);
 
     if(nSessionID) {
         strAutoDenomResult = _("Mixing in progress...");
@@ -1297,7 +1298,7 @@ bool CPrivateSendClient::PrepareDenominate(int nMinRounds, int nMaxRounds, std::
 }
 
 // Create collaterals by looping through inputs grouped by addresses
-bool CPrivateSendClient::MakeCollateralAmounts()
+bool CPrivateSendClient::MakeCollateralAmounts(interfaces::Chain::Lock& locked_chain)
 {
     if (!pmixingwallet)
         return false;
@@ -1310,13 +1311,13 @@ bool CPrivateSendClient::MakeCollateralAmounts()
 
     // First try to use only non-denominated funds
     for (const auto& item : vecTally) {
-        if(!MakeCollateralAmounts(item, false)) continue;
+        if(!MakeCollateralAmounts(locked_chain, item, false)) continue;
         return true;
     }
 
     // There should be at least some denominated funds we should be able to break in pieces to continue mixing
     for (const auto& item : vecTally) {
-        if(!MakeCollateralAmounts(item, true)) continue;
+        if(!MakeCollateralAmounts(locked_chain, item, true)) continue;
         return true;
     }
 
@@ -1326,7 +1327,7 @@ bool CPrivateSendClient::MakeCollateralAmounts()
 }
 
 // Split up large inputs or create fee sized inputs
-bool CPrivateSendClient::MakeCollateralAmounts(const CompactTallyItem& tallyItem, bool fTryDenominated)
+bool CPrivateSendClient::MakeCollateralAmounts(interfaces::Chain::Lock& locked_chain, const CompactTallyItem& tallyItem, bool fTryDenominated)
 {
     if (!pmixingwallet)
         return false;
@@ -1365,14 +1366,14 @@ bool CPrivateSendClient::MakeCollateralAmounts(const CompactTallyItem& tallyItem
     for (const auto& outpoint : tallyItem.vecOutPoints)
         coinControl.Select(outpoint);
 
-    bool fSuccess = pmixingwallet->CreateTransaction(vecSend, tx, reservekeyChange,
+    bool fSuccess = pmixingwallet->CreateTransaction(locked_chain, vecSend, tx, reservekeyChange,
             nFeeRet, nChangePosRet, strFail, coinControl, true, ONLY_NONDENOMINATED);
     if(!fSuccess) {
         LogPrintf("CPrivateSendClient::MakeCollateralAmounts -- ONLY_NONDENOMINATED: %s\n", strFail);
         // If we failed then most likely there are not enough funds on this address.
         if(fTryDenominated) {
             // Try to also use denominated coins (we can't mix denominated without collaterals anyway).
-            if(!pmixingwallet->CreateTransaction(vecSend, tx, reservekeyChange,
+            if(!pmixingwallet->CreateTransaction(locked_chain, vecSend, tx, reservekeyChange,
                                 nFeeRet, nChangePosRet, strFail, coinControl, true, ALL_COINS)) {
                 LogPrintf("CPrivateSendClient::MakeCollateralAmounts -- ALL_COINS Error: %s\n", strFail);
                 reservekeyCollateral.ReturnKey();
@@ -1407,7 +1408,8 @@ bool CPrivateSendClient::CreateDenominated()
     if (!pmixingwallet)
         return false;
 
-    LOCK2(cs_main, pmixingwallet->cs_wallet);
+    auto locked_chain = pmixingwallet->chain().lock();
+    LOCK(pmixingwallet->cs_wallet);
 
     std::vector<CompactTallyItem> vecTally;
     if(!pmixingwallet->SelectCoinsGrouppedByAddresses(vecTally)) {
@@ -1418,7 +1420,7 @@ bool CPrivateSendClient::CreateDenominated()
     bool fCreateMixingCollaterals = !pmixingwallet->HasCollateralInputs();
 
     for (const auto& item : vecTally) {
-        if(!CreateDenominated(item, fCreateMixingCollaterals)) continue;
+        if(!CreateDenominated(*locked_chain, item, fCreateMixingCollaterals)) continue;
         return true;
     }
 
@@ -1427,7 +1429,7 @@ bool CPrivateSendClient::CreateDenominated()
 }
 
 // Create denominations
-bool CPrivateSendClient::CreateDenominated(const CompactTallyItem& tallyItem, bool fCreateMixingCollaterals)
+bool CPrivateSendClient::CreateDenominated(interfaces::Chain::Lock& locked_chain, const CompactTallyItem& tallyItem, bool fCreateMixingCollaterals)
 {
     if (!pmixingwallet)
         return false;
@@ -1515,7 +1517,7 @@ bool CPrivateSendClient::CreateDenominated(const CompactTallyItem& tallyItem, bo
     std::string strFail = "";
     // make our change address
     CReserveKey reservekeyChange(pmixingwallet);
-    bool fSuccess = pmixingwallet->CreateTransaction(vecSend, tx, reservekeyChange,
+    bool fSuccess = pmixingwallet->CreateTransaction(locked_chain, vecSend, tx, reservekeyChange,
             nFeeRet, nChangePosRet, strFail, coinControl, true, ONLY_NONDENOMINATED);
     if(!fSuccess) {
         LogPrintf("CPrivateSendClient::CreateDenominated -- Error: %s\n", strFail);
@@ -1578,7 +1580,8 @@ void CPrivateSendClient::ClientTask()
         nTick++;
         if(nDoAutoNextRun == nTick) {
             nDoAutoNextRun = nTick + PRIVATESEND_AUTO_TIMEOUT_MIN + GetRandInt(PRIVATESEND_AUTO_TIMEOUT_MAX - PRIVATESEND_AUTO_TIMEOUT_MIN);
-            CPrivateSendClient::DoAutomaticDenominating();
+            auto locked_chain = pmixingwallet->chain().lock();
+            CPrivateSendClient::DoAutomaticDenominating(*locked_chain);
         }
     }
 }

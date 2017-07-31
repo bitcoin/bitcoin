@@ -13,10 +13,6 @@
 #include <masternode-sync.h>
 #include <masternodeconfig.h>
 #include <masternodeman.h>
-#ifdef ENABLE_WALLET
-#include <wallet/privatesend-client.h>
-#include <wallet/rpcwallet.h>
-#endif // ENABLE_WALLET
 #include <privatesend-server.h>
 #include <rpc/server.h>
 #include <util/system.h>
@@ -28,97 +24,17 @@
 
 UniValue masternodelist(const JSONRPCRequest& request);
 
-
-#ifdef ENABLE_WALLET
-void EnsureWalletIsUnlocked(CWallet* const pwallet);
-
-UniValue privatesend(const JSONRPCRequest& request)
-{
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
-        return NullUniValue;
-    }
-
-    if (request.fHelp || request.params.size() != 1)
-        throw std::runtime_error(
-            "privatesend \"command\"\n"
-            "\nArguments:\n"
-            "1. \"command\"        (string or set of strings, required) The command to execute\n"
-            "\nAvailable commands:\n"
-            "  start       - Start mixing\n"
-            "  stop        - Stop mixing\n"
-            "  reset       - Reset mixing\n"
-            );
-
-    if(fMasternodeMode)
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "Client-side mixing is not supported on masternodes");
-
-    if(request.params[0].get_str() == "start") {
-        {
-            LOCK2(cs_main, pwallet ? &pwallet->cs_wallet : nullptr);
-            if (pwallet->IsLocked(true))
-                throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please unlock wallet for mixing with walletpassphrase first.");
-        }
-
-        bool result = privateSendClient.DoAutomaticDenominating();
-        return "Mixing " + (result ? "started successfully" : ("start failed: " + privateSendClient.GetStatus() + ", will retry"));
-    }
-
-    if(request.params[0].get_str() == "stop") {
-        privateSendClient.fEnablePrivateSend = false;
-        return "Mixing was stopped";
-    }
-
-    if(request.params[0].get_str() == "reset") {
-        privateSendClient.ResetPool();
-        return "Mixing was reset";
-    }
-
-    return "Unknown command, please see \"help privatesend\"";
-}
-#endif // ENABLE_WALLET
-
-UniValue getpoolinfo(const JSONRPCRequest& request)
+UniValue getqueueinfo(const JSONRPCRequest& request)
 {    
     if (request.fHelp || request.params.size() != 0)
         throw std::runtime_error(
-            "getpoolinfo\n"
-            "Returns an object containing mixing pool related information.\n");
+            "getqueueinfo\n"
+            "Returns an object containing mixing queue related information.\n");
 
-#ifdef ENABLE_WALLET
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
-        return NullUniValue;
-    }
-
-    CPrivateSendBase* pprivateSendBase = fMasternodeMode ? (CPrivateSendBase*)&privateSendServer : (CPrivateSendBase*)&privateSendClient;
-
-    UniValue obj(UniValue::VOBJ);
-    obj.pushKV("state",             pprivateSendBase->GetStateString());
-    obj.pushKV("mixing_mode",       (!fMasternodeMode && privateSendClient.fPrivateSendMultiSession) ? "multi-session" : "normal");
-    obj.pushKV("queue",             pprivateSendBase->GetQueueSize());
-    obj.pushKV("entries",           pprivateSendBase->GetEntriesCount());
-    obj.pushKV("status",            privateSendClient.GetStatus());
-
-    masternode_info_t mnInfo;
-    if (privateSendClient.GetMixingMasternodeInfo(mnInfo)) {
-        obj.pushKV("outpoint",      mnInfo.outpoint.ToStringShort());
-        obj.pushKV("addr",          mnInfo.addr.ToString());
-    }
-
-    if (pwallet) {
-        obj.pushKV("keys_left",     pwallet->nKeysLeftSinceAutoBackup);
-        obj.pushKV("warnings",      pwallet->nKeysLeftSinceAutoBackup < PRIVATESEND_KEYS_THRESHOLD_WARNING
-                                                ? "WARNING: keypool is almost depleted!" : "");
-    }
-#else // ENABLE_WALLET
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("state",             privateSendServer.GetStateString());
     obj.pushKV("queue",             privateSendServer.GetQueueSize());
     obj.pushKV("entries",           privateSendServer.GetEntriesCount());
-#endif // ENABLE_WALLET
     return obj;
 }
 
@@ -130,18 +46,9 @@ UniValue masternode(const JSONRPCRequest& request)
         strCommand = request.params[0].get_str();
     }
 
-#ifdef ENABLE_WALLET
-    if (strCommand == "start-many")
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "DEPRECATED, please use start-all instead");
-#endif // ENABLE_WALLET
-
     if (request.fHelp  ||
-        (
-#ifdef ENABLE_WALLET
-            strCommand != "start-alias" && strCommand != "start-all" && strCommand != "start-missing" &&
-         strCommand != "start-disabled" && strCommand != "outputs" &&
-#endif // ENABLE_WALLET
-         strCommand != "list" && strCommand != "list-conf" && strCommand != "count" && strCommand != "debug" && strCommand != "current" &&
+        (strCommand != "start-alias" && strCommand != "start-all" && strCommand != "start-missing" &&
+         strCommand != "start-disabled" && strCommand != "list" && strCommand != "list-conf" && strCommand != "count" && strCommand != "debug" && strCommand != "current" &&
          strCommand != "winner" && strCommand != "winners" && strCommand != "genkey" && strCommand != "status"))
             throw std::runtime_error(
                 "masternode \"command\"...\n"
@@ -152,11 +59,8 @@ UniValue masternode(const JSONRPCRequest& request)
                 "  count        - Get information about number of masternodes (DEPRECATED options: 'total', 'ps', 'enabled', 'qualify', 'all')\n"
                 "  current      - Print info on current masternode winner to be paid the next block (calculated locally)\n"
                 "  genkey       - Generate new masternodeprivkey\n"
-#ifdef ENABLE_WALLET
-                "  outputs      - Print masternode compatible outputs\n"
                 "  start-alias  - Start single remote masternode by assigned alias configured in masternode.conf\n"
                 "  start-<mode> - Start remote masternodes configured in masternode.conf (<mode>: 'all', 'missing', 'disabled')\n"
-#endif // ENABLE_WALLET
                 "  status       - Print masternode status information\n"
                 "  list         - Print list of all known masternodes (see masternodelist for more info)\n"
                 "  list-conf    - Print masternode.conf in JSON format\n"
@@ -246,22 +150,10 @@ UniValue masternode(const JSONRPCRequest& request)
         return obj;
     }
 
-#ifdef ENABLE_WALLET
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
-        return NullUniValue;
-    }
-
     if (strCommand == "start-alias")
     {
         if (request.params.size() < 2)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Please specify an alias");
-
-        {
-            LOCK2(cs_main, pwallet ? &pwallet->cs_wallet : nullptr);
-            EnsureWalletIsUnlocked(pwallet);
-        }
 
         std::string strAlias = request.params[1].get_str();
 
@@ -304,11 +196,6 @@ UniValue masternode(const JSONRPCRequest& request)
 
     if (strCommand == "start-all" || strCommand == "start-missing" || strCommand == "start-disabled")
     {
-        {
-            LOCK2(cs_main, pwallet ? &pwallet->cs_wallet : nullptr);
-            EnsureWalletIsUnlocked(pwallet);
-        }
-
         if((strCommand == "start-missing" || strCommand == "start-disabled") && !masternodeSync.IsMasternodeListSynced()) {
             throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "You can't use this command until masternode list is synced");
         }
@@ -357,7 +244,6 @@ UniValue masternode(const JSONRPCRequest& request)
 
         return returnObj;
     }
-#endif // ENABLE_WALLET
 
     if (strCommand == "genkey")
     {
@@ -389,22 +275,6 @@ UniValue masternode(const JSONRPCRequest& request)
 
         return resultObj;
     }
-
-#ifdef ENABLE_WALLET
-    if (strCommand == "outputs") {
-        // Find possible candidates
-        std::vector<COutput> vPossibleCoins;
-        LOCK2(cs_main, pwallet->cs_wallet);
-        pwallet->AvailableCoins(vPossibleCoins, true, nullptr, ONLY_1000);
-
-        UniValue obj(UniValue::VOBJ);
-        for (const auto& out : vPossibleCoins) {
-            obj.pushKV(out.tx->GetHash().ToString(), strprintf("%d", out.i));
-        }
-
-        return obj;
-    }
-#endif // ENABLE_WALLET
 
     if (strCommand == "status")
     {
@@ -674,9 +544,7 @@ UniValue masternodebroadcast(const JSONRPCRequest& request)
 
     if (request.fHelp  ||
         (
-#ifdef ENABLE_WALLET
             strCommand != "create-alias" && strCommand != "create-all" &&
-#endif // ENABLE_WALLET
             strCommand != "decode" && strCommand != "relay"))
         throw std::runtime_error(
                 "masternodebroadcast \"command\"...\n"
@@ -684,20 +552,11 @@ UniValue masternodebroadcast(const JSONRPCRequest& request)
                 "\nArguments:\n"
                 "1. \"command\"        (string or set of strings, required) The command to execute\n"
                 "\nAvailable commands:\n"
-#ifdef ENABLE_WALLET
                 "  create-alias  - Create single remote masternode broadcast message by assigned alias configured in masternode.conf\n"
                 "  create-all    - Create remote masternode broadcast messages for all masternodes configured in masternode.conf\n"
-#endif // ENABLE_WALLET
                 "  decode        - Decode masternode broadcast message\n"
                 "  relay         - Relay masternode broadcast message to the network\n"
                 );
-
-#ifdef ENABLE_WALLET
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
-        return NullUniValue;
-    }
 
     if (strCommand == "create-alias")
     {
@@ -707,11 +566,6 @@ UniValue masternodebroadcast(const JSONRPCRequest& request)
 
         if (request.params.size() < 2)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Please specify an alias");
-
-        {
-            LOCK2(cs_main, pwallet ? &pwallet->cs_wallet : nullptr);
-            EnsureWalletIsUnlocked(pwallet);
-        }
 
         bool fFound = false;
         std::string strAlias = request.params[1].get_str();
@@ -757,11 +611,6 @@ UniValue masternodebroadcast(const JSONRPCRequest& request)
         if (fImporting || fReindex)
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Wait for reindex and/or import to finish");
 
-        {
-            LOCK2(cs_main, pwallet ? &pwallet->cs_wallet : nullptr);
-            EnsureWalletIsUnlocked(pwallet);
-        }
-
         int nSuccessful = 0;
         int nFailed = 0;
 
@@ -798,7 +647,6 @@ UniValue masternodebroadcast(const JSONRPCRequest& request)
 
         return returnObj;
     }
-#endif // ENABLE_WALLET
 
     if (strCommand == "decode")
     {
@@ -920,14 +768,11 @@ static UniValue sentinelping(const JSONRPCRequest& request)
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
   //  --------------------- ------------------------  -----------------------  ----------
-    { "chaincoin",          "masternode",             &masternode,             {} },
-    { "chaincoin",          "masternodelist",         &masternodelist,         {} },
-    { "chaincoin",          "masternodebroadcast",    &masternodebroadcast,    {} },
-    { "chaincoin",          "getpoolinfo",            &getpoolinfo,            {} },
-    { "chaincoin",          "sentinelping",           &sentinelping,           {} },
-#ifdef ENABLE_WALLET
-    { "chaincoin",          "privatesend",            &privatesend,            {} },
-#endif // ENABLE_WALLET
+    { "masternode",         "masternode",             &masternode,             {} },
+    { "masternode",         "masternodelist",         &masternodelist,         {} },
+    { "masternode",         "masternodebroadcast",    &masternodebroadcast,    {} },
+    { "masternode",         "getqueueinfo",           &getqueueinfo,           {} },
+    { "masternode",         "sentinelping",           &sentinelping,           {"version"} },
 };
 
 void RegisterMasternodeRPCCommands(CRPCTable &t)

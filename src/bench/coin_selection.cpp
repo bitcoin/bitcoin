@@ -46,7 +46,7 @@ static void CoinSelection(benchmark::State& state)
     addCoin(3 * COIN, wallet, groups);
 
     const CoinEligibilityFilter filter_standard(1, 6, 0);
-    const CoinSelectionParams coin_selection_params(true, 34, 148, CFeeRate(0), 0);
+    const CoinSelectionParams coin_selection_params(true, false, 34, 148, CFeeRate(0), 0);
     while (state.KeepRunning()) {
         std::set<CInputCoin> setCoinsRet;
         CAmount nValueRet;

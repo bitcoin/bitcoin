@@ -150,11 +150,11 @@ private:
 
     /// Create denominations
     bool CreateDenominated();
-    bool CreateDenominated(const CompactTallyItem& tallyItem, bool fCreateMixingCollaterals);
+    bool CreateDenominated(interfaces::Chain::Lock &locked_chain, const CompactTallyItem& tallyItem, bool fCreateMixingCollaterals);
 
     /// Split up large inputs or make fee sized inputs
-    bool MakeCollateralAmounts();
-    bool MakeCollateralAmounts(const CompactTallyItem& tallyItem, bool fTryDenominated);
+    bool MakeCollateralAmounts(interfaces::Chain::Lock &locked_chain);
+    bool MakeCollateralAmounts(interfaces::Chain::Lock &locked_chain, const CompactTallyItem& tallyItem, bool fTryDenominated);
 
     /// As a client, submit part of a future mixing transaction to a Masternode to start the process
     bool SubmitDenominate();
@@ -219,7 +219,7 @@ public:
     bool DoOnceDenominating(std::string walletIn);
 
     /// Passively run mixing in the background according to the configuration in settings
-    bool DoAutomaticDenominating();
+    bool DoAutomaticDenominating(interfaces::Chain::Lock &locked_chain);
 
     void ProcessPendingDsaRequest();
 
