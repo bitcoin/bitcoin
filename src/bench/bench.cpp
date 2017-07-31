@@ -100,6 +100,7 @@ bool benchmark::State::KeepRunning()
     int64_t averageCycles = (nowCycles-beginCycles)/count;
     std::cout << std::fixed << std::setprecision(15) << name << "," << count << "," << minTime << "," << maxTime << "," << average << ","
               << minCycles << "," << maxCycles << "," << averageCycles << "\n";
+    std::cout.copyfmt(std::ios(nullptr));
 
     return false;
 }
