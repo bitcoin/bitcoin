@@ -154,6 +154,13 @@ bool IsSyncCheckpointEnforced()
     return (GetBoolArg("-checkpointenforce", true) || mapArgs.count("-checkpointkey")); // checkpoint master node is always enforced
 }
 
+void SetCheckpointEnforce(bool fEnforce)
+{
+    if (fEnforce)
+        strCheckpointWarning = "";
+    mapArgs["-checkpointenforce"] = (fEnforce ? "1" : "0");
+}
+
 bool AcceptPendingSyncCheckpoint()
 {
     LOCK(cs_hashSyncCheckpoint);
@@ -522,9 +529,7 @@ Value enforcecheckpoint(const Array& params, bool fHelp)
     if (mapArgs.count("-checkpointkey") && !fEnforceCheckpoint)
         throw runtime_error(
             "checkpoint master node must enforce synchronized checkpoints.");
-    if (fEnforceCheckpoint)
-        strCheckpointWarning = "";
-    mapArgs["-checkpointenforce"] = (fEnforceCheckpoint ? "1" : "0");
+    SetCheckpointEnforce(fEnforceCheckpoint);
     return Value::null;
 }
 

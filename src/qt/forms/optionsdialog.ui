@@ -87,6 +87,13 @@
         </widget>
        </item>
        <item>
+        <widget class="QCheckBox" name="checkpointEnforce">
+         <property name="text">
+          <string>Enforce checkpoints</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <spacer name="verticalSpacer_Main">
          <property name="orientation">
           <enum>Qt::Vertical</enum>

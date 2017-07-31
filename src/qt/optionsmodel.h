@@ -30,6 +30,7 @@ public:
         DisplayAddresses,  // bool
         Language,          // QString
         CoinControlFeatures, // bool
+        CheckpointEnforce, // bool
         OptionIDRowCount,
     };
 
@@ -53,6 +54,8 @@ public:
 
     bool getCoinControlFeatures() { return fCoinControlFeatures; }
 
+    bool getCheckpointEnforce() { return fCheckpointEnforce; }
+
 private:
     int nDisplayUnit;
     bool bDisplayAddresses;
@@ -62,6 +65,8 @@ private:
     bool fCoinControlFeatures;
 
     QString language;
+
+    bool fCheckpointEnforce;
 
 signals:
     void displayUnitChanged(int unit);

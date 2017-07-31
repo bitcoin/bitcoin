@@ -23,6 +23,7 @@ extern std::string strCheckpointWarning;
 CBlockIndex* GetLastSyncCheckpoint();
 bool WriteSyncCheckpoint(const uint256& hashCheckpoint);
 bool IsSyncCheckpointEnforced();
+void SetCheckpointEnforce(bool fEnforce);
 bool AcceptPendingSyncCheckpoint();
 uint256 AutoSelectSyncCheckpoint();
 bool CheckSyncCheckpoint(const uint256& hashBlock, const CBlockIndex* pindexPrev);

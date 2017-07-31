@@ -126,6 +126,7 @@ void OptionsDialog::setMapper()
     /* Main */
     mapper->addMapping(ui->transactionFee, OptionsModel::Fee);
     mapper->addMapping(ui->bitcoinAtStartup, OptionsModel::StartAtStartup);
+    mapper->addMapping(ui->checkpointEnforce, OptionsModel::CheckpointEnforce);
 
     /* Network */
     mapper->addMapping(ui->mapPortUpnp, OptionsModel::MapPortUPnP);

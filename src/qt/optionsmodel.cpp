@@ -4,6 +4,7 @@
 #include "init.h"
 #include "walletdb.h"
 #include "guiutil.h"
+#include "checkpointsync.h"
 
 #include <QSettings>
 
@@ -49,6 +50,7 @@ void OptionsModel::Init()
     nTransactionFee = settings.value("nTransactionFee").toLongLong();
     fCoinControlFeatures = settings.value("fCoinControlFeatures", false).toBool();
     language = settings.value("language", "").toString();
+    fCheckpointEnforce = settings.value("fCheckpointEnforce", true).toBool();
 
     // These are shared with core Bitcoin; we want
     // command-line options to override the GUI settings:
@@ -60,6 +62,8 @@ void OptionsModel::Init()
         SoftSetArg("-socks", settings.value("nSocksVersion").toString().toStdString());
     if (!language.isEmpty())
         SoftSetArg("-lang", language.toStdString());
+    if (settings.contains("fCheckpointEnforce"))
+        SoftSetBoolArg("-checkpointenforce", settings.value("fCheckpointEnforce").toBool());
 }
 
 void OptionsModel::Reset()
@@ -199,6 +203,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return QVariant(fCoinControlFeatures);
         case Language:
             return settings.value("language", "");
+        case CheckpointEnforce:
+            return IsSyncCheckpointEnforced();
         default:
             return QVariant();
         }
@@ -285,6 +291,11 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             fCoinControlFeatures = value.toBool();
             settings.setValue("fCoinControlFeatures", fCoinControlFeatures);
             emit coinControlFeaturesChanged(fCoinControlFeatures);
+            break;
+        case CheckpointEnforce:
+            fCheckpointEnforce = value.toBool();
+            settings.setValue("fCheckpointEnforce", fCheckpointEnforce);
+            SetCheckpointEnforce(fCheckpointEnforce);
             break;
         default:
             break;
