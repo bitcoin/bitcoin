@@ -353,7 +353,7 @@ fi
 if [[ $sign = true ]]
 then
     
-        pushd ./gitian-builder
+    pushd ./gitian-builder
     # Sign Windows
     if [[ $windows = true ]]
     then
@@ -373,7 +373,7 @@ then
         echo ""
         ./bin/gbuild -i --commit signature=${COMMIT} ../particl-core/contrib/gitian-descriptors/gitian-osx-signer.yml
         ./bin/gsign -p $signProg --signer $SIGNER --release ${VERSION}-osx-signed --destination ../gitian.sigs/ ../particl-core/contrib/gitian-descriptors/gitian-osx-signer.yml
-        mv build/out/particl-osx-signed.dmg ../bitcoin-binaries/${VERSION}/particl-${VERSION}-osx.dmg
+        mv build/out/particl-osx-signed.dmg ../particl-binaries/${VERSION}/particl-${VERSION}-osx.dmg
     fi
     popd
 
