@@ -323,6 +323,23 @@ public:
         pdb->GetApproximateSizes(&range, 1, &size);
         return size;
     }
+
+    /**
+     * Compact a certain range of keys in the database.
+     */
+    template<typename K>
+    void CompactRange(const K& key_begin, const K& key_end) const
+    {
+        CDataStream ssKey1(SER_DISK, CLIENT_VERSION), ssKey2(SER_DISK, CLIENT_VERSION);
+        ssKey1.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
+        ssKey2.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
+        ssKey1 << key_begin;
+        ssKey2 << key_end;
+        leveldb::Slice slKey1(ssKey1.data(), ssKey1.size());
+        leveldb::Slice slKey2(ssKey2.data(), ssKey2.size());
+        pdb->CompactRange(&slKey1, &slKey2);
+    }
+
 };
 
 #endif // BITCOIN_DBWRAPPER_H
