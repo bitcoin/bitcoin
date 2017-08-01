@@ -20,7 +20,7 @@
 
 namespace leveldb {
 
-static int TargetFileSize(const Options* options) {
+static size_t TargetFileSize(const Options* options) {
   return options->max_file_size;
 }
 
