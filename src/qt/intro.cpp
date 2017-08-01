@@ -43,7 +43,7 @@ class FreespaceChecker : public QObject
     Q_OBJECT
 
 public:
-    FreespaceChecker(Intro *intro);
+    explicit FreespaceChecker(Intro *intro);
 
     enum Status {
         ST_OK,

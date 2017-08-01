@@ -36,7 +36,7 @@ class CNetAddr
 
     public:
         CNetAddr();
-        CNetAddr(const struct in_addr& ipv4Addr);
+        explicit CNetAddr(const struct in_addr& ipv4Addr);
         void Init();
         void SetIP(const CNetAddr& ip);
 
@@ -82,7 +82,7 @@ class CNetAddr
         std::vector<unsigned char> GetGroup() const;
         int GetReachabilityFrom(const CNetAddr *paddrPartner = nullptr) const;
 
-        CNetAddr(const struct in6_addr& pipv6Addr, const uint32_t scope = 0);
+        explicit CNetAddr(const struct in6_addr& pipv6Addr, const uint32_t scope = 0);
         bool GetIn6Addr(struct in6_addr* pipv6Addr) const;
 
         friend bool operator==(const CNetAddr& a, const CNetAddr& b);
@@ -146,7 +146,7 @@ class CService : public CNetAddr
         CService();
         CService(const CNetAddr& ip, unsigned short port);
         CService(const struct in_addr& ipv4Addr, unsigned short port);
-        CService(const struct sockaddr_in& addr);
+        explicit CService(const struct sockaddr_in& addr);
         void Init();
         unsigned short GetPort() const;
         bool GetSockAddr(struct sockaddr* paddr, socklen_t *addrlen) const;
@@ -160,7 +160,7 @@ class CService : public CNetAddr
         std::string ToStringIPPort() const;
 
         CService(const struct in6_addr& ipv6Addr, unsigned short port);
-        CService(const struct sockaddr_in6& addr);
+        explicit CService(const struct sockaddr_in6& addr);
 
         ADD_SERIALIZE_METHODS;
 
