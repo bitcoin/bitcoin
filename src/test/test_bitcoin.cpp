@@ -75,7 +75,7 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
         pcoinsdbview = new CCoinsViewDB(1 << 23, true);
         pcoinsTip = new CCoinsViewCache(pcoinsdbview);
         if (!LoadGenesisBlock(chainparams)) {
-            throw std::runtime_error("InitBlockIndex failed.");
+            throw std::runtime_error("LoadGenesisBlock failed.");
         }
         {
             CValidationState state;
