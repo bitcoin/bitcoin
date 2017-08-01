@@ -56,21 +56,27 @@ string FormatScript(const CScript& script)
     return ret.substr(0, ret.size() - 1);
 }
 
-const map<unsigned char, string> mapSigHashTypes =
-    boost::assign::map_list_of
-    (static_cast<unsigned char>(SIGHASH_ALL), string("ALL"))
-    (static_cast<unsigned char>(SIGHASH_ALL|SIGHASH_ANYONECANPAY), string("ALL|ANYONECANPAY"))
-    (static_cast<unsigned char>(SIGHASH_NONE), string("NONE"))
-    (static_cast<unsigned char>(SIGHASH_NONE|SIGHASH_ANYONECANPAY), string("NONE|ANYONECANPAY"))
-    (static_cast<unsigned char>(SIGHASH_SINGLE), string("SINGLE"))
-    (static_cast<unsigned char>(SIGHASH_SINGLE|SIGHASH_ANYONECANPAY), string("SINGLE|ANYONECANPAY"))
-    ;
+const map<unsigned char, string> mapSigHashTypes = boost::assign::map_list_of(
+    (unsigned char)SIGHASH_ALL,std::string("ALL"))
+    ((unsigned char)(SIGHASH_ALL | SIGHASH_ANYONECANPAY),std::string("ALL|ANYONECANPAY"))
+    ((unsigned char)(SIGHASH_ALL | SIGHASH_FORKID),std::string("ALL|FORKID"))
+    ((unsigned char)(SIGHASH_ALL | SIGHASH_FORKID | SIGHASH_ANYONECANPAY),std::string("ALL|FORKID|ANYONECANPAY"))
+    ((unsigned char)SIGHASH_NONE, std::string("NONE"))
+    ((unsigned char)(SIGHASH_NONE | SIGHASH_ANYONECANPAY), std::string("NONE|ANYONECANPAY"))
+    ((unsigned char)(SIGHASH_NONE | SIGHASH_FORKID),std::string("NONE|FORKID"))
+    ((unsigned char)(SIGHASH_NONE | SIGHASH_FORKID | SIGHASH_ANYONECANPAY),std::string("NONE|FORKID|ANYONECANPAY"))
+    ((unsigned char)SIGHASH_SINGLE, std::string("SINGLE"))
+    ((unsigned char)(SIGHASH_SINGLE | SIGHASH_ANYONECANPAY),std::string("SINGLE|ANYONECANPAY"))
+    ((unsigned char)(SIGHASH_SINGLE | SIGHASH_FORKID),std::string("SINGLE|FORKID"))
+    ((unsigned char)(SIGHASH_SINGLE | SIGHASH_FORKID | SIGHASH_ANYONECANPAY), std::string("SINGLE|FORKID|ANYONECANPAY"));
 
 /**
  * Create the assembly string representation of a CScript object.
  * @param[in] script    CScript object to convert into the asm string representation.
- * @param[in] fAttemptSighashDecode    Whether to attempt to decode sighash types on data within the script that matches the format
- *                                     of a signature. Only pass true for scripts you believe could contain signatures. For example,
+ * @param[in] fAttemptSighashDecode    Whether to attempt to decode sighash types on data within the script that matches
+ * the format
+ *                                     of a signature. Only pass true for scripts you believe could contain signatures.
+ * For example,
  *                                     pass false, or omit the this argument (defaults to false), for scriptPubKeys.
  */
 string ScriptToAsmStr(const CScript& script, const bool fAttemptSighashDecode)

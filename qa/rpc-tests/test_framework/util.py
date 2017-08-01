@@ -26,6 +26,7 @@ import time
 import re
 import urllib.parse as urlparse
 import errno
+import logging
 
 from . import coverage
 from .authproxy import AuthServiceProxy, JSONRPCException
@@ -150,18 +151,19 @@ def hex_str_to_bytes(hex_str):
 def str_to_b64str(string):
     return b64encode(string.encode('utf-8')).decode('ascii')
 
-def sync_blocks(rpc_connections, wait=1):
+def sync_blocks(rpc_connections, wait=1,verbose=1):
     """
     Wait until everybody has the same block count
     """
     while True:
         counts = [ x.getblockcount() for x in rpc_connections ]
-        print(counts)
+        if verbose:
+            logging.info("sync blocks: " + str(counts))
         if counts == [ counts[0] ]*len(counts):
             break
         time.sleep(wait)
 
-def sync_mempools(rpc_connections, wait=1):
+def sync_mempools(rpc_connections, wait=1,verbose=1):
     """
     Wait until everybody has the same transactions in their memory
     pools
@@ -169,9 +171,14 @@ def sync_mempools(rpc_connections, wait=1):
     while True:
         pool = set(rpc_connections[0].getrawmempool())
         num_match = 1
+        pool_len = [len(pool)]
         for i in range(1, len(rpc_connections)):
-            if set(rpc_connections[i].getrawmempool()) == pool:
+            tmp = set(rpc_connections[i].getrawmempool())
+            if tmp == pool:
                 num_match = num_match+1
+            pool_len.append(len(tmp))
+        if verbose:
+            logging.info("sync mempool: " + str(pool_len))
         if num_match == len(rpc_connections):
             break
         time.sleep(wait)
@@ -182,7 +189,7 @@ def initialize_datadir(dirname, n,bitcoinConfDict=None,wallet=None):
     datadir = os.path.join(dirname, "node"+str(n))
     if not os.path.isdir(datadir):
         os.makedirs(datadir)
-    
+
     defaults = {"server":1, "discover":0, "regtest":1,"rpcuser":"rt","rpcpassword":"rt",
                 "port":p2p_port(n),"rpcport":str(rpc_port(n)),"listenonion":0,"maxlimitertxfee":0}
     if bitcoinConfDict: defaults.update(bitcoinConfDict)
@@ -545,7 +552,7 @@ def split_transaction(node, prevouts, toAddrs, txfeePer=DEFAULT_TX_FEE_PER_BYTE,
           outp = {}
           if amount - Decimal(txfeePer*txLen) < 0:  # fee too big, find something smaller
             txfeePer = (float(amount)/txLen)/1.5
-          
+
           txfee = int(math.ceil(txfeePer*txLen))
           amtPer = (Decimal(amount-txfee)/len(toAddrs)).to_integral_value()
           # print "amount: ", amount, " amount per: ", amtPer, "from :", len(prevouts), "to: ", len(toAddrs), "tx fee: ", txfeePer, txfee
@@ -585,12 +592,14 @@ def split_transaction(node, prevouts, toAddrs, txfeePer=DEFAULT_TX_FEE_PER_BYTE,
                   except JSONRPCException as e:
                       tmp = e.error["message"]
                       (code, msg) = tmp.split(":")
-                      if code == 64: raise # bad transaction
+                      if int(code) == 64: raise # bad transaction
+                      if int(code) == 258: # txn-mempool-conflict
+                          # we are reusing inputs so this is all the splitting we can do
+                          return (txn,inp,outp,txid)
                       # print tmp
                       if e.error["code"] == -26:  # insufficient priority
                           txfeePer = txfeePer * 2
                           print(str(e))
-                          pdb.set_trace()
                           print("Insufficient priority, raising tx fee per byte to: ", txfeePer)
                           continue
                       else:

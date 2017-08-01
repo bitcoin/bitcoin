@@ -53,6 +53,9 @@ typedef enum ScriptError_t
     /* softfork safeness */
     SCRIPT_ERR_DISCOURAGE_UPGRADABLE_NOPS,
 
+    /* anti replay */
+    SCRIPT_ERR_ILLEGAL_FORKID,
+
     SCRIPT_ERR_ERROR_COUNT
 } ScriptError;
 

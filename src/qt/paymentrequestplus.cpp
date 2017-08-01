@@ -10,6 +10,8 @@
 
 #include "paymentrequestplus.h"
 
+#include "guiconstants.h"
+
 #include "util.h"
 
 #include <stdexcept>

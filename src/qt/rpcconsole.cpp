@@ -12,6 +12,7 @@
 
 #include "bantablemodel.h"
 #include "clientmodel.h"
+#include "dosman.h"
 #include "guiutil.h"
 #include "platformstyle.h"
 #include "bantablemodel.h"
@@ -895,22 +896,11 @@ void RPCConsole::disconnectSelectedNode()
     // Get currently selected peer address
     QString strNode = GUIUtil::getEntryData(ui->peerWidget, 0, PeerTableModel::Address);
 
-    //BU: Enforce cs_vNodes lock held external to FindNode function calls to prevent use-after-free errors
-    CNode* bannedNode = NULL;
-    {
-        LOCK(cs_vNodes);
-        bannedNode = FindNode(strNode.toStdString());
-
-        //BU: Since we are making UI update calls below, we want to protect bannedNode from deletion
-        //    while still being able to release the lock on cs_vNodes to not block on a UI update
-        if (bannedNode) bannedNode->AddRef();
-    }
-
     // Find the node, disconnect it and clear the selected node
-    if (bannedNode) {
-        bannedNode->fDisconnect = true;
-        //BU: Remember to release the reference we took on bannedNode to protect from use-after-free
-        bannedNode->Release();
+    CNodeRef node = FindNodeRef(strNode.toStdString());
+    if (node)
+    {
+        node->fDisconnect = true;
         clearSelectedNode();
     }
 }
@@ -923,28 +913,17 @@ void RPCConsole::banSelectedNode(int bantime)
     // Get currently selected peer address
     QString strNode = GUIUtil::getEntryData(ui->peerWidget, 0, PeerTableModel::Address);
 
-    //BU: Enforce cs_vNodes lock held external to FindNode function calls to prevent use-after-free errors
-    CNode* bannedNode = NULL;
+    // Find the node, ban it and clear the selected node
+    CNodeRef bannedNode = FindNodeRef(strNode.toStdString());
+    if (bannedNode)
     {
-        LOCK(cs_vNodes);
-        bannedNode = FindNode(strNode.toStdString());
-
-        //BU: Since we are making UI update calls below, we want to protect bannedNode from deletion
-        //    while still being able to release the lock on cs_vNodes to not block on a UI update
-        if (bannedNode) bannedNode->AddRef();
-    }
-
-    // Find possible nodes, ban it and clear the selected node
-    if (bannedNode) {
         std::string nStr = strNode.toStdString();
         std::string addr;
         int port = 0;
         SplitHostPort(nStr, port, addr);
 
-        CNode::Ban(CNetAddr(addr), BanReasonManuallyAdded, bantime);
+        dosMan.Ban(CNetAddr(addr), BanReasonManuallyAdded, bantime);
         bannedNode->fDisconnect = true;
-        //BU: Remember to release the reference we took on bannedNode to protect from use-after-free
-        bannedNode->Release();
 
         clearSelectedNode();
     }
@@ -961,7 +940,7 @@ void RPCConsole::unbanSelectedNode()
 
     if (possibleSubnet.IsValid())
     {
-        CNode::Unban(possibleSubnet);
+        dosMan.Unban(possibleSubnet);
     }
 }
 

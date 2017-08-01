@@ -47,6 +47,13 @@ Example text.
   properly in JSON RPC processing. This is no longer the case. This also affects
   the GUI debug console.
 
+- Command line and config option checking improvements (ported from Classic; see
+  https://zander.github.io/posts/20170220-Whatsnew/).  Using non-existent options
+  is no longer ignored but produces a hard error; inputs are properly validated, and
+  yes/no, false/true, 0/1 all now work consistently.
+  Obsolete command line and config arguments 'rpcssl' ,'socks', 'debugnet', 'tor',
+  'benchmark' and 'whitelistalwaysrelay' now give a hard error about an unknown option.
+
 C++11
 -----
 

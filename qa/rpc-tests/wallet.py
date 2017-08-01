@@ -3,6 +3,12 @@
 # Copyright (c) 2015-2017 The Bitcoin Unlimited developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
+import time
+import sys
+if sys.version_info[0] < 3:
+    raise "Use Python 3"
+import logging
+logging.basicConfig(format='%(asctime)s.%(levelname)s: %(message)s', level=logging.INFO)
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
@@ -144,7 +150,7 @@ class WalletTest (BitcoinTestFramework):
         node_2_bal = self.check_fee_amount(self.nodes[2].getbalance(), node_2_bal - Decimal('10'), fee_per_byte, count_bytes(self.nodes[2].getrawtransaction(txid)))
         assert_equal(self.nodes[0].getbalance(), node_0_bal)
 
-        # Sendmany 10 BTC with subtract fee from amount
+        # Sendmany 10 BTC with subtract fee from amountd
         txid = self.nodes[2].sendmany('from1', {address: 10}, 0, "", [address])
         self.nodes[2].generate(1)
         self.sync_all()
@@ -161,6 +167,7 @@ class WalletTest (BitcoinTestFramework):
         sync_mempools(self.nodes)
 
         self.nodes.append(start_node(3, self.options.tmpdir))
+        time.sleep(5)
         connect_nodes_bi(self.nodes, 0, 3)
         sync_blocks(self.nodes)
 
@@ -358,3 +365,12 @@ class WalletTest (BitcoinTestFramework):
 
 if __name__ == '__main__':
     WalletTest ().main ()
+
+def Test():
+    t = WalletTest()
+    bitcoinConf = {
+        "debug": ["net", "blk", "thin", "mempool", "req", "bench", "evict"],  # "lck"
+        "blockprioritysize": 2000000  # we don't want any transactions rejected due to insufficient fees...
+    }
+    # "--tmpdir=/ramdisk/test", 
+    t.main(["--nocleanup", "--noshutdown"], bitcoinConf, None)

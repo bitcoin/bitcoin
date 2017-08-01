@@ -49,7 +49,13 @@ static int AppInitRawTx(int argc, char* argv[])
     //
     // Parameters
     //
-    ParseParameters(argc, argv);
+    AllowedArgs::BitcoinTx allowedArgs;
+    try {
+        ParseParameters(argc, argv, allowedArgs);
+    } catch (const std::exception& e) {
+        fprintf(stderr, "Error parsing program options: %s\n", e.what());
+        return EXIT_FAILURE;
+    }
 
     // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
     try {
@@ -61,45 +67,46 @@ static int AppInitRawTx(int argc, char* argv[])
 
     fCreateBlank = GetBoolArg("-create", false);
 
-    if (argc<2 || mapArgs.count("-?") || mapArgs.count("-h") || mapArgs.count("-help"))
+    if (argc<2 || mapArgs.count("-?") || mapArgs.count("-h") || mapArgs.count("-help") || mapArgs.count("-version"))
     {
         // First part of help message is specific to this utility
-        std::string strUsage = strprintf(_("%s bitcoin-tx utility version"), _(PACKAGE_NAME)) + " " + FormatFullVersion() + "\n\n" +
-            _("Usage:") + "\n" +
+        std::string strUsage = strprintf(_("%s bitcoin-tx utility version"), _(PACKAGE_NAME)) + " " + FormatFullVersion() + "\n";
+
+        fprintf(stdout, "%s", strUsage.c_str());
+
+        if (mapArgs.count("-version"))
+            return false;
+
+        strUsage = "\n" + _("Usage:") + "\n" +
               "  bitcoin-tx [options] <hex-tx> [commands]  " + _("Update hex-encoded bitcoin transaction") + "\n" +
               "  bitcoin-tx [options] -create [commands]   " + _("Create hex-encoded bitcoin transaction") + "\n" +
               "\n";
 
         fprintf(stdout, "%s", strUsage.c_str());
 
-        strUsage = HelpMessageGroup(_("Options:"));
-        strUsage += HelpMessageOpt("-?", _("This help message"));
-        strUsage += HelpMessageOpt("-create", _("Create new, empty TX."));
-        strUsage += HelpMessageOpt("-json", _("Select JSON output"));
-        strUsage += HelpMessageOpt("-txid", _("Output only the hex-encoded transaction id of the resultant transaction."));
-        AppendParamsHelpMessages(strUsage);
+        strUsage = allowedArgs.helpMessage();
 
         fprintf(stdout, "%s", strUsage.c_str());
 
-        strUsage = HelpMessageGroup(_("Commands:"));
-        strUsage += HelpMessageOpt("delin=N", _("Delete input N from TX"));
-        strUsage += HelpMessageOpt("delout=N", _("Delete output N from TX"));
-        strUsage += HelpMessageOpt("in=TXID:VOUT", _("Add input to TX"));
-        strUsage += HelpMessageOpt("locktime=N", _("Set TX lock time to N"));
-        strUsage += HelpMessageOpt("nversion=N", _("Set TX version to N"));
-        strUsage += HelpMessageOpt("outaddr=VALUE:ADDRESS", _("Add address-based output to TX"));
-        strUsage += HelpMessageOpt("outdata=[VALUE:]DATA", _("Add data-based output to TX"));
-        strUsage += HelpMessageOpt("outscript=VALUE:SCRIPT", _("Add raw script output to TX"));
-        strUsage += HelpMessageOpt("sign=SIGHASH-FLAGS", _("Add zero or more signatures to transaction") + ". " +
+        strUsage = AllowedArgs::HelpMessageGroup(_("Commands:"));
+        strUsage += AllowedArgs::HelpMessageOpt("delin=N", _("Delete input N from TX"));
+        strUsage += AllowedArgs::HelpMessageOpt("delout=N", _("Delete output N from TX"));
+        strUsage += AllowedArgs::HelpMessageOpt("in=TXID:VOUT", _("Add input to TX"));
+        strUsage += AllowedArgs::HelpMessageOpt("locktime=N", _("Set TX lock time to N"));
+        strUsage += AllowedArgs::HelpMessageOpt("nversion=N", _("Set TX version to N"));
+        strUsage += AllowedArgs::HelpMessageOpt("outaddr=VALUE:ADDRESS", _("Add address-based output to TX"));
+        strUsage += AllowedArgs::HelpMessageOpt("outdata=[VALUE:]DATA", _("Add data-based output to TX"));
+        strUsage += AllowedArgs::HelpMessageOpt("outscript=VALUE:SCRIPT", _("Add raw script output to TX"));
+        strUsage += AllowedArgs::HelpMessageOpt("sign=SIGHASH-FLAGS", _("Add zero or more signatures to transaction") + ". " +
             _("This command requires JSON registers:") +
             _("prevtxs=JSON object") + ", " +
             _("privatekeys=JSON object") + ". " +
             _("See signrawtransaction docs for format of sighash flags, JSON objects."));
         fprintf(stdout, "%s", strUsage.c_str());
 
-        strUsage = HelpMessageGroup(_("Register Commands:"));
-        strUsage += HelpMessageOpt("load=NAME:FILENAME", _("Load JSON file FILENAME into register NAME"));
-        strUsage += HelpMessageOpt("set=NAME:JSON-STRING", _("Set register NAME to given JSON-STRING"));
+        strUsage = AllowedArgs::HelpMessageGroup(_("Register Commands:"));
+        strUsage += AllowedArgs::HelpMessageOpt("load=NAME:FILENAME", _("Load JSON file FILENAME into register NAME"));
+        strUsage += AllowedArgs::HelpMessageOpt("set=NAME:JSON-STRING", _("Set register NAME to given JSON-STRING"));
         fprintf(stdout, "%s", strUsage.c_str());
 
         if (argc < 2) {
@@ -332,31 +339,33 @@ static void MutateTxDelOutput(CMutableTransaction& tx, const string& strOutIdx)
     tx.vout.erase(tx.vout.begin() + outIdx);
 }
 
-static const unsigned int N_SIGHASH_OPTS = 6;
-static const struct {
-    const char *flagStr;
-    int flags;
-} sighashOptions[N_SIGHASH_OPTS] = {
-    {"ALL", SIGHASH_ALL},
-    {"NONE", SIGHASH_NONE},
-    {"SINGLE", SIGHASH_SINGLE},
-    {"ALL|ANYONECANPAY", SIGHASH_ALL|SIGHASH_ANYONECANPAY},
-    {"NONE|ANYONECANPAY", SIGHASH_NONE|SIGHASH_ANYONECANPAY},
-    {"SINGLE|ANYONECANPAY", SIGHASH_SINGLE|SIGHASH_ANYONECANPAY},
-};
 
-static bool findSighashFlags(int& flags, const string& flagStr)
+static bool findSighashFlags(int &flags, const string &flagStr)
 {
     flags = 0;
 
-    for (unsigned int i = 0; i < N_SIGHASH_OPTS; i++) {
-        if (flagStr == sighashOptions[i].flagStr) {
-            flags = sighashOptions[i].flags;
-            return true;
+    std::vector<string> strings;
+    std::istringstream ss(flagStr);
+    std::string s;
+    while (getline(ss, s, '|'))
+    {
+        boost::trim(s);
+        if (boost::iequals(s, "ALL"))
+            flags = SIGHASH_ALL;
+        else if (boost::iequals(s, "NONE"))
+            flags = SIGHASH_NONE;
+        else if (boost::iequals(s, "SINGLE"))
+            flags = SIGHASH_SINGLE;
+        else if (boost::iequals(s, "ANYONECANPAY"))
+            flags |= SIGHASH_ANYONECANPAY;
+        else if (boost::iequals(s, "FORKID"))
+            flags |= SIGHASH_FORKID;
+        else
+        {
+            return false;
         }
     }
-
-    return false;
+    return true;
 }
 
 uint256 ParseHashUO(map<string,UniValue>& o, string strKey)
@@ -463,7 +472,7 @@ static void MutateTxSign(CMutableTransaction& tx, const string& flagStr)
 
     const CKeyStore& keystore = tempKeystore;
 
-    bool fHashSingle = ((nHashType & ~SIGHASH_ANYONECANPAY) == SIGHASH_SINGLE);
+    bool fHashSingle = ((nHashType & ~(SIGHASH_ANYONECANPAY | SIGHASH_FORKID)) == SIGHASH_SINGLE);
 
     // Sign what we can:
     for (unsigned int i = 0; i < mergedTx.vin.size(); i++) {
@@ -474,17 +483,18 @@ static void MutateTxSign(CMutableTransaction& tx, const string& flagStr)
             continue;
         }
         const CScript& prevPubKey = coins->vout[txin.prevout.n].scriptPubKey;
+        const CAmount &amount = coins->vout[txin.prevout.n].nValue;
 
         txin.scriptSig.clear();
         // Only sign SIGHASH_SINGLE if there's a corresponding output:
         if (!fHashSingle || (i < mergedTx.vout.size()))
-            SignSignature(keystore, prevPubKey, mergedTx, i, nHashType);
+            SignSignature(keystore, prevPubKey, mergedTx, i, amount, nHashType);
 
         // ... and merge in other signatures:
         BOOST_FOREACH(const CTransaction& txv, txVariants) {
-            txin.scriptSig = CombineSignatures(prevPubKey, mergedTx, i, txin.scriptSig, txv.vin[i].scriptSig);
+            txin.scriptSig = CombineSignatures(prevPubKey, MutableTransactionSignatureChecker(&mergedTx, i, amount), txin.scriptSig, txv.vin[i].scriptSig);
         }
-        if (!VerifyScript(txin.scriptSig, prevPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker(&mergedTx, i)))
+        if (!VerifyScript(txin.scriptSig, prevPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker(&mergedTx, i, amount)))
             fComplete = false;
     }
 

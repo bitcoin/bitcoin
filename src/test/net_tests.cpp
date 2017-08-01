@@ -162,6 +162,52 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
     std::unique_ptr<CNode> pnode2(new CNode(hSocket, addr, pszDest, fInboundIn));
     BOOST_CHECK(pnode2->fInbound == true);
     BOOST_CHECK(pnode2->fFeeler == false);
+
+    // NodeRef checks and refcount checks.
+    BOOST_CHECK_EQUAL(pnode1->nRefCount, 0);
+
+    // Check null pointers are good
+    {
+        CNodeRef ref;       // Default constructor
+        BOOST_CHECK(!ref);  // operator bool
+        ref = 0;
+        BOOST_CHECK(!ref);
+    }
+
+    // get()
+    {
+        CNodeRef ref1(pnode1.get());
+        CNodeRef ref2;
+        BOOST_CHECK(ref1.get() == pnode1.get());
+        BOOST_CHECK(ref2.get() == nullptr);
+    }
+
+    // Plain constructor and copy constructor
+    {
+        CNodeRef ref1(pnode1.get());
+        BOOST_CHECK_EQUAL(pnode1->nRefCount, 1);
+
+        {
+            CNodeRef ref2(ref1);
+            BOOST_CHECK_EQUAL(pnode1->nRefCount, 2);
+        }
+
+        BOOST_CHECK_EQUAL(pnode1->nRefCount, 1);
+    }
+    BOOST_CHECK_EQUAL(pnode1->nRefCount, 0);
+
+    // Assignment operator
+    {
+        CNodeRef ref1;
+
+        ref1 = pnode1.get();
+        BOOST_CHECK_EQUAL(pnode1->nRefCount, 1);
+        ref1 = ref1;
+        BOOST_CHECK_EQUAL(pnode1->nRefCount, 1);
+        ref1 = nullptr;
+        BOOST_CHECK_EQUAL(pnode1->nRefCount, 0);
+    }
+    BOOST_CHECK_EQUAL(pnode1->nRefCount, 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

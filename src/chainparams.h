@@ -30,8 +30,16 @@ typedef std::map<int, uint256> MapCheckpoints;
 struct CCheckpointData {
     MapCheckpoints mapCheckpoints;
     int64_t nTimeLastCheckpoint;
-    int64_t nTransactionsLastCheckpoint;
+    uint64_t nTransactionsLastCheckpoint;
     double fTransactionsPerDay;
+};
+
+enum
+{
+    DEFAULT_MAINNET_PORT = 8333,
+    DEFAULT_TESTNET_PORT = 18333,
+    DEFAULT_NOLNET_PORT = 9333,
+    DEFAULT_REGTESTNET_PORT = 18444
 };
 
 /**
@@ -112,5 +120,9 @@ CChainParams& Params(const std::string& chain);
  * @throws std::runtime_error when the chain is not supported.
  */
 void SelectParams(const std::string& chain);
+
+CBlock CreateGenesisBlock(CScript prefix, const std::string &comment, const CScript& genesisOutputScript,
+                          uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion,
+                          const CAmount& genesisReward);
 
 #endif // BITCOIN_CHAINPARAMS_H

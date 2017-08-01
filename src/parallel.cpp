@@ -4,7 +4,7 @@
 
 #include "parallel.h"
 #include "chainparams.h"
-#include "main.h"
+#include "dosman.h"
 #include "net.h"
 #include "pow.h"
 #include "timedata.h"
@@ -17,17 +17,14 @@
 
 #include <boost/thread/thread.hpp>
 
-#define MAX_SCRIPT_CHECK_QUEUES 4
-
-static CCheckQueue<CScriptCheck> scriptcheckqueue1(128);
-static CCheckQueue<CScriptCheck> scriptcheckqueue2(128);
-static CCheckQueue<CScriptCheck> scriptcheckqueue3(128);
-static CCheckQueue<CScriptCheck> scriptcheckqueue4(128);
-
 using namespace std;
 
+static const unsigned int nScriptCheckQueues = 4;
+std::unique_ptr<CParallelValidation> PV;
 
-void AddScriptCheckThreads(int i, CCheckQueue<CScriptCheck> *pqueue)
+static void HandleBlockMessageThread(CNode *pfrom, const std::string strCommand, const CBlock block, const CInv inv);
+
+static void AddScriptCheckThreads(int i, CCheckQueue<CScriptCheck> *pqueue)
 {
     ostringstream tName;
     tName << "bitcoin-scriptchk" << i;
@@ -35,20 +32,41 @@ void AddScriptCheckThreads(int i, CCheckQueue<CScriptCheck> *pqueue)
     pqueue->Thread();
 }
 
-void AddAllScriptCheckQueuesAndThreads(int nScriptCheckThreads, boost::thread_group *threadGroup)
+CParallelValidation::CParallelValidation(int threadCount, boost::thread_group *threadGroup)
+    : semThreadCount(nScriptCheckQueues)
 {
-    CCheckQueue<CScriptCheck> *pqueue[MAX_SCRIPT_CHECK_QUEUES] = {
-        &scriptcheckqueue1, &scriptcheckqueue2, &scriptcheckqueue3, &scriptcheckqueue4};
+    // A single thread has no parallelism so just use the main thread.  Equivalent to parallel being turned off.
+    if (threadCount <= 1)
+        threadCount = 0;
+    else if (threadCount > MAX_SCRIPTCHECK_THREADS)
+        threadCount = MAX_SCRIPTCHECK_THREADS;
+    nThreads = threadCount;
 
-    for (int i = 0; i < MAX_SCRIPT_CHECK_QUEUES; i++)
+    LogPrintf("Using %d threads for script verification\n", threadCount);
+
+    while (QueueCount() < nScriptCheckQueues)
     {
-        allScriptCheckQueues.Add(pqueue[i]);
-        for (int j = 0; j < nScriptCheckThreads; j++)
-            threadGroup->create_thread(boost::bind(&AddScriptCheckThreads, i + 1, pqueue[i]));
+        auto queue = new CCheckQueue<CScriptCheck>(128);
+
+        for (unsigned int i = 0; i < nThreads; i++)
+            threadGroup->create_thread(boost::bind(&AddScriptCheckThreads, i + 1, queue));
+
+        vQueues.push_back(queue);
     }
 }
 
-CParallelValidation::CParallelValidation() { mapBlockValidationThreads.clear(); }
+CParallelValidation::~CParallelValidation()
+{
+    for (auto queue : vQueues)
+        delete queue;
+}
+
+unsigned int CParallelValidation::QueueCount()
+{
+    // Only modified in constructor so no lock currently needed
+    return vQueues.size();
+}
+
 bool CParallelValidation::Initialize(const boost::thread::id this_id, const CBlockIndex *pindex, const bool fParallel)
 {
     AssertLockHeld(cs_main);
@@ -78,9 +96,8 @@ bool CParallelValidation::Initialize(const boost::thread::id this_id, const CBlo
         }
 
         // Check whether a thread is aleady validating this very same block.  It can happen at times when a block
-        // arrives
-        // while a previous blocks is still validating or just finishing it's validation and grabs the next block to
-        // validate.
+        // arrives while a previous blocks is still validating or just finishing it's validation and grabs the next
+        // block to validate.
         map<boost::thread::id, CParallelValidation::CHandleBlockMsgThreads>::iterator iter =
             mapBlockValidationThreads.begin();
         while (iter != mapBlockValidationThreads.end())
@@ -233,7 +250,8 @@ void CParallelValidation::StopAllValidationThreads(const uint32_t nChainWork)
         // Kill any threads that have less than or equal to our own chain work we are working on.  We use
         // this method when we're mining our own block.  In that event we want to give priority to our own
         // block rather than any competing block or chain.
-        if (((*mi).first != this_id) && (*mi).second.nChainWork <= nChainWork)
+        if (((*mi).first != this_id) && (*mi).second.nChainWork <= nChainWork &&
+            (*mi).second.nMostWorkOurFork <= nChainWork)
         {
             if ((*mi).second.pScriptQueue != NULL)
                 (*mi).second.pScriptQueue->Quit(); // quit any active script queue threads
@@ -265,12 +283,15 @@ void CParallelValidation::InitThread(const boost::thread::id this_id,
     const CBlock &block,
     const CInv &inv)
 {
+    const CBlockHeader &header = block.GetBlockHeader();
+
     LOCK(cs_blockvalidationthread);
     assert(mapBlockValidationThreads.count(this_id) == 0); // this id should not already be in use
     mapBlockValidationThreads[this_id].pScriptQueue = NULL;
     mapBlockValidationThreads[this_id].hash = inv.hash;
-    mapBlockValidationThreads[this_id].hashPrevBlock = block.GetBlockHeader().hashPrevBlock;
-    mapBlockValidationThreads[this_id].nChainWork = block.GetBlockHeader().nBits;
+    mapBlockValidationThreads[this_id].hashPrevBlock = header.hashPrevBlock;
+    mapBlockValidationThreads[this_id].nChainWork = header.nBits;
+    mapBlockValidationThreads[this_id].nMostWorkOurFork = header.nBits;
     mapBlockValidationThreads[this_id].nSequenceId = INT_MAX;
     mapBlockValidationThreads[this_id].nStartTime = GetTimeMillis();
     mapBlockValidationThreads[this_id].nBlockSize = ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION);
@@ -354,6 +375,33 @@ bool CParallelValidation::IsReorgInProgress()
     return false;
 }
 
+void CParallelValidation::UpdateMostWorkOurFork(const CBlockHeader &header)
+{
+    LOCK(cs_blockvalidationthread);
+    map<boost::thread::id, CHandleBlockMsgThreads>::iterator mi = mapBlockValidationThreads.begin();
+    while (mi != mapBlockValidationThreads.end())
+    {
+        // check if this new header connects to this block and if so then update the nMostWorkOurFork
+        if ((*mi).second.hash == header.hashPrevBlock && (*mi).second.nMostWorkOurFork < header.nBits)
+            (*mi).second.nMostWorkOurFork = header.nBits;
+        mi++;
+    }
+}
+
+uint32_t CParallelValidation::MaxWorkChainBeingProcessed()
+{
+    uint32_t nMaxWork = 0;
+    LOCK(cs_blockvalidationthread);
+    map<boost::thread::id, CHandleBlockMsgThreads>::iterator mi = mapBlockValidationThreads.begin();
+    while (mi != mapBlockValidationThreads.end())
+    {
+        if ((*mi).second.nChainWork > nMaxWork)
+            nMaxWork = (*mi).second.nChainWork;
+        mi++;
+    }
+    return nMaxWork;
+}
+
 void CParallelValidation::ClearOrphanCache(const CBlock &block)
 {
     if (!IsInitialBlockDownload())
@@ -391,11 +439,6 @@ void CParallelValidation::HandleBlockMessage(CNode *pfrom,
     const CInv &inv)
 {
     uint64_t nBlockSize = ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION);
-    uint8_t nScriptCheckQueues = allScriptCheckQueues.Size();
-
-    /** Initialize Semaphores used to limit the total number of concurrent validation threads. */
-    if (semPV == NULL)
-        semPV = new CSemaphore(nScriptCheckQueues);
 
     // NOTE: You must not have a cs_main lock before you aquire the semaphore grant or you can end up deadlocking
     // AssertLockNotHeld(cs_main); TODO: need to create this
@@ -403,7 +446,7 @@ void CParallelValidation::HandleBlockMessage(CNode *pfrom,
     // Aquire semaphore grant
     if (IsChainNearlySyncd())
     {
-        if (!semPV->try_wait())
+        if (!semThreadCount.try_wait())
         {
             /** The following functionality is for the case when ALL thread queues and grants are in use, meaning
              * somehow an attacker
@@ -462,12 +505,12 @@ void CParallelValidation::HandleBlockMessage(CNode *pfrom,
             } // We must not hold the lock here because we could be waiting for a grant, below.
 
             // wait for semaphore grant
-            semPV->wait();
+            semThreadCount.wait();
         }
     }
     else
     { // for IBD just wait for the next available
-        semPV->wait();
+        semThreadCount.wait();
     }
 
     // Add a reference here because we are detaching a thread which may run for a long time and
@@ -479,7 +522,7 @@ void CParallelValidation::HandleBlockMessage(CNode *pfrom,
     }
 
     // only launch block validation in a separate thread if PV is enabled.
-    if (PV.Enabled())
+    if (PV->Enabled())
     {
         boost::thread thread(boost::bind(&HandleBlockMessageThread, pfrom, strCommand, block, inv));
         thread.detach(); // Separate actual thread from the "thread" object so its fine to fall out of scope
@@ -490,26 +533,24 @@ void CParallelValidation::HandleBlockMessage(CNode *pfrom,
     }
 }
 
-void HandleBlockMessageThread(CNode *pfrom, const string &strCommand, const CBlock &block, const CInv &inv)
+void HandleBlockMessageThread(CNode *pfrom, const string strCommand, const CBlock block, const CInv inv)
 {
     int64_t startTime = GetTimeMicros();
     CValidationState state;
     uint64_t nSizeBlock = ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION);
 
-    // At this point we have either a block or a fully reconstructed thinblock but we still need to
-    // maintain a mapThinBlocksInFlight entry so that we don't re-request a full block from
-    // the same node while the block is processing. Furthermore by setting the time = -1 we prevent
-    // the timeout from triggering and inadvertently disconnecting the node in the event that the block
-    // takes a longer time to process than the THINBLOCK_DOWNLOAD_TIMEOUT interval.
+    // Indicate that the thinblock was fully received. At this point we have either a block or a fully reconstructed
+    // thinblock but we still need to maintain a mapThinBlocksInFlight entry so that we don't re-request a full block
+    // from the same node while the block is processing.
     {
         LOCK(pfrom->cs_mapthinblocksinflight);
         if (pfrom->mapThinBlocksInFlight.count(inv.hash))
-            pfrom->mapThinBlocksInFlight[inv.hash] = -1;
+            pfrom->mapThinBlocksInFlight[inv.hash].fReceived = true;
     }
 
 
     boost::thread::id this_id(boost::this_thread::get_id());
-    PV.InitThread(this_id, pfrom, block, inv); // initialize the mapBlockValidationThread entries
+    PV->InitThread(this_id, pfrom, block, inv); // initialize the mapBlockValidationThread entries
 
     // Process all blocks from whitelisted peers, even if not requested,
     // unless we're still syncing with the network.
@@ -517,7 +558,7 @@ void HandleBlockMessageThread(CNode *pfrom, const string &strCommand, const CBlo
     // conditions in AcceptBlock().
     bool forceProcessing = pfrom->fWhitelisted && !IsInitialBlockDownload();
     const CChainParams &chainparams = Params();
-    if (PV.Enabled())
+    if (PV->Enabled())
     {
         ProcessNewBlock(state, chainparams, pfrom, &block, forceProcessing, NULL, true);
     }
@@ -536,10 +577,20 @@ void HandleBlockMessageThread(CNode *pfrom, const string &strCommand, const CBlo
             pfrom->PushMessage("reject", strCommand, state.GetRejectCode(),
                 state.GetRejectReason().substr(0, MAX_REJECT_MESSAGE_LENGTH), inv.hash);
             if (nDoS > 0)
-            {
-                LOCK(cs_main);
-                Misbehaving(pfrom->GetId(), nDoS);
-            }
+                dosMan.Misbehaving(pfrom, nDoS);
+        }
+
+        // the current fork is bad due to this block so reset the best header to the best fully-validated block
+        // so we can download another fork of headers (and blocks).
+        CBlockIndex *mostWork = FindMostWorkChain();
+        CBlockIndex *tip = chainActive.Tip();
+        if (mostWork && tip && (mostWork->nChainWork > tip->nChainWork))
+        {
+            pindexBestHeader = mostWork;
+        }
+        else
+        {
+            pindexBestHeader = tip;
         }
     }
     else
@@ -549,13 +600,14 @@ void HandleBlockMessageThread(CNode *pfrom, const string &strCommand, const CBlo
         double nValidationTime = (double)(GetTimeMicros() - startTime) / 1000000.0;
         if (strCommand != NetMsgType::BLOCK)
         {
-            LogPrint("thin", "Processed ThinBlock %s in %.2f seconds\n", inv.hash.ToString(),
-                (double)(GetTimeMicros() - startTime) / 1000000.0);
+            LogPrint("thin", "Processed Block %s reconstructed from (%s) in %.2f seconds, peer=%s\n",
+                inv.hash.ToString(), strCommand, (double)(GetTimeMicros() - startTime) / 1000000.0,
+                pfrom->GetLogName());
             thindata.UpdateValidationTime(nValidationTime);
         }
         else
-            LogPrint("thin", "Processed Regular Block %s in %.2f seconds\n", inv.hash.ToString(),
-                (double)(GetTimeMicros() - startTime) / 1000000.0);
+            LogPrint("thin", "Processed Regular Block %s in %.2f seconds, peer=%s\n", inv.hash.ToString(),
+                (double)(GetTimeMicros() - startTime) / 1000000.0, pfrom->GetLogName());
     }
 
     // When we request a thinblock we may get back a regular block if it is smaller than a thinblock
@@ -566,11 +618,12 @@ void HandleBlockMessageThread(CNode *pfrom, const string &strCommand, const CBlo
         int nTotalThinBlocksInFlight = 0;
         {
             LOCK2(cs_vNodes, pfrom->cs_mapthinblocksinflight);
+
             // Erase this thinblock from the tracking map now that we're done with it.
-            if (pfrom->mapThinBlocksInFlight.erase(inv.hash))
+            if (pfrom->mapThinBlocksInFlight.count(inv.hash))
             {
-                // Clear out and reset thinblock data
-                thindata.ClearThinBlockData(pfrom);
+                // Clear thinblock data and thinblock in flight
+                thindata.ClearThinBlockData(pfrom, inv.hash);
             }
 
             // Count up any other remaining nodes with thinblocks in flight.
@@ -595,19 +648,16 @@ void HandleBlockMessageThread(CNode *pfrom, const string &strCommand, const CBlo
     }
 
     // Erase any txns from the orphan cache that are no longer needed
-    PV.ClearOrphanCache(block);
+    PV->ClearOrphanCache(block);
 
     // Clear thread data - this must be done before the thread completes or else some other new
     // thread may grab the same thread id and we would end up deleting the entry for the new thread instead.
-    PV.Erase(this_id);
+    PV->Erase(this_id);
 
     // release semaphores depending on whether this was IBD or not.  We can not use IsChainNearlySyncd()
     // because the return value will switch over when IBD is nearly finished and we may end up not releasing
     // the correct semaphore.
-    {
-        LOCK(cs_semPV);
-        semPV->post();
-    }
+    PV->Post();
 
     // Remove the CNode reference we aquired just before we launched this thread.
     {
@@ -617,54 +667,51 @@ void HandleBlockMessageThread(CNode *pfrom, const string &strCommand, const CBlo
 }
 
 
-CCheckQueue<CScriptCheck> *CAllScriptCheckQueues::GetScriptCheckQueue()
+// for newly mined block validation, return the first queue not in use.
+CCheckQueue<CScriptCheck> *CParallelValidation::GetScriptCheckQueue()
 {
-    // for newly mined block validation, return the first queue not in use.
-    CCheckQueue<CScriptCheck> *pqueue = NULL;
-    if (Size() > 0)
+    while (true)
     {
-        while (true)
         {
+            LOCK(cs_blockvalidationthread);
+
+            for (unsigned int i = 0; i < vQueues.size(); i++)
             {
-                LOCK2(PV.cs_blockvalidationthread, cs);
-                for (unsigned int i = 0; i < vScriptCheckQueues.size(); i++)
+                auto pqueue(vQueues[i]);
+
+                if (pqueue->IsIdle())
                 {
-                    if (vScriptCheckQueues[i]->IsIdle())
+                    bool inUse = false;
+                    map<boost::thread::id, CParallelValidation::CHandleBlockMsgThreads>::iterator iter =
+                        mapBlockValidationThreads.begin();
+                    while (iter != mapBlockValidationThreads.end())
                     {
-                        bool inUse = false;
-                        map<boost::thread::id, CParallelValidation::CHandleBlockMsgThreads>::iterator iter =
-                            PV.mapBlockValidationThreads.begin();
-                        while (iter != PV.mapBlockValidationThreads.end())
+                        if ((*iter).second.pScriptQueue == pqueue)
                         {
-                            if ((*iter).second.pScriptQueue == vScriptCheckQueues[i])
-                            {
-                                inUse = true;
-                                break;
-                            }
-                            iter++;
+                            inUse = true;
+                            break;
                         }
-                        if (!inUse)
-                        {
-                            pqueue = vScriptCheckQueues[i];
-                            pqueue->Quit(false); // set to false because it still may be set to true from last run.
+                        iter++;
+                    }
+                    if (!inUse)
+                    {
+                        pqueue->Quit(false); // set to false because it still may be set to true from last run.
 
-                            // Only assign a pqueue to a validation thread if a validation thread is actually running.
-                            // When mining or when bitcoin is first starting there will be no validation threads so we
-                            // don't want to assign a pqueue here if that is the case.
-                            boost::thread::id this_id(boost::this_thread::get_id());
-                            if (PV.mapBlockValidationThreads.count(this_id))
-                                PV.mapBlockValidationThreads[this_id].pScriptQueue = pqueue;
+                        // Only assign a pqueue to a validation thread if a validation thread is actually running.
+                        // When mining or when bitcoin is first starting there will be no validation threads so we
+                        // don't want to assign a pqueue here if that is the case.
+                        boost::thread::id this_id(boost::this_thread::get_id());
+                        if (mapBlockValidationThreads.count(this_id))
+                            mapBlockValidationThreads[this_id].pScriptQueue = pqueue;
 
-                            LogPrint("parallel", "next scriptqueue not in use is %d\n", i);
-                            return pqueue;
-                        }
+                        LogPrint("parallel", "next scriptqueue not in use is %d\n", i);
+                        return pqueue;
                     }
                 }
             }
-            LogPrint("parallel", "Sleeping 50 millis\n");
-            MilliSleep(50);
         }
+
+        LogPrint("parallel", "Sleeping 50 millis\n");
+        MilliSleep(50);
     }
-    assert(pqueue != NULL);
-    return pqueue;
 }

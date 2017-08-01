@@ -10,8 +10,6 @@
 #include <QMutex>
 #include <QThread>
 
-static const bool DEFAULT_CHOOSE_DATADIR = false;
-
 class FreespaceChecker;
 
 namespace Ui {

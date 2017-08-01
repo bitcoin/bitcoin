@@ -26,39 +26,34 @@ class UnlimitedModel : public QAbstractListModel
 public:
     explicit UnlimitedModel(QObject *parent = 0);
 
-    enum UOptionID {
-        MaxGeneratedBlock,      // uint64_t
+    enum UOptionID
+    {
+        MaxGeneratedBlock, // uint64_t
         ExcessiveBlockSize,
         ExcessiveAcceptDepth,
-        UseReceiveShaping,      // bool
-        UseSendShaping,         // bool
-        ReceiveBurst,           // int
-        ReceiveAve,             // int
-        SendBurst,              // int
-        SendAve,                // int
+        UseReceiveShaping, // bool
+        UseSendShaping, // bool
+        ReceiveBurst, // int
+        ReceiveAve, // int
+        SendBurst, // int
+        SendAve, // int
         UOptIDRowCount,
     };
 
     void Init();
     void Reset();
 
-    int rowCount(const QModelIndex & parent = QModelIndex()) const;
-    QVariant data(const QModelIndex & index, int role = Qt::DisplayRole) const;
-    bool setData(const QModelIndex & index, const QVariant & value, int role = Qt::EditRole);
+    int rowCount(const QModelIndex &parent = QModelIndex()) const;
+    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
+    bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole);
 
     /* Options setters */
-    void setMaxGeneratedBlock(const QVariant& value);
+    void setMaxGeneratedBlock(const QVariant &value);
 
 
     /* Explicit getters */
-    uint64_t getMaxGeneratedBlock()
-    {
-        return ::maxGeneratedBlock;
-    }
-
-
-    const QString& getOverriddenByCommandLine() { return strOverriddenByCommandLine; }
-
+    uint64_t getMaxGeneratedBlock() { return ::maxGeneratedBlock; }
+    const QString &getOverriddenByCommandLine() { return strOverriddenByCommandLine; }
     /* Restart flag helper */
     void setRestartRequired(bool fRequired);
     bool isRestartRequired();
@@ -71,7 +66,6 @@ private:
     void addOverriddenOption(const std::string &option);
 
 Q_SIGNALS:
-
 };
 
 #endif // BITCOIN_QT_OPTIONSMODEL_H

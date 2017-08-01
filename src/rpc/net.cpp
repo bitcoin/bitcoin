@@ -7,6 +7,7 @@
 
 #include "chainparams.h"
 #include "clientversion.h"
+#include "dosman.h"
 #include "main.h"
 #include "net.h"
 #include "netbase.h"
@@ -125,12 +126,12 @@ UniValue getpeerinfo(const UniValue& params, bool fHelp)
     CopyNodeStats(vstats);
 
     UniValue ret(UniValue::VARR);
-    CNode* node = NULL;
+    CNodeRef node;
     if (params.size() > 0)  // BU allow params to this RPC call
       {
 	string nodeName = params[0].get_str();
         node = FindLikelyNode(nodeName);
-        if (!node) throw runtime_error("Unknown node");        
+        if (!node) throw runtime_error("Unknown node");
       }
 
     BOOST_FOREACH(const CNodeStats& stats, vstats) {
@@ -240,13 +241,11 @@ UniValue disconnectnode(const UniValue& params, bool fHelp)
             + HelpExampleRpc("disconnectnode", "\"192.168.0.6:8333\"")
         );
 
-    //BU: Add lock on cs_vNodes as FindNode now requries it to prevent potential use-after-free errors
-    LOCK(cs_vNodes);
-    CNode* pNode = FindNode(params[0].get_str());
-    if (pNode == NULL)
+    CNodeRef node = FindNodeRef(params[0].get_str());
+    if (!node)
         throw JSONRPCError(RPC_CLIENT_NODE_NOT_CONNECTED, "Node not found in connected nodes");
 
-    pNode->fDisconnect = true;
+    node->fDisconnect = true;
 
     return NullUniValue;
 }
@@ -483,7 +482,7 @@ UniValue getnetworkinfo(const UniValue& params, bool fHelp)
             "  ,...\n"
             "  ]\n"
             "  \"warnings\": \"...\"                    (string) any network warnings (such as alert messages) \n"
-            "  \"thinblockstats\": \"...\"              (string) thin block related statistics \n" 
+            "  \"thinblockstats\": \"...\"              (string) thin block related statistics \n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("getnetworkinfo", "")
@@ -559,7 +558,7 @@ UniValue setban(const UniValue& params, bool fHelp)
 
     if (strCommand == "add")
     {
-        if (isSubnet ? CNode::IsBanned(subNet) : CNode::IsBanned(netAddr))
+        if (isSubnet ? dosMan.IsBanned(subNet) : dosMan.IsBanned(netAddr))
             throw JSONRPCError(RPC_CLIENT_NODE_ALREADY_ADDED, "Error: IP/Subnet already banned");
 
         int64_t banTime = 0; //use standard bantime if not specified
@@ -570,17 +569,16 @@ UniValue setban(const UniValue& params, bool fHelp)
         if (params.size() == 4 && params[3].isTrue())
             absolute = true;
 
-        isSubnet ? CNode::Ban(subNet, BanReasonManuallyAdded, banTime, absolute) : CNode::Ban(netAddr, BanReasonManuallyAdded, banTime, absolute);
+        isSubnet ? dosMan.Ban(subNet, BanReasonManuallyAdded, banTime, absolute) : dosMan.Ban(netAddr, BanReasonManuallyAdded, banTime, absolute);
 
         //disconnect possible nodes
         if (!isSubnet) subNet = CSubNet(netAddr);
-        DisconnectSubNetNodes(subNet);//BU: Since we need to mark any nodes in subNet for disconnect, atomically mark all nodes at once
-        //while(CNode *bannedNode = (isSubnet ? FindNode(subNet) : FindNode(netAddr)))
-        //    bannedNode->fDisconnect = true;
+        // BU: Since we need to mark any nodes in subNet for disconnect, atomically mark all nodes at once
+        DisconnectSubNetNodes(subNet);
     }
     else if(strCommand == "remove")
     {
-        if (!( isSubnet ? CNode::Unban(subNet) : CNode::Unban(netAddr) ))
+        if (!( isSubnet ? dosMan.Unban(subNet) : dosMan.Unban(netAddr) ))
             throw JSONRPCError(RPC_MISC_ERROR, "Error: Unban failed");
     }
 
@@ -599,7 +597,7 @@ UniValue listbanned(const UniValue& params, bool fHelp)
                             );
 
     banmap_t banMap;
-    CNode::GetBanned(banMap);
+    dosMan.GetBanned(banMap);
 
     UniValue bannedAddresses(UniValue::VARR);
     for (banmap_t::iterator it = banMap.begin(); it != banMap.end(); it++)
@@ -628,7 +626,7 @@ UniValue clearbanned(const UniValue& params, bool fHelp)
                             + HelpExampleRpc("clearbanned", "")
                             );
 
-    CNode::ClearBanned();
+    dosMan.ClearBanned();
     return NullUniValue;
 }
 

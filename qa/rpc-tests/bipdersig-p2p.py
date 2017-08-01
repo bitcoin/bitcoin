@@ -50,7 +50,7 @@ class BIP66Test(ComparisonTestFramework):
     def setup_network(self):
         # Must set the blockversion for this test
         self.nodes = start_nodes(1, self.options.tmpdir, 
-                                 extra_args=[['-debug', '-whitelist=127.0.0.1', '-blockversion=2']],
+                                 extra_args=[['-use-thinblocks=0', '-debug', '-whitelist=127.0.0.1', '-blockversion=2']],
                                  binary=[self.options.testbinary])
 
     def run_test(self):
@@ -102,7 +102,7 @@ class BIP66Test(ComparisonTestFramework):
             self.last_block_time += 1
             self.tip = block.sha256
             height += 1
-        yield TestInstance(test_blocks, sync_every_block=False)
+        yield TestInstance(test_blocks, sync_every_block=True)
 
         ''' 
         Check that the new DERSIG rules are not enforced in the 750th

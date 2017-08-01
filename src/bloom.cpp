@@ -11,6 +11,7 @@
 #include "script/standard.h"
 #include "random.h"
 #include "streams.h"
+#include "util.h"
 
 #include <math.h>
 #include <stdlib.h>
@@ -22,35 +23,36 @@
 
 using namespace std;
 
-CBloomFilter::CBloomFilter(unsigned int nElements, double nFPRate, unsigned int nTweakIn, unsigned char nFlagsIn) :
-    /**
-     * The ideal size for a bloom filter with a given number of elements and false positive rate is:
-     * - nElements * log(fp rate) / ln(2)^2
-     * We ignore filter parameters which will create a bloom filter larger than the protocol limits
-     */
-    vData(min((unsigned int)(-1  / LN2SQUARED * nElements * log(nFPRate)), MAX_BLOOM_FILTER_SIZE * 8) / 8),
-    /**
-     * The ideal number of hash functions is filter size * ln(2) / number of elements
-     * Again, we ignore filter parameters which will create a bloom filter with more hash functions than the protocol limits
-     * See https://en.wikipedia.org/wiki/Bloom_filter for an explanation of these formulas
-     */
-    isFull(false),
-    isEmpty(false),
-    nHashFuncs(min((unsigned int)(vData.size() * 8 / nElements * LN2), MAX_HASH_FUNCS)),
-    nTweak(nTweakIn),
-    nFlags(nFlagsIn)
-{
+void CBloomFilter::setup(unsigned int nElements, double nFPRate, unsigned int nTweakIn, unsigned char nFlagsIn, bool size_constrained) {
+    if (nElements == 0) {
+        LogPrintf("Construction of empty CBloomFilter attempted.\n");
+        nElements = 1;
+    }
+    unsigned desired_vdata_size = (unsigned int)(-1  / LN2SQUARED * nElements * log(nFPRate) / 8);
+
+    if (size_constrained)
+        desired_vdata_size = min(desired_vdata_size, MAX_BLOOM_FILTER_SIZE);
+    
+    vData.resize(desired_vdata_size, 0);
+    isFull = vData.size() == 0;
+    isEmpty = true;
+
+    nHashFuncs = (unsigned int)(vData.size() * 8 / nElements * LN2);
+
+    if (size_constrained)
+        nHashFuncs = min(nHashFuncs, MAX_HASH_FUNCS);
+    
+    nTweak = nTweakIn;
+    nFlags = nFlagsIn;
+}
+
+CBloomFilter::CBloomFilter(unsigned int nElements, double nFPRate, unsigned int nTweakIn, unsigned char nFlagsIn)  {
+    setup(nElements, nFPRate, nTweakIn, nFlagsIn, true);
 }
 
 // Private constructor used by CRollingBloomFilter
-CBloomFilter::CBloomFilter(unsigned int nElements, double nFPRate, unsigned int nTweakIn) :
-    vData((unsigned int)(-1  / LN2SQUARED * nElements * log(nFPRate)) / 8),
-    isFull(false),
-    isEmpty(true),
-    nHashFuncs((unsigned int)(vData.size() * 8 / nElements * LN2)),
-    nTweak(nTweakIn),
-    nFlags(BLOOM_UPDATE_NONE)
-{
+CBloomFilter::CBloomFilter(unsigned int nElements, double nFPRate, unsigned int nTweakIn) {
+    setup(nElements, nFPRate, nTweakIn, BLOOM_UPDATE_NONE, false);
 }
 
 inline unsigned int CBloomFilter::Hash(unsigned int nHashNum, const std::vector<unsigned char>& vDataToHash) const
@@ -118,8 +120,8 @@ bool CBloomFilter::contains(const uint256& hash) const
 
 void CBloomFilter::clear()
 {
-    vData.assign(vData.size(),0);
-    isFull = false;
+    vData.assign(vData.size(), 0);
+    isFull = vData.size() == 0;
     isEmpty = true;
 }
 

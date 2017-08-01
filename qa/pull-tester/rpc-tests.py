@@ -170,6 +170,7 @@ testScripts = [ RpcTest(t) for t in [
     'parallel',
     'wallet',
     'excessive',
+    'buip055',
     'listtransactions',
     'receivedby',
     'mempool_resurrect_test',
@@ -209,6 +210,7 @@ testScripts = [ RpcTest(t) for t in [
 testScriptsExt = [ RpcTest(t) for t in [
     'txPerf',
     'excessive --extensive',
+    'parallel --extensive',
     'bip9-softforks',
     'bip65-cltv',
     'bip65-cltv-p2p',
@@ -364,7 +366,8 @@ def runtests():
                     if additional_opt not in double_opts:
                         continue
 
-            if fullscriptcmd not in execution_time.keys():
+            #if fullscriptcmd not in execution_time.keys():
+            if 1:
                 if t in testScripts:
                     print("Running testscript %s%s%s ..." % (bold[1], t, bold[0]))
                 else:

@@ -31,6 +31,7 @@
 #include <stdint.h>
 
 #include <boost/assign/list_of.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <univalue.h>
 
@@ -574,8 +575,9 @@ UniValue signrawtransaction(const UniValue& params, bool fHelp)
             "       \"ALL\"\n"
             "       \"NONE\"\n"
             "       \"SINGLE\"\n"
-            "       \"ALL|ANYONECANPAY\"\n"
-            "       \"NONE|ANYONECANPAY\"\n"
+            "       followed by ANYONECANPAY and/or FORKID flags separated with |, for example\n"
+            "       \"ALL|ANYONECANPAY|FORKID\"\n"
+            "       \"NONE|FORKID\"\n"
             "       \"SINGLE|ANYONECANPAY\"\n"
 
             "\nResult:\n"
@@ -723,28 +725,46 @@ UniValue signrawtransaction(const UniValue& params, bool fHelp)
 #endif
 
     int nHashType = SIGHASH_ALL;
-    if (params.size() > 3 && !params[3].isNull()) {
-        static map<string, int> mapSigHashValues =
-            boost::assign::map_list_of
-            (string("ALL"), int(SIGHASH_ALL))
-            (string("ALL|ANYONECANPAY"), int(SIGHASH_ALL|SIGHASH_ANYONECANPAY))
-            (string("NONE"), int(SIGHASH_NONE))
-            (string("NONE|ANYONECANPAY"), int(SIGHASH_NONE|SIGHASH_ANYONECANPAY))
-            (string("SINGLE"), int(SIGHASH_SINGLE))
-            (string("SINGLE|ANYONECANPAY"), int(SIGHASH_SINGLE|SIGHASH_ANYONECANPAY))
-            ;
-        string strHashType = params[3].get_str();
-        if (mapSigHashValues.count(strHashType))
-            nHashType = mapSigHashValues[strHashType];
-        else
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid sighash param");
+    if (params.size() > 3 && !params[3].isNull())
+    {
+        std::string strHashType = params[3].get_str();
+
+        std::vector<string> strings;
+        std::istringstream ss(strHashType);
+        std::string s;
+        while (getline(ss, s, '|'))
+        {
+            boost::trim(s);
+            if (boost::iequals(s,"ALL"))
+                nHashType = SIGHASH_ALL;
+            else if (boost::iequals(s,"NONE"))
+                nHashType = SIGHASH_NONE;
+            else if (boost::iequals(s,"SINGLE"))
+                nHashType = SIGHASH_SINGLE;
+            else if (boost::iequals(s,"ANYONECANPAY"))
+                nHashType |= SIGHASH_ANYONECANPAY;
+            else if (boost::iequals(s,"FORKID"))
+                nHashType |= SIGHASH_FORKID;
+            else
+            {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid sighash param");
+            }
+        }
+
+    }
+    else  // If the user didn't specify, use the configured default for the hash type
+    {
+        if (chainActive.Tip()->IsforkActiveOnNextBlock(miningForkTime.value)) nHashType |= SIGHASH_FORKID;
     }
 
-    bool fHashSingle = ((nHashType & ~SIGHASH_ANYONECANPAY) == SIGHASH_SINGLE);
+    bool fHashSingle = ((nHashType & ~(SIGHASH_ANYONECANPAY | SIGHASH_FORKID)) == SIGHASH_SINGLE);
 
     // Script verification errors
     UniValue vErrors(UniValue::VARR);
 
+    // Use CTransaction for the constant parts of the
+    // transaction to avoid rehashing.
+    const CTransaction txConst(mergedTx);
     // Sign what we can:
     for (unsigned int i = 0; i < mergedTx.vin.size(); i++) {
         CTxIn& txin = mergedTx.vin[i];
@@ -754,18 +774,18 @@ UniValue signrawtransaction(const UniValue& params, bool fHelp)
             continue;
         }
         const CScript& prevPubKey = coins->vout[txin.prevout.n].scriptPubKey;
-
+        const CAmount &amount = coins->vout[txin.prevout.n].nValue;
         txin.scriptSig.clear();
         // Only sign SIGHASH_SINGLE if there's a corresponding output:
         if (!fHashSingle || (i < mergedTx.vout.size()))
-            SignSignature(keystore, prevPubKey, mergedTx, i, nHashType);
+            SignSignature(keystore, prevPubKey, mergedTx, i, amount, nHashType);
 
         // ... and merge in other signatures:
         BOOST_FOREACH(const CMutableTransaction& txv, txVariants) {
-            txin.scriptSig = CombineSignatures(prevPubKey, mergedTx, i, txin.scriptSig, txv.vin[i].scriptSig);
+            txin.scriptSig = CombineSignatures(prevPubKey, TransactionSignatureChecker(&txConst, i, amount), txin.scriptSig, txv.vin[i].scriptSig);
         }
         ScriptError serror = SCRIPT_ERR_OK;
-        if (!VerifyScript(txin.scriptSig, prevPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker(&mergedTx, i), &serror)) {
+        if (!VerifyScript(txin.scriptSig, prevPubKey, STANDARD_SCRIPT_VERIFY_FLAGS | SCRIPT_ENABLE_SIGHASH_FORKID, MutableTransactionSignatureChecker(&mergedTx, i, amount), &serror)) {
             TxInErrorToJSON(txin, vErrors, ScriptErrorString(serror));
         }
     }

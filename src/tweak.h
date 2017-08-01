@@ -9,16 +9,13 @@
 #include <boost/bind.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 // c++11 #include <type_traits>
-#include <univalue.h>
+#include "univalue/include/univalue.h"
 
 class CTweakBase;
 
 typedef std::string CTweakKey;
 typedef std::map<CTweakKey, CTweakBase *> CTweakMap;
 extern CTweakMap tweaks;
-
-// Create a help string for all the ctweaks entries, as they would be used as command line options
-std::string TweakCmdLineHelp();
 
 class CTweakBase
 {

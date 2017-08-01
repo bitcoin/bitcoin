@@ -7,6 +7,7 @@
 
 #include "bitcoinaddressvalidator.h"
 #include "bitcoinunits.h"
+#include "clientversion.h"
 #include "qvalidatedlineedit.h"
 #include "walletmodel.h"
 
@@ -927,6 +928,11 @@ QString formatServicesStr(quint64 mask)
             case NODE_XTHIN:
                 strList.append("XTHIN");
                 break;
+#ifdef BITCOIN_CASH
+            case NODE_BITCOIN_CASH:
+                strList.append("CASH");
+                break;
+#endif
             default:
                 strList.append(QString("%1[%2]").arg("UNKNOWN").arg(check));
             }

@@ -6,21 +6,22 @@
 #ifndef BITCOIN_UNLIMITED_H
 #define BITCOIN_UNLIMITED_H
 
+#include "buip055fork.h"
 #include "chain.h"
 #include "checkqueue.h"
+#include "clientversion.h"
 #include "coins.h"
 #include "consensus/params.h"
 #include "consensus/validation.h"
 #include "leakybucket.h"
 #include "net.h"
-#include "requestManager.h"
 #include "script/script_error.h"
 #include "stat.h"
 #include "thinblock.h"
 #include "tweak.h"
+#include "univalue/include/univalue.h"
 #include <boost/thread.hpp>
 #include <list>
-#include <univalue.h>
 #include <vector>
 
 enum
@@ -37,6 +38,15 @@ enum
     EXCESSIVE_BLOCK_CHAIN_RESET = 6 * 24, // After 1 day of non-excessive blocks, reset the checker
     DEFAULT_CHECKPOINT_DAYS =
         30, // Default for the number of days in the past we check scripts during initial block download
+
+// if the blockchain is this far (in seconds) behind the current time, only request headers from a single
+// peer.  This makes IBD more efficient.  We make BITCOIN_CASH more lenient here because mining could be
+// more erratic and this node is likely to connect to non-BCC nodes.
+#ifdef BITCOIN_CASH
+    SINGLE_PEER_REQUEST_MODE_AGE = (7 * 24 * 60 * 60),
+#else
+    SINGLE_PEER_REQUEST_MODE_AGE = (24 * 60 * 60),
+#endif
 };
 
 class CBlock;
@@ -44,12 +54,13 @@ class CBlockIndex;
 class CValidationState;
 struct CDiskBlockPos;
 class CNode;
+class CNodeRef;
 class CChainParams;
 
-
+extern std::set<CBlockIndex *> setDirtyBlockIndex;
 extern uint32_t blockVersion; // Overrides the mined block version if non-zero
 extern uint64_t maxGeneratedBlock;
-extern unsigned int excessiveBlockSize;
+extern uint64_t excessiveBlockSize;
 extern unsigned int excessiveAcceptDepth;
 extern unsigned int maxMessageSizeMultiplier;
 /** BU Default maximum number of Outbound connections to simultaneously allow*/
@@ -73,6 +84,9 @@ static const unsigned int DEFAULT_MIN_LIMITFREERELAY = 1;
 // The number of days in the past we check scripts during initial block download
 extern CTweak<uint64_t> checkScriptDays;
 
+// Allow getblocktemplate to succeed even if this node chain tip blocks are old or this node is not connected
+extern CTweak<bool> unsafeGetBlockTemplate;
+
 // print out a configuration warning during initialization
 // bool InitWarning(const std::string &str);
 
@@ -84,7 +98,7 @@ int32_t UnlimitedComputeBlockVersion(const CBlockIndex *pindexPrev, const Consen
 // The function also allows * or ? wildcards.
 // This is useful for the RPC calls.
 // Returns the first node that matches.
-extern CNode *FindLikelyNode(const std::string &addrName);
+extern CNodeRef FindLikelyNode(const std::string &addrName);
 
 // Convert the BUComments to the string client's "subversion" string
 extern void settingsToUserAgentString();
@@ -121,6 +135,9 @@ extern int isChainExcessive(const CBlockIndex *blk, unsigned int checkDepth = ex
 
 // Check whether any block N back in this chain is an excessive block
 extern int chainContainsExcessive(const CBlockIndex *blk, unsigned int goBack = 0);
+
+// Given an invalid block, find all chains containing this block and mark all children invalid
+void MarkAllContainingChainsInvalid(CBlockIndex *invalidBlock);
 
 //// Internal CPU miner
 
@@ -229,9 +246,8 @@ extern CStatHistory<unsigned int> txAdded;
 extern CStatHistory<uint64_t, MinValMax<uint64_t> > poolSize;
 
 // Configuration variable validators
-bool MiningAndExcessiveBlockValidatorRule(const unsigned int newExcessiveBlockSize,
-    const unsigned int newMiningBlockSize);
-std::string ExcessiveBlockValidator(const unsigned int &value, unsigned int *item, bool validate);
+bool MiningAndExcessiveBlockValidatorRule(const uint64_t newExcessiveBlockSize, const uint64_t newMiningBlockSize);
+std::string ExcessiveBlockValidator(const uint64_t &value, uint64_t *item, bool validate);
 std::string OutboundConnectionValidator(const int &value, int *item, bool validate);
 std::string SubverValidator(const std::string &value, std::string *item, bool validate);
 std::string MiningBlockSizeValidator(const uint64_t &value, uint64_t *item, bool validate);
@@ -248,5 +264,6 @@ extern std::list<CStatBase *> mallocedStats;
 extern CCriticalSection cs_blockvalidationthread;
 void InterruptBlockValidationThreads();
 
-
+extern CTweak<uint64_t> miningForkTime;
+extern CTweak<bool> onlyAcceptForkSig;
 #endif

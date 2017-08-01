@@ -7,19 +7,21 @@
 #include "chainparams.h"
 #include "checkpoints.h"
 #include "clientversion.h"
+#include "connmgr.h"
 #include "consensus/consensus.h"
 #include "consensus/params.h"
 #include "consensus/validation.h"
 #include "core_io.h"
+#include "dosman.h"
 #include "expedited.h"
 #include "hash.h"
 #include "leakybucket.h"
-#include "main.h"
 #include "miner.h"
 #include "net.h"
 #include "parallel.h"
 #include "policy/policy.h"
 #include "primitives/block.h"
+#include "requestManager.h"
 #include "rpc/server.h"
 #include "stat.h"
 #include "thinblock.h"
@@ -50,24 +52,22 @@ static atomic<uint64_t> nLargestBlockSeen{BLOCKSTREAM_CORE_MAX_BLOCK_SIZE}; // t
 static atomic<bool> fIsChainNearlySyncd{false};
 extern atomic<bool> fIsInitialBlockDownload;
 extern CTweakRef<uint64_t> miningBlockSize;
-extern CTweakRef<unsigned int> ebTweak;
-extern std::vector<CNode *> xpeditedBlk; // Who requested expedited blocks from us
-extern std::vector<CNode *> xpeditedBlkUp; // Who we requested expedited blocks from
-extern std::vector<CNode *> xpeditedTxn;
+extern CTweakRef<uint64_t> ebTweak;
 
 int64_t nMaxTipAge = DEFAULT_MAX_TIP_AGE;
 
 bool IsTrafficShapingEnabled();
 UniValue validateblocktemplate(const UniValue &params, bool fHelp);
+UniValue validatechainhistory(const UniValue &params, bool fHelp);
 
-bool MiningAndExcessiveBlockValidatorRule(const unsigned int newExcessiveBlockSize,
-    const unsigned int newMiningBlockSize)
+bool MiningAndExcessiveBlockValidatorRule(const uint64_t newExcessiveBlockSize, const uint64_t newMiningBlockSize)
 {
     // The mined block size must be less then or equal too the excessive block size.
+    LogPrintf("newMiningBlockSizei: %d - newExcessiveBlockSize: %d", newMiningBlockSize, newExcessiveBlockSize);
     return (newMiningBlockSize <= newExcessiveBlockSize);
 }
 
-std::string ExcessiveBlockValidator(const unsigned int &value, unsigned int *item, bool validate)
+std::string ExcessiveBlockValidator(const uint64_t &value, uint64_t *item, bool validate)
 {
     if (validate)
     {
@@ -206,70 +206,6 @@ void UpdateRecvStats(CNode *pfrom, const std::string &strCommand, int msgSize, i
 }
 
 
-std::string UnlimitedCmdLineHelp()
-{
-    std::string strUsage;
-    strUsage += HelpMessageGroup(_("Bitcoin Unlimited Options:"));
-    strUsage += HelpMessageOpt("-blockversion=<n>", _("Generated block version number.  Value must be an integer"));
-    strUsage +=
-        HelpMessageOpt("-excessiveblocksize=<n>", _("Blocks above this size in bytes are considered excessive"));
-    strUsage += HelpMessageOpt("-excessiveacceptdepth=<n>",
-        _("Excessive blocks are accepted anyway if this many blocks are mined on top of them"));
-    strUsage += HelpMessageOpt(
-        "-receiveburst", _("The maximum rate that data can be received in kB/s.  If there has been a period of lower "
-                           "than average data rates, the client may receive extra data to bring the average back to "
-                           "'-receiveavg' but the data rate will not exceed this parameter."));
-    strUsage += HelpMessageOpt(
-        "-sendburst", _("The maximum rate that data can be sent in kB/s.  If there has been a period of lower than "
-                        "average data rates, the client may send extra data to bring the average back to '-receiveavg' "
-                        "but the data rate will not exceed this parameter."));
-    strUsage += HelpMessageOpt("-receiveavg", _("The average rate that data can be received in kB/s"));
-    strUsage += HelpMessageOpt("-sendavg", _("The maximum rate that data can be sent in kB/s"));
-    strUsage += HelpMessageOpt(
-        "-use-thinblocks=<n>", strprintf(_("Turn Thinblocks on or off (off: 0, on: 1, default: %d)"), 1));
-    strUsage += HelpMessageOpt("-connect-thinblock=<ip:port>",
-        _("Connect to a thinblock node(s). Blocks will only be downloaded from a thinblock peer.  If no connections "
-          "are possible then regular blocks will then be downloaded form any other connected peers."));
-    strUsage +=
-        HelpMessageOpt("-minlimitertxfee=<amt>", strprintf(_("Fees (in satoshi/byte) smaller than this are considered "
-                                                             "zero fee and subject to -limitfreerelay (default: %s)"),
-                                                     DEFAULT_MINLIMITERTXFEE));
-    strUsage += HelpMessageOpt(
-        "-min-xthin-nodes=<n>", strprintf(_("Minimum number of xthin nodes to automatically find and connect "
-                                            "(default: %d)"),
-                                    4));
-    strUsage += HelpMessageOpt("-maxlimitertxfee=<amt>",
-        strprintf(_("Fees (in satoshi/byte) larger than this are always relayed (default: %s)"),
-                                   DEFAULT_MAXLIMITERTXFEE));
-    strUsage += HelpMessageOpt(
-        "-bitnodes", _("Query for peer addresses via Bitnodes API, if low on addresses (default: 1 unless -connect)"));
-    strUsage += HelpMessageOpt("-forcebitnodes",
-        strprintf(_("Always query for peer addresses via Bitnodes API (default: %u)"), DEFAULT_FORCEBITNODES));
-    strUsage += HelpMessageOpt("-usednsseed=<host>", _("Add a custom DNS seed to use.  If at least one custom DNS seed "
-                                                       "is set, the default DNS seeds will be ignored."));
-    strUsage += HelpMessageOpt(
-        "-expeditedblock=<host>", _("Request expedited blocks from this host whenever we are connected to it"));
-    strUsage += HelpMessageOpt("-maxexpeditedblockrecipients=<n>",
-        _("The maximum number of nodes this node will forward expedited blocks to"));
-    strUsage += HelpMessageOpt("-maxexpeditedtxrecipients=<n>",
-        _("The maximum number of nodes this node will forward expedited transactions to"));
-    strUsage += HelpMessageOpt("-maxoutconnections=<n>",
-        strprintf(_("Initiate at most <n> connections to peers (default: %u).  If this number is higher than "
-                    "--maxconnections, it will be reduced to --maxconnections."),
-                                   DEFAULT_MAX_OUTBOUND_CONNECTIONS));
-    strUsage += HelpMessageOpt(
-        "-parallel=<n>", strprintf(_("Turn Parallel Block Validation on or off (off: 0, on: 1, default: %d)"), 1));
-    strUsage += HelpMessageOpt("-gen", strprintf(_("Generate coins (default: %u)"), DEFAULT_GENERATE));
-    strUsage += HelpMessageOpt("-genproclimit=<n>",
-        strprintf(_("Set the number of threads for coin generation if enabled (-1 = all cores, default: %d)"),
-                                   DEFAULT_GENERATE_THREADS));
-    strUsage += HelpMessageOpt("-ophanpoolexpiry=<n>",
-        strprintf(_("Do not keep transactions in the orphanpool longer than <n> hours (default: %u)"),
-                                   DEFAULT_ORPHANPOOL_EXPIRY));
-    strUsage += TweakCmdLineHelp();
-    return strUsage;
-}
-
 std::string FormatCoinbaseMessage(const std::vector<std::string> &comments, const std::string &customComment)
 {
     std::ostringstream ss;
@@ -285,7 +221,7 @@ std::string FormatCoinbaseMessage(const std::vector<std::string> &comments, cons
     return ret;
 }
 
-CNode *FindLikelyNode(const std::string &addrName)
+CNodeRef FindLikelyNode(const std::string &addrName)
 {
     LOCK(cs_vNodes);
     bool wildcard = (addrName.find_first_of("*?") != std::string::npos);
@@ -324,7 +260,7 @@ UniValue expedited(const UniValue &params, bool fHelp)
     std::string obj = params[0].get_str();
     std::string strNode = params[1].get_str();
 
-    CNode *node = FindLikelyNode(strNode);
+    CNodeRef node(FindLikelyNode(strNode));
     if (!node)
     {
         throw runtime_error("Unknown node");
@@ -353,27 +289,8 @@ UniValue expedited(const UniValue &params, bool fHelp)
             flags |= EXPEDITED_STOP;
     }
 
-    // TODO: validate that the node can handle expedited blocks
+    connmgr->PushExpeditedRequest(node.get(), flags);
 
-    // Add or remove this node to our list of upstream nodes
-    {
-        LOCK(cs_xpedited);
-        std::vector<CNode *>::iterator elem = std::find(xpeditedBlkUp.begin(), xpeditedBlkUp.end(), node);
-        if ((flags & EXPEDITED_BLOCKS) && (flags & EXPEDITED_STOP))
-        {
-            if (elem != xpeditedBlkUp.end())
-                xpeditedBlkUp.erase(elem);
-        }
-        else if (flags & EXPEDITED_BLOCKS)
-        {
-            if (elem == xpeditedBlkUp.end()) // don't add it twice
-                xpeditedBlkUp.push_back(node);
-        }
-    }
-
-    // Push the expedited message even if its a repeat to allow the operator to reissue the CLI command to trigger
-    // another message.
-    node->PushMessage(NetMsgType::XPEDITEDREQUEST, flags);
     return NullUniValue;
 }
 
@@ -391,26 +308,11 @@ UniValue pushtx(const UniValue &params, bool fHelp)
 
     string strNode = params[0].get_str();
 
-    // BU: Add lock on cs_vNodes as FindNode now requries it to prevent potential use-after-free errors
-    CNode *node = NULL;
-    {
-        LOCK(cs_vNodes);
-        node = FindLikelyNode(strNode);
+    CNodeRef node(FindLikelyNode(strNode));
+    if (!node)
+        throw runtime_error("Unknown node");
 
-        if (!node)
-        {
-            throw runtime_error("Unknown node");
-        }
-
-        // BU: Since we are passing node to another function, add a ref to prevent use-after-free
-        //    This allows us to release the lock on cs_vNodes earlier while still protecting node from deletion
-        node->AddRef();
-    }
-
-    UnlimitedPushTxns(node);
-
-    // BU: Remember to release the reference we took on node to protect from use-after-free
-    node->Release();
+    UnlimitedPushTxns(node.get());
 
     return NullUniValue;
 }
@@ -445,13 +347,16 @@ void settingsToUserAgentString()
 {
     BUComments.clear();
 
-    double ebInMegaBytes = (double)excessiveBlockSize / 1000000;
     std::stringstream ebss;
-    ebss << std::fixed << std::setprecision(1) << ebInMegaBytes;
+    ebss << (excessiveBlockSize / 100000);
     std::string eb = ebss.str();
-    std::string eb_formatted;
-    eb_formatted = (eb.at(eb.size() - 1) == '0' ? eb.substr(0, eb.size() - 2) : eb); // strip zero decimal
-    BUComments.push_back("EB" + eb_formatted);
+    eb.insert(eb.size() - 1, ".", 1);
+    if (eb.substr(0, 1) == ".")
+        eb = "0" + eb;
+    if (eb.at(eb.size() - 1) == '0')
+        eb = eb.substr(0, eb.size() - 2);
+
+    BUComments.push_back("EB" + eb);
 
     int ad_formatted;
     ad_formatted = (excessiveAcceptDepth >= 9999999 ? 9999999 : excessiveAcceptDepth);
@@ -460,8 +365,8 @@ void settingsToUserAgentString()
 
 void UnlimitedSetup(void)
 {
-    MIN_TX_REQUEST_RETRY_INTERVAL = GetArg("-txretryinterval", MIN_TX_REQUEST_RETRY_INTERVAL);
-    MIN_BLK_REQUEST_RETRY_INTERVAL = GetArg("-blkretryinterval", MIN_BLK_REQUEST_RETRY_INTERVAL);
+    MIN_TX_REQUEST_RETRY_INTERVAL = GetArg("-txretryinterval", DEFAULT_MIN_TX_REQUEST_RETRY_INTERVAL);
+    MIN_BLK_REQUEST_RETRY_INTERVAL = GetArg("-blkretryinterval", DEFAULT_MIN_BLK_REQUEST_RETRY_INTERVAL);
     maxGeneratedBlock = GetArg("-blockmaxsize", maxGeneratedBlock);
     blockVersion = GetArg("-blockversion", blockVersion);
     excessiveBlockSize = GetArg("-excessiveblocksize", excessiveBlockSize);
@@ -506,10 +411,6 @@ void UnlimitedSetup(void)
         mallocedStats.push_front(new CStatHistory<uint64_t>("net/recv/msg/" + *i));
         mallocedStats.push_front(new CStatHistory<uint64_t>("net/send/msg/" + *i));
     }
-
-    xpeditedBlk.reserve(256);
-    xpeditedBlkUp.reserve(256);
-    xpeditedTxn.reserve(256);
 
     // make outbound conns modifiable by the user
     int nUserMaxOutConnections = GetArg("-maxoutconnections", DEFAULT_MAX_OUTBOUND_CONNECTIONS);
@@ -636,9 +537,9 @@ static bool ProcessBlockFound(const CBlock *pblock, const CChainParams &chainpar
 
         // In we are mining our own block or not running in parallel for any reason
         // we must terminate any block validation threads that are currently running,
-        // Unless they have more work than our own block.
-        // TODO: we need a better way to determine if a reorg is in progress.
-        PV.StopAllValidationThreads(pblock->GetBlockHeader().nBits);
+        // Unless they have more work than our own block or are processing a chain
+        // that has more work than our block.
+        PV->StopAllValidationThreads(pblock->GetBlockHeader().nBits);
 
         // Process this block the same as if we had received it from another node
         CValidationState state;
@@ -1382,13 +1283,12 @@ void LoadFilter(CNode *pfrom, CBloomFilter *filter)
 {
     if (!filter->IsWithinSizeConstraints())
         // There is no excuse for sending a too-large filter
-        Misbehaving(pfrom->GetId(), 100);
+        dosMan.Misbehaving(pfrom, 100);
     else
     {
         LOCK(pfrom->cs_filter);
         delete pfrom->pThinBlockFilter;
         pfrom->pThinBlockFilter = new CBloomFilter(*filter);
-        pfrom->pThinBlockFilter->UpdateEmptyFull();
     }
     uint64_t nSizeFilter = ::GetSerializeSize(*pfrom->pThinBlockFilter, SER_NETWORK, PROTOCOL_VERSION);
     LogPrint("thin", "Thinblock Bloom filter size: %d\n", nSizeFilter);
@@ -1577,6 +1477,7 @@ static const CRPCCommand commands[] =
     { "util",               "getstat",                &getstat,                true  },
     { "util",               "get",                    &gettweak,               true  },
     { "util",               "set",                    &settweak,               true  },
+    { "util",               "validatechainhistory",   &validatechainhistory,   true  },
 #ifdef DEBUG
     { "util",               "getstructuresizes",      &getstructuresizes,      true  },  // BU
 #endif
@@ -1591,6 +1492,67 @@ void RegisterUnlimitedRPCCommands(CRPCTable &tableRPC)
 {
     for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)
         tableRPC.appendCommand(commands[vcidx].name, &commands[vcidx]);
+}
+
+
+UniValue validatechainhistory(const UniValue &params, bool fHelp)
+{
+    if (fHelp)
+        throw runtime_error("validatechainhistory [hash]\n"
+                            "\nUpdates a chain's valid/invalid status based on parent blocks.\n");
+
+    std::stack<CBlockIndex *> stk;
+    CBlockIndex *pos = pindexBestHeader;
+    bool failedChain = false;
+    UniValue ret = NullUniValue;
+
+    LOCK(cs_main);
+
+    if (params.size() >= 1)
+    {
+        std::string strHash = params[0].get_str();
+        uint256 hash(uint256S(strHash));
+
+        if (mapBlockIndex.count(hash) == 0)
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+
+        CBlock block;
+        pos = mapBlockIndex[hash];
+    }
+
+    LogPrintf("validatechainhistory starting at %d %s\n", pos->nHeight, pos->phashBlock->ToString());
+    while (pos && !failedChain)
+    {
+        // LogPrintf("validate %d %s\n", pos->nHeight, pos->phashBlock->ToString());
+        failedChain = pos->nStatus & BLOCK_FAILED_MASK;
+        if (!failedChain)
+        {
+            stk.push(pos);
+        }
+        pos = pos->pprev;
+    }
+    if (failedChain)
+    {
+        ret = UniValue("Chain has a bad ancestor");
+        while (!stk.empty())
+        {
+            pos = stk.top();
+            if (pos)
+            {
+                pos->nStatus |= BLOCK_FAILED_CHILD;
+            }
+            setDirtyBlockIndex.insert(pos);
+            stk.pop();
+        }
+        FlushStateToDisk();
+        pindexBestHeader = FindMostWorkChain();
+    }
+    else
+    {
+        ret = UniValue("Chain is ok");
+    }
+
+    return ret;
 }
 
 
@@ -1705,10 +1667,13 @@ extern UniValue getstructuresizes(const UniValue &params, bool fHelp)
 
     ret.push_back(Pair("mapBlockIndex", mapBlockIndex.size()));
     // CChain
-    ret.push_back(Pair("setPreVerifiedTxHash", setPreVerifiedTxHash.size()));
-    ret.push_back(Pair("setUnVerifiedOrphanTxHash", setUnVerifiedOrphanTxHash.size()));
+    {
+        LOCK(cs_xval);
+        ret.push_back(Pair("setPreVerifiedTxHash", setPreVerifiedTxHash.size()));
+        ret.push_back(Pair("setUnVerifiedOrphanTxHash", setUnVerifiedOrphanTxHash.size()));
+    }
     ret.push_back(Pair("mapLocalHost", mapLocalHost.size()));
-    ret.push_back(Pair("CNode::vWhitelistedRange", CNode::vWhitelistedRange.size()));
+    ret.push_back(Pair("CDoSManager::vWhitelistedRange", dosMan.vWhitelistedRange.size()));
     ret.push_back(Pair("mapInboundConnectionTracker", mapInboundConnectionTracker.size()));
     ret.push_back(Pair("vUseDNSSeeds", vUseDNSSeeds.size()));
     ret.push_back(Pair("vAddedNodes", vAddedNodes.size()));
@@ -1722,9 +1687,13 @@ extern UniValue getstructuresizes(const UniValue &params, bool fHelp)
     // CAddrMan
     ret.push_back(Pair("mapOrphanTransactions", mapOrphanTransactions.size()));
     ret.push_back(Pair("mapOrphanTransactionsByPrev", mapOrphanTransactionsByPrev.size()));
-    ret.push_back(Pair("xpeditedBlk", xpeditedBlk.size()));
-    ret.push_back(Pair("xpeditedBlkUp", xpeditedBlkUp.size()));
-    ret.push_back(Pair("xpeditedTxn", xpeditedTxn.size()));
+
+    uint32_t nExpeditedBlocks, nExpeditedTxs, nExpeditedUpstream;
+    connmgr->ExpeditedNodeCounts(nExpeditedBlocks, nExpeditedTxs, nExpeditedUpstream);
+    ret.push_back(Pair("xpeditedBlk", (uint64_t)nExpeditedBlocks));
+    ret.push_back(Pair("xpeditedBlkUp", (uint64_t)nExpeditedUpstream));
+    ret.push_back(Pair("xpeditedTxn", (uint64_t)nExpeditedTxs));
+
 #ifdef DEBUG_LOCKORDER
     ret.push_back(Pair("lockorders", lockorders.size()));
 #endif
@@ -1771,3 +1740,70 @@ extern UniValue getstructuresizes(const UniValue &params, bool fHelp)
     return ret;
 }
 #endif
+
+/** Comparison function for sorting the getchaintips heads.  */
+struct CompareBlocksByHeight
+{
+    bool operator()(const CBlockIndex *a, const CBlockIndex *b) const
+    {
+        /* Make sure that unequal blocks with the same height do not compare
+           equal. Use the pointers themselves to make a distinction. */
+
+        if (a->nHeight != b->nHeight)
+            return (a->nHeight > b->nHeight);
+
+        return a < b;
+    }
+};
+
+void MarkAllContainingChainsInvalid(CBlockIndex *invalidBlock)
+{
+    LOCK(cs_main);
+
+    bool dirty = false;
+    DbgAssert(invalidBlock->nStatus & BLOCK_FAILED_MASK, return );
+
+    // Find all the chain tips:
+    std::set<CBlockIndex *, CompareBlocksByHeight> setTips;
+    std::set<CBlockIndex *> setOrphans;
+    std::set<CBlockIndex *> setPrevs;
+
+    BOOST_FOREACH (const PAIRTYPE(const uint256, CBlockIndex *) & item, mapBlockIndex)
+    {
+        if (!chainActive.Contains(item.second))
+        {
+            setOrphans.insert(item.second);
+            setPrevs.insert(item.second->pprev);
+        }
+    }
+
+    for (std::set<CBlockIndex *>::iterator it = setOrphans.begin(); it != setOrphans.end(); ++it)
+    {
+        if (setPrevs.erase(*it) == 0)
+        {
+            setTips.insert(*it);
+        }
+    }
+
+    // Always report the currently active tip.
+    setTips.insert(chainActive.Tip());
+
+    BOOST_FOREACH (CBlockIndex *tip, setTips)
+    {
+        if (tip->GetAncestor(invalidBlock->nHeight) == invalidBlock)
+        {
+            for (CBlockIndex *blk = tip; blk != invalidBlock; blk = blk->pprev)
+            {
+                if ((blk->nStatus & BLOCK_FAILED_CHILD) == 0)
+                {
+                    blk->nStatus |= BLOCK_FAILED_CHILD;
+                    setDirtyBlockIndex.insert(blk);
+                    dirty = true;
+                }
+            }
+        }
+    }
+
+    if (dirty)
+        FlushStateToDisk();
+}

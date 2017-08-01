@@ -23,10 +23,10 @@
 #include "script/standard.h"
 #include "timedata.h"
 #include "txmempool.h"
+#include "unlimited.h"
 #include "util.h"
 #include "utilmoneystr.h"
 #include "validationinterface.h"
-#include "unlimited.h"
 
 #include <boost/thread.hpp>
 #include <boost/tuple/tuple.hpp>
@@ -52,17 +52,16 @@ class ScoreCompare
 {
 public:
     ScoreCompare() {}
-
     bool operator()(const CTxMemPool::txiter a, const CTxMemPool::txiter b)
     {
-        return CompareTxMemPoolEntryByScore()(*b,*a); // Convert to less than
+        return CompareTxMemPoolEntryByScore()(*b, *a); // Convert to less than
     }
 };
 
-int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
+int64_t UpdateTime(CBlockHeader *pblock, const Consensus::Params &consensusParams, const CBlockIndex *pindexPrev)
 {
     int64_t nOldTime = pblock->nTime;
-    int64_t nNewTime = std::max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
+    int64_t nNewTime = std::max(pindexPrev->GetMedianTimePast() + 1, GetAdjustedTime());
 
     if (nOldTime < nNewTime)
         pblock->nTime = nNewTime;
@@ -76,7 +75,7 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
 
 BlockAssembler::BlockAssembler(const CChainParams &_chainparams)
     : chainparams(_chainparams), nBlockSize(0), nBlockTx(0), nBlockSigOps(0), nFees(0), nHeight(0), nLockTimeCutoff(0),
-      lastFewTxs(0), blockFinished(false)
+      lastFewTxs(0), blockFinished(false), buip055ChainBlock(false)
 {
     // Largest block you're willing to create:
     nBlockMaxSize = maxGeneratedBlock;
@@ -186,6 +185,8 @@ CBlockTemplate *BlockAssembler::CreateNewBlock(const CScript &scriptPubKeyIn, bo
     CBlockIndex *pindexPrev = chainActive.Tip();
     nHeight = pindexPrev->nHeight + 1;
 
+    buip055ChainBlock = pindexPrev->IsforkActiveOnNextBlock(miningForkTime.value);
+
     pblock->nTime = GetAdjustedTime();
     pblock->nVersion = UnlimitedComputeBlockVersion(pindexPrev, chainparams.GetConsensus(), pblock->nTime);
     // -regtest only: allow overriding block.nVersion with
@@ -203,8 +204,8 @@ CBlockTemplate *BlockAssembler::CreateNewBlock(const CScript &scriptPubKeyIn, bo
 
     nLastBlockTx = nBlockTx;
     nLastBlockSize = nBlockSize;
-    LogPrintf("CreateNewBlock(): total size %llu txs: %llu fees: %lld sigops %u\n",
-              nBlockSize, nBlockTx, nFees, nBlockSigOps);
+    LogPrintf("CreateNewBlock(): total size %llu txs: %llu fees: %lld sigops %u\n", nBlockSize, nBlockTx, nFees,
+        nBlockSigOps);
 
     // Create coinbase transaction.
     pblock->vtx[0] = coinbaseTx(scriptPubKeyIn, nHeight, nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus()));
@@ -338,8 +339,8 @@ void BlockAssembler::AddToBlock(CBlockTemplate *pblocktemplate, CTxMemPool::txit
         CAmount dummy;
         mempool.ApplyDeltas(iter->GetTx().GetHash(), dPriority, dummy);
         LogPrintf("priority %.1f fee %s txid %s\n", dPriority,
-                  CFeeRate(iter->GetModifiedFee(), iter->GetTxSize()).ToString().c_str(),
-                  iter->GetTx().GetHash().ToString().c_str());
+            CFeeRate(iter->GetModifiedFee(), iter->GetTxSize()).ToString().c_str(),
+            iter->GetTx().GetHash().ToString().c_str());
     }
 }
 
@@ -369,6 +370,22 @@ void BlockAssembler::addScoreTxs(CBlockTemplate *pblocktemplate)
 
         // If tx already in block, skip  (added by addPriorityTxs)
         if (inBlock.count(iter))
+        {
+            continue;
+        }
+
+        // If tx is not applicable to this (forked) chain, skip it
+        if (buip055ChainBlock && IsTxOpReturnInvalid(iter->GetTx()))
+        {
+            continue;
+        }
+        // Reject the tx if we are on the fork, but the tx is not fork-signed
+        if (buip055ChainBlock && onlyAcceptForkSig.value && !IsTxBUIP055Only(*iter))
+        {
+            continue;
+        }
+        // if tx is not applicable to this (unforked) chain, skip it
+        if (!buip055ChainBlock && IsTxBUIP055Only(*iter))
         {
             continue;
         }
@@ -459,6 +476,22 @@ void BlockAssembler::addPriorityTxs(CBlockTemplate *pblocktemplate)
             continue;
         }
 
+        // If tx is not applicable to this (forked) chain, skip it
+        if (buip055ChainBlock && IsTxOpReturnInvalid(iter->GetTx()))
+        {
+            continue;
+        }
+        // Reject the tx if we are on the fork, but the tx is not fork-signed
+        if (buip055ChainBlock && onlyAcceptForkSig.value && !IsTxBUIP055Only(*iter))
+        {
+            continue;
+        }
+        // if tx is not applicable to this (unforked) chain, skip it
+        if (!buip055ChainBlock && IsTxBUIP055Only(*iter))
+        {
+            continue;
+        }
+
         // If this tx fits in the block add it, otherwise keep looping
         if (TestForBlock(iter))
         {
@@ -487,7 +520,7 @@ void BlockAssembler::addPriorityTxs(CBlockTemplate *pblocktemplate)
     }
 }
 
-void IncrementExtraNonce(CBlock* pblock, unsigned int& nExtraNonce)
+void IncrementExtraNonce(CBlock *pblock, unsigned int &nExtraNonce)
 {
     // Update nExtraNonce
     static uint256 hashPrevBlock;
@@ -502,9 +535,9 @@ void IncrementExtraNonce(CBlock* pblock, unsigned int& nExtraNonce)
 
     CScript script = (CScript() << nHeight << CScriptNum(nExtraNonce));
     if (script.size() + COINBASE_FLAGS.size() > MAX_COINBASE_SCRIPTSIG_SIZE)
-      {
+    {
         COINBASE_FLAGS.resize(MAX_COINBASE_SCRIPTSIG_SIZE - script.size());
-      }
+    }
     txCoinbase.vin[0].scriptSig = script + COINBASE_FLAGS;
     assert(txCoinbase.vin[0].scriptSig.size() <= MAX_COINBASE_SCRIPTSIG_SIZE);
 
