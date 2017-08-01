@@ -1314,6 +1314,10 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     } // (!fDisableWallet)
 #endif // ENABLE_WALLET
     // ********************************************************* Step 6: network initialization
+    // Note that we absolutely cannot open any actual connections
+    // until the very end ("start node") as the UTXO/block state
+    // is not yet setup and may end up being set up twice if we
+    // need to reindex later.
 
     assert(!g_connman);
     g_connman = std::unique_ptr<CConnman>(new CConnman());
