@@ -86,7 +86,7 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
         pcoinsdbview = new CCoinsViewDB(1 << 23, true);
         llmq::InitLLMQSystem(*evoDb, nullptr, true);
         pcoinsTip = new CCoinsViewCache(pcoinsdbview);
-        if (!InitBlockIndex(chainparams)) {
+        if (!LoadGenesisBlock(chainparams)) {
             throw std::runtime_error("InitBlockIndex failed.");
         }
         {
