@@ -1440,8 +1440,9 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                 }
 
                 // At this point blocktree args are consistent with what's on disk.
-                // If we're not mid-reindex (based on disk + args), add a genesis block on disk.
-                // This is called again in ThreadImport in the reindex completes.
+                // If we're not mid-reindex (based on disk + args), add a genesis block on disk
+                // (otherwise we use the one already on disk).
+                // This is called again in ThreadImport after the reindex completes.
                 if (!fReindex && !LoadGenesisBlock(chainparams)) {
                     strLoadError = _("Error initializing block database");
                     break;
