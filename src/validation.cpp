@@ -3539,14 +3539,24 @@ bool static LoadBlockIndexDB(const CChainParams& chainparams)
     return true;
 }
 
-void LoadChainTip(const CChainParams& chainparams)
+bool LoadChainTip(const CChainParams& chainparams)
 {
-    if (chainActive.Tip() && chainActive.Tip()->GetBlockHash() == pcoinsTip->GetBestBlock()) return;
+    if (chainActive.Tip() && chainActive.Tip()->GetBlockHash() == pcoinsTip->GetBestBlock()) return true;
+
+    if (pcoinsTip->GetBestBlock().IsNull() && mapBlockIndex.size() == 1) {
+        // In case we just added the genesis block, connect it now, so
+        // that we always have a chainActive.Tip() when we return.
+        LogPrintf("%s: Connecting genesis block...\n", __func__);
+        CValidationState state;
+        if (!ActivateBestChain(state, chainparams)) {
+            return false;
+        }
+    }
 
     // Load pointer to end of best chain
     BlockMap::iterator it = mapBlockIndex.find(pcoinsTip->GetBestBlock());
     if (it == mapBlockIndex.end())
-        return;
+        return false;
     chainActive.SetTip(it->second);
 
     PruneBlockIndexCandidates();
@@ -3555,6 +3565,7 @@ void LoadChainTip(const CChainParams& chainparams)
         chainActive.Tip()->GetBlockHash().ToString(), chainActive.Height(),
         DateTimeStrFormat("%Y-%m-%d %H:%M:%S", chainActive.Tip()->GetBlockTime()),
         GuessVerificationProgress(chainparams.TxData(), chainActive.Tip()));
+    return true;
 }
 
 CVerifyDB::CVerifyDB()
@@ -3751,6 +3762,8 @@ bool RewindBlockIndex(const CChainParams& params)
 {
     LOCK(cs_main);
 
+    // Note that during -reindex-chainstate we are called with an empty chainActive!
+
     int nHeight = 1;
     while (nHeight <= chainActive.Height()) {
         if (IsWitnessEnabled(chainActive[nHeight - 1], params.GetConsensus()) && !(chainActive[nHeight]->nStatus & BLOCK_OPT_WITNESS)) {
@@ -3820,12 +3833,19 @@ bool RewindBlockIndex(const CChainParams& params)
         }
     }
 
-    PruneBlockIndexCandidates();
+    if (chainActive.Tip() != NULL) {
+        // We can't prune block index candidates based on our tip if we have
+        // no tip due to chainActive being empty!
+        PruneBlockIndexCandidates();
 
-    CheckBlockIndex(params.GetConsensus());
+        CheckBlockIndex(params.GetConsensus());
 
-    if (!FlushStateToDisk(params, state, FLUSH_STATE_ALWAYS)) {
-        return false;
+        // FlushStateToDisk can possibly read chainActive. Be conservative
+        // and skip it here, we're about to -reindex-chainstate anyway, so
+        // it'll get called a bunch real soon.
+        if (!FlushStateToDisk(params, state, FLUSH_STATE_ALWAYS)) {
+            return false;
+        }
     }
 
     return true;
@@ -3863,42 +3883,55 @@ void UnloadBlockIndex()
 bool LoadBlockIndex(const CChainParams& chainparams)
 {
     // Load block index from databases
-    if (!fReindex && !LoadBlockIndexDB(chainparams))
-        return false;
+    bool needs_init = fReindex;
+    if (!fReindex) {
+        bool ret = LoadBlockIndexDB(chainparams);
+        if (!ret) return false;
+        needs_init = mapBlockIndex.empty();
+    }
+
+    if (needs_init) {
+        // Everything here is for *new* reindex/DBs. Thus, though
+        // LoadBlockIndexDB may have set fReindex if we shut down
+        // mid-reindex previously, we don't check fReindex and
+        // instead only check it prior to LoadBlockIndexDB to set
+        // needs_init.
+
+        LogPrintf("Initializing databases...\n");
+        // Use the provided setting for -txindex in the new database
+        fTxIndex = GetBoolArg("-txindex", DEFAULT_TXINDEX);
+        pblocktree->WriteFlag("txindex", fTxIndex);
+    }
     return true;
 }
 
-bool InitBlockIndex(const CChainParams& chainparams)
+bool LoadGenesisBlock(const CChainParams& chainparams)
 {
     LOCK(cs_main);
 
-    // Check whether we're already initialized
-    if (chainActive.Genesis() != NULL)
+    // Check whether we're already initialized by checking for genesis in
+    // mapBlockIndex. Note that we can't use chainActive here, since it is
+    // set based on the coins db, not the block index db, which is the only
+    // thing loaded at this point.
+    if (mapBlockIndex.count(chainparams.GenesisBlock().GetHash()))
         return true;
 
-    // Use the provided setting for -txindex in the new database
-    fTxIndex = GetBoolArg("-txindex", DEFAULT_TXINDEX);
-    pblocktree->WriteFlag("txindex", fTxIndex);
-    LogPrintf("Initializing databases...\n");
-
     // Only add the genesis block if not reindexing (in which case we reuse the one already on disk)
-    if (!fReindex) {
-        try {
-            CBlock &block = const_cast<CBlock&>(chainparams.GenesisBlock());
-            // Start new block file
-            unsigned int nBlockSize = ::GetSerializeSize(block, SER_DISK, CLIENT_VERSION);
-            CDiskBlockPos blockPos;
-            CValidationState state;
-            if (!FindBlockPos(state, blockPos, nBlockSize+8, 0, block.GetBlockTime()))
-                return error("LoadBlockIndex(): FindBlockPos failed");
-            if (!WriteBlockToDisk(block, blockPos, chainparams.MessageStart()))
-                return error("LoadBlockIndex(): writing genesis block to disk failed");
-            CBlockIndex *pindex = AddToBlockIndex(block);
-            if (!ReceivedBlockTransactions(block, state, pindex, blockPos, chainparams.GetConsensus()))
-                return error("LoadBlockIndex(): genesis block not accepted");
-        } catch (const std::runtime_error& e) {
-            return error("LoadBlockIndex(): failed to initialize block database: %s", e.what());
-        }
+    try {
+        CBlock &block = const_cast<CBlock&>(chainparams.GenesisBlock());
+        // Start new block file
+        unsigned int nBlockSize = ::GetSerializeSize(block, SER_DISK, CLIENT_VERSION);
+        CDiskBlockPos blockPos;
+        CValidationState state;
+        if (!FindBlockPos(state, blockPos, nBlockSize+8, 0, block.GetBlockTime()))
+            return error("%s: FindBlockPos failed", __func__);
+        if (!WriteBlockToDisk(block, blockPos, chainparams.MessageStart()))
+            return error("%s: writing genesis block to disk failed", __func__);
+        CBlockIndex *pindex = AddToBlockIndex(block);
+        if (!ReceivedBlockTransactions(block, state, pindex, blockPos, chainparams.GetConsensus()))
+            return error("%s: genesis block not accepted", __func__);
+    } catch (const std::runtime_error& e) {
+        return error("%s: failed to write genesis block: %s", __func__, e.what());
     }
 
     return true;
