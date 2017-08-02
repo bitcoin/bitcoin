@@ -1329,10 +1329,16 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     int64_t nStart;
 
-    // ********************************************************* Step 5: verify wallet database integrity
+    // ********************************************************* Step 5: initialize AutoBackup and verify wallet database integrity
 #ifdef ENABLE_WALLET
-    if (!WalletVerify())
+    if (!CWallet::InitAutoBackup())
         return false;
+
+    if (!CWallet::Verify())
+        return false;
+
+    // Initialize KeePass Integration
+    keePassInt.init();
 #endif
     // ********************************************************* Step 6: network initialization
     // Note that we absolutely cannot open any actual connections
