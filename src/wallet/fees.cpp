@@ -12,7 +12,6 @@
 #include <wallet/coincontrol.h>
 #include <wallet/wallet.h>
 
-
 CAmount GetRequiredFee(unsigned int nTxBytes)
 {
     return std::max(CWallet::minTxFee.GetFee(nTxBytes), ::minRelayTxFee.GetFee(nTxBytes));
