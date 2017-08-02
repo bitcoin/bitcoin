@@ -762,7 +762,7 @@
           <item>
            <widget class="QLabel" name="fallbackFeeWarningLabel">
             <property name="toolTip">
-             <string>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until your have validated the complete chain.</string>
+             <string>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.</string>
             </property>
             <property name="font">
             <font>
