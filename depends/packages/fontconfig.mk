@@ -13,7 +13,13 @@ define $(package)_config_cmds
   $($(package)_autoconf)
 endef
 
+# 2.12.1 uses CHAR_WIDTH which is reserved and clashes with some glibc versions, but newer versions of fontconfig
+# have broken makefiles which needlessly attempt to re-generate headers with gperf.
+# Instead, change all uses of CHAR_WIDTH, and disable the rule that forces header re-generation.
+# This can be removed once the upstream build is fixed.
 define $(package)_build_cmds
+  sed -i 's/CHAR_WIDTH/CHARWIDTH/g' fontconfig/fontconfig.h src/fcobjshash.gperf src/fcobjs.h src/fcobjshash.h && \
+  sed -i 's/fcobjshash.h: fcobjshash.gperf/fcobjshash.h:/' src/Makefile && \
   $(MAKE)
 endef
 
