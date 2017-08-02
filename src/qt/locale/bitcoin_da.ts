@@ -4,13 +4,13 @@
     <name>AboutDialog</name>
     <message>
         <location filename="../forms/aboutdialog.ui" line="+14"/>
-        <source>About PPCoin</source>
-        <translation>Om PPCoin</translation>
+        <source>About Peercoin</source>
+        <translation>Om Peercoin</translation>
     </message>
     <message>
         <location line="+39"/>
-        <source>&lt;b&gt;PPCoin&lt;/b&gt; version</source>
-        <translation>&lt;b&gt;PPCoin&lt;/b&gt; version</translation>
+        <source>&lt;b&gt;Peercoin&lt;/b&gt; version</source>
+        <translation>&lt;b&gt;Peercoin&lt;/b&gt; version</translation>
     </message>
     <message>
         <location line="+57"/>
@@ -248,8 +248,8 @@ Produktet indeholder software som er udviklet af OpenSSL Project til brug i Open
     </message>
     <message>
         <location line="+1"/>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR PPCOINS&lt;/b&gt;!</source>
-        <translation>Advarsel: Hvis du krypterer din tegnebog og mister din adgangskode, vil du &lt;b&gt;MISTE ALLE DINE PPCOINS&lt;/b&gt;!</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR PEERCOINS&lt;/b&gt;!</source>
+        <translation>Advarsel: Hvis du krypterer din tegnebog og mister din adgangskode, vil du &lt;b&gt;MISTE ALLE DINE PEERCOINS&lt;/b&gt;!</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -275,8 +275,8 @@ Produktet indeholder software som er udviklet af OpenSSL Project til brug i Open
     </message>
     <message>
         <location line="-56"/>
-        <source>PPCoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>PPCoin vil nu lukke for at gennemføre krypteringsprocessen. Husk på, at kryptering af din tegnebog vil ikke beskytte dine bitcoins fuldt ud mod at blive stjålet af malware på din computer.</translation>
+        <source>Peercoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>Peercoin vil nu lukke for at gennemføre krypteringsprocessen. Husk på, at kryptering af din tegnebog vil ikke beskytte dine bitcoins fuldt ud mod at blive stjålet af malware på din computer.</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -321,7 +321,7 @@ Produktet indeholder software som er udviklet af OpenSSL Project til brug i Open
     </message>
 </context>
 <context>
-    <name>PPCoinGUI</name>
+    <name>PeercoinGUI</name>
     <message>
         <location filename="../bitcoingui.cpp" line="+233"/>
         <source>Sign &amp;message...</source>
@@ -536,13 +536,13 @@ Produktet indeholder software som er udviklet af OpenSSL Project til brug i Open
     </message>
     <message>
         <location line="+47"/>
-        <source>PPCoin client</source>
-        <translation>PPCoin-klient</translation>
+        <source>Peercoin client</source>
+        <translation>Peercoin-klient</translation>
     </message>
     <message numerus="yes">
         <location line="+141"/>
-        <source>%n active connection(s) to PPCoin network</source>
-        <translation><numerusform>%n aktiv(e) forbindelse(r) til PPCoin-netværket</numerusform><numerusform>%n aktiv(e) forbindelse(r) til PPCoin-netværket</numerusform></translation>
+        <source>%n active connection(s) to Peercoin network</source>
+        <translation><numerusform>%n aktiv(e) forbindelse(r) til Peercoin-netværket</numerusform><numerusform>%n aktiv(e) forbindelse(r) til Peercoin-netværket</numerusform></translation>
     </message>
     <message>
         <location line="+22"/>
@@ -737,8 +737,8 @@ Adresse: %4
     </message>
     <message>
         <location line="-5"/>
-        <source>The entered address &quot;%1&quot; is not a valid PPCoin address.</source>
-        <translation>Den indtastede adresse &quot;%1&quot; er ikke en gyldig PPCoin-adresse.</translation>
+        <source>The entered address &quot;%1&quot; is not a valid Peercoin address.</source>
+        <translation>Den indtastede adresse &quot;%1&quot; er ikke en gyldig Peercoin-adresse.</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -756,8 +756,8 @@ Adresse: %4
     <message>
         <location filename="../guiutil.cpp" line="+424"/>
         <location line="+12"/>
-        <source>PPCoin-Qt</source>
-        <translation>PPCoin-Qt</translation>
+        <source>Peercoin-Qt</source>
+        <translation>Peercoin-Qt</translation>
     </message>
     <message>
         <location line="-12"/>
@@ -820,12 +820,12 @@ Adresse: %4
     <message>
         <location line="+31"/>
         <source>Automatically start Bitcoin after logging in to the system.</source>
-        <translation>Start Bitcoin automatisk, når der logges ind på systemet</translation>
+        <translation>Start Peercoin automatisk, når der logges ind på systemet</translation>
     </message>
     <message>
         <location line="+3"/>
-        <source>&amp;Start Bitcoin on system login</source>
-        <translation>Start Bitcoin, når systemet startes</translation>
+        <source>&amp;Start Peercoin on system login</source>
+        <translation>Start Peercoin, når systemet startes</translation>
     </message>
     <message>
         <location line="+35"/>
@@ -1448,8 +1448,8 @@ Adresse: %4
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="+1"/>
-        <source>Enter a PPCoin address</source>
-        <translation>Indtast en PPCoin-adresse</translation>
+        <source>Enter a Peercoin address</source>
+        <translation>Indtast en Peercoin-adresse</translation>
     </message>
 </context>
 <context>
@@ -1565,7 +1565,7 @@ Adresse: %4
     <message>
         <location filename="../signverifymessagedialog.cpp" line="+27"/>
         <location line="+3"/>
-        <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <source>Enter a Peercoin address</source>
         <translation>Indtast en Bitcoin-adresse (f.eks. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
@@ -1575,7 +1575,7 @@ Adresse: %4
     </message>
     <message>
         <location line="+3"/>
-        <source>Enter Bitcoin signature</source>
+        <source>Enter Peercoin signature</source>
         <translation>Indtast Bitcoin-underskriften</translation>
     </message>
     <message>
@@ -2184,11 +2184,11 @@ Adresse: %4
     </message>
 </context>
 <context>
-    <name>PPCoin-core</name>
+    <name>Peercoin-core</name>
     <message>
         <location filename="../bitcoinstrings.cpp" line="+94"/>
-        <source>PPCoin version</source>
-        <translation>PPCoin-version</translation>
+        <source>Peercoin version</source>
+        <translation>Peercoin-version</translation>
     </message>
     <message>
         <location line="+102"/>
@@ -2197,8 +2197,8 @@ Adresse: %4
     </message>
     <message>
         <location line="-29"/>
-        <source>Send command to -server or ppcoind</source>
-        <translation>Send kommando til -server eller ppcoind</translation>
+        <source>Send command to -server or peercoind</source>
+        <translation>Send kommando til -server eller peercoind</translation>
     </message>
     <message>
         <location line="-23"/>
@@ -2217,13 +2217,13 @@ Adresse: %4
     </message>
     <message>
         <location line="+24"/>
-        <source>Specify configuration file (default: ppcoin.conf)</source>
-        <translation>Angiv konfigurationsfil (standard: ppcoin.conf)</translation>
+        <source>Specify configuration file (default: peercoin.conf)</source>
+        <translation>Angiv konfigurationsfil (standard: peercoin.conf)</translation>
     </message>
     <message>
         <location line="+3"/>
-        <source>Specify pid file (default: ppcoind.pid)</source>
-        <translation>Angiv pid-fil (default: ppcoind.pid)</translation>
+        <source>Specify pid file (default: peercoind.pid)</source>
+        <translation>Angiv pid-fil (default: peercoind.pid)</translation>
     </message>
     <message>
         <location line="-1"/>
@@ -2817,13 +2817,13 @@ f.eks.: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
     </message>
     <message>
         <location line="+1"/>
-        <source>Error loading wallet.dat: Wallet requires newer version of PPCoin</source>
-        <translation>Fejl ved indlæsning af wallet.dat: Tegnebog kræver en nyere version af PPCoin</translation>
+        <source>Error loading wallet.dat: Wallet requires newer version of Peercoin</source>
+        <translation>Fejl ved indlæsning af wallet.dat: Tegnebog kræver en nyere version af Peercoin</translation>
     </message>
     <message>
         <location line="+93"/>
-        <source>Wallet needed to be rewritten: restart PPCoin to complete</source>
-        <translation>Det var nødvendigt at genskrive tegnebogen: genstart PPCoin for at gennemføre</translation>
+        <source>Wallet needed to be rewritten: restart Peercoin to complete</source>
+        <translation>Det var nødvendigt at genskrive tegnebogen: genstart Peercoin for at gennemføre</translation>
     </message>
     <message>
         <location line="-95"/>

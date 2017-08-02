@@ -489,7 +489,7 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
 void ThreadFlushWalletDB(const string& strFile)
 {
     // Make this thread recognisable as the wallet flushing thread
-    RenameThread("ppcoin-wallet");
+    RenameThread("peercoin-wallet");
 
     static bool fOneThread;
     if (fOneThread)

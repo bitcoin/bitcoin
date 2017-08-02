@@ -6,13 +6,13 @@
     <name>AboutDialog</name>
     <message>
         <location filename="../forms/aboutdialog.ui" line="+14"/>
-        <source>About PPCoin</source>
-        <translation>About PPCoin</translation>
+        <source>About Peercoin</source>
+        <translation>About Peercoin</translation>
     </message>
     <message>
         <location line="+39"/>
-        <source>&lt;b&gt;PPCoin&lt;/b&gt; version</source>
-        <translation>&lt;b&gt;PPCoin&lt;/b&gt; version</translation>
+        <source>&lt;b&gt;Peercoin&lt;/b&gt; version</source>
+        <translation>&lt;b&gt;Peercoin&lt;/b&gt; version</translation>
     </message>
     <message>
         <location line="+57"/>
@@ -250,8 +250,8 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location line="+1"/>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR PPCOINS&lt;/b&gt;!</source>
-        <translation>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR PPCOINS&lt;/b&gt;!</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR PEERCOINS&lt;/b&gt;!</source>
+        <translation>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR PEERCOINS&lt;/b&gt;!</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -323,7 +323,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
 </context>
 <context>
-    <name>PPCoinGUI</name>
+    <name>PeercoinGUI</name>
     <message>
         <location filename="../bitcoingui.cpp" line="+233"/>
         <source>Sign &amp;message...</source>
@@ -457,8 +457,8 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="-165"/>
         <location line="+530"/>
-        <source>PPCoin</source>
-        <translation>PPCoin</translation>
+        <source>Peercoin</source>
+        <translation>Peercoin</translation>
     </message>
     <message>
         <location line="-530"/>
@@ -538,15 +538,15 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location line="+47"/>
-        <source>PPCoin client</source>
-        <translation>PPCoin client</translation>
+        <source>Peercoin client</source>
+        <translation>Peercoin client</translation>
     </message>
     <message numerus="yes">
         <location line="+141"/>
-        <source>%n active connection(s) to PPCoin network</source>
+        <source>%n active connection(s) to Peercoin network</source>
         <translation>
-            <numerusform>%n active connection to PPCoin network</numerusform>
-            <numerusform>%n active connections to PPCoin network</numerusform>
+            <numerusform>%n active connection to Peercoin network</numerusform>
+            <numerusform>%n active connections to Peercoin network</numerusform>
         </translation>
     </message>
     <message>
@@ -751,8 +751,8 @@ Address: %4
     </message>
     <message>
         <location line="-5"/>
-        <source>The entered address &quot;%1&quot; is not a valid PPCoin address.</source>
-        <translation>The entered address &quot;%1&quot; is not a valid PPCoin address.</translation>
+        <source>The entered address &quot;%1&quot; is not a valid Peercoin address.</source>
+        <translation>The entered address &quot;%1&quot; is not a valid Peercoin address.</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -770,8 +770,8 @@ Address: %4
     <message>
         <location filename="../guiutil.cpp" line="+424"/>
         <location line="+12"/>
-        <source>PPCoin-Qt</source>
-        <translation>PPCoin-Qt</translation>
+        <source>Peercoin-Qt</source>
+        <translation>Peercoin-Qt</translation>
     </message>
     <message>
         <location line="-12"/>
@@ -838,8 +838,8 @@ Address: %4
     </message>
     <message>
         <location line="+3"/>
-        <source>&amp;Start Bitcoin on system login</source>
-        <translation>&amp;Start Bitcoin on system login</translation>
+        <source>&amp;Start Peercoin on system login</source>
+        <translation>&amp;Start Peercoin on system login</translation>
     </message>
     <message>
         <location line="+35"/>
@@ -1253,8 +1253,8 @@ Address: %4
     </message>
     <message>
         <location line="-104"/>
-        <source>PPCoin - Debug window</source>
-        <translation>PPCoin - Debug window</translation>
+        <source>Peercoin - Debug window</source>
+        <translation>Peercoin - Debug window</translation>
     </message>
     <message>
         <location line="+25"/>
@@ -1462,8 +1462,8 @@ Address: %4
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="+1"/>
-        <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <source>Enter a Peercoin address</source>
+        <translation>Enter a Peercoin address</translation>
     </message>
 </context>
 <context>
@@ -1579,8 +1579,8 @@ Address: %4
     <message>
         <location filename="../signverifymessagedialog.cpp" line="+27"/>
         <location line="+3"/>
-        <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <source>Enter a Peercoin address</source>
+        <translation>Enter a Peercoin address</translation>
     </message>
     <message>
         <location line="-2"/>
@@ -1589,8 +1589,8 @@ Address: %4
     </message>
     <message>
         <location line="+3"/>
-        <source>Enter Bitcoin signature</source>
-        <translation>Enter Bitcoin signature</translation>
+        <source>Enter Peercoin signature</source>
+        <translation>Enter Peercoin signature</translation>
     </message>
     <message>
         <location line="+82"/>
@@ -2213,11 +2213,11 @@ Address: %4
     </message>
 </context>
 <context>
-    <name>PPCoin-core</name>
+    <name>Peercoin-core</name>
     <message>
         <location filename="../bitcoinstrings.cpp" line="+94"/>
-        <source>PPCoin version</source>
-        <translation>PPCoin version</translation>
+        <source>Peercoin version</source>
+        <translation>Peercoin version</translation>
     </message>
     <message>
         <location line="+102"/>
@@ -2226,8 +2226,8 @@ Address: %4
     </message>
     <message>
         <location line="-29"/>
-        <source>Send command to -server or ppcoind</source>
-        <translation>Send command to -server or ppcoind</translation>
+        <source>Send command to -server or peercoind</source>
+        <translation>Send command to -server or peercoind</translation>
     </message>
     <message>
         <location line="-23"/>
@@ -2246,13 +2246,13 @@ Address: %4
     </message>
     <message>
         <location line="+24"/>
-        <source>Specify configuration file (default: ppcoin.conf)</source>
-        <translation>Specify configuration file (default: ppcoin.conf)</translation>
+        <source>Specify configuration file (default: peercoin.conf)</source>
+        <translation>Specify configuration file (default: peercoin.conf)</translation>
     </message>
     <message>
         <location line="+3"/>
-        <source>Specify pid file (default: ppcoind.pid)</source>
-        <translation>Specify pid file (default: ppcoind.pid)</translation>
+        <source>Specify pid file (default: peercoind.pid)</source>
+        <translation>Specify pid file (default: peercoind.pid)</translation>
     </message>
     <message>
         <location line="-1"/>

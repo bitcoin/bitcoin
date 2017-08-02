@@ -18,6 +18,7 @@
 #include "askpassphrasedialog.h"
 #include "ui_interface.h"
 #include "mintingview.h"
+#include "wallet.h"
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -246,6 +247,37 @@ void WalletView::encryptWallet(bool status)
     setEncryptionStatus();
 }
 
+void WalletView::decryptForMinting(bool status)
+{
+    if(!walletModel)
+        return;
+
+    if (status)
+    {
+        if(walletModel->getEncryptionStatus() != WalletModel::Locked)
+            return;
+
+        AskPassphraseDialog dlg(AskPassphraseDialog::Unlock, this);
+        dlg.setModel(walletModel);
+        dlg.exec();
+
+        if(walletModel->getEncryptionStatus() != WalletModel::Unlocked)
+            return;
+
+        fWalletUnlockMintOnly = true;
+    }
+    else
+    {
+        if(walletModel->getEncryptionStatus() != WalletModel::Unlocked)
+            return;
+
+        if (!fWalletUnlockMintOnly)
+            return;
+
+        walletModel->setWalletLocked(true);
+        fWalletUnlockMintOnly = false;
+    }
+}
 void WalletView::backupWallet()
 {
     QString saveDir = QDesktopServices::storageLocation(QDesktopServices::DocumentsLocation);

@@ -18,6 +18,7 @@ WalletStack::WalletStack(QWidget *parent) :
     bOutOfSync(true)
 {
     setContentsMargins(0,0,0,0);
+    setObjectName("walletstack");
 }
 
 WalletStack::~WalletStack()
@@ -133,6 +134,12 @@ void WalletStack::encryptWallet(bool status)
 {
     WalletView *walletView = (WalletView*)currentWidget();
     if (walletView) walletView->encryptWallet(status);
+}
+
+void WalletStack::decryptForMinting(bool status)
+{
+    WalletView *walletView = (WalletView*)currentWidget();
+    if (walletView) walletView->decryptForMinting(status);
 }
 
 void WalletStack::backupWallet()

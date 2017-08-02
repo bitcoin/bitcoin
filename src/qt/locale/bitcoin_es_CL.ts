@@ -4,13 +4,13 @@
     <name>AboutDialog</name>
     <message>
         <location filename="../forms/aboutdialog.ui" line="+14"/>
-        <source>About PPCoin</source>
-        <translation>Sobre PPCoin</translation>
+        <source>About Peercoin</source>
+        <translation>Sobre Peercoin</translation>
     </message>
     <message>
         <location line="+39"/>
-        <source>&lt;b&gt;PPCoin&lt;/b&gt; version</source>
-        <translation>&lt;b&gt;PPCoin&lt;/b&gt; - versión </translation>
+        <source>&lt;b&gt;Peercoin&lt;/b&gt; version</source>
+        <translation>&lt;b&gt;Peercoin&lt;/b&gt; - versión </translation>
     </message>
     <message>
         <location line="+57"/>
@@ -251,8 +251,8 @@ Eric Young (eay@cryptsoft.com) y UPnP software escrito por Thomas Bernard.</tran
     </message>
     <message>
         <location line="+1"/>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR PPCOINS&lt;/b&gt;!</source>
-        <translation>Atención: ¡Si codificas tu billetera y pierdes la contraseña perderás &lt;b&gt;TODOS TUS PPCOINS&lt;/b&gt;!</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR PEERCOINS&lt;/b&gt;!</source>
+        <translation>Atención: ¡Si codificas tu billetera y pierdes la contraseña perderás &lt;b&gt;TODOS TUS PEERCOINS&lt;/b&gt;!</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -278,8 +278,8 @@ Eric Young (eay@cryptsoft.com) y UPnP software escrito por Thomas Bernard.</tran
     </message>
     <message>
         <location line="-56"/>
-        <source>PPCoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your ppcoins from being stolen by malware infecting your computer.</source>
-        <translation>PPCoin se cerrará para finalizar el proceso de encriptación. Recuerde que encriptar su billetera no protegera completatamente sus ppcoins de ser robados por malware que infecte su computador</translation>
+        <source>Peercoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your peercoins from being stolen by malware infecting your computer.</source>
+        <translation>Peercoin se cerrará para finalizar el proceso de encriptación. Recuerde que encriptar su billetera no protegera completatamente sus peercoins de ser robados por malware que infecte su computador</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -324,7 +324,7 @@ Eric Young (eay@cryptsoft.com) y UPnP software escrito por Thomas Bernard.</tran
     </message>
 </context>
 <context>
-    <name>PPCoinGUI</name>
+    <name>PeercoinGUI</name>
     <message>
         <location filename="../bitcoingui.cpp" line="+233"/>
         <source>Sign &amp;message...</source>
@@ -377,8 +377,8 @@ Eric Young (eay@cryptsoft.com) y UPnP software escrito por Thomas Bernard.</tran
     </message>
     <message>
         <location line="+4"/>
-        <source>Show information about PPCoin</source>
-        <translation>Muestra información acerca de PPCoin</translation>
+        <source>Show information about Peercoin</source>
+        <translation>Muestra información acerca de Peercoin</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -422,13 +422,13 @@ Eric Young (eay@cryptsoft.com) y UPnP software escrito por Thomas Bernard.</tran
     </message>
     <message>
         <location line="-347"/>
-        <source>Send coins to a PPCoin address</source>
-        <translation>Enviar monedas a una dirección ppcoin</translation>
+        <source>Send coins to a Peercoin address</source>
+        <translation>Enviar monedas a una dirección peercoin</translation>
     </message>
     <message>
         <location line="+49"/>
-        <source>Modify configuration options for PPCoin</source>
-        <translation>Modifica las opciones de configuración de ppcoin</translation>
+        <source>Modify configuration options for Peercoin</source>
+        <translation>Modifica las opciones de configuración de peercoin</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -539,13 +539,13 @@ Eric Young (eay@cryptsoft.com) y UPnP software escrito por Thomas Bernard.</tran
     </message>
     <message>
         <location line="+47"/>
-        <source>PPCoin client</source>
-        <translation>Cliente PPCoin</translation>
+        <source>Peercoin client</source>
+        <translation>Cliente Peercoin</translation>
     </message>
     <message numerus="yes">
         <location line="+141"/>
-        <source>%n active connection(s) to PPCoin network</source>
-        <translation><numerusform>%n conexión activa hacia la red PPCoin</numerusform><numerusform>%n conexiones activas hacia la red PPCoin</numerusform></translation>
+        <source>%n active connection(s) to Peercoin network</source>
+        <translation><numerusform>%n conexión activa hacia la red Peercoin</numerusform><numerusform>%n conexiones activas hacia la red Peercoin</numerusform></translation>
     </message>
     <message>
         <location line="+22"/>
@@ -739,8 +739,8 @@ Dirección: %4</translation>
     </message>
     <message>
         <location line="-5"/>
-        <source>The entered address &quot;%1&quot; is not a valid PPCoin address.</source>
-        <translation>La dirección introducida &quot;%1&quot; no es una dirección PPCoin valida.</translation>
+        <source>The entered address &quot;%1&quot; is not a valid Peercoin address.</source>
+        <translation>La dirección introducida &quot;%1&quot; no es una dirección Peercoin valida.</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -758,7 +758,7 @@ Dirección: %4</translation>
     <message>
         <location filename="../guiutil.cpp" line="+424"/>
         <location line="+12"/>
-        <source>PPCoin-Qt</source>
+        <source>Peercoin-Qt</source>
         <translation type="unfinished"/>
     </message>
     <message>
@@ -827,7 +827,7 @@ Dirección: %4</translation>
     </message>
     <message>
         <location line="+3"/>
-        <source>&amp;Start Bitcoin on system login</source>
+        <source>&amp;Start Peercoin on system login</source>
         <translation>&amp;Inicia Bitcoin al iniciar el sistema</translation>
     </message>
     <message>
@@ -1451,8 +1451,8 @@ Dirección: %4</translation>
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="+1"/>
-        <source>Enter a PPCoin address</source>
-        <translation>Introduce una dirección PPCoin</translation>
+        <source>Enter a Peercoin address</source>
+        <translation>Introduce una dirección Peercoin</translation>
     </message>
 </context>
 <context>
@@ -1568,7 +1568,7 @@ Dirección: %4</translation>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="+27"/>
         <location line="+3"/>
-        <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <source>Enter a Peercoin address</source>
         <translation>Introduce una dirección Bitcoin (ej. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
@@ -1578,7 +1578,7 @@ Dirección: %4</translation>
     </message>
     <message>
         <location line="+3"/>
-        <source>Enter Bitcoin signature</source>
+        <source>Enter Peercoin signature</source>
         <translation type="unfinished"/>
     </message>
     <message>
@@ -2187,11 +2187,11 @@ Dirección: %4</translation>
     </message>
 </context>
 <context>
-    <name>PPCoin-core</name>
+    <name>Peercoin-core</name>
     <message>
         <location filename="../bitcoinstrings.cpp" line="+94"/>
-        <source>PPCoin version</source>
-        <translation>Versión PPCoin</translation>
+        <source>Peercoin version</source>
+        <translation>Versión Peercoin</translation>
     </message>
     <message>
         <location line="+102"/>
@@ -2200,8 +2200,8 @@ Dirección: %4</translation>
     </message>
     <message>
         <location line="-29"/>
-        <source>Send command to -server or ppcoind</source>
-        <translation>Envia comando a bitcoin lanzado con -server u ppcoind
+        <source>Send command to -server or peercoind</source>
+        <translation>Envia comando a bitcoin lanzado con -server u peercoind
 </translation>
     </message>
     <message>
@@ -2224,14 +2224,14 @@ Dirección: %4</translation>
     </message>
     <message>
         <location line="+24"/>
-        <source>Specify configuration file (default: ppcoin.conf)</source>
-        <translation>Especifica archivo de configuración (predeterminado: ppcoin.conf)
+        <source>Specify configuration file (default: peercoin.conf)</source>
+        <translation>Especifica archivo de configuración (predeterminado: peercoin.conf)
 </translation>
     </message>
     <message>
         <location line="+3"/>
-        <source>Specify pid file (default: ppcoind.pid)</source>
-        <translation>Especifica archivo pid (predeterminado: ppcoin.pid)
+        <source>Specify pid file (default: peercoind.pid)</source>
+        <translation>Especifica archivo pid (predeterminado: peercoin.pid)
 </translation>
     </message>
     <message>
@@ -2833,13 +2833,13 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <location line="+1"/>
-        <source>Error loading wallet.dat: Wallet requires newer version of PPCoin</source>
-        <translation>Error cargando wallet.dat: Billetera necesita una vercion reciente de PPCoin</translation>
+        <source>Error loading wallet.dat: Wallet requires newer version of Peercoin</source>
+        <translation>Error cargando wallet.dat: Billetera necesita una vercion reciente de Peercoin</translation>
     </message>
     <message>
         <location line="+93"/>
-        <source>Wallet needed to be rewritten: restart PPCoin to complete</source>
-        <translation>La billetera necesita ser reescrita: reinicie PPCoin para completar</translation>
+        <source>Wallet needed to be rewritten: restart Peercoin to complete</source>
+        <translation>La billetera necesita ser reescrita: reinicie Peercoin para completar</translation>
     </message>
     <message>
         <location line="-95"/>
