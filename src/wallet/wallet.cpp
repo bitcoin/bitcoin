@@ -1974,6 +1974,7 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount &nFeeRet, int& nC
             tx.vin.push_back(txin);
     }
 
+    if (tx.nLockTime == 0) tx.nLockTime = wtx.nLockTime;
     return true;
 }
 
