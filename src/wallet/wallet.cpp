@@ -33,6 +33,7 @@
 #include <util.h>
 #include <utilmoneystr.h>
 #include <validation.h>
+#include <wallet/fees.h>
 
 #include <governance.h>
 #include <instantx.h>
@@ -563,7 +564,7 @@ void CWallet::Flush(bool shutdown)
     dbw->Flush(shutdown);
 }
 
-bool CWallet::Verify()
+bool WalletVerify()
 {
     if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET))
         return true;
@@ -3512,7 +3513,7 @@ bool CWallet::ConvertList(std::vector<CTxIn> vecTxIn, std::vector<CAmount>& vecA
     return true;
 }
 
-static CFeeRate GetDiscardRate(const CBlockPolicyEstimator& estimator)
+CFeeRate GetDiscardRate(const CBlockPolicyEstimator& estimator)
 {
     unsigned int highest_target = estimator.HighestTargetTracked(FeeEstimateHorizon::LONG_HALFLIFE);
     CFeeRate discard_rate = estimator.estimateSmartFee(highest_target, nullptr /* FeeCalculation */, false /* conservative */);
@@ -4013,12 +4014,12 @@ bool CWallet::AddAccountingEntry(const CAccountingEntry& acentry, CWalletDB *pwa
     return true;
 }
 
-CAmount CWallet::GetRequiredFee(unsigned int nTxBytes)
+CAmount GetRequiredFee(unsigned int nTxBytes)
 {
-    return std::max(minTxFee.GetFee(nTxBytes), ::minRelayTxFee.GetFee(nTxBytes));
+    return std::max(CWallet::minTxFee.GetFee(nTxBytes), ::minRelayTxFee.GetFee(nTxBytes));
 }
 
-CAmount CWallet::GetMinimumFee(unsigned int nTxBytes, const CCoinControl& coin_control, const CTxMemPool& pool, const CBlockPolicyEstimator& estimator, FeeCalculation *feeCalc)
+CAmount GetMinimumFee(unsigned int nTxBytes, const CCoinControl& coin_control, const CTxMemPool& pool, const CBlockPolicyEstimator& estimator, FeeCalculation *feeCalc)
 {
     /* User control of how to calculate fee uses the following parameter precedence:
        1. coin_control.m_feerate
@@ -4050,7 +4051,7 @@ CAmount CWallet::GetMinimumFee(unsigned int nTxBytes, const CCoinControl& coin_c
         fee_needed = estimator.estimateSmartFee(target, feeCalc, conservative_estimate).GetFee(nTxBytes);
         if (fee_needed == 0) {
             // if we don't have enough data for estimateSmartFee, then use fallbackFee
-            fee_needed = fallbackFee.GetFee(nTxBytes);
+            fee_needed = CWallet::fallbackFee.GetFee(nTxBytes);
             if (feeCalc) feeCalc->reason = FeeReason::FALLBACK;
         }
         // Obey mempool min fee when using smart fee estimation
@@ -4865,7 +4866,7 @@ std::vector<std::string> CWallet::GetDestValues(const std::string& prefix) const
     return values;
 }
 
-std::string CWallet::GetWalletHelpString(bool showDebug)
+std::string GetWalletHelpString(bool showDebug)
 {
     std::string strUsage = HelpMessageGroup(_("Wallet options:"));
     strUsage += HelpMessageOpt("-disablewallet", _("Do not load the wallet and disable wallet RPC calls"));
@@ -5093,7 +5094,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
     return walletInstance;
 }
 
-bool CWallet::InitLoadWallet()
+bool InitLoadWallet()
 {
     if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
         LogPrintf("Wallet disabled!\n");
@@ -5101,7 +5102,7 @@ bool CWallet::InitLoadWallet()
     }
 
     for (const std::string& walletFile : gArgs.GetArgs("-wallet")) {
-        CWallet * const pwallet = CreateWalletFromFile(walletFile);
+        CWallet * const pwallet = CWallet::CreateWalletFromFile(walletFile);
         if (!pwallet) {
             return false;
         }
@@ -5125,7 +5126,7 @@ void CWallet::postInitProcess(CScheduler& scheduler)
     }
 }
 
-bool CWallet::ParameterInteraction()
+bool WalletParameterInteraction()
 {
     gArgs.SoftSetArg("-wallet", DEFAULT_WALLET_DAT);
     const bool is_multiwallet = gArgs.GetArgs("-wallet").size() > 1;

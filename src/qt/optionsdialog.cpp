@@ -17,10 +17,6 @@
 #include <netbase.h>
 #include <txdb.h> // for -dbcache defaults
 
-#ifdef ENABLE_WALLET
-#include <wallet/wallet.h> // for CWallet::GetRequiredFee()
-#endif
-
 #include <privatesend-client.h>
 
 #include <QDataWidgetMapper>

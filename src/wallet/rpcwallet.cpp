@@ -11,7 +11,6 @@
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <httpserver.h>
-#include <init.h>
 #include <instantx.h>
 #include <keepass.h>
 #include <net.h>
@@ -31,6 +30,8 @@
 #include <wallet/feebumper.h>
 #include <wallet/wallet.h>
 #include <wallet/walletdb.h>
+
+#include <init.h>  // For StartShutdown
 
 #include <stdint.h>
 

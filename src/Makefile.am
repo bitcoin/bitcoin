@@ -183,6 +183,8 @@ BITCOIN_CORE_H = \
   wallet/crypter.h \
   wallet/db.h \
   wallet/feebumper.h \
+  wallet/fees.h \
+  wallet/init.h \
   wallet/rpcwallet.h \
   wallet/wallet.h \
   wallet/walletdb.h \
@@ -283,6 +285,8 @@ libbitcoin_wallet_a_SOURCES = \
   wallet/crypter.cpp \
   wallet/db.cpp \
   wallet/feebumper.cpp \
+  wallet/fees.cpp \
+  wallet/init.cpp \
   wallet/rpcdump.cpp \
   wallet/rpcwallet.cpp \
   wallet/wallet.cpp \

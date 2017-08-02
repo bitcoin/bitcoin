@@ -48,6 +48,7 @@
 
 #ifdef ENABLE_WALLET
 #include <wallet/wallet.h>
+#include <wallet/init.h>
 #endif
 
 #include <activemasternode.h>
@@ -458,7 +459,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-maxuploadtarget=<n>", strprintf(_("Tries to keep outbound traffic under the given target (in MiB per 24h), 0 = no limit (default: %d)"), DEFAULT_MAX_UPLOAD_TARGET));
 
 #ifdef ENABLE_WALLET
-    strUsage += CWallet::GetWalletHelpString(showDebug);
+    strUsage += GetWalletHelpString(showDebug);
 #endif
 
 #if ENABLE_ZMQ
@@ -1122,7 +1123,7 @@ bool AppInitParameterInteraction()
         if (!ParseMoney(gArgs.GetArg("-minrelaytxfee", ""), n)) {
             return InitError(AmountErrMsg("minrelaytxfee", gArgs.GetArg("-minrelaytxfee", "")));
         }
-        // High fee check is done afterward in CWallet::ParameterInteraction()
+        // High fee check is done afterward in WalletParameterInteraction()
         ::minRelayTxFee = CFeeRate(n);
     } else if (incrementalRelayFee > ::minRelayTxFee) {
         // Allow only setting incrementalRelayFee to control both
@@ -1155,7 +1156,7 @@ bool AppInitParameterInteraction()
     nBytesPerSigOp = gArgs.GetArg("-bytespersigop", nBytesPerSigOp);
 
 #ifdef ENABLE_WALLET
-    if (!CWallet::ParameterInteraction())
+    if (!WalletParameterInteraction())
         return false;
 #endif // ENABLE_WALLET
 
@@ -1328,44 +1329,11 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     int64_t nStart;
 
-    // ********************************************************* Step 5: Backup wallet and verify wallet database integrity
+    // ********************************************************* Step 5: verify wallet database integrity
 #ifdef ENABLE_WALLET
-    bool fDisableWallet = gArgs.GetBoolArg("-disablewallet", false);
-    if (!fDisableWallet) {
-        std::string strWarning;
-        std::string strError;
-        std::string strWalletFile = DEFAULT_WALLET_DAT;
-
-        nWalletBackups = gArgs.GetArg("-createwalletbackups", 10);
-        nWalletBackups = std::max(0, std::min(10, nWalletBackups));
-
-        if(!AutoBackupWallet(nullptr, strWalletFile, strWarning, strError)) {
-            if (!strWarning.empty())
-                InitWarning(strWarning);
-            if (!strError.empty())
-                return InitError(strError);
-        }
-
-        LogPrintf("Using wallet %s\n", strWalletFile);
-        uiInterface.InitMessage(_("Verifying wallet..."));
-
-        // reset warning string
-        strWarning = "";
-
-        if (!CWallet::Verify())
-            return false;
-
-        if (!strWarning.empty())
-            InitWarning(strWarning);
-        if (!strError.empty())
-            return InitError(strError);
-
-
-        // Initialize KeePass Integration
-        keePassInt.init();
-
-    } // (!fDisableWallet)
-#endif // ENABLE_WALLET
+    if (!WalletVerify())
+        return false;
+#endif
     // ********************************************************* Step 6: network initialization
     // Note that we absolutely cannot open any actual connections
     // until the very end ("start node") as the UTXO/block state
@@ -1549,17 +1517,8 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                     return InitError(_("Incorrect or no genesis block found. Wrong datadir for network?"));
 
                 // Check for changed -txindex state
-<<<<<<< HEAD
-<<<<<<< HEAD
-                if (fTxIndex != GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
-=======
-                if (fTxIndex != gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
->>>>>>> e6e563c... scripted-diff: stop using the gArgs wrappers
-                    strLoadError = _("You need to rebuild the database using -reindex-chainstate to change -txindex");
-=======
                 if (fTxIndex != gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
                     strLoadError = _("You need to rebuild the database using -reindex to change -txindex");
->>>>>>> cd0ea48... Changing -txindex requires -reindex, not -reindex-chainstate
                     break;
                 }
 
@@ -1697,7 +1656,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     // ********************************************************* Step 8: load wallet
 #ifdef ENABLE_WALLET
-    if (!CWallet::InitLoadWallet())
+    if (!InitLoadWallet())
         return false;
 #else
     LogPrintf("No wallet support compiled in!\n");
