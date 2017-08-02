@@ -9,7 +9,6 @@
 #include "chain.h"
 #include "consensus/validation.h"
 #include "core_io.h"
-#include "init.h"
 #include "httpserver.h"
 #include "keepass.h"
 #include "net.h"
@@ -26,6 +25,8 @@
 #include "wallet/coincontrol.h"
 #include "wallet/wallet.h"
 #include "wallet/walletdb.h"
+
+#include <init.h>  // For StartShutdown
 
 #include "llmq/quorums_chainlocks.h"
 #include "llmq/quorums_instantsend.h"
