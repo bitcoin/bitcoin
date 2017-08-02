@@ -1557,9 +1557,15 @@ size_t CountWitnessSigOps(const CScript& scriptSig, const CScript& scriptPubKey,
     if (scriptPubKey.IsPayToScriptHash() && scriptSig.IsPushOnly()) {
         CScript::const_iterator pc = scriptSig.begin();
         std::vector<unsigned char> data;
+        bool hasValidOp = false;
         while (pc < scriptSig.end()) {
             opcodetype opcode;
-            scriptSig.GetOp(pc, opcode, data);
+            if (scriptSig.GetOp(pc, opcode, data)) {
+                hasValidOp = true;
+            }
+        }
+        if (!hasValidOp) {
+            return 0;
         }
         CScript subscript(data.begin(), data.end());
         if (subscript.IsWitnessProgram(witnessversion, witnessprogram)) {
