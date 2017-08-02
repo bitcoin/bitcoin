@@ -23,7 +23,7 @@ Let it run for a few minutes, or long enough that it has started syncho-
 
 2) Stop bitcoind, so that we can rearrange some datadir folders:
 
-       kill -QUIT `cat /Volumes/WD-Passport-Mac/bitcoin/data/bitcoind.pid`
+       bitcoin-cli stop
 
 3) Move the "index" folder up one level (so that it may remain on the internal drive). Like the 
       
