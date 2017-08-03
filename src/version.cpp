@@ -25,14 +25,14 @@ const std::string CLIENT_NAME("Satoshi");
 //code specific to MSVC compiler
 #define CL_NAME   "-msvc"
 #elif __clang__
-//code specific to clang compilers
+//code specific to clang compiler
 #define CL_NAME   "-clang"
-#elif __GNUC__
-//code for GNU C compiler
-#define CL_NAME   "-gcc"
 #elif __MINGW32__
-//code specific to mingw compilers
+//code specific to mingw compiler
 #define CL_NAME   "-mingw"
+#elif __GNUC__
+//code specific to gnu compiler
+#define CL_NAME   "-gcc"
 #else
 #define CL_NAME   "-genericcl"
 //others
@@ -57,11 +57,14 @@ const std::string CLIENT_NAME("Satoshi");
 #    include "build.h"
 #endif
 
-// git will put "#define GIT_ARCHIVE 1" on the next line inside archives. 
+// git will put "#define GIT_ARCHIVE 1" on the next line inside archives.
+#ifdef GIT_ARCHIVE
+#define GIT_COMMIT_DATE "$Format:%cD$"
+#endif
+
 #define GIT_ARCHIVE 1
 #ifdef GIT_ARCHIVE
-#    define GIT_COMMIT_ID "891b422"
-#    define GIT_COMMIT_DATE "$Format:%cD"
+#define GIT_COMMIT_ID "891b422"
 #endif
 
 #define BUILD_DESC_FROM_COMMIT(maj,min,rev,commit) \
