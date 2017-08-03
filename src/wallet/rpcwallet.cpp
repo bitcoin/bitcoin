@@ -161,8 +161,8 @@ UniValue getnewaddress(const JSONRPCRequest& request)
 
     // Generate a new key that is added to wallet
     CPubKey newKey;
-    if (!pwallet->GetKeyFromPool(newKey)) {
-        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
+    if (!pwallet->GetKeyFromPool(newKey, false, true)) {
+        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool is at critical level or has run out, please call keypoolrefill first");
     }
     CKeyID keyID = newKey.GetID();
 
