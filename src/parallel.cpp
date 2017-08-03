@@ -664,6 +664,12 @@ void HandleBlockMessageThread(CNode *pfrom, const string strCommand, const CBloc
         LOCK(cs_vNodes);
         pfrom->Release();
     }
+
+    // If chain is nearly caught up then flush the state after a block is finished processing and the
+    // performance timings have been updated.  This way we don't include the flush time in our time to
+    // process the block advance the tip.
+    if (IsChainNearlySyncd())
+        FlushStateToDisk(state, FLUSH_STATE_ALWAYS);
 }
 
 

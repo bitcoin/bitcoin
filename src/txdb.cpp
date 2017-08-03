@@ -50,22 +50,30 @@ uint256 CCoinsViewDB::GetBestBlock() const {
     return hashBestChain;
 }
 
-bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) {
+bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, size_t &nChildCachedCoinsUsage)
+{
     LOCK(cs_utxo);
     CDBBatch batch(&db.GetObfuscateKey());
     size_t count = 0;
     size_t changed = 0;
-    for (CCoinsMap::iterator it = mapCoins.begin(); it != mapCoins.end();) {
-        if (it->second.flags & CCoinsCacheEntry::DIRTY) {
+    for (CCoinsMap::iterator it = mapCoins.begin(); it != mapCoins.end();)
+    {
+        if (it->second.flags & CCoinsCacheEntry::DIRTY)
+        {
             if (it->second.coins.IsPruned())
                 batch.Erase(make_pair(DB_COINS, it->first));
             else
                 batch.Write(make_pair(DB_COINS, it->first), it->second.coins);
             changed++;
+
+            // Update the usage of the child cache before deleting the entry in the child cache
+            nChildCachedCoinsUsage -= it->second.coins.DynamicMemoryUsage();
+            CCoinsMap::iterator itOld = it++;
+            mapCoins.erase(itOld);
         }
+        else
+            it++;
         count++;
-        CCoinsMap::iterator itOld = it++;
-        mapCoins.erase(itOld);
     }
     if (!hashBlock.IsNull())
         batch.Write(DB_BEST_BLOCK, hashBlock);

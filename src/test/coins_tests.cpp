@@ -45,7 +45,7 @@ public:
 
     uint256 GetBestBlock() const { return hashBestBlock_; }
 
-    bool BatchWrite(CCoinsMap& mapCoins, const uint256& hashBlock)
+    bool BatchWrite(CCoinsMap& mapCoins, const uint256& hashBlock, size_t &nChildCachedCoinsUsage)
     {
         for (CCoinsMap::iterator it = mapCoins.begin(); it != mapCoins.end(); ) {
             if (it->second.flags & CCoinsCacheEntry::DIRTY) {
@@ -55,8 +55,11 @@ public:
                     // Randomly delete empty entries on write.
                     map_.erase(it->first);
                 }
+                nChildCachedCoinsUsage -= it->second.coins.DynamicMemoryUsage();
+                mapCoins.erase(it++);
             }
-            mapCoins.erase(it++);
+            else
+                it++;
         }
         if (!hashBlock.IsNull())
             hashBestBlock_ = hashBlock;
@@ -188,10 +191,10 @@ BOOST_AUTO_TEST_CASE(coins_cache_simulation_test)
                 } else {
                     removed_all_caches = true;
                 }
+
                 stack.push_back(new CCoinsViewCacheTest(tip));
-                if (stack.size() == 4) {
+                if (stack.size() == 4)
                     reached_4_caches = true;
-                }
             }
         }
     }
@@ -308,9 +311,9 @@ BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
                 const CCoins* coins = stack.back()->AccessCoins(it->first);
                 if (coins) {
                     BOOST_CHECK(*coins == it->second);
-                 } else {
+                } else {
                     BOOST_CHECK(it->second.IsPruned());
-                 }
+                }
             }
         }
 

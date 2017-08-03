@@ -1222,15 +1222,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool &pool,
             CCoinsViewMemPool viewMemPool(pcoinsTip, pool);
             view.SetBackend(viewMemPool);
 
-            // do we already have it?
-            bool fHadTxInCache = pcoinsTip->HaveCoinsInCache(hash);
-            if (view.HaveCoins(hash))
-            {
-                if (!fHadTxInCache)
-                    vHashTxnToUncache.push_back(hash);
-                return state.Invalid(false, REJECT_ALREADY_KNOWN, "txn-already-known");
-            }
-
             // do all inputs exist?
             // Note that this does not check for the presence of actual outputs (see the next check for that),
             // and only helps with filling in pfMissingInputs (to determine missing vs spent).
@@ -2797,21 +2788,13 @@ bool ConnectBlock(const CBlock &block,
     return true;
 }
 
-enum FlushStateMode
-{
-    FLUSH_STATE_NONE,
-    FLUSH_STATE_IF_NEEDED,
-    FLUSH_STATE_PERIODIC,
-    FLUSH_STATE_ALWAYS
-};
-
 /**
  * Update the on-disk chain state.
  * The caches and indexes are flushed depending on the mode we're called with
  * if they're too large, if it's been a while since the last write,
  * or always and in all cases if we're in prune mode and are deleting files.
  */
-bool static FlushStateToDisk(CValidationState &state, FlushStateMode mode)
+bool FlushStateToDisk(CValidationState &state, FlushStateMode mode)
 {
     const CChainParams &chainparams = Params();
     LOCK2(cs_main, cs_LastBlockFile);
@@ -2851,10 +2834,8 @@ bool static FlushStateToDisk(CValidationState &state, FlushStateMode mode)
             nLastSetChain = nNow;
         }
         size_t cacheSize = pcoinsTip->DynamicMemoryUsage();
-        // The cache is large and close to the limit, but we have time now (not in the middle of a block processing).
-        bool fCacheLarge = mode == FLUSH_STATE_PERIODIC && cacheSize * (10.0 / 9) > nCoinCacheUsage;
-        // The cache is over the limit, we have to write now.
-        bool fCacheCritical = mode == FLUSH_STATE_IF_NEEDED && cacheSize > nCoinCacheUsage;
+        // The cache is close to the limit. Try to flush and trim.
+        bool fCacheCritical = mode == FLUSH_STATE_IF_NEEDED && cacheSize > (nCoinCacheUsage * 0.99);
         // It's been a while since we wrote the block index to disk. Do this frequently, so we don't need to redownload
         // after a crash.
         bool fPeriodicWrite =
@@ -2863,8 +2844,7 @@ bool static FlushStateToDisk(CValidationState &state, FlushStateMode mode)
         bool fPeriodicFlush =
             mode == FLUSH_STATE_PERIODIC && nNow > nLastFlush + (int64_t)DATABASE_FLUSH_INTERVAL * 1000000;
         // Combine all conditions that result in a full cache flush.
-        bool fDoFullFlush =
-            (mode == FLUSH_STATE_ALWAYS) || fCacheLarge || fCacheCritical || fPeriodicFlush || fFlushForPrune;
+        bool fDoFullFlush = (mode == FLUSH_STATE_ALWAYS) || fCacheCritical || fPeriodicFlush || fFlushForPrune;
         // Write blocks and block index to disk.
         if (fDoFullFlush || fPeriodicWrite)
         {
@@ -2913,6 +2893,8 @@ bool static FlushStateToDisk(CValidationState &state, FlushStateMode mode)
             if (!pcoinsTip->Flush())
                 return AbortNode(state, "Failed to write to coin database");
             nLastFlush = nNow;
+            // Trim any excess entries from the cache if needed
+            pcoinsTip->Trim(nCoinCacheUsage);
         }
         if (fDoFullFlush || ((mode == FLUSH_STATE_ALWAYS || mode == FLUSH_STATE_PERIODIC) &&
                                 nNow > nLastSetChain + (int64_t)DATABASE_WRITE_INTERVAL * 1000000))
@@ -2921,6 +2903,12 @@ bool static FlushStateToDisk(CValidationState &state, FlushStateMode mode)
             GetMainSignals().SetBestChain(chainActive.GetLocator());
             nLastSetChain = nNow;
         }
+
+        // As a safeguard, periodically check and correct any drift in the value of cachedCoinsUsage.  While a
+        // correction should never be needed, resetting the value allows the node to continue operating, and only
+        // an error is reported if the new and old values do not match.
+        if (fPeriodicFlush)
+            pcoinsTip->ResetCachedCoinUsage();
     }
     catch (const std::runtime_error &e)
     {
@@ -3145,16 +3133,19 @@ bool static ConnectTip(CValidationState &state,
         bool result = view.Flush();
         assert(result);
     }
+
     int64_t nTime4 = GetTimeMicros();
     nTimeFlush += nTime4 - nTime3;
     LogPrint("bench", "  - Flush: %.2fms [%.2fs]\n", (nTime4 - nTime3) * 0.001, nTimeFlush * 0.000001);
-    // Write the chain state to disk, if necessary.
-    if (!FlushStateToDisk(state, FLUSH_STATE_IF_NEEDED))
-        return false;
+    // Write the chain state to disk, if necessary, and only during IBD, reindex, or importing.
+    if (!IsChainNearlySyncd() || fReindex || fImporting)
+        if (!FlushStateToDisk(state, FLUSH_STATE_IF_NEEDED))
+            return false;
     int64_t nTime5 = GetTimeMicros();
     nTimeChainState += nTime5 - nTime4;
     LogPrint(
         "bench", "  - Writing chainstate: %.2fms [%.2fs]\n", (nTime5 - nTime4) * 0.001, nTimeChainState * 0.000001);
+
     // Remove conflicting transactions from the mempool.
     std::list<CTransaction> txConflicted;
     mempool.removeForBlock(pblock->vtx, pindexNew->nHeight, txConflicted, !IsInitialBlockDownload());
@@ -3640,10 +3631,6 @@ bool ActivateBestChain(CValidationState &state, const CChainParams &chainparams,
         fOneDone = true;
     } while (pindexMostWork->nChainWork > chainActive.Tip()->nChainWork);
     CheckBlockIndex(chainparams.GetConsensus());
-
-    // Write changes periodically to disk.
-    if (!FlushStateToDisk(state, FLUSH_STATE_PERIODIC))
-        return false;
 
     return true;
 }
@@ -6392,6 +6379,9 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
                 dosMan.Misbehaving(pfrom, nDoS);
         }
         FlushStateToDisk(state, FLUSH_STATE_PERIODIC);
+
+        // The flush to disk above is only periodic therefore we need to continuously trim any excess from the cache.
+        pcoinsTip->Trim(nCoinCacheUsage);
     }
 
 

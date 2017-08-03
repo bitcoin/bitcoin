@@ -334,7 +334,7 @@ public:
 
     //! Do a bulk modification (multiple CCoins changes + BestBlock change).
     //! The passed mapCoins can be modified.
-    virtual bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock);
+    virtual bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, size_t &nChildCachedCoinsUsage);
 
     //! Calculate statistics about the unspent transaction output set
     virtual bool GetStats(CCoinsStats &stats) const;
@@ -356,7 +356,7 @@ public:
     bool HaveCoins(const uint256 &txid) const;
     uint256 GetBestBlock() const;
     void SetBackend(CCoinsView &viewIn);
-    bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock);
+    bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, size_t &nChildCachedCoinsUsage);
     bool GetStats(CCoinsStats &stats) const;
 };
 
@@ -410,7 +410,7 @@ public:
     bool HaveCoins(const uint256 &txid) const;
     uint256 GetBestBlock() const;
     void SetBestBlock(const uint256 &hashBlock);
-    bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock);
+    bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, size_t &nChildCachedCoinsUsage);
 
     /**
      * Check if we have the given tx already loaded in this cache.
@@ -451,6 +451,14 @@ public:
      */
     bool Flush();
 
+    /** 
+     * Remove excess entries from this cache.
+     * Entries are trimmed starting from the beginning of the map.  In this way if those entries
+     * are needed later they will all be collocated near the the beginning of the leveldb database
+     * and will be faster to retrieve.
+     */
+    void Trim(size_t nTrimSize) const;
+
     /**
      * Removes the transaction with the given hash from the cache, if it is
      * not modified.
@@ -462,6 +470,9 @@ public:
 
     //! Calculate the size of the cache (in bytes)
     size_t DynamicMemoryUsage() const;
+
+    //! Recalculate and Reset the size of cachedCoinsUsage
+    size_t ResetCachedCoinUsage() const;
 
     /**
      * Amount of bitcoins coming in to a transaction
