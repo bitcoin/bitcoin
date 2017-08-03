@@ -1338,7 +1338,6 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     // see Step 2: parameter interactions for more information about these
     fListen = GetBoolArg("-listen", DEFAULT_LISTEN);
     fDiscover = GetBoolArg("-discover", true);
-    fRelayTxes = !GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY);
 
     for (const std::string& strAddr : gArgs.GetArgs("-externalip")) {
         CService addrLocal;
@@ -1639,6 +1638,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     MapPort(GetBoolArg("-upnp", DEFAULT_UPNP));
 
     CConnman::Options connOptions;
+    connOptions.m_relay_txes = !GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY);
     connOptions.nLocalServices = nLocalServices;
     connOptions.nRelevantServices = nRelevantServices;
     connOptions.nMaxConnections = nMaxConnections;

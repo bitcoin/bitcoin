@@ -130,6 +130,7 @@ public:
 
     struct Options
     {
+        bool m_relay_txes = false;
         ServiceFlags nLocalServices = NODE_NONE;
         ServiceFlags nRelevantServices = NODE_NONE;
         int nMaxConnections = 0;
@@ -242,6 +243,8 @@ public:
     bool DisconnectNode(const std::string& node);
     bool DisconnectNode(NodeId id);
 
+    bool GetRelayTxes() const;
+
     ServiceFlags GetLocalServices() const;
 
     //!set the max outbound target in bytes
@@ -349,6 +352,7 @@ private:
     unsigned int nSendBufferMaxSize;
     unsigned int nReceiveFloodSize;
 
+    bool m_relay_txes;
     std::vector<ListenSocket> vhListenSocket;
     std::atomic<bool> fNetworkActive;
     banmap_t setBanned;
@@ -461,7 +465,6 @@ CAddress GetLocalAddress(const CNetAddr *paddrPeer, ServiceFlags nLocalServices)
 
 extern bool fDiscover;
 extern bool fListen;
-extern bool fRelayTxes;
 
 extern limitedmap<uint256, int64_t> mapAlreadyAskedFor;
 
