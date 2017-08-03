@@ -469,6 +469,7 @@ void MultisigDialog::on_signTransactionButton_clicked()
 
     //bool fHashSingle = ((nHashType & ~SIGHASH_ANYONECANPAY) == SIGHASH_SINGLE);
     bool fHashSingle = true;
+    bool fSigned = true;
     for(unsigned int i = 0; i < mergedTx.vin.size(); i++)
     {
         CScript redeemScript = redeemScripts[i];
@@ -490,26 +491,14 @@ void MultisigDialog::on_signTransactionButton_clicked()
             SignSignature(keystore, prevPubKey, mergedTx, i, nHashType);
         }
         // ... and merge in other signatures:
-        unsigned int sigCount = 0;
         BOOST_FOREACH(const CMutableTransaction& txv, txVariants) {
             txin.scriptSig = CombineSignatures(prevPubKey, mergedTx, i, txin.scriptSig, txv.vin[i].scriptSig);
-            sigCount = sigCount + 1;
         }
 
-        ScriptError scriptError = SCRIPT_ERR_OK;
-        if (!VerifyScript(txin.scriptSig, prevPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker(&mergedTx, i)), scriptError)
+        if (!VerifyScript(txin.scriptSig, prevPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker(&mergedTx, i)))
         {
-            if (scriptError != 0)
-            {
-                QMessageBox::critical(this, tr("Multisig: Sign Button failed!"), tr("VerifyScript failed."));
-                fComplete = false;
-            }
-        }
-        unsigned int requiredSigs = redeemScript.GetSigOpCount(redeemScript) - 1;
-        if (requiredSigs > sigCount)
-        {
-            QMessageBox::critical(this, tr("Multisig: More signatures needed!"), tr("sigCount=%1, requiredSigs = %2").arg(sigCount).arg(requiredSigs));
             fComplete = false;
+            fSigned = false;
         }
     }
 
@@ -517,12 +506,16 @@ void MultisigDialog::on_signTransactionButton_clicked()
     ui->sendTransactionButton->setEnabled(fComplete);
     if(fComplete)
     {
-        ui->statusLabel->setText(tr("Transaction signature is complete"));
+        ui->statusLabel->setText(tr("Transaction completely signed"));
+    }
+    else if (!fSigned)
+    {
+        ui->statusLabel->setText(tr("Transaction needs more signatures"));
     }
     else
     {
-        ui->statusLabel->setText(tr("Transaction is NOT completely signed"));
-	}
+        ui->statusLabel->setText(tr("Transaction did NOT sign correctly"));
+    }
 }
 
 void MultisigDialog::on_copySignedTransactionButton_clicked()
@@ -579,11 +572,17 @@ void MultisigDialog::on_sendTransactionButton_clicked()
     //   CTxDB txdb("r");
     bool fMissingInputs = false;
     CValidationState state;
-    if(!AcceptToMemoryPool(mempool, state, tx, true, &fMissingInputs))
-        return;
-    SyncWithWallets(tx, NULL);
-    //(CInv(MSG_TX, txHash), tx);
-    RelayTransaction(tx);
+    if(!AcceptToMemoryPool(mempool, state, tx, true, &fMissingInputs)){
+        QString Reason = QString::fromStdString(state.GetRejectReason());
+        if(state.IsInvalid())
+            QMessageBox::critical(this, tr("Multisig: Rejected from memory pool!"), tr("Rejected from memory pool (more signatures needed?) Code: %1, Reason: %2").arg(state.GetRejectCode()).arg(Reason)); 
+        else
+           QMessageBox::critical(this, tr("Multisig: Memory pool error!"), tr("Memory pool error (more signatures needed?) Reason: %1").arg(Reason)); 
+    } else { 
+        SyncWithWallets(tx, NULL);
+        //(CInv(MSG_TX, txHash), tx);
+        RelayTransaction(tx);
+    }
 }
 
 MultisigInputEntry * MultisigDialog::addInput()
