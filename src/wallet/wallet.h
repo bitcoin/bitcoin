@@ -650,7 +650,7 @@ private:
  * A CWallet is an extension of a keystore, which also maintains a set of transactions and balances,
  * and provides the ability to create new transactions.
  */
-class CWallet : public CCryptoKeyStore, public CValidationInterface
+class CWallet : public CCryptoKeyStore, public CWatchOnlyStore, public CValidationInterface
 {
 private:
     static std::atomic<bool> fFlushScheduled;
@@ -900,6 +900,8 @@ public:
     bool GetDestData(const CTxDestination &dest, const std::string &key, std::string *value) const;
     //! Get all destination values matching a prefix.
     std::vector<std::string> GetDestValues(const std::string& prefix) const;
+
+    bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const;
 
     //! Adds a watch-only address to the store, and saves it to disk.
     bool AddWatchOnly(const CScript& dest, int64_t nCreateTime);

@@ -11,6 +11,7 @@
 #include <stdint.h>
 
 class CKeyStore;
+class CWatchOnlyStore;
 class CScript;
 
 /** IsMine() return codes */
@@ -33,9 +34,9 @@ typedef uint8_t isminefilter;
  * different SIGVERSION may have different network rules. Currently the only use of isInvalid is indicate uncompressed
  * keys in SIGVERSION_WITNESS_V0 script, but could also be used in similar cases in the future
  */
-isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey, bool& isInvalid, SigVersion = SIGVERSION_BASE);
-isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey, SigVersion = SIGVERSION_BASE);
-isminetype IsMine(const CKeyStore& keystore, const CTxDestination& dest, bool& isInvalid, SigVersion = SIGVERSION_BASE);
-isminetype IsMine(const CKeyStore& keystore, const CTxDestination& dest, SigVersion = SIGVERSION_BASE);
+isminetype IsMine(const CKeyStore& keystore, const CWatchOnlyStore& watchOnlyStore, const CScript& scriptPubKey, bool& isInvalid, SigVersion = SIGVERSION_BASE);
+isminetype IsMine(const CKeyStore& keystore, const CWatchOnlyStore& watchOnlyStore, const CScript& scriptPubKey, SigVersion = SIGVERSION_BASE);
+isminetype IsMine(const CKeyStore& keystore, const CWatchOnlyStore& watchOnlyStore, const CTxDestination& dest, bool& isInvalid, SigVersion = SIGVERSION_BASE);
+isminetype IsMine(const CKeyStore& keystore, const CWatchOnlyStore& watchOnlyStore, const CTxDestination& dest, SigVersion = SIGVERSION_BASE);
 
 #endif // BITCOIN_SCRIPT_ISMINE_H

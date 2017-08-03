@@ -284,7 +284,7 @@ bool CWallet::LoadCScript(const CScript& redeemScript)
 
 bool CWallet::AddWatchOnly(const CScript& dest)
 {
-    if (!CCryptoKeyStore::AddWatchOnly(dest))
+    if (!CWatchOnlyStore::AddWatchOnly(dest))
         return false;
     const CKeyMetadata& meta = mapKeyMetadata[CScriptID(dest)];
     UpdateTimeFirstKey(meta.nCreateTime);
@@ -301,7 +301,7 @@ bool CWallet::AddWatchOnly(const CScript& dest, int64_t nCreateTime)
 bool CWallet::RemoveWatchOnly(const CScript &dest)
 {
     AssertLockHeld(cs_wallet);
-    if (!CCryptoKeyStore::RemoveWatchOnly(dest))
+    if (!CWatchOnlyStore::RemoveWatchOnly(dest))
         return false;
     if (!HaveWatchOnly())
         NotifyWatchonlyChanged(false);
@@ -313,7 +313,7 @@ bool CWallet::RemoveWatchOnly(const CScript &dest)
 
 bool CWallet::LoadWatchOnly(const CScript &dest)
 {
-    return CCryptoKeyStore::AddWatchOnly(dest);
+    return CWatchOnlyStore::AddWatchOnly(dest);
 }
 
 bool CWallet::Unlock(const SecureString& strWalletPassphrase)
@@ -1240,7 +1240,7 @@ CAmount CWallet::GetDebit(const CTxIn &txin, const isminefilter& filter) const
 
 isminetype CWallet::IsMine(const CTxOut& txout) const
 {
-    return ::IsMine(*this, txout.scriptPubKey);
+    return ::IsMine(*this, *this, txout.scriptPubKey);
 }
 
 CAmount CWallet::GetCredit(const CTxOut& txout, const isminefilter& filter) const
@@ -1259,7 +1259,7 @@ bool CWallet::IsChange(const CTxOut& txout) const
     // a better way of identifying which outputs are 'the send' and which are
     // 'the change' will need to be implemented (maybe extend CWalletTx to remember
     // which output, if any, was change).
-    if (::IsMine(*this, txout.scriptPubKey))
+    if (::IsMine(*this, *this, txout.scriptPubKey))
     {
         CTxDestination address;
         if (!ExtractDestination(txout.scriptPubKey, address))
@@ -3128,7 +3128,7 @@ bool CWallet::SetAddressBook(const CTxDestination& address, const std::string& s
         if (!strPurpose.empty()) /* update purpose only if requested */
             mapAddressBook[address].purpose = strPurpose;
     }
-    NotifyAddressBookChanged(this, address, strName, ::IsMine(*this, address) != ISMINE_NO,
+    NotifyAddressBookChanged(this, address, strName, ::IsMine(*this, *this, address) != ISMINE_NO,
                              strPurpose, (fUpdated ? CT_UPDATED : CT_NEW) );
     if (!strPurpose.empty() && !CWalletDB(*dbw).WritePurpose(CBitcoinAddress(address).ToString(), strPurpose))
         return false;
@@ -3149,7 +3149,7 @@ bool CWallet::DelAddressBook(const CTxDestination& address)
         mapAddressBook.erase(address);
     }
 
-    NotifyAddressBookChanged(this, address, "", ::IsMine(*this, address) != ISMINE_NO, "", CT_DELETED);
+    NotifyAddressBookChanged(this, address, "", ::IsMine(*this, *this, address) != ISMINE_NO, "", CT_DELETED);
 
     CWalletDB(*dbw).ErasePurpose(CBitcoinAddress(address).ToString());
     return CWalletDB(*dbw).EraseName(CBitcoinAddress(address).ToString());
@@ -3834,6 +3834,11 @@ std::vector<std::string> CWallet::GetDestValues(const std::string& prefix) const
         }
     }
     return values;
+}
+
+bool CWallet::GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const
+{
+    return CCryptoKeyStore::GetPubKey(address, vchPubKeyOut) || CWatchOnlyStore::GetPubKey(address, vchPubKeyOut);
 }
 
 std::string CWallet::GetWalletHelpString(bool showDebug)

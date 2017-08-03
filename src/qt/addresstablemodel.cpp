@@ -83,7 +83,7 @@ public:
             for (const std::pair<CTxDestination, CAddressBookData>& item : wallet->mapAddressBook)
             {
                 const CBitcoinAddress& address = item.first;
-                bool fMine = IsMine(*wallet, address.Get());
+                bool fMine = IsMine(*wallet, *wallet, address.Get());
                 AddressTableEntry::Type addressType = translateTransactionType(
                         QString::fromStdString(item.second.purpose), fMine);
                 const std::string& strName = item.second.name;
