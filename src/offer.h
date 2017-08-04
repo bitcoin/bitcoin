@@ -437,7 +437,7 @@ bool GetVtxOfOffer(const std::vector<unsigned char> &vchOffer,
 				  COffer& txPos, std::vector<COffer> &vtxPos, bool skipExpiresCheck=false);
 std::string GetPaymentOptionsString(const uint32_t paymentOptions);
 CChainParams::AddressType PaymentOptionToAddressType(const uint32_t paymentOptions);
-bool BuildOfferAcceptJson(const COffer& theOffer, const CAliasIndex &alias, const CTransaction &aliastx, UniValue& oOfferAccept);
+bool BuildOfferAcceptJson(const COffer& theOffer, const CAliasIndex &alias, const CTransaction &aliastx, UniValue& oOfferAccept, bool filterPurchases, bool filterSales);
 bool BuildOfferJson(const COffer& theOffer, const CAliasIndex &alias, UniValue& oOffer);
 uint64_t GetOfferExpiration(const COffer& offer);
 #endif // OFFER_H
