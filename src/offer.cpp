@@ -3432,7 +3432,11 @@ bool BuildOfferAcceptJson(const COffer& theOffer, const CAliasIndex& theAlias, c
 	oOfferAccept.push_back(Pair("time", sTime));
 	oOfferAccept.push_back(Pair("quantity", strprintf("%d", theOffer.accept.nQty)));
 	oOfferAccept.push_back(Pair("currency", stringFromVch(theOffer.sCurrencyCode)));
-	oOfferAccept.push_back(Pair("address", EncodeBase58(offerAlias.vchAddress)));
+	CSyscoinAddress address;
+	GetAddress(offerAlias, &address);
+	if (!address.IsValid())
+		return false;
+	oOfferAccept.push_back(Pair("address", address.ToString()));
 	if (theOffer.GetPrice() > 0)
 		oOfferAccept.push_back(Pair("offer_discount_percentage", strprintf("%.2f%%", 100.0f - 100.0f*((float)theOffer.accept.nPrice / (float)theOffer.nPrice))));
 	else
