@@ -2391,9 +2391,7 @@ UniValue aliascount(const UniValue& params, bool fHelp) {
 		CAliasIndex alias(wtx);
 		if (alias.IsNull())
 			continue;
-		// skip this alias if it doesn't match the given filter value
-		if (vchAlias.size() > 0 && alias.vchAlias != vchAlias)
-			continue;
+
 		if (!paliasdb->ReadAlias(alias.vchAlias, vtxPos) || vtxPos.empty())
 		{
 			continue;
