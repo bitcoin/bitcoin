@@ -2537,7 +2537,9 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
         }
     }
 
-
+    // If the transaction has not provided a locktime, let's use the default locktime chosen in CreateTransaction
+    // so that the miner fee sniping prevention implemented there works
+    if (tx.nLockTime == 0) tx.nLockTime = wtx.tx->nLockTime;
     return true;
 }
 
