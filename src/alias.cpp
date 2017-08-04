@@ -2445,9 +2445,6 @@ UniValue aliascount(const UniValue& params, bool fHelp) {
 	CTransaction tx;
 	int found = 0;
 	BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet) {
-		if (oRes.size() >= count)
-			break;
-		pending = 0;
 		// get txn hash, read txn index
 		hash = item.second.GetHash();
 		const CWalletTx &wtx = item.second;
