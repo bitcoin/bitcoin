@@ -2369,7 +2369,7 @@ bool IsMyAlias(const CAliasIndex& alias)
 	return IsMine(*pwalletMain, address.Get());
 }
 UniValue aliascount(const UniValue& params, bool fHelp) {
-	if (fHelp || 1 < params.size())
+	if (fHelp || 0 < params.size())
 		throw runtime_error("aliascount\n"
 			"Count aliases in this wallet.\n");
 

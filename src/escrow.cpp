@@ -3579,12 +3579,12 @@ bool BuildEscrowJson(const CEscrow &escrow, UniValue& oEscrow)
 }
 UniValue escrowlist(const UniValue& params, bool fHelp) {
 	if (fHelp || 4 < params.size())
-        throw runtime_error("escrowlist [\"alias\",...] [<escrow>] [count] [from]\n"
-                "list escrows that an array of aliases are involved in. Set of aliases to look up based on alias.\n"
+        throw runtime_error("escrowlist [\"buyeralias\",...] [\"selleralias\",...] [\"arbiteralias\",...] [<escrow>] [count] [from]\n"
+                "list escrows that a set of aliases are involved in.\n"
 				"[count]          (numeric, optional, default=10) The number of results to return\n"
 				"[from]           (numeric, optional, default=0) The number of results to skip\n");
 	UniValue aliasesValue(UniValue::VARR);
-	vector<string> aliases;
+	vector<string> buyeraliases, selleraliases, arbiteraliases;
 	if(CheckParam(params, 0))
 	{
 		if(params[0].isArray())
@@ -3595,7 +3595,7 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 				string lowerStr = aliasesValue[aliasIndex].get_str();
 				boost::algorithm::to_lower(lowerStr);
 				if(!lowerStr.empty())
-					aliases.push_back(lowerStr);
+					buyeraliases.push_back(lowerStr);
 			}
 		}
 		else
@@ -3603,20 +3603,62 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 			string aliasName = params[0].get_str();
 			boost::algorithm::to_lower(aliasName);
 			if (!aliasName.empty())
-				aliases.push_back(aliasName);
+				buyeraliases.push_back(aliasName);
+		}
+	}
+	if (CheckParam(params, 1))
+	{
+		if (params[1].isArray())
+		{
+			aliasesValue = params[1].get_array();
+			for (unsigned int aliasIndex = 0; aliasIndex<aliasesValue.size(); aliasIndex++)
+			{
+				string lowerStr = aliasesValue[aliasIndex].get_str();
+				boost::algorithm::to_lower(lowerStr);
+				if (!lowerStr.empty())
+					selleraliases.push_back(lowerStr);
+			}
+		}
+		else
+		{
+			string aliasName = params[1].get_str();
+			boost::algorithm::to_lower(aliasName);
+			if (!aliasName.empty())
+				selleraliases.push_back(aliasName);
+		}
+	}
+	if (CheckParam(params, 2))
+	{
+		if (params[2].isArray())
+		{
+			aliasesValue = params[2].get_array();
+			for (unsigned int aliasIndex = 0; aliasIndex<aliasesValue.size(); aliasIndex++)
+			{
+				string lowerStr = aliasesValue[aliasIndex].get_str();
+				boost::algorithm::to_lower(lowerStr);
+				if (!lowerStr.empty())
+					arbiteraliases.push_back(lowerStr);
+			}
+		}
+		else
+		{
+			string aliasName = params[2].get_str();
+			boost::algorithm::to_lower(aliasName);
+			if (!aliasName.empty())
+				arbiteraliases.push_back(aliasName);
 		}
 	}
 	vector<unsigned char> vchNameUniq;
-    if(CheckParam(params, 1))
-        vchNameUniq = vchFromValue(params[1]);
+    if(CheckParam(params, 3))
+        vchNameUniq = vchFromValue(params[3]);
 
 
 	int count = 10;
 	int from = 0;
-	if (CheckParam(params, 2))
-		count = atoi(params[2].get_str());
-	if (CheckParam(params, 3))
-		from = atoi(params[3].get_str());
+	if (CheckParam(params, 4))
+		count = atoi(params[4].get_str());
+	if (CheckParam(params, 5))
+		from = atoi(params[5].get_str());
 	int found = 0;
 
 	map<uint256, CTransaction> vtxTx;
@@ -3628,15 +3670,15 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 	UniValue oRes(UniValue::VARR);
 	map< vector<unsigned char>, int > vNamesI;
 	map< vector<unsigned char>, UniValue > vNamesO;
-	if(aliases.size() > 0)
+	if(buyeraliases.size() > 0)
 	{
-		for(unsigned int aliasIndex =0;aliasIndex<aliases.size();aliasIndex++)
+		for(unsigned int aliasIndex =0;aliasIndex<buyeraliases.size();aliasIndex++)
 		{
 			if (oRes.size() >= count)
 				break;
 			vtxTx.clear();
 			vtxHeight.clear();
-			const string &name = aliases[aliasIndex];
+			const string &name = buyeraliases[aliasIndex];
 			const vector<unsigned char> &vchAlias = vchFromString(name);
 			vector<CAliasIndex> vtxPos;
 			if (!paliasdb->ReadAlias(vchAlias, vtxPos) || vtxPos.empty())
@@ -3675,7 +3717,7 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 					if (!pescrowdb->ReadEscrow(escrow.vchEscrow, vtxEscrowPos) || vtxEscrowPos.empty())
 						continue;
 					const CEscrow &theEscrow = vtxEscrowPos.back();
-					if(theEscrow.vchBuyerAlias != vchAlias && theEscrow.vchSellerAlias != vchAlias && theEscrow.vchArbiterAlias != vchAlias)
+					if(theEscrow.vchBuyerAlias != vchAlias)
 						continue;
 					UniValue oEscrow(UniValue::VOBJ);
 					vNamesI[escrow.vchEscrow] = nHeight;
@@ -3691,6 +3733,138 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 					if (vchNameUniq.size() > 0)
 						return oRes;
 				}	
+			}
+		}
+	}
+	if (arbiteraliases.size() > 0)
+	{
+		for (unsigned int aliasIndex = 0; aliasIndex<arbiteraliases.size(); aliasIndex++)
+		{
+			if (oRes.size() >= count)
+				break;
+			vtxTx.clear();
+			vtxHeight.clear();
+			const string &name = arbiteraliases[aliasIndex];
+			const vector<unsigned char> &vchAlias = vchFromString(name);
+			vector<CAliasIndex> vtxPos;
+			if (!paliasdb->ReadAlias(vchAlias, vtxPos) || vtxPos.empty())
+				continue;
+			vector<CAliasPayment> vtxPaymentPos;
+			if (!paliasdb->ReadAliasPayment(vchAlias, vtxPaymentPos) || vtxPaymentPos.empty())
+				continue;
+			BOOST_FOREACH(txPos, vtxPos) {
+				if (!GetSyscoinTransaction(txPos.nHeight, txPos.txHash, tx, Params().GetConsensus()))
+					continue;
+				vtxTx[txPos.txHash] = tx;
+				vtxHeight[txPos.txHash] = txPos.nHeight;
+			}
+			BOOST_FOREACH(txPaymentPos, vtxPaymentPos) {
+				if (vtxTx.find(txPaymentPos.txHash) != vtxTx.end())
+					continue;
+				if (!GetSyscoinTransaction(txPaymentPos.nHeight, txPaymentPos.txHash, tx, Params().GetConsensus()))
+					continue;
+				vtxTx[txPaymentPos.txHash] = tx;
+				vtxHeight[txPaymentPos.txHash] = txPaymentPos.nHeight;
+			}
+			CTransaction tx;
+			for (auto& it : boost::adaptors::reverse(vtxTx)) {
+				if (oRes.size() >= count)
+					break;
+				const uint64_t& nHeight = vtxHeight[it.first];
+				const CTransaction& tx = it.second;
+				CEscrow escrow(tx);
+				if (!escrow.IsNull())
+				{
+					if (vNamesI.find(escrow.vchEscrow) != vNamesI.end() && (nHeight <= vNamesI[escrow.vchEscrow] || vNamesI[escrow.vchEscrow] < 0))
+						continue;
+					if (vchNameUniq.size() > 0 && vchNameUniq != escrow.vchEscrow)
+						continue;
+					vector<CEscrow> vtxEscrowPos;
+					if (!pescrowdb->ReadEscrow(escrow.vchEscrow, vtxEscrowPos) || vtxEscrowPos.empty())
+						continue;
+					const CEscrow &theEscrow = vtxEscrowPos.back();
+					if (theEscrow.vchArbiterAlias != vchAlias)
+						continue;
+					UniValue oEscrow(UniValue::VOBJ);
+					vNamesI[escrow.vchEscrow] = nHeight;
+
+					if (BuildEscrowJson(theEscrow, oEscrow))
+					{
+						found++;
+						if (found < from)
+							continue;
+						oRes.push_back(oEscrow);
+					}
+					// if finding specific GUID don't need to look any further
+					if (vchNameUniq.size() > 0)
+						return oRes;
+				}
+			}
+		}
+	}
+	if (selleraliases.size() > 0)
+	{
+		for (unsigned int aliasIndex = 0; aliasIndex<selleraliases.size(); aliasIndex++)
+		{
+			if (oRes.size() >= count)
+				break;
+			vtxTx.clear();
+			vtxHeight.clear();
+			const string &name = selleraliases[aliasIndex];
+			const vector<unsigned char> &vchAlias = vchFromString(name);
+			vector<CAliasIndex> vtxPos;
+			if (!paliasdb->ReadAlias(vchAlias, vtxPos) || vtxPos.empty())
+				continue;
+			vector<CAliasPayment> vtxPaymentPos;
+			if (!paliasdb->ReadAliasPayment(vchAlias, vtxPaymentPos) || vtxPaymentPos.empty())
+				continue;
+			BOOST_FOREACH(txPos, vtxPos) {
+				if (!GetSyscoinTransaction(txPos.nHeight, txPos.txHash, tx, Params().GetConsensus()))
+					continue;
+				vtxTx[txPos.txHash] = tx;
+				vtxHeight[txPos.txHash] = txPos.nHeight;
+			}
+			BOOST_FOREACH(txPaymentPos, vtxPaymentPos) {
+				if (vtxTx.find(txPaymentPos.txHash) != vtxTx.end())
+					continue;
+				if (!GetSyscoinTransaction(txPaymentPos.nHeight, txPaymentPos.txHash, tx, Params().GetConsensus()))
+					continue;
+				vtxTx[txPaymentPos.txHash] = tx;
+				vtxHeight[txPaymentPos.txHash] = txPaymentPos.nHeight;
+			}
+			CTransaction tx;
+			for (auto& it : boost::adaptors::reverse(vtxTx)) {
+				if (oRes.size() >= count)
+					break;
+				const uint64_t& nHeight = vtxHeight[it.first];
+				const CTransaction& tx = it.second;
+				CEscrow escrow(tx);
+				if (!escrow.IsNull())
+				{
+					if (vNamesI.find(escrow.vchEscrow) != vNamesI.end() && (nHeight <= vNamesI[escrow.vchEscrow] || vNamesI[escrow.vchEscrow] < 0))
+						continue;
+					if (vchNameUniq.size() > 0 && vchNameUniq != escrow.vchEscrow)
+						continue;
+					vector<CEscrow> vtxEscrowPos;
+					if (!pescrowdb->ReadEscrow(escrow.vchEscrow, vtxEscrowPos) || vtxEscrowPos.empty())
+						continue;
+					const CEscrow &theEscrow = vtxEscrowPos.back();
+					if (theEscrow.vchSellerAlias != vchAlias)
+						continue;
+					UniValue oEscrow(UniValue::VOBJ);
+					vNamesI[escrow.vchEscrow] = nHeight;
+
+					if (BuildEscrowJson(theEscrow, oEscrow))
+					{
+						found++;
+						if (found < from)
+							continue;
+						oRes.push_back(oEscrow);
+					}
+					// if finding specific GUID don't need to look any further
+					if (vchNameUniq.size() > 0)
+						return oRes;
+				}
 			}
 		}
 	}
