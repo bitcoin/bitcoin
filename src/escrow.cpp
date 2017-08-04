@@ -139,7 +139,7 @@ bool CEscrowDB::CleanupDatabase(int &servicesCleaned)
 	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
 	pcursor->SeekToFirst();
 	vector<CEscrow> vtxPos;
-	uint256 txHash;
+	uint256 txHash;`
 	CTransaction fundingTx;
 	pair<string, vector<unsigned char> > key;
     while (pcursor->Valid()) {
@@ -169,7 +169,7 @@ bool CEscrowDB::CleanupDatabase(int &servicesCleaned)
 	return true;
 }
 
-bool CEscrowDB::ScanEscrows(const std::vector<unsigned char>& vchEscrow, const string& strRegexp, const vector<string>& aliasArray, unsigned int nMax,
+bool CEscrowDB::ScanEscrows(const std::vector<unsigned char>& vchEscrow, const string& strRegexp, const vector<string>& aliasBuyerArray, const vector<string>& aliasSellerArray, const vector<string>& aliasArbiterArray, unsigned int nMax,
 							std::vector<std::pair<CEscrow, CEscrow> >& escrowScan) {
 	string strSearchLower = strRegexp;
 	boost::algorithm::to_lower(strSearchLower);
@@ -208,10 +208,10 @@ bool CEscrowDB::ScanEscrows(const std::vector<unsigned char>& vchEscrow, const s
 				{
 					bool notFoundLinkSeller = true;
 					if(!linkSellerAliasLower.empty())
-						notFoundLinkSeller = (std::find(aliasArray.begin(), aliasArray.end(), linkSellerAliasLower) == aliasArray.end());
-					if (std::find(aliasArray.begin(), aliasArray.end(), buyerAliasLower) == aliasArray.end() &&
-						std::find(aliasArray.begin(), aliasArray.end(), sellerAliasLower) == aliasArray.end() &&
-						std::find(aliasArray.begin(), aliasArray.end(), arbiterAliasLower) == aliasArray.end() &&
+						notFoundLinkSeller = (std::find(aliasSellerArray.begin(), aliasSellerArray.end(), linkSellerAliasLower) == aliasSellerArray.end());
+					if (std::find(aliasBuyerArray.begin(), aliasBuyerArray.end(), buyerAliasLower) == aliasBuyerArray.end() &&
+						std::find(aliasSellerArray.begin(), aliasSellerArray.end(), sellerAliasLower) == aliasSellerArray.end() &&
+						std::find(aliasArbiterArray.begin(), aliasArbiterArray.end(), arbiterAliasLower) == aliasArbiterArray.end() &&
 						notFoundLinkSeller)
 					{
 						pcursor->Next();
@@ -3719,12 +3719,12 @@ UniValue escrowcount(const UniValue& params, bool fHelp) {
 }
 UniValue escrowlist(const UniValue& params, bool fHelp) {
    if (fHelp || 4 < params.size())
-        throw runtime_error("escrowlist [\"alias\",...] [escrow] [count] [from]\n"
-                "list escrows that an array of aliases are involved in.\n"
+        throw runtime_error("escrowlist [\"buyeralias\",...] [\"selleralias\",...] [\"arbiteralias\",...] [escrow] [count] [from]\n"
+                "list escrows that an set of aliases are involved in.\n"
 				"[count]          (numeric, optional, default=10) The number of results to return\n"
 				"[from]           (numeric, optional, default=0) The number of results to skip\n");
 	UniValue aliasesValue(UniValue::VARR);
-	vector<string> aliases;
+	vector<string> buyeraliases, selleraliases, arbiteraliases;
 	if(params.size() >= 1)
 	{
 		if(params[0].isArray())
@@ -3735,7 +3735,7 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 				string lowerStr = aliasesValue[aliasIndex].get_str();
 				boost::algorithm::to_lower(lowerStr);
 				if(!lowerStr.empty())
-					aliases.push_back(lowerStr);
+					buyeraliases.push_back(lowerStr);
 			}
 		}
 		else
@@ -3743,7 +3743,49 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 			string aliasName =  params[0].get_str();
 			boost::algorithm::to_lower(aliasName);
 			if(!aliasName.empty())
-				aliases.push_back(aliasName);
+				buyeraliases.push_back(aliasName);
+		}
+	}
+	if (params.size() >= 2)
+	{
+		if (params[1].isArray())
+		{
+			aliasesValue = params[1].get_array();
+			for (unsigned int aliasIndex = 0; aliasIndex<aliasesValue.size(); aliasIndex++)
+			{
+				string lowerStr = aliasesValue[aliasIndex].get_str();
+				boost::algorithm::to_lower(lowerStr);
+				if (!lowerStr.empty())
+					selleraliases.push_back(lowerStr);
+			}
+		}
+		else
+		{
+			string aliasName = params[1].get_str();
+			boost::algorithm::to_lower(aliasName);
+			if (!aliasName.empty())
+				selleraliases.push_back(aliasName);
+		}
+	}
+	if (params.size() >= 3)
+	{
+		if (params[2].isArray())
+		{
+			aliasesValue = params[2].get_array();
+			for (unsigned int aliasIndex = 0; aliasIndex<aliasesValue.size(); aliasIndex++)
+			{
+				string lowerStr = aliasesValue[aliasIndex].get_str();
+				boost::algorithm::to_lower(lowerStr);
+				if (!lowerStr.empty())
+					arbiteraliases.push_back(lowerStr);
+			}
+		}
+		else
+		{
+			string aliasName = params[2].get_str();
+			boost::algorithm::to_lower(aliasName);
+			if (!aliasName.empty())
+				arbiteraliases.push_back(aliasName);
 		}
 	}
 	vector<unsigned char> vchNameUniq;
@@ -3762,7 +3804,7 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 	vector<pair<CEscrow, CEscrow> > escrowScan;
 	if(aliases.size() > 0)
 	{
-		if (!pescrowdb->ScanEscrows(vchNameUniq, stringFromVch(vchNameUniq), aliases, 1000, escrowScan))
+		if (!pescrowdb->ScanEscrows(vchNameUniq, stringFromVch(vchNameUniq), buyeraliases, selleraliases, arbiteraliases, 1000, escrowScan))
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4606 - " + _("Scan failed"));
 	
 	}
@@ -3828,7 +3870,7 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
 
 	vector<pair<CEscrow, CEscrow> > escrowScan;
 	vector<string> aliases;
-	if (!pescrowdb->ScanEscrows(vchEscrow, strRegexp, aliases, count, escrowScan))
+	if (!pescrowdb->ScanEscrows(vchEscrow, strRegexp, aliases, aliases, aliases, count, escrowScan))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4607 - " + _("Scan failed"));
 
 	pair<CEscrow, CEscrow> pairScan;
