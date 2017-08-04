@@ -2990,6 +2990,7 @@ extern UniValue aliasnew(const UniValue& params, bool fHelp);
 extern UniValue aliasauthenticate(const UniValue& params, bool fHelp);
 extern UniValue aliasupdate(const UniValue& params, bool fHelp);
 extern UniValue aliaslist(const UniValue& params, bool fHelp);
+extern UniValue aliascount(const UniValue& params, bool fHelp);
 extern UniValue aliasaffiliates(const UniValue& params, bool fHelp);
 extern UniValue aliasinfo(const UniValue& params, bool fHelp);
 extern UniValue aliasbalance(const UniValue& params, bool fHelp);
@@ -3013,7 +3014,6 @@ extern UniValue offerwhitelist(const UniValue& params, bool fHelp);
 extern UniValue offerinfo(const UniValue& params, bool fHelp);
 extern UniValue offerlist(const UniValue& params, bool fHelp);
 extern UniValue offercount(const UniValue& params, bool fHelp);
-extern UniValue offeracceptlist(const UniValue& params, bool fHelp);
 extern UniValue offerhistory(const UniValue& params, bool fHelp);
 extern UniValue offerfilter(const UniValue& params, bool fHelp);
 
@@ -3104,6 +3104,7 @@ static const CRPCCommand commands[] =
 	{ "wallet", "aliasauthenticate", &aliasauthenticate,          false },
     { "wallet", "aliasupdate",       &aliasupdate,       false },
     { "wallet", "aliaslist",         &aliaslist,         false },
+	{ "wallet", "aliascount",        &aliascount,         false },
 	{ "wallet", "aliasaffiliates",   &aliasaffiliates,   false },
     { "wallet", "aliasinfo",         &aliasinfo,         false },
 	{ "wallet", "aliasbalance",      &aliasbalance,         false },
@@ -3127,7 +3128,6 @@ static const CRPCCommand commands[] =
 	{ "wallet", "offerwhitelist",		&offerwhitelist,	   false },
     { "wallet", "offerlist",            &offerlist,            false },
 	{ "wallet", "offercount",            &offercount,            false },
-	{ "wallet", "offeracceptlist",      &offeracceptlist,      false },
     { "wallet", "offerinfo",            &offerinfo,            false },
     { "wallet", "offerhistory",         &offerhistory,         false },
     { "wallet", "offerfilter",          &offerfilter,          false },

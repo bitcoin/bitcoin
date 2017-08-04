@@ -399,4 +399,5 @@ bool IsMyAlias(const CAliasIndex& alias);
 void GetAddress(const CAliasIndex &alias, CSyscoinAddress* address, const uint32_t nPaymentOption=1);
 void GetAddress(const CAliasIndex &alias, CSyscoinAddress* address, CScript& script, const uint32_t nPaymentOption=1);
 void GetPrivateKeysFromScript(const CScript& script, std::vector<std::string> &strKeys);
+bool CheckParam(const UniValue& params, const unsigned int index);
 #endif // ALIAS_H

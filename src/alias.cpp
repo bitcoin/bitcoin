@@ -1621,6 +1621,20 @@ void CreateRecipient(const CScript& scriptPubKey, CRecipient& recipient)
 	CAmount fee = 3*minRelayTxFee.GetFee(nSize);
 	recipient.nAmount = fee;
 }
+bool CheckParam(const UniValue& params, const unsigned int index)
+{
+	if (params.size() > index)
+	{
+		if (params[index].isStr())
+		{
+			if (params[index].get_str().size() > 0 && params[index].get_str() != "\"\"")
+				return true;
+		}
+		else if (params[index].isArray())
+			return params[index].get_array().size() > 0;
+	}
+	return false;
+}
 void CreateFeeRecipient(CScript& scriptPubKey, const vector<unsigned char>& vchAliasPeg, const uint64_t& nHeight, const vector<unsigned char>& data, CRecipient& recipient)
 {
 	int precision = 0;
