@@ -2419,6 +2419,49 @@ bool IsMyAlias(const CAliasIndex& alias)
 	else
 		return IsMine(*pwalletMain, address.Get());
 }
+UniValue aliascount(const UniValue& params, bool fHelp) {
+	if (fHelp || 0 < params.size())
+		throw runtime_error("aliascount\n"
+			"Count aliases that in your wallet.\n");
+
+	UniValue oRes(UniValue::VARR);
+	map<vector<unsigned char>, int> vNamesI;
+
+	uint256 hash;
+	CTransaction tx;
+	int found = 0;
+	BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet) {
+		if (oRes.size() >= count)
+			break;
+		pending = 0;
+		// get txn hash, read txn index
+		hash = item.second.GetHash();
+		const CWalletTx &wtx = item.second;
+		// skip non-syscoin txns
+		if (wtx.nVersion != SYSCOIN_TX_VERSION)
+			continue;
+
+		vector<CAliasIndex> vtxPos;
+		CAliasIndex alias(wtx);
+		if (alias.IsNull())
+			continue;
+
+		if (!paliasdb->ReadAlias(alias.vchAlias, vtxPos) || vtxPos.empty())
+		{
+			continue;
+		}
+		const CAliasIndex &theAlias = vtxPos.back();
+		if (!IsMyAlias(theAlias))
+			continue;
+		// get last active name only
+		if (vNamesI.find(theAlias.vchAlias) != vNamesI.end() && (theAlias.nHeight <= vNamesI[theAlias.vchAlias] || vNamesI[theAlias.vchAlias] < 0))
+			continue;
+		UniValue oName(UniValue::VOBJ);
+		vNamesI[theAlias.vchAlias] = theAlias.nHeight;
+		found++;
+	}
+	return found;
+}
 UniValue aliaslist(const UniValue& params, bool fHelp) {
 	if (fHelp || 3 < params.size())
 		throw runtime_error("aliaslist [aliasname] [count] [from]\n"
