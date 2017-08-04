@@ -1940,16 +1940,20 @@ UniValue listtransactions(const JSONRPCRequest& request)
     if (nFrom < 0)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative from");
 
+
+    // NOTE: nFrom and nCount seem to apply to the individual json entries, not the txn
+    //  a txn producing 2 entries will output only 1 entry if nCount is 1
+    // TODO: Change to count on unique txids?
+
+
     UniValue ret(UniValue::VARR);
     UniValue retReversed(UniValue::VARR);
 
     const CWallet::TxItems &txOrdered = pwalletMain->wtxOrdered;
     
-    int nCountIter = 0;
     // iterate backwards until we have nCount items to return:
     for (CWallet::TxItems::const_reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
     {
-        nCountIter++;
         
         CWalletTx *const pwtx = (*it).second.first;
         if (pwtx != 0)
@@ -1958,7 +1962,7 @@ UniValue listtransactions(const JSONRPCRequest& request)
         if (pacentry != 0)
             AcentryToJSON(*pacentry, strAccount, retReversed);
         
-        if (nCountIter >= nCount + nFrom)
+        if (retReversed.size() >= nCount + nFrom)
             break;
     };
     
@@ -1975,13 +1979,10 @@ UniValue listtransactions(const JSONRPCRequest& request)
         // TODO: Combine finding and inserting into ret loops 
         
         UniValue retRecords(UniValue::VARR);
-        nCountIter = 0;
         for (RtxOrdered_t::const_reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
         {
-            nCountIter++;
-            
             ListRecord(it->second->first, it->second->second, strAccount, 0, true, retRecords, filter);
-            if (nCountIter >= nCount + nFrom)
+            if (retRecords.size() >= nCount + nFrom)
                 break;
         };
         

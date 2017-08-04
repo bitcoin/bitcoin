@@ -229,8 +229,6 @@ BOOST_AUTO_TEST_CASE(rpc_hdwallet_timelocks)
     BOOST_REQUIRE_NO_THROW(rv = CallRPC(sCmd));
     BOOST_CHECK(rv["complete"].getBool() == true);
     sResult = rv["hex"].getValStr();
-    
-    
 }
 
 BOOST_AUTO_TEST_SUITE_END()

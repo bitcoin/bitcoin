@@ -1704,7 +1704,8 @@ bool IsInitialBlockDownload()
         return true;
     if (chainActive.Tip()->nChainWork < UintToArith256(chainParams.GetConsensus().nMinimumChainWork))
         return true;
-    if (chainActive.Tip()->nHeight > COINBASE_MATURITY
+    if (fRequireStandard // testnet
+        && chainActive.Tip()->nHeight > COINBASE_MATURITY
         && chainActive.Tip()->GetBlockTime() < (GetTime() - nMaxTipAge))
         return true;
     if (GetNumPeers() < 1

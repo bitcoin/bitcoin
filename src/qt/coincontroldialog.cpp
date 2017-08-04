@@ -775,6 +775,7 @@ void CoinControlDialog::updateView()
             // amount
             itemOutput->setText(COLUMN_AMOUNT, BitcoinUnits::format(nDisplayUnit, out.nValue));
             itemOutput->setData(COLUMN_AMOUNT, Qt::UserRole, QVariant((qlonglong)out.nValue)); // padding so that sorting works correctly
+            itemOutput->setTextAlignment(COLUMN_AMOUNT, Qt::AlignRight);
 
             // date
             itemOutput->setText(COLUMN_DATE, GUIUtil::dateTimeStr(out.nTxTime));
@@ -783,6 +784,7 @@ void CoinControlDialog::updateView()
             // confirmations
             itemOutput->setText(COLUMN_CONFIRMATIONS, QString::number(out.nDepth));
             itemOutput->setData(COLUMN_CONFIRMATIONS, Qt::UserRole, QVariant((qlonglong)out.nDepth));
+            itemOutput->setTextAlignment(COLUMN_CONFIRMATIONS, Qt::AlignRight);
 
             // transaction hash
             uint256 txhash = out.op.hash;
@@ -811,6 +813,7 @@ void CoinControlDialog::updateView()
             itemWalletAddress->setText(COLUMN_CHECKBOX, "(" + QString::number(nChildren) + ")");
             itemWalletAddress->setText(COLUMN_AMOUNT, BitcoinUnits::format(nDisplayUnit, nSum));
             itemWalletAddress->setData(COLUMN_AMOUNT, Qt::UserRole, QVariant((qlonglong)nSum));
+            itemWalletAddress->setTextAlignment(COLUMN_AMOUNT, Qt::AlignRight);
         }
     }
     
