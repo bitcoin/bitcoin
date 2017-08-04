@@ -50,7 +50,7 @@ enum
 #endif
 
     BITCOIN_CASH_FORK_HEIGHT = 478559,
-    
+
 };
 
 class CBlock;
