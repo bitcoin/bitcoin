@@ -419,8 +419,14 @@ void CWallet::SetBestChain(const CBlockLocator& loc)
 {
     LOCK(cs_wallet); //nWalletMaxVersion
     unsigned int keypool_min = GetArg("-keypoolmin", DEFAULT_KEYPOOL_MIN);
-    if (IsHDEnabled() && !HasUnusedKeys(keypool_min)) {
+    if (IsHDEnabled() && (!m_update_best_block || !HasUnusedKeys(keypool_min))) {
         // If the keypool has dropped below -keypoolmin, then don't update the bestblock height. We can rescan later once the wallet is unlocked.
+
+        if (m_update_best_block) {
+            LogPrintf("Keypool has fallen below keypool_min (%s). Wallet will no longer watch for new transactions and best block height will not be advanced.\n", keypool_min);
+            LogPrintf("Unlock wallet, top up keypool and rescan to resume watching for new transactions.\n");
+            m_update_best_block = false;
+        }
         return;
     }
     CWalletDB walletdb(*dbw);
@@ -1649,6 +1655,23 @@ CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool f
         ShowProgress(_("Rescanning..."), 100); // hide progress dialog in GUI
 
         fScanningWallet = false;
+    }
+
+    // Update m_update_best_block if we've scanned from before the previous best block and keypool level is still above Keypool_min
+    CWalletDB walletdb(*dbw);
+    CBlockLocator loc;
+    walletdb.ReadBestBlock(loc);
+    CBlockIndex* pindexBestBlock = FindForkInGlobalIndex(chainActive, loc);
+    if (IsHDEnabled() && pindexStart && pindexStart->nHeight <= pindexBestBlock->nHeight) {
+        m_update_best_block = HasUnusedKeys(GetArg("-keypoolmin", DEFAULT_KEYPOOL_MIN));
+    }
+
+    // If the keypool has dropped below -keypoolmin, then stop updating the bestblock height. We can rescan later once the wallet is unlocked.
+    unsigned int keypool_min = GetArg("-keypoolmin", DEFAULT_KEYPOOL_MIN);
+    if (IsHDEnabled() && !HasUnusedKeys(keypool_min) && m_update_best_block) {
+        LogPrintf("Keypool has fallen below keypool_min (%s). Wallet will no longer watch for new transactions and best block height will not be advanced.\n", keypool_min);
+        LogPrintf("Unlock wallet, top up keypool and rescan to resume watching for new transactions.\n");
+        m_update_best_block = false;
     }
 
     // Check that we haven't dropped below the keypool_critical threshold.
@@ -4082,6 +4105,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
         }
 
     }
+
     // Try to top up keypool. No-op if the wallet is locked.
     walletInstance->TopUpKeyPool();
 

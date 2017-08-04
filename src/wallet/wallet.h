@@ -665,6 +665,7 @@ private:
     static std::atomic<bool> fFlushScheduled;
     std::atomic<bool> fAbortRescan;
     std::atomic<bool> fScanningWallet;
+    bool m_update_best_block;
 
     /**
      * Select a set of coins such that nValueRet >= nTargetValue and at least
@@ -800,6 +801,7 @@ public:
         nRelockTime = 0;
         fAbortRescan = false;
         fScanningWallet = false;
+        m_update_best_block = true;
     }
 
     std::map<uint256, CWalletTx> mapWallet;
