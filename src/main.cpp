@@ -5287,7 +5287,7 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
     } }
     catch (boost::thread_interrupted)
     {
-        printf("BitcoinMiner terminated\n");
+        if(!fProofOfStake) printf("BitcoinMiner terminated\n");
         throw;
     }
 }
@@ -5328,7 +5328,9 @@ void static ThreadStakeMinter(void* parg)
     {
         BitcoinMiner(pwallet, true);
     }
-    catch (std::exception& e) {
+    catch (boost::thread_interrupted) {
+        printf("stakeminter thread interrupt\n");
+    } catch (std::exception& e) {
         PrintException(&e, "ThreadStakeMinter()");
     } catch (...) {
         PrintException(NULL, "ThreadStakeMinter()");
