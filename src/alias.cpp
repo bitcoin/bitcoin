@@ -1047,6 +1047,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			CAliasPayment payment;
 			payment.txHash = txHash;
 			payment.nOut = nOut;
+			payment.nHeight = nHeight;
 			vtxPaymentPos.push_back(payment);
 			if (!dontaddtodb && !paliasdb->WriteAliasPayment(vchAlias, vtxPaymentPos))
 			{

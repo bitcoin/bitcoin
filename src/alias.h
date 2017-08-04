@@ -68,39 +68,46 @@ class CAliasUnprunable
 };
 class CAliasPayment {
 public:
-	
+	uint64_t nHeight;
 	unsigned char nOut;
 	uint256 txHash;
+	std::vector<unsigned char> vchFrom;
 	CAliasPayment() {
-        SetNull();
-    }
-
-	ADD_SERIALIZE_METHODS;
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-		READWRITE(txHash);
-		READWRITE(VARINT(nOut));
+		SetNull();
 	}
 
-    inline friend bool operator==(const CAliasPayment &a, const CAliasPayment &b) {
-        return (
-		a.txHash == b.txHash
-        && a.nOut == b.nOut
-        );
-    }
+	ADD_SERIALIZE_METHODS;
+	template <typename Stream, typename Operation>
+	inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+		READWRITE(txHash);
+		READWRITE(VARINT(nOut));
+		READWRITE(VARINT(nHeight));
+		READWRITE(vchFrom);
+	}
 
-    inline CAliasPayment operator=(const CAliasPayment &b) {
+	inline friend bool operator==(const CAliasPayment &a, const CAliasPayment &b) {
+		return (
+			a.txHash == b.txHash
+			&& a.nOut == b.nOut
+			&& a.nHeight == b.nHeight
+			&& a.vchFrom == b.vchFrom
+			);
+	}
+
+	inline CAliasPayment operator=(const CAliasPayment &b) {
 		txHash = b.txHash;
-        nOut = b.nOut;
-        return *this;
-    }
+		nOut = b.nOut;
+		nHeight = b.nHeight;
+		vchFrom = b.vchFrom;
+		return *this;
+	}
 
-    inline friend bool operator!=(const CAliasPayment &a, const CAliasPayment &b) {
-        return !(a == b);
-    }
+	inline friend bool operator!=(const CAliasPayment &a, const CAliasPayment &b) {
+		return !(a == b);
+	}
 
-    inline void SetNull() { txHash.SetNull(); nOut = 0;}
-    inline bool IsNull() const { return (txHash.IsNull() && nOut == 0); }
+	inline void SetNull() { vchFrom.clear(); nHeight = 0; txHash.SetNull(); nOut = 0; }
+	inline bool IsNull() const { return (vchFrom.empty() && nHeight == 0 && txHash.IsNull() && nOut == 0); }
 
 };
 class CMultiSigAliasInfo {
