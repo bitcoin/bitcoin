@@ -3868,9 +3868,6 @@ UniValue offeracceptcount(const UniValue& params, bool fHelp) {
 
 						// for accepts its the same as acceptheight because its the height from transaction
 						vNamesI[vchKey] = nHeight;
-						// if finding specific GUID don't need to look any further
-						if (vchNameUniq.size() > 0)
-							return oRes;
 					}
 				}
 			}
