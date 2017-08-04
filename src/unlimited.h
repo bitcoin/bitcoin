@@ -48,6 +48,9 @@ enum
 #else
     SINGLE_PEER_REQUEST_MODE_AGE = (24 * 60 * 60),
 #endif
+
+    BITCOIN_CASH_FORK_HEIGHT = 478559,
+    
 };
 
 class CBlock;
@@ -57,6 +60,8 @@ struct CDiskBlockPos;
 class CNode;
 class CNodeRef;
 class CChainParams;
+
+extern uint256 bitcoinCashForkBlockHash;
 
 extern std::set<CBlockIndex *> setDirtyBlockIndex;
 extern uint32_t blockVersion; // Overrides the mined block version if non-zero
