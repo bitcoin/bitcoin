@@ -108,6 +108,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "getmempooldescendants", 1 },
     { "aliasnew", 9 },
     { "aliasupdate", 10 },
+	{ "offerlist", 0 },
 };
 
 class CRPCConvertTable
