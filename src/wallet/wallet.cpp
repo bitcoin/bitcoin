@@ -3444,11 +3444,21 @@ void CWallet::ReturnKey(int64_t nIndex, bool fInternal, const CPubKey& pubkey)
     LogPrintf("keypool return %d\n", nIndex);
 }
 
-bool CWallet::GetKeyFromPool(CPubKey& result, bool internal)
+bool CWallet::GetKeyFromPool(CPubKey& result, bool internal, bool fail_on_critical)
 {
     CKeyPool keypool;
     {
         LOCK(cs_wallet);
+
+        // First, try to top up the keypool (this is a no-op if wallet is encrypted and locked)
+        TopUpKeyPool();
+        if (fail_on_critical && IsHDEnabled() &&
+            !HasUnusedKeys(GetArg("-keypoolcritical", DEFAULT_KEYPOOL_CRITICAL) + 1)) {
+            // If getting a key from the pool would result in us dropping to
+            // the keypool_critical threshold, fail
+            return false;
+        }
+
         int64_t nIndex = 0;
         ReserveKeyFromKeyPool(nIndex, keypool, internal);
         if (nIndex == -1)

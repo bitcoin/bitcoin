@@ -987,7 +987,7 @@ public:
     void ReserveKeyFromKeyPool(int64_t& nIndex, CKeyPool& keypool, bool fRequestedInternal);
     void KeepKey(int64_t nIndex);
     void ReturnKey(int64_t nIndex, bool fInternal, const CPubKey& pubkey);
-    bool GetKeyFromPool(CPubKey &key, bool internal = false);
+    bool GetKeyFromPool(CPubKey &key, bool internal = false, bool fail_on_critical = false);
     int64_t GetOldestKeyPoolTime();
     void ShutdownIfKeypoolCritical();
     /**
