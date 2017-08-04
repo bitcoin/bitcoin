@@ -3151,6 +3151,7 @@ static const CRPCCommand commands[] =
 	{ "wallet", "escrowrefund",          &escrowrefund,      false },
 	{ "wallet", "escrowclaimrefund",          &escrowclaimrefund,      false },
 	{ "wallet", "escrowcompleterefund",          &escrowcompleterefund,      false },
+	{ "wallet", "escrowcount",            &escrowcount,            false },
 	{ "wallet", "escrowlist",              &escrowlist,          false },
 	{ "wallet", "escrowinfo",              &escrowinfo,          false },
 	{ "wallet", "escrowhistory",     &escrowhistory, false },

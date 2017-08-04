@@ -3671,6 +3671,52 @@ bool BuildEscrowJson(const CEscrow &escrow, const CEscrow &firstEscrow, UniValue
 	oEscrow.push_back(Pair("avg_rating_display", strprintf("%.1f/5 (%d %s)", totalAvgRating, ratingCount, _("Votes"))));
 	return true;
 }
+UniValue escrowcount(const UniValue& params, bool fHelp) {
+	if (fHelp || 1 < params.size())
+		throw runtime_error("escrowlist [\"alias\",...]\n"
+			"list escrows that an array of aliases are involved in.\n"
+			"[count]          (numeric, optional, default=10) The number of results to return\n"
+			"[from]           (numeric, optional, default=0) The number of results to skip\n");
+	UniValue aliasesValue(UniValue::VARR);
+	vector<string> aliases;
+	if (params.size() >= 1)
+	{
+		if (params[0].isArray())
+		{
+			aliasesValue = params[0].get_array();
+			for (unsigned int aliasIndex = 0; aliasIndex<aliasesValue.size(); aliasIndex++)
+			{
+				string lowerStr = aliasesValue[aliasIndex].get_str();
+				boost::algorithm::to_lower(lowerStr);
+				if (!lowerStr.empty())
+					aliases.push_back(lowerStr);
+			}
+		}
+		else
+		{
+			string aliasName = params[0].get_str();
+			boost::algorithm::to_lower(aliasName);
+			if (!aliasName.empty())
+				aliases.push_back(aliasName);
+		}
+	}
+	
+	int found = 0;
+	UniValue oRes(UniValue::VARR);
+	map< vector<unsigned char>, int > vNamesI;
+	vector<pair<CEscrow, CEscrow> > escrowScan;
+	if (aliases.size() > 0)
+	{
+		if (!pescrowdb->ScanEscrows(vchNameUniq, stringFromVch(vchNameUniq), aliases, 1000, escrowScan))
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4606 - " + _("Scan failed"));
+
+	}
+	pair<CEscrow, CEscrow> pairScan;
+	BOOST_FOREACH(pairScan, escrowScan) {
+		found++;
+	}
+	return found;
+}
 UniValue escrowlist(const UniValue& params, bool fHelp) {
    if (fHelp || 4 < params.size())
         throw runtime_error("escrowlist [\"alias\",...] [escrow] [count] [from]\n"
