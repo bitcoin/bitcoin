@@ -3604,26 +3604,25 @@ UniValue offercount(const UniValue& params, bool fHelp) {
 				const CTransaction& tx = it.second;
 
 				COffer offer(tx);
-				if (!offer.IsNull() && offer.accept.IsNull()))
+				if (!offer.IsNull() && offer.accept.IsNull())
 				{
-				const vector<unsigned char> &vchKey = offer.vchOffer;
-				if (vNamesI.find(vchKey) != vNamesI.end() && (nHeight <= vNamesI[vchKey] || vNamesI[vchKey] < 0))
-					continue;
+					const vector<unsigned char> &vchKey = offer.vchOffer;
+					if (vNamesI.find(vchKey) != vNamesI.end() && (nHeight <= vNamesI[vchKey] || vNamesI[vchKey] < 0))
+						continue;
 
-				vector<COffer> vtxOfferPos;
-				if (!pofferdb->ReadOffer(offer.vchOffer, vtxOfferPos) || vtxOfferPos.empty())
-					continue;
+					vector<COffer> vtxOfferPos;
+					if (!pofferdb->ReadOffer(offer.vchOffer, vtxOfferPos) || vtxOfferPos.empty())
+						continue;
 
-				const COffer &theOffer = vtxOfferPos.back();
-				UniValue oOffer(UniValue::VOBJ);
-				vector<CAliasIndex> vtxAliasPos;
-				if (!paliasdb->ReadAlias(theOffer.vchAlias, vtxAliasPos) || vtxAliasPos.empty())
-					continue;
-				found++;
+					const COffer &theOffer = vtxOfferPos.back();
+					UniValue oOffer(UniValue::VOBJ);
+					vector<CAliasIndex> vtxAliasPos;
+					if (!paliasdb->ReadAlias(theOffer.vchAlias, vtxAliasPos) || vtxAliasPos.empty())
+						continue;
+					found++;
 
-				// for accepts its the same as acceptheight because its the height from transaction
-				vNamesI[vchKey] = nHeight;
-
+					// for accepts its the same as acceptheight because its the height from transaction
+					vNamesI[vchKey] = nHeight;
 				}
 			}
 		}
@@ -3785,7 +3784,7 @@ UniValue offeracceptcount(const UniValue& params, bool fHelp) {
 		string strFilterPurchases = "true";
 		if (CheckParam(params, 1))
 			strFilterPurchases = params[1].get_str();
-		bool filterAccepts = strFilterPurchases == "true";
+		bool filterPurchases = strFilterPurchases == "true";
 
 		string strFilterSales = "true";
 		if (CheckParam(params, 2))
@@ -3914,7 +3913,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 	string strFilterPurchases = "true";
 	if (CheckParam(params, 2))
 		strFilterPurchases = params[2].get_str();
-	bool filterAccepts = strFilterPurchases == "true";
+	bool filterPurchases = strFilterPurchases == "true";
 
 	string strFilterSales = "true";
 	if (CheckParam(params, 3))
@@ -3996,7 +3995,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 					CAliasIndex offerAcceptAlias;
 					offerAcceptAlias.nHeight = offer.accept.nAcceptHeight;
 					offerAcceptAlias.GetAliasFromList(vtxAliasPos);
-					if (BuildOfferAcceptJson(acceptOffer, vtxPos.back(), offerAcceptAlias, oOffer, filterAccepts, filterSales)) {
+					if (BuildOfferAcceptJson(acceptOffer, vtxPos.back(), offerAcceptAlias, oOffer, filterPurchases, filterSales)) {
 						found++;
 						if (found < from)
 						{
