@@ -18,14 +18,14 @@ CDSNotificationInterface::~CDSNotificationInterface()
 {
 }
 
-void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindex)
+void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
 {
-    mnodeman.UpdatedBlockTip(pindex);
-    privateSendClient.UpdatedBlockTip(pindex);
-    instantsend.UpdatedBlockTip(pindex);
-    mnpayments.UpdatedBlockTip(pindex);
-    governance.UpdatedBlockTip(pindex);
-    masternodeSync.UpdatedBlockTip(pindex);
+    mnodeman.UpdatedBlockTip(pindexNew);
+    privateSendClient.UpdatedBlockTip(pindexNew);
+    instantsend.UpdatedBlockTip(pindexNew);
+    mnpayments.UpdatedBlockTip(pindexNew);
+    governance.UpdatedBlockTip(pindexNew);
+    masternodeSync.UpdatedBlockTip(pindexNew);
 }
 
 void CDSNotificationInterface::SyncTransaction(const CTransaction &tx, const CBlock *pblock)
