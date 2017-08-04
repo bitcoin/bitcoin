@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "bitcoinunits.h"
+#include "clientversion.h" // for BITCOIN_CASH define (if on BUCash branch)
 
 #include "primitives/transaction.h"
 
@@ -41,9 +42,15 @@ QString BitcoinUnits::name(int unit)
 {
     switch(unit)
     {
+#ifdef BITCOIN_CASH
+    case BTC: return QString("BCC");
+    case mBTC: return QString("mBCC");
+    case uBTC: return QString::fromUtf8("μBCC");
+#else
     case BTC: return QString("BTC");
     case mBTC: return QString("mBTC");
     case uBTC: return QString::fromUtf8("μBTC");
+#endif
     default: return QString("???");
     }
 }
