@@ -3574,8 +3574,6 @@ UniValue offercount(const UniValue& params, bool fHelp) {
 	{
 		for (unsigned int aliasIndex = 0; aliasIndex<aliases.size(); aliasIndex++)
 		{
-			if (oRes.size() >= count)
-				break;
 			vtxTx.clear();
 			vtxHeight.clear();
 			const string &name = aliases[aliasIndex];
@@ -3602,8 +3600,6 @@ UniValue offercount(const UniValue& params, bool fHelp) {
 			}
 			CTransaction tx;
 			for (auto& it : boost::adaptors::reverse(vtxTx)) {
-				if (oRes.size() >= count)
-					break;
 				const uint64_t& nHeight = vtxHeight[it.first];
 				const CTransaction& tx = it.second;
 
@@ -3722,7 +3718,7 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 				const CTransaction& tx = it.second;
 
 				COffer offer(tx);
-				if (!offer.IsNull() && offer.accept.IsNull()))
+				if (!offer.IsNull() && offer.accept.IsNull())
 				{
 					const vector<unsigned char> &vchKey = offer.vchOffer;
 					if (vNamesI.find(vchKey) != vNamesI.end() && (nHeight <= vNamesI[vchKey] || vNamesI[vchKey] < 0))
