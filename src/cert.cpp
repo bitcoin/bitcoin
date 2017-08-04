@@ -1150,6 +1150,13 @@ UniValue certcount(const UniValue& params, bool fHelp) {
 					aliases.push_back(lowerStr);
 			}
 		}
+		else
+		{
+			string aliasName = params[0].get_str();
+			boost::algorithm::to_lower(aliasName);
+			if (!aliasName.empty())
+				aliases.push_back(aliasName);
+		}
 	}
 
 
@@ -1212,6 +1219,13 @@ UniValue certlist(const UniValue& params, bool fHelp) {
 				if(!lowerStr.empty())
 					aliases.push_back(lowerStr);
 			}
+		}
+		else
+		{
+			string aliasName = params[0].get_str();
+			boost::algorithm::to_lower(aliasName);
+			if (!aliasName.empty())
+				aliases.push_back(aliasName);
 		}
 	}
 	vector<unsigned char> vchNameUniq;
