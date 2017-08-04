@@ -3747,7 +3747,7 @@ UniValue escrowcount(const UniValue& params, bool fHelp) {
 	vector<pair<CEscrow, CEscrow> > escrowScan;
 	if (buyeraliases.size() > 0 || selleraliases.size() > 0 || arbiteraliases.size() > 0)
 	{
-		if (!pescrowdb->ScanEscrows(vchFromString(""), stringFromVch(vchNameUniq), buyeraliases, selleraliases, arbiteraliases, 1000, escrowScan))
+		if (!pescrowdb->ScanEscrows(vchFromString(""), "", buyeraliases, selleraliases, arbiteraliases, 1000, escrowScan))
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4606 - " + _("Scan failed"));
 
 	}
@@ -3841,7 +3841,7 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 	vector<pair<CEscrow, CEscrow> > escrowScan;
 	if(buyeraliases.size() > 0 || selleraliases.size() > 0 || arbiteraliases.size() > 0)
 	{
-		if (!pescrowdb->ScanEscrows(vchFromString(""), stringFromVch(vchNameUniq), buyeraliases, selleraliases, arbiteraliases, 1000, escrowScan))
+		if (!pescrowdb->ScanEscrows(vchNameUniq, stringFromVch(vchNameUniq), buyeraliases, selleraliases, arbiteraliases, 1000, escrowScan))
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4606 - " + _("Scan failed"));
 	
 	}
