@@ -3014,6 +3014,8 @@ extern UniValue offerwhitelist(const UniValue& params, bool fHelp);
 extern UniValue offerinfo(const UniValue& params, bool fHelp);
 extern UniValue offerlist(const UniValue& params, bool fHelp);
 extern UniValue offercount(const UniValue& params, bool fHelp);
+extern UniValue offeracceptlist(const UniValue& params, bool fHelp);
+extern UniValue offeracceptcount(const UniValue& params, bool fHelp);
 extern UniValue offerhistory(const UniValue& params, bool fHelp);
 extern UniValue offerfilter(const UniValue& params, bool fHelp);
 
