@@ -45,7 +45,7 @@ CWallet *GetWalletForJSONRPCRequest(const JSONRPCRequest& request)
         }
         throw JSONRPCError(RPC_WALLET_NOT_FOUND, "Requested wallet does not exist or is not loaded");
     }
-    return ::vpwallets.size() == 1 || (request.fHelp && ::vpwallets.size() > 0) ? ::vpwallets[0] : nullptr;
+    return vpwallets.empty() ? nullptr : vpwallets[0];
 }
 
 std::string HelpRequiringPassphrase(CWallet * const pwallet)
