@@ -139,7 +139,7 @@ bool CEscrowDB::CleanupDatabase(int &servicesCleaned)
 	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
 	pcursor->SeekToFirst();
 	vector<CEscrow> vtxPos;
-	uint256 txHash;`
+	uint256 txHash;
 	CTransaction fundingTx;
 	pair<string, vector<unsigned char> > key;
     while (pcursor->Valid()) {
