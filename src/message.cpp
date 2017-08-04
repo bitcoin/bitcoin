@@ -629,11 +629,12 @@ UniValue messagereceivelist(const UniValue& params, bool fHelp) {
 					
 					UniValue oMessage(UniValue::VOBJ);
 					vNamesI[message.vchMessage] = theMessage.nHeight;
-					found++;
-					if (found < from)
-						continue;
+
 					if(BuildMessageJson(theMessage, oMessage))
 					{
+						found++;
+						if (found < from)
+							continue;
 						oRes.push_back(oMessage);
 					}
 					// if finding specific GUID don't need to look any further
@@ -737,11 +738,12 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
 					
 					UniValue oMessage(UniValue::VOBJ);
 					vNamesI[message.vchMessage] = theMessage.nHeight;
-					found++;
-					if (found < from)
-						continue;
+
 					if(BuildMessageJson(theMessage, oMessage))
 					{
+						found++;
+						if (found < from)
+							continue;
 						oRes.push_back(oMessage);
 					}
 					// if finding specific GUID don't need to look any further

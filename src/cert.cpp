@@ -1262,11 +1262,11 @@ UniValue certlist(const UniValue& params, bool fHelp) {
 					
 					UniValue oCert(UniValue::VOBJ);
 					vNamesI[cert.vchCert] = theAlias.nHeight;
-					found++;
-					if (found < from)
-						continue;
 					if(BuildCertJson(theCert, theAlias, oCert))
 					{
+						found++;
+						if (found < from)
+							continue;
 						oRes.push_back(oCert);
 					}
 					// if finding specific GUID don't need to look any further

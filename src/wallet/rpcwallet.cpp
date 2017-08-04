@@ -3134,6 +3134,7 @@ extern UniValue aliasupdate(const UniValue& params, bool fHelp);
 extern UniValue aliaslist(const UniValue& params, bool fHelp);
 extern UniValue aliasaffiliates(const UniValue& params, bool fHelp);
 extern UniValue aliasinfo(const UniValue& params, bool fHelp);
+extern UniValue aliascount(const UniValue& params, bool fHelp);
 extern UniValue aliasbalance(const UniValue& params, bool fHelp);
 extern UniValue aliashistory(const UniValue& params, bool fHelp);
 extern UniValue aliasfilter(const UniValue& params, bool fHelp);
@@ -3248,6 +3249,7 @@ static const CRPCCommand commands[] =
 	// SYSCOIN rpc functions
 	{ "wallet", "aliasnew",          &aliasnew,          false },
     { "wallet", "aliasupdate",       &aliasupdate,       false },
+	{ "wallet", "aliascount",		 &aliascount,        false },
     { "wallet", "aliaslist",         &aliaslist,         false },
 	{ "wallet", "aliasaffiliates",   &aliasaffiliates,   false },
     { "wallet", "aliasinfo",         &aliasinfo,         false },

@@ -3672,11 +3672,12 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 						continue;
 					UniValue oEscrow(UniValue::VOBJ);
 					vNamesI[escrow.vchEscrow] = nHeight;
-					found++;
-					if (found < from)
-						continue;
+
 					if(BuildEscrowJson(theEscrow, oEscrow))
 					{
+						found++;
+						if (found < from)
+							continue;
 						oRes.push_back(oEscrow);
 					}
 					// if finding specific GUID don't need to look any further

@@ -3328,7 +3328,7 @@ bool BuildOfferJson(const COffer& theOffer, const CAliasIndex &alias, UniValue& 
 	oOffer.push_back(Pair("offer_units", theOffer.fUnits));
 	return true;
 }
-bool BuildOfferAcceptJson(const COffer& theOffer, const CAliasIndex& theAlias, const CAliasIndex& offerAlias, UniValue& oOfferAccept)
+bool BuildOfferAcceptJson(const COffer& theOffer, const CAliasIndex& theAlias, const CAliasIndex& offerAlias, UniValue& oOfferAccept, bool myAccepts)
 {
 	COffer linkOffer;
 	CTransaction linkTx;
@@ -3353,10 +3353,18 @@ bool BuildOfferAcceptJson(const COffer& theOffer, const CAliasIndex& theAlias, c
 		commissionPaid = false;
 		discountApplied = false;
 		detectedUser = true;
+		// if looking for your offer accepts as a merchant but you are buyer, return false
+		if (myAccepts) {
+			return false;
+		}
 	}
 	// merchant or affiliate
 	else
 	{
+		// if looking for your offer accepts as a buyer but you are merchant or affiliate, return false
+		if (!myAccepts) {
+			return false;
+		}
 		if(theOffer.vchLinkOffer.empty())
 		{
 			// NON-LINKED merchant
@@ -3520,9 +3528,9 @@ bool BuildOfferAcceptJson(const COffer& theOffer, const CAliasIndex& theAlias, c
 	return true;
 }
 UniValue offercount(const UniValue& params, bool fHelp) {
-	if (fHelp || 6 < params.size())
-		throw runtime_error("offercount [\"alias\",...] [accepts=false]\n"
-			"Count offers that an array of aliases own. Set of aliases to look up based on alias.\n");
+	if (fHelp || 3 < params.size() || params.size() < 1)
+		throw runtime_error("offercount [\"alias\",...] [accepts=false] [myaccepts=true]\n"
+			"Count offers that an array of aliases own. Set of aliases to look up based on alias. Myaccepts represents offers that have been bought from aliases passed in(as merchant or affiliate), false for offers aliases passed in have bought.\n");
 	UniValue aliasesValue(UniValue::VARR);
 	vector<string> aliases;
 	if (CheckParam(params, 0))
@@ -3544,6 +3552,10 @@ UniValue offercount(const UniValue& params, bool fHelp) {
 	if (CheckParam(params, 2))
 		strAccepts = params[2].get_str();
 
+	string strMyAccepts = "true";
+	if (CheckParam(params, 3))
+		strMyAccepts = params[3].get_str();
+	bool myAccepts = strMyAccepts == "true";
 	int found = 0;
 
 
@@ -3617,6 +3629,22 @@ UniValue offercount(const UniValue& params, bool fHelp) {
 						vector<CAliasIndex> vtxAliasPos;
 						if (!paliasdb->ReadAlias(acceptOffer.vchAlias, vtxAliasPos) || vtxAliasPos.empty())
 							continue;
+						// buyer
+						if (vtxPos.back().vchAlias == acceptOffer.accept.vchBuyerAlias)
+						{
+							// if looking for your offer accepts as a merchant but you are buyer, continue
+							if (myAccepts) {
+								continue;
+							}
+						}
+						// merchant or affiliate
+						else
+						{
+							// if looking for your offer accepts as a buyer but you are merchant or affiliate, continue
+							if (!myAccepts) {
+								continue;
+							}
+						}
 						found++;
 					}
 					// for accepts its the same as acceptheight because its the height from transaction
@@ -3628,9 +3656,9 @@ UniValue offercount(const UniValue& params, bool fHelp) {
 	return found;
 }
 UniValue offerlist(const UniValue& params, bool fHelp) {
-    if (fHelp || 5 < params.size())
-        throw runtime_error("offerlist [\"alias\",...] [guid] [accepts=false] [count] [from]\n"
-                "list offers that an array of aliases own. Set of aliases to look up based on alias.\n"
+    if (fHelp || 6 < params.size())
+        throw runtime_error("offerlist [\"alias\",...] [guid] [accepts=false] [myaccepts=true] [count] [from]\n"
+			"list offers that an array of aliases own. Set of aliases to look up based on alias. Myaccepts represents offers that have been bought from aliases passed in(as merchant or affiliate), false for offers aliases passed in have bought.\n"
 				"[count]          (numeric, optional, default=10) The number of results to return\n"
 				"[from]           (numeric, optional, default=0) The number of results to skip\n");
 	UniValue aliasesValue(UniValue::VARR);
@@ -3657,12 +3685,16 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 	if(CheckParam(params, 2))
 		strAccepts = params[2].get_str();
 
+	string strMyAccepts = "true";
+	if (CheckParam(params, 3))
+		strMyAccepts = params[3].get_str();
+	bool myAccepts = strMyAccepts == "true";
 	int count = 10;
 	int from = 0;
-	if (CheckParam(params, 3))
-		count = atoi(params[3].get_str());
 	if (CheckParam(params, 4))
-		from = atoi(params[4].get_str());
+		count = atoi(params[4].get_str());
+	if (CheckParam(params, 5))
+		from = atoi(params[5].get_str());
 	int found = 0;
 
 
@@ -3730,11 +3762,12 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 						vector<CAliasIndex> vtxAliasPos;
 						if (!paliasdb->ReadAlias(theOffer.vchAlias, vtxAliasPos) || vtxAliasPos.empty())
 							continue;
-						found++;
-						if (found < from)
-							continue;
-						if(BuildOfferJson(theOffer, vtxAliasPos.back(), oOffer))
+						if (BuildOfferJson(theOffer, vtxAliasPos.back(), oOffer)) {
+							found++;
+							if (found < from)
+								continue;
 							oRes.push_back(oOffer);
+						}
 					}
 					else if(strAccepts == "true")
 					{
@@ -3746,18 +3779,19 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 						vector<CAliasIndex> vtxAliasPos;
 						if (!paliasdb->ReadAlias(acceptOffer.vchAlias, vtxAliasPos) || vtxAliasPos.empty())
 							continue;
-						found++;
-						if (found < from)
-						{
-							vNamesI[vchKey] = nHeight;
-							continue;
-						}
 						// we need to get the alias at the time of the accept
 						CAliasIndex offerAcceptAlias;
 						offerAcceptAlias.nHeight = offer.accept.nAcceptHeight;
 						offerAcceptAlias.GetAliasFromList(vtxAliasPos);
-						if(BuildOfferAcceptJson(acceptOffer, vtxPos.back(), vtxAliasPos.back(), oOffer))
+						if (BuildOfferAcceptJson(acceptOffer, vtxPos.back(), offerAcceptAlias, oOffer, myAccepts)) {
+							found++;
+							if (found < from)
+							{
+								vNamesI[vchKey] = nHeight;
+								continue;
+							}
 							oRes.push_back(oOffer);
+						}
 					}
 					// for accepts its the same as acceptheight because its the height from transaction
 					vNamesI[vchKey] = nHeight;
