@@ -204,7 +204,7 @@ bool CEscrowDB::ScanEscrows(const std::vector<unsigned char>& vchEscrow, const s
 				string sellerAliasLower = stringFromVch(txPos.vchSellerAlias);
 				string arbiterAliasLower = stringFromVch(txPos.vchArbiterAlias);
 				string linkSellerAliasLower = stringFromVch(txPos.vchLinkSellerAlias);
-				if(aliasArray.size() > 0)
+				if(aliasBuyerArray.size() > 0 || aliasSellerArray.size() > 0 || aliasArbiterArray.size() > 0)
 				{
 					bool notFoundLinkSeller = true;
 					if(!linkSellerAliasLower.empty())
