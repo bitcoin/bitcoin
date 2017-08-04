@@ -3578,7 +3578,7 @@ bool BuildEscrowJson(const CEscrow &escrow, UniValue& oEscrow)
 	return true;
 }
 UniValue escrowlist(const UniValue& params, bool fHelp) {
-	if (fHelp || 4 < params.size())
+	if (fHelp || 6 < params.size())
         throw runtime_error("escrowlist [\"buyeralias\",...] [\"selleralias\",...] [\"arbiteralias\",...] [<escrow>] [count] [from]\n"
                 "list escrows that a set of aliases are involved in.\n"
 				"[count]          (numeric, optional, default=10) The number of results to return\n"
