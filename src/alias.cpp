@@ -2373,6 +2373,7 @@ UniValue aliascount(const UniValue& params, bool fHelp) {
 		throw runtime_error("aliascount\n"
 			"Count aliases in this wallet.\n");
 
+	map<vector<unsigned char>, int> vNamesI;
 	uint256 hash;
 	CTransaction tx;
 	bool pending = false;
