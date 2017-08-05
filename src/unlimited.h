@@ -39,7 +39,7 @@ enum
     DEFAULT_CHECKPOINT_DAYS =
         30, // Default for the number of days in the past we check scripts during initial block download
 
-    MAX_HEADER_REQS_DURING_IBD = 5,
+    MAX_HEADER_REQS_DURING_IBD = 3,
 // if the blockchain is this far (in seconds) behind the current time, only request headers from a single
 // peer.  This makes IBD more efficient.  We make BITCOIN_CASH more lenient here because mining could be
 // more erratic and this node is likely to connect to non-BCC nodes.
