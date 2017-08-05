@@ -48,6 +48,33 @@ bool ValidateBUIP055Block(const CBlock &block, CValidationState &state, int nHei
     return true;
 }
 
+bool IsTxProbablyNewSigHash(const CTransaction& tx)
+{
+    //bool newsighash = false;
+    bool oldsighash = false;
+    for (auto txin : tx.vin)
+    {
+        std::vector<unsigned char> data;
+        CScript::const_iterator pc(txin.scriptSig.begin());
+        opcodetype op;
+        if (txin.scriptSig.GetOp(pc, op, data))
+        {
+            if (!data.empty())
+            {
+                if (data.back() & SIGHASH_FORKID)
+                {
+                    //newsighash = true;
+                }
+                else
+                {
+                    oldsighash = true;
+                }
+            }
+        }
+
+    }
+    return (oldsighash == false);
+}
 
 bool IsTxBUIP055Only(const CTxMemPoolEntry& txentry)
 {
