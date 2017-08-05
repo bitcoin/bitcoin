@@ -1279,6 +1279,13 @@ uint64_t LargestBlockSeen(uint64_t nBlockSize)
     return nSize;
 }
 
+/** Returns the block height of the current active chain tip. **/
+int GetBlockchainHeight()
+{
+    LOCK(cs_main);
+    return chainActive.Height();
+}
+
 void LoadFilter(CNode *pfrom, CBloomFilter *filter)
 {
     if (!filter->IsWithinSizeConstraints())

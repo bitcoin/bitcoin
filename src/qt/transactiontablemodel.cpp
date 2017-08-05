@@ -11,7 +11,6 @@
 #include "optionsmodel.h"
 #include "platformstyle.h"
 #include "transactiondesc.h"
-#include "transactionrecord.h"
 #include "walletmodel.h"
 
 #include "core_io.h"
@@ -210,14 +209,14 @@ public:
         return 0;
     }
 
-    QString describe(TransactionRecord *rec, int unit)
+    QString describe(TransactionRecord *rec, int unit, QString labelFreeze)
     {
         {
             LOCK2(cs_main, wallet->cs_wallet);
             std::map<uint256, CWalletTx>::iterator mi = wallet->mapWallet.find(rec->hash);
             if(mi != wallet->mapWallet.end())
             {
-                return TransactionDesc::toHTML(wallet, mi->second, rec, unit);
+                return TransactionDesc::toHTML(wallet, mi->second, rec, unit, labelFreeze);
             }
         }
         return QString();
@@ -244,7 +243,7 @@ TransactionTableModel::TransactionTableModel(const PlatformStyle *platformStyle,
         fProcessingQueuedTransactions(false),
         platformStyle(platformStyle)
 {
-    columns << QString() << QString() << tr("Date") << tr("Type") << tr("Label") << BitcoinUnits::getAmountColumnTitle(walletModel->getOptionsModel()->getDisplayUnit());
+    columns << QString() << QString() << tr("Date") << tr("Type") << tr("Address or Label") << BitcoinUnits::getAmountColumnTitle(walletModel->getOptionsModel()->getDisplayUnit());
     priv->refreshWallet();
 
     connect(walletModel->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
@@ -347,6 +346,7 @@ QString TransactionTableModel::formatTxDate(const TransactionRecord *wtx) const
 
 /* Look up address in address book, if found return label (address)
    otherwise just return (address)
+   OBSOLETE previously called from formatTxToAddress
  */
 QString TransactionTableModel::lookupAddress(const std::string &address, bool tooltip) const
 {
@@ -378,6 +378,8 @@ QString TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
         return tr("Payment to yourself");
     case TransactionRecord::Generated:
         return tr("Mined");
+    case TransactionRecord::PublicLabel:
+        return tr("Public label");
     default:
         return QString();
     }
@@ -402,26 +404,30 @@ QVariant TransactionTableModel::txAddressDecoration(const TransactionRecord *wtx
 
 QString TransactionTableModel::formatTxToAddress(const TransactionRecord *wtx, bool tooltip) const
 {
+    /* Get a related watching address if one exists */
     QString watchAddress;
     if (tooltip) {
         // Mark transactions involving watch-only addresses by adding " (watch-only)"
         watchAddress = wtx->involvesWatchAddress ? QString(" (") + tr("watch-only") + QString(")") : "";
     }
 
-    switch(wtx->type)
+    /* Get the first label. */    
+    std::string address;
+    QString label = pickLabelWithAddress(wtx->addresses, address);
+
+    /* Get all the addresses so the user can filter for any of them */
+    std::string addressList = "";
+    BOOST_FOREACH(const PAIRTYPE(std::string,CScript)& addr, wtx->addresses)
     {
-    case TransactionRecord::RecvFromOther:
-        return QString::fromStdString(wtx->address) + watchAddress;
-    case TransactionRecord::RecvWithAddress:
-    case TransactionRecord::SendToAddress:
-    case TransactionRecord::Generated:
-        return lookupAddress(wtx->address, tooltip) + watchAddress;
-    case TransactionRecord::SendToOther:
-        return QString::fromStdString(wtx->address) + watchAddress;
-    case TransactionRecord::SendToSelf:
-    default:
-        return tr("(n/a)") + watchAddress;
+        std::string nextAddress = boost::replace_all_copy(addr.first, "\n", " ");
+        // ensure list isn't prefixed by a space
+        if (addressList == "") addressList = nextAddress;
+            else addressList = addressList + " " + nextAddress;
     }
+
+    if (label == "") return QString::fromStdString(addressList) + watchAddress;
+    else return label + " " + QString::fromStdString(addressList) + watchAddress;
+
 }
 
 QVariant TransactionTableModel::addressColor(const TransactionRecord *wtx) const
@@ -433,7 +439,7 @@ QVariant TransactionTableModel::addressColor(const TransactionRecord *wtx) const
     case TransactionRecord::SendToAddress:
     case TransactionRecord::Generated:
         {
-        QString label = walletModel->getAddressTableModel()->labelForAddress(QString::fromStdString(wtx->address));
+        QString label = walletModel->getAddressTableModel()->labelForAddress(QString::fromStdString(wtx->addresses.begin()->first));
         if(label.isEmpty())
             return COLOR_BAREADDRESS;
         } break;
@@ -514,11 +520,29 @@ QString TransactionTableModel::formatTooltip(const TransactionRecord *rec) const
     return tooltip;
 }
 
+QString TransactionTableModel::pickLabelWithAddress(AddressList listAddresses, std::string& address) const
+{
+    /* returns the first address wiith a label or the last address on the list */
+    QString label = "";
+    BOOST_FOREACH(const PAIRTYPE(std::string,CScript)& addr, listAddresses)
+    {
+        address = addr.first;
+        label = walletModel->getAddressTableModel()->labelForAddress(QString::fromStdString(address));
+        if (label != "") break;
+    }
+
+    return label;
+}
+
 QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
 {
     if(!index.isValid())
         return QVariant();
     TransactionRecord *rec = static_cast<TransactionRecord*>(index.internalPointer());
+
+    /* For some roles prefer the address which has a label. */
+    std::string address;
+    QString label = pickLabelWithAddress(rec->addresses, address);
 
     switch(role)
     {
@@ -594,14 +618,16 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         return QDateTime::fromTime_t(static_cast<uint>(rec->time));
     case WatchonlyRole:
         return rec->involvesWatchAddress;
+    case PublicLabelRole:
+        return (rec->type == TransactionRecord::PublicLabel);
     case WatchonlyDecorationRole:
         return txWatchonlyDecoration(rec);
     case LongDescriptionRole:
-        return priv->describe(rec, walletModel->getOptionsModel()->getDisplayUnit());
+        return priv->describe(rec, walletModel->getOptionsModel()->getDisplayUnit(), walletModel->getAddressTableModel()->labelForFreeze(QString::fromStdString(address)));
     case AddressRole:
-        return QString::fromStdString(rec->address);
-    case LabelRole:
-        return walletModel->getAddressTableModel()->labelForAddress(QString::fromStdString(rec->address));
+        return formatTxToAddress(rec, false);
+    case LabelRole:        
+        return label;
     case AmountRole:
         return qint64(rec->credit + rec->debit);
     case TxIDRole:
