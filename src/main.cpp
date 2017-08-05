@@ -1293,22 +1293,10 @@ bool AcceptToMemoryPoolWorker(CTxMemPool &pool,
             inChainInputValue, fSpendsCoinbase, nSigOps, lp);
         nSize = entry.GetTxSize();
 
-// Check that the transaction doesn't have an excessive number of
-// sigops, making it impossible to mine. Since the coinbase transaction
-// itself can contain sigops MAX_STANDARD_TX_SIGOPS is less than
-// MAX_BLOCK_SIGOPS; we still consider this an invalid rather than
-// merely non-standard transaction.
-
-#if 1
-        // For testing blocks with larger numbers of sigops, we need to be able to create them by creating transactions
-        // that miners can create.  This define won't be set outside of testing
-        //#ifdef ALLOW_ALL_VALID_TX_IN_MEMPOOL
-        if (nSigOps > BLOCKSTREAM_CORE_MAX_BLOCK_SIGOPS)
+        // Check that the transaction doesn't have an excessive number of
+        // sigops, making it impossible to mine.
+        if (nSigOps > MAX_TX_SIGOPS)
             return state.DoS(0, false, REJECT_NONSTANDARD, "bad-txns-too-many-sigops", false, strprintf("%d", nSigOps));
-#else
-        if ((nSigOps > MAX_STANDARD_TX_SIGOPS) || (nBytesPerSigOp && nSigOps > nSize / nBytesPerSigOp))
-            return state.DoS(0, false, REJECT_NONSTANDARD, "bad-txns-too-many-sigops", false, strprintf("%d", nSigOps));
-#endif
 
         CAmount mempoolRejectFee =
             pool.GetMinFee(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFee(nSize);
