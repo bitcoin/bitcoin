@@ -265,7 +265,13 @@ void UpdatePreferredDownload(CNode *node, CNodeState *state)
     nPreferredDownload -= state->fPreferredDownload;
 
     // Whether this node should be marked as a preferred download node.
-    state->fPreferredDownload = (!node->fInbound || node->fWhitelisted) && !node->fOneShot && !node->fClient;
+    state->fPreferredDownload = !node->fOneShot && !node->fClient;
+    // BU allow downloads from inbound nodes; this may have been limited to stop attackers from connecting
+    // and offering a bad chain.  However, we are connecting to multiple nodes and so can choose the most work
+    // chain on that basis.
+    // state->fPreferredDownload = (!node->fInbound || node->fWhitelisted) && !node->fOneShot && !node->fClient;
+    LogPrint("net", "node %s preferred DL: %d because (%d || %d) && %d && %d\n", node->GetLogName(),
+        state->fPreferredDownload, !node->fInbound, node->fWhitelisted, !node->fOneShot, !node->fClient);
 
     nPreferredDownload += state->fPreferredDownload;
 }
@@ -6373,8 +6379,18 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
     }
 
 
-    else if (strCommand == NetMsgType::HEADERS && !fImporting && !fReindex) // Ignore headers received while importing
+    else if (strCommand == NetMsgType::HEADERS) // Ignore headers received while importing
     {
+        if (fImporting)
+        {
+            LogPrint("net", "skipping processing of HEADERS because importing\n");
+            return true;
+        }
+        if (fReindex)
+        {
+            LogPrint("net", "skipping processing of HEADERS because reindexing\n");
+            return true;
+        }
         std::vector<CBlockHeader> headers;
 
         // Bypass the normal CBlock deserialization, as we don't want to risk deserializing 2000 full blocks.
@@ -7339,7 +7355,7 @@ bool SendMessages(CNode *pto)
         if (!state.fSyncStarted && !pto->fClient && !fImporting && !fReindex)
         {
             // Only actively request headers from a single peer, unless we're close to today.
-            if ((nSyncStarted == 0 && fFetch) ||
+            if ((nSyncStarted < MAX_HEADER_REQS_DURING_IBD && fFetch) ||
                 chainActive.Tip()->GetBlockTime() > GetAdjustedTime() - SINGLE_PEER_REQUEST_MODE_AGE)
             {
                 const CBlockIndex *pindexStart = chainActive.Tip();
@@ -7601,19 +7617,19 @@ bool SendMessages(CNode *pto)
         // Message: getdata (blocks)
         //
         std::vector<CInv> vGetData;
-        if (!pto->fDisconnect && !pto->fClient && (fFetch || !IsInitialBlockDownload()) &&
-            state.nBlocksInFlight < (int)MAX_BLOCKS_IN_TRANSIT_PER_PEER)
+        if (!pto->fDisconnect && !pto->fClient && state.nBlocksInFlight < (int)MAX_BLOCKS_IN_TRANSIT_PER_PEER)
         {
             std::vector<CBlockIndex *> vToDownload;
             FindNextBlocksToDownload(pto->GetId(), MAX_BLOCKS_IN_TRANSIT_PER_PEER - state.nBlocksInFlight, vToDownload);
+            LogPrint("req", "IBD AskFor %d blocks from peer=%s\n", vToDownload.size(), pto->GetLogName());
             BOOST_FOREACH (CBlockIndex *pindex, vToDownload)
             {
                 CInv inv(MSG_BLOCK, pindex->GetBlockHash());
                 if (!AlreadyHave(inv))
                 {
                     requester.AskFor(inv, pto);
-                    // LogPrint("req", "AskFor block %s (%d) peer=%d\n", pindex->GetBlockHash().ToString(),
-                    //    pindex->nHeight, pto->id);
+                    // LogPrint("req", "AskFor block %s (%d) peer=%s\n", pindex->GetBlockHash().ToString(),
+                    //  pindex->nHeight, pto->GetLogName());
                 }
             }
         }
