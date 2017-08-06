@@ -43,7 +43,11 @@ SplashScreen::SplashScreen(Qt::WindowFlags f, const NetworkStyle *networkStyle) 
 #endif
 
     // define text to place
+#ifdef BITCOIN_CASH
+    QString titleText       = tr("Bitcoin Unlimited");
+#else
     QString titleText       = tr(PACKAGE_NAME);
+#endif
     QString versionText     = QString("Version %1").arg(QString::fromStdString(FormatFullVersion()));
     QString copyrightText   = QString::fromUtf8(CopyrightHolders(strprintf("\xc2\xA9 %u-%u ", 2009, COPYRIGHT_YEAR)).c_str());
     QString titleAddText    = networkStyle->getTitleAddText();
@@ -70,8 +74,11 @@ SplashScreen::SplashScreen(Qt::WindowFlags f, const NetworkStyle *networkStyle) 
     pixPaint.fillRect(rGradient, gradient);
 
     // draw the bitcoin icon, expected size of PNG: 1024x1024
+#ifdef BITCOIN_CASH
+    QRect rectIcon(QPoint(0,-70), QSize(480,480));
+#else
     QRect rectIcon(QPoint(-150,-122), QSize(430,430));
-
+#endif
     const QSize requiredSize(1024,1024);
     QPixmap icon(networkStyle->getAppIcon().pixmap(requiredSize));
 
@@ -89,7 +96,10 @@ SplashScreen::SplashScreen(Qt::WindowFlags f, const NetworkStyle *networkStyle) 
     fm = pixPaint.fontMetrics();
     titleTextWidth  = fm.width(titleText);
     pixPaint.drawText(pixmap.width()/devicePixelRatio-titleTextWidth-paddingRight,paddingTop,titleText);
-
+#ifdef BITCOIN_CASH
+    pixPaint.drawText(pixmap.width()/devicePixelRatio-titleTextWidth-paddingRight,paddingTop+titleVersionVSpace,"Bitcoin Cash");
+    titleVersionVSpace += titleVersionVSpace;
+#endif
     pixPaint.setFont(QFont(font, 15*fontFactor));
 
     // if the version string is to long, reduce size
