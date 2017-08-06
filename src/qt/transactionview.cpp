@@ -33,6 +33,7 @@
 #include <QScrollBar>
 #include <QSignalMapper>
 #include <QTableView>
+#include <QTimer>
 #include <QUrl>
 #include <QVBoxLayout>
 
@@ -112,6 +113,17 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     amountWidget->setValidator(new QDoubleValidator(0, 1e20, 8, this));
     hlayout->addWidget(amountWidget);
 
+    // Delay before filtering transactions in ms
+    static const int input_filter_delay = 200;
+
+    QTimer* amount_typing_delay = new QTimer(this);
+    amount_typing_delay->setSingleShot(true);
+    amount_typing_delay->setInterval(input_filter_delay);
+
+    QTimer* prefix_typing_delay = new QTimer(this);
+    prefix_typing_delay->setSingleShot(true);
+    prefix_typing_delay->setInterval(input_filter_delay);
+
     QVBoxLayout *vlayout = new QVBoxLayout(this);
     vlayout->setContentsMargins(0,0,0,0);
     vlayout->setSpacing(0);
@@ -173,8 +185,10 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     connect(dateWidget, SIGNAL(activated(int)), this, SLOT(chooseDate(int)));
     connect(typeWidget, SIGNAL(activated(int)), this, SLOT(chooseType(int)));
     connect(watchOnlyWidget, SIGNAL(activated(int)), this, SLOT(chooseWatchonly(int)));
-    connect(addressWidget, SIGNAL(textChanged(QString)), this, SLOT(changedPrefix(QString)));
-    connect(amountWidget, SIGNAL(textChanged(QString)), this, SLOT(changedAmount(QString)));
+    connect(amountWidget, SIGNAL(textChanged(QString)), amount_typing_delay, SLOT(start()));
+    connect(amount_typing_delay, SIGNAL(timeout()), this, SLOT(changedAmount()));
+    connect(addressWidget, SIGNAL(textChanged(QString)), prefix_typing_delay, SLOT(start()));
+    connect(prefix_typing_delay, SIGNAL(timeout()), this, SLOT(changedPrefix()));
 
     connect(view, SIGNAL(doubleClicked(QModelIndex)), this, SIGNAL(doubleClicked(QModelIndex)));
     connect(view, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
@@ -312,20 +326,19 @@ void TransactionView::chooseWatchonly(int idx)
         (TransactionFilterProxy::WatchOnlyFilter)watchOnlyWidget->itemData(idx).toInt());
 }
 
-void TransactionView::changedPrefix(const QString &prefix)
+void TransactionView::changedPrefix()
 {
     if(!transactionProxyModel)
         return;
-    transactionProxyModel->setAddressPrefix(prefix);
+    transactionProxyModel->setAddressPrefix(addressWidget->text());
 }
 
-void TransactionView::changedAmount(const QString &amount)
+void TransactionView::changedAmount()
 {
     if(!transactionProxyModel)
         return;
     CAmount amount_parsed = 0;
-    if(BitcoinUnits::parse(model->getOptionsModel()->getDisplayUnit(), amount, &amount_parsed))
-    {
+    if (BitcoinUnits::parse(model->getOptionsModel()->getDisplayUnit(), amountWidget->text(), &amount_parsed)) {
         transactionProxyModel->setMinAmount(amount_parsed);
     }
     else
