@@ -364,9 +364,14 @@ class BUIP055Test (BitcoinTestFramework):
         # connect 1 to 3 to propagate these transactions
         connect_nodes(self.nodes[1],3)
 
-        # Issue sendtoaddress commands using both the new sighash and the ond and ensure that they work.
+        # Issue sendtoaddress commands using both the new sighash and the old and ensure that first fails, second works.
         self.nodes[1].set("wallet.useNewSig=False")
-        txhash2 = self.nodes[1].sendtoaddress(addrs[0], 2.345)
+        try:
+            txhash2 = self.nodes[1].sendtoaddress(addrs[0], 2.345)
+            assert( not "fork must use new sighash")
+        except JSONRPCException as e:
+             txhash2 = self.nodes[3].sendtoaddress(addrs[0], 2.345)
+
         self.nodes[1].set("wallet.useNewSig=True")
         # produce a new sighash transaction using the sendtoaddress API
         txhash = self.nodes[1].sendtoaddress(addrs[0], 1.234)
@@ -378,17 +383,22 @@ class BUIP055Test (BitcoinTestFramework):
             assert("mandatory-script-verify-flag-failed" in e.error["message"])
             # hitting this exception verifies that the new format was rejected by the unforked node and that the new format was generated
 
-        rawtx = self.nodes[1].getrawtransaction(txhash2)
-        self.nodes[3].sendrawtransaction(rawtx)  # should replay on the small block fork, since its an old sighash tx
+        #rawtx = self.nodes[1].getrawtransaction(txhash2)
+        #self.nodes[3].sendrawtransaction(rawtx)  # should replay on the small block fork, since its an old sighash tx
 
         self.nodes[1].generate(1)
         txinfo = self.nodes[1].gettransaction(txhash)
         assert(txinfo["blockindex"] > 0) # ensure that the new-style tx was included in the block
-        txinfo = self.nodes[1].gettransaction(txhash2)
-        if self.nodes[1].get("net.onlyRelayForkSig")["net.onlyRelayForkSig"]:
-            assert(not "blockindex" in txinfo) # old style won't be included in the block
-        else:
-            assert(txinfo["blockindex"] > 0) # ensure that the old-style tx was included in the block
+        try:
+            txinfo = self.nodes[1].gettransaction(txhash2)
+            assert(not "old transaction was improperly accepted in forked node")
+        except JSONRPCException:
+            pass
+
+        #if self.nodes[1].get("net.onlyRelayForkSig")["net.onlyRelayForkSig"]:
+        #    assert(not "blockindex" in txinfo) # old style won't be included in the block
+        #else:
+        #    assert(txinfo["blockindex"] > 0) # ensure that the old-style tx was included in the block
 
         # small block node should have gotten this cross-chain replayable tx
         txsIn3 = self.nodes[3].getrawmempool()
@@ -398,8 +408,12 @@ class BUIP055Test (BitcoinTestFramework):
         assert(txsIn3 == []) # all transactions were included in the block
 
         # Issue sendmany commands using both the new sighash and the ond and ensure that they work.
-        self.nodes[1].set("wallet.useNewSig=False")
-        txhash2 = self.nodes[1].sendmany("",{addrs[0]:2.345, addrs[1]:1.23})
+        try:
+            self.nodes[1].set("wallet.useNewSig=False")
+            txhash2 = self.nodes[1].sendmany("",{addrs[0]:2.345, addrs[1]:1.23})
+            assert(not "this tx should not have been accepted")
+        except JSONRPCException:
+            pass
         self.nodes[1].set("wallet.useNewSig=True")
         # produce a new sighash transaction using the sendtoaddress API
         txhash = self.nodes[1].sendmany("",{addrs[0]:0.345, addrs[1]:0.23})
