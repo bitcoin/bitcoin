@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(buip055_sighash)
     CTransaction tx(t);
 
     {
-    TransactionSignatureCreator tsc(&keystore,&tx, 1, 90*CENT, SIGHASH_ALL);
+    TransactionSignatureCreator tsc(&keystore,&tx, 0, 90*CENT, SIGHASH_ALL);
     const CScript& scriptPubKey = dummyTransactions[0].vout[0].scriptPubKey;
     CScript& scriptSigRes = t.vin[0].scriptSig;
     bool worked = ProduceSignature(tsc,scriptPubKey,scriptSigRes);
@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(buip055_sighash)
     }
 
     {
-    TransactionSignatureCreator tsc(&keystore,&tx, 1, 90*CENT, SIGHASH_ALL | SIGHASH_FORKID);
+    TransactionSignatureCreator tsc(&keystore,&tx, 0, 90*CENT, SIGHASH_ALL | SIGHASH_FORKID);
     const CScript& scriptPubKey = dummyTransactions[0].vout[0].scriptPubKey;
     CScript& scriptSigRes = t.vin[0].scriptSig;
     bool worked = ProduceSignature(tsc,scriptPubKey,scriptSigRes);
