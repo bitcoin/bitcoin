@@ -36,7 +36,7 @@ WalletModel::WalletModel(const PlatformStyle *platformStyle, CWallet *wallet, Op
     cachedEncryptionStatus(Unencrypted),
     cachedNumBlocks(0)
 {
-    fHaveWatchOnly = wallet->HaveWatchOnly();
+    fHaveWatchOnly = wallet->HaveWatchOnly() || getWatchBalance() > 0;
     fForceCheckBalanceChanged = false;
 
     addressTableModel = new AddressTableModel(wallet, this);
@@ -160,8 +160,10 @@ void WalletModel::checkBalanceChanged()
         cachedWatchOnlyBalance = newWatchOnlyBalance;
         cachedWatchUnconfBalance = newWatchUnconfBalance;
         cachedWatchImmatureBalance = newWatchImmatureBalance;
+
         Q_EMIT balanceChanged(newBalance, newUnconfirmedBalance, newImmatureBalance,
                             newWatchOnlyBalance, newWatchUnconfBalance, newWatchImmatureBalance);
+
     }
 }
 
@@ -238,14 +240,21 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
             {
                 return InvalidAddress;
             }
-            if(rcp.amount <= 0)
+            if(rcp.amount <= 0 && rcp.labelPublic == "")
             {
                 return InvalidAmount;
             }
             setAddress.insert(rcp.address);
             ++nAddresses;
 
-            CScript scriptPubKey = GetScriptForDestination(CBitcoinAddress(rcp.address.toStdString()).Get());
+            CScript scriptPubKey;
+            if (rcp.labelPublic == "")
+                scriptPubKey = GetScriptForDestination(CBitcoinAddress(rcp.address.toStdString()).Get());
+            else {
+                scriptPubKey = GetScriptLabelPublic(rcp.labelPublic.toStdString());
+                --nAddresses; // remove duplicate address as rcp.adddress was copied in SendCoinsDialog::on_sendButton_clicked()
+            }
+
             CRecipient recipient = {scriptPubKey, rcp.amount, rcp.fSubtractFeeFromAmount};
             vecSend.push_back(recipient);
 
@@ -342,6 +351,9 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
     // and emit coinsSent signal for each recipient
     Q_FOREACH(const SendCoinsRecipient &rcp, transaction.getRecipients())
     {
+        // Set have watch only flag to true if sending to a coin freeze address
+        if (!rcp.freezeLockTime.isEmpty()) this->updateWatchOnlyFlag(true);
+
         // Don't touch the address book when we have a payment request
         if (!rcp.paymentRequest.IsInitialized())
         {

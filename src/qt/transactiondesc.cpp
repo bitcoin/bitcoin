@@ -46,7 +46,7 @@ QString TransactionDesc::FormatTxStatus(const CWalletTx& wtx)
     }
 }
 
-QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionRecord *rec, int unit)
+QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionRecord *rec, int unit, QString labelFreeze)
 {
     QString strHTML;
 
@@ -90,20 +90,34 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
         if (nNet > 0)
         {
             // Credit
-            if (CBitcoinAddress(rec->address).IsValid())
+            CTxDestination address = CBitcoinAddress(rec->addresses.begin()->first).Get();
+            if (CBitcoinAddress(address).IsValid())
             {
-                CTxDestination address = CBitcoinAddress(rec->address).Get();
                 if (wallet->mapAddressBook.count(address))
                 {
                     strHTML += "<b>" + tr("From") + ":</b> " + tr("unknown") + "<br>";
+
+                    // Include in description public label if it exists
+                    std::string labelPublic = getLabelPublic(wtx.vout[0].scriptPubKey);
+                    if (labelPublic != "")
+                        strHTML += "<b>" + tr("Public label:") + "</b> " + labelPublic.c_str() + "<br>";
+
                     strHTML += "<b>" + tr("To") + ":</b> ";
-                    strHTML += GUIUtil::HtmlEscape(rec->address);
-                    QString addressOwned = (::IsMine(*wallet, address) == ISMINE_SPENDABLE) ? tr("own address") : tr("watch-only");
                     if (!wallet->mapAddressBook[address].name.empty())
-                        strHTML += " (" + addressOwned + ", " + tr("label") + ": " + GUIUtil::HtmlEscape(wallet->mapAddressBook[address].name) + ")";
+                        strHTML += GUIUtil::HtmlEscape(wallet->mapAddressBook[address].name) + " ";
+
+                    strHTML += GUIUtil::HtmlEscape(rec->addresses.begin()->first);
+                    QString addressOwned;
+                    // Include in description label for change address, own address or watch-only
+                    if (wtx.vout[0].nValue == wtx.GetChange() && wallet->IsMine(address) == ISMINE_SPENDABLE)
+                        addressOwned = tr("change address");
                     else
-                        strHTML += " (" + addressOwned + ")";
+                        (wallet->IsMine(address) == ISMINE_SPENDABLE) ? tr("own address") : tr("watch-only");
+
+                    if (addressOwned != "") strHTML += " (" + addressOwned + ")";
+
                     strHTML += "<br>";
+
                 }
             }
         }
@@ -114,6 +128,11 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
     //
     if (wtx.mapValue.count("to") && !wtx.mapValue["to"].empty())
     {
+        // Include in description public label if it exists
+        std::string labelPublic = getLabelPublic(wtx.vout[0].scriptPubKey);
+        if (labelPublic != "")
+            strHTML += "<b>" + tr("Public label:") + "</b> " + labelPublic.c_str() + "<br>";
+
         // Online transaction
         std::string strAddress = wtx.mapValue["to"];
         strHTML += "<b>" + tr("To") + ":</b> ";
@@ -121,6 +140,13 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
         if (wallet->mapAddressBook.count(dest) && !wallet->mapAddressBook[dest].name.empty())
             strHTML += GUIUtil::HtmlEscape(wallet->mapAddressBook[dest].name) + " ";
         strHTML += GUIUtil::HtmlEscape(strAddress) + "<br>";
+
+    }
+
+    if (labelFreeze != "")
+    {
+        strHTML += "<b>" + tr("Freeze until") + ":</b> ";
+        strHTML += GUIUtil::HtmlEscape(labelFreeze) + "<br>";
     }
 
     //
@@ -134,6 +160,7 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
         CAmount nUnmatured = 0;
         BOOST_FOREACH(const CTxOut& txout, wtx.vout)
             nUnmatured += wallet->GetCredit(txout, ISMINE_ALL);
+
         strHTML += "<b>" + tr("Credit") + ":</b> ";
         if (wtx.IsInMainChain())
             strHTML += BitcoinUnits::formatHtmlWithUnit(unit, nUnmatured)+ " (" + tr("matures in %n more block(s)", "", wtx.GetBlocksToMaturity()) + ")";
@@ -176,31 +203,45 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
             {
                 // Ignore change
                 isminetype toSelf = wallet->IsMine(txout);
-                if ((toSelf == ISMINE_SPENDABLE) && (fAllFromMe == ISMINE_SPENDABLE))
-                    continue;
 
-                if (!wtx.mapValue.count("to") || wtx.mapValue["to"].empty())
                 {
-                    // Offline transaction
-                    CTxDestination address;
-                    if (ExtractDestination(txout.scriptPubKey, address))
+                    // Include in description public label if it exists
+                    std::string labelPublic = getLabelPublic(txout.scriptPubKey);
+                    if (labelPublic != "")
+                        strHTML += "<b>" + tr("Public label:") + "</b> " + labelPublic.c_str() + "<br>";
+
+                    if (!wtx.mapValue.count("to") || wtx.mapValue["to"].empty())
                     {
-                        strHTML += "<b>" + tr("To") + ":</b> ";
-                        if (wallet->mapAddressBook.count(address) && !wallet->mapAddressBook[address].name.empty())
-                            strHTML += GUIUtil::HtmlEscape(wallet->mapAddressBook[address].name) + " ";
-                        strHTML += GUIUtil::HtmlEscape(CBitcoinAddress(address).ToString());
-                        if(toSelf == ISMINE_SPENDABLE)
-                            strHTML += " (own address)";
-                        else if(toSelf & ISMINE_WATCH_ONLY)
-                            strHTML += " (watch-only)";
-                        strHTML += "<br>";
+
+
+                        // Offline transaction
+                        CTxDestination address;
+                        if (ExtractDestination(txout.scriptPubKey, address))
+                        {
+                            strHTML += "<b>" + tr("To") + ":</b> ";
+                            if (wallet->mapAddressBook.count(address) && !wallet->mapAddressBook[address].name.empty())
+                                strHTML += GUIUtil::HtmlEscape(wallet->mapAddressBook[address].name) + " ";
+                            strHTML += GUIUtil::HtmlEscape(CBitcoinAddress(address).ToString());
+                            if(txout.nValue == wtx.GetChange() && toSelf == ISMINE_SPENDABLE)
+                                strHTML += " (change address)";
+                            else if(toSelf == ISMINE_SPENDABLE)
+                                strHTML += " (own address)";
+                            else if(toSelf & ISMINE_WATCH_ONLY)
+                                strHTML += " (watch-only)";
+                            strHTML += "<br>";
+
+                        }
+                    }
+
+                    if (labelPublic == "") // hide on public label txout
+                    {
+                        if(toSelf)
+                            strHTML += "<b>" + tr("Credit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, txout.nValue) + " ";
+
+                        strHTML += "<b>" + tr("Debit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, -txout.nValue) + "<br>";
                     }
                 }
-
-                strHTML += "<b>" + tr("Debit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, -txout.nValue) + "<br>";
-                if(toSelf)
-                    strHTML += "<b>" + tr("Credit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, txout.nValue) + "<br>";
-            }
+            } // BOOST_FOREACH(const CTxOut& txout, wtx.vout)
 
             if (fAllToMe)
             {
@@ -304,6 +345,7 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
                             strHTML += GUIUtil::HtmlEscape(wallet->mapAddressBook[address].name) + " ";
                         strHTML += QString::fromStdString(CBitcoinAddress(address).ToString());
                     }
+
                     strHTML = strHTML + " " + tr("Amount") + "=" + BitcoinUnits::formatHtmlWithUnit(unit, vout.nValue);
                     strHTML = strHTML + " IsMine=" + (wallet->IsMine(vout) & ISMINE_SPENDABLE ? tr("true") : tr("false")) + "</li>";
                     strHTML = strHTML + " IsWatchOnly=" + (wallet->IsMine(vout) & ISMINE_WATCH_ONLY ? tr("true") : tr("false")) + "</li>";

@@ -28,7 +28,7 @@ class WalletTest (BitcoinTestFramework):
 
     def setup_chain(self,bitcoinConfDict=None, wallets=None):
         print("Initializing test directory "+self.options.tmpdir)
-        initialize_chain_clean(self.options.tmpdir, 4)
+        initialize_chain_clean(self.options.tmpdir, 4, bitcoinConfDict, wallets)
 
     def setup_network(self, split=False):
         self.nodes = start_nodes(3, self.options.tmpdir)
@@ -167,7 +167,6 @@ class WalletTest (BitcoinTestFramework):
         sync_mempools(self.nodes)
 
         self.nodes.append(start_node(3, self.options.tmpdir))
-        time.sleep(5)
         connect_nodes_bi(self.nodes, 0, 3)
         sync_blocks(self.nodes)
 
@@ -372,5 +371,5 @@ def Test():
         "debug": ["net", "blk", "thin", "mempool", "req", "bench", "evict"],  # "lck"
         "blockprioritysize": 2000000  # we don't want any transactions rejected due to insufficient fees...
     }
-    # "--tmpdir=/ramdisk/test", 
+    # "--tmpdir=/ramdisk/test",
     t.main(["--nocleanup", "--noshutdown"], bitcoinConf, None)

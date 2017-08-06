@@ -231,6 +231,7 @@ QString formatBitcoinURI(const SendCoinsRecipient &info)
         ret += QString("%1message=%2").arg(paramCount == 0 ? "?" : "&").arg(msg);
         paramCount++;
     }
+    // TODO Unsure whether it helps to include the Freeze message (info.freezeLockTime) in the URL ?
 
     return ret;
 }

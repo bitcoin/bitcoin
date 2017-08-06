@@ -265,7 +265,13 @@ void UpdatePreferredDownload(CNode *node, CNodeState *state)
     nPreferredDownload -= state->fPreferredDownload;
 
     // Whether this node should be marked as a preferred download node.
-    state->fPreferredDownload = (!node->fInbound || node->fWhitelisted) && !node->fOneShot && !node->fClient;
+    state->fPreferredDownload = !node->fOneShot && !node->fClient;
+    // BU allow downloads from inbound nodes; this may have been limited to stop attackers from connecting
+    // and offering a bad chain.  However, we are connecting to multiple nodes and so can choose the most work
+    // chain on that basis.
+    // state->fPreferredDownload = (!node->fInbound || node->fWhitelisted) && !node->fOneShot && !node->fClient;
+    LogPrint("net", "node %s preferred DL: %d because (%d || %d) && %d && %d\n", node->GetLogName(),
+        state->fPreferredDownload, !node->fInbound, node->fWhitelisted, !node->fOneShot, !node->fClient);
 
     nPreferredDownload += state->fPreferredDownload;
 }
@@ -1222,15 +1228,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool &pool,
             CCoinsViewMemPool viewMemPool(pcoinsTip, pool);
             view.SetBackend(viewMemPool);
 
-            // do we already have it?
-            bool fHadTxInCache = pcoinsTip->HaveCoinsInCache(hash);
-            if (view.HaveCoins(hash))
-            {
-                if (!fHadTxInCache)
-                    vHashTxnToUncache.push_back(hash);
-                return state.Invalid(false, REJECT_ALREADY_KNOWN, "txn-already-known");
-            }
-
             // do all inputs exist?
             // Note that this does not check for the presence of actual outputs (see the next check for that),
             // and only helps with filling in pfMissingInputs (to determine missing vs spent).
@@ -1302,22 +1299,10 @@ bool AcceptToMemoryPoolWorker(CTxMemPool &pool,
             inChainInputValue, fSpendsCoinbase, nSigOps, lp);
         nSize = entry.GetTxSize();
 
-// Check that the transaction doesn't have an excessive number of
-// sigops, making it impossible to mine. Since the coinbase transaction
-// itself can contain sigops MAX_STANDARD_TX_SIGOPS is less than
-// MAX_BLOCK_SIGOPS; we still consider this an invalid rather than
-// merely non-standard transaction.
-
-#if 1
-        // For testing blocks with larger numbers of sigops, we need to be able to create them by creating transactions
-        // that miners can create.  This define won't be set outside of testing
-        //#ifdef ALLOW_ALL_VALID_TX_IN_MEMPOOL
-        if (nSigOps > BLOCKSTREAM_CORE_MAX_BLOCK_SIGOPS)
+        // Check that the transaction doesn't have an excessive number of
+        // sigops, making it impossible to mine.
+        if (nSigOps > MAX_TX_SIGOPS)
             return state.DoS(0, false, REJECT_NONSTANDARD, "bad-txns-too-many-sigops", false, strprintf("%d", nSigOps));
-#else
-        if ((nSigOps > MAX_STANDARD_TX_SIGOPS) || (nBytesPerSigOp && nSigOps > nSize / nBytesPerSigOp))
-            return state.DoS(0, false, REJECT_NONSTANDARD, "bad-txns-too-many-sigops", false, strprintf("%d", nSigOps));
-#endif
 
         CAmount mempoolRejectFee =
             pool.GetMinFee(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFee(nSize);
@@ -1471,8 +1456,13 @@ bool AcceptToMemoryPoolWorker(CTxMemPool &pool,
                 __func__, hash.ToString(), FormatStateMessage(state));
         }
 
-        // Store transaction in memory
         entry.sighashType = sighashType | sighashType2;
+        // This code denies old style tx from entering the mempool as soon as we fork
+        if (chainActive.Tip()->IsforkActiveOnNextBlock(miningForkTime.value) && !IsTxBUIP055Only(entry))
+        {
+            return state.Invalid(false, REJECT_WRONG_FORK, "txn-uses-old-sighash-algorithm");
+        }
+        // Store transaction in memory
         pool.addUnchecked(hash, entry, setAncestors, !IsInitialBlockDownload());
 
         // trim mempool and check if tx was trimmed
@@ -2797,21 +2787,13 @@ bool ConnectBlock(const CBlock &block,
     return true;
 }
 
-enum FlushStateMode
-{
-    FLUSH_STATE_NONE,
-    FLUSH_STATE_IF_NEEDED,
-    FLUSH_STATE_PERIODIC,
-    FLUSH_STATE_ALWAYS
-};
-
 /**
  * Update the on-disk chain state.
  * The caches and indexes are flushed depending on the mode we're called with
  * if they're too large, if it's been a while since the last write,
  * or always and in all cases if we're in prune mode and are deleting files.
  */
-bool static FlushStateToDisk(CValidationState &state, FlushStateMode mode)
+bool FlushStateToDisk(CValidationState &state, FlushStateMode mode)
 {
     const CChainParams &chainparams = Params();
     LOCK2(cs_main, cs_LastBlockFile);
@@ -2851,10 +2833,8 @@ bool static FlushStateToDisk(CValidationState &state, FlushStateMode mode)
             nLastSetChain = nNow;
         }
         size_t cacheSize = pcoinsTip->DynamicMemoryUsage();
-        // The cache is large and close to the limit, but we have time now (not in the middle of a block processing).
-        bool fCacheLarge = mode == FLUSH_STATE_PERIODIC && cacheSize * (10.0 / 9) > nCoinCacheUsage;
-        // The cache is over the limit, we have to write now.
-        bool fCacheCritical = mode == FLUSH_STATE_IF_NEEDED && cacheSize > nCoinCacheUsage;
+        // The cache is close to the limit. Try to flush and trim.
+        bool fCacheCritical = mode == FLUSH_STATE_IF_NEEDED && cacheSize > (nCoinCacheUsage * 0.99);
         // It's been a while since we wrote the block index to disk. Do this frequently, so we don't need to redownload
         // after a crash.
         bool fPeriodicWrite =
@@ -2863,8 +2843,7 @@ bool static FlushStateToDisk(CValidationState &state, FlushStateMode mode)
         bool fPeriodicFlush =
             mode == FLUSH_STATE_PERIODIC && nNow > nLastFlush + (int64_t)DATABASE_FLUSH_INTERVAL * 1000000;
         // Combine all conditions that result in a full cache flush.
-        bool fDoFullFlush =
-            (mode == FLUSH_STATE_ALWAYS) || fCacheLarge || fCacheCritical || fPeriodicFlush || fFlushForPrune;
+        bool fDoFullFlush = (mode == FLUSH_STATE_ALWAYS) || fCacheCritical || fPeriodicFlush || fFlushForPrune;
         // Write blocks and block index to disk.
         if (fDoFullFlush || fPeriodicWrite)
         {
@@ -2913,6 +2892,8 @@ bool static FlushStateToDisk(CValidationState &state, FlushStateMode mode)
             if (!pcoinsTip->Flush())
                 return AbortNode(state, "Failed to write to coin database");
             nLastFlush = nNow;
+            // Trim any excess entries from the cache if needed
+            pcoinsTip->Trim(nCoinCacheUsage);
         }
         if (fDoFullFlush || ((mode == FLUSH_STATE_ALWAYS || mode == FLUSH_STATE_PERIODIC) &&
                                 nNow > nLastSetChain + (int64_t)DATABASE_WRITE_INTERVAL * 1000000))
@@ -2921,6 +2902,12 @@ bool static FlushStateToDisk(CValidationState &state, FlushStateMode mode)
             GetMainSignals().SetBestChain(chainActive.GetLocator());
             nLastSetChain = nNow;
         }
+
+        // As a safeguard, periodically check and correct any drift in the value of cachedCoinsUsage.  While a
+        // correction should never be needed, resetting the value allows the node to continue operating, and only
+        // an error is reported if the new and old values do not match.
+        if (fPeriodicFlush)
+            pcoinsTip->ResetCachedCoinUsage();
     }
     catch (const std::runtime_error &e)
     {
@@ -3095,6 +3082,12 @@ bool static ConnectTip(CValidationState &state,
 {
     AssertLockHeld(cs_main);
 
+    // During IBD if there are many blocks to connect still it could be a while before shutting down
+    // and the user may think the shutdown has hung, so return here and stop connecting any remaining
+    // blocks.
+    if (ShutdownRequested())
+        return false;
+
     // With PV there is a special case where one chain may be in the process of connecting several blocks but then
     // a second chain also begins to connect blocks and its block beat the first chains block to advance the tip.
     // As a result pindexNew->prev on the first chain will no longer match the chaintip as the second chain continues
@@ -3139,16 +3132,19 @@ bool static ConnectTip(CValidationState &state,
         bool result = view.Flush();
         assert(result);
     }
+
     int64_t nTime4 = GetTimeMicros();
     nTimeFlush += nTime4 - nTime3;
     LogPrint("bench", "  - Flush: %.2fms [%.2fs]\n", (nTime4 - nTime3) * 0.001, nTimeFlush * 0.000001);
-    // Write the chain state to disk, if necessary.
-    if (!FlushStateToDisk(state, FLUSH_STATE_IF_NEEDED))
-        return false;
+    // Write the chain state to disk, if necessary, and only during IBD, reindex, or importing.
+    if (!IsChainNearlySyncd() || fReindex || fImporting)
+        if (!FlushStateToDisk(state, FLUSH_STATE_IF_NEEDED))
+            return false;
     int64_t nTime5 = GetTimeMicros();
     nTimeChainState += nTime5 - nTime4;
     LogPrint(
         "bench", "  - Writing chainstate: %.2fms [%.2fs]\n", (nTime5 - nTime4) * 0.001, nTimeChainState * 0.000001);
+
     // Remove conflicting transactions from the mempool.
     std::list<CTransaction> txConflicted;
     mempool.removeForBlock(pblock->vtx, pindexNew->nHeight, txConflicted, !IsInitialBlockDownload());
@@ -3359,12 +3355,6 @@ static bool ActivateBestChainStep(CValidationState &state,
     int nHeight = pindexFork ? pindexFork->nHeight : -1;
     while (fContinue && nHeight < pindexMostWork->nHeight)
     {
-        // During IBD if there are many blocks to connect still it could be a while before shutting down
-        // and the user may think the shutdown has hung, so return here and stop connecting any remaining
-        // blocks.
-        if (ShutdownRequested())
-            return false;
-
         // Don't iterate the entire list of potential improvements toward the best tip, as we likely only need
         // a few blocks along the way.
         int nTargetHeight = std::min(nHeight + (int)BLOCK_DOWNLOAD_WINDOW, pindexMostWork->nHeight);
@@ -3640,10 +3630,6 @@ bool ActivateBestChain(CValidationState &state, const CChainParams &chainparams,
         fOneDone = true;
     } while (pindexMostWork->nChainWork > chainActive.Tip()->nChainWork);
     CheckBlockIndex(chainparams.GetConsensus());
-
-    // Write changes periodically to disk.
-    if (!FlushStateToDisk(state, FLUSH_STATE_PERIODIC))
-        return false;
 
     return true;
 }
@@ -6340,17 +6326,21 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
         }
         else if (fMissingInputs)
         {
-            LOCK(cs_orphancache);
-            AddOrphanTx(tx, pfrom->GetId());
+            // If we've forked and this is probably not a valid tx, then skip adding it to the orphan pool
+            if (!chainActive.Tip()->IsforkActiveOnNextBlock(miningForkTime.value) || IsTxProbablyNewSigHash(tx))
+            {
+                LOCK(cs_orphancache);
+                AddOrphanTx(tx, pfrom->GetId());
 
-            // DoS prevention: do not allow mapOrphanTransactions to grow unbounded
-            static unsigned int nMaxOrphanTx =
-                (unsigned int)std::max((int64_t)0, GetArg("-maxorphantx", DEFAULT_MAX_ORPHAN_TRANSACTIONS));
-            static uint64_t nMaxOrphanPoolSize =
-                (uint64_t)std::max((int64_t)0, (GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000 / 10));
-            unsigned int nEvicted = LimitOrphanTxSize(nMaxOrphanTx, nMaxOrphanPoolSize);
-            if (nEvicted > 0)
-                LogPrint("mempool", "mapOrphan overflow, removed %u tx\n", nEvicted);
+                // DoS prevention: do not allow mapOrphanTransactions to grow unbounded
+                static unsigned int nMaxOrphanTx =
+                    (unsigned int)std::max((int64_t)0, GetArg("-maxorphantx", DEFAULT_MAX_ORPHAN_TRANSACTIONS));
+                static uint64_t nMaxOrphanPoolSize =
+                    (uint64_t)std::max((int64_t)0, (GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000 / 10));
+                unsigned int nEvicted = LimitOrphanTxSize(nMaxOrphanTx, nMaxOrphanPoolSize);
+                if (nEvicted > 0)
+                    LogPrint("mempool", "mapOrphan overflow, removed %u tx\n", nEvicted);
+            }
         }
         else
         {
@@ -6392,11 +6382,24 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
                 dosMan.Misbehaving(pfrom, nDoS);
         }
         FlushStateToDisk(state, FLUSH_STATE_PERIODIC);
+
+        // The flush to disk above is only periodic therefore we need to continuously trim any excess from the cache.
+        pcoinsTip->Trim(nCoinCacheUsage);
     }
 
 
-    else if (strCommand == NetMsgType::HEADERS && !fImporting && !fReindex) // Ignore headers received while importing
+    else if (strCommand == NetMsgType::HEADERS) // Ignore headers received while importing
     {
+        if (fImporting)
+        {
+            LogPrint("net", "skipping processing of HEADERS because importing\n");
+            return true;
+        }
+        if (fReindex)
+        {
+            LogPrint("net", "skipping processing of HEADERS because reindexing\n");
+            return true;
+        }
         std::vector<CBlockHeader> headers;
 
         // Bypass the normal CBlock deserialization, as we don't want to risk deserializing 2000 full blocks.
@@ -7361,7 +7364,7 @@ bool SendMessages(CNode *pto)
         if (!state.fSyncStarted && !pto->fClient && !fImporting && !fReindex)
         {
             // Only actively request headers from a single peer, unless we're close to today.
-            if ((nSyncStarted == 0 && fFetch) ||
+            if ((nSyncStarted < MAX_HEADER_REQS_DURING_IBD && fFetch) ||
                 chainActive.Tip()->GetBlockTime() > GetAdjustedTime() - SINGLE_PEER_REQUEST_MODE_AGE)
             {
                 const CBlockIndex *pindexStart = chainActive.Tip();
@@ -7623,19 +7626,19 @@ bool SendMessages(CNode *pto)
         // Message: getdata (blocks)
         //
         std::vector<CInv> vGetData;
-        if (!pto->fDisconnect && !pto->fClient && (fFetch || !IsInitialBlockDownload()) &&
-            state.nBlocksInFlight < (int)MAX_BLOCKS_IN_TRANSIT_PER_PEER)
+        if (!pto->fDisconnect && !pto->fClient && state.nBlocksInFlight < (int)MAX_BLOCKS_IN_TRANSIT_PER_PEER)
         {
             std::vector<CBlockIndex *> vToDownload;
             FindNextBlocksToDownload(pto->GetId(), MAX_BLOCKS_IN_TRANSIT_PER_PEER - state.nBlocksInFlight, vToDownload);
+            // LogPrint("req", "IBD AskFor %d blocks from peer=%s\n", vToDownload.size(), pto->GetLogName());
             BOOST_FOREACH (CBlockIndex *pindex, vToDownload)
             {
                 CInv inv(MSG_BLOCK, pindex->GetBlockHash());
                 if (!AlreadyHave(inv))
                 {
                     requester.AskFor(inv, pto);
-                    // LogPrint("req", "AskFor block %s (%d) peer=%d\n", pindex->GetBlockHash().ToString(),
-                    //    pindex->nHeight, pto->id);
+                    // LogPrint("req", "AskFor block %s (%d) peer=%s\n", pindex->GetBlockHash().ToString(),
+                    //  pindex->nHeight, pto->GetLogName());
                 }
             }
         }

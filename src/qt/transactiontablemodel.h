@@ -7,7 +7,10 @@
 #define BITCOIN_QT_TRANSACTIONTABLEMODEL_H
 
 #include "bitcoinunits.h"
-
+#ifdef ENABLE_WALLET
+#include "transactionrecord.h"
+#endif
+#include "script/script.h"
 #include <QAbstractTableModel>
 #include <QStringList>
 
@@ -47,6 +50,8 @@ public:
         DateRole,
         /** Watch-only boolean */
         WatchonlyRole,
+        /** Public label boolean */
+        PublicLabelRole,
         /** Watch-only icon */
         WatchonlyDecorationRole,
         /** Long description (HTML format) */
@@ -99,6 +104,10 @@ private:
     QString formatTxToAddress(const TransactionRecord *wtx, bool tooltip) const;
     QString formatTxAmount(const TransactionRecord *wtx, bool showUnconfirmed=true, BitcoinUnits::SeparatorStyle separators=BitcoinUnits::separatorStandard) const;
     QString formatTooltip(const TransactionRecord *rec) const;
+#ifdef ENABLE_WALLET
+    QString pickLabelWithAddress(AddressList listAddresses, std::string& address) const;
+#endif
+
     QVariant txStatusDecoration(const TransactionRecord *wtx) const;
     QVariant txWatchonlyDecoration(const TransactionRecord *wtx) const;
     QVariant txAddressDecoration(const TransactionRecord *wtx) const;

@@ -12,6 +12,7 @@
 static const unsigned int BLOCKSTREAM_CORE_MAX_BLOCK_SIZE = 1000000;
 /** The maximum allowed number of signature check operations in a 1MB block (network rule), and the suggested max sigops per (MB rounded up) in blocks > 1MB.  If greater, the block is considered excessive */
 static const unsigned int BLOCKSTREAM_CORE_MAX_BLOCK_SIGOPS = BLOCKSTREAM_CORE_MAX_BLOCK_SIZE/50;
+static const unsigned int MAX_TX_SIGOPS = BLOCKSTREAM_CORE_MAX_BLOCK_SIZE/50;
 /** The maximum suggested length of a transaction.  If greater, the transaction is not relayed, and the > 1MB block is considered "excessive".  
     For blocks < 1MB, there is no largest transaction so it is defacto 1MB.
 */

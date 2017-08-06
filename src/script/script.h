@@ -177,6 +177,8 @@ enum opcodetype
 
 
     // template matching params
+    OP_BIGINTEGER = 0xf0,
+    OP_DATA = 0xf1,
     OP_SMALLINTEGER = 0xfa,
     OP_PUBKEYS = 0xfb,
     OP_PUBKEYHASH = 0xfd,
@@ -308,7 +310,10 @@ public:
             return std::numeric_limits<int>::min();
         return m_value;
     }
-
+    int64_t getint64() const
+	{
+		return m_value;
+	}
     std::vector<unsigned char> getvch() const
     {
         return serialize(m_value);

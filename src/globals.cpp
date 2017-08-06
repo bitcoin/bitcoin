@@ -286,3 +286,5 @@ CStatHistory<uint64_t> nBlockValidationTime("blockValidationTime", STAT_OP_MAX |
 CCriticalSection cs_blockvalidationtime;
 
 CThinBlockData thindata; // Singleton class
+
+uint256 bitcoinCashForkBlockHash = uint256S("000000000000000000651ef99cb9fcbe0dadde1d424bd9f15ff20136191a5eec");

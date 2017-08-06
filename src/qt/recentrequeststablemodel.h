@@ -70,6 +70,7 @@ public:
         Label = 1,
         Message = 2,
         Amount = 3,
+        Address = 4,
         NUMBER_OF_COLUMNS
     };
 

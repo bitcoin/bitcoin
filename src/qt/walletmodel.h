@@ -39,8 +39,8 @@ class SendCoinsRecipient
 {
 public:
     explicit SendCoinsRecipient() : amount(0), fSubtractFeeFromAmount(false), nVersion(SendCoinsRecipient::CURRENT_VERSION) { }
-    explicit SendCoinsRecipient(const QString &addr, const QString &label, const CAmount& amount, const QString &message):
-        address(addr), label(label), amount(amount), message(message), fSubtractFeeFromAmount(false), nVersion(SendCoinsRecipient::CURRENT_VERSION) {}
+    explicit SendCoinsRecipient(const QString &addr, const QString &label, const CAmount& amount, const QString &message, const QString& freezeLockTime,  const QString &labelPublic):
+        address(addr), label(label), labelPublic(labelPublic), amount(amount), message(message), freezeLockTime(freezeLockTime), fSubtractFeeFromAmount(false), nVersion(SendCoinsRecipient::CURRENT_VERSION) {}
 
     // If from an unauthenticated payment request, this is used for storing
     // the addresses, e.g. address-A<br />address-B<br />address-C.
@@ -49,9 +49,12 @@ public:
     // Todo: This is a hack, should be replaced with a cleaner solution!
     QString address;
     QString label;
+    QString labelPublic;
     CAmount amount;
     // If from a payment request, this is used for storing the memo
     QString message;
+    // Freeze Lock Time
+    QString freezeLockTime;
 
     // If from a payment request, paymentRequest.IsInitialized() will be true
     PaymentRequestPlus paymentRequest;
@@ -60,7 +63,7 @@ public:
 
     bool fSubtractFeeFromAmount; // memory only
 
-    static const int CURRENT_VERSION = 1;
+    static const int CURRENT_VERSION = 2;
     int nVersion;
 
     ADD_SERIALIZE_METHODS;
@@ -70,6 +73,8 @@ public:
         std::string sAddress = address.toStdString();
         std::string sLabel = label.toStdString();
         std::string sMessage = message.toStdString();
+        std::string sFreezeLockTime = freezeLockTime.toStdString();
+        std::string slabelPublic = labelPublic.toStdString();
         std::string sPaymentRequest;
         if (!ser_action.ForRead() && paymentRequest.IsInitialized())
             paymentRequest.SerializeToString(&sPaymentRequest);
@@ -83,16 +88,20 @@ public:
         READWRITE(sMessage);
         READWRITE(sPaymentRequest);
         READWRITE(sAuthenticatedMerchant);
+        if (nVersion >= 2) READWRITE(sFreezeLockTime);
 
         if (ser_action.ForRead())
         {
             address = QString::fromStdString(sAddress);
             label = QString::fromStdString(sLabel);
             message = QString::fromStdString(sMessage);
+            freezeLockTime = QString::fromStdString(sFreezeLockTime);
+            labelPublic = QString::fromStdString(slabelPublic);
             if (!sPaymentRequest.empty())
                 paymentRequest.parse(QByteArray::fromRawData(sPaymentRequest.data(), sPaymentRequest.size()));
             authenticatedMerchant = QString::fromStdString(sAuthenticatedMerchant);
         }
+
     }
 };
 
