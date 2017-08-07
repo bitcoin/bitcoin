@@ -6,6 +6,7 @@
 
 #include "chainparams.h"
 #include "clientversion.h"
+#include "core_io.h"
 #include "validation.h"
 #include "net.h"
 #include "net_processing.h"

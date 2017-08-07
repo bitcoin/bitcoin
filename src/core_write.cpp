@@ -16,6 +16,16 @@
 #include "utilmoneystr.h"
 #include "utilstrencodings.h"
 
+UniValue ValueFromAmount(const CAmount& amount)
+{
+    bool sign = amount < 0;
+    int64_t n_abs = (sign ? -amount : amount);
+    int64_t quotient = n_abs / COIN;
+    int64_t remainder = n_abs % COIN;
+    return UniValue(UniValue::VNUM,
+            strprintf("%s%d.%08d", sign ? "-" : "", quotient, remainder));
+}
+
 std::string FormatScript(const CScript& script)
 {
     std::string ret;
