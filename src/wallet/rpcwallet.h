@@ -14,7 +14,7 @@ void RegisterWalletRPCCommands(CRPCTable &t);
  * Figures out what wallet, if any, to use for a JSONRPCRequest.
  *
  * @param[in] request JSONRPCRequest that wishes to access a wallet
- * @return NULL if no wallet should be used, or a pointer to the CWallet
+ * @return nullptr if no wallet should be used, or a pointer to the CWallet
  */
 CWallet *GetWalletForJSONRPCRequest(const JSONRPCRequest& request);
 

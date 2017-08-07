@@ -152,7 +152,7 @@ static void RandAddSeedPerfmon()
     const size_t nMaxSize = 10000000; // Bail out at more than 10MB of performance data
     while (true) {
         nSize = vData.size();
-        ret = RegQueryValueExA(HKEY_PERFORMANCE_DATA, "Global", NULL, NULL, vData.data(), &nSize);
+        ret = RegQueryValueExA(HKEY_PERFORMANCE_DATA, "Global", nullptr, nullptr, vData.data(), &nSize);
         if (ret != ERROR_MORE_DATA || vData.size() >= nMaxSize)
             break;
         vData.resize(std::max((vData.size() * 3) / 2, nMaxSize)); // Grow size of buffer exponentially
@@ -200,7 +200,7 @@ void GetOSRand(unsigned char *ent32)
 {
 #if defined(WIN32)
     HCRYPTPROV hProvider;
-    int ret = CryptAcquireContextW(&hProvider, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
+    int ret = CryptAcquireContextW(&hProvider, nullptr, nullptr, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
     if (!ret) {
         RandFailure();
     }
@@ -245,7 +245,7 @@ void GetOSRand(unsigned char *ent32)
     int have = 0;
     do {
         size_t len = NUM_OS_RANDOM_BYTES - have;
-        if (sysctl(name, ARRAYLEN(name), ent32 + have, &len, NULL, 0) != 0) {
+        if (sysctl(name, ARRAYLEN(name), ent32 + have, &len, nullptr, 0) != 0) {
             RandFailure();
         }
         have += len;
