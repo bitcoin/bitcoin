@@ -68,7 +68,8 @@ script:
     - echo "BITCOIN_CONFIG_ALL=$BITCOIN_CONFIG_ALL"
     - echo "BITCOIN_CONFIG=$BITCOIN_CONFIG"
     - echo "GOAL=$GOAL"
-    - ../configure $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG || ( cat config.log && false)
+    - echo "../configure $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG"
+    - ../configure $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG > configure.out || ( cat configure.out && cat config.log && false)
     - if [ "$RUN_FORMATTING_CHECK" = "true" ]; then make $MAKEJOBS check-formatting VERBOSE=1; fi
     - make $MAKEJOBS $GOAL || ( echo "Build failure. Verbose build follows." && make $GOAL V=1 ; false )
     - export LD_LIBRARY_PATH=$TRAVIS_BUILD_DIR/depends/$HOST/lib
