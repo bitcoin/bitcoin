@@ -314,6 +314,12 @@ class SendHeadersTest(BitcoinTestFramework):
         return [int(x, 16) for x in all_hashes]
 
     def run_test(self):
+
+        # Set the forktime to be far into the future.  Running the sript after forktime will cause a failure since
+        # we will be expecting a > 1MB block to begin with.
+        self.nodes[0].set("mining.forkTime=1901590000")
+        self.nodes[1].set("mining.forkTime=1901590000")
+
         # Setup the p2p connections and start up the network thread.
         inv_node = InvNode()
         test_node = TestNode()
@@ -767,6 +773,7 @@ class SendHeadersTest(BitcoinTestFramework):
             test_node.sync_with_ping()
             assert_not_equal(int(self.nodes[0].getbestblockhash(), 16), blocks[1].sha256)
 
+            # Advance the time beyond the timeout value
             cur_time = int(time.time())
             self.nodes[0].setmocktime(cur_time + 120)
             self.nodes[1].setmocktime(cur_time + 120)
