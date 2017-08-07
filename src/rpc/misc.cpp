@@ -7,6 +7,7 @@
 #include <base58.h>
 #include <chain.h>
 #include <clientversion.h>
+#include <core_io.h>
 #include <httpserver.h>
 #include <init.h>
 #include <net.h>
