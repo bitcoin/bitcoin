@@ -2586,6 +2586,7 @@ UniValue resendwallettransactions(const JSONRPCRequest& request)
             "Immediately re-broadcast unconfirmed wallet transactions to all peers.\n"
             "Intended only for testing; the wallet code periodically re-broadcasts\n"
             "automatically.\n"
+            "Returns an RPC error if -walletbroadcast is set to false.\n"
             "Returns array of transaction ids that were re-broadcast.\n"
             );
 
@@ -2593,6 +2594,10 @@ UniValue resendwallettransactions(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
     LOCK2(cs_main, pwallet->cs_wallet);
+
+    if (!pwallet->GetBroadcastTransactions()) {
+        throw JSONRPCError(RPC_INVALID_REQUEST, "Error: Wallet transaction broadcasting is disabled with -walletbroadcast");
+    }
 
     std::vector<uint256> txids = pwallet->ResendWalletTransactionsBefore(GetTime(), g_connman.get());
     UniValue result(UniValue::VARR);
