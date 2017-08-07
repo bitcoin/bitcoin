@@ -65,6 +65,7 @@ class NodeConnCB(object):
         # tests; it causes message delivery to sleep for the specified time
         # before acquiring the global lock and delivering the next message.
         self.deliver_sleep_time = None
+        self.disconnected = False
 
     def set_deliver_sleep_time(self, value):
         with mininode_lock:
@@ -141,7 +142,9 @@ class NodeConnCB(object):
 
     def on_reject(self, conn, message): pass
 
-    def on_close(self, conn): pass
+    def on_close(self, conn):
+        self.disconnected=True
+        pass
 
     def on_mempool(self, conn): pass
 
