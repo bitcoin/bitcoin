@@ -12,14 +12,14 @@ if [ -z "${TRAVIS_COMMIT_RANGE}" ]; then
 fi
 
 showdiff() {
-  if ! git diff "${TRAVIS_COMMIT_RANGE}" --; then
+  if ! git diff -U0 "${TRAVIS_COMMIT_RANGE}" --; then
     echo "Failed to get a diff"
     exit 1
   fi
 }
 
 # Do a first pass, and if no trailing whitespace was found then exit early.
-if ! showdiff | egrep -q '^\+.*\s+$'; then
+if ! showdiff | grep -E -q '^\+.*\s+$'; then
   exit
 fi
 
@@ -43,5 +43,5 @@ while read -r line; do
     fi
     echo "$line"
   fi
-done < <(showdiff | egrep '^(diff --git |\+.*\s+$)')
+done < <(showdiff | grep -E '^(diff --git |\+.*\s+$)')
 exit 1
