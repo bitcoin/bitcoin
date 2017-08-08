@@ -12,6 +12,7 @@ from test_framework.util import assert_equal
 from test_framework.util import *
 from test_framework.script import *
 from test_framework.blocktools import *
+from test_framework.bunode import *
 import test_framework.script as script
 import traceback
 import pdb
@@ -225,8 +226,32 @@ class BUIP055Test (BitcoinTestFramework):
         decimal.getcontext().prec = decContext
         return (count, size)
 
+    def testNetMagic(self):
+        info = self.nodes[0].getnetworkinfo()
+
+        # Both BUcash and BU should connect to a normal BU node
+        bunode = BasicBUNode()
+        bunode.connect(0,'127.0.0.1', p2p_port(1), self.nodes[1])
+        NetworkThread().start()  # Start up network handling in another thread
+        bunode.cnxns[0].wait_for_verack()
+
+        buCashNode = BasicBUCashNode()
+        buCashNode.connect(0,'127.0.0.1', p2p_port(0), self.nodes[0])
+        if int(info["localservices"],16)&NODE_BITCOIN_CASH:
+            try: # Accept BU cash nodes if running BTC node
+                buCashNode.cnxns[0].wait_for_buverack()
+            except DisconnectedError:
+                assert(not "should not have disconnected a bitcoin cash node")
+        else:
+            try: # do not accept BU cash nodes if running BTC node
+                buCashNode.cnxns[0].wait_for_buverack()
+                assert(not "should have disconnected a bitcoin cash node")
+            except DisconnectedError:
+                logging.info("properly disconnected bucash node")
+
     def run_test(self):
         # Creating UTXOs needed for building tx for large blocks
+        self.testNetMagic()
         NUM_ADDRS = 50
         logging.info("Creating addresses...")
         self.nodes[0].keypoolrefill(NUM_ADDRS)

@@ -8,6 +8,7 @@
 #define BITCOIN_NET_H
 
 #include "bloom.h"
+#include "chainparams.h"
 #include "compat.h"
 #include "limitedmap.h"
 #include "netbase.h"
@@ -455,6 +456,8 @@ public:
 
 
     CNode(SOCKET hSocketIn, const CAddress &addrIn, const std::string &addrNameIn = "", bool fInboundIn = false);
+    // Whether the node uses the bitcoin cash magic to communicate.
+    std::atomic<bool> fUsesCashMagic;
     ~CNode();
 
 private:
@@ -499,6 +502,11 @@ public:
         nRecvVersion = nVersionIn;
         BOOST_FOREACH (CNetMessage &msg, vRecvMsg)
             msg.SetVersion(nVersionIn);
+    }
+
+    const CMessageHeader::MessageStartChars &GetMagic(const CChainParams &params) const
+    {
+        return fUsesCashMagic ? params.CashMessageStart() : params.MessageStart();
     }
 
     CNode *AddRef()

@@ -151,21 +151,23 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
                 else
                     break;
             }
-            else if (opcode2 == OP_BIGINTEGER )
+            else if (opcode2 == OP_BIGINTEGER)
             {
-            	try {
-            		CScriptNum n(vch1, true, 5);
-
-            		LogPrintf("Freeze Solver BIGINT=%d \n", n.getint64());
-            		// if try reaches here without scriptnum_error
-            		// then vch1 is a valid bigint
-            		vSolutionsRet.push_back(vch1);
-            	} catch (scriptnum_error&) {
-            		LogPrintf("Freeze Solver BIGINT ERROR! %s \n", ::ScriptToAsmStr(CScript(vch1)));
-            		break;
-            	} // end try/catch
+                try
+                {
+                    CScriptNum n(vch1, true, 5);
+                    // if try reaches here without scriptnum_error
+                    // then vch1 is a valid bigint
+                    vSolutionsRet.push_back(vch1);
+                }
+                catch (scriptnum_error &)
+                {
+                    // the data is not a proper big int so this is not a match
+                    break;
+                } // end try/catch
             }
-            else if (opcode2 == OP_DATA) vSolutionsRet.push_back(vch1);
+            else if (opcode2 == OP_DATA)
+                vSolutionsRet.push_back(vch1);
             else if (opcode1 != opcode2 || vch1 != vch2)
             {
                 // Others must match exactly
