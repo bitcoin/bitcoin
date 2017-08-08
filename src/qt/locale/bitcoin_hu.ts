@@ -41,9 +41,17 @@
         <source>&amp;Delete</source>
         <translation>&amp;Törlés</translation>
     </message>
+    <message>
+        <source>&amp;Copy Address</source>
+        <translation>&amp;Cím másolása</translation>
+    </message>
     </context>
 <context>
     <name>AddressTableModel</name>
+    <message>
+        <source>Label</source>
+        <translation>Címke</translation>
+    </message>
     </context>
 <context>
     <name>AskPassphraseDialog</name>
@@ -62,6 +70,10 @@
     <message>
         <source>Repeat new passphrase</source>
         <translation>Új jelszó újra</translation>
+    </message>
+    <message>
+        <source>Decrypt wallet</source>
+        <translation>Tárca dekódolása</translation>
     </message>
     </context>
 <context>
@@ -1078,9 +1090,17 @@
         <source>&amp;Save Image...</source>
         <translation>&amp;Kép mentése</translation>
     </message>
+    <message>
+        <source>Label</source>
+        <translation>Címke</translation>
+    </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
+    <message>
+        <source>Label</source>
+        <translation>Címke</translation>
+    </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
@@ -1331,9 +1351,17 @@
     </context>
 <context>
     <name>TransactionTableModel</name>
+    <message>
+        <source>Label</source>
+        <translation>Címke</translation>
+    </message>
     </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>Label</source>
+        <translation>Címke</translation>
+    </message>
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>

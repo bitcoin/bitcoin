@@ -10,7 +10,7 @@ from test_framework.script import CScript, OP_1, OP_DROP, OP_2, OP_HASH160, OP_E
 from test_framework.mininode import CTransaction, CTxIn, CTxOut, COutPoint, ToHex, COIN
 
 # Construct 2 trivial P2SH's and the ScriptSigs that spend them
-# So we can create many many transactions without needing to spend
+# So we can create many transactions without needing to spend
 # time signing.
 redeem_script_1 = CScript([OP_1, OP_DROP])
 redeem_script_2 = CScript([OP_2, OP_DROP])
@@ -116,8 +116,8 @@ def check_estimates(node, fees_seen, max_invalid, print_estimates = True):
     for i,e in enumerate(all_estimates): # estimate is for i+1
         if e >= 0:
             valid_estimate = True
-            # estimatesmartfee should return the same result
-            assert_equal(node.estimatesmartfee(i+1)["feerate"], e)
+            if i >= 13:  # for n>=14 estimatesmartfee(n/2) should be at least as high as estimatefee(n)
+                assert(node.estimatesmartfee((i+1)//2)["feerate"] > float(e) - delta)
 
         else:
             invalid_estimates += 1
@@ -155,7 +155,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         """
         self.nodes = []
         # Use node0 to mine blocks for input splitting
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-maxorphantx=1000",
+        self.nodes.append(self.start_node(0, self.options.tmpdir, ["-maxorphantx=1000",
                                                               "-whitelist=127.0.0.1"]))
 
         self.log.info("This test is time consuming, please be patient")
@@ -191,7 +191,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         # Node1 mines small blocks but that are bigger than the expected transaction rate.
         # NOTE: the CreateNewBlock code starts counting block size at 1,000 bytes,
         # (17k is room enough for 110 or so transactions)
-        self.nodes.append(start_node(1, self.options.tmpdir,
+        self.nodes.append(self.start_node(1, self.options.tmpdir,
                                      ["-blockmaxsize=17000", "-maxorphantx=1000"]))
         connect_nodes(self.nodes[1], 0)
 
@@ -199,11 +199,10 @@ class EstimateFeeTest(BitcoinTestFramework):
         # produces too small blocks (room for only 55 or so transactions)
         node2args = ["-blockmaxsize=8000", "-maxorphantx=1000"]
 
-        self.nodes.append(start_node(2, self.options.tmpdir, node2args))
+        self.nodes.append(self.start_node(2, self.options.tmpdir, node2args))
         connect_nodes(self.nodes[0], 2)
         connect_nodes(self.nodes[2], 1)
 
-        self.is_network_split = False
         self.sync_all()
 
     def transact_and_mine(self, numblocks, mining_node):

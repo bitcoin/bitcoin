@@ -41,10 +41,66 @@
         <source>&amp;Delete</source>
         <translation>&amp;Poista</translation>
     </message>
+    <message>
+        <source>Choose the address to send coins to</source>
+        <translation>Valitse osoite johon kolikot lähetetään</translation>
+    </message>
+    <message>
+        <source>Choose the address to receive coins with</source>
+        <translation>Valitse osoite kolikoiden vastaanottamiseen</translation>
+    </message>
+    <message>
+        <source>C&amp;hoose</source>
+        <translation>V&amp;alitse</translation>
+    </message>
+    <message>
+        <source>Sending addresses</source>
+        <translation>Lähetysosoitteet</translation>
+    </message>
+    <message>
+        <source>Receiving addresses</source>
+        <translation>Vastaanotto-osoitteet</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Nämä ovat Bitcoin-osoitteesi maksujen lähettämistä varten. Tarkista aina määrä ja vastaanotto-osoite ennen kolikoiden lähettämistä.</translation>
+    </message>
+    <message>
+        <source>&amp;Copy Address</source>
+        <translation>&amp;Kopioi osoite</translation>
+    </message>
+    <message>
+        <source>Copy &amp;Label</source>
+        <translation>Kopioi &amp;nimike</translation>
+    </message>
+    <message>
+        <source>&amp;Edit</source>
+        <translation>&amp;Muokkaa</translation>
+    </message>
+    <message>
+        <source>Export Address List</source>
+        <translation>Vie osoitelista</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>Vienti epäonnistui</translation>
+    </message>
     </context>
 <context>
     <name>AddressTableModel</name>
-    </context>
+    <message>
+        <source>Label</source>
+        <translation>Nimike</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>Osoite</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(ei nimikettä)</translation>
+    </message>
+</context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
@@ -63,7 +119,55 @@
         <source>Repeat new passphrase</source>
         <translation>Toista uusi tunnuslause</translation>
     </message>
-    </context>
+    <message>
+        <source>Encrypt wallet</source>
+        <translation>Salaa lompakko</translation>
+    </message>
+    <message>
+        <source>Unlock wallet</source>
+        <translation>Avaa lompakko</translation>
+    </message>
+    <message>
+        <source>Decrypt wallet</source>
+        <translation>Pura lompakon salaus</translation>
+    </message>
+    <message>
+        <source>Change passphrase</source>
+        <translation>Vaihda salasana</translation>
+    </message>
+    <message>
+        <source>Confirm wallet encryption</source>
+        <translation>Vahvista lompakon salaaminen</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to encrypt your wallet?</source>
+        <translation>Oletko varma, että haluat salata lompakkosi?</translation>
+    </message>
+    <message>
+        <source>Wallet encrypted</source>
+        <translation>Lompakko salattiin</translation>
+    </message>
+    <message>
+        <source>Wallet encryption failed</source>
+        <translation>Lompakon salaus epäonnistui</translation>
+    </message>
+    <message>
+        <source>Wallet unlock failed</source>
+        <translation>Lompakon lukituksen avaaminen epäonnistui</translation>
+    </message>
+    <message>
+        <source>Wallet decryption failed</source>
+        <translation>Lompakon salauksen purkaminen epäonnistui</translation>
+    </message>
+    <message>
+        <source>Wallet passphrase was successfully changed.</source>
+        <translation>Lompakon salasana vaihdettiin onnistuneesti.</translation>
+    </message>
+    <message>
+        <source>Warning: The Caps Lock key is on!</source>
+        <translation>Varoitus: Caps Lock-painike on päällä!</translation>
+    </message>
+</context>
 <context>
     <name>BanTableModel</name>
     <message>
@@ -160,6 +264,18 @@
     <message>
         <source>Open &amp;URI...</source>
         <translation>Avaa &amp;URI...</translation>
+    </message>
+    <message>
+        <source>Click to disable network activity.</source>
+        <translation>Paina poistaaksesi verkkoyhteysilmaisin käytöstä.</translation>
+    </message>
+    <message>
+        <source>Network activity disabled.</source>
+        <translation>Verkkoyhteysmittari pois käytöstä</translation>
+    </message>
+    <message>
+        <source>Click to enable network activity again.</source>
+        <translation>Paina ottaaksesi verkkoyhteysilmaisin uudelleen käyttöön.</translation>
     </message>
     <message>
         <source>Reindexing blocks on disk...</source>
@@ -314,6 +430,10 @@
         <translation>%1-asiakas</translation>
     </message>
     <message>
+        <source>Connecting to peers...</source>
+        <translation>Yhdistetään vertaisiin...</translation>
+    </message>
+    <message>
         <source>Catching up...</source>
         <translation>Saavutetaan verkkoa...</translation>
     </message>
@@ -434,7 +554,75 @@
         <source>Confirmed</source>
         <translation>Vahvistettu</translation>
     </message>
-    </context>
+    <message>
+        <source>Copy address</source>
+        <translation>Kopioi osoite</translation>
+    </message>
+    <message>
+        <source>Copy label</source>
+        <translation>Kopioi nimike</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation>Kopioi määrä</translation>
+    </message>
+    <message>
+        <source>Copy transaction ID</source>
+        <translation>Kopioi transaktion ID</translation>
+    </message>
+    <message>
+        <source>Lock unspent</source>
+        <translation>Lukitse käyttämättömät</translation>
+    </message>
+    <message>
+        <source>Unlock unspent</source>
+        <translation>Avaa käyttämättömien lukitus</translation>
+    </message>
+    <message>
+        <source>Copy quantity</source>
+        <translation>Kopioi kappalemäärä</translation>
+    </message>
+    <message>
+        <source>Copy fee</source>
+        <translation>Kopioi rahansiirtokulu</translation>
+    </message>
+    <message>
+        <source>Copy after fee</source>
+        <translation>Kopioi rahansiirtokulun jälkeen</translation>
+    </message>
+    <message>
+        <source>Copy bytes</source>
+        <translation>Kopioi tavut</translation>
+    </message>
+    <message>
+        <source>Copy dust</source>
+        <translation>Kopioi tomu</translation>
+    </message>
+    <message>
+        <source>Copy change</source>
+        <translation>Kopioi vaihtorahat</translation>
+    </message>
+    <message>
+        <source>(%1 locked)</source>
+        <translation>(%1 lukittu)</translation>
+    </message>
+    <message>
+        <source>yes</source>
+        <translation>kyllä</translation>
+    </message>
+    <message>
+        <source>no</source>
+        <translation>ei</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(ei nimikettä)</translation>
+    </message>
+    <message>
+        <source>(change)</source>
+        <translation>(vaihtoraha)</translation>
+    </message>
+</context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -457,7 +645,19 @@
         <source>&amp;Address</source>
         <translation>&amp;Osoite</translation>
     </message>
-    </context>
+    <message>
+        <source>New receiving address</source>
+        <translation>Uusi vastaanotto-osoite</translation>
+    </message>
+    <message>
+        <source>New sending address</source>
+        <translation>Uusi lähetysosoite</translation>
+    </message>
+    <message>
+        <source>New key generation failed.</source>
+        <translation>Uuden avaimen luonti epäonnistui.</translation>
+    </message>
+</context>
 <context>
     <name>FreespaceChecker</name>
     <message>
@@ -586,8 +786,28 @@
         <translation>Lomake</translation>
     </message>
     <message>
+        <source>Unknown...</source>
+        <translation>Tunnistamaton..</translation>
+    </message>
+    <message>
         <source>Last block time</source>
         <translation>Viimeisimmän lohkon aika</translation>
+    </message>
+    <message>
+        <source>Progress</source>
+        <translation>Tila</translation>
+    </message>
+    <message>
+        <source>Progress increase per hour</source>
+        <translation>Edistymisen kasvu tunnissa</translation>
+    </message>
+    <message>
+        <source>calculating...</source>
+        <translation>lasketaan..</translation>
+    </message>
+    <message>
+        <source>Estimated time left until synced</source>
+        <translation>Arvioitu jäljellä oleva aika, kunnes synkronoitu</translation>
     </message>
     <message>
         <source>Hide</source>
@@ -928,7 +1148,11 @@
         <source>Node/Service</source>
         <translation>Noodi/Palvelu</translation>
     </message>
-    </context>
+    <message>
+        <source>Ping</source>
+        <translation>Vasteaika</translation>
+    </message>
+</context>
 <context>
     <name>QObject</name>
     <message>
@@ -974,9 +1198,17 @@
     </context>
 <context>
     <name>QObject::QObject</name>
-    </context>
+    <message>
+        <source>Error: %1</source>
+        <translation>Virhe: %1</translation>
+    </message>
+</context>
 <context>
     <name>QRImageWidget</name>
+    <message>
+        <source>Save QR Code</source>
+        <translation>Tallenna QR-koodi</translation>
+    </message>
     </context>
 <context>
     <name>RPCConsole</name>
@@ -1137,6 +1369,10 @@
         <translation>Yhteyskokeilun odotus</translation>
     </message>
     <message>
+        <source>Min Ping</source>
+        <translation>Pienin vasteaika</translation>
+    </message>
+    <message>
         <source>Time Offset</source>
         <translation>Ajan poikkeama</translation>
     </message>
@@ -1195,6 +1431,10 @@
     <message>
         <source>1 &amp;year</source>
         <translation>1 &amp;vuosi</translation>
+    </message>
+    <message>
+        <source>Welcome to the %1 RPC console.</source>
+        <translation>Tervetuloa %1 RPC-konsoliin.</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
@@ -1323,7 +1563,15 @@
         <source>Remove</source>
         <translation>Poista</translation>
     </message>
-    </context>
+    <message>
+        <source>Copy label</source>
+        <translation>Kopioi nimike</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation>Kopioi määrä</translation>
+    </message>
+</context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
@@ -1342,6 +1590,22 @@
         <source>&amp;Save Image...</source>
         <translation>&amp;Tallenna kuva</translation>
     </message>
+    <message>
+        <source>Address</source>
+        <translation>Osoite</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation>Määrä</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Nimike</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Viesti</translation>
+    </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
@@ -1349,7 +1613,23 @@
         <source>Date</source>
         <translation>Aika</translation>
     </message>
-    </context>
+    <message>
+        <source>Label</source>
+        <translation>Nimike</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Viesti</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(ei nimikettä)</translation>
+    </message>
+    <message>
+        <source>Requested</source>
+        <translation>Pyydetty</translation>
+    </message>
+</context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
@@ -1484,7 +1764,43 @@
         <source>S&amp;end</source>
         <translation>&amp;Lähetä</translation>
     </message>
-    </context>
+    <message>
+        <source>Copy quantity</source>
+        <translation>Kopioi kappalemäärä</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation>Kopioi määrä</translation>
+    </message>
+    <message>
+        <source>Copy fee</source>
+        <translation>Kopioi rahansiirtokulu</translation>
+    </message>
+    <message>
+        <source>Copy after fee</source>
+        <translation>Kopioi rahansiirtokulun jälkeen</translation>
+    </message>
+    <message>
+        <source>Copy bytes</source>
+        <translation>Kopioi tavut</translation>
+    </message>
+    <message>
+        <source>Copy dust</source>
+        <translation>Kopioi tomu</translation>
+    </message>
+    <message>
+        <source>Copy change</source>
+        <translation>Kopioi vaihtorahat</translation>
+    </message>
+    <message>
+        <source>or</source>
+        <translation>tai</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(ei nimikettä)</translation>
+    </message>
+</context>
 <context>
     <name>SendCoinsEntry</name>
     <message>
@@ -1677,6 +1993,14 @@
         <source>Date</source>
         <translation>Aika</translation>
     </message>
+    <message>
+        <source>Message</source>
+        <translation>Viesti</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation>Määrä</translation>
+    </message>
     </context>
 <context>
     <name>TransactionDescDialog</name>
@@ -1691,12 +2015,48 @@
         <source>Date</source>
         <translation>Aika</translation>
     </message>
+    <message>
+        <source>Label</source>
+        <translation>Nimike</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(ei nimikettä)</translation>
+    </message>
     </context>
 <context>
     <name>TransactionView</name>
     <message>
+        <source>Copy address</source>
+        <translation>Kopioi osoite</translation>
+    </message>
+    <message>
+        <source>Copy label</source>
+        <translation>Kopioi nimike</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation>Kopioi määrä</translation>
+    </message>
+    <message>
+        <source>Copy transaction ID</source>
+        <translation>Kopioi transaktion ID</translation>
+    </message>
+    <message>
         <source>Date</source>
         <translation>Aika</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Nimike</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>Osoite</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>Vienti epäonnistui</translation>
     </message>
     </context>
 <context>

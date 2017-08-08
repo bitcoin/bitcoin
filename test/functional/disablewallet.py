@@ -18,13 +18,11 @@ class DisableWalletTest (BitcoinTestFramework):
         super().__init__()
         self.setup_clean_chain = True
         self.num_nodes = 1
-
-    def setup_network(self, split=False):
-        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, [['-disablewallet']])
-        self.is_network_split = False
-        self.sync_all()
+        self.extra_args = [["-disablewallet"]]
 
     def run_test (self):
+        # Make sure wallet is really disabled
+        assert_raises_jsonrpc(-32601, 'Method not found', self.nodes[0].getwalletinfo)
         x = self.nodes[0].validateaddress('3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy')
         assert(x['isvalid'] == False)
         x = self.nodes[0].validateaddress('mneYUmWYsuk7kySiURxCi3AGxrAqZxLgPZ')

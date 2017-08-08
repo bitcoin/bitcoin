@@ -4,8 +4,10 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the dumpwallet RPC."""
 
+import os
+
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import (start_nodes, start_node, assert_equal, bitcoind_processes)
+from test_framework.util import assert_equal
 
 
 def read_dump(file_name, addrs, hd_master_addr_old):
@@ -66,7 +68,7 @@ class WalletDumpTest(BitcoinTestFramework):
         # longer than the default 30 seconds due to an expensive
         # CWallet::TopUpKeyPool call, and the encryptwallet RPC made later in
         # the test often takes even longer.
-        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, self.extra_args, timewait=60)
+        self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir, self.extra_args, timewait=60)
 
     def run_test (self):
         tmpdir = self.options.tmpdir
@@ -82,7 +84,8 @@ class WalletDumpTest(BitcoinTestFramework):
         self.nodes[0].keypoolrefill()
 
         # dump unencrypted wallet
-        self.nodes[0].dumpwallet(tmpdir + "/node0/wallet.unencrypted.dump")
+        result = self.nodes[0].dumpwallet(tmpdir + "/node0/wallet.unencrypted.dump")
+        assert_equal(result['filename'], os.path.abspath(tmpdir + "/node0/wallet.unencrypted.dump"))
 
         found_addr, found_addr_chg, found_addr_rsv, hd_master_addr_unenc = \
             read_dump(tmpdir + "/node0/wallet.unencrypted.dump", addrs, None)
@@ -92,8 +95,8 @@ class WalletDumpTest(BitcoinTestFramework):
 
         #encrypt wallet, restart, unlock and dump
         self.nodes[0].encryptwallet('test')
-        bitcoind_processes[0].wait()
-        self.nodes[0] = start_node(0, self.options.tmpdir, self.extra_args[0])
+        self.bitcoind_processes[0].wait()
+        self.nodes[0] = self.start_node(0, self.options.tmpdir, self.extra_args[0])
         self.nodes[0].walletpassphrase('test', 10)
         # Should be a no-op:
         self.nodes[0].keypoolrefill()

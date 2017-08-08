@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016 The Bitcoin Core developers
+# Copyright (c) 2016-2017 Bitcoin Core Developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -127,6 +127,9 @@ def tree_sha512sum(commit='HEAD'):
         raise IOError('Non-zero return value executing git cat-file')
     return overall.hexdigest()
 
+def print_merge_details(pull, title, branch, base_branch, head_branch):
+    print('%s#%s%s %s %sinto %s%s' % (ATTR_RESET+ATTR_PR,pull,ATTR_RESET,title,ATTR_RESET+ATTR_PR,branch,ATTR_RESET))
+    subprocess.check_call([GIT,'log','--graph','--topo-order','--pretty=format:'+COMMIT_FORMAT,base_branch+'..'+head_branch])
 
 def parse_arguments():
     epilog = '''
@@ -171,7 +174,8 @@ def main():
     info = retrieve_pr_info(repo,pull)
     if info is None:
         exit(1)
-    title = info['title']
+    title = info['title'].strip()
+    body = info['body'].strip()
     # precedence order for destination branch argument:
     #   - command line argument
     #   - githubmerge.branch setting
@@ -226,6 +230,7 @@ def main():
             firstline = 'Merge #%s' % (pull,)
         message = firstline + '\n\n'
         message += subprocess.check_output([GIT,'log','--no-merges','--topo-order','--pretty=format:%h %s (%an)',base_branch+'..'+head_branch]).decode('utf-8')
+        message += '\n\nPull request description:\n\n  ' + body.replace('\n', '\n  ') + '\n'
         try:
             subprocess.check_call([GIT,'merge','-q','--commit','--no-edit','--no-ff','-m',message.encode('utf-8'),head_branch])
         except subprocess.CalledProcessError as e:
@@ -256,8 +261,7 @@ def main():
             printf("ERROR: Cannot update message.",file=stderr)
             exit(4)
 
-        print('%s#%s%s %s %sinto %s%s' % (ATTR_RESET+ATTR_PR,pull,ATTR_RESET,title,ATTR_RESET+ATTR_PR,branch,ATTR_RESET))
-        subprocess.check_call([GIT,'log','--graph','--topo-order','--pretty=format:'+COMMIT_FORMAT,base_branch+'..'+head_branch])
+        print_merge_details(pull, title, branch, base_branch, head_branch)
         print()
 
         # Run test command if configured.
@@ -276,12 +280,6 @@ def main():
                     print("Difference with github ignored.",file=stderr)
                 else:
                     exit(6)
-            reply = ask_prompt("Press 'd' to accept the diff.")
-            if reply.lower() == 'd':
-                print("Diff accepted.",file=stderr)
-            else:
-                print("ERROR: Diff rejected.",file=stderr)
-                exit(6)
         else:
             # Verify the result manually.
             print("Dropping you on a shell so you can try building/testing the merged source.",file=stderr)
@@ -290,12 +288,6 @@ def main():
             if os.path.isfile('/etc/debian_version'): # Show pull number on Debian default prompt
                 os.putenv('debian_chroot',pull)
             subprocess.call([BASH,'-i'])
-            reply = ask_prompt("Type 'm' to accept the merge.")
-            if reply.lower() == 'm':
-                print("Merge accepted.",file=stderr)
-            else:
-                print("ERROR: Merge rejected.",file=stderr)
-                exit(7)
 
         second_sha512 = tree_sha512sum()
         if first_sha512 != second_sha512:
@@ -303,16 +295,18 @@ def main():
             exit(8)
 
         # Sign the merge commit.
-        reply = ask_prompt("Type 's' to sign off on the merge.")
-        if reply == 's':
-            try:
-                subprocess.check_call([GIT,'commit','-q','--gpg-sign','--amend','--no-edit'])
-            except subprocess.CalledProcessError as e:
-                print("Error signing, exiting.",file=stderr)
+        print_merge_details(pull, title, branch, base_branch, head_branch)
+        while True:
+            reply = ask_prompt("Type 's' to sign off on the above merge, or 'x' to reject and exit.").lower()
+            if reply == 's':
+                try:
+                    subprocess.check_call([GIT,'commit','-q','--gpg-sign','--amend','--no-edit'])
+                    break
+                except subprocess.CalledProcessError as e:
+                    print("Error while signing, asking again.",file=stderr)
+            elif reply == 'x':
+                print("Not signing off on merge, exiting.",file=stderr)
                 exit(1)
-        else:
-            print("Not signing off on merge, exiting.",file=stderr)
-            exit(1)
 
         # Put the result in branch.
         subprocess.check_call([GIT,'checkout','-q',branch])
@@ -326,9 +320,13 @@ def main():
         subprocess.call([GIT,'branch','-q','-D',local_merge_branch],stderr=devnull)
 
     # Push the result.
-    reply = ask_prompt("Type 'push' to push the result to %s, branch %s." % (host_repo,branch))
-    if reply.lower() == 'push':
-        subprocess.check_call([GIT,'push',host_repo,'refs/heads/'+branch])
+    while True:
+        reply = ask_prompt("Type 'push' to push the result to %s, branch %s, or 'x' to exit without pushing." % (host_repo,branch)).lower()
+        if reply == 'push':
+            subprocess.check_call([GIT,'push',host_repo,'refs/heads/'+branch])
+            break
+        elif reply == 'x':
+            exit(1)
 
 if __name__ == '__main__':
     main()

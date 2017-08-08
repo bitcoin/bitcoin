@@ -10,7 +10,7 @@ its preconditions are met, and returns appropriate errors in other cases.
 This module consists of around a dozen individual test cases implemented in the
 top-level functions named as test_<test_case_description>. The test functions
 can be disabled or reordered if needed for debugging. If new test cases are
-added in the the future, they should try to follow the same convention and not
+added in the future, they should try to follow the same convention and not
 make assumptions about execution order.
 """
 
@@ -38,16 +38,15 @@ class BumpFeeTest(BitcoinTestFramework):
     def setup_network(self, split=False):
         extra_args = [["-prematurewitness", "-walletprematurewitness", "-walletrbf={}".format(i)]
                       for i in range(self.num_nodes)]
-        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, extra_args)
+        self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir, extra_args)
 
         # Encrypt wallet for test_locked_wallet_fails test
         self.nodes[1].encryptwallet(WALLET_PASSPHRASE)
-        bitcoind_processes[1].wait()
-        self.nodes[1] = start_node(1, self.options.tmpdir, extra_args[1])
+        self.bitcoind_processes[1].wait()
+        self.nodes[1] = self.start_node(1, self.options.tmpdir, extra_args[1])
         self.nodes[1].walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
 
         connect_nodes_bi(self.nodes, 0, 1)
-        self.is_network_split = False
         self.sync_all()
 
     def run_test(self):
@@ -89,6 +88,7 @@ def test_simple_bumpfee_succeeds(rbf_node, peer_node, dest_address):
     sync_mempools((rbf_node, peer_node))
     assert rbfid in rbf_node.getrawmempool() and rbfid in peer_node.getrawmempool()
     bumped_tx = rbf_node.bumpfee(rbfid)
+    assert_equal(bumped_tx["errors"], [])
     assert bumped_tx["fee"] - abs(rbftx["fee"]) > 0
     # check that bumped_tx propogates, original tx was evicted and has a wallet conflict
     sync_mempools((rbf_node, peer_node))

@@ -3,8 +3,10 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "consensus/validation.h"
+#include "wallet/coincontrol.h"
 #include "wallet/feebumper.h"
 #include "wallet/wallet.h"
+#include "policy/fees.h"
 #include "policy/policy.h"
 #include "policy/rbf.h"
 #include "validation.h" //for mempool access
@@ -40,7 +42,32 @@ int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *pWal
     return GetVirtualTransactionSize(txNew);
 }
 
-CFeeBumper::CFeeBumper(const CWallet *pWallet, const uint256 txidIn, int newConfirmTarget, bool specifiedConfirmTarget, CAmount totalFee, bool newTxReplaceable)
+bool CFeeBumper::preconditionChecks(const CWallet *pWallet, const CWalletTx& wtx) {
+    if (pWallet->HasWalletSpend(wtx.GetHash())) {
+        vErrors.push_back("Transaction has descendants in the wallet");
+        currentResult = BumpFeeResult::INVALID_PARAMETER;
+        return false;
+    }
+
+    {
+        LOCK(mempool.cs);
+        auto it_mp = mempool.mapTx.find(wtx.GetHash());
+        if (it_mp != mempool.mapTx.end() && it_mp->GetCountWithDescendants() > 1) {
+            vErrors.push_back("Transaction has descendants in the mempool");
+            currentResult = BumpFeeResult::INVALID_PARAMETER;
+            return false;
+        }
+    }
+
+    if (wtx.GetDepthInMainChain() != 0) {
+        vErrors.push_back("Transaction has been mined, or is conflicted with a mined transaction");
+        currentResult = BumpFeeResult::WALLET_ERROR;
+        return false;
+    }
+    return true;
+}
+
+CFeeBumper::CFeeBumper(const CWallet *pWallet, const uint256 txidIn, const CCoinControl& coin_control, CAmount totalFee)
     :
     txid(std::move(txidIn)),
     nOldFee(0),
@@ -57,25 +84,7 @@ CFeeBumper::CFeeBumper(const CWallet *pWallet, const uint256 txidIn, int newConf
     auto it = pWallet->mapWallet.find(txid);
     const CWalletTx& wtx = it->second;
 
-    if (pWallet->HasWalletSpend(txid)) {
-        vErrors.push_back("Transaction has descendants in the wallet");
-        currentResult = BumpFeeResult::INVALID_PARAMETER;
-        return;
-    }
-
-    {
-        LOCK(mempool.cs);
-        auto it_mp = mempool.mapTx.find(txid);
-        if (it_mp != mempool.mapTx.end() && it_mp->GetCountWithDescendants() > 1) {
-            vErrors.push_back("Transaction has descendants in the mempool");
-            currentResult = BumpFeeResult::INVALID_PARAMETER;
-            return;
-        }
-    }
-
-    if (wtx.GetDepthInMainChain() != 0) {
-        vErrors.push_back("Transaction has been mined, or is conflicted with a mined transaction");
-        currentResult = BumpFeeResult::WALLET_ERROR;
+    if (!preconditionChecks(pWallet, wtx)) {
         return;
     }
 
@@ -157,15 +166,7 @@ CFeeBumper::CFeeBumper(const CWallet *pWallet, const uint256 txidIn, int newConf
         nNewFee = totalFee;
         nNewFeeRate = CFeeRate(totalFee, maxNewTxSize);
     } else {
-        // if user specified a confirm target then don't consider any global payTxFee
-        if (specifiedConfirmTarget) {
-            nNewFee = CWallet::GetMinimumFee(maxNewTxSize, newConfirmTarget, mempool, CAmount(0));
-        }
-        // otherwise use the regular wallet logic to select payTxFee or default confirm target
-        else {
-            nNewFee = CWallet::GetMinimumFee(maxNewTxSize, newConfirmTarget, mempool);
-        }
-
+        nNewFee = CWallet::GetMinimumFee(maxNewTxSize, coin_control, mempool, ::feeEstimator, nullptr /* FeeCalculation */);
         nNewFeeRate = CFeeRate(nNewFee, maxNewTxSize);
 
         // New fee rate must be at least old rate + minimum incremental relay rate
@@ -213,14 +214,14 @@ CFeeBumper::CFeeBumper(const CWallet *pWallet, const uint256 txidIn, int newConf
 
     // If the output would become dust, discard it (converting the dust to fee)
     poutput->nValue -= nDelta;
-    if (poutput->nValue <= poutput->GetDustThreshold(::dustRelayFee)) {
+    if (poutput->nValue <= GetDustThreshold(*poutput, ::dustRelayFee)) {
         LogPrint(BCLog::RPC, "Bumping fee and discarding dust output\n");
         nNewFee += poutput->nValue;
         mtx.vout.erase(mtx.vout.begin() + nOutput);
     }
 
     // Mark new tx not replaceable, if requested.
-    if (!newTxReplaceable) {
+    if (!coin_control.signalRbf) {
         for (auto& input : mtx.vin) {
             if (input.nSequence < 0xfffffffe) input.nSequence = 0xfffffffe;
         }
@@ -246,6 +247,11 @@ bool CFeeBumper::commit(CWallet *pWallet)
         return false;
     }
     CWalletTx& oldWtx = pWallet->mapWallet[txid];
+
+    // make sure the transaction still has no descendants and hasn't been mined in the meantime
+    if (!preconditionChecks(pWallet, oldWtx)) {
+        return false;
+    }
 
     CWalletTx wtxBumped(pWallet, MakeTransactionRef(std::move(mtx)));
     // commit/broadcast the tx

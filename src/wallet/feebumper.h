@@ -8,7 +8,10 @@
 #include <primitives/transaction.h>
 
 class CWallet;
+class CWalletTx;
 class uint256;
+class CCoinControl;
+enum class FeeEstimateMode;
 
 enum class BumpFeeResult
 {
@@ -23,7 +26,7 @@ enum class BumpFeeResult
 class CFeeBumper
 {
 public:
-    CFeeBumper(const CWallet *pWalletIn, const uint256 txidIn, int newConfirmTarget, bool specifiedConfirmTarget, CAmount totalFee, bool newTxReplaceable);
+    CFeeBumper(const CWallet *pWalletIn, const uint256 txidIn, const CCoinControl& coin_control, CAmount totalFee);
     BumpFeeResult getResult() const { return currentResult; }
     const std::vector<std::string>& getErrors() const { return vErrors; }
     CAmount getOldFee() const { return nOldFee; }
@@ -44,6 +47,8 @@ public:
     bool commit(CWallet *pWalletNonConst);
 
 private:
+    bool preconditionChecks(const CWallet *pWallet, const CWalletTx& wtx);
+
     const uint256 txid;
     uint256 bumpedTxid;
     CMutableTransaction mtx;

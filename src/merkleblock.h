@@ -23,7 +23,7 @@
  * storing a bit for each traversed node, signifying whether the node is the
  * parent of at least one matched leaf txid (or a matched txid itself). In
  * case we are at the leaf level, or this bit is 0, its merkle node hash is
- * stored, and its children are not explorer further. Otherwise, no hash is
+ * stored, and its children are not explored further. Otherwise, no hash is
  * stored, but we recurse into both (or the only) child branch. During
  * decoding, the same depth-first traversal is performed, consuming bits and
  * hashes as they written during encoding.
@@ -121,6 +121,8 @@ public:
 /**
  * Used to relay blocks as header + vector<merkle branch>
  * to filtered nodes.
+ *
+ * NOTE: The class assumes that the given CBlock has *at least* 1 transaction. If the CBlock has 0 txs, it will hit an assertion.
  */
 class CMerkleBlock
 {

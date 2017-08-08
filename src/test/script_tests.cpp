@@ -24,7 +24,6 @@
 #include <string>
 #include <vector>
 
-#include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <univalue.h>
@@ -468,7 +467,7 @@ std::string JSONPrettyPrint(const UniValue& univalue)
     }
     return ret;
 }
-}
+} // namespace
 
 BOOST_AUTO_TEST_CASE(script_build)
 {
@@ -927,7 +926,7 @@ BOOST_AUTO_TEST_CASE(script_build)
 
     std::string strGen;
 
-    BOOST_FOREACH(TestBuilder& test, tests) {
+    for (TestBuilder& test : tests) {
         test.Test();
         std::string str = JSONPrettyPrint(test.GetJSON());
 #ifndef UPDATE_JSON_TESTS
@@ -1033,7 +1032,7 @@ sign_multisig(CScript scriptPubKey, std::vector<CKey> keys, CTransaction transac
     // and vice-versa)
     //
     result << OP_0;
-    BOOST_FOREACH(const CKey &key, keys)
+    for (const CKey &key : keys)
     {
         std::vector<unsigned char> vchSig;
         BOOST_CHECK(key.Sign(hash, vchSig));
@@ -1436,6 +1435,20 @@ BOOST_AUTO_TEST_CASE(script_FindAndDelete)
     expect = ScriptFromHex("03feed");
     BOOST_CHECK_EQUAL(s.FindAndDelete(d), 1);
     BOOST_CHECK(s == expect);
+}
+
+BOOST_AUTO_TEST_CASE(script_HasValidOps)
+{
+    // Exercise the HasValidOps functionality
+    CScript script;
+    script = ScriptFromHex("76a9141234567890abcdefa1a2a3a4a5a6a7a8a9a0aaab88ac"); // Normal script
+    BOOST_CHECK(script.HasValidOps());
+    script = ScriptFromHex("76a914ff34567890abcdefa1a2a3a4a5a6a7a8a9a0aaab88ac");
+    BOOST_CHECK(script.HasValidOps());
+    script = ScriptFromHex("ff88ac"); // Script with OP_INVALIDOPCODE explicit
+    BOOST_CHECK(!script.HasValidOps());
+    script = ScriptFromHex("88acc0"); // Script with undefined opcode
+    BOOST_CHECK(!script.HasValidOps());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

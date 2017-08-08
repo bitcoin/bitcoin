@@ -163,6 +163,8 @@ typedef int (*secp256k1_nonce_function)(
  *
  *  Returns: a newly created context object.
  *  In:      flags: which parts of the context to initialize.
+ *
+ *  See also secp256k1_context_randomize.
  */
 SECP256K1_API secp256k1_context* secp256k1_context_create(
     unsigned int flags
@@ -485,6 +487,28 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_create(
     const unsigned char *seckey
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
+/** Negates a private key in place.
+ *
+ *  Returns: 1 always
+ *  Args:   ctx:        pointer to a context object
+ *  In/Out: pubkey:     pointer to the public key to be negated (cannot be NULL)
+ */
+SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_privkey_negate(
+    const secp256k1_context* ctx,
+    unsigned char *seckey
+) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2);
+
+/** Negates a public key in place.
+ *
+ *  Returns: 1 always
+ *  Args:   ctx:        pointer to a context object
+ *  In/Out: pubkey:     pointer to the public key to be negated (cannot be NULL)
+ */
+SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_negate(
+    const secp256k1_context* ctx,
+    secp256k1_pubkey *pubkey
+) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2);
+
 /** Tweak a private key by adding tweak to it.
  * Returns: 0 if the tweak was out of range (chance of around 1 in 2^128 for
  *          uniformly random 32-byte arrays, or if the resulting private key
@@ -543,11 +567,24 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_tweak_mul(
     const unsigned char *tweak
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
-/** Updates the context randomization.
+/** Updates the context randomization to protect against side-channel leakage.
  *  Returns: 1: randomization successfully updated
  *           0: error
  *  Args:    ctx:       pointer to a context object (cannot be NULL)
  *  In:      seed32:    pointer to a 32-byte random seed (NULL resets to initial state)
+ *
+ * While secp256k1 code is written to be constant-time no matter what secret
+ * values are, it's possible that a future compiler may output code which isn't,
+ * and also that the CPU may not emit the same radio frequencies or draw the same
+ * amount power for all values.
+ *
+ * This function provides a seed which is combined into the blinding value: that
+ * blinding value is added before each multiplication (and removed afterwards) so
+ * that it does not affect function results, but shields against attacks which
+ * rely on any input-dependent behaviour.
+ *
+ * You should call this after secp256k1_context_create or
+ * secp256k1_context_clone, and may call this repeatedly afterwards.
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_context_randomize(
     secp256k1_context* ctx,

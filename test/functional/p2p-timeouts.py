@@ -28,32 +28,15 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
 class TestNode(NodeConnCB):
-    def __init__(self):
-        super().__init__()
-        self.connected = False
-        self.received_version = False
-
-    def on_open(self, conn):
-        self.connected = True
-
-    def on_close(self, conn):
-        self.connected = False
-
     def on_version(self, conn, message):
         # Don't send a verack in response
-        self.received_version = True
+        pass
 
 class TimeoutsTest(BitcoinTestFramework):
     def __init__(self):
         super().__init__()
         self.setup_clean_chain = True
         self.num_nodes = 1
-
-    def setup_network(self):
-        self.nodes = []
-
-        # Start up node0 to be a version 1, pre-segwit node.
-        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir)
 
     def run_test(self):
         # Setup the p2p connections and start up the network thread.
@@ -83,7 +66,7 @@ class TimeoutsTest(BitcoinTestFramework):
 
         sleep(30)
 
-        assert(self.no_verack_node.received_version)
+        assert "version" in self.no_verack_node.last_message
 
         assert(self.no_verack_node.connected)
         assert(self.no_version_node.connected)

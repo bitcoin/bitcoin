@@ -7,12 +7,14 @@
 
 //
 // NOTE:
-// boost::thread / boost::function / boost::chrono should be ported to
-// std::thread / std::function / std::chrono when we support C++11.
+// boost::thread / boost::chrono should be ported to std::thread / std::chrono
+// when we support C++11.
 //
 #include <boost/chrono/chrono.hpp>
 #include <boost/thread.hpp>
 #include <map>
+
+#include "sync.h"
 
 //
 // Simple class for background tasks that should be run
@@ -41,7 +43,7 @@ public:
     typedef std::function<void(void)> Function;
 
     // Call func at/after time t
-    void schedule(Function f, boost::chrono::system_clock::time_point t);
+    void schedule(Function f, boost::chrono::system_clock::time_point t=boost::chrono::system_clock::now());
 
     // Convenience method: call f once deltaSeconds from now
     void scheduleFromNow(Function f, int64_t deltaMilliSeconds);
@@ -69,6 +71,9 @@ public:
     size_t getQueueInfo(boost::chrono::system_clock::time_point &first,
                         boost::chrono::system_clock::time_point &last) const;
 
+    // Returns true if there are threads actively running in serviceQueue()
+    bool AreThreadsServicingQueue() const;
+
 private:
     std::multimap<boost::chrono::system_clock::time_point, Function> taskQueue;
     boost::condition_variable newTaskScheduled;
@@ -77,6 +82,32 @@ private:
     bool stopRequested;
     bool stopWhenEmpty;
     bool shouldStop() { return stopRequested || (stopWhenEmpty && taskQueue.empty()); }
+};
+
+/**
+ * Class used by CScheduler clients which may schedule multiple jobs
+ * which are required to be run serially. Does not require such jobs
+ * to be executed on the same thread, but no two jobs will be executed
+ * at the same time.
+ */
+class SingleThreadedSchedulerClient {
+private:
+    CScheduler *m_pscheduler;
+
+    CCriticalSection m_cs_callbacks_pending;
+    std::list<std::function<void (void)>> m_callbacks_pending;
+    bool m_are_callbacks_running = false;
+
+    void MaybeScheduleProcessQueue();
+    void ProcessQueue();
+
+public:
+    SingleThreadedSchedulerClient(CScheduler *pschedulerIn) : m_pscheduler(pschedulerIn) {}
+    void AddToProcessQueue(std::function<void (void)> func);
+
+    // Processes all remaining queue members on the calling thread, blocking until queue is empty
+    // Must be called after the CScheduler has no remaining processing threads!
+    void EmptyQueue();
 };
 
 #endif

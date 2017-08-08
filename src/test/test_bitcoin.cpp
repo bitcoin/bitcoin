@@ -7,6 +7,7 @@
 #include "chainparams.h"
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
+#include "crypto/sha256.h"
 #include "fs.h"
 #include "key.h"
 #include "validation.h"
@@ -25,19 +26,21 @@
 
 #include <memory>
 
-#include <boost/thread.hpp>
-
-FastRandomContext insecure_rand_ctx(true);
+uint256 insecure_rand_seed = GetRandHash();
+FastRandomContext insecure_rand_ctx(insecure_rand_seed);
 
 extern bool fPrintToConsole;
 extern void noui_connect();
 
 BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
 {
+        SHA256AutoDetect();
+        RandomInit();
         ECC_Start();
         SetupEnvironment();
         SetupNetworking();
         InitSignatureCache();
+        InitScriptExecutionCache();
         fPrintToDebugLog = false; // don't want to write to debug.log file
         fCheckBlockIndex = true;
         SelectParams(chainName);
@@ -58,15 +61,21 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
 
         RegisterAllCoreRPCCommands(tableRPC);
         ClearDatadirCache();
-        pathTemp = GetTempPath() / strprintf("test_bitcoin_%lu_%i", (unsigned long)GetTime(), (int)(GetRand(100000)));
+        pathTemp = GetTempPath() / strprintf("test_bitcoin_%lu_%i", (unsigned long)GetTime(), (int)(InsecureRandRange(100000)));
         fs::create_directories(pathTemp);
         ForceSetArg("-datadir", pathTemp.string());
+
+        // Note that because we don't bother running a scheduler thread here,
+        // callbacks via CValidationInterface are unreliable, but that's OK,
+        // our unit tests aren't testing multiple parts of the code at once.
+        GetMainSignals().RegisterBackgroundSignalScheduler(scheduler);
+
         mempool.setSanityCheck(1.0);
         pblocktree = new CBlockTreeDB(1 << 20, true);
         pcoinsdbview = new CCoinsViewDB(1 << 23, true);
         pcoinsTip = new CCoinsViewCache(pcoinsdbview);
-        if (!InitBlockIndex(chainparams)) {
-            throw std::runtime_error("InitBlockIndex failed.");
+        if (!LoadGenesisBlock(chainparams)) {
+            throw std::runtime_error("LoadGenesisBlock failed.");
         }
         {
             CValidationState state;
@@ -87,6 +96,8 @@ TestingSetup::~TestingSetup()
         UnregisterNodeSignals(GetNodeSignals());
         threadGroup.interrupt_all();
         threadGroup.join_all();
+        GetMainSignals().FlushBackgroundCallbacks();
+        GetMainSignals().UnregisterBackgroundSignalScheduler();
         UnloadBlockIndex();
         delete pcoinsTip;
         delete pcoinsdbview;
@@ -120,7 +131,7 @@ TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransaction>&
 
     // Replace mempool-selected txns with just coinbase plus passed-in txns:
     block.vtx.resize(1);
-    BOOST_FOREACH(const CMutableTransaction& tx, txns)
+    for (const CMutableTransaction& tx : txns)
         block.vtx.push_back(MakeTransactionRef(tx));
     // IncrementExtraNonce creates a valid coinbase and merkleRoot
     unsigned int extraNonce = 0;

@@ -37,6 +37,14 @@
         <source>&amp;Delete</source>
         <translation>&amp;წაშლა</translation>
     </message>
+    <message>
+        <source>Sending addresses</source>
+        <translation>გამმგზავნი მისამართ</translation>
+    </message>
+    <message>
+        <source>Receiving addresses</source>
+        <translation>მიმღები მისამართი</translation>
+    </message>
     </context>
 <context>
     <name>AddressTableModel</name>

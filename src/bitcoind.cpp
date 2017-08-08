@@ -20,7 +20,6 @@
 #include "httprpc.h"
 #include "utilstrencodings.h"
 
-#include <boost/algorithm/string/predicate.hpp>
 #include <boost/thread.hpp>
 
 #include <stdio.h>
@@ -117,17 +116,14 @@ bool AppInit(int argc, char* argv[])
             return false;
         }
 
-        // Command-line RPC
-        bool fCommandLine = false;
-        for (int i = 1; i < argc; i++)
-            if (!IsSwitchChar(argv[i][0]) && !boost::algorithm::istarts_with(argv[i], "bitcoin:"))
-                fCommandLine = true;
-
-        if (fCommandLine)
-        {
-            fprintf(stderr, "Error: There is no RPC client functionality in bitcoind anymore. Use the bitcoin-cli utility instead.\n");
-            exit(EXIT_FAILURE);
+        // Error out when loose non-argument tokens are encountered on command line
+        for (int i = 1; i < argc; i++) {
+            if (!IsSwitchChar(argv[i][0])) {
+                fprintf(stderr, "Error: Command line contains unexpected token '%s', see bitcoind -h for a list of options.\n", argv[i]);
+                exit(EXIT_FAILURE);
+            }
         }
+
         // -server defaults to true for bitcoind but not for the GUI so do this here
         SoftSetBoolArg("-server", true);
         // Set this early so that parameter interactions go to console
@@ -163,7 +159,12 @@ bool AppInit(int argc, char* argv[])
             return false;
 #endif // HAVE_DECL_DAEMON
         }
-
+        // Lock data directory after daemonization
+        if (!AppInitLockDataDirectory())
+        {
+            // If locking the data directory failed, exit immediately
+            exit(EXIT_FAILURE);
+        }
         fRet = AppInitMain(threadGroup, scheduler);
     }
     catch (const std::exception& e) {
@@ -175,9 +176,7 @@ bool AppInit(int argc, char* argv[])
     if (!fRet)
     {
         Interrupt(threadGroup);
-        // threadGroup.join_all(); was left out intentionally here, because we didn't re-test all of
-        // the startup-failure cases to make sure they don't result in a hang due to some
-        // thread-blocking-waiting-for-another-thread-during-startup case
+        threadGroup.join_all();
     } else {
         WaitForShutdown(&threadGroup);
     }

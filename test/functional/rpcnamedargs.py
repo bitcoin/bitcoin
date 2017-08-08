@@ -8,7 +8,6 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_jsonrpc,
-    start_nodes,
 )
 
 
@@ -21,11 +20,6 @@ class NamedArgumentTest(BitcoinTestFramework):
         super().__init__()
         self.setup_clean_chain = False
         self.num_nodes = 1
-
-    def setup_network(self, split=False):
-        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir)
-        self.is_network_split = False
-        self.sync_all()
 
     def run_test(self):
         node = self.nodes[0]

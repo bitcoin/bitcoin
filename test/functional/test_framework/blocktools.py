@@ -25,6 +25,13 @@ def create_block(hashprev, coinbase, nTime=None):
 # From BIP141
 WITNESS_COMMITMENT_HEADER = b"\xaa\x21\xa9\xed"
 
+
+def get_witness_script(witness_root, witness_nonce):
+    witness_commitment = uint256_from_str(hash256(ser_uint256(witness_root)+ser_uint256(witness_nonce)))
+    output_data = WITNESS_COMMITMENT_HEADER + ser_uint256(witness_commitment)
+    return CScript([OP_RETURN, output_data])
+
+
 # According to BIP141, blocks with witness rules active must commit to the
 # hash of all in-block transactions including witness.
 def add_witness_commitment(block, nonce=0):
@@ -32,14 +39,12 @@ def add_witness_commitment(block, nonce=0):
     # transactions, with witnesses.
     witness_nonce = nonce
     witness_root = block.calc_witness_merkle_root()
-    witness_commitment = uint256_from_str(hash256(ser_uint256(witness_root)+ser_uint256(witness_nonce)))
     # witness_nonce should go to coinbase witness.
     block.vtx[0].wit.vtxinwit = [CTxInWitness()]
     block.vtx[0].wit.vtxinwit[0].scriptWitness.stack = [ser_uint256(witness_nonce)]
 
     # witness commitment is the last OP_RETURN output in coinbase
-    output_data = WITNESS_COMMITMENT_HEADER + ser_uint256(witness_commitment)
-    block.vtx[0].vout.append(CTxOut(0, CScript([OP_RETURN, output_data])))
+    block.vtx[0].vout.append(CTxOut(0, get_witness_script(witness_root, witness_nonce)))
     block.vtx[0].rehash()
     block.hashMerkleRoot = block.calc_merkle_root()
     block.rehash()

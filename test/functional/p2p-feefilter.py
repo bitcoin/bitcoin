@@ -22,8 +22,6 @@ def allInvsMatch(invsExpected, testnode):
         time.sleep(1)
     return False
 
-# TestNode: bare-bones "peer".  Used to track which invs are received from a node
-# and to send the node feefilter messages.
 class TestNode(NodeConnCB):
     def __init__(self):
         super().__init__()
@@ -38,24 +36,12 @@ class TestNode(NodeConnCB):
         with mininode_lock:
             self.txinvs = []
 
-    def send_filter(self, feerate):
-        self.send_message(msg_feefilter(feerate))
-        self.sync_with_ping()
-
 class FeeFilterTest(BitcoinTestFramework):
 
     def __init__(self):
         super().__init__()
         self.num_nodes = 2
         self.setup_clean_chain = False
-
-    def setup_network(self):
-        # Node1 will be used to generate txs which should be relayed from Node0
-        # to our test node
-        self.nodes = []
-        self.nodes.append(start_node(0, self.options.tmpdir))
-        self.nodes.append(start_node(1, self.options.tmpdir))
-        connect_nodes(self.nodes[0], 1)
 
     def run_test(self):
         node1 = self.nodes[1]
@@ -78,7 +64,7 @@ class FeeFilterTest(BitcoinTestFramework):
         test_node.clear_invs()
 
         # Set a filter of 15 sat/byte
-        test_node.send_filter(15000)
+        test_node.send_and_ping(msg_feefilter(15000))
 
         # Test that txs are still being received (paying 20 sat/byte)
         txids = [node1.sendtoaddress(node1.getnewaddress(), 1) for x in range(3)]
@@ -103,7 +89,7 @@ class FeeFilterTest(BitcoinTestFramework):
         test_node.clear_invs()
 
         # Remove fee filter and check that txs are received again
-        test_node.send_filter(0)
+        test_node.send_and_ping(msg_feefilter(0))
         txids = [node1.sendtoaddress(node1.getnewaddress(), 1) for x in range(3)]
         assert(allInvsMatch(txids, test_node))
         test_node.clear_invs()

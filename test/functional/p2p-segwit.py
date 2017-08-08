@@ -8,7 +8,7 @@ from test_framework.mininode import *
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 from test_framework.script import *
-from test_framework.blocktools import create_block, create_coinbase, add_witness_commitment, WITNESS_COMMITMENT_HEADER
+from test_framework.blocktools import create_block, create_coinbase, add_witness_commitment, get_witness_script, WITNESS_COMMITMENT_HEADER
 from test_framework.key import CECKey, CPubKey
 import time
 import random
@@ -35,79 +35,22 @@ def get_virtual_size(witness_block):
 class TestNode(NodeConnCB):
     def __init__(self):
         super().__init__()
-        self.connection = None
-        self.ping_counter = 1
-        self.last_pong = msg_pong(0)
-        self.sleep_time = 0.05
         self.getdataset = set()
-        self.last_reject = None
-
-    def add_connection(self, conn):
-        self.connection = conn
-
-    # Wrapper for the NodeConn's send_message function
-    def send_message(self, message):
-        self.connection.send_message(message)
-
-    def on_inv(self, conn, message):
-        self.last_inv = message
-
-    def on_block(self, conn, message):
-        self.last_block = message.block
-        self.last_block.calc_sha256()
 
     def on_getdata(self, conn, message):
         for inv in message.inv:
             self.getdataset.add(inv.hash)
-        self.last_getdata = message
-
-    def on_getheaders(self, conn, message):
-        self.last_getheaders = message
-
-    def on_pong(self, conn, message):
-        self.last_pong = message
-
-    def on_reject(self, conn, message):
-        self.last_reject = message
-
-    # Syncing helpers
-    def sync(self, test_function, timeout=60):
-        while timeout > 0:
-            with mininode_lock:
-                if test_function():
-                    return
-            time.sleep(self.sleep_time)
-            timeout -= self.sleep_time
-        raise AssertionError("Sync failed to complete")
-        
-    def wait_for_block(self, blockhash, timeout=60):
-        test_function = lambda: self.last_block != None and self.last_block.sha256 == blockhash
-        self.sync(test_function, timeout)
-        return
-
-    def wait_for_getdata(self, timeout=60):
-        test_function = lambda: self.last_getdata != None
-        self.sync(test_function, timeout)
-
-    def wait_for_getheaders(self, timeout=60):
-        test_function = lambda: self.last_getheaders != None
-        self.sync(test_function, timeout)
-
-    def wait_for_inv(self, expected_inv, timeout=60):
-        test_function = lambda: self.last_inv != expected_inv
-        self.sync(test_function, timeout)
 
     def announce_tx_and_wait_for_getdata(self, tx, timeout=60):
         with mininode_lock:
-            self.last_getdata = None
+            self.last_message.pop("getdata", None)
         self.send_message(msg_inv(inv=[CInv(1, tx.sha256)]))
         self.wait_for_getdata(timeout)
-        return
 
     def announce_block_and_wait_for_getdata(self, block, use_header, timeout=60):
         with mininode_lock:
-            self.last_getdata = None
-            self.last_getheaders = None
+            self.last_message.pop("getdata", None)
+            self.last_message.pop("getheaders", None)
         msg = msg_headers()
         msg.headers = [ CBlockHeader(block) ]
         if use_header:
@@ -117,36 +60,25 @@ class TestNode(NodeConnCB):
             self.wait_for_getheaders()
             self.send_message(msg)
         self.wait_for_getdata()
-        return
-
-    def announce_block(self, block, use_header):
-        with mininode_lock:
-            self.last_getdata = None
-        if use_header:
-            msg = msg_headers()
-            msg.headers = [ CBlockHeader(block) ]
-            self.send_message(msg)
-        else:
-            self.send_message(msg_inv(inv=[CInv(2, block.sha256)]))
 
     def request_block(self, blockhash, inv_type, timeout=60):
         with mininode_lock:
-            self.last_block = None
+            self.last_message.pop("block", None)
         self.send_message(msg_getdata(inv=[CInv(inv_type, blockhash)]))
         self.wait_for_block(blockhash, timeout)
-        return self.last_block
+        return self.last_message["block"].block
 
     def test_transaction_acceptance(self, tx, with_witness, accepted, reason=None):
         tx_message = msg_tx(tx)
         if with_witness:
             tx_message = msg_witness_tx(tx)
         self.send_message(tx_message)
-        self.sync_with_ping(60)
+        self.sync_with_ping()
         assert_equal(tx.hash in self.connection.rpc.getrawmempool(), accepted)
         if (reason != None and not accepted):
             # Check the rejection reason as well.
             with mininode_lock:
-                assert_equal(self.last_reject.reason, reason)
+                assert_equal(self.last_message["reject"].reason, reason)
 
     # Test whether a witness block had the correct effect on the tip
     def test_witness_block(self, block, accepted, with_witness=True):
@@ -154,9 +86,8 @@ class TestNode(NodeConnCB):
             self.send_message(msg_witness_block(block))
         else:
             self.send_message(msg_block(block))
-        self.sync_with_ping(60)
+        self.sync_with_ping()
         assert_equal(self.connection.rpc.getbestblockhash() == block.hash, accepted)
-
 
 # Used to keep track of anyone-can-spend outputs that we can use in the tests
 class UTXO(object):
@@ -183,17 +114,13 @@ class SegWitTest(BitcoinTestFramework):
         super().__init__()
         self.setup_clean_chain = True
         self.num_nodes = 3
+        self.extra_args = [["-whitelist=127.0.0.1"], ["-whitelist=127.0.0.1", "-acceptnonstdtxn=0"], ["-whitelist=127.0.0.1", "-vbparams=segwit:0:0"]]
 
     def setup_network(self):
-        self.nodes = []
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-whitelist=127.0.0.1"]))
-        # Start a node for testing IsStandard rules.
-        self.nodes.append(start_node(1, self.options.tmpdir, ["-whitelist=127.0.0.1", "-acceptnonstdtxn=0"]))
+        self.setup_nodes()
         connect_nodes(self.nodes[0], 1)
-
-        # Disable segwit's bip9 parameter to simulate upgrading after activation.
-        self.nodes.append(start_node(2, self.options.tmpdir, ["-whitelist=127.0.0.1", "-bip9params=segwit:0:0"]))
         connect_nodes(self.nodes[0], 2)
+        self.sync_all()
 
     ''' Helpers '''
     # Build a block on top of node0's tip.
@@ -228,7 +155,7 @@ class SegWitTest(BitcoinTestFramework):
         block = self.build_next_block(nVersion=1)
         block.solve()
         self.test_node.send_message(msg_block(block))
-        self.test_node.sync_with_ping(60) # make sure the block was processed
+        self.test_node.sync_with_ping() # make sure the block was processed
         txid = block.vtx[0].sha256
 
         self.nodes[0].generate(99) # let the block mature
@@ -244,7 +171,7 @@ class SegWitTest(BitcoinTestFramework):
         assert_equal(msg_tx(tx).serialize(), msg_witness_tx(tx).serialize())
 
         self.test_node.send_message(msg_witness_tx(tx))
-        self.test_node.sync_with_ping(60) # make sure the tx was processed
+        self.test_node.sync_with_ping() # make sure the tx was processed
         assert(tx.hash in self.nodes[0].getrawmempool())
         # Save this transaction for later
         self.utxo.append(UTXO(tx.sha256, 0, 49*100000000))
@@ -279,12 +206,12 @@ class SegWitTest(BitcoinTestFramework):
         # TODO: fix synchronization so we can test reject reason
         # Right now, bitcoind delays sending reject messages for blocks
         # until the future, making synchronization here difficult.
-        #assert_equal(self.test_node.last_reject.reason, "unexpected-witness")
+        #assert_equal(self.test_node.last_message["reject"].reason, "unexpected-witness")
 
         # But it should not be permanently marked bad...
         # Resend without witness information.
         self.test_node.send_message(msg_block(block))
-        self.test_node.sync_with_ping(60)
+        self.test_node.sync_with_ping()
         assert_equal(self.nodes[0].getbestblockhash(), block.hash)
 
         sync_blocks(self.nodes)
@@ -893,7 +820,7 @@ class SegWitTest(BitcoinTestFramework):
         # Verify that if a peer doesn't set nServices to include NODE_WITNESS,
         # the getdata is just for the non-witness portion.
         self.old_node.announce_tx_and_wait_for_getdata(tx)
-        assert(self.old_node.last_getdata.inv[0].type == 1)
+        assert(self.old_node.last_message["getdata"].inv[0].type == 1)
 
         # Since we haven't delivered the tx yet, inv'ing the same tx from
         # a witness transaction ought not result in a getdata.
@@ -989,9 +916,9 @@ class SegWitTest(BitcoinTestFramework):
         tx3.wit.vtxinwit[0].scriptWitness.stack = [ witness_program ]
         # Also check that old_node gets a tx announcement, even though this is
         # a witness transaction.
-        self.old_node.wait_for_inv(CInv(1, tx2.sha256)) # wait until tx2 was inv'ed
+        self.old_node.wait_for_inv([CInv(1, tx2.sha256)]) # wait until tx2 was inv'ed
         self.test_node.test_transaction_acceptance(tx3, with_witness=True, accepted=True)
-        self.old_node.wait_for_inv(CInv(1, tx3.sha256))
+        self.old_node.wait_for_inv([CInv(1, tx3.sha256)])
 
         # Test that getrawtransaction returns correct witness information
         # hash, size, vsize
@@ -1028,20 +955,20 @@ class SegWitTest(BitcoinTestFramework):
         block1.solve()
 
         self.test_node.announce_block_and_wait_for_getdata(block1, use_header=False)
-        assert(self.test_node.last_getdata.inv[0].type == blocktype)
+        assert(self.test_node.last_message["getdata"].inv[0].type == blocktype)
         self.test_node.test_witness_block(block1, True)
 
         block2 = self.build_next_block(nVersion=4)
         block2.solve()
 
         self.test_node.announce_block_and_wait_for_getdata(block2, use_header=True)
-        assert(self.test_node.last_getdata.inv[0].type == blocktype)
+        assert(self.test_node.last_message["getdata"].inv[0].type == blocktype)
         self.test_node.test_witness_block(block2, True)
 
         block3 = self.build_next_block(nVersion=(VB_TOP_BITS | (1<<15)))
         block3.solve()
         self.test_node.announce_block_and_wait_for_getdata(block3, use_header=True)
-        assert(self.test_node.last_getdata.inv[0].type == blocktype)
+        assert(self.test_node.last_message["getdata"].inv[0].type == blocktype)
         self.test_node.test_witness_block(block3, True)
 
         # Check that we can getdata for witness blocks or regular blocks,
@@ -1092,13 +1019,18 @@ class SegWitTest(BitcoinTestFramework):
             block4 = self.build_next_block(nVersion=4)
             block4.solve()
             self.old_node.getdataset = set()
+
             # Blocks can be requested via direct-fetch (immediately upon processing the announcement)
             # or via parallel download (with an indeterminate delay from processing the announcement)
             # so to test that a block is NOT requested, we could guess a time period to sleep for,
             # and then check. We can avoid the sleep() by taking advantage of transaction getdata's
             # being processed after block getdata's, and announce a transaction as well,
             # and then check to see if that particular getdata has been received.
-            self.old_node.announce_block(block4, use_header=False)
+            # Since 0.14, inv's will only be responded to with a getheaders, so send a header
+            # to announce this block.
+            msg = msg_headers()
+            msg.headers = [ CBlockHeader(block4) ]
+            self.old_node.send_message(msg)
             self.old_node.announce_tx_and_wait_for_getdata(block4.vtx[0])
             assert(block4.sha256 not in self.old_node.getdataset)
 
@@ -1250,9 +1182,9 @@ class SegWitTest(BitcoinTestFramework):
         # Spending a higher version witness output is not allowed by policy,
         # even with fRequireStandard=false.
         self.test_node.test_transaction_acceptance(tx3, with_witness=True, accepted=False)
-        self.test_node.sync_with_ping(60)
+        self.test_node.sync_with_ping()
         with mininode_lock:
-            assert(b"reserved for soft-fork upgrades" in self.test_node.last_reject.reason)
+            assert(b"reserved for soft-fork upgrades" in self.test_node.last_message["reject"].reason)
 
         # Building a block with the transaction must be valid, however.
         block = self.build_next_block()
@@ -1380,7 +1312,7 @@ class SegWitTest(BitcoinTestFramework):
         for i in range(NUM_TESTS):
             # Ping regularly to keep the connection alive
             if (not i % 100):
-                self.test_node.sync_with_ping(60)
+                self.test_node.sync_with_ping()
             # Choose random number of inputs to use.
             num_inputs = random.randint(1, 10)
             # Create a slight bias for producing more utxos
@@ -1554,7 +1486,7 @@ class SegWitTest(BitcoinTestFramework):
     # nodes would have stored, this requires special handling.
     # To enable this test, pass --oldbinary=<path-to-pre-segwit-bitcoind> to
     # the test.
-    def test_upgrade_after_activation(self, node, node_id):
+    def test_upgrade_after_activation(self, node_id):
         self.log.info("Testing software upgrade after softfork activation")
 
         assert(node_id != 0) # node0 is assumed to be a segwit-active bitcoind
@@ -1563,21 +1495,21 @@ class SegWitTest(BitcoinTestFramework):
         sync_blocks(self.nodes)
 
         # Restart with the new binary
-        stop_node(node, node_id)
-        self.nodes[node_id] = start_node(node_id, self.options.tmpdir)
+        self.stop_node(node_id)
+        self.nodes[node_id] = self.start_node(node_id, self.options.tmpdir)
         connect_nodes(self.nodes[0], node_id)
 
         sync_blocks(self.nodes)
 
         # Make sure that this peer thinks segwit has activated.
-        assert(get_bip9_status(node, 'segwit')['status'] == "active")
+        assert(get_bip9_status(self.nodes[node_id], 'segwit')['status'] == "active")
 
         # Make sure this peers blocks match those of node0.
-        height = node.getblockcount()
+        height = self.nodes[node_id].getblockcount()
         while height >= 0:
-            block_hash = node.getblockhash(height)
+            block_hash = self.nodes[node_id].getblockhash(height)
             assert_equal(block_hash, self.nodes[0].getblockhash(height))
-            assert_equal(self.nodes[0].getblock(block_hash), node.getblock(block_hash))
+            assert_equal(self.nodes[0].getblock(block_hash), self.nodes[node_id].getblock(block_hash))
             height -= 1
 
 
@@ -1721,15 +1653,10 @@ class SegWitTest(BitcoinTestFramework):
                 assert('default_witness_commitment' in gbt_results)
                 witness_commitment = gbt_results['default_witness_commitment']
 
-                # TODO: this duplicates some code from blocktools.py, would be nice
-                # to refactor.
                 # Check that default_witness_commitment is present.
-                block = CBlock()
-                witness_root = block.get_merkle_root([ser_uint256(0), ser_uint256(txid)])
-                check_commitment = uint256_from_str(hash256(ser_uint256(witness_root)+ser_uint256(0)))
-                from test_framework.blocktools import WITNESS_COMMITMENT_HEADER
-                output_data = WITNESS_COMMITMENT_HEADER + ser_uint256(check_commitment)
-                script = CScript([OP_RETURN, output_data])
+                witness_root = CBlock.get_merkle_root([ser_uint256(0),
+                                                       ser_uint256(txid)])
+                script = get_witness_script(witness_root, 0)
                 assert_equal(witness_commitment, bytes_to_hex_str(script))
 
         # undo mocktime
@@ -2017,7 +1944,7 @@ class SegWitTest(BitcoinTestFramework):
         self.test_signature_version_1()
         self.test_non_standard_witness()
         sync_blocks(self.nodes)
-        self.test_upgrade_after_activation(self.nodes[2], 2)
+        self.test_upgrade_after_activation(node_id=2)
         self.test_witness_sigops()
 
 
