@@ -4119,7 +4119,9 @@ bool ContextualCheckBlock(const CBlock &block, CValidationState &state, CBlockIn
 
     // BUIP055 enforce that the fork block is > 1MB
     // (note subsequent blocks can be <= 1MB...)
-    if (pindexPrev && pindexPrev->forkAtNextBlock(miningForkTime.value))
+    // An exception is added -- if the fork block is block 1 then it can be <= 1MB.  This allows test chains to
+    // fork without having to create a large block so long as the fork time is in the past.
+    if (pindexPrev && pindexPrev->forkAtNextBlock(miningForkTime.value) && (pindexPrev->nHeight > 1))
     {
         DbgAssert(block.nBlockSize, );
         if (block.nBlockSize <= BLOCKSTREAM_CORE_MAX_BLOCK_SIZE)

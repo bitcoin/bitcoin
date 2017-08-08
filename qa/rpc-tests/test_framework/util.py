@@ -47,11 +47,10 @@ uBTC = 100
 MOCKTIME = 0
 
 def enable_mocktime():
-    #For backwared compatibility of the python scripts
-    #with previous versions of the cache, set MOCKTIME 
-    #to Jan 1, 2014 + (201 * 10 * 60)
+    # Set the mocktime to be after the Bitcoin Cash fork so
+    # in normal tests blockchains the fork is in the past
     global MOCKTIME
-    MOCKTIME = 1388534400 + (201 * 10 * 60)
+    MOCKTIME = 1501600000 + (201 * 10 * 60)
 
 def disable_mocktime():
     global MOCKTIME
@@ -168,7 +167,9 @@ def sync_mempools(rpc_connections, wait=1,verbose=1):
     Wait until everybody has the same transactions in their memory
     pools
     """
+    count = 0
     while True:
+        count += 1
         pool = set(rpc_connections[0].getrawmempool())
         num_match = 1
         pool_len = [len(pool)]
@@ -177,7 +178,7 @@ def sync_mempools(rpc_connections, wait=1,verbose=1):
             if tmp == pool:
                 num_match = num_match+1
             pool_len.append(len(tmp))
-        if verbose:
+        if verbose and count%30==0:
             logging.info("sync mempool: " + str(pool_len))
         if num_match == len(rpc_connections):
             break
