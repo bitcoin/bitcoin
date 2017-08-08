@@ -2596,7 +2596,7 @@ UniValue resendwallettransactions(const JSONRPCRequest& request)
     LOCK2(cs_main, pwallet->cs_wallet);
 
     if (!pwallet->GetBroadcastTransactions()) {
-        throw JSONRPCError(RPC_INVALID_REQUEST, "Error: Wallet transaction broadcasting is disabled with -walletbroadcast");
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error: Wallet transaction broadcasting is disabled with -walletbroadcast");
     }
 
     std::vector<uint256> txids = pwallet->ResendWalletTransactionsBefore(GetTime(), g_connman.get());
