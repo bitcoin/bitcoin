@@ -216,7 +216,7 @@ BOOST_AUTO_TEST_CASE(multisig_Solver1)
         BOOST_CHECK(ExtractDestination(s, addr));
         BOOST_CHECK(addr == keyaddr[0]);
 #ifdef ENABLE_WALLET
-        CBlockIndex *nullBestBlock;
+        CBlockIndex *nullBestBlock = nullptr;
         BOOST_CHECK(IsMine(keystore, s, nullBestBlock));
         BOOST_CHECK(!IsMine(emptykeystore, s, nullBestBlock));
 #endif
@@ -232,7 +232,7 @@ BOOST_AUTO_TEST_CASE(multisig_Solver1)
         BOOST_CHECK(ExtractDestination(s, addr));
         BOOST_CHECK(addr == keyaddr[0]);
 #ifdef ENABLE_WALLET
-        CBlockIndex *nullBestBlock;
+        CBlockIndex *nullBestBlock = nullptr;
         BOOST_CHECK(IsMine(keystore, s, nullBestBlock));
         BOOST_CHECK(!IsMine(emptykeystore, s, nullBestBlock));
 #endif
@@ -247,7 +247,7 @@ BOOST_AUTO_TEST_CASE(multisig_Solver1)
         CTxDestination addr;
         BOOST_CHECK(!ExtractDestination(s, addr));
 #ifdef ENABLE_WALLET
-        CBlockIndex *nullBestBlock;
+        CBlockIndex *nullBestBlock = nullptr;
         BOOST_CHECK(IsMine(keystore, s, nullBestBlock));
         BOOST_CHECK(!IsMine(emptykeystore, s, nullBestBlock));
         BOOST_CHECK(!IsMine(partialkeystore, s, nullBestBlock));
@@ -267,7 +267,7 @@ BOOST_AUTO_TEST_CASE(multisig_Solver1)
         BOOST_CHECK(addrs[1] == keyaddr[1]);
         BOOST_CHECK(nRequired == 1);
 #ifdef ENABLE_WALLET
-        CBlockIndex *nullBestBlock;
+        CBlockIndex *nullBestBlock = nullptr;
         BOOST_CHECK(IsMine(keystore, s, nullBestBlock));
         BOOST_CHECK(!IsMine(emptykeystore, s, nullBestBlock));
         BOOST_CHECK(!IsMine(partialkeystore, s, nullBestBlock));
@@ -392,7 +392,6 @@ BOOST_AUTO_TEST_CASE(opreturn_send)
     vector<valtype> solutions;
     txnouttype whichType;
     vector<CTxDestination> addresses;
-    txnouttype type = TX_LABELPUBLIC;
 
     string inMsg = "hello world", outMsg = "";
     CScript s = GetScriptLabelPublic(inMsg);
