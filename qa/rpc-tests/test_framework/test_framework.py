@@ -11,6 +11,7 @@ import os
 import sys
 import time       # BU added
 import random     # BU added
+import pdb        # BU added
 import shutil
 import tempfile
 import traceback
@@ -32,6 +33,7 @@ from .authproxy import AuthServiceProxy, JSONRPCException
 
 
 class BitcoinTestFramework(object):
+    drop_to_pdb = os.getenv("DROP_TO_PDB", "")
 
     # These may be over-ridden by subclasses:
     def run_test(self):
@@ -187,16 +189,24 @@ class BitcoinTestFramework(object):
 
         except JSONRPCException as e:
             print("JSONRPC error: "+e.error['message'])
-            traceback.print_tb(sys.exc_info()[2])
+            typ, value, tb = sys.exc_info()
+            traceback.print_tb(tb)
+            if self.drop_to_pdb: pdb.post_mortem(tb)
         except AssertionError as e:
             print("Assertion failed: " + str(e))
-            traceback.print_tb(sys.exc_info()[2])
+            typ, value, tb = sys.exc_info()
+            traceback.print_tb(tb)
+            if self.drop_to_pdb: pdb.post_mortem(tb)
         except KeyError as e:
             print("key not found: "+ str(e))
-            traceback.print_tb(sys.exc_info()[2])
+            typ, value, tb = sys.exc_info()
+            traceback.print_tb(tb)
+            if self.drop_to_pdb: pdb.post_mortem(tb)
         except Exception as e:
             print("Unexpected exception caught during testing: " + repr(e))
-            traceback.print_tb(sys.exc_info()[2])
+            typ, value, tb = sys.exc_info()
+            traceback.print_tb(tb)
+            if self.drop_to_pdb: pdb.post_mortem(tb)
 
         if not self.options.noshutdown:
             print("Stopping nodes")

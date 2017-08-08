@@ -339,14 +339,14 @@ class ValidateblocktemplateTest(BitcoinTestFramework):
 
 
 def Test():
-    t = ValidateblocktemplateTest()
-    bitcoinConf = {
+    try:
+        t = ValidateblocktemplateTest()
+        bitcoinConf = {
         "debug": ["net", "blk", "thin", "mempool", "req", "bench", "evict"],  # "lck"
         "blockprioritysize": 2000000  # we don't want any transactions rejected due to insufficient fees...
-    }
+        }
 #    t.main(["--tmpdir=/ramdisk/test", "--nocleanup", "--noshutdown"], bitcoinConf, None)
-    try:
-        t.main(["--tmpdir=/ramdisk/test"], bitcoinConf, None)
+        t.main(["--tmpdir=/ramdisk/test","--nocleanup", "--noshutdown"], bitcoinConf, None)
     except Exception as e:
         print(str(e))
         pdb.pm()
