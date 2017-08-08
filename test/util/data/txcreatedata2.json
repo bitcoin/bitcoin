@@ -16,7 +16,7 @@
     ],
     "vout": [
         {
-            "value": 0.18,
+            "value": 0.18000000,
             "valueSat": 18000000,
             "n": 0,
             "scriptPubKey": {
@@ -30,7 +30,7 @@
             }
         }, 
         {
-            "value": 0.00,
+            "value": 0.00000000,
             "valueSat": 0,
             "n": 1,
             "scriptPubKey": {

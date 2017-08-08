@@ -16,7 +16,7 @@
     ],
     "vout": [
         {
-            "value": 0.001,
+            "value": 0.00100000,
             "valueSat": 100000,
             "n": 0,
             "scriptPubKey": {

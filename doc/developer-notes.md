@@ -540,10 +540,10 @@ A few guidelines for introducing and reviewing new RPC interfaces:
     which is error prone, and it is easy to get things such as escaping wrong.
     JSON already supports nested data structures, no need to re-invent the wheel.
 
-  - *Exception*: AmountToValue can parse amounts as string. This was introduced because many JSON
+  - *Exception*: AmountFromValue can parse amounts as string. This was introduced because many JSON
     parsers and formatters hard-code handling decimal numbers as floating point
     values, resulting in potential loss of precision. This is unacceptable for
-    monetary values. **Always** use `AmountToValue` and `ValueToAmount` when
+    monetary values. **Always** use `AmountFromValue` and `ValueFromAmount` when
     inputting or outputting monetary values. The only exceptions to this are
     `prioritisetransaction` and `getblocktemplate` because their interface
     is specified as-is in BIP22.
