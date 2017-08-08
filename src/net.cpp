@@ -543,7 +543,7 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes)
 
         CNetMessage &msg = vRecvMsg.back();
 
-        // absorb network data
+        // Absorb network data.
         int handled;
         if (!msg.in_data)
             handled = msg.readHeader(pch, nBytes);
@@ -2779,6 +2779,8 @@ CNode::CNode(SOCKET hSocketIn, const CAddress &addrIn, const std::string &addrNa
     nPingUsecStart = 0;
     nPingUsecTime = 0;
     fPingQueued = false;
+    // set when etablishing connection
+    fUsesCashMagic = false;
     nMinPingUsecTime = std::numeric_limits<int64_t>::max();
     thinBlockWaitingForTxns = -1; // BUIP010 Xtreme Thinblocks
     addrFromPort = 0; // BU
@@ -2903,9 +2905,7 @@ void CNode::BeginMessage(const char *pszCommand) EXCLUSIVE_LOCK_FUNCTION(cs_vSen
 void CNode::AbortMessage() UNLOCK_FUNCTION(cs_vSend)
 {
     ssSend.clear();
-
     LEAVE_CRITICAL_SECTION(cs_vSend);
-
     LogPrint("net", "(aborted)\n");
 }
 

@@ -12,6 +12,7 @@ from test_framework.util import assert_equal
 from test_framework.util import *
 from test_framework.script import *
 from test_framework.blocktools import *
+from test_framework.bunode import *
 import test_framework.script as script
 import traceback
 import pdb
@@ -169,6 +170,15 @@ class BUIP055Test (BitcoinTestFramework):
             assert(t['mining.forkTime'] == now)
 
         self.nodes[3].set("mining.forkTime=0")
+        nodeInfo = self.nodes[3].getnetworkinfo()
+
+        # if this is a bitcoin cash build, we need to do the cash defaults on our old chain node
+        if int(nodeInfo["localservices"],16)&NODE_BITCOIN_CASH:
+            self.nodes[3].set("net.excessiveBlock=1000000")  # keep it on the 1MB chain
+            self.nodes[3].set("net.onlyRelayForkSig=False")
+            self.nodes[2].set("net.excessiveBlock=1000000")  # keep it on the 1MB chain
+            self.nodes[2].set("net.onlyRelayForkSig=False")
+
         return now
 
     def createUtxos(self, node, addrs, amt):
@@ -225,8 +235,37 @@ class BUIP055Test (BitcoinTestFramework):
         decimal.getcontext().prec = decContext
         return (count, size)
 
+    def testNetMagic(self):
+        info = self.nodes[0].getnetworkinfo()
+
+        # Both BUcash and BU should connect to a normal BU node
+        bunode = BasicBUNode()
+        bunode.connect(0,'127.0.0.1', p2p_port(1), self.nodes[1])
+        NetworkThread().start()  # Start up network handling in another thread
+        bunode.cnxns[0].wait_for_verack()
+
+        buCashNode = BasicBUCashNode()
+        buCashNode.connect(0,'127.0.0.1', p2p_port(0), self.nodes[0])
+        if int(info["localservices"],16)&NODE_BITCOIN_CASH:
+            try: # Accept BU cash nodes if running BTC node
+                buCashNode.cnxns[0].wait_for_buverack()
+            except DisconnectedError:
+                assert(not "should not have disconnected a bitcoin cash node")
+        else:
+            try: # do not accept BU cash nodes if running BTC node
+                buCashNode.cnxns[0].wait_for_buverack()
+                assert(not "should have disconnected a bitcoin cash node")
+            except DisconnectedError:
+                logging.info("properly disconnected bucash node")
+
     def run_test(self):
+        # this test is mean to test fork scenarios starting from mainchain nodes.
+        nodeInfo = self.nodes[0].getnetworkinfo()
+        if int(nodeInfo["localservices"],16)&NODE_BITCOIN_CASH:
+            return
+
         # Creating UTXOs needed for building tx for large blocks
+        self.testNetMagic()
         NUM_ADDRS = 50
         logging.info("Creating addresses...")
         self.nodes[0].keypoolrefill(NUM_ADDRS)
@@ -345,7 +384,7 @@ class BUIP055Test (BitcoinTestFramework):
         wallet = self.nodes[1].listunspent()
         utxo = wallet.pop()
         txn = createrawtransaction([utxo], {addrs1[0]:utxo["amount"]}, wastefulOutput)
-        signedtxn = self.nodes[1].signrawtransaction(txn,None,None, "ALL")
+        signedtxn = self.nodes[1].signrawtransaction(txn,None,None, "ALL|NOFORKID")
         signedtxn2 = self.nodes[1].signrawtransaction(txn,None,None,"ALL|FORKID")
         assert(signedtxn["hex"] != signedtxn2["hex"])  # they should use a different sighash method
         try:
@@ -432,7 +471,9 @@ class BUIP055Test (BitcoinTestFramework):
         sync_blocks(self.nodes[0:2])
 
         # generate blocks on the original side
-        self.nodes[2].generate(2)
+        sync_blocks(self.nodes[2:])
+        hashes = self.nodes[2].generate(2)
+        print(hashes)
         sync_blocks(self.nodes[2:])
         counts = [x.getblockcount() for x in self.nodes]
         assert(counts == [forkHeight + 6, forkHeight + 6, base[3] + 15 + 3, base[3] + 15 + 3])
@@ -578,17 +619,12 @@ sys.excepthook = info
 
 def Test():
     t = BUIP055Test(True)
+    t.drop_to_pdb = True
     bitcoinConf = {
         "debug": ["net", "blk", "thin", "mempool", "req", "bench", "evict"],  # "lck"
         "blockprioritysize": 2000000  # we don't want any transactions rejected due to insufficient fees...
     }
-    try:
-        t.main(["--tmpdir=/ramdisk/test","--nocleanup","--noshutdown"], bitcoinConf, None)  # , "--tracerpc"])
-    except:
-        typ, value, tb = sys.exc_info()
-        if typ == SystemExit: raise
-        traceback.print_exc()
-        pdb.post_mortem(tb)
+    t.main(["--tmpdir=/ramdisk/test","--nocleanup","--noshutdown"], bitcoinConf, None)  # , "--tracerpc"])
 
 
 if __name__ == '__main__':
