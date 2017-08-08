@@ -1079,13 +1079,6 @@ static UniValue BIP9SoftForkDesc(const Consensus::Params& consensusParams, Conse
 {
     UniValue rv(UniValue::VOBJ);
     const ThresholdState thresholdState = VersionBitsTipState(consensusParams, id);
-    switch (thresholdState) {
-    case THRESHOLD_DEFINED: rv.push_back(Pair("status", "defined")); break;
-    case THRESHOLD_STARTED: rv.push_back(Pair("status", "started")); break;
-    case THRESHOLD_LOCKED_IN: rv.push_back(Pair("status", "locked_in")); break;
-    case THRESHOLD_ACTIVE: rv.push_back(Pair("status", "active")); break;
-    case THRESHOLD_FAILED: rv.push_back(Pair("status", "failed")); break;
-    }
     if (THRESHOLD_STARTED == thresholdState)
     {
         rv.push_back(Pair("bit", consensusParams.vDeployments[id].bit));
@@ -1093,16 +1086,25 @@ static UniValue BIP9SoftForkDesc(const Consensus::Params& consensusParams, Conse
     rv.push_back(Pair("startTime", consensusParams.vDeployments[id].nStartTime));
     rv.push_back(Pair("timeout", consensusParams.vDeployments[id].nTimeout));
     rv.push_back(Pair("since", VersionBitsTipStateSinceHeight(consensusParams, id)));
-    if (THRESHOLD_STARTED == thresholdState)
+    BIP9Stats statsStruct = VersionBitsTipStatistics(consensusParams, id);
+    bool isLockedIn = (statsStruct.count >= statsStruct.threshold) || (THRESHOLD_LOCKED_IN == thresholdState || THRESHOLD_ACTIVE == thresholdState);
+    if (THRESHOLD_STARTED == thresholdState || THRESHOLD_LOCKED_IN == thresholdState)
     {
         UniValue statsUV(UniValue::VOBJ);
-        BIP9Stats statsStruct = VersionBitsTipStatistics(consensusParams, id);
         statsUV.push_back(Pair("period", statsStruct.period));
         statsUV.push_back(Pair("threshold", statsStruct.threshold));
         statsUV.push_back(Pair("elapsed", statsStruct.elapsed));
         statsUV.push_back(Pair("count", statsStruct.count));
         statsUV.push_back(Pair("possible", statsStruct.possible));
+	statsUV.push_back(Pair("locked_in", isLockedIn));
         rv.push_back(Pair("statistics", statsUV));
+    }
+    switch (thresholdState) {
+    case THRESHOLD_DEFINED: rv.push_back(Pair("status", "defined")); rv.push_back(Pair("statusNext", "started")); break;
+    case THRESHOLD_STARTED: rv.push_back(Pair("status", "started")); rv.push_back(Pair("statusNext", (isLockedIn ? "locked_in" : (statsStruct.possible==true?"possible":"started")))); break;
+    case THRESHOLD_LOCKED_IN: rv.push_back(Pair("status", "locked_in")); rv.push_back(Pair("statusNext", "active")); break;
+    case THRESHOLD_ACTIVE: rv.push_back(Pair("status", "active")); rv.push_back(Pair("statusNext", "active")); break;
+    case THRESHOLD_FAILED: rv.push_back(Pair("status", "failed")); rv.push_back(Pair("statusNext", "failed")); break;
     }
     return rv;
 }
@@ -1145,7 +1147,8 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
             "  ],\n"
             "  \"bip9_softforks\": {          (object) status of BIP9 softforks in progress\n"
             "     \"xxxx\" : {                (string) name of the softfork\n"
-            "        \"status\": \"xxxx\",    (string) one of \"defined\", \"started\", \"locked_in\", \"active\", \"failed\"\n"
+            "        \"status\": \"xxx\",     (string) one of \"defined\", \"started\", \"locked_in\", \"active\", \"failed\"\n"
+            "        \"statusNext\": \"xxx\", (string) one of \"defined\", \"started\", \"possible\", \"locked_in\", \"active\", \"failed\"\n"
             "        \"bit\": xx,             (numeric) the bit (0-28) in the block version field used to signal this softfork (only for \"started\" status)\n"
             "        \"startTime\": xx,       (numeric) the minimum median time past of a block at which the bit gains its meaning\n"
             "        \"timeout\": xx,         (numeric) the median time past of a block at which the deployment is considered failed if not yet locked in\n"
