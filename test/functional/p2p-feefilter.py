@@ -4,9 +4,16 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test processing of feefilter messages."""
 
-from test_framework.mininode import *
+from test_framework.mininode import (
+    mininode_lock,
+    msg_feefilter,
+    NetworkThread,
+    NodeConn,
+    NodeConnCB,
+)
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import p2p_port, sync_blocks, sync_mempools
+from decimal import Decimal
 import time
 
 

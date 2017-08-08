@@ -4,7 +4,12 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the importmulti RPC."""
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import (
+    assert_equal,
+    assert_greater_than,
+    assert_raises_message,
+)
+from test_framework.authproxy import JSONRPCException
 
 class ImportMultiTest (BitcoinTestFramework):
     def __init__(self):

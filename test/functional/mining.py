@@ -13,7 +13,13 @@ import copy
 from test_framework.blocktools import create_coinbase
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.mininode import CBlock
-from test_framework.util import *
+from test_framework.util import (assert_equal,
+                                 assert_raises_jsonrpc,
+                                 )
+
+from hashlib import sha256
+from struct import pack
+
 
 def b2x(b):
     return b2a_hex(b).decode('ascii')

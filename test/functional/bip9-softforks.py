@@ -21,7 +21,13 @@ import time
 import itertools
 
 from test_framework.test_framework import ComparisonTestFramework
-from test_framework.util import *
+from test_framework.util import (
+    assert_equal,
+    bytes_to_hex_str,
+    hex_str_to_bytes,
+    shutil,
+    stop_nodes,
+)
 from test_framework.mininode import CTransaction, NetworkThread
 from test_framework.blocktools import create_coinbase, create_block
 from test_framework.comptool import TestInstance, TestManager

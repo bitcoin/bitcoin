@@ -5,7 +5,16 @@
 """Test the fundrawtransaction RPC."""
 
 from test_framework.test_framework import BitcoinTestFramework, BITCOIND_PROC_WAIT_TIMEOUT
-from test_framework.util import *
+from test_framework.util import (
+    assert_equal,
+    assert_fee_amount,
+    assert_greater_than,
+    assert_greater_than_or_equal,
+    assert_raises_jsonrpc,
+    connect_nodes_bi,
+    count_bytes,
+)
+from decimal import Decimal
 
 
 def get_unspent(listunspent, amount):

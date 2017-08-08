@@ -5,9 +5,20 @@
 """Test the RBF code."""
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
-from test_framework.script import *
-from test_framework.mininode import *
+from test_framework.util import (
+    assert_equal,
+    assert_raises_jsonrpc,
+    bytes_to_hex_str,
+    satoshi_round,
+)
+from test_framework.script import CScript
+from test_framework.mininode import (
+    COIN,
+    COutPoint,
+    CTransaction,
+    CTxIn,
+    CTxOut,
+)
 
 MAX_REPLACEMENT_LIMIT = 100
 

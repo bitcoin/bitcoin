@@ -5,8 +5,15 @@
 """Test descendant package tracking code."""
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import (
+    assert_equal,
+    assert_raises_jsonrpc,
+    satoshi_round,
+    sync_blocks,
+    sync_mempools,
+)
 from test_framework.mininode import COIN
+from decimal import Decimal
 
 MAX_ANCESTORS = 25
 MAX_DESCENDANTS = 25

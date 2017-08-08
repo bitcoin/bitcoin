@@ -33,8 +33,18 @@ and confirm again balances are correct.
 from random import randint
 import shutil
 
+import shutil
+import os
+
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import (
+    assert_equal,
+    connect_nodes,
+    sync_blocks,
+    sync_mempools,
+)
+from random import randint
+from decimal import Decimal
 
 class WalletBackupTest(BitcoinTestFramework):
 

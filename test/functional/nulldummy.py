@@ -14,7 +14,7 @@ Generate 427 more blocks.
 """
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import assert_equal, assert_raises_jsonrpc, bytes_to_hex_str, hex_str_to_bytes
 from test_framework.mininode import CTransaction, NetworkThread
 from test_framework.blocktools import create_coinbase, create_block, add_witness_commitment
 from test_framework.script import CScript
