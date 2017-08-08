@@ -461,7 +461,7 @@ void ThroneList::updateVoteList(bool reset)
 
             if (pbudgetProposal->fValid &&
                 pbudgetProposal->nBlockStart <= nBlockStart &&
-                pbudgetProposal->nBlockEnd >= nBlockEnd
+                pbudgetProposal->nBlockEnd >= nBlockEnd)
             {
 
                 // populate list
