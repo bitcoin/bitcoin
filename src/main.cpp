@@ -1699,9 +1699,7 @@ void CheckForkWarningConditions()
     if (pindexBestForkTip && chainActive.Height() - pindexBestForkTip->nHeight >= 72)
         pindexBestForkTip = NULL;
 
-    if (pindexBestForkTip ||
-        (pindexBestInvalid &&
-            pindexBestInvalid->nChainWork > chainActive.Tip()->nChainWork + (GetBlockProof(*chainActive.Tip()) * 6)))
+    if (pindexBestForkTip)
     {
         if (!fLargeWorkForkFound && pindexBestForkBase)
         {
@@ -1716,13 +1714,6 @@ void CheckForkWarningConditions()
                 __func__, pindexBestForkBase->nHeight, pindexBestForkBase->phashBlock->ToString(),
                 pindexBestForkTip->nHeight, pindexBestForkTip->phashBlock->ToString());
             fLargeWorkForkFound = true;
-        }
-        else
-        {
-            LogPrintf("%s: Warning: Found invalid chain at least ~6 blocks longer than our best chain.\nChain state "
-                      "database corruption likely.\n",
-                __func__);
-            fLargeWorkInvalidChainFound = true;
         }
     }
     else
