@@ -422,5 +422,5 @@ bool CCoinsViewDB::Upgrade() {
     db.CompactRange({DB_COINS, uint256()}, key);
     uiInterface.SetProgressBreakAction(std::function<void(void)>());
     LogPrintf("[%s].\n", ShutdownRequested() ? "CANCELLED" : "DONE");
-    return true;
+    return !ShutdownRequested();
 }
