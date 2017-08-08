@@ -49,6 +49,7 @@ src/qt/test/moc*.cpp
 .libs
 .*.swp
 *.*~*
+*.backup
 *.bak
 *.rej
 *.orig
@@ -97,9 +98,11 @@ total.coverage/
 coverage_percent.txt
 
 #build tests
+qa/
 linux-coverage-build
 linux-build
 win32-build
+src/test/buildenv.py
 test/config.ini
 test/cache/*
 
