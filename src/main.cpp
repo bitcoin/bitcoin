@@ -2400,8 +2400,13 @@ bool ConnectBlock(const CBlock &block,
     // recent ones.
     bool fScriptChecks = true;
     if (pindexBestHeader)
-        fScriptChecks = !fCheckpointsEnabled || block.nTime > timeBarrier ||
-                        (uint32_t)pindex->nHeight > pindexBestHeader->nHeight - (144 * checkScriptDays.value);
+    {
+        if (fReindex || fImporting)
+            fScriptChecks = !fCheckpointsEnabled || block.nTime > timeBarrier;
+        else
+            fScriptChecks = !fCheckpointsEnabled || block.nTime > timeBarrier ||
+                            (uint32_t)pindex->nHeight > pindexBestHeader->nHeight - (144 * checkScriptDays.value);
+    }
 
     int64_t nTime1 = GetTimeMicros();
     nTimeCheck += nTime1 - nTimeStart;
