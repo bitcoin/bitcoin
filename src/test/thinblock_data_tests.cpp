@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(test_thinblockdata_stats1)
 {
     vector<int64_t> times1(1000); // minutes
 
-    for (int i = 0; i < times1.size(); i++)
+    for (uint32_t i = 0; i < times1.size(); i++)
     {
         times1[i] = 1000 * 60 * i;
     }
