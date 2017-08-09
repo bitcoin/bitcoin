@@ -177,6 +177,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "sendtypeto", 7, "test_fee" },
     { "sendtypeto", 8, "coincontrol" },
     
+    { "buildscript", 0, "json" },
+    
     { "getnewextaddress", 1, "childno" },
     
     { "listunspentanon", 0, "minconf" },

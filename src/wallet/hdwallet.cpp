@@ -1010,6 +1010,13 @@ bool CHDWallet::GetPubKey(const CKeyID &address, CPubKey& pkOut) const
     return CCryptoKeyStore::GetPubKey(address, pkOut);
 };
 
+bool CHDWallet::GetKeyFromPool(CPubKey &key)
+{
+    
+    // return a key from the internal chain
+    return 0 == NewKeyFromAccount(key, true, false, NULL);
+};
+
 bool CHDWallet::HaveStealthAddress(const CStealthAddress &sxAddr) const
 {
     if (fDebug)
@@ -1320,6 +1327,31 @@ int64_t CHDWallet::CountActiveAccountKeys()
 isminetype CHDWallet::IsMine(const CScript &scriptPubKey, CKeyID &keyID,
     CEKAKey &ak, CExtKeyAccount *&pa, bool &isInvalid, SigVersion sigversion)
 {
+    
+    
+    if (HasIsCoinstakeOp(scriptPubKey))
+    {
+        CScript scriptA, scriptB;
+        if (!SplitConditionalCoinstakeScript(scriptPubKey, scriptA, scriptB))
+            return ISMINE_NO;
+        
+        isminetype typeB = IsMine(scriptB, keyID, ak, pa, isInvalid, sigversion);
+        if (typeB & ISMINE_SPENDABLE)
+            return typeB;
+        
+        isminetype typeA = IsMine(scriptA, keyID, ak, pa, isInvalid, sigversion);
+        
+        if (typeA & ISMINE_SPENDABLE)
+        {
+            int ia = (int)typeA;
+            ia &= ~ISMINE_SPENDABLE;
+            ia |= ISMINE_WATCH_SOLVABLE;
+            typeA = (isminetype)ia;
+        };
+        
+        return (isminetype)((int)typeA | (int)typeB);
+    };
+    
     
     std::vector<valtype> vSolutions;
     txnouttype whichType;
@@ -1688,6 +1720,45 @@ CAmount CHDWallet::GetBalance() const
     return nBalance;
 };
 
+CAmount CHDWallet::GetStakeableBalance() const
+{
+    //LogPrintf("[rm] CHDWallet::GetStakeableBalance()\n");
+    CAmount nBalance = 0;
+    
+    LOCK2(cs_main, cs_wallet);
+    
+    for (const auto &ri : mapRecords)
+    {
+        const auto &txhash = ri.first;
+        const auto &rtx = ri.second;
+        if (!IsTrusted(txhash, rtx.blockHash, rtx.nIndex))
+            continue;
+        
+        for (const auto &r : rtx.vout)
+        {
+            if (r.nType == OUTPUT_STANDARD
+                && (r.nFlags & ORF_OWNED || r.nFlags & ORF_STAKEONLY)
+                && !IsSpent(txhash, r.n))
+                nBalance += r.nValue;
+        };
+        
+        if (!MoneyRange(nBalance))
+            throw std::runtime_error(std::string(__func__) + ": value out of range");
+    };
+    
+    for (MapWallet_t::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+    {
+        const CWalletTx* pcoin = &(*it).second;
+        if (!pcoin->IsTrusted())
+            continue;
+        nBalance += pcoin->GetAvailableCredit();
+        nBalance += pcoin->GetAvailableWatchOnlyCredit();  // TODO: split stakeable and non-stakeable watch type
+    };
+    
+    nBalance += CWallet::GetBalance();
+    return nBalance;
+};
+
 CAmount CHDWallet::GetUnconfirmedBalance() const
 {
     CAmount nBalance = 0;
@@ -1785,16 +1856,16 @@ CAmount CHDWallet::GetStaked()
             && pcoin->GetDepthInMainChainCached() > 0 // checks for hashunset
             && pcoin->GetBlocksToMaturity() > 0)
         {
-            nTotal += CHDWallet::GetCredit(*pcoin, ISMINE_SPENDABLE);
+            nTotal += CHDWallet::GetCredit(*pcoin, ISMINE_ALL);
         }
     };
     return nTotal;
 };
 
-bool CHDWallet::GetBalances(CAmount &nPart, CAmount &nPartUnconf, CAmount &nPartStaked, CAmount &nPartImmature,
+bool CHDWallet::GetBalances(CAmount &nPart, CAmount &nPartUnconf, CAmount &nPartStaked, CAmount &nPartImmature, CAmount &nPartWatchOnly, 
         CAmount &nBlind, CAmount &nBlindUnconf, CAmount &nAnon, CAmount &nAnonUnconf)
 {
-    nPart = nPartUnconf = nPartStaked = nPartImmature = 0;
+    nPart = nPartUnconf = nPartStaked = nPartImmature = nPartWatchOnly = 0;
     nBlind = nBlindUnconf = 0;
     nAnon = nAnonUnconf = 0;
     
@@ -1809,12 +1880,13 @@ bool CHDWallet::GetBalances(CAmount &nPart, CAmount &nPartUnconf, CAmount &nPart
             && pcoin->GetDepthInMainChainCached() > 0 // checks for hashunset
             && pcoin->GetBlocksToMaturity() > 0)
         {
-            nPartStaked += CHDWallet::GetCredit(*pcoin, ISMINE_SPENDABLE);
+            nPartStaked += CHDWallet::GetCredit(*pcoin, ISMINE_ALL);
         };
         
         if (pcoin->IsTrusted())
         {
             nPart += pcoin->GetAvailableCredit();
+            nPartWatchOnly += pcoin->GetAvailableWatchOnlyCredit();
         } else
         {
             if (pcoin->GetDepthInMainChain() == 0 && pcoin->InMempool())
@@ -2113,7 +2185,6 @@ int CHDWallet::ExpandTempRecipients(std::vector<CTempRecipient> &vecSend, CStore
                 CPubKey pkEphem = r.sEphem.GetPubKey();
                 r.pkTo = CPubKey(pkSendTo);
                 CKeyID idTo = r.pkTo.GetID();
-                r.scriptPubKey = GetScriptForDestination(idTo);
                 
                 if (fDebug)
                     LogPrint("hdwallet", "Stealth send to generated address: %s\n", CBitcoinAddress(idTo).ToString());
@@ -2141,8 +2212,13 @@ int CHDWallet::ExpandTempRecipients(std::vector<CTempRecipient> &vecSend, CStore
                     r.pkTo = pkDest;
                     r.scriptPubKey = GetScriptForDestination(pkDest.GetID());
                 } else
+                if (r.address.type() == typeid(CKeyID))
                 {
                     r.scriptPubKey = GetScriptForDestination(r.address);
+                } else
+                {
+                    if (!r.fScriptSet)
+                        return errorN(1, sError, __func__, "Unknown address type and no script set.");
                 };
                 
                 if (r.sNarration.length() > 0)
@@ -8227,7 +8303,7 @@ CWalletTx *CHDWallet::GetWalletTx(const uint256& hash)
     return &(it->second);
 };
 
-int CHDWallet::InsertTempTxn(const uint256 &txid, const uint256 &blockHash, int nIndex) const
+int CHDWallet::InsertTempTxn(const uint256 &txid, const CTransactionRecord *rtx) const
 {
     LOCK(cs_wallet);
     
@@ -8245,8 +8321,14 @@ int CHDWallet::InsertTempTxn(const uint256 &txid, const uint256 &blockHash, int 
     
     wtx.BindWallet(pwalletMain);
     wtx.tx = stx.tx;
-    wtx.hashBlock = blockHash;
-    wtx.nIndex = nIndex;
+    
+    if (rtx)
+    {
+        wtx.hashBlock = rtx->blockHash;
+        wtx.nIndex = rtx->nIndex;
+        wtx.nTimeSmart = rtx->GetTxTime();
+        wtx.nTimeReceived = rtx->nTimeReceived;
+    };
     
     mapTempWallet[txid] = wtx;
     
@@ -8841,7 +8923,7 @@ std::vector<uint256> CHDWallet::ResendRecordTransactionsBefore(int64_t nTime, CC
         
         if (twi == mapTempWallet.end())
         {
-            if (0 != InsertTempTxn(txhash, rtx.blockHash, rtx.nIndex)
+            if (0 != InsertTempTxn(txhash, &rtx)
                 || (twi = mapTempWallet.find(txhash)) == mapTempWallet.end())
             {
                 LogPrintf("ERROR: %s - InsertTempTxn failed %s.", __func__, txhash.ToString());
@@ -8999,7 +9081,7 @@ void CHDWallet::AvailableCoins(std::vector<COutput>& vCoins, bool fOnlyConfirmed
                 if (twi == mapTempWallet.end()
                     && (twi = mapTempWallet.find(txid)) == mapTempWallet.end())
                 {
-                    if (0 != InsertTempTxn(txid, rtx.blockHash, rtx.nIndex)
+                    if (0 != InsertTempTxn(txid, &rtx)
                         || (twi = mapTempWallet.find(txid)) == mapTempWallet.end())
                     {
                         LogPrintf("ERROR: %s - InsertTempTxn failed %s.", __func__, txid.ToString());
@@ -9366,7 +9448,7 @@ bool CHDWallet::SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, i
         const CWalletTx *pcoin = GetWalletTx(r.txhash);
         if (!pcoin)
         {
-            if (0 != InsertTempTxn(r.txhash, rtx->blockHash, rtx->nIndex)
+            if (0 != InsertTempTxn(r.txhash, rtx)
                 || !(pcoin = GetWalletTx(r.txhash)))
                 return error("%s: InsertTempTxn failed.\n", __func__);
         };
@@ -9803,7 +9885,7 @@ bool CHDWallet::SetReserveBalance(CAmount nNewReserveBalance)
 uint64_t CHDWallet::GetStakeWeight() const
 {
     // Choose coins to use
-    int64_t nBalance = GetBalance();
+    int64_t nBalance = GetStakeableBalance();
 
     if (nBalance <= nReserveBalance)
         return 0;
@@ -9877,7 +9959,17 @@ void CHDWallet::AvailableCoinsForStaking(std::vector<COutput> &vCoins, int64_t n
                 
                 std::vector<std::vector<uint8_t> > vSolutionsRet;
                 txnouttype typeRet;
-                if (!Solver(*txout->GetPScriptPubKey(), typeRet, vSolutionsRet)
+                
+                const CScript *pscriptPubKey = txout->GetPScriptPubKey();
+                CScript coinstakePath;
+                if ((HasIsCoinstakeOp(*pscriptPubKey)))
+                {
+                    if (!GetCoinstakeScriptPath(*pscriptPubKey, coinstakePath))
+                        continue;
+                    pscriptPubKey = &coinstakePath;
+                };
+                
+                if (!Solver(*pscriptPubKey, typeRet, vSolutionsRet)
                     || typeRet != TX_PUBKEYHASH)
                     continue;
                 
@@ -9910,14 +10002,23 @@ void CHDWallet::AvailableCoinsForStaking(std::vector<COutput> &vCoins, int64_t n
                 {
                     std::vector<std::vector<uint8_t> > vSolutionsRet;
                     txnouttype typeRet;
-                    if (!Solver(r.scriptPubKey, typeRet, vSolutionsRet)
+                    const CScript *pscriptPubKey = &r.scriptPubKey;
+                    CScript coinstakePath;
+                    if ((HasIsCoinstakeOp(r.scriptPubKey)))
+                    {
+                        if (!GetCoinstakeScriptPath(r.scriptPubKey, coinstakePath))
+                            continue;
+                        pscriptPubKey = &coinstakePath;
+                    };
+                    
+                    if (!Solver(*pscriptPubKey, typeRet, vSolutionsRet)
                         || typeRet != TX_PUBKEYHASH)
                         continue;
                     
                     if (twi == mapTempWallet.end()
                         && (twi = mapTempWallet.find(txid)) == mapTempWallet.end())
                     {
-                        if (0 != InsertTempTxn(txid, rtx.blockHash, rtx.nIndex)
+                        if (0 != InsertTempTxn(txid, &rtx)
                             || (twi = mapTempWallet.find(txid)) == mapTempWallet.end())
                         {
                             LogPrintf("ERROR: %s - InsertTempTxn failed %s.", __func__, txid.ToString());
@@ -9989,8 +10090,7 @@ bool CHDWallet::CreateCoinStake(unsigned int nBits, int64_t nTime, int nBlockHei
     txNew.nVersion = PARTICL_TXN_VERSION;
     txNew.SetType(TXN_COINSTAKE);
     
-    CAmount nBalance = GetBalance();
-    
+    CAmount nBalance = GetStakeableBalance();
     if (nBalance <= nReserveBalance)
         return false;
     
@@ -10031,15 +10131,25 @@ bool CHDWallet::CreateCoinStake(unsigned int nBits, int64_t nTime, int nBlockHei
             
             std::vector<valtype> vSolutions;
             txnouttype whichType;
+            
+            const CScript *pscriptPubKey = &kernelOut->scriptPubKey;
+            CScript coinstakePath;
+            bool fConditionalStake = false;
+            if ((HasIsCoinstakeOp(*pscriptPubKey)))
+            {
+                fConditionalStake = true;
+                if (!GetCoinstakeScriptPath(*pscriptPubKey, coinstakePath))
+                    continue;
+                pscriptPubKey = &coinstakePath;
+            };
 
-            if (!Solver(kernelOut->scriptPubKey, whichType, vSolutions))
+            if (!Solver(*pscriptPubKey, whichType, vSolutions))
             {
                 LogPrint("pos", "%s: Failed to parse kernel.\n", __func__);
                 break;
             };
-            
-            LogPrint("pos", "%s: Parsed kernel type=%d.\n", __func__, whichType);
 
+            LogPrint("pos", "%s: Parsed kernel type=%d.\n", __func__, whichType);
             if (whichType != TX_PUBKEYHASH)
             {
                 LogPrint("pos", "%s: No support for kernel type=%d.\n", __func__, whichType);
@@ -10054,7 +10164,13 @@ bool CHDWallet::CreateCoinStake(unsigned int nBits, int64_t nTime, int nBlockHei
             };
             
             //scriptPubKeyKernel << ToByteVector(key.GetPubKey()) << OP_CHECKSIG;
-            scriptPubKeyKernel << OP_DUP << OP_HASH160 << ToByteVector(spendId) << OP_EQUALVERIFY << OP_CHECKSIG;
+            
+            if (fConditionalStake)
+                scriptPubKeyKernel = kernelOut->scriptPubKey;
+            else
+                scriptPubKeyKernel << OP_DUP << OP_HASH160 << ToByteVector(spendId) << OP_EQUALVERIFY << OP_CHECKSIG;
+            
+            
             
             txNew.nVersion = PARTICL_TXN_VERSION;
             txNew.SetType(TXN_COINSTAKE);

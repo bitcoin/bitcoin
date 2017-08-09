@@ -41,6 +41,7 @@ const char* GetTxnOutputType(txnouttype t)
     case TX_TIMELOCKED_SCRIPTHASH: return "timelocked_scripthash";
     case TX_TIMELOCKED_PUBKEYHASH: return "timelocked_pubkeyhash";
     case TX_TIMELOCKED_MULTISIG: return "timelocked_multisig";
+    case TX_CONDITIONAL_STAKE: return "conditional_stake";
     }
     return NULL;
 }
@@ -301,6 +302,31 @@ bool ExtractDestinations(const CScript& scriptPubKey, txnouttype& typeRet, vecto
     addressRet.clear();
     typeRet = TX_NONSTANDARD;
     vector<valtype> vSolutions;
+    
+    if (HasIsCoinstakeOp(scriptPubKey))
+    {
+        CScript scriptB;
+        if (!GetNonCoinstakeScriptPath(scriptPubKey, scriptB))
+            return false;
+        
+        // Return only the spending address to keep insight working
+        ExtractDestinations(scriptB, typeRet, addressRet, nRequiredRet);
+        
+        /*
+        CScript scriptA, scriptB;
+        if (!SplitConditionalCoinstakeScript(scriptPubKey, scriptA, scriptB))
+            return false;
+        
+        std::vector<CTxDestination> addressRetB;
+        ExtractDestinations(scriptA, typeRet, addressRet, nRequiredRet);
+        ExtractDestinations(scriptB, typeRet, addressRetB, nRequiredRet);
+        
+        addressRet.insert(addressRet.end(), addressRetB.begin(), addressRetB.end());
+        typeRet = TX_CONDITIONAL_STAKE;
+        */
+        return true;
+    };
+    
     if (!Solver(scriptPubKey, typeRet, vSolutions))
         return false;
 

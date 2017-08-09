@@ -27,6 +27,7 @@ public:
     virtual const BaseSignatureChecker& Checker() const =0;
     
     virtual bool IsParticlVersion() const { return false; }
+    virtual bool IsCoinStake() const  { return false; }
 
     /** Create a singular (non-script) signature. */
     virtual bool CreateSig(std::vector<unsigned char>& vchSig, const CKeyID& keyid, const CScript& scriptCode, SigVersion sigversion) const =0;
@@ -45,6 +46,7 @@ public:
     const BaseSignatureChecker& Checker() const { return checker; }
     
     bool IsParticlVersion() const { return txTo && txTo->IsParticlVersion(); }
+    bool IsCoinStake() const { return txTo && txTo->IsCoinStake(); }
     
     bool CreateSig(std::vector<unsigned char>& vchSig, const CKeyID& keyid, const CScript& scriptCode, SigVersion sigversion) const;
 };

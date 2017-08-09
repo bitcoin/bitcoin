@@ -167,15 +167,16 @@ UniValue getnewaddress(const JSONRPCRequest& request)
     if (!EnsureWalletIsAvailable(request.fHelp))
         return NullUniValue;
 
-    if (request.fHelp || request.params.size() > 2)
+    if (request.fHelp || request.params.size() > 3)
         throw runtime_error(
-            "getnewaddress ( \"account\" \"bech32\")\n"
+            "getnewaddress ( \"account\" bech32 hardened)\n"
             "\nReturns a new Particl address for receiving payments, key is saved in wallet.\n"
             "If 'account' is specified (DEPRECATED), it is added to the address book \n"
             "so payments received with the address will be credited to 'account'.\n"
             "\nArguments:\n"
             "1. \"account\"        (string, optional) DEPRECATED. The account name for the address to be linked to. If not provided, the default account \"\" is used. It can also be set to the empty string \"\" to represent the default account. The account does not need to exist, it will be created if there is no account by the given name.\n"
-            "2. \"bech32\"         (bool, optional) .\n"
+            "2. bech32             (bool, optional) .\n"
+            "3. hardened           (bool, optional) derive a hardened key.\n"
             "\nResult:\n"
             "\"address\"           (string) The new particl address\n"
             "\nExamples:\n"
@@ -199,6 +200,13 @@ UniValue getnewaddress(const JSONRPCRequest& request)
             fBech32 = part::IsStringBoolPositive(s);
         };
         
+        bool fHardened = false;
+        if (request.params.size() > 2)
+        {
+            std::string s = request.params[2].get_str();
+            fHardened = part::IsStringBoolPositive(s);
+        };
+        
         CPubKey newKey;
         CHDWallet *phdw = (CHDWallet*) pwalletMain;
         {
@@ -210,7 +218,7 @@ UniValue getnewaddress(const JSONRPCRequest& request)
                 if (phdw->idDefaultAccount.IsNull())
                     throw JSONRPCError(RPC_WALLET_ERROR, "No default account set.");
             }
-            if (0 != phdw->NewKeyFromAccount(newKey, false, false, strAccount.c_str()))
+            if (0 != phdw->NewKeyFromAccount(newKey, false, fHardened, strAccount.c_str()))
                 throw JSONRPCError(RPC_WALLET_ERROR, "NewKeyFromAccount failed.");
         }
         
@@ -1962,7 +1970,7 @@ UniValue listtransactions(const JSONRPCRequest& request)
         if (pacentry != 0)
             AcentryToJSON(*pacentry, strAccount, retReversed);
         
-        if (retReversed.size() >= nCount + nFrom)
+        if ((int)retReversed.size() >= nCount + nFrom)
             break;
     };
     
@@ -1982,7 +1990,7 @@ UniValue listtransactions(const JSONRPCRequest& request)
         for (RtxOrdered_t::const_reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
         {
             ListRecord(it->second->first, it->second->second, strAccount, 0, true, retRecords, filter);
-            if (retRecords.size() >= nCount + nFrom)
+            if ((int)retRecords.size() >= nCount + nFrom)
                 break;
         };
         
@@ -2861,11 +2869,11 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
     
     if (fParticlWallet)
     {
-        CAmount part_balance, part_unconfirmed, part_staked, immature_balance;
+        CAmount part_balance, part_unconfirmed, part_staked, immature_balance, watchonly_balance;
         CAmount blind_balance, blind_unconfirmed;
         CAmount anon_balance, anon_unconfirmed;
         
-        ((CHDWallet*)pwalletMain)->GetBalances(part_balance, part_unconfirmed, part_staked, immature_balance,
+        ((CHDWallet*)pwalletMain)->GetBalances(part_balance, part_unconfirmed, part_staked, immature_balance, watchonly_balance,
             blind_balance, blind_unconfirmed, anon_balance, anon_unconfirmed);
         
         obj.push_back(Pair("total_balance",         ValueFromAmount(
@@ -2884,6 +2892,9 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
         obj.push_back(Pair("unconfirmed_anon",      ValueFromAmount(anon_unconfirmed)));
         obj.push_back(Pair("immature_balance",      ValueFromAmount(immature_balance)));
         
+        if (watchonly_balance > 0)
+            obj.push_back(Pair("watchonly_balance",     ValueFromAmount(watchonly_balance)));
+        
     } else
     {
         obj.push_back(Pair("balance",       ValueFromAmount(pwalletMain->GetBalance())));
@@ -2894,12 +2905,14 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
     int nTxCount = (int)pwalletMain->mapWallet.size() + (fParticlWallet ? (int)((CHDWallet*)pwalletMain)->mapRecords.size() : 0);
     
     obj.push_back(Pair("txcount",       (int)nTxCount));
-    obj.push_back(Pair("keypoololdest", pwalletMain->GetOldestKeyPoolTime()));
-    obj.push_back(Pair("keypoolsize",   (int)pwalletMain->GetKeyPoolSize()));
     
     if (fParticlWallet)
     {
         CHDWallet *pwhd = (CHDWallet*)pwalletMain;
+        
+        obj.pushKV("keypoololdest", pwhd->GetOldestActiveAccountTime());
+        obj.pushKV("keypoolsize",   pwhd->CountActiveAccountKeys());
+        
         obj.push_back(Pair("reserve",   ValueFromAmount(pwhd->nReserveBalance)));
         
         obj.push_back(Pair("encryptionstatus", !pwhd->IsCrypted()
@@ -2908,6 +2921,9 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
             obj.push_back(Pair("unlocked_until", nWalletUnlockTime));
     } else
     {
+        obj.pushKV("keypoololdest", pwalletMain->GetOldestKeyPoolTime());
+        obj.pushKV("keypoolsize",   (int)pwalletMain->GetKeyPoolSize());
+        
         obj.push_back(Pair("encryptionstatus", !pwalletMain->IsCrypted()
         ? "Unencrypted" : pwalletMain->IsLocked() ? "Locked" : "Unlocked"));
         if (pwalletMain->IsCrypted())

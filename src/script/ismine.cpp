@@ -57,6 +57,30 @@ isminetype IsMine(const CKeyStore &keystore, const CTxDestination& dest, bool& i
 
 isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, bool& isInvalid, SigVersion sigversion)
 {
+    
+    if (HasIsCoinstakeOp(scriptPubKey))
+    {
+        CScript scriptA, scriptB;
+        if (!SplitConditionalCoinstakeScript(scriptPubKey, scriptA, scriptB))
+            return ISMINE_NO;
+        
+        isminetype typeB = IsMine(keystore, scriptB, isInvalid, sigversion);
+        if (typeB & ISMINE_SPENDABLE)
+            return typeB;
+        
+        isminetype typeA = IsMine(keystore, scriptA, isInvalid, sigversion);
+        
+        if (typeA & ISMINE_SPENDABLE)
+        {
+            int ia = (int)typeA;
+            ia &= ~ISMINE_SPENDABLE;
+            ia |= ISMINE_WATCH_SOLVABLE;
+            typeA = (isminetype)ia;
+        };
+        
+        return (isminetype)((int)typeA | (int)typeB);
+    };
+    
     vector<valtype> vSolutions;
     txnouttype whichType;
     if (!Solver(scriptPubKey, whichType, vSolutions)) {

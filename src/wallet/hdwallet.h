@@ -34,6 +34,7 @@ enum OutputRecordFlags
     ORF_CHANGE       = (1 << 2),
     ORF_SPENT        = (1 << 3),
     ORF_LOCKED       = (1 << 4), // Needs wallet to be unlocked for further processing
+    ORF_STAKEONLY    = (1 << 5),
     
     ORF_BLIND_IN     = (1 << 14),
     ORF_ANON_IN      = (1 << 15),
@@ -201,6 +202,7 @@ public:
     
     void SetNull()
     {
+        fScriptSet = false;
         fChange = false;
         nChildKey = 0;
         nStealthPrefix = 0;
@@ -236,6 +238,7 @@ public:
     CPubKey pkTo;
     int n;
     std::string sNarration;
+    bool fScriptSet;
     bool fChange;
     uint32_t nChildKey; // update later
     uint32_t nStealthPrefix;
@@ -363,6 +366,8 @@ public:
     
     bool GetPubKey(const CKeyID &address, CPubKey &pkOut) const;
     
+    bool GetKeyFromPool(CPubKey &key);
+    
     bool HaveStealthAddress(const CStealthAddress &sxAddr) const;
     bool GetStealthAddressScanKey(CStealthAddress &sxAddr) const;
     
@@ -403,11 +408,12 @@ public:
     bool IsTrusted(const uint256 &hash, const uint256 &blockhash, int nIndex = 0) const;
     
     CAmount GetBalance() const;
+    CAmount GetStakeableBalance() const;        // Includes watch_only
     CAmount GetUnconfirmedBalance() const;
     CAmount GetBlindBalance();
     CAmount GetAnonBalance();
     CAmount GetStaked();
-    bool GetBalances(CAmount &nPart, CAmount &nPartUnconf, CAmount &nPartStaked, CAmount &nPartImmature,
+    bool GetBalances(CAmount &nPart, CAmount &nPartUnconf, CAmount &nPartStaked, CAmount &nPartImmature, CAmount &nPartWatchOnly, 
         CAmount &nBlind, CAmount &nBlindUnconf, CAmount &nAnon, CAmount &nAnonUnconf);
     
     
@@ -560,7 +566,7 @@ public:
     const CWalletTx *GetWalletTx(const uint256& hash) const;
     CWalletTx *GetWalletTx(const uint256& hash);
     
-    int InsertTempTxn(const uint256 &txid, const uint256 &blockHash, int nIndex) const;
+    int InsertTempTxn(const uint256 &txid, const CTransactionRecord *rtx) const;
     
     int OwnStandardOut(const CTxOutStandard *pout, const CTxOutData *pdata, COutputRecord &rout, bool &fUpdated);
     int OwnBlindOut(CHDWalletDB *pwdb, const uint256 &txhash, const CTxOutCT *pout, const CStoredExtKey *pc, uint32_t &nLastChild,

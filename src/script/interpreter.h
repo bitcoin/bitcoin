@@ -135,14 +135,19 @@ public:
 
     virtual bool CheckLockTime(const CScriptNum& nLockTime) const
     {
-         return false;
+        return false;
     }
 
     virtual bool CheckSequence(const CScriptNum& nSequence) const
     {
-         return false;
+        return false;
     }
-    
+
+    virtual bool IsCoinStake() const
+    {
+        return false;
+    }
+
     virtual bool IsParticlVersion() const { return false; }
 
     virtual ~BaseSignatureChecker() {}
@@ -165,7 +170,12 @@ public:
     bool CheckSig(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode, SigVersion sigversion) const;
     bool CheckLockTime(const CScriptNum& nLockTime) const;
     bool CheckSequence(const CScriptNum& nSequence) const;
-    
+
+    virtual bool IsCoinStake() const
+    {
+        return txTo && txTo->IsCoinStake();
+    }
+
     bool IsParticlVersion() const
     {
         return txTo && txTo->IsParticlVersion();
@@ -185,5 +195,11 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
 bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CScriptWitness* witness, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror = NULL);
 
 size_t CountWitnessSigOps(const CScript& scriptSig, const CScript& scriptPubKey, const CScriptWitness* witness, unsigned int flags);
+
+bool HasIsCoinstakeOp(const CScript &script);
+
+bool GetCoinstakeScriptPath(const CScript &scriptIn, CScript &scriptOut);
+bool GetNonCoinstakeScriptPath(const CScript &scriptIn, CScript &scriptOut);
+bool SplitConditionalCoinstakeScript(const CScript &scriptIn, CScript &scriptOutA, CScript &scriptOutB);
 
 #endif // BITCOIN_SCRIPT_INTERPRETER_H

@@ -3600,9 +3600,8 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
                 && !address.IsValidStealthAddress())
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Particl stealth address");
             
-            if (!address.IsValid())
+            if (!obj.exists("script") && !address.IsValid())
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Particl address");
-                
             
             if (obj.exists("amount"))
                 nAmount = AmountFromValue(obj["amount"]);
@@ -3621,14 +3620,33 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
             if (obj.exists("narr"))
                 sNarr = obj["narr"].get_str();
             
+            
+            
             if (0 != AddOutput(typeOut, vecSend, address.Get(), nAmount, fSubtractFeeFromAmount, sNarr, sError))
                 throw JSONRPCError(RPC_MISC_ERROR, strprintf("AddOutput failed: %s.", sError));
+            
+            
+            if (obj.exists("script"))
+            {
+                CTempRecipient &r = vecSend.back();
+                
+                if (sAddress != "script")
+                    JSONRPCError(RPC_INVALID_PARAMETER, "address parameter must be 'script' to set script explicitly.");
+                
+                std::string sScript = obj["script"].get_str();
+                std::vector<uint8_t> scriptData = ParseHex(sScript);
+                r.scriptPubKey = CScript(scriptData.begin(), scriptData.end());
+                r.fScriptSet = true;
+                
+                if (typeOut != OUTPUT_STANDARD)
+                    throw std::runtime_error("In progress, setting script only works for standard outputs.");
+            };
+            
         };
         nCommentOfs = 1;
         nRingSizeOfs = 3;
         nTestFeeOfs = 5;
         nCoinControlOfs = 6;
-        
     } else
     {
         std::string sAddress = request.params[0].get_str();
@@ -3992,8 +4010,9 @@ UniValue sendtypeto(const JSONRPCRequest &request)
             "3. \"outputs\"         (json, required) Array of output objects\n"
             "    3.1 \"address\"    (string, required) The particl address to send to.\n"
             "    3.2 \"amount\"     (numeric or string, required) The amount in " + CURRENCY_UNIT + " to send. eg 0.1\n"
-            "    3.3 \"narr\"       (string, optional) Up to 24 character narration sent with the transaction.\n"
-            "    3.4 \"subfee\"     (boolean, optional, default=false) The fee will be deducted from the amount being sent.\n"
+            "    3.x \"narr\"       (string, optional) Up to 24 character narration sent with the transaction.\n"
+            "    3.x \"subfee\"     (boolean, optional, default=false) The fee will be deducted from the amount being sent.\n"
+            "    3.x \"script\"     (string, optional) Hex encoded script, will override the address.\n"
             "4. \"comment\"         (string, optional) A comment used to store what the transaction is for. \n"
             "                            This is not part of the transaction, just kept in your wallet.\n"
             "5. \"comment_to\"      (string, optional) A comment to store the name of the person or organization \n"
@@ -4025,6 +4044,70 @@ UniValue sendtypeto(const JSONRPCRequest &request)
     req.params.erase(0, 2);
     
     return SendToInner(req, typeIn, typeOut);
+}
+
+UniValue buildscript(const JSONRPCRequest &request)
+{
+    if (request.fHelp || request.params.size() != 1)
+        throw std::runtime_error(
+            "buildscript json\n"
+            "\nArguments:\n"
+            "{recipe: , ...}\n"
+            "\nRecipes:\n"
+            "{\"recipe\":\"ifcoinstake\", \"addrstake\":\"addrA\", \"addrspend\":\"addrB\"}"
+            );
+    
+    if (!request.params[0].isObject())
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Input must be a json object.");
+    
+    const UniValue &params = request.params[0].get_obj();
+    
+    const UniValue &recipe = params["recipe"];
+    if (!recipe.isStr())
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Missing recipe.");
+    
+    std::string sRecipe = recipe.get_str();
+    
+    UniValue obj(UniValue::VOBJ);
+    obj.pushKV("recipe", sRecipe);
+    
+    CScript scriptOut;
+    
+    if (sRecipe == "ifcoinstake")
+    {
+        RPCTypeCheckObj(params,
+        {
+            {"addrstake", UniValueType(UniValue::VSTR)},
+            {"addrspend", UniValueType(UniValue::VSTR)},
+        });
+        
+        CBitcoinAddress addrTrue(params["addrstake"].get_str());
+        CBitcoinAddress addrFalse(params["addrspend"].get_str());
+        
+        if (!addrTrue.IsValid())
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid addrstake.");
+        if (!addrFalse.IsValid())
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid addrspend.");
+        
+        CScript scriptTrue = GetScriptForDestination(addrTrue.Get());
+        CScript scriptFalse = GetScriptForDestination(addrFalse.Get());
+        
+        scriptOut = CScript() << OP_ISCOINSTAKE << OP_IF;
+        scriptOut += scriptTrue;
+        scriptOut << OP_ELSE;
+        scriptOut += scriptFalse;
+        scriptOut << OP_ENDIF;
+        
+    } else
+    {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown recipe.");
+    };
+    
+    obj.pushKV("hex", HexStr(scriptOut.begin(), scriptOut.end()));
+    obj.pushKV("asm", ScriptToAsmStr(scriptOut));
+   
+    
+    return obj;
 }
 
 UniValue debugwallet(const JSONRPCRequest &request)
@@ -4148,7 +4231,7 @@ static const CRPCCommand commands[] =
     
     { "wallet",             "sendtypeto",               &sendtypeto,               false,  {"typein", "typeout", "outputs","comment","comment_to", "ring_size", "inputs_per_sig", "test_fee"} },
     
-    
+    { "wallet",             "buildscript",              &buildscript,              false,  {"json"} },
     
     { "wallet",             "debugwallet",              &debugwallet,               false,  {"attempt_repair"} },
     

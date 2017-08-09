@@ -8,6 +8,7 @@
 #include "clientversion.h"
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
+#include "script/interpreter.h"
 #include "validation.h"
 #include "policy/policy.h"
 #include "policy/fees.h"
@@ -482,30 +483,18 @@ void CTxMemPool::addAddressIndex(const CTxMemPoolEntry &entry, const CCoinsViewC
             // prevout should only ever be OUTPUT_STANDARD or OUTPUT_CT
             assert(prevout->IsType(OUTPUT_STANDARD) || prevout->IsType(OUTPUT_CT));
             
+            std::vector<unsigned char> hashBytes;
             const CScript *pScript;
-            if (!(pScript = prevout->GetPScriptPubKey()))
-            {
-                LogPrintf("ERROR: %s - expected script pointer.\n", __func__);
+            int scriptType = 0;
+            CAmount nValue;
+            if (!ExtractIndexInfo(prevout, scriptType, hashBytes, nValue, pScript)
+                || scriptType == 0)
                 continue;
-            };
-            CAmount nValue = prevout->IsType(OUTPUT_STANDARD) ? prevout->GetValue() : 0;
             
-            if (pScript->IsPayToScriptHash())
-            {
-                std::vector<unsigned char> hashBytes(pScript->begin()+2, pScript->begin()+22);
-                CMempoolAddressDeltaKey key(2, uint160(hashBytes), txhash, j, 1);
-                CMempoolAddressDelta delta(entry.GetTime(), nValue * -1, input.prevout.hash, input.prevout.n);
-                mapAddress.insert(std::make_pair(key, delta));
-                inserted.push_back(key);
-            } else
-            if (pScript->IsPayToPublicKeyHash())
-            {
-                std::vector<unsigned char> hashBytes(pScript->begin()+3, pScript->begin()+23);
-                CMempoolAddressDeltaKey key(1, uint160(hashBytes), txhash, j, 1);
-                CMempoolAddressDelta delta(entry.GetTime(), nValue * -1, input.prevout.hash, input.prevout.n);
-                mapAddress.insert(std::make_pair(key, delta));
-                inserted.push_back(key);
-            };
+            CMempoolAddressDeltaKey key(scriptType, uint160(hashBytes), txhash, j, 1);
+            CMempoolAddressDelta delta(entry.GetTime(), nValue * -1, input.prevout.hash, input.prevout.n);
+            mapAddress.insert(std::make_pair(key, delta));
+            inserted.push_back(key);
         } else
         {
             const CTxOut &prevout = view.GetOutputFor(input);
@@ -631,29 +620,19 @@ void CTxMemPool::addSpentIndex(const CTxMemPoolEntry &entry, const CCoinsViewCac
             assert(prevout->IsType(OUTPUT_STANDARD) || prevout->IsType(OUTPUT_CT));
             
             const CScript *pScript;
-            if (!(pScript = prevout->GetPScriptPubKey()))
-            {
-                LogPrintf("ERROR: %s - expected script pointer.\n", __func__);
+            std::vector<unsigned char> hashBytes;
+            int scriptType = 0;
+            CAmount nValue;
+            if (!ExtractIndexInfo(prevout, scriptType, hashBytes, nValue, pScript))
                 continue;
-            };
-            CAmount nValue = prevout->IsType(OUTPUT_STANDARD) ? prevout->GetValue() : -1;
             
             uint160 addressHash;
-            int addressType = 0;
-
-            if (pScript->IsPayToScriptHash())
-            {
-                addressHash = uint160(std::vector<unsigned char> (pScript->begin()+2, pScript->begin()+22));
-                addressType = 2;
-            } else
-            if (pScript->IsPayToPublicKeyHash()) 
-            {
-                addressHash = uint160(std::vector<unsigned char> (pScript->begin()+3, pScript->begin()+23));
-                addressType = 1;
-            };
+            if (scriptType != 0)
+                addressHash = uint160(hashBytes);
+            
             
             CSpentIndexKey key = CSpentIndexKey(input.prevout.hash, input.prevout.n);
-            CSpentIndexValue value = CSpentIndexValue(txhash, j, -1, nValue, addressType, addressHash);
+            CSpentIndexValue value = CSpentIndexValue(txhash, j, -1, nValue, scriptType, addressHash);
 
             mapSpent.insert(std::make_pair(key, value));
             inserted.push_back(key);

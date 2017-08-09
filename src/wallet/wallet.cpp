@@ -1854,7 +1854,7 @@ CAmount CWalletTx::GetAvailableCredit(bool fUseCache) const
         return nAvailableCreditCached;
 
     CAmount nCredit = 0;
-    uint256 hashTx = GetHash();
+    const uint256 &hashTx = GetHash();
 
     if (fParticlWallet)
     {
@@ -1910,7 +1910,20 @@ CAmount CWalletTx::GetAvailableWatchOnlyCredit(const bool& fUseCache) const
     if (fUseCache && fAvailableWatchCreditCached)
         return nAvailableWatchCreditCached;
 
+    const uint256 &hashTx = GetHash();
     CAmount nCredit = 0;
+    if (fParticlWallet)
+    {
+        for (unsigned int i = 0; i < tx->vpout.size(); i++)
+        {
+            if (!pwallet->IsSpent(hashTx, i))
+            {
+                nCredit += pwallet->GetCredit(tx->vpout[i].get(), ISMINE_WATCH_ONLY);
+                if (!MoneyRange(nCredit))
+                    throw std::runtime_error("CWalletTx::GetAvailableCredit() : value out of range");
+            };
+        };
+    } else
     for (unsigned int i = 0; i < tx->vout.size(); i++)
     {
         if (!pwallet->IsSpent(GetHash(), i))

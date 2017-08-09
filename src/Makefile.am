@@ -209,6 +209,7 @@ libparticl_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libparticl_server_a_SOURCES = \
   addrman.cpp \
   addrdb.cpp \
+  addressindex.cpp \
   bloom.cpp \
   blockencodings.cpp \
   chain.cpp \

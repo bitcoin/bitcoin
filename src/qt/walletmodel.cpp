@@ -169,7 +169,7 @@ void WalletModel::checkBalanceChanged()
     CAmount newBalance = 0;
     CAmount newAnonBalance = 0;
     CAmount newBlindBalance = 0;
-    CAmount nPartUnconf = 0, nPartStaked = 0, nPartImmature = 0;
+    CAmount nPartUnconf = 0, nPartStaked = 0, nPartImmature = 0, nPartWatchOnly;
     CAmount nBlindUnconf = 0, nAnonUnconf = 0;
     
     CAmount newUnconfirmedBalance = 0;
@@ -182,16 +182,15 @@ void WalletModel::checkBalanceChanged()
     {
         CHDWallet *pw = getParticlWallet();
         
-        pw->GetBalances(newBalance, nPartUnconf, nPartStaked, nPartImmature,
+        pw->GetBalances(newBalance, nPartUnconf, nPartStaked, nPartImmature, nPartWatchOnly,
             newBlindBalance, nBlindUnconf, newAnonBalance, nAnonUnconf);
         
         newImmatureBalance = nPartImmature;
         newUnconfirmedBalance = nPartUnconf + nBlindUnconf + nAnonUnconf;
-    };
-    
-    
-    
-    
+        
+        newWatchOnlyBalance = nPartWatchOnly;
+        fHaveWatchOnly = nPartWatchOnly;
+    } else
     if (haveWatchOnly())
     {
         newWatchOnlyBalance = getWatchBalance();

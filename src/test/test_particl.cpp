@@ -44,8 +44,6 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, bool fParticl
     ResetParams(fParticlMode);
     
     fPrintToDebugLog = false; // don't want to write to debug.log file
-    //fDebug = true;
-    //fPrintToConsole = true; // [rm], remember to comment out
     
     ECC_Start();
     SetupEnvironment();

@@ -21,6 +21,7 @@
 #include "primitives/transaction.h"
 #include "random.h"
 #include "script/script.h"
+#include "script/interpreter.h"
 #include "script/sigcache.h"
 #include "script/standard.h"
 #include "timedata.h"
@@ -1704,7 +1705,7 @@ bool IsInitialBlockDownload()
         return true;
     if (chainActive.Tip()->nChainWork < UintToArith256(chainParams.GetConsensus().nMinimumChainWork))
         return true;
-    if (fRequireStandard // testnet
+    if (fRequireStandard // fRequireStandard is false on testnet
         && chainActive.Tip()->nHeight > COINBASE_MATURITY
         && chainActive.Tip()->GetBlockTime() < (GetTime() - nMaxTipAge))
         return true;
@@ -1912,8 +1913,6 @@ void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, int nHeight)
 bool CScriptCheck::operator()() {
     const CScript &scriptSig = ptxTo->vin[nIn].scriptSig;
     const CScriptWitness *witness = &ptxTo->vin[nIn].scriptWitness;
-    //std::vector<uint8_t> vchAmount(8);
-    //memcpy(&vchAmount[0], &amount, 8);
     if (!VerifyScript(scriptSig, scriptPubKey, witness, nFlags, CachingTransactionSignatureChecker(ptxTo, nIn, vchAmount, cacheStore, *txdata), &error)) {
         return false;
     }
@@ -2420,30 +2419,12 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
                 continue;
             
             const CScript *pScript;
-            if (!(pScript = out->GetPScriptPubKey()))
-            {
-                LogPrintf("ERROR: %s - expected script pointer.\n", __func__);
-                continue;
-            };
-            
-            CAmount nValue = out->IsType(OUTPUT_STANDARD) ? out->GetValue() : -1;
-            
-            int scriptType = 0;
             std::vector<unsigned char> hashBytes;
-            if (pScript->IsPayToScriptHash())
-            {
-                hashBytes.assign(pScript->begin()+2, pScript->begin()+22);
-                scriptType = 2;
-            } else
-            if (pScript->IsPayToPublicKeyHash())
-            {
-                hashBytes.assign(pScript->begin()+3, pScript->begin()+23);
-                scriptType = 1;
-            } else
-            {
+            int scriptType = 0;
+            CAmount nValue;
+            if (!ExtractIndexInfo(out, scriptType, hashBytes, nValue, pScript)
+                || scriptType == 0)
                 continue;
-            };
-            
             // undo receiving activity
             addressIndex.push_back(std::make_pair(CAddressIndexKey(scriptType, uint160(hashBytes), pindex->nHeight, i, hash, k, false), nValue));
             // undo unspent index
@@ -2955,41 +2936,31 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                         };
                         
                         const CScript *pScript;
-                        if (!(pScript = prevout->GetPScriptPubKey()))
-                        {
-                            LogPrintf("ERROR: %s - expected script pointer.\n", __func__);
+                        std::vector<unsigned char> hashBytes;
+                        int scriptType = 0;
+                        CAmount nValue;
+                        if (!ExtractIndexInfo(prevout, scriptType, hashBytes, nValue, pScript))
                             continue;
-                        };
                         
-                        CAmount nValue = prevout->IsType(OUTPUT_STANDARD) ? prevout->GetValue() : -1;
+                        uint160 hashAddress;
+                        if (scriptType > 0)
+                            hashAddress = uint160(hashBytes);
                         
-                        uint160 hashBytes; // inits to null
-                        int addressType = 0;
-
-                        if (pScript->IsPayToScriptHash())
+                        if (fAddressIndex && scriptType > 0)
                         {
-                            hashBytes = uint160(std::vector <unsigned char>(pScript->begin()+2, pScript->begin()+22));
-                            addressType = 2;
-                        } else
-                        if (pScript->IsPayToPublicKeyHash())
-                        {
-                            hashBytes = uint160(std::vector <unsigned char>(pScript->begin()+3, pScript->begin()+23));
-                            addressType = 1;
-                        };
-                        
-                        if (fAddressIndex && addressType > 0)
-                        {
+                            
                             // record spending activity
-                            addressIndex.push_back(std::make_pair(CAddressIndexKey(addressType, hashBytes, pindex->nHeight, i, txhash, j, true), nValue * -1));
+                            addressIndex.push_back(std::make_pair(CAddressIndexKey(scriptType, hashAddress, pindex->nHeight, i, txhash, j, true), nValue * -1));
+                            
                             // remove address from unspent index
-                            addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(addressType, hashBytes, input.prevout.hash, input.prevout.n), CAddressUnspentValue()));
+                            addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(scriptType, hashAddress, input.prevout.hash, input.prevout.n), CAddressUnspentValue()));
                         };
 
                         if (fSpentIndex)
                         {
                             // add the spent index to determine the txid and input that spent an output
                             // and to find the amount and address from an input
-                            spentIndex.push_back(std::make_pair(CSpentIndexKey(input.prevout.hash, input.prevout.n), CSpentIndexValue(txhash, j, pindex->nHeight, nValue, addressType, hashBytes)));
+                            spentIndex.push_back(std::make_pair(CSpentIndexKey(input.prevout.hash, input.prevout.n), CSpentIndexValue(txhash, j, pindex->nHeight, nValue, scriptType, hashAddress)));
                         };
                     } else
                     {
@@ -3174,29 +3145,12 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                     continue;
                 
                 const CScript *pScript;
-                if (!(pScript = out->GetPScriptPubKey()))
-                {
-                    LogPrintf("ERROR: %s - expected script pointer.\n", __func__);
-                    continue;
-                };
-                
-                CAmount nValue = out->IsType(OUTPUT_STANDARD) ? out->GetValue() : 0;
-                
-                int scriptType = 0;
                 std::vector<unsigned char> hashBytes;
-                if (pScript->IsPayToScriptHash())
-                {
-                    hashBytes.assign(pScript->begin()+2, pScript->begin()+22);
-                    scriptType = 2;
-                } else
-                if (pScript->IsPayToPublicKeyHash())
-                {
-                    hashBytes.assign(pScript->begin()+3, pScript->begin()+23);
-                    scriptType = 1;
-                } else
-                {
+                int scriptType = 0;
+                CAmount nValue;
+                if (!ExtractIndexInfo(out, scriptType, hashBytes, nValue, pScript)
+                    || scriptType == 0)
                     continue;
-                };
                 
                 // record receiving activity
                 addressIndex.push_back(std::make_pair(CAddressIndexKey(scriptType, uint160(hashBytes), pindex->nHeight, i, txhash, k, false), nValue));

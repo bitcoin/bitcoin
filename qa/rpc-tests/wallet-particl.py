@@ -557,8 +557,55 @@ class WalletParticlTest(ParticlTestFramework):
         
         
         
+        
+        ro = nodes[0].walletpassphrase("qwerty123", 3000)
+        
+        ro = nodes[0].extkey("account")
+        
+        sExternalChainId = ""
+        for chain in ro["chains"]:
+            if chain["function"] == "active_external":
+                sExternalChainId = chain["id"]
+                nHardened = chain["num_derives_h"]
+                break
+        assert(len(sExternalChainId) > 0)
+        assert(nHardened == "0")
+        
+        
+        ro = nodes[0].deriverangekeys(0, 0, sExternalChainId, "true")
+        sCheckAddr = ro[0]
+        
+        ro = nodes[0].getnewaddress("h1","false","true")
+        sHardenedAddr = ro
+        assert(sHardenedAddr == sCheckAddr)
+        
+        ro = nodes[0].extkey("account")
+        
+        nHardened = 0
+        for chain in ro["chains"]:
+            if chain["function"] == "active_external":
+                nHardened = chain["num_derives_h"]
+                break
+        assert(nHardened == "1")
+        
+        
+        ro = nodes[0].filteraddresses()
+        
+        sPath = ""
+        for entry in ro:
+            if entry["address"] == sHardenedAddr:
+                sPath = entry["path"]
+                break
+        assert(sPath == "m/0/0'")
+        
+        #jsonInput = {"recipe":"ifcoinstake", "addresstrue":sHardenedAddr, "addressfalse":"piNdRiuL2BqUA8hh2A6AtEbBkKqKxK13LT"}
+        jsonInput = {"recipe":"ifcoinstake", "addrstake":"pomrQeo26xVLV5pnuDYkTUYuABFuP13HHE", "addrspend":"piNdRiuL2BqUA8hh2A6AtEbBkKqKxK13LT"}
+        
+        ro = nodes[0].buildscript(jsonInput)
+        assert(ro["hex"] == "b86376a914cf3837ef2e493d5b485c7f4536f27415c5cd3b6088ac6776a91493fb2f9e77825e4d38045a2406efd60aac9c956e88ac68")
+        
         #print(json.dumps(ro, indent=4, default=self.jsonDecimal))
-        #assert(false)
+        #assert(False)
         
 
 if __name__ == '__main__':

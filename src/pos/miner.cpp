@@ -284,7 +284,6 @@ void ThreadStakeMiner(CHDWallet *pwallet)
             continue;
         };
         
-        
         if (g_connman->vNodes.empty() || IsInitialBlockDownload())
         {
             fIsStaking = false;
@@ -333,7 +332,6 @@ void ThreadStakeMiner(CHDWallet *pwallet)
         
         if (nSearchTime <= nBestTime)
         {
-            //fIsStaking = false;
             LogPrint("pos", "%s: Can't stake before last block time.\n", __func__);
             condWaitFor(10000);
             continue;
@@ -345,7 +343,7 @@ void ThreadStakeMiner(CHDWallet *pwallet)
             continue;
         };
         
-        if (pwallet->GetBalance() <= pwallet->nReserveBalance)
+        if (pwallet->GetStakeableBalance() <= pwallet->nReserveBalance)
         {
             fIsStaking = false;
             LogPrint("pos", "%s: Low balance.\n", __func__);
@@ -391,8 +389,8 @@ void ThreadStakeMiner(CHDWallet *pwallet)
                 fIsStaking = false;
                 condWaitFor(nSleep * 1000);
                 continue;
-            }
-        }
+            };
+        };
         
         condWaitFor(nMinerSleep);
     };

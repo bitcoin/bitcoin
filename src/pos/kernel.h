@@ -22,6 +22,7 @@ bool CheckStakeKernelHash(const CBlockIndex *pindexPrev,
     uint256 &hashProofOfStake, uint256 &targetProofOfStake,
     bool fPrintProofOfStake=false);
 
+
 /** 
  * Check kernel hash target and coinstake signature
  * Sets hashProofOfStake on success return

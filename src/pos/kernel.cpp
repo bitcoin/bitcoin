@@ -14,6 +14,8 @@
 #include "streams.h"
 #include "hash.h"
 #include "script/interpreter.h"
+#include "script/script.h"
+#include "script/ismine.h" // valtype
 #include "policy/policy.h"
 #include "consensus/validation.h"
 
@@ -203,6 +205,32 @@ bool CheckProofOfStake(const CBlockIndex *pindexPrev, const CTransaction &tx, in
         return state.DoS(1, // may occur during initial download or if behind on block chain sync
             error("%s: INFO: check kernel failed on coinstake %s, hashProof=%s", __func__, tx.GetHash().ToString(), hashProofOfStake.ToString()),
             REJECT_INVALID, "check-kernel-failed");  
+    
+    
+    // Check that the output assigns at least the same value as the input to outputs with scripts matching the prevout script.
+    // The foundation fund split is user selectable, making it difficult to check the blockreward here.
+    // Leaving a window for compromised staking nodes to reassign the blockreward to an attacker's address.
+    // If Coin owners detect this, they can move their coin to a new address.
+    if (HasIsCoinstakeOp(kernelPubKey))
+    {
+        CAmount nVerify = 0;
+        
+        for (const auto &txout : tx.vpout)
+        {
+            if (!txout->IsType(OUTPUT_STANDARD))
+                continue;
+            
+            const CScript *pOutPubKey = txout->GetPScriptPubKey();
+            
+            if (pOutPubKey && *pOutPubKey == kernelPubKey)
+                nVerify += txout->GetValue();
+        };
+        
+        if (nVerify < amount)
+            return state.DoS(100, error("%s: verify-amount-script-failed, txn %s", __func__, tx.GetHash().ToString()),
+                REJECT_INVALID, "verify-amount-script-failed");
+    };
+    
     
     return true;
 }
