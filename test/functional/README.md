@@ -90,7 +90,7 @@ on nodes 2 and up.
 
 - Implement a (generator) function called `get_tests()` which yields `TestInstance`s.
 Each `TestInstance` consists of:
-  - a list of `[object, outcome, hash]` entries
+  - A list of `[object, outcome, hash]` entries
     * `object` is a `CBlock`, `CTransaction`, or
     `CBlockHeader`.  `CBlock`'s and `CTransaction`'s are tested for
     acceptance.  `CBlockHeader`s can be used so that the test runner can deliver
