@@ -2290,8 +2290,8 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 instantsend.Vote(tx.GetHash(), *connman);
             }
 
-            mempool.check(pcoinsTip);
-            connman->RelayTransaction(tx);
+            mempool.check(pcoinsTip.get());
+            RelayTransaction(tx, connman);
             for (unsigned int i = 0; i < tx.vout.size(); i++) {
                 vWorkQueue.emplace_back(inv.hash, i);
             }
@@ -2357,7 +2357,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                             recentRejects->insert(orphanHash);
                         }
                     }
-                    mempool.check(pcoinsTip);
+                    mempool.check(pcoinsTip.get());
                 }
             }
 
