@@ -883,16 +883,9 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                     uint32_t nHashType = GetHashType(vchSig);
                     // BU remember the sighashtype so we can use it to choose when to allow this tx
                     if (sighashtype) *sighashtype |= nHashType;
-                    if (nHashType & SIGHASH_FORKID)
-                    {
-                        if (!(flags & SCRIPT_ENABLE_SIGHASH_FORKID))
-                            return set_error(serror,
-                                             SCRIPT_ERR_ILLEGAL_FORKID);
-                    }
-                    else
-                    {
-                        scriptCode.FindAndDelete(CScript(vchSig));
-                    }
+
+                    // Drop the signature, since there's no way for a signature to sign itself
+                    scriptCode.FindAndDelete(CScript(vchSig));
 
                     if (!CheckSignatureEncoding(vchSig, flags, serror) || !CheckPubKeyEncoding(vchPubKey, flags, serror)) {
                         //serror is set
@@ -954,16 +947,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                         uint32_t nHashType = GetHashType(vchSig);
                         // BU remember the sighashtype so we can use it to choose when to allow this tx
                         if (sighashtype) *sighashtype |= nHashType;
-                        if (nHashType & SIGHASH_FORKID)
-                        {
-                            if (!(flags & SCRIPT_ENABLE_SIGHASH_FORKID))
-                                return set_error(serror,
-                                                 SCRIPT_ERR_ILLEGAL_FORKID);
-                        }
-                        else
-                        {
-                            scriptCode.FindAndDelete(CScript(vchSig));
-                        }
+                        scriptCode.FindAndDelete(CScript(vchSig));
                     }
 
                     bool fSuccess = true;
@@ -1166,7 +1150,9 @@ uint256 GetOutputsHash(const CTransaction &txTo) {
     return ss.GetHash();
 }
 
-uint256 SignatureHashForkAlg(const CScript &scriptCode, const CTransaction &txTo, unsigned int nIn, uint32_t nHashType,
+} // anon namespace
+
+uint256 SignatureHashBitcoinCash(const CScript &scriptCode, const CTransaction &txTo, unsigned int nIn, uint32_t nHashType,
     const CAmount &amount, size_t *nHashedOut)
 {
     static const uint256 one(uint256S("0000000000000000000000000000000000000000000000000000000000000001"));
@@ -1224,15 +1210,8 @@ uint256 SignatureHashForkAlg(const CScript &scriptCode, const CTransaction &txTo
     return one;
 }
 
-} // anon namespace
-
-
-uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsigned int nIn, uint32_t nHashType, const CAmount &amount, size_t* nHashedOut)
+uint256 SignatureHashLegacy(const CScript& scriptCode, const CTransaction& txTo, unsigned int nIn, uint32_t nHashType, const CAmount &amount, size_t* nHashedOut)
 {
-    if (nHashType & SIGHASH_FORKID) {
-        return SignatureHashForkAlg(scriptCode, txTo, nIn, nHashType, amount, nHashedOut);
-    }
-
     static const uint256 one(uint256S("0000000000000000000000000000000000000000000000000000000000000001"));
     if (nIn >= txTo.vin.size()) {
         //  nIn out of range
@@ -1258,6 +1237,15 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
     return ss.GetHash();
 }
 
+uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsigned int nIn, uint32_t nHashType, const CAmount &amount, size_t* nHashedOut)
+{
+    if (nHashType & SIGHASH_FORKID)
+    {
+        return SignatureHashBitcoinCash(scriptCode, txTo, nIn, nHashType, amount, nHashedOut);
+    }
+    return SignatureHashLegacy(scriptCode, txTo, nIn, nHashType, amount, nHashedOut);
+}
+
 bool TransactionSignatureChecker::VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& pubkey, const uint256& sighash) const
 {
     return pubkey.Verify(sighash, vchSig);
@@ -1276,8 +1264,18 @@ bool TransactionSignatureChecker::CheckSig(const vector<unsigned char>& vchSigIn
     int nHashType = vchSig.back();
     vchSig.pop_back();
 
+    uint256 sighash;
     size_t nHashed = 0;
-    uint256 sighash = SignatureHash(scriptCode, *txTo, nIn, nHashType, amount, &nHashed);
+    // If BCC sighash is possible, check the bit, otherwise ignore the bit.  This is needed because
+    // the bit is undefined (can be any value) before the fork. See block 264084 tx 102
+    if ((nFlags & SCRIPT_ENABLE_SIGHASH_FORKID)&&(nHashType & SIGHASH_FORKID))
+    {
+        sighash = SignatureHashBitcoinCash(scriptCode, *txTo, nIn, nHashType, amount, &nHashed);
+    }
+    else
+    {
+        sighash = SignatureHashLegacy(scriptCode, *txTo, nIn, nHashType, amount, &nHashed);
+    }
     nBytesHashed += nHashed;
     ++nSigops;
 
