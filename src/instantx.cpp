@@ -5,7 +5,7 @@
 #include "activemasternode.h"
 #include "instantx.h"
 #include "key.h"
-#include "main.h"
+#include "validation.h"
 #include "masternode-sync.h"
 #include "masternodeman.h"
 #include "messagesigner.h"

@@ -7,7 +7,7 @@
 #include "versionbits.h"
 #include "test/test_dash.h"
 #include "chainparams.h"
-#include "main.h"
+#include "validation.h"
 #include "consensus/params.h"
 
 #include <boost/test/unit_test.hpp>

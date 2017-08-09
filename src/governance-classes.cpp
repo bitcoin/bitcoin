@@ -7,7 +7,7 @@
 #include "core_io.h"
 #include "governance-classes.h"
 #include "init.h"
-#include "main.h"
+#include "validation.h"
 #include "utilstrencodings.h"
 
 #include <boost/algorithm/string.hpp>

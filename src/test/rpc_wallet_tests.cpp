@@ -6,7 +6,7 @@
 #include "rpc/client.h"
 
 #include "base58.h"
-#include "main.h"
+#include "validation.h"
 #include "wallet/wallet.h"
 
 #include "test/test_dash.h"

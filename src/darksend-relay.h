@@ -6,7 +6,7 @@
 #ifndef DARKSEND_RELAY_H
 #define DARKSEND_RELAY_H
 
-#include "main.h"
+#include "validation.h"
 #include "activemasternode.h"
 #include "masternodeman.h"
 

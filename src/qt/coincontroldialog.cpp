@@ -16,7 +16,7 @@
 
 #include "coincontrol.h"
 #include "init.h"
-#include "main.h" // For minRelayTxFee
+#include "validation.h" // For minRelayTxFee
 #include "wallet/wallet.h"
 
 #include "instantx.h"

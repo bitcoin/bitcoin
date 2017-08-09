@@ -10,7 +10,7 @@
 #include "governance-classes.h"
 #include "governance-validators.h"
 #include "init.h"
-#include "main.h"
+#include "validation.h"
 #include "masternode.h"
 #include "masternode-sync.h"
 #include "masternodeconfig.h"

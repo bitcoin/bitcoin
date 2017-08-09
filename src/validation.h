@@ -4,8 +4,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_MAIN_H
-#define BITCOIN_MAIN_H
+#ifndef BITCOIN_VALIDATION_H
+#define BITCOIN_VALIDATION_H
 
 #if defined(HAVE_CONFIG_H)
 #include "config/dash-config.h"
@@ -14,10 +14,9 @@
 #include "amount.h"
 #include "chain.h"
 #include "coins.h"
-#include "net.h"
+#include "protocol.h" // For CMessageHeader::MessageStartChars
 #include "script/script_error.h"
 #include "sync.h"
-#include "validationinterface.h"
 #include "versionbits.h"
 #include "spentindex.h"
 
@@ -30,7 +29,10 @@
 #include <utility>
 #include <vector>
 
+#include <atomic>
+
 #include <boost/unordered_map.hpp>
+#include <boost/filesystem/path.hpp>
 
 class CBlockIndex;
 class CBlockTreeDB;
@@ -855,45 +857,4 @@ static const unsigned int REJECT_ALREADY_KNOWN = 0x101;
 /** Transaction conflicts with a transaction already known */
 static const unsigned int REJECT_CONFLICT = 0x102;
 
-// The following things handle network-processing logic
-// (and should be moved to a separate file)
-
-/** Register with a network node to receive its signals */
-void RegisterNodeSignals(CNodeSignals& nodeSignals);
-/** Unregister a network node */
-void UnregisterNodeSignals(CNodeSignals& nodeSignals);
-
-class PeerLogicValidation : public CValidationInterface {
-private:
-    CConnman* connman;
-
-public:
-    PeerLogicValidation(CConnman* connmanIn);
-
-    virtual void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload);
-    virtual void BlockChecked(const CBlock& block, const CValidationState& state);
-};
-
-struct CNodeStateStats {
-    int nMisbehavior;
-    int nSyncHeight;
-    int nCommonHeight;
-    std::vector<int> vHeightInFlight;
-};
-
-/** Get statistics from node state */
-bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
-/** Increase a node's misbehavior score. */
-void Misbehaving(NodeId nodeid, int howmuch);
-
-/** Process protocol messages received from a given node */
-bool ProcessMessages(CNode* pfrom, CConnman& connman);
-/**
- * Send queued protocol messages to be sent to a give node.
- *
- * @param[in]   pto             The node which we are sending messages to.
- * @param[in]   connman         The connection manager for that node.
- */
-bool SendMessages(CNode* pto, CConnman& connman);
-
-#endif // BITCOIN_MAIN_H
+#endif // BITCOIN_VALIDATION_H

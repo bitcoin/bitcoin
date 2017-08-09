@@ -6,7 +6,7 @@
 #include "governance-object.h"
 #include "governance-vote.h"
 #include "governance-classes.h"
-#include "main.h"
+#include "net_processing.h"
 #include "masternode.h"
 #include "masternode-sync.h"
 #include "masternodeman.h"

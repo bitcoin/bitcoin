@@ -9,7 +9,7 @@
 #include "chain.h"
 #include "core_io.h"
 #include "init.h"
-#include "main.h"
+#include "validation.h"
 #include "net.h"
 #include "netbase.h"
 #include "policy/rbf.h"

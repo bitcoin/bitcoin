@@ -4,7 +4,7 @@
 
 #include "clientversion.h"
 #include "consensus/validation.h"
-#include "main.h" // For CheckBlock
+#include "validation.h" // For CheckBlock
 #include "primitives/block.h"
 #include "test/test_dash.h"
 #include "utiltime.h"

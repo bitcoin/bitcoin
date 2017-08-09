@@ -6,7 +6,7 @@
 #define MASTERNODE_H
 
 #include "key.h"
-#include "main.h"
+#include "validation.h"
 #include "net.h"
 #include "spork.h"
 #include "timedata.h"
