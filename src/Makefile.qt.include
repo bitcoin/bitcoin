@@ -302,6 +302,7 @@ RES_ICONS = \
   qt/res/icons/history.png \
   qt/res/icons/info.png \
   qt/res/icons/key.png \
+  qt/res/icons/litecoin_splash.png \
   qt/res/icons/lock_closed.png \
   qt/res/icons/lock_open.png \
   qt/res/icons/network_disabled.png \
