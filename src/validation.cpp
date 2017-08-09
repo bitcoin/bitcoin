@@ -38,7 +38,6 @@
 
 #include "instantx.h"
 #include "masternode-payments.h"
-#include "masternode-sync.h"
 
 #include <sstream>
 
@@ -3455,8 +3454,6 @@ bool ProcessNewBlock(const CChainParams& chainparams, const CBlock* pblock, bool
     CValidationState state; // Only used to report errors, not invalidity - ignore it
     if (!ActivateBestChain(state, chainparams, pblock))
         return error("%s: ActivateBestChain failed", __func__);
-
-    masternodeSync.IsBlockchainSynced(true);
 
     LogPrintf("%s : ACCEPTED\n", __func__);
     return true;

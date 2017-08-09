@@ -173,6 +173,7 @@ UniValue mnsync(const UniValue& params, bool fHelp)
     if(strMode == "reset")
     {
         masternodeSync.Reset();
+        masternodeSync.SwitchToNextAsset();
         return "success";
     }
     return "failure";

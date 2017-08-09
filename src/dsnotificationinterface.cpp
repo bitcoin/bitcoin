@@ -25,7 +25,7 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
     instantsend.UpdatedBlockTip(pindexNew);
     mnpayments.UpdatedBlockTip(pindexNew);
     governance.UpdatedBlockTip(pindexNew);
-    masternodeSync.UpdatedBlockTip(pindexNew);
+    masternodeSync.UpdatedBlockTip(pindexNew, fInitialDownload);
 }
 
 void CDSNotificationInterface::SyncTransaction(const CTransaction &tx, const CBlock *pblock)

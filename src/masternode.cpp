@@ -627,7 +627,7 @@ bool CMasternodeBroadcast::Update(CMasternode* pmn, int& nDos)
             pmn->Check();
             Relay();
         }
-        masternodeSync.AddedMasternodeList();
+        masternodeSync.BumpAssetLastTime("CMasternodeBroadcast::Update");
     }
 
     return true;
@@ -890,7 +890,7 @@ bool CMasternodePing::CheckAndUpdate(CMasternode* pmn, bool fFromNewBroadcast, i
     if(!masternodeSync.IsMasternodeListSynced() && !pmn->IsPingedWithin(MASTERNODE_EXPIRATION_SECONDS/2)) {
         // let's bump sync timeout
         LogPrint("masternode", "CMasternodePing::CheckAndUpdate -- bumping sync timeout, masternode=%s\n", vin.prevout.ToStringShort());
-        masternodeSync.AddedMasternodeList();
+        masternodeSync.BumpAssetLastTime("CMasternodePing::CheckAndUpdate");
     }
 
     // let's store this ping as the last one

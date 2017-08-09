@@ -1971,7 +1971,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     mnodeman.UpdatedBlockTip(chainActive.Tip());
     privateSendClient.UpdatedBlockTip(chainActive.Tip());
     mnpayments.UpdatedBlockTip(chainActive.Tip());
-    masternodeSync.UpdatedBlockTip(chainActive.Tip());
+    masternodeSync.UpdatedBlockTip(chainActive.Tip(), IsInitialBlockDownload());
     governance.UpdatedBlockTip(chainActive.Tip());
 
     // ********************************************************* Step 11d: start dash-ps-<smth> threads
