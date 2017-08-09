@@ -359,7 +359,7 @@ private:
     uint64_t nMaxOutboundLimit;
     uint64_t nMaxOutboundTimeframe;
 
-    // Whitelisted ranges. Any node connecting from these is automatically
+    // Whitelisted ranges. Any node communicating using these is automatically
     // whitelisted (as well as those connecting to whitelisted binds).
     std::vector<CSubNet> vWhitelistedRange;
 
@@ -824,6 +824,11 @@ public:
     ServiceFlags GetLocalServices() const
     {
         return nLocalServices;
+    }
+
+    bool PunishInvalidBlocks() const
+    {
+        return !(fInbound || fFeeler || fWhitelisted || fAddnode);
     }
 
     std::string GetAddrName() const;

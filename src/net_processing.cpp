@@ -839,6 +839,30 @@ void PeerLogicValidation::UpdatedBlockTip(const CBlockIndex *pindexNew, const CB
     nTimeBestReceived = GetTime();
 }
 
+namespace {
+
+void HandleBlockDoS(std::string node_name, CNode * const pfrom, const int nDoS, const bool is_header) {
+    // We never actually DoS ban for invalid blocks, merely disconnect nodes if we're relying on them as a primary node
+    NodeId node_id = pfrom->GetId();
+    if (node_name.empty()) {
+        node_name = "(unknown)";
+        LOCK(cs_main);
+        CNodeState *nodestate = State(node_id);
+        if (nodestate) {
+            node_name = nodestate->name;
+        }
+    }
+    const std::string msg = strprintf("%s peer=%d got DoS score %d on invalid block%s", node_name, node_id, nDoS, is_header ? " header" : "");
+    if (pfrom->PunishInvalidBlocks()) {
+        LogPrint(BCLog::NET, "%s; simply disconnecting\n", msg);
+        pfrom->fDisconnect = true;
+    } else {
+        LogPrint(BCLog::NET, "%s; tolerating\n", msg);
+    }
+}
+
+}
+
 void PeerLogicValidation::BlockChecked(const CBlock& block, const CValidationState& state) {
     LOCK(cs_main);
 
@@ -849,10 +873,16 @@ void PeerLogicValidation::BlockChecked(const CBlock& block, const CValidationSta
     if (state.IsInvalid(nDoS)) {
         // Don't send reject message with code 0 or an internal reject code.
         if (it != mapBlockSource.end() && State(it->second.first) && state.GetRejectCode() > 0 && state.GetRejectCode() < REJECT_INTERNAL) {
+            const NodeId node_id = it->second.first;
+            CNodeState * const nodestate = State(node_id);
             CBlockReject reject = {(unsigned char)state.GetRejectCode(), state.GetRejectReason().substr(0, MAX_REJECT_MESSAGE_LENGTH), hash};
             State(it->second.first)->rejects.push_back(reject);
-            if (nDoS > 0 && it->second.second)
-                Misbehaving(it->second.first, nDoS);
+            if (nDoS > 0 && it->second.second) {
+                connman->ForNode(node_id, [nodestate, nDoS](CNode* pfrom){
+                    HandleBlockDoS(nodestate->name, pfrom, nDoS, false);
+                    return true;
+                });
+            }
         }
     }
     // Check that:
@@ -1986,8 +2016,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             int nDoS;
             if (state.IsInvalid(nDoS)) {
                 if (nDoS > 0) {
-                    LOCK(cs_main);
-                    Misbehaving(pfrom->GetId(), nDoS);
+                    HandleBlockDoS("", pfrom, nDoS, true);
                 }
                 LogPrintf("Peer %d sent us invalid header via cmpctblock\n", pfrom->GetId());
                 return true;
@@ -2255,12 +2284,23 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         LOCK(cs_main);
         CNodeState *nodestate = State(pfrom->GetId());
 
+        uint256 hashLastBlock;
+        for (const CBlockHeader& header : headers) {
+            if (!hashLastBlock.IsNull() && header.hashPrevBlock != hashLastBlock) {
+                Misbehaving(pfrom->GetId(), 20);
+                return error("non-continuous headers sequence");
+            }
+            hashLastBlock = header.GetHash();
+            if (!CheckProofOfWork(header.GetHash(), header.nBits, chainparams.GetConsensus())) {
+                Misbehaving(pfrom->GetId(), 50);
+                return error("proof of work failed");
+            }
+        }
+
         // If this looks like it could be a block announcement (nCount <
         // MAX_BLOCKS_TO_ANNOUNCE), use special logic for handling headers that
         // don't connect:
         // - Send a getheaders message in response to try to connect the chain.
-        // - The peer can send up to MAX_UNCONNECTING_HEADERS in a row that
-        //   don't connect before giving DoS points
         // - Once a headers message is received that is valid and does connect,
         //   nUnconnectingHeaders gets reset back to 0.
         if (mapBlockIndex.find(headers[0].hashPrevBlock) == mapBlockIndex.end() && nCount < MAX_BLOCKS_TO_ANNOUNCE) {
@@ -2276,19 +2316,11 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             // we can use this peer to download.
             UpdateBlockAvailability(pfrom->GetId(), headers.back().GetHash());
 
-            if (nodestate->nUnconnectingHeaders % MAX_UNCONNECTING_HEADERS == 0) {
-                Misbehaving(pfrom->GetId(), 20);
+            if (pfrom->PunishInvalidBlocks()) {
+                pfrom->fDisconnect = true;
             }
-            return true;
-        }
 
-        uint256 hashLastBlock;
-        for (const CBlockHeader& header : headers) {
-            if (!hashLastBlock.IsNull() && header.hashPrevBlock != hashLastBlock) {
-                Misbehaving(pfrom->GetId(), 20);
-                return error("non-continuous headers sequence");
-            }
-            hashLastBlock = header.GetHash();
+            return true;
         }
         }
 
@@ -2297,8 +2329,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             int nDoS;
             if (state.IsInvalid(nDoS)) {
                 if (nDoS > 0) {
-                    LOCK(cs_main);
-                    Misbehaving(pfrom->GetId(), nDoS);
+                    HandleBlockDoS("", pfrom, nDoS, true);
                 }
                 return error("invalid header received");
             }

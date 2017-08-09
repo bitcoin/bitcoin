@@ -415,7 +415,7 @@ std::string HelpMessage(HelpMessageMode mode)
 #endif
 #endif
     strUsage += HelpMessageOpt("-whitebind=<addr>", _("Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6"));
-    strUsage += HelpMessageOpt("-whitelist=<IP address or network>", _("Whitelist peers connecting from the given IP address (e.g. 1.2.3.4) or CIDR notated network (e.g. 1.2.3.0/24). Can be specified multiple times.") +
+    strUsage += HelpMessageOpt("-whitelist=<IP address or network>", _("Whitelist peers using the given IP address (e.g. 1.2.3.4) or CIDR notated network (e.g. 1.2.3.0/24). Can be specified multiple times.") +
         " " + _("Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway"));
     strUsage += HelpMessageOpt("-maxuploadtarget=<n>", strprintf(_("Tries to keep outbound traffic under the given target (in MiB per 24h), 0 = no limit (default: %d)"), DEFAULT_MAX_UPLOAD_TARGET));
 
@@ -496,6 +496,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-blockmaxweight=<n>", strprintf(_("Set maximum BIP141 block weight (default: %d)"), DEFAULT_BLOCK_MAX_WEIGHT));
     strUsage += HelpMessageOpt("-blockmaxsize=<n>", strprintf(_("Set maximum block size in bytes (default: %d)"), DEFAULT_BLOCK_MAX_SIZE));
     strUsage += HelpMessageOpt("-blockmintxfee=<amt>", strprintf(_("Set lowest fee rate (in %s/kB) for transactions to be included in block creation. (default: %s)"), CURRENCY_UNIT, FormatMoney(DEFAULT_BLOCK_MIN_TX_FEE)));
+    strUsage += HelpMessageOpt("-bip148", strprintf(_("Enable BIP148/UASF (default: %d)"), DEFAULT_BIP148));
     if (showDebug)
         strUsage += HelpMessageOpt("-blockversion=<n>", "Override block version to test forking scenarios");
 
@@ -1269,6 +1270,20 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
             return InitError(strprintf(_("User Agent comment (%s) contains unsafe characters."), cmt));
         uacomments.push_back(cmt);
     }
+    // Add BIP148 enforcement indicator; note this uses characters forbidden by SAFE_CHARS_UA_COMMENT (but not BIP14) to avoid users confusing it with a mere uacomment option
+    {
+        std::string uacomment_bip148;
+        if (gArgs.GetBoolArg("-bip148", DEFAULT_BIP148)) {
+            uacomment_bip148 = "+";
+        } else {
+            uacomment_bip148 = "!";
+        }
+        uacomment_bip148 += "BIP148";
+        if (!gArgs.IsArgSet("-bip148")) {
+            uacomment_bip148 += "=";
+        }
+        uacomments.push_back(uacomment_bip148);
+    }
     strSubVersion = FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, uacomments);
     if (strSubVersion.size() > MAX_SUBVERSION_LENGTH) {
         return InitError(strprintf(_("Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments."),
@@ -1595,6 +1610,12 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         // Only care about others providing witness capabilities if there is a softfork
         // defined.
         nRelevantServices = ServiceFlags(nRelevantServices | NODE_WITNESS);
+    }
+
+    if (gArgs.GetBoolArg("-bip148", DEFAULT_BIP148)) {
+        // We want to preferentially peer with other nodes that enforce BIP148, in case of a chain split
+        nLocalServices = ServiceFlags(nLocalServices | NODE_BIP148);
+        nRelevantServices = ServiceFlags(nRelevantServices | NODE_BIP148);
     }
 
     // ********************************************************* Step 10: import blocks
