@@ -1463,6 +1463,10 @@ bool CScriptCheck::operator()() const {
 
 bool VerifySignature(const CCoins& txFrom, const CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType)
 {
+    assert(nIn < txTo.vin.size());
+    if (txTo.vin[nIn].prevout.n >= txFrom.vout.size())
+        return false;
+
     return CScriptCheck(txFrom, txTo, nIn, flags, nHashType)();
 }
 

@@ -480,7 +480,7 @@ bool CheckProofOfStake(CValidationState &state, const CTransaction& tx, unsigned
 
     // Verify signature
     CCoins coins(txPrev, 0);
-    if (!VerifySignature(coins, tx, 0, true, 0))
+    if (!VerifySignature(coins, tx, 0, SCRIPT_VERIFY_P2SH, 0))
         return state.DoS(100, error("CheckProofOfStake() : VerifySignature failed on coinstake %s", tx.GetHash().ToString().c_str()));
 
     if (!CheckStakeKernelHash(nBits, header, postx.nTxOffset + sizeof(CBlockHeader), txPrev, txin.prevout, tx.nTime, hashProofOfStake, fDebug))
