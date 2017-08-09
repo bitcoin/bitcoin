@@ -522,7 +522,7 @@ bool CDB::Rewrite(CWalletDBWrapper& dbw, const char* pszSkip)
                 std::string strFileRes = strFile + ".rewrite";
                 { // surround usage of db with extra {}
                     CDB db(dbw, "r");
-                    Db* pdbCopy = new Db(env->dbenv.get(), 0);
+                    std::unique_ptr<Db> pdbCopy = std::unique_ptr<Db>(new Db(env->dbenv.get(), 0));
 
                     int ret = pdbCopy->open(nullptr,               // Txn pointer
                                             strFileRes.c_str(), // Filename
@@ -571,7 +571,6 @@ bool CDB::Rewrite(CWalletDBWrapper& dbw, const char* pszSkip)
                     } else {
                         pdbCopy->close(0);
                     }
-                    delete pdbCopy;
                 }
                 if (fSuccess) {
                     Db dbA(env->dbenv.get(), 0);
