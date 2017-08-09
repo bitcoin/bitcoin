@@ -699,7 +699,7 @@ public:
     CSemaphoreGrant grantOutbound;
     CSemaphoreGrant grantMasternodeOutbound;
     CCriticalSection cs_filter;
-    CBloomFilter* pfilter;
+    std::unique_ptr<CBloomFilter> pfilter;
     std::atomic<int> nRefCount;
 
     const uint64_t nKeyedNetGroup;
