@@ -18,11 +18,14 @@
 #include "sync.h"
 #include "uint256.h"
 #include "util.h"
+#include "threadinterrupt.h"
 
 #include <atomic>
 #include <deque>
 #include <stdint.h>
+#include <thread>
 #include <memory>
+#include <condition_variable>
 
 #ifndef WIN32
 #include <arpa/inet.h>
@@ -127,8 +130,9 @@ public:
     };
     CConnman();
     ~CConnman();
-    bool Start(boost::thread_group& threadGroup, CScheduler& scheduler, std::string& strNodeError, Options options);
+    bool Start(CScheduler& scheduler, std::string& strNodeError, Options options);
     void Stop();
+    void Interrupt();
     bool BindListenPort(const CService &bindAddr, std::string& strError, bool fWhitelisted = false);
     bool OpenNetworkConnection(const CAddress& addrConnect, CSemaphoreGrant *grantOutbound = NULL, const char *strDest = NULL, bool fOneShot = false, bool fFeeler = false);
     bool CheckIncomingNonce(uint64_t nonce);
@@ -421,7 +425,6 @@ private:
     std::list<CNode*> vNodesDisconnected;
     mutable CCriticalSection cs_vNodes;
     std::atomic<NodeId> nLastNodeId;
-    boost::condition_variable messageHandlerCondition;
 
     /** Services this instance offers */
     ServiceFlags nLocalServices;
@@ -436,6 +439,19 @@ private:
     int nMaxFeeler;
     std::atomic<int> nBestHeight;
     CClientUIInterface* clientInterface;
+
+    std::condition_variable condMsgProc;
+    std::mutex mutexMsgProc;
+    std::atomic<bool> flagInterruptMsgProc;
+
+    CThreadInterrupt interruptNet;
+
+    std::thread threadDNSAddressSeed;
+    std::thread threadSocketHandler;
+    std::thread threadOpenAddedConnections;
+    std::thread threadOpenConnections;
+    std::thread threadMnbRequestConnections;
+    std::thread threadMessageHandler;
 };
 extern std::unique_ptr<CConnman> g_connman;
 void Discover(boost::thread_group& threadGroup);
@@ -462,8 +478,8 @@ struct CombinerAll
 // Signals for message handling
 struct CNodeSignals
 {
-    boost::signals2::signal<bool (CNode*, CConnman&), CombinerAll> ProcessMessages;
-    boost::signals2::signal<bool (CNode*, CConnman&), CombinerAll> SendMessages;
+    boost::signals2::signal<bool (CNode*, CConnman&, std::atomic<bool>&), CombinerAll> ProcessMessages;
+    boost::signals2::signal<bool (CNode*, CConnman&, std::atomic<bool>&), CombinerAll> SendMessages;
     boost::signals2::signal<void (CNode*, CConnman&)> InitializeNode;
     boost::signals2::signal<void (NodeId, bool&)> FinalizeNode;
 };
