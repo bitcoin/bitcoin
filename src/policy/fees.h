@@ -245,9 +245,9 @@ private:
     std::map<uint256, TxStatsInfo> mapMemPoolTxs;
 
     /** Classes to track historical data on transaction confirmations */
-    TxConfirmStats* feeStats;
-    TxConfirmStats* shortStats;
-    TxConfirmStats* longStats;
+    std::unique_ptr<TxConfirmStats> feeStats;
+    std::unique_ptr<TxConfirmStats> shortStats;
+    std::unique_ptr<TxConfirmStats> longStats;
 
     unsigned int trackedTxs;
     unsigned int untrackedTxs;
