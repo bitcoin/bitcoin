@@ -482,7 +482,7 @@ public:
     bool IsEquivalentTo(const CWalletTx& tx) const;
 
     bool InMempool() const;
-    bool IsTrusted() const;
+    bool IsTrusted(bool trust_unavailable = false) const;
 
     int64_t GetTxTime() const;
     int GetRequestCount() const;
@@ -941,8 +941,8 @@ public:
     void ResendWalletTransactions(int64_t nBestBlockTime, CConnman* connman) override;
     // ResendWalletTransactionsBefore may only be called if fBroadcastTransactions!
     std::vector<uint256> ResendWalletTransactionsBefore(int64_t nTime, CConnman* connman);
-    CAmount GetBalance() const;
-    CAmount GetUnconfirmedBalance() const;
+    CAmount GetBalance(bool include_unavailable = false) const;
+    CAmount GetUnconfirmedBalance(bool include_unavailable = false) const;
     CAmount GetImmatureBalance() const;
     CAmount GetWatchOnlyBalance() const;
     CAmount GetUnconfirmedWatchOnlyBalance() const;
