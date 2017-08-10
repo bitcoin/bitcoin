@@ -104,6 +104,8 @@ static bool SignStep(const BaseSignatureCreator& creator, const CScript& scriptP
     case TX_MULTISIG:
         scriptSigRet << OP_0; // workaround CHECKMULTISIG bug
         return (SignN(vSolutions, creator, scriptPubKey, scriptSigRet));
+    case TX_LABELPUBLIC:  // These are OP_RETURN unspendable outputs so they should never be an input that needs signing
+        return false;
     }
 
     return false;
@@ -259,6 +261,8 @@ static CScript CombineSignatures(const CScript& scriptPubKey, const BaseSignatur
         }
     case TX_MULTISIG:
         return CombineMultisig(scriptPubKey, checker, vSolutions, sigs1, sigs2);
+    case TX_LABELPUBLIC:  // These are OP_RETURN unspendable outputs so they should never be an input that needs signing
+        return CScript();
     }
 
     return CScript();
