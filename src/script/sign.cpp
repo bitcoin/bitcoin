@@ -75,6 +75,7 @@ static bool SignStep(const BaseSignatureCreator& creator, const CScript& scriptP
     CKeyID keyID;
     switch (whichTypeRet)
     {
+    case TX_LABELPUBLIC:  // These are OP_RETURN unspendable outputs so they should never be an input that needs signing
     case TX_NONSTANDARD:
     case TX_NULL_DATA:
         return false;
@@ -259,6 +260,8 @@ static CScript CombineSignatures(const CScript& scriptPubKey, const BaseSignatur
         }
     case TX_MULTISIG:
         return CombineMultisig(scriptPubKey, checker, vSolutions, sigs1, sigs2);
+    case TX_LABELPUBLIC:  // These are OP_RETURN unspendable outputs so they should never be an input that needs signing
+        return CScript();
     }
 
     return CScript();
