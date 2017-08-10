@@ -108,7 +108,10 @@ static bool multiUserAuthorized(std::string strUserPass)
             std::string strSalt = vFields[1];
             std::string strHash = vFields[2];
 
-            unsigned int KEY_SIZE = 32;
+            enum
+            {
+                KEY_SIZE = 32
+            };
             unsigned char out[KEY_SIZE];
 
             CHMAC_SHA256(reinterpret_cast<const unsigned char*>(strSalt.c_str()), strSalt.size()).Write(reinterpret_cast<const unsigned char*>(strPass.c_str()), strPass.size()).Finalize(out);

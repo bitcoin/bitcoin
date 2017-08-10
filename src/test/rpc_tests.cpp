@@ -40,7 +40,8 @@ UniValue CallRPC(string args)
     string strMethod = vArgs[0];
     vArgs.erase(vArgs.begin());
     UniValue params = RPCConvertValues(strMethod, vArgs);
-    BOOST_CHECK(tableRPC[strMethod]);
+    // calling boost_check here sets the last checkpoint to a useless position
+    if (!tableRPC[strMethod]) BOOST_CHECK(tableRPC[strMethod]);
     rpcfn_type method = tableRPC[strMethod]->actor;
     try {
         UniValue result = (*method)(params, false);

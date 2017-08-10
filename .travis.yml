@@ -63,14 +63,14 @@ script:
     - OUTDIR=$BASE_OUTDIR/$TRAVIS_PULL_REQUEST/$TRAVIS_JOB_NUMBER-$HOST
     - BITCOIN_CONFIG_ALL="--without-comparison-tool --disable-dependency-tracking --prefix=$TRAVIS_BUILD_DIR/depends/$HOST --bindir=$OUTDIR/bin --libdir=$OUTDIR/lib"
     - depends/$HOST/native/bin/ccache --max-size=$CCACHE_SIZE
-    - test -n "$USE_SHELL" && eval '"$USE_SHELL" -c "./autogen.sh"' || ./autogen.sh
+    - test -n "$USE_SHELL" && eval '"$USE_SHELL" -c "./autogen.sh 2>&1 > autogen.out"' || ./autogen.sh 2>&1 > autogen.out || ( cat autogen.out && false)
     - mkdir build && cd build
     - echo "BITCOIN_CONFIG_ALL=$BITCOIN_CONFIG_ALL"
     - echo "BITCOIN_CONFIG=$BITCOIN_CONFIG"
     - echo "GOAL=$GOAL"
-    - ../configure $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG || ( cat config.log && false)
+    - ../configure $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG > configure.out || ( cat configure.out && cat config.log && false)
     - if [ "$RUN_FORMATTING_CHECK" = "true" ]; then make $MAKEJOBS check-formatting VERBOSE=1; fi
-    - make $MAKEJOBS $GOAL || ( echo "Build failure. Verbose build follows." && make $GOAL V=1 ; false )
+    - stdbuf -i0 -o0 -e0 make $MAKEJOBS $GOAL 2>&1 | ../contrib/devtools/buildsilence.py || ( echo "Build failure. Verbose build follows." && make $GOAL V=1 ; false )
     - export LD_LIBRARY_PATH=$TRAVIS_BUILD_DIR/depends/$HOST/lib
     - if [ "$RUN_TESTS" = "true" ] && { [ "$HOST" = "i686-w64-mingw32" ] || [ "$HOST" = "x86_64-w64-mingw32" ]; }; then travis_wait make $MAKEJOBS check VERBOSE=1; fi
     - if [ "$RUN_TESTS" = "true" ] && ! { [ "$HOST" = "i686-w64-mingw32" ] || [ "$HOST" = "x86_64-w64-mingw32" ]; }; then make $MAKEJOBS check VERBOSE=1; fi
