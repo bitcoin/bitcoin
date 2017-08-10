@@ -3755,7 +3755,7 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 UniValue offeracceptcount(const UniValue& params, bool fHelp) {
 	if (fHelp || 3 < params.size())
 		throw runtime_error("offeracceptcount [\"alias\",...] [filterpurchases=true] [filtersales=true]\n"
-			"list count of offer accept for a set of aliases. filterpurchases filters results for count of accepts that have been bought from aliases passed in(as buyer), filtersales filters results for count of accepts purchased by aliases passed in(as merchant or affiliate).\n");
+			"list count of offer accept for a set of aliases. filterpurchases filters results for count of accepts that have been bought with aliases passed in(as buyer), filtersales filters results for count of accepts purchased by aliases passed in(as merchant or affiliate).\n");
 
 		UniValue aliasesValue(UniValue::VARR);
 		vector<string> aliases;
@@ -3877,7 +3877,7 @@ UniValue offeracceptcount(const UniValue& params, bool fHelp) {
 UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 	if (fHelp || 6 < params.size())
 		throw runtime_error("offeracceptlist [\"alias\",...] [guid] [filterpurchases=true] [filtersales=true] [count] [from]\n"
-			"list offer accepts for a set of aliases. filterpurchases filters results for accepts that have been bought from aliases passed in(as buyer), filtersales filters results for accepts purchased by aliases passed in(as merchant or affiliate).\n"
+			"list offer accepts for a set of aliases. filterpurchases filters results for accepts that have been bought with aliases passed in(as buyer), filtersales filters results for accepts purchased by aliases passed in(as merchant or affiliate).\n"
 			"[count]          (numeric, optional, default=10) The number of results to return\n"
 			"[from]           (numeric, optional, default=0) The number of results to skip\n");
 	UniValue aliasesValue(UniValue::VARR);
