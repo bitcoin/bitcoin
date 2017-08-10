@@ -15,6 +15,7 @@
 #include <boost/foreach.hpp>
 #include <boost/thread.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
+#include <boost/range/adaptor/reversed.hpp>
 #include <functional> 
 using namespace std;
 extern void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CWalletTx* wtxInAlias=NULL, int nTxOutAlias = 0, bool syscoinMultiSigTx=false, const CCoinControl* coinControl=NULL, const CWalletTx* wtxInLinkAlias=NULL,  int nTxOutLinkAlias = 0)
@@ -737,8 +738,6 @@ UniValue messagereceivecount(const UniValue& params, bool fHelp) {
 				{
 					if (vNamesI.find(message.vchMessage) != vNamesI.end())
 						continue;
-					if (vchNameUniq.size() > 0 && vchNameUniq != message.vchMessage)
-						continue;
 					vector<CMessage> vtxMessagePos;
 					if (!pmessagedb->ReadMessage(message.vchMessage, vtxMessagePos) || vtxMessagePos.empty())
 						continue;
@@ -898,8 +897,6 @@ UniValue messagesentcount(const UniValue& params, bool fHelp) {
 				if (!message.IsNull())
 				{
 					if (vNamesI.find(message.vchMessage) != vNamesI.end())
-						continue;
-					if (vchNameUniq.size() > 0 && vchNameUniq != message.vchMessage)
 						continue;
 					vector<CMessage> vtxMessagePos;
 					if (!pmessagedb->ReadMessage(message.vchMessage, vtxMessagePos) || vtxMessagePos.empty())
