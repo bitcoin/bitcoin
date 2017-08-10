@@ -3128,6 +3128,8 @@ static const CRPCCommand commands[] =
 	{ "wallet", "offerremovewhitelist",	&offerremovewhitelist, false },
 	{ "wallet", "offerclearwhitelist",	&offerclearwhitelist,  false },
 	{ "wallet", "offerwhitelist",		&offerwhitelist,	   false },
+	 { "wallet", "offeracceptlist",          &offeracceptlist,          false },
+	 { "wallet", "offeracceptcount",          &offeracceptcount,          false },
     { "wallet", "offerlist",            &offerlist,            false },
 	{ "wallet", "offercount",            &offercount,            false },
     { "wallet", "offerinfo",            &offerinfo,            false },
