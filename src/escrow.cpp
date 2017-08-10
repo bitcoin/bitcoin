@@ -3673,7 +3673,7 @@ bool BuildEscrowJson(const CEscrow &escrow, const CEscrow &firstEscrow, UniValue
 }
 UniValue escrowcount(const UniValue& params, bool fHelp) {
 	if (fHelp || 3 < params.size())
-		throw runtime_error("escrowlist [\"buyeralias\",...] [\"selleralias\",...] [\"arbiteralias\",...]\n"
+		throw runtime_error("escrowcount [\"buyeralias\",...] [\"selleralias\",...] [\"arbiteralias\",...]\n"
 			"Count escrows that an set of aliases are involved in.\n");
 	UniValue aliasesValue(UniValue::VARR);
 	vector<string> buyeraliases, selleraliases, arbiteraliases;
