@@ -412,12 +412,9 @@ class WalletTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getmempoolinfo()['size'], chainlimit*2)
         assert_equal(len(txid_list), chainlimit*2)
 
-        # Without walletrejectlongchains, we will still generate a txid
-        # The tx will be stored in the wallet but not accepted to the mempool
-        extra_txid = self.nodes[0].sendtoaddress(sending_addr, Decimal('0.0001'))
-        assert(extra_txid not in self.nodes[0].getrawmempool())
-        assert(extra_txid in [tx["txid"] for tx in self.nodes[0].listtransactions()])
-        self.nodes[0].abandontransaction(extra_txid)
+        # Even without walletrejectlongchains, if a txid we make has a too long
+        # chain to go into the mempool, it will raise a JSON RPC error
+        assert_raises_rpc_error(-4, "too-long-mempool-chain", self.nodes[0].sendtoaddress, sending_addr, Decimal('0.0001'))
         total_txs = len(self.nodes[0].listtransactions("*",99999))
 
         # Try with walletrejectlongchains
