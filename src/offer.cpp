@@ -3877,7 +3877,7 @@ UniValue offeracceptcount(const UniValue& params, bool fHelp) {
 UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 	if (fHelp || 6 < params.size())
 		throw runtime_error("offeracceptlist [\"alias\",...] [guid] [filterpurchases=true] [filtersales=true] [count] [from]\n"
-			"list offer accepts for a set of aliases. filterpurchases filters results for accepts that have been bought from aliases passed in(as merchant or affiliate), filtersales filters results for accepts purchased by aliases passed in(buyer).\n"
+			"list offer accepts for a set of aliases. filterpurchases filters results for accepts that have been bought from aliases passed in(as buyer), filtersales filters results for accepts purchased by aliases passed in(as merchant or affiliate).\n"
 			"[count]          (numeric, optional, default=10) The number of results to return\n"
 			"[from]           (numeric, optional, default=0) The number of results to skip\n");
 	UniValue aliasesValue(UniValue::VARR);
