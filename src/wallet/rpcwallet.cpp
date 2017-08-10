@@ -3167,6 +3167,8 @@ static const CRPCCommand commands[] =
 	{ "wallet", "messagenew",         &messagenew,     false },
 	{ "wallet", "messagereceivelist",              &messagereceivelist,          false },
 	{ "wallet", "messagesentlist",              &messagesentlist,          false },
+	{ "wallet", "messagereceivecount",              &messagereceivecount,          false },
+	{ "wallet", "messagesentcount",              &messagesentcount,          false },
 	{ "wallet", "messageinfo",              &messageinfo,          false },
 };
 

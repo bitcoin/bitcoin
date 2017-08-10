@@ -670,87 +670,8 @@ UniValue messageinfo(const UniValue& params, bool fHelp) {
 
     return oMessage;
 }
-
-UniValue messagereceivelist(const UniValue& params, bool fHelp) {
-    if (fHelp || 4 < params.size())
-        throw runtime_error("messagereceivelist [\"alias\",...] [message] [count] [from]\n"
-                "list received messages that an array of aliases own. Set of aliases to look up based on alias.");
-	UniValue aliasesValue(UniValue::VARR);
-	vector<string> aliases;
-	
-
-	vector<unsigned char> vchNameUniq;
-	if (params.size() >= 2 && !params[1].get_str().empty())
-		vchNameUniq = vchFromValue(params[1]);
-
-	int count = 10;
-	int from = 0;
-	if (params.size() > 2 && !params[2].get_str().empty())
-		count = atoi(params[2].get_str());
-	if (params.size() > 3 && !params[3].get_str().empty())
-		from = atoi(params[3].get_str());
-	int found = 0;
-
-	UniValue oRes(UniValue::VARR);
-	map< vector<unsigned char>, int > vNamesI;
-
-	BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
-	{
-		if (oRes.size() >= count)
-			break;
-		const CWalletTx &wtx = item.second; 
-		if (wtx.nVersion != SYSCOIN_TX_VERSION)
-			continue;
-		if(!IsSyscoinTxMine(wtx, "message"))
-			continue;
-
-		CMessage message(wtx);
-		if(!message.IsNull())
-		{
-			if (vNamesI.find(message.vchMessage) != vNamesI.end())
-				continue;
-			if (vchNameUniq.size() > 0 && vchNameUniq != message.vchMessage)
-				continue;
-			vector<CMessage> vtxPos;
-			if (!pmessagedb->ReadMessage(message.vchMessage, vtxPos) || vtxPos.empty())
-				continue;
-			message.txHash = wtx.GetHash();
-			
-			UniValue oName(UniValue::VOBJ);
-			vNamesI[message.vchMessage] = message.nHeight;
-			found++;
-			if (found < from)
-				continue;
-			if (BuildMessageJson(message, oName))
-			{
-				oRes.push_back(oName);
-			}
-		}
-	}
-	
-    return oRes;
-}
 bool BuildMessageJson(const CMessage& message, UniValue& oName)
 {
-	CAliasIndex aliasFrom, aliasTo;
-	CTransaction aliastxtmp;
-	bool isExpired = false;
-	vector<CAliasIndex> aliasVtxPos;
-	if(GetTxAndVtxOfAlias(message.vchAliasFrom, aliasFrom, aliastxtmp, aliasVtxPos, isExpired, true))
-	{
-		aliasFrom.nHeight = message.nHeight;
-		aliasFrom.GetAliasFromList(aliasVtxPos);
-	}
-	else
-		return false;
-	aliasVtxPos.clear();
-	if(GetTxAndVtxOfAlias(message.vchAliasTo, aliasTo, aliastxtmp, aliasVtxPos, isExpired, true))
-	{
-		aliasTo.nHeight = message.nHeight;
-		aliasTo.GetAliasFromList(aliasVtxPos);
-	}
-	else
-		return false;
 	oName.push_back(Pair("GUID", stringFromVch(message.vchMessage)));
 	string sTime;
 	CBlockIndex *pindex = chainActive[message.nHeight];
@@ -762,85 +683,219 @@ bool BuildMessageJson(const CMessage& message, UniValue& oName)
 	oName.push_back(Pair("time", sTime));
 	oName.push_back(Pair("from", stringFromVch(message.vchAliasFrom)));
 	oName.push_back(Pair("to", stringFromVch(message.vchAliasTo)));
-
 	oName.push_back(Pair("subject", stringFromVch(message.vchSubject)));
-
-
 	oName.push_back(Pair("message", stringFromVch(message.vchMessageTo)));
 	return true;
 }
-UniValue messagesentlist(const UniValue& params, bool fHelp) {
-    if (fHelp || 4 < params.size())
-        throw runtime_error("messagesentlist [\"alias\",...] [message] [count] [from]\n"
-                "list sent messages that an array of aliases own. Set of aliases to look up based on alias\n"
-				"[count]          (numeric, optional, default=10) The number of results to return\n"
-				"[from]           (numeric, optional, default=0) The number of results to skip\n");
+UniValue messagereceivecount(const UniValue& params, bool fHelp) {
+	if (fHelp || 1 < params.size())
+		throw runtime_error("messagereceivecount [\"alias\",...]\n"
+			"Count messages that an array of aliases has recieved.");
 	UniValue aliasesValue(UniValue::VARR);
 	vector<string> aliases;
-	if(params.size() >= 1)
+	if (CheckParam(params, 0))
 	{
-		if(params[0].isArray())
+		if (params[0].isArray())
 		{
 			aliasesValue = params[0].get_array();
-			for(unsigned int aliasIndex =0;aliasIndex<aliasesValue.size();aliasIndex++)
+			for (unsigned int aliasIndex = 0; aliasIndex<aliasesValue.size(); aliasIndex++)
 			{
 				string lowerStr = aliasesValue[aliasIndex].get_str();
 				boost::algorithm::to_lower(lowerStr);
-				if(!lowerStr.empty())
+				if (!lowerStr.empty())
 					aliases.push_back(lowerStr);
 			}
 		}
 		else
 		{
-			string aliasName =  params[0].get_str();
+			string aliasName = params[0].get_str();
 			boost::algorithm::to_lower(aliasName);
-			if(!aliasName.empty())
+			if (!aliasName.empty())
+				aliases.push_back(aliasName);
+		}
+	}
+	int found = 0;
+
+	map< vector<unsigned char>, int > vNamesI;
+	map< vector<unsigned char>, UniValue > vNamesO;
+	if (aliases.size() > 0)
+	{
+		for (unsigned int aliasIndex = 0; aliasIndex<aliases.size(); aliasIndex++)
+		{
+			const string &name = aliases[aliasIndex];
+			const vector<unsigned char> &vchAlias = vchFromString(name);
+			vector<CAliasIndex> vtxPos;
+			if (!paliasdb->ReadAlias(vchAlias, vtxPos) || vtxPos.empty())
+				continue;
+			CTransaction tx;
+			for (auto& it : boost::adaptors::reverse(vtxPos)) {
+				const CAliasIndex& theAlias = it;
+				if (!GetSyscoinTransaction(theAlias.nHeight, theAlias.txHash, tx, Params().GetConsensus()))
+					continue;
+				CMessage message(tx);
+				if (!message.IsNull())
+				{
+					if (vNamesI.find(message.vchMessage) != vNamesI.end())
+						continue;
+					if (vchNameUniq.size() > 0 && vchNameUniq != message.vchMessage)
+						continue;
+					vector<CMessage> vtxMessagePos;
+					if (!pmessagedb->ReadMessage(message.vchMessage, vtxMessagePos) || vtxMessagePos.empty())
+						continue;
+					const CMessage &theMessage = vtxMessagePos.back();
+					if (theMessage.vchAliasTo != theAlias.vchAlias)
+						continue;
+
+					UniValue oMessage(UniValue::VOBJ);
+					vNamesI[message.vchMessage] = theMessage.nHeight;
+					found++;
+				}
+			}
+		}
+	}
+	return found;
+}
+UniValue messagereceivelist(const UniValue& params, bool fHelp) {
+	if (fHelp || 4 < params.size())
+		throw runtime_error("messagereceivelist [\"alias\",...] [<message>] [count] [from]\n"
+			"list messages that an array of aliases has recieved.");
+	UniValue aliasesValue(UniValue::VARR);
+	vector<string> aliases;
+	if (CheckParam(params, 0))
+	{
+		if (params[0].isArray())
+		{
+			aliasesValue = params[0].get_array();
+			for (unsigned int aliasIndex = 0; aliasIndex<aliasesValue.size(); aliasIndex++)
+			{
+				string lowerStr = aliasesValue[aliasIndex].get_str();
+				boost::algorithm::to_lower(lowerStr);
+				if (!lowerStr.empty())
+					aliases.push_back(lowerStr);
+			}
+		}
+		else
+		{
+			string aliasName = params[0].get_str();
+			boost::algorithm::to_lower(aliasName);
+			if (!aliasName.empty())
 				aliases.push_back(aliasName);
 		}
 	}
 	vector<unsigned char> vchNameUniq;
-    if (params.size() >= 2 && !params[1].get_str().empty())
-        vchNameUniq = vchFromValue(params[1]);
+	if (CheckParam(params, 1))
+		vchNameUniq = vchFromValue(params[1]);
 
 	int count = 10;
 	int from = 0;
-	if (params.size() > 2 && !params[2].get_str().empty())
+	if (CheckParam(params, 2))
 		count = atoi(params[2].get_str());
-	if (params.size() > 3 && !params[3].get_str().empty())
+	if (CheckParam(params, 3))
 		from = atoi(params[3].get_str());
 	int found = 0;
+
 	UniValue oRes(UniValue::VARR);
 	map< vector<unsigned char>, int > vNamesI;
-	if(aliases.size() > 0)
+	map< vector<unsigned char>, UniValue > vNamesO;
+	if (aliases.size() > 0)
 	{
-		for(unsigned int aliasIndex =0;aliasIndex<aliases.size();aliasIndex++)
+		for (unsigned int aliasIndex = 0; aliasIndex<aliases.size(); aliasIndex++)
 		{
 			if (oRes.size() >= count)
 				break;
-			string name = aliases[aliasIndex];
-			vector<unsigned char> vchAlias = vchFromString(name);
+			const string &name = aliases[aliasIndex];
+			const vector<unsigned char> &vchAlias = vchFromString(name);
 			vector<CAliasIndex> vtxPos;
 			if (!paliasdb->ReadAlias(vchAlias, vtxPos) || vtxPos.empty())
 				continue;
-		
-			const CAliasIndex &alias = vtxPos.back();
-			CTransaction aliastx;
-			uint256 txHash;
-			if (!GetSyscoinTransaction(alias.nHeight, alias.txHash, aliastx, Params().GetConsensus()))
-				continue;
-
 			CTransaction tx;
-
-			vector<unsigned char> vchValue;
-			BOOST_FOREACH(const CAliasIndex &theAlias, vtxPos)
-			{
+			for (auto& it : boost::adaptors::reverse(vtxPos)) {
 				if (oRes.size() >= count)
 					break;
-				if(!GetSyscoinTransaction(theAlias.nHeight, theAlias.txHash, tx, Params().GetConsensus()))
+				const CAliasIndex& theAlias = it;
+				if (!GetSyscoinTransaction(theAlias.nHeight, theAlias.txHash, tx, Params().GetConsensus()))
 					continue;
-
 				CMessage message(tx);
-				if(!message.IsNull())
+				if (!message.IsNull())
+				{
+					if (vNamesI.find(message.vchMessage) != vNamesI.end())
+						continue;
+					if (vchNameUniq.size() > 0 && vchNameUniq != message.vchMessage)
+						continue;
+					vector<CMessage> vtxMessagePos;
+					if (!pmessagedb->ReadMessage(message.vchMessage, vtxMessagePos) || vtxMessagePos.empty())
+						continue;
+					const CMessage &theMessage = vtxMessagePos.back();
+					if (theMessage.vchAliasTo != theAlias.vchAlias)
+						continue;
+
+					UniValue oMessage(UniValue::VOBJ);
+					vNamesI[message.vchMessage] = theMessage.nHeight;
+
+					if (BuildMessageJson(theMessage, oMessage))
+					{
+						found++;
+						if (found < from)
+							continue;
+						oRes.push_back(oMessage);
+					}
+					// if finding specific GUID don't need to look any further
+					if (vchNameUniq.size() > 0)
+						return oRes;
+				}
+			}
+		}
+	}
+	return oRes;
+}
+UniValue messagesentcount(const UniValue& params, bool fHelp) {
+	if (fHelp || 1 < params.size())
+		throw runtime_error("messagesentcount [\"alias\",...]\n"
+			"Count messages that an array of aliases has sent.\n");
+	UniValue aliasesValue(UniValue::VARR);
+	vector<string> aliases;
+	if (CheckParam(params, 0))
+	{
+		if (params[0].isArray())
+		{
+			aliasesValue = params[0].get_array();
+			for (unsigned int aliasIndex = 0; aliasIndex<aliasesValue.size(); aliasIndex++)
+			{
+				string lowerStr = aliasesValue[aliasIndex].get_str();
+				boost::algorithm::to_lower(lowerStr);
+				if (!lowerStr.empty())
+					aliases.push_back(lowerStr);
+			}
+		}
+		else
+		{
+			string aliasName = params[0].get_str();
+			boost::algorithm::to_lower(aliasName);
+			if (!aliasName.empty())
+				aliases.push_back(aliasName);
+		}
+	}
+	
+	int found = 0;
+
+	map< vector<unsigned char>, int > vNamesI;
+	map< vector<unsigned char>, UniValue > vNamesO;
+	if (aliases.size() > 0)
+	{
+		for (unsigned int aliasIndex = 0; aliasIndex<aliases.size(); aliasIndex++)
+		{
+			const string &name = aliases[aliasIndex];
+			const vector<unsigned char> &vchAlias = vchFromString(name);
+			vector<CAliasIndex> vtxPos;
+			if (!paliasdb->ReadAlias(vchAlias, vtxPos) || vtxPos.empty())
+				continue;
+			CTransaction tx;
+			for (auto& it : boost::adaptors::reverse(vtxPos)) {
+				const CAliasIndex& theAlias = it;
+				if (!GetSyscoinTransaction(theAlias.nHeight, theAlias.txHash, tx, Params().GetConsensus()))
+					continue;
+				CMessage message(tx);
+				if (!message.IsNull())
 				{
 					if (vNamesI.find(message.vchMessage) != vNamesI.end())
 						continue;
@@ -852,56 +907,109 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
 					const CMessage &theMessage = vtxMessagePos.back();
 					if (theMessage.vchAliasFrom != theAlias.vchAlias)
 						continue;
-					message.txHash = theAlias.txHash;
-					vNamesI[message.vchMessage] = message.nHeight;
+
+					vNamesI[message.vchMessage] = theMessage.nHeight;
 					found++;
-					if (found < from)
-						continue;
-					UniValue oName(UniValue::VOBJ);
-					if (BuildMessageJson(message, oName))
-					{
-						oRes.push_back(oName);
-					}
 				}
 			}
 		}
 	}
-	else
+	return found;
+}
+UniValue messagesentlist(const UniValue& params, bool fHelp) {
+	if (fHelp || 4 < params.size())
+		throw runtime_error("messagesentlist [\"alias\",...] [<message>] [count] [from]\n"
+			"list messages that an array of aliases has sent.\n"
+			"[count]          (numeric, optional, default=10) The number of results to return\n"
+			"[from]           (numeric, optional, default=0) The number of results to skip\n");
+	UniValue aliasesValue(UniValue::VARR);
+	vector<string> aliases;
+	if (CheckParam(params, 0))
 	{
-		BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
+		if (params[0].isArray())
+		{
+			aliasesValue = params[0].get_array();
+			for (unsigned int aliasIndex = 0; aliasIndex<aliasesValue.size(); aliasIndex++)
+			{
+				string lowerStr = aliasesValue[aliasIndex].get_str();
+				boost::algorithm::to_lower(lowerStr);
+				if (!lowerStr.empty())
+					aliases.push_back(lowerStr);
+			}
+		}
+		else
+		{
+			string aliasName = params[0].get_str();
+			boost::algorithm::to_lower(aliasName);
+			if (!aliasName.empty())
+				aliases.push_back(aliasName);
+		}
+	}
+	vector<unsigned char> vchNameUniq;
+	if (CheckParam(params, 1))
+		vchNameUniq = vchFromValue(params[1]);
+
+	int count = 10;
+	int from = 0;
+	if (CheckParam(params, 2))
+		count = atoi(params[2].get_str());
+	if (CheckParam(params, 3))
+		from = atoi(params[3].get_str());
+	int found = 0;
+
+	UniValue oRes(UniValue::VARR);
+	map< vector<unsigned char>, int > vNamesI;
+	map< vector<unsigned char>, UniValue > vNamesO;
+	if (aliases.size() > 0)
+	{
+		for (unsigned int aliasIndex = 0; aliasIndex<aliases.size(); aliasIndex++)
 		{
 			if (oRes.size() >= count)
 				break;
-			const CWalletTx &wtx = item.second; 
-			if (wtx.nVersion != SYSCOIN_TX_VERSION)
+			const string &name = aliases[aliasIndex];
+			const vector<unsigned char> &vchAlias = vchFromString(name);
+			vector<CAliasIndex> vtxPos;
+			if (!paliasdb->ReadAlias(vchAlias, vtxPos) || vtxPos.empty())
 				continue;
-			if(IsSyscoinTxMine(wtx, "message"))
-				continue;
-			CMessage message(wtx);
-			if(!message.IsNull())
-			{
-				if (vNamesI.find(message.vchMessage) != vNamesI.end())
+			CTransaction tx;
+			for (auto& it : boost::adaptors::reverse(vtxPos)) {
+				if (oRes.size() >= count)
+					break;
+				const CAliasIndex& theAlias = it;
+				if (!GetSyscoinTransaction(theAlias.nHeight, theAlias.txHash, tx, Params().GetConsensus()))
 					continue;
-				if (vchNameUniq.size() > 0 && vchNameUniq != message.vchMessage)
-					continue;
-				vector<CMessage> vtxMessagePos;
-				if (!pmessagedb->ReadMessage(message.vchMessage, vtxMessagePos) || vtxMessagePos.empty())
-					continue;
-				message.txHash = wtx.GetHash();
-				vNamesI[message.vchMessage] = message.nHeight;
-				found++;
-				if (found < from)
-					continue;
-				UniValue oName(UniValue::VOBJ);
-				if (BuildMessageJson(message, oName))
+				CMessage message(tx);
+				if (!message.IsNull())
 				{
-					oRes.push_back(oName);
+					if (vNamesI.find(message.vchMessage) != vNamesI.end())
+						continue;
+					if (vchNameUniq.size() > 0 && vchNameUniq != message.vchMessage)
+						continue;
+					vector<CMessage> vtxMessagePos;
+					if (!pmessagedb->ReadMessage(message.vchMessage, vtxMessagePos) || vtxMessagePos.empty())
+						continue;
+					const CMessage &theMessage = vtxMessagePos.back();
+					if (theMessage.vchAliasFrom != theAlias.vchAlias)
+						continue;
+
+					UniValue oMessage(UniValue::VOBJ);
+					vNamesI[message.vchMessage] = theMessage.nHeight;
+
+					if (BuildMessageJson(theMessage, oMessage))
+					{
+						found++;
+						if (found < from)
+							continue;
+						oRes.push_back(oMessage);
+					}
+					// if finding specific GUID don't need to look any further
+					if (vchNameUniq.size() > 0)
+						return oRes;
 				}
 			}
 		}
 	}
-
-    return oRes;
+	return oRes;
 }
 
 void MessageTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry)
