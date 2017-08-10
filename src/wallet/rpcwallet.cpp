@@ -3063,7 +3063,6 @@ UniValue listunspent(const JSONRPCRequest& request)
         RPCTypeCheckArgument(request.params[4], UniValue::VBOOL);
         fCCFormat = request.params[4].get_bool();
     }
-    
 
     UniValue results(UniValue::VARR);
     vector<COutput> vecOutputs;

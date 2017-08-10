@@ -271,6 +271,16 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
     vector<valtype> vSolutions;
     txnouttype whichType;
 
+    if (HasIsCoinstakeOp(scriptPubKey))
+    {
+        CScript scriptB;
+        if (!GetNonCoinstakeScriptPath(scriptPubKey, scriptB))
+            return false;
+        
+        // Return only the spending address
+        return ExtractDestination(scriptB, addressRet);
+    };
+
     if (!Solver(scriptPubKey, whichType, vSolutions))
         return false;
 

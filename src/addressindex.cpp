@@ -35,6 +35,9 @@ bool ExtractIndexInfo(const CTxOutBase *out, int &scriptType, std::vector<uint8_
         scriptType = 1;
     };
     
+    // Reset if HasIsCoinstakeOp
+    pScript = out->GetPScriptPubKey();
+    
     return true;
 };
 
