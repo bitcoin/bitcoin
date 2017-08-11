@@ -3582,7 +3582,7 @@ UniValue offercount(const UniValue& params, bool fHelp) {
 			if (!paliasdb->ReadAlias(vchAlias, vtxPos) || vtxPos.empty())
 				continue;
 			vector<CAliasPayment> vtxPaymentPos;
-			if (!paliasdb->ReadAliasPayment(vchAlias, vtxPaymentPos) || vtxPaymentPos.empty())
+			if (!paliasdb->ReadAliasPayment(vchAlias, vtxPaymentPos))
 				continue;
 			BOOST_FOREACH(txPos, vtxPos) {
 				if (!GetSyscoinTransaction(txPos.nHeight, txPos.txHash, tx, Params().GetConsensus()))
@@ -3693,7 +3693,7 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 			if (!paliasdb->ReadAlias(vchAlias, vtxPos) || vtxPos.empty())
 				continue;
 			vector<CAliasPayment> vtxPaymentPos;
-			if (!paliasdb->ReadAliasPayment(vchAlias, vtxPaymentPos) || vtxPaymentPos.empty())
+			if (!paliasdb->ReadAliasPayment(vchAlias, vtxPaymentPos))
 				continue;
 			BOOST_FOREACH(txPos, vtxPos) {
 				if (!GetSyscoinTransaction(txPos.nHeight, txPos.txHash, tx, Params().GetConsensus()))
@@ -3814,7 +3814,7 @@ UniValue offeracceptcount(const UniValue& params, bool fHelp) {
 				if (!paliasdb->ReadAlias(vchAlias, vtxPos) || vtxPos.empty())
 					continue;
 				vector<CAliasPayment> vtxPaymentPos;
-				if (!paliasdb->ReadAliasPayment(vchAlias, vtxPaymentPos) || vtxPaymentPos.empty())
+				if (!paliasdb->ReadAliasPayment(vchAlias, vtxPaymentPos))
 					continue;
 				BOOST_FOREACH(txPos, vtxPos) {
 					if (!GetSyscoinTransaction(txPos.nHeight, txPos.txHash, tx, Params().GetConsensus()))
@@ -3948,7 +3948,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 			if (!paliasdb->ReadAlias(vchAlias, vtxPos) || vtxPos.empty())
 				continue;
 			vector<CAliasPayment> vtxPaymentPos;
-			if (!paliasdb->ReadAliasPayment(vchAlias, vtxPaymentPos) || vtxPaymentPos.empty())
+			if (!paliasdb->ReadAliasPayment(vchAlias, vtxPaymentPos))
 				continue;
 			BOOST_FOREACH(txPos, vtxPos) {
 				if (!GetSyscoinTransaction(txPos.nHeight, txPos.txHash, tx, Params().GetConsensus()))
