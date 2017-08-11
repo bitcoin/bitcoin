@@ -20,6 +20,9 @@ CDSNotificationInterface::~CDSNotificationInterface()
 
 void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
 {
+    if (fInitialDownload || pindexNew == pindexFork) // In IBD or blocks were disconnected without any new ones
+     	return; 
+
     mnodeman.UpdatedBlockTip(pindexNew);
     privateSendClient.UpdatedBlockTip(pindexNew);
     instantsend.UpdatedBlockTip(pindexNew);
