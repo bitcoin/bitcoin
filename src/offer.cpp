@@ -3709,7 +3709,7 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 				vtxHeight.push_back(make_pair(txPaymentPos.txHash, txPaymentPos.nHeight));
 			}
 			CTransaction tx;
-			for (auto& it : boost::adaptors::reverse(vtxTx)) {
+			for (std::vector<pair<uint256, CTransaction> >::reverse_iterator it = vtxTx.rbegin(); it != vtxTx.rend(); ++it) {) {
 				if (oRes.size() >= count)
 					break;
 				const uint64_t& nHeight = vtxHeight[it.first];
