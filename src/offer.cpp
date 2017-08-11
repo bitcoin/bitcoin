@@ -3670,8 +3670,8 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 	int found = 0;
 
 
-	vector<uint256, CTransaction> vtxTx;
-	vector<uint256, uint64_t> vtxHeight;
+	vector<pair<uint256, CTransaction> > vtxTx;
+	vector<pair<uint256, uint64_t> > vtxHeight;
 	CTransaction tx;
 	CAliasIndex txPos;
 	CAliasPayment txPaymentPos;
