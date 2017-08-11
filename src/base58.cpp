@@ -222,6 +222,8 @@ public:
 
     bool operator()(const CKeyID& id) const { return addr->Set(id); }
     bool operator()(const CScriptID& id) const { return addr->Set(id); }
+    bool operator()(const CWitKeyID& id) const { return false; }
+    bool operator()(const CWitScriptID& id) const { return false; }
     bool operator()(const CNoDestination& no) const { return false; }
 };
 

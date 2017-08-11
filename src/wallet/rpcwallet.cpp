@@ -1170,6 +1170,16 @@ public:
         }
         return false;
     }
+
+    /* We can't witnessify what is already witnessified */
+    bool operator()(const CWitScriptID &scriptID) {
+        return false;
+    }
+
+    /* We can't witnessify what is already witnessified */
+    bool operator()(const CWitKeyID &keyId) {
+        return false;
+    }
 };
 
 UniValue addwitnessaddress(const JSONRPCRequest& request)

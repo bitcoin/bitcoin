@@ -118,6 +118,7 @@ BASE_SCRIPTS= [
     'bipdersig-p2p.py',
     'bip65-cltv-p2p.py',
     'uptime.py',
+    'segwit2.py'
 ]
 
 EXTENDED_SCRIPTS = [

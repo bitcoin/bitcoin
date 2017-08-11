@@ -202,6 +202,16 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
         addressRet = CScriptID(uint160(vSolutions[0]));
         return true;
     }
+    else if (whichType == TX_WITNESS_V0_SCRIPTHASH)
+    {
+        addressRet = CWitScriptID(uint256(vSolutions[0]));
+        return true;
+    }
+    else if (whichType == TX_WITNESS_V0_KEYHASH)
+    {
+        addressRet = CWitKeyID(uint160(vSolutions[0]));
+        return true;
+    }
     // Multisig txns have more than one address...
     return false;
 }
@@ -263,6 +273,18 @@ public:
     bool operator()(const CKeyID &keyID) const {
         script->clear();
         *script << OP_DUP << OP_HASH160 << ToByteVector(keyID) << OP_EQUALVERIFY << OP_CHECKSIG;
+        return true;
+    }
+
+    bool operator()(const CWitKeyID &keyID) const {
+        script->clear();
+        *script << OP_0 << ToByteVector(keyID);
+        return true;
+    }
+
+    bool operator()(const CWitScriptID &scriptID) const {
+        script->clear();
+        *script << OP_0 << ToByteVector(scriptID);
         return true;
     }
 

@@ -71,13 +71,14 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, bool& 
         break;
     case TX_WITNESS_V0_KEYHASH:
     {
-        if (!keystore.HaveCScript(CScriptID(CScript() << OP_0 << vSolutions[0]))) {
+        CWitKeyID witKeyID = CWitKeyID(uint160(vSolutions[0]));
+        if (!keystore.HaveCScript(witKeyID.ToP2SH())) {
             // We do not support bare witness outputs unless the P2SH version of it would be
             // acceptable as well. This protects against matching before segwit activates.
             // This also applies to the P2WSH case.
             break;
         }
-        isminetype ret = ::IsMine(keystore, GetScriptForDestination(CKeyID(uint160(vSolutions[0]))), isInvalid, SIGVERSION_WITNESS_V0);
+        isminetype ret = ::IsMine(keystore, GetScriptForDestination(witKeyID.ToKeyID()), isInvalid, SIGVERSION_WITNESS_V0);
         if (ret == ISMINE_SPENDABLE || ret == ISMINE_WATCH_SOLVABLE || (ret == ISMINE_NO && isInvalid))
             return ret;
         break;
@@ -107,14 +108,12 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, bool& 
     }
     case TX_WITNESS_V0_SCRIPTHASH:
     {
-        if (!keystore.HaveCScript(CScriptID(CScript() << OP_0 << vSolutions[0]))) {
+        CWitScriptID witScriptId = CWitScriptID(uint256(vSolutions[0]));
+        if (!keystore.HaveCScript(witScriptId.ToP2SH())) {
             break;
         }
-        uint160 hash;
-        CRIPEMD160().Write(&vSolutions[0][0], vSolutions[0].size()).Finalize(hash.begin());
-        CScriptID scriptID = CScriptID(hash);
         CScript subscript;
-        if (keystore.GetCScript(scriptID, subscript)) {
+        if (keystore.GetCScript(witScriptId.ToScriptID(), subscript)) {
             isminetype ret = IsMine(keystore, subscript, isInvalid, SIGVERSION_WITNESS_V0);
             if (ret == ISMINE_SPENDABLE || ret == ISMINE_WATCH_SOLVABLE || (ret == ISMINE_NO && isInvalid))
                 return ret;
