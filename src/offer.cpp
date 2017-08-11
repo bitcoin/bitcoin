@@ -3670,8 +3670,8 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 	int found = 0;
 
 
-	map<uint256, CTransaction> vtxTx;
-	map<uint256, uint64_t> vtxHeight;
+	vector<uint256, CTransaction> vtxTx;
+	vector<uint256, uint64_t> vtxHeight;
 	CTransaction tx;
 	CAliasIndex txPos;
 	CAliasPayment txPaymentPos;
@@ -3697,16 +3697,16 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 			BOOST_FOREACH(txPos, vtxPos) {
 				if (!GetSyscoinTransaction(txPos.nHeight, txPos.txHash, tx, Params().GetConsensus()))
 					continue;
-				vtxTx[txPos.txHash] = tx;
-				vtxHeight[txPos.txHash] = txPos.nHeight;
+				vtxTx.push_back(make_pair(txPos.txHash, tx));
+				vtxHeight.push_back(make_pair(txPos.txHash, txPos.nHeight));
 			}
 			BOOST_FOREACH(txPaymentPos, vtxPaymentPos) {
-				if (vtxTx.find(txPaymentPos.txHash) != vtxTx.end())
+				if (std::find(vtxHeight.begin(), vtxHeight.end(), make_pair(txPaymentPos.txHash, txPaymentPos.nHeight)) != vtxHeight.end())
 					continue;
 				if (!GetSyscoinTransaction(txPaymentPos.nHeight, txPaymentPos.txHash, tx, Params().GetConsensus()))
 					continue;
-				vtxTx[txPaymentPos.txHash] = tx;
-				vtxHeight[txPaymentPos.txHash] = txPaymentPos.nHeight;
+				vtxTx.push_back(make_pair(txPaymentPos.txHash, tx));
+				vtxHeight.push_back(make_pair(txPaymentPos.txHash, txPaymentPos.nHeight));
 			}
 			CTransaction tx;
 			for (auto& it : boost::adaptors::reverse(vtxTx)) {
