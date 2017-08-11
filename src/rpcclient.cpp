@@ -106,6 +106,14 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "setban", 3 },
     { "aliasnew", 9 },
     { "aliasupdate", 10 },
+	{ "messagereceivelist", 0},
+	{ "messagereceivecount", 0 },
+	{ "messagesentlist", 0 },
+	{ "messagesentcount", 0 },
+	{ "messagesentcount", 0 },
+	{ "offerlist", 0 },
+	{ "offeracceptcount", 0 },
+	{ "offeracceptlist", 0 }
 };
 
 class CRPCConvertTable
