@@ -410,8 +410,8 @@
         <translation>عرض قائمة عناوين الإستقبال المستخدمة والملصقات</translation>
     </message>
     <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>فتح URI : Bitcoin أو طلب دفع</translation>
+        <source>Open a %1: URI or payment request</source>
+        <translation>فتح URI : %1 أو طلب دفع</translation>
     </message>
     <message>
         <source>%1 and %2</source>

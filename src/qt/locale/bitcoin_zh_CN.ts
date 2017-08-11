@@ -402,8 +402,8 @@
         <translation>比特币无限</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>请求支付（生成二维码和 bitcoin: URI）</translation>
+        <source>Request payments (generates QR codes and %1: URIs)</source>
+        <translation>请求支付（生成二维码和 %1: URI）</translation>
     </message>
     <message>
         <source>&amp;About Bitcoin Unlimited</source>
@@ -422,8 +422,8 @@
         <translation>显示用过的接收地址和标签的列表</translation>
     </message>
     <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>打开一个比特币：URI 或支付请求</translation>
+        <source>Open a %1: URI or payment request</source>
+        <translation>打开一%1：URI 或支付请求</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
