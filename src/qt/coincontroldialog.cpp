@@ -494,66 +494,67 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
             
             nAmount += oR->nValue;
         };
-    };
-    
-    
-    
-    model->getOutputs(vCoinControl, vOutputs);
+    } else
+    {
 
-    BOOST_FOREACH(const COutput& out, vOutputs) {
-        // unselect already spent, very unlikely scenario, this could happen
-        // when selected are spent elsewhere, like rpc or another computer
-        uint256 txhash = out.tx->GetHash();
-        COutPoint outpt(txhash, out.i);
-        if (model->isSpent(outpt))
-        {
-            coinControl->UnSelect(outpt);
-            continue;
-        }
+        model->getOutputs(vCoinControl, vOutputs);
 
-        // Quantity
-        nQuantity++;
-
-        // Amount
-        CAmount nOutputValue = out.tx->tx->vpout[out.i]->GetValue();
-        nAmount += nOutputValue;
-        
-
-        // Priority
-        dPriorityInputs += (double)nOutputValue * (out.nDepth+1);
-
-        // Bytes
-        CTxDestination address;
-        int witnessversion = 0;
-        std::vector<unsigned char> witnessprogram;
-        
-        
-        const CScript *pScriptPubKey = out.tx->tx->vpout[out.i]->GetPScriptPubKey();
-        
-        if (!pScriptPubKey)
-        {
-            nBytesInputs += 148;
-        } else
-        if (pScriptPubKey->IsWitnessProgram(witnessversion, witnessprogram))
-        {
-            nBytesInputs += (32 + 4 + 1 + (107 / WITNESS_SCALE_FACTOR) + 4);
-            fWitness = true;
-        }
-        else if(ExtractDestination(*pScriptPubKey, address))
-        {
-            CPubKey pubkey;
-            CKeyID *keyid = boost::get<CKeyID>(&address);
-            if (keyid && model->getPubKey(*keyid, pubkey))
+        BOOST_FOREACH(const COutput& out, vOutputs) {
+            // unselect already spent, very unlikely scenario, this could happen
+            // when selected are spent elsewhere, like rpc or another computer
+            uint256 txhash = out.tx->GetHash();
+            COutPoint outpt(txhash, out.i);
+            if (model->isSpent(outpt))
             {
-                nBytesInputs += (pubkey.IsCompressed() ? 148 : 180);
-                if (!pubkey.IsCompressed())
-                    nQuantityUncompressed++;
+                coinControl->UnSelect(outpt);
+                continue;
             }
-            else
-                nBytesInputs += 148; // in all error cases, simply assume 148 here
+
+            // Quantity
+            nQuantity++;
+
+            
+            // Amount
+            CAmount nOutputValue = out.tx->tx->vpout[out.i]->GetValue();
+            nAmount += nOutputValue;
+            
+
+            // Priority
+            dPriorityInputs += (double)nOutputValue * (out.nDepth+1);
+
+            // Bytes
+            CTxDestination address;
+            int witnessversion = 0;
+            std::vector<unsigned char> witnessprogram;
+            
+            
+            const CScript *pScriptPubKey = out.tx->tx->vpout[out.i]->GetPScriptPubKey();
+            
+            if (!pScriptPubKey)
+            {
+                nBytesInputs += 148;
+            } else
+            if (pScriptPubKey->IsWitnessProgram(witnessversion, witnessprogram))
+            {
+                nBytesInputs += (32 + 4 + 1 + (107 / WITNESS_SCALE_FACTOR) + 4);
+                fWitness = true;
+            }
+            else if(ExtractDestination(*pScriptPubKey, address))
+            {
+                CPubKey pubkey;
+                CKeyID *keyid = boost::get<CKeyID>(&address);
+                if (keyid && model->getPubKey(*keyid, pubkey))
+                {
+                    nBytesInputs += (pubkey.IsCompressed() ? 148 : 180);
+                    if (!pubkey.IsCompressed())
+                        nQuantityUncompressed++;
+                }
+                else
+                    nBytesInputs += 148; // in all error cases, simply assume 148 here
+            }
+            else nBytesInputs += 148;
         }
-        else nBytesInputs += 148;
-    }
+    };
 
     // calculation
     if (nQuantity > 0)
