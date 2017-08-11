@@ -244,6 +244,11 @@ UniValue validateaddress(const JSONRPCRequest& request)
                     ret.push_back(Pair("hdmasterkeyid", it->second.hdMasterKeyID.GetHex()));
                 }
             }
+
+	        if (pwallet->IsExternalHD()) {
+                CBitcoinExtPubKey externalHD(pwallet->GetHDChain().externalHD);
+                ret.push_back(Pair("externalhdkey", externalHD.ToString()));
+            }
         }
 #endif
     }

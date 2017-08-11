@@ -146,7 +146,8 @@ public:
 
     K GetKey() {
         K ret;
-        if (vchData.size() == Size) {
+        const bool fCorrectVersion = vchVersion == Params().Base58Prefix(Type);
+        if (vchData.size() == Size && fCorrectVersion) {
             // If base58 encoded data does not hold an ext key, return a !IsValid() key
             ret.Decode(vchData.data());
         }
