@@ -98,7 +98,7 @@ public:
 
     void AddPayee(const CMasternodePaymentVote& vote);
     bool GetBestPayee(CScript& payeeRet);
-    bool HasPayeeWithVotes(CScript payeeIn, int nVotesReq);
+    bool HasPayeeWithVotes(const CScript& payeeIn, int nVotesReq);
 
     bool IsTransactionValid(const CTransaction& txNew);
 
