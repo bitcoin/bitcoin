@@ -359,6 +359,7 @@ public:
     // Forces an arg setting. Called by SoftSetArg() if the arg hasn't already
     // been set. Also called directly in testing.
     void ForceSetArg(const std::string& strArg, const std::string& strValue);
+    void ForceSetArg(const std::string& strArg, int64_t nValue);
 
     /**
      * Returns the appropriate chain name from the program arguments.
