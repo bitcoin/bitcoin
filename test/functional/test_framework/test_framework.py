@@ -11,6 +11,7 @@ import http.client
 import logging
 import optparse
 import os
+import pdb
 import shutil
 import subprocess
 import sys
@@ -125,6 +126,8 @@ class BitcoinTestFramework(object):
                           help="Write tested RPC commands into this directory")
         parser.add_option("--configfile", dest="configfile",
                           help="Location of the test framework config file")
+        parser.add_option("--pdbonfailure", dest="pdbonfailure", default=False, action="store_true",
+                          help="Attach a python debugger if test fails")
         self.add_options(parser)
         (self.options, self.args) = parser.parse_args()
 
@@ -161,6 +164,10 @@ class BitcoinTestFramework(object):
             self.log.exception("Unexpected exception caught during testing")
         except KeyboardInterrupt as e:
             self.log.warning("Exiting after keyboard interrupt")
+
+        if success == TestStatus.FAILED and self.options.pdbonfailure:
+            print("Testcase failed. Attaching python debugger. Enter ? for help")
+            pdb.set_trace()
 
         if not self.options.noshutdown:
             self.log.info("Stopping nodes")
