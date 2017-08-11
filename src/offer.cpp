@@ -3712,8 +3712,8 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 			for (std::vector<pair<uint256, CTransaction> >::reverse_iterator it = vtxTx.rbegin(); it != vtxTx.rend(); ++it) {
 				if (oRes.size() >= count)
 					break;
-				const uint64_t& nHeight = vtxHeight[it.first];
-				const CTransaction& tx = it.second;
+				const uint64_t& nHeight = vtxHeight[it->first];
+				const CTransaction& tx = it->second;
 
 				COffer offer(tx);
 				if (!offer.IsNull() && offer.accept.IsNull())
