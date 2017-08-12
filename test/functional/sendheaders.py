@@ -132,9 +132,6 @@ class TestNode(NodeConnCB):
             message.headers[-1].calc_sha256()
             self.last_blockhash_announced = message.headers[-1].sha256
 
-    def on_block(self, conn, message):
-        self.last_message["block"].calc_sha256()
-
     # Test whether the last announcement we received had the
     # right header or the right inv
     # inv and headers should be lists of block hashes
