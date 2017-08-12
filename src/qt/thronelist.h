@@ -9,8 +9,9 @@
 #include <QTimer>
 #include <QWidget>
 
-#define THRONELIST_UPDATE_SECONDS            5
-#define MY_THRONELIST_UPDATE_SECONDS        60
+#define THRONELIST_UPDATE_SECONDS            60
+#define MY_THRONELIST_UPDATE_SECONDS         15
+#define THRONELIST_FILTER_COOLDOWN_SECONDS   3
 
 namespace Ui {
     class ThroneList;
@@ -36,14 +37,17 @@ public:
     void setWalletModel(WalletModel *walletModel);
     void StartAlias(std::string strAlias);
     void StartAll(std::string strCommand = "start-all");
+    void VoteMany(std::string strCommand);
 
 private:
     QMenu *contextMenu;
-
+    int64_t nTimeFilterUpdate;
+    bool fFilterUpdated;
 public Q_SLOTS:
     void updateMyThroneInfo(QString alias, QString addr, QString privkey, QString txHash, QString txIndex, CThrone *pmn);
     void updateMyNodeList(bool reset = false);
     void updateNodeList();
+    void updateVoteList(bool reset = false);
 
 Q_SIGNALS:
 
@@ -63,5 +67,11 @@ private Q_SLOTS:
     void on_startMissingButton_clicked();
     void on_tableWidgetMyThrones_itemSelectionChanged();
     void on_UpdateButton_clicked();
+    
+    void on_voteManyYesButton_clicked();
+    void on_voteManyNoButton_clicked();
+    void on_voteManyAbstainButton_clicked();
+    void on_tableWidgetVoting_itemSelectionChanged();
+    void on_UpdateVotesButton_clicked();
 };
 #endif // THRONELIST_H

@@ -190,6 +190,13 @@ public:
 
     //! Derive BIP32 child pubkey.
     bool Derive(CPubKey& pubkeyChild, ChainCode &ccChild, unsigned int nChild, const ChainCode& cc) const;
+
+    // Raw
+    std::vector<unsigned char> Raw() const {
+        std::vector<unsigned char> r;
+        r.insert(r.end(), vch, vch+size());
+        return r;
+    }
 };
 
 struct CExtPubKey {

@@ -379,7 +379,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += "                         " + _("If <category> is not supplied, output all debugging information.") + "\n";
     strUsage += "                         " + _("<category> can be:\n");
     strUsage += "                           addrman, alert, bench, coindb, db, lock, rand, rpc, selectcoins, mempool, net,\n"; // Don't translate these and qt below
-    strUsage += "                           crown (or specifically: darksend, instantx, throne, mnpayments, mnbudget)"; // Don't translate these and qt below
+    strUsage += "                           crown (or specifically: instantx, throne, mnpayments, mnbudget)"; // Don't translate these and qt below
     if (mode == HMM_BITCOIN_QT)
         strUsage += ", qt";
     strUsage += ".\n";
@@ -417,12 +417,6 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += "  -throneprivkey=<n>     " + _("Set the throne private key") + "\n";
     strUsage += "  -throneaddr=<n>        " + strprintf(_("Set external address:port to get to this throne (example: %s)"), "128.127.106.235:9340") + "\n";
     strUsage += "  -budgetvotemode=<mode>     " + _("Change automatic finalized budget voting behavior. mode=auto: Vote for only exact finalized budget match to my generated budget. (string, default: auto)") + "\n";
-
-    strUsage += "\n" + _("Darksend options:") + "\n";
-    strUsage += "  -enabledarksend=<n>          " + strprintf(_("Enable use of automated darksend for funds stored in this wallet (0-1, default: %u)"), 0) + "\n";
-    strUsage += "  -darksendrounds=<n>          " + strprintf(_("Use N separate thrones to anonymize funds  (2-8, default: %u)"), 2) + "\n";
-    strUsage += "  -anonymizecrownamount=<n>     " + strprintf(_("Keep N CRW anonymized (default: %u)"), 0) + "\n";
-    strUsage += "  -liquidityprovider=<n>       " + strprintf(_("Provide liquidity to Darksend by infrequently mixing coins on a continual basis (0-100, default: %u, 1=very frequent, high fees, 100=very infrequent, low fees)"), 0) + "\n";
 
     strUsage += "\n" + _("InstantX options:") + "\n";
     strUsage += "  -enableinstantx=<n>    " + strprintf(_("Enable instantx, show confirmations for locked transactions (bool, default: %s)"), "true") + "\n";

@@ -127,6 +127,7 @@ public:
         UnlockedForAnonymizationOnly     // wallet->IsCrypted() && !wallet->IsLocked() && wallet->fWalletUnlockAnonymizeOnly
     };
 
+    CWallet* getWallet();
     OptionsModel *getOptionsModel();
     AddressTableModel *getAddressTableModel();
     TransactionTableModel *getTransactionTableModel();
