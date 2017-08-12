@@ -368,6 +368,8 @@ void FlushStateToDisk();
 /** Prune block files and flush state to disk. */
 void PruneAndFlush();
 
+bool FlushView(CCoinsViewCache *view, CValidationState& state, bool fDisconnecting);
+
 /** Update chainActive and related internal data structures. */
 void UpdateTip(CBlockIndex *pindexNew, const CChainParams& chainParams);
 
@@ -588,7 +590,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
  *  In case pfClean is provided, operation will try to be tolerant about errors, and *pfClean
  *  will be true if no problems were found. Otherwise, the return value will be false in case
  *  of problems. Note that in any case, coins may be modified. */
-bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockIndex* pindex, CCoinsViewCache& coins, bool* pfClean = NULL);
+bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockIndex* pindex, CCoinsViewCache& coins, bool* pfClean = NULL, bool fSkipRCTIndices = false);
 
 /** Check a block is completely valid from start to finish (only works on top of our current best block, with cs_main held) */
 bool TestBlockValidity(CValidationState& state, const CChainParams& chainparams, const CBlock& block, CBlockIndex* pindexPrev, bool fCheckPOW = true, bool fCheckMerkleRoot = true);

@@ -97,7 +97,6 @@ uint64_t nPruneTarget = 0;
 int64_t nMaxTipAge = DEFAULT_MAX_TIP_AGE;
 bool fEnableReplacement = DEFAULT_ENABLE_REPLACEMENT;
 static bool fVerifyingDB = false;
-static int64_t nVerifyDBLastRCTIndex = 0;
 
 uint256 hashAssumeValid;
 
@@ -2295,7 +2294,7 @@ bool ApplyTxInUndo(const CTxInUndo& undo, CCoinsViewCache& view, const COutPoint
     return fClean;
 }
 
-bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockIndex* pindex, CCoinsViewCache& view, bool* pfClean)
+bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockIndex* pindex, CCoinsViewCache& view, bool* pfClean, bool fSkipRCTIndices)
 {
     if (fDebug)
         LogPrintf("%s: hash %s, height %d\n", __func__, block.GetHash().ToString(), pindex->nHeight);
@@ -2333,9 +2332,6 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
         };
     };
 
-    std::vector<std::pair<CAddressIndexKey, CAmount> > addressIndex;
-    std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > addressUnspentIndex;
-    std::vector<std::pair<CSpentIndexKey, CSpentIndexValue> > spentIndex;
     
     int nVtxundo = blockUndo.vtxundo.size()-1;
     // undo transactions in reverse order
@@ -2344,8 +2340,6 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
         const CTransaction &tx = *(block.vtx[i]);
         uint256 hash = tx.GetHash();
         
-        COutPoint op(hash, 0);
-        int64_t nLastRCTOutputIndex = fVerifyingDB ? nVerifyDBLastRCTIndex : 0;
         
         for (const auto &txin : tx.vin)
         {
@@ -2358,15 +2352,15 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
                     return error("%s: Bad scriptData stack, %s.", __func__, hash.ToString());
                 
                 const std::vector<uint8_t> &vKeyImages = txin.scriptData.stack[0];
+                
+                
                 for (size_t k = 0; k < nInputs; ++k)
                 {
                     const CCmpPubKey &ki = *((CCmpPubKey*)&vKeyImages[k*33]);
                     
-                    if (!fVerifyingDB)
-                    {
-                        if (!pblocktree->EraseRCTKeyImage(ki))
-                            return error("%s: EraseRCTKeyImage failed, txn %s, %d.", __func__, hash.ToString(), k);
-                    };
+                    
+                    //if (!fSkipRCTIndices)
+                    view.keyImages.push_back(std::make_pair(ki, hash));
                 };
             };
         };
@@ -2379,35 +2373,28 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
             {
                 CTxOutRingCT *txout = (CTxOutRingCT*)out;
                 
-                if (nLastRCTOutputIndex == 0)
+                if (!fSkipRCTIndices
+                    && view.nLastRCTOutput == 0)
                 {
-                    pblocktree->ReadLastRCTOutput(nLastRCTOutputIndex);
-                    if (nLastRCTOutputIndex == 0)
+                    pblocktree->ReadLastRCTOutput(view.nLastRCTOutput);
+                    if (view.nLastRCTOutput == 0)
                         return error("%s: RCT index missing, txn %s, %d.", __func__, hash.ToString(), k);
                     
                     
+                    // Verify data matches
                     CAnonOutput ao;
-                    if (!pblocktree->ReadRCTOutput(nLastRCTOutputIndex, ao))
-                        return error("%s: RCT output missing, txn %s, %d, index %d.", __func__, hash.ToString(), k, nLastRCTOutputIndex);
+                    if (!pblocktree->ReadRCTOutput(view.nLastRCTOutput, ao))
+                        return error("%s: RCT output missing, txn %s, %d, index %d.", __func__, hash.ToString(), k, view.nLastRCTOutput);
                     if (ao.pubkey != txout->pk)
                     {
-                        return error("%s: RCT output mismatch, txn %s, %d, index %d.", __func__, hash.ToString(), k, nLastRCTOutputIndex);
+                        return error("%s: RCT output mismatch, txn %s, %d, index %d.", __func__, hash.ToString(), k, view.nLastRCTOutput);
                     };
                 };
                 
-                if (fVerifyingDB)
+                if (!fSkipRCTIndices)
                 {
-                    nLastRCTOutputIndex--;
-                    nVerifyDBLastRCTIndex = nLastRCTOutputIndex;
-                } else
-                {
-                    op.n = k;
-                    if (!pblocktree->EraseRCTOutput(nLastRCTOutputIndex--))
-                        return error("%s: EraseRCTOutput failed, txn %s, %d, index %d.", __func__, hash.ToString(), k, nLastRCTOutputIndex);
-                    if (!pblocktree->EraseRCTOutputLink(txout->pk))
-                        return error("%s: EraseRCTOutputLink failed, txn %s, %d.", __func__, hash.ToString(), k);
-                    if (!pblocktree->WriteLastRCTOutput(nLastRCTOutputIndex))
-                        return error("%s: WriteLastRCTOutput failed, txn %s, %d.", __func__, hash.ToString(), k);
+                    view.anonOutputLinks[txout->pk] = view.nLastRCTOutput;
+                    view.nLastRCTOutput--;
                 };
                 
                 continue;
@@ -2426,9 +2413,9 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
                 || scriptType == 0)
                 continue;
             // undo receiving activity
-            addressIndex.push_back(std::make_pair(CAddressIndexKey(scriptType, uint160(hashBytes), pindex->nHeight, i, hash, k, false), nValue));
+            view.addressIndex.push_back(std::make_pair(CAddressIndexKey(scriptType, uint160(hashBytes), pindex->nHeight, i, hash, k, false), nValue));
             // undo unspent index
-            addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(scriptType, uint160(hashBytes), hash, k), CAddressUnspentValue()));
+            view.addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(scriptType, uint160(hashBytes), hash, k), CAddressUnspentValue()));
         };
 
         if (fAddressIndex) // Legacy code - remove
@@ -2442,10 +2429,10 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
                     std::vector<unsigned char> hashBytes(out.scriptPubKey.begin()+2, out.scriptPubKey.begin()+22);
 
                     // undo receiving activity
-                    addressIndex.push_back(std::make_pair(CAddressIndexKey(2, uint160(hashBytes), pindex->nHeight, i, hash, k, false), out.nValue));
+                    view.addressIndex.push_back(std::make_pair(CAddressIndexKey(2, uint160(hashBytes), pindex->nHeight, i, hash, k, false), out.nValue));
 
                     // undo unspent index
-                    addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(2, uint160(hashBytes), hash, k), CAddressUnspentValue()));
+                    view.addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(2, uint160(hashBytes), hash, k), CAddressUnspentValue()));
 
                 } else
                 if (out.scriptPubKey.IsPayToPublicKeyHash())
@@ -2453,10 +2440,10 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
                     std::vector<unsigned char> hashBytes(out.scriptPubKey.begin()+3, out.scriptPubKey.begin()+23);
 
                     // undo receiving activity
-                    addressIndex.push_back(std::make_pair(CAddressIndexKey(1, uint160(hashBytes), pindex->nHeight, i, hash, k, false), out.nValue));
+                    view.addressIndex.push_back(std::make_pair(CAddressIndexKey(1, uint160(hashBytes), pindex->nHeight, i, hash, k, false), out.nValue));
 
                     // undo unspent index
-                    addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(1, uint160(hashBytes), hash, k), CAddressUnspentValue()));
+                    view.addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(1, uint160(hashBytes), hash, k), CAddressUnspentValue()));
 
                 };
             };
@@ -2512,7 +2499,7 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
                     const CTxIn input = tx.vin[j];
 
                     if (fSpentIndex) // undo and delete the spent index
-                        spentIndex.push_back(std::make_pair(CSpentIndexKey(input.prevout.hash, input.prevout.n), CSpentIndexValue()));
+                        view.spentIndex.push_back(std::make_pair(CSpentIndexKey(input.prevout.hash, input.prevout.n), CSpentIndexValue()));
 
                     if (fAddressIndex)
                     {
@@ -2552,9 +2539,9 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
                         };
                         
                         // undo spending activity
-                        addressIndex.push_back(std::make_pair(CAddressIndexKey(scriptType, uint160(hashBytes), pindex->nHeight, i, hash, j, true), nValue * -1));
+                        view.addressIndex.push_back(std::make_pair(CAddressIndexKey(scriptType, uint160(hashBytes), pindex->nHeight, i, hash, j, true), nValue * -1));
                         // restore unspent index
-                        addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(scriptType, uint160(hashBytes), input.prevout.hash, input.prevout.n), CAddressUnspentValue(nValue, *pScript, undo.nHeight)));
+                        view.addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(scriptType, uint160(hashBytes), input.prevout.hash, input.prevout.n), CAddressUnspentValue(nValue, *pScript, undo.nHeight)));
                     }; // if (fAddressIndex)
                 }; // for (unsigned int j = tx.vin.size(); j-- > 0;)
             };
@@ -2573,7 +2560,7 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
                     const CTxIn input = tx.vin[j];
 
                     if (fSpentIndex) // undo and delete the spent index
-                        spentIndex.push_back(std::make_pair(CSpentIndexKey(input.prevout.hash, input.prevout.n), CSpentIndexValue()));
+                        view.spentIndex.push_back(std::make_pair(CSpentIndexKey(input.prevout.hash, input.prevout.n), CSpentIndexValue()));
 
                     if (fAddressIndex)
                     {
@@ -2583,20 +2570,20 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
                             std::vector<unsigned char> hashBytes(prevout.scriptPubKey.begin()+2, prevout.scriptPubKey.begin()+22);
 
                             // undo spending activity
-                            addressIndex.push_back(std::make_pair(CAddressIndexKey(2, uint160(hashBytes), pindex->nHeight, i, hash, j, true), prevout.nValue * -1));
+                            view.addressIndex.push_back(std::make_pair(CAddressIndexKey(2, uint160(hashBytes), pindex->nHeight, i, hash, j, true), prevout.nValue * -1));
 
                             // restore unspent index
-                            addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(2, uint160(hashBytes), input.prevout.hash, input.prevout.n), CAddressUnspentValue(prevout.nValue, prevout.scriptPubKey, undo.nHeight)));
+                            view.addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(2, uint160(hashBytes), input.prevout.hash, input.prevout.n), CAddressUnspentValue(prevout.nValue, prevout.scriptPubKey, undo.nHeight)));
                         } else
                         if (prevout.scriptPubKey.IsPayToPublicKeyHash())
                         {
                             std::vector<unsigned char> hashBytes(prevout.scriptPubKey.begin()+3, prevout.scriptPubKey.begin()+23);
 
                             // undo spending activity
-                            addressIndex.push_back(std::make_pair(CAddressIndexKey(1, uint160(hashBytes), pindex->nHeight, i, hash, j, true), prevout.nValue * -1));
+                            view.addressIndex.push_back(std::make_pair(CAddressIndexKey(1, uint160(hashBytes), pindex->nHeight, i, hash, j, true), prevout.nValue * -1));
 
                             // restore unspent index
-                            addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(1, uint160(hashBytes), input.prevout.hash, input.prevout.n), CAddressUnspentValue(prevout.nValue, prevout.scriptPubKey, undo.nHeight)));
+                            view.addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(1, uint160(hashBytes), input.prevout.hash, input.prevout.n), CAddressUnspentValue(prevout.nValue, prevout.scriptPubKey, undo.nHeight)));
 
                         };
                     }; // if (fAddressIndex)
@@ -2611,15 +2598,6 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
     if (pfClean) {
         *pfClean = fClean;
         return true;
-    }
-
-    if (fAddressIndex)
-    {
-        if (!pblocktree->EraseAddressIndex(addressIndex))
-            return AbortNode(state, "Failed to delete address index");
-        
-        if (!pblocktree->UpdateAddressUnspentIndex(addressUnspentIndex))
-            return AbortNode(state, "Failed to write address unspent index");
     }
 
     return fClean;
@@ -2745,6 +2723,8 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             view.SetBestBlock(pindex->GetBlockHash());
         return true;
     }
+    
+    view.nBlockHeight = pindex->nHeight;
 
     bool fScriptChecks = true;
     if (!hashAssumeValid.IsNull()) {
@@ -2875,10 +2855,6 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     std::vector<PrecomputedTransactionData> txdata;
     txdata.reserve(block.vtx.size()); // Required so that pointers to individual PrecomputedTransactionData don't get invalidated
     
-    std::vector<std::pair<CAddressIndexKey, CAmount> > addressIndex;
-    std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > addressUnspentIndex;
-    std::vector<std::pair<CSpentIndexKey, CSpentIndexValue> > spentIndex;
-    
     // NOTE: TODO: Be careful traking coin when adding anon, block reward is based on nMoneySupply
     CAmount nMoneyCreated = 0;
     
@@ -2950,17 +2926,17 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                         {
                             
                             // record spending activity
-                            addressIndex.push_back(std::make_pair(CAddressIndexKey(scriptType, hashAddress, pindex->nHeight, i, txhash, j, true), nValue * -1));
+                            view.addressIndex.push_back(std::make_pair(CAddressIndexKey(scriptType, hashAddress, pindex->nHeight, i, txhash, j, true), nValue * -1));
                             
                             // remove address from unspent index
-                            addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(scriptType, hashAddress, input.prevout.hash, input.prevout.n), CAddressUnspentValue()));
+                            view.addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(scriptType, hashAddress, input.prevout.hash, input.prevout.n), CAddressUnspentValue()));
                         };
 
                         if (fSpentIndex)
                         {
                             // add the spent index to determine the txid and input that spent an output
                             // and to find the amount and address from an input
-                            spentIndex.push_back(std::make_pair(CSpentIndexKey(input.prevout.hash, input.prevout.n), CSpentIndexValue(txhash, j, pindex->nHeight, nValue, scriptType, hashAddress)));
+                            view.spentIndex.push_back(std::make_pair(CSpentIndexKey(input.prevout.hash, input.prevout.n), CSpentIndexValue(txhash, j, pindex->nHeight, nValue, scriptType, hashAddress)));
                         };
                     } else
                     {
@@ -2981,15 +2957,15 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
                         if (fAddressIndex && addressType > 0) {
                             // record spending activity
-                            addressIndex.push_back(std::make_pair(CAddressIndexKey(addressType, hashBytes, pindex->nHeight, i, txhash, j, true), prevout.nValue * -1));
+                            view.addressIndex.push_back(std::make_pair(CAddressIndexKey(addressType, hashBytes, pindex->nHeight, i, txhash, j, true), prevout.nValue * -1));
                             // remove address from unspent index
-                            addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(addressType, hashBytes, input.prevout.hash, input.prevout.n), CAddressUnspentValue()));
+                            view.addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(addressType, hashBytes, input.prevout.hash, input.prevout.n), CAddressUnspentValue()));
                         }
 
                         if (fSpentIndex) {
                             // add the spent index to determine the txid and input that spent an output
                             // and to find the amount and address from an input
-                            spentIndex.push_back(std::make_pair(CSpentIndexKey(input.prevout.hash, input.prevout.n), CSpentIndexValue(txhash, j, pindex->nHeight, prevout.nValue, addressType, hashBytes)));
+                            view.spentIndex.push_back(std::make_pair(CSpentIndexKey(input.prevout.hash, input.prevout.n), CSpentIndexValue(txhash, j, pindex->nHeight, prevout.nValue, addressType, hashBytes)));
                         };
                     };
                 };
@@ -3066,19 +3042,18 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         // Index rct outputs and keyimages
         if (nRingCTOut > 0 || nRingCTIn > 0)
         {
-            int64_t nLastRCTOutIndex = fVerifyingDB ? nVerifyDBLastRCTIndex : 0;
             
-            if (nLastRCTOutIndex == 0)
+            if (view.nLastRCTOutput == 0)
             {
-                if (!pblocktree->ReadLastRCTOutput(nLastRCTOutIndex))
+                if (!pblocktree->ReadLastRCTOutput(view.nLastRCTOutput))
                 {
-                    LogPrint("rct", "%s: Writing 0 to LastRCTOutput\n", __func__);
-                    pblocktree->WriteLastRCTOutput(0);
+                    //LogPrint("rct", "%s: Writing 0 to LastRCTOutput\n", __func__);
+                    //pblocktree->WriteLastRCTOutput(0);
                 };
             };
             
+            
             COutPoint op(txhash, 0);
-            CDBBatch batch(*pblocktree);
             
             for (const auto &txin : tx.vin)
             {
@@ -3096,8 +3071,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                     {
                         const CCmpPubKey &ki = *((CCmpPubKey*)&vKeyImages[k*33]);
                         
-                        batch.Write(std::make_pair(DB_RCTKEYIMAGE, ki), txhash);
-                        setConnectKi.insert(ki);
+                        view.keyImages.push_back(std::make_pair(ki, txhash));
                     };
                 };
             };
@@ -3111,25 +3085,16 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                 
                 int64_t nTestExists;
                 if (!fVerifyingDB
-                    && pblocktree->ReadRCTOutputLink(txout->pk, nTestExists))
+                    && (pblocktree->ReadRCTOutputLink(txout->pk, nTestExists)
+                        || view.ReadRCTOutputLink(txout->pk, nTestExists)))
                     return error("%s: Duplicate anon-output %s, index %d.", __func__, HexStr(txout->pk.begin(), txout->pk.end()), nTestExists);
                 
                 op.n = k;
-                nLastRCTOutIndex++;
+                view.nLastRCTOutput++;
                 CAnonOutput ao(txout->pk, txout->commitment, op, pindex->nHeight, 0);
-                batch.Write(std::make_pair(DB_RCTOUTPUT, nLastRCTOutIndex), ao);
-                batch.Write(std::make_pair(DB_RCTOUTPUT_LINK, txout->pk), nLastRCTOutIndex);
-            };
-            
-            if (fVerifyingDB)
-            {
-                nVerifyDBLastRCTIndex = nLastRCTOutIndex;
-                batch.Clear();
-            } else
-            {
-                batch.Write(DB_RCTOUTPUT_LAST, nLastRCTOutIndex);
-                if (!pblocktree->WriteBatch(batch))
-                    return error("ConnectBlock(): Write RCT outputs of %s failed.", txhash.ToString());
+                
+                view.anonOutputLinks[txout->pk] = view.nLastRCTOutput;
+                view.anonOutputs.push_back(std::make_pair(view.nLastRCTOutput, ao));
             };
         };
         
@@ -3153,9 +3118,9 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                     continue;
                 
                 // record receiving activity
-                addressIndex.push_back(std::make_pair(CAddressIndexKey(scriptType, uint160(hashBytes), pindex->nHeight, i, txhash, k, false), nValue));
+                view.addressIndex.push_back(std::make_pair(CAddressIndexKey(scriptType, uint160(hashBytes), pindex->nHeight, i, txhash, k, false), nValue));
                 // record unspent output
-                addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(scriptType, uint160(hashBytes), txhash, k), CAddressUnspentValue(nValue, *pScript, pindex->nHeight)));
+                view.addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(scriptType, uint160(hashBytes), txhash, k), CAddressUnspentValue(nValue, *pScript, pindex->nHeight)));
             };
 
             for (unsigned int k = 0; k < tx.vout.size(); k++)
@@ -3166,17 +3131,17 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                     std::vector<unsigned char> hashBytes(out.scriptPubKey.begin()+2, out.scriptPubKey.begin()+22);
 
                     // record receiving activity
-                    addressIndex.push_back(std::make_pair(CAddressIndexKey(2, uint160(hashBytes), pindex->nHeight, i, txhash, k, false), out.nValue));
+                    view.addressIndex.push_back(std::make_pair(CAddressIndexKey(2, uint160(hashBytes), pindex->nHeight, i, txhash, k, false), out.nValue));
                     // record unspent output
-                    addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(2, uint160(hashBytes), txhash, k), CAddressUnspentValue(out.nValue, out.scriptPubKey, pindex->nHeight)));
+                    view.addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(2, uint160(hashBytes), txhash, k), CAddressUnspentValue(out.nValue, out.scriptPubKey, pindex->nHeight)));
 
                 } else if (out.scriptPubKey.IsPayToPublicKeyHash()) {
                     std::vector<unsigned char> hashBytes(out.scriptPubKey.begin()+3, out.scriptPubKey.begin()+23);
 
                     // record receiving activity
-                    addressIndex.push_back(std::make_pair(CAddressIndexKey(1, uint160(hashBytes), pindex->nHeight, i, txhash, k, false), out.nValue));
+                    view.addressIndex.push_back(std::make_pair(CAddressIndexKey(1, uint160(hashBytes), pindex->nHeight, i, txhash, k, false), out.nValue));
                     // record unspent output
-                    addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(1, uint160(hashBytes), txhash, k), CAddressUnspentValue(out.nValue, out.scriptPubKey, pindex->nHeight)));
+                    view.addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(1, uint160(hashBytes), txhash, k), CAddressUnspentValue(out.nValue, out.scriptPubKey, pindex->nHeight)));
                 };
             };
         }; // if (fAddressIndex)
@@ -3317,19 +3282,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         if (!pblocktree->WriteTxIndex(vPos))
             return AbortNode(state, "Failed to write transaction index");
     
-    if (fAddressIndex)
-    {
-        if (!pblocktree->WriteAddressIndex(addressIndex))
-            return AbortNode(state, "Failed to write address index");
-
-        if (!pblocktree->UpdateAddressUnspentIndex(addressUnspentIndex))
-            return AbortNode(state, "Failed to write address unspent index");
-    };
-
-    if (fSpentIndex)
-        if (!pblocktree->UpdateSpentIndex(spentIndex))
-            return AbortNode(state, "Failed to write transaction index");
-
+    
     if (fTimestampIndex)
     {
         unsigned int logicalTS = pindex->nTime;
@@ -3491,6 +3444,97 @@ void PruneAndFlush() {
     FlushStateToDisk(state, FLUSH_STATE_NONE);
 }
 
+bool FlushView(CCoinsViewCache *view, CValidationState& state, bool fDisconnecting)
+{
+    if (!view->Flush())
+        return false;
+    
+    if (fAddressIndex)
+    {
+        if (fDisconnecting)
+        {
+            if (!pblocktree->EraseAddressIndex(view->addressIndex))
+                return AbortNode(state, "Failed to delete address index");
+        } else
+        {
+            if (!pblocktree->WriteAddressIndex(view->addressIndex))
+                return AbortNode(state, "Failed to write address index");
+        };
+
+        if (!pblocktree->UpdateAddressUnspentIndex(view->addressUnspentIndex))
+            return AbortNode(state, "Failed to write address unspent index");
+    };
+    
+    if (fSpentIndex)
+    {
+        if (!pblocktree->UpdateSpentIndex(view->spentIndex))
+            return AbortNode(state, "Failed to write transaction index");
+    };
+    
+    view->addressIndex.clear();
+    view->addressUnspentIndex.clear();
+    view->spentIndex.clear();
+    
+    
+    if (fDisconnecting)
+    {
+        for (auto &it : view->keyImages)
+            if (!pblocktree->EraseRCTKeyImage(it.first))
+                return error("%s: EraseRCTKeyImage failed, txn %s.", __func__, it.second.ToString());
+        
+        if (view->anonOutputLinks.size() > 0)
+        {
+            for (auto &it : view->anonOutputLinks)
+            {
+                if (!pblocktree->EraseRCTOutput(it.second))
+                    return error("%s: EraseRCTOutput failed.", __func__);
+                
+                if (!pblocktree->EraseRCTOutputLink(it.first))
+                    return error("%s: EraseRCTOutput failed.", __func__);
+            };
+            
+            if (!pblocktree->WriteLastRCTOutput(view->nLastRCTOutput))
+                return error("%s: WriteLastRCTOutput failed.", __func__);
+        };
+    } else
+    {
+        CDBBatch batch(*pblocktree);
+        
+        
+        if (view->anonOutputs.size() > 0)
+        {
+            batch.Write(DB_RCTOUTPUT_LAST, view->nLastRCTOutput);
+            
+            if (view->nBlockHeight % 250 == 0)
+                batch.Write(std::make_pair(DB_RCTOUTPUT_CHECKPOINT, view->nBlockHeight), view->nLastRCTOutput);
+        } else
+        if (view->nBlockHeight % 250 == 0)
+        {
+            if (pblocktree->ReadLastRCTOutput(view->nLastRCTOutput))
+                batch.Write(std::make_pair(DB_RCTOUTPUT_CHECKPOINT, view->nBlockHeight), view->nLastRCTOutput);
+        };
+        
+        for (auto &it : view->keyImages)
+            batch.Write(std::make_pair(DB_RCTKEYIMAGE, it.first), it.second);
+        
+        for (auto &it : view->anonOutputs)
+            batch.Write(std::make_pair(DB_RCTOUTPUT, it.first), it.second);
+        
+        for (auto &it : view->anonOutputLinks)
+            batch.Write(std::make_pair(DB_RCTOUTPUT_LINK, it.first), it.second);
+        
+        if (!pblocktree->WriteBatch(batch))
+            return error("%s: Write RCT outputs failed.", __func__);
+    };
+    
+    view->nLastRCTOutput = 0;
+    view->anonOutputs.clear();
+    view->anonOutputLinks.clear();
+    view->keyImages.clear();
+    
+    return true;
+};
+
 /** Update chainActive and related internal data structures. */
 void UpdateTip(CBlockIndex *pindexNew, const CChainParams& chainParams) {
     chainActive.SetTip(pindexNew);
@@ -3576,7 +3620,7 @@ bool static DisconnectTip(CValidationState& state, const CChainParams& chainpara
         CCoinsViewCache view(pcoinsTip, fParticlMode);
         if (!DisconnectBlock(block, state, pindexDelete, view))
             return error("DisconnectTip(): DisconnectBlock %s failed", pindexDelete->GetBlockHash().ToString());
-        bool flushed = view.Flush();
+        bool flushed = FlushView(&view, state, true);
         assert(flushed);
     }
     LogPrint("bench", "- Disconnect block: %.2fms\n", (GetTimeMicros() - nStart) * 0.001);
@@ -3673,12 +3717,12 @@ bool static ConnectTip(CValidationState& state, const CChainParams& chainparams,
             if (state.IsInvalid())
                 InvalidBlockFound(pindexNew, connectTrace.blocksConnected.back().second, state);
             
-            RollBackRCTIndex(nLastValidRCTOutput, setConnectKi);
+            //RollBackRCTIndex(nLastValidRCTOutput, setConnectKi);
             return error("ConnectTip(): ConnectBlock %s failed", pindexNew->GetBlockHash().ToString());
         }
         nTime3 = GetTimeMicros(); nTimeConnectTotal += nTime3 - nTime2;
         LogPrint("bench", "  - Connect total: %.2fms [%.2fs]\n", (nTime3 - nTime2) * 0.001, nTimeConnectTotal * 0.000001);
-        bool flushed = view.Flush();
+        bool flushed = FlushView(&view, state, false);
         assert(flushed);
     }
     int64_t nTime4 = GetTimeMicros(); nTimeFlush += nTime4 - nTime3;
@@ -3686,7 +3730,7 @@ bool static ConnectTip(CValidationState& state, const CChainParams& chainparams,
     // Write the chain state to disk, if necessary.
     if (!FlushStateToDisk(state, FLUSH_STATE_IF_NEEDED))
     {
-        RollBackRCTIndex(nLastValidRCTOutput, setConnectKi);
+        //RollBackRCTIndex(nLastValidRCTOutput, setConnectKi);
         return false;
     }
     int64_t nTime5 = GetTimeMicros(); nTimeChainState += nTime5 - nTime4;
@@ -4377,6 +4421,13 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
 
     if (fParticlMode)
     {
+        if (block.IsProofOfStake())
+        {
+            // Limit the number of outputs in a coinstake txn to 4: 1 data + 1 foundation + 2 user
+            if (block.vtx[0]->vpout.size() > 4)
+                return state.DoS(100, false, REJECT_INVALID, "bad-cs-outputs", false, "Too many outputs in coinstake");
+        };
+        
         if (!IsInitialBlockDownload()
             && block.vtx[0]->IsCoinStake()
             && !CheckStakeUnique(block))
@@ -4415,7 +4466,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
         if (block.vtx.empty() || !block.vtx[0]->IsCoinBase())
             return state.DoS(100, false, REJECT_INVALID, "bad-cb-missing", false, "first tx is not coinbase");
         
-        // remaining txns must not be coinbase/stake
+        // Remaining txns must not be coinbase/stake
         for (size_t i = 1; i < block.vtx.size(); i++)
             if (block.vtx[i]->IsCoinBase() || block.vtx[i]->IsCoinStake())
                 return state.DoS(100, false, REJECT_INVALID, "bad-cb-multiple", false, "more than one coinbase");
@@ -4678,7 +4729,6 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Co
             if (hashWitness != block.hashWitnessMerkleRoot)
                 return state.DoS(100, false, REJECT_INVALID, "bad-witness-merkle-match", true, strprintf("%s : witness merkle commitment mismatch", __func__));
             
-            //if (!CheckCoinStakeTimestamp(nHeight, block.GetBlockTime(), (int64_t)block.vtx[0]->nTime))
             if (!CheckCoinStakeTimestamp(nHeight, block.GetBlockTime()))
                 return state.DoS(50, false, REJECT_INVALID, "bad-coinstake-time", true, strprintf("%s: coinstake timestamp violation nTimeBlock=%d", __func__, block.GetBlockTime()));
             
@@ -5491,7 +5541,6 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
         return true;
 
     fVerifyingDB = true;
-    nVerifyDBLastRCTIndex = 0;
 
     // Verify blocks in the best chain
     if (nCheckDepth <= 0)

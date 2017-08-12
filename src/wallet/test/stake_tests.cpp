@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(stake_test)
     
     CValidationState state;
     BOOST_REQUIRE(DisconnectBlock(block, state, pindexDelete, view));
-    BOOST_REQUIRE(view.Flush());
+    BOOST_REQUIRE(FlushView(&view, state, true));
     BOOST_REQUIRE(FlushStateToDisk(state, FLUSH_STATE_IF_NEEDED));
     UpdateTip(pindexDelete->pprev, chainparams);
     
@@ -259,7 +259,7 @@ BOOST_AUTO_TEST_CASE(stake_test)
         CCoinsViewCache view(pcoinsTip, fParticlMode);
         CValidationState state;
         BOOST_REQUIRE(DisconnectBlock(block, state, pindexDelete, view));
-        BOOST_REQUIRE(view.Flush());
+        BOOST_REQUIRE(FlushView(&view, state, true));
         BOOST_REQUIRE(FlushStateToDisk(state, FLUSH_STATE_IF_NEEDED));
         UpdateTip(pindexDelete->pprev, chainparams);
         
@@ -290,7 +290,7 @@ BOOST_AUTO_TEST_CASE(stake_test)
             BOOST_REQUIRE(ConnectBlock(block, clearstate, pindexDelete, clearview, chainparams, false));
             
             BOOST_CHECK(!clearstate.IsInvalid());
-            BOOST_REQUIRE(clearview.Flush());
+            BOOST_REQUIRE(FlushView(&clearview, state, false));
             BOOST_REQUIRE(FlushStateToDisk(clearstate, FLUSH_STATE_IF_NEEDED));
             
             UpdateTip(pindexDelete, chainparams);
@@ -338,7 +338,7 @@ BOOST_AUTO_TEST_CASE(stake_test)
             CCoinsViewCache view(pcoinsTip, fParticlMode);
             CValidationState state;
             BOOST_REQUIRE(DisconnectBlock(block, state, pindexDelete, view));
-            BOOST_REQUIRE(view.Flush());
+            BOOST_REQUIRE(FlushView(&view, state, true));
             BOOST_REQUIRE(FlushStateToDisk(state, FLUSH_STATE_IF_NEEDED));
             UpdateTip(pindexDelete->pprev, chainparams);
             

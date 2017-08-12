@@ -13,6 +13,10 @@
 #include "serialize.h"
 #include "uint256.h"
 
+#include "addressindex.h"
+#include "spentindex.h"
+#include "rctindex.h"
+
 #include <assert.h>
 #include <stdint.h>
 
@@ -516,10 +520,34 @@ public:
      * declared as "const".  
      */
     mutable uint256 hashBlock;
+    mutable int nBlockHeight = 0;
     mutable CCoinsMap cacheCoins;
 
     /* Cached dynamic memory usage for the inner CCoins objects. */
     mutable size_t cachedCoinsUsage;
+    
+    mutable std::vector<std::pair<CAddressIndexKey, CAmount> > addressIndex;
+    mutable std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > addressUnspentIndex;
+    mutable std::vector<std::pair<CSpentIndexKey, CSpentIndexValue> > spentIndex;
+    
+    mutable int64_t nLastRCTOutput = 0;
+    mutable std::vector<std::pair<int64_t, CAnonOutput> > anonOutputs;
+    mutable std::map<CCmpPubKey, int64_t> anonOutputLinks;
+    mutable std::vector<std::pair<CCmpPubKey, uint256> > keyImages;
+    
+    bool ReadRCTOutputLink(CCmpPubKey &pk, int64_t &index)
+    {
+        std::map<CCmpPubKey, int64_t>::iterator it = anonOutputLinks.find(pk);
+        if (it != anonOutputLinks.end())
+        {
+            index = it->second;
+            return true;
+        };
+        
+        return false;
+    };
+
+
 
 public:
     CCoinsViewCache(CCoinsView *baseIn, bool fParticlModeIn);

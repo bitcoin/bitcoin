@@ -16,6 +16,8 @@
 #include "script/sign.h"
 #include "timedata.h"
 #include "util.h"
+#include "txdb.h"
+#include "anon.h"
 #include "utilmoneystr.h"
 #include "wallet/hdwallet.h"
 #include "wallet/hdwalletdb.h"
@@ -4180,6 +4182,82 @@ UniValue debugwallet(const JSONRPCRequest &request)
     return obj;
 }
 
+UniValue rewindchain(const JSONRPCRequest &request)
+{
+    if (request.fHelp || request.params.size() > 1)
+        throw std::runtime_error(
+            "rewindchain [height]\n"
+            "height default - last known rct index .\n");
+    
+    CHDWallet *pwallet = GetHDWallet();
+    EnsureWalletIsUnlocked(pwallet);
+    
+    LOCK2(cs_main, pwallet->cs_wallet);
+    
+    const CChainParams& chainparams = Params();
+    
+    UniValue result(UniValue::VOBJ);
+    
+    CCoinsViewCache view(pcoinsTip, fParticlMode);
+    CBlockIndex* pindexState = chainActive.Tip();
+    CValidationState state;
+    
+    int nBlocks = 0;
+    result.pushKV("start_height", pindexState->nHeight);
+    
+    int nLastRCTCheckpointHeight = ((pindexState->nHeight-1) / 250) * 250;
+    
+    int64_t nLastRCTOutput = 0;
+    
+    pblocktree->ReadRCTOutputCheckpoint(nLastRCTCheckpointHeight, nLastRCTOutput);
+    
+    result.pushKV("rct_checkpoint_height", nLastRCTCheckpointHeight);
+    result.pushKV("last_rct_output", (int)nLastRCTOutput);
+    
+    std::set<CCmpPubKey> setKi; // unused
+    if (!RollBackRCTIndex(nLastRCTOutput, setKi))
+        throw JSONRPCError(RPC_MISC_ERROR, "RollBackRCTIndex failed.");
+    
+    
+    
+    for (CBlockIndex *pindex = chainActive.Tip(); pindex && pindex->pprev; pindex = pindex->pprev)
+    {
+        if (pindex->nHeight <= nLastRCTCheckpointHeight)
+            break;
+        
+        nBlocks++;
+        
+        CBlock block;
+        if (!ReadBlockFromDisk(block, pindex, chainparams.GetConsensus()))
+        {
+            result.pushKV("ReadBlockFromDisk failed", pindex->GetBlockHash().ToString());
+            break;
+        };
+        bool fClean = true;
+        if (!DisconnectBlock(block, state, pindex, view, &fClean, true))
+        {
+            result.pushKV("DisconnectBlock failed", pindex->GetBlockHash().ToString());
+            break;
+        };
+        if (!FlushView(&view, state, true))
+        {
+            result.pushKV("FlushView failed", pindex->GetBlockHash().ToString());
+            break;
+        };
+        
+        if (!FlushStateToDisk(state, FLUSH_STATE_IF_NEEDED))
+            return false;
+
+        // Update chainActive and related variables.
+        UpdateTip(pindex->pprev, chainparams);
+    };
+    
+    result.pushKV("nBlocks", nBlocks);
+    
+    
+    return result;
+}
+
 
 
 static const CRPCCommand commands[] =
@@ -4234,6 +4312,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "buildscript",              &buildscript,              false,  {"json"} },
     
     { "wallet",             "debugwallet",              &debugwallet,               false,  {"attempt_repair"} },
+    { "wallet",             "rewindchain",              &rewindchain,               false,  {"height"} },
     
 };
 

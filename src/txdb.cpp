@@ -34,6 +34,7 @@ static const char DB_LAST_BLOCK = 'l';
 static const char DB_RCTOUTPUT = 'A';
 static const char DB_RCTOUTPUT_LAST = 'I';
 static const char DB_RCTOUTPUT_LINK = 'L';
+static const char DB_RCTOUTPUT_CHECKPOINT = 'H';
 static const char DB_RCTKEYIMAGE = 'K';
 */
 
@@ -458,6 +459,11 @@ bool CBlockTreeDB::EraseRCTOutputLink(const CCmpPubKey &pk)
     CDBBatch batch(*this);
     batch.Erase(std::make_pair(DB_RCTOUTPUT_LINK, pk));
     return WriteBatch(batch);
+};
+
+bool CBlockTreeDB::ReadRCTOutputCheckpoint(int nBlock, int64_t &i)
+{
+    return Read(std::make_pair(DB_RCTOUTPUT_CHECKPOINT, nBlock), i);
 };
 
 

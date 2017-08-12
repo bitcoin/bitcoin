@@ -28,6 +28,7 @@ class uint256;
 const char DB_RCTOUTPUT = 'A';
 const char DB_RCTOUTPUT_LAST = 'I';
 const char DB_RCTOUTPUT_LINK = 'L';
+const char DB_RCTOUTPUT_CHECKPOINT = 'H';
 const char DB_RCTKEYIMAGE = 'K';
 
 
@@ -124,6 +125,7 @@ public:
     bool ReadReindexing(bool &fReindex);
     bool ReadTxIndex(const uint256 &txid, CDiskTxPos &pos);
     bool WriteTxIndex(const std::vector<std::pair<uint256, CDiskTxPos> > &list);
+    
     bool ReadSpentIndex(CSpentIndexKey &key, CSpentIndexValue &value);
     bool UpdateSpentIndex(const std::vector<std::pair<CSpentIndexKey, CSpentIndexValue> >&vect);
     bool UpdateAddressUnspentIndex(const std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue > >&vect);
@@ -153,9 +155,14 @@ public:
     bool WriteRCTOutputLink(const CCmpPubKey &pk, int64_t i);
     bool EraseRCTOutputLink(const CCmpPubKey &pk);
     
+    bool ReadRCTOutputCheckpoint(int nBlock, int64_t &i);
+    
+    
     bool ReadRCTKeyImage(const CCmpPubKey &ki, uint256 &txhash);
     bool WriteRCTKeyImage(const CCmpPubKey &ki, const uint256 &txhash);
     bool EraseRCTKeyImage(const CCmpPubKey &ki);
+    
+    
     //bool WriteRCTOutputBatch(std::vector<std::pair<int64_t, CAnonOutput> > &vao);
 };
 

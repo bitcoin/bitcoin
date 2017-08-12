@@ -12,8 +12,6 @@
 HDWalletTestingSetup::HDWalletTestingSetup(const std::string &chainName):
     TestingSetup(chainName, true) // fParticlMode = true
 {
-    //fPrintToConsole = true;
-    //fDebug = true;
     
     bitdb.MakeMock();
 
