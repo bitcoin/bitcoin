@@ -135,14 +135,20 @@ make
 
 
 
-2.4 Miniupnpc: http://miniupnp.free.fr/files/download.php?file=miniupnpc-1.9.20151008.tar.gz
-Unpack Miniupnpc to C:\deps, rename containing folder from "miniupnpc-1.9.20151008" to "miniupnpc" then 
+2.4 Miniupnpc: http://miniupnp.free.fr/files/download.php?file=miniupnpc-2.0.20170509.tar.gz
+Unpack Miniupnpc to C:\deps, rename containing folder from "miniupnpc-2.0.20170509" to "miniupnpc" then 
 from a Windows command prompt:
 
 
 cd C:\deps\miniupnpc
+set "OLD_CC=%CC%"
+set "CC=gcc"
 mingw32-make -f Makefile.mingw init upnpc-static
+set "CC=%OLD_CC%"
 
+NOTE: Miniupnpc version has been updated to 2.0.20170509 due to CVE-2017-8798
+In v2.0.20170509 Makefile.mingw changed the CC definition to "CC ?= gcc" which can cause issues,
+so the value for CC needs to be explicitly set prior to calling mingw32-make.
 
 
 2.5 protoc and libprotobuf:
