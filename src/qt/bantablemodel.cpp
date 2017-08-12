@@ -58,8 +58,8 @@ public:
         for (banmap_t::iterator it = banMap.begin(); it != banMap.end(); it++)
         {
             CCombinedBan banEntry;
-            banEntry.subnet = (*it).first;
-            banEntry.banEntry = (*it).second;
+            banEntry.subnet = it->first;
+            banEntry.banEntry = it->second;
             cachedBanlist.append(banEntry);
         }
 

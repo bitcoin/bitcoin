@@ -179,8 +179,8 @@ bool CCryptoKeyStore::Unlock(const CKeyingMaterial& vMasterKeyIn)
         CryptedKeyMap::const_iterator mi = mapCryptedKeys.begin();
         for (; mi != mapCryptedKeys.end(); ++mi)
         {
-            const CPubKey &vchPubKey = (*mi).second.first;
-            const std::vector<unsigned char> &vchCryptedSecret = (*mi).second.second;
+            const CPubKey &vchPubKey = mi->second.first;
+            const std::vector<unsigned char> &vchCryptedSecret = mi->second.second;
             CKey key;
             if (!DecryptKey(vMasterKeyIn, vchCryptedSecret, vchPubKey, key))
             {
@@ -249,8 +249,8 @@ bool CCryptoKeyStore::GetKey(const CKeyID &address, CKey& keyOut) const
         CryptedKeyMap::const_iterator mi = mapCryptedKeys.find(address);
         if (mi != mapCryptedKeys.end())
         {
-            const CPubKey &vchPubKey = (*mi).second.first;
-            const std::vector<unsigned char> &vchCryptedSecret = (*mi).second.second;
+            const CPubKey &vchPubKey = mi->second.first;
+            const std::vector<unsigned char> &vchCryptedSecret = mi->second.second;
             return DecryptKey(vMasterKey, vchCryptedSecret, vchPubKey, keyOut);
         }
     }
@@ -267,7 +267,7 @@ bool CCryptoKeyStore::GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) co
         CryptedKeyMap::const_iterator mi = mapCryptedKeys.find(address);
         if (mi != mapCryptedKeys.end())
         {
-            vchPubKeyOut = (*mi).second.first;
+            vchPubKeyOut = mi->second.first;
             return true;
         }
         // Check for watch-only pubkeys

@@ -166,7 +166,7 @@ CBlockIndex* FindForkInGlobalIndex(const CChain& chain, const CBlockLocator& loc
         BlockMap::iterator mi = mapBlockIndex.find(hash);
         if (mi != mapBlockIndex.end())
         {
-            CBlockIndex* pindex = (*mi).second;
+            CBlockIndex* pindex = mi->second;
             if (chain.Contains(pindex))
                 return pindex;
             if (pindex->GetAncestor(chain.Height()) == chain.Tip()) {
@@ -2602,11 +2602,11 @@ static CBlockIndex* AddToBlockIndex(const CBlockHeader& block)
     // competitive advantage.
     pindexNew->nSequenceId = 0;
     BlockMap::iterator mi = mapBlockIndex.insert(std::make_pair(hash, pindexNew)).first;
-    pindexNew->phashBlock = &((*mi).first);
+    pindexNew->phashBlock = &mi->first;
     BlockMap::iterator miPrev = mapBlockIndex.find(block.hashPrevBlock);
     if (miPrev != mapBlockIndex.end())
     {
-        pindexNew->pprev = (*miPrev).second;
+        pindexNew->pprev = miPrev->second;
         pindexNew->nHeight = pindexNew->pprev->nHeight + 1;
         pindexNew->BuildSkip();
     }
@@ -3046,7 +3046,7 @@ static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state
         BlockMap::iterator mi = mapBlockIndex.find(block.hashPrevBlock);
         if (mi == mapBlockIndex.end())
             return state.DoS(10, error("%s: prev block not found", __func__), 0, "prev-blk-not-found");
-        pindexPrev = (*mi).second;
+        pindexPrev = mi->second;
         if (pindexPrev->nStatus & BLOCK_FAILED_MASK)
             return state.DoS(100, error("%s: prev block invalid", __func__), REJECT_INVALID, "bad-prevblk");
 
@@ -3430,14 +3430,14 @@ CBlockIndex * InsertBlockIndex(uint256 hash)
     // Return existing
     BlockMap::iterator mi = mapBlockIndex.find(hash);
     if (mi != mapBlockIndex.end())
-        return (*mi).second;
+        return mi->second;
 
     // Create new
     CBlockIndex* pindexNew = new CBlockIndex();
     if (!pindexNew)
         throw std::runtime_error(std::string(__func__) + ": new CBlockIndex failed");
     mi = mapBlockIndex.insert(std::make_pair(hash, pindexNew)).first;
-    pindexNew->phashBlock = &((*mi).first);
+    pindexNew->phashBlock = &mi->first;
 
     return pindexNew;
 }
@@ -4406,7 +4406,7 @@ public:
         // block headers
         BlockMap::iterator it1 = mapBlockIndex.begin();
         for (; it1 != mapBlockIndex.end(); it1++)
-            delete (*it1).second;
+            delete it1->second;
         mapBlockIndex.clear();
     }
 } instance_of_cmaincleanup;

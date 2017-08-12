@@ -292,7 +292,7 @@ const CRPCCommand *CRPCTable::operator[](const std::string &name) const
     std::map<std::string, const CRPCCommand*>::const_iterator it = mapCommands.find(name);
     if (it == mapCommands.end())
         return NULL;
-    return (*it).second;
+    return it->second;
 }
 
 bool CRPCTable::appendCommand(const std::string& name, const CRPCCommand* pcmd)

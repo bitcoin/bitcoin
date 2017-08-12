@@ -79,7 +79,7 @@ public:
             KeyMap::const_iterator mi = mapKeys.begin();
             while (mi != mapKeys.end())
             {
-                setAddress.insert((*mi).first);
+                setAddress.insert(mi->first);
                 mi++;
             }
         }

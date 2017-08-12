@@ -58,7 +58,7 @@ bool CBasicKeyStore::GetCScript(const CScriptID &hash, CScript& redeemScriptOut)
     ScriptMap::const_iterator mi = mapScripts.find(hash);
     if (mi != mapScripts.end())
     {
-        redeemScriptOut = (*mi).second;
+        redeemScriptOut = mi->second;
         return true;
     }
     return false;

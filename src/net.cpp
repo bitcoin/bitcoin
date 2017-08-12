@@ -116,11 +116,11 @@ bool GetLocal(CService& addr, const CNetAddr *paddrPeer)
         LOCK(cs_mapLocalHost);
         for (std::map<CNetAddr, LocalServiceInfo>::iterator it = mapLocalHost.begin(); it != mapLocalHost.end(); it++)
         {
-            int nScore = (*it).second.nScore;
-            int nReachability = (*it).first.GetReachabilityFrom(paddrPeer);
+            int nScore = it->second.nScore;
+            int nReachability = it->first.GetReachabilityFrom(paddrPeer);
             if (nReachability > nBestReachability || (nReachability == nBestReachability && nScore > nBestScore))
             {
-                addr = CService((*it).first, (*it).second.nPort);
+                addr = CService(it->first, it->second.nPort);
                 nBestReachability = nReachability;
                 nBestScore = nScore;
             }
@@ -480,8 +480,8 @@ bool CConnman::IsBanned(CNetAddr ip)
     LOCK(cs_setBanned);
     for (banmap_t::iterator it = setBanned.begin(); it != setBanned.end(); it++)
     {
-        CSubNet subNet = (*it).first;
-        CBanEntry banEntry = (*it).second;
+        CSubNet subNet = it->first;
+        CBanEntry banEntry = it->second;
 
         if (subNet.Match(ip) && GetTime() < banEntry.nBanUntil) {
             return true;
@@ -496,7 +496,7 @@ bool CConnman::IsBanned(CSubNet subnet)
     banmap_t::iterator i = setBanned.find(subnet);
     if (i != setBanned.end())
     {
-        CBanEntry banEntry = (*i).second;
+        CBanEntry banEntry = i->second;
         if (GetTime() < banEntry.nBanUntil) {
             return true;
         }
@@ -582,8 +582,8 @@ void CConnman::SweepBanned()
     banmap_t::iterator it = setBanned.begin();
     while(it != setBanned.end())
     {
-        CSubNet subNet = (*it).first;
-        CBanEntry banEntry = (*it).second;
+        CSubNet subNet = it->first;
+        CBanEntry banEntry = it->second;
         if(now > banEntry.nBanUntil)
         {
             setBanned.erase(it++);

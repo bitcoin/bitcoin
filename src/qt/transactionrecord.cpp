@@ -170,7 +170,7 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
     CBlockIndex* pindex = NULL;
     BlockMap::iterator mi = mapBlockIndex.find(wtx.hashBlock);
     if (mi != mapBlockIndex.end())
-        pindex = (*mi).second;
+        pindex = mi->second;
 
     // Sort order, unrecorded transactions sort to the top
     status.sortKey = strprintf("%010d-%01d-%010u-%03d",

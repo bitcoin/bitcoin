@@ -1030,12 +1030,12 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                 if (send && (mi->second->nStatus & BLOCK_HAVE_DATA))
                 {
                     std::shared_ptr<const CBlock> pblock;
-                    if (a_recent_block && a_recent_block->GetHash() == (*mi).second->GetBlockHash()) {
+                    if (a_recent_block && a_recent_block->GetHash() == mi->second->GetBlockHash()) {
                         pblock = a_recent_block;
                     } else {
                         // Send block from disk
                         std::shared_ptr<CBlock> pblockRead = std::make_shared<CBlock>();
-                        if (!ReadBlockFromDisk(*pblockRead, (*mi).second, consensusParams))
+                        if (!ReadBlockFromDisk(*pblockRead, mi->second, consensusParams))
                             assert(!"cannot load block from disk");
                         pblock = pblockRead;
                     }
@@ -1741,7 +1741,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             BlockMap::iterator mi = mapBlockIndex.find(hashStop);
             if (mi == mapBlockIndex.end())
                 return true;
-            pindex = (*mi).second;
+            pindex = mi->second;
         }
         else
         {
