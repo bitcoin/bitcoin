@@ -129,6 +129,7 @@ BASE_SCRIPTS= [
     'p2p-fingerprint.py',
     'wallet-encryption.py',
     'uptime.py',
+    'resendwallettransactions.py',
 ]
 
 EXTENDED_SCRIPTS = [
