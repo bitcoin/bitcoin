@@ -1260,7 +1260,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             return false;
         }
 
-        if (nServices & ((1 << 7) | (1 << 5))) {
+        if (nServices & (1 << 5)) {
             if (GetTime() < 1533096000) {
                 // Immediately disconnect peers that use service bits 6 or 8 until August 1st, 2018
                 // These bits have been used as a flag to indicate that a node is running incompatible
