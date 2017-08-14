@@ -11,6 +11,9 @@
 #include <boost/thread.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include <chrono>
+#include <thread>
+
 BOOST_AUTO_TEST_SUITE(scheduler_tests)
 
 static void microTask(CScheduler& s, boost::mutex& mutex, int& counter, int delta, boost::chrono::system_clock::time_point rescheduleTime)
@@ -28,14 +31,7 @@ static void microTask(CScheduler& s, boost::mutex& mutex, int& counter, int delt
 
 static void MicroSleep(uint64_t n)
 {
-#if defined(HAVE_WORKING_BOOST_SLEEP_FOR)
-    boost::this_thread::sleep_for(boost::chrono::microseconds(n));
-#elif defined(HAVE_WORKING_BOOST_SLEEP)
-    boost::this_thread::sleep(boost::posix_time::microseconds(n));
-#else
-    //should never get here
-    #error missing boost sleep implementation
-#endif
+    std::this_thread::sleep_for(std::chrono::microseconds(n));
 }
 
 BOOST_AUTO_TEST_CASE(manythreads)
