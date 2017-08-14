@@ -12,6 +12,14 @@
 
 #include <boost/optional.hpp>
 
+enum class InputType {
+    LEGACY, //! Only use non-segwit inputs
+    SEGWIT, //! Only use segwit inputs
+    ALL,    //! Use all input types
+};
+
+bool InputTypeFromString(const std::string& input_string, InputType& input_type);
+
 /** Coin Control Features. */
 class CCoinControl
 {
@@ -31,6 +39,7 @@ public:
     bool signalRbf;
     //! Fee estimation mode to control arguments to estimateSmartFee
     FeeEstimateMode m_fee_mode;
+    InputType m_input_type;
 
     CCoinControl()
     {
@@ -48,6 +57,7 @@ public:
         m_confirm_target.reset();
         signalRbf = fWalletRbf;
         m_fee_mode = FeeEstimateMode::UNSET;
+        m_input_type = InputType::ALL;
     }
 
     bool HasSelected() const

@@ -6,6 +6,7 @@
 #include "amount.h"
 #include "base58.h"
 #include "chain.h"
+#include "coincontrol.h"
 #include "consensus/validation.h"
 #include "core_io.h"
 #include "init.h"
@@ -2811,6 +2812,10 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
                             "         \"UNSET\"\n"
                             "         \"ECONOMICAL\"\n"
                             "         \"CONSERVATIVE\"\n"
+                            "     \"input_type\"             (string, optional, default=ALL) The type of inputs used to fund the transaction, must be one of:\n"
+                            "         \"ALL\"                Only use non-segwit inputs\n"
+                            "         \"LEGACY\"             Only use segwit inputs\n"
+                            "         \"SEGWIT\"             Use all input types\n"
                             "   }\n"
                             "                         for backward compatibility: passing in a true instead of an object will result in {\"includeWatching\":true}\n"
                             "\nResult:\n"
@@ -2860,6 +2865,7 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
                 {"replaceable", UniValueType(UniValue::VBOOL)},
                 {"conf_target", UniValueType(UniValue::VNUM)},
                 {"estimate_mode", UniValueType(UniValue::VSTR)},
+                {"input_type", UniValueType(UniValue::VSTR)},
             },
             true, true);
 
@@ -2905,6 +2911,11 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
             }
             if (!FeeModeFromString(options["estimate_mode"].get_str(), coinControl.m_fee_mode)) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid estimate_mode parameter");
+            }
+        }
+        if (options.exists("input_type")) {
+            if (!InputTypeFromString(options["input_type"].get_str(), coinControl.m_input_type)) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid input_type parameter");
             }
         }
       }
