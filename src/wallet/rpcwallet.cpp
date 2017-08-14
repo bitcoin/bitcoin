@@ -287,7 +287,7 @@ UniValue setaccount(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Chaincoin address");
 
     std::string strAccount;
-    if (request.params.size() > 1)
+    if (!request.params[1].isNull())
         strAccount = AccountFromValue(request.params[1]);
 
     // Only add the account if the address is yours.
@@ -747,7 +747,11 @@ UniValue getreceivedbyaddress(const JSONRPCRequest& request)
     int nMinDepth = 1;
     if (!request.params[1].isNull())
         nMinDepth = request.params[1].get_int();
-    bool fAddLockConf = (request.params.size() > 2 && request.params[2].get_bool());
+
+    bool fAddLockConf = false;
+    if(!request.params[2].isNull())
+        if(request.params[2].get_bool())
+            fAddLockConf = true;
 
     // Tally
     CAmount nAmount = 0;
@@ -800,7 +804,11 @@ UniValue getreceivedbyaccount(const JSONRPCRequest& request)
     int nMinDepth = 1;
     if (!request.params[1].isNull())
         nMinDepth = request.params[1].get_int();
-    bool fAddLockConf = (request.params.size() > 2 && request.params[2].get_bool());
+
+    bool fAddLockConf = false;
+    if(!request.params[2].isNull())
+        if(request.params[2].get_bool())
+            fAddLockConf = true;
 
     // Get the set of pub keys assigned to account
     std::string strAccount = AccountFromValue(request.params[0]);
@@ -869,7 +877,7 @@ UniValue getbalance(const JSONRPCRequest& request)
 
     LOCK2(cs_main, pwallet->cs_wallet);
 
-    if (request.params.size() == 0)
+    if (request.params[0].isNull() && request.params[1].isNull() && request.params[2].isNull())
         return  ValueFromAmount(pwallet->GetBalance());
 
     const std::string& account_param = request.params[0].get_str();
@@ -878,7 +886,12 @@ UniValue getbalance(const JSONRPCRequest& request)
     int nMinDepth = 1;
     if (!request.params[1].isNull())
         nMinDepth = request.params[1].get_int();
-    bool fAddLockConf = (request.params.size() > 2 && request.params[2].get_bool());
+
+    bool fAddLockConf = false;
+    if(!request.params[2].isNull())
+        if(request.params[2].get_bool())
+            fAddLockConf = true;
+
     isminefilter filter = ISMINE_SPENDABLE;
     if(!request.params[3].isNull())
         if(request.params[3].get_bool())
@@ -940,11 +953,11 @@ UniValue movecmd(const JSONRPCRequest& request)
     CAmount nAmount = AmountFromValue(request.params[2]);
     if (nAmount <= 0)
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send");
-    if (request.params.size() > 3)
+    if (!request.params[3].isNull())
         // unused parameter, used to be nMinDepth, keep type-checking it though
         (void)request.params[3].get_int();
     std::string strComment;
-    if (request.params.size() > 4)
+    if (!request.params[4].isNull())
         strComment = request.params[4].get_str();
 
     if (!pwallet->AccountMove(strFrom, strTo, nAmount, strComment)) {
@@ -1002,9 +1015,13 @@ UniValue sendfrom(const JSONRPCRequest& request)
     if (nAmount <= 0)
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send");
     int nMinDepth = 1;
-    if (request.params.size() > 3)
+    if (!request.params[3].isNull())
         nMinDepth = request.params[3].get_int();
-    bool fAddLockConf = (request.params.size() > 4 && request.params[4].get_bool());
+
+    bool fAddLockConf = false;
+    if(!request.params[4].isNull())
+        if(request.params[4].get_bool())
+            fAddLockConf = true;
 
     CWalletTx wtx;
     wtx.strFromAccount = strAccount;
@@ -1012,7 +1029,7 @@ UniValue sendfrom(const JSONRPCRequest& request)
         wtx.mapValue["comment"] = request.params[5].get_str();
     if (!request.params[6].isNull() && !request.params[6].get_str().empty())
         wtx.mapValue["to"]      = request.params[6].get_str();
->
+
     EnsureWalletIsUnlocked(pwallet);
 
     // Check funds
@@ -1088,7 +1105,11 @@ UniValue sendmany(const JSONRPCRequest& request)
     int nMinDepth = 1;
     if (!request.params[2].isNull())
         nMinDepth = request.params[2].get_int();
-    bool fAddLockConf = (request.params.size() > 3 && request.params[3].get_bool());
+
+    bool fAddLockConf = false;
+    if(!request.params[3].isNull())
+        if(request.params[3].get_bool())
+            fAddLockConf = true;
 
     CWalletTx wtx;
     wtx.strFromAccount = strAccount;
@@ -1219,7 +1240,7 @@ UniValue addmultisigaddress(const JSONRPCRequest& request)
     LOCK2(cs_main, pwallet->cs_wallet);
 
     std::string strAccount;
-    if (request.params.size() > 2)
+    if (!request.params[2].isNull())
         strAccount = AccountFromValue(request.params[2]);
 
     // Construct using pay-to-script-hash:
@@ -1352,7 +1373,11 @@ UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bool fByA
     int nMinDepth = 1;
     if (!params[0].isNull())
         nMinDepth = params[0].get_int();
-    bool fAddLockConf = (params.size() > 1 && params[1].get_bool());
+
+    bool fAddLockConf = false;
+    if(!request.params[1].isNull())
+        if(request.params[1].get_bool())
+            fAddLockConf = true;
 
     // Whether to include empty accounts
     bool fIncludeEmpty = false;
@@ -1825,11 +1850,16 @@ UniValue listaccounts(const JSONRPCRequest& request)
     LOCK2(cs_main, pwallet->cs_wallet);
 
     int nMinDepth = 1;
-    if (request.params.size() > 0)
+    if (!request.params[0].isNull())
         nMinDepth = request.params[0].get_int();
-    bool fAddLockConf = (request.params.size() > 1 && request.params[1].get_bool());
+
+    bool fAddLockConf = false;
+    if(!request.params[1].isNull())
+        if(request.params[1].get_bool())
+            fAddLockConf = true;
+
     isminefilter includeWatchonly = ISMINE_SPENDABLE;
-    if(request.params.size() > 2)
+    if(!request.params[2].isNull())
         if(request.params[2].get_bool())
             includeWatchonly = includeWatchonly | ISMINE_WATCH_ONLY;
 
@@ -2486,18 +2516,17 @@ UniValue lockunspent(const JSONRPCRequest& request)
 
     LOCK2(cs_main, pwallet->cs_wallet);
 
-    if (request.params.size() == 1)
-        RPCTypeCheck(request.params, {UniValue::VBOOL});
-    else
-        RPCTypeCheck(request.params, {UniValue::VBOOL, UniValue::VARR});
+    RPCTypeCheckArgument(request.params[0], UniValue::VBOOL);
 
     bool fUnlock = request.params[0].get_bool();
 
-    if (request.params.size() == 1) {
+    if (request.params[1].isNull()) {
         if (fUnlock)
             pwallet->UnlockAllCoins();
         return true;
     }
+
+    RPCTypeCheckArgument(request.params[1], UniValue::VARR);
 
     UniValue outputs = request.params[1].get_array();
     for (unsigned int idx = 0; idx < outputs.size(); idx++) {
