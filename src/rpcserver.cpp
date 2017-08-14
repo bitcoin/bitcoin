@@ -310,14 +310,18 @@ static const CRPCCommand vRPCCommands[] =
     { "hidden",             "setmocktime",            &setmocktime,            true,      false,      false },
     { "hidden",             "sendalert",              &sendalert,              false,     false,      false },
     /* Crown features */
-    { "crown",               "throne",             &throne,             true,      true,       false },
-    { "crown",               "thronelist",         &thronelist,         true,      true,       false },
-    { "crown",               "thronebroadcast",    &thronebroadcast,    true,      true,       false },
-    { "crown",               "mnbudget",               &mnbudget,               true,      true,       false },
-    { "crown",               "mnbudgetvoteraw",        &mnbudgetvoteraw,        true,      true,       false },
-    { "crown",               "mnfinalbudget",          &mnfinalbudget,          true,      true,       false },
-    { "crown",               "mnsync",                 &mnsync,                 true,      true,       false },
-    { "crown",               "spork",                  &spork,                  true,      true,       false },
+    { "crown",               "throne",                &throne,                 true,      true,       false },
+    { "crown",               "thronelist",            &thronelist,             true,      true,       false },
+    { "crown",               "thronebroadcast",       &thronebroadcast,        true,      true,       false },
+    { "crown",               "mnbudget",              &mnbudget,               true,      true,       false },
+    { "crown",               "mnbudgetvoteraw",       &mnbudgetvoteraw,        true,      true,       false },
+    { "crown",               "mnfinalbudget",         &mnfinalbudget,          true,      true,       false },
+    { "crown",               "mnsync",                &mnsync,                 true,      true,       false },
+    { "crown",               "spork",                 &spork,                  true,      true,       false },
+
+    /* API features */
+    { "api",                 "service",               &service,                true,      true,       false },
+
 #ifdef ENABLE_WALLET
 
     /* Wallet */
