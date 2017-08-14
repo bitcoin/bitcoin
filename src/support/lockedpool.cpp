@@ -28,7 +28,7 @@
 
 #include <algorithm>
 
-LockedPoolManager* LockedPoolManager::_instance = NULL;
+LockedPoolManager* LockedPoolManager::_instance = nullptr;
 std::once_flag LockedPoolManager::init_flag;
 
 /*******************************************************************************/
@@ -87,7 +87,7 @@ template <class Iterator, class Pair> bool extend(Iterator it, const Pair& other
 
 void Arena::free(void *ptr)
 {
-    // Freeing the NULL pointer is OK.
+    // Freeing the nullptr pointer is OK.
     if (ptr == nullptr) {
         return;
     }

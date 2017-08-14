@@ -217,7 +217,7 @@ UniValue addnode(const JSONRPCRequest& request)
     if (strCommand == "onetry")
     {
         CAddress addr;
-        g_connman->OpenNetworkConnection(addr, false, NULL, strNode.c_str());
+        g_connman->OpenNetworkConnection(addr, false, nullptr, strNode.c_str());
         return NullUniValue;
     }
 

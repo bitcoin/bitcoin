@@ -75,12 +75,12 @@ public:
     PaymentServer(QObject* parent, bool startLocalServer = true);
     ~PaymentServer();
 
-    // Load root certificate authorities. Pass NULL (default)
+    // Load root certificate authorities. Pass nullptr (default)
     // to read from the file specified in the -rootcertificates setting,
     // or, if that's not set, to use the system default root certificates.
     // If you pass in a store, you should not X509_STORE_free it: it will be
     // freed either at exit or when another set of CAs are loaded.
-    static void LoadRootCAs(X509_STORE* store = NULL);
+    static void LoadRootCAs(X509_STORE* store = nullptr);
 
     // Return certificate store
     static X509_STORE* getCertStore();
