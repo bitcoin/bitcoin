@@ -1489,11 +1489,11 @@ UniValue getchaintxstats(const JSONRPCRequest& request)
     const CBlockIndex* pindex;
     int blockcount = 30 * 24 * 60 * 60 / Params().GetConsensus().nPowTargetSpacing; // By default: 1 month
 
-    if (request.params.size() > 0 && !request.params[0].isNull()) {
+    if (!request.params[0].isNull()) {
         blockcount = request.params[0].get_int();
     }
 
-    bool havehash = request.params.size() > 1 && !request.params[1].isNull();
+    bool havehash = !request.params[1].isNull();
     uint256 hash;
     if (havehash) {
         hash = uint256S(request.params[1].get_str());
