@@ -58,8 +58,13 @@ protected:
     virtual void BlockChecked(const CBlock&, const CValidationState&) {}
     /**
      * Notifies listeners that a block which builds directly on our current tip
-     * has been received and connected to the headers tree, though not validated yet */
-    virtual void NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& block) {};
+     * has been received and connected to the headers tree, though not validated yet.
+     * If the new block builds on the current best tip, the final bool argument is
+     * set to true, otherwise it is false.
+     * Consider if you need an IsInitialBlockDownload check in your client (and note
+     * that any such calls will be racy wrt the state when the callback was generated)
+     * */
+    virtual void NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& block, bool fNewCandidateTip) {};
     friend void ::RegisterValidationInterface(CValidationInterface*);
     friend void ::UnregisterValidationInterface(CValidationInterface*);
     friend void ::UnregisterAllValidationInterfaces();
@@ -90,7 +95,7 @@ public:
     void Inventory(const uint256 &);
     void Broadcast(int64_t nBestBlockTime, CConnman* connman);
     void BlockChecked(const CBlock&, const CValidationState&);
-    void NewPoWValidBlock(const CBlockIndex *, const std::shared_ptr<const CBlock>&);
+    void NewPoWValidBlock(const CBlockIndex *, const std::shared_ptr<const CBlock>&, bool);
 };
 
 CMainSignals& GetMainSignals();
