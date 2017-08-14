@@ -193,7 +193,7 @@ UniValue getpeerinfo(const JSONRPCRequest& request)
 UniValue addnode(const JSONRPCRequest& request)
 {
     std::string strCommand;
-    if (request.params.size() == 2)
+    if (!request.params[1].isNull())
         strCommand = request.params[1].get_str();
     if (request.fHelp || request.params.size() != 2 ||
         (strCommand != "onetry" && strCommand != "add" && strCommand != "remove"))
@@ -490,7 +490,7 @@ UniValue getnetworkinfo(const JSONRPCRequest& request)
 UniValue setban(const JSONRPCRequest& request)
 {
     std::string strCommand;
-    if (request.params.size() >= 2)
+    if (!request.params[1].isNull())
         strCommand = request.params[1].get_str();
     if (request.fHelp || request.params.size() < 2 ||
         (strCommand != "add" && strCommand != "remove"))
