@@ -76,7 +76,11 @@ In the VirtualBox GUI click "New" and choose the following parameters in the wiz
 
 After creating the VM, we need to configure it.
 
-- Click the `Settings` button, then go to the `Network` tab. Adapter 1 should be attached to `NAT`.
+- Click the `Settings` button, then go to `System` tab and `Processor` sub-tab. Increase the number of processors to the number of cores on your machine if you want builds to be faster.
+
+![](gitian-building/system_settings.png)
+
+- Go to the `Network` tab. Adapter 1 should be attached to `NAT`.
 
 ![](gitian-building/network_settings.png)
 
