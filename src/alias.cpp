@@ -1038,11 +1038,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			vector<CAliasPayment> vtxPaymentPos;
 			if(paliasdb->ExistsAliasPayment(vchAlias))
 			{
-				if(!paliasdb->ReadAliasPayment(vchAlias, vtxPaymentPos))
-				{
-					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5032 - " + _("Cannot read payments from alias DB");
-					return true;
-				}
+				paliasdb->ReadAliasPayment(vchAlias, vtxPaymentPos);
 			}
 			CAliasPayment payment;
 			payment.txHash = txHash;
