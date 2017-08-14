@@ -3663,11 +3663,6 @@ void CWallet::MarkReserveKeysAsUsed(int64_t keypool_id)
     }
 }
 
-bool CWallet::HasUnusedKeys(int min_keys) const
-{
-    return setExternalKeyPool.size() >= min_keys && (setInternalKeyPool.size() >= min_keys || !CanSupportFeature(FEATURE_HD_SPLIT));
-}
-
 void CWallet::GetScriptForMining(std::shared_ptr<CReserveScript> &script)
 {
     std::shared_ptr<CReserveKey> rKey = std::make_shared<CReserveKey>(this);
