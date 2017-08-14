@@ -32,13 +32,13 @@ env:
 # 32-bit + dash
     - HOST=i686-pc-linux-gnu PACKAGES="g++-multilib python3-zmq" DEP_OPTS="NO_QT=1" RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++" USE_SHELL="/bin/dash" LITECOIN_SCRYPT=1
 # Win64
-    - HOST=x86_64-w64-mingw32 DPKG_ADD_ARCH="i386" DEP_OPTS="NO_QT=1" PACKAGES="python3 nsis g++-mingw-w64-x86-64 wine1.6" RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-reduce-exports" LITECOIN_SCRYPT=1
+    - HOST=x86_64-w64-mingw32 DPKG_ADD_ARCH="i386" DEP_OPTS="NO_QT=1" PACKAGES="python3 nsis g++-mingw-w64-x86-64 wine1.6" RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-reduce-exports --enable-sse2" LITECOIN_SCRYPT=1
 # x86_64 Linux (uses qt5 dev package instead of depends Qt to speed up build and avoid timeout)
-    - HOST=x86_64-unknown-linux-gnu PACKAGES="python3-zmq qtbase5-dev qttools5-dev-tools protobuf-compiler libdbus-1-dev libharfbuzz-dev" DEP_OPTS="NO_QT=1 NO_UPNP=1 DEBUG=1 ALLOW_HOST_PACKAGES=1" RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-zmq --with-gui=qt5 --enable-glibc-back-compat --enable-reduce-exports CPPFLAGS=-DDEBUG_LOCKORDER" LITECOIN_SCRYPT=1
+    - HOST=x86_64-unknown-linux-gnu PACKAGES="python3-zmq qtbase5-dev qttools5-dev-tools protobuf-compiler libdbus-1-dev libharfbuzz-dev" DEP_OPTS="NO_QT=1 NO_UPNP=1 DEBUG=1 ALLOW_HOST_PACKAGES=1" RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-zmq --with-gui=qt5 --enable-glibc-back-compat --enable-reduce-exports --enable-sse2 CPPFLAGS=-DDEBUG_LOCKORDER" LITECOIN_SCRYPT=1
 # x86_64 Linux, No wallet
-    - HOST=x86_64-unknown-linux-gnu PACKAGES="python3" DEP_OPTS="NO_WALLET=1" RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports" LITECOIN_SCRYPT=1
+    - HOST=x86_64-unknown-linux-gnu PACKAGES="python3" DEP_OPTS="NO_WALLET=1" RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports --enable-sse2" LITECOIN_SCRYPT=1
 # Cross-Mac
-    - HOST=x86_64-apple-darwin11 PACKAGES="cmake imagemagick libcap-dev librsvg2-bin libz-dev libbz2-dev libtiff-tools python-dev" BITCOIN_CONFIG="--enable-gui --enable-reduce-exports --enable-werror" OSX_SDK=10.11 GOAL="deploy"
+    - HOST=x86_64-apple-darwin11 PACKAGES="cmake imagemagick libcap-dev librsvg2-bin libz-dev libbz2-dev libtiff-tools python-dev" BITCOIN_CONFIG="--enable-gui --enable-reduce-exports --enable-werror --enable-sse2" OSX_SDK=10.11 GOAL="deploy"
 
 before_install:
     - export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")
@@ -76,7 +76,7 @@ script:
     - mkdir build && cd build
     - ../configure --cache-file=config.cache $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG || ( cat config.log && false)
     - make distdir VERSION=$HOST
-    - cd bitcoin-$HOST
+    - cd litecoin-$HOST
     - ./configure --cache-file=../config.cache $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG || ( cat config.log && false)
     - make $MAKEJOBS $GOAL || ( echo "Build failure. Verbose build follows." && make $GOAL V=1 ; false )
     - export LD_LIBRARY_PATH=$TRAVIS_BUILD_DIR/depends/$HOST/lib
