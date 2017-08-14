@@ -291,10 +291,11 @@ void scrypt_1024_1_1_256_sp_generic(const char *input, char *output, char *scrat
 // By default, set to generic scrypt function. This will prevent crash in case when scrypt_detect_sse2() wasn't called
 void (*scrypt_1024_1_1_256_sp_detected)(const char *input, char *output, char *scratchpad) = &scrypt_1024_1_1_256_sp_generic;
 
-void scrypt_detect_sse2()
+std::string scrypt_detect_sse2()
 {
+    std::string ret;
 #if defined(USE_SSE2_ALWAYS)
-    printf("scrypt: using scrypt-sse2 as built.\n");
+    ret = "scrypt: using scrypt-sse2 as built.";
 #else // USE_SSE2_ALWAYS
     // 32bit x86 Linux or Windows, detect cpuid features
     unsigned int cpuid_edx=0;
@@ -312,14 +313,15 @@ void scrypt_detect_sse2()
     if (cpuid_edx & 1<<26)
     {
         scrypt_1024_1_1_256_sp_detected = &scrypt_1024_1_1_256_sp_sse2;
-        printf("scrypt: using scrypt-sse2 as detected.\n");
+        ret = "scrypt: using scrypt-sse2 as detected");
     }
     else
     {
         scrypt_1024_1_1_256_sp_detected = &scrypt_1024_1_1_256_sp_generic;
-        printf("scrypt: using scrypt-generic, SSE2 unavailable.\n");
+        ret = "scrypt: using scrypt-generic, SSE2 unavailable";
     }
 #endif // USE_SSE2_ALWAYS
+    return ret;
 }
 #endif
 
