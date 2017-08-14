@@ -5,7 +5,7 @@
 #ifndef BITCOIN_WALLET_FEEBUMPER_H
 #define BITCOIN_WALLET_FEEBUMPER_H
 
-#include <primitives/transaction.h>
+#include "primitives/transaction.h"
 
 class CWallet;
 class CWalletTx;
