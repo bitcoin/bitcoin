@@ -258,7 +258,7 @@ UniValue disconnectnode(const JSONRPCRequest& request)
 
     bool success;
     const UniValue &address_arg = request.params[0];
-    const UniValue &id_arg = request.params.size() < 2 ? NullUniValue : request.params[1];
+    const UniValue &id_arg = request.params[1];
 
     if (!address_arg.isNull() && id_arg.isNull()) {
         /* handle disconnect-by-address */
@@ -311,7 +311,7 @@ UniValue getaddednodeinfo(const JSONRPCRequest& request)
 
     std::vector<AddedNodeInfo> vInfo = g_connman->GetAddedNodeInfo();
 
-    if (request.params.size() == 1 && !request.params[0].isNull()) {
+    if (!request.params[0].isNull()) {
         bool found = false;
         for (const AddedNodeInfo& info : vInfo) {
             if (info.strAddedNode == request.params[0].get_str()) {
@@ -534,11 +534,11 @@ UniValue setban(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_CLIENT_NODE_ALREADY_ADDED, "Error: IP/Subnet already banned");
 
         int64_t banTime = 0; //use standard bantime if not specified
-        if (request.params.size() >= 3 && !request.params[2].isNull())
+        if (!request.params[2].isNull())
             banTime = request.params[2].get_int64();
 
         bool absolute = false;
-        if (request.params.size() == 4 && request.params[3].isTrue())
+        if (request.params[3].isTrue())
             absolute = true;
 
         isSubnet ? g_connman->Ban(subNet, BanReasonManuallyAdded, banTime, absolute) : g_connman->Ban(netAddr, BanReasonManuallyAdded, banTime, absolute);
