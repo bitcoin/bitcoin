@@ -4,9 +4,9 @@
 
 #include <base58.h>
 
-#include <data/base58_encode_decode.json.h>
-#include <data/base58_keys_invalid.json.h>
-#include <data/base58_keys_valid.json.h>
+#include <test/data/base58_encode_decode.json.h>
+#include <test/data/base58_keys_invalid.json.h>
+#include <test/data/base58_keys_valid.json.h>
 
 #include <key.h>
 #include <script/script.h>
