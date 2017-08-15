@@ -87,6 +87,7 @@ enum DisconnectResult
 };
 
 class ConnectTrace;
+typedef std::unordered_map<uint256, CBlockIndex*, BlockHasher> NonConstBlockMap;
 
 /**
  * CChainState stores and provides an API to update our local knowledge of the
@@ -124,7 +125,8 @@ private:
     arith_uint256 nLastPreciousChainwork = 0;
 public:
     CChain chainActive;
-    BlockMap mapBlockIndex;
+
+    NonConstBlockMap mapBlockIndex;
     std::multimap<CBlockIndex*, CBlockIndex*> mapBlocksUnlinked;
     CBlockIndex *pindexBestInvalid = nullptr;
 
@@ -4000,7 +4002,7 @@ void CChainState::UnloadBlockIndex() {
     setBlockIndexCandidates.clear();
     chainActive.SetTip(nullptr);
 
-    for (BlockMap::value_type& entry : mapBlockIndex) {
+    for (NonConstBlockMap::value_type& entry : mapBlockIndex) {
         delete entry.second;
     }
     mapBlockIndex.clear();
