@@ -299,7 +299,7 @@
   <customwidget>
    <class>BitcoinAmountField</class>
    <extends>QLineEdit</extends>
-   <header>bitcoinamountfield.h</header>
+   <header>qt/bitcoinamountfield.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
