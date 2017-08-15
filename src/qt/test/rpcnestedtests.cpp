@@ -72,7 +72,7 @@ void RPCNestedTests::rpcNestedTests()
     (RPCConsole::RPCExecuteCommandLine(result, "createrawtransaction [] {} 0")); //parameter not in brackets are allowed
     (RPCConsole::RPCExecuteCommandLine(result2, "createrawtransaction([],{},0)")); //parameter in brackets are allowed
     QVERIFY(result == result2);
-    (RPCConsole::RPCExecuteCommandLine(result2, "createrawtransaction( [],  {} , 0   )")); //whitespace between parametres is allowed
+    (RPCConsole::RPCExecuteCommandLine(result2, "createrawtransaction( [],  {} , 0   )")); //whitespace between parameters is allowed
     QVERIFY(result == result2);
 
     RPCConsole::RPCExecuteCommandLine(result, "getblock(getbestblockhash())[tx][0]", &filtered);
