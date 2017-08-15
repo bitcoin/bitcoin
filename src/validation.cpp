@@ -137,6 +137,7 @@ public:
     }
 
     bool LoadBlockIndex(const Consensus::Params& consensus_params, CBlockTreeDB& blocktree);
+    bool LoadChainTip(const CChainParams& chainparams);
 
     bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams, std::shared_ptr<const CBlock> pblock);
 
@@ -160,8 +161,6 @@ public:
     bool RewindBlockIndex(const CChainParams& params);
     bool LoadGenesisBlock(const CChainParams& chainparams);
 
-    void PruneBlockIndexCandidates();
-
     void UnloadBlockIndex();
 
 private:
@@ -177,6 +176,7 @@ private:
     CBlockIndex* FindMostWorkChain();
     bool ReceivedBlockTransactions(const CBlock &block, CValidationState& state, CBlockIndex *pindexNew, const CDiskBlockPos& pos, const Consensus::Params& consensusParams);
 
+    void PruneBlockIndexCandidates();
 
     bool RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& inputs, const CChainParams& params);
 } chainstate;
@@ -3663,7 +3663,7 @@ bool static LoadBlockIndexDB(const CChainParams& chainparams)
     return true;
 }
 
-bool LoadChainTip(const CChainParams& chainparams)
+bool CChainState::LoadChainTip(const CChainParams& chainparams)
 {
     if (chainActive.Tip() && chainActive.Tip()->GetBlockHash() == pcoinsTip->GetBestBlock()) return true;
 
@@ -3672,7 +3672,7 @@ bool LoadChainTip(const CChainParams& chainparams)
         // that we always have a chainActive.Tip() when we return.
         LogPrintf("%s: Connecting genesis block...\n", __func__);
         CValidationState state;
-        if (!ActivateBestChain(state, chainparams)) {
+        if (!ActivateBestChain(state, chainparams, std::shared_ptr<const CBlock>())) {
             return false;
         }
     }
@@ -3683,13 +3683,18 @@ bool LoadChainTip(const CChainParams& chainparams)
         return false;
     chainActive.SetTip(it->second);
 
-    chainstate.PruneBlockIndexCandidates();
+    PruneBlockIndexCandidates();
 
     LogPrintf("Loaded best chain: hashBestChain=%s height=%d date=%s progress=%f\n",
         chainActive.Tip()->GetBlockHash().ToString(), chainActive.Height(),
         DateTimeStrFormat("%Y-%m-%d %H:%M:%S", chainActive.Tip()->GetBlockTime()),
         GuessVerificationProgress(chainparams.TxData(), chainActive.Tip()));
     return true;
+}
+
+bool LoadChainTip(const CChainParams& chainparams)
+{
+    return chainstate.LoadChainTip(chainparams);
 }
 
 CVerifyDB::CVerifyDB()
