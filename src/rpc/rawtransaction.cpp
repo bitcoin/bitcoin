@@ -45,7 +45,7 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
 
     if (!hashBlock.IsNull()) {
         entry.push_back(Pair("blockhash", hashBlock.GetHex()));
-        BlockMap::iterator mi = mapBlockIndex.find(hashBlock);
+        BlockMap::const_iterator mi = mapBlockIndex.find(hashBlock);
         if (mi != mapBlockIndex.end() && (*mi).second) {
             const CBlockIndex* pindex = (*mi).second;
             if (chainActive.Contains(pindex)) {

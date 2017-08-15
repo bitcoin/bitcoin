@@ -999,7 +999,7 @@ UniValue gettxout(const JSONRPCRequest& request)
         }
     }
 
-    BlockMap::iterator it = mapBlockIndex.find(pcoinsTip->GetBestBlock());
+    BlockMap::const_iterator it = mapBlockIndex.find(pcoinsTip->GetBestBlock());
     const CBlockIndex *pindex = it->second;
     ret.push_back(Pair("bestblock", pindex->GetBlockHash().GetHex()));
     if (coin.nHeight == MEMPOOL_HEIGHT) {

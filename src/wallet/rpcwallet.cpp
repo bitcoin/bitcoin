@@ -1827,7 +1827,7 @@ UniValue listsinceblock(const JSONRPCRequest& request)
         uint256 blockId;
 
         blockId.SetHex(request.params[0].get_str());
-        BlockMap::iterator it = mapBlockIndex.find(blockId);
+        BlockMap::const_iterator it = mapBlockIndex.find(blockId);
         if (it != mapBlockIndex.end()) {
             paltindex = pindex = it->second;
             if (chainActive[pindex->nHeight] != pindex) {
