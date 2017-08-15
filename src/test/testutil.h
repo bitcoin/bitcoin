@@ -8,7 +8,7 @@
 #ifndef BITCOIN_TEST_TESTUTIL_H
 #define BITCOIN_TEST_TESTUTIL_H
 
-#include "fs.h"
+#include <fs.h>
 
 fs::path GetTempPath();
 

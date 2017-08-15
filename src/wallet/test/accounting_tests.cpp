@@ -2,9 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "wallet/wallet.h"
+#include <wallet/wallet.h>
 
-#include "wallet/test/wallet_test_fixture.h"
+#include <wallet/test/wallet_test_fixture.h>
 
 #include <stdint.h>
 

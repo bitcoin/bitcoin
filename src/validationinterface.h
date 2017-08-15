@@ -8,7 +8,7 @@
 
 #include <memory>
 
-#include "primitives/transaction.h" // CTransaction(Ref)
+#include <primitives/transaction.h> // CTransaction(Ref)
 
 class CBlock;
 class CBlockIndex;

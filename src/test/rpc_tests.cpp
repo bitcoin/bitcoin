@@ -2,14 +2,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "rpc/server.h"
-#include "rpc/client.h"
+#include <rpc/server.h>
+#include <rpc/client.h>
 
-#include "base58.h"
-#include "core_io.h"
-#include "netbase.h"
+#include <base58.h>
+#include <core_io.h>
+#include <netbase.h>
 
-#include "test/test_bitcoin.h"
+#include <test/test_bitcoin.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/test/unit_test.hpp>
