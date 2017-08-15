@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <qt/editaddressdialog.h>
-#include <ui_editaddressdialog.h>
+#include <qt/forms/ui_editaddressdialog.h>
 
 #include <qt/addresstablemodel.h>
 #include <qt/guiutil.h>

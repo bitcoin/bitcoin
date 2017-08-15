@@ -7,7 +7,7 @@
 #endif
 
 #include <qt/rpcconsole.h>
-#include <ui_debugwindow.h>
+#include <qt/forms/ui_debugwindow.h>
 
 #include <qt/bantablemodel.h>
 #include <qt/clientmodel.h>
@@ -125,7 +125,7 @@ public:
 };
 
 
-#include <rpcconsole.moc>
+#include <qt/rpcconsole.moc>
 
 /**
  * Split shell command line into a list of arguments and optionally execute the command(s).
