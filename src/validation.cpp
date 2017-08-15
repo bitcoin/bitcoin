@@ -87,7 +87,6 @@ enum DisconnectResult
 };
 
 class ConnectTrace;
-typedef std::unordered_map<uint256, CBlockIndex*, BlockHasher> NonConstBlockMap;
 
 /**
  * CChainState stores and provides an API to update our local knowledge of the
@@ -126,6 +125,7 @@ private:
 public:
     CChain chainActive;
 
+    typedef std::unordered_map<uint256, CBlockIndex*, BlockHasher> NonConstBlockMap;
     NonConstBlockMap mapBlockIndex;
     std::multimap<CBlockIndex*, CBlockIndex*> mapBlocksUnlinked;
     CBlockIndex *pindexBestInvalid = nullptr;
@@ -3360,7 +3360,7 @@ static uint64_t CalculateCurrentUsage()
 /* Prune a block file (modify associated database entries)*/
 void PruneOneBlockFile(const int fileNumber)
 {
-    for (NonConstBlockMap::iterator it = chainstate.mapBlockIndex.begin(); it != chainstate.mapBlockIndex.end(); ++it) {
+    for (CChainState::NonConstBlockMap::iterator it = chainstate.mapBlockIndex.begin(); it != chainstate.mapBlockIndex.end(); ++it) {
         CBlockIndex* pindex = it->second;
         if (pindex->nFile == fileNumber) {
             pindex->nStatus &= ~BLOCK_HAVE_DATA;
