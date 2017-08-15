@@ -367,7 +367,7 @@ QLabel { color: rgb(40,40,40);  }</string>
   <customwidget>
    <class>ModalOverlay</class>
    <extends>QWidget</extends>
-   <header>modaloverlay.h</header>
+   <header>qt/modaloverlay.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
