@@ -22,6 +22,6 @@ void SetfLargeWorkInvalidChainFound(bool flag);
  */
 std::string GetWarnings(const std::string& strFor);
 
-static const bool DEFAULT_TESTSAFEMODE = false;
+static const bool DEFAULT_TESTSAFEMODE = false;  // set default test safe mode to false
 
 #endif //  BITCOIN_WARNINGS_H
