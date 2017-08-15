@@ -90,7 +90,7 @@ def test_simple_bumpfee_succeeds(rbf_node, peer_node, dest_address):
     bumped_tx = rbf_node.bumpfee(rbfid)
     assert_equal(bumped_tx["errors"], [])
     assert bumped_tx["fee"] - abs(rbftx["fee"]) > 0
-    # check that bumped_tx propogates, original tx was evicted and has a wallet conflict
+    # check that bumped_tx propagates, original tx was evicted and has a wallet conflict
     sync_mempools((rbf_node, peer_node))
     assert bumped_tx["txid"] in rbf_node.getrawmempool()
     assert bumped_tx["txid"] in peer_node.getrawmempool()
