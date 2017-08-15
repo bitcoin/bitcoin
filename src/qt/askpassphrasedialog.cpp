@@ -7,7 +7,7 @@
 #endif
 
 #include <qt/askpassphrasedialog.h>
-#include <ui_askpassphrasedialog.h>
+#include <qt/forms/ui_askpassphrasedialog.h>
 
 #include <qt/guiconstants.h>
 #include <qt/walletmodel.h>

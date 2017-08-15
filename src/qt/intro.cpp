@@ -8,7 +8,7 @@
 
 #include <fs.h>
 #include <qt/intro.h>
-#include <ui_intro.h>
+#include <qt/forms/ui_intro.h>
 
 #include <qt/guiutil.h>
 
@@ -60,7 +60,7 @@ private:
     Intro *intro;
 };
 
-#include <intro.moc>
+#include <qt/intro.moc>
 
 FreespaceChecker::FreespaceChecker(Intro *_intro)
 {

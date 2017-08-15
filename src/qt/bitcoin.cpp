@@ -261,7 +261,7 @@ private:
     void startThread();
 };
 
-#include <bitcoin.moc>
+#include <qt/bitcoin.moc>
 
 BitcoinCore::BitcoinCore():
     QObject()
