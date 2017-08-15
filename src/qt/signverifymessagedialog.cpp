@@ -3,13 +3,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <signverifymessagedialog.h>
-#include <ui_signverifymessagedialog.h>
+#include <qt/signverifymessagedialog.h>
+#include <qt/forms/ui_signverifymessagedialog.h>
 
-#include <addressbookpage.h>
-#include <guiutil.h>
-#include <platformstyle.h>
-#include <walletmodel.h>
+#include <qt/addressbookpage.h>
+#include <qt/guiutil.h>
+#include <qt/platformstyle.h>
+#include <qt/walletmodel.h>
 
 #include <base58.h>
 #include <init.h>

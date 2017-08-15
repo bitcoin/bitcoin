@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <policy/policy.h>
-#include <walletmodeltransaction.h>
+#include <qt/walletmodeltransaction.h>
 
 #include <wallet/wallet.h>
 

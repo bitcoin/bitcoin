@@ -5,8 +5,8 @@
 #ifndef BITCOIN_QT_WALLETMODEL_H
 #define BITCOIN_QT_WALLETMODEL_H
 
-#include <paymentrequestplus.h>
-#include <walletmodeltransaction.h>
+#include <qt/paymentrequestplus.h>
+#include <qt/walletmodeltransaction.h>
 
 #ifdef ENABLE_WALLET
 #include <wallet/wallet.h>

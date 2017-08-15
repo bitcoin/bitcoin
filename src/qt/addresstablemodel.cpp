@@ -5,8 +5,8 @@
 
 #include <addresstablemodel.h>
 
-#include <guiutil.h>
-#include <walletmodel.h>
+#include <qt/guiutil.h>
+#include <qt/walletmodel.h>
 
 #include <base58.h>
 #include <wallet/wallet.h>

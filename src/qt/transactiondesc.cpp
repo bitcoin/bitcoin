@@ -3,12 +3,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <transactiondesc.h>
+#include <qt/transactiondesc.h>
 
-#include <bitcoinunits.h>
-#include <guiutil.h>
-#include <paymentserver.h>
-#include <transactionrecord.h>
+#include <qt/bitcoinunits.h>
+#include <qt/guiutil.h>
+#include <qt/paymentserver.h>
+#include <qt/transactionrecord.h>
 
 #include <base58.h>
 #include <consensus/consensus.h>

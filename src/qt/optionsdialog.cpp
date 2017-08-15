@@ -6,12 +6,12 @@
 #include <config/chaincoin-config.h>
 #endif
 
-#include <optionsdialog.h>
-#include <ui_optionsdialog.h>
+#include <qt/optionsdialog.h>
+#include <qt/forms/ui_optionsdialog.h>
 
-#include <bitcoinunits.h>
-#include <guiutil.h>
-#include <optionsmodel.h>
+#include <qt/bitcoinunits.h>
+#include <qt/guiutil.h>
+#include <qt/optionsmodel.h>
 
 #include <validation.h> // for DEFAULT_SCRIPTCHECK_THREADS and MAX_SCRIPTCHECK_THREADS
 #include <netbase.h>

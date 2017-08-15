@@ -7,10 +7,10 @@
 #include <config/chaincoin-config.h>
 #endif
 
-#include <optionsmodel.h>
+#include <qt/optionsmodel.h>
 
-#include <bitcoinunits.h>
-#include <guiutil.h>
+#include <qt/bitcoinunits.h>
+#include <qt/guiutil.h>
 
 #include <amount.h>
 #include <init.h>
@@ -19,6 +19,7 @@
 #include <net.h>
 #include <netbase.h>
 #include <txdb.h> // for -dbcache defaults
+#include <qt/intro.h>
 
 #ifdef ENABLE_WALLET
 #include <wallet/wallet.h>

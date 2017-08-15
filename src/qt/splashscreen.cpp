@@ -3,10 +3,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <splashscreen.h>
+#include <qt/splashscreen.h>
 
-#include <guiutil.h>
-#include <networkstyle.h>
+#include <qt/guiutil.h>
+#include <qt/networkstyle.h>
 
 #include <clientversion.h>
 #include <init.h>

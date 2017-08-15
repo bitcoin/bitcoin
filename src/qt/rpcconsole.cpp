@@ -7,13 +7,13 @@
 #include <config/chaincoin-config.h>
 #endif
 
-#include <rpcconsole.h>
-#include <ui_debugwindow.h>
+#include <qt/rpcconsole.h>
+#include <qt/forms/ui_debugwindow.h>
 
-#include <bantablemodel.h>
-#include <clientmodel.h>
-#include <guiutil.h>
-#include <platformstyle.h>
+#include <qt/bantablemodel.h>
+#include <qt/clientmodel.h>
+#include <qt/guiutil.h>
+#include <qt/platformstyle.h>
 
 #include <chainparams.h>
 #include <netbase.h>
@@ -127,7 +127,7 @@ public:
 };
 
 
-#include <rpcconsole.moc>
+#include <qt/rpcconsole.moc>
 
 /**
  * Split shell command line into a list of arguments and optionally execute the command(s).

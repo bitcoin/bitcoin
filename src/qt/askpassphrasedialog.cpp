@@ -7,11 +7,11 @@
 #include <config/chaincoin-config.h>
 #endif
 
-#include <askpassphrasedialog.h>
-#include <ui_askpassphrasedialog.h>
+#include <qt/askpassphrasedialog.h>
+#include <qt/forms/ui_askpassphrasedialog.h>
 
-#include <guiconstants.h>
-#include <walletmodel.h>
+#include <qt/guiconstants.h>
+#include <qt/walletmodel.h>
 
 #include <support/allocators/secure.h>
 

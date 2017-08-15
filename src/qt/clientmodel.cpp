@@ -3,12 +3,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <clientmodel.h>
+#include <qt/clientmodel.h>
 
-#include <bantablemodel.h>
-#include <guiconstants.h>
-#include <guiutil.h>
-#include <peertablemodel.h>
+#include <qt/bantablemodel.h>
+#include <qt/guiconstants.h>
+#include <qt/guiutil.h>
+#include <qt/peertablemodel.h>
 
 #include <chain.h>
 #include <chainparams.h>

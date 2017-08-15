@@ -3,17 +3,17 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <walletmodel.h>
+#include <qt/walletmodel.h>
 
-#include <addresstablemodel.h>
+#include <qt/addresstablemodel.h>
 #include <consensus/validation.h>
-#include <guiconstants.h>
-#include <guiutil.h>
-#include <optionsmodel.h>
-#include <paymentserver.h>
-#include <recentrequeststablemodel.h>
-#include <sendcoinsdialog.h>
-#include <transactiontablemodel.h>
+#include <qt/guiconstants.h>
+#include <qt/guiutil.h>
+#include <qt/optionsmodel.h>
+#include <qt/paymentserver.h>
+#include <qt/recentrequeststablemodel.h>
+#include <qt/sendcoinsdialog.h>
+#include <qt/transactiontablemodel.h>
 
 #include <base58.h>
 #include <chain.h>

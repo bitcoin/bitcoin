@@ -2,7 +2,7 @@
 #define MASTERNODELIST_H
 
 #include <primitives/transaction.h>
-#include <platformstyle.h>
+#include <qt/platformstyle.h>
 #include <sync.h>
 #include <util.h>
 

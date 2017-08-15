@@ -3,20 +3,20 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <sendcoinsdialog.h>
+#include <qt/sendcoinsdialog.h>
 #include <qt/forms/ui_sendcoinsdialog.h>
 
-#include <addresstablemodel.h>
-#include <bitcoinunits.h>
+#include <qt/addresstablemodel.h>
+#include <qt/bitcoinunits.h>
 #include <chainparams.h>
-#include <clientmodel.h>
-#include <coincontroldialog.h>
-#include <guiutil.h>
-#include <optionsmodel.h>
-#include <platformstyle.h>
-#include <sendcoinsentry.h>
+#include <qt/clientmodel.h>
+#include <qt/coincontroldialog.h>
+#include <qt/guiutil.h>
+#include <qt/optionsmodel.h>
+#include <qt/platformstyle.h>
+#include <qt/sendcoinsentry.h>
 #include <util.h>
-#include <walletmodel.h>
+#include <qt/walletmodel.h>
 
 #include <base58.h>
 #include <wallet/coincontrol.h>

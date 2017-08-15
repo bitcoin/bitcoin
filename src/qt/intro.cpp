@@ -8,10 +8,10 @@
 #endif
 
 #include <fs.h>
-#include <intro.h>
-#include <ui_intro.h>
+#include <qt/intro.h>
+#include <qt/forms/ui_intro.h>
 
-#include <guiutil.h>
+#include <qt/guiutil.h>
 
 #include <util.h>
 
@@ -61,7 +61,7 @@ private:
     Intro *intro;
 };
 
-#include <intro.moc>
+#include <qt/intro.moc>
 
 FreespaceChecker::FreespaceChecker(Intro *_intro)
 {

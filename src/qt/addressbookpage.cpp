@@ -7,15 +7,15 @@
 #include <config/chaincoin-config.h>
 #endif
 
-#include <addressbookpage.h>
-#include <ui_addressbookpage.h>
+#include <qt/addressbookpage.h>
+#include <qt/forms/ui_addressbookpage.h>
 
-#include <addresstablemodel.h>
-#include <bitcoingui.h>
-#include <csvmodelwriter.h>
-#include <editaddressdialog.h>
-#include <guiutil.h>
-#include <platformstyle.h>
+#include <qt/addresstablemodel.h>
+#include <qt/bitcoingui.h>
+#include <qt/csvmodelwriter.h>
+#include <qt/editaddressdialog.h>
+#include <qt/guiutil.h>
+#include <qt/platformstyle.h>
 
 #include <QIcon>
 #include <QMenu>

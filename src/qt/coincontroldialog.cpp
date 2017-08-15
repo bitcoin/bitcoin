@@ -3,16 +3,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <coincontroldialog.h>
-#include <ui_coincontroldialog.h>
+#include <qt/coincontroldialog.h>
+#include <qt/forms/ui_coincontroldialog.h>
 
-#include <addresstablemodel.h>
-#include <bitcoinunits.h>
-#include <guiutil.h>
-#include <optionsmodel.h>
-#include <platformstyle.h>
+#include <qt/addresstablemodel.h>
+#include <qt/bitcoinunits.h>
+#include <qt/guiutil.h>
+#include <qt/optionsmodel.h>
+#include <qt/platformstyle.h>
 #include <txmempool.h>
-#include <walletmodel.h>
+#include <qt/walletmodel.h>
 
 #include <wallet/coincontrol.h>
 #include <init.h>

@@ -2,16 +2,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <transactiontablemodel.h>
+#include <qt/transactiontablemodel.h>
 
-#include <addresstablemodel.h>
-#include <guiconstants.h>
-#include <guiutil.h>
-#include <optionsmodel.h>
-#include <platformstyle.h>
-#include <transactiondesc.h>
-#include <transactionrecord.h>
-#include <walletmodel.h>
+#include <qt/addresstablemodel.h>
+#include <qt/guiconstants.h>
+#include <qt/guiutil.h>
+#include <qt/optionsmodel.h>
+#include <qt/platformstyle.h>
+#include <qt/transactiondesc.h>
+#include <qt/transactionrecord.h>
+#include <qt/walletmodel.h>
 
 #include <core_io.h>
 #include <validation.h>

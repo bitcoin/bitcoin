@@ -1,9 +1,9 @@
-#include <darksendconfig.h>
-#include <ui_darksendconfig.h>
+#include <qt/darksendconfig.h>
+#include <qt/forms/ui_darksendconfig.h>
 
-#include <bitcoinunits.h>
-#include <guiconstants.h>
-#include <optionsmodel.h>
+#include <qt/bitcoinunits.h>
+#include <qt/guiconstants.h>
+#include <qt/optionsmodel.h>
 #include <privatesend-client.h>
 #include <walletmodel.h>
 
