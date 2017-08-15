@@ -508,7 +508,7 @@
   <customwidget>
    <class>CoinControlTreeWidget</class>
    <extends>QTreeWidget</extends>
-   <header>coincontroltreewidget.h</header>
+   <header>qt/coincontroltreewidget.h</header>
   </customwidget>
  </customwidgets>
  <resources/>
