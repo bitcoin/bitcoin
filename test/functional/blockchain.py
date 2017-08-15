@@ -138,13 +138,13 @@ class BlockchainTest(BitcoinTestFramework):
         self.nodes[0].generate(6)
         assert_equal(self.nodes[0].getblockcount(), 206)
         self.log.debug('Node should not stop at this height')
-        assert_raises(subprocess.TimeoutExpired, lambda: self.bitcoind_processes[0].wait(timeout=3))
+        assert_raises(subprocess.TimeoutExpired, lambda: self.nodes[0].process.wait(timeout=3))
         try:
             self.nodes[0].generate(1)
         except (ConnectionError, http.client.BadStatusLine):
             pass  # The node already shut down before response
         self.log.debug('Node should stop at this height...')
-        self.bitcoind_processes[0].wait(timeout=BITCOIND_PROC_WAIT_TIMEOUT)
+        self.nodes[0].process.wait(timeout=BITCOIND_PROC_WAIT_TIMEOUT)
         self.nodes[0] = self.start_node(0, self.options.tmpdir)
         assert_equal(self.nodes[0].getblockcount(), 207)
 

@@ -30,8 +30,7 @@ class WalletEncryptionTest(BitcoinTestFramework):
         assert_equal(len(privkey), 52)
 
         # Encrypt the wallet
-        self.nodes[0].encryptwallet(passphrase)
-        self.bitcoind_processes[0].wait(timeout=BITCOIND_PROC_WAIT_TIMEOUT)
+        self.nodes[0].node_encrypt_wallet(passphrase)
         self.nodes[0] = self.start_node(0, self.options.tmpdir)
 
         # Test that the wallet is encrypted
