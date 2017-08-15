@@ -1603,13 +1603,13 @@ int64_t CWallet::RescanFromTime(int64_t startTime, bool update)
  * possible (due to pruning or corruption), returns pointer to the most recent
  * block that could not be scanned.
  */
-CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate)
+const CBlockIndex* CWallet::ScanForWalletTransactions(const CBlockIndex* pindexStart, bool fUpdate)
 {
     int64_t nNow = GetTime();
     const CChainParams& chainParams = Params();
 
-    CBlockIndex* pindex = pindexStart;
-    CBlockIndex* ret = nullptr;
+    const CBlockIndex* pindex = pindexStart;
+    const CBlockIndex* ret = nullptr;
     {
         LOCK2(cs_main, cs_wallet);
         fAbortRescan = false;
@@ -4044,7 +4044,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
     // Try to top up keypool. No-op if the wallet is locked.
     walletInstance->TopUpKeyPool();
 
-    CBlockIndex *pindexRescan = chainActive.Genesis();
+    const CBlockIndex *pindexRescan = chainActive.Genesis();
     if (!gArgs.GetBoolArg("-rescan", false))
     {
         CWalletDB walletdb(*walletInstance->dbw);
