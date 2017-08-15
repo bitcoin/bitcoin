@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <qt/overviewpage.h>
-#include <ui_overviewpage.h>
+#include <qt/forms/ui_overviewpage.h>
 
 #include <qt/bitcoinunits.h>
 #include <qt/clientmodel.h>
@@ -106,7 +106,7 @@ public:
     const PlatformStyle *platformStyle;
 
 };
-#include <overviewpage.moc>
+#include <qt/overviewpage.moc>
 
 OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) :
     QWidget(parent),

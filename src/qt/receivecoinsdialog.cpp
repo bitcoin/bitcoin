@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <qt/receivecoinsdialog.h>
-#include <ui_receivecoinsdialog.h>
+#include <qt/forms/ui_receivecoinsdialog.h>
 
 #include <qt/addressbookpage.h>
 #include <qt/addresstablemodel.h>
