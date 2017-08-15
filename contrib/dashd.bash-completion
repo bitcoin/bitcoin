@@ -30,7 +30,7 @@ _dashd() {
             ;;
         *)
 
-            # only parse -help if senseful
+            # only parse -help if sensible
             if [[ -z "$cur" || "$cur" =~ ^- ]]; then
                 local helpopts
                 helpopts=$($dashd -help 2>&1 | awk '$1 ~ /^-/ { sub(/=.*/, "="); print $1 }' )

@@ -403,7 +403,7 @@ def print_results(test_results, max_len_name, runtime):
 
 class TestHandler:
     """
-    Trigger the testscrips passed in via the list.
+    Trigger the test scripts passed in via the list.
     """
 
     def __init__(self, *, num_tests_parallel, tests_dir, tmpdir, test_list, flags, timeout_duration):
