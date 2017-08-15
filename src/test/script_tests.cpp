@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <data/script_tests.json.h>
+#include <test/data/script_tests.json.h>
 
 #include <core_io.h>
 #include <key.h>

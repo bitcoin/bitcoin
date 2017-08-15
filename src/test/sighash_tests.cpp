@@ -4,7 +4,7 @@
 
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
-#include <data/sighash.json.h>
+#include <test/data/sighash.json.h>
 #include <hash.h>
 #include <script/interpreter.h>
 #include <script/script.h>
