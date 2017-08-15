@@ -141,6 +141,8 @@ public:
     bool LoadBlockIndex(const Consensus::Params& consensus_params, CBlockTreeDB& blocktree);
     bool LoadChainTip(const CChainParams& chainparams);
 
+    bool VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview, int nCheckLevel, int nCheckDepth);
+
     bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams, std::shared_ptr<const CBlock> pblock);
 
     bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex);
@@ -3699,17 +3701,7 @@ bool LoadChainTip(const CChainParams& chainparams)
     return chainstate.LoadChainTip(chainparams);
 }
 
-CVerifyDB::CVerifyDB()
-{
-    uiInterface.ShowProgress(_("Verifying blocks..."), 0);
-}
-
-CVerifyDB::~CVerifyDB()
-{
-    uiInterface.ShowProgress("", 100);
-}
-
-bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview, int nCheckLevel, int nCheckDepth)
+bool CChainState::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview, int nCheckLevel, int nCheckDepth)
 {
     LOCK(cs_main);
     if (chainActive.Tip() == nullptr || chainActive.Tip()->pprev == nullptr)
@@ -3891,6 +3883,19 @@ bool CChainState::ReplayBlocks(const CChainParams& params, CCoinsView* view)
 
 bool ReplayBlocks(const CChainParams& params, CCoinsView* view) {
     return chainstate.ReplayBlocks(params, view);
+}
+
+bool VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview, int nCheckLevel, int nCheckDepth)
+{
+    struct VerifyProgress {
+        VerifyProgress() {
+            uiInterface.ShowProgress(_("Verifying blocks..."), 0);
+        }
+        ~VerifyProgress() {
+            uiInterface.ShowProgress("", 100);
+        }
+    } verifyProgressRAII;
+    return chainstate.VerifyDB(chainparams, coinsview, nCheckLevel, nCheckDepth);
 }
 
 bool CChainState::RewindBlockIndex(const CChainParams& params)
