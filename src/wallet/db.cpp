@@ -222,7 +222,7 @@ bool CDB::Recover(const std::string& filename, void *callbackDataIn, bool (*reco
     }
     LogPrintf("Salvage(aggressive) found %u records\n", salvagedData.size());
 
-    std::unique_ptr<Db> pdbCopy(new Db(bitdb.dbenv.get(), 0));
+    std::unique_ptr<Db> pdbCopy = MakeUnique<Db>(bitdb.dbenv.get(), 0);
     int ret = pdbCopy->open(nullptr,               // Txn pointer
                             filename.c_str(),   // Filename
                             "main",             // Logical db name
@@ -522,7 +522,7 @@ bool CDB::Rewrite(CWalletDBWrapper& dbw, const char* pszSkip)
                 std::string strFileRes = strFile + ".rewrite";
                 { // surround usage of db with extra {}
                     CDB db(dbw, "r");
-                    std::unique_ptr<Db> pdbCopy = std::unique_ptr<Db>(new Db(env->dbenv.get(), 0));
+                    std::unique_ptr<Db> pdbCopy = MakeUnique<Db>(env->dbenv.get(), 0);
 
                     int ret = pdbCopy->open(nullptr,               // Txn pointer
                                             strFileRes.c_str(), // Filename
