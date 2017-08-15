@@ -199,7 +199,7 @@ class ExampleTest(BitcoinTestFramework):
         network_thread_start()
         self.nodes[2].p2p.wait_for_verack()
 
-        self.log.info("Wait for node2 reach current tip. Test that it has propogated all the blocks to us")
+        self.log.info("Wait for node2 reach current tip. Test that it has propagated all the blocks to us")
 
         getdata_request = msg_getdata()
         for block in blocks:

@@ -92,7 +92,7 @@ class NetTest(BitcoinTestFramework):
         added_nodes = self.nodes[0].getaddednodeinfo(ip_port)
         assert_equal(len(added_nodes), 1)
         assert_equal(added_nodes[0]['addednode'], ip_port)
-        # check that a non-existant node returns an error
+        # check that a non-existent node returns an error
         assert_raises_rpc_error(-24, "Node has not been added", self.nodes[0].getaddednodeinfo, '1.1.1.1')
 
     def _test_getpeerinfo(self):

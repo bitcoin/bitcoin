@@ -139,7 +139,7 @@ class PruneTest(BitcoinTestFramework):
         self.log.info("Invalidating block %s at height %d" % (badhash,invalidheight))
         self.nodes[1].invalidateblock(badhash)
 
-        # We've now switched to our previously mined-24 block fork on node 1, but thats not what we want
+        # We've now switched to our previously mined-24 block fork on node 1, but that's not what we want
         # So invalidate that fork as well, until we're on the same chain as node 0/2 (but at an ancestor 288 blocks ago)
         mainchainhash = self.nodes[0].getblockhash(invalidheight - 1)
         curhash = self.nodes[1].getblockhash(invalidheight - 1)
@@ -202,7 +202,7 @@ class PruneTest(BitcoinTestFramework):
         goalbesthash = self.mainchainhash2
 
         # As of 0.10 the current block download logic is not able to reorg to the original chain created in
-        # create_chain_with_stale_blocks because it doesn't know of any peer thats on that chain from which to
+        # create_chain_with_stale_blocks because it doesn't know of any peer that's on that chain from which to
         # redownload its missing blocks.
         # Invalidate the reorg_test chain in node 0 as well, it can successfully switch to the original chain
         # because it has all the block data.
