@@ -40,7 +40,15 @@ extern unsigned int nTxConfirmTarget;
 extern bool bSpendZeroConfChange;
 extern bool fWalletRbf;
 
+//! Default size for the keypool. Always try to top up the keypool to have this
+//  many keys. For an HD split wallet, have this many keys in each of the
+//  internal/external chains
 static const unsigned int DEFAULT_KEYPOOL_SIZE = 1000;
+//! Don't update wallet's best block if keypool falls below this size (to avoid
+//  not detecting transactions)
+static const unsigned int DEFAULT_KEYPOOL_MIN = 500;
+//! Shut down if the keypool falls below this size
+static const unsigned int DEFAULT_KEYPOOL_CRITICAL = 500;
 //! -paytxfee default
 static const CAmount DEFAULT_TRANSACTION_FEE = 0;
 //! -fallbackfee default
@@ -657,6 +665,7 @@ private:
     static std::atomic<bool> fFlushScheduled;
     std::atomic<bool> fAbortRescan;
     std::atomic<bool> fScanningWallet;
+    bool m_update_best_block;
 
     /**
      * Select a set of coins such that nValueRet >= nTargetValue and at least
@@ -792,6 +801,7 @@ public:
         nRelockTime = 0;
         fAbortRescan = false;
         fScanningWallet = false;
+        m_update_best_block = true;
     }
 
     std::map<uint256, CWalletTx> mapWallet;
@@ -977,8 +987,9 @@ public:
     void ReserveKeyFromKeyPool(int64_t& nIndex, CKeyPool& keypool, bool fRequestedInternal);
     void KeepKey(int64_t nIndex);
     void ReturnKey(int64_t nIndex, bool fInternal, const CPubKey& pubkey);
-    bool GetKeyFromPool(CPubKey &key, bool internal = false);
+    bool GetKeyFromPool(CPubKey &key, bool internal = false, bool fail_on_critical = false);
     int64_t GetOldestKeyPoolTime();
+    void ShutdownIfKeypoolCritical();
     /**
      * Marks all keys in the keypool up to and including reserve_key as used.
      */
