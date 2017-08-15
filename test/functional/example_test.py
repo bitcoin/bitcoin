@@ -200,7 +200,7 @@ class ExampleTest(BitcoinTestFramework):
         node2.add_connection(connections[1])
         node2.wait_for_verack()
 
-        self.log.info("Wait for node2 reach current tip. Test that it has propogated all the blocks to us")
+        self.log.info("Wait for node2 reach current tip. Test that it has propagated all the blocks to us")
 
         getdata_request = msg_getdata()
         for block in blocks:
