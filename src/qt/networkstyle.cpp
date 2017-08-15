@@ -78,8 +78,36 @@ NetworkStyle::NetworkStyle(const QString &_appName, const int iconColorHueShift,
         QImage appIconImg = appIconPixmap.toImage();
         QImage splashImageImg = splashImagePixmap.toImage();
 
-        rotateColors(appIconImg, iconColorHueShift, iconColorSaturationReduction);
-        rotateColors(splashImageImg, iconColorHueShift, iconColorSaturationReduction);
+        // traverse though lines
+        for(int y=0;y<img.height();y++)
+        {
+            QRgb *scL = reinterpret_cast< QRgb *>( img.scanLine( y ) );
+
+            // loop through pixels
+            for(int x=0;x<img.width();x++)
+            {
+                // preserve alpha because QColor::getHsl doesn't return the alpha value
+                a = qAlpha(scL[x]);
+                QColor col(scL[x]);
+
+                // get hue value
+                col.getHsl(&h,&s,&l);
+
+                // rotate color on RGB color circle
+                // 70° should end up with the typical "testnet" green
+                h+=iconColorHueShift;
+
+                // change saturation value
+                if(s>iconColorSaturationReduction)
+                {
+                    s -= iconColorSaturationReduction;
+                }
+                col.setHsl(h,s,l,a);
+
+                // set the pixel
+                scL[x] = col.rgba();
+            }
+        }
 
         //convert back to QPixmap
 #if QT_VERSION >= 0x040700
