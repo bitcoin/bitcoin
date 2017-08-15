@@ -205,7 +205,7 @@ void PaymentServerTests::paymentServerTests()
     delete server;
 }
 
-void RecipientCatcher::getRecipient(SendCoinsRecipient r)
+void RecipientCatcher::getRecipient(const SendCoinsRecipient& r)
 {
     recipient = r;
 }
