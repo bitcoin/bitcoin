@@ -44,7 +44,7 @@ NetworkStyle::NetworkStyle(const QString &_appName, const int iconColorHueShift,
             // loop through pixels
             for(int x=0;x<img.width();x++)
             {
-                // preserve alpha because QColor::getHsl doesen't return the alpha value
+                // preserve alpha because QColor::getHsl doesn't return the alpha value
                 a = qAlpha(scL[x]);
                 QColor col(scL[x]);
 

@@ -51,7 +51,7 @@ static CBlock BuildBlockTestCase() {
     return block;
 }
 
-// Number of shared use_counts we expect for a tx we havent touched
+// Number of shared use_counts we expect for a tx we haven't touched
 // == 2 (mempool + our copy from the GetSharedTx call)
 #define SHARED_TX_OFFSET 2
 
