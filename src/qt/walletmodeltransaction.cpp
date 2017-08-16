@@ -21,12 +21,12 @@ WalletModelTransaction::~WalletModelTransaction()
     delete walletTransaction;
 }
 
-QList<SendCoinsRecipient> WalletModelTransaction::getRecipients()
+QList<SendCoinsRecipient> WalletModelTransaction::getRecipients() const
 {
     return recipients;
 }
 
-CWalletTx *WalletModelTransaction::getTransaction()
+CWalletTx *WalletModelTransaction::getTransaction() const
 {
     return walletTransaction;
 }
@@ -36,7 +36,7 @@ unsigned int WalletModelTransaction::getTransactionSize()
     return (!walletTransaction ? 0 : (::GetSerializeSize(walletTransaction->tx, SER_NETWORK, PROTOCOL_VERSION)));
 }
 
-CAmount WalletModelTransaction::getTransactionFee()
+CAmount WalletModelTransaction::getTransactionFee() const
 {
     return fee;
 }
@@ -85,7 +85,7 @@ void WalletModelTransaction::reassignAmounts()
     }
 }
 
-CAmount WalletModelTransaction::getTotalTransactionAmount()
+CAmount WalletModelTransaction::getTotalTransactionAmount() const
 {
     CAmount totalTransactionAmount = 0;
     for (const SendCoinsRecipient &rcp : recipients)
