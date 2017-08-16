@@ -59,18 +59,18 @@ public:
     void setDisplayUnit(const QVariant &value);
 
     /* Explicit getters */
-    bool getHideTrayIcon() { return fHideTrayIcon; }
-    bool getMinimizeToTray() { return fMinimizeToTray; }
-    bool getMinimizeOnClose() { return fMinimizeOnClose; }
-    int getDisplayUnit() { return nDisplayUnit; }
-    QString getThirdPartyTxUrls() { return strThirdPartyTxUrls; }
+    bool getHideTrayIcon() const { return fHideTrayIcon; }
+    bool getMinimizeToTray() const { return fMinimizeToTray; }
+    bool getMinimizeOnClose() const { return fMinimizeOnClose; }
+    int getDisplayUnit() const { return nDisplayUnit; }
+    QString getThirdPartyTxUrls() const { return strThirdPartyTxUrls; }
     bool getProxySettings(QNetworkProxy& proxy) const;
-    bool getCoinControlFeatures() { return fCoinControlFeatures; }
+    bool getCoinControlFeatures() const { return fCoinControlFeatures; }
     const QString& getOverriddenByCommandLine() { return strOverriddenByCommandLine; }
 
     /* Restart flag helper */
     void setRestartRequired(bool fRequired);
-    bool isRestartRequired();
+    bool isRestartRequired() const;
 
 private:
     /* Qt-only settings */
