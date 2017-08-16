@@ -161,7 +161,7 @@ class BitcoinTestFramework(object):
         random.seed(self.randomseed)
         print("Random seed: %s" % self.randomseed)
 
-        self.options.tmpdir += '/' + str(self.options.port_seed)
+        self.options.tmpdir = os.path.join(self.options.tmpdir, str(self.options.port_seed))
 
         if self.options.trace_rpc:
             logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
@@ -171,7 +171,7 @@ class BitcoinTestFramework(object):
 
         PortSeed.n = self.options.port_seed
 
-        os.environ['PATH'] = self.options.srcdir+":"+self.options.srcdir+"/qt:"+os.environ['PATH']
+        os.environ['PATH'] = self.options.srcdir + ":" + os.path.join(self.options.srcdir, "qt") + ":" + os.environ['PATH']
 
         check_json_precision()
 
