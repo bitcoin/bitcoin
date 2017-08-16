@@ -19,18 +19,18 @@
 #include <string>
 
 /** Message header.
- * (8) message start.
+ * (12) message start.
  * (12) command.
- * (8) size.
+ * (12) size.
  * (4) checksum.
  */
 class CMessageHeader
 {
 public:
     enum {
-        MESSAGE_START_SIZE = 8,
+        MESSAGE_START_SIZE = 12,
         COMMAND_SIZE = 12,
-        MESSAGE_SIZE_SIZE = 8,
+        MESSAGE_SIZE_SIZE = 12,
         CHECKSUM_SIZE = 4,
 
         MESSAGE_SIZE_OFFSET = MESSAGE_START_SIZE + COMMAND_SIZE,
