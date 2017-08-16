@@ -30,9 +30,9 @@ struct pooled_secure_allocator : public std::allocator<T> {
     typedef typename base::value_type value_type;
     pooled_secure_allocator(const size_type nrequested_size = 32,
                             const size_type nnext_size = 32,
-                            const size_type nmax_size = 0) throw() :
+                            const size_type nmax_size = 0) noexcept :
                             pool(nrequested_size, nnext_size, nmax_size){}
-    ~pooled_secure_allocator() throw() {}
+    ~pooled_secure_allocator() noexcept {}
 
     T* allocate(std::size_t n, const void* hint = 0)
     {
