@@ -300,22 +300,12 @@ void PruneBlockFilesManual(int nManualPruneHeight);
 
 /** (try to) add transaction to memory pool
  * plTxnReplaced will be appended to with all transactions replaced from mempool **/
-bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransactionRef &tx, bool fLimitFree,
-                        bool* pfMissingInputs, std::list<CTransactionRef>* plTxnReplaced,
-                        const CAmount nAbsurdFee, const ignore_rejects_type& ignore_rejects);
-
-// Previously, the signature was ATMP(pool, state, tx, limitfree,
-// missinginputs, txnreplaced, overridemempoollimit, absurdfee) so calls could in theory
-// satisfy absurdfee with `true` which would be broken. To avoid the risk,
-// absurdfee is only optional if ignorerejects is also provided (which cannot
-// be cast implicitly from CAmount).
-static inline bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransactionRef &tx,
-                                      bool fLimitFree, bool* pfMissingInputs,
-                                      std::list<CTransactionRef>* plTxnReplaced = nullptr) {
-    return AcceptToMemoryPool(pool, state, tx, fLimitFree, pfMissingInputs, plTxnReplaced, 0, empty_ignore_rejects);
-}
+bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransactionRef &tx,
+                        bool* pfMissingInputs, std::list<CTransactionRef>* plTxnReplaced = nullptr,
+                        const CAmount nAbsurdFee=0, const ignore_rejects_type& ignore_rejects=empty_ignore_rejects);
 
 static const std::string rejectmsg_absurdfee = "absurdly-high-fee";
+static const std::string rejectmsg_gratis = "fee-too-low-for-relay";
 static const std::string rejectmsg_mempoolfull = "fee-too-low-for-mempool-full";
 
 /** Convert CValidationState to a human-readable message for logging */

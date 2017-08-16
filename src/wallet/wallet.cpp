@@ -4335,5 +4335,5 @@ int CMerkleTx::GetBlocksToMaturity() const
 
 bool CMerkleTx::AcceptToMemoryPool(const CAmount& nAbsurdFee, CValidationState& state, const ignore_rejects_type& ignore_rejects)
 {
-    return ::AcceptToMemoryPool(mempool, state, tx, true, nullptr, nullptr, nAbsurdFee, ignore_rejects);
+    return ::AcceptToMemoryPool(mempool, state, tx, nullptr, nullptr, nAbsurdFee, ignore_rejects);
 }

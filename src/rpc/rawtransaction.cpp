@@ -936,9 +936,8 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
         // push to local node and sync with wallets
         CValidationState state;
         bool fMissingInputs;
-        bool fLimitFree = true;
         ignore_rejects_type ignore_rejects;
-        if (!AcceptToMemoryPool(mempool, state, std::move(tx), fLimitFree, &fMissingInputs, nullptr, nMaxRawTxFee, ignore_rejects)) {
+        if (!AcceptToMemoryPool(mempool, state, std::move(tx), &fMissingInputs, nullptr, nMaxRawTxFee, ignore_rejects)) {
             if (state.IsInvalid()) {
                 throw JSONRPCError(RPC_TRANSACTION_REJECTED, strprintf("%i: %s", state.GetRejectCode(), state.GetRejectReason()));
             } else {
