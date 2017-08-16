@@ -119,11 +119,11 @@ class P2PLeakTest(BitcoinTestFramework):
 
         NetworkThread().start()  # Start up network handling in another thread
 
-        assert wait_until(lambda: no_version_bannode.ever_connected, timeout=10)
-        assert wait_until(lambda: no_version_idlenode.ever_connected, timeout=10)
-        assert wait_until(lambda: no_verack_idlenode.version_received, timeout=10)
-        assert wait_until(lambda: unsupported_service_bit5_node.ever_connected, timeout=10)
-        assert wait_until(lambda: unsupported_service_bit7_node.ever_connected, timeout=10)
+        wait_until(lambda: no_version_bannode.ever_connected, timeout=10, lock=mininode_lock)
+        wait_until(lambda: no_version_idlenode.ever_connected, timeout=10, lock=mininode_lock)
+        wait_until(lambda: no_verack_idlenode.version_received, timeout=10, lock=mininode_lock)
+        wait_until(lambda: unsupported_service_bit5_node.ever_connected, timeout=10, lock=mininode_lock)
+        wait_until(lambda: unsupported_service_bit7_node.ever_connected, timeout=10, lock=mininode_lock)
 
         # Mine a block and make sure that it's not sent to the connected nodes
         self.nodes[0].generate(1)
@@ -158,8 +158,8 @@ class P2PLeakTest(BitcoinTestFramework):
         allowed_service_bit5_node.add_connection(connections[5])
         allowed_service_bit7_node.add_connection(connections[6])
 
-        assert wait_until(lambda: allowed_service_bit5_node.message_count["verack"], timeout=10)
-        assert wait_until(lambda: allowed_service_bit7_node.message_count["verack"], timeout=10)
+        wait_until(lambda: allowed_service_bit5_node.message_count["verack"], timeout=10, lock=mininode_lock)
+        wait_until(lambda: allowed_service_bit7_node.message_count["verack"], timeout=10, lock=mininode_lock)
 
 if __name__ == '__main__':
     P2PLeakTest().main()
