@@ -37,6 +37,7 @@ code.
 
 - **Miscellaneous**
   - `++i` is preferred over `i++`.
+  - `static_assert` is preferred over `assert` where possible. Generally; compile-time checking is preferred over run-time checking.
 
 Block style example:
 ```c++
