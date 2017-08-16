@@ -1,1 +1,1 @@
-KhongCoGiaTri là coin dùng để chứng minh ai cũng có thể Fork Bitcoin 
+CoinKhongCoGiaTri là coin dùng để chứng minh ai cũng có thể Fork Bitcoin 
