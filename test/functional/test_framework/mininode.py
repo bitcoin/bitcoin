@@ -1830,6 +1830,7 @@ class NetworkThread(Thread):
                     disconnected.append(obj)
             [ obj.handle_close() for obj in disconnected ]
             asyncore.loop(0.1, use_poll=True, map=mininode_socket_map, count=1)
+        logger.debug("Network thread closing")
 
 
 # An exception we can raise if we detect a potential disconnect
