@@ -22,7 +22,7 @@ private:
     AES128_ctx ctx;
 
 public:
-    AES128Encrypt(const unsigned char key[16]);
+    explicit AES128Encrypt(const unsigned char key[16]);
     ~AES128Encrypt();
     void Encrypt(unsigned char ciphertext[16], const unsigned char plaintext[16]) const;
 };
@@ -34,7 +34,7 @@ private:
     AES128_ctx ctx;
 
 public:
-    AES128Decrypt(const unsigned char key[16]);
+    explicit AES128Decrypt(const unsigned char key[16]);
     ~AES128Decrypt();
     void Decrypt(unsigned char plaintext[16], const unsigned char ciphertext[16]) const;
 };
@@ -46,7 +46,7 @@ private:
     AES256_ctx ctx;
 
 public:
-    AES256Encrypt(const unsigned char key[32]);
+    explicit AES256Encrypt(const unsigned char key[32]);
     ~AES256Encrypt();
     void Encrypt(unsigned char ciphertext[16], const unsigned char plaintext[16]) const;
 };
@@ -58,7 +58,7 @@ private:
     AES256_ctx ctx;
 
 public:
-    AES256Decrypt(const unsigned char key[32]);
+    explicit AES256Decrypt(const unsigned char key[32]);
     ~AES256Decrypt();
     void Decrypt(unsigned char plaintext[16], const unsigned char ciphertext[16]) const;
 };

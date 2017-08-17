@@ -16,7 +16,7 @@ struct TransactionCompressor {
 private:
     CTransactionRef& tx;
 public:
-    TransactionCompressor(CTransactionRef& txIn) : tx(txIn) {}
+    explicit TransactionCompressor(CTransactionRef& txIn) : tx(txIn) {}
 
     ADD_SERIALIZE_METHODS;
 
@@ -75,7 +75,7 @@ public:
     std::vector<CTransactionRef> txn;
 
     BlockTransactions() {}
-    BlockTransactions(const BlockTransactionsRequest& req) :
+    explicit BlockTransactions(const BlockTransactionsRequest& req) :
         blockhash(req.blockhash), txn(req.indexes.size()) {}
 
     ADD_SERIALIZE_METHODS;
@@ -198,7 +198,7 @@ protected:
     CTxMemPool* pool;
 public:
     CBlockHeader header;
-    PartiallyDownloadedBlock(CTxMemPool* poolIn) : pool(poolIn) {}
+    explicit PartiallyDownloadedBlock(CTxMemPool* poolIn) : pool(poolIn) {}
 
     // extra_txn is a list of extra transactions to look at, in <hash, reference> form
     ReadStatus InitData(const CBlockHeaderAndShortTxIDs& cmpctblock, const std::vector<std::pair<uint256, CTransactionRef>>& extra_txn);
