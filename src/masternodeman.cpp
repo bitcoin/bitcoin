@@ -763,7 +763,7 @@ void CMasternodeMan::ProcessMasternodeConnections()
     //we don't care about this for regtest
     if(Params().NetworkIDString() == CBaseChainParams::REGTEST) return;
 
-    g_connman->ForEachNode([](CNode* pnode) {
+    g_connman->ForEachNode(CConnman::AllNodes, [](CNode* pnode) {
         if(pnode->fMasternode) {
             if(privateSendClient.infoMixingMasternode.fInfoValid && pnode->addr == privateSendClient.infoMixingMasternode.addr) return true;
             LogPrintf("Closing Masternode connection: peer=%d, addr=%s\n", pnode->id, pnode->addr.ToString());

@@ -850,7 +850,7 @@ bool CPrivateSendClient::JoinExistingQueue(CAmount nBalanceNeedsAnonymized)
 
         CNode* pnodeFound = NULL;
         bool fDisconnect = false;
-        g_connman->ForNode(infoMn.addr, [&pnodeFound, &fDisconnect](CNode* pnode) {
+        g_connman->ForNode(infoMn.addr, CConnman::AllNodes, [&pnodeFound, &fDisconnect](CNode* pnode) {
             pnodeFound = pnode;
             if(pnodeFound->fDisconnect) {
                 fDisconnect = true;
@@ -925,7 +925,7 @@ bool CPrivateSendClient::StartNewQueue(CAmount nValueMin, CAmount nBalanceNeedsA
 
         CNode* pnodeFound = NULL;
         bool fDisconnect = false;
-        g_connman->ForNode(infoMn.addr, [&pnodeFound, &fDisconnect](CNode* pnode) {
+        g_connman->ForNode(infoMn.addr, CConnman::AllNodes, [&pnodeFound, &fDisconnect](CNode* pnode) {
             pnodeFound = pnode;
             if(pnodeFound->fDisconnect) {
                 fDisconnect = true;
