@@ -22,6 +22,7 @@ public:
 class CCoinControl
 {
 public:
+    CScript scriptChange;
     CTxDestination destChange;
     //! If false, allows unselected inputs, but requires all selected inputs be used
     bool fAllowOtherInputs;

@@ -8,6 +8,7 @@
 #include "policy/policy.h"
 
 #include "validation.h"
+#include "chainparams.h"
 #include "timedata.h"
 #include "tinyformat.h"
 #include "util.h"
@@ -34,17 +35,21 @@
 
 bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType, const bool witnessEnabled)
 {
-    /*
-    // TODO: Uncomment for mainnet, replace with better method
-    if (HasIsCoinstakeOp(scriptPubKey))
+    const Consensus::Params& consensusParams = Params().GetConsensus();
+    int nBestHeight = chainActive.Height();
+    
+    if (nBestHeight >= consensusParams.OpIsCoinstakeHeight)
     {
-        CScript scriptA, scriptB;
-        if (!SplitConditionalCoinstakeScript(scriptPubKey, scriptA, scriptB))
-            return false;
-        
-        return IsStandard(scriptA, whichType, witnessEnabled) && IsStandard(scriptB, whichType, witnessEnabled);
+        // TODO: better method
+        if (HasIsCoinstakeOp(scriptPubKey))
+        {
+            CScript scriptA, scriptB;
+            if (!SplitConditionalCoinstakeScript(scriptPubKey, scriptA, scriptB))
+                return false;
+            
+            return IsStandard(scriptA, whichType, witnessEnabled) && IsStandard(scriptB, whichType, witnessEnabled);
+        };
     };
-    */
     
     std::vector<std::vector<unsigned char> > vSolutions;
     if (!Solver(scriptPubKey, whichType, vSolutions))

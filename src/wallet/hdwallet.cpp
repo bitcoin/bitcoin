@@ -1327,8 +1327,6 @@ int64_t CHDWallet::CountActiveAccountKeys()
 isminetype CHDWallet::IsMine(const CScript &scriptPubKey, CKeyID &keyID,
     CEKAKey &ak, CExtKeyAccount *&pa, bool &isInvalid, SigVersion sigversion)
 {
-    
-    
     if (HasIsCoinstakeOp(scriptPubKey))
     {
         CScript scriptA, scriptB;
@@ -1429,6 +1427,8 @@ isminetype CHDWallet::IsMine(const CScript &scriptPubKey, CKeyID &keyID,
     }
     case TX_PUBKEY256HASH:
         LogPrintf("%s: TODO TX_PUBKEY256HASH.\n");
+        return ISMINE_NO;
+    default:
         return ISMINE_NO;
     };
 
@@ -1862,35 +1862,35 @@ CAmount CHDWallet::GetStaked()
     return nTotal;
 };
 
-bool CHDWallet::GetBalances(CAmount &nPart, CAmount &nPartUnconf, CAmount &nPartStaked, CAmount &nPartImmature, CAmount &nPartWatchOnly, 
-        CAmount &nBlind, CAmount &nBlindUnconf, CAmount &nAnon, CAmount &nAnonUnconf)
+bool CHDWallet::GetBalances(CHDWalletBalances &bal)
 {
-    nPart = nPartUnconf = nPartStaked = nPartImmature = nPartWatchOnly = 0;
-    nBlind = nBlindUnconf = 0;
-    nAnon = nAnonUnconf = 0;
+    bal.Clear();
     
     LOCK2(cs_main, cs_wallet);
     for (MapWallet_t::iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
     {
         CWalletTx *pcoin = &(*it).second;
         
-        nPartImmature += pcoin->GetImmatureCredit();
+        bal.nPartImmature += pcoin->GetImmatureCredit();
         
         if (pcoin->IsCoinStake()
             && pcoin->GetDepthInMainChainCached() > 0 // checks for hashunset
             && pcoin->GetBlocksToMaturity() > 0)
         {
-            nPartStaked += CHDWallet::GetCredit(*pcoin, ISMINE_ALL);
+            bal.nPartStaked += CHDWallet::GetCredit(*pcoin, ISMINE_ALL);
         };
         
         if (pcoin->IsTrusted())
         {
-            nPart += pcoin->GetAvailableCredit();
-            nPartWatchOnly += pcoin->GetAvailableWatchOnlyCredit();
+            bal.nPart += pcoin->GetAvailableCredit();
+            bal.nPartWatchOnly += pcoin->GetAvailableWatchOnlyCredit();
         } else
         {
             if (pcoin->GetDepthInMainChain() == 0 && pcoin->InMempool())
-                nPartUnconf += pcoin->GetAvailableCredit();
+            {
+                bal.nPartUnconf += pcoin->GetAvailableCredit();
+                bal.nPartWatchOnlyUnconf += pcoin->GetAvailableWatchOnlyCredit();
+            };
         };
     };
     
@@ -1909,21 +1909,21 @@ bool CHDWallet::GetBalances(CAmount &nPart, CAmount &nPartUnconf, CAmount &nPart
             {
                 case OUTPUT_RINGCT:
                     if (fTrusted)
-                        nAnon += r.nValue;
+                        bal.nAnon += r.nValue;
                     else
-                        nAnonUnconf += r.nValue;
+                        bal.nAnonUnconf += r.nValue;
                     break;
                 case OUTPUT_CT:
                     if (fTrusted)
-                        nBlind += r.nValue;
+                        bal.nBlind += r.nValue;
                     else
-                        nBlindUnconf += r.nValue;
+                        bal.nBlindUnconf += r.nValue;
                     break;
                 case OUTPUT_STANDARD:
                     if (fTrusted)
-                        nPart += r.nValue;
+                        bal.nPart += r.nValue;
                     else
-                        nPartUnconf += r.nValue;
+                        bal.nPartUnconf += r.nValue;
                     break;
                 default:
                     break;
@@ -2551,7 +2551,7 @@ bool CTempRecipient::ApplySubFee(CAmount nFee, size_t nSubtractFeeFromAmount, bo
     return false;
 };
 
-bool CHDWallet::SetChangeDest(CTempRecipient &r, std::string &sError)
+bool CHDWallet::SetChangeDest(const CCoinControl *coinControl, CTempRecipient &r, std::string &sError)
 {
     
     if (r.nType == OUTPUT_CT || r.nType == OUTPUT_RINGCT
@@ -2565,84 +2565,122 @@ bool CHDWallet::SetChangeDest(CTempRecipient &r, std::string &sError)
         r.sEphem.MakeNewKey(true);
     };
     
-    if (r.address.type() == typeid(CStealthAddress))
+    // coin control: send change to custom address
+    if (coinControl && !boost::get<CNoDestination>(&coinControl->destChange))
     {
-        CStealthAddress sx = boost::get<CStealthAddress>(r.address);
+        r.address = coinControl->destChange;
         
-        CKey sShared;
-        ec_point pkSendTo;
-        
-        int k, nTries = 24;
-        for (k = 0; k < nTries; ++k)
+        if (r.address.type() == typeid(CStealthAddress))
         {
-            if (StealthSecret(r.sEphem, sx.scan_pubkey, sx.spend_pubkey, sShared, pkSendTo) == 0)
-                break;
-            // if StealthSecret fails try again with new ephem key
-            /* TODO: Make optional
-            if (0 != pc->DeriveNextKey(sEphem, nChild, true))
-                return errorN(1, sError, __func__, "DeriveNextKey failed.");
-            */
-            r.sEphem.MakeNewKey(true);
-        };
-        if (k >= nTries)
-            return errorN(1, sError, __func__, "Could not generate receiving public key.");
-        
-        CPubKey pkEphem = r.sEphem.GetPubKey();
-        r.pkTo = CPubKey(pkSendTo);
-        CKeyID idTo = r.pkTo.GetID();
-        r.scriptPubKey = GetScriptForDestination(idTo);
-        
-        if (fDebug)
-            LogPrint("hdwallet", "Stealth send to generated change address: %s\n", CBitcoinAddress(idTo).ToString());
-        
-        if (r.nType == OUTPUT_CT || r.nType == OUTPUT_RINGCT)
-        {
-            if (sx.prefix.number_bits > 0)
-            {
-                r.nStealthPrefix = FillStealthPrefix(sx.prefix.number_bits, sx.prefix.bitfield);
-            };
-        } else
-        {
-            if (0 != MakeStealthData(r.sNarration, sx.prefix, sShared, pkEphem, r.vData, r.nStealthPrefix, sError))
-                return 1;
+            CStealthAddress sx = boost::get<CStealthAddress>(r.address);
             
+            CKey sShared;
+            ec_point pkSendTo;
+            
+            int k, nTries = 24;
+            for (k = 0; k < nTries; ++k)
+            {
+                if (StealthSecret(r.sEphem, sx.scan_pubkey, sx.spend_pubkey, sShared, pkSendTo) == 0)
+                    break;
+                // if StealthSecret fails try again with new ephem key
+                /* TODO: Make optional
+                if (0 != pc->DeriveNextKey(sEphem, nChild, true))
+                    return errorN(1, sError, __func__, "DeriveNextKey failed.");
+                */
+                r.sEphem.MakeNewKey(true);
+            };
+            if (k >= nTries)
+                return errorN(1, sError, __func__, "Could not generate receiving public key.");
+            
+            CPubKey pkEphem = r.sEphem.GetPubKey();
+            r.pkTo = CPubKey(pkSendTo);
+            CKeyID idTo = r.pkTo.GetID();
+            r.scriptPubKey = GetScriptForDestination(idTo);
+            
+            if (fDebug)
+                LogPrint("hdwallet", "Stealth send to generated change address: %s\n", CBitcoinAddress(idTo).ToString());
+            
+            if (r.nType == OUTPUT_CT || r.nType == OUTPUT_RINGCT)
+            {
+                if (sx.prefix.number_bits > 0)
+                {
+                    r.nStealthPrefix = FillStealthPrefix(sx.prefix.number_bits, sx.prefix.bitfield);
+                };
+            } else
+            {
+                if (0 != MakeStealthData(r.sNarration, sx.prefix, sShared, pkEphem, r.vData, r.nStealthPrefix, sError))
+                    return 1;
+            };
+            return true;
         };
-        return true;
-    };
-    
-    if (r.address.type() == typeid(CExtKeyPair))
+        
+        if (r.address.type() == typeid(CExtKeyPair))
+        {
+            CExtKeyPair ek = boost::get<CExtKeyPair>(r.address);
+            CExtKey58 ek58;
+            ek58.SetKeyP(ek);
+            uint32_t nChildKey;
+            
+            if (0 != ((CHDWallet*)pwalletMain)->ExtKeyGetDestination(ek, r.pkTo, nChildKey))
+                return errorN(false, sError, __func__, "ExtKeyGetDestination failed.");
+            
+            CKeyID idTo = r.pkTo.GetID();
+            r.scriptPubKey = GetScriptForDestination(idTo);
+            
+            return true;
+        };
+        
+        if (r.address.type() == typeid(CKeyID))
+        {
+            CKeyID idk = boost::get<CKeyID>(r.address);
+            
+            if (!GetPubKey(idk, r.pkTo))
+                return errorN(false, sError, __func__, "GetPubKey failed.");
+            r.scriptPubKey = GetScriptForDestination(idk);
+            
+            return true;
+        };
+        
+        if (r.address.type() != typeid(CNoDestination)
+            // TODO OUTPUT_CT?
+            && r.nType == OUTPUT_STANDARD)
+        {
+            r.scriptPubKey = GetScriptForDestination(r.address);
+            return r.scriptPubKey.size() > 0;
+        };
+    } else
+    if (coinControl && coinControl->scriptChange.size() > 0)
     {
-        CExtKeyPair ek = boost::get<CExtKeyPair>(r.address);
-        CExtKey58 ek58;
-        ek58.SetKeyP(ek);
-        uint32_t nChildKey;
+        if (r.nType == OUTPUT_RINGCT)
+            return errorN(0, sError, __func__, "Change script on anon output.");
         
-        if (0 != ((CHDWallet*)pwalletMain)->ExtKeyGetDestination(ek, r.pkTo, nChildKey))
-            return errorN(false, sError, __func__, "ExtKeyGetDestination failed.");
+        r.scriptPubKey = coinControl->scriptChange;
         
-        CKeyID idTo = r.pkTo.GetID();
-        r.scriptPubKey = GetScriptForDestination(idTo);
-        
-        return true;
-    };
-    
-    if (r.address.type() == typeid(CKeyID))
-    {
-        CKeyID idk = boost::get<CKeyID>(r.address);
-        
-        if (!GetPubKey(idk, r.pkTo))
-            return errorN(false, sError, __func__, "GetPubKey failed.");
-        r.scriptPubKey = GetScriptForDestination(idk);
+        if (r.nType == OUTPUT_CT)
+        {
+            if (!ExtractDestination(r.scriptPubKey, r.address))
+                return errorN(0, sError, __func__, "Could not get pubkey from changescript.");
+            
+            if (r.address.type() != typeid(CKeyID))
+                return errorN(0, sError, __func__, "Could not get pubkey from changescript.");
+            
+            CKeyID idk = boost::get<CKeyID>(r.address);
+            if (!GetPubKey(idk, r.pkTo))
+                return errorN(0, sError, __func__, "Could not get pubkey from changescript.");
+        };
         
         return true;
-    };
-    
-    if (r.address.type() != typeid(CNoDestination)
-        // TODO OUTPUT_CT?
-        && r.nType == OUTPUT_STANDARD)
+    } else
     {
-        r.scriptPubKey = GetScriptForDestination(r.address);
-        return r.scriptPubKey.size() > 0;
+        CPubKey pkChange;
+        if (0 != GetChangeAddress(pkChange))
+            return errorN(0, sError, __func__, "GetChangeAddress failed.");
+        
+        CKeyID idChange = pkChange.GetID();
+        r.pkTo = pkChange;
+        r.address = idChange;
+        r.scriptPubKey = GetScriptForDestination(idChange);
+        return true;
     };
     
     return false;
@@ -2766,24 +2804,9 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 r.SetAmount(nChange);
                 
                 
-                CPubKey pkChange;
+                if (!SetChangeDest(coinControl, r, sError))
+                    return errorN(1, sError, __func__, ("SetChangeDest failed: " + sError).c_str());
                 
-                // coin control: send change to custom address
-                if (coinControl && !boost::get<CNoDestination>(&coinControl->destChange))
-                {
-                    r.address = coinControl->destChange;
-                    if (!SetChangeDest(r, sError))
-                        return errorN(1, sError, __func__, ("SetChangeDest failed: " + sError).c_str());
-                } else
-                if (0 == GetChangeAddress(pkChange))
-                {
-                    CKeyID idChange = pkChange.GetID();
-                    r.address = idChange;
-                    r.scriptPubKey = GetScriptForDestination(idChange);
-                } else
-                {
-                    return errorN(1, sError, __func__, "GetChangeAddress failed.");
-                };
                 
                 CTxOutStandard tempOut;
                 tempOut.scriptPubKey = r.scriptPubKey;
@@ -3220,30 +3243,10 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 r.nType = OUTPUT_CT;
                 r.fChange = true;
                 
-                CPubKey pkChange;
                 
-                // coin control: send change to custom address
-                if (coinControl && !boost::get<CNoDestination>(&coinControl->destChange))
-                {
-                    r.address = coinControl->destChange;
-                    if (!SetChangeDest(r, sError))
-                        return errorN(1, sError, __func__, ("SetChangeDest failed: " + sError).c_str());
-                } else
-                if (0 == GetChangeAddress(pkChange))
-                {
-                    CKeyID idChange = pkChange.GetID();
-                    r.address = idChange;
-                    r.pkTo = pkChange;
-                    r.scriptPubKey = GetScriptForDestination(idChange);
-                    
-                    r.sEphem.MakeNewKey(true);
-                    //uint32_t nDiscard; // Derive the same ephemeral secret each iteration
-                    //if (0 != pc->DeriveNextKey(sEphem, nDiscard, true))
-                    //    return errorN(1, sError, __func__, "TryDeriveNext failed.");
-                } else
-                {
-                    return errorN(1, sError, __func__, "GetChangeAddress failed.");
-                };
+                if (!SetChangeDest(coinControl, r, sError))
+                    return errorN(1, sError, __func__, ("SetChangeDest failed: " + sError).c_str());
+                
                 
                 if (nChange > ::minRelayTxFee.GetFee(2048)) // TODO: better output size estimate
                 {
@@ -3798,29 +3801,10 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 r.nType = OUTPUT_RINGCT;
                 r.fChange = true;
                 
-                CPubKey pkChange;
                 
-                // coin control: send change to custom address
-                if (coinControl && !boost::get<CNoDestination>(&coinControl->destChange))
-                {
-                    r.address = coinControl->destChange;
-                    if (!SetChangeDest(r, sError))
-                        return errorN(1, sError, __func__, ("SetChangeDest failed: " + sError).c_str());
-                } else
-                if (0 == GetChangeAddress(pkChange))
-                {
-                    CKeyID idChange = pkChange.GetID();
-                    r.pkTo = pkChange;
-                    r.address = idChange;
-                    
-                    r.sEphem.MakeNewKey(true);
-                    //uint32_t nDiscard; // Derive the same ephemeral secret each iteration
-                    //if (0 != pc->DeriveNextKey(sEphem, nDiscard, true))
-                    //    return errorN(1, sError, __func__, "TryDeriveNext failed.");
-                } else
-                {
-                    return errorN(1, sError, __func__, "GetChangeAddress failed.");
-                };
+                if (!SetChangeDest(coinControl, r, sError))
+                    return errorN(1, sError, __func__, ("SetChangeDest failed: " + sError).c_str());
+                
                 
                 if (nChange > ::minRelayTxFee.GetFee(2048)) // TODO: better output size estimate
                 {

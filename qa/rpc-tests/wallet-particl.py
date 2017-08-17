@@ -27,7 +27,6 @@ def read_dump(file_name):
                 sJson += line
             elif len(line) > 10:
                 nLines+=1
-            
     
     return sJson, nLines
 
@@ -72,14 +71,12 @@ class WalletParticlTest(ParticlTestFramework):
         
         ro = nodes[0].extkey("info", oRoot0['master'])
         root0_id = ro['key_info']['id']
-        #print(json.dumps(ro, indent=4))
         
         ro = nodes[0].extkey("info", oRoot0['master'], 'm/44h/1h')
         expectedMasterKey0 = ro['key_info']['result']
         
         
         # "extkey import <key> [label] [bip44] [save_bip44_key]\n"
-        #ro = nodes[0].extkey("import", oMaster0['master'], "import save key", "true", "true")
         ro = nodes[0].extkey("import", oRoot0['master'], "import save key", "true")
         
         # "extkey list [show_secrets] - default\n"
@@ -155,7 +152,6 @@ class WalletParticlTest(ParticlTestFramework):
         
         ro = nodes[0].extkey("deriveAccount", "Should fail", "abcd")
         assert(ro["result"] == "Failed.")
-        #print(json.dumps(ro, indent=4))
         
         try:
             ro = nodes[0].extkey("deriveAccount", "Should fail", "0'", "abcd")
@@ -181,7 +177,6 @@ class WalletParticlTest(ParticlTestFramework):
         
         ro = nodes[0].getwalletinfo()
         assert(ro['encryptionstatus'] == 'Locked')
-        #print(ro)
         
         try:
             ro = nodes[0].extkey("list")
@@ -208,7 +203,6 @@ class WalletParticlTest(ParticlTestFramework):
         assert(ro["id"] == master0_id)
         assert(ro["root_key_id"] == root0_id)
         assert(ro["current_master"] == "true")
-        
         
         
         ro = nodes[0].extkey("account", account0_id)
@@ -591,18 +585,40 @@ class WalletParticlTest(ParticlTestFramework):
         
         ro = nodes[0].filteraddresses()
         
-        sPath = ""
+        sPath = ''
         for entry in ro:
-            if entry["address"] == sHardenedAddr:
-                sPath = entry["path"]
+            if entry['address'] == sHardenedAddr:
+                sPath = entry['path']
                 break
         assert(sPath == "m/0/0'")
         
-        #jsonInput = {"recipe":"ifcoinstake", "addresstrue":sHardenedAddr, "addressfalse":"piNdRiuL2BqUA8hh2A6AtEbBkKqKxK13LT"}
-        jsonInput = {"recipe":"ifcoinstake", "addrstake":"pomrQeo26xVLV5pnuDYkTUYuABFuP13HHE", "addrspend":"piNdRiuL2BqUA8hh2A6AtEbBkKqKxK13LT"}
+        #sAddrStake = sHardenedAddr
+        sAddrStake = 'pomrQeo26xVLV5pnuDYkTUYuABFuP13HHE'
+        sAddrSpend = 'piNdRiuL2BqUA8hh2A6AtEbBkKqKxK13LT'
+        jsonInput = {'recipe':'ifcoinstake', 'addrstake':sAddrStake, 'addrspend':sAddrSpend}
         
         ro = nodes[0].buildscript(jsonInput)
-        assert(ro["hex"] == "b86376a914cf3837ef2e493d5b485c7f4536f27415c5cd3b6088ac6776a91493fb2f9e77825e4d38045a2406efd60aac9c956e88ac68")
+        scriptHex = ro['hex']
+        assert(scriptHex == 'b86376a914cf3837ef2e493d5b485c7f4536f27415c5cd3b6088ac6776a91493fb2f9e77825e4d38045a2406efd60aac9c956e88ac68')
+        
+        
+        
+        coincontrol = {'changeaddress':scriptHex,'debug':True}
+        outputs = [{'address':sAddrSpend, 'amount':1, 'narr':'not change'},]
+        ro = nodes[2].sendtypeto('part', 'part', outputs, 'comment', 'comment-to', 4, 32, True, coincontrol)
+        
+        ro = nodes[2].decoderawtransaction(ro['hex']);
+        
+        fFound = False
+        for output in ro['vout']:
+            if output['type'] != 'standard':
+                continue
+            if output['scriptPubKey']['asm'].startswith('OP_ISCOINSTAKE'):
+                fFound = True
+                break
+        assert(fFound)
+        
+        
         
         #print(json.dumps(ro, indent=4, default=self.jsonDecimal))
         #assert(False)

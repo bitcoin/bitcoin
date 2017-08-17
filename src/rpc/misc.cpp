@@ -96,19 +96,15 @@ UniValue getinfo(const JSONRPCRequest& request)
         
         if (fParticlMode)
         {
-            CAmount part_balance, part_unconfirmed, part_staked, immature_balance, watchonly_balance;
-            CAmount blind_balance, blind_unconfirmed;
-            CAmount anon_balance, anon_unconfirmed;
+            CHDWalletBalances bal;
+            ((CHDWallet*)pwalletMain)->GetBalances(bal);
             
-            ((CHDWallet*)pwalletMain)->GetBalances(part_balance, part_unconfirmed, part_staked, immature_balance, watchonly_balance,
-                blind_balance, blind_unconfirmed, anon_balance, anon_unconfirmed);
-            
-            CAmount nTotalBalance = part_balance + part_unconfirmed + part_staked + immature_balance
-                + blind_balance + blind_unconfirmed
-                + anon_balance + anon_unconfirmed;
+            CAmount nTotalBalance = bal.nPart + bal.nPartUnconf + bal.nPartStaked + bal.nPartImmature
+                + bal.nBlind + bal.nBlindUnconf
+                + bal.nAnon + bal.nAnonUnconf;
             
             obj.pushKV("total_balance",         ValueFromAmount(nTotalBalance));
-            obj.pushKV("balance",               ValueFromAmount(part_balance + immature_balance));
+            obj.pushKV("balance",               ValueFromAmount(bal.nPart + bal.nPartImmature));
         } else
         {
             obj.push_back(Pair("balance",       ValueFromAmount(pwalletMain->GetBalance())));

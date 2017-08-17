@@ -86,7 +86,6 @@ CAmount WalletModel::getBalance(const CCoinControl *coinControl) const
                     nBalance += out.tx->tx->vpout[out.i]->GetValue();
         };
         
-        
         return nBalance;
     };
 
@@ -165,12 +164,9 @@ void WalletModel::reserveBalanceChanged(CAmount nReserveBalanceNew)
 
 void WalletModel::checkBalanceChanged()
 {
-    
     CAmount newBalance = 0;
     CAmount newAnonBalance = 0;
     CAmount newBlindBalance = 0;
-    CAmount nPartUnconf = 0, nPartStaked = 0, nPartImmature = 0, nPartWatchOnly;
-    CAmount nBlindUnconf = 0, nAnonUnconf = 0;
     
     CAmount newUnconfirmedBalance = 0;
     CAmount newImmatureBalance = 0;
@@ -178,18 +174,26 @@ void WalletModel::checkBalanceChanged()
     CAmount newWatchUnconfBalance = 0;
     CAmount newWatchImmatureBalance = 0;
     
+    
+    CHDWalletBalances bal;
+    
     if (fParticlWallet)
     {
         CHDWallet *pw = getParticlWallet();
         
-        pw->GetBalances(newBalance, nPartUnconf, nPartStaked, nPartImmature, nPartWatchOnly,
-            newBlindBalance, nBlindUnconf, newAnonBalance, nAnonUnconf);
         
-        newImmatureBalance = nPartImmature;
-        newUnconfirmedBalance = nPartUnconf + nBlindUnconf + nAnonUnconf;
+        pw->GetBalances(bal);
         
-        newWatchOnlyBalance = nPartWatchOnly;
-        fHaveWatchOnly = nPartWatchOnly;
+        newBalance = bal.nPart;
+        newImmatureBalance = bal.nPartImmature;
+        newUnconfirmedBalance = bal.nPartUnconf + bal.nBlindUnconf + bal.nAnonUnconf;
+        
+        newWatchOnlyBalance = bal.nPartWatchOnly;
+        newWatchUnconfBalance = bal.nPartWatchOnlyUnconf;
+        
+        bool fHaveWatchOnlyCheck = bal.nPartWatchOnly || bal.nPartWatchOnlyUnconf;
+        if (fHaveWatchOnlyCheck != fHaveWatchOnly)
+            updateWatchOnlyFlag(fHaveWatchOnlyCheck);
     } else
     if (haveWatchOnly())
     {
@@ -198,13 +202,13 @@ void WalletModel::checkBalanceChanged()
         newWatchImmatureBalance = getWatchImmatureBalance();
     }
 
-    if(cachedBalance != newBalance || cachedStaked != nPartStaked
+    if(cachedBalance != newBalance || cachedStaked != bal.nPartStaked
         || cachedUnconfirmedBalance != newUnconfirmedBalance || cachedImmatureBalance != newImmatureBalance
         || cachedWatchOnlyBalance != newWatchOnlyBalance || cachedWatchUnconfBalance != newWatchUnconfBalance || cachedWatchImmatureBalance != newWatchImmatureBalance
         || newBlindBalance != cachedBlindBalance || newAnonBalance != cachedAnonBalance)
     {
         cachedBalance = newBalance;
-        cachedStaked = nPartStaked;
+        cachedStaked = bal.nPartStaked;
         cachedUnconfirmedBalance = newUnconfirmedBalance;
         cachedImmatureBalance = newImmatureBalance;
         cachedWatchOnlyBalance = newWatchOnlyBalance;
@@ -212,7 +216,7 @@ void WalletModel::checkBalanceChanged()
         cachedWatchImmatureBalance = newWatchImmatureBalance;
         cachedBlindBalance = newBlindBalance;
         cachedAnonBalance = newAnonBalance;
-        Q_EMIT balanceChanged(newBalance, nPartStaked, newBlindBalance, newAnonBalance, newUnconfirmedBalance, newImmatureBalance,
+        Q_EMIT balanceChanged(newBalance, bal.nPartStaked, newBlindBalance, newAnonBalance, newUnconfirmedBalance, newImmatureBalance,
                             newWatchOnlyBalance, newWatchUnconfBalance, newWatchImmatureBalance);
     }
 }

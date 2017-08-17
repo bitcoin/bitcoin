@@ -2869,31 +2869,30 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
     
     if (fParticlWallet)
     {
-        CAmount part_balance, part_unconfirmed, part_staked, immature_balance, watchonly_balance;
-        CAmount blind_balance, blind_unconfirmed;
-        CAmount anon_balance, anon_unconfirmed;
-        
-        ((CHDWallet*)pwalletMain)->GetBalances(part_balance, part_unconfirmed, part_staked, immature_balance, watchonly_balance,
-            blind_balance, blind_unconfirmed, anon_balance, anon_unconfirmed);
+        CHDWalletBalances bal;
+        ((CHDWallet*)pwalletMain)->GetBalances(bal);
         
         obj.push_back(Pair("total_balance",         ValueFromAmount(
-            part_balance + part_unconfirmed + part_staked + immature_balance
-            + blind_balance + blind_unconfirmed
-            + anon_balance + anon_unconfirmed)));
+            bal.nPart + bal.nPartUnconf + bal.nPartStaked + bal.nPartImmature
+            + bal.nBlind + bal.nBlindUnconf
+            + bal.nAnon + bal.nAnonUnconf)));
         
-        obj.push_back(Pair("balance",               ValueFromAmount(part_balance)));
+        obj.push_back(Pair("balance",               ValueFromAmount(bal.nPart)));
     
-        obj.push_back(Pair("blind_balance",         ValueFromAmount(blind_balance)));
-        obj.push_back(Pair("anon_balance",          ValueFromAmount(anon_balance)));
-        obj.push_back(Pair("staked_balance",        ValueFromAmount(part_staked)));
+        obj.push_back(Pair("blind_balance",         ValueFromAmount(bal.nBlind)));
+        obj.push_back(Pair("anon_balance",          ValueFromAmount(bal.nAnon)));
+        obj.push_back(Pair("staked_balance",        ValueFromAmount(bal.nPartStaked)));
         
-        obj.push_back(Pair("unconfirmed_balance",   ValueFromAmount(part_unconfirmed)));
-        obj.push_back(Pair("unconfirmed_blind",     ValueFromAmount(blind_unconfirmed)));
-        obj.push_back(Pair("unconfirmed_anon",      ValueFromAmount(anon_unconfirmed)));
-        obj.push_back(Pair("immature_balance",      ValueFromAmount(immature_balance)));
+        obj.push_back(Pair("unconfirmed_balance",   ValueFromAmount(bal.nPartUnconf)));
+        obj.push_back(Pair("unconfirmed_blind",     ValueFromAmount(bal.nBlindUnconf)));
+        obj.push_back(Pair("unconfirmed_anon",      ValueFromAmount(bal.nAnonUnconf)));
+        obj.push_back(Pair("immature_balance",      ValueFromAmount(bal.nPartImmature)));
         
-        if (watchonly_balance > 0)
-            obj.push_back(Pair("watchonly_balance",     ValueFromAmount(watchonly_balance)));
+        if (bal.nPartWatchOnly > 0 || bal.nPartWatchOnlyUnconf > 0)
+        {
+            obj.push_back(Pair("watchonly_balance",                 ValueFromAmount(bal.nPartWatchOnly)));
+            obj.push_back(Pair("watchonly_unconfirmed_balance",     ValueFromAmount(bal.nPartWatchOnlyUnconf)));
+        };
         
     } else
     {
@@ -3116,6 +3115,16 @@ UniValue listunspent(const JSONRPCRequest& request)
                     entry.push_back(Pair("redeemScript", HexStr(redeemScript.begin(), redeemScript.end())));
             }
         }
+        
+        if (HasIsCoinstakeOp(*scriptPubKey))
+        {
+            CScript scriptStake;
+            if (GetCoinstakeScriptPath(*scriptPubKey, scriptStake))
+            {
+                if (ExtractDestination(scriptStake, address))
+                    entry.push_back(Pair("staking_address", CBitcoinAddress(address).ToString()));
+            };
+        };
 
         entry.push_back(Pair("scriptPubKey", HexStr(scriptPubKey->begin(), scriptPubKey->end())));
         

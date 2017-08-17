@@ -3623,7 +3623,6 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
                 sNarr = obj["narr"].get_str();
             
             
-            
             if (0 != AddOutput(typeOut, vecSend, address.Get(), nAmount, fSubtractFeeFromAmount, sNarr, sError))
                 throw JSONRPCError(RPC_MISC_ERROR, strprintf("AddOutput failed: %s.", sError));
             
@@ -3738,6 +3737,7 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
     if (request.params.size() > nv)
         nInputsPerSig = request.params[nv].get_int();
     
+    bool fShowHex = false;
     bool fCheckFeeOnly = false;
     nv = nTestFeeOfs;
     if (request.params.size() > nv)
@@ -3756,8 +3756,27 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
         if (uvCoinControl.exists("changeaddress"))
         {
             std::string sChangeAddress = uvCoinControl["changeaddress"].get_str();
-            CBitcoinAddress addrChange(sChangeAddress);
-            coincontrol.destChange = addrChange.Get();
+            
+            // Check for script
+            bool fHaveScript = false;
+            if (IsHex(sChangeAddress))
+            {
+                std::vector<uint8_t> vScript = ParseHex(sChangeAddress);
+                CScript script(vScript.begin(), vScript.end());
+                
+                txnouttype whichType;
+                if (IsStandard(script, whichType, true))
+                {
+                    coincontrol.scriptChange = script;
+                    fHaveScript = true;
+                };
+            };
+            
+            if (!fHaveScript)
+            {
+                CBitcoinAddress addrChange(sChangeAddress);
+                coincontrol.destChange = addrChange.Get();
+            };
         };
         
         const UniValue &uvInputs = uvCoinControl["inputs"];
@@ -3776,6 +3795,9 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
                 coincontrol.setSelected.insert(op);
             };
         };
+        
+        if (uvCoinControl["debug"].isBool() && uvCoinControl["debug"].get_bool() == true)
+            fShowHex = true;
         
         pCoinControl = &coincontrol;
     };
@@ -3805,6 +3827,12 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
         UniValue result(UniValue::VOBJ);
         result.pushKV("fee", ValueFromAmount(nFeeRet));
         result.pushKV("bytes", (int)GetVirtualTransactionSize(*(wtx.tx)));
+        
+        if (fShowHex)
+        {
+            std::string strHex = EncodeHexTx(*(wtx.tx), RPCSerializationFlags());
+            result.pushKV("hex", strHex);
+        };
         
         UniValue objChangedOutputs(UniValue::VOBJ);
         std::map<std::string, CAmount> mapChanged; // Blinded outputs are split, join the values for display
@@ -4057,6 +4085,8 @@ UniValue buildscript(const JSONRPCRequest &request)
             "{recipe: , ...}\n"
             "\nRecipes:\n"
             "{\"recipe\":\"ifcoinstake\", \"addrstake\":\"addrA\", \"addrspend\":\"addrB\"}"
+            "{\"recipe\":\"abslocktime\", \"time\":timestamp, \"addr\":\"addr\"}"
+            "{\"recipe\":\"rellocktime\", \"time\":timestamp, \"addr\":\"addr\"}"
             );
     
     if (!request.params[0].isObject())
@@ -4099,7 +4129,40 @@ UniValue buildscript(const JSONRPCRequest &request)
         scriptOut << OP_ELSE;
         scriptOut += scriptFalse;
         scriptOut << OP_ENDIF;
+    } else
+    if (sRecipe == "abslocktime")
+    {
+        RPCTypeCheckObj(params,
+        {
+            {"time", UniValueType(UniValue::VNUM)},
+            {"addr", UniValueType(UniValue::VSTR)},
+        });
         
+        CBitcoinAddress addr(params["addr"].get_str());
+        if (!addr.IsValid())
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid addr.");
+        
+        CScript scriptAddr = GetScriptForDestination(addr.Get());
+        
+        scriptOut = CScript() << params["time"].get_int64() << OP_CHECKLOCKTIMEVERIFY << OP_DROP;
+        scriptOut += scriptAddr;
+    } else
+    if (sRecipe == "rellocktime")
+    {
+        RPCTypeCheckObj(params,
+        {
+            {"time", UniValueType(UniValue::VNUM)},
+            {"addr", UniValueType(UniValue::VSTR)},
+        });
+        
+        CBitcoinAddress addr(params["addr"].get_str());
+        if (!addr.IsValid())
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid addr.");
+        
+        CScript scriptAddr = GetScriptForDestination(addr.Get());
+        
+        scriptOut = CScript() << params["time"].get_int64() << OP_CHECKSEQUENCEVERIFY << OP_DROP;
+        scriptOut += scriptAddr;
     } else
     {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown recipe.");
@@ -4107,7 +4170,6 @@ UniValue buildscript(const JSONRPCRequest &request)
     
     obj.pushKV("hex", HexStr(scriptOut.begin(), scriptOut.end()));
     obj.pushKV("asm", ScriptToAsmStr(scriptOut));
-   
     
     return obj;
 }

@@ -305,6 +305,39 @@ public:
     };
 };
 
+class CHDWalletBalances
+{
+public:
+    void Clear()
+    {
+        nPart = 0;
+        nPartUnconf = 0;
+        nPartStaked = 0;
+        nPartImmature = 0;
+        nPartWatchOnly = 0;
+        nPartWatchOnlyUnconf = 0;
+        
+        nBlind = 0;
+        nBlindUnconf = 0;
+        
+        nAnon = 0;
+        nAnonUnconf = 0;
+    };
+    
+    CAmount nPart = 0;
+    CAmount nPartUnconf = 0;
+    CAmount nPartStaked = 0;
+    CAmount nPartImmature = 0;
+    CAmount nPartWatchOnly = 0;
+    CAmount nPartWatchOnlyUnconf = 0;
+    
+    CAmount nBlind = 0;
+    CAmount nBlindUnconf = 0;
+    
+    CAmount nAnon = 0;
+    CAmount nAnonUnconf = 0;
+};
+
 class CHDWallet : public CWallet
 {
 public:
@@ -413,8 +446,10 @@ public:
     CAmount GetBlindBalance();
     CAmount GetAnonBalance();
     CAmount GetStaked();
-    bool GetBalances(CAmount &nPart, CAmount &nPartUnconf, CAmount &nPartStaked, CAmount &nPartImmature, CAmount &nPartWatchOnly, 
-        CAmount &nBlind, CAmount &nBlindUnconf, CAmount &nAnon, CAmount &nAnonUnconf);
+    
+    bool GetBalances(CHDWalletBalances &bal);
+    //bool GetBalances(CAmount &nPart, CAmount &nPartUnconf, CAmount &nPartStaked, CAmount &nPartImmature, CAmount &nPartWatchOnly, 
+    //    CAmount &nBlind, CAmount &nBlindUnconf, CAmount &nAnon, CAmount &nAnonUnconf);
     
     
     bool IsChange(const CTxOutBase *txout) const;
@@ -427,7 +462,7 @@ public:
     int CreateOutput(OUTPUT_PTR<CTxOutBase> &txbout, CTempRecipient &r, std::string &sError);
     int AddCTData(CTxOutBase *txout, CTempRecipient &r, std::string &sError);
     
-    bool SetChangeDest(CTempRecipient &r, std::string &sError);
+    bool SetChangeDest(const CCoinControl *coinControl, CTempRecipient &r, std::string &sError);
     
     /** Update wallet after successfull transaction */
     int PostProcessTempRecipients(std::vector<CTempRecipient> &vecSend);

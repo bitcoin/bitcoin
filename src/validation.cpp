@@ -2755,34 +2755,38 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     int64_t nTime1 = GetTimeMicros(); nTimeCheck += nTime1 - nTimeStart;
     LogPrint("bench", "    - Sanity checks: %.2fms [%.2fs]\n", 0.001 * (nTime1 - nTimeStart), nTimeCheck * 0.000001);
 
-    // Do not allow blocks that contain transactions which 'overwrite' older transactions,
-    // unless those are already completely spent.
-    // If such overwrites are allowed, coinbases and transactions depending upon those
-    // can be duplicated to remove the ability to spend the first instance -- even after
-    // being sent to another address.
-    // See BIP30 and http://r6.ca/blog/20120206T005236Z.html for more information.
-    // This logic is not necessary for memory pool transactions, as AcceptToMemoryPool
-    // already refuses previously-known transaction ids entirely.
-    // This rule was originally applied to all blocks with a timestamp after March 15, 2012, 0:00 UTC.
-    // Now that the whole chain is irreversibly beyond that time it is applied to all blocks except the
-    // two in the chain that violate it. This prevents exploiting the issue against nodes during their
-    // initial block download.
-    bool fEnforceBIP30 = (!pindex->phashBlock) || // Enforce on CreateNewBlock invocations which don't have a hash.
-                          !((pindex->nHeight==91842 && pindex->GetBlockHash() == uint256S("0x00000000000a4d0a398161ffc163c503763b1f4360639393e0e4c8e300e0caec")) ||
+    bool fEnforceBIP30 = false;
+    if (fParticlMode)
+    {
+        fEnforceBIP30 = true;
+    } else
+    {
+        // Do not allow blocks that contain transactions which 'overwrite' older transactions,
+        // unless those are already completely spent.
+        // If such overwrites are allowed, coinbases and transactions depending upon those
+        // can be duplicated to remove the ability to spend the first instance -- even after
+        // being sent to another address.
+        // See BIP30 and http://r6.ca/blog/20120206T005236Z.html for more information.
+        // This logic is not necessary for memory pool transactions, as AcceptToMemoryPool
+        // already refuses previously-known transaction ids entirely.
+        // This rule was originally applied to all blocks with a timestamp after March 15, 2012, 0:00 UTC.
+        // Now that the whole chain is irreversibly beyond that time it is applied to all blocks except the
+        // two in the chain that violate it. This prevents exploiting the issue against nodes during their
+        // initial block download.
+        fEnforceBIP30 = (!pindex->phashBlock) || // Enforce on CreateNewBlock invocations which don't have a hash.
+                         !((pindex->nHeight==91842 && pindex->GetBlockHash() == uint256S("0x00000000000a4d0a398161ffc163c503763b1f4360639393e0e4c8e300e0caec")) ||
                            (pindex->nHeight==91880 && pindex->GetBlockHash() == uint256S("0x00000000000743f190a18c5577a3c2d2a1f610ae9601ac046a38084ccb7cd721")));
 
-    // Once BIP34 activated it was not possible to create new duplicate coinbases and thus other than starting
-    // with the 2 existing duplicate coinbase pairs, not possible to create overwriting txs.  But by the
-    // time BIP34 activated, in each of the existing pairs the duplicate coinbase had overwritten the first
-    // before the first had been spent.  Since those coinbases are sufficiently buried its no longer possible to create further
-    // duplicate transactions descending from the known pairs either.
-    // If we're on the known chain at height greater than where BIP34 activated, we can save the db accesses needed for the BIP30 check.
-    CBlockIndex *pindexBIP34height = fIsGenesisBlock ? NULL : pindex->pprev->GetAncestor(chainparams.GetConsensus().BIP34Height);
-    //Only continue to enforce if we're below BIP34 activation height or the block hash at that height doesn't correspond.
-    fEnforceBIP30 = fEnforceBIP30 && (!pindexBIP34height || !(pindexBIP34height->GetBlockHash() == chainparams.GetConsensus().BIP34Hash));
-    
-    if (fParticlMode)
-        fEnforceBIP30 = true;
+        // Once BIP34 activated it was not possible to create new duplicate coinbases and thus other than starting
+        // with the 2 existing duplicate coinbase pairs, not possible to create overwriting txs.  But by the
+        // time BIP34 activated, in each of the existing pairs the duplicate coinbase had overwritten the first
+        // before the first had been spent.  Since those coinbases are sufficiently buried its no longer possible to create further
+        // duplicate transactions descending from the known pairs either.
+        // If we're on the known chain at height greater than where BIP34 activated, we can save the db accesses needed for the BIP30 check.
+        CBlockIndex *pindexBIP34height = fIsGenesisBlock ? NULL : pindex->pprev->GetAncestor(chainparams.GetConsensus().BIP34Height);
+        //Only continue to enforce if we're below BIP34 activation height or the block hash at that height doesn't correspond.
+        fEnforceBIP30 = fEnforceBIP30 && (!pindexBIP34height || !(pindexBIP34height->GetBlockHash() == chainparams.GetConsensus().BIP34Hash));
+    };
 
     if (fEnforceBIP30) {
         for (const auto& tx : block.vtx) {
@@ -4421,13 +4425,6 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
 
     if (fParticlMode)
     {
-        if (block.IsProofOfStake())
-        {
-            // Limit the number of outputs in a coinstake txn to 4: 1 data + 1 foundation + 2 user
-            if (block.vtx[0]->vpout.size() > 4)
-                return state.DoS(100, false, REJECT_INVALID, "bad-cs-outputs", false, "Too many outputs in coinstake");
-        };
-        
         if (!IsInitialBlockDownload()
             && block.vtx[0]->IsCoinStake()
             && !CheckStakeUnique(block))
@@ -4695,7 +4692,6 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Co
         }
     }
     
-    
     if (fParticlMode)
     {
         // Enforce rule that the coinbase/coinstake ends with serialized block height
@@ -4703,6 +4699,13 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Co
         
         if (block.IsProofOfStake())
         {
+            // Limit the number of outputs in a coinstake txn to 4: 1 data + 1 foundation + 2 user
+            if (nHeight >= consensusParams.OpIsCoinstakeHeight)
+            {
+                if (block.vtx[0]->vpout.size() > 4)
+                    return state.DoS(100, false, REJECT_INVALID, "bad-cs-outputs", false, "Too many outputs in coinstake");
+            };
+            
             // coinstake output 0 must be data output of blockheight
             int i;
             if (!block.vtx[0]->GetCoinStakeHeight(i))

@@ -1671,7 +1671,6 @@ bool GetCoinstakeScriptPath(const CScript &scriptIn, CScript &scriptOut)
         if (!scriptIn.GetOp(pc, opcode, vchPushValue))
             break;
         
-        
         if (!fFoundOp
             && opcode == OP_ISCOINSTAKE)
         {
@@ -1708,7 +1707,6 @@ bool GetNonCoinstakeScriptPath(const CScript &scriptIn, CScript &scriptOut)
         if (!scriptIn.GetOp(pc, opcode, vchPushValue))
             break;
         
-        
         if (!fFoundOp
             && opcode == OP_ELSE)
         {
@@ -1742,7 +1740,6 @@ bool SplitConditionalCoinstakeScript(const CScript &scriptIn, CScript &scriptOut
     {
         if (!scriptIn.GetOp(pc, opcode, vchPushValue))
             break;
-        
         
         if (!fFoundOp
             && opcode == OP_ISCOINSTAKE)

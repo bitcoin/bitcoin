@@ -9,6 +9,8 @@
 #include "validation.h"
 #include "wallet/hdwallet.h"
 
+#include "policy/policy.h"
+
 #include "wallet/test/hdwallet_test_fixture.h"
 
 #include <boost/algorithm/string.hpp>
@@ -229,6 +231,46 @@ BOOST_AUTO_TEST_CASE(rpc_hdwallet_timelocks)
     BOOST_REQUIRE_NO_THROW(rv = CallRPC(sCmd));
     BOOST_CHECK(rv["complete"].getBool() == true);
     sResult = rv["hex"].getValStr();
+    
+    
+    
+    
+    BOOST_CHECK_NO_THROW(rv = CallRPC("getnewaddress"));
+    std::string sAddr = StripQuotes(rv.write());
+    BOOST_CHECK(sAddr == "PYWn26pQyqRE84XSWGmUBMQs67AzCRtvdG");
+    
+    // 2147483648 is > 32bit signed
+    BOOST_CHECK_NO_THROW(rv = CallRPC("buildscript {\"recipe\":\"abslocktime\",\"time\":2147483648,\"addr\":\""+sAddr+"\"}"));
+    BOOST_REQUIRE(rv["hex"].isStr());
+    
+    std::vector<uint8_t> vScript = ParseHex(rv["hex"].get_str());
+    script = CScript(vScript.begin(), vScript.end());
+    
+    txnouttype whichType;
+    BOOST_CHECK(IsStandard(script, whichType, true));
+    
+    opcodetype opcode;
+    valtype vchPushValue;
+    CScript::const_iterator pc = script.begin();
+    BOOST_REQUIRE(script.GetOp(pc, opcode, vchPushValue));
+    CScriptNum nTest(vchPushValue, false, 5);
+    BOOST_CHECK(nTest == 2147483648);
+    
+    
+    
+    BOOST_CHECK_NO_THROW(rv = CallRPC("buildscript {\"recipe\":\"rellocktime\",\"time\":1447483648,\"addr\":\""+sAddr+"\"}"));
+    BOOST_REQUIRE(rv["hex"].isStr());
+    
+    vScript = ParseHex(rv["hex"].get_str());
+    script = CScript(vScript.begin(), vScript.end());
+    
+    BOOST_CHECK(IsStandard(script, whichType, true));
+    
+    pc = script.begin();
+    BOOST_REQUIRE(script.GetOp(pc, opcode, vchPushValue));
+    nTest = CScriptNum(vchPushValue, false, 5);
+    BOOST_CHECK(nTest == 1447483648);
+    
 }
 
 BOOST_AUTO_TEST_SUITE_END()
