@@ -13,7 +13,7 @@
 class JSONUTF8StringFilter
 {
 public:
-    JSONUTF8StringFilter(std::string &s):
+    explicit JSONUTF8StringFilter(std::string &s):
         str(s), is_valid(true), codepoint(0), state(0), surpair(0)
     {
     }
