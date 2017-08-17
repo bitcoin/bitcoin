@@ -341,6 +341,11 @@ public:
 class CHDWallet : public CWallet
 {
 public:
+    CHDWallet()
+    {
+        SetNull();
+    };
+    
     CHDWallet(const std::string &strWalletFileIn)
     {
         strWalletFile = strWalletFileIn;
@@ -691,5 +696,8 @@ public:
 
 int LoopExtKeysInDB(bool fInactive, bool fInAccount, LoopExtKeyCallback &callback);
 int LoopExtAccountsInDB(bool fInactive, LoopExtKeyCallback &callback);
+
+bool IsHDWallet(CWallet *win);
+CHDWallet *GetHDWallet(CWallet *win);
 
 #endif // PARTICL_WALLET_HDWALLET_H

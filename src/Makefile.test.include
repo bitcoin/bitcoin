@@ -212,7 +212,7 @@ DISTCLEANFILES += test/buildenv.pyc
 bitcoin_test: $(TEST_BINARY)
 
 bitcoin_test_check: $(TEST_BINARY) FORCE
-	$(MAKE) check-TESTS TESTS=$^
+	$(MAKE) check-TESTS TESTS=$^ --run_test=\!stake_tests
 
 bitcoin_test_clean : FORCE
 	rm -f $(CLEAN_BITCOIN_TEST) $(test_test_particl_OBJECTS) $(TEST_BINARY)

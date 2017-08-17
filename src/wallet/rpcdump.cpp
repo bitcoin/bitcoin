@@ -663,13 +663,13 @@ UniValue dumpwallet(const JSONRPCRequest& request)
         }
     }
     
-    if (fParticlWallet)
+    if (IsHDWallet(pwalletMain))
     {
         std::string sError;
         file << "\n# --- Begin JSON --- \n";
         
         UniValue rv(UniValue::VOBJ);
-        if (!((CHDWallet*)pwalletMain)->DumpJson(rv, sError))
+        if (!GetHDWallet(pwalletMain)->DumpJson(rv, sError))
             throw JSONRPCError(RPC_WALLET_ERROR, "DumpJson failed " + sError);
         file << rv.write(1);
         

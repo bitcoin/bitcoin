@@ -1042,6 +1042,8 @@ public:
 
     /* Returns true if HD is enabled */
     virtual bool IsHDEnabled();
+    
+    bool IsFileBacked() {return fFileBacked;};
 
     /* Generates a new HD master key (will not be activated) */
     CPubKey GenerateNewHDMasterKey();

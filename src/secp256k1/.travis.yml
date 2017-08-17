@@ -11,7 +11,7 @@ cache:
   - src/java/guava/
 env:
   global:
-    - FIELD=auto  BIGNUM=no  SCALAR=auto  ENDOMORPHISM=yes  STATICPRECOMPUTATION=yes  ASM=no  BUILD=check  EXTRAFLAGS=  HOST=  ECDH=yes  SCHNORR=no  RECOVERY=yes  EXPERIMENTAL=yes  GENERATOR=yes  RANGEPROOF=yes  MLSAG=yes
+    - FIELD=auto  BIGNUM=auto  SCALAR=auto  ENDOMORPHISM=yes  STATICPRECOMPUTATION=yes  ASM=no  BUILD=check  EXTRAFLAGS=  HOST=  ECDH=yes  SCHNORR=no  RECOVERY=yes  EXPERIMENTAL=yes  GENERATOR=yes  RANGEPROOF=yes  MLSAG=yes
     - GUAVA_URL=https://search.maven.org/remotecontent?filepath=com/google/guava/guava/18.0/guava-18.0.jar GUAVA_JAR=src/java/guava/guava-18.0.jar
   matrix:
     - SCALAR=32bit    RECOVERY=yes

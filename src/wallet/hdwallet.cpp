@@ -10460,6 +10460,12 @@ int LoopExtKeysInDB(bool fInactive, bool fInAccount, LoopExtKeyCallback &callbac
 {
     AssertLockHeld(pwalletMain->cs_wallet);
     
+    if (!pwalletMain || !pwalletMain->IsFileBacked())
+    {
+        LogPrintf("%s: Warning - Not file backed!", __func__);
+        return 0;
+    };
+    
     CHDWalletDB wdb(pwalletMain->strWalletFile);
     
     Dbc *pcursor;
@@ -10555,3 +10561,17 @@ int LoopExtAccountsInDB(bool fInactive, LoopExtKeyCallback &callback)
     return 0;
 };
 
+bool IsHDWallet(CWallet *win)
+{
+    return win && dynamic_cast<CHDWallet*>(win);
+};
+
+CHDWallet *GetHDWallet(CWallet *win)
+{
+    CHDWallet *rv;
+    if (!win)
+        throw std::runtime_error("Wallet pointer is null.");
+    if (!(rv = dynamic_cast<CHDWallet*>(win)))
+        throw std::runtime_error("Wallet pointer is not an instance of class CHDWallet.");
+    return rv;
+};
