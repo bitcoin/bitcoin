@@ -1123,7 +1123,7 @@ public:
     CWallet * const pwallet;
     CScriptID result;
 
-    Witnessifier(CWallet *_pwallet) : pwallet(_pwallet) {}
+    explicit Witnessifier(CWallet *_pwallet) : pwallet(_pwallet) {}
 
     bool operator()(const CNoDestination &dest) const { return false; }
 
