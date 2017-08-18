@@ -618,7 +618,7 @@ public:
         return (mapTx.count(hash) != 0);
     }
 
-    TxMemPoolSnapshot snapshot(const std::set<uint256> hashes) const;
+    TxMemPoolSnapshot snapshot(const std::vector<uint256>& hashes) const;
 
     CTransactionRef get(const uint256& hash) const;
     TxMempoolInfo info(const uint256& hash) const;

@@ -3138,7 +3138,7 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
                     filterrate = pto->minFeeFilter;
                 }
                 // Make a mempool snapshot to avoid a high number of locks
-                TxMemPoolSnapshot mps = mempool.snapshot(std::set<uint256>(vInvTx.begin(), vInvTx.end()));
+                TxMemPoolSnapshot mps = mempool.snapshot(vInvTx);
                 // Topologically and fee-rate sort the inventory we send for privacy and priority reasons.
                 // A heap is used so that not all items need sorting if only a few are being sent.
                 CompareInvMempoolOrder compareInvMempoolOrder(&mps);
