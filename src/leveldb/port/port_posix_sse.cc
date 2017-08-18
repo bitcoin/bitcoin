@@ -19,7 +19,6 @@
 #include <intrin.h>
 #elif defined(__GNUC__) && defined(__SSE4_2__)
 #include <nmmintrin.h>
-#include <cpuid.h>
 #endif
 
 #endif  // defined(LEVELDB_PLATFORM_POSIX_SSE)
@@ -48,20 +47,6 @@ static inline uint64_t LE_LOAD64(const uint8_t *p) {
 
 #endif  // defined(_M_X64) || defined(__x86_64__)
 
-static inline bool HaveSSE42() {
-#if defined(_MSC_VER)
-  int cpu_info[4];
-  __cpuid(cpu_info, 1);
-  return (cpu_info[2] & (1 << 20)) != 0;
-#elif defined(__GNUC__)
-  unsigned int eax, ebx, ecx, edx;
-  __get_cpuid(1, &eax, &ebx, &ecx, &edx);
-  return (ecx & (1 << 20)) != 0;
-#else
-  return false;
-#endif
-}
-
 #endif  // defined(LEVELDB_PLATFORM_POSIX_SSE)
 
 // For further improvements see Intel publication at:
@@ -70,10 +55,6 @@ uint32_t AcceleratedCRC32C(uint32_t crc, const char* buf, size_t size) {
 #if !defined(LEVELDB_PLATFORM_POSIX_SSE)
   return 0;
 #else
-  static bool have = HaveSSE42();
-  if (!have) {
-    return 0;
-  }
 
   const uint8_t *p = reinterpret_cast<const uint8_t *>(buf);
   const uint8_t *e = p + size;
