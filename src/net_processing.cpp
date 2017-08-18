@@ -2788,11 +2788,11 @@ public:
         mp = _mempool;
     }
 
-    bool operator()(std::set<uint256>::iterator a, std::set<uint256>::iterator b)
+    bool operator()(uint256& a, uint256& b)
     {
         /* As std::make_heap produces a max-heap, we want the entries with the
          * fewest ancestors/highest fee to sort later. */
-        return mp->CompareDepthAndScore(*b, *a);
+        return mp->CompareDepthAndScore(b, a);
     }
 };
 
@@ -3128,10 +3128,11 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
                 int64_t nInvTrickleTimeStart = GetTimeMicros();
                 {
                 // Produce a vector with all candidates for sending
-                std::vector<std::set<uint256>::iterator> vInvTx;
+                std::vector<uint256> vInvTx;
                 vInvTx.reserve(pto->setInventoryTxToSend.size());
-                for (std::set<uint256>::iterator it = pto->setInventoryTxToSend.begin(); it != pto->setInventoryTxToSend.end(); it++) {
-                    vInvTx.push_back(it);
+                for (std::set<uint256>::iterator it = pto->setInventoryTxToSend.begin(); it != pto->setInventoryTxToSend.end(); ) {
+                    vInvTx.push_back(*it);
+                    it = pto->setInventoryTxToSend.erase(it);
                 }
                 CAmount filterrate = 0;
                 {
@@ -3151,11 +3152,8 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
                     nInvTrickleProcessedCount++;
                     // Fetch the top element from the heap
                     std::pop_heap(vInvTx.begin(), vInvTx.end(), compareInvMempoolOrder);
-                    std::set<uint256>::iterator it = vInvTx.back();
+                    uint256 hash = vInvTx.back();
                     vInvTx.pop_back();
-                    uint256 hash = *it;
-                    // Remove it from the to-be-sent set
-                    pto->setInventoryTxToSend.erase(it);
                     // Check if not in the filter already
                     if (pto->filterInventoryKnown.contains(hash)) {
                         continue;
