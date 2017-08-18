@@ -41,6 +41,7 @@ LIBBITCOINCONSENSUS=libbitcoinconsensus.la
 endif
 if ENABLE_WALLET
 LIBBITCOIN_WALLET=libbitcoin_wallet.a
+LIBBITCOIN_WALLET_TOOLS=libbitcoin_wallet_tools.a
 endif
 
 $(LIBSECP256K1): $(wildcard secp256k1/src/*) $(wildcard secp256k1/include/*)
@@ -56,6 +57,7 @@ EXTRA_LIBRARIES += \
   $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_CLI) \
   $(LIBBITCOIN_WALLET) \
+  $(LIBBITCOIN_WALLET_TOOLS) \
   $(LIBBITCOIN_ZMQ)
 
 lib_LTLIBRARIES = $(LIBBITCOINCONSENSUS)
@@ -71,6 +73,9 @@ endif
 
 if BUILD_BITCOIN_UTILS
   bin_PROGRAMS += bitcoin-cli bitcoin-tx
+if ENABLE_WALLET
+  bin_PROGRAMS += bitcoin-wallet-tool
+endif
 endif
 
 .PHONY: FORCE check-symbols check-security
@@ -165,6 +170,7 @@ BITCOIN_CORE_H = \
   wallet/rpcwallet.h \
   wallet/wallet.h \
   wallet/walletdb.h \
+  wallet/wallettools.h \
   warnings.h \
   zmq/zmqabstractnotifier.h \
   zmq/zmqconfig.h\
@@ -243,6 +249,12 @@ libbitcoin_wallet_a_SOURCES = \
   wallet/rpcwallet.cpp \
   wallet/wallet.cpp \
   wallet/walletdb.cpp \
+  $(BITCOIN_CORE_H)
+
+libbitcoin_wallet_tools_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+libbitcoin_wallet_tools_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libbitcoin_wallet_tools_a_SOURCES = \
+  wallet/wallettools.cpp \
   $(BITCOIN_CORE_H)
 
 # crypto primitives library
@@ -430,6 +442,33 @@ bitcoin_tx_LDADD = \
   $(LIBSECP256K1)
 
 bitcoin_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
+#
+
+# bitcoin-wallet-tool binary #
+bitcoin_wallet_tool_SOURCES = bitcoin-wallet-tool.cpp
+bitcoin_wallet_tool_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+bitcoin_wallet_tool_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+bitcoin_wallet_tool_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+
+if TARGET_WINDOWS
+bitcoin_wallet_tool_SOURCES += bitcoin-wallet-tool-res.rc
+endif
+
+bitcoin_wallet_tool_LDADD = \
+  $(LIBBITCOIN_SERVER) \
+  $(LIBBITCOIN_COMMON) \
+  $(LIBUNIVALUE) \
+  $(LIBBITCOIN_UTIL) \
+  $(LIBBITCOIN_WALLET) \
+  $(LIBBITCOIN_WALLET_TOOLS) \
+  $(LIBBITCOIN_ZMQ) \
+  $(LIBBITCOIN_CONSENSUS) \
+  $(LIBBITCOIN_CRYPTO) \
+  $(LIBLEVELDB) \
+  $(LIBMEMENV) \
+  $(LIBSECP256K1)
+
+bitcoin_wallet_tool_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(ZMQ_LIBS)
 #
 
 # bitcoinconsensus library #
