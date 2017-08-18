@@ -429,7 +429,6 @@ private:
     void trackPackageRemoved(const CFeeRate& rate);
 
 public:
-
     static const int ROLLING_FEE_HALFLIFE = 60 * 60 * 12; // public only for testing
 
     typedef boost::multi_index_container<
@@ -479,6 +478,7 @@ public:
 
     const setEntries & GetMemPoolParents(txiter entry) const;
     const setEntries & GetMemPoolChildren(txiter entry) const;
+
 private:
     typedef std::map<txiter, setEntries, CompareIteratorByHash> cacheMap;
 
@@ -542,7 +542,6 @@ public:
     void ApplyDelta(const uint256 hash, CAmount &nFeeDelta) const;
     void ClearPrioritisation(const uint256 hash);
 
-public:
     /** Remove a set of transactions from the mempool.
      *  If a transaction is in this set, then all in-mempool descendants must
      *  also be in the set, unless this transaction is being removed for being
