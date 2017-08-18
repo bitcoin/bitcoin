@@ -1165,6 +1165,9 @@ case ${OS} in
    ;;
 esac
 
+AC_SUBST([TRAVIS])
+AM_CONDITIONAL([TRAVIS_SET], [test ! -z "$TRAVIS"])
+
 echo 
 echo "Options used to compile and link:"
 echo "  with wallet   = $enable_wallet"

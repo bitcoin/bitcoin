@@ -439,7 +439,7 @@ UniValue getaddressesbyaccount(const JSONRPCRequest& request)
     return ret;
 }
 
-static void SendMoney(const CTxDestination &address, CAmount nValue, bool fSubtractFeeFromAmount, std::string &sNarr, CWalletTx& wtxNew)
+static void SendMoney(const CTxDestination &address, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew)
 {
     CAmount curBalance = pwalletMain->GetBalance();
 
@@ -459,46 +459,9 @@ static void SendMoney(const CTxDestination &address, CAmount nValue, bool fSubtr
     std::vector<CRecipient> vecSend;
     std::string strError;
     
-    
-    int nStealthPos = -1;
-    // Parse Particl address
-    if (address.type() == typeid(CStealthAddress))
-    {
-        CStealthAddress sx = boost::get<CStealthAddress>(address);
-        
-        nStealthPos = vecSend.size();
-        if (0 != ToStealthRecipient(sx, nValue, fSubtractFeeFromAmount, vecSend, sNarr, strError))
-            throw JSONRPCError(RPC_WALLET_ERROR, strError);
-    } else
-    {
-        if (address.type() == typeid(CExtKeyPair))
-        {
-            ek = boost::get<CExtKeyPair>(address);
-            CExtKey58 ek58;
-            ek58.SetKeyP(ek);
-            CPubKey pkDest;
-            if (0 != ((CHDWallet*)pwalletMain)->ExtKeyGetDestination(ek, pkDest, nChildKey))
-                throw JSONRPCError(RPC_WALLET_ERROR, "ExtKeyGetDestination failed.");
-            scriptPubKey = GetScriptForDestination(pkDest.GetID());
-        } else
-        {
-            scriptPubKey = GetScriptForDestination(address);
-        };
-        
-        CRecipient recipient(scriptPubKey, nValue, fSubtractFeeFromAmount);
-        vecSend.push_back(recipient);
-        
-        if (sNarr.length() > 0)
-        {
-            CRecipient r;
-            std::vector<uint8_t> vNarr();
-            r.vData.push_back(DO_NARR_PLAIN);
-            std::copy(sNarr.begin(), sNarr.end(), std::back_inserter(r.vData));
-            
-            vecSend.push_back(r);
-        };
-    };
-    
+    scriptPubKey = GetScriptForDestination(address);
+    CRecipient recipient(scriptPubKey, nValue, fSubtractFeeFromAmount);
+    vecSend.push_back(recipient);
 
     // Create and send the transaction
     CReserveKey reservekey(pwalletMain);
@@ -511,29 +474,14 @@ static void SendMoney(const CTxDestination &address, CAmount nValue, bool fSubtr
             strError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
     }
-    
-    if (address.type() == typeid(CStealthAddress))
-    {
-        if (nChangePosRet >= nStealthPos)
-            nStealthPos++;
-        std::string sKey = strprintf("n%d", nStealthPos);
-        wtxNew.mapValue[sKey] = sNarr;
-    };
-    
     CValidationState state;
     if (!pwalletMain->CommitTransaction(wtxNew, reservekey, g_connman.get(), state)) {
         strError = strprintf("Error: The transaction was rejected! Reason given: %s", state.GetRejectReason());
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
     }
-    
-    if (address.type() == typeid(CExtKeyPair))
-    {
-        nChildKey+=1;
-        ((CHDWallet*)pwalletMain)->ExtKeyUpdateLooseKey(ek, nChildKey, true);
-    };
-    
 }
 
+extern UniValue sendtypeto(const JSONRPCRequest &request);
 UniValue sendtoaddress(const JSONRPCRequest& request)
 {
     if (!EnsureWalletIsAvailable(request.fHelp))
@@ -575,6 +523,47 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
     CAmount nAmount = AmountFromValue(request.params[1]);
     if (nAmount <= 0)
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount to send");
+    
+    bool fSubtractFeeFromAmount = false;
+    if (request.params.size() > 4)
+        fSubtractFeeFromAmount = request.params[4].get_bool();
+
+
+    if (fParticlWallet)
+    {
+        JSONRPCRequest newRequest;
+        newRequest.fHelp = false;
+        UniValue params(UniValue::VARR);
+        params.push_back("part");
+        params.push_back("part");
+        UniValue arr(UniValue::VARR);
+        UniValue out(UniValue::VOBJ);
+        
+        out.pushKV("address", request.params[0].get_str());
+        out.pushKV("amount", request.params[1]);
+        
+        if (request.params.size() > 5)
+            out.pushKV("narr", request.params[5].get_str());
+        
+        if (fSubtractFeeFromAmount)
+        {
+            UniValue uvBool;
+            uvBool.setBool(fSubtractFeeFromAmount);
+            out.pushKV("subfee", uvBool);
+        }
+        arr.push_back(out);
+        params.push_back(arr);
+        
+        if (request.params.size() > 2 && !request.params[2].isNull() && !request.params[2].get_str().empty())
+            params.push_back(request.params[2].get_str());
+        if (request.params.size() > 3 && !request.params[3].isNull() && !request.params[3].get_str().empty())
+            params.push_back(request.params[3].get_str());
+        
+        newRequest.params = params;
+        
+        return sendtypeto(newRequest);
+    };
+
 
     // Wallet comments
     CWalletTx wtx;
@@ -583,20 +572,9 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
     if (request.params.size() > 3 && !request.params[3].isNull() && !request.params[3].get_str().empty())
         wtx.mapValue["to"]      = request.params[3].get_str();
 
-    bool fSubtractFeeFromAmount = false;
-    if (request.params.size() > 4)
-        fSubtractFeeFromAmount = request.params[4].get_bool();
-    
-    std::string sNarr;
-    if (request.params.size() > 5)
-    {
-        sNarr = request.params[5].get_str();
-        if (sNarr.length() > 24)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Narration can range from 1 to 24 characters.");
-    };
     EnsureWalletIsUnlocked();
 
-    SendMoney(address.Get(), nAmount, fSubtractFeeFromAmount, sNarr, wtx);
+    SendMoney(address.Get(), nAmount, fSubtractFeeFromAmount, wtx);
 
     return wtx.GetHash().GetHex();
 }

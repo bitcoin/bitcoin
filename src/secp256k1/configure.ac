@@ -97,7 +97,7 @@ AC_ARG_ENABLE(tests,
 AC_ARG_ENABLE(openssl_tests,
     AS_HELP_STRING([--enable-openssl-tests],[enable OpenSSL tests, if OpenSSL is available (default is auto)]),
     [enable_openssl_tests=$enableval],
-    [enable_openssl_tests=auto])
+    [enable_openssl_tests=no])
 
 AC_ARG_ENABLE(experimental,
     AS_HELP_STRING([--enable-experimental],[allow experimental configure options (default is no)]),

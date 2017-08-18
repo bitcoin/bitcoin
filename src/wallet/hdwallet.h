@@ -453,8 +453,6 @@ public:
     CAmount GetStaked();
     
     bool GetBalances(CHDWalletBalances &bal);
-    //bool GetBalances(CAmount &nPart, CAmount &nPartUnconf, CAmount &nPartStaked, CAmount &nPartImmature, CAmount &nPartWatchOnly, 
-    //    CAmount &nBlind, CAmount &nBlindUnconf, CAmount &nAnon, CAmount &nAnonUnconf);
     
     
     bool IsChange(const CTxOutBase *txout) const;
@@ -580,7 +578,7 @@ public:
     
     bool CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosInOut,
                            std::string& strFailReason, const CCoinControl *coinControl = NULL, bool sign = true);
-    bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey, CConnman* connman, CValidationState& state);
+    bool CommitTransaction(CWalletTx &wtxNew, CReserveKey &reservekey, CConnman *connman, CValidationState &state);
     bool CommitTransaction(CWalletTx &wtxNew, CTransactionRecord &rtx,
         CReserveKey &reservekey, CConnman *connman, CValidationState &state);
     

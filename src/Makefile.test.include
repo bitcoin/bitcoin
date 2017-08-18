@@ -212,7 +212,12 @@ DISTCLEANFILES += test/buildenv.pyc
 bitcoin_test: $(TEST_BINARY)
 
 bitcoin_test_check: $(TEST_BINARY) FORCE
+	@echo "Running make check..."
+if TRAVIS_SET
 	$(MAKE) check-TESTS TESTS=$^ --run_test=\!stake_tests
+else
+	$(MAKE) check-TESTS TESTS=$^
+endif
 
 bitcoin_test_clean : FORCE
 	rm -f $(CLEAN_BITCOIN_TEST) $(test_test_particl_OBJECTS) $(TEST_BINARY)
@@ -220,7 +225,7 @@ bitcoin_test_clean : FORCE
 check-local:
 	@echo "Running test/bitcoin-util-test.py..."
 	$(AM_V_at)srcdir=$(srcdir) PYTHONPATH=$(builddir)/test $(PYTHON) $(srcdir)/test/bitcoin-util-test.py
-#	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C secp256k1 check
+	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C secp256k1 check
 if EMBEDDED_UNIVALUE
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C univalue check
 endif

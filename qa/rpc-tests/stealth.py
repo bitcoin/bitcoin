@@ -43,8 +43,6 @@ class StealthTest(ParticlTestFramework):
         
         txnHashes = []
         
-        #assert(self.wait_for_height(node, 1))
-        
         
         ro = node1.extkeyimportmaster("drip fog service village program equip minute dentist series hawk crop sphere olympic lazy garbage segment fox library good alley steak jazz force inmate")
         
@@ -79,7 +77,6 @@ class StealthTest(ParticlTestFramework):
         assert(self.wait_for_mempool(node1, txnHash))
         
         ro = node1.listtransactions()
-        #print("node1.listtransactions ", ro)
         
         sxAddrTo3 = node1.getnewstealthaddress()
         assert(sxAddrTo3 == 'TetcV5ZNzM6hT6Tz8Vc5t6FM74nojY8oFdeCnPr9Vyx6QNqrR7LKy87aZ1ytGGqBSAJ9CpWDj81pPwYPYHjg6Ks8GKXvGyLoBdTDYQ')
@@ -98,7 +95,6 @@ class StealthTest(ParticlTestFramework):
         
         # - Test encrypted narrations on sent wtx (from sending node)
         ro = node.listtransactions()
-        #print("\n\nnode.listtransactions ", ro)
         assert('narration test' in str(ro[-1]))
         
         
@@ -109,7 +105,6 @@ class StealthTest(ParticlTestFramework):
         assert('Success.' in ro['result'])
         
         sxAddrTo2_1 = node2.getnewstealthaddress('lbl test 3 bits', "3")
-        #print("sxAddrTo2_1 ", sxAddrTo2_1)
         
         
         ro = node2.importstealthaddress("7uk8ELaUsop2r4vMg415wEGBfRd1MmY7JiXX7CRhwuwq5PaWXQ9N", # secrets are backwards
@@ -154,7 +149,6 @@ class StealthTest(ParticlTestFramework):
         ro = node2.listtransactions()
         assert(isclose(ro[-1]['amount'], 0.6))
         assert('test 6' in str(ro[-1]))
-        #print("node2.listtransactions ", ro)
         
         ro = node2.walletpassphrase("qwerty234", 300)
         
@@ -181,13 +175,12 @@ class StealthTest(ParticlTestFramework):
         ro = node1.listtransactions()
         assert(isclose(ro[-1]['amount'], 1.4))
         assert('node2 -> node1' in str(ro[-1]))
-        #print("node1.listtransactions ", ro)
         
         
         
         
         #assert(False)
-        #print(json.dumps(ro, indent=4))
+        #print(json.dumps(ro, indent=4, default=self.jsonDecimal))
         
 
 if __name__ == '__main__':

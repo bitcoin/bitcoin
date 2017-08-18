@@ -3564,6 +3564,9 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
     CHDWallet *pwallet = GetHDWallet();
     EnsureWalletIsUnlocked(pwallet);
     
+    if (pwalletMain->GetBroadcastTransactions() && !g_connman)
+        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+    
     if (typeOut == OUTPUT_RINGCT && Params().NetworkID() == "main")
         throw std::runtime_error("Disabled on mainnet.");
     
@@ -3621,7 +3624,6 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
             std::string sNarr;
             if (obj.exists("narr"))
                 sNarr = obj["narr"].get_str();
-            
             
             if (0 != AddOutput(typeOut, vecSend, address.Get(), nAmount, fSubtractFeeFromAmount, sNarr, sError))
                 throw JSONRPCError(RPC_MISC_ERROR, strprintf("AddOutput failed: %s.", sError));
@@ -3859,6 +3861,16 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
         return result;
     };
     
+    // Store sent narrations
+    for (const auto &r : vecSend)
+    {
+        if (r.nType != OUTPUT_STANDARD
+            || r.sNarration.size() < 1)
+            continue;
+        std::string sKey = strprintf("n%d", r.n);
+        wtx.mapValue[sKey] = r.sNarration;
+    };
+    
     CValidationState state;
     CReserveKey reservekey(pwallet);
     if (typeIn == OUTPUT_STANDARD && typeOut == OUTPUT_STANDARD)
@@ -4060,7 +4072,6 @@ UniValue sendtypeto(const JSONRPCRequest &request)
     
     std::string sTypeIn = request.params[0].get_str();
     std::string sTypeOut = request.params[1].get_str();
-    
     
     OutputTypes typeIn = WordToType(sTypeIn);
     OutputTypes typeOut = WordToType(sTypeOut);
