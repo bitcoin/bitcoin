@@ -65,6 +65,7 @@ BITCOIN_TESTS =\
   test/scheduler_tests.cpp \
   test/script_P2SH_tests.cpp \
   test/script_tests.cpp \
+  test/script_standard_tests.cpp \
   test/scriptnum_tests.cpp \
   test/serialize_tests.cpp \
   test/sighash_tests.cpp \
