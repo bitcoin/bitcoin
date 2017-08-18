@@ -603,7 +603,7 @@ UniValue combinerawtransaction(const JSONRPCRequest& request)
             "    ]\n"
 
             "\nResult:\n"
-            "\"hex\" : \"value\",           (string) The hex-encoded raw transaction with signature(s)\n"
+            "\"hex\"            (string) The hex-encoded raw transaction with signature(s)\n"
 
             "\nExamples:\n"
             + HelpExampleCli("combinerawtransaction", "[\"myhex1\", \"myhex2\", \"myhex3\"]")
