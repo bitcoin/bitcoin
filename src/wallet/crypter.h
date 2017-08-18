@@ -113,7 +113,6 @@ public:
 class CCryptoKeyStore : public CBasicKeyStore
 {
 private:
-    CryptedKeyMap mapCryptedKeys;
 
     CKeyingMaterial vMasterKey;
 
@@ -131,6 +130,7 @@ protected:
     bool EncryptKeys(CKeyingMaterial& vMasterKeyIn);
 
     bool Unlock(const CKeyingMaterial& vMasterKeyIn);
+    CryptedKeyMap mapCryptedKeys;
 
 public:
     CCryptoKeyStore() : fUseCrypto(false), fDecryptionThoroughlyChecked(false)
