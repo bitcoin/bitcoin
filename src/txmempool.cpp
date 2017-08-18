@@ -1066,3 +1066,40 @@ bool CTxMemPool::TransactionWithinChainLimit(const uint256& txid, size_t chainLi
 }
 
 SaltedTxidHasher::SaltedTxidHasher() : k0(GetRand(std::numeric_limits<uint64_t>::max())), k1(GetRand(std::numeric_limits<uint64_t>::max())) {}
+
+TxMemPoolSnapshot CTxMemPool::snapshot(const std::set<uint256> hashes) const
+{
+    indexed_transaction_set mapTxOut;
+    {
+        LOCK(cs);
+        for (const uint256& hash : hashes) {
+            auto it = mapTx.find(hash);
+            if (it != mapTx.end()) {
+                mapTxOut.insert(*it);
+            }
+        }
+    }
+    return TxMemPoolSnapshot(mapTxOut);
+}
+
+bool TxMemPoolSnapshot::compareDepthAndScore(const uint256& hasha, const uint256& hashb)
+{
+    CTxMemPool::indexed_transaction_set::const_iterator i = mapTx.find(hasha);
+    if (i == mapTx.end()) return false;
+    CTxMemPool::indexed_transaction_set::const_iterator j = mapTx.find(hashb);
+    if (j == mapTx.end()) return true;
+    uint64_t counta = i->GetCountWithAncestors();
+    uint64_t countb = j->GetCountWithAncestors();
+    if (counta == countb) {
+        return CompareTxMemPoolEntryByScore()(*i, *j);
+    }
+    return counta < countb;
+}
+
+TxMempoolInfo TxMemPoolSnapshot::info(const uint256& hash) const
+{
+    CTxMemPool::indexed_transaction_set::const_iterator i = mapTx.find(hash);
+    if (i == mapTx.end())
+        return TxMempoolInfo();
+    return GetInfo(i);
+}

@@ -294,6 +294,7 @@ struct mining_score {};
 struct ancestor_score {};
 
 class CBlockPolicyEstimator;
+class TxMemPoolSnapshot;
 
 /**
  * Information about a mempool transaction.
@@ -617,6 +618,8 @@ public:
         return (mapTx.count(hash) != 0);
     }
 
+    TxMemPoolSnapshot snapshot(const std::set<uint256> hashes) const;
+
     CTransactionRef get(const uint256& hash) const;
     TxMempoolInfo info(const uint256& hash) const;
     std::vector<TxMempoolInfo> infoAll() const;
@@ -684,6 +687,17 @@ protected:
 public:
     CCoinsViewMemPool(CCoinsView* baseIn, const CTxMemPool& mempoolIn);
     bool GetCoin(const COutPoint &outpoint, Coin &coin) const override;
+};
+
+class TxMemPoolSnapshot
+{
+protected:
+    CTxMemPool::indexed_transaction_set mapTx;
+
+public:
+    TxMemPoolSnapshot(CTxMemPool::indexed_transaction_set mapTxIn) : mapTx(mapTxIn) {};
+    bool compareDepthAndScore(const uint256& hasha, const uint256& hashb);
+    TxMempoolInfo info(const uint256& hash) const;
 };
 
 /**
