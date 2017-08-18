@@ -3121,6 +3121,12 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
 
             // Determine transactions to relay
             if (fSendTrickle) {
+                static int64_t nInvTrickleTimeSum = 0; // sum of time spent here
+                static int64_t nInvTrickleCount = 0;   // sum of size of vInv
+                static int64_t nInvTrickleProcessedCount = 0;   // # of entries in nInvTx that were actually processed before hitting cap
+                static int64_t nInvTricklePasses = 0;  // # of times we entered this part of the code
+                int64_t nInvTrickleTimeStart = GetTimeMicros();
+                {
                 // Produce a vector with all candidates for sending
                 std::vector<std::set<uint256>::iterator> vInvTx;
                 vInvTx.reserve(pto->setInventoryTxToSend.size());
@@ -3140,7 +3146,9 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
                 // especially since we have many peers and some will draw much shorter delays.
                 unsigned int nRelayedTransactions = 0;
                 LOCK(pto->cs_filter);
+                nInvTrickleCount += vInvTx.size();
                 while (!vInvTx.empty() && nRelayedTransactions < INVENTORY_BROADCAST_MAX) {
+                    nInvTrickleProcessedCount++;
                     // Fetch the top element from the heap
                     std::pop_heap(vInvTx.begin(), vInvTx.end(), compareInvMempoolOrder);
                     std::set<uint256>::iterator it = vInvTx.back();
@@ -3182,6 +3190,13 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
                         vInv.clear();
                     }
                     pto->filterInventoryKnown.insert(hash);
+                }
+                }
+                int64_t nInvTrickleTimeEnd = GetTimeMicros();
+                nInvTrickleTimeSum += (nInvTrickleTimeEnd - nInvTrickleTimeStart);
+                nInvTricklePasses++;
+                if (nInvTricklePasses % 1000 == 0) {
+                    LogPrint(BCLog::BENCH, "    - inv.trickle: %.2fus/tx [%.2fus/seen, %.2f seen/pass, %.2fus/pass]\n", (float)nInvTrickleTimeSum / nInvTrickleCount, (float)nInvTrickleTimeSum / nInvTrickleProcessedCount, (float)nInvTrickleProcessedCount / nInvTricklePasses, (float)nInvTrickleTimeSum / nInvTricklePasses);
                 }
             }
         }
