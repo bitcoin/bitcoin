@@ -37,6 +37,7 @@ code.
 
 - **Miscellaneous**
   - `++i` is preferred over `i++`.
+  - `static_assert` is preferred over `assert` where possible. Generally; compile-time checking is preferred over run-time checking.
   - Align pointers and references to the left i.e. use `type& var` and not `type &var`.
 
 Block style example:
