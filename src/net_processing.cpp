@@ -2781,18 +2781,15 @@ bool ProcessMessages(CNode* pfrom, CConnman& connman, const std::atomic<bool>& i
 
 class CompareInvMempoolOrder
 {
-    CTxMemPool *mp;
+    TxMemPoolSnapshot* mp;
 public:
-    explicit CompareInvMempoolOrder(CTxMemPool *_mempool)
-    {
-        mp = _mempool;
-    }
+    explicit CompareInvMempoolOrder(TxMemPoolSnapshot* mpIn) : mp(mpIn) {}
 
     bool operator()(uint256& a, uint256& b)
     {
         /* As std::make_heap produces a max-heap, we want the entries with the
          * fewest ancestors/highest fee to sort later. */
-        return mp->CompareDepthAndScore(b, a);
+        return mp->compareDepthAndScore(b, a);
     }
 };
 
@@ -3129,8 +3126,9 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
                 {
                 // Produce a vector with all candidates for sending
                 std::vector<uint256> vInvTx;
-                vInvTx.reserve(pto->setInventoryTxToSend.size());
-                for (std::set<uint256>::iterator it = pto->setInventoryTxToSend.begin(); it != pto->setInventoryTxToSend.end(); ) {
+                vInvTx.reserve(std::max<size_t>(pto->setInventoryTxToSend.size(), INVENTORY_BROADCAST_MAX));
+                size_t count = 0;
+                for (std::set<uint256>::iterator it = pto->setInventoryTxToSend.begin(); count++ < INVENTORY_BROADCAST_MAX && it != pto->setInventoryTxToSend.end(); ) {
                     vInvTx.push_back(*it);
                     it = pto->setInventoryTxToSend.erase(it);
                 }
@@ -3139,16 +3137,17 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
                     LOCK(pto->cs_feeFilter);
                     filterrate = pto->minFeeFilter;
                 }
+                // Make a mempool snapshot to avoid a high number of locks
+                TxMemPoolSnapshot mps = mempool.snapshot(std::set<uint256>(vInvTx.begin(), vInvTx.end()));
                 // Topologically and fee-rate sort the inventory we send for privacy and priority reasons.
                 // A heap is used so that not all items need sorting if only a few are being sent.
-                CompareInvMempoolOrder compareInvMempoolOrder(&mempool);
+                CompareInvMempoolOrder compareInvMempoolOrder(&mps);
                 std::make_heap(vInvTx.begin(), vInvTx.end(), compareInvMempoolOrder);
                 // No reason to drain out at many times the network's capacity,
                 // especially since we have many peers and some will draw much shorter delays.
-                unsigned int nRelayedTransactions = 0;
                 LOCK(pto->cs_filter);
                 nInvTrickleCount += vInvTx.size();
-                while (!vInvTx.empty() && nRelayedTransactions < INVENTORY_BROADCAST_MAX) {
+                while (!vInvTx.empty()) {
                     nInvTrickleProcessedCount++;
                     // Fetch the top element from the heap
                     std::pop_heap(vInvTx.begin(), vInvTx.end(), compareInvMempoolOrder);
@@ -3159,7 +3158,7 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
                         continue;
                     }
                     // Not in the mempool anymore? don't bother sending it.
-                    auto txinfo = mempool.info(hash);
+                    auto txinfo = mps.info(hash);
                     if (!txinfo.tx) {
                         continue;
                     }
@@ -3169,7 +3168,6 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
                     if (pto->pfilter && !pto->pfilter->IsRelevantAndUpdate(*txinfo.tx)) continue;
                     // Send
                     vInv.push_back(CInv(MSG_TX, hash));
-                    nRelayedTransactions++;
                     {
                         // Expire old relay messages
                         while (!vRelayExpiration.empty() && vRelayExpiration.front().first < nNow)
