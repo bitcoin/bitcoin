@@ -669,10 +669,11 @@ void WalletModel::getOutputs(const std::vector<COutPoint>& vOutpoints, std::vect
     LOCK2(cs_main, wallet->cs_wallet);
     for (const COutPoint& outpoint : vOutpoints)
     {
-        if (!wallet->mapWallet.count(outpoint.hash)) continue;
-        int nDepth = wallet->mapWallet[outpoint.hash].GetDepthInMainChain();
+        auto it = wallet->mapWallet.find(outpoint.hash);
+        if (it == wallet->mapWallet.end()) continue;
+        int nDepth = it->second.GetDepthInMainChain();
         if (nDepth < 0) continue;
-        COutput out(&wallet->mapWallet[outpoint.hash], outpoint.n, nDepth, true /* spendable */, true /* solvable */, true /* safe */);
+        COutput out(&it->second, outpoint.n, nDepth, true /* spendable */, true /* solvable */, true /* safe */);
         vOutputs.push_back(out);
     }
 }
