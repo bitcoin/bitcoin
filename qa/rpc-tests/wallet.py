@@ -8,7 +8,7 @@ import sys
 if sys.version_info[0] < 3:
     raise "Use Python 3"
 import logging
-logging.basicConfig(format='%(asctime)s.%(levelname)s: %(message)s', level=logging.INFO)
+logging.basicConfig(format='%(asctime)s.%(levelname)s: %(message)s', level=logging.INFO,stream=sys.stdout)
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
