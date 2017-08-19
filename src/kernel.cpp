@@ -457,16 +457,6 @@ bool CheckProofOfStake(CValidationState &state, const CTransaction& tx, unsigned
     if (!fTxIndex)
         return error("CheckProofOfStake() : transaction index not available");
 
-    // First try finding the previous transaction in database
-    CCoinsViewCache view(*pcoinsTip, true);
-    CCoins coins;
-    if (!view.GetCoins(txin.prevout.hash, coins))
-        return state.DoS(1, error("CheckProofOfStake() : txPrev not found")); // previous transaction not in main chain, may occur during initial download
-
-    // Verify signature
-    if (!VerifySignature(coins, tx, 0, true, 0))
-        return state.DoS(100, error("CheckProofOfStake() : VerifySignature failed on coinstake %s", tx.GetHash().ToString().c_str()));
-
     // Get transaction index for the previous transaction
     CDiskTxPos postx;
     if (!pblocktree->ReadTxIndex(txin.prevout.hash, postx))
@@ -487,6 +477,11 @@ bool CheckProofOfStake(CValidationState &state, const CTransaction& tx, unsigned
         if (txPrev.GetHash() != txin.prevout.hash)
             return error("%s() : txid mismatch in CheckProofOfStake()", __PRETTY_FUNCTION__);
     }
+
+    // Verify signature
+    CCoins coins(txPrev, 0);
+    if (!VerifySignature(coins, tx, 0, true, 0))
+        return state.DoS(100, error("CheckProofOfStake() : VerifySignature failed on coinstake %s", tx.GetHash().ToString().c_str()));
 
     if (!CheckStakeKernelHash(nBits, header, postx.nTxOffset + sizeof(CBlockHeader), txPrev, txin.prevout, tx.nTime, hashProofOfStake, fDebug))
         return state.DoS(1, error("CheckProofOfStake() : INFO: check kernel failed on coinstake %s, hashProof=%s", tx.GetHash().ToString().c_str(), hashProofOfStake.ToString().c_str())); // may occur during initial download or if behind on block chain sync
