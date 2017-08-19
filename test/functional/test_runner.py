@@ -105,6 +105,7 @@ BASE_SCRIPTS = [
     'interface_zmq.py',
     'interface_bitcoin_cli.py',
     'mempool_resurrect.py',
+    'wallet_sweepprivkeys.py',
     'wallet_txn_doublespend.py --mineblock',
     'tool_wallet.py',
     'wallet_txn_clone.py',
