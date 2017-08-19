@@ -33,9 +33,10 @@ class CoinContainer
     end
     name = options[:name]
 
+    connect_cmd = (options[:link_with_connect] ? "-connect" : "-addnode")
     connects = links.map do |linked_name, alias_name|
       upname = alias_name.upcase
-      "-addnode=$#{upname}_PORT_9903_TCP_ADDR:$#{upname}_PORT_9903_TCP_PORT"
+      "#{connect_cmd}=$#{upname}_PORT_9903_TCP_ADDR:$#{upname}_PORT_9903_TCP_PORT"
     end
 
     default_args = {

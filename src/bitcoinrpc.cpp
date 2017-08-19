@@ -286,30 +286,16 @@ Value stop(const Array& params, bool fHelp)
 
 Value generatestake(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() > 1)
+    if (fHelp || params.size() != 0)
         throw runtime_error(
-            "generatestake [<parent block hash>]\n"
-            "generate a single proof of stake block on top of <parent block hash> (default: highest block hash)"
+            "generatestake\n"
+            "generate a single proof of stake block"
             );
 
     if (GetBoolArg("-stakegen", true))
         throw JSONRPCError(-3, "Stake generation enabled. Won't start another generation.");
 
-    CBlockIndex *parent;
-    if (params.size() > 1)
-    {
-        uint256 parentHash;
-        parentHash.SetHex(params[1].get_str());
-        if (!mapBlockIndex.count(parentHash))
-            throw JSONRPCError(-3, "Parent hash not in main chain");
-        parent = mapBlockIndex[parentHash];
-    }
-    else
-    {
-        parent = pindexBest;
-    }
-
-    BitcoinMiner(pwalletMain, true, true, parent);
+    BitcoinMiner(pwalletMain, true, true);
     return hashSingleStakeBlock.ToString();
 }
 
@@ -359,105 +345,48 @@ Value duplicateblock(const Array& params, bool fHelp)
         throw JSONRPCError(-3, "Original hash not in main chain");
     CBlockIndex *original = mapBlockIndex[originalHash];
 
-    CBlockIndex *parent;
+    CBlockIndex *pindexPrev;
     if (params.size() > 1)
     {
         uint256 parentHash;
         parentHash.SetHex(params[1].get_str());
         if (!mapBlockIndex.count(parentHash))
             throw JSONRPCError(-3, "Parent hash not in main chain");
-        parent = mapBlockIndex[parentHash];
+        pindexPrev = mapBlockIndex[parentHash];
     }
     else
-    {
-        parent = original->pprev;
-    }
+        pindexPrev = original->pprev;
 
-    CWallet *pwallet = pwalletMain;
-    CReserveKey reservekey(pwalletMain);
-    bool fProofOfStake = true;
-    unsigned int nExtraNonce = 0;
+    CBlock block;
+    block.ReadFromDisk(original);
 
-    auto_ptr<CBlock> pblock(new CBlock());
-    if (!pblock.get())
-        throw JSONRPCError(-3, "Unable to allocate block");
+    // Update parent block
+    block.hashPrevBlock  = pindexPrev->GetBlockHash();
+    block.nBits = GetNextTargetRequired(pindexPrev, block.IsProofOfStake());
 
-    // Create coinbase tx
-    CTransaction txNew;
-    txNew.vin.resize(1);
-    txNew.vin[0].prevout.SetNull();
-    txNew.vout.resize(1);
-    CPubKey reservepubkey;
-    if (!reservekey.GetReservedKey(reservepubkey))
-        throw JSONRPCError(-3, "Unable to get reserve pub key");
-    txNew.vout[0].scriptPubKey << reservepubkey << OP_CHECKSIG;
+    // Increment nonce to make sure the hash changes
+    block.nNonce++;
 
-    // Add our coinbase tx as first transaction
-    pblock->vtx.push_back(txNew);
+    block.SignBlock(*pwalletMain); // We ignore errors to be able to test duplicate blocks with invalid signature
 
-    // ppcoin: if coinstake available add coinstake tx
-    CBlockIndex* pindexPrev = parent;
-    IncrementExtraNonce(pblock.get(), pindexPrev, nExtraNonce);
+    // Process this block the same as if we had received it from another node
+    // But do not check for errors as this is expected to fail
+    CValidationState state;
+    ProcessBlock(state, NULL, &block);
 
-    CBlock originalBlock;
-    originalBlock.ReadFromDisk(original);
-    CTransaction txCoinStake(originalBlock.vtx[1]);
+    return block.GetHash().ToString();
+}
 
-    pblock->vtx[0].vout[0].SetEmpty();
-    pblock->vtx[0].nTime = txCoinStake.nTime;
-    pblock->vtx.push_back(txCoinStake);
+Value ignorenextblock(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "ignorenextblock"
+            );
 
-    pblock->nBits = GetNextTargetRequired(pindexPrev, pblock->IsProofOfStake());
+    nBlocksToIgnore++;
 
-    // Fill in header
-    pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
-    pblock->hashMerkleRoot = pblock->BuildMerkleTree();
-    if (pblock->IsProofOfStake())
-        pblock->nTime      = pblock->vtx[1].nTime; //same as coinstake timestamp
-    pblock->nTime          = max(pindexPrev->GetMedianTimePast()+1, pblock->GetMaxTransactionTime());
-    pblock->nTime          = max(pblock->GetBlockTime(), pindexPrev->GetBlockTime() - nMaxClockDrift);
-    if (pblock->IsProofOfWork())
-        pblock->UpdateTime(pindexPrev);
-    pblock->nNonce         = 0;
-
-    if (fProofOfStake)
-    {
-        // ppcoin: if proof-of-stake block found then process block
-        if (pblock->IsProofOfStake())
-        {
-            if (!pblock->SignBlock(*pwallet))
-            {
-                // We ignore errors to be able to test duplicate blocks with invalid signature
-            }
-
-            // Found a solution
-            {
-                LOCK(cs_main);
-
-                // Remove key from key pool
-                reservekey.KeepKey();
-
-                // Track how many getdata requests this block gets
-                {
-                    LOCK(pwallet->cs_wallet);
-                    pwallet->mapRequestCount[pblock->GetHash()] = 0;
-                }
-
-                // Process this block the same as if we had received it from another node
-                // But do not check for errors as this is expected to fail
-                CValidationState state;
-                ProcessBlock(state, NULL, pblock.get());
-            }
-        }
-        else
-            throw JSONRPCError(-3, "generated block is not a Proof of Stake");
-    }
-
-    string result(pblock->GetHash().ToString());
-
-    pblock.release();
-
-    return result;
+    return "";
 }
 
 #endif
@@ -548,6 +477,7 @@ static const CRPCCommand vRPCCommands[] =
 #ifdef TESTING
     { "generatestake",          &generatestake,          true,      false },
     { "duplicateblock",         &duplicateblock,         true,      false },
+    { "ignorenextblock",        &ignorenextblock,        true,      false },
     { "shutdown",               &shutdown,               true,      false },
     { "timetravel",             &timetravel,             true,      false },
 #endif

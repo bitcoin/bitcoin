@@ -121,6 +121,7 @@ extern bool fTxIndex;
 extern unsigned int nCoinCacheSize;
 #ifdef TESTING
 extern uint256 hashSingleStakeBlock;
+extern int nBlocksToIgnore;
 #endif
 
 // Settings
@@ -204,7 +205,7 @@ std::string GetWarnings(std::string strFor);
 uint256 WantedByOrphan(const CBlock* pblockOrphan);
 const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex, bool fProofOfStake);
 #ifdef TESTING
-void BitcoinMiner(CWallet *pwallet, bool fProofOfStake, bool fGenerateSingleBlock = false, CBlockIndex* parent = NULL);
+void BitcoinMiner(CWallet *pwallet, bool fProofOfStake, bool fGenerateSingleBlock = false);
 #else
 void BitcoinMiner(CWallet *pwallet, bool fProofOfStake);
 #endif

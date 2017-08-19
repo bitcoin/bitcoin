@@ -14,14 +14,41 @@ Feature: The top block is removed if a duplicate stake is received
 
   Scenario: A node builds a block on top of a block that was removed because of duplication
     Given a network with nodes "A", "B" and "C" able to mint
+    And a node "D" connected only to node "A"
+
     When node "A" finds a block "X"
     Then all nodes should be at block "X"
+
+    When node "B" finds a block "Y" not received by node "C"
+    Then nodes "A", "B" and "D" should be at block "Y"
+    And node "C" should be at block "X"
+
+    When node "B" sends a duplicate "Y2" of block "Y"
+    Then nodes "A", "B" and "D" should be at block "X"
+    And node "C" should be at block "Y2"
+
+    When node "C" finds a block "Z"
+    Then all nodes should be at block "Z"
+    And node "D" should have 1 connection
+
+
+  Scenario: A node builds a block on top of a duplicated block
+    Given a network with nodes "A", "B" and "C" able to mint
+    And a node "D" connected only to node "A"
+
+    When node "A" finds a block "X"
+    Then all nodes should be at block "X"
+
     When node "B" finds a block "Y"
     Then all nodes should be at block "Y"
-    When node "B" sends a duplicate "Y2" of block "Y"
-    Then all nodes should be at block "X"
-    When node "C" finds a block "Z" on top of block "Y2"
+
+    When node "B" sends a duplicate "Y2" of block "Y" not received by node "C"
+    Then nodes "A", "B" and "D" should be at block "X"
+    And node "C" should be at block "Y"
+
+    When node "C" finds a block "Z"
     Then all nodes should be at block "Z"
+    And node "D" should have 1 connection
 
 
   Scenario: Transactions unconfirmed by duplicate removal gets confirmed again in the next block
