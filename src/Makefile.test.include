@@ -6,7 +6,7 @@ TESTS += test/test_particl
 bin_PROGRAMS += test/test_particl
 noinst_PROGRAMS += test/test_particl_fuzzy
 TEST_SRCDIR = test
-TEST_BINARY=test/test_particl$(EXEEXT)
+TEST_BINARY = test/test_particl$(EXEEXT)
 
 
 EXTRA_DIST += \
@@ -159,9 +159,15 @@ BITCOIN_TESTS += \
   wallet/test/hdwallet_test_fixture.cpp \
   wallet/test/hdwallet_test_fixture.h \
   wallet/test/hdwallet_tests.cpp \
-  wallet/test/stake_tests.cpp \
-  wallet/test/rpc_hdwallet_tests.cpp 
+  wallet/test/rpc_hdwallet_tests.cpp
+  
+if ENABLE_STAKE_TEST
+  BITCOIN_TESTS += \
+  wallet/test/stake_tests.cpp
 endif
+endif
+
+
 
 test_test_particl_SOURCES = $(BITCOIN_TESTS) $(JSON_TEST_FILES) $(RAW_TEST_FILES)
 test_test_particl_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -I$(builddir)/test/ $(TESTDEFS) $(EVENT_CFLAGS)
@@ -212,12 +218,7 @@ DISTCLEANFILES += test/buildenv.pyc
 bitcoin_test: $(TEST_BINARY)
 
 bitcoin_test_check: $(TEST_BINARY) FORCE
-	@echo "Running make check..."
-if TRAVIS_SET
-	$(MAKE) check-TESTS TESTS=$^ --run_test=\!stake_tests
-else
-	$(MAKE) check-TESTS TESTS=$^
-endif
+	$(MAKE) check-TESTS TESTS=$^ 
 
 bitcoin_test_clean : FORCE
 	rm -f $(CLEAN_BITCOIN_TEST) $(test_test_particl_OBJECTS) $(TEST_BINARY)
