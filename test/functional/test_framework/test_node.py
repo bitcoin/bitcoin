@@ -68,9 +68,9 @@ class TestNode():
 
     def wait_for_rpc_connection(self):
         """Sets up an RPC connection to the dashd process. Returns False if unable to connect."""
-
-        # Wait for up to 10 seconds for the RPC server to respond
-        for _ in range(40):
+        timeout_s = 60 # Wait for up to 60 seconds for the RPC server to respond
+        poll_per_s = 4 # Poll at a rate of four times per second
+        for _ in range(timeout_s*poll_per_s):
             assert not self.process.poll(), "dashd exited with status %i during initialization" % self.process.returncode
             try:
                 self.rpc = get_rpc_proxy(rpc_url(self.datadir, self.index, self.rpchost), self.index, coveragedir=self.coverage_dir)
@@ -89,7 +89,7 @@ class TestNode():
             except ValueError as e:  # cookie file not found and no rpcuser or rpcassword. dashd still starting
                 if "No RPC credentials" not in str(e):
                     raise
-            time.sleep(0.25)
+            time.sleep(1.0 / poll_per_s)
         raise AssertionError("Unable to connect to dashd")
 
     def get_wallet_rpc(self, wallet_name):
