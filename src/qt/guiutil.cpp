@@ -11,7 +11,6 @@
 #include "qvalidatedlineedit.h"
 #include "walletmodel.h"
 
-#include <Application.h>
 #include "primitives/transaction.h"
 #include "init.h"
 #include "main.h" // For minRelayTxFee
