@@ -77,6 +77,7 @@ private Q_SLOTS:
     void on_buttonChooseFee_clicked();
     void on_buttonMinimizeFee_clicked();
     void removeEntry(SendCoinsEntry* entry);
+    void useAvailableBalance(SendCoinsEntry* entry);
     void updateDisplayUnit();
     void updateInstantSend();
     void coinControlFeatureChanged(bool);
