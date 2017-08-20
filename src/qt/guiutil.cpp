@@ -958,7 +958,11 @@ QString formatTimeOffset(int64_t nTimeOffset)
 
 QString uriPrefix()
 {
-    return Application::uahfChainState() == Application::UAHFDisabled ? "bitcoin" : "bitcoincash";
+#ifdef BITCOIN_CASH
+    return "bitcoincash";
+#else
+    return "bitcoin";
+#endif
 }
 
 } // namespace GUIUtil
