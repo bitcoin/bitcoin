@@ -2781,18 +2781,15 @@ bool ProcessMessages(CNode* pfrom, CConnman& connman, const std::atomic<bool>& i
 
 class CompareInvMempoolOrder
 {
-    CTxMemPool *mp;
+    TxMemPoolSnapshot* mp;
 public:
-    explicit CompareInvMempoolOrder(CTxMemPool *_mempool)
-    {
-        mp = _mempool;
-    }
+    explicit CompareInvMempoolOrder(TxMemPoolSnapshot* mpIn) : mp(mpIn) {}
 
-    bool operator()(std::set<uint256>::iterator a, std::set<uint256>::iterator b)
+    bool operator()(std::set<uint256>::iterator& a, std::set<uint256>::iterator& b)
     {
         /* As std::make_heap produces a max-heap, we want the entries with the
          * fewest ancestors/highest fee to sort later. */
-        return mp->CompareDepthAndScore(*b, *a);
+        return mp->compareDepthAndScore(*b, *a);
     }
 };
 
@@ -3121,10 +3118,16 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
 
             // Determine transactions to relay
             if (fSendTrickle) {
+                static int64_t nInvTrickleTimeSum = 0; // sum of time spent here
+                static int64_t nInvTrickleCount = 0;   // sum of size of vInv
+                static int64_t nInvTrickleProcessedCount = 0;   // # of entries in nInvTx that were actually processed before hitting cap
+                static int64_t nInvTricklePasses = 0;  // # of times we entered this part of the code
+                int64_t nInvTrickleTimeStart = GetTimeMicros();
+                {
                 // Produce a vector with all candidates for sending
                 std::vector<std::set<uint256>::iterator> vInvTx;
                 vInvTx.reserve(pto->setInventoryTxToSend.size());
-                for (std::set<uint256>::iterator it = pto->setInventoryTxToSend.begin(); it != pto->setInventoryTxToSend.end(); it++) {
+                for (std::set<uint256>::iterator it = pto->setInventoryTxToSend.begin(); it != pto->setInventoryTxToSend.end(); ++it) {
                     vInvTx.push_back(it);
                 }
                 CAmount filterrate = 0;
@@ -3132,15 +3135,19 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
                     LOCK(pto->cs_feeFilter);
                     filterrate = pto->minFeeFilter;
                 }
+                // Make a mempool snapshot to avoid a high number of locks
+                TxMemPoolSnapshot mps = mempool.snapshot(vInvTx);
                 // Topologically and fee-rate sort the inventory we send for privacy and priority reasons.
                 // A heap is used so that not all items need sorting if only a few are being sent.
-                CompareInvMempoolOrder compareInvMempoolOrder(&mempool);
+                CompareInvMempoolOrder compareInvMempoolOrder(&mps);
                 std::make_heap(vInvTx.begin(), vInvTx.end(), compareInvMempoolOrder);
                 // No reason to drain out at many times the network's capacity,
                 // especially since we have many peers and some will draw much shorter delays.
                 unsigned int nRelayedTransactions = 0;
                 LOCK(pto->cs_filter);
+                nInvTrickleCount += vInvTx.size();
                 while (!vInvTx.empty() && nRelayedTransactions < INVENTORY_BROADCAST_MAX) {
+                    nInvTrickleProcessedCount++;
                     // Fetch the top element from the heap
                     std::pop_heap(vInvTx.begin(), vInvTx.end(), compareInvMempoolOrder);
                     std::set<uint256>::iterator it = vInvTx.back();
@@ -3153,7 +3160,7 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
                         continue;
                     }
                     // Not in the mempool anymore? don't bother sending it.
-                    auto txinfo = mempool.info(hash);
+                    auto txinfo = mps.info(hash);
                     if (!txinfo.tx) {
                         continue;
                     }
@@ -3182,6 +3189,13 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
                         vInv.clear();
                     }
                     pto->filterInventoryKnown.insert(hash);
+                }
+                }
+                int64_t nInvTrickleTimeEnd = GetTimeMicros();
+                nInvTrickleTimeSum += (nInvTrickleTimeEnd - nInvTrickleTimeStart);
+                nInvTricklePasses++;
+                if (nInvTricklePasses % 1000 == 0) {
+                    LogPrint(BCLog::BENCH, "    - inv.trickle: %.2fus/tx [%.2fus/seen, %.2f seen/pass, %.2fus/pass]\n", (float)nInvTrickleTimeSum / nInvTrickleCount, (float)nInvTrickleTimeSum / nInvTrickleProcessedCount, (float)nInvTrickleProcessedCount / nInvTricklePasses, (float)nInvTrickleTimeSum / nInvTricklePasses);
                 }
             }
         }
