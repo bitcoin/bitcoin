@@ -1067,13 +1067,13 @@ bool CTxMemPool::TransactionWithinChainLimit(const uint256& txid, size_t chainLi
 
 SaltedTxidHasher::SaltedTxidHasher() : k0(GetRand(std::numeric_limits<uint64_t>::max())), k1(GetRand(std::numeric_limits<uint64_t>::max())) {}
 
-TxMemPoolSnapshot CTxMemPool::snapshot(const std::vector<uint256>& hashes) const
+TxMemPoolSnapshot CTxMemPool::snapshot(const std::vector<std::set<uint256>::iterator>& hashes) const
 {
     indexed_transaction_set mapTxOut;
     {
         LOCK(cs);
-        for (const uint256& hash : hashes) {
-            auto it = mapTx.find(hash);
+        for (const auto& hit : hashes) {
+            auto it = mapTx.find(*hit);
             if (it != mapTx.end()) {
                 mapTxOut.insert(*it);
             }
