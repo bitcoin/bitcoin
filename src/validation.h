@@ -475,7 +475,7 @@ static const unsigned int REJECT_HIGHFEE = 0x100;
 CBlockFileInfo* GetBlockFileInfo(size_t n);
 
 /** Dump the mempool to disk. */
-void DumpMempool();
+bool DumpMempool();
 
 /** Load the mempool from disk. */
 bool LoadMempool();
