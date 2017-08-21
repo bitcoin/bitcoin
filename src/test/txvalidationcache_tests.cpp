@@ -29,7 +29,7 @@ ToMemPool(CMutableTransaction& tx)
     LOCK(cs_main);
 
     CValidationState state;
-    return AcceptToMemoryPool(mempool, state, MakeTransactionRef(tx), false, nullptr, nullptr, true, 0);
+    return AcceptToMemoryPool(mempool, state, MakeTransactionRef(tx), nullptr, nullptr, 0, ignore_rejects_type({rejectmsg_mempoolfull, rejectmsg_gratis}));
 }
 
 BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend, TestChain100Setup)

@@ -15,6 +15,7 @@
 #include "fs.h"
 #include "protocol.h" // For CMessageHeader::MessageStartChars
 #include "policy/feerate.h"
+#include "policy/policy.h"
 #include "script/script_error.h"
 #include "sync.h"
 #include "versionbits.h"
@@ -299,9 +300,13 @@ void PruneBlockFilesManual(int nManualPruneHeight);
 
 /** (try to) add transaction to memory pool
  * plTxnReplaced will be appended to with all transactions replaced from mempool **/
-bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransactionRef &tx, bool fLimitFree,
+bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransactionRef &tx,
                         bool* pfMissingInputs, std::list<CTransactionRef>* plTxnReplaced = nullptr,
-                        bool fOverrideMempoolLimit=false, const CAmount nAbsurdFee=0);
+                        const CAmount nAbsurdFee=0, const ignore_rejects_type& ignore_rejects=empty_ignore_rejects);
+
+static const std::string rejectmsg_absurdfee = "absurdly-high-fee";
+static const std::string rejectmsg_gratis = "fee-too-low-for-relay";
+static const std::string rejectmsg_mempoolfull = "fee-too-low-for-mempool-full";
 
 /** Convert CValidationState to a human-readable message for logging */
 std::string FormatStateMessage(const CValidationState &state);

@@ -8,6 +8,7 @@
 
 #include "amount.h"
 #include "policy/feerate.h"
+#include "policy/policy.h"
 #include "streams.h"
 #include "tinyformat.h"
 #include "ui_interface.h"
@@ -253,7 +254,7 @@ public:
     bool IsInMainChain() const { const CBlockIndex *pindexRet; return GetDepthInMainChain(pindexRet) > 0; }
     int GetBlocksToMaturity() const;
     /** Pass this transaction to the mempool. Fails if absolute fee exceeds absurd fee. */
-    bool AcceptToMemoryPool(const CAmount& nAbsurdFee, CValidationState& state);
+    bool AcceptToMemoryPool(const CAmount& nAbsurdFee, CValidationState& state, const ignore_rejects_type& ignore_rejects=empty_ignore_rejects);
     bool hashUnset() const { return (hashBlock.IsNull() || hashBlock == ABANDON_HASH); }
     bool isAbandoned() const { return (hashBlock == ABANDON_HASH); }
     void setAbandoned() { hashBlock = ABANDON_HASH; }
