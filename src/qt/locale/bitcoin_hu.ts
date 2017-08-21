@@ -390,8 +390,8 @@
         <translation>Bitcoin Unlimited</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>Fizetési kérelem (QR-kódot és "bitcoin:" URI azonosítót hoz létre)</translation>
+        <source>Request payments (generates QR codes and %1: URIs)</source>
+        <translation>Fizetési kérelem (QR-kódot és "%1:" URI azonosítót hoz létre)</translation>
     </message>
     <message>
         <source>&amp;About Bitcoin Unlimited</source>
@@ -410,8 +410,8 @@
         <translation>A használt fogadó címek és címkék megtekintése</translation>
     </message>
     <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>"bitcoin:" URI azonosító vagy fizetési kérelem megnyitása</translation>
+        <source>Open a %1: URI or payment request</source>
+        <translation>"%1:" URI azonosító vagy fizetési kérelem megnyitása</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>

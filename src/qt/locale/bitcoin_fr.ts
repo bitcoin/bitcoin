@@ -402,8 +402,8 @@
         <translation>Bitcoin Unlimited</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>Demander des paiements (génère des codes QR et des URIs bitcoin:)</translation>
+        <source>Request payments (generates QR codes and %1: URIs)</source>
+        <translation>Demander des paiements (génère des codes QR et des URIs %1:)</translation>
     </message>
     <message>
         <source>&amp;About Bitcoin Unlimited</source>
@@ -422,8 +422,8 @@
         <translation>Afficher la liste d'adresses de réception et d'étiquettes utilisées</translation>
     </message>
     <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>Ouvrir un URI bitcoin: ou une demande de paiement</translation>
+        <source>Open a %1: URI or payment request</source>
+        <translation>Ouvrir un URI %1: ou une demande de paiement</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>

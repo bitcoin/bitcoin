@@ -394,8 +394,8 @@
         <translation>Bitcoin Unlimited</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>Zahtevajte plačilo (ustvarite zahtevek s kodo QR in URI tipa bitcoin:)</translation>
+        <source>Request payments (generates QR codes and %1: URIs)</source>
+        <translation>Zahtevajte plačilo (ustvarite zahtevek s kodo QR in URI tipa %1:)</translation>
     </message>
     <message>
         <source>&amp;About Bitcoin Unlimited</source>
@@ -414,8 +414,8 @@
         <translation>Preglejte in uredite seznam naslovov, na katere ste kdaj prejeli plačila</translation>
     </message>
     <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>Izvedite plačilo iz zahtevka v datoteki ali iz URI tipa bitcoin:</translation>
+        <source>Open a %1: URI or payment request</source>
+        <translation>Izvedite plačilo iz zahtevka v datoteki ali iz URI tipa %1:</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>

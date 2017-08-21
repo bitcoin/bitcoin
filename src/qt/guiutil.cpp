@@ -135,7 +135,7 @@ void setupAmountWidget(QLineEdit *widget, QWidget *parent)
 bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
 {
     // return if URI is not valid or is no bitcoin: URI
-    if(!uri.isValid() || uri.scheme() != QString("bitcoin"))
+    if(!uri.isValid() || uri.scheme() != uriPrefix())
         return false;
 
     SendCoinsRecipient rv;
@@ -199,9 +199,9 @@ bool parseBitcoinURI(QString uri, SendCoinsRecipient *out)
     //
     //    Cannot handle this later, because bitcoin:// will cause Qt to see the part after // as host,
     //    which will lower-case it (and thus invalidate the address).
-    if(uri.startsWith("bitcoin://", Qt::CaseInsensitive))
-    {
-        uri.replace(0, 10, "bitcoin:");
+    const QString bigPrefix(uriPrefix() + "://");
+    if(uri.startsWith(bigPrefix, Qt::CaseInsensitive)) {
+        uri.replace(0, bigPrefix.length(), uriPrefix() + ':');
     }
     QUrl uriInstance(uri);
     return parseBitcoinURI(uriInstance, out);
@@ -209,7 +209,7 @@ bool parseBitcoinURI(QString uri, SendCoinsRecipient *out)
 
 QString formatBitcoinURI(const SendCoinsRecipient &info)
 {
-    QString ret = QString("bitcoin:%1").arg(info.address);
+    QString ret = uriPrefix() + ':'+ info.address;
     int paramCount = 0;
 
     if (info.amount)
@@ -954,6 +954,15 @@ QString formatPingTime(double dPingTime)
 QString formatTimeOffset(int64_t nTimeOffset)
 {
   return QString(QObject::tr("%1 s")).arg(QString::number((int)nTimeOffset, 10));
+}
+
+QString uriPrefix()
+{
+#ifdef BITCOIN_CASH
+    return "bitcoincash";
+#else
+    return "bitcoin";
+#endif
 }
 
 } // namespace GUIUtil

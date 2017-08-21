@@ -402,8 +402,8 @@
         <translation>Bitcoin Unlimited</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>要求付款(產生 QR Code 和 bitcoin 付款協議的資源識別碼: URI)</translation>
+        <source>Request payments (generates QR codes and %1: URIs)</source>
+        <translation>要求付款(產生 QR Code 和 %1 付款協議的資源識別碼: URI)</translation>
     </message>
     <message>
         <source>&amp;About Bitcoin Unlimited</source>
@@ -422,8 +422,8 @@
         <translation>顯示已使用過的收款位址和標記的清單</translation>
     </message>
     <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>開啓 bitcoin 協議的資源識別碼(URI)或付款要求</translation>
+        <source>Open a %1: URI or payment request</source>
+        <translation>開啓 %1 協議的資源識別碼(URI)或付款要求</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>

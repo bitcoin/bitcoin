@@ -510,7 +510,7 @@
     </message>
     <message>
         <location line="+160"/>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
+        <source>Request payments (generates QR codes and %1: URIs)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -535,7 +535,7 @@
     </message>
     <message>
         <location line="+3"/>
-        <source>Open a bitcoin: URI or payment request</source>
+        <source>Open a %1: URI or payment request</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

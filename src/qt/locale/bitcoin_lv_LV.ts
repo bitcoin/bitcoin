@@ -386,16 +386,16 @@
         <translation>Bitcoin Unlimited</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>Pieprasīt maksājumus (izveido QR kodu un bitcoin: URIs)</translation>
+        <source>Request payments (generates QR codes and %1: URIs)</source>
+        <translation>Pieprasīt maksājumus (izveido QR kodu un %1: URIs)</translation>
     </message>
     <message>
         <source>&amp;About Bitcoin Unlimited</source>
         <translation>Par &amp;Bitcoin Unlimited</translation>
     </message>
     <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>Atvērt bitcoin URI vai maksājuma pieprasījumu</translation>
+        <source>Open a %1: URI or payment request</source>
+        <translation>Atvērt %1 URI vai maksājuma pieprasījumu</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
