@@ -11,7 +11,7 @@
     </message>
     <message>
         <source>&amp;New</source>
-        <translation>नया</translation>
+        <translation>&amp;NEW</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>

@@ -2067,6 +2067,10 @@
         <translation>小额：</translation>
     </message>
     <message>
+        <source>Confirmation time target:</source>
+        <translation>确认时间目标：</translation>
+    </message>
+    <message>
         <source>Clear &amp;All</source>
         <translation>清除所有(&amp;A)</translation>
     </message>
