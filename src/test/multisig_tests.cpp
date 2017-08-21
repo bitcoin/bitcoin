@@ -186,6 +186,7 @@ BOOST_AUTO_TEST_CASE(multisig_Solver1)
     // to spend an escrow transaction.
     //
     CBasicKeyStore keystore, emptykeystore, partialkeystore;
+    CWatchOnlyStore watchOnlyStore;
     CKey key[3];
     CTxDestination keyaddr[3];
     for (int i = 0; i < 3; i++)
@@ -206,8 +207,8 @@ BOOST_AUTO_TEST_CASE(multisig_Solver1)
         CTxDestination addr;
         BOOST_CHECK(ExtractDestination(s, addr));
         BOOST_CHECK(addr == keyaddr[0]);
-        BOOST_CHECK(IsMine(keystore, s));
-        BOOST_CHECK(!IsMine(emptykeystore, s));
+        BOOST_CHECK(IsMine(keystore, watchOnlyStore, s));
+        BOOST_CHECK(!IsMine(emptykeystore, watchOnlyStore, s));
     }
     {
         std::vector<valtype> solutions;
@@ -219,8 +220,8 @@ BOOST_AUTO_TEST_CASE(multisig_Solver1)
         CTxDestination addr;
         BOOST_CHECK(ExtractDestination(s, addr));
         BOOST_CHECK(addr == keyaddr[0]);
-        BOOST_CHECK(IsMine(keystore, s));
-        BOOST_CHECK(!IsMine(emptykeystore, s));
+        BOOST_CHECK(IsMine(keystore, watchOnlyStore, s));
+        BOOST_CHECK(!IsMine(emptykeystore, watchOnlyStore, s));
     }
     {
         std::vector<valtype> solutions;
@@ -231,9 +232,9 @@ BOOST_AUTO_TEST_CASE(multisig_Solver1)
         BOOST_CHECK_EQUAL(solutions.size(), 4U);
         CTxDestination addr;
         BOOST_CHECK(!ExtractDestination(s, addr));
-        BOOST_CHECK(IsMine(keystore, s));
-        BOOST_CHECK(!IsMine(emptykeystore, s));
-        BOOST_CHECK(!IsMine(partialkeystore, s));
+        BOOST_CHECK(IsMine(keystore, watchOnlyStore, s));
+        BOOST_CHECK(!IsMine(emptykeystore, watchOnlyStore, s));
+        BOOST_CHECK(!IsMine(partialkeystore, watchOnlyStore, s));
     }
     {
         std::vector<valtype> solutions;
@@ -248,9 +249,9 @@ BOOST_AUTO_TEST_CASE(multisig_Solver1)
         BOOST_CHECK(addrs[0] == keyaddr[0]);
         BOOST_CHECK(addrs[1] == keyaddr[1]);
         BOOST_CHECK(nRequired == 1);
-        BOOST_CHECK(IsMine(keystore, s));
-        BOOST_CHECK(!IsMine(emptykeystore, s));
-        BOOST_CHECK(!IsMine(partialkeystore, s));
+        BOOST_CHECK(IsMine(keystore, watchOnlyStore, s));
+        BOOST_CHECK(!IsMine(emptykeystore, watchOnlyStore, s));
+        BOOST_CHECK(!IsMine(partialkeystore, watchOnlyStore, s));
     }
     {
         std::vector<valtype> solutions;
