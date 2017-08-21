@@ -2418,37 +2418,6 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
             view.addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(scriptType, uint160(hashBytes), hash, k), CAddressUnspentValue()));
         };
 
-        if (fAddressIndex) // Legacy code - remove
-        {
-            for (unsigned int k = tx.vout.size(); k-- > 0;)
-            {
-                const CTxOut &out = tx.vout[k];
-
-                if (out.scriptPubKey.IsPayToScriptHash())
-                {
-                    std::vector<unsigned char> hashBytes(out.scriptPubKey.begin()+2, out.scriptPubKey.begin()+22);
-
-                    // undo receiving activity
-                    view.addressIndex.push_back(std::make_pair(CAddressIndexKey(2, uint160(hashBytes), pindex->nHeight, i, hash, k, false), out.nValue));
-
-                    // undo unspent index
-                    view.addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(2, uint160(hashBytes), hash, k), CAddressUnspentValue()));
-
-                } else
-                if (out.scriptPubKey.IsPayToPublicKeyHash())
-                {
-                    std::vector<unsigned char> hashBytes(out.scriptPubKey.begin()+3, out.scriptPubKey.begin()+23);
-
-                    // undo receiving activity
-                    view.addressIndex.push_back(std::make_pair(CAddressIndexKey(1, uint160(hashBytes), pindex->nHeight, i, hash, k, false), out.nValue));
-
-                    // undo unspent index
-                    view.addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(1, uint160(hashBytes), hash, k), CAddressUnspentValue()));
-
-                };
-            };
-        };
-
         // Check that all outputs are available and match the outputs in the block itself
         // exactly.
         {
@@ -2558,35 +2527,6 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
                         fClean = false;
                     
                     const CTxIn input = tx.vin[j];
-
-                    if (fSpentIndex) // undo and delete the spent index
-                        view.spentIndex.push_back(std::make_pair(CSpentIndexKey(input.prevout.hash, input.prevout.n), CSpentIndexValue()));
-
-                    if (fAddressIndex)
-                    {
-                        const CTxOut &prevout = view.GetOutputFor(tx.vin[j]);
-                        
-                        if (prevout.scriptPubKey.IsPayToScriptHash()) {
-                            std::vector<unsigned char> hashBytes(prevout.scriptPubKey.begin()+2, prevout.scriptPubKey.begin()+22);
-
-                            // undo spending activity
-                            view.addressIndex.push_back(std::make_pair(CAddressIndexKey(2, uint160(hashBytes), pindex->nHeight, i, hash, j, true), prevout.nValue * -1));
-
-                            // restore unspent index
-                            view.addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(2, uint160(hashBytes), input.prevout.hash, input.prevout.n), CAddressUnspentValue(prevout.nValue, prevout.scriptPubKey, undo.nHeight)));
-                        } else
-                        if (prevout.scriptPubKey.IsPayToPublicKeyHash())
-                        {
-                            std::vector<unsigned char> hashBytes(prevout.scriptPubKey.begin()+3, prevout.scriptPubKey.begin()+23);
-
-                            // undo spending activity
-                            view.addressIndex.push_back(std::make_pair(CAddressIndexKey(1, uint160(hashBytes), pindex->nHeight, i, hash, j, true), prevout.nValue * -1));
-
-                            // restore unspent index
-                            view.addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(1, uint160(hashBytes), input.prevout.hash, input.prevout.n), CAddressUnspentValue(prevout.nValue, prevout.scriptPubKey, undo.nHeight)));
-
-                        };
-                    }; // if (fAddressIndex)
                 }
             }
         }
@@ -2942,35 +2882,6 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                             // and to find the amount and address from an input
                             view.spentIndex.push_back(std::make_pair(CSpentIndexKey(input.prevout.hash, input.prevout.n), CSpentIndexValue(txhash, j, pindex->nHeight, nValue, scriptType, hashAddress)));
                         };
-                    } else
-                    {
-                        const CTxOut &prevout = view.GetOutputFor(tx.vin[j]);
-                        uint160 hashBytes;
-                        int addressType;
-
-                        if (prevout.scriptPubKey.IsPayToScriptHash()) {
-                            hashBytes = uint160(std::vector <unsigned char>(prevout.scriptPubKey.begin()+2, prevout.scriptPubKey.begin()+22));
-                            addressType = 2;
-                        } else if (prevout.scriptPubKey.IsPayToPublicKeyHash()) {
-                            hashBytes = uint160(std::vector <unsigned char>(prevout.scriptPubKey.begin()+3, prevout.scriptPubKey.begin()+23));
-                            addressType = 1;
-                        } else {
-                            hashBytes.SetNull();
-                            addressType = 0;
-                        }
-
-                        if (fAddressIndex && addressType > 0) {
-                            // record spending activity
-                            view.addressIndex.push_back(std::make_pair(CAddressIndexKey(addressType, hashBytes, pindex->nHeight, i, txhash, j, true), prevout.nValue * -1));
-                            // remove address from unspent index
-                            view.addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(addressType, hashBytes, input.prevout.hash, input.prevout.n), CAddressUnspentValue()));
-                        }
-
-                        if (fSpentIndex) {
-                            // add the spent index to determine the txid and input that spent an output
-                            // and to find the amount and address from an input
-                            view.spentIndex.push_back(std::make_pair(CSpentIndexKey(input.prevout.hash, input.prevout.n), CSpentIndexValue(txhash, j, pindex->nHeight, prevout.nValue, addressType, hashBytes)));
-                        };
                     };
                 };
             };
@@ -3125,28 +3036,6 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                 view.addressIndex.push_back(std::make_pair(CAddressIndexKey(scriptType, uint160(hashBytes), pindex->nHeight, i, txhash, k, false), nValue));
                 // record unspent output
                 view.addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(scriptType, uint160(hashBytes), txhash, k), CAddressUnspentValue(nValue, *pScript, pindex->nHeight)));
-            };
-
-            for (unsigned int k = 0; k < tx.vout.size(); k++)
-            {
-                const CTxOut &out = tx.vout[k];
-
-                if (out.scriptPubKey.IsPayToScriptHash()) {
-                    std::vector<unsigned char> hashBytes(out.scriptPubKey.begin()+2, out.scriptPubKey.begin()+22);
-
-                    // record receiving activity
-                    view.addressIndex.push_back(std::make_pair(CAddressIndexKey(2, uint160(hashBytes), pindex->nHeight, i, txhash, k, false), out.nValue));
-                    // record unspent output
-                    view.addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(2, uint160(hashBytes), txhash, k), CAddressUnspentValue(out.nValue, out.scriptPubKey, pindex->nHeight)));
-
-                } else if (out.scriptPubKey.IsPayToPublicKeyHash()) {
-                    std::vector<unsigned char> hashBytes(out.scriptPubKey.begin()+3, out.scriptPubKey.begin()+23);
-
-                    // record receiving activity
-                    view.addressIndex.push_back(std::make_pair(CAddressIndexKey(1, uint160(hashBytes), pindex->nHeight, i, txhash, k, false), out.nValue));
-                    // record unspent output
-                    view.addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(1, uint160(hashBytes), txhash, k), CAddressUnspentValue(out.nValue, out.scriptPubKey, pindex->nHeight)));
-                };
             };
         }; // if (fAddressIndex)
         
@@ -3478,7 +3367,6 @@ bool FlushView(CCoinsViewCache *view, CValidationState& state, bool fDisconnecti
     view->addressIndex.clear();
     view->addressUnspentIndex.clear();
     view->spentIndex.clear();
-    
     
     if (fDisconnecting)
     {

@@ -8,13 +8,13 @@
 #
 
 import time
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_particl import ParticlTestFramework
 from test_framework.util import *
 from test_framework.script import *
 from test_framework.mininode import *
 import binascii
 
-class TxIndexTest(BitcoinTestFramework):
+class TxIndexTest(ParticlTestFramework):
 
     def setup_chain(self):
         print("Initializing test directory "+self.options.tmpdir)
@@ -23,11 +23,11 @@ class TxIndexTest(BitcoinTestFramework):
     def setup_network(self):
         self.nodes = []
         # Nodes 0/1 are "wallet" nodes
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug"]))
-        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug", "-txindex"]))
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug"], genfirstkey=False))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug", "-txindex"], genfirstkey=False))
         # Nodes 2/3 are used for testing
-        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug", "-txindex"]))
-        self.nodes.append(start_node(3, self.options.tmpdir, ["-debug", "-txindex"]))
+        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug", "-txindex"], genfirstkey=False))
+        self.nodes.append(start_node(3, self.options.tmpdir, ["-debug", "-txindex"], genfirstkey=False))
         connect_nodes(self.nodes[0], 1)
         connect_nodes(self.nodes[0], 2)
         connect_nodes(self.nodes[0], 3)
@@ -36,37 +36,47 @@ class TxIndexTest(BitcoinTestFramework):
         self.sync_all()
 
     def run_test(self):
-        print("Mining blocks...")
-        self.nodes[0].generate(105)
-        self.sync_all()
-
-        chain_height = self.nodes[1].getblockcount()
-        assert_equal(chain_height, 105)
-
+        
+        nodes = self.nodes
+        
+        # Stop staking
+        ro = nodes[0].reservebalance(True, 10000000)
+        ro = nodes[1].reservebalance(True, 10000000)
+        ro = nodes[2].reservebalance(True, 10000000)
+        ro = nodes[3].reservebalance(True, 10000000)
+        
+        ro = nodes[0].extkeyimportmaster("abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb")
+        assert(ro['account_id'] == 'aaaZf2qnNr5T7PWRmqgmusuu5ACnBcX2ev')
+        
+        ro = nodes[0].getinfo()
+        assert(ro['total_balance'] == 100000)
+        
+        
         print("Testing transaction index...")
-
-        #privkey = "cSdkPxkAjA4HDr5VHgsebAPDEh9Gyub4HK8UJr2DFGGqKKy4K5sG"
-        #address = "mgY65WSfEmsyYaYPQaXhmXMeBhwp4EcsQW"
-        addressHash = bytes([11,47,10,12,49,191,224,64,107,12,204,19,129,253,190,49,25,70,218,220])
-        scriptPubKey = CScript([OP_DUP, OP_HASH160, addressHash, OP_EQUALVERIFY, OP_CHECKSIG])
-        unspent = self.nodes[0].listunspent()
+        
+        ro = nodes[1].extkeyimportmaster('graine article givre hublot encadrer admirer stipuler capsule acajou paisible soutirer organe')
+        
+        addr1 = nodes[1].getnewaddress()
+        
+        txid = nodes[0].sendtoaddress(addr1, 5)
+        print("txid",txid)
         
         
-        tx = CTransaction()
-        amount = int(unspent[0]["amount"] * 10000000)
-        tx.vin = [CTxIn(COutPoint(int(unspent[0]["txid"], 16), unspent[0]["vout"]))]
-        tx.vout = [CTxOut(amount, scriptPubKey)]
-        tx.rehash()
-
-        signed_tx = self.nodes[0].signrawtransaction(binascii.hexlify(tx.serialize()).decode("utf-8"))
-        txid = self.nodes[0].sendrawtransaction(signed_tx["hex"], True)
-        self.nodes[0].generate(1)
-        self.sync_all()
-
         # Check verbose raw transaction results
-        verbose = self.nodes[3].getrawtransaction(unspent[0]["txid"], 1)
-        assert_equal(verbose["vout"][0]["valueSat"], 5000000000);
-        assert_equal(verbose["vout"][0]["value"], 50);
+        verbose = self.nodes[0].getrawtransaction(txid, 1)
+        print(json.dumps(verbose, indent=4, default=self.jsonDecimal))
+        assert(len(verbose["vout"]) == 2)
+        
+        str0 = json.dumps(verbose["vout"][0], indent=4, default=self.jsonDecimal)
+        str1 = json.dumps(verbose["vout"][1], indent=4, default=self.jsonDecimal)
+        if addr1 in str0:
+            assert_equal(verbose["vout"][0]["valueSat"], 500000000);
+            assert_equal(verbose["vout"][0]["value"], 5);
+        elif addr1 in str1:
+            assert_equal(verbose["vout"][1]["valueSat"], 500000000);
+            assert_equal(verbose["vout"][1]["value"], 5);
+        else:
+            assert(False)
 
         print("Passed\n")
 

@@ -30,7 +30,6 @@ Notes:
 #include <stdexcept>
 #include <errno.h>
 
-#include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem/operations.hpp>
@@ -608,7 +607,7 @@ void ThreadSecureMsg()
                     if (fDebugSmsg)
                         LogPrintf("Removing bucket %d \n", it->first);
 
-                    std::string fileName = boost::lexical_cast<std::string>(it->first);
+                    std::string fileName = std::to_string(it->first);
 
                     fs::path fullPath = GetDataDir() / "smsgstore" / (fileName + "_01.dat");
                     if (fs::exists(fullPath))
@@ -841,8 +840,12 @@ int SecureMsgBuildBucketSet()
             continue;
 
         std::string stime = fileName.substr(0, sep);
-
-        int64_t fileTime = boost::lexical_cast<int64_t>(stime);
+        int64_t fileTime;
+        if (!ParseInt64(stime, &fileTime))
+        {
+            LogPrintf("%s: ParseInt64 failed %s.\n", __func__, stime);
+            continue;
+        };
 
         if (fileTime < now - SMSG_RETENTION)
         {
@@ -2344,8 +2347,12 @@ bool SecureMsgScanBuckets()
             continue;
 
         std::string stime = fileName.substr(0, sep);
-
-        int64_t fileTime = boost::lexical_cast<int64_t>(stime);
+        int64_t fileTime;
+        if (!ParseInt64(stime, &fileTime))
+        {
+            LogPrintf("%s: ParseInt64 failed %s.\n", __func__, stime);
+            continue;
+        };
 
         if (fileTime < now - SMSG_RETENTION)
         {
@@ -2496,17 +2503,21 @@ int SecureMsgWalletUnlocked()
             continue;
 
         std::string stime = fileName.substr(0, sep);
-
-        int64_t fileTime = boost::lexical_cast<int64_t>(stime);
+        int64_t fileTime;
+        if (!ParseInt64(stime, &fileTime))
+        {
+            LogPrintf("%s: ParseInt64 failed %s.\n", __func__, stime);
+            continue;
+        };
 
         if (fileTime < now - SMSG_RETENTION)
         {
-            LogPrintf("Dropping wallet locked file %s, expired.\n", fileName.c_str());
+            LogPrintf("Dropping wallet locked file %s, expired.\n", fileName);
             try {
                 fs::remove((*itd).path());
             } catch (const boost::filesystem::filesystem_error &ex)
             {
-                LogPrintf("Error removing wl file %s - %s\n", fileName.c_str(), ex.what());
+                LogPrintf("Error removing wl file %s - %s\n", fileName, ex.what());
                 return 1;
             };
             continue;
@@ -2902,7 +2913,7 @@ int SecureMsgRetrieve(SecMsgToken &token, std::vector<uint8_t> &vchData)
 
     //LogPrintf("token.offset %d.\n", token.offset); // DEBUG
     int64_t bucket = token.timestamp - (token.timestamp % SMSG_BUCKET_LEN);
-    std::string fileName = boost::lexical_cast<std::string>(bucket) + "_01.dat";
+    std::string fileName = std::to_string(bucket) + "_01.dat";
     fs::path fullpath = pathSmsgDir / fileName;
 
     //LogPrintf("bucket %d.\n", bucket);
@@ -3100,7 +3111,7 @@ int SecureMsgStoreUnscanned(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPaylo
 
     int64_t bucket = psmsg->timestamp - (psmsg->timestamp % SMSG_BUCKET_LEN);
 
-    std::string fileName = boost::lexical_cast<std::string>(bucket) + "_01_wl.dat";
+    std::string fileName = std::to_string(bucket) + "_01_wl.dat";
     fs::path fullpath = pathSmsgDir / fileName;
 
     FILE *fp;
@@ -3196,7 +3207,7 @@ int SecureMsgStore(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload, bool 
         return 1;
     };
 
-    std::string fileName = boost::lexical_cast<std::string>(bucket) + "_01.dat";
+    std::string fileName = std::to_string(bucket) + "_01.dat";
     fs::path fullpath = pathSmsgDir / fileName;
 
     FILE *fp;

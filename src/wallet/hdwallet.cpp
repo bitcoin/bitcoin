@@ -6778,6 +6778,69 @@ int CHDWallet::ScanChainFromHeight(int nHeight)
     return 0;
 };
 
+bool CHDWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, bool overrideEstimatedFeeRate, const CFeeRate& specificFeeRate, int& nChangePosInOut, std::string& strFailReason, bool includeWatching, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, bool keepReserveKey, const CTxDestination& destChange)
+{
+    
+    std::vector<CRecipient> vecSend;
+
+    // Turn the txout set into a CRecipient vector
+    for (size_t idx = 0; idx < tx.vpout.size(); idx++)
+    {
+        const auto &txOut = tx.vpout[idx];
+        if (!(txOut->IsType(OUTPUT_STANDARD)))
+        {
+            strFailReason = _("Output isn't standard.");
+            return false;
+        };
+        
+        CRecipient recipient(*txOut->GetPScriptPubKey(), txOut->GetValue(), setSubtractFeeFromOutputs.count(idx) == 1);
+        vecSend.push_back(recipient);
+    };
+    
+    CCoinControl coinControl;
+    coinControl.destChange = destChange;
+    coinControl.fAllowOtherInputs = true;
+    coinControl.fAllowWatchOnly = includeWatching;
+    coinControl.fOverrideFeeRate = overrideEstimatedFeeRate;
+    coinControl.nFeeRate = specificFeeRate;
+
+    for (const auto &txin : tx.vin)
+        coinControl.Select(txin.prevout);
+    
+    CReserveKey reservekey(this);
+    CWalletTx wtx;
+    if (!CreateTransaction(vecSend, wtx, reservekey, nFeeRet, nChangePosInOut, strFailReason, &coinControl, false))
+        return false;
+
+    if (nChangePosInOut != -1)
+        tx.vpout.insert(tx.vpout.begin() + nChangePosInOut, wtx.tx->vpout[nChangePosInOut]);
+
+    // Copy output sizes from new transaction; they may have had the fee subtracted from them
+    for (unsigned int idx = 0; idx < tx.vpout.size(); idx++)
+        tx.vpout[idx]->SetValue(wtx.tx->vpout[idx]->GetValue());
+    
+    // Add new txins (keeping original txin scriptSig/order)
+    for (const auto &txin : wtx.tx->vin)
+    {
+        if (!coinControl.IsSelected(txin.prevout))
+        {
+            tx.vin.push_back(txin);
+
+            if (lockUnspents)
+            {
+              LOCK2(cs_main, cs_wallet);
+              LockCoin(txin.prevout);
+            }
+        }
+    }
+
+    // optionally keep the change output key
+    if (keepReserveKey)
+        reservekey.KeepKey();
+    
+    return true;
+};
+
 bool CHDWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosInOut,
     std::string& strFailReason, const CCoinControl *coinControl, bool sign)
 {
@@ -6804,7 +6867,20 @@ bool CHDWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalle
     };
     
     CTransactionRecord rtxTemp;
-    return (0 == AddStandardInputs(wtxNew, rtxTemp, vecSendB, sign, nFeeRet, coinControl, strFailReason));
+    
+    if (0 != AddStandardInputs(wtxNew, rtxTemp, vecSendB, sign, nFeeRet, coinControl, strFailReason))
+        return false;
+    
+    for (const auto &r : vecSendB)
+    {
+        if (r.fChange)
+        {
+            nChangePosInOut = r.n;
+            break;
+        };
+    };
+    
+    return true;
 };
 
 /**

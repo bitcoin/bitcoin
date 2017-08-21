@@ -3248,10 +3248,11 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
     if (!DecodeHexTx(tx, request.params[0].get_str(), true))
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
 
-    if (tx.vout.size() == 0)
+    size_t nOutputs = IsHDWallet(pwalletMain) ? tx.vpout.size() : tx.vout.size();
+    if (nOutputs == 0)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "TX must have at least one output");
 
-    if (changePosition != -1 && (changePosition < 0 || (unsigned int)changePosition > tx.vout.size()))
+    if (changePosition != -1 && (changePosition < 0 || (unsigned int)changePosition > nOutputs))
         throw JSONRPCError(RPC_INVALID_PARAMETER, "changePosition out of bounds");
 
     for (unsigned int idx = 0; idx < subtractFeeFromOutputs.size(); idx++) {
@@ -3260,7 +3261,7 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid parameter, duplicated position: %d", pos));
         if (pos < 0)
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid parameter, negative position: %d", pos));
-        if (pos >= int(tx.vout.size()))
+        if (pos >= int(nOutputs))
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid parameter, position too large: %d", pos));
         setSubtractFeeFromOutputs.insert(pos);
     }

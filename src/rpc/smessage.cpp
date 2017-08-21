@@ -5,7 +5,6 @@
 
 #include "rpc/server.h"
 
-#include <boost/lexical_cast.hpp>
 #include <algorithm>
 #include <string>
 
@@ -886,10 +885,10 @@ UniValue smsgbuckets(const JSONRPCRequest &request)
             {
                 std::set<SecMsgToken>& tokenSet = it->second.setTokens;
 
-                std::string sBucket = boost::lexical_cast<std::string>(it->first);
+                std::string sBucket = std::to_string(it->first);
                 std::string sFile = sBucket + "_01.dat";
 
-                std::string sHash = boost::lexical_cast<std::string>(it->second.hash);
+                std::string sHash = std::to_string(it->second.hash);
 
                 nBuckets++;
                 nMessages += tokenSet.size();
@@ -930,8 +929,8 @@ UniValue smsgbuckets(const JSONRPCRequest &request)
         }; // cs_smsg
 
 
-        std::string snBuckets = boost::lexical_cast<std::string>(nBuckets);
-        std::string snMessages = boost::lexical_cast<std::string>(nMessages);
+        std::string snBuckets = std::to_string(nBuckets);
+        std::string snMessages = std::to_string(nMessages);
 
         UniValue objM(UniValue::VOBJ);
         objM.pushKV("buckets", snBuckets);
@@ -949,7 +948,7 @@ UniValue smsgbuckets(const JSONRPCRequest &request)
 
             for (it = smsgBuckets.begin(); it != smsgBuckets.end(); ++it)
             {
-                std::string sFile = boost::lexical_cast<std::string>(it->first) + "_01.dat";
+                std::string sFile = std::to_string(it->first) + "_01.dat";
 
                 try {
                     boost::filesystem::path fullPath = GetDataDir() / "smsgstore" / sFile;

@@ -576,6 +576,12 @@ public:
     int ScanChainFromTime(int64_t nTimeStartScan);
     int ScanChainFromHeight(int nHeight);
     
+    /**
+     * Insert additional inputs into the transaction by
+     * calling CreateTransaction();
+     */
+    bool FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, bool overrideEstimatedFeeRate, const CFeeRate& specificFeeRate, int& nChangePosInOut, std::string& strFailReason, bool includeWatching, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, bool keepReserveKey = true, const CTxDestination& destChange = CNoDestination());
+    
     bool CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosInOut,
                            std::string& strFailReason, const CCoinControl *coinControl = NULL, bool sign = true);
     bool CommitTransaction(CWalletTx &wtxNew, CReserveKey &reservekey, CConnman *connman, CValidationState &state);

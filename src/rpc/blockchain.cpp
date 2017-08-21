@@ -108,6 +108,20 @@ UniValue blockheaderToJSON(const CBlockIndex* blockindex)
     return result;
 }
 
+void AddAddress(CScript *script, UniValue &uv)
+{
+    if (script->IsPayToScriptHash())
+    {
+        vector<unsigned char> hashBytes(script->begin()+2, script->begin()+22);
+        uv.push_back(Pair("address", CBitcoinAddress(CScriptID(uint160(hashBytes))).ToString()));
+    } else
+    if (script->IsPayToPublicKeyHash())
+    {
+        vector<unsigned char> hashBytes(script->begin()+3, script->begin()+23);
+        uv.push_back(Pair("address", CBitcoinAddress(CKeyID(uint160(hashBytes))).ToString()));
+    };
+}
+
 UniValue blockToDeltasJSON(const CBlock& block, const CBlockIndex* blockindex)
 {
     UniValue result(UniValue::VOBJ);
@@ -173,24 +187,44 @@ UniValue blockToDeltasJSON(const CBlock& block, const CBlockIndex* blockindex)
 
         UniValue outputs(UniValue::VARR);
 
-        for (unsigned int k = 0; k < tx.vout.size(); k++) {
-            const CTxOut &out = tx.vout[k];
+        
+        for (unsigned int k = 0; k < tx.vpout.size(); k++) {
+            const CTxOutBase *out = tx.vpout[k].get();
 
             UniValue delta(UniValue::VOBJ);
-
-            if (out.scriptPubKey.IsPayToScriptHash()) {
-                vector<unsigned char> hashBytes(out.scriptPubKey.begin()+2, out.scriptPubKey.begin()+22);
-                delta.push_back(Pair("address", CBitcoinAddress(CScriptID(uint160(hashBytes))).ToString()));
-
-            } else if (out.scriptPubKey.IsPayToPublicKeyHash()) {
-                vector<unsigned char> hashBytes(out.scriptPubKey.begin()+3, out.scriptPubKey.begin()+23);
-                delta.push_back(Pair("address", CBitcoinAddress(CKeyID(uint160(hashBytes))).ToString()));
-            } else {
-                continue;
-            }
-
-            delta.push_back(Pair("satoshis", out.nValue));
+            
             delta.push_back(Pair("index", (int)k));
+            
+            switch (out->GetType())
+            {
+                case OUTPUT_STANDARD:
+                    {
+                    delta.push_back(Pair("type", "standard"));
+                    CTxOutStandard *s = (CTxOutStandard*) out;
+                    delta.push_back(Pair("satoshis", s->nValue));
+                    AddAddress(&s->scriptPubKey, delta);
+                    }
+                    break;
+                case OUTPUT_CT:
+                    {
+                    CTxOutCT *s = (CTxOutCT*) out;
+                    delta.push_back(Pair("type", "blind"));
+                    delta.push_back(Pair("valueCommitment", HexStr(&s->commitment.data[0], &s->commitment.data[0]+33)));
+                    AddAddress(&s->scriptPubKey, delta);
+                    }
+                    break;
+                case OUTPUT_RINGCT:
+                    {
+                    CTxOutRingCT *s = (CTxOutRingCT*) out;
+                    delta.push_back(Pair("type", "anon"));
+                    delta.push_back(Pair("pubkey", HexStr(s->pk.begin(), s->pk.end())));
+                    delta.push_back(Pair("valueCommitment", HexStr(&s->commitment.data[0], &s->commitment.data[0]+33)));
+                    }
+                    break;
+                default:
+                    continue;
+                    break;
+            };
 
             outputs.push_back(delta);
         }

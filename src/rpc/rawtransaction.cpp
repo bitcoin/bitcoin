@@ -227,28 +227,6 @@ void TxToJSONExpanded(const CTransaction& tx, const uint256 hashBlock, UniValue&
         vout.push_back(out);
     };
     
-    for (unsigned int i = 0; i < tx.vout.size(); i++)
-    {
-        const CTxOut& txout = tx.vout[i];
-        UniValue out(UniValue::VOBJ);
-        out.push_back(Pair("value", ValueFromAmount(txout.nValue)));
-        out.push_back(Pair("valueSat", txout.nValue));
-        out.push_back(Pair("n", (int64_t)i));
-        UniValue o(UniValue::VOBJ);
-        ScriptPubKeyToJSON(txout.scriptPubKey, o, true);
-        out.push_back(Pair("scriptPubKey", o));
-
-        // Add spent information if spentindex is enabled
-        CSpentIndexValue spentInfo;
-        CSpentIndexKey spentKey(txid, i);
-        if (GetSpentIndex(spentKey, spentInfo)) {
-            out.push_back(Pair("spentTxId", spentInfo.txid.GetHex()));
-            out.push_back(Pair("spentIndex", (int)spentInfo.inputIndex));
-            out.push_back(Pair("spentHeight", spentInfo.blockHeight));
-        }
-
-        vout.push_back(out);
-    }
     entry.push_back(Pair("vout", vout));
 
     if (!hashBlock.IsNull())

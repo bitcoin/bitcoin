@@ -641,8 +641,8 @@ UniValue getaddressmempool(const JSONRPCRequest& request)
             "  }\n"
             "]\n"
             "\nExamples:\n"
-            + HelpExampleCli("getaddressmempool", "'{\"addresses\": [\"12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX\"]}'")
-            + HelpExampleRpc("getaddressmempool", "{\"addresses\": [\"12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX\"]}")
+            + HelpExampleCli("getaddressmempool", "'{\"addresses\": [\"Pb7FLL3DyaAVP2eGfRiEkj4U8ZJ3RHLY9g\"]}'")
+            + HelpExampleRpc("getaddressmempool", "{\"addresses\": [\"Pb7FLL3DyaAVP2eGfRiEkj4U8ZJ3RHLY9g\"]}")
         );
 
     std::vector<std::pair<uint160, int> > addresses;
@@ -712,8 +712,8 @@ UniValue getaddressutxos(const JSONRPCRequest& request)
             "  }\n"
             "]\n"
             "\nExamples:\n"
-            + HelpExampleCli("getaddressutxos", "'{\"addresses\": [\"12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX\"]}'")
-            + HelpExampleRpc("getaddressutxos", "{\"addresses\": [\"12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX\"]}")
+            + HelpExampleCli("getaddressutxos", "'{\"addresses\": [\"Pb7FLL3DyaAVP2eGfRiEkj4U8ZJ3RHLY9g\"]}'")
+            + HelpExampleRpc("getaddressutxos", "{\"addresses\": [\"Pb7FLL3DyaAVP2eGfRiEkj4U8ZJ3RHLY9g\"]}")
             );
 
     bool includeChainInfo = false;
@@ -799,8 +799,8 @@ UniValue getaddressdeltas(const JSONRPCRequest& request)
             "  }\n"
             "]\n"
             "\nExamples:\n"
-            + HelpExampleCli("getaddressdeltas", "'{\"addresses\": [\"12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX\"]}'")
-            + HelpExampleRpc("getaddressdeltas", "{\"addresses\": [\"12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX\"]}")
+            + HelpExampleCli("getaddressdeltas", "'{\"addresses\": [\"Pb7FLL3DyaAVP2eGfRiEkj4U8ZJ3RHLY9g\"]}'")
+            + HelpExampleRpc("getaddressdeltas", "{\"addresses\": [\"Pb7FLL3DyaAVP2eGfRiEkj4U8ZJ3RHLY9g\"]}")
         );
 
 
@@ -916,8 +916,8 @@ UniValue getaddressbalance(const JSONRPCRequest& request)
             "  \"received\"  (string) The total number of satoshis received (including change)\n"
             "}\n"
             "\nExamples:\n"
-            + HelpExampleCli("getaddressbalance", "'{\"addresses\": [\"12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX\"]}'")
-            + HelpExampleRpc("getaddressbalance", "{\"addresses\": [\"12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX\"]}")
+            + HelpExampleCli("getaddressbalance", "'{\"addresses\": [\"Pb7FLL3DyaAVP2eGfRiEkj4U8ZJ3RHLY9g\"]}'")
+            + HelpExampleRpc("getaddressbalance", "{\"addresses\": [\"Pb7FLL3DyaAVP2eGfRiEkj4U8ZJ3RHLY9g\"]}")
         );
 
     std::vector<std::pair<uint160, int> > addresses;
@@ -949,7 +949,6 @@ UniValue getaddressbalance(const JSONRPCRequest& request)
     result.push_back(Pair("received", received));
 
     return result;
-
 }
 
 UniValue getaddresstxids(const JSONRPCRequest& request)
@@ -974,8 +973,8 @@ UniValue getaddresstxids(const JSONRPCRequest& request)
             "  ,...\n"
             "]\n"
             "\nExamples:\n"
-            + HelpExampleCli("getaddresstxids", "'{\"addresses\": [\"12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX\"]}'")
-            + HelpExampleRpc("getaddresstxids", "{\"addresses\": [\"12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX\"]}")
+            + HelpExampleCli("getaddresstxids", "'{\"addresses\": [\"Pb7FLL3DyaAVP2eGfRiEkj4U8ZJ3RHLY9g\"]}'")
+            + HelpExampleRpc("getaddresstxids", "{\"addresses\": [\"Pb7FLL3DyaAVP2eGfRiEkj4U8ZJ3RHLY9g\"]}")
         );
 
     std::vector<std::pair<uint160, int> > addresses;
@@ -1032,7 +1031,6 @@ UniValue getaddresstxids(const JSONRPCRequest& request)
     }
 
     return result;
-
 }
 
 UniValue getspentinfo(const JSONRPCRequest& request)

@@ -9,11 +9,11 @@
 
 import time
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_particl import ParticlTestFramework
 from test_framework.util import *
 
 
-class TimestampIndexTest(BitcoinTestFramework):
+class TimestampIndexTest(ParticlTestFramework):
 
     def setup_chain(self):
         print("Initializing test directory "+self.options.tmpdir)
@@ -22,11 +22,11 @@ class TimestampIndexTest(BitcoinTestFramework):
     def setup_network(self):
         self.nodes = []
         # Nodes 0/1 are "wallet" nodes
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug"]))
-        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug", "-timestampindex"]))
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug"], genfirstkey=False))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug", "-timestampindex"], genfirstkey=False))
         # Nodes 2/3 are used for testing
-        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug"]))
-        self.nodes.append(start_node(3, self.options.tmpdir, ["-debug", "-timestampindex"]))
+        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug"], genfirstkey=False))
+        self.nodes.append(start_node(3, self.options.tmpdir, ["-debug", "-timestampindex"], genfirstkey=False))
         connect_nodes(self.nodes[0], 1)
         connect_nodes(self.nodes[0], 2)
         connect_nodes(self.nodes[0], 3)
@@ -34,26 +34,54 @@ class TimestampIndexTest(BitcoinTestFramework):
         self.is_network_split = False
         self.sync_all()
 
-    def run_test(self):
-        print("Mining 25 blocks...")
-        blockhashes = self.nodes[0].generate(25)
-        time.sleep(3)
-        print("Mining 25 blocks...")
-        blockhashes.extend(self.nodes[0].generate(25))
-        time.sleep(3)
-        print("Mining 25 blocks...")
-        blockhashes.extend(self.nodes[0].generate(25))
+    def stakeToHeight(self, height, fSync=True):
+        ro = self.nodes[0].reservebalance(False)
+        assert(self.wait_for_height(self.nodes[0], height))
+        ro = self.nodes[0].reservebalance(True, 10000000)
+        if not fSync:
+            return
         self.sync_all()
+        assert(self.nodes[1].getblockcount() == height)
+
+    def run_test(self):
+        
+        nodes = self.nodes
+        
+        # Stop staking
+        ro = nodes[0].reservebalance(True, 10000000)
+        ro = nodes[1].reservebalance(True, 10000000)
+        ro = nodes[2].reservebalance(True, 10000000)
+        ro = nodes[3].reservebalance(True, 10000000)
+        
+        ro = nodes[0].extkeyimportmaster("abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb")
+        assert(ro['account_id'] == 'aaaZf2qnNr5T7PWRmqgmusuu5ACnBcX2ev')
+        
+        ro = nodes[0].getinfo()
+        assert(ro['total_balance'] == 100000)
+        
+        blockhashes = []
+        self.stakeToHeight(1, False)
+        blockhashes.append(nodes[0].getblockhash(1))
+        time.sleep(3)
+        
+        self.stakeToHeight(2, False)
+        blockhashes.append(nodes[0].getblockhash(2))
+        time.sleep(3)
+        
+        self.stakeToHeight(3, False)
+        blockhashes.append(nodes[0].getblockhash(3))
+        self.sync_all()
+        
         low = self.nodes[1].getblock(blockhashes[0])["time"]
         high = low + 76
-
+        
         print("Checking timestamp index...")
         hashes = self.nodes[1].getblockhashes(high, low)
 
         assert_equal(len(hashes), len(blockhashes))
-
+        
         assert_equal(hashes, blockhashes)
-
+        
         print("Passed\n")
 
 

@@ -51,7 +51,7 @@ extern boost::signals2::signal<void (SecMsgStored& inboxHdr)> NotifySecMsgInboxC
 // Outbox db changed, called with lock cs_smsgDB held.
 extern boost::signals2::signal<void (SecMsgStored& outboxHdr)> NotifySecMsgOutboxChanged;
 
-// Wallet Unlocked, called after all messages received while locked have been processed.
+// Wallet unlocked, called after all messages received while locked have been processed.
 extern boost::signals2::signal<void ()> NotifySecMsgWalletUnlocked;
 
 class SecMsgBucket;

@@ -8,13 +8,13 @@
 #
 
 import time
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_particl import ParticlTestFramework
 from test_framework.util import *
 from test_framework.script import *
 from test_framework.mininode import *
 import binascii
 
-class SpentIndexTest(BitcoinTestFramework):
+class SpentIndexTest(ParticlTestFramework):
 
     def setup_chain(self):
         print("Initializing test directory "+self.options.tmpdir)
@@ -23,11 +23,11 @@ class SpentIndexTest(BitcoinTestFramework):
     def setup_network(self):
         self.nodes = []
         # Nodes 0/1 are "wallet" nodes
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug"]))
-        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug", "-spentindex"]))
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug"], genfirstkey=False))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug", "-spentindex"], genfirstkey=False))
         # Nodes 2/3 are used for testing
-        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug", "-spentindex"]))
-        self.nodes.append(start_node(3, self.options.tmpdir, ["-debug", "-spentindex", "-txindex"]))
+        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug", "-spentindex"], genfirstkey=False))
+        self.nodes.append(start_node(3, self.options.tmpdir, ["-debug", "-spentindex", "-txindex"], genfirstkey=False))
         connect_nodes(self.nodes[0], 1)
         connect_nodes(self.nodes[0], 2)
         connect_nodes(self.nodes[0], 3)
@@ -35,105 +35,138 @@ class SpentIndexTest(BitcoinTestFramework):
         self.is_network_split = False
         self.sync_all()
 
-    def run_test(self):
-        print("Mining blocks...")
-        self.nodes[0].generate(105)
+    def stakeToHeight(self, height, fSync=True):
+        ro = self.nodes[0].reservebalance(False)
+        assert(self.wait_for_height(self.nodes[0], height))
+        ro = self.nodes[0].reservebalance(True, 10000000)
+        if not fSync:
+            return
         self.sync_all()
+        assert(self.nodes[1].getblockcount() >= height)
 
-        chain_height = self.nodes[1].getblockcount()
-        assert_equal(chain_height, 105)
+    def stakeBlocks(self, nBlocks):
+        height = self.nodes[0].getblockcount()
+        
+        self.stakeToHeight(height + nBlocks)
 
+    def run_test(self):
+        
+        nodes = self.nodes
+        
+        # Stop staking
+        ro = nodes[0].reservebalance(True, 10000000)
+        ro = nodes[1].reservebalance(True, 10000000)
+        ro = nodes[2].reservebalance(True, 10000000)
+        ro = nodes[3].reservebalance(True, 10000000)
+        
+        
+        ro = nodes[0].extkeyimportmaster("abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb")
+        assert(ro['account_id'] == 'aaaZf2qnNr5T7PWRmqgmusuu5ACnBcX2ev')
+        
+        ro = nodes[0].getinfo()
+        assert(ro['total_balance'] == 100000)
+        
+        ro = nodes[1].extkeyimportmaster('graine article givre hublot encadrer admirer stipuler capsule acajou paisible soutirer organe')
+        ro = nodes[2].extkeyimportmaster('sección grito médula hecho pauta posada nueve ebrio bruto buceo baúl mitad')
+        ro = nodes[3].extkeyimportmaster('けっこん　ゆそう　へいねつ　しあわせ　ちまた　きつね　たんたい　むかし　たかい　のいず　こわもて　けんこう')
+        
+        addrs = []
+        addrs.append(nodes[1].getnewaddress())
+        addrs.append(nodes[1].getnewaddress())
+        
+        
         # Check that
         print("Testing spent index...")
-
-        feeSatoshis = 10000
-        privkey = "7tj43pCYwVEk9yXEZ4hHwa8DCqNNs9Fks3uKKB9wUupTySdp4CPA"
-        address = "pVuJyGXgD387GcWzaWrwAQG9bEkR3zrEdX"
-        addressHash = bytes([11,47,10,12,49,191,224,64,107,12,204,19,129,253,190,49,25,70,218,220])
-        scriptPubKey = CScript([OP_DUP, OP_HASH160, addressHash, OP_EQUALVERIFY, OP_CHECKSIG])
-        unspent = self.nodes[0].listunspent()
-        tx = CTransaction()
-        amount = int(unspent[0]["amount"] * 100000000 - feeSatoshis)
-        tx.vin = [CTxIn(COutPoint(int(unspent[0]["txid"], 16), unspent[0]["vout"]))]
-        tx.vout = [CTxOut(amount, scriptPubKey)]
-        tx.rehash()
-
-        signed_tx = self.nodes[0].signrawtransaction(binascii.hexlify(tx.serialize()).decode("utf-8"))
-        txid = self.nodes[0].sendrawtransaction(signed_tx["hex"], True)
-        self.nodes[0].generate(1)
-        self.sync_all()
-
+        
+        unspent = nodes[0].listunspent()
+        
+        
+        #{\"txid\":\"id\",\"vout\":n}
+        inputs = [{"txid":unspent[0]["txid"],"vout":unspent[0]["vout"]},]
+        outputs = {addrs[0]:1}
+        tx = nodes[0].createrawtransaction(inputs,outputs)
+        
+        # Add change output
+        txfunded = nodes[0].fundrawtransaction(tx)
+        
+        txsigned = nodes[0].signrawtransaction(txfunded['hex'])
+        
+        txd = nodes[0].decoderawtransaction(txsigned['hex'])
+        
+        sent_txid = nodes[0].sendrawtransaction(txsigned['hex'], True)
+        
+        
+        
+        self.stakeBlocks(1)
+        
         print("Testing getspentinfo method...")
 
         # Check that the spentinfo works standalone
         info = self.nodes[1].getspentinfo({"txid": unspent[0]["txid"], "index": unspent[0]["vout"]})
-        assert_equal(info["txid"], txid)
+        assert_equal(info["txid"], sent_txid)
         assert_equal(info["index"], 0)
-        assert_equal(info["height"], 106)
-
+        assert_equal(info["height"], 1)
+        
         print("Testing getrawtransaction method...")
 
         # Check that verbose raw transaction includes spent info
         txVerbose = self.nodes[3].getrawtransaction(unspent[0]["txid"], 1)
-        assert_equal(txVerbose["vout"][unspent[0]["vout"]]["spentTxId"], txid)
+        assert_equal(txVerbose["vout"][unspent[0]["vout"]]["spentTxId"], sent_txid)
         assert_equal(txVerbose["vout"][unspent[0]["vout"]]["spentIndex"], 0)
-        assert_equal(txVerbose["vout"][unspent[0]["vout"]]["spentHeight"], 106)
-
-        # Check that verbose raw transaction includes input values
-        txVerbose2 = self.nodes[3].getrawtransaction(txid, 1)
-        assert_equal(float(txVerbose2["vin"][0]["value"]), (amount + feeSatoshis) / 100000000)
-        assert_equal(txVerbose2["vin"][0]["valueSat"], amount + feeSatoshis)
-
+        assert_equal(txVerbose["vout"][unspent[0]["vout"]]["spentHeight"], 1)
+        
         # Check that verbose raw transaction includes address values and input values
-        privkey2 = "7tj43pCYwVEk9yXEZ4hHwa8DCqNNs9Fks3uKKB9wUupTySdp4CPA"
-        address2 = "pVuJyGXgD387GcWzaWrwAQG9bEkR3zrEdX"
-        addressHash2 = bytes([11,47,10,12,49,191,224,64,107,12,204,19,129,253,190,49,25,70,218,220])
-        scriptPubKey2 = CScript([OP_DUP, OP_HASH160, addressHash2, OP_EQUALVERIFY, OP_CHECKSIG])
-        tx2 = CTransaction()
-        tx2.vin = [CTxIn(COutPoint(int(txid, 16), 0))]
-        amount = int(amount - feeSatoshis);
-        tx2.vout = [CTxOut(amount, scriptPubKey2)]
-        tx.rehash()
-        self.nodes[0].importprivkey(privkey)
-        signed_tx2 = self.nodes[0].signrawtransaction(binascii.hexlify(tx2.serialize()).decode("utf-8"))
-        txid2 = self.nodes[0].sendrawtransaction(signed_tx2["hex"], True)
-
+        txVerbose2 = self.nodes[3].getrawtransaction(sent_txid, 1)
+        assert_equal(txVerbose2["vin"][0]["address"], 'pcwP4hTtaMb7n4urszBTsgxWLdNLU4yNGz')
+        assert(float(txVerbose2["vin"][0]["value"]) > 0)
+        assert(txVerbose2["vin"][0]["valueSat"] > 0)
+        
+        
         # Check the mempool index
+        txid2 = nodes[0].sendtoaddress(addrs[1], 5)
         self.sync_all()
         txVerbose3 = self.nodes[1].getrawtransaction(txid2, 1)
-        assert_equal(txVerbose3["vin"][0]["address"], address2)
-        assert_equal(txVerbose3["vin"][0]["valueSat"], amount + feeSatoshis)
-        assert_equal(float(txVerbose3["vin"][0]["value"]), (amount + feeSatoshis) / 100000000)
-
-
+        assert(len(txVerbose3["vin"][0]["address"]) > 0)
+        assert(float(txVerbose3["vin"][0]["value"]) > 0)
+        assert(txVerbose3["vin"][0]["valueSat"] > 0)
+        
+        
         # Check the database index
-        block_hash = self.nodes[0].generate(1)
-        self.sync_all()
-
+        self.stakeBlocks(1)
+        
+        block1_hash = nodes[1].getblockhash(nodes[1].getblockcount())
+        ro = nodes[1].getblock(block1_hash)
+        assert(txid2 in ro['tx'])
+        
+        
         txVerbose4 = self.nodes[3].getrawtransaction(txid2, 1)
-        assert_equal(txVerbose4["vin"][0]["address"], address2)
-        assert_equal(txVerbose4["vin"][0]["valueSat"], amount + feeSatoshis)
-        assert_equal(float(txVerbose4["vin"][0]["value"]), (amount + feeSatoshis) / 100000000)
-
+        assert(len(txVerbose4["vin"][0]["address"]) > 0)
+        assert(float(txVerbose4["vin"][0]["value"]) > 0)
+        assert(txVerbose4["vin"][0]["valueSat"] > 0)
+        
+        
         # Check block deltas
         print("Testing getblockdeltas...")
 
-        block = self.nodes[3].getblockdeltas(block_hash[0])
+        block = nodes[3].getblockdeltas(block1_hash)
         assert_equal(len(block["deltas"]), 2)
+        
         assert_equal(block["deltas"][0]["index"], 0)
-        assert_equal(len(block["deltas"][0]["inputs"]), 0)
-        assert_equal(len(block["deltas"][0]["outputs"]), 0)
+        assert_equal(len(block["deltas"][0]["inputs"]), 1)
+        assert_equal(len(block["deltas"][0]["outputs"]), 2)
+        
         assert_equal(block["deltas"][1]["index"], 1)
         assert_equal(block["deltas"][1]["txid"], txid2)
-        assert_equal(block["deltas"][1]["inputs"][0]["index"], 0)
-        assert_equal(block["deltas"][1]["inputs"][0]["address"], "pVuJyGXgD387GcWzaWrwAQG9bEkR3zrEdX")
-        assert_equal(block["deltas"][1]["inputs"][0]["satoshis"], (amount + feeSatoshis) * -1)
-        assert_equal(block["deltas"][1]["inputs"][0]["prevtxid"], txid)
-        assert_equal(block["deltas"][1]["inputs"][0]["prevout"], 0)
-        assert_equal(block["deltas"][1]["outputs"][0]["index"], 0)
-        assert_equal(block["deltas"][1]["outputs"][0]["address"], "pVuJyGXgD387GcWzaWrwAQG9bEkR3zrEdX")
-        assert_equal(block["deltas"][1]["outputs"][0]["satoshis"], amount)
-
+        assert_equal(len(block["deltas"][1]["inputs"]), 1)
+        assert_equal(len(block["deltas"][1]["outputs"]), 2)
+        
+        fFound = False
+        for out in block["deltas"][1]["outputs"]:
+            if out["satoshis"] == 500000000 and out["address"] == addrs[1]:
+                fFound = True
+                break
+        assert(fFound)
+        
         print("Passed\n")
 
 

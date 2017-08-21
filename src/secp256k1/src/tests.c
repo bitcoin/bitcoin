@@ -39,7 +39,8 @@
 # endif
 #endif
 
-static int count = 64;
+/*static int count = 64;*/
+static int count = 32;
 static secp256k1_context *ctx = NULL;
 
 static void counting_illegal_callback_fn(const char* str, void* data) {
