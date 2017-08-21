@@ -8,7 +8,7 @@ Bitcoin Core version *0.15.0* is now available from:
 This is a new major version release, including new features, various bugfixes
 and performance improvements, as well as updated translations.
 
-Please report bugs using the issue tracker at github:
+Please report bugs using the issue tracker at GitHub:
 
   <https://github.com/bitcoin/bitcoin/issues>
 
@@ -292,6 +292,7 @@ Thanks to everyone who directly contributed to this release:
 - Allan Doensen
 - Andres G. Aragoneses
 - Andrew Chow
+- Angel Leon
 - Awemany
 - Bob McElrath
 - Brian McMichael
@@ -306,7 +307,7 @@ Thanks to everyone who directly contributed to this release:
 - Daniel Cousens
 - darksh1ne
 - Dimitris Tsapakidis
-- Eric Shaw Jr
+- Eric Shaw
 - Evan Klitzke
 - fanquake
 - Felix Weis
@@ -314,7 +315,6 @@ Thanks to everyone who directly contributed to this release:
 - Greg Griffith
 - Gregory Maxwell
 - Gregory Sanders
-- gubatron
 - Ian Kelling
 - Jack Grigg
 - James Evans
@@ -326,15 +326,12 @@ Thanks to everyone who directly contributed to this release:
 - Johnathan Corgan
 - John Newbery
 - Jonas Schnelli
-- jonnynewbs
 - Jorge Timón
 - Kalle Alm
 - Karl-Johan Alm
-- Kewde
-- keystrike
+- kewde
 - KibbledJiveElkZoo
-- Kibbled Jive Elk Zoo
-- kirit93
+- Kirit Thadaka
 - kobake
 - Kyle Honeycutt
 - Lawrence Nahum
@@ -354,7 +351,6 @@ Thanks to everyone who directly contributed to this release:
 - Mikerah
 - Mike van Rossum
 - Mitchell Cash
-- NicolasDorier
 - Nicolas Dorier
 - Patrick Strateman
 - Pavel Janík
