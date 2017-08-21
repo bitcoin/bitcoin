@@ -133,7 +133,7 @@ bool ShutdownRequested()
  * chainstate, while keeping user interface out of the common library, which is shared
  * between bitcoind, and bitcoin-qt and non-server tools.
 */
-class CCoinsViewErrorCatcher : public CCoinsViewBacked
+class CCoinsViewErrorCatcher final : public CCoinsViewBacked
 {
 public:
     explicit CCoinsViewErrorCatcher(CCoinsView* view) : CCoinsViewBacked(view) {}
