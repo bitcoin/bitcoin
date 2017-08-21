@@ -29,6 +29,7 @@ def get_sub_array_from_array(object_array, to_match):
 class ReceivedByTest(BitcoinTestFramework):
 
     def setup_nodes(self):
+        enable_mocktime()
         return start_nodes(4, self.options.tmpdir)
 
     def run_test(self):
@@ -36,8 +37,6 @@ class ReceivedByTest(BitcoinTestFramework):
         listreceivedbyaddress Test
         '''
         # Send from node 0 to 1
-        self.nodes[0].generate(10)
-        self.sync_all()
         addr = self.nodes[1].getnewaddress()
         txid = self.nodes[0].sendtoaddress(addr, 0.1)
         self.sync_all()
