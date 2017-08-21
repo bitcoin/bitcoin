@@ -7,6 +7,7 @@
 #ifndef BITCOIN_SCRIPT_INTERPRETER_H
 #define BITCOIN_SCRIPT_INTERPRETER_H
 
+#include "clientversion.h"
 #include "script_error.h"
 #include "primitives/transaction.h"
 
@@ -139,7 +140,11 @@ protected:
     virtual bool VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& vchPubKey, const uint256& sighash) const;
 
 public:
+#ifdef BITCOIN_CASH
     TransactionSignatureChecker(const CTransaction* txToIn, unsigned int nInIn, const CAmount &amountIn, unsigned int flags=SCRIPT_ENABLE_SIGHASH_FORKID) : txTo(txToIn), nIn(nInIn), amount(amountIn), nBytesHashed(0), nSigops(0), nFlags(flags) {}
+#else
+    TransactionSignatureChecker(const CTransaction* txToIn, unsigned int nInIn, const CAmount &amountIn, unsigned int flags=0) : txTo(txToIn), nIn(nInIn), amount(amountIn), nBytesHashed(0), nSigops(0), nFlags(flags) {}
+#endif
     bool CheckSig(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode) const;
     bool CheckLockTime(const CScriptNum& nLockTime) const;
     bool CheckSequence(const CScriptNum& nSequence) const;
@@ -153,7 +158,11 @@ private:
     const CTransaction txTo;
 
 public:
+#ifdef BITCOIN_CASH
     MutableTransactionSignatureChecker(const CMutableTransaction* txToIn, unsigned int nInIn, const CAmount &amount, unsigned int flags=SCRIPT_ENABLE_SIGHASH_FORKID) : TransactionSignatureChecker(&txTo, nInIn, amount, flags), txTo(*txToIn) {}
+#else
+    MutableTransactionSignatureChecker(const CMutableTransaction* txToIn, unsigned int nInIn, const CAmount &amount, unsigned int flags=0) : TransactionSignatureChecker(&txTo, nInIn, amount, flags), txTo(*txToIn) {}
+#endif
 };
 
 bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* error = NULL, unsigned char* sighashtype=NULL);

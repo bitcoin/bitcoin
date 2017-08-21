@@ -13,6 +13,7 @@
 #include "chainparams.h"
 #include "checkpoints.h"
 #include "checkqueue.h"
+#include "clientversion.h"
 #include "connmgr.h"
 #include "consensus/consensus.h"
 #include "consensus/merkle.h"
@@ -6378,7 +6379,15 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
                 pfrom->PushMessage(NetMsgType::REJECT, strCommand, (unsigned char)state.GetRejectCode(),
                     state.GetRejectReason().substr(0, MAX_REJECT_MESSAGE_LENGTH), inv.hash);
             if (nDoS > 0)
+            {
+#ifdef BITCOIN_CASH
+                // this is just temporary and will be taken out on the next release.
+                if (pfrom->nVersion != 80002)
+                    dosMan.Misbehaving(pfrom, nDoS);
+#else
                 dosMan.Misbehaving(pfrom, nDoS);
+#endif
+            }
         }
         FlushStateToDisk(state, FLUSH_STATE_PERIODIC);
 

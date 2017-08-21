@@ -66,6 +66,9 @@ double_opts = set()  # BU: added for checking validity of -- opts
 passOn = ""
 showHelp = False  # if we need to print help
 p = re.compile("^--")
+p_parallel = re.compile('^-parallel=')
+run_parallel = 4
+
 # some of the single-dash options applicable only to this runner script
 # are also allowed in double-dash format (but are not passed on to the
 # test scripts themselves)
@@ -119,6 +122,9 @@ for arg in sys.argv[1:]:
                     passOn += " " + arg
         # add it to double_opts only for validation
         double_opts.add(arg)
+    elif p_parallel.match(arg):
+        run_parallel = int(arg.split(sep='=', maxsplit=1)[1])
+
     else:
         # this is for single-dash options only
         # they are interpreted only by this script
@@ -255,9 +261,7 @@ def show_wrapper_options():
 def runtests():
     global passOn
     coverage = None
-    execution_time = {}
-    test_passed = {}
-    test_failure_info = {}
+    test_passed = []
     disabled = []
     skipped = []
     tests_to_run = []
@@ -347,52 +351,33 @@ def runtests():
                     trimmed_tests_to_run.append(t)
             tests_to_run = trimmed_tests_to_run
 
-        # now run the tests
-        p = re.compile(" -h| --help| -help")
-        for t in tests_to_run:
-            scriptname=re.sub(".py$", "", str(t).split(' ')[0])
-            fullscriptcmd=str(t)
+        if len(tests_to_run) > 1 and run_parallel:
+            # Populate cache
+            subprocess.check_output([RPC_TESTS_DIR + 'create_cache.py'] + [flags])
 
-            # print the wrapper-specific help options
-            if showHelp:
-                show_wrapper_options()
+        tests_to_run = list(map(str,tests_to_run))
+        max_len_name = len(max(tests_to_run, key=len))
+        time_sum = 0
+        time0 = time.time()
+        job_queue = RPCTestHandler(run_parallel, tests_to_run, flags)
+        results = BOLD[1] + "%s | %s | %s\n\n" % ("TEST".ljust(max_len_name), "PASSED", "DURATION") + BOLD[0]
+        all_passed = True
 
-            if bad_opts_found:
-                if not ' --help' in passOn:
-                    passOn += ' --help'
+        for _ in range(len(tests_to_run)):
+            (name, stdout, stderr, passed, duration) = job_queue.get_next()
+            test_passed.append(passed)
+            all_passed = all_passed and passed
+            time_sum += duration
 
-            if len(double_opts):
-                for additional_opt in fullscriptcmd.split(' ')[1:]:
-                    if additional_opt not in double_opts:
-                        continue
+            print('\n' + BOLD[1] + name + BOLD[0] + ":")
+            print(stdout)
+            print('stderr:\n' if not stderr == '' else '', stderr)
+            results += "%s | %s | %s s\n" % (name.ljust(max_len_name), str(passed).ljust(6), duration)
+            print("Pass: %s%s%s, Duration: %s s\n" % (BOLD[1], passed, BOLD[0], duration))
 
-            #if fullscriptcmd not in execution_time.keys():
-            if 1:
-                if t in testScripts:
-                    print("Running testscript %s%s%s ..." % (bold[1], t, bold[0]))
-                else:
-                    print("Running 2nd level testscript "
-                          + "%s%s%s ..." % (bold[1], t, bold[0]))
-
-                time0 = time.time()
-                test_passed[fullscriptcmd] = False
-                try:
-                    subprocess.check_call(
-                        rpcTestDir + repr(t) + flags, shell=True)
-                    test_passed[fullscriptcmd] = True
-                except subprocess.CalledProcessError as e:
-                    print( e )
-                    test_failure_info[fullscriptcmd] = e
-
-                # exit if help was called
-                if showHelp:
-                    sys.exit(0)
-                else:
-                    execution_time[fullscriptcmd] = int(time.time() - time0)
-                    print("Duration: %s s\n" % execution_time[fullscriptcmd])
-
-            else:
-                print("Skipping extended test name %s - already executed in regular\n" % scriptname)
+        results += BOLD[1] + "\n%s | %s | %s s (accumulated)" % ("ALL".ljust(max_len_name), str(all_passed).ljust(6), time_sum) + BOLD[0]
+        print(results)
+        print("\nRuntime: %s s" % (int(time.time() - time0)))
 
         if coverage:
             coverage.report_rpc_coverage()
@@ -403,30 +388,62 @@ def runtests():
         if not showHelp:
             # show some overall results and aggregates
             print()
-            print("%-50s  Status    Time (s)" % "Test")
-            print('-' * 70)
-            for k in sorted(execution_time.keys()):
-                print("%-50s  %-6s    %7s" % (k, "PASS" if test_passed[k] else "FAILED", execution_time[k]))
-            for d in disabled:
-                print("%-50s  %-8s" % (d, "DISABLED"))
-            for s in skipped:
-                print("%-50s  %-8s" % (s, "SKIPPED"))
-            print('-' * 70)
-            print("%-44s  Total time (s): %7s" % (" ", sum(execution_time.values())))
-
-            print
-            print("%d test(s) passed / %d test(s) failed / %d test(s) executed" % (list(test_passed.values()).count(True),
-                                                                       list(test_passed.values()).count(False),
+            print("%d test(s) passed / %d test(s) failed / %d test(s) executed" % (test_passed.count(True),
+                                                                       test_passed.count(False),
                                                                        len(test_passed)))
             print("%d test(s) disabled / %d test(s) skipped due to platform" % (len(disabled), len(skipped)))
 
         # signal that tests have failed using exit code
-        if list(test_passed.values()).count(False):
-            sys.exit(1)
+        sys.exit(not all_passed)
 
     else:
         print("No rpc tests to run. Wallet, utils, and bitcoind must all be enabled")
 
+class RPCTestHandler:
+    """
+    Trigger the testscrips passed in via the list.
+    """
+
+    def __init__(self, num_tests_parallel, test_list=None, flags=None):
+        assert(num_tests_parallel >= 1)
+        self.num_jobs = num_tests_parallel
+        self.test_list = test_list
+        self.flags = flags
+        self.num_running = 0
+        # In case there is a graveyard of zombie bitcoinds, we can apply a
+        # pseudorandom offset to hopefully jump over them.
+        # (625 is PORT_RANGE/MAX_NODES)
+        self.portseed_offset = int(time.time() * 1000) % 625
+        self.jobs = []
+
+    def get_next(self):
+        while self.num_running < self.num_jobs and self.test_list:
+            # Add tests
+            self.num_running += 1
+            t = self.test_list.pop(0)
+            port_seed = ["--portseed={}".format(len(self.test_list) + self.portseed_offset)]
+            log_stdout = tempfile.SpooledTemporaryFile(max_size=2**16)
+            log_stderr = tempfile.SpooledTemporaryFile(max_size=2**16)
+            self.jobs.append((t,
+                              time.time(),
+                              subprocess.Popen((RPC_TESTS_DIR + t).split() + self.flags.split() + port_seed,
+                                               universal_newlines=True,
+                                               stdout=subprocess.PIPE,
+                                               stderr=subprocess.PIPE)))
+        if not self.jobs:
+            raise IndexError('pop from empty list')
+        while True:
+            # Return first proc that finishes
+            time.sleep(.5)
+            for j in self.jobs:
+                (name, time0, proc) = j
+                if proc.poll() is not None:
+                    (stdout, stderr) = proc.communicate(timeout=3)
+                    passed = stderr == "" and proc.returncode == 0
+                    self.num_running -= 1
+                    self.jobs.remove(j)
+                    return name, stdout, stderr, passed, int(time.time() - time0)
+            print('.', end='', flush=True)
 
 class RPCCoverage(object):
     """

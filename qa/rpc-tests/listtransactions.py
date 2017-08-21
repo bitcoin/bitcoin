@@ -20,7 +20,6 @@ def txFromHex(hexstring):
 class ListTransactionsTest(BitcoinTestFramework):
 
     def setup_nodes(self):
-        #This test requires mocktime
         enable_mocktime()
         return start_nodes(4, self.options.tmpdir)
 
