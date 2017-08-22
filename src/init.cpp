@@ -1553,8 +1553,13 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                     return InitError(_("Incorrect or no genesis block found. Wrong datadir for network?"));
 
                 // Check for changed -txindex state
+<<<<<<< HEAD
                 if (fTxIndex != GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
                     strLoadError = _("You need to rebuild the database using -reindex-chainstate to change -txindex");
+=======
+                if (fTxIndex != gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
+                    strLoadError = _("You need to rebuild the database using -reindex to change -txindex");
+>>>>>>> cd0ea48... Changing -txindex requires -reindex, not -reindex-chainstate
                     break;
                 }
 
