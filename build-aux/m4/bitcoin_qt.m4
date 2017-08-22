@@ -321,7 +321,7 @@ AC_DEFUN([_BITCOIN_QT_IS_STATIC],[
     [bitcoin_cv_static_qt=yes],
     [bitcoin_cv_static_qt=no])
   ])
-  if test xbitcoin_cv_static_qt = xyes; then
+  if test x$bitcoin_cv_static_qt = xyes; then
     AC_DEFINE(QT_STATICPLUGIN, 1, [Define this symbol for static Qt plugins])
   fi
 ])
