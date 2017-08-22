@@ -826,14 +826,14 @@ UniValue getblockheaders(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
 
     int nCount = MAX_HEADERS_RESULTS;
-    if (request.params.size() > 1)
+    if (!request.params[1].isNull())
         nCount = request.params[1].get_int();
 
     if (nCount <= 0 || nCount > (int)MAX_HEADERS_RESULTS)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Count is out of range");
 
     bool fVerbose = true;
-    if (request.params.size() > 2)
+    if (!request.params[2].isNull())
         fVerbose = request.params[2].get_bool();
 
     CBlockIndex* pblockindex = mapBlockIndex[hash];
@@ -923,7 +923,7 @@ UniValue getmerkleblocks(const JSONRPCRequest& request)
     }
 
     int nCount = MAX_HEADERS_RESULTS;
-    if (request.params.size() > 2)
+    if (!request.params[2].isNull())
         nCount = request.params[2].get_int();
 
     if (nCount <= 0 || nCount > (int)MAX_HEADERS_RESULTS) {
@@ -1565,10 +1565,10 @@ UniValue getchaintips(const JSONRPCRequest& request)
     int nBranchMin = -1;
     int nCountMax = INT_MAX;
 
-    if(request.params.size() >= 1)
+    if(!request.params[0].isNull())
         nCountMax = request.params[0].get_int();
 
-    if(request.params.size() == 2)
+    if(!request.params[1].isNull())
         nBranchMin = request.params[1].get_int();
 
     /* Construct the output array.  */
@@ -1790,11 +1790,11 @@ UniValue getchaintxstats(const JSONRPCRequest& request)
     const CBlockIndex* pindex;
     int blockcount = 30 * 24 * 60 * 60 / Params().GetConsensus().nPowTargetSpacing; // By default: 1 month
 
-    if (request.params.size() > 0 && !request.params[0].isNull()) {
+    if (!request.params[0].isNull()) {
         blockcount = request.params[0].get_int();
     }
 
-    bool havehash = request.params.size() > 1 && !request.params[1].isNull();
+    bool havehash = !request.params[1].isNull();
     uint256 hash;
     if (havehash) {
         hash = uint256S(request.params[1].get_str());
@@ -2123,26 +2123,26 @@ UniValue getspecialtxes(const JSONRPCRequest& request)
     uint256 hash(uint256S(strHash));
 
     int nTxType = -1;
-    if (request.params.size() > 1) {
+    if (!request.params[1].isNull()) {
         nTxType = request.params[1].get_int();
     }
 
     int nCount = 10;
-    if (request.params.size() > 2) {
+    if (!request.params[2].isNull()) {
         nCount = request.params[2].get_int();
         if (nCount < 0)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative count");
     }
 
     int nSkip = 0;
-    if (request.params.size() > 3) {
+    if (!request.params[3].isNull()) {
         nSkip = request.params[3].get_int();
         if (nSkip < 0)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative skip");
     }
 
     int nVerbosity = 0;
-    if (request.params.size() > 4) {
+    if (!request.params[4].isNull()) {
         nVerbosity = request.params[4].get_int();
         if (nVerbosity < 0 || nVerbosity > 2) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Verbosity must be in range 0..2");

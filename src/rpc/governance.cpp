@@ -38,7 +38,7 @@ UniValue gobject_count(const JSONRPCRequest& request)
 
     std::string strMode{"json"};
 
-    if (request.params.size() == 2) {
+    if (!request.params[1].isNull()) {
         strMode = request.params[1].get_str();
     }
 
@@ -195,7 +195,7 @@ UniValue gobject_prepare(const JSONRPCRequest& request)
     // If specified, spend this outpoint as the proposal fee
     COutPoint outpoint;
     outpoint.SetNull();
-    if (request.params.size() == 8) {
+    if (!request.params[6].isNull() && !request.params[7].isNull()) {
         uint256 collateralHash = ParseHashV(request.params[6], "outputHash");
         int32_t collateralIndex = ParseInt32V(request.params[7], "outputIndex");
         if (collateralHash.IsNull() || collateralIndex < 0) {
@@ -207,7 +207,9 @@ UniValue gobject_prepare(const JSONRPCRequest& request)
     CWalletTx wtx;
     if (!pwallet->GetBudgetSystemCollateralTX(wtx, govobj.GetHash(), govobj.GetMinCollateralFee(), outpoint)) {
         std::string err = "Error making collateral transaction for governance object. Please check your wallet balance and make sure your wallet is unlocked.";
-        if (request.params.size() == 8) err += "Please verify your specified output is valid and is enough for the combined proposal fee and transaction fee.";
+        if (!request.params[6].isNull() && !request.params[7].isNull()) {
+            err += "Please verify your specified output is valid and is enough for the combined proposal fee and transaction fee.";
+        }
         throw JSONRPCError(RPC_INTERNAL_ERROR, err);
     }
 
@@ -260,7 +262,7 @@ UniValue gobject_submit(const JSONRPCRequest& request)
 
     uint256 txidFee;
 
-    if (request.params.size() == 6) {
+    if (!request.params[5].isNull()) {
         txidFee = ParseHashV(request.params[5], "fee-txid, parameter 6");
     }
     uint256 hashParent;
@@ -688,12 +690,16 @@ UniValue gobject_list(const JSONRPCRequest& request)
         gobject_list_help();
 
     std::string strCachedSignal = "valid";
-    if (request.params.size() >= 2) strCachedSignal = request.params[1].get_str();
+    if (!request.params[1].isNull()) {
+        strCachedSignal = request.params[1].get_str();
+    }
     if (strCachedSignal != "valid" && strCachedSignal != "funding" && strCachedSignal != "delete" && strCachedSignal != "endorsed" && strCachedSignal != "all")
         return "Invalid signal, should be 'valid', 'funding', 'delete', 'endorsed' or 'all'";
 
     std::string strType = "all";
-    if (request.params.size() == 3) strType = request.params[2].get_str();
+    if (!request.params[2].isNull()) {
+        strType = request.params[2].get_str();
+    }
     if (strType != "proposals" && strType != "triggers" && strType != "all")
         return "Invalid type, should be 'proposals', 'triggers' or 'all'";
 
@@ -717,12 +723,16 @@ UniValue gobject_diff(const JSONRPCRequest& request)
         gobject_diff_help();
 
     std::string strCachedSignal = "valid";
-    if (request.params.size() >= 2) strCachedSignal = request.params[1].get_str();
+    if (!request.params[1].isNull()) {
+        strCachedSignal = request.params[1].get_str();
+    }
     if (strCachedSignal != "valid" && strCachedSignal != "funding" && strCachedSignal != "delete" && strCachedSignal != "endorsed" && strCachedSignal != "all")
         return "Invalid signal, should be 'valid', 'funding', 'delete', 'endorsed' or 'all'";
 
     std::string strType = "all";
-    if (request.params.size() == 3) strType = request.params[2].get_str();
+    if (!request.params[2].isNull()) {
+        strType = request.params[2].get_str();
+    }
     if (strType != "proposals" && strType != "triggers" && strType != "all")
         return "Invalid type, should be 'proposals', 'triggers' or 'all'";
 
@@ -837,7 +847,7 @@ UniValue gobject_getcurrentvotes(const JSONRPCRequest& request)
     uint256 hash = ParseHashV(request.params[1], "Governance hash");
 
     COutPoint mnCollateralOutpoint;
-    if (request.params.size() == 4) {
+    if (!request.params[2].isNull() && !request.params[3].isNull()) {
         uint256 txid = ParseHashV(request.params[2], "Masternode Collateral hash");
         std::string strVout = request.params[3].get_str();
         mnCollateralOutpoint = COutPoint(txid, (uint32_t)atoi(strVout));
@@ -897,7 +907,7 @@ UniValue gobject_getcurrentvotes(const JSONRPCRequest& request)
 UniValue gobject(const JSONRPCRequest& request)
 {
     std::string strCommand;
-    if (request.params.size() >= 1)
+    if (!request.params[0].isNull())
         strCommand = request.params[0].get_str();
 
     if (request.fHelp && strCommand.empty()) {

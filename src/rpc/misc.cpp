@@ -1186,7 +1186,7 @@ UniValue getmemoryinfo(const JSONRPCRequest& request)
             + HelpExampleRpc("getmemoryinfo", "")
         );
 
-    std::string mode = (request.params.size() < 1 || request.params[0].isNull()) ? "stats" : request.params[0].get_str();
+    std::string mode = request.params[0].isNull() ? "stats" : request.params[0].get_str();
     if (mode == "stats") {
         UniValue obj(UniValue::VOBJ);
         obj.push_back(Pair("locked", RPCLockedMemoryInfo()));
@@ -1241,11 +1241,11 @@ UniValue logging(const JSONRPCRequest& request)
     }
 
     uint64_t originalLogCategories = logCategories;
-    if (request.params.size() > 0 && request.params[0].isArray()) {
+    if (request.params[0].isArray()) {
         logCategories |= getCategoryMask(request.params[0]);
     }
 
-    if (request.params.size() > 1 && request.params[1].isArray()) {
+    if (request.params[1].isArray()) {
         logCategories &= ~getCategoryMask(request.params[1]);
     }
 

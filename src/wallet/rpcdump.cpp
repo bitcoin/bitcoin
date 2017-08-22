@@ -662,7 +662,7 @@ UniValue importelectrumwallet(const JSONRPCRequest& request)
 
     // Whether to perform rescan after import
     int nStartHeight = 0;
-    if (request.params.size() > 1)
+    if (!request.params[1].isNull())
         nStartHeight = request.params[1].get_int();
     if (chainActive.Height() < nStartHeight)
         nStartHeight = chainActive.Height();
