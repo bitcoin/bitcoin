@@ -7,7 +7,6 @@
 from test_framework.test_framework import BitcoinTestFramework, BITCOIND_PROC_WAIT_TIMEOUT
 from test_framework.util import *
 
-
 def get_unspent(listunspent, amount):
     for utx in listunspent:
         if utx['amount'] == amount:
@@ -718,6 +717,44 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         # the total subtracted from the outputs is equal to the fee
         assert_equal(share[0] + share[2] + share[3], result[0]['fee'])
+
+        ##########################
+        # Test input_type option #
+        ##########################
+
+        # Activate segwit
+        self.nodes[0].generate(300)
+
+        # Get a segwit address to fund later
+        addr = self.nodes[0].getnewaddress()
+        witaddr = self.nodes[0].addwitnessaddress(addr)
+        rawtx = self.nodes[0].createrawtransaction([], {witaddr:1})
+
+        # Test fund attempts with no segwit funds
+        assert_raises_jsonrpc(-4, "Insufficient funds", self.nodes[0].fundrawtransaction, rawtx, {"input_type":"SEGWIT"})
+
+        # Fund the witness address using ALL and LEGACY
+        funded = self.nodes[0].fundrawtransaction(rawtx, {"input_type":"LEGACY"})
+        signed = self.nodes[0].signrawtransaction(funded["hex"])
+        self.nodes[0].sendrawtransaction(signed["hex"])
+
+        funded = self.nodes[0].fundrawtransaction(rawtx, {"input_type":"ALL"})
+        signed = self.nodes[0].signrawtransaction(funded["hex"])
+        self.nodes[0].sendrawtransaction(signed["hex"])
+
+        # Now fund using segwit funds only, sending to legacy address
+        rawtx = self.nodes[0].createrawtransaction([], {addr:2})
+        funded = self.nodes[0].fundrawtransaction(rawtx, {"input_type":"SEGWIT", "subtractFeeFromOutputs":[0]})
+        signed = self.nodes[0].signrawtransaction(funded["hex"])
+        self.nodes[0].sendrawtransaction(signed["hex"])
+
+        # No more segwit funds available again
+        assert_raises_jsonrpc(-4, "Insufficient funds", self.nodes[0].fundrawtransaction, rawtx, {"input_type":"SEGWIT"})
+
+        # Invalid funding type
+        assert_raises_jsonrpc(-8, "Invalid input_type parameter", self.nodes[0].fundrawtransaction, rawtx, {"input_type":"NONE"})
+
+
 
 if __name__ == '__main__':
     RawTransactionsTest().main()

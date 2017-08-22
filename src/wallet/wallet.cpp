@@ -2224,6 +2224,25 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
                     continue;
                 }
 
+
+                if (coinControl && coinControl->m_input_type != InputType::ALL) {
+                    std::vector<std::vector<unsigned char> > vSolutions;
+                    txnouttype whichType = TX_NONSTANDARD;
+                    if (Solver(pcoin->tx->vout[i].scriptPubKey, whichType, vSolutions) && whichType == TX_SCRIPTHASH) {
+                        CScriptID scriptID = CScriptID(uint160(vSolutions[0]));
+                        CScript subscript;
+                        if (!GetCScript(scriptID, subscript) || !Solver(subscript, whichType, vSolutions)) {
+                            continue;
+                        }
+                    }
+                    if (coinControl->m_input_type == InputType::LEGACY && (whichType == TX_WITNESS_V0_SCRIPTHASH || whichType == TX_WITNESS_V0_KEYHASH)) {
+                        continue;
+                    }
+                    if (coinControl->m_input_type == InputType::SEGWIT && (whichType != TX_WITNESS_V0_SCRIPTHASH && whichType != TX_WITNESS_V0_KEYHASH)) {
+                        continue;
+                    }
+                }
+
                 bool fSpendableIn = ((mine & ISMINE_SPENDABLE) != ISMINE_NO) || (coinControl && coinControl->fAllowWatchOnly && (mine & ISMINE_WATCH_SOLVABLE) != ISMINE_NO);
                 bool fSolvableIn = (mine & (ISMINE_SPENDABLE | ISMINE_WATCH_SOLVABLE)) != ISMINE_NO;
 
@@ -4329,3 +4348,4 @@ bool CMerkleTx::AcceptToMemoryPool(const CAmount& nAbsurdFee, CValidationState& 
 {
     return ::AcceptToMemoryPool(mempool, state, tx, true, nullptr, nullptr, false, nAbsurdFee);
 }
+
