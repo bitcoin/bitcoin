@@ -886,10 +886,7 @@ UniValue sendrawtransaction(const UniValue& params, bool fHelp)
     if(!g_connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
-    CInv inv(MSG_TX, hashTx);
-    g_connman->ForEachNode([&inv](CNode* pnode)
-    {
-        pnode->PushInventory(inv);
-    });
+    g_connman->RelayTransaction(tx);
+
     return hashTx.GetHex();
 }
