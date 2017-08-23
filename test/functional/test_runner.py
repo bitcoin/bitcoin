@@ -98,6 +98,7 @@ BASE_SCRIPTS= [
     'disconnect_ban.py',
     'decodescript.py',
     'blockchain.py',
+    'deprecated_rpc.py',
     'disablewallet.py',
     'net.py',
     'keypool.py',
