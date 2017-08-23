@@ -386,6 +386,7 @@ public:
     int GetBestHeight() const;
 
 
+    unsigned int GetReceiveFloodSize() const;
 private:
     struct ListenSocket {
         SOCKET socket;
@@ -403,6 +404,8 @@ private:
     void ThreadDNSAddressSeed();
     void ThreadMnbRequestConnections();
 
+    void WakeMessageHandler();
+
     CNode* FindNode(const CNetAddr& ip);
     CNode* FindNode(const CSubNet& subNet);
     CNode* FindNode(const std::string& addrName);
@@ -415,6 +418,7 @@ private:
 
     NodeId GetNewNodeId();
 
+    size_t SocketSendData(CNode *pnode);
     //!check is the banlist has unwritten changes
     bool BannedSetIsDirty();
     //!set the "dirty" flag for the banlist
@@ -424,8 +428,6 @@ private:
     void DumpAddresses();
     void DumpData();
     void DumpBanlist();
-
-    unsigned int GetReceiveFloodSize() const;
 
     CDataStream BeginMessage(CNode* node, int nVersion, int flags, const std::string& sCommand);
     void PushMessage(CNode* pnode, CDataStream& strm, const std::string& sCommand);
@@ -487,6 +489,9 @@ private:
     std::atomic<int> nBestHeight;
     CClientUIInterface* clientInterface;
 
+    /** flag for waking the message processor. */
+    bool fMsgProcWake;
+
     std::condition_variable condMsgProc;
     std::mutex mutexMsgProc;
     std::atomic<bool> flagInterruptMsgProc;
@@ -505,7 +510,6 @@ void Discover(boost::thread_group& threadGroup);
 void MapPort(bool fUseUPnP);
 unsigned short GetListenPort();
 bool BindListenPort(const CService &bindAddr, std::string& strError, bool fWhitelisted = false);
-size_t SocketSendData(CNode *pnode);
 
 struct CombinerAll
 {
@@ -666,11 +670,13 @@ public:
     std::deque<CSerializeData> vSendMsg;
     CCriticalSection cs_vSend;
 
+    CCriticalSection cs_vProcessMsg;
+    std::list<CNetMessage> vProcessMsg;
+    size_t nProcessQueueSize;
+
     std::deque<CInv> vRecvGetData;
-    std::deque<CNetMessage> vRecvMsg;
-    CCriticalSection cs_vRecvMsg;
     uint64_t nRecvBytes;
-    int nRecvVersion;
+    std::atomic<int> nRecvVersion;
 
     int64_t nLastSend;
     int64_t nLastRecv;
@@ -708,6 +714,9 @@ public:
     CBloomFilter* pfilter;
     int nRefCount;
     NodeId id;
+
+    std::atomic_bool fPauseRecv;
+    std::atomic_bool fPauseSend;
 protected:
 
     mapMsgCmdSize mapSendBytesPerMsgCmd;
@@ -770,6 +779,7 @@ private:
     ServiceFlags nLocalServices;
     int nMyStartingHeight;
     int nSendVersion;
+    std::list<CNetMessage> vRecvMsg;  // Used only by SocketHandler thread
 public:
 
     NodeId GetId() const {
@@ -791,24 +801,15 @@ public:
         return nRefCount;
     }
 
-    // requires LOCK(cs_vRecvMsg)
-    unsigned int GetTotalRecvSize()
-    {
-        unsigned int total = 0;
-        BOOST_FOREACH(const CNetMessage &msg, vRecvMsg)
-            total += msg.vRecv.size() + 24;
-        return total;
-    }
-
-    // requires LOCK(cs_vRecvMsg)
     bool ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete);
 
-    // requires LOCK(cs_vRecvMsg)
     void SetRecvVersion(int nVersionIn)
     {
         nRecvVersion = nVersionIn;
-        BOOST_FOREACH(CNetMessage &msg, vRecvMsg)
-            msg.SetVersion(nVersionIn);
+    }
+    int GetRecvVersion()
+    {
+        return nRecvVersion;
     }
     void SetSendVersion(int nVersionIn);
     int GetSendVersion() const;

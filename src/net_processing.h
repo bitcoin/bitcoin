@@ -45,6 +45,7 @@ bool ProcessMessages(CNode* pfrom, CConnman& connman, std::atomic<bool>& interru
  * @param[in]   pto             The node which we are sending messages to.
  * @param[in]   connman         The connection manager for that node.
  * @param[in]   interrupt       Interrupt condition for processing threads
+ * @return                      True if there is more work to be done
  */
 bool SendMessages(CNode* pto, CConnman& connman, std::atomic<bool>& interrupt);
 
