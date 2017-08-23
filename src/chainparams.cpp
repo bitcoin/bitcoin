@@ -107,6 +107,12 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 1486252800; // Feb 5th, 2017
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 1517788800; // Feb 5th, 2018
 
+        // The best chain should have at least this much work.
+        consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000006acd76c0e55d52910"); // 721000
+
+        // By default assume that the signatures in ancestors of this block are valid.
+        consensus.defaultAssumeValid = uint256S("0x0000000000000e869031f3639be333de35d82a16d96c1b8173ad5c4b62554157"); //721000
+
         /**
          * The message start string is designed to be unlikely to occur in normal data.
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
@@ -231,6 +237,12 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 1456790400; // March 1st, 2016
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 1493596800; // May 1st, 2017
 
+        // The best chain should have at least this much work.
+        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000003c26a58a13731"); //251000
+
+        // By default assume that the signatures in ancestors of this block are valid.
+        consensus.defaultAssumeValid = uint256S("0x00000000013385efe690be40297e76478c2c9f2fef7a7486f84ccee3172417f3"); //251000
+
         pchMessageStart[0] = 0xce;
         pchMessageStart[1] = 0xe2;
         pchMessageStart[2] = 0xca;
@@ -335,6 +347,12 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].bit = 0;
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 0;
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 999999999999ULL;
+
+        // The best chain should have at least this much work.
+        consensus.nMinimumChainWork = uint256S("0x00");
+
+        // By default assume that the signatures in ancestors of this block are valid.
+        consensus.defaultAssumeValid = uint256S("0x00");
 
         pchMessageStart[0] = 0xfc;
         pchMessageStart[1] = 0xc1;

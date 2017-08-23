@@ -9,6 +9,11 @@
 #include "net.h"
 #include "validationinterface.h"
 
+/** Headers download timeout expressed in microseconds
+ *  Timeout = base + per_header * (expected number of headers) */
+static constexpr int64_t HEADERS_DOWNLOAD_TIMEOUT_BASE = 15 * 60 * 1000000; // 15 minutes
+static constexpr int64_t HEADERS_DOWNLOAD_TIMEOUT_PER_HEADER = 1000; // 1ms/header
+
 /** Register with a network node to receive its signals */
 void RegisterNodeSignals(CNodeSignals& nodeSignals);
 /** Unregister a network node */
