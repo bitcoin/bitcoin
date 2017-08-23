@@ -34,7 +34,11 @@ class TestNode():
         self.index = i
         self.datadir = os.path.join(dirname, "node" + str(i))
         self.rpchost = rpchost
-        self.rpc_timeout = timewait
+        if timewait:
+            self.rpc_timeout = timewait
+        else:
+            # Wait for up to 60 seconds for the RPC server to respond
+            self.rpc_timeout = 60
         if binary is None:
             self.binary = os.getenv("BITCOIND", "dashd")
         else:
@@ -68,10 +72,10 @@ class TestNode():
 
     def wait_for_rpc_connection(self):
         """Sets up an RPC connection to the dashd process. Returns False if unable to connect."""
-        timeout_s = 60 # Wait for up to 60 seconds for the RPC server to respond
-        poll_per_s = 4 # Poll at a rate of four times per second
-        for _ in range(timeout_s*poll_per_s):
-            assert not self.process.poll(), "dashd exited with status %i during initialization" % self.process.returncode
+        # Poll at a rate of four times per second
+        poll_per_s = 4
+        for _ in range(poll_per_s * self.rpc_timeout):
+            assert self.process.poll() is None, "dashd exited with status %i during initialization" % self.process.returncode
             try:
                 self.rpc = get_rpc_proxy(rpc_url(self.datadir, self.index, self.rpchost), self.index, coveragedir=self.coverage_dir)
                 self.rpc.getblockcount()
