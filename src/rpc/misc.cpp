@@ -506,21 +506,15 @@ UniValue setmocktime(const UniValue& params, bool fHelp)
     if (!Params().MineBlocksOnDemand())
         throw runtime_error("setmocktime for regression testing (-regtest mode) only");
 
-    // cs_vNodes is locked and node send/receive times are updated
-    // atomically with the time change to prevent peers from being
-    // disconnected because we think we haven't communicated with them
-    // in a long time.
+    // For now, don't change mocktime if we're in the middle of validation, as
+    // this could have an effect on mempool time-based eviction, as well as
+    // IsCurrentForFeeEstimation() and IsInitialBlockDownload().
+    // TODO: figure out the right way to synchronize around mocktime, and
+    // ensure all callsites of GetTime() are accessing this safely.
     LOCK(cs_main);
 
     RPCTypeCheck(params, boost::assign::list_of(UniValue::VNUM));
     SetMockTime(params[0].get_int64());
-
-    uint64_t t = GetTime();
-    if(g_connman) {
-        g_connman->ForEachNode([t](CNode* pnode) {
-            pnode->nLastSend = pnode->nLastRecv = t;
-        });
-    }
 
     return NullUniValue;
 }
