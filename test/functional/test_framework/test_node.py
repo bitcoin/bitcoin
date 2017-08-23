@@ -74,7 +74,7 @@ class TestNode():
         for _ in range(poll_per_s * self.rpc_timeout):
             assert self.process.poll() is None, "bitcoind exited with status %i during initialization" % self.process.returncode
             try:
-                self.rpc = get_rpc_proxy(rpc_url(self.datadir, self.index, self.rpchost), self.index, coveragedir=self.coverage_dir)
+                self.rpc = get_rpc_proxy(rpc_url(self.datadir, self.index, self.rpchost), self.index, timeout=self.rpc_timeout, coveragedir=self.coverage_dir)
                 self.rpc.getblockcount()
                 # If the call to getblockcount() succeeds then the RPC connection is up
                 self.rpc_connected = True
