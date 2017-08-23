@@ -89,10 +89,10 @@ BitcoinAddressCheckValidator::BitcoinAddressCheckValidator(QObject *parent) :
 QValidator::State BitcoinAddressCheckValidator::validate(QString &input, int &pos) const
 {
     Q_UNUSED(pos);
-    // Validate the passed Dash address
-    CBitcoinAddress addr(input.toStdString());
-    if (addr.IsValid())
+    // Validate the passed Chaincoin address
+    if (IsValidDestinationString(input.toStdString())) {
         return QValidator::Acceptable;
+    }
 
     return QValidator::Invalid;
 }
