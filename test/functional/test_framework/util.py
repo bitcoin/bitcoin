@@ -159,6 +159,28 @@ def str_to_b64str(string):
 def satoshi_round(amount):
     return Decimal(amount).quantize(Decimal('0.00000001'), rounding=ROUND_DOWN)
 
+def wait_until(predicate, *, attempts=float('inf'), timeout=float('inf'), sleep=0.05, lock=None):
+    if attempts == float('inf') and timeout == float('inf'):
+        timeout = 60
+    attempt = 0
+    timeout += time.time()
+
+    while attempt < attempts and time.time() < timeout:
+        if lock:
+            with lock:
+                if predicate():
+                    return
+        else:
+            if predicate():
+                return
+        attempt += 1
+        time.sleep(sleep)
+
+    # Print the cause of the timeout
+    assert_greater_than(attempts, attempt)
+    assert_greater_than(timeout, time.time())
+    raise RuntimeError('Unreachable')
+
 # RPC/P2P connection constants and functions
 ############################################
 

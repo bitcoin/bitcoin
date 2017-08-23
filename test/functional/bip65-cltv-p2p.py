@@ -109,7 +109,7 @@ class BIP65Test(BitcoinTestFramework):
         node0.send_and_ping(msg_block(block))
         assert_equal(int(self.nodes[0].getbestblockhash(), 16), tip)
 
-        assert wait_until(lambda: "reject" in node0.last_message.keys())
+        wait_until(lambda: "reject" in node0.last_message.keys(), lock=mininode_lock)
         with mininode_lock:
             assert_equal(node0.last_message["reject"].code, REJECT_OBSOLETE)
             assert_equal(node0.last_message["reject"].reason, b'bad-version(0x00000003)')
@@ -136,7 +136,7 @@ class BIP65Test(BitcoinTestFramework):
         node0.send_and_ping(msg_block(block))
         assert_equal(int(self.nodes[0].getbestblockhash(), 16), tip)
 
-        assert wait_until (lambda: "reject" in node0.last_message.keys())
+        wait_until(lambda: "reject" in node0.last_message.keys(), lock=mininode_lock)
         with mininode_lock:
             assert node0.last_message["reject"].code in [REJECT_INVALID, REJECT_NONSTANDARD]
             assert_equal(node0.last_message["reject"].data, block.sha256)
