@@ -9,6 +9,7 @@ from test_framework.util import assert_equal
 
 class ListSinceBlockTest (BitcoinTestFramework):
     def set_test_params(self):
+        self.num_nodes = 4
         self.setup_clean_chain = True
 
     def run_test(self):

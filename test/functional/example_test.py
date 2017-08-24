@@ -77,7 +77,9 @@ class ExampleTest(BitcoinTestFramework):
     # and setup_nodes() methods to customize the test setup as required.
 
     def set_test_params(self):
-        """Override any test parameters for your individual test."""
+        """Override test parameters for your individual test.
+
+        This method must be overridden and num_nodes must be exlicitly set."""
         self.setup_clean_chain = True
         self.num_nodes = 3
         # Use self.extra_args to change command-line arguments for the nodes

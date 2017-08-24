@@ -8,6 +8,9 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
 class TxnMallTest(BitcoinTestFramework):
+    def set_test_params(self):
+        self.num_nodes = 4
+
     def add_options(self, parser):
         parser.add_option("--mineblock", dest="mine_block", default=False, action="store_true",
                           help="Test double-spend of 1-confirmed transaction")
