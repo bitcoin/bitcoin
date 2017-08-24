@@ -20,7 +20,7 @@ class RPCBindTest(BitcoinTestFramework):
         self.num_nodes = 1
 
     def setup_network(self):
-        self.add_nodes(self.num_nodes, self.options.tmpdir, None)
+        self.add_nodes(self.num_nodes, None)
 
     def run_bind_test(self, allow_ips, connect_to, addresses, expected):
         '''

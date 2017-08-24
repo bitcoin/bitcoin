@@ -57,7 +57,7 @@ class PruneTest(BitcoinTestFramework):
         sync_blocks(self.nodes[0:5])
 
     def setup_nodes(self):
-        self.add_nodes(self.num_nodes, self.options.tmpdir, self.extra_args, timewait=900)
+        self.add_nodes(self.num_nodes, self.extra_args, timewait=900)
         self.start_nodes()
 
     def create_big_chain(self):
