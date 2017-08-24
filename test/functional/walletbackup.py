@@ -38,6 +38,7 @@ from test_framework.util import *
 
 class WalletBackupTest(BitcoinTestFramework):
     def set_test_params(self):
+        self.num_nodes = 4
         self.setup_clean_chain = True
         # nodes 1, 2,3 are spenders, let's give them a keypool=100
         self.extra_args = [["-keypool=100"], ["-keypool=100"], ["-keypool=100"], []]

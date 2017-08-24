@@ -14,6 +14,9 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
 
 class GetChainTipsTest (BitcoinTestFramework):
+    def set_test_params(self):
+        self.num_nodes = 4
+
     def run_test (self):
         tips = self.nodes[0].getchaintips ()
         assert_equal (len (tips), 1)
