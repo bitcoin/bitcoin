@@ -17,6 +17,7 @@ from binascii import hexlify
 # The versionbit bit used to signal activation of SegWit
 VB_WITNESS_BIT = 1
 VB_PERIOD = 144
+VB_ACTIVATION_THRESHOLD = 108
 VB_TOP_BITS = 0x20000000
 
 MAX_SIGOP_COST = 80000
@@ -32,8 +33,8 @@ def get_virtual_size(witness_block):
     return vsize
 
 class TestNode(NodeConnCB):
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
+        self.num_nodes = 3
         self.getdataset = set()
 
     def on_getdata(self, conn, message):
@@ -108,9 +109,7 @@ def sign_P2PK_witness_input(script, txTo, inIdx, hashtype, value, key):
 
 
 class SegWitTest(BitcoinTestFramework):
-
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3
         self.extra_args = [["-whitelist=127.0.0.1"], ["-whitelist=127.0.0.1", "-acceptnonstdtxn=0"], ["-whitelist=127.0.0.1", "-vbparams=segwit:0:0"]]

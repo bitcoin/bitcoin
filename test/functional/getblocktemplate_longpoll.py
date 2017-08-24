@@ -23,10 +23,8 @@ class LongpollThread(threading.Thread):
         self.node.getblocktemplate({'longpollid':self.longpollid})
 
 class GetBlockTemplateLPTest(BitcoinTestFramework):
-    def __init__(self):
-        super().__init__()
-        self.num_nodes = 4
-        self.setup_clean_chain = False
+    def set_test_params(self):
+        self.num_nodes = 2
 
     def run_test(self):
         self.log.info("Warning: this test will take about 70 seconds in the best case. Be patient.")
