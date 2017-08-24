@@ -4,8 +4,10 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Class for dashd node under test"""
 
+import decimal
 import errno
 import http.client
+import json
 import logging
 import os
 import subprocess
@@ -48,6 +50,8 @@ class TestNode():
         # Most callers will just need to add extra args to the standard list below. For those callers that need more flexibity, they can just set the args property directly.
         self.extra_args = extra_args
         self.args = [self.binary, "-datadir=" + self.datadir, "-server", "-keypool=1", "-discover=0", "-rest", "-logtimemicros", "-debug", "-debugexclude=libevent", "-debugexclude=leveldb", "-mocktime=" + str(mocktime), "-uacomment=testnode%d" % i]
+
+        self.cli = TestNodeCLI(os.getenv("BITCOINCLI", "bitcoin-cli"), self.datadir)
 
         # Don't try auto backups (they fail a lot when running tests)
         self.args.append("-createwalletbackups=0")
@@ -139,3 +143,28 @@ class TestNode():
             time.sleep(0.1)
         self.rpc = None
         self.rpc_connected = False
+
+class TestNodeCLI():
+    """Interface to bitcoin-cli for an individual node"""
+
+    def __init__(self, binary, datadir):
+        self.binary = binary
+        self.datadir = datadir
+
+    def __getattr__(self, command):
+        def dispatcher(*args, **kwargs):
+            return self.send_cli(command, *args, **kwargs)
+        return dispatcher
+
+    def send_cli(self, command, *args, **kwargs):
+        """Run bitcoin-cli command. Deserializes returned string as python object."""
+
+        pos_args = [str(arg) for arg in args]
+        named_args = [str(key) + "=" + str(value) for (key, value) in kwargs.items()]
+        assert not (pos_args and named_args), "Cannot use positional arguments and named arguments in the same bitcoin-cli call"
+        p_args = [self.binary, "-datadir=" + self.datadir]
+        if named_args:
+            p_args += ["-named"]
+        p_args += [command] + pos_args + named_args
+        cli_output = subprocess.check_output(p_args, universal_newlines=True)
+        return json.loads(cli_output, parse_float=decimal.Decimal)
