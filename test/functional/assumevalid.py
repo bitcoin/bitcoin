@@ -60,7 +60,7 @@ class AssumeValidTest(BitcoinTestFramework):
         self.num_nodes = 3
 
     def setup_network(self):
-        self.add_nodes(3, self.options.tmpdir)
+        self.add_nodes(3)
         # Start node0. We don't start the other nodes yet since
         # we need to pre-mine a block with an invalid transaction
         # signature so we can pass in the block hash as assumevalid.

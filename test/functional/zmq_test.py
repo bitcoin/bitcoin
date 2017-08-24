@@ -42,7 +42,7 @@ class ZMQTest (BitcoinTestFramework):
         ip_address = "tcp://127.0.0.1:28332"
         self.zmqSubSocket.connect(ip_address)
         self.extra_args = [['-zmqpubhashtx=%s' % ip_address, '-zmqpubhashblock=%s' % ip_address], []]
-        self.add_nodes(self.num_nodes, self.options.tmpdir, self.extra_args)
+        self.add_nodes(self.num_nodes, self.extra_args)
         self.start_nodes()
 
     def run_test(self):
