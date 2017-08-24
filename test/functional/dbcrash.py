@@ -65,7 +65,7 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
 
     def setup_network(self):
         # Need a bit of extra time for the nodes to start up for this test
-        self.add_nodes(self.num_nodes, self.options.tmpdir, self.extra_args, timewait=90)
+        self.add_nodes(self.num_nodes, timewait=90)
         self.start_nodes()
         # Leave them unconnected, we'll use submitblock directly in this test
 
