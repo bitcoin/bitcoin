@@ -45,7 +45,8 @@ std::string HelpMessageCli()
     strUsage += HelpMessageOpt("-rpcuser=<user>", _("Username for JSON-RPC connections"));
     strUsage += HelpMessageOpt("-rpcpassword=<pw>", _("Password for JSON-RPC connections"));
     strUsage += HelpMessageOpt("-rpcclienttimeout=<n>", strprintf(_("Timeout in seconds during HTTP requests, or 0 for no timeout. (default: %d)"), DEFAULT_HTTP_CLIENT_TIMEOUT));
-    strUsage += HelpMessageOpt("-stdin", _("Read extra arguments from standard input, one per line until EOF/Ctrl-D (recommended for sensitive information such as passphrases)"));
+    strUsage += HelpMessageOpt("-stdinrpcpass", strprintf(_("Read RPC password from standard input as a single line.  When combined with -stdin, the first line from standard input is used for the RPC password.")));
+    strUsage += HelpMessageOpt("-stdin", _("Read extra arguments from standard input, one per line until EOF/Ctrl-D (recommended for sensitive information such as passphrases).  When combined with -stdinrpcpass, the first line from standard input is used for the RPC password."));
     strUsage += HelpMessageOpt("-rpcwallet=<walletname>", _("Send RPC for non-default wallet on RPC server (argument is wallet filename in bitcoind directory, required if bitcoind/-Qt runs with multiple wallets)"));
 
     return strUsage;
@@ -190,7 +191,7 @@ static void http_error_cb(enum evhttp_request_error err, void *ctx)
 }
 #endif
 
-UniValue CallRPC(const std::string& strMethod, const UniValue& params)
+static UniValue CallRPC(const std::string& strMethod, const UniValue& params)
 {
     std::string host;
     // In preference order, we choose the following for the port:
@@ -222,7 +223,7 @@ UniValue CallRPC(const std::string& strMethod, const UniValue& params)
         // Try fall back to cookie-based authentication if no password is provided
         if (!GetAuthCookie(&strRPCUserColonPass)) {
             throw std::runtime_error(strprintf(
-                _("Could not locate RPC credentials. No authentication cookie could be found, and no rpcpassword is set in the configuration file (%s)"),
+                _("Could not locate RPC credentials. No authentication cookie could be found, and RPC password is not set.  See -rpcpassword and -stdinrpcpass.  Configuration file: (%s)"),
                     GetConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME)).string().c_str()));
 
         }
@@ -292,6 +293,12 @@ int CommandLineRPC(int argc, char *argv[])
         while (argc > 1 && IsSwitchChar(argv[1][0])) {
             argc--;
             argv++;
+        }
+        std::string rpcPass;
+        if (gArgs.GetBoolArg("-stdinrpcpass", false)) {
+            if(!std::getline(std::cin,rpcPass))
+                throw std::runtime_error("-stdinrpcpass specified but failed to read from standard input");
+            gArgs.ForceSetArg("-rpcpassword", rpcPass);
         }
         std::vector<std::string> args = std::vector<std::string>(&argv[1], &argv[argc]);
         if (gArgs.GetBoolArg("-stdin", false)) {
