@@ -48,11 +48,10 @@ BITCOIND_PROC_WAIT_TIMEOUT = 60
 class BitcoinTestFramework(object):
     """Base class for a bitcoin test script.
 
-    Individual bitcoin test scripts should subclass this class and override the run_test() method.
+    Individual bitcoin test scripts should subclass this class and override the set_test_params() and run_test() methods.
 
     Individual tests can also override the following methods to customize the test setup:
 
-    - set_test_params()
     - add_options()
     - setup_chain()
     - setup_network()
@@ -64,11 +63,12 @@ class BitcoinTestFramework(object):
 
     def __init__(self):
         """Sets test framework defaults. Do not override this method. Instead, override the set_test_params() method"""
-        self.num_nodes = 4
         self.setup_clean_chain = False
         self.nodes = []
         self.mocktime = 0
         self.set_test_params()
+
+        assert hasattr(self, "num_nodes"), "Test must set self.num_nodes in set_test_params()"
 
     def main(self):
         """Main function. This should not be overridden by the subclass test scripts."""
@@ -177,8 +177,8 @@ class BitcoinTestFramework(object):
 
     # Methods to override in subclass test scripts.
     def set_test_params(self):
-        """Override this method to change default values for number of nodes, topology, etc"""
-        pass
+        """Tests must this method to change default values for number of nodes, topology, etc"""
+        raise NotImplementedError
 
     def add_options(self, parser):
         """Override this method to add command-line options to the test"""
@@ -212,7 +212,7 @@ class BitcoinTestFramework(object):
         self.start_nodes()
 
     def run_test(self):
-        """Override this method to define test logic"""
+        """Tests must override this method to define test logic"""
         raise NotImplementedError
 
     # Public helper methods. These can be accessed by the subclass test scripts.
