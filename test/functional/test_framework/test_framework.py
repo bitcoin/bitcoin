@@ -73,9 +73,9 @@ class BitcoinTestFramework(object):
     def setup_chain(self):
         self.log.info("Initializing test directory " + self.options.tmpdir)
         if self.setup_clean_chain:
-            self._initialize_chain_clean(self.options.tmpdir, self.num_nodes)
+            self._initialize_chain_clean()
         else:
-            self._initialize_chain(self.options.tmpdir, self.num_nodes, self.options.cachedir)
+            self._initialize_chain()
 
     def setup_network(self):
         self.setup_nodes()
@@ -91,7 +91,7 @@ class BitcoinTestFramework(object):
         extra_args = None
         if hasattr(self, "extra_args"):
             extra_args = self.extra_args
-        self.add_nodes(self.num_nodes, self.options.tmpdir, extra_args)
+        self.add_nodes(self.num_nodes, extra_args)
         self.start_nodes()
 
     def run_test(self):
@@ -205,7 +205,7 @@ class BitcoinTestFramework(object):
 
     # Public helper methods. These can be accessed by the subclass test scripts.
 
-    def add_nodes(self, num_nodes, dirname, extra_args=None, rpchost=None, timewait=None, binary=None):
+    def add_nodes(self, num_nodes, extra_args=None, rpchost=None, timewait=None, binary=None):
         """Instantiate TestNode objects"""
 
         if extra_args is None:
@@ -215,7 +215,7 @@ class BitcoinTestFramework(object):
         assert_equal(len(extra_args), num_nodes)
         assert_equal(len(binary), num_nodes)
         for i in range(num_nodes):
-            self.nodes.append(TestNode(i, dirname, extra_args[i], rpchost, timewait=timewait, binary=binary[i], stderr=None, mocktime=self.mocktime, coverage_dir=self.options.coveragedir))
+            self.nodes.append(TestNode(i, self.options.tmpdir, extra_args[i], rpchost, timewait=timewait, binary=binary[i], stderr=None, mocktime=self.mocktime, coverage_dir=self.options.coveragedir))
 
     def start_node(self, i, extra_args=None, stderr=None):
         """Start a bitcoind"""
@@ -357,16 +357,16 @@ class BitcoinTestFramework(object):
             rpc_handler.setLevel(logging.DEBUG)
             rpc_logger.addHandler(rpc_handler)
 
-    def _initialize_chain(self, test_dir, num_nodes, cachedir):
+    def _initialize_chain(self):
         """Initialize a pre-mined blockchain for use by the test.
 
         Create a cache of a 200-block-long chain (with wallet) for MAX_NODES
         Afterward, create num_nodes copies from the cache."""
 
-        assert num_nodes <= MAX_NODES
+        assert self.num_nodes <= MAX_NODES
         create_cache = False
         for i in range(MAX_NODES):
-            if not os.path.isdir(os.path.join(cachedir, 'node' + str(i))):
+            if not os.path.isdir(os.path.join(self.options.cachedir, 'node' + str(i))):
                 create_cache = True
                 break
 
@@ -375,16 +375,16 @@ class BitcoinTestFramework(object):
 
             # find and delete old cache directories if any exist
             for i in range(MAX_NODES):
-                if os.path.isdir(os.path.join(cachedir, "node" + str(i))):
-                    shutil.rmtree(os.path.join(cachedir, "node" + str(i)))
+                if os.path.isdir(os.path.join(self.options.cachedir, "node" + str(i))):
+                    shutil.rmtree(os.path.join(self.options.cachedir, "node" + str(i)))
 
             # Create cache directories, run bitcoinds:
             for i in range(MAX_NODES):
-                datadir = initialize_datadir(cachedir, i)
+                datadir = initialize_datadir(self.options.cachedir, i)
                 args = [os.getenv("BITCOIND", "bitcoind"), "-server", "-keypool=1", "-datadir=" + datadir, "-discover=0"]
                 if i > 0:
                     args.append("-connect=127.0.0.1:" + str(p2p_port(0)))
-                self.nodes.append(TestNode(i, cachedir, extra_args=[], rpchost=None, timewait=None, binary=None, stderr=None, mocktime=self.mocktime, coverage_dir=None))
+                self.nodes.append(TestNode(i, self.options.cachedir, extra_args=[], rpchost=None, timewait=None, binary=None, stderr=None, mocktime=self.mocktime, coverage_dir=None))
                 self.nodes[i].args = args
                 self.start_node(i)
 
@@ -415,24 +415,24 @@ class BitcoinTestFramework(object):
             self.nodes = []
             self.disable_mocktime()
             for i in range(MAX_NODES):
-                os.remove(log_filename(cachedir, i, "debug.log"))
-                os.remove(log_filename(cachedir, i, "db.log"))
-                os.remove(log_filename(cachedir, i, "peers.dat"))
-                os.remove(log_filename(cachedir, i, "fee_estimates.dat"))
+                os.remove(log_filename(self.options.cachedir, i, "debug.log"))
+                os.remove(log_filename(self.options.cachedir, i, "db.log"))
+                os.remove(log_filename(self.options.cachedir, i, "peers.dat"))
+                os.remove(log_filename(self.options.cachedir, i, "fee_estimates.dat"))
 
-        for i in range(num_nodes):
-            from_dir = os.path.join(cachedir, "node" + str(i))
-            to_dir = os.path.join(test_dir, "node" + str(i))
+        for i in range(self.num_nodes):
+            from_dir = os.path.join(self.options.cachedir, "node" + str(i))
+            to_dir = os.path.join(self.options.tmpdir, "node" + str(i))
             shutil.copytree(from_dir, to_dir)
-            initialize_datadir(test_dir, i)  # Overwrite port/rpcport in bitcoin.conf
+            initialize_datadir(self.options.tmpdir, i)  # Overwrite port/rpcport in bitcoin.conf
 
-    def _initialize_chain_clean(self, test_dir, num_nodes):
+    def _initialize_chain_clean(self):
         """Initialize empty blockchain for use by the test.
 
         Create an empty blockchain and num_nodes wallets.
         Useful if a test case wants complete control over initialization."""
-        for i in range(num_nodes):
-            initialize_datadir(test_dir, i)
+        for i in range(self.num_nodes):
+            initialize_datadir(self.options.tmpdir, i)
 
 class ComparisonTestFramework(BitcoinTestFramework):
     """Test framework for doing p2p comparison testing
@@ -459,7 +459,7 @@ class ComparisonTestFramework(BitcoinTestFramework):
         extra_args = [['-whitelist=127.0.0.1']] * self.num_nodes
         if hasattr(self, "extra_args"):
             extra_args = self.extra_args
-        self.add_nodes(self.num_nodes, self.options.tmpdir, extra_args,
+        self.add_nodes(self.num_nodes, extra_args,
                        binary=[self.options.testbinary] +
                        [self.options.refbinary] * (self.num_nodes - 1))
         self.start_nodes()
