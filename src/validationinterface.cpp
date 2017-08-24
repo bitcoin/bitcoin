@@ -139,6 +139,8 @@ void UnregisterSharedValidationInterface(std::shared_ptr<CValidationInterface> c
 
 void UnregisterValidationInterface(CValidationInterface* callbacks)
 {
+    callbacks->ValidationInterfaceUnregistering();
+
     if (g_signals.m_internals) {
         g_signals.m_internals->Unregister(callbacks);
     }
@@ -149,6 +151,9 @@ void UnregisterAllValidationInterfaces()
     if (!g_signals.m_internals) {
         return;
     }
+
+    g_signals.m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.ValidationInterfaceUnregistering(); });
+
     g_signals.m_internals->Clear();
 }
 
