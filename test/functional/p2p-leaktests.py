@@ -97,24 +97,13 @@ class P2PLeakTest(BitcoinTestFramework):
         self.extra_args = [['-banscore='+str(banscore)]]
 
     def run_test(self):
-        no_version_bannode = CNodeNoVersionBan()
-        no_version_idlenode = CNodeNoVersionIdle()
-        no_verack_idlenode = CNodeNoVerackIdle()
-        unsupported_service_bit5_node = CLazyNode()
-        unsupported_service_bit7_node = CLazyNode()
-
         self.nodes[0].setmocktime(1501545600)  # August 1st 2017
-        connections = []
-        connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], no_version_bannode, send_version=False))
-        connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], no_version_idlenode, send_version=False))
-        connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], no_verack_idlenode))
-        connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], unsupported_service_bit5_node, services=NODE_NETWORK|NODE_UNSUPPORTED_SERVICE_BIT_5))
-        connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], unsupported_service_bit7_node, services=NODE_NETWORK|NODE_UNSUPPORTED_SERVICE_BIT_7))
-        no_version_bannode.add_connection(connections[0])
-        no_version_idlenode.add_connection(connections[1])
-        no_verack_idlenode.add_connection(connections[2])
-        unsupported_service_bit5_node.add_connection(connections[3])
-        unsupported_service_bit7_node.add_connection(connections[4])
+
+        no_version_bannode = self.nodes[0].add_p2p_connection(CNodeNoVersionBan(), send_version=False)
+        no_version_idlenode = self.nodes[0].add_p2p_connection(CNodeNoVersionIdle(), send_version=False)
+        no_verack_idlenode = self.nodes[0].add_p2p_connection(CNodeNoVerackIdle())
+        unsupported_service_bit5_node = self.nodes[0].add_p2p_connection(CLazyNode(), services=NODE_NETWORK|NODE_UNSUPPORTED_SERVICE_BIT_5)
+        unsupported_service_bit7_node = self.nodes[0].add_p2p_connection(CLazyNode(), services=NODE_NETWORK|NODE_UNSUPPORTED_SERVICE_BIT_7)
 
         NetworkThread().start()  # Start up network handling in another thread
 
@@ -137,7 +126,8 @@ class P2PLeakTest(BitcoinTestFramework):
         assert not unsupported_service_bit5_node.connected
         assert not unsupported_service_bit7_node.connected
 
-        [conn.disconnect_node() for conn in connections]
+        for _ in range(5):
+            self.nodes[0].disconnect_p2p()
 
         # Wait until all connections are closed
         wait_until(lambda: len(self.nodes[0].getpeerinfo()) == 0)
@@ -152,13 +142,8 @@ class P2PLeakTest(BitcoinTestFramework):
         self.log.info("Service bits 5 and 7 are allowed after August 1st 2018")
         self.nodes[0].setmocktime(1533168000)  # August 2nd 2018
 
-        allowed_service_bit5_node = NodeConnCB()
-        allowed_service_bit7_node = NodeConnCB()
-
-        connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], allowed_service_bit5_node, services=NODE_NETWORK|NODE_UNSUPPORTED_SERVICE_BIT_5))
-        connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], allowed_service_bit7_node, services=NODE_NETWORK|NODE_UNSUPPORTED_SERVICE_BIT_7))
-        allowed_service_bit5_node.add_connection(connections[5])
-        allowed_service_bit7_node.add_connection(connections[6])
+        allowed_service_bit5_node = self.nodes[0].add_p2p_connection(NodeConnCB(), services=NODE_NETWORK|NODE_UNSUPPORTED_SERVICE_BIT_5)
+        allowed_service_bit7_node = self.nodes[0].add_p2p_connection(NodeConnCB(), services=NODE_NETWORK|NODE_UNSUPPORTED_SERVICE_BIT_7)
 
         NetworkThread().start()  # Network thread stopped when all previous NodeConnCBs disconnected. Restart it
 
