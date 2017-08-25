@@ -145,7 +145,6 @@ void CMasternodeSync::ProcessTick()
 {
     static int nTick = 0;
     if(nTick++ % MASTERNODE_SYNC_TICK_SECONDS != 0) return;
-    if(!pCurrentBlockIndex) return;
 
     // reset the sync process if the last call to this function was more than 60 minutes ago (client was in sleep mode)
     static int64_t nTimeLastProcess = GetTime();
@@ -389,8 +388,7 @@ void CMasternodeSync::SendGovernanceSyncRequest(CNode* pnode)
 
 void CMasternodeSync::UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload)
 {
-    pCurrentBlockIndex = pindexNew;
-    if(fDebug) LogPrintf("CMasternodeSync::UpdatedBlockTip -- pCurrentBlockIndex->nHeight: %d fInitialDownload=%d\n", pCurrentBlockIndex->nHeight, fInitialDownload);
+    if(fDebug) LogPrintf("CMasternodeSync::UpdatedBlockTip -- pindexNew->nHeight: %d fInitialDownload=%d\n", pindexNew->nHeight, fInitialDownload);
     // nothing to do here if we failed to sync previousely,
     // just wait till status reset after a cooldown (see ProcessTick)
     if(IsFailed()) return;

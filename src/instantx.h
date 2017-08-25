@@ -39,8 +39,8 @@ class CInstantSend
 private:
     static const int ORPHAN_VOTE_SECONDS            = 60;
 
-    // Keep track of current block index
-    const CBlockIndex *pCurrentBlockIndex;
+    // Keep track of current block height
+    int nCachedBlockHeight;
 
     // maps for AlreadyHave
     std::map<uint256, CTxLockRequest> mapLockRequestAccepted; // tx hash - tx

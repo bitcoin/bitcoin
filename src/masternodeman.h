@@ -114,8 +114,8 @@ private:
     // critical section to protect the inner data structures
     mutable CCriticalSection cs;
 
-    // Keep track of current block index
-    const CBlockIndex *pCurrentBlockIndex;
+    // Keep track of current block height
+    int nCachedBlockHeight;
 
     // map to hold all MNs
     std::vector<CMasternode> vMasternodes;
@@ -321,7 +321,7 @@ public:
     bool CheckMnbAndUpdateMasternodeList(CNode* pfrom, CMasternodeBroadcast mnb, int& nDos);
     bool IsMnbRecoveryRequested(const uint256& hash) { return mMnbRecoveryRequests.count(hash); }
 
-    void UpdateLastPaid();
+    void UpdateLastPaid(const CBlockIndex* pindex);
     bool UpdateLastDsq(const CTxIn& vin);
 
     void CheckAndRebuildMasternodeIndex();

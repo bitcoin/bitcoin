@@ -188,11 +188,13 @@ UniValue masternode(const UniValue& params, bool fHelp)
         int nCount;
         int nHeight;
         CMasternode* winner = NULL;
+        CBlockIndex* pindex = NULL;
         {
             LOCK(cs_main);
-            nHeight = chainActive.Height() + (strCommand == "current" ? 1 : 10);
+            pindex = chainActive.Tip();
         }
-        mnodeman.UpdateLastPaid();
+        nHeight = pindex->nHeight + (strCommand == "current" ? 1 : 10);
+        mnodeman.UpdateLastPaid(pindex);
         winner = mnodeman.GetNextMasternodeInQueueForPayment(nHeight, true, nCount);
         if(!winner) return "unknown";
 
@@ -487,7 +489,12 @@ UniValue masternodelist(const UniValue& params, bool fHelp)
     }
 
     if (strMode == "full" || strMode == "lastpaidtime" || strMode == "lastpaidblock") {
-        mnodeman.UpdateLastPaid();
+        CBlockIndex* pindex = NULL;
+        {
+            LOCK(cs_main);
+            pindex = chainActive.Tip();
+        }
+        mnodeman.UpdateLastPaid(pindex);
     }
 
     UniValue obj(UniValue::VOBJ);

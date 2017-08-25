@@ -23,8 +23,7 @@ const int CGovernanceManager::MAX_TIME_FUTURE_DEVIATION = 60*60;
 const int CGovernanceManager::RELIABLE_PROPAGATION_TIME = 60;
 
 CGovernanceManager::CGovernanceManager()
-    : pCurrentBlockIndex(NULL),
-      nTimeLastDiff(0),
+    : nTimeLastDiff(0),
       nCachedBlockHeight(0),
       mapObjects(),
       mapErasedGovernanceObjects(),
@@ -149,10 +148,6 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
     {
         // MAKE SURE WE HAVE A VALID REFERENCE TO THE TIP BEFORE CONTINUING
 
-        if(!pCurrentBlockIndex) {
-            LogPrintf("MNGOVERNANCEOBJECT -- pCurrentBlockIndex is NULL\n");
-            return;
-        }
 
         if(!masternodeSync.IsMasternodeListSynced()) {
             LogPrint("gobject", "MNGOVERNANCEOBJECT -- masternode list not synced\n");
@@ -472,13 +467,7 @@ void CGovernanceManager::UpdateCachesAndClean()
         it->second.fDirtyCache = true;
     }
 
-    // DOUBLE CHECK THAT WE HAVE A VALID POINTER TO TIP
-
-    if(!pCurrentBlockIndex) return;
-
     CRateChecksGuard guard(false, *this);
-
-    LogPrint("gobject", "CGovernanceManager::UpdateCachesAndClean -- After pCurrentBlockIndex (not NULL)\n");
 
     // UPDATE CACHE FOR EACH OBJECT THAT IS FLAGGED DIRTYCACHE=TRUE
 
@@ -681,15 +670,7 @@ struct sortProposalsByVotes {
 
 void CGovernanceManager::DoMaintenance()
 {
-    // NOTHING TO DO IN LITEMODE
-    if(fLiteMode) {
-        return;
-    }
-
-    // IF WE'RE NOT SYNCED, EXIT
-    if(!masternodeSync.IsSynced()) return;
-
-    if(!pCurrentBlockIndex) return;
+    if(fLiteMode || !masternodeSync.IsSynced()) return;
 
     // CHECK OBJECTS WE'VE ASKED FOR, REMOVE OLD ENTRIES
 
@@ -1400,12 +1381,8 @@ void CGovernanceManager::UpdatedBlockTip(const CBlockIndex *pindex)
         return;
     }
 
-    {
-        LOCK(cs);
-        pCurrentBlockIndex = pindex;
-        nCachedBlockHeight = pCurrentBlockIndex->nHeight;
-        LogPrint("gobject", "CGovernanceManager::UpdatedBlockTip pCurrentBlockIndex->nHeight: %d\n", pCurrentBlockIndex->nHeight);
-    }
+    nCachedBlockHeight = pindex->nHeight;
+    LogPrint("gobject", "CGovernanceManager::UpdatedBlockTip -- nCachedBlockHeight: %d\n", nCachedBlockHeight);
 
     CheckPostponedObjects();
 }

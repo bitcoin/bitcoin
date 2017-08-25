@@ -43,7 +43,9 @@ private:
 
     int nCachedLastSuccessBlock;
     int nMinBlockSpacing; //required blocks between mixes
-    const CBlockIndex *pCurrentBlockIndex; // Keep track of current block index
+
+    // Keep track of current block height
+    int nCachedBlockHeight;
 
     int nEntriesCount;
     bool fLastEntryAccepted;

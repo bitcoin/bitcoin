@@ -46,9 +46,6 @@ private:
     // ... or failed
     int64_t nTimeLastFailure;
 
-    // Keep track of current block index
-    const CBlockIndex *pCurrentBlockIndex;
-
     void Fail();
     void ClearFulfilledRequests();
 
