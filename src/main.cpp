@@ -6010,8 +6010,11 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
     }
 
 
-    else if (strCommand == NetMsgType::INV && !fImporting && !fReindex)
+    else if (strCommand == NetMsgType::INV)
     {
+        if (fImporting || fReindex)
+            return true;
+
         std::vector<CInv> vInv;
         vRecv >> vInv;
 
@@ -6097,8 +6100,11 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
     }
 
 
-    else if (strCommand == NetMsgType::GETDATA && !fImporting && !fReindex)
+    else if (strCommand == NetMsgType::GETDATA)
     {
+        if (fImporting || fReindex)
+            return true;
+
         std::vector<CInv> vInv;
         vRecv >> vInv;
         // BU check size == 0 to be intolerant of an empty and useless request
@@ -6133,8 +6139,11 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
     }
 
 
-    else if (strCommand == NetMsgType::GETBLOCKS && !fImporting && !fReindex)
+    else if (strCommand == NetMsgType::GETBLOCKS)
     {
+        if (fImporting || fReindex)
+            return true;
+
         CBlockLocator locator;
         uint256 hashStop;
         vRecv >> locator >> hashStop;
