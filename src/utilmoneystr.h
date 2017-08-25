@@ -12,7 +12,7 @@
 #include <stdint.h>
 #include <string>
 
-#include "amount.h"
+#include <amount.h>
 
 /* Do not use these functions to represent or parse monetary amounts to or from
  * JSON but use AmountFromValue and ValueFromAmount for that.

@@ -2,17 +2,17 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "paymentservertests.h"
+#include <qt/test/paymentservertests.h>
 
-#include "optionsmodel.h"
-#include "paymentrequestdata.h"
+#include <qt/optionsmodel.h>
+#include <qt/test/paymentrequestdata.h>
 
-#include "amount.h"
-#include "random.h"
-#include "script/script.h"
-#include "script/standard.h"
-#include "util.h"
-#include "utilstrencodings.h"
+#include <amount.h>
+#include <random.h>
+#include <script/script.h>
+#include <script/standard.h>
+#include <util.h>
+#include <utilstrencodings.h>
 
 #include <openssl/x509.h>
 #include <openssl/x509_vfy.h>

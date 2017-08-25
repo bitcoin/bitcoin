@@ -4,9 +4,9 @@
 
 #include <iostream>
 
-#include "bench.h"
-#include "bloom.h"
-#include "utiltime.h"
+#include <bench/bench.h>
+#include <bloom.h>
+#include <utiltime.h>
 
 static void RollingBloom(benchmark::State& state)
 {

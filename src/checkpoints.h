@@ -5,7 +5,7 @@
 #ifndef BITCOIN_CHECKPOINTS_H
 #define BITCOIN_CHECKPOINTS_H
 
-#include "uint256.h"
+#include <uint256.h>
 
 #include <map>
 
