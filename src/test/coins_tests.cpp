@@ -81,7 +81,7 @@ public:
         // Manually recompute the dynamic usage of the whole data, and compare it.
         size_t ret = memusage::DynamicUsage(cacheCoins);
         size_t count = 0;
-        for (CCoinsMap::iterator it = cacheCoins.begin(); it != cacheCoins.end(); it++) {
+        for (CCoinsMap::iterator it = cacheCoins.begin(); it != cacheCoins.end(); ++it) {
             ret += it->second.coin.DynamicMemoryUsage();
             ++count;
         }
@@ -132,11 +132,11 @@ BOOST_AUTO_TEST_CASE(coins_cache_simulation_test)
     // Use a limited set of random transaction ids, so we do test overwriting entries.
     std::vector<uint256> txids;
     txids.resize(NUM_SIMULATION_ITERATIONS / 8);
-    for (unsigned int i = 0; i < txids.size(); i++) {
+    for (unsigned int i = 0; i < txids.size(); ++i) {
         txids[i] = InsecureRand256();
     }
 
-    for (unsigned int i = 0; i < NUM_SIMULATION_ITERATIONS; i++) {
+    for (unsigned int i = 0; i < NUM_SIMULATION_ITERATIONS; ++i) {
         // Do a random modification.
         {
             uint256 txid = txids[InsecureRandRange(txids.size())]; // txid we're going to modify in this iteration.
@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE(coins_cache_simulation_test)
 
         // Once every 1000 iterations and at the end, verify the full cache.
         if (InsecureRandRange(1000) == 1 || i == NUM_SIMULATION_ITERATIONS - 1) {
-            for (auto it = result.begin(); it != result.end(); it++) {
+            for (auto it = result.begin(); it != result.end(); ++it) {
                 bool have = stack.back()->HaveCoin(it->first);
                 const Coin& coin = stack.back()->AccessCoin(it->first);
                 BOOST_CHECK(have == !coin.IsSpent());
@@ -293,7 +293,7 @@ BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
     std::set<COutPoint> duplicate_coins;
     std::set<COutPoint> utxoset;
 
-    for (unsigned int i = 0; i < NUM_SIMULATION_ITERATIONS; i++) {
+    for (unsigned int i = 0; i < NUM_SIMULATION_ITERATIONS; ++i) {
         uint32_t randiter = InsecureRand32();
 
         // 19/20 txs add a new transaction
@@ -420,7 +420,7 @@ BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
 
         // Once every 1000 iterations and at the end, verify the full cache.
         if (InsecureRandRange(1000) == 1 || i == NUM_SIMULATION_ITERATIONS - 1) {
-            for (auto it = result.begin(); it != result.end(); it++) {
+            for (auto it = result.begin(); it != result.end(); ++it) {
                 bool have = stack.back()->HaveCoin(it->first);
                 const Coin& coin = stack.back()->AccessCoin(it->first);
                 BOOST_CHECK(have == !coin.IsSpent());

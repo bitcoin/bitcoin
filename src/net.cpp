@@ -114,7 +114,7 @@ bool GetLocal(CService& addr, const CNetAddr *paddrPeer)
     int nBestReachability = -1;
     {
         LOCK(cs_mapLocalHost);
-        for (std::map<CNetAddr, LocalServiceInfo>::iterator it = mapLocalHost.begin(); it != mapLocalHost.end(); it++)
+        for (std::map<CNetAddr, LocalServiceInfo>::iterator it = mapLocalHost.begin(); it != mapLocalHost.end(); ++it)
         {
             int nScore = (*it).second.nScore;
             int nReachability = (*it).first.GetReachabilityFrom(paddrPeer);
@@ -272,7 +272,7 @@ bool SeenLocal(const CService& addr)
         LOCK(cs_mapLocalHost);
         if (mapLocalHost.count(addr) == 0)
             return false;
-        mapLocalHost[addr].nScore++;
+        ++mapLocalHost[addr].nScore;
     }
     return true;
 }
@@ -478,7 +478,7 @@ void CConnman::ClearBanned()
 bool CConnman::IsBanned(CNetAddr ip)
 {
     LOCK(cs_setBanned);
-    for (banmap_t::iterator it = setBanned.begin(); it != setBanned.end(); it++)
+    for (banmap_t::iterator it = setBanned.begin(); it != setBanned.end(); ++it)
     {
         CSubNet subNet = (*it).first;
         CBanEntry banEntry = (*it).second;
@@ -869,7 +869,7 @@ size_t CConnman::SocketSendData(CNode *pnode) const
                 pnode->nSendOffset = 0;
                 pnode->nSendSize -= data.size();
                 pnode->fPauseSend = pnode->nSendSize > nSendBufferMaxSize;
-                it++;
+                ++it;
             } else {
                 // could not send full message; stop sending more
                 break;
@@ -1062,7 +1062,7 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
         LOCK(cs_vNodes);
         for (CNode* pnode : vNodes)
             if (pnode->fInbound)
-                nInbound++;
+                ++nInbound;
     }
 
     if (hSocket == INVALID_SOCKET)
@@ -1263,7 +1263,7 @@ void CConnman::ThreadSocketHandler()
             {
                 int nErr = WSAGetLastError();
                 LogPrintf("socket select error %s\n", NetworkErrorString(nErr));
-                for (unsigned int i = 0; i <= hSocketMax; i++)
+                for (unsigned int i = 0; i <= hSocketMax; ++i)
                     FD_SET(i, &fdsetRecv);
             }
             FD_ZERO(&fdsetSend);
@@ -1618,7 +1618,7 @@ void CConnman::ThreadDNSAddressSeed()
                     CAddress addr = CAddress(CService(ip, Params().GetDefaultPort()), requiredServiceBits);
                     addr.nTime = GetTime() - 3*nOneDay - GetRand(4*nOneDay); // use a random age between 3 and 7 days old
                     vAdd.push_back(addr);
-                    found++;
+                    ++found;
                 }
                 addrman.Add(vAdd, resolveSource);
             }
@@ -1679,14 +1679,14 @@ void CConnman::ThreadOpenConnections()
     // Connect to specific addresses
     if (gArgs.IsArgSet("-connect"))
     {
-        for (int64_t nLoop = 0;; nLoop++)
+        for (int64_t nLoop = 0;; ++nLoop)
         {
             ProcessOneShot();
             for (const std::string& strAddr : gArgs.GetArgs("-connect"))
             {
                 CAddress addr(CService(), NODE_NONE);
                 OpenNetworkConnection(addr, false, nullptr, strAddr.c_str());
-                for (int i = 0; i < 10 && i < nLoop; i++)
+                for (int i = 0; i < 10 && i < nLoop; ++i)
                 {
                     if (!interruptNet.sleep_for(std::chrono::milliseconds(500)))
                         return;
@@ -1742,7 +1742,7 @@ void CConnman::ThreadOpenConnections()
 
                     // Count the peers that have all relevant services
                     if (pnode->fSuccessfullyConnected && !pnode->fFeeler && ((pnode->nServices & nRelevantServices) == nRelevantServices)) {
-                        nOutboundRelevant++;
+                        ++nOutboundRelevant;
                     }
                     // Netgroups for inbound and addnode peers are not excluded because our goal here
                     // is to not use multiple of our limited outbound slots on a single netgroup
@@ -1750,7 +1750,7 @@ void CConnman::ThreadOpenConnections()
                     // also have the added issue that they're attacker controlled and could be used
                     // to prevent us from connecting to particular hosts if we used them here.
                     setConnected.insert(pnode->addr.GetGroup());
-                    nOutbound++;
+                    ++nOutbound;
                 }
             }
         }
@@ -1791,7 +1791,7 @@ void CConnman::ThreadOpenConnections()
             // If we didn't find an appropriate destination after trying 100 addresses fetched from addrman,
             // stop this loop, and let the outer loop run again (which sleeps, adds seed nodes, recalculates
             // already-connected network ranges, ...) before trying new addrman addresses.
-            nTries++;
+            ++nTries;
             if (nTries > 100)
                 break;
 
@@ -2384,13 +2384,13 @@ void CConnman::Interrupt()
     InterruptSocks5(true);
 
     if (semOutbound) {
-        for (int i=0; i<(nMaxOutbound + nMaxFeeler); i++) {
+        for (int i=0; i<(nMaxOutbound + nMaxFeeler); ++i) {
             semOutbound->post();
         }
     }
 
     if (semAddnode) {
-        for (int i=0; i<nMaxAddnode; i++) {
+        for (int i=0; i<nMaxAddnode; ++i) {
             semAddnode->post();
         }
     }
@@ -2513,7 +2513,7 @@ size_t CConnman::GetNodeCount(NumConnections flags)
     int nNum = 0;
     for(std::vector<CNode*>::const_iterator it = vNodes.begin(); it != vNodes.end(); ++it)
         if (flags & ((*it)->fInbound ? CONNECTIONS_IN : CONNECTIONS_OUT))
-            nNum++;
+            ++nNum;
 
     return nNum;
 }

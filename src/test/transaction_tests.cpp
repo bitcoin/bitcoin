@@ -85,7 +85,7 @@ std::string FormatScriptFlags(unsigned int flags)
         if (flags & it->second) {
             ret += it->first + ",";
         }
-        it++;
+        ++it;
     }
     return ret.substr(0, ret.size() - 1);
 }
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(tx_valid)
     UniValue tests = read_json(std::string(json_tests::tx_valid, json_tests::tx_valid + sizeof(json_tests::tx_valid)));
 
     ScriptError err;
-    for (unsigned int idx = 0; idx < tests.size(); idx++) {
+    for (unsigned int idx = 0; idx < tests.size(); ++idx) {
         UniValue test = tests[idx];
         std::string strTest = test.write();
         if (test[0].isArray())
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(tx_valid)
             std::map<COutPoint, int64_t> mapprevOutValues;
             UniValue inputs = test[0].get_array();
             bool fValid = true;
-	    for (unsigned int inpIdx = 0; inpIdx < inputs.size(); inpIdx++) {
+	    for (unsigned int inpIdx = 0; inpIdx < inputs.size(); ++inpIdx) {
 	        const UniValue& input = inputs[inpIdx];
                 if (!input.isArray())
                 {
@@ -154,7 +154,7 @@ BOOST_AUTO_TEST_CASE(tx_valid)
             BOOST_CHECK(state.IsValid());
 
             PrecomputedTransactionData txdata(tx);
-            for (unsigned int i = 0; i < tx.vin.size(); i++)
+            for (unsigned int i = 0; i < tx.vin.size(); ++i)
             {
                 if (!mapprevOutScriptPubKeys.count(tx.vin[i].prevout))
                 {
@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
     // Initialize to SCRIPT_ERR_OK. The tests expect err to be changed to a
     // value other than SCRIPT_ERR_OK.
     ScriptError err = SCRIPT_ERR_OK;
-    for (unsigned int idx = 0; idx < tests.size(); idx++) {
+    for (unsigned int idx = 0; idx < tests.size(); ++idx) {
         UniValue test = tests[idx];
         std::string strTest = test.write();
         if (test[0].isArray())
@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
             std::map<COutPoint, int64_t> mapprevOutValues;
             UniValue inputs = test[0].get_array();
             bool fValid = true;
-	    for (unsigned int inpIdx = 0; inpIdx < inputs.size(); inpIdx++) {
+	    for (unsigned int inpIdx = 0; inpIdx < inputs.size(); ++inpIdx) {
 	        const UniValue& input = inputs[inpIdx];
                 if (!input.isArray())
                 {
@@ -240,7 +240,7 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
             fValid = CheckTransaction(tx, state) && state.IsValid();
 
             PrecomputedTransactionData txdata(tx);
-            for (unsigned int i = 0; i < tx.vin.size() && fValid; i++)
+            for (unsigned int i = 0; i < tx.vin.size() && fValid; ++i)
             {
                 if (!mapprevOutScriptPubKeys.count(tx.vin[i].prevout))
                 {
@@ -293,7 +293,7 @@ SetupDummyInputs(CBasicKeyStore& keystoreRet, CCoinsViewCache& coinsRet)
 
     // Add some keys to the keystore:
     CKey key[4];
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 4; ++i)
     {
         key[i].MakeNewKey(i % 2);
         keystoreRet.AddKey(key[i]);
@@ -433,7 +433,7 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction) {
     sigHashes.push_back(SIGHASH_ALL);
 
     // create a big transaction of 4500 inputs signed by the same key
-    for(uint32_t ij = 0; ij < 4500; ij++) {
+    for(uint32_t ij = 0; ij < 4500; ++ij) {
         uint32_t i = mtx.vin.size();
         uint256 prevId;
         prevId.SetHex("0000000000000000000000000000000000000000000000000000000000000100");
@@ -449,7 +449,7 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction) {
     }
 
     // sign all inputs
-    for(uint32_t i = 0; i < mtx.vin.size(); i++) {
+    for(uint32_t i = 0; i < mtx.vin.size(); ++i) {
         bool hashSigned = SignSignature(keystore, scriptPubKey, mtx, i, 1000, sigHashes.at(i % sigHashes.size()));
         assert(hashSigned);
     }
@@ -465,11 +465,11 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction) {
     CCheckQueue<CScriptCheck> scriptcheckqueue(128);
     CCheckQueueControl<CScriptCheck> control(&scriptcheckqueue);
 
-    for (int i=0; i<20; i++)
+    for (int i=0; i<20; ++i)
         threadGroup.create_thread(boost::bind(&CCheckQueue<CScriptCheck>::Thread, boost::ref(scriptcheckqueue)));
 
     std::vector<Coin> coins;
-    for(uint32_t i = 0; i < mtx.vin.size(); i++) {
+    for(uint32_t i = 0; i < mtx.vin.size(); ++i) {
         Coin coin;
         coin.nHeight = 1;
         coin.fCoinBase = false;
@@ -478,7 +478,7 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction) {
         coins.emplace_back(std::move(coin));
     }
 
-    for(uint32_t i = 0; i < mtx.vin.size(); i++) {
+    for(uint32_t i = 0; i < mtx.vin.size(); ++i) {
         std::vector<CScriptCheck> vChecks;
         const CTxOut& output = coins[tx.vin[i].prevout.n].out;
         CScriptCheck check(output.scriptPubKey, output.nValue, tx, i, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS, false, &txdata);

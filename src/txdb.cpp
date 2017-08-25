@@ -113,9 +113,9 @@ bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) {
                 batch.Erase(entry);
             else
                 batch.Write(entry, it->second.coin);
-            changed++;
+            ++changed;
         }
-        count++;
+        ++count;
         CCoinsMap::iterator itOld = it++;
         mapCoins.erase(itOld);
         if (batch.SizeEstimate() > batch_size) {
@@ -226,11 +226,11 @@ void CCoinsViewDBCursor::Next()
 
 bool CBlockTreeDB::WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo*> >& fileInfo, int nLastFile, const std::vector<const CBlockIndex*>& blockinfo) {
     CDBBatch batch(*this);
-    for (std::vector<std::pair<int, const CBlockFileInfo*> >::const_iterator it=fileInfo.begin(); it != fileInfo.end(); it++) {
+    for (std::vector<std::pair<int, const CBlockFileInfo*> >::const_iterator it=fileInfo.begin(); it != fileInfo.end(); ++it) {
         batch.Write(std::make_pair(DB_BLOCK_FILES, it->first), *it->second);
     }
     batch.Write(DB_LAST_BLOCK, nLastFile);
-    for (std::vector<const CBlockIndex*>::const_iterator it=blockinfo.begin(); it != blockinfo.end(); it++) {
+    for (std::vector<const CBlockIndex*>::const_iterator it=blockinfo.begin(); it != blockinfo.end(); ++it) {
         batch.Write(std::make_pair(DB_BLOCK_INDEX, (*it)->GetBlockHash()), CDiskBlockIndex(*it));
     }
     return WriteBatch(batch, true);
@@ -242,7 +242,7 @@ bool CBlockTreeDB::ReadTxIndex(const uint256 &txid, CDiskTxPos &pos) {
 
 bool CBlockTreeDB::WriteTxIndex(const std::vector<std::pair<uint256, CDiskTxPos> >&vect) {
     CDBBatch batch(*this);
-    for (std::vector<std::pair<uint256,CDiskTxPos> >::const_iterator it=vect.begin(); it!=vect.end(); it++)
+    for (std::vector<std::pair<uint256,CDiskTxPos> >::const_iterator it=vect.begin(); it!=vect.end(); ++it)
         batch.Write(std::make_pair(DB_TXINDEX, it->first), it->second);
     return WriteBatch(batch);
 }
@@ -337,16 +337,16 @@ public:
         while (nMaskCode > 0) {
             unsigned char chAvail = 0;
             ::Unserialize(s, chAvail);
-            for (unsigned int p = 0; p < 8; p++) {
+            for (unsigned int p = 0; p < 8; ++p) {
                 bool f = (chAvail & (1 << p)) != 0;
                 vAvail.push_back(f);
             }
             if (chAvail != 0)
-                nMaskCode--;
+                --nMaskCode;
         }
         // txouts themself
         vout.assign(vAvail.size(), CTxOut());
-        for (unsigned int i = 0; i < vAvail.size(); i++) {
+        for (unsigned int i = 0; i < vAvail.size(); ++i) {
             if (vAvail[i])
                 ::Unserialize(s, REF(CTxOutCompressor(vout[i])));
         }

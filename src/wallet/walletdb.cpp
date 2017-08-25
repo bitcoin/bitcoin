@@ -316,7 +316,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
         }
         else if (strType == "watchs")
         {
-            wss.nWatchKeys++;
+            ++wss.nWatchKeys;
             CScript script;
             ssKey >> script;
             char fYes;
@@ -339,7 +339,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
 
             if (strType == "key")
             {
-                wss.nKeys++;
+                ++wss.nKeys;
                 ssValue >> pkey;
             } else {
                 CWalletKey wkey;
@@ -414,7 +414,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             }
             std::vector<unsigned char> vchPrivKey;
             ssValue >> vchPrivKey;
-            wss.nCKeys++;
+            ++wss.nCKeys;
 
             if (!pwallet->LoadCryptedKey(vchPubKey, vchPrivKey))
             {
@@ -441,7 +441,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
 
             CKeyMetadata keyMeta;
             ssValue >> keyMeta;
-            wss.nKeyMeta++;
+            ++wss.nKeyMeta;
 
             pwallet->LoadKeyMetadata(keyID, keyMeta);
         }
@@ -709,7 +709,7 @@ DBErrors CWalletDB::ZapSelectTx(std::vector<uint256>& vTxHashIn, std::vector<uin
     std::vector<uint256>::iterator it = vTxHashIn.begin();
     for (uint256 hash : vTxHash) {
         while (it < vTxHashIn.end() && (*it) < hash) {
-            it++;
+            ++it;
         }
         if (it == vTxHashIn.end()) {
             break;

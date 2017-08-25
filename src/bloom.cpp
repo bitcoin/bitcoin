@@ -59,7 +59,7 @@ void CBloomFilter::insert(const std::vector<unsigned char>& vKey)
 {
     if (isFull)
         return;
-    for (unsigned int i = 0; i < nHashFuncs; i++)
+    for (unsigned int i = 0; i < nHashFuncs; ++i)
     {
         unsigned int nIndex = Hash(i, vKey);
         // Sets bit nIndex of vData
@@ -88,7 +88,7 @@ bool CBloomFilter::contains(const std::vector<unsigned char>& vKey) const
         return true;
     if (isEmpty)
         return false;
-    for (unsigned int i = 0; i < nHashFuncs; i++)
+    for (unsigned int i = 0; i < nHashFuncs; ++i)
     {
         unsigned int nIndex = Hash(i, vKey);
         // Checks bit nIndex of vData
@@ -143,7 +143,7 @@ bool CBloomFilter::IsRelevantAndUpdate(const CTransaction& tx)
     if (contains(hash))
         fFound = true;
 
-    for (unsigned int i = 0; i < tx.vout.size(); i++)
+    for (unsigned int i = 0; i < tx.vout.size(); ++i)
     {
         const CTxOut& txout = tx.vout[i];
         // Match if the filter contains any arbitrary script data element in any scriptPubKey in tx
@@ -204,7 +204,7 @@ void CBloomFilter::UpdateEmptyFull()
 {
     bool full = true;
     bool empty = true;
-    for (unsigned int i = 0; i < vData.size(); i++)
+    for (unsigned int i = 0; i < vData.size(); ++i)
     {
         full &= vData[i] == 0xff;
         empty &= vData[i] == 0;
@@ -249,7 +249,7 @@ void CRollingBloomFilter::insert(const std::vector<unsigned char>& vKey)
 {
     if (nEntriesThisGeneration == nEntriesPerGeneration) {
         nEntriesThisGeneration = 0;
-        nGeneration++;
+        ++nGeneration;
         if (nGeneration == 4) {
             nGeneration = 1;
         }
@@ -263,9 +263,9 @@ void CRollingBloomFilter::insert(const std::vector<unsigned char>& vKey)
             data[p + 1] = p2 & mask;
         }
     }
-    nEntriesThisGeneration++;
+    ++nEntriesThisGeneration;
 
-    for (int n = 0; n < nHashFuncs; n++) {
+    for (int n = 0; n < nHashFuncs; ++n) {
         uint32_t h = RollingBloomHash(n, nTweak, vKey);
         int bit = h & 0x3F;
         uint32_t pos = (h >> 6) % data.size();
@@ -283,7 +283,7 @@ void CRollingBloomFilter::insert(const uint256& hash)
 
 bool CRollingBloomFilter::contains(const std::vector<unsigned char>& vKey) const
 {
-    for (int n = 0; n < nHashFuncs; n++) {
+    for (int n = 0; n < nHashFuncs; ++n) {
         uint32_t h = RollingBloomHash(n, nTweak, vKey);
         int bit = h & 0x3F;
         uint32_t pos = (h >> 6) % data.size();
@@ -306,7 +306,7 @@ void CRollingBloomFilter::reset()
     nTweak = GetRand(std::numeric_limits<unsigned int>::max());
     nEntriesThisGeneration = 0;
     nGeneration = 1;
-    for (std::vector<uint64_t>::iterator it = data.begin(); it != data.end(); it++) {
+    for (std::vector<uint64_t>::iterator it = data.begin(); it != data.end(); ++it) {
         *it = 0;
     }
 }

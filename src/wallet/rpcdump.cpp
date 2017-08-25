@@ -58,7 +58,7 @@ std::string static EncodeDumpString(const std::string &str) {
 
 std::string DecodeDumpString(const std::string &str) {
     std::stringstream ret;
-    for (unsigned int pos = 0; pos < str.length(); pos++) {
+    for (unsigned int pos = 0; pos < str.length(); ++pos) {
         unsigned char c = str[pos];
         if (c == '%' && pos+2 < str.length()) {
             c = (((str[pos+1]>>6)*9+((str[pos+1]-'0')&15)) << 4) | 
@@ -510,7 +510,7 @@ UniValue importwallet(const JSONRPCRequest& request)
         int64_t nTime = DecodeDumpTime(vstr[1]);
         std::string strLabel;
         bool fLabel = true;
-        for (unsigned int nStr = 2; nStr < vstr.size(); nStr++) {
+        for (unsigned int nStr = 2; nStr < vstr.size(); ++nStr) {
             if (boost::algorithm::starts_with(vstr[nStr], "#"))
                 break;
             if (vstr[nStr] == "change=1")
@@ -654,7 +654,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
             file << "# extended private masterkey: " << b58extkey.ToString() << "\n\n";
         }
     }
-    for (std::vector<std::pair<int64_t, CKeyID> >::const_iterator it = vKeyBirth.begin(); it != vKeyBirth.end(); it++) {
+    for (std::vector<std::pair<int64_t, CKeyID> >::const_iterator it = vKeyBirth.begin(); it != vKeyBirth.end(); ++it) {
         const CKeyID &keyid = it->second;
         std::string strTime = EncodeDumpTime(it->first);
         std::string strAddr = CBitcoinAddress(keyid).ToString();
@@ -798,7 +798,7 @@ UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, const int6
 
             // Import private keys.
             if (keys.size()) {
-                for (size_t i = 0; i < keys.size(); i++) {
+                for (size_t i = 0; i < keys.size(); ++i) {
                     const std::string& privkey = keys[i].get_str();
 
                     CBitcoinSecret vchSecret;
