@@ -36,49 +36,6 @@ struct CompareScoreMN
     }
 };
 
-CMasternodeIndex::CMasternodeIndex()
-    : nSize(0),
-      mapIndex(),
-      mapReverseIndex()
-{}
-
-bool CMasternodeIndex::Get(int nIndex, CTxIn& vinMasternode) const
-{
-    rindex_m_cit it = mapReverseIndex.find(nIndex);
-    if(it == mapReverseIndex.end()) {
-        return false;
-    }
-    vinMasternode = it->second;
-    return true;
-}
-
-int CMasternodeIndex::GetMasternodeIndex(const CTxIn& vinMasternode) const
-{
-    index_m_cit it = mapIndex.find(vinMasternode);
-    if(it == mapIndex.end()) {
-        return -1;
-    }
-    return it->second;
-}
-
-void CMasternodeIndex::AddMasternodeVIN(const CTxIn& vinMasternode)
-{
-    index_m_it it = mapIndex.find(vinMasternode);
-    if(it != mapIndex.end()) {
-        return;
-    }
-    int nNextIndex = nSize;
-    mapIndex[vinMasternode] = nNextIndex;
-    mapReverseIndex[nNextIndex] = vinMasternode;
-    ++nSize;
-}
-
-void CMasternodeIndex::Clear()
-{
-    mapIndex.clear();
-    mapReverseIndex.clear();
-    nSize = 0;
-}
 struct CompareByAddr
 
 {
@@ -88,14 +45,6 @@ struct CompareByAddr
         return t1->addr < t2->addr;
     }
 };
-
-void CMasternodeIndex::RebuildIndex()
-{
-    nSize = mapIndex.size();
-    for(index_m_it it = mapIndex.begin(); it != mapIndex.end(); ++it) {
-        mapReverseIndex[it->second] = it->first;
-    }
-}
 
 CMasternodeMan::CMasternodeMan()
 : cs(),
@@ -107,10 +56,6 @@ CMasternodeMan::CMasternodeMan()
   mMnbRecoveryRequests(),
   mMnbRecoveryGoodReplies(),
   listScheduledMnbRequestConnections(),
-  nLastIndexRebuildTime(0),
-  indexMasternodes(),
-  indexMasternodesOld(),
-  fIndexRebuilt(false),
   fMasternodesAdded(false),
   fMasternodesRemoved(false),
   vecDirtyGovernanceObjectHashes(),
@@ -124,16 +69,12 @@ bool CMasternodeMan::Add(CMasternode &mn)
 {
     LOCK(cs);
 
-    CMasternode *pmn = Find(mn.vin);
-    if (pmn == NULL) {
-        LogPrint("masternode", "CMasternodeMan::Add -- Adding new Masternode: addr=%s, %i now\n", mn.addr.ToString(), size() + 1);
-        vMasternodes.push_back(mn);
-        indexMasternodes.AddMasternodeVIN(mn.vin);
-        fMasternodesAdded = true;
-        return true;
-    }
+    if (Has(mn.vin)) return false;
 
-    return false;
+    LogPrint("masternode", "CMasternodeMan::Add -- Adding new Masternode: addr=%s, %i now\n", mn.addr.ToString(), size() + 1);
+    vMasternodes.push_back(mn);
+    fMasternodesAdded = true;
+    return true;
 }
 
 void CMasternodeMan::AskForMN(CNode* pnode, const CTxIn &vin)
@@ -352,10 +293,6 @@ void CMasternodeMan::CheckAndRemove()
         }
 
         LogPrintf("CMasternodeMan::CheckAndRemove -- %s\n", ToString());
-
-        if(fMasternodesRemoved) {
-            CheckAndRebuildMasternodeIndex();
-        }
     }
 
     if(fMasternodesRemoved) {
@@ -374,8 +311,6 @@ void CMasternodeMan::Clear()
     mapSeenMasternodePing.clear();
     nDsqCount = 0;
     nLastWatchdogVoteTime = 0;
-    indexMasternodes.Clear();
-    indexMasternodesOld.Clear();
 }
 
 int CMasternodeMan::CountMasternodes(int nProtocolVersion)
@@ -1375,7 +1310,6 @@ std::string CMasternodeMan::ToString() const
             ", peers who asked us for Masternode list: " << (int)mAskedUsForMasternodeList.size() <<
             ", peers we asked for Masternode list: " << (int)mWeAskedForMasternodeList.size() <<
             ", entries in Masternode list we asked for: " << (int)mWeAskedForMasternodeListEntry.size() <<
-            ", masternode index size: " << indexMasternodes.GetSize() <<
             ", nDsqCount: " << (int)nDsqCount;
 
     return info.str();
@@ -1529,31 +1463,6 @@ bool CMasternodeMan::UpdateLastDsq(const CTxIn& vin)
     return true;
 }
 
-void CMasternodeMan::CheckAndRebuildMasternodeIndex()
-{
-    LOCK(cs);
-
-    if(GetTime() - nLastIndexRebuildTime < MIN_INDEX_REBUILD_TIME) {
-        return;
-    }
-
-    if(indexMasternodes.GetSize() <= MAX_EXPECTED_INDEX_SIZE) {
-        return;
-    }
-
-    if(indexMasternodes.GetSize() <= int(vMasternodes.size())) {
-        return;
-    }
-
-    indexMasternodesOld = indexMasternodes;
-    indexMasternodes.Clear();
-    for(size_t i = 0; i < vMasternodes.size(); ++i) {
-        indexMasternodes.AddMasternodeVIN(vMasternodes[i].vin);
-    }
-
-    fIndexRebuilt = true;
-    nLastIndexRebuildTime = GetTime();
-}
 
 void CMasternodeMan::UpdateWatchdogVoteTime(const CTxIn& vin)
 {

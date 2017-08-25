@@ -1286,29 +1286,6 @@ void CGovernanceManager::RebuildIndexes()
     }
 }
 
-int CGovernanceManager::GetMasternodeIndex(const CTxIn& masternodeVin)
-{
-    LOCK(cs);
-    bool fIndexRebuilt = false;
-    int nMNIndex = mnodeman.GetMasternodeIndex(masternodeVin, fIndexRebuilt);
-    if(fIndexRebuilt) {
-        RebuildVoteMaps();
-        nMNIndex = mnodeman.GetMasternodeIndex(masternodeVin, fIndexRebuilt);
-        if(fIndexRebuilt) {
-            LogPrintf("CGovernanceManager::GetMasternodeIndex -- WARNING: vote map rebuild failed\n");
-        }
-    }
-    return nMNIndex;
-}
-
-void CGovernanceManager::RebuildVoteMaps()
-{
-    for(object_m_it it = mapObjects.begin(); it != mapObjects.end(); ++it) {
-        it->second.RebuildVoteMap();
-    }
-    mnodeman.ClearOldMasternodeIndex();
-}
-
 void CGovernanceManager::AddCachedTriggers()
 {
     LOCK(cs);

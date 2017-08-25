@@ -99,8 +99,7 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
                                     const CGovernanceVote& vote,
                                     CGovernanceException& exception)
 {
-    int nMNIndex = governance.GetMasternodeIndex(vote.GetVinMasternode());
-    if(nMNIndex < 0) {
+    if(!mnodeman.Has(vote.GetVinMasternode())) {
         std::ostringstream ostr;
         ostr << "CGovernanceObject::ProcessVote -- Masternode index not found";
         exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_WARNING);
@@ -116,9 +115,9 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
         return false;
     }
 
-    vote_m_it it = mapCurrentMNVotes.find(nMNIndex);
+    vote_m_it it = mapCurrentMNVotes.find(vote.GetVinMasternode());
     if(it == mapCurrentMNVotes.end()) {
-        it = mapCurrentMNVotes.insert(vote_m_t::value_type(nMNIndex,vote_rec_t())).first;
+        it = mapCurrentMNVotes.insert(vote_m_t::value_type(vote.GetVinMasternode(), vote_rec_t())).first;
     }
     vote_rec_t& recVote = it->second;
     vote_signal_enum_t eSignal = vote.GetSignal();
@@ -196,38 +195,12 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
     return true;
 }
 
-void CGovernanceObject::RebuildVoteMap()
-{
-    vote_m_t mapMNVotesNew;
-    for(vote_m_it it = mapCurrentMNVotes.begin(); it != mapCurrentMNVotes.end(); ++it) {
-        CTxIn vinMasternode;
-        if(mnodeman.GetMasternodeVinForIndexOld(it->first, vinMasternode)) {
-            int nNewIndex = mnodeman.GetMasternodeIndex(vinMasternode);
-            if((nNewIndex >= 0)) {
-                mapMNVotesNew[nNewIndex] = it->second;
-            }
-        }
-    }
-    mapCurrentMNVotes = mapMNVotesNew;
-}
-
 void CGovernanceObject::ClearMasternodeVotes()
 {
     vote_m_it it = mapCurrentMNVotes.begin();
     while(it != mapCurrentMNVotes.end()) {
-        bool fIndexRebuilt = false;
-        CTxIn vinMasternode;
-        bool fRemove = true;
-        if(mnodeman.Get(it->first, vinMasternode, fIndexRebuilt)) {
-            if(mnodeman.Has(vinMasternode)) {
-                fRemove = false;
-            }
-            else {
-                fileVotes.RemoveVotesFromMasternode(vinMasternode);
-            }
-        }
-
-        if(fRemove) {
+        if(!mnodeman.Has(it->first)) {
+            fileVotes.RemoveVotesFromMasternode(it->first);
             mapCurrentMNVotes.erase(it++);
         }
         else {
@@ -667,8 +640,7 @@ int CGovernanceObject::GetAbstainCount(vote_signal_enum_t eVoteSignalIn) const
 
 bool CGovernanceObject::GetCurrentMNVotes(const CTxIn& mnCollateralOutpoint, vote_rec_t& voteRecord)
 {
-    int nMNIndex = governance.GetMasternodeIndex(mnCollateralOutpoint);
-    vote_m_it it = mapCurrentMNVotes.find(nMNIndex);
+    vote_m_it it = mapCurrentMNVotes.find(mnCollateralOutpoint);
     if (it == mapCurrentMNVotes.end()) {
         return false;
     }

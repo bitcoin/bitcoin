@@ -451,11 +451,6 @@ private:
 
     void RebuildIndexes();
 
-    /// Returns MN index, handling the case of index rebuilds
-    int GetMasternodeIndex(const CTxIn& masternodeVin);
-
-    void RebuildVoteMaps();
-
     void AddCachedTriggers();
 
     bool UpdateCurrentWatchdog(CGovernanceObject& watchdogNew);
