@@ -3,6 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "clientversion.h" // for BITCOIN_CASH define (if on BUCash branch)
 #include "networkstyle.h"
 
 #include "guiconstants.h"
@@ -16,7 +17,12 @@ static const struct
     const int iconColorHueShift;
     const int iconColorSaturationReduction;
     const char *titleAddText;
-} network_styles[] = {{"main", QAPP_APP_NAME_DEFAULT, 0, 0, ""},
+} network_styles[] = {
+#ifdef BITCOIN_CASH
+    {"main", QAPP_APP_NAME_BUCASH, 0, 0, ""},
+#else
+    {"main", QAPP_APP_NAME_DEFAULT, 0, 0, ""},
+#endif
     {"test", QAPP_APP_NAME_TESTNET, 70, 30, QT_TRANSLATE_NOOP("SplashScreen", "[testnet]")},
     {"nol", QAPP_APP_NAME_NOLNET, 70, 30, QT_TRANSLATE_NOOP("SplashScreen", "[nolimit]")}, // BU
     {"regtest", QAPP_APP_NAME_TESTNET, 160, 30, "[regtest]"}};
