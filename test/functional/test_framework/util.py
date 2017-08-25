@@ -257,8 +257,10 @@ def get_datadir_path(dirname, n):
 def get_auth_cookie(datadir):
     user = None
     password = None
-    if os.path.isfile(os.path.join(datadir, "bitcoin.conf")):
-        with open(os.path.join(datadir, "bitcoin.conf"), 'r', encoding='utf8') as f:
+    file_conf = os.path.join(datadir, 'bitcoin.conf')
+    file_cookie = os.path.join(datadir, 'regtest', '.cookie')
+    if os.path.isfile(file_conf):
+        with open(file_conf, 'r', encoding='utf8') as f:
             for line in f:
                 if line.startswith("rpcuser="):
                     assert user is None  # Ensure that there is only one rpcuser line
@@ -266,8 +268,11 @@ def get_auth_cookie(datadir):
                 if line.startswith("rpcpassword="):
                     assert password is None  # Ensure that there is only one rpcpassword line
                     password = line.split("=")[1].strip("\n")
-    if os.path.isfile(os.path.join(datadir, "regtest", ".cookie")):
-        with open(os.path.join(datadir, "regtest", ".cookie"), 'r') as f:
+    if os.path.isfile(file_cookie):
+        while os.path.getsize(file_cookie) != len('__cookie__:') + 64:
+            # Wait for the file to be flushed
+            time.sleep(0.05)
+        with open(file_cookie, 'r') as f:
             userpass = f.read()
             split_userpass = userpass.split(':')
             user = split_userpass[0]
