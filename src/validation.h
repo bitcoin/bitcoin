@@ -294,10 +294,9 @@ void PruneAndFlush();
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
                         bool* pfMissingInputs, bool fOverrideMempoolLimit=false, bool fRejectAbsurdFee=false, bool fDryRun=false);
 
+bool GetUTXOCoins(const COutPoint& outpoint, CCoins& coins);
 int GetUTXOHeight(const COutPoint& outpoint);
-int GetInputAge(const CTxIn &txin);
-int GetInputAgeIX(const uint256 &nTXHash, const CTxIn &txin);
-int GetIXConfirmations(const uint256 &nTXHash);
+int GetUTXOConfirmations(const COutPoint& outpoint);
 
 /** Convert CValidationState to a human-readable message for logging */
 std::string FormatStateMessage(const CValidationState &state);

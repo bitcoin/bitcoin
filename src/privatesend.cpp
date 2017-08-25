@@ -178,7 +178,6 @@ bool CPrivateSend::IsCollateralValid(const CTransaction& txCollateral)
 
     CAmount nValueIn = 0;
     CAmount nValueOut = 0;
-    bool fMissingTx = false;
 
     BOOST_FOREACH(const CTxOut txout, txCollateral.vout) {
         nValueOut += txout.nValue;
@@ -190,19 +189,12 @@ bool CPrivateSend::IsCollateralValid(const CTransaction& txCollateral)
     }
 
     BOOST_FOREACH(const CTxIn txin, txCollateral.vin) {
-        CTransaction txPrev;
-        uint256 hash;
-        if(GetTransaction(txin.prevout.hash, txPrev, Params().GetConsensus(), hash, true)) {
-            if(txPrev.vout.size() > txin.prevout.n)
-                nValueIn += txPrev.vout[txin.prevout.n].nValue;
-        } else {
-            fMissingTx = true;
+        CCoins coins;
+        if(!GetUTXOCoins(txin.prevout, coins)) {
+            LogPrint("privatesend", "CPrivateSend::IsCollateralValid -- Unknown inputs in collateral transaction, txCollateral=%s", txCollateral.ToString());
+            return false;
         }
-    }
-
-    if(fMissingTx) {
-        LogPrint("privatesend", "CPrivateSend::IsCollateralValid -- Unknown inputs in collateral transaction, txCollateral=%s", txCollateral.ToString());
-        return false;
+        nValueIn += coins.vout[txin.prevout.n].nValue;
     }
 
     //collateral transactions are required to pay out a small fee to the miners

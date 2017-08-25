@@ -114,9 +114,7 @@ CMasternode::CollateralStatus CMasternode::CheckCollateral(CTxIn vin, int& nHeig
     AssertLockHeld(cs_main);
 
     CCoins coins;
-    if(!pcoinsTip->GetCoins(vin.prevout.hash, coins) ||
-       (unsigned int)vin.prevout.n>=coins.vout.size() ||
-       coins.vout[vin.prevout.n].IsNull()) {
+    if(!GetUTXOCoins(vin.prevout, coins)) {
         return COLLATERAL_UTXO_NOT_FOUND;
     }
 
@@ -307,27 +305,6 @@ std::string CMasternode::GetStatus() const
 {
     // TODO: return smth a bit more human readable here
     return GetStateString();
-}
-
-int CMasternode::GetCollateralAge()
-{
-    int nHeight;
-    {
-        TRY_LOCK(cs_main, lockMain);
-        if(!lockMain || !chainActive.Tip()) return -1;
-        nHeight = chainActive.Height();
-    }
-
-    if (nCacheCollateralBlock == 0) {
-        int nInputAge = GetInputAge(vin);
-        if(nInputAge > 0) {
-            nCacheCollateralBlock = nHeight - nInputAge;
-        } else {
-            return nInputAge;
-        }
-    }
-
-    return nHeight - nCacheCollateralBlock;
 }
 
 void CMasternode::UpdateLastPaid(const CBlockIndex *pindex, int nMaxBlocksToScanBack)

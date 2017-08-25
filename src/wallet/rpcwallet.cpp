@@ -9,7 +9,7 @@
 #include "chain.h"
 #include "core_io.h"
 #include "init.h"
-#include "validation.h"
+#include "instantx.h"
 #include "net.h"
 #include "netbase.h"
 #include "policy/rbf.h"
@@ -17,6 +17,7 @@
 #include "timedata.h"
 #include "util.h"
 #include "utilmoneystr.h"
+#include "validation.h"
 #include "wallet.h"
 #include "walletdb.h"
 #include "keepass.h"
@@ -60,7 +61,7 @@ void EnsureWalletIsUnlocked()
 void WalletTxToJSON(const CWalletTx& wtx, UniValue& entry)
 {
     int confirms = wtx.GetDepthInMainChain(false);
-    int confirmsTotal = GetIXConfirmations(wtx.GetHash()) + confirms;
+    int confirmsTotal = instantsend.GetConfirmations(wtx.GetHash()) + confirms;
     entry.push_back(Pair("confirmations", confirmsTotal));
     entry.push_back(Pair("bcconfirmations", confirms));
     if (wtx.IsCoinBase())

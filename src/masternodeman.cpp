@@ -575,7 +575,7 @@ CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight
         if(fFilterSigTime && mn.sigTime + (nMnCount*2.6*60) > GetAdjustedTime()) continue;
 
         //make sure it has at least as many confirmations as there are masternodes
-        if(mn.GetCollateralAge() < nMnCount) continue;
+        if(GetUTXOConfirmations(mn.vin.prevout) < nMnCount) continue;
 
         vecMasternodeLastPaid.push_back(std::make_pair(mn.GetLastPaidBlock(), &mn));
     }

@@ -439,55 +439,27 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& in
     return nSigOps;
 }
 
-int GetUTXOHeight(const COutPoint& outpoint)
+bool GetUTXOCoins(const COutPoint& outpoint, CCoins& coins)
 {
     LOCK(cs_main);
+    return !(!pcoinsTip->GetCoins(outpoint.hash, coins) ||
+             (unsigned int)outpoint.n>=coins.vout.size() ||
+             coins.vout[outpoint.n].IsNull());
+}
+
+int GetUTXOHeight(const COutPoint& outpoint)
+{
+    // -1 means UTXO is yet unknown or already spent
     CCoins coins;
-    if(!pcoinsTip->GetCoins(outpoint.hash, coins) ||
-       (unsigned int)outpoint.n>=coins.vout.size() ||
-       coins.vout[outpoint.n].IsNull()) {
-        return -1;
-    }
-    return coins.nHeight;
+    return GetUTXOCoins(outpoint, coins) ? coins.nHeight : -1;
 }
 
-int GetInputAge(const CTxIn &txin)
+int GetUTXOConfirmations(const COutPoint& outpoint)
 {
-    CCoinsView viewDummy;
-    CCoinsViewCache view(&viewDummy);
-    {
-        LOCK(mempool.cs);
-        CCoinsViewMemPool viewMempool(pcoinsTip, mempool);
-        view.SetBackend(viewMempool); // temporarily switch cache backend to db+mempool view
-
-        const CCoins* coins = view.AccessCoins(txin.prevout.hash);
-
-        if (coins) {
-            if(coins->nHeight < 0) return 0;
-            return chainActive.Height() - coins->nHeight + 1;
-        } else {
-            return -1;
-        }
-    }
-}
-
-int GetInputAgeIX(const uint256 &nTXHash, const CTxIn &txin)
-{
-    int nResult = GetInputAge(txin);
-    if(nResult < 0) return -1;
-
-    if (nResult < 6 && instantsend.IsLockedInstantSendTransaction(nTXHash))
-        return nInstantSendDepth + nResult;
-
-    return nResult;
-}
-
-int GetIXConfirmations(const uint256 &nTXHash)
-{
-    if (instantsend.IsLockedInstantSendTransaction(nTXHash))
-        return nInstantSendDepth;
-
-    return 0;
+    // -1 means UTXO is yet unknown or already spent
+    LOCK(cs_main);
+    int nPrevoutHeight = GetUTXOHeight(outpoint);
+    return (nPrevoutHeight > -1 && chainActive.Tip()) ? chainActive.Height() - nPrevoutHeight + 1 : -1;
 }
 
 

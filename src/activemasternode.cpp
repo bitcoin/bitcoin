@@ -287,10 +287,10 @@ void CActiveMasternode::ManageStateLocal()
     CKey keyCollateral;
 
     if(pwalletMain->GetMasternodeVinAndKeys(vin, pubKeyCollateral, keyCollateral)) {
-        int nInputAge = GetInputAge(vin);
-        if(nInputAge < Params().GetConsensus().nMasternodeMinimumConfirmations){
+        int nPrevoutAge = GetUTXOConfirmations(vin.prevout);
+        if(nPrevoutAge < Params().GetConsensus().nMasternodeMinimumConfirmations){
             nState = ACTIVE_MASTERNODE_INPUT_TOO_NEW;
-            strNotCapableReason = strprintf(_("%s - %d confirmations"), GetStatus(), nInputAge);
+            strNotCapableReason = strprintf(_("%s - %d confirmations"), GetStatus(), nPrevoutAge);
             LogPrintf("CActiveMasternode::ManageStateLocal -- %s: %s\n", GetStateString(), strNotCapableReason);
             return;
         }

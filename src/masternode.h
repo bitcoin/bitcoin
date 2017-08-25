@@ -265,8 +265,6 @@ public:
     std::string GetStateString() const;
     std::string GetStatus() const;
 
-    int GetCollateralAge();
-
     int GetLastPaidTime() { return nTimeLastPaid; }
     int GetLastPaidBlock() { return nBlockLastPaid; }
     void UpdateLastPaid(const CBlockIndex *pindex, int nMaxBlocksToScanBack);
