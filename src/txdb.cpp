@@ -56,18 +56,20 @@ bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, siz
     CDBBatch batch(&db.GetObfuscateKey());
     size_t count = 0;
     size_t changed = 0;
+    size_t nBatchSize = 0;
+    size_t nBatchWrites = 0;
     for (CCoinsMap::iterator it = mapCoins.begin(); it != mapCoins.end();)
     {
         if (it->second.flags & CCoinsCacheEntry::DIRTY)
         {
+            size_t nUsage = it->second.coins.DynamicMemoryUsage();
             if (it->second.coins.IsPruned())
             {
                 batch.Erase(make_pair(DB_COINS, it->first));
 
                 // Update the usage of the child cache before deleting the entry in the child cache
-                nChildCachedCoinsUsage -= it->second.coins.DynamicMemoryUsage();
-                CCoinsMap::iterator itOld = it++;
-                mapCoins.erase(itOld);
+                nChildCachedCoinsUsage -= nUsage;
+                it = mapCoins.erase(it);
             }
             else
             {
@@ -80,9 +82,8 @@ bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, siz
                 if (IsChainNearlySyncd() && !fImporting && !fReindex && !fBlocksOnly)
                 {
                     // Update the usage of the child cache before deleting the entry in the child cache
-                    nChildCachedCoinsUsage -= it->second.coins.DynamicMemoryUsage();
-                    CCoinsMap::iterator itOld = it++;
-                    mapCoins.erase(itOld);
+                    nChildCachedCoinsUsage -= nUsage;
+                    it = mapCoins.erase(it);
                 }
                 else
                 {
@@ -91,6 +92,18 @@ bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, siz
                 }
             }
             changed++;
+
+            // In order to prevent the spikes in memory usage that used to happen when we prepared large as 
+            // was possible, we instead break up the batches such that the performance gains for writing to 
+            // leveldb are still realized but the memory spikes are not seen.
+            nBatchSize += nUsage;
+            if (nBatchSize > nCoinCacheUsage * 0.01)
+            {
+                 db.WriteBatch(batch);
+                 batch.Clear();
+                 nBatchSize = 0;
+                 nBatchWrites++;
+            }
         }
         else
             it++;
@@ -99,7 +112,7 @@ bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, siz
     if (!hashBlock.IsNull())
         batch.Write(DB_BEST_BLOCK, hashBlock);
 
-    LogPrint("coindb", "Committing %u changed transactions (out of %u) to coin database...\n", (unsigned int)changed, (unsigned int)count);
+    LogPrint("coindb", "Committing %u changed transactions (out of %u) to coin database with %u batch writes...\n", (unsigned int)changed, (unsigned int)count, (unsigned int)nBatchWrites);
     return db.WriteBatch(batch);
 }
 
