@@ -56,6 +56,22 @@ frequently tested on them.
 Notable changes
 ===============
 
+Miner block size limiting deprecated
+------------------------------------
+
+Though blockmaxweight has been preferred for limiting the size of blocks returned by
+getblocktemplate since 0.13.0, blockmaxsize remained as an option for those who wished
+to limit their block size directly. Using this option resulted in a few UI issues as
+well as non-optimal fee selection and ever-so-slightly worse performance, and has thus
+now been deprecated. Further, the blockmaxsize option is now used only to calculate an
+implied blockmaxweight, instead of limiting block size directly. Any miners who wish
+to limit their blocks by size, instead of by weight, will have to do so manually by
+removing transactions from their block template directly.
+
+Low-level RPC changes
+----------------------
+- The "currentblocksize" value in getmininginfo has been removed.
+
 Credits
 =======
 
