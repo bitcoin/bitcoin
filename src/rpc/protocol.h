@@ -91,8 +91,6 @@ UniValue JSONRPCReplyObj(const UniValue& result, const UniValue& error, const Un
 std::string JSONRPCReply(const UniValue& result, const UniValue& error, const UniValue& id);
 UniValue JSONRPCError(int code, const std::string& message);
 
-/** Get name of RPC authentication cookie file */
-fs::path GetAuthCookieFile();
 /** Generate a new RPC authentication cookie and write it to disk */
 bool GenerateAuthCookie(std::string *cookie_out);
 /** Read the RPC authentication cookie from disk */
