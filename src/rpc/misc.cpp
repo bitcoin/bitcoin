@@ -7,6 +7,7 @@
 #include "chain.h"
 #include "clientversion.h"
 #include "core_io.h"
+#include "crypto/ripemd160.h"
 #include "init.h"
 #include "validation.h"
 #include "httpserver.h"
@@ -45,6 +46,7 @@ public:
         UniValue obj(UniValue::VOBJ);
         CPubKey vchPubKey;
         obj.push_back(Pair("isscript", false));
+        obj.push_back(Pair("iswitness", false));
         if (pwallet && pwallet->GetPubKey(keyID, vchPubKey)) {
             obj.push_back(Pair("pubkey", HexStr(vchPubKey)));
             obj.push_back(Pair("iscompressed", vchPubKey.IsCompressed()));
@@ -56,6 +58,7 @@ public:
         UniValue obj(UniValue::VOBJ);
         CScript subscript;
         obj.push_back(Pair("isscript", true));
+        obj.push_back(Pair("iswitness", false));
         if (pwallet && pwallet->GetCScript(scriptID, subscript)) {
             std::vector<CTxDestination> addresses;
             txnouttype whichType;
@@ -71,6 +74,47 @@ public:
             if (whichType == TX_MULTISIG)
                 obj.push_back(Pair("sigsrequired", nRequired));
         }
+        return obj;
+    }
+
+    UniValue operator()(const WitnessV0KeyHash& id) const
+    {
+        UniValue obj(UniValue::VOBJ);
+        CPubKey pubkey;
+        obj.push_back(Pair("isscript", false));
+        obj.push_back(Pair("iswitness", true));
+        obj.push_back(Pair("witness_version", 0));
+        obj.push_back(Pair("witness_program", HexStr(id.begin(), id.end())));
+        if (pwallet && pwallet->GetPubKey(CKeyID(id), pubkey)) {
+            obj.push_back(Pair("pubkey", HexStr(pubkey)));
+        }
+        return obj;
+    }
+
+    UniValue operator()(const WitnessV0ScriptHash& id) const
+    {
+        UniValue obj(UniValue::VOBJ);
+        CScript subscript;
+        obj.push_back(Pair("isscript", true));
+        obj.push_back(Pair("iswitness", true));
+        obj.push_back(Pair("witness_version", 0));
+        obj.push_back(Pair("witness_program", HexStr(id.begin(), id.end())));
+        CRIPEMD160 hasher;
+        uint160 hash;
+        hasher.Write(id.begin(), 32).Finalize(hash.begin());
+        if (pwallet && pwallet->GetCScript(CScriptID(hash), subscript)) {
+            obj.push_back(Pair("hex", HexStr(subscript.begin(), subscript.end())));
+        }
+        return obj;
+    }
+
+    UniValue operator()(const WitnessUnknown& id) const
+    {
+        UniValue obj(UniValue::VOBJ);
+        CScript subscript;
+        obj.push_back(Pair("iswitness", true));
+        obj.push_back(Pair("witness_version", (int)id.version));
+        obj.push_back(Pair("witness_program", HexStr(id.program, id.program + id.length)));
         return obj;
     }
 };
