@@ -78,7 +78,7 @@ public:
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(scriptPubKey);
+        READWRITE(*(CScriptBase*)(&scriptPubKey));
         READWRITE(nVotes);
      }
 };
@@ -199,7 +199,7 @@ public:
         READWRITE(vinThrone);
         READWRITE(nBlockHeight);
         READWRITE(payee);
-        READWRITE(vchSig);
+        READWRITE(*(CScriptBase*)(&vchSig));
     }
 
     std::string ToString()

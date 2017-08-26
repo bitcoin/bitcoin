@@ -378,7 +378,7 @@ public:
         READWRITE(vin);
         READWRITE(nBudgetHash);
         READWRITE(nTime);
-        READWRITE(vchSig);
+        READWRITE(*(CScriptBase*)(&vchSig));
     }
 
 };
@@ -583,7 +583,7 @@ public:
         READWRITE(nProposalHash);
         READWRITE(nVote);
         READWRITE(nTime);
-        READWRITE(vchSig);
+        READWRITE(*(CScriptBase*)(&vchSig));
     }
 
 
