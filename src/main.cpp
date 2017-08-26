@@ -62,7 +62,7 @@ bool fReindex = false;
 bool fTxIndex = true;
 bool fIsBareMultisigStd = true;
 bool fCheckBlockIndex = false;
-unsigned int nCoinCacheUsage = 5000 * 300;
+size_t nCoinCacheUsage = 5000 * 300;
 bool fAlerts = DEFAULT_ALERTS;
 
 /** Fees smaller than this (in cSats) are considered zero fee (for relaying and mining)
