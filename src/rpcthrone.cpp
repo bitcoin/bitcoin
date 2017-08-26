@@ -231,7 +231,7 @@ Value throne(const Array& params, bool fHelp)
             return activeThrone.GetStatus();
 
         CTxIn vin = CTxIn();
-        CPubKey pubkey = CScript();
+        CPubKey pubkey;
         CKey key;
         if(!pwalletMain || !pwalletMain->GetThroneVinAndKeys(vin, pubkey, key))
             throw runtime_error("Missing throne input, please look at the documentation for instructions on throne creation\n");

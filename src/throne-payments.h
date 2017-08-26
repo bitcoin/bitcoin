@@ -175,7 +175,7 @@ public:
 
     uint256 GetHash(){
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-        ss << payee;
+        ss << *(CScriptBase*)(&payee);
         ss << nBlockHeight;
         ss << vinThrone.prevout;
 
@@ -198,7 +198,7 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(vinThrone);
         READWRITE(nBlockHeight);
-        READWRITE(payee);
+        READWRITE(*(CScriptBase*)(&payee));
         READWRITE(*(CScriptBase*)(&vchSig));
     }
 

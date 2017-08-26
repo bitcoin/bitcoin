@@ -194,7 +194,7 @@ public:
     //for saving to the serialized db
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(payee);
+        READWRITE(*(CScriptBase*)(&payee));
         READWRITE(nAmount);
         READWRITE(nProposalHash);
     }
@@ -459,7 +459,7 @@ public:
         ss << nBlockStart;
         ss << nBlockEnd;
         ss << nAmount;
-        ss << address;
+        ss << *(CScriptBase*)(&address);
         uint256 h1 = ss.GetHash();
 
         return h1;
@@ -476,7 +476,7 @@ public:
         READWRITE(nBlockStart);
         READWRITE(nBlockEnd);
         READWRITE(nAmount);
-        READWRITE(address);
+        READWRITE(*(CScriptBase*)(&address));
         READWRITE(nTime);
         READWRITE(nFeeTXHash);
 
@@ -532,7 +532,7 @@ public:
         READWRITE(nBlockStart);
         READWRITE(nBlockEnd);
         READWRITE(nAmount);
-        READWRITE(address);
+        READWRITE(*(CScriptBase*)(&address));
         READWRITE(nFeeTXHash);
     }
 };
