@@ -1158,8 +1158,6 @@ public:
 
     explicit Witnessifier(CWallet *_pwallet) : pwallet(_pwallet) {}
 
-    bool operator()(const CNoDestination &dest) const { return false; }
-
     bool operator()(const CKeyID &keyID) {
         if (pwallet) {
             CScript basescript = GetScriptForDestination(keyID);
@@ -1203,6 +1201,9 @@ public:
         }
         return false;
     }
+
+    template<typename T>
+    bool operator()(const T& dest) { return false; }
 };
 
 UniValue addwitnessaddress(const JSONRPCRequest& request)
