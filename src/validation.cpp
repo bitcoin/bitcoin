@@ -4013,6 +4013,10 @@ static bool CheckBlockHeader(const CBlockHeader& block, BlockValidationState& st
     if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, consensusParams))
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "high-hash", "proof of work failed");
 
+    if (IsThisSoftwareExpired(block.nTime)) {
+        return state.Invalid(BlockValidationResult::BLOCK_TIME_FUTURE, "node-expired", "node software has expired");
+    }
+
     return true;
 }
 

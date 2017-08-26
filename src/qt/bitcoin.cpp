@@ -7,6 +7,7 @@
 #include <qt/bitcoin.h>
 
 #include <chainparams.h>
+#include <clientversion.h>
 #include <common/args.h>
 #include <common/init.h>
 #include <common/system.h>
@@ -628,6 +629,11 @@ int GuiMain(int argc, char* argv[])
     QApplication::setApplicationName(networkStyle->getAppName());
     // Re-initialize translations after changing application name (language in network-specific settings can be different)
     initTranslations(qtTranslatorBase, qtTranslator, translatorBase, translator);
+
+    if (IsThisSoftwareExpired(GetTime())) {
+        QMessageBox::critical(nullptr, QObject::tr("Software expired"), QObject::tr("This software is expired, and may be out of consensus. You must choose to upgrade or override this expiration."));
+        return EXIT_FAILURE;
+    }
 
 #ifdef ENABLE_WALLET
     /// 8. URI IPC sending

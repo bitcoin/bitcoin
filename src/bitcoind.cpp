@@ -129,6 +129,12 @@ static bool ParseArgs(NodeContext& node, int argc, char* argv[])
             return InitError(Untranslated(strprintf("Command line contains unexpected token '%s', see bitcoind -h for a list of options.", argv[i])));
         }
     }
+
+    if (IsThisSoftwareExpired(GetTime())) {
+        tfm::format(std::cerr, "This software is expired, and may be out of consensus. You must choose to upgrade or override this expiration.\n");
+        exit(EXIT_FAILURE);
+    }
+
     return true;
 }
 
