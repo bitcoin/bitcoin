@@ -556,7 +556,7 @@ bool BackupQtAppSettings(const QSettings &source, const QString &backupName)
         return true;
 
     // The backup settings location
-    QSettings backup(backupName, QAPP_APP_NAME_DEFAULT);
+    QSettings backup(backupName, source.applicationName());
 
     // verify that the backup location is writable
     if (!backup.isWritable())
@@ -586,23 +586,29 @@ bool BackupQtAppSettings(const QSettings &source, const QString &backupName)
 * Migration will only be performed if there are alternate settings and a prior
 * migration has not been performed.
 * @param[in] oldOrg    Org name to migrate settings from
+* @param[in] oldApp    App name to migrate settings from
 * @param[in] newOrg    Org name to migrate settings to
+* @param[in] newApp    App name to migrate settings to
 * @return true if migration was performed, otherwise false
 * @see CanMigrateQtAppSettings()
 * @see BackupQtAppSettings()
 */
-bool TryMigrateQtAppSettings(const QString &oldOrg, const QString &newOrg)
+bool TryMigrateQtAppSettings(const QString &oldOrg, const QString &oldApp, const QString &newOrg, const QString &newApp)
 {
     // parameter saftey checks
     if (oldOrg.trimmed().size() <= 0)
         return error("%s: Parameter oldOrg must contain a non-whitespace value.", __func__);
+    if (oldApp.trimmed().size() <= 0)
+        return error("%s: Parameter oldApp must contain a non-whitespace value.", __func__);
     if (newOrg.trimmed().size() <= 0)
         return error("%s: Parameter newOrg must contain a non-whitespace value.", __func__);
+    if (newApp.trimmed().size() <= 0)
+        return error("%s: Parameter newApp must contain a non-whitespace value.", __func__);
 
     // The desired settings location
-    QSettings sink(newOrg, QAPP_APP_NAME_DEFAULT);
+    QSettings sink(newOrg, newApp);
     // The previous settings location
-    QSettings source(oldOrg, QAPP_APP_NAME_DEFAULT);
+    QSettings source(oldOrg, oldApp);
 
     // Check to see if we actually can/need to migrate
     if (!CanMigrateQtAppSettings(sink, source))
@@ -626,8 +632,8 @@ bool TryMigrateQtAppSettings(const QString &oldOrg, const QString &newOrg)
     // lastly we need to add the flag which indicates we have performed a migration
     sink.setValue(APP_SETTINGS_MIGRATED_FLAG, true);
 
-    LogPrintf(
-        "APP SETTINGS: Settings successfully migrated from '%s' to '%s'\n", oldOrg.toStdString(), newOrg.toStdString());
+    LogPrintf("APP SETTINGS: Settings successfully migrated from '%s/%s' to '%s/%s'\n",
+        oldOrg.toStdString(), oldApp.toStdString(), newOrg.toStdString(), newApp.toStdString());
 
     // NOTE: sink will go out of scope upon return so we don't need to manually call sync()
 
@@ -694,7 +700,7 @@ int main(int argc, char *argv[])
     // BU changed the QAPP_ORG_NAME and since this is used for reading the app settings
     // from the registry (Windows) or a configuration file (Linux/OSX)
     // we need to check to see if we need to migrate old settings to the new location
-    TryMigrateQtAppSettings(QAPP_ORG_NAME_LEGACY, QAPP_ORG_NAME);
+    TryMigrateQtAppSettings(QAPP_ORG_NAME_LEGACY, QAPP_APP_NAME_DEFAULT, QAPP_ORG_NAME, QAPP_APP_NAME_DEFAULT);
 
     /// 4. Application identification
     // must be set before OptionsModel is initialized or translations are loaded,
