@@ -27,6 +27,7 @@
 #include <qt/walletmodel.h>
 #endif // ENABLE_WALLET
 
+#include <clientversion.h>
 #include <init.h>
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
@@ -560,6 +561,11 @@ int GuiMain(int argc, char* argv[])
     QApplication::setApplicationName(networkStyle->getAppName());
     // Re-initialize translations after changing application name (language in network-specific settings can be different)
     initTranslations(qtTranslatorBase, qtTranslator, translatorBase, translator);
+
+    if (IsThisSoftwareExpired(GetTime())) {
+        QMessageBox::critical(0, QObject::tr("Software expired"), QObject::tr("This software is expired, and may be out of consensus. You must choose to upgrade or override this expiration."));
+        return EXIT_FAILURE;
+    }
 
 #ifdef ENABLE_WALLET
     /// 8. URI IPC sending
