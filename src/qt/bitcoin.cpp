@@ -694,7 +694,7 @@ int main(int argc, char *argv[])
     // BU changed the QAPP_ORG_NAME and since this is used for reading the app settings
     // from the registry (Windows) or a configuration file (Linux/OSX)
     // we need to check to see if we need to migrate old settings to the new location
-    TryMigrateQtAppSettings("Bitcoin", QAPP_ORG_NAME);
+    TryMigrateQtAppSettings(QAPP_ORG_NAME_LEGACY, QAPP_ORG_NAME);
 
     /// 4. Application identification
     // must be set before OptionsModel is initialized or translations are loaded,
