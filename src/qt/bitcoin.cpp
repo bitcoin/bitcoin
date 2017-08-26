@@ -701,9 +701,20 @@ int main(int argc, char *argv[])
     // from the registry (Windows) or a configuration file (Linux/OSX)
     // we need to check to see if we need to migrate old settings to the new location
 #ifdef BITCOIN_CASH
-    // TODO: Add migration code which first tries to move from BU to BUcash settings,
-    //       or if there weren't pre-existing BU settings, try to migrate from a legacy settings
+    bool fMigrated = false;
+    // For BUCash, first try to migrate from BTC BU settings
+    fMigrated = TryMigrateQtAppSettings(QAPP_ORG_NAME, QAPP_APP_NAME_DEFAULT, QAPP_ORG_NAME, QAPP_APP_NAME_BUCASH);
+    // Then try to migrate from non-BU client settings (if we didn't just migrate from BU settings)
+    fMigrated = fMigrated ||
+        TryMigrateQtAppSettings(QAPP_ORG_NAME_LEGACY, QAPP_APP_NAME_DEFAULT, QAPP_ORG_NAME, QAPP_APP_NAME_BUCASH);
+
+    // If we just migrated and this is a BUcash node, have the user reconfirm the data directory.
+    // This is necessary in case the user wants to run side-by-side BTC chain and BCC chain nodes
+    // in which case each instance requires a different data directory.
+    if (fMigrated)
+        SoftSetBoolArg("-choosedatadir", true);
 #else
+    // Try to migrate from non-BU client settings
     TryMigrateQtAppSettings(QAPP_ORG_NAME_LEGACY, QAPP_APP_NAME_DEFAULT, QAPP_ORG_NAME, QAPP_APP_NAME_DEFAULT);
 #endif
 
