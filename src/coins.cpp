@@ -110,7 +110,7 @@ CCoinsModifier CCoinsViewCache::ModifyCoins(const uint256 &txid) {
             ret.first->second.flags = CCoinsCacheEntry::FRESH;
         }
     } else {
-        cachedCoinUsage = memusage::DynamicUsage(ret.first->second.coins);
+        cachedCoinUsage = ret.first->second.coins.DynamicMemoryUsage();
     }
     // Assume that whenever ModifyCoins is called, the entry will be modified.
     ret.first->second.flags |= CCoinsCacheEntry::DIRTY;
@@ -123,7 +123,7 @@ CCoinsModifier CCoinsViewCache::ModifyNewCoins(const uint256 &txid) {
     ret.first->second.coins.Clear();
     ret.first->second.flags = CCoinsCacheEntry::FRESH;
     ret.first->second.flags |= CCoinsCacheEntry::DIRTY;
-    return CCoinsModifier(*this, ret.first);
+    return CCoinsModifier(*this, ret.first, 0);
 }
 
 const CCoins* CCoinsViewCache::AccessCoins(const uint256 &txid) const {
