@@ -170,11 +170,6 @@ BOOST_AUTO_TEST_CASE(script_standard_Solver_failure)
     s << OP_RETURN << std::vector<unsigned char>({75}) << OP_ADD;
     BOOST_CHECK(!Solver(s, whichType, solutions));
 
-    // TX_WITNESS with unknown version
-    s.clear();
-    s << OP_1 << ToByteVector(pubkey);
-    BOOST_CHECK(!Solver(s, whichType, solutions));
-
     // TX_WITNESS with incorrect program size
     s.clear();
     s << OP_0 << std::vector<unsigned char>(19, 0x01);
@@ -225,13 +220,29 @@ BOOST_AUTO_TEST_CASE(script_standard_ExtractDestination)
 
     // TX_WITNESS_V0_KEYHASH
     s.clear();
-    s << OP_0 << ToByteVector(pubkey);
-    BOOST_CHECK(!ExtractDestination(s, address));
+    s << OP_0 << ToByteVector(pubkey.GetID());
+    BOOST_CHECK(ExtractDestination(s, address));
+    WitnessV0KeyHash keyhash;
+    CHash160().Write(pubkey.begin(), pubkey.size()).Finalize(keyhash.begin());
+    BOOST_CHECK(boost::get<WitnessV0KeyHash>(&address) && *boost::get<WitnessV0KeyHash>(&address) == keyhash);
 
     // TX_WITNESS_V0_SCRIPTHASH
     s.clear();
-    s << OP_0 << ToByteVector(CScriptID(redeemScript));
-    BOOST_CHECK(!ExtractDestination(s, address));
+    WitnessV0ScriptHash scripthash;
+    CSHA256().Write(redeemScript.data(), redeemScript.size()).Finalize(scripthash.begin());
+    s << OP_0 << ToByteVector(scripthash);
+    BOOST_CHECK(ExtractDestination(s, address));
+    BOOST_CHECK(boost::get<WitnessV0ScriptHash>(&address) && *boost::get<WitnessV0ScriptHash>(&address) == scripthash);
+
+    // TX_WITNESS with unknown version
+    s.clear();
+    s << OP_1 << ToByteVector(pubkey);
+    BOOST_CHECK(ExtractDestination(s, address));
+    WitnessUnknown unk;
+    unk.length = 33;
+    unk.version = 1;
+    std::copy(pubkey.begin(), pubkey.end(), unk.program);
+    BOOST_CHECK(boost::get<WitnessUnknown>(&address) && *boost::get<WitnessUnknown>(&address) == unk);
 }
 
 BOOST_AUTO_TEST_CASE(script_standard_ExtractDestinations)
@@ -297,16 +308,6 @@ BOOST_AUTO_TEST_CASE(script_standard_ExtractDestinations)
     // TX_NULL_DATA
     s.clear();
     s << OP_RETURN << std::vector<unsigned char>({75});
-    BOOST_CHECK(!ExtractDestinations(s, whichType, addresses, nRequired));
-
-    // TX_WITNESS_V0_KEYHASH
-    s.clear();
-    s << OP_0 << ToByteVector(pubkeys[0].GetID());
-    BOOST_CHECK(!ExtractDestinations(s, whichType, addresses, nRequired));
-
-    // TX_WITNESS_V0_SCRIPTHASH
-    s.clear();
-    s << OP_0 << ToByteVector(CScriptID(redeemScript));
     BOOST_CHECK(!ExtractDestinations(s, whichType, addresses, nRequired));
 }
 
