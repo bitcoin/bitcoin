@@ -2229,7 +2229,7 @@ bool static FlushStateToDisk(CValidationState &state, FlushStateMode mode) {
     if (nLastSetChain == 0) {
         nLastSetChain = nNow;
     }
-    int64_t nMempoolSizeMax = GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
+    int64_t nMempoolSizeMax = GetArg("-maxmempool", 300) * 1000000;
     int64_t cacheSize = pcoinsTip->DynamicMemoryUsage();
     int64_t nTotalSpace = nCoinCacheUsage + std::max<int64_t>(nMempoolSizeMax - nMempoolUsage, 0);
     // The cache is large and we're within 10% and 100 MiB of the limit, but we have time now (not in the middle of a block processing).
