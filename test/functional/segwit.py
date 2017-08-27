@@ -7,7 +7,7 @@
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 from test_framework.mininode import sha256, CTransaction, CTxIn, COutPoint, CTxOut, COIN, ToHex, FromHex
-from test_framework.address import script_to_p2sh, key_to_p2pkh
+from test_framework.address import script_to_p2sh, key_to_p2pkh, key_to_p2sh_p2wpkh, key_to_p2wpkh, script_to_p2sh_p2wsh, script_to_p2wsh, program_to_witness
 from test_framework.script import CScript, OP_HASH160, OP_CHECKSIG, OP_0, hash160, OP_EQUAL, OP_DUP, OP_EQUALVERIFY, OP_1, OP_2, OP_CHECKMULTISIG, OP_TRUE
 from io import BytesIO
 
@@ -33,15 +33,15 @@ def witness_script(use_p2wsh, pubkey):
 
 # Return a transaction (in hex) that spends the given utxo to a segwit output,
 # optionally wrapping the segwit output using P2SH.
-def create_witnessprogram(use_p2wsh, utxo, pubkey, encode_p2sh, amount):
-    pkscript = hex_str_to_bytes(witness_script(use_p2wsh, pubkey))
-    if (encode_p2sh):
-        p2sh_hash = hash160(pkscript)
-        pkscript = CScript([OP_HASH160, p2sh_hash, OP_EQUAL])
-    tx = CTransaction()
-    tx.vin.append(CTxIn(COutPoint(int(utxo["txid"], 16), utxo["vout"]), b""))
-    tx.vout.append(CTxOut(int(amount*COIN), pkscript))
-    return ToHex(tx)
+def create_witness_tx(node, use_p2wsh, utxo, pubkey, encode_p2sh, amount):
+    if use_p2wsh:
+        program = CScript([OP_1, hex_str_to_bytes(pubkey), OP_1, OP_CHECKMULTISIG])
+        addr = script_to_p2sh_p2wsh(program) if encode_p2sh else script_to_p2wsh(program)
+    else:
+        addr = key_to_p2sh_p2wpkh(pubkey) if encode_p2sh else key_to_p2wpkh(pubkey)
+    if not encode_p2sh:
+        assert_equal(node.validateaddress(addr)['scriptPubKey'], witness_script(use_p2wsh, pubkey))
+    return node.createrawtransaction([utxo], {addr: amount})
 
 # Create a transaction spending a given utxo to a segwit output corresponding
 # to the given pubkey: use_p2wsh determines whether to use P2WPKH or P2WSH;
@@ -49,7 +49,7 @@ def create_witnessprogram(use_p2wsh, utxo, pubkey, encode_p2sh, amount):
 # sign=True will have the given node sign the transaction.
 # insert_redeem_script will be added to the scriptSig, if given.
 def send_to_witness(use_p2wsh, node, utxo, pubkey, encode_p2sh, amount, sign=True, insert_redeem_script=""):
-    tx_to_witness = create_witnessprogram(use_p2wsh, utxo, pubkey, encode_p2sh, amount)
+    tx_to_witness = create_witness_tx(node, use_p2wsh, utxo, pubkey, encode_p2sh, amount)
     if (sign):
         signed = node.signrawtransaction(tx_to_witness)
         assert("errors" not in signed or len(["errors"]) == 0)
@@ -133,8 +133,15 @@ class SegWitTest(BitcoinTestFramework):
             newaddress = self.nodes[i].getnewaddress()
             self.pubkey.append(self.nodes[i].validateaddress(newaddress)["pubkey"])
             multiaddress = self.nodes[i].addmultisigaddress(1, [self.pubkey[-1]])
-            self.nodes[i].addwitnessaddress(newaddress)
-            self.nodes[i].addwitnessaddress(multiaddress)
+            multiscript = CScript([OP_1, hex_str_to_bytes(self.pubkey[-1]), OP_1, OP_CHECKMULTISIG])
+            p2sh_addr = self.nodes[i].addwitnessaddress(newaddress, True)
+            bip173_addr = self.nodes[i].addwitnessaddress(newaddress, False)
+            p2sh_ms_addr = self.nodes[i].addwitnessaddress(multiaddress, True)
+            bip173_ms_addr = self.nodes[i].addwitnessaddress(multiaddress, False)
+            assert_equal(p2sh_addr, key_to_p2sh_p2wpkh(self.pubkey[-1]))
+            assert_equal(bip173_addr, key_to_p2wpkh(self.pubkey[-1]))
+            assert_equal(p2sh_ms_addr, script_to_p2sh_p2wsh(multiscript))
+            assert_equal(bip173_ms_addr, script_to_p2wsh(multiscript))
             p2sh_ids.append([])
             wit_ids.append([])
             for v in range(2):
@@ -557,6 +564,13 @@ class SegWitTest(BitcoinTestFramework):
         spendable_txid.append(self.mine_and_test_listunspent(spendable_after_addwitnessaddress, 2))
         solvable_txid.append(self.mine_and_test_listunspent(solvable_after_addwitnessaddress, 1))
         self.mine_and_test_listunspent(unseen_anytime, 0)
+
+        # Check that createrawtransaction/decoderawtransaction with non-v0 Bech32 works
+        v1_addr = program_to_witness(1, [3,5])
+        v1_tx = self.nodes[0].createrawtransaction([getutxo(spendable_txid[0])],{v1_addr: 1})
+        v1_decoded = self.nodes[1].decoderawtransaction(v1_tx)
+        assert_equal(v1_decoded['vout'][0]['scriptPubKey']['addresses'][0], v1_addr)
+        assert_equal(v1_decoded['vout'][0]['scriptPubKey']['hex'], "51020305")
 
         # Check that spendable outputs are really spendable
         self.create_and_mine_tx_from_txids(spendable_txid)
