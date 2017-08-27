@@ -71,15 +71,6 @@ void OptionsModel::Init()
         settings.setValue("fCoinControlFeatures", false);
     fCoinControlFeatures = settings.value("fCoinControlFeatures", false).toBool();
 
-    if (!settings.contains("nDarksendRounds"))
-        settings.setValue("nDarksendRounds", 2);
-
-    if (!settings.contains("nAnonymizeCrownAmount"))
-        settings.setValue("nAnonymizeCrownAmount", 10000);
-
-    nDarksendRounds = settings.value("nDarksendRounds").toLongLong();
-    nAnonymizeCrownAmount = settings.value("nAnonymizeCrownAmount").toLongLong();
-
     // These are shared with the core or have a command-line parameter
     // and we want command-line parameters to overwrite the GUI settings.
     //
@@ -137,11 +128,6 @@ void OptionsModel::Init()
         settings.setValue("language", "");
     if (!SoftSetArg("-lang", settings.value("language").toString().toStdString()))
         addOverriddenOption("-lang");
-
-    if (settings.contains("nDarksendRounds"))
-        SoftSetArg("-darksendrounds", settings.value("nDarksendRounds").toString().toStdString());
-    if (settings.contains("nAnonymizeCrownAmount"))
-        SoftSetArg("-anonymizecrownamount", settings.value("nAnonymizeCrownAmount").toString().toStdString());
 
     language = settings.value("language").toString();
 }
@@ -219,10 +205,6 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return settings.value("nDatabaseCache");
         case ThreadsScriptVerif:
             return settings.value("nThreadsScriptVerif");
-        case DarksendRounds:
-            return QVariant(nDarksendRounds);
-        case AnonymizeCrownAmount:
-            return QVariant(nAnonymizeCrownAmount);
         case Listen:
             return settings.value("fListen");
         default:
@@ -323,16 +305,6 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 settings.setValue("language", value);
                 setRestartRequired(true);
             }
-            break;
-        case DarksendRounds:
-            nDarksendRounds = value.toInt();
-            settings.setValue("nDarksendRounds", nDarksendRounds);
-            emit darksendRoundsChanged(nDarksendRounds);
-            break;
-        case AnonymizeCrownAmount:
-            nAnonymizeCrownAmount = value.toInt();
-            settings.setValue("nAnonymizeCrownAmount", nAnonymizeCrownAmount);
-            emit anonymizeCrownAmountChanged(nAnonymizeCrownAmount);
             break;
         case CoinControlFeatures:
             fCoinControlFeatures = value.toBool();

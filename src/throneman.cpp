@@ -854,7 +854,7 @@ bool CThroneMan::CheckMnbAndUpdateThroneList(CThroneBroadcast mnb, int& nDos) {
     }
 
     // make sure it's still unspent
-    //  - this is checked later by .check() in many places and by ThreadCheckDarkSendPool()
+    //  - this is checked later by .check() in many places and by ThreadCheckLegacySigner()
     if(mnb.CheckInputsAndAdd(nDos)) {
         throneSync.AddedThroneList(mnb.GetHash());
     } else {

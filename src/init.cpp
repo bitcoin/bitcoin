@@ -408,7 +408,7 @@ std::string HelpMessage(HelpMessageMode mode)
     }
     strUsage += "  -shrinkdebugfile       " + _("Shrink debug.log file on client startup (default: 1 when no -debug)") + "\n";
     strUsage += "  -testnet               " + _("Use the test network") + "\n";
-    strUsage += "  -litemode=<n>          " + strprintf(_("Disable all Crown specific functionality (Thrones, Darksend, InstantX, Budgeting) (0-1, default: %u)"), 0) + "\n";
+    strUsage += "  -litemode=<n>          " + strprintf(_("Disable all Crown specific functionality (Thrones, InstantX, Budgeting) (0-1, default: %u)"), 0) + "\n";
 
     strUsage += "\n" + _("Throne options:") + "\n";
     strUsage += "  -throne=<n>            " + strprintf(_("Enable the client to act as a throne (0-1, default: %u)"), 0) + "\n";
@@ -1411,7 +1411,7 @@ bool AppInit2(boost::thread_group& threadGroup)
             MilliSleep(10);
     }
 
-    // ********************************************************* Step 10: setup DarkSend
+    // ********************************************************* Step 10: setup Budgets
 
     uiInterface.InitMessage(_("Loading throne cache..."));
 
@@ -1473,7 +1473,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     }
 
     if(fThroNe) {
-        LogPrintf("IS DARKSEND MASTER NODE\n");
+        LogPrintf("IS MASTERNODE\n");
         strThroNeAddr = GetArg("-throneaddr", "");
 
         LogPrintf(" addr %s\n", strThroNeAddr.c_str());
@@ -1519,23 +1519,6 @@ bool AppInit2(boost::thread_group& threadGroup)
         }
     }
 
-    fEnableDarksend = GetBoolArg("-enabledarksend", false);
-
-    nDarksendRounds = GetArg("-darksendrounds", 2);
-    if(nDarksendRounds > 16) nDarksendRounds = 16;
-    if(nDarksendRounds < 1) nDarksendRounds = 1;
-
-    nLiquidityProvider = GetArg("-liquidityprovider", 0); //0-100
-    if(nLiquidityProvider != 0) {
-        darkSendPool.SetMinBlockSpacing(std::min(nLiquidityProvider,100)*15);
-        fEnableDarksend = true;
-        nDarksendRounds = 93409;
-    }
-
-    nAnonymizeCrownAmount = GetArg("-anonymizecrownamount", 0);
-    if(nAnonymizeCrownAmount > 934099) nAnonymizeCrownAmount = 934099;
-    if(nAnonymizeCrownAmount < 2) nAnonymizeCrownAmount = 2;
-
     fEnableInstantX = GetBoolArg("-enableinstantx", fEnableInstantX);
     nInstantXDepth = GetArg("-instantxdepth", nInstantXDepth);
     nInstantXDepth = std::min(std::max(nInstantXDepth, 0), 60);
@@ -1548,32 +1531,11 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     LogPrintf("fLiteMode %d\n", fLiteMode);
     LogPrintf("nInstantXDepth %d\n", nInstantXDepth);
-    LogPrintf("Darksend rounds %d\n", nDarksendRounds);
-    LogPrintf("Anonymize Crown Amount %d\n", nAnonymizeCrownAmount);
     LogPrintf("Budget Mode %s\n", strBudgetMode.c_str());
 
-    /* Denominations
+    legacySigner.InitCollateralAddress();
 
-       A note about convertability. Within Darksend pools, each denomination
-       is convertable to another.
-
-       For example:
-       1 CRW+1000 == (.1 CRW+100)*10
-       10 CRW+10000 == (1 CRW+1000)*10
-    */
-    darkSendDenominations.push_back( (1000      * COIN)+1000000 );
-    darkSendDenominations.push_back( (100      * COIN)+100000 );
-    darkSendDenominations.push_back( (10       * COIN)+10000 );
-    darkSendDenominations.push_back( (1        * COIN)+1000 );
-    darkSendDenominations.push_back( (.1       * COIN)+100 );
-    /* Disabled till we need them
-    darkSendDenominations.push_back( (.01      * COIN)+10 );
-    darkSendDenominations.push_back( (.001     * COIN)+1 );
-    */
-
-    darkSendPool.InitCollateralAddress();
-
-    threadGroup.create_thread(boost::bind(&ThreadCheckDarkSendPool));
+    threadGroup.create_thread(boost::bind(&ThreadCheckLegacySigner));
 
     // ********************************************************* Step 11: start node
 

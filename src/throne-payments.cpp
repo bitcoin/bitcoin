@@ -351,7 +351,7 @@ void CThronePayments::ProcessMessageThronePayments(CNode* pfrom, std::string& st
 {
     if(!throneSync.IsBlockchainSynced()) return;
 
-    if(fLiteMode) return; //disable all Darksend/Throne related functionality
+    if(fLiteMode) return; //disable all Throne related functionality
 
 
     if (strCommand == "mnget") { //Throne Payments Request Sync

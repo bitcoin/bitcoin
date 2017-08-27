@@ -26,7 +26,7 @@ std::map<int, CSporkMessage> mapSporksActive;
 
 void ProcessSpork(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
-    if(fLiteMode) return; //disable all darksend/throne related functionality
+    if(fLiteMode) return; //disable all throne related functionality
 
     if (strCommand == "spork")
     {

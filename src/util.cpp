@@ -109,15 +109,9 @@ string strThroNeAddr = "";
 bool fLiteMode = false;
 bool fEnableInstantX = true;
 int nInstantXDepth = 5;
-int nDarksendRounds = 2;
-int nAnonymizeCrownAmount = 10000;
-int nLiquidityProvider = 0;
 /** Spork enforcement enabled time */
 int64_t enforceThronePaymentsTime = 4085657524;
 bool fSucessfullyLoaded = false;
-bool fEnableDarksend = false;
-/** All denominations used by darksend */
-std::vector<int64_t> darkSendDenominations;
 string strBudgetMode = "";
 
 map<string, string> mapArgs;
@@ -233,7 +227,6 @@ bool LogAcceptCategory(const char* category)
             // thread_specific_ptr automatically deletes the set when the thread ends.
             // "crown" is a composite category enabling all Crown-related debug output
             if(ptrCategory->count(string("crown"))) {
-                ptrCategory->insert(string("darksend"));
                 ptrCategory->insert(string("instantx"));
                 ptrCategory->insert(string("throne"));
                 ptrCategory->insert(string("mnpayments"));
