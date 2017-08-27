@@ -2404,9 +2404,8 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew, CBlock *
     LogPrint("bench", "  - Load block from disk: %.2fms [%.2fs]\n", (nTime2 - nTime1) * 0.001, nTimeReadFromDisk * 0.000001);
     {
         CCoinsViewCache view(pcoinsTip);
-        bool rv = ConnectBlock(*pblock, state, pindexNew, view);
         g_signals.BlockChecked(*pblock, state);
-        if (!rv) {
+        if (!ConnectBlock(*pblock, state, pindexNew, view)) {
             if (state.IsInvalid())
                 InvalidBlockFound(pindexNew, state);
             return error("ConnectTip() : ConnectBlock %s failed", pindexNew->GetBlockHash().ToString());
