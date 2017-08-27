@@ -25,7 +25,7 @@ using namespace boost;
 // The main object for accessing Darksend
 CDarksendPool darkSendPool;
 // A helper object for signing messages from Thrones
-CDarkSendSigner darkSendSigner;
+CLegacySigner legacySigner;
 // The current Darksends in progress on the network
 std::vector<CDarksendQueue> vecDarksendQueue;
 // Keep track of the used Thrones
@@ -596,18 +596,18 @@ void CDarksendPool::CheckFinalTransaction()
         CKey key2;
         CPubKey pubkey2;
 
-        if(!darkSendSigner.SetKey(strThroNePrivKey, strError, key2, pubkey2))
+        if(!legacySigner.SetKey(strThroNePrivKey, strError, key2, pubkey2))
         {
             LogPrintf("CDarksendPool::Check() - ERROR: Invalid Throneprivkey: '%s'\n", strError);
             return;
         }
 
-        if(!darkSendSigner.SignMessage(strMessage, strError, vchSig, key2)) {
+        if(!legacySigner.SignMessage(strMessage, strError, vchSig, key2)) {
             LogPrintf("CDarksendPool::Check() - Sign message failed\n");
             return;
         }
 
-        if(!darkSendSigner.VerifyMessage(pubkey2, vchSig, strMessage, strError)) {
+        if(!legacySigner.VerifyMessage(pubkey2, vchSig, strMessage, strError)) {
             LogPrintf("CDarksendPool::Check() - Verify message failed\n");
             return;
         }
@@ -2058,7 +2058,7 @@ std::string CDarksendPool::GetMessageByID(int messageID) {
     }
 }
 
-bool CDarkSendSigner::IsVinAssociatedWithPubkey(CTxIn& vin, CPubKey& pubkey){
+bool CLegacySigner::IsVinAssociatedWithPubkey(CTxIn& vin, CPubKey& pubkey){
     CScript payee2;
     payee2 = GetScriptForDestination(pubkey.GetID());
 
@@ -2075,7 +2075,7 @@ bool CDarkSendSigner::IsVinAssociatedWithPubkey(CTxIn& vin, CPubKey& pubkey){
     return false;
 }
 
-bool CDarkSendSigner::SetKey(std::string strSecret, std::string& errorMessage, CKey& key, CPubKey& pubkey){
+bool CLegacySigner::SetKey(std::string strSecret, std::string& errorMessage, CKey& key, CPubKey& pubkey){
     CBitcoinSecret vchSecret;
     bool fGood = vchSecret.SetString(strSecret);
 
@@ -2090,7 +2090,7 @@ bool CDarkSendSigner::SetKey(std::string strSecret, std::string& errorMessage, C
     return true;
 }
 
-bool CDarkSendSigner::SignMessage(std::string strMessage, std::string& errorMessage, vector<unsigned char>& vchSig, CKey key)
+bool CLegacySigner::SignMessage(std::string strMessage, std::string& errorMessage, vector<unsigned char>& vchSig, CKey key)
 {
     CHashWriter ss(SER_GETHASH, 0);
     ss << strMessageMagic;
@@ -2104,7 +2104,7 @@ bool CDarkSendSigner::SignMessage(std::string strMessage, std::string& errorMess
     return true;
 }
 
-bool CDarkSendSigner::VerifyMessage(CPubKey pubkey, vector<unsigned char>& vchSig, std::string strMessage, std::string& errorMessage)
+bool CLegacySigner::VerifyMessage(CPubKey pubkey, vector<unsigned char>& vchSig, std::string strMessage, std::string& errorMessage)
 {
     CHashWriter ss(SER_GETHASH, 0);
     ss << strMessageMagic;
@@ -2136,18 +2136,18 @@ bool CDarksendQueue::Sign()
     CPubKey pubkey2;
     std::string errorMessage = "";
 
-    if(!darkSendSigner.SetKey(strThroNePrivKey, errorMessage, key2, pubkey2))
+    if(!legacySigner.SetKey(strThroNePrivKey, errorMessage, key2, pubkey2))
     {
         LogPrintf("CDarksendQueue():Relay - ERROR: Invalid Throneprivkey: '%s'\n", errorMessage);
         return false;
     }
 
-    if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchSig, key2)) {
+    if(!legacySigner.SignMessage(strMessage, errorMessage, vchSig, key2)) {
         LogPrintf("CDarksendQueue():Relay - Sign message failed");
         return false;
     }
 
-    if(!darkSendSigner.VerifyMessage(pubkey2, vchSig, strMessage, errorMessage)) {
+    if(!legacySigner.VerifyMessage(pubkey2, vchSig, strMessage, errorMessage)) {
         LogPrintf("CDarksendQueue():Relay - Verify message failed");
         return false;
     }
@@ -2176,7 +2176,7 @@ bool CDarksendQueue::CheckSignature()
         std::string strMessage = vin.ToString() + boost::lexical_cast<std::string>(nDenom) + boost::lexical_cast<std::string>(time) + boost::lexical_cast<std::string>(ready);
 
         std::string errorMessage = "";
-        if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, errorMessage)){
+        if(!legacySigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, errorMessage)){
             return error("CDarksendQueue::CheckSignature() - Got bad Throne address signature %s \n", vin.ToString().c_str());
         }
 

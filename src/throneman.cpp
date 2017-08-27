@@ -847,7 +847,7 @@ bool CThroneMan::CheckMnbAndUpdateThroneList(CThroneBroadcast mnb, int& nDos) {
 
     // make sure the vout that was signed is related to the transaction that spawned the Throne
     //  - this is expensive, so it's only done once per Throne
-    if(!darkSendSigner.IsVinAssociatedWithPubkey(mnb.vin, mnb.pubkey)) {
+    if(!legacySigner.IsVinAssociatedWithPubkey(mnb.vin, mnb.pubkey)) {
         LogPrintf("CThroneMan::CheckMnbAndUpdateThroneList - Got mismatched pubkey and vin\n");
         nDos = 33;
         return false;

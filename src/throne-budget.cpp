@@ -1587,12 +1587,12 @@ bool CBudgetVote::Sign(CKey& keyThrone, CPubKey& pubKeyThrone)
     std::string errorMessage;
     std::string strMessage = vin.prevout.ToStringShort() + nProposalHash.ToString() + boost::lexical_cast<std::string>(nVote) + boost::lexical_cast<std::string>(nTime);
 
-    if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchSig, keyThrone)) {
+    if(!legacySigner.SignMessage(strMessage, errorMessage, vchSig, keyThrone)) {
         LogPrintf("CBudgetVote::Sign - Error upon calling SignMessage");
         return false;
     }
 
-    if(!darkSendSigner.VerifyMessage(pubKeyThrone, vchSig, strMessage, errorMessage)) {
+    if(!legacySigner.VerifyMessage(pubKeyThrone, vchSig, strMessage, errorMessage)) {
         LogPrintf("CBudgetVote::Sign - Error upon calling VerifyMessage");
         return false;
     }
@@ -1615,7 +1615,7 @@ bool CBudgetVote::SignatureValid(bool fSignatureCheck)
 
     if(!fSignatureCheck) return true;
 
-    if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, errorMessage)) {
+    if(!legacySigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, errorMessage)) {
         LogPrintf("CBudgetVote::SignatureValid() - Verify message failed\n");
         return false;
     }
@@ -1897,7 +1897,7 @@ void CFinalizedBudget::SubmitVote()
     CKey keyThrone;
     std::string errorMessage;
 
-    if(!darkSendSigner.SetKey(strThroNePrivKey, errorMessage, keyThrone, pubKeyThrone)){
+    if(!legacySigner.SetKey(strThroNePrivKey, errorMessage, keyThrone, pubKeyThrone)){
         LogPrintf("CFinalizedBudget::SubmitVote - Error upon calling SetKey\n");
         return;
     }
@@ -1988,12 +1988,12 @@ bool CFinalizedBudgetVote::Sign(CKey& keyThrone, CPubKey& pubKeyThrone)
     std::string errorMessage;
     std::string strMessage = vin.prevout.ToStringShort() + nBudgetHash.ToString() + boost::lexical_cast<std::string>(nTime);
 
-    if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchSig, keyThrone)) {
+    if(!legacySigner.SignMessage(strMessage, errorMessage, vchSig, keyThrone)) {
         LogPrintf("CFinalizedBudgetVote::Sign - Error upon calling SignMessage");
         return false;
     }
 
-    if(!darkSendSigner.VerifyMessage(pubKeyThrone, vchSig, strMessage, errorMessage)) {
+    if(!legacySigner.VerifyMessage(pubKeyThrone, vchSig, strMessage, errorMessage)) {
         LogPrintf("CFinalizedBudgetVote::Sign - Error upon calling VerifyMessage");
         return false;
     }
@@ -2017,7 +2017,7 @@ bool CFinalizedBudgetVote::SignatureValid(bool fSignatureCheck)
 
     if(!fSignatureCheck) return true;
 
-    if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, errorMessage)) {
+    if(!legacySigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, errorMessage)) {
         LogPrintf("CFinalizedBudgetVote::SignatureValid() - Verify message failed\n");
         return false;
     }

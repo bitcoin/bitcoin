@@ -592,7 +592,7 @@ Value throne(const Array& params, bool fHelp)
             CPubKey pubKeyThrone;
             CKey keyThrone;
 
-            if(!darkSendSigner.SetKey(mne.getPrivKey(), errorMessage, keyThrone, pubKeyThrone)){
+            if(!legacySigner.SetKey(mne.getPrivKey(), errorMessage, keyThrone, pubKeyThrone)){
                 printf(" Error upon calling SetKey for %s\n", mne.getAlias().c_str());
                 failed++;
                 continue;
@@ -608,13 +608,13 @@ Value throne(const Array& params, bool fHelp)
 
             std::string strMessage = pmn->vin.ToString() + boost::lexical_cast<std::string>(nVote);
 
-            if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchThroNeSignature, keyThrone)){
+            if(!legacySigner.SignMessage(strMessage, errorMessage, vchThroNeSignature, keyThrone)){
                 printf(" Error upon calling SignMessage for %s\n", mne.getAlias().c_str());
                 failed++;
                 continue;
             }
 
-            if(!darkSendSigner.VerifyMessage(pubKeyThrone, vchThroNeSignature, strMessage, errorMessage)){
+            if(!legacySigner.VerifyMessage(pubKeyThrone, vchThroNeSignature, strMessage, errorMessage)){
                 printf(" Error upon calling VerifyMessage for %s\n", mne.getAlias().c_str());
                 failed++;
                 continue;
@@ -655,13 +655,13 @@ Value throne(const Array& params, bool fHelp)
         std::vector<unsigned char> vchThroNeSignature;
         std::string strMessage = activeThrone.vin.ToString() + boost::lexical_cast<std::string>(nVote);
 
-        if(!darkSendSigner.SetKey(strThroNePrivKey, errorMessage, keyThrone, pubKeyThrone))
+        if(!legacySigner.SetKey(strThroNePrivKey, errorMessage, keyThrone, pubKeyThrone))
             return(" Error upon calling SetKey");
 
-        if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchThroNeSignature, keyThrone))
+        if(!legacySigner.SignMessage(strMessage, errorMessage, vchThroNeSignature, keyThrone))
             return(" Error upon calling SignMessage");
 
-        if(!darkSendSigner.VerifyMessage(pubKeyThrone, vchThroNeSignature, strMessage, errorMessage))
+        if(!legacySigner.VerifyMessage(pubKeyThrone, vchThroNeSignature, strMessage, errorMessage))
             return(" Error upon calling VerifyMessage");
 
         //send to all peers

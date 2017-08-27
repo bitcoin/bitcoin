@@ -1492,7 +1492,7 @@ bool AppInit2(boost::thread_group& threadGroup)
             CKey key;
             CPubKey pubkey;
 
-            if(!darkSendSigner.SetKey(strThroNePrivKey, errorMessage, key, pubkey))
+            if(!legacySigner.SetKey(strThroNePrivKey, errorMessage, key, pubkey))
             {
                 return InitError(_("Invalid throneprivkey. Please see documenation."));
             }

@@ -238,7 +238,7 @@ Value mnbudget(const Array& params, bool fHelp)
 
             Object statusObj;
 
-            if(!darkSendSigner.SetKey(mne.getPrivKey(), errorMessage, keyThrone, pubKeyThrone)){
+            if(!legacySigner.SetKey(mne.getPrivKey(), errorMessage, keyThrone, pubKeyThrone)){
                 failed++;
                 statusObj.push_back(Pair("result", "failed"));
                 statusObj.push_back(Pair("errorMessage", "Throne signing error, could not set key correctly: " + errorMessage));
@@ -307,7 +307,7 @@ Value mnbudget(const Array& params, bool fHelp)
         CKey keyThrone;
         std::string errorMessage;
 
-        if(!darkSendSigner.SetKey(strThroNePrivKey, errorMessage, keyThrone, pubKeyThrone))
+        if(!legacySigner.SetKey(strThroNePrivKey, errorMessage, keyThrone, pubKeyThrone))
             return "Error upon calling SetKey";
 
         CThrone* pmn = mnodeman.Find(activeThrone.vin);
@@ -603,7 +603,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
 
             Object statusObj;
 
-            if(!darkSendSigner.SetKey(mne.getPrivKey(), errorMessage, keyThrone, pubKeyThrone)){
+            if(!legacySigner.SetKey(mne.getPrivKey(), errorMessage, keyThrone, pubKeyThrone)){
                 failed++;
                 statusObj.push_back(Pair("result", "failed"));
                 statusObj.push_back(Pair("errorMessage", "Throne signing error, could not set key correctly: " + errorMessage));
@@ -667,7 +667,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
         CKey keyThrone;
         std::string errorMessage;
 
-        if(!darkSendSigner.SetKey(strThroNePrivKey, errorMessage, keyThrone, pubKeyThrone))
+        if(!legacySigner.SetKey(strThroNePrivKey, errorMessage, keyThrone, pubKeyThrone))
             return "Error upon calling SetKey";
 
         CThrone* pmn = mnodeman.Find(activeThrone.vin);

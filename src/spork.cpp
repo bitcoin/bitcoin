@@ -178,7 +178,7 @@ bool CSporkManager::CheckSignature(CSporkMessage& spork)
     CPubKey pubkey(ParseHex(Params().SporkKey()));
 
     std::string errorMessage = "";
-    if(!darkSendSigner.VerifyMessage(pubkey, spork.vchSig, strMessage, errorMessage)){
+    if(!legacySigner.VerifyMessage(pubkey, spork.vchSig, strMessage, errorMessage)){
         return false;
     }
 
@@ -193,18 +193,18 @@ bool CSporkManager::Sign(CSporkMessage& spork)
     CPubKey pubkey2;
     std::string errorMessage = "";
 
-    if(!darkSendSigner.SetKey(strMasterPrivKey, errorMessage, key2, pubkey2))
+    if(!legacySigner.SetKey(strMasterPrivKey, errorMessage, key2, pubkey2))
     {
         LogPrintf("CThronePayments::Sign - ERROR: Invalid throneprivkey: '%s'\n", errorMessage);
         return false;
     }
 
-    if(!darkSendSigner.SignMessage(strMessage, errorMessage, spork.vchSig, key2)) {
+    if(!legacySigner.SignMessage(strMessage, errorMessage, spork.vchSig, key2)) {
         LogPrintf("CThronePayments::Sign - Sign message failed");
         return false;
     }
 
-    if(!darkSendSigner.VerifyMessage(pubkey2, spork.vchSig, strMessage, errorMessage)) {
+    if(!legacySigner.VerifyMessage(pubkey2, spork.vchSig, strMessage, errorMessage)) {
         LogPrintf("CThronePayments::Sign - Verify message failed");
         return false;
     }

@@ -549,7 +549,7 @@ void ThroneList::VoteMany(std::string strCommand)
         CPubKey pubKeyThrone;
         CKey keyThrone;
 
-        if(!darkSendSigner.SetKey(mne.getPrivKey(), errorMessage, keyThrone, pubKeyThrone)){
+        if(!legacySigner.SetKey(mne.getPrivKey(), errorMessage, keyThrone, pubKeyThrone)){
             failed++;
             statusObj += "\nFailed to vote with " + mne.getAlias() + ". Throne signing error, could not set key correctly: " + errorMessage;
             continue;

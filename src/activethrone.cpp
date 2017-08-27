@@ -103,7 +103,7 @@ void CActiveThrone::ManageStatus()
             CPubKey pubKeyThrone;
             CKey keyThrone;
 
-            if(!darkSendSigner.SetKey(strThroNePrivKey, errorMessage, keyThrone, pubKeyThrone))
+            if(!legacySigner.SetKey(strThroNePrivKey, errorMessage, keyThrone, pubKeyThrone))
             {
                 notCapableReason = "Error upon calling SetKey: " + errorMessage;
                 LogPrintf("Register::ManageStatus() - %s\n", notCapableReason);
@@ -162,7 +162,7 @@ bool CActiveThrone::SendThronePing(std::string& errorMessage) {
     CPubKey pubKeyThrone;
     CKey keyThrone;
 
-    if(!darkSendSigner.SetKey(strThroNePrivKey, errorMessage, keyThrone, pubKeyThrone))
+    if(!legacySigner.SetKey(strThroNePrivKey, errorMessage, keyThrone, pubKeyThrone))
     {
         errorMessage = strprintf("Error upon calling SetKey: %s\n", errorMessage);
         return false;

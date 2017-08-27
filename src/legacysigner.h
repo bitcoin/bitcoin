@@ -15,7 +15,7 @@
 
 class CTxIn;
 class CDarksendPool;
-class CDarkSendSigner;
+class CLegacySigner;
 class CThroNeVote;
 class CBitcoinAddress;
 class CDarksendQueue;
@@ -50,7 +50,7 @@ static const int64_t DARKSEND_COLLATERAL = (0.01*COIN);
 static const int64_t DARKSEND_POOL_MAX = (9999.99*COIN);
 
 extern CDarksendPool darkSendPool;
-extern CDarkSendSigner darkSendSigner;
+extern CLegacySigner legacySigner;
 extern std::vector<CDarksendQueue> vecDarksendQueue;
 extern std::string strThroNePrivKey;
 extern map<uint256, CDarksendBroadcastTx> mapDarksendBroadcastTxes;
@@ -242,7 +242,7 @@ public:
 
 /** Helper object for signing and checking signatures
  */
-class CDarkSendSigner
+class CLegacySigner
 {
 public:
     /// Is the inputs associated with this public key? (and there is 10000 CRW - checking if valid throne)

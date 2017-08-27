@@ -358,7 +358,7 @@ bool CThroneBroadcast::Create(std::string strService, std::string strKeyThrone, 
         return false;
     }
 
-    if(!darkSendSigner.SetKey(strKeyThrone, strErrorMessage, keyThroneNew, pubKeyThroneNew))
+    if(!legacySigner.SetKey(strKeyThrone, strErrorMessage, keyThroneNew, pubKeyThroneNew))
     {
         strErrorMessage = strprintf("Can't find keys for throne %s - %s", strService, strErrorMessage);
         LogPrintf("CThroneBroadcast::Create -- %s\n", strErrorMessage);
@@ -475,7 +475,7 @@ bool CThroneBroadcast::CheckAndUpdate(int& nDos)
             SanitizeString(strMessage), CBitcoinAddress(pubkey.GetID()).ToString(),
             EncodeBase64(&sig[0], sig.size()));
 
-        if(!darkSendSigner.VerifyMessage(pubkey, sig, strMessage, errorMessage)){
+        if(!legacySigner.VerifyMessage(pubkey, sig, strMessage, errorMessage)){
             if (addr.ToString() != addr.ToString(false))
             {
                 // maybe it's wrong format, try again with the old one
@@ -486,7 +486,7 @@ bool CThroneBroadcast::CheckAndUpdate(int& nDos)
                     SanitizeString(strMessage), CBitcoinAddress(pubkey.GetID()).ToString(),
                     EncodeBase64(&sig[0], sig.size()));
 
-                if(!darkSendSigner.VerifyMessage(pubkey, sig, strMessage, errorMessage)){
+                if(!legacySigner.VerifyMessage(pubkey, sig, strMessage, errorMessage)){
                     // didn't work either
                     LogPrintf("mnb - Got bad Throne address signature, sanitized error: %s\n", SanitizeString(errorMessage));
                     // there is a bug in old MN signatures, ignore such MN but do not ban the peer we got this from
@@ -507,7 +507,7 @@ bool CThroneBroadcast::CheckAndUpdate(int& nDos)
         LogPrint("throne", "mnb - strMessage: %s, pubkey address: %s, sig: %s\n",
             strMessage, CBitcoinAddress(pubkey.GetID()).ToString(), EncodeBase64(&sig[0], sig.size()));
 
-        if(!darkSendSigner.VerifyMessage(pubkey, sig, strMessage, errorMessage)){
+        if(!legacySigner.VerifyMessage(pubkey, sig, strMessage, errorMessage)){
             LogPrintf("mnb - Got bad Throne address signature, error: %s\n", errorMessage);
             nDos = 100;
             return false;
@@ -656,7 +656,7 @@ bool CThroneBroadcast::Sign(CKey& keyCollateralAddress)
 
     std::string strMessage = addr.ToString(false) + boost::lexical_cast<std::string>(sigTime) + vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(protocolVersion);
 
-    if(!darkSendSigner.SignMessage(strMessage, errorMessage, sig, keyCollateralAddress)) {
+    if(!legacySigner.SignMessage(strMessage, errorMessage, sig, keyCollateralAddress)) {
         LogPrintf("CThroneBroadcast::Sign() - Error: %s\n", errorMessage);
         return false;
     }
@@ -673,7 +673,7 @@ bool CThroneBroadcast::VerifySignature()
 
     std::string strMessage = addr.ToString() + boost::lexical_cast<std::string>(sigTime) + vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(protocolVersion);
 
-    if(!darkSendSigner.VerifyMessage(pubkey, sig, strMessage, errorMessage)) {
+    if(!legacySigner.VerifyMessage(pubkey, sig, strMessage, errorMessage)) {
         LogPrintf("CThroneBroadcast::VerifySignature() - Error: %s\n", errorMessage);
         return false;
     }
@@ -706,12 +706,12 @@ bool CThronePing::Sign(CKey& keyThrone, CPubKey& pubKeyThrone)
     sigTime = GetAdjustedTime();
     std::string strMessage = vin.ToString() + blockHash.ToString() + boost::lexical_cast<std::string>(sigTime);
 
-    if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchSig, keyThrone)) {
+    if(!legacySigner.SignMessage(strMessage, errorMessage, vchSig, keyThrone)) {
         LogPrintf("CThronePing::Sign() - Error: %s\n", errorMessage);
         return false;
     }
 
-    if(!darkSendSigner.VerifyMessage(pubKeyThrone, vchSig, strMessage, errorMessage)) {
+    if(!legacySigner.VerifyMessage(pubKeyThrone, vchSig, strMessage, errorMessage)) {
         LogPrintf("CThronePing::Sign() - Error: %s\n", errorMessage);
         return false;
     }
@@ -723,7 +723,7 @@ bool CThronePing::VerifySignature(CPubKey& pubKeyThrone, int &nDos) {
     std::string strMessage = vin.ToString() + blockHash.ToString() + boost::lexical_cast<std::string>(sigTime);
     std::string errorMessage = "";
 
-    if(!darkSendSigner.VerifyMessage(pubKeyThrone, vchSig, strMessage, errorMessage))
+    if(!legacySigner.VerifyMessage(pubKeyThrone, vchSig, strMessage, errorMessage))
     {
         LogPrintf("CThronePing::VerifySignature - Got bad Throne ping signature %s Error: %s\n", vin.ToString(), errorMessage);
         nDos = 33;
