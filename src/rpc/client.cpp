@@ -179,6 +179,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     
     { "buildscript", 0, "json" },
     
+    { "walletsettings", 1, "json" },
+    
     { "getnewextaddress", 1, "childno" },
     
     { "listunspentanon", 0, "minconf" },

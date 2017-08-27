@@ -240,3 +240,19 @@ bool CHDWalletDB::EraseLockedAnonOut(const COutPoint &op)
     return Erase(std::make_pair(std::string("lao"), op));
 };
 
+
+bool CHDWalletDB::ReadWalletSetting(const std::string &setting, std::string &json, uint32_t nFlags)
+{
+    return Read(std::make_pair(std::string("wset"), setting), json, nFlags);
+};
+
+bool CHDWalletDB::WriteWalletSetting(const std::string &setting, const std::string &json)
+{
+    return Write(std::make_pair(std::string("wset"), setting), json, true);
+};
+
+bool CHDWalletDB::EraseWalletSetting(const std::string &setting)
+{
+    return Erase(std::make_pair(std::string("wset"), setting));
+};
+

@@ -205,6 +205,7 @@ public:
         fScriptSet = false;
         fChange = false;
         nChildKey = 0;
+        nChildKeyColdStaking = 0;
         nStealthPrefix = 0;
         fSplitBlindOutput = false;
         fExemptFeeSub = false;
@@ -225,6 +226,7 @@ public:
     bool fSplitBlindOutput;
     bool fExemptFeeSub;         // Value too low to sub fee when blinded value split into two outputs
     CTxDestination address;
+    CTxDestination addressColdStaking;
     CScript scriptPubKey;
     std::vector<uint8_t> vData;
     std::vector<uint8_t> vBlind;
@@ -241,6 +243,7 @@ public:
     bool fScriptSet;
     bool fChange;
     uint32_t nChildKey; // update later
+    uint32_t nChildKeyColdStaking; // update later
     uint32_t nStealthPrefix;
 };
 
@@ -652,6 +655,10 @@ public:
     
     void MarkConflicted(const uint256 &hashBlock, const uint256 &hashTx);
     void SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator>);
+    
+    bool GetSetting(const std::string &setting, UniValue &json);
+    bool SetSetting(const std::string &setting, const UniValue &json);
+    bool EraseSetting(const std::string &setting);
     
     bool SetReserveBalance(CAmount nNewReserveBalance);
     uint64_t GetStakeWeight() const;

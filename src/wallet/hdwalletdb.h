@@ -82,8 +82,7 @@ prefixes
     votes               - vector of vote tokens added by time added asc
     
     wkey
-    
-    old:
+    wset                - wallet setting
 
 */
 
@@ -414,8 +413,11 @@ public:
     bool HaveLockedAnonOut(const COutPoint &op, uint32_t nFlags=DB_READ_UNCOMMITTED);
     bool WriteLockedAnonOut(const COutPoint &op);
     bool EraseLockedAnonOut(const COutPoint &op);
-
-
+    
+    
+    bool ReadWalletSetting(const std::string &setting, std::string &json, uint32_t nFlags=DB_READ_UNCOMMITTED);
+    bool WriteWalletSetting(const std::string &setting, const std::string &json);
+    bool EraseWalletSetting(const std::string &setting);
 };
 
 //void ThreadFlushHDWalletDB();

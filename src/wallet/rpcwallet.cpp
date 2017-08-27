@@ -454,8 +454,6 @@ static void SendMoney(const CTxDestination &address, CAmount nValue, bool fSubtr
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
     CScript scriptPubKey;
-    uint32_t nChildKey;
-    CExtKeyPair ek;
     std::vector<CRecipient> vecSend;
     std::string strError;
     

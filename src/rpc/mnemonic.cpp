@@ -5,8 +5,6 @@
 
 #include "rpc/server.h"
 
-#include <string>
-
 #include "util.h"
 #include "utilstrencodings.h"
 #include "key.h"
@@ -17,6 +15,7 @@
 #include "support/cleanse.h"
 #include "key/mnemonic.h"
 
+#include <string>
 #include <univalue.h>
 
 //typedef std::basic_string<char, std::char_traits<char>, secure_allocator<char> > SecureString;

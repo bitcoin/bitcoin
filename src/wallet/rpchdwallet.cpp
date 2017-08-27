@@ -28,7 +28,6 @@
 #include "crypto/sha256.h"
 
 #include <univalue.h>
-
 #include <stdint.h>
 
 
@@ -483,14 +482,24 @@ int KeyInfo(CKeyID &idMaster, CKeyID &idKey, CStoredExtKey &sek, int nShowKeys, 
     addr.Set(idKey, CChainParams::EXT_KEY_HASH);
     obj.pushKV("id", addr.ToString());
     
+    
     if (nShowKeys > 1
         && pwallet->ExtKeyUnlock(&sek) == 0)
     {
-        if (fBip44Root)
-            eKey58.SetKey(sek.kp, CChainParams::EXT_SECRET_KEY_BTC);
-        else
-            eKey58.SetKeyV(sek.kp);
-        obj.pushKV("evkey", eKey58.ToString());
+        std::string sKey;
+        if (sek.kp.IsValidV())
+        {
+            if (fBip44Root)
+                eKey58.SetKey(sek.kp, CChainParams::EXT_SECRET_KEY_BTC);
+            else
+                eKey58.SetKeyV(sek.kp);
+            sKey = eKey58.ToString();
+        } else
+        {
+            sKey = "Unknown";
+        };
+        
+        obj.pushKV("evkey", sKey);
     };
     
     if (nShowKeys > 0)
@@ -928,16 +937,20 @@ UniValue extkey(const JSONRPCRequest &request)
             sInKey = request.params[nParamOffset].get_str();
             nParamOffset++;
             
-            ExtractExtKeyId(sInKey, keyId, mode == "account" ? CChainParams::EXT_ACC_HASH : CChainParams::EXT_KEY_HASH);
+            if (mode == "account" && sInKey == "default")
+                keyId = pwallet->idDefaultAccount;
+            else
+                ExtractExtKeyId(sInKey, keyId, mode == "account" ? CChainParams::EXT_ACC_HASH : CChainParams::EXT_KEY_HASH);
         } else
         {
-            // Display default account
             if (mode == "account")
+            {
+                // Display default account
                 keyId = pwallet->idDefaultAccount;
-            
-            if (keyId.IsNull())
-                throw std::runtime_error("Must specify ext key or id.");
-        };
+            };
+        }
+        if (keyId.IsNull())
+            throw std::runtime_error(strprintf("Must specify ext key or id%s.", mode == "account" ? "or 'default'" : ""));
         
         int nListFull = 0; // 0 id only, 1 id+pubkey, 2 id+pubkey+secret
         if (request.params.size() > nParamOffset)
@@ -2379,8 +2392,52 @@ UniValue deriverangekeys(const JSONRPCRequest &request)
             };
         };
         
+        CHDWalletDB wdb(pwallet->strWalletFile, "r+");
+        CStoredExtKey sekLoose, sekDB;
+        if (!sek)
+        {
+            CExtKey58 eKey58;
+            CBitcoinAddress addr;
+            CKeyID idk;
+            
+            if (addr.SetString(sInKey)
+                && addr.IsValid(CChainParams::EXT_KEY_HASH)
+                && addr.GetKeyID(idk, CChainParams::EXT_KEY_HASH))
+            {
+                
+            } else
+            if (eKey58.Set58(sInKey.c_str()) == 0)
+            {
+                sek = &sekLoose;
+                sek->kp = eKey58.GetKey();
+                idk = sek->kp.GetID();
+            } else
+            {
+                throw JSONRPCError(RPC_WALLET_ERROR, _("Invalid key."));
+            };
+            
+            if (!idk.IsNull())
+            {
+                if (wdb.ReadExtKey(idk, sekDB))
+                {
+                    sek = &sekDB;
+                    if (fHardened && (sek->nFlags & EAF_IS_CRYPTED))
+                        throw std::runtime_error("TODO: decrypt key.");
+                };
+            };
+        };
+        
+        
+        
         if (!sek)
             throw JSONRPCError(RPC_WALLET_ERROR, _("Unknown chain."));
+        
+        if (fHardened && !sek->kp.IsValidV())
+            throw JSONRPCError(RPC_INVALID_PARAMETER, _("extkey must have private key to derive hardened keys."));
+        
+        if (fSave && !sea)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, _("Must have account to save keys."));
+        
         
         uint32_t idIndex;
         if (fAddToAddressBook)
@@ -2388,7 +2445,6 @@ UniValue deriverangekeys(const JSONRPCRequest &request)
             if (0 != pwallet->ExtKeyGetIndex(sea, idIndex))
                 throw JSONRPCError(RPC_WALLET_ERROR, _("ExtKeyGetIndex failed."));
         };
-        CHDWalletDB wdb(pwallet->strWalletFile, "r+");
         
         uint32_t nChildIn = (uint32_t)nStart;
         CPubKey newKey;
@@ -2937,207 +2993,6 @@ UniValue manageaddressbook(const JSONRPCRequest &request)
     return result;
 }
 
-UniValue setvote(const JSONRPCRequest &request)
-{
-    if (request.fHelp || request.params.size() != 4)
-        throw std::runtime_error(
-            "setvote <proposal> <option> <height_start> <height_end>\n"
-            "Set voting token.\n"
-            "Proposal is the proposal to vote on.\n"
-            "Option is the option to vote for.\n"
-            "The last added option valid for a range will be applied.\n"
-            "Wallet will include this token in staked blocks from height_start to height_end.\n"
-            "Set proposal and/or option to 0 to stop voting.\n");
-    
-    CHDWallet *pwallet = GetHDWallet();
-    EnsureWalletIsUnlocked(pwallet);
-    
-    uint32_t issue = request.params[0].get_int();
-    uint32_t option = request.params[1].get_int();
-    
-    if (issue > 0xFFFF)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, _("Proposal out of range."));
-    if (option > 0xFFFF)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, _("Option out of range."));
-
-    int nStartHeight = request.params[2].get_int();
-    int nEndHeight = request.params[3].get_int();
-    
-    if (nEndHeight < nStartHeight)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, _("height_end must be after height_start."));
-    
-    uint32_t voteToken = issue | (option << 16);
-    
-    {
-        LOCK(pwallet->cs_wallet);
-        
-        CHDWalletDB wdb(pwallet->strWalletFile, "r+");
-        
-        std::vector<CVoteToken> vVoteTokens;
-    
-        wdb.ReadVoteTokens(vVoteTokens);
-        
-        CVoteToken v(voteToken, nStartHeight, nEndHeight, GetTime());
-        vVoteTokens.push_back(v);
-        
-        if (!wdb.WriteVoteTokens(vVoteTokens))
-            throw JSONRPCError(RPC_WALLET_ERROR, "WriteVoteTokens failed.");
-        
-        pwallet->LoadVoteTokens(&wdb);
-    }
-    
-    UniValue result(UniValue::VOBJ);
-    
-    if (issue < 1)
-        result.pushKV("result", _("Cleared vote token."));
-    else
-        result.pushKV("result", strprintf(_("Voting for option %u on proposal %u"), option, issue));
-    
-    result.pushKV("from_height", nStartHeight);
-    result.pushKV("to_height", nEndHeight);
-    
-    return result;
-}
-
-UniValue votehistory(const JSONRPCRequest &request)
-{
-    if (request.fHelp || request.params.size() > 1)
-        throw std::runtime_error(
-            "votehistory [current_only]\n"
-            "Display voting history.\n");
-    
-    CHDWallet *pwallet = GetHDWallet();
-    
-    UniValue result(UniValue::VARR);
-    
-    if (request.params.size() > 0)
-    {
-        std::string s = request.params[0].get_str();
-        if (part::IsStringBoolPositive(s))
-        {
-            UniValue vote(UniValue::VOBJ);
-            
-            int nNextHeight = chainActive.Height() + 1;
-            
-            for (auto i = pwallet->vVoteTokens.size(); i-- > 0; )
-            {
-                auto &v = pwallet->vVoteTokens[i];
-                if (v.nEnd < nNextHeight
-                    || v.nStart > nNextHeight)
-                    continue;
-                
-                if ((v.nToken >> 16) < 1
-                    || (v.nToken & 0xFFFF) < 1)
-                    continue;
-                UniValue vote(UniValue::VOBJ);
-                vote.pushKV("proposal", (int)(v.nToken & 0xFFFF));
-                vote.pushKV("option", (int)(v.nToken >> 16));
-                vote.pushKV("from_height", v.nStart);
-                vote.pushKV("to_height", v.nEnd);
-                result.push_back(vote);
-            };
-            return result;
-        };
-    };
-    
-    std::vector<CVoteToken> vVoteTokens;
-    {
-        LOCK(pwallet->cs_wallet);
-        
-        CHDWalletDB wdb(pwallet->strWalletFile, "r+");
-        wdb.ReadVoteTokens(vVoteTokens);
-    }
-    
-    for (auto i = vVoteTokens.size(); i-- > 0; )
-    {
-        auto &v = vVoteTokens[i];
-        UniValue vote(UniValue::VOBJ);
-        vote.pushKV("proposal", (int)(v.nToken & 0xFFFF));
-        vote.pushKV("option", (int)(v.nToken >> 16));
-        vote.pushKV("from_height", v.nStart);
-        vote.pushKV("to_height", v.nEnd);
-        vote.pushKV("added", v.nTimeAdded);
-        result.push_back(vote);
-    };
-    
-    return result;
-}
-
-UniValue tallyvotes(const JSONRPCRequest &request)
-{
-    if (request.fHelp || request.params.size() != 3)
-        throw std::runtime_error(
-            "tallyvotes <proposal> <height_start> <height_end>\n"
-            "count votes.\n");
-    
-    int issue = request.params[0].get_int();
-    if (issue < 1 || issue >= (1 << 16))
-        throw JSONRPCError(RPC_INVALID_PARAMETER, _("Proposal out of range."));
-    
-    int nStartHeight = request.params[1].get_int();
-    int nEndHeight = request.params[2].get_int();
-    
-    CBlock block;
-    const Consensus::Params& consensusParams = Params().GetConsensus();
-    
-    std::map<int, int> mapVotes;
-    std::pair<std::map<int, int>::iterator, bool> ri;
-    
-    int nBlocks = 0;
-    CBlockIndex *pindex = chainActive.Tip();
-    if (pindex)
-    do
-    {
-        if (pindex->nHeight < nStartHeight)
-            break;
-        if (pindex->nHeight <= nEndHeight)
-        {
-            if (!ReadBlockFromDisk(block, pindex, consensusParams))
-                continue;
-            
-            if (block.vtx.size() < 1
-                || !block.vtx[0]->IsCoinStake())
-                continue;
-            
-            std::vector<uint8_t> &vData = ((CTxOutData*)block.vtx[0]->vpout[0].get())->vData;
-            if (vData.size() < 9 || vData[4] != DO_VOTE)
-            {
-                ri = mapVotes.insert(std::pair<int, int>(0, 1));
-                if (!ri.second) ri.first->second++;
-            } else
-            {
-                uint32_t voteToken;
-                memcpy(&voteToken, &vData[5], 4);
-                int option = 0; // default to abstain
-                
-                // count only if related to current issue:
-                if ((int) (voteToken & 0xFFFF) == issue)
-                    option = (voteToken >> 16) & 0xFFFF;
-                
-                ri = mapVotes.insert(std::pair<int, int>(option, 1));
-                if (!ri.second) ri.first->second++;
-            };
-            
-            nBlocks++;
-        };
-    } while ((pindex = pindex->pprev));
-    
-    UniValue result(UniValue::VOBJ);
-    result.pushKV("proposal", issue);
-    result.pushKV("height_start", nStartHeight);
-    result.pushKV("height_end", nEndHeight);
-    result.pushKV("blocks_counted", nBlocks);
-    
-    float fnBlocks = (float) nBlocks;
-    for (auto &i : mapVotes)
-    {
-        std::string sKey = i.first == 0 ? "Abstain" : strprintf("Option %d", i.first);
-        result.pushKV(sKey, strprintf("%d, %.02f%%", i.second, ((float) i.second / fnBlocks) * 100.0));
-    };
-    
-    return result;
-};
-
 UniValue getstakinginfo(const JSONRPCRequest &request)
 {
     if (request.fHelp || request.params.size() != 0)
@@ -3496,6 +3351,7 @@ UniValue listunspentblind(const JSONRPCRequest &request)
 
     return results;
 };
+
 /*
 UniValue gettransactionsummary(const JSONRPCRequest &request)
 {
@@ -3843,7 +3699,6 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
             if (!r.fChange
                 && r.nAmount != r.nAmountSelected)
             {
-                CAmount nValue = r.nAmount;
                 std::string sAddr = CBitcoinAddress(r.address).ToString();
                 
                 if (mapChanged.count(sAddr))
@@ -3979,7 +3834,7 @@ UniValue sendparttoblind(const JSONRPCRequest &request)
         throw std::runtime_error(SendHelp(OUTPUT_STANDARD, OUTPUT_CT));
     
     return SendToInner(request, OUTPUT_STANDARD, OUTPUT_CT);
-}
+};
 
 UniValue sendparttoanon(const JSONRPCRequest &request)
 {
@@ -3987,7 +3842,7 @@ UniValue sendparttoanon(const JSONRPCRequest &request)
         throw std::runtime_error(SendHelp(OUTPUT_STANDARD, OUTPUT_RINGCT));
     
     return SendToInner(request, OUTPUT_STANDARD, OUTPUT_RINGCT);
-}
+};
 
 
 UniValue sendblindtopart(const JSONRPCRequest &request)
@@ -3996,7 +3851,7 @@ UniValue sendblindtopart(const JSONRPCRequest &request)
         throw std::runtime_error(SendHelp(OUTPUT_CT, OUTPUT_STANDARD));
     
     return SendToInner(request, OUTPUT_CT, OUTPUT_STANDARD);
-}
+};
 
 UniValue sendblindtoblind(const JSONRPCRequest &request)
 {
@@ -4004,7 +3859,7 @@ UniValue sendblindtoblind(const JSONRPCRequest &request)
         throw std::runtime_error(SendHelp(OUTPUT_CT, OUTPUT_CT));
     
     return SendToInner(request, OUTPUT_CT, OUTPUT_CT);
-}
+};
 
 UniValue sendblindtoanon(const JSONRPCRequest &request)
 {
@@ -4012,7 +3867,7 @@ UniValue sendblindtoanon(const JSONRPCRequest &request)
         throw std::runtime_error(SendHelp(OUTPUT_CT, OUTPUT_RINGCT));
     
     return SendToInner(request, OUTPUT_CT, OUTPUT_RINGCT);
-}
+};
 
 
 UniValue sendanontopart(const JSONRPCRequest &request)
@@ -4021,7 +3876,7 @@ UniValue sendanontopart(const JSONRPCRequest &request)
         throw std::runtime_error(SendHelp(OUTPUT_RINGCT, OUTPUT_STANDARD));
     
     return SendToInner(request, OUTPUT_RINGCT, OUTPUT_STANDARD);
-}
+};
 
 UniValue sendanontoblind(const JSONRPCRequest &request)
 {
@@ -4029,7 +3884,7 @@ UniValue sendanontoblind(const JSONRPCRequest &request)
         throw std::runtime_error(SendHelp(OUTPUT_RINGCT, OUTPUT_CT));
     
     return SendToInner(request, OUTPUT_RINGCT, OUTPUT_CT);
-}
+};
 
 UniValue sendanontoanon(const JSONRPCRequest &request)
 {
@@ -4037,7 +3892,7 @@ UniValue sendanontoanon(const JSONRPCRequest &request)
         throw std::runtime_error(SendHelp(OUTPUT_RINGCT, OUTPUT_RINGCT));
     
     return SendToInner(request, OUTPUT_RINGCT, OUTPUT_RINGCT);
-}
+};
 
 UniValue sendtypeto(const JSONRPCRequest &request)
 {
@@ -4085,7 +3940,7 @@ UniValue sendtypeto(const JSONRPCRequest &request)
     req.params.erase(0, 2);
     
     return SendToInner(req, typeIn, typeOut);
-}
+};
 
 UniValue buildscript(const JSONRPCRequest &request)
 {
@@ -4183,7 +4038,7 @@ UniValue buildscript(const JSONRPCRequest &request)
     obj.pushKV("asm", ScriptToAsmStr(scriptOut));
     
     return obj;
-}
+};
 
 UniValue debugwallet(const JSONRPCRequest &request)
 {
@@ -4253,7 +4108,7 @@ UniValue debugwallet(const JSONRPCRequest &request)
     obj.pushKV("unabandoned_orphans", (int)nUnabandonedOrphans);
     
     return obj;
-}
+};
 
 UniValue rewindchain(const JSONRPCRequest &request)
 {
@@ -4329,7 +4184,319 @@ UniValue rewindchain(const JSONRPCRequest &request)
     
     
     return result;
+};
+
+UniValue walletsettings(const JSONRPCRequest &request)
+{
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
+        throw std::runtime_error(
+            "walletsettings \"setting\" json/\"clear\"\n"
+            "\nManage wallet settings.\n"
+            "\nchangeaddress {\"address_standard\":,\"coldstakingaddress\":}.\n"
+            "   - \"address_standard\": Change address for standard inputs.\n"
+            "   - \"coldstakingaddress\": Cold staking address for standard inputs.\n"
+        );
+    
+    
+    CHDWallet *pwallet = GetHDWallet();
+    EnsureWalletIsUnlocked(pwallet);
+    
+    UniValue result(UniValue::VOBJ);
+    
+    std::string sSetting = request.params[0].get_str();
+    
+    if (sSetting == "changeaddress")
+    {
+        if (request.params.size() > 1)
+        {
+            UniValue json;
+            UniValue warnings(UniValue::VARR);
+            
+            if (request.params[1].isStr())
+            {
+                std::string sCmd = request.params[1].get_str();
+                
+                if (sCmd == "clear")
+                {
+                    if (!pwallet->EraseSetting(sSetting))
+                        throw JSONRPCError(RPC_WALLET_ERROR, _("EraseSetting failed."));
+                    
+                    result.pushKV(sSetting, "cleared");
+                    return result;
+                } else
+                {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, _("Unknown command."));
+                };
+            } else
+            if (request.params[1].isObject())
+            {
+                json = request.params[1].get_obj();
+                
+                const std::vector<std::string> &vKeys = json.getKeys();
+                
+                for (const auto &sKey : vKeys)
+                {
+                    if (sKey == "address_standard")
+                    {
+                        if (!json["address_standard"].isStr())
+                            throw JSONRPCError(RPC_INVALID_PARAMETER, _("address_standard must be a string."));
+                        
+                        std::string sAddress = json["address_standard"].get_str();
+                        
+                        CBitcoinAddress addr(sAddress);
+                        if (!addr.IsValid())
+                            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid address_standard.");
+                    } else
+                    if (sKey == "coldstakingaddress")
+                    {
+                        if (!json["coldstakingaddress"].isStr())
+                            throw JSONRPCError(RPC_INVALID_PARAMETER, _("coldstakingaddress must be a string."));
+                        
+                        std::string sAddress = json["coldstakingaddress"].get_str();
+                        
+                        CBitcoinAddress addr(sAddress);
+                        if (!addr.IsValid())
+                            throw JSONRPCError(RPC_INVALID_PARAMETER, _("Invalid coldstakingaddress."));
+                        
+                        if (addr.IsValidStealthAddress())
+                            throw JSONRPCError(RPC_INVALID_PARAMETER, _("coldstakingaddress can't be a stealthaddress."));
+                    } else
+                    {
+                        warnings.push_back("Unknown key " + sKey);
+                    };
+                };
+                
+                
+                json.pushKV("time", GetTime());
+                
+                if (!pwallet->SetSetting(sSetting, json))
+                    throw JSONRPCError(RPC_WALLET_ERROR, _("SetSetting failed."));
+                
+                if (warnings.size() > 0)
+                    result.pushKV("warnings", warnings);
+            };
+            result.pushKV(sSetting, json);
+        } else
+        {
+            UniValue json;
+            if (!pwallet->GetSetting("changeaddress", json))
+            {
+                result.pushKV(sSetting, "default");
+            } else
+            {
+                result.pushKV(sSetting, json);
+            };
+        };
+    } else
+    {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, _("Unknown setting"));
+    };
+    
+    
+    return result;
+};
+
+
+UniValue setvote(const JSONRPCRequest &request)
+{
+    if (request.fHelp || request.params.size() != 4)
+        throw std::runtime_error(
+            "setvote <proposal> <option> <height_start> <height_end>\n"
+            "Set voting token.\n"
+            "Proposal is the proposal to vote on.\n"
+            "Option is the option to vote for.\n"
+            "The last added option valid for a range will be applied.\n"
+            "Wallet will include this token in staked blocks from height_start to height_end.\n"
+            "Set proposal and/or option to 0 to stop voting.\n");
+    
+    CHDWallet *pwallet = GetHDWallet();
+    EnsureWalletIsUnlocked(pwallet);
+    
+    uint32_t issue = request.params[0].get_int();
+    uint32_t option = request.params[1].get_int();
+    
+    if (issue > 0xFFFF)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, _("Proposal out of range."));
+    if (option > 0xFFFF)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, _("Option out of range."));
+
+    int nStartHeight = request.params[2].get_int();
+    int nEndHeight = request.params[3].get_int();
+    
+    if (nEndHeight < nStartHeight)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, _("height_end must be after height_start."));
+    
+    uint32_t voteToken = issue | (option << 16);
+    
+    {
+        LOCK(pwallet->cs_wallet);
+        
+        CHDWalletDB wdb(pwallet->strWalletFile, "r+");
+        
+        std::vector<CVoteToken> vVoteTokens;
+    
+        wdb.ReadVoteTokens(vVoteTokens);
+        
+        CVoteToken v(voteToken, nStartHeight, nEndHeight, GetTime());
+        vVoteTokens.push_back(v);
+        
+        if (!wdb.WriteVoteTokens(vVoteTokens))
+            throw JSONRPCError(RPC_WALLET_ERROR, "WriteVoteTokens failed.");
+        
+        pwallet->LoadVoteTokens(&wdb);
+    }
+    
+    UniValue result(UniValue::VOBJ);
+    
+    if (issue < 1)
+        result.pushKV("result", _("Cleared vote token."));
+    else
+        result.pushKV("result", strprintf(_("Voting for option %u on proposal %u"), option, issue));
+    
+    result.pushKV("from_height", nStartHeight);
+    result.pushKV("to_height", nEndHeight);
+    
+    return result;
 }
+
+UniValue votehistory(const JSONRPCRequest &request)
+{
+    if (request.fHelp || request.params.size() > 1)
+        throw std::runtime_error(
+            "votehistory [current_only]\n"
+            "Display voting history.\n");
+    
+    CHDWallet *pwallet = GetHDWallet();
+    
+    UniValue result(UniValue::VARR);
+    
+    if (request.params.size() > 0)
+    {
+        std::string s = request.params[0].get_str();
+        if (part::IsStringBoolPositive(s))
+        {
+            UniValue vote(UniValue::VOBJ);
+            
+            int nNextHeight = chainActive.Height() + 1;
+            
+            for (auto i = pwallet->vVoteTokens.size(); i-- > 0; )
+            {
+                auto &v = pwallet->vVoteTokens[i];
+                if (v.nEnd < nNextHeight
+                    || v.nStart > nNextHeight)
+                    continue;
+                
+                if ((v.nToken >> 16) < 1
+                    || (v.nToken & 0xFFFF) < 1)
+                    continue;
+                UniValue vote(UniValue::VOBJ);
+                vote.pushKV("proposal", (int)(v.nToken & 0xFFFF));
+                vote.pushKV("option", (int)(v.nToken >> 16));
+                vote.pushKV("from_height", v.nStart);
+                vote.pushKV("to_height", v.nEnd);
+                result.push_back(vote);
+            };
+            return result;
+        };
+    };
+    
+    std::vector<CVoteToken> vVoteTokens;
+    {
+        LOCK(pwallet->cs_wallet);
+        
+        CHDWalletDB wdb(pwallet->strWalletFile, "r+");
+        wdb.ReadVoteTokens(vVoteTokens);
+    }
+    
+    for (auto i = vVoteTokens.size(); i-- > 0; )
+    {
+        auto &v = vVoteTokens[i];
+        UniValue vote(UniValue::VOBJ);
+        vote.pushKV("proposal", (int)(v.nToken & 0xFFFF));
+        vote.pushKV("option", (int)(v.nToken >> 16));
+        vote.pushKV("from_height", v.nStart);
+        vote.pushKV("to_height", v.nEnd);
+        vote.pushKV("added", v.nTimeAdded);
+        result.push_back(vote);
+    };
+    
+    return result;
+}
+
+UniValue tallyvotes(const JSONRPCRequest &request)
+{
+    if (request.fHelp || request.params.size() != 3)
+        throw std::runtime_error(
+            "tallyvotes <proposal> <height_start> <height_end>\n"
+            "count votes.\n");
+    
+    int issue = request.params[0].get_int();
+    if (issue < 1 || issue >= (1 << 16))
+        throw JSONRPCError(RPC_INVALID_PARAMETER, _("Proposal out of range."));
+    
+    int nStartHeight = request.params[1].get_int();
+    int nEndHeight = request.params[2].get_int();
+    
+    CBlock block;
+    const Consensus::Params& consensusParams = Params().GetConsensus();
+    
+    std::map<int, int> mapVotes;
+    std::pair<std::map<int, int>::iterator, bool> ri;
+    
+    int nBlocks = 0;
+    CBlockIndex *pindex = chainActive.Tip();
+    if (pindex)
+    do
+    {
+        if (pindex->nHeight < nStartHeight)
+            break;
+        if (pindex->nHeight <= nEndHeight)
+        {
+            if (!ReadBlockFromDisk(block, pindex, consensusParams))
+                continue;
+            
+            if (block.vtx.size() < 1
+                || !block.vtx[0]->IsCoinStake())
+                continue;
+            
+            std::vector<uint8_t> &vData = ((CTxOutData*)block.vtx[0]->vpout[0].get())->vData;
+            if (vData.size() < 9 || vData[4] != DO_VOTE)
+            {
+                ri = mapVotes.insert(std::pair<int, int>(0, 1));
+                if (!ri.second) ri.first->second++;
+            } else
+            {
+                uint32_t voteToken;
+                memcpy(&voteToken, &vData[5], 4);
+                int option = 0; // default to abstain
+                
+                // count only if related to current issue:
+                if ((int) (voteToken & 0xFFFF) == issue)
+                    option = (voteToken >> 16) & 0xFFFF;
+                
+                ri = mapVotes.insert(std::pair<int, int>(option, 1));
+                if (!ri.second) ri.first->second++;
+            };
+            
+            nBlocks++;
+        };
+    } while ((pindex = pindex->pprev));
+    
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("proposal", issue);
+    result.pushKV("height_start", nStartHeight);
+    result.pushKV("height_end", nEndHeight);
+    result.pushKV("blocks_counted", nBlocks);
+    
+    float fnBlocks = (float) nBlocks;
+    for (auto &i : mapVotes)
+    {
+        std::string sKey = i.first == 0 ? "Abstain" : strprintf("Option %d", i.first);
+        result.pushKV(sKey, strprintf("%d, %.02f%%", i.second, ((float) i.second / fnBlocks) * 100.0));
+    };
+    
+    return result;
+};
 
 
 
@@ -4348,24 +4515,19 @@ static const CRPCCommand commands[] =
     
     { "wallet",             "scanchain",                &scanchain,                false,  {} },
     { "wallet",             "reservebalance",           &reservebalance,           false,  {"enabled","amount"} },
-    { "wallet",             "deriverangekeys",          &deriverangekeys,          false,  {} },
+    { "wallet",             "deriverangekeys",          &deriverangekeys,          false,  {"start", "end", "key/id", "hardened", "save", "add_to_addressbook"} },
     { "wallet",             "clearwallettransactions",  &clearwallettransactions,  false,  {} },
     
     { "wallet",             "filtertransactions",       &filtertransactions,       false,  {"offset","count","sort_code"} },
     { "wallet",             "filteraddresses",          &filteraddresses,          false,  {"offset","count","sort_code"} },
     { "wallet",             "manageaddressbook",        &manageaddressbook,        true,   {"action","address","label","purpose"} },
     
-    { "governance",         "setvote",                  &setvote,                  false,  {"proposal","option","height_start","height_end"} },
-    { "governance",         "votehistory",              &votehistory,              false,  {"current_only"} },
-    { "governance",         "tallyvotes",               &tallyvotes,               false,  {"proposal","height_start","height_end"} },
-    
-    { "wallet",             "getstakinginfo",           &getstakinginfo,           true,  {} },
+    { "wallet",             "getstakinginfo",           &getstakinginfo,           true,   {} },
     
     //{ "wallet",             "gettransactionsummary",    &gettransactionsummary,    true,  {} },
     
-    { "wallet",             "listunspentanon",          &listunspentanon,          true,  {"minconf","maxconf","addresses","include_unsafe","cc_format"} },
-    { "wallet",             "listunspentblind",         &listunspentblind,         true,  {"minconf","maxconf","addresses","include_unsafe","cc_format"} },
-    
+    { "wallet",             "listunspentanon",          &listunspentanon,          true,   {"minconf","maxconf","addresses","include_unsafe","cc_format"} },
+    { "wallet",             "listunspentblind",         &listunspentblind,         true,   {"minconf","maxconf","addresses","include_unsafe","cc_format"} },
     
     
     //sendparttopart // normal txn
@@ -4384,8 +4546,21 @@ static const CRPCCommand commands[] =
     
     { "wallet",             "buildscript",              &buildscript,              false,  {"json"} },
     
-    { "wallet",             "debugwallet",              &debugwallet,               false,  {"attempt_repair"} },
-    { "wallet",             "rewindchain",              &rewindchain,               false,  {"height"} },
+    { "wallet",             "debugwallet",              &debugwallet,              false,  {"attempt_repair"} },
+    { "wallet",             "rewindchain",              &rewindchain,              false,  {"height"} },
+    
+    { "wallet",             "walletsettings",           &walletsettings,           true,   {} },
+    
+    
+    
+    
+    { "governance",         "setvote",                  &setvote,                  false,  {"proposal","option","height_start","height_end"} },
+    { "governance",         "votehistory",              &votehistory,              false,  {"current_only"} },
+    { "governance",         "tallyvotes",               &tallyvotes,               false,  {"proposal","height_start","height_end"} },
+    
+    
+    
+    
     
 };
 

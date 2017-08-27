@@ -2206,7 +2206,7 @@ int CHDWallet::ExpandTempRecipients(std::vector<CTempRecipient> &vecSend, CStore
                     ek58.SetKeyP(ek);
                     CPubKey pkDest;
                     uint32_t nChildKey;
-                    if (0 != ((CHDWallet*)pwalletMain)->ExtKeyGetDestination(ek, pkDest, nChildKey))
+                    if (0 != ExtKeyGetDestination(ek, pkDest, nChildKey))
                         return errorN(1, sError, __func__, "ExtKeyGetDestination failed.");
                     
                     r.nChildKey = nChildKey;
@@ -2292,7 +2292,7 @@ int CHDWallet::ExpandTempRecipients(std::vector<CTempRecipient> &vecSend, CStore
                 CExtKey58 ek58;
                 ek58.SetKeyP(ek);
                 uint32_t nDestChildKey;
-                if (0 != ((CHDWallet*)pwalletMain)->ExtKeyGetDestination(ek, r.pkTo, nDestChildKey))
+                if (0 != ExtKeyGetDestination(ek, r.pkTo, nDestChildKey))
                     return errorN(1, sError, __func__, "ExtKeyGetDestination failed.");
                 
                 r.nChildKey = nDestChildKey;
@@ -2478,6 +2478,13 @@ int CHDWallet::PostProcessTempRecipients(std::vector<CTempRecipient> &vecSend)
             r.nChildKey+=1;
             ExtKeyUpdateLooseKey(ek, r.nChildKey, true);
         };
+        
+        if (r.addressColdStaking.type() == typeid(CExtKeyPair))
+        {
+            CExtKeyPair ek = boost::get<CExtKeyPair>(r.addressColdStaking);
+            r.nChildKeyColdStaking+=1;
+            ExtKeyUpdateLooseKey(ek, r.nChildKeyColdStaking, true);
+        };
     };
     
     return 0;
@@ -2557,9 +2564,93 @@ bool CTempRecipient::ApplySubFee(CAmount nFee, size_t nSubtractFeeFromAmount, bo
     return false;
 };
 
+static bool ExpandChangeAddress(CHDWallet *phdw, CTempRecipient &r, std::string &sError)
+{
+    if (r.address.type() == typeid(CStealthAddress))
+    {
+        CStealthAddress sx = boost::get<CStealthAddress>(r.address);
+        
+        CKey sShared;
+        ec_point pkSendTo;
+        
+        int k, nTries = 24;
+        for (k = 0; k < nTries; ++k)
+        {
+            if (StealthSecret(r.sEphem, sx.scan_pubkey, sx.spend_pubkey, sShared, pkSendTo) == 0)
+                break;
+            // if StealthSecret fails try again with new ephem key
+            /* TODO: Make optional
+            if (0 != pc->DeriveNextKey(sEphem, nChild, true))
+                return errorN(1, sError, __func__, "DeriveNextKey failed.");
+            */
+            r.sEphem.MakeNewKey(true);
+        };
+        if (k >= nTries)
+            return errorN(1, sError, __func__, "Could not generate receiving public key.");
+        
+        CPubKey pkEphem = r.sEphem.GetPubKey();
+        r.pkTo = CPubKey(pkSendTo);
+        CKeyID idTo = r.pkTo.GetID();
+        r.scriptPubKey = GetScriptForDestination(idTo);
+        
+        if (fDebug)
+            LogPrint("hdwallet", "Stealth send to generated change address: %s\n", CBitcoinAddress(idTo).ToString());
+        
+        if (r.nType == OUTPUT_CT || r.nType == OUTPUT_RINGCT)
+        {
+            if (sx.prefix.number_bits > 0)
+            {
+                r.nStealthPrefix = FillStealthPrefix(sx.prefix.number_bits, sx.prefix.bitfield);
+            };
+        } else
+        {
+            if (0 != MakeStealthData(r.sNarration, sx.prefix, sShared, pkEphem, r.vData, r.nStealthPrefix, sError))
+                return 1;
+        };
+        return true;
+    };
+    
+    if (r.address.type() == typeid(CExtKeyPair))
+    {
+        CExtKeyPair ek = boost::get<CExtKeyPair>(r.address);
+        CExtKey58 ek58;
+        ek58.SetKeyP(ek);
+        uint32_t nChildKey;
+        
+        if (0 != phdw->ExtKeyGetDestination(ek, r.pkTo, nChildKey))
+            return errorN(false, sError, __func__, "ExtKeyGetDestination failed.");
+        
+        r.nChildKey = nChildKey;
+        CKeyID idTo = r.pkTo.GetID();
+        r.scriptPubKey = GetScriptForDestination(idTo);
+        
+        return true;
+    };
+    
+    if (r.address.type() == typeid(CKeyID))
+    {
+        CKeyID idk = boost::get<CKeyID>(r.address);
+        
+        if (!phdw->GetPubKey(idk, r.pkTo))
+            return errorN(false, sError, __func__, "GetPubKey failed.");
+        r.scriptPubKey = GetScriptForDestination(idk);
+        
+        return true;
+    };
+    
+    if (r.address.type() != typeid(CNoDestination)
+        // TODO OUTPUT_CT?
+        && r.nType == OUTPUT_STANDARD)
+    {
+        r.scriptPubKey = GetScriptForDestination(r.address);
+        return r.scriptPubKey.size() > 0;
+    };
+    
+    return false;
+}
+
 bool CHDWallet::SetChangeDest(const CCoinControl *coinControl, CTempRecipient &r, std::string &sError)
 {
-    
     if (r.nType == OUTPUT_CT || r.nType == OUTPUT_RINGCT
         || r.address.type() == typeid(CStealthAddress))
     {
@@ -2576,84 +2667,8 @@ bool CHDWallet::SetChangeDest(const CCoinControl *coinControl, CTempRecipient &r
     {
         r.address = coinControl->destChange;
         
-        if (r.address.type() == typeid(CStealthAddress))
-        {
-            CStealthAddress sx = boost::get<CStealthAddress>(r.address);
-            
-            CKey sShared;
-            ec_point pkSendTo;
-            
-            int k, nTries = 24;
-            for (k = 0; k < nTries; ++k)
-            {
-                if (StealthSecret(r.sEphem, sx.scan_pubkey, sx.spend_pubkey, sShared, pkSendTo) == 0)
-                    break;
-                // if StealthSecret fails try again with new ephem key
-                /* TODO: Make optional
-                if (0 != pc->DeriveNextKey(sEphem, nChild, true))
-                    return errorN(1, sError, __func__, "DeriveNextKey failed.");
-                */
-                r.sEphem.MakeNewKey(true);
-            };
-            if (k >= nTries)
-                return errorN(1, sError, __func__, "Could not generate receiving public key.");
-            
-            CPubKey pkEphem = r.sEphem.GetPubKey();
-            r.pkTo = CPubKey(pkSendTo);
-            CKeyID idTo = r.pkTo.GetID();
-            r.scriptPubKey = GetScriptForDestination(idTo);
-            
-            if (fDebug)
-                LogPrint("hdwallet", "Stealth send to generated change address: %s\n", CBitcoinAddress(idTo).ToString());
-            
-            if (r.nType == OUTPUT_CT || r.nType == OUTPUT_RINGCT)
-            {
-                if (sx.prefix.number_bits > 0)
-                {
-                    r.nStealthPrefix = FillStealthPrefix(sx.prefix.number_bits, sx.prefix.bitfield);
-                };
-            } else
-            {
-                if (0 != MakeStealthData(r.sNarration, sx.prefix, sShared, pkEphem, r.vData, r.nStealthPrefix, sError))
-                    return 1;
-            };
-            return true;
-        };
+        return ExpandChangeAddress(this, r, sError);
         
-        if (r.address.type() == typeid(CExtKeyPair))
-        {
-            CExtKeyPair ek = boost::get<CExtKeyPair>(r.address);
-            CExtKey58 ek58;
-            ek58.SetKeyP(ek);
-            uint32_t nChildKey;
-            
-            if (0 != ((CHDWallet*)pwalletMain)->ExtKeyGetDestination(ek, r.pkTo, nChildKey))
-                return errorN(false, sError, __func__, "ExtKeyGetDestination failed.");
-            
-            CKeyID idTo = r.pkTo.GetID();
-            r.scriptPubKey = GetScriptForDestination(idTo);
-            
-            return true;
-        };
-        
-        if (r.address.type() == typeid(CKeyID))
-        {
-            CKeyID idk = boost::get<CKeyID>(r.address);
-            
-            if (!GetPubKey(idk, r.pkTo))
-                return errorN(false, sError, __func__, "GetPubKey failed.");
-            r.scriptPubKey = GetScriptForDestination(idk);
-            
-            return true;
-        };
-        
-        if (r.address.type() != typeid(CNoDestination)
-            // TODO OUTPUT_CT?
-            && r.nType == OUTPUT_STANDARD)
-        {
-            r.scriptPubKey = GetScriptForDestination(r.address);
-            return r.scriptPubKey.size() > 0;
-        };
     } else
     if (coinControl && coinControl->scriptChange.size() > 0)
     {
@@ -2678,14 +2693,94 @@ bool CHDWallet::SetChangeDest(const CCoinControl *coinControl, CTempRecipient &r
         return true;
     } else
     {
-        CPubKey pkChange;
-        if (0 != GetChangeAddress(pkChange))
-            return errorN(0, sError, __func__, "GetChangeAddress failed.");
+        UniValue jsonSettings;
+        GetSetting("changeaddress", jsonSettings);
         
-        CKeyID idChange = pkChange.GetID();
-        r.pkTo = pkChange;
-        r.address = idChange;
-        r.scriptPubKey = GetScriptForDestination(idChange);
+        bool fIsSet = false;
+        if (r.nType == OUTPUT_STANDARD)
+        {
+            if (jsonSettings["address_standard"].isStr())
+            {
+                std::string sAddress = jsonSettings["address_standard"].get_str();
+                
+                CBitcoinAddress addr(sAddress);
+                if (!addr.IsValid())
+                    return errorN(0, sError, __func__, "Invalid address setting.");
+                
+                r.address = addr.Get();
+                
+                if (!ExpandChangeAddress(this, r, sError))
+                    return false;
+                
+                fIsSet = true;
+            };
+        };
+        
+        
+        if (!fIsSet)
+        {
+            CPubKey pkChange;
+            if (0 != GetChangeAddress(pkChange))
+                return errorN(0, sError, __func__, "GetChangeAddress failed.");
+            
+            CKeyID idChange = pkChange.GetID();
+            r.pkTo = pkChange;
+            r.address = idChange;
+            r.scriptPubKey = GetScriptForDestination(idChange);
+        };
+        
+        if (r.nType == OUTPUT_STANDARD)
+        {
+            if (jsonSettings["coldstakingaddress"].isStr())
+            {
+                LogPrintf("%s: Adding coldstaking script.", __func__);
+                std::string sAddress = jsonSettings["coldstakingaddress"].get_str();
+                
+                CBitcoinAddress addr(sAddress);
+                
+                if (!addr.IsValid())
+                    return errorN(0, sError, __func__, "Invalid coldstaking address setting.");
+                
+                r.addressColdStaking = addr.Get();
+                
+                CScript scriptStaking;
+                
+                if (r.addressColdStaking.type() == typeid(CExtKeyPair))
+                {
+                    CExtKeyPair ek = boost::get<CExtKeyPair>(r.addressColdStaking);
+                    CExtKey58 ek58;
+                    ek58.SetKeyP(ek);
+                    uint32_t nChildKey;
+                    
+                    CPubKey pkTemp;
+                    if (0 != ExtKeyGetDestination(ek, pkTemp, nChildKey))
+                        return errorN(false, sError, __func__, "ExtKeyGetDestination failed.");
+                    
+                    r.nChildKeyColdStaking = nChildKey;
+                    CKeyID idTo = pkTemp.GetID();
+                    scriptStaking = GetScriptForDestination(idTo);
+                };
+                
+                if (r.addressColdStaking.type() == typeid(CKeyID))
+                {
+                    CKeyID idk = boost::get<CKeyID>(r.addressColdStaking);
+                    
+                    scriptStaking = GetScriptForDestination(idk);
+                };
+                
+                if (scriptStaking.IsPayToPublicKeyHash())
+                {
+                    CScript script = CScript() << OP_ISCOINSTAKE << OP_IF;
+                    script += scriptStaking;
+                    script << OP_ELSE;
+                    script += r.scriptPubKey;
+                    script << OP_ENDIF;
+                    r.scriptPubKey = script;
+                };
+            };
+        };
+        
+        
         return true;
     };
     
@@ -5332,20 +5427,13 @@ int CHDWallet::ExtKeyLock()
         pEKMaster->fLocked = 1;
     };
 
-    // TODO: iterate over mapExtKeys instead?
-    ExtKeyAccountMap::iterator mi;
-    for (mi = mapExtAccounts.begin(); mi != mapExtAccounts.end(); ++mi)
+    for (auto &mi : mapExtKeys)
     {
-        CExtKeyAccount *sea = mi->second;
-        std::vector<CStoredExtKey*>::iterator it;
-        for (it = sea->vExtKeys.begin(); it != sea->vExtKeys.end(); ++it)
-        {
-            CStoredExtKey *sek = *it;
-            if (!(sek->nFlags & EAF_IS_CRYPTED))
-                continue;
-            sek->kp.key.Clear();
-            sek->fLocked = 1;
-        };
+        CStoredExtKey *sek = mi.second;
+        if (!(sek->nFlags & EAF_IS_CRYPTED))
+            continue;
+        sek->kp.key.Clear();
+        sek->fLocked = 1;
     };
 
     return 0;
@@ -5414,14 +5502,11 @@ int CHDWallet::ExtKeyUnlock(const CKeyingMaterial &vMKey)
             return 1;
     };
 
-    ExtKeyAccountMap::iterator mi;
-    mi = mapExtAccounts.begin();
-    for (mi = mapExtAccounts.begin(); mi != mapExtAccounts.end(); ++mi)
+    for (auto &mi : mapExtKeys)
     {
-        CExtKeyAccount *sea = mi->second;
-
-        if (ExtKeyUnlock(sea, vMKey) != 0)
-            return errorN(1, "ExtKeyUnlock() account failed.");
+        CStoredExtKey *sek = mi.second;
+        if (0 != ExtKeyUnlock(sek, vMKey))
+            return errorN(1, "ExtKeyUnlock failed.");
     };
 
     return 0;
@@ -9593,6 +9678,49 @@ void CHDWallet::SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator> r
         // cached members not copied on purpose
     }
 }
+
+bool CHDWallet::GetSetting(const std::string &setting, UniValue &json)
+{
+    LOCK(cs_wallet);
+    
+    CHDWalletDB wdb(strWalletFile, "r");
+    
+    std::string sJson;
+    
+    if (!wdb.ReadWalletSetting(setting, sJson))
+        return false;
+    
+    if (!json.read(sJson))
+        return false;
+    
+    return true;
+};
+
+bool CHDWallet::SetSetting(const std::string &setting, const UniValue &json)
+{
+    LOCK(cs_wallet);
+    
+    CHDWalletDB wdb(strWalletFile, "r+");
+    
+    std::string sJson = json.write();
+    
+    if (!wdb.WriteWalletSetting(setting, sJson))
+        return false;
+    
+    return true;
+};
+
+bool CHDWallet::EraseSetting(const std::string &setting)
+{
+    LOCK(cs_wallet);
+    
+    CHDWalletDB wdb(strWalletFile, "r+");
+    
+    if (!wdb.EraseWalletSetting(setting))
+        return false;
+    
+    return true;
+};
 
 bool CHDWallet::SetReserveBalance(CAmount nNewReserveBalance)
 {

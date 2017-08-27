@@ -406,7 +406,6 @@ bool CBitcoinAddress::IsValid(const CChainParams& params) const
         return false;
     };
     
-    
     if (IsValidStealthAddress(params))
         return true;
     
@@ -499,7 +498,7 @@ CTxDestination CBitcoinAddress::Get() const
         CExtKeyPair kp;
         kp.DecodeP(&vchData[0]);
         return kp;
-    }
+    };
     
     
     return CNoDestination();

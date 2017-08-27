@@ -240,10 +240,6 @@ BOOST_AUTO_TEST_CASE(opiscoinstake_test)
     
     BOOST_CHECK(VerifyScript(scriptSig, script, &sigdataB.scriptWitness, nFlags, TransactionSignatureChecker(&txnConst2, 0, vchAmount), &serror));
     
-    
-    
-    
-    
 }
 
 

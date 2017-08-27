@@ -260,6 +260,9 @@ public:
         {
             s.read((char*)tmp+1, 32);
             key.Set((uint8_t*)tmp+1, 1);
+        } else
+        {
+            key.Clear();
         };
         pubkey.Unserialize(s);
     }
@@ -275,7 +278,7 @@ public:
         nGenerated = 0;
         nHGenerated = 0;
         nLastLookAhead = 0;
-    }
+    };
     
     std::string GetIDString58() const;
     

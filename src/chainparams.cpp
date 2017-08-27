@@ -668,7 +668,6 @@ public:
         base58Prefixes[SCRIPT_ADDRESS]     = std::vector<unsigned char>(1,122);
         base58Prefixes[SECRET_KEY]         = std::vector<unsigned char>(1,46);
         
-        
         base58Prefixes[EXT_PUBLIC_KEY]     = boost::assign::list_of(0xe1)(0x42)(0x78)(0x00).convert_to_container<std::vector<unsigned char> >(); // ppar
         base58Prefixes[EXT_SECRET_KEY]     = boost::assign::list_of(0x04)(0x88)(0x94)(0x78).convert_to_container<std::vector<unsigned char> >(); // xpar
         base58Prefixes[STEALTH_ADDRESS]    = std::vector<unsigned char>(1,21); // T
@@ -795,6 +794,7 @@ public:
         base58Prefixes[PUBKEY_ADDRESS]     = std::vector<unsigned char>(1,118); // p
         base58Prefixes[SCRIPT_ADDRESS]     = std::vector<unsigned char>(1,122);
         base58Prefixes[SECRET_KEY]         = std::vector<unsigned char>(1,46);
+        
         base58Prefixes[EXT_PUBLIC_KEY]     = boost::assign::list_of(0xe1)(0x42)(0x78)(0x00).convert_to_container<std::vector<unsigned char> >(); // ppar
         base58Prefixes[EXT_SECRET_KEY]     = boost::assign::list_of(0x04)(0x88)(0x94)(0x78).convert_to_container<std::vector<unsigned char> >(); // xpar
         base58Prefixes[STEALTH_ADDRESS]    = std::vector<unsigned char>(1,21); // T
@@ -804,6 +804,15 @@ public:
         base58Prefixes[EXT_SECRET_KEY_BTC] = boost::assign::list_of(0x04)(0x35)(0x83)(0x94).convert_to_container<std::vector<unsigned char> >(); // tprv
         base58Prefixes[EXT_PUBLIC_KEY_SDC] = boost::assign::list_of(0x76)(0xC0)(0xFD)(0xFB).convert_to_container<std::vector<unsigned char> >();
         base58Prefixes[EXT_SECRET_KEY_SDC] = boost::assign::list_of(0x76)(0xC1)(0x07)(0x7A).convert_to_container<std::vector<unsigned char> >();
+        
+        bech32Prefixes[PUBKEY_ADDRESS].assign   ("tph","tph"+3);
+        bech32Prefixes[SCRIPT_ADDRESS].assign   ("tpr","tpr"+3);
+        bech32Prefixes[SECRET_KEY].assign       ("tpx","tpx"+3);
+        bech32Prefixes[EXT_PUBLIC_KEY].assign   ("tpep","tpep"+4);
+        bech32Prefixes[EXT_SECRET_KEY].assign   ("tpex","tpex"+4);
+        bech32Prefixes[STEALTH_ADDRESS].assign  ("tps","tps"+3);
+        bech32Prefixes[EXT_KEY_HASH].assign     ("tpek","tpek"+4);
+        bech32Prefixes[EXT_KEY_HASH].assign     ("tpea","tpea"+4);
 
         chainTxData = ChainTxData{
             0,

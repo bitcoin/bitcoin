@@ -205,6 +205,7 @@ testScriptsParticl = [
     'mnemonic.py',
     'smsg.py',
     'multisig.py',
+    'coldstaking.py',
 ]
 
 testScriptsInsight = [
