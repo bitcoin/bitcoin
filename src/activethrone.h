@@ -10,7 +10,7 @@
 #include "key.h"
 #include "init.h"
 #include "wallet.h"
-#include "darksend.h"
+#include "legacysigner.h"
 #include "throne.h"
 
 #define ACTIVE_THRONE_INITIAL                     0 // initial state

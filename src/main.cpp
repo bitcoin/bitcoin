@@ -15,7 +15,7 @@
 #include "checkqueue.h"
 #include "init.h"
 #include "instantx.h"
-#include "darksend.h"
+#include "legacysigner.h"
 #include "throneman.h"
 #include "throne-payments.h"
 #include "throne-budget.h"

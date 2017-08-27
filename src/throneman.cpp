@@ -5,7 +5,7 @@
 #include "throneman.h"
 #include "throne.h"
 #include "activethrone.h"
-#include "darksend.h"
+#include "legacysigner.h"
 #include "util.h"
 #include "addrman.h"
 #include "spork.h"

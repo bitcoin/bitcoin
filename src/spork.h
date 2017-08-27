@@ -13,7 +13,7 @@
 #include "main.h"
 
 #include "protocol.h"
-#include "darksend.h"
+#include "legacysigner.h"
 #include <boost/lexical_cast.hpp>
 
 using namespace std;

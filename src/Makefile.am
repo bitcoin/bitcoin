@@ -92,7 +92,7 @@ BITCOIN_CORE_H = \
   core_io.h \
   core_memusage.h \
   crypter.h \
-  darksend.h \
+  legacysigner.h \
   darksend-relay.h \
   db.h \
   hash.h \

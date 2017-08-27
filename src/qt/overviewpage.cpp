@@ -8,7 +8,7 @@
 
 #include "bitcoinunits.h"
 #include "clientmodel.h"
-#include "darksend.h"
+#include "legacysigner.h"
 #include "darksendconfig.h"
 #include "guiconstants.h"
 #include "guiutil.h"

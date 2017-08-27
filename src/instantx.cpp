@@ -10,7 +10,7 @@
 #include "instantx.h"
 #include "activethrone.h"
 #include "throneman.h"
-#include "darksend.h"
+#include "legacysigner.h"
 #include "spork.h"
 #include <boost/lexical_cast.hpp>
 

@@ -7,7 +7,7 @@
 
 #include "throne-budget.h"
 #include "throne.h"
-#include "darksend.h"
+#include "legacysigner.h"
 #include "throneman.h"
 #include "throne-sync.h"
 #include "util.h"
