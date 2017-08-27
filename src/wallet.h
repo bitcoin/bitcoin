@@ -71,10 +71,8 @@ enum WalletFeature
 enum AvailableCoinsType
 {
     ALL_COINS = 1,
-    ONLY_DENOMINATED = 2,
-    ONLY_NOT10000IFMN = 3,
-    ONLY_NONDENOMINATED_NOT10000IFMN = 4,
-    ONLY_10000 = 5 // find throne outputs including locked ones (use with caution)
+    ONLY_NOT10000IFMN = 2,
+    ONLY_10000 = 3 // find throne outputs including locked ones (use with caution)
 };
 
 
