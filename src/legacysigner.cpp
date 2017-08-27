@@ -25,11 +25,19 @@ using namespace boost;
 // A helper object for signing messages from Thrones
 CLegacySigner legacySigner;
 
-// Keep track of the used Thrones
-std::vector<CTxIn> vecThronesUsed;
-
 // Keep track of the active Throne
 CActiveThrone activeThrone;
+
+bool CLegacySigner::SetCollateralAddress(std::string strAddress){
+    CBitcoinAddress address;
+    if (!address.SetString(strAddress))
+    {
+        LogPrintf("CLegacySigner::SetCollateralAddress - Invalid collateral address\n");
+        return false;
+    }
+    collateralPubKey = GetScriptForDestination(address.Get());
+    return true;
+}
 
 bool CLegacySigner::IsVinAssociatedWithPubkey(CTxIn& vin, CPubKey& pubkey){
     CScript payee2;
@@ -102,17 +110,17 @@ bool CLegacySigner::VerifyMessage(CPubKey pubkey, vector<unsigned char>& vchSig,
 //TODO: Rename/move to core
 void ThreadCheckLegacySigner()
 {
-    if(fLiteMode) return; //disable all Darksend/Throne related functionality
+    if(fLiteMode) return; //disable all Throne related functionality
 
     // Make this thread recognisable as the wallet flushing thread
-    RenameThread("crown-darksend");
+    RenameThread("crown-legacysigner");
 
     unsigned int c = 0;
 
     while (true)
     {
         MilliSleep(1000);
-        //LogPrintf("ThreadCheckDarkSendPool::check timeout\n");
+        //LogPrintf("ThreadCheckLegacySigner::check timeout\n");
 
         // try to sync from all available nodes, one step at a time
         throneSync.Process();
@@ -134,13 +142,6 @@ void ThreadCheckLegacySigner()
             }
 
             //if(c % THRONES_DUMP_SECONDS == 0) DumpThrones();
-
-            darkSendPool.CheckTimeout();
-            darkSendPool.CheckForCompleteQueue();
-
-            if(darkSendPool.GetState() == POOL_STATUS_IDLE && c % 15 == 0){
-                darkSendPool.DoAutomaticDenominating();
-            }
         }
     }
 }

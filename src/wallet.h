@@ -156,8 +156,6 @@ public:
     // Extract vin information from output
     bool GetVinAndKeysFromOutput(COutput out, CTxIn& vinRet, CPubKey& pubKeyRet, CKey& keyRet);
 
-    int  CountInputsWithAmount(int64_t nInputAmount);
-
     /*
      * Main wallet lock.
      * This lock protects all the fields added by CWallet
@@ -895,17 +893,6 @@ public:
     COutput(const CWalletTx *txIn, int iIn, int nDepthIn, bool fSpendableIn)
     {
         tx = txIn; i = iIn; nDepth = nDepthIn; fSpendable = fSpendableIn;
-    }
-
-    //Used with Darksend. Will return largest nondenom, then denominations, then very small inputs
-    int Priority() const
-    {
-        BOOST_FOREACH(int64_t d, darkSendDenominations)
-            if(tx->vout[i].nValue == d) return 10000;
-        if(tx->vout[i].nValue < 1*COIN) return 20000;
-
-        //nondenom return largest first
-        return -(tx->vout[i].nValue/COIN);
     }
 
     std::string ToString() const;

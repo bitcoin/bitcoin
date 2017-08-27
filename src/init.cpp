@@ -1523,7 +1523,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     nInstantXDepth = GetArg("-instantxdepth", nInstantXDepth);
     nInstantXDepth = std::min(std::max(nInstantXDepth, 0), 60);
 
-    //lite mode disables all Throne and Darksend related functionality
+    //lite mode disables all Throne related functionality
     fLiteMode = GetBoolArg("-litemode", false);
     if(fThroNe && fLiteMode){
         return InitError("You can not start a throne in litemode");

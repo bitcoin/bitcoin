@@ -201,7 +201,7 @@ bool CActiveThrone::SendThronePing(std::string& errorMessage) {
     else
     {
         // Seems like we are trying to send a ping while the Throne is not registered in the network
-        errorMessage = "Darksend Throne List doesn't include our Throne, shutting down Throne pinging service! " + vin.ToString();
+        errorMessage = "Throne List doesn't include our Throne, shutting down Throne pinging service! " + vin.ToString();
         status = ACTIVE_THRONE_NOT_CAPABLE;
         notCapableReason = errorMessage;
         return false;

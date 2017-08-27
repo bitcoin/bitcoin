@@ -665,10 +665,10 @@ void CThroneMan::ProcessThroneConnections()
 
     LOCK(cs_vNodes);
     BOOST_FOREACH(CNode* pnode, vNodes) {
-        if(pnode->fDarkSendMaster){
-            if(darkSendPool.pSubmittedToThrone != NULL && pnode->addr == darkSendPool.pSubmittedToThrone->addr) continue;
+        if(pnode->fMasternode){
+            if(legacySigner.pSubmittedToThrone != NULL && pnode->addr == legacySigner.pSubmittedToThrone->addr) continue;
             LogPrintf("Closing Throne connection %s \n", pnode->addr.ToString());
-            pnode->fDarkSendMaster = false;
+            pnode->fMasternode = false;
             pnode->Release();
         }
     }
@@ -677,7 +677,7 @@ void CThroneMan::ProcessThroneConnections()
 void CThroneMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
 
-    if(fLiteMode) return; //disable all Darksend/Throne related functionality
+    if(fLiteMode) return; //disable all Throne related functionality
     if(!throneSync.IsBlockchainSynced()) return;
 
     LOCK(cs_process_message);

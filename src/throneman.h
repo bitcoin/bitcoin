@@ -70,7 +70,7 @@ public:
     // Keep track of all pings I've seen
     map<uint256, CThronePing> mapSeenThronePing;
     
-    // keep track of dsq count to prevent thrones from gaming darksend queue
+    // keep track of dsq count to prevent thrones from gaming legacySigner queue
     int64_t nDsqCount;
 
     ADD_SERIALIZE_METHODS;

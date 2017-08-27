@@ -73,12 +73,6 @@ CAmount WalletModel::getBalance(const CCoinControl *coinControl) const
     return wallet->GetBalance();
 }
 
-
-CAmount WalletModel::getAnonymizedBalance() const
-{
-    return wallet->GetAnonymizedBalance();
-}
-
 CAmount WalletModel::getUnconfirmedBalance() const
 {
     return wallet->GetUnconfirmedBalance();
@@ -129,13 +123,12 @@ void WalletModel::pollBalanceChanged()
     if(!lockWallet)
         return;
 
-    if(fForceCheckBalanceChanged || chainActive.Height() != cachedNumBlocks || nDarksendRounds != cachedDarksendRounds || cachedTxLocks != nCompleteTXLocks)
+    if(fForceCheckBalanceChanged || chainActive.Height() != cachedNumBlocks || cachedTxLocks != nCompleteTXLocks)
     {
         fForceCheckBalanceChanged = false;
 
         // Balance and number of transactions might have changed
         cachedNumBlocks = chainActive.Height();
-        cachedDarksendRounds = nDarksendRounds;
 
         checkBalanceChanged();
         if(transactionTableModel){
@@ -152,7 +145,6 @@ void WalletModel::checkBalanceChanged()
     CAmount newBalance = getBalance();
     CAmount newUnconfirmedBalance = getUnconfirmedBalance();
     CAmount newImmatureBalance = getImmatureBalance();
-    CAmount newAnonymizedBalance = getAnonymizedBalance();
     CAmount newWatchOnlyBalance = 0;
     CAmount newWatchUnconfBalance = 0;
     CAmount newWatchImmatureBalance = 0;
@@ -164,18 +156,17 @@ void WalletModel::checkBalanceChanged()
     }
 
     if(cachedBalance != newBalance || cachedUnconfirmedBalance != newUnconfirmedBalance || cachedImmatureBalance != newImmatureBalance ||
-        cachedAnonymizedBalance != newAnonymizedBalance || cachedTxLocks != nCompleteTXLocks ||
+        cachedTxLocks != nCompleteTXLocks ||
         cachedWatchOnlyBalance != newWatchOnlyBalance || cachedWatchUnconfBalance != newWatchUnconfBalance || cachedWatchImmatureBalance != newWatchImmatureBalance)
     {
         cachedBalance = newBalance;
         cachedUnconfirmedBalance = newUnconfirmedBalance;
         cachedImmatureBalance = newImmatureBalance;
-        cachedAnonymizedBalance = newAnonymizedBalance;
         cachedTxLocks = nCompleteTXLocks;
         cachedWatchOnlyBalance = newWatchOnlyBalance;
         cachedWatchUnconfBalance = newWatchUnconfBalance;
         cachedWatchImmatureBalance = newWatchImmatureBalance;
-        emit balanceChanged(newBalance, newUnconfirmedBalance, newImmatureBalance, newAnonymizedBalance,
+        emit balanceChanged(newBalance, newUnconfirmedBalance, newImmatureBalance,
                             newWatchOnlyBalance, newWatchUnconfBalance, newWatchImmatureBalance);
     }
 }
@@ -214,11 +205,6 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
     if(recipients.empty())
     {
         return OK;
-    }
-
-    if(isAnonymizeOnlyUnlocked())
-    {
-        return AnonymizeOnlyUnlocked;
     }
 
     QSet<QString> setAddress; // Used to detect duplicates
@@ -326,11 +312,6 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
 {
     QByteArray transaction_array; /* store serialized transaction */
 
-    if(isAnonymizeOnlyUnlocked())
-    {
-        return AnonymizeOnlyUnlocked;
-    }
-
     {
         LOCK2(cs_main, wallet->cs_wallet);
         CWalletTx *newTx = transaction.getTransaction();
@@ -428,10 +409,6 @@ WalletModel::EncryptionStatus WalletModel::getEncryptionStatus() const
     {
         return Locked;
     }
-    else if (wallet->fWalletUnlockAnonymizeOnly)
-    {
-        return UnlockedForAnonymizationOnly;
-    }
     else
     {
         return Unlocked;
@@ -452,7 +429,7 @@ bool WalletModel::setWalletEncrypted(bool encrypted, const SecureString &passphr
     }
 }
 
-bool WalletModel::setWalletLocked(bool locked, const SecureString &passPhrase, bool anonymizeOnly)
+bool WalletModel::setWalletLocked(bool locked, const SecureString &passPhrase)
 {
     if(locked)
     {
@@ -462,13 +439,8 @@ bool WalletModel::setWalletLocked(bool locked, const SecureString &passPhrase, b
     else
     {
         // Unlock
-        return wallet->Unlock(passPhrase, anonymizeOnly);
+        return wallet->Unlock(passPhrase);
     }
-}
-
-bool WalletModel::isAnonymizeOnlyUnlocked()
-{
-    return wallet->fWalletUnlockAnonymizeOnly;
 }
 
 bool WalletModel::changePassphrase(const SecureString &oldPass, const SecureString &newPass)
@@ -569,7 +541,7 @@ WalletModel::UnlockContext WalletModel::requestUnlock(bool relock)
 {
     bool was_locked = getEncryptionStatus() == Locked;
 
-    if (!was_locked && isAnonymizeOnlyUnlocked())
+    if (!was_locked)
     {
        setWalletLocked(true);
        was_locked = getEncryptionStatus() == Locked;
@@ -584,7 +556,7 @@ WalletModel::UnlockContext WalletModel::requestUnlock(bool relock)
     bool valid = getEncryptionStatus() != Locked;
 
     return UnlockContext(this, valid, relock);
-//    return UnlockContext(this, valid, was_locked && !isAnonymizeOnlyUnlocked());
+//    return UnlockContext(this, valid, was_locked);
 }
 
 WalletModel::UnlockContext::UnlockContext(WalletModel *wallet, bool valid, bool relock):

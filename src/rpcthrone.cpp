@@ -83,7 +83,7 @@ Value throne(const Array& params, bool fHelp)
                 "1. \"command\"        (string or set of strings, required) The command to execute\n"
                 "2. \"passphrase\"     (string, optional) The wallet passphrase\n"
                 "\nAvailable commands:\n"
-                "  count        - Print number of all known thrones (optional: 'ds', 'enabled', 'all', 'qualify')\n"
+                "  count        - Print number of all known thrones (optional: 'ls', 'enabled', 'all', 'qualify')\n"
                 "  current      - Print info on current throne winner\n"
                 "  debug        - Print throne status\n"
                 "  genkey       - Generate new throneprivkey\n"
@@ -142,10 +142,10 @@ Value throne(const Array& params, bool fHelp)
             if(chainActive.Tip())
                 mnodeman.GetNextThroneInQueueForPayment(chainActive.Tip()->nHeight, true, nCount);
 
-            if(params[1] == "ds") return mnodeman.CountEnabled(MIN_POOL_PEER_PROTO_VERSION);
+            if(params[1] == "ls") return mnodeman.CountEnabled(MIN_POOL_PEER_PROTO_VERSION);
             if(params[1] == "enabled") return mnodeman.CountEnabled();
             if(params[1] == "qualify") return nCount;
-            if(params[1] == "all") return strprintf("Total: %d (DS Compatible: %d / Enabled: %d / Qualify: %d)",
+            if(params[1] == "all") return strprintf("Total: %d (LS Compatible: %d / Enabled: %d / Qualify: %d)",
                                                     mnodeman.size(),
                                                     mnodeman.CountEnabled(MIN_POOL_PEER_PROTO_VERSION),
                                                     mnodeman.CountEnabled(),

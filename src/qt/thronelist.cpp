@@ -325,7 +325,7 @@ void ThroneList::on_startButton_clicked()
     }
 
     WalletModel::EncryptionStatus encStatus = walletModel->getEncryptionStatus();
-    if(encStatus == walletModel->Locked || encStatus == walletModel->UnlockedForAnonymizationOnly)
+    if(encStatus == walletModel->Locked)
     {
         WalletModel::UnlockContext ctx(walletModel->requestUnlock(true));
         if(!ctx.isValid())
@@ -354,7 +354,7 @@ void ThroneList::on_startAllButton_clicked()
     }
 
     WalletModel::EncryptionStatus encStatus = walletModel->getEncryptionStatus();
-    if(encStatus == walletModel->Locked || encStatus == walletModel->UnlockedForAnonymizationOnly)
+    if(encStatus == walletModel->Locked)
     {
         WalletModel::UnlockContext ctx(walletModel->requestUnlock(true));
         if(!ctx.isValid())
@@ -392,7 +392,7 @@ void ThroneList::on_startMissingButton_clicked()
     }
 
     WalletModel::EncryptionStatus encStatus = walletModel->getEncryptionStatus();
-    if(encStatus == walletModel->Locked || encStatus == walletModel->UnlockedForAnonymizationOnly)
+    if(encStatus == walletModel->Locked)
     {
         WalletModel::UnlockContext ctx(walletModel->requestUnlock(true));
         if(!ctx.isValid())
@@ -605,7 +605,7 @@ void ThroneList::on_voteManyYesButton_clicked()
     }
 
     WalletModel::EncryptionStatus encStatus = walletModel->getEncryptionStatus();
-    if(encStatus == walletModel->Locked || encStatus == walletModel->UnlockedForAnonymizationOnly)
+    if(encStatus == walletModel->Locked)
     {
         WalletModel::UnlockContext ctx(walletModel->requestUnlock(true));
         if(!ctx.isValid())
@@ -634,7 +634,7 @@ void ThroneList::on_voteManyNoButton_clicked()
     }
 
     WalletModel::EncryptionStatus encStatus = walletModel->getEncryptionStatus();
-    if(encStatus == walletModel->Locked || encStatus == walletModel->UnlockedForAnonymizationOnly)
+    if(encStatus == walletModel->Locked)
     {
         WalletModel::UnlockContext ctx(walletModel->requestUnlock(true));
         if(!ctx.isValid())
@@ -663,7 +663,7 @@ void ThroneList::on_voteManyAbstainButton_clicked()
     }
 
     WalletModel::EncryptionStatus encStatus = walletModel->getEncryptionStatus();
-    if(encStatus == walletModel->Locked || encStatus == walletModel->UnlockedForAnonymizationOnly)
+    if(encStatus == walletModel->Locked)
     {
         WalletModel::UnlockContext ctx(walletModel->requestUnlock(true));
         if(!ctx.isValid())
