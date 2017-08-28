@@ -22,6 +22,10 @@ bool VerifyWallets();
 //! Load wallet databases.
 bool OpenWallets();
 
+//! Flush all wallets in preparation for shutdown.
+//! Call with shutdown = true to actually shutdown the wallet.
+void FlushWallets(bool shutdown);
+
 //! Initialize AutoBackup functionality
 bool InitAutoBackupWallet();
 

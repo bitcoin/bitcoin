@@ -246,6 +246,12 @@ bool OpenWallets()
     return true;
 }
 
+void FlushWallets(bool shutdown) {
+    for (CWalletRef pwallet : vpwallets) {
+        pwallet->Flush(shutdown);
+    }
+}
+
 bool InitAutoBackupWallet()
 {
     if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET))
@@ -259,7 +265,7 @@ bool InitAutoBackupWallet()
 
     std::string strWalletFile = gArgs.GetArg("-wallet", DEFAULT_WALLET_DAT);
 
-    if(!AutoBackupWallet(NULL, strWalletFile, strWarning, strError)) {
+    if(!AutoBackupWallet(nullptr, strWalletFile, strWarning, strError)) {
         if (!strWarning.empty())
             InitWarning(strWarning);
         if (!strError.empty())
