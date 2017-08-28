@@ -100,8 +100,6 @@ public:
                     bool spendsCoinbase,
                     unsigned int nSigOps, LockPoints lp);
 
-    CTxMemPoolEntry(const CTxMemPoolEntry& other);
-
     const CTransaction& GetTx() const { return *this->tx; }
     CTransactionRef GetSharedTx() const { return this->tx; }
     const CAmount& GetFee() const { return nFee; }
