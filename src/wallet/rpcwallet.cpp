@@ -206,19 +206,22 @@ UniValue getnewaddress(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() > 1)
+    if (request.fHelp || request.params.size() > 2)
         throw std::runtime_error(
-            "getnewaddress ( \"account\" )\n"
+            "getnewaddress ( \"account\" \"witness\" )\n"
             "\nReturns a new Bitcoin address for receiving payments.\n"
             "If 'account' is specified (DEPRECATED), it is added to the address book \n"
             "so payments received with the address will be credited to 'account'.\n"
             "\nArguments:\n"
             "1. \"account\"        (string, optional) DEPRECATED. The account name for the address to be linked to. If not provided, the default account \"\" is used. It can also be set to the empty string \"\" to represent the default account. The account does not need to exist, it will be created if there is no account by the given name.\n"
+            "2. \"witness\"        (boolean, optional, default=false) Return a witness address"
             "\nResult:\n"
             "\"address\"    (string) The new bitcoin address\n"
             "\nExamples:\n"
             + HelpExampleCli("getnewaddress", "")
+            + HelpExampleCli("getnewaddress", "\"account\" false")
             + HelpExampleRpc("getnewaddress", "")
+            + HelpExampleRpc("getnewaddress", "\"account\" false")
         );
 
     LOCK2(cs_main, pwallet->cs_wallet);
@@ -238,12 +241,20 @@ UniValue getnewaddress(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
     }
     CKeyID keyID = newKey.GetID();
+    CBitcoinAddress addr = CBitcoinAddress(keyID);
 
     pwallet->SetAddressBook(keyID, strAccount, "receive");
+    bool witnessify = gArgs.GetBoolArg("-defaultwitnessaddress", false);
+    if (!request.params[1].isNull()) {
+		witnessify = request.params[1].get_bool();
+    }
 
-    return CBitcoinAddress(keyID).ToString();
+    if (witnessify) {
+		return WitnessifyBitcoinAddress(pwallet, strAccount, addr).ToString();
+    }
+
+    return addr.ToString();
 }
-
 
 CBitcoinAddress GetAccountAddress(CWallet* const pwallet, std::string strAccount, bool bForceNew=false)
 {
@@ -3193,7 +3204,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "getaccount",               &getaccount,               true,   {"address"} },
     { "wallet",             "getaddressesbyaccount",    &getaddressesbyaccount,    true,   {"account"} },
     { "wallet",             "getbalance",               &getbalance,               false,  {"account","minconf","include_watchonly"} },
-    { "wallet",             "getnewaddress",            &getnewaddress,            true,   {"account"} },
+    { "wallet",             "getnewaddress",            &getnewaddress,            true,   {"account", "witness"} },
     { "wallet",             "getrawchangeaddress",      &getrawchangeaddress,      true,   {} },
     { "wallet",             "getreceivedbyaccount",     &getreceivedbyaccount,     false,  {"account","minconf"} },
     { "wallet",             "getreceivedbyaddress",     &getreceivedbyaddress,     false,  {"address","minconf"} },
