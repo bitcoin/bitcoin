@@ -254,8 +254,8 @@ bool CGovernanceVote::Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode)
 
 bool CGovernanceVote::IsValid(bool fSignatureCheck) const
 {
-    if(nTime > GetTime() + (60*60)) {
-        LogPrint("gobject", "CGovernanceVote::IsValid -- vote is too far ahead of current time - %s - nTime %lli - Max Time %lli\n", GetHash().ToString(), nTime, GetTime() + (60*60));
+    if(nTime > GetAdjustedTime() + (60*60)) {
+        LogPrint("gobject", "CGovernanceVote::IsValid -- vote is too far ahead of current time - %s - nTime %lli - Max Time %lli\n", GetHash().ToString(), nTime, GetAdjustedTime() + (60*60));
         return false;
     }
 

@@ -396,7 +396,7 @@ bool CGovernanceManager::UpdateCurrentWatchdog(CGovernanceObject& watchdogNew)
     arith_uint256 nHashCurrent = UintToArith256(nHashWatchdogCurrent);
 
     int64_t nExpirationDelay = GOVERNANCE_WATCHDOG_EXPIRATION_TIME / 2;
-    int64_t nNow = GetTime();
+    int64_t nNow = GetAdjustedTime();
 
     if(nHashWatchdogCurrent == uint256() ||                                             // no known current OR
        ((nNow - watchdogNew.GetCreationTime() < nExpirationDelay) &&                    // (new one is NOT expired AND
@@ -546,7 +546,6 @@ void CGovernanceManager::UpdateCachesAndClean()
 
     // forget about expired deleted objects
     hash_time_m_it s_it = mapErasedGovernanceObjects.begin();
-    nNow = GetTime();
     while(s_it != mapErasedGovernanceObjects.end()) {
         if(s_it->second < nNow)
             mapErasedGovernanceObjects.erase(s_it++);
@@ -874,7 +873,7 @@ bool CGovernanceManager::MasternodeRateCheck(const CGovernanceObject& govobj, bo
 
     const CTxIn& vin = govobj.GetMasternodeVin();
     int64_t nTimestamp = govobj.GetCreationTime();
-    int64_t nNow = GetTime();
+    int64_t nNow = GetAdjustedTime();
     int64_t nSuperblockCycleSeconds = Params().GetConsensus().nSuperblockCycle * Params().GetConsensus().nPowTargetSpacing;
 
     std::string strHash = govobj.GetHash().ToString();
@@ -1072,7 +1071,7 @@ void CGovernanceManager::CheckPostponedObjects()
 
 
     // Perform additional relays for triggers/watchdogs
-    int64_t nNow = GetTime();
+    int64_t nNow = GetAdjustedTime();
     int64_t nSuperblockCycleSeconds = Params().GetConsensus().nSuperblockCycle * Params().GetConsensus().nPowTargetSpacing;
 
     for(hash_s_it it = setAdditionalRelayObjects.begin(); it != setAdditionalRelayObjects.end();) {

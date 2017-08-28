@@ -91,7 +91,7 @@ UniValue gobject(const UniValue& params, bool fHelp)
 
         int nRevision = 1;
 
-        int64_t nTime = GetTime();
+        int64_t nTime = GetAdjustedTime();
         std::string strData = params[1].get_str();
 
         CGovernanceObject govobj(hashParent, nRevision, nTime, uint256(), strData);

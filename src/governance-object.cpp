@@ -150,7 +150,7 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
         return false;
     }
 
-    int64_t nNow = GetTime();
+    int64_t nNow = GetAdjustedTime();
     int64_t nVoteTimeUpdate = voteInstance.nTime;
     if(governance.AreRateChecksEnabled()) {
         int64_t nTimeDelta = nNow - voteInstance.nTime;

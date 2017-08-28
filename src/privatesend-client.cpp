@@ -46,7 +46,7 @@ void CPrivateSendClient::ProcessMessage(CNode* pfrom, std::string& strCommand, C
 
         LogPrint("privatesend", "DSQUEUE -- %s new\n", dsq.ToString());
 
-        if(dsq.IsExpired() || dsq.nTime > GetTime() + PRIVATESEND_QUEUE_TIMEOUT) return;
+        if(dsq.IsExpired()) return;
 
         masternode_info_t infoMn = mnodeman.GetMasternodeInfo(dsq.vin);
         if(!infoMn.fInfoValid) return;

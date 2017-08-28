@@ -42,8 +42,8 @@ void ThreadSendAlert(CConnman& connman)
     // Nodes never save alerts to disk, they are in-memory-only.
     //
     CAlert alert;
-    alert.nRelayUntil   = GetTime() + 15 * 60;
-    alert.nExpiration   = GetTime() + 30 * 60 * 60;
+    alert.nRelayUntil   = GetAdjustedTime() + 15 * 60;
+    alert.nExpiration   = GetAdjustedTime() + 30 * 60 * 60;
     alert.nID           = 1;  // keep track of alert IDs somewhere
     alert.nCancel       = 0;   // cancels previous messages up to this ID number
 

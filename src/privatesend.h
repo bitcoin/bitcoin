@@ -10,7 +10,7 @@
 #include "pubkey.h"
 #include "sync.h"
 #include "tinyformat.h"
-#include "utiltime.h"
+#include "timedata.h"
 
 class CPrivateSend;
 
@@ -199,7 +199,7 @@ public:
     bool Relay();
 
     /// Is this queue expired?
-    bool IsExpired() { return GetTime() - nTime > PRIVATESEND_QUEUE_TIMEOUT; }
+    bool IsExpired() { return GetAdjustedTime() - nTime > PRIVATESEND_QUEUE_TIMEOUT; }
 
     std::string ToString()
     {
