@@ -10,14 +10,16 @@
 class CDSNotificationInterface : public CValidationInterface
 {
 public:
-    // virtual CDSNotificationInterface();
-    CDSNotificationInterface();
-    virtual ~CDSNotificationInterface();
+    CDSNotificationInterface() = default;
+    virtual ~CDSNotificationInterface() = default;
+
+    // a small helper to initialize current block height in sub-modules on startup
+    void InitializeCurrentBlockTip();
 
 protected:
     // CValidationInterface
-    void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload);
-    void SyncTransaction(const CTransaction &tx, const CBlock *pblock);
+    void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) override;
+    void SyncTransaction(const CTransaction &tx, const CBlock *pblock) override;
 
 private:
 };

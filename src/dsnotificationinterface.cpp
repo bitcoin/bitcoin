@@ -10,18 +10,16 @@
 #include "masternode-sync.h"
 #include "privatesend-client.h"
 
-CDSNotificationInterface::CDSNotificationInterface()
+void CDSNotificationInterface::InitializeCurrentBlockTip()
 {
-}
-
-CDSNotificationInterface::~CDSNotificationInterface()
-{
+    LOCK(cs_main);
+    UpdatedBlockTip(chainActive.Tip(), NULL, IsInitialBlockDownload());
 }
 
 void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
 {
     if (fInitialDownload || pindexNew == pindexFork) // In IBD or blocks were disconnected without any new ones
-     	return; 
+        return;
 
     mnodeman.UpdatedBlockTip(pindexNew);
     privateSendClient.UpdatedBlockTip(pindexNew);
