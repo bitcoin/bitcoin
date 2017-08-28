@@ -651,6 +651,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     QString toolTipDust = tr("This label turns red if any recipient receives an amount smaller than the current dust threshold.");
 
     // how many chuffs the estimated fee can vary per byte we guess wrong
+    assert(nBytes != 0);
     double dFeeVary = (double)nPayFee / nBytes;
 
     QString toolTip4 = tr("Can vary +/- %1 chuff(s) per input.").arg(dFeeVary);
