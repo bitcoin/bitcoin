@@ -46,16 +46,16 @@ class PreciousTest(BitcoinTestFramework):
         self.log.info("Ensure submitblock can in principle reorg to a competing chain")
         self.nodes[0].generate(1)
         assert_equal(self.nodes[0].getblockcount(), 1)
-        (hashY, hashZ) = self.nodes[1].generate(2)
+        hashZ = self.nodes[1].generate(2)[-1]
         assert_equal(self.nodes[1].getblockcount(), 2)
         node_sync_via_rpc(self.nodes[0:3])
         assert_equal(self.nodes[0].getbestblockhash(), hashZ)
 
         self.log.info("Mine blocks A-B-C on Node 0")
-        (hashA, hashB, hashC) = self.nodes[0].generate(3)
+        hashC = self.nodes[0].generate(3)[-1]
         assert_equal(self.nodes[0].getblockcount(), 5)
         self.log.info("Mine competing blocks E-F-G on Node 1")
-        (hashE, hashF, hashG) = self.nodes[1].generate(3)
+        hashG = self.nodes[1].generate(3)[-1]
         assert_equal(self.nodes[1].getblockcount(), 5)
         assert(hashC != hashG)
         self.log.info("Connect nodes and check no reorg occurs")

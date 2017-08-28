@@ -398,7 +398,7 @@ class FullBlockTest(ComparisonTestFramework):
         yield rejected(RejectResult(16, b'bad-cb-length'))
 
         # Extend the b26 chain to make sure bitcoind isn't accepting b26
-        b27 = block(27, spend=out[7])
+        block(27, spend=out[7])
         yield rejected(False)
 
         # Now try a too-large-coinbase script
@@ -410,7 +410,7 @@ class FullBlockTest(ComparisonTestFramework):
         yield rejected(RejectResult(16, b'bad-cb-length'))
 
         # Extend the b28 chain to make sure bitcoind isn't accepting b28
-        b29 = block(29, spend=out[7])
+        block(29, spend=out[7])
         yield rejected(False)
 
         # b30 has a max-sized coinbase scriptSig.
@@ -582,7 +582,7 @@ class FullBlockTest(ComparisonTestFramework):
 
         # same as b40, but one less sigop
         tip(39)
-        b41 = block(41, spend=None)
+        block(41, spend=None)
         update_block(41, b40.vtx[1:-1])
         b41_sigops_to_fill = b40_sigops_to_fill - 1
         tx = CTransaction()
@@ -928,7 +928,7 @@ class FullBlockTest(ComparisonTestFramework):
         # -> b42 (12) -> b43 (13) -> b53 (14) -> b55 (15) -> b57 (16) -> b60 (17) -> b64 (18) -> b65 (19)
         #
         tip(64)
-        b65 = block(65)
+        block(65)
         tx1 = create_and_sign_tx(out[19].tx, out[19].n, out[19].tx.vout[0].nValue)
         tx2 = create_and_sign_tx(tx1, 0, 0)
         update_block(65, [tx1, tx2])
@@ -940,7 +940,7 @@ class FullBlockTest(ComparisonTestFramework):
         # -> b43 (13) -> b53 (14) -> b55 (15) -> b57 (16) -> b60 (17) -> b64 (18) -> b65 (19)
         #                                                                                    \-> b66 (20)
         tip(65)
-        b66 = block(66)
+        block(66)
         tx1 = create_and_sign_tx(out[20].tx, out[20].n, out[20].tx.vout[0].nValue)
         tx2 = create_and_sign_tx(tx1, 0, 1)
         update_block(66, [tx2, tx1])
@@ -953,7 +953,7 @@ class FullBlockTest(ComparisonTestFramework):
         #
         #
         tip(65)
-        b67 = block(67)
+        block(67)
         tx1 = create_and_sign_tx(out[20].tx, out[20].n, out[20].tx.vout[0].nValue)
         tx2 = create_and_sign_tx(tx1, 0, 1)
         tx3 = create_and_sign_tx(tx1, 0, 2)
@@ -973,7 +973,7 @@ class FullBlockTest(ComparisonTestFramework):
         #       this succeeds
         #
         tip(65)
-        b68 = block(68, additional_coinbase_value=10)
+        block(68, additional_coinbase_value=10)
         tx = create_and_sign_tx(out[20].tx, out[20].n, out[20].tx.vout[0].nValue-9)
         update_block(68, [tx])
         yield rejected(RejectResult(16, b'bad-cb-amount'))
@@ -1176,7 +1176,7 @@ class FullBlockTest(ComparisonTestFramework):
         #
         #  -> b81 (26) -> b82 (27) -> b83 (28)
         #
-        b83 = block(83)
+        block(83)
         op_codes = [OP_IF, OP_INVALIDOPCODE, OP_ELSE, OP_TRUE, OP_ENDIF]
         script = CScript(op_codes)
         tx1 = create_and_sign_tx(out[28].tx, out[28].n, out[28].tx.vout[0].nValue, script)
@@ -1196,7 +1196,7 @@ class FullBlockTest(ComparisonTestFramework):
         #                                    \-> b85 (29) -> b86 (30)            \-> b89a (32)
         #
         #
-        b84 = block(84)
+        block(84)
         tx1 = create_tx(out[29].tx, out[29].n, 0, CScript([OP_RETURN]))
         tx1.vout.append(CTxOut(0, CScript([OP_TRUE])))
         tx1.vout.append(CTxOut(0, CScript([OP_TRUE])))

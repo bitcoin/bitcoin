@@ -258,7 +258,8 @@ class CompactBlocksTest(BitcoinTestFramework):
 
         # Store the raw block in our internal format.
         block = FromHex(CBlock(), node.getblock("%02x" % block_hash, False))
-        [tx.calc_sha256() for tx in block.vtx]
+        for tx in block.vtx:
+            tx.calc_sha256()
         block.rehash()
 
         # Wait until the block was announced (via compact blocks)

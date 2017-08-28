@@ -158,6 +158,6 @@ if __name__ == '__main__':
                 print('%s: NEEDED library %s is not allowed' % (filename, library_name))
                 retval = 1
 
-    exit(retval)
+    sys.exit(retval)
 
 
