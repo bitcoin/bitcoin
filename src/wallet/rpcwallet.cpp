@@ -104,6 +104,23 @@ public:
     }
 };
 
+CScriptID GetWitnessScriptFromAddress(CWallet * const pwallet, CBitcoinAddress addr)
+{
+        Witnessifier w(pwallet);
+        CTxDestination dest = addr.Get();
+        if (!boost::apply_visitor(w, dest)) 
+			throw JSONRPCError(RPC_WALLET_ERROR, "Public key or redeemscript not known to wallet, or the key is uncompressed");
+        return w.result;
+}
+
+CBitcoinAddress WitnessifyBitcoinAddress(CWallet* const pwallet, std::string strAccount, CBitcoinAddress addr)
+{
+        Witnessifier w(pwallet);
+        CScriptID wscript = GetWitnessScriptFromAddress(pwallet, addr);
+        pwallet->SetAddressBook(wscript, strAccount, "receive");
+        return CBitcoinAddress(wscript);
+}
+
 std::string HelpRequiringPassphrase(CWallet * const pwallet)
 {
     return pwallet && pwallet->IsCrypted()
