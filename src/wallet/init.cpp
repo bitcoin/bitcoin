@@ -10,6 +10,7 @@
 #include "utilmoneystr.h"
 #include "validation.h"
 #include "wallet/wallet.h"
+#include "wallet/rpcwallet.h"
 
 std::string GetWalletHelpString(bool showDebug)
 {
@@ -169,6 +170,13 @@ bool WalletParameterInteraction()
     fWalletRbf = gArgs.GetBoolArg("-walletrbf", DEFAULT_WALLET_RBF);
 
     return true;
+}
+
+void RegisterWalletRPC(CRPCTable &t)
+{
+    if (gArgs.GetBoolArg("-disablewallet", false)) return;
+
+    RegisterWalletRPCCommands(t);
 }
 
 bool VerifyWallets()
