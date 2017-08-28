@@ -14,6 +14,9 @@ std::string GetWalletHelpString(bool showDebug);
 //! Wallets parameter interaction
 bool WalletParameterInteraction();
 
+//! Initialize AutoBackup functionality
+bool InitAutoBackupWallet();
+
 //! Responsible for reading and validating the -wallet arguments and verifying the wallet database.
 //  This function will perform salvage on the wallet if requested, as long as only one wallet is
 //  being loaded (CWallet::ParameterInteraction forbids -salvagewallet, -zapwallettxes or -upgradewallet with multiwallet).
@@ -29,7 +32,8 @@ void FlushWallets();
 //! Stop all wallets. Wallets will be flushed first.
 void StopWallets();
 
-//! Initialize AutoBackup functionality
-bool InitAutoBackupWallet();
+//! Close all wallets.
+void CloseWallets();
+
 
 #endif // BITCOIN_WALLET_INIT_H

@@ -171,6 +171,29 @@ bool WalletParameterInteraction()
     return true;
 }
 
+bool InitAutoBackupWallet()
+{
+    if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET))
+        return true;
+
+    std::string strWarning;
+    std::string strError;
+
+    nWalletBackups = gArgs.GetArg("-createwalletbackups", 10);
+    nWalletBackups = std::max(0, std::min(10, nWalletBackups));
+
+    std::string strWalletFile = gArgs.GetArg("-wallet", DEFAULT_WALLET_DAT);
+
+    if(!AutoBackupWallet(nullptr, strWalletFile, strWarning, strError)) {
+        if (!strWarning.empty())
+            InitWarning(strWarning);
+        if (!strError.empty())
+            return InitError(strError);
+    }
+
+    return true;
+}
+
 bool VerifyWallets()
 {
     if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET))
@@ -258,25 +281,9 @@ void StopWallets() {
     }
 }
 
-bool InitAutoBackupWallet()
-{
-    if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET))
-        return true;
-
-    std::string strWarning;
-    std::string strError;
-
-    nWalletBackups = gArgs.GetArg("-createwalletbackups", 10);
-    nWalletBackups = std::max(0, std::min(10, nWalletBackups));
-
-    std::string strWalletFile = gArgs.GetArg("-wallet", DEFAULT_WALLET_DAT);
-
-    if(!AutoBackupWallet(nullptr, strWalletFile, strWarning, strError)) {
-        if (!strWarning.empty())
-            InitWarning(strWarning);
-        if (!strError.empty())
-            return InitError(strError);
+void CloseWallets() {
+    for (CWalletRef pwallet : vpwallets) {
+        delete pwallet;
     }
-
-    return true;
+    vpwallets.clear();
 }

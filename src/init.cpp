@@ -306,10 +306,7 @@ void Shutdown()
 #endif
     UnregisterAllValidationInterfaces();
 #ifdef ENABLE_WALLET
-    for (CWalletRef pwallet : vpwallets) {
-        delete pwallet;
-    }
-    vpwallets.clear();
+    CloseWallets();
 #endif
     globalVerifyHandle.reset();
     ECC_Stop();
