@@ -327,7 +327,6 @@ Thanks to everyone who directly contributed to this release:
 - John Newbery
 - Jonas Schnelli
 - Jorge Timón
-- Kalle Alm
 - Karl-Johan Alm
 - kewde
 - KibbledJiveElkZoo
