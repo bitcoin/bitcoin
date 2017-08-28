@@ -80,7 +80,7 @@ public:
             while (mi != mapKeys.end())
             {
                 setAddress.insert((*mi).first);
-                mi++;
+                ++mi;
             }
         }
     }

@@ -283,7 +283,7 @@ void FinalizeNode(NodeId nodeid, bool& fUpdateConnectionTime) {
     CNodeState *state = State(nodeid);
 
     if (state->fSyncStarted)
-        nSyncStarted--;
+        --nSyncStarted;
 
     if (state->nMisbehavior == 0 && state->fCurrentlyConnected) {
         fUpdateConnectionTime = true;
@@ -318,14 +318,14 @@ bool MarkBlockAsReceived(const uint256& hash) {
         state->nBlocksInFlightValidHeaders -= itInFlight->second.second->fValidatedHeaders;
         if (state->nBlocksInFlightValidHeaders == 0 && itInFlight->second.second->fValidatedHeaders) {
             // Last validated block on the queue was received.
-            nPeersWithValidatedDownloads--;
+            --nPeersWithValidatedDownloads;
         }
         if (state->vBlocksInFlight.begin() == itInFlight->second.second) {
             // First block on the queue was received, update the start download time for the next one
             state->nDownloadingSince = std::max(state->nDownloadingSince, GetTimeMicros());
         }
         state->vBlocksInFlight.erase(itInFlight->second.second);
-        state->nBlocksInFlight--;
+        --state->nBlocksInFlight;
         state->nStallingSince = 0;
         mapBlocksInFlight.erase(itInFlight);
         return true;
@@ -354,14 +354,14 @@ bool MarkBlockAsInFlight(NodeId nodeid, const uint256& hash, const CBlockIndex* 
 
     std::list<QueuedBlock>::iterator it = state->vBlocksInFlight.insert(state->vBlocksInFlight.end(),
             {hash, pindex, pindex != nullptr, std::unique_ptr<PartiallyDownloadedBlock>(pit ? new PartiallyDownloadedBlock(&mempool) : nullptr)});
-    state->nBlocksInFlight++;
+    ++state->nBlocksInFlight;
     state->nBlocksInFlightValidHeaders += it->fValidatedHeaders;
     if (state->nBlocksInFlight == 1) {
         // We're starting a block download (batch) from this peer.
         state->nDownloadingSince = GetTimeMicros();
     }
     if (state->nBlocksInFlightValidHeaders == 1 && pindex != nullptr) {
-        nPeersWithValidatedDownloads++;
+        ++nPeersWithValidatedDownloads;
     }
     itInFlight = mapBlocksInFlight.insert(std::make_pair(hash, std::make_pair(nodeid, it))).first;
     if (pit)
@@ -410,7 +410,7 @@ void MaybeSetPeerAsAnnouncingHeaderAndIDs(NodeId nodeid, CConnman& connman) {
         return;
     }
     if (nodestate->fProvidesHeaderAndIDs) {
-        for (std::list<NodeId>::iterator it = lNodesAnnouncingHeaderAndIDs.begin(); it != lNodesAnnouncingHeaderAndIDs.end(); it++) {
+        for (std::list<NodeId>::iterator it = lNodesAnnouncingHeaderAndIDs.begin(); it != lNodesAnnouncingHeaderAndIDs.end(); ++it) {
             if (*it == nodeid) {
                 lNodesAnnouncingHeaderAndIDs.erase(it);
                 lNodesAnnouncingHeaderAndIDs.push_back(nodeid);
@@ -499,7 +499,7 @@ void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vector<con
         vToFetch.resize(nToFetch);
         pindexWalk = state->pindexBestKnownBlock->GetAncestor(pindexWalk->nHeight + nToFetch);
         vToFetch[nToFetch - 1] = pindexWalk;
-        for (unsigned int i = nToFetch - 1; i > 0; i--) {
+        for (unsigned int i = nToFetch - 1; i > 0; --i) {
             vToFetch[i - 1] = vToFetch[i]->pprev;
         }
 
@@ -936,7 +936,7 @@ static void RelayAddress(const CAddress& addr, bool fReachable, CConnman& connma
     auto sortfunc = [&best, &hasher, nRelayNodes](CNode* pnode) {
         if (pnode->nVersion >= CADDR_TIME_VERSION) {
             uint64_t hashKey = CSipHasher(hasher).Write(pnode->GetId()).Finalize();
-            for (unsigned int i = 0; i < nRelayNodes; i++) {
+            for (unsigned int i = 0; i < nRelayNodes; ++i) {
                  if (hashKey > best[i].first) {
                      std::copy(best.begin() + i, best.begin() + nRelayNodes - 1, best.begin() + i + 1);
                      best[i] = std::make_pair(hashKey, pnode);
@@ -947,7 +947,7 @@ static void RelayAddress(const CAddress& addr, bool fReachable, CConnman& connma
     };
 
     auto pushfunc = [&addr, &best, nRelayNodes, &insecure_rand] {
-        for (unsigned int i = 0; i < nRelayNodes && best[i].first != 0; i++) {
+        for (unsigned int i = 0; i < nRelayNodes && best[i].first != 0; ++i) {
             best[i].second->PushAddress(addr, insecure_rand);
         }
     };
@@ -972,7 +972,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
             if (interruptMsgProc)
                 return;
 
-            it++;
+            ++it;
 
             if (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK || inv.type == MSG_CMPCT_BLOCK || inv.type == MSG_WITNESS_BLOCK)
             {
@@ -1157,7 +1157,7 @@ uint32_t GetFetchFlags(CNode* pfrom) {
 
 inline void static SendBlockTransactions(const CBlock& block, const BlockTransactionsRequest& req, CNode* pfrom, CConnman& connman) {
     BlockTransactions resp(req);
-    for (size_t i = 0; i < req.indexes.size(); i++) {
+    for (size_t i = 0; i < req.indexes.size(); ++i) {
         if (req.indexes[i] >= block.vtx.size()) {
             LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 100);
@@ -1810,7 +1810,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         if (!AlreadyHave(inv) && AcceptToMemoryPool(mempool, state, ptx, true, &fMissingInputs, &lRemovedTxn)) {
             mempool.check(pcoinsTip);
             RelayTransaction(tx, connman);
-            for (unsigned int i = 0; i < tx.vout.size(); i++) {
+            for (unsigned int i = 0; i < tx.vout.size(); ++i) {
                 vWorkQueue.emplace_back(inv.hash, i);
             }
 
@@ -1848,7 +1848,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                     if (AcceptToMemoryPool(mempool, stateDummy, porphanTx, true, &fMissingInputs2, &lRemovedTxn)) {
                         LogPrint(BCLog::MEMPOOL, "   accepted orphan tx %s\n", orphanHash.ToString());
                         RelayTransaction(orphanTx, connman);
-                        for (unsigned int i = 0; i < orphanTx.vout.size(); i++) {
+                        for (unsigned int i = 0; i < orphanTx.vout.size(); ++i) {
                             vWorkQueue.emplace_back(orphanHash, i);
                         }
                         vEraseQueue.push_back(orphanHash);
@@ -2079,7 +2079,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 }
 
                 BlockTransactionsRequest req;
-                for (size_t i = 0; i < cmpctblock.BlockTxCount(); i++) {
+                for (size_t i = 0; i < cmpctblock.BlockTxCount(); ++i) {
                     if (!partialBlock.IsTxAvailable(i))
                         req.indexes.push_back(i);
                 }
@@ -2247,7 +2247,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             return error("headers message size = %u", nCount);
         }
         headers.resize(nCount);
-        for (unsigned int n = 0; n < nCount; n++) {
+        for (unsigned int n = 0; n < nCount; ++n) {
             vRecv >> headers[n];
             ReadCompactSize(vRecv); // ignore tx count; assume it is 0.
         }
@@ -2271,7 +2271,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         // - Once a headers message is received that is valid and does connect,
         //   nUnconnectingHeaders gets reset back to 0.
         if (mapBlockIndex.find(headers[0].hashPrevBlock) == mapBlockIndex.end() && nCount < MAX_BLOCKS_TO_ANNOUNCE) {
-            nodestate->nUnconnectingHeaders++;
+            ++nodestate->nUnconnectingHeaders;
             connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexBestHeader), uint256()));
             LogPrint(BCLog::NET, "received header %s: missing prev block %s, sending getheaders (%d) to end (peer=%d, nUnconnectingHeaders=%d)\n",
                     headers[0].GetHash().ToString(),
@@ -2889,7 +2889,7 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
             if ((nSyncStarted == 0 && fFetch) || pindexBestHeader->GetBlockTime() > GetAdjustedTime() - 24 * 60 * 60) {
                 state.fSyncStarted = true;
                 state.nHeadersSyncTimeout = GetTimeMicros() + HEADERS_DOWNLOAD_TIMEOUT_BASE + HEADERS_DOWNLOAD_TIMEOUT_PER_HEADER * (GetAdjustedTime() - pindexBestHeader->GetBlockTime())/(consensusParams.nPowTargetSpacing);
-                nSyncStarted++;
+                ++nSyncStarted;
                 const CBlockIndex *pindexStart = pindexBestHeader;
                 /* If possible, start at the block preceding the currently
                    best known header.  This ensures that we always get a
@@ -3124,7 +3124,7 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
                 // Produce a vector with all candidates for sending
                 std::vector<std::set<uint256>::iterator> vInvTx;
                 vInvTx.reserve(pto->setInventoryTxToSend.size());
-                for (std::set<uint256>::iterator it = pto->setInventoryTxToSend.begin(); it != pto->setInventoryTxToSend.end(); it++) {
+                for (std::set<uint256>::iterator it = pto->setInventoryTxToSend.begin(); it != pto->setInventoryTxToSend.end(); ++it) {
                     vInvTx.push_back(it);
                 }
                 CAmount filterrate = 0;
@@ -3163,7 +3163,7 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
                     if (pto->pfilter && !pto->pfilter->IsRelevantAndUpdate(*txinfo.tx)) continue;
                     // Send
                     vInv.push_back(CInv(MSG_TX, hash));
-                    nRelayedTransactions++;
+                    ++nRelayedTransactions;
                     {
                         // Expire old relay messages
                         while (!vRelayExpiration.empty() && vRelayExpiration.front().first < nNow)
@@ -3234,7 +3234,7 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
                         // getheaders message to be sent to
                         // this peer (eventually).
                         state.fSyncStarted = false;
-                        nSyncStarted--;
+                        --nSyncStarted;
                         state.nHeadersSyncTimeout = 0;
                     }
                 }

@@ -587,7 +587,7 @@ void CDBEnv::Flush(bool fShutdown)
                 LogPrint(BCLog::DB, "CDBEnv::Flush: %s closed\n", strFile);
                 mapFileUseCount.erase(mi++);
             } else
-                mi++;
+                ++mi;
         }
         LogPrint(BCLog::DB, "CDBEnv::Flush: Flush(%s)%s took %15dms\n", fShutdown ? "true" : "false", fDbEnvInit ? "" : " database not started", GetTimeMillis() - nStart);
         if (fShutdown) {
@@ -619,7 +619,7 @@ bool CDB::PeriodicFlush(CWalletDBWrapper& dbw)
         while (mit != env->mapFileUseCount.end())
         {
             nRefCount += (*mit).second;
-            mit++;
+            ++mit;
         }
 
         if (nRefCount == 0)

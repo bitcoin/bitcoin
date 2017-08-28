@@ -189,12 +189,12 @@ void CWallet::DeriveNewChildKey(CWalletDB &walletdb, CKeyMetadata& metadata, CKe
         if (internal) {
             chainChildKey.Derive(childKey, hdChain.nInternalChainCounter | BIP32_HARDENED_KEY_LIMIT);
             metadata.hdKeypath = "m/0'/1'/" + std::to_string(hdChain.nInternalChainCounter) + "'";
-            hdChain.nInternalChainCounter++;
+            ++hdChain.nInternalChainCounter;
         }
         else {
             chainChildKey.Derive(childKey, hdChain.nExternalChainCounter | BIP32_HARDENED_KEY_LIMIT);
             metadata.hdKeypath = "m/0'/0'/" + std::to_string(hdChain.nExternalChainCounter) + "'";
-            hdChain.nExternalChainCounter++;
+            ++hdChain.nExternalChainCounter;
         }
     } while (HaveKey(childKey.key.GetPubKey().GetID()));
     secret = childKey.key;
@@ -991,7 +991,7 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const CBlockI
                         LogPrintf("Transaction %s (in block %s) conflicts with wallet transaction %s (both spend %s:%i)\n", tx.GetHash().ToString(), pIndex->GetBlockHash().ToString(), range.first->second.ToString(), range.first->first.hash.ToString(), range.first->first.n);
                         MarkConflicted(pIndex->GetBlockHash(), range.first->second);
                     }
-                    range.first++;
+                    ++range.first;
                 }
             }
         }
@@ -1087,7 +1087,7 @@ bool CWallet::AbandonTransaction(const uint256& hashTx)
                 if (!done.count(iter->second)) {
                     todo.insert(iter->second);
                 }
-                iter++;
+                ++iter;
             }
             // If a transaction changes 'conflicted' state, that changes the balance
             // available of the outputs it spends. So force those to be recomputed
@@ -1151,7 +1151,7 @@ void CWallet::MarkConflicted(const uint256& hashBlock, const uint256& hashTx)
                  if (!done.count(iter->second)) {
                      todo.insert(iter->second);
                  }
-                 iter++;
+                 ++iter;
             }
             // If a transaction changes 'conflicted' state, that changes the balance
             // available of the outputs it spends. So force those to be recomputed
@@ -1200,7 +1200,7 @@ void CWallet::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const 
     for (const CTransactionRef& ptx : vtxConflicted) {
         SyncTransaction(ptx);
     }
-    for (size_t i = 0; i < pblock->vtx.size(); i++) {
+    for (size_t i = 0; i < pblock->vtx.size(); ++i) {
         SyncTransaction(pblock->vtx[i], pindex, i);
     }
 }
@@ -1759,7 +1759,7 @@ CAmount CWalletTx::GetAvailableCredit(bool fUseCache) const
 
     CAmount nCredit = 0;
     uint256 hashTx = GetHash();
-    for (unsigned int i = 0; i < tx->vout.size(); i++)
+    for (unsigned int i = 0; i < tx->vout.size(); ++i)
     {
         if (!pwallet->IsSpent(hashTx, i))
         {
@@ -1802,7 +1802,7 @@ CAmount CWalletTx::GetAvailableWatchOnlyCredit(const bool& fUseCache) const
         return nAvailableWatchCreditCached;
 
     CAmount nCredit = 0;
-    for (unsigned int i = 0; i < tx->vout.size(); i++)
+    for (unsigned int i = 0; i < tx->vout.size(); ++i)
     {
         if (!pwallet->IsSpent(GetHash(), i))
         {
@@ -2149,7 +2149,7 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
             if (nDepth < nMinDepth || nDepth > nMaxDepth)
                 continue;
 
-            for (unsigned int i = 0; i < pcoin->tx->vout.size(); i++) {
+            for (unsigned int i = 0; i < pcoin->tx->vout.size(); ++i) {
                 if (pcoin->tx->vout[i].nValue < nMinimumAmount || pcoin->tx->vout[i].nValue > nMaximumAmount)
                     continue;
 
@@ -2264,14 +2264,14 @@ static void ApproximateBestSubset(const std::vector<CInputCoin>& vValue, const C
 
     FastRandomContext insecure_rand;
 
-    for (int nRep = 0; nRep < iterations && nBest != nTargetValue; nRep++)
+    for (int nRep = 0; nRep < iterations && nBest != nTargetValue; ++nRep)
     {
         vfIncluded.assign(vValue.size(), false);
         CAmount nTotal = 0;
         bool fReachedTarget = false;
-        for (int nPass = 0; nPass < 2 && !fReachedTarget; nPass++)
+        for (int nPass = 0; nPass < 2 && !fReachedTarget; ++nPass)
         {
-            for (unsigned int i = 0; i < vValue.size(); i++)
+            for (unsigned int i = 0; i < vValue.size(); ++i)
             {
                 //The solver here uses a randomized algorithm,
                 //the randomness serves no real security purpose but is just
@@ -2385,7 +2385,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
         nValueRet += coinLowestLarger->txout.nValue;
     }
     else {
-        for (unsigned int i = 0; i < vValue.size(); i++)
+        for (unsigned int i = 0; i < vValue.size(); ++i)
             if (vfBest[i])
             {
                 setCoinsRet.insert(vValue[i]);
@@ -2394,7 +2394,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
 
         if (LogAcceptCategory(BCLog::SELECTCOINS)) {
             LogPrint(BCLog::SELECTCOINS, "SelectCoins() best subset: ");
-            for (unsigned int i = 0; i < vValue.size(); i++) {
+            for (unsigned int i = 0; i < vValue.size(); ++i) {
                 if (vfBest[i]) {
                     LogPrint(BCLog::SELECTCOINS, "%s ", FormatMoney(vValue[i].txout.nValue));
                 }
@@ -2494,7 +2494,7 @@ bool CWallet::SignTransaction(CMutableTransaction &tx)
             return false;
         }
         UpdateTransaction(tx, nIn, sigdata);
-        nIn++;
+        ++nIn;
     }
     return true;
 }
@@ -2504,7 +2504,7 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
     std::vector<CRecipient> vecSend;
 
     // Turn the txout set into a CRecipient vector
-    for (size_t idx = 0; idx < tx.vout.size(); idx++)
+    for (size_t idx = 0; idx < tx.vout.size(); ++idx)
     {
         const CTxOut& txOut = tx.vout[idx];
         CRecipient recipient = {txOut.scriptPubKey, txOut.nValue, setSubtractFeeFromOutputs.count(idx) == 1};
@@ -2530,7 +2530,7 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
     }
 
     // Copy output sizes from new transaction; they may have had the fee subtracted from them
-    for (unsigned int idx = 0; idx < tx.vout.size(); idx++)
+    for (unsigned int idx = 0; idx < tx.vout.size(); ++idx)
         tx.vout[idx].nValue = wtx.tx->vout[idx].nValue;
 
     // Add new txins (keeping original txin scriptSig/order)
@@ -2568,7 +2568,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
         nValue += recipient.nAmount;
 
         if (recipient.fSubtractFeeFromAmount)
-            nSubtractFeeFromAmount++;
+            ++nSubtractFeeFromAmount;
     }
     if (vecSend.empty())
     {
@@ -2867,7 +2867,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                     UpdateTransaction(txNew, nIn, sigdata);
                 }
 
-                nIn++;
+                ++nIn;
             }
         }
 
@@ -3351,7 +3351,7 @@ std::map<CTxDestination, CAmount> CWallet::GetAddressBalances()
             if (nDepth < (pcoin->IsFromMe(ISMINE_ALL) ? 0 : 1))
                 continue;
 
-            for (unsigned int i = 0; i < pcoin->tx->vout.size(); i++)
+            for (unsigned int i = 0; i < pcoin->tx->vout.size(); ++i)
             {
                 CTxDestination addr;
                 if (!IsMine(pcoin->tx->vout[i]))
@@ -3577,7 +3577,7 @@ void CWallet::ListLockedCoins(std::vector<COutPoint>& vOutpts) const
 {
     AssertLockHeld(cs_wallet); // setLockedCoins
     for (std::set<COutPoint>::iterator it = setLockedCoins.begin();
-         it != setLockedCoins.end(); it++) {
+         it != setLockedCoins.end(); ++it) {
         COutPoint outpt = (*it);
         vOutpts.push_back(outpt);
     }
@@ -3613,7 +3613,7 @@ void CWallet::GetKeyBirthTimes(std::map<CTxDestination, int64_t> &mapKeyBirth) c
 
     // find first block that affects those keys, if there are any left
     std::vector<CKeyID> vAffected;
-    for (std::map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); it++) {
+    for (std::map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it) {
         // iterate over all wallet transactions...
         const CWalletTx &wtx = (*it).second;
         BlockMap::const_iterator blit = mapBlockIndex.find(wtx.hashBlock);
@@ -3635,7 +3635,7 @@ void CWallet::GetKeyBirthTimes(std::map<CTxDestination, int64_t> &mapKeyBirth) c
     }
 
     // Extract block timestamps for those keys
-    for (std::map<CKeyID, CBlockIndex*>::const_iterator it = mapKeyFirstBlock.begin(); it != mapKeyFirstBlock.end(); it++)
+    for (std::map<CKeyID, CBlockIndex*>::const_iterator it = mapKeyFirstBlock.begin(); it != mapKeyFirstBlock.end(); ++it)
         mapKeyBirth[it->first] = it->second->GetBlockTime() - TIMESTAMP_WINDOW; // block times can be 2h off
 }
 

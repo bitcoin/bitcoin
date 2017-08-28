@@ -182,11 +182,11 @@ TxConfirmStats::TxConfirmStats(const std::vector<double>& defaultBuckets,
     decay = _decay;
     scale = _scale;
     confAvg.resize(maxPeriods);
-    for (unsigned int i = 0; i < maxPeriods; i++) {
+    for (unsigned int i = 0; i < maxPeriods; ++i) {
         confAvg[i].resize(buckets.size());
     }
     failAvg.resize(maxPeriods);
-    for (unsigned int i = 0; i < maxPeriods; i++) {
+    for (unsigned int i = 0; i < maxPeriods; ++i) {
         failAvg[i].resize(buckets.size());
     }
 
@@ -199,7 +199,7 @@ TxConfirmStats::TxConfirmStats(const std::vector<double>& defaultBuckets,
 void TxConfirmStats::resizeInMemoryCounters(size_t newbuckets) {
     // newbuckets must be passed in because the buckets referred to during Read have not been updated yet.
     unconfTxs.resize(GetMaxConfirms());
-    for (unsigned int i = 0; i < unconfTxs.size(); i++) {
+    for (unsigned int i = 0; i < unconfTxs.size(); ++i) {
         unconfTxs[i].resize(newbuckets);
     }
     oldUnconfTxs.resize(newbuckets);
@@ -208,7 +208,7 @@ void TxConfirmStats::resizeInMemoryCounters(size_t newbuckets) {
 // Roll the unconfirmed txs circular buffer
 void TxConfirmStats::ClearCurrent(unsigned int nBlockHeight)
 {
-    for (unsigned int j = 0; j < buckets.size(); j++) {
+    for (unsigned int j = 0; j < buckets.size(); ++j) {
         oldUnconfTxs[j] += unconfTxs[nBlockHeight%unconfTxs.size()][j];
         unconfTxs[nBlockHeight%unconfTxs.size()][j] = 0;
     }
@@ -222,19 +222,19 @@ void TxConfirmStats::Record(int blocksToConfirm, double val)
         return;
     int periodsToConfirm = (blocksToConfirm + scale - 1)/scale;
     unsigned int bucketindex = bucketMap.lower_bound(val)->second;
-    for (size_t i = periodsToConfirm; i <= confAvg.size(); i++) {
-        confAvg[i - 1][bucketindex]++;
+    for (size_t i = periodsToConfirm; i <= confAvg.size(); ++i) {
+        ++confAvg[i - 1][bucketindex];
     }
-    txCtAvg[bucketindex]++;
+    ++txCtAvg[bucketindex];
     avg[bucketindex] += val;
 }
 
 void TxConfirmStats::UpdateMovingAverages()
 {
-    for (unsigned int j = 0; j < buckets.size(); j++) {
-        for (unsigned int i = 0; i < confAvg.size(); i++)
+    for (unsigned int j = 0; j < buckets.size(); ++j) {
+        for (unsigned int i = 0; i < confAvg.size(); ++i)
             confAvg[i][j] = confAvg[i][j] * decay;
-        for (unsigned int i = 0; i < failAvg.size(); i++)
+        for (unsigned int i = 0; i < failAvg.size(); ++i)
             failAvg[i][j] = failAvg[i][j] * decay;
         avg[j] = avg[j] * decay;
         txCtAvg[j] = txCtAvg[j] * decay;
@@ -289,7 +289,7 @@ double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
         nConf += confAvg[periodTarget - 1][bucket];
         totalNum += txCtAvg[bucket];
         failNum += failAvg[periodTarget - 1][bucket];
-        for (unsigned int confct = confTarget; confct < GetMaxConfirms(); confct++)
+        for (unsigned int confct = confTarget; confct < GetMaxConfirms(); ++confct)
             extraNum += unconfTxs[(nBlockHeight - confct)%bins][bucket];
         extraNum += oldUnconfTxs[bucket];
         // If we have enough transaction data points in this range of buckets,
@@ -345,12 +345,12 @@ double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
     // and reporting the average which is less accurate
     unsigned int minBucket = std::min(bestNearBucket, bestFarBucket);
     unsigned int maxBucket = std::max(bestNearBucket, bestFarBucket);
-    for (unsigned int j = minBucket; j <= maxBucket; j++) {
+    for (unsigned int j = minBucket; j <= maxBucket; ++j) {
         txSum += txCtAvg[j];
     }
     if (foundAnswer && txSum != 0) {
         txSum = txSum / 2;
-        for (unsigned int j = minBucket; j <= maxBucket; j++) {
+        for (unsigned int j = minBucket; j <= maxBucket; ++j) {
             if (txCtAvg[j] < txSum)
                 txSum -= txCtAvg[j];
             else { // we're in the right bucket
@@ -435,7 +435,7 @@ void TxConfirmStats::Read(CAutoFile& filein, int nFileVersion, size_t numBuckets
     if (maxConfirms <= 0 || maxConfirms > 6 * 24 * 7) { // one week
         throw std::runtime_error("Corrupt estimates file.  Must maintain estimates for between 1 and 1008 (one week) confirms");
     }
-    for (unsigned int i = 0; i < maxPeriods; i++) {
+    for (unsigned int i = 0; i < maxPeriods; ++i) {
         if (confAvg[i].size() != numBuckets) {
             throw std::runtime_error("Corrupt estimates file. Mismatch in feerate conf average bucket count");
         }
@@ -446,14 +446,14 @@ void TxConfirmStats::Read(CAutoFile& filein, int nFileVersion, size_t numBuckets
         if (maxPeriods != failAvg.size()) {
             throw std::runtime_error("Corrupt estimates file. Mismatch in confirms tracked for failures");
         }
-        for (unsigned int i = 0; i < maxPeriods; i++) {
+        for (unsigned int i = 0; i < maxPeriods; ++i) {
             if (failAvg[i].size() != numBuckets) {
                 throw std::runtime_error("Corrupt estimates file. Mismatch in one of failure average bucket counts");
             }
         }
     } else {
         failAvg.resize(confAvg.size());
-        for (unsigned int i = 0; i < failAvg.size(); i++) {
+        for (unsigned int i = 0; i < failAvg.size(); ++i) {
             failAvg[i].resize(numBuckets);
         }
     }
@@ -470,7 +470,7 @@ unsigned int TxConfirmStats::NewTx(unsigned int nBlockHeight, double val)
 {
     unsigned int bucketindex = bucketMap.lower_bound(val)->second;
     unsigned int blockIndex = nBlockHeight % unconfTxs.size();
-    unconfTxs[blockIndex][bucketindex]++;
+    ++unconfTxs[blockIndex][bucketindex];
     return bucketindex;
 }
 
@@ -487,7 +487,7 @@ void TxConfirmStats::removeTx(unsigned int entryHeight, unsigned int nBestSeenHe
 
     if (blocksAgo >= (int)unconfTxs.size()) {
         if (oldUnconfTxs[bucketindex] > 0) {
-            oldUnconfTxs[bucketindex]--;
+            --oldUnconfTxs[bucketindex];
         } else {
             LogPrint(BCLog::ESTIMATEFEE, "Blockpolicy error, mempool tx removed from >25 blocks,bucketIndex=%u already\n",
                      bucketindex);
@@ -496,7 +496,7 @@ void TxConfirmStats::removeTx(unsigned int entryHeight, unsigned int nBestSeenHe
     else {
         unsigned int blockIndex = entryHeight % unconfTxs.size();
         if (unconfTxs[blockIndex][bucketindex] > 0) {
-            unconfTxs[blockIndex][bucketindex]--;
+            --unconfTxs[blockIndex][bucketindex];
         } else {
             LogPrint(BCLog::ESTIMATEFEE, "Blockpolicy error, mempool tx removed from blockIndex=%u,bucketIndex=%u already\n",
                      blockIndex, bucketindex);
@@ -504,8 +504,8 @@ void TxConfirmStats::removeTx(unsigned int entryHeight, unsigned int nBestSeenHe
     }
     if (!inBlock && (unsigned int)blocksAgo >= scale) { // Only counts as a failure if not confirmed for entire period
         unsigned int periodsAgo = blocksAgo / scale;
-        for (size_t i = 0; i < periodsAgo && i < failAvg.size(); i++) {
-            failAvg[i][bucketindex]++;
+        for (size_t i = 0; i < periodsAgo && i < failAvg.size(); ++i) {
+            ++failAvg[i][bucketindex];
         }
     }
 }
@@ -535,7 +535,7 @@ CBlockPolicyEstimator::CBlockPolicyEstimator()
 {
     static_assert(MIN_BUCKET_FEERATE > 0, "Min feerate must be nonzero");
     size_t bucketIndex = 0;
-    for (double bucketBoundary = MIN_BUCKET_FEERATE; bucketBoundary <= MAX_BUCKET_FEERATE; bucketBoundary *= FEE_SPACING, bucketIndex++) {
+    for (double bucketBoundary = MIN_BUCKET_FEERATE; bucketBoundary <= MAX_BUCKET_FEERATE; bucketBoundary *= FEE_SPACING, ++bucketIndex) {
         buckets.push_back(bucketBoundary);
         bucketMap[bucketBoundary] = bucketIndex;
     }
@@ -577,10 +577,10 @@ void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, boo
     // Only want to be updating estimates when our blockchain is synced,
     // otherwise we'll miscalculate how many blocks its taking to get included.
     if (!validFeeEstimate) {
-        untrackedTxs++;
+        ++untrackedTxs;
         return;
     }
-    trackedTxs++;
+    ++trackedTxs;
 
     // Feerates are stored and reported as BTC-per-kb:
     CFeeRate feeRate(entry.GetFee(), entry.GetTxSize());
@@ -653,7 +653,7 @@ void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
     // Update averages with data points from current block
     for (const auto& entry : entries) {
         if (processBlockTx(nBlockHeight, entry))
-            countedTxs++;
+            ++countedTxs;
     }
 
     if (firstRecordedHeight == 0 && countedTxs > 0) {
@@ -965,7 +965,7 @@ bool CBlockPolicyEstimator::Read(CAutoFile& filein)
             // if nVersionThatWrote < 139900 then another TxConfirmStats (for priority) follows but can be ignored.
 
             tempMap.clear();
-            for (unsigned int i = 0; i < tempBuckets.size(); i++) {
+            for (unsigned int i = 0; i < tempBuckets.size(); ++i) {
                 tempMap[tempBuckets[i]] = i;
             }
         }
@@ -992,7 +992,7 @@ bool CBlockPolicyEstimator::Read(CAutoFile& filein)
             // Copy buckets from file and refresh our bucketmap
             buckets = fileBuckets;
             bucketMap.clear();
-            for (unsigned int i = 0; i < buckets.size(); i++) {
+            for (unsigned int i = 0; i < buckets.size(); ++i) {
                 bucketMap[buckets[i]] = i;
             }
 
@@ -1041,7 +1041,7 @@ CAmount FeeFilterRounder::round(CAmount currentMinFee)
 {
     std::set<double>::iterator it = feeset.lower_bound(currentMinFee);
     if ((it != feeset.begin() && insecure_rand.rand32() % 3 != 0) || it == feeset.end()) {
-        it--;
+        --it;
     }
     return *it;
 }

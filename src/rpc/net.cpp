@@ -569,7 +569,7 @@ UniValue listbanned(const JSONRPCRequest& request)
     g_connman->GetBanned(banMap);
 
     UniValue bannedAddresses(UniValue::VARR);
-    for (banmap_t::iterator it = banMap.begin(); it != banMap.end(); it++)
+    for (banmap_t::iterator it = banMap.begin(); it != banMap.end(); ++it)
     {
         CBanEntry banEntry = (*it).second;
         UniValue rec(UniValue::VOBJ);
@@ -641,6 +641,6 @@ static const CRPCCommand commands[] =
 
 void RegisterNetRPCCommands(CRPCTable &t)
 {
-    for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)
+    for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); ++vcidx)
         t.appendCommand(commands[vcidx].name, &commands[vcidx]);
 }

@@ -219,7 +219,7 @@ void BlockAssembler::onlyUnconfirmed(CTxMemPool::setEntries& testSet)
             testSet.erase(iit++);
         }
         else {
-            iit++;
+            ++iit;
         }
     }
 }

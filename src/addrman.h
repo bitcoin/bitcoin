@@ -313,32 +313,32 @@ public:
         s << nUBuckets;
         std::map<int, int> mapUnkIds;
         int nIds = 0;
-        for (std::map<int, CAddrInfo>::const_iterator it = mapInfo.begin(); it != mapInfo.end(); it++) {
+        for (std::map<int, CAddrInfo>::const_iterator it = mapInfo.begin(); it != mapInfo.end(); ++it) {
             mapUnkIds[(*it).first] = nIds;
             const CAddrInfo &info = (*it).second;
             if (info.nRefCount) {
                 assert(nIds != nNew); // this means nNew was wrong, oh ow
                 s << info;
-                nIds++;
+                ++nIds;
             }
         }
         nIds = 0;
-        for (std::map<int, CAddrInfo>::const_iterator it = mapInfo.begin(); it != mapInfo.end(); it++) {
+        for (std::map<int, CAddrInfo>::const_iterator it = mapInfo.begin(); it != mapInfo.end(); ++it) {
             const CAddrInfo &info = (*it).second;
             if (info.fInTried) {
                 assert(nIds != nTried); // this means nTried was wrong, oh ow
                 s << info;
-                nIds++;
+                ++nIds;
             }
         }
-        for (int bucket = 0; bucket < ADDRMAN_NEW_BUCKET_COUNT; bucket++) {
+        for (int bucket = 0; bucket < ADDRMAN_NEW_BUCKET_COUNT; ++bucket) {
             int nSize = 0;
-            for (int i = 0; i < ADDRMAN_BUCKET_SIZE; i++) {
+            for (int i = 0; i < ADDRMAN_BUCKET_SIZE; ++i) {
                 if (vvNew[bucket][i] != -1)
-                    nSize++;
+                    ++nSize;
             }
             s << nSize;
-            for (int i = 0; i < ADDRMAN_BUCKET_SIZE; i++) {
+            for (int i = 0; i < ADDRMAN_BUCKET_SIZE; ++i) {
                 if (vvNew[bucket][i] != -1) {
                     int nIndex = mapUnkIds[vvNew[bucket][i]];
                     s << nIndex;
@@ -377,7 +377,7 @@ public:
         }
 
         // Deserialize entries from the new table.
-        for (int n = 0; n < nNew; n++) {
+        for (int n = 0; n < nNew; ++n) {
             CAddrInfo &info = mapInfo[n];
             s >> info;
             mapAddr[info] = n;
@@ -390,7 +390,7 @@ public:
                 int nUBucketPos = info.GetBucketPosition(nKey, true, nUBucket);
                 if (vvNew[nUBucket][nUBucketPos] == -1) {
                     vvNew[nUBucket][nUBucketPos] = n;
-                    info.nRefCount++;
+                    ++info.nRefCount;
                 }
             }
         }
@@ -398,7 +398,7 @@ public:
 
         // Deserialize entries from the tried table.
         int nLost = 0;
-        for (int n = 0; n < nTried; n++) {
+        for (int n = 0; n < nTried; ++n) {
             CAddrInfo info;
             s >> info;
             int nKBucket = info.GetTriedBucket(nKey);
@@ -410,25 +410,25 @@ public:
                 mapInfo[nIdCount] = info;
                 mapAddr[info] = nIdCount;
                 vvTried[nKBucket][nKBucketPos] = nIdCount;
-                nIdCount++;
+                ++nIdCount;
             } else {
-                nLost++;
+                ++nLost;
             }
         }
         nTried -= nLost;
 
         // Deserialize positions in the new table (if possible).
-        for (int bucket = 0; bucket < nUBuckets; bucket++) {
+        for (int bucket = 0; bucket < nUBuckets; ++bucket) {
             int nSize = 0;
             s >> nSize;
-            for (int n = 0; n < nSize; n++) {
+            for (int n = 0; n < nSize; ++n) {
                 int nIndex = 0;
                 s >> nIndex;
                 if (nIndex >= 0 && nIndex < nNew) {
                     CAddrInfo &info = mapInfo[nIndex];
                     int nUBucketPos = info.GetBucketPosition(nKey, true, bucket);
                     if (nVersion == 1 && nUBuckets == ADDRMAN_NEW_BUCKET_COUNT && vvNew[bucket][nUBucketPos] == -1 && info.nRefCount < ADDRMAN_NEW_BUCKETS_PER_ADDRESS) {
-                        info.nRefCount++;
+                        ++info.nRefCount;
                         vvNew[bucket][nUBucketPos] = nIndex;
                     }
                 }
@@ -441,9 +441,9 @@ public:
             if (it->second.fInTried == false && it->second.nRefCount == 0) {
                 std::map<int, CAddrInfo>::const_iterator itCopy = it++;
                 Delete(itCopy->first);
-                nLostUnk++;
+                ++nLostUnk;
             } else {
-                it++;
+                ++it;
             }
         }
         if (nLost + nLostUnk > 0) {
@@ -457,13 +457,13 @@ public:
     {
         std::vector<int>().swap(vRandom);
         nKey = GetRandHash();
-        for (size_t bucket = 0; bucket < ADDRMAN_NEW_BUCKET_COUNT; bucket++) {
-            for (size_t entry = 0; entry < ADDRMAN_BUCKET_SIZE; entry++) {
+        for (size_t bucket = 0; bucket < ADDRMAN_NEW_BUCKET_COUNT; ++bucket) {
+            for (size_t entry = 0; entry < ADDRMAN_BUCKET_SIZE; ++entry) {
                 vvNew[bucket][entry] = -1;
             }
         }
-        for (size_t bucket = 0; bucket < ADDRMAN_TRIED_BUCKET_COUNT; bucket++) {
-            for (size_t entry = 0; entry < ADDRMAN_BUCKET_SIZE; entry++) {
+        for (size_t bucket = 0; bucket < ADDRMAN_TRIED_BUCKET_COUNT; ++bucket) {
+            for (size_t entry = 0; entry < ADDRMAN_BUCKET_SIZE; ++entry) {
                 vvTried[bucket][entry] = -1;
             }
         }
@@ -524,7 +524,7 @@ public:
         LOCK(cs);
         int nAdd = 0;
         Check();
-        for (std::vector<CAddress>::const_iterator it = vAddr.begin(); it != vAddr.end(); it++)
+        for (std::vector<CAddress>::const_iterator it = vAddr.begin(); it != vAddr.end(); ++it)
             nAdd += Add_(*it, source, nTimePenalty) ? 1 : 0;
         Check();
         if (nAdd) {
