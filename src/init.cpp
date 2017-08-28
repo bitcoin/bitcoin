@@ -189,7 +189,7 @@ void Shutdown()
     StopRPC();
     StopHTTPServer();
 #ifdef ENABLE_WALLET
-    FlushWallets(false);
+    FlushWallets();
 #endif
     MapPort(false);
     UnregisterValidationInterface(peerLogic.get());
@@ -244,7 +244,7 @@ void Shutdown()
         pblocktree = nullptr;
     }
 #ifdef ENABLE_WALLET
-    FlushWallets(true);
+    StopWallets();
 #endif
 
 #if ENABLE_ZMQ
