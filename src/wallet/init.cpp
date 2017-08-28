@@ -257,3 +257,10 @@ void StopWallets() {
         pwallet->Flush(true);
     }
 }
+
+void CloseWallets() {
+    for (CWalletRef pwallet : vpwallets) {
+        delete pwallet;
+    }
+    vpwallets.clear();
+}
