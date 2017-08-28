@@ -1362,6 +1362,10 @@ Var vänlig och försök igen.</translation>
         <translation>Nod/Tjänst</translation>
     </message>
     <message>
+        <source>NodeId</source>
+        <translation>Nod-ID</translation>
+    </message>
+    <message>
         <source>Ping</source>
         <translation>Ping</translation>
     </message>

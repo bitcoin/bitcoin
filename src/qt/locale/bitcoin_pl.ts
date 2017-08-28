@@ -1306,6 +1306,10 @@
         <translation>Zwrot z %1</translation>
     </message>
     <message>
+        <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
+        <translation>Żądanie płatności %1 jest zbyt duże (%2 bajtów, dozwolone %3 bajtów).</translation>
+    </message>
+    <message>
         <source>Error communicating with %1: %2</source>
         <translation>Błąd komunikacji z %1 : %2</translation>
     </message>
@@ -1421,6 +1425,10 @@
     <message>
         <source>Error: Specified data directory "%1" does not exist.</source>
         <translation>Błąd: Określony folder danych "%1" nie istnieje.</translation>
+    </message>
+    <message>
+        <source>Error: Cannot parse configuration file: %1. Only use key=value syntax.</source>
+        <translation>Błąd: Nie można przetworzyć pliku konfiguracyjnego: %1. Używaj tylko składni klucz=wartość.</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -1693,6 +1701,10 @@
         <translation>Wpisz &lt;b&gt;help&lt;/b&gt; aby uzyskać listę dostępnych komend</translation>
     </message>
     <message>
+        <source>WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramification of a command.</source>
+        <translation>UWAGA: Oszuści nakłaniają do wpisywania tutaj różnych poleceń aby ukraść portfel. Nie używaj tej konsoli bez pełnego zrozumienia wpisywanych poleceń.</translation>
+    </message>
+    <message>
         <source>Network activity disabled</source>
         <translation>Aktywność sieciowa wyłączona</translation>
     </message>
@@ -1877,6 +1889,10 @@
     <message>
         <source>Message</source>
         <translation>Wiadomość</translation>
+    </message>
+    <message>
+        <source>Resulting URI too long, try to reduce the text for label / message.</source>
+        <translation>Wynikowy URI jest zbyt długi, spróbuj zmniejszyć tekst etykiety / wiadomości</translation>
     </message>
     <message>
         <source>Error encoding URI into QR Code.</source>
@@ -2144,9 +2160,17 @@
         <source>Payment request expired.</source>
         <translation>Żądanie płatności upłynęło.</translation>
     </message>
+    <message numerus="yes">
+        <source>%n block(s)</source>
+        <translation><numerusform>%n blok</numerusform><numerusform>%n bloków</numerusform><numerusform>%n bloków</numerusform><numerusform>%n bloków</numerusform></translation>
+    </message>
     <message>
         <source>Pay only the required fee of %1</source>
         <translation>Zapłać tylko wymaganą opłatę w wysokości %1</translation>
+    </message>
+    <message numerus="yes">
+        <source>Estimated to begin confirmation within %n block(s).</source>
+        <translation><numerusform>Przybliżony czas zatwierdzenia: %n blok.</numerusform><numerusform>Przybliżony czas zatwierdzenia: %n bloki.</numerusform><numerusform>Przybliżony czas zatwierdzenia: %n bloków.</numerusform><numerusform>Przybliżony czas zatwierdzenia: %n bloków.</numerusform></translation>
     </message>
     <message>
         <source>Warning: Invalid Bitcoin address</source>
@@ -2155,6 +2179,10 @@
     <message>
         <source>Warning: Unknown change address</source>
         <translation>Ostrzeżenie: Nieznany adres reszty</translation>
+    </message>
+    <message>
+        <source>Confirm custom change address</source>
+        <translation>Potwierdź zmianę adresu własnego</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -2239,7 +2267,11 @@
         <source>Memo:</source>
         <translation>Notatka:</translation>
     </message>
-    </context>
+    <message>
+        <source>Enter a label for this address to add it to your address book</source>
+        <translation>Wprowadź etykietę dla tego adresu by dodać go do książki adresowej</translation>
+    </message>
+</context>
 <context>
     <name>SendConfirmationDialog</name>
     <message>
@@ -2346,12 +2378,20 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation>Resetuje wszystkie pola weryfikacji wiadomości</translation>
     </message>
     <message>
+        <source>Click "Sign Message" to generate signature</source>
+        <translation>Kliknij "Podpisz Wiadomość" żeby uzyskać podpis</translation>
+    </message>
+    <message>
         <source>The entered address is invalid.</source>
         <translation>Podany adres jest nieprawidłowy.</translation>
     </message>
     <message>
         <source>Please check the address and try again.</source>
         <translation>Proszę sprawdzić adres i spróbować ponownie.</translation>
+    </message>
+    <message>
+        <source>The entered address does not refer to a key.</source>
+        <translation>Wprowadzony adres nie odnosi się do klucza.</translation>
     </message>
     <message>
         <source>Wallet unlock was cancelled.</source>
@@ -2368,6 +2408,22 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     <message>
         <source>Message signed.</source>
         <translation>Wiadomość podpisana.</translation>
+    </message>
+    <message>
+        <source>The signature could not be decoded.</source>
+        <translation>Podpis nie może zostać zdekodowany.</translation>
+    </message>
+    <message>
+        <source>Please check the signature and try again.</source>
+        <translation>Sprawdź podpis i spróbuj ponownie.</translation>
+    </message>
+    <message>
+        <source>The signature did not match the message digest.</source>
+        <translation>Podpis nie odpowiada skrótowi wiadomości.</translation>
+    </message>
+    <message>
+        <source>Message verification failed.</source>
+        <translation>Weryfikacja wiadomości nie powiodła się.</translation>
     </message>
     <message>
         <source>Message verified.</source>
@@ -2390,9 +2446,53 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
 </context>
 <context>
     <name>TransactionDesc</name>
+    <message numerus="yes">
+        <source>Open for %n more block(s)</source>
+        <translation><numerusform>Otwórz dla %n kolejnego bloku</numerusform><numerusform>Otwórz dla %n kolejnych bloków</numerusform><numerusform>Otwórz dla %n kolejnych bloków</numerusform><numerusform>Otwórz dla %n kolejnych bloków</numerusform></translation>
+    </message>
+    <message>
+        <source>Open until %1</source>
+        <translation>Otwórz do %1</translation>
+    </message>
+    <message>
+        <source>conflicted with a transaction with %1 confirmations</source>
+        <translation>sprzeczny z transakcją posiadającą %1 potwierdzeń</translation>
+    </message>
+    <message>
+        <source>%1/offline</source>
+        <translation>%1/offline</translation>
+    </message>
+    <message>
+        <source>0/unconfirmed, %1</source>
+        <translation>0/niezatwierdzone, %1</translation>
+    </message>
+    <message>
+        <source>in memory pool</source>
+        <translation>w obszarze pamięci</translation>
+    </message>
     <message>
         <source>abandoned</source>
         <translation>porzucone</translation>
+    </message>
+    <message>
+        <source>%1/unconfirmed</source>
+        <translation>%1/niezatwierdzone</translation>
+    </message>
+    <message>
+        <source>%1 confirmations</source>
+        <translation>%1 potwierdzeń</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>Status</translation>
+    </message>
+    <message>
+        <source>, has not been successfully broadcast yet</source>
+        <translation>, nie został jeszcze pomyślnie rozesłany</translation>
+    </message>
+    <message numerus="yes">
+        <source>, broadcast through %n node(s)</source>
+        <translation><numerusform>, przekazywany przez %n węzęł</numerusform><numerusform>, przekazywany przez %n węzy</numerusform><numerusform>, przekazywany przez %n węzłów</numerusform><numerusform>, przekazywany przez %n węzłów</numerusform></translation>
     </message>
     <message>
         <source>Date</source>
@@ -2431,12 +2531,48 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation>etykieta</translation>
     </message>
     <message>
+        <source>Credit</source>
+        <translation>Uznanie</translation>
+    </message>
+    <message>
+        <source>not accepted</source>
+        <translation>niezaakceptowane</translation>
+    </message>
+    <message>
+        <source>Debit</source>
+        <translation>Debet</translation>
+    </message>
+    <message>
         <source>Transaction fee</source>
         <translation>Opłata transakcyjna</translation>
     </message>
     <message>
+        <source>Net amount</source>
+        <translation>Kwota netto</translation>
+    </message>
+    <message>
         <source>Message</source>
         <translation>Wiadomość</translation>
+    </message>
+    <message>
+        <source>Comment</source>
+        <translation>Komentarz</translation>
+    </message>
+    <message>
+        <source>Transaction ID</source>
+        <translation>ID transakcji</translation>
+    </message>
+    <message>
+        <source>Transaction total size</source>
+        <translation>Rozmiar transakcji</translation>
+    </message>
+    <message>
+        <source>Output index</source>
+        <translation>Indeks wyjściowy</translation>
+    </message>
+    <message>
+        <source>Debug information</source>
+        <translation>Informacje debugowania</translation>
     </message>
     <message>
         <source>Transaction</source>
@@ -2465,7 +2601,11 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Ten panel pokazuje szczegółowy opis transakcji</translation>
     </message>
-    </context>
+    <message>
+        <source>Details for %1</source>
+        <translation>Szczegóły %1</translation>
+    </message>
+</context>
 <context>
     <name>TransactionTableModel</name>
     <message>
@@ -2480,6 +2620,14 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <source>Label</source>
         <translation>Etykieta</translation>
     </message>
+    <message numerus="yes">
+        <source>Open for %n more block(s)</source>
+        <translation><numerusform>Otwórz dla %n kolejnego bloku</numerusform><numerusform>Otwórz dla %n kolejnych bloków</numerusform><numerusform>Otwórz dla %n kolejnych bloków</numerusform><numerusform>Otwórz dla %n kolejnych bloków</numerusform></translation>
+    </message>
+    <message>
+        <source>Open until %1</source>
+        <translation>Otwórz do %1</translation>
+    </message>
     <message>
         <source>Offline</source>
         <translation>Offline</translation>
@@ -2493,24 +2641,68 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation>Porzucone</translation>
     </message>
     <message>
+        <source>Confirming (%1 of %2 recommended confirmations)</source>
+        <translation>Potwierdzanie (%1 z %2 rekomendowanych potwierdzeń)</translation>
+    </message>
+    <message>
+        <source>Confirmed (%1 confirmations)</source>
+        <translation>Zatwierdzony (%1 potwierdzeń)</translation>
+    </message>
+    <message>
         <source>Conflicted</source>
         <translation>Skonfliktowane</translation>
+    </message>
+    <message>
+        <source>Immature (%1 confirmations, will be available after %2)</source>
+        <translation>Niedojrzała (%1 potwierdzeń, będzie dostępna po %2)</translation>
+    </message>
+    <message>
+        <source>This block was not received by any other nodes and will probably not be accepted!</source>
+        <translation>Ten blok nie został odebrany przez jakikolwiek inny węzeł i prawdopodobnie nie zostanie zaakceptowany!</translation>
     </message>
     <message>
         <source>Generated but not accepted</source>
         <translation>Wygenerowane ale nie zaakceptowane</translation>
     </message>
     <message>
+        <source>Received from</source>
+        <translation>Odebrano od</translation>
+    </message>
+    <message>
         <source>Sent to</source>
         <translation>Wysłane do</translation>
+    </message>
+    <message>
+        <source>Payment to yourself</source>
+        <translation>Płatność do siebie</translation>
+    </message>
+    <message>
+        <source>Mined</source>
+        <translation>Wydobyto</translation>
     </message>
     <message>
         <source>watch-only</source>
         <translation>tylko-obserwowany</translation>
     </message>
     <message>
+        <source>(n/a)</source>
+        <translation>(brak)</translation>
+    </message>
+    <message>
         <source>(no label)</source>
         <translation>(brak etykiety)</translation>
+    </message>
+    <message>
+        <source>Transaction status. Hover over this field to show number of confirmations.</source>
+        <translation>Status transakcji. Najedź na pole, aby zobaczyć liczbę potwierdzeń.</translation>
+    </message>
+    <message>
+        <source>Date and time that the transaction was received.</source>
+        <translation>Data i czas odebrania transakcji.</translation>
+    </message>
+    <message>
+        <source>Type of transaction.</source>
+        <translation>Rodzaj transakcji.</translation>
     </message>
     </context>
 <context>
@@ -2548,6 +2740,26 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation>Wysłane do</translation>
     </message>
     <message>
+        <source>To yourself</source>
+        <translation>Do siebie</translation>
+    </message>
+    <message>
+        <source>Mined</source>
+        <translation>Wydobyto</translation>
+    </message>
+    <message>
+        <source>Other</source>
+        <translation>Inne</translation>
+    </message>
+    <message>
+        <source>Enter address or label to search</source>
+        <translation>Wprowadź adres albo etykietę aby wyszukać</translation>
+    </message>
+    <message>
+        <source>Abandon transaction</source>
+        <translation>Porzuć transakcję</translation>
+    </message>
+    <message>
         <source>Copy address</source>
         <translation>Kopiuj adres</translation>
     </message>
@@ -2564,12 +2776,32 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation>Skopiuj ID transakcji</translation>
     </message>
     <message>
+        <source>Copy raw transaction</source>
+        <translation>Skopiuj surowe dane transakcji</translation>
+    </message>
+    <message>
+        <source>Copy full transaction details</source>
+        <translation>Skopiuj pełne informacje o transakcji</translation>
+    </message>
+    <message>
         <source>Edit label</source>
         <translation>Zmień etykietę</translation>
     </message>
     <message>
+        <source>Show transaction details</source>
+        <translation>Pokaż szczegóły transakcji</translation>
+    </message>
+    <message>
+        <source>Export Transaction History</source>
+        <translation>Eksport historii transakcji</translation>
+    </message>
+    <message>
         <source>Comma separated file (*.csv)</source>
         <translation>Plik *.CSV (dane rozdzielane przecinkami)</translation>
+    </message>
+    <message>
+        <source>Confirmed</source>
+        <translation>Potwierdzony</translation>
     </message>
     <message>
         <source>Date</source>
@@ -2588,8 +2820,20 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation>Adres</translation>
     </message>
     <message>
+        <source>ID</source>
+        <translation>ID</translation>
+    </message>
+    <message>
         <source>Exporting Failed</source>
         <translation>Eksportowanie nie powiodło się</translation>
+    </message>
+    <message>
+        <source>Exporting Successful</source>
+        <translation>Eksport powiódł się</translation>
+    </message>
+    <message>
+        <source>The transaction history was successfully saved to %1.</source>
+        <translation>Historia transakcji została zapisana do %1.</translation>
     </message>
     <message>
         <source>Range:</source>
@@ -2609,19 +2853,43 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
 </context>
 <context>
     <name>WalletFrame</name>
-    </context>
+    <message>
+        <source>No wallet has been loaded.</source>
+        <translation>Nie załadowano żadnego portfela.</translation>
+    </message>
+</context>
 <context>
     <name>WalletModel</name>
-    </context>
+    <message>
+        <source>Send Coins</source>
+        <translation>Wyślij płatność</translation>
+    </message>
+</context>
 <context>
     <name>WalletView</name>
+    <message>
+        <source>&amp;Export</source>
+        <translation>&amp;Eksportuj</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Eksportuj dane z aktywnej karty do pliku</translation>
+    </message>
     <message>
         <source>Backup Wallet</source>
         <translation>Kopia zapasowa portfela</translation>
     </message>
     <message>
+        <source>Wallet Data (*.dat)</source>
+        <translation>Dane Portfela (*.dat)</translation>
+    </message>
+    <message>
         <source>Backup Failed</source>
         <translation>Nie udało się wykonać kopii zapasowej</translation>
+    </message>
+    <message>
+        <source>There was an error trying to save the wallet data to %1.</source>
+        <translation>Wystąpił błąd przy próbie zapisu pliku portfela do %1.</translation>
     </message>
     <message>
         <source>Backup Successful</source>
@@ -2653,6 +2921,10 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     <message>
         <source>Accept command line and JSON-RPC commands</source>
         <translation>Akceptuj linię poleceń oraz polecenia JSON-RPC</translation>
+    </message>
+    <message>
+        <source>Distributed under the MIT software license, see the accompanying file %s or %s</source>
+        <translation>Rozprowadzane na licencji MIT, zobacz dołączony plik %s lub %s</translation>
     </message>
     <message>
         <source>If &lt;category&gt; is not supplied or if &lt;category&gt; = 1, output all debugging information.</source>
@@ -3211,6 +3483,10 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation>Wspieraj filtrowanie bloków i transakcji używając Filtrów Blooma (domyślnie: %u)</translation>
     </message>
     <message>
+        <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit %s and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
+        <translation>Produkt zawiera oprogramowanie stworzone przez OpenSSL Project do użycia w OpensSSL Toolkit %s, oprogramowanie kryptograficzne napisane przez Eric Young oraz oprogramowanie UPnP napisane przez Thomas Bernard.</translation>
+    </message>
+    <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
         <translation>Całkowita długość łańcucha wersji (%i) przekracza maksymalną dopuszczalną długość (%i). Zmniejsz ilość lub rozmiar parametru uacomment.</translation>
     </message>
@@ -3295,6 +3571,10 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation>Przekazuj transakcje multisig inne niż P2SH (domyślnie: %u)</translation>
     </message>
     <message>
+        <source>Send transactions with full-RBF opt-in enabled (default: %u)</source>
+        <translation>Wyślij transakcje z włączoną flagą full-RBF (domyślnie: %u)</translation>
+    </message>
+    <message>
         <source>Set key pool size to &lt;n&gt; (default: %u)</source>
         <translation>Ustaw rozmiar puli kluczy na &lt;n&gt; (domyślnie: %u)</translation>
     </message>
@@ -3321,6 +3601,10 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     <message>
         <source>Spend unconfirmed change when sending transactions (default: %u)</source>
         <translation>Wydawaj niepotwierdzoną resztę podczas wysyłania transakcji (domyślnie: %u)</translation>
+    </message>
+    <message>
+        <source>Starting network threads...</source>
+        <translation>Uruchamianie wątków sieciowych...</translation>
     </message>
     <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>

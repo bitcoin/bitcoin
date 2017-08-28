@@ -63,11 +63,11 @@
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Estas son sus direcciones Bitcoin para enviar pagos. Verifique siempre la cantidad y la dirección de recibimiento antes de enviar monedas.</translation>
+        <translation>Estas son sus direcciones Bitcoin para enviar pagos. Verifique siempre la cantidad y la dirección de recepción antes de enviar monedas.</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Estas son sus direcciones Bitcoin para recibir pagos. Se recomienda utilizar una nueva dirección de recibimiento para cada transacción</translation>
+        <translation>Estas son sus direcciones Bitcoin para recibir pagos. Se recomienda utilizar una nueva dirección de recepción para cada transacción</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -532,6 +532,14 @@
         <translation>Transacción entrante</translation>
     </message>
     <message>
+        <source>HD key generation is &lt;b&gt;enabled&lt;/b&gt;</source>
+        <translation>La generación de claves HD está &lt;b&gt;activada&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>HD key generation is &lt;b&gt;disabled&lt;/b&gt;</source>
+        <translation>La generación de claves HD está &lt;b&gt;desactivada&lt;/b&gt;</translation>
+    </message>
+    <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>El monedero está &lt;b&gt;cifrado&lt;/b&gt; y actualmente &lt;b&gt;desbloqueado&lt;/b&gt;</translation>
     </message>
@@ -719,7 +727,7 @@
     </message>
     <message>
         <source>New receiving address</source>
-        <translation>Nueva dirección de recivimiento</translation>
+        <translation>Nueva dirección de recepción</translation>
     </message>
     <message>
         <source>New sending address</source>
@@ -727,7 +735,7 @@
     </message>
     <message>
         <source>Edit receiving address</source>
-        <translation>Editar dirección de recivimiento</translation>
+        <translation>Editar dirección de recepción</translation>
     </message>
     <message>
         <source>Edit sending address</source>
@@ -876,6 +884,10 @@
     <message>
         <source>Form</source>
         <translation>Formulario</translation>
+    </message>
+    <message>
+        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</source>
+        <translation>Las transacciones recientes podrían no ser visibles todavía, por lo que el balance de la cartera podría ser incorrecto. Esta información será correcta una vez su cartera se haya terminado de sincronizar con la red bitcoin, como se detalla más abajo.</translation>
     </message>
     <message>
         <source>Number of blocks left</source>
@@ -1395,6 +1407,26 @@
         <source>%1 ms</source>
         <translation>%1 ms</translation>
     </message>
+    <message numerus="yes">
+        <source>%n second(s)</source>
+        <translation><numerusform>%n segundo</numerusform><numerusform>%n segundos</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n minute(s)</source>
+        <translation><numerusform>%n minuto</numerusform><numerusform>%n minutos</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n hour(s)</source>
+        <translation><numerusform>%n hora</numerusform><numerusform>%n horas</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n day(s)</source>
+        <translation><numerusform>%n día</numerusform><numerusform>%n días</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n week(s)</source>
+        <translation><numerusform>%n semana</numerusform><numerusform>%n semanas</numerusform></translation>
+    </message>
     <message>
         <source>%1 and %2</source>
         <translation>%1 y %2</translation>
@@ -1410,7 +1442,15 @@
         <source>Error: Specified data directory "%1" does not exist.</source>
         <translation>Error: directorio especificado "%1" no existe.</translation>
     </message>
-    </context>
+    <message>
+        <source>Error: Cannot parse configuration file: %1. Only use key=value syntax.</source>
+        <translation>Error: no se puede interpretar el archivo de configuración: %1. Utilize exclusivamente sintaxis clave=valor.</translation>
+    </message>
+    <message>
+        <source>Error: %1</source>
+        <translation>Error: %1</translation>
+    </message>
+</context>
 <context>
     <name>QRImageWidget</name>
     <message>
@@ -1589,6 +1629,10 @@
         <translation>Espera de Ping</translation>
     </message>
     <message>
+        <source>Min Ping</source>
+        <translation>Ping mín.</translation>
+    </message>
+    <message>
         <source>Time Offset</source>
         <translation>Desplazamiento de tiempo</translation>
     </message>
@@ -1649,6 +1693,14 @@
         <translation>1 &amp;año</translation>
     </message>
     <message>
+        <source>&amp;Disconnect</source>
+        <translation>&amp;Desconectar</translation>
+    </message>
+    <message>
+        <source>&amp;Unban</source>
+        <translation>&amp;Desbanear</translation>
+    </message>
+    <message>
         <source>Welcome to the %1 RPC console.</source>
         <translation>Bienvenido a la consola RPC %1.</translation>
     </message>
@@ -1659,6 +1711,14 @@
     <message>
         <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
         <translation>Escriba &lt;b&gt;help&lt;/b&gt; para ver un resumen de los comandos disponibles.</translation>
+    </message>
+    <message>
+        <source>WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramification of a command.</source>
+        <translation>ADVERTENCIA: algunos estafadores han estado pidiendo a los usuarios que escriban comandos aquí, robando el contenido de sus carteras. No use esta consola sin entender completamente las ramificaciones del comando.</translation>
+    </message>
+    <message>
+        <source>Network activity disabled</source>
+        <translation>Actividad de red desactivada</translation>
     </message>
     <message>
         <source>%1 B</source>
@@ -2105,12 +2165,20 @@
         <translation>¡Falló la creación de transacción!</translation>
     </message>
     <message>
+        <source>The transaction was rejected with the following reason: %1</source>
+        <translation>Esta transacción fue rechazada por la siguiente razón: %1</translation>
+    </message>
+    <message>
         <source>A fee higher than %1 is considered an absurdly high fee.</source>
         <translation>Una couta mayor que %1 se considera una cuota irracionalmente alta.</translation>
     </message>
     <message>
         <source>Payment request expired.</source>
         <translation>Solicitud de pago caducada.</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n block(s)</source>
+        <translation><numerusform>%n bloque</numerusform><numerusform>%n bloques</numerusform></translation>
     </message>
     <message>
         <source>Pay only the required fee of %1</source>
@@ -2123,6 +2191,14 @@
     <message>
         <source>Warning: Unknown change address</source>
         <translation>Alerta: dirección cambiada desconocida</translation>
+    </message>
+    <message>
+        <source>Confirm custom change address</source>
+        <translation>Confirmar dirección de cambio personalizada</translation>
+    </message>
+    <message>
+        <source>The address you selected for change is not part of this wallet. Any or all funds in your wallet may be sent to this address. Are you sure?</source>
+        <translation>La dirección que seleccionó para el cambio no es parte de esta cartera. Parte o la totalidad de los fondos de su cartera podrían ser enviados a esta dirección. ¿Está seguro?</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -2385,6 +2461,10 @@
 </context>
 <context>
     <name>TransactionDesc</name>
+    <message numerus="yes">
+        <source>Open for %n more block(s)</source>
+        <translation><numerusform>Abierto para %n bloque más</numerusform><numerusform>Abierto para %n bloques más</numerusform></translation>
+    </message>
     <message>
         <source>Open until %1</source>
         <translation>Abierto hasta %1</translation>
@@ -3657,6 +3737,10 @@
     <message>
         <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
         <translation>Umbral para la desconexión de pares con mal comportamiento (predeterminado: %u)</translation>
+    </message>
+    <message>
+        <source>Transaction amounts must not be negative</source>
+        <translation>Las cantidades de las transacciones no pueden ser negativas.</translation>
     </message>
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>

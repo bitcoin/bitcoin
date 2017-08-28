@@ -3,11 +3,11 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Clique com o botão direito para editar o endereço ou rótulocabeça</translation>
+        <translation>Clique com o botão direito para editar o endereço ou rótulo</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>Criar novo endereço</translation>
+        <translation>Criar um novo endereço</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -3835,7 +3835,7 @@
     </message>
     <message>
         <source>Starting network threads...</source>
-        <translation>Iniciando análise da rede...</translation>
+        <translation>Iniciando atividades da rede...</translation>
     </message>
     <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
@@ -3855,11 +3855,11 @@
     </message>
     <message>
         <source>Transaction amounts must not be negative</source>
-        <translation>As quantidades das transações devem ser positivas.</translation>
+        <translation>As quantidades das transações não podem serem negativas</translation>
     </message>
     <message>
         <source>Transaction has too long of a mempool chain</source>
-        <translation>A transação demorou muito na memória</translation>
+        <translation>A transação demorou muito para ser confirmada na mempool chain</translation>
     </message>
     <message>
         <source>Transaction must have at least one recipient</source>
@@ -3879,7 +3879,7 @@
     </message>
     <message>
         <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation>Adicionar um cliente para se conectar e tentar manter a conexão ativa</translation>
+        <translation>Adicionar um nódulo para se conectar e tentar manter a conexão ativa</translation>
     </message>
     <message>
         <source>Loading wallet...</source>
