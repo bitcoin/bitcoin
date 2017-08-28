@@ -27,4 +27,8 @@ void FlushWallets();
 
 //! Stop all wallets. Wallets will be flushed first.
 void StopWallets();
+
+//! Close all wallets.
+void CloseWallets();
+
 #endif // BITCOIN_WALLET_INIT_H
