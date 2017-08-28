@@ -12,10 +12,16 @@
 #include <string>
 #include <map>
 
+/* 
+ *前置声明类 CSubNet，CAddrMan，CDataStream
+ */
 class CSubNet;
 class CAddrMan;
 class CDataStream;
 
+/*
+ * 定义枚举类型: BanReason，屏蔽原因类型
+ */
 typedef enum BanReason
 {
     BanReasonUnknown          = 0,
