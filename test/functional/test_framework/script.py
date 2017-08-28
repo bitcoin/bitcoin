@@ -14,8 +14,7 @@ import hashlib
 import sys
 bchr = chr
 bord = ord
-if sys.version > '3':
-    long = int
+if sys.version_info.major == 3:
     bchr = lambda x: bytes([x])
     bord = lambda x: x
 

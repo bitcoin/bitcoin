@@ -36,7 +36,7 @@ class VersionBitsWarningTest(BitcoinTestFramework):
     def setup_network(self):
         self.alert_filename = os.path.join(self.options.tmpdir, "alert.txt")
         # Open and close to create zero-length file
-        with open(self.alert_filename, 'w', encoding='utf8') as _:
+        with open(self.alert_filename, 'w', encoding='utf8'):
             pass
         self.extra_args = [["-alertnotify=echo %s >> \"" + self.alert_filename + "\""]]
         self.setup_nodes()
@@ -110,7 +110,7 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         self.nodes[0].generate(VB_PERIOD)
         self.stop_nodes()
         # Empty out the alert file
-        with open(self.alert_filename, 'w', encoding='utf8') as _:
+        with open(self.alert_filename, 'w', encoding='utf8'):
             pass
         self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir, self.extra_args)
 
