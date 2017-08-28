@@ -273,19 +273,22 @@ UniValue getaccountaddress(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() != 1)
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
-            "getaccountaddress \"account\"\n"
+            "getaccountaddress \"account\" \"witness\"\n"
             "\nDEPRECATED. Returns the current Bitcoin address for receiving payments to this account.\n"
             "\nArguments:\n"
             "1. \"account\"       (string, required) The account name for the address. It can also be set to the empty string \"\" to represent the default account. The account does not need to exist, it will be created and a new address created  if there is no account by the given name.\n"
+            "2. \"witness\"       (boolean, optional, default=false) Return a witness address\n"
             "\nResult:\n"
             "\"address\"          (string) The account bitcoin address\n"
             "\nExamples:\n"
             + HelpExampleCli("getaccountaddress", "")
             + HelpExampleCli("getaccountaddress", "\"\"")
             + HelpExampleCli("getaccountaddress", "\"myaccount\"")
+            + HelpExampleCli("getaccountaddress", "\"myaccount\" true")
             + HelpExampleRpc("getaccountaddress", "\"myaccount\"")
+            + HelpExampleRpc("getaccountaddress", "\"myaccount\", true")
         );
 
     LOCK2(cs_main, pwallet->cs_wallet);
@@ -295,7 +298,16 @@ UniValue getaccountaddress(const JSONRPCRequest& request)
 
     UniValue ret(UniValue::VSTR);
 
-    ret = GetAccountAddress(pwallet, strAccount).ToString();
+    CBitcoinAddress addr = GetAccountAddress(pwallet, strAccount);
+    bool witnessify = gArgs.GetBoolArg("-defaultwitnessaddress", false);
+    if (!request.params[1].isNull()) {
+        witnessify = request.params[1].get_bool();
+    }
+
+    if (witnessify) {
+        return WitnessifyBitcoinAddress(pwallet, strAccount, addr).ToString();
+    }
+    ret = addr.ToString();
     return ret;
 }
 
@@ -3200,7 +3212,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "dumpprivkey",              &dumpprivkey,              true,   {"address"}  },
     { "wallet",             "dumpwallet",               &dumpwallet,               true,   {"filename"} },
     { "wallet",             "encryptwallet",            &encryptwallet,            true,   {"passphrase"} },
-    { "wallet",             "getaccountaddress",        &getaccountaddress,        true,   {"account"} },
+    { "wallet",             "getaccountaddress",        &getaccountaddress,        true,   {"account", "witness"} },
     { "wallet",             "getaccount",               &getaccount,               true,   {"address"} },
     { "wallet",             "getaddressesbyaccount",    &getaddressesbyaccount,    true,   {"account"} },
     { "wallet",             "getbalance",               &getbalance,               false,  {"account","minconf","include_watchonly"} },
