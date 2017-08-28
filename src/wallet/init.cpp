@@ -245,3 +245,9 @@ bool OpenWallets()
 
     return true;
 }
+
+void FlushWallets(bool shutdown) {
+    for (CWalletRef pwallet : vpwallets) {
+        pwallet->Flush(shutdown);
+    }
+}

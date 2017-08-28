@@ -22,4 +22,7 @@ bool VerifyWallets();
 //! Load wallet databases.
 bool OpenWallets();
 
+//! Flush all wallets in preparation for shutdown.
+//! Call with shutdown = true to actually shutdown the wallet.
+void FlushWallets(bool shutdown);
 #endif // BITCOIN_WALLET_INIT_H
