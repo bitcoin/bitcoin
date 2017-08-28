@@ -1114,7 +1114,7 @@ bool AppInitParameterInteraction()
 
     RegisterAllCoreRPCCommands(tableRPC);
 #ifdef ENABLE_WALLET
-    RegisterWalletRPCCommands(tableRPC);
+    RegisterWalletRPC(tableRPC);
 #endif
 
     nConnectTimeout = gArgs.GetArg("-timeout", DEFAULT_CONNECT_TIMEOUT);

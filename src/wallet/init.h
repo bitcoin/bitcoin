@@ -8,11 +8,16 @@
 
 #include <string>
 
+class CRPCTable;
+
 //! Return the wallets help message.
 std::string GetWalletHelpString(bool showDebug);
 
 //! Wallets parameter interaction
 bool WalletParameterInteraction();
+
+//! Register wallet RPCs.
+void RegisterWalletRPC(CRPCTable &tableRPC);
 
 //! Initialize AutoBackup functionality
 bool InitAutoBackupWallet();
