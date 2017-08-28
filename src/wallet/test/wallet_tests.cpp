@@ -363,6 +363,12 @@ BOOST_AUTO_TEST_CASE(ApproximateBestSubset)
     empty_wallet();
 }
 
+static void AddKey(CWallet& wallet, const CKey& key)
+{
+    LOCK(wallet.cs_wallet);
+    wallet.AddKeyPubKey(key, key.GetPubKey());
+}
+
 BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
 {
     // Cap last block file size, and mine new block in a new block file.
@@ -378,8 +384,7 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
     // and new block files.
     {
         CWallet wallet;
-        LOCK(wallet.cs_wallet);
-        wallet.AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey());
+        AddKey(wallet, coinbaseKey);
         BOOST_CHECK_EQUAL(nullBlock, wallet.ScanForWalletTransactions(oldTip));
         BOOST_CHECK_EQUAL(wallet.GetImmatureBalance(), 1000 * COIN);
     }
@@ -392,8 +397,7 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
     // file.
     {
         CWallet wallet;
-        LOCK(wallet.cs_wallet);
-        wallet.AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey());
+        AddKey(wallet, coinbaseKey);
         BOOST_CHECK_EQUAL(oldTip, wallet.ScanForWalletTransactions(oldTip));
         BOOST_CHECK_EQUAL(wallet.GetImmatureBalance(), 500 * COIN);
     }
@@ -598,8 +602,7 @@ public:
         wallet.reset(new CWallet(std::unique_ptr<CWalletDBWrapper>(new CWalletDBWrapper(&bitdb, "wallet_test.dat"))));
         bool firstRun;
         wallet->LoadWallet(firstRun);
-        LOCK(wallet->cs_wallet);
-        wallet->AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey());
+        AddKey(*wallet, coinbaseKey);
         wallet->ScanForWalletTransactions(chainActive.Genesis());
     }
 
@@ -633,7 +636,7 @@ public:
 BOOST_FIXTURE_TEST_CASE(ListCoins, ListCoinsTestingSetup)
 {
     std::string coinbaseAddress = coinbaseKey.GetPubKey().GetID().ToString();
-    LOCK(wallet->cs_wallet);
+    LOCK2(cs_main, wallet->cs_wallet);
 
     // Confirm ListCoins initially returns 1 coin grouped under coinbaseKey
     // address.
