@@ -24,7 +24,10 @@ bool OpenWallets();
 
 //! Flush all wallets in preparation for shutdown.
 //! Call with shutdown = true to actually shutdown the wallet.
-void FlushWallets(bool shutdown);
+void FlushWallets();
+
+//! Stop all wallets. Wallets will be flushed first.
+void StopWallets();
 
 //! Initialize AutoBackup functionality
 bool InitAutoBackupWallet();

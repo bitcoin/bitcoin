@@ -212,7 +212,7 @@ void Shutdown()
     StopRPC();
     StopHTTPServer();
 #ifdef ENABLE_WALLET
-    FlushWallets(false);
+    FlushWallets();
 #endif
     MapPort(false);
 
@@ -280,7 +280,7 @@ void Shutdown()
         pblocktree = nullptr;
     }
 #ifdef ENABLE_WALLET
-    FlushWallets(true);
+    StopWallets();
 #endif
 
 #if ENABLE_ZMQ
