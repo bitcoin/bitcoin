@@ -48,7 +48,6 @@
 #include <warnings.h>
 
 #ifdef ENABLE_WALLET
-#include <wallet/wallet.h>
 #include <wallet/init.h>
 #endif
 
@@ -1941,9 +1940,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     uiInterface.InitMessage(_("Done loading"));
 
 #ifdef ENABLE_WALLET
-    for (CWalletRef pwallet : vpwallets) {
-        pwallet->postInitProcess(scheduler);
-    }
+    StartWallets(scheduler);
 #endif
 
     return !fRequestShutdown;
