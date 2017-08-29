@@ -139,9 +139,18 @@ bool GetTimeToPrune(const CScript& scriptPubKey, uint64_t &nTime)
 	{
 		uint256 txid;
 		if (!pofferdb || !pofferdb->ReadOfferLastTXID(offer.vchOffer, txid))
-			return false;
+		{			
+			// setting to the tip means we don't prune this data, we keep it
+			nTime = chainActive.Tip()->nTime + 1;
+			return true;
+		}
+		return true;
 		if (!pofferdb->ReadOffer(CNameTXIDTuple(offer.vchOffer, txid), offer))
-			return false;
+		{
+			// setting to the tip means we don't prune this data, we keep it
+			nTime = chainActive.Tip()->nTime + 1;
+			return true;
+		}
 		nTime = GetOfferExpiration(offer);
 		return true; 
 	}
@@ -149,9 +158,17 @@ bool GetTimeToPrune(const CScript& scriptPubKey, uint64_t &nTime)
 	{
 		uint256 txid;
 		if (!pcertdb || !pcertdb->ReadCertLastTXID(cert.vchCert, txid))
-			return false;
+		{
+			// setting to the tip means we don't prune this data, we keep it
+			nTime = chainActive.Tip()->nTime + 1;
+			return true;
+		}
 		if (!pcertdb->ReadCert(CNameTXIDTuple(cert.vchCert, txid), cert))
-			return false;
+		{
+			// setting to the tip means we don't prune this data, we keep it
+			nTime = chainActive.Tip()->nTime + 1;
+			return true;
+		}
 		nTime = GetCertExpiration(cert);
 		return true; 
 	}
@@ -159,9 +176,17 @@ bool GetTimeToPrune(const CScript& scriptPubKey, uint64_t &nTime)
 	{
 		uint256 txid;
 		if (!pescrowdb || !pescrowdb->ReadEscrowLastTXID(escrow.vchEscrow, txid))
-			return false;
+		{
+			// setting to the tip means we don't prune this data, we keep it
+			nTime = chainActive.Tip()->nTime + 1;
+			return true;
+		}
 		if (!pescrowdb->ReadEscrow(CNameTXIDTuple(escrow.vchEscrow, txid), escrow))
-			return false;
+		{
+			// setting to the tip means we don't prune this data, we keep it
+			nTime = chainActive.Tip()->nTime + 1;
+			return true;
+		}
 		nTime = GetEscrowExpiration(escrow);
 		return true;
 	}
