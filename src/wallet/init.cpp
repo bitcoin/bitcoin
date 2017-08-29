@@ -254,6 +254,12 @@ bool OpenWallets()
     return true;
 }
 
+void StartWallets(CScheduler& scheduler) {
+    for (CWalletRef pwallet : vpwallets) {
+        pwallet->postInitProcess(scheduler);
+    }
+}
+
 void FlushWallets() {
     for (CWalletRef pwallet : vpwallets) {
         pwallet->Flush(false);

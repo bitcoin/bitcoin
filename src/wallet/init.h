@@ -9,6 +9,7 @@
 #include <string>
 
 class CRPCTable;
+class CScheduler;
 
 //! Return the wallets help message.
 std::string GetWalletHelpString(bool showDebug);
@@ -26,6 +27,9 @@ bool VerifyWallets();
 
 //! Load wallet databases.
 bool OpenWallets();
+
+//! Complete startup of wallets.
+void StartWallets(CScheduler& scheduler);
 
 //! Flush all wallets in preparation for shutdown.
 void FlushWallets();
