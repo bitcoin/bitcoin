@@ -228,7 +228,7 @@ bool WalletVerify()
     return true;
 }
 
-bool InitLoadWallet()
+bool OpenWallets()
 {
     if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
         LogPrintf("Wallet disabled!\n");
