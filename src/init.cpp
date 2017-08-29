@@ -1246,7 +1246,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     // ********************************************************* Step 5: verify wallet database integrity
 #ifdef ENABLE_WALLET
-    if (!WalletVerify())
+    if (!VerifyWallets())
         return false;
 #endif
     // ********************************************************* Step 6: network initialization

@@ -171,7 +171,7 @@ bool WalletParameterInteraction()
     return true;
 }
 
-bool WalletVerify()
+bool VerifyWallets()
 {
     if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET))
         return true;
