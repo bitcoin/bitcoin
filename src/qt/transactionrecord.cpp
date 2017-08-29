@@ -80,7 +80,6 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
     }
     else
     {
-        int nFromMe = 0;
         bool involvesWatchAddress = false;
         isminetype fAllFromMe = ISMINE_SPENDABLE;
         BOOST_FOREACH(const CTxIn& txin, wtx.vin)
@@ -91,7 +90,6 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
         }
 
         isminetype fAllToMe = ISMINE_SPENDABLE;
-        int nToMe = 0;
         BOOST_FOREACH(const CTxOut& txout, wtx.vout) {
             isminetype mine = wallet->IsMine(txout);
             if(mine == ISMINE_WATCH_ONLY) involvesWatchAddress = true;
@@ -101,26 +99,11 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
         if (fAllFromMe && fAllToMe)
         {
             // Payment to self
-            // TODO: this section still not accurate but covers most cases,
-            // might need some additional work however
-
-            TransactionRecord sub(hash, nTime);
-            // Payment to self by default
-            sub.type = TransactionRecord::SendToSelf;
-            sub.address = "";
-
-            for (unsigned int nOut = 0; nOut < wtx.vout.size(); nOut++)
-            {
-                const CTxOut& txout = wtx.vout[nOut];
-                sub.idx = parts.size();
-
-            }
 
             CAmount nChange = wtx.GetChange();
 
-            sub.debit = -(nDebit - nChange);
-            sub.credit = nCredit - nChange;
-            parts.append(sub);
+            parts.append(TransactionRecord(hash, nTime, TransactionRecord::SendToSelf, "",
+                             -(nDebit - nChange), nCredit - nChange));
             parts.last().involvesWatchAddress = involvesWatchAddress;   // maybe pass to TransactionRecord as constructor argument
         }
         else if (fAllFromMe)
