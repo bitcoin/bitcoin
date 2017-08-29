@@ -152,7 +152,6 @@ bool COfferDB::CleanupDatabase(int &servicesCleaned)
 {
 	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
 	pcursor->SeekToFirst();
-	CNameTXIDTuple offerTuple;
 	COffer offer;
 	COfferAccept offerAccept;
 	pair<string, CNameTXIDTuple > key;
@@ -160,9 +159,8 @@ bool COfferDB::CleanupDatabase(int &servicesCleaned)
         boost::this_thread::interruption_point();
         try {
 			if (pcursor->GetKey(key) && key.first == "offeri") {
-            	const CNameTXIDTuple &offerTuple = key.second;
-				pcursor->GetValue(offer);
-  				if (chainActive.Tip()->nTime >= GetOfferExpiration(offer))
+				const CNameTXIDTuple &offerTuple = key.second;
+  				if (GetOffer(key.first, offer) && chainActive.Tip()->nTime >= GetOfferExpiration(offer))
 				{
 					servicesCleaned++;
 					EraseOffer(offerTuple);
@@ -173,8 +171,7 @@ bool COfferDB::CleanupDatabase(int &servicesCleaned)
 				COffer offer;
 				const CNameTXIDTuple &offerAcceptTuple = key.second;
 				pcursor->GetValue(offerAccept);
-				GetOffer(offerAccept.offerTuple, offer);
-				if (offer.IsNull() || chainActive.Tip()->nTime >= GetOfferExpiration(offer))
+				if (!GetOffer(offerAccept.offerTuple.first, offer) || chainActive.Tip()->nTime >= GetOfferExpiration(offer))
 				{
 					servicesCleaned++;
 					EraseOfferAccept(offerAcceptTuple);

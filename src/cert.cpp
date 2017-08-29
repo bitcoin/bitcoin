@@ -161,9 +161,8 @@ bool CCertDB::CleanupDatabase(int &servicesCleaned)
         boost::this_thread::interruption_point();
         try {
 			if (pcursor->GetKey(key) && key.first == "certi") {
-            	const CNameTXIDTuple &certTuple = key.second;  	
-				pcursor->GetValue(txPos);
-  				if (chainActive.Tip()->nTime >= GetCertExpiration(txPos))
+				const CNameTXIDTuple &certTuple = key.second;
+  				if (GetCert(key.first, txPos) && chainActive.Tip()->nTime >= GetCertExpiration(txPos))
 				{
 					servicesCleaned++;
 					EraseCert(certTuple);

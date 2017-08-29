@@ -239,8 +239,7 @@ bool CEscrowDB::CleanupDatabase(int &servicesCleaned)
         try {
 			if (pcursor->GetKey(key) && key.first == "escrowi") {
 				const CNameTXIDTuple &escrowTuple = key.second;
-				pcursor->GetValue(txPos);
-  				if (chainActive.Tip()->nTime >= GetEscrowExpiration(txPos))
+  				if (GetEscrow(key.first, txPos) && chainActive.Tip()->nTime >= GetEscrowExpiration(txPos))
 				{
 					servicesCleaned++;
 					EraseEscrow(escrowTuple);
