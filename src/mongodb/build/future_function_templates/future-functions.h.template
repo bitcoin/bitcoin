@@ -1,0 +1,19 @@
+#ifndef FUTURE_FUNCTIONS_H
+#define FUTURE_FUNCTIONS_H
+
+#include "future-value.h"
+#include "future.h"
+#include "mongoc-bulk-operation.h"
+
+{{ header_comment }}
+
+{% for F in future_functions %}
+future_t *
+{{ F|future_function_name }} (
+{% for P in F.params %}
+   {{ P.type_name }} {{ P.name }}{% if not loop.last %},{% endif %}{% endfor %}
+);
+
+{% endfor %}
+
+#endif /* FUTURE_FUNCTIONS_H */
