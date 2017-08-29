@@ -137,16 +137,31 @@ bool GetTimeToPrune(const CScript& scriptPubKey, uint64_t &nTime)
 	}
 	else if(offer.UnserializeFromData(vchData, vchHash))
 	{
+		uint256 txid;
+		if (!pofferdb || !pofferdb->ReadOfferLastTXID(offer.vchOffer, txid))
+			return false;
+		if (!pofferdb->ReadOffer(CNameTXIDTuple(offer.vchOffer, txid), offer))
+			return false;
 		nTime = GetOfferExpiration(offer);
 		return true; 
 	}
 	else if(cert.UnserializeFromData(vchData, vchHash))
 	{
+		uint256 txid;
+		if (!pcertdb || !pcertdb->ReadCertLastTXID(cert.vchCert, txid))
+			return false;
+		if (!pcertdb->ReadCert(CNameTXIDTuple(cert.vchCert, txid), cert))
+			return false;
 		nTime = GetCertExpiration(cert);
 		return true; 
 	}
 	else if(escrow.UnserializeFromData(vchData, vchHash))
 	{
+		uint256 txid;
+		if (!pescrowdb || !pescrowdb->ReadEscrowLastTXID(escrow.vchEscrow, txid))
+			return false;
+		if (!pescrowdb->ReadEscrow(CNameTXIDTuple(escrow.vchEscrow, txid), escrow))
+			return false;
 		nTime = GetEscrowExpiration(escrow);
 		return true;
 	}

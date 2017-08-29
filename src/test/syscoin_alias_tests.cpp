@@ -304,10 +304,7 @@ BOOST_AUTO_TEST_CASE (generate_alias_offerexpiry_resync)
 	BOOST_CHECK(aliasnewexpiry > mediantime);
 
 	BOOST_CHECK_THROW(r = CallRPC("node1", "aliasinfo aliasold"), runtime_error);
-
-
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offerinfo " + offerguid), runtime_error);
-
 
 	StartNode("node3");
 	ExpireAlias("aliasold");
