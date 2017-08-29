@@ -3734,10 +3734,8 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 					vector<CAliasIndex> vtxAliasPos;
 					if (!paliasdb->ReadAlias(theOffer.vchAlias, vtxAliasPos) || vtxAliasPos.empty())
 						continue;
-					if (BuildOfferJson(theOffer, vtxAliasPos.back(), oOffer)) {
-						found++;
-						if (found < from)
-							continue;
+					found++;
+					if (found >= from && BuildOfferJson(theOffer, vtxAliasPos.back(), oOffer)) {
 						oRes.push_back(oOffer);
 					}
 					
@@ -3989,13 +3987,8 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 					CAliasIndex offerAcceptAlias;
 					offerAcceptAlias.nHeight = offer.accept.nAcceptHeight;
 					offerAcceptAlias.GetAliasFromList(vtxAliasPos);
-					if (BuildOfferAcceptJson(acceptOffer, vtxPos.back(), offerAcceptAlias, oOffer, filterPurchases, filterSales)) {
-						found++;
-						if (found < from)
-						{
-							vNamesI[vchKey] = nHeight;
-							continue;
-						}
+					found++;
+					if (found >= from && BuildOfferAcceptJson(acceptOffer, vtxPos.back(), offerAcceptAlias, oOffer, filterPurchases, filterSales)) {
 						oRes.push_back(oOffer);
 					}
 					
