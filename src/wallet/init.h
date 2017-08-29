@@ -20,7 +20,7 @@ bool WalletParameterInteraction();
 bool WalletVerify();
 
 //! Load wallet databases.
-bool InitLoadWallet();
+bool OpenWallets();
 
 //! Initialize AutoBackup functionality
 bool WalletInitAutoBackup();
