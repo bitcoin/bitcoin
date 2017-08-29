@@ -1,0 +1,84 @@
+{
+    "heartbeatFrequencyMS": 25000,
+    "in_latency_window": [
+        {
+            "address": "a:27017",
+            "avg_rtt_ms": 5,
+            "lastUpdateTime": 0,
+            "lastWrite": {
+                "lastWriteDate": {
+                    "$numberLong": "125002"
+                }
+            },
+            "maxWireVersion": 5,
+            "tags": {
+                "data_center": "tokyo"
+            },
+            "type": "RSSecondary"
+        }
+    ],
+    "read_preference": {
+        "maxStalenessSeconds": 150,
+        "mode": "PrimaryPreferred",
+        "tag_sets": [
+            {
+                "data_center": "nyc"
+            },
+            {
+                "data_center": "tokyo"
+            }
+        ]
+    },
+    "suitable_servers": [
+        {
+            "address": "a:27017",
+            "avg_rtt_ms": 5,
+            "lastUpdateTime": 0,
+            "lastWrite": {
+                "lastWriteDate": {
+                    "$numberLong": "125002"
+                }
+            },
+            "maxWireVersion": 5,
+            "tags": {
+                "data_center": "tokyo"
+            },
+            "type": "RSSecondary"
+        }
+    ],
+    "topology_description": {
+        "servers": [
+            {
+                "address": "a:27017",
+                "avg_rtt_ms": 5,
+                "lastUpdateTime": 0,
+                "lastWrite": {
+                    "lastWriteDate": {
+                        "$numberLong": "125002"
+                    }
+                },
+                "maxWireVersion": 5,
+                "tags": {
+                    "data_center": "tokyo"
+                },
+                "type": "RSSecondary"
+            },
+            {
+                "address": "b:27017",
+                "avg_rtt_ms": 5,
+                "lastUpdateTime": 0,
+                "lastWrite": {
+                    "lastWriteDate": {
+                        "$numberLong": "1"
+                    }
+                },
+                "maxWireVersion": 5,
+                "tags": {
+                    "data_center": "nyc"
+                },
+                "type": "RSSecondary"
+            }
+        ],
+        "type": "ReplicaSetNoPrimary"
+    }
+}

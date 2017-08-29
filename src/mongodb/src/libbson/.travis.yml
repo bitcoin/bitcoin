@@ -1,0 +1,14 @@
+language: c
+
+compiler:
+  - gcc
+  - clang
+
+env:
+  - CFLAGS="$CFLAGS -Werror -Wno-cast-align" 
+
+script:
+  - ./autogen.sh --enable-maintainer-flags
+  - make
+  - make test
+

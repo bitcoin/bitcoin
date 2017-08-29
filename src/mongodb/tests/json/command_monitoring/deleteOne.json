@@ -1,0 +1,115 @@
+{
+  "data": [
+    {
+      "_id": 1,
+      "x": 11
+    },
+    {
+      "_id": 2,
+      "x": 22
+    },
+    {
+      "_id": 3,
+      "x": 33
+    }
+  ],
+  "collection_name": "test",
+  "database_name": "command-monitoring-tests",
+  "tests": [
+    {
+      "description": "A successful delete one",
+      "operation": {
+        "name": "deleteOne",
+        "arguments": {
+          "filter": {
+            "_id": {
+              "$gt": 1
+            }
+          }
+        }
+      },
+      "expectations": [
+        {
+          "command_started_event": {
+            "command": {
+              "delete": "test",
+              "deletes": [
+                {
+                  "q": {
+                    "_id": {
+                      "$gt": 1
+                    }
+                  },
+                  "limit": 1
+                }
+              ],
+              "ordered": true
+            },
+            "command_name": "delete",
+            "database_name": "command-monitoring-tests"
+          }
+        },
+        {
+          "command_succeeded_event": {
+            "reply": {
+              "ok": 1.0,
+              "n": 1
+            },
+            "command_name": "delete"
+          }
+        }
+      ]
+    },
+    {
+      "description": "A successful delete one command with write errors",
+      "operation": {
+        "name": "deleteOne",
+        "arguments": {
+          "filter": {
+            "_id": {
+              "$nothing": 1
+            }
+          }
+        }
+      },
+      "expectations": [
+        {
+          "command_started_event": {
+            "command": {
+              "delete": "test",
+              "deletes": [
+                {
+                  "q": {
+                    "_id": {
+                      "$nothing": 1
+                    }
+                  },
+                  "limit": 1
+                }
+              ],
+              "ordered": true
+            },
+            "command_name": "delete",
+            "database_name": "command-monitoring-tests"
+          }
+        },
+        {
+          "command_succeeded_event": {
+            "reply": {
+              "ok": 1.0,
+              "n": 0,
+              "writeErrors": [
+                {
+                  "index": 0,
+                  "code": 42,
+                  "errmsg": ""
+                }
+              ]
+            },
+            "command_name": "delete"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -22,10 +22,10 @@ void URITests::uriTests()
     QVERIFY(rv.label == QString());
     QVERIFY(rv.amount == 0);
 
-    uri.setUrl(QString("syscoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?label=Wikipedia Example Address"));
+    uri.setUrl(QString("syscoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?label=Some Example Address"));
     QVERIFY(GUIUtil::parseSyscoinURI(uri, &rv));
     QVERIFY(rv.address == QString("175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W"));
-    QVERIFY(rv.label == QString("Wikipedia Example Address"));
+    QVERIFY(rv.label == QString("Some Example Address"));
     QVERIFY(rv.amount == 0);
 
     uri.setUrl(QString("syscoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?amount=0.001"));
@@ -40,27 +40,55 @@ void URITests::uriTests()
     QVERIFY(rv.label == QString());
     QVERIFY(rv.amount == 100100000);
 
-    uri.setUrl(QString("syscoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?amount=100&label=Wikipedia Example"));
+    uri.setUrl(QString("syscoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?amount=100&label=Some Example"));
     QVERIFY(GUIUtil::parseSyscoinURI(uri, &rv));
     QVERIFY(rv.address == QString("175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W"));
     QVERIFY(rv.amount == 10000000000LL);
-    QVERIFY(rv.label == QString("Wikipedia Example"));
+    QVERIFY(rv.label == QString("Some Example"));
 
-    uri.setUrl(QString("syscoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?message=Wikipedia Example Address"));
+    uri.setUrl(QString("syscoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?message=Some Example Address"));
     QVERIFY(GUIUtil::parseSyscoinURI(uri, &rv));
     QVERIFY(rv.address == QString("175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W"));
     QVERIFY(rv.label == QString());
 
-    QVERIFY(GUIUtil::parseSyscoinURI("syscoin://175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?message=Wikipedia Example Address", &rv));
+    QVERIFY(GUIUtil::parseSyscoinURI("syscoin://175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?message=Some Example Address", &rv));
     QVERIFY(rv.address == QString("175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W"));
     QVERIFY(rv.label == QString());
 
-    uri.setUrl(QString("syscoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?req-message=Wikipedia Example Address"));
+    uri.setUrl(QString("syscoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?req-message=Some Example Address"));
     QVERIFY(GUIUtil::parseSyscoinURI(uri, &rv));
 
-    uri.setUrl(QString("syscoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?amount=1,000&label=Wikipedia Example"));
+    uri.setUrl(QString("syscoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?amount=1,000&label=Some Example"));
     QVERIFY(!GUIUtil::parseSyscoinURI(uri, &rv));
 
-    uri.setUrl(QString("syscoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?amount=1,000.0&label=Wikipedia Example"));
+    uri.setUrl(QString("syscoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?amount=1,000.0&label=Some Example"));
     QVERIFY(!GUIUtil::parseSyscoinURI(uri, &rv));
+
+    uri.setUrl(QString("syscoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?amount=100&label=Some Example&message=Some Example Message&IS=1"));
+    QVERIFY(GUIUtil::parseSyscoinURI(uri, &rv));
+    QVERIFY(rv.address == QString("175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W"));
+    QVERIFY(rv.amount == 10000000000LL);
+    QVERIFY(rv.label == QString("Some Example"));
+    QVERIFY(rv.message == QString("Some Example Message"));
+    QVERIFY(rv.fUseInstantSend == 1);
+
+    uri.setUrl(QString("syscoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?amount=100&label=Some Example&message=Some Example Message&IS=Something Invalid"));
+    QVERIFY(GUIUtil::parseSyscoinURI(uri, &rv));
+    QVERIFY(rv.address == QString("175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W"));
+    QVERIFY(rv.amount == 10000000000LL);
+    QVERIFY(rv.label == QString("Some Example"));
+    QVERIFY(rv.message == QString("Some Example Message"));
+    QVERIFY(rv.fUseInstantSend != 1);
+
+    uri.setUrl(QString("syscoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?IS=1"));
+    QVERIFY(GUIUtil::parseSyscoinURI(uri, &rv));
+    QVERIFY(rv.fUseInstantSend == 1);
+
+    uri.setUrl(QString("syscoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?IS=0"));
+    QVERIFY(GUIUtil::parseSyscoinURI(uri, &rv));
+    QVERIFY(rv.fUseInstantSend != 1);
+
+    uri.setUrl(QString("syscoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W"));
+    QVERIFY(GUIUtil::parseSyscoinURI(uri, &rv));
+    QVERIFY(rv.fUseInstantSend != 1);
 }

@@ -1,0 +1,40 @@
+description: "Discover replica set name from secondary"
+
+uri: "mongodb://a,b"  # No replicaSet= option
+
+phases: [
+
+    {
+        responses: [
+                ["b:27017", {
+
+                    ok: 1,
+                    ismaster: false,
+                    secondary: true,
+                    hosts: ["b:27017"],
+                    setName: "rs"
+                }],
+                ["a:27017", {
+
+                    ok: 1,
+                    ismaster: true,
+                    msg: "isdbgrid"
+                }]
+        ],
+
+        outcome: {
+
+            servers: {
+
+                "b:27017": {
+
+                    type: "RSSecondary",
+                    setName: "rs"
+                }
+            },
+
+            topologyType: "ReplicaSetNoPrimary",
+            setName: "rs"
+        }
+    }
+]

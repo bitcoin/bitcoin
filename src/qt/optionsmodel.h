@@ -28,7 +28,6 @@ public:
 
     enum OptionID {
         StartAtStartup,         // bool
-        HideTrayIcon,           // bool
         MinimizeToTray,         // bool
         MapPortUPnP,            // bool
         MinimizeOnClose,        // bool
@@ -40,22 +39,19 @@ public:
         ProxyPortTor,           // int
         DisplayUnit,            // SyscoinUnits::Unit
         ThirdPartyTxUrls,       // QString
-		// SYSCOIN
-		Theme,                  // QString
-		DefaultAlias,			// QString
-		DefaultPegAlias,		// QString
-		SafeSearch,				// QString
-		ZecEndPoint,			// QString
-		BTCEndPoint,			// QString
-		ZecRPCLogin,			// QString
-		BTCRPCLogin,			// QString
-		ZecRPCPassword,			// QString
-		BTCRPCPassword,			// QString
+        Digits,                 // QString
+        Theme,                  // QString
         Language,               // QString
         CoinControlFeatures,    // bool
         ThreadsScriptVerif,     // int
         DatabaseCache,          // int
         SpendZeroConfChange,    // bool
+        ShowMasternodesTab,     // bool
+        ShowAdvancedPSUI,       // bool
+        LowKeysWarning,         // bool
+        PrivateSendRounds,      // int
+        PrivateSendAmount,      // int
+        PrivateSendMultiSession,// bool
         Listen,                 // bool
         OptionIDRowCount,
     };
@@ -70,40 +66,41 @@ public:
     void setDisplayUnit(const QVariant &value);
 
     /* Explicit getters */
-    bool getHideTrayIcon() { return fHideTrayIcon; }
     bool getMinimizeToTray() { return fMinimizeToTray; }
     bool getMinimizeOnClose() { return fMinimizeOnClose; }
     int getDisplayUnit() { return nDisplayUnit; }
     QString getThirdPartyTxUrls() { return strThirdPartyTxUrls; }
     bool getProxySettings(QNetworkProxy& proxy) const;
     bool getCoinControlFeatures() { return fCoinControlFeatures; }
+    bool getShowAdvancedPSUI() { return fShowAdvancedPSUI; }
     const QString& getOverriddenByCommandLine() { return strOverriddenByCommandLine; }
 
     /* Restart flag helper */
     void setRestartRequired(bool fRequired);
     bool isRestartRequired();
+    bool resetSettings;
 
 private:
     /* Qt-only settings */
-    bool fHideTrayIcon;
     bool fMinimizeToTray;
     bool fMinimizeOnClose;
     QString language;
     int nDisplayUnit;
     QString strThirdPartyTxUrls;
     bool fCoinControlFeatures;
+    bool fShowAdvancedPSUI;
     /* settings that were overriden by command-line */
     QString strOverriddenByCommandLine;
 
-    // Add option to list of GUI options overridden through command line/config file
+    /// Add option to list of GUI options overridden through command line/config file
     void addOverriddenOption(const std::string &option);
 
-    // Check settings version and upgrade default values if required
-    void checkAndMigrate();
 Q_SIGNALS:
     void displayUnitChanged(int unit);
+    void privateSendRoundsChanged();
+    void privateSentAmountChanged();
+    void advancedPSUIChanged(bool);
     void coinControlFeaturesChanged(bool);
-    void hideTrayIconChanged(bool);
 };
 
 #endif // SYSCOIN_QT_OPTIONSMODEL_H

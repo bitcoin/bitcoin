@@ -1,5 +1,6 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Syscoin Core developers
+// Copyright (c) 2014-2017 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -18,23 +19,24 @@ using namespace std;
 class CRPCConvertParam
 {
 public:
-    std::string methodName; //!< method whose params want conversion
-    int paramIdx;           //!< 0-based idx of param to convert
+    std::string methodName;            //! method whose params want conversion
+    int paramIdx;                      //! 0-based idx of param to convert
 };
-
 static const CRPCConvertParam vRPCConvertParams[] =
 {
     { "stop", 0 },
     { "setmocktime", 0 },
     { "getaddednodeinfo", 0 },
+    { "setgenerate", 0 },
+    { "setgenerate", 1 },
     { "generate", 0 },
-    { "generate", 1 },
-    { "generatetoaddress", 0 },
-    { "generatetoaddress", 2 },
     { "getnetworkhashps", 0 },
     { "getnetworkhashps", 1 },
     { "sendtoaddress", 1 },
     { "sendtoaddress", 4 },
+    { "sendtoaddress", 5 },
+    { "sendtoaddress", 6 },
+    { "instantsendtoaddress", 4 },
     { "settxfee", 0 },
     { "getreceivedbyaddress", 1 },
     { "getreceivedbyaccount", 1 },
@@ -46,7 +48,10 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "listreceivedbyaccount", 2 },
     { "getbalance", 1 },
     { "getbalance", 2 },
+    { "getchaintips", 0 },
+    { "getchaintips", 1 },
     { "getblockhash", 0 },
+    { "getsuperblockbudget", 0 },
     { "move", 2 },
     { "move", 3 },
     { "sendfrom", 2 },
@@ -57,14 +62,17 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "listaccounts", 0 },
     { "listaccounts", 1 },
     { "walletpassphrase", 1 },
+    { "walletpassphrase", 2 },
     { "getblocktemplate", 0 },
     { "listsinceblock", 1 },
     { "listsinceblock", 2 },
     { "sendmany", 1 },
     { "sendmany", 2 },
     { "sendmany", 4 },
-    { "aliaspay", 2 },
-    { "aliaspay", 3 },
+    { "sendmany", 5 },
+    { "sendmany", 6 },
+	{ "aliaspay", 2 },
+	{ "aliaspay", 3 },
     { "addmultisigaddress", 0 },
     { "addmultisigaddress", 1 },
     { "createmultisig", 0 },
@@ -74,6 +82,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "listunspent", 2 },
     { "getblock", 1 },
     { "getblockheader", 1 },
+    { "getblockheaders", 1 },
+    { "getblockheaders", 2 },
     { "gettransaction", 1 },
     { "getrawtransaction", 1 },
     { "createrawtransaction", 0 },
@@ -82,6 +92,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "signrawtransaction", 1 },
     { "signrawtransaction", 2 },
     { "sendrawtransaction", 1 },
+    { "sendrawtransaction", 2 },    
     { "fundrawtransaction", 1 },
     { "gettxout", 1 },
     { "gettxout", 2 },
@@ -89,6 +100,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "lockunspent", 0 },
     { "lockunspent", 1 },
     { "importprivkey", 2 },
+    { "importelectrumwallet", 1 },
     { "importaddress", 2 },
     { "importaddress", 3 },
     { "importpubkey", 2 },
@@ -104,17 +116,17 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "prioritisetransaction", 2 },
     { "setban", 2 },
     { "setban", 3 },
-    { "getmempoolancestors", 1 },
-    { "getmempooldescendants", 1 },
-	{ "offerlist", 0 },
-	{ "certlist", 0 },
-	{ "escrowlist", 0 },
-	{ "messagesentlist", 0 },
-	{ "messagereceivelist", 0 },
-	{ "offerstats", 1 },
-	{ "certstats", 1 },
-	{ "escrowstats", 1 },
-	{ "messagestats", 1 },
+    { "spork", 1 },
+    { "voteraw", 1 },
+    { "voteraw", 5 },
+    { "getblockhashes", 0 },
+    { "getblockhashes", 1 },
+    { "getspentinfo", 0},
+    { "getaddresstxids", 0},
+    { "getaddressbalance", 0},
+    { "getaddressdeltas", 0},
+    { "getaddressutxos", 0},
+    { "getaddressmempool", 0},
 };
 
 class CRPCConvertTable
@@ -174,3 +186,4 @@ UniValue RPCConvertValues(const std::string &strMethod, const std::vector<std::s
 
     return params;
 }
+

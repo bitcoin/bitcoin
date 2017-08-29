@@ -1,0 +1,110 @@
+Snappy compressed format description
+Last revised: 2011-10-05
+
+
+This is not a formal specification, but should suffice to explain most
+relevant parts of how the Snappy format works. It is originally based on
+text by Zeev Tarantov.
+
+Snappy is a LZ77-type compressor with a fixed, byte-oriented encoding.
+There is no entropy encoder backend nor framing layer -- the latter is
+assumed to be handled by other parts of the system.
+
+This document only describes the format, not how the Snappy compressor nor
+decompressor actually works. The correctness of the decompressor should not
+depend on implementation details of the compressor, and vice versa.
+
+
+1. Preamble
+
+The stream starts with the uncompressed length (up to a maximum of 2^32 - 1),
+stored as a little-endian varint. Varints consist of a series of bytes,
+where the lower 7 bits are data and the upper bit is set iff there are
+more bytes to be read. In other words, an uncompressed length of 64 would
+be stored as 0x40, and an uncompressed length of 2097150 (0x1FFFFE)
+would be stored as 0xFE 0xFF 0x7F.
+
+
+2. The compressed stream itself
+
+There are two types of elements in a Snappy stream: Literals and
+copies (backreferences). There is no restriction on the order of elements,
+except that the stream naturally cannot start with a copy. (Having
+two literals in a row is never optimal from a compression point of
+view, but nevertheless fully permitted.) Each element starts with a tag byte,
+and the lower two bits of this tag byte signal what type of element will
+follow:
+
+  00: Literal
+  01: Copy with 1-byte offset
+  10: Copy with 2-byte offset
+  11: Copy with 4-byte offset
+
+The interpretation of the upper six bits are element-dependent.
+
+
+2.1. Literals (00)
+
+Literals are uncompressed data stored directly in the byte stream.
+The literal length is stored differently depending on the length
+of the literal:
+
+ - For literals up to and including 60 bytes in length, the upper
+   six bits of the tag byte contain (len-1). The literal follows
+   immediately thereafter in the bytestream.
+ - For longer literals, the (len-1) value is stored after the tag byte,
+   little-endian. The upper six bits of the tag byte describe how
+   many bytes are used for the length; 60, 61, 62 or 63 for
+   1-4 bytes, respectively. The literal itself follows after the
+   length.
+
+
+2.2. Copies
+
+Copies are references back into previous decompressed data, telling
+the decompressor to reuse data it has previously decoded.
+They encode two values: The _offset_, saying how many bytes back
+from the current position to read, and the _length_, how many bytes
+to copy. Offsets of zero can be encoded, but are not legal;
+similarly, it is possible to encode backreferences that would
+go past the end of the block (offset > current decompressed position),
+which is also nonsensical and thus not allowed.
+
+As in most LZ77-based compressors, the length can be larger than the offset,
+yielding a form of run-length encoding (RLE). For instance,
+"xababab" could be encoded as
+
+  <literal: "xab"> <copy: offset=2 length=4>
+
+Note that since the current Snappy compressor works in 32 kB
+blocks and does not do matching across blocks, it will never produce
+a bitstream with offsets larger than about 32768. However, the
+decompressor should not rely on this, as it may change in the future.
+
+There are several different kinds of copy elements, depending on
+the amount of bytes to be copied (length), and how far back the
+data to be copied is (offset).
+
+
+2.2.1. Copy with 1-byte offset (01)
+
+These elements can encode lengths between [4..11] bytes and offsets
+between [0..2047] bytes. (len-4) occupies three bits and is stored
+in bits [2..4] of the tag byte. The offset occupies 11 bits, of which the
+upper three are stored in the upper three bits ([5..7]) of the tag byte,
+and the lower eight are stored in a byte following the tag byte.
+
+
+2.2.2. Copy with 2-byte offset (10)
+
+These elements can encode lengths between [1..64] and offsets from
+[0..65535]. (len-1) occupies six bits and is stored in the upper
+six bits ([2..7]) of the tag byte. The offset is stored as a
+little-endian 16-bit integer in the two bytes following the tag byte.
+
+
+2.2.3. Copy with 4-byte offset (11)
+
+These are like the copies with 2-byte offsets (see previous subsection),
+except that the offset is stored as a 32-bit integer instead of a
+16-bit integer (and thus will occupy four bytes).

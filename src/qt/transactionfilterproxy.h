@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2014 The Syscoin Core developers
+// Copyright (c) 2011-2013 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -24,6 +24,8 @@ public:
     static const QDateTime MAX_DATE;
     /** Type filter bit field (all types) */
     static const quint32 ALL_TYPES = 0xFFFFFFFF;
+    /** Type filter bit field (all types but Darksend-SPAM) */
+    static const quint32 COMMON_TYPES = 4223;
 
     static quint32 TYPE(int type) { return 1<<type; }
 

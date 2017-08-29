@@ -1,0 +1,42 @@
+{%- extends "basic/layout.html" %}
+{%- block extrahead %}
+  {{ super() }}
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+{% endblock %}
+{# remove related docs bars #}
+{%- block relbar1 %}{% endblock %}
+{%- block relbar2 %}{% endblock %}
+{%- block document %}
+  <div class="documentwrapper">
+    <div class="bodywrapper" id="{{ pagename }}">
+      <div class="body" role="main">
+        {% if pagename != 'index' %}
+            <div class="related">
+              <ul>
+                <li class="nav-item nav-item-0"><a href="{{ pathto(master_doc) }}">{{ shorttitle|e }}</a>{{ reldelim1 }}</li>
+                {% for doc in parents %}
+                  <li class="nav-item nav-item-{{ loop.index }}"><a href="{{ doc.link|e }}">{{ doc.title }}</a>{% if not loop.last %}{{ reldelim1 }}{% endif %}</li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+        {% block body %} {% endblock %}
+      </div>
+      <div class="footer">
+        <div class="footer-nav">
+          {%- if prev %}
+          <a class="footer-nav-button footer-nav-button-prev" title="{{ prev.title|striptags|e }}" href="{{ prev.link|e }}">&laquo; Previous: {{ prev.title|striptags|e }}</a>
+          {%- endif %}
+          {%- if next %}
+          <a class="footer-nav-button footer-nav-button-next" title="{{ next.title|striptags|e }}" href="{{ next.link|e }}">Next: {{ next.title|striptags|e }} &raquo;</a>
+          {%- endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+{%- endblock %}
+{% block footer %}
+  <div class="colophon">
+    Created using <a href="http://sphinx-doc.org/">Sphinx</a> {{ sphinx_version }}, based on <a href="https://sphinx-readable-theme.readthedocs.io/en/latest/">Sphinx Readable Theme</a>.
+  </div>
+{% endblock %}

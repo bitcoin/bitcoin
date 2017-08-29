@@ -1,0 +1,7 @@
+<h3><a href="{{ pathto(master_doc) }}">{{ shorttitle }}</a></h3>
+{{ toctree(titles_only=True, maxdepth=2) }}
+<ul>
+  <li class="toctree-l1 {% if pagename=="full_index" %}current{% endif %}">
+    <a href="{{ pathto("full_index") }}">Index</a>
+  </li>
+</ul>

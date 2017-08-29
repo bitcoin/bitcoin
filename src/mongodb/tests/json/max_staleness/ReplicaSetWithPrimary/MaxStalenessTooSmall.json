@@ -1,0 +1,37 @@
+{
+    "error": true,
+    "heartbeatFrequencyMS": 500,
+    "read_preference": {
+        "maxStalenessSeconds": 89,
+        "mode": "Nearest"
+    },
+    "topology_description": {
+        "servers": [
+            {
+                "address": "a:27017",
+                "avg_rtt_ms": 5,
+                "lastUpdateTime": 0,
+                "lastWrite": {
+                    "lastWriteDate": {
+                        "$numberLong": "1"
+                    }
+                },
+                "maxWireVersion": 5,
+                "type": "RSPrimary"
+            },
+            {
+                "address": "b:27017",
+                "avg_rtt_ms": 5,
+                "lastUpdateTime": 0,
+                "lastWrite": {
+                    "lastWriteDate": {
+                        "$numberLong": "1"
+                    }
+                },
+                "maxWireVersion": 5,
+                "type": "RSSecondary"
+            }
+        ],
+        "type": "ReplicaSetWithPrimary"
+    }
+}

@@ -47,9 +47,6 @@ namespace GUIUtil
     // Parse "syscoin:" URI into recipient object, return true on successful parsing
     bool parseSyscoinURI(const QUrl &uri, SendCoinsRecipient *out);
     bool parseSyscoinURI(QString uri, SendCoinsRecipient *out);
-	// SYSCOIN
-	QString formatBitcoinURI(const SendCoinsRecipient &info);
-	QString formatZCashURI(const SendCoinsRecipient &info);
     QString formatSyscoinURI(const SendCoinsRecipient &info);
 
     // Returns true if given address+amount meets "dust" definition
@@ -58,10 +55,7 @@ namespace GUIUtil
     // HTML escaping for rich text controls
     QString HtmlEscape(const QString& str, bool fMultiLine=false);
     QString HtmlEscape(const std::string& str, bool fMultiLine=false);
-	// SYSCOIN
-    /** Load global CSS theme */
-    QString loadStyleSheet();
-    QString getThemeName();
+
     /** Copy a field of the currently selected entry of a view to the clipboard. Does nothing if nothing
         is selected.
        @param[in] column  Data column to extract from the model
@@ -76,7 +70,7 @@ namespace GUIUtil
        @param[in] role    Data role to extract from the model
        @see  TransactionView::copyLabel, TransactionView::copyAmount, TransactionView::copyAddress
      */
-    QString getEntryData(QAbstractItemView *view, int column, int role);
+    QVariant getEntryData(QAbstractItemView *view, int column, int role);
 
     void setClipboard(const QString& str);
 
@@ -119,6 +113,15 @@ namespace GUIUtil
 
     // Open debug.log
     void openDebugLogfile();
+	
+    // Open syscoin.conf
+    void openConfigfile();	
+
+    // Open masternode.conf
+    void openMNConfigfile();	
+
+    // Browse backup folder
+    void showBackups();
 
     // Replace invalid default fonts with known good ones
     void SubstituteFonts(const QString& language);
@@ -183,11 +186,20 @@ namespace GUIUtil
     bool GetStartOnSystemStartup();
     bool SetStartOnSystemStartup(bool fAutoStart);
 
+    /** Modify Qt network specific settings on migration */
+    void migrateQtSettings();
+
     /** Save window size and position */
     void saveWindowGeometry(const QString& strSetting, QWidget *parent);
     /** Restore window size and position */
     void restoreWindowGeometry(const QString& strSetting, const QSize &defaultSizeIn, QWidget *parent);
 
+    /** Load global CSS theme */
+    QString loadStyleSheet();
+
+    /** Return name of current CSS theme */
+    QString getThemeName();
+    
     /* Convert QString to OS specific boost path through UTF-8 */
     boost::filesystem::path qstringToBoostPath(const QString &path);
 

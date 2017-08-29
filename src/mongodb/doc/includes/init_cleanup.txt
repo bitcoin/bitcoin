@@ -1,0 +1,3 @@
+Initialize the MongoDB C Driver by calling :symbol:`mongoc_init` exactly once at the beginning of your program. It is responsible for initializing global state such as process counters, SSL, and threading primitives.
+
+Call :symbol:`mongoc_cleanup` exactly once at the end of your program to release all memory and other resources allocated by the driver. You must not call any other MongoDB C Driver functions after :symbol:`mongoc_cleanup`. Note that :symbol:`mongoc_init` does **not** reinitialize the driver after :symbol:`mongoc_cleanup`.

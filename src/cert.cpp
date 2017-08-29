@@ -2,7 +2,7 @@
 #include "alias.h"
 #include "offer.h"
 #include "init.h"
-#include "main.h"
+#include "validation.h"
 #include "util.h"
 #include "random.h"
 #include "base58.h"
@@ -18,19 +18,17 @@
 #include <boost/thread.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/range/adaptor/reversed.hpp>
+#include <mongoc.h>
 using namespace std;
+extern mongoc_client_t *client;
+extern mongoc_database_t *database;
+extern mongoc_collection_t *alias_collection;
+extern mongoc_collection_t *offer_collection;
+extern mongoc_collection_t *offeraccept_collection;
+extern mongoc_collection_t *escrow_collection;
+extern mongoc_collection_t *cert_collection;
+extern mongoc_collection_t *feedback_collection;
 extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const vector<unsigned char> &vchAliasPeg, const string &currencyCode, const CRecipient &aliasRecipient, const CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool useOnlyAliasPaymentToFund=true, bool transferAlias=false);
-void PutToCertList(std::vector<CCert> &certList, CCert& index) {
-	int i = certList.size() - 1;
-	BOOST_REVERSE_FOREACH(CCert &o, certList) {
-        if(!o.txHash.IsNull() && o.txHash == index.txHash) {
-        	certList[i] = index;
-            return;
-        }
-        i--;
-	}
-    certList.push_back(index);
-}
 bool IsCertOp(int op) {
     return op == OP_CERT_ACTIVATE
         || op == OP_CERT_UPDATE
@@ -40,7 +38,7 @@ bool IsCertOp(int op) {
 uint64_t GetCertExpiration(const CCert& cert) {
 	uint64_t nTime = chainActive.Tip()->nTime + 1;
 	CAliasUnprunable aliasUnprunable;
-	if (paliasdb && paliasdb->ReadAliasUnprunable(cert.vchAlias, aliasUnprunable) && !aliasUnprunable.IsNull())
+	if (paliasdb && paliasdb->ReadAliasUnprunable(cert.aliasTuple.first, aliasUnprunable) && !aliasUnprunable.IsNull())
 		nTime = aliasUnprunable.nExpireTime;
 	
 	return nTime;
@@ -101,29 +99,74 @@ void CCert::Serialize( vector<unsigned char> &vchData) {
 	vchData = vector<unsigned char>(dsCert.begin(), dsCert.end());
 
 }
+void CCertDB::WriteCertIndex(const CCert& cert) {
+	if (!cert_collection)
+		return;
+	bson_error_t error;
+	bson_t *update = NULL;
+	bson_t *selector = NULL;
+	mongoc_write_concern_t* write_concern = NULL;
+	UniValue oName(UniValue::VOBJ);
+	CAliasIndex certAlias;
+	if (!GetAlias(cert.aliasTuple.first, certAlias))
+	{
+		return;
+	}
+
+	mongoc_update_flags_t update_flags;
+	update_flags = (mongoc_update_flags_t)(MONGOC_UPDATE_NO_VALIDATE | MONGOC_UPDATE_UPSERT);
+	selector = BCON_NEW("_id", BCON_UTF8(stringFromVch(cert.vchCert).c_str()));
+	write_concern = mongoc_write_concern_new();
+	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
+	if (BuildCertJson(cert, certAlias, oName)) {
+		update = bson_new_from_json((unsigned char *)oName.write().c_str(), -1, &error);
+		if (!update || !mongoc_collection_update(cert_collection, update_flags, selector, update, write_concern, &error)) {
+			LogPrintf("MONGODB CERT UPDATE ERROR: %s\n", error.message);
+		}
+	}
+	if (update)
+		bson_destroy(update);
+	if (selector)
+		bson_destroy(selector);
+	if (write_concern)
+		mongoc_write_concern_destroy(write_concern);
+}
+void CCertDB::EraseCertIndex(const std::vector<unsigned char>& vchCert) {
+	if (!cert_collection)
+		return;
+	bson_error_t error;
+	bson_t *selector = NULL;
+	mongoc_write_concern_t* write_concern = NULL;
+	mongoc_remove_flags_t remove_flags;
+	remove_flags = (mongoc_remove_flags_t)(MONGOC_REMOVE_NONE);
+	selector = BCON_NEW("_id", BCON_UTF8(stringFromVch(vchCert).c_str()));
+	write_concern = mongoc_write_concern_new();
+	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
+	if (!mongoc_collection_remove(cert_collection, remove_flags, selector, write_concern, &error)) {
+		LogPrintf("MONGODB CERT REMOVE ERROR: %s\n", error.message);
+	}
+	
+	if (selector)
+		bson_destroy(selector);
+	if (write_concern)
+		mongoc_write_concern_destroy(write_concern);
+}
 bool CCertDB::CleanupDatabase(int &servicesCleaned)
 {
 	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
 	pcursor->SeekToFirst();
-	vector<CCert> vtxPos;
-	pair<string, vector<unsigned char> > key;
+	CCert txPos;
+	pair<string, CNameTXIDTuple > key;
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
         try {
 			if (pcursor->GetKey(key) && key.first == "certi") {
-            	const vector<unsigned char> &vchMyCert= key.second;         
-				pcursor->GetValue(vtxPos);	
-				if (vtxPos.empty()){
-					servicesCleaned++;
-					EraseCert(vchMyCert);
-					pcursor->Next();
-					continue;
-				}
-				const CCert &txPos = vtxPos.back();
+            	const CNameTXIDTuple &certTuple = key.second;  	
+				pcursor->GetValue(txPos);
   				if (chainActive.Tip()->nTime >= GetCertExpiration(txPos))
 				{
 					servicesCleaned++;
-					EraseCert(vchMyCert);
+					EraseCert(certTuple);
 				} 
 				
             }
@@ -133,152 +176,6 @@ bool CCertDB::CleanupDatabase(int &servicesCleaned)
         }
     }
 	return true;
-}
-bool CCertDB::GetDBCerts(std::vector<CCert>& certs, const uint64_t &nExpireFilter, const std::vector<std::string>& aliasArray)
-{
-	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
-	pcursor->SeekToFirst();
-	vector<CCert> vtxPos;
-	pair<string, vector<unsigned char> > key;
-    while (pcursor->Valid()) {
-        boost::this_thread::interruption_point();
-        try {
-			if (pcursor->GetKey(key) && key.first == "certi") {       
-				pcursor->GetValue(vtxPos);	
-				if (vtxPos.empty())
-				{
-					pcursor->Next();
-					continue;
-				}
-				const CCert &txPos = vtxPos.back();
-				if(chainActive.Height() <= txPos.nHeight || chainActive[txPos.nHeight]->nTime < nExpireFilter)
-				{
-					pcursor->Next();
-					continue;
-				}
-  				if (chainActive.Tip()->nTime >= GetCertExpiration(txPos))
-				{
-					pcursor->Next();
-					continue;
-				}
-				if(aliasArray.size() > 0)
-				{
-					if (std::find(aliasArray.begin(), aliasArray.end(), stringFromVch(txPos.vchAlias)) == aliasArray.end())
-					{
-						pcursor->Next();
-						continue;
-					}
-				}
-				certs.push_back(txPos);	
-            }
-			
-            pcursor->Next();
-        } catch (std::exception &e) {
-            return error("%s() : deserialize error", __PRETTY_FUNCTION__);
-        }
-    }
-	return true;
-}
-bool CCertDB::ScanCerts(const std::vector<unsigned char>& vchCertPage, const string &strSearchTerm, const vector<string>& aliasArray, bool safeSearch, const string& strCategory, unsigned int nMax,
-        std::vector<CCert>& certScan) {
-	string strSearchTermLower = strSearchTerm;
-	boost::algorithm::to_lower(strSearchTermLower);
-	vector<CCert> vtxPos;
-	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
-	if(!vchCertPage.empty())
-		pcursor->Seek(make_pair(string("certi"), vchCertPage));
-	else
-		pcursor->SeekToFirst();
-	pair<string, vector<unsigned char> > key;
-    while (pcursor->Valid()) {
-        boost::this_thread::interruption_point();
-        try {
-			if (pcursor->GetKey(key) && key.first == "certi") {
-            	const vector<unsigned char> &vchMyCert = key.second;              
-				pcursor->GetValue(vtxPos);
-				if (vtxPos.empty()){
-					pcursor->Next();
-					continue;
-				}
-				const CCert &txPos = vtxPos.back();
-  				if (chainActive.Tip()->nTime >= GetCertExpiration(txPos))
-				{
-					pcursor->Next();
-					continue;
-				}
-
-
-				if(strCategory.size() > 0 && !boost::algorithm::starts_with(stringFromVch(txPos.sCategory), strCategory))
-				{
-					pcursor->Next();
-					continue;
-				}
-				if(aliasArray.size() > 0)
-				{
-					if (std::find(aliasArray.begin(), aliasArray.end(), stringFromVch(txPos.vchAlias)) == aliasArray.end())
-					{
-						pcursor->Next();
-						continue;
-					}
-				}
-				if(txPos.safetyLevel >= SAFETY_LEVEL1)
-				{
-					if(safeSearch)
-					{
-						pcursor->Next();
-						continue;
-					}
-					if(txPos.safetyLevel >= SAFETY_LEVEL2)
-					{
-						pcursor->Next();
-						continue;
-					}
-				}
-				if(!txPos.safeSearch && safeSearch)
-				{
-					pcursor->Next();
-					continue;
-				}
-				CAliasIndex theAlias;
-				CTransaction aliastx;
-				if(!GetTxOfAlias(txPos.vchAlias, theAlias, aliastx))
-				{
-					pcursor->Next();
-					continue;
-				}
-				if(!theAlias.safeSearch && safeSearch)
-				{
-					pcursor->Next();
-					continue;
-				}
-				if((safeSearch && theAlias.safetyLevel > txPos.safetyLevel) || (!safeSearch && theAlias.safetyLevel > SAFETY_LEVEL1))
-				{
-					pcursor->Next();
-					continue;
-				}
-				if(!strSearchTerm.empty())
-				{
-					const string &cert = stringFromVch(vchMyCert);
-					const string &myalias = stringFromVch(txPos.vchAlias);
-					string title = stringFromVch(txPos.vchTitle);
-					boost::algorithm::to_lower(title);
-					if (strSearchTerm != cert && myalias.find(strSearchTermLower) == string::npos && title.find(strSearchTermLower) == string::npos)
-					{
-						pcursor->Next();
-						continue;
-					}
-				}
-				certScan.push_back(txPos); 
-			}
-			if (certScan.size() >= nMax)
-				break;
-
-			pcursor->Next();
-        } catch (std::exception &e) {
-            return error("%s() : deserialize error", __PRETTY_FUNCTION__);
-        }
-    }
-    return true;
 }
 int IndexOfCertOutput(const CTransaction& tx) {
 	if (tx.nVersion != SYSCOIN_TX_VERSION)
@@ -295,51 +192,24 @@ int IndexOfCertOutput(const CTransaction& tx) {
 	return -1;
 }
 
-bool GetTxOfCert(const vector<unsigned char> &vchCert,
-        CCert& txPos, CTransaction& tx, bool skipExpiresCheck) {
-    vector<CCert> vtxPos;
-    if (!pcertdb->ReadCert(vchCert, vtxPos) || vtxPos.empty())
-        return false;
-    txPos = vtxPos.back();
-    int nHeight = txPos.nHeight;
-    if (!skipExpiresCheck && chainActive.Tip()->nTime >= GetCertExpiration(txPos)) {
-        string cert = stringFromVch(vchCert);
-        LogPrintf("GetTxOfCert(%s) : expired", cert.c_str());
-        return false;
-    }
 
-    if (!GetSyscoinTransaction(nHeight, txPos.txHash, tx, Params().GetConsensus()))
-        return error("GetTxOfCert() : could not read tx from disk");
-
-    return true;
+bool GetCert(const CNameTXIDTuple &certTuple,
+	CCert& txPos) {
+	if (!pcertdb || !pcertdb->ReadCert(certTuple, txPos))
+		return false;
+	return true;
 }
-
-bool GetTxAndVtxOfCert(const vector<unsigned char> &vchCert,
-        CCert& txPos, CTransaction& tx,  vector<CCert> &vtxPos, bool skipExpiresCheck) {
-    if (!pcertdb->ReadCert(vchCert, vtxPos) || vtxPos.empty())
+bool GetCert(const vector<unsigned char> &vchCert,
+        CCert& txPos) {
+	uint256 txid;
+	if (!pcertdb || !pcertdb->ReadCertLastTXID(vchCert, txid) )
+		return false;
+    if (!pcertdb->ReadCert(CNameTXIDTuple(vchCert, txid), txPos))
         return false;
-    txPos = vtxPos.back();
-    int nHeight = txPos.nHeight;
-    if (!skipExpiresCheck && chainActive.Tip()->nTime >= GetCertExpiration(txPos)) {
+    if (chainActive.Tip()->nTime >= GetCertExpiration(txPos)) {
+		txPos.SetNull();
         string cert = stringFromVch(vchCert);
-        LogPrintf("GetTxOfCert(%s) : expired", cert.c_str());
-        return false;
-    }
-
-    if (!GetSyscoinTransaction(nHeight, txPos.txHash, tx, Params().GetConsensus()))
-        return error("GetTxOfCert() : could not read tx from disk");
-
-    return true;
-}
-bool GetVtxOfCert(const vector<unsigned char> &vchCert,
-        CCert& txPos, vector<CCert> &vtxPos, bool skipExpiresCheck) {
-    if (!pcertdb->ReadCert(vchCert, vtxPos) || vtxPos.empty())
-        return false;
-    txPos = vtxPos.back();
-    int nHeight = txPos.nHeight;
-    if (!skipExpiresCheck && chainActive.Tip()->nTime >= GetCertExpiration(txPos)) {
-        string cert = stringFromVch(vchCert);
-        LogPrintf("GetTxOfCert(%s) : expired", cert.c_str());
+        LogPrintf("GetCert(%s) : expired", cert.c_str());
         return false;
     }
 
@@ -496,8 +366,6 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 
 	
 	CAliasIndex alias;
-	CTransaction aliasTx;
-	vector<CCert> vtxPos;
 	string retError = "";
 	if(fJustCheck)
 	{
@@ -533,12 +401,12 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2009 - " + _("Certificate guid mismatch");
 				return error(errorMessage.c_str());
 			}
-			if(!theCert.vchLinkAlias.empty())
+			if(!theCert.linkAliasTuple.first.empty())
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2010 - " + _("Certificate linked alias not allowed in activate");
 				return error(errorMessage.c_str());
 			}
-			if(!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty() || theCert.vchAlias != vvchPrevAliasArgs[0])
+			if(!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty() || theCert.aliasTuple.first != vvchPrevAliasArgs[0])
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2011 - " + _("Alias input mismatch");
 				return error(errorMessage.c_str());
@@ -566,7 +434,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2015 - " + _("Certificate title too big");
 				return error(errorMessage.c_str());
 			}
-			if(!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty() || theCert.vchAlias != vvchPrevAliasArgs[0])
+			if(!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty() || theCert.aliasTuple.first != vvchPrevAliasArgs[0])
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2016 - " + _("Alias input mismatch");
 				return error(errorMessage.c_str());
@@ -584,7 +452,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2018 - " + _("Certificate guid mismatch");
 				return error(errorMessage.c_str());
 			}
-			if(!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty() || theCert.vchAlias != vvchPrevAliasArgs[0])
+			if(!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty() || theCert.aliasTuple.first != vvchPrevAliasArgs[0])
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2019 - " + _("Alias input mismatch");
 				return error(errorMessage.c_str());
@@ -607,7 +475,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		{
 			// if not an certnew, load the cert data from the DB
 			CCert dbCert;
-			if(!GetVtxOfCert(vvchArgs[0], dbCert, vtxPos))	
+			if(!GetCert(vvchArgs[0], dbCert))
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2022 - " + _("Failed to read from certificate DB");
 				return true;
@@ -621,26 +489,32 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			if(theCert.sCategory.empty())
 				theCert.sCategory = dbCert.sCategory;
 			
-			// user can't update safety level after creation
-			theCert.safetyLevel = dbCert.safetyLevel;
 			theCert.vchCert = dbCert.vchCert;
-			if(theCert.vchAlias != dbCert.vchAlias)
+			if(theCert.aliasTuple != dbCert.aliasTuple)
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2023 - " + _("Wrong alias input provided in this certificate transaction");
-				theCert.vchAlias = dbCert.vchAlias;
+				theCert.aliasTuple = dbCert.aliasTuple;
+			}
+			uint256 txid;
+			CCert firstCert;
+			if (!pcertdb->ReadCertFirstTXID(dbCert.vchCert, txid)) {
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Cannot read first txid from cert DB");
+				theCert = dbCert;
+			}
+			if (!GetCert(CNameTXIDTuple(dbCert.vchCert, txid), firstCert)) {
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Cannot read first cert from cert DB");
+				theCert = dbCert;
 			}
 			if(op == OP_CERT_TRANSFER)
 			{
-				vector<CAliasIndex> vtxAlias;
-				bool isExpired = false;
 				// check toalias
-				if(!GetVtxOfAlias(theCert.vchLinkAlias, alias, vtxAlias, isExpired))
+				if(!GetAlias(theCert.linkAliasTuple.first, alias))
 				{
 					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Cannot find alias you are transferring to. It may be expired");		
 				}
 				else
 				{
-					theCert.vchAlias = theCert.vchLinkAlias;		
+					theCert.aliasTuple = theCert.linkAliasTuple;		
 					if(!alias.acceptCertTransfers)
 					{
 						errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("The alias you are transferring to does not accept certificate transfers");
@@ -648,7 +522,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 					}
 				}
 				// the original owner can modify certificate regardless of access flags, new owners must adhere to access flags
-				if(dbCert.nAccessFlags < 2 && dbCert.vchAlias != vtxPos.front().vchAlias)
+				if(dbCert.nAccessFlags < 2 && dbCert.aliasTuple != firstCert.aliasTuple)
 				{
 					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot transfer this certificate. Insufficient privileges.");
 					theCert = dbCert;
@@ -656,22 +530,23 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			}
 			else if(op == OP_CERT_UPDATE)
 			{
-				if(dbCert.nAccessFlags < 1 && dbCert.vchAlias != vtxPos.front().vchAlias)
+				if(dbCert.nAccessFlags < 1 && dbCert.aliasTuple != firstCert.aliasTuple)
 				{
 					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot edit this certificate. It is view-only.");
 					theCert = dbCert;
 				}
 			}
-			if(theCert.nAccessFlags > dbCert.nAccessFlags && dbCert.vchAlias != vtxPos.front().vchAlias)
+			if(theCert.nAccessFlags > dbCert.nAccessFlags && dbCert.aliasTuple != firstCert.aliasTuple)
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot modify for more lenient access. Only tighter access level can be granted.");
 				theCert = dbCert;
 			}
-			theCert.vchLinkAlias.clear();
+			theCert.linkAliasTuple.first.clear();
 		}
 		else
 		{
-			if (pcertdb->ExistsCert(vvchArgs[0]))
+			uint256 txid;
+			if (pcertdb->ReadCertLastTXID(vvchArgs[0], txid))
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2027 - " + _("Certificate already exists");
 				return true;
@@ -680,10 +555,9 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
         // set the cert's txn-dependent values
 		theCert.nHeight = nHeight;
 		theCert.txHash = tx.GetHash();
-		PutToCertList(vtxPos, theCert);
         // write cert  
 
-        if (!dontaddtodb && !pcertdb->WriteCert(vvchArgs[0], vtxPos))
+        if (!dontaddtodb && (!pcertdb->WriteCert(theCert) || (op == OP_CERT_ACTIVATE && !pcertdb->WriteCertFirstTXID(vvchArgs[0], theCert.txHash))))
 		{
 			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Failed to write to certifcate DB");
             return error(errorMessage.c_str());
@@ -722,22 +596,18 @@ UniValue certnew(const UniValue& params, bool fHelp) {
     vector<unsigned char> vchTitle = vchFromString(params[1].get_str());
 	vector<unsigned char> vchPubData = vchFromString(params[2].get_str());
 	string strCategory = "certificates";
-	string strSafeSearch = "true";
 	string strData = "";
 	if(CheckParam(params, 3))
 		strData = params[3].get_str();
-	if(CheckParam(params, 4))
-		strSafeSearch = params[4].get_str();
 	if(CheckParam(params, 5))
 		strCategory = params[5].get_str();
 	vector<unsigned char> vchWitness;
 	if(CheckParam(params, 6))
 		vchWitness = vchFromValue(params[6]);
 	// check for alias existence in DB
-	CTransaction aliastx;
 	CAliasIndex theAlias;
 
-	if (!GetTxOfAlias(vchAlias, theAlias, aliastx))
+	if (!GetAlias(vchAlias, theAlias))
 		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2500 - " + _("failed to read alias from alias DB"));
 
 	
@@ -763,9 +633,7 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 		newCert.vchData = vchFromString(strData);
 	newCert.vchPubData = vchPubData;
 	newCert.nHeight = chainActive.Tip()->nHeight;
-	newCert.vchAlias = vchAlias;
-	newCert.safetyLevel = 0;
-	newCert.safeSearch = strSafeSearch == "true"? true: false;
+	newCert.aliasTuple = CNameTXIDTuple(vchAlias, theAlias.txHash);
 
 	vector<unsigned char> data;
 	newCert.Serialize(data);
@@ -786,12 +654,12 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
 	CRecipient aliasPaymentRecipient;
-	CreateAliasRecipient(scriptPubKeyOrig, theAlias.vchAlias, theAlias.vchAliasPeg, chainActive.Tip()->nHeight, aliasPaymentRecipient);
+	CreateAliasRecipient(scriptPubKeyOrig, theAlias.vchAlias, theAlias.aliasPegTuple, aliasPaymentRecipient);
 		
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
-	CreateFeeRecipient(scriptData, theAlias.vchAliasPeg, chainActive.Tip()->nHeight, data, fee);
+	CreateFeeRecipient(scriptData, theAlias.aliasPegTuple, data, fee);
 	vecSend.push_back(fee);
 
 	
@@ -799,7 +667,7 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;	
-	SendMoneySyscoin(vchAlias, vchWitness, theAlias.vchAliasPeg, "", aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(vchAlias, vchWitness, theAlias.aliasPegTuple.first, "", aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 	UniValue res(UniValue::VARR);
 	UniValue signParams(UniValue::VARR);
 	signParams.push_back(EncodeHexTx(wtx));
@@ -834,13 +702,12 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 UniValue certupdate(const UniValue& params, bool fHelp) {
     if (fHelp || params.size() < 1 || params.size() > 7)
         throw runtime_error(
-		"certupdate <guid> [title] [public] [private] [safesearch=true] [category=certificates] [witness]\n"
+		"certupdate <guid> [title] [public] [private] [category=certificates] [witness]\n"
 						"Perform an update on an certificate you control.\n"
 						"<guid> certificate guidkey.\n"
 						"<title> certificate title, 256 characters max.\n"
                         "<public> public data, 256 characters max.\n"
-						"<private> private data, 256 characters max.\n"
-						"<safe search> set to No if this cert should only show in the search when safe search is not selected. Defaults to Yes (cert shows with or without safe search selected in search lists).\n"                     
+						"<private> private data, 256 characters max.\n"                    
 						"<category> category, 256 characters max. Defaults to certificates\n"
 						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"	
 						+ HelpRequiringPassphrase());
@@ -849,7 +716,6 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 	string strData = "";
 	string strTitle = "";
 	string strPubData = "";
-	string strSafeSearch = "";
 	string strCategory = "";
 	if(CheckParam(params, 1))
 		strTitle = params[1].get_str();
@@ -857,8 +723,6 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 		strPubData = params[2].get_str();
 	if(CheckParam(params, 3))
 		strData = params[3].get_str();
-	if(CheckParam(params, 4))
-		strSafeSearch = params[4].get_str();
 	if(CheckParam(params, 5))
 		strCategory = params[5].get_str();
 
@@ -869,19 +733,14 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
     // this is a syscoind txn
     CWalletTx wtx;
     CScript scriptPubKeyOrig;
-
-
-    // look for a transaction with this key
-    CTransaction tx;
 	CCert theCert;
 	
-    if (!GetTxOfCert( vchCert, theCert, tx))
+    if (!GetCert( vchCert, theCert))
         throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2504 - " + _("Could not find a certificate with this key"));
 
-	CTransaction aliastx;
 	CAliasIndex theAlias;
 
-	if (!GetTxOfAlias(theCert.vchAlias, theAlias, aliastx))
+	if (!GetAlias(theCert.aliasTuple, theAlias))
 		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2505 - " + _("Failed to read alias from alias DB"));
 
 	CCert copyCert = theCert;
@@ -896,15 +755,10 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 		theCert.vchData = vchFromString(strData);
 	if(!strPubData.empty())
 		theCert.vchPubData = vchFromString(strPubData);
-	if(!strSafeSearch.empty())
-		theCert.safeSearch = strSafeSearch == "true"? true: false;
-	else
-		theCert.safeSearch = copyCert.safeSearch;
 	if(!strCategory.empty())
 		theCert.sCategory = vchFromString(strCategory);
 	if(!strTitle.empty())
 		theCert.vchTitle = vchFromString(strTitle);
-	theCert.vchAlias = theAlias.vchAlias;
 	theCert.nHeight = chainActive.Tip()->nHeight;
 	vector<unsigned char> data;
 	theCert.Serialize(data);
@@ -924,19 +778,19 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
 	CRecipient aliasPaymentRecipient;
-	CreateAliasRecipient(scriptPubKeyOrig, theAlias.vchAlias, theAlias.vchAliasPeg, chainActive.Tip()->nHeight, aliasPaymentRecipient);
+	CreateAliasRecipient(scriptPubKeyOrig, theAlias.vchAlias, theAlias.aliasPegTuple, aliasPaymentRecipient);
 		
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
-	CreateFeeRecipient(scriptData, theAlias.vchAliasPeg, chainActive.Tip()->nHeight, data, fee);
+	CreateFeeRecipient(scriptData, theAlias.aliasPegTuple, data, fee);
 	vecSend.push_back(fee);
 	
 	
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;	
-	SendMoneySyscoin(theAlias.vchAlias, vchWitness, theAlias.vchAliasPeg, "", aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);	
+	SendMoneySyscoin(theAlias.vchAlias, vchWitness, theAlias.aliasPegTuple.first, "", aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
  	UniValue res(UniValue::VARR);
 
 	UniValue signParams(UniValue::VARR);
@@ -998,22 +852,20 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	if(CheckParam(params, 5))
 		vchWitness = vchFromValue(params[5]);
 	// check for alias existence in DB
-	CTransaction tx;
 	CAliasIndex toAlias;
-	if (!GetTxOfAlias(vchAlias, toAlias, tx))
+	if (!GetAlias(vchAlias, toAlias))
 		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2509 - " + _("Failed to read transfer alias from DB"));
 
     // this is a syscoin txn
     CWalletTx wtx;
     CScript scriptPubKeyOrig, scriptPubKeyFromOrig;
 
-    CTransaction aliastx;
 	CCert theCert;
-    if (!GetTxOfCert( vchCert, theCert, tx))
+    if (!GetCert( vchCert, theCert))
         throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2510 - " + _("Could not find a certificate with this key"));
 
 	CAliasIndex fromAlias;
-	if(!GetTxOfAlias(theCert.vchAlias, fromAlias, aliastx))
+	if(!GetAlias(theCert.aliasTuple, fromAlias))
 	{
 		 throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2511 - " + _("Could not find the certificate alias"));
 	}
@@ -1027,9 +879,8 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	theCert.ClearCert();
     CScript scriptPubKey;
 	theCert.nHeight = chainActive.Tip()->nHeight;
-	theCert.vchAlias = fromAlias.vchAlias;
-	theCert.vchLinkAlias = toAlias.vchAlias;
-	theCert.safetyLevel = copyCert.safetyLevel;
+	theCert.aliasTuple = CNameTXIDTuple(fromAlias.vchAlias, fromAlias.txHash);
+	theCert.linkAliasTuple = CNameTXIDTuple(toAlias.vchAlias, toAlias.txHash);
 
 	if(!strData.empty())
 		theCert.vchData = vchFromString(strData);
@@ -1062,19 +913,19 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
 	CRecipient aliasPaymentRecipient;
-	CreateAliasRecipient(scriptPubKeyFromOrig, fromAlias.vchAlias, fromAlias.vchAliasPeg, chainActive.Tip()->nHeight, aliasPaymentRecipient);
+	CreateAliasRecipient(scriptPubKeyFromOrig, fromAlias.vchAlias, fromAlias.aliasPegTuple, aliasPaymentRecipient);
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
-	CreateFeeRecipient(scriptData, fromAlias.vchAliasPeg, chainActive.Tip()->nHeight, data, fee);
+	CreateFeeRecipient(scriptData, fromAlias.aliasPegTuple, data, fee);
 	vecSend.push_back(fee);
 	
 	
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(fromAlias.vchAlias, vchWitness, fromAlias.vchAliasPeg, "", aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(fromAlias.vchAlias, vchWitness, fromAlias.aliasPegTuple.first, "", aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 	UniValue res(UniValue::VARR);
 
 	UniValue signParams(UniValue::VARR);
@@ -1112,210 +963,51 @@ UniValue certinfo(const UniValue& params, bool fHelp) {
                 "Show stored values of a single certificate and its .\n");
 
     vector<unsigned char> vchCert = vchFromValue(params[0]);
-
-
-	vector<CCert> vtxPos;
-
 	UniValue oCert(UniValue::VOBJ);
     vector<unsigned char> vchValue;
 
-	if (!pcertdb->ReadCert(vchCert, vtxPos) || vtxPos.empty())
-		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2515 - " + _("Failed to read from cert DB"));
+	CCert txPos;
+	uint256 txid;
+	if (!pcertdb || !pcertdb->ReadCertLastTXID(vchCert, txid))
+		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 5535 - " + _("Failed to read from cert DB"));
+	if (!GetCert(CNameTXIDTuple(vchCert, txid), txPos))
+		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 5535 - " + _("Failed to read from cert DB"));
+
+	CTransaction tx;
+	if (!GetSyscoinTransaction(txPos.nHeight, txPos.txHash, tx, Params().GetConsensus()))
+		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 4604 - " + _("Failed to read from cert tx"));
+	vector<vector<unsigned char> > vvch;
+	int op, nOut;
+	if (!DecodeCertTx(tx, op, nOut, vvch))
+		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 4604 - " + _("Failed to decode cert"));
+
 
 	CAliasIndex alias;
-	CTransaction aliastx;
-	if (!GetTxOfAlias(vtxPos.back().vchAlias, alias, aliastx, true))
+	if (!GetAlias(txPos.aliasTuple.first, alias))
 		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2516 - " + _("Failed to read xfer alias from alias DB"));
 
-	if(!BuildCertJson(vtxPos.back(), alias, oCert))
+	if(!BuildCertJson(txPos, alias, oCert))
 		oCert.clear();
     return oCert;
 }
-UniValue certcount(const UniValue& params, bool fHelp) {
-	if (fHelp || 1< params.size())
-		throw runtime_error("certcount [\"alias\",...]\n"
-			"Count certs that an array of aliases own. Set of aliases to look up based on alias.\n");
-	UniValue aliasesValue(UniValue::VARR);
-	vector<string> aliases;
-	if (CheckParam(params, 0))
-	{
-		if (params[0].isArray())
-		{
-			aliasesValue = params[0].get_array();
-			for (unsigned int aliasIndex = 0; aliasIndex<aliasesValue.size(); aliasIndex++)
-			{
-				string lowerStr = aliasesValue[aliasIndex].get_str();
-				boost::algorithm::to_lower(lowerStr);
-				if (!lowerStr.empty())
-					aliases.push_back(lowerStr);
-			}
-		}
-		else
-		{
-			string aliasName = params[0].get_str();
-			boost::algorithm::to_lower(aliasName);
-			if (!aliasName.empty())
-				aliases.push_back(aliasName);
-		}
-	}
-
-
-	int found = 0;
-
-	UniValue oRes(UniValue::VARR);
-	map< vector<unsigned char>, int > vNamesI;
-	map< vector<unsigned char>, UniValue > vNamesO;
-	if (aliases.size() > 0)
-	{
-		for (unsigned int aliasIndex = 0; aliasIndex<aliases.size(); aliasIndex++)
-		{
-			const string &name = aliases[aliasIndex];
-			const vector<unsigned char> &vchAlias = vchFromString(name);
-			vector<CAliasIndex> vtxPos;
-			if (!paliasdb->ReadAlias(vchAlias, vtxPos) || vtxPos.empty())
-				continue;
-			CTransaction tx;
-			for (auto& it : boost::adaptors::reverse(vtxPos)) {
-				const CAliasIndex& theAlias = it;
-				if (!GetSyscoinTransaction(theAlias.nHeight, theAlias.txHash, tx, Params().GetConsensus()))
-					continue;
-				CCert cert(tx);
-				if (!cert.IsNull())
-				{
-					if (vNamesI.find(cert.vchCert) != vNamesI.end() && (theAlias.nHeight <= vNamesI[cert.vchCert] || vNamesI[cert.vchCert] < 0))
-						continue;
-					vector<CCert> vtxCertPos;
-					if (!pcertdb->ReadCert(cert.vchCert, vtxCertPos) || vtxCertPos.empty())
-						continue;
-					const CCert &theCert = vtxCertPos.back();
-					if (theCert.vchAlias != theAlias.vchAlias)
-						continue;
-
-					vNamesI[cert.vchCert] = theAlias.nHeight;
-					found++;
-				}
-			}
-		}
-	}
-	return found;
-}
-UniValue certlist(const UniValue& params, bool fHelp) {
-    if (fHelp || 4 < params.size())
-        throw runtime_error("certlist [\"alias\",...] [cert] [count] [from]\n"
-                "list certs that an array of aliases own. Set of aliases to look up based on alias.\n"
-				"[count]          (numeric, optional, default=10) The number of results to return\n"
-				"[from]           (numeric, optional, default=0) The number of results to skip\n");
-	UniValue aliasesValue(UniValue::VARR);
-	vector<string> aliases;
-	if(CheckParam(params, 0))
-	{
-		if(params[0].isArray())
-		{
-			aliasesValue = params[0].get_array();
-			for(unsigned int aliasIndex =0;aliasIndex<aliasesValue.size();aliasIndex++)
-			{
-				string lowerStr = aliasesValue[aliasIndex].get_str();
-				boost::algorithm::to_lower(lowerStr);
-				if(!lowerStr.empty())
-					aliases.push_back(lowerStr);
-			}
-		}
-		else
-		{
-			string aliasName = params[0].get_str();
-			boost::algorithm::to_lower(aliasName);
-			if (!aliasName.empty())
-				aliases.push_back(aliasName);
-		}
-	}
-	vector<unsigned char> vchNameUniq;
-    if(CheckParam(params, 1))
-        vchNameUniq = vchFromValue(params[1]);
-
-	int count = 10;
-	int from = 0;
-	if (CheckParam(params, 2))
-		count = atoi(params[2].get_str());
-	if (CheckParam(params, 3))
-		from = atoi(params[3].get_str());
-	int found = 0;
-
-	UniValue oRes(UniValue::VARR);
-	map< vector<unsigned char>, int > vNamesI;
-	if(aliases.size() > 0)
-	{
-		for(unsigned int aliasIndex =0;aliasIndex<aliases.size();aliasIndex++)
-		{
-			if (oRes.size() >= count)
-				break;
-			const string &name = aliases[aliasIndex];
-			const vector<unsigned char> &vchAlias = vchFromString(name);
-			vector<CAliasIndex> vtxPos;
-			if (!paliasdb->ReadAlias(vchAlias, vtxPos) || vtxPos.empty())
-				continue;
-			CTransaction tx;
-			for(auto& it : boost::adaptors::reverse(vtxPos)) {
-				if (oRes.size() >= count)
-					break;
-				const CAliasIndex& theAlias = it;
-				if(!GetSyscoinTransaction(theAlias.nHeight, theAlias.txHash, tx, Params().GetConsensus()))
-					continue;
-				CCert cert(tx);
-				if(!cert.IsNull())
-				{
-					if (vNamesI.find(cert.vchCert) != vNamesI.end() && (theAlias.nHeight <= vNamesI[cert.vchCert] || vNamesI[cert.vchCert] < 0))
-						continue;
-					if (vchNameUniq.size() > 0 && vchNameUniq != cert.vchCert)
-						continue;
-					vector<CCert> vtxCertPos;
-					if (!pcertdb->ReadCert(cert.vchCert, vtxCertPos) || vtxCertPos.empty())
-						continue;
-					const CCert &theCert = vtxCertPos.back();
-					if(theCert.vchAlias != theAlias.vchAlias)
-						continue;
-					
-					UniValue oCert(UniValue::VOBJ);
-					vNamesI[cert.vchCert] = theAlias.nHeight;
-					if(BuildCertJson(theCert, theAlias, oCert))
-					{
-						found++;
-						if (found < from)
-							continue;
-						oRes.push_back(oCert);
-					}
-					// if finding specific GUID don't need to look any further
-					if (vchNameUniq.size() > 0)
-						return oRes;
-				}	
-			}
-		}
-	}
-    return oRes;
-}
 bool BuildCertJson(const CCert& cert, const CAliasIndex& alias, UniValue& oCert)
 {
-	if(cert.safetyLevel >= SAFETY_LEVEL2)
-		return false;
-	if(alias.safetyLevel >= SAFETY_LEVEL2)
-		return false;
-	string sHeight = strprintf("%llu", cert.nHeight);
-    oCert.push_back(Pair("cert", stringFromVch(cert.vchCert)));
+    oCert.push_back(Pair("_id", stringFromVch(cert.vchCert)));
     oCert.push_back(Pair("txid", cert.txHash.GetHex()));
-    oCert.push_back(Pair("height", sHeight));
-	string sTime;
-	CBlockIndex *pindex = chainActive[cert.nHeight];
-	if (pindex) {
-		sTime = strprintf("%llu", pindex->nTime);
+    oCert.push_back(Pair("height", (int64_t)cert.nHeight));
+	int64_t nTime = 0;
+	if (chainActive.Height() >= cert.nHeight) {
+		CBlockIndex *pindex = chainActive[cert.nHeight];
+		if (pindex) {
+			nTime = pindex->nTime;
+		}
 	}
-	oCert.push_back(Pair("time", sTime));
+	oCert.push_back(Pair("time", nTime));
 	oCert.push_back(Pair("title", stringFromVch(cert.vchTitle)));
     oCert.push_back(Pair("privatevalue", stringFromVch(cert.vchData)));
 	oCert.push_back(Pair("publicvalue", stringFromVch(cert.vchPubData)));
 	oCert.push_back(Pair("category", stringFromVch(cert.sCategory)));
-	oCert.push_back(Pair("safesearch", cert.safeSearch? "true" : "false"));
-	unsigned char safetyLevel = max(cert.safetyLevel, alias.safetyLevel );
-	oCert.push_back(Pair("safetylevel", safetyLevel));
-	oCert.push_back(Pair("alias", stringFromVch(cert.vchAlias)));
+	oCert.push_back(Pair("alias", stringFromVch(cert.aliasTuple.first)));
 	oCert.push_back(Pair("access_flags", cert.nAccessFlags));
 	int64_t expired_time = GetCertExpiration(cert);
 	bool expired = false;
@@ -1332,106 +1024,7 @@ bool BuildCertJson(const CCert& cert, const CAliasIndex& alias, UniValue& oCert)
 	oCert.push_back(Pair("expired", expired));
 	return true;
 }
-UniValue certfilter(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() > 5)
-		throw runtime_error(
-			"certfilter [searchterm] [certpage] [safesearch='true'] [category] [count]\n"
-						"scan and filter certs\n"
-						"[searchterm] : find searchterm on certs, empty means all certs\n"
-						"[certpage] : page with this cert guid, starting from this cert 'count' max results are returned. Empty for first 'count' certs.\n"
-						"[safesearch] : shows all certs that are safe to display (not on the ban list). Defaults to true.\n"
-						"[category] : category you want to search in, empty for all\n"
-						"[count]	: The number of results to return. Defaults to 10\n");
 
-	vector<unsigned char> vchCertPage;
-	string strSearchTerm;
-	string strCategory;
-	bool safeSearch = true;
-
-
-	if(CheckParam(params, 0))
-		strSearchTerm = params[0].get_str();
-
-	if(CheckParam(params, 1))
-		vchCertPage = vchFromValue(params[1]);
-
-	if(CheckParam(params, 2))
-		safeSearch = params[2].get_str()=="true"? true: false;
-
-	if(CheckParam(params, 3))
-		strCategory = params[3].get_str();
-
-	int count = 10;
-	if (CheckParam(params, 4))
-		count = atoi(params[4].get_str());
-
-    UniValue oRes(UniValue::VARR);
-    
-    vector<CCert> certScan;
-	vector<string> aliases;
-    if (!pcertdb->ScanCerts(vchCertPage, strSearchTerm, aliases, safeSearch, strCategory, count, certScan))
-		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2520 - " + _("Scan failed"));
-  
-	CTransaction aliastx;
-	uint256 txHash;
-	BOOST_FOREACH(const CCert &txCert, certScan) {
-		vector<CAliasIndex> vtxAliasPos;
-		if(!paliasdb->ReadAlias(txCert.vchAlias, vtxAliasPos) || vtxAliasPos.empty())
-			continue;
-		const CAliasIndex& alias = vtxAliasPos.back();
-		UniValue oCert(UniValue::VOBJ);
-		if(BuildCertJson(txCert, alias, oCert))
-			oRes.push_back(oCert);
-	}
-
-
-	return oRes;
-}
-UniValue certhistory(const UniValue& params, bool fHelp) {
-    if (fHelp || 1 > params.size())
-        throw runtime_error("certhistory <guid>\n"
-                 "List all stored values of an cert.\n");
-
-    vector<unsigned char> vchCert = vchFromValue(params[0]);
-
-
-    UniValue oRes(UniValue::VARR);
- 
-    vector<CCert> vtxPos;
-    if (!pcertdb->ReadCert(vchCert, vtxPos) || vtxPos.empty())
-		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2518 - " + _("Failed to read from cert DB"));
-
-	vector<CAliasIndex> vtxAliasPos;
-	if (!paliasdb->ReadAlias(vtxPos.back().vchAlias, vtxAliasPos) || vtxAliasPos.empty())
-		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2519 - " + _("Failed to read from alias DB"));
-	
-    CCert txPos2;
-	CAliasIndex alias;
-	CTransaction tx;
-	vector<vector<unsigned char> > vvch;
-	int op, nOut;
-    BOOST_FOREACH(txPos2, vtxPos) {
-		vector<CAliasIndex> vtxAliasPos;
-		if(!paliasdb->ReadAlias(txPos2.vchAlias, vtxAliasPos) || vtxAliasPos.empty())
-			continue;
-		if (!GetSyscoinTransaction(txPos2.nHeight, txPos2.txHash, tx, Params().GetConsensus())) {
-			continue;
-		}
-		if (!DecodeCertTx(tx, op, nOut, vvch) )
-			continue;
-
-		alias.nHeight = txPos2.nHeight;
-		alias.GetAliasFromList(vtxAliasPos);
-
-		UniValue oCert(UniValue::VOBJ);
-		string opName = certFromOp(op);
-		oCert.push_back(Pair("certtype", opName));
-		if(BuildCertJson(txPos2, alias, oCert))
-			oRes.push_back(oCert);
-    }
-    
-    return oRes;
-}
 void CertTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry)
 {
 	string opName = certFromOp(op);
@@ -1439,25 +1032,14 @@ void CertTxToJSON(const int op, const std::vector<unsigned char> &vchData, const
 	if(!cert.UnserializeFromData(vchData, vchHash))
 		return;
 
-	bool isExpired = false;
-	vector<CAliasIndex> aliasVtxPos;
-	vector<CCert> certVtxPos;
-	CTransaction certtx, aliastx;
 	CCert dbCert;
-	if(GetTxAndVtxOfCert(cert.vchCert, dbCert, certtx, certVtxPos, true))
-	{
-		dbCert.nHeight = cert.nHeight;
-		dbCert.GetCertFromList(certVtxPos);
-	}
+	GetCert(CNameTXIDTuple(cert.vchCert, cert.txHash), dbCert);
 	CAliasIndex dbAlias;
-	if(GetTxAndVtxOfAlias(cert.vchAlias, dbAlias, aliastx, aliasVtxPos, isExpired, true))
-	{
-		dbAlias.nHeight = cert.nHeight;
-		dbAlias.GetAliasFromList(aliasVtxPos);
-	}
+	GetAlias(dbCert.aliasTuple, dbAlias);
+	
 
 	entry.push_back(Pair("txtype", opName));
-	entry.push_back(Pair("cert", stringFromVch(cert.vchCert)));
+	entry.push_back(Pair("_id", stringFromVch(cert.vchCert)));
 
 	if(!cert.vchTitle.empty() && cert.vchTitle != dbCert.vchTitle)
 		entry.push_back(Pair("title", stringFromVch(cert.vchTitle)));
@@ -1468,73 +1050,19 @@ void CertTxToJSON(const int op, const std::vector<unsigned char> &vchData, const
 	if(!cert.vchPubData.empty() && cert.vchPubData != dbCert.vchPubData)
 		entry.push_back(Pair("publicdata", stringFromVch(cert.vchPubData)));
 
-	if(!cert.vchLinkAlias.empty() && cert.vchLinkAlias != dbCert.vchAlias)
-		entry.push_back(Pair("alias", stringFromVch(cert.vchLinkAlias)));
-	else if(cert.vchAlias != dbCert.vchAlias)
-		entry.push_back(Pair("alias", stringFromVch(cert.vchAlias)));
+	if(!cert.linkAliasTuple.first.empty() && cert.linkAliasTuple != dbCert.aliasTuple)
+		entry.push_back(Pair("alias", stringFromVch(cert.linkAliasTuple.first)));
+	else if(cert.aliasTuple.first != dbCert.aliasTuple.first)
+		entry.push_back(Pair("alias", stringFromVch(cert.aliasTuple.first)));
 
 	if(cert.nAccessFlags != dbCert.nAccessFlags)
 		entry.push_back(Pair("access_flags", cert.nAccessFlags));
 
-	if(cert.safetyLevel != dbCert.safetyLevel)
-		entry.push_back(Pair("safetylevel", cert.safetyLevel));
 
 
 
 }
-UniValue certstats(const UniValue& params, bool fHelp) {
-	if (fHelp || 2 < params.size())
-		throw runtime_error("certstats unixtime=0 [\"alias\",...]\n"
-				"Show statistics for all non-expired certificates. Only certificates created or updated after unixtime are returned. Set of certificates to look up based on array of aliases passed in. Leave empty for all certificates.\n");
-	vector<string> aliases;
-	uint64_t nExpireFilter = 0;
-	if(CheckParam(params, 0))
-		nExpireFilter = params[0].get_int64();
-	if(CheckParam(params, 1))
-	{
-		if(params[1].isArray())
-		{
-			UniValue aliasesValue = params[1].get_array();
-			for(unsigned int aliasIndex =0;aliasIndex<aliasesValue.size();aliasIndex++)
-			{
-				string lowerStr = aliasesValue[aliasIndex].get_str();
-				boost::algorithm::to_lower(lowerStr);
-				if(!lowerStr.empty())
-					aliases.push_back(lowerStr);
-			}
-		}
-	}
-	UniValue oCertStats(UniValue::VOBJ);
-	std::vector<CCert> certs;
-	if (!pcertdb->GetDBCerts(certs, nExpireFilter, aliases))
-		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR ERRCODE: 2521 - " + _("Scan failed"));	
-	if(!BuildCertStatsJson(certs, oCertStats))
-		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR ERRCODE: 2522 - " + _("Could not find this certificate"));
 
-	return oCertStats;
-
-}
-/* Output some stats about certs
-	- Total number of certs
-*/
-bool BuildCertStatsJson(const std::vector<CCert> &certs, UniValue& oCertStats)
-{
-	uint32_t totalCerts = certs.size();
-	oCertStats.push_back(Pair("totalcerts", (int)totalCerts));
-	UniValue oCerts(UniValue::VARR);
-	BOOST_REVERSE_FOREACH(const CCert &cert, certs) {
-		UniValue oCert(UniValue::VOBJ);
-		CAliasIndex alias;
-		CTransaction aliastx;
-		if (!GetTxOfAlias(cert.vchAlias, alias, aliastx, true))
-			continue;
-		if(!BuildCertJson(cert, alias, oCert))
-			continue;
-		oCerts.push_back(oCert);
-	}
-	oCertStats.push_back(Pair("certs", oCerts)); 
-	return true;
-}
 
 
 

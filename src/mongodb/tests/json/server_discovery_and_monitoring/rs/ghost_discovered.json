@@ -1,0 +1,32 @@
+{
+    "description": "Ghost discovered", 
+    "phases": [
+        {
+            "outcome": {
+                "servers": {
+                    "a:27017": {
+                        "setName": null, 
+                        "type": "Unknown"
+                    }, 
+                    "b:27017": {
+                        "setName": null, 
+                        "type": "RSGhost"
+                    }
+                }, 
+                "setName": "rs", 
+                "topologyType": "ReplicaSetNoPrimary"
+            }, 
+            "responses": [
+                [
+                    "b:27017", 
+                    {
+                        "ismaster": false, 
+                        "isreplicaset": true, 
+                        "ok": 1
+                    }
+                ]
+            ]
+        }
+    ], 
+    "uri": "mongodb://a,b/?replicaSet=rs"
+}

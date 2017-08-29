@@ -1,7 +1,3 @@
-dnl Copyright (c) 2013-2016 The Syscoin Core developers
-dnl Distributed under the MIT software license, see the accompanying
-dnl file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
 dnl Helper for cases where a qt dependency is not met.
 dnl Output: If qt version is auto, set syscoin_enable_qt to false. Else, exit.
 AC_DEFUN([SYSCOIN_QT_FAIL],[
@@ -224,7 +220,7 @@ AC_DEFUN([SYSCOIN_QT_CONFIGURE],[
 
 
   dnl enable qt support
-  AC_MSG_CHECKING(whether to build ]AC_PACKAGE_NAME[ GUI)
+  AC_MSG_CHECKING(whether to build Syscoin Core GUI)
   SYSCOIN_QT_CHECK([
     syscoin_enable_qt=yes
     syscoin_enable_qt_test=yes
@@ -335,9 +331,8 @@ AC_DEFUN([_SYSCOIN_QT_FIND_STATIC_PLUGINS],[
           QT_LIBS="$QT_LIBS -L$qt_plugin_path/accessible"
         fi
       fi
-     if test x$use_pkgconfig = xyes; then
-     : dnl
      m4_ifdef([PKG_CHECK_MODULES],[
+     if test x$use_pkgconfig = xyes; then
        PKG_CHECK_MODULES([QTPLATFORM], [Qt5PlatformSupport], [QT_LIBS="$QTPLATFORM_LIBS $QT_LIBS"])
        if test x$TARGET_OS = xlinux; then
          PKG_CHECK_MODULES([X11XCB], [x11-xcb], [QT_LIBS="$X11XCB_LIBS $QT_LIBS"])
@@ -347,23 +342,8 @@ AC_DEFUN([_SYSCOIN_QT_FIND_STATIC_PLUGINS],[
        elif test x$TARGET_OS = xdarwin; then
          PKG_CHECK_MODULES([QTPRINT], [Qt5PrintSupport], [QT_LIBS="$QTPRINT_LIBS $QT_LIBS"])
        fi
-     ])
-     else
-       if test x$TARGET_OS = xwindows; then
-         AC_CACHE_CHECK(for Qt >= 5.6, syscoin_cv_need_platformsupport,[AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
-             [[#include <QtCore>]],[[
-             #if QT_VERSION < 0x050600
-             choke;
-             #endif
-             ]])],
-           [syscoin_cv_need_platformsupport=yes],
-           [syscoin_cv_need_platformsupport=no])
-         ])
-         if test x$syscoin_cv_need_platformsupport = xyes; then
-           SYSCOIN_QT_CHECK(AC_CHECK_LIB([${QT_LIB_PREFIX}PlatformSupport],[main],,SYSCOIN_QT_FAIL(lib$QT_LIB_PREFIXPlatformSupport not found)))
-         fi
-       fi
      fi
+     ])
   else
     if test x$qt_plugin_path != x; then
       QT_LIBS="$QT_LIBS -L$qt_plugin_path/accessible"

@@ -1,0 +1,121 @@
+tests:
+    -
+        description: "Single IPv4 host without port"
+        uri: "mongodb://127.0.0.1"
+        valid: true
+        warning: false
+        hosts:
+            -
+                type: "ipv4"
+                host: "127.0.0.1"
+                port: ~
+        auth: ~
+        options: ~
+    -
+        description: "Single IPv4 host with port"
+        uri: "mongodb://127.0.0.1:27018"
+        valid: true
+        warning: false
+        hosts:
+            -
+                type: "ipv4"
+                host: "127.0.0.1"
+                port: 27018
+        auth: ~
+        options: ~
+    -
+        description: "Single IP literal host without port"
+        uri: "mongodb://[::1]"
+        valid: true
+        warning: false
+        hosts:
+            -
+                type: "ip_literal"
+                host: "::1"
+                port: ~
+        auth: ~
+        options: ~
+    -
+        description: "Single IP literal host with port"
+        uri: "mongodb://[::1]:27019"
+        valid: true
+        warning: false
+        hosts:
+            -
+                type: "ip_literal"
+                host: "::1"
+                port: 27019
+        auth: ~
+        options: ~
+    -
+        description: "Single hostname without port"
+        uri: "mongodb://example.com"
+        valid: true
+        warning: false
+        hosts:
+            -
+                type: "hostname"
+                host: "example.com"
+                port: ~
+        auth: ~
+        options: ~
+    -
+        description: "Single hostname with port"
+        uri: "mongodb://example.com:27020"
+        valid: true
+        warning: false
+        hosts:
+            -
+                type: "hostname"
+                host: "example.com"
+                port: 27020
+        auth: ~
+        options: ~
+    -
+        description: "Single hostname (resembling IPv4) without port"
+        uri: "mongodb://256.0.0.1"
+        valid: true
+        warning: false
+        hosts:
+            -
+                type: "hostname"
+                host: "256.0.0.1"
+                port: ~
+        auth: ~
+        options: ~
+    -
+        description: "Multiple hosts (mixed formats)"
+        uri: "mongodb://127.0.0.1,[::1]:27018,example.com:27019"
+        valid: true
+        warning: false
+        hosts:
+            -
+                type: "ipv4"
+                host: "127.0.0.1"
+                port: ~
+            -
+                type: "ip_literal"
+                host: "::1"
+                port: 27018
+            -
+                type: "hostname"
+                host: "example.com"
+                port: 27019
+        auth: ~
+        options: ~
+    -
+        description: "UTF-8 hosts"
+        uri: "mongodb://bücher.example.com,umläut.example.com/"
+        valid: true
+        warning: false
+        hosts:
+            -
+                type: "hostname"
+                host: "bücher.example.com"
+                port: ~
+            -
+                type: "hostname"
+                host: "umläut.example.com"
+                port: ~
+        auth: ~
+        options: ~

@@ -1,4 +1,5 @@
 // Copyright (c) 2011-2015 The Syscoin Core developers
+// Copyright (c) 2014-2017 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -31,8 +32,8 @@ struct AddressTableEntry
     QString address;
 
     AddressTableEntry() {}
-    AddressTableEntry(Type _type, const QString &_label, const QString &_address):
-        type(_type), label(_label), address(_address) {}
+    AddressTableEntry(Type type, const QString &label, const QString &address):
+        type(type), label(label), address(address) {}
 };
 
 struct AddressTableEntryLessThan
@@ -73,8 +74,8 @@ public:
     QList<AddressTableEntry> cachedAddressTable;
     AddressTableModel *parent;
 
-    AddressTablePriv(CWallet *_wallet, AddressTableModel *_parent):
-        wallet(_wallet), parent(_parent) {}
+    AddressTablePriv(CWallet *wallet, AddressTableModel *parent):
+        wallet(wallet), parent(parent) {}
 
     void refreshAddressTable()
     {
@@ -164,8 +165,8 @@ public:
     }
 };
 
-AddressTableModel::AddressTableModel(CWallet *_wallet, WalletModel *parent) :
-    QAbstractTableModel(parent),walletModel(parent),wallet(_wallet),priv(0)
+AddressTableModel::AddressTableModel(CWallet *wallet, WalletModel *parent) :
+    QAbstractTableModel(parent),walletModel(parent),wallet(wallet),priv(0)
 {
     columns << tr("Label") << tr("Address");
     priv = new AddressTablePriv(wallet, this);
@@ -203,12 +204,6 @@ QVariant AddressTableModel::data(const QModelIndex &index, int role) const
         case Label:
             if(rec->label.isEmpty() && role == Qt::DisplayRole)
             {
-				// SYSCOIN
-				CSyscoinAddress myAddress = CSyscoinAddress(rec->address.toStdString());
-				if(myAddress.IsValid() && myAddress.isAlias)
-				{
-					return rec->address;
-				}
                 return tr("(no label)");
             }
             else
@@ -289,15 +284,8 @@ bool AddressTableModel::setData(const QModelIndex &index, const QVariant &value,
             {
                 // Remove old entry
                 wallet->DelAddressBook(curAddress);
-				// SYSCOIN
-				std::string newLabel = rec->label.toStdString();
-				CSyscoinAddress curSysAddress = CSyscoinAddress(rec->address.toStdString());
-				if(curSysAddress.IsValid() && curSysAddress.isAlias && rec->label.isEmpty())
-				{
-					newLabel = rec->address.toStdString();
-				}
-                // SYSCOIN Add new entry with new address
-                wallet->SetAddressBook(newAddress, newLabel, strPurpose);
+                // Add new entry with new address
+                wallet->SetAddressBook(newAddress, rec->label.toStdString(), strPurpose);
             }
         }
         return true;
@@ -383,7 +371,7 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
     {
         // Generate a new address to associate with given label
         CPubKey newKey;
-        if(!wallet->GetKeyFromPool(newKey))
+        if(!wallet->GetKeyFromPool(newKey, false))
         {
             WalletModel::UnlockContext ctx(walletModel->requestUnlock());
             if(!ctx.isValid())
@@ -392,7 +380,7 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
                 editStatus = WALLET_UNLOCK_FAILURE;
                 return QString();
             }
-            if(!wallet->GetKeyFromPool(newKey))
+            if(!wallet->GetKeyFromPool(newKey, false))
             {
                 editStatus = KEY_GENERATION_FAILURE;
                 return QString();
@@ -405,15 +393,10 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
         return QString();
     }
 
-    // SYSCOIN Add entry
+    // Add entry
     {
-		CSyscoinAddress myAddress = CSyscoinAddress(strAddress);
         LOCK(wallet->cs_wallet);
-		if(myAddress.IsValid() && myAddress.isAlias && strLabel.length() <= 0)
-		{
-			strLabel = strAddress;
-		}
-        wallet->SetAddressBook(myAddress.Get(), strLabel,
+        wallet->SetAddressBook(CSyscoinAddress(strAddress).Get(), strLabel,
                                (type == Send ? "send" : "receive"));
     }
     return QString::fromStdString(strAddress);

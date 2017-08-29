@@ -96,34 +96,33 @@ public:
 };
 
 /** base58-encoded Syscoin addresses.
- * Public-key-hash-addresses have version 0 (or 111 testnet).
+ * Public-key-hash-addresses have version 76 (or 140 testnet).
  * The data vector contains RIPEMD160(SHA256(pubkey)), where pubkey is the serialized public key.
- * Script-hash-addresses have version 5 (or 196 testnet).
+ * Script-hash-addresses have version 16 (or 19 testnet).
  * The data vector contains RIPEMD160(SHA256(cscript)), where cscript is the serialized redemption script.
  */
 class CSyscoinAddress : public CBase58Data {
 public:
 	// SYSCOIN
 	bool isAlias;
-	unsigned char safetyLevel;
-	bool safeSearch;
 	std::string aliasName;
 	std::vector<unsigned char> vchPubKey;
 
-    bool Set(const CKeyID &id, CChainParams::AddressType sysVer = CChainParams::ADDRESS_SYS);
-    bool Set(const CScriptID &id, CChainParams::AddressType sysVer = CChainParams::ADDRESS_SYS);
-    bool Set(const CTxDestination &dest, CChainParams::AddressType sysVer = CChainParams::ADDRESS_SYS);
-    bool IsValid() const;
-    bool IsValid(const CChainParams &params) const;
+	bool Set(const CKeyID &id, CChainParams::AddressType sysVer = CChainParams::ADDRESS_SYS);
+	bool Set(const CScriptID &id, CChainParams::AddressType sysVer = CChainParams::ADDRESS_SYS);
+	bool Set(const CTxDestination &dest, CChainParams::AddressType sysVer = CChainParams::ADDRESS_SYS);
+	bool IsValid() const;
+	bool IsValid(const CChainParams &params) const;
 
 	// SYSCOIN aliases as addresses
-    CSyscoinAddress();
+	CSyscoinAddress();
 	CSyscoinAddress(const CTxDestination &dest, CChainParams::AddressType sysVer = CChainParams::ADDRESS_SYS);
-    CSyscoinAddress(const std::string& strAddress);
-    CSyscoinAddress(const char* pszAddress);
+	CSyscoinAddress(const std::string& strAddress);
+	CSyscoinAddress(const char* pszAddress);
 
     CTxDestination Get() const;
     bool GetKeyID(CKeyID &keyID) const;
+    bool GetIndexKey(uint160& hashBytes, int& type) const;
     bool IsScript() const;
 };
 
@@ -172,7 +171,7 @@ public:
     CSyscoinExtKeyBase() {}
 };
 
-typedef CSyscoinExtKeyBase<CExtKey, BIP32_EXTKEY_SIZE, CChainParams::EXT_SECRET_KEY> CSyscoinExtKey;
-typedef CSyscoinExtKeyBase<CExtPubKey, BIP32_EXTKEY_SIZE, CChainParams::EXT_PUBLIC_KEY> CSyscoinExtPubKey;
+typedef CSyscoinExtKeyBase<CExtKey, 74, CChainParams::EXT_SECRET_KEY> CSyscoinExtKey;
+typedef CSyscoinExtKeyBase<CExtPubKey, 74, CChainParams::EXT_PUBLIC_KEY> CSyscoinExtPubKey;
 
 #endif // SYSCOIN_BASE58_H

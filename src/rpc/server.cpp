@@ -1,5 +1,6 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Syscoin Core developers
+// Copyright (c) 2014-2017 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -33,7 +34,7 @@ static bool fRPCInWarmup = true;
 static std::string rpcWarmupStatus("RPC server started");
 static CCriticalSection cs_rpcWarmup;
 /* Timer-creating functions */
-static RPCTimerInterface* timerInterface = NULL;
+static std::vector<RPCTimerInterface*> timerInterfaces;
 /* Map of name to timer.
  * @note Can be changed to std::unique_ptr when C++11 */
 static std::map<std::string, boost::shared_ptr<RPCTimerBase> > deadlineTimers;
@@ -88,31 +89,20 @@ void RPCTypeCheck(const UniValue& params,
 }
 
 void RPCTypeCheckObj(const UniValue& o,
-    const map<string, UniValueType>& typesExpected,
-    bool fAllowNull,
-    bool fStrict)
+                  const map<string, UniValue::VType>& typesExpected,
+                  bool fAllowNull)
 {
-    for (const auto& t : typesExpected) {
+    BOOST_FOREACH(const PAIRTYPE(string, UniValue::VType)& t, typesExpected)
+    {
         const UniValue& v = find_value(o, t.first);
         if (!fAllowNull && v.isNull())
             throw JSONRPCError(RPC_TYPE_ERROR, strprintf("Missing %s", t.first));
 
-        if (!(t.second.typeAny || v.type() == t.second.type || (fAllowNull && v.isNull()))) {
-            string err = strprintf("Expected type %s for %s, got %s",
-                uvTypeName(t.second.type), t.first, uvTypeName(v.type()));
-            throw JSONRPCError(RPC_TYPE_ERROR, err);
-        }
-    }
-
-    if (fStrict)
-    {
-        BOOST_FOREACH(const string& k, o.getKeys())
+        if (!((v.type() == t.second) || (fAllowNull && (v.isNull()))))
         {
-            if (typesExpected.count(k) == 0)
-            {
-                string err = strprintf("Unexpected key %s", k);
-                throw JSONRPCError(RPC_TYPE_ERROR, err);
-            }
+            string err = strprintf("Expected type %s for %s, got %s",
+                                   uvTypeName(t.second), t.first, uvTypeName(v.type()));
+            throw JSONRPCError(RPC_TYPE_ERROR, err);
         }
     }
 }
@@ -146,8 +136,6 @@ uint256 ParseHashV(const UniValue& v, string strName)
         strHex = v.get_str();
     if (!IsHex(strHex)) // Note: IsHex("") is false
         throw JSONRPCError(RPC_INVALID_PARAMETER, strName+" must be hexadecimal string (not '"+strHex+"')");
-    if (64 != strHex.length())
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s must be of length %d (not %d)", strName, 64, strHex.length()));
     uint256 result;
     result.SetHex(strHex);
     return result;
@@ -255,11 +243,11 @@ UniValue stop(const UniValue& params, bool fHelp)
     if (fHelp || params.size() > 1)
         throw runtime_error(
             "stop\n"
-            "\nStop Syscoin server.");
+            "\nStop Syscoin Core server.");
     // Event loop will exit after current HTTP requests have been handled, so
     // this reply will get back to the client.
     StartShutdown();
-    return "Syscoin server stopping";
+    return "Syscoin Core server stopping";
 }
 
 /**
@@ -269,8 +257,203 @@ static const CRPCCommand vRPCCommands[] =
 { //  category              name                      actor (function)         okSafeMode
   //  --------------------- ------------------------  -----------------------  ----------
     /* Overall control/query calls */
+    { "control",            "getinfo",                &getinfo,                true  }, /* uses wallet if enabled */
+    { "control",            "debug",                  &debug,                  true  },
     { "control",            "help",                   &help,                   true  },
     { "control",            "stop",                   &stop,                   true  },
+
+    /* P2P networking */
+    { "network",            "getnetworkinfo",         &getnetworkinfo,         true  },
+    { "network",            "addnode",                &addnode,                true  },
+    { "network",            "disconnectnode",         &disconnectnode,         true  },
+    { "network",            "getaddednodeinfo",       &getaddednodeinfo,       true  },
+    { "network",            "getconnectioncount",     &getconnectioncount,     true  },
+    { "network",            "getnettotals",           &getnettotals,           true  },
+    { "network",            "getpeerinfo",            &getpeerinfo,            true  },
+    { "network",            "ping",                   &ping,                   true  },
+    { "network",            "setban",                 &setban,                 true  },
+    { "network",            "listbanned",             &listbanned,             true  },
+    { "network",            "clearbanned",            &clearbanned,            true  },
+
+    /* Block chain and UTXO */
+    { "blockchain",         "getblockchaininfo",      &getblockchaininfo,      true  },
+    { "blockchain",         "getbestblockhash",       &getbestblockhash,       true  },
+    { "blockchain",         "getblockcount",          &getblockcount,          true  },
+    { "blockchain",         "getblock",               &getblock,               true  },
+    { "blockchain",         "getblockhashes",         &getblockhashes,         true  },
+    { "blockchain",         "getblockhash",           &getblockhash,           true  },
+    { "blockchain",         "getblockheader",         &getblockheader,         true  },
+    { "blockchain",         "getblockheaders",        &getblockheaders,        true  },
+    { "blockchain",         "getchaintips",           &getchaintips,           true  },
+    { "blockchain",         "getdifficulty",          &getdifficulty,          true  },
+    { "blockchain",         "getmempoolinfo",         &getmempoolinfo,         true  },
+    { "blockchain",         "getrawmempool",          &getrawmempool,          true  },
+    { "blockchain",         "gettxout",               &gettxout,               true  },
+    { "blockchain",         "gettxoutproof",          &gettxoutproof,          true  },
+    { "blockchain",         "verifytxoutproof",       &verifytxoutproof,       true  },
+    { "blockchain",         "gettxoutsetinfo",        &gettxoutsetinfo,        true  },
+    { "blockchain",         "verifychain",            &verifychain,            true  },
+    { "blockchain",         "getspentinfo",           &getspentinfo,           false },
+
+    /* Mining */
+    { "mining",             "getblocktemplate",       &getblocktemplate,       true  },
+    { "mining",             "getmininginfo",          &getmininginfo,          true  },
+    { "mining",             "getnetworkhashps",       &getnetworkhashps,       true  },
+    { "mining",             "prioritisetransaction",  &prioritisetransaction,  true  },
+    { "mining",             "submitblock",            &submitblock,            true  },
+	// SYSCOIN mining
+	{ "mining",             "getauxblock",            &getauxblock,            true },
+
+    /* Coin generation */
+    { "generating",         "getgenerate",            &getgenerate,            true  },
+    { "generating",         "setgenerate",            &setgenerate,            true  },
+    { "generating",         "generate",               &generate,               true  },
+
+    /* Raw transactions */
+    { "rawtransactions",    "createrawtransaction",   &createrawtransaction,   true  },
+    { "rawtransactions",    "decoderawtransaction",   &decoderawtransaction,   true  },
+    { "rawtransactions",    "decodescript",           &decodescript,           true  },
+    { "rawtransactions",    "getrawtransaction",      &getrawtransaction,      true  },
+    { "rawtransactions",    "sendrawtransaction",     &sendrawtransaction,     false },
+    { "rawtransactions",    "signrawtransaction",     &signrawtransaction,     false }, /* uses wallet if enabled */
+#ifdef ENABLE_WALLET
+    { "rawtransactions",    "fundrawtransaction",     &fundrawtransaction,     false },
+#endif
+
+    /* Address index */
+    { "addressindex",       "getaddressmempool",      &getaddressmempool,      true  },
+    { "addressindex",       "getaddressutxos",        &getaddressutxos,        false },
+    { "addressindex",       "getaddressdeltas",       &getaddressdeltas,       false },
+    { "addressindex",       "getaddresstxids",        &getaddresstxids,        false },
+    { "addressindex",       "getaddressbalance",      &getaddressbalance,      false },
+
+    /* Utility functions */
+    { "util",               "createmultisig",         &createmultisig,         true  },
+    { "util",               "validateaddress",        &validateaddress,        true  }, /* uses wallet if enabled */
+    { "util",               "verifymessage",          &verifymessage,          true  },
+    { "util",               "estimatefee",            &estimatefee,            true  },
+    { "util",               "estimatepriority",       &estimatepriority,       true  },
+    { "util",               "estimatesmartfee",       &estimatesmartfee,       true  },
+    { "util",               "estimatesmartpriority",  &estimatesmartpriority,  true  },
+
+    /* Not shown in help */
+    { "hidden",             "invalidateblock",        &invalidateblock,        true  },
+    { "hidden",             "reconsiderblock",        &reconsiderblock,        true  },
+    { "hidden",             "setmocktime",            &setmocktime,            true  },
+#ifdef ENABLE_WALLET
+    { "hidden",             "resendwallettransactions", &resendwallettransactions, true},
+#endif
+
+    /* Syscoin features */
+    { "syscoin",               "masternode",             &masternode,             true  },
+    { "syscoin",               "masternodelist",         &masternodelist,         true  },
+    { "syscoin",               "masternodebroadcast",    &masternodebroadcast,    true  },
+    { "syscoin",               "gobject",                &gobject,                true  },
+    { "syscoin",               "getgovernanceinfo",      &getgovernanceinfo,      true  },
+    { "syscoin",               "getsuperblockbudget",    &getsuperblockbudget,    true  },
+    { "syscoin",               "voteraw",                &voteraw,                true  },
+    { "syscoin",               "mnsync",                 &mnsync,                 true  },
+    { "syscoin",               "spork",                  &spork,                  true  },
+    { "syscoin",               "getpoolinfo",            &getpoolinfo,            true  },
+    { "syscoin",               "sentinelping",           &sentinelping,           true  },
+#ifdef ENABLE_WALLET
+    { "syscoin",               "privatesend",            &privatesend,            false },
+
+    /* Wallet */
+    { "wallet",             "keepass",                &keepass,                true },
+    { "wallet",             "instantsendtoaddress",   &instantsendtoaddress,   false },
+    { "wallet",             "addmultisigaddress",     &addmultisigaddress,     true  },
+    { "wallet",             "backupwallet",           &backupwallet,           true  },
+    { "wallet",             "dumpprivkey",            &dumpprivkey,            true  },
+    { "wallet",             "dumphdinfo",             &dumphdinfo,             true  },
+    { "wallet",             "dumpwallet",             &dumpwallet,             true  },
+    { "wallet",             "encryptwallet",          &encryptwallet,          true  },
+    { "wallet",             "getaccountaddress",      &getaccountaddress,      true  },
+    { "wallet",             "getaccount",             &getaccount,             true  },
+    { "wallet",             "getaddressesbyaccount",  &getaddressesbyaccount,  true  },
+    { "wallet",             "getbalance",             &getbalance,             false },
+    { "wallet",             "getnewaddress",          &getnewaddress,          true  },
+		// SYSCOIN support old/new sys
+	{ "wallet",             "getv2address",           &getv2address,          true },
+    { "wallet",             "getrawchangeaddress",    &getrawchangeaddress,    true  },
+    { "wallet",             "getreceivedbyaccount",   &getreceivedbyaccount,   false },
+    { "wallet",             "getreceivedbyaddress",   &getreceivedbyaddress,   false },
+    { "wallet",             "gettransaction",         &gettransaction,         false },
+    { "wallet",             "abandontransaction",     &abandontransaction,     false },
+    { "wallet",             "getunconfirmedbalance",  &getunconfirmedbalance,  false },
+    { "wallet",             "getwalletinfo",          &getwalletinfo,          false },
+    { "wallet",             "importprivkey",          &importprivkey,          true  },
+    { "wallet",             "importwallet",           &importwallet,           true  },
+    { "wallet",             "importelectrumwallet",   &importelectrumwallet,   true  },
+    { "wallet",             "importaddress",          &importaddress,          true  },
+    { "wallet",             "importpubkey",           &importpubkey,           true  },
+    { "wallet",             "keypoolrefill",          &keypoolrefill,          true  },
+    { "wallet",             "listaccounts",           &listaccounts,           false },
+    { "wallet",             "listaddressgroupings",   &listaddressgroupings,   false },
+    { "wallet",             "listlockunspent",        &listlockunspent,        false },
+    { "wallet",             "listreceivedbyaccount",  &listreceivedbyaccount,  false },
+    { "wallet",             "listreceivedbyaddress",  &listreceivedbyaddress,  false },
+    { "wallet",             "listsinceblock",         &listsinceblock,         false },
+    { "wallet",             "listtransactions",       &listtransactions,       false },
+    { "wallet",             "listunspent",            &listunspent,            false },
+    { "wallet",             "lockunspent",            &lockunspent,            true  },
+    { "wallet",             "move",                   &movecmd,                false },
+    { "wallet",             "sendfrom",               &sendfrom,               false },
+    { "wallet",             "sendmany",               &sendmany,               false },
+    { "wallet",             "sendtoaddress",          &sendtoaddress,          false },
+    { "wallet",             "setaccount",             &setaccount,             true  },
+    { "wallet",             "settxfee",               &settxfee,               true  },
+    { "wallet",             "signmessage",            &signmessage,            true  },
+    { "wallet",             "walletlock",             &walletlock,             true  },
+    { "wallet",             "walletpassphrasechange", &walletpassphrasechange, true  },
+    { "wallet",             "walletpassphrase",       &walletpassphrase,       true  },
+		// SYSCOIN support old/new sys and zec
+	{ "wallet",             "getv2address",           &getv2address,          true },
+	{ "wallet",             "getzaddress",            &getzaddress,           true },
+		// SYSCOIN rpc functions
+	{ "wallet", "aliasnew",          &aliasnew,          false },
+	{ "wallet", "aliasupdate",       &aliasupdate,       false },
+	{ "wallet", "aliasinfo",         &aliasinfo,         false },
+	{ "wallet", "aliasbalance",      &aliasbalance,         false },
+	{ "wallet", "aliaspay",       &aliaspay,       false },
+	{ "wallet", "aliasconvertcurrency",       &aliasconvertcurrency,       false },
+	{ "wallet", "aliasdecodemultisigredeemscript",        &aliasdecodemultisigredeemscript,       false },
+	{ "wallet", "aliasaddscript",        &aliasaddscript,       false },
+	{ "wallet", "syscoinsignrawtransaction",		 &syscoinsignrawtransaction,	false },
+	{ "wallet", "syscoindecoderawtransaction",		 &syscoindecoderawtransaction,	false },
+	{ "wallet", "syscoinquery",          &syscoinquery,          false },
+		// use the blockchain as a distributed marketplace
+	{ "wallet", "offernew",             &offernew,             false },
+	{ "wallet", "offerupdate",          &offerupdate,          false },
+	{ "wallet", "offeraccept",          &offeraccept,          false },
+	{ "wallet", "offeracceptfeedback",  &offeracceptfeedback,  false },
+	{ "wallet", "offeracceptacknowledge",  &offeracceptacknowledge,false },
+	{ "wallet", "offerlink",		    &offerlink,            false },
+	{ "wallet", "offeraddwhitelist",    &offeraddwhitelist,	   false },
+	{ "wallet", "offerremovewhitelist",	&offerremovewhitelist, false },
+	{ "wallet", "offerclearwhitelist",	&offerclearwhitelist,  false },
+	{ "wallet", "offerwhitelist",		&offerwhitelist,	   false },
+	{ "wallet", "offerinfo",            &offerinfo,            false },
+
+		// use the blockchain as a certificate issuance platform
+	{ "wallet", "certnew",         &certnew,     false },
+	{ "wallet", "certupdate",      &certupdate,  false },
+	{ "wallet", "certtransfer",          &certtransfer,      false },
+	{ "wallet", "certinfo",              &certinfo,          false },
+
+		// use the blockchain for escrow linked to offers
+	{ "wallet", "generateescrowmultisig",         &generateescrowmultisig,     false },
+	{ "wallet", "escrownew",         &escrownew,     false },
+	{ "wallet", "escrowrelease",      &escrowrelease,  false },
+	{ "wallet", "escrowclaimrelease",      &escrowclaimrelease,  false },
+	{ "wallet", "escrowcompleterelease",      &escrowcompleterelease,  false },
+	{ "wallet", "escrowrefund",          &escrowrefund,      false },
+	{ "wallet", "escrowclaimrefund",          &escrowclaimrefund,      false },
+	{ "wallet", "escrowcompleterefund",          &escrowcompleterefund,      false },
+	{ "wallet", "escrowinfo",              &escrowinfo,          false },
+	{ "wallet", "escrowfeedback",      &escrowfeedback,  false },
+	{ "wallet", "escrowacknowledge",      &escrowacknowledge,  false }
+#endif // ENABLE_WALLET
 };
 
 CRPCTable::CRPCTable()
@@ -291,20 +474,6 @@ const CRPCCommand *CRPCTable::operator[](const std::string &name) const
     if (it == mapCommands.end())
         return NULL;
     return (*it).second;
-}
-
-bool CRPCTable::appendCommand(const std::string& name, const CRPCCommand* pcmd)
-{
-    if (IsRPCRunning())
-        return false;
-
-    // don't allow overwriting for now
-    map<string, const CRPCCommand*>::const_iterator it = mapCommands.find(name);
-    if (it != mapCommands.end())
-        return false;
-
-    mapCommands[name] = pcmd;
-    return true;
 }
 
 bool StartRPC()
@@ -466,41 +635,29 @@ std::string HelpExampleCli(const std::string& methodname, const std::string& arg
 std::string HelpExampleRpc(const std::string& methodname, const std::string& args)
 {
     return "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", "
-        "\"method\": \"" + methodname + "\", \"params\": [" + args + "] }' -H 'content-type: text/plain;' http://127.0.0.1:8370/\n";
+        "\"method\": \"" + methodname + "\", \"params\": [" + args + "] }' -H 'content-type: text/plain;' http://127.0.0.1:9998/\n";
 }
 
-void RPCSetTimerInterfaceIfUnset(RPCTimerInterface *iface)
+void RPCRegisterTimerInterface(RPCTimerInterface *iface)
 {
-    if (!timerInterface)
-        timerInterface = iface;
+    timerInterfaces.push_back(iface);
 }
 
-void RPCSetTimerInterface(RPCTimerInterface *iface)
+void RPCUnregisterTimerInterface(RPCTimerInterface *iface)
 {
-    timerInterface = iface;
-}
-
-void RPCUnsetTimerInterface(RPCTimerInterface *iface)
-{
-    if (timerInterface == iface)
-        timerInterface = NULL;
+    std::vector<RPCTimerInterface*>::iterator i = std::find(timerInterfaces.begin(), timerInterfaces.end(), iface);
+    assert(i != timerInterfaces.end());
+    timerInterfaces.erase(i);
 }
 
 void RPCRunLater(const std::string& name, boost::function<void(void)> func, int64_t nSeconds)
 {
-    if (!timerInterface)
+    if (timerInterfaces.empty())
         throw JSONRPCError(RPC_INTERNAL_ERROR, "No timer handler registered for RPC");
     deadlineTimers.erase(name);
+    RPCTimerInterface* timerInterface = timerInterfaces.back();
     LogPrint("rpc", "queue run of timer %s in %i seconds (using %s)\n", name, nSeconds, timerInterface->Name());
     deadlineTimers.insert(std::make_pair(name, boost::shared_ptr<RPCTimerBase>(timerInterface->NewTimer(func, nSeconds*1000))));
 }
 
-int RPCSerializationFlags()
-{
-    int flag = 0;
-    if (GetArg("-rpcserialversion", DEFAULT_RPC_SERIALIZE_VERSION) == 0)
-        flag |= SERIALIZE_TRANSACTION_NO_WITNESS;
-    return flag;
-}
-
-CRPCTable tableRPC;
+const CRPCTable tableRPC;

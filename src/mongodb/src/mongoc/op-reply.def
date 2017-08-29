@@ -1,0 +1,12 @@
+RPC(
+  reply,
+  INT32_FIELD(msg_len)
+  INT32_FIELD(request_id)
+  INT32_FIELD(response_to)
+  INT32_FIELD(opcode)
+  ENUM_FIELD(flags)
+  INT64_FIELD(cursor_id)
+  INT32_FIELD(start_from)
+  INT32_FIELD(n_returned)
+  BSON_ARRAY_FIELD(documents)
+)

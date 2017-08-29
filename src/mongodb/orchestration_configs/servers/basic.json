@@ -1,0 +1,10 @@
+{
+  "name": "mongod",
+  "procParams": {
+    "ipv6": true,
+    "bind_ip": "",
+    "logappend": true,
+    "journal": true,
+    "port": 27017
+  }
+}

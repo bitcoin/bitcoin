@@ -5,7 +5,8 @@
 #ifndef SYSCOIN_QT_PEERTABLEMODEL_H
 #define SYSCOIN_QT_PEERTABLEMODEL_H
 
-#include "main.h" // For CNodeStateStats
+#include "validation.h" // For CNodeStateStats
+#include "net_processing.h" // For CNodeStateStats
 #include "net.h"
 
 #include <QAbstractTableModel>
@@ -46,16 +47,16 @@ class PeerTableModel : public QAbstractTableModel
 
 public:
     explicit PeerTableModel(ClientModel *parent = 0);
-    ~PeerTableModel();
     const CNodeCombinedStats *getNodeStats(int idx);
     int getRowByNodeId(NodeId nodeid);
     void startAutoRefresh();
     void stopAutoRefresh();
 
     enum ColumnIndex {
-        Address = 0,
-        Subversion = 1,
-        Ping = 2
+        NetNodeId = 0,
+        Address = 1,
+        Subversion = 2,
+        Ping = 3
     };
 
     /** @name Methods overridden from QAbstractTableModel
@@ -75,7 +76,7 @@ public Q_SLOTS:
 private:
     ClientModel *clientModel;
     QStringList columns;
-    std::unique_ptr<PeerTablePriv> priv;
+    PeerTablePriv *priv;
     QTimer *timer;
 };
 

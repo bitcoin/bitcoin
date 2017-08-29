@@ -6,12 +6,12 @@ Some notes on how to build Syscoin Core in Unix.
 
 Note
 ---------------------
-Always use absolute paths to configure and compile syscoin and the dependencies,
-for example, when specifying the path of the dependency:
+Always use absolute paths to configure and compile Syscoin Core and the dependencies,
+for example, when specifying the the path of the dependency:
 
 	../dist/configure --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX
 
-Here BDB_PREFIX must be an absolute path - it is defined using $(pwd) which ensures
+Here BDB_PREFIX must absolute path - it is defined using $(pwd) which ensures
 the usage of the absolute path.
 
 To Build
@@ -51,15 +51,12 @@ Optional dependencies:
 
 For the versions used in the release, see [release-process.md](release-process.md) under *Fetch and build inputs*.
 
-Memory Requirements
+System requirements
 --------------------
 
-C++ compilers are memory-hungry. It is recommended to have at least 1.5 GB of
-memory available when compiling Syscoin Core. On systems with less, gcc can be
-tuned to conserve memory with additional CXXFLAGS:
-
-
-    ./configure CXXFLAGS="--param ggc-min-expand=1 --param ggc-min-heapsize=32768"
+C++ compilers are memory-hungry. It is recommended to have at least 1 GB of
+memory available when compiling Syscoin Core. With 512MB of memory or less
+compilation will take much longer due to swap thrashing.
 
 Dependency Build Instructions: Ubuntu & Debian
 ----------------------------------------------
@@ -67,23 +64,20 @@ Build requirements:
 
     sudo apt-get install build-essential libtool autotools-dev automake pkg-config libssl-dev libevent-dev bsdmainutils
 
-Options when installing required Boost library files:
-
-1. On at least Ubuntu 14.04+ and Debian 7+ there are generic names for the
+On at least Ubuntu 14.04+ and Debian 7+ there are generic names for the
 individual boost development packages, so the following can be used to only
 install necessary parts of boost:
 
-        sudo apt-get install libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-program-options-dev libboost-test-dev libboost-thread-dev
+    sudo apt-get install libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-program-options-dev libboost-test-dev libboost-thread-dev
 
-2. If that doesn't work, you can install all boost development packages with:
+If that doesn't work, you can install all boost development packages with:
 
-        sudo apt-get install libboost-all-dev
+    sudo apt-get install libboost-all-dev
 
-BerkeleyDB is required for the wallet. db4.8 packages are available [here](https://launchpad.net/~bitcoin/+archive/bitcoin).
+BerkeleyDB is required for the wallet. db4.8 packages are available [here](https://launchpad.net/~syscoin/+archive/syscoin).
 You can add the repository and install using the following commands:
 
-    sudo apt-get install software-properties-common
-    sudo add-apt-repository ppa:bitcoin/bitcoin or sudo add-apt-repository ppa:syscoin/syscoin
+    sudo add-apt-repository ppa:bitcoin/bitcoin
     sudo apt-get update
     sudo apt-get install libdb4.8-dev libdb4.8++-dev
 
@@ -125,24 +119,6 @@ libqrencode (optional) can be installed with:
 Once these are installed, they will be found by configure and a syscoin-qt executable will be
 built by default.
 
-Dependency Build Instructions: Fedora
--------------------------------------
-Build requirements:
-
-    sudo dnf install gcc-c++ libtool make autoconf automake openssl-devel libevent-devel boost-devel libdb4-devel libdb4-cxx-devel
-
-Optional:
-
-    sudo dnf install miniupnpc-devel
-
-To build with Qt 5 (recommended) you need the following:
-
-    sudo dnf install qt5-qttools-devel qt5-qtbase-devel protobuf-devel
-
-libqrencode (optional) can be installed with:
-
-    sudo dnf install qrencode-devel
-
 Notes
 -----
 The release is built with GCC and then "strip syscoind" to strip the debug
@@ -166,10 +142,10 @@ Berkeley DB
 It is recommended to use Berkeley DB 4.8. If you have to build it yourself:
 
 ```bash
-SYSCOIN_ROOT=$(pwd)
+SYS_ROOT=$(pwd)
 
 # Pick some path to install BDB to, here we create a directory within the syscoin directory
-BDB_PREFIX="${SYSCOIN_ROOT}/db4"
+BDB_PREFIX="${SYS_ROOT}/db4"
 mkdir -p $BDB_PREFIX
 
 # Fetch the source and verify that it is not tampered with
@@ -185,7 +161,7 @@ cd db-4.8.30.NC/build_unix/
 make install
 
 # Configure Syscoin Core to use our own-built instance of BDB
-cd $SYSCOIN_ROOT
+cd $SYS_ROOT
 ./autogen.sh
 ./configure LDFLAGS="-L${BDB_PREFIX}/lib/" CPPFLAGS="-I${BDB_PREFIX}/include/" # (other args...)
 ```
@@ -203,7 +179,7 @@ If you need to build Boost yourself:
 
 Security
 --------
-To help make your syscoin installation more secure by making certain attacks impossible to
+To help make your Syscoin installation more secure by making certain attacks impossible to
 exploit even if a vulnerability is found, binaries are hardened by default.
 This can be disabled with:
 
@@ -227,7 +203,7 @@ Hardening enables the following features:
 
     To test that you have built PIE executable, install scanelf, part of paxutils, and use:
 
-    	scanelf -e ./syscoin
+    	scanelf -e ./syscoind
 
     The output should contain:
 
@@ -236,13 +212,13 @@ Hardening enables the following features:
 
 * Non-executable Stack
     If the stack is executable then trivial stack based buffer overflow exploits are possible if
-    vulnerable buffers are found. By default, syscoin should be built with a non-executable stack
+    vulnerable buffers are found. By default, Syscoin Core should be built with a non-executable stack
     but if one of the libraries it uses asks for an executable stack or someone makes a mistake
     and uses a compiler extension which requires an executable stack, it will silently build an
     executable without the non-executable stack protection.
 
     To verify that the stack is non-executable after compiling use:
-    `scanelf -e ./syscoin`
+    `scanelf -e ./syscoind`
 
     the output should contain:
 	STK/REL/PTL
@@ -252,7 +228,7 @@ Hardening enables the following features:
 
 Disable-wallet mode
 --------------------
-When the intention is to run only a P2P node without a wallet, syscoin may be compiled in
+When the intention is to run only a P2P node without a wallet, Syscoin Core may be compiled in
 disable-wallet mode with:
 
     ./configure --disable-wallet
@@ -268,36 +244,15 @@ A list of additional configure flags can be displayed with:
 
     ./configure --help
 
-
-Setup and Build Example: Arch Linux
------------------------------------
-This example lists the steps necessary to setup and build a command line only, non-wallet distribution of the latest changes on Arch Linux:
-
-    pacman -S git base-devel boost libevent python
-    git clone https://github.com/syscoin/syscoin2.git
-    cd syscoin/
-    ./autogen.sh
-    ./configure --disable-wallet --without-gui --without-miniupnpc
-    make check
-
-Note:
-Enabling wallet support requires either compiling against a Berkeley DB newer than 4.8 (package `db`) using `--with-incompatible-bdb`,
-or building and depending on a local version of Berkeley DB 4.8. The readily available Arch Linux packages are currently built using
-`--with-incompatible-bdb` according to the [PKGBUILD](https://projects.archlinux.org/svntogit/community.git/tree/syscoin/trunk/PKGBUILD).
-As mentioned above, when maintaining portability of the wallet between the standard Syscoin Core distributions and independently built
-node software is desired, Berkeley DB 4.8 must be used.
-
-
 ARM Cross-compilation
 -------------------
 These steps can be performed on, for example, an Ubuntu VM. The depends system
 will also work on other Linux distributions, however the commands for
 installing the toolchain will be different.
 
-Make sure you install the build requirements mentioned above.
-Then, install the toolchain and curl:
+First install the toolchain:
 
-    sudo apt-get install g++-arm-linux-gnueabihf curl
+    sudo apt-get install g++-arm-linux-gnueabihf
 
 To build executables for ARM:
 

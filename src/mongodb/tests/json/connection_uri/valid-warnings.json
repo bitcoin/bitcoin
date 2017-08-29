@@ -1,0 +1,68 @@
+{
+  "tests": [
+    {
+      "description": "Unrecognized option keys are ignored",
+      "uri": "mongodb://example.com/?foo=bar",
+      "valid": true,
+      "warning": true,
+      "hosts": [
+        {
+          "type": "hostname",
+          "host": "example.com",
+          "port": null
+        }
+      ],
+      "auth": null,
+      "options": null
+    },
+    {
+      "description": "Unsupported option values are ignored",
+      "uri": "mongodb://example.com/?fsync=ifPossible",
+      "valid": true,
+      "warning": true,
+      "hosts": [
+        {
+          "type": "hostname",
+          "host": "example.com",
+          "port": null
+        }
+      ],
+      "auth": null,
+      "options": null
+    },
+    {
+      "description": "Repeated option keys",
+      "uri": "mongodb://example.com/?replicaSet=test&replicaSet=test",
+      "valid": true,
+      "warning": true,
+      "hosts": [
+        {
+          "type": "hostname",
+          "host": "example.com",
+          "port": null
+        }
+      ],
+      "auth": null,
+      "options": {
+        "replicaset": "test"
+      }
+    },
+    {
+      "description": "Deprecated (or unknown) options are ignored if replacement exists",
+      "uri": "mongodb://example.com/?wtimeout=5&wtimeoutMS=10",
+      "valid": true,
+      "warning": true,
+      "hosts": [
+        {
+          "type": "hostname",
+          "host": "example.com",
+          "port": null
+        }
+      ],
+      "auth": null,
+      "options": {
+        "wtimeoutms": 10
+      }
+    }
+  ]
+}

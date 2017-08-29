@@ -2,18 +2,18 @@
 
 # backward compatibility for existing gentoo layout 
 #
-if [ -d "/var/lib/syscoin/.syscoin" ]; then
-	SYSCOIND_DEFAULT_DATADIR="/var/lib/syscoin/.syscoin"
+if [ -d "/var/lib/syscoincore/.syscoincore" ]; then
+	SYSCOIND_DEFAULT_DATADIR="/var/lib/syscoincore/.syscoincore"
 else
 	SYSCOIND_DEFAULT_DATADIR="/var/lib/syscoind"
 fi
 
-SYSCOIND_CONFIGFILE=${SYSCOIND_CONFIGFILE:-/etc/syscoin/syscoin.conf}
+SYSCOIND_CONFIGFILE=${SYSCOIND_CONFIGFILE:-/etc/syscoincore/syscoin.conf}
 SYSCOIND_PIDDIR=${SYSCOIND_PIDDIR:-/var/run/syscoind}
 SYSCOIND_PIDFILE=${SYSCOIND_PIDFILE:-${SYSCOIND_PIDDIR}/syscoind.pid}
 SYSCOIND_DATADIR=${SYSCOIND_DATADIR:-${SYSCOIND_DEFAULT_DATADIR}}
-SYSCOIND_USER=${SYSCOIND_USER:-${SYSCOIN_USER:-syscoin}}
-SYSCOIND_GROUP=${SYSCOIND_GROUP:-syscoin}
+SYSCOIND_USER=${SYSCOIND_USER:-${SYSCOIN_USER:-syscoincore}}
+SYSCOIND_GROUP=${SYSCOIND_GROUP:-syscoincore}
 SYSCOIND_BIN=${SYSCOIND_BIN:-/usr/bin/syscoind}
 SYSCOIND_NICE=${SYSCOIND_NICE:-${NICELEVEL:-0}}
 SYSCOIND_OPTS="${SYSCOIND_OPTS:-${SYSCOIN_OPTS}}"
@@ -84,7 +84,7 @@ checkconfig()
 		eerror "It is also recommended that you also set alertnotify so you are "
 		eerror "notified of problems:"
 		eerror ""
-		eerror "ie: alertnotify=echo %%s | mail -s \"Syscoin Alert\"" \
+		eerror "ie: alertnotify=echo %%s | mail -s \"Syscoin Core Alert\"" \
 			"admin@foo.com"
 		eerror ""
 		return 1

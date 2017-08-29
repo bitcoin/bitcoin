@@ -86,14 +86,8 @@ public:
             return;
         }
         nSize -= nSpecialScripts;
-        if (nSize > MAX_SCRIPT_SIZE) {
-            // Overly long script, replace with a short invalid one
-            script << OP_RETURN;
-            s.ignore(nSize);
-        } else {
-            script.resize(nSize);
-            s >> REF(CFlatData(script));
-        }
+        script.resize(nSize);
+        s >> REF(CFlatData(script));
     }
 };
 

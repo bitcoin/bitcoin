@@ -3,8 +3,7 @@
 
 #include "rpc/server.h"
 #include "dbwrapper.h"
-#include "script/script.h"
-#include "serialize.h"
+#include "feedback.h"
 class CWalletTx;
 class CTransaction;
 class CReserveKey;
@@ -24,13 +23,11 @@ bool RemoveCertScriptPrefix(const CScript& scriptIn, CScript& scriptOut);
 class CCert {
 public:
 	std::vector<unsigned char> vchCert;
-	std::vector<unsigned char> vchAlias;
-	// to modify vchAlias in certtransfer
-	std::vector<unsigned char> vchLinkAlias;
+	CNameTXIDTuple aliasTuple;
+	// to modify alias in certtransfer
+	CNameTXIDTuple linkAliasTuple;
     uint256 txHash;
     uint64_t nHeight;
-	unsigned char safetyLevel;
-	bool safeSearch;
 	// 1 can edit, 2 can edit/transfer
 	unsigned char nAccessFlags;
 	std::vector<unsigned char> vchTitle;
@@ -59,13 +56,11 @@ public:
 		READWRITE(vchPubData);
 		READWRITE(txHash);
 		READWRITE(VARINT(nHeight));
-		READWRITE(vchLinkAlias);
+		READWRITE(linkAliasTuple);
 		READWRITE(nAccessFlags);
 		READWRITE(vchCert);
-		READWRITE(VARINT(safetyLevel));
-		READWRITE(safeSearch);
 		READWRITE(sCategory);
-		READWRITE(vchAlias);
+		READWRITE(aliasTuple);
 	}
     friend bool operator==(const CCert &a, const CCert &b) {
         return (
@@ -74,11 +69,9 @@ public:
 		&& a.vchPubData == b.vchPubData
         && a.txHash == b.txHash
         && a.nHeight == b.nHeight
-		&& a.vchAlias == b.vchAlias
-		&& a.vchLinkAlias == b.vchLinkAlias
+		&& a.aliasTuple == b.aliasTuple
+		&& a.linkAliasTuple == b.linkAliasTuple
 		&& a.nAccessFlags == b.nAccessFlags
-		&& a.safetyLevel == b.safetyLevel
-		&& a.safeSearch == b.safeSearch
 		&& a.vchCert == b.vchCert
 		&& a.sCategory == b.sCategory
         );
@@ -90,11 +83,9 @@ public:
 		vchPubData = b.vchPubData;
         txHash = b.txHash;
         nHeight = b.nHeight;
-		vchAlias = b.vchAlias;
-		vchLinkAlias = b.vchLinkAlias;
+		aliasTuple = b.aliasTuple;
+		linkAliasTuple = b.linkAliasTuple;
 		nAccessFlags = b.nAccessFlags;
-		safetyLevel = b.safetyLevel;
-		safeSearch = b.safeSearch;
 		vchCert = b.vchCert;
 		sCategory = b.sCategory;
         return *this;
@@ -103,29 +94,8 @@ public:
     friend bool operator!=(const CCert &a, const CCert &b) {
         return !(a == b);
     }
-    bool GetCertFromList(std::vector<CCert> &certList) {
-        if(certList.size() == 0) return false;
-		CCert myCert = certList.front();
-		if(nHeight <= 0)
-		{
-			*this = myCert;
-			return true;
-		}
-			
-		// find the closest cert without going over in height, assuming certList orders entries by nHeight ascending
-        for(std::vector<CCert>::reverse_iterator it = certList.rbegin(); it != certList.rend(); ++it) {
-            const CCert &c = *it;
-			// skip if this height is greater than our cert height
-			if(c.nHeight > nHeight)
-				continue;
-            myCert = c;
-			break;
-        }
-        *this = myCert;
-        return true;
-    }
-    void SetNull() { sCategory.clear(); vchTitle.clear(); safeSearch = true; nAccessFlags = 2; vchLinkAlias.clear(); vchCert.clear(); safetyLevel = 0; nHeight = 0; txHash.SetNull(); vchAlias.clear(); vchData.clear(); vchPubData.clear();}
-    bool IsNull() const { return (sCategory.empty() && vchTitle.empty() && safeSearch && nAccessFlags == 2 && vchLinkAlias.empty() && vchCert.empty() && safetyLevel == 0 && txHash.IsNull() &&  nHeight == 0 && vchData.empty() && vchPubData.empty() && vchAlias.empty()); }
+    void SetNull() { sCategory.clear(); vchTitle.clear(); nAccessFlags = 2; linkAliasTuple.first.clear(); vchCert.clear(); nHeight = 0; txHash.SetNull(); aliasTuple.first.clear(); vchData.clear(); vchPubData.clear();}
+    bool IsNull() const { return (sCategory.empty() && vchTitle.empty() && nAccessFlags == 2 && linkAliasTuple.first.empty() && vchCert.empty() && txHash.IsNull() &&  nHeight == 0 && vchData.empty() && vchPubData.empty() && aliasTuple.first.empty()); }
     bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
 	void Serialize(std::vector<unsigned char>& vchData);
@@ -136,37 +106,46 @@ class CCertDB : public CDBWrapper {
 public:
     CCertDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "certificates", nCacheSize, fMemory, fWipe) {}
 
-    bool WriteCert(const std::vector<unsigned char>& name, const std::vector<CCert>& vtxPos) {
-        return Write(make_pair(std::string("certi"), name), vtxPos);
+    bool WriteCert(const CCert& cert) {
+		WriteCertIndex(cert);
+        return Write(make_pair(std::string("certi"), CNameTXIDTuple(cert.vchCert, cert.txHash)), cert) && WriteCertLastTXID(cert.vchCert, cert.txHash);
     }
 
-    bool EraseCert(const std::vector<unsigned char>& name) {
-        return Erase(make_pair(std::string("certi"), name));
+    bool EraseCert(const CNameTXIDTuple& certTuple) {
+		EraseCertLastTXID(certTuple.first);
+		EraseCertFirstTXID(certTuple.first);
+		EraseCertIndex(certTuple.first);
+        return Erase(make_pair(std::string("certi"), certTuple));
     }
 
-    bool ReadCert(const std::vector<unsigned char>& name, std::vector<CCert>& vtxPos) {
-        return Read(make_pair(std::string("certi"), name), vtxPos);
+    bool ReadCert(const CNameTXIDTuple& certTuple, CCert& cert) {
+        return Read(make_pair(std::string("certi"), certTuple), cert);
     }
-
-    bool ExistsCert(const std::vector<unsigned char>& name) {
-        return Exists(make_pair(std::string("certi"), name));
-    }
-	bool ScanCerts(
-		const std::vector<unsigned char>& vchCert, const std::string &strRegExp, const std::vector<std::string>& aliasArray, bool safeSearch, const std::string& strCategory,
-            unsigned int nMax,
-            std::vector<CCert>& certScan);
-	bool GetDBCerts(std::vector<CCert>& certs, const uint64_t& nExpireFilter, const std::vector<std::string>& aliasArray);
+	bool WriteCertLastTXID(const std::vector<unsigned char>& cert, const uint256& txid) {
+		return Write(make_pair(std::string("certlt"), cert), txid);
+	}
+	bool ReadCertLastTXID(const std::vector<unsigned char>& cert, uint256& txid) {
+		return Read(make_pair(std::string("certlt"), cert), txid);
+	}
+	bool EraseCertLastTXID(const std::vector<unsigned char>& cert) {
+		return Erase(make_pair(std::string("certlt"), cert));
+	}
+	bool WriteCertFirstTXID(const std::vector<unsigned char>& cert, const uint256& txid) {
+		return Write(make_pair(std::string("certft"), cert), txid);
+	}
+	bool ReadCertFirstTXID(const std::vector<unsigned char>& cert, uint256& txid) {
+		return Read(make_pair(std::string("certft"), cert), txid);
+	}
+	bool EraseCertFirstTXID(const std::vector<unsigned char>& cert) {
+		return Erase(make_pair(std::string("certft"), cert));
+	}
 	bool CleanupDatabase(int &servicesCleaned);
+	void WriteCertIndex(const CCert& cert);
+	void EraseCertIndex(const std::vector<unsigned char>& vchCert);
 
 };
-bool GetTxOfCert(const std::vector<unsigned char> &vchCert,
-        CCert& txPos, CTransaction& tx, bool skipExpiresCheck=false);
-bool GetTxAndVtxOfCert(const std::vector<unsigned char> &vchCert,
-					   CCert& txPos, CTransaction& tx, std::vector<CCert> &vtxPos, bool skipExpiresCheck=false);
-bool GetVtxOfCert(const std::vector<unsigned char> &vchCert,
-					   CCert& txPos, std::vector<CCert> &vtxPos, bool skipExpiresCheck=false);
-void PutToCertList(std::vector<CCert> &certList, CCert& index);
+bool GetCert(const CNameTXIDTuple& certTuple);
+bool GetCert(const std::vector<unsigned char> &vchCert,CCert& txPos);
 bool BuildCertJson(const CCert& cert, const CAliasIndex& alias, UniValue& oName);
-bool BuildCertStatsJson(const std::vector<CCert> &certs, UniValue& oCertStats);
 uint64_t GetCertExpiration(const CCert& cert);
 #endif // CERT_H

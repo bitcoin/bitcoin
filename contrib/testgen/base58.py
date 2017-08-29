@@ -1,6 +1,3 @@
-# Copyright (c) 2012 The Syscoin Core developers
-# Distributed under the MIT software license, see the accompanying
-# file COPYING or http://www.opensource.org/licenses/mit-license.php.
 '''
 Syscoin base58 encoding and decoding.
 

@@ -1,22 +1,23 @@
-Syscoin Core integration/staging tree
-=====================================
+Syscoin Core staging tree 0.12.1
+===============================
 
-[![Build Status](https://travis-ci.org/syscoin/syscoin.svg?branch=master)](https://travis-ci.org/syscoin/syscoin)
+`master:` [![Build Status](https://travis-ci.org/syscoin/syscoin.svg?branch=master)](https://travis-ci.org/syscoin/syscoin) `v0.12.0.x:` [![Build Status](https://travis-ci.org/syscoin/syscoin.svg?branch=v0.12.0.x)](https://travis-ci.org/syscoin/syscoin/branches) `v0.12.1.x:` [![Build Status](https://travis-ci.org/syscoin/syscoin.svg?branch=v0.12.1.x)](https://travis-ci.org/syscoin/syscoin/branches)
 
-https://syscoincore.org
+https://www.syscoin.org
+
 
 What is Syscoin?
 ----------------
 
-Syscoin is an experimental digital currency that enables instant payments to
-anyone, anywhere in the world. Syscoin uses peer-to-peer technology to operate
-with no central authority: managing transactions and issuing money are carried
-out collectively by the network. Syscoin Core is the name of open source
-software which enables the use of this currency.
+Syscoin is an experimental new digital currency that enables anonymous, instant
+payments to anyone, anywhere in the world. Syscoin uses peer-to-peer technology
+to operate with no central authority: managing transactions and issuing money
+are carried out collectively by the network. Syscoin Core is the name of the open
+source software which enables the use of this currency.
 
 For more information, as well as an immediately useable, binary version of
-the Syscoin Core software, see https://syscoin.org/en/download, or read the
-[original whitepaper](https://syscoin.org/syscoin.pdf).
+the Syscoin Core software, see https://www.syscoin.org/get-syscoin/.
+
 
 License
 -------
@@ -27,17 +28,11 @@ information or see https://opensource.org/licenses/MIT.
 Development Process
 -------------------
 
-The `master` branch is regularly built and tested, but is not guaranteed to be
-completely stable. [Tags](https://github.com/syscoin/syscoin2/tags) are created
-regularly to indicate new official, stable release versions of Syscoin Core.
+The `master` branch is meant to be stable. Development is normally done in separate branches.
+[Tags](https://github.com/syscoin/syscoin2/tags) are created to indicate new official,
+stable release versions of Syscoin Core.
 
 The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md).
-
-The developer [mailing list](https://lists.linuxfoundation.org/mailman/listinfo/syscoin-dev)
-should be used to discuss complicated or controversial changes before working
-on a patch set.
-
-Developer IRC can be found on Freenode at #syscoin-core-dev.
 
 Testing
 -------
@@ -57,7 +52,8 @@ There are also [regression and integration tests](/qa) of the RPC interface, wri
 in Python, that are run automatically on the build server.
 These tests can be run (if the [test dependencies](/qa) are installed) with: `qa/pull-tester/rpc-tests.py`
 
-The Travis CI system makes sure that every pull request is built for Windows, Linux, and OS X, and that unit/sanity tests are run automatically.
+The Travis CI system makes sure that every pull request is built for Windows
+and Linux, OS X, and that unit and sanity tests are automatically run.
 
 ### Manual Quality Assurance (QA) Testing
 
@@ -78,4 +74,4 @@ Translations are periodically pulled from Transifex and merged into the git repo
 **Important**: We do not accept translation changes as GitHub pull requests because the next
 pull from Transifex would automatically overwrite them again.
 
-Translators should also subscribe to the [mailing list](https://groups.google.com/forum/#!forum/syscoin-translators).
+Translators should also follow the [forum](https://www.syscoin.org/forum/topic/syscoin-worldwide-collaboration.88/).

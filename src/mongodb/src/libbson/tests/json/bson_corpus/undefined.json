@@ -1,0 +1,15 @@
+{
+    "description": "Undefined type (deprecated)",
+    "bson_type": "0x06",
+    "deprecated": true,
+    "test_key": "a",
+    "valid": [
+        {
+            "description": "Undefined",
+            "canonical_bson": "0800000006610000",
+            "canonical_extjson": "{\"a\" : {\"$undefined\" : true}}",
+            "converted_bson": "080000000A610000",
+            "converted_extjson": "{\"a\" : null}"
+        }
+    ]
+}

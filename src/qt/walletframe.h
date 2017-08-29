@@ -38,7 +38,6 @@ public:
 
     void showOutOfSyncWarning(bool fShow);
 
-
 private:
     QStackedWidget *walletStack;
     SyscoinGUI *gui;
@@ -56,16 +55,13 @@ public Q_SLOTS:
     void gotoOverviewPage();
     /** Switch to history (transactions) page */
     void gotoHistoryPage();
+    /** Switch to masternode page */
+    void gotoMasternodePage();
     /** Switch to receive coins page */
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */
     void gotoSendCoinsPage(QString addr = "");
-	// SYSCOIN
-    void gotoAliasListPage();
-    void gotoEscrowListPage();
-    void gotoMessageListPage();
-    void gotoOfferListPage();
-    void gotoCertListPage();
+
     /** Show Sign/Verify Message dialog and switch to sign message tab */
     void gotoSignMessageTab(QString addr = "");
     /** Show Sign/Verify Message dialog and switch to verify message tab */
@@ -79,6 +75,8 @@ public Q_SLOTS:
     void changePassphrase();
     /** Ask for passphrase to unlock wallet temporarily */
     void unlockWallet();
+    /** Lock wallet */
+    void lockWallet();
 
     /** Show used sending addresses */
     void usedSendingAddresses();

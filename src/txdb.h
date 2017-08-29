@@ -8,58 +8,32 @@
 
 #include "coins.h"
 #include "dbwrapper.h"
-#include "chain.h"
 
 #include <map>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include <boost/function.hpp>
-
+class CBlockFileInfo;
 class CBlockIndex;
-class CCoinsViewDBCursor;
+struct CDiskTxPos;
+struct CAddressUnspentKey;
+struct CAddressUnspentValue;
+struct CAddressIndexKey;
+struct CAddressIndexIteratorKey;
+struct CAddressIndexIteratorHeightKey;
+struct CTimestampIndexKey;
+struct CTimestampIndexIteratorKey;
+struct CSpentIndexKey;
+struct CSpentIndexValue;
 class uint256;
 
 //! -dbcache default (MiB)
-static const int64_t nDefaultDbCache = 300;
-//! max. -dbcache (MiB)
+static const int64_t nDefaultDbCache = 100;
+//! max. -dbcache in (MiB)
 static const int64_t nMaxDbCache = sizeof(void*) > 4 ? 16384 : 1024;
-//! min. -dbcache (MiB)
+//! min. -dbcache in (MiB)
 static const int64_t nMinDbCache = 4;
-//! Max memory allocated to block tree DB specific cache, if no -txindex (MiB)
-static const int64_t nMaxBlockDBCache = 2;
-//! Max memory allocated to block tree DB specific cache, if -txindex (MiB)
-// Unlike for the UTXO database, for the txindex scenario the leveldb cache make
-// a meaningful difference: https://github.com/syscoin/syscoin2/pull/8273#issuecomment-229601991
-static const int64_t nMaxBlockDBAndTxIndexCache = 1024;
-//! Max memory allocated to coin DB specific cache (MiB)
-static const int64_t nMaxCoinsDBCache = 8;
-
-struct CDiskTxPos : public CDiskBlockPos
-{
-    unsigned int nTxOffset; // after header
-
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(*(CDiskBlockPos*)this);
-        READWRITE(VARINT(nTxOffset));
-    }
-
-    CDiskTxPos(const CDiskBlockPos &blockIn, unsigned int nTxOffsetIn) : CDiskBlockPos(blockIn.nFile, blockIn.nPos), nTxOffset(nTxOffsetIn) {
-    }
-
-    CDiskTxPos() {
-        SetNull();
-    }
-
-    void SetNull() {
-        CDiskBlockPos::SetNull();
-        nTxOffset = 0;
-    }
-};
 
 /** CCoinsView backed by the coin database (chainstate/) */
 class CCoinsViewDB : public CCoinsView
@@ -73,29 +47,7 @@ public:
     bool HaveCoins(const uint256 &txid) const;
     uint256 GetBestBlock() const;
     bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock);
-    CCoinsViewCursor *Cursor() const;
-};
-
-/** Specialization of CCoinsViewCursor to iterate over a CCoinsViewDB */
-class CCoinsViewDBCursor: public CCoinsViewCursor
-{
-public:
-    ~CCoinsViewDBCursor() {}
-
-    bool GetKey(uint256 &key) const;
-    bool GetValue(CCoins &coins) const;
-    unsigned int GetValueSize() const;
-
-    bool Valid() const;
-    void Next();
-
-private:
-    CCoinsViewDBCursor(CDBIterator* pcursorIn, const uint256 &hashBlockIn):
-        CCoinsViewCursor(hashBlockIn), pcursor(pcursorIn) {}
-    boost::scoped_ptr<CDBIterator> pcursor;
-    std::pair<char, uint256> keyTmp;
-
-    friend class CCoinsViewDB;
+    bool GetStats(CCoinsStats &stats) const;
 };
 
 /** Access to the block database (blocks/index/) */
@@ -114,9 +66,21 @@ public:
     bool ReadReindexing(bool &fReindex);
     bool ReadTxIndex(const uint256 &txid, CDiskTxPos &pos);
     bool WriteTxIndex(const std::vector<std::pair<uint256, CDiskTxPos> > &list);
+    bool ReadSpentIndex(CSpentIndexKey &key, CSpentIndexValue &value);
+    bool UpdateSpentIndex(const std::vector<std::pair<CSpentIndexKey, CSpentIndexValue> >&vect);
+    bool UpdateAddressUnspentIndex(const std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue > >&vect);
+    bool ReadAddressUnspentIndex(uint160 addressHash, int type,
+                                 std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > &vect);
+    bool WriteAddressIndex(const std::vector<std::pair<CAddressIndexKey, CAmount> > &vect);
+    bool EraseAddressIndex(const std::vector<std::pair<CAddressIndexKey, CAmount> > &vect);
+    bool ReadAddressIndex(uint160 addressHash, int type,
+                          std::vector<std::pair<CAddressIndexKey, CAmount> > &addressIndex,
+                          int start = 0, int end = 0);
+    bool WriteTimestampIndex(const CTimestampIndexKey &timestampIndex);
+    bool ReadTimestampIndex(const unsigned int &high, const unsigned int &low, std::vector<uint256> &vect);
     bool WriteFlag(const std::string &name, bool fValue);
     bool ReadFlag(const std::string &name, bool &fValue);
-    bool LoadBlockIndexGuts(boost::function<CBlockIndex*(const uint256&)> insertBlockIndex);
+    bool LoadBlockIndexGuts();
 };
 
 #endif // SYSCOIN_TXDB_H

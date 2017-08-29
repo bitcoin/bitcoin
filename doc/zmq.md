@@ -38,7 +38,7 @@ newer. Typically, it is packaged by distributions as something like
 *libzmq3-dev*. The C++ wrapper for ZeroMQ is *not* needed.
 
 In order to run the example Python client scripts in contrib/ one must
-also install *python3-zmq*, though this is not necessary for daemon
+also install *python-zmq*, though this is not necessary for daemon
 operation.
 
 ## Enabling
@@ -57,9 +57,11 @@ the commandline or in the configuration file.
 Currently, the following notifications are supported:
 
     -zmqpubhashtx=address
+    -zmqpubhashtxlock=address
     -zmqpubhashblock=address
     -zmqpubrawblock=address
     -zmqpubrawtx=address
+    -zmqpubrawtxlock=address
 
 The socket type is PUB and the address must be a valid ZeroMQ socket
 address. The same address can be used in more than one notification.

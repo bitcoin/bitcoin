@@ -6,10 +6,6 @@
 
 #include <string>
 
-/**
- * Filter that generates and validates UTF-8, as well as collates UTF-16
- * surrogate pairs as specified in RFC4627.
- */
 class JSONUTF8StringFilter
 {
 public:
@@ -48,7 +44,8 @@ public:
     // Write codepoint directly, possibly collating surrogate pairs
     void push_back_u(unsigned int codepoint)
     {
-        if (state) // Only accept full codepoints in open state
+        // Only accept full codepoints in open state
+        if (state)
             is_valid = false;
         if (codepoint >= 0xD800 && codepoint < 0xDC00) { // First half of surrogate pair
             if (surpair) // Two subsequent surrogate pair openers - fail
@@ -60,10 +57,10 @@ public:
                 // Compute code point from UTF-16 surrogate pair
                 append_codepoint(0x10000 | ((surpair - 0xD800)<<10) | (codepoint - 0xDC00));
                 surpair = 0;
-            } else // Second half doesn't follow a first half - fail
+            } else // First half of surrogate pair not followed by second
                 is_valid = false;
         } else {
-            if (surpair) // First half of surrogate pair not followed by second - fail
+            if (surpair) // First half of surrogate pair not followed by second
                 is_valid = false;
             else
                 append_codepoint(codepoint);
@@ -83,9 +80,7 @@ private:
     // Current UTF-8 decoding state
     unsigned int codepoint;
     int state; // Top bit to be filled in for next UTF-8 byte, or 0
-
-    // Keep track of the following state to handle the following section of
-    // RFC4627:
+    // Keep track of this state to handle the following section of RFC4627:
     //
     //    To escape an extended character that is not in the Basic Multilingual
     //    Plane, the character is represented as a twelve-character sequence,
@@ -94,7 +89,7 @@ private:
     //    "\uD834\uDD1E".
     //
     //  Two subsequent \u.... may have to be replaced with one actual codepoint.
-    unsigned int surpair; // First half of open UTF-16 surrogate pair, or 0
+    unsigned int surpair; // First of UTF-16 surrogate pair
 
     void append_codepoint(unsigned int codepoint)
     {

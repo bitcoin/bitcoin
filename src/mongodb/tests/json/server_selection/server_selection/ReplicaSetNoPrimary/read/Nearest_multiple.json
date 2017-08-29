@@ -1,0 +1,68 @@
+{
+    "in_latency_window": [
+        {
+            "address": "b:27017", 
+            "avg_rtt_ms": 10, 
+            "tags": {
+                "data_center": "nyc"
+            }, 
+            "type": "RSSecondary"
+        }, 
+        {
+            "address": "c:27017", 
+            "avg_rtt_ms": 20, 
+            "tags": {
+                "data_center": "nyc"
+            }, 
+            "type": "RSSecondary"
+        }
+    ], 
+    "operation": "read", 
+    "read_preference": {
+        "mode": "Nearest", 
+        "tag_sets": [
+            {
+                "data_center": "nyc"
+            }
+        ]
+    }, 
+    "suitable_servers": [
+        {
+            "address": "b:27017", 
+            "avg_rtt_ms": 10, 
+            "tags": {
+                "data_center": "nyc"
+            }, 
+            "type": "RSSecondary"
+        }, 
+        {
+            "address": "c:27017", 
+            "avg_rtt_ms": 20, 
+            "tags": {
+                "data_center": "nyc"
+            }, 
+            "type": "RSSecondary"
+        }
+    ], 
+    "topology_description": {
+        "servers": [
+            {
+                "address": "b:27017", 
+                "avg_rtt_ms": 10, 
+                "tags": {
+                    "data_center": "nyc"
+                }, 
+                "type": "RSSecondary"
+            }, 
+            {
+                "address": "c:27017", 
+                "avg_rtt_ms": 20, 
+                "tags": {
+                    "data_center": "nyc"
+                }, 
+                "type": "RSSecondary"
+            }
+        ], 
+        "type": "ReplicaSetNoPrimary"
+    }
+}

@@ -269,13 +269,15 @@ static void secp256k1_rfc6979_hmac_sha256_finalize(secp256k1_rfc6979_hmac_sha256
     rng->retry = 0;
 }
 
-#undef BE32
+
 #undef Round
-#undef sigma1
 #undef sigma0
-#undef Sigma1
+#undef sigma1
 #undef Sigma0
-#undef Maj
+#undef Sigma1
 #undef Ch
+#undef Maj
+#undef ReadBE32
+#undef WriteBE32
 
 #endif

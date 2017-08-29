@@ -1,0 +1,10 @@
+prefix=@prefix@
+exec_prefix=${prefix}
+libdir=@libdir@
+includedir=${exec_prefix}/include
+
+Name: libbson static archive
+Description: The libbson BSON serialization library.
+Version: @VERSION@
+Libs: -L${libdir} -lbson-static-@BSON_API_VERSION@ @LIBBSON_LIBS@
+Cflags: -I${includedir}/libbson-@BSON_API_VERSION@ -DBSON_STATIC

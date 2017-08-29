@@ -1,0 +1,213 @@
+tests:
+    -
+        description: "Unix domain socket (relative path with trailing slash)"
+        uri: "mongodb://rel%2Fmongodb-27017.sock/"
+        valid: true
+        warning: false
+        hosts:
+            -
+                type: "unix"
+                host: "rel/mongodb-27017.sock"
+                port: ~
+        auth: ~
+        options: ~
+    -
+        description: "Unix domain socket (relative path without trailing slash)"
+        uri: "mongodb://rel%2Fmongodb-27017.sock"
+        valid: true
+        warning: false
+        hosts:
+            -
+                type: "unix"
+                host: "rel/mongodb-27017.sock"
+                port: ~
+        auth: ~
+        options: ~
+    -
+        description: "Unix domain socket (relative path with spaces)"
+        uri: "mongodb://rel%2F %2Fmongodb-27017.sock"
+        valid: true
+        warning: false
+        hosts:
+            -
+                type: "unix"
+                host: "rel/ /mongodb-27017.sock"
+                port: ~
+        auth: ~
+        options: ~
+    -
+        description: "Multiple Unix domain sockets (relative paths)"
+        uri: "mongodb://rel%2Fmongodb-27017.sock,rel%2Fmongodb-27018.sock"
+        valid: true
+        warning: false
+        hosts:
+            -
+                type: "unix"
+                host: "rel/mongodb-27017.sock"
+                port: ~
+            -
+                type: "unix"
+                host: "rel/mongodb-27018.sock"
+                port: ~
+        auth: ~
+        options: ~
+    -
+        description: "Multiple Unix domain sockets (relative and absolute paths)"
+        uri: "mongodb://rel%2Fmongodb-27017.sock,%2Ftmp%2Fmongodb-27018.sock"
+        valid: true
+        warning: false
+        hosts:
+            -
+                type: "unix"
+                host: "rel/mongodb-27017.sock"
+                port: ~
+            -
+                type: "unix"
+                host: "/tmp/mongodb-27018.sock"
+                port: ~
+        auth: ~
+        options: ~
+    -
+        description: "Multiple hosts (relative path and ipv4)"
+        uri: "mongodb://127.0.0.1:27017,rel%2Fmongodb-27017.sock"
+        valid: true
+        warning: false
+        hosts:
+            -
+                type: "ipv4"
+                host: "127.0.0.1"
+                port: 27017
+            -
+                type: "unix"
+                host: "rel/mongodb-27017.sock"
+                port: ~
+        auth: ~
+        options: ~
+    -
+        description: "Multiple hosts (relative path and hostname resembling relative path)"
+        uri: "mongodb://mongodb-27017.sock,rel%2Fmongodb-27018.sock"
+        valid: true
+        warning: false
+        hosts:
+            -
+                type: "hostname"
+                host: "mongodb-27017.sock"
+                port: ~
+            -
+                type: "unix"
+                host: "rel/mongodb-27018.sock"
+                port: ~
+        auth: ~
+        options: ~
+    -
+        description: "Unix domain socket with auth database (relative path)"
+        uri: "mongodb://alice:foo@rel%2Fmongodb-27017.sock/admin"
+        valid: true
+        warning: false
+        hosts:
+            -
+                type: "unix"
+                host: "rel/mongodb-27017.sock"
+                port: ~
+        auth:
+            username: "alice"
+            password: "foo"
+            db: "admin"
+        options: ~
+    -
+        description: "Unix domain socket with path resembling socket file (relative path with trailing slash)"
+        uri: "mongodb://rel%2Fpath.to.sock%2Fmongodb-27017.sock/"
+        valid: true
+        warning: false
+        hosts:
+            -
+                type: "unix"
+                host: "rel/path.to.sock/mongodb-27017.sock"
+                port: ~
+        auth: ~
+        options: ~
+    -
+        description: "Unix domain socket with path resembling socket file (relative path without trailing slash)"
+        uri: "mongodb://rel%2Fpath.to.sock%2Fmongodb-27017.sock"
+        valid: true
+        warning: false
+        hosts:
+            -
+                type: "unix"
+                host: "rel/path.to.sock/mongodb-27017.sock"
+                port: ~
+        auth: ~
+        options: ~
+    -
+        description: "Unix domain socket with path resembling socket file and auth (relative path)"
+        uri: "mongodb://bob:bar@rel%2Fpath.to.sock%2Fmongodb-27017.sock/admin"
+        valid: true
+        warning: false
+        hosts:
+            -
+                type: "unix"
+                host: "rel/path.to.sock/mongodb-27017.sock"
+                port: ~
+        auth:
+            username: "bob"
+            password: "bar"
+            db: "admin"
+        options: ~
+    -
+        description: "Multiple Unix domain sockets and auth DB resembling a socket (relative path)"
+        uri: "mongodb://rel%2Fmongodb-27017.sock,rel%2Fmongodb-27018.sock/admin.sock"
+        valid: true
+        warning: false
+        hosts:
+            -
+                type: "unix"
+                host: "rel/mongodb-27017.sock"
+                port: ~
+            -
+                type: "unix"
+                host: "rel/mongodb-27018.sock"
+                port: ~
+        auth:
+            username: ~
+            password: ~
+            db: "admin.sock"
+        options: ~
+    -
+        description: "Multiple Unix domain sockets with auth DB resembling a path (relative path)"
+        uri: "mongodb://rel%2Fmongodb-27017.sock,rel%2Fmongodb-27018.sock/admin.shoe"
+        valid: true
+        warning: false
+        hosts:
+            -
+                type: "unix"
+                host: "rel/mongodb-27017.sock"
+                port: ~
+            -
+                type: "unix"
+                host: "rel/mongodb-27018.sock"
+                port: ~
+        auth:
+            username: ~
+            password: ~
+            db: "admin.shoe"
+        options: ~
+    -
+        description: "Multiple Unix domain sockets with auth and query string (relative path)"
+        uri: "mongodb://bob:bar@rel%2Fmongodb-27017.sock,rel%2Fmongodb-27018.sock/admin?w=1"
+        valid: true
+        warning: false
+        hosts:
+            -
+                type: "unix"
+                host: "rel/mongodb-27017.sock"
+                port: ~
+            -
+                type: "unix"
+                host: "rel/mongodb-27018.sock"
+                port: ~
+        auth:
+            username: "bob"
+            password: "bar"
+            db: "admin"
+        options:
+            w: 1

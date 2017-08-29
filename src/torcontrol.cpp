@@ -1,7 +1,3 @@
-// Copyright (c) 2015 The Syscoin Core developers
-// Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
 #include "torcontrol.h"
 #include "utilstrencodings.h"
 #include "net.h"
@@ -83,7 +79,7 @@ public:
     /**
      * Connect to a Tor control port.
      * target is address of the form host:port.
-     * connected is the handler that is called when connection is successfully established.
+     * connected is the handler that is called when connection is succesfully established.
      * disconnected is a handler that is called when the connection is broken.
      * Return true on success.
      */
@@ -181,7 +177,7 @@ void TorControlConnection::eventcb(struct bufferevent *bev, short what, void *ct
 {
     TorControlConnection *self = (TorControlConnection*)ctx;
     if (what & BEV_EVENT_CONNECTED) {
-        LogPrint("tor", "tor: Successfully connected!\n");
+        LogPrint("tor", "tor: Succesfully connected!\n");
         self->connected(*self);
     } else if (what & (BEV_EVENT_EOF|BEV_EVENT_ERROR)) {
         if (what & BEV_EVENT_ERROR)
@@ -307,7 +303,7 @@ static std::map<std::string,std::string> ParseTorReplyMapping(const std::string 
 
 /** Read full contents of a file and return them in a std::string.
  * Returns a pair <status, string>.
- * If an error occurred, status will be false, otherwise status will be true and the data will be returned in string.
+ * If an error occured, status will be false, otherwise status will be true and the data will be returned in string.
  *
  * @param maxsize Puts a maximum size limit on the file that is read. If the file is larger than this, truncated data
  *         (with len > maxsize) will be returned.
@@ -384,7 +380,7 @@ private:
     void authchallenge_cb(TorControlConnection& conn, const TorControlReply& reply);
     /** Callback for PROTOCOLINFO result */
     void protocolinfo_cb(TorControlConnection& conn, const TorControlReply& reply);
-    /** Callback after successful connection */
+    /** Callback after succesful connection */
     void connected_cb(TorControlConnection& conn);
     /** Callback after connection lost or failed connection attempt */
     void disconnected_cb(TorControlConnection& conn);
@@ -393,8 +389,8 @@ private:
     static void reconnect_cb(evutil_socket_t fd, short what, void *arg);
 };
 
-TorController::TorController(struct event_base* baseIn, const std::string& target):
-    base(baseIn),
+TorController::TorController(struct event_base* base, const std::string& target):
+    base(base),
     target(target), conn(base), reconnect(true), reconnect_ev(0),
     reconnect_timeout(RECONNECT_TIMEOUT_START)
 {
@@ -428,7 +424,7 @@ TorController::~TorController()
 void TorController::add_onion_cb(TorControlConnection& conn, const TorControlReply& reply)
 {
     if (reply.code == 250) {
-        LogPrint("tor", "tor: ADD_ONION successful\n");
+        LogPrint("tor", "tor: ADD_ONION succesful\n");
         BOOST_FOREACH(const std::string &s, reply.lines) {
             std::map<std::string,std::string> m = ParseTorReplyMapping(s);
             std::map<std::string,std::string>::iterator i;
@@ -438,7 +434,7 @@ void TorController::add_onion_cb(TorControlConnection& conn, const TorControlRep
                 private_key = i->second;
         }
 
-        service = CService(service_id+".onion", GetListenPort());
+        service = CService(service_id+".onion", GetListenPort(), false);
         LogPrintf("tor: Got service ID %s, advertising service %s\n", service_id, service.ToString());
         if (WriteBinaryFile(GetPrivateKeyFile(), private_key)) {
             LogPrint("tor", "tor: Cached service private key to %s\n", GetPrivateKeyFile());
@@ -457,7 +453,7 @@ void TorController::add_onion_cb(TorControlConnection& conn, const TorControlRep
 void TorController::auth_cb(TorControlConnection& conn, const TorControlReply& reply)
 {
     if (reply.code == 250) {
-        LogPrint("tor", "tor: Authentication successful\n");
+        LogPrint("tor", "tor: Authentication succesful\n");
 
         // Now that we know Tor is running setup the proxy for onion addresses
         // if -onion isn't set to something else.
@@ -510,7 +506,7 @@ static std::vector<uint8_t> ComputeResponse(const std::string &key, const std::v
 void TorController::authchallenge_cb(TorControlConnection& conn, const TorControlReply& reply)
 {
     if (reply.code == 250) {
-        LogPrint("tor", "tor: SAFECOOKIE authentication challenge successful\n");
+        LogPrint("tor", "tor: SAFECOOKIE authentication challenge succesful\n");
         std::pair<std::string,std::string> l = SplitTorReplyLine(reply.lines[0]);
         if (l.first == "AUTHCHALLENGE") {
             std::map<std::string,std::string> m = ParseTorReplyMapping(l.second);
@@ -574,15 +570,7 @@ void TorController::protocolinfo_cb(TorControlConnection& conn, const TorControl
          *   password: "password"
          */
         std::string torpassword = GetArg("-torpassword", "");
-        if (!torpassword.empty()) {
-            if (methods.count("HASHEDPASSWORD")) {
-                LogPrint("tor", "tor: Using HASHEDPASSWORD authentication\n");
-                boost::replace_all(torpassword, "\"", "\\\"");
-                conn.Command("AUTHENTICATE \"" + torpassword + "\"", boost::bind(&TorController::auth_cb, this, _1, _2));
-            } else {
-                LogPrintf("tor: Password provided with -torpassword, but HASHEDPASSWORD authentication is not available\n");
-            }
-        } else if (methods.count("NULL")) {
+        if (methods.count("NULL")) {
             LogPrint("tor", "tor: Using NULL authentication\n");
             conn.Command("AUTHENTICATE", boost::bind(&TorController::auth_cb, this, _1, _2));
         } else if (methods.count("SAFECOOKIE")) {
@@ -603,7 +591,13 @@ void TorController::protocolinfo_cb(TorControlConnection& conn, const TorControl
                 }
             }
         } else if (methods.count("HASHEDPASSWORD")) {
-            LogPrintf("tor: The only supported authentication mechanism left is password, but no password provided with -torpassword\n");
+            if (!torpassword.empty()) {
+                LogPrint("tor", "tor: Using HASHEDPASSWORD authentication\n");
+                boost::replace_all(torpassword, "\"", "\\\"");
+                conn.Command("AUTHENTICATE \"" + torpassword + "\"", boost::bind(&TorController::auth_cb, this, _1, _2));
+            } else {
+                LogPrintf("tor: Password authentication required, but no password provided with -torpassword\n");
+            }
         } else {
             LogPrintf("tor: No supported authentication method\n");
         }
@@ -698,10 +692,15 @@ void InterruptTorControl()
 
 void StopTorControl()
 {
+    // timed_join() avoids the wallet not closing during a repair-restart. For a 'normal' wallet exit
+    // it behaves for our cases exactly like the normal join()
     if (base) {
-        torControlThread.join();
+#if BOOST_VERSION >= 105000
+        torControlThread.try_join_for(boost::chrono::seconds(1));
+#else
+        torControlThread.timed_join(boost::posix_time::seconds(1));
+#endif
         event_base_free(base);
         base = 0;
     }
 }
-

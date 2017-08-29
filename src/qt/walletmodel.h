@@ -8,6 +8,7 @@
 #include "paymentrequestplus.h"
 #include "walletmodeltransaction.h"
 
+#include "wallet/wallet.h"
 #include "support/allocators/secure.h"
 
 #include <map>
@@ -21,13 +22,6 @@ class PlatformStyle;
 class RecentRequestsTableModel;
 class TransactionTableModel;
 class WalletModelTransaction;
-// SYSCOIN
-class AliasTableModel;
-class MessageTableModel;
-class EscrowTableModel;
-class CertTableModel;
-class OfferTableModel;
-class OfferAcceptTableModel;
 
 class CCoinControl;
 class CKeyID;
@@ -36,8 +30,6 @@ class COutput;
 class CPubKey;
 class CWallet;
 class uint256;
-// SYSCOIN
-class UniValue;
 
 QT_BEGIN_NAMESPACE
 class QTimer;
@@ -47,8 +39,8 @@ class SendCoinsRecipient
 {
 public:
     explicit SendCoinsRecipient() : amount(0), fSubtractFeeFromAmount(false), nVersion(SendCoinsRecipient::CURRENT_VERSION) { }
-    explicit SendCoinsRecipient(const QString &addr, const QString &_label, const CAmount& _amount, const QString &_message):
-        address(addr), label(_label), amount(_amount), message(_message), fSubtractFeeFromAmount(false), nVersion(SendCoinsRecipient::CURRENT_VERSION) {}
+    explicit SendCoinsRecipient(const QString &addr, const QString &label, const CAmount& amount, const QString &message):
+        address(addr), label(label), amount(amount), message(message), fSubtractFeeFromAmount(false), nVersion(SendCoinsRecipient::CURRENT_VERSION) {}
 
     // If from an unauthenticated payment request, this is used for storing
     // the addresses, e.g. address-A<br />address-B<br />address-C.
@@ -57,6 +49,8 @@ public:
     // Todo: This is a hack, should be replaced with a cleaner solution!
     QString address;
     QString label;
+    AvailableCoinsType inputType;
+    bool fUseInstantSend;
     CAmount amount;
     // If from a payment request, this is used for storing the memo
     QString message;
@@ -126,38 +120,26 @@ public:
         AbsurdFee,
         PaymentRequestExpired,
 		// SYSCOIN
-		OKMultisig,
 		InvalidMultisig
     };
 
     enum EncryptionStatus
     {
-        Unencrypted,  // !wallet->IsCrypted()
-        Locked,       // wallet->IsCrypted() && wallet->IsLocked()
-        Unlocked      // wallet->IsCrypted() && !wallet->IsLocked()
+        Unencrypted,            // !wallet->IsCrypted()
+        Locked,                 // wallet->IsCrypted() && wallet->IsLocked(true)
+        UnlockedForMixingOnly,  // wallet->IsCrypted() && !wallet->IsLocked(true) && wallet->IsLocked()
+        Unlocked,               // wallet->IsCrypted() && !wallet->IsLocked()
     };
 
     OptionsModel *getOptionsModel();
     AddressTableModel *getAddressTableModel();
     TransactionTableModel *getTransactionTableModel();
     RecentRequestsTableModel *getRecentRequestsTableModel();
-	// SYSCOIN
-    AliasTableModel *getAliasTableModelMine();
-    AliasTableModel *getAliasTableModelAll();
-	MessageTableModel *getMessageTableModelIn();
-	MessageTableModel *getMessageTableModelOut();
-	EscrowTableModel *getEscrowTableModelMine();
-	EscrowTableModel *getEscrowTableModelAll();
-    CertTableModel *getCertTableModelMine();
-    CertTableModel *getCertTableModelAll();
-    OfferTableModel *getOfferTableModelMine();
-    OfferTableModel *getOfferTableModelAll();
-    OfferAcceptTableModel *getOfferTableModelAccept();
-    OfferAcceptTableModel *getOfferTableModelMyAccept();
 
     CAmount getBalance(const CCoinControl *coinControl = NULL) const;
     CAmount getUnconfirmedBalance() const;
     CAmount getImmatureBalance() const;
+    CAmount getAnonymizedBalance() const;
     bool haveWatchOnly() const;
     CAmount getWatchBalance() const;
     CAmount getWatchUnconfirmedBalance() const;
@@ -170,8 +152,8 @@ public:
     // Return status record for SendCoins, contains error id + information
     struct SendCoinsReturn
     {
-        SendCoinsReturn(StatusCode _status = OK):
-            status(_status) {}
+        SendCoinsReturn(StatusCode status = OK):
+            status(status) {}
         StatusCode status;
     };
 
@@ -184,8 +166,9 @@ public:
     // Wallet encryption
     bool setWalletEncrypted(bool encrypted, const SecureString &passphrase);
     // Passphrase only needed when unlocking
-    bool setWalletLocked(bool locked, const SecureString &passPhrase=SecureString());
+    bool setWalletLocked(bool locked, const SecureString &passPhrase=SecureString(), bool fMixing=false);
     bool changePassphrase(const SecureString &oldPass, const SecureString &newPass);
+
     // Wallet backup
     bool backupWallet(const QString &filename);
 
@@ -193,7 +176,7 @@ public:
     class UnlockContext
     {
     public:
-        UnlockContext(WalletModel *wallet, bool valid, bool relock);
+        UnlockContext(WalletModel *wallet, bool valid, bool was_locked, bool was_mixing);
         ~UnlockContext();
 
         bool isValid() const { return valid; }
@@ -204,12 +187,13 @@ public:
     private:
         WalletModel *wallet;
         bool valid;
-        mutable bool relock; // mutable, as it can be set to false by copying
+        mutable bool was_locked; // mutable, as it can be set to false by copying
+        mutable bool was_mixing; // mutable, as it can be set to false by copying
 
         void CopyFrom(const UnlockContext& rhs);
     };
 
-    UnlockContext requestUnlock();
+    UnlockContext requestUnlock(bool fForMixingOnly=false);
 
     bool getPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const;
     bool havePrivKey(const CKeyID &address) const;
@@ -225,8 +209,7 @@ public:
     void loadReceiveRequests(std::vector<std::string>& vReceiveRequests);
     bool saveReceiveRequest(const std::string &sAddress, const int64_t nId, const std::string &sRequest);
 
-    bool transactionCanBeAbandoned(uint256 hash) const;
-    bool abandonTransaction(uint256 hash) const;
+    bool hdEnabled() const;
 
 private:
     CWallet *wallet;
@@ -240,29 +223,19 @@ private:
     AddressTableModel *addressTableModel;
     TransactionTableModel *transactionTableModel;
     RecentRequestsTableModel *recentRequestsTableModel;
-	// SYSCOIN
-	AliasTableModel *aliasTableModelMine;
-    AliasTableModel *aliasTableModelAll;
-    EscrowTableModel *escrowTableModelMine;
-	EscrowTableModel *escrowTableModelAll;
-    MessageTableModel *inMessageTableModel;
-	MessageTableModel *outMessageTableModel;
-    CertTableModel *certTableModelMine;
-    CertTableModel *certTableModelAll;
-    OfferTableModel *offerTableModelMine;
-    OfferTableModel *offerTableModelAll;
-	OfferAcceptTableModel *offerTableModelAccept;
-    OfferAcceptTableModel *offerTableModelMyAccept;
 
     // Cache some values to be able to detect changes
     CAmount cachedBalance;
     CAmount cachedUnconfirmedBalance;
     CAmount cachedImmatureBalance;
+    CAmount cachedAnonymizedBalance;
     CAmount cachedWatchOnlyBalance;
     CAmount cachedWatchUnconfBalance;
     CAmount cachedWatchImmatureBalance;
     EncryptionStatus cachedEncryptionStatus;
     int cachedNumBlocks;
+    int cachedTxLocks;
+    int cachedPrivateSendRounds;
 
     QTimer *pollTimer;
 
@@ -272,7 +245,7 @@ private:
 
 Q_SIGNALS:
     // Signal that balance in wallet changed
-    void balanceChanged(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
+    void balanceChanged(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance, const CAmount& anonymizedBalance,
                         const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance);
 
     // Encryption status of wallet changed
@@ -281,7 +254,7 @@ Q_SIGNALS:
     // Signal emitted when wallet needs to be unlocked
     // It is valid behaviour for listeners to keep the wallet locked after this signal;
     // this means that the unlocking failed or was cancelled.
-    void requireUnlock();
+    void requireUnlock(bool fForMixingOnly=false);
 
     // Fired when a message should be reported to the user
     void message(const QString &title, const QString &message, unsigned int style);
@@ -306,13 +279,6 @@ public Q_SLOTS:
     void updateWatchOnlyFlag(bool fHaveWatchonly);
     /* Current, immature or unconfirmed balance might have changed - emit 'balanceChanged' if so */
     void pollBalanceChanged();
-	// SYSCOIN
-    void updateAlias();
-    void updateCert();
-	void updateEscrow();
-	void updateOffer();
-	void updateMessage();
 };
-// SYSCOIN
-extern void appendListAliases(UniValue& defaultAliasArray, bool allAliases=false);
+
 #endif // SYSCOIN_QT_WALLETMODEL_H

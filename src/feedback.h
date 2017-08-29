@@ -8,15 +8,50 @@ enum FeedbackUser {
 	FEEDBACKSELLER=2,
 	FEEDBACKARBITER=3
 };
+class CNameTXIDTuple {
+public:
+	std::vector<unsigned char> first;
+	uint256 second;
 
+	ADD_SERIALIZE_METHODS;
+
+	template <typename Stream, typename Operation>
+	inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+		READWRITE(first);
+		READWRITE(second);
+	}
+
+	CNameTXIDTuple(const std::vector<unsigned char> &f, uint256 s) {
+		first = f;
+		second = s;
+	}
+
+	CNameTXIDTuple() {
+		SetNull();
+	}
+	inline CNameTXIDTuple operator=(const CNameTXIDTuple& other) {
+		this->first = other.first;
+		this->second = other.second;
+		return *this;
+	}
+	inline bool operator==(const CNameTXIDTuple& other) const {
+		return this->first == other.first && this->second == other.second;
+	}
+	inline bool operator!=(const CNameTXIDTuple& other) const {
+		return (this->first != other.first || this->second != other.second);
+	}
+	void SetNull() {
+		second.SetNull();
+		first.clear();
+	}
+
+};
 class CFeedback {
 public:
 	std::vector<unsigned char> vchFeedback;
 	unsigned char nRating;
 	unsigned char nFeedbackUserTo;
 	unsigned char nFeedbackUserFrom;
-	uint64_t nHeight;
-	uint256 txHash;
     CFeedback() {
         SetNull();
     }
@@ -33,8 +68,6 @@ public:
 		READWRITE(VARINT(nRating));
 		READWRITE(VARINT(nFeedbackUserFrom));
 		READWRITE(VARINT(nFeedbackUserTo));
-		READWRITE(VARINT(nHeight));
-		READWRITE(txHash);
 	}
 
     friend bool operator==(const CFeedback &a, const CFeedback &b) {
@@ -43,8 +76,6 @@ public:
 		&& a.nRating == b.nRating
 		&& a.nFeedbackUserFrom == b.nFeedbackUserFrom
 		&& a.nFeedbackUserTo == b.nFeedbackUserTo
-		&& a.nHeight == b.nHeight
-		&& a.txHash == b.txHash
         );
     }
 
@@ -53,8 +84,6 @@ public:
 		nRating = b.nRating;
 		nFeedbackUserFrom = b.nFeedbackUserFrom;
 		nFeedbackUserTo = b.nFeedbackUserTo;
-		nHeight = b.nHeight;
-		txHash = b.txHash;
         return *this;
     }
 
@@ -62,12 +91,7 @@ public:
         return !(a == b);
     }
 
-    void SetNull() { txHash.SetNull(); nHeight = 0; nRating = 0; nFeedbackUserFrom = 0; nFeedbackUserTo = 0; vchFeedback.clear();}
-    bool IsNull() const { return ( txHash.IsNull() && nHeight == 0 && nRating == 0 && nFeedbackUserFrom == 0 && nFeedbackUserTo == 0 && vchFeedback.empty()); }
-};
-struct feedbacksort {
-    bool operator ()(const CFeedback& a, const CFeedback& b) {
-        return a.nHeight < b.nHeight;
-    }
+    void SetNull() {  nRating = 0; nFeedbackUserFrom = 0; nFeedbackUserTo = 0; vchFeedback.clear();}
+    bool IsNull() const { return (  nRating == 0 && nFeedbackUserFrom == 0 && nFeedbackUserTo == 0 && vchFeedback.empty()); }
 };
 #endif // FEEDBACK_H

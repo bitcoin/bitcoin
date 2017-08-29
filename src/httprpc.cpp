@@ -1,7 +1,3 @@
-// Copyright (c) 2015 The Syscoin Core developers
-// Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
 #include "httprpc.h"
 
 #include "base58.h"
@@ -235,7 +231,7 @@ bool StartHTTPRPC()
 
     assert(EventBase());
     httpRPCTimerInterface = new HTTPRPCTimerInterface(EventBase());
-    RPCSetTimerInterface(httpRPCTimerInterface);
+    RPCRegisterTimerInterface(httpRPCTimerInterface);
     return true;
 }
 
@@ -249,7 +245,7 @@ void StopHTTPRPC()
     LogPrint("rpc", "Stopping HTTP RPC server\n");
     UnregisterHTTPHandler("/", true);
     if (httpRPCTimerInterface) {
-        RPCUnsetTimerInterface(httpRPCTimerInterface);
+        RPCUnregisterTimerInterface(httpRPCTimerInterface);
         delete httpRPCTimerInterface;
         httpRPCTimerInterface = 0;
     }

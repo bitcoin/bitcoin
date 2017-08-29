@@ -1,0 +1,27 @@
+{
+    "description": "Direct connection to slave", 
+    "phases": [
+        {
+            "outcome": {
+                "servers": {
+                    "a:27017": {
+                        "setName": null, 
+                        "type": "Standalone"
+                    }
+                }, 
+                "setName": null, 
+                "topologyType": "Single"
+            }, 
+            "responses": [
+                [
+                    "a:27017", 
+                    {
+                        "ismaster": false, 
+                        "ok": 1
+                    }
+                ]
+            ]
+        }
+    ], 
+    "uri": "mongodb://a"
+}

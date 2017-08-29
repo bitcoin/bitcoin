@@ -14,7 +14,7 @@
 #include "walletmodel.h"
 
 #include "core_io.h"
-#include "main.h"
+#include "validation.h"
 #include "sync.h"
 #include "uint256.h"
 #include "util.h"
@@ -59,9 +59,9 @@ struct TxLessThan
 class TransactionTablePriv
 {
 public:
-    TransactionTablePriv(CWallet *_wallet, TransactionTableModel *_parent) :
-        wallet(_wallet),
-        parent(_parent)
+    TransactionTablePriv(CWallet *wallet, TransactionTableModel *parent) :
+        wallet(wallet),
+        parent(parent)
     {
     }
 
@@ -235,15 +235,15 @@ public:
     }
 };
 
-TransactionTableModel::TransactionTableModel(const PlatformStyle *_platformStyle, CWallet* _wallet, WalletModel *parent):
+TransactionTableModel::TransactionTableModel(const PlatformStyle *platformStyle, CWallet* wallet, WalletModel *parent):
         QAbstractTableModel(parent),
-        wallet(_wallet),
+        wallet(wallet),
         walletModel(parent),
-        priv(new TransactionTablePriv(_wallet, this)),
+        priv(new TransactionTablePriv(wallet, this)),
         fProcessingQueuedTransactions(false),
-        platformStyle(_platformStyle)
+        platformStyle(platformStyle)
 {
-    columns << QString() << QString() << tr("Date") << tr("Type") << tr("Label") << SyscoinUnits::getAmountColumnTitle(walletModel->getOptionsModel()->getDisplayUnit());
+    columns << QString() << QString() << tr("Date") << tr("Type") << tr("Address / Label") << SyscoinUnits::getAmountColumnTitle(walletModel->getOptionsModel()->getDisplayUnit());
     priv->refreshWallet();
 
     connect(walletModel->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
@@ -312,9 +312,6 @@ QString TransactionTableModel::formatTxStatus(const TransactionRecord *wtx) cons
     case TransactionStatus::Unconfirmed:
         status = tr("Unconfirmed");
         break;
-    case TransactionStatus::Abandoned:
-        status = tr("Abandoned");
-        break;
     case TransactionStatus::Confirming:
         status = tr("Confirming (%1 of %2 recommended confirmations)").arg(wtx->status.depth).arg(TransactionRecord::RecommendedNumConfirmations);
         break;
@@ -373,6 +370,8 @@ QString TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
         return tr("Received with");
     case TransactionRecord::RecvFromOther:
         return tr("Received from");
+    case TransactionRecord::RecvWithPrivateSend:
+        return tr("Received via PrivateSend");
     case TransactionRecord::SendToAddress:
     case TransactionRecord::SendToOther:
         return tr("Sent to");
@@ -380,65 +379,18 @@ QString TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
         return tr("Payment to yourself");
     case TransactionRecord::Generated:
         return tr("Mined");
-	// SYSCOIN
-    case TransactionRecord::AliasActivate:
-        return tr("Alias Activated");
-    case TransactionRecord::AliasPaymentSent:
-        return tr("Alias Payment Sent");
-    case TransactionRecord::AliasPaymentRecv:
-        return tr("Alias Payment Received");
-    case TransactionRecord::AliasTransfer:
-        return tr("Alias Transferred");
-    case TransactionRecord::AliasUpdate:
-        return tr("Alias Updated");
-    case TransactionRecord::AliasRecv:
-        return tr("Alias Received");
-    case TransactionRecord::OfferActivate:
-        return tr("Offer Activated");
-    case TransactionRecord::OfferUpdate:
-        return tr("Offer Updated");
-    case TransactionRecord::OfferAccept:
-        return tr("Offer Accepted");
-    case TransactionRecord::OfferAcceptAcknowledge:
-        return tr("Offer Accept Acknowledged");
-    case TransactionRecord::OfferAcceptRecv:
-        return tr("Offer Accept Received");
-    case TransactionRecord::OfferAcceptFeedback:
-        return tr("Offer Accept Feedback");
-    case TransactionRecord::OfferAcceptFeedbackRecv:
-        return tr("Offer Accept Feedback Received");
-    case TransactionRecord::CertActivate:
-        return tr("Cert. Activated");
-    case TransactionRecord::CertUpdate:
-        return tr("Cert. Updated");
-    case TransactionRecord::CertTransfer:
-        return tr("Cert. Transferred");
-    case TransactionRecord::CertRecv:
-        return tr("Cert. Received");
-	case TransactionRecord::EscrowActivate:
-        return tr("Escrow Activated");
-	case TransactionRecord::EscrowAcknowledge:
-        return tr("Escrow Acknowledged");
-    case TransactionRecord::EscrowRelease:
-        return tr("Escrow Released");
-    case TransactionRecord::EscrowReleaseRecv:
-        return tr("Escrow Release Received");
-    case TransactionRecord::EscrowRefund:
-        return tr("Escrow Refunded");
-    case TransactionRecord::EscrowFeedback:
-        return tr("Escrow Feedback");
-    case TransactionRecord::EscrowFeedbackRecv:
-        return tr("Escrow Feedback Received");
-    case TransactionRecord::EscrowRefundRecv:
-        return tr("Escrow Refund Received");
-	case TransactionRecord::EscrowRefundComplete:
-        return tr("Escrow Refund Complete");
-    case TransactionRecord::EscrowReleaseComplete:
-        return tr("Escrow Release Complete");
-    case TransactionRecord::MessageActivate:
-        return tr("Message Sent");
-    case TransactionRecord::MessageRecv:
-        return tr("Message Received");
+
+    case TransactionRecord::PrivateSendDenominate:
+        return tr("PrivateSend Denominate");
+    case TransactionRecord::PrivateSendCollateralPayment:
+        return tr("PrivateSend Collateral Payment");
+    case TransactionRecord::PrivateSendMakeCollaterals:
+        return tr("PrivateSend Make Collateral Inputs");
+    case TransactionRecord::PrivateSendCreateDenominations:
+        return tr("PrivateSend Create Denominations");
+    case TransactionRecord::PrivateSend:
+        return tr("PrivateSend");
+
     default:
         return QString();
     }
@@ -446,47 +398,17 @@ QString TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
 
 QVariant TransactionTableModel::txAddressDecoration(const TransactionRecord *wtx) const
 {
-	// SYSCOIN
-	QString theme = GUIUtil::getThemeName();
+    QString theme = GUIUtil::getThemeName();
     switch(wtx->type)
     {
     case TransactionRecord::Generated:
         return QIcon(":/icons/" + theme + "/tx_mined");
+    case TransactionRecord::RecvWithPrivateSend:
     case TransactionRecord::RecvWithAddress:
     case TransactionRecord::RecvFromOther:
-	// SYSCOIN
-	case TransactionRecord::AliasRecv:
-	case TransactionRecord::AliasPaymentRecv:
-	case TransactionRecord::CertRecv:
-	case TransactionRecord::OfferAcceptRecv:
-	case TransactionRecord::OfferAcceptFeedbackRecv:
-	case TransactionRecord::EscrowRefundRecv:
-	case TransactionRecord::EscrowFeedbackRecv:
-	case TransactionRecord::EscrowReleaseRecv:
-	case TransactionRecord::MessageRecv:
         return QIcon(":/icons/" + theme + "/tx_input");
     case TransactionRecord::SendToAddress:
     case TransactionRecord::SendToOther:
-	// SYSCOIN
-	case TransactionRecord::AliasActivate:
-	case TransactionRecord::AliasPaymentSent:
-	case TransactionRecord::AliasUpdate:
-    case TransactionRecord::AliasTransfer:
-    case TransactionRecord::OfferUpdate:
-    case TransactionRecord::OfferActivate:
-    case TransactionRecord::OfferAccept:
-	case TransactionRecord::OfferAcceptAcknowledge:
-	case TransactionRecord::OfferAcceptFeedback:
-    case TransactionRecord::CertActivate:
-	case TransactionRecord::CertTransfer:
-    case TransactionRecord::EscrowActivate:
-	case TransactionRecord::EscrowAcknowledge:
-    case TransactionRecord::EscrowRelease:
-    case TransactionRecord::EscrowRefund:
-	case TransactionRecord::EscrowRefundComplete:
-	case TransactionRecord::EscrowFeedback:
-	case TransactionRecord::EscrowReleaseComplete:
-	case TransactionRecord::MessageActivate:
         return QIcon(":/icons/" + theme + "/tx_output");
     default:
         return QIcon(":/icons/" + theme + "/tx_inout");
@@ -506,40 +428,12 @@ QString TransactionTableModel::formatTxToAddress(const TransactionRecord *wtx, b
     case TransactionRecord::RecvFromOther:
         return QString::fromStdString(wtx->address) + watchAddress;
     case TransactionRecord::RecvWithAddress:
+    case TransactionRecord::RecvWithPrivateSend:
     case TransactionRecord::SendToAddress:
     case TransactionRecord::Generated:
+    case TransactionRecord::PrivateSend:
         return lookupAddress(wtx->address, tooltip) + watchAddress;
     case TransactionRecord::SendToOther:
-	// SYSCOIN
-    case TransactionRecord::AliasActivate:
-	case TransactionRecord::AliasPaymentRecv:
-	case TransactionRecord::AliasPaymentSent:
-    case TransactionRecord::AliasUpdate:
-    case TransactionRecord::AliasTransfer:
-	case TransactionRecord::AliasRecv:
-    case TransactionRecord::OfferActivate:
-    case TransactionRecord::OfferUpdate:
-    case TransactionRecord::OfferAccept:
-	case TransactionRecord::OfferAcceptAcknowledge:
-	case TransactionRecord::OfferAcceptRecv:
-    case TransactionRecord::OfferAcceptFeedback:
-	case TransactionRecord::OfferAcceptFeedbackRecv:
-    case TransactionRecord::CertActivate:
-    case TransactionRecord::CertUpdate:
-    case TransactionRecord::CertTransfer:
-	case TransactionRecord::CertRecv:
-    case TransactionRecord::EscrowActivate:
-	case TransactionRecord::EscrowAcknowledge:
-    case TransactionRecord::EscrowRelease:
-	case TransactionRecord::EscrowReleaseComplete:
-    case TransactionRecord::EscrowRefund:
-	case TransactionRecord::EscrowFeedback:
-	case TransactionRecord::EscrowFeedbackRecv:
-	case TransactionRecord::EscrowRefundRecv:
-	case TransactionRecord::EscrowReleaseRecv:
-	case TransactionRecord::EscrowRefundComplete:
-	case TransactionRecord::MessageActivate:
-	case TransactionRecord::MessageRecv:
         return QString::fromStdString(wtx->address) + watchAddress;
     case TransactionRecord::SendToSelf:
     default:
@@ -555,12 +449,18 @@ QVariant TransactionTableModel::addressColor(const TransactionRecord *wtx) const
     case TransactionRecord::RecvWithAddress:
     case TransactionRecord::SendToAddress:
     case TransactionRecord::Generated:
+    case TransactionRecord::PrivateSend:
+    case TransactionRecord::RecvWithPrivateSend:
         {
         QString label = walletModel->getAddressTableModel()->labelForAddress(QString::fromStdString(wtx->address));
         if(label.isEmpty())
             return COLOR_BAREADDRESS;
         } break;
     case TransactionRecord::SendToSelf:
+    case TransactionRecord::PrivateSendCreateDenominations:
+    case TransactionRecord::PrivateSendDenominate:
+    case TransactionRecord::PrivateSendMakeCollaterals:
+    case TransactionRecord::PrivateSendCollateralPayment:
         return COLOR_BAREADDRESS;
     default:
         break;
@@ -583,8 +483,7 @@ QString TransactionTableModel::formatTxAmount(const TransactionRecord *wtx, bool
 
 QVariant TransactionTableModel::txStatusDecoration(const TransactionRecord *wtx) const
 {
-	// SYSCOIN
-	QString theme = GUIUtil::getThemeName();
+    QString theme = GUIUtil::getThemeName();
     switch(wtx->status.status)
     {
     case TransactionStatus::OpenUntilBlock:
@@ -594,8 +493,6 @@ QVariant TransactionTableModel::txStatusDecoration(const TransactionRecord *wtx)
         return COLOR_TX_STATUS_OFFLINE;
     case TransactionStatus::Unconfirmed:
         return QIcon(":/icons/" + theme + "/transaction_0");
-    case TransactionStatus::Abandoned:
-        return QIcon(":/icons/" + theme + "/transaction_abandoned");
     case TransactionStatus::Confirming:
         switch(wtx->status.depth)
         {
@@ -624,10 +521,9 @@ QVariant TransactionTableModel::txStatusDecoration(const TransactionRecord *wtx)
 
 QVariant TransactionTableModel::txWatchonlyDecoration(const TransactionRecord *wtx) const
 {
-	// SYSCOIN
-	QString theme = GUIUtil::getThemeName();
+    QString theme = GUIUtil::getThemeName();
     if (wtx->involvesWatchAddress)
-         return QIcon(":/icons/" + theme + "/eye");
+        return QIcon(":/icons/" + theme + "/eye");
     else
         return QVariant();
 }
@@ -664,8 +560,7 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         break;
     case Qt::DecorationRole:
     {
-        QIcon icon = qvariant_cast<QIcon>(index.data(RawDecorationRole));
-        return platformStyle->TextColorIcon(icon);
+        return qvariant_cast<QIcon>(index.data(RawDecorationRole));
     }
     case Qt::DisplayRole:
         switch(index.column())
@@ -703,11 +598,6 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
     case Qt::TextAlignmentRole:
         return column_alignments[index.column()];
     case Qt::ForegroundRole:
-        // Use the "danger" color for abandoned transactions
-        if(rec->status.status == TransactionStatus::Abandoned)
-        {
-            return COLOR_TX_STATUS_DANGER;
-        }
         // Non-confirmed (but not immature) as transactions are grey
         if(!rec->status.countsForBalance && rec->status.status != TransactionStatus::Immature)
         {
@@ -744,34 +634,6 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         return QString::fromStdString(rec->hash.ToString());
     case TxHexRole:
         return priv->getTxHex(rec);
-    case TxPlainTextRole:
-        {
-            QString details;
-            QDateTime date = QDateTime::fromTime_t(static_cast<uint>(rec->time));
-            QString txLabel = walletModel->getAddressTableModel()->labelForAddress(QString::fromStdString(rec->address));
-
-            details.append(date.toString("M/d/yy HH:mm"));
-            details.append(" ");
-            details.append(formatTxStatus(rec));
-            details.append(". ");
-            if(!formatTxType(rec).isEmpty()) {
-                details.append(formatTxType(rec));
-                details.append(" ");
-            }
-            if(!rec->address.empty()) {
-                if(txLabel.isEmpty())
-                    details.append(tr("(no label)") + " ");
-                else {
-                    details.append("(");
-                    details.append(txLabel);
-                    details.append(") ");
-                }
-                details.append(QString::fromStdString(rec->address));
-                details.append(" ");
-            }
-            details.append(formatTxAmount(rec, false, SyscoinUnits::separatorNever));
-            return details;
-        }
     case ConfirmedRole:
         return rec->status.countsForBalance;
     case FormattedAmountRole:
@@ -839,8 +701,8 @@ struct TransactionNotification
 {
 public:
     TransactionNotification() {}
-    TransactionNotification(uint256 _hash, ChangeType _status, bool _showTransaction):
-        hash(_hash), status(_status), showTransaction(_showTransaction) {}
+    TransactionNotification(uint256 hash, ChangeType status, bool showTransaction):
+        hash(hash), status(status), showTransaction(showTransaction) {}
 
     void invoke(QObject *ttm)
     {

@@ -1,0 +1,29 @@
+---
+topology_description:
+  type: ReplicaSetNoPrimary
+  servers:
+  - &1
+    address: b:27017
+    avg_rtt_ms: 5
+    type: RSSecondary
+    tags:
+      rack: one
+      data_center: nyc
+  - &2
+    address: c:27017
+    avg_rtt_ms: 5
+    type: RSSecondary
+    tags:
+      rack: two
+      data_center: sf
+operation: read
+read_preference:
+  mode: Secondary
+  tag_sets:
+  - data_center: nyc
+    rack: one
+  - other_tag: doesntexist
+suitable_servers:
+- *1
+in_latency_window:
+- *1

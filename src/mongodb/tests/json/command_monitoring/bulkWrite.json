@@ -1,0 +1,161 @@
+{
+  "data": [
+    {
+      "_id": 1,
+      "x": 11
+    },
+    {
+      "_id": 2,
+      "x": 22
+    },
+    {
+      "_id": 3,
+      "x": 33
+    }
+  ],
+  "collection_name": "test",
+  "database_name": "command-monitoring-tests",
+  "tests": [
+    {
+      "description": "A successful mixed bulk write",
+      "operation": {
+        "name": "bulkWrite",
+        "arguments": {
+          "requests": [
+            {
+              "insertOne": {
+                "document": {
+                  "_id": 4,
+                  "x": 44
+                }
+              }
+            },
+            {
+              "updateOne": {
+                "filter": {
+                  "_id": 3
+                },
+                "update": {
+                  "$set": {
+                    "x": 333
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expectations": [
+        {
+          "command_started_event": {
+            "command": {
+              "insert": "test",
+              "documents": [
+                {
+                  "_id": 4,
+                  "x": 44
+                }
+              ],
+              "ordered": true
+            },
+            "command_name": "insert",
+            "database_name": "command-monitoring-tests"
+          }
+        },
+        {
+          "command_succeeded_event": {
+            "reply": {
+              "ok": 1.0,
+              "n": 1
+            },
+            "command_name": "insert"
+          }
+        },
+        {
+          "command_started_event": {
+            "command": {
+              "update": "test",
+              "updates": [
+                {
+                  "q": {
+                    "_id": 3
+                  },
+                  "u": {
+                    "$set": {
+                      "x": 333
+                    }
+                  },
+                  "upsert": false,
+                  "multi": false
+                }
+              ],
+              "ordered": true
+            },
+            "command_name": "update",
+            "database_name": "command-monitoring-tests"
+          }
+        },
+        {
+          "command_succeeded_event": {
+            "reply": {
+              "ok": 1.0,
+              "n": 1
+            },
+            "command_name": "update"
+          }
+        }
+      ]
+    },
+    {
+      "description": "A successful unordered bulk write with an unacknowledged write concern",
+      "operation": {
+        "name": "bulkWrite",
+        "arguments": {
+          "requests": [
+            {
+              "insertOne": {
+                "document": {
+                  "_id": 4,
+                  "x": 44
+                }
+              }
+            }
+          ],
+          "ordered": false,
+          "writeConcern": {
+            "w": 0
+          }
+        }
+      },
+      "expectations": [
+        {
+          "command_started_event": {
+            "command": {
+              "insert": "test",
+              "documents": [
+                {
+                  "_id": 4,
+                  "x": 44
+                }
+              ],
+              "ordered": false,
+              "writeConcern": {
+                "w": 0
+              }
+            },
+            "command_name": "insert",
+            "database_name": "command-monitoring-tests"
+          }
+        },
+        {
+          "command_succeeded_event": {
+            "reply": {
+              "ok": 1.0
+            },
+            "command_name": "insert"
+          }
+        }
+      ]
+    }
+  ]
+}

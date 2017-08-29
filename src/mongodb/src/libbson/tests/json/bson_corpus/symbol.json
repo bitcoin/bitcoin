@@ -1,0 +1,80 @@
+{
+    "description": "Symbol",
+    "bson_type": "0x0E",
+    "deprecated": true,
+    "test_key": "a",
+    "valid": [
+        {
+            "description": "Empty string",
+            "canonical_bson": "0D0000000E6100010000000000",
+            "canonical_extjson": "{\"a\": {\"$symbol\": \"\"}}",
+            "converted_bson": "0D000000026100010000000000",
+            "converted_extjson": "{\"a\": \"\"}"
+        },
+        {
+            "description": "Single character",
+            "canonical_bson": "0E0000000E610002000000620000",
+            "canonical_extjson": "{\"a\": {\"$symbol\": \"b\"}}",
+            "converted_bson": "0E00000002610002000000620000",
+            "converted_extjson": "{\"a\": \"b\"}"
+        },
+        {
+            "description": "Multi-character",
+            "canonical_bson": "190000000E61000D0000006162616261626162616261620000",
+            "canonical_extjson": "{\"a\": {\"$symbol\": \"abababababab\"}}",
+            "converted_bson": "190000000261000D0000006162616261626162616261620000",
+            "converted_extjson": "{\"a\": \"abababababab\"}"
+        },
+        {
+            "description": "two-byte UTF-8 (\u00e9)",
+            "canonical_bson": "190000000E61000D000000C3A9C3A9C3A9C3A9C3A9C3A90000",
+            "canonical_extjson": "{\"a\": {\"$symbol\": \"éééééé\"}}",
+            "converted_bson": "190000000261000D000000C3A9C3A9C3A9C3A9C3A9C3A90000",
+            "converted_extjson": "{\"a\": \"éééééé\"}"
+        },
+        {
+            "description": "three-byte UTF-8 (\u2606)",
+            "canonical_bson": "190000000E61000D000000E29886E29886E29886E298860000",
+            "canonical_extjson": "{\"a\": {\"$symbol\": \"☆☆☆☆\"}}",
+            "converted_bson": "190000000261000D000000E29886E29886E29886E298860000",
+            "converted_extjson": "{\"a\": \"☆☆☆☆\"}"
+        },
+        {
+            "description": "Embedded nulls",
+            "canonical_bson": "190000000E61000D0000006162006261620062616261620000",
+            "canonical_extjson": "{\"a\": {\"$symbol\": \"ab\\u0000bab\\u0000babab\"}}",
+            "converted_bson": "190000000261000D0000006162006261620062616261620000",
+            "converted_extjson": "{\"a\": \"ab\\u0000bab\\u0000babab\"}"
+        }
+    ],
+    "decodeErrors": [
+        {
+            "description": "bad symbol length: 0 (but no 0x00 either)",
+            "bson": "0C0000000261000000000000"
+        },
+        {
+            "description": "bad symbol length: -1",
+            "bson": "0C000000026100FFFFFFFF00"
+        },
+        {
+            "description": "bad symbol length: eats terminator",
+            "bson": "10000000026100050000006200620000"
+        },
+        {
+            "description": "bad symbol length: longer than rest of document",
+            "bson": "120000000200FFFFFF00666F6F6261720000"
+        },
+        {
+            "description": "symbol is not null-terminated",
+            "bson": "1000000002610004000000616263FF00"
+        },
+        {
+            "description": "empty symbol, but extra null",
+            "bson": "0E00000002610001000000000000"
+        },
+        {
+            "description": "invalid UTF-8",
+            "bson": "0E00000002610002000000E90000"
+        }
+    ]
+}

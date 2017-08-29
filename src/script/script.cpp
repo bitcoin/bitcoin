@@ -4,12 +4,11 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "script.h"
-
 #include "tinyformat.h"
 #include "utilstrencodings.h"
 
 using namespace std;
-
+extern bool RemoveSyscoinScript(const CScript& scriptPubKeyIn, CScript& scriptPubKeyOut);
 const char* GetOpName(opcodetype opcode)
 {
     switch (opcode)
@@ -201,39 +200,70 @@ unsigned int CScript::GetSigOpCount(const CScript& scriptSig) const
     return subscript.GetSigOpCount(true);
 }
 
+bool CScript::IsNormalPaymentScript() const
+{
+	// SYSCOIN
+	CScript scriptOut;
+	CScript scriptPubKeyOut;
+	if (RemoveSyscoinScript(*this, scriptPubKeyOut))
+		scriptOut = scriptPubKeyOut;
+	else
+		scriptOut = *this;
+
+    if(scriptOut.size() != 25) return false;
+
+    std::string str;
+    opcodetype opcode;
+    const_iterator pc = scriptOut.begin();
+    int i = 0;
+    while (pc < scriptOut.end())
+    {
+        GetOp(pc, opcode);
+
+        if(     i == 0 && opcode != OP_DUP) return false;
+        else if(i == 1 && opcode != OP_HASH160) return false;
+        else if(i == 3 && opcode != OP_EQUALVERIFY) return false;
+        else if(i == 4 && opcode != OP_CHECKSIG) return false;
+        else if(i == 5) return false;
+
+        i++;
+    }
+
+    return true;
+}
+
+bool CScript::IsPayToPublicKeyHash() const
+{
+	// SYSCOIN
+	CScript scriptOut;
+	CScript scriptPubKeyOut;
+	if (RemoveSyscoinScript(*this, scriptPubKeyOut))
+		scriptOut = scriptPubKeyOut;
+	else
+		scriptOut = *this;
+    // Extra-fast test for pay-to-pubkey-hash CScripts:
+    return (scriptOut.size() == 25 &&
+	    scriptOut[0] == OP_DUP &&
+	    scriptOut[1] == OP_HASH160 &&
+	    scriptOut[2] == 0x14 &&
+	    scriptOut[23] == OP_EQUALVERIFY &&
+	    scriptOut[24] == OP_CHECKSIG);
+}
+
 bool CScript::IsPayToScriptHash() const
 {
+	// SYSCOIN
+	CScript scriptOut;
+	CScript scriptPubKeyOut;
+	if (RemoveSyscoinScript(*this, scriptPubKeyOut))
+		scriptOut = scriptPubKeyOut;
+	else
+		scriptOut = *this;
     // Extra-fast test for pay-to-script-hash CScripts:
-    return (this->size() == 23 &&
-            (*this)[0] == OP_HASH160 &&
-            (*this)[1] == 0x14 &&
-            (*this)[22] == OP_EQUAL);
-}
-
-bool CScript::IsPayToWitnessScriptHash() const
-{
-    // Extra-fast test for pay-to-witness-script-hash CScripts:
-    return (this->size() == 34 &&
-            (*this)[0] == OP_0 &&
-            (*this)[1] == 0x20);
-}
-
-// A witness program is any valid CScript that consists of a 1-byte push opcode
-// followed by a data push between 2 and 40 bytes.
-bool CScript::IsWitnessProgram(int& version, std::vector<unsigned char>& program) const
-{
-    if (this->size() < 4 || this->size() > 42) {
-        return false;
-    }
-    if ((*this)[0] != OP_0 && ((*this)[0] < OP_1 || (*this)[0] > OP_16)) {
-        return false;
-    }
-    if ((size_t)((*this)[1] + 2) == this->size()) {
-        version = DecodeOP_N((opcodetype)(*this)[0]);
-        program = std::vector<unsigned char>(this->begin() + 2, this->end());
-        return true;
-    }
-    return false;
+    return (scriptOut.size() == 23 &&
+            scriptOut[0] == OP_HASH160 &&
+            scriptOut[1] == 0x14 &&
+            scriptOut[22] == OP_EQUAL);
 }
 
 bool CScript::IsPushOnly(const_iterator pc) const
@@ -256,16 +286,4 @@ bool CScript::IsPushOnly(const_iterator pc) const
 bool CScript::IsPushOnly() const
 {
     return this->IsPushOnly(begin());
-}
-
-std::string CScriptWitness::ToString() const
-{
-    std::string ret = "CScriptWitness(";
-    for (unsigned int i = 0; i < stack.size(); i++) {
-        if (i) {
-            ret += ", ";
-        }
-        ret += HexStr(stack[i]);
-    }
-    return ret + ")";
 }

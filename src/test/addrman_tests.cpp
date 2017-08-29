@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(addrman_select)
 
     // Test 12: Select pulls from new and tried regardless of port number.
 	// SYSCOIN
- /*   BOOST_CHECK(addrman.Select().ToString() == "250.4.6.6:8369");
+   /* BOOST_CHECK(addrman.Select().ToString() == "250.4.6.6:8369");
     BOOST_CHECK(addrman.Select().ToString() == "250.3.2.2:9999");
     BOOST_CHECK(addrman.Select().ToString() == "250.3.3.3:9999");
     BOOST_CHECK(addrman.Select().ToString() == "250.4.4.4:8369");*/
@@ -416,7 +416,7 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket)
     uint256 nKey2 = (uint256)(CHashWriter(SER_GETHASH, 0) << 2).GetHash();
 
 	// SYSCOIN
-    //BOOST_CHECK(info1.GetTriedBucket(nKey1) == 40);
+   // BOOST_CHECK(info1.GetTriedBucket(nKey1) == 40);
 
     // Test 26: Make sure key actually randomizes bucket placement. A fail on
     //  this test could be a security issue.
@@ -425,11 +425,10 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket)
     // Test 27: Two addresses with same IP but different ports can map to
     //  different buckets because they have different keys.
     CAddrInfo info2 = CAddrInfo(addr2, source1);
-
 	
     BOOST_CHECK(info1.GetKey() != info2.GetKey());
 	// SYSCOIN
-    //BOOST_CHECK(info1.GetTriedBucket(nKey1) != info2.GetTriedBucket(nKey1));
+	//BOOST_CHECK(info1.GetTriedBucket(nKey1) != info2.GetTriedBucket(nKey1));
 
     set<int> buckets;
     for (int i = 0; i < 255; i++) {

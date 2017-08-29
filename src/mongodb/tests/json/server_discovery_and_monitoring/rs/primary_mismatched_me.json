@@ -1,0 +1,37 @@
+{
+    "description": "Primary mismatched me", 
+    "phases": [
+        {
+            "outcome": {
+                "servers": {
+                    "a:27017": {
+                        "setName": null, 
+                        "type": "Unknown"
+                    }, 
+                    "b:27017": {
+                        "setName": null, 
+                        "type": "Unknown"
+                    }
+                }, 
+                "setName": "rs", 
+                "topologyType": "ReplicaSetNoPrimary"
+            }, 
+            "responses": [
+                [
+                    "localhost:27017", 
+                    {
+                        "hosts": [
+                            "a:27017", 
+                            "b:27017"
+                        ], 
+                        "ismaster": true, 
+                        "me": "a:27017", 
+                        "ok": 1, 
+                        "setName": "rs"
+                    }
+                ]
+            ]
+        }
+    ], 
+    "uri": "mongodb://localhost:27017/?replicaSet=rs"
+}

@@ -12,6 +12,7 @@
 #include <assert.h>
 #include <ios>
 #include <limits>
+#include <list>
 #include <map>
 #include <set>
 #include <stdint.h>
@@ -91,6 +92,11 @@ template<typename Stream> inline void ser_writedata32(Stream &s, uint32_t obj)
     obj = htole32(obj);
     s.write((char*)&obj, 4);
 }
+template<typename Stream> inline void ser_writedata32be(Stream &s, uint32_t obj)
+{
+    obj = htobe32(obj);
+    s.write((char*)&obj, 4);
+}
 template<typename Stream> inline void ser_writedata64(Stream &s, uint64_t obj)
 {
     obj = htole64(obj);
@@ -113,6 +119,12 @@ template<typename Stream> inline uint32_t ser_readdata32(Stream &s)
     uint32_t obj;
     s.read((char*)&obj, 4);
     return le32toh(obj);
+}
+template<typename Stream> inline uint32_t ser_readdata32be(Stream &s)
+{
+    uint32_t obj;
+    s.read((char*)&obj, 4);
+    return be32toh(obj);
 }
 template<typename Stream> inline uint64_t ser_readdata64(Stream &s)
 {
@@ -161,6 +173,7 @@ enum
 };
 
 #define READWRITE(obj)      (::SerReadWrite(s, (obj), nType, nVersion, ser_action))
+#define READWRITEMANY(...)      (::SerReadWriteMany(s, nType, nVersion, ser_action, __VA_ARGS__))
 
 /** 
  * Implement three methods for serializable objects. These are actually wrappers over
@@ -322,8 +335,8 @@ uint64_t ReadCompactSize(Stream& is)
  * 0:         [0x00]  256:        [0x81 0x00]
  * 1:         [0x01]  16383:      [0xFE 0x7F]
  * 127:       [0x7F]  16384:      [0xFF 0x00]
- * 128:  [0x80 0x00]  16511:      [0xFF 0x7F]
- * 255:  [0x80 0x7F]  65535: [0x82 0xFE 0x7F]
+ * 128:  [0x80 0x00]  16511: [0x80 0xFF 0x7F]
+ * 255:  [0x80 0x7F]  65535: [0x82 0xFD 0x7F]
  * 2^32:           [0x8E 0xFE 0xFE 0xFF 0x00]
  */
 
@@ -373,7 +386,6 @@ I ReadVarInt(Stream& is)
 
 #define FLATDATA(obj) REF(CFlatData((char*)&(obj), (char*)&(obj) + sizeof(obj)))
 #define VARINT(obj) REF(WrapVarInt(REF(obj)))
-#define COMPACTSIZE(obj) REF(CCompactSize(REF(obj)))
 #define LIMITED_STRING(obj,n) REF(LimitedString< n >(REF(obj)))
 
 /** 
@@ -441,28 +453,6 @@ public:
     template<typename Stream>
     void Unserialize(Stream& s, int, int) {
         n = ReadVarInt<Stream,I>(s);
-    }
-};
-
-class CCompactSize
-{
-protected:
-    uint64_t &n;
-public:
-    CCompactSize(uint64_t& nIn) : n(nIn) { }
-
-    unsigned int GetSerializeSize(int, int) const {
-        return GetSizeOfCompactSize(n);
-    }
-
-    template<typename Stream>
-    void Serialize(Stream &s, int, int) const {
-        WriteCompactSize<Stream>(s, n);
-    }
-
-    template<typename Stream>
-    void Unserialize(Stream& s, int, int) {
-        n = ReadCompactSize<Stream>(s);
     }
 };
 
@@ -898,6 +888,39 @@ void Unserialize(Stream& is, std::set<K, Pred, A>& m, int nType, int nVersion)
     }
 }
 
+/**
+ * list
+ */
+template<typename T, typename A>
+unsigned int GetSerializeSize(const std::list<T, A>& l, int nType, int nVersion)
+{
+    unsigned int nSize = GetSizeOfCompactSize(l.size());
+    for (typename std::list<T, A>::const_iterator it = l.begin(); it != l.end(); ++it)
+        nSize += GetSerializeSize((*it), nType, nVersion);
+    return nSize;
+}
+
+template<typename Stream, typename T, typename A>
+void Serialize(Stream& os, const std::list<T, A>& l, int nType, int nVersion)
+{
+    WriteCompactSize(os, l.size());
+    for (typename std::list<T, A>::const_iterator it = l.begin(); it != l.end(); ++it)
+        Serialize(os, (*it), nType, nVersion);
+}
+
+template<typename Stream, typename T, typename A>
+void Unserialize(Stream& is, std::list<T, A>& l, int nType, int nVersion)
+{
+    l.clear();
+    unsigned int nSize = ReadCompactSize(is);
+    for (unsigned int i = 0; i < nSize; i++)
+    {
+        T val;
+        Unserialize(is, val, nType, nVersion);
+        l.push_back(val);
+    }
+}
+
 
 
 /**
@@ -960,5 +983,53 @@ public:
         return nSize;
     }
 };
+
+template<typename Stream>
+void SerializeMany(Stream& s, int nType, int nVersion)
+{
+}
+
+template<typename Stream, typename Arg>
+void SerializeMany(Stream& s, int nType, int nVersion, Arg&& arg)
+{
+    ::Serialize(s, std::forward<Arg>(arg), nType, nVersion);
+}
+
+template<typename Stream, typename Arg, typename... Args>
+void SerializeMany(Stream& s, int nType, int nVersion, Arg&& arg, Args&&... args)
+{
+    ::Serialize(s, std::forward<Arg>(arg), nType, nVersion);
+    ::SerializeMany(s, nType, nVersion, std::forward<Args>(args)...);
+}
+
+template<typename Stream>
+inline void UnserializeMany(Stream& s, int nType, int nVersion)
+{
+}
+
+template<typename Stream, typename Arg>
+inline void UnserializeMany(Stream& s, int nType, int nVersion, Arg& arg)
+{
+    ::Unserialize(s, arg, nType, nVersion);
+}
+
+template<typename Stream, typename Arg, typename... Args>
+inline void UnserializeMany(Stream& s, int nType, int nVersion, Arg& arg, Args&... args)
+{
+    ::Unserialize(s, arg, nType, nVersion);
+    ::UnserializeMany(s, nType, nVersion, args...);
+}
+
+template<typename Stream, typename... Args>
+inline void SerReadWriteMany(Stream& s, int nType, int nVersion, CSerActionSerialize ser_action, Args&&... args)
+{
+    ::SerializeMany(s, nType, nVersion, std::forward<Args>(args)...);
+}
+
+template<typename Stream, typename... Args>
+inline void SerReadWriteMany(Stream& s, int nType, int nVersion, CSerActionUnserialize ser_action, Args&... args)
+{
+    ::UnserializeMany(s, nType, nVersion, args...);
+}
 
 #endif // SYSCOIN_SERIALIZE_H

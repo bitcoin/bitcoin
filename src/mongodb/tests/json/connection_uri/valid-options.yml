@@ -1,0 +1,30 @@
+tests:
+    -
+        description: "Option names are normalized to lowercase"
+        uri: "mongodb://alice:secret@example.com/admin?AUTHMechanism=MONGODB-CR"
+        valid: true
+        warning: false
+        hosts:
+            -
+                type: "hostname"
+                host: "example.com"
+                port: ~
+        auth:
+            username: "alice"
+            password: "secret"
+            db: "admin"
+        options:
+            authmechanism: "MONGODB-CR"
+    -
+        description: "Option key and value (escaped null bytes)"
+        uri: "mongodb://example.com/?replicaSet=my%00rs"
+        valid: true
+        warning: false
+        hosts:
+            -
+                type: "hostname"
+                host: "example.com"
+                port: ~
+        auth: ~
+        options:
+            replicaset: "my\0rs"

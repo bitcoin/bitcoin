@@ -1,0 +1,26 @@
+{
+    "description": "Primary wrong setName", 
+    "phases": [
+        {
+            "outcome": {
+                "servers": {}, 
+                "setName": "rs", 
+                "topologyType": "ReplicaSetNoPrimary"
+            }, 
+            "responses": [
+                [
+                    "a:27017", 
+                    {
+                        "hosts": [
+                            "a:27017"
+                        ], 
+                        "ismaster": true, 
+                        "ok": 1, 
+                        "setName": "wrong"
+                    }
+                ]
+            ]
+        }
+    ], 
+    "uri": "mongodb://a/?replicaSet=rs"
+}

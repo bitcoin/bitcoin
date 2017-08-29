@@ -1,0 +1,146 @@
+{
+  "description": "Monitoring a topology that is a replica set with a primary connected",
+  "uri": "mongodb://a,b",
+  "phases": [
+    {
+      "responses": [
+        [
+          "a:27017",
+          {
+            "ok": 1,
+            "ismaster": true,
+            "setName": "rs",
+            "setVersion": 1,
+            "primary": "a:27017",
+            "hosts": [
+              "a:27017", "b:27017"
+            ],
+            "minWireVersion": 0,
+            "maxWireVersion": 4
+          }
+        ]
+      ],
+      "outcome": {
+        "events": [
+          {
+            "topology_opening_event": {
+              "topologyId": "42"
+            }
+          },
+          {
+            "topology_description_changed_event": {
+              "topologyId": "42",
+              "previousDescription": {
+                "topologyType": "Unknown",
+                "servers": []
+              },
+              "newDescription": {
+                "topologyType": "Unknown",
+                "servers": [
+                  {
+                    "address": "a:27017",
+                    "arbiters": [],
+                    "hosts": [],
+                    "passives": [],
+                    "type": "Unknown"
+                  },
+                  {
+                    "address": "b:27017",
+                    "arbiters": [],
+                    "hosts": [],
+                    "passives": [],
+                    "type": "Unknown"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "server_opening_event": {
+              "topologyId": "42",
+              "address": "a:27017"
+            }
+          },
+          {
+            "server_opening_event": {
+              "topologyId": "42",
+              "address": "b:27017"
+            }
+          },
+          {
+            "server_description_changed_event": {
+              "topologyId": "42",
+              "address": "a:27017",
+              "previousDescription": {
+                "address": "a:27017",
+                "arbiters": [],
+                "hosts": [],
+                "passives": [],
+                "type": "Unknown"
+              },
+              "newDescription": {
+                "address": "a:27017",
+                "arbiters": [],
+                "hosts": [
+                  "a:27017", "b:27017"
+                ],
+                "passives": [],
+                "primary": "a:27017",
+                "setName": "rs",
+                "type": "RSPrimary"
+              }
+            }
+          },
+          {
+            "topology_description_changed_event": {
+              "topologyId": "42",
+              "previousDescription": {
+                "topologyType": "Unknown",
+                "servers": [
+                  {
+                    "address": "a:27017",
+                    "arbiters": [],
+                    "hosts": [],
+                    "passives": [],
+                    "type": "Unknown"
+                  },
+                  {
+                    "address": "b:27017",
+                    "arbiters": [],
+                    "hosts": [],
+                    "passives": [],
+                    "type": "Unknown"
+                  }
+                ]
+              },
+              "newDescription": {
+                "topologyType": "ReplicaSetWithPrimary",
+                "setName": "rs",
+                "servers": [
+                  {
+                    "address": "a:27017",
+                    "arbiters": [],
+                    "hosts": [
+                      "a:27017", "b:27017"
+                    ],
+                    "passives": [],
+                    "primary": "a:27017",
+                    "setName": "rs",
+                    "type": "RSPrimary"
+                  },
+                  {
+                    "address": "b:27017",
+                    "arbiters": [],
+                    "hosts": [],
+                    "passives": [],
+                    "type": "Unknown"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

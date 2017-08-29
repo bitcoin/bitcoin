@@ -1,0 +1,36 @@
+{
+    "description": "DateTime",
+    "bson_type": "0x09",
+    "test_key": "a",
+    "valid": [
+        {
+            "description": "epoch",
+            "canonical_bson": "10000000096100000000000000000000",
+            "relaxed_extjson": "{\"a\" : {\"$date\" : \"1970-01-01T00:00:00Z\"}}",
+            "canonical_extjson": "{\"a\" : {\"$date\" : {\"$numberLong\" : \"0\"}}}"
+        },
+        {
+            "description": "positive ms",
+            "canonical_bson": "10000000096100C5D8D6CC3B01000000",
+            "relaxed_extjson": "{\"a\" : {\"$date\" : \"2012-12-24T12:15:30.501Z\"}}",
+            "canonical_extjson": "{\"a\" : {\"$date\" : {\"$numberLong\" : \"1356351330501\"}}}"
+        },
+        {
+            "description": "negative",
+            "canonical_bson": "10000000096100C33CE7B9BDFFFFFF00",
+            "relaxed_extjson": "{\"a\" : {\"$date\" : {\"$numberLong\" : \"-284643869501\"}}}",
+            "canonical_extjson": "{\"a\" : {\"$date\" : {\"$numberLong\" : \"-284643869501\"}}}"
+        },
+        {
+            "description" : "Y10K",
+            "canonical_bson" : "1000000009610000DC1FD277E6000000",
+            "canonical_extjson" : "{\"a\":{\"$date\":{\"$numberLong\":\"253402300800000\"}}}"
+        }
+    ],
+    "decodeErrors": [
+        {
+            "description": "datetime field truncated",
+            "bson": "0C0000000961001234567800"
+        }
+    ]
+}

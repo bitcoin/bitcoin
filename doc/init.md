@@ -13,7 +13,7 @@ can be found in the contrib/init folder.
 1. Service User
 ---------------------------------
 
-All three Linux startup configurations assume the existence of a "syscoin" user
+All three Linux startup configurations assume the existence of a "syscoincore" user
 and group.  They must be created before attempting to use these scripts.
 The OS X configuration assumes syscoind will be set up for the current user.
 
@@ -54,23 +54,23 @@ see `contrib/debian/examples/syscoin.conf`.
 All three configurations assume several paths that might need to be adjusted.
 
 Binary:              `/usr/bin/syscoind`  
-Configuration file:  `/etc/syscoin/syscoin.conf`  
+Configuration file:  `/etc/syscoincore/syscoin.conf`  
 Data directory:      `/var/lib/syscoind`  
 PID file:            `/var/run/syscoind/syscoind.pid` (OpenRC and Upstart) or `/var/lib/syscoind/syscoind.pid` (systemd)  
 Lock file:           `/var/lock/subsys/syscoind` (CentOS)  
 
 The configuration file, PID directory (if applicable) and data directory
-should all be owned by the syscoin user and group.  It is advised for security
+should all be owned by the syscoincore user and group.  It is advised for security
 reasons to make the configuration file and data directory only readable by the
-syscoin user and group.  Access to syscoin-cli and other syscoind rpc clients
+syscoincore user and group.  Access to syscoin-cli and other syscoind rpc clients
 can then be controlled by group membership.
 
 3b) Mac OS X
 
 Binary:              `/usr/local/bin/syscoind`  
-Configuration file:  `~/Library/Application Support/Syscoin/syscoin.conf`  
-Data directory:      `~/Library/Application Support/Syscoin`
-Lock file:           `~/Library/Application Support/Syscoin/.lock`
+Configuration file:  `~/Library/Application Support/SyscoinCore/syscoin.conf`  
+Data directory:      `~/Library/Application Support/SyscoinCore`
+Lock file:           `~/Library/Application Support/SyscoinCore/.lock`
 
 4. Installing Service Configuration
 -----------------------------------
@@ -104,7 +104,7 @@ use old versions of Upstart and do not supply the start-stop-daemon utility.
 Copy syscoind.init to /etc/init.d/syscoind. Test by running `service syscoind start`.
 
 Using this script, you can adjust the path and flags to the syscoind program by
-setting the SYSCOIND and FLAGS environment variables in the file
+setting the SYSD and FLAGS environment variables in the file
 /etc/sysconfig/syscoind. You can also use the DAEMONOPTS environment variable here.
 
 4e) Mac OS X
@@ -116,7 +116,7 @@ This Launch Agent will cause syscoind to start whenever the user logs in.
 
 NOTE: This approach is intended for those wanting to run syscoind as the current user.
 You will need to modify org.syscoin.syscoind.plist if you intend to use it as a
-Launch Daemon with a dedicated syscoin user.
+Launch Daemon with a dedicated syscoincore user.
 
 5. Auto-respawn
 -----------------------------------

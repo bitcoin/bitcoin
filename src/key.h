@@ -164,17 +164,17 @@ struct CExtKey {
                a.chaincode == b.chaincode && a.key == b.key;
     }
 
-    void Encode(unsigned char code[BIP32_EXTKEY_SIZE]) const;
-    void Decode(const unsigned char code[BIP32_EXTKEY_SIZE]);
+    void Encode(unsigned char code[74]) const;
+    void Decode(const unsigned char code[74]);
     bool Derive(CExtKey& out, unsigned int nChild) const;
     CExtPubKey Neuter() const;
     void SetMaster(const unsigned char* seed, unsigned int nSeedLen);
     template <typename Stream>
     void Serialize(Stream& s, int nType, int nVersion) const
     {
-        unsigned int len = BIP32_EXTKEY_SIZE;
+        unsigned int len = 74;
         ::WriteCompactSize(s, len);
-        unsigned char code[BIP32_EXTKEY_SIZE];
+        unsigned char code[74];
         Encode(code);
         s.write((const char *)&code[0], len);
     }
@@ -182,7 +182,7 @@ struct CExtKey {
     void Unserialize(Stream& s, int nType, int nVersion)
     {
         unsigned int len = ::ReadCompactSize(s);
-        unsigned char code[BIP32_EXTKEY_SIZE];
+        unsigned char code[74];
         s.read((char *)&code[0], len);
         Decode(code);
     }

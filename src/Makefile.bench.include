@@ -1,7 +1,3 @@
-# Copyright (c) 2015-2016 The Syscoin Core developers
-# Distributed under the MIT software license, see the accompanying
-# file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
 bin_PROGRAMS += bench/bench_syscoin
 BENCH_SRCDIR = bench
 BENCH_BINARY = bench/bench_syscoin$(EXEEXT)
@@ -11,10 +7,7 @@ bench_bench_syscoin_SOURCES = \
   bench/bench_syscoin.cpp \
   bench/bench.cpp \
   bench/bench.h \
-  bench/Examples.cpp \
-  bench/rollingbloom.cpp \
-  bench/crypto_hash.cpp \
-  bench/base58.cpp
+  bench/Examples.cpp
 
 bench_bench_syscoin_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(EVENT_CLFAGS) $(EVENT_PTHREADS_CFLAGS) -I$(builddir)/bench/
 bench_bench_syscoin_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
@@ -22,7 +15,6 @@ bench_bench_syscoin_LDADD = \
   $(LIBSYSCOIN_SERVER) \
   $(LIBSYSCOIN_COMMON) \
   $(LIBSYSCOIN_UTIL) \
-  $(LIBSYSCOIN_CONSENSUS) \
   $(LIBSYSCOIN_CRYPTO) \
   $(LIBLEVELDB) \
   $(LIBMEMENV) \

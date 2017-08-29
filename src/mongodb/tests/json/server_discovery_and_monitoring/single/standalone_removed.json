@@ -1,0 +1,27 @@
+{
+    "description": "Standalone removed from multi-server topology", 
+    "phases": [
+        {
+            "outcome": {
+                "servers": {
+                    "b:27017": {
+                        "setName": null, 
+                        "type": "Unknown"
+                    }
+                }, 
+                "setName": null, 
+                "topologyType": "Unknown"
+            }, 
+            "responses": [
+                [
+                    "a:27017", 
+                    {
+                        "ismaster": true, 
+                        "ok": 1
+                    }
+                ]
+            ]
+        }
+    ], 
+    "uri": "mongodb://a,b"
+}

@@ -8,9 +8,9 @@
 #include "walletmodel.h"
 
 #include <QDialog>
-#include <QMessageBox>
 #include <QString>
-#include <QTimer>
+
+static const int MAX_SEND_POPUP_ENTRIES = 10;
 
 class ClientModel;
 class OptionsModel;
@@ -54,7 +54,7 @@ public Q_SLOTS:
     void accept();
     SendCoinsEntry *addEntry();
     void updateTabsAndLabels();
-    void setBalance(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
+    void setBalance(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance, const CAmount& anonymizedBalance,
                     const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance);
 
 private:
@@ -62,6 +62,7 @@ private:
     ClientModel *clientModel;
     WalletModel *model;
     bool fNewRecipientAllowed;
+    void send(QList<SendCoinsRecipient> recipients, QString strFee, QString strFunds);
     bool fFeeMinimized;
     const PlatformStyle *platformStyle;
 
@@ -78,6 +79,7 @@ private Q_SLOTS:
     void on_buttonMinimizeFee_clicked();
     void removeEntry(SendCoinsEntry* entry);
     void updateDisplayUnit();
+    void updateInstantSend();
     void coinControlFeatureChanged(bool);
     void coinControlButtonClicked();
     void coinControlChangeChecked(int);
@@ -100,26 +102,6 @@ private Q_SLOTS:
 Q_SIGNALS:
     // Fired when a message should be reported to the user
     void message(const QString &title, const QString &message, unsigned int style);
-};
-
-
-
-class SendConfirmationDialog : public QMessageBox
-{
-    Q_OBJECT
-
-public:
-    SendConfirmationDialog(const QString &title, const QString &text, int secDelay = 0, QWidget *parent = 0);
-    int exec();
-
-private Q_SLOTS:
-    void countDown();
-    void updateYesButton();
-
-private:
-    QAbstractButton *yesButton;
-    QTimer countDownTimer;
-    int secDelay;
 };
 
 #endif // SYSCOIN_QT_SENDCOINSDIALOG_H

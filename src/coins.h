@@ -8,7 +8,6 @@
 
 #include "compressor.h"
 #include "core_memusage.h"
-#include "hash.h"
 #include "memusage.h"
 #include "serialize.h"
 #include "uint256.h"
@@ -265,22 +264,21 @@ public:
     }
 };
 
-class SaltedTxidHasher
+class CCoinsKeyHasher
 {
 private:
-    /** Salt */
-    const uint64_t k0, k1;
+    uint256 salt;
 
 public:
-    SaltedTxidHasher();
+    CCoinsKeyHasher();
 
     /**
      * This *must* return size_t. With Boost 1.46 on 32-bit systems the
      * unordered_map will behave unpredictably if the custom hasher returns a
      * uint64_t, resulting in failures when syncing the chain (#4634).
      */
-    size_t operator()(const uint256& txid) const {
-        return SipHashUint256(k0, k1, txid);
+    size_t operator()(const uint256& key) const {
+        return key.GetHash(salt);
     }
 };
 
@@ -297,28 +295,21 @@ struct CCoinsCacheEntry
     CCoinsCacheEntry() : coins(), flags(0) {}
 };
 
-typedef boost::unordered_map<uint256, CCoinsCacheEntry, SaltedTxidHasher> CCoinsMap;
+typedef boost::unordered_map<uint256, CCoinsCacheEntry, CCoinsKeyHasher> CCoinsMap;
 
-/** Cursor for iterating over CoinsView state */
-class CCoinsViewCursor
+struct CCoinsStats
 {
-public:
-    CCoinsViewCursor(const uint256 &hashBlockIn): hashBlock(hashBlockIn) {}
-    virtual ~CCoinsViewCursor();
-
-    virtual bool GetKey(uint256 &key) const = 0;
-    virtual bool GetValue(CCoins &coins) const = 0;
-    /* Don't care about GetKeySize here */
-    virtual unsigned int GetValueSize() const = 0;
-
-    virtual bool Valid() const = 0;
-    virtual void Next() = 0;
-
-    //! Get best block at the time this cursor was created
-    const uint256 &GetBestBlock() const { return hashBlock; }
-private:
+    int nHeight;
     uint256 hashBlock;
+    uint64_t nTransactions;
+    uint64_t nTransactionOutputs;
+    uint64_t nSerializedSize;
+    uint256 hashSerialized;
+    CAmount nTotalAmount;
+
+    CCoinsStats() : nHeight(0), nTransactions(0), nTransactionOutputs(0), nSerializedSize(0), nTotalAmount(0) {}
 };
+
 
 /** Abstract view on the open txout dataset. */
 class CCoinsView
@@ -338,8 +329,8 @@ public:
     //! The passed mapCoins can be modified.
     virtual bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock);
 
-    //! Get a cursor to iterate over the whole state
-    virtual CCoinsViewCursor *Cursor() const;
+    //! Calculate statistics about the unspent transaction output set
+    virtual bool GetStats(CCoinsStats &stats) const;
 
     //! As we use CCoinsViews polymorphically, have a virtual destructor
     virtual ~CCoinsView() {}
@@ -359,7 +350,7 @@ public:
     uint256 GetBestBlock() const;
     void SetBackend(CCoinsView &viewIn);
     bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock);
-    CCoinsViewCursor *Cursor() const;
+    bool GetStats(CCoinsStats &stats) const;
 };
 
 
@@ -444,7 +435,7 @@ public:
      * would not properly overwrite the first coinbase of the pair. Simultaneous modifications
      * are not allowed.
      */
-    CCoinsModifier ModifyNewCoins(const uint256 &txid, bool coinbase);
+    CCoinsModifier ModifyNewCoins(const uint256 &txid);
 
     /**
      * Push the modifications applied to this cache to its base.
@@ -466,7 +457,7 @@ public:
     size_t DynamicMemoryUsage() const;
 
     /** 
-     * Amount of syscoins coming in to a transaction
+     * Amount of syscoin coming in to a transaction
      * Note that lightweight clients may not know anything besides the hash of previous transactions,
      * so may not be able to calculate this.
      *

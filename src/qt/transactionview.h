@@ -18,6 +18,7 @@ QT_BEGIN_NAMESPACE
 class QComboBox;
 class QDateTimeEdit;
 class QFrame;
+class QItemSelectionModel;
 class QLineEdit;
 class QMenu;
 class QModelIndex;
@@ -53,7 +54,7 @@ public:
         STATUS_COLUMN_WIDTH = 30,
         WATCHONLY_COLUMN_WIDTH = 23,
         DATE_COLUMN_WIDTH = 120,
-        TYPE_COLUMN_WIDTH = 113,
+        TYPE_COLUMN_WIDTH = 240,
         AMOUNT_MINIMUM_COLUMN_WIDTH = 120,
         MINIMUM_COLUMN_WIDTH = 23
     };
@@ -62,7 +63,6 @@ private:
     WalletModel *model;
     TransactionFilterProxy *transactionProxyModel;
     QTableView *transactionView;
-
     QComboBox *dateWidget;
     QComboBox *typeWidget;
     QComboBox *watchOnlyWidget;
@@ -75,7 +75,6 @@ private:
     QFrame *dateRangeWidget;
     QDateTimeEdit *dateFrom;
     QDateTimeEdit *dateTo;
-    QAction *abandonAction;
 
     QWidget *createDateRangeWidget();
 
@@ -95,16 +94,17 @@ private Q_SLOTS:
     void copyAmount();
     void copyTxID();
     void copyTxHex();
-    void copyTxPlainText();
     void openThirdPartyTxUrl(QString url);
     void updateWatchOnlyColumn(bool fHaveWatchOnly);
-    void abandonTx();
 
 Q_SIGNALS:
     void doubleClicked(const QModelIndex&);
 
     /**  Fired when a message should be reported to the user */
     void message(const QString &title, const QString &message, unsigned int style);
+
+    /** Send computed sum back to wallet-view */
+    void trxAmount(QString amount);
 
 public Q_SLOTS:
     void chooseDate(int idx);
@@ -114,7 +114,7 @@ public Q_SLOTS:
     void changedAmount(const QString &amount);
     void exportClicked();
     void focusTransaction(const QModelIndex&);
-
+    void computeSum();
 };
 
 #endif // SYSCOIN_QT_TRANSACTIONVIEW_H

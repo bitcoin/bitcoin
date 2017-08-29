@@ -1,0 +1,113 @@
+{
+  "data": [
+    {
+      "_id": 1,
+      "x": 11
+    }
+  ],
+  "collection_name": "test",
+  "database_name": "command-monitoring-tests",
+  "tests": [
+    {
+      "description": "A successful command",
+      "operation": {
+        "name": "count",
+        "arguments": {
+          "filter": {
+            "_id": 1
+          }
+        }
+      },
+      "expectations": [
+        {
+          "command_started_event": {
+            "command": {
+              "count": "test",
+              "query": {
+                "_id": 1
+              }
+            },
+            "command_name": "count",
+            "database_name": "command-monitoring-tests"
+          }
+        },
+        {
+          "command_succeeded_event": {
+            "reply": {
+              "ok": 1.0,
+              "n": 1
+            },
+            "command_name": "count"
+          }
+        }
+      ]
+    },
+    {
+      "description": "A failed command event",
+      "operation": {
+        "name": "count",
+        "arguments": {
+          "filter": {
+            "$or": true
+          }
+        }
+      },
+      "expectations": [
+        {
+          "command_started_event": {
+            "command": {
+              "count": "test",
+              "query": {
+                "$or": true
+              }
+            },
+            "command_name": "count",
+            "database_name": "command-monitoring-tests"
+          }
+        },
+        {
+          "command_failed_event": {
+            "command_name": "count"
+          }
+        }
+      ]
+    },
+    {
+      "description": "A successful command with a non-primary read preference",
+      "operation": {
+        "name": "count",
+        "arguments": {
+          "filter": {
+            "_id": 1
+          }
+        },
+        "read_preference": {
+          "mode": "primaryPreferred"
+        }
+      },
+      "expectations": [
+        {
+          "command_started_event": {
+            "command": {
+              "count": "test",
+              "query": {
+                "_id": 1
+              }
+            },
+            "command_name": "count",
+            "database_name": "command-monitoring-tests"
+          }
+        },
+        {
+          "command_succeeded_event": {
+            "reply": {
+              "ok": 1.0,
+              "n": 1
+            },
+            "command_name": "count"
+          }
+        }
+      ]
+    }
+  ]
+}

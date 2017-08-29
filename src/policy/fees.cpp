@@ -8,7 +8,6 @@
 
 #include "amount.h"
 #include "primitives/transaction.h"
-#include "random.h"
 #include "streams.h"
 #include "txmempool.h"
 #include "util.h"
@@ -88,7 +87,7 @@ double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
     int maxbucketindex = buckets.size() - 1;
 
     // requireGreater means we are looking for the lowest fee/priority such that all higher
-    // values pass, so we start at maxbucketindex (highest fee) and look at successively
+    // values pass, so we start at maxbucketindex (highest fee) and look at succesively
     // smaller buckets until we reach failure.  Otherwise, we are looking for the highest
     // fee/priority such that all lower values fail, and we go in the opposite direction.
     unsigned int startbucket = requireGreater ? maxbucketindex : 0;
@@ -287,8 +286,7 @@ void CBlockPolicyEstimator::removeTx(uint256 hash)
 {
     std::map<uint256, TxStatsInfo>::iterator pos = mapMemPoolTxs.find(hash);
     if (pos == mapMemPoolTxs.end()) {
-        LogPrint("estimatefee", "Blockpolicy error mempool tx %s not found for removeTx\n",
-                 hash.ToString().c_str());
+        LogPrint("estimatefee", "Blockpolicy error mempool tx %s not found for removeTx\n", hash.ToString());
         return;
     }
     TxConfirmStats *stats = pos->second.stats;
@@ -348,9 +346,8 @@ void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, boo
     unsigned int txHeight = entry.GetHeight();
     uint256 hash = entry.GetTx().GetHash();
     if (mapMemPoolTxs[hash].stats != NULL) {
-        LogPrint("estimatefee", "Blockpolicy error mempool tx %s already being tracked\n",
-                 hash.ToString().c_str());
-	return;
+        LogPrint("estimatefee", "Blockpolicy error mempool tx %s already being tracked\n", hash.ToString());
+        return;
     }
 
     if (txHeight < nBestSeenHeight) {
@@ -495,8 +492,7 @@ void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
 CFeeRate CBlockPolicyEstimator::estimateFee(int confTarget)
 {
     // Return failure if trying to analyze a target we're not tracking
-    // It's not possible to get reasonable estimates for confTarget of 1
-    if (confTarget <= 1 || (unsigned int)confTarget > feeStats.GetMaxConfirms())
+    if (confTarget <= 0 || (unsigned int)confTarget > feeStats.GetMaxConfirms())
         return CFeeRate(0);
 
     double median = feeStats.EstimateMedianVal(confTarget, SUFFICIENT_FEETXS, MIN_SUCCESS_PCT, true, nBestSeenHeight);
@@ -514,10 +510,6 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, int *answerFoun
     // Return failure if trying to analyze a target we're not tracking
     if (confTarget <= 0 || (unsigned int)confTarget > feeStats.GetMaxConfirms())
         return CFeeRate(0);
-
-    // It's not possible to get reasonable estimates for confTarget of 1
-    if (confTarget == 1)
-        confTarget = 2;
 
     double median = -1;
     while (median < 0 && (unsigned int)confTarget <= feeStats.GetMaxConfirms()) {
@@ -585,22 +577,4 @@ void CBlockPolicyEstimator::Read(CAutoFile& filein)
     feeStats.Read(filein);
     priStats.Read(filein);
     nBestSeenHeight = nFileBestSeenHeight;
-}
-
-FeeFilterRounder::FeeFilterRounder(const CFeeRate& minIncrementalFee)
-{
-    CAmount minFeeLimit = minIncrementalFee.GetFeePerK() / 2;
-    feeset.insert(0);
-    for (double bucketBoundary = minFeeLimit; bucketBoundary <= MAX_FEERATE; bucketBoundary *= FEE_SPACING) {
-        feeset.insert(bucketBoundary);
-    }
-}
-
-CAmount FeeFilterRounder::round(CAmount currentMinFee)
-{
-    std::set<double>::iterator it = feeset.lower_bound(currentMinFee);
-    if ((it != feeset.begin() && insecure_rand() % 3 != 0) || it == feeset.end()) {
-        it--;
-    }
-    return *it;
 }

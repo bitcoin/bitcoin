@@ -1,0 +1,55 @@
+{
+   ignore_libcrypto_conditional_jump_errors_in_leak
+   Memcheck:Leak
+   ...
+   obj:*/libcrypto.so.*
+}
+{
+   ignore_libcrypto_conditional_jump_errors_in_cond
+   Memcheck:Cond
+   ...
+   obj:*/libcrypto.so.*
+}
+{
+   ignore_libssl_conditional_jump_errors_in_cond
+   Memcheck:Cond
+   ...
+   obj:*/libssl.so.*
+}
+{
+   ignore_libcrypto_conditional_jump_errors_in_value8
+   Memcheck:Value8
+   ...
+   obj:*/libcrypto.so.*
+}
+{
+   ignore_scram_nonce_uninitialized_warning_cond
+   Memcheck:Cond
+   fun:mongoc_b64_ntop
+   ...
+   fun:_mongoc_scram_step
+   ...
+}
+{
+   ignore_scram_nonce_uninitialized_warning_value8
+   Memcheck:Value8
+   fun:mongoc_b64_ntop
+   ...
+   fun:_mongoc_scram_step
+   ...
+}
+{
+   ignore_libcrypto_conditional_jump_errors_in_param
+   Memcheck:Param
+   sendmsg(msg.msg_iov[0])
+   ...
+   obj:*/libcrypto.so.*
+}
+{
+   ignore_sasl_load_plugin_reachable_warnings
+   Memcheck:Leak
+   ...
+   fun:_sasl_get_plugin
+   ...
+   fun:_mongoc_do_init
+}

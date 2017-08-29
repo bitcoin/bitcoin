@@ -1,0 +1,143 @@
+{
+  "data": [
+    {
+      "_id": 1,
+      "x": 11
+    }
+  ],
+  "collection_name": "test",
+  "database_name": "command-monitoring-tests",
+  "tests": [
+    {
+      "description": "A successful insert many",
+      "operation": {
+        "name": "insertMany",
+        "arguments": {
+          "documents": [
+            {
+              "_id": 2,
+              "x": 22
+            }
+          ]
+        }
+      },
+      "expectations": [
+        {
+          "command_started_event": {
+            "command": {
+              "insert": "test",
+              "documents": [
+                {
+                  "_id": 2,
+                  "x": 22
+                }
+              ],
+              "ordered": true
+            },
+            "command_name": "insert",
+            "database_name": "command-monitoring-tests"
+          }
+        },
+        {
+          "command_succeeded_event": {
+            "reply": {
+              "ok": 1.0,
+              "n": 1
+            },
+            "command_name": "insert"
+          }
+        }
+      ]
+    },
+    {
+      "description": "A successful insert many command with write errors",
+      "operation": {
+        "name": "insertMany",
+        "arguments": {
+          "documents": [
+            {
+              "_id": 1,
+              "x": 11
+            }
+          ]
+        }
+      },
+      "expectations": [
+        {
+          "command_started_event": {
+            "command": {
+              "insert": "test",
+              "documents": [
+                {
+                  "_id": 1,
+                  "x": 11
+                }
+              ],
+              "ordered": true
+            },
+            "command_name": "insert",
+            "database_name": "command-monitoring-tests"
+          }
+        },
+        {
+          "command_succeeded_event": {
+            "reply": {
+              "ok": 1.0,
+              "n": 0,
+              "writeErrors": [
+                {
+                  "index": 0,
+                  "code": 42,
+                  "errmsg": ""
+                }
+              ]
+            },
+            "command_name": "insert"
+          }
+        }
+      ]
+    },
+    {
+      "description": "A successful unordered insert many",
+      "operation": {
+        "name": "insertMany",
+        "arguments": {
+          "documents": [
+            {
+              "_id": 2,
+              "x": 22
+            }
+          ],
+          "ordered": false
+        }
+      },
+      "expectations": [
+        {
+          "command_started_event": {
+            "command": {
+              "insert": "test",
+              "documents": [
+                {
+                  "_id": 2,
+                  "x": 22
+                }
+              ],
+              "ordered": false
+            },
+            "command_name": "insert",
+            "database_name": "command-monitoring-tests"
+          }
+        },
+        {
+          "command_succeeded_event": {
+            "reply": {
+              "ok": 1.0,
+              "n": 1
+            },
+            "command_name": "insert"
+          }
+        }
+      ]
+    }
+  ]
+}

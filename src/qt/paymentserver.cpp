@@ -1,4 +1,5 @@
 // Copyright (c) 2011-2015 The Syscoin Core developers
+// Copyright (c) 2014-2017 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,7 +11,7 @@
 
 #include "base58.h"
 #include "chainparams.h"
-#include "main.h" // For minRelayTxFee
+#include "validation.h" // For minRelayTxFee
 #include "ui_interface.h"
 #include "util.h"
 #include "wallet/wallet.h"
@@ -58,19 +59,14 @@ const char* BIP71_MIMETYPE_PAYMENTREQUEST = "application/syscoin-paymentrequest"
 // BIP70 max payment request size in bytes (DoS protection)
 const qint64 BIP70_MAX_PAYMENTREQUEST_SIZE = 50000;
 
-struct X509StoreDeleter {
-      void operator()(X509_STORE* b) {
-          X509_STORE_free(b);
-      }
-};
-
-struct X509Deleter {
-      void operator()(X509* b) { X509_free(b); }
-};
-
-namespace // Anon namespace
+X509_STORE* PaymentServer::certStore = NULL;
+void PaymentServer::freeCertStore()
 {
-    std::unique_ptr<X509_STORE, X509StoreDeleter> certStore;
+    if (PaymentServer::certStore != NULL)
+    {
+        X509_STORE_free(PaymentServer::certStore);
+        PaymentServer::certStore = NULL;
+    }
 }
 
 //
@@ -85,7 +81,7 @@ static QString ipcServerName()
     // Append a simple hash of the datadir
     // Note that GetDataDir(true) returns a different path
     // for -testnet versus main net
-    QString ddir(GUIUtil::boostPathToQString(GetDataDir(true)));
+    QString ddir(QString::fromStdString(GetDataDir(true).string()));
     name.append(QString::number(qHash(ddir)));
 
     return name;
@@ -112,15 +108,20 @@ static void ReportInvalidCertificate(const QSslCertificate& cert)
 //
 void PaymentServer::LoadRootCAs(X509_STORE* _store)
 {
+    if (PaymentServer::certStore == NULL)
+        atexit(PaymentServer::freeCertStore);
+    else
+        freeCertStore();
+
     // Unit tests mostly use this, to pass in fake root CAs:
     if (_store)
     {
-        certStore.reset(_store);
+        PaymentServer::certStore = _store;
         return;
     }
 
     // Normal execution, use either -rootcertificates or system certs:
-    certStore.reset(X509_STORE_new());
+    PaymentServer::certStore = X509_STORE_new();
 
     // Note: use "-system-" default here so that users can pass -rootcertificates=""
     // and get 'I don't like X.509 certificates, don't trust anybody' behavior:
@@ -167,11 +168,11 @@ void PaymentServer::LoadRootCAs(X509_STORE* _store)
         QByteArray certData = cert.toDer();
         const unsigned char *data = (const unsigned char *)certData.data();
 
-        std::unique_ptr<X509, X509Deleter> x509(d2i_X509(0, &data, certData.size()));
-        if (x509 && X509_STORE_add_cert(certStore.get(), x509.get()))
+        X509* x509 = d2i_X509(0, &data, certData.size());
+        if (x509 && X509_STORE_add_cert(PaymentServer::certStore, x509))
         {
-            // Note: X509_STORE increases the reference count to the X509 object,
-            // we still have to release our reference to it.
+            // Note: X509_STORE_free will free the X509* objects when
+            // the PaymentServer is destroyed
             ++nRootCerts;
         }
         else
@@ -550,7 +551,7 @@ bool PaymentServer::processPaymentRequest(const PaymentRequestPlus& request, Sen
     recipient.paymentRequest = request;
     recipient.message = GUIUtil::HtmlEscape(request.getDetails().memo());
 
-    request.getMerchant(certStore.get(), recipient.authenticatedMerchant);
+    request.getMerchant(PaymentServer::certStore, recipient.authenticatedMerchant);
 
     QList<std::pair<CScript, CAmount> > sendingTos = request.getPayTo();
     QStringList addresses;
@@ -648,7 +649,7 @@ void PaymentServer::fetchPaymentACK(CWallet* wallet, SendCoinsRecipient recipien
     }
     else {
         CPubKey newKey;
-        if (wallet->GetKeyFromPool(newKey)) {
+        if (wallet->GetKeyFromPool(newKey, false)) {
             CKeyID keyID = newKey.GetID();
             wallet->SetAddressBook(keyID, strAccount, "refund");
 
@@ -806,9 +807,4 @@ bool PaymentServer::verifyAmount(const CAmount& requestAmount)
             .arg(MAX_MONEY);
     }
     return fVerified;
-}
-
-X509_STORE* PaymentServer::getCertStore()
-{
-    return certStore.get();
 }

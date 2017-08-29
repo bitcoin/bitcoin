@@ -15,8 +15,7 @@
 #ifdef DEBUG_LOCKCONTENTION
 void PrintLockContention(const char* pszName, const char* pszFile, int nLine)
 {
-    LogPrintf("LOCKCONTENTION: %s\n", pszName);
-    LogPrintf("Locker: %s:%d\n", pszFile, nLine);
+    LogPrintf("LOCKCONTENTION: %s Locker: %s:%d\n", pszName, pszFile, nLine);
 }
 #endif /* DEBUG_LOCKCONTENTION */
 
@@ -56,24 +55,11 @@ private:
 };
 
 typedef std::vector<std::pair<void*, CLockLocation> > LockStack;
-typedef std::map<std::pair<void*, void*>, LockStack> LockOrders;
-typedef std::set<std::pair<void*, void*> > InvLockOrders;
 
-struct LockData {
-    // Very ugly hack: as the global constructs and destructors run single
-    // threaded, we use this boolean to know whether LockData still exists,
-    // as DeleteLock can get called by global CCriticalSection destructors
-    // after LockData disappears.
-    bool available;
-    LockData() : available(true) {}
-    ~LockData() { available = false; }
+static boost::mutex dd_mutex;
+static std::map<std::pair<void*, void*>, LockStack> lockorders;
+static boost::thread_specific_ptr<LockStack> lockstack;
 
-    LockOrders lockorders;
-    InvLockOrders invlockorders;
-    boost::mutex dd_mutex;
-} static lockdata;
-
-boost::thread_specific_ptr<LockStack> lockstack;
 
 static void potential_deadlock_detected(const std::pair<void*, void*>& mismatch, const LockStack& s1, const LockStack& s2)
 {
@@ -86,41 +72,46 @@ static void potential_deadlock_detected(const std::pair<void*, void*>& mismatch,
     bool firstLocked = false;
     bool secondLocked = false;
     bool onlyMaybeDeadlock = false;
+    std::string strOutput = "";
 
-    LogPrintf("POTENTIAL DEADLOCK DETECTED\n");
-    LogPrintf("Previous lock order was:\n");
+    strOutput += "POTENTIAL DEADLOCK DETECTED\n";
+    strOutput += "Previous lock order was:\n";
     BOOST_FOREACH (const PAIRTYPE(void*, CLockLocation) & i, s2) {
         if (i.first == mismatch.first) {
-            LogPrintf(" (1)");
+            strOutput += " (1)";
             if (!firstLocked && secondLocked && i.second.fTry)
                 onlyMaybeDeadlock = true;
             firstLocked = true;
         }
         if (i.first == mismatch.second) {
-            LogPrintf(" (2)");
+            strOutput += " (2)";
             if (!secondLocked && firstLocked && i.second.fTry)
                 onlyMaybeDeadlock = true;
             secondLocked = true;
         }
-        LogPrintf(" %s\n", i.second.ToString());
+        strOutput += strprintf(" %s\n", i.second.ToString().c_str());
     }
     firstLocked = false;
     secondLocked = false;
-    LogPrintf("Current lock order is:\n");
+    strOutput += "Current lock order is:\n";
     BOOST_FOREACH (const PAIRTYPE(void*, CLockLocation) & i, s1) {
         if (i.first == mismatch.first) {
-            LogPrintf(" (1)");
+            strOutput += " (1)";
             if (!firstLocked && secondLocked && i.second.fTry)
                 onlyMaybeDeadlock = true;
             firstLocked = true;
         }
         if (i.first == mismatch.second) {
-            LogPrintf(" (2)");
+            strOutput += " (2)";
             if (!secondLocked && firstLocked && i.second.fTry)
                 onlyMaybeDeadlock = true;
             secondLocked = true;
         }
-        LogPrintf(" %s\n", i.second.ToString());
+        strOutput += strprintf(" %s\n", i.second.ToString().c_str());
+    }
+    if(!onlyMaybeDeadlock) {
+        printf("%s\n", strOutput.c_str());
+        LogPrintf("%s\n", strOutput.c_str());
     }
     assert(onlyMaybeDeadlock);
 }
@@ -130,7 +121,7 @@ static void push_lock(void* c, const CLockLocation& locklocation, bool fTry)
     if (lockstack.get() == NULL)
         lockstack.reset(new LockStack);
 
-    boost::unique_lock<boost::mutex> lock(lockdata.dd_mutex);
+    dd_mutex.lock();
 
     (*lockstack).push_back(std::make_pair(c, locklocation));
 
@@ -140,21 +131,23 @@ static void push_lock(void* c, const CLockLocation& locklocation, bool fTry)
                 break;
 
             std::pair<void*, void*> p1 = std::make_pair(i.first, c);
-            if (lockdata.lockorders.count(p1))
+            if (lockorders.count(p1))
                 continue;
-            lockdata.lockorders[p1] = (*lockstack);
+            lockorders[p1] = (*lockstack);
 
             std::pair<void*, void*> p2 = std::make_pair(c, i.first);
-            lockdata.invlockorders.insert(p2);
-            if (lockdata.lockorders.count(p2))
-                potential_deadlock_detected(p1, lockdata.lockorders[p2], lockdata.lockorders[p1]);
+            if (lockorders.count(p2))
+                potential_deadlock_detected(p1, lockorders[p2], lockorders[p1]);
         }
     }
+    dd_mutex.unlock();
 }
 
 static void pop_lock()
 {
+    dd_mutex.lock();
     (*lockstack).pop_back();
+    dd_mutex.unlock();
 }
 
 void EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs, bool fTry)
@@ -182,28 +175,6 @@ void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine,
             return;
     fprintf(stderr, "Assertion failed: lock %s not held in %s:%i; locks held:\n%s", pszName, pszFile, nLine, LocksHeld().c_str());
     abort();
-}
-
-void DeleteLock(void* cs)
-{
-    if (!lockdata.available) {
-        // We're already shutting down.
-        return;
-    }
-    boost::unique_lock<boost::mutex> lock(lockdata.dd_mutex);
-    std::pair<void*, void*> item = std::make_pair(cs, (void*)0);
-    LockOrders::iterator it = lockdata.lockorders.lower_bound(item);
-    while (it != lockdata.lockorders.end() && it->first.first == cs) {
-        std::pair<void*, void*> invitem = std::make_pair(it->first.second, it->first.first);
-        lockdata.invlockorders.erase(invitem);
-        lockdata.lockorders.erase(it++);
-    }
-    InvLockOrders::iterator invit = lockdata.invlockorders.lower_bound(item);
-    while (invit != lockdata.invlockorders.end() && invit->first == cs) {
-        std::pair<void*, void*> invinvitem = std::make_pair(invit->second, invit->first);
-        lockdata.lockorders.erase(invinvitem);
-        lockdata.invlockorders.erase(invit++);
-    }
 }
 
 #endif /* DEBUG_LOCKORDER */

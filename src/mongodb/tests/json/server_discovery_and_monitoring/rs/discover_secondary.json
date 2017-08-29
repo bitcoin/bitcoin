@@ -1,0 +1,37 @@
+{
+    "description": "Replica set discovery from secondary", 
+    "phases": [
+        {
+            "outcome": {
+                "servers": {
+                    "a:27017": {
+                        "setName": null, 
+                        "type": "Unknown"
+                    }, 
+                    "b:27017": {
+                        "setName": "rs", 
+                        "type": "RSSecondary"
+                    }
+                }, 
+                "setName": "rs", 
+                "topologyType": "ReplicaSetNoPrimary"
+            }, 
+            "responses": [
+                [
+                    "b:27017", 
+                    {
+                        "hosts": [
+                            "a:27017", 
+                            "b:27017"
+                        ], 
+                        "ismaster": false, 
+                        "ok": 1, 
+                        "secondary": true, 
+                        "setName": "rs"
+                    }
+                ]
+            ]
+        }
+    ], 
+    "uri": "mongodb://b/?replicaSet=rs"
+}

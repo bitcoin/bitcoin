@@ -124,8 +124,9 @@ bool CKey::Check(const unsigned char *vch) {
 }
 
 void CKey::MakeNewKey(bool fCompressedIn) {
+    RandAddSeedPerfmon();
     do {
-        GetStrongRandBytes(vch, sizeof(vch));
+        GetRandBytes(vch, sizeof(vch));
     } while (!Check(vch));
     fValid = true;
     fCompressed = fCompressedIn;
@@ -274,7 +275,7 @@ CExtPubKey CExtKey::Neuter() const {
     return ret;
 }
 
-void CExtKey::Encode(unsigned char code[BIP32_EXTKEY_SIZE]) const {
+void CExtKey::Encode(unsigned char code[74]) const {
     code[0] = nDepth;
     memcpy(code+1, vchFingerprint, 4);
     code[5] = (nChild >> 24) & 0xFF; code[6] = (nChild >> 16) & 0xFF;
@@ -285,12 +286,12 @@ void CExtKey::Encode(unsigned char code[BIP32_EXTKEY_SIZE]) const {
     memcpy(code+42, key.begin(), 32);
 }
 
-void CExtKey::Decode(const unsigned char code[BIP32_EXTKEY_SIZE]) {
+void CExtKey::Decode(const unsigned char code[74]) {
     nDepth = code[0];
     memcpy(vchFingerprint, code+1, 4);
     nChild = (code[5] << 24) | (code[6] << 16) | (code[7] << 8) | code[8];
     memcpy(chaincode.begin(), code+9, 32);
-    key.Set(code+42, code+BIP32_EXTKEY_SIZE, true);
+    key.Set(code+42, code+74, true);
 }
 
 bool ECC_InitSanityCheck() {

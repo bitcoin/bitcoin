@@ -7,12 +7,12 @@
 
 #include "guiutil.h"
 #include "peertablemodel.h"
+#include "trafficgraphdata.h"
 
 #include "net.h"
 
 #include <QWidget>
 #include <QCompleter>
-#include <QThread>
 
 class ClientModel;
 class PlatformStyle;
@@ -50,7 +50,8 @@ public:
         TAB_INFO = 0,
         TAB_CONSOLE = 1,
         TAB_GRAPH = 2,
-        TAB_PEERS = 3
+        TAB_PEERS = 3,
+        TAB_REPAIR = 4
     };
 
 protected:
@@ -79,14 +80,22 @@ private Q_SLOTS:
     void clearSelectedNode();
 
 public Q_SLOTS:
-    void clear(bool clearHistory = true);
-    void fontBigger();
-    void fontSmaller();
-    void setFontSize(int newSize);
+    void clear();
+    
+    /** Wallet repair options */
+    void walletSalvage();
+    void walletRescan();
+    void walletZaptxes1();
+    void walletZaptxes2();
+    void walletUpgrade();
+    void walletReindex();
+    
     /** Append the message to the message widget */
     void message(int category, const QString &message, bool html = false);
     /** Set number of connections shown in the UI */
     void setNumConnections(int count);
+    /** Set number of masternodes shown in the UI */
+    void setMasternodeCount(const QString &strMasternodes);
     /** Set number of blocks and last block date shown in the UI */
     void setNumBlocks(int count, const QDateTime& blockDate, double nVerificationProgress, bool headers);
     /** Set size (number of transactions and memory usage) of the mempool in the UI */
@@ -112,17 +121,21 @@ Q_SIGNALS:
     // For RPC command executor
     void stopExecutor();
     void cmdRequest(const QString &command);
+    /** Get restart command-line parameters and handle restart */
+    void handleRestart(QStringList args);
 
 private:
     static QString FormatBytes(quint64 bytes);
     void startExecutor();
-    void setTrafficGraphRange(int mins);
+    void setTrafficGraphRange(TrafficGraphData::GraphRange range);
+    /** Build parameter list for restart */
+    void buildParameterlist(QString arg);
     /** show detailed information on ui about selected node */
     void updateNodeDetail(const CNodeCombinedStats *stats);
 
     enum ColumnWidths
     {
-        ADDRESS_COLUMN_WIDTH = 200,
+        ADDRESS_COLUMN_WIDTH = 170,
         SUBVERSION_COLUMN_WIDTH = 150,
         PING_COLUMN_WIDTH = 80,
         BANSUBNET_COLUMN_WIDTH = 200,
@@ -139,9 +152,7 @@ private:
     RPCTimerInterface *rpcTimerInterface;
     QMenu *peersTableContextMenu;
     QMenu *banTableContextMenu;
-    int consoleFontSize;
     QCompleter *autoCompleter;
-    QThread thread;
 };
 
 #endif // SYSCOIN_QT_RPCCONSOLE_H

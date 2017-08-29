@@ -1,4 +1,5 @@
 // Copyright (c) 2014 The Syscoin Core developers
+// Copyright (c) 2014-2017 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -18,19 +19,20 @@ public:
 
     const QString &getAppName() const { return appName; }
     const QIcon &getAppIcon() const { return appIcon; }
-	// SYSCOIN
-	const QPixmap &getSplashImage() const { return splashImage; }
+    const QPixmap &getSplashImage() const { return splashImage; }
     const QIcon &getTrayAndWindowIcon() const { return trayAndWindowIcon; }
     const QString &getTitleAddText() const { return titleAddText; }
 
 private:
     NetworkStyle(const QString &appName, const int iconColorHueShift, const int iconColorSaturationReduction, const char *titleAddText);
-	// SYSCOIN
-	QPixmap splashImage;
+
     QString appName;
     QIcon appIcon;
+    QPixmap splashImage;
     QIcon trayAndWindowIcon;
     QString titleAddText;
+
+    void rotateColors(QImage& img, const int iconColorHueShift, const int iconColorSaturationReduction);
 };
 
 #endif // SYSCOIN_QT_NETWORKSTYLE_H

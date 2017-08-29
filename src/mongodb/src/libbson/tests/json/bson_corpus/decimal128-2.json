@@ -1,0 +1,793 @@
+{
+    "description": "Decimal128",
+    "bson_type": "0x13",
+    "test_key": "d",
+    "valid": [
+       {
+          "description": "[decq021] Normality",
+          "canonical_bson": "18000000136400F2AF967ED05C82DE3297FF6FDE3C40B000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-1234567890123456789012345678901234\"}}"
+       },
+       {
+          "description": "[decq823] values around [u]int32 edges (zeros done earlier)",
+          "canonical_bson": "18000000136400010000800000000000000000000040B000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-2147483649\"}}"
+       },
+       {
+          "description": "[decq822] values around [u]int32 edges (zeros done earlier)",
+          "canonical_bson": "18000000136400000000800000000000000000000040B000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-2147483648\"}}"
+       },
+       {
+          "description": "[decq821] values around [u]int32 edges (zeros done earlier)",
+          "canonical_bson": "18000000136400FFFFFF7F0000000000000000000040B000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-2147483647\"}}"
+       },
+       {
+          "description": "[decq820] values around [u]int32 edges (zeros done earlier)",
+          "canonical_bson": "18000000136400FEFFFF7F0000000000000000000040B000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-2147483646\"}}"
+       },
+       {
+          "description": "[decq152] fold-downs (more below)",
+          "canonical_bson": "18000000136400393000000000000000000000000040B000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-12345\"}}"
+       },
+       {
+          "description": "[decq154] fold-downs (more below)",
+          "canonical_bson": "18000000136400D20400000000000000000000000040B000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-1234\"}}"
+       },
+       {
+          "description": "[decq006] derivative canonical plain strings",
+          "canonical_bson": "18000000136400EE0200000000000000000000000040B000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-750\"}}"
+       },
+       {
+          "description": "[decq164] fold-downs (more below)",
+          "canonical_bson": "1800000013640039300000000000000000000000003CB000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-123.45\"}}"
+       },
+       {
+          "description": "[decq156] fold-downs (more below)",
+          "canonical_bson": "180000001364007B0000000000000000000000000040B000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-123\"}}"
+       },
+       {
+          "description": "[decq008] derivative canonical plain strings",
+          "canonical_bson": "18000000136400EE020000000000000000000000003EB000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-75.0\"}}"
+       },
+       {
+          "description": "[decq158] fold-downs (more below)",
+          "canonical_bson": "180000001364000C0000000000000000000000000040B000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-12\"}}"
+       },
+       {
+          "description": "[decq122] Nmax and similar",
+          "canonical_bson": "18000000136400FFFFFFFF638E8D37C087ADBE09EDFFDF00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-9.999999999999999999999999999999999E+6144\"}}"
+       },
+       {
+          "description": "[decq002] (mostly derived from the Strawman 4 document and examples)",
+          "canonical_bson": "18000000136400EE020000000000000000000000003CB000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-7.50\"}}"
+       },
+       {
+          "description": "[decq004] derivative canonical plain strings",
+          "canonical_bson": "18000000136400EE0200000000000000000000000042B000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-7.50E+3\"}}"
+       },
+       {
+          "description": "[decq018] derivative canonical plain strings",
+          "canonical_bson": "18000000136400EE020000000000000000000000002EB000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-7.50E-7\"}}"
+       },
+       {
+          "description": "[decq125] Nmax and similar",
+          "canonical_bson": "18000000136400F2AF967ED05C82DE3297FF6FDE3CFEDF00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-1.234567890123456789012345678901234E+6144\"}}"
+       },
+       {
+          "description": "[decq131] fold-downs (more below)",
+          "canonical_bson": "18000000136400000000807F1BCF85B27059C8A43CFEDF00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-1.230000000000000000000000000000000E+6144\"}}"
+       },
+       {
+          "description": "[decq162] fold-downs (more below)",
+          "canonical_bson": "180000001364007B000000000000000000000000003CB000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-1.23\"}}"
+       },
+       {
+          "description": "[decq176] Nmin and below",
+          "canonical_bson": "18000000136400010000000A5BC138938D44C64D31008000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-1.000000000000000000000000000000001E-6143\"}}"
+       },
+       {
+          "description": "[decq174] Nmin and below",
+          "canonical_bson": "18000000136400000000000A5BC138938D44C64D31008000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-1.000000000000000000000000000000000E-6143\"}}"
+       },
+       {
+          "description": "[decq133] fold-downs (more below)",
+          "canonical_bson": "18000000136400000000000A5BC138938D44C64D31FEDF00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-1.000000000000000000000000000000000E+6144\"}}"
+       },
+       {
+          "description": "[decq160] fold-downs (more below)",
+          "canonical_bson": "18000000136400010000000000000000000000000040B000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-1\"}}"
+       },
+       {
+          "description": "[decq172] Nmin and below",
+          "canonical_bson": "180000001364000100000000000000000000000000428000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-1E-6143\"}}"
+       },
+       {
+          "description": "[decq010] derivative canonical plain strings",
+          "canonical_bson": "18000000136400EE020000000000000000000000003AB000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0.750\"}}"
+       },
+       {
+          "description": "[decq012] derivative canonical plain strings",
+          "canonical_bson": "18000000136400EE0200000000000000000000000038B000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0.0750\"}}"
+       },
+       {
+          "description": "[decq014] derivative canonical plain strings",
+          "canonical_bson": "18000000136400EE0200000000000000000000000034B000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0.000750\"}}"
+       },
+       {
+          "description": "[decq016] derivative canonical plain strings",
+          "canonical_bson": "18000000136400EE0200000000000000000000000030B000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0.00000750\"}}"
+       },
+       {
+          "description": "[decq404] zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000000000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E-6176\"}}"
+       },
+       {
+          "description": "[decq424] negative zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000008000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0E-6176\"}}"
+       },
+       {
+          "description": "[decq407] zeros",
+          "canonical_bson": "1800000013640000000000000000000000000000003C3000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.00\"}}"
+       },
+       {
+          "description": "[decq427] negative zeros",
+          "canonical_bson": "1800000013640000000000000000000000000000003CB000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0.00\"}}"
+       },
+       {
+          "description": "[decq409] zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0\"}}"
+       },
+       {
+          "description": "[decq428] negative zeros",
+          "canonical_bson": "18000000136400000000000000000000000000000040B000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0\"}}"
+       },
+       {
+          "description": "[decq700] Selected DPD codes",
+          "canonical_bson": "180000001364000000000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0\"}}"
+       },
+       {
+          "description": "[decq406] zeros",
+          "canonical_bson": "1800000013640000000000000000000000000000003C3000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.00\"}}"
+       },
+       {
+          "description": "[decq426] negative zeros",
+          "canonical_bson": "1800000013640000000000000000000000000000003CB000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0.00\"}}"
+       },
+       {
+          "description": "[decq410] zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000463000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E+3\"}}"
+       },
+       {
+          "description": "[decq431] negative zeros",
+          "canonical_bson": "18000000136400000000000000000000000000000046B000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0E+3\"}}"
+       },
+       {
+          "description": "[decq419] clamped zeros...",
+          "canonical_bson": "180000001364000000000000000000000000000000FE5F00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E+6111\"}}"
+       },
+       {
+          "description": "[decq432] negative zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000FEDF00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0E+6111\"}}"
+       },
+       {
+          "description": "[decq405] zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000000000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E-6176\"}}"
+       },
+       {
+          "description": "[decq425] negative zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000008000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0E-6176\"}}"
+       },
+       {
+          "description": "[decq508] Specials",
+          "canonical_bson": "180000001364000000000000000000000000000000007800",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"Infinity\"}}"
+       },
+       {
+          "description": "[decq528] Specials",
+          "canonical_bson": "18000000136400000000000000000000000000000000F800",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-Infinity\"}}"
+       },
+       {
+          "description": "[decq541] Specials",
+          "canonical_bson": "180000001364000000000000000000000000000000007C00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"NaN\"}}"
+       },
+       {
+          "description": "[decq074] Nmin and below",
+          "canonical_bson": "18000000136400000000000A5BC138938D44C64D31000000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.000000000000000000000000000000000E-6143\"}}"
+       },
+       {
+          "description": "[decq602] fold-down full sequence",
+          "canonical_bson": "18000000136400000000000A5BC138938D44C64D31FE5F00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.000000000000000000000000000000000E+6144\"}}"
+       },
+       {
+          "description": "[decq604] fold-down full sequence",
+          "canonical_bson": "180000001364000000000081EFAC855B416D2DEE04FE5F00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.00000000000000000000000000000000E+6143\"}}"
+       },
+       {
+          "description": "[decq606] fold-down full sequence",
+          "canonical_bson": "1800000013640000000080264B91C02220BE377E00FE5F00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.0000000000000000000000000000000E+6142\"}}"
+       },
+       {
+          "description": "[decq608] fold-down full sequence",
+          "canonical_bson": "1800000013640000000040EAED7446D09C2C9F0C00FE5F00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.000000000000000000000000000000E+6141\"}}"
+       },
+       {
+          "description": "[decq610] fold-down full sequence",
+          "canonical_bson": "18000000136400000000A0CA17726DAE0F1E430100FE5F00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.00000000000000000000000000000E+6140\"}}"
+       },
+       {
+          "description": "[decq612] fold-down full sequence",
+          "canonical_bson": "18000000136400000000106102253E5ECE4F200000FE5F00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.0000000000000000000000000000E+6139\"}}"
+       },
+       {
+          "description": "[decq614] fold-down full sequence",
+          "canonical_bson": "18000000136400000000E83C80D09F3C2E3B030000FE5F00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.000000000000000000000000000E+6138\"}}"
+       },
+       {
+          "description": "[decq616] fold-down full sequence",
+          "canonical_bson": "18000000136400000000E4D20CC8DCD2B752000000FE5F00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.00000000000000000000000000E+6137\"}}"
+       },
+       {
+          "description": "[decq618] fold-down full sequence",
+          "canonical_bson": "180000001364000000004A48011416954508000000FE5F00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.0000000000000000000000000E+6136\"}}"
+       },
+       {
+          "description": "[decq620] fold-down full sequence",
+          "canonical_bson": "18000000136400000000A1EDCCCE1BC2D300000000FE5F00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.000000000000000000000000E+6135\"}}"
+       },
+       {
+          "description": "[decq622] fold-down full sequence",
+          "canonical_bson": "18000000136400000080F64AE1C7022D1500000000FE5F00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.00000000000000000000000E+6134\"}}"
+       },
+       {
+          "description": "[decq624] fold-down full sequence",
+          "canonical_bson": "18000000136400000040B2BAC9E0191E0200000000FE5F00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.0000000000000000000000E+6133\"}}"
+       },
+       {
+          "description": "[decq626] fold-down full sequence",
+          "canonical_bson": "180000001364000000A0DEC5ADC935360000000000FE5F00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.000000000000000000000E+6132\"}}"
+       },
+       {
+          "description": "[decq628] fold-down full sequence",
+          "canonical_bson": "18000000136400000010632D5EC76B050000000000FE5F00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.00000000000000000000E+6131\"}}"
+       },
+       {
+          "description": "[decq630] fold-down full sequence",
+          "canonical_bson": "180000001364000000E8890423C78A000000000000FE5F00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.0000000000000000000E+6130\"}}"
+       },
+       {
+          "description": "[decq632] fold-down full sequence",
+          "canonical_bson": "18000000136400000064A7B3B6E00D000000000000FE5F00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.000000000000000000E+6129\"}}"
+       },
+       {
+          "description": "[decq634] fold-down full sequence",
+          "canonical_bson": "1800000013640000008A5D78456301000000000000FE5F00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.00000000000000000E+6128\"}}"
+       },
+       {
+          "description": "[decq636] fold-down full sequence",
+          "canonical_bson": "180000001364000000C16FF2862300000000000000FE5F00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.0000000000000000E+6127\"}}"
+       },
+       {
+          "description": "[decq638] fold-down full sequence",
+          "canonical_bson": "180000001364000080C6A47E8D0300000000000000FE5F00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.000000000000000E+6126\"}}"
+       },
+       {
+          "description": "[decq640] fold-down full sequence",
+          "canonical_bson": "1800000013640000407A10F35A0000000000000000FE5F00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.00000000000000E+6125\"}}"
+       },
+       {
+          "description": "[decq642] fold-down full sequence",
+          "canonical_bson": "1800000013640000A0724E18090000000000000000FE5F00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.0000000000000E+6124\"}}"
+       },
+       {
+          "description": "[decq644] fold-down full sequence",
+          "canonical_bson": "180000001364000010A5D4E8000000000000000000FE5F00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.000000000000E+6123\"}}"
+       },
+       {
+          "description": "[decq646] fold-down full sequence",
+          "canonical_bson": "1800000013640000E8764817000000000000000000FE5F00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.00000000000E+6122\"}}"
+       },
+       {
+          "description": "[decq648] fold-down full sequence",
+          "canonical_bson": "1800000013640000E40B5402000000000000000000FE5F00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.0000000000E+6121\"}}"
+       },
+       {
+          "description": "[decq650] fold-down full sequence",
+          "canonical_bson": "1800000013640000CA9A3B00000000000000000000FE5F00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.000000000E+6120\"}}"
+       },
+       {
+          "description": "[decq652] fold-down full sequence",
+          "canonical_bson": "1800000013640000E1F50500000000000000000000FE5F00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.00000000E+6119\"}}"
+       },
+       {
+          "description": "[decq654] fold-down full sequence",
+          "canonical_bson": "180000001364008096980000000000000000000000FE5F00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.0000000E+6118\"}}"
+       },
+       {
+          "description": "[decq656] fold-down full sequence",
+          "canonical_bson": "1800000013640040420F0000000000000000000000FE5F00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.000000E+6117\"}}"
+       },
+       {
+          "description": "[decq658] fold-down full sequence",
+          "canonical_bson": "18000000136400A086010000000000000000000000FE5F00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.00000E+6116\"}}"
+       },
+       {
+          "description": "[decq660] fold-down full sequence",
+          "canonical_bson": "180000001364001027000000000000000000000000FE5F00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.0000E+6115\"}}"
+       },
+       {
+          "description": "[decq662] fold-down full sequence",
+          "canonical_bson": "18000000136400E803000000000000000000000000FE5F00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.000E+6114\"}}"
+       },
+       {
+          "description": "[decq664] fold-down full sequence",
+          "canonical_bson": "180000001364006400000000000000000000000000FE5F00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.00E+6113\"}}"
+       },
+       {
+          "description": "[decq666] fold-down full sequence",
+          "canonical_bson": "180000001364000A00000000000000000000000000FE5F00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.0E+6112\"}}"
+       },
+       {
+          "description": "[decq060] fold-downs (more below)",
+          "canonical_bson": "180000001364000100000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1\"}}"
+       },
+       {
+          "description": "[decq670] fold-down full sequence",
+          "canonical_bson": "180000001364000100000000000000000000000000FC5F00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1E+6110\"}}"
+       },
+       {
+          "description": "[decq668] fold-down full sequence",
+          "canonical_bson": "180000001364000100000000000000000000000000FE5F00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1E+6111\"}}"
+       },
+       {
+          "description": "[decq072] Nmin and below",
+          "canonical_bson": "180000001364000100000000000000000000000000420000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1E-6143\"}}"
+       },
+       {
+          "description": "[decq076] Nmin and below",
+          "canonical_bson": "18000000136400010000000A5BC138938D44C64D31000000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.000000000000000000000000000000001E-6143\"}}"
+       },
+       {
+          "description": "[decq036] fold-downs (more below)",
+          "canonical_bson": "18000000136400000000807F1BCF85B27059C8A43CFE5F00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.230000000000000000000000000000000E+6144\"}}"
+       },
+       {
+          "description": "[decq062] fold-downs (more below)",
+          "canonical_bson": "180000001364007B000000000000000000000000003C3000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.23\"}}"
+       },
+       {
+          "description": "[decq034] Nmax and similar",
+          "canonical_bson": "18000000136400F2AF967ED05C82DE3297FF6FDE3CFE5F00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.234567890123456789012345678901234E+6144\"}}"
+       },
+       {
+          "description": "[decq441] exponent lengths",
+          "canonical_bson": "180000001364000700000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"7\"}}"
+       },
+       {
+          "description": "[decq449] exponent lengths",
+          "canonical_bson": "1800000013640007000000000000000000000000001E5F00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"7E+5999\"}}"
+       },
+       {
+          "description": "[decq447] exponent lengths",
+          "canonical_bson": "1800000013640007000000000000000000000000000E3800",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"7E+999\"}}"
+       },
+       {
+          "description": "[decq445] exponent lengths",
+          "canonical_bson": "180000001364000700000000000000000000000000063100",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"7E+99\"}}"
+       },
+       {
+          "description": "[decq443] exponent lengths",
+          "canonical_bson": "180000001364000700000000000000000000000000523000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"7E+9\"}}"
+       },
+       {
+          "description": "[decq842] VG testcase",
+          "canonical_bson": "180000001364000000FED83F4E7C9FE4E269E38A5BCD1700",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"7.049000000000010795488000000000000E-3097\"}}"
+       },
+       {
+          "description": "[decq841] VG testcase",
+          "canonical_bson": "180000001364000000203B9DB5056F000000000000002400",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"8.000000000000000000E-1550\"}}"
+       },
+       {
+          "description": "[decq840] VG testcase",
+          "canonical_bson": "180000001364003C17258419D710C42F0000000000002400",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"8.81125000000001349436E-1548\"}}"
+       },
+       {
+          "description": "[decq701] Selected DPD codes",
+          "canonical_bson": "180000001364000900000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"9\"}}"
+       },
+       {
+          "description": "[decq032] Nmax and similar",
+          "canonical_bson": "18000000136400FFFFFFFF638E8D37C087ADBE09EDFF5F00",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"9.999999999999999999999999999999999E+6144\"}}"
+       },
+       {
+          "description": "[decq702] Selected DPD codes",
+          "canonical_bson": "180000001364000A00000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"10\"}}"
+       },
+       {
+          "description": "[decq057] fold-downs (more below)",
+          "canonical_bson": "180000001364000C00000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"12\"}}"
+       },
+       {
+          "description": "[decq703] Selected DPD codes",
+          "canonical_bson": "180000001364001300000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"19\"}}"
+       },
+       {
+          "description": "[decq704] Selected DPD codes",
+          "canonical_bson": "180000001364001400000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"20\"}}"
+       },
+       {
+          "description": "[decq705] Selected DPD codes",
+          "canonical_bson": "180000001364001D00000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"29\"}}"
+       },
+       {
+          "description": "[decq706] Selected DPD codes",
+          "canonical_bson": "180000001364001E00000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"30\"}}"
+       },
+       {
+          "description": "[decq707] Selected DPD codes",
+          "canonical_bson": "180000001364002700000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"39\"}}"
+       },
+       {
+          "description": "[decq708] Selected DPD codes",
+          "canonical_bson": "180000001364002800000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"40\"}}"
+       },
+       {
+          "description": "[decq709] Selected DPD codes",
+          "canonical_bson": "180000001364003100000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"49\"}}"
+       },
+       {
+          "description": "[decq710] Selected DPD codes",
+          "canonical_bson": "180000001364003200000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"50\"}}"
+       },
+       {
+          "description": "[decq711] Selected DPD codes",
+          "canonical_bson": "180000001364003B00000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"59\"}}"
+       },
+       {
+          "description": "[decq712] Selected DPD codes",
+          "canonical_bson": "180000001364003C00000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"60\"}}"
+       },
+       {
+          "description": "[decq713] Selected DPD codes",
+          "canonical_bson": "180000001364004500000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"69\"}}"
+       },
+       {
+          "description": "[decq714] Selected DPD codes",
+          "canonical_bson": "180000001364004600000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"70\"}}"
+       },
+       {
+          "description": "[decq715] Selected DPD codes",
+          "canonical_bson": "180000001364004700000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"71\"}}"
+       },
+       {
+          "description": "[decq716] Selected DPD codes",
+          "canonical_bson": "180000001364004800000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"72\"}}"
+       },
+       {
+          "description": "[decq717] Selected DPD codes",
+          "canonical_bson": "180000001364004900000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"73\"}}"
+       },
+       {
+          "description": "[decq718] Selected DPD codes",
+          "canonical_bson": "180000001364004A00000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"74\"}}"
+       },
+       {
+          "description": "[decq719] Selected DPD codes",
+          "canonical_bson": "180000001364004B00000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"75\"}}"
+       },
+       {
+          "description": "[decq720] Selected DPD codes",
+          "canonical_bson": "180000001364004C00000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"76\"}}"
+       },
+       {
+          "description": "[decq721] Selected DPD codes",
+          "canonical_bson": "180000001364004D00000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"77\"}}"
+       },
+       {
+          "description": "[decq722] Selected DPD codes",
+          "canonical_bson": "180000001364004E00000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"78\"}}"
+       },
+       {
+          "description": "[decq723] Selected DPD codes",
+          "canonical_bson": "180000001364004F00000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"79\"}}"
+       },
+       {
+          "description": "[decq056] fold-downs (more below)",
+          "canonical_bson": "180000001364007B00000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"123\"}}"
+       },
+       {
+          "description": "[decq064] fold-downs (more below)",
+          "canonical_bson": "1800000013640039300000000000000000000000003C3000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"123.45\"}}"
+       },
+       {
+          "description": "[decq732] Selected DPD codes",
+          "canonical_bson": "180000001364000802000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"520\"}}"
+       },
+       {
+          "description": "[decq733] Selected DPD codes",
+          "canonical_bson": "180000001364000902000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"521\"}}"
+       },
+       {
+          "description": "[decq740] DPD: one of each of the huffman groups",
+          "canonical_bson": "180000001364000903000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"777\"}}"
+       },
+       {
+          "description": "[decq741] DPD: one of each of the huffman groups",
+          "canonical_bson": "180000001364000A03000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"778\"}}"
+       },
+       {
+          "description": "[decq742] DPD: one of each of the huffman groups",
+          "canonical_bson": "180000001364001303000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"787\"}}"
+       },
+       {
+          "description": "[decq746] DPD: one of each of the huffman groups",
+          "canonical_bson": "180000001364001F03000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"799\"}}"
+       },
+       {
+          "description": "[decq743] DPD: one of each of the huffman groups",
+          "canonical_bson": "180000001364006D03000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"877\"}}"
+       },
+       {
+          "description": "[decq753] DPD all-highs cases (includes the 24 redundant codes)",
+          "canonical_bson": "180000001364007803000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"888\"}}"
+       },
+       {
+          "description": "[decq754] DPD all-highs cases (includes the 24 redundant codes)",
+          "canonical_bson": "180000001364007903000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"889\"}}"
+       },
+       {
+          "description": "[decq760] DPD all-highs cases (includes the 24 redundant codes)",
+          "canonical_bson": "180000001364008203000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"898\"}}"
+       },
+       {
+          "description": "[decq764] DPD all-highs cases (includes the 24 redundant codes)",
+          "canonical_bson": "180000001364008303000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"899\"}}"
+       },
+       {
+          "description": "[decq745] DPD: one of each of the huffman groups",
+          "canonical_bson": "18000000136400D303000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"979\"}}"
+       },
+       {
+          "description": "[decq770] DPD all-highs cases (includes the 24 redundant codes)",
+          "canonical_bson": "18000000136400DC03000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"988\"}}"
+       },
+       {
+          "description": "[decq774] DPD all-highs cases (includes the 24 redundant codes)",
+          "canonical_bson": "18000000136400DD03000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"989\"}}"
+       },
+       {
+          "description": "[decq730] Selected DPD codes",
+          "canonical_bson": "18000000136400E203000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"994\"}}"
+       },
+       {
+          "description": "[decq731] Selected DPD codes",
+          "canonical_bson": "18000000136400E303000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"995\"}}"
+       },
+       {
+          "description": "[decq744] DPD: one of each of the huffman groups",
+          "canonical_bson": "18000000136400E503000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"997\"}}"
+       },
+       {
+          "description": "[decq780] DPD all-highs cases (includes the 24 redundant codes)",
+          "canonical_bson": "18000000136400E603000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"998\"}}"
+       },
+       {
+          "description": "[decq787] DPD all-highs cases (includes the 24 redundant codes)",
+          "canonical_bson": "18000000136400E703000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"999\"}}"
+       },
+       {
+          "description": "[decq053] fold-downs (more below)",
+          "canonical_bson": "18000000136400D204000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1234\"}}"
+       },
+       {
+          "description": "[decq052] fold-downs (more below)",
+          "canonical_bson": "180000001364003930000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"12345\"}}"
+       },
+       {
+          "description": "[decq792] Miscellaneous (testers' queries, etc.)",
+          "canonical_bson": "180000001364003075000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"30000\"}}"
+       },
+       {
+          "description": "[decq793] Miscellaneous (testers' queries, etc.)",
+          "canonical_bson": "1800000013640090940D0000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"890000\"}}"
+       },
+       {
+          "description": "[decq824] values around [u]int32 edges (zeros done earlier)",
+          "canonical_bson": "18000000136400FEFFFF7F00000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"2147483646\"}}"
+       },
+       {
+          "description": "[decq825] values around [u]int32 edges (zeros done earlier)",
+          "canonical_bson": "18000000136400FFFFFF7F00000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"2147483647\"}}"
+       },
+       {
+          "description": "[decq826] values around [u]int32 edges (zeros done earlier)",
+          "canonical_bson": "180000001364000000008000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"2147483648\"}}"
+       },
+       {
+          "description": "[decq827] values around [u]int32 edges (zeros done earlier)",
+          "canonical_bson": "180000001364000100008000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"2147483649\"}}"
+       },
+       {
+          "description": "[decq828] values around [u]int32 edges (zeros done earlier)",
+          "canonical_bson": "18000000136400FEFFFFFF00000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"4294967294\"}}"
+       },
+       {
+          "description": "[decq829] values around [u]int32 edges (zeros done earlier)",
+          "canonical_bson": "18000000136400FFFFFFFF00000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"4294967295\"}}"
+       },
+       {
+          "description": "[decq830] values around [u]int32 edges (zeros done earlier)",
+          "canonical_bson": "180000001364000000000001000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"4294967296\"}}"
+       },
+       {
+          "description": "[decq831] values around [u]int32 edges (zeros done earlier)",
+          "canonical_bson": "180000001364000100000001000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"4294967297\"}}"
+       },
+       {
+          "description": "[decq022] Normality",
+          "canonical_bson": "18000000136400C7711CC7B548F377DC80A131C836403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1111111111111111111111111111111111\"}}"
+       },
+       {
+          "description": "[decq020] Normality",
+          "canonical_bson": "18000000136400F2AF967ED05C82DE3297FF6FDE3C403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1234567890123456789012345678901234\"}}"
+       },
+       {
+          "description": "[decq550] Specials",
+          "canonical_bson": "18000000136400FFFFFFFF638E8D37C087ADBE09ED413000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"9999999999999999999999999999999999\"}}"
+       }
+    ]
+}
+

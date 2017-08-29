@@ -12,10 +12,10 @@
 #include <QHBoxLayout>
 #include <QLabel>
 
-WalletFrame::WalletFrame(const PlatformStyle *_platformStyle, SyscoinGUI *_gui) :
+WalletFrame::WalletFrame(const PlatformStyle *platformStyle, SyscoinGUI *_gui) :
     QFrame(_gui),
     gui(_gui),
-    platformStyle(_platformStyle)
+    platformStyle(platformStyle)
 {
     // Leave HBox hook for adding a list view later
     QHBoxLayout *walletFrameLayout = new QHBoxLayout(this);
@@ -33,9 +33,9 @@ WalletFrame::~WalletFrame()
 {
 }
 
-void WalletFrame::setClientModel(ClientModel *_clientModel)
+void WalletFrame::setClientModel(ClientModel *clientModel)
 {
-    this->clientModel = _clientModel;
+    this->clientModel = clientModel;
 }
 
 bool WalletFrame::addWallet(const QString& name, WalletModel *walletModel)
@@ -56,7 +56,6 @@ bool WalletFrame::addWallet(const QString& name, WalletModel *walletModel)
 
     // Ensure a walletView is able to show the main window
     connect(walletView, SIGNAL(showNormalIfMinimized()), gui, SLOT(showNormalIfMinimized()));
-
 
     return true;
 }
@@ -121,6 +120,13 @@ void WalletFrame::gotoHistoryPage()
         i.value()->gotoHistoryPage();
 }
 
+void WalletFrame::gotoMasternodePage()
+{
+    QMap<QString, WalletView*>::const_iterator i;
+    for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
+        i.value()->gotoMasternodePage();
+}
+
 void WalletFrame::gotoReceiveCoinsPage()
 {
     QMap<QString, WalletView*>::const_iterator i;
@@ -148,39 +154,7 @@ void WalletFrame::gotoVerifyMessageTab(QString addr)
     if (walletView)
         walletView->gotoVerifyMessageTab(addr);
 }
-// SYSCOIN
-void WalletFrame::gotoAliasListPage()
-{
-    WalletView *walletView = currentWalletView();
-    if (walletView)
-        walletView->gotoAliasListPage();
-}
-void WalletFrame::gotoMessageListPage()
-{
-    WalletView *walletView = currentWalletView();
-    if (walletView)
-        walletView->gotoMessageListPage();
-}
-void WalletFrame::gotoEscrowListPage()
-{
-    WalletView *walletView = currentWalletView();
-    if (walletView)
-        walletView->gotoEscrowListPage();
-}
 
-void WalletFrame::gotoOfferListPage()
-{
-    WalletView *walletView = currentWalletView();
-    if (walletView)
-        walletView->gotoOfferListPage();
-}
-
-void WalletFrame::gotoCertListPage()
-{
-    WalletView *walletView = currentWalletView();
-    if (walletView)
-        walletView->gotoCertListPage();
-}
 void WalletFrame::encryptWallet(bool status)
 {
     WalletView *walletView = currentWalletView();
@@ -209,6 +183,13 @@ void WalletFrame::unlockWallet()
         walletView->unlockWallet();
 }
 
+void WalletFrame::lockWallet()
+{
+    WalletView *walletView = currentWalletView();
+    if (walletView)
+        walletView->lockWallet();
+}
+
 void WalletFrame::usedSendingAddresses()
 {
     WalletView *walletView = currentWalletView();
@@ -227,3 +208,4 @@ WalletView *WalletFrame::currentWalletView()
 {
     return qobject_cast<WalletView*>(walletStack->currentWidget());
 }
+

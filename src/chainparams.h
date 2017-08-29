@@ -15,8 +15,7 @@
 
 struct CDNSSeedData {
     std::string name, host;
-    bool supportsServiceBitsFiltering;
-    CDNSSeedData(const std::string &strName, const std::string &strHost, bool supportsServiceBitsFilteringIn = false) : name(strName), host(strHost), supportsServiceBitsFiltering(supportsServiceBitsFilteringIn) {}
+    CDNSSeedData(const std::string &strName, const std::string &strHost) : name(strName), host(strHost) {}
 };
 
 struct SeedSpec6 {
@@ -44,30 +43,29 @@ class CChainParams
 {
 public:
 	// SYSCOIN allow old SYSCOIN address scheme
-    enum Base58Type {
-        PUBKEY_ADDRESS,
-        PUBKEY_ADDRESS_SYS,
-        PUBKEY_ADDRESS_ZEC,
-        SCRIPT_ADDRESS,
-        SCRIPT_ADDRESS_ZEC,
-        SECRET_KEY,
-        SECRET_KEY_SYS,
-        EXT_PUBLIC_KEY,
-        EXT_SECRET_KEY,
+	enum Base58Type {
+		PUBKEY_ADDRESS,
+		PUBKEY_ADDRESS_SYS,
+		PUBKEY_ADDRESS_ZEC,
+		SCRIPT_ADDRESS,
+		SCRIPT_ADDRESS_ZEC,
+		SECRET_KEY,
+		SECRET_KEY_SYS,
+		EXT_PUBLIC_KEY,
+		EXT_SECRET_KEY,
 
-        MAX_BASE58_TYPES
-    };  
-    enum AddressType {
+		MAX_BASE58_TYPES
+	};
+	enum AddressType {
 		ADDRESS_OLDSYS,
-        ADDRESS_SYS,
-        ADDRESS_ZEC,
-        MAX_ADDRESS_TYPES
-    };
+		ADDRESS_SYS,
+		ADDRESS_ZEC,
+		MAX_ADDRESS_TYPES
+	};
 
-
-    
     const Consensus::Params& GetConsensus() const { return consensus; }
     const CMessageHeader::MessageStartChars& MessageStart() const { return pchMessageStart; }
+    const std::vector<unsigned char>& AlertKey() const { return vAlertPubKey; }
     int GetDefaultPort() const { return nDefaultPort; }
 
     const CBlock& GenesisBlock() const { return genesis; }
@@ -77,6 +75,7 @@ public:
     bool DefaultConsistencyChecks() const { return fDefaultConsistencyChecks; }
     /** Policy: Filter transactions that do not match well-defined patterns */
     bool RequireStandard() const { return fRequireStandard; }
+    int64_t MaxTipAge() const { return nMaxTipAge; }
     uint64_t PruneAfterHeight() const { return nPruneAfterHeight; }
     /** Make miner stop after a block is found. In RPC, don't return until nGenProcLimit blocks are generated */
     bool MineBlocksOnDemand() const { return fMineBlocksOnDemand; }
@@ -86,17 +85,25 @@ public:
     std::string NetworkIDString() const { return strNetworkID; }
     const std::vector<CDNSSeedData>& DNSSeeds() const { return vSeeds; }
     const std::vector<unsigned char>& Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
+    int ExtCoinType() const { return nExtCoinType; }
     const std::vector<SeedSpec6>& FixedSeeds() const { return vFixedSeeds; }
     const CCheckpointData& Checkpoints() const { return checkpointData; }
+    int PoolMaxTransactions() const { return nPoolMaxTransactions; }
+    int FulfilledRequestExpireTime() const { return nFulfilledRequestExpireTime; }
+    std::string SporkPubKey() const { return strSporkPubKey; }
 protected:
     CChainParams() {}
 
     Consensus::Params consensus;
     CMessageHeader::MessageStartChars pchMessageStart;
+    //! Raw pub key bytes for the broadcast alert signing key.
+    std::vector<unsigned char> vAlertPubKey;
     int nDefaultPort;
+    long nMaxTipAge;
     uint64_t nPruneAfterHeight;
     std::vector<CDNSSeedData> vSeeds;
     std::vector<unsigned char> base58Prefixes[MAX_BASE58_TYPES];
+    int nExtCoinType;
     std::string strNetworkID;
     CBlock genesis;
     std::vector<SeedSpec6> vFixedSeeds;
@@ -106,6 +113,10 @@ protected:
     bool fMineBlocksOnDemand;
     bool fTestnetToBeDeprecatedFieldRPC;
     CCheckpointData checkpointData;
+    int nPoolMaxTransactions;
+    int nFulfilledRequestExpireTime;
+    std::string strSporkPubKey;
+    std::string strMasternodePaymentsPubKey;
 };
 
 /**
@@ -124,10 +135,5 @@ CChainParams& Params(const std::string& chain);
  * @throws std::runtime_error when the chain is not supported.
  */
 void SelectParams(const std::string& chain);
-
-/**
- * Allows modifying the BIP9 regtest parameters.
- */
-void UpdateRegtestBIP9Parameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout);
 
 #endif // SYSCOIN_CHAINPARAMS_H

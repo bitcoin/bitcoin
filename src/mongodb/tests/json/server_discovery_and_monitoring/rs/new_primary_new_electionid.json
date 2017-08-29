@@ -1,0 +1,123 @@
+{
+    "description": "New primary with greater setVersion and electionId", 
+    "phases": [
+        {
+            "outcome": {
+                "servers": {
+                    "a:27017": {
+                        "electionId": {
+                            "$oid": "000000000000000000000001"
+                        }, 
+                        "setName": "rs", 
+                        "setVersion": 1, 
+                        "type": "RSPrimary"
+                    }, 
+                    "b:27017": {
+                        "electionId": null, 
+                        "setName": null, 
+                        "type": "Unknown"
+                    }
+                }, 
+                "setName": "rs", 
+                "topologyType": "ReplicaSetWithPrimary"
+            }, 
+            "responses": [
+                [
+                    "a:27017", 
+                    {
+                        "electionId": {
+                            "$oid": "000000000000000000000001"
+                        }, 
+                        "hosts": [
+                            "a:27017", 
+                            "b:27017"
+                        ], 
+                        "ismaster": true, 
+                        "ok": 1, 
+                        "setName": "rs", 
+                        "setVersion": 1
+                    }
+                ]
+            ]
+        }, 
+        {
+            "outcome": {
+                "servers": {
+                    "a:27017": {
+                        "electionId": null, 
+                        "setName": null, 
+                        "type": "Unknown"
+                    }, 
+                    "b:27017": {
+                        "electionId": {
+                            "$oid": "000000000000000000000002"
+                        }, 
+                        "setName": "rs", 
+                        "setVersion": 1, 
+                        "type": "RSPrimary"
+                    }
+                }, 
+                "setName": "rs", 
+                "topologyType": "ReplicaSetWithPrimary"
+            }, 
+            "responses": [
+                [
+                    "b:27017", 
+                    {
+                        "electionId": {
+                            "$oid": "000000000000000000000002"
+                        }, 
+                        "hosts": [
+                            "a:27017", 
+                            "b:27017"
+                        ], 
+                        "ismaster": true, 
+                        "ok": 1, 
+                        "setName": "rs", 
+                        "setVersion": 1
+                    }
+                ]
+            ]
+        }, 
+        {
+            "outcome": {
+                "servers": {
+                    "a:27017": {
+                        "electionId": null, 
+                        "setName": null, 
+                        "type": "Unknown"
+                    }, 
+                    "b:27017": {
+                        "electionId": {
+                            "$oid": "000000000000000000000002"
+                        }, 
+                        "setName": "rs", 
+                        "setVersion": 1, 
+                        "type": "RSPrimary"
+                    }
+                }, 
+                "setName": "rs", 
+                "topologyType": "ReplicaSetWithPrimary"
+            }, 
+            "responses": [
+                [
+                    "a:27017", 
+                    {
+                        "electionId": {
+                            "$oid": "000000000000000000000001"
+                        }, 
+                        "hosts": [
+                            "a:27017", 
+                            "b:27017"
+                        ], 
+                        "ismaster": true, 
+                        "ok": 1, 
+                        "setName": "rs", 
+                        "setVersion": 1
+                    }
+                ]
+            ]
+        }
+    ], 
+    "uri": "mongodb://a/?replicaSet=rs"
+}

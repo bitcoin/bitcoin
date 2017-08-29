@@ -14,7 +14,7 @@
 #include <boost/foreach.hpp>
 
 RecentRequestsTableModel::RecentRequestsTableModel(CWallet *wallet, WalletModel *parent) :
-    QAbstractTableModel(parent), walletModel(parent)
+    walletModel(parent)
 {
     Q_UNUSED(wallet);
     nReceiveRequestsMaxId = 0;
@@ -83,7 +83,7 @@ QVariant RecentRequestsTableModel::data(const QModelIndex &index, int role) cons
             }
         case Amount:
             if (rec->recipient.amount == 0 && role == Qt::DisplayRole)
-                return tr("(no amount requested)");
+                return tr("(no amount)");
             else if (role == Qt::EditRole)
                 return SyscoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), rec->recipient.amount, false, SyscoinUnits::separatorNever);
             else
@@ -125,7 +125,12 @@ void RecentRequestsTableModel::updateAmountColumnTitle()
 /** Gets title for amount column including current display unit if optionsModel reference available. */
 QString RecentRequestsTableModel::getAmountTitle()
 {
-    return (this->walletModel->getOptionsModel() != NULL) ? tr("Requested") + " ("+SyscoinUnits::name(this->walletModel->getOptionsModel()->getDisplayUnit()) + ")" : "";
+    QString amountTitle = tr("Amount");
+    if (this->walletModel->getOptionsModel() != NULL)
+    {
+        amountTitle += " ("+SyscoinUnits::name(this->walletModel->getOptionsModel()->getDisplayUnit()) + ")";
+    }
+    return amountTitle;
 }
 
 QModelIndex RecentRequestsTableModel::index(int row, int column, const QModelIndex &parent) const

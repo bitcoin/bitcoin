@@ -1,0 +1,1771 @@
+{
+    "description": "Decimal128",
+    "bson_type": "0x13",
+    "test_key": "d",
+    "valid": [
+       {
+          "description": "[basx066] strings without E cannot generate E in result",
+          "canonical_bson": "18000000136400185C0ACE0000000000000000000038B000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"-00345678.5432\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-345678.5432\"}}"
+       },
+       {
+          "description": "[basx065] strings without E cannot generate E in result",
+          "canonical_bson": "18000000136400185C0ACE0000000000000000000038B000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0345678.5432\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-345678.5432\"}}"
+       },
+       {
+          "description": "[basx064] strings without E cannot generate E in result",
+          "canonical_bson": "18000000136400185C0ACE0000000000000000000038B000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-345678.5432\"}}"
+       },
+       {
+          "description": "[basx041] strings without E cannot generate E in result",
+          "canonical_bson": "180000001364004C0000000000000000000000000040B000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-76\"}}"
+       },
+       {
+          "description": "[basx027] conform to rules and exponent will be in permitted range).",
+          "canonical_bson": "180000001364000F270000000000000000000000003AB000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-9.999\"}}"
+       },
+       {
+          "description": "[basx026] conform to rules and exponent will be in permitted range).",
+          "canonical_bson": "180000001364009F230000000000000000000000003AB000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-9.119\"}}"
+       },
+       {
+          "description": "[basx025] conform to rules and exponent will be in permitted range).",
+          "canonical_bson": "180000001364008F030000000000000000000000003CB000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-9.11\"}}"
+       },
+       {
+          "description": "[basx024] conform to rules and exponent will be in permitted range).",
+          "canonical_bson": "180000001364005B000000000000000000000000003EB000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-9.1\"}}"
+       },
+       {
+          "description": "[dqbsr531] negatives (Rounded)",
+          "canonical_bson": "1800000013640099761CC7B548F377DC80A131C836FEAF00",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"-1.1111111111111111111111111111123450\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-1.111111111111111111111111111112345\"}}"
+       },
+       {
+          "description": "[basx022] conform to rules and exponent will be in permitted range).",
+          "canonical_bson": "180000001364000A000000000000000000000000003EB000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-1.0\"}}"
+       },
+       {
+          "description": "[basx021] conform to rules and exponent will be in permitted range).",
+          "canonical_bson": "18000000136400010000000000000000000000000040B000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-1\"}}"
+       },
+       {
+          "description": "[basx601] Zeros",
+          "canonical_bson": "1800000013640000000000000000000000000000002E3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.000000000\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E-9\"}}"
+       },
+       {
+          "description": "[basx622] Zeros",
+          "canonical_bson": "1800000013640000000000000000000000000000002EB000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0.000000000\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0E-9\"}}"
+       },
+       {
+          "description": "[basx602] Zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000303000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.00000000\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E-8\"}}"
+       },
+       {
+          "description": "[basx621] Zeros",
+          "canonical_bson": "18000000136400000000000000000000000000000030B000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0.00000000\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0E-8\"}}"
+       },
+       {
+          "description": "[basx603] Zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000323000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.0000000\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E-7\"}}"
+       },
+       {
+          "description": "[basx620] Zeros",
+          "canonical_bson": "18000000136400000000000000000000000000000032B000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0.0000000\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0E-7\"}}"
+       },
+       {
+          "description": "[basx604] Zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000343000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.000000\"}}"
+       },
+       {
+          "description": "[basx619] Zeros",
+          "canonical_bson": "18000000136400000000000000000000000000000034B000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0.000000\"}}"
+       },
+       {
+          "description": "[basx605] Zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000363000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.00000\"}}"
+       },
+       {
+          "description": "[basx618] Zeros",
+          "canonical_bson": "18000000136400000000000000000000000000000036B000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0.00000\"}}"
+       },
+       {
+          "description": "[basx680] Zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000403000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"000000.\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0\"}}"
+       },
+       {
+          "description": "[basx606] Zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000383000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.0000\"}}"
+       },
+       {
+          "description": "[basx617] Zeros",
+          "canonical_bson": "18000000136400000000000000000000000000000038B000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0.0000\"}}"
+       },
+       {
+          "description": "[basx681] Zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000403000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"00000.\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0\"}}"
+       },
+       {
+          "description": "[basx686] Zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000403000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"+00000.\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0\"}}"
+       },
+       {
+          "description": "[basx687] Zeros",
+          "canonical_bson": "18000000136400000000000000000000000000000040B000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"-00000.\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0\"}}"
+       },
+       {
+          "description": "[basx019] conform to rules and exponent will be in permitted range).",
+          "canonical_bson": "1800000013640000000000000000000000000000003CB000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"-00.00\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0.00\"}}"
+       },
+       {
+          "description": "[basx607] Zeros",
+          "canonical_bson": "1800000013640000000000000000000000000000003A3000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.000\"}}"
+       },
+       {
+          "description": "[basx616] Zeros",
+          "canonical_bson": "1800000013640000000000000000000000000000003AB000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0.000\"}}"
+       },
+       {
+          "description": "[basx682] Zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000403000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0000.\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0\"}}"
+       },
+       {
+          "description": "[basx155] Numbers with E",
+          "canonical_bson": "1800000013640000000000000000000000000000003A3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.000e+0\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.000\"}}"
+       },
+       {
+          "description": "[basx130] Numbers with E",
+          "canonical_bson": "180000001364000000000000000000000000000000383000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.000E-1\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.0000\"}}"
+       },
+       {
+          "description": "[basx290] some more negative zeros [systematic tests below]",
+          "canonical_bson": "18000000136400000000000000000000000000000038B000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0.000E-1\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0.0000\"}}"
+       },
+       {
+          "description": "[basx131] Numbers with E",
+          "canonical_bson": "180000001364000000000000000000000000000000363000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.000E-2\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.00000\"}}"
+       },
+       {
+          "description": "[basx291] some more negative zeros [systematic tests below]",
+          "canonical_bson": "18000000136400000000000000000000000000000036B000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0.000E-2\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0.00000\"}}"
+       },
+       {
+          "description": "[basx132] Numbers with E",
+          "canonical_bson": "180000001364000000000000000000000000000000343000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.000E-3\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.000000\"}}"
+       },
+       {
+          "description": "[basx292] some more negative zeros [systematic tests below]",
+          "canonical_bson": "18000000136400000000000000000000000000000034B000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0.000E-3\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0.000000\"}}"
+       },
+       {
+          "description": "[basx133] Numbers with E",
+          "canonical_bson": "180000001364000000000000000000000000000000323000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.000E-4\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E-7\"}}"
+       },
+       {
+          "description": "[basx293] some more negative zeros [systematic tests below]",
+          "canonical_bson": "18000000136400000000000000000000000000000032B000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0.000E-4\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0E-7\"}}"
+       },
+       {
+          "description": "[basx608] Zeros",
+          "canonical_bson": "1800000013640000000000000000000000000000003C3000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.00\"}}"
+       },
+       {
+          "description": "[basx615] Zeros",
+          "canonical_bson": "1800000013640000000000000000000000000000003CB000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0.00\"}}"
+       },
+       {
+          "description": "[basx683] Zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000403000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"000.\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0\"}}"
+       },
+       {
+          "description": "[basx630] Zeros",
+          "canonical_bson": "1800000013640000000000000000000000000000003C3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.00E+0\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.00\"}}"
+       },
+       {
+          "description": "[basx670] Zeros",
+          "canonical_bson": "1800000013640000000000000000000000000000003C3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.00E-0\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.00\"}}"
+       },
+       {
+          "description": "[basx631] Zeros",
+          "canonical_bson": "1800000013640000000000000000000000000000003E3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.00E+1\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.0\"}}"
+       },
+       {
+          "description": "[basx671] Zeros",
+          "canonical_bson": "1800000013640000000000000000000000000000003A3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.00E-1\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.000\"}}"
+       },
+       {
+          "description": "[basx134] Numbers with E",
+          "canonical_bson": "180000001364000000000000000000000000000000383000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.00E-2\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.0000\"}}"
+       },
+       {
+          "description": "[basx294] some more negative zeros [systematic tests below]",
+          "canonical_bson": "18000000136400000000000000000000000000000038B000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0.00E-2\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0.0000\"}}"
+       },
+       {
+          "description": "[basx632] Zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000403000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.00E+2\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0\"}}"
+       },
+       {
+          "description": "[basx672] Zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000383000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.00E-2\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.0000\"}}"
+       },
+       {
+          "description": "[basx135] Numbers with E",
+          "canonical_bson": "180000001364000000000000000000000000000000363000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.00E-3\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.00000\"}}"
+       },
+       {
+          "description": "[basx295] some more negative zeros [systematic tests below]",
+          "canonical_bson": "18000000136400000000000000000000000000000036B000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0.00E-3\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0.00000\"}}"
+       },
+       {
+          "description": "[basx633] Zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000423000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.00E+3\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E+1\"}}"
+       },
+       {
+          "description": "[basx673] Zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000363000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.00E-3\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.00000\"}}"
+       },
+       {
+          "description": "[basx136] Numbers with E",
+          "canonical_bson": "180000001364000000000000000000000000000000343000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.00E-4\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.000000\"}}"
+       },
+       {
+          "description": "[basx674] Zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000343000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.00E-4\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.000000\"}}"
+       },
+       {
+          "description": "[basx634] Zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000443000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.00E+4\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E+2\"}}"
+       },
+       {
+          "description": "[basx137] Numbers with E",
+          "canonical_bson": "180000001364000000000000000000000000000000323000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.00E-5\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E-7\"}}"
+       },
+       {
+          "description": "[basx635] Zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000463000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.00E+5\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E+3\"}}"
+       },
+       {
+          "description": "[basx675] Zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000323000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.00E-5\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E-7\"}}"
+       },
+       {
+          "description": "[basx636] Zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000483000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.00E+6\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E+4\"}}"
+       },
+       {
+          "description": "[basx676] Zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000303000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.00E-6\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E-8\"}}"
+       },
+       {
+          "description": "[basx637] Zeros",
+          "canonical_bson": "1800000013640000000000000000000000000000004A3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.00E+7\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E+5\"}}"
+       },
+       {
+          "description": "[basx677] Zeros",
+          "canonical_bson": "1800000013640000000000000000000000000000002E3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.00E-7\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E-9\"}}"
+       },
+       {
+          "description": "[basx638] Zeros",
+          "canonical_bson": "1800000013640000000000000000000000000000004C3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.00E+8\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E+6\"}}"
+       },
+       {
+          "description": "[basx678] Zeros",
+          "canonical_bson": "1800000013640000000000000000000000000000002C3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.00E-8\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E-10\"}}"
+       },
+       {
+          "description": "[basx149] Numbers with E",
+          "canonical_bson": "180000001364000000000000000000000000000000523000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"000E+9\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E+9\"}}"
+       },
+       {
+          "description": "[basx639] Zeros",
+          "canonical_bson": "1800000013640000000000000000000000000000004E3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.00E+9\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E+7\"}}"
+       },
+       {
+          "description": "[basx679] Zeros",
+          "canonical_bson": "1800000013640000000000000000000000000000002A3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.00E-9\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E-11\"}}"
+       },
+       {
+          "description": "[basx063] strings without E cannot generate E in result",
+          "canonical_bson": "18000000136400185C0ACE00000000000000000000383000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"+00345678.5432\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"345678.5432\"}}"
+       },
+       {
+          "description": "[basx018] conform to rules and exponent will be in permitted range).",
+          "canonical_bson": "1800000013640000000000000000000000000000003EB000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0.0\"}}"
+       },
+       {
+          "description": "[basx609] Zeros",
+          "canonical_bson": "1800000013640000000000000000000000000000003E3000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.0\"}}"
+       },
+       {
+          "description": "[basx614] Zeros",
+          "canonical_bson": "1800000013640000000000000000000000000000003EB000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0.0\"}}"
+       },
+       {
+          "description": "[basx684] Zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000403000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"00.\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0\"}}"
+       },
+       {
+          "description": "[basx640] Zeros",
+          "canonical_bson": "1800000013640000000000000000000000000000003E3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.0E+0\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.0\"}}"
+       },
+       {
+          "description": "[basx660] Zeros",
+          "canonical_bson": "1800000013640000000000000000000000000000003E3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.0E-0\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.0\"}}"
+       },
+       {
+          "description": "[basx641] Zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000403000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.0E+1\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0\"}}"
+       },
+       {
+          "description": "[basx661] Zeros",
+          "canonical_bson": "1800000013640000000000000000000000000000003C3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.0E-1\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.00\"}}"
+       },
+       {
+          "description": "[basx296] some more negative zeros [systematic tests below]",
+          "canonical_bson": "1800000013640000000000000000000000000000003AB000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0.0E-2\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0.000\"}}"
+       },
+       {
+          "description": "[basx642] Zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000423000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.0E+2\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E+1\"}}"
+       },
+       {
+          "description": "[basx662] Zeros",
+          "canonical_bson": "1800000013640000000000000000000000000000003A3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.0E-2\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.000\"}}"
+       },
+       {
+          "description": "[basx297] some more negative zeros [systematic tests below]",
+          "canonical_bson": "18000000136400000000000000000000000000000038B000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0.0E-3\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0.0000\"}}"
+       },
+       {
+          "description": "[basx643] Zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000443000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.0E+3\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E+2\"}}"
+       },
+       {
+          "description": "[basx663] Zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000383000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.0E-3\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.0000\"}}"
+       },
+       {
+          "description": "[basx644] Zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000463000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.0E+4\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E+3\"}}"
+       },
+       {
+          "description": "[basx664] Zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000363000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.0E-4\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.00000\"}}"
+       },
+       {
+          "description": "[basx645] Zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000483000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.0E+5\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E+4\"}}"
+       },
+       {
+          "description": "[basx665] Zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000343000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.0E-5\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.000000\"}}"
+       },
+       {
+          "description": "[basx646] Zeros",
+          "canonical_bson": "1800000013640000000000000000000000000000004A3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.0E+6\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E+5\"}}"
+       },
+       {
+          "description": "[basx666] Zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000323000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.0E-6\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E-7\"}}"
+       },
+       {
+          "description": "[basx647] Zeros",
+          "canonical_bson": "1800000013640000000000000000000000000000004C3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.0E+7\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E+6\"}}"
+       },
+       {
+          "description": "[basx667] Zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000303000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.0E-7\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E-8\"}}"
+       },
+       {
+          "description": "[basx648] Zeros",
+          "canonical_bson": "1800000013640000000000000000000000000000004E3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.0E+8\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E+7\"}}"
+       },
+       {
+          "description": "[basx668] Zeros",
+          "canonical_bson": "1800000013640000000000000000000000000000002E3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.0E-8\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E-9\"}}"
+       },
+       {
+          "description": "[basx160] Numbers with E",
+          "canonical_bson": "180000001364000000000000000000000000000000523000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"00E+9\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E+9\"}}"
+       },
+       {
+          "description": "[basx161] Numbers with E",
+          "canonical_bson": "1800000013640000000000000000000000000000002E3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"00E-9\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E-9\"}}"
+       },
+       {
+          "description": "[basx649] Zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000503000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.0E+9\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E+8\"}}"
+       },
+       {
+          "description": "[basx669] Zeros",
+          "canonical_bson": "1800000013640000000000000000000000000000002C3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.0E-9\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E-10\"}}"
+       },
+       {
+          "description": "[basx062] strings without E cannot generate E in result",
+          "canonical_bson": "18000000136400185C0ACE00000000000000000000383000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"+0345678.5432\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"345678.5432\"}}"
+       },
+       {
+          "description": "[basx001] conform to rules and exponent will be in permitted range).",
+          "canonical_bson": "180000001364000000000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0\"}}"
+       },
+       {
+          "description": "[basx017] conform to rules and exponent will be in permitted range).",
+          "canonical_bson": "18000000136400000000000000000000000000000040B000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0\"}}"
+       },
+       {
+          "description": "[basx611] Zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000403000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0\"}}"
+       },
+       {
+          "description": "[basx613] Zeros",
+          "canonical_bson": "18000000136400000000000000000000000000000040B000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0.\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0\"}}"
+       },
+       {
+          "description": "[basx685] Zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000403000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0\"}}"
+       },
+       {
+          "description": "[basx688] Zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000403000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"+0.\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0\"}}"
+       },
+       {
+          "description": "[basx689] Zeros",
+          "canonical_bson": "18000000136400000000000000000000000000000040B000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0.\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0\"}}"
+       },
+       {
+          "description": "[basx650] Zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000403000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E+0\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0\"}}"
+       },
+       {
+          "description": "[basx651] Zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000423000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E+1\"}}"
+       },
+       {
+          "description": "[basx298] some more negative zeros [systematic tests below]",
+          "canonical_bson": "1800000013640000000000000000000000000000003CB000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0E-2\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0.00\"}}"
+       },
+       {
+          "description": "[basx652] Zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000443000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E+2\"}}"
+       },
+       {
+          "description": "[basx299] some more negative zeros [systematic tests below]",
+          "canonical_bson": "1800000013640000000000000000000000000000003AB000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0E-3\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0.000\"}}"
+       },
+       {
+          "description": "[basx653] Zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000463000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E+3\"}}"
+       },
+       {
+          "description": "[basx654] Zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000483000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E+4\"}}"
+       },
+       {
+          "description": "[basx655] Zeros",
+          "canonical_bson": "1800000013640000000000000000000000000000004A3000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E+5\"}}"
+       },
+       {
+          "description": "[basx656] Zeros",
+          "canonical_bson": "1800000013640000000000000000000000000000004C3000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E+6\"}}"
+       },
+       {
+          "description": "[basx657] Zeros",
+          "canonical_bson": "1800000013640000000000000000000000000000004E3000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E+7\"}}"
+       },
+       {
+          "description": "[basx658] Zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000503000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E+8\"}}"
+       },
+       {
+          "description": "[basx138] Numbers with E",
+          "canonical_bson": "180000001364000000000000000000000000000000523000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"+0E+9\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E+9\"}}"
+       },
+       {
+          "description": "[basx139] Numbers with E",
+          "canonical_bson": "18000000136400000000000000000000000000000052B000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"-0E+9\"}}"
+       },
+       {
+          "description": "[basx144] Numbers with E",
+          "canonical_bson": "180000001364000000000000000000000000000000523000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E+9\"}}"
+       },
+       {
+          "description": "[basx154] Numbers with E",
+          "canonical_bson": "180000001364000000000000000000000000000000523000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E9\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E+9\"}}"
+       },
+       {
+          "description": "[basx659] Zeros",
+          "canonical_bson": "180000001364000000000000000000000000000000523000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0E+9\"}}"
+       },
+       {
+          "description": "[basx042] strings without E cannot generate E in result",
+          "canonical_bson": "18000000136400FC040000000000000000000000003C3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"+12.76\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"12.76\"}}"
+       },
+       {
+          "description": "[basx143] Numbers with E",
+          "canonical_bson": "180000001364000100000000000000000000000000523000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"+1E+009\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1E+9\"}}"
+       },
+       {
+          "description": "[basx061] strings without E cannot generate E in result",
+          "canonical_bson": "18000000136400185C0ACE00000000000000000000383000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"+345678.5432\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"345678.5432\"}}"
+       },
+       {
+          "description": "[basx036] conform to rules and exponent will be in permitted range).",
+          "canonical_bson": "1800000013640015CD5B0700000000000000000000203000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.0000000123456789\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.23456789E-8\"}}"
+       },
+       {
+          "description": "[basx035] conform to rules and exponent will be in permitted range).",
+          "canonical_bson": "1800000013640015CD5B0700000000000000000000223000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.000000123456789\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.23456789E-7\"}}"
+       },
+       {
+          "description": "[basx034] conform to rules and exponent will be in permitted range).",
+          "canonical_bson": "1800000013640015CD5B0700000000000000000000243000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.00000123456789\"}}"
+       },
+       {
+          "description": "[basx053] strings without E cannot generate E in result",
+          "canonical_bson": "180000001364003200000000000000000000000000323000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.0000050\"}}"
+       },
+       {
+          "description": "[basx033] conform to rules and exponent will be in permitted range).",
+          "canonical_bson": "1800000013640015CD5B0700000000000000000000263000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.0000123456789\"}}"
+       },
+       {
+          "description": "[basx016] conform to rules and exponent will be in permitted range).",
+          "canonical_bson": "180000001364000C000000000000000000000000003A3000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.012\"}}"
+       },
+       {
+          "description": "[basx015] conform to rules and exponent will be in permitted range).",
+          "canonical_bson": "180000001364007B000000000000000000000000003A3000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.123\"}}"
+       },
+       {
+          "description": "[basx037] conform to rules and exponent will be in permitted range).",
+          "canonical_bson": "1800000013640078DF0D8648700000000000000000223000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.123456789012344\"}}"
+       },
+       {
+          "description": "[basx038] conform to rules and exponent will be in permitted range).",
+          "canonical_bson": "1800000013640079DF0D8648700000000000000000223000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.123456789012345\"}}"
+       },
+       {
+          "description": "[basx250] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000383000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.1265\"}}"
+       },
+       {
+          "description": "[basx257] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000383000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.1265E-0\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.1265\"}}"
+       },
+       {
+          "description": "[basx256] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000363000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.1265E-1\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.01265\"}}"
+       },
+       {
+          "description": "[basx258] Numbers with E",
+          "canonical_bson": "18000000136400F1040000000000000000000000003A3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.1265E+1\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.265\"}}"
+       },
+       {
+          "description": "[basx251] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000103000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.1265E-20\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.265E-21\"}}"
+       },
+       {
+          "description": "[basx263] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000603000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.1265E+20\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.265E+19\"}}"
+       },
+       {
+          "description": "[basx255] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000343000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.1265E-2\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.001265\"}}"
+       },
+       {
+          "description": "[basx259] Numbers with E",
+          "canonical_bson": "18000000136400F1040000000000000000000000003C3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.1265E+2\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"12.65\"}}"
+       },
+       {
+          "description": "[basx254] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000323000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.1265E-3\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.0001265\"}}"
+       },
+       {
+          "description": "[basx260] Numbers with E",
+          "canonical_bson": "18000000136400F1040000000000000000000000003E3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.1265E+3\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"126.5\"}}"
+       },
+       {
+          "description": "[basx253] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000303000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.1265E-4\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.00001265\"}}"
+       },
+       {
+          "description": "[basx261] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000403000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.1265E+4\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1265\"}}"
+       },
+       {
+          "description": "[basx252] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000283000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.1265E-8\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.265E-9\"}}"
+       },
+       {
+          "description": "[basx262] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000483000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.1265E+8\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.265E+7\"}}"
+       },
+       {
+          "description": "[basx159] Numbers with E",
+          "canonical_bson": "1800000013640049000000000000000000000000002E3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.73e-7\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"7.3E-8\"}}"
+       },
+       {
+          "description": "[basx004] conform to rules and exponent will be in permitted range).",
+          "canonical_bson": "1800000013640064000000000000000000000000003C3000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.00\"}}"
+       },
+       {
+          "description": "[basx003] conform to rules and exponent will be in permitted range).",
+          "canonical_bson": "180000001364000A000000000000000000000000003E3000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.0\"}}"
+       },
+       {
+          "description": "[basx002] conform to rules and exponent will be in permitted range).",
+          "canonical_bson": "180000001364000100000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1\"}}"
+       },
+       {
+          "description": "[basx148] Numbers with E",
+          "canonical_bson": "180000001364000100000000000000000000000000523000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"1E+009\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1E+9\"}}"
+       },
+       {
+          "description": "[basx153] Numbers with E",
+          "canonical_bson": "180000001364000100000000000000000000000000523000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"1E009\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1E+9\"}}"
+       },
+       {
+          "description": "[basx141] Numbers with E",
+          "canonical_bson": "180000001364000100000000000000000000000000523000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"1e+09\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1E+9\"}}"
+       },
+       {
+          "description": "[basx146] Numbers with E",
+          "canonical_bson": "180000001364000100000000000000000000000000523000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"1E+09\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1E+9\"}}"
+       },
+       {
+          "description": "[basx151] Numbers with E",
+          "canonical_bson": "180000001364000100000000000000000000000000523000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"1e09\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1E+9\"}}"
+       },
+       {
+          "description": "[basx142] Numbers with E",
+          "canonical_bson": "180000001364000100000000000000000000000000F43000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1E+90\"}}"
+       },
+       {
+          "description": "[basx147] Numbers with E",
+          "canonical_bson": "180000001364000100000000000000000000000000F43000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"1e+90\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1E+90\"}}"
+       },
+       {
+          "description": "[basx152] Numbers with E",
+          "canonical_bson": "180000001364000100000000000000000000000000F43000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"1E90\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1E+90\"}}"
+       },
+       {
+          "description": "[basx140] Numbers with E",
+          "canonical_bson": "180000001364000100000000000000000000000000523000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1E+9\"}}"
+       },
+       {
+          "description": "[basx150] Numbers with E",
+          "canonical_bson": "180000001364000100000000000000000000000000523000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"1E9\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1E+9\"}}"
+       },
+       {
+          "description": "[basx014] conform to rules and exponent will be in permitted range).",
+          "canonical_bson": "18000000136400D2040000000000000000000000003A3000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.234\"}}"
+       },
+       {
+          "description": "[basx170] Numbers with E",
+          "canonical_bson": "18000000136400F1040000000000000000000000003A3000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.265\"}}"
+       },
+       {
+          "description": "[basx177] Numbers with E",
+          "canonical_bson": "18000000136400F1040000000000000000000000003A3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.265E-0\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.265\"}}"
+       },
+       {
+          "description": "[basx176] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000383000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.265E-1\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.1265\"}}"
+       },
+       {
+          "description": "[basx178] Numbers with E",
+          "canonical_bson": "18000000136400F1040000000000000000000000003C3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.265E+1\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"12.65\"}}"
+       },
+       {
+          "description": "[basx171] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000123000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.265E-20\"}}"
+       },
+       {
+          "description": "[basx183] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000623000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.265E+20\"}}"
+       },
+       {
+          "description": "[basx175] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000363000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.265E-2\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.01265\"}}"
+       },
+       {
+          "description": "[basx179] Numbers with E",
+          "canonical_bson": "18000000136400F1040000000000000000000000003E3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.265E+2\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"126.5\"}}"
+       },
+       {
+          "description": "[basx174] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000343000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.265E-3\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.001265\"}}"
+       },
+       {
+          "description": "[basx180] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000403000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.265E+3\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1265\"}}"
+       },
+       {
+          "description": "[basx173] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000323000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.265E-4\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.0001265\"}}"
+       },
+       {
+          "description": "[basx181] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000423000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.265E+4\"}}"
+       },
+       {
+          "description": "[basx172] Numbers with E",
+          "canonical_bson": "18000000136400F1040000000000000000000000002A3000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.265E-8\"}}"
+       },
+       {
+          "description": "[basx182] Numbers with E",
+          "canonical_bson": "18000000136400F1040000000000000000000000004A3000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.265E+8\"}}"
+       },
+       {
+          "description": "[basx157] Numbers with E",
+          "canonical_bson": "180000001364000400000000000000000000000000523000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"4E+9\"}}"
+       },
+       {
+          "description": "[basx067] examples",
+          "canonical_bson": "180000001364000500000000000000000000000000343000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"5E-6\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.000005\"}}"
+       },
+       {
+          "description": "[basx069] examples",
+          "canonical_bson": "180000001364000500000000000000000000000000323000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"5E-7\"}}"
+       },
+       {
+          "description": "[basx385] Engineering notation tests",
+          "canonical_bson": "180000001364000700000000000000000000000000403000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"7E0\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"7\"}}"
+       },
+       {
+          "description": "[basx365] Engineering notation tests",
+          "canonical_bson": "180000001364000700000000000000000000000000543000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"7E10\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"7E+10\"}}"
+       },
+       {
+          "description": "[basx405] Engineering notation tests",
+          "canonical_bson": "1800000013640007000000000000000000000000002C3000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"7E-10\"}}"
+       },
+       {
+          "description": "[basx363] Engineering notation tests",
+          "canonical_bson": "180000001364000700000000000000000000000000563000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"7E11\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"7E+11\"}}"
+       },
+       {
+          "description": "[basx407] Engineering notation tests",
+          "canonical_bson": "1800000013640007000000000000000000000000002A3000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"7E-11\"}}"
+       },
+       {
+          "description": "[basx361] Engineering notation tests",
+          "canonical_bson": "180000001364000700000000000000000000000000583000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"7E12\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"7E+12\"}}"
+       },
+       {
+          "description": "[basx409] Engineering notation tests",
+          "canonical_bson": "180000001364000700000000000000000000000000283000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"7E-12\"}}"
+       },
+       {
+          "description": "[basx411] Engineering notation tests",
+          "canonical_bson": "180000001364000700000000000000000000000000263000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"7E-13\"}}"
+       },
+       {
+          "description": "[basx383] Engineering notation tests",
+          "canonical_bson": "180000001364000700000000000000000000000000423000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"7E1\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"7E+1\"}}"
+       },
+       {
+          "description": "[basx387] Engineering notation tests",
+          "canonical_bson": "1800000013640007000000000000000000000000003E3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"7E-1\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.7\"}}"
+       },
+       {
+          "description": "[basx381] Engineering notation tests",
+          "canonical_bson": "180000001364000700000000000000000000000000443000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"7E2\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"7E+2\"}}"
+       },
+       {
+          "description": "[basx389] Engineering notation tests",
+          "canonical_bson": "1800000013640007000000000000000000000000003C3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"7E-2\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.07\"}}"
+       },
+       {
+          "description": "[basx379] Engineering notation tests",
+          "canonical_bson": "180000001364000700000000000000000000000000463000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"7E3\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"7E+3\"}}"
+       },
+       {
+          "description": "[basx391] Engineering notation tests",
+          "canonical_bson": "1800000013640007000000000000000000000000003A3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"7E-3\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.007\"}}"
+       },
+       {
+          "description": "[basx377] Engineering notation tests",
+          "canonical_bson": "180000001364000700000000000000000000000000483000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"7E4\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"7E+4\"}}"
+       },
+       {
+          "description": "[basx393] Engineering notation tests",
+          "canonical_bson": "180000001364000700000000000000000000000000383000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"7E-4\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.0007\"}}"
+       },
+       {
+          "description": "[basx375] Engineering notation tests",
+          "canonical_bson": "1800000013640007000000000000000000000000004A3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"7E5\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"7E+5\"}}"
+       },
+       {
+          "description": "[basx395] Engineering notation tests",
+          "canonical_bson": "180000001364000700000000000000000000000000363000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"7E-5\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.00007\"}}"
+       },
+       {
+          "description": "[basx373] Engineering notation tests",
+          "canonical_bson": "1800000013640007000000000000000000000000004C3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"7E6\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"7E+6\"}}"
+       },
+       {
+          "description": "[basx397] Engineering notation tests",
+          "canonical_bson": "180000001364000700000000000000000000000000343000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"7E-6\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.000007\"}}"
+       },
+       {
+          "description": "[basx371] Engineering notation tests",
+          "canonical_bson": "1800000013640007000000000000000000000000004E3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"7E7\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"7E+7\"}}"
+       },
+       {
+          "description": "[basx399] Engineering notation tests",
+          "canonical_bson": "180000001364000700000000000000000000000000323000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"7E-7\"}}"
+       },
+       {
+          "description": "[basx369] Engineering notation tests",
+          "canonical_bson": "180000001364000700000000000000000000000000503000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"7E8\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"7E+8\"}}"
+       },
+       {
+          "description": "[basx401] Engineering notation tests",
+          "canonical_bson": "180000001364000700000000000000000000000000303000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"7E-8\"}}"
+       },
+       {
+          "description": "[basx367] Engineering notation tests",
+          "canonical_bson": "180000001364000700000000000000000000000000523000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"7E9\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"7E+9\"}}"
+       },
+       {
+          "description": "[basx403] Engineering notation tests",
+          "canonical_bson": "1800000013640007000000000000000000000000002E3000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"7E-9\"}}"
+       },
+       {
+          "description": "[basx007] conform to rules and exponent will be in permitted range).",
+          "canonical_bson": "1800000013640064000000000000000000000000003E3000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"10.0\"}}"
+       },
+       {
+          "description": "[basx005] conform to rules and exponent will be in permitted range).",
+          "canonical_bson": "180000001364000A00000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"10\"}}"
+       },
+       {
+          "description": "[basx165] Numbers with E",
+          "canonical_bson": "180000001364000A00000000000000000000000000523000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"10E+009\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.0E+10\"}}"
+       },
+       {
+          "description": "[basx163] Numbers with E",
+          "canonical_bson": "180000001364000A00000000000000000000000000523000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"10E+09\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.0E+10\"}}"
+       },
+       {
+          "description": "[basx325] Engineering notation tests",
+          "canonical_bson": "180000001364000A00000000000000000000000000403000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"10e0\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"10\"}}"
+       },
+       {
+          "description": "[basx305] Engineering notation tests",
+          "canonical_bson": "180000001364000A00000000000000000000000000543000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"10e10\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.0E+11\"}}"
+       },
+       {
+          "description": "[basx345] Engineering notation tests",
+          "canonical_bson": "180000001364000A000000000000000000000000002C3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"10e-10\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.0E-9\"}}"
+       },
+       {
+          "description": "[basx303] Engineering notation tests",
+          "canonical_bson": "180000001364000A00000000000000000000000000563000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"10e11\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.0E+12\"}}"
+       },
+       {
+          "description": "[basx347] Engineering notation tests",
+          "canonical_bson": "180000001364000A000000000000000000000000002A3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"10e-11\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.0E-10\"}}"
+       },
+       {
+          "description": "[basx301] Engineering notation tests",
+          "canonical_bson": "180000001364000A00000000000000000000000000583000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"10e12\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.0E+13\"}}"
+       },
+       {
+          "description": "[basx349] Engineering notation tests",
+          "canonical_bson": "180000001364000A00000000000000000000000000283000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"10e-12\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.0E-11\"}}"
+       },
+       {
+          "description": "[basx351] Engineering notation tests",
+          "canonical_bson": "180000001364000A00000000000000000000000000263000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"10e-13\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.0E-12\"}}"
+       },
+       {
+          "description": "[basx323] Engineering notation tests",
+          "canonical_bson": "180000001364000A00000000000000000000000000423000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"10e1\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.0E+2\"}}"
+       },
+       {
+          "description": "[basx327] Engineering notation tests",
+          "canonical_bson": "180000001364000A000000000000000000000000003E3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"10e-1\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.0\"}}"
+       },
+       {
+          "description": "[basx321] Engineering notation tests",
+          "canonical_bson": "180000001364000A00000000000000000000000000443000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"10e2\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.0E+3\"}}"
+       },
+       {
+          "description": "[basx329] Engineering notation tests",
+          "canonical_bson": "180000001364000A000000000000000000000000003C3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"10e-2\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.10\"}}"
+       },
+       {
+          "description": "[basx319] Engineering notation tests",
+          "canonical_bson": "180000001364000A00000000000000000000000000463000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"10e3\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.0E+4\"}}"
+       },
+       {
+          "description": "[basx331] Engineering notation tests",
+          "canonical_bson": "180000001364000A000000000000000000000000003A3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"10e-3\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.010\"}}"
+       },
+       {
+          "description": "[basx317] Engineering notation tests",
+          "canonical_bson": "180000001364000A00000000000000000000000000483000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"10e4\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.0E+5\"}}"
+       },
+       {
+          "description": "[basx333] Engineering notation tests",
+          "canonical_bson": "180000001364000A00000000000000000000000000383000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"10e-4\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.0010\"}}"
+       },
+       {
+          "description": "[basx315] Engineering notation tests",
+          "canonical_bson": "180000001364000A000000000000000000000000004A3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"10e5\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.0E+6\"}}"
+       },
+       {
+          "description": "[basx335] Engineering notation tests",
+          "canonical_bson": "180000001364000A00000000000000000000000000363000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"10e-5\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.00010\"}}"
+       },
+       {
+          "description": "[basx313] Engineering notation tests",
+          "canonical_bson": "180000001364000A000000000000000000000000004C3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"10e6\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.0E+7\"}}"
+       },
+       {
+          "description": "[basx337] Engineering notation tests",
+          "canonical_bson": "180000001364000A00000000000000000000000000343000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"10e-6\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.000010\"}}"
+       },
+       {
+          "description": "[basx311] Engineering notation tests",
+          "canonical_bson": "180000001364000A000000000000000000000000004E3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"10e7\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.0E+8\"}}"
+       },
+       {
+          "description": "[basx339] Engineering notation tests",
+          "canonical_bson": "180000001364000A00000000000000000000000000323000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"10e-7\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.0000010\"}}"
+       },
+       {
+          "description": "[basx309] Engineering notation tests",
+          "canonical_bson": "180000001364000A00000000000000000000000000503000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"10e8\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.0E+9\"}}"
+       },
+       {
+          "description": "[basx341] Engineering notation tests",
+          "canonical_bson": "180000001364000A00000000000000000000000000303000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"10e-8\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.0E-7\"}}"
+       },
+       {
+          "description": "[basx164] Numbers with E",
+          "canonical_bson": "180000001364000A00000000000000000000000000F43000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"10e+90\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.0E+91\"}}"
+       },
+       {
+          "description": "[basx162] Numbers with E",
+          "canonical_bson": "180000001364000A00000000000000000000000000523000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"10E+9\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.0E+10\"}}"
+       },
+       {
+          "description": "[basx307] Engineering notation tests",
+          "canonical_bson": "180000001364000A00000000000000000000000000523000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"10e9\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.0E+10\"}}"
+       },
+       {
+          "description": "[basx343] Engineering notation tests",
+          "canonical_bson": "180000001364000A000000000000000000000000002E3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"10e-9\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.0E-8\"}}"
+       },
+       {
+          "description": "[basx008] conform to rules and exponent will be in permitted range).",
+          "canonical_bson": "1800000013640065000000000000000000000000003E3000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"10.1\"}}"
+       },
+       {
+          "description": "[basx009] conform to rules and exponent will be in permitted range).",
+          "canonical_bson": "1800000013640068000000000000000000000000003E3000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"10.4\"}}"
+       },
+       {
+          "description": "[basx010] conform to rules and exponent will be in permitted range).",
+          "canonical_bson": "1800000013640069000000000000000000000000003E3000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"10.5\"}}"
+       },
+       {
+          "description": "[basx011] conform to rules and exponent will be in permitted range).",
+          "canonical_bson": "180000001364006A000000000000000000000000003E3000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"10.6\"}}"
+       },
+       {
+          "description": "[basx012] conform to rules and exponent will be in permitted range).",
+          "canonical_bson": "180000001364006D000000000000000000000000003E3000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"10.9\"}}"
+       },
+       {
+          "description": "[basx013] conform to rules and exponent will be in permitted range).",
+          "canonical_bson": "180000001364006E000000000000000000000000003E3000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"11.0\"}}"
+       },
+       {
+          "description": "[basx040] strings without E cannot generate E in result",
+          "canonical_bson": "180000001364000C00000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"12\"}}"
+       },
+       {
+          "description": "[basx190] Numbers with E",
+          "canonical_bson": "18000000136400F1040000000000000000000000003C3000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"12.65\"}}"
+       },
+       {
+          "description": "[basx197] Numbers with E",
+          "canonical_bson": "18000000136400F1040000000000000000000000003C3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"12.65E-0\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"12.65\"}}"
+       },
+       {
+          "description": "[basx196] Numbers with E",
+          "canonical_bson": "18000000136400F1040000000000000000000000003A3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"12.65E-1\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.265\"}}"
+       },
+       {
+          "description": "[basx198] Numbers with E",
+          "canonical_bson": "18000000136400F1040000000000000000000000003E3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"12.65E+1\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"126.5\"}}"
+       },
+       {
+          "description": "[basx191] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000143000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"12.65E-20\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.265E-19\"}}"
+       },
+       {
+          "description": "[basx203] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000643000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"12.65E+20\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.265E+21\"}}"
+       },
+       {
+          "description": "[basx195] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000383000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"12.65E-2\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.1265\"}}"
+       },
+       {
+          "description": "[basx199] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000403000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"12.65E+2\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1265\"}}"
+       },
+       {
+          "description": "[basx194] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000363000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"12.65E-3\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.01265\"}}"
+       },
+       {
+          "description": "[basx200] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000423000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"12.65E+3\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.265E+4\"}}"
+       },
+       {
+          "description": "[basx193] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000343000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"12.65E-4\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.001265\"}}"
+       },
+       {
+          "description": "[basx201] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000443000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"12.65E+4\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.265E+5\"}}"
+       },
+       {
+          "description": "[basx192] Numbers with E",
+          "canonical_bson": "18000000136400F1040000000000000000000000002C3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"12.65E-8\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.265E-7\"}}"
+       },
+       {
+          "description": "[basx202] Numbers with E",
+          "canonical_bson": "18000000136400F1040000000000000000000000004C3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"12.65E+8\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.265E+9\"}}"
+       },
+       {
+          "description": "[basx044] strings without E cannot generate E in result",
+          "canonical_bson": "18000000136400FC040000000000000000000000003C3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"012.76\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"12.76\"}}"
+       },
+       {
+          "description": "[basx042] strings without E cannot generate E in result",
+          "canonical_bson": "18000000136400FC040000000000000000000000003C3000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"12.76\"}}"
+       },
+       {
+          "description": "[basx046] strings without E cannot generate E in result",
+          "canonical_bson": "180000001364001100000000000000000000000000403000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"17.\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"17\"}}"
+       },
+       {
+          "description": "[basx049] strings without E cannot generate E in result",
+          "canonical_bson": "180000001364002C00000000000000000000000000403000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0044\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"44\"}}"
+       },
+       {
+          "description": "[basx048] strings without E cannot generate E in result",
+          "canonical_bson": "180000001364002C00000000000000000000000000403000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"044\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"44\"}}"
+       },
+       {
+          "description": "[basx158] Numbers with E",
+          "canonical_bson": "180000001364002C00000000000000000000000000523000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"44E+9\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"4.4E+10\"}}"
+       },
+       {
+          "description": "[basx068] examples",
+          "canonical_bson": "180000001364003200000000000000000000000000323000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"50E-7\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.0000050\"}}"
+       },
+       {
+          "description": "[basx169] Numbers with E",
+          "canonical_bson": "180000001364006400000000000000000000000000523000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"100e+009\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.00E+11\"}}"
+       },
+       {
+          "description": "[basx167] Numbers with E",
+          "canonical_bson": "180000001364006400000000000000000000000000523000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"100e+09\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.00E+11\"}}"
+       },
+       {
+          "description": "[basx168] Numbers with E",
+          "canonical_bson": "180000001364006400000000000000000000000000F43000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"100E+90\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.00E+92\"}}"
+       },
+       {
+          "description": "[basx166] Numbers with E",
+          "canonical_bson": "180000001364006400000000000000000000000000523000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"100e+9\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.00E+11\"}}"
+       },
+       {
+          "description": "[basx210] Numbers with E",
+          "canonical_bson": "18000000136400F1040000000000000000000000003E3000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"126.5\"}}"
+       },
+       {
+          "description": "[basx217] Numbers with E",
+          "canonical_bson": "18000000136400F1040000000000000000000000003E3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"126.5E-0\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"126.5\"}}"
+       },
+       {
+          "description": "[basx216] Numbers with E",
+          "canonical_bson": "18000000136400F1040000000000000000000000003C3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"126.5E-1\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"12.65\"}}"
+       },
+       {
+          "description": "[basx218] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000403000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"126.5E+1\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1265\"}}"
+       },
+       {
+          "description": "[basx211] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000163000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"126.5E-20\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.265E-18\"}}"
+       },
+       {
+          "description": "[basx223] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000663000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"126.5E+20\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.265E+22\"}}"
+       },
+       {
+          "description": "[basx215] Numbers with E",
+          "canonical_bson": "18000000136400F1040000000000000000000000003A3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"126.5E-2\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.265\"}}"
+       },
+       {
+          "description": "[basx219] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000423000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"126.5E+2\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.265E+4\"}}"
+       },
+       {
+          "description": "[basx214] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000383000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"126.5E-3\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.1265\"}}"
+       },
+       {
+          "description": "[basx220] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000443000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"126.5E+3\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.265E+5\"}}"
+       },
+       {
+          "description": "[basx213] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000363000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"126.5E-4\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.01265\"}}"
+       },
+       {
+          "description": "[basx221] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000463000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"126.5E+4\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.265E+6\"}}"
+       },
+       {
+          "description": "[basx212] Numbers with E",
+          "canonical_bson": "18000000136400F1040000000000000000000000002E3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"126.5E-8\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.000001265\"}}"
+       },
+       {
+          "description": "[basx222] Numbers with E",
+          "canonical_bson": "18000000136400F1040000000000000000000000004E3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"126.5E+8\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.265E+10\"}}"
+       },
+       {
+          "description": "[basx006] conform to rules and exponent will be in permitted range).",
+          "canonical_bson": "18000000136400E803000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1000\"}}"
+       },
+       {
+          "description": "[basx230] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1265\"}}"
+       },
+       {
+          "description": "[basx237] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000403000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"1265E-0\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1265\"}}"
+       },
+       {
+          "description": "[basx236] Numbers with E",
+          "canonical_bson": "18000000136400F1040000000000000000000000003E3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"1265E-1\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"126.5\"}}"
+       },
+       {
+          "description": "[basx238] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000423000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"1265E+1\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.265E+4\"}}"
+       },
+       {
+          "description": "[basx231] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000183000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"1265E-20\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.265E-17\"}}"
+       },
+       {
+          "description": "[basx243] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000683000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"1265E+20\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.265E+23\"}}"
+       },
+       {
+          "description": "[basx235] Numbers with E",
+          "canonical_bson": "18000000136400F1040000000000000000000000003C3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"1265E-2\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"12.65\"}}"
+       },
+       {
+          "description": "[basx239] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000443000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"1265E+2\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.265E+5\"}}"
+       },
+       {
+          "description": "[basx234] Numbers with E",
+          "canonical_bson": "18000000136400F1040000000000000000000000003A3000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"1265E-3\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.265\"}}"
+       },
+       {
+          "description": "[basx240] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000463000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"1265E+3\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.265E+6\"}}"
+       },
+       {
+          "description": "[basx233] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000383000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"1265E-4\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.1265\"}}"
+       },
+       {
+          "description": "[basx241] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000483000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"1265E+4\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.265E+7\"}}"
+       },
+       {
+          "description": "[basx232] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000303000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"1265E-8\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"0.00001265\"}}"
+       },
+       {
+          "description": "[basx242] Numbers with E",
+          "canonical_bson": "18000000136400F104000000000000000000000000503000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"1265E+8\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"1.265E+11\"}}"
+       },
+       {
+          "description": "[basx060] strings without E cannot generate E in result",
+          "canonical_bson": "18000000136400185C0ACE00000000000000000000383000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"345678.5432\"}}"
+       },
+       {
+          "description": "[basx059] strings without E cannot generate E in result",
+          "canonical_bson": "18000000136400F198670C08000000000000000000363000",
+          "degenerate_extjson": "{\"d\" : {\"$numberDecimal\" : \"0345678.54321\"}}",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"345678.54321\"}}"
+       },
+       {
+          "description": "[basx058] strings without E cannot generate E in result",
+          "canonical_bson": "180000001364006AF90B7C50000000000000000000343000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"345678.543210\"}}"
+       },
+       {
+          "description": "[basx057] strings without E cannot generate E in result",
+          "canonical_bson": "180000001364006A19562522020000000000000000343000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"2345678.543210\"}}"
+       },
+       {
+          "description": "[basx056] strings without E cannot generate E in result",
+          "canonical_bson": "180000001364006AB9C8733A0B0000000000000000343000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"12345678.543210\"}}"
+       },
+       {
+          "description": "[basx031] conform to rules and exponent will be in permitted range).",
+          "canonical_bson": "1800000013640040AF0D8648700000000000000000343000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"123456789.000000\"}}"
+       },
+       {
+          "description": "[basx030] conform to rules and exponent will be in permitted range).",
+          "canonical_bson": "1800000013640080910F8648700000000000000000343000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"123456789.123456\"}}"
+       },
+       {
+          "description": "[basx032] conform to rules and exponent will be in permitted range).",
+          "canonical_bson": "1800000013640080910F8648700000000000000000403000",
+          "canonical_extjson": "{\"d\" : {\"$numberDecimal\" : \"123456789123456\"}}"
+       }
+    ]
+}

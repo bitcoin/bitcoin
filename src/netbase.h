@@ -44,13 +44,12 @@ class CNetAddr
 {
     protected:
         unsigned char ip[16]; // in network byte order
-        uint32_t scopeId; // for scoped/link-local ipv6 addresses
 
     public:
         CNetAddr();
         CNetAddr(const struct in_addr& ipv4Addr);
-        explicit CNetAddr(const char *pszIp);
-        explicit CNetAddr(const std::string &strIp);
+        explicit CNetAddr(const char *pszIp, bool fAllowLookup = false);
+        explicit CNetAddr(const std::string &strIp, bool fAllowLookup = false);
         void Init();
         void SetIP(const CNetAddr& ip);
 
@@ -83,14 +82,14 @@ class CNetAddr
         bool IsMulticast() const;
         enum Network GetNetwork() const;
         std::string ToString() const;
-        std::string ToStringIP() const;
+        std::string ToStringIP(bool fUseGetnameinfo = true) const;
         unsigned int GetByte(int n) const;
         uint64_t GetHash() const;
         bool GetInAddr(struct in_addr* pipv4Addr) const;
         std::vector<unsigned char> GetGroup() const;
         int GetReachabilityFrom(const CNetAddr *paddrPartner = NULL) const;
 
-        CNetAddr(const struct in6_addr& pipv6Addr, const uint32_t scope = 0);
+        CNetAddr(const struct in6_addr& pipv6Addr);
         bool GetIn6Addr(struct in6_addr* pipv6Addr) const;
 
         friend bool operator==(const CNetAddr& a, const CNetAddr& b);
@@ -119,7 +118,7 @@ class CSubNet
 
     public:
         CSubNet();
-        explicit CSubNet(const std::string &strSubnet);
+        explicit CSubNet(const std::string &strSubnet, bool fAllowLookup = false);
 
         //constructor for single ip subnet (<ipv4>/32 or <ipv6>/128)
         explicit CSubNet(const CNetAddr &addr);
@@ -154,10 +153,10 @@ class CService : public CNetAddr
         CService(const CNetAddr& ip, unsigned short port);
         CService(const struct in_addr& ipv4Addr, unsigned short port);
         CService(const struct sockaddr_in& addr);
-        explicit CService(const char *pszIpPort, int portDefault);
-        explicit CService(const char *pszIpPort);
-        explicit CService(const std::string& strIpPort, int portDefault);
-        explicit CService(const std::string& strIpPort);
+        explicit CService(const char *pszIpPort, int portDefault, bool fAllowLookup = false);
+        explicit CService(const char *pszIpPort, bool fAllowLookup = false);
+        explicit CService(const std::string& strIpPort, int portDefault, bool fAllowLookup = false);
+        explicit CService(const std::string& strIpPort, bool fAllowLookup = false);
         void Init();
         void SetPort(unsigned short portIn);
         unsigned short GetPort() const;
@@ -167,9 +166,9 @@ class CService : public CNetAddr
         friend bool operator!=(const CService& a, const CService& b);
         friend bool operator<(const CService& a, const CService& b);
         std::vector<unsigned char> GetKey() const;
-        std::string ToString() const;
+        std::string ToString(bool fUseGetnameinfo = true) const;
         std::string ToStringPort() const;
-        std::string ToStringIPPort() const;
+        std::string ToStringIPPort(bool fUseGetnameinfo = true) const;
 
         CService(const struct in6_addr& ipv6Addr, unsigned short port);
         CService(const struct sockaddr_in6& addr);
@@ -206,9 +205,9 @@ bool GetProxy(enum Network net, proxyType &proxyInfoOut);
 bool IsProxy(const CNetAddr &addr);
 bool SetNameProxy(const proxyType &addrProxy);
 bool HaveNameProxy();
-bool LookupHost(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowLookup);
-bool Lookup(const char *pszName, CService& addr, int portDefault, bool fAllowLookup);
-bool Lookup(const char *pszName, std::vector<CService>& vAddr, int portDefault, bool fAllowLookup, unsigned int nMaxSolutions);
+bool LookupHost(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions = 0, bool fAllowLookup = true);
+bool Lookup(const char *pszName, CService& addr, int portDefault = 0, bool fAllowLookup = true);
+bool Lookup(const char *pszName, std::vector<CService>& vAddr, int portDefault = 0, bool fAllowLookup = true, unsigned int nMaxSolutions = 0);
 bool LookupNumeric(const char *pszName, CService& addr, int portDefault = 0);
 bool ConnectSocket(const CService &addr, SOCKET& hSocketRet, int nTimeout, bool *outProxyConnectionFailed = 0);
 bool ConnectSocketByName(CService &addr, SOCKET& hSocketRet, const char *pszDest, int portDefault, int nTimeout, bool *outProxyConnectionFailed = 0);
@@ -222,5 +221,6 @@ bool SetSocketNonBlocking(SOCKET& hSocket, bool fNonBlocking);
  * Convert milliseconds to a struct timeval for e.g. select.
  */
 struct timeval MillisToTimeval(int64_t nTimeout);
+void InterruptSocks5(bool interrupt);
 
 #endif // SYSCOIN_NETBASE_H

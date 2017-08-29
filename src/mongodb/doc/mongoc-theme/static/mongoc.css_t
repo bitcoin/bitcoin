@@ -1,0 +1,550 @@
+/*
+ * mongoc.css_t
+ * ~~~~~~~~~~~~~~
+ *
+ * Sphinx stylesheet -- MongoDB C Driver theme.
+ *
+ * Adapted from Sphinx Readable Theme, Copyright 2013 by Ignacy Sokolowski
+ * https://github.com/ignacysokolowski/sphinx-readable-theme
+ *
+ * Copyright (c) 2017 MongoDB, Inc.
+ *
+ *                               MIT LICENSE
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
+{% set page_width = '90%' %}
+
+@import url('basic.css');
+ 
+/* -- page layout --------------------------------------------------------- */
+ 
+body {
+    font-family: sans-serif;
+    font-size: 18px;
+    margin: 0;
+    padding: 0;
+}
+ 
+div.document {
+    margin: 10px auto 0 auto;
+    max-width: {{ page_width }};
+}
+
+div.documentwrapper {
+    float: left;
+    width: 100%;
+}
+
+div.bodywrapper {
+    margin: 0 0 0 {{ theme_sidebarwidth|toint }}px;
+}
+
+/* make room for the big table */
+div.bodywrapper#errors {
+    margin: 0;
+}
+
+div.body {
+    background-color: #ffffff;
+    color: #3e4349;
+    padding: 0 30px 30px 30px;
+}
+ 
+div.footer {
+    color: #555;
+    font-size: 14px;
+    margin: 20px auto 30px auto;
+    padding: 1em;
+    max-width: 880px;
+}
+ 
+div.footer a {
+    text-decoration: underline;
+}
+
+div.related {
+    padding: 10px 0;
+    width: auto;
+}
+
+/* on wide windows, show the sidebar and hide the home link */
+div.related li.nav-item-0 {
+    display: none;
+}
+
+div.related ul {
+    padding: 0;
+    padding-left: 0 !important;
+    margin: 0 !important;
+}
+
+div.sphinxsidebar {
+    float: left;
+    font-size: 14px;
+    line-height: 1.5em;
+    margin-left: -100%;
+    width: {{ theme_sidebarwidth|toint }}px;
+}
+
+div.sphinxsidebarwrapper {
+    font-size: 14px;
+    line-height: 1.5em;
+    padding: 10px 0;
+}
+
+div.sphinxsidebar h3,
+div.sphinxsidebar h4 {
+    color: #333;
+    font-size: 24px;
+    font-weight: normal;
+    margin: 0 0 5px 0;
+    padding: 0;
+}
+
+div.sphinxsidebarwrapper h3:first-of-type {
+    margin-bottom: 44px;
+}
+
+div.sphinxsidebar h4 {
+    font-size: 1.1em;
+}
+ 
+div.sphinxsidebar h3 a {
+    color: #333;
+}
+ 
+div.sphinxsidebar p {
+    color: #888;
+}
+
+div.sphinxsidebar p.searchtip {
+    line-height: 1.4em;
+}
+ 
+div.sphinxsidebar ul {
+    color: #000;
+    margin: 10px 0 20px;
+    padding: 0;
+}
+
+div.sphinxsidebar ul li.current > a {
+    font-weight: bold;
+}
+
+div.sphinxsidebar a {
+    color: #444;
+}
+
+div.sphinxsidebar a:hover {
+    color: #d00;
+}
+ 
+div.sphinxsidebar input {
+    border: 1px solid #ccc;
+    font-family: sans-serif;
+    font-size: 1em;
+}
+
+div.footer-nav {
+    clear: both;
+}
+
+div.footer a.footer-nav-button {
+    display: block;
+    font-size: 18px;
+    margin: 0.5em 0;
+    text-decoration: none;
+}
+
+a.footer-nav-button-prev {
+    float: left;
+}
+
+a.footer-nav-button-next {
+    float: right;
+}
+
+div.colophon {
+    clear: both;
+    text-align: center;
+    padding: 2em;
+}
+
+/* -- body styles --------------------------------------------------------- */
+ 
+a {
+    color: #900;
+    text-decoration: none;
+}
+
+a:visited {
+    color: #700;
+}
+ 
+a:hover {
+    color: #d00;
+    text-decoration: underline;
+}
+
+hr {
+    border: 1px solid #b1b4b6;
+}
+
+div.body h1,
+div.body h2,
+div.body h3,
+div.body h4,
+div.body h5,
+div.body h6 { font-weight: normal; }
+
+div.body h1,
+div.body h2,
+div.body h3,
+div.body h4 { color: #212224; }
+div.body h5 { color: #000; }
+div.body h6 { color: #777; }
+ 
+div.body h1 { margin: 0 0 10px 0; }
+div.body h2,
+div.body h3 { margin: 30px 0px 10px 0px; }
+div.body h4,
+div.body h5,
+div.body h6 { margin: 20px 0px 10px 0px; }
+
+div.body h1 { padding: 0 0 10px 0; }
+div.body h2,
+div.body h3 { padding: 10px 0 10px 0; }
+div.body h4 { padding: 10px 0 10px 0; }
+div.body h5,
+div.body h6 { padding: 10px 0 0 0; }
+ 
+div.body h1,
+div.body h2,
+div.body h3 { border-bottom: 1px solid #ddd; }
+div.body h4 { border-bottom: 1px solid #e5e5e5; }
+ 
+div.body h1 { font-size: 230%; }
+div.body h2 { font-size: 180%; }
+div.body h3 { font-size: 130%; }
+div.body h4 { font-size: 110%; }
+div.body h5 { font-size: 105%; }
+div.body h6 { font-size: 100%; }
+ 
+a.headerlink {
+    color: #c60f0f;
+    font-size: 0.8em;
+    padding: 0 4px 0 4px;
+    text-decoration: none;
+}
+ 
+a.headerlink:hover {
+    background-color: #c60f0f;
+    color: #fff;
+}
+
+div.body ul {
+    list-style: disc;
+    margin: 1em 0;
+    padding-left: 1.3em;
+}
+
+div.body ul ul, div.body ol ul {
+    margin: .2em 0;
+    padding-left: 1.2em;
+}
+
+div.body ul li {
+    padding: 2px 0;
+}
+
+div.body ul.search li {
+    padding: 5px 0 5px 20px;
+}
+
+div.body ol {
+    counter-reset: li;
+    margin-left: 0;
+    padding-left: 0;
+}
+
+div.body ol ol {
+    margin: .2em 0;
+}
+
+div.body ol > li {
+    list-style: none;
+    margin: 0 0 0 1.9em;
+    padding: 2px 1px;
+    position: relative;
+}
+
+div.body ol > li:before {
+    content: counter(li) ".";
+    counter-increment: li;
+    top: -2px;
+    left: -1.9em;
+    width: 1.9em;
+    padding: 4px 0;
+    position: absolute;
+    text-align: left;
+}
+
+div.body p,
+div.body dd,
+div.body li {
+    line-height: 1.4em;
+}
+div.body p, div.body dd, div.body li,
+div.body blockquote {
+	hyphens: none;
+	text-align: justify;
+}
+ 
+div.admonition p.admonition-title + p {
+    display: inline;
+}
+
+div.highlight {
+    background-color: #fff;
+}
+
+div.important, div.note {
+    background-color: #eee;
+    border: 1px solid #ccc;
+}
+ 
+div.attention, div.caution, div.hint, div.seealso, div.tip {
+    background-color: #fef9e9;
+    border: 1px solid #fbe091;
+}
+ 
+div.topic {
+    background-color: #eee;
+}
+ 
+div.danger, div.error, div.warning {
+    background-color: #ffe4e4;
+    border: 1px solid #f66;
+}
+
+div.literal-block-wrapper {
+  padding: 0;
+}
+
+span.caption-text {
+  font-family: monospace;
+  font-size: 0.75em;
+}
+
+p.admonition-title {
+    display: inline;
+}
+ 
+p.admonition-title:after {
+    content: ':';
+}
+ 
+pre {
+    background-color: #f5f5f5;
+    border: 1px solid #C6C9CB;
+    color: #222;
+    font-size: 0.75em;
+    line-height: 1.5em;
+    margin: 1.5em 0 1.5em 0;
+    padding: 10px;
+    box-shadow: 1px 1px 1px #d8d8d8;
+    -webkit-box-shadow: 1px 1px 1px #d8d8d8;
+    -moz-box-shadow: 1px 1px 1px #d8d8d8;
+}
+
+pre, tt, code {
+    font-family: 'Consolas', 'Menlo', 'Deja Vu Sans Mono', 'Bitstream Vera Sans Mono', monospace;
+}
+ 
+tt, code {
+    background-color: #ecf0f3;
+    font-size: 0.85em;
+}
+
+tt.descname, code.descname {
+    font-size: 0.95em;
+}
+
+tt.xref, a tt, code.xref, a code {
+    font-weight: normal;
+}
+
+span.pre {
+    padding: 0 2px;
+}
+
+/* Table-of-contents lists (UL) on home page should look like section headers */
+{% set toc_selector = 'div.bodywrapper#index div.toctree-wrapper > ul' %}
+
+{{ toc_selector }} {
+    margin: 0;
+}
+
+{{ toc_selector }} {
+    padding: 0;
+    margin: 20px 0 0 0;
+}
+
+{{ toc_selector }} > li.toctree-l1 {
+    list-style: none;
+    margin: 20px 0 10px;
+}
+
+{{ toc_selector }} li.toctree-l1 > a {
+    width: 100%;
+    display: block;
+    padding: 17px 0;
+    margin-bottom: 17px;
+    border-bottom: 1px solid #ddd;
+    font-size: 180%;
+    font-weight: normal;
+    color: black;
+}
+
+{{ toc_selector }} li.toctree-l1 > a:hover {
+    text-decoration: none;
+    color: #d00;
+}
+
+{{ toc_selector }} li.toctree-l1 ul {
+    padding-left: 20px;
+}
+
+dl.class, dl.function {
+    margin-bottom: 50px;
+}
+
+dl.function > dt,
+dl.attribute > dt,
+dl.classmethod > dt,
+dl.method > dt,
+dl.class > dt,
+dl.exception > dt {
+    background-color: #f5f5f5;
+    margin: 25px 0 10px 0;
+    padding: 1px 10px;
+}
+
+table.docutils {
+    width: 100%;
+}
+
+table.docutils.footnote {
+    width: auto;
+}
+
+table.docutils thead,
+table.docutils tfoot {
+    background: #f5f5f5;
+}
+
+table.docutils thead tr th {
+    color: #000;
+    font-weight: normal;
+    padding: 7px 5px;
+    vertical-align: middle;
+}
+
+table.docutils tbody tr th,
+table.docutils tbody tr td {
+    border-bottom: 0;
+    border-top: solid 1px #ddd;
+    padding: 7px 5px;
+    vertical-align: top;
+}
+table.docutils tbody tr:last-child th,
+table.docutils tbody tr:last-child td {
+    border-bottom: solid 1px #ddd;
+}
+
+table.docutils thead tr td p,
+table.docutils tfoot tr td p,
+table.docutils tbody tr td p,
+table.docutils thead tr td ul,
+table.docutils tfoot tr td ul,
+table.docutils tbody tr td ul,
+table.docutils thead tr td ol,
+table.docutils tfoot tr td ol,
+table.docutils tbody tr td ol {
+    margin: 0 0 .5em;
+}
+table.docutils thead tr td p.last,
+table.docutils tfoot tr td p.last,
+table.docutils tbody tr td p.last,
+table.docutils thead tr td ul.last,
+table.docutils tfoot tr td ul.last,
+table.docutils tbody tr td ul.last,
+table.docutils thead tr td ol.last,
+table.docutils tfoot tr td ol.last,
+table.docutils tbody tr td ol.last {
+    margin-bottom: 0;
+}
+
+.viewcode-back {
+    font-family: Arial, sans-serif;
+}
+
+div.viewcode-block:target {
+    background-color: #fef9e9;
+    border-top: 1px solid #fbe091;
+    border-bottom: 1px solid #fbe091;
+}
+
+a.symbol > span {
+    font-family: monospace;
+    font-size: 0.85em;
+}
+
+div.code-block-caption {
+    font-size: inherit;
+    padding: 0 0 1em 0;
+}
+
+@media screen and (max-width: 870px) {
+
+    div.document {
+        width: auto;
+        margin: 0;
+    }
+
+    div.bodywrapper {
+        margin: 0;
+    }
+
+    div.body {
+        min-height: 0;
+        padding: 0 20px 30px 20px;
+    }
+
+    /* hide side bar and reveal home page link */
+    div.sphinxsidebar, div.colophon {
+        display: none;
+    }
+
+    div.related li.nav-item-0 {
+        display: inline;
+    }
+}

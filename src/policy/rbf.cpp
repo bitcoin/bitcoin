@@ -14,34 +14,33 @@ bool SignalsOptInRBF(const CTransaction &tx)
     return false;
 }
 
-RBFTransactionState IsRBFOptIn(const CTransaction &tx, CTxMemPool &pool)
+bool IsRBFOptIn(const CTxMemPoolEntry &entry, CTxMemPool &pool)
 {
     AssertLockHeld(pool.cs);
 
     CTxMemPool::setEntries setAncestors;
 
     // First check the transaction itself.
-    if (SignalsOptInRBF(tx)) {
-        return RBF_TRANSACTIONSTATE_REPLACEABLE_BIP125;
+    if (SignalsOptInRBF(entry.GetTx())) {
+        return true;
     }
 
     // If this transaction is not in our mempool, then we can't be sure
     // we will know about all its inputs.
-    if (!pool.exists(tx.GetHash())) {
-        return RBF_TRANSACTIONSTATE_UNKNOWN;
+    if (!pool.exists(entry.GetTx().GetHash())) {
+        throw std::runtime_error("Cannot determine RBF opt-in signal for non-mempool transaction\n");
     }
 
     // If all the inputs have nSequence >= maxint-1, it still might be
     // signaled for RBF if any unconfirmed parents have signaled.
     uint64_t noLimit = std::numeric_limits<uint64_t>::max();
     std::string dummy;
-    CTxMemPoolEntry entry = *pool.mapTx.find(tx.GetHash());
     pool.CalculateMemPoolAncestors(entry, setAncestors, noLimit, noLimit, noLimit, noLimit, dummy, false);
 
     BOOST_FOREACH(CTxMemPool::txiter it, setAncestors) {
         if (SignalsOptInRBF(it->GetTx())) {
-            return RBF_TRANSACTIONSTATE_REPLACEABLE_BIP125;
+            return true;
         }
     }
-    return RBF_TRANSACTIONSTATE_FINAL;
+    return false;
 }

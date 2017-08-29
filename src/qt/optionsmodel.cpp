@@ -1,4 +1,5 @@
 // Copyright (c) 2011-2015 The Syscoin Core developers
+// Copyright (c) 2014-2017 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,15 +14,19 @@
 
 #include "amount.h"
 #include "init.h"
-#include "main.h" // For DEFAULT_SCRIPTCHECK_THREADS
+#include "validation.h" // For DEFAULT_SCRIPTCHECK_THREADS
 #include "net.h"
 #include "txdb.h" // for -dbcache defaults
-#include "intro.h" 
 
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"
 #include "wallet/walletdb.h"
 #endif
+
+#ifdef ENABLE_WALLET
+#include "masternodeconfig.h"
+#endif
+#include "privatesend-client.h"
 
 #include <QNetworkProxy>
 #include <QSettings>
@@ -44,7 +49,7 @@ void OptionsModel::Init(bool resetSettings)
     if (resetSettings)
         Reset();
 
-    checkAndMigrate();
+    this->resetSettings = resetSettings;
 
     QSettings settings;
 
@@ -54,14 +59,9 @@ void OptionsModel::Init(bool resetSettings)
     // These are Qt-only settings:
 
     // Window
-    if (!settings.contains("fHideTrayIcon"))
-        settings.setValue("fHideTrayIcon", false);
-    fHideTrayIcon = settings.value("fHideTrayIcon").toBool();
-    Q_EMIT hideTrayIconChanged(fHideTrayIcon);
-    
     if (!settings.contains("fMinimizeToTray"))
         settings.setValue("fMinimizeToTray", false);
-    fMinimizeToTray = settings.value("fMinimizeToTray").toBool() && !fHideTrayIcon;
+    fMinimizeToTray = settings.value("fMinimizeToTray").toBool();
 
     if (!settings.contains("fMinimizeOnClose"))
         settings.setValue("fMinimizeOnClose", false);
@@ -79,6 +79,21 @@ void OptionsModel::Init(bool resetSettings)
     if (!settings.contains("fCoinControlFeatures"))
         settings.setValue("fCoinControlFeatures", false);
     fCoinControlFeatures = settings.value("fCoinControlFeatures", false).toBool();
+
+    if (!settings.contains("digits"))
+        settings.setValue("digits", "2");
+    if (!settings.contains("theme"))
+        settings.setValue("theme", "");
+
+    if (!settings.contains("fShowMasternodesTab"))
+        settings.setValue("fShowMasternodesTab", masternodeConfig.getCount());
+
+    if (!settings.contains("fShowAdvancedPSUI"))
+        settings.setValue("fShowAdvancedPSUI", false);
+    fShowAdvancedPSUI = settings.value("fShowAdvancedPSUI", false).toBool();
+
+    if (!settings.contains("fLowKeysWarning"))
+        settings.setValue("fLowKeysWarning", true);
 
     // These are shared with the core or have a command-line parameter
     // and we want command-line parameters to overwrite the GUI settings.
@@ -99,15 +114,36 @@ void OptionsModel::Init(bool resetSettings)
     if (!SoftSetArg("-par", settings.value("nThreadsScriptVerif").toString().toStdString()))
         addOverriddenOption("-par");
 
-    if (!settings.contains("strDataDir"))
-        settings.setValue("strDataDir", Intro::getDefaultDataDirectory());
-
     // Wallet
 #ifdef ENABLE_WALLET
     if (!settings.contains("bSpendZeroConfChange"))
         settings.setValue("bSpendZeroConfChange", true);
     if (!SoftSetBoolArg("-spendzeroconfchange", settings.value("bSpendZeroConfChange").toBool()))
         addOverriddenOption("-spendzeroconfchange");
+
+    // PrivateSend
+    if (!settings.contains("nPrivateSendRounds"))
+        settings.setValue("nPrivateSendRounds", DEFAULT_PRIVATESEND_ROUNDS);
+    if (!SoftSetArg("-privatesendrounds", settings.value("nPrivateSendRounds").toString().toStdString()))
+        addOverriddenOption("-privatesendrounds");
+    privateSendClient.nPrivateSendRounds = settings.value("nPrivateSendRounds").toInt();
+
+    if (!settings.contains("nPrivateSendAmount")) {
+        // for migration from old settings
+        if (!settings.contains("nAnonymizeSyscoinAmount"))
+            settings.setValue("nPrivateSendAmount", DEFAULT_PRIVATESEND_AMOUNT);
+        else
+            settings.setValue("nPrivateSendAmount", settings.value("nAnonymizeSyscoinAmount").toInt());
+    }
+    if (!SoftSetArg("-privatesendamount", settings.value("nPrivateSendAmount").toString().toStdString()))
+        addOverriddenOption("-privatesendamount");
+    privateSendClient.nPrivateSendAmount = settings.value("nPrivateSendAmount").toInt();
+
+    if (!settings.contains("fPrivateSendMultiSession"))
+        settings.setValue("fPrivateSendMultiSession", DEFAULT_PRIVATESEND_MULTISESSION);
+    if (!SoftSetBoolArg("-privatesendmultisession", settings.value("fPrivateSendMultiSession").toBool()))
+        addOverriddenOption("-privatesendmultisession");
+    privateSendClient.fPrivateSendMultiSession = settings.value("fPrivateSendMultiSession").toBool();
 #endif
 
     // Network
@@ -142,29 +178,6 @@ void OptionsModel::Init(bool resetSettings)
         addOverriddenOption("-onion");
 
     // Display
-	// SYSCOIN
-    if (!settings.contains("theme"))
-        settings.setValue("theme", "");
-    if (!settings.contains("defaultAlias"))
-        settings.setValue("defaultAlias", "");
-    if (!settings.contains("defaultPegAlias") || settings.value("defaultPegAlias", "").toString() == "SYS_RATES")
-        settings.setValue("defaultPegAlias", "sysrates.peg");
-    if (!settings.contains("defaultListAlias"))
-        settings.setValue("defaultListAlias", tr("All"));
-    if (!settings.contains("safesearch"))
-        settings.setValue("safesearch", "Yes");
-    if (!settings.contains("zecEndPoint"))
-		settings.setValue("zecEndPoint", "http://zec.syscoin.org:8080/");
-    if (!settings.contains("btcEndPoint"))
-        settings.setValue("btcEndPoint", "http://btc.syscoin.org:8080/");
-    if (!settings.contains("zecRPCLogin"))
-        settings.setValue("zecRPCLogin", "sysuser");
-    if (!settings.contains("btcRPCLogin"))
-        settings.setValue("btcRPCLogin", "sysuser");
-    if (!settings.contains("zecRPCPassword"))
-        settings.setValue("zecRPCPassword", "JcfJqiyhVVRsYJo0MQKjBJxOZMCrXPqQjUt2Kte2qU");
-    if (!settings.contains("btcRPCPassword"))
-        settings.setValue("btcRPCPassword", "JcfJqiyhVVRsYJo0MQKjBJxOZMCrXPqQjUt2Kte2qU");
     if (!settings.contains("language"))
         settings.setValue("language", "");
     if (!SoftSetArg("-lang", settings.value("language").toString().toStdString()))
@@ -177,18 +190,9 @@ void OptionsModel::Reset()
 {
     QSettings settings;
 
-    // Save the strDataDir setting
-    QString dataDir = Intro::getDefaultDataDirectory();
-    dataDir = settings.value("strDataDir", dataDir).toString();
-
     // Remove all entries from our QSettings object
     settings.clear();
-
-    // Set strDataDir
-    settings.setValue("strDataDir", dataDir);
-
-    // Set that this was reset
-    settings.setValue("fReset", true);
+    resetSettings = true; // Needed in syscoin.cpp during shotdown to also remove the window positions
 
     // default setting for OptionsModel::StartAtStartup - disabled
     if (GUIUtil::GetStartOnSystemStartup())
@@ -210,8 +214,6 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
         {
         case StartAtStartup:
             return GUIUtil::GetStartOnSystemStartup();
-        case HideTrayIcon:
-            return fHideTrayIcon;
         case MinimizeToTray:
             return fMinimizeToTray;
         case MapPortUPnP:
@@ -254,11 +256,27 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
 #ifdef ENABLE_WALLET
         case SpendZeroConfChange:
             return settings.value("bSpendZeroConfChange");
+        case ShowMasternodesTab:
+            return settings.value("fShowMasternodesTab");
+        case ShowAdvancedPSUI:
+            return fShowAdvancedPSUI;
+        case LowKeysWarning:
+            return settings.value("fLowKeysWarning");
+        case PrivateSendRounds:
+            return settings.value("nPrivateSendRounds");
+        case PrivateSendAmount:
+            return settings.value("nPrivateSendAmount");
+        case PrivateSendMultiSession:
+            return settings.value("fPrivateSendMultiSession");
 #endif
         case DisplayUnit:
             return nDisplayUnit;
         case ThirdPartyTxUrls:
             return strThirdPartyTxUrls;
+        case Digits:
+            return settings.value("digits");
+        case Theme:
+            return settings.value("theme");
         case Language:
             return settings.value("language");
         case CoinControlFeatures:
@@ -269,27 +287,6 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return settings.value("nThreadsScriptVerif");
         case Listen:
             return settings.value("fListen");
-        // SYSCOIN
-		case Theme:
-            return settings.value("theme");  
-        case DefaultAlias:
-            return settings.value("defaultAlias");   
-        case DefaultPegAlias:
-            return settings.value("defaultPegAlias");
-       case SafeSearch:
-            return settings.value("safesearch");
-       case ZecEndPoint:
-            return settings.value("zecEndPoint");
-       case BTCEndPoint:
-            return settings.value("btcEndPoint");
-       case ZecRPCLogin:
-            return settings.value("zecRPCLogin");
-       case BTCRPCLogin:
-            return settings.value("btcRPCLogin");
-       case ZecRPCPassword:
-            return settings.value("zecRPCPassword");
-       case BTCRPCPassword:
-            return settings.value("btcRPCPassword");
         default:
             return QVariant();
         }
@@ -308,11 +305,6 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
         {
         case StartAtStartup:
             successful = GUIUtil::SetStartOnSystemStartup(value.toBool());
-            break;
-        case HideTrayIcon:
-            fHideTrayIcon = value.toBool();
-            settings.setValue("fHideTrayIcon", fHideTrayIcon);
-    		Q_EMIT hideTrayIconChanged(fHideTrayIcon);
             break;
         case MinimizeToTray:
             fMinimizeToTray = value.toBool();
@@ -398,6 +390,43 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 setRestartRequired(true);
             }
             break;
+        case ShowMasternodesTab:
+            if (settings.value("fShowMasternodesTab") != value) {
+                settings.setValue("fShowMasternodesTab", value);
+                setRestartRequired(true);
+            }
+            break;
+        case ShowAdvancedPSUI:
+            fShowAdvancedPSUI = value.toBool();
+            settings.setValue("fShowAdvancedPSUI", fShowAdvancedPSUI);
+            Q_EMIT advancedPSUIChanged(fShowAdvancedPSUI);
+            break;
+        case LowKeysWarning:
+            settings.setValue("fLowKeysWarning", value);
+            break;
+        case PrivateSendRounds:
+            if (settings.value("nPrivateSendRounds") != value)
+            {
+                privateSendClient.nPrivateSendRounds = value.toInt();
+                settings.setValue("nPrivateSendRounds", privateSendClient.nPrivateSendRounds);
+                Q_EMIT privateSendRoundsChanged();
+            }
+            break;
+        case PrivateSendAmount:
+            if (settings.value("nPrivateSendAmount") != value)
+            {
+                privateSendClient.nPrivateSendAmount = value.toInt();
+                settings.setValue("nPrivateSendAmount", privateSendClient.nPrivateSendAmount);
+                Q_EMIT privateSentAmountChanged();
+            }
+            break;
+        case PrivateSendMultiSession:
+            if (settings.value("fPrivateSendMultiSession") != value)
+            {
+                privateSendClient.fPrivateSendMultiSession = value.toBool();
+                settings.setValue("fPrivateSendMultiSession", privateSendClient.fPrivateSendMultiSession);
+            }
+            break;
 #endif
         case DisplayUnit:
             setDisplayUnit(value);
@@ -409,65 +438,22 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 setRestartRequired(true);
             }
             break;
-        case Language:
-            if (settings.value("language") != value) {
-                settings.setValue("language", value);
+        case Digits:
+            if (settings.value("digits") != value) {
+                settings.setValue("digits", value);
                 setRestartRequired(true);
             }
-            break;
-		// SYSCOIN
+            break;            
         case Theme:
             if (settings.value("theme") != value) {
                 settings.setValue("theme", value);
                 setRestartRequired(true);
             }
-            break; 
-        case DefaultAlias:
-            if (settings.value("defaultAlias") != value) {
-                settings.setValue("defaultAlias", value);
-            }
-            break;
-        case DefaultPegAlias:
-            if (settings.value("defaultPegAlias") != value) {
-				if(value == "")
-					settings.setValue("defaultPegAlias", "sysrates.peg");
-				else
-					settings.setValue("defaultPegAlias", value);
-            }
-            break;
-        case SafeSearch:
-            if (settings.value("safesearch") != value) {
-				settings.setValue("safesearch", value);
-            }
-            break;
-       case ZecEndPoint:
-            if (settings.value("zecEndPoint") != value) {
-				settings.setValue("zecEndPoint", value);
-            }
-            break;
-       case BTCEndPoint:
-            if (settings.value("btcEndPoint") != value) {
-				settings.setValue("btcEndPoint", value);
-            }
-            break;
-       case ZecRPCLogin:
-            if (settings.value("zecRPCLogin") != value) {
-				settings.setValue("zecRPCLogin", value);
-            }
-            break;
-       case BTCRPCLogin:
-            if (settings.value("btcRPCLogin") != value) {
-				settings.setValue("btcRPCLogin", value);
-            }
-            break;
-       case ZecRPCPassword:
-            if (settings.value("zecRPCPassword") != value) {
-				settings.setValue("zecRPCPassword", value);
-            }
-            break;
-       case BTCRPCPassword:
-            if (settings.value("btcRPCPassword") != value) {
-				settings.setValue("btcRPCPassword", value);
+            break;            
+        case Language:
+            if (settings.value("language") != value) {
+                settings.setValue("language", value);
+                setRestartRequired(true);
             }
             break;
         case CoinControlFeatures:
@@ -543,23 +529,4 @@ bool OptionsModel::isRestartRequired()
 {
     QSettings settings;
     return settings.value("fRestartRequired", false).toBool();
-}
-
-void OptionsModel::checkAndMigrate()
-{
-    // Migration of default values
-    // Check if the QSettings container was already loaded with this client version
-    QSettings settings;
-    static const char strSettingsVersionKey[] = "nSettingsVersion";
-    int settingsVersion = settings.contains(strSettingsVersionKey) ? settings.value(strSettingsVersionKey).toInt() : 0;
-    if (settingsVersion < CLIENT_VERSION)
-    {
-        // -dbcache was bumped from 100 to 300 in 0.13
-        // see https://github.com/syscoin/syscoin2/pull/8273
-        // force people to upgrade to the new value if they are using 100MB
-        if (settingsVersion < 130000 && settings.contains("nDatabaseCache") && settings.value("nDatabaseCache").toLongLong() == 100)
-            settings.setValue("nDatabaseCache", (qint64)nDefaultDbCache);
-
-        settings.setValue(strSettingsVersionKey, CLIENT_VERSION);
-    }
 }

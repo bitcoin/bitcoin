@@ -1,0 +1,16 @@
+# Supplemental test, not from Max Staleness Spec. Test that the driver
+# survives a buggy server that has maxWireVersion 5 but no lastWriteDate.
+---
+topology_description:
+  type: ReplicaSetNoPrimary
+  servers:
+  - &1
+    address: a:27017
+    type: RSSecondary
+    avg_rtt_ms: 5
+    lastUpdateTime: 0
+    maxWireVersion: 5
+read_preference:
+  mode: Nearest
+  maxStalenessSeconds: 120
+error: true

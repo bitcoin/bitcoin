@@ -1,0 +1,26 @@
+{
+    "description": "Non replicaSet member responds", 
+    "phases": [
+        {
+            "outcome": {
+                "servers": {
+                    "a:27017": {
+                        "setName": null, 
+                        "type": "Unknown"
+                    }
+                }, 
+                "setName": "rs", 
+                "topologyType": "ReplicaSetNoPrimary"
+            }, 
+            "responses": [
+                [
+                    "b:27017", 
+                    {
+                        "ok": 1
+                    }
+                ]
+            ]
+        }
+    ], 
+    "uri": "mongodb://a,b/?replicaSet=rs"
+}

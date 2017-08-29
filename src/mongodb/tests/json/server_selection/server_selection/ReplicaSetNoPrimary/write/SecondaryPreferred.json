@@ -1,0 +1,34 @@
+{
+    "in_latency_window": [], 
+    "operation": "write", 
+    "read_preference": {
+        "mode": "SecondaryPreferred", 
+        "tag_sets": [
+            {
+                "data_center": "nyc"
+            }
+        ]
+    }, 
+    "suitable_servers": [], 
+    "topology_description": {
+        "servers": [
+            {
+                "address": "b:27017", 
+                "avg_rtt_ms": 5, 
+                "tags": {
+                    "data_center": "nyc"
+                }, 
+                "type": "RSSecondary"
+            }, 
+            {
+                "address": "c:27017", 
+                "avg_rtt_ms": 100, 
+                "tags": {
+                    "data_center": "nyc"
+                }, 
+                "type": "RSSecondary"
+            }
+        ], 
+        "type": "ReplicaSetNoPrimary"
+    }
+}

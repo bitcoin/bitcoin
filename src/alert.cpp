@@ -5,6 +5,7 @@
 
 #include "alert.h"
 
+#include "base58.h"
 #include "clientversion.h"
 #include "net.h"
 #include "pubkey.h"
@@ -124,7 +125,7 @@ bool CAlert::AppliesToMe() const
     return AppliesTo(PROTOCOL_VERSION, FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, std::vector<std::string>()));
 }
 
-bool CAlert::RelayTo(CNode* pnode) const
+bool CAlert::RelayTo(CNode* pnode, CConnman& connman) const
 {
     if (!IsInEffect())
         return false;
@@ -138,11 +139,32 @@ bool CAlert::RelayTo(CNode* pnode) const
             AppliesToMe() ||
             GetAdjustedTime() < nRelayUntil)
         {
-            pnode->PushMessage(NetMsgType::ALERT, *this);
+            connman.PushMessage(pnode, NetMsgType::ALERT, *this);
             return true;
         }
     }
     return false;
+}
+
+bool CAlert::Sign()
+{
+    CDataStream sMsg(SER_NETWORK, CLIENT_VERSION);
+    sMsg << *(CUnsignedAlert*)this;
+    vchMsg = std::vector<unsigned char>(sMsg.begin(), sMsg.end());
+    CSyscoinSecret vchSecret;
+    if (!vchSecret.SetString(GetArg("-alertkey", "")))
+    {
+        printf("CAlert::SignAlert() : vchSecret.SetString failed\n");
+        return false;
+    }
+    CKey key = vchSecret.GetKey();
+    if (!key.Sign(Hash(vchMsg.begin(), vchMsg.end()), vchSig))
+    {
+        printf("CAlert::SignAlert() : key.Sign failed\n");
+        return false;
+    }
+
+    return true;
 }
 
 bool CAlert::CheckSignature(const std::vector<unsigned char>& alertKey) const

@@ -1,0 +1,67 @@
+/*
+ * Copyright 2013 MongoDB, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+COUNTER(op_egress_total,        "Operations",   "Egress Total",        "The number of sent operations.")
+COUNTER(op_ingress_total,       "Operations",   "Ingress Total",       "The number of received operations.")
+COUNTER(op_egress_query,        "Operations",   "Egress Queries",      "The number of sent Query operations.")
+COUNTER(op_ingress_query,       "Operations",   "Ingress Queries",     "The number of received Query operations.")
+COUNTER(op_egress_getmore,      "Operations",   "Egress GetMore",      "The number of sent GetMore operations.")
+COUNTER(op_ingress_getmore,     "Operations",   "Ingress GetMore",     "The number of received GetMore operations.")
+COUNTER(op_egress_insert,       "Operations",   "Egress Insert",       "The number of sent Insert operations.")
+COUNTER(op_ingress_insert,      "Operations",   "Ingress Insert",      "The number of received Insert operations.")
+COUNTER(op_egress_delete,       "Operations",   "Egress Delete",       "The number of sent Delete operations.")
+COUNTER(op_ingress_delete,      "Operations",   "Ingress Delete",      "The number of received Delete operations.")
+COUNTER(op_egress_update,       "Operations",   "Egress Update",       "The number of sent Update operations.")
+COUNTER(op_ingress_update,      "Operations",   "Ingress Update",      "The number of received Update operations.")
+COUNTER(op_egress_killcursors,  "Operations",   "Egress KillCursors",  "The number of sent KillCursors operations.")
+COUNTER(op_ingress_killcursors, "Operations",   "Ingress KillCursors", "The number of received KillCursors operations.")
+COUNTER(op_egress_msg,          "Operations",   "Egress Msg",          "The number of sent Msg operations.")
+COUNTER(op_ingress_msg,         "Operations",   "Ingress Msg",         "The number of received Msg operations.")
+COUNTER(op_egress_reply,        "Operations",   "Egress Reply",        "The number of sent Reply operations.")
+COUNTER(op_ingress_reply,       "Operations",   "Ingress Reply",       "The number of received Reply operations.")
+COUNTER(op_egress_compressed,   "Operations",   "Egress Compressed",   "The number of sent compressed operations.")
+COUNTER(op_ingress_compressed,  "Operations",   "Ingress Compressed",  "The number of received compressed operations.")
+
+
+COUNTER(cursors_active,         "Cursors",      "Active",              "The number of active cursors.")
+COUNTER(cursors_disposed,       "Cursors",      "Disposed",            "The number of disposed cursors.")
+
+
+COUNTER(clients_active,         "Clients",      "Active",              "The number of active clients.")
+COUNTER(clients_disposed,       "Clients",      "Disposed",            "The number of disposed clients.")
+
+
+COUNTER(streams_active,         "Streams",      "Active",              "The number of active streams.")
+COUNTER(streams_disposed,       "Streams",      "Disposed",            "The number of disposed streams.")
+COUNTER(streams_egress,         "Streams",      "Egress Bytes",        "The number of bytes sent.")
+COUNTER(streams_ingress,        "Streams",      "Ingress Bytes",       "The number of bytes received.")
+COUNTER(streams_timeout,        "Streams",      "N Socket Timeouts",   "The number of socket timeouts.")
+
+
+COUNTER(client_pools_active,    "Client Pools", "Active",              "The number of active client pools.")
+COUNTER(client_pools_disposed,  "Client Pools", "Disposed",            "The number of disposed client pools.")
+
+
+COUNTER(protocol_ingress_error, "Protocol",     "Ingress Errors",      "The number of protocol errors on ingress.")
+
+
+COUNTER(auth_failure,           "Auth",         "Failures",            "The number of failed authentication requests.")
+COUNTER(auth_success,           "Auth",         "Success",             "The number of successful authentication requests.")
+
+
+COUNTER(dns_failure,            "DNS",          "Failure",             "The number of failed DNS requests.")
+COUNTER(dns_success,            "DNS",          "Success",             "The number of successful DNS requests.")

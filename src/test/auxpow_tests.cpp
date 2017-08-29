@@ -6,7 +6,7 @@
 #include "chainparams.h"
 #include "coins.h"
 #include "consensus/merkle.h"
-#include "main.h"
+#include "validation.h"
 #include "primitives/block.h"
 #include "script/script.h"
 #include "utilstrencodings.h"

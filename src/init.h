@@ -16,6 +16,8 @@ namespace boost
 class thread_group;
 } // namespace boost
 
+extern CWallet* pwalletMain;
+
 void StartShutdown();
 bool ShutdownRequested();
 /** Interrupt threads */
@@ -26,6 +28,7 @@ void InitLogging();
 //!Parameter interaction: change current parameters depending on various rules
 void InitParameterInteraction();
 bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler);
+void PrepareShutdown();
 
 /** The help message mode determines what help message to show */
 enum HelpMessageMode {

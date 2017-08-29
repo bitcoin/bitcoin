@@ -1,0 +1,139 @@
+{
+    "description": "Primary reports a new member",
+    "phases": [
+        {
+            "outcome": {
+                "servers": {
+                    "a:27017": {
+                        "setName": "rs",
+                        "type": "RSSecondary"
+                    },
+                    "b:27017": {
+                        "setName": null,
+                        "type": "Unknown"
+                    }
+                },
+                "setName": "rs",
+                "topologyType": "ReplicaSetNoPrimary"
+            },
+            "responses": [
+                [
+                    "a:27017",
+                    {
+                        "hosts": [
+                            "a:27017",
+                            "b:27017"
+                        ],
+                        "ismaster": false,
+                        "ok": 1,
+                        "secondary": true,
+                        "setName": "rs"
+                    }
+                ]
+            ]
+        },
+        {
+            "outcome": {
+                "servers": {
+                    "a:27017": {
+                        "setName": "rs",
+                        "type": "RSSecondary"
+                    },
+                    "b:27017": {
+                        "setName": "rs",
+                        "type": "RSPrimary"
+                    }
+                },
+                "setName": "rs",
+                "topologyType": "ReplicaSetWithPrimary"
+            },
+            "responses": [
+                [
+                    "b:27017",
+                    {
+                        "hosts": [
+                            "a:27017",
+                            "b:27017"
+                        ],
+                        "ismaster": true,
+                        "ok": 1,
+                        "setName": "rs"
+                    }
+                ]
+            ]
+        },
+        {
+            "outcome": {
+                "servers": {
+                    "a:27017": {
+                        "setName": "rs",
+                        "type": "RSSecondary"
+                    },
+                    "b:27017": {
+                        "setName": "rs",
+                        "type": "RSPrimary"
+                    },
+                    "c:27017": {
+                        "setName": null,
+                        "type": "Unknown"
+                    }
+                },
+                "setName": "rs",
+                "topologyType": "ReplicaSetWithPrimary"
+            },
+            "responses": [
+                [
+                    "b:27017",
+                    {
+                        "hosts": [
+                            "a:27017",
+                            "b:27017",
+                            "c:27017"
+                        ],
+                        "ismaster": true,
+                        "ok": 1,
+                        "setName": "rs"
+                    }
+                ]
+            ]
+        },
+        {
+            "outcome": {
+                "servers": {
+                    "a:27017": {
+                        "setName": "rs",
+                        "type": "RSSecondary"
+                    },
+                    "b:27017": {
+                        "setName": "rs",
+                        "type": "RSPrimary"
+                    },
+                    "c:27017": {
+                        "setName": "rs",
+                        "type": "RSSecondary"
+                    }
+                },
+                "setName": "rs",
+                "topologyType": "ReplicaSetWithPrimary"
+            },
+            "responses": [
+                [
+                    "c:27017",
+                    {
+                        "hosts": [
+                            "a:27017",
+                            "b:27017",
+                            "c:27017"
+                        ],
+                        "ismaster": false,
+                        "ok": 1,
+                        "primary": "b:27017",
+                        "secondary": true,
+                        "setName": "rs"
+                    }
+                ]
+            ]
+        }
+    ],
+    "uri": "mongodb://a/?replicaSet=rs"
+}

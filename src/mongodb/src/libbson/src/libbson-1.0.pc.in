@@ -1,0 +1,10 @@
+prefix=@prefix@
+exec_prefix=${prefix}
+libdir=@libdir@
+includedir=${exec_prefix}/include
+
+Name: libbson
+Description: The libbson BSON serialization library.
+Version: @VERSION@
+Libs: -L${libdir} -lbson-@BSON_API_VERSION@
+Cflags: -I${includedir}/libbson-@BSON_API_VERSION@

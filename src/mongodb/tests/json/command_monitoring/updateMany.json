@@ -1,0 +1,137 @@
+{
+  "data": [
+    {
+      "_id": 1,
+      "x": 11
+    },
+    {
+      "_id": 2,
+      "x": 22
+    },
+    {
+      "_id": 3,
+      "x": 33
+    }
+  ],
+  "collection_name": "test",
+  "database_name": "command-monitoring-tests",
+  "tests": [
+    {
+      "description": "A successful update many",
+      "operation": {
+        "name": "updateMany",
+        "arguments": {
+          "filter": {
+            "_id": {
+              "$gt": 1
+            }
+          },
+          "update": {
+            "$inc": {
+              "x": 1
+            }
+          }
+        }
+      },
+      "expectations": [
+        {
+          "command_started_event": {
+            "command": {
+              "update": "test",
+              "ordered": true,
+              "updates": [
+                {
+                  "q": {
+                    "_id": {
+                      "$gt": 1
+                    }
+                  },
+                  "u": {
+                    "$inc": {
+                      "x": 1
+                    }
+                  },
+                  "multi": true,
+                  "upsert": false
+                }
+              ]
+            },
+            "command_name": "update",
+            "database_name": "command-monitoring-tests"
+          }
+        },
+        {
+          "command_succeeded_event": {
+            "reply": {
+              "ok": 1.0,
+              "n": 2
+            },
+            "command_name": "update"
+          }
+        }
+      ]
+    },
+    {
+      "description": "A successful update many command with write errors",
+      "operation": {
+        "name": "updateMany",
+        "arguments": {
+          "filter": {
+            "_id": {
+              "$gt": 1
+            }
+          },
+          "update": {
+            "$nothing": {
+              "x": 1
+            }
+          }
+        }
+      },
+      "expectations": [
+        {
+          "command_started_event": {
+            "command": {
+              "update": "test",
+              "ordered": true,
+              "updates": [
+                {
+                  "q": {
+                    "_id": {
+                      "$gt": 1
+                    }
+                  },
+                  "u": {
+                    "$nothing": {
+                      "x": 1
+                    }
+                  },
+                  "multi": true,
+                  "upsert": false
+                }
+              ]
+            },
+            "command_name": "update",
+            "database_name": "command-monitoring-tests"
+          }
+        },
+        {
+          "command_succeeded_event": {
+            "reply": {
+              "ok": 1.0,
+              "n": 0,
+              "writeErrors": [
+                {
+                  "index": 0,
+                  "code": 42,
+                  "errmsg": ""
+                }
+              ]
+            },
+            "command_name": "update"
+          }
+        }
+      ]
+    }
+  ]
+}

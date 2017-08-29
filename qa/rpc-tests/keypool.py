@@ -1,9 +1,11 @@
-#!/usr/bin/env python3
-# Copyright (c) 2014-2016 The Syscoin Core developers
+#!/usr/bin/env python2
+# Copyright (c) 2014-2015 The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 # Exercise the wallet keypool, and interaction with wallet encryption/locking
+
+# Add python-syscoinrpc to module search path:
 
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import *
@@ -15,8 +17,8 @@ class KeyPoolTest(SyscoinTestFramework):
         addr_before_encrypting = nodes[0].getnewaddress()
         addr_before_encrypting_data = nodes[0].validateaddress(addr_before_encrypting)
         wallet_info_old = nodes[0].getwalletinfo()
-        assert(addr_before_encrypting_data['hdmasterkeyid'] == wallet_info_old['hdmasterkeyid'])
-        
+        assert(addr_before_encrypting_data['hdchainid'] == wallet_info_old['hdchainid'])
+
         # Encrypt wallet and wait to terminate
         nodes[0].encryptwallet('test')
         syscoind_processes[0].wait()
@@ -26,32 +28,50 @@ class KeyPoolTest(SyscoinTestFramework):
         addr = nodes[0].getnewaddress()
         addr_data = nodes[0].validateaddress(addr)
         wallet_info = nodes[0].getwalletinfo()
-        assert(addr_before_encrypting_data['hdmasterkeyid'] != wallet_info['hdmasterkeyid'])
-        assert(addr_data['hdmasterkeyid'] == wallet_info['hdmasterkeyid'])
-        
+        assert(addr_before_encrypting_data['hdchainid'] == wallet_info['hdchainid'])
+        assert(addr_data['hdchainid'] == wallet_info['hdchainid'])
+
         try:
             addr = nodes[0].getnewaddress()
             raise AssertionError('Keypool should be exhausted after one address')
         except JSONRPCException as e:
             assert(e.error['code']==-12)
 
-        # put three new keys in the keypool
+        # put six (plus 2) new keys in the keypool (100% external-, +100% internal-keys, 1 in min)
         nodes[0].walletpassphrase('test', 12000)
-        nodes[0].keypoolrefill(3)
+        nodes[0].keypoolrefill(6)
         nodes[0].walletlock()
+        wi = nodes[0].getwalletinfo()
+        assert_equal(wi['keypoolsize_hd_internal'], 6)
+        assert_equal(wi['keypoolsize'], 6)
 
-        # drain the keys
-        addr = set()
-        addr.add(nodes[0].getrawchangeaddress())
-        addr.add(nodes[0].getrawchangeaddress())
-        addr.add(nodes[0].getrawchangeaddress())
-        addr.add(nodes[0].getrawchangeaddress())
-        # assert that four unique addresses were returned
-        assert(len(addr) == 4)
+        # drain the internal keys
+        nodes[0].getrawchangeaddress()
+        nodes[0].getrawchangeaddress()
+        nodes[0].getrawchangeaddress()
+        nodes[0].getrawchangeaddress()
+        nodes[0].getrawchangeaddress()
+        nodes[0].getrawchangeaddress()
         # the next one should fail
         try:
-            addr = nodes[0].getrawchangeaddress()
-            raise AssertionError('Keypool should be exhausted after three addresses')
+            nodes[0].getrawchangeaddress()
+            raise AssertionError('Keypool should be exhausted after six addresses')
+        except JSONRPCException as e:
+            assert(e.error['code']==-12)
+
+        addr = set()
+        # drain the external keys
+        addr.add(nodes[0].getnewaddress())
+        addr.add(nodes[0].getnewaddress())
+        addr.add(nodes[0].getnewaddress())
+        addr.add(nodes[0].getnewaddress())
+        addr.add(nodes[0].getnewaddress())
+        addr.add(nodes[0].getnewaddress())
+        assert(len(addr) == 6)
+        # the next one should fail
+        try:
+            addr = nodes[0].getnewaddress()
+            raise AssertionError('Keypool should be exhausted after six addresses')
         except JSONRPCException as e:
             assert(e.error['code']==-12)
 
@@ -66,20 +86,24 @@ class KeyPoolTest(SyscoinTestFramework):
         nodes[0].generate(1)
         nodes[0].generate(1)
         nodes[0].generate(1)
-        nodes[0].generate(1)
         try:
             nodes[0].generate(1)
             raise AssertionError('Keypool should be exhausted after three addesses')
         except JSONRPCException as e:
             assert(e.error['code']==-12)
 
-    def __init__(self):
-        super().__init__()
-        self.setup_clean_chain = False
-        self.num_nodes = 1
+        nodes[0].walletpassphrase('test', 100)
+        nodes[0].keypoolrefill(100)
+        wi = nodes[0].getwalletinfo()
+        assert_equal(wi['keypoolsize_hd_internal'], 100)
+        assert_equal(wi['keypoolsize'], 100)
+
+    def setup_chain(self):
+        print("Initializing test directory "+self.options.tmpdir)
+        initialize_chain(self.options.tmpdir)
 
     def setup_network(self):
-        self.nodes = self.setup_nodes()
+        self.nodes = start_nodes(1, self.options.tmpdir)
 
 if __name__ == '__main__':
     KeyPoolTest().main()

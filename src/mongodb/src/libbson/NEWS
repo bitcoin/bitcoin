@@ -1,0 +1,1052 @@
+Libbson-1.7.0
+=============
+
+It is my pleasure to announce libbson 1.7.0.
+
+  * Changes to JSON encoding and decoding:
+    * New functions bson_as_canonical_extended_json and
+      bson_as_relaxed_extended_json convert BSON to canonical and relaxed
+      extended JSON according to MongoDB Extended JSON Spec.
+      Output for the existing bson_as_json function has not been changed.
+    * When parsing JSON type wrappers like "$timestamp", any missing or extra
+      keys are an error.
+    * The JSON format for BSON regular expressions is now "$regularExpression":
+      {"pattern": "...", "options": "..."}. The old format {"$regex": "...",
+      "$options": "..."} is still parsed.
+    * The JSON format for BSON binary elements is now "$binary": {"base64":
+      "...", "subType": "..."}. The old format {"$binary": "...", "$type":
+      "..."} is still parsed.
+    * BSON dates can be parsed from "$date" as an ISO8601 date or "$numberLong"
+      as milliseconds since the epoch: "t": {"$date": {"$numberLong": "1234"}}.
+      Dates can no longer be formatted as raw integers. bson_as_json writes a
+      BSON date after 1970 as "$date" with an ISO8601 string, and dates before
+      1970 as negative milliseconds wrapped in "$numberLong".
+      bson_as_canonical_extended_json always writes dates with "$numberLong".
+      bson_as_relaxed_extended_json always writes dates with "$date".
+    * The non-numbers NaN, Infinity, and -Infinity are now recognized (regardless
+      of case) when parsing JSON.
+  * CMake build now installs .pc files for programs that link to libbson using
+    pkg-config. Both the CMake and Autotools build systems now install .cmake
+    files for programs that link to libbson using CMake. Linking to libbson
+    statically or dynamically is now much more convenient.
+  * New CMake option, "ENABLE_STATIC", defaults to ON.
+  * Minimum required CMake version has been increased to 3.1.
+  * CMake remains experimental on non-Windows platforms and issues a warning now
+  * New functions
+    * bson_strcasecmp, a portable equivalent of strcasecmp.
+    * bson_iter_as_double, cast the current value to double.
+    * bson_iter_init_from_data, creates an iterator from BSON string.
+    * bson_validate_with_error, checks a document like bson_validate does but
+      also reports which key was invalid
+  * New convenience macros
+    * BSON_ITER_HOLDS_INT, checks if iterator holds int32 or int64
+    * BSON_ITER_HOLDS_NUMBER, checks if iterator holds int32, int64 or double
+  * Raised BSON recursion limit to 200
+
+Thanks to everyone who contributed to the development of this release.
+
+  * A. Jesse Jiryu Davis
+  * Hannes Magnusson
+  * David Golden
+  * Jeremy Mikola
+  * gael Magnan
+  * Hannes Magn?sson
+  * David Carlier
+  * Paul Melnikow
+  * Petr Písař
+  * Shane Harvey
+  * alexeyvo
+  * Greg Rowe
+
+Peace,
+
+    A. Jesse Jiryu Davis
+
+Libbson-1.6.0
+=============
+
+It is my pleasure to announce libbson-1.6.0.
+
+New features and bug fixes:
+
+  * Use jsonsl instead of libyajl as our JSON parsing library, parse JSON more
+    strictly, fix minor parsing bugs.
+  * Extended JSON documents like '{"$code": "...", "$scope": {}}' are now parsed
+    into BSON "code" elements.
+  * ISO8601 dates now allow years from 0000 to 9999 inclusive. Before, years
+    before 1970 were prohibited.
+  * BSON floats and ints are now distinguished in JSON output.
+  * The library is now built and continuously tested with MinGW-W64 on Windows.
+  * The documentation is ported from Mallard XML to ReStructured Text, the
+    HTML documentation is restyled, and numerous man page syntax errors fixed.
+  * All public functions now have the __cdecl calling convention on Windows.
+
+Thanks to everyone who contributed to the development of this release.
+
+  * A. Jesse Jiryu Davis
+  * Hannes Magnusson
+  * Aleksander Melnikov
+  * Remi Collet
+
+Peace,
+
+    A. Jesse Jiryu Davis
+
+
+libbson-1.5.5
+=============
+
+No change since 1.5.4; released to keep pace with libmongoc's version.
+
+-- A. Jesse Jiryu Davis
+
+
+Libbson-1.5.4
+=============
+
+No change since 1.5.3; released to keep pace with libmongoc's version.
+
+-- A. Jesse Jiryu Davis
+
+
+Libbson-1.5.3
+=============
+
+No change since 1.5.2; released to keep pace with libmongoc's version.
+
+-- A. Jesse Jiryu Davis
+
+
+Libbson-1.5.2
+=============
+
+This is a patch release that fixes a build error with MinGW on Windows.
+
+
+Libbson-1.5.1
+=============
+
+No change since 1.5.0; released to keep pace with libmongoc's version.
+
+-- A. Jesse Jiryu Davis
+
+
+Libbson-1.5.2
+=============
+
+It is my pleasure to announce Libbson-1.5.2.
+
+New bug fixes:
+
+  * CDRIVER-1982 fix ifdef for strerror_s with mingw.
+
+Thanks to everyone who contributed to the development of this release.
+
+  * A. Jesse Jiryu Davis
+
+Peace,
+
+    Hannes Magnusson
+
+
+Libbson-1.5.1
+=============
+
+No change since 1.5.0; released to keep pace with libmongoc's version.
+
+-- A. Jesse Jiryu Davis
+
+
+Libbson-1.5.0
+=============
+
+It is my pleasure to announce Libbson-1.5.0.
+
+New features and bug fixes:
+
+  * New BSON Type, Decimal128 (bson_decimal128_t) along with the following
+    new functions and helpers:
+    * bson_decimal128_to_string()
+    * bson_decimal128_from_string()
+    * bson_iter_decimal128()
+    * bson_iter_overwrite_decimal128()
+    * BSON_ITER_HOLDS_DECIMAL128()
+    * bson_append_decimal128()
+    * BSON_APPEND_DECIMAL128()
+    * BCON_DECIMAL128()
+    See the documentations for further details.
+  * bson_validate and bson_iter_next now validate that BSON boolean values are
+    0 or 1. Before, any non-zero value was considered true.
+  * bson_append_code_with_scope now preserves the "code with scope" type
+    if scope is an empty, non-NULL BSON document.
+  * BSON "code" and "code with scope" types are properly translated to and from
+    JSON of the form '{"$code": "...", "$scope": {...}}'.
+  * bson_json_reader functions now always validate UTF-8.
+  * JSON parsing now preserves integer width.
+  * bson_strtoll now matches stroll: it detects range errors, and when
+    parsing octal it stops at non-octal digits and returns what it parsed
+    instead of setting errno.
+  * New flag BSON_VALIDATE_EMPTY_KEYS causes bson_validate to fail if a document
+    contains zero-length field names.
+  * The configure option "--enable-hardening" had had no effect. It is removed
+    in favor of system-wide compiler configuration.
+  * Additional validation of
+
+Thanks to everyone who contributed to the development of this release.
+
+  * Hannes Magnusson
+  * A. Jesse Jiryu Davis
+  * Fiona Rowan
+  * Brian Samek
+
+Peace,
+
+    A. Jesse Jiryu Davis
+
+
+Libbson-1.4.1
+=============
+
+This release improves the HTML documentation's Makefile.
+
+-- A. Jesse Jiryu Davis
+
+
+Libbson-1.4.0
+=============
+
+It is my pleasure to announce Libbson-1.4.0.
+
+New features and bug fixes:
+
+  * bson_reader_reset seeks to the beginning of a BSON buffer.
+  * bson_steal efficiently transfers contents from one bson_t to another.
+  * Fix Windows compile error with BSON_EXTRA_ALIGN disabled.
+  * Potential buffer overrun in bson_strndup.
+  * bson_oid_to_string optimization for MS Visual Studio
+  * bson_oid_is_valid accepts uppercase hex characters.
+  * bson_json_reader_read aborted on some invalid Extended JSON documents.
+  * All man page names now begin with "bson_" to avoid install conflicts.
+  * Error messages sometimes truncated at 63 chars.
+
+This release tentatively supports the new BSON decimal type when built with
+"./configure --enable-experimental-features", or with
+"cmake -DENABLE_EXPERIMENTAL_FEATURES=ON", but this feature may change
+between now and libbson 1.5.
+
+Thanks to everyone who contributed to the development of this release.
+
+  * A. Jesse Jiryu Davis
+  * Hannes Magnusson
+  * Jeremy Mikola
+  * David Hatch
+  * Ian Boros
+  * Fiona Rowan
+  * Shane Harvey
+  * Runar Buvik
+  * Raymond Jacobson
+  * ReadmeCritic
+  * Mike Lloyd
+  * Derick Rethans
+  * Maverick Chan
+
+Peace,
+
+    A. Jesse Jiryu Davis
+
+Libbson-1.3.5
+=============
+
+No change since 1.3.4; released to keep pace with libmongoc's version.
+
+-- A. Jesse Jiryu Davis
+
+
+Libbson-1.3.4
+=============
+
+No change since 1.3.3; released to keep pace with libmongoc's version.
+
+-- A. Jesse Jiryu Davis
+
+
+Libbson-1.3.3
+=============
+
+No change since 1.3.2; released to keep pace with libmongoc's version.
+
+-- A. Jesse Jiryu Davis
+
+
+Libbson-1.3.2
+=============
+
+This is a patch release with a fix for the build system:
+
+  * man pages couldn't be built from a distribution tarball.
+
+Peace,
+
+  A. Jesse Jiryu Davis
+
+
+Libbson-1.3.1
+=============
+
+It is my pleasure to announce Libbson-1.3.1. This is a bugfix release:
+
+  * bson_strnlen is off by one on Windows.
+  * BSON_HAVE_STRNLEN config check used incorrectly.
+  * Incompatibility with older CMake versions.
+  * Wrong-sized allocation in bson_json_reader_new.
+
+Thanks to everyone who contributed to the development of this release.
+
+  * A. Jesse Jiryu Davis
+  * Alex Bishop
+  * Jeroen Ooms
+
+Peace,
+
+  A. Jesse Jiryu Davis
+
+
+Libbson-1.3.0
+=============
+
+It is my pleasure to announce to you the release of Libbson-1.3.0. Since the
+release candidate 1.3.0-rc0, the only changes have been fixes for compiler
+warnings and errors on various platforms.
+
+All changes since the previous stable release, 1.2.1:
+
+  * Fix potential crash in bson_strncpy on Windows.
+  * Parse DBRefs correctly from JSON.
+  * CMake option to disable building tests: "cmake -DENABLE_TESTS:BOOL=OFF".
+  * Refactor the build system to declare library version in one place.
+  * Fix compiler warnings and errors, especially with Visual Studio 2015
+    and IBM XL C.
+  * Combine environment's CFLAGS with configure options when building.
+
+Thanks to everyone who contributed to the development of this release.
+
+  * A. Jesse Jiryu Davis
+  * Hannes Magnusson
+  * Mark Benvenuto
+  * Petr Písař
+  * xpol
+  * Jose Sebastian Battig
+  * Jeroen Ooms
+
+Peace,
+
+  A. Jesse Jiryu Davis
+
+
+Libbson-1.3.0-rc0
+=================
+
+It is my pleasure to announce to you first release candidate of Libbson-1.3.0.
+
+Changes since 1.3.0-beta0:
+
+  * Parse DBRefs correctly from JSON.
+  * CMake option to disable building tests: "cmake -DENABLE_TESTS:BOOL=OFF".
+  * Fix build warnings on some platforms, and refactor the build system.
+
+Thanks to everyone who contributed to the development of this release.
+
+  * A. Jesse Jiryu Davis
+  * Hannes Magnusson
+  * Jose Sebastian Battig
+
+Peace,
+
+  A. Jesse Jiryu Davis
+
+
+Libbson-1.3.0-beta0
+===================
+
+It is my pleasure to announce to you the beta release of Libbson-1.3.0.
+
+Changes since the previous stable release, 1.2.1:
+
+  * Fix potential crash in bson_strncpy on Windows.
+  * Fix compiler warnings and errors, especially with Visual Studio 2015
+    and IBM XL C.
+  * Combine environment's CFLAGS with configure options when building.
+
+Thanks to everyone who contributed to the development of this release.
+
+  * Hannes Magnusson
+  * A. Jesse Jiryu Davis
+  * Jeroen Ooms
+  * Petr Písař
+  * xpol
+
+Peace,
+
+  A. Jesse Jiryu Davis
+
+
+Libbson-1.2.1
+=============
+
+It is my pleasure to announce to you the release of Libbson-1.2.1.
+
+Changes since the previous stable release, 1.2.0 are solely in the content
+and format of documentation.
+
+Peace,
+
+  A. Jesse Jiryu Davis
+
+
+Libbson-1.2.0
+=============
+
+It is my pleasure to announce to you the release of Libbson-1.2.0.
+
+Changes since the previous stable release, 1.1.11:
+
+  * Add bson_mem_restore_vtable(), the inverse of bson_mem_set_vtable().
+  * Enable runtime asserts in release build.
+  * Fixed compiler warnings and build failures on various platforms.
+  * Improvements to the formatting and contents of the documentation.
+
+Thanks to everyone who contributed to the development of this release.
+
+  * A. Jesse Jiryu Davis
+  * Hannes Magnusson
+  * Jason Carey
+  * Kyle Suarez
+  * Derick Rethans
+  * David Hatch
+
+Peace,
+
+  A. Jesse Jiryu Davis
+
+
+Libbson 1.2.0-rc0
+==================
+
+It is my pleasure to announce to you the release candidate of Libbson-1.2.0.
+
+Changes:
+
+  * Merge changes from 1.1.11.
+  * Enable runtime asserts in release build.
+
+Thanks to everyone who contributed to the development of this release candidate.
+
+  * A. Jesse Jiryu Davis
+  * Hannes Magnusson
+  * Kyle Suarez
+  * Jason Carey
+
+-- A. Jesse Jiryu Davis
+
+
+Libbson 1.2.0-beta
+==================
+
+It is my pleasure to announce to you the beta of Libbson-1.2.0.
+
+This release adds the bson_mem_restore_vtable() function to undo the effect
+of bson_mem_set_vtable().
+
+Thanks to everyone who contributed to the development of this beta.
+
+ * Jason Carey
+ * Hannes Magnusson
+
+
+Libbson-1.1.11
+==============
+
+It is my pleasure to announce to you the release of Libbson-1.1.11.
+
+This is a patch release with improvements to the documentation:
+
+  * Document bson streaming reads with an example,
+    bson-streaming-reader.c.
+  * Document callback function types bson_reader_destroy_func_t and
+    bson_reader_read_func_t.
+
+Thanks to Kyle Suarez for his contributions to this version of Libbson.
+
+-- A. Jesse Jiryu Davis
+
+
+Libbson-1.1.10
+==============
+
+No change since 1.1.9; released to keep pace with libmongoc's version.
+
+-- A. Jesse Jiryu Davis
+
+
+Libbson-1.1.9
+=============
+
+This is a patch release with a fix for the build system:
+
+ * "./configure --enable-coverage" works now.
+
+-- A. Jesse Jiryu Davis
+
+
+Libbson-1.1.8
+=============
+
+No change since 1.1.7; released to keep pace with libmongoc's version.
+
+-- A. Jesse Jiryu Davis
+
+
+Libbson-1.1.7
+=============
+
+It is my pleasure to announce to you the release of Libbson-1.1.7.
+
+This is a patch release with bug fixes:
+
+ * Unchecked error in bson_utf8_escape_for_json caused unbounded memory growth
+   and a crash.
+ * Nicer floating-point formatting in bson_as_json.
+ * Link error with CMake on Mac.
+
+Thanks to everyone who contributed to this version of Libbson.
+
+ * A. Jesse Jiryu Davis
+ * Jason Carey
+ * Jeroen Ooms
+ * Hannes Magnusson
+ * Hendrik Dahlkamp
+
+-- A. Jesse Jiryu Davis
+
+
+Libbson-1.1.6
+=============
+
+No change since 1.1.5; released to keep pace with libmongoc's version.
+
+-- A. Jesse Jiryu Davis
+
+
+Libbson 1.1.5
+=============
+
+It is my pleasure to announce to you the release of Libbson-1.1.5.
+
+This is a patch release with small bug fixes:
+
+ * Fix link error "missing __sync_add_and_fetch_4" in GCC on i386 -
+   the functions bson_atomic_int_add and bson_atomic_int64_add are now
+   compiled and exported if needed in i386 mode
+ * Fix version check for GCC 5 and future versions of Clang
+ * Fix warnings and errors building on various platforms
+
+With this release, Libbson abandons the convention that odd-numbered patch
+versions indicate unstable releases. We switch to simple semantic versioning:
+1.1.5 is a stable release with bug fixes since 1.1.4. During subsequent
+development the version will be "1.1.6-dev".
+
+Thanks to everyone who contributed to this version of Libbson.
+
+ * A. Jesse Jiryu Davis
+ * Christian Hergert
+ * Jason Carey
+ * Hannes Magnusson
+ * Paul Melnikow
+
+-- A. Jesse Jiryu Davis
+
+Libbson 1.1.4
+=============
+
+It is my pleasure to announce to you the release of Libbson-1.1.4.
+
+This release is a minor patch release with one bug fix for bson_iter_timeval
+
+Thanks to everyone who contributed to the development of this release candidate for
+Libbson.
+
+ * Jason Carey
+ * A. Jesse Jiryu Davis
+ * Vladimir Zidar
+
+-- Jason Carey
+
+Libbson 1.1.2
+=============
+
+It is my pleasure to announce to you the release of Libbson-1.1.2.
+
+This release is a minor patch release with one bug fix for mingw.
+
+* sscanf_s doesn't exist for mingw.
+
+-- Jason Carey
+
+Libbson 1.1.0
+=============
+
+It is my pleasure to announce to you the release of Libbson-1.1.0.
+
+This release is a stable release with some ABI additions and bugfixes.
+
+The below changes include the changes mentioned in the rc0.
+
+ABI/API changes include:
+ * RC0
+   * Deprecation of bson_copy_to_excluding
+   * Addition of bson_copy_to_excluding_noinit
+ * Removal of MIN, MAX and ABS macros in favor of BSON_MIN, BSON_MAX and
+   BSON_ABS.  Note this is a breaking source level change if you relied on
+   these from bson.h.  Also note that this is not a breaking ABI change.
+ * Addition of BSON_ERROR_BUFFER_SIZE macro
+
+Other changes include:
+ * RC0
+   * Addition of a versioned ABI for the libbson shared library
+   * fixed bson_get_monotonic_time fallback when a system monotonic clock can not
+     be found.  Formerly failed to compile with an incorrect call to
+     bson_gettimeofday
+   * Allow the "dbref" convention in bson_validate when BSON_VALIDATE_DOLLAR_KEYS
+     is present
+   * Support for ISO-8601 or $numberLong dates in bson <-> json parsing
+   * Quiet various compiler warnings
+
+Thanks to everyone who contributed to the development of this release candidate for
+Libbson.
+
+ * Adam Midvidy
+ * Christian Hergert
+ * Daniel Colchete
+ * Ivan Suvorov
+ * Hannes Magnusson
+ * Jason Carey
+ * Jérôme Lebel
+ * Samantha Ritter
+
+-- Jason Carey
+
+Libbson 1.1.0-rc0
+=================
+
+It is my pleasure to announce to you the release of Libbson-1.1.0-rc0.
+
+This release is a release candidate release with some ABI additions and bugfixes.
+
+ABI changes include:
+ * Deprecation of bson_copy_to_excluding
+ * Addition of bson_copy_to_excluding_noinit
+
+Other changes include:
+ * Addition of a versioned ABI for the libbson shared library
+ * fixed bson_get_monotonic_time fallback when a system monotonic clock can not
+   be found.  Formerly failed to compile with an incorrect call to
+   bson_gettimeofday
+ * Allow the "dbref" convention in bson_validate when BSON_VALIDATE_DOLLAR_KEYS
+   is present
+ * Support for ISO-8601 or $numberLong dates in bson <-> json parsing
+ * Quiet various compiler warnings
+
+Thanks to everyone who contributed to the development of this release candidate for
+Libbson.
+
+ * Adam Midvidy
+ * Christian Hergert
+ * Daniel Colchete
+ * Ivan Suvorov
+ * Jason Carey
+ * Jérôme Lebel
+
+-- Jason Carey
+
+Libbson 1.0.2
+=============
+
+It is my pleasure to announce to you the release of Libbson-1.0.2.
+
+This release is a minor point release with no ABI changes and mostly small
+bugfixes.
+
+Changes include:
+ * bson_init_from_json supports top level arrays
+ * fixes for bson_strerror_r
+ * fix for timeouts on OS X
+ * house cleaning for various integer types
+
+Thanks to everyone who contributed to the development of this point release for
+Libbson.
+
+ * Adam Midvidy
+ * Christian Hergert
+ * Jason Carey
+ * Jérôme Lebel
+ * Tyler Brock
+
+-- Jason Carey
+
+Libbson 1.0.0
+=============
+
+It is my very distinct pleasure to announce to you the release of
+Libbson-1.0.0!
+
+This is the culmination of just over a year of work and could not have been
+done without the help of our wonderful community.
+
+Thanks to everyone who contributed to the development of Libbson!
+
+ * Christian Hergert
+ * Jason Carey
+ * Jose Sebastian Battig
+ * Maxim Zakharov
+ * Jérôme Lebel
+ * Itay Neeman
+ * Mike Manilone
+ * Michael Kuhn
+ * Kyle Suarez
+ * Josh Blum
+ * Jason Choy
+ * mntmnt7@gmail.com
+ * Tyler Brock
+ * Stefan Kaes
+ * Paul Melnikow
+ * Matt Cotter
+ * Gary J. Murakami
+ * Toon Schoenmakers
+ * Máximo Cuadros
+ * Michael Whittaker
+ * Kota Yamaguchi
+ * Justin Case
+ * Jeff Yemin
+ * Ivan Suvorov
+ * Hannes Magnusson
+ * Eric Daniels
+ * Anil Kumar
+ * A. Jesse Jiryu Davis
+
+Happy Hacking!
+
+-- Christian Hergert
+
+
+Libbson 0.98.0
+==============
+
+One more step closer to a 1.0!
+
+This release has a few fixes as we near the finish line of a 1.0 release.
+We have bumped the version to 0.98.0 to sync up with MongoDB C driver, which
+is the primary consumer of this library.
+
+This release includes a new memory callback vtable to help in embedding
+situations that have their own custom allocator such as various language
+runtimes.
+
+A few compilation fixes for various C++ compilers have also been included.
+
+A special thanks to:
+
+ * Itay Neeman
+ * Michael Whittaker
+
+Happy Hacking!
+
+-- Christian
+
+
+Libbson 0.8.4
+=============
+
+Another incremental release with a couple of new functions and bugfixes.
+
+In this release you will find the following changes:
+
+ * Alignment fixes for Solaris Studio C compiler.
+ * RPM and Debian packaging helpers.
+ * bson_gettimeofday() has dropped the deprecated timezone field used
+   when calling posix gettimeofday(). This eases portability concerns.
+   It is technically an ABI break, but since the field was never set,
+   in reality it shouldn't be an issue.
+ * Multi-byte optimizations for bson_oid_to_string() have been disabled
+   on non-x86 based platforms. This should aid in architecture portability.
+ * The JSON parser can now support $numberLong.
+ * bson_ascii_strtoll() has been added, which is a portable strtoll()
+   implementation. This is primarily useful for Windows users and is
+   used by the JSON parser.
+ * A bug was fixed in bson_iter_find_descendent() where the wrong field
+   could be matched if it's prefix matched the query.
+ * bson_array_as_json() has been added to convert a bson_t as a top-level
+   array.
+
+Thanks to:
+ * Kyle Suarez
+ * Itay Neeman
+
+Happy Hacking!
+
+
+Libbson 0.8.2
+=============
+
+A bugfix release is here as a follow up to 0.8.0.
+
+In this release you will find the following changes:
+
+ * A fix for BCON when used from C++.
+ * Change bson_next_power_of_two() to accept size_t. This should not be
+   an ABI break since it is static inline.
+
+Happy Hacking!
+
+
+Libbson 0.8.0
+=============
+
+It's that time again, time for another Libbson release!
+
+This cycle includes much, much more documentation for your perusing. There is
+much more cross-referencing and structure for your navigation pleasure.
+
+We've improved support for Libbson on a few more exotic platforms. SPARC
+support is looking pretty good these days.
+
+You'll also find some new examples in this release to help you get started a
+bit faster. If there is something you'd like to see, just ask!
+
+There are a few ABI breaks this cycle, as we are well on the road to a 1.0 and
+would like things as clean as possible. I anticipate a few more during the next
+couple of cycles, but we will try to keep them to a minimum.  With that said,
+you *WILL* need to recompile your application against 0.8.0.
+
+Happy Hacking!
+
+
+Libbson 0.6.8
+=============
+
+Quickly following up on the 0.6.6 release is 0.6.8. This release contains
+a couple of bugfixes and more support for older architectures.
+
+On big-endian systems, bson_append_date_time() was not properly converting
+to little-endian. This is now fixed.
+
+We've added support for Sun Pro C Compiler on Solaris 10 and 11. This includes
+support for SPARC systems as well as x86_64. In particular, intrinsics were
+added for the Solaris/SPARC/SunProC combination. If you are running SunProC
+on a non-Solaris platform, a fallback path will be used which is slower than
+native support for atomics. Additionally, bson_gettimeofday() does not fully
+support timezones under SunProC as struct timezone is not defined.
+
+Libbson will now check for GLibc 2.19 to remove various warnings with both
+_GNU_SOURCE and _BSD_SOURCE defined.
+
+Happy Hacking!
+
+
+Libbson 0.6.6
+=============
+
+Another release for your hacking pleasure!
+
+First off, note that there are two ABI breaks as part of this release. We
+felt they were important as they will help us stablize towards a 1.0 release.
+It is recommended that you recompile against this version of libbson.
+
+Lots of small fixes went into this release to help get things building better
+on various platforms. Windows support should be improved and many warnings have
+been cleaned up.
+
+The signature of bson_realloc_func has changed to allow for context to be
+provided. This should help in situations where a pointer to the memory pool is
+required.
+
+bson_destroy_with_steal() has been added so that you can steal a buffer instead
+of freeing it when bson_destroy() is called.
+
+bson_new_from_buffer() has been added so that you can provide your own realloc
+function to manage the underlying buffer. This will be useful for bindings that
+want to integrate their memory manager for bson documents.
+
+bson_value_t is a new container type that can hold any bson type.
+
+I'd like to thank everyone who contributed to this release.
+
+    Gary Murakami
+    Jason Carey
+    Jose Sebastian Battig
+    Máximo Cuadros
+    Paul Melnikow
+    Stefan Kaes
+
+Happy hacking!
+
+Libbson 0.6.4
+=============
+
+This is just a followup release of libbson as we work towards stablizing for
+the new mongo-c-driver release. In fact, it only includes build work and a
+new macro, bson_clear().
+
+Happy hacking!
+
+
+Libbson 0.6.2
+=============
+
+A new Libbson release is already here as a follow up to the 0.6.0 release.
+
+This release includes a few build and installation fixes. In particular,
+
+ * Windows build fixes
+ * CMake build fixes
+ * C++ build fixes.
+
+The monotonic clock is now more accurately calculated on Windows as well.
+If you'd like to build on Windows, check out the section in README.md for
+information on how to do so.
+
+Happy hacking!
+
+
+Libbson 0.6.0
+=============
+
+Many changes have gone into this release!
+
+TL;DR
+
+ * C99 types (from C89).
+ * JSON parsing.
+ * Lots of Operating System support, including Windows.
+ * Parallel Test Suite.
+ * Revamped build system.
+ * A couple ABI breaks.
+
+First off, 0.6.0 has gone through a significant amount of build system cleanup.
+This should simplify using libbson as a submodule for those that wish to do so.
+For example, the mongo-c-driver now does this using autotools.
+
+Windows Vista and higher is now supported as a build target through the use of
+cmake. See README.md for the instructions. Other platforms should continue to
+use autotools.
+
+The test suite has been improved and more tests added. We now generate random
+seeds on every run to help catch more errors with additional fuzzing passes.
+By default, the test suite will run all tests in parallel with subprocesses.
+This should speed up execution of `make test' for contributors.
+
+bson_string_t went through an ABI break to support power-of-two growth.
+
+JSON parsing has been added through the bson_json_reader_t type. You can also
+now use bson_init_from_json() for a simplified interface.
+
+Types were revamped to appear to be using C99 types. If C99 types are
+available, they will be used. If not, they will be emulated. This means you
+can just go on using uint64_t and similar. We even use bool now.
+
+Many functions have been made portable to deal with inconsistencies with Win32.
+
+This release has been tested on the following operating systems:
+
+ * RedHat Enterprise 5, 6, and 7 beta.
+ * CentOS 6.5
+ * Ubuntu 12.04 LTS
+ * Fedora 20
+ * Windows 7
+ * FreeBSD 10
+ * DragonFly BSD
+ * Solaris 11
+ * SmartOS
+ * mingw64
+
+Thanks again and enjoy using libbson!
+
+Libbson 0.4.0
+=============
+
+This release includes a few bug fixes and copious documentation. Additionally,
+we improved our fuzz testing and found a couple issues in the process.  It is
+suggested that everyone upgrade their installations to 0.4.0.
+
+We have been busy adding a lot of documentation that we hope you will like.
+Many `man' pages have been added for various API endpoints and structures.  If
+you use vim, remember that you can jump to the documentation with <shift>k
+while on a symbol.
+
+Thanks and enjoy using libbson!
+
+Libbson 0.2.4
+=============
+
+This release includes some more performance improvements and bug fixes.
+
+It contains an important fix for dealing with invalid string lengths that could
+cause an integer overflow when checking to see if the string length fits within
+the end of the buffer.
+
+There is preliminary support for Solaris on x86_64 and SPARC.
+
+Generating OIDs is now simpler with the use of bson_context_get_default(). This
+function will return a thread-safe generic bson_context_t implementation.
+Alternatively, you may pass NULL to bson_oid_init() for the context and the
+default context is automatically used.
+
+The fuzz tests now use srand() with a 32-bit integer derived from /dev/urandom.
+
+Endianess conversions are now performed by __builtin_bswap*() functions when
+available with the GCC compiler.
+
+Endianness conversions for the double type are now properly handled on
+big-endian systems.
+
+bson_reinit() has been added to cleanup code that needs to destroy and then
+initialize a bson_t.
+
+Validation of Code with Scope fields was absent from bson_validate(). This is
+now supported.
+
+Libbson 0.2.2
+=============
+
+This release includes a few performance improvements and bug fixes.
+
+The bson_t structure is more efficient when growing allocated buffers.
+The use of memalign() was unnecessary for allocated bson_t structures
+and has therefore been removed. Performance sensitive allocations now
+use bson_malloc() instead of calloc() and initialize fields directly.
+Stack alignment of bson_t is now enforced through compiler intrinsics.
+
+The unit tests can now support running inside of valgrind to check for
+various memory leaks. Simply defing VALGRIND=valgrind when running
+`make test`.
+
+Enjoy libbson-0.2.2!
+
+
+Libbson 0.2.0
+=============
+
+This is the initial release of Libbson. It has not yet reached API and ABI
+maturity and is therefore subject to change without notice.  Developers are
+encouraged to start using Libbson as we journey on the road to 1.0, where ABI
+stability will be guaranteed.
+
+Libbson is Apache 2.0 licensed so that it can be embedded in a multitude of
+scenarios. This means that we try hard to not rely on external libraries.
+Therefore, Libbson contains useful routines to help in portability as well
+as BSON support.
+
+Libbson is the basis of a new MongoDB C driver that will follow shortly.
+
+Please see the doc/ directory for documentation on how to use Libbson. We
+would love for you to contribute to Libbson, whether that is code,
+documentation or packaging.

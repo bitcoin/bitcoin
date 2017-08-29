@@ -1,7 +1,7 @@
 # /etc/conf.d/syscoind: config file for /etc/init.d/syscoind
 
 # Config file location
-#SYSCOIND_CONFIGFILE="/etc/syscoin/syscoin.conf"
+#SYSCOIND_CONFIGFILE="/etc/syscoincore/syscoin.conf"
 
 # What directory to write pidfile to?  (created and owned by $SYSCOIND_USER)
 #SYSCOIND_PIDDIR="/var/run/syscoind"
@@ -13,8 +13,8 @@
 #SYSCOIND_DATADIR="/var/lib/syscoind"
 
 # User and group to own syscoind process
-#SYSCOIND_USER="syscoin"
-#SYSCOIND_GROUP="syscoin"
+#SYSCOIND_USER="syscoincore"
+#SYSCOIND_GROUP="syscoincore"
 
 # Path to syscoind executable
 #SYSCOIND_BIN="/usr/bin/syscoind"
