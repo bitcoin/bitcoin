@@ -273,7 +273,8 @@ void CCoinsViewCache::Trim(size_t nTrimSize) const
             iter++;
     }
 
-    LogPrint("coindb", "Trimmed %ld from the CoinsViewCache, current size after trim: %ld and usage %ld bytes\n", nTrimmed, cacheCoins.size(), cachedCoinsUsage);
+    if (nTrimmed > 0)
+        LogPrint("coindb", "Trimmed %ld from the CoinsViewCache, current size after trim: %ld and usage %ld bytes\n", nTrimmed, cacheCoins.size(), cachedCoinsUsage);
 }
 
 void CCoinsViewCache::Uncache(const uint256& hash)

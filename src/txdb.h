@@ -22,11 +22,13 @@ struct CDiskTxPos;
 class uint256;
 
 //! -dbcache default (MiB)
-static const int64_t nDefaultDbCache = 300; // BU Xtreme Thinblocks bump to support a larger ophan cache
+static const int64_t nDefaultDbCache = 500;
 //! max. -dbcache in (MiB)
-static const int64_t nMaxDbCache = sizeof(void*) > 4 ? 16384 : 1024;
+static const int64_t nMaxDbCache = sizeof(void*) > 4 ? 16384 : 2048;
 //! min. -dbcache in (MiB)
 static const int64_t nMinDbCache = 4;
+//! max increase in cache size since the last time we did a full flush
+static const int64_t nMaxCacheIncreaseSinceLastFlush = 512 * 1000 * 1000;
 
 /** CCoinsView backed by the coin database (chainstate/) */
 class CCoinsViewDB : public CCoinsView
