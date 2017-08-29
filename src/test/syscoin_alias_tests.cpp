@@ -625,14 +625,14 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpiredbuyback)
 	AliasNew("node1", "aliasexpirebuyback1", "somedata1", "data1");
 	GenerateBlocks(5, "node1");
 	ExpireAlias("aliasexpirebuyback1");
-	BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasexpirebuyback1"), false);
-	BOOST_CHECK_EQUAL(AliasFilter("node2", "aliasexpirebuyback1"), false);
+	BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasexpirebuyback1"), true);
+	BOOST_CHECK_EQUAL(AliasFilter("node2", "aliasexpirebuyback1"), true);
 
 	StartNode("node3");
 	ExpireAlias("aliasexpirebuyback1");
 	GenerateBlocks(5, "node3");
-	BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasexpirebuyback1"), false);
-	BOOST_CHECK_EQUAL(AliasFilter("node2", "aliasexpirebuyback1"), false);
+	BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasexpirebuyback1"), true);
+	BOOST_CHECK_EQUAL(AliasFilter("node2", "aliasexpirebuyback1"), true);
 	BOOST_CHECK_EQUAL(AliasFilter("node3", "aliasexpirebuyback1"), false);
 	// node3 shouldn't find the service at all (meaning node3 doesn't sync the data)
 	BOOST_CHECK_THROW(CallRPC("node3", "aliasinfo aliasexpirebuyback1"), runtime_error);
@@ -703,8 +703,7 @@ BOOST_AUTO_TEST_CASE (generate_aliaspruning)
 	StartNode("node2");
 	ExpireAlias("aliasprune");
 	GenerateBlocks(5, "node2");
-	// now we shouldn't be able to search it
-	BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasprune"), false);
+	BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasprune"), true);
 	// and it should say its expired
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo aliasprune"));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), true);
@@ -739,8 +738,8 @@ BOOST_AUTO_TEST_CASE (generate_aliaspruning)
 	// now it should be expired
 	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate sysrates.peg aliasprune1 newdata2 " + HexStr(vchFromString("privatedata"))), runtime_error);
 
-	BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasprune1"), false);
-	BOOST_CHECK_EQUAL(AliasFilter("node2", "aliasprune1"), false);
+	BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasprune1"), true);
+	BOOST_CHECK_EQUAL(AliasFilter("node2", "aliasprune1"), true);
 	// and it should say its expired
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasinfo aliasprune1"));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), true);
