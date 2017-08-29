@@ -144,7 +144,6 @@ bool GetTimeToPrune(const CScript& scriptPubKey, uint64_t &nTime)
 			nTime = chainActive.Tip()->nTime + 1;
 			return true;
 		}
-		return true;
 		if (!pofferdb->ReadOffer(CNameTXIDTuple(offer.vchOffer, txid), offer))
 		{
 			// setting to the tip means we don't prune this data, we keep it
