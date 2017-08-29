@@ -3850,10 +3850,8 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 		if (oRes.size() >= count)
 			break;
 		found++;
-		if (found < from)
-			continue;
 		UniValue oEscrow(UniValue::VOBJ);
-		if(BuildEscrowJson(pairScan.first, pairScan.second, oEscrow))
+		if(found >= from && BuildEscrowJson(pairScan.first, pairScan.second, oEscrow))
 			oRes.push_back(oEscrow);
 	}
     return oRes;

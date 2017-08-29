@@ -1192,9 +1192,7 @@ UniValue certlist(const UniValue& params, bool fHelp) {
 		const CAliasIndex &alias = vtxPos.back();
 		UniValue oCert(UniValue::VOBJ);
 		found++;
-		if (found < from)
-			continue;
-		if (BuildCertJson(cert, alias, oCert))
+		if (found >= from && BuildCertJson(cert, alias, oCert))
 		{
 			oRes.push_back(oCert);
 		}
