@@ -162,7 +162,7 @@ bool CCertDB::CleanupDatabase(int &servicesCleaned)
         try {
 			if (pcursor->GetKey(key) && key.first == "certi") {
 				const CNameTXIDTuple &certTuple = key.second;
-  				if (GetCert(key.first, txPos) && chainActive.Tip()->nTime >= GetCertExpiration(txPos))
+  				if (!GetCert(certTuple.first, txPos) || chainActive.Tip()->nTime >= GetCertExpiration(txPos))
 				{
 					servicesCleaned++;
 					EraseCert(certTuple);

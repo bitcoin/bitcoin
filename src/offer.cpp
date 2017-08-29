@@ -160,7 +160,7 @@ bool COfferDB::CleanupDatabase(int &servicesCleaned)
         try {
 			if (pcursor->GetKey(key) && key.first == "offeri") {
 				const CNameTXIDTuple &offerTuple = key.second;
-  				if (GetOffer(key.first, offer) && chainActive.Tip()->nTime >= GetOfferExpiration(offer))
+  				if (!GetOffer(offerTuple.first, offer) || chainActive.Tip()->nTime >= GetOfferExpiration(offer))
 				{
 					servicesCleaned++;
 					EraseOffer(offerTuple);
