@@ -231,13 +231,25 @@ void TxConfirmStats::Record(int blocksToConfirm, double val)
 
 void TxConfirmStats::UpdateMovingAverages()
 {
-    for (unsigned int j = 0; j < buckets.size(); j++) {
-        for (unsigned int i = 0; i < confAvg.size(); i++)
-            confAvg[i][j] = confAvg[i][j] * decay;
-        for (unsigned int i = 0; i < failAvg.size(); i++)
-            failAvg[i][j] = failAvg[i][j] * decay;
-        avg[j] = avg[j] * decay;
-        txCtAvg[j] = txCtAvg[j] * decay;
+    for (auto& elem : confAvg) {
+        assert(elem.size() == buckets.size());
+        for (auto& bucket : elem) {
+            bucket *= decay;
+        }
+    }
+    for (auto& elem : failAvg) {
+        assert(elem.size() == buckets.size());
+        for (auto& bucket : elem) {
+            bucket *= decay;
+        }
+    }
+    assert(avg.size() == buckets.size());
+    for (auto& bucket : avg) {
+        bucket *= decay;
+    }
+    assert(txCtAvg.size() == buckets.size());
+    for (auto& bucket : txCtAvg) {
+        bucket *= decay;
     }
 }
 
