@@ -20,6 +20,6 @@ bool WalletParameterInteraction();
 bool WalletVerify();
 
 //! Load wallet databases.
-bool InitLoadWallet();
+bool OpenWallets();
 
 #endif // BITCOIN_WALLET_INIT_H
