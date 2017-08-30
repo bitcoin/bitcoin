@@ -779,7 +779,7 @@ UniValue messagereceivelist(const UniValue& params, bool fHelp) {
 			break;
 		found++;
 		UniValue oName(UniValue::VOBJ);
-		if (found >= from && BuildMessageJson(message, oName, strPrivateKey))
+		if (found >= from && BuildMessageJson(message, oName))
 			oRes.push_back(oName);
 	}
 	return oRes;
