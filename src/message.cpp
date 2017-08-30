@@ -691,7 +691,7 @@ bool BuildMessageJson(const CMessage& message, UniValue& oName)
 UniValue messagereceivecount(const UniValue& params, bool fHelp) {
 	if (fHelp || 1 < params.size())
 		throw runtime_error("messagereceivecount [\"alias\",...]\n"
-			"Count messages that an array of aliases has recieved.");
+			"Count messages that an array of aliases has received.\n");
 	UniValue aliasesValue(UniValue::VARR);
 	vector<string> aliases;
 	if (CheckParam(params, 0))
@@ -715,6 +715,7 @@ UniValue messagereceivecount(const UniValue& params, bool fHelp) {
 				aliases.push_back(aliasName);
 		}
 	}
+
 	int found = 0;
 
 	map< vector<unsigned char>, int > vNamesI;
@@ -745,7 +746,6 @@ UniValue messagereceivecount(const UniValue& params, bool fHelp) {
 					if (theMessage.vchAliasTo != theAlias.vchAlias)
 						continue;
 
-					UniValue oMessage(UniValue::VOBJ);
 					vNamesI[message.vchMessage] = theMessage.nHeight;
 					found++;
 				}
@@ -757,7 +757,9 @@ UniValue messagereceivecount(const UniValue& params, bool fHelp) {
 UniValue messagereceivelist(const UniValue& params, bool fHelp) {
 	if (fHelp || 4 < params.size())
 		throw runtime_error("messagereceivelist [\"alias\",...] [<message>] [count] [from]\n"
-			"list messages that an array of aliases has recieved.");
+			"list messages that an array of aliases has received.\n"
+			"[count]          (numeric, optional, default=10) The number of results to return\n"
+			"[from]           (numeric, optional, default=0) The number of results to skip\n");
 	UniValue aliasesValue(UniValue::VARR);
 	vector<string> aliases;
 	if (CheckParam(params, 0))
@@ -829,12 +831,12 @@ UniValue messagereceivelist(const UniValue& params, bool fHelp) {
 						continue;
 
 					UniValue oMessage(UniValue::VOBJ);
-					vNamesI[message.vchMessage] = theMessage.nHeight;
 					found++;
 					if (found >= from && BuildMessageJson(theMessage, oMessage))
 					{
 						oRes.push_back(oMessage);
 					}
+					vNamesI[message.vchMessage] = theMessage.nHeight;
 					// if finding specific GUID don't need to look any further
 					if (vchNameUniq.size() > 0)
 						return oRes;
@@ -987,12 +989,12 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
 						continue;
 
 					UniValue oMessage(UniValue::VOBJ);
-					vNamesI[message.vchMessage] = theMessage.nHeight;
 					found++;
 					if (found >= from && BuildMessageJson(theMessage, oMessage))
 					{
 						oRes.push_back(oMessage);
 					}
+					vNamesI[message.vchMessage] = theMessage.nHeight;
 					// if finding specific GUID don't need to look any further
 					if (vchNameUniq.size() > 0)
 						return oRes;
