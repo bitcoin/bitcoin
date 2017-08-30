@@ -1344,9 +1344,8 @@ const string EscrowNew(const string& node, const string& sellernode, const strin
 	string merchantaliaspegtxid = "\"\"";
 	string paymentoptions = "\"\"";
 	string redeemscript = "\"\"";
-	string height = "\"\"";
 	//										escrownew <alias> <offer> <quantity> <arbiter alias> [extTx] [merchantAliasPegTx] [payment option] [redeemScript] [height] [witness]
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrownew " + buyeralias + " " + offerguid + " " + qtyStr + " " + arbiteralias + " " + exttxid + " " + merchantaliaspegtxid + " " + paymentoptions + " " + redeemscript + " " + height + " " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrownew " + buyeralias + " " + offerguid + " " + qtyStr + " " + arbiteralias + " " + exttxid + " " + merchantaliaspegtxid + " " + paymentoptions + " " + redeemscript + " " + witness));
 	const UniValue &arr = r.get_array();
 	string guid = arr[1].get_str();
 	GenerateBlocks(10, node);

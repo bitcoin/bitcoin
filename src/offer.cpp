@@ -455,13 +455,13 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1013 - " + _("Offer has too many affiliate entries, only one allowed per transaction");
 			return error(errorMessage.c_str());
 		}
-		if(!theOffer.vchOffer.empty() && theOffer.vchOffer != vvchArgs[0])
-		{
-			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1014 - " + _("Offer guid in the data output does not match the guid in the transaction");
-			return error(errorMessage.c_str());
-		}
 		switch (op) {
 		case OP_OFFER_ACTIVATE:
+			if (!theOffer.vchOffer.empty() && theOffer.vchOffer != vvchArgs[0])
+			{
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1014 - " + _("Offer guid in the data output does not match the guid in the transaction");
+				return error(errorMessage.c_str());
+			}
 			if(!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty() || theOffer.aliasTuple.first != vvchPrevAliasArgs[0])
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Alias input mismatch");
@@ -525,6 +525,11 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 
 			break;
 		case OP_OFFER_UPDATE:
+			if (!theOffer.vchOffer.empty() && theOffer.vchOffer != vvchArgs[0])
+			{
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1014 - " + _("Offer guid in the data output does not match the guid in the transaction");
+				return error(errorMessage.c_str());
+			}
 			if(!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty() || theOffer.aliasTuple.first != vvchPrevAliasArgs[0])
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1026 - " + _("Alias input mismatch");
