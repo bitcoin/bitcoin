@@ -717,41 +717,13 @@ UniValue messagereceivecount(const UniValue& params, bool fHelp) {
 	}
 
 	int found = 0;
-
-	map< vector<unsigned char>, int > vNamesI;
-	map< vector<unsigned char>, UniValue > vNamesO;
+	vector<CMessage > messageScan;
 	if (aliases.size() > 0)
 	{
-		for (unsigned int aliasIndex = 0; aliasIndex<aliases.size(); aliasIndex++)
-		{
-			const string &name = aliases[aliasIndex];
-			const vector<unsigned char> &vchAlias = vchFromString(name);
-			vector<CAliasIndex> vtxPos;
-			if (!paliasdb->ReadAlias(vchAlias, vtxPos) || vtxPos.empty())
-				continue;
-			CTransaction tx;
-			for (auto& it : boost::adaptors::reverse(vtxPos)) {
-				const CAliasIndex& theAlias = it;
-				if (!GetSyscoinTransaction(theAlias.nHeight, theAlias.txHash, tx, Params().GetConsensus()))
-					continue;
-				CMessage message(tx);
-				if (!message.IsNull())
-				{
-					if (vNamesI.find(message.vchMessage) != vNamesI.end())
-						continue;
-					vector<CMessage> vtxMessagePos;
-					if (!pmessagedb->ReadMessage(message.vchMessage, vtxMessagePos) || vtxMessagePos.empty())
-						continue;
-					const CMessage &theMessage = vtxMessagePos.back();
-					if (theMessage.vchAliasTo != theAlias.vchAlias)
-						continue;
-
-					vNamesI[message.vchMessage] = theMessage.nHeight;
-					found++;
-				}
-			}
-		}
+		if (!pmessagedb->ScanRecvMessages(vchFromString(""), aliases, 1000, messageScan))
+			throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3508 - " + _("Scan failed"));
 	}
+	found = messageScan.size();
 	return found;
 }
 UniValue messagereceivelist(const UniValue& params, bool fHelp) {
@@ -796,53 +768,19 @@ UniValue messagereceivelist(const UniValue& params, bool fHelp) {
 	int found = 0;
 
 	UniValue oRes(UniValue::VARR);
-	map< vector<unsigned char>, int > vNamesI;
-	map< vector<unsigned char>, UniValue > vNamesO;
+	vector<CMessage > messageScan;
 	if (aliases.size() > 0)
 	{
-		for (unsigned int aliasIndex = 0; aliasIndex<aliases.size(); aliasIndex++)
-		{
-			if (oRes.size() >= count)
-				break;
-			const string &name = aliases[aliasIndex];
-			const vector<unsigned char> &vchAlias = vchFromString(name);
-			vector<CAliasIndex> vtxPos;
-			if (!paliasdb->ReadAlias(vchAlias, vtxPos) || vtxPos.empty())
-				continue;
-			CTransaction tx;
-			for (auto& it : boost::adaptors::reverse(vtxPos)) {
-				if (oRes.size() >= count)
-					break;
-				const CAliasIndex& theAlias = it;
-				if (!GetSyscoinTransaction(theAlias.nHeight, theAlias.txHash, tx, Params().GetConsensus()))
-					continue;
-				CMessage message(tx);
-				if (!message.IsNull())
-				{
-					if (vNamesI.find(message.vchMessage) != vNamesI.end())
-						continue;
-					if (vchNameUniq.size() > 0 && vchNameUniq != message.vchMessage)
-						continue;
-					vector<CMessage> vtxMessagePos;
-					if (!pmessagedb->ReadMessage(message.vchMessage, vtxMessagePos) || vtxMessagePos.empty())
-						continue;
-					const CMessage &theMessage = vtxMessagePos.back();
-					if (theMessage.vchAliasTo != theAlias.vchAlias)
-						continue;
-
-					UniValue oMessage(UniValue::VOBJ);
-					found++;
-					if (found >= from && BuildMessageJson(theMessage, oMessage))
-					{
-						oRes.push_back(oMessage);
-					}
-					vNamesI[message.vchMessage] = theMessage.nHeight;
-					// if finding specific GUID don't need to look any further
-					if (vchNameUniq.size() > 0)
-						return oRes;
-				}
-			}
-		}
+		if (!pmessagedb->ScanRecvMessages(vchNameUniq, aliases, 1000, messageScan))
+			throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3508 - " + _("Scan failed"));
+	}
+	BOOST_FOREACH(const CMessage &message, messageScan) {
+		if (oRes.size() >= count)
+			break;
+		found++;
+		UniValue oName(UniValue::VOBJ);
+		if (found >= from && BuildMessageJson(message, oName, strPrivateKey))
+			oRes.push_back(oName);
 	}
 	return oRes;
 }
