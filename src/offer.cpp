@@ -3776,16 +3776,14 @@ UniValue offeracceptcount(const UniValue& params, bool fHelp) {
 			}
 		}
 
-		string strFilterPurchases = "true";
-		if (CheckParam(params, 1))
-			strFilterPurchases = params[1].get_str();
-		bool filterPurchases = strFilterPurchases == "true";
 
-		string strFilterSales = "true";
-		if (CheckParam(params, 2))
-			strFilterSales = params[2].get_str();
-		bool filterSales = strFilterSales == "true";
+		bool filterPurchases = true;
+		if (params.size() > 1)
+			filterPurchases = params[1].get_bool();
 
+		bool filterSales = true;;
+		if (params.size() > 2)
+			filterSales = params[2].get_bool();
 		int found = 0;
 
 
@@ -3899,15 +3897,13 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 	if (CheckParam(params, 1))
 		vchNameUniq = vchFromValue(params[1]);
 
-	string strFilterPurchases = "true";
-	if (CheckParam(params, 2))
-		strFilterPurchases = params[2].get_str();
-	bool filterPurchases = strFilterPurchases == "true";
+	bool filterPurchases = true;
+	if (params.size() > 2)
+		filterPurchases = params[2].get_bool();
 
-	string strFilterSales = "true";
-	if (CheckParam(params, 3))
-		strFilterSales = params[3].get_str();
-	bool filterSales = strFilterSales == "true";
+	bool filterSales = true;;
+	if (params.size() > 3)
+		filterSales = params[3].get_bool();
 
 	int count = 10;
 	int from = 0;
