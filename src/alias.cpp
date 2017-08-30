@@ -752,6 +752,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		if(!vchData.empty())
 		{
 			CAmount fee = GetDataFee(tx.vout[nDataOut].scriptPubKey,  (op == OP_ALIAS_ACTIVATE)? theAlias.aliasPegTuple:dbAlias.aliasPegTuple);
+			float fYears;
 			// if this is an alias payload get expire time and figure out if alias payload pays enough fees for expiry
 			if(!theAlias.IsNull())
 			{
@@ -762,7 +763,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				// ensure aliases are good for atleast an hour
 				if(nTimeExpiry < 3600)
 					theAlias.nExpireTime = chainActive[nHeightTmp]->nTime+3600;
-				float fYears = nTimeExpiry / ONE_YEAR_IN_SECONDS;
+				fYears = nTimeExpiry / ONE_YEAR_IN_SECONDS;
 				if(fYears < 1)
 					fYears = 1;
 				fee *= powf(2.88,fYears);
