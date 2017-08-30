@@ -3564,10 +3564,8 @@ UniValue offercount(const UniValue& params, bool fHelp) {
 
 	vector<pair<uint256, CTransaction> > vtxTx;
 	map<uint256, uint64_t> vtxHeight;
-	CTransaction tx;
 	CAliasIndex txPos;
 	CAliasPayment txPaymentPos;
-	UniValue oRes(UniValue::VARR);
 	map< vector<unsigned char>, int > vNamesI;
 	map< vector<unsigned char>, UniValue > vNamesO;
 	if (aliases.size() > 0)
@@ -3583,13 +3581,16 @@ UniValue offercount(const UniValue& params, bool fHelp) {
 				continue;
 			vector<CAliasPayment> vtxPaymentPos;
 			paliasdb->ReadAliasPayment(vchAlias, vtxPaymentPos);
+
 			BOOST_FOREACH(txPos, vtxPos) {
+				CTransaction tx;
 				if (!GetSyscoinTransaction(txPos.nHeight, txPos.txHash, tx, Params().GetConsensus()))
 					continue;
 				vtxTx.push_back(make_pair(txPos.txHash, tx));
 				vtxHeight[txPos.txHash] = txPos.nHeight;
 			}
 			BOOST_FOREACH(txPaymentPos, vtxPaymentPos) {
+				CTransaction tx;
 				if (vtxHeight.find(txPaymentPos.txHash) != vtxHeight.end())
 					continue;
 				if (!GetSyscoinTransaction(txPaymentPos.nHeight, txPaymentPos.txHash, tx, Params().GetConsensus()))
@@ -3597,7 +3598,6 @@ UniValue offercount(const UniValue& params, bool fHelp) {
 				vtxTx.push_back(make_pair(txPaymentPos.txHash, tx));
 				vtxHeight[txPaymentPos.txHash] = txPaymentPos.nHeight;
 			}
-			CTransaction tx;
 			for (auto& it : boost::adaptors::reverse(vtxTx)) {
 				const uint64_t& nHeight = vtxHeight[it.first];
 				const CTransaction& tx = it.second;
@@ -3614,13 +3614,11 @@ UniValue offercount(const UniValue& params, bool fHelp) {
 						continue;
 
 					const COffer &theOffer = vtxOfferPos.back();
-					UniValue oOffer(UniValue::VOBJ);
 					vector<CAliasIndex> vtxAliasPos;
 					if (!paliasdb->ReadAlias(theOffer.vchAlias, vtxAliasPos) || vtxAliasPos.empty())
 						continue;
 					found++;
 
-					// for accepts its the same as acceptheight because its the height from transaction
 					vNamesI[vchKey] = nHeight;
 				}
 			}
@@ -3672,7 +3670,6 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 
 	vector<pair<uint256, CTransaction> > vtxTx;
 	map<uint256, uint64_t> vtxHeight;
-	CTransaction tx;
 	CAliasIndex txPos;
 	CAliasPayment txPaymentPos;
 	UniValue oRes(UniValue::VARR);
@@ -3695,12 +3692,14 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 			paliasdb->ReadAliasPayment(vchAlias, vtxPaymentPos);
 				
 			BOOST_FOREACH(txPos, vtxPos) {
+				CTransaction tx;
 				if (!GetSyscoinTransaction(txPos.nHeight, txPos.txHash, tx, Params().GetConsensus()))
 					continue;
 				vtxTx.push_back(make_pair(txPos.txHash, tx));
 				vtxHeight[txPos.txHash] = txPos.nHeight;
 			}
 			BOOST_FOREACH(txPaymentPos, vtxPaymentPos) {
+				CTransaction tx;
 				if (vtxHeight.find(txPaymentPos.txHash) != vtxHeight.end())
 					continue;
 				if (!GetSyscoinTransaction(txPaymentPos.nHeight, txPaymentPos.txHash, tx, Params().GetConsensus()))
@@ -3708,7 +3707,6 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 				vtxTx.push_back(make_pair(txPaymentPos.txHash, tx));
 				vtxHeight[txPaymentPos.txHash] = txPaymentPos.nHeight;
 			}
-			CTransaction tx;
 			for (auto& it : boost::adaptors::reverse(vtxTx)) {
 				if (oRes.size() >= count)
 					break;
@@ -3793,10 +3791,8 @@ UniValue offeracceptcount(const UniValue& params, bool fHelp) {
 
 		vector<pair<uint256, CTransaction> > vtxTx;
 		map<uint256, uint64_t> vtxHeight;
-		CTransaction tx;
 		CAliasIndex txPos;
 		CAliasPayment txPaymentPos;
-		UniValue oRes(UniValue::VARR);
 		map< vector<unsigned char>, int > vNamesI;
 		map< vector<unsigned char>, UniValue > vNamesO;
 		if (aliases.size() > 0)
@@ -3813,12 +3809,14 @@ UniValue offeracceptcount(const UniValue& params, bool fHelp) {
 				vector<CAliasPayment> vtxPaymentPos;
 				paliasdb->ReadAliasPayment(vchAlias, vtxPaymentPos);
 				BOOST_FOREACH(txPos, vtxPos) {
+					CTransaction tx;
 					if (!GetSyscoinTransaction(txPos.nHeight, txPos.txHash, tx, Params().GetConsensus()))
 						continue;
 					vtxTx.push_back(make_pair(txPos.txHash, tx));
 					vtxHeight[txPos.txHash] = txPos.nHeight;
 				}
 				BOOST_FOREACH(txPaymentPos, vtxPaymentPos) {
+					CTransaction tx;
 					if (vtxHeight.find(txPaymentPos.txHash) != vtxHeight.end())
 						continue;
 					if (!GetSyscoinTransaction(txPaymentPos.nHeight, txPaymentPos.txHash, tx, Params().GetConsensus()))
@@ -3826,7 +3824,6 @@ UniValue offeracceptcount(const UniValue& params, bool fHelp) {
 					vtxTx.push_back(make_pair(txPaymentPos.txHash, tx));
 					vtxHeight[txPaymentPos.txHash] = txPaymentPos.nHeight;
 				}
-				CTransaction tx;
 				for (auto& it : boost::adaptors::reverse(vtxTx)) {
 					const uint64_t& nHeight = vtxHeight[it.first];
 					const CTransaction& tx = it.second;
@@ -3842,7 +3839,6 @@ UniValue offeracceptcount(const UniValue& params, bool fHelp) {
 						COfferAccept offerAccept;
 						if (!GetOfferAccept(offer.vchOffer, offer.accept.vchAcceptRand, acceptOffer, offerAccept))
 							continue;
-						UniValue oOffer(UniValue::VOBJ);
 						vector<CAliasIndex> vtxAliasPos;
 						if (!paliasdb->ReadAlias(acceptOffer.vchAlias, vtxAliasPos) || vtxAliasPos.empty())
 							continue;
@@ -3868,7 +3864,7 @@ UniValue offeracceptcount(const UniValue& params, bool fHelp) {
 				}
 			}
 		}
-		return oRes;
+		return found;
 	}
 UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 	if (fHelp || 6 < params.size())
@@ -3924,7 +3920,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 
 	vector<pair<uint256, CTransaction> > vtxTx;
 	map<uint256, uint64_t> vtxHeight;
-	CTransaction tx;
+	
 	CAliasIndex txPos;
 	CAliasPayment txPaymentPos;
 	UniValue oRes(UniValue::VARR);
@@ -3946,12 +3942,14 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 			vector<CAliasPayment> vtxPaymentPos;
 			paliasdb->ReadAliasPayment(vchAlias, vtxPaymentPos);
 			BOOST_FOREACH(txPos, vtxPos) {
+				CTransaction tx;
 				if (!GetSyscoinTransaction(txPos.nHeight, txPos.txHash, tx, Params().GetConsensus()))
 					continue;
 				vtxTx.push_back(make_pair(txPos.txHash, tx));
 				vtxHeight[txPos.txHash] = txPos.nHeight;
 			}
 			BOOST_FOREACH(txPaymentPos, vtxPaymentPos) {
+				CTransaction tx;
 				if (vtxHeight.find(txPaymentPos.txHash) != vtxHeight.end())
 					continue;
 				if (!GetSyscoinTransaction(txPaymentPos.nHeight, txPaymentPos.txHash, tx, Params().GetConsensus()))
@@ -3959,7 +3957,6 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				vtxTx.push_back(make_pair(txPaymentPos.txHash, tx));
 				vtxHeight[txPaymentPos.txHash] = txPaymentPos.nHeight;
 			}
-			CTransaction tx;
 			for (auto& it : boost::adaptors::reverse(vtxTx)) {
 				if (oRes.size() >= count)
 					break;
