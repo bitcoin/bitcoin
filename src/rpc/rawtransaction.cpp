@@ -780,7 +780,11 @@ UniValue signrawtransaction(const UniValue& params, bool fHelp)
     }
     if (!pickedForkId)  // If the user didn't specify, use the configured default for the hash type
     {
-        if (chainActive.Tip()->IsforkActiveOnNextBlock(miningForkTime.value)) nHashType |= SIGHASH_FORKID;
+        if (chainActive.Tip()->IsforkActiveOnNextBlock(miningForkTime.value))
+        {
+            nHashType |= SIGHASH_FORKID;
+            pickedForkId = true;
+        }
     }
 
     bool fHashSingle = ((nHashType & ~(SIGHASH_ANYONECANPAY | SIGHASH_FORKID)) == SIGHASH_SINGLE);
