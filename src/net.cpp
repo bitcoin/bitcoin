@@ -1366,7 +1366,7 @@ void CConnman::ThreadSocketHandler()
         int nSelect = select(have_fds ? hSocketMax + 1 : 0,
                              &fdsetRecv, &fdsetSend, &fdsetError, &timeout);
         if (interruptNet)
-            return;
+            break;
 
         if (nSelect == SOCKET_ERROR)
         {
@@ -1380,7 +1380,7 @@ void CConnman::ThreadSocketHandler()
             FD_ZERO(&fdsetSend);
             FD_ZERO(&fdsetError);
             if (!interruptNet.sleep_for(std::chrono::milliseconds(timeout.tv_usec/1000)))
-                return;
+                break;
         }
 
         //
@@ -1407,7 +1407,7 @@ void CConnman::ThreadSocketHandler()
         for (CNode* pnode : vNodesCopy)
         {
             if (interruptNet)
-                return;
+                break;
 
             //
             // Receive
@@ -2052,7 +2052,7 @@ void CConnman::ThreadMessageHandler()
             bool fMoreNodeWork = m_msgproc->ProcessMessages(pnode, flagInterruptMsgProc);
             fMoreWork |= (fMoreNodeWork && !pnode->fPauseSend);
             if (flagInterruptMsgProc)
-                return;
+                break;
             // Send messages
             {
                 LOCK(pnode->cs_sendProcessing);
@@ -2060,7 +2060,7 @@ void CConnman::ThreadMessageHandler()
             }
 
             if (flagInterruptMsgProc)
-                return;
+                break;
         }
 
         {
