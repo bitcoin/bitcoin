@@ -351,6 +351,7 @@ private:
     size_t SocketReceiveData(CNode *pnode);
     size_t SocketSendData(CNode *pnode) const;
     void CheckForTimeout(CNode* pnode);
+    void OnEvents(CNode* pnode, bool receive, bool send);
     //!check is the banlist has unwritten changes
     bool BannedSetIsDirty();
     //!set the "dirty" flag for the banlist

@@ -967,12 +967,7 @@ size_t CConnman::SocketSendData(CNode *pnode) const
     while (it != pnode->vSendMsg.end()) {
         const auto &data = *it;
         assert(data.size() > pnode->nSendOffset);
-        int nBytes = 0;
-        {
-            if (pnode->hSocket == INVALID_SOCKET)
-                break;
-            nBytes = send(pnode->hSocket, reinterpret_cast<const char*>(data.data()) + pnode->nSendOffset, data.size() - pnode->nSendOffset, MSG_NOSIGNAL | MSG_DONTWAIT);
-        }
+        int nBytes = send(pnode->hSocket, reinterpret_cast<const char*>(data.data()) + pnode->nSendOffset, data.size() - pnode->nSendOffset, MSG_NOSIGNAL | MSG_DONTWAIT);
         if (nBytes > 0) {
             pnode->nLastSend = GetSystemTimeInSeconds();
             pnode->nSendBytes += nBytes;
@@ -1040,6 +1035,27 @@ void CConnman::CheckForTimeout(CNode* pnode)
             LogPrintf("version handshake timeout from %d\n", pnode->GetId());
             pnode->Disconnect();
         }
+    }
+}
+
+void CConnman::OnEvents(CNode* pnode, bool receive, bool send)
+{
+    if (!pnode->fDisconnect && receive)
+    {
+        size_t nBytes = SocketReceiveData(pnode);
+        if (nBytes) {
+            RecordBytesRecv(nBytes);
+        }
+    }
+    if (!pnode->fDisconnect && send)
+    {
+        size_t nBytes = SocketSendData(pnode);
+        if (nBytes) {
+            RecordBytesSent(nBytes);
+        }
+    }
+    if (!pnode->fDisconnect) {
+        CheckForTimeout(pnode);
     }
 }
 
@@ -1454,29 +1470,7 @@ void CConnman::ThreadSocketHandler()
                 sendSet = FD_ISSET(pnode->hSocket, &fdsetSend);
                 errorSet = FD_ISSET(pnode->hSocket, &fdsetError);
             }
-            if (recvSet || errorSet)
-            {
-                size_t nBytes = SocketReceiveData(pnode);
-                if (nBytes) {
-                    RecordBytesRecv(nBytes);
-                }
-            }
-
-            //
-            // Send
-            //
-            if (sendSet)
-            {
-                size_t nBytes = SocketSendData(pnode);
-                if (nBytes) {
-                    RecordBytesSent(nBytes);
-                }
-            }
-
-            //
-            // Inactivity checking
-            //
-            CheckForTimeout(pnode);
+            OnEvents(pnode, recvSet || errorSet, sendSet);
         }
         {
             LOCK(cs_vNodes);
