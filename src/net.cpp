@@ -761,9 +761,6 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete
 {
     complete = false;
     int64_t nTimeMicros = GetTimeMicros();
-    LOCK(cs_vRecv);
-    nLastRecv = nTimeMicros / 1000000;
-    nRecvBytes += nBytes;
     while (nBytes > 0) {
 
         // get current incomplete message, or create a new one
@@ -792,15 +789,6 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete
         nBytes -= handled;
 
         if (msg.complete()) {
-
-            //store received bytes per message command
-            //to prevent a memory DOS, only allow valid commands
-            mapMsgCmdSize::iterator i = mapRecvBytesPerMsgCmd.find(msg.hdr.pchCommand);
-            if (i == mapRecvBytesPerMsgCmd.end())
-                i = mapRecvBytesPerMsgCmd.find(NET_MESSAGE_COMMAND_OTHER);
-            assert(i != mapRecvBytesPerMsgCmd.end());
-            i->second += msg.hdr.nMessageSize + CMessageHeader::HEADER_SIZE;
-
             msg.nTime = nTimeMicros;
             complete = true;
         }
@@ -911,14 +899,29 @@ size_t CConnman::SocketReceiveData(CNode* pnode)
         bool notify = false;
         if (!pnode->ReceiveMsgBytes(pchBuf, nBytes, notify))
             pnode->CloseSocketDisconnect();
-        if (notify) {
-            size_t nSizeAdded = 0;
-            auto it(pnode->vRecvMsg.begin());
-            for (; it != pnode->vRecvMsg.end(); ++it) {
-                if (!it->complete())
-                    break;
-                nSizeAdded += it->vRecv.size() + CMessageHeader::HEADER_SIZE;
+
+        auto it(pnode->vRecvMsg.begin());
+        size_t nSizeAdded = 0;
+        {
+            LOCK(pnode->cs_vRecv);
+            int64_t nTimeMicros = GetTimeMicros();
+            pnode->nLastRecv = nTimeMicros / 1000000;
+            pnode->nRecvBytes += nBytes;
+            if (notify) {
+                for (; it != pnode->vRecvMsg.end(); ++it) {
+                    const auto& msg = *it;
+                    if (!msg.complete())
+                        break;
+                    nSizeAdded += msg.vRecv.size() + CMessageHeader::HEADER_SIZE;
+                    mapMsgCmdSize::iterator mapit = pnode->mapRecvBytesPerMsgCmd.find(msg.hdr.pchCommand);
+                    if (mapit == pnode->mapRecvBytesPerMsgCmd.end())
+                        mapit = pnode->mapRecvBytesPerMsgCmd.find(NET_MESSAGE_COMMAND_OTHER);
+                    assert(mapit != pnode->mapRecvBytesPerMsgCmd.end());
+                    mapit->second += msg.vRecv.size() + CMessageHeader::HEADER_SIZE;
+                }
             }
+        }
+        if (it != pnode->vRecvMsg.begin()) {
             {
                 LOCK(pnode->cs_vProcessMsg);
                 pnode->vProcessMsg.splice(pnode->vProcessMsg.end(), pnode->vRecvMsg, pnode->vRecvMsg.begin(), it);
