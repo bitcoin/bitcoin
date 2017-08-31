@@ -2411,7 +2411,7 @@ void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const
 				// if its not alias specific payment then do this check, as an alias payment will use previous alias inputs
 				if (!bAliasPay || !coinControl || !coinControl->IsSelected((*it).first, i))
 				{
-					CTXDestination sysdestination;
+					CTxDestination sysdestination;
 					if (ExtractDestination(pcoin->vout[i].scriptPubKey, sysdestination))
 					{
 						CSyscoinAddress address = CSyscoinAddress(sysdestination);
@@ -2564,7 +2564,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
 			// SYSCOIN inputs are unspendable by normal wallet selection
 			if (!bAliasPay)
 			{
-				CTXDestination sysdestination;
+				CTxDestination sysdestination;
 				if (ExtractDestination(pcoin->vout[i].scriptPubKey, sysdestination))
 				{
 					CSyscoinAddress address = CSyscoinAddress(sysdestination);
