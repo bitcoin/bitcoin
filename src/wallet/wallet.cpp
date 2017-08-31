@@ -2414,7 +2414,7 @@ void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const
 					CTXDestination sysdestination;
 					if (ExtractDestination(pcoin->vout[i].scriptPubKey, sysdestination))
 					{
-						CSyscoinAddress address = CSyscoinAddress(payDest);
+						CSyscoinAddress address = CSyscoinAddress(sysdestination);
 						address = CSyscoinAddress(address.ToString());
 						if (address.isAlias)
 							continue;
@@ -2567,7 +2567,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
 				CTXDestination sysdestination;
 				if (ExtractDestination(pcoin->vout[i].scriptPubKey, sysdestination))
 				{
-					CSyscoinAddress address = CSyscoinAddress(payDest);
+					CSyscoinAddress address = CSyscoinAddress(sysdestination);
 					address = CSyscoinAddress(address.ToString());
 					if (address.isAlias)
 						continue;
