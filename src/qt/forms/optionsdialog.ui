@@ -507,10 +507,10 @@
        <item>
         <widget class="QCheckBox" name="hideTrayIcon">
          <property name="toolTip">
-          <string>&amp;Hide the icon from the system tray.</string>
+          <string>Hide the icon from the system tray.</string>
          </property>
          <property name="text">
-          <string>Hide tray icon</string>
+          <string>&amp;Hide tray icon</string>
          </property>
         </widget>
        </item>
