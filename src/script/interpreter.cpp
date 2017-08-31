@@ -278,7 +278,7 @@ int FindAndDelete(CScript& script, const CScript& b)
     return nFound;
 }
 
-bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptError* serror)
+bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& scriptIn, unsigned int flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptError* serror)
 {
     static const CScriptNum bnZero(0);
     static const CScriptNum bnOne(1);
@@ -288,17 +288,21 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
     // static const valtype vchZero(0);
     static const valtype vchTrue(1, 1);
 
+    CScript script = scriptIn;
+    bool allow_tail_call = (flags & SCRIPT_VERIFY_TAIL_CALL) != 0;
+    std::vector<valtype> altstack;
+    int nOpCount = 0;
+
+tailcall:
     CScript::const_iterator pc = script.begin();
     CScript::const_iterator pend = script.end();
     CScript::const_iterator pbegincodehash = script.begin();
     opcodetype opcode;
     valtype vchPushValue;
     std::vector<bool> vfExec;
-    std::vector<valtype> altstack;
     set_error(serror, SCRIPT_ERR_UNKNOWN_ERROR);
     if (script.size() > MAX_SCRIPT_SIZE)
         return set_error(serror, SCRIPT_ERR_SCRIPT_SIZE);
-    int nOpCount = 0;
     bool fRequireMinimal = (flags & SCRIPT_VERIFY_MINIMALDATA) != 0;
 
     try
@@ -1069,6 +1073,69 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
     if (!vfExec.empty())
         return set_error(serror, SCRIPT_ERR_UNBALANCED_CONDITIONAL);
 
+    if (allow_tail_call && !stack.empty() && ((stack.size() + altstack.size()) >= 2) && CastToBool(stack.back())) {
+        // Replace the script we just finished executing with the
+        // subscript from the top of the stack:
+        const valtype& top = stacktop(-1);
+        script = CScript(top.begin(), top.end());
+        popstack(stack);
+        // A single component policy script is simply specified.
+        // Multiple scripts are specified with OP_1 (2 script
+        // components) through OP_16 (17 script components):
+        if ((script.size() == 1) && ((OP_1 <= script.front()) && (script.front() <= OP_16))) {
+            // If policy script is one of OP_1 ... OP_16, then it
+            // actually specifies (one less than) the number of script
+            // components that follow, which are concatinated to form
+            // the policy script.
+            const std::size_t num_scripts = (script.front() - OP_1) + 2;
+            if ((stack.size() + altstack.size()) < num_scripts)
+                return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
+            // First we determine the size of the aggregate script, so
+            // we can allocate enough space to hold it. In doing so we
+            // also advance an iterator to point to the "first" script
+            // component, the one deepest on the combined stacks.
+            std::vector<valtype>* curstack = &stack;
+            std::size_t elem = curstack->size();
+            std::size_t script_size = 0;
+            for (std::size_t i = 0; i < num_scripts; ++i) {
+                if (elem == 0) {
+                    curstack = &altstack;
+                    elem = curstack->size();
+                }
+                --elem;
+                script_size += (*curstack)[elem].size();
+            }
+            script.resize(script_size);
+            // We copy the script components into script in reverse
+            // order, beginning with the deepest script component on
+            // the stack:
+            auto pos = script.begin();
+            for (std::size_t i = 0; i < num_scripts; ++i) {
+                std::copy((*curstack)[elem].begin(), (*curstack)[elem].end(), pos);
+                pos += (*curstack)[elem].size();
+                ++elem;
+                if (elem == curstack->size()) {
+                    curstack = &stack;
+                    elem = 0;
+                }
+            }
+            // Finally we pop the consumed script components off their
+            // respective stacks:
+            for (std::size_t i = 0; i < num_scripts; ++i) {
+                if (!stack.empty())
+                    popstack(stack);
+                else
+                    popstack(altstack);
+            }
+        }
+        // Only allow one tail-call:
+        allow_tail_call = false;
+        // Disable nOpCount limit for subscript, effectively:
+        nOpCount = std::numeric_limits<int>::min();
+        // Go back to the top of this function:
+        goto tailcall;
+    }
+
     return set_success(serror);
 }
 
@@ -1443,6 +1510,8 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
         witness = &emptyWitness;
     }
     bool hadWitness = false;
+    unsigned int witnessflags = flags;
+    flags &= ~SCRIPT_VERIFY_TAIL_CALL;
 
     set_error(serror, SCRIPT_ERR_UNKNOWN_ERROR);
 
@@ -1474,7 +1543,7 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
                 // The scriptSig must be _exactly_ CScript(), otherwise we reintroduce malleability.
                 return set_error(serror, SCRIPT_ERR_WITNESS_MALLEATED);
             }
-            if (!VerifyWitnessProgram(*witness, witnessversion, witnessprogram, flags, checker, serror)) {
+            if (!VerifyWitnessProgram(*witness, witnessversion, witnessprogram, witnessflags, checker, serror)) {
                 return false;
             }
             // Bypass the cleanstack check at the end. The actual stack is obviously not clean
@@ -1519,7 +1588,7 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
                     // reintroduce malleability.
                     return set_error(serror, SCRIPT_ERR_WITNESS_MALLEATED_P2SH);
                 }
-                if (!VerifyWitnessProgram(*witness, witnessversion, witnessprogram, flags, checker, serror)) {
+                if (!VerifyWitnessProgram(*witness, witnessversion, witnessprogram, witnessflags, checker, serror)) {
                     return false;
                 }
                 // Bypass the cleanstack check at the end. The actual stack is obviously not clean
