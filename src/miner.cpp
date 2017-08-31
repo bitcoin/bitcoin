@@ -66,7 +66,7 @@ BlockAssembler::Options::Options() {
     blockMinFeeRate = CFeeRate(DEFAULT_BLOCK_MIN_TX_FEE);
     nBlockMaxWeight = DEFAULT_BLOCK_MAX_WEIGHT;
     nBlockMaxSize = DEFAULT_BLOCK_MAX_SIZE;
-    nRecentTxWindow = DEFAULT_RECENT_TX_WINDOW;
+    nRecentTxWindow = (DEFAULT_RECENT_TX_WINDOW + 999) / 1000;
     dRecentTxStaleRate = DEFAULT_RECENT_TX_STALE_RATE;
 }
 
