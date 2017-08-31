@@ -740,6 +740,10 @@ private:
     mutable CCriticalSection cs_addrLocal;
 public:
 
+    void Disconnect() {
+        fDisconnect = true;
+    }
+
     NodeId GetId() const {
         return id;
     }
