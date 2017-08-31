@@ -37,6 +37,8 @@
 class CScheduler;
 class CNode;
 
+struct event_base;
+struct event;
 namespace boost {
     class thread_group;
 } // namespace boost
@@ -352,6 +354,7 @@ private:
     size_t SocketSendData(CNode *pnode) const;
     void CheckForTimeout(CNode* pnode);
     void OnEvents(CNode* pnode, bool receive, bool send);
+    void InterruptEvents();
     //!check is the banlist has unwritten changes
     bool BannedSetIsDirty();
     //!set the "dirty" flag for the banlist
@@ -437,6 +440,12 @@ private:
     std::thread threadOpenAddedConnections;
     std::thread threadOpenConnections;
     std::thread threadMessageHandler;
+
+    event_base* m_event_base = nullptr;
+    std::vector<event*> m_listen_events;
+
+    event* m_interrupt_event = nullptr;
+    CCriticalSection m_cs_interrupt_event;
 };
 extern std::unique_ptr<CConnman> g_connman;
 void Discover(boost::thread_group& threadGroup);

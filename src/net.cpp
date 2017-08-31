@@ -35,6 +35,8 @@
 #include <miniupnpc/upnperrors.h>
 #endif
 
+#include <event2/event.h>
+#include <event2/thread.h>
 
 #include <math.h>
 
@@ -1059,6 +1061,23 @@ void CConnman::OnEvents(CNode* pnode, bool receive, bool send)
     }
 }
 
+void CConnman::InterruptEvents()
+{
+    // Only do this once
+    {
+        LOCK(m_cs_interrupt_event);
+        if (!m_interrupt_event) {
+            return;
+        }
+        event_free(m_interrupt_event);
+        m_interrupt_event = nullptr;
+    }
+
+    for (auto& event : m_listen_events) {
+        event_del(event);
+    }
+}
+
 struct NodeEvictionCandidate
 {
     NodeId id;
@@ -1287,6 +1306,26 @@ void CConnman::AcceptConnection(const SOCKET& listen_socket, bool whitelisted) {
 void CConnman::ThreadSocketHandler()
 {
     unsigned int nPrevNodeCount = 0;
+
+    static const auto accept_whitelist_callback = [](evutil_socket_t sock, short events, void* data) {
+        auto* connman = static_cast<CConnman*>(data);
+        connman->AcceptConnection(sock, true);
+    };
+    static const auto accept_callback = [](evutil_socket_t sock, short events, void* data) {
+        auto* connman = static_cast<CConnman*>(data);
+        connman->AcceptConnection(sock, false);
+    };
+
+    for (const auto& hListenSocket : vhListenSocket) {
+        if (hListenSocket.whitelisted) {
+            m_listen_events.push_back(event_new(m_event_base, hListenSocket.socket, EV_READ | EV_PERSIST, accept_whitelist_callback, this));
+        } else {
+            m_listen_events.push_back(event_new(m_event_base, hListenSocket.socket, EV_READ | EV_PERSIST, accept_callback, this));
+        }
+    }
+    for (const auto& event : m_listen_events) {
+        event_add(event, nullptr);
+    }
     while (!interruptNet)
     {
         //
@@ -1366,11 +1405,8 @@ void CConnman::ThreadSocketHandler()
         SOCKET hSocketMax = 0;
         bool have_fds = false;
 
-        for (const ListenSocket& hListenSocket : vhListenSocket) {
-            FD_SET(hListenSocket.socket, &fdsetRecv);
-            hSocketMax = std::max(hSocketMax, hListenSocket.socket);
-            have_fds = true;
-        }
+        // Accept new connections
+        event_base_loop(m_event_base, EVLOOP_NONBLOCK);
 
         {
             LOCK(cs_vNodes);
@@ -1432,17 +1468,6 @@ void CConnman::ThreadSocketHandler()
         }
 
         //
-        // Accept new connections
-        //
-        for (const ListenSocket& hListenSocket : vhListenSocket)
-        {
-            if (hListenSocket.socket != INVALID_SOCKET && FD_ISSET(hListenSocket.socket, &fdsetRecv))
-            {
-                AcceptConnection(hListenSocket.socket, hListenSocket.whitelisted);
-            }
-        }
-
-        //
         // Service each socket
         //
         std::vector<CNode*> vNodesCopy;
@@ -1478,6 +1503,10 @@ void CConnman::ThreadSocketHandler()
                 pnode->Release();
         }
     }
+    for (auto& event : m_listen_events) {
+        event_free(event);
+    }
+    m_listen_events.clear();
 }
 
 void CConnman::WakeMessageHandler()
@@ -2385,6 +2414,36 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
         fMsgProcWake = false;
     }
 
+    bool working_event_threads;
+#ifdef WIN32
+    working_event_threads = evthread_use_windows_threads() == 0;
+#else
+    working_event_threads = evthread_use_pthreads() == 0;
+#endif
+
+    if (!working_event_threads) {
+        return false;
+    }
+
+    event_config* cfg = event_config_new();
+    event_config_set_flag(cfg, EVENT_BASE_FLAG_EPOLL_USE_CHANGELIST);
+    m_event_base = event_base_new_with_config(cfg);
+    if (!m_event_base) {
+        return false;
+    }
+    event_config_free(cfg);
+    if (evthread_make_base_notifiable(m_event_base) == -1) {
+        return false;
+    }
+    const char* method = event_base_get_method(m_event_base);
+    assert(method);
+    LogPrintf("%s: Using %s for event loop\n", __func__, method);
+
+    {
+        LOCK(m_cs_interrupt_event);
+        m_interrupt_event = event_new(m_event_base, -1, 0, [](evutil_socket_t, short, void* data) {static_cast<CConnman*>(data)->InterruptEvents();}, (this));
+    }
+
     // Send and receive from sockets, accept connections
     threadSocketHandler = std::thread(&TraceThread<std::function<void()> >, "net", std::function<void()>(std::bind(&CConnman::ThreadSocketHandler, this)));
 
@@ -2437,6 +2496,14 @@ void CConnman::Interrupt()
         std::lock_guard<std::mutex> lock(mutexMsgProc);
         flagInterruptMsgProc = true;
     }
+
+    {
+        LOCK(m_cs_interrupt_event);
+        if (m_interrupt_event) {
+            event_active(m_interrupt_event, 0, 0);
+        }
+    }
+
     condMsgProc.notify_all();
 
     interruptNet();
@@ -2474,6 +2541,8 @@ void CConnman::Stop()
         fAddressesInitialized = false;
     }
 
+    assert(!m_event_base);
+
     // Close sockets
     for (CNode* pnode : vNodes)
         pnode->CloseSocketDisconnect();
@@ -2496,6 +2565,18 @@ void CConnman::Stop()
     semOutbound = nullptr;
     delete semAddnode;
     semAddnode = nullptr;
+    {
+        LOCK(m_cs_interrupt_event);
+        if (m_interrupt_event) {
+            event_free(m_interrupt_event);
+            m_interrupt_event = nullptr;
+        }
+    }
+
+    if (m_event_base) {
+        event_base_free(m_event_base);
+        m_event_base = nullptr;
+    }
 }
 
 void CConnman::DeleteNode(CNode* pnode)
