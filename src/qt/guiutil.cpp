@@ -857,10 +857,9 @@ void restoreWindowGeometry(const QString& strSetting, const QSize& defaultSize, 
 
     parent->resize(size);
     parent->move(pos);
-
-    if ((!pos.x() && !pos.y()) || (QApplication::desktop()->screenNumber(parent) == -1))
-    {
-        QRect screen = QApplication::desktop()->screenGeometry();
+    
+    QRect screen = QApplication::desktop()->screenGeometry();
+    if ((!pos.x() && !pos.y()) || pos.x() > screen.width() || pos.y() > screen.height() || (QApplication::desktop()->screenNumber(parent) == -1)) {
         QPoint defaultPos((screen.width() - defaultSize.width()) / 2,
                           (screen.height() - defaultSize.height()) / 2);
         parent->resize(defaultSize);
