@@ -3816,6 +3816,7 @@ UniValue offeracceptcount(const UniValue& params, bool fHelp) {
 						vector<CAliasIndex> vtxAliasPos;
 						if (!paliasdb->ReadAlias(acceptOffer.vchAlias, vtxAliasPos) || vtxAliasPos.empty())
 							continue;
+						UniValue oOffer(UniValue::VOBJ);
 						// we need to get the alias at the time of the accept
 						CAliasIndex offerAcceptAlias;
 						offerAcceptAlias.nHeight = offer.accept.nAcceptHeight;
