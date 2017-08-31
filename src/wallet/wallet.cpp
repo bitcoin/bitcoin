@@ -2409,16 +2409,18 @@ void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const
             for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
 				// SYSCOIN txs are unspendable by wallet unless using coincontrol(and the tx is selected)
 				// if its not alias specific payment then do this check, as an alias payment will use previous alias inputs
-				if (pcoin->nVersion == GetSyscoinTxVersion())
+				if (!bAliasPay || !coinControl || !coinControl->IsSelected((*it).first, i))
 				{
-					int op;
-					vector<vector<unsigned char> > vvchArgs;
-					if (!bAliasPay || !coinControl || !coinControl->IsSelected((*it).first, i))
+					CTXDestination sysdestination;
+					if (ExtractDestination(pcoin->vout[i].scriptPubKey, sysdestination))
 					{
-						if (IsSyscoinScript(pcoin->vout[i].scriptPubKey, op, vvchArgs))
+						CSyscoinAddress address = CSyscoinAddress(payDest);
+						address = CSyscoinAddress(address.ToString());
+						if (address.isAlias)
 							continue;
 					}
 				}
+				
                 bool found = false;
                 if(nCoinType == ONLY_DENOMINATED) {
                     found = IsDenominatedAmount(pcoin->vout[i].nValue);
@@ -2559,14 +2561,17 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
 
             int i = output.i;
             CAmount n = pcoin->vout[i].nValue;
-			// SYSCOIN txs are unspendable unless input to another syscoin tx (passed into createtransaction)
-			if (!bAliasPay && pcoin->nVersion == GetSyscoinTxVersion())
+			// SYSCOIN inputs are unspendable by normal wallet selection
+			if (!bAliasPay)
 			{
-				int op;
-				vector<vector<unsigned char> > vvchArgs;
-				if (pcoin->vout.size() >= i && IsSyscoinScript(pcoin->vout[i].scriptPubKey, op, vvchArgs) && op != OP_ALIAS_PAYMENT)
-					continue;
-
+				CTXDestination sysdestination;
+				if (ExtractDestination(pcoin->vout[i].scriptPubKey, sysdestination))
+				{
+					CSyscoinAddress address = CSyscoinAddress(payDest);
+					address = CSyscoinAddress(address.ToString());
+					if (address.isAlias)
+						continue;
+				}
 			}
             if (tryDenom == 0 && IsDenominatedAmount(n)) continue; // we don't want denom values on first run
 
@@ -3514,17 +3519,6 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 								scriptChange = GetScriptForDestination(vchPubKey.GetID());
 							}
                         }
-						// SYSCOIN change as a alias payment				
-						if (address.isAlias)
-						{
-							int op;
-							vector<vector<unsigned char> > vvch;
-							CScript scriptChangeOrig;
-							scriptChangeOrig << CScript::EncodeOP_N(OP_ALIAS_PAYMENT) << vchFromString(address.aliasName) << OP_2DROP;
-							scriptChangeOrig += scriptChange;
-							scriptChange = scriptChangeOrig;
-							txNew.nVersion = GetSyscoinTxVersion();
-						}
                         newTxOut = CTxOut(nChange, scriptChange);
 
                         // We do not move dust-change to fees, because the sender would end up paying more than requested.
