@@ -8,38 +8,43 @@
 #endif
 
 #include "netaddress.h"
+
 #include "hash.h"
-#include "utilstrencodings.h"
 #include "tinyformat.h"
+#include "utilstrencodings.h"
 
-#include <boost/algorithm/string/predicate.hpp>
+#include <algorithm>
+#include <utility>
 
-static const unsigned char pchIPv4[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff };
-static const unsigned char pchOnionCat[] = {0xFD,0x87,0xD8,0x7E,0xEB,0x43};
+static const std::array<unsigned char, 12> IPV4_IP_PREFIX = {{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff }};
+static const std::array<unsigned char, 6> ONION_IP_PREFIX = {{ 0xFD, 0x87, 0xD8, 0x7E, 0xEB, 0x43 }};
 
 // 0xFD + sha256("bitcoin")[0:5]
-static const unsigned char g_internal_prefix[] = { 0xFD, 0x6B, 0x88, 0xC0, 0x87, 0x24 };
+static const std::array<unsigned char, 6> INTERNAL_IP_PREFIX = {{ 0xFD, 0x6B, 0x88, 0xC0, 0x87, 0x24 }};
+
+static const std::string ONION_ADDRESS_SUFFIX {".onion"};
 
 void CNetAddr::Init()
 {
-    memset(ip, 0, sizeof(ip));
+    ip.fill(0);
     scopeId = 0;
 }
 
-void CNetAddr::SetIP(const CNetAddr& ipIn)
+void CNetAddr::SetIP(CNetAddr ipIn)
 {
-    memcpy(ip, ipIn.ip, sizeof(ip));
+    ip = ipIn.ip;
 }
 
-void CNetAddr::SetRawIPv4(const unsigned char *ip_in)
+void CNetAddr::SetRawIPv4(const std::array<unsigned char, 4>& ip_in)
 {
-    memcpy(ip, pchIPv4, 12);
-    memcpy(ip+12, ip_in, 4);
+    assert(IPV4_IP_PREFIX.size() + ip_in.size() == ip.size());
+    auto it = std::copy(IPV4_IP_PREFIX.begin(), IPV4_IP_PREFIX.end(), ip.begin());
+    std::copy(ip_in.begin(), ip_in.end(), it);
 }
 
-void CNetAddr::SetRawIPv6(const unsigned char *ip_in)
+void CNetAddr::SetRawIPv6(const std::array<unsigned char, 16>& ip_in)
 {
-    memcpy(ip, ip_in, 16);
+    ip = ip_in;
 }
 
 bool CNetAddr::SetInternal(const std::string &name)
@@ -47,28 +52,26 @@ bool CNetAddr::SetInternal(const std::string &name)
     if (name.empty()) {
         return false;
     }
-    unsigned char hash[32] = {};
-    CSHA256().Write((const unsigned char*)name.data(), name.size()).Finalize(hash);
-    memcpy(ip, g_internal_prefix, sizeof(g_internal_prefix));
-    memcpy(ip + sizeof(g_internal_prefix), hash, sizeof(ip) - sizeof(g_internal_prefix));
+    std::array<unsigned char, 32> hash {};
+    CSHA256().Write(reinterpret_cast<const unsigned char*>(name.data()), name.size()).Finalize(hash.data());
+    auto it = std::copy(INTERNAL_IP_PREFIX.begin(), INTERNAL_IP_PREFIX.end(), ip.begin());
+    std::copy(hash.begin(), hash.begin() + (ip.size() - INTERNAL_IP_PREFIX.size()), it);
     return true;
 }
 
 bool CNetAddr::SetSpecial(const std::string &strName)
 {
-    if (!boost::algorithm::ends_with(strName, ".onion")) {
+    if (strName.size() <= ONION_ADDRESS_SUFFIX.size() || !std::equal(ONION_ADDRESS_SUFFIX.begin(), ONION_ADDRESS_SUFFIX.end(), strName.end() - ONION_ADDRESS_SUFFIX.size())) {
         return false;
     }
 
-    std::vector<unsigned char> vchAddr = DecodeBase32(strName.substr(0, strName.size() - 6).c_str());
-    if (vchAddr.size() != 16-sizeof(pchOnionCat)) {
+    const auto vchAddr = DecodeBase32(strName.substr(0, strName.size() - ONION_ADDRESS_SUFFIX.size()).c_str());
+    if (vchAddr.size() != ip.size() - ONION_IP_PREFIX.size()) {
         return false;
     }
 
-    memcpy(ip, pchOnionCat, sizeof(pchOnionCat));
-    for (unsigned int i=0; i<16-sizeof(pchOnionCat); i++) {
-        ip[i + sizeof(pchOnionCat)] = vchAddr[i];
-    }
+    auto it = std::copy(ONION_IP_PREFIX.begin(), ONION_IP_PREFIX.end(), ip.begin());
+    std::copy(vchAddr.begin(), vchAddr.end(), it);
 
     return true;
 }
@@ -80,23 +83,29 @@ CNetAddr::CNetAddr()
 
 CNetAddr::CNetAddr(const struct in_addr& ipv4Addr)
 {
-    SetRawIPv4((const unsigned char*)&ipv4Addr);
+    std::array<unsigned char, 4> ipAr;
+    const auto* ipv4AddrBytes = reinterpret_cast<const unsigned char*>(&ipv4Addr);
+    std::copy(ipv4AddrBytes, ipv4AddrBytes + ipAr.size(), ipAr.begin());
+    SetRawIPv4(ipAr);
 }
 
 CNetAddr::CNetAddr(const struct in6_addr& ipv6Addr, const uint32_t scope)
 {
-    SetRawIPv6((const unsigned char*)&ipv6Addr);
+    std::array<unsigned char, 16> ipAr;
+    const auto* ipv6AddrBytes = reinterpret_cast<const unsigned char*>(&ipv6Addr);
+    std::copy(ipv6AddrBytes, ipv6AddrBytes + ipAr.size(), ipAr.begin());
+    SetRawIPv6(ipAr);
     scopeId = scope;
 }
 
-unsigned int CNetAddr::GetByte(int n) const
+unsigned int CNetAddr::GetByte(unsigned int n) const
 {
-    return ip[15-n];
+    return *(ip.end() - (n+1));
 }
 
 bool CNetAddr::IsIPv4() const
 {
-    return (memcmp(ip, pchIPv4, sizeof(pchIPv4)) == 0);
+    return std::equal(IPV4_IP_PREFIX.begin(), IPV4_IP_PREFIX.end(), ip.begin());
 }
 
 bool CNetAddr::IsIPv6() const
@@ -146,8 +155,8 @@ bool CNetAddr::IsRFC3964() const
 
 bool CNetAddr::IsRFC6052() const
 {
-    static const unsigned char pchRFC6052[] = {0,0x64,0xFF,0x9B,0,0,0,0,0,0,0,0};
-    return (memcmp(ip, pchRFC6052, sizeof(pchRFC6052)) == 0);
+    static const std::array<unsigned char, 12> RFC6052_IP_PREFIX {{ 0, 0x64, 0xFF, 0x9B, 0, 0, 0, 0, 0, 0, 0, 0}};
+    return std::equal(RFC6052_IP_PREFIX.begin(), RFC6052_IP_PREFIX.end(), ip.begin());
 }
 
 bool CNetAddr::IsRFC4380() const
@@ -157,8 +166,8 @@ bool CNetAddr::IsRFC4380() const
 
 bool CNetAddr::IsRFC4862() const
 {
-    static const unsigned char pchRFC4862[] = {0xFE,0x80,0,0,0,0,0,0};
-    return (memcmp(ip, pchRFC4862, sizeof(pchRFC4862)) == 0);
+    static const std::array<unsigned char, 8> RFC4862_IP_PREFIX {{ 0xFE, 0x80, 0, 0, 0, 0, 0, 0 }};
+    return std::equal(RFC4862_IP_PREFIX.begin(), RFC4862_IP_PREFIX.end(), ip.begin());
 }
 
 bool CNetAddr::IsRFC4193() const
@@ -168,8 +177,8 @@ bool CNetAddr::IsRFC4193() const
 
 bool CNetAddr::IsRFC6145() const
 {
-    static const unsigned char pchRFC6145[] = {0,0,0,0,0,0,0,0,0xFF,0xFF,0,0};
-    return (memcmp(ip, pchRFC6145, sizeof(pchRFC6145)) == 0);
+    static const std::array<unsigned char, 12> RFC6145_IP_PREFIX = {{ 0, 0, 0, 0, 0, 0, 0, 0, 0xFF, 0xFF, 0, 0 }};
+    return std::equal(RFC6145_IP_PREFIX.begin(), RFC6145_IP_PREFIX.end(), ip.begin());
 }
 
 bool CNetAddr::IsRFC4843() const
@@ -179,7 +188,7 @@ bool CNetAddr::IsRFC4843() const
 
 bool CNetAddr::IsTor() const
 {
-    return (memcmp(ip, pchOnionCat, sizeof(pchOnionCat)) == 0);
+    return std::equal(ONION_IP_PREFIX.begin(), ONION_IP_PREFIX.end(), ip.begin());
 }
 
 bool CNetAddr::IsLocal() const
@@ -189,11 +198,8 @@ bool CNetAddr::IsLocal() const
        return true;
 
    // IPv6 loopback (::1/128)
-   static const unsigned char pchLocal[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1};
-   if (memcmp(ip, pchLocal, 16) == 0)
-       return true;
-
-   return false;
+   static const std::array<unsigned char, 16> LOOPBACK_IP {{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 }};
+   return ip == LOOPBACK_IP;
 }
 
 bool CNetAddr::IsValid() const
@@ -204,32 +210,34 @@ bool CNetAddr::IsValid() const
     // header20 vectorlen3 addr26 addr26 addr26 header20 vectorlen3 addr26 addr26 addr26...
     // so if the first length field is garbled, it reads the second batch
     // of addr misaligned by 3 bytes.
-    if (memcmp(ip, pchIPv4+3, sizeof(pchIPv4)-3) == 0)
+    if (std::equal(IPV4_IP_PREFIX.begin() + 3, IPV4_IP_PREFIX.end(), ip.begin())) {
         return false;
+    }
 
     // unspecified IPv6 address (::/128)
-    unsigned char ipNone6[16] = {};
-    if (memcmp(ip, ipNone6, 16) == 0)
+    if (std::all_of(ip.begin(), ip.end(), [](unsigned char x){ return x == 0; })) {
         return false;
+    }
 
     // documentation IPv6 address
-    if (IsRFC3849())
+    if (IsRFC3849()) {
         return false;
+    }
 
-    if (IsInternal())
+    if (IsInternal()) {
         return false;
+    }
 
-    if (IsIPv4())
-    {
+    if (IsIPv4()) {
+        const auto ipv4_begin = ip.begin() + IPV4_IP_PREFIX.size();
         // INADDR_NONE
-        uint32_t ipNone = INADDR_NONE;
-        if (memcmp(ip+12, &ipNone, 4) == 0)
+        if (std::all_of(ipv4_begin, ip.end(), [](unsigned char x){ return x == 0xff; })) {
             return false;
-
+        }
         // 0
-        ipNone = 0;
-        if (memcmp(ip+12, &ipNone, 4) == 0)
+        if (std::all_of(ipv4_begin, ip.end(), [](unsigned char x){ return x == 0; })) {
             return false;
+        }
     }
 
     return true;
@@ -242,7 +250,7 @@ bool CNetAddr::IsRoutable() const
 
 bool CNetAddr::IsInternal() const
 {
-   return memcmp(ip, g_internal_prefix, sizeof(g_internal_prefix)) == 0;
+   return std::equal(INTERNAL_IP_PREFIX.begin(), INTERNAL_IP_PREFIX.end(), ip.begin());
 }
 
 enum Network CNetAddr::GetNetwork() const
@@ -264,10 +272,12 @@ enum Network CNetAddr::GetNetwork() const
 
 std::string CNetAddr::ToStringIP() const
 {
-    if (IsTor())
-        return EncodeBase32(&ip[6], 10) + ".onion";
-    if (IsInternal())
-        return EncodeBase32(ip + sizeof(g_internal_prefix), sizeof(ip) - sizeof(g_internal_prefix)) + ".internal";
+    if (IsTor()) {
+        return EncodeBase32(ip.data() + ONION_IP_PREFIX.size(), ip.size() - ONION_IP_PREFIX.size()) + ONION_ADDRESS_SUFFIX;
+    }
+    if (IsInternal()) {
+        return EncodeBase32(ip.data() + INTERNAL_IP_PREFIX.size(), ip.size() - INTERNAL_IP_PREFIX.size()) + ".internal";
+    }
     CService serv(*this, 0);
     struct sockaddr_storage sockaddr;
     socklen_t socklen = sizeof(sockaddr);
@@ -293,30 +303,31 @@ std::string CNetAddr::ToString() const
 
 bool operator==(const CNetAddr& a, const CNetAddr& b)
 {
-    return (memcmp(a.ip, b.ip, 16) == 0);
+    return a.ip == b.ip;
 }
 
 bool operator!=(const CNetAddr& a, const CNetAddr& b)
 {
-    return (memcmp(a.ip, b.ip, 16) != 0);
+    return !(a == b);
 }
 
 bool operator<(const CNetAddr& a, const CNetAddr& b)
 {
-    return (memcmp(a.ip, b.ip, 16) < 0);
+    return a.ip < b.ip;
 }
 
 bool CNetAddr::GetInAddr(struct in_addr* pipv4Addr) const
 {
-    if (!IsIPv4())
+    if (!IsIPv4()) {
         return false;
-    memcpy(pipv4Addr, ip+12, 4);
+    }
+    std::copy(ip.begin() + IPV4_IP_PREFIX.size(), ip.end(), reinterpret_cast<unsigned char*>(pipv4Addr));
     return true;
 }
 
 bool CNetAddr::GetIn6Addr(struct in6_addr* pipv6Addr) const
 {
-    memcpy(pipv6Addr, ip, 16);
+    std::copy(ip.begin(), ip.end(), reinterpret_cast<unsigned char*>(pipv6Addr));
     return true;
 }
 
@@ -339,8 +350,8 @@ std::vector<unsigned char> CNetAddr::GetGroup() const
     if (IsInternal())
     {
         nClass = NET_INTERNAL;
-        nStartByte = sizeof(g_internal_prefix);
-        nBits = (sizeof(ip) - sizeof(g_internal_prefix)) * 8;
+        nStartByte = INTERNAL_IP_PREFIX.size();
+        nBits = (ip.size() - INTERNAL_IP_PREFIX.size()) * 8;
     }
     // all other unroutable addresses belong to the same group
     else if (!IsRoutable())
@@ -353,7 +364,7 @@ std::vector<unsigned char> CNetAddr::GetGroup() const
     else if (IsIPv4() || IsRFC6145() || IsRFC6052())
     {
         nClass = NET_IPV4;
-        nStartByte = 12;
+        nStartByte = IPV4_IP_PREFIX.size();
     }
     // for 6to4 tunnelled addresses, use the encapsulated IPv4 address
     else if (IsRFC3964())
@@ -372,7 +383,7 @@ std::vector<unsigned char> CNetAddr::GetGroup() const
     else if (IsTor())
     {
         nClass = NET_TOR;
-        nStartByte = 6;
+        nStartByte = ONION_IP_PREFIX.size();
         nBits = 4;
     }
     // for he.net, use /36 groups
@@ -383,21 +394,21 @@ std::vector<unsigned char> CNetAddr::GetGroup() const
         nBits = 32;
 
     vchRet.push_back(nClass);
-    while (nBits >= 8)
-    {
-        vchRet.push_back(GetByte(15 - nStartByte));
+    while (nBits >= 8) {
+        vchRet.push_back(GetByte(ip.size() - 1 - nStartByte));
         nStartByte++;
         nBits -= 8;
     }
-    if (nBits > 0)
-        vchRet.push_back(GetByte(15 - nStartByte) | ((1 << (8 - nBits)) - 1));
+    if (nBits > 0) {
+        vchRet.push_back(GetByte(ip.size() - 1 - nStartByte) | ((1 << (8 - nBits)) - 1));
+    }
 
     return vchRet;
 }
 
 uint64_t CNetAddr::GetHash() const
 {
-    uint256 hash = Hash(&ip[0], &ip[16]);
+    uint256 hash = Hash(ip.begin(), ip.end());
     uint64_t nRet;
     memcpy(&nRet, &hash, sizeof(nRet));
     return nRet;
@@ -511,10 +522,10 @@ bool CService::SetSockAddr(const struct sockaddr *paddr)
 {
     switch (paddr->sa_family) {
     case AF_INET:
-        *this = CService(*(const struct sockaddr_in*)paddr);
+        *this = CService(*reinterpret_cast<const struct sockaddr_in*>(paddr));
         return true;
     case AF_INET6:
-        *this = CService(*(const struct sockaddr_in6*)paddr);
+        *this = CService(*reinterpret_cast<const struct sockaddr_in6*>(paddr));
         return true;
     default:
         return false;
@@ -547,7 +558,7 @@ bool CService::GetSockAddr(struct sockaddr* paddr, socklen_t *addrlen) const
         if (*addrlen < (socklen_t)sizeof(struct sockaddr_in))
             return false;
         *addrlen = sizeof(struct sockaddr_in);
-        struct sockaddr_in *paddrin = (struct sockaddr_in*)paddr;
+        auto *paddrin = reinterpret_cast<struct sockaddr_in*>(paddr);
         memset(paddrin, 0, *addrlen);
         if (!GetInAddr(&paddrin->sin_addr))
             return false;
@@ -559,7 +570,7 @@ bool CService::GetSockAddr(struct sockaddr* paddr, socklen_t *addrlen) const
         if (*addrlen < (socklen_t)sizeof(struct sockaddr_in6))
             return false;
         *addrlen = sizeof(struct sockaddr_in6);
-        struct sockaddr_in6 *paddrin6 = (struct sockaddr_in6*)paddr;
+        auto *paddrin6 = reinterpret_cast<struct sockaddr_in6*>(paddr);
         memset(paddrin6, 0, *addrlen);
         if (!GetIn6Addr(&paddrin6->sin6_addr))
             return false;
@@ -575,7 +586,7 @@ std::vector<unsigned char> CService::GetKey() const
 {
      std::vector<unsigned char> vKey;
      vKey.resize(18);
-     memcpy(vKey.data(), ip, 16);
+     std::copy(ip.begin(), ip.end(), vKey.begin());
      vKey[16] = port / 0x100;
      vKey[17] = port & 0x0FF;
      return vKey;
@@ -600,10 +611,11 @@ std::string CService::ToString() const
     return ToStringIPPort();
 }
 
-CSubNet::CSubNet():
-    valid(false)
+CSubNet::CSubNet()
+: netmask {}
+, valid {false}
 {
-    memset(netmask, 0, sizeof(netmask));
+    // Empty
 }
 
 CSubNet::CSubNet(const CNetAddr &addr, int32_t mask)
@@ -611,7 +623,7 @@ CSubNet::CSubNet(const CNetAddr &addr, int32_t mask)
     valid = true;
     network = addr;
     // Default to /32 (IPv4) or /128 (IPv6), i.e. match single address
-    memset(netmask, 255, sizeof(netmask));
+    std::fill(netmask.begin(), netmask.end(), 255);
 
     // IPv4 addresses start at offset 12, and first 12 bytes must match, so just offset n
     const int astartofs = network.IsIPv4() ? 12 : 0;
@@ -627,8 +639,8 @@ CSubNet::CSubNet(const CNetAddr &addr, int32_t mask)
         valid = false;
 
     // Normalize network according to netmask
-    for(int x=0; x<16; ++x)
-        network.ip[x] &= netmask[x];
+    std::transform(network.ip.begin(), network.ip.end(), netmask.begin(), network.ip.begin(),
+        [](unsigned char ip_byte, unsigned char mask_byte) { return ip_byte & mask_byte; });
 }
 
 CSubNet::CSubNet(const CNetAddr &addr, const CNetAddr &mask)
@@ -636,23 +648,22 @@ CSubNet::CSubNet(const CNetAddr &addr, const CNetAddr &mask)
     valid = true;
     network = addr;
     // Default to /32 (IPv4) or /128 (IPv6), i.e. match single address
-    memset(netmask, 255, sizeof(netmask));
+    std::fill(netmask.begin(), netmask.end(), 255);
 
     // IPv4 addresses start at offset 12, and first 12 bytes must match, so just offset n
-    const int astartofs = network.IsIPv4() ? 12 : 0;
+    const size_t astartofs = network.IsIPv4() ? IPV4_IP_PREFIX.size() : 0;
 
-    for(int x=astartofs; x<16; ++x)
-        netmask[x] = mask.ip[x];
+    std::copy(mask.ip.begin() + astartofs, mask.ip.end(), netmask.begin() + astartofs);
 
     // Normalize network according to netmask
-    for(int x=0; x<16; ++x)
-        network.ip[x] &= netmask[x];
+    std::transform(network.ip.begin(), network.ip.end(), netmask.begin(), network.ip.begin(),
+        [](unsigned char ip_byte, unsigned char mask_byte) { return ip_byte & mask_byte; });
 }
 
 CSubNet::CSubNet(const CNetAddr &addr):
     valid(addr.IsValid())
 {
-    memset(netmask, 255, sizeof(netmask));
+    std::fill(netmask.begin(), netmask.end(), 255);
     network = addr;
 }
 
@@ -660,13 +671,15 @@ bool CSubNet::Match(const CNetAddr &addr) const
 {
     if (!valid || !addr.IsValid())
         return false;
-    for(int x=0; x<16; ++x)
-        if ((addr.ip[x] & netmask[x]) != network.ip[x])
+    for (size_t x = 0; x < addr.ip.size(); ++x) {
+        if ((addr.ip[x] & netmask[x]) != network.ip[x]) {
             return false;
+        }
+    }
     return true;
 }
 
-static inline int NetmaskBits(uint8_t x)
+static inline int NetmaskBits(unsigned char x)
 {
     switch(x) {
     case 0x00: return 0; break;
@@ -687,10 +700,11 @@ std::string CSubNet::ToString() const
     /* Parse binary 1{n}0{N-n} to see if mask can be represented as /n */
     int cidr = 0;
     bool valid_cidr = true;
-    int n = network.IsIPv4() ? 12 : 0;
-    for (; n < 16 && netmask[n] == 0xff; ++n)
+    size_t n = network.IsIPv4() ? IPV4_IP_PREFIX.size() : 0;
+    for (; n < netmask.size() && netmask[n] == 0xff; ++n) {
         cidr += 8;
-    if (n < 16) {
+    }
+    if (n < netmask.size()) {
         int bits = NetmaskBits(netmask[n]);
         if (bits < 0)
             valid_cidr = false;
@@ -698,9 +712,11 @@ std::string CSubNet::ToString() const
             cidr += bits;
         ++n;
     }
-    for (; n < 16 && valid_cidr; ++n)
-        if (netmask[n] != 0x00)
+    for (; n < netmask.size() && valid_cidr; ++n) {
+        if (netmask[n] != 0x00) {
             valid_cidr = false;
+        }
+    }
 
     /* Format output */
     std::string strNetmask;
@@ -727,7 +743,7 @@ bool CSubNet::IsValid() const
 
 bool operator==(const CSubNet& a, const CSubNet& b)
 {
-    return a.valid == b.valid && a.network == b.network && !memcmp(a.netmask, b.netmask, 16);
+    return a.valid == b.valid && a.network == b.network && a.netmask == b.netmask;
 }
 
 bool operator!=(const CSubNet& a, const CSubNet& b)
@@ -737,5 +753,5 @@ bool operator!=(const CSubNet& a, const CSubNet& b)
 
 bool operator<(const CSubNet& a, const CSubNet& b)
 {
-    return (a.network < b.network || (a.network == b.network && memcmp(a.netmask, b.netmask, 16) < 0));
+    return a.network < b.network || (a.network == b.network && a.netmask < b.netmask);
 }
