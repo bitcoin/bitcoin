@@ -2238,9 +2238,9 @@ void CConnman::SetNetworkActive(bool active)
 
     if (!fNetworkActive) {
         LOCK(cs_vNodes);
-        // Close sockets to all nodes
+        // Disconnect all nodes
         for (CNode* pnode : vNodes) {
-            pnode->CloseSocketDisconnect();
+            pnode->fDisconnect = true;
         }
     }
 
