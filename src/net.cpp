@@ -1189,13 +1189,12 @@ bool CConnman::AttemptToEvictConnection()
     return false;
 }
 
-void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
-
+void CConnman::AcceptConnection(const SOCKET& listen_socket, bool whitelisted) {
     struct sockaddr_storage sockaddr;
     socklen_t len = sizeof(sockaddr);
 
     NewConnection conn;
-    conn.sock = accept(hListenSocket.socket, (struct sockaddr*)&sockaddr, &len);
+    conn.sock = accept(listen_socket, (struct sockaddr*)&sockaddr, &len);
     conn.remote_addr = CAddress();
     conn.remote_str = "";
     conn.count_failure = false;
@@ -1204,7 +1203,7 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     conn.feeler = false;
     conn.addnode = false;
     conn.incoming = true;
-    conn.whitelisted = hListenSocket.whitelisted;
+    conn.whitelisted = whitelisted;
 
     int nInbound = 0;
     int nMaxInbound = nMaxConnections - (nMaxOutbound + nMaxFeeler);
@@ -1423,7 +1422,7 @@ void CConnman::ThreadSocketHandler()
         {
             if (hListenSocket.socket != INVALID_SOCKET && FD_ISSET(hListenSocket.socket, &fdsetRecv))
             {
-                AcceptConnection(hListenSocket);
+                AcceptConnection(hListenSocket.socket, hListenSocket.whitelisted);
             }
         }
 
