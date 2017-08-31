@@ -255,7 +255,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     return std::move(winner->pblocktemplate);
 }
 
-void BlockAssembler::onlyUnconfirmed(WorkingState &workState, CTxMemPool::setEntries& testSet)
+void BlockAssembler::onlyUnconfirmed(WorkingState &workState, CTxMemPool::setEntries& testSet) const
 {
     for (CTxMemPool::setEntries::iterator iit = testSet.begin(); iit != testSet.end(); ) {
         // Only test txs not already in the block
@@ -283,7 +283,7 @@ bool BlockAssembler::TestPackage(const WorkingState &workState, uint64_t package
 // - premature witness (in case segwit transactions are added to mempool before
 //   segwit activation)
 // - serialized size (in case -blockmaxsize is in use)
-bool BlockAssembler::TestPackageTransactions(WorkingState &workState, const CTxMemPool::setEntries& package)
+bool BlockAssembler::TestPackageTransactions(WorkingState &workState, const CTxMemPool::setEntries& package) const
 {
     uint64_t nPotentialBlockSize = workState.nBlockSize; // only used with fNeedSizeAccounting
     for (const CTxMemPool::txiter it : package) {
@@ -302,7 +302,7 @@ bool BlockAssembler::TestPackageTransactions(WorkingState &workState, const CTxM
     return true;
 }
 
-void BlockAssembler::AddToBlock(WorkingState &workState, CTxMemPool::txiter iter)
+void BlockAssembler::AddToBlock(WorkingState &workState, CTxMemPool::txiter iter) const
 {
     workState.pblock->vtx.emplace_back(iter->GetSharedTx());
     workState.pblocktemplate->vTxFees.push_back(iter->GetFee());
@@ -394,7 +394,7 @@ void BlockAssembler::RemoveRecentTransactionsFromBlockAndUpdatePackages(WorkingS
 }
 
 int BlockAssembler::UpdatePackagesForAdded(const CTxMemPool::setEntries& alreadyAdded,
-        indexed_modified_transaction_set &mapModifiedTx)
+        indexed_modified_transaction_set &mapModifiedTx) const
 {
     int nDescendantsUpdated = 0;
     for (const CTxMemPool::txiter it : alreadyAdded) {
@@ -431,13 +431,13 @@ int BlockAssembler::UpdatePackagesForAdded(const CTxMemPool::setEntries& already
 // guaranteed to fail again, but as a belt-and-suspenders check we put it in
 // failedTx and avoid re-evaluation, since the re-evaluation would be using
 // cached size/sigops/fee values that are not actually correct.
-bool BlockAssembler::SkipMapTxEntry(WorkingState &workState, CTxMemPool::txiter it, indexed_modified_transaction_set &mapModifiedTx, CTxMemPool::setEntries &failedTx)
+bool BlockAssembler::SkipMapTxEntry(WorkingState &workState, CTxMemPool::txiter it, indexed_modified_transaction_set &mapModifiedTx, CTxMemPool::setEntries &failedTx) const
 {
     assert (it != mempool.mapTx.end());
     return mapModifiedTx.count(it) || workState.inBlock.count(it) || failedTx.count(it);
 }
 
-void BlockAssembler::SortForBlock(const CTxMemPool::setEntries& package, CTxMemPool::txiter entry, std::vector<CTxMemPool::txiter>& sortedEntries)
+void BlockAssembler::SortForBlock(const CTxMemPool::setEntries& package, CTxMemPool::txiter entry, std::vector<CTxMemPool::txiter>& sortedEntries) const
 {
     // Sort package by ancestor count
     // If a transaction A depends on transaction B, then A's ancestor count
@@ -458,7 +458,7 @@ void BlockAssembler::SortForBlock(const CTxMemPool::setEntries& package, CTxMemP
 // Each time through the loop, we compare the best transaction in
 // mapModifiedTxs with the next transaction in the mempool to decide what
 // transaction package to work on next.
-void BlockAssembler::addPackageTxs(WorkingState &workState, int &nPackagesSelected, int &nDescendantsUpdated, int64_t nTimeCutoff, indexed_modified_transaction_set &mapModifiedTx)
+void BlockAssembler::addPackageTxs(WorkingState &workState, int &nPackagesSelected, int &nDescendantsUpdated, int64_t nTimeCutoff, indexed_modified_transaction_set &mapModifiedTx) const
 {
     // Keep track of entries that failed inclusion, to avoid duplicate work
     CTxMemPool::setEntries failedTx;

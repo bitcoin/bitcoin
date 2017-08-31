@@ -221,7 +221,7 @@ public:
 private:
     // utility functions
     /** Add a tx to the block */
-    void AddToBlock(WorkingState &workState, CTxMemPool::txiter iter);
+    void AddToBlock(WorkingState &workState, CTxMemPool::txiter iter) const;
     /** Remove recent transactions from a block, including any descendants */
     void RemoveRecentTransactionsFromBlockAndUpdatePackages(WorkingState &workState, int64_t timeCutoff, indexed_modified_transaction_set &mapModifiedTx);
 
@@ -231,27 +231,27 @@ private:
       * statistics from the package selection (for logging statistics).
      *  mapModifiedTx will track the updated ancestor feerate score of
      *  not-in-block transactions that have parents in the block */
-    void addPackageTxs(WorkingState &workState, int &nPackagesSelected, int &nDescendantsUpdated, int64_t nTimeCutoff, indexed_modified_transaction_set &mapModifiedTx);
+    void addPackageTxs(WorkingState &workState, int &nPackagesSelected, int &nDescendantsUpdated, int64_t nTimeCutoff, indexed_modified_transaction_set &mapModifiedTx) const;
 
     // helper functions for addPackageTxs()
     /** Remove confirmed (inBlock) entries from given set */
-    void onlyUnconfirmed(WorkingState &workState, CTxMemPool::setEntries& testSet);
+    void onlyUnconfirmed(WorkingState &workState, CTxMemPool::setEntries& testSet) const;
     /** Test if a new package would "fit" in the block */
     bool TestPackage(const WorkingState &workState, uint64_t packageSize, int64_t packageSigOpsCost) const;
     /** Perform checks on each transaction in a package:
       * locktime, premature-witness, serialized size (if necessary)
       * These checks should always succeed, and they're here
       * only as an extra check in case of suboptimal node configuration */
-    bool TestPackageTransactions(WorkingState &workState, const CTxMemPool::setEntries& package);
+    bool TestPackageTransactions(WorkingState &workState, const CTxMemPool::setEntries& package) const;
     /** Return true if given transaction from mapTx has already been evaluated,
       * or if the transaction's cached data in mapTx is incorrect. */
-    bool SkipMapTxEntry(WorkingState &workState, CTxMemPool::txiter it, indexed_modified_transaction_set &mapModifiedTx, CTxMemPool::setEntries &failedTx);
+    bool SkipMapTxEntry(WorkingState &workState, CTxMemPool::txiter it, indexed_modified_transaction_set &mapModifiedTx, CTxMemPool::setEntries &failedTx) const;
     /** Sort the package in an order that is valid to appear in a block */
-    void SortForBlock(const CTxMemPool::setEntries& package, CTxMemPool::txiter entry, std::vector<CTxMemPool::txiter>& sortedEntries);
+    void SortForBlock(const CTxMemPool::setEntries& package, CTxMemPool::txiter entry, std::vector<CTxMemPool::txiter>& sortedEntries) const;
     /** Add descendants of given transactions to mapModifiedTx with ancestor
       * state updated assuming given transactions are inBlock. Returns number
       * of updated descendants. */
-    int UpdatePackagesForAdded(const CTxMemPool::setEntries& alreadyAdded, indexed_modified_transaction_set &mapModifiedTx);
+    int UpdatePackagesForAdded(const CTxMemPool::setEntries& alreadyAdded, indexed_modified_transaction_set &mapModifiedTx) const;
 };
 
 /** Modify the extranonce in a block */
