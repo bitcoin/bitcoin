@@ -350,7 +350,7 @@ void BlockAssembler::RemoveRecentTransactionsFromBlockAndUpdatePackages(WorkingS
         assert(it != mempool.mapTx.end());
         // Keep any transactions that are sufficiently old, but skip transactions
         // that depend on removed transactions.  (Note that it's technically
-        // possible for a child tx to have a newer arrival time than its
+        // possible for a child tx to have an older arrival time than its
         // parent, eg after a reorg.)
         if (it->GetTime() <= timeCutoff && descendantTransactions.count(it) == 0) {
             vtxCopy.push_back(ptx);
