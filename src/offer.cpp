@@ -3816,21 +3816,13 @@ UniValue offeracceptcount(const UniValue& params, bool fHelp) {
 						vector<CAliasIndex> vtxAliasPos;
 						if (!paliasdb->ReadAlias(acceptOffer.vchAlias, vtxAliasPos) || vtxAliasPos.empty())
 							continue;
-						// buyer
-						if (vtxPos.back().vchAlias == acceptOffer.accept.vchBuyerAlias)
-						{
-							// if not filtering purchases skip
-							if (!filterPurchases)
-								continue;
+						// we need to get the alias at the time of the accept
+						CAliasIndex offerAcceptAlias;
+						offerAcceptAlias.nHeight = offer.accept.nAcceptHeight;
+						offerAcceptAlias.GetAliasFromList(vtxAliasPos);
+						if (BuildOfferAcceptJson(acceptOffer, vtxPos.back(), offerAcceptAlias, oOffer, filterPurchases, filterSales)) {
+							found++;
 						}
-						// merchant or affiliate
-						else
-						{
-							// if not filtering purchases skip
-							if (!filterSales) 
-								continue;
-						}
-						found++;
 
 						// for accepts its the same as acceptheight because its the height from transaction
 						vNamesI[vchKey] = nHeight;
