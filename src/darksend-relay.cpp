@@ -99,12 +99,12 @@ void CDarkSendRelay::Relay()
 
 void CDarkSendRelay::RelayThroughNode(int nRank)
 {
-    CMasternode* pmn = mnodeman.GetMasternodeByRank(nRank, nBlockHeight, MIN_PRIVATESEND_PEER_PROTO_VERSION);
+    masternode_info_t mnInfo;
 
-    if(pmn != NULL){
-        //printf("RelayThroughNode %s\n", pmn->addr.ToString().c_str());
+    if(mnodeman.GetMasternodeByRank(nRank, nBlockHeight, MIN_PRIVATESEND_PEER_PROTO_VERSION, false, mnInfo)){
+        //printf("RelayThroughNode %s\n", mnInfo.addr.ToString().c_str());
         // TODO: Pass CConnman instance somehow and don't use global variable.
-        CNode* pnode = g_connman->ConnectNode((CAddress)pmn->addr, NULL);
+        CNode* pnode = g_connman->ConnectNode((CAddress)mnInfo.addr, NULL);
         if(pnode) {
             //printf("Connected\n");
             pnode->PushMessage("dsr", (*this));

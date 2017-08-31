@@ -168,7 +168,7 @@ public:
 
     std::vector<std::pair<int, CMasternode> > GetMasternodeRanks(int nBlockHeight = -1, int nMinProtocol=0);
     int GetMasternodeRank(const CTxIn &vin, int nBlockHeight, int nMinProtocol=0, bool fOnlyActive=true);
-    CMasternode* GetMasternodeByRank(int nRank, int nBlockHeight, int nMinProtocol=0, bool fOnlyActive=true);
+    bool GetMasternodeByRank(int nRank, int nBlockHeight, int nMinProtocol, bool fOnlyActive, masternode_info_t& mnInfoRet);
 
     void ProcessMasternodeConnections();
     std::pair<CService, std::set<uint256> > PopScheduledMnbRequestConnection();
