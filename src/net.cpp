@@ -512,7 +512,6 @@ void CConnman::DumpBanlist()
 void CNode::CloseSocketDisconnect()
 {
     Disconnect();
-    LOCK(cs_hSocket);
     if (hSocket != INVALID_SOCKET)
     {
         LogPrint(BCLog::NET, "disconnecting peer=%d\n", id);
@@ -905,9 +904,9 @@ const uint256& CNetMessage::GetMessageHash() const
 
 
 
-// requires LOCK(cs_vSend)
 size_t CConnman::SocketSendData(CNode *pnode) const
 {
+    LOCK(pnode->cs_vSend);
     auto it = pnode->vSendMsg.begin();
     size_t nSentSize = 0;
 
@@ -916,7 +915,6 @@ size_t CConnman::SocketSendData(CNode *pnode) const
         assert(data.size() > pnode->nSendOffset);
         int nBytes = 0;
         {
-            LOCK(pnode->cs_hSocket);
             if (pnode->hSocket == INVALID_SOCKET)
                 break;
             nBytes = send(pnode->hSocket, reinterpret_cast<const char*>(data.data()) + pnode->nSendOffset, data.size() - pnode->nSendOffset, MSG_NOSIGNAL | MSG_DONTWAIT);
@@ -1294,7 +1292,6 @@ void CConnman::ThreadSocketHandler()
                     select_send = !pnode->vSendMsg.empty();
                 }
 
-                LOCK(pnode->cs_hSocket);
                 if (pnode->hSocket == INVALID_SOCKET)
                     continue;
 
@@ -1365,7 +1362,6 @@ void CConnman::ThreadSocketHandler()
             bool sendSet = false;
             bool errorSet = false;
             {
-                LOCK(pnode->cs_hSocket);
                 if (pnode->hSocket == INVALID_SOCKET)
                     continue;
                 recvSet = FD_ISSET(pnode->hSocket, &fdsetRecv);
@@ -1376,13 +1372,7 @@ void CConnman::ThreadSocketHandler()
             {
                 // typical socket buffer is 8K-64K
                 char pchBuf[0x10000];
-                int nBytes = 0;
-                {
-                    LOCK(pnode->cs_hSocket);
-                    if (pnode->hSocket == INVALID_SOCKET)
-                        continue;
-                    nBytes = recv(pnode->hSocket, pchBuf, sizeof(pchBuf), MSG_DONTWAIT);
-                }
+                int nBytes = recv(pnode->hSocket, pchBuf, sizeof(pchBuf), MSG_DONTWAIT);
                 if (nBytes > 0)
                 {
                     bool notify = false;
@@ -1434,7 +1424,6 @@ void CConnman::ThreadSocketHandler()
             //
             if (sendSet)
             {
-                LOCK(pnode->cs_vSend);
                 size_t nBytes = SocketSendData(pnode);
                 if (nBytes) {
                     RecordBytesSent(nBytes);
@@ -2872,10 +2861,8 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
 
     CVectorWriter{SER_NETWORK, INIT_PROTO_VERSION, serializedHeader, 0, hdr};
 
-    size_t nBytesSent = 0;
     {
         LOCK(pnode->cs_vSend);
-        bool optimisticSend(pnode->vSendMsg.empty());
 
         //log total amount of bytes per command
         pnode->mapSendBytesPerMsgCmd[msg.command] += nTotalSize;
@@ -2886,13 +2873,7 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
         pnode->vSendMsg.push_back(std::move(serializedHeader));
         if (nMessageSize)
             pnode->vSendMsg.push_back(std::move(msg.data));
-
-        // If write queue empty, attempt "optimistic write"
-        if (optimisticSend == true)
-            nBytesSent = SocketSendData(pnode);
     }
-    if (nBytesSent)
-        RecordBytesSent(nBytesSent);
 }
 
 bool CConnman::ForNode(NodeId id, std::function<bool(CNode* pnode)> func)
