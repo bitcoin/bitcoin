@@ -29,20 +29,15 @@ void CNetAddr::SetIP(const CNetAddr& ipIn)
     memcpy(ip, ipIn.ip, sizeof(ip));
 }
 
-void CNetAddr::SetRaw(Network network, const uint8_t *ip_in)
+void CNetAddr::SetRawIPv4(const unsigned char *ip_in)
 {
-    switch(network)
-    {
-        case NET_IPV4:
-            memcpy(ip, pchIPv4, 12);
-            memcpy(ip+12, ip_in, 4);
-            break;
-        case NET_IPV6:
-            memcpy(ip, ip_in, 16);
-            break;
-        default:
-            assert(!"invalid network");
-    }
+    memcpy(ip, pchIPv4, 12);
+    memcpy(ip+12, ip_in, 4);
+}
+
+void CNetAddr::SetRawIPv6(const unsigned char *ip_in)
+{
+    memcpy(ip, ip_in, 16);
 }
 
 bool CNetAddr::SetInternal(const std::string &name)
@@ -78,12 +73,12 @@ CNetAddr::CNetAddr()
 
 CNetAddr::CNetAddr(const struct in_addr& ipv4Addr)
 {
-    SetRaw(NET_IPV4, (const uint8_t*)&ipv4Addr);
+    SetRawIPv4((const unsigned char*)&ipv4Addr);
 }
 
 CNetAddr::CNetAddr(const struct in6_addr& ipv6Addr, const uint32_t scope)
 {
-    SetRaw(NET_IPV6, (const uint8_t*)&ipv6Addr);
+    SetRawIPv6((const unsigned char*)&ipv6Addr);
     scopeId = scope;
 }
 

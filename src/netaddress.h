@@ -42,9 +42,9 @@ class CNetAddr
 
         /**
          * Set raw IPv4 or IPv6 address (in network byte order)
-         * @note Only NET_IPV4 and NET_IPV6 are allowed for network.
          */
-        void SetRaw(Network network, const uint8_t *data);
+        void SetRawIPv4(const unsigned char *data);
+        void SetRawIPv6(const unsigned char *data);
 
         /**
           * Transform an arbitrary string into a non-routable ipv6 address.
