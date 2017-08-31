@@ -743,6 +743,7 @@ public:
     void Disconnect() {
         fDisconnect = true;
     }
+    void EnableReceive();
 
     NodeId GetId() const {
         return id;

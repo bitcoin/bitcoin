@@ -836,6 +836,10 @@ int CNode::GetSendVersion() const
     return nSendVersion;
 }
 
+void CNode::EnableReceive()
+{
+    fPauseRecv = false;
+}
 
 int CNetMessage::readHeader(const char *pch, unsigned int nBytes)
 {
@@ -1397,7 +1401,9 @@ void CConnman::ThreadSocketHandler()
                             LOCK(pnode->cs_vProcessMsg);
                             pnode->vProcessMsg.splice(pnode->vProcessMsg.end(), pnode->vRecvMsg, pnode->vRecvMsg.begin(), it);
                             pnode->nProcessQueueSize += nSizeAdded;
-                            pnode->fPauseRecv = pnode->nProcessQueueSize > nReceiveFloodSize;
+                            if (pnode->nProcessQueueSize > nReceiveFloodSize) {
+                                pnode->fPauseRecv = true;
+                            }
                         }
                         WakeMessageHandler();
                     }
