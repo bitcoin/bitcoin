@@ -3565,7 +3565,6 @@ UniValue offercount(const UniValue& params, bool fHelp) {
 	vector<pair<uint256, CTransaction> > vtxTx;
 	map<uint256, uint64_t> vtxHeight;
 	CAliasIndex txPos;
-	CAliasPayment txPaymentPos;
 	map< vector<unsigned char>, int > vNamesI;
 	map< vector<unsigned char>, UniValue > vNamesO;
 	if (aliases.size() > 0)
@@ -3579,8 +3578,6 @@ UniValue offercount(const UniValue& params, bool fHelp) {
 			vector<CAliasIndex> vtxPos;
 			if (!paliasdb->ReadAlias(vchAlias, vtxPos) || vtxPos.empty())
 				continue;
-			vector<CAliasPayment> vtxPaymentPos;
-			paliasdb->ReadAliasPayment(vchAlias, vtxPaymentPos);
 
 			BOOST_FOREACH(txPos, vtxPos) {
 				CTransaction tx;
@@ -3588,15 +3585,6 @@ UniValue offercount(const UniValue& params, bool fHelp) {
 					continue;
 				vtxTx.push_back(make_pair(txPos.txHash, tx));
 				vtxHeight[txPos.txHash] = txPos.nHeight;
-			}
-			BOOST_FOREACH(txPaymentPos, vtxPaymentPos) {
-				CTransaction tx;
-				if (vtxHeight.find(txPaymentPos.txHash) != vtxHeight.end())
-					continue;
-				if (!GetSyscoinTransaction(txPaymentPos.nHeight, txPaymentPos.txHash, tx, Params().GetConsensus()))
-					continue;
-				vtxTx.push_back(make_pair(txPaymentPos.txHash, tx));
-				vtxHeight[txPaymentPos.txHash] = txPaymentPos.nHeight;
 			}
 			for (auto& it : boost::adaptors::reverse(vtxTx)) {
 				const uint64_t& nHeight = vtxHeight[it.first];
@@ -3615,7 +3603,7 @@ UniValue offercount(const UniValue& params, bool fHelp) {
 
 					const COffer &theOffer = vtxOfferPos.back();
 					vector<CAliasIndex> vtxAliasPos;
-					if (!paliasdb->ReadAlias(theOffer.vchAlias, vtxAliasPos) || vtxAliasPos.empty())
+					if (!paliasdb->ReadAlias(theOffer.vchAlias, vtxAliasPos) || vtxAliasPos.empty() || theOffer.vchAlias != vchAlias)
 						continue;
 					found++;
 
@@ -3671,7 +3659,6 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 	vector<pair<uint256, CTransaction> > vtxTx;
 	map<uint256, uint64_t> vtxHeight;
 	CAliasIndex txPos;
-	CAliasPayment txPaymentPos;
 	UniValue oRes(UniValue::VARR);
 	map< vector<unsigned char>, int > vNamesI;
 	map< vector<unsigned char>, UniValue > vNamesO;
@@ -3688,24 +3675,13 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 			vector<CAliasIndex> vtxPos;
 			if (!paliasdb->ReadAlias(vchAlias, vtxPos) || vtxPos.empty())
 				continue;
-			vector<CAliasPayment> vtxPaymentPos;
-			paliasdb->ReadAliasPayment(vchAlias, vtxPaymentPos);
-				
+
 			BOOST_FOREACH(txPos, vtxPos) {
 				CTransaction tx;
 				if (!GetSyscoinTransaction(txPos.nHeight, txPos.txHash, tx, Params().GetConsensus()))
 					continue;
 				vtxTx.push_back(make_pair(txPos.txHash, tx));
 				vtxHeight[txPos.txHash] = txPos.nHeight;
-			}
-			BOOST_FOREACH(txPaymentPos, vtxPaymentPos) {
-				CTransaction tx;
-				if (vtxHeight.find(txPaymentPos.txHash) != vtxHeight.end())
-					continue;
-				if (!GetSyscoinTransaction(txPaymentPos.nHeight, txPaymentPos.txHash, tx, Params().GetConsensus()))
-					continue;
-				vtxTx.push_back(make_pair(txPaymentPos.txHash, tx));
-				vtxHeight[txPaymentPos.txHash] = txPaymentPos.nHeight;
 			}
 			for (auto& it : boost::adaptors::reverse(vtxTx)) {
 				if (oRes.size() >= count)
@@ -3730,7 +3706,7 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 					const COffer &theOffer = vtxOfferPos.back();
 					UniValue oOffer(UniValue::VOBJ);
 					vector<CAliasIndex> vtxAliasPos;
-					if (!paliasdb->ReadAlias(theOffer.vchAlias, vtxAliasPos) || vtxAliasPos.empty())
+					if (!paliasdb->ReadAlias(theOffer.vchAlias, vtxAliasPos) || vtxAliasPos.empty() || theOffer.vchAlias != vchAlias)
 						continue;
 					found++;
 					if (found >= from && BuildOfferJson(theOffer, vtxAliasPos.back(), oOffer)) {
