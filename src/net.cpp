@@ -901,8 +901,59 @@ const uint256& CNetMessage::GetMessageHash() const
 
 
 
-
-
+size_t CConnman::SocketReceiveData(CNode* pnode)
+{
+    // typical socket buffer is 8K-64K
+    char pchBuf[0x10000];
+    int nBytes = recv(pnode->hSocket, pchBuf, sizeof(pchBuf), MSG_DONTWAIT);
+    if (nBytes > 0)
+    {
+        bool notify = false;
+        if (!pnode->ReceiveMsgBytes(pchBuf, nBytes, notify))
+            pnode->CloseSocketDisconnect();
+        if (notify) {
+            size_t nSizeAdded = 0;
+            auto it(pnode->vRecvMsg.begin());
+            for (; it != pnode->vRecvMsg.end(); ++it) {
+                if (!it->complete())
+                    break;
+                nSizeAdded += it->vRecv.size() + CMessageHeader::HEADER_SIZE;
+            }
+            {
+                LOCK(pnode->cs_vProcessMsg);
+                pnode->vProcessMsg.splice(pnode->vProcessMsg.end(), pnode->vRecvMsg, pnode->vRecvMsg.begin(), it);
+                pnode->nProcessQueueSize += nSizeAdded;
+                if (pnode->nProcessQueueSize > nReceiveFloodSize) {
+                    pnode->fPauseRecv = true;
+                }
+            }
+            WakeMessageHandler();
+        }
+    }
+    else if (nBytes == 0)
+    {
+        // socket closed gracefully
+        if (!pnode->fDisconnect) {
+            LogPrint(BCLog::NET, "socket closed\n");
+        }
+        pnode->CloseSocketDisconnect();
+    }
+    else if (nBytes < 0)
+    {
+        // error
+        int nErr = WSAGetLastError();
+        if (nErr != WSAEWOULDBLOCK && nErr != WSAEMSGSIZE && nErr != WSAEINTR && nErr != WSAEINPROGRESS)
+        {
+            if (!pnode->fDisconnect)
+                LogPrintf("socket recv error %s\n", NetworkErrorString(nErr));
+            pnode->CloseSocketDisconnect();
+        }
+    }
+    if (nBytes < 0) {
+        return 0;
+    }
+    return nBytes;
+}
 
 size_t CConnman::SocketSendData(CNode *pnode) const
 {
@@ -1370,52 +1421,9 @@ void CConnman::ThreadSocketHandler()
             }
             if (recvSet || errorSet)
             {
-                // typical socket buffer is 8K-64K
-                char pchBuf[0x10000];
-                int nBytes = recv(pnode->hSocket, pchBuf, sizeof(pchBuf), MSG_DONTWAIT);
-                if (nBytes > 0)
-                {
-                    bool notify = false;
-                    if (!pnode->ReceiveMsgBytes(pchBuf, nBytes, notify))
-                        pnode->CloseSocketDisconnect();
+                size_t nBytes = SocketReceiveData(pnode);
+                if (nBytes) {
                     RecordBytesRecv(nBytes);
-                    if (notify) {
-                        size_t nSizeAdded = 0;
-                        auto it(pnode->vRecvMsg.begin());
-                        for (; it != pnode->vRecvMsg.end(); ++it) {
-                            if (!it->complete())
-                                break;
-                            nSizeAdded += it->vRecv.size() + CMessageHeader::HEADER_SIZE;
-                        }
-                        {
-                            LOCK(pnode->cs_vProcessMsg);
-                            pnode->vProcessMsg.splice(pnode->vProcessMsg.end(), pnode->vRecvMsg, pnode->vRecvMsg.begin(), it);
-                            pnode->nProcessQueueSize += nSizeAdded;
-                            if (pnode->nProcessQueueSize > nReceiveFloodSize) {
-                                pnode->fPauseRecv = true;
-                            }
-                        }
-                        WakeMessageHandler();
-                    }
-                }
-                else if (nBytes == 0)
-                {
-                    // socket closed gracefully
-                    if (!pnode->fDisconnect) {
-                        LogPrint(BCLog::NET, "socket closed\n");
-                    }
-                    pnode->CloseSocketDisconnect();
-                }
-                else if (nBytes < 0)
-                {
-                    // error
-                    int nErr = WSAGetLastError();
-                    if (nErr != WSAEWOULDBLOCK && nErr != WSAEMSGSIZE && nErr != WSAEINTR && nErr != WSAEINPROGRESS)
-                    {
-                        if (!pnode->fDisconnect)
-                            LogPrintf("socket recv error %s\n", NetworkErrorString(nErr));
-                        pnode->CloseSocketDisconnect();
-                    }
                 }
             }
 
