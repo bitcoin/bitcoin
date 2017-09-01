@@ -15,8 +15,7 @@ import time
 
 class ReindexTest(BitcoinTestFramework):
 
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
 
@@ -25,7 +24,7 @@ class ReindexTest(BitcoinTestFramework):
         blockcount = self.nodes[0].getblockcount()
         self.stop_nodes()
         extra_args = [["-reindex-chainstate" if justchainstate else "-reindex", "-checkblockindex=1"]]
-        self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir, extra_args)
+        self.start_nodes(extra_args)
         while self.nodes[0].getblockcount() < blockcount:
             time.sleep(0.1)
         assert_equal(self.nodes[0].getblockcount(), blockcount)

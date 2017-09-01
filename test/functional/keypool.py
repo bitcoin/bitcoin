@@ -8,6 +8,8 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
 class KeyPoolTest(BitcoinTestFramework):
+    def set_test_params(self):
+        self.num_nodes = 1
 
     def run_test(self):
         nodes = self.nodes
@@ -19,7 +21,7 @@ class KeyPoolTest(BitcoinTestFramework):
         # Encrypt wallet and wait to terminate
         nodes[0].node_encrypt_wallet('test')
         # Restart node 0
-        nodes[0] = self.start_node(0, self.options.tmpdir)
+        self.start_node(0)
         # Keep creating keys
         addr = nodes[0].getnewaddress()
         addr_data = nodes[0].validateaddress(addr)
@@ -77,11 +79,6 @@ class KeyPoolTest(BitcoinTestFramework):
         wi = nodes[0].getwalletinfo()
         assert_equal(wi['keypoolsize_hd_internal'], 100)
         assert_equal(wi['keypoolsize'], 100)
-
-    def __init__(self):
-        super().__init__()
-        self.setup_clean_chain = False
-        self.num_nodes = 1
 
 if __name__ == '__main__':
     KeyPoolTest().main()

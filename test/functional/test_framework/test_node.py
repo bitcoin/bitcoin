@@ -65,9 +65,13 @@ class TestNode():
         assert self.rpc_connected and self.rpc is not None, "Error: no RPC connection"
         return self.rpc.__getattr__(*args, **kwargs)
 
-    def start(self):
+    def start(self, extra_args=None, stderr=None):
         """Start the node."""
-        self.process = subprocess.Popen(self.args + self.extra_args, stderr=self.stderr)
+        if extra_args is None:
+            extra_args = self.extra_args
+        if stderr is None:
+            stderr = self.stderr
+        self.process = subprocess.Popen(self.args + extra_args, stderr=stderr)
         self.running = True
         self.log.debug("bitcoind started, waiting for RPC to come up")
 
@@ -78,7 +82,7 @@ class TestNode():
         for _ in range(poll_per_s * self.rpc_timeout):
             assert self.process.poll() is None, "bitcoind exited with status %i during initialization" % self.process.returncode
             try:
-                self.rpc = get_rpc_proxy(rpc_url(self.datadir, self.index, self.rpchost), self.index, coveragedir=self.coverage_dir)
+                self.rpc = get_rpc_proxy(rpc_url(self.datadir, self.index, self.rpchost), self.index, timeout=self.rpc_timeout, coveragedir=self.coverage_dir)
                 self.rpc.getblockcount()
                 # If the call to getblockcount() succeeds then the RPC connection is up
                 self.rpc_connected = True
