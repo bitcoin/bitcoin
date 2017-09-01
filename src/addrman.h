@@ -195,7 +195,7 @@ private:
     std::map<CNetAddr, int> mapAddr;
 
     //! randomly-ordered vector of all nIds
-    std::vector<int> vRandom;
+    std::vector<int> vRandom GUARDED_BY(cs);
 
     // number of "tried" entries
     int nTried;
