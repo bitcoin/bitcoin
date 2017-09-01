@@ -11,7 +11,7 @@
 #include "util.h"
 #include "base58.h"
 #include "main.h"
-#include "throne.h"
+#include "masternode.h"
 
 #define MASTERNODES_DUMP_SECONDS               (15*60)
 #define MASTERNODES_DSEG_SECONDS               (3*60*60)
@@ -70,7 +70,7 @@ public:
     // Keep track of all pings I've seen
     map<uint256, CMasternodePing> mapSeenMasternodePing;
     
-    // keep track of dsq count to prevent thrones from gaming legacySigner queue
+    // keep track of dsq count to prevent masternodes from gaming legacySigner queue
     int64_t nDsqCount;
 
     ADD_SERIALIZE_METHODS;
@@ -115,7 +115,7 @@ public:
     CMasternode* Find(const CTxIn& vin);
     CMasternode* Find(const CPubKey& pubKeyMasternode);
 
-    /// Find an entry in the throne list that is next to be paid
+    /// Find an entry in the masternode list that is next to be paid
     CMasternode* GetNextMasternodeInQueueForPayment(int nBlockHeight, bool fFilterSigTime, int& nCount);
 
     /// Find a random entry
@@ -141,7 +141,7 @@ public:
 
     void Remove(CTxIn vin);
 
-    /// Update throne list and maps using provided CMasternodeBroadcast
+    /// Update masternode list and maps using provided CMasternodeBroadcast
     void UpdateMasternodeList(CMasternodeBroadcast mnb);
     /// Perform complete check and only then update list and maps
     bool CheckMnbAndUpdateMasternodeList(CMasternodeBroadcast mnb, int& nDos);

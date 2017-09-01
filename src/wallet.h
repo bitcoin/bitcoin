@@ -72,7 +72,7 @@ enum AvailableCoinsType
 {
     ALL_COINS = 1,
     ONLY_NOT10000IFMN = 2,
-    ONLY_10000 = 3 // find throne outputs including locked ones (use with caution)
+    ONLY_10000 = 3 // find masternode outputs including locked ones (use with caution)
 };
 
 

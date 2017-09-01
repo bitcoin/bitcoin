@@ -24,7 +24,7 @@
 #include "paymentserver.h"
 #include "walletmodel.h"
 #endif
-#include "throneconfig.h"
+#include "masternodeconfig.h"
 
 #include "init.h"
 #include "main.h"
@@ -632,11 +632,11 @@ int main(int argc, char *argv[])
     initTranslations(qtTranslatorBase, qtTranslator, translatorBase, translator);
 
 #ifdef ENABLE_WALLET
-    /// 7a. parse throne.conf
+    /// 7a. parse masternode.conf
     string strErr;
-    if(!throneConfig.read(strErr)) {
+    if(!masternodeConfig.read(strErr)) {
         QMessageBox::critical(0, QObject::tr("Crown Core"),
-                              QObject::tr("Error reading throne configuration file: %1").arg(strErr.c_str()));
+                              QObject::tr("Error reading masternode configuration file: %1").arg(strErr.c_str()));
         return false;
     }
 

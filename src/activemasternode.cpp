@@ -1,9 +1,9 @@
 
 #include "addrman.h"
 #include "protocol.h"
-#include "activethrone.h"
-#include "throneman.h"
-#include "throne.h"
+#include "activemasternode.h"
+#include "masternodeman.h"
+#include "masternode.h"
 #include "spork.h"
 
 //
@@ -18,7 +18,7 @@ void CActiveMasternode::ManageStatus()
     if (fDebug) LogPrintf("CActiveMasternode::ManageStatus() - Begin\n");
 
     //need correct blocks to send ping
-    if(Params().NetworkID() != CBaseChainParams::REGTEST && !throneSync.IsBlockchainSynced()) {
+    if(Params().NetworkID() != CBaseChainParams::REGTEST && !masternodeSync.IsBlockchainSynced()) {
         status = ACTIVE_MASTERNODE_SYNC_IN_PROCESS;
         LogPrintf("CActiveMasternode::ManageStatus() - %s\n", GetStatus());
         return;
@@ -55,7 +55,7 @@ void CActiveMasternode::ManageStatus()
 
         if(strMasterNodeAddr.empty()) {
             if(!GetLocal(service)) {
-                notCapableReason = "Can't detect external address. Please use the throneaddr configuration option.";
+                notCapableReason = "Can't detect external address. Please use the masternodeaddr configuration option.";
                 LogPrintf("CActiveMasternode::ManageStatus() - not capable: %s\n", notCapableReason);
                 return;
             }
@@ -147,7 +147,7 @@ std::string CActiveMasternode::GetStatus() {
     case ACTIVE_MASTERNODE_INITIAL: return "Node just started, not yet activated";
     case ACTIVE_MASTERNODE_SYNC_IN_PROCESS: return "Sync in progress. Must wait until sync is complete to start Masternode";
     case ACTIVE_MASTERNODE_INPUT_TOO_NEW: return strprintf("Masternode input must have at least %d confirmations", MASTERNODE_MIN_CONFIRMATIONS);
-    case ACTIVE_MASTERNODE_NOT_CAPABLE: return "Not capable throne: " + notCapableReason;
+    case ACTIVE_MASTERNODE_NOT_CAPABLE: return "Not capable masternode: " + notCapableReason;
     case ACTIVE_MASTERNODE_STARTED: return "Masternode successfully started";
     default: return "unknown";
     }
@@ -177,7 +177,7 @@ bool CActiveMasternode::SendMasternodePing(std::string& errorMessage) {
         return false;
     }
 
-    // Update lastPing for our throne in Masternode list
+    // Update lastPing for our masternode in Masternode list
     CMasternode* pmn = mnodeman.Find(vin);
     if(pmn != NULL)
     {

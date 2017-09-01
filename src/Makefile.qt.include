@@ -37,7 +37,7 @@ QT_FORMS_UI = \
   qt/forms/sendcoinsdialog.ui \
   qt/forms/sendcoinsentry.ui \
   qt/forms/signverifymessagedialog.ui \
-  qt/forms/thronelist.ui \
+  qt/forms/masternodelist.ui \
   qt/forms/transactiondescdialog.ui \
   qt/forms/multisigaddressentry.ui \
   qt/forms/multisigdialog.ui \
@@ -77,7 +77,7 @@ QT_MOC_CPP = \
   qt/moc_sendcoinsentry.cpp \
   qt/moc_signverifymessagedialog.cpp \
   qt/moc_splashscreen.cpp \
-  qt/moc_thronelist.cpp \
+  qt/moc_masternodelist.cpp \
   qt/moc_trafficgraphwidget.cpp \
   qt/moc_transactiondesc.cpp \
   qt/moc_transactiondescdialog.cpp \
@@ -149,7 +149,7 @@ BITCOIN_QT_H = \
   qt/sendcoinsentry.h \
   qt/signverifymessagedialog.h \
   qt/splashscreen.h \
-  qt/thronelist.h \
+  qt/masternodelist.h \
   qt/trafficgraphwidget.h \
   qt/transactiondesc.h \
   qt/transactiondescdialog.h \
@@ -210,7 +210,7 @@ RES_ICONS = \
   qt/res/icons/remove.png \
   qt/res/icons/send.png \
   qt/res/icons/synced.png \
-  qt/res/icons/throne.png \
+  qt/res/icons/masternode.png \
   qt/res/icons/toolbar.png \
   qt/res/icons/transaction0.png \
   qt/res/icons/transaction2.png \
@@ -271,7 +271,7 @@ BITCOIN_QT_CPP += \
   qt/sendcoinsdialog.cpp \
   qt/sendcoinsentry.cpp \
   qt/signverifymessagedialog.cpp \
-  qt/thronelist.cpp \
+  qt/masternodelist.cpp \
   qt/transactiondesc.cpp \
   qt/transactiondescdialog.cpp \
   qt/transactionfilterproxy.cpp \

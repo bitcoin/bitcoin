@@ -19,10 +19,10 @@
 #define MASTERNODE_SYNC_THRESHOLD         2
 
 class CMasternodeSync;
-extern CMasternodeSync throneSync;
+extern CMasternodeSync masternodeSync;
 
 //
-// CMasternodeSync : Sync throne assets in stages
+// CMasternodeSync : Sync masternode assets in stages
 //
 
 class CMasternodeSync
@@ -53,7 +53,7 @@ public:
     int RequestedMasternodeAssets;
     int RequestedMasternodeAttempt;
 
-    // Time when current throne asset sync started
+    // Time when current masternode asset sync started
     int64_t nAssetSyncStarted;
 
     CMasternodeSync();

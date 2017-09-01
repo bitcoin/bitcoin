@@ -1,14 +1,14 @@
-#include "thronelist.h"
-#include "ui_thronelist.h"
+#include "masternodelist.h"
+#include "ui_masternodelist.h"
 
 #include "sync.h"
 #include "clientmodel.h"
 #include "walletmodel.h"
-#include "activethrone.h"
-#include "throne-budget.h"
-#include "throne-sync.h"
-#include "throneconfig.h"
-#include "throneman.h"
+#include "activemasternode.h"
+#include "masternode-budget.h"
+#include "masternode-sync.h"
+#include "masternodeconfig.h"
+#include "masternodeman.h"
 #include "wallet.h"
 #include "init.h"
 #include "guiutil.h"
@@ -16,7 +16,7 @@
 #include <QTimer>
 #include <QMessageBox>
 
-CCriticalSection cs_thrones;
+CCriticalSection cs_masternodes;
 
 MasternodeList::MasternodeList(QWidget *parent) :
     QWidget(parent),
@@ -82,7 +82,7 @@ void MasternodeList::setClientModel(ClientModel *model)
     this->clientModel = model;
     if(model)
     {
-        // try to update list when throne count changes
+        // try to update list when masternode count changes
         connect(clientModel, SIGNAL(strMasternodesChanged(QString)), this, SLOT(updateNodeList()));
     }
 }
@@ -103,7 +103,7 @@ void MasternodeList::StartAlias(std::string strAlias)
     std::string statusObj;
     statusObj += "<center>Alias: " + strAlias;
 
-    BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, throneConfig.getEntries()) {
+    BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
         if(mne.getAlias() == strAlias) {
             std::string errorMessage;
             CMasternodeBroadcast mnb;
@@ -111,11 +111,11 @@ void MasternodeList::StartAlias(std::string strAlias)
             bool result = CMasternodeBroadcast::Create(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage, mnb);
 
             if(result) {
-                statusObj += "<br>Successfully started throne." ;
+                statusObj += "<br>Successfully started masternode." ;
                 mnodeman.UpdateMasternodeList(mnb);
                 mnb.Relay();
             } else {
-                statusObj += "<br>Failed to start throne.<br>Error: " + errorMessage;
+                statusObj += "<br>Failed to start masternode.<br>Error: " + errorMessage;
             }
             break;
         }
@@ -135,7 +135,7 @@ void MasternodeList::StartAll(std::string strCommand)
     int fail = 0;
     std::string statusObj;
 
-    BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, throneConfig.getEntries()) {
+    BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
         std::string errorMessage;
         CMasternodeBroadcast mnb;
 
@@ -159,7 +159,7 @@ void MasternodeList::StartAll(std::string strCommand)
     pwalletMain->Lock();
 
     std::string returnObj;
-    returnObj = strprintf("Successfully started %d thrones, failed to start %d, total %d", successful, fail, total);
+    returnObj = strprintf("Successfully started %d masternodes, failed to start %d, total %d", successful, fail, total);
     if (fail > 0)
         returnObj += statusObj;
 
@@ -209,7 +209,7 @@ void MasternodeList::updateMyMasternodeInfo(QString alias, QString addr, QString
 void MasternodeList::updateMyNodeList(bool reset) {
     static int64_t lastMyListUpdate = 0;
 
-    // automatically update my throne list only once in MY_MASTERNODELIST_UPDATE_SECONDS seconds,
+    // automatically update my masternode list only once in MY_MASTERNODELIST_UPDATE_SECONDS seconds,
     // this update still can be triggered manually at any time via button click
     int64_t timeTillUpdate = lastMyListUpdate + MY_MASTERNODELIST_UPDATE_SECONDS - GetTime();
     ui->secondsLabel->setText(QString::number(timeTillUpdate));
@@ -218,7 +218,7 @@ void MasternodeList::updateMyNodeList(bool reset) {
     lastMyListUpdate = GetTime();
 
     ui->tableWidgetMasternodes->setSortingEnabled(false);
-    BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, throneConfig.getEntries()) {
+    BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
         CTxIn vin = CTxIn(uint256S(mne.getTxHash()), uint32_t(atoi(mne.getOutputIndex().c_str())));
         CMasternode *pmn = mnodeman.Find(vin);
 
@@ -247,7 +247,7 @@ void MasternodeList::updateNodeList()
     nTimeListUpdate = GetTime();
     fFilterUpdated = false;
 
-    TRY_LOCK(cs_thrones, lockMasternodes);
+    TRY_LOCK(cs_masternodes, lockMasternodes);
     if(!lockMasternodes)
         return;
 
@@ -314,8 +314,8 @@ void MasternodeList::on_startButton_clicked()
     std::string strAlias = ui->tableWidgetMyMasternodes->item(r, 0)->text().toStdString();
 
     // Display message box
-    QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm throne start"),
-        tr("Are you sure you want to start throne %1?").arg(QString::fromStdString(strAlias)),
+    QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm masternode start"),
+        tr("Are you sure you want to start masternode %1?").arg(QString::fromStdString(strAlias)),
         QMessageBox::Yes | QMessageBox::Cancel,
         QMessageBox::Cancel);
 
@@ -343,8 +343,8 @@ void MasternodeList::on_startButton_clicked()
 void MasternodeList::on_startAllButton_clicked()
 {
     // Display message box
-    QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm all thrones start"),
-        tr("Are you sure you want to start ALL thrones?"),
+    QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm all masternodes start"),
+        tr("Are you sure you want to start ALL masternodes?"),
         QMessageBox::Yes | QMessageBox::Cancel,
         QMessageBox::Cancel);
 
@@ -372,17 +372,17 @@ void MasternodeList::on_startAllButton_clicked()
 void MasternodeList::on_startMissingButton_clicked()
 {
 
-    if(throneSync.RequestedMasternodeAssets <= MASTERNODE_SYNC_LIST ||
-      throneSync.RequestedMasternodeAssets == MASTERNODE_SYNC_FAILED) {
+    if(masternodeSync.RequestedMasternodeAssets <= MASTERNODE_SYNC_LIST ||
+      masternodeSync.RequestedMasternodeAssets == MASTERNODE_SYNC_FAILED) {
         QMessageBox::critical(this, tr("Command is not available right now"),
-            tr("You can't use this command until throne list is synced"));
+            tr("You can't use this command until masternode list is synced"));
         return;
     }
 
     // Display message box
     QMessageBox::StandardButton retval = QMessageBox::question(this,
-        tr("Confirm missing thrones start"),
-        tr("Are you sure you want to start MISSING thrones?"),
+        tr("Confirm missing masternodes start"),
+        tr("Are you sure you want to start MISSING masternodes?"),
         QMessageBox::Yes | QMessageBox::Cancel,
         QMessageBox::Cancel);
 
@@ -430,7 +430,7 @@ void MasternodeList::updateVoteList(bool reset)
 
     static int64_t lastVoteListUpdate = 0;
 
-    // automatically update my throne list only once in MY_MASTERNODELIST_UPDATE_SECONDS seconds,
+    // automatically update my masternode list only once in MY_MASTERNODELIST_UPDATE_SECONDS seconds,
     // this update still can be triggered manually at any time via button click
     int64_t timeTillUpdate = lastVoteListUpdate + MY_MASTERNODELIST_UPDATE_SECONDS - GetTime();
     ui->voteSecondsLabel->setText(QString::number(timeTillUpdate));
@@ -517,7 +517,7 @@ void MasternodeList::updateVoteList(bool reset)
 void MasternodeList::VoteMany(std::string strCommand)
 {
     std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
-    mnEntries = throneConfig.getEntries();
+    mnEntries = masternodeConfig.getEntries();
 
     int nVote = VOTE_ABSTAIN;
     if(strCommand == "yea") nVote = VOTE_YES;
@@ -539,7 +539,7 @@ void MasternodeList::VoteMany(std::string strCommand)
     int failed = 0;
     std::string statusObj;
 
-    BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, throneConfig.getEntries()) {
+    BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
         std::string errorMessage;
         std::vector<unsigned char> vchMasterNodeSignature;
         std::string strMasterNodeSignMessage;
@@ -559,7 +559,7 @@ void MasternodeList::VoteMany(std::string strCommand)
         if(pmn == NULL)
         {
             failed++;
-            statusObj += "\nFailed to vote with " + mne.getAlias() + ". Error: Can't find throne by pubkey";
+            statusObj += "\nFailed to vote with " + mne.getAlias() + ". Error: Can't find masternode by pubkey";
             continue;
         }
 
@@ -595,7 +595,7 @@ void MasternodeList::on_voteManyYesButton_clicked()
 {
     // Display message box
     QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm vote-many"),
-        tr("Are you sure you want to vote with ALL of your thrones?"),
+        tr("Are you sure you want to vote with ALL of your masternodes?"),
         QMessageBox::Yes | QMessageBox::Cancel,
         QMessageBox::Cancel);
 
@@ -624,7 +624,7 @@ void MasternodeList::on_voteManyNoButton_clicked()
 {
     // Display message box
     QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm vote-many"),
-        tr("Are you sure you want to vote with ALL of your thrones?"),
+        tr("Are you sure you want to vote with ALL of your masternodes?"),
         QMessageBox::Yes | QMessageBox::Cancel,
         QMessageBox::Cancel);
 
@@ -653,7 +653,7 @@ void MasternodeList::on_voteManyAbstainButton_clicked()
 {
     // Display message box
     QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm vote-many"),
-        tr("Are you sure you want to vote with ALL of your thrones?"),
+        tr("Are you sure you want to vote with ALL of your masternodes?"),
         QMessageBox::Yes | QMessageBox::Cancel,
         QMessageBox::Cancel);
 

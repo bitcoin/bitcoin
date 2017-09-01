@@ -25,11 +25,11 @@
 #include "txdb.h"
 #include "ui_interface.h"
 #include "util.h"
-#include "activethrone.h"
-#include "throne-budget.h"
-#include "throne-payments.h"
-#include "throneman.h"
-#include "throneconfig.h"
+#include "activemasternode.h"
+#include "masternode-budget.h"
+#include "masternode-payments.h"
+#include "masternodeman.h"
+#include "masternodeconfig.h"
 #include "spork.h"
 #include "utilmoneystr.h"
 #ifdef ENABLE_WALLET
@@ -379,7 +379,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += "                         " + _("If <category> is not supplied, output all debugging information.") + "\n";
     strUsage += "                         " + _("<category> can be:\n");
     strUsage += "                           addrman, alert, bench, coindb, db, lock, rand, rpc, selectcoins, mempool, net,\n"; // Don't translate these and qt below
-    strUsage += "                           crown (or specifically: instantx, throne, mnpayments, mnbudget)"; // Don't translate these and qt below
+    strUsage += "                           crown (or specifically: instantx, masternode, mnpayments, mnbudget)"; // Don't translate these and qt below
     if (mode == HMM_BITCOIN_QT)
         strUsage += ", qt";
     strUsage += ".\n";
@@ -411,11 +411,11 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += "  -litemode=<n>          " + strprintf(_("Disable all Crown specific functionality (Masternodes, InstantX, Budgeting) (0-1, default: %u)"), 0) + "\n";
 
     strUsage += "\n" + _("Masternode options:") + "\n";
-    strUsage += "  -throne=<n>            " + strprintf(_("Enable the client to act as a throne (0-1, default: %u)"), 0) + "\n";
-    strUsage += "  -mnconf=<file>             " + strprintf(_("Specify throne configuration file (default: %s)"), "throne.conf") + "\n";
-    strUsage += "  -mnconflock=<n>            " + strprintf(_("Lock thrones from throne configuration file (default: %u)"), 1) + "\n";
-    strUsage += "  -throneprivkey=<n>     " + _("Set the throne private key") + "\n";
-    strUsage += "  -throneaddr=<n>        " + strprintf(_("Set external address:port to get to this throne (example: %s)"), "128.127.106.235:9340") + "\n";
+    strUsage += "  -masternode=<n>            " + strprintf(_("Enable the client to act as a masternode (0-1, default: %u)"), 0) + "\n";
+    strUsage += "  -mnconf=<file>             " + strprintf(_("Specify masternode configuration file (default: %s)"), "masternode.conf") + "\n";
+    strUsage += "  -mnconflock=<n>            " + strprintf(_("Lock masternodes from masternode configuration file (default: %u)"), 1) + "\n";
+    strUsage += "  -masternodeprivkey=<n>     " + _("Set the masternode private key") + "\n";
+    strUsage += "  -masternodeaddr=<n>        " + strprintf(_("Set external address:port to get to this masternode (example: %s)"), "128.127.106.235:9340") + "\n";
     strUsage += "  -budgetvotemode=<mode>     " + _("Change automatic finalized budget voting behavior. mode=auto: Vote for only exact finalized budget match to my generated budget. (string, default: auto)") + "\n";
 
     strUsage += "\n" + _("InstantX options:") + "\n";
@@ -1414,12 +1414,12 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     // ********************************************************* Step 10: setup Budgets
 
-    uiInterface.InitMessage(_("Loading throne cache..."));
+    uiInterface.InitMessage(_("Loading masternode cache..."));
 
     CMasternodeDB mndb;
     CMasternodeDB::ReadResult readResult = mndb.Read(mnodeman);
     if (readResult == CMasternodeDB::FileError)
-        LogPrintf("Missing throne cache file - mncache.dat, will try to recreate\n");
+        LogPrintf("Missing masternode cache file - mncache.dat, will try to recreate\n");
     else if (readResult != CMasternodeDB::Ok)
     {
         LogPrintf("Error reading mncache.dat: ");
@@ -1450,13 +1450,13 @@ bool AppInit2(boost::thread_group& threadGroup)
     budget.ClearSeen();
 
 
-    uiInterface.InitMessage(_("Loading throne payment cache..."));
+    uiInterface.InitMessage(_("Loading masternode payment cache..."));
 
     CMasternodePaymentDB mnpayments;
-    CMasternodePaymentDB::ReadResult readResult3 = mnpayments.Read(thronePayments);
+    CMasternodePaymentDB::ReadResult readResult3 = mnpayments.Read(masternodePayments);
     
     if (readResult3 == CMasternodePaymentDB::FileError)
-        LogPrintf("Missing throne payment cache - mnpayments.dat, will try to recreate\n");
+        LogPrintf("Missing masternode payment cache - mnpayments.dat, will try to recreate\n");
     else if (readResult3 != CMasternodePaymentDB::Ok)
     {
         LogPrintf("Error reading mnpayments.dat: ");
@@ -1466,27 +1466,27 @@ bool AppInit2(boost::thread_group& threadGroup)
             LogPrintf("file format is unknown or invalid, please fix it manually\n");
     }
 
-    fMasterNode = GetBoolArg("-throne", false);
+    fMasterNode = GetBoolArg("-masternode", false);
 
-    if((fMasterNode || throneConfig.getCount() > -1) && fTxIndex == false) {
+    if((fMasterNode || masternodeConfig.getCount() > -1) && fTxIndex == false) {
         return InitError("Enabling Masternode support requires turning on transaction indexing."
                   "Please add txindex=1 to your configuration and start with -reindex");
     }
 
     if(fMasterNode) {
         LogPrintf("IS MASTERNODE\n");
-        strMasterNodeAddr = GetArg("-throneaddr", "");
+        strMasterNodeAddr = GetArg("-masternodeaddr", "");
 
         LogPrintf(" addr %s\n", strMasterNodeAddr.c_str());
 
         if(!strMasterNodeAddr.empty()){
             CService addrTest = CService(strMasterNodeAddr);
             if (!addrTest.IsValid()) {
-                return InitError("Invalid -throneaddr address: " + strMasterNodeAddr);
+                return InitError("Invalid -masternodeaddr address: " + strMasterNodeAddr);
             }
         }
 
-        strMasterNodePrivKey = GetArg("-throneprivkey", "");
+        strMasterNodePrivKey = GetArg("-masternodeprivkey", "");
         if(!strMasterNodePrivKey.empty()){
             std::string errorMessage;
 
@@ -1495,24 +1495,24 @@ bool AppInit2(boost::thread_group& threadGroup)
 
             if(!legacySigner.SetKey(strMasterNodePrivKey, errorMessage, key, pubkey))
             {
-                return InitError(_("Invalid throneprivkey. Please see documenation."));
+                return InitError(_("Invalid masternodeprivkey. Please see documenation."));
             }
 
             activeMasternode.pubKeyMasternode = pubkey;
 
         } else {
-            return InitError(_("You must specify a throneprivkey in the configuration. Please see documentation for help."));
+            return InitError(_("You must specify a masternodeprivkey in the configuration. Please see documentation for help."));
         }
     }
     
-    //get the mode of budget voting for this throne
+    //get the mode of budget voting for this masternode
     strBudgetMode = GetArg("-budgetvotemode", "auto");
 
     if(GetBoolArg("-mnconflock", true) && pwalletMain) {
         LOCK(pwalletMain->cs_wallet);
         LogPrintf("Locking Masternodes:\n");
         uint256 mnTxHash;
-        BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, throneConfig.getEntries()) {
+        BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
             LogPrintf("  %s %s\n", mne.getTxHash(), mne.getOutputIndex());
             mnTxHash.SetHex(mne.getTxHash());
             COutPoint outpoint = COutPoint(mnTxHash, boost::lexical_cast<unsigned int>(mne.getOutputIndex()));
@@ -1527,7 +1527,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     //lite mode disables all Masternode related functionality
     fLiteMode = GetBoolArg("-litemode", false);
     if(fMasterNode && fLiteMode){
-        return InitError("You can not start a throne in litemode");
+        return InitError("You can not start a masternode in litemode");
     }
 
     LogPrintf("fLiteMode %d\n", fLiteMode);

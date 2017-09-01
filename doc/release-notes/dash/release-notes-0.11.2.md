@@ -13,7 +13,7 @@ Please report bugs using the issue tracker at github:
 Masternode enhancements
 -----------------------
 
-When restarting the client the thrones will be stored in the datadir in
+When restarting the client the masternodes will be stored in the datadir in
 *mncache.dat* file (make sure you don't have any wallet with such name or this
 functionality will not be available for you)
 
@@ -75,8 +75,8 @@ crownd/crown-qt (on Linux).
 - Bump block header version to 3 (see notes above)
 - Masternode caching
 - Masternode payment scheduler
-- Better protection from cheating thrones
-- Extended functionality for `throne list` RPC command
+- Better protection from cheating masternodes
+- Extended functionality for `masternode list` RPC command
 - Live Darksend and InstantX fee calculations in CoinControl
 - Darksend input caching
 - Open config file from within the wallet

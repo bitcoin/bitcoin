@@ -1,7 +1,7 @@
 #ifndef MASTERNODELIST_H
 #define MASTERNODELIST_H
 
-#include "throne.h"
+#include "masternode.h"
 #include "sync.h"
 #include "util.h"
 

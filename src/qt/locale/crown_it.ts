@@ -833,16 +833,16 @@ Indirizzo: %4
         <translation>Selezionare il livello di privacy</translation>
     </message>
     <message>
-        <source>Use 2 separate thrones to mix funds up to 10000 CRW</source>
-        <translation>Usa 2 separati throne per mischiare fino al 10000 CRW</translation>
+        <source>Use 2 separate masternodes to mix funds up to 10000 CRW</source>
+        <translation>Usa 2 separati masternode per mischiare fino al 10000 CRW</translation>
     </message>
     <message>
-        <source>Use 8 separate thrones to mix funds up to 10000 CRW</source>
-        <translation>Usa 8 separati throne per mischiare fino al 10000 CRW</translation>
+        <source>Use 8 separate masternodes to mix funds up to 10000 CRW</source>
+        <translation>Usa 8 separati masternode per mischiare fino al 10000 CRW</translation>
     </message>
     <message>
-        <source>Use 16 separate thrones</source>
-        <translation>Usa 16 separati throne</translation>
+        <source>Use 16 separate masternodes</source>
+        <translation>Usa 16 separati masternode</translation>
     </message>
     <message>
         <source>This option is the quickest and will cost about ~0.025 CRW to anonymize 10000 CRW</source>
@@ -3248,8 +3248,8 @@ Più URL vengono separati da una barra verticale |.</translation>
         <translation>Attenzione: wallet.dat corrotto, dati recuperati! Il wallet.dat originale è stato salvato come wallet.{timestamp}.bak in %s; se il tuo saldo o le transazioni non sono corrette dovresti ripristinare da un backup.</translation>
     </message>
     <message>
-        <source>You must specify a throneprivkey in the configuration. Please see documentation for help.</source>
-        <translation>Devi specificare una throneprivkey nella configurazione. Per favore consulta la documentazione di aiuto.</translation>
+        <source>You must specify a masternodeprivkey in the configuration. Please see documentation for help.</source>
+        <translation>Devi specificare una masternodeprivkey nella configurazione. Per favore consulta la documentazione di aiuto.</translation>
     </message>
     <message>
         <source>(default: 1)</source>
@@ -3540,8 +3540,8 @@ Più URL vengono separati da una barra verticale |.</translation>
         <translation>Importo non valido per -paytxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
-        <source>Lock thrones from throne configuration file (default: %u)</source>
-        <translation>Blocca i thrones  nel file di configurazione del throne (default: %u)</translation>
+        <source>Lock masternodes from masternode configuration file (default: %u)</source>
+        <translation>Blocca i masternodes  nel file di configurazione del masternode (default: %u)</translation>
     </message>
     <message>
         <source>Mixing in progress...</source>
@@ -3560,8 +3560,8 @@ Più URL vengono separati da una barra verticale |.</translation>
         <translation>Non si trova in lista di Masternode.</translation>
     </message>
     <message>
-        <source>Invalid throneprivkey. Please see documenation.</source>
-        <translation>throneprivkey non valida. Per favore consulta la documentazione</translation>
+        <source>Invalid masternodeprivkey. Please see documenation.</source>
+        <translation>masternodeprivkey non valida. Per favore consulta la documentazione</translation>
     </message>
     <message>
         <source>Invalid private key.</source>
@@ -3597,11 +3597,11 @@ Più URL vengono separati da una barra verticale |.</translation>
     </message>
     <message>
         <source>Masternode options:</source>
-        <translation>Opzioni throne:</translation>
+        <translation>Opzioni masternode:</translation>
     </message>
     <message>
         <source>Masternode queue is full.</source>
-        <translation>La lista di throne e' piena.</translation>
+        <translation>La lista di masternode e' piena.</translation>
     </message>
     <message>
         <source>Masternode:</source>
@@ -3686,7 +3686,7 @@ Più URL vengono separati da una barra verticale |.</translation>
         <translation>Imposta la dimensione massima del blocco in byte (predefinita: %d)</translation>
     </message>
     <message>
-        <source>Set the throne private key</source>
+        <source>Set the masternode private key</source>
         <translation>Configura la chiave privata del Masternode</translation>
     </message>
     <message>

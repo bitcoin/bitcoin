@@ -2,10 +2,10 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "throne-payments.h"
-#include "throne-budget.h"
-#include "throne-sync.h"
-#include "throneman.h"
+#include "masternode-payments.h"
+#include "masternode-budget.h"
+#include "masternode-sync.h"
+#include "masternodeman.h"
 #include "legacysigner.h"
 #include "util.h"
 #include "sync.h"
@@ -15,7 +15,7 @@
 #include <boost/filesystem.hpp>
 
 /** Object for who's going to get paid on which blocks */
-CMasternodePayments thronePayments;
+CMasternodePayments masternodePayments;
 
 CCriticalSection cs_vecPayments;
 CCriticalSection cs_mapMasternodeBlocks;
@@ -37,7 +37,7 @@ bool CMasternodePaymentDB::Write(const CMasternodePayments& objToSave)
 
     // serialize, checksum data up to that point, then append checksum
     CDataStream ssObj(SER_DISK, CLIENT_VERSION);
-    ssObj << strMagicMessage; // throne cache file specific magic message
+    ssObj << strMagicMessage; // masternode cache file specific magic message
     ssObj << FLATDATA(Params().MessageStart()); // network specific magic number
     ssObj << objToSave;
     uint256 hash = Hash(ssObj.begin(), ssObj.end());
@@ -111,13 +111,13 @@ CMasternodePaymentDB::ReadResult CMasternodePaymentDB::Read(CMasternodePayments&
     unsigned char pchMsgTmp[4];
     std::string strMagicMessageTmp;
     try {
-        // de-serialize file header (throne cache file specific magic message) and ..
+        // de-serialize file header (masternode cache file specific magic message) and ..
         ssObj >> strMagicMessageTmp;
 
         // ... verify the message matches predefined one
         if (strMagicMessage != strMagicMessageTmp)
         {
-            error("%s : Invalid throne payement cache magic message", __func__);
+            error("%s : Invalid masternode payement cache magic message", __func__);
             return IncorrectMagicMessage;
         }
 
@@ -177,7 +177,7 @@ void DumpMasternodePayments()
         }
     }
     LogPrintf("Writting info to mnpayments.dat...\n");
-    paymentdb.Write(thronePayments);
+    paymentdb.Write(masternodePayments);
 
     LogPrintf("Budget dump finished  %dms\n", GetTimeMillis() - nStart);
 }
@@ -200,7 +200,7 @@ bool IsBlockValueValid(const CBlock& block, int64_t nExpectedValue){
         LogPrintf("IsBlockValueValid() : WARNING: Couldn't find previous block");
     }
 
-    if(!throneSync.IsSynced()) { //there is no budget data to use to check anything
+    if(!masternodeSync.IsSynced()) { //there is no budget data to use to check anything
         //super blocks will always be on these blocks, max 100 per budgeting
         if(nHeight % GetBudgetPaymentCycleBlocks() < 100){
             return true;
@@ -227,7 +227,7 @@ bool IsBlockValueValid(const CBlock& block, int64_t nExpectedValue){
 
 bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight)
 {
-    if(!throneSync.IsSynced()) { //there is no budget data to use to check anything -- find the longest chain
+    if(!masternodeSync.IsSynced()) { //there is no budget data to use to check anything -- find the longest chain
         LogPrint("mnpayments", "Client not synced, skipping block payee checks\n");
         return true;
     }
@@ -249,8 +249,8 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight)
         }
     }
 
-    //check for throne payee
-    if(thronePayments.IsTransactionValid(txNew, nBlockHeight))
+    //check for masternode payee
+    if(masternodePayments.IsTransactionValid(txNew, nBlockHeight))
     {
         return true;
     } else {
@@ -274,7 +274,7 @@ bool CMasternodePayments::CanVote(COutPoint outMasternode, int nBlockHeight)
         return false;
     }
 
-    //record this throne voted
+    //record this masternode voted
     mapMasternodesLastVote[outMasternode] = nBlockHeight;
     return true;
 }
@@ -287,7 +287,7 @@ void FillBlockPayee(CMutableTransaction& txNew, int64_t nFees)
     if(IsSporkActive(SPORK_13_ENABLE_SUPERBLOCKS) && budget.IsBudgetPaymentBlock(pindexPrev->nHeight+1)){
         budget.FillBlockPayee(txNew, nFees);
     } else {
-        thronePayments.FillBlockPayee(txNew, nFees);
+        masternodePayments.FillBlockPayee(txNew, nFees);
     }
 }
 
@@ -296,7 +296,7 @@ std::string GetRequiredPaymentsString(int nBlockHeight)
     if(IsSporkActive(SPORK_13_ENABLE_SUPERBLOCKS) && budget.IsBudgetPaymentBlock(nBlockHeight)){
         return budget.GetRequiredPaymentsString(nBlockHeight);
     } else {
-        return thronePayments.GetRequiredPaymentsString(nBlockHeight);
+        return masternodePayments.GetRequiredPaymentsString(nBlockHeight);
     }
 }
 
@@ -309,19 +309,19 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int64_t nFe
     CScript payee;
 
     //spork
-    if(!thronePayments.GetBlockPayee(pindexPrev->nHeight+1, payee)){
-        //no throne detected
+    if(!masternodePayments.GetBlockPayee(pindexPrev->nHeight+1, payee)){
+        //no masternode detected
         CMasternode* winningNode = mnodeman.GetCurrentMasterNode(1);
         if(winningNode){
             payee = GetScriptForDestination(winningNode->pubkey.GetID());
         } else {
-            LogPrintf("CreateNewBlock: Failed to detect throne to pay\n");
+            LogPrintf("CreateNewBlock: Failed to detect masternode to pay\n");
             hasPayment = false;
         }
     }
 
     CAmount blockValue = GetBlockValue(pindexPrev->nBits, pindexPrev->nHeight, nFees);
-    CAmount thronePayment = GetMasternodePayment(pindexPrev->nHeight+1, blockValue);
+    CAmount masternodePayment = GetMasternodePayment(pindexPrev->nHeight+1, blockValue);
 
     txNew.vout[0].nValue = blockValue;
 
@@ -329,9 +329,9 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int64_t nFe
         txNew.vout.resize(2);
 
         txNew.vout[1].scriptPubKey = payee;
-        txNew.vout[1].nValue = thronePayment;
+        txNew.vout[1].nValue = masternodePayment;
 
-        txNew.vout[0].nValue -= thronePayment;
+        txNew.vout[0].nValue -= masternodePayment;
 
         CTxDestination address1;
         ExtractDestination(payee, address1);
@@ -349,7 +349,7 @@ int CMasternodePayments::GetMinMasternodePaymentsProto() {
 
 void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
-    if(!throneSync.IsBlockchainSynced()) return;
+    if(!masternodeSync.IsBlockchainSynced()) return;
 
     if(fLiteMode) return; //disable all Masternode related functionality
 
@@ -369,7 +369,7 @@ void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::st
         }
 
         pfrom->FulfilledRequest("mnget");
-        thronePayments.Sync(pfrom, nCountNeeded);
+        masternodePayments.Sync(pfrom, nCountNeeded);
         LogPrintf("mnget - Sent Masternode winners to %s\n", pfrom->addr.ToString().c_str());
     }
     else if (strCommand == "mnw") { //Masternode Payments Declare Winner
@@ -386,9 +386,9 @@ void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::st
             nHeight = chainActive.Tip()->nHeight;
         }
 
-        if(thronePayments.mapMasternodePayeeVotes.count(winner.GetHash())){
+        if(masternodePayments.mapMasternodePayeeVotes.count(winner.GetHash())){
             LogPrint("mnpayments", "mnw - Already seen - %s bestHeight %d\n", winner.GetHash().ToString().c_str(), nHeight);
-            throneSync.AddedMasternodeWinner(winner.GetHash());
+            masternodeSync.AddedMasternodeWinner(winner.GetHash());
             return;
         }
 
@@ -404,15 +404,15 @@ void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::st
             return;
         }
 
-        if(!thronePayments.CanVote(winner.vinMasternode.prevout, winner.nBlockHeight)){
-            LogPrintf("mnw - throne already voted - %s\n", winner.vinMasternode.prevout.ToStringShort());
+        if(!masternodePayments.CanVote(winner.vinMasternode.prevout, winner.nBlockHeight)){
+            LogPrintf("mnw - masternode already voted - %s\n", winner.vinMasternode.prevout.ToStringShort());
             return;
         }
 
         if(!winner.SignatureValid()){
             LogPrintf("mnw - invalid signature\n");
-            if(throneSync.IsSynced()) Misbehaving(pfrom->GetId(), 20);
-            // it could just be a non-synced throne
+            if(masternodeSync.IsSynced()) Misbehaving(pfrom->GetId(), 20);
+            // it could just be a non-synced masternode
             mnodeman.AskForMN(pfrom, winner.vinMasternode);
             return;
         }
@@ -423,9 +423,9 @@ void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::st
 
         LogPrint("mnpayments", "mnw - winning vote - Addr %s Height %d bestHeight %d - %s\n", address2.ToString().c_str(), winner.nBlockHeight, nHeight, winner.vinMasternode.prevout.ToStringShort());
 
-        if(thronePayments.AddWinningMasternode(winner)){
+        if(masternodePayments.AddWinningMasternode(winner)){
             winner.Relay();
-            throneSync.AddedMasternodeWinner(winner.GetHash());
+            masternodeSync.AddedMasternodeWinner(winner.GetHash());
         }
     }
 }
@@ -461,7 +461,7 @@ bool CMasternodePayments::GetBlockPayee(int nBlockHeight, CScript& payee)
     return false;
 }
 
-// Is this throne scheduled to get paid soon? 
+// Is this masternode scheduled to get paid soon? 
 // -- Only look ahead up to 8 blocks to allow for propagation of the latest 2 winners
 bool CMasternodePayments::IsScheduled(CMasternode& mn, int nNotBlockHeight)
 {
@@ -528,7 +528,7 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew)
     int nMaxSignatures = 0;
     std::string strPayeesPossible = "";
 
-    CAmount thronePayment = GetMasternodePayment(nBlockHeight, txNew.GetValueOut());
+    CAmount masternodePayment = GetMasternodePayment(nBlockHeight, txNew.GetValueOut());
 
     //require at least 6 signatures
 
@@ -543,7 +543,7 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew)
     {
         bool found = false;
         BOOST_FOREACH(CTxOut out, txNew.vout){
-            if(payee.scriptPubKey == out.scriptPubKey && thronePayment == out.nValue){
+            if(payee.scriptPubKey == out.scriptPubKey && masternodePayment == out.nValue){
                 found = true;
             }
         }
@@ -632,7 +632,7 @@ void CMasternodePayments::CleanPaymentList()
 
         if(nHeight - winner.nBlockHeight > nLimit){
             LogPrint("mnpayments", "CMasternodePayments::CleanPaymentList - Removing old Masternode payment - block %d\n", winner.nBlockHeight);
-            throneSync.mapSeenSyncMNW.erase((*it).first);
+            masternodeSync.mapSeenSyncMNW.erase((*it).first);
             mapMasternodePayeeVotes.erase(it++);
             mapMasternodeBlocks.erase(winner.nBlockHeight);
         } else {
@@ -676,13 +676,13 @@ bool CMasternodePaymentWinner::IsValid(CNode* pnode, std::string& strError)
 
     if(n > MNPAYMENTS_SIGNATURES_TOTAL)
     {    
-        //It's common to have thrones mistakenly think they are in the top 10
+        //It's common to have masternodes mistakenly think they are in the top 10
         // We don't want to print all of these messages, or punish them unless they're way off
         if(n > MNPAYMENTS_SIGNATURES_TOTAL*2)
         {
             strError = strprintf("Masternode not in the top %d (%d)", MNPAYMENTS_SIGNATURES_TOTAL, n);
             LogPrintf("CMasternodePaymentWinner::IsValid - %s\n", strError);
-            if(throneSync.IsSynced()) Misbehaving(pnode->GetId(), 20);
+            if(masternodeSync.IsSynced()) Misbehaving(pnode->GetId(), 20);
         }
         return false;
     }
@@ -740,7 +740,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
 
             LogPrintf("CMasternodePayments::ProcessBlock() Winner payee %s nHeight %d. \n", address2.ToString().c_str(), newWinner.nBlockHeight);
         } else {
-            LogPrintf("CMasternodePayments::ProcessBlock() Failed to find throne to pay\n");
+            LogPrintf("CMasternodePayments::ProcessBlock() Failed to find masternode to pay\n");
         }
 
     }

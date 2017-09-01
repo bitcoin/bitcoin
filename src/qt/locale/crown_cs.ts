@@ -863,15 +863,15 @@ Adresa: %4</translation>
         <translation>Prosím vyberte úroveò soukromí.</translation>
     </message>
     <message>
-        <source>Use 2 separate thrones to mix funds up to 10000 CRW</source>
+        <source>Use 2 separate masternodes to mix funds up to 10000 CRW</source>
         <translation>Použít 2 rozdílné Trony pro fixování prostøedkù až do 10000 CRW</translation>
     </message>
     <message>
-        <source>Use 8 separate thrones to mix funds up to 10000 CRW</source>
+        <source>Use 8 separate masternodes to mix funds up to 10000 CRW</source>
         <translation>Použít 8 rozdílných Trons pro fixování prostøedkù až do 10000 CRW</translation>
     </message>
     <message>
-        <source>Use 16 separate thrones</source>
+        <source>Use 16 separate masternodes</source>
         <translation>Použít 16 rozdílných Tronù</translation>
     </message>
     <message>
@@ -1185,7 +1185,7 @@ Adresa: %4</translation>
         <translation>Expert</translation>
     </message>
     <message>
-        <source>This setting determines the amount of individual thrones that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</source>
+        <source>This setting determines the amount of individual masternodes that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</source>
         <translation>Toto nastavení urèuje množství rozlièných Trons, pøes které se bude anonymizovat vstup.&lt;br/&gt; Více kol anonymizace dává vìtší úroveò soukromí, ale též stojí více na poplatcích.</translation>
     </message>
     <message>
@@ -3409,8 +3409,8 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Upozornìní: wallet.dat je poškozen, data jsou zachránìna! Pùvodní wallet.dat byl uložen jako wallet.{timestamp}.bak v %s; pokud je váš zùstatek nebo transakce nesprávný, mìli byste obnovit ze zálohy.</translation>
     </message>
     <message>
-        <source>You must specify a throneprivkey in the configuration. Please see documentation for help.</source>
-        <translation>V konfiguraci musíte zadat throneprivkey. Pokyny naleznete v dokumentaci.</translation>
+        <source>You must specify a masternodeprivkey in the configuration. Please see documentation for help.</source>
+        <translation>V konfiguraci musíte zadat masternodeprivkey. Pokyny naleznete v dokumentaci.</translation>
     </message>
     <message>
         <source>(default: 1)</source>
@@ -3959,11 +3959,11 @@ napøíklad: alertnotify=echo %%s | mail -s "Crown Upozornìní" admin@foo.com
         <translation>Naèítá se vyrovnávací pamì rozpoètu...</translation>
     </message>
     <message>
-        <source>Loading throne cache...</source>
+        <source>Loading masternode cache...</source>
         <translation>Naèítá se vyrovnávací pamì Tron...</translation>
     </message>
     <message>
-        <source>Loading throne payment cache...</source>
+        <source>Loading masternode payment cache...</source>
         <translation>Naèíta se vyrovnávací pamì plateb Tron...</translation>
     </message>
     <message>
@@ -3971,7 +3971,7 @@ napøíklad: alertnotify=echo %%s | mail -s "Crown Upozornìní" admin@foo.com
         <translation>Zámek je už na místì.</translation>
     </message>
     <message>
-        <source>Lock thrones from Tron configuration file (default: %u)</source>
+        <source>Lock masternodes from Tron configuration file (default: %u)</source>
         <translation>Zamknout masternody z konfiguraèního souboru Tron (pøedvoleno: %u)</translation>
     </message>
     <message>
@@ -4043,7 +4043,7 @@ napøíklad: alertnotify=echo %%s | mail -s "Crown Upozornìní" admin@foo.com
         <translation>Soukromý klíè serveru (Standard: %s)</translation>
     </message>
     <message>
-        <source>Set external address:port to get to this throne (example: %s)</source>
+        <source>Set external address:port to get to this masternode (example: %s)</source>
         <translation>Nastavit externí adresu:port k nastavení tohoto trùnu (pøíklad: %s)</translation>
     </message>
     <message>
@@ -4075,8 +4075,8 @@ napøíklad: alertnotify=echo %%s | mail -s "Crown Upozornìní" admin@foo.com
         <translation>Zadejte èasový limit pøipojení v milisekundách (Minimum: 1, Standardnì: %d)</translation>
     </message>
     <message>
-        <source>Specify throne configuration file (default: %s)</source>
-        <translation>Zadat konfiguraèní soubor throne (Standardnì: %s)</translation>
+        <source>Specify masternode configuration file (default: %s)</source>
+        <translation>Zadat konfiguraèní soubor masternode (Standardnì: %s)</translation>
     </message>
     <message>
         <source>Specify pid file (default: %s)</source>
@@ -4091,16 +4091,16 @@ napøíklad: alertnotify=echo %%s | mail -s "Crown Upozornìní" admin@foo.com
         <translation>Ukonèit èinnost po importování blockù z disku (Standardnì: %u)</translation>
     </message>
     <message>
-        <source>Submitted following entries to throne: %u / %d</source>
-        <translation>Položky odeslané na throne: %u / %d</translation>
+        <source>Submitted following entries to masternode: %u / %d</source>
+        <translation>Položky odeslané na masternode: %u / %d</translation>
     </message>
     <message>
-        <source>Submitted to throne, waiting for more entries ( %u / %d ) %s</source>
-        <translation>Odeslané a throne, èeká se na víc položek ( %u / %d ) %s</translation>
+        <source>Submitted to masternode, waiting for more entries ( %u / %d ) %s</source>
+        <translation>Odeslané a masternode, èeká se na víc položek ( %u / %d ) %s</translation>
     </message>
     <message>
-        <source>Submitted to throne, waiting in queue %s</source>
-        <translation>Odeslané na throne, èeká ve frontì %s</translation>
+        <source>Submitted to masternode, waiting in queue %s</source>
+        <translation>Odeslané na masternode, èeká ve frontì %s</translation>
     </message>
     <message>
         <source>Synchronization failed</source>
@@ -4115,12 +4115,12 @@ napøíklad: alertnotify=echo %%s | mail -s "Crown Upozornìní" admin@foo.com
         <translation>Synchornizují se rozpoèty...</translation>
     </message>
     <message>
-        <source>Synchronizing throne winners...</source>
-        <translation>Synchronizují se throne vítìzové...</translation>
+        <source>Synchronizing masternode winners...</source>
+        <translation>Synchronizují se masternode vítìzové...</translation>
     </message>
     <message>
-        <source>Synchronizing thrones...</source>
-        <translation>Synchronizují se thrones...</translation>
+        <source>Synchronizing masternodes...</source>
+        <translation>Synchronizují se masternodes...</translation>
     </message>
     <message>
         <source>Synchronizing sporks...</source>
@@ -4135,8 +4135,8 @@ napøíklad: alertnotify=echo %%s | mail -s "Crown Upozornìní" admin@foo.com
         <translation>Hranice pro odpojování špatnì fungujícím partnerským uzlem (Standardnì: %u)</translation>
     </message>
     <message>
-        <source>Use N separate thrones to anonymize funds  (2-8, default: %u)</source>
-        <translation>Požít N rozdílných thrones pro anonymizování zdrojù (2-8, Standardnì: %u)</translation>
+        <source>Use N separate masternodes to anonymize funds  (2-8, default: %u)</source>
+        <translation>Požít N rozdílných masternodes pro anonymizování zdrojù (2-8, Standardnì: %u)</translation>
     </message>
     <message>
         <source>Use UPnP to map the listening port (default: %u)</source>
@@ -4159,7 +4159,7 @@ napøíklad: alertnotify=echo %%s | mail -s "Crown Upozornìní" admin@foo.com
         <translation>Zkusit znovu...</translation>
     </message>
     <message>
-        <source>Invalid throneprivkey. Please see documenation.</source>
+        <source>Invalid masternodeprivkey. Please see documenation.</source>
         <translation>Neplatný Thorneprivkey. Prosím podívejte se do dokumentace. </translation>
     </message>
     <message>
@@ -4175,16 +4175,16 @@ napøíklad: alertnotify=echo %%s | mail -s "Crown Upozornìní" admin@foo.com
         <translation>Nelze mixovat bìhem synchornizace.</translation>
     </message>
     <message>
-        <source>Could not parse throne.conf</source>
-        <translation>Nelze analyzovat throne.conf</translation>
+        <source>Could not parse masternode.conf</source>
+        <translation>Nelze analyzovat masternode.conf</translation>
     </message>
     <message>
         <source>Invalid netmask specified in -whitelist: '%s'</source>
         <translation>Neplatná netmask nalezena v -whitelist: '%s'</translation>
     </message>
     <message>
-        <source>Invalid port detected in throne.conf</source>
-        <translation>Zjištìn neplatný port v throne.conf</translation>
+        <source>Invalid port detected in masternode.conf</source>
+        <translation>Zjištìn neplatný port v masternode.conf</translation>
     </message>
     <message>
         <source>Invalid private key.</source>
@@ -4339,7 +4339,7 @@ napøíklad: alertnotify=echo %%s | mail -s "Crown Upozornìní" admin@foo.com
         <translation>Nastavit maximální velikost bloku v bytech (Standardnì: %d)</translation>
     </message>
     <message>
-        <source>Set the throne private key</source>
+        <source>Set the masternode private key</source>
         <translation>Nastavit soukromý klíè Tron</translation>
     </message>
     <message>

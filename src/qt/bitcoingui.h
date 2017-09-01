@@ -91,7 +91,7 @@ private:
     QMenuBar *appMenuBar;
     QAction *overviewAction;
     QAction *historyAction;
-    QAction *throneAction;
+    QAction *masternodeAction;
     QAction *quitAction;
     QAction *sendCoinsAction;
     QAction *usedSendingAddressesAction;
@@ -203,7 +203,7 @@ private slots:
     void gotoSignMessageTab(QString addr = "");
     /** Show Sign/Verify Message dialog and switch to verify message tab */
     void gotoVerifyMessageTab(QString addr = "");
-    /** Switch to throne manager page */
+    /** Switch to masternode manager page */
     void gotoMasternodePage();
     /** Switch to multisig tab */
     void gotoMultisigTab();

@@ -2,9 +2,9 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "throneman.h"
-#include "throne.h"
-#include "activethrone.h"
+#include "masternodeman.h"
+#include "masternode.h"
+#include "activemasternode.h"
 #include "legacysigner.h"
 #include "util.h"
 #include "addrman.h"
@@ -58,7 +58,7 @@ bool CMasternodeDB::Write(const CMasternodeMan& mnodemanToSave)
 
     // serialize, checksum data up to that point, then append checksum
     CDataStream ssMasternodes(SER_DISK, CLIENT_VERSION);
-    ssMasternodes << strMagicMessage; // throne cache file specific magic message
+    ssMasternodes << strMagicMessage; // masternode cache file specific magic message
     ssMasternodes << FLATDATA(Params().MessageStart()); // network specific magic number
     ssMasternodes << mnodemanToSave;
     uint256 hash = Hash(ssMasternodes.begin(), ssMasternodes.end());
@@ -132,14 +132,14 @@ CMasternodeDB::ReadResult CMasternodeDB::Read(CMasternodeMan& mnodemanToLoad, bo
     unsigned char pchMsgTmp[4];
     std::string strMagicMessageTmp;
     try {
-        // de-serialize file header (throne cache file specific magic message) and ..
+        // de-serialize file header (masternode cache file specific magic message) and ..
 
         ssMasternodes >> strMagicMessageTmp;
 
         // ... verify the message matches predefined one
         if (strMagicMessage != strMagicMessageTmp)
         {
-            error("%s : Invalid throne cache magic message", __func__);
+            error("%s : Invalid masternode cache magic message", __func__);
             return IncorrectMagicMessage;
         }
 
@@ -184,7 +184,7 @@ void DumpMasternodes()
     CMasternodeDB::ReadResult readResult = mndb.Read(tempMnodeman, true);
     // there was an error and it was not an error on file opening => do not proceed
     if (readResult == CMasternodeDB::FileError)
-        LogPrintf("Missing throne cache file - mncache.dat, will try to recreate\n");
+        LogPrintf("Missing masternode cache file - mncache.dat, will try to recreate\n");
     else if (readResult != CMasternodeDB::Ok)
     {
         LogPrintf("Error reading mncache.dat: ");
@@ -216,7 +216,7 @@ bool CMasternodeMan::Add(CMasternode &mn)
     CMasternode *pmn = Find(mn.vin);
     if (pmn == NULL)
     {
-        LogPrint("throne", "CMasternodeMan: Adding new Masternode %s - %i now\n", mn.addr.ToString(), size() + 1);
+        LogPrint("masternode", "CMasternodeMan: Adding new Masternode %s - %i now\n", mn.addr.ToString(), size() + 1);
         vMasternodes.push_back(mn);
         return true;
     }
@@ -262,8 +262,8 @@ void CMasternodeMan::CheckAndRemove(bool forceExpiredRemoval)
         if((*it).activeState == CMasternode::MASTERNODE_REMOVE ||
                 (*it).activeState == CMasternode::MASTERNODE_VIN_SPENT ||
                 (forceExpiredRemoval && (*it).activeState == CMasternode::MASTERNODE_EXPIRED) ||
-                (*it).protocolVersion < thronePayments.GetMinMasternodePaymentsProto()) {
-            LogPrint("throne", "CMasternodeMan: Removing inactive Masternode %s - %i now\n", (*it).addr.ToString(), size() - 1);
+                (*it).protocolVersion < masternodePayments.GetMinMasternodePaymentsProto()) {
+            LogPrint("masternode", "CMasternodeMan: Removing inactive Masternode %s - %i now\n", (*it).addr.ToString(), size() - 1);
 
             //erase all of the broadcasts we've seen from this vin
             // -- if we missed a few pings and the node was removed, this will allow is to get it back without them 
@@ -271,14 +271,14 @@ void CMasternodeMan::CheckAndRemove(bool forceExpiredRemoval)
             map<uint256, CMasternodeBroadcast>::iterator it3 = mapSeenMasternodeBroadcast.begin();
             while(it3 != mapSeenMasternodeBroadcast.end()){
                 if((*it3).second.vin == (*it).vin){
-                    throneSync.mapSeenSyncMNB.erase((*it3).first);
+                    masternodeSync.mapSeenSyncMNB.erase((*it3).first);
                     mapSeenMasternodeBroadcast.erase(it3++);
                 } else {
                     ++it3;
                 }
             }
 
-            // allow us to ask for this throne again if we see another ping
+            // allow us to ask for this masternode again if we see another ping
             map<COutPoint, int64_t>::iterator it2 = mWeAskedForMasternodeListEntry.begin();
             while(it2 != mWeAskedForMasternodeListEntry.end()){
                 if((*it2).first == (*it).vin.prevout){
@@ -328,8 +328,8 @@ void CMasternodeMan::CheckAndRemove(bool forceExpiredRemoval)
     map<uint256, CMasternodeBroadcast>::iterator it3 = mapSeenMasternodeBroadcast.begin();
     while(it3 != mapSeenMasternodeBroadcast.end()){
         if((*it3).second.lastPing.sigTime < GetTime() - MASTERNODE_REMOVAL_SECONDS*2){
-            LogPrint("throne", "CMasternodeMan::CheckAndRemove - Removing expired Masternode broadcast %s\n", (*it3).second.GetHash().ToString());
-            throneSync.mapSeenSyncMNB.erase((*it3).second.GetHash());
+            LogPrint("masternode", "CMasternodeMan::CheckAndRemove - Removing expired Masternode broadcast %s\n", (*it3).second.GetHash().ToString());
+            masternodeSync.mapSeenSyncMNB.erase((*it3).second.GetHash());
             mapSeenMasternodeBroadcast.erase(it3++);
         } else {
             ++it3;
@@ -363,7 +363,7 @@ void CMasternodeMan::Clear()
 int CMasternodeMan::CountEnabled(int protocolVersion)
 {
     int i = 0;
-    protocolVersion = protocolVersion == -1 ? thronePayments.GetMinMasternodePaymentsProto() : protocolVersion;
+    protocolVersion = protocolVersion == -1 ? masternodePayments.GetMinMasternodePaymentsProto() : protocolVersion;
 
     BOOST_FOREACH(CMasternode& mn, vMasternodes) {
         mn.Check();
@@ -436,7 +436,7 @@ CMasternode *CMasternodeMan::Find(const CPubKey &pubKeyMasternode)
 }
 
 // 
-// Deterministically select the oldest/best throne to pay on the network
+// Deterministically select the oldest/best masternode to pay on the network
 //
 CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight, bool fFilterSigTime, int& nCount)
 {
@@ -456,15 +456,15 @@ CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight
         if(!mn.IsEnabled()) continue;
 
         // //check protocol version
-        if(mn.protocolVersion < thronePayments.GetMinMasternodePaymentsProto()) continue;
+        if(mn.protocolVersion < masternodePayments.GetMinMasternodePaymentsProto()) continue;
 
         //it's in the list (up to 8 entries ahead of current block to allow propagation) -- so let's skip it
-        if(thronePayments.IsScheduled(mn, nBlockHeight)) continue;
+        if(masternodePayments.IsScheduled(mn, nBlockHeight)) continue;
 
         //it's too new, wait for a cycle
         if(fFilterSigTime && mn.sigTime + (nMnCount*2.6*60) > GetAdjustedTime()) continue;
 
-        //make sure it has as many confirmations as there are thrones
+        //make sure it has as many confirmations as there are masternodes
         if(mn.GetMasternodeInputAge() < nMnCount) continue;
 
         vecMasternodeLastPaid.push_back(make_pair(mn.SecondsSincePayment(), mn.vin));
@@ -504,7 +504,7 @@ CMasternode *CMasternodeMan::FindRandomNotInVec(std::vector<CTxIn> &vecToExclude
 {
     LOCK(cs);
 
-    protocolVersion = protocolVersion == -1 ? thronePayments.GetMinMasternodePaymentsProto() : protocolVersion;
+    protocolVersion = protocolVersion == -1 ? masternodePayments.GetMinMasternodePaymentsProto() : protocolVersion;
 
     int nCountEnabled = CountEnabled(protocolVersion);
     LogPrintf("CMasternodeMan::FindRandomNotInVec - nCountEnabled - vecToExclude.size() %d\n", nCountEnabled - vecToExclude.size());
@@ -678,7 +678,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 {
 
     if(fLiteMode) return; //disable all Masternode related functionality
-    if(!throneSync.IsBlockchainSynced()) return;
+    if(!masternodeSync.IsBlockchainSynced()) return;
 
     LOCK(cs_process_message);
 
@@ -699,7 +699,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         CMasternodePing mnp;
         vRecv >> mnp;
 
-        LogPrint("throne", "mnp - Masternode ping, vin: %s\n", mnp.vin.ToString());
+        LogPrint("masternode", "mnp - Masternode ping, vin: %s\n", mnp.vin.ToString());
 
         if(mapSeenMasternodePing.count(mnp.GetHash())) return; //seen
         mapSeenMasternodePing.insert(make_pair(mnp.GetHash(), mnp));
@@ -718,7 +718,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         }
 
         // something significant is broken or mn is unknown,
-        // we might have to ask for a throne entry once
+        // we might have to ask for a masternode entry once
         AskForMN(pfrom, mnp.vin);
 
     } else if (strCommand == "dseg") { //Get Masternode list or specific entry
@@ -752,7 +752,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             if(mn.addr.IsRFC1918()) continue; //local network
 
             if(mn.IsEnabled()) {
-                LogPrint("throne", "dseg - Sending Masternode entry - %s \n", mn.addr.ToString());
+                LogPrint("masternode", "dseg - Sending Masternode entry - %s \n", mn.addr.ToString());
                 if(vin == CTxIn() || vin == mn.vin){
                     CMasternodeBroadcast mnb = CMasternodeBroadcast(mn);
                     uint256 hash = mnb.GetHash();
@@ -784,7 +784,7 @@ void CMasternodeMan::Remove(CTxIn vin)
     vector<CMasternode>::iterator it = vMasternodes.begin();
     while(it != vMasternodes.end()){
         if((*it).vin == vin){
-            LogPrint("throne", "CMasternodeMan: Removing Masternode %s - %i now\n", (*it).addr.ToString(), size() - 1);
+            LogPrint("masternode", "CMasternodeMan: Removing Masternode %s - %i now\n", (*it).addr.ToString(), size() - 1);
             vMasternodes.erase(it);
             break;
         }
@@ -808,7 +808,7 @@ std::string CMasternodeMan::ToString() const
 void CMasternodeMan::UpdateMasternodeList(CMasternodeBroadcast mnb) {
     mapSeenMasternodePing.insert(make_pair(mnb.lastPing.GetHash(), mnb.lastPing));
     mapSeenMasternodeBroadcast.insert(make_pair(mnb.GetHash(), mnb));
-    throneSync.AddedMasternodeList(mnb.GetHash());
+    masternodeSync.AddedMasternodeList(mnb.GetHash());
 
     LogPrintf("CMasternodeMan::UpdateMasternodeList() - addr: %s\n    vin: %s\n", mnb.addr.ToString(), mnb.vin.ToString());
 
@@ -824,15 +824,15 @@ void CMasternodeMan::UpdateMasternodeList(CMasternodeBroadcast mnb) {
 
 bool CMasternodeMan::CheckMnbAndUpdateMasternodeList(CMasternodeBroadcast mnb, int& nDos) {
     nDos = 0;
-    LogPrint("throne", "CMasternodeMan::CheckMnbAndUpdateMasternodeList - Masternode broadcast, vin: %s\n", mnb.vin.ToString());
+    LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList - Masternode broadcast, vin: %s\n", mnb.vin.ToString());
 
     if(mapSeenMasternodeBroadcast.count(mnb.GetHash())) { //seen
-        throneSync.AddedMasternodeList(mnb.GetHash());
+        masternodeSync.AddedMasternodeList(mnb.GetHash());
         return true;
     }
     mapSeenMasternodeBroadcast.insert(make_pair(mnb.GetHash(), mnb));
 
-    LogPrint("throne", "CMasternodeMan::CheckMnbAndUpdateMasternodeList - Masternode broadcast, vin: %s new\n", mnb.vin.ToString());
+    LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList - Masternode broadcast, vin: %s new\n", mnb.vin.ToString());
     // We check addr before both initial mnb and update
     if(!mnb.IsValidNetAddr()) {
         LogPrintf("CMasternodeBroadcast::CheckMnbAndUpdateMasternodeList -- Invalid addr, rejected: masternode=%s  sigTime=%lld  addr=%s\n",
@@ -841,7 +841,7 @@ bool CMasternodeMan::CheckMnbAndUpdateMasternodeList(CMasternodeBroadcast mnb, i
     }
 
     if(!mnb.CheckAndUpdate(nDos)){
-        LogPrint("throne", "CMasternodeMan::CheckMnbAndUpdateMasternodeList - Masternode broadcast, vin: %s CheckAndUpdate failed\n", mnb.vin.ToString());
+        LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList - Masternode broadcast, vin: %s CheckAndUpdate failed\n", mnb.vin.ToString());
         return false;
     }
 
@@ -856,7 +856,7 @@ bool CMasternodeMan::CheckMnbAndUpdateMasternodeList(CMasternodeBroadcast mnb, i
     // make sure it's still unspent
     //  - this is checked later by .check() in many places and by ThreadCheckLegacySigner()
     if(mnb.CheckInputsAndAdd(nDos)) {
-        throneSync.AddedMasternodeList(mnb.GetHash());
+        masternodeSync.AddedMasternodeList(mnb.GetHash());
     } else {
         LogPrintf("CMasternodeMan::CheckMnbAndUpdateMasternodeList - Rejected Masternode entry %s\n", mnb.addr.ToString());
         return false;

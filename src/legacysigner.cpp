@@ -6,7 +6,7 @@
 #include "main.h"
 #include "init.h"
 #include "util.h"
-#include "throneman.h"
+#include "masternodeman.h"
 #include "script/sign.h"
 #include "instantx.h"
 #include "ui_interface.h"
@@ -123,9 +123,9 @@ void ThreadCheckLegacySigner()
         //LogPrintf("ThreadCheckLegacySigner::check timeout\n");
 
         // try to sync from all available nodes, one step at a time
-        throneSync.Process();
+        masternodeSync.Process();
 
-        if(throneSync.IsBlockchainSynced()) {
+        if(masternodeSync.IsBlockchainSynced()) {
 
             c++;
 
@@ -137,7 +137,7 @@ void ThreadCheckLegacySigner()
             {
                 mnodeman.CheckAndRemove();
                 mnodeman.ProcessMasternodeConnections();
-                thronePayments.CleanPaymentList();
+                masternodePayments.CleanPaymentList();
                 CleanTransactionLocksList();
             }
 

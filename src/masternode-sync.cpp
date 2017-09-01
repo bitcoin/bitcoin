@@ -3,18 +3,18 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "main.h"
-#include "activethrone.h"
-#include "throne-sync.h"
-#include "throne-payments.h"
-#include "throne-budget.h"
-#include "throne.h"
-#include "throneman.h"
+#include "activemasternode.h"
+#include "masternode-sync.h"
+#include "masternode-payments.h"
+#include "masternode-budget.h"
+#include "masternode.h"
+#include "masternodeman.h"
 #include "spork.h"
 #include "util.h"
 #include "addrman.h"
 
 class CMasternodeSync;
-CMasternodeSync throneSync;
+CMasternodeSync masternodeSync;
 
 CMasternodeSync::CMasternodeSync()
 {
@@ -95,7 +95,7 @@ void CMasternodeSync::AddedMasternodeList(uint256 hash)
 
 void CMasternodeSync::AddedMasternodeWinner(uint256 hash)
 {
-    if(thronePayments.mapMasternodePayeeVotes.count(hash)) {
+    if(masternodePayments.mapMasternodePayeeVotes.count(hash)) {
         if(mapSeenSyncMNW[hash] < MASTERNODE_SYNC_THRESHOLD) {
             lastMasternodeWinner = GetTime();
             mapSeenSyncMNW[hash]++;
@@ -159,11 +159,11 @@ void CMasternodeSync::GetNextAsset()
 
 std::string CMasternodeSync::GetSyncStatus()
 {
-    switch (throneSync.RequestedMasternodeAssets) {
+    switch (masternodeSync.RequestedMasternodeAssets) {
         case MASTERNODE_SYNC_INITIAL: return _("Synchronization pending...");
         case MASTERNODE_SYNC_SPORKS: return _("Synchronizing sporks...");
-        case MASTERNODE_SYNC_LIST: return _("Synchronizing thrones...");
-        case MASTERNODE_SYNC_MNW: return _("Synchronizing throne winners...");
+        case MASTERNODE_SYNC_LIST: return _("Synchronizing masternodes...");
+        case MASTERNODE_SYNC_MNW: return _("Synchronizing masternode winners...");
         case MASTERNODE_SYNC_BUDGET: return _("Synchronizing budgets...");
         case MASTERNODE_SYNC_FAILED: return _("Synchronization failed");
         case MASTERNODE_SYNC_FINISHED: return _("Synchronization finished");
@@ -231,7 +231,7 @@ void CMasternodeSync::Process()
 
     if(IsSynced()) {
         /* 
-            Resync if we lose all thrones from sleep/wake or failure to sync originally
+            Resync if we lose all masternodes from sleep/wake or failure to sync originally
         */
         if(mnodeman.CountEnabled() == 0) {
             Reset();
@@ -268,7 +268,7 @@ void CMasternodeSync::Process()
                 int nMnCount = mnodeman.CountEnabled();
                 pnode->PushMessage("mnget", nMnCount); //sync payees
                 uint256 n = uint256();
-                pnode->PushMessage("mnvs", n); //sync throne votes
+                pnode->PushMessage("mnvs", n); //sync masternode votes
             } else {
                 RequestedMasternodeAssets = MASTERNODE_SYNC_FINISHED;
             }
@@ -288,7 +288,7 @@ void CMasternodeSync::Process()
             return;
         }
 
-        if (pnode->nVersion >= thronePayments.GetMinMasternodePaymentsProto()) {
+        if (pnode->nVersion >= masternodePayments.GetMinMasternodePaymentsProto()) {
 
             if(RequestedMasternodeAssets == MASTERNODE_SYNC_LIST) {
                 if(fDebug) LogPrintf("CMasternodeSync::Process() - lastMasternodeList %lld (GetTime() - MASTERNODE_SYNC_TIMEOUT) %lld\n", lastMasternodeList, GetTime() - MASTERNODE_SYNC_TIMEOUT);
@@ -368,7 +368,7 @@ void CMasternodeSync::Process()
                     //if(budget.HasNextFinalizedBudget() || nCountFailures >= 2 || IsBudgetPropEmpty()) {
                         GetNextAsset();
 
-                        //try to activate our throne if possible
+                        //try to activate our masternode if possible
                         activeMasternode.ManageStatus();
                     // } else { //we've failed to sync, this state will reject the next budget block
                     //     LogPrintf("CMasternodeSync::Process - ERROR - Sync has failed, will retry later\n");
@@ -395,7 +395,7 @@ void CMasternodeSync::Process()
                 if(RequestedMasternodeAttempt >= MASTERNODE_SYNC_THRESHOLD*3) return;
 
                 uint256 n = uint256();
-                pnode->PushMessage("mnvs", n); //sync throne votes
+                pnode->PushMessage("mnvs", n); //sync masternode votes
                 RequestedMasternodeAttempt++;
                 
                 return;

@@ -864,15 +864,15 @@ Adres: %4
         <translation>Proszę wybrać poziom bezpieczeństwa.</translation>
     </message>
     <message>
-        <source>Use 2 separate thrones to mix funds up to 10000 CRW</source>
+        <source>Use 2 separate masternodes to mix funds up to 10000 CRW</source>
         <translation>Użyj 2 oddzielnych masternodów aby wymieszać środki max. do 10000 CRW</translation>
     </message>
     <message>
-        <source>Use 8 separate thrones to mix funds up to 10000 CRW</source>
+        <source>Use 8 separate masternodes to mix funds up to 10000 CRW</source>
         <translation>Użyj 8 oddzielnych masternodów aby wymieszać środki max. do 10000 CRW</translation>
     </message>
     <message>
-        <source>Use 16 separate thrones</source>
+        <source>Use 16 separate masternodes</source>
         <translation>Użyj 16 oddzielnych masternodów</translation>
     </message>
     <message>
@@ -1186,7 +1186,7 @@ Adres: %4
         <translation>Ekspert</translation>
     </message>
     <message>
-        <source>This setting determines the amount of individual thrones that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</source>
+        <source>This setting determines the amount of individual masternodes that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</source>
         <translation>Tutaj możesz ustawić liczbę masternodów, przez które transakcja zostanie przepuszczona.&lt;br/&gt;Im większa liczba masternodów tym większy poziom anonimowości, ale opłata jest również wyższa.</translation>
     </message>
     <message>
@@ -3410,8 +3410,8 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Uwaga: plik wallet.dat jest uszkodzony, ale dane zostały odzyskane! Oryginalny plik wallet.dat został zapisany jako wallet.{timestamp}.bak w %s; jeżeli twoje saldo lub transakcje są nieprawidłowe powinieneś przwyrócić ten plik z kopi zapasowej.</translation>
     </message>
     <message>
-        <source>You must specify a throneprivkey in the configuration. Please see documentation for help.</source>
-        <translation>Musisz sprecyzować throneprivkey w konfiguracji. Proszę przeglądnij dokumentacje w celu pomocy.</translation>
+        <source>You must specify a masternodeprivkey in the configuration. Please see documentation for help.</source>
+        <translation>Musisz sprecyzować masternodeprivkey w konfiguracji. Proszę przeglądnij dokumentacje w celu pomocy.</translation>
     </message>
     <message>
         <source>(default: 1)</source>
@@ -3815,8 +3815,8 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
         <translation>Wyłącz tryb awaryjny, nadpisz prawdziwy tryb awaryjny (domyślnie: %u)</translation>
     </message>
     <message>
-        <source>Enable the client to act as a throne (0-1, default: %u)</source>
-        <translation>Upoważnia klienta aby działał jako throne (0-1, domyślnie: %u)</translation>
+        <source>Enable the client to act as a masternode (0-1, default: %u)</source>
+        <translation>Upoważnia klienta aby działał jako masternode (0-1, domyślnie: %u)</translation>
     </message>
     <message>
         <source>Error connecting to Masternode.</source>
@@ -3959,11 +3959,11 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
         <translation>Ładuje pamięć podręczną budżetu...</translation>
     </message>
     <message>
-        <source>Loading throne cache...</source>
+        <source>Loading masternode cache...</source>
         <translation>Ładuję pamięć podręczną masternoda...</translation>
     </message>
     <message>
-        <source>Loading throne payment cache...</source>
+        <source>Loading masternode payment cache...</source>
         <translation>Ładuję pamięć podręczną płatności masternodów...</translation>
     </message>
     <message>
@@ -3971,7 +3971,7 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
         <translation>Transakcja została już zamknięta.</translation>
     </message>
     <message>
-        <source>Lock thrones from throne configuration file (default: %u)</source>
+        <source>Lock masternodes from masternode configuration file (default: %u)</source>
         <translation>Zamknij masternody z pliku konfiguracji (domyślnie: %u)</translation>
     </message>
     <message>
@@ -4043,8 +4043,8 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
         <translation>Klucz prywatny serwera (domyślnie: %s)</translation>
     </message>
     <message>
-        <source>Set external address:port to get to this throne (example: %s)</source>
-        <translation>Ustaw zewnętrzny address:port aby połączyć się z tym thronem (na przykład: %s)</translation>
+        <source>Set external address:port to get to this masternode (example: %s)</source>
+        <translation>Ustaw zewnętrzny address:port aby połączyć się z tym masternodem (na przykład: %s)</translation>
     </message>
     <message>
         <source>Set key pool size to &lt;n&gt; (default: %u)</source>
@@ -4075,7 +4075,7 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
         <translation>ustaw limit czasu połączenia w milisekundach (minimum: 1, domyślnie: %d)</translation>
     </message>
     <message>
-        <source>Specify throne configuration file (default: %s)</source>
+        <source>Specify masternode configuration file (default: %s)</source>
         <translation>Ustaw plik konfiguracji masternoda (domyślnie: %s)</translation>
     </message>
     <message>
@@ -4091,15 +4091,15 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
         <translation>Zamknij program po zaimportowaniu wszystkich bloków z dysku (domyślnie: %u)</translation>
     </message>
     <message>
-        <source>Submitted following entries to throne: %u / %d</source>
+        <source>Submitted following entries to masternode: %u / %d</source>
         <translation>Następujące wpisy zostały przesłane do masternoda: %u / %d</translation>
     </message>
     <message>
-        <source>Submitted to throne, waiting for more entries ( %u / %d ) %s</source>
+        <source>Submitted to masternode, waiting for more entries ( %u / %d ) %s</source>
         <translation>Zapisano do masternoda, czekam na więcej wejść ( %u / %d ) %s</translation>
     </message>
     <message>
-        <source>Submitted to throne, waiting in queue %s</source>
+        <source>Submitted to masternode, waiting in queue %s</source>
         <translation>Przesłano do masterdnoda, czekaj na swoją kolej %s</translation>
     </message>
     <message>
@@ -4115,11 +4115,11 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
         <translation>Synchronizuję budżet...</translation>
     </message>
     <message>
-        <source>Synchronizing throne winners...</source>
+        <source>Synchronizing masternode winners...</source>
         <translation>Synchronizuję zwycięskie masternody...</translation>
     </message>
     <message>
-        <source>Synchronizing thrones...</source>
+        <source>Synchronizing masternodes...</source>
         <translation>Synchronizuję masternody...</translation>
     </message>
     <message>
@@ -4135,7 +4135,7 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
         <translation>Próg dla niewłaściwie działających, odłączających sie peerów (domyślnie: %u)</translation>
     </message>
     <message>
-        <source>Use N separate thrones to anonymize funds  (2-8, default: %u)</source>
+        <source>Use N separate masternodes to anonymize funds  (2-8, default: %u)</source>
         <translation>Użyj N oddzielnych masternodów aby zanonimizować fundusze (2-8, domyślnie: %u)</translation>
     </message>
     <message>
@@ -4159,7 +4159,7 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
         <translation>Spróbuje ponownie...</translation>
     </message>
     <message>
-        <source>Invalid throneprivkey. Please see documenation.</source>
+        <source>Invalid masternodeprivkey. Please see documenation.</source>
         <translation>Nieprawidłowy klucz prywatny masternoda. Przeczytaj dokumentację.</translation>
     </message>
     <message>
@@ -4175,16 +4175,16 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
         <translation>Nie możesz miksować w trakcie  synchronizacji.</translation>
     </message>
     <message>
-        <source>Could not parse throne.conf</source>
-        <translation>Nie można analizować throne.conf</translation>
+        <source>Could not parse masternode.conf</source>
+        <translation>Nie można analizować masternode.conf</translation>
     </message>
     <message>
         <source>Invalid netmask specified in -whitelist: '%s'</source>
         <translation>Niewłaściwa maska sieci w -whitelist: '%s'</translation>
     </message>
     <message>
-        <source>Invalid port detected in throne.conf</source>
-        <translation>Wykryto niewłaściwy port w throne.conf</translation>
+        <source>Invalid port detected in masternode.conf</source>
+        <translation>Wykryto niewłaściwy port w masternode.conf</translation>
     </message>
     <message>
         <source>Invalid private key.</source>
@@ -4339,7 +4339,7 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
         <translation>Ustaw maksymalny rozmiar bloku w bajtach (domyślny: %d)</translation>
     </message>
     <message>
-        <source>Set the throne private key</source>
+        <source>Set the masternode private key</source>
         <translation>Ustaw klucz prywatny masternoda</translation>
     </message>
     <message>

@@ -228,7 +228,7 @@ bool LogAcceptCategory(const char* category)
             // "crown" is a composite category enabling all Crown-related debug output
             if(ptrCategory->count(string("crown"))) {
                 ptrCategory->insert(string("instantx"));
-                ptrCategory->insert(string("throne"));
+                ptrCategory->insert(string("masternode"));
                 ptrCategory->insert(string("mnpayments"));
                 ptrCategory->insert(string("mnbudget"));
             }
@@ -485,7 +485,7 @@ boost::filesystem::path GetConfigFile()
 
 boost::filesystem::path GetMasternodeConfigFile()
 {
-    boost::filesystem::path pathConfigFile(GetArg("-mnconf", "throne.conf"));
+    boost::filesystem::path pathConfigFile(GetArg("-mnconf", "masternode.conf"));
     if (!pathConfigFile.is_complete()) pathConfigFile = GetDataDir() / pathConfigFile;
     return pathConfigFile;
 }

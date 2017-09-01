@@ -67,7 +67,7 @@
              <item>
               <widget class="QLabel" name="updateNote">
                <property name="text">
-                <string>Note: Status of your thrones in local wallet can potentially be slightly incorrect.&lt;br /&gt;Always wait for wallet to sync additional data and then double check from another node&lt;br /&gt;if your node should be running but you still see &quot;MISSING&quot; in &quot;Status&quot; field.</string>
+                <string>Note: Status of your masternodes in local wallet can potentially be slightly incorrect.&lt;br /&gt;Always wait for wallet to sync additional data and then double check from another node&lt;br /&gt;if your node should be running but you still see &quot;MISSING&quot; in &quot;Status&quot; field.</string>
                </property>
               </widget>
              </item>
@@ -271,7 +271,7 @@
            <item>
             <widget class="QLineEdit" name="filterLineEdit">
              <property name="toolTip">
-              <string>Filter throne list</string>
+              <string>Filter masternode list</string>
              </property>
             </widget>
            </item>

@@ -10,7 +10,7 @@
 #include "checkpoints.h"
 #include "coincontrol.h"
 #include "net.h"
-#include "throne-budget.h"
+#include "masternode-budget.h"
 #include "instantx.h"
 #include "script/script.h"
 #include "script/sign.h"
@@ -1404,7 +1404,7 @@ bool CWallet::GetMasternodeVinAndKeys(CTxIn& vinRet, CPubKey& pubKeyRet, CKey& k
     std::vector<COutput> vPossibleCoins;
     AvailableCoins(vPossibleCoins, true, NULL, ONLY_10000);
     if(vPossibleCoins.empty()) {
-        LogPrintf("CWallet::GetMasternodeVinAndKeys - Could not locate any valid throne vin\n");
+        LogPrintf("CWallet::GetMasternodeVinAndKeys - Could not locate any valid masternode vin\n");
         return false;
     }
 
@@ -1419,7 +1419,7 @@ bool CWallet::GetMasternodeVinAndKeys(CTxIn& vinRet, CPubKey& pubKeyRet, CKey& k
         if(out.tx->GetHash() == txHash && out.i == nOutputIndex) // found it!
             return GetVinAndKeysFromOutput(out, vinRet, pubKeyRet, keyRet);
 
-    LogPrintf("CWallet::GetMasternodeVinAndKeys - Could not locate specified throne vin\n");
+    LogPrintf("CWallet::GetMasternodeVinAndKeys - Could not locate specified masternode vin\n");
     return false;
 }
 

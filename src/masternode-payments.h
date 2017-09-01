@@ -8,7 +8,7 @@
 
 #include "key.h"
 #include "main.h"
-#include "throne.h"
+#include "masternode.h"
 #include <boost/lexical_cast.hpp>
 
 using namespace std;
@@ -21,7 +21,7 @@ class CMasternodePayments;
 class CMasternodePaymentWinner;
 class CMasternodeBlockPayees;
 
-extern CMasternodePayments thronePayments;
+extern CMasternodePayments masternodePayments;
 
 #define MNPAYMENTS_SIGNATURES_REQUIRED           6
 #define MNPAYMENTS_SIGNATURES_TOTAL              10
@@ -83,7 +83,7 @@ public:
      }
 };
 
-// Keep track of votes for payees from thrones
+// Keep track of votes for payees from masternodes
 class CMasternodeBlockPayees
 {
 public:

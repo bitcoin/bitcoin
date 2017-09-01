@@ -11,7 +11,7 @@
 #include "noui.h"
 #include "ui_interface.h"
 #include "util.h"
-#include "throneconfig.h"
+#include "masternodeconfig.h"
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
@@ -109,10 +109,10 @@ bool AppInit(int argc, char* argv[])
             return false;
         }
 
-        // parse throne.conf
+        // parse masternode.conf
         std::string strErr;
-        if(!throneConfig.read(strErr)) {
-            fprintf(stderr,"Error reading throne configuration file: %s\n", strErr.c_str());
+        if(!masternodeConfig.read(strErr)) {
+            fprintf(stderr,"Error reading masternode configuration file: %s\n", strErr.c_str());
             return false;
         }
 

@@ -7,10 +7,10 @@
 
 #include "main.h"
 #include "sync.h"
-#include "activethrone.h"
-#include "throneman.h"
-#include "throne-payments.h"
-#include "throne-sync.h"
+#include "activemasternode.h"
+#include "masternodeman.h"
+#include "masternode-payments.h"
+#include "masternode-sync.h"
 
 class CTxIn;
 class CLegacySigner;
@@ -36,7 +36,7 @@ public:
         SetCollateralAddress(Params().LegacySignerDummyAddress());
     }
     bool SetCollateralAddress(std::string strAddress);
-    /// Is the inputs associated with this public key? (and there is 10000 CRW - checking if valid throne)
+    /// Is the inputs associated with this public key? (and there is 10000 CRW - checking if valid masternode)
     bool IsVinAssociatedWithPubkey(CTxIn& vin, CPubKey& pubkey);
     /// Set the private/public key values, returns true if successful
     bool SetKey(std::string strSecret, std::string& errorMessage, CKey& key, CPubKey& pubkey);

@@ -11,7 +11,7 @@
 #include "init.h"
 #include "wallet.h"
 #include "legacysigner.h"
-#include "throne.h"
+#include "masternode.h"
 
 #define ACTIVE_MASTERNODE_INITIAL                     0 // initial state
 #define ACTIVE_MASTERNODE_SYNC_IN_PROCESS             1
