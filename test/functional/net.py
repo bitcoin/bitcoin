@@ -17,10 +17,8 @@ from test_framework.util import (
     p2p_port
 )
 
-
 class NetTest(BitcoinTestFramework):
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
 

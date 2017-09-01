@@ -92,10 +92,9 @@ def all_rlt_txs(txarray):
     return txs
 
 class BIP68_112_113Test(ComparisonTestFramework):
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.num_nodes = 1
-        # Must set the blockversion for this test
+        self.setup_clean_chain = True
         # Must also set '-maxtipage=600100' to allow syncing from very old blocks
         # and '-dip3params=2000:2000' to create pre-dip3 blocks only
         self.extra_args = [['-whitelist=127.0.0.1', '-blockversion=4', '-maxtipage=600100', '-dip3params=2000:2000']]

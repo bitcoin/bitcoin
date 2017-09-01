@@ -185,8 +185,7 @@ class TestNode(NodeConnCB):
         self.send_message(getblocks_message)
 
 class SendHeadersTest(BitcoinTestFramework):
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
 

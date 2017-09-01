@@ -86,8 +86,7 @@ class TestNode(NodeConnCB):
         wait_until(lambda: not self.connected, timeout=timeout, lock=mininode_lock)
 
 class CompactBlocksTest(BitcoinTestFramework):
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.setup_clean_chain = True
         # both nodes has the same version
         self.num_nodes = 2

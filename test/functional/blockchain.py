@@ -30,12 +30,8 @@ from test_framework.util import (
     assert_is_hash_string,
 )
 
-
 class BlockchainTest(BitcoinTestFramework):
-
-    def __init__(self):
-        super().__init__()
-        self.setup_clean_chain = False
+    def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [['-stopatheight=207']]
 
@@ -145,7 +141,7 @@ class BlockchainTest(BitcoinTestFramework):
             pass  # The node already shut down before response
         self.log.debug('Node should stop at this height...')
         self.nodes[0].process.wait(timeout=BITCOIND_PROC_WAIT_TIMEOUT)
-        self.nodes[0] = self.start_node(0, self.options.tmpdir)
+        self.start_node(0)
         assert_equal(self.nodes[0].getblockcount(), 207)
 
 

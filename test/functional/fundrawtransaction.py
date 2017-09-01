@@ -14,13 +14,10 @@ def get_unspent(listunspent, amount):
             return utx
     raise AssertionError('Could not find unspent with amount={}'.format(amount))
 
-
 class RawTransactionsTest(BitcoinTestFramework):
-
-    def __init__(self):
-        super().__init__()
-        self.setup_clean_chain = True
+    def set_test_params(self):
         self.num_nodes = 4
+        self.setup_clean_chain = True
         self.extra_args = [['-usehd=0']] * self.num_nodes
 
     def setup_network(self, split=False):
@@ -450,11 +447,11 @@ class RawTransactionsTest(BitcoinTestFramework):
         ############################################################
         # locked wallet test
         self.stop_node(0)
+        self.nodes[1].node_encrypt_wallet("test")
         self.stop_node(2)
         self.stop_node(3)
-        self.nodes[1].node_encrypt_wallet("test")
 
-        self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir, [['-usehd=0']] * self.num_nodes)
+        self.start_nodes()
         # This test is not meant to test fee estimation and we'd like
         # to be sure all txs are sent at a consistent desired feerate
         for node in self.nodes:

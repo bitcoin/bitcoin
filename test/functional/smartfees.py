@@ -141,11 +141,8 @@ def check_estimates(node, fees_seen, max_invalid, print_estimates = True):
 
 
 class EstimateFeeTest(BitcoinTestFramework):
-
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.num_nodes = 3
-        self.setup_clean_chain = False
 
     def setup_network(self):
         """
@@ -153,58 +150,16 @@ class EstimateFeeTest(BitcoinTestFramework):
         But first we need to use one node to create a lot of outputs
         which we will use to generate our transactions.
         """
-        self.nodes = []
+        self.add_nodes(3, extra_args=[["-maxorphantx=1000", "-whitelist=127.0.0.1"],
+                                      ["-blockmaxsize=17000", "-maxorphantx=1000"],
+                                      ["-blockmaxsize=8000", "-maxorphantx=1000"]])
         # Use node0 to mine blocks for input splitting
-        self.nodes.append(self.start_node(0, self.options.tmpdir, ["-maxorphantx=1000",
-                                                              "-whitelist=127.0.0.1"]))
-
-        self.log.info("This test is time consuming, please be patient")
-        self.log.info("Splitting inputs so we can generate tx's")
-        self.txouts = []
-        self.txouts2 = []
-        # Split a coinbase into two transaction puzzle outputs
-        split_inputs(self.nodes[0], self.nodes[0].listunspent(0), self.txouts, True)
-
-        # Mine
-        while (len(self.nodes[0].getrawmempool()) > 0):
-            self.nodes[0].generate(1)
-
-        # Repeatedly split those 2 outputs, doubling twice for each rep
-        # Use txouts to monitor the available utxo, since these won't be tracked in wallet
-        reps = 0
-        while (reps < 5):
-            #Double txouts to txouts2
-            while (len(self.txouts)>0):
-                split_inputs(self.nodes[0], self.txouts, self.txouts2)
-            while (len(self.nodes[0].getrawmempool()) > 0):
-                self.nodes[0].generate(1)
-            #Double txouts2 to txouts
-            while (len(self.txouts2)>0):
-                split_inputs(self.nodes[0], self.txouts2, self.txouts)
-            while (len(self.nodes[0].getrawmempool()) > 0):
-                self.nodes[0].generate(1)
-            reps += 1
-        self.log.info("Finished splitting")
-
-        # Now we can connect the other nodes, didn't want to connect them earlier
-        # so the estimates would not be affected by the splitting transactions
         # Node1 mines small blocks but that are bigger than the expected transaction rate.
         # NOTE: the CreateNewBlock code starts counting block size at 1,000 bytes,
         # (17k is room enough for 110 or so transactions)
-        self.nodes.append(self.start_node(1, self.options.tmpdir,
-                                     ["-blockmaxsize=17000",
-                                      "-maxorphantx=1000"]))
-        connect_nodes(self.nodes[1], 0)
-
         # Node2 is a stingy miner, that
         # produces too small blocks (room for only 55 or so transactions)
-        node2args = ["-blockmaxsize=8000", "-maxorphantx=1000"]
 
-        self.nodes.append(self.start_node(2, self.options.tmpdir, node2args))
-        connect_nodes(self.nodes[0], 2)
-        connect_nodes(self.nodes[2], 1)
-
-        self.sync_all()
 
     def transact_and_mine(self, numblocks, mining_node):
         min_fee = Decimal("0.0001")
@@ -233,9 +188,51 @@ class EstimateFeeTest(BitcoinTestFramework):
             self.memutxo = newmem
 
     def run_test(self):
+        self.log.info("This test is time consuming, please be patient")
+        self.log.info("Splitting inputs so we can generate tx's")
+
         # Make log handler available to helper functions
         global log
         log = self.log
+
+        # Start node0
+        self.start_node(0)
+        self.txouts = []
+        self.txouts2 = []
+        # Split a coinbase into two transaction puzzle outputs
+        split_inputs(self.nodes[0], self.nodes[0].listunspent(0), self.txouts, True)
+
+        # Mine
+        while (len(self.nodes[0].getrawmempool()) > 0):
+            self.nodes[0].generate(1)
+
+        # Repeatedly split those 2 outputs, doubling twice for each rep
+        # Use txouts to monitor the available utxo, since these won't be tracked in wallet
+        reps = 0
+        while (reps < 5):
+            #Double txouts to txouts2
+            while (len(self.txouts)>0):
+                split_inputs(self.nodes[0], self.txouts, self.txouts2)
+            while (len(self.nodes[0].getrawmempool()) > 0):
+                self.nodes[0].generate(1)
+            #Double txouts2 to txouts
+            while (len(self.txouts2)>0):
+                split_inputs(self.nodes[0], self.txouts2, self.txouts)
+            while (len(self.nodes[0].getrawmempool()) > 0):
+                self.nodes[0].generate(1)
+            reps += 1
+        self.log.info("Finished splitting")
+
+        # Now we can connect the other nodes, didn't want to connect them earlier
+        # so the estimates would not be affected by the splitting transactions
+        self.start_node(1)
+        self.start_node(2)
+        connect_nodes(self.nodes[1], 0)
+        connect_nodes(self.nodes[0], 2)
+        connect_nodes(self.nodes[2], 1)
+
+        self.sync_all()
+
         self.fees_per_kb = []
         self.memutxo = []
         self.confutxo = self.txouts # Start with the set of confirmed txouts after splitting
