@@ -701,8 +701,8 @@ private:
     /* HD derive new child key (on internal or external chain) */
     void DeriveNewChildKey(CWalletDB &walletdb, CKeyMetadata& metadata, CKey& secret, bool internal = false);
 
-    std::set<int64_t> setInternalKeyPool;
-    std::set<int64_t> setExternalKeyPool;
+    std::set<int64_t> setInternalKeyPool GUARDED_BY(cs_wallet);
+    std::set<int64_t> setExternalKeyPool GUARDED_BY(cs_wallet);
     int64_t m_max_keypool_index;
     std::map<CKeyID, int64_t> m_pool_key_to_index;
 
@@ -766,7 +766,7 @@ public:
     std::map<CTxDestination, CKeyMetadata> mapKeyMetadata;
 
     typedef std::map<unsigned int, CMasterKey> MasterKeyMap;
-    MasterKeyMap mapMasterKeys;
+    MasterKeyMap mapMasterKeys GUARDED_BY(cs_wallet);
     unsigned int nMasterKeyMaxID;
 
     // Create wallet with dummy database handle
@@ -805,7 +805,7 @@ public:
         fScanningWallet = false;
     }
 
-    std::map<uint256, CWalletTx> mapWallet;
+    std::map<uint256, CWalletTx> mapWallet GUARDED_BY(cs_wallet);
     std::list<CAccountingEntry> laccentries;
 
     typedef std::pair<CWalletTx*, CAccountingEntry*> TxPair;
@@ -814,11 +814,11 @@ public:
 
     int64_t nOrderPosNext;
     uint64_t nAccountingEntryNumber;
-    std::map<uint256, int> mapRequestCount;
+    std::map<uint256, int> mapRequestCount GUARDED_BY(cs_wallet);
 
     std::map<CTxDestination, CAddressBookData> mapAddressBook;
 
-    std::set<COutPoint> setLockedCoins;
+    std::set<COutPoint> setLockedCoins GUARDED_BY(cs_wallet);
 
     const CWalletTx* GetWalletTx(const uint256& hash) const;
 
