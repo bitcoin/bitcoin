@@ -675,8 +675,8 @@ public:
     CRollingBloomFilter addrKnown;
     bool fGetAddr;
     std::set<uint256> setKnown;
-    int64_t nNextAddrSend;
-    int64_t nNextLocalAddrSend;
+    int64_t nNextAddrSend GUARDED_BY(cs_sendProcessing);
+    int64_t nNextLocalAddrSend GUARDED_BY(cs_sendProcessing);
 
     CCriticalSection cs_inventory;
     // inventory based relay
