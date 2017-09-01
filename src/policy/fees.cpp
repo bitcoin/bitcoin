@@ -596,7 +596,7 @@ void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, boo
     assert(bucketIndex == bucketIndex3);
 }
 
-bool CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry* entry)
+bool CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry* entry) EXCLUSIVE_LOCKS_REQUIRED(cs_feeEstimator)
 {
     if (!removeTx(entry->GetTx().GetHash(), true)) {
         // This transaction wasn't being tracked for fee estimation
@@ -719,7 +719,7 @@ CFeeRate CBlockPolicyEstimator::estimateRawFee(int confTarget, double successThr
     return CFeeRate(llround(median));
 }
 
-unsigned int CBlockPolicyEstimator::HighestTargetTracked(FeeEstimateHorizon horizon) const
+unsigned int CBlockPolicyEstimator::HighestTargetTracked(FeeEstimateHorizon horizon) const EXCLUSIVE_LOCKS_REQUIRED(cs_feeEstimator)
 {
     switch (horizon) {
     case FeeEstimateHorizon::SHORT_HALFLIFE: {
@@ -737,7 +737,7 @@ unsigned int CBlockPolicyEstimator::HighestTargetTracked(FeeEstimateHorizon hori
     }
 }
 
-unsigned int CBlockPolicyEstimator::BlockSpan() const
+unsigned int CBlockPolicyEstimator::BlockSpan() const EXCLUSIVE_LOCKS_REQUIRED(cs_feeEstimator)
 {
     if (firstRecordedHeight == 0) return 0;
     assert(nBestSeenHeight >= firstRecordedHeight);
@@ -745,7 +745,7 @@ unsigned int CBlockPolicyEstimator::BlockSpan() const
     return nBestSeenHeight - firstRecordedHeight;
 }
 
-unsigned int CBlockPolicyEstimator::HistoricalBlockSpan() const
+unsigned int CBlockPolicyEstimator::HistoricalBlockSpan() const EXCLUSIVE_LOCKS_REQUIRED(cs_feeEstimator)
 {
     if (historicalFirst == 0) return 0;
     assert(historicalBest >= historicalFirst);
@@ -755,7 +755,7 @@ unsigned int CBlockPolicyEstimator::HistoricalBlockSpan() const
     return historicalBest - historicalFirst;
 }
 
-unsigned int CBlockPolicyEstimator::MaxUsableEstimate() const
+unsigned int CBlockPolicyEstimator::MaxUsableEstimate() const EXCLUSIVE_LOCKS_REQUIRED(cs_feeEstimator)
 {
     // Block spans are divided by 2 to make sure there are enough potential failing data points for the estimate
     return std::min(longStats->GetMaxConfirms(), std::max(BlockSpan(), HistoricalBlockSpan()) / 2);
@@ -765,7 +765,7 @@ unsigned int CBlockPolicyEstimator::MaxUsableEstimate() const
  * time horizon which tracks confirmations up to the desired target.  If
  * checkShorterHorizon is requested, also allow short time horizon estimates
  * for a lower target to reduce the given answer */
-double CBlockPolicyEstimator::estimateCombinedFee(unsigned int confTarget, double successThreshold, bool checkShorterHorizon, EstimationResult *result) const
+double CBlockPolicyEstimator::estimateCombinedFee(unsigned int confTarget, double successThreshold, bool checkShorterHorizon, EstimationResult *result) const EXCLUSIVE_LOCKS_REQUIRED(cs_feeEstimator)
 {
     double estimate = -1;
     if (confTarget >= 1 && confTarget <= longStats->GetMaxConfirms()) {
@@ -804,7 +804,7 @@ double CBlockPolicyEstimator::estimateCombinedFee(unsigned int confTarget, doubl
 /** Ensure that for a conservative estimate, the DOUBLE_SUCCESS_PCT is also met
  * at 2 * target for any longer time horizons.
  */
-double CBlockPolicyEstimator::estimateConservativeFee(unsigned int doubleTarget, EstimationResult *result) const
+double CBlockPolicyEstimator::estimateConservativeFee(unsigned int doubleTarget, EstimationResult *result) const EXCLUSIVE_LOCKS_REQUIRED(cs_feeEstimator)
 {
     double estimate = -1;
     EstimationResult tempResult;

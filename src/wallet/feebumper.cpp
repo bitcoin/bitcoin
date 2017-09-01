@@ -23,7 +23,7 @@
 // calculation, but we should be able to refactor after priority is removed).
 // NOTE: this requires that all inputs must be in mapWallet (eg the tx should
 // be IsAllFromMe).
-static int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet)
+static int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet) EXCLUSIVE_LOCKS_REQUIRED(wallet->cs_wallet)
 {
     CMutableTransaction txNew(tx);
     std::vector<CInputCoin> vCoins;

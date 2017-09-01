@@ -59,7 +59,7 @@ size_t CTxMemPoolEntry::GetTxSize() const
 // Update the given tx for any in-mempool descendants.
 // Assumes that setMemPoolChildren is correct for the given tx and all
 // descendants.
-void CTxMemPool::UpdateForDescendants(txiter updateIt, cacheMap &cachedDescendants, const std::set<uint256> &setExclude)
+void CTxMemPool::UpdateForDescendants(txiter updateIt, cacheMap &cachedDescendants, const std::set<uint256> &setExclude) EXCLUSIVE_LOCKS_REQUIRED(cs)
 {
     setEntries stageEntries, setAllDescendants;
     stageEntries = GetMemPoolChildren(updateIt);
@@ -213,7 +213,7 @@ bool CTxMemPool::CalculateMemPoolAncestors(const CTxMemPoolEntry &entry, setEntr
     return true;
 }
 
-void CTxMemPool::UpdateAncestorsOf(bool add, txiter it, setEntries &setAncestors)
+void CTxMemPool::UpdateAncestorsOf(bool add, txiter it, setEntries &setAncestors) EXCLUSIVE_LOCKS_REQUIRED(cs)
 {
     setEntries parentIters = GetMemPoolParents(it);
     // add or remove this tx as a child of each parent
@@ -228,7 +228,7 @@ void CTxMemPool::UpdateAncestorsOf(bool add, txiter it, setEntries &setAncestors
     }
 }
 
-void CTxMemPool::UpdateEntryForAncestors(txiter it, const setEntries &setAncestors)
+void CTxMemPool::UpdateEntryForAncestors(txiter it, const setEntries &setAncestors) EXCLUSIVE_LOCKS_REQUIRED(cs)
 {
     int64_t updateCount = setAncestors.size();
     int64_t updateSize = 0;
@@ -250,7 +250,7 @@ void CTxMemPool::UpdateChildrenForRemoval(txiter it)
     }
 }
 
-void CTxMemPool::UpdateForRemoveFromMempool(const setEntries &entriesToRemove, bool updateDescendants)
+void CTxMemPool::UpdateForRemoveFromMempool(const setEntries &entriesToRemove, bool updateDescendants) EXCLUSIVE_LOCKS_REQUIRED(cs)
 {
     // For each entry, walk back all ancestors and decrement size associated with this
     // transaction
@@ -416,7 +416,7 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry,
     return true;
 }
 
-void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
+void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs)
 {
     NotifyEntryRemoved(it->GetSharedTx(), reason);
     const uint256 hash = it->GetTx().GetHash();
@@ -588,7 +588,7 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigne
     blockSinceLastRollingFeeBump = true;
 }
 
-void CTxMemPool::_clear()
+void CTxMemPool::_clear() EXCLUSIVE_LOCKS_REQUIRED(cs)
 {
     mapLinks.clear();
     mapTx.clear();
@@ -769,7 +769,7 @@ public:
 };
 } // namespace
 
-std::vector<CTxMemPool::indexed_transaction_set::const_iterator> CTxMemPool::GetSortedDepthAndScore() const
+std::vector<CTxMemPool::indexed_transaction_set::const_iterator> CTxMemPool::GetSortedDepthAndScore() const EXCLUSIVE_LOCKS_REQUIRED(cs)
 {
     std::vector<indexed_transaction_set::const_iterator> iters;
     AssertLockHeld(cs);
@@ -910,7 +910,7 @@ size_t CTxMemPool::DynamicMemoryUsage() const {
     return memusage::MallocUsage(sizeof(CTxMemPoolEntry) + 15 * sizeof(void*)) * mapTx.size() + memusage::DynamicUsage(mapNextTx) + memusage::DynamicUsage(mapDeltas) + memusage::DynamicUsage(mapLinks) + memusage::DynamicUsage(vTxHashes) + cachedInnerUsage;
 }
 
-void CTxMemPool::RemoveStaged(setEntries &stage, bool updateDescendants, MemPoolRemovalReason reason) {
+void CTxMemPool::RemoveStaged(setEntries &stage, bool updateDescendants, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs) {
     AssertLockHeld(cs);
     UpdateForRemoveFromMempool(stage, updateDescendants);
     for (const txiter& it : stage) {
@@ -964,7 +964,7 @@ void CTxMemPool::UpdateParent(txiter entry, txiter parent, bool add)
     }
 }
 
-const CTxMemPool::setEntries & CTxMemPool::GetMemPoolParents(txiter entry) const
+const CTxMemPool::setEntries & CTxMemPool::GetMemPoolParents(txiter entry) const EXCLUSIVE_LOCKS_REQUIRED(cs)
 {
     assert (entry != mapTx.end());
     txlinksMap::const_iterator it = mapLinks.find(entry);
@@ -972,7 +972,7 @@ const CTxMemPool::setEntries & CTxMemPool::GetMemPoolParents(txiter entry) const
     return it->second.parents;
 }
 
-const CTxMemPool::setEntries & CTxMemPool::GetMemPoolChildren(txiter entry) const
+const CTxMemPool::setEntries & CTxMemPool::GetMemPoolChildren(txiter entry) const EXCLUSIVE_LOCKS_REQUIRED(cs)
 {
     assert (entry != mapTx.end());
     txlinksMap::const_iterator it = mapLinks.find(entry);

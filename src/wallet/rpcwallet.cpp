@@ -1338,7 +1338,7 @@ struct tallyitem
     }
 };
 
-UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bool fByAccounts)
+UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bool fByAccounts) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
 {
     // Minimum confirmations
     int nMinDepth = 1;

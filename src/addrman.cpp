@@ -78,7 +78,7 @@ CAddrInfo* CAddrMan::Find(const CNetAddr& addr, int* pnId)
     return nullptr;
 }
 
-CAddrInfo* CAddrMan::Create(const CAddress& addr, const CNetAddr& addrSource, int* pnId)
+CAddrInfo* CAddrMan::Create(const CAddress& addr, const CNetAddr& addrSource, int* pnId) EXCLUSIVE_LOCKS_REQUIRED(cs)
 {
     int nId = nIdCount++;
     mapInfo[nId] = CAddrInfo(addr, addrSource);
@@ -90,7 +90,7 @@ CAddrInfo* CAddrMan::Create(const CAddress& addr, const CNetAddr& addrSource, in
     return &mapInfo[nId];
 }
 
-void CAddrMan::SwapRandom(unsigned int nRndPos1, unsigned int nRndPos2)
+void CAddrMan::SwapRandom(unsigned int nRndPos1, unsigned int nRndPos2) EXCLUSIVE_LOCKS_REQUIRED(cs)
 {
     if (nRndPos1 == nRndPos2)
         return;
@@ -110,7 +110,7 @@ void CAddrMan::SwapRandom(unsigned int nRndPos1, unsigned int nRndPos2)
     vRandom[nRndPos2] = nId1;
 }
 
-void CAddrMan::Delete(int nId)
+void CAddrMan::Delete(int nId) EXCLUSIVE_LOCKS_REQUIRED(cs)
 {
     assert(mapInfo.count(nId) != 0);
     CAddrInfo& info = mapInfo[nId];
@@ -124,7 +124,7 @@ void CAddrMan::Delete(int nId)
     nNew--;
 }
 
-void CAddrMan::ClearNew(int nUBucket, int nUBucketPos)
+void CAddrMan::ClearNew(int nUBucket, int nUBucketPos) EXCLUSIVE_LOCKS_REQUIRED(cs)
 {
     // if there is an entry in the specified bucket, delete it.
     if (vvNew[nUBucket][nUBucketPos] != -1) {
@@ -139,7 +139,7 @@ void CAddrMan::ClearNew(int nUBucket, int nUBucketPos)
     }
 }
 
-void CAddrMan::MakeTried(CAddrInfo& info, int nId)
+void CAddrMan::MakeTried(CAddrInfo& info, int nId) EXCLUSIVE_LOCKS_REQUIRED(cs)
 {
     // remove the entry from all new buckets
     for (int bucket = 0; bucket < ADDRMAN_NEW_BUCKET_COUNT; bucket++) {
@@ -187,7 +187,7 @@ void CAddrMan::MakeTried(CAddrInfo& info, int nId)
     info.fInTried = true;
 }
 
-void CAddrMan::Good_(const CService& addr, int64_t nTime)
+void CAddrMan::Good_(const CService& addr, int64_t nTime) EXCLUSIVE_LOCKS_REQUIRED(cs)
 {
     int nId;
 
@@ -239,7 +239,7 @@ void CAddrMan::Good_(const CService& addr, int64_t nTime)
     MakeTried(info, nId);
 }
 
-bool CAddrMan::Add_(const CAddress& addr, const CNetAddr& source, int64_t nTimePenalty)
+bool CAddrMan::Add_(const CAddress& addr, const CNetAddr& source, int64_t nTimePenalty) EXCLUSIVE_LOCKS_REQUIRED(cs)
 {
     if (!addr.IsRoutable())
         return false;
@@ -459,7 +459,7 @@ int CAddrMan::Check_()
 }
 #endif
 
-void CAddrMan::GetAddr_(std::vector<CAddress>& vAddr)
+void CAddrMan::GetAddr_(std::vector<CAddress>& vAddr) EXCLUSIVE_LOCKS_REQUIRED(cs)
 {
     unsigned int nNodes = ADDRMAN_GETADDR_MAX_PCT * vRandom.size() / 100;
     if (nNodes > ADDRMAN_GETADDR_MAX)

@@ -864,7 +864,7 @@ const uint256& CNetMessage::GetMessageHash() const
 
 
 // requires LOCK(cs_vSend)
-size_t CConnman::SocketSendData(CNode *pnode) const
+size_t CConnman::SocketSendData(CNode *pnode) const EXCLUSIVE_LOCKS_REQUIRED(pnode->cs_vSend)
 {
     auto it = pnode->vSendMsg.begin();
     size_t nSentSize = 0;
@@ -2266,7 +2266,7 @@ bool CConnman::InitBinds(const std::vector<CService>& binds, const std::vector<C
     return fBound;
 }
 
-bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
+bool CConnman::Start(CScheduler& scheduler, const Options& connOptions) EXCLUSIVE_LOCKS_REQUIRED(cs_totalBytesRecv, cs_totalBytesSent)
 {
     Init(connOptions);
 
@@ -2424,7 +2424,7 @@ void CConnman::Interrupt()
     }
 }
 
-void CConnman::Stop()
+void CConnman::Stop() EXCLUSIVE_LOCKS_REQUIRED(cs_vNodes)
 {
     if (threadMessageHandler.joinable())
         threadMessageHandler.join();
