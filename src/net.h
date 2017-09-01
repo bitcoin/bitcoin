@@ -608,8 +608,8 @@ public:
     SOCKET hSocket GUARDED_BY(cs_hSocket);
     size_t nSendSize; // total size of all vSendMsg entries
     size_t nSendOffset; // offset inside the first vSendMsg already sent
-    uint64_t nSendBytes;
-    std::deque<std::vector<unsigned char>> vSendMsg;
+    uint64_t nSendBytes GUARDED_BY(cs_vSend);
+    std::deque<std::vector<unsigned char>> vSendMsg GUARDED_BY(cs_vSend);
     CCriticalSection cs_vSend;
     CCriticalSection cs_vRecv;
 
@@ -663,7 +663,7 @@ public:
     std::atomic_bool fPauseSend;
 protected:
 
-    mapMsgCmdSize mapSendBytesPerMsgCmd;
+    mapMsgCmdSize mapSendBytesPerMsgCmd GUARDED_BY(cs_vSend);
     mapMsgCmdSize mapRecvBytesPerMsgCmd;
 
 public:
