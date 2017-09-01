@@ -1277,11 +1277,11 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	// send to escrow address
 
 	float fEscrowFee = getEscrowFee(selleralias.aliasPegTuple, vchFromString("SYS"), precision);
-	CAmount nTotal = convertSyscoinToCurrencyCode(merchantAliasPegTuple, GetPaymentOptionsString(paymentOptionMask), theOffer.GetPrice(foundEntry), precision)*nQty;
+	CAmount nTotal = convertSyscoinToCurrencyCode(merchantAliasPegTuple, vchFromString(GetPaymentOptionsString(paymentOptionMask)), theOffer.GetPrice(foundEntry), precision)*nQty;
 	string sTotal = strprintf("%.*f", precision, ValueFromAmount(nTotal).get_real());
 	CAmount nEscrowFee = GetEscrowArbiterFee(nTotal, fEscrowFee);
-	nEscrowFee = convertSyscoinToCurrencyCode(selleralias.aliasPegTuple, GetPaymentOptionsString(paymentOptionMask), nEscrowFee, precision);
-	int nFeePerByte = getFeePerByte(selleralias.aliasPegTuple, GetPaymentOptionsString(paymentOptionMask), precision);
+	nEscrowFee = convertSyscoinToCurrencyCode(selleralias.aliasPegTuple, vchFromString(GetPaymentOptionsString(paymentOptionMask)), nEscrowFee, precision);
+	int nFeePerByte = getFeePerByte(selleralias.aliasPegTuple, vchFromString(GetPaymentOptionsString(paymentOptionMask)), precision);
 	CAmount nNetworkFee = (nFeePerByte * 400);
 	vector<CRecipient> vecSend;
 	CAmount nAmountWithFee = nTotal+nEscrowFee+nNetworkFee;
