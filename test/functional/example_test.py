@@ -85,7 +85,7 @@ class ExampleTest(BitcoinTestFramework):
         # Use self.extra_args to change command-line arguments for the nodes
         self.extra_args = [[], ["-logips"], []]
 
-        # self.log.info("I've finished __init__")  # Oops! Can't run self.log before run_test()
+        # self.log.info("I've finished set_test_params")  # Oops! Can't run self.log before run_test()
 
     # Use add_options() to add specific command-line options for your test.
     # In practice this is not used very much, since the tests are mostly written
