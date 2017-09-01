@@ -4009,6 +4009,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
             for (const CWalletTx& wtxOld : vWtx)
             {
                 uint256 hash = wtxOld.GetHash();
+                LOCK(walletInstance->cs_wallet);
                 std::map<uint256, CWalletTx>::iterator mi = walletInstance->mapWallet.find(hash);
                 if (mi != walletInstance->mapWallet.end())
                 {
