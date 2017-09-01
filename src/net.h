@@ -393,10 +393,10 @@ private:
     bool setBannedIsDirty GUARDED_BY(cs_setBanned);
     bool fAddressesInitialized;
     CAddrMan addrman;
-    std::deque<std::string> vOneShots;
     CCriticalSection cs_vOneShots;
     std::vector<std::string> vAddedNodes GUARDED_BY(cs_vAddedNodes);
     CCriticalSection cs_vAddedNodes;
+    std::vector<std::string> vAddedNodes GUARDED_BY(cs_vAddedNodes);
     std::vector<CNode*> vNodes;
     std::list<CNode*> vNodesDisconnected;
     mutable CCriticalSection cs_vNodes;
