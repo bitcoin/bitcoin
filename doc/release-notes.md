@@ -312,6 +312,7 @@ Thanks to everyone who directly contributed to this release:
 - fanquake
 - Felix Weis
 - flack
+- Guido Vranken
 - Greg Griffith
 - Gregory Maxwell
 - Gregory Sanders
