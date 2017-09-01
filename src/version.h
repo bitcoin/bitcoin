@@ -32,8 +32,8 @@ static const int MIN_MNW_PEER_PROTO_VERSION = 70050;
 //! minimum peer version that can receive throne payments
 // V1 - Last protocol version before update
 // V2 - Newest protocol version
-static const int MIN_THRONE_PAYMENT_PROTO_VERSION_1 = 70040;
-static const int MIN_THRONE_PAYMENT_PROTO_VERSION_2 = 70050;
+static const int MIN_MASTERNODE_PAYMENT_PROTO_VERSION_1 = 70040;
+static const int MIN_MASTERNODE_PAYMENT_PROTO_VERSION_2 = 70050;
 
 //! nTime field added to CAddress, starting with this version;
 //! if possible, avoid requesting addresses nodes older than this

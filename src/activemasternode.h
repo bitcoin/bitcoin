@@ -2,8 +2,8 @@
 // Copyright (c) 2009-2012 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#ifndef ACTIVETHRONE_H
-#define ACTIVETHRONE_H
+#ifndef ACTIVEMASTERNODE_H
+#define ACTIVEMASTERNODE_H
 
 #include "sync.h"
 #include "net.h"
@@ -13,11 +13,11 @@
 #include "legacysigner.h"
 #include "throne.h"
 
-#define ACTIVE_THRONE_INITIAL                     0 // initial state
-#define ACTIVE_THRONE_SYNC_IN_PROCESS             1
-#define ACTIVE_THRONE_INPUT_TOO_NEW               2
-#define ACTIVE_THRONE_NOT_CAPABLE                 3
-#define ACTIVE_THRONE_STARTED                     4
+#define ACTIVE_MASTERNODE_INITIAL                     0 // initial state
+#define ACTIVE_MASTERNODE_SYNC_IN_PROCESS             1
+#define ACTIVE_MASTERNODE_INPUT_TOO_NEW               2
+#define ACTIVE_MASTERNODE_NOT_CAPABLE                 3
+#define ACTIVE_MASTERNODE_STARTED                     4
 
 // Responsible for activating the Throne and pinging the network
 class CActiveThrone
@@ -43,7 +43,7 @@ public:
 
     CActiveThrone()
     {        
-        status = ACTIVE_THRONE_INITIAL;
+        status = ACTIVE_MASTERNODE_INITIAL;
     }
 
     /// Manage status of main Throne

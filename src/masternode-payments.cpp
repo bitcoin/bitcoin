@@ -239,7 +239,7 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight)
                 return true;
             } else {
                 LogPrintf("Invalid budget payment detected %s\n", txNew.ToString().c_str());
-                if(IsSporkActive(SPORK_9_THRONE_BUDGET_ENFORCEMENT)){
+                if(IsSporkActive(SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT)){
                     return false;
                 } else {
                     LogPrintf("Budget enforcement is disabled, accepting block\n");
@@ -255,7 +255,7 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight)
         return true;
     } else {
         LogPrintf("Invalid mn payment detected %s\n", txNew.ToString().c_str());
-        if(IsSporkActive(SPORK_8_THRONE_PAYMENT_ENFORCEMENT)){
+        if(IsSporkActive(SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT)){
             return false;
         } else {
             LogPrintf("Throne payment enforcement is disabled, accepting block\n");
@@ -342,9 +342,9 @@ void CThronePayments::FillBlockPayee(CMutableTransaction& txNew, int64_t nFees)
 }
 
 int CThronePayments::GetMinThronePaymentsProto() {
-    return IsSporkActive(SPORK_10_THRONE_PAY_UPDATED_NODES)
-            ? MIN_THRONE_PAYMENT_PROTO_VERSION_2
-            : MIN_THRONE_PAYMENT_PROTO_VERSION_1;
+    return IsSporkActive(SPORK_10_MASTERNODE_PAY_UPDATED_NODES)
+            ? MIN_MASTERNODE_PAYMENT_PROTO_VERSION_2
+            : MIN_MASTERNODE_PAYMENT_PROTO_VERSION_1;
 }
 
 void CThronePayments::ProcessMessageThronePayments(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
@@ -773,7 +773,7 @@ bool CThronePayments::ProcessBlock(int nBlockHeight)
 
 void CThronePaymentWinner::Relay()
 {
-    CInv inv(MSG_THRONE_WINNER, GetHash());
+    CInv inv(MSG_MASTERNODE_WINNER, GetHash());
     RelayInv(inv);
 }
 
@@ -818,12 +818,12 @@ void CThronePayments::Sync(CNode* node, int nCountNeeded)
     while(it != mapThronePayeeVotes.end()) {
         CThronePaymentWinner winner = (*it).second;
         if(winner.nBlockHeight >= nHeight-nCountNeeded && winner.nBlockHeight <= nHeight + 20) {
-            node->PushInventory(CInv(MSG_THRONE_WINNER, winner.GetHash()));
+            node->PushInventory(CInv(MSG_MASTERNODE_WINNER, winner.GetHash()));
             nInvCount++;
         }
         ++it;
     }
-    node->PushMessage("ssc", THRONE_SYNC_MNW, nInvCount);
+    node->PushMessage("ssc", MASTERNODE_SYNC_MNW, nInvCount);
 }
 
 std::string CThronePayments::ToString() const

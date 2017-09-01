@@ -176,7 +176,7 @@ Value throne(const Array& params, bool fHelp)
 
     if (strCommand == "debug")
     {
-        if(activeThrone.status != ACTIVE_THRONE_INITIAL || !throneSync.IsSynced())
+        if(activeThrone.status != ACTIVE_MASTERNODE_INITIAL || !throneSync.IsSynced())
             return activeThrone.GetStatus();
 
         CTxIn vin = CTxIn();
@@ -201,8 +201,8 @@ Value throne(const Array& params, bool fHelp)
             EnsureWalletIsUnlocked();
         }
 
-        if(activeThrone.status != ACTIVE_THRONE_STARTED){
-            activeThrone.status = ACTIVE_THRONE_INITIAL; // TODO: consider better way
+        if(activeThrone.status != ACTIVE_MASTERNODE_STARTED){
+            activeThrone.status = ACTIVE_MASTERNODE_INITIAL; // TODO: consider better way
             activeThrone.ManageStatus();
         }
 
@@ -264,8 +264,8 @@ Value throne(const Array& params, bool fHelp)
         }
 
         if((strCommand == "start-missing" || strCommand == "start-disabled") &&
-         (throneSync.RequestedThroneAssets <= THRONE_SYNC_LIST ||
-          throneSync.RequestedThroneAssets == THRONE_SYNC_FAILED)) {
+         (throneSync.RequestedThroneAssets <= MASTERNODE_SYNC_LIST ||
+          throneSync.RequestedThroneAssets == MASTERNODE_SYNC_FAILED)) {
             throw runtime_error("You can't use this command until throne list is synced\n");
         }
 

@@ -806,7 +806,7 @@ void CBudgetManager::NewBlock()
     TRY_LOCK(cs, fBudgetNewBlock);
     if(!fBudgetNewBlock) return;
 
-    if (throneSync.RequestedThroneAssets <= THRONE_SYNC_BUDGET) return;
+    if (throneSync.RequestedThroneAssets <= MASTERNODE_SYNC_BUDGET) return;
 
     if (strBudgetMode == "suggest") { //suggest the budget we see
         SubmitFinalBudget();
@@ -1205,7 +1205,7 @@ void CBudgetManager::Sync(CNode* pfrom, uint256 nProp, bool fPartial)
         ++it1;
     }
 
-    pfrom->PushMessage("ssc", THRONE_SYNC_BUDGET_PROP, nInvCount);
+    pfrom->PushMessage("ssc", MASTERNODE_SYNC_BUDGET_PROP, nInvCount);
 
     LogPrintf("CBudgetManager::Sync - sent %d items\n", nInvCount);
 
@@ -1233,7 +1233,7 @@ void CBudgetManager::Sync(CNode* pfrom, uint256 nProp, bool fPartial)
         ++it3;
     }
 
-    pfrom->PushMessage("ssc", THRONE_SYNC_BUDGET_FIN, nInvCount);
+    pfrom->PushMessage("ssc", MASTERNODE_SYNC_BUDGET_FIN, nInvCount);
     LogPrintf("CBudgetManager::Sync - sent %d items\n", nInvCount);
 
 }

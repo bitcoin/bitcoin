@@ -237,7 +237,7 @@ void CThroneMan::AskForMN(CNode* pnode, CTxIn &vin)
 
     LogPrintf("CThroneMan::AskForMN - Asking node for missing entry, vin: %s\n", vin.ToString());
     pnode->PushMessage("dseg", vin);
-    int64_t askAgain = GetTime() + THRONE_MIN_MNP_SECONDS;
+    int64_t askAgain = GetTime() + MASTERNODE_MIN_MNP_SECONDS;
     mWeAskedForThroneListEntry[vin.prevout] = askAgain;
 }
 
@@ -259,9 +259,9 @@ void CThroneMan::CheckAndRemove(bool forceExpiredRemoval)
     //remove inactive and outdated
     vector<CThrone>::iterator it = vThrones.begin();
     while(it != vThrones.end()){
-        if((*it).activeState == CThrone::THRONE_REMOVE ||
-                (*it).activeState == CThrone::THRONE_VIN_SPENT ||
-                (forceExpiredRemoval && (*it).activeState == CThrone::THRONE_EXPIRED) ||
+        if((*it).activeState == CThrone::MASTERNODE_REMOVE ||
+                (*it).activeState == CThrone::MASTERNODE_VIN_SPENT ||
+                (forceExpiredRemoval && (*it).activeState == CThrone::MASTERNODE_EXPIRED) ||
                 (*it).protocolVersion < thronePayments.GetMinThronePaymentsProto()) {
             LogPrint("throne", "CThroneMan: Removing inactive Throne %s - %i now\n", (*it).addr.ToString(), size() - 1);
 
@@ -327,7 +327,7 @@ void CThroneMan::CheckAndRemove(bool forceExpiredRemoval)
     // remove expired mapSeenThroneBroadcast
     map<uint256, CThroneBroadcast>::iterator it3 = mapSeenThroneBroadcast.begin();
     while(it3 != mapSeenThroneBroadcast.end()){
-        if((*it3).second.lastPing.sigTime < GetTime() - THRONE_REMOVAL_SECONDS*2){
+        if((*it3).second.lastPing.sigTime < GetTime() - MASTERNODE_REMOVAL_SECONDS*2){
             LogPrint("throne", "CThroneMan::CheckAndRemove - Removing expired Throne broadcast %s\n", (*it3).second.GetHash().ToString());
             throneSync.mapSeenSyncMNB.erase((*it3).second.GetHash());
             mapSeenThroneBroadcast.erase(it3++);
@@ -339,7 +339,7 @@ void CThroneMan::CheckAndRemove(bool forceExpiredRemoval)
     // remove expired mapSeenThronePing
     map<uint256, CThronePing>::iterator it4 = mapSeenThronePing.begin();
     while(it4 != mapSeenThronePing.end()){
-        if((*it4).second.sigTime < GetTime()-(THRONE_REMOVAL_SECONDS*2)){
+        if((*it4).second.sigTime < GetTime()-(MASTERNODE_REMOVAL_SECONDS*2)){
             mapSeenThronePing.erase(it4++);
         } else {
             ++it4;
@@ -392,7 +392,7 @@ void CThroneMan::DsegUpdate(CNode* pnode)
     }
     
     pnode->PushMessage("dseg", CTxIn());
-    int64_t askAgain = GetTime() + THRONES_DSEG_SECONDS;
+    int64_t askAgain = GetTime() + MASTERNODES_DSEG_SECONDS;
     mWeAskedForThroneList[pnode->addr] = askAgain;
 }
 
@@ -740,7 +740,7 @@ void CThroneMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStre
                         return;
                     }
                 }
-                int64_t askAgain = GetTime() + THRONES_DSEG_SECONDS;
+                int64_t askAgain = GetTime() + MASTERNODES_DSEG_SECONDS;
                 mAskedUsForThroneList[pfrom->addr] = askAgain;
             }
         } //else, asking for a specific node which is ok
@@ -756,7 +756,7 @@ void CThroneMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStre
                 if(vin == CTxIn() || vin == mn.vin){
                     CThroneBroadcast mnb = CThroneBroadcast(mn);
                     uint256 hash = mnb.GetHash();
-                    pfrom->PushInventory(CInv(MSG_THRONE_ANNOUNCE, hash));
+                    pfrom->PushInventory(CInv(MSG_MASTERNODE_ANNOUNCE, hash));
                     nInvCount++;
 
                     if(!mapSeenThroneBroadcast.count(hash)) mapSeenThroneBroadcast.insert(make_pair(hash, mnb));
@@ -770,7 +770,7 @@ void CThroneMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStre
         }
 
         if(vin == CTxIn()) {
-            pfrom->PushMessage("ssc", THRONE_SYNC_LIST, nInvCount);
+            pfrom->PushMessage("ssc", MASTERNODE_SYNC_LIST, nInvCount);
             LogPrintf("dseg - Sent %d Throne entries to %s\n", nInvCount, pfrom->addr.ToString());
         }
     }

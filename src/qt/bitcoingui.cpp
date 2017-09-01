@@ -858,10 +858,10 @@ void BitcoinGUI::setNumBlocks(int count)
                 walletFrame->showOutOfSyncWarning(false);
 #endif // ENABLE_WALLET
 
-            nAttempt = throneSync.RequestedThroneAttempt < THRONE_SYNC_THRESHOLD ?
-                        throneSync.RequestedThroneAttempt + 1 : THRONE_SYNC_THRESHOLD;
-            progress = nAttempt + (throneSync.RequestedThroneAssets - 1) * THRONE_SYNC_THRESHOLD;
-            progressBar->setMaximum(4 * THRONE_SYNC_THRESHOLD);
+            nAttempt = throneSync.RequestedThroneAttempt < MASTERNODE_SYNC_THRESHOLD ?
+                        throneSync.RequestedThroneAttempt + 1 : MASTERNODE_SYNC_THRESHOLD;
+            progress = nAttempt + (throneSync.RequestedThroneAssets - 1) * MASTERNODE_SYNC_THRESHOLD;
+            progressBar->setMaximum(4 * MASTERNODE_SYNC_THRESHOLD);
             progressBar->setFormat(tr("Synchronizing additional data: %p%"));
             progressBar->setValue(progress);
         }

@@ -19,14 +19,14 @@ void CActiveThrone::ManageStatus()
 
     //need correct blocks to send ping
     if(Params().NetworkID() != CBaseChainParams::REGTEST && !throneSync.IsBlockchainSynced()) {
-        status = ACTIVE_THRONE_SYNC_IN_PROCESS;
+        status = ACTIVE_MASTERNODE_SYNC_IN_PROCESS;
         LogPrintf("CActiveThrone::ManageStatus() - %s\n", GetStatus());
         return;
     }
 
-    if(status == ACTIVE_THRONE_SYNC_IN_PROCESS) status = ACTIVE_THRONE_INITIAL;
+    if(status == ACTIVE_MASTERNODE_SYNC_IN_PROCESS) status = ACTIVE_MASTERNODE_INITIAL;
 
-    if(status == ACTIVE_THRONE_INITIAL) {
+    if(status == ACTIVE_MASTERNODE_INITIAL) {
         CThrone *pmn;
         pmn = mnodeman.Find(pubKeyThrone);
         if(pmn != NULL) {
@@ -35,10 +35,10 @@ void CActiveThrone::ManageStatus()
         }
     }
 
-    if(status != ACTIVE_THRONE_STARTED) {
+    if(status != ACTIVE_MASTERNODE_STARTED) {
 
         // Set defaults
-        status = ACTIVE_THRONE_NOT_CAPABLE;
+        status = ACTIVE_MASTERNODE_NOT_CAPABLE;
         notCapableReason = "";
 
         if(pwalletMain->IsLocked()){
@@ -89,8 +89,8 @@ void CActiveThrone::ManageStatus()
 
         if(pwalletMain->GetThroneVinAndKeys(vin, pubKeyCollateralAddress, keyCollateralAddress)) {
 
-            if(GetInputAge(vin) < THRONE_MIN_CONFIRMATIONS){
-                status = ACTIVE_THRONE_INPUT_TOO_NEW;
+            if(GetInputAge(vin) < MASTERNODE_MIN_CONFIRMATIONS){
+                status = ACTIVE_MASTERNODE_INPUT_TOO_NEW;
                 notCapableReason = strprintf("%s - %d confirmations", GetStatus(), GetInputAge(vin));
                 LogPrintf("CActiveThrone::ManageStatus() - %s\n", notCapableReason);
                 return;
@@ -126,7 +126,7 @@ void CActiveThrone::ManageStatus()
             mnb.Relay();
 
             LogPrintf("CActiveThrone::ManageStatus() - Is capable master node!\n");
-            status = ACTIVE_THRONE_STARTED;
+            status = ACTIVE_MASTERNODE_STARTED;
 
             return;
         } else {
@@ -144,17 +144,17 @@ void CActiveThrone::ManageStatus()
 
 std::string CActiveThrone::GetStatus() {
     switch (status) {
-    case ACTIVE_THRONE_INITIAL: return "Node just started, not yet activated";
-    case ACTIVE_THRONE_SYNC_IN_PROCESS: return "Sync in progress. Must wait until sync is complete to start Throne";
-    case ACTIVE_THRONE_INPUT_TOO_NEW: return strprintf("Throne input must have at least %d confirmations", THRONE_MIN_CONFIRMATIONS);
-    case ACTIVE_THRONE_NOT_CAPABLE: return "Not capable throne: " + notCapableReason;
-    case ACTIVE_THRONE_STARTED: return "Throne successfully started";
+    case ACTIVE_MASTERNODE_INITIAL: return "Node just started, not yet activated";
+    case ACTIVE_MASTERNODE_SYNC_IN_PROCESS: return "Sync in progress. Must wait until sync is complete to start Throne";
+    case ACTIVE_MASTERNODE_INPUT_TOO_NEW: return strprintf("Throne input must have at least %d confirmations", MASTERNODE_MIN_CONFIRMATIONS);
+    case ACTIVE_MASTERNODE_NOT_CAPABLE: return "Not capable throne: " + notCapableReason;
+    case ACTIVE_MASTERNODE_STARTED: return "Throne successfully started";
     default: return "unknown";
     }
 }
 
 bool CActiveThrone::SendThronePing(std::string& errorMessage) {
-    if(status != ACTIVE_THRONE_STARTED) {
+    if(status != ACTIVE_MASTERNODE_STARTED) {
         errorMessage = "Throne is not in a running status";
         return false;
     }
@@ -181,7 +181,7 @@ bool CActiveThrone::SendThronePing(std::string& errorMessage) {
     CThrone* pmn = mnodeman.Find(vin);
     if(pmn != NULL)
     {
-        if(pmn->IsPingedWithin(THRONE_PING_SECONDS, mnp.sigTime)){
+        if(pmn->IsPingedWithin(MASTERNODE_PING_SECONDS, mnp.sigTime)){
             errorMessage = "Too early to send Throne Ping";
             return false;
         }
@@ -202,7 +202,7 @@ bool CActiveThrone::SendThronePing(std::string& errorMessage) {
     {
         // Seems like we are trying to send a ping while the Throne is not registered in the network
         errorMessage = "Throne List doesn't include our Throne, shutting down Throne pinging service! " + vin.ToString();
-        status = ACTIVE_THRONE_NOT_CAPABLE;
+        status = ACTIVE_MASTERNODE_NOT_CAPABLE;
         notCapableReason = errorMessage;
         return false;
     }
@@ -214,7 +214,7 @@ bool CActiveThrone::EnableHotColdThroNe(CTxIn& newVin, CService& newService)
 {
     if(!fThroNe) return false;
 
-    status = ACTIVE_THRONE_STARTED;
+    status = ACTIVE_MASTERNODE_STARTED;
 
     //The values below are needed for signing mnping messages going forward
     vin = newVin;

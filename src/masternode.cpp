@@ -61,7 +61,7 @@ CThrone::CThrone()
     pubkey = CPubKey();
     pubkey2 = CPubKey();
     sig = std::vector<unsigned char>();
-    activeState = THRONE_ENABLED;
+    activeState = MASTERNODE_ENABLED;
     sigTime = GetAdjustedTime();
     lastPing = CThronePing();
     cacheInputAge = 0;
@@ -105,7 +105,7 @@ CThrone::CThrone(const CThroneBroadcast& mnb)
     pubkey = mnb.pubkey;
     pubkey2 = mnb.pubkey2;
     sig = mnb.sig;
-    activeState = THRONE_ENABLED;
+    activeState = MASTERNODE_ENABLED;
     sigTime = mnb.sigTime;
     lastPing = mnb.lastPing;
     cacheInputAge = 0;
@@ -176,21 +176,21 @@ void CThrone::Check(bool forceCheck)
 {
     if(ShutdownRequested()) return;
 
-    if(!forceCheck && (GetTime() - lastTimeChecked < THRONE_CHECK_SECONDS)) return;
+    if(!forceCheck && (GetTime() - lastTimeChecked < MASTERNODE_CHECK_SECONDS)) return;
     lastTimeChecked = GetTime();
 
 
     //once spent, stop doing the checks
-    if(activeState == THRONE_VIN_SPENT) return;
+    if(activeState == MASTERNODE_VIN_SPENT) return;
 
 
-    if(!IsPingedWithin(THRONE_REMOVAL_SECONDS)){
-        activeState = THRONE_REMOVE;
+    if(!IsPingedWithin(MASTERNODE_REMOVAL_SECONDS)){
+        activeState = MASTERNODE_REMOVE;
         return;
     }
 
-    if(!IsPingedWithin(THRONE_EXPIRATION_SECONDS)){
-        activeState = THRONE_EXPIRED;
+    if(!IsPingedWithin(MASTERNODE_EXPIRATION_SECONDS)){
+        activeState = MASTERNODE_EXPIRED;
         return;
     }
 
@@ -206,14 +206,14 @@ void CThrone::Check(bool forceCheck)
             if(!lockMain) return;
 
             if(!AcceptableInputs(mempool, state, CTransaction(tx), false, NULL)){
-                activeState = THRONE_VIN_SPENT;
+                activeState = MASTERNODE_VIN_SPENT;
                 return;
 
             }
         }
     }
 
-    activeState = THRONE_ENABLED; // OK
+    activeState = MASTERNODE_ENABLED; // OK
 }
 
 bool CThrone::IsValidNetAddr()
@@ -291,7 +291,7 @@ CThroneBroadcast::CThroneBroadcast()
     pubkey = CPubKey();
     pubkey2 = CPubKey();
     sig = std::vector<unsigned char>();
-    activeState = THRONE_ENABLED;
+    activeState = MASTERNODE_ENABLED;
     sigTime = GetAdjustedTime();
     lastPing = CThronePing();
     cacheInputAge = 0;
@@ -311,7 +311,7 @@ CThroneBroadcast::CThroneBroadcast(CService newAddr, CTxIn newVin, CPubKey newPu
     pubkey = newPubkey;
     pubkey2 = newPubkey2;
     sig = std::vector<unsigned char>();
-    activeState = THRONE_ENABLED;
+    activeState = MASTERNODE_ENABLED;
     sigTime = GetAdjustedTime();
     lastPing = CThronePing();
     cacheInputAge = 0;
@@ -538,7 +538,7 @@ bool CThroneBroadcast::CheckAndUpdate(int& nDos)
 
     // mn.pubkey = pubkey, IsVinAssociatedWithPubkey is validated once below,
     //   after that they just need to match
-    if(pmn->pubkey == pubkey && !pmn->IsBroadcastedWithin(THRONE_MIN_MNB_SECONDS)) {
+    if(pmn->pubkey == pubkey && !pmn->IsBroadcastedWithin(MASTERNODE_MIN_MNB_SECONDS)) {
         //take the newest entry
         LogPrintf("mnb - Got updated entry for %s\n", addr.ToString());
         if(pmn->UpdateFromNewBroadcast((*this))){
@@ -596,8 +596,8 @@ bool CThroneBroadcast::CheckInputsAndAdd(int& nDoS)
 
     LogPrint("throne", "mnb - Accepted Throne entry\n");
 
-    if(GetInputAge(vin) < THRONE_MIN_CONFIRMATIONS){
-        LogPrintf("mnb - Input must have at least %d confirmations\n", THRONE_MIN_CONFIRMATIONS);
+    if(GetInputAge(vin) < MASTERNODE_MIN_CONFIRMATIONS){
+        LogPrintf("mnb - Input must have at least %d confirmations\n", MASTERNODE_MIN_CONFIRMATIONS);
         // maybe we miss few blocks, let this mnb to be checked again later
         mnodeman.mapSeenThroneBroadcast.erase(GetHash());
         throneSync.mapSeenSyncMNB.erase(GetHash());
@@ -605,7 +605,7 @@ bool CThroneBroadcast::CheckInputsAndAdd(int& nDoS)
     }
 
     // verify that sig time is legit in past
-    // should be at least not earlier than block when 10000 CRW tx got THRONE_MIN_CONFIRMATIONS
+    // should be at least not earlier than block when 10000 CRW tx got MASTERNODE_MIN_CONFIRMATIONS
     uint256 hashBlock = uint256();
     CTransaction tx2;
     GetTransaction(vin.prevout.hash, tx2, hashBlock, true);
@@ -613,11 +613,11 @@ bool CThroneBroadcast::CheckInputsAndAdd(int& nDoS)
     if (mi != mapBlockIndex.end() && (*mi).second)
     {
         CBlockIndex* pMNIndex = (*mi).second; // block for 10000 CRW tx -> 1 confirmation
-        CBlockIndex* pConfIndex = chainActive[pMNIndex->nHeight + THRONE_MIN_CONFIRMATIONS - 1]; // block where tx got THRONE_MIN_CONFIRMATIONS
+        CBlockIndex* pConfIndex = chainActive[pMNIndex->nHeight + MASTERNODE_MIN_CONFIRMATIONS - 1]; // block where tx got MASTERNODE_MIN_CONFIRMATIONS
         if(pConfIndex->GetBlockTime() > sigTime)
         {
             LogPrintf("mnb - Bad sigTime %d for Throne %20s %105s (%i conf block is at %d)\n",
-                      sigTime, addr.ToString(), vin.ToString(), THRONE_MIN_CONFIRMATIONS, pConfIndex->GetBlockTime());
+                      sigTime, addr.ToString(), vin.ToString(), MASTERNODE_MIN_CONFIRMATIONS, pConfIndex->GetBlockTime());
             return false;
         }
     }
@@ -641,7 +641,7 @@ bool CThroneBroadcast::CheckInputsAndAdd(int& nDoS)
 
 void CThroneBroadcast::Relay()
 {
-    CInv inv(MSG_THRONE_ANNOUNCE, GetHash());
+    CInv inv(MSG_MASTERNODE_ANNOUNCE, GetHash());
     RelayInv(inv);
 }
 
@@ -762,8 +762,8 @@ bool CThronePing::CheckAndUpdate(int& nDos, bool fRequireEnabled, bool fCheckSig
 
         // LogPrintf("mnping - Found corresponding mn for vin: %s\n", vin.ToString());
         // update only if there is no known ping for this throne or
-        // last ping was more then THRONE_MIN_MNP_SECONDS-60 ago comparing to this one
-        if(!pmn->IsPingedWithin(THRONE_MIN_MNP_SECONDS - 60, sigTime))
+        // last ping was more then MASTERNODE_MIN_MNP_SECONDS-60 ago comparing to this one
+        if(!pmn->IsPingedWithin(MASTERNODE_MIN_MNP_SECONDS - 60, sigTime))
         {
             if(!VerifySignature(pmn->pubkey2, nDos))
                 return false;
@@ -815,6 +815,6 @@ bool CThronePing::CheckAndUpdate(int& nDos, bool fRequireEnabled, bool fCheckSig
 
 void CThronePing::Relay()
 {
-    CInv inv(MSG_THRONE_PING, GetHash());
+    CInv inv(MSG_MASTERNODE_PING, GetHash());
     RelayInv(inv);
 }

@@ -19,9 +19,9 @@ class CBitcoinAddress;
 class CActiveThrone;
 
 // status update message constants
-#define THRONE_ACCEPTED                    1
-#define THRONE_REJECTED                    0
-#define THRONE_RESET                       -1
+#define MASTERNODE_ACCEPTED                    1
+#define MASTERNODE_REJECTED                    0
+#define MASTERNODE_RESET                       -1
 
 extern CLegacySigner legacySigner;
 extern std::string strThroNePrivKey;

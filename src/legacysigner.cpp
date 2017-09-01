@@ -131,7 +131,7 @@ void ThreadCheckLegacySigner()
 
             // check if we should activate or ping every few minutes,
             // start right after sync is considered to be done
-            if(c % THRONE_PING_SECONDS == 15) activeThrone.ManageStatus();
+            if(c % MASTERNODE_PING_SECONDS == 15) activeThrone.ManageStatus();
 
             if(c % 60 == 0)
             {
@@ -141,7 +141,7 @@ void ThreadCheckLegacySigner()
                 CleanTransactionLocksList();
             }
 
-            //if(c % THRONES_DUMP_SECONDS == 0) DumpThrones();
+            //if(c % MASTERNODES_DUMP_SECONDS == 0) DumpThrones();
         }
     }
 }

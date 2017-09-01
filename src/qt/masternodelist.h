@@ -1,5 +1,5 @@
-#ifndef THRONELIST_H
-#define THRONELIST_H
+#ifndef MASTERNODELIST_H
+#define MASTERNODELIST_H
 
 #include "throne.h"
 #include "sync.h"
@@ -9,9 +9,9 @@
 #include <QTimer>
 #include <QWidget>
 
-#define THRONELIST_UPDATE_SECONDS            60
-#define MY_THRONELIST_UPDATE_SECONDS         15
-#define THRONELIST_FILTER_COOLDOWN_SECONDS   3
+#define MASTERNODELIST_UPDATE_SECONDS            60
+#define MY_MASTERNODELIST_UPDATE_SECONDS         15
+#define MASTERNODELIST_FILTER_COOLDOWN_SECONDS   3
 
 namespace Ui {
     class ThroneList;
@@ -74,4 +74,4 @@ private Q_SLOTS:
     void on_tableWidgetVoting_itemSelectionChanged();
     void on_UpdateVotesButton_clicked();
 };
-#endif // THRONELIST_H
+#endif // MASTERNODELIST_H

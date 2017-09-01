@@ -2,8 +2,8 @@
 // Copyright (c) 2014-2015 The Crown developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#ifndef THRONE_H
-#define THRONE_H
+#ifndef MASTERNODE_H
+#define MASTERNODE_H
 
 #include "sync.h"
 #include "net.h"
@@ -13,13 +13,13 @@
 #include "main.h"
 #include "timedata.h"
 
-#define THRONE_MIN_CONFIRMATIONS           15
-#define THRONE_MIN_MNP_SECONDS             (10*60)
-#define THRONE_MIN_MNB_SECONDS             (5*60)
-#define THRONE_PING_SECONDS                (5*60)
-#define THRONE_EXPIRATION_SECONDS          (65*60)
-#define THRONE_REMOVAL_SECONDS             (75*60)
-#define THRONE_CHECK_SECONDS               5
+#define MASTERNODE_MIN_CONFIRMATIONS           15
+#define MASTERNODE_MIN_MNP_SECONDS             (10*60)
+#define MASTERNODE_MIN_MNB_SECONDS             (5*60)
+#define MASTERNODE_PING_SECONDS                (5*60)
+#define MASTERNODE_EXPIRATION_SECONDS          (65*60)
+#define MASTERNODE_REMOVAL_SECONDS             (75*60)
+#define MASTERNODE_CHECK_SECONDS               5
 
 using namespace std;
 
@@ -112,11 +112,11 @@ private:
     int64_t lastTimeChecked;
 public:
     enum state {
-        THRONE_ENABLED = 1,
-        THRONE_EXPIRED = 2,
-        THRONE_VIN_SPENT = 3,
-        THRONE_REMOVE = 4,
-        THRONE_POS_ERROR = 5
+        MASTERNODE_ENABLED = 1,
+        MASTERNODE_EXPIRED = 2,
+        MASTERNODE_VIN_SPENT = 3,
+        MASTERNODE_REMOVE = 4,
+        MASTERNODE_POS_ERROR = 5
     };
 
     CTxIn vin;
@@ -241,7 +241,7 @@ public:
 
     bool IsEnabled()
     {
-        return activeState == THRONE_ENABLED;
+        return activeState == MASTERNODE_ENABLED;
     }
 
     bool IsValidNetAddr();
@@ -261,11 +261,11 @@ public:
     std::string Status() {
         std::string strStatus = "ACTIVE";
 
-        if(activeState == CThrone::THRONE_ENABLED) strStatus   = "ENABLED";
-        if(activeState == CThrone::THRONE_EXPIRED) strStatus   = "EXPIRED";
-        if(activeState == CThrone::THRONE_VIN_SPENT) strStatus = "VIN_SPENT";
-        if(activeState == CThrone::THRONE_REMOVE) strStatus    = "REMOVE";
-        if(activeState == CThrone::THRONE_POS_ERROR) strStatus = "POS_ERROR";
+        if(activeState == CThrone::MASTERNODE_ENABLED) strStatus   = "ENABLED";
+        if(activeState == CThrone::MASTERNODE_EXPIRED) strStatus   = "EXPIRED";
+        if(activeState == CThrone::MASTERNODE_VIN_SPENT) strStatus = "VIN_SPENT";
+        if(activeState == CThrone::MASTERNODE_REMOVE) strStatus    = "REMOVE";
+        if(activeState == CThrone::MASTERNODE_POS_ERROR) strStatus = "POS_ERROR";
 
         return strStatus;
     }

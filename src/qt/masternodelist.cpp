@@ -209,9 +209,9 @@ void ThroneList::updateMyThroneInfo(QString alias, QString addr, QString privkey
 void ThroneList::updateMyNodeList(bool reset) {
     static int64_t lastMyListUpdate = 0;
 
-    // automatically update my throne list only once in MY_THRONELIST_UPDATE_SECONDS seconds,
+    // automatically update my throne list only once in MY_MASTERNODELIST_UPDATE_SECONDS seconds,
     // this update still can be triggered manually at any time via button click
-    int64_t timeTillUpdate = lastMyListUpdate + MY_THRONELIST_UPDATE_SECONDS - GetTime();
+    int64_t timeTillUpdate = lastMyListUpdate + MY_MASTERNODELIST_UPDATE_SECONDS - GetTime();
     ui->secondsLabel->setText(QString::number(timeTillUpdate));
 
     if(timeTillUpdate > 0 && !reset) return;
@@ -235,11 +235,11 @@ void ThroneList::updateNodeList()
 {
     static int64_t nTimeListUpdate = 0;
 
-      // to prevent high cpu usage update only once in THRONELIST_UPDATE_SECONDS secondsLabel
-      // or THRONELIST_FILTER_COOLDOWN_SECONDS seconds after filter was last changed
+      // to prevent high cpu usage update only once in MASTERNODELIST_UPDATE_SECONDS secondsLabel
+      // or MASTERNODELIST_FILTER_COOLDOWN_SECONDS seconds after filter was last changed
       int64_t nTimeToWait =   fFilterUpdated
-                              ? nTimeFilterUpdate - GetTime() + THRONELIST_FILTER_COOLDOWN_SECONDS
-                              : nTimeListUpdate - GetTime() + THRONELIST_UPDATE_SECONDS;
+                              ? nTimeFilterUpdate - GetTime() + MASTERNODELIST_FILTER_COOLDOWN_SECONDS
+                              : nTimeListUpdate - GetTime() + MASTERNODELIST_UPDATE_SECONDS;
 
     if(fFilterUpdated) ui->countLabel->setText(QString::fromStdString(strprintf("Please wait... %d", nTimeToWait)));
     if(nTimeToWait > 0) return;
@@ -298,7 +298,7 @@ void ThroneList::on_filterLineEdit_textChanged(const QString &filterString) {
     strCurrentFilter = filterString;
     nTimeFilterUpdate = GetTime();
     fFilterUpdated = true;
-    ui->countLabel->setText(QString::fromStdString(strprintf("Please wait... %d", THRONELIST_FILTER_COOLDOWN_SECONDS)));
+    ui->countLabel->setText(QString::fromStdString(strprintf("Please wait... %d", MASTERNODELIST_FILTER_COOLDOWN_SECONDS)));
 }
 
 void ThroneList::on_startButton_clicked()
@@ -372,8 +372,8 @@ void ThroneList::on_startAllButton_clicked()
 void ThroneList::on_startMissingButton_clicked()
 {
 
-    if(throneSync.RequestedThroneAssets <= THRONE_SYNC_LIST ||
-      throneSync.RequestedThroneAssets == THRONE_SYNC_FAILED) {
+    if(throneSync.RequestedThroneAssets <= MASTERNODE_SYNC_LIST ||
+      throneSync.RequestedThroneAssets == MASTERNODE_SYNC_FAILED) {
         QMessageBox::critical(this, tr("Command is not available right now"),
             tr("You can't use this command until throne list is synced"));
         return;
@@ -430,9 +430,9 @@ void ThroneList::updateVoteList(bool reset)
 
     static int64_t lastVoteListUpdate = 0;
 
-    // automatically update my throne list only once in MY_THRONELIST_UPDATE_SECONDS seconds,
+    // automatically update my throne list only once in MY_MASTERNODELIST_UPDATE_SECONDS seconds,
     // this update still can be triggered manually at any time via button click
-    int64_t timeTillUpdate = lastVoteListUpdate + MY_THRONELIST_UPDATE_SECONDS - GetTime();
+    int64_t timeTillUpdate = lastVoteListUpdate + MY_MASTERNODELIST_UPDATE_SECONDS - GetTime();
     ui->voteSecondsLabel->setText(QString::number(timeTillUpdate));
 
     if(timeTillUpdate > 0 && !reset) return;
