@@ -562,9 +562,9 @@ fs::path GetDefaultDataDir()
 #endif
 }
 
-static fs::path pathCached;
-static fs::path pathCachedNetSpecific;
 static CCriticalSection csPathCached;
+static fs::path pathCached GUARDED_BY(csPathCached);
+static fs::path pathCachedNetSpecific GUARDED_BY(csPathCached);
 
 const fs::path &GetDataDir(bool fNetSpecific)
 {
