@@ -116,7 +116,7 @@ class CCryptoKeyStore : public CBasicKeyStore
 {
 private:
 
-    CKeyingMaterial vMasterKey;
+    CKeyingMaterial vMasterKey GUARDED_BY(cs_KeyStore);
 
     //! if fUseCrypto is true, mapKeys must be empty
     //! if fUseCrypto is false, vMasterKey must be empty
