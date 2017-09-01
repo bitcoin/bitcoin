@@ -70,7 +70,6 @@ UniValue getrawtransaction(const JSONRPCRequest& request)
             "is known, its hash can be provided even for nodes without -txindex. Note that if a blockhash is\n"
             "provided, only that block will be searched and if the transaction is in the mempool or other\n"
             "blocks, or if this node does not have the given block available, the transaction will not be found.\n"
-            "DEPRECATED: for now, it also works for transactions with unspent outputs.\n"
 
             "\nReturn the raw transaction data.\n"
             "\nIf verbose is 'true', returns an Object with information about 'txid'.\n"
