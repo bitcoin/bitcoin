@@ -1149,21 +1149,21 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	if (CheckParam(params, 5))
 		merchantAliasPegTx.SetHex(params[5].get_str());
 	// payment options - get payment options string if specified otherwise default to SYS
-	string paymentOptions = "SYS";
+	string paymentOption = "SYS";
 	if(CheckParam(params, 6))
 	{
-		paymentOptions = params[6].get_str();
-		boost::algorithm::to_upper(paymentOptions);
+		paymentOption = params[6].get_str();
+		boost::algorithm::to_upper(paymentOption);
 	}
 	// payment options - validate payment options string
-	if(!ValidatePaymentOptionsString(paymentOptions))
+	if(!ValidatePaymentOptionsString(paymentOption))
 	{
 		// TODO change error number to something unique
-		string err = "SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4510 - " + _("Could not validate the payment options value");
+		string err = "SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4510 - " + _("Could not validate the payment option value");
 		throw runtime_error(err.c_str());
 	}
 		// payment options - and convert payment options string to a bitmask for the txn
-	unsigned char paymentOptionsMask = (unsigned char) GetPaymentOptionsMaskFromString(paymentOptions);
+	unsigned char paymentOptionMask = (unsigned char) GetPaymentOptionsMaskFromString(paymentOption);
 	vector<unsigned char> vchRedeemScript;
 	if(CheckParam(params, 7))
 		vchRedeemScript = vchFromValue(params[7]);
@@ -1277,11 +1277,11 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	// send to escrow address
 
 	float fEscrowFee = getEscrowFee(selleralias.aliasPegTuple, vchFromString("SYS"), precision);
-	CAmount nTotal = convertSyscoinToCurrencyCode(merchantAliasPegTuple, vchFromString("SYS"), theOffer.GetPrice(foundEntry), precision)*nQty;
+	CAmount nTotal = convertSyscoinToCurrencyCode(merchantAliasPegTuple, GetPaymentOptionsString(paymentOptionMask), theOffer.GetPrice(foundEntry), precision)*nQty;
 	string sTotal = strprintf("%.*f", precision, ValueFromAmount(nTotal).get_real());
 	CAmount nEscrowFee = GetEscrowArbiterFee(nTotal, fEscrowFee);
-	nEscrowFee = convertSyscoinToCurrencyCode(merchantAliasPegTuple, vchFromString("SYS"), nEscrowFee,precision);
-	int nFeePerByte = getFeePerByte(selleralias.aliasPegTuple, vchFromString("SYS"), precision);
+	nEscrowFee = convertSyscoinToCurrencyCode(selleralias.aliasPegTuple, GetPaymentOptionsString(paymentOptionMask), nEscrowFee, precision);
+	int nFeePerByte = getFeePerByte(selleralias.aliasPegTuple, GetPaymentOptionsString(paymentOptionMask), precision);
 	CAmount nNetworkFee = (nFeePerByte * 400);
 	vector<CRecipient> vecSend;
 	CAmount nAmountWithFee = nTotal+nEscrowFee+nNetworkFee;
@@ -1303,7 +1303,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	newEscrow.sellerAliasTuple = CNameTXIDTuple(selleralias.vchAlias, selleralias.txHash);
 	newEscrow.linkSellerAliasTuple = CNameTXIDTuple(reselleralias.vchAlias, reselleralias.txHash);
 	newEscrow.nQty = nQty;
-	newEscrow.nPaymentOption = paymentOptionsMask;
+	newEscrow.nPaymentOption = paymentOptionMask;
 	newEscrow.nHeight = chainActive.Tip()->nHeight;
 	newEscrow.sCurrencyCode = stringFromVch(theOffer.sCurrencyCode);
 	newEscrow.bCoinOffer = theOffer.bCoinOffer;
@@ -1311,7 +1311,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	newEscrow.nCommission = nCommission;
 	newEscrow.nNetworkFee = nNetworkFee;
 	newEscrow.nArbiterFee = nEscrowFee;
-	newEscrow.nSysTotal = nAmountWithFee;
+	newEscrow.nSysTotal = nTotal;
 	vector<unsigned char> data;
 	newEscrow.Serialize(data);
     uint256 hash = Hash(data.begin(), data.end());
@@ -1425,8 +1425,8 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 
 	CScript scriptPubKeyAlias, scriptPubKeyAliasOrig;
 
-	CAmount nEscrowTotal = escrow.nSysTotal;
-	CAmount nTotal = nEscrowTotal - escrow.nArbiterFee + escrow.nNetworkFee;
+	CAmount nEscrowTotal = escrow.nSysTotal + escrow.nArbiterFee + escrow.nNetworkFee;
+	CAmount nTotal = escrow.nSysTotal;
 	uint256 txid;
 	CEscrow firstEscrow;
 	if (!pescrowdb->ReadEscrowFirstTXID(escrow.vchEscrow, txid)) {
@@ -1796,8 +1796,8 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 		GetAddress(linkSellerAliasLatest, &linkSellerAddress, script, escrow.nPaymentOption);
 	}
 
-	CAmount nEscrowTotal = escrow.nSysTotal;
-	CAmount nTotal = nEscrowTotal - escrow.nArbiterFee - escrow.nNetworkFee;
+	CAmount nEscrowTotal = escrow.nSysTotal + escrow.nArbiterFee + escrow.nNetworkFee;
+	CAmount nTotal = escrow.nSysTotal;
 	
 	uint256 txid;
 	CEscrow firstEscrow;
@@ -2145,8 +2145,8 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 		GetAddress(sellerAliasLatest, &sellerAddressPayment, sellerScript, escrow.nPaymentOption);
 	}
 
-	CAmount nEscrowTotal = escrow.nSysTotal;
-	CAmount nTotal = nEscrowTotal - escrow.nArbiterFee - escrow.nNetworkFee;
+	CAmount nEscrowTotal = escrow.nSysTotal + escrow.nArbiterFee + escrow.nNetworkFee;
+	CAmount nTotal = escrow.nSysTotal;
 
 
 	
@@ -2354,8 +2354,8 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	CPubKey sellerKey;
 	GetAlias(escrow.sellerAliasTuple, sellerAlias);
 
-	CAmount nEscrowTotal = escrow.nSysTotal;
-	CAmount nTotal = nEscrowTotal - escrow.nArbiterFee - escrow.nNetworkFee;
+	CAmount nEscrowTotal = escrow.nSysTotal + escrow.nArbiterFee + escrow.nNetworkFee;
+	CAmount nTotal = escrow.nSysTotal;
 
 	uint256 txid;
 	CEscrow firstEscrow;
