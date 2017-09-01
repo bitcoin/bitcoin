@@ -37,8 +37,8 @@ private:
 public:
     mutable CCriticalSection cs_db;
     std::unique_ptr<DbEnv> dbenv;
-    std::map<std::string, int> mapFileUseCount;
-    std::map<std::string, Db*> mapDb;
+    std::map<std::string, int> mapFileUseCount GUARDED_BY(cs_db);
+    std::map<std::string, Db*> mapDb GUARDED_BY(cs_db);
 
     CDBEnv();
     ~CDBEnv();
