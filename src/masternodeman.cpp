@@ -532,7 +532,7 @@ CThrone *CThroneMan::FindRandomNotInVec(std::vector<CTxIn> &vecToExclude, int pr
     return NULL;
 }
 
-CThrone* CThroneMan::GetCurrentThroNe(int mod, int64_t nBlockHeight, int minProtocol)
+CThrone* CThroneMan::GetCurrentMasterNode(int mod, int64_t nBlockHeight, int minProtocol)
 {
     int64_t score = 0;
     CThrone* winner = NULL;

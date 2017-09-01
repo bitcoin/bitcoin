@@ -13,7 +13,7 @@ void CActiveThrone::ManageStatus()
 {    
     std::string errorMessage;
 
-    if(!fThroNe) return;
+    if(!fMasterNode) return;
 
     if (fDebug) LogPrintf("CActiveThrone::ManageStatus() - Begin\n");
 
@@ -31,7 +31,7 @@ void CActiveThrone::ManageStatus()
         pmn = mnodeman.Find(pubKeyThrone);
         if(pmn != NULL) {
             pmn->Check();
-            if(pmn->IsEnabled() && pmn->protocolVersion == PROTOCOL_VERSION) EnableHotColdThroNe(pmn->vin, pmn->addr);
+            if(pmn->IsEnabled() && pmn->protocolVersion == PROTOCOL_VERSION) EnableHotColdMasterNode(pmn->vin, pmn->addr);
         }
     }
 
@@ -53,14 +53,14 @@ void CActiveThrone::ManageStatus()
             return;
         }
 
-        if(strThroNeAddr.empty()) {
+        if(strMasterNodeAddr.empty()) {
             if(!GetLocal(service)) {
                 notCapableReason = "Can't detect external address. Please use the throneaddr configuration option.";
                 LogPrintf("CActiveThrone::ManageStatus() - not capable: %s\n", notCapableReason);
                 return;
             }
         } else {
-            service = CService(strThroNeAddr);
+            service = CService(strMasterNodeAddr);
         }
 
         if(Params().NetworkID() == CBaseChainParams::MAIN) {
@@ -103,7 +103,7 @@ void CActiveThrone::ManageStatus()
             CPubKey pubKeyThrone;
             CKey keyThrone;
 
-            if(!legacySigner.SetKey(strThroNePrivKey, errorMessage, keyThrone, pubKeyThrone))
+            if(!legacySigner.SetKey(strMasterNodePrivKey, errorMessage, keyThrone, pubKeyThrone))
             {
                 notCapableReason = "Error upon calling SetKey: " + errorMessage;
                 LogPrintf("Register::ManageStatus() - %s\n", notCapableReason);
@@ -162,7 +162,7 @@ bool CActiveThrone::SendThronePing(std::string& errorMessage) {
     CPubKey pubKeyThrone;
     CKey keyThrone;
 
-    if(!legacySigner.SetKey(strThroNePrivKey, errorMessage, keyThrone, pubKeyThrone))
+    if(!legacySigner.SetKey(strMasterNodePrivKey, errorMessage, keyThrone, pubKeyThrone))
     {
         errorMessage = strprintf("Error upon calling SetKey: %s\n", errorMessage);
         return false;
@@ -210,9 +210,9 @@ bool CActiveThrone::SendThronePing(std::string& errorMessage) {
 }
 
 // when starting a Throne, this can enable to run as a hot wallet with no funds
-bool CActiveThrone::EnableHotColdThroNe(CTxIn& newVin, CService& newService)
+bool CActiveThrone::EnableHotColdMasterNode(CTxIn& newVin, CService& newService)
 {
-    if(!fThroNe) return false;
+    if(!fMasterNode) return false;
 
     status = ACTIVE_MASTERNODE_STARTED;
 
@@ -220,7 +220,7 @@ bool CActiveThrone::EnableHotColdThroNe(CTxIn& newVin, CService& newService)
     vin = newVin;
     service = newService;
 
-    LogPrintf("CActiveThrone::EnableHotColdThroNe() - Enabled! You may shut down the cold daemon.\n");
+    LogPrintf("CActiveThrone::EnableHotColdMasterNode() - Enabled! You may shut down the cold daemon.\n");
 
     return true;
 }

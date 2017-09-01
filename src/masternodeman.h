@@ -122,7 +122,7 @@ public:
     CThrone* FindRandomNotInVec(std::vector<CTxIn> &vecToExclude, int protocolVersion = -1);
 
     /// Get the current winner for this block
-    CThrone* GetCurrentThroNe(int mod=1, int64_t nBlockHeight=0, int minProtocol=0);
+    CThrone* GetCurrentMasterNode(int mod=1, int64_t nBlockHeight=0, int minProtocol=0);
 
     std::vector<CThrone> GetFullThroneVector() { Check(); return vThrones; }
 

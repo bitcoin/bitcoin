@@ -103,9 +103,9 @@ namespace boost {
 using namespace std;
 
 //Crown only features
-bool fThroNe = false;
-string strThroNePrivKey = "";
-string strThroNeAddr = "";
+bool fMasterNode = false;
+string strMasterNodePrivKey = "";
+string strMasterNodeAddr = "";
 bool fLiteMode = false;
 bool fEnableInstantX = true;
 int nInstantXDepth = 5;

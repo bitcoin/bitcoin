@@ -256,7 +256,7 @@ int64_t CreateNewLock(CTransaction tx)
 // check if we need to vote on this transaction
 void DoConsensusVote(CTransaction& tx, int64_t nBlockHeight)
 {
-    if(!fThroNe) return;
+    if(!fMasterNode) return;
 
     int n = mnodeman.GetThroneRank(activeThrone.vin, nBlockHeight, MIN_INSTANTX_PROTO_VERSION);
 
@@ -480,7 +480,7 @@ bool CConsensusVote::SignatureValid()
         return false;
     }
 
-    if(!legacySigner.VerifyMessage(pmn->pubkey2, vchThroNeSignature, strMessage, errorMessage)) {
+    if(!legacySigner.VerifyMessage(pmn->pubkey2, vchMasterNodeSignature, strMessage, errorMessage)) {
         LogPrintf("InstantX::CConsensusVote::SignatureValid() - Verify message failed\n");
         return false;
     }
@@ -496,20 +496,20 @@ bool CConsensusVote::Sign()
     CPubKey pubkey2;
     std::string strMessage = txHash.ToString().c_str() + boost::lexical_cast<std::string>(nBlockHeight);
     //LogPrintf("signing strMessage %s \n", strMessage.c_str());
-    //LogPrintf("signing privkey %s \n", strThroNePrivKey.c_str());
+    //LogPrintf("signing privkey %s \n", strMasterNodePrivKey.c_str());
 
-    if(!legacySigner.SetKey(strThroNePrivKey, errorMessage, key2, pubkey2))
+    if(!legacySigner.SetKey(strMasterNodePrivKey, errorMessage, key2, pubkey2))
     {
         LogPrintf("CConsensusVote::Sign() - ERROR: Invalid throneprivkey: '%s'\n", errorMessage.c_str());
         return false;
     }
 
-    if(!legacySigner.SignMessage(strMessage, errorMessage, vchThroNeSignature, key2)) {
+    if(!legacySigner.SignMessage(strMessage, errorMessage, vchMasterNodeSignature, key2)) {
         LogPrintf("CConsensusVote::Sign() - Sign message failed");
         return false;
     }
 
-    if(!legacySigner.VerifyMessage(pubkey2, vchThroNeSignature, strMessage, errorMessage)) {
+    if(!legacySigner.VerifyMessage(pubkey2, vchMasterNodeSignature, strMessage, errorMessage)) {
         LogPrintf("CConsensusVote::Sign() - Verify message failed");
         return false;
     }

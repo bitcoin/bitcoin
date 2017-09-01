@@ -51,7 +51,7 @@ public:
     std::string GetStatus();
 
     /// Enable cold wallet mode (run a Throne with no funds)
-    bool EnableHotColdThroNe(CTxIn& vin, CService& addr);
+    bool EnableHotColdMasterNode(CTxIn& vin, CService& addr);
 };
 
 #endif

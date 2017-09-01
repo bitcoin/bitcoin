@@ -1466,34 +1466,34 @@ bool AppInit2(boost::thread_group& threadGroup)
             LogPrintf("file format is unknown or invalid, please fix it manually\n");
     }
 
-    fThroNe = GetBoolArg("-throne", false);
+    fMasterNode = GetBoolArg("-throne", false);
 
-    if((fThroNe || throneConfig.getCount() > -1) && fTxIndex == false) {
+    if((fMasterNode || throneConfig.getCount() > -1) && fTxIndex == false) {
         return InitError("Enabling Throne support requires turning on transaction indexing."
                   "Please add txindex=1 to your configuration and start with -reindex");
     }
 
-    if(fThroNe) {
+    if(fMasterNode) {
         LogPrintf("IS MASTERNODE\n");
-        strThroNeAddr = GetArg("-throneaddr", "");
+        strMasterNodeAddr = GetArg("-throneaddr", "");
 
-        LogPrintf(" addr %s\n", strThroNeAddr.c_str());
+        LogPrintf(" addr %s\n", strMasterNodeAddr.c_str());
 
-        if(!strThroNeAddr.empty()){
-            CService addrTest = CService(strThroNeAddr);
+        if(!strMasterNodeAddr.empty()){
+            CService addrTest = CService(strMasterNodeAddr);
             if (!addrTest.IsValid()) {
-                return InitError("Invalid -throneaddr address: " + strThroNeAddr);
+                return InitError("Invalid -throneaddr address: " + strMasterNodeAddr);
             }
         }
 
-        strThroNePrivKey = GetArg("-throneprivkey", "");
-        if(!strThroNePrivKey.empty()){
+        strMasterNodePrivKey = GetArg("-throneprivkey", "");
+        if(!strMasterNodePrivKey.empty()){
             std::string errorMessage;
 
             CKey key;
             CPubKey pubkey;
 
-            if(!legacySigner.SetKey(strThroNePrivKey, errorMessage, key, pubkey))
+            if(!legacySigner.SetKey(strMasterNodePrivKey, errorMessage, key, pubkey))
             {
                 return InitError(_("Invalid throneprivkey. Please see documenation."));
             }
@@ -1526,7 +1526,7 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     //lite mode disables all Throne related functionality
     fLiteMode = GetBoolArg("-litemode", false);
-    if(fThroNe && fLiteMode){
+    if(fMasterNode && fLiteMode){
         return InitError("You can not start a throne in litemode");
     }
 

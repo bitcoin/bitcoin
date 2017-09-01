@@ -311,7 +311,7 @@ void CThronePayments::FillBlockPayee(CMutableTransaction& txNew, int64_t nFees)
     //spork
     if(!thronePayments.GetBlockPayee(pindexPrev->nHeight+1, payee)){
         //no throne detected
-        CThrone* winningNode = mnodeman.GetCurrentThroNe(1);
+        CThrone* winningNode = mnodeman.GetCurrentMasterNode(1);
         if(winningNode){
             payee = GetScriptForDestination(winningNode->pubkey.GetID());
         } else {
@@ -433,7 +433,7 @@ void CThronePayments::ProcessMessageThronePayments(CNode* pfrom, std::string& st
 bool CThronePaymentWinner::Sign(CKey& keyThrone, CPubKey& pubKeyThrone)
 {
     std::string errorMessage;
-    std::string strThroNeSignMessage;
+    std::string strMasterNodeSignMessage;
 
     std::string strMessage =  vinThrone.prevout.ToStringShort() +
                 boost::lexical_cast<std::string>(nBlockHeight) +
@@ -692,7 +692,7 @@ bool CThronePaymentWinner::IsValid(CNode* pnode, std::string& strError)
 
 bool CThronePayments::ProcessBlock(int nBlockHeight)
 {
-    if(!fThroNe) return false;
+    if(!fMasterNode) return false;
 
     //reference node - hybrid mode
 
@@ -749,7 +749,7 @@ bool CThronePayments::ProcessBlock(int nBlockHeight)
     CPubKey pubKeyThrone;
     CKey keyThrone;
 
-    if(!legacySigner.SetKey(strThroNePrivKey, errorMessage, keyThrone, pubKeyThrone))
+    if(!legacySigner.SetKey(strMasterNodePrivKey, errorMessage, keyThrone, pubKeyThrone))
     {
         LogPrintf("CThronePayments::ProcessBlock() - Error upon calling SetKey: %s\n", errorMessage.c_str());
         return false;

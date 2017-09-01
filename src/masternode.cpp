@@ -555,7 +555,7 @@ bool CThroneBroadcast::CheckInputsAndAdd(int& nDoS)
 {
     // we are a throne with the same vin (i.e. already activated) and this mnb is ours (matches our Throne privkey)
     // so nothing to do here for us
-    if(fThroNe && vin.prevout == activeThrone.vin.prevout && pubkey2 == activeThrone.pubKeyThrone)
+    if(fMasterNode && vin.prevout == activeThrone.vin.prevout && pubkey2 == activeThrone.pubKeyThrone)
         return true;
 
     // incorrect ping or its sigTime
@@ -628,7 +628,7 @@ bool CThroneBroadcast::CheckInputsAndAdd(int& nDoS)
 
     // if it matches our Throne privkey, then we've been remotely activated
     if(pubkey2 == activeThrone.pubKeyThrone && protocolVersion == PROTOCOL_VERSION){
-        activeThrone.EnableHotColdThroNe(vin, addr);
+        activeThrone.EnableHotColdMasterNode(vin, addr);
     }
 
     bool isLocal = addr.IsRFC1918() || addr.IsLocal();
@@ -701,7 +701,7 @@ CThronePing::CThronePing(CTxIn& newVin)
 bool CThronePing::Sign(CKey& keyThrone, CPubKey& pubKeyThrone)
 {
     std::string errorMessage;
-    std::string strThroNeSignMessage;
+    std::string strMasterNodeSignMessage;
 
     sigTime = GetAdjustedTime();
     std::string strMessage = vin.ToString() + blockHash.ToString() + boost::lexical_cast<std::string>(sigTime);

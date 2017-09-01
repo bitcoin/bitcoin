@@ -228,8 +228,8 @@ Value mnbudget(const Array& params, bool fHelp)
 
         BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
             std::string errorMessage;
-            std::vector<unsigned char> vchThroNeSignature;
-            std::string strThroNeSignMessage;
+            std::vector<unsigned char> vchMasterNodeSignature;
+            std::string strMasterNodeSignMessage;
 
             CPubKey pubKeyCollateralAddress;
             CKey keyCollateralAddress;
@@ -307,7 +307,7 @@ Value mnbudget(const Array& params, bool fHelp)
         CKey keyThrone;
         std::string errorMessage;
 
-        if(!legacySigner.SetKey(strThroNePrivKey, errorMessage, keyThrone, pubKeyThrone))
+        if(!legacySigner.SetKey(strMasterNodePrivKey, errorMessage, keyThrone, pubKeyThrone))
             return "Error upon calling SetKey";
 
         CThrone* pmn = mnodeman.Find(activeThrone.vin);
@@ -593,8 +593,8 @@ Value mnfinalbudget(const Array& params, bool fHelp)
 
         BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
             std::string errorMessage;
-            std::vector<unsigned char> vchThroNeSignature;
-            std::string strThroNeSignMessage;
+            std::vector<unsigned char> vchMasterNodeSignature;
+            std::string strMasterNodeSignMessage;
 
             CPubKey pubKeyCollateralAddress;
             CKey keyCollateralAddress;
@@ -667,7 +667,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
         CKey keyThrone;
         std::string errorMessage;
 
-        if(!legacySigner.SetKey(strThroNePrivKey, errorMessage, keyThrone, pubKeyThrone))
+        if(!legacySigner.SetKey(strMasterNodePrivKey, errorMessage, keyThrone, pubKeyThrone))
             return "Error upon calling SetKey";
 
         CThrone* pmn = mnodeman.Find(activeThrone.vin);

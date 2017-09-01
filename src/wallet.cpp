@@ -1203,7 +1203,7 @@ void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const
             for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
                 bool found = false;
                 if(coin_type == ONLY_NOT10000IFMN) {
-                    found = !(fThroNe && pcoin->vout[i].nValue == 10000*COIN);
+                    found = !(fMasterNode && pcoin->vout[i].nValue == 10000*COIN);
                 } else if(coin_type == ONLY_10000) {
                     found = pcoin->vout[i].nValue == 10000*COIN;
                 } else {

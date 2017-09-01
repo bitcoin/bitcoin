@@ -10,11 +10,11 @@ There are many ways to setup a wallet to support start-many. This guide will wal
 
 This is the way to go if you are consolidating multiple wallets into one that supports start-many. 
 
-### From your single-instance ThroNe Wallet
+### From your single-instance MasterNode Wallet
 
 Open your QT Wallet and go to console (from the menu select Tools => Debug Console)
 
-Dump the private key from your ThroNe's pulic key.
+Dump the private key from your MasterNode's pulic key.
 
 ```
 walletpassphrase [your_wallet_passphrase] 600
@@ -23,7 +23,7 @@ dumpprivkey [mn_public_key]
 
 Copy the resulting priviate key. You'll use it in the next step.
 
-### From your multi-instance ThroNe Wallet
+### From your multi-instance MasterNode Wallet
 
 Open your QT Wallet and go to console (from the menu select Tools => Debug Console)
 
@@ -52,7 +52,7 @@ The wallet will re-scan and you will see your available balance increase by the 
     * Click *Request payment*
 5. Click the *Copy Address* button
 
-Create a new wallet address for each ThroNe.
+Create a new wallet address for each MasterNode.
 
 Close your QT Wallet.
 
@@ -68,7 +68,7 @@ Issue the following:
 
 ```throne genkey```
 
-*Note: A throne private key will need to be created for each ThroNe you run. You should not use the same throne private key for multiple ThroNes.*
+*Note: A throne private key will need to be created for each MasterNode you run. You should not use the same throne private key for multiple MasterNodes.*
 
 Close your QT Wallet.
 
@@ -127,7 +127,7 @@ Shut down the daemon and then edit the file.
 ### Edit the throneprivkey
 If you generated a new throne private key, you will need to update the throneprivkey value in your remote crown.conf file.
 
-## Start your ThroNes
+## Start your MasterNodes
 
 ### Remote
 
@@ -147,7 +147,7 @@ Finally... time to start from local.
 
 From the menu select Tools => Debug Console
 
-If you want to review your throne.conf setting before starting the ThroNes, issue the following in the Debug Console:
+If you want to review your throne.conf setting before starting the MasterNodes, issue the following in the Debug Console:
 
 ```throne list-conf```
 

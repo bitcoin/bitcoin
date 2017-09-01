@@ -30,12 +30,12 @@
 
 //Crown only features
 
-extern bool fThroNe;
+extern bool fMasterNode;
 extern bool fLiteMode;
 extern bool fEnableInstantX;
 extern int nInstantXDepth;
 extern int64_t enforceThronePaymentsTime;
-extern std::string strThroNeAddr;
+extern std::string strMasterNodeAddr;
 extern int keysLoaded;
 extern bool fSucessfullyLoaded;
 extern std::string strBudgetMode;

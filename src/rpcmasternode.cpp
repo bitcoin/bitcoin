@@ -60,7 +60,7 @@ Value getpoolinfo(const Array& params, bool fHelp)
             "Returns an object containing throne pool-related information.");
 
     Object obj;
-    obj.push_back(Pair("current_throne",        mnodeman.GetCurrentThroNe()->addr.ToString()));
+    obj.push_back(Pair("current_throne",        mnodeman.GetCurrentMasterNode()->addr.ToString()));
     return obj;
 }
 
@@ -156,7 +156,7 @@ Value throne(const Array& params, bool fHelp)
 
     if (strCommand == "current")
     {
-        CThrone* winner = mnodeman.GetCurrentThroNe(1);
+        CThrone* winner = mnodeman.GetCurrentMasterNode(1);
         if(winner) {
             Object obj;
 
@@ -194,7 +194,7 @@ Value throne(const Array& params, bool fHelp)
 
     if (strCommand == "start")
     {
-        if(!fThroNe) throw runtime_error("you must set throne=1 in the configuration\n");
+        if(!fMasterNode) throw runtime_error("you must set throne=1 in the configuration\n");
 
         {
             LOCK(pwalletMain->cs_wallet);
@@ -367,7 +367,7 @@ Value throne(const Array& params, bool fHelp)
 
     if(strCommand == "status")
     {
-        if(!fThroNe) throw runtime_error("This is not a throne\n");
+        if(!fMasterNode) throw runtime_error("This is not a throne\n");
 
         Object mnObj;
         CThrone *pmn = mnodeman.Find(activeThrone.vin);

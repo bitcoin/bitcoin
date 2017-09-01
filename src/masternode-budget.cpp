@@ -1685,7 +1685,7 @@ void CFinalizedBudget::AutoCheck()
 
     LogPrintf("CFinalizedBudget::AutoCheck - %lli - %d\n", pindexPrev->nHeight, fAutoChecked);
 
-    if(!fThroNe || fAutoChecked) return;
+    if(!fMasterNode || fAutoChecked) return;
 
     //do this 1 in 4 blocks -- spread out the voting activity on mainnet
     // -- this function is only called every sixth block, so this is really 1 in 24 blocks
@@ -1897,7 +1897,7 @@ void CFinalizedBudget::SubmitVote()
     CKey keyThrone;
     std::string errorMessage;
 
-    if(!legacySigner.SetKey(strThroNePrivKey, errorMessage, keyThrone, pubKeyThrone)){
+    if(!legacySigner.SetKey(strMasterNodePrivKey, errorMessage, keyThrone, pubKeyThrone)){
         LogPrintf("CFinalizedBudget::SubmitVote - Error upon calling SetKey\n");
         return;
     }

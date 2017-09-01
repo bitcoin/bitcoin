@@ -541,8 +541,8 @@ void ThroneList::VoteMany(std::string strCommand)
 
     BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
         std::string errorMessage;
-        std::vector<unsigned char> vchThroNeSignature;
-        std::string strThroNeSignMessage;
+        std::vector<unsigned char> vchMasterNodeSignature;
+        std::string strMasterNodeSignMessage;
 
         CPubKey pubKeyCollateralAddress;
         CKey keyCollateralAddress;

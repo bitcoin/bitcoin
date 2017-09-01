@@ -14,7 +14,7 @@
 
 class CTxIn;
 class CLegacySigner;
-class CThroNeVote;
+class CMasterNodeVote;
 class CBitcoinAddress;
 class CActiveThrone;
 
@@ -24,7 +24,7 @@ class CActiveThrone;
 #define MASTERNODE_RESET                       -1
 
 extern CLegacySigner legacySigner;
-extern std::string strThroNePrivKey;
+extern std::string strMasterNodePrivKey;
 extern CActiveThrone activeThrone;
 
 /** Helper object for signing and checking signatures
