@@ -397,9 +397,9 @@ private:
     std::vector<std::string> vAddedNodes GUARDED_BY(cs_vAddedNodes);
     CCriticalSection cs_vAddedNodes;
     std::vector<std::string> vAddedNodes GUARDED_BY(cs_vAddedNodes);
-    std::vector<CNode*> vNodes;
-    std::list<CNode*> vNodesDisconnected;
     mutable CCriticalSection cs_vNodes;
+    std::vector<CNode*> vNodes GUARDED_BY(cs_vNodes);
+    std::list<CNode*> vNodesDisconnected;
     std::atomic<NodeId> nLastNodeId;
 
     /** Services this instance offers */
