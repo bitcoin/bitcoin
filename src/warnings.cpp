@@ -9,7 +9,7 @@
 #include <warnings.h>
 
 CCriticalSection cs_warnings;
-std::string strMiscWarning;
+std::string strMiscWarning GUARDED_BY(cs_warnings);
 bool fLargeWorkForkFound = false;
 bool fLargeWorkInvalidChainFound = false;
 
