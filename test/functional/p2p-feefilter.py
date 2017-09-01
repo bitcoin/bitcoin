@@ -37,11 +37,8 @@ class TestNode(NodeConnCB):
             self.txinvs = []
 
 class FeeFilterTest(BitcoinTestFramework):
-
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.num_nodes = 2
-        self.setup_clean_chain = False
 
     def run_test(self):
         node1 = self.nodes[1]
