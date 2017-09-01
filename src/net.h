@@ -388,9 +388,9 @@ private:
 
     std::vector<ListenSocket> vhListenSocket;
     std::atomic<bool> fNetworkActive;
-    banmap_t setBanned;
     CCriticalSection cs_setBanned;
-    bool setBannedIsDirty;
+    banmap_t setBanned GUARDED_BY(cs_setBanned);
+    bool setBannedIsDirty GUARDED_BY(cs_setBanned);
     bool fAddressesInitialized;
     CAddrMan addrman;
     std::deque<std::string> vOneShots;
