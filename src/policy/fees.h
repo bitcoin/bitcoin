@@ -229,10 +229,12 @@ public:
     unsigned int HighestTargetTracked(FeeEstimateHorizon horizon) const;
 
 private:
-    unsigned int nBestSeenHeight;
-    unsigned int firstRecordedHeight;
-    unsigned int historicalFirst;
-    unsigned int historicalBest;
+    mutable CCriticalSection cs_feeEstimator;
+
+    unsigned int nBestSeenHeight GUARDED_BY(cs_feeEstimator);
+    unsigned int firstRecordedHeight GUARDED_BY(cs_feeEstimator);
+    unsigned int historicalFirst GUARDED_BY(cs_feeEstimator);
+    unsigned int historicalBest GUARDED_BY(cs_feeEstimator);
 
     struct TxStatsInfo
     {
@@ -242,20 +244,18 @@ private:
     };
 
     // map of txids to information about that transaction
-    std::map<uint256, TxStatsInfo> mapMemPoolTxs;
+    std::map<uint256, TxStatsInfo> mapMemPoolTxs GUARDED_BY(cs_feeEstimator);
 
     /** Classes to track historical data on transaction confirmations */
-    std::unique_ptr<TxConfirmStats> feeStats;
-    std::unique_ptr<TxConfirmStats> shortStats;
-    std::unique_ptr<TxConfirmStats> longStats;
+    std::unique_ptr<TxConfirmStats> feeStats PT_GUARDED_BY(cs_feeEstimator);
+    std::unique_ptr<TxConfirmStats> shortStats PT_GUARDED_BY(cs_feeEstimator);
+    std::unique_ptr<TxConfirmStats> longStats PT_GUARDED_BY(cs_feeEstimator);
 
-    unsigned int trackedTxs;
-    unsigned int untrackedTxs;
+    unsigned int trackedTxs GUARDED_BY(cs_feeEstimator);
+    unsigned int untrackedTxs GUARDED_BY(cs_feeEstimator);
 
-    std::vector<double> buckets;              // The upper-bound of the range for the bucket (inclusive)
-    std::map<double, unsigned int> bucketMap; // Map of bucket upper-bound to index into all vectors by bucket
-
-    mutable CCriticalSection cs_feeEstimator;
+    std::vector<double> buckets GUARDED_BY(cs_feeEstimator); // The upper-bound of the range for the bucket (inclusive)
+    std::map<double, unsigned int> bucketMap GUARDED_BY(cs_feeEstimator); // Map of bucket upper-bound to index into all vectors by bucket
 
     /** Process a transaction confirmed in a block*/
     bool processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry* entry);
