@@ -620,7 +620,7 @@ public:
     CCriticalSection cs_sendProcessing;
 
     std::deque<CInv> vRecvGetData;
-    uint64_t nRecvBytes;
+    uint64_t nRecvBytes GUARDED_BY(cs_vRecv);
     std::atomic<int> nRecvVersion;
 
     std::atomic<int64_t> nLastSend;
@@ -664,7 +664,7 @@ public:
 protected:
 
     mapMsgCmdSize mapSendBytesPerMsgCmd GUARDED_BY(cs_vSend);
-    mapMsgCmdSize mapRecvBytesPerMsgCmd;
+    mapMsgCmdSize mapRecvBytesPerMsgCmd GUARDED_BY(cs_vRecv);
 
 public:
     uint256 hashContinue;
