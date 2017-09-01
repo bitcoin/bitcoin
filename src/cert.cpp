@@ -1014,11 +1014,8 @@ bool BuildCertJson(const CCert& cert, const CAliasIndex& alias, UniValue& oCert)
 	{
 		expired = true;
 	}  
-	int64_t expires_in = expired_time - chainActive.Tip()->nTime;
-	if(expires_in < -1)
-		expires_in = -1;
 
-	oCert.push_back(Pair("expires_in", expires_in));
+
 	oCert.push_back(Pair("expires_on", expired_time));
 	oCert.push_back(Pair("expired", expired));
 	return true;

@@ -2903,10 +2903,10 @@ bool BuildOfferJson(const COffer& theOffer, UniValue& oOffer)
 	}
 
 	bool expired = false;
-	int64_t expires_in;
+
 	int64_t expired_time;
 	expired = 0;
-	expires_in = 0;
+
 	expired_time = 0;
 	vector<unsigned char> vchCert;
 	if(!theOffer.certTuple.first.empty())
@@ -2919,10 +2919,7 @@ bool BuildOfferJson(const COffer& theOffer, UniValue& oOffer)
 	{
 		expired = true;
 	}
-	expires_in = expired_time - chainActive.Tip()->nTime;
-	if(expires_in < -1)
-		expires_in = -1;
-	oOffer.push_back(Pair("expires_in", expires_in));
+
 	oOffer.push_back(Pair("expires_on", expired_time));
 	oOffer.push_back(Pair("expired", expired));
 	oOffer.push_back(Pair("height", (int64_t)theOffer.nHeight));

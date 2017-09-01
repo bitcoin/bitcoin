@@ -2373,7 +2373,6 @@ UniValue aliasinfo(const UniValue& params, bool fHelp) {
 bool BuildAliasJson(const CAliasIndex& alias, UniValue& oName)
 {
 	bool expired = false;
-	int64_t expires_in = 0;
 	int64_t expired_time = 0;
 	oName.push_back(Pair("_id", stringFromVch(alias.vchAlias)));
 	oName.push_back(Pair("passwordsalt", HexStr(alias.vchPasswordSalt)));
@@ -2400,17 +2399,12 @@ bool BuildAliasJson(const CAliasIndex& alias, UniValue& oName)
 		{
 			expired = true;
 		}  
-		expires_in = expired_time - chainActive.Tip()->nTime;
-		if(expires_in < -1)
-			expires_in = -1;
 	}
 	else
 	{
-		expires_in = -1;
 		expired = false;
 		expired_time = -1;
 	}
-	oName.push_back(Pair("expires_in", expires_in));
 	oName.push_back(Pair("expires_on", expired_time));
 	oName.push_back(Pair("expired", expired));
 	return true;
