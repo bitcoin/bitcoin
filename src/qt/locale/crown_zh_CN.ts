@@ -1456,7 +1456,7 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>开始/关闭 混合</translation>
     </message>
     <message>
-        <source>The denominations you submitted to the Throne.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
         <translation>您向主节点所提交的用以面额化混合的CRW,&lt;br&gt;当其他用户提交相同的面额化CRW数量时,将开始混合.</translation>
     </message>
     <message>
@@ -1805,7 +1805,7 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>数据链</translation>
     </message>
     <message>
-        <source>Number of Thrones</source>
+        <source>Number of Masternodes</source>
         <translation>主节点数量</translation>
     </message>
     <message>
@@ -3531,7 +3531,7 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>删除钱包里的所有交易信息, 并且在下次启动时, 使用 -rescan 来从区块链中恢复</translation>
     </message>
     <message>
-        <source>Disable all Crown specific functionality (Thrones, Darksend, InstantX, Budgeting) (0-1, default: %u)</source>
+        <source>Disable all Crown specific functionality (Masternodes, Darksend, InstantX, Budgeting) (0-1, default: %u)</source>
         <translation>禁止所有达世币附加功能(主节点, 匿名发送, 即时发送, 预算) (0-1, default: %u)</translation>
     </message>
     <message>
@@ -3677,7 +3677,7 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>激活客户端,使其作为主节点(0-1, 默认: %u)</translation>
     </message>
     <message>
-        <source>Error connecting to Throne.</source>
+        <source>Error connecting to Masternode.</source>
         <translation>连接到主节点时发生错误.</translation>
     </message>
     <message>
@@ -3810,15 +3810,15 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>混淆中...</translation>
     </message>
     <message>
-        <source>No Thrones detected.</source>
+        <source>No Masternodes detected.</source>
         <translation>没有检测到任何主节点。</translation>
     </message>
     <message>
-        <source>No compatible Throne found.</source>
+        <source>No compatible Masternode found.</source>
         <translation>没有找到任何兼容的主节点。</translation>
     </message>
     <message>
-        <source>Not in the Throne list.</source>
+        <source>Not in the Masternode list.</source>
         <translation>在主节点列表中不存在.</translation>
     </message>
     <message>
@@ -3926,7 +3926,7 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>同步分叉...</translation>
     </message>
     <message>
-        <source>This is not a Throne.</source>
+        <source>This is not a Masternode.</source>
         <translation>这并不是一个主节点。</translation>
     </message>
     <message>
@@ -3959,7 +3959,7 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>(设置 9340 为主网)</translation>
     </message>
     <message>
-        <source>Can't find random Throne.</source>
+        <source>Can't find random Masternode.</source>
         <translation>无法找到随机主节点.</translation>
     </message>
     <message>
@@ -4011,15 +4011,15 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>正在读取钱包...</translation>
     </message>
     <message>
-        <source>Throne options:</source>
+        <source>Masternode options:</source>
         <translation>主节点选项：</translation>
     </message>
     <message>
-        <source>Throne queue is full.</source>
+        <source>Masternode queue is full.</source>
         <translation>主节点列队已满。</translation>
     </message>
     <message>
-        <source>Throne:</source>
+        <source>Masternode:</source>
         <translation>主节点：</translation>
     </message>
     <message>

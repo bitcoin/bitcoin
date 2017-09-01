@@ -57,7 +57,7 @@ public slots:
     /** Switch to send coins page */
     void gotoSendCoinsPage(QString addr = "");
     /** Switch to throne manager page */
-    void gotoThronePage();
+    void gotoMasternodePage();
     /** Switch to multisig tab */
     void gotoMultisigTab();
 

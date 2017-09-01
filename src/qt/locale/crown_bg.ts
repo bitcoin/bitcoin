@@ -1455,8 +1455,8 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Пусни/Спри Смесване</translation>
     </message>
     <message>
-        <source>The denominations you submitted to the Throne.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
-        <translation>Деноминираните суми, които сте изпратили към Throne. За смесване, другите потребители трябва да изпратят абсолютно същите деноминирани суми.</translation>
+        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <translation>Деноминираните суми, които сте изпратили към Masternode. За смесване, другите потребители трябва да изпратят абсолютно същите деноминирани суми.</translation>
     </message>
     <message>
         <source>(Last Message)</source>
@@ -1812,8 +1812,8 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Регистър на блокове</translation>
     </message>
     <message>
-        <source>Number of Thrones</source>
-        <translation>Брой на Thrones</translation>
+        <source>Number of Masternodes</source>
+        <translation>Брой на Masternodes</translation>
     </message>
     <message>
         <source>&amp;Console</source>
@@ -3610,8 +3610,8 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Изтриване на всички транзакции на портфейла и  възстановява само тези части на блок веригата чрез -rescan при стартиране</translation>
     </message>
     <message>
-        <source>Disable all Crown specific functionality (Thrones, Darksend, InstantX, Budgeting) (0-1, default: %u)</source>
-        <translation>Изключване на всички специфични Crown функции (Thrones, Darksend, InstantX, Budgeting) (0-1, по подразбиране: %u)</translation>
+        <source>Disable all Crown specific functionality (Masternodes, Darksend, InstantX, Budgeting) (0-1, default: %u)</source>
+        <translation>Изключване на всички специфични Crown функции (Masternodes, Darksend, InstantX, Budgeting) (0-1, по подразбиране: %u)</translation>
     </message>
     <message>
         <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
@@ -3811,8 +3811,8 @@ for example: alertnotify=echo %%s | mail -s "Crown Alert" admin@foo.com
         <translation>Активиране на клиента да работи като throne (0-1, по подразбиране: %u)</translation>
     </message>
     <message>
-        <source>Error connecting to Throne.</source>
-        <translation>Грешка при свързване с Throne.</translation>
+        <source>Error connecting to Masternode.</source>
+        <translation>Грешка при свързване с Masternode.</translation>
     </message>
     <message>
         <source>Error loading wallet.dat: Wallet requires newer version of Crown Core</source>
@@ -3987,15 +3987,15 @@ for example: alertnotify=echo %%s | mail -s "Crown Alert" admin@foo.com
         <translation>Нужно е определяне на порта с -whitebind: '%s'</translation>
     </message>
     <message>
-        <source>No Thrones detected.</source>
-        <translation>Не са открити Thrones.</translation>
+        <source>No Masternodes detected.</source>
+        <translation>Не са открити Masternodes.</translation>
     </message>
     <message>
-        <source>No compatible Throne found.</source>
-        <translation>Не e намерен съвместим Throne.</translation>
+        <source>No compatible Masternode found.</source>
+        <translation>Не e намерен съвместим Masternode.</translation>
     </message>
     <message>
-        <source>Not in the Throne list.</source>
+        <source>Not in the Masternode list.</source>
         <translation>Не е в Мasternode списъка.</translation>
     </message>
     <message>
@@ -4119,8 +4119,8 @@ for example: alertnotify=echo %%s | mail -s "Crown Alert" admin@foo.com
         <translation>Синхронизиране на sporks...</translation>
     </message>
     <message>
-        <source>This is not a Throne.</source>
-        <translation>Това не е Throne.</translation>
+        <source>This is not a Masternode.</source>
+        <translation>Това не е Masternode.</translation>
     </message>
     <message>
         <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
@@ -4128,7 +4128,7 @@ for example: alertnotify=echo %%s | mail -s "Crown Alert" admin@foo.com
     </message>
     <message>
         <source>Use N separate thrones to anonymize funds  (2-8, default: %u)</source>
-        <translation>Използвай N отделни Throne за анонимизиране на средствата (2-8, по подразбиране: %u)</translation>
+        <translation>Използвай N отделни Masternode за анонимизиране на средствата (2-8, по подразбиране: %u)</translation>
     </message>
     <message>
         <source>Use UPnP to map the listening port (default: %u)</source>
@@ -4152,15 +4152,15 @@ for example: alertnotify=echo %%s | mail -s "Crown Alert" admin@foo.com
     </message>
     <message>
         <source>Invalid throneprivkey. Please see documenation.</source>
-        <translation>Невалиден частен ключ на Throne. Моля вижте документацията.</translation>
+        <translation>Невалиден частен ключ на Masternode. Моля вижте документацията.</translation>
     </message>
     <message>
         <source>(must be 9340 for mainnet)</source>
         <translation>(трябва да е 9340 за основната мрежа)</translation>
     </message>
     <message>
-        <source>Can't find random Throne.</source>
-        <translation>Не можете да намери случаен Throne.</translation>
+        <source>Can't find random Masternode.</source>
+        <translation>Не можете да намери случаен Masternode.</translation>
     </message>
     <message>
         <source>Can't mix while sync in progress.</source>
@@ -4219,16 +4219,16 @@ for example: alertnotify=echo %%s | mail -s "Crown Alert" admin@foo.com
         <translation>Зареждане на портфейла...</translation>
     </message>
     <message>
-        <source>Throne options:</source>
-        <translation>Throne опции:</translation>
+        <source>Masternode options:</source>
+        <translation>Masternode опции:</translation>
     </message>
     <message>
-        <source>Throne queue is full.</source>
-        <translation>Опашката с задачи на Throne е пълна.</translation>
+        <source>Masternode queue is full.</source>
+        <translation>Опашката с задачи на Masternode е пълна.</translation>
     </message>
     <message>
-        <source>Throne:</source>
-        <translation>Throne:</translation>
+        <source>Masternode:</source>
+        <translation>Masternode:</translation>
     </message>
     <message>
         <source>Missing input transaction information.</source>
@@ -4332,7 +4332,7 @@ for example: alertnotify=echo %%s | mail -s "Crown Alert" admin@foo.com
     </message>
     <message>
         <source>Set the throne private key</source>
-        <translation>Задаване на личен ключ на Throne</translation>
+        <translation>Задаване на личен ключ на Masternode</translation>
     </message>
     <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>

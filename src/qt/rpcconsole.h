@@ -75,7 +75,7 @@ public slots:
     /** Set number of blocks shown in the UI */
     void setNumBlocks(int count);
     /** Set number of thrones shown in the UI */
-    void setThroneCount(const QString &strThrones);
+    void setMasternodeCount(const QString &strMasternodes);
     /** Go forward or back in history */
     void browseHistory(int offset);
     /** Scroll console view to end */

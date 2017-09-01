@@ -98,11 +98,11 @@ void CBudgetManager::CheckOrphanVotes()
 
 
     std::string strError = "";
-    std::map<uint256, CBudgetVote>::iterator it1 = mapOrphanThroneBudgetVotes.begin();
-    while(it1 != mapOrphanThroneBudgetVotes.end()){
+    std::map<uint256, CBudgetVote>::iterator it1 = mapOrphanMasternodeBudgetVotes.begin();
+    while(it1 != mapOrphanMasternodeBudgetVotes.end()){
         if(budget.UpdateProposal(((*it1).second), NULL, strError)){
             LogPrintf("CBudgetManager::CheckOrphanVotes - Proposal/Budget is known, activating and removing orphan vote\n");
-            mapOrphanThroneBudgetVotes.erase(it1++);
+            mapOrphanMasternodeBudgetVotes.erase(it1++);
         } else {
             ++it1;
         }
@@ -232,7 +232,7 @@ void CBudgetManager::SubmitFinalBudget()
 CBudgetDB::CBudgetDB()
 {
     pathDB = GetDataDir() / "budget.dat";
-    strMagicMessage = "ThroneBudget";
+    strMagicMessage = "MasternodeBudget";
 }
 
 bool CBudgetDB::Write(const CBudgetManager& objToSave)
@@ -806,7 +806,7 @@ void CBudgetManager::NewBlock()
     TRY_LOCK(cs, fBudgetNewBlock);
     if(!fBudgetNewBlock) return;
 
-    if (throneSync.RequestedThroneAssets <= MASTERNODE_SYNC_BUDGET) return;
+    if (throneSync.RequestedMasternodeAssets <= MASTERNODE_SYNC_BUDGET) return;
 
     if (strBudgetMode == "suggest") { //suggest the budget we see
         SubmitFinalBudget();
@@ -919,7 +919,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
     LOCK(cs_budget);
 
-    if (strCommand == "mnvs") { //Throne vote sync
+    if (strCommand == "mnvs") { //Masternode vote sync
         uint256 nProp;
         vRecv >> nProp;
 
@@ -935,14 +935,14 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         }
 
         Sync(pfrom, nProp);
-        LogPrintf("mnvs - Sent Throne votes to %s\n", pfrom->addr.ToString());
+        LogPrintf("mnvs - Sent Masternode votes to %s\n", pfrom->addr.ToString());
     }
 
-    if (strCommand == "mprop") { //Throne Proposal
+    if (strCommand == "mprop") { //Masternode Proposal
         CBudgetProposalBroadcast budgetProposalBroadcast;
         vRecv >> budgetProposalBroadcast;
 
-        if(mapSeenThroneBudgetProposals.count(budgetProposalBroadcast.GetHash())){
+        if(mapSeenMasternodeBudgetProposals.count(budgetProposalBroadcast.GetHash())){
             throneSync.AddedBudgetItem(budgetProposalBroadcast.GetHash());
             return;
         }
@@ -955,7 +955,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             return;
         }
 
-        mapSeenThroneBudgetProposals.insert(make_pair(budgetProposalBroadcast.GetHash(), budgetProposalBroadcast));
+        mapSeenMasternodeBudgetProposals.insert(make_pair(budgetProposalBroadcast.GetHash(), budgetProposalBroadcast));
 
         if(!budgetProposalBroadcast.IsValid(strError)) {
             LogPrintf("mprop - invalid budget proposal - %s\n", strError);
@@ -972,17 +972,17 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         CheckOrphanVotes();
     }
 
-    if (strCommand == "mvote") { //Throne Vote
+    if (strCommand == "mvote") { //Masternode Vote
         CBudgetVote vote;
         vRecv >> vote;
         vote.fValid = true;
 
-        if(mapSeenThroneBudgetVotes.count(vote.GetHash())){
+        if(mapSeenMasternodeBudgetVotes.count(vote.GetHash())){
             throneSync.AddedBudgetItem(vote.GetHash());
             return;
         }
 
-        CThrone* pmn = mnodeman.Find(vote.vin);
+        CMasternode* pmn = mnodeman.Find(vote.vin);
         if(pmn == NULL) {
             LogPrint("mnbudget", "mvote - unknown throne - vin: %s\n", vote.vin.ToString());
             mnodeman.AskForMN(pfrom, vote.vin);
@@ -990,7 +990,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         }
 
 
-        mapSeenThroneBudgetVotes.insert(make_pair(vote.GetHash(), vote));
+        mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
         if(!vote.SignatureValid(true)){
             LogPrintf("mvote - signature invalid\n");
             if(throneSync.IsSynced()) Misbehaving(pfrom->GetId(), 20);
@@ -1053,7 +1053,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             return;
         }
 
-        CThrone* pmn = mnodeman.Find(vote.vin);
+        CMasternode* pmn = mnodeman.Find(vote.vin);
         if(pmn == NULL) {
             LogPrint("mnbudget", "fbvote - unknown throne - vin: %s\n", vote.vin.ToString());
             mnodeman.AskForMN(pfrom, vote.vin);
@@ -1093,8 +1093,8 @@ void CBudgetManager::ResetSync()
     LOCK(cs);
 
 
-    std::map<uint256, CBudgetProposalBroadcast>::iterator it1 = mapSeenThroneBudgetProposals.begin();
-    while(it1 != mapSeenThroneBudgetProposals.end()){
+    std::map<uint256, CBudgetProposalBroadcast>::iterator it1 = mapSeenMasternodeBudgetProposals.begin();
+    while(it1 != mapSeenMasternodeBudgetProposals.end()){
         CBudgetProposal* pbudgetProposal = FindProposal((*it1).first);
         if(pbudgetProposal && pbudgetProposal->fValid){
         
@@ -1132,8 +1132,8 @@ void CBudgetManager::MarkSynced()
         Mark that we've sent all valid items
     */
 
-    std::map<uint256, CBudgetProposalBroadcast>::iterator it1 = mapSeenThroneBudgetProposals.begin();
-    while(it1 != mapSeenThroneBudgetProposals.end()){
+    std::map<uint256, CBudgetProposalBroadcast>::iterator it1 = mapSeenMasternodeBudgetProposals.begin();
+    while(it1 != mapSeenMasternodeBudgetProposals.end()){
         CBudgetProposal* pbudgetProposal = FindProposal((*it1).first);
         if(pbudgetProposal && pbudgetProposal->fValid){
         
@@ -1183,8 +1183,8 @@ void CBudgetManager::Sync(CNode* pfrom, uint256 nProp, bool fPartial)
 
     int nInvCount = 0;
 
-    std::map<uint256, CBudgetProposalBroadcast>::iterator it1 = mapSeenThroneBudgetProposals.begin();
-    while(it1 != mapSeenThroneBudgetProposals.end()){
+    std::map<uint256, CBudgetProposalBroadcast>::iterator it1 = mapSeenMasternodeBudgetProposals.begin();
+    while(it1 != mapSeenMasternodeBudgetProposals.end()){
         CBudgetProposal* pbudgetProposal = FindProposal((*it1).first);
         if(pbudgetProposal && pbudgetProposal->fValid && (nProp.IsNull() || (*it1).first == nProp)){
             pfrom->PushInventory(CInv(MSG_BUDGET_PROPOSAL, (*it1).second.GetHash()));
@@ -1249,7 +1249,7 @@ bool CBudgetManager::UpdateProposal(CBudgetVote& vote, CNode* pfrom, std::string
             if(!throneSync.IsSynced()) return false;
 
             LogPrintf("CBudgetManager::UpdateProposal - Unknown proposal %d, asking for source proposal\n", vote.nProposalHash.ToString());
-            mapOrphanThroneBudgetVotes[vote.nProposalHash] = vote;
+            mapOrphanMasternodeBudgetVotes[vote.nProposalHash] = vote;
 
             if(!askedForSourceProposalOrBudget.count(vote.nProposalHash)){
                 pfrom->PushMessage("mnvs", vote.nProposalHash);
@@ -1578,7 +1578,7 @@ void CBudgetVote::Relay()
     RelayInv(inv, MIN_BUDGET_PEER_PROTO_VERSION);
 }
 
-bool CBudgetVote::Sign(CKey& keyThrone, CPubKey& pubKeyThrone)
+bool CBudgetVote::Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode)
 {
     // Choose coins to use
     CPubKey pubKeyCollateralAddress;
@@ -1587,12 +1587,12 @@ bool CBudgetVote::Sign(CKey& keyThrone, CPubKey& pubKeyThrone)
     std::string errorMessage;
     std::string strMessage = vin.prevout.ToStringShort() + nProposalHash.ToString() + boost::lexical_cast<std::string>(nVote) + boost::lexical_cast<std::string>(nTime);
 
-    if(!legacySigner.SignMessage(strMessage, errorMessage, vchSig, keyThrone)) {
+    if(!legacySigner.SignMessage(strMessage, errorMessage, vchSig, keyMasternode)) {
         LogPrintf("CBudgetVote::Sign - Error upon calling SignMessage");
         return false;
     }
 
-    if(!legacySigner.VerifyMessage(pubKeyThrone, vchSig, strMessage, errorMessage)) {
+    if(!legacySigner.VerifyMessage(pubKeyMasternode, vchSig, strMessage, errorMessage)) {
         LogPrintf("CBudgetVote::Sign - Error upon calling VerifyMessage");
         return false;
     }
@@ -1605,11 +1605,11 @@ bool CBudgetVote::SignatureValid(bool fSignatureCheck)
     std::string errorMessage;
     std::string strMessage = vin.prevout.ToStringShort() + nProposalHash.ToString() + boost::lexical_cast<std::string>(nVote) + boost::lexical_cast<std::string>(nTime);
 
-    CThrone* pmn = mnodeman.Find(vin);
+    CMasternode* pmn = mnodeman.Find(vin);
 
     if(pmn == NULL)
     {
-        LogPrint("mnbudget", "CBudgetVote::SignatureValid() - Unknown Throne - %s\n", vin.ToString());
+        LogPrint("mnbudget", "CBudgetVote::SignatureValid() - Unknown Masternode - %s\n", vin.ToString());
         return false;
     }
 
@@ -1675,7 +1675,7 @@ bool CFinalizedBudget::AddOrUpdateVote(CFinalizedBudgetVote& vote, std::string& 
     return true;
 }
 
-//evaluate if we should vote for this. Throne only
+//evaluate if we should vote for this. Masternode only
 void CFinalizedBudget::AutoCheck()
 {
     LOCK(cs);
@@ -1893,17 +1893,17 @@ bool CFinalizedBudget::IsTransactionValid(const CTransaction& txNew, int nBlockH
 
 void CFinalizedBudget::SubmitVote()
 {
-    CPubKey pubKeyThrone;
-    CKey keyThrone;
+    CPubKey pubKeyMasternode;
+    CKey keyMasternode;
     std::string errorMessage;
 
-    if(!legacySigner.SetKey(strMasterNodePrivKey, errorMessage, keyThrone, pubKeyThrone)){
+    if(!legacySigner.SetKey(strMasterNodePrivKey, errorMessage, keyMasternode, pubKeyMasternode)){
         LogPrintf("CFinalizedBudget::SubmitVote - Error upon calling SetKey\n");
         return;
     }
 
-    CFinalizedBudgetVote vote(activeThrone.vin, GetHash());
-    if(!vote.Sign(keyThrone, pubKeyThrone)){
+    CFinalizedBudgetVote vote(activeMasternode.vin, GetHash());
+    if(!vote.Sign(keyMasternode, pubKeyMasternode)){
         LogPrintf("CFinalizedBudget::SubmitVote - Failure to sign.");
         return;
     }
@@ -1979,7 +1979,7 @@ void CFinalizedBudgetVote::Relay()
     RelayInv(inv, MIN_BUDGET_PEER_PROTO_VERSION);
 }
 
-bool CFinalizedBudgetVote::Sign(CKey& keyThrone, CPubKey& pubKeyThrone)
+bool CFinalizedBudgetVote::Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode)
 {
     // Choose coins to use
     CPubKey pubKeyCollateralAddress;
@@ -1988,12 +1988,12 @@ bool CFinalizedBudgetVote::Sign(CKey& keyThrone, CPubKey& pubKeyThrone)
     std::string errorMessage;
     std::string strMessage = vin.prevout.ToStringShort() + nBudgetHash.ToString() + boost::lexical_cast<std::string>(nTime);
 
-    if(!legacySigner.SignMessage(strMessage, errorMessage, vchSig, keyThrone)) {
+    if(!legacySigner.SignMessage(strMessage, errorMessage, vchSig, keyMasternode)) {
         LogPrintf("CFinalizedBudgetVote::Sign - Error upon calling SignMessage");
         return false;
     }
 
-    if(!legacySigner.VerifyMessage(pubKeyThrone, vchSig, strMessage, errorMessage)) {
+    if(!legacySigner.VerifyMessage(pubKeyMasternode, vchSig, strMessage, errorMessage)) {
         LogPrintf("CFinalizedBudgetVote::Sign - Error upon calling VerifyMessage");
         return false;
     }
@@ -2007,11 +2007,11 @@ bool CFinalizedBudgetVote::SignatureValid(bool fSignatureCheck)
 
     std::string strMessage = vin.prevout.ToStringShort() + nBudgetHash.ToString() + boost::lexical_cast<std::string>(nTime);
 
-    CThrone* pmn = mnodeman.Find(vin);
+    CMasternode* pmn = mnodeman.Find(vin);
 
     if(pmn == NULL)
     {
-        LogPrint("mnbudget", "CFinalizedBudgetVote::SignatureValid() - Unknown Throne\n");
+        LogPrint("mnbudget", "CFinalizedBudgetVote::SignatureValid() - Unknown Masternode\n");
         return false;
     }
 
@@ -2031,8 +2031,8 @@ std::string CBudgetManager::ToString() const
 
     info << "Proposals: " << (int)mapProposals.size() <<
             ", Budgets: " << (int)mapFinalizedBudgets.size() <<
-            ", Seen Budgets: " << (int)mapSeenThroneBudgetProposals.size() <<
-            ", Seen Budget Votes: " << (int)mapSeenThroneBudgetVotes.size() <<
+            ", Seen Budgets: " << (int)mapSeenMasternodeBudgetProposals.size() <<
+            ", Seen Budget Votes: " << (int)mapSeenMasternodeBudgetVotes.size() <<
             ", Seen Final Budgets: " << (int)mapSeenFinalizedBudgets.size() <<
             ", Seen Final Budget Votes: " << (int)mapSeenFinalizedBudgetVotes.size();
 

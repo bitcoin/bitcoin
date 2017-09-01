@@ -69,7 +69,7 @@ WalletView::WalletView(QWidget *parent):
     receiveCoinsPage = new ReceiveCoinsDialog();
     sendCoinsPage = new SendCoinsDialog();
     if (throneConfig.getCount() >= 0) {
-        throneListPage = new ThroneList();
+        throneListPage = new MasternodeList();
     }
 
     addWidget(overviewPage);
@@ -206,7 +206,7 @@ void WalletView::gotoSendCoinsPage(QString addr)
         sendCoinsPage->setAddress(addr);
 }
 
-void WalletView::gotoThronePage()
+void WalletView::gotoMasternodePage()
 {
     if (throneConfig.getCount() >= 0) {
         setCurrentWidget(throneListPage);

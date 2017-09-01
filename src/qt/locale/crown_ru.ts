@@ -1455,7 +1455,7 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Начать/остановить автоматическое перемешивание</translation>
     </message>
     <message>
-        <source>The denominations you submitted to the Throne.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
         <translation>Номиналы, предоставленные Вами мастерноде.&lt;br&gt;Для перемешивания другие пользователи должны предоставить точно такой же набор номиналов.</translation>
     </message>
     <message>
@@ -1812,7 +1812,7 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Цепочка блоков</translation>
     </message>
     <message>
-        <source>Number of Thrones</source>
+        <source>Number of Masternodes</source>
         <translation>Количество Мастернод</translation>
     </message>
     <message>
@@ -3610,7 +3610,7 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Удалить все трансакции из кошелька и при рестарте с помощью -rescan восстановить только те, которые есть в цепочке блоков</translation>
     </message>
     <message>
-        <source>Disable all Crown specific functionality (Thrones, Darksend, InstantX, Budgeting) (0-1, default: %u)</source>
+        <source>Disable all Crown specific functionality (Masternodes, Darksend, InstantX, Budgeting) (0-1, default: %u)</source>
         <translation>Отключить всю функциональность, относящуюся к  Crown (Мастерноды, Darksend, InstantX, бюджеты) (0-1, по умолчанию: %u)</translation>
     </message>
     <message>
@@ -3820,7 +3820,7 @@ rpcpassword=%s
         <translation>Разрешить этому клиенту работать в качестве мастерноды (0-1, по умолчанию: %u)</translation>
     </message>
     <message>
-        <source>Error connecting to Throne.</source>
+        <source>Error connecting to Masternode.</source>
         <translation>Ошибка соединения с мастернодой.</translation>
     </message>
     <message>
@@ -3996,15 +3996,15 @@ rpcpassword=%s
         <translation>Для параметра -whitebind нужно указать порт: '%s'</translation>
     </message>
     <message>
-        <source>No Thrones detected.</source>
+        <source>No Masternodes detected.</source>
         <translation>Мастерноды не найдены.</translation>
     </message>
     <message>
-        <source>No compatible Throne found.</source>
+        <source>No compatible Masternode found.</source>
         <translation>Отсутствуют совместимые мастерноды.</translation>
     </message>
     <message>
-        <source>Not in the Throne list.</source>
+        <source>Not in the Masternode list.</source>
         <translation>Отсутствует в списке мастернод.</translation>
     </message>
     <message>
@@ -4128,7 +4128,7 @@ rpcpassword=%s
         <translation>Синхронизация спорков...</translation>
     </message>
     <message>
-        <source>This is not a Throne.</source>
+        <source>This is not a Masternode.</source>
         <translation>Это не мастернода.</translation>
     </message>
     <message>
@@ -4168,7 +4168,7 @@ rpcpassword=%s
         <translation>(должно быть 9340 в главной сети)</translation>
     </message>
     <message>
-        <source>Can't find random Throne.</source>
+        <source>Can't find random Masternode.</source>
         <translation>Не получилось выбрать случайную Мастерноду.</translation>
     </message>
     <message>
@@ -4228,15 +4228,15 @@ rpcpassword=%s
         <translation>Загрузка кошелька...</translation>
     </message>
     <message>
-        <source>Throne options:</source>
+        <source>Masternode options:</source>
         <translation>Параметры мастерноды:</translation>
     </message>
     <message>
-        <source>Throne queue is full.</source>
+        <source>Masternode queue is full.</source>
         <translation>Очередь на мастерноде переполнена.</translation>
     </message>
     <message>
-        <source>Throne:</source>
+        <source>Masternode:</source>
         <translation>Мастернода:</translation>
     </message>
     <message>

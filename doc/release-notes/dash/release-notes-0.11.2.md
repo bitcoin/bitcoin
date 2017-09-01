@@ -10,7 +10,7 @@ Please report bugs using the issue tracker at github:
   https://github.com/darkcoin/darkcoin/issues
 
 
-Throne enhancements
+Masternode enhancements
 -----------------------
 
 When restarting the client the thrones will be stored in the datadir in
@@ -73,8 +73,8 @@ crownd/crown-qt (on Linux).
 - BIP 66 integration
 - Strict DER signatures
 - Bump block header version to 3 (see notes above)
-- Throne caching
-- Throne payment scheduler
+- Masternode caching
+- Masternode payment scheduler
 - Better protection from cheating thrones
 - Extended functionality for `throne list` RPC command
 - Live Darksend and InstantX fee calculations in CoinControl

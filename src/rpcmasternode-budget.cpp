@@ -56,7 +56,7 @@ Value mnbudget(const Array& params, bool fHelp)
         int nBlockMin = 0;
         CBlockIndex* pindexPrev = chainActive.Tip();
 
-        std::vector<CThroneConfig::CThroneEntry> mnEntries;
+        std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
         mnEntries = throneConfig.getEntries();
 
         if (params.size() != 7)
@@ -133,7 +133,7 @@ Value mnbudget(const Array& params, bool fHelp)
         int nBlockMin = 0;
         CBlockIndex* pindexPrev = chainActive.Tip();
 
-        std::vector<CThroneConfig::CThroneEntry> mnEntries;
+        std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
         mnEntries = throneConfig.getEntries();
 
         if (params.size() != 8)
@@ -197,7 +197,7 @@ Value mnbudget(const Array& params, bool fHelp)
         //     return "Proposal is not valid - " + budgetProposalBroadcast.GetHash().ToString() + " - " + strError;
         // }
 
-        budget.mapSeenThroneBudgetProposals.insert(make_pair(budgetProposalBroadcast.GetHash(), budgetProposalBroadcast));
+        budget.mapSeenMasternodeBudgetProposals.insert(make_pair(budgetProposalBroadcast.GetHash(), budgetProposalBroadcast));
         budgetProposalBroadcast.Relay();
         budget.AddProposal(budgetProposalBroadcast);
 
@@ -207,7 +207,7 @@ Value mnbudget(const Array& params, bool fHelp)
 
     if(strCommand == "vote-many")
     {
-        std::vector<CThroneConfig::CThroneEntry> mnEntries;
+        std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
         mnEntries = throneConfig.getEntries();
 
         if (params.size() != 3)
@@ -226,27 +226,27 @@ Value mnbudget(const Array& params, bool fHelp)
 
         Object resultsObj;
 
-        BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
+        BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, throneConfig.getEntries()) {
             std::string errorMessage;
             std::vector<unsigned char> vchMasterNodeSignature;
             std::string strMasterNodeSignMessage;
 
             CPubKey pubKeyCollateralAddress;
             CKey keyCollateralAddress;
-            CPubKey pubKeyThrone;
-            CKey keyThrone;
+            CPubKey pubKeyMasternode;
+            CKey keyMasternode;
 
             Object statusObj;
 
-            if(!legacySigner.SetKey(mne.getPrivKey(), errorMessage, keyThrone, pubKeyThrone)){
+            if(!legacySigner.SetKey(mne.getPrivKey(), errorMessage, keyMasternode, pubKeyMasternode)){
                 failed++;
                 statusObj.push_back(Pair("result", "failed"));
-                statusObj.push_back(Pair("errorMessage", "Throne signing error, could not set key correctly: " + errorMessage));
+                statusObj.push_back(Pair("errorMessage", "Masternode signing error, could not set key correctly: " + errorMessage));
                 resultsObj.push_back(Pair(mne.getAlias(), statusObj));
                 continue;
             }
 
-            CThrone* pmn = mnodeman.Find(pubKeyThrone);
+            CMasternode* pmn = mnodeman.Find(pubKeyMasternode);
             if(pmn == NULL)
             {
                 failed++;
@@ -257,7 +257,7 @@ Value mnbudget(const Array& params, bool fHelp)
             }
 
             CBudgetVote vote(pmn->vin, hash, nVote);
-            if(!vote.Sign(keyThrone, pubKeyThrone)){
+            if(!vote.Sign(keyMasternode, pubKeyMasternode)){
                 failed++;
                 statusObj.push_back(Pair("result", "failed"));
                 statusObj.push_back(Pair("errorMessage", "Failure to sign."));
@@ -268,7 +268,7 @@ Value mnbudget(const Array& params, bool fHelp)
 
             std::string strError = "";
             if(budget.UpdateProposal(vote, NULL, strError)) {
-                budget.mapSeenThroneBudgetVotes.insert(make_pair(vote.GetHash(), vote));
+                budget.mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
                 vote.Relay();
                 success++;
                 statusObj.push_back(Pair("result", "success"));
@@ -289,7 +289,7 @@ Value mnbudget(const Array& params, bool fHelp)
 
     if(strCommand == "vote")
     {
-        std::vector<CThroneConfig::CThroneEntry> mnEntries;
+        std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
         mnEntries = throneConfig.getEntries();
 
         if (params.size() != 3)
@@ -303,27 +303,27 @@ Value mnbudget(const Array& params, bool fHelp)
         if(strVote == "yes") nVote = VOTE_YES;
         if(strVote == "no") nVote = VOTE_NO;
 
-        CPubKey pubKeyThrone;
-        CKey keyThrone;
+        CPubKey pubKeyMasternode;
+        CKey keyMasternode;
         std::string errorMessage;
 
-        if(!legacySigner.SetKey(strMasterNodePrivKey, errorMessage, keyThrone, pubKeyThrone))
+        if(!legacySigner.SetKey(strMasterNodePrivKey, errorMessage, keyMasternode, pubKeyMasternode))
             return "Error upon calling SetKey";
 
-        CThrone* pmn = mnodeman.Find(activeThrone.vin);
+        CMasternode* pmn = mnodeman.Find(activeMasternode.vin);
         if(pmn == NULL)
         {
-            return "Failure to find throne in list : " + activeThrone.vin.ToString();
+            return "Failure to find throne in list : " + activeMasternode.vin.ToString();
         }
 
-        CBudgetVote vote(activeThrone.vin, hash, nVote);
-        if(!vote.Sign(keyThrone, pubKeyThrone)){
+        CBudgetVote vote(activeMasternode.vin, hash, nVote);
+        if(!vote.Sign(keyMasternode, pubKeyMasternode)){
             return "Failure to sign.";
         }
 
         std::string strError = "";
         if(budget.UpdateProposal(vote, NULL, strError)){
-            budget.mapSeenThroneBudgetVotes.insert(make_pair(vote.GetHash(), vote));
+            budget.mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
             vote.Relay();
             return "Voted successfully";
         } else {
@@ -533,7 +533,7 @@ Value mnbudgetvoteraw(const Array& params, bool fHelp)
     if (fInvalid)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Malformed base64 encoding");
 
-    CThrone* pmn = mnodeman.Find(vin);
+    CMasternode* pmn = mnodeman.Find(vin);
     if(pmn == NULL)
     {
         return "Failure to find throne in list : " + vin.ToString();
@@ -549,7 +549,7 @@ Value mnbudgetvoteraw(const Array& params, bool fHelp)
 
     std::string strError = "";
     if(budget.UpdateProposal(vote, NULL, strError)){
-        budget.mapSeenThroneBudgetVotes.insert(make_pair(vote.GetHash(), vote));
+        budget.mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
         vote.Relay();
         return "Voted successfully";
     } else {
@@ -577,7 +577,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
 
     if(strCommand == "vote-many")
     {
-        std::vector<CThroneConfig::CThroneEntry> mnEntries;
+        std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
         mnEntries = throneConfig.getEntries();
 
         if (params.size() != 2)
@@ -591,27 +591,27 @@ Value mnfinalbudget(const Array& params, bool fHelp)
 
         Object resultsObj;
 
-        BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
+        BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, throneConfig.getEntries()) {
             std::string errorMessage;
             std::vector<unsigned char> vchMasterNodeSignature;
             std::string strMasterNodeSignMessage;
 
             CPubKey pubKeyCollateralAddress;
             CKey keyCollateralAddress;
-            CPubKey pubKeyThrone;
-            CKey keyThrone;
+            CPubKey pubKeyMasternode;
+            CKey keyMasternode;
 
             Object statusObj;
 
-            if(!legacySigner.SetKey(mne.getPrivKey(), errorMessage, keyThrone, pubKeyThrone)){
+            if(!legacySigner.SetKey(mne.getPrivKey(), errorMessage, keyMasternode, pubKeyMasternode)){
                 failed++;
                 statusObj.push_back(Pair("result", "failed"));
-                statusObj.push_back(Pair("errorMessage", "Throne signing error, could not set key correctly: " + errorMessage));
+                statusObj.push_back(Pair("errorMessage", "Masternode signing error, could not set key correctly: " + errorMessage));
                 resultsObj.push_back(Pair(mne.getAlias(), statusObj));
                 continue;
             }
 
-            CThrone* pmn = mnodeman.Find(pubKeyThrone);
+            CMasternode* pmn = mnodeman.Find(pubKeyMasternode);
             if(pmn == NULL)
             {
                 failed++;
@@ -623,7 +623,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
 
 
             CFinalizedBudgetVote vote(pmn->vin, hash);
-            if(!vote.Sign(keyThrone, pubKeyThrone)){
+            if(!vote.Sign(keyMasternode, pubKeyMasternode)){
                 failed++;
                 statusObj.push_back(Pair("result", "failed"));
                 statusObj.push_back(Pair("errorMessage", "Failure to sign."));
@@ -654,7 +654,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
 
     if(strCommand == "vote")
     {
-        std::vector<CThroneConfig::CThroneEntry> mnEntries;
+        std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
         mnEntries = throneConfig.getEntries();
 
         if (params.size() != 2)
@@ -663,21 +663,21 @@ Value mnfinalbudget(const Array& params, bool fHelp)
         std::string strHash = params[1].get_str();
         uint256 hash(uint256S(strHash));
 
-        CPubKey pubKeyThrone;
-        CKey keyThrone;
+        CPubKey pubKeyMasternode;
+        CKey keyMasternode;
         std::string errorMessage;
 
-        if(!legacySigner.SetKey(strMasterNodePrivKey, errorMessage, keyThrone, pubKeyThrone))
+        if(!legacySigner.SetKey(strMasterNodePrivKey, errorMessage, keyMasternode, pubKeyMasternode))
             return "Error upon calling SetKey";
 
-        CThrone* pmn = mnodeman.Find(activeThrone.vin);
+        CMasternode* pmn = mnodeman.Find(activeMasternode.vin);
         if(pmn == NULL)
         {
-            return "Failure to find throne in list : " + activeThrone.vin.ToString();
+            return "Failure to find throne in list : " + activeMasternode.vin.ToString();
         }
 
-        CFinalizedBudgetVote vote(activeThrone.vin, hash);
-        if(!vote.Sign(keyThrone, pubKeyThrone)){
+        CFinalizedBudgetVote vote(activeMasternode.vin, hash);
+        if(!vote.Sign(keyMasternode, pubKeyMasternode)){
             return "Failure to sign.";
         }
 

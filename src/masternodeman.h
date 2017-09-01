@@ -18,14 +18,14 @@
 
 using namespace std;
 
-class CThroneMan;
+class CMasternodeMan;
 
-extern CThroneMan mnodeman;
-void DumpThrones();
+extern CMasternodeMan mnodeman;
+void DumpMasternodes();
 
 /** Access to the MN database (mncache.dat)
  */
-class CThroneDB
+class CMasternodeDB
 {
 private:
     boost::filesystem::path pathMN;
@@ -41,12 +41,12 @@ public:
         IncorrectFormat
     };
 
-    CThroneDB();
-    bool Write(const CThroneMan &mnodemanToSave);
-    ReadResult Read(CThroneMan& mnodemanToLoad, bool fDryRun = false);
+    CMasternodeDB();
+    bool Write(const CMasternodeMan &mnodemanToSave);
+    ReadResult Read(CMasternodeMan& mnodemanToLoad, bool fDryRun = false);
 };
 
-class CThroneMan
+class CMasternodeMan
 {
 private:
     // critical section to protect the inner data structures
@@ -56,19 +56,19 @@ private:
     mutable CCriticalSection cs_process_message;
 
     // map to hold all MNs
-    std::vector<CThrone> vThrones;
-    // who's asked for the Throne list and the last time
-    std::map<CNetAddr, int64_t> mAskedUsForThroneList;
-    // who we asked for the Throne list and the last time
-    std::map<CNetAddr, int64_t> mWeAskedForThroneList;
-    // which Thrones we've asked for
-    std::map<COutPoint, int64_t> mWeAskedForThroneListEntry;
+    std::vector<CMasternode> vMasternodes;
+    // who's asked for the Masternode list and the last time
+    std::map<CNetAddr, int64_t> mAskedUsForMasternodeList;
+    // who we asked for the Masternode list and the last time
+    std::map<CNetAddr, int64_t> mWeAskedForMasternodeList;
+    // which Masternodes we've asked for
+    std::map<COutPoint, int64_t> mWeAskedForMasternodeListEntry;
 
 public:
     // Keep track of all broadcasts I've seen
-    map<uint256, CThroneBroadcast> mapSeenThroneBroadcast;
+    map<uint256, CMasternodeBroadcast> mapSeenMasternodeBroadcast;
     // Keep track of all pings I've seen
-    map<uint256, CThronePing> mapSeenThronePing;
+    map<uint256, CMasternodePing> mapSeenMasternodePing;
     
     // keep track of dsq count to prevent thrones from gaming legacySigner queue
     int64_t nDsqCount;
@@ -78,32 +78,32 @@ public:
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         LOCK(cs);
-        READWRITE(vThrones);
-        READWRITE(mAskedUsForThroneList);
-        READWRITE(mWeAskedForThroneList);
-        READWRITE(mWeAskedForThroneListEntry);
+        READWRITE(vMasternodes);
+        READWRITE(mAskedUsForMasternodeList);
+        READWRITE(mWeAskedForMasternodeList);
+        READWRITE(mWeAskedForMasternodeListEntry);
         READWRITE(nDsqCount);
 
-        READWRITE(mapSeenThroneBroadcast);
-        READWRITE(mapSeenThronePing);
+        READWRITE(mapSeenMasternodeBroadcast);
+        READWRITE(mapSeenMasternodePing);
     }
 
-    CThroneMan();
-    CThroneMan(CThroneMan& other);
+    CMasternodeMan();
+    CMasternodeMan(CMasternodeMan& other);
 
     /// Add an entry
-    bool Add(CThrone &mn);
+    bool Add(CMasternode &mn);
 
     /// Ask (source) node for mnb
     void AskForMN(CNode *pnode, CTxIn &vin);
 
-    /// Check all Thrones
+    /// Check all Masternodes
     void Check();
 
-    /// Check all Thrones and remove inactive
+    /// Check all Masternodes and remove inactive
     void CheckAndRemove(bool forceExpiredRemoval = false);
 
-    /// Clear Throne vector
+    /// Clear Masternode vector
     void Clear();
 
     int CountEnabled(int protocolVersion = -1);
@@ -111,40 +111,40 @@ public:
     void DsegUpdate(CNode* pnode);
 
     /// Find an entry
-    CThrone* Find(const CScript &payee);
-    CThrone* Find(const CTxIn& vin);
-    CThrone* Find(const CPubKey& pubKeyThrone);
+    CMasternode* Find(const CScript &payee);
+    CMasternode* Find(const CTxIn& vin);
+    CMasternode* Find(const CPubKey& pubKeyMasternode);
 
     /// Find an entry in the throne list that is next to be paid
-    CThrone* GetNextThroneInQueueForPayment(int nBlockHeight, bool fFilterSigTime, int& nCount);
+    CMasternode* GetNextMasternodeInQueueForPayment(int nBlockHeight, bool fFilterSigTime, int& nCount);
 
     /// Find a random entry
-    CThrone* FindRandomNotInVec(std::vector<CTxIn> &vecToExclude, int protocolVersion = -1);
+    CMasternode* FindRandomNotInVec(std::vector<CTxIn> &vecToExclude, int protocolVersion = -1);
 
     /// Get the current winner for this block
-    CThrone* GetCurrentMasterNode(int mod=1, int64_t nBlockHeight=0, int minProtocol=0);
+    CMasternode* GetCurrentMasterNode(int mod=1, int64_t nBlockHeight=0, int minProtocol=0);
 
-    std::vector<CThrone> GetFullThroneVector() { Check(); return vThrones; }
+    std::vector<CMasternode> GetFullMasternodeVector() { Check(); return vMasternodes; }
 
-    std::vector<pair<int, CThrone> > GetThroneRanks(int64_t nBlockHeight, int minProtocol=0);
-    int GetThroneRank(const CTxIn &vin, int64_t nBlockHeight, int minProtocol=0, bool fOnlyActive=true);
-    CThrone* GetThroneByRank(int nRank, int64_t nBlockHeight, int minProtocol=0, bool fOnlyActive=true);
+    std::vector<pair<int, CMasternode> > GetMasternodeRanks(int64_t nBlockHeight, int minProtocol=0);
+    int GetMasternodeRank(const CTxIn &vin, int64_t nBlockHeight, int minProtocol=0, bool fOnlyActive=true);
+    CMasternode* GetMasternodeByRank(int nRank, int64_t nBlockHeight, int minProtocol=0, bool fOnlyActive=true);
 
-    void ProcessThroneConnections();
+    void ProcessMasternodeConnections();
 
     void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
 
-    /// Return the number of (unique) Thrones
-    int size() { return vThrones.size(); }
+    /// Return the number of (unique) Masternodes
+    int size() { return vMasternodes.size(); }
 
     std::string ToString() const;
 
     void Remove(CTxIn vin);
 
-    /// Update throne list and maps using provided CThroneBroadcast
-    void UpdateThroneList(CThroneBroadcast mnb);
+    /// Update throne list and maps using provided CMasternodeBroadcast
+    void UpdateMasternodeList(CMasternodeBroadcast mnb);
     /// Perform complete check and only then update list and maps
-    bool CheckMnbAndUpdateThroneList(CThroneBroadcast mnb, int& nDos);
+    bool CheckMnbAndUpdateMasternodeList(CMasternodeBroadcast mnb, int& nDos);
 
 };
 

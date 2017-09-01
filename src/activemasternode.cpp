@@ -7,28 +7,28 @@
 #include "spork.h"
 
 //
-// Bootup the Throne, look for a 10000 CRW input and register on the network
+// Bootup the Masternode, look for a 10000 CRW input and register on the network
 //
-void CActiveThrone::ManageStatus()
+void CActiveMasternode::ManageStatus()
 {    
     std::string errorMessage;
 
     if(!fMasterNode) return;
 
-    if (fDebug) LogPrintf("CActiveThrone::ManageStatus() - Begin\n");
+    if (fDebug) LogPrintf("CActiveMasternode::ManageStatus() - Begin\n");
 
     //need correct blocks to send ping
     if(Params().NetworkID() != CBaseChainParams::REGTEST && !throneSync.IsBlockchainSynced()) {
         status = ACTIVE_MASTERNODE_SYNC_IN_PROCESS;
-        LogPrintf("CActiveThrone::ManageStatus() - %s\n", GetStatus());
+        LogPrintf("CActiveMasternode::ManageStatus() - %s\n", GetStatus());
         return;
     }
 
     if(status == ACTIVE_MASTERNODE_SYNC_IN_PROCESS) status = ACTIVE_MASTERNODE_INITIAL;
 
     if(status == ACTIVE_MASTERNODE_INITIAL) {
-        CThrone *pmn;
-        pmn = mnodeman.Find(pubKeyThrone);
+        CMasternode *pmn;
+        pmn = mnodeman.Find(pubKeyMasternode);
         if(pmn != NULL) {
             pmn->Check();
             if(pmn->IsEnabled() && pmn->protocolVersion == PROTOCOL_VERSION) EnableHotColdMasterNode(pmn->vin, pmn->addr);
@@ -43,20 +43,20 @@ void CActiveThrone::ManageStatus()
 
         if(pwalletMain->IsLocked()){
             notCapableReason = "Wallet is locked.";
-            LogPrintf("CActiveThrone::ManageStatus() - not capable: %s\n", notCapableReason);
+            LogPrintf("CActiveMasternode::ManageStatus() - not capable: %s\n", notCapableReason);
             return;
         }
 
         if(pwalletMain->GetBalance() == 0){
             notCapableReason = "Hot node, waiting for remote activation.";
-            LogPrintf("CActiveThrone::ManageStatus() - not capable: %s\n", notCapableReason);
+            LogPrintf("CActiveMasternode::ManageStatus() - not capable: %s\n", notCapableReason);
             return;
         }
 
         if(strMasterNodeAddr.empty()) {
             if(!GetLocal(service)) {
                 notCapableReason = "Can't detect external address. Please use the throneaddr configuration option.";
-                LogPrintf("CActiveThrone::ManageStatus() - not capable: %s\n", notCapableReason);
+                LogPrintf("CActiveMasternode::ManageStatus() - not capable: %s\n", notCapableReason);
                 return;
             }
         } else {
@@ -66,20 +66,20 @@ void CActiveThrone::ManageStatus()
         if(Params().NetworkID() == CBaseChainParams::MAIN) {
             if(service.GetPort() != 9340) {
                 notCapableReason = strprintf("Invalid port: %u - only 9340 is supported on mainnet.", service.GetPort());
-                LogPrintf("CActiveThrone::ManageStatus() - not capable: %s\n", notCapableReason);
+                LogPrintf("CActiveMasternode::ManageStatus() - not capable: %s\n", notCapableReason);
                 return;
             }
         } else if(service.GetPort() == 9340) {
             notCapableReason = strprintf("Invalid port: %u - 9340 is only supported on mainnet.", service.GetPort());
-            LogPrintf("CActiveThrone::ManageStatus() - not capable: %s\n", notCapableReason);
+            LogPrintf("CActiveMasternode::ManageStatus() - not capable: %s\n", notCapableReason);
             return;
         }
 
-        LogPrintf("CActiveThrone::ManageStatus() - Checking inbound connection to '%s'\n", service.ToString());
+        LogPrintf("CActiveMasternode::ManageStatus() - Checking inbound connection to '%s'\n", service.ToString());
 
         if(!ConnectNode((CAddress)service, NULL, true)){
             notCapableReason = "Could not connect to " + service.ToString();
-            LogPrintf("CActiveThrone::ManageStatus() - not capable: %s\n", notCapableReason);
+            LogPrintf("CActiveMasternode::ManageStatus() - not capable: %s\n", notCapableReason);
             return;
         }
 
@@ -87,12 +87,12 @@ void CActiveThrone::ManageStatus()
         CPubKey pubKeyCollateralAddress;
         CKey keyCollateralAddress;
 
-        if(pwalletMain->GetThroneVinAndKeys(vin, pubKeyCollateralAddress, keyCollateralAddress)) {
+        if(pwalletMain->GetMasternodeVinAndKeys(vin, pubKeyCollateralAddress, keyCollateralAddress)) {
 
             if(GetInputAge(vin) < MASTERNODE_MIN_CONFIRMATIONS){
                 status = ACTIVE_MASTERNODE_INPUT_TOO_NEW;
                 notCapableReason = strprintf("%s - %d confirmations", GetStatus(), GetInputAge(vin));
-                LogPrintf("CActiveThrone::ManageStatus() - %s\n", notCapableReason);
+                LogPrintf("CActiveMasternode::ManageStatus() - %s\n", notCapableReason);
                 return;
             }
 
@@ -100,99 +100,99 @@ void CActiveThrone::ManageStatus()
             pwalletMain->LockCoin(vin.prevout);
 
             // send to all nodes
-            CPubKey pubKeyThrone;
-            CKey keyThrone;
+            CPubKey pubKeyMasternode;
+            CKey keyMasternode;
 
-            if(!legacySigner.SetKey(strMasterNodePrivKey, errorMessage, keyThrone, pubKeyThrone))
+            if(!legacySigner.SetKey(strMasterNodePrivKey, errorMessage, keyMasternode, pubKeyMasternode))
             {
                 notCapableReason = "Error upon calling SetKey: " + errorMessage;
                 LogPrintf("Register::ManageStatus() - %s\n", notCapableReason);
                 return;
             }
 
-            CThroneBroadcast mnb;
-            if(!CThroneBroadcast::Create(vin, service, keyCollateralAddress, pubKeyCollateralAddress, keyThrone, pubKeyThrone, errorMessage, mnb)) {
+            CMasternodeBroadcast mnb;
+            if(!CMasternodeBroadcast::Create(vin, service, keyCollateralAddress, pubKeyCollateralAddress, keyMasternode, pubKeyMasternode, errorMessage, mnb)) {
                 notCapableReason = "Error on CreateBroadcast: " + errorMessage;
                 LogPrintf("Register::ManageStatus() - %s\n", notCapableReason);
                 return;
             }
 
             //update to masternode list
-            LogPrintf("CActiveThrone::ManageStatus() - Update Throne List\n");
-            mnodeman.UpdateThroneList(mnb);
+            LogPrintf("CActiveMasternode::ManageStatus() - Update Masternode List\n");
+            mnodeman.UpdateMasternodeList(mnb);
 
             //send to all peers
-            LogPrintf("CActiveThrone::ManageStatus() - Relay broadcast vin = %s\n", vin.ToString());
+            LogPrintf("CActiveMasternode::ManageStatus() - Relay broadcast vin = %s\n", vin.ToString());
             mnb.Relay();
 
-            LogPrintf("CActiveThrone::ManageStatus() - Is capable master node!\n");
+            LogPrintf("CActiveMasternode::ManageStatus() - Is capable master node!\n");
             status = ACTIVE_MASTERNODE_STARTED;
 
             return;
         } else {
             notCapableReason = "Could not find suitable coins!";
-            LogPrintf("CActiveThrone::ManageStatus() - %s\n", notCapableReason);
+            LogPrintf("CActiveMasternode::ManageStatus() - %s\n", notCapableReason);
             return;
         }
     }
 
     //send to all peers
-    if(!SendThronePing(errorMessage)) {
-        LogPrintf("CActiveThrone::ManageStatus() - Error on Ping: %s\n", errorMessage);
+    if(!SendMasternodePing(errorMessage)) {
+        LogPrintf("CActiveMasternode::ManageStatus() - Error on Ping: %s\n", errorMessage);
     }
 }
 
-std::string CActiveThrone::GetStatus() {
+std::string CActiveMasternode::GetStatus() {
     switch (status) {
     case ACTIVE_MASTERNODE_INITIAL: return "Node just started, not yet activated";
-    case ACTIVE_MASTERNODE_SYNC_IN_PROCESS: return "Sync in progress. Must wait until sync is complete to start Throne";
-    case ACTIVE_MASTERNODE_INPUT_TOO_NEW: return strprintf("Throne input must have at least %d confirmations", MASTERNODE_MIN_CONFIRMATIONS);
+    case ACTIVE_MASTERNODE_SYNC_IN_PROCESS: return "Sync in progress. Must wait until sync is complete to start Masternode";
+    case ACTIVE_MASTERNODE_INPUT_TOO_NEW: return strprintf("Masternode input must have at least %d confirmations", MASTERNODE_MIN_CONFIRMATIONS);
     case ACTIVE_MASTERNODE_NOT_CAPABLE: return "Not capable throne: " + notCapableReason;
-    case ACTIVE_MASTERNODE_STARTED: return "Throne successfully started";
+    case ACTIVE_MASTERNODE_STARTED: return "Masternode successfully started";
     default: return "unknown";
     }
 }
 
-bool CActiveThrone::SendThronePing(std::string& errorMessage) {
+bool CActiveMasternode::SendMasternodePing(std::string& errorMessage) {
     if(status != ACTIVE_MASTERNODE_STARTED) {
-        errorMessage = "Throne is not in a running status";
+        errorMessage = "Masternode is not in a running status";
         return false;
     }
 
-    CPubKey pubKeyThrone;
-    CKey keyThrone;
+    CPubKey pubKeyMasternode;
+    CKey keyMasternode;
 
-    if(!legacySigner.SetKey(strMasterNodePrivKey, errorMessage, keyThrone, pubKeyThrone))
+    if(!legacySigner.SetKey(strMasterNodePrivKey, errorMessage, keyMasternode, pubKeyMasternode))
     {
         errorMessage = strprintf("Error upon calling SetKey: %s\n", errorMessage);
         return false;
     }
 
-    LogPrintf("CActiveThrone::SendThronePing() - Relay Throne Ping vin = %s\n", vin.ToString());
+    LogPrintf("CActiveMasternode::SendMasternodePing() - Relay Masternode Ping vin = %s\n", vin.ToString());
     
-    CThronePing mnp(vin);
-    if(!mnp.Sign(keyThrone, pubKeyThrone))
+    CMasternodePing mnp(vin);
+    if(!mnp.Sign(keyMasternode, pubKeyMasternode))
     {
-        errorMessage = "Couldn't sign Throne Ping";
+        errorMessage = "Couldn't sign Masternode Ping";
         return false;
     }
 
-    // Update lastPing for our throne in Throne list
-    CThrone* pmn = mnodeman.Find(vin);
+    // Update lastPing for our throne in Masternode list
+    CMasternode* pmn = mnodeman.Find(vin);
     if(pmn != NULL)
     {
         if(pmn->IsPingedWithin(MASTERNODE_PING_SECONDS, mnp.sigTime)){
-            errorMessage = "Too early to send Throne Ping";
+            errorMessage = "Too early to send Masternode Ping";
             return false;
         }
 
         pmn->lastPing = mnp;
-        mnodeman.mapSeenThronePing.insert(make_pair(mnp.GetHash(), mnp));
+        mnodeman.mapSeenMasternodePing.insert(make_pair(mnp.GetHash(), mnp));
 
-        //mnodeman.mapSeenThroneBroadcast.lastPing is probably outdated, so we'll update it
-        CThroneBroadcast mnb(*pmn);
+        //mnodeman.mapSeenMasternodeBroadcast.lastPing is probably outdated, so we'll update it
+        CMasternodeBroadcast mnb(*pmn);
         uint256 hash = mnb.GetHash();
-        if(mnodeman.mapSeenThroneBroadcast.count(hash)) mnodeman.mapSeenThroneBroadcast[hash].lastPing = mnp;
+        if(mnodeman.mapSeenMasternodeBroadcast.count(hash)) mnodeman.mapSeenMasternodeBroadcast[hash].lastPing = mnp;
 
         mnp.Relay();
 
@@ -200,8 +200,8 @@ bool CActiveThrone::SendThronePing(std::string& errorMessage) {
     }
     else
     {
-        // Seems like we are trying to send a ping while the Throne is not registered in the network
-        errorMessage = "Throne List doesn't include our Throne, shutting down Throne pinging service! " + vin.ToString();
+        // Seems like we are trying to send a ping while the Masternode is not registered in the network
+        errorMessage = "Masternode List doesn't include our Masternode, shutting down Masternode pinging service! " + vin.ToString();
         status = ACTIVE_MASTERNODE_NOT_CAPABLE;
         notCapableReason = errorMessage;
         return false;
@@ -209,8 +209,8 @@ bool CActiveThrone::SendThronePing(std::string& errorMessage) {
 
 }
 
-// when starting a Throne, this can enable to run as a hot wallet with no funds
-bool CActiveThrone::EnableHotColdMasterNode(CTxIn& newVin, CService& newService)
+// when starting a Masternode, this can enable to run as a hot wallet with no funds
+bool CActiveMasternode::EnableHotColdMasterNode(CTxIn& newVin, CService& newService)
 {
     if(!fMasterNode) return false;
 
@@ -220,7 +220,7 @@ bool CActiveThrone::EnableHotColdMasterNode(CTxIn& newVin, CService& newService)
     vin = newVin;
     service = newService;
 
-    LogPrintf("CActiveThrone::EnableHotColdMasterNode() - Enabled! You may shut down the cold daemon.\n");
+    LogPrintf("CActiveMasternode::EnableHotColdMasterNode() - Enabled! You may shut down the cold daemon.\n");
 
     return true;
 }

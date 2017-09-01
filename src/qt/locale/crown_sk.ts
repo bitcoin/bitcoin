@@ -1454,8 +1454,8 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Začať/Zastaviť miešanie</translation>
     </message>
     <message>
-        <source>The denominations you submitted to the Throne.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
-        <translation>Denominácie ktoré ste odoslali na Throne. &lt;br&gt;Pre miešanie, ostatný používatelia musia odoslať rovnakú sumu denominácií.</translation>
+        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <translation>Denominácie ktoré ste odoslali na Masternode. &lt;br&gt;Pre miešanie, ostatný používatelia musia odoslať rovnakú sumu denominácií.</translation>
     </message>
     <message>
         <source>(Last Message)</source>
@@ -1811,7 +1811,7 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Reťazec blokov</translation>
     </message>
     <message>
-        <source>Number of Thrones</source>
+        <source>Number of Masternodes</source>
         <translation>Počet Mastenode</translation>
     </message>
     <message>
@@ -3609,8 +3609,8 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Vymazať všetky transakcie z peňaženky a pri spustení znova získať z reťazca blokov iba tie získané pomocou -rescan</translation>
     </message>
     <message>
-        <source>Disable all Crown specific functionality (Thrones, Darksend, InstantX, Budgeting) (0-1, default: %u)</source>
-        <translation>Vypnúť všetky funkcie špecifické pre Crown (Throne, Darksend, InstantX, Rozpočty) (0-1, predvolené: %u)</translation>
+        <source>Disable all Crown specific functionality (Masternodes, Darksend, InstantX, Budgeting) (0-1, default: %u)</source>
+        <translation>Vypnúť všetky funkcie špecifické pre Crown (Masternode, Darksend, InstantX, Rozpočty) (0-1, predvolené: %u)</translation>
     </message>
     <message>
         <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
@@ -3819,8 +3819,8 @@ napríklad: alertnotify=echo %%s | mail -s "Crown Upozornenie" admin@foo.com
         <translation>Povoliť klientovi aby vystupoval ako throne (0-1, predvolené: %u)</translation>
     </message>
     <message>
-        <source>Error connecting to Throne.</source>
-        <translation>Chyba pripojenia k Throne.</translation>
+        <source>Error connecting to Masternode.</source>
+        <translation>Chyba pripojenia k Masternode.</translation>
     </message>
     <message>
         <source>Error loading wallet.dat: Wallet requires newer version of Crown Core</source>
@@ -3995,16 +3995,16 @@ napríklad: alertnotify=echo %%s | mail -s "Crown Upozornenie" admin@foo.com
         <translation>Je potrebné zadať port s -whitebind: '%s'</translation>
     </message>
     <message>
-        <source>No Thrones detected.</source>
-        <translation>Nezistený žiadny Throne.</translation>
+        <source>No Masternodes detected.</source>
+        <translation>Nezistený žiadny Masternode.</translation>
     </message>
     <message>
-        <source>No compatible Throne found.</source>
-        <translation>Nekompatibilný Throne zdroj.</translation>
+        <source>No compatible Masternode found.</source>
+        <translation>Nekompatibilný Masternode zdroj.</translation>
     </message>
     <message>
-        <source>Not in the Throne list.</source>
-        <translation>Nie je v zozname Throne.</translation>
+        <source>Not in the Masternode list.</source>
+        <translation>Nie je v zozname Masternode.</translation>
     </message>
     <message>
         <source>Number of automatic wallet backups (default: 10)</source>
@@ -4127,8 +4127,8 @@ napríklad: alertnotify=echo %%s | mail -s "Crown Upozornenie" admin@foo.com
         <translation>Synchronizujú sa sporky...</translation>
     </message>
     <message>
-        <source>This is not a Throne.</source>
-        <translation>Toto nie je Throne.</translation>
+        <source>This is not a Masternode.</source>
+        <translation>Toto nie je Masternode.</translation>
     </message>
     <message>
         <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
@@ -4167,8 +4167,8 @@ napríklad: alertnotify=echo %%s | mail -s "Crown Upozornenie" admin@foo.com
         <translation>(pre hlavnú sieť musí byť 9999)</translation>
     </message>
     <message>
-        <source>Can't find random Throne.</source>
-        <translation>Nedá sa nájsť náhodný Throne.</translation>
+        <source>Can't find random Masternode.</source>
+        <translation>Nedá sa nájsť náhodný Masternode.</translation>
     </message>
     <message>
         <source>Can't mix while sync in progress.</source>
@@ -4227,16 +4227,16 @@ napríklad: alertnotify=echo %%s | mail -s "Crown Upozornenie" admin@foo.com
         <translation>Načítavanie peňaženky...</translation>
     </message>
     <message>
-        <source>Throne options:</source>
-        <translation>Možnosti Throne:</translation>
+        <source>Masternode options:</source>
+        <translation>Možnosti Masternode:</translation>
     </message>
     <message>
-        <source>Throne queue is full.</source>
-        <translation>Fronta Throne je plná</translation>
+        <source>Masternode queue is full.</source>
+        <translation>Fronta Masternode je plná</translation>
     </message>
     <message>
-        <source>Throne:</source>
-        <translation>Throne:</translation>
+        <source>Masternode:</source>
+        <translation>Masternode:</translation>
     </message>
     <message>
         <source>Missing input transaction information.</source>

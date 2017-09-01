@@ -325,7 +325,7 @@
        <item row="10" column="0">
         <widget class="QLabel" name="throneCountLabel">
          <property name="text">
-          <string>Number of Thrones</string>
+          <string>Number of Masternodes</string>
          </property>
         </widget>
        </item>

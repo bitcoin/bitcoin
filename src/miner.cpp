@@ -323,7 +323,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
             }
         }
 
-        // Throne and general budget payments
+        // Masternode and general budget payments
         FillBlockPayee(txNew, nFees);
 
         // Make payee

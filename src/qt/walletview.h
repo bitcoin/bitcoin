@@ -64,7 +64,7 @@ private:
     QWidget *transactionsPage;
     ReceiveCoinsDialog *receiveCoinsPage;
     SendCoinsDialog *sendCoinsPage;
-    ThroneList *throneListPage;
+    MasternodeList *throneListPage;
     MultisigDialog *multisigPage;
 
     TransactionView *transactionView;
@@ -82,7 +82,7 @@ public slots:
     /** Switch to send coins page */
     void gotoSendCoinsPage(QString addr = "");
     /** Switch to throne page */
-    void gotoThronePage();
+    void gotoMasternodePage();
     /** Switch to multisig page*/
     void gotoMultisigTab();
 

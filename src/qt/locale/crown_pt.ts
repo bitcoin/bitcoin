@@ -1451,8 +1451,8 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Iniciar/Parar Mistura</translation>
     </message>
     <message>
-        <source>The denominations you submitted to the Throne.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
-        <translation>As denominações que foram submetidas para o Throne.&lt;br&gt;Para misturar, outros utilizadores terão que submeter denominações iguais.</translation>
+        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <translation>As denominações que foram submetidas para o Masternode.&lt;br&gt;Para misturar, outros utilizadores terão que submeter denominações iguais.</translation>
     </message>
     <message>
         <source>(Last Message)</source>
@@ -1808,8 +1808,8 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Cadeia de blocos</translation>
     </message>
     <message>
-        <source>Number of Thrones</source>
-        <translation>Número de Thrones</translation>
+        <source>Number of Masternodes</source>
+        <translation>Número de Masternodes</translation>
     </message>
     <message>
         <source>&amp;Console</source>
@@ -3716,8 +3716,8 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Permitir ao cliente actuar como um throne (0-1, omissão: %u)</translation>
     </message>
     <message>
-        <source>Error connecting to Throne.</source>
-        <translation>Erro conectando ao Throne</translation>
+        <source>Error connecting to Masternode.</source>
+        <translation>Erro conectando ao Masternode</translation>
     </message>
     <message>
         <source>Error loading wallet.dat: Wallet requires newer version of Crown Core</source>
@@ -3892,16 +3892,16 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Necessita especificar a porta com -whitebind: '%s'</translation>
     </message>
     <message>
-        <source>No Thrones detected.</source>
-        <translation>Nenhum Throne detectado.</translation>
+        <source>No Masternodes detected.</source>
+        <translation>Nenhum Masternode detectado.</translation>
     </message>
     <message>
-        <source>No compatible Throne found.</source>
-        <translation>Nenhum Throne compatível encontrado.</translation>
+        <source>No compatible Masternode found.</source>
+        <translation>Nenhum Masternode compatível encontrado.</translation>
     </message>
     <message>
-        <source>Not in the Throne list.</source>
-        <translation>Não está na lista de Thrones.</translation>
+        <source>Not in the Masternode list.</source>
+        <translation>Não está na lista de Masternodes.</translation>
     </message>
     <message>
         <source>Number of automatic wallet backups (default: 10)</source>
@@ -4016,8 +4016,8 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>A sincronizar sporks...</translation>
     </message>
     <message>
-        <source>This is not a Throne.</source>
-        <translation>Este não é um Throne</translation>
+        <source>This is not a Masternode.</source>
+        <translation>Este não é um Masternode</translation>
     </message>
     <message>
         <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
@@ -4056,8 +4056,8 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>(deve ser 9340 para mainnet)</translation>
     </message>
     <message>
-        <source>Can't find random Throne.</source>
-        <translation>Incapaz de encontrar Throne aleatório.</translation>
+        <source>Can't find random Masternode.</source>
+        <translation>Incapaz de encontrar Masternode aleatório.</translation>
     </message>
     <message>
         <source>Can't mix while sync in progress.</source>
@@ -4116,16 +4116,16 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>A carregar carteira...</translation>
     </message>
     <message>
-        <source>Throne options:</source>
+        <source>Masternode options:</source>
         <translation>Opções de throne:</translation>
     </message>
     <message>
-        <source>Throne queue is full.</source>
+        <source>Masternode queue is full.</source>
         <translation>A fila do throne está cheia.</translation>
     </message>
     <message>
-        <source>Throne:</source>
-        <translation>Throne:</translation>
+        <source>Masternode:</source>
+        <translation>Masternode:</translation>
     </message>
     <message>
         <source>Missing input transaction information.</source>

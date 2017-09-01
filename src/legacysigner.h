@@ -16,7 +16,7 @@ class CTxIn;
 class CLegacySigner;
 class CMasterNodeVote;
 class CBitcoinAddress;
-class CActiveThrone;
+class CActiveMasternode;
 
 // status update message constants
 #define MASTERNODE_ACCEPTED                    1
@@ -25,7 +25,7 @@ class CActiveThrone;
 
 extern CLegacySigner legacySigner;
 extern std::string strMasterNodePrivKey;
-extern CActiveThrone activeThrone;
+extern CActiveMasternode activeMasternode;
 
 /** Helper object for signing and checking signatures
  */
@@ -46,7 +46,7 @@ public:
     bool VerifyMessage(CPubKey pubkey, std::vector<unsigned char>& vchSig, std::string strMessage, std::string& errorMessage);
     // where collateral should be made out to
     CScript collateralPubKey;
-    CThrone* pSubmittedToThrone;
+    CMasternode* pSubmittedToMasternode;
 };
 
 void ThreadCheckLegacySigner();

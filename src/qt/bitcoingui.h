@@ -26,7 +26,7 @@ class Notificator;
 class OptionsModel;
 class RPCConsole;
 class SendCoinsRecipient;
-class ThroneList;
+class MasternodeList;
 class UnitDisplayStatusBarControl;
 class WalletFrame;
 class WalletModel;
@@ -204,7 +204,7 @@ private slots:
     /** Show Sign/Verify Message dialog and switch to verify message tab */
     void gotoVerifyMessageTab(QString addr = "");
     /** Switch to throne manager page */
-    void gotoThronePage();
+    void gotoMasternodePage();
     /** Switch to multisig tab */
     void gotoMultisigTab();
 

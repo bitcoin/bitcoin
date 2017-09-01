@@ -32,7 +32,7 @@ Crown Core:
   `keepass`, `keepassport`, `keepasskey`, `keepassid`, `keepassname`
 
 
-Thrones:
+Masternodes:
 
 - Improve support for start-many with multi throne config
 - New throne rpc commands: stop-many, start-alias, stop-alias, list-conf

@@ -641,7 +641,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
         result.push_back(Pair("payee_amount", ""));
     }
 
-    result.push_back(Pair("throne_payments", pblock->nTime > Params().StartThronePayments()));
+    result.push_back(Pair("throne_payments", pblock->nTime > Params().StartMasternodePayments()));
     result.push_back(Pair("enforce_throne_payments", true));
 
     return result;

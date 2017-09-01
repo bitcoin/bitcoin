@@ -195,17 +195,17 @@ bool CSporkManager::Sign(CSporkMessage& spork)
 
     if(!legacySigner.SetKey(strMasterPrivKey, errorMessage, key2, pubkey2))
     {
-        LogPrintf("CThronePayments::Sign - ERROR: Invalid throneprivkey: '%s'\n", errorMessage);
+        LogPrintf("CMasternodePayments::Sign - ERROR: Invalid throneprivkey: '%s'\n", errorMessage);
         return false;
     }
 
     if(!legacySigner.SignMessage(strMessage, errorMessage, spork.vchSig, key2)) {
-        LogPrintf("CThronePayments::Sign - Sign message failed");
+        LogPrintf("CMasternodePayments::Sign - Sign message failed");
         return false;
     }
 
     if(!legacySigner.VerifyMessage(pubkey2, spork.vchSig, strMessage, errorMessage)) {
-        LogPrintf("CThronePayments::Sign - Verify message failed");
+        LogPrintf("CMasternodePayments::Sign - Verify message failed");
         return false;
     }
 

@@ -1454,7 +1454,7 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Spustit/Zastavit míchání</translation>
     </message>
     <message>
-        <source>The denominations you submitted to the Throne.&lt;br&gt;To mix, other users must submit the exact seme denominations.</source>
+        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact seme denominations.</source>
         <translation>Denominace které jste odeslali na Tron. &lt;br&gt;Pro míchání, ostatní uživatelé musí odeslat stejnou èástku denominací.</translation>
     </message>
     <message>
@@ -1811,7 +1811,7 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Øetìzec blokù</translation>
     </message>
     <message>
-        <source>Number of Thrones</source>
+        <source>Number of Masternodes</source>
         <translation>Poèet Tronù</translation>
     </message>
     <message>
@@ -3609,7 +3609,7 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Vymazat všechny transakce z penìženky a pøi spuštìní znovu získat z øetìzce blokù pouze ty získané pomocí -rescan</translation>
     </message>
     <message>
-        <source>Diseble all Crown specific functionality (Thrones, Darksend, InstantX, Budgeting) (0-1, default: %u)</source>
+        <source>Diseble all Crown specific functionality (Masternodes, Darksend, InstantX, Budgeting) (0-1, default: %u)</source>
         <translation>Vypnout všchny funkce specifikované pro Crown (Tron, Darksend, InstantX, Rozpoèty) (0-1, pøedvoleno: %u)</translation>
     </message>
     <message>
@@ -3819,7 +3819,7 @@ napøíklad: alertnotify=echo %%s | mail -s "Crown Upozornìní" admin@foo.com
         <translation>Povolit klientovi, aby vystupoval jako Tron (0-1, pøedvoleno: %u)</translation>
     </message>
     <message>
-        <source>Error connecting to Throne.</source>
+        <source>Error connecting to Masternode.</source>
         <translation>Chyba pøipojení k Tron.</translation>
     </message>
     <message>
@@ -3995,15 +3995,15 @@ napøíklad: alertnotify=echo %%s | mail -s "Crown Upozornìní" admin@foo.com
         <translation>Je potøeba zadat port s -whitebind: '%s'</translation>
     </message>
     <message>
-        <source>No Thrones detected.</source>
+        <source>No Masternodes detected.</source>
         <translation>Nezjištìn žádný Tron.</translation>
     </message>
     <message>
-        <source>No compatible Throne found.</source>
+        <source>No compatible Masternode found.</source>
         <translation>Nenalezen žádný kompatibilní trùn.</translation>
     </message>
     <message>
-        <source>Not in the Throne list.</source>
+        <source>Not in the Masternode list.</source>
         <translation>Nenalezeno v seznamu trùnù.</translation>
     </message>
     <message>
@@ -4127,8 +4127,8 @@ napøíklad: alertnotify=echo %%s | mail -s "Crown Upozornìní" admin@foo.com
         <translation>Synchronizují se sporky...</translation>
     </message>
     <message>
-        <source>This is not a Throne.</source>
-        <translation>Toto není Throne.</translation>
+        <source>This is not a Masternode.</source>
+        <translation>Toto není Masternode.</translation>
     </message>
     <message>
         <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
@@ -4167,8 +4167,8 @@ napøíklad: alertnotify=echo %%s | mail -s "Crown Upozornìní" admin@foo.com
         <translation>(pro hlavní sí musí být 9340)</translation>
     </message>
     <message>
-        <source>Can't find random Throne.</source>
-        <translation>Nelze nalézt náhodný Throne</translation>
+        <source>Can't find random Masternode.</source>
+        <translation>Nelze nalézt náhodný Masternode</translation>
     </message>
     <message>
         <source>Can't mix while sync in progress.</source>
@@ -4227,16 +4227,16 @@ napøíklad: alertnotify=echo %%s | mail -s "Crown Upozornìní" admin@foo.com
         <translation>Naèítání penìženky...</translation>
     </message>
     <message>
-        <source>Throne options:</source>
-        <translation>Nastavení Throne:</translation>
+        <source>Masternode options:</source>
+        <translation>Nastavení Masternode:</translation>
     </message>
     <message>
-        <source>Throne queue is full.</source>
-        <translation>Fronta Throne je plná.</translation>
+        <source>Masternode queue is full.</source>
+        <translation>Fronta Masternode je plná.</translation>
     </message>
     <message>
-        <source>Throne:</source>
-        <translation>Throne:</translation>
+        <source>Masternode:</source>
+        <translation>Masternode:</translation>
     </message>
     <message>
         <source>Missing input transaction information.</source>

@@ -13,20 +13,20 @@
 #include "util.h"
 #include "addrman.h"
 
-class CThroneSync;
-CThroneSync throneSync;
+class CMasternodeSync;
+CMasternodeSync throneSync;
 
-CThroneSync::CThroneSync()
+CMasternodeSync::CMasternodeSync()
 {
     Reset();
 }
 
-bool CThroneSync::IsSynced()
+bool CMasternodeSync::IsSynced()
 {
-    return RequestedThroneAssets == MASTERNODE_SYNC_FINISHED;
+    return RequestedMasternodeAssets == MASTERNODE_SYNC_FINISHED;
 }
 
-bool CThroneSync::IsBlockchainSynced()
+bool CMasternodeSync::IsBlockchainSynced()
 {
     static bool fBlockchainSynced = false;
     static int64_t lastProcess = GetTime();
@@ -57,58 +57,58 @@ bool CThroneSync::IsBlockchainSynced()
     return true;
 }
 
-void CThroneSync::Reset()
+void CMasternodeSync::Reset()
 {   
-    lastThroneList = 0;
-    lastThroneWinner = 0;
+    lastMasternodeList = 0;
+    lastMasternodeWinner = 0;
     lastBudgetItem = 0;
     mapSeenSyncMNB.clear();
     mapSeenSyncMNW.clear();
     mapSeenSyncBudget.clear();
     lastFailure = 0;
     nCountFailures = 0;
-    sumThroneList = 0;
-    sumThroneWinner = 0;
+    sumMasternodeList = 0;
+    sumMasternodeWinner = 0;
     sumBudgetItemProp = 0;
     sumBudgetItemFin = 0;
-    countThroneList = 0;
-    countThroneWinner = 0;
+    countMasternodeList = 0;
+    countMasternodeWinner = 0;
     countBudgetItemProp = 0;
     countBudgetItemFin = 0;
-    RequestedThroneAssets = MASTERNODE_SYNC_INITIAL;
-    RequestedThroneAttempt = 0;
+    RequestedMasternodeAssets = MASTERNODE_SYNC_INITIAL;
+    RequestedMasternodeAttempt = 0;
     nAssetSyncStarted = GetTime();
 }
 
-void CThroneSync::AddedThroneList(uint256 hash)
+void CMasternodeSync::AddedMasternodeList(uint256 hash)
 {
-    if(mnodeman.mapSeenThroneBroadcast.count(hash)) {
+    if(mnodeman.mapSeenMasternodeBroadcast.count(hash)) {
         if(mapSeenSyncMNB[hash] < MASTERNODE_SYNC_THRESHOLD) {
-            lastThroneList = GetTime();
+            lastMasternodeList = GetTime();
             mapSeenSyncMNB[hash]++;
         }
     } else {
-        lastThroneList = GetTime();
+        lastMasternodeList = GetTime();
         mapSeenSyncMNB.insert(make_pair(hash, 1));
     }
 }
 
-void CThroneSync::AddedThroneWinner(uint256 hash)
+void CMasternodeSync::AddedMasternodeWinner(uint256 hash)
 {
-    if(thronePayments.mapThronePayeeVotes.count(hash)) {
+    if(thronePayments.mapMasternodePayeeVotes.count(hash)) {
         if(mapSeenSyncMNW[hash] < MASTERNODE_SYNC_THRESHOLD) {
-            lastThroneWinner = GetTime();
+            lastMasternodeWinner = GetTime();
             mapSeenSyncMNW[hash]++;
         }
     } else {
-        lastThroneWinner = GetTime();
+        lastMasternodeWinner = GetTime();
         mapSeenSyncMNW.insert(make_pair(hash, 1));
     }
 }
 
-void CThroneSync::AddedBudgetItem(uint256 hash)
+void CMasternodeSync::AddedBudgetItem(uint256 hash)
 {
-    if(budget.mapSeenThroneBudgetProposals.count(hash) || budget.mapSeenThroneBudgetVotes.count(hash) ||
+    if(budget.mapSeenMasternodeBudgetProposals.count(hash) || budget.mapSeenMasternodeBudgetVotes.count(hash) ||
             budget.mapSeenFinalizedBudgets.count(hash) || budget.mapSeenFinalizedBudgetVotes.count(hash)) {
         if(mapSeenSyncBudget[hash] < MASTERNODE_SYNC_THRESHOLD) {
             lastBudgetItem = GetTime();
@@ -120,46 +120,46 @@ void CThroneSync::AddedBudgetItem(uint256 hash)
     }
 }
 
-bool CThroneSync::IsBudgetPropEmpty()
+bool CMasternodeSync::IsBudgetPropEmpty()
 {
     return sumBudgetItemProp==0 && countBudgetItemProp>0;
 }
 
-bool CThroneSync::IsBudgetFinEmpty()
+bool CMasternodeSync::IsBudgetFinEmpty()
 {
     return sumBudgetItemFin==0 && countBudgetItemFin>0;
 }
 
-void CThroneSync::GetNextAsset()
+void CMasternodeSync::GetNextAsset()
 {
-    switch(RequestedThroneAssets)
+    switch(RequestedMasternodeAssets)
     {
         case(MASTERNODE_SYNC_INITIAL):
         case(MASTERNODE_SYNC_FAILED): // should never be used here actually, use Reset() instead
             ClearFulfilledRequest();
-            RequestedThroneAssets = MASTERNODE_SYNC_SPORKS;
+            RequestedMasternodeAssets = MASTERNODE_SYNC_SPORKS;
             break;
         case(MASTERNODE_SYNC_SPORKS):
-            RequestedThroneAssets = MASTERNODE_SYNC_LIST;
+            RequestedMasternodeAssets = MASTERNODE_SYNC_LIST;
             break;
         case(MASTERNODE_SYNC_LIST):
-            RequestedThroneAssets = MASTERNODE_SYNC_MNW;
+            RequestedMasternodeAssets = MASTERNODE_SYNC_MNW;
             break;
         case(MASTERNODE_SYNC_MNW):
-            RequestedThroneAssets = MASTERNODE_SYNC_BUDGET;
+            RequestedMasternodeAssets = MASTERNODE_SYNC_BUDGET;
             break;
         case(MASTERNODE_SYNC_BUDGET):
-            LogPrintf("CThroneSync::GetNextAsset - Sync has finished\n");
-            RequestedThroneAssets = MASTERNODE_SYNC_FINISHED;
+            LogPrintf("CMasternodeSync::GetNextAsset - Sync has finished\n");
+            RequestedMasternodeAssets = MASTERNODE_SYNC_FINISHED;
             break;
     }
-    RequestedThroneAttempt = 0;
+    RequestedMasternodeAttempt = 0;
     nAssetSyncStarted = GetTime();
 }
 
-std::string CThroneSync::GetSyncStatus()
+std::string CMasternodeSync::GetSyncStatus()
 {
-    switch (throneSync.RequestedThroneAssets) {
+    switch (throneSync.RequestedMasternodeAssets) {
         case MASTERNODE_SYNC_INITIAL: return _("Synchronization pending...");
         case MASTERNODE_SYNC_SPORKS: return _("Synchronizing sporks...");
         case MASTERNODE_SYNC_LIST: return _("Synchronizing thrones...");
@@ -171,45 +171,45 @@ std::string CThroneSync::GetSyncStatus()
     return "";
 }
 
-void CThroneSync::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
+void CMasternodeSync::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
     if (strCommand == "ssc") { //Sync status count
         int nItemID;
         int nCount;
         vRecv >> nItemID >> nCount;
 
-        if(RequestedThroneAssets >= MASTERNODE_SYNC_FINISHED) return;
+        if(RequestedMasternodeAssets >= MASTERNODE_SYNC_FINISHED) return;
 
         //this means we will receive no further communication
         switch(nItemID)
         {
             case(MASTERNODE_SYNC_LIST):
-                if(nItemID != RequestedThroneAssets) return;
-                sumThroneList += nCount;
-                countThroneList++;
+                if(nItemID != RequestedMasternodeAssets) return;
+                sumMasternodeList += nCount;
+                countMasternodeList++;
                 break;
             case(MASTERNODE_SYNC_MNW):
-                if(nItemID != RequestedThroneAssets) return;
-                sumThroneWinner += nCount;
-                countThroneWinner++;
+                if(nItemID != RequestedMasternodeAssets) return;
+                sumMasternodeWinner += nCount;
+                countMasternodeWinner++;
                 break;
             case(MASTERNODE_SYNC_BUDGET_PROP):
-                if(RequestedThroneAssets != MASTERNODE_SYNC_BUDGET) return;
+                if(RequestedMasternodeAssets != MASTERNODE_SYNC_BUDGET) return;
                 sumBudgetItemProp += nCount;
                 countBudgetItemProp++;
                 break;
             case(MASTERNODE_SYNC_BUDGET_FIN):
-                if(RequestedThroneAssets != MASTERNODE_SYNC_BUDGET) return;
+                if(RequestedMasternodeAssets != MASTERNODE_SYNC_BUDGET) return;
                 sumBudgetItemFin += nCount;
                 countBudgetItemFin++;
                 break;
         }
         
-        LogPrintf("CThroneSync:ProcessMessage - ssc - got inventory count %d %d\n", nItemID, nCount);
+        LogPrintf("CMasternodeSync:ProcessMessage - ssc - got inventory count %d %d\n", nItemID, nCount);
     }
 }
 
-void CThroneSync::ClearFulfilledRequest()
+void CMasternodeSync::ClearFulfilledRequest()
 {
     TRY_LOCK(cs_vNodes, lockRecv);
     if(!lockRecv) return;
@@ -223,7 +223,7 @@ void CThroneSync::ClearFulfilledRequest()
     }
 }
 
-void CThroneSync::Process()
+void CMasternodeSync::Process()
 {
     static int tick = 0;
 
@@ -240,19 +240,19 @@ void CThroneSync::Process()
     }
 
     //try syncing again
-    if(RequestedThroneAssets == MASTERNODE_SYNC_FAILED && lastFailure + (1*60) < GetTime()) {
+    if(RequestedMasternodeAssets == MASTERNODE_SYNC_FAILED && lastFailure + (1*60) < GetTime()) {
         Reset();
-    } else if (RequestedThroneAssets == MASTERNODE_SYNC_FAILED) {
+    } else if (RequestedMasternodeAssets == MASTERNODE_SYNC_FAILED) {
         return;
     }
 
-    if(fDebug) LogPrintf("CThroneSync::Process() - tick %d RequestedThroneAssets %d\n", tick, RequestedThroneAssets);
+    if(fDebug) LogPrintf("CMasternodeSync::Process() - tick %d RequestedMasternodeAssets %d\n", tick, RequestedMasternodeAssets);
 
-    if(RequestedThroneAssets == MASTERNODE_SYNC_INITIAL) GetNextAsset();
+    if(RequestedMasternodeAssets == MASTERNODE_SYNC_INITIAL) GetNextAsset();
 
     // sporks synced but blockchain is not, wait until we're almost at a recent block to continue
     if(Params().NetworkID() != CBaseChainParams::REGTEST &&
-            !IsBlockchainSynced() && RequestedThroneAssets > MASTERNODE_SYNC_SPORKS) return;
+            !IsBlockchainSynced() && RequestedMasternodeAssets > MASTERNODE_SYNC_SPORKS) return;
 
     TRY_LOCK(cs_vNodes, lockRecv);
     if(!lockRecv) return;
@@ -260,39 +260,39 @@ void CThroneSync::Process()
     BOOST_FOREACH(CNode* pnode, vNodes)
     {
         if(Params().NetworkID() == CBaseChainParams::REGTEST){
-            if(RequestedThroneAttempt <= 2) {
+            if(RequestedMasternodeAttempt <= 2) {
                 pnode->PushMessage("getsporks"); //get current network sporks
-            } else if(RequestedThroneAttempt < 4) {
+            } else if(RequestedMasternodeAttempt < 4) {
                 mnodeman.DsegUpdate(pnode); 
-            } else if(RequestedThroneAttempt < 6) {
+            } else if(RequestedMasternodeAttempt < 6) {
                 int nMnCount = mnodeman.CountEnabled();
                 pnode->PushMessage("mnget", nMnCount); //sync payees
                 uint256 n = uint256();
                 pnode->PushMessage("mnvs", n); //sync throne votes
             } else {
-                RequestedThroneAssets = MASTERNODE_SYNC_FINISHED;
+                RequestedMasternodeAssets = MASTERNODE_SYNC_FINISHED;
             }
-            RequestedThroneAttempt++;
+            RequestedMasternodeAttempt++;
             return;
         }
 
         //set to synced
-        if(RequestedThroneAssets == MASTERNODE_SYNC_SPORKS){
+        if(RequestedMasternodeAssets == MASTERNODE_SYNC_SPORKS){
             if(pnode->HasFulfilledRequest("getspork")) continue;
             pnode->FulfilledRequest("getspork");
 
             pnode->PushMessage("getsporks"); //get current network sporks
-            if(RequestedThroneAttempt >= 2) GetNextAsset();
-            RequestedThroneAttempt++;
+            if(RequestedMasternodeAttempt >= 2) GetNextAsset();
+            RequestedMasternodeAttempt++;
             
             return;
         }
 
-        if (pnode->nVersion >= thronePayments.GetMinThronePaymentsProto()) {
+        if (pnode->nVersion >= thronePayments.GetMinMasternodePaymentsProto()) {
 
-            if(RequestedThroneAssets == MASTERNODE_SYNC_LIST) {
-                if(fDebug) LogPrintf("CThroneSync::Process() - lastThroneList %lld (GetTime() - MASTERNODE_SYNC_TIMEOUT) %lld\n", lastThroneList, GetTime() - MASTERNODE_SYNC_TIMEOUT);
-                if(lastThroneList > 0 && lastThroneList < GetTime() - MASTERNODE_SYNC_TIMEOUT*2 && RequestedThroneAttempt >= MASTERNODE_SYNC_THRESHOLD){ //hasn't received a new item in the last five seconds, so we'll move to the
+            if(RequestedMasternodeAssets == MASTERNODE_SYNC_LIST) {
+                if(fDebug) LogPrintf("CMasternodeSync::Process() - lastMasternodeList %lld (GetTime() - MASTERNODE_SYNC_TIMEOUT) %lld\n", lastMasternodeList, GetTime() - MASTERNODE_SYNC_TIMEOUT);
+                if(lastMasternodeList > 0 && lastMasternodeList < GetTime() - MASTERNODE_SYNC_TIMEOUT*2 && RequestedMasternodeAttempt >= MASTERNODE_SYNC_THRESHOLD){ //hasn't received a new item in the last five seconds, so we'll move to the
                     GetNextAsset();
                     return;
                 }
@@ -301,12 +301,12 @@ void CThroneSync::Process()
                 pnode->FulfilledRequest("mnsync");
 
                 // timeout
-                if(lastThroneList == 0 &&
-                (RequestedThroneAttempt >= MASTERNODE_SYNC_THRESHOLD*3 || GetTime() - nAssetSyncStarted > MASTERNODE_SYNC_TIMEOUT*5)) {
+                if(lastMasternodeList == 0 &&
+                (RequestedMasternodeAttempt >= MASTERNODE_SYNC_THRESHOLD*3 || GetTime() - nAssetSyncStarted > MASTERNODE_SYNC_TIMEOUT*5)) {
                     if(IsSporkActive(SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT)) {
-                        LogPrintf("CThroneSync::Process - ERROR - Sync has failed, will retry later\n");
-                        RequestedThroneAssets = MASTERNODE_SYNC_FAILED;
-                        RequestedThroneAttempt = 0;
+                        LogPrintf("CMasternodeSync::Process - ERROR - Sync has failed, will retry later\n");
+                        RequestedMasternodeAssets = MASTERNODE_SYNC_FAILED;
+                        RequestedMasternodeAttempt = 0;
                         lastFailure = GetTime();
                         nCountFailures++;
                     } else {
@@ -315,15 +315,15 @@ void CThroneSync::Process()
                     return;
                 }
 
-                if(RequestedThroneAttempt >= MASTERNODE_SYNC_THRESHOLD*3) return;
+                if(RequestedMasternodeAttempt >= MASTERNODE_SYNC_THRESHOLD*3) return;
 
                 mnodeman.DsegUpdate(pnode);
-                RequestedThroneAttempt++;
+                RequestedMasternodeAttempt++;
                 return;
             }
 
-            if(RequestedThroneAssets == MASTERNODE_SYNC_MNW) {
-                if(lastThroneWinner > 0 && lastThroneWinner < GetTime() - MASTERNODE_SYNC_TIMEOUT*2 && RequestedThroneAttempt >= MASTERNODE_SYNC_THRESHOLD){ //hasn't received a new item in the last five seconds, so we'll move to the
+            if(RequestedMasternodeAssets == MASTERNODE_SYNC_MNW) {
+                if(lastMasternodeWinner > 0 && lastMasternodeWinner < GetTime() - MASTERNODE_SYNC_TIMEOUT*2 && RequestedMasternodeAttempt >= MASTERNODE_SYNC_THRESHOLD){ //hasn't received a new item in the last five seconds, so we'll move to the
                     GetNextAsset();
                     return;
                 }
@@ -332,12 +332,12 @@ void CThroneSync::Process()
                 pnode->FulfilledRequest("mnwsync");
 
                 // timeout
-                if(lastThroneWinner == 0 &&
-                (RequestedThroneAttempt >= MASTERNODE_SYNC_THRESHOLD*3 || GetTime() - nAssetSyncStarted > MASTERNODE_SYNC_TIMEOUT*5)) {
+                if(lastMasternodeWinner == 0 &&
+                (RequestedMasternodeAttempt >= MASTERNODE_SYNC_THRESHOLD*3 || GetTime() - nAssetSyncStarted > MASTERNODE_SYNC_TIMEOUT*5)) {
                     if(IsSporkActive(SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT)) {
-                        LogPrintf("CThroneSync::Process - ERROR - Sync has failed, will retry later\n");
-                        RequestedThroneAssets = MASTERNODE_SYNC_FAILED;
-                        RequestedThroneAttempt = 0;
+                        LogPrintf("CMasternodeSync::Process - ERROR - Sync has failed, will retry later\n");
+                        RequestedMasternodeAssets = MASTERNODE_SYNC_FAILED;
+                        RequestedMasternodeAttempt = 0;
                         lastFailure = GetTime();
                         nCountFailures++;
                     } else {
@@ -346,14 +346,14 @@ void CThroneSync::Process()
                     return;
                 }
 
-                if(RequestedThroneAttempt >= MASTERNODE_SYNC_THRESHOLD*3) return;
+                if(RequestedMasternodeAttempt >= MASTERNODE_SYNC_THRESHOLD*3) return;
 
                 CBlockIndex* pindexPrev = chainActive.Tip();
                 if(pindexPrev == NULL) return;
 
                 int nMnCount = mnodeman.CountEnabled();
                 pnode->PushMessage("mnget", nMnCount); //sync payees
-                RequestedThroneAttempt++;
+                RequestedMasternodeAttempt++;
 
                 return;
             }
@@ -361,19 +361,19 @@ void CThroneSync::Process()
 
         if (pnode->nVersion >= MIN_BUDGET_PEER_PROTO_VERSION) {
 
-            if(RequestedThroneAssets == MASTERNODE_SYNC_BUDGET){
+            if(RequestedMasternodeAssets == MASTERNODE_SYNC_BUDGET){
                 //we'll start rejecting votes if we accidentally get set as synced too soon
-                if(lastBudgetItem > 0 && lastBudgetItem < GetTime() - MASTERNODE_SYNC_TIMEOUT*2 && RequestedThroneAttempt >= MASTERNODE_SYNC_THRESHOLD){ //hasn't received a new item in the last five seconds, so we'll move to the
-                    //LogPrintf("CThroneSync::Process - HasNextFinalizedBudget %d nCountFailures %d IsBudgetPropEmpty %d\n", budget.HasNextFinalizedBudget(), nCountFailures, IsBudgetPropEmpty());
+                if(lastBudgetItem > 0 && lastBudgetItem < GetTime() - MASTERNODE_SYNC_TIMEOUT*2 && RequestedMasternodeAttempt >= MASTERNODE_SYNC_THRESHOLD){ //hasn't received a new item in the last five seconds, so we'll move to the
+                    //LogPrintf("CMasternodeSync::Process - HasNextFinalizedBudget %d nCountFailures %d IsBudgetPropEmpty %d\n", budget.HasNextFinalizedBudget(), nCountFailures, IsBudgetPropEmpty());
                     //if(budget.HasNextFinalizedBudget() || nCountFailures >= 2 || IsBudgetPropEmpty()) {
                         GetNextAsset();
 
                         //try to activate our throne if possible
-                        activeThrone.ManageStatus();
+                        activeMasternode.ManageStatus();
                     // } else { //we've failed to sync, this state will reject the next budget block
-                    //     LogPrintf("CThroneSync::Process - ERROR - Sync has failed, will retry later\n");
-                    //     RequestedThroneAssets = MASTERNODE_SYNC_FAILED;
-                    //     RequestedThroneAttempt = 0;
+                    //     LogPrintf("CMasternodeSync::Process - ERROR - Sync has failed, will retry later\n");
+                    //     RequestedMasternodeAssets = MASTERNODE_SYNC_FAILED;
+                    //     RequestedMasternodeAttempt = 0;
                     //     lastFailure = GetTime();
                     //     nCountFailures++;
                     // }
@@ -382,21 +382,21 @@ void CThroneSync::Process()
 
                 // timeout
                 if(lastBudgetItem == 0 &&
-                (RequestedThroneAttempt >= MASTERNODE_SYNC_THRESHOLD*3 || GetTime() - nAssetSyncStarted > MASTERNODE_SYNC_TIMEOUT*5)) {
+                (RequestedMasternodeAttempt >= MASTERNODE_SYNC_THRESHOLD*3 || GetTime() - nAssetSyncStarted > MASTERNODE_SYNC_TIMEOUT*5)) {
                     // maybe there is no budgets at all, so just finish syncing
                     GetNextAsset();
-                    activeThrone.ManageStatus();
+                    activeMasternode.ManageStatus();
                     return;
                 }
 
                 if(pnode->HasFulfilledRequest("busync")) continue;
                 pnode->FulfilledRequest("busync");
 
-                if(RequestedThroneAttempt >= MASTERNODE_SYNC_THRESHOLD*3) return;
+                if(RequestedMasternodeAttempt >= MASTERNODE_SYNC_THRESHOLD*3) return;
 
                 uint256 n = uint256();
                 pnode->PushMessage("mnvs", n); //sync throne votes
-                RequestedThroneAttempt++;
+                RequestedMasternodeAttempt++;
                 
                 return;
             }

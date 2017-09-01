@@ -14,7 +14,7 @@
 #define MASTERNODELIST_FILTER_COOLDOWN_SECONDS   3
 
 namespace Ui {
-    class ThroneList;
+    class MasternodeList;
 }
 
 class ClientModel;
@@ -24,14 +24,14 @@ QT_BEGIN_NAMESPACE
 class QModelIndex;
 QT_END_NAMESPACE
 
-/** Throne Manager page widget */
-class ThroneList : public QWidget
+/** Masternode Manager page widget */
+class MasternodeList : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit ThroneList(QWidget *parent = 0);
-    ~ThroneList();
+    explicit MasternodeList(QWidget *parent = 0);
+    ~MasternodeList();
 
     void setClientModel(ClientModel *clientModel);
     void setWalletModel(WalletModel *walletModel);
@@ -44,7 +44,7 @@ private:
     int64_t nTimeFilterUpdate;
     bool fFilterUpdated;
 public Q_SLOTS:
-    void updateMyThroneInfo(QString alias, QString addr, QString privkey, QString txHash, QString txIndex, CThrone *pmn);
+    void updateMyMasternodeInfo(QString alias, QString addr, QString privkey, QString txHash, QString txIndex, CMasternode *pmn);
     void updateMyNodeList(bool reset = false);
     void updateNodeList();
     void updateVoteList(bool reset = false);
@@ -53,7 +53,7 @@ Q_SIGNALS:
 
 private:
     QTimer *timer;
-    Ui::ThroneList *ui;
+    Ui::MasternodeList *ui;
     ClientModel *clientModel;
     WalletModel *walletModel;
     CCriticalSection cs_mnlistupdate;
@@ -65,7 +65,7 @@ private Q_SLOTS:
     void on_startButton_clicked();
     void on_startAllButton_clicked();
     void on_startMissingButton_clicked();
-    void on_tableWidgetMyThrones_itemSelectionChanged();
+    void on_tableWidgetMyMasternodes_itemSelectionChanged();
     void on_UpdateButton_clicked();
     
     void on_voteManyYesButton_clicked();

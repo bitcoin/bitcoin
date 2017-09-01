@@ -1455,8 +1455,8 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Démarrer/Arrêtér le mélange</translation>
     </message>
     <message>
-        <source>The denominations you submitted to the Throne.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
-        <translation>Les dénominations que vous avez soumises à la Throne.&lt;br&gt;Pour mélanger, d'autres utilisateurs doivent soumettre les mêmes dénominations.</translation>
+        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <translation>Les dénominations que vous avez soumises à la Masternode.&lt;br&gt;Pour mélanger, d'autres utilisateurs doivent soumettre les mêmes dénominations.</translation>
     </message>
     <message>
         <source>(Last Message)</source>
@@ -1812,8 +1812,8 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Chaîne de blocs</translation>
     </message>
     <message>
-        <source>Number of Thrones</source>
-        <translation>Nombre de Thrones</translation>
+        <source>Number of Masternodes</source>
+        <translation>Nombre de Masternodes</translation>
     </message>
     <message>
         <source>&amp;Console</source>
@@ -3610,8 +3610,8 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Effacer toutes les transactions du portefeuille et récupère celle qui font partie de la chaine de blocs via -rescan au démarrage</translation>
     </message>
     <message>
-        <source>Disable all Crown specific functionality (Thrones, Darksend, InstantX, Budgeting) (0-1, default: %u)</source>
-        <translation>Désactivez toutes les fonctionnalités liées à Crown (Throne, Darksend, InstantX, Budgetisation) (0-1, par défaut: %u)</translation>
+        <source>Disable all Crown specific functionality (Masternodes, Darksend, InstantX, Budgeting) (0-1, default: %u)</source>
+        <translation>Désactivez toutes les fonctionnalités liées à Crown (Masternode, Darksend, InstantX, Budgetisation) (0-1, par défaut: %u)</translation>
     </message>
     <message>
         <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
@@ -3820,7 +3820,7 @@ Pour exemple: alertnotify=echo %%s | mail -s "Alerte Crown" admin@foo.com
         <translation>Autoriser le client à agir en tant que throne (0-1, par défaut : %u)</translation>
     </message>
     <message>
-        <source>Error connecting to Throne.</source>
+        <source>Error connecting to Masternode.</source>
         <translation>Erreur de connexion au throne.</translation>
     </message>
     <message>
@@ -3996,16 +3996,16 @@ Pour exemple: alertnotify=echo %%s | mail -s "Alerte Crown" admin@foo.com
         <translation>Un port doit être spécifié avec -whitebind: '%s'</translation>
     </message>
     <message>
-        <source>No Thrones detected.</source>
-        <translation>Aucun Throne détecté.</translation>
+        <source>No Masternodes detected.</source>
+        <translation>Aucun Masternode détecté.</translation>
     </message>
     <message>
-        <source>No compatible Throne found.</source>
-        <translation>Aucun Throne compatible trouvé.</translation>
+        <source>No compatible Masternode found.</source>
+        <translation>Aucun Masternode compatible trouvé.</translation>
     </message>
     <message>
-        <source>Not in the Throne list.</source>
-        <translation>Absent de la liste des Thrones.</translation>
+        <source>Not in the Masternode list.</source>
+        <translation>Absent de la liste des Masternodes.</translation>
     </message>
     <message>
         <source>Number of automatic wallet backups (default: 10)</source>
@@ -4128,7 +4128,7 @@ Pour exemple: alertnotify=echo %%s | mail -s "Alerte Crown" admin@foo.com
         <translation>Synchronisation des sporks...</translation>
     </message>
     <message>
-        <source>This is not a Throne.</source>
+        <source>This is not a Masternode.</source>
         <translation>Ceci n'est pas un throne.</translation>
     </message>
     <message>
@@ -4168,8 +4168,8 @@ Pour exemple: alertnotify=echo %%s | mail -s "Alerte Crown" admin@foo.com
         <translation>(doit être 9340 pour mainnet)</translation>
     </message>
     <message>
-        <source>Can't find random Throne.</source>
-        <translation>Throne aléatoire introuvable.</translation>
+        <source>Can't find random Masternode.</source>
+        <translation>Masternode aléatoire introuvable.</translation>
     </message>
     <message>
         <source>Can't mix while sync in progress.</source>
@@ -4228,16 +4228,16 @@ Pour exemple: alertnotify=echo %%s | mail -s "Alerte Crown" admin@foo.com
         <translation>Chargement du portefeuille...</translation>
     </message>
     <message>
-        <source>Throne options:</source>
-        <translation>Options Throne :</translation>
+        <source>Masternode options:</source>
+        <translation>Options Masternode :</translation>
     </message>
     <message>
-        <source>Throne queue is full.</source>
+        <source>Masternode queue is full.</source>
         <translation>La file d'attente du throne est pleine.</translation>
     </message>
     <message>
-        <source>Throne:</source>
-        <translation>Throne :</translation>
+        <source>Masternode:</source>
+        <translation>Masternode :</translation>
     </message>
     <message>
         <source>Missing input transaction information.</source>

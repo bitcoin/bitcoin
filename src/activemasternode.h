@@ -19,38 +19,38 @@
 #define ACTIVE_MASTERNODE_NOT_CAPABLE                 3
 #define ACTIVE_MASTERNODE_STARTED                     4
 
-// Responsible for activating the Throne and pinging the network
-class CActiveThrone
+// Responsible for activating the Masternode and pinging the network
+class CActiveMasternode
 {
 private:
     // critical section to protect the inner data structures
     mutable CCriticalSection cs;
 
-    /// Ping Throne
-    bool SendThronePing(std::string& errorMessage);
+    /// Ping Masternode
+    bool SendMasternodePing(std::string& errorMessage);
 
 public:
 	// Initialized by init.cpp
-	// Keys for the main Throne
-	CPubKey pubKeyThrone;
+	// Keys for the main Masternode
+	CPubKey pubKeyMasternode;
 
-	// Initialized while registering Throne
+	// Initialized while registering Masternode
 	CTxIn vin;
     CService service;
 
     int status;
     std::string notCapableReason;
 
-    CActiveThrone()
+    CActiveMasternode()
     {        
         status = ACTIVE_MASTERNODE_INITIAL;
     }
 
-    /// Manage status of main Throne
+    /// Manage status of main Masternode
     void ManageStatus(); 
     std::string GetStatus();
 
-    /// Enable cold wallet mode (run a Throne with no funds)
+    /// Enable cold wallet mode (run a Masternode with no funds)
     bool EnableHotColdMasterNode(CTxIn& vin, CService& addr);
 };
 

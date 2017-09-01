@@ -310,7 +310,7 @@ void BitcoinGUI::createActions(const NetworkStyle *networkStyle)
     tabGroup->addAction(historyAction);
 
     if (throneConfig.getCount() >= 0) {
-        throneAction = new QAction(QIcon(":/icons/throne"), tr("&Thrones"), this);
+        throneAction = new QAction(QIcon(":/icons/throne"), tr("&Masternodes"), this);
         throneAction->setStatusTip(tr("Browse thrones"));
         throneAction->setToolTip(throneAction->statusTip());
         throneAction->setCheckable(true);
@@ -321,7 +321,7 @@ void BitcoinGUI::createActions(const NetworkStyle *networkStyle)
 #endif
         tabGroup->addAction(throneAction);
         connect(throneAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
-        connect(throneAction, SIGNAL(triggered()), this, SLOT(gotoThronePage()));
+        connect(throneAction, SIGNAL(triggered()), this, SLOT(gotoMasternodePage()));
     }
 
 #ifdef Q_OS_MAC
@@ -746,11 +746,11 @@ void BitcoinGUI::gotoHistoryPage()
     if (walletFrame) walletFrame->gotoHistoryPage();
 }
 
-void BitcoinGUI::gotoThronePage()
+void BitcoinGUI::gotoMasternodePage()
 {
     if (throneConfig.getCount() >= 0) {
         throneAction->setChecked(true);
-        if (walletFrame) walletFrame->gotoThronePage();
+        if (walletFrame) walletFrame->gotoMasternodePage();
     }
 }
 
@@ -858,9 +858,9 @@ void BitcoinGUI::setNumBlocks(int count)
                 walletFrame->showOutOfSyncWarning(false);
 #endif // ENABLE_WALLET
 
-            nAttempt = throneSync.RequestedThroneAttempt < MASTERNODE_SYNC_THRESHOLD ?
-                        throneSync.RequestedThroneAttempt + 1 : MASTERNODE_SYNC_THRESHOLD;
-            progress = nAttempt + (throneSync.RequestedThroneAssets - 1) * MASTERNODE_SYNC_THRESHOLD;
+            nAttempt = throneSync.RequestedMasternodeAttempt < MASTERNODE_SYNC_THRESHOLD ?
+                        throneSync.RequestedMasternodeAttempt + 1 : MASTERNODE_SYNC_THRESHOLD;
+            progress = nAttempt + (throneSync.RequestedMasternodeAssets - 1) * MASTERNODE_SYNC_THRESHOLD;
             progressBar->setMaximum(4 * MASTERNODE_SYNC_THRESHOLD);
             progressBar->setFormat(tr("Synchronizing additional data: %p%"));
             progressBar->setValue(progress);

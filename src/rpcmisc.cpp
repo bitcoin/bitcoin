@@ -120,21 +120,21 @@ Value mnsync(const Array& params, bool fHelp)
         Object obj;
 
         obj.push_back(Pair("IsBlockchainSynced", throneSync.IsBlockchainSynced()));
-        obj.push_back(Pair("lastThroneList", throneSync.lastThroneList));
-        obj.push_back(Pair("lastThroneWinner", throneSync.lastThroneWinner));
+        obj.push_back(Pair("lastMasternodeList", throneSync.lastMasternodeList));
+        obj.push_back(Pair("lastMasternodeWinner", throneSync.lastMasternodeWinner));
         obj.push_back(Pair("lastBudgetItem", throneSync.lastBudgetItem));
         obj.push_back(Pair("lastFailure", throneSync.lastFailure));
         obj.push_back(Pair("nCountFailures", throneSync.nCountFailures));
-        obj.push_back(Pair("sumThroneList", throneSync.sumThroneList));
-        obj.push_back(Pair("sumThroneWinner", throneSync.sumThroneWinner));
+        obj.push_back(Pair("sumMasternodeList", throneSync.sumMasternodeList));
+        obj.push_back(Pair("sumMasternodeWinner", throneSync.sumMasternodeWinner));
         obj.push_back(Pair("sumBudgetItemProp", throneSync.sumBudgetItemProp));
         obj.push_back(Pair("sumBudgetItemFin", throneSync.sumBudgetItemFin));
-        obj.push_back(Pair("countThroneList", throneSync.countThroneList));
-        obj.push_back(Pair("countThroneWinner", throneSync.countThroneWinner));
+        obj.push_back(Pair("countMasternodeList", throneSync.countMasternodeList));
+        obj.push_back(Pair("countMasternodeWinner", throneSync.countMasternodeWinner));
         obj.push_back(Pair("countBudgetItemProp", throneSync.countBudgetItemProp));
         obj.push_back(Pair("countBudgetItemFin", throneSync.countBudgetItemFin));
-        obj.push_back(Pair("RequestedThroneAssets", throneSync.RequestedThroneAssets));
-        obj.push_back(Pair("RequestedThroneAttempt", throneSync.RequestedThroneAttempt));
+        obj.push_back(Pair("RequestedMasternodeAssets", throneSync.RequestedMasternodeAssets));
+        obj.push_back(Pair("RequestedMasternodeAttempt", throneSync.RequestedMasternodeAttempt));
 
 
         return obj;

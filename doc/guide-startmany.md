@@ -60,7 +60,7 @@ Close your QT Wallet.
 
 Just like setting up a standard MN. Send exactly 1,000 CRW to each new address created above.
 
-### Create New Throne Private Keys
+### Create New Masternode Private Keys
 
 Open your QT Wallet and go to console (from the menu select Tools => Debug Console)
 
@@ -94,7 +94,7 @@ Issue the following:
 
 Make note of the hash (which is your collaterla_output) and index.
 
-### Enter your Throne details into your throne.conf file
+### Enter your Masternode details into your throne.conf file
 [From the crown github repo](https://github.com/infernoman/bitcoin/blob/master/doc/throne_conf.md)
 
 The new throne.conf format consists of a space seperated text file. Each line consisting of an alias, IP address followed by port, throne private key, collateral output transaction id and collateral output index, donation address and donation percentage (the latter two are optional and should be in format "address:percentage").
