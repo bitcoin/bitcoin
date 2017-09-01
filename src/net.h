@@ -738,8 +738,8 @@ private:
     std::string addrName;
 
     // Our address, as reported by the peer
-    CService addrLocal;
     mutable CCriticalSection cs_addrLocal;
+    CService addrLocal GUARDED_BY(cs_addrLocal);
 public:
 
     NodeId GetId() const {
