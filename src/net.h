@@ -735,7 +735,7 @@ private:
     std::list<CNetMessage> vRecvMsg;  // Used only by SocketHandler thread
 
     mutable CCriticalSection cs_addrName;
-    std::string addrName;
+    std::string addrName GUARDED_BY(cs_addrName);
 
     // Our address, as reported by the peer
     mutable CCriticalSection cs_addrLocal;
