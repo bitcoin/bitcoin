@@ -790,8 +790,8 @@ void SendCoinsDialog::coinControlChangeEdited(const QString& text)
         else // Valid address
         {
             CKeyID keyid;
-            addr.GetKeyID(keyid);
-            if (!model->havePrivKey(keyid)) // Unknown change address
+            bool valid = addr.GetKeyID(keyid);
+            if (!valid || !model->havePrivKey(keyid)) // Unknown change address
             {
                 ui->labelCoinControlChangeLabel->setText(tr("Warning: Unknown change address"));
 
