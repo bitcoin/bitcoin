@@ -50,12 +50,3 @@ examine `uint256_tests.cpp`.
 For further reading, I found the following website to be helpful in
 explaining how the boost unit test framework works:
 [http://www.alittlemadness.com/2009/03/31/c-unit-testing-with-boosttest/](http://www.alittlemadness.com/2009/03/31/c-unit-testing-with-boosttest/).
-
-### bitcoin-util-test.py
-
-The test directory also contains the bitcoin-util-test.py tool, which tests bitcoin utils (currently just bitcoin-tx). This test gets run automatically during the `make check` build process. It is also possible to run the test manually from the src directory:
-
-```
-test/bitcoin-util-test.py --srcdir=[current directory]
-
-```

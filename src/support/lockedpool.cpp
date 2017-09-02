@@ -28,7 +28,7 @@
 
 #include <algorithm>
 
-LockedPoolManager* LockedPoolManager::_instance = NULL;
+LockedPoolManager* LockedPoolManager::_instance = nullptr;
 std::once_flag LockedPoolManager::init_flag;
 
 /*******************************************************************************/
@@ -87,7 +87,7 @@ template <class Iterator, class Pair> bool extend(Iterator it, const Pair& other
 
 void Arena::free(void *ptr)
 {
-    // Freeing the NULL pointer is OK.
+    // Freeing the nullptr pointer is OK.
     if (ptr == nullptr) {
         return;
     }
@@ -148,9 +148,9 @@ class Win32LockedPageAllocator: public LockedPageAllocator
 {
 public:
     Win32LockedPageAllocator();
-    void* AllocateLocked(size_t len, bool *lockingSuccess);
-    void FreeLocked(void* addr, size_t len);
-    size_t GetLimit();
+    void* AllocateLocked(size_t len, bool *lockingSuccess) override;
+    void FreeLocked(void* addr, size_t len) override;
+    size_t GetLimit() override;
 private:
     size_t page_size;
 };
@@ -200,9 +200,9 @@ class PosixLockedPageAllocator: public LockedPageAllocator
 {
 public:
     PosixLockedPageAllocator();
-    void* AllocateLocked(size_t len, bool *lockingSuccess);
-    void FreeLocked(void* addr, size_t len);
-    size_t GetLimit();
+    void* AllocateLocked(size_t len, bool *lockingSuccess) override;
+    void FreeLocked(void* addr, size_t len) override;
+    size_t GetLimit() override;
 private:
     size_t page_size;
 };
@@ -357,8 +357,8 @@ LockedPool::LockedPageArena::~LockedPageArena()
 /*******************************************************************************/
 // Implementation: LockedPoolManager
 //
-LockedPoolManager::LockedPoolManager(std::unique_ptr<LockedPageAllocator> allocator):
-    LockedPool(std::move(allocator), &LockedPoolManager::LockingFailed)
+LockedPoolManager::LockedPoolManager(std::unique_ptr<LockedPageAllocator> allocator_in):
+    LockedPool(std::move(allocator_in), &LockedPoolManager::LockingFailed)
 {
 }
 

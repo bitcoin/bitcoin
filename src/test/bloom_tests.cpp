@@ -19,7 +19,6 @@
 #include <vector>
 
 #include <boost/test/unit_test.hpp>
-#include <boost/tuple/tuple.hpp>
 
 BOOST_FIXTURE_TEST_SUITE(bloom_tests, BasicTestingSetup)
 
@@ -463,7 +462,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_4_test_update_none)
 
 static std::vector<unsigned char> RandomData()
 {
-    uint256 r = GetRandHash();
+    uint256 r = InsecureRand256();
     return std::vector<unsigned char>(r.begin(), r.end());
 }
 

@@ -240,7 +240,7 @@
 ["0", "IF NOP10 ENDIF 1", "P2SH,STRICTENC,DISCOURAGE_UPGRADABLE_NOPS", "OK",
  "Discouraged NOPs are allowed if not executed"],
 
-["0", "IF 0xba ELSE 1 ENDIF", "P2SH,STRICTENC", "OK", "opcodes above NOP10 invalid if executed"],
+["0", "IF 0xba ELSE 1 ENDIF", "P2SH,STRICTENC", "OK", "opcodes above MAX_OPCODE invalid if executed"],
 ["0", "IF 0xbb ELSE 1 ENDIF", "P2SH,STRICTENC", "OK"],
 ["0", "IF 0xbc ELSE 1 ENDIF", "P2SH,STRICTENC", "OK"],
 ["0", "IF 0xbd ELSE 1 ENDIF", "P2SH,STRICTENC", "OK"],
@@ -349,7 +349,7 @@
 ["2147483647", "0x04 0xFFFFFF7F EQUAL", "P2SH,STRICTENC", "OK"],
 ["2147483648", "0x05 0x0000008000 EQUAL", "P2SH,STRICTENC", "OK"],
 ["549755813887", "0x05 0xFFFFFFFF7F EQUAL", "P2SH,STRICTENC", "OK"],
-["549755813888", "0x06 0xFFFFFFFF7F EQUAL", "P2SH,STRICTENC", "OK"],
+["549755813888", "0x06 0x000000008000 EQUAL", "P2SH,STRICTENC", "OK"],
 ["9223372036854775807", "0x08 0xFFFFFFFFFFFFFF7F EQUAL", "P2SH,STRICTENC", "OK"],
 ["-1", "0x01 0x81 EQUAL", "P2SH,STRICTENC", "OK", "Numbers are little-endian with the MSB being a sign bit"],
 ["-127", "0x01 0xFF EQUAL", "P2SH,STRICTENC", "OK"],
@@ -878,7 +878,7 @@
  "P2SH,DISCOURAGE_UPGRADABLE_NOPS", "DISCOURAGE_UPGRADABLE_NOPS", "Discouraged NOP10 in redeemScript"],
 
 ["0x50","1", "P2SH,STRICTENC", "BAD_OPCODE", "opcode 0x50 is reserved"],
-["1", "IF 0xba ELSE 1 ENDIF", "P2SH,STRICTENC", "BAD_OPCODE", "opcodes above NOP10 invalid if executed"],
+["1", "IF 0xba ELSE 1 ENDIF", "P2SH,STRICTENC", "BAD_OPCODE", "opcodes above MAX_OPCODE invalid if executed"],
 ["1", "IF 0xbb ELSE 1 ENDIF", "P2SH,STRICTENC", "BAD_OPCODE"],
 ["1", "IF 0xbc ELSE 1 ENDIF", "P2SH,STRICTENC", "BAD_OPCODE"],
 ["1", "IF 0xbd ELSE 1 ENDIF", "P2SH,STRICTENC", "BAD_OPCODE"],
@@ -1001,7 +1001,7 @@
 ["1","RESERVED", "P2SH,STRICTENC", "BAD_OPCODE", "OP_RESERVED is reserved"],
 ["1","RESERVED1", "P2SH,STRICTENC", "BAD_OPCODE", "OP_RESERVED1 is reserved"],
 ["1","RESERVED2", "P2SH,STRICTENC", "BAD_OPCODE", "OP_RESERVED2 is reserved"],
-["1","0xba", "P2SH,STRICTENC", "BAD_OPCODE", "0xba == OP_NOP10 + 1"],
+["1","0xba", "P2SH,STRICTENC", "BAD_OPCODE", "0xba == MAX_OPCODE + 1"],
 
 ["2147483648", "1ADD 1", "P2SH,STRICTENC", "UNKNOWN_ERROR", "We cannot do math on 5-byte integers"],
 ["2147483648", "NEGATE 1", "P2SH,STRICTENC", "UNKNOWN_ERROR", "We cannot do math on 5-byte integers"],
@@ -2506,7 +2506,7 @@
 ],
 
 ["CHECKSEQUENCEVERIFY tests"],
-["", "CHECKSEQUENCEVERIFY", "CHECKSEQUENCEVERIFY", "INVALID_STACK_OPERATION", "CSV automatically fails on a empty stack"],
+["", "CHECKSEQUENCEVERIFY", "CHECKSEQUENCEVERIFY", "INVALID_STACK_OPERATION", "CSV automatically fails on an empty stack"],
 ["-1", "CHECKSEQUENCEVERIFY", "CHECKSEQUENCEVERIFY", "NEGATIVE_LOCKTIME", "CSV automatically fails if stack top is negative"],
 ["0x0100", "CHECKSEQUENCEVERIFY", "CHECKSEQUENCEVERIFY,MINIMALDATA", "UNKNOWN_ERROR", "CSV fails if stack top is not minimally encoded"],
 ["0", "CHECKSEQUENCEVERIFY", "CHECKSEQUENCEVERIFY", "UNSATISFIED_LOCKTIME", "CSV fails if stack top bit 1 << 31 is set and the tx version < 2"],

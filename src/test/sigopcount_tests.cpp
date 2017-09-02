@@ -2,7 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "validation.h"
+#include "consensus/tx_verify.h"
+#include "consensus/validation.h"
 #include "pubkey.h"
 #include "key.h"
 #include "script/script.h"
@@ -12,7 +13,6 @@
 
 #include <vector>
 
-#include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
 
 // Helpers:
@@ -102,7 +102,7 @@ void BuildTxs(CMutableTransaction& spendingTx, CCoinsViewCache& coins, CMutableT
     spendingTx.vout[0].nValue = 1;
     spendingTx.vout[0].scriptPubKey = CScript();
 
-    coins.ModifyCoins(creationTx.GetHash())->FromTx(creationTx, 0);
+    AddCoins(coins, creationTx, 0);
 }
 
 BOOST_AUTO_TEST_CASE(GetTxSigOpCost)

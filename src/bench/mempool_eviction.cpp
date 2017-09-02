@@ -12,14 +12,13 @@
 static void AddTx(const CTransaction& tx, const CAmount& nFee, CTxMemPool& pool)
 {
     int64_t nTime = 0;
-    double dPriority = 10.0;
     unsigned int nHeight = 1;
     bool spendsCoinbase = false;
     unsigned int sigOpCost = 4;
     LockPoints lp;
     pool.addUnchecked(tx.GetHash(), CTxMemPoolEntry(
-                                        MakeTransactionRef(tx), nFee, nTime, dPriority, nHeight,
-                                        tx.GetValueOut(), spendsCoinbase, sigOpCost, lp));
+                                        MakeTransactionRef(tx), nFee, nTime, nHeight,
+                                        spendsCoinbase, sigOpCost, lp));
 }
 
 // Right now this is only testing eviction performance in an extremely small
@@ -97,7 +96,7 @@ static void MempoolEviction(benchmark::State& state)
     tx7.vout[1].scriptPubKey = CScript() << OP_7 << OP_EQUAL;
     tx7.vout[1].nValue = 10 * COIN;
 
-    CTxMemPool pool(CFeeRate(1000));
+    CTxMemPool pool;
 
     while (state.KeepRunning()) {
         AddTx(tx1, 10000LL, pool);

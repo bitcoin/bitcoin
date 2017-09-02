@@ -13,7 +13,7 @@ Usage:
 # Released under MIT License
 import os
 from itertools import islice
-from base58 import b58encode, b58decode, b58encode_chk, b58decode_chk, b58chars
+from base58 import b58encode_chk, b58decode_chk, b58chars
 import random
 from binascii import b2a_hex
 

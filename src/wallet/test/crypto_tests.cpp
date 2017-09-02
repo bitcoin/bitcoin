@@ -2,93 +2,15 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "test/test_random.h"
-#include "utilstrencodings.h"
 #include "test/test_bitcoin.h"
+#include "utilstrencodings.h"
 #include "wallet/crypter.h"
 
 #include <vector>
 
 #include <boost/test/unit_test.hpp>
-#include <openssl/aes.h>
-#include <openssl/evp.h>
 
 BOOST_FIXTURE_TEST_SUITE(wallet_crypto, BasicTestingSetup)
-
-bool OldSetKeyFromPassphrase(const SecureString& strKeyData, const std::vector<unsigned char>& chSalt, const unsigned int nRounds, const unsigned int nDerivationMethod, unsigned char* chKey, unsigned char* chIV)
-{
-    if (nRounds < 1 || chSalt.size() != WALLET_CRYPTO_SALT_SIZE)
-        return false;
-
-    int i = 0;
-    if (nDerivationMethod == 0)
-        i = EVP_BytesToKey(EVP_aes_256_cbc(), EVP_sha512(), &chSalt[0],
-                          (unsigned char *)&strKeyData[0], strKeyData.size(), nRounds, chKey, chIV);
-
-    if (i != (int)WALLET_CRYPTO_KEY_SIZE)
-    {
-        memory_cleanse(chKey, sizeof(chKey));
-        memory_cleanse(chIV, sizeof(chIV));
-        return false;
-    }
-    return true;
-}
-
-bool OldEncrypt(const CKeyingMaterial& vchPlaintext, std::vector<unsigned char> &vchCiphertext, const unsigned char chKey[32], const unsigned char chIV[16])
-{
-    // max ciphertext len for a n bytes of plaintext is
-    // n + AES_BLOCK_SIZE - 1 bytes
-    int nLen = vchPlaintext.size();
-    int nCLen = nLen + AES_BLOCK_SIZE, nFLen = 0;
-    vchCiphertext = std::vector<unsigned char> (nCLen);
-
-    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
-
-    if (!ctx) return false;
-
-    bool fOk = true;
-
-    EVP_CIPHER_CTX_init(ctx);
-    if (fOk) fOk = EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, chKey, chIV) != 0;
-    if (fOk) fOk = EVP_EncryptUpdate(ctx, &vchCiphertext[0], &nCLen, &vchPlaintext[0], nLen) != 0;
-    if (fOk) fOk = EVP_EncryptFinal_ex(ctx, (&vchCiphertext[0]) + nCLen, &nFLen) != 0;
-    EVP_CIPHER_CTX_cleanup(ctx);
-
-    EVP_CIPHER_CTX_free(ctx);
-
-    if (!fOk) return false;
-
-    vchCiphertext.resize(nCLen + nFLen);
-    return true;
-}
-
-bool OldDecrypt(const std::vector<unsigned char>& vchCiphertext, CKeyingMaterial& vchPlaintext, const unsigned char chKey[32], const unsigned char chIV[16])
-{
-    // plaintext will always be equal to or lesser than length of ciphertext
-    int nLen = vchCiphertext.size();
-    int nPLen = nLen, nFLen = 0;
-
-    vchPlaintext = CKeyingMaterial(nPLen);
-
-    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
-
-    if (!ctx) return false;
-
-    bool fOk = true;
-
-    EVP_CIPHER_CTX_init(ctx);
-    if (fOk) fOk = EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, chKey, chIV) != 0;
-    if (fOk) fOk = EVP_DecryptUpdate(ctx, &vchPlaintext[0], &nPLen, &vchCiphertext[0], nLen) != 0;
-    if (fOk) fOk = EVP_DecryptFinal_ex(ctx, (&vchPlaintext[0]) + nPLen, &nFLen) != 0;
-    EVP_CIPHER_CTX_cleanup(ctx);
-
-    EVP_CIPHER_CTX_free(ctx);
-
-    if (!fOk) return false;
-
-    vchPlaintext.resize(nPLen + nFLen);
-    return true;
-}
 
 class TestCrypter
 {
@@ -97,25 +19,15 @@ static void TestPassphraseSingle(const std::vector<unsigned char>& vchSalt, cons
                  const std::vector<unsigned char>& correctKey = std::vector<unsigned char>(),
                  const std::vector<unsigned char>& correctIV=std::vector<unsigned char>())
 {
-    unsigned char chKey[WALLET_CRYPTO_KEY_SIZE];
-    unsigned char chIV[WALLET_CRYPTO_IV_SIZE];
-
     CCrypter crypt;
     crypt.SetKeyFromPassphrase(passphrase, vchSalt, rounds, 0);
 
-    OldSetKeyFromPassphrase(passphrase, vchSalt, rounds, 0, chKey, chIV);
-
-    BOOST_CHECK_MESSAGE(memcmp(chKey, crypt.vchKey.data(), crypt.vchKey.size()) == 0, \
-        HexStr(chKey, chKey+sizeof(chKey)) + std::string(" != ") + HexStr(crypt.vchKey));
-    BOOST_CHECK_MESSAGE(memcmp(chIV, crypt.vchIV.data(), crypt.vchIV.size()) == 0, \
-        HexStr(chIV, chIV+sizeof(chIV)) + std::string(" != ") + HexStr(crypt.vchIV));
-
     if(!correctKey.empty())
-        BOOST_CHECK_MESSAGE(memcmp(chKey, &correctKey[0], sizeof(chKey)) == 0, \
-            HexStr(chKey, chKey+sizeof(chKey)) + std::string(" != ") + HexStr(correctKey.begin(), correctKey.end()));
+        BOOST_CHECK_MESSAGE(memcmp(crypt.vchKey.data(), correctKey.data(), crypt.vchKey.size()) == 0, \
+            HexStr(crypt.vchKey.begin(), crypt.vchKey.end()) + std::string(" != ") + HexStr(correctKey.begin(), correctKey.end()));
     if(!correctIV.empty())
-        BOOST_CHECK_MESSAGE(memcmp(chIV, &correctIV[0], sizeof(chIV)) == 0,
-            HexStr(chIV, chIV+sizeof(chIV)) + std::string(" != ") + HexStr(correctIV.begin(), correctIV.end()));
+        BOOST_CHECK_MESSAGE(memcmp(crypt.vchIV.data(), correctIV.data(), crypt.vchIV.size()) == 0,
+            HexStr(crypt.vchIV.begin(), crypt.vchIV.end()) + std::string(" != ") + HexStr(correctIV.begin(), correctIV.end()));
 }
 
 static void TestPassphrase(const std::vector<unsigned char>& vchSalt, const SecureString& passphrase, uint32_t rounds,
@@ -127,50 +39,26 @@ static void TestPassphrase(const std::vector<unsigned char>& vchSalt, const Secu
         TestPassphraseSingle(vchSalt, SecureString(i, passphrase.end()), rounds);
 }
 
-
 static void TestDecrypt(const CCrypter& crypt, const std::vector<unsigned char>& vchCiphertext, \
                         const std::vector<unsigned char>& vchPlaintext = std::vector<unsigned char>())
 {
-    CKeyingMaterial vchDecrypted1;
-    CKeyingMaterial vchDecrypted2;
-    int result1, result2;
-    result1 = crypt.Decrypt(vchCiphertext, vchDecrypted1);
-    result2 = OldDecrypt(vchCiphertext, vchDecrypted2, crypt.vchKey.data(), crypt.vchIV.data());
-    BOOST_CHECK(result1 == result2);
-
-    // These two should be equal. However, OpenSSL 1.0.1j introduced a change
-    // that would zero all padding except for the last byte for failed decrypts.
-    // This behavior was reverted for 1.0.1k.
-    if (vchDecrypted1 != vchDecrypted2 && vchDecrypted1.size() >= AES_BLOCK_SIZE && SSLeay() == 0x100010afL)
-    {
-        for(CKeyingMaterial::iterator it = vchDecrypted1.end() - AES_BLOCK_SIZE; it != vchDecrypted1.end() - 1; it++)
-            *it = 0;
-    }
-
-    BOOST_CHECK_MESSAGE(vchDecrypted1 == vchDecrypted2, HexStr(vchDecrypted1.begin(), vchDecrypted1.end()) + " != " + HexStr(vchDecrypted2.begin(), vchDecrypted2.end()));
-
+    CKeyingMaterial vchDecrypted;
+    crypt.Decrypt(vchCiphertext, vchDecrypted);
     if (vchPlaintext.size())
-        BOOST_CHECK(CKeyingMaterial(vchPlaintext.begin(), vchPlaintext.end()) == vchDecrypted2);
+        BOOST_CHECK(CKeyingMaterial(vchPlaintext.begin(), vchPlaintext.end()) == vchDecrypted);
 }
 
 static void TestEncryptSingle(const CCrypter& crypt, const CKeyingMaterial& vchPlaintext,
                        const std::vector<unsigned char>& vchCiphertextCorrect = std::vector<unsigned char>())
 {
-    std::vector<unsigned char> vchCiphertext1;
-    std::vector<unsigned char> vchCiphertext2;
-    int result1 = crypt.Encrypt(vchPlaintext, vchCiphertext1);
-
-    int result2 = OldEncrypt(vchPlaintext, vchCiphertext2, crypt.vchKey.data(), crypt.vchIV.data());
-    BOOST_CHECK(result1 == result2);
-    BOOST_CHECK(vchCiphertext1 == vchCiphertext2);
+    std::vector<unsigned char> vchCiphertext;
+    crypt.Encrypt(vchPlaintext, vchCiphertext);
 
     if (!vchCiphertextCorrect.empty())
-        BOOST_CHECK(vchCiphertext2 == vchCiphertextCorrect);
+        BOOST_CHECK(vchCiphertext == vchCiphertextCorrect);
 
     const std::vector<unsigned char> vchPlaintext2(vchPlaintext.begin(), vchPlaintext.end());
-
-    if(vchCiphertext1 == vchCiphertext2)
-        TestDecrypt(crypt, vchCiphertext1, vchPlaintext2);
+    TestDecrypt(crypt, vchCiphertext, vchPlaintext2);
 }
 
 static void TestEncrypt(const CCrypter& crypt, const std::vector<unsigned char>& vchPlaintextIn, \
@@ -193,7 +81,7 @@ BOOST_AUTO_TEST_CASE(passphrase) {
     std::string hash(GetRandHash().ToString());
     std::vector<unsigned char> vchSalt(8);
     GetRandBytes(&vchSalt[0], vchSalt.size());
-    uint32_t rounds = insecure_rand();
+    uint32_t rounds = InsecureRand32();
     if (rounds > 30000)
         rounds = 30000;
     TestCrypter::TestPassphrase(vchSalt, SecureString(hash.begin(), hash.end()), rounds);

@@ -17,36 +17,34 @@ unsigned int MurmurHash3(unsigned int nHashSeed, const std::vector<unsigned char
 {
     // The following is MurmurHash3 (x86_32), see http://code.google.com/p/smhasher/source/browse/trunk/MurmurHash3.cpp
     uint32_t h1 = nHashSeed;
-    if (vDataToHash.size() > 0)
-    {
-        const uint32_t c1 = 0xcc9e2d51;
-        const uint32_t c2 = 0x1b873593;
+    const uint32_t c1 = 0xcc9e2d51;
+    const uint32_t c2 = 0x1b873593;
 
-        const int nblocks = vDataToHash.size() / 4;
+    const int nblocks = vDataToHash.size() / 4;
 
-        //----------
-        // body
-        const uint8_t* blocks = &vDataToHash[0] + nblocks * 4;
+    //----------
+    // body
+    const uint8_t* blocks = vDataToHash.data();
 
-        for (int i = -nblocks; i; i++) {
-            uint32_t k1 = ReadLE32(blocks + i*4);
+    for (int i = 0; i < nblocks; ++i) {
+        uint32_t k1 = ReadLE32(blocks + i*4);
 
-            k1 *= c1;
-            k1 = ROTL32(k1, 15);
-            k1 *= c2;
+        k1 *= c1;
+        k1 = ROTL32(k1, 15);
+        k1 *= c2;
 
-            h1 ^= k1;
-            h1 = ROTL32(h1, 13);
-            h1 = h1 * 5 + 0xe6546b64;
-        }
+        h1 ^= k1;
+        h1 = ROTL32(h1, 13);
+        h1 = h1 * 5 + 0xe6546b64;
+    }
 
-        //----------
-        // tail
-        const uint8_t* tail = (const uint8_t*)(&vDataToHash[0] + nblocks * 4);
+    //----------
+    // tail
+    const uint8_t* tail = vDataToHash.data() + nblocks * 4;
 
-        uint32_t k1 = 0;
+    uint32_t k1 = 0;
 
-        switch (vDataToHash.size() & 3) {
+    switch (vDataToHash.size() & 3) {
         case 3:
             k1 ^= tail[2] << 16;
         case 2:
@@ -57,7 +55,6 @@ unsigned int MurmurHash3(unsigned int nHashSeed, const std::vector<unsigned char
             k1 = ROTL32(k1, 15);
             k1 *= c2;
             h1 ^= k1;
-        }
     }
 
     //----------
@@ -201,6 +198,47 @@ uint64_t SipHashUint256(uint64_t k0, uint64_t k1, const uint256& val)
     SIPROUND;
     SIPROUND;
     v0 ^= ((uint64_t)4) << 59;
+    v2 ^= 0xFF;
+    SIPROUND;
+    SIPROUND;
+    SIPROUND;
+    SIPROUND;
+    return v0 ^ v1 ^ v2 ^ v3;
+}
+
+uint64_t SipHashUint256Extra(uint64_t k0, uint64_t k1, const uint256& val, uint32_t extra)
+{
+    /* Specialized implementation for efficiency */
+    uint64_t d = val.GetUint64(0);
+
+    uint64_t v0 = 0x736f6d6570736575ULL ^ k0;
+    uint64_t v1 = 0x646f72616e646f6dULL ^ k1;
+    uint64_t v2 = 0x6c7967656e657261ULL ^ k0;
+    uint64_t v3 = 0x7465646279746573ULL ^ k1 ^ d;
+
+    SIPROUND;
+    SIPROUND;
+    v0 ^= d;
+    d = val.GetUint64(1);
+    v3 ^= d;
+    SIPROUND;
+    SIPROUND;
+    v0 ^= d;
+    d = val.GetUint64(2);
+    v3 ^= d;
+    SIPROUND;
+    SIPROUND;
+    v0 ^= d;
+    d = val.GetUint64(3);
+    v3 ^= d;
+    SIPROUND;
+    SIPROUND;
+    v0 ^= d;
+    d = (((uint64_t)36) << 56) | extra;
+    v3 ^= d;
+    SIPROUND;
+    SIPROUND;
+    v0 ^= d;
     v2 ^= 0xFF;
     SIPROUND;
     SIPROUND;

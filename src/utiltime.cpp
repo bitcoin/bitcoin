@@ -9,25 +9,31 @@
 
 #include "utiltime.h"
 
+#include <atomic>
+
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/thread.hpp>
 
-using namespace std;
-
-static int64_t nMockTime = 0; //!< For unit testing
+static std::atomic<int64_t> nMockTime(0); //!< For unit testing
 
 int64_t GetTime()
 {
-    if (nMockTime) return nMockTime;
+    int64_t mocktime = nMockTime.load(std::memory_order_relaxed);
+    if (mocktime) return mocktime;
 
-    time_t now = time(NULL);
+    time_t now = time(nullptr);
     assert(now > 0);
     return now;
 }
 
 void SetMockTime(int64_t nMockTimeIn)
 {
-    nMockTime = nMockTimeIn;
+    nMockTime.store(nMockTimeIn, std::memory_order_relaxed);
+}
+
+int64_t GetMockTime()
+{
+    return nMockTime.load(std::memory_order_relaxed);
 }
 
 int64_t GetTimeMillis()
@@ -49,14 +55,6 @@ int64_t GetTimeMicros()
 int64_t GetSystemTimeInSeconds()
 {
     return GetTimeMicros()/1000000;
-}
-
-/** Return a time useful for the debug log */
-int64_t GetLogTimeMicros()
-{
-    if (nMockTime) return nMockTime*1000000;
-
-    return GetTimeMicros();
 }
 
 void MilliSleep(int64_t n)

@@ -645,7 +645,7 @@
            <item>
             <widget class="QPushButton" name="btnClearTrafficGraph">
              <property name="text">
-              <string>&amp;Clear</string>
+              <string>&amp;Reset</string>
              </property>
              <property name="autoDefault">
               <bool>false</bool>

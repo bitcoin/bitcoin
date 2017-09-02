@@ -16,6 +16,8 @@ import json
 import re
 import base64
 import sys
+import os
+import os.path
 
 settings = {}
 
@@ -85,13 +87,21 @@ def get_block_hashes(settings, max_blocks_per_call=10000):
 		for x,resp_obj in enumerate(reply):
 			if rpc.response_is_error(resp_obj):
 				print('JSON-RPC: error at height', height+x, ': ', resp_obj['error'], file=sys.stderr)
-				exit(1)
+				sys.exit(1)
 			assert(resp_obj['id'] == x) # assume replies are in-sequence
 			if settings['rev_hash_bytes'] == 'true':
 				resp_obj['result'] = hex_switchEndian(resp_obj['result'])
 			print(resp_obj['result'])
 
 		height += num_blocks
+
+def get_rpc_cookie():
+	# Open the cookie file
+	with open(os.path.join(os.path.expanduser(settings['datadir']), '.cookie'), 'r') as f:
+		combined = f.readline()
+		combined_split = combined.split(":")
+		settings['rpcuser'] = combined_split[0]
+		settings['rpcpassword'] = combined_split[1]
 
 if __name__ == '__main__':
 	if len(sys.argv) != 2:
@@ -122,8 +132,15 @@ if __name__ == '__main__':
 		settings['max_height'] = 313000
 	if 'rev_hash_bytes' not in settings:
 		settings['rev_hash_bytes'] = 'false'
+
+	use_userpass = True
+	use_datadir = False
 	if 'rpcuser' not in settings or 'rpcpassword' not in settings:
-		print("Missing username and/or password in cfg file", file=stderr)
+		use_userpass = False
+	if 'datadir' in settings and not use_userpass:
+		use_datadir = True
+	if not use_userpass and not use_datadir:
+		print("Missing datadir or username and/or password in cfg file", file=sys.stderr)
 		sys.exit(1)
 
 	settings['port'] = int(settings['port'])
@@ -132,5 +149,9 @@ if __name__ == '__main__':
 
 	# Force hash byte format setting to be lowercase to make comparisons easier.
 	settings['rev_hash_bytes'] = settings['rev_hash_bytes'].lower()
+
+	# Get the rpc user and pass from the cookie if the datadir is set
+	if use_datadir:
+		get_rpc_cookie()
 
 	get_block_hashes(settings)

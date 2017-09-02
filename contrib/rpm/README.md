@@ -84,16 +84,16 @@ If you would prefer not to build the GUI at all, you can pass the switch
 
 The desktop and KDE meta files are created in the spec file itself with the
 `cat` command. This is done to allow easy distribution specific changes without
-needing to use any patches. A specific time stamp is given to the files so that
+needing to use any patches. A specific timestamp is given to the files so that
 it does not they do not appear to have been updated every time the package is
-built. If you do make changes to them, you probably should update time stamp
-assigned to them in the `touch` command that specifies the time stamp.
+built. If you do make changes to them, you probably should update timestamp
+assigned to them in the `touch` command that specifies the timestamp.
 
 ## SVG, PNG, and XPM Icons
 
 The `bitcoin.svg` file is from the source listed as `Source100`. It is used as
 the source for the PNG and XPM files. The generated PNG and XPM files are given
-the same time stamp as the source SVG file as a means of indicating they are
+the same timestamp as the source SVG file as a means of indicating they are
 derived from it.
 
 ## Systemd
@@ -105,10 +105,10 @@ distributions that still receive vendor updates do in fact use systemd.
 The files to control the service are created in the RPM spec file itself using
 the `cat` command. This is done to make it easy to modify for other
 distributions that may implement things differently without needing to patch
-source. A specific time stamp is given to the files so that they do not appear
+source. A specific timestamp is given to the files so that they do not appear
 to have been updated every time the package is built. If you do make changes to
-them, you probably should update the time stamp assigned to them in the `touch`
-command that specifies the time stamp.
+them, you probably should update the timestamp assigned to them in the `touch`
+command that specifies the timestamp.
 
 ## SELinux
 
@@ -181,5 +181,5 @@ knows what they are getting when installing the GUI package.
 
 As far as minor differences, I generally prefer to assign the file permissions
 in the `%files` portion of an RPM spec file rather than specifying the
-permissions of a file during `%install` and other minor things like that that
+permissions of a file during `%install` and other minor things like that
 are largely just cosmetic.

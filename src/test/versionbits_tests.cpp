@@ -5,7 +5,6 @@
 #include "chain.h"
 #include "versionbits.h"
 #include "test/test_bitcoin.h"
-#include "test/test_random.h"
 #include "chainparams.h"
 #include "validation.h"
 #include "consensus/params.h"
@@ -23,11 +22,11 @@ private:
     mutable ThresholdConditionCache cache;
 
 public:
-    int64_t BeginTime(const Consensus::Params& params) const { return TestTime(10000); }
-    int64_t EndTime(const Consensus::Params& params) const { return TestTime(20000); }
-    int Period(const Consensus::Params& params) const { return 1000; }
-    int Threshold(const Consensus::Params& params) const { return 900; }
-    bool Condition(const CBlockIndex* pindex, const Consensus::Params& params) const { return (pindex->nVersion & 0x100); }
+    int64_t BeginTime(const Consensus::Params& params) const override { return TestTime(10000); }
+    int64_t EndTime(const Consensus::Params& params) const override { return TestTime(20000); }
+    int Period(const Consensus::Params& params) const override { return 1000; }
+    int Threshold(const Consensus::Params& params) const override { return 900; }
+    bool Condition(const CBlockIndex* pindex, const Consensus::Params& params) const override { return (pindex->nVersion & 0x100); }
 
     ThresholdState GetStateFor(const CBlockIndex* pindexPrev) const { return AbstractThresholdConditionChecker::GetStateFor(pindexPrev, paramsDummy, cache); }
     int GetStateSinceHeightFor(const CBlockIndex* pindexPrev) const { return AbstractThresholdConditionChecker::GetStateSinceHeightFor(pindexPrev, paramsDummy, cache); }
@@ -70,7 +69,7 @@ public:
         while (vpblock.size() < height) {
             CBlockIndex* pindex = new CBlockIndex();
             pindex->nHeight = vpblock.size();
-            pindex->pprev = vpblock.size() > 0 ? vpblock.back() : NULL;
+            pindex->pprev = vpblock.size() > 0 ? vpblock.back() : nullptr;
             pindex->nTime = nTime;
             pindex->nVersion = nVersion;
             pindex->BuildSkip();
@@ -81,8 +80,8 @@ public:
 
     VersionBitsTester& TestStateSinceHeight(int height) {
         for (int i = 0; i < CHECKERS; i++) {
-            if ((insecure_rand() & ((1 << i) - 1)) == 0) {
-                BOOST_CHECK_MESSAGE(checker[i].GetStateSinceHeightFor(vpblock.empty() ? NULL : vpblock.back()) == height, strprintf("Test %i for StateSinceHeight", num));
+            if (InsecureRandBits(i) == 0) {
+                BOOST_CHECK_MESSAGE(checker[i].GetStateSinceHeightFor(vpblock.empty() ? nullptr : vpblock.back()) == height, strprintf("Test %i for StateSinceHeight", num));
             }
         }
         num++;
@@ -91,8 +90,8 @@ public:
 
     VersionBitsTester& TestDefined() {
         for (int i = 0; i < CHECKERS; i++) {
-            if ((insecure_rand() & ((1 << i) - 1)) == 0) {
-                BOOST_CHECK_MESSAGE(checker[i].GetStateFor(vpblock.empty() ? NULL : vpblock.back()) == THRESHOLD_DEFINED, strprintf("Test %i for DEFINED", num));
+            if (InsecureRandBits(i) == 0) {
+                BOOST_CHECK_MESSAGE(checker[i].GetStateFor(vpblock.empty() ? nullptr : vpblock.back()) == THRESHOLD_DEFINED, strprintf("Test %i for DEFINED", num));
             }
         }
         num++;
@@ -101,8 +100,8 @@ public:
 
     VersionBitsTester& TestStarted() {
         for (int i = 0; i < CHECKERS; i++) {
-            if ((insecure_rand() & ((1 << i) - 1)) == 0) {
-                BOOST_CHECK_MESSAGE(checker[i].GetStateFor(vpblock.empty() ? NULL : vpblock.back()) == THRESHOLD_STARTED, strprintf("Test %i for STARTED", num));
+            if (InsecureRandBits(i) == 0) {
+                BOOST_CHECK_MESSAGE(checker[i].GetStateFor(vpblock.empty() ? nullptr : vpblock.back()) == THRESHOLD_STARTED, strprintf("Test %i for STARTED", num));
             }
         }
         num++;
@@ -111,8 +110,8 @@ public:
 
     VersionBitsTester& TestLockedIn() {
         for (int i = 0; i < CHECKERS; i++) {
-            if ((insecure_rand() & ((1 << i) - 1)) == 0) {
-                BOOST_CHECK_MESSAGE(checker[i].GetStateFor(vpblock.empty() ? NULL : vpblock.back()) == THRESHOLD_LOCKED_IN, strprintf("Test %i for LOCKED_IN", num));
+            if (InsecureRandBits(i) == 0) {
+                BOOST_CHECK_MESSAGE(checker[i].GetStateFor(vpblock.empty() ? nullptr : vpblock.back()) == THRESHOLD_LOCKED_IN, strprintf("Test %i for LOCKED_IN", num));
             }
         }
         num++;
@@ -121,8 +120,8 @@ public:
 
     VersionBitsTester& TestActive() {
         for (int i = 0; i < CHECKERS; i++) {
-            if ((insecure_rand() & ((1 << i) - 1)) == 0) {
-                BOOST_CHECK_MESSAGE(checker[i].GetStateFor(vpblock.empty() ? NULL : vpblock.back()) == THRESHOLD_ACTIVE, strprintf("Test %i for ACTIVE", num));
+            if (InsecureRandBits(i) == 0) {
+                BOOST_CHECK_MESSAGE(checker[i].GetStateFor(vpblock.empty() ? nullptr : vpblock.back()) == THRESHOLD_ACTIVE, strprintf("Test %i for ACTIVE", num));
             }
         }
         num++;
@@ -131,15 +130,15 @@ public:
 
     VersionBitsTester& TestFailed() {
         for (int i = 0; i < CHECKERS; i++) {
-            if ((insecure_rand() & ((1 << i) - 1)) == 0) {
-                BOOST_CHECK_MESSAGE(checker[i].GetStateFor(vpblock.empty() ? NULL : vpblock.back()) == THRESHOLD_FAILED, strprintf("Test %i for FAILED", num));
+            if (InsecureRandBits(i) == 0) {
+                BOOST_CHECK_MESSAGE(checker[i].GetStateFor(vpblock.empty() ? nullptr : vpblock.back()) == THRESHOLD_FAILED, strprintf("Test %i for FAILED", num));
             }
         }
         num++;
         return *this;
     }
 
-    CBlockIndex * Tip() { return vpblock.size() ? vpblock.back() : NULL; }
+    CBlockIndex * Tip() { return vpblock.size() ? vpblock.back() : nullptr; }
 };
 
 BOOST_FIXTURE_TEST_SUITE(versionbits_tests, TestingSetup)
@@ -209,7 +208,8 @@ BOOST_AUTO_TEST_CASE(versionbits_test)
     }
 
     // Sanity checks of version bit deployments
-    const Consensus::Params &mainnetParams = Params(CBaseChainParams::MAIN).GetConsensus();
+    const auto chainParams = CreateChainParams(CBaseChainParams::MAIN);
+    const Consensus::Params &mainnetParams = chainParams->GetConsensus();
     for (int i=0; i<(int) Consensus::MAX_VERSION_BITS_DEPLOYMENTS; i++) {
         uint32_t bitmask = VersionBitsMask(mainnetParams, (Consensus::DeploymentPos)i);
         // Make sure that no deployment tries to set an invalid bit.
@@ -235,7 +235,8 @@ BOOST_AUTO_TEST_CASE(versionbits_computeblockversion)
 {
     // Check that ComputeBlockVersion will set the appropriate bit correctly
     // on mainnet.
-    const Consensus::Params &mainnetParams = Params(CBaseChainParams::MAIN).GetConsensus();
+    const auto chainParams = CreateChainParams(CBaseChainParams::MAIN);
+    const Consensus::Params &mainnetParams = chainParams->GetConsensus();
 
     // Use the TESTDUMMY deployment for testing purposes.
     int64_t bit = mainnetParams.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit;
@@ -254,7 +255,7 @@ BOOST_AUTO_TEST_CASE(versionbits_computeblockversion)
 
     // Before MedianTimePast of the chain has crossed nStartTime, the bit
     // should not be set.
-    CBlockIndex *lastBlock = NULL;
+    CBlockIndex *lastBlock = nullptr;
     lastBlock = firstChain.Mine(2016, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
     BOOST_CHECK_EQUAL(ComputeBlockVersion(lastBlock, mainnetParams) & (1<<bit), 0);
 
@@ -313,20 +314,20 @@ BOOST_AUTO_TEST_CASE(versionbits_computeblockversion)
 
     // Mine one period worth of blocks, and check that the bit will be on for the
     // next period.
-    lastBlock = secondChain.Mine(2016, nStartTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
+    lastBlock = secondChain.Mine(2016, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
     BOOST_CHECK((ComputeBlockVersion(lastBlock, mainnetParams) & (1<<bit)) != 0);
 
     // Mine another period worth of blocks, signaling the new bit.
-    lastBlock = secondChain.Mine(4032, nStartTime, VERSIONBITS_TOP_BITS | (1<<bit)).Tip();
+    lastBlock = secondChain.Mine(4032, nTime, VERSIONBITS_TOP_BITS | (1<<bit)).Tip();
     // After one period of setting the bit on each block, it should have locked in.
     // We keep setting the bit for one more period though, until activation.
     BOOST_CHECK((ComputeBlockVersion(lastBlock, mainnetParams) & (1<<bit)) != 0);
 
     // Now check that we keep mining the block until the end of this period, and
     // then stop at the beginning of the next period.
-    lastBlock = secondChain.Mine(6047, nStartTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
+    lastBlock = secondChain.Mine(6047, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
     BOOST_CHECK((ComputeBlockVersion(lastBlock, mainnetParams) & (1<<bit)) != 0);
-    lastBlock = secondChain.Mine(6048, nStartTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
+    lastBlock = secondChain.Mine(6048, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
     BOOST_CHECK_EQUAL(ComputeBlockVersion(lastBlock, mainnetParams) & (1<<bit), 0);
 
     // Finally, verify that after a soft fork has activated, CBV no longer uses

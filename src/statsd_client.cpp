@@ -139,9 +139,9 @@ int StatsdClient::init()
         freeaddrinfo(result);
     }
 
-    string name = GetArg("-statshostname", "");
-    if (!name.empty())
-        d->nodename = name;
+    if (gArgs.IsArgSet("-statshostname")) {
+        d->nodename = gArgs.GetArg("-statshostname", "");
+    }
 
     d->init = true;
     return 0;

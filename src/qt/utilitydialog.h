@@ -9,7 +9,6 @@
 #include <QObject>
 
 class BitcoinGUI;
-class ClientModel;
 
 namespace Ui {
     class HelpMessageDialog;
@@ -42,7 +41,7 @@ class ShutdownWindow : public QWidget
     Q_OBJECT
 
 public:
-    ShutdownWindow(QWidget *parent=0, Qt::WindowFlags f=0);
+    explicit ShutdownWindow(QWidget *parent=0, Qt::WindowFlags f=0);
     static QWidget *showShutdownWindow(BitcoinGUI *window);
 
 protected:

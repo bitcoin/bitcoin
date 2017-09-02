@@ -2,14 +2,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef _BITCOIN_PREVECTOR_H_
-#define _BITCOIN_PREVECTOR_H_
+#ifndef BITCOIN_PREVECTOR_H
+#define BITCOIN_PREVECTOR_H
 
+#include <assert.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 
 #include <iterator>
+#include <type_traits>
 
 #pragma pack(push, 1)
 /** Implements a drop-in replacement for std::vector<T> which stores up to N
@@ -130,7 +132,7 @@ public:
         typedef const T* pointer;
         typedef const T& reference;
         typedef std::bidirectional_iterator_tag iterator_category;
-        const_reverse_iterator(T* ptr_) : ptr(ptr_) {}
+        const_reverse_iterator(const T* ptr_) : ptr(ptr_) {}
         const_reverse_iterator(reverse_iterator x) : ptr(&(*x)) {}
         const T& operator*() const { return *ptr; }
         const T* operator->() const { return ptr; }
@@ -170,10 +172,15 @@ private:
             }
         } else {
             if (!is_direct()) {
+                /* FIXME: Because malloc/realloc here won't call new_handler if allocation fails, assert
+                    success. These should instead use an allocator or new/delete so that handlers
+                    are called as necessary, but performance would be slightly degraded by doing so. */
                 _union.indirect = static_cast<char*>(realloc(_union.indirect, ((size_t)sizeof(T)) * new_capacity));
+                assert(_union.indirect);
                 _union.capacity = new_capacity;
             } else {
                 char* new_indirect = static_cast<char*>(malloc(((size_t)sizeof(T)) * new_capacity));
+                assert(new_indirect);
                 T* src = direct_ptr(0);
                 T* dst = reinterpret_cast<T*>(new_indirect);
                 memcpy(dst, src, size() * sizeof(T));
@@ -213,7 +220,7 @@ public:
         }
     }
 
-    prevector() : _size(0) {}
+    prevector() : _size(0), _union{{}} {}
 
     explicit prevector(size_type n) : _size(0) {
         resize(n);
@@ -380,12 +387,22 @@ public:
     }
 
     iterator erase(iterator first, iterator last) {
+        // Erase is not allowed to the change the object's capacity. That means
+        // that when starting with an indirectly allocated prevector with
+        // size and capacity > N, the result may be a still indirectly allocated
+        // prevector with size <= N and capacity > N. A shrink_to_fit() call is
+        // necessary to switch to the (more efficient) directly allocated
+        // representation (with capacity N and size <= N).
         iterator p = first;
         char* endp = (char*)&(*end());
-        while (p != last) {
-            (*p).~T();
-            _size--;
-            ++p;
+        if (!std::is_trivially_destructible<T>::value) {
+            while (p != last) {
+                (*p).~T();
+                _size--;
+                ++p;
+            }
+        } else {
+            _size -= last - p;
         }
         memmove(&(*first), &(*last), endp - ((char*)(&(*last))));
         return first;
@@ -426,10 +443,12 @@ public:
     }
 
     ~prevector() {
-        clear();
+        if (!std::is_trivially_destructible<T>::value) {
+            clear();
+        }
         if (!is_direct()) {
             free(_union.indirect);
-            _union.indirect = NULL;
+            _union.indirect = nullptr;
         }
     }
 
@@ -495,4 +514,4 @@ public:
 };
 #pragma pack(pop)
 
-#endif
+#endif // BITCOIN_PREVECTOR_H
