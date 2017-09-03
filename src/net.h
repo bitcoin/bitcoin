@@ -353,7 +353,7 @@ private:
     size_t SocketReceiveData(CNode *pnode);
     size_t SocketSendData(CNode *pnode) const;
     void CheckForTimeout(CNode* pnode);
-    void OnEvents(CNode* pnode, bool receive, bool send);
+    void OnEvents(CNode* pnode, short events);
     void InterruptEvents();
     //!check is the banlist has unwritten changes
     bool BannedSetIsDirty();
@@ -443,6 +443,7 @@ private:
 
     event_base* m_event_base = nullptr;
     std::vector<event*> m_listen_events;
+    timeval m_event_timeout;
 
     event* m_interrupt_event = nullptr;
     CCriticalSection m_cs_interrupt_event;
@@ -746,14 +747,19 @@ private:
     mutable CCriticalSection cs_addrName;
     std::string addrName;
 
+    event* m_read_event = nullptr;
+    event* m_write_event = nullptr;
+    event* m_read_timeout_event = nullptr;
+    event* m_write_timeout_event = nullptr;
+    event* m_wake_event = nullptr;
+    std::function<void(short)> m_callback;
+
     // Our address, as reported by the peer
     CService addrLocal;
     mutable CCriticalSection cs_addrLocal;
 public:
 
-    void Disconnect() {
-        fDisconnect = true;
-    }
+    void Disconnect();
     void EnableReceive();
 
     NodeId GetId() const {
