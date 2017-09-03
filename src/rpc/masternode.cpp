@@ -4,6 +4,7 @@
 
 #include "activemasternode.h"
 #include "init.h"
+#include "netbase.h"
 #include "validation.h"
 #include "masternode-payments.h"
 #include "masternode-sync.h"
@@ -145,7 +146,9 @@ UniValue masternode(const UniValue& params, bool fHelp)
 
         std::string strAddress = params[1].get_str();
 
-        CService addr = CService(strAddress);
+        CService addr;
+        if (!Lookup(strAddress.c_str(), addr, 0, false))
+            throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Incorrect masternode address %s", strAddress));
 
         // TODO: Pass CConnman instance somehow and don't use global variable.
         CNode *pnode = g_connman->ConnectNode(CAddress(addr, NODE_NETWORK), NULL);
