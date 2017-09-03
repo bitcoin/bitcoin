@@ -394,7 +394,7 @@ private:
     bool fAddressesInitialized;
     CAddrMan addrman;
     CCriticalSection cs_vOneShots;
-    std::vector<std::string> vAddedNodes GUARDED_BY(cs_vAddedNodes);
+    std::deque<std::string> vOneShots GUARDED_BY(cs_vOneShots);
     CCriticalSection cs_vAddedNodes;
     std::vector<std::string> vAddedNodes GUARDED_BY(cs_vAddedNodes);
     mutable CCriticalSection cs_vNodes;
