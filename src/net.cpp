@@ -997,22 +997,54 @@ size_t CConnman::SocketSendData(CNode *pnode) const
     LOCK(pnode->cs_vSend);
     auto it = pnode->vSendMsg.begin();
     size_t nSentSize = 0;
+    size_t send_offset = pnode->nSendOffset;
 
     while (it != pnode->vSendMsg.end()) {
-        const auto &data = *it;
-        assert(data.size() > pnode->nSendOffset);
-        int nBytes = send(pnode->hSocket, reinterpret_cast<const char*>(data.data()) + pnode->nSendOffset, data.size() - pnode->nSendOffset, MSG_NOSIGNAL | MSG_DONTWAIT);
+        assert(it->size() > send_offset);
+        size_t prev_offset = send_offset;
+// TODO: Make this an autoconf check
+#ifndef WIN32
+        static constexpr size_t max_combined_messages = 16;
+        iovec iov[max_combined_messages] = {};
+        msghdr hdr;
+        hdr.msg_name = nullptr;
+        hdr.msg_iov = iov;
+        hdr.msg_iovlen = 0;
+        hdr.msg_control = nullptr;
+        hdr.msg_controllen = 0;
+        hdr.msg_flags = 0;
+        for (auto indexit = it; indexit != pnode->vSendMsg.end(); ++indexit) {
+            iovec& elem = iov[hdr.msg_iovlen];
+            elem.iov_base = indexit->data() + prev_offset;
+            elem.iov_len = indexit->size() - prev_offset;
+            prev_offset = 0;
+            if (++hdr.msg_iovlen == max_combined_messages) {
+                break;
+            }
+        }
+
+        int nBytes = sendmsg(pnode->hSocket, &hdr, MSG_NOSIGNAL | MSG_DONTWAIT);
+#else
+        int nBytes = send(pnode->hSocket, reinterpret_cast<const char*>(it->data()) + send_offset, it->size() - send_offset, MSG_NOSIGNAL | MSG_DONTWAIT);
+#endif
         if (nBytes > 0) {
-            pnode->nLastSend = GetSystemTimeInSeconds();
-            pnode->nSendBytes += nBytes;
-            pnode->nSendOffset += nBytes;
             nSentSize += nBytes;
-            if (pnode->nSendOffset == data.size()) {
-                pnode->nSendOffset = 0;
-                pnode->nSendSize -= data.size();
-                pnode->fPauseSend = pnode->nSendSize > nSendBufferMaxSize;
-                it++;
-            } else {
+            size_t bytes_to_process = nBytes;
+            bool done = false;
+            while (it != pnode->vSendMsg.end() && bytes_to_process > 0) {
+                size_t msg_bytes_needed = it->size() - send_offset;
+                if (msg_bytes_needed > bytes_to_process) {
+                    send_offset += bytes_to_process;
+                    bytes_to_process = 0;
+                    done = true;
+                    break;
+                }
+                bytes_to_process -= msg_bytes_needed;
+                send_offset = 0;
+                ++it;
+            }
+            assert(bytes_to_process == 0);
+            if (done) {
                 // could not send full message; stop sending more
                 break;
             }
@@ -1028,6 +1060,16 @@ size_t CConnman::SocketSendData(CNode *pnode) const
             }
             // couldn't send anything at all
             break;
+        }
+    }
+
+    if (nSentSize) {
+        pnode->nLastSend = GetSystemTimeInSeconds();
+        pnode->nSendBytes += nSentSize;
+        pnode->nSendOffset = send_offset;
+        pnode->nSendSize -= nSentSize;
+        if (it != pnode->vSendMsg.begin()) {
+            pnode->fPauseSend = pnode->nSendSize > nSendBufferMaxSize;
         }
     }
 
