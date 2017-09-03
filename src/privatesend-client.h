@@ -42,7 +42,7 @@ private:
     std::vector<COutPoint> vecOutPointLocked;
 
     int nCachedLastSuccessBlock;
-    int nMinBlockSpacing; //required blocks between mixes
+    int nMinBlocksToWait; // how many blocks to wait after one successful mixing tx in non-multisession mode
 
     // Keep track of current block height
     int nCachedBlockHeight;
@@ -62,6 +62,8 @@ private:
     bool IsDenomSkipped(CAmount nDenomValue) {
         return std::find(vecDenominationsSkipped.begin(), vecDenominationsSkipped.end(), nDenomValue) != vecDenominationsSkipped.end();
     }
+
+    bool WaitForAnotherBlock();
 
     // Make sure we have enough keys since last backup
     bool CheckAutomaticBackup();
@@ -108,7 +110,7 @@ public:
 
     CPrivateSendClient() :
         nCachedLastSuccessBlock(0),
-        nMinBlockSpacing(0),
+        nMinBlocksToWait(1),
         txMyCollateral(CMutableTransaction()),
         nPrivateSendRounds(DEFAULT_PRIVATESEND_ROUNDS),
         nPrivateSendAmount(DEFAULT_PRIVATESEND_AMOUNT),
@@ -122,7 +124,7 @@ public:
 
     void ClearSkippedDenominations() { vecDenominationsSkipped.clear(); }
 
-    void SetMinBlockSpacing(int nMinBlockSpacingIn) { nMinBlockSpacing = nMinBlockSpacingIn; }
+    void SetMinBlocksToWait(int nMinBlocksToWaitIn) { nMinBlocksToWait = nMinBlocksToWaitIn; }
 
     void ResetPool();
 
