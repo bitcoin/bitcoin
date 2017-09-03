@@ -1533,6 +1533,8 @@ UniValue getchaintxstats(const JSONRPCRequest& request)
     ret.push_back(Pair("time", (int64_t)pindex->nTime));
     ret.push_back(Pair("txcount", (int64_t)pindex->nChainTx));
     ret.push_back(Pair("txrate", ((double)nTxDiff) / nTimeDiff));
+    statsClient.gauge("transactions.totalCount", (int64_t)pindex->nChainTx);
+    statsClient.gauge("transactions.txRate", ((double)nTxDiff) / nTimeDiff);
 
     return ret;
 }
