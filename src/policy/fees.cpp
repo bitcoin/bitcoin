@@ -670,7 +670,7 @@ void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
     for (unsigned int i = 1; i <= 1008; i++)
     {
         std::string feeName = "estimates.fee.block" + boost::lexical_cast<std::string>(i);
-        CFeeRate feeEstimate = estimateSmartFee(i, NULL, false);
+        CFeeRate feeEstimate = estimateSmartFee(i, NULL, true);
         if (feeEstimate.GetFeePerK() > 0)
             statsClient.gauge(feeName, feeEstimate.GetFeePerK());
         else
