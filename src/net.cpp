@@ -900,7 +900,7 @@ size_t CConnman::SocketReceiveData(CNode* pnode)
     {
         bool notify = false;
         if (!pnode->ReceiveMsgBytes(pchBuf, nBytes, notify))
-            pnode->CloseSocketDisconnect();
+            pnode->Disconnect();
 
         auto it(pnode->vRecvMsg.begin());
         size_t nSizeAdded = 0;
@@ -941,7 +941,7 @@ size_t CConnman::SocketReceiveData(CNode* pnode)
         if (!pnode->fDisconnect) {
             LogPrint(BCLog::NET, "socket closed\n");
         }
-        pnode->CloseSocketDisconnect();
+        pnode->Disconnect();
     }
     else if (nBytes < 0)
     {
@@ -949,9 +949,8 @@ size_t CConnman::SocketReceiveData(CNode* pnode)
         int nErr = WSAGetLastError();
         if (nErr != WSAEWOULDBLOCK && nErr != WSAEMSGSIZE && nErr != WSAEINTR && nErr != WSAEINPROGRESS)
         {
-            if (!pnode->fDisconnect)
-                LogPrintf("socket recv error %s\n", NetworkErrorString(nErr));
-            pnode->CloseSocketDisconnect();
+            LogPrintf("socket recv error %s\n", NetworkErrorString(nErr));
+            pnode->Disconnect();
         }
     }
     if (nBytes < 0) {
@@ -991,7 +990,7 @@ size_t CConnman::SocketSendData(CNode *pnode) const
                 if (nErr != WSAEWOULDBLOCK && nErr != WSAEMSGSIZE && nErr != WSAEINTR && nErr != WSAEINPROGRESS)
                 {
                     LogPrintf("socket send error %s\n", NetworkErrorString(nErr));
-                    pnode->CloseSocketDisconnect();
+                    pnode->Disconnect();
                 }
             }
             // couldn't send anything at all
