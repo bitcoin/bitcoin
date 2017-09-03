@@ -222,6 +222,8 @@ UniValue getmininginfo(const JSONRPCRequest& request)
     obj.push_back(Pair("networkhashps",    getnetworkhashps(request)));
     obj.push_back(Pair("pooledtx",         (uint64_t)mempool.size()));
     obj.push_back(Pair("chain",            Params().NetworkIDString()));
+    statsClient.gauge("network.hashesPerSecond", getnetworkhashps(request).get_real());
+    statsClient.gauge("network.difficulty", (double)GetDifficulty());
     return obj;
 }
 

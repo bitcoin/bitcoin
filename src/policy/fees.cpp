@@ -13,6 +13,10 @@
 #include "streams.h"
 #include "txmempool.h"
 #include "util.h"
+#include "statsd_client.h"
+#include <boost/lexical_cast.hpp>
+
+statsd::StatsdClient statsClient;
 
 static constexpr double INF_FEERATE = 1e99;
 
@@ -661,6 +665,17 @@ void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
         LogPrint(BCLog::ESTIMATEFEE, "Blockpolicy first recorded height %u\n", firstRecordedHeight);
     }
 
+
+    // emit stats for estimated fees
+    for (unsigned int i = 1; i <= 1008; i++)
+    {
+        std::string feeName = "estimates.fee.block" + boost::lexical_cast<std::string>(i);
+        CFeeRate feeEstimate = estimateSmartFee(i, NULL, false);
+        if (feeEstimate.GetFeePerK() > 0)
+            statsClient.gauge(feeName, feeEstimate.GetFeePerK());
+        else
+            statsClient.gauge(feeName, 0);
+    }
 
     LogPrint(BCLog::ESTIMATEFEE, "Blockpolicy estimates updated by %u of %u block txs, since last block %u of %u tracked, mempool map size %u, max target %u from %s\n",
              countedTxs, entries.size(), trackedTxs, trackedTxs + untrackedTxs, mapMemPoolTxs.size(),

@@ -12,6 +12,7 @@
 #include "bloom.h"
 #include "compat.h"
 #include "hash.h"
+#include "init.h"
 #include "limitedmap.h"
 #include "netaddress.h"
 #include "policy/feerate.h"
@@ -475,7 +476,6 @@ bool IsReachable(enum Network net);
 bool IsReachable(const CNetAddr &addr);
 CAddress GetLocalAddress(const CNetAddr *paddrPeer, ServiceFlags nLocalServices);
 
-
 extern bool fDiscover;
 extern bool fListen;
 extern bool fRelayTxes;
@@ -643,6 +643,7 @@ protected:
     mapMsgCmdSize mapRecvBytesPerMsgCmd;
 
 public:
+
     uint256 hashContinue;
     std::atomic<int> nStartingHeight;
 
@@ -816,6 +817,27 @@ public:
     }
 
     void AskFor(const CInv& inv);
+
+    std::string RejectCodeToString(const char& code)
+    {
+        if (code == 0x01)
+            return "malformed";
+        if (code == 0x10)
+            return "invalid";
+        if (code == 0x11)
+            return "obsolete";
+        if (code == 0x12)
+            return "duplicate";
+        if (code == 0x40)
+            return "nonstandard";
+        if (code == 0x41)
+            return "dust";
+        if (code == 0x42)
+            return "insufficientfee";
+        if (code == 0x43)
+            return "checkpoint";
+        return "";
+    }
 
     void CloseSocketDisconnect();
 
