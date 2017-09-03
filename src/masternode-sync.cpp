@@ -28,7 +28,7 @@ void CMasternodeSync::Reset()
     nRequestedMasternodeAssets = MASTERNODE_SYNC_INITIAL;
     nRequestedMasternodeAttempt = 0;
     nTimeAssetSyncStarted = GetTime();
-    nTimeLastBumped = 0;
+    nTimeLastBumped = GetTime();
     nTimeLastFailure = 0;
 }
 
@@ -44,6 +44,7 @@ std::string CMasternodeSync::GetAssetName()
     switch(nRequestedMasternodeAssets)
     {
         case(MASTERNODE_SYNC_INITIAL):      return "MASTERNODE_SYNC_INITIAL";
+        case(MASTERNODE_SYNC_WAITING):      return "MASTERNODE_SYNC_WAITING";
         case(MASTERNODE_SYNC_LIST):         return "MASTERNODE_SYNC_LIST";
         case(MASTERNODE_SYNC_MNW):          return "MASTERNODE_SYNC_MNW";
         case(MASTERNODE_SYNC_GOVERNANCE):   return "MASTERNODE_SYNC_GOVERNANCE";
@@ -62,6 +63,12 @@ void CMasternodeSync::SwitchToNextAsset()
             break;
         case(MASTERNODE_SYNC_INITIAL):
             ClearFulfilledRequests();
+            nRequestedMasternodeAssets = MASTERNODE_SYNC_WAITING;
+            LogPrintf("CMasternodeSync::SwitchToNextAsset -- Starting %s\n", GetAssetName());
+            break;
+        case(MASTERNODE_SYNC_WAITING):
+            ClearFulfilledRequests();
+            LogPrintf("CMasternodeSync::SwitchToNextAsset -- Completed %s in %llds\n", GetAssetName(), GetTime() - nTimeAssetSyncStarted);
             nRequestedMasternodeAssets = MASTERNODE_SYNC_LIST;
             LogPrintf("CMasternodeSync::SwitchToNextAsset -- Starting %s\n", GetAssetName());
             break;
@@ -101,7 +108,8 @@ void CMasternodeSync::SwitchToNextAsset()
 std::string CMasternodeSync::GetSyncStatus()
 {
     switch (masternodeSync.nRequestedMasternodeAssets) {
-        case MASTERNODE_SYNC_INITIAL:       return _("Synchronization pending...");
+        case MASTERNODE_SYNC_INITIAL:       return _("Synchroning blockchain...");
+        case MASTERNODE_SYNC_WAITING:       return _("Synchronization pending...");
         case MASTERNODE_SYNC_LIST:          return _("Synchronizing masternodes...");
         case MASTERNODE_SYNC_MNW:           return _("Synchronizing masternode payments...");
         case MASTERNODE_SYNC_GOVERNANCE:    return _("Synchronizing governance objects...");
@@ -226,6 +234,22 @@ void CMasternodeSync::ProcessTick()
                 // get current network sporks
                 g_connman->PushMessageWithVersion(pnode, INIT_PROTO_VERSION, NetMsgType::GETSPORKS);
                 LogPrintf("CMasternodeSync::ProcessTick -- nTick %d nRequestedMasternodeAssets %d -- requesting sporks from peer %d\n", nTick, nRequestedMasternodeAssets, pnode->id);
+            }
+
+            // INITIAL TIMEOUT
+
+            if(nRequestedMasternodeAssets == MASTERNODE_SYNC_WAITING) {
+                if(GetTime() - nTimeLastBumped > MASTERNODE_SYNC_TIMEOUT_SECONDS) {
+                    // At this point we know that:
+                    // a) there are peers (because we are looping on at least one of them);
+                    // b) we waited for at least MASTERNODE_SYNC_TIMEOUT_SECONDS since we reached
+                    //    the headers tip the last time (i.e. since we switched from
+                    //     MASTERNODE_SYNC_INITIAL to MASTERNODE_SYNC_WAITING and bumped time);
+                    // c) there were no blocks (NotifyHeaderTip) or headers (AcceptedBlockHeader)
+                    //    for at least MASTERNODE_SYNC_TIMEOUT_SECONDS.
+                    // We must be at the tip already, let's move to the next asset.
+                    SwitchToNextAsset();
+                }
             }
 
             // MNLIST : SYNC MASTERNODE LIST FROM OTHER CONNECTED CLIENTS
@@ -386,15 +410,57 @@ void CMasternodeSync::SendGovernanceSyncRequest(CNode* pnode)
     }
 }
 
-void CMasternodeSync::UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload)
+void CMasternodeSync::AcceptedBlockHeader(const CBlockIndex *pindexNew)
 {
-    if(fDebug) LogPrintf("CMasternodeSync::UpdatedBlockTip -- pindexNew->nHeight: %d fInitialDownload=%d\n", pindexNew->nHeight, fInitialDownload);
-    // nothing to do here if we failed to sync previousely,
-    // just wait till status reset after a cooldown (see ProcessTick)
-    if(IsFailed()) return;
-    // switch from MASTERNODE_SYNC_INITIAL to the next "asset"
-    // the first time we are out of IBD mode (and only the first time)
-    if(!fInitialDownload && !IsBlockchainSynced()) SwitchToNextAsset();
-    // postpone timeout each time new block arrives while we are syncing
-    if(!IsSynced()) BumpAssetLastTime("CMasternodeSync::UpdatedBlockTip");
+    if (fDebug)
+        LogPrintf("CMasternodeSync::AcceptedBlockHeader -- pindexNew->nHeight: %d\n", pindexNew->nHeight);
+
+    if (!IsBlockchainSynced()) {
+        // Postpone timeout each time new block header arrives while we are still syncing blockchain
+        BumpAssetLastTime("CMasternodeSync::AcceptedBlockHeader");
+    }
+}
+
+void CMasternodeSync::NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload)
+{
+    if (fDebug)
+        LogPrintf("CMasternodeSync::NotifyHeaderTip -- pindexNew->nHeight: %d fInitialDownload=%d\n", pindexNew->nHeight, fInitialDownload);
+
+    if (IsFailed() || IsSynced() || !pindexBestHeader)
+        return;
+
+    if (!IsBlockchainSynced()) {
+        // Postpone timeout each time new block arrives while we are still syncing blockchain
+        BumpAssetLastTime("CMasternodeSync::NotifyHeaderTip");
+    }
+
+    if (fInitialDownload) {
+        // no need to check any further while still in IBD mode
+        return;
+    }
+
+    // Note: since we sync headers first, it should be ok to use this
+    static bool fReachedBestHeader = false;
+    bool fReachedBestHeaderNew = pindexNew->GetBlockHash() == pindexBestHeader->GetBlockHash();
+
+    if (fReachedBestHeader && !fReachedBestHeaderNew) {
+        // Switching from true to false means that we previousely stuck syncing headers for some reason,
+        // probably initial timeout was not enough,
+        // because there is no way we can update tip not having best header
+        Reset();
+        fReachedBestHeader = false;
+        return;
+    }
+
+    fReachedBestHeader = fReachedBestHeaderNew;
+
+    if (fDebug)
+        LogPrintf("CMasternodeSync::NotifyHeaderTip -- pindexNew->nHeight: %d pindexBestHeader->nHeight: %d fInitialDownload=%d fReachedBestHeader=%d\n",
+                pindexNew->nHeight, pindexBestHeader->nHeight, fInitialDownload, fReachedBestHeader);
+
+    if (!IsBlockchainSynced() && fReachedBestHeader) {
+        // Reached best header while being in initial mode.
+        // We must be at the tip already, let's move to the next asset.
+        SwitchToNextAsset();
+    }
 }

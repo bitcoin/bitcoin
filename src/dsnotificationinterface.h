@@ -18,6 +18,8 @@ public:
 
 protected:
     // CValidationInterface
+    void AcceptedBlockHeader(const CBlockIndex *pindexNew) override;
+    void NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload) override;
     void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) override;
     void SyncTransaction(const CTransaction &tx, const CBlock *pblock) override;
 
