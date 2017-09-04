@@ -67,7 +67,7 @@ UniValue getinfo(const JSONRPCRequest& request)
             "  \"proxy\": \"host:port\",       (string, optional) the proxy used by the server\n"
             "  \"difficulty\": xxxxxx,       (numeric) the current difficulty\n"
             "  \"testnet\": true|false,      (boolean) if the server is using testnet or not\n")
-            + (fParticlWallet ?
+            + (fParticlMode ?
             "  \"keypoololdest\": xxxxxx,    (numeric) the timestamp (seconds since Unix epoch) of the oldest account in the wallet\n"
             "  \"keypoolsize\": xxxx,        (numeric) the total number of keys in the active accounts\n"
             :
@@ -131,10 +131,9 @@ UniValue getinfo(const JSONRPCRequest& request)
     obj.push_back(Pair("testnet",       Params().NetworkIDString() == CBaseChainParams::TESTNET));
 #ifdef ENABLE_WALLET
     if (pwallet) {
-        
-        if (fParticlWallet)
+        if (IsHDWallet(pwallet))
         {
-            CHDWallet *phdw = (CHDWallet*)pwallet;
+            CHDWallet *phdw = GetHDWallet(pwallet);
             obj.pushKV("keypoololdest", phdw->GetOldestActiveAccountTime());
             obj.pushKV("keypoolsize",   phdw->CountActiveAccountKeys());
         } else

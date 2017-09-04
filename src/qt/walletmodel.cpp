@@ -82,25 +82,6 @@ CAmount WalletModel::getBalance(const CCoinControl *coinControl) const
 {
     if (coinControl)
     {
-    /* [rmblk]
-    // leave <<<<<<< to prevent accidental commits
-<<<<<<< HEAD
-        CAmount nBalance = 0;
-        
-        if (coinControl->nCoinType == OUTPUT_STANDARD)
-        {
-            std::vector<COutput> vCoins;
-            wallet->AvailableCoins(vCoins, true, coinControl);
-            for (const auto &out : vCoins)
-                if (out.fSpendable)
-                    nBalance += out.tx->tx->vpout[out.i]->GetValue();
-        };
-        
-        return nBalance;
-    };
-=======
->>>>>>> v0.15.0rc2
-    [/rmblk]*/
         return wallet->GetAvailableBalance(coinControl);
     }
 

@@ -585,8 +585,7 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
         }
     }
 
-
-    if (fParticlWallet)
+    if (IsHDWallet(pwallet))
     {
         JSONRPCRequest newRequest;
         newRequest.fHelp = false;

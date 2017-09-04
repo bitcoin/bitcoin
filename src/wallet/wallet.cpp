@@ -4512,7 +4512,7 @@ int CMerkleTx::GetBlocksToMaturity() const
     if (!(IsCoinBase() || IsCoinStake()))
         return 0;
     
-    if (fParticlWallet && (chainActive.Height() < COINBASE_MATURITY * 2))
+    if (fParticlMode && (chainActive.Height() < COINBASE_MATURITY * 2))
     {
         BlockMap::iterator mi = mapBlockIndex.find(hashBlock);
         if (mi == mapBlockIndex.end())

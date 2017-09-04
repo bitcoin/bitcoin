@@ -46,27 +46,7 @@ public:
     
     uint8_t nType = OUTPUT_STANDARD;
     secp256k1_pedersen_commitment commitment;
-    
 
-/* < HEAD
-    //! version of the CTransaction; accesses to this value should probably check for nHeight as well,
-    //! as new tx version will probably only be introduced at certain heights
-    int nVersion;
-
-    void FromTx(const CTransaction &tx, int nHeightIn) {
-        fCoinBase = tx.IsCoinBase() || tx.IsCoinStake(); // mark to check COINBASE_MATURITY
-        vout = tx.vout;
-        vpout = tx.vpout;
-        nHeight = nHeightIn;
-        nVersion = tx.nVersion;
-        ClearUnspendable();
-    }
-
-    //! construct a CCoins from a CTransaction, at a given height
-    CCoins(const CTransaction &tx, int nHeightIn) {
-        FromTx(tx, nHeightIn);
-    }
-= [/rmblk] */
     //! construct a Coin from a CTxOut and height/coinbase information.
     Coin(CTxOut&& outIn, int nHeightIn, bool fCoinBaseIn) : out(std::move(outIn)), fCoinBase(fCoinBaseIn), nHeight(nHeightIn) {}
     Coin(const CTxOut& outIn, int nHeightIn, bool fCoinBaseIn) : out(outIn), fCoinBase(fCoinBaseIn),nHeight(nHeightIn) {}

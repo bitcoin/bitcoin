@@ -37,7 +37,6 @@ extern bool fParticlMode;
 BasicTestingSetup::BasicTestingSetup(const std::string& chainName, bool fParticlModeIn)
 {
     fParticlMode = fParticlModeIn;
-    
 
     SHA256AutoDetect();
     RandomInit();

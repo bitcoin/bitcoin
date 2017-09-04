@@ -1059,7 +1059,6 @@ bool AppInitParameterInteraction()
         nScriptCheckThreads = MAX_SCRIPTCHECK_THREADS;
     */
     
-    
     // block pruning; get the amount of disk space (in MiB) to allot for block & undo files
     int64_t nPruneArg = gArgs.GetArg("-prune", 0);
     if (nPruneArg < 0) {
@@ -1076,6 +1075,13 @@ bool AppInitParameterInteraction()
         }
         LogPrintf("Prune configured to target %uMiB on disk for block and undo files.\n", nPruneTarget / 1024 / 1024);
         fPruneMode = true;
+    }
+    
+    // TODO: Check pruning
+    if (fPruneMode)
+    {
+        LogPrintf("Block pruning disabled.  Todo.\n");
+        fPruneMode = false;
     }
 
     RegisterAllCoreRPCCommands(tableRPC);
@@ -1751,6 +1757,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
 #ifdef ENABLE_WALLET
     assert(vpwallets.size() > 0);
+    if (fParticlMode) // SMSG breaks functional tests with services flag, see version msg
     SecureMsgStart(vpwallets[0], !gArgs.GetBoolArg("-smsg", true), gArgs.GetBoolArg("-smsgscanchain", false));
 #endif
 

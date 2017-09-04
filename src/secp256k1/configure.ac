@@ -112,7 +112,7 @@ AC_ARG_ENABLE(experimental,
 AC_ARG_ENABLE(exhaustive_tests,
     AS_HELP_STRING([--enable-exhaustive-tests],[compile exhaustive tests (default is yes)]),
     [use_exhaustive_tests=$enableval],
-    [use_exhaustive_tests=yes])
+    [use_exhaustive_tests=no])
 
 AC_ARG_ENABLE(endomorphism,
     AS_HELP_STRING([--enable-endomorphism],[enable endomorphism (default is no)]),

@@ -36,7 +36,7 @@ HDWalletTestingSetup::~HDWalletTestingSetup()
 
     bitdb.Flush(true);
     bitdb.Reset();
-    
+
     mapStakeSeen.clear();
     listStakeSeen.clear();
     vpwallets.clear();
