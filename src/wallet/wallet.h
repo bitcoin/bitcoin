@@ -787,13 +787,13 @@ public:
         pwalletdbEncryption = nullptr;
     }
 
-    void SetNull()
+    void SetNull() NO_THREAD_SAFETY_ANALYSIS
     {
         nWalletVersion = FEATURE_BASE;
         nWalletMaxVersion = FEATURE_BASE;
         nMasterKeyMaxID = 0;
         pwalletdbEncryption = nullptr;
-        nOrderPosNext = 0;
+        nOrderPosNext = 0; // NO_THREAD_SAFETY_ANALYSIS
         nAccountingEntryNumber = 0;
         nNextResend = 0;
         nLastResend = 0;
@@ -812,7 +812,7 @@ public:
     typedef std::multimap<int64_t, TxPair > TxItems;
     TxItems wtxOrdered;
 
-    int64_t nOrderPosNext;
+    int64_t nOrderPosNext GUARDED_BY(cs_wallet);
     uint64_t nAccountingEntryNumber;
     std::map<uint256, int> mapRequestCount GUARDED_BY(cs_wallet);
 

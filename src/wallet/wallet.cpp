@@ -769,7 +769,7 @@ DBErrors CWallet::ReorderTransactions()
     return DB_LOAD_OK;
 }
 
-int64_t CWallet::IncOrderPosNext(CWalletDB *pwalletdb)
+int64_t CWallet::IncOrderPosNext(CWalletDB *pwalletdb) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
 {
     AssertLockHeld(cs_wallet); // nOrderPosNext
     int64_t nRet = nOrderPosNext++;
@@ -781,7 +781,7 @@ int64_t CWallet::IncOrderPosNext(CWalletDB *pwalletdb)
     return nRet;
 }
 
-bool CWallet::AccountMove(std::string strFrom, std::string strTo, CAmount nAmount, std::string strComment)
+bool CWallet::AccountMove(std::string strFrom, std::string strTo, CAmount nAmount, std::string strComment) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
 {
     CWalletDB walletdb(*dbw);
     if (!walletdb.TxnBegin())
