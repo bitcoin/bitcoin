@@ -513,15 +513,47 @@
         <translation>Bevestig</translation>
     </message>
     <message>
+        <source>yes</source>
+        <translation>ja</translation>
+    </message>
+    <message>
+        <source>no</source>
+        <translation>nee</translation>
+    </message>
+    <message>
+        <source>Can vary +/- %1 satoshi(s) per input.</source>
+        <translation>Kan verskil met +/- %1 satoshi(s) per invoer.</translation>
+    </message>
+    <message>
         <source>(no label)</source>
         <translation>(geen etiket)</translation>
     </message>
-    </context>
+    <message>
+        <source>change from %1 (%2)</source>
+        <translation>verander van %1 (%2)</translation>
+    </message>
+    <message>
+        <source>(change)</source>
+        <translation>(verander)</translation>
+    </message>
+</context>
 <context>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
         <translation>Wysig Adres</translation>
+    </message>
+    <message>
+        <source>&amp;Label</source>
+        <translation>&amp;Etiket</translation>
+    </message>
+    <message>
+        <source>&amp;Address</source>
+        <translation>&amp;Adres</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Kon beursie nie oopsluit nie.</translation>
     </message>
     </context>
 <context>
@@ -565,6 +597,10 @@
         <translation>Welkom by %1.</translation>
     </message>
     <message>
+        <source>Error: Specified data directory "%1" cannot be created.</source>
+        <translation>Fout: Gespesifiseerde dataleêr "%1" kon nie geskep word nie.</translation>
+    </message>
+    <message>
         <source>Error</source>
         <translation>Fout</translation>
     </message>
@@ -602,8 +638,28 @@
         <translation>Alle kliëntopsies na verstek terugstel.</translation>
     </message>
     <message>
+        <source>&amp;Network</source>
+        <translation>&amp;Netwerk</translation>
+    </message>
+    <message>
+        <source>W&amp;allet</source>
+        <translation>B&amp;eursie</translation>
+    </message>
+    <message>
         <source>Expert</source>
         <translation>Kenner</translation>
+    </message>
+    <message>
+        <source>Enable coin &amp;control features</source>
+        <translation>Bemagtig munt &amp;beheer funksies.</translation>
+    </message>
+    <message>
+        <source>&amp;Port:</source>
+        <translation>&amp;Poort:</translation>
+    </message>
+    <message>
+        <source>IPv4</source>
+        <translation>IPv4</translation>
     </message>
     <message>
         <source>IPv6</source>
@@ -612,6 +668,14 @@
     <message>
         <source>Tor</source>
         <translation>Tor</translation>
+    </message>
+    <message>
+        <source>&amp;OK</source>
+        <translation>&amp;OK</translation>
+    </message>
+    <message>
+        <source>&amp;Cancel</source>
+        <translation>&amp;Kanselleer</translation>
     </message>
     <message>
         <source>default</source>

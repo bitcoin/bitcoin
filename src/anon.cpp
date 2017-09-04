@@ -139,8 +139,8 @@ bool VerifyMLSAG(const CTransaction &tx, CValidationState &state)
             
             if (!setHaveKI.insert(ki).second)
             {
-                if (fDebug)
-                    LogPrint("rct", "%s: Duplicate keyimage detected in txn %s.\n", __func__,
+                if (LogAcceptCategory(BCLog::RINGCT))
+                    LogPrintf("%s: Duplicate keyimage detected in txn %s.\n", __func__,
                         HexStr(ki.begin(), ki.end()));
                 return state.DoS(100, false, REJECT_INVALID, "bad-anonin-dup-ki");
             };
@@ -148,8 +148,8 @@ bool VerifyMLSAG(const CTransaction &tx, CValidationState &state)
             if (mempool.HaveKeyImage(ki, txhashKI)
                 && txhashKI != txhash)
             {
-                if (fDebug)
-                    LogPrint("rct", "%s: Duplicate keyimage detected in mempool %s, used in %s.\n", __func__,
+                if (LogAcceptCategory(BCLog::RINGCT))
+                    LogPrintf("%s: Duplicate keyimage detected in mempool %s, used in %s.\n", __func__,
                         HexStr(ki.begin(), ki.end()), txhashKI.ToString());
                 return state.DoS(100, false, REJECT_INVALID, "bad-anonin-dup-ki");
             };
@@ -157,8 +157,8 @@ bool VerifyMLSAG(const CTransaction &tx, CValidationState &state)
             if (pblocktree->ReadRCTKeyImage(ki, txhashKI)
                 && txhashKI != txhash)
             {
-                if (fDebug)
-                    LogPrint("rct", "%s: Duplicate keyimage detected %s, used in %s.\n", __func__,
+                if (LogAcceptCategory(BCLog::RINGCT))
+                    LogPrintf("%s: Duplicate keyimage detected %s, used in %s.\n", __func__,
                         HexStr(ki.begin(), ki.end()), txhashKI.ToString());
                 return state.DoS(100, false, REJECT_INVALID, "bad-anonin-dup-ki");
             };
@@ -289,7 +289,7 @@ bool AllAnonOutputsUnknown(const CTransaction &tx, CValidationState &state)
 
 bool RollBackRCTIndex(int64_t nLastValidRCTOutput, std::set<CCmpPubKey> &setKi)
 {
-    LogPrint("rct", "%s: Last valid %d, num ki %d\n", __func__, nLastValidRCTOutput, setKi.size());
+    LogPrint(BCLog::RINGCT, "%s: Last valid %d, num ki %d\n", __func__, nLastValidRCTOutput, setKi.size());
     // This should hardly happen, if ever
     
     AssertLockHeld(cs_main);

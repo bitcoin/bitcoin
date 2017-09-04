@@ -8,6 +8,24 @@
 #include "script/interpreter.h"
 #include "util.h"
 
+
+bool ExtractIndexInfo(const CScript *pScript, int &scriptType, std::vector<uint8_t> &hashBytes)
+{
+    scriptType = 0;
+    if (pScript->IsPayToScriptHash())
+    {
+        hashBytes.assign(pScript->begin()+2, pScript->begin()+22);
+        scriptType = 2;
+    } else
+    if (pScript->IsPayToPublicKeyHash())
+    {
+        hashBytes.assign(pScript->begin()+3, pScript->begin()+23);
+        scriptType = 1;
+    };
+    
+    return true;
+};
+
 bool ExtractIndexInfo(const CTxOutBase *out, int &scriptType, std::vector<uint8_t> &hashBytes, CAmount &nValue, const CScript *&pScript)
 {
     if (!(pScript = out->GetPScriptPubKey()))
@@ -23,17 +41,7 @@ bool ExtractIndexInfo(const CTxOutBase *out, int &scriptType, std::vector<uint8_
         && GetNonCoinstakeScriptPath(*pScript, tmpScript))
         pScript = &tmpScript;
     
-    scriptType = 0;
-    if (pScript->IsPayToScriptHash())
-    {
-        hashBytes.assign(pScript->begin()+2, pScript->begin()+22);
-        scriptType = 2;
-    } else
-    if (pScript->IsPayToPublicKeyHash())
-    {
-        hashBytes.assign(pScript->begin()+3, pScript->begin()+23);
-        scriptType = 1;
-    };
+    ExtractIndexInfo(pScript, scriptType, hashBytes);
     
     // Reset if HasIsCoinstakeOp
     pScript = out->GetPScriptPubKey();

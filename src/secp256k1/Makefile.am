@@ -87,13 +87,29 @@ bench_internal_LDADD = $(SECP_LIBS) $(COMMON_LIB)
 bench_internal_CPPFLAGS = -DSECP256K1_BUILD $(SECP_INCLUDES)
 endif
 
+TESTS =
 if USE_TESTS
 noinst_PROGRAMS += tests
 tests_SOURCES = src/tests.c
-tests_CPPFLAGS = -DSECP256K1_BUILD -DVERIFY -I$(top_srcdir)/src -I$(top_srcdir)/include $(SECP_INCLUDES) $(SECP_TEST_INCLUDES)
+tests_CPPFLAGS = -DSECP256K1_BUILD -I$(top_srcdir)/src -I$(top_srcdir)/include $(SECP_INCLUDES) $(SECP_TEST_INCLUDES)
+if !ENABLE_COVERAGE
+tests_CPPFLAGS += -DVERIFY
+endif
 tests_LDADD = $(SECP_LIBS) $(SECP_TEST_LIBS) $(COMMON_LIB)
 tests_LDFLAGS = -static
-TESTS = tests
+TESTS += tests
+endif
+
+if USE_EXHAUSTIVE_TESTS
+noinst_PROGRAMS += exhaustive_tests
+exhaustive_tests_SOURCES = src/tests_exhaustive.c
+exhaustive_tests_CPPFLAGS = -DSECP256K1_BUILD -I$(top_srcdir)/src $(SECP_INCLUDES)
+if !ENABLE_COVERAGE
+exhaustive_tests_CPPFLAGS += -DVERIFY
+endif
+exhaustive_tests_LDADD = $(SECP_LIBS)
+exhaustive_tests_LDFLAGS = -static
+TESTS += exhaustive_tests
 endif
 
 JAVAROOT=src/java

@@ -11,7 +11,7 @@
 
 /**
  * GetTimeMicros() and GetTimeMillis() both return the system time, but in
- * different units. GetTime() returns the sytem time in seconds, but also
+ * different units. GetTime() returns the system time in seconds, but also
  * supports mocktime, where the time can be specified by the user, eg for
  * testing (eg with the setmocktime rpc, or -mocktime argument).
  *
@@ -23,8 +23,8 @@ int64_t GetTime();
 int64_t GetTimeMillis();
 int64_t GetTimeMicros();
 int64_t GetSystemTimeInSeconds(); // Like GetTime(), but not mockable
-int64_t GetLogTimeMicros();
 void SetMockTime(int64_t nMockTimeIn);
+int64_t GetMockTime();
 void MilliSleep(int64_t n);
 
 std::string DateTimeStrFormat(const char* pszFormat, int64_t nTime);

@@ -13,8 +13,6 @@
 
 #include <assert.h>
 
-#include <boost/assign/list_of.hpp>
-
 #include "chainparamsseeds.h"
 #include "chainparamsimport.h"
 
@@ -40,7 +38,7 @@ int64_t CChainParams::GetProofOfStakeReward(const CBlockIndex *pindexPrev, int64
 
     nSubsidy = (pindexPrev->nMoneySupply / COIN) * GetCoinYearReward(pindexPrev->nTime) / (365 * 24 * (60 * 60 / nTargetSpacing));
 
-    if (fDebug && GetBoolArg("-printcreation", false))
+    if (fDebug && gArgs.GetBoolArg("-printcreation", false))
         LogPrintf("GetProofOfStakeReward(): create=%s\n", FormatMoney(nSubsidy).c_str());
 
     return nSubsidy + nFees;
@@ -61,13 +59,6 @@ bool CChainParams::CheckImportCoinbase(int nHeight, uint256 &hash) const
     return error("%s - Unknown height.", __func__);
 };
 
-uint32_t CChainParams::GetStakeMinAge(int nHeight) const
-{
-    // StakeMinAge is not checked directly, nStakeMinConfirmations is checked in CheckProofOfStake
-    if ((uint32_t)nHeight <= nStakeMinConfirmations) // smooth start for the chain. 
-        return nHeight * nTargetSpacing;
-    return nStakeMinAge;
-};
 
 const DevFundSettings *CChainParams::GetDevFundSettings(int64_t nTime) const
 {
@@ -77,7 +68,7 @@ const DevFundSettings *CChainParams::GetDevFundSettings(int64_t nTime) const
             return &vDevFundSettings[i].second;
     };
 
-    return NULL;
+    return nullptr;
 };
 
 bool CChainParams::IsBech32Prefix(const std::vector<unsigned char> &vchPrefixIn) const
@@ -426,6 +417,11 @@ static CBlock CreateGenesisBlockMainNet(uint32_t nTime, uint32_t nNonce, uint32_
 }
 
 
+void CChainParams::UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout)
+{
+    consensus.vDeployments[d].nStartTime = nStartTime;
+    consensus.vDeployments[d].nTimeout = nTimeout;
+}
 
 /**
  * Main network
@@ -496,44 +492,39 @@ public:
         nStakeMinConfirmations = 225;   // 225 * 2 minutes
         nTargetSpacing = 120;           // 2 minutes
         nTargetTimespan = 24 * 60;      // 24 mins
-        nStakeMinAge = (nStakeMinConfirmations+1) * nTargetSpacing;
         
         AddImportHashesMain(vImportedCoinbaseTxns);
         SetLastImportHeight();
         
         nPruneAfterHeight = 100000;
         
-        
         genesis = CreateGenesisBlockMainNet(1500296400, 31429, 0x1f00ffff);
         consensus.hashGenesisBlock = genesis.GetHash();
-        
+
         assert(consensus.hashGenesisBlock == uint256S("0x0000ee0784c195317ac95623e22fddb8c7b8825dc3998e0bb924d66866eccf4c"));
         assert(genesis.hashMerkleRoot == uint256S("0xc95fb023cf4bc02ddfed1a59e2b2f53edd1a726683209e2780332edf554f1e3e"));
         assert(genesis.hashWitnessMerkleRoot == uint256S("0x619e94a7f9f04c8a1d018eb8bcd9c42d3c23171ebed8f351872256e36959d66c"));
 
         // Note that of those with the service bits flag, most only support a subset of possible options
-        vSeeds.push_back(CDNSSeedData("mainnet-seed.particl.io",  "mainnet-seed.particl.io", true));
-        vSeeds.push_back(CDNSSeedData("dnsseed-mainnet.particl.io",  "dnsseed-mainnet.particl.io", true));
-        vSeeds.push_back(CDNSSeedData("mainnet.particl.io",  "mainnet.particl.io", true));
+        vSeeds.emplace_back("mainnet-seed.particl.io", true);
+        vSeeds.emplace_back("dnsseed-mainnet.particl.io", true);
+        vSeeds.emplace_back("mainnet.particl.io", true);
         
         
         vDevFundSettings.push_back(std::make_pair(0, DevFundSettings("RJAPhgckEgRGVPZa9WoGSWW24spskSfLTQ", 10, 60)));
-        
-        
 
-        base58Prefixes[PUBKEY_ADDRESS]     = std::vector<unsigned char>(1,56); // P
-        base58Prefixes[SCRIPT_ADDRESS]     = std::vector<unsigned char>(1,60);
-        base58Prefixes[SECRET_KEY]         = std::vector<unsigned char>(1,108);
-        base58Prefixes[EXT_PUBLIC_KEY]     = boost::assign::list_of(0x69)(0x6e)(0x82)(0xd1).convert_to_container<std::vector<unsigned char> >(); // PPAR
-        base58Prefixes[EXT_SECRET_KEY]     = boost::assign::list_of(0x8f)(0x1d)(0xae)(0xb8).convert_to_container<std::vector<unsigned char> >(); // XPAR
-        base58Prefixes[STEALTH_ADDRESS]    = std::vector<unsigned char>(1,20);
-        base58Prefixes[EXT_KEY_HASH]       = std::vector<unsigned char>(1,75); // X
-        base58Prefixes[EXT_ACC_HASH]       = std::vector<unsigned char>(1,23); // A
-        base58Prefixes[EXT_PUBLIC_KEY_BTC] = boost::assign::list_of(0x04)(0x88)(0xB2)(0x1E).convert_to_container<std::vector<unsigned char> >(); // xpub
-        base58Prefixes[EXT_SECRET_KEY_BTC] = boost::assign::list_of(0x04)(0x88)(0xAD)(0xE4).convert_to_container<std::vector<unsigned char> >(); // xprv
-        base58Prefixes[EXT_PUBLIC_KEY_SDC] = boost::assign::list_of(0xEE)(0x80)(0x28)(0x6A).convert_to_container<std::vector<unsigned char> >();
-        base58Prefixes[EXT_SECRET_KEY_SDC] = boost::assign::list_of(0xEE)(0x80)(0x31)(0xE8).convert_to_container<std::vector<unsigned char> >();
-        
+        base58Prefixes[PUBKEY_ADDRESS]     = {0x38}; // P
+        base58Prefixes[SCRIPT_ADDRESS]     = {0x3c};
+        base58Prefixes[SECRET_KEY]         = {0x6c};
+        base58Prefixes[EXT_PUBLIC_KEY]     = {0x69, 0x6e, 0x82, 0xd1}; // PPAR
+        base58Prefixes[EXT_SECRET_KEY]     = {0x8f, 0x1d, 0xae, 0xb8}; // XPAR
+        base58Prefixes[STEALTH_ADDRESS]    = {0x14};
+        base58Prefixes[EXT_KEY_HASH]       = {0x4b}; // X
+        base58Prefixes[EXT_ACC_HASH]       = {0x17}; // A
+        base58Prefixes[EXT_PUBLIC_KEY_BTC] = {0x04, 0x88, 0xB2, 0x1E}; // xpub
+        base58Prefixes[EXT_SECRET_KEY_BTC] = {0x04, 0x88, 0xAD, 0xE4}; // xprv
+        base58Prefixes[EXT_PUBLIC_KEY_SDC] = {0xEE, 0x80, 0x28, 0x6A};
+        base58Prefixes[EXT_SECRET_KEY_SDC] = {0xEE, 0x80, 0x31, 0xE8};
         
         bech32Prefixes[PUBKEY_ADDRESS].assign   ("ph","ph"+2);
         bech32Prefixes[SCRIPT_ADDRESS].assign   ("pr","pr"+2);
@@ -543,28 +534,28 @@ public:
         bech32Prefixes[STEALTH_ADDRESS].assign  ("ps","ps"+2);
         bech32Prefixes[EXT_KEY_HASH].assign     ("pek","pek"+3);
         bech32Prefixes[EXT_KEY_HASH].assign     ("pea","pea"+3);
-        
 
         vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_main, pnSeed6_main + ARRAYLEN(pnSeed6_main));
 
-        fMiningRequiresPeers = true;
         fDefaultConsistencyChecks = false;
         fRequireStandard = true;
         fMineBlocksOnDemand = false;
         
         
         checkpointData = (CCheckpointData) {
-            boost::assign::map_list_of
-            ( 5000,     uint256S("0xe786020ab94bc5461a07d744f3631a811b4ebf424fceda12274f2321883713f4"))
-            ( 15000,    uint256S("0xafc73ac299f2e6dd309077d230fccef547b9fc24379c1bf324dd3683b13c61c3"))
+            {
+                { 5000,     uint256S("0xe786020ab94bc5461a07d744f3631a811b4ebf424fceda12274f2321883713f4")},
+                { 15000,    uint256S("0xafc73ac299f2e6dd309077d230fccef547b9fc24379c1bf324dd3683b13c61c3")},
+                { 30000,    uint256S("0x35d95c12799323d7b418fd64df9d88ef67ef27f057d54033b5b2f38a5ecaacbf")},
+            }
         };
         /*
         chainTxData = ChainTxData{
-            // Data as of block 00000000000000000166d612d5595e2b1cd88d71d695fc580af64d8da8658c23 (height 446482).
-            1483472411, // * UNIX timestamp of last known number of transactions
-            184495391,  // * total number of transactions between genesis and that timestamp
+            // Data as of block 000000000000000000d97e53664d17967bd4ee50b23abb92e54a34eb222d15ae (height 478913).
+            1501801925, // * UNIX timestamp of last known number of transactions
+            243756039,  // * total number of transactions between genesis and that timestamp
                         //   (the tx=... number in the SetBestChain debug.log lines)
-            3.2         // * estimated number of transactions per second after that timestamp
+            3.1         // * estimated number of transactions per second after that timestamp
         };
         */
     }
@@ -582,7 +573,6 @@ public:
         consensus.hashGenesisBlock = genesis.GetHash();
     }
 };
-static CMainParams mainParams;
 
 /**
  * Testnet (v3)
@@ -638,7 +628,6 @@ public:
         nStakeMinConfirmations = 225;   // 225 * 2 minutes
         nTargetSpacing = 120;           // 2 minutes
         nTargetTimespan = 24 * 60;      // 24 mins
-        nStakeMinAge = (nStakeMinConfirmations+1) * nTargetSpacing;
         
         
         AddImportHashesTest(vImportedCoinbaseTxns);
@@ -657,26 +646,25 @@ public:
         vFixedSeeds.clear();
         vSeeds.clear();
         // nodes with support for servicebits filtering should be at the top
-        vSeeds.push_back(CDNSSeedData("testnet-seed.particl.io",  "testnet-seed.particl.io", true));
-        vSeeds.push_back(CDNSSeedData("dnsseed-testnet.particl.io",  "dnsseed-testnet.particl.io", true));
+        vSeeds.emplace_back("testnet-seed.particl.io", true);
+        vSeeds.emplace_back("dnsseed-testnet.particl.io", true);
         
         
         vDevFundSettings.push_back(std::make_pair(0, DevFundSettings("rTvv9vsbu269mjYYEecPYinDG8Bt7D86qD", 10, 60)));
         
         
-        base58Prefixes[PUBKEY_ADDRESS]     = std::vector<unsigned char>(1,118); // p
-        base58Prefixes[SCRIPT_ADDRESS]     = std::vector<unsigned char>(1,122);
-        base58Prefixes[SECRET_KEY]         = std::vector<unsigned char>(1,46);
-        
-        base58Prefixes[EXT_PUBLIC_KEY]     = boost::assign::list_of(0xe1)(0x42)(0x78)(0x00).convert_to_container<std::vector<unsigned char> >(); // ppar
-        base58Prefixes[EXT_SECRET_KEY]     = boost::assign::list_of(0x04)(0x88)(0x94)(0x78).convert_to_container<std::vector<unsigned char> >(); // xpar
-        base58Prefixes[STEALTH_ADDRESS]    = std::vector<unsigned char>(1,21); // T
-        base58Prefixes[EXT_KEY_HASH]       = std::vector<unsigned char>(1,137); // x
-        base58Prefixes[EXT_ACC_HASH]       = std::vector<unsigned char>(1,83);  // a
-        base58Prefixes[EXT_PUBLIC_KEY_BTC] = boost::assign::list_of(0x04)(0x35)(0x87)(0xCF).convert_to_container<std::vector<unsigned char> >(); // tpub
-        base58Prefixes[EXT_SECRET_KEY_BTC] = boost::assign::list_of(0x04)(0x35)(0x83)(0x94).convert_to_container<std::vector<unsigned char> >(); // tprv
-        base58Prefixes[EXT_PUBLIC_KEY_SDC] = boost::assign::list_of(0x76)(0xC0)(0xFD)(0xFB).convert_to_container<std::vector<unsigned char> >();
-        base58Prefixes[EXT_SECRET_KEY_SDC] = boost::assign::list_of(0x76)(0xC1)(0x07)(0x7A).convert_to_container<std::vector<unsigned char> >();
+        base58Prefixes[PUBKEY_ADDRESS]     = {118}; // p
+        base58Prefixes[SCRIPT_ADDRESS]     = {122};
+        base58Prefixes[SECRET_KEY]         = {46};
+        base58Prefixes[EXT_PUBLIC_KEY]     = {0xe1, 0x42, 0x78, 0x00}; // ppar
+        base58Prefixes[EXT_SECRET_KEY]     = {0x04, 0x88, 0x94, 0x78}; // xpar
+        base58Prefixes[STEALTH_ADDRESS]    = {21}; // T
+        base58Prefixes[EXT_KEY_HASH]       = {137}; // x
+        base58Prefixes[EXT_ACC_HASH]       = {83};  // a
+        base58Prefixes[EXT_PUBLIC_KEY_BTC] = {0x04, 0x35, 0x87, 0xCF}; // tpub
+        base58Prefixes[EXT_SECRET_KEY_BTC] = {0x04, 0x35, 0x83, 0x94}; // tprv
+        base58Prefixes[EXT_PUBLIC_KEY_SDC] = {0x76, 0xC0, 0xFD, 0xFB};
+        base58Prefixes[EXT_SECRET_KEY_SDC] = {0x76, 0xC1, 0x07, 0x7A};
         
         bech32Prefixes[PUBKEY_ADDRESS].assign   ("tph","tph"+3);
         bech32Prefixes[SCRIPT_ADDRESS].assign   ("tpr","tpr"+3);
@@ -690,28 +678,27 @@ public:
 
         vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_test, pnSeed6_test + ARRAYLEN(pnSeed6_test));
 
-        fMiningRequiresPeers = true;
         fDefaultConsistencyChecks = false;
         fRequireStandard = false;
         fMineBlocksOnDemand = false;
 
         /*
         checkpointData = (CCheckpointData) {
-            boost::assign::map_list_of
-            ( 546, uint256S("000000002a936ca763904c3c35fce2f3556c559c0214345d31b1bcebf76acb70")),
+            {
+                {546, uint256S("000000002a936ca763904c3c35fce2f3556c559c0214345d31b1bcebf76acb70")},
+            }
         };
 
         chainTxData = ChainTxData{
-            // Data as of block 00000000c2872f8f8a8935c8e3c5862be9038c97d4de2cf37ed496991166928a (height 1063660)
-            1483546230,
-            12834668,
+            // Data as of block 00000000000001c200b9790dc637d3bb141fe77d155b966ed775b17e109f7c6c (height 1156179)
+            1501802953,
+            14706531,
             0.15
         };
         */
 
     }
 };
-static CTestNetParams testNetParams;
 
 /**
  * Regression test
@@ -764,7 +751,6 @@ public:
         nStakeMinConfirmations = 12;
         nTargetSpacing = 5;             // 5 seconds
         nTargetTimespan = 16 * 60;      // 16 mins
-        nStakeMinAge = (nStakeMinConfirmations+1) * nTargetSpacing;
         
         SetLastImportHeight();
         
@@ -781,29 +767,28 @@ public:
         vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.
         vSeeds.clear();      //!< Regtest mode doesn't have any DNS seeds.
 
-        fMiningRequiresPeers = false;
         fDefaultConsistencyChecks = true;
         fRequireStandard = false;
         fMineBlocksOnDemand = true;
 
-        checkpointData = (CCheckpointData){
-            boost::assign::map_list_of
-            ( 0, uint256S("0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206"))
+        checkpointData = (CCheckpointData) {
+            {
+                {0, uint256S("0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206")},
+            }
         };
         
-        base58Prefixes[PUBKEY_ADDRESS]     = std::vector<unsigned char>(1,118); // p
-        base58Prefixes[SCRIPT_ADDRESS]     = std::vector<unsigned char>(1,122);
-        base58Prefixes[SECRET_KEY]         = std::vector<unsigned char>(1,46);
-        
-        base58Prefixes[EXT_PUBLIC_KEY]     = boost::assign::list_of(0xe1)(0x42)(0x78)(0x00).convert_to_container<std::vector<unsigned char> >(); // ppar
-        base58Prefixes[EXT_SECRET_KEY]     = boost::assign::list_of(0x04)(0x88)(0x94)(0x78).convert_to_container<std::vector<unsigned char> >(); // xpar
-        base58Prefixes[STEALTH_ADDRESS]    = std::vector<unsigned char>(1,21); // T
-        base58Prefixes[EXT_KEY_HASH]       = std::vector<unsigned char>(1,137); // x
-        base58Prefixes[EXT_ACC_HASH]       = std::vector<unsigned char>(1,83);  // a
-        base58Prefixes[EXT_PUBLIC_KEY_BTC] = boost::assign::list_of(0x04)(0x35)(0x87)(0xCF).convert_to_container<std::vector<unsigned char> >(); // tpub
-        base58Prefixes[EXT_SECRET_KEY_BTC] = boost::assign::list_of(0x04)(0x35)(0x83)(0x94).convert_to_container<std::vector<unsigned char> >(); // tprv
-        base58Prefixes[EXT_PUBLIC_KEY_SDC] = boost::assign::list_of(0x76)(0xC0)(0xFD)(0xFB).convert_to_container<std::vector<unsigned char> >();
-        base58Prefixes[EXT_SECRET_KEY_SDC] = boost::assign::list_of(0x76)(0xC1)(0x07)(0x7A).convert_to_container<std::vector<unsigned char> >();
+        base58Prefixes[PUBKEY_ADDRESS]     = {118}; // p
+        base58Prefixes[SCRIPT_ADDRESS]     = {122};
+        base58Prefixes[SECRET_KEY]         = {46};
+        base58Prefixes[EXT_PUBLIC_KEY]     = {0xe1, 0x42, 0x78, 0x00}; // ppar
+        base58Prefixes[EXT_SECRET_KEY]     = {0x04, 0x88, 0x94, 0x78}; // xpar
+        base58Prefixes[STEALTH_ADDRESS]    = {21}; // T
+        base58Prefixes[EXT_KEY_HASH]       = {137}; // x
+        base58Prefixes[EXT_ACC_HASH]       = {83};  // a
+        base58Prefixes[EXT_PUBLIC_KEY_BTC] = {0x04, 0x35, 0x87, 0xCF}; // tpub
+        base58Prefixes[EXT_SECRET_KEY_BTC] = {0x04, 0x35, 0x83, 0x94}; // tprv
+        base58Prefixes[EXT_PUBLIC_KEY_SDC] = {0x76, 0xC0, 0xFD, 0xFB};
+        base58Prefixes[EXT_SECRET_KEY_SDC] = {0x76, 0xC1, 0x07, 0x7A};
         
         bech32Prefixes[PUBKEY_ADDRESS].assign   ("tph","tph"+3);
         bech32Prefixes[SCRIPT_ADDRESS].assign   ("tpr","tpr"+3);
@@ -820,12 +805,6 @@ public:
             0
         };
     }
-
-    void UpdateBIP9Parameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout)
-    {
-        consensus.vDeployments[d].nStartTime = nStartTime;
-        consensus.vDeployments[d].nTimeout = nTimeout;
-    }
     
     void SetOld()
     {
@@ -839,46 +818,51 @@ public:
         */
     }
 };
-static CRegTestParams regTestParams;
 
-static CChainParams *pCurrentParams = 0;
+static std::unique_ptr<CChainParams> globalChainParams;
 
 const CChainParams &Params() {
-    assert(pCurrentParams);
-    return *pCurrentParams;
+    assert(globalChainParams);
+    return *globalChainParams;
 }
 
 const CChainParams *pParams() {
-    return pCurrentParams;
+    return globalChainParams.get();
 };
 
-CChainParams& Params(const std::string& chain)
+std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain)
 {
     if (chain == CBaseChainParams::MAIN)
-        return mainParams;
+        return std::unique_ptr<CChainParams>(new CMainParams());
     else if (chain == CBaseChainParams::TESTNET)
-        return testNetParams;
+        return std::unique_ptr<CChainParams>(new CTestNetParams());
     else if (chain == CBaseChainParams::REGTEST)
-        return regTestParams;
-    else
-        throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
+        return std::unique_ptr<CChainParams>(new CRegTestParams());
+    throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
 }
 
 void SelectParams(const std::string& network)
 {
     SelectBaseParams(network);
-    pCurrentParams = &Params(network);
+    globalChainParams = CreateChainParams(network);
 }
 
-void ResetParams(bool fParticlModeIn)
+
+void SetOldParams(std::unique_ptr<CChainParams> &params)
+{
+    if (params->NetworkID() == CBaseChainParams::MAIN)
+        return ((CMainParams*)params.get())->SetOld();
+    if (params->NetworkID() == CBaseChainParams::REGTEST)
+        return ((CRegTestParams*)params.get())->SetOld();
+};
+
+void ResetParams(std::string sNetworkId, bool fParticlModeIn)
 {
     // Hack to pass old unit tests
-    mainParams = CMainParams();
-    regTestParams = CRegTestParams();
+    globalChainParams = CreateChainParams(sNetworkId);
     if (!fParticlModeIn)
     {
-        mainParams.SetOld();
-        regTestParams.SetOld();
+        SetOldParams(globalChainParams);
     };
 };
 
@@ -887,10 +871,10 @@ void ResetParams(bool fParticlModeIn)
  */
 CChainParams &RegtestParams()
 {
-    return regTestParams;
+    return *globalChainParams.get();
 };
 
-void UpdateRegtestBIP9Parameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout)
+void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout)
 {
-    regTestParams.UpdateBIP9Parameters(d, nStartTime, nTimeout);
+    globalChainParams->UpdateVersionBitsParameters(d, nStartTime, nTimeout);
 }

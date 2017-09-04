@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "wallet/hdwallet.h"
+#include "wallet/coincontrol.h"
 
 #include "wallet/test/hdwallet_test_fixture.h"
 #include "base58.h"
@@ -25,6 +26,13 @@
 
 #include <boost/test/unit_test.hpp>
 
+extern CWallet* pwalletMain;
+
+extern UniValue CallRPC(std::string args);
+
+extern bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pindex,
+                  CCoinsViewCache& view, const CChainParams& chainparams, bool fJustCheck = false);
+
 struct StakeTestingSetup: public TestingSetup {
     StakeTestingSetup(const std::string& chainName = CBaseChainParams::REGTEST):
         TestingSetup(chainName, true) // fParticlMode = true
@@ -33,7 +41,9 @@ struct StakeTestingSetup: public TestingSetup {
         bitdb.MakeMock();
 
         bool fFirstRun;
-        pwalletMain = (CWallet*) new CHDWallet("wallet_stake_test.dat");
+        std::unique_ptr<CWalletDBWrapper> dbw(new CWalletDBWrapper(&bitdb, "wallet_test.dat"));
+        pwalletMain = (CWallet*) new CHDWallet(std::move(dbw));
+        vpwallets.push_back(pwalletMain);
         fParticlWallet = true;
         pwalletMain->LoadWallet(fFirstRun);
         RegisterValidationInterface(pwalletMain);
@@ -55,13 +65,11 @@ struct StakeTestingSetup: public TestingSetup {
         
         mapStakeSeen.clear();
         listStakeSeen.clear();
+        vpwallets.clear();
         ECC_Stop_Stealth();
         ECC_Stop_Blinding();
     }
 };
-
-
-extern UniValue CallRPC(std::string args);
 
 BOOST_FIXTURE_TEST_SUITE(stake_tests, StakeTestingSetup)
 
@@ -125,7 +133,8 @@ static void AddAnonTxn(CHDWallet *pwallet, CBitcoinAddress &address, CAmount amo
     CWalletTx wtx;
     CTransactionRecord rtx;
     CAmount nFee;
-    BOOST_CHECK(0 == pwallet->AddStandardInputs(wtx, rtx, vecSend, true, nFee, NULL, sError));
+    CCoinControl coinControl;
+    BOOST_CHECK(0 == pwallet->AddStandardInputs(wtx, rtx, vecSend, true, nFee, &coinControl, sError));
     
     wtx.BindWallet(pwallet);
     BOOST_CHECK(wtx.AcceptToMemoryPool(maxTxFee, state));
@@ -136,7 +145,8 @@ BOOST_AUTO_TEST_CASE(stake_test)
     CHDWallet *pwallet = (CHDWallet*) pwalletMain;
     UniValue rv;
     
-    const CChainParams &chainparams = Params(CBaseChainParams::REGTEST);
+    std::unique_ptr<CChainParams> regtestChainParams = CreateChainParams(CBaseChainParams::REGTEST);
+    const CChainParams &chainparams = *regtestChainParams;
     
     
     BOOST_REQUIRE(chainparams.GenesisBlock().GetHash() == chainActive.Tip()->GetBlockHash());
@@ -165,24 +175,21 @@ BOOST_AUTO_TEST_CASE(stake_test)
     
     const CTxIn &txin = block.vtx[0]->vin[0];
     
-    CCoinsViewCache view(pcoinsTip, fParticlMode);
-    const CCoins *coins = view.AccessCoins(txin.prevout.hash);
-    BOOST_REQUIRE(coins);
-    BOOST_CHECK(!coins->IsAvailable(txin.prevout.n));
+    CCoinsViewCache view(pcoinsTip);
+    const Coin &coin = view.AccessCoin(txin.prevout);
+    BOOST_REQUIRE(coin.IsSpent());
     
     CValidationState state;
-    BOOST_REQUIRE(DisconnectBlock(block, state, pindexDelete, view));
+    BOOST_REQUIRE(DISCONNECT_OK == DisconnectBlock(block, pindexDelete, view));
     BOOST_REQUIRE(FlushView(&view, state, true));
-    BOOST_REQUIRE(FlushStateToDisk(state, FLUSH_STATE_IF_NEEDED));
+    BOOST_REQUIRE(FlushStateToDisk(chainparams, state, FLUSH_STATE_IF_NEEDED));
     UpdateTip(pindexDelete->pprev, chainparams);
     
     
     BOOST_REQUIRE(pindexDelete->pprev->GetBlockHash() == chainActive.Tip()->GetBlockHash());
     
-    
-    const CCoins *coins2 = view.AccessCoins(txin.prevout.hash);
-    BOOST_REQUIRE(coins2);
-    BOOST_CHECK(coins2->IsAvailable(txin.prevout.n));
+    const Coin &coin2 = view.AccessCoin(txin.prevout);
+    BOOST_REQUIRE(!coin2.IsSpent());
     
     BOOST_CHECK(chainActive.Height() == pindexDelete->nHeight - 1);
     BOOST_CHECK(chainActive.Tip()->GetBlockHash() == pindexDelete->pprev->GetBlockHash());
@@ -195,15 +202,10 @@ BOOST_AUTO_TEST_CASE(stake_test)
     }
     
     
-    BOOST_CHECK(coins2->IsAvailable(txin.prevout.n));
-    
-    // need to get a new view for coins to update
     {
-        CCoinsViewCache view(pcoinsTip, fParticlMode);
-        const CCoins *coins = view.AccessCoins(txin.prevout.hash);
-        BOOST_REQUIRE(coins);
-        
-        BOOST_CHECK(!coins->IsAvailable(txin.prevout.n));
+        CCoinsViewCache view(pcoinsTip);
+        const Coin &coin = view.AccessCoin(txin.prevout);
+        BOOST_REQUIRE(coin.IsSpent());
     }
     
     
@@ -228,7 +230,9 @@ BOOST_AUTO_TEST_CASE(stake_test)
     int nChangePosRet = -1;
     CRecipient recipient(scriptPubKey, nAmount, fSubtractFeeFromAmount);
     vecSend.push_back(recipient);
-    BOOST_CHECK(pwallet->CreateTransaction(vecSend, wtx, reservekey, nFeeRequired, nChangePosRet, strError));
+    
+    CCoinControl coinControl;
+    BOOST_CHECK(pwallet->CreateTransaction(vecSend, wtx, reservekey, nFeeRequired, nChangePosRet, strError, coinControl));
     
     {
         g_connman = std::unique_ptr<CConnman>(new CConnman(GetRand(std::numeric_limits<uint64_t>::max()), GetRand(std::numeric_limits<uint64_t>::max())));
@@ -256,11 +260,12 @@ BOOST_AUTO_TEST_CASE(stake_test)
         CBlock block;
         BOOST_REQUIRE(ReadBlockFromDisk(block, pindexDelete, chainparams.GetConsensus()));
         
-        CCoinsViewCache view(pcoinsTip, fParticlMode);
+        CCoinsViewCache view(pcoinsTip);
         CValidationState state;
-        BOOST_REQUIRE(DisconnectBlock(block, state, pindexDelete, view));
+        BOOST_REQUIRE(DISCONNECT_OK == DisconnectBlock(block, pindexDelete, view));
         BOOST_REQUIRE(FlushView(&view, state, true));
-        BOOST_REQUIRE(FlushStateToDisk(state, FLUSH_STATE_IF_NEEDED));
+        BOOST_REQUIRE(FlushStateToDisk(chainparams, state, FLUSH_STATE_IF_NEEDED));
+        
         UpdateTip(pindexDelete->pprev, chainparams);
         
         
@@ -274,7 +279,7 @@ BOOST_AUTO_TEST_CASE(stake_test)
             LOCK(cs_main);
             
             CValidationState state;
-            CCoinsViewCache view(pcoinsTip, fParticlMode);
+            CCoinsViewCache view(pcoinsTip);
             BOOST_REQUIRE(false == ConnectBlock(block, state, pindexDelete, view, chainparams, false));
             
             BOOST_CHECK(state.IsInvalid());
@@ -286,12 +291,13 @@ BOOST_AUTO_TEST_CASE(stake_test)
             
             // block should connect now
             CValidationState clearstate;
-            CCoinsViewCache clearview(pcoinsTip, fParticlMode);
+            CCoinsViewCache clearview(pcoinsTip);
+            //CCoinsViewCache &clearview = *pcoinsTip;
             BOOST_REQUIRE(ConnectBlock(block, clearstate, pindexDelete, clearview, chainparams, false));
             
             BOOST_CHECK(!clearstate.IsInvalid());
             BOOST_REQUIRE(FlushView(&clearview, state, false));
-            BOOST_REQUIRE(FlushStateToDisk(clearstate, FLUSH_STATE_IF_NEEDED));
+            BOOST_REQUIRE(FlushStateToDisk(chainparams, clearstate, FLUSH_STATE_IF_NEEDED));
             
             UpdateTip(pindexDelete, chainparams);
             
@@ -335,11 +341,11 @@ BOOST_AUTO_TEST_CASE(stake_test)
             CBlock block;
             BOOST_REQUIRE(ReadBlockFromDisk(block, pindexDelete, chainparams.GetConsensus()));
             
-            CCoinsViewCache view(pcoinsTip, fParticlMode);
+            CCoinsViewCache view(pcoinsTip);
             CValidationState state;
-            BOOST_REQUIRE(DisconnectBlock(block, state, pindexDelete, view));
+            BOOST_REQUIRE(DISCONNECT_OK == DisconnectBlock(block, pindexDelete, view));
             BOOST_REQUIRE(FlushView(&view, state, true));
-            BOOST_REQUIRE(FlushStateToDisk(state, FLUSH_STATE_IF_NEEDED));
+            BOOST_REQUIRE(FlushStateToDisk(chainparams, state, FLUSH_STATE_IF_NEEDED));
             UpdateTip(pindexDelete->pprev, chainparams);
             
             BOOST_CHECK(prevTipHash == chainActive.Tip()->GetBlockHash());

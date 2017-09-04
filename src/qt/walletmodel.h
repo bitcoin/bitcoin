@@ -139,7 +139,7 @@ public:
     TransactionTableModel *getTransactionTableModel();
     RecentRequestsTableModel *getRecentRequestsTableModel();
 
-    CAmount getBalance(const CCoinControl *coinControl = NULL) const;
+    CAmount getBalance(const CCoinControl *coinControl = nullptr) const;
     CAmount getUnconfirmedBalance() const;
     CAmount getImmatureBalance() const;
     bool haveWatchOnly() const;
@@ -164,7 +164,7 @@ public:
     };
 
     // prepare transaction for getting txfee before sending coins
-    SendCoinsReturn prepareTransaction(WalletModelTransaction &transaction, const CCoinControl *coinControl = NULL);
+    SendCoinsReturn prepareTransaction(WalletModelTransaction &transaction, const CCoinControl& coinControl);
 
     // Send coins to a list of recipients
     SendCoinsReturn sendCoins(WalletModelTransaction &transaction);
@@ -218,6 +218,9 @@ public:
     bool transactionCanBeAbandoned(uint256 hash) const;
     bool abandonTransaction(uint256 hash) const;
 
+    bool transactionCanBeBumped(uint256 hash) const;
+    bool bumpFee(uint256 hash);
+
     static bool isWalletEnabled();
 
     bool hdEnabled() const;
@@ -232,6 +235,8 @@ public:
     
     bool tryCallRpc(const QString &sCommand, UniValue &rv) const;
     void warningBox(QString heading, QString msg) const;
+
+    bool getDefaultWalletRbf() const;
 
 private:
     CWallet *wallet;

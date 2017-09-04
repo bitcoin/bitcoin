@@ -16,6 +16,8 @@ import json
 import re
 import base64
 import sys
+import os
+import os.path
 
 settings = {}
 
@@ -93,6 +95,14 @@ def get_block_hashes(settings, max_blocks_per_call=10000):
 
 		height += num_blocks
 
+def get_rpc_cookie():
+	# Open the cookie file
+	with open(os.path.join(os.path.expanduser(settings['datadir']), '.cookie'), 'r') as f:
+		combined = f.readline()
+		combined_split = combined.split(":")
+		settings['rpcuser'] = combined_split[0]
+		settings['rpcpassword'] = combined_split[1]
+
 if __name__ == '__main__':
 	if len(sys.argv) != 2:
 		print("Usage: linearize-hashes.py CONFIG-FILE")
@@ -122,8 +132,15 @@ if __name__ == '__main__':
 		settings['max_height'] = 313000
 	if 'rev_hash_bytes' not in settings:
 		settings['rev_hash_bytes'] = 'false'
+
+	use_userpass = True
+	use_datadir = False
 	if 'rpcuser' not in settings or 'rpcpassword' not in settings:
-		print("Missing username and/or password in cfg file", file=stderr)
+		use_userpass = False
+	if 'datadir' in settings and not use_userpass:
+		use_datadir = True
+	if not use_userpass and not use_datadir:
+		print("Missing datadir or username and/or password in cfg file", file=stderr)
 		sys.exit(1)
 
 	settings['port'] = int(settings['port'])
@@ -132,5 +149,9 @@ if __name__ == '__main__':
 
 	# Force hash byte format setting to be lowercase to make comparisons easier.
 	settings['rev_hash_bytes'] = settings['rev_hash_bytes'].lower()
+
+	# Get the rpc user and pass from the cookie if the datadir is set
+	if use_datadir:
+		get_rpc_cookie()
 
 	get_block_hashes(settings)

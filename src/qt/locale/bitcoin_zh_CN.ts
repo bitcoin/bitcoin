@@ -330,6 +330,10 @@
         <translation>点击重新开启网络活动。</translation>
     </message>
     <message>
+        <source>Syncing Headers (%1%)...</source>
+        <translation>同步区块头 (%1%)...</translation>
+    </message>
+    <message>
         <source>Reindexing blocks on disk...</source>
         <translation>正在为数据块重建索引...</translation>
     </message>
@@ -2061,6 +2065,10 @@
     <message>
         <source>Dust:</source>
         <translation>小额：</translation>
+    </message>
+    <message>
+        <source>Confirmation time target:</source>
+        <translation>确认时间目标：</translation>
     </message>
     <message>
         <source>Clear &amp;All</source>

@@ -551,6 +551,10 @@
         <translation>تأیید شده</translation>
     </message>
     <message>
+        <source>Copy address</source>
+        <translation>کپی ادرس</translation>
+    </message>
+    <message>
         <source>Copy label</source>
         <translation>کپی برچسب</translation>
     </message>
@@ -752,6 +756,10 @@
     <message>
         <source>Form</source>
         <translation>فرم</translation>
+    </message>
+    <message>
+        <source>Unknown...</source>
+        <translation>مشخص نیست</translation>
     </message>
     <message>
         <source>Last block time</source>
@@ -1626,6 +1634,10 @@
     </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>Copy address</source>
+        <translation>کپی ادرس</translation>
+    </message>
     <message>
         <source>Copy label</source>
         <translation>کپی برچسب</translation>

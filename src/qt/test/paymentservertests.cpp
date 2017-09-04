@@ -25,7 +25,7 @@ X509 *parse_b64der_cert(const char* cert_data)
     std::vector<unsigned char> data = DecodeBase64(cert_data);
     assert(data.size() > 0);
     const unsigned char* dptr = &data[0];
-    X509 *cert = d2i_X509(NULL, &dptr, data.size());
+    X509 *cert = d2i_X509(nullptr, &dptr, data.size());
     assert(cert);
     return cert;
 }
@@ -68,7 +68,7 @@ void PaymentServerTests::paymentServerTests()
     
     SelectParams(CBaseChainParams::MAIN);
     OptionsModel optionsModel;
-    PaymentServer* server = new PaymentServer(NULL, false);
+    PaymentServer* server = new PaymentServer(nullptr, false);
     X509_STORE* caStore = X509_STORE_new();
     X509_STORE_add_cert(caStore, parse_b64der_cert(caCert1_BASE64));
     PaymentServer::LoadRootCAs(caStore);
@@ -144,7 +144,7 @@ void PaymentServerTests::paymentServerTests()
     byteArray = QByteArray((const char*)&data[0], data.size());
     r.paymentRequest.parse(byteArray);
     // Ensure the request is initialized, because network "main" is default, even for
-    // uninizialized payment requests and that will fail our test here.
+    // uninitialized payment requests and that will fail our test here.
     QVERIFY(r.paymentRequest.IsInitialized());
     QCOMPARE(PaymentServer::verifyNetwork(r.paymentRequest.getDetails()), false);
 
@@ -198,7 +198,7 @@ void PaymentServerTests::paymentServerTests()
     QVERIFY(r.paymentRequest.IsInitialized());
     // Extract address and amount from the request
     QList<std::pair<CScript, CAmount> > sendingTos = r.paymentRequest.getPayTo();
-    Q_FOREACH (const PAIRTYPE(CScript, CAmount)& sendingTo, sendingTos) {
+    for (const std::pair<CScript, CAmount>& sendingTo : sendingTos) {
         CTxDestination dest;
         if (ExtractDestination(sendingTo.first, dest))
             QCOMPARE(PaymentServer::verifyAmount(sendingTo.second), false);

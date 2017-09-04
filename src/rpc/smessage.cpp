@@ -33,7 +33,8 @@ UniValue smsgenable(const JSONRPCRequest &request)
     
     CWallet *pwallet = NULL;
 #ifdef ENABLE_WALLET
-    pwallet = pwalletMain;
+    assert(vpwallets.size() > 0);
+    pwallet = vpwallets[0];
 #endif
     
     result.pushKV("result", (SecureMsgEnable(pwallet) ? "Enabled secure messaging." : "Failed to enable secure messaging."));
@@ -1097,7 +1098,6 @@ UniValue smsgview(const JSONRPCRequest &request)
                             CKeyID ki;
                             checkValid.GetKeyID(ki);
                             vMatchAddress.push_back(ki);
-                            //LogPrintf("[rm] matched address: %s\n", checkValid.ToString().c_str());
                         } else
                         {
                             LogPrintf("Warning: matched invalid address: %s\n", checkValid.ToString().c_str());

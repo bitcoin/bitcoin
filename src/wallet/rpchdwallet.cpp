@@ -8,6 +8,7 @@
 #include "consensus/validation.h"
 #include "core_io.h"
 #include "init.h"
+#include "httpserver.h"
 #include "validation.h"
 #include "net.h"
 #include "policy/policy.h"
@@ -26,6 +27,7 @@
 #include "key/mnemonic.h"
 #include "pos/miner.h"
 #include "crypto/sha256.h"
+#include "warnings.h"
 
 #include <univalue.h>
 #include <stdint.h>
@@ -41,15 +43,22 @@ void EnsureWalletIsUnlocked(CHDWallet *pwallet)
         throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Wallet is unlocked for staking only.");
 };
 
-static CHDWallet *GetHDWallet()
+static const std::string WALLET_ENDPOINT_BASE = "/wallet/";
+
+CHDWallet *GetHDWalletForJSONRPCRequest(const JSONRPCRequest &request)
 {
-    CHDWallet *rv;
-    if (!pwalletMain)
-        throw std::runtime_error("pwalletMain is null.");
-    if (!(rv = dynamic_cast<CHDWallet*>(pwalletMain)))
-        throw std::runtime_error("pwalletMain is not an instance of class CHDWallet.");
-    return rv;
-};
+    if (request.URI.substr(0, WALLET_ENDPOINT_BASE.size()) == WALLET_ENDPOINT_BASE) {
+        // wallet endpoint was used
+        std::string requestedWallet = urlDecode(request.URI.substr(WALLET_ENDPOINT_BASE.size()));
+        for (auto pwallet : ::vpwallets) {
+            if (pwallet->GetName() == requestedWallet) {
+                return GetHDWallet(pwallet);
+            }
+        }
+        throw JSONRPCError(RPC_WALLET_NOT_FOUND, "Requested wallet does not exist or is not loaded");
+    }
+    return ::vpwallets.size() == 1 || (request.fHelp && ::vpwallets.size() > 0) ? GetHDWallet(::vpwallets[0]) : nullptr;
+}
 
 inline uint32_t reversePlace(uint8_t *p)
 {
@@ -59,7 +68,7 @@ inline uint32_t reversePlace(uint8_t *p)
     return rv;
 };
 
-int ExtractBip32InfoV(std::vector<unsigned char> &vchKey, UniValue &keyInfo, std::string &sError)
+int ExtractBip32InfoV(std::vector<uint8_t> &vchKey, UniValue &keyInfo, std::string &sError)
 {
     CExtKey58 ek58;
     CExtKeyPair vk;
@@ -106,7 +115,7 @@ int ExtractBip32InfoV(std::vector<unsigned char> &vchKey, UniValue &keyInfo, std
     return 0;
 };
 
-int ExtractBip32InfoP(std::vector<unsigned char> &vchKey, UniValue &keyInfo, std::string &sError)
+int ExtractBip32InfoP(std::vector<uint8_t> &vchKey, UniValue &keyInfo, std::string &sError)
 {
     CExtPubKey pk;
     
@@ -224,9 +233,8 @@ int ExtKeyPathP(std::string &sPath, std::vector<uint8_t> &vchKey, UniValue &keyI
     return 0;
 };
 
-int AccountInfo(CExtKeyAccount *pa, int nShowKeys, bool fAllChains, UniValue &obj, std::string &sError)
+int AccountInfo(CHDWallet *pwallet, CExtKeyAccount *pa, int nShowKeys, bool fAllChains, UniValue &obj, std::string &sError)
 {
-    CHDWallet *pwallet = (CHDWallet*) pwalletMain;
     CExtKey58 eKey58;
     
     obj.pushKV("type", "Account");
@@ -390,9 +398,8 @@ int AccountInfo(CExtKeyAccount *pa, int nShowKeys, bool fAllChains, UniValue &ob
     return 0;
 };
 
-int AccountInfo(CKeyID &keyId, int nShowKeys, bool fAllChains, UniValue &obj, std::string &sError)
+int AccountInfo(CHDWallet *pwallet, CKeyID &keyId, int nShowKeys, bool fAllChains, UniValue &obj, std::string &sError)
 {
-    CHDWallet *pwallet = (CHDWallet*) pwalletMain;
     // TODO: inactive keys can be in db and not in memory - search db for keyId
     ExtKeyAccountMap::iterator mi = pwallet->mapExtAccounts.find(keyId);
     if (mi == pwallet->mapExtAccounts.end())
@@ -403,12 +410,11 @@ int AccountInfo(CKeyID &keyId, int nShowKeys, bool fAllChains, UniValue &obj, st
     
     CExtKeyAccount *pa = mi->second;
     
-    return AccountInfo(pa, nShowKeys, fAllChains, obj, sError);
+    return AccountInfo(pwallet, pa, nShowKeys, fAllChains, obj, sError);
 };
 
-int KeyInfo(CKeyID &idMaster, CKeyID &idKey, CStoredExtKey &sek, int nShowKeys, UniValue &obj, std::string &sError)
+int KeyInfo(CHDWallet *pwallet, CKeyID &idMaster, CKeyID &idKey, CStoredExtKey &sek, int nShowKeys, UniValue &obj, std::string &sError)
 {
-    CHDWallet *pwallet = (CHDWallet*) pwalletMain;
     CExtKey58 eKey58;
     
     bool fBip44Root = false;
@@ -518,14 +524,12 @@ int KeyInfo(CKeyID &idMaster, CKeyID &idKey, CStoredExtKey &sek, int nShowKeys, 
     return 0;
 };
 
-int KeyInfo(CKeyID &idMaster, CKeyID &idKey, int nShowKeys, UniValue &obj, std::string &sError)
+int KeyInfo(CHDWallet *pwallet, CKeyID &idMaster, CKeyID &idKey, int nShowKeys, UniValue &obj, std::string &sError)
 {
-    CHDWallet *pwallet = (CHDWallet*) pwalletMain;
-    
     CStoredExtKey sek;
     {
         LOCK(pwallet->cs_wallet);
-        CHDWalletDB wdb(pwallet->strWalletFile, "r+");
+        CHDWalletDB wdb(pwallet->GetDBHandle(), "r+");
         
         if (!wdb.ReadExtKey(idKey, sek))
         {
@@ -534,15 +538,15 @@ int KeyInfo(CKeyID &idMaster, CKeyID &idKey, int nShowKeys, UniValue &obj, std::
         };
     }
     
-    return KeyInfo(idMaster, idKey, sek, nShowKeys, obj, sError);
+    return KeyInfo(pwallet, idMaster, idKey, sek, nShowKeys, obj, sError);
 };
 
 class ListExtCallback : public LoopExtKeyCallback
 {
 public:
-    ListExtCallback(UniValue *arr, int _nShowKeys)
+    ListExtCallback(CHDWallet *pwalletIn, UniValue *arr, int _nShowKeys)
     {
-        CHDWallet *pwallet = (CHDWallet*) pwalletMain;
+        pwallet = pwalletIn;
         nItems = 0;
         rvArray = arr;
         nShowKeys = _nShowKeys;
@@ -555,7 +559,7 @@ public:
     {
         nItems++;
         UniValue obj(UniValue::VOBJ);
-        if (0 != KeyInfo(idMaster, id, sek, nShowKeys, obj, sError))
+        if (0 != KeyInfo(pwallet, idMaster, id, sek, nShowKeys, obj, sError))
         {
             obj.pushKV("id", sek.GetIDString58());
             obj.pushKV("error", sError);
@@ -571,7 +575,7 @@ public:
         UniValue obj(UniValue::VOBJ);
         
         bool fAllChains = nShowKeys > 2 ? true : false;
-        if (0 != AccountInfo(&sea, nShowKeys, fAllChains, obj, sError))
+        if (0 != AccountInfo(pwallet, &sea, nShowKeys, fAllChains, obj, sError))
         {
             obj.pushKV("id", sea.GetIDString58());
             obj.pushKV("error", sError);
@@ -588,11 +592,11 @@ public:
     UniValue *rvArray;
 };
 
-int ListLooseExtKeys(int nShowKeys, UniValue &ret, size_t &nKeys)
+int ListLooseExtKeys(CHDWallet *pwallet, int nShowKeys, UniValue &ret, size_t &nKeys)
 {
-    ListExtCallback cbc(&ret, nShowKeys);
+    ListExtCallback cbc(pwallet, &ret, nShowKeys);
     
-    if (0 != LoopExtKeysInDB(true, false, cbc))
+    if (0 != LoopExtKeysInDB(pwallet, true, false, cbc))
         return errorN(1, "LoopExtKeys failed.");
     
     nKeys = cbc.nItems;
@@ -600,11 +604,11 @@ int ListLooseExtKeys(int nShowKeys, UniValue &ret, size_t &nKeys)
     return 0;
 };
 
-int ListAccountExtKeys(int nShowKeys, UniValue &ret, size_t &nKeys)
+int ListAccountExtKeys(CHDWallet *pwallet, int nShowKeys, UniValue &ret, size_t &nKeys)
 {
-    ListExtCallback cbc(&ret, nShowKeys);
+    ListExtCallback cbc(pwallet, &ret, nShowKeys);
     
-    if (0 != LoopExtAccountsInDB(true, cbc))
+    if (0 != LoopExtAccountsInDB(pwallet, true, cbc))
         return errorN(1, "LoopExtKeys failed.");
     
     nKeys = cbc.nItems;
@@ -647,7 +651,7 @@ int ManageExtKey(CStoredExtKey &sek, std::string &sOptName, std::string &sOptVal
     } else
     if (sOptName == "look_ahead")
     {
-        uint64_t nLookAhead = GetArg("-defaultlookaheadsize", N_DEFAULT_LOOKAHEAD);
+        uint64_t nLookAhead = gArgs.GetArg("-defaultlookaheadsize", N_DEFAULT_LOOKAHEAD);
         
         if (sOptValue.length() > 0)
         {
@@ -751,6 +755,10 @@ static int ExtractExtKeyId(const std::string &sInKey, CKeyID &keyId, CChainParam
 
 UniValue extkey(const JSONRPCRequest &request)
 {
+    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
+    
     static const char *help = ""
         "extkey [info|list|account|gen|import|importAccount|setMaster|setDefaultAccount|deriveAccount|options]\n"
         "extkey [\"info\"] [key] [path]\n"
@@ -805,8 +813,6 @@ UniValue extkey(const JSONRPCRequest &request)
     
     if (request.fHelp || request.params.size() > 5) // defaults to info, will always take at least 1 parameter
         throw std::runtime_error(help);
-    
-    CHDWallet *pwallet = GetHDWallet();
     
     EnsureWalletIsUnlocked(pwallet);
     
@@ -872,10 +878,6 @@ UniValue extkey(const JSONRPCRequest &request)
         if (keyLen != BIP32_KEY_LEN)
             throw std::runtime_error(strprintf("Unknown ext key length '%d'", keyLen));
         
-        const CChainParams &otherNet = 
-            (Params().NetworkID() == CBaseChainParams::TESTNET || Params().NetworkID() == CBaseChainParams::REGTEST)
-            ? Params(CBaseChainParams::MAIN) : Params(CBaseChainParams::TESTNET);
-        
         if (memcmp(&vchOut[0], &Params().Base58Prefix(CChainParams::EXT_SECRET_KEY)[0], 4) == 0
             || memcmp(&vchOut[0], &Params().Base58Prefix(CChainParams::EXT_SECRET_KEY_BTC)[0], 4) == 0)
         {
@@ -888,16 +890,10 @@ UniValue extkey(const JSONRPCRequest &request)
             if (ExtKeyPathP(sMode, vchOut, keyInfo, sError) != 0)
                 throw std::runtime_error(strprintf("ExtKeyPathP failed %s.", sError.c_str()));
         } else
-        if (memcmp(&vchOut[0], &otherNet.Base58Prefix(CChainParams::EXT_SECRET_KEY)[0], 4) == 0
-            || memcmp(&vchOut[0], &otherNet.Base58Prefix(CChainParams::EXT_SECRET_KEY_BTC)[0], 4) == 0
-            || memcmp(&vchOut[0], &otherNet.Base58Prefix(CChainParams::EXT_PUBLIC_KEY)[0], 4) == 0
-            || memcmp(&vchOut[0], &otherNet.Base58Prefix(CChainParams::EXT_PUBLIC_KEY_BTC)[0], 4) == 0)
-        {
-            throw std::runtime_error(strprintf("Prefix is for %s-net bip32 key.", otherNet.NetworkIDString().c_str()));
-        } else
         {
             throw std::runtime_error(strprintf("Unknown prefix '%s'", sInKey.substr(0, 4)));
         };
+        
         
         result.pushKV("key_info", keyInfo);
     } else
@@ -919,8 +915,8 @@ UniValue extkey(const JSONRPCRequest &request)
         
         {
             LOCK(pwallet->cs_wallet);
-            ListLooseExtKeys(nListFull, ret, nKeys);
-            ListAccountExtKeys(nListFull, ret, nAcc);
+            ListLooseExtKeys(pwallet, nListFull, ret, nKeys);
+            ListAccountExtKeys(pwallet, nListFull, ret, nAcc);
         } // cs_wallet
         
         if (nKeys + nAcc > 0)
@@ -965,7 +961,7 @@ UniValue extkey(const JSONRPCRequest &request)
         std::string sError;
         if (mode == "account")
         {
-            if (0 != AccountInfo(keyId, nListFull, true, result, sError))
+            if (0 != AccountInfo(pwallet, keyId, nListFull, true, result, sError))
                 throw std::runtime_error("AccountInfo failed: " + sError);
         } else
         {
@@ -974,7 +970,7 @@ UniValue extkey(const JSONRPCRequest &request)
                 idMaster = pwallet->pEKMaster->GetID();
             else
                 LogPrintf("%s: Warning: Master key isn't set!\n", __func__);
-            if (0 != KeyInfo(idMaster, keyId, nListFull, result, sError))
+            if (0 != KeyInfo(pwallet, idMaster, keyId, nListFull, result, sError))
                 throw std::runtime_error("KeyInfo failed: " + sError);
         };
     } else
@@ -1089,7 +1085,7 @@ UniValue extkey(const JSONRPCRequest &request)
         
         {
             LOCK(pwallet->cs_wallet);
-            CHDWalletDB wdb(pwallet->strWalletFile, "r+");
+            CHDWalletDB wdb(pwallet->GetDBHandle(), "r+");
             if (!wdb.TxnBegin())
                 throw std::runtime_error("TxnBegin failed.");
             
@@ -1173,7 +1169,7 @@ UniValue extkey(const JSONRPCRequest &request)
         {
             //LOCK(pwallet->cs_wallet);
             LOCK2(cs_main, pwallet->cs_wallet);
-            CHDWalletDB wdb(pwallet->strWalletFile, "r+");
+            CHDWalletDB wdb(pwallet->GetDBHandle(), "r+");
             if (!wdb.TxnBegin())
                 throw std::runtime_error("TxnBegin failed.");
             
@@ -1220,7 +1216,7 @@ UniValue extkey(const JSONRPCRequest &request)
         
         {
             LOCK(pwallet->cs_wallet);
-            CHDWalletDB wdb(pwallet->strWalletFile, "r+");
+            CHDWalletDB wdb(pwallet->GetDBHandle(), "r+");
             if (!wdb.TxnBegin())
                 throw std::runtime_error("TxnBegin failed.");
             
@@ -1264,7 +1260,7 @@ UniValue extkey(const JSONRPCRequest &request)
         int rv;
         {
             LOCK(pwallet->cs_wallet);
-            CHDWalletDB wdb(pwallet->strWalletFile, "r+");
+            CHDWalletDB wdb(pwallet->GetDBHandle(), "r+");
             
             if (!wdb.TxnBegin())
             {
@@ -1315,7 +1311,7 @@ UniValue extkey(const JSONRPCRequest &request)
         
         {
             LOCK(pwallet->cs_wallet);
-            CHDWalletDB wdb(pwallet->strWalletFile, "r+");
+            CHDWalletDB wdb(pwallet->GetDBHandle(), "r+");
             if (!wdb.TxnBegin())
                 throw std::runtime_error("TxnBegin failed.");
             
@@ -1408,7 +1404,7 @@ UniValue extkey(const JSONRPCRequest &request)
         CExtKeyAccount sea;
         {
             LOCK(pwallet->cs_wallet);
-            CHDWalletDB wdb(pwallet->strWalletFile, "r+");
+            CHDWalletDB wdb(pwallet->GetDBHandle(), "r+");
             if (!wdb.TxnBegin())
                 throw std::runtime_error("TxnBegin failed.");
             
@@ -1497,7 +1493,9 @@ UniValue extkey(const JSONRPCRequest &request)
 
 UniValue extkeyimportinternal(const JSONRPCRequest &request, bool fGenesisChain)
 {
-    CHDWallet *pwallet = GetHDWallet();
+    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
     
     EnsureWalletIsUnlocked(pwallet);
     
@@ -1572,7 +1570,7 @@ UniValue extkeyimportinternal(const JSONRPCRequest &request, bool fGenesisChain)
     
     {
         LOCK(pwallet->cs_wallet);
-        CHDWalletDB wdb(pwallet->strWalletFile, "r+");
+        CHDWalletDB wdb(pwallet->GetDBHandle(), "r+");
         if (!wdb.TxnBegin())
             throw std::runtime_error("TxnBegin failed.");
         
@@ -1697,6 +1695,10 @@ UniValue extkeygenesisimport(const JSONRPCRequest &request)
 
 UniValue keyinfo(const JSONRPCRequest &request)
 {
+    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
+    
     static const char *help = ""
         "keyinfo <key> [show_secret]\n"
         "Return public key.\n"
@@ -1704,8 +1706,6 @@ UniValue keyinfo(const JSONRPCRequest &request)
     
     if (request.fHelp) // defaults to info, will always take at least 1 parameter
         throw std::runtime_error(help);
-    
-    CHDWallet *pwallet = GetHDWallet();
     
     if (request.params.size() < 1)
         throw JSONRPCError(RPC_INVALID_PARAMETER, _("Please specify a key."));
@@ -1814,6 +1814,10 @@ UniValue extkeyaltversion(const JSONRPCRequest &request)
 
 UniValue getnewextaddress(const JSONRPCRequest &request)
 {
+    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
+    
     if (request.fHelp || request.params.size() > 2)
         throw std::runtime_error(
             "getnewextaddress [label] [childNo]\n"
@@ -1821,7 +1825,6 @@ UniValue getnewextaddress(const JSONRPCRequest &request)
             "label   (string, optional), if specified the key is added to the address book.\n"
             "childNo (int, optional), if specified, the account derive counter is not updated.");
     
-    CHDWallet *pwallet = GetHDWallet();
     EnsureWalletIsUnlocked(pwallet);
     
     uint32_t nChild = 0;
@@ -1854,6 +1857,10 @@ UniValue getnewextaddress(const JSONRPCRequest &request)
 
 UniValue getnewstealthaddress(const JSONRPCRequest &request)
 {
+    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
+    
     if (request.fHelp || request.params.size() > 3)
         throw std::runtime_error(
             "getnewstealthaddress [label] [num_prefix_bits] [prefix_num]\n"
@@ -1866,9 +1873,8 @@ UniValue getnewstealthaddress(const JSONRPCRequest &request)
             "Stealth addresses with prefixes will scan only incoming stealth transactions with a matching prefix.\n"
             "Examples:\n"
             "   getnewstealthaddress \"lblTestSxAddrPrefix\" 3 \"0b101\" \n"
-            + HelpRequiringPassphrase());
+            + HelpRequiringPassphrase(pwallet));
     
-    CHDWallet *pwallet = GetHDWallet();
     EnsureWalletIsUnlocked(pwallet);
     
     std::string sLabel;
@@ -1907,6 +1913,10 @@ UniValue getnewstealthaddress(const JSONRPCRequest &request)
 
 UniValue importstealthaddress(const JSONRPCRequest &request)
 {
+    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
+    
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 5)
         throw std::runtime_error(
             "importstealthaddress <scan_secret> <spend_secret> [label] [num_prefix_bits] [prefix_num]\n"
@@ -1919,9 +1929,8 @@ UniValue importstealthaddress(const JSONRPCRequest &request)
             "Stealth addresses with prefixes will scan only incoming stealth transactions with a matching prefix.\n"
             "Examples:\n"
             "   getnewstealthaddress \"lblTestSxAddrPrefix\" 3 \"0b101\" \n"
-            + HelpRequiringPassphrase());
+            + HelpRequiringPassphrase(pwallet));
     
-    CHDWallet *pwallet = GetHDWallet();
     EnsureWalletIsUnlocked(pwallet);
 
     std::string sScanSecret  = request.params[0].get_str();
@@ -2116,14 +2125,16 @@ int ListLooseStealthAddresses(UniValue &arr, CHDWallet *pwallet, bool fShowSecre
 
 UniValue liststealthaddresses(const JSONRPCRequest &request)
 {
+    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
+    
     if (request.fHelp || request.params.size() > 1)
         throw std::runtime_error(
             "liststealthaddresses [show_secrets=0]\n"
             "List owned stealth addresses.");
 
     bool fShowSecrets = false;
-    
-    CHDWallet *pwallet = GetHDWallet();
     
     if (request.params.size() > 0)
     {
@@ -2136,7 +2147,7 @@ UniValue liststealthaddresses(const JSONRPCRequest &request)
     };
     
     if (fShowSecrets)
-        EnsureWalletIsUnlocked();
+        EnsureWalletIsUnlocked(pwallet);
 
     UniValue result(UniValue::VARR);
 
@@ -2214,12 +2225,15 @@ UniValue liststealthaddresses(const JSONRPCRequest &request)
 
 UniValue scanchain(const JSONRPCRequest &request)
 {
+    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
+    
     if (request.fHelp || request.params.size() > 1)
         throw std::runtime_error(
             "scanchain [fromHeight]\n"
             "Scan blockchain for owned transactions.");
     
-    CHDWallet *pwallet = GetHDWallet();
     //EnsureWalletIsUnlocked(pwallet);
     
     UniValue result(UniValue::VOBJ);
@@ -2240,6 +2254,10 @@ UniValue reservebalance(const JSONRPCRequest &request)
 {
     // Reserve balance from being staked for network protection
     
+    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
+    
     if (request.fHelp || request.params.size() > 2)
         throw std::runtime_error(
             "reservebalance <reserve> [amount]\n"
@@ -2248,8 +2266,6 @@ UniValue reservebalance(const JSONRPCRequest &request)
             "Set reserve amount not participating in network protection.\n"
             "If no parameters provided current setting is printed.\n"
             "Wallet must be unlocked to modify.\n");
-    
-    CHDWallet *pwallet = GetHDWallet();
     
     if (request.params.size() > 0)
     {
@@ -2282,6 +2298,10 @@ UniValue reservebalance(const JSONRPCRequest &request)
 
 UniValue deriverangekeys(const JSONRPCRequest &request)
 {
+    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
+    
     if (request.fHelp || request.params.size() < 1 ||request.params.size() > 6)
         throw std::runtime_error(
             "deriverangekeys <start> [end] [key/id] [hardened] [save] [add_to_addressbook]\n"
@@ -2293,8 +2313,6 @@ UniValue deriverangekeys(const JSONRPCRequest &request)
             "[add_to_addressbook] add derived keys to address book, only applies when saving keys, default false.\n"
             "Derive keys from the specified chain.\n"
             "Wallet must be unlocked if save or hardened options are set.\n");
-    
-    CHDWallet *pwallet = GetHDWallet();
     
     // TODO: manage nGenerated, nHGenerated properly
     
@@ -2392,7 +2410,7 @@ UniValue deriverangekeys(const JSONRPCRequest &request)
             };
         };
         
-        CHDWalletDB wdb(pwallet->strWalletFile, "r+");
+        CHDWalletDB wdb(pwallet->GetDBHandle(), "r+");
         CStoredExtKey sekLoose, sekDB;
         if (!sek)
         {
@@ -2495,6 +2513,10 @@ UniValue deriverangekeys(const JSONRPCRequest &request)
 
 UniValue clearwallettransactions(const JSONRPCRequest &request)
 {
+    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
+    
     if (request.fHelp || request.params.size() > 1)
         throw std::runtime_error(
             "clearwallettransactions [remove_all]\n"
@@ -2504,7 +2526,6 @@ UniValue clearwallettransactions(const JSONRPCRequest &request)
             "Wallet must be unlocked.\n"
             "Warning: Backup your wallet first!");
     
-    CHDWallet *pwallet = GetHDWallet();
     EnsureWalletIsUnlocked(pwallet);
     
     bool fRemoveAll = false;
@@ -2523,7 +2544,7 @@ UniValue clearwallettransactions(const JSONRPCRequest &request)
     {
         LOCK2(cs_main, pwallet->cs_wallet);
         
-        CHDWalletDB wdb(pwallet->strWalletFile);
+        CHDWalletDB wdb(pwallet->GetDBHandle());
         if (!wdb.TxnBegin())
             throw std::runtime_error("TxnBegin failed.");
         
@@ -2612,14 +2633,16 @@ UniValue clearwallettransactions(const JSONRPCRequest &request)
 
 UniValue filtertransactions(const JSONRPCRequest &request)
 {
+    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
+    
     if (request.fHelp || request.params.size() > 2)
         throw std::runtime_error(
             "filtertransactions [offset] [count]\n"
             "List transactions.");
     
     throw std::runtime_error("TODO");
-    
-    CHDWallet *pwallet = GetHDWallet();
     
     UniValue result(UniValue::VARR);
     
@@ -2655,6 +2678,10 @@ public:
 
 UniValue filteraddresses(const JSONRPCRequest &request)
 {
+    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
+    
     if (request.fHelp || request.params.size() > 6)
         throw std::runtime_error(
             "filteraddresses [offset] [count] [sort_code] [match_str] [match_owned] [show_path]\n"
@@ -2664,8 +2691,6 @@ UniValue filteraddresses(const JSONRPCRequest &request)
             "[match_str] filter by label\n"
             "[match_owned] 0 off, 1 owned, 2 non-owned, default 0\n"
             "List addresses.");
-    
-    CHDWallet *pwallet = GetHDWallet();
     
     int nOffset = 0, nCount = 0x7FFFFFFF;
     if (request.params.size() > 0)
@@ -2759,7 +2784,7 @@ UniValue filteraddresses(const JSONRPCRequest &request)
     {
         LOCK(pwallet->cs_wallet);
         
-        CHDWalletDB wdb(pwallet->strWalletFile, "r+");
+        CHDWalletDB wdb(pwallet->GetDBHandle(), "r+");
         
         if (nOffset >= (int)pwallet->mapAddressBook.size())
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("offset is beyond last address (%d).", nOffset));
@@ -2847,6 +2872,10 @@ UniValue filteraddresses(const JSONRPCRequest &request)
 
 UniValue manageaddressbook(const JSONRPCRequest &request)
 {
+    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
+    
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 4)
         throw std::runtime_error(
             "manageaddressbook <action> <address> [label] [purpose]\n"
@@ -2856,9 +2885,6 @@ UniValue manageaddressbook(const JSONRPCRequest &request)
             "2. \"address\"     (string, required) The address to affect.\n"
             "3. \"label\"       (string, optional) Optional label.\n"
             "4. \"purpose\"     (string, optional) Optional purpose label.\n");
-    
-    CHDWallet *pwallet = GetHDWallet();
-    
     
     std::string sAction = request.params[0].get_str();
     std::string sAddress = request.params[1].get_str();
@@ -2993,14 +3019,17 @@ UniValue manageaddressbook(const JSONRPCRequest &request)
     return result;
 }
 
+extern double GetDifficulty(const CBlockIndex* blockindex = NULL);
 UniValue getstakinginfo(const JSONRPCRequest &request)
 {
+    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
+    
     if (request.fHelp || request.params.size() != 0)
         throw std::runtime_error(
             "getstakinginfo\n"
             "Returns an object containing staking-related information.");
-    
-    CHDWallet *pwallet = GetHDWallet();
     
     UniValue obj(UniValue::VOBJ);
     
@@ -3021,7 +3050,7 @@ UniValue getstakinginfo(const JSONRPCRequest &request)
     bool fStaking = nLastCoinStakeSearchTime && nWeight && fIsStaking;
     uint64_t nExpectedTime = fStaking ? (Params().GetTargetSpacing() * nNetworkWeight / nWeight) : 0;
 
-    obj.pushKV("enabled", GetBoolArg("-staking", true));
+    obj.pushKV("enabled", gArgs.GetBoolArg("-staking", true));
     obj.pushKV("staking", fStaking);
     obj.pushKV("errors", GetWarnings("statusbar"));
 
@@ -3054,6 +3083,10 @@ UniValue getstakinginfo(const JSONRPCRequest &request)
 
 UniValue listunspentanon(const JSONRPCRequest &request)
 {
+    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
+    
     if (request.fHelp || request.params.size() > 5)
         throw std::runtime_error(
             "listunspentanon ( minconf maxconf  [\"addresses\",...] [include_unsafe] )\n"
@@ -3096,8 +3129,6 @@ UniValue listunspentanon(const JSONRPCRequest &request)
             + HelpExampleRpc("listunspentanon", "6, 9999999 \"[\\\"PfqK97PXYfqRFtdYcZw82x3dzPrZbEAcYa\\\",\\\"Pka9M2Bva8WetQhQ4ngC255HAbMJf5P5Dc\\\"]\"")
         );
     
-    CHDWallet *pwallet = GetHDWallet();
-    
     int nMinDepth = 1;
     if (request.params.size() > 0 && !request.params[0].isNull()) {
         RPCTypeCheckArgument(request.params[0], UniValue::VNUM);
@@ -3139,8 +3170,8 @@ UniValue listunspentanon(const JSONRPCRequest &request)
     
     UniValue results(UniValue::VARR);
     std::vector<COutputR> vecOutputs;
-    assert(pwalletMain != NULL);
-    LOCK2(cs_main, pwalletMain->cs_wallet);
+    assert(pwallet != NULL);
+    LOCK2(cs_main, pwallet->cs_wallet);
     
     
     // TODO: filter on stealth address
@@ -3202,6 +3233,10 @@ UniValue listunspentanon(const JSONRPCRequest &request)
 
 UniValue listunspentblind(const JSONRPCRequest &request)
 {
+    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
+    
     if (request.fHelp || request.params.size() > 5)
         throw std::runtime_error(
             "listunspentblind ( minconf maxconf  [\"addresses\",...] [include_unsafe] )\n"
@@ -3244,8 +3279,6 @@ UniValue listunspentblind(const JSONRPCRequest &request)
             + HelpExampleRpc("listunspentblind", "6, 9999999 \"[\\\"PfqK97PXYfqRFtdYcZw82x3dzPrZbEAcYa\\\",\\\"Pka9M2Bva8WetQhQ4ngC255HAbMJf5P5Dc\\\"]\"")
         );
     
-    CHDWallet *pwallet = GetHDWallet();
-    
     int nMinDepth = 1;
     if (request.params.size() > 0 && !request.params[0].isNull()) {
         RPCTypeCheckArgument(request.params[0], UniValue::VNUM);
@@ -3287,8 +3320,8 @@ UniValue listunspentblind(const JSONRPCRequest &request)
     
     UniValue results(UniValue::VARR);
     std::vector<COutputR> vecOutputs;
-    assert(pwalletMain != NULL);
-    LOCK2(cs_main, pwalletMain->cs_wallet);
+    assert(pwallet != NULL);
+    LOCK2(cs_main, pwallet->cs_wallet);
     
     pwallet->AvailableBlindedCoins(vecOutputs, !include_unsafe, NULL, true);
     
@@ -3360,7 +3393,7 @@ UniValue gettransactionsummary(const JSONRPCRequest &request)
             "gettransactionsummary <txhash>\n"
             "Returns a summary of a transaction in the wallet.");
     
-    CHDWallet *pwallet = GetHDWallet();
+    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
     
     UniValue obj(UniValue::VOBJ);
     
@@ -3417,10 +3450,12 @@ static int AddOutput(uint8_t nType, std::vector<CTempRecipient> &vecSend, const 
 
 static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, OutputTypes typeOut)
 {
-    CHDWallet *pwallet = GetHDWallet();
+    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
     EnsureWalletIsUnlocked(pwallet);
     
-    if (pwalletMain->GetBroadcastTransactions() && !g_connman)
+    if (pwallet->GetBroadcastTransactions() && !g_connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
     
     if (typeOut == OUTPUT_RINGCT && Params().NetworkID() == "main")
@@ -3603,7 +3638,6 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
     
     
     CCoinControl coincontrol;
-    CCoinControl *pCoinControl = NULL;
     
     nv = nCoinControlOfs;
     if (request.params.size() > nv
@@ -3656,8 +3690,6 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
         
         if (uvCoinControl["debug"].isBool() && uvCoinControl["debug"].get_bool() == true)
             fShowHex = true;
-        
-        pCoinControl = &coincontrol;
     };
     
     
@@ -3665,15 +3697,15 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
     switch (typeIn)
     {
         case OUTPUT_STANDARD:
-            if (0 != pwallet->AddStandardInputs(wtx, rtx, vecSend, !fCheckFeeOnly, nFeeRet, pCoinControl, sError))
+            if (0 != pwallet->AddStandardInputs(wtx, rtx, vecSend, !fCheckFeeOnly, nFeeRet, &coincontrol, sError))
                 throw JSONRPCError(RPC_WALLET_ERROR, strprintf("AddStandardInputs failed: %s.", sError));
             break;
         case OUTPUT_CT:
-            if (0 != pwallet->AddBlindedInputs(wtx, rtx, vecSend, !fCheckFeeOnly, nFeeRet, pCoinControl, sError))
+            if (0 != pwallet->AddBlindedInputs(wtx, rtx, vecSend, !fCheckFeeOnly, nFeeRet, &coincontrol, sError))
                 throw JSONRPCError(RPC_WALLET_ERROR, strprintf("AddBlindedInputs failed: %s.", sError));
             break;
         case OUTPUT_RINGCT:
-            if (0 != pwallet->AddAnonInputs(wtx, rtx, vecSend, !fCheckFeeOnly, nRingSize, nInputsPerSig, nFeeRet, pCoinControl, sError))
+            if (0 != pwallet->AddAnonInputs(wtx, rtx, vecSend, !fCheckFeeOnly, nRingSize, nInputsPerSig, nFeeRet, &coincontrol, sError))
                 throw JSONRPCError(RPC_WALLET_ERROR, strprintf("AddAnonInputs failed: %s.", sError));
             break;
         default:
@@ -3783,7 +3815,7 @@ static OutputTypes WordToType(std::string &s)
     return OUTPUT_NULL;
 };
 
-static std::string SendHelp(OutputTypes typeIn, OutputTypes typeOut)
+static std::string SendHelp(CHDWallet *pwallet, OutputTypes typeIn, OutputTypes typeOut)
 {
     std::string rv;
     
@@ -3799,7 +3831,7 @@ static std::string SendHelp(OutputTypes typeIn, OutputTypes typeOut)
     rv += std::string(" part in a") + (typeOut == OUTPUT_RINGCT || typeOut == OUTPUT_CT ? " blinded" : "") + " payment to a given address"
         + (typeOut == OUTPUT_CT ? " in anon part": "") + ".\n";
     
-    rv += HelpRequiringPassphrase();
+    rv += HelpRequiringPassphrase(pwallet);
     
     rv +=   "\nArguments:\n"
             "1. \"address\"     (string, required) The particl address to send to.\n"
@@ -3830,16 +3862,22 @@ static std::string SendHelp(OutputTypes typeIn, OutputTypes typeOut)
 
 UniValue sendparttoblind(const JSONRPCRequest &request)
 {
+    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 6)
-        throw std::runtime_error(SendHelp(OUTPUT_STANDARD, OUTPUT_CT));
+        throw std::runtime_error(SendHelp(pwallet, OUTPUT_STANDARD, OUTPUT_CT));
     
     return SendToInner(request, OUTPUT_STANDARD, OUTPUT_CT);
 };
 
 UniValue sendparttoanon(const JSONRPCRequest &request)
 {
+    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 6)
-        throw std::runtime_error(SendHelp(OUTPUT_STANDARD, OUTPUT_RINGCT));
+        throw std::runtime_error(SendHelp(pwallet, OUTPUT_STANDARD, OUTPUT_RINGCT));
     
     return SendToInner(request, OUTPUT_STANDARD, OUTPUT_RINGCT);
 };
@@ -3847,24 +3885,33 @@ UniValue sendparttoanon(const JSONRPCRequest &request)
 
 UniValue sendblindtopart(const JSONRPCRequest &request)
 {
+    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 6)
-        throw std::runtime_error(SendHelp(OUTPUT_CT, OUTPUT_STANDARD));
+        throw std::runtime_error(SendHelp(pwallet, OUTPUT_CT, OUTPUT_STANDARD));
     
     return SendToInner(request, OUTPUT_CT, OUTPUT_STANDARD);
 };
 
 UniValue sendblindtoblind(const JSONRPCRequest &request)
 {
+    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 6)
-        throw std::runtime_error(SendHelp(OUTPUT_CT, OUTPUT_CT));
+        throw std::runtime_error(SendHelp(pwallet, OUTPUT_CT, OUTPUT_CT));
     
     return SendToInner(request, OUTPUT_CT, OUTPUT_CT);
 };
 
 UniValue sendblindtoanon(const JSONRPCRequest &request)
 {
+    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 6)
-        throw std::runtime_error(SendHelp(OUTPUT_CT, OUTPUT_RINGCT));
+        throw std::runtime_error(SendHelp(pwallet, OUTPUT_CT, OUTPUT_RINGCT));
     
     return SendToInner(request, OUTPUT_CT, OUTPUT_RINGCT);
 };
@@ -3872,35 +3919,47 @@ UniValue sendblindtoanon(const JSONRPCRequest &request)
 
 UniValue sendanontopart(const JSONRPCRequest &request)
 {
+    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 8)
-        throw std::runtime_error(SendHelp(OUTPUT_RINGCT, OUTPUT_STANDARD));
+        throw std::runtime_error(SendHelp(pwallet, OUTPUT_RINGCT, OUTPUT_STANDARD));
     
     return SendToInner(request, OUTPUT_RINGCT, OUTPUT_STANDARD);
 };
 
 UniValue sendanontoblind(const JSONRPCRequest &request)
 {
+    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 8)
-        throw std::runtime_error(SendHelp(OUTPUT_RINGCT, OUTPUT_CT));
+        throw std::runtime_error(SendHelp(pwallet, OUTPUT_RINGCT, OUTPUT_CT));
     
     return SendToInner(request, OUTPUT_RINGCT, OUTPUT_CT);
 };
 
 UniValue sendanontoanon(const JSONRPCRequest &request)
 {
+    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 8)
-        throw std::runtime_error(SendHelp(OUTPUT_RINGCT, OUTPUT_RINGCT));
+        throw std::runtime_error(SendHelp(pwallet, OUTPUT_RINGCT, OUTPUT_RINGCT));
     
     return SendToInner(request, OUTPUT_RINGCT, OUTPUT_RINGCT);
 };
 
 UniValue sendtypeto(const JSONRPCRequest &request)
 {
+    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
     if (request.fHelp || request.params.size() < 3 || request.params.size() > 9)
         throw std::runtime_error(
             "sendtypeto \"typein\" \"typeout\" [{address: , amount: , narr: , subfee:},...] (\"comment\" \"comment-to\" ringsize inputs_per_sig test_fee coin_control)\n"
             "\nSend part to multiple outputs.\n"
-            + HelpRequiringPassphrase() +
+            + HelpRequiringPassphrase(pwallet) +
             "\nArguments:\n"
             "1. \"typein\"          (string, required) part/blind/anon\n"
             "2. \"typeout\"         (string, required) part/blind/anon\n"
@@ -4042,6 +4101,10 @@ UniValue buildscript(const JSONRPCRequest &request)
 
 UniValue debugwallet(const JSONRPCRequest &request)
 {
+    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
+    
     if (request.fHelp || request.params.size() > 1)
         throw std::runtime_error(
             "debugwallet [attempt_repair]\n"
@@ -4055,7 +4118,6 @@ UniValue debugwallet(const JSONRPCRequest &request)
             fAttemptRepair = true;
     };
     
-    CHDWallet *pwallet = GetHDWallet();
     EnsureWalletIsUnlocked(pwallet);
     
     size_t nUnabandonedOrphans = 0;
@@ -4112,12 +4174,15 @@ UniValue debugwallet(const JSONRPCRequest &request)
 
 UniValue rewindchain(const JSONRPCRequest &request)
 {
+    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
+    
     if (request.fHelp || request.params.size() > 1)
         throw std::runtime_error(
             "rewindchain [height]\n"
             "height default - last known rct index .\n");
     
-    CHDWallet *pwallet = GetHDWallet();
     EnsureWalletIsUnlocked(pwallet);
     
     LOCK2(cs_main, pwallet->cs_wallet);
@@ -4126,7 +4191,7 @@ UniValue rewindchain(const JSONRPCRequest &request)
     
     UniValue result(UniValue::VOBJ);
     
-    CCoinsViewCache view(pcoinsTip, fParticlMode);
+    CCoinsViewCache view(pcoinsdbview);
     CBlockIndex* pindexState = chainActive.Tip();
     CValidationState state;
     
@@ -4161,8 +4226,7 @@ UniValue rewindchain(const JSONRPCRequest &request)
             result.pushKV("ReadBlockFromDisk failed", pindex->GetBlockHash().ToString());
             break;
         };
-        bool fClean = true;
-        if (!DisconnectBlock(block, state, pindex, view, &fClean, true))
+        if (DISCONNECT_OK != DisconnectBlock(block, pindex, view)) 
         {
             result.pushKV("DisconnectBlock failed", pindex->GetBlockHash().ToString());
             break;
@@ -4173,7 +4237,7 @@ UniValue rewindchain(const JSONRPCRequest &request)
             break;
         };
         
-        if (!FlushStateToDisk(state, FLUSH_STATE_IF_NEEDED))
+        if (!FlushStateToDisk(Params(), state, FLUSH_STATE_IF_NEEDED))
             return false;
 
         // Update chainActive and related variables.
@@ -4188,6 +4252,10 @@ UniValue rewindchain(const JSONRPCRequest &request)
 
 UniValue walletsettings(const JSONRPCRequest &request)
 {
+    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
+    
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
             "walletsettings \"setting\" json/\"clear\"\n"
@@ -4197,8 +4265,6 @@ UniValue walletsettings(const JSONRPCRequest &request)
             "   - \"coldstakingaddress\": Cold staking address for standard inputs.\n"
         );
     
-    
-    CHDWallet *pwallet = GetHDWallet();
     EnsureWalletIsUnlocked(pwallet);
     
     UniValue result(UniValue::VOBJ);
@@ -4299,6 +4365,10 @@ UniValue walletsettings(const JSONRPCRequest &request)
 
 UniValue setvote(const JSONRPCRequest &request)
 {
+    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
+    
     if (request.fHelp || request.params.size() != 4)
         throw std::runtime_error(
             "setvote <proposal> <option> <height_start> <height_end>\n"
@@ -4309,7 +4379,6 @@ UniValue setvote(const JSONRPCRequest &request)
             "Wallet will include this token in staked blocks from height_start to height_end.\n"
             "Set proposal and/or option to 0 to stop voting.\n");
     
-    CHDWallet *pwallet = GetHDWallet();
     EnsureWalletIsUnlocked(pwallet);
     
     uint32_t issue = request.params[0].get_int();
@@ -4331,7 +4400,7 @@ UniValue setvote(const JSONRPCRequest &request)
     {
         LOCK(pwallet->cs_wallet);
         
-        CHDWalletDB wdb(pwallet->strWalletFile, "r+");
+        CHDWalletDB wdb(pwallet->GetDBHandle(), "r+");
         
         std::vector<CVoteToken> vVoteTokens;
     
@@ -4361,12 +4430,14 @@ UniValue setvote(const JSONRPCRequest &request)
 
 UniValue votehistory(const JSONRPCRequest &request)
 {
+    CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
+    
     if (request.fHelp || request.params.size() > 1)
         throw std::runtime_error(
             "votehistory [current_only]\n"
             "Display voting history.\n");
-    
-    CHDWallet *pwallet = GetHDWallet();
     
     UniValue result(UniValue::VARR);
     
@@ -4404,7 +4475,7 @@ UniValue votehistory(const JSONRPCRequest &request)
     {
         LOCK(pwallet->cs_wallet);
         
-        CHDWalletDB wdb(pwallet->strWalletFile, "r+");
+        CHDWalletDB wdb(pwallet->GetDBHandle(), "r+");
         wdb.ReadVoteTokens(vVoteTokens);
     }
     
@@ -4566,7 +4637,7 @@ static const CRPCCommand commands[] =
 
 void RegisterHDWalletRPCCommands(CRPCTable &t)
 {
-    if (GetBoolArg("-disablewallet", false))
+    if (gArgs.GetBoolArg("-disablewallet", false))
         return;
 
     for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)

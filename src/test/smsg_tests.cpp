@@ -13,7 +13,11 @@
 
 #include <boost/test/unit_test.hpp>
 
-BOOST_FIXTURE_TEST_SUITE(smsg_tests, BasicTestingSetup)
+struct SmsgTestingSetup : public TestingSetup {
+    SmsgTestingSetup() : TestingSetup(CBaseChainParams::MAIN, true) {}
+};
+
+BOOST_FIXTURE_TEST_SUITE(smsg_tests, SmsgTestingSetup)
 
 
 
@@ -25,6 +29,7 @@ BOOST_AUTO_TEST_CASE(smsg_test_ckeyId_inits_null)
 
 BOOST_AUTO_TEST_CASE(smsg_test)
 {
+
 #ifdef ENABLE_WALLET
     fParticlMode = true;
     g_connman = std::unique_ptr<CConnman>(new CConnman(GetRand(std::numeric_limits<uint64_t>::max()), GetRand(std::numeric_limits<uint64_t>::max())));

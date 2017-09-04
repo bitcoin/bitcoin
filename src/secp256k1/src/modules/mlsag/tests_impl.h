@@ -9,6 +9,8 @@
 
 #include "include/secp256k1_mlsag.h"
 
+static int mlsag_count = 32;
+
 #define MAX_N_INPUTS  32
 #define MAX_N_OUTPUTS 32
 #define MAX_N_COLUMNS 32
@@ -182,8 +184,7 @@ void test_mlsag(void)
 void run_mlsag_tests(void) {
     int i;
     
-    /*for (i = 0; i < 10*count; i++) {*/
-    for (i = 0; i < count; i++) {
+    for (i = 0; i < mlsag_count; i++) {
         test_mlsag();
     }
 }

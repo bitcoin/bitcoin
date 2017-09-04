@@ -7,12 +7,12 @@
 #include "rpc/rpcutil.h"
 
 #include "base58.h"
+#include "core_io.h"
 #include "netbase.h"
 
 #include "test/test_particl.h"
 
 #include <boost/algorithm/string.hpp>
-#include <boost/assign/list_of.hpp>
 #include <boost/test/unit_test.hpp>
 
 
@@ -257,7 +257,7 @@ BOOST_AUTO_TEST_CASE(rpc_ban)
     BOOST_CHECK(banned_until.get_int64() > now);
     BOOST_CHECK(banned_until.get_int64()-now <= 200);
 
-    // must throw an exception because 127.0.0.1 is in already banned suubnet range
+    // must throw an exception because 127.0.0.1 is in already banned subnet range
     BOOST_CHECK_THROW(r = CallRPC(std::string("setban 127.0.0.1 add")), std::runtime_error);
 
     BOOST_CHECK_NO_THROW(CallRPC(std::string("setban 127.0.0.0/24 remove")));
@@ -304,20 +304,21 @@ BOOST_AUTO_TEST_CASE(rpc_ban)
 BOOST_AUTO_TEST_CASE(rpc_convert_values_generatetoaddress)
 {
     UniValue result;
-    BOOST_CHECK_NO_THROW(result = RPCConvertValues("generatetoaddress", boost::assign::list_of("101")("pZbfd6eX4Mhu1jgrh4gRy4eN75sex3xSxG")));
+
+    BOOST_CHECK_NO_THROW(result = RPCConvertValues("generatetoaddress", {"101", "pZbfd6eX4Mhu1jgrh4gRy4eN75sex3xSxG"}));
     BOOST_CHECK_EQUAL(result[0].get_int(), 101);
     BOOST_CHECK_EQUAL(result[1].get_str(), "pZbfd6eX4Mhu1jgrh4gRy4eN75sex3xSxG");
 
-    BOOST_CHECK_NO_THROW(result = RPCConvertValues("generatetoaddress", boost::assign::list_of("101")("pWipez7uCRD82aB6KWhRXcE1mZpXv71Yk5")));
+    BOOST_CHECK_NO_THROW(result = RPCConvertValues("generatetoaddress", {"101", "pWipez7uCRD82aB6KWhRXcE1mZpXv71Yk5"}));
     BOOST_CHECK_EQUAL(result[0].get_int(), 101);
     BOOST_CHECK_EQUAL(result[1].get_str(), "pWipez7uCRD82aB6KWhRXcE1mZpXv71Yk5");
 
-    BOOST_CHECK_NO_THROW(result = RPCConvertValues("generatetoaddress", boost::assign::list_of("1")("pZbfd6eX4Mhu1jgrh4gRy4eN75sex3xSxG")("9")));
+    BOOST_CHECK_NO_THROW(result = RPCConvertValues("generatetoaddress", {"1", "pZbfd6eX4Mhu1jgrh4gRy4eN75sex3xSxG", "9"}));
     BOOST_CHECK_EQUAL(result[0].get_int(), 1);
     BOOST_CHECK_EQUAL(result[1].get_str(), "pZbfd6eX4Mhu1jgrh4gRy4eN75sex3xSxG");
     BOOST_CHECK_EQUAL(result[2].get_int(), 9);
 
-    BOOST_CHECK_NO_THROW(result = RPCConvertValues("generatetoaddress", boost::assign::list_of("1")("pWipez7uCRD82aB6KWhRXcE1mZpXv71Yk5")("9")));
+    BOOST_CHECK_NO_THROW(result = RPCConvertValues("generatetoaddress", {"1", "pWipez7uCRD82aB6KWhRXcE1mZpXv71Yk5", "9"}));
     BOOST_CHECK_EQUAL(result[0].get_int(), 1);
     BOOST_CHECK_EQUAL(result[1].get_str(), "pWipez7uCRD82aB6KWhRXcE1mZpXv71Yk5");
     BOOST_CHECK_EQUAL(result[2].get_int(), 9);

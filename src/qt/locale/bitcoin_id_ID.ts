@@ -441,6 +441,14 @@
         <source>Processing blocks on disk...</source>
         <translation>Memproses blok pada disk ...</translation>
     </message>
+    <message>
+        <source>Indexing blocks on disk...</source>
+        <translation>Pengindeksan blok pada disk ...</translation>
+    </message>
+    <message>
+        <source>Processing blocks on disk...</source>
+        <translation>Memproses blok pada disk ...</translation>
+    </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation><numerusform>%n blok dari riwayat transaksi diproses.</numerusform></translation>
@@ -528,6 +536,14 @@
         <translation>Transaksi diterima</translation>
     </message>
     <message>
+        <source>HD key generation is &lt;b&gt;enabled&lt;/b&gt;</source>
+        <translation>Pembuatan kunci HD &lt;b&gt;diaktifkan&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>HD key generation is &lt;b&gt;disabled&lt;/b&gt;</source>
+        <translation>Pembuatan kunci HD &lt;b&gt;dinonaktifkan&lt;/b&gt;</translation>
+    </message>
+    <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>Dompet saat ini &lt;b&gt;terenkripsi&lt;/b&gt; dan &lt;b&gt;terbuka&lt;/b&gt;</translation>
     </message>
@@ -535,7 +551,11 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Dompet saat ini &lt;b&gt;terenkripsi&lt;/b&gt; dan &lt;b&gt;terkunci&lt;/b&gt;</translation>
     </message>
-    </context>
+    <message>
+        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
+        <translation>Terjadi Kesalahan Fatal. Bitcoin Tidak Dapat Melanjutkan Dengan Aman Dan Akan Keluar</translation>
+    </message>
+</context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -615,14 +635,62 @@
         <translation>Salin label</translation>
     </message>
     <message>
+        <source>Copy amount</source>
+        <translation>Salin Jumlah</translation>
+    </message>
+    <message>
+        <source>Copy transaction ID</source>
+        <translation>Salain ID Transaksi</translation>
+    </message>
+    <message>
+        <source>Lock unspent</source>
+        <translation>Kunci Yang Tidak Digunakan</translation>
+    </message>
+    <message>
+        <source>Unlock unspent</source>
+        <translation>Buka Kunci Yang Tidak Digunakan</translation>
+    </message>
+    <message>
+        <source>Copy quantity</source>
+        <translation>Salin Kuantitas</translation>
+    </message>
+    <message>
         <source>Copy fee</source>
         <translation>Salin biaya</translation>
+    </message>
+    <message>
+        <source>Copy after fee</source>
+        <translation>Salin Setelah Upah</translation>
+    </message>
+    <message>
+        <source>Copy bytes</source>
+        <translation>Salin bytes</translation>
+    </message>
+    <message>
+        <source>Copy dust</source>
+        <translation>Salin jumlah yang lebih kecil</translation>
+    </message>
+    <message>
+        <source>Copy change</source>
+        <translation>Salin Perubahan</translation>
+    </message>
+    <message>
+        <source>(%1 locked)</source>
+        <translation>(%1 terkunci)</translation>
+    </message>
+    <message>
+        <source>yes</source>
+        <translation>Ya</translation>
+    </message>
+    <message>
+        <source>no</source>
+        <translation>Tidak</translation>
     </message>
     <message>
         <source>(no label)</source>
         <translation>(tidak ada label)</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -645,7 +713,39 @@
         <source>&amp;Address</source>
         <translation>&amp;Alamat</translation>
     </message>
-    </context>
+    <message>
+        <source>New receiving address</source>
+        <translation>Alamat penerima baru</translation>
+    </message>
+    <message>
+        <source>New sending address</source>
+        <translation>Alamat pengirim baru</translation>
+    </message>
+    <message>
+        <source>Edit receiving address</source>
+        <translation>Ubah alamat penerima</translation>
+    </message>
+    <message>
+        <source>Edit sending address</source>
+        <translation>Ubah alamat pengirim</translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is not a valid Bitcoin address.</source>
+        <translation>Alamat yang dimasukkan "%1" bukanlah alamat Bitcoin yang valid.</translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is already in the address book.</source>
+        <translation>Alamat yang dimasukkan "%1" sudah ada di dalam buku alamat.</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Tidak dapat membuka dompet.</translation>
+    </message>
+    <message>
+        <source>New key generation failed.</source>
+        <translation>Pembuatan kunci baru gagal.</translation>
+    </message>
+</context>
 <context>
     <name>FreespaceChecker</name>
     <message>
@@ -678,6 +778,10 @@
     <message>
         <source>(%1-bit)</source>
         <translation>(%1-bit)</translation>
+    </message>
+    <message>
+        <source>About %1</source>
+        <translation>Tentang %1</translation>
     </message>
     <message>
         <source>Command-line options</source>
@@ -715,12 +819,24 @@
         <source>Show splash screen on startup (default: %u)</source>
         <translation>Tampilkan layar kilat saat memulai (default: %u)</translation>
     </message>
-    </context>
+    <message>
+        <source>Reset all settings changed in the GUI</source>
+        <translation>Hapus semua pengaturan pada GUI.</translation>
+    </message>
+</context>
 <context>
     <name>Intro</name>
     <message>
         <source>Welcome</source>
         <translation>Selamat Datang</translation>
+    </message>
+    <message>
+        <source>Welcome to %1.</source>
+        <translation>Selamat Datang ke %1.</translation>
+    </message>
+    <message>
+        <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
+        <translation>Karena ini adalah pertama kalinya program dijalankan, Anda dapat memilih lokasi %1 akan menyimpan data.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -1285,7 +1401,11 @@
         <source>Copy label</source>
         <translation>Salin label</translation>
     </message>
-    </context>
+    <message>
+        <source>Copy amount</source>
+        <translation>Salin Jumlah</translation>
+    </message>
+</context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
@@ -1431,8 +1551,32 @@
         <translation>K&amp;irim</translation>
     </message>
     <message>
+        <source>Copy quantity</source>
+        <translation>Salin Kuantitas</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation>Salin Jumlah</translation>
+    </message>
+    <message>
         <source>Copy fee</source>
         <translation>Salin biaya</translation>
+    </message>
+    <message>
+        <source>Copy after fee</source>
+        <translation>Salin Setelah Upah</translation>
+    </message>
+    <message>
+        <source>Copy bytes</source>
+        <translation>Salin bytes</translation>
+    </message>
+    <message>
+        <source>Copy dust</source>
+        <translation>Salin dust</translation>
+    </message>
+    <message>
+        <source>Copy change</source>
+        <translation>Salin Perubahan</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -1619,6 +1763,14 @@
     <message>
         <source>Copy label</source>
         <translation>Salin label</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation>Salin Jumlah</translation>
+    </message>
+    <message>
+        <source>Copy transaction ID</source>
+        <translation>Salain ID Transaksi</translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>

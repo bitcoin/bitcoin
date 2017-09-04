@@ -79,13 +79,22 @@ TestVector test2 =
      "XPARHB1oxMhcXYGXJaSBoFUj6ConuBpmjSFiSDZKem4Cecot5oDz4vCiMpdTRh8jsoGLUwCp5ZE1h4pBZtadZh2vBxUVq2wmzWoaUSeVEJjizfsx",
      0);
 
+TestVector test3 =
+  TestVector("4b381541583be4423346c643850da4b320e46a87ae3d2a4e6da11eba819cd4acba45d239319ac14f863b8d5ab5a0d0c64d2e8a1e7d1457df2e5a3c51c73235be")
+    ("PPARTKMMf4AUDYzRSBPh1qaQ8LoRsSnCgtgHUvGnWJ8nsxAUb5aTb12KccaCijQZZNDtpWNC5mFPAuLXNLGThsWmjMJ2BRaAcZgXGCmmFn7Ntz1j",
+     "XPARHAr37YxmFP8wyjXjrhRkZZSxTfSFhYAktHGRgHaakNusFRq1EpNoTozddSN7FZpKSpBQz7FcEF3uZH77FLfALV8AwMm7cWWtiJR8hCzrUe75",
+      0x80000000)
+    ("PPARTKPiro8JMEMnnNvnR4ijdQ4BY98p53XhPKm2T7NUitUPxLbb3aX6Uh2zS38Q56aVZhjgvYD8ukHirxjQ3okhuvYJ86g7W7Y24gx8ASXM6ArD",
+     "XPARHAtQKHvbP4WKKw4qFva64chi8Mns5h2Angkfd6pGbKDncgr8hPsaKtTRLk8TbumeNGL4Q8CQ6tnY1vekPusk6EtNZnu2fFgAXRS6MAQjzukJ",
+      0);
+
 void RunTest(const TestVector &test) {
     std::vector<unsigned char> seed = ParseHex(test.strHexMaster);
     CExtKey key;
     CExtPubKey pubkey;
     key.SetMaster(&seed[0], seed.size());
     pubkey = key.Neutered();
-    BOOST_FOREACH(const TestDerivation &derive, test.vDerive) {
+    for (const TestDerivation &derive : test.vDerive) {
         unsigned char data[74];
         key.Encode(data);
         pubkey.Encode(data);
@@ -149,6 +158,10 @@ BOOST_AUTO_TEST_CASE(bip32_test1) {
 
 BOOST_AUTO_TEST_CASE(bip32_test2) {
     RunTest(test2);
+}
+
+BOOST_AUTO_TEST_CASE(bip32_test3) {
+    RunTest(test3);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

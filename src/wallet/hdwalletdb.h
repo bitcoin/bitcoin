@@ -20,8 +20,6 @@
 #include <utility>
 #include <vector>
 
-
-
 /*
 prefixes
     name
@@ -217,27 +215,32 @@ public:
 class CHDWalletDB : public CWalletDB
 {
 public:
-    CHDWalletDB(const std::string& strFilename, const char* pszMode = "r+", bool fFlushOnClose = true) : CWalletDB(strFilename, pszMode, fFlushOnClose)
+    CHDWalletDB(CWalletDBWrapper& dbw, const char* pszMode = "r+", bool _fFlushOnClose = true) : CWalletDB(dbw, pszMode, _fFlushOnClose)
     {
-    }
+    };
     
     bool InTxn()
     {
-        return pdb && activeTxn;
+        return batch.pdb && batch.activeTxn;
     };
     
     Dbc *GetTxnCursor()
     {
-        if (!pdb || !activeTxn)
+        if (!batch.pdb || !batch.activeTxn)
             return NULL;
 
-        DbTxn *ptxnid = activeTxn; // call TxnBegin first
+        DbTxn *ptxnid = batch.activeTxn; // call TxnBegin first
 
         Dbc *pcursor = NULL;
-        int ret = pdb->cursor(ptxnid, &pcursor, 0);
+        int ret = batch.pdb->cursor(ptxnid, &pcursor, 0);
         if (ret != 0)
             return NULL;
         return pcursor;
+    }
+    
+    Dbc *GetCursor()
+    {
+        return batch.GetCursor();
     }
     
     template< typename T>
@@ -246,7 +249,7 @@ public:
         if (!pcursor)
             return false;
 
-        if (fReadOnly)
+        if (batch.fReadOnly)
             assert(!"Replace called on database in read-only mode");
 
         // Value

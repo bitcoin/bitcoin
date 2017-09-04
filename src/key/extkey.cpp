@@ -863,7 +863,7 @@ int CExtKeyAccount::AddLookBehind(uint32_t nChain, uint32_t nKeys)
         return errorN(1, "%s: Unknown chain, %d.", __func__, nChain);
     
     if (fDebug)
-        LogPrint("hdwallet", "%s: chain %s, keys %d.\n", __func__, pc->GetIDString58(), nKeys);
+        LogPrint(BCLog::HDWALLET, "%s: chain %s, keys %d.\n", __func__, pc->GetIDString58(), nKeys);
     
     AccKeyMap::const_iterator mi;
     uint32_t nChild = pc->nGenerated;
@@ -877,7 +877,7 @@ int CExtKeyAccount::AddLookBehind(uint32_t nChain, uint32_t nKeys)
         
         if (nChild == 0)
         {
-            LogPrint("hdwallet", "%s: chain %s, at key 0.\n", __func__, pc->GetIDString58());
+            LogPrint(BCLog::HDWALLET, "%s: chain %s, at key 0.\n", __func__, pc->GetIDString58());
             break;
         }
         
@@ -898,7 +898,7 @@ int CExtKeyAccount::AddLookBehind(uint32_t nChain, uint32_t nKeys)
             if ((mi = mapKeys.find(keyId)) != mapKeys.end())
             {
                 if (fDebug)
-                    LogPrint("hdwallet", "%s: key exists in map skipping %s.\n", __func__, CBitcoinAddress(keyId).ToString());
+                    LogPrint(BCLog::HDWALLET, "%s: key exists in map skipping %s.\n", __func__, CBitcoinAddress(keyId).ToString());
                 continue;
             };
             
@@ -918,7 +918,7 @@ int CExtKeyAccount::AddLookBehind(uint32_t nChain, uint32_t nKeys)
         mapLookAhead[keyId] = CEKAKey(nChain, nChildOut);
         
         if (fDebug)
-            LogPrint("hdwallet", "%s: Added %s, look-ahead size %u.\n", __func__, CBitcoinAddress(keyId).ToString(), mapLookAhead.size());
+            LogPrint(BCLog::HDWALLET, "%s: Added %s, look-ahead size %u.\n", __func__, CBitcoinAddress(keyId).ToString(), mapLookAhead.size());
     };
     
     return 0;
@@ -932,7 +932,7 @@ int CExtKeyAccount::AddLookAhead(uint32_t nChain, uint32_t nKeys)
         return errorN(1, "%s: Unknown chain, %d.", __func__, nChain);
     
     if (fDebug)
-        LogPrint("hdwallet", "%s: chain %s, keys %d.\n", __func__, pc->GetIDString58(), nKeys);
+        LogPrint(BCLog::HDWALLET, "%s: chain %s, keys %d.\n", __func__, pc->GetIDString58(), nKeys);
     
     AccKeyMap::const_iterator mi;
     uint32_t nChild = std::max(pc->nGenerated, pc->nLastLookAhead);
@@ -959,7 +959,7 @@ int CExtKeyAccount::AddLookAhead(uint32_t nChain, uint32_t nKeys)
             if ((mi = mapKeys.find(keyId)) != mapKeys.end())
             {
                 if (fDebug)
-                    LogPrint("hdwallet", "%s: key exists in map skipping %s.\n", __func__, CBitcoinAddress(keyId).ToString());
+                    LogPrint(BCLog::HDWALLET, "%s: key exists in map skipping %s.\n", __func__, CBitcoinAddress(keyId).ToString());
                 continue;
             };
             
@@ -980,7 +980,7 @@ int CExtKeyAccount::AddLookAhead(uint32_t nChain, uint32_t nKeys)
         pc->nLastLookAhead = nChildOut;
         
         if (fDebug)
-            LogPrint("hdwallet", "%s: Added %s, look-ahead size %u.\n", __func__, CBitcoinAddress(keyId).ToString(), mapLookAhead.size());
+            LogPrint(BCLog::HDWALLET, "%s: Added %s, look-ahead size %u.\n", __func__, CBitcoinAddress(keyId).ToString(), mapLookAhead.size());
     };
     
     return 0;

@@ -9,14 +9,17 @@
 #include "wallet/hdwallet.h"
 #include "validation.h"
 
+extern CWallet *pwalletMain;
+
 HDWalletTestingSetup::HDWalletTestingSetup(const std::string &chainName):
     TestingSetup(chainName, true) // fParticlMode = true
 {
-    
     bitdb.MakeMock();
 
     bool fFirstRun;
-    pwalletMain = (CWallet*) new CHDWallet("wallet_test.dat");
+    std::unique_ptr<CWalletDBWrapper> dbw(new CWalletDBWrapper(&bitdb, "wallet_test.dat"));
+    pwalletMain = (CWallet*) new CHDWallet(std::move(dbw));
+    vpwallets.push_back(pwalletMain);
     fParticlWallet = true;
     pwalletMain->LoadWallet(fFirstRun);
     RegisterValidationInterface(pwalletMain);
@@ -36,6 +39,7 @@ HDWalletTestingSetup::~HDWalletTestingSetup()
     
     mapStakeSeen.clear();
     listStakeSeen.clear();
+    vpwallets.clear();
 }
 
 std::string StripQuotes(std::string s)

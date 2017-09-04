@@ -169,7 +169,7 @@ bool CheckProofOfStake(const CBlockIndex *pindexPrev, const CTransaction &tx, in
     // read transaction and block header, fTxIndex should be enabled by default
     if (!GetTransaction(txin.prevout.hash, txKernel, Params().GetConsensus(), blockKernel, true))
     {
-        if (fDebug) LogPrint("pos", "%s: GetTransaction failed for %s\n", __func__, txin.prevout.hash.ToString());
+        if (fDebug) LogPrint(BCLog::POS, "%s: GetTransaction failed for %s\n", __func__, txin.prevout.hash.ToString());
         return state.DoS(1, error("%s: prevout-not-in-chain", __func__), REJECT_INVALID, "prevout-not-in-chain");
     };
     

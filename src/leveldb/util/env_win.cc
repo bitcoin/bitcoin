@@ -1,7 +1,7 @@
 // This file contains source that originates from:
 // http://code.google.com/p/leveldbwin/source/browse/trunk/win32_impl_src/env_win32.h
 // http://code.google.com/p/leveldbwin/source/browse/trunk/win32_impl_src/port_win32.cc
-// Those files dont' have any explict license headers but the 
+// Those files don't have any explicit license headers but the 
 // project (http://code.google.com/p/leveldbwin/) lists the 'New BSD License'
 // as the license.
 #if defined(LEVELDB_PLATFORM_WINDOWS)
@@ -355,11 +355,13 @@ BOOL Win32SequentialFile::_Init()
 	ToWidePath(_filename, path);
 	_hFile = CreateFileW(path.c_str(),
                          GENERIC_READ,
-                         FILE_SHARE_READ,
+                         FILE_SHARE_READ | FILE_SHARE_WRITE,
                          NULL,
                          OPEN_EXISTING,
-                         FILE_ATTRIBUTE_NORMAL,
+                         FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN,
                          NULL);
+    if (_hFile == INVALID_HANDLE_VALUE)
+        _hFile = NULL;
     return _hFile ? TRUE : FALSE;
 }
 
@@ -403,7 +405,7 @@ BOOL Win32RandomAccessFile::_Init( LPCWSTR path )
 {
     BOOL bRet = FALSE;
     if(!_hFile)
-        _hFile = ::CreateFileW(path,GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,
+        _hFile = ::CreateFileW(path,GENERIC_READ,FILE_SHARE_READ|FILE_SHARE_WRITE,NULL,OPEN_EXISTING,
         FILE_ATTRIBUTE_NORMAL | FILE_FLAG_RANDOM_ACCESS,NULL);
     if(!_hFile || _hFile == INVALID_HANDLE_VALUE )
         _hFile = NULL;
@@ -669,7 +671,7 @@ Status Win32Env::GetFileSize( const std::string& fname, uint64_t* file_size )
 	ToWidePath(ModifyPath(path), wpath);
 
     HANDLE file = ::CreateFileW(wpath.c_str(),
-        GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
+        GENERIC_READ,FILE_SHARE_READ|FILE_SHARE_WRITE,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
     LARGE_INTEGER li;
     if(::GetFileSizeEx(file,&li)){
         *file_size = (uint64_t)li.QuadPart;

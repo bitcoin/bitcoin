@@ -107,9 +107,11 @@ bool CheckStake(CBlock *pblock)
     
     // debug print
     LogPrintf("CheckStake(): New proof-of-stake block found  \n  hash: %s \nproofhash: %s  \ntarget: %s\n", hashBlock.GetHex(), proofHash.GetHex(), hashTarget.GetHex());
-    LogPrintf(pblock->ToString());
-    LogPrintf("out %s\n", FormatMoney(pblock->vtx[0]->GetValueOut()));
-    
+    if (LogAcceptCategory(BCLog::POS))
+    {
+        LogPrintf("block %s\n", pblock->ToString());
+        LogPrintf("out %s\n", FormatMoney(pblock->vtx[0]->GetValueOut()));
+    };
     
     {
         LOCK(cs_main);
@@ -126,7 +128,7 @@ bool CheckStake(CBlock *pblock)
 
 bool ImportOutputs(CBlockTemplate *pblocktemplate, int nHeight)
 {
-    LogPrint("pos", "%s, nHeight %d\n", __func__, nHeight);
+    LogPrint(BCLog::POS, "%s, nHeight %d\n", __func__, nHeight);
     
     CBlock *pblock = &pblocktemplate->block;
     if (pblock->vtx.size() < 1)
@@ -218,7 +220,7 @@ void ShutdownThreadStakeMiner()
     if (threadStakeMiner.get_id() == std::thread::id()) // no thread created
         return;
     
-    LogPrint("pos", "ShutdownThreadStakeMiner\n");
+    LogPrint(BCLog::POS, "ShutdownThreadStakeMiner\n");
     fStopMinerProc = true;
     
     {
@@ -233,7 +235,7 @@ void ShutdownThreadStakeMiner()
 void WakeThreadStakeMiner()
 {
     // call once chain is synced, or wallet unlocked
-    LogPrint("pos", "WakeThreadStakeMiner\n");
+    LogPrint(BCLog::POS, "WakeThreadStakeMiner\n");
     
     {
         std::lock_guard<std::mutex> lock(mtxMinerProc);
@@ -270,7 +272,7 @@ void ThreadStakeMiner(CHDWallet *pwallet)
     assert(pwallet);
     while (!fStopMinerProc)
     {
-        if (pwallet->IsLocked() || !GetBoolArg("-staking", true))
+        if (pwallet->IsLocked() || !gArgs.GetBoolArg("-staking", true))
         {
             fIsStaking = false;
             condWaitFor(30000);
@@ -288,7 +290,7 @@ void ThreadStakeMiner(CHDWallet *pwallet)
         {
             fIsStaking = false;
             fTryToSync = true;
-            LogPrint("pos", "%s: IsInitialBlockDownload\n", __func__);
+            LogPrint(BCLog::POS, "%s: IsInitialBlockDownload\n", __func__);
             condWaitFor(2000);
             continue;
         };
@@ -300,7 +302,7 @@ void ThreadStakeMiner(CHDWallet *pwallet)
             if (g_connman->vNodes.size() < 3 || nBestHeight < GetNumBlocksOfPeers())
             {
                 fIsStaking = false;
-                LogPrint("pos", "%s: TryToSync\n", __func__);
+                LogPrint(BCLog::POS, "%s: TryToSync\n", __func__);
                 condWaitFor(30000);
                 continue;
             };
@@ -315,24 +317,23 @@ void ThreadStakeMiner(CHDWallet *pwallet)
         if (nBestHeight < GetNumBlocksOfPeers()-1)
         {
             fIsStaking = false;
-            LogPrint("pos", "%s: nBestHeight < GetNumBlocksOfPeers(), %d, %d\n", __func__, nBestHeight, GetNumBlocksOfPeers());
+            LogPrint(BCLog::POS, "%s: nBestHeight < GetNumBlocksOfPeers(), %d, %d\n", __func__, nBestHeight, GetNumBlocksOfPeers());
             condWaitFor(nMinerSleep * 4);
             continue;
         };
         
         if (nMinStakeInterval > 0 && nTimeLastStake + (int64_t)nMinStakeInterval > GetTime())
         {
-            LogPrint("pos", "%s: Rate limited to 1 / %d seconds.\n", __func__, nMinStakeInterval);
+            LogPrint(BCLog::POS, "%s: Rate limited to 1 / %d seconds.\n", __func__, nMinStakeInterval);
             condWaitFor(nMinStakeInterval * 500); // nMinStakeInterval / 2 seconds
             continue;
         };
         
         
         int64_t nSearchTime = GetAdjustedTime() & ~Params().GetStakeTimestampMask(nBestHeight+1);
-        
         if (nSearchTime <= nBestTime)
         {
-            LogPrint("pos", "%s: Can't stake before last block time.\n", __func__);
+            LogPrint(BCLog::POS, "%s: Can't stake before last block time.\n", __func__);
             condWaitFor(10000);
             continue;
         };
@@ -346,7 +347,7 @@ void ThreadStakeMiner(CHDWallet *pwallet)
         if (pwallet->GetStakeableBalance() <= pwallet->nReserveBalance)
         {
             fIsStaking = false;
-            LogPrint("pos", "%s: Low balance.\n", __func__);
+            LogPrint(BCLog::POS, "%s: Low balance.\n", __func__);
             condWaitFor(60000);
             continue;
         };
@@ -358,7 +359,7 @@ void ThreadStakeMiner(CHDWallet *pwallet)
         std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler(Params()).CreateNewBlock(coinbaseScript->reserveScript));
         if (!pblocktemplate.get())
         {
-            LogPrint("pos", "%s: Couldn't create new block.\n", __func__);
+            LogPrint(BCLog::POS, "%s: Couldn't create new block.\n", __func__);
             condWaitFor(nMinerSleep);
             continue;
         };
@@ -366,7 +367,7 @@ void ThreadStakeMiner(CHDWallet *pwallet)
         if (nBestHeight+1 <= nLastImportHeight
             && !ImportOutputs(pblocktemplate.get(), nBestHeight+1))
         {
-            LogPrint("pos", "%s: ImportOutputs failed.\n", __func__);
+            LogPrint(BCLog::POS, "%s: ImportOutputs failed.\n", __func__);
             condWaitFor(30000);
             continue;
         };
@@ -385,7 +386,7 @@ void ThreadStakeMiner(CHDWallet *pwallet)
             if (pwallet->deepestTxnDepth < nRequiredDepth-4)
             {
                 int nSleep = (nRequiredDepth - pwallet->deepestTxnDepth) / 4;
-                LogPrint("pos", "%s: Wallet has no outputs with required depth, sleeping for %ds.\n", __func__, nSleep);
+                LogPrint(BCLog::POS, "%s: Wallet has no outputs with required depth, sleeping for %ds.\n", __func__, nSleep);
                 fIsStaking = false;
                 condWaitFor(nSleep * 1000);
                 continue;

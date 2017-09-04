@@ -344,16 +344,20 @@ public:
 class CHDWallet : public CWallet
 {
 public:
-    CHDWallet()
+    // Create wallet with dummy database handle
+    CHDWallet() : CWallet()
     {
-        SetNull();
-    };
+        SetHDWalletNull();
+    }
+
+    // Create wallet with passed-in database handle
+    CHDWallet(std::unique_ptr<CWalletDBWrapper> dbw_in) : CWallet(std::move(dbw_in))
+    {
+        SetHDWalletNull();
+    }
     
-    CHDWallet(const std::string &strWalletFileIn)
+    void SetHDWalletNull()
     {
-        strWalletFile = strWalletFileIn;
-        SetNull();
-        fFileBacked = true;
         nReserveBalance = 0;
         
         pEKMaster = NULL;
@@ -377,7 +381,7 @@ public:
     static bool InitLoadWallet();
     
     /* Returns true if HD is enabled, and default account set */
-    bool IsHDEnabled() override;
+    bool IsHDEnabled() const override;
     
     bool DumpJson(UniValue &rv, std::string &sError);
     bool LoadJson(const UniValue &inj, std::string &sError);
@@ -583,10 +587,10 @@ public:
      * Insert additional inputs into the transaction by
      * calling CreateTransaction();
      */
-    bool FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, bool overrideEstimatedFeeRate, const CFeeRate& specificFeeRate, int& nChangePosInOut, std::string& strFailReason, bool includeWatching, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, bool keepReserveKey = true, const CTxDestination& destChange = CNoDestination());
+    bool FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosInOut, std::string& strFailReason, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl);
     
     bool CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosInOut,
-                           std::string& strFailReason, const CCoinControl *coinControl = NULL, bool sign = true);
+                           std::string& strFailReason, const CCoinControl& coin_control, bool sign = true) override;
     bool CommitTransaction(CWalletTx &wtxNew, CReserveKey &reservekey, CConnman *connman, CValidationState &state);
     bool CommitTransaction(CWalletTx &wtxNew, CTransactionRecord &rtx,
         CReserveKey &reservekey, CConnman *connman, CValidationState &state);
@@ -606,7 +610,7 @@ public:
     bool FindStealthTransactions(const CTransaction &tx, mapValue_t &mapNarr);
     
     bool ScanForOwnedOutputs(const CTransaction &tx, size_t &nCT, size_t &nRingCT, mapValue_t &mapNarr);
-    bool AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlockIndex* pIndex, int posInBlock, bool fUpdate);
+    bool AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const CBlockIndex* pIndex, int posInBlock, bool fUpdate);
     
     CWalletTx *GetTempWalletTx(const uint256& hash);
     
@@ -635,8 +639,10 @@ public:
     /**
      * populate vCoins with vector of available COutputs.
      */
-    void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlyConfirmed=true, const CCoinControl *coinControl = NULL, bool fIncludeZeroValue=false) const;
-    bool SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet, const CCoinControl *coinControl = NULL) const;
+    void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe=true, const CCoinControl *coinControl = NULL, bool fIncludeZeroValue=false) const;
+    //bool SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet, const CCoinControl *coinControl = NULL) const;
+    bool SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CCoinControl *coinControl = nullptr) const;
+    
     
     void AvailableBlindedCoins(std::vector<COutputR>& vCoins, bool fOnlyConfirmed=true, const CCoinControl *coinControl = NULL, bool fIncludeZeroValue=false) const;
     bool SelectBlindedCoins(const std::vector<COutputR>& vAvailableCoins, const CAmount& nTargetValue, std::vector<std::pair<MapRecords_t::const_iterator,unsigned int> > &setCoinsRet, CAmount &nValueRet, const CCoinControl *coinControl = NULL) const;
@@ -700,13 +706,15 @@ int ToStealthRecipient(CStealthAddress &sx, CAmount nValue, bool fSubtractFeeFro
 class LoopExtKeyCallback
 {
 public:
+    CHDWallet *pwallet = NULL;
+    
     // NOTE: the key and account instances passed to Process are temporary
     virtual int ProcessKey(CKeyID &id, CStoredExtKey &sek) {return 1;};
     virtual int ProcessAccount(CKeyID &id, CExtKeyAccount &sek) {return 1;};
 };
 
-int LoopExtKeysInDB(bool fInactive, bool fInAccount, LoopExtKeyCallback &callback);
-int LoopExtAccountsInDB(bool fInactive, LoopExtKeyCallback &callback);
+int LoopExtKeysInDB(CHDWallet *pwallet, bool fInactive, bool fInAccount, LoopExtKeyCallback &callback);
+int LoopExtAccountsInDB(CHDWallet *pwallet, bool fInactive, LoopExtKeyCallback &callback);
 
 bool IsHDWallet(CWallet *win);
 CHDWallet *GetHDWallet(CWallet *win);
