@@ -763,7 +763,7 @@ public:
 
     // Map from Key ID (for regular keys) or Script ID (for watch-only keys) to
     // key metadata.
-    std::map<CTxDestination, CKeyMetadata> mapKeyMetadata;
+    std::map<CTxDestination, CKeyMetadata> mapKeyMetadata GUARDED_BY(cs_wallet);
 
     typedef std::map<unsigned int, CMasterKey> MasterKeyMap;
     MasterKeyMap mapMasterKeys GUARDED_BY(cs_wallet);

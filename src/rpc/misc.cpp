@@ -120,7 +120,7 @@ public:
 };
 #endif
 
-UniValue validateaddress(const JSONRPCRequest& request)
+UniValue validateaddress(const JSONRPCRequest& request) NO_THREAD_SAFETY_ANALYSIS
 {
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
