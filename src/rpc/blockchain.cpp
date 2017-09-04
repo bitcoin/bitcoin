@@ -1052,13 +1052,23 @@ static UniValue SoftForkMajorityDesc(int version, CBlockIndex* pindex, const Con
     switch(version)
     {
         case 2:
-            activated = pindex->nHeight >= consensusParams.BIP34Height;
+            /* **** IOP CHANGE //
+            IoP Chain uses the coinbase content to store the miner signature, so we can not enforce BIP34 in its current form.
+            So deactivate the check for BIP34 completely
+            // **** IOP CHANGE */
+            // activated = pindex->nHeight >= consensusParams.BIP34Height;
             break;
         case 3:
-            activated = pindex->nHeight >= consensusParams.BIP66Height;
+            /* **** IOP CHANGE //
+            BIP66 is activated from the start
+            // **** IOP CHANGE */
+            activated = true;
             break;
         case 4:
-            activated = pindex->nHeight >= consensusParams.BIP65Height;
+            /* **** IOP CHANGE //
+            BIP65 is activated from the start
+            // **** IOP CHANGE */
+            activated = true;
             break;
     }
     rv.push_back(Pair("status", activated));

@@ -1024,7 +1024,16 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
     if (halvings >= 64)
         return 0;
 
-    CAmount nSubsidy = 50 * COIN;
+    /* IoP CHANGE */
+    CAmount nSubsidy;
+	if (nHeight == 1) {
+		nSubsidy = 2100000 * COIN;
+    // } else if (nHeight < consensusParams.nPowSubsidyIncreaseHeight) {
+	// 	nSubsidy = 2 * COIN; //this code line to be removed after beta release. We are forcing 1 IoP per block during this phase. Then will be 50 coins per block.
+    } else {
+        nSubsidy = 50 * COIN;
+    }
+
     // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
     nSubsidy >>= halvings;
     return nSubsidy;
@@ -1589,16 +1598,23 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consens
     bool fStrictPayToScriptHash = (pindex->GetBlockTime() >= nBIP16SwitchTime);
 
     unsigned int flags = fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE;
+    
 
-    // Start enforcing the DERSIG (BIP66) rule
-    if (pindex->nHeight >= consensusparams.BIP66Height) {
-        flags |= SCRIPT_VERIFY_DERSIG;
-    }
+    /* IOP CHANGE **** //
+    We enforce BIP65 and BIP66 from the beginning
+    // **** IOP CHANGE */
+    flags |= SCRIPT_VERIFY_DERSIG;
+    flags |= SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
 
-    // Start enforcing CHECKLOCKTIMEVERIFY (BIP65) rule
-    if (pindex->nHeight >= consensusparams.BIP65Height) {
-        flags |= SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
-    }
+    // // Start enforcing the DERSIG (BIP66) rule
+    // if (pindex->nHeight >= consensusparams.BIP66Height) {
+    //     flags |= SCRIPT_VERIFY_DERSIG;
+    // }
+
+    // // Start enforcing CHECKLOCKTIMEVERIFY (BIP65) rule
+    // if (pindex->nHeight >= consensusparams.BIP65Height) {
+    //     flags |= SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
+    // }
 
     // Start enforcing BIP68 (sequence locks) and BIP112 (CHECKSEQUENCEVERIFY) using versionbits logic.
     if (VersionBitsState(pindex->pprev, consensusparams, Consensus::DEPLOYMENT_CSV, versionbitscache) == THRESHOLD_ACTIVE) {
@@ -1694,19 +1710,23 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     // Now that the whole chain is irreversibly beyond that time it is applied to all blocks except the
     // two in the chain that violate it. This prevents exploiting the issue against nodes during their
     // initial block download.
-    bool fEnforceBIP30 = (!pindex->phashBlock) || // Enforce on CreateNewBlock invocations which don't have a hash.
-                          !((pindex->nHeight==91842 && pindex->GetBlockHash() == uint256S("0x00000000000a4d0a398161ffc163c503763b1f4360639393e0e4c8e300e0caec")) ||
-                           (pindex->nHeight==91880 && pindex->GetBlockHash() == uint256S("0x00000000000743f190a18c5577a3c2d2a1f610ae9601ac046a38084ccb7cd721")));
+    
+                    
+    /* **** IOP CHANGE //
+    IoP Chain uses the coinbase content to store the miner signature, so we can not enforce BIP34 in its current form.
+    Deactivate the check for BIP34 completely, but always enforce BIP30
+    // **** IOP CHANGE */
+    bool fEnforceBIP30 = true;
 
-    // Once BIP34 activated it was not possible to create new duplicate coinbases and thus other than starting
-    // with the 2 existing duplicate coinbase pairs, not possible to create overwriting txs.  But by the
-    // time BIP34 activated, in each of the existing pairs the duplicate coinbase had overwritten the first
-    // before the first had been spent.  Since those coinbases are sufficiently buried its no longer possible to create further
-    // duplicate transactions descending from the known pairs either.
-    // If we're on the known chain at height greater than where BIP34 activated, we can save the db accesses needed for the BIP30 check.
-    CBlockIndex *pindexBIP34height = pindex->pprev->GetAncestor(chainparams.GetConsensus().BIP34Height);
-    //Only continue to enforce if we're below BIP34 activation height or the block hash at that height doesn't correspond.
-    fEnforceBIP30 = fEnforceBIP30 && (!pindexBIP34height || !(pindexBIP34height->GetBlockHash() == chainparams.GetConsensus().BIP34Hash));
+    // // Once BIP34 activated it was not possible to create new duplicate coinbases and thus other than starting
+    // // with the 2 existing duplicate coinbase pairs, not possible to create overwriting txs.  But by the
+    // // time BIP34 activated, in each of the existing pairs the duplicate coinbase had overwritten the first
+    // // before the first had been spent.  Since those coinbases are sufficiently buried its no longer possible to create further
+    // // duplicate transactions descending from the known pairs either.
+    // // If we're on the known chain at height greater than where BIP34 activated, we can save the db accesses needed for the BIP30 check.
+    // CBlockIndex *pindexBIP34height = pindex->pprev->GetAncestor(chainparams.GetConsensus().BIP34Height);
+    // //Only continue to enforce if we're below BIP34 activation height or the block hash at that height doesn't correspond.
+    // fEnforceBIP30 = fEnforceBIP30 && (!pindexBIP34height || !(pindexBIP34height->GetBlockHash() == chainparams.GetConsensus().BIP34Hash));
 
     if (fEnforceBIP30) {
         for (const auto& tx : block.vtx) {
@@ -2928,11 +2948,10 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
     if (block.GetBlockTime() > nAdjustedTime + MAX_FUTURE_BLOCK_TIME)
         return state.Invalid(false, REJECT_INVALID, "time-too-new", "block timestamp too far in the future");
 
-    // Reject outdated version blocks when 95% (75% on testnet) of the network has upgraded:
-    // check for version 2, 3 and 4 upgrades
-    if((block.nVersion < 2 && nHeight >= consensusParams.BIP34Height) ||
-       (block.nVersion < 3 && nHeight >= consensusParams.BIP66Height) ||
-       (block.nVersion < 4 && nHeight >= consensusParams.BIP65Height))
+    /* IOP CHANGE **** //
+    // Reject blocks that dont use BIP9 style bit signalling
+    // **** IOP CHANGE */
+    if(block.nVersion < 536870912 )
             return state.Invalid(false, REJECT_OBSOLETE, strprintf("bad-version(0x%08x)", block.nVersion),
                                  strprintf("rejected nVersion=0x%08x block", block.nVersion));
 
@@ -2961,14 +2980,17 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
     }
 
     // Enforce rule that the coinbase starts with serialized block height
-    if (nHeight >= consensusParams.BIP34Height)
-    {
-        CScript expect = CScript() << nHeight;
-        if (block.vtx[0]->vin[0].scriptSig.size() < expect.size() ||
-            !std::equal(expect.begin(), expect.end(), block.vtx[0]->vin[0].scriptSig.begin())) {
-            return state.DoS(100, false, REJECT_INVALID, "bad-cb-height", false, "block height mismatch in coinbase");
-        }
-    }
+    /* IOP CHANGE **** //
+    We can not do this, as we need the coinbase for miner's signature
+    **** IOP CHANGE */
+    // if (nHeight < consensusParams.minerWhiteListActivationHeight)
+    // {
+    //     CScript expect = CScript() << nHeight;
+    //     if (block.vtx[0]->vin[0].scriptSig.size() < expect.size() ||
+    //         !std::equal(expect.begin(), expect.end(), block.vtx[0]->vin[0].scriptSig.begin())) {
+    //         return state.DoS(100, false, REJECT_INVALID, "bad-cb-height", false, "block height mismatch in coinbase");
+    //     }
+    // }
 
     // Validation for witness commitments.
     // * We compute the witness hash (which is the hash including witnesses) of all the block's transactions, except the

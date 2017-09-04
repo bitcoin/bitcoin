@@ -8,6 +8,7 @@
 
 #include "uint256.h"
 #include <map>
+#include <set>
 #include <string>
 
 namespace Consensus {
@@ -39,13 +40,17 @@ struct BIP9Deployment {
 struct Params {
     uint256 hashGenesisBlock;
     int nSubsidyHalvingInterval;
+    /* **** IOP CHANGE //
+    IoP Chain uses the coinbase content to store the miner signature, so we can not enforce BIP34 in its current form.
+    So deactivate the check for BIP34 completely. BIP65 and BIP66 are enforced from the beginning 
+    // **** IOP CHANGE */
     /** Block height and hash at which BIP34 becomes active */
-    int BIP34Height;
-    uint256 BIP34Hash;
+    // int BIP34Height;
+    // uint256 BIP34Hash;
     /** Block height at which BIP65 becomes active */
-    int BIP65Height;
+    // int BIP65Height;
     /** Block height at which BIP66 becomes active */
-    int BIP66Height;
+    // int BIP66Height;
     /**
      * Minimum blocks including miner confirmation of the total of 2016 blocks in a retargeting period,
      * (nPowTargetTimespan / nPowTargetSpacing) which is also used for BIP9 deployments.
@@ -63,6 +68,19 @@ struct Params {
     int64_t DifficultyAdjustmentInterval() const { return nPowTargetTimespan / nPowTargetSpacing; }
     uint256 nMinimumChainWork;
     uint256 defaultAssumeValid;
+
+
+
+     /* IoP beta release - Miner White List params */
+     int minerWhiteListActivationHeight;
+     std::set<std::string> minerWhiteListAdminPubKey;
+     std::set<std::string> minerWhiteListAdminAddress;
+     int minerCapSystemChangeHeight;
+ 
+    //  int nPowSubsidyIncreaseHeight;
+     /* Voting System Parameters */
+    //  int ccBlockStartAdditionalHeight; // this amount of blocks is used to calculate the start of a CC. Current Height + n + User Provided CC height
+     int ccLastCCBlockHeight;
 };
 } // namespace Consensus
 
