@@ -354,7 +354,7 @@ std::string EntryDescriptionString()
 
 void entryToJSON(UniValue &info, const CTxMemPoolEntry &e)
 {
-    AssertLockHeld(mempool.cs);
+    AssertLockHeld(mempool.cs_txMemPool);
 
     info.push_back(Pair("size", (int)e.GetTxSize()));
     info.push_back(Pair("fee", ValueFromAmount(e.GetFee())));
@@ -389,7 +389,7 @@ UniValue mempoolToJSON(bool fVerbose)
 {
     if (fVerbose)
     {
-        LOCK(mempool.cs);
+        LOCK(mempool.cs_txMemPool);
         UniValue o(UniValue::VOBJ);
         for (const CTxMemPoolEntry& e : mempool.mapTx)
         {
@@ -477,7 +477,7 @@ UniValue getmempoolancestors(const JSONRPCRequest& request)
 
     uint256 hash = ParseHashV(request.params[0], "parameter 1");
 
-    LOCK(mempool.cs);
+    LOCK(mempool.cs_txMemPool);
 
     CTxMemPool::txiter it = mempool.mapTx.find(hash);
     if (it == mempool.mapTx.end()) {
@@ -541,7 +541,7 @@ UniValue getmempooldescendants(const JSONRPCRequest& request)
 
     uint256 hash = ParseHashV(request.params[0], "parameter 1");
 
-    LOCK(mempool.cs);
+    LOCK(mempool.cs_txMemPool);
 
     CTxMemPool::txiter it = mempool.mapTx.find(hash);
     if (it == mempool.mapTx.end()) {
@@ -593,7 +593,7 @@ UniValue getmempoolentry(const JSONRPCRequest& request)
 
     uint256 hash = ParseHashV(request.params[0], "parameter 1");
 
-    LOCK(mempool.cs);
+    LOCK(mempool.cs_txMemPool);
 
     CTxMemPool::txiter it = mempool.mapTx.find(hash);
     if (it == mempool.mapTx.end()) {
@@ -995,7 +995,7 @@ UniValue gettxout(const JSONRPCRequest& request)
 
     Coin coin;
     if (fMempool) {
-        LOCK(mempool.cs);
+        LOCK(mempool.cs_txMemPool);
         CCoinsViewMemPool view(pcoinsTip.get(), mempool);
         if (!view.GetCoin(out, coin) || mempool.isSpent(out)) {
             return NullUniValue;

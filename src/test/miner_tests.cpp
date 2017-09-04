@@ -81,7 +81,7 @@ CBlockIndex CreateBlockIndex(int nHeight)
 
 bool TestSequenceLocks(const CTransaction &tx, int flags)
 {
-    LOCK(mempool.cs);
+    LOCK(mempool.cs_txMemPool);
     return CheckSequenceLocks(tx, flags);
 }
 

@@ -1717,7 +1717,7 @@ void CWallet::ReacceptWalletTransactions()
     {
         CWalletTx& wtx = *(item.second);
 
-        LOCK(mempool.cs);
+        LOCK(mempool.cs_txMemPool);
         CValidationState state;
         wtx.AcceptToMemoryPool(maxTxFee, state);
     }

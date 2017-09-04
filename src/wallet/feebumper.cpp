@@ -53,7 +53,7 @@ static feebumper::Result PreconditionChecks(const CWallet* wallet, const CWallet
     }
 
     {
-        LOCK(mempool.cs);
+        LOCK(mempool.cs_txMemPool);
         auto it_mp = mempool.mapTx.find(wtx.GetHash());
         if (it_mp != mempool.mapTx.end() && it_mp->GetCountWithDescendants() > 1) {
             errors.push_back("Transaction has descendants in the mempool");

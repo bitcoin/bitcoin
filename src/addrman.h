@@ -183,7 +183,7 @@ class CAddrMan
 {
 private:
     //! critical section to protect the inner data structures
-    mutable CCriticalSection cs;
+    mutable CCriticalSection cs_addrMan;
 
     //! last used nId
     int nIdCount;
@@ -195,7 +195,7 @@ private:
     std::map<CNetAddr, int> mapAddr;
 
     //! randomly-ordered vector of all nIds
-    std::vector<int> vRandom GUARDED_BY(cs);
+    std::vector<int> vRandom GUARDED_BY(cs_addrMan);
 
     // number of "tried" entries
     int nTried;
@@ -300,7 +300,7 @@ public:
     template<typename Stream>
     void Serialize(Stream &s) const
     {
-        LOCK(cs);
+        LOCK(cs_addrMan);
 
         unsigned char nVersion = 1;
         s << nVersion;
@@ -350,7 +350,7 @@ public:
     template<typename Stream>
     void Unserialize(Stream& s)
     {
-        LOCK(cs);
+        LOCK(cs_addrMan);
 
         Clear();
 
@@ -490,7 +490,7 @@ public:
     //! Return the number of (unique) addresses in all tables.
     size_t size() const
     {
-        LOCK(cs); // TODO: Cache this in an atomic to avoid this overhead
+        LOCK(cs_addrMan); // TODO: Cache this in an atomic to avoid this overhead
         return vRandom.size();
     }
 
@@ -499,7 +499,7 @@ public:
     {
 #ifdef DEBUG_ADDRMAN
         {
-            LOCK(cs);
+            LOCK(cs_addrMan);
             int err;
             if ((err=Check_()))
                 LogPrintf("ADDRMAN CONSISTENCY CHECK FAILED!!! err=%i\n", err);
@@ -510,7 +510,7 @@ public:
     //! Add a single address.
     bool Add(const CAddress &addr, const CNetAddr& source, int64_t nTimePenalty = 0)
     {
-        LOCK(cs);
+        LOCK(cs_addrMan);
         bool fRet = false;
         Check();
         fRet |= Add_(addr, source, nTimePenalty);
@@ -524,7 +524,7 @@ public:
     //! Add multiple addresses.
     bool Add(const std::vector<CAddress> &vAddr, const CNetAddr& source, int64_t nTimePenalty = 0)
     {
-        LOCK(cs);
+        LOCK(cs_addrMan);
         int nAdd = 0;
         Check();
         for (std::vector<CAddress>::const_iterator it = vAddr.begin(); it != vAddr.end(); it++)
@@ -539,7 +539,7 @@ public:
     //! Mark an entry as accessible.
     void Good(const CService &addr, int64_t nTime = GetAdjustedTime())
     {
-        LOCK(cs);
+        LOCK(cs_addrMan);
         Check();
         Good_(addr, nTime);
         Check();
@@ -548,7 +548,7 @@ public:
     //! Mark an entry as connection attempted to.
     void Attempt(const CService &addr, bool fCountFailure, int64_t nTime = GetAdjustedTime())
     {
-        LOCK(cs);
+        LOCK(cs_addrMan);
         Check();
         Attempt_(addr, fCountFailure, nTime);
         Check();
@@ -561,7 +561,7 @@ public:
     {
         CAddrInfo addrRet;
         {
-            LOCK(cs);
+            LOCK(cs_addrMan);
             Check();
             addrRet = Select_(newOnly);
             Check();
@@ -575,7 +575,7 @@ public:
         Check();
         std::vector<CAddress> vAddr;
         {
-            LOCK(cs);
+            LOCK(cs_addrMan);
             GetAddr_(vAddr);
         }
         Check();
@@ -585,7 +585,7 @@ public:
     //! Mark an entry as currently-connected-to.
     void Connected(const CService &addr, int64_t nTime = GetAdjustedTime())
     {
-        LOCK(cs);
+        LOCK(cs_addrMan);
         Check();
         Connected_(addr, nTime);
         Check();
@@ -593,7 +593,7 @@ public:
 
     void SetServices(const CService &addr, ServiceFlags nServices)
     {
-        LOCK(cs);
+        LOCK(cs_addrMan);
         Check();
         SetServices_(addr, nServices);
         Check();

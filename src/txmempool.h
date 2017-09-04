@@ -413,10 +413,10 @@ class CTxMemPool
 {
 private:
     uint32_t nCheckFrequency; //!< Value n means that n times in 2^32 we check.
-    unsigned int nTransactionsUpdated GUARDED_BY(cs); //!< Used by getblocktemplate to trigger CreateNewBlock() invocation
+    unsigned int nTransactionsUpdated GUARDED_BY(cs_txMemPool); //!< Used by getblocktemplate to trigger CreateNewBlock() invocation
     CBlockPolicyEstimator* minerPolicyEstimator;
 
-    uint64_t totalTxSize GUARDED_BY(cs); //!< sum of all mempool tx's virtual sizes. Differs from serialized tx size since witness data is discounted. Defined in BIP 141.
+    uint64_t totalTxSize GUARDED_BY(cs_txMemPool); //!< sum of all mempool tx's virtual sizes. Differs from serialized tx size since witness data is discounted. Defined in BIP 141.
     uint64_t cachedInnerUsage; //!< sum of dynamic memory usage of all the map elements (NOT the maps themselves)
 
     mutable int64_t lastRollingFeeUpdate;
@@ -461,11 +461,11 @@ public:
         >
     > indexed_transaction_set;
 
-    mutable CCriticalSection cs;
-    indexed_transaction_set mapTx GUARDED_BY(cs);
+    mutable CCriticalSection cs_txMemPool;
+    indexed_transaction_set mapTx GUARDED_BY(cs_txMemPool);
 
     typedef indexed_transaction_set::nth_index<0>::type::iterator txiter;
-    std::vector<std::pair<uint256, txiter>> vTxHashes GUARDED_BY(cs); //!< All tx witness hashes/entries in mapTx, in random order
+    std::vector<std::pair<uint256, txiter>> vTxHashes GUARDED_BY(cs_txMemPool); //!< All tx witness hashes/entries in mapTx, in random order
 
     struct CompareIteratorByHash {
         bool operator()(const txiter &a, const txiter &b) const {
@@ -493,8 +493,8 @@ private:
     std::vector<indexed_transaction_set::const_iterator> GetSortedDepthAndScore() const;
 
 public:
-    indirectmap<COutPoint, const CTransaction*> mapNextTx GUARDED_BY(cs);
-    std::map<uint256, CAmount> mapDeltas GUARDED_BY(cs);
+    indirectmap<COutPoint, const CTransaction*> mapNextTx GUARDED_BY(cs_txMemPool);
+    std::map<uint256, CAmount> mapDeltas GUARDED_BY(cs_txMemPool);
 
     /** Create a new CTxMemPool.
      */
@@ -602,19 +602,19 @@ public:
 
     unsigned long size()
     {
-        LOCK(cs);
+        LOCK(cs_txMemPool);
         return mapTx.size();
     }
 
     uint64_t GetTotalTxSize() const
     {
-        LOCK(cs);
+        LOCK(cs_txMemPool);
         return totalTxSize;
     }
 
     bool exists(uint256 hash) const
     {
-        LOCK(cs);
+        LOCK(cs_txMemPool);
         return (mapTx.count(hash) != 0);
     }
 

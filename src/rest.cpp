@@ -487,7 +487,7 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
     std::vector<bool> hits;
     bitmap.resize((vOutPoints.size() + 7) / 8);
     {
-        LOCK2(cs_main, mempool.cs);
+        LOCK2(cs_main, mempool.cs_txMemPool);
 
         CCoinsView viewDummy;
         CCoinsViewCache view(&viewDummy);

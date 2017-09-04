@@ -108,7 +108,7 @@ void WalletTxToJSON(const CWalletTx& wtx, UniValue& entry)
     // Add opt-in RBF status
     std::string rbfStatus = "no";
     if (confirms <= 0) {
-        LOCK(mempool.cs);
+        LOCK(mempool.cs_txMemPool);
         RBFTransactionState rbfState = IsRBFOptIn(*wtx.tx, mempool);
         if (rbfState == RBF_TRANSACTIONSTATE_UNKNOWN)
             rbfStatus = "unknown";
