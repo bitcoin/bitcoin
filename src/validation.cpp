@@ -137,7 +137,7 @@ namespace {
 
     CCriticalSection cs_LastBlockFile;
     std::vector<CBlockFileInfo> vinfoBlockFile;
-    int nLastBlockFile = 0;
+    int nLastBlockFile = 0; // GUARDED_BY(cs_LastBlockFile)
     /** Global flag to indicate we should check to see if there are
      *  block/undo files that should be deleted.  Set on startup
      *  or if we allocate more file space when we're in prune mode
@@ -3544,7 +3544,7 @@ CBlockIndex * InsertBlockIndex(uint256 hash)
     return pindexNew;
 }
 
-bool static LoadBlockIndexDB(const CChainParams& chainparams)
+bool static LoadBlockIndexDB(const CChainParams& chainparams) EXCLUSIVE_LOCKS_REQUIRED(cs_LastBlockFile)
 {
     LOCK(cs_main);
     if (!pblocktree->LoadBlockIndexGuts(chainparams.GetConsensus(), InsertBlockIndex))
@@ -3996,7 +3996,7 @@ void UnloadBlockIndex()
     fHavePruned = false;
 }
 
-bool LoadBlockIndex(const CChainParams& chainparams)
+bool LoadBlockIndex(const CChainParams& chainparams) EXCLUSIVE_LOCKS_REQUIRED(cs_LastBlockFile)
 {
     // Load block index from databases
     bool needs_init = fReindex;
