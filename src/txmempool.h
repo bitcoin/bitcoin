@@ -414,14 +414,14 @@ class CTxMemPool
 private:
     uint32_t nCheckFrequency; //!< Value n means that n times in 2^32 we check.
     unsigned int nTransactionsUpdated GUARDED_BY(cs_txMemPool); //!< Used by getblocktemplate to trigger CreateNewBlock() invocation
-    CBlockPolicyEstimator* minerPolicyEstimator;
+    CBlockPolicyEstimator* minerPolicyEstimator PT_GUARDED_BY(cs_txMemPool);
 
     uint64_t totalTxSize GUARDED_BY(cs_txMemPool); //!< sum of all mempool tx's virtual sizes. Differs from serialized tx size since witness data is discounted. Defined in BIP 141.
-    uint64_t cachedInnerUsage; //!< sum of dynamic memory usage of all the map elements (NOT the maps themselves)
+    uint64_t cachedInnerUsage GUARDED_BY(cs_txMemPool); //!< sum of dynamic memory usage of all the map elements (NOT the maps themselves)
 
-    mutable int64_t lastRollingFeeUpdate;
-    mutable bool blockSinceLastRollingFeeBump;
-    mutable double rollingMinimumFeeRate; //!< minimum fee to get into the pool, decreases exponentially
+    mutable int64_t lastRollingFeeUpdate GUARDED_BY(cs_txMemPool);
+    mutable bool blockSinceLastRollingFeeBump GUARDED_BY(cs_txMemPool);
+    mutable double rollingMinimumFeeRate GUARDED_BY(cs_txMemPool); //!< minimum fee to get into the pool, decreases exponentially
 
     void trackPackageRemoved(const CFeeRate& rate);
 

@@ -944,7 +944,7 @@ bool CTxMemPool::addUnchecked(const uint256&hash, const CTxMemPoolEntry &entry, 
     return addUnchecked(hash, entry, setAncestors, validFeeEstimate);
 }
 
-void CTxMemPool::UpdateChild(txiter entry, txiter child, bool add)
+void CTxMemPool::UpdateChild(txiter entry, txiter child, bool add) EXCLUSIVE_LOCKS_REQUIRED(cs_txMemPool)
 {
     setEntries s;
     if (add && mapLinks[entry].children.insert(child).second) {
@@ -954,7 +954,7 @@ void CTxMemPool::UpdateChild(txiter entry, txiter child, bool add)
     }
 }
 
-void CTxMemPool::UpdateParent(txiter entry, txiter parent, bool add)
+void CTxMemPool::UpdateParent(txiter entry, txiter parent, bool add) EXCLUSIVE_LOCKS_REQUIRED(cs_txMemPool)
 {
     setEntries s;
     if (add && mapLinks[entry].parents.insert(parent).second) {
@@ -1004,7 +1004,7 @@ CFeeRate CTxMemPool::GetMinFee(size_t sizelimit) const {
     return std::max(CFeeRate(llround(rollingMinimumFeeRate)), incrementalRelayFee);
 }
 
-void CTxMemPool::trackPackageRemoved(const CFeeRate& rate) {
+void CTxMemPool::trackPackageRemoved(const CFeeRate& rate) EXCLUSIVE_LOCKS_REQUIRED(cs_txMemPool) {
     AssertLockHeld(cs_txMemPool);
     if (rate.GetFeePerK() > rollingMinimumFeeRate) {
         rollingMinimumFeeRate = rate.GetFeePerK();
