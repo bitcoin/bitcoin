@@ -65,6 +65,7 @@ public:
     /** Policy: Filter transactions that do not match well-defined patterns */
     bool RequireStandard() const { return fRequireStandard; }
     int64_t MaxTipAge() const { return nMaxTipAge; }
+    int64_t DelayGetHeadersTime() const { return nDelayGetHeadersTime; }
     uint64_t PruneAfterHeight() const { return nPruneAfterHeight; }
     /** Make miner stop after a block is found. In RPC, don't return until nGenProcLimit blocks are generated */
     bool MineBlocksOnDemand() const { return fMineBlocksOnDemand; }
@@ -89,6 +90,7 @@ protected:
     std::vector<unsigned char> vAlertPubKey;
     int nDefaultPort;
     long nMaxTipAge;
+    int64_t nDelayGetHeadersTime;
     uint64_t nPruneAfterHeight;
     std::vector<CDNSSeedData> vSeeds;
     std::vector<unsigned char> base58Prefixes[MAX_BASE58_TYPES];
