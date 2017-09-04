@@ -2783,6 +2783,7 @@ CNode::CNode(SOCKET hSocketIn, const CAddress &addrIn, const std::string &addrNa
     fUsesCashMagic = false;
     nMinPingUsecTime = std::numeric_limits<int64_t>::max();
     thinBlockWaitingForTxns = -1; // BUIP010 Xtreme Thinblocks
+    nXthinBloomfilterSize = 0;
     addrFromPort = 0; // BU
     nLocalThinBlockBytes = 0;
 

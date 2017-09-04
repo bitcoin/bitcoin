@@ -1620,6 +1620,7 @@ bool IsThinBlockValid(CNode *pfrom, const std::vector<CTransaction> &vMissingTx,
 void BuildSeededBloomFilter(CBloomFilter &filterMemPool,
     vector<uint256> &vOrphanHashes,
     uint256 hash,
+    CNode *pfrom,
     bool fDeterministic)
 {
     int64_t nStartTimer = GetTimeMillis();
@@ -1817,7 +1818,8 @@ void BuildSeededBloomFilter(CBloomFilter &filterMemPool,
     if (nTimePassed > nHoursToGrow * 3600)
         nFPRate = nMaxFalsePositive;
 
-    filterMemPool = CBloomFilter(nElements, nFPRate, insecure_rand(), BLOOM_UPDATE_ALL);
+    uint32_t nMaxFilterSize = std::max(MAX_BLOOM_FILTER_SIZE, pfrom->nXthinBloomfilterSize);
+    filterMemPool = CBloomFilter(nElements, nFPRate, insecure_rand(), BLOOM_UPDATE_ALL, nMaxFilterSize);
     LogPrint("thin", "FPrate: %f Num elements in bloom filter:%d high priority txs:%d high fee txs:%d orphans:%d total "
                      "txs in mempool:%d\n",
         nFPRate, nElements, setPriorityMemPoolHashes.size(), setHighScoreMemPoolHashes.size(), vOrphanHashes.size(),

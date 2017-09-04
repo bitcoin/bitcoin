@@ -5706,7 +5706,7 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
 
     if (!(nLocalServices & NODE_BLOOM) &&
         (strCommand == NetMsgType::FILTERLOAD || strCommand == NetMsgType::FILTERADD ||
-            strCommand == NetMsgType::FILTERCLEAR))
+            strCommand == NetMsgType::FILTERCLEAR || strCommand == NetMsgType::FILTERSIZEXTHIN))
     {
         if (pfrom->nVersion >= NO_BLOOM_VERSION)
         {
@@ -5897,6 +5897,13 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
             // nodes)
 
             pfrom->PushMessage(NetMsgType::SENDHEADERS);
+        }
+
+        // Tell the peer what maximum xthin bloom filter size we will consider acceptable.
+        if (pfrom->ThinBlockCapable())
+        {
+            pfrom->PushMessage(
+                NetMsgType::FILTERSIZEXTHIN, (uint32_t)GetArg("xthinbloomfiltersize", MAX_BLOOM_FILTER_SIZE));
         }
 
         // BU expedited procecessing requires the exchange of the listening port id but we have to send it in a separate
@@ -7046,6 +7053,10 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
         pfrom->fRelayTxes = true;
     }
 
+    else if (strCommand == NetMsgType::FILTERSIZEXTHIN)
+    {
+        vRecv >> pfrom->nXthinBloomfilterSize;
+    }
 
     else if (strCommand == NetMsgType::REJECT)
     {

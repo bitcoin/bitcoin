@@ -60,7 +60,7 @@ private:
 
     /** Helper function to set up bloom filter from desired number of elements and false positive rate.
         Used by the constructors. Checks that the variables in sane ranges. */
-    void setup(unsigned int nElements, double nFPRate, unsigned int nTweakIn, unsigned char nFlagsIn, bool size_constrained);
+    void setup(unsigned int nElements, double nFPRate, unsigned int nTweakIn, unsigned char nFlagsIn, bool size_constrained, uint32_t  nMaxFilterSize);
 
     //! Checks for empty and full filters to avoid wasting cpu
     void UpdateEmptyFull();
@@ -80,6 +80,7 @@ public:
      * nFlags should be one of the BLOOM_UPDATE_* enums (not _MASK)
      */
     CBloomFilter(unsigned int nElements, double nFPRate, unsigned int nTweak, unsigned char nFlagsIn);
+    CBloomFilter(unsigned int nElements, double nFPRate, unsigned int nTweak, unsigned char nFlagsIn, uint32_t nMaxFilterSize);
     CBloomFilter() : isFull(true), isEmpty(true), nHashFuncs(0), nTweak(0), nFlags(0) {}
 
     ADD_SERIALIZE_METHODS;

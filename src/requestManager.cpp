@@ -386,7 +386,7 @@ bool RequestBlock(CNode *pfrom, CInv obj)
                              mi != mapOrphanTransactions.end(); ++mi)
                             vOrphanHashes.push_back((*mi).first);
                     }
-                    BuildSeededBloomFilter(filterMemPool, vOrphanHashes, inv2.hash);
+                    BuildSeededBloomFilter(filterMemPool, vOrphanHashes, inv2.hash, pfrom);
                     ss << inv2;
                     ss << filterMemPool;
                     MarkBlockAsInFlight(pfrom->GetId(), obj.hash, chainParams.GetConsensus());
@@ -413,7 +413,7 @@ bool RequestBlock(CNode *pfrom, CInv obj)
                              mi != mapOrphanTransactions.end(); ++mi)
                             vOrphanHashes.push_back((*mi).first);
                     }
-                    BuildSeededBloomFilter(filterMemPool, vOrphanHashes, inv2.hash);
+                    BuildSeededBloomFilter(filterMemPool, vOrphanHashes, inv2.hash, pfrom);
                     ss << inv2;
                     ss << filterMemPool;
                     pfrom->PushMessage(NetMsgType::GET_XTHIN, ss);

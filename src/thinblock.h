@@ -244,6 +244,7 @@ bool IsThinBlockValid(CNode *pfrom, const std::vector<CTransaction> &vMissingTx,
 void BuildSeededBloomFilter(CBloomFilter &memPoolFilter,
     std::vector<uint256> &vOrphanHashes,
     uint256 hash,
+    CNode *pfrom,
     bool fDeterministic = false);
 
 // Xpress Validation: begin
