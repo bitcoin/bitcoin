@@ -1,7 +1,7 @@
 Release Notes for Bitcoin Unlimited Cash Edition 1.1.1.1
 =========================================================
 
-Bitcoin Unlimited Cash Edition version 1.1.1.0 is now available from:
+Bitcoin Unlimited Cash Edition version 1.1.1.1 is now available from:
 
   <https://bitcoinunlimited.info/download>
 
