@@ -759,11 +759,13 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				int nHeightTmp = nHeight;
 				if(nHeightTmp > chainActive.Height())
 					nHeightTmp = chainActive.Height();
-				const uint64_t &nTimeExpiry = theAlias.nExpireTime - chainActive[nHeightTmp]->nTime;
+				uint64_t nTimeExpiry = theAlias.nExpireTime - chainActive[nHeightTmp]->nTime;
 				// ensure aliases are good for atleast an hour
-				if(nTimeExpiry < 3600)
-					theAlias.nExpireTime = chainActive[nHeightTmp]->nTime+3600;
-				fYears = theAlias.nExpireTime / ONE_YEAR_IN_SECONDS;
+				if (nTimeExpiry < 3600) {
+					nTimeExpiry = 3600;
+					theAlias.nExpireTime = chainActive[nHeightTmp]->nTime + 3600;
+				}
+				fYears = nTimeExpiry / ONE_YEAR_IN_SECONDS;
 				if(fYears < 1)
 					fYears = 1;
 				fee *= powf(2.88,fYears);
@@ -1727,7 +1729,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	// calculate a fee if renewal is larger than default.. based on how many years you extend for it will be exponentially more expensive
 	uint64_t nTimeExpiry = nTime - chainActive.Tip()->nTime;
 	if (nTimeExpiry < 3600)
-		nTimeExpiry = chainActive.Tip()->nTime + 3600;
+		nTimeExpiry = 3600;
 	float fYears = nTimeExpiry / ONE_YEAR_IN_SECONDS;
 	if(fYears < 1)
 		fYears = 1;
@@ -1903,7 +1905,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	// calculate a fee if renewal is larger than default.. based on how many years you extend for it will be exponentially more expensive
 	uint64_t nTimeExpiry = nTime - chainActive.Tip()->nTime;
 	if (nTimeExpiry < 3600)
-		nTimeExpiry = chainActive.Tip()->nTime + 3600;
+		nTimeExpiry = 3600;
 	float fYears = nTimeExpiry / ONE_YEAR_IN_SECONDS;
 	if(fYears < 1)
 		fYears = 1;
