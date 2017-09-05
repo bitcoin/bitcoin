@@ -620,6 +620,8 @@ bool AddOrphanTx(const CTransactionRef& tx, NodeId peer) EXCLUSIVE_LOCKS_REQUIRE
 
     LogPrint(BCLog::MEMPOOL, "stored orphan tx %s (mapsz %u outsz %u)\n", hash.ToString(),
              mapOrphanTransactions.size(), mapOrphanTransactionsByPrev.size());
+    statsClient.inc("transactions.orphans.add", 1.0f);
+    statsClient.gauge("transactions.orphans", mapOrphanTransactions.size());
     return true;
 }
 
@@ -638,6 +640,8 @@ int static EraseOrphanTx(uint256 hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
             mapOrphanTransactionsByPrev.erase(itPrev);
     }
     mapOrphanTransactions.erase(it);
+    statsClient.inc("transactions.orphans.remove", 1.0f);
+    statsClient.gauge("transactions.orphans", mapOrphanTransactions.size());
     return 1;
 }
 
@@ -709,8 +713,11 @@ void Misbehaving(NodeId pnode, int howmuch)
     {
         LogPrintf("%s: %s peer=%d (%d -> %d) BAN THRESHOLD EXCEEDED\n", __func__, state->name, pnode, state->nMisbehavior-howmuch, state->nMisbehavior);
         state->fShouldBan = true;
-    } else
+        statsClient.inc("misbehavior.banned", 1.0f);
+    } else {
         LogPrintf("%s: %s peer=%d (%d -> %d)\n", __func__, state->name, pnode, state->nMisbehavior-howmuch, state->nMisbehavior);
+        statsClient.count("misbehavior.amount", howmuch, 1.0);
+    }
 }
 
 
@@ -1175,6 +1182,7 @@ inline void static SendBlockTransactions(const CBlock& block, const BlockTransac
 bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, CConnman& connman, const std::atomic<bool>& interruptMsgProc)
 {
     LogPrint(BCLog::NET, "received: %s (%u bytes) peer=%d\n", SanitizeString(strCommand), vRecv.size(), pfrom->GetId());
+    statsClient.inc("message.received." + SanitizeString(strCommand), 1.0f);
     if (gArgs.IsArgSet("-dropmessagestest") && GetRand(gArgs.GetArg("-dropmessagestest", 0)) == 0)
     {
         LogPrintf("dropmessagestest DROPPING RECV MESSAGE\n");
@@ -1212,6 +1220,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                     vRecv >> hash;
                     ss << ": hash " << hash.ToString();
                 }
+        		statsClient.inc("message.sent.reject_" + strMsg + "_" + pfrom->RejectCodeToString(ccode), 1.0f);
                 LogPrint(BCLog::NET, "Reject %s\n", SanitizeString(ss.str()));
             } catch (const std::ios_base::failure&) {
                 // Avoid feedback loops by preventing reject messages from triggering a new reject message.
@@ -1495,6 +1504,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             pfrom->fGetAddr = false;
         if (pfrom->fOneShot)
             pfrom->fDisconnect = true;
+        statsClient.gauge("peers.knownAddresses", connman.GetAddressCount(), 1.0f);
     }
 
     else if (strCommand == NetMsgType::SENDHEADERS)
@@ -1558,6 +1568,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
             if (inv.type == MSG_TX) {
                 inv.type |= nFetchFlags;
+		        statsClient.inc("message.received.inv_tx", 1.0f);
             }
 
             if (inv.type == MSG_BLOCK) {
@@ -1571,6 +1582,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                     connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexBestHeader), inv.hash));
                     LogPrint(BCLog::NET, "getheaders (%d) %s to peer=%d\n", pindexBestHeader->nHeight, inv.hash.ToString(), pfrom->GetId());
                 }
+		        statsClient.inc("message.received.inv_block", 1.0f);
             }
             else
             {
