@@ -3832,8 +3832,8 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
         // Create new keyUser and set as default key
         if (gArgs.GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET) && !walletInstance->IsHDEnabled()) {
 
-            // ensure this wallet.dat can only be opened by clients supporting HD with chain split
-            walletInstance->SetMinVersion(FEATURE_HD_SPLIT);
+            // ensure this wallet.dat can only be opened by clients supporting HD with chain split and expects no default key
+            walletInstance->SetMinVersion(FEATURE_NO_DEFAULT_KEY);
 
             // generate a new master key
             CPubKey masterPubKey = walletInstance->GenerateNewHDMasterKey();
