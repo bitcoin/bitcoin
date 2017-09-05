@@ -197,9 +197,10 @@ def main():
         print("ERROR: Cannot check out branch %s." % (branch), file=stderr)
         sys.exit(3)
     try:
-        subprocess.check_call([GIT,'fetch','-q',host_repo,'+refs/pull/'+pull+'/*:refs/heads/pull/'+pull+'/*'])
+        subprocess.check_call([GIT,'fetch','-q',host_repo,'+refs/pull/'+pull+'/*:refs/heads/pull/'+pull+'/*',
+                                                          '+refs/heads/'+branch+':refs/heads/'+base_branch])
     except subprocess.CalledProcessError as e:
-        print("ERROR: Cannot find pull request #%s on %s." % (pull,host_repo), file=stderr)
+        print("ERROR: Cannot find pull request #%s or branch %s on %s." % (pull,branch,host_repo), file=stderr)
         sys.exit(3)
     try:
         subprocess.check_call([GIT,'log','-q','-1','refs/heads/'+head_branch], stdout=devnull, stderr=stdout)
@@ -210,11 +211,6 @@ def main():
         subprocess.check_call([GIT,'log','-q','-1','refs/heads/'+merge_branch], stdout=devnull, stderr=stdout)
     except subprocess.CalledProcessError as e:
         print("ERROR: Cannot find merge of pull request #%s on %s." % (pull,host_repo), file=stderr)
-        sys.exit(3)
-    try:
-        subprocess.check_call([GIT,'fetch','-q',host_repo,'+refs/heads/'+branch+':refs/heads/'+base_branch])
-    except subprocess.CalledProcessError as e:
-        print("ERROR: Cannot find branch %s on %s." % (branch,host_repo), file=stderr)
         sys.exit(3)
     subprocess.check_call([GIT,'checkout','-q',base_branch])
     subprocess.call([GIT,'branch','-q','-D',local_merge_branch], stderr=devnull)
