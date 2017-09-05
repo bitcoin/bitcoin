@@ -1210,8 +1210,12 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	}
 	else
 		theOffer.linkWhitelist.GetLinkEntryByHash(buyeralias.vchAlias, foundEntry);
+	CAliasIndex sellerAliasPeg;
 
-	const CNameTXIDTuple &merchantAliasPegTuple = CNameTXIDTuple(selleralias.aliasPegTuple.first, merchantAliasPegTx);
+	if (merchantAliasPegTx.IsNull() && !GetAlias(selleralias.aliasPegTuple.first, sellerAliasPeg))
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4518 - " + _("Cannot fnd seller alias peg"));
+
+	const CNameTXIDTuple &merchantAliasPegTuple = CNameTXIDTuple(selleralias.aliasPegTuple.first, merchantAliasPegTx.IsNull()? sellerAliasPeg.txHash: merchantAliasPegTx);
 
 
 	CSyscoinAddress buyerAddress;
