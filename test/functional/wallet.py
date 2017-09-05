@@ -10,10 +10,9 @@ class WalletTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
         self.setup_clean_chain = True
-        self.extra_args = [['-usehd={:d}'.format(i%2==0)] for i in range(4)]
 
     def setup_network(self):
-        self.add_nodes(4, self.extra_args)
+        self.add_nodes(4)
         self.start_node(0)
         self.start_node(1)
         self.start_node(2)
