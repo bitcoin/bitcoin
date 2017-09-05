@@ -22,8 +22,6 @@
 #include "rpc/register.h"
 #include "script/sigcache.h"
 
-#include "test/testutil.h"
-
 #include "evo/specialtx.h"
 #include "evo/deterministicmns.h"
 #include "evo/cbtx.h"
@@ -71,7 +69,7 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
         // instead of unit tests, but for now we need these here.
         RegisterAllCoreRPCCommands(tableRPC);
         ClearDatadirCache();
-        pathTemp = GetTempPath() / strprintf("test_dash_%lu_%i", (unsigned long)GetTime(), (int)(InsecureRandRange(100000)));
+        pathTemp = fs::temp_directory_path() / strprintf("test_dash_%lu_%i", (unsigned long)GetTime(), (int)(InsecureRandRange(100000)));
         fs::create_directories(pathTemp);
         gArgs.ForceSetArg("-datadir", pathTemp.string());
 

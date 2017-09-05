@@ -89,8 +89,6 @@ BITCOIN_TESTS =\
   test/test_dash.cpp \
   test/test_dash.h \
   test/test_dash_main.cpp \
-  test/testutil.cpp \
-  test/testutil.h \
   test/timedata_tests.cpp \
   test/torcontrol_tests.cpp \
   test/transaction_tests.cpp \
