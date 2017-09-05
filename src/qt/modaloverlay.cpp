@@ -96,7 +96,7 @@ void ModalOverlay::tipUpdate(int count, const QDateTime& blockDate, double nVeri
             if (sample.first < (currentDate.toMSecsSinceEpoch() - 500 * 1000) || i == blockProcessTime.size() - 1) {
                 progressDelta = blockProcessTime[0].second - sample.second;
                 timeDelta = blockProcessTime[0].first - sample.first;
-                progressPerHour = progressDelta / (double) timeDelta * 1000 * 3600;
+                progressPerHour = progressDelta/(double)timeDelta*1000*3600;
                 remainingMSecs = (progressDelta > 0) ? remainingProgress / progressDelta * timeDelta : -1;
                 break;
             }
@@ -104,7 +104,6 @@ void ModalOverlay::tipUpdate(int count, const QDateTime& blockDate, double nVeri
         // show progress increase per hour
         ui->progressIncreasePerH->setText(QString::number(progressPerHour * 100, 'f', 2)+"%");
 
-        // show expected remaining time
         if(remainingMSecs >= 0) {	
             ui->expectedTimeLeft->setText(GUIUtil::formatNiceTimeOffset(remainingMSecs / 1000.0));
         } else {
@@ -175,9 +174,4 @@ void ModalOverlay::closeClicked()
 {
     showHide(true);
     userClosed = true;
-}
-
-void ModalOverlay::hideForever()
-{
-    foreverHidden = true;
 }
