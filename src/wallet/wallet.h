@@ -96,6 +96,8 @@ enum WalletFeature
 
     FEATURE_HD_SPLIT = 139900, // Wallet with HD chain split (change outputs will use m/0'/1'/k)
 
+    FEATURE_NO_DEFAULT_KEY = 159900, // Wallet without a default key written
+
     FEATURE_LATEST = FEATURE_COMPRPUBKEY // HD is optional, use FEATURE_COMPRPUBKEY as latest version
 };
 
