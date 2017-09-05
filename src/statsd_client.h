@@ -26,6 +26,7 @@ class StatsdClient {
         int dec(const std::string& key, float sample_rate = 1.0);
         int count(const std::string& key, size_t value, float sample_rate = 1.0);
         int gauge(const std::string& key, size_t value, float sample_rate = 1.0);
+        int gaugeDouble(const std::string& key, double value, float sample_rate = 1.0);
         int timing(const std::string& key, size_t ms, float sample_rate = 1.0);
 
     public:
@@ -39,6 +40,8 @@ class StatsdClient {
          * type = "c", "g" or "ms"
          */
         int send(std::string key, size_t value,
+                const std::string& type, float sample_rate);
+        int sendDouble(std::string key, double value,
                 const std::string& type, float sample_rate);
 
     protected:

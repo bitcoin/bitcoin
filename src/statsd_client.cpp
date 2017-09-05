@@ -178,6 +178,11 @@ int StatsdClient::gauge(const string& key, size_t value, float sample_rate)
     return send(key, value, "g", sample_rate);
 }
 
+int StatsdClient::gaugeDouble(const string& key, double value, float sample_rate)
+{
+    return sendDouble(key, value, "g", sample_rate);
+}
+
 int StatsdClient::timing(const string& key, size_t ms, float sample_rate)
 {
     return send(key, ms, "ms", sample_rate);
@@ -204,6 +209,33 @@ int StatsdClient::send(string key, size_t value, const string &type, float sampl
     else
     {
         snprintf(buf, sizeof(buf), "%s%s:%zd|%s|@%.2f",
+                d->ns.c_str(), key.c_str(), value, type.c_str(), sample_rate);
+    }
+
+    return send(buf);
+}
+
+int StatsdClient::sendDouble(string key, double value, const string &type, float sample_rate)
+{
+    if (!should_send(sample_rate)) {
+        return 0;
+    }
+
+    // partition stats by node name if set
+    if (!d->nodename.empty())
+        key = key + "." + d->nodename;
+
+    cleanup(key);
+
+    char buf[256];
+    if ( fequal( sample_rate, 1.0 ) )
+    {
+        snprintf(buf, sizeof(buf), "%s%s:%f|%s",
+                d->ns.c_str(), key.c_str(), value, type.c_str());
+    }
+    else
+    {
+        snprintf(buf, sizeof(buf), "%s%s:%f|%s|@%.2f",
                 d->ns.c_str(), key.c_str(), value, type.c_str(), sample_rate);
     }
 
