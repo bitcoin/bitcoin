@@ -70,6 +70,7 @@ To build executables for Windows 64-bit, install the following dependencies:
 
 Then build using:
 
+    PATH=$(echo "$PATH" | sed -e 's/:\/mnt.*//g') # strip out problematic Windows %PATH% imported var
     cd depends
     make HOST=x86_64-w64-mingw32
     cd ..
@@ -85,6 +86,7 @@ To build executables for Windows 32-bit, install the following dependencies:
 
 Then build using:
 
+    PATH=$(echo "$PATH" | sed -e 's/:\/mnt.*//g') # strip out problematic Windows %PATH% imported var
     cd depends
     make HOST=i686-w64-mingw32
     cd ..
