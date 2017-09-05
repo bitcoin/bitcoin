@@ -44,6 +44,14 @@ option to rebuild the chainstate data structures in the old format.
 If your node has pruning enabled, this will entail re-downloading and
 processing the entire blockchain.
 
+Known Issues
+------------
+
+There have been a number of reports of the Bitcoin-Qt GUI on Windows being spawned off-screen,
+causing it not to appear (See [Issue 11207](https://github.com/bitcoin/bitcoin/issues/11207)).
+Users can fix this problem by re-running bitcoin-qt with the `-resetguisettings` parameter, or
+using Windows keyboard shortcuts to move the GUI back on screen. This will be fixed in 0.15.1.
+
 Compatibility
 ==============
 
