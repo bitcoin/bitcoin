@@ -131,7 +131,7 @@ class ListTransactionsTest(BitcoinTestFramework):
         inputs = [{"txid":utxo_to_use["txid"], "vout":utxo_to_use["vout"]}]
         outputs = {self.nodes[0].getnewaddress(): 0.999}
         tx2 = self.nodes[1].createrawtransaction(inputs, outputs)
-        tx2_signed = self.nodes[1].signrawtransaction(tx2)["hex"]
+        tx2_signed = self.nodes[1].signrawtransactionwithwallet(tx2)["hex"]
         txid_2 = self.nodes[1].sendrawtransaction(tx2_signed)
 
         # ...and check the result
@@ -148,7 +148,7 @@ class ListTransactionsTest(BitcoinTestFramework):
         tx3_modified = txFromHex(tx3)
         tx3_modified.vin[0].nSequence = 0
         tx3 = bytes_to_hex_str(tx3_modified.serialize())
-        tx3_signed = self.nodes[0].signrawtransaction(tx3)['hex']
+        tx3_signed = self.nodes[0].signrawtransactionwithwallet(tx3)['hex']
         txid_3 = self.nodes[0].sendrawtransaction(tx3_signed)
 
         assert(is_opt_in(self.nodes[0], txid_3))
@@ -162,7 +162,7 @@ class ListTransactionsTest(BitcoinTestFramework):
         inputs = [{"txid": txid_3, "vout":utxo_to_use["vout"]}]
         outputs = {self.nodes[0].getnewaddress(): 0.997}
         tx4 = self.nodes[1].createrawtransaction(inputs, outputs)
-        tx4_signed = self.nodes[1].signrawtransaction(tx4)["hex"]
+        tx4_signed = self.nodes[1].signrawtransactionwithwallet(tx4)["hex"]
         txid_4 = self.nodes[1].sendrawtransaction(tx4_signed)
 
         assert(not is_opt_in(self.nodes[1], txid_4))
@@ -174,7 +174,7 @@ class ListTransactionsTest(BitcoinTestFramework):
         tx3_b = tx3_modified
         tx3_b.vout[0].nValue -= int(Decimal("0.004") * COIN) # bump the fee
         tx3_b = bytes_to_hex_str(tx3_b.serialize())
-        tx3_b_signed = self.nodes[0].signrawtransaction(tx3_b)['hex']
+        tx3_b_signed = self.nodes[0].signrawtransactionwithwallet(tx3_b)['hex']
         txid_3b = self.nodes[0].sendrawtransaction(tx3_b_signed, True)
         assert(is_opt_in(self.nodes[0], txid_3b))
 
