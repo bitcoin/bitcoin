@@ -1041,7 +1041,7 @@
     </message>
     <message>
         <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
-        <translation>Si vous désactivé la dépense de la monnaie non confirmée, la monnaie d'une transaction ne peut pas être utilisée tant que cette transaction n'a pas reçu au moins une confirmation. Celai affecte aussi le calcul de votre solde.</translation>
+        <translation>Si vous désactivez la dépense de la monnaie non confirmée, la monnaie d'une transaction ne peut pas être utilisée tant que cette transaction n'a pas reçu au moins une confirmation. Cela affecte aussi le calcul de votre solde.</translation>
     </message>
     <message>
         <source>&amp;Spend unconfirmed change</source>
