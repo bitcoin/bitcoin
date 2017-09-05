@@ -61,7 +61,7 @@ std::string DecodeDumpString(const std::string &str) {
     for (unsigned int pos = 0; pos < str.length(); pos++) {
         unsigned char c = str[pos];
         if (c == '%' && pos+2 < str.length()) {
-            c = (((str[pos+1]>>6)*9+((str[pos+1]-'0')&15)) << 4) | 
+            c = (((str[pos+1]>>6)*9+((str[pos+1]-'0')&15)) << 4) |
                 ((str[pos+2]>>6)*9+((str[pos+2]-'0')&15));
             pos += 2;
         }
@@ -584,6 +584,50 @@ UniValue dumpprivkey(const JSONRPCRequest& request)
     return CBitcoinSecret(vchSecret).ToString();
 }
 
+UniValue dumpmasterprivkey(const JSONRPCRequest& request)
+{
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp || request.params.size() != 0)
+        throw std::runtime_error(
+            "dumpmasterprivkey\n"
+            "\nReveals the current master private key.\n"
+            "\nResult:\n"
+            " \"key\"                 (string) The HD master private key\n"
+            "\nExamples:\n"
+            + HelpExampleCli("dumpmasterprivkey", "")
+        );
+
+    LOCK2(cs_main, pwallet->cs_wallet);
+
+    EnsureWalletIsUnlocked(pwallet);
+
+    CKeyID masterKeyID = pwallet->GetHDChain().masterKeyID;
+    if (!pwallet->IsHDEnabled())
+    {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Wallet is not a HD wallet.");
+    }
+    CKey key;
+    if (pwallet->GetKey(masterKeyID, key))
+    {
+        CExtKey masterKey;
+        masterKey.SetMaster(key.begin(), key.size());
+
+        CBitcoinExtKey b58extkey;
+        b58extkey.SetKey(masterKey);
+
+        return b58extkey.ToString();
+    }
+    else
+    {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Unable to retrieve HD master private key");
+        return NullUniValue;
+    }
+}
+
 
 UniValue dumpwallet(const JSONRPCRequest& request)
 {
@@ -639,7 +683,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
     file << strprintf("#   mined on %s\n", EncodeDumpTime(chainActive.Tip()->GetBlockTime()));
     file << "\n";
 
-    // add the base58check encoded extended master if the wallet uses HD 
+    // add the base58check encoded extended master if the wallet uses HD
     CKeyID masterKeyID = pwallet->GetHDChain().masterKeyID;
     if (!masterKeyID.IsNull())
     {
