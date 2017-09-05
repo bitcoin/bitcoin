@@ -1937,9 +1937,7 @@ UniValue listtransactions(const UniValue& params, bool fHelp)
     ret.clear();
     ret.setArray();
     ret.push_backV(arrTmp);
-	UniValue entry(UniValue::VOBJ);
-	entry.push_back(Pair("txcount", (int)txOrdered.size()));
-	ret.push_back(entry);
+
     return ret;
 }
 
