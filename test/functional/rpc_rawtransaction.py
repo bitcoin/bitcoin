@@ -6,7 +6,7 @@
 
 Test the following RPCs:
    - createrawtransaction
-   - signrawtransaction
+   - signrawtransactionwithwallet
    - sendrawtransaction
    - decoderawtransaction
    - getrawtransaction
@@ -104,7 +104,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         inputs  = [ {'txid' : "1d1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000", 'vout' : 1}] #won't exists
         outputs = { self.nodes[0].getnewaddress() : 4.998 }
         rawtx   = self.nodes[2].createrawtransaction(inputs, outputs)
-        rawtx   = self.nodes[2].signrawtransaction(rawtx)
+        rawtx   = self.nodes[2].signrawtransactionwithwallet(rawtx)
 
         # This will raise an exception since there are missing inputs
         assert_raises_rpc_error(-25, "Missing inputs", self.nodes[2].sendrawtransaction, rawtx['hex'])
@@ -202,10 +202,10 @@ class RawTransactionsTest(BitcoinTestFramework):
         inputs = [{ "txid" : txId, "vout" : vout['n'], "scriptPubKey" : vout['scriptPubKey']['hex'], "amount" : vout['value']}]
         outputs = { self.nodes[0].getnewaddress() : 2.19 }
         rawTx = self.nodes[2].createrawtransaction(inputs, outputs)
-        rawTxPartialSigned = self.nodes[1].signrawtransaction(rawTx, inputs)
+        rawTxPartialSigned = self.nodes[1].signrawtransactionwithwallet(rawTx, inputs)
         assert_equal(rawTxPartialSigned['complete'], False) #node1 only has one key, can't comp. sign the tx
 
-        rawTxSigned = self.nodes[2].signrawtransaction(rawTx, inputs)
+        rawTxSigned = self.nodes[2].signrawtransactionwithwallet(rawTx, inputs)
         assert_equal(rawTxSigned['complete'], True) #node2 can sign the tx compl., own two of three keys
         self.nodes[2].sendrawtransaction(rawTxSigned['hex'])
         rawTx = self.nodes[0].decoderawtransaction(rawTxSigned['hex'])
@@ -247,11 +247,11 @@ class RawTransactionsTest(BitcoinTestFramework):
         inputs = [{ "txid" : txId, "vout" : vout['n'], "scriptPubKey" : vout['scriptPubKey']['hex'], "redeemScript" : mSigObjValid['hex'], "amount" : vout['value']}]
         outputs = { self.nodes[0].getnewaddress() : 2.19 }
         rawTx2 = self.nodes[2].createrawtransaction(inputs, outputs)
-        rawTxPartialSigned1 = self.nodes[1].signrawtransaction(rawTx2, inputs)
+        rawTxPartialSigned1 = self.nodes[1].signrawtransactionwithwallet(rawTx2, inputs)
         self.log.info(rawTxPartialSigned1)
         assert_equal(rawTxPartialSigned['complete'], False) #node1 only has one key, can't comp. sign the tx
 
-        rawTxPartialSigned2 = self.nodes[2].signrawtransaction(rawTx2, inputs)
+        rawTxPartialSigned2 = self.nodes[2].signrawtransactionwithwallet(rawTx2, inputs)
         self.log.info(rawTxPartialSigned2)
         assert_equal(rawTxPartialSigned2['complete'], False) #node2 only has one key, can't comp. sign the tx
         rawTxComb = self.nodes[2].combinerawtransaction([rawTxPartialSigned1['hex'], rawTxPartialSigned2['hex']])
