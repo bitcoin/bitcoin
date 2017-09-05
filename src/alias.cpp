@@ -759,7 +759,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				int nHeightTmp = nHeight;
 				if(nHeightTmp > chainActive.Height())
 					nHeightTmp = chainActive.Height();
-				const int64_t &nTimeExpiry = theAlias.nExpireTime - chainActive[nHeightTmp]->nTime;
+				const uint64_t &nTimeExpiry = theAlias.nExpireTime - chainActive[nHeightTmp]->nTime;
 				// ensure aliases are good for atleast an hour
 				if(nTimeExpiry < 3600)
 					theAlias.nExpireTime = chainActive[nHeightTmp]->nTime+3600;
@@ -1726,6 +1726,8 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	CreateFeeRecipient(scriptData, newAlias.aliasPegTuple, data, fee);
 	// calculate a fee if renewal is larger than default.. based on how many years you extend for it will be exponentially more expensive
 	uint64_t nTimeExpiry = nTime - chainActive.Tip()->nTime;
+	if (nTimeExpiry < 3600)
+		nTimeExpiry = chainActive.Tip()->nTime + 3600;
 	float fYears = nTimeExpiry / ONE_YEAR_IN_SECONDS;
 	if(fYears < 1)
 		fYears = 1;
@@ -1900,6 +1902,8 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	CreateFeeRecipient(scriptData, copyAlias.aliasPegTuple, data, fee);
 	// calculate a fee if renewal is larger than default.. based on how many years you extend for it will be exponentially more expensive
 	uint64_t nTimeExpiry = nTime - chainActive.Tip()->nTime;
+	if (nTimeExpiry < 3600)
+		nTimeExpiry = chainActive.Tip()->nTime + 3600;
 	float fYears = nTimeExpiry / ONE_YEAR_IN_SECONDS;
 	if(fYears < 1)
 		fYears = 1;
