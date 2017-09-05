@@ -1643,7 +1643,7 @@ UniValue getmempoolinfo(const JSONRPCRequest& request)
             "  \"bytes\": xxxxx,              (numeric) Sum of all tx sizes\n"
             "  \"usage\": xxxxx,              (numeric) Total memory usage for the mempool\n"
             "  \"maxmempool\": xxxxx,         (numeric) Maximum memory usage for the mempool\n"
-            "  \"mempoolminfee\": xxxxx       (numeric) Minimum feerate (" + CURRENCY_UNIT + " per KB) for tx to be accepted\n"
+            "  \"mempoolminfee\": xxxxx       (numeric) Minimum fee rate in " + CURRENCY_UNIT + "/kB for tx to be accepted\n"
             "  \"instantsendlocks\": xxxxx,   (numeric) Number of unconfirmed instant send locks\n"
             "}\n"
             "\nExamples:\n"
