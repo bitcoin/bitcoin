@@ -763,7 +763,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				// ensure aliases are good for atleast an hour
 				if(nTimeExpiry < 3600)
 					theAlias.nExpireTime = chainActive[nHeightTmp]->nTime+3600;
-				fYears = nTimeExpiry / ONE_YEAR_IN_SECONDS;
+				fYears = theAlias.nExpireTime / ONE_YEAR_IN_SECONDS;
 				if(fYears < 1)
 					fYears = 1;
 				fee *= powf(2.88,fYears);
