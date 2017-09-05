@@ -5706,7 +5706,7 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
 
     if (!(nLocalServices & NODE_BLOOM) &&
         (strCommand == NetMsgType::FILTERLOAD || strCommand == NetMsgType::FILTERADD ||
-            strCommand == NetMsgType::FILTERCLEAR || strCommand == NetMsgType::FILTERSIZEXTHIN))
+            strCommand == NetMsgType::FILTERCLEAR))
     {
         if (pfrom->nVersion >= NO_BLOOM_VERSION)
         {
@@ -7055,7 +7055,15 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
 
     else if (strCommand == NetMsgType::FILTERSIZEXTHIN)
     {
-        vRecv >> pfrom->nXthinBloomfilterSize;
+        if (pfrom->ThinBlockCapable())
+        {
+            vRecv >> pfrom->nXthinBloomfilterSize;
+        }
+        else
+        {
+            pfrom->fDisconnect = true;
+            return false;
+        }
     }
 
     else if (strCommand == NetMsgType::REJECT)
