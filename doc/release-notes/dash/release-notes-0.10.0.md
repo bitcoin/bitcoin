@@ -15,7 +15,7 @@ changelog reaches back further but remains valid as all commits are visible now.
 --------------------------
 
 - Fixed memory issues
-- Fixed remote throne issues
+- Fixed remote masternode issues
 - Fixed darksend definitions
 - Fixed mixing issues
 - Reduced collateral charges by 90%
@@ -25,21 +25,21 @@ changelog reaches back further but remains valid as all commits are visible now.
 0.10.16.6 Release notes
 -----------------------
 
-- saction for Darksend. These are special transactions that require a signature that only the thrones can create.
+- saction for Darksend. These are special transactions that require a signature that only the masternodes can create.
 - Darksend now has no fees to track what-so-ever, all that will ever be in Darksend transactions are Darksend denominations.
 - Added queue gaming protection
-- Clients remember which thrones they've connected to in the past and won't use them against.
+- Clients remember which masternodes they've connected to in the past and won't use them against.
 - Dsee/Dseep messages have been fixed so they only take newer signatures than the one they have
 - 2 different kinds of client crashes have been fixed
 - Split up main.cpp into core.cpp
-- Split up darksend.cpp into throne.cpp, activethrone.cpp and instantx.cpp
-- Added modular ProcessMessages for Darksend, Thrones and InstantX
+- Split up darksend.cpp into masternode.cpp, activemasternode.cpp and instantx.cpp
+- Added modular ProcessMessages for Darksend, Masternodes and InstantX
 - Client can now join sessions with any other users
 
 0.10.15.20/21 Release notes
 ---------------------------
 
-- added bloom filters for dsee/dseep broadcasts, moved expensive dsee search, throne vote caching
+- added bloom filters for dsee/dseep broadcasts, moved expensive dsee search, masternode vote caching
 
 
 0.10.15.19 Release notes
@@ -51,7 +51,7 @@ changelog reaches back further but remains valid as all commits are visible now.
 0.10.15.18 Release notes
 ------------------------
 
-- Fixed throne payment check for out-of-order blocks
+- Fixed masternode payment check for out-of-order blocks
 
 
 0.10.15.17 Release notes
@@ -63,20 +63,20 @@ changelog reaches back further but remains valid as all commits are visible now.
 0.10.15.16 Release notes
 ------------------------
 
-- throne only take newest dsee now
+- masternode only take newest dsee now
 
 
 0.10.15.15 Release notes
 ------------------------
 
-- fixed fragmentation issue, allow thrones to update pubkey2
+- fixed fragmentation issue, allow masternodes to update pubkey2
 
 
 0.10.15.14 Release notes
 ------------------------
 
 - fixed dsee duplication issue and added better cleanup for
-  inactive thrones
+  inactive masternodes
 
 
 0.10.15.13 Release notes
@@ -119,10 +119,10 @@ changelog reaches back further but remains valid as all commits are visible now.
 0.10.15.7 Release notes
 ------------------------
 
-- Fixed the stuck blockchain (due to throne payments)
+- Fixed the stuck blockchain (due to masternode payments)
 - Improves collateral creation for those getting "invalid collateral"
-- Minimum confirmation requirements before throne payment.
-  Must have more confirmations then there are thrones.
+- Minimum confirmation requirements before masternode payment.
+  Must have more confirmations then there are masternodes.
 
 
 0.10.15.6 Release notes
@@ -130,7 +130,7 @@ changelog reaches back further but remains valid as all commits are visible now.
 
 - This updates the min protocol version to kick off older clients
 - Improves collateral charging
-- Changes the throne payments keys, you'll only recieve throne
+- Changes the masternode payments keys, you'll only recieve masternode
   payments and be able to mine on 15.6
 - If anyone has that warning message, start the client
   with --disablesafemode --reindex
@@ -139,14 +139,14 @@ changelog reaches back further but remains valid as all commits are visible now.
 0.10.15.5 Release notes
 ------------------------
 
-- I've made some huge progress with enforcement. Each throne will
+- I've made some huge progress with enforcement. Each masternode will
   have exactly the same distribution of payments after this.
 
 
 0.10.15.4 Release notes
 ------------------------
 
-- Fixed some issues with throne payments syncing
+- Fixed some issues with masternode payments syncing
 
 
 0.10.15.3 Release notes
@@ -159,9 +159,9 @@ changelog reaches back further but remains valid as all commits are visible now.
 0.10.15.2 Release notes
 ------------------------
 
-- Fixed some issues with the way the throne payment list
+- Fixed some issues with the way the masternode payment list
   was being handled
-- Throne confirmation error now displays 200 required instead of 6
+- Masternode confirmation error now displays 200 required instead of 6
 - Changed the pinging settings around
 - Block reward reduction is set to have it's first 7% reduction in a couple
   days on testnet to test that code
@@ -180,7 +180,7 @@ changelog reaches back further but remains valid as all commits are visible now.
 ------------------------
 
 - security update: This update simply verifies that the signature was
-  not forged and that the thrones entering the list are authentic.
+  not forged and that the masternodes entering the list are authentic.
 
 
 0.10.14.0 Release notes
@@ -200,7 +200,7 @@ changelog reaches back further but remains valid as all commits are visible now.
 
 - Bounds checking in a few places where it was lacking
 - Output list in transactions lacked random seeding
-- throne constants for communication are much easier to read now
+- masternode constants for communication are much easier to read now
 
 
 0.10.13.12 Release notes
@@ -212,8 +212,8 @@ changelog reaches back further but remains valid as all commits are visible now.
 0.10.13.11 Release notes
 ------------------------
 
-- Improved handling of enforcement for bad throne lists
-- Removed old throne override code
+- Improved handling of enforcement for bad masternode lists
+- Removed old masternode override code
 
 
 0.10.13.10 Release notes
@@ -235,9 +235,9 @@ changelog reaches back further but remains valid as all commits are visible now.
 
 - Debugged progress bar
 - New terms of use window
-- Darksend UI is disabled for thrones now and titlebar says "[throne]"
+- Darksend UI is disabled for masternodes now and titlebar says "[masternode]"
 - Improvement for dealing with splitting large inputs
-- Protocol version bump to kick old thrones off
+- Protocol version bump to kick old masternodes off
 
 
 0.10.13.7 Release notes
@@ -259,7 +259,7 @@ changelog reaches back further but remains valid as all commits are visible now.
 - Added tooltips for config screen
 - Changed DS participants to three
 - Bump minimum protocol to RC4
-- Added a spork for enforcing throne payments (this will ensure misconfigured
+- Added a spork for enforcing masternode payments (this will ensure misconfigured
   pools break when we enable the spork)
 
 
@@ -304,7 +304,7 @@ everything much more efficient.
   "not compatible" error. I debugged one of the slow wallets and found it had
   38,000 keys in the keypool, then after more investigation I found the passive
   Darksend process has been reserve keys for every attempt! To rectify this
-  I've modified the queuing system, so users wait in a throne queue without
+  I've modified the queuing system, so users wait in a masternode queue without
   actually sending the transactions until the queue is full.
 
 Please move any testing funds to a new wallet to test the new version.
@@ -375,15 +375,15 @@ http://test.explorer.darkcoin.fr/tx/ce0ea2bdf630233955d459489b6f764e0d0bbe9e8a62
   will create double spent transactions that will not confirm. erasetransaction
   is for removing them.
 - SplitUpMoney can only execute every 10 blocks now.
-- removed matching throne debugging messages, that's not really an error
+- removed matching masternode debugging messages, that's not really an error
 - Client now prioritises sending denominated funds back into Darksend. This will
   improve anonymity and help to respect the "anonymize darkcoin" amount in the
   configuration.
-- fixed a bug where thrones send failed transactions
+- fixed a bug where masternodes send failed transactions
 - changed max to 100k in configuration
 - added a warning message to startup (delete ~/.darkcoin/.agree_to_tou to see it)
 - found a bug causing inputs to get locked forever.
-- Darksend now checks diskspace before sending anything to a throne.
+- Darksend now checks diskspace before sending anything to a masternode.
 - incrementing protocol version to knock all old clients off
 
 
@@ -398,7 +398,7 @@ http://test.explorer.darkcoin.fr/tx/ce0ea2bdf630233955d459489b6f764e0d0bbe9e8a62
 ------------------------
 
 - Disabled collateral charging for now. We'll work on this after RC4 is
-  released and update the throne network after it's working properly. It's
+  released and update the masternode network after it's working properly. It's
   not incredibly important at this stage (while we're closed source), so
   I don't want it holding up the release. Plus it's really
   the only issue we're experiencing
@@ -440,17 +440,17 @@ http://test.explorer.darkcoin.fr/tx/6de2c5204abdea451da930f61bae0f954eef13188a3a
 0.10.12.17 Release notes
 ------------------------
 
-- I've switched up the way the throne network works.
-    1.) Users now will join a random throne (1 of the entire list, just
+- I've switched up the way the masternode network works.
+    1.) Users now will join a random masternode (1 of the entire list, just
         completely randomly)
-    2.) Upon joining if it's the first user, the throne will propagate
+    2.) Upon joining if it's the first user, the masternode will propagate
         a message stating it's taking participants for a merge
     3.) Another user will check that queue, if it's got a recent node, it will
         try that node first, otherwise it will go to 1.)
 
 - Darksend limited to 5000DRK per wallet.dat. Client will warn about this the
   first time it's opened, then disable darksend from then on.
-- Fixed some bugs with connecting to the correct thrones
+- Fixed some bugs with connecting to the correct masternodes
 - Send was sending way too many coins for all modes, (I sent 100DRK anon and it
   sent 2000DRK, then sent me change for the rest causing a whole reprocess of
   everything in the wallet)
@@ -467,21 +467,21 @@ http://test.explorer.darkcoin.fr/tx/6de2c5204abdea451da930f61bae0f954eef13188a3a
 0.10.12.15 Release notes
 ------------------------
 
-- Added session IDs for throne communication. Clients were getting
+- Added session IDs for masternode communication. Clients were getting
   confused when they got messages about other sessions (sometimes happened when
-  they all jumped on the same throne at once)
-- Added a pre-session state where the client will query a random throne
+  they all jumped on the same masternode at once)
+- Added a pre-session state where the client will query a random masternode
   and ask if they can perform a merge on N darkcoin without giving any other
   information. If that amount is compatible without losing anonymity, the client
   will then add it's entry for merging
-- Added code to randomly use the top 20 thrones, this can dynamically be
+- Added code to randomly use the top 20 masternodes, this can dynamically be
   increased as more transaction traffic starts to happen (although it's not
   implemented but it could be done later)
 - After successful transactions clients will now automatically attempt another
-  session on a random throne, then repeat until they get any kind of error
+  session on a random masternode, then repeat until they get any kind of error
   or run out of funds that need to be processed.
 - Fixed a change address reuse issue
-- Fixed an issue with the compatible join algorithm (Thrones will only join
+- Fixed an issue with the compatible join algorithm (Masternodes will only join
   the same denominations, this wasn't always the case before)
 - Inc protocol to kick old users odd again
 
@@ -489,8 +489,8 @@ http://test.explorer.darkcoin.fr/tx/6de2c5204abdea451da930f61bae0f954eef13188a3a
 0.10.12.14 Release notes
 ------------------------
 
-- Fixed an issue where clients weren't connected to the correct throne
-- Fixed throne relay issues
+- Fixed an issue where clients weren't connected to the correct masternode
+- Fixed masternode relay issues
 - Anonymous Balance now calculates correctly
 - Inc protocol to kick old users odd again
 
@@ -498,9 +498,9 @@ http://test.explorer.darkcoin.fr/tx/6de2c5204abdea451da930f61bae0f954eef13188a3a
 0.10.12.13 Release notes
 ------------------------
 
-- This version automatically resets the throne state machine after a short
+- This version automatically resets the masternode state machine after a short
   period of inactivity.
-- Updated protocol version to kick old thrones off
+- Updated protocol version to kick old masternodes off
 
 
 0.10.12.12 Release notes
@@ -512,12 +512,12 @@ http://test.explorer.darkcoin.fr/tx/6de2c5204abdea451da930f61bae0f954eef13188a3a
 - Found race condition with new blocks and clearing darksend entries that was
   causing some collateral fees
 - Found a communication mix up where clients would see messages from the wrong
-  throne and think it was theirs, also causing collateral fees
+  masternode and think it was theirs, also causing collateral fees
 - Added "Anonymized Balance" to overview
 - Added "anonymized_balance" to getinfo
 - Changed dropbox box on Send Dialog to be clearer
 - Added text to the confirmation screen with what funds will be sent
-- incremented protocol version to force throne updates
+- incremented protocol version to force masternode updates
 
 
 0.10.12.11 Release notes
@@ -560,7 +560,7 @@ anonymity improvements:
   the Darksend process.
 - Client will only submit 1 transaction into the pool fixing possible
   anonymity issues
-- Thrones will only merge compatible transactions using the same
+- Masternodes will only merge compatible transactions using the same
   denominations. For example (500,500,100) would be able to merge
   with (500,100), (10,1) with (10,1,1), but not (500,1) with (10,1).
   This improves the anonmity by not allowing someone to follow transactions by
@@ -587,7 +587,7 @@ DS+ seems to be pretty stable now :-)
   regenerated as the client will not recognize the old ones)
 - SplitUpMoney does a better job of splitting up really large wallets now
 - Fixed crashing issues
-- Added possible fix for throne list syncing
+- Added possible fix for masternode list syncing
 
 - RPC calls are changed a bit:
 
@@ -602,7 +602,7 @@ DS+ seems to be pretty stable now :-)
 
 - Fixed a few issues with input selection causing the
   "Insufficent Funds 2" error
-- Thrones now reset themselves when they give "entries is full".
+- Masternodes now reset themselves when they give "entries is full".
   Not sure what's causing it but a client will just try again
 - Improved the split up function
 - Fixed issues with AutoDenom in wallets larger than a few hundred
@@ -628,12 +628,12 @@ However, there are some known issues:
 
 
 Testing commands, you can start multiple wallets up and all denominate
-on the same throne for testing purposes:
-/darkcoin-qt -datadir=/home/user/.darkcoin -listen=0 -darksendrounds=8 -usethrone="192.168.56.102:19340"
-/darkcoin-qt -datadir=/home/user/.darkcoin2 -listen=0 -darksendrounds=8 -usethrone="192.168.56.102:19340"
+on the same masternode for testing purposes:
+/darkcoin-qt -datadir=/home/user/.darkcoin -listen=0 -darksendrounds=8 -usemasternode="192.168.56.102:19340"
+/darkcoin-qt -datadir=/home/user/.darkcoin2 -listen=0 -darksendrounds=8 -usemasternode="192.168.56.102:19340"
 
 and even disable darksend auto-denom if wanted:
-/darkcoin-qt -datadir=/home/user/.darkcoin -listen=0 -darksendrounds=8 -usethrone="192.168.56.102:19340" -disabledarksend=1
+/darkcoin-qt -datadir=/home/user/.darkcoin -listen=0 -darksendrounds=8 -usemasternode="192.168.56.102:19340" -disabledarksend=1
 
 
 0.10.12.7 Release notes
@@ -654,7 +654,7 @@ and even disable darksend auto-denom if wanted:
 
 - Fixed AutoDenominate. It seems to work pretty well now.
 - Inputs that are large will be broken up automatically for denomination
-- Thrones should change every block now (missed a mod=10 last time)
+- Masternodes should change every block now (missed a mod=10 last time)
 - Mixing requires 5 clients to merge now, should improve anonymity.
 - Mixing rounds are limited to 1000DRK, per block
 
@@ -662,7 +662,7 @@ and even disable darksend auto-denom if wanted:
 0.10.12.5 Release notes
 -----------------------
 
-- Thrones should change every block now
+- Masternodes should change every block now
 - DoAutomaticDenomination should happen every block now
 - DarkSendRounds had a bug that I fixed, should calculate correctly now
 
@@ -678,7 +678,7 @@ This is a pretty large update to the RC client.
 - Redid denominations to 1, 10, 100, and 500. Maybe this is too simple, but it
   seems effective, all change from transactions will de denominated automatically
   again through darksend for the next transactions. We'll see how it works.
-- usethrone option, will override active throne (only in RC, just for testing)
+- usemasternode option, will override active masternode (only in RC, just for testing)
 
 0.10.12.3 Release notes
 -----------------------
@@ -688,8 +688,8 @@ This is a pretty large update to the RC client.
 0.10.12.2 Release notes
 -----------------------
 
-- Fixed payout issues (throne consessus was paying out to vout(0) by default)
-- Improved DarksendInput add entry verification. Thrones will now reject
+- Fixed payout issues (masternode consessus was paying out to vout(0) by default)
+- Improved DarksendInput add entry verification. Masternodes will now reject
   transactions that look like fees are too low, too high, have spent inputs, etc.
 - Incremented protocol version to kick off clients with vout(0) payment bug
 - DoAutomaticDenominations 100DRK limit changed to 500DRK (we should see a bunch
@@ -699,7 +699,7 @@ This is a pretty large update to the RC client.
 0.10.12.1 Release notes
 -----------------------
 
-- Fixed a signing bug with the throne voting system causing a bunch of issues
+- Fixed a signing bug with the masternode voting system causing a bunch of issues
 - Updated unit tests
 - Incremented protocol version to kick off clients with signing bug
 

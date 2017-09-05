@@ -863,16 +863,16 @@ Adresse: %4</translation>
         <translation>Bitten wählen Sie eine Datenschutz-Stufe.</translation>
     </message>
     <message>
-        <source>Use 2 separate thrones to mix funds up to 10000 CRW</source>
-        <translation>Benutze 2 separate Thrones um bis zu 10000 CRW zu mixen</translation>
+        <source>Use 2 separate masternodes to mix funds up to 10000 CRW</source>
+        <translation>Benutze 2 separate Masternodes um bis zu 10000 CRW zu mixen</translation>
     </message>
     <message>
-        <source>Use 8 separate thrones to mix funds up to 10000 CRW</source>
-        <translation>Benutze 8 separate Thrones um bis zu 10000 CRW zu mixen</translation>
+        <source>Use 8 separate masternodes to mix funds up to 10000 CRW</source>
+        <translation>Benutze 8 separate Masternodes um bis zu 10000 CRW zu mixen</translation>
     </message>
     <message>
-        <source>Use 16 separate thrones</source>
-        <translation>Benutze 16 separate Thrones</translation>
+        <source>Use 16 separate masternodes</source>
+        <translation>Benutze 16 separate Masternodes</translation>
     </message>
     <message>
         <source>This option is the quickest and will cost about ~0.025 CRW to anonymize 10000 CRW</source>
@@ -1185,8 +1185,8 @@ Adresse: %4</translation>
         <translation>Erweiterte Wallet-Optionen</translation>
     </message>
     <message>
-        <source>This setting determines the amount of individual thrones that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</source>
-        <translation>Diese Einstellung setzt fest, durch wie viele Thrones ein Input anonymisiert wird. &lt;br/&gt; Eine höhere Anzahl bedeutet höhere Anonymität, verursacht allerdings auch höhere Gebühren.</translation>
+        <source>This setting determines the amount of individual masternodes that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</source>
+        <translation>Diese Einstellung setzt fest, durch wie viele Masternodes ein Input anonymisiert wird. &lt;br/&gt; Eine höhere Anzahl bedeutet höhere Anonymität, verursacht allerdings auch höhere Gebühren.</translation>
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
@@ -1454,8 +1454,8 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Starte/Stoppe das Mixen</translation>
     </message>
     <message>
-        <source>The denominations you submitted to the Throne.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
-        <translation>Die gestückelten Beträge, die Sie zu dem Throne gesendet haben.&lt;br&gt; Zum Erfolgreichen Mixen müssen andere Benutzer exakt gleich gestückelte Beträge senden.</translation>
+        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <translation>Die gestückelten Beträge, die Sie zu dem Masternode gesendet haben.&lt;br&gt; Zum Erfolgreichen Mixen müssen andere Benutzer exakt gleich gestückelte Beträge senden.</translation>
     </message>
     <message>
         <source>(Last Message)</source>
@@ -1811,8 +1811,8 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Blockkette</translation>
     </message>
     <message>
-        <source>Number of Thrones</source>
-        <translation>Anzahl Thrones</translation>
+        <source>Number of Masternodes</source>
+        <translation>Anzahl Masternodes</translation>
     </message>
     <message>
         <source>&amp;Console</source>
@@ -3410,8 +3410,8 @@ Dies kann passieren, wenn einige Crown aus ihrer Wallet bereits ausgegeben wurde
         <translation>Warnung: wallet.dat beschädigt, Datenrettung erfolgreich! Original wallet.dat wurde als wallet.{Zeitstempel}.dat in %s gespeichert. Falls ihr Kontostand oder Transaktionen nicht korrekt sind, sollten Sie dem vorangegangenen Zustand durch die Datensicherung wiederherstellen.</translation>
     </message>
     <message>
-        <source>You must specify a throneprivkey in the configuration. Please see documentation for help.</source>
-        <translation>Es muss ein Throne-Geheimschlüssel (throneprivkey) in der Konfiguration angegeben werden. Für weitere Informationen siehe Dokumentation.</translation>
+        <source>You must specify a masternodeprivkey in the configuration. Please see documentation for help.</source>
+        <translation>Es muss ein Masternode-Geheimschlüssel (masternodeprivkey) in der Konfiguration angegeben werden. Für weitere Informationen siehe Dokumentation.</translation>
     </message>
     <message>
         <source>(default: 1)</source>
@@ -3610,8 +3610,8 @@ Dies kann passieren, wenn einige Crown aus ihrer Wallet bereits ausgegeben wurde
         <translation>Lösche alle Wallet-Transaktionen stelle nur diese mittels -rescan beim nächsten Start des Wallets wieder her.</translation>
     </message>
     <message>
-        <source>Disable all Crown specific functionality (Thrones, Darksend, InstantX, Budgeting) (0-1, default: %u)</source>
-        <translation>Deaktiviere all Crown-spezifischen Funktionen (Thrones, Darksend, InstantX, Budgeting) (0-1, Standard: %u)</translation>
+        <source>Disable all Crown specific functionality (Masternodes, Darksend, InstantX, Budgeting) (0-1, default: %u)</source>
+        <translation>Deaktiviere all Crown-spezifischen Funktionen (Masternodes, Darksend, InstantX, Budgeting) (0-1, Standard: %u)</translation>
     </message>
     <message>
         <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
@@ -3815,12 +3815,12 @@ zum Beispiel: alertnotify=echo %%s | mail -s \"Crown Alert\" admin@foo.com</tran
         <translation>Sicherheitsmodus deaktivieren, überschreibt ein echtes Sicherheitsmodusereignis (Standard: %u)</translation>
     </message>
     <message>
-        <source>Enable the client to act as a throne (0-1, default: %u)</source>
-        <translation>Throne-Modus aktivieren. (0=aus, 1=an; Voreinstellung: %u)</translation>
+        <source>Enable the client to act as a masternode (0-1, default: %u)</source>
+        <translation>Masternode-Modus aktivieren. (0=aus, 1=an; Voreinstellung: %u)</translation>
     </message>
     <message>
-        <source>Error connecting to Throne.</source>
-        <translation>Fehler bei der Verbindung zum Throne.</translation>
+        <source>Error connecting to Masternode.</source>
+        <translation>Fehler bei der Verbindung zum Masternode.</translation>
     </message>
     <message>
         <source>Error loading wallet.dat: Wallet requires newer version of Crown Core</source>
@@ -3960,20 +3960,20 @@ Crown Core wird heruntergefahren.</translation>
         <translation>Lade Budget-Cache...</translation>
     </message>
     <message>
-        <source>Loading throne cache...</source>
-        <translation>Lade Throne-Cache...</translation>
+        <source>Loading masternode cache...</source>
+        <translation>Lade Masternode-Cache...</translation>
     </message>
     <message>
-        <source>Loading throne payment cache...</source>
-        <translation>Lade Throne Zahlungs-Cache...</translation>
+        <source>Loading masternode payment cache...</source>
+        <translation>Lade Masternode Zahlungs-Cache...</translation>
     </message>
     <message>
         <source>Lock is already in place.</source>
         <translation>Schon gesperrt.</translation>
     </message>
     <message>
-        <source>Lock thrones from throne configuration file (default: %u)</source>
-        <translation>Thrones über Throne-Konfiguration sperren (Standard: %u)</translation>
+        <source>Lock masternodes from masternode configuration file (default: %u)</source>
+        <translation>Masternodes über Masternode-Konfiguration sperren (Standard: %u)</translation>
     </message>
     <message>
         <source>Maintain at most &lt;n&gt; connections to peers (default: %u)</source>
@@ -3996,16 +3996,16 @@ Crown Core wird heruntergefahren.</translation>
         <translation>Für -whitebind muss eine Portnummer angegeben werden: '%s'</translation>
     </message>
     <message>
-        <source>No Thrones detected.</source>
-        <translation>Keine Thrones gefunden.</translation>
+        <source>No Masternodes detected.</source>
+        <translation>Keine Masternodes gefunden.</translation>
     </message>
     <message>
-        <source>No compatible Throne found.</source>
-        <translation>Kein kompatibler Throne gefunden.</translation>
+        <source>No compatible Masternode found.</source>
+        <translation>Kein kompatibler Masternode gefunden.</translation>
     </message>
     <message>
-        <source>Not in the Throne list.</source>
-        <translation>Nicht in der Throne-Liste.</translation>
+        <source>Not in the Masternode list.</source>
+        <translation>Nicht in der Masternode-Liste.</translation>
     </message>
     <message>
         <source>Number of automatic wallet backups (default: 10)</source>
@@ -4044,8 +4044,8 @@ Crown Core wird heruntergefahren.</translation>
         <translation>Privater Serverschlüssel (Standard: %s)</translation>
     </message>
     <message>
-        <source>Set external address:port to get to this throne (example: %s)</source>
-        <translation>Setze externe Adresse und Port, um diesen Throne zu erreichen (Beispiel: %s)</translation>
+        <source>Set external address:port to get to this masternode (example: %s)</source>
+        <translation>Setze externe Adresse und Port, um diesen Masternode zu erreichen (Beispiel: %s)</translation>
     </message>
     <message>
         <source>Set key pool size to &lt;n&gt; (default: %u)</source>
@@ -4076,8 +4076,8 @@ Crown Core wird heruntergefahren.</translation>
         <translation>Verbindungzeitüberschreitung in Millisekunden festlegen (Minimum: 1, Standard: %d)</translation>
     </message>
     <message>
-        <source>Specify throne configuration file (default: %s)</source>
-        <translation>Konfigurationsdatei der Throne-Einstellungen angeben (Standard: %s)</translation>
+        <source>Specify masternode configuration file (default: %s)</source>
+        <translation>Konfigurationsdatei der Masternode-Einstellungen angeben (Standard: %s)</translation>
     </message>
     <message>
         <source>Specify pid file (default: %s)</source>
@@ -4092,16 +4092,16 @@ Crown Core wird heruntergefahren.</translation>
         <translation>Nach dem Import von Blöcken von der Festplatte Programm beenden (Standard: %u)</translation>
     </message>
     <message>
-        <source>Submitted following entries to throne: %u / %d</source>
-        <translation>Folgende Einträge wurden an Throne gesendet: %u / %d</translation>
+        <source>Submitted following entries to masternode: %u / %d</source>
+        <translation>Folgende Einträge wurden an Masternode gesendet: %u / %d</translation>
     </message>
     <message>
-        <source>Submitted to throne, waiting for more entries ( %u / %d ) %s</source>
-        <translation>An Throne gesendet, warte auf weitere Einträge ( %u / %d ) %s</translation>
+        <source>Submitted to masternode, waiting for more entries ( %u / %d ) %s</source>
+        <translation>An Masternode gesendet, warte auf weitere Einträge ( %u / %d ) %s</translation>
     </message>
     <message>
-        <source>Submitted to throne, waiting in queue %s</source>
-        <translation>An Throne übermittelt, wartet in Warteschlange %s</translation>
+        <source>Submitted to masternode, waiting in queue %s</source>
+        <translation>An Masternode übermittelt, wartet in Warteschlange %s</translation>
     </message>
     <message>
         <source>Synchronization failed</source>
@@ -4116,28 +4116,28 @@ Crown Core wird heruntergefahren.</translation>
         <translation>Synchronisiere Budgets...</translation>
     </message>
     <message>
-        <source>Synchronizing throne winners...</source>
-        <translation>Synchronisiere Throne Gewinner...</translation>
+        <source>Synchronizing masternode winners...</source>
+        <translation>Synchronisiere Masternode Gewinner...</translation>
     </message>
     <message>
-        <source>Synchronizing thrones...</source>
-        <translation>Synchronisiere Thrones...</translation>
+        <source>Synchronizing masternodes...</source>
+        <translation>Synchronisiere Masternodes...</translation>
     </message>
     <message>
         <source>Synchronizing sporks...</source>
         <translation>Synchronisiere Sporks...</translation>
     </message>
     <message>
-        <source>This is not a Throne.</source>
-        <translation>Dies ist kein Throne.</translation>
+        <source>This is not a Masternode.</source>
+        <translation>Dies ist kein Masternode.</translation>
     </message>
     <message>
         <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
         <translation>Schwellenwert, um Verbindungen zu sich nicht konform verhaltenden Gegenstellen zu beenden (Standard: %u)</translation>
     </message>
     <message>
-        <source>Use N separate thrones to anonymize funds  (2-8, default: %u)</source>
-        <translation>N unterschiedliche Thrones benutzen, um Crown zu anonymisieren (2-8, Standard: %u)</translation>
+        <source>Use N separate masternodes to anonymize funds  (2-8, default: %u)</source>
+        <translation>N unterschiedliche Masternodes benutzen, um Crown zu anonymisieren (2-8, Standard: %u)</translation>
     </message>
     <message>
         <source>Use UPnP to map the listening port (default: %u)</source>
@@ -4160,32 +4160,32 @@ Crown Core wird heruntergefahren.</translation>
         <translation>Versuche erneut...</translation>
     </message>
     <message>
-        <source>Invalid throneprivkey. Please see documenation.</source>
-        <translation>Throne-Geheimschlüssel (throneprivkey) ist ungültig. Siehe Dokumentation. </translation>
+        <source>Invalid masternodeprivkey. Please see documenation.</source>
+        <translation>Masternode-Geheimschlüssel (masternodeprivkey) ist ungültig. Siehe Dokumentation. </translation>
     </message>
     <message>
         <source>(must be 9340 for mainnet)</source>
         <translation>(muss für Standardnetz 9340 sein)</translation>
     </message>
     <message>
-        <source>Can't find random Throne.</source>
-        <translation>Kann keinen zufällig ausgewählten Throne finden</translation>
+        <source>Can't find random Masternode.</source>
+        <translation>Kann keinen zufällig ausgewählten Masternode finden</translation>
     </message>
     <message>
         <source>Can't mix while sync in progress.</source>
         <translation>Währen der Synchronisierung kann nicht gemixt werden.</translation>
     </message>
     <message>
-        <source>Could not parse throne.conf</source>
-        <translation>throne.conf konnte nicht analysiert werden</translation>
+        <source>Could not parse masternode.conf</source>
+        <translation>masternode.conf konnte nicht analysiert werden</translation>
     </message>
     <message>
         <source>Invalid netmask specified in -whitelist: '%s'</source>
         <translation>Ungültige Netzmaske für -whitelist angegeben: '%s'</translation>
     </message>
     <message>
-        <source>Invalid port detected in throne.conf</source>
-        <translation>Ungültige Portnummer in throne.conf</translation>
+        <source>Invalid port detected in masternode.conf</source>
+        <translation>Ungültige Portnummer in masternode.conf</translation>
     </message>
     <message>
         <source>Invalid private key.</source>
@@ -4228,16 +4228,16 @@ Crown Core wird heruntergefahren.</translation>
         <translation>Lade Wallet...</translation>
     </message>
     <message>
-        <source>Throne options:</source>
-        <translation>Throne Optionen:</translation>
+        <source>Masternode options:</source>
+        <translation>Masternode Optionen:</translation>
     </message>
     <message>
-        <source>Throne queue is full.</source>
-        <translation>Warteschlange der Throne ist voll.</translation>
+        <source>Masternode queue is full.</source>
+        <translation>Warteschlange der Masternode ist voll.</translation>
     </message>
     <message>
-        <source>Throne:</source>
-        <translation>Throne:</translation>
+        <source>Masternode:</source>
+        <translation>Masternode:</translation>
     </message>
     <message>
         <source>Missing input transaction information.</source>
@@ -4340,8 +4340,8 @@ Crown Core wird heruntergefahren.</translation>
         <translation>Maximale Blockgröße in Byte festlegen (Standard: %d)</translation>
     </message>
     <message>
-        <source>Set the throne private key</source>
-        <translation>Privaten Throne-Schlüssel setzen</translation>
+        <source>Set the masternode private key</source>
+        <translation>Privaten Masternode-Schlüssel setzen</translation>
     </message>
     <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>

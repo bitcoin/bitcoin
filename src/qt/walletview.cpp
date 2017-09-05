@@ -9,7 +9,7 @@
 #include "bitcoingui.h"
 #include "clientmodel.h"
 #include "guiutil.h"
-#include "throneconfig.h"
+#include "masternodeconfig.h"
 #include "optionsmodel.h"
 #include "overviewpage.h"
 #include "receivecoinsdialog.h"
@@ -68,16 +68,16 @@ WalletView::WalletView(QWidget *parent):
 
     receiveCoinsPage = new ReceiveCoinsDialog();
     sendCoinsPage = new SendCoinsDialog();
-    if (throneConfig.getCount() >= 0) {
-        throneListPage = new ThroneList();
+    if (masternodeConfig.getCount() >= 0) {
+        masternodeListPage = new MasternodeList();
     }
 
     addWidget(overviewPage);
     addWidget(transactionsPage);
     addWidget(receiveCoinsPage);
     addWidget(sendCoinsPage);
-    if (throneConfig.getCount() >= 0) {
-        addWidget(throneListPage);
+    if (masternodeConfig.getCount() >= 0) {
+        addWidget(masternodeListPage);
     }
 
     // Clicking on a transaction on the overview pre-selects the transaction on the transaction history page
@@ -126,8 +126,8 @@ void WalletView::setClientModel(ClientModel *clientModel)
 
     overviewPage->setClientModel(clientModel);
     sendCoinsPage->setClientModel(clientModel);
-    if (throneConfig.getCount() >= 0) {
-        throneListPage->setClientModel(clientModel);
+    if (masternodeConfig.getCount() >= 0) {
+        masternodeListPage->setClientModel(clientModel);
     }
 }
 
@@ -140,8 +140,8 @@ void WalletView::setWalletModel(WalletModel *walletModel)
     overviewPage->setWalletModel(walletModel);
     receiveCoinsPage->setModel(walletModel);
     sendCoinsPage->setModel(walletModel);
-    if (throneConfig.getCount() >= 0) {
-        throneListPage->setWalletModel(walletModel);
+    if (masternodeConfig.getCount() >= 0) {
+        masternodeListPage->setWalletModel(walletModel);
     }
 
     if (walletModel)
@@ -206,10 +206,10 @@ void WalletView::gotoSendCoinsPage(QString addr)
         sendCoinsPage->setAddress(addr);
 }
 
-void WalletView::gotoThronePage()
+void WalletView::gotoMasternodePage()
 {
-    if (throneConfig.getCount() >= 0) {
-        setCurrentWidget(throneListPage);
+    if (masternodeConfig.getCount() >= 0) {
+        setCurrentWidget(masternodeListPage);
     }
 }
 

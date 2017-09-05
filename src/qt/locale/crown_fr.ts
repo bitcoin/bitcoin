@@ -864,16 +864,16 @@ Adresse : %4
         <translation>Veuillez choisir un niveau de confidentialité.</translation>
     </message>
     <message>
-        <source>Use 2 separate thrones to mix funds up to 10000 CRW</source>
-        <translation>Utiliser 2 thrones pour mélanger jusqu'à 10000 CRW</translation>
+        <source>Use 2 separate masternodes to mix funds up to 10000 CRW</source>
+        <translation>Utiliser 2 masternodes pour mélanger jusqu'à 10000 CRW</translation>
     </message>
     <message>
-        <source>Use 8 separate thrones to mix funds up to 10000 CRW</source>
-        <translation>Utiliser 8 thrones pour mélanger jusqu'à 10000 CRW</translation>
+        <source>Use 8 separate masternodes to mix funds up to 10000 CRW</source>
+        <translation>Utiliser 8 masternodes pour mélanger jusqu'à 10000 CRW</translation>
     </message>
     <message>
-        <source>Use 16 separate thrones</source>
-        <translation>Utiliser 16 thrones</translation>
+        <source>Use 16 separate masternodes</source>
+        <translation>Utiliser 16 masternodes</translation>
     </message>
     <message>
         <source>This option is the quickest and will cost about ~0.025 CRW to anonymize 10000 CRW</source>
@@ -1186,8 +1186,8 @@ Adresse : %4
         <translation>Expert</translation>
     </message>
     <message>
-        <source>This setting determines the amount of individual thrones that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</source>
-        <translation>Ce paramètre détermine le nombre de thrones uniques par lesquels l'anonymisation sera effectuée.&lt;br/&gt;Plus le nombre de cycles d'anonymisation est important, plus le degré de confidentialité est élevé, mais les frais associés sont d'autant plus importants.</translation>
+        <source>This setting determines the amount of individual masternodes that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</source>
+        <translation>Ce paramètre détermine le nombre de masternodes uniques par lesquels l'anonymisation sera effectuée.&lt;br/&gt;Plus le nombre de cycles d'anonymisation est important, plus le degré de confidentialité est élevé, mais les frais associés sont d'autant plus importants.</translation>
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
@@ -1455,8 +1455,8 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Démarrer/Arrêtér le mélange</translation>
     </message>
     <message>
-        <source>The denominations you submitted to the Throne.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
-        <translation>Les dénominations que vous avez soumises à la Throne.&lt;br&gt;Pour mélanger, d'autres utilisateurs doivent soumettre les mêmes dénominations.</translation>
+        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <translation>Les dénominations que vous avez soumises à la Masternode.&lt;br&gt;Pour mélanger, d'autres utilisateurs doivent soumettre les mêmes dénominations.</translation>
     </message>
     <message>
         <source>(Last Message)</source>
@@ -1812,8 +1812,8 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Chaîne de blocs</translation>
     </message>
     <message>
-        <source>Number of Thrones</source>
-        <translation>Nombre de Thrones</translation>
+        <source>Number of Masternodes</source>
+        <translation>Nombre de Masternodes</translation>
     </message>
     <message>
         <source>&amp;Console</source>
@@ -3410,8 +3410,8 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Avertissement : wallet.dat corrompu, données récupérées ! Le fichier wallet.dat original a été enregistré en tant que wallet.{timestamp}.bak dans %s ; si votre solde ou transactions sont incorrects vous devriez effectuer une restauration depuis une sauvegarde.</translation>
     </message>
     <message>
-        <source>You must specify a throneprivkey in the configuration. Please see documentation for help.</source>
-        <translation>Vous devez définir throneprivkey dans la configuration. Veuillez consulter la documentation pour plus d'aide.</translation>
+        <source>You must specify a masternodeprivkey in the configuration. Please see documentation for help.</source>
+        <translation>Vous devez définir masternodeprivkey dans la configuration. Veuillez consulter la documentation pour plus d'aide.</translation>
     </message>
     <message>
         <source>(default: 1)</source>
@@ -3610,8 +3610,8 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Effacer toutes les transactions du portefeuille et récupère celle qui font partie de la chaine de blocs via -rescan au démarrage</translation>
     </message>
     <message>
-        <source>Disable all Crown specific functionality (Thrones, Darksend, InstantX, Budgeting) (0-1, default: %u)</source>
-        <translation>Désactivez toutes les fonctionnalités liées à Crown (Throne, Darksend, InstantX, Budgetisation) (0-1, par défaut: %u)</translation>
+        <source>Disable all Crown specific functionality (Masternodes, Darksend, InstantX, Budgeting) (0-1, default: %u)</source>
+        <translation>Désactivez toutes les fonctionnalités liées à Crown (Masternode, Darksend, InstantX, Budgetisation) (0-1, par défaut: %u)</translation>
     </message>
     <message>
         <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
@@ -3816,12 +3816,12 @@ Pour exemple: alertnotify=echo %%s | mail -s "Alerte Crown" admin@foo.com
         <translation>Désactiver le mode sans échec, passer outre un événement sans échec réel (par défaut : %u)</translation>
     </message>
     <message>
-        <source>Enable the client to act as a throne (0-1, default: %u)</source>
-        <translation>Autoriser le client à agir en tant que throne (0-1, par défaut : %u)</translation>
+        <source>Enable the client to act as a masternode (0-1, default: %u)</source>
+        <translation>Autoriser le client à agir en tant que masternode (0-1, par défaut : %u)</translation>
     </message>
     <message>
-        <source>Error connecting to Throne.</source>
-        <translation>Erreur de connexion au throne.</translation>
+        <source>Error connecting to Masternode.</source>
+        <translation>Erreur de connexion au masternode.</translation>
     </message>
     <message>
         <source>Error loading wallet.dat: Wallet requires newer version of Crown Core</source>
@@ -3960,20 +3960,20 @@ Pour exemple: alertnotify=echo %%s | mail -s "Alerte Crown" admin@foo.com
         <translation>Chargement du cache de budget...</translation>
     </message>
     <message>
-        <source>Loading throne cache...</source>
-        <translation>Chargement du cache de throne...</translation>
+        <source>Loading masternode cache...</source>
+        <translation>Chargement du cache de masternode...</translation>
     </message>
     <message>
-        <source>Loading throne payment cache...</source>
-        <translation>Chargement du cache de paiement throne...</translation>
+        <source>Loading masternode payment cache...</source>
+        <translation>Chargement du cache de paiement masternode...</translation>
     </message>
     <message>
         <source>Lock is already in place.</source>
         <translation>Verrou déjà en place.</translation>
     </message>
     <message>
-        <source>Lock thrones from throne configuration file (default: %u)</source>
-        <translation>Vérouiller les thrones depuis le fichier de configuration throne (par défaut : %u)</translation>
+        <source>Lock masternodes from masternode configuration file (default: %u)</source>
+        <translation>Vérouiller les masternodes depuis le fichier de configuration masternode (par défaut : %u)</translation>
     </message>
     <message>
         <source>Maintain at most &lt;n&gt; connections to peers (default: %u)</source>
@@ -3996,16 +3996,16 @@ Pour exemple: alertnotify=echo %%s | mail -s "Alerte Crown" admin@foo.com
         <translation>Un port doit être spécifié avec -whitebind: '%s'</translation>
     </message>
     <message>
-        <source>No Thrones detected.</source>
-        <translation>Aucun Throne détecté.</translation>
+        <source>No Masternodes detected.</source>
+        <translation>Aucun Masternode détecté.</translation>
     </message>
     <message>
-        <source>No compatible Throne found.</source>
-        <translation>Aucun Throne compatible trouvé.</translation>
+        <source>No compatible Masternode found.</source>
+        <translation>Aucun Masternode compatible trouvé.</translation>
     </message>
     <message>
-        <source>Not in the Throne list.</source>
-        <translation>Absent de la liste des Thrones.</translation>
+        <source>Not in the Masternode list.</source>
+        <translation>Absent de la liste des Masternodes.</translation>
     </message>
     <message>
         <source>Number of automatic wallet backups (default: 10)</source>
@@ -4044,8 +4044,8 @@ Pour exemple: alertnotify=echo %%s | mail -s "Alerte Crown" admin@foo.com
         <translation>Clef privée du serveur (par défaut : %s)</translation>
     </message>
     <message>
-        <source>Set external address:port to get to this throne (example: %s)</source>
-        <translation>Définir une adresse:port externe pour accéder à ce throne (exemple : %s)</translation>
+        <source>Set external address:port to get to this masternode (example: %s)</source>
+        <translation>Définir une adresse:port externe pour accéder à ce masternode (exemple : %s)</translation>
     </message>
     <message>
         <source>Set key pool size to &lt;n&gt; (default: %u)</source>
@@ -4076,8 +4076,8 @@ Pour exemple: alertnotify=echo %%s | mail -s "Alerte Crown" admin@foo.com
         <translation>Spécifier le délai d'expiration de la connexion en millisecondes (minimum : 1, par défaut : %d)</translation>
     </message>
     <message>
-        <source>Specify throne configuration file (default: %s)</source>
-        <translation>Définir le fichier de configuration du throne (par défaut : %s)</translation>
+        <source>Specify masternode configuration file (default: %s)</source>
+        <translation>Définir le fichier de configuration du masternode (par défaut : %s)</translation>
     </message>
     <message>
         <source>Specify pid file (default: %s)</source>
@@ -4092,16 +4092,16 @@ Pour exemple: alertnotify=echo %%s | mail -s "Alerte Crown" admin@foo.com
         <translation>Arrêter après l'importation des blocs du disque (par défaut : %u)</translation>
     </message>
     <message>
-        <source>Submitted following entries to throne: %u / %d</source>
-        <translation>Les entrées suivantes ont été envoyées au throne: %u / %d</translation>
+        <source>Submitted following entries to masternode: %u / %d</source>
+        <translation>Les entrées suivantes ont été envoyées au masternode: %u / %d</translation>
     </message>
     <message>
-        <source>Submitted to throne, waiting for more entries ( %u / %d ) %s</source>
-        <translation>Envoyé au throne, en attente d'entrées supplémentaires ( %u / %d ) %s</translation>
+        <source>Submitted to masternode, waiting for more entries ( %u / %d ) %s</source>
+        <translation>Envoyé au masternode, en attente d'entrées supplémentaires ( %u / %d ) %s</translation>
     </message>
     <message>
-        <source>Submitted to throne, waiting in queue %s</source>
-        <translation>Soumis au throne, dans la file d'attente %s</translation>
+        <source>Submitted to masternode, waiting in queue %s</source>
+        <translation>Soumis au masternode, dans la file d'attente %s</translation>
     </message>
     <message>
         <source>Synchronization failed</source>
@@ -4116,28 +4116,28 @@ Pour exemple: alertnotify=echo %%s | mail -s "Alerte Crown" admin@foo.com
         <translation>Synchronisation des budgets...</translation>
     </message>
     <message>
-        <source>Synchronizing throne winners...</source>
-        <translation>Synchronisation des thrones vainqueurs...</translation>
+        <source>Synchronizing masternode winners...</source>
+        <translation>Synchronisation des masternodes vainqueurs...</translation>
     </message>
     <message>
-        <source>Synchronizing thrones...</source>
-        <translation>Synchronisation des thrones...</translation>
+        <source>Synchronizing masternodes...</source>
+        <translation>Synchronisation des masternodes...</translation>
     </message>
     <message>
         <source>Synchronizing sporks...</source>
         <translation>Synchronisation des sporks...</translation>
     </message>
     <message>
-        <source>This is not a Throne.</source>
-        <translation>Ceci n'est pas un throne.</translation>
+        <source>This is not a Masternode.</source>
+        <translation>Ceci n'est pas un masternode.</translation>
     </message>
     <message>
         <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
         <translation>Seuil de déconnexion des pairs présentant un mauvais comportement (par défaut : %u)</translation>
     </message>
     <message>
-        <source>Use N separate thrones to anonymize funds  (2-8, default: %u)</source>
-        <translation>Utiliser N thrones différents pour anonymiser les fonds (2-8, par défaut : %u)</translation>
+        <source>Use N separate masternodes to anonymize funds  (2-8, default: %u)</source>
+        <translation>Utiliser N masternodes différents pour anonymiser les fonds (2-8, par défaut : %u)</translation>
     </message>
     <message>
         <source>Use UPnP to map the listening port (default: %u)</source>
@@ -4160,32 +4160,32 @@ Pour exemple: alertnotify=echo %%s | mail -s "Alerte Crown" admin@foo.com
         <translation>Va réessayer ...</translation>
     </message>
     <message>
-        <source>Invalid throneprivkey. Please see documenation.</source>
-        <translation>throneprivkey invalide. Veuillez vous référer à la documentation.</translation>
+        <source>Invalid masternodeprivkey. Please see documenation.</source>
+        <translation>masternodeprivkey invalide. Veuillez vous référer à la documentation.</translation>
     </message>
     <message>
         <source>(must be 9340 for mainnet)</source>
         <translation>(doit être 9340 pour mainnet)</translation>
     </message>
     <message>
-        <source>Can't find random Throne.</source>
-        <translation>Throne aléatoire introuvable.</translation>
+        <source>Can't find random Masternode.</source>
+        <translation>Masternode aléatoire introuvable.</translation>
     </message>
     <message>
         <source>Can't mix while sync in progress.</source>
         <translation>Ne peux pas mélanger pendant la synchronisation.</translation>
     </message>
     <message>
-        <source>Could not parse throne.conf</source>
-        <translation>Impossible d'analyser throne.conf</translation>
+        <source>Could not parse masternode.conf</source>
+        <translation>Impossible d'analyser masternode.conf</translation>
     </message>
     <message>
         <source>Invalid netmask specified in -whitelist: '%s'</source>
         <translation>Masque de réseau inconnu spécifié sur -whitelist : « %s »</translation>
     </message>
     <message>
-        <source>Invalid port detected in throne.conf</source>
-        <translation>Port non valide détecté dans throne.conf</translation>
+        <source>Invalid port detected in masternode.conf</source>
+        <translation>Port non valide détecté dans masternode.conf</translation>
     </message>
     <message>
         <source>Invalid private key.</source>
@@ -4228,16 +4228,16 @@ Pour exemple: alertnotify=echo %%s | mail -s "Alerte Crown" admin@foo.com
         <translation>Chargement du portefeuille...</translation>
     </message>
     <message>
-        <source>Throne options:</source>
-        <translation>Options Throne :</translation>
+        <source>Masternode options:</source>
+        <translation>Options Masternode :</translation>
     </message>
     <message>
-        <source>Throne queue is full.</source>
-        <translation>La file d'attente du throne est pleine.</translation>
+        <source>Masternode queue is full.</source>
+        <translation>La file d'attente du masternode est pleine.</translation>
     </message>
     <message>
-        <source>Throne:</source>
-        <translation>Throne :</translation>
+        <source>Masternode:</source>
+        <translation>Masternode :</translation>
     </message>
     <message>
         <source>Missing input transaction information.</source>
@@ -4340,8 +4340,8 @@ Pour exemple: alertnotify=echo %%s | mail -s "Alerte Crown" admin@foo.com
         <translation>Définir la taille minimale de bloc en octets (par défaut : %d)</translation>
     </message>
     <message>
-        <source>Set the throne private key</source>
-        <translation>Définir la clé privée du throne</translation>
+        <source>Set the masternode private key</source>
+        <translation>Définir la clé privée du masternode</translation>
     </message>
     <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>

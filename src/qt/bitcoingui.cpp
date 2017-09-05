@@ -17,8 +17,8 @@
 #include "optionsmodel.h"
 #include "rpcconsole.h"
 #include "utilitydialog.h"
-#include "throneconfig.h"
-#include "thronelist.h"
+#include "masternodeconfig.h"
+#include "masternodelist.h"
 
 #ifdef ENABLE_WALLET
 #include "walletframe.h"
@@ -78,7 +78,7 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
     appMenuBar(0),
     overviewAction(0),
     historyAction(0),
-    throneAction(0),
+    masternodeAction(0),
     quitAction(0),
     sendCoinsAction(0),
     usedSendingAddressesAction(0),
@@ -309,19 +309,19 @@ void BitcoinGUI::createActions(const NetworkStyle *networkStyle)
 #endif
     tabGroup->addAction(historyAction);
 
-    if (throneConfig.getCount() >= 0) {
-        throneAction = new QAction(QIcon(":/icons/throne"), tr("&Thrones"), this);
-        throneAction->setStatusTip(tr("Browse thrones"));
-        throneAction->setToolTip(throneAction->statusTip());
-        throneAction->setCheckable(true);
+    if (masternodeConfig.getCount() >= 0) {
+        masternodeAction = new QAction(QIcon(":/icons/masternode"), tr("&Masternodes"), this);
+        masternodeAction->setStatusTip(tr("Browse masternodes"));
+        masternodeAction->setToolTip(masternodeAction->statusTip());
+        masternodeAction->setCheckable(true);
 #ifdef Q_OS_MAC
-        throneAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_5));
+        masternodeAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_5));
 #else
-        throneAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_5));
+        masternodeAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_5));
 #endif
-        tabGroup->addAction(throneAction);
-        connect(throneAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
-        connect(throneAction, SIGNAL(triggered()), this, SLOT(gotoThronePage()));
+        tabGroup->addAction(masternodeAction);
+        connect(masternodeAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+        connect(masternodeAction, SIGNAL(triggered()), this, SLOT(gotoMasternodePage()));
     }
 
 #ifdef Q_OS_MAC
@@ -523,9 +523,9 @@ void BitcoinGUI::createToolBars()
         toolbar->addAction(sendCoinsAction);
         toolbar->addAction(receiveCoinsAction);
         toolbar->addAction(historyAction);
-        if (throneConfig.getCount() >= 0)
+        if (masternodeConfig.getCount() >= 0)
         {
-            toolbar->addAction(throneAction);
+            toolbar->addAction(masternodeAction);
         }
         toolbar->setMovable(false); // remove unused icon in upper left corner
         overviewAction->setChecked(true);
@@ -617,8 +617,8 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
     sendCoinsAction->setEnabled(enabled);
     receiveCoinsAction->setEnabled(enabled);
     historyAction->setEnabled(enabled);
-    if (throneConfig.getCount() >= 0) {
-        throneAction->setEnabled(enabled);
+    if (masternodeConfig.getCount() >= 0) {
+        masternodeAction->setEnabled(enabled);
     }
     encryptWalletAction->setEnabled(enabled);
     backupWalletAction->setEnabled(enabled);
@@ -746,11 +746,11 @@ void BitcoinGUI::gotoHistoryPage()
     if (walletFrame) walletFrame->gotoHistoryPage();
 }
 
-void BitcoinGUI::gotoThronePage()
+void BitcoinGUI::gotoMasternodePage()
 {
-    if (throneConfig.getCount() >= 0) {
-        throneAction->setChecked(true);
-        if (walletFrame) walletFrame->gotoThronePage();
+    if (masternodeConfig.getCount() >= 0) {
+        masternodeAction->setChecked(true);
+        if (walletFrame) walletFrame->gotoMasternodePage();
     }
 }
 
@@ -834,12 +834,12 @@ void BitcoinGUI::setNumBlocks(int count)
 
     // Set icon state: spinning if catching up, tick otherwise
 //    if(secs < 25*60) // 90*60 for bitcoin but we are 4x times faster
-    if(throneSync.IsBlockchainSynced())
+    if(masternodeSync.IsBlockchainSynced())
     {
         QString strSyncStatus;
         tooltip = tr("Up to date") + QString(".<br>") + tooltip;
 
-        if(throneSync.IsSynced()) {
+        if(masternodeSync.IsSynced()) {
             progressBarLabel->setVisible(false);
             progressBar->setVisible(false);
             labelBlocksIcon->setPixmap(QIcon(":/icons/synced").pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
@@ -858,15 +858,15 @@ void BitcoinGUI::setNumBlocks(int count)
                 walletFrame->showOutOfSyncWarning(false);
 #endif // ENABLE_WALLET
 
-            nAttempt = throneSync.RequestedThroneAttempt < THRONE_SYNC_THRESHOLD ?
-                        throneSync.RequestedThroneAttempt + 1 : THRONE_SYNC_THRESHOLD;
-            progress = nAttempt + (throneSync.RequestedThroneAssets - 1) * THRONE_SYNC_THRESHOLD;
-            progressBar->setMaximum(4 * THRONE_SYNC_THRESHOLD);
+            nAttempt = masternodeSync.RequestedMasternodeAttempt < MASTERNODE_SYNC_THRESHOLD ?
+                        masternodeSync.RequestedMasternodeAttempt + 1 : MASTERNODE_SYNC_THRESHOLD;
+            progress = nAttempt + (masternodeSync.RequestedMasternodeAssets - 1) * MASTERNODE_SYNC_THRESHOLD;
+            progressBar->setMaximum(4 * MASTERNODE_SYNC_THRESHOLD);
             progressBar->setFormat(tr("Synchronizing additional data: %p%"));
             progressBar->setValue(progress);
         }
 
-        strSyncStatus = QString(throneSync.GetSyncStatus().c_str());
+        strSyncStatus = QString(masternodeSync.GetSyncStatus().c_str());
         progressBarLabel->setText(strSyncStatus);
         tooltip = strSyncStatus + QString("<br>") + tooltip;
     }

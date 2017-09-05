@@ -10,7 +10,7 @@
 #include "checkpoints.h"
 #include "coincontrol.h"
 #include "net.h"
-#include "throne-budget.h"
+#include "masternode-budget.h"
 #include "instantx.h"
 #include "script/script.h"
 #include "script/sign.h"
@@ -1203,7 +1203,7 @@ void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const
             for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
                 bool found = false;
                 if(coin_type == ONLY_NOT10000IFMN) {
-                    found = !(fThroNe && pcoin->vout[i].nValue == 10000*COIN);
+                    found = !(fMasterNode && pcoin->vout[i].nValue == 10000*COIN);
                 } else if(coin_type == ONLY_10000) {
                     found = pcoin->vout[i].nValue == 10000*COIN;
                 } else {
@@ -1395,7 +1395,7 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
             (bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue, 0, 1, vCoins, setCoinsRet, nValueRet)));
 }
 
-bool CWallet::GetThroneVinAndKeys(CTxIn& vinRet, CPubKey& pubKeyRet, CKey& keyRet, std::string strTxHash, std::string strOutputIndex)
+bool CWallet::GetMasternodeVinAndKeys(CTxIn& vinRet, CPubKey& pubKeyRet, CKey& keyRet, std::string strTxHash, std::string strOutputIndex)
 {
     // wait for reindex and/or import to finish
     if (fImporting || fReindex) return false;
@@ -1404,7 +1404,7 @@ bool CWallet::GetThroneVinAndKeys(CTxIn& vinRet, CPubKey& pubKeyRet, CKey& keyRe
     std::vector<COutput> vPossibleCoins;
     AvailableCoins(vPossibleCoins, true, NULL, ONLY_10000);
     if(vPossibleCoins.empty()) {
-        LogPrintf("CWallet::GetThroneVinAndKeys - Could not locate any valid throne vin\n");
+        LogPrintf("CWallet::GetMasternodeVinAndKeys - Could not locate any valid masternode vin\n");
         return false;
     }
 
@@ -1419,7 +1419,7 @@ bool CWallet::GetThroneVinAndKeys(CTxIn& vinRet, CPubKey& pubKeyRet, CKey& keyRe
         if(out.tx->GetHash() == txHash && out.i == nOutputIndex) // found it!
             return GetVinAndKeysFromOutput(out, vinRet, pubKeyRet, keyRet);
 
-    LogPrintf("CWallet::GetThroneVinAndKeys - Could not locate specified throne vin\n");
+    LogPrintf("CWallet::GetMasternodeVinAndKeys - Could not locate specified masternode vin\n");
     return false;
 }
 

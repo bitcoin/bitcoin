@@ -14,7 +14,7 @@
 #include "spork.h"
 
 /*
-    At 15 signatures, 1/2 of the throne network can be owned by
+    At 15 signatures, 1/2 of the masternode network can be owned by
     one party without comprimising the security of InstantX
     (1000/2150.0)**10 = 0.00047382219560689856
     (1000/2900.0)**10 = 2.3769498616783657e-05
@@ -65,10 +65,10 @@ int64_t GetAverageVoteTime();
 class CConsensusVote
 {
 public:
-    CTxIn vinThrone;
+    CTxIn vinMasternode;
     uint256 txHash;
     int nBlockHeight;
-    std::vector<unsigned char> vchThroNeSignature;
+    std::vector<unsigned char> vchMasterNodeSignature;
 
     uint256 GetHash() const;
 
@@ -80,8 +80,8 @@ public:
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(txHash);
-        READWRITE(vinThrone);
-        READWRITE(vchThroNeSignature);
+        READWRITE(vinMasternode);
+        READWRITE(vchMasterNodeSignature);
         READWRITE(nBlockHeight);
     }
 };

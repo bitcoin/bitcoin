@@ -6,7 +6,7 @@
 #include "main.h"
 #include "init.h"
 #include "util.h"
-#include "throneman.h"
+#include "masternodeman.h"
 #include "script/sign.h"
 #include "instantx.h"
 #include "ui_interface.h"
@@ -22,11 +22,11 @@
 using namespace std;
 using namespace boost;
 
-// A helper object for signing messages from Thrones
+// A helper object for signing messages from Masternodes
 CLegacySigner legacySigner;
 
-// Keep track of the active Throne
-CActiveThrone activeThrone;
+// Keep track of the active Masternode
+CActiveMasternode activeMasternode;
 
 bool CLegacySigner::SetCollateralAddress(std::string strAddress){
     CBitcoinAddress address;
@@ -110,7 +110,7 @@ bool CLegacySigner::VerifyMessage(CPubKey pubkey, vector<unsigned char>& vchSig,
 //TODO: Rename/move to core
 void ThreadCheckLegacySigner()
 {
-    if(fLiteMode) return; //disable all Throne related functionality
+    if(fLiteMode) return; //disable all Masternode related functionality
 
     // Make this thread recognisable as the wallet flushing thread
     RenameThread("crown-legacysigner");
@@ -123,25 +123,25 @@ void ThreadCheckLegacySigner()
         //LogPrintf("ThreadCheckLegacySigner::check timeout\n");
 
         // try to sync from all available nodes, one step at a time
-        throneSync.Process();
+        masternodeSync.Process();
 
-        if(throneSync.IsBlockchainSynced()) {
+        if(masternodeSync.IsBlockchainSynced()) {
 
             c++;
 
             // check if we should activate or ping every few minutes,
             // start right after sync is considered to be done
-            if(c % THRONE_PING_SECONDS == 15) activeThrone.ManageStatus();
+            if(c % MASTERNODE_PING_SECONDS == 15) activeMasternode.ManageStatus();
 
             if(c % 60 == 0)
             {
                 mnodeman.CheckAndRemove();
-                mnodeman.ProcessThroneConnections();
-                thronePayments.CleanPaymentList();
+                mnodeman.ProcessMasternodeConnections();
+                masternodePayments.CleanPaymentList();
                 CleanTransactionLocksList();
             }
 
-            //if(c % THRONES_DUMP_SECONDS == 0) DumpThrones();
+            //if(c % MASTERNODES_DUMP_SECONDS == 0) DumpMasternodes();
         }
     }
 }

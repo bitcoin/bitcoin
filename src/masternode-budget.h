@@ -2,8 +2,8 @@
 
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#ifndef THRONE_BUDGET_H
-#define THRONE_BUDGET_H
+#ifndef MASTERNODE_BUDGET_H
+#define MASTERNODE_BUDGET_H
 
 #include "main.h"
 #include "sync.h"
@@ -11,7 +11,7 @@
 #include "key.h"
 #include "util.h"
 #include "base58.h"
-#include "throne.h"
+#include "masternode.h"
 #include <boost/lexical_cast.hpp>
 #include "init.h"
 
@@ -90,9 +90,9 @@ public:
     map<uint256, CBudgetProposal> mapProposals;
     map<uint256, CFinalizedBudget> mapFinalizedBudgets;
 
-    std::map<uint256, CBudgetProposalBroadcast> mapSeenThroneBudgetProposals;
-    std::map<uint256, CBudgetVote> mapSeenThroneBudgetVotes;
-    std::map<uint256, CBudgetVote> mapOrphanThroneBudgetVotes;
+    std::map<uint256, CBudgetProposalBroadcast> mapSeenMasternodeBudgetProposals;
+    std::map<uint256, CBudgetVote> mapSeenMasternodeBudgetVotes;
+    std::map<uint256, CBudgetVote> mapOrphanMasternodeBudgetVotes;
     std::map<uint256, CFinalizedBudgetBroadcast> mapSeenFinalizedBudgets;
     std::map<uint256, CFinalizedBudgetVote> mapSeenFinalizedBudgetVotes;
     std::map<uint256, CFinalizedBudgetVote> mapOrphanFinalizedBudgetVotes;
@@ -103,8 +103,8 @@ public:
     }
 
     void ClearSeen() {
-        mapSeenThroneBudgetProposals.clear();
-        mapSeenThroneBudgetVotes.clear();
+        mapSeenMasternodeBudgetProposals.clear();
+        mapSeenMasternodeBudgetVotes.clear();
         mapSeenFinalizedBudgets.clear();
         mapSeenFinalizedBudgetVotes.clear();
     }
@@ -148,11 +148,11 @@ public:
         LogPrintf("Budget object cleared\n");
         mapProposals.clear();
         mapFinalizedBudgets.clear();
-        mapSeenThroneBudgetProposals.clear();
-        mapSeenThroneBudgetVotes.clear();
+        mapSeenMasternodeBudgetProposals.clear();
+        mapSeenMasternodeBudgetVotes.clear();
         mapSeenFinalizedBudgets.clear();
         mapSeenFinalizedBudgetVotes.clear();
-        mapOrphanThroneBudgetVotes.clear();
+        mapOrphanMasternodeBudgetVotes.clear();
         mapOrphanFinalizedBudgetVotes.clear();
     }
     void CheckAndRemove();
@@ -163,11 +163,11 @@ public:
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(mapSeenThroneBudgetProposals);
-        READWRITE(mapSeenThroneBudgetVotes);
+        READWRITE(mapSeenMasternodeBudgetProposals);
+        READWRITE(mapSeenMasternodeBudgetVotes);
         READWRITE(mapSeenFinalizedBudgets);
         READWRITE(mapSeenFinalizedBudgetVotes);
-        READWRITE(mapOrphanThroneBudgetVotes);
+        READWRITE(mapOrphanMasternodeBudgetVotes);
         READWRITE(mapOrphanFinalizedBudgetVotes);
 
         READWRITE(mapProposals);
@@ -210,7 +210,7 @@ class CFinalizedBudget
 private:
     // critical section to protect the inner data structures
     mutable CCriticalSection cs;
-    bool fAutoChecked; //If it matches what we see, we'll auto vote for it (throne only)
+    bool fAutoChecked; //If it matches what we see, we'll auto vote for it (masternode only)
 
 public:
     bool fValid;
@@ -263,7 +263,7 @@ public:
     void AutoCheck();
     //total crown paid out by this budget
     CAmount GetTotalPayout();
-    //vote on this finalized budget as a throne
+    //vote on this finalized budget as a masternode
     void SubmitVote();
 
     //checks the hashes to make sure we know about them
@@ -343,7 +343,7 @@ public:
 };
 
 //
-// CFinalizedBudgetVote - Allow a throne node to vote and broadcast throughout the network
+// CFinalizedBudgetVote - Allow a masternode node to vote and broadcast throughout the network
 //
 
 class CFinalizedBudgetVote
@@ -359,7 +359,7 @@ public:
     CFinalizedBudgetVote();
     CFinalizedBudgetVote(CTxIn vinIn, uint256 nBudgetHashIn);
 
-    bool Sign(CKey& keyThrone, CPubKey& pubKeyThrone);
+    bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode);
     bool SignatureValid(bool fSignatureCheck);
     void Relay();
 
@@ -384,7 +384,7 @@ public:
 };
 
 //
-// Budget Proposal : Contains the throne votes for each budget
+// Budget Proposal : Contains the masternode votes for each budget
 //
 
 class CBudgetProposal
@@ -538,7 +538,7 @@ public:
 };
 
 //
-// CBudgetVote - Allow a throne node to vote and broadcast throughout the network
+// CBudgetVote - Allow a masternode node to vote and broadcast throughout the network
 //
 
 class CBudgetVote
@@ -555,7 +555,7 @@ public:
     CBudgetVote();
     CBudgetVote(CTxIn vin, uint256 nProposalHash, int nVoteIn);
 
-    bool Sign(CKey& keyThrone, CPubKey& pubKeyThrone);
+    bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode);
     bool SignatureValid(bool fSignatureCheck);
     void Relay();
 

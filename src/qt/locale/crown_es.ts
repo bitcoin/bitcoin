@@ -864,15 +864,15 @@ Dirección: %4
         <translation>Por favor, seleccione el nivel de privacidad.</translation>
     </message>
     <message>
-        <source>Use 2 separate thrones to mix funds up to 10000 CRW</source>
+        <source>Use 2 separate masternodes to mix funds up to 10000 CRW</source>
         <translation>Usar 2 nodos maestros distintos para mezclar fondos hasta 10000 CRW</translation>
     </message>
     <message>
-        <source>Use 8 separate thrones to mix funds up to 10000 CRW</source>
+        <source>Use 8 separate masternodes to mix funds up to 10000 CRW</source>
         <translation>Usar 8 nodos maestros diferentes para mezclar fondos hasta 10000 CRW</translation>
     </message>
     <message>
-        <source>Use 16 separate thrones</source>
+        <source>Use 16 separate masternodes</source>
         <translation>Usar 16 nodos maestros diferentes</translation>
     </message>
     <message>
@@ -1186,7 +1186,7 @@ Dirección: %4
         <translation>Experto</translation>
     </message>
     <message>
-        <source>This setting determines the amount of individual thrones that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</source>
+        <source>This setting determines the amount of individual masternodes that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</source>
         <translation>Esta opción determina la cuantía de nodos maestros distintos a través de los cuales circulará una entrada para hacerla anónima.&lt;br/&gt;Cuantas más rondas se realicen para su anonimato mayor será el grado de privacidad, pero cuesta a su vez más comisiones.</translation>
     </message>
     <message>
@@ -1455,7 +1455,7 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Comenzar/Parar Mezclado</translation>
     </message>
     <message>
-        <source>The denominations you submitted to the Throne.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
         <translation>Las denominaciones que envió al Nodo Maestro.&lt;br&gt;Para poder mezclar, otros usuarios deben enviar exactamente las mismas denominaciones.</translation>
     </message>
     <message>
@@ -1812,7 +1812,7 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Cadena de bloques</translation>
     </message>
     <message>
-        <source>Number of Thrones</source>
+        <source>Number of Masternodes</source>
         <translation>Número de Nodos Maestros</translation>
     </message>
     <message>
@@ -3410,8 +3410,8 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Aviso: ¡Recuperados datos de wallet.dat corrupto! El wallet.dat original se ha guardado como wallet.{timestamp}.bak en %s; si hubiera errores en su saldo o transacciones, deberá restaurar una copia de seguridad.</translation>
     </message>
     <message>
-        <source>You must specify a throneprivkey in the configuration. Please see documentation for help.</source>
-        <translation>Debe declarar la variable throneprivkey o clave privada para el nodo maestro en la configuración. Por favor, consulte la documentación para obtener ayuda.</translation>
+        <source>You must specify a masternodeprivkey in the configuration. Please see documentation for help.</source>
+        <translation>Debe declarar la variable masternodeprivkey o clave privada para el nodo maestro en la configuración. Por favor, consulte la documentación para obtener ayuda.</translation>
     </message>
     <message>
         <source>(default: 1)</source>
@@ -3611,7 +3611,7 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Borrar todas las transacciones del monedero y recuperar únicamente aquellas partes de la cadena de bloques a través de -rescan en el inicio</translation>
     </message>
     <message>
-        <source>Disable all Crown specific functionality (Thrones, Darksend, InstantX, Budgeting) (0-1, default: %u)</source>
+        <source>Disable all Crown specific functionality (Masternodes, Darksend, InstantX, Budgeting) (0-1, default: %u)</source>
         <translation>Desactivar todas las funciones asociadas a Crown (Nodos Maestros, Darksend, InstantX, Presupuesto) (0-1, predeterminado: %u)</translation>
     </message>
     <message>
@@ -3817,11 +3817,11 @@ por ejemplo: alertnotify=echo %%s | mail -s "Alerta de Crown" admin@foo.com
         <translation>Desactivar el modo seguro, no considerar un suceso real de modo seguro (predeterminado: %u)</translation>
     </message>
     <message>
-        <source>Enable the client to act as a throne (0-1, default: %u)</source>
+        <source>Enable the client to act as a masternode (0-1, default: %u)</source>
         <translation>Activar el cliente para que se comporte como un nodo maestro (0-1, predeterminado: %u)</translation>
     </message>
     <message>
-        <source>Error connecting to Throne.</source>
+        <source>Error connecting to Masternode.</source>
         <translation>Error al conectar al Nodo Maestro.</translation>
     </message>
     <message>
@@ -3961,11 +3961,11 @@ por ejemplo: alertnotify=echo %%s | mail -s "Alerta de Crown" admin@foo.com
         <translation>Cargando caché del presupuesto...</translation>
     </message>
     <message>
-        <source>Loading throne cache...</source>
+        <source>Loading masternode cache...</source>
         <translation>Cargando caché de nodos maestros...</translation>
     </message>
     <message>
-        <source>Loading throne payment cache...</source>
+        <source>Loading masternode payment cache...</source>
         <translation>Cargando caché de pago del nodo maestro...</translation>
     </message>
     <message>
@@ -3973,7 +3973,7 @@ por ejemplo: alertnotify=echo %%s | mail -s "Alerta de Crown" admin@foo.com
         <translation>El bloqueo ya está activo.</translation>
     </message>
     <message>
-        <source>Lock thrones from throne configuration file (default: %u)</source>
+        <source>Lock masternodes from masternode configuration file (default: %u)</source>
         <translation>Asegurar nodos maestros a partir del archivo de configuración del nodo maestro (predeterminado: %u)</translation>
     </message>
     <message>
@@ -3997,15 +3997,15 @@ por ejemplo: alertnotify=echo %%s | mail -s "Alerta de Crown" admin@foo.com
         <translation>Ha de indicar un puerto con -whitebind: '%s'</translation>
     </message>
     <message>
-        <source>No Thrones detected.</source>
+        <source>No Masternodes detected.</source>
         <translation>No se detectaron Nodos Maestros.</translation>
     </message>
     <message>
-        <source>No compatible Throne found.</source>
+        <source>No compatible Masternode found.</source>
         <translation>No se encontró un Nodo Maestro compatible.</translation>
     </message>
     <message>
-        <source>Not in the Throne list.</source>
+        <source>Not in the Masternode list.</source>
         <translation>Ausente de la lista de Nodos Maestros.</translation>
     </message>
     <message>
@@ -4045,7 +4045,7 @@ por ejemplo: alertnotify=echo %%s | mail -s "Alerta de Crown" admin@foo.com
         <translation>Clave privada del servidor (predeterminado: %s)</translation>
     </message>
     <message>
-        <source>Set external address:port to get to this throne (example: %s)</source>
+        <source>Set external address:port to get to this masternode (example: %s)</source>
         <translation>Establecer dirección:puerto externos para acceder a este nodo maestro (ejemplo: %s)</translation>
     </message>
     <message>
@@ -4077,7 +4077,7 @@ por ejemplo: alertnotify=echo %%s | mail -s "Alerta de Crown" admin@foo.com
         <translation>Indicar tiempo máximo de desconexión en milisegundos (mínimo: 1, predeterminado: %d)</translation>
     </message>
     <message>
-        <source>Specify throne configuration file (default: %s)</source>
+        <source>Specify masternode configuration file (default: %s)</source>
         <translation>Indicar archivo de configuración del nodo maestro (predeterminado: %s)</translation>
     </message>
     <message>
@@ -4093,15 +4093,15 @@ por ejemplo: alertnotify=echo %%s | mail -s "Alerta de Crown" admin@foo.com
         <translation>Detener la ejecución después de importar los bloques desde el disco (predeterminado: %u)</translation>
     </message>
     <message>
-        <source>Submitted following entries to throne: %u / %d</source>
+        <source>Submitted following entries to masternode: %u / %d</source>
         <translation>Se han enviado la entradas siguientes al nodo maestro: %u / %d</translation>
     </message>
     <message>
-        <source>Submitted to throne, waiting for more entries ( %u / %d ) %s</source>
+        <source>Submitted to masternode, waiting for more entries ( %u / %d ) %s</source>
         <translation>Enviado al nodo maestro, esperando a más entradas ( %u / %d ) %s</translation>
     </message>
     <message>
-        <source>Submitted to throne, waiting in queue %s</source>
+        <source>Submitted to masternode, waiting in queue %s</source>
         <translation>Enviado al nodo maestro, esperando en cola %s</translation>
     </message>
     <message>
@@ -4117,11 +4117,11 @@ por ejemplo: alertnotify=echo %%s | mail -s "Alerta de Crown" admin@foo.com
         <translation>Sincronizando presupuestos...</translation>
     </message>
     <message>
-        <source>Synchronizing throne winners...</source>
+        <source>Synchronizing masternode winners...</source>
         <translation>Sincronizando ganadores de los nodos maestros...</translation>
     </message>
     <message>
-        <source>Synchronizing thrones...</source>
+        <source>Synchronizing masternodes...</source>
         <translation>Sincronizando nodos maestros...</translation>
     </message>
     <message>
@@ -4129,7 +4129,7 @@ por ejemplo: alertnotify=echo %%s | mail -s "Alerta de Crown" admin@foo.com
         <translation>Sincronizando sporks...</translation>
     </message>
     <message>
-        <source>This is not a Throne.</source>
+        <source>This is not a Masternode.</source>
         <translation>Esto no es un Nodo Maestro.</translation>
     </message>
     <message>
@@ -4137,7 +4137,7 @@ por ejemplo: alertnotify=echo %%s | mail -s "Alerta de Crown" admin@foo.com
         <translation>Umbral para la desconexión de pares con mal comportamiento (predeterminado: %u)</translation>
     </message>
     <message>
-        <source>Use N separate thrones to anonymize funds  (2-8, default: %u)</source>
+        <source>Use N separate masternodes to anonymize funds  (2-8, default: %u)</source>
         <translation>Usar N nodos maestros distintos para generar fondos anónimos (2-8, predeterminado: %u)</translation>
     </message>
     <message>
@@ -4161,7 +4161,7 @@ por ejemplo: alertnotify=echo %%s | mail -s "Alerta de Crown" admin@foo.com
         <translation>Se volverá a intentar...</translation>
     </message>
     <message>
-        <source>Invalid throneprivkey. Please see documenation.</source>
+        <source>Invalid masternodeprivkey. Please see documenation.</source>
         <translation>La clave prinvada del nodo maestro no es válida. Por favor, consulte la  documentación.</translation>
     </message>
     <message>
@@ -4169,7 +4169,7 @@ por ejemplo: alertnotify=echo %%s | mail -s "Alerta de Crown" admin@foo.com
         <translation>(debe ser 9340 para la red principal)</translation>
     </message>
     <message>
-        <source>Can't find random Throne.</source>
+        <source>Can't find random Masternode.</source>
         <translation>No se pudo encontrar un Nodo Maestro aleatorio.</translation>
     </message>
     <message>
@@ -4177,16 +4177,16 @@ por ejemplo: alertnotify=echo %%s | mail -s "Alerta de Crown" admin@foo.com
         <translation>No se puede mezclar mientras la sincronización esté en curso.</translation>
     </message>
     <message>
-        <source>Could not parse throne.conf</source>
-        <translation>No se pudo interpretar throne.conf</translation>
+        <source>Could not parse masternode.conf</source>
+        <translation>No se pudo interpretar masternode.conf</translation>
     </message>
     <message>
         <source>Invalid netmask specified in -whitelist: '%s'</source>
         <translation>La máscara de red especificada en -whitelist no es válida: '%s' </translation>
     </message>
     <message>
-        <source>Invalid port detected in throne.conf</source>
-        <translation>Se detectó un puerto no válido en throne.conf</translation>
+        <source>Invalid port detected in masternode.conf</source>
+        <translation>Se detectó un puerto no válido en masternode.conf</translation>
     </message>
     <message>
         <source>Invalid private key.</source>
@@ -4229,15 +4229,15 @@ por ejemplo: alertnotify=echo %%s | mail -s "Alerta de Crown" admin@foo.com
         <translation>Cargando monedero...</translation>
     </message>
     <message>
-        <source>Throne options:</source>
+        <source>Masternode options:</source>
         <translation>Opciones del Nodo Maestro:</translation>
     </message>
     <message>
-        <source>Throne queue is full.</source>
+        <source>Masternode queue is full.</source>
         <translation>La cola del nodo maestro está llena.</translation>
     </message>
     <message>
-        <source>Throne:</source>
+        <source>Masternode:</source>
         <translation>Nodo Maestro:</translation>
     </message>
     <message>
@@ -4341,7 +4341,7 @@ por ejemplo: alertnotify=echo %%s | mail -s "Alerta de Crown" admin@foo.com
         <translation>Establecer tamaño máximo de bloque en bytes (predeterminado: %d)</translation>
     </message>
     <message>
-        <source>Set the throne private key</source>
+        <source>Set the masternode private key</source>
         <translation>Establezca la clave privada del nodo maestro</translation>
     </message>
     <message>

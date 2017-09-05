@@ -80,7 +80,7 @@ public:
     int PoolMaxTransactions() const { return nPoolMaxTransactions; }
     std::string SporkKey() const { return strSporkKey; }
     std::string LegacySignerDummyAddress() const { return strLegacySignerDummyAddress; }
-    int64_t StartThronePayments() const { return nStartThronePayments; }
+    int64_t StartMasternodePayments() const { return nStartMasternodePayments; }
     CBaseChainParams::Network NetworkID() const { return networkID; }
     /* Return the auxpow chain ID.  */
     inline int32_t AuxpowChainId () const { return 20; }
@@ -124,7 +124,7 @@ protected:
     int nPoolMaxTransactions;
     std::string strSporkKey;
     std::string strLegacySignerDummyAddress;
-    int64_t nStartThronePayments;
+    int64_t nStartMasternodePayments;
 };
 
 /** 

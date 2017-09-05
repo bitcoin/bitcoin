@@ -53,11 +53,11 @@ This does not affect wallet forward or backward compatibility.
 Switched to Bitcoin Core version 0.10 - https://bitcoin.org/en/release/v0.10.0
 - Implemented decentralized budget system 
 - Removed reference node
-- Implemented new decentralized throne payment consensus system
+- Implemented new decentralized masternode payment consensus system
 - Improved speed of DS
-- New throne payment/winners/budgets syncing strategy
-- Platform independent throne ranking system
-- Throne broadcasts, pings and winners now use the inventory system
+- New masternode payment/winners/budgets syncing strategy
+- Platform independent masternode ranking system
+- Masternode broadcasts, pings and winners now use the inventory system
 - Transaction indexing is enabled by default for all clients
 - Better implementation of IX block reprocessing to find and remove an invalid block
 - IX nearly 100% successful with new implementation

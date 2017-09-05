@@ -70,7 +70,7 @@ endif
 .PHONY: FORCE
 # crown core #
 BITCOIN_CORE_H = \
-  activethrone.h \
+  activemasternode.h \
   addrman.h \
   alert.h \
   amount.h \
@@ -134,12 +134,12 @@ BITCOIN_CORE_H = \
   support/pagelocker.h \
   support/cleanse.h \
   sync.h \
-  throne.h \
-  throne-payments.h \
-  throne-budget.h \
-  throne-sync.h \
-  throneman.h \
-  throneconfig.h \
+  masternode.h \
+  masternode-payments.h \
+  masternode-budget.h \
+  masternode-sync.h \
+  masternodeman.h \
+  masternodeconfig.h \
   threadsafety.h \
   timedata.h \
   tinyformat.h \
@@ -196,8 +196,8 @@ libbitcoin_server_a_SOURCES = \
   rest.cpp \
   rpcblockchain.cpp \
   rpcservice.cpp \
-  rpcthrone.cpp \
-  rpcthrone-budget.cpp \
+  rpcmasternode.cpp \
+  rpcmasternode-budget.cpp \
   rpcmining.cpp \
   rpcmisc.cpp \
   rpcnet.cpp \
@@ -214,17 +214,17 @@ libbitcoin_server_a_SOURCES = \
 # when wallet enabled
 libbitcoin_wallet_a_CPPFLAGS = $(BITCOIN_INCLUDES)
 libbitcoin_wallet_a_SOURCES = \
-  activethrone.cpp \
+  activemasternode.cpp \
   legacysigner.cpp \
   db.cpp \
   crypter.cpp \
   instantx.cpp \
-  throne.cpp \
-  throne-budget.cpp \
-  throne-payments.cpp \
-  throne-sync.cpp \
-  throneconfig.cpp \
-  throneman.cpp \
+  masternode.cpp \
+  masternode-budget.cpp \
+  masternode-payments.cpp \
+  masternode-sync.cpp \
+  masternodeconfig.cpp \
+  masternodeman.cpp \
   rpcdump.cpp \
   rpcwallet.cpp \
   wallet.cpp \
