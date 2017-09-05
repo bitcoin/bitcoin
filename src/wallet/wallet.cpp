@@ -804,11 +804,12 @@ bool CWallet::GetAccountPubkey(CPubKey &pubKey, std::string strAccount, bool bFo
         else {
             // Check if the current key has been used
             CScript scriptPubKey = GetScriptForDestination(account.vchPubKey.GetID());
+            CScript scriptWitness = GetScriptForDestination(GetScriptForWitness(scriptPubKey));
             for (std::map<uint256, CWalletTx>::iterator it = mapWallet.begin();
                  it != mapWallet.end() && account.vchPubKey.IsValid();
                  ++it)
                 for (const CTxOut& txout : (*it).second.tx->vout)
-                    if (txout.scriptPubKey == scriptPubKey) {
+                    if (txout.scriptPubKey == scriptPubKey || txout.scriptPubKey == scriptWitness) {
                         bForceNew = true;
                         break;
                     }
@@ -2648,6 +2649,11 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                 }
 
                 scriptChange = GetScriptForDestination(vchPubKey.GetID());
+                if (gArgs.GetBoolArg("-defaultwitnessaddress", false)) {
+                    scriptChange = GetScriptForWitness(scriptChange);
+                    this->AddCScript(scriptChange);
+                    scriptChange = GetScriptForDestination(scriptChange);
+                }
             }
             CTxOut change_prototype_txout(0, scriptChange);
             size_t change_prototype_size = GetSerializeSize(change_prototype_txout, SER_DISK, 0);
