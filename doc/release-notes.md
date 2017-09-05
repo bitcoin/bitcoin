@@ -50,7 +50,9 @@ Known Issues
 There have been a number of reports of the Bitcoin-Qt GUI on Windows being spawned off-screen,
 causing it not to appear (See [Issue 11207](https://github.com/bitcoin/bitcoin/issues/11207)).
 Users can fix this problem by re-running bitcoin-qt with the `-resetguisettings` parameter, or
-using Windows keyboard shortcuts to move the GUI back on screen. This will be fixed in 0.15.1.
+using Windows keyboard shortcuts to move the GUI back on screen. Select the window from the task
+bar, type Alt+Space on the keyboard, and select Move from the menu. You can then use the arrow keys
+to move the window back onto the screen. This will be fixed in 0.15.1.
 
 Compatibility
 ==============
