@@ -25,9 +25,13 @@ from decimal import Decimal
 import random
 import time
 
+
 class CreateNewBlockTest(BitcoinTestFramework):
     def __init__(self):
         super().__init__()
+        self.set_test_params()
+
+    def set_test_params(self):
         self.num_nodes = 4
         self.setup_clean_chain = True
 
@@ -157,7 +161,13 @@ class CreateNewBlockTest(BitcoinTestFramework):
         mempool_txids = node.getrawmempool()
 
         # Find a transaction that has exactly one ancestor that is also not in
-        # the block.
+        # the block. Exactly one ancestor is required so that we aren't trying
+        # to fee bump something that has, eg, one in-block ancestors and one
+        # not-in-block ancestor, because in such a situation the package feerate
+        # used in CreateNewBlock will not be the ancestor feerate we get from
+        # looking up the transaction in the mempool; it'll be modified by the
+        # in-block parent.  Consequently we could bump the feerate by too little
+        # fee in the test, causing test failure.
         txid_to_bump = None
 
         for txid in mempool_txids:
@@ -244,7 +254,7 @@ class CreateNewBlockTest(BitcoinTestFramework):
             # within the expected tolerance of max_income.
             # Return true if the returned block includes recent transactions;
             # false otherwise
-            def check_gbt_results(node, max_income, cnb_args, cur_time):
+            def check_gbt_results(node, cnb_args):
                 template = node.getblocktemplate({"rules": ["segwit"]})
                 mempool = node.getrawmempool(verbose=True)
                 stale_rate = cnb_args['stalerate']
@@ -268,8 +278,7 @@ class CreateNewBlockTest(BitcoinTestFramework):
                 return includes_recent_transactions
 
             for j in range(3):
-                if check_gbt_results(self.nodes[j], max_income,
-                                     self.cnb_args[j], cur_time):
+                if check_gbt_results(self.nodes[j], self.cnb_args[j]):
                     recent_tx_block_count[j] += 1
 
             # Drain the mempool if it gets big
@@ -284,6 +293,8 @@ class CreateNewBlockTest(BitcoinTestFramework):
             self.log.warn(
                 "Warning: every block contained recent transactions!"
             )
+        if sum(recent_tx_block_count) == 0:
+            self.log.warn("Warning: no block contained recent transactions!")
         self.log.debug(recent_tx_block_count)
 
     def run_test(self):
