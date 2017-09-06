@@ -184,5 +184,10 @@ class TestNodeCLI():
         if named_args:
             p_args += ["-named"]
         p_args += [command] + pos_args + named_args
-        cli_output = subprocess.check_output(p_args, input=self.input, universal_newlines=True)
-        return json.loads(cli_output, parse_float=decimal.Decimal)
+        process = subprocess.Popen(p_args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        cli_stdout, cli_stderr = process.communicate(input=self.input)
+        returncode = process.poll()
+        if returncode:
+            # Ignore cli_stdout, raise with cli_stderr
+            raise subprocess.CalledProcessError(returncode, self.binary, output=cli_stderr)
+        return json.loads(cli_stdout, parse_float=decimal.Decimal)
