@@ -1516,7 +1516,7 @@ UniValue syscoinquery(const UniValue& params, bool fHelp) {
 	cursor = mongoc_collection_find_with_opts(selectedCollection, filter, opts, NULL);
 	UniValue res(UniValue::VARR);
 	while (mongoc_cursor_next(cursor, &doc)) {
-		str = bson_as_json(doc, NULL);
+		str = bson_as_relaxed_extended_json(doc, NULL);
 		res.push_back(str);
 		bson_free(str);
 	}
