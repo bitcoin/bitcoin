@@ -1237,7 +1237,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 		paymentOptions = params[8].get_str();		
 	boost::algorithm::to_upper(paymentOptions);
 	// payment options - validate payment options string
-	if(!paymentOptions.empty() && !ValidatePaymentOptionsString(paymentOptions))
+	if(!ValidatePaymentOptionsString(paymentOptions))
 	{
 		string err = "SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1504 - " + _("Could not validate the payment options value");
 		throw runtime_error(err.c_str());

@@ -229,7 +229,7 @@ public:
 	COfferLinkWhitelist linkWhitelist;
 	bool bPrivate;
 	bool bCoinOffer;
-	unsigned int paymentOptions;
+	uint64_t paymentOptions;
 	unsigned int nSold;
 	std::vector<unsigned char> sCategory;
 	std::vector<unsigned char> sTitle;
