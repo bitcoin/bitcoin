@@ -827,7 +827,7 @@ bool CertFilter(const string& node, const string& cert)
 {
 	UniValue r;
 	int64_t currentTime = GetTime();
-	string query = "\"{\\\"_id\\\":\\\"" + cert + "\\\"}\"";;
+	string query = "\"{\\\"_id\\\":\\\"" + cert + "\\\"}\"";
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinquery cert " + query));
 	const UniValue &arr = r.get_array();
 	return !arr.empty();
@@ -1535,7 +1535,7 @@ const UniValue FindOfferAcceptList(const string& node, const string& alias, cons
 {
 	UniValue r, ret;
 	string id = offerguid + acceptguid;
-	string query = "\"{\\\"_id\\\":\\\"" + id + "\\\"\"";
+	string query = "\"{\\\"_id\\\":\\\"" + id + "\\\"}\"";
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinquery offeraccept " + query));
 	BOOST_CHECK(r.type() == UniValue::VARR);
 	const UniValue &arrayValue = r.get_array();
