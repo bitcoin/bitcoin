@@ -1542,9 +1542,11 @@ const UniValue FindOfferAcceptList(const string& node, const string& alias, cons
 	BOOST_CHECK(r.type() == UniValue::VARR);
 	const UniValue &arrayValue = r.get_array();
 	for(int i=0;i<arrayValue.size();i++)
-	{		
+	{	
+		string arrayValueEscaped = arrayValue[i].write();
+		boost::replace_all(arrayValueEscaped, "\"\"", "\"");
 		UniValue acceptObj;
-		acceptObj.read(arrayValue[i].write());
+		acceptObj.read(arrayValueEscaped);
 		const string &acceptvalueguid = find_value(acceptObj, "id").get_str();
 		const string &offervalueguid = find_value(acceptObj, "offer").get_str();
 		if(acceptvalueguid == acceptguid && offervalueguid == offerguid)
