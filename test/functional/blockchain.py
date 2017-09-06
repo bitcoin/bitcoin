@@ -5,6 +5,7 @@
 """Test RPCs related to blockchainstate.
 
 Test the following RPCs:
+    - getblockchaininfo
     - gettxoutsetinfo
     - getdifficulty
     - getbestblockhash
@@ -62,6 +63,7 @@ class BlockchainTest(BitcoinTestFramework):
             'chainwork',
             'difficulty',
             'headers',
+            'initialblockdownload',
             'mediantime',
             'pruned',
             'size_on_disk',
