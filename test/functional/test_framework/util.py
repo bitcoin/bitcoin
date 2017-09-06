@@ -12,6 +12,7 @@ import logging
 import os
 import random
 import re
+from subprocess import CalledProcessError
 import time
 
 from . import coverage
@@ -57,18 +58,42 @@ def assert_raises_message(exc, message, fun, *args, **kwds):
     else:
         raise AssertionError("No exception raised")
 
+def assert_raises_process_error(returncode, output, fun, *args, **kwds):
+    """Execute a process and asserts the process return code and output.
+
+    Calls function `fun` with arguments `args` and `kwds`. Catches a CalledProcessError
+    and verifies that the return code and output are as expected. Throws AssertionError if
+    no CalledProcessError was raised or if the return code and output are not as expected.
+
+    Args:
+        returncode (int): the process return code.
+        output (string): [a substring of] the process output.
+        fun (function): the function to call. This should execute a process.
+        args*: positional arguments for the function.
+        kwds**: named arguments for the function.
+    """
+    try:
+        fun(*args, **kwds)
+    except CalledProcessError as e:
+        if returncode != e.returncode:
+            raise AssertionError("Unexpected returncode %i" % e.returncode)
+        if output not in e.output:
+            raise AssertionError("Expected substring not found:" + e.output)
+    else:
+        raise AssertionError("No exception raised")
+
 def assert_raises_jsonrpc(code, message, fun, *args, **kwds):
     """Run an RPC and verify that a specific JSONRPC exception code and message is raised.
 
     Calls function `fun` with arguments `args` and `kwds`. Catches a JSONRPCException
     and verifies that the error code and message are as expected. Throws AssertionError if
-    no JSONRPCException was returned or if the error code/message are not as expected.
+    no JSONRPCException was raised or if the error code/message are not as expected.
 
     Args:
         code (int), optional: the error code returned by the RPC call (defined
             in src/rpc/protocol.h). Set to None if checking the error code is not required.
         message (string), optional: [a substring of] the error string returned by the
-            RPC call. Set to None if checking the error string is not required
+            RPC call. Set to None if checking the error string is not required.
         fun (function): the function to call. This should be the name of an RPC.
         args*: positional arguments for the function.
         kwds**: named arguments for the function.
