@@ -317,3 +317,7 @@ CScript GetScriptForWitness(const CScript& redeemscript)
     ret << OP_0 << ToByteVector(hash);
     return ret;
 }
+
+bool IsValidDestination(const CTxDestination& dest) {
+    return dest.which() != 0;
+}
