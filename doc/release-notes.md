@@ -86,7 +86,7 @@ Initial Block Download, startup, transaction and block validation much faster:
   this results in new block validation being 40-50% faster.
 - LevelDB has been upgraded to version 1.20 (See [PR 10544](https://github.com/bitcoin/bitcoin/pull/10544)). This version contains hardware acceleration for CRC
   on architectures supporting SSE 4.2. As a result, synchronization and block validation are now faster.
-- SHA256 hashing has been optimized for architectures supporting SSE 4 (See [PR 10182](https://github.com/bitcoin/bitcoin/pull/10182)). SHA256 is around
+- SHA256 hashing has been optimized for architectures supporting SSE 4 (See [PR 10821](https://github.com/bitcoin/bitcoin/pull/10821)). SHA256 is around
   50% faster on supported hardware, which results in around 5% faster IBD and block
   validation. In version 0.15, SHA256 hardware optimization is disabled in release builds by
   default, but can be enabled by using `--enable-experimental-asm` when building.
