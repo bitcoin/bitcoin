@@ -645,7 +645,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	if (!fJustCheck ) {
 		COffer dbOffer;
 		COffer serializedOffer;
-		if(op != OP_OFFER_ACTIVATE) {
+		if(op == OP_OFFER_UPDATE) {
 			// save serialized offer for later use
 			serializedOffer = theOffer;
 			// load the offer data from the DB
@@ -660,11 +660,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1049 - " + _("Offer alias mismatch");
 				serializedOffer.aliasTuple = theOffer.aliasTuple;
 			}
-		}
-		// If update, we make the serialized offer the master
-		// but first we assign fields from the DB since
-		// they are not shipped in an update txn to keep size down
-		if(op == OP_OFFER_UPDATE) {
 			serializedOffer.linkOfferTuple = theOffer.linkOfferTuple;
 			serializedOffer.vchOffer = theOffer.vchOffer;
 			serializedOffer.nSold = theOffer.nSold;
@@ -739,7 +734,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
  			theOffer.nSold = 0;
 		}
 		else if (op == OP_OFFER_ACCEPT) {
-			theOfferAccept = serializedOffer.accept;
+			theOfferAccept = theOffer.accept;
 			theOfferAccept.txHash = tx.GetHash();
 			theOfferAccept.nHeight = nHeight;
 			COfferAccept offerAccept;

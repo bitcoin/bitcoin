@@ -1449,7 +1449,7 @@ void EscrowClaimRefund(const string& node, const string& guid, const string& wit
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + guid));
 	string buyeralias = find_value(r.get_obj(), "buyer").get_str();
-	CAmount nEscrowFee = find_value(r.get_obj(), "sysfee").get_int64();
+	CAmount nEscrowFee = find_value(r.get_obj(), "networkfee").get_int64() + find_value(r.get_obj(), "arbiterfee").get_int64();
 	CAmount nBuyerTotal = find_value(r.get_obj(), "systotal").get_int64();
 	BOOST_CHECK(!buyeralias.empty());
 	string offer = find_value(r.get_obj(), "offer").get_str();
@@ -1580,7 +1580,7 @@ void EscrowClaimRelease(const string& node, const string& guid, const string &wi
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + guid));
 	string selleralias = find_value(r.get_obj(), "seller").get_str();
-	CAmount nEscrowFee = find_value(r.get_obj(), "sysfee").get_int64();
+	CAmount nEscrowFee = find_value(r.get_obj(), "networkfee").get_int64() + find_value(r.get_obj(), "arbiterfee").get_int64();
 	CAmount nSellerTotal = find_value(r.get_obj(), "systotal").get_int64();
 	BOOST_CHECK(!selleralias.empty());
 	string offer = find_value(r.get_obj(), "offer").get_str();
