@@ -570,7 +570,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         // be mined yet.
         // Must keep pool.cs for this unless we change CheckSequenceLocks to take a
         // CoinsViewCache instead of create its own
-        if (!CheckSequenceLocks(tx, STANDARD_LOCKTIME_VERIFY_FLAGS, &lp))
+        if (!CheckSequenceLocks(tx, STANDARD_LOCKTIME_VERIFY_FLAGS, &lp, false))
             return state.DoS(0, false, REJECT_NONSTANDARD, "non-BIP68-final");
         }
 
@@ -851,6 +851,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
                     plTxnReplaced->push_back(it->GetSharedTx());
             }
             pool.RemoveStaged(allConflicting, false, MemPoolRemovalReason::REPLACED);
+        }
 
             // This transaction should only count for fee estimation if it isn't a
             // BIP 125 replacement transaction (may not be widely supported), the
@@ -859,8 +860,9 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
             bool validForFeeEstimation = !fReplacementTransaction && IsCurrentForFeeEstimation() && pool.HasNoInputsOf(tx);
 
             // Store transaction in memory
-            pool.addUnchecked(hash, entry, setAncestors, validForFeeEstimation);
+            pool.addUnchecked(hash, entry, setAncestors, validForFeeEstimation, fDryRun);
 
+        if (!fDryRun) {
             // trim mempool and check if tx was trimmed
             if (!fOverrideMempoolLimit) {
                 // We don't have this failure mode in dry-run mode since we aren't

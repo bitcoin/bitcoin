@@ -948,11 +948,88 @@ UniValue verifyrawtransactions(const JSONRPCRequest& request)
         transactions.insert(std::pair<uint256, CTransactionRef>(ref->GetHash(), ref));
     }
 
+    // Find the ancestors of all of the transactions, including ones in mempool
+    std::map<uint256, CTransactionRef> ancestors;
+    for (auto const& hash_tx : transactions) {
+        CTransactionRef tx = hash_tx.second;
+        for (const CTxIn& txin : tx->vin) {
+            // Check the mempool
+            const uint256& hash = txin.prevout.hash;
+            CTxMemPool::txiter it = mempool.mapTx.find(hash);
+
+            // Ancestor not in mempool
+            if (it == mempool.mapTx.end()) {
+                continue;
+            }
+
+            // Add the ancestor to the map
+            ancestors.insert(std::pair<uint256, CTransactionRef>(hash, MakeTransactionRef(it->GetTx())));
+
+            // CalculateMemPoolAncestors only works on mempool entries, which is why we are iterating over vin
+            CTxMemPool::setEntries tx_ancestors;
+            uint64_t no_limit = std::numeric_limits<uint64_t>::max();
+            std::string dummy;
+            mempool.CalculateMemPoolAncestors(*it, tx_ancestors, no_limit, no_limit, no_limit, no_limit, dummy, false);
+
+            // Insert ancestors' ancestors into the map
+            for (CTxMemPool::txiter ancestor_it : tx_ancestors) {
+                CTransactionRef atf = MakeTransactionRef(ancestor_it->GetTx());
+                ancestors.insert(std::pair<uint256, CTransactionRef>(atf->GetHash(), atf));
+            }
+        }
+    }
+
+    // Merge the ancestors into the transactions
+    transactions.insert(ancestors.begin(), ancestors.end());
+
+    // Now, come up with a valid topological sort over the transactions
+    std::vector<CTransactionRef> ordered_tx;
+    std::vector<CTransactionRef> block_tx;
+
+    // Iterate over the transactions, removing all of those with no
+    // dependencies in the list each time. Technically, this is worst
+    // case n^2 since the transactions could be dependent in reverse
+    // order. In practice, I think this is better than e.g. implementing
+    // an asymptotically efficient topological sort since input sizes will
+    // likely be small and this is way easier to implement.
+    while (transactions.size() > 0) {
+        auto hash_tx = transactions.begin();
+        bool found_independent = false;
+        while (hash_tx != transactions.end()) {
+            CTransactionRef tx = hash_tx->second;
+            bool is_independent = true;
+            for (const CTxIn& txin : tx->vin) {
+                txit = transactions.find(txin.prevout.hash);
+                if (txit != transactions.end()) {
+                    is_independent = false;
+                    break;
+                }
+            }
+            if (is_independent) {
+                found_independent = true;
+                // Don't insert mempool ancestors
+                if (ancestors.find(hash_tx->first) == ancestors.end()) {
+                    ordered_tx.push_back(tx);
+                }
+                block_tx.push_back(tx);
+                hash_tx = transactions.erase(hash_tx);
+            } else {
+                hash_tx++;
+            }
+        }
+        if (found_independent) {
+            continue;
+        }
+        // We got all the way through without finding an independent tx
+        result.push_back(Pair("valid",  false));
+        result.push_back(Pair("reason", "circular transaction dependency"));
+        return result;
+    }
+
     // Should we check against our local policy, or just consensus rules?
     if (use_local_policy) {
         // For each input transaction
-        for (auto const& hash_tx : transactions) {
-            CTransactionRef tx(hash_tx.second);
+        for (auto const& tx : ordered_tx) {
             const uint256& hash = tx->GetHash();
             CCoinsViewCache& view = *pcoinsTip;
 
@@ -961,8 +1038,8 @@ UniValue verifyrawtransactions(const JSONRPCRequest& request)
             // duplicate tx (copied from sendrawtransaction)
             bool have_chain = false;
             for (size_t o = 0; !have_chain && o < tx->vout.size(); o++) {
-                const Coin& existingCoin = view.AccessCoin(COutPoint(hash, o));
-                have_chain = !existingCoin.IsSpent();
+                const Coin& existing_coin = view.AccessCoin(COutPoint(hash, o));
+                have_chain = !existing_coin.IsSpent();
             }
 
             // Check if transaction already exists in mempool
@@ -1005,92 +1082,22 @@ UniValue verifyrawtransactions(const JSONRPCRequest& request)
         }
     }
 
-    // Find the ancestors of all of the transactions, including ones in mempool
-    std::map<uint256, CTransactionRef> ancestors;
-    for (auto const& hash_tx : transactions) {
-        CTransactionRef tx = hash_tx.second;
-        for (const CTxIn& txin : tx->vin) {
-            // Check the mempool
-            const uint256& hash = txin.prevout.hash;
-            CTxMemPool::txiter it = mempool.mapTx.find(hash);
-
-            // Ancestor not in mempool
-            if (it == mempool.mapTx.end()) {
-                continue;
-            }
-
-            // Add the ancestor to the map
-            ancestors.insert(std::pair<uint256, CTransactionRef>(hash, MakeTransactionRef(it->GetTx())));
-
-            // CalculateMemPoolAncestors only works on mempool entries, which is why we are iterating over vin
-            CTxMemPool::setEntries tx_ancestors;
-            uint64_t no_limit = std::numeric_limits<uint64_t>::max();
-            std::string dummy;
-            mempool.CalculateMemPoolAncestors(*it, tx_ancestors, no_limit, no_limit, no_limit, no_limit, dummy, false);
-
-            // Insert ancestors' ancestors into the map
-            for (CTxMemPool::txiter ancestor_it : tx_ancestors) {
-                CTransactionRef atf = MakeTransactionRef(ancestor_it->GetTx());
-                ancestors.insert(std::pair<uint256, CTransactionRef>(atf->GetHash(), atf));
-            }
-        }
-    }
-
-    // Merge the ancestors into the transactions
-    transactions.insert(ancestors.begin(), ancestors.end());
-
-    // Now, come up with a valid topological sort over the transactions
-    std::vector<CTransactionRef> ordered_tx;
-
-    // Iterate over the transactions, removing all of those with no
-    // dependencies in the list each time. Technically, this is worst
-    // case n^2 since the transactions could be dependent in reverse
-    // order. In practice, I think this is better than e.g. implementing
-    // an asymptotically efficient topological sort since input sizes will
-    // likely be small and this is way easier to implement.
-    while (transactions.size() > 0) {
-        auto hash_tx = transactions.begin();
-        bool found_independent = false;
-        while (hash_tx != transactions.end()) {
-            CTransactionRef tx = hash_tx->second;
-            bool is_independent = true;
-            for (const CTxIn& txin : tx->vin) {
-                txit = transactions.find(txin.prevout.hash);
-                if (txit != transactions.end()) {
-                    is_independent = false;
-                    break;
-                }
-            }
-            if (is_independent) {
-                found_independent = true;
-                ordered_tx.push_back(tx);
-                hash_tx = transactions.erase(hash_tx);
-            } else {
-                hash_tx++;
-            }
-        }
-        if (found_independent) {
-            continue;
-        }
-        // We got all the way through without finding an independent tx
-        result.push_back(Pair("valid",  false));
-        result.push_back(Pair("reason", "circular transaction dependency"));
-        return result;
-    }
+    // Clean up the dryRunMap
+    mempool.dryRunMapTx.clear();
 
     // Create the dummy block
-    CScript scriptDummy = CScript() << OP_TRUE;
-    std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler(Params()).CreateNewBlock(scriptDummy, true, false));
-    CBlock* pblock = &pblocktemplate->block;
+    CScript script_dummy = CScript() << OP_TRUE;
+    std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler(Params()).CreateNewBlock(script_dummy, true, false));
+    CBlock* block = &pblocktemplate->block;
 
     // Add all of the transactions
-    pblock->vtx.reserve(1 + ordered_tx.size());
-    pblock->vtx.insert(pblock->vtx.begin() + 1, ordered_tx.begin(), ordered_tx.end());
+    block->vtx.reserve(1 + block_tx.size());
+    block->vtx.insert(block->vtx.begin() + 1, block_tx.begin(), block_tx.end());
 
     // Check if that block would be valid (modulo PoW and merkle root checks)
     CBlockIndex* const index_prev = chainActive.Tip();
     CValidationState state;
-    bool res = TestBlockValidity(state, Params(), *pblock, index_prev, false, false);
+    bool res = TestBlockValidity(state, Params(), *block, index_prev, false, false);
 
     if (!res) {
         result.push_back(Pair("valid",  false));

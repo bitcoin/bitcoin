@@ -37,6 +37,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(),5.0)
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(),4.0)
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(),3.0)
+        self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(),2.0)
         self.sync_all()
         self.nodes[0].generate(5)
         self.sync_all()
@@ -46,6 +47,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         fivebtc  = [tx for tx in unspent if tx["amount"] == Decimal("5.0")][0]
         fourbtc  = [tx for tx in unspent if tx["amount"] == Decimal("4.0")][0]
         threebtc = [tx for tx in unspent if tx["amount"] == Decimal("3.0")][0]
+        twobtc   = [tx for tx in unspent if tx["amount"] == Decimal("2.0")][0]
 
         #########################################
         # {create|verify|send}rawtransaction with valid or empty transaction #
@@ -122,17 +124,28 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         txdec = self.nodes[2].decoderawtransaction(rawtx1["hex"])
 
-        # One more, so we can test multiple mempool ancestors
+        # Another, so we can test multiple mempool ancestors
         inputs  = [ {'txid' : txdec["txid"], 'vout' : 0} ]
         outputs = { self.nodes[2].getnewaddress(): 3.7 }
         rawtx2  = self.nodes[2].createrawtransaction(inputs, outputs)
         rawtx2  = self.nodes[2].signrawtransaction(rawtx2, [{"txid": txdec["txid"], "vout": 0,
                                     "scriptPubKey": txdec["vout"][0]["scriptPubKey"]["hex"]}])
 
+        txdec = self.nodes[2].decoderawtransaction(rawtx2["hex"])
+
+        # One last one to test that we can do local policy checks on transactions
+        # that don't have mempool ancestors
+        inputs  = [ {'txid' : txdec["txid"], 'vout' : 0} ]
+        outputs = { self.nodes[2].getnewaddress(): 3.7 } # no fee
+        rawtx3  = self.nodes[2].createrawtransaction(inputs, outputs)
+        rawtx3  = self.nodes[2].signrawtransaction(rawtx3, [{"txid": txdec["txid"], "vout": 0,
+                                    "scriptPubKey": txdec["vout"][0]["scriptPubKey"]["hex"]}])
+
         # We don't know about the first tx yet, so verifyrawtransaction should fail
         res = self.nodes[2].verifyrawtransactions([rawtx1['hex']])
         assert_equal(res['valid'], False)
         assert_equal("missingorspent" in res['reason'], True)
+
         res = self.nodes[2].verifyrawtransactions([rawtx2['hex']])
         assert_equal(res['valid'], False)
         assert_equal("missingorspent" in res['reason'], True)
@@ -149,6 +162,14 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_equal(res['valid'], True)
 
         res = self.nodes[2].verifyrawtransactions([rawtx2['hex'], rawtx0['hex'], rawtx1['hex']])
+        assert_equal(res['valid'], True)
+
+        # Transaction with insufficient fee should be caught, but not if use_local_policy is false
+        res = self.nodes[2].verifyrawtransactions([rawtx2['hex'], rawtx0['hex'], rawtx1['hex'], rawtx3['hex']])
+        assert_equal(res['valid'], False)
+        assert_equal("relay fee" in res['reason'], True)
+
+        res = self.nodes[2].verifyrawtransactions([rawtx2['hex'], rawtx0['hex'], rawtx1['hex'], rawtx3['hex']], False)
         assert_equal(res['valid'], True)
 
         # Add the first transaction to the mempool
