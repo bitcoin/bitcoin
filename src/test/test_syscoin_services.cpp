@@ -1186,8 +1186,9 @@ void EscrowFeedback(const string& node, const string& role, const string& escrow
 	string query = "\"{\\\"_id\\\":\\\"" + id + "\\\"}\"";
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinquery feedback " + query));
 	BOOST_CHECK(r.type() == UniValue::VARR);
+	const UniValue &feedbackArray = r.get_array();
 	UniValue feedbackObj;
-	feedbackObj.read(feedbackArray[i].get_str());
+	feedbackObj.read(feedbackArray[0].get_str());
 	const string &feedbackid = find_value(feedbackObj, "_id").get_str();
 	BOOST_CHECK(feedbackid == id);
 	BOOST_CHECK(find_value(r.get_obj(), "txid").get_str() == escrowTxid);
@@ -1566,7 +1567,7 @@ const UniValue FindOfferAcceptFeedback(const string& node, const string& acceptg
 	BOOST_CHECK(r.type() == UniValue::VARR);
 	const UniValue &feedbackArray = r.get_array();
 	UniValue feedbackObj;
-	feedbackObj.read(feedbackArray[i].get_str());
+	feedbackObj.read(feedbackArray[0].get_str());
 	const string &feedbackid = find_value(feedbackObj, "_id").get_str();
 	if (feedbackid == id)
 	{
