@@ -716,10 +716,10 @@ void WalletModel::listCoins(std::map<QString, std::vector<CCoinControlEntry> >& 
     QString sCommand;
     
     if (nType == OUTPUT_RINGCT)
-        sCommand =  + "listunspentanon 1 9999999 [] false true";
+        sCommand =  + "listunspentanon 1 9999999 [] false { \"cc_format\":true }";
     else
     if (nType == OUTPUT_CT)
-        sCommand =  + "listunspentblind 1 9999999 [] false true";
+        sCommand =  + "listunspentblind 1 9999999 [] false { \"cc_format\":true }";
     else
         sCommand =  + "listunspent 1 9999999 [] false { \"cc_format\":true }";
 

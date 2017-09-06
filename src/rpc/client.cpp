@@ -194,13 +194,13 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "listunspentanon", 1, "maxconf" },
     { "listunspentanon", 2, "addresses" },
     { "listunspentanon", 3, "include_unsafe" },
-    { "listunspentanon", 4, "cc_format" },
+    { "listunspentanon", 4, "query_options" },
     
     { "listunspentblind", 0, "minconf" },
     { "listunspentblind", 1, "maxconf" },
     { "listunspentblind", 2, "addresses" },
     { "listunspentblind", 3, "include_unsafe" },
-    { "listunspentblind", 4, "cc_format" },
+    { "listunspentblind", 4, "query_options" },
     
     
     { "logging", 0, "include" },

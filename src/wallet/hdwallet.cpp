@@ -1864,6 +1864,63 @@ CAmount CHDWallet::GetStaked()
     return nTotal;
 };
 
+CAmount CHDWallet::GetLegacyBalance(const isminefilter& filter, int minDepth, const std::string* account) const
+{
+    LOCK2(cs_main, cs_wallet);
+
+    CAmount balance = 0;
+    for (const auto& entry : mapWallet) {
+        const CWalletTx& wtx = entry.second;
+        const int depth = wtx.GetDepthInMainChain();
+        if (depth < 0 || !CheckFinalTx(*wtx.tx) || wtx.GetBlocksToMaturity() > 0) {
+            continue;
+        }
+
+        // Loop through tx outputs and add incoming payments. For outgoing txs,
+        // treat change outputs specially, as part of the amount debited.
+        CAmount debit = wtx.GetDebit(filter);
+        const bool outgoing = debit > 0;
+        for (const auto &out : wtx.tx->vpout) {
+            if (outgoing && IsChange(out.get())) {
+                debit -= out->GetValue();
+            } else if (IsMine(out.get()) & filter && depth >= minDepth && (!account || *account == GetAccountName(*out->GetPScriptPubKey()))) {
+                balance += out->GetValue();
+            }
+        }
+
+        // For outgoing txs, subtract amount debited.
+        if (outgoing && (!account || *account == wtx.strFromAccount)) {
+            balance -= debit;
+        }
+    }
+
+    if (account) {
+        balance += CWalletDB(*dbw).GetAccountCreditDebit(*account);
+    }
+
+    for (const auto &entry : mapRecords)
+    {
+        const auto &txhash = entry.first;
+        const auto &rtx = entry.second;
+        const int depth = GetDepthInMainChain(rtx.blockHash, rtx.nIndex);
+        //if (depth < 0 || !CheckFinalTx(*wtx.tx) || wtx.GetBlocksToMaturity() > 0) {
+        if (depth < 0)
+            continue;
+        
+        for (const auto &r : rtx.vout)
+        {
+            if (r.nType == OUTPUT_STANDARD
+                && r.nFlags & ORF_OWNED && !IsSpent(txhash, r.n))
+                balance += r.nValue;
+        };
+        
+        if (!MoneyRange(balance))
+            throw std::runtime_error(std::string(__func__) + ": value out of range");
+    };
+
+    return balance;
+}
+
 bool CHDWallet::GetBalances(CHDWalletBalances &bal)
 {
     bal.Clear();
@@ -8827,9 +8884,11 @@ void CHDWallet::ResendWalletTransactions(int64_t nBestBlockTime, CConnman *connm
         LogPrintf("%s: rebroadcast %u unconfirmed transactions\n", __func__, relayed.size() + relayedRecord.size());
 };
 
-void CHDWallet::AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe, const CCoinControl *coinControl, bool fIncludeZeroValue) const
+void CHDWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const CCoinControl *coinControl, const CAmount &nMinimumAmount, const CAmount &nMaximumAmount, const CAmount &nMinimumSumAmount, const uint64_t &nMaximumCount, const int &nMinDepth, const int &nMaxDepth) const
 {
     vCoins.clear();
+
+    CAmount nTotal = 0;
 
     LOCK2(cs_main, cs_wallet);
     for (MapWallet_t::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
@@ -8845,6 +8904,9 @@ void CHDWallet::AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe, con
 
         int nDepth = pcoin->GetDepthInMainChain();
         if (nDepth < 0)
+            continue;
+
+        if (nDepth < nMinDepth || nDepth > nMaxDepth)
             continue;
 
         // We should not consider coins which aren't at least in our mempool
@@ -8892,23 +8954,44 @@ void CHDWallet::AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe, con
         {
             if (!pcoin->tx->vpout[i]->IsStandardOutput())
                 continue;
-                
             const CTxOutStandard *txout = pcoin->tx->vpout[i]->GetStandardOutput();
+
+            if (txout->nValue < nMinimumAmount || txout->nValue > nMaximumAmount)
+                continue;
+
+            if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs && !coinControl->IsSelected(COutPoint(wtxid, i)))
+                continue;
+
+            if (IsLockedCoin(wtxid, i))
+                continue;
+
+            if (IsSpent(wtxid, i))
+                continue;
+
             isminetype mine = IsMine(txout);
-            
-            // TODO
-            //bool fSpendableIn = ((mine & ISMINE_SPENDABLE) != ISMINE_NO) || (coinControl && coinControl->fAllowWatchOnly && (mine & ISMINE_WATCH_SOLVABLE) != ISMINE_NO);
-            //bool fSolvableIn = (mine & (ISMINE_SPENDABLE | ISMINE_WATCH_SOLVABLE)) != ISMINE_NO;
-            
-            if (!(IsSpent(wtxid, i)) && mine != ISMINE_NO &&
-                !IsLockedCoin((*it).first, i) && (txout->nValue > 0 || fIncludeZeroValue) &&
-                (!coinControl || !coinControl->HasSelected() || coinControl->fAllowOtherInputs || coinControl->IsSelected(COutPoint((*it).first, i))))
-            {
-                vCoins.push_back(COutput(pcoin, i, nDepth,
-                                         ((mine & ISMINE_SPENDABLE) != ISMINE_NO) ||
-                                          (coinControl && coinControl->fAllowWatchOnly && (mine & ISMINE_WATCH_SOLVABLE) != ISMINE_NO),
-                                         (mine & (ISMINE_SPENDABLE | ISMINE_WATCH_SOLVABLE)) != ISMINE_NO, safeTx));
-            };
+
+            if (mine == ISMINE_NO) {
+                continue;
+            }
+
+            bool fSpendableIn = ((mine & ISMINE_SPENDABLE) != ISMINE_NO) || (coinControl && coinControl->fAllowWatchOnly && (mine & ISMINE_WATCH_SOLVABLE) != ISMINE_NO);
+            bool fSolvableIn = (mine & (ISMINE_SPENDABLE | ISMINE_WATCH_SOLVABLE)) != ISMINE_NO;
+
+            vCoins.push_back(COutput(pcoin, i, nDepth, fSpendableIn, fSolvableIn, safeTx));
+
+            // Checks the sum amount of all UTXO's.
+            if (nMinimumSumAmount != MAX_MONEY) {
+                nTotal += txout->nValue;
+
+                if (nTotal >= nMinimumSumAmount) {
+                    return;
+                }
+            }
+
+            // Checks the maximum number of UTXO's.
+            if (nMaximumCount > 0 && vCoins.size() >= nMaximumCount) {
+                return;
+            }
         };
     };
     
@@ -8916,9 +8999,7 @@ void CHDWallet::AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe, con
     {
         const uint256 &txid = it->first;
         const CTransactionRecord &rtx = it->second;
-        
-        
-        
+
         // TODO: implement when moving coinbase and coinstake txns to mapRecords
         //if (pcoin->GetBlocksToMaturity() > 0)
         //    continue;
@@ -8927,11 +9008,14 @@ void CHDWallet::AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe, con
         if (nDepth < 0)
             continue;
 
+        if (nDepth < nMinDepth || nDepth > nMaxDepth)
+            continue;
+
         // We should not consider coins which aren't at least in our mempool
         // It's possible for these to be conflicted via ancestors which we may never be able to detect
         if (nDepth == 0 && !InMempool(txid))
             continue;
-        
+
         bool safeTx = IsTrusted(txid, rtx.blockHash);
         if (nDepth == 0 && rtx.mapValue.count(RTXVT_REPLACES_TXID)) {
             safeTx = false;
@@ -8940,39 +9024,62 @@ void CHDWallet::AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe, con
         if (nDepth == 0 && rtx.mapValue.count(RTXVT_REPLACED_BY_TXID)) {
             safeTx = false;
         }
-        
+
         if (fOnlySafe && !safeTx) {
             continue;
         }
-        
+
         MapWallet_t::const_iterator twi = mapTempWallet.find(txid);
         for (auto &r : rtx.vout)
         {
             if (r.nType != OUTPUT_STANDARD)
                 continue;
-            
-            if (r.nFlags & ORF_OWNED && !(IsSpent(txid, r.n)))
+
+            if (!(r.nFlags & ORF_OWNED))
+                continue;
+
+            if (IsSpent(txid, r.n))
+                continue;
+
+            if (r.nValue < nMinimumAmount || r.nValue > nMaximumAmount)
+                continue;
+
+            if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs && !coinControl->IsSelected(COutPoint(txid, r.n)))
+                continue;
+
+            if (IsLockedCoin(txid, r.n))
+                continue;
+
+            if (twi == mapTempWallet.end()
+                && (twi = mapTempWallet.find(txid)) == mapTempWallet.end())
             {
-                if (twi == mapTempWallet.end()
-                    && (twi = mapTempWallet.find(txid)) == mapTempWallet.end())
+                if (0 != InsertTempTxn(txid, &rtx)
+                    || (twi = mapTempWallet.find(txid)) == mapTempWallet.end())
                 {
-                    if (0 != InsertTempTxn(txid, &rtx)
-                        || (twi = mapTempWallet.find(txid)) == mapTempWallet.end())
-                    {
-                        LogPrintf("ERROR: %s - InsertTempTxn failed %s.", __func__, txid.ToString());
-                        return;
-                    };
+                    LogPrintf("ERROR: %s - InsertTempTxn failed %s.", __func__, txid.ToString());
+                    return;
                 };
-                vCoins.push_back(COutput(&twi->second, r.n, nDepth, true, true, safeTx));
             };
+            vCoins.push_back(COutput(&twi->second, r.n, nDepth, true, true, safeTx));
+
+            if (nMinimumSumAmount != MAX_MONEY) {
+                nTotal += r.nValue;
+
+                if (nTotal >= nMinimumSumAmount) {
+                    return;
+                }
+            }
+
+            // Checks the maximum number of UTXO's.
+            if (nMaximumCount > 0 && vCoins.size() >= nMaximumCount) {
+                return;
+            }
         };
     };
-    
 };
 
 bool CHDWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CCoinControl *coinControl) const
 {
-
     std::vector<COutput> vCoins(vAvailableCoins);
 
     // coin control -> return all selected outputs (we want all selected to go into the transaction for sure)
@@ -9059,17 +9166,18 @@ bool CHDWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const C
     return res;
 };
 
-void CHDWallet::AvailableBlindedCoins(std::vector<COutputR> &vCoins, bool fOnlyConfirmed, const CCoinControl *coinControl, bool fIncludeZeroValue) const
+void CHDWallet::AvailableBlindedCoins(std::vector<COutputR>& vCoins, bool fOnlySafe, const CCoinControl *coinControl, const CAmount& nMinimumAmount, const CAmount& nMaximumAmount, const CAmount& nMinimumSumAmount, const uint64_t& nMaximumCount, const int& nMinDepth, const int& nMaxDepth) const
 {
-    
+    vCoins.clear();
+
+    CAmount nTotal = 0;
+
+    LOCK2(cs_main, cs_wallet);
     for (MapRecords_t::const_iterator it = mapRecords.begin(); it != mapRecords.end(); ++it)
     {
         const uint256 &txid = it->first;
         const CTransactionRecord &rtx = it->second;
-        
-        if (fOnlyConfirmed && !IsTrusted(txid, rtx.blockHash))
-            continue;
-        
+
         // TODO: implement when moving coinbase and coinstake txns to mapRecords
         //if (pcoin->GetBlocksToMaturity() > 0)
         //    continue;
@@ -9078,26 +9186,61 @@ void CHDWallet::AvailableBlindedCoins(std::vector<COutputR> &vCoins, bool fOnlyC
         if (nDepth < 0)
             continue;
 
+        if (nDepth < nMinDepth || nDepth > nMaxDepth)
+            continue;
+
         // We should not consider coins which aren't at least in our mempool
         // It's possible for these to be conflicted via ancestors which we may never be able to detect
         if (nDepth == 0 && !InMempool(txid))
             continue;
-        
-        
-        if (nDepth == 0 && fOnlyConfirmed
-             && (rtx.mapValue.count(RTXVT_REPLACES_TXID)
-                || rtx.mapValue.count(RTXVT_REPLACED_BY_TXID)))
+
+        bool safeTx = IsTrusted(txid, rtx.blockHash);
+        if (nDepth == 0 && rtx.mapValue.count(RTXVT_REPLACES_TXID)) {
+            safeTx = false;
+        }
+
+        if (nDepth == 0 && rtx.mapValue.count(RTXVT_REPLACED_BY_TXID)) {
+            safeTx = false;
+        }
+
+        if (fOnlySafe && !safeTx) {
             continue;
-        
+        }
+
         for (auto &r : rtx.vout)
         {
             if (r.nType != OUTPUT_CT)
                 continue;
-            
-            if (r.nFlags & ORF_OWNED && !(IsSpent(txid, r.n)))
-            {
-                vCoins.push_back(COutputR(txid, it, r.n, nDepth));
-            };
+
+            if (!(r.nFlags & ORF_OWNED))
+                continue;
+
+            if (IsSpent(txid, r.n))
+                continue;
+
+            if (r.nValue < nMinimumAmount || r.nValue > nMaximumAmount)
+                continue;
+
+            if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs && !coinControl->IsSelected(COutPoint(txid, r.n)))
+                continue;
+
+            if (IsLockedCoin(txid, r.n))
+                continue;
+
+            vCoins.push_back(COutputR(txid, it, r.n, nDepth));
+
+            if (nMinimumSumAmount != MAX_MONEY) {
+                nTotal += r.nValue;
+
+                if (nTotal >= nMinimumSumAmount) {
+                    return;
+                }
+            }
+
+            // Checks the maximum number of UTXO's.
+            if (nMaximumCount > 0 && vCoins.size() >= nMaximumCount) {
+                return;
+            }
         };
     };
     
@@ -9198,18 +9341,19 @@ bool CHDWallet::SelectBlindedCoins(const std::vector<COutputR> &vAvailableCoins,
     return res;
 };
 
-void CHDWallet::AvailableAnonCoins(std::vector<COutputR> &vCoins, bool fOnlyConfirmed, const CCoinControl *coinControl, bool fIncludeZeroValue) const
+void CHDWallet::AvailableAnonCoins(std::vector<COutputR> &vCoins, bool fOnlySafe, const CCoinControl *coinControl, const CAmount& nMinimumAmount, const CAmount& nMaximumAmount, const CAmount& nMinimumSumAmount, const uint64_t& nMaximumCount, const int& nMinDepth, const int& nMaxDepth) const
 {
-    
+    vCoins.clear();
+
+    CAmount nTotal = 0;
+
+    LOCK2(cs_main, cs_wallet);
     const Consensus::Params& consensusParams = Params().GetConsensus();
     for (MapRecords_t::const_iterator it = mapRecords.begin(); it != mapRecords.end(); ++it)
     {
         const uint256 &txid = it->first;
         const CTransactionRecord &rtx = it->second;
-        
-        if (fOnlyConfirmed && !IsTrusted(txid, rtx.blockHash))
-            continue;
-        
+
         // TODO: implement when moving coinbase and coinstake txns to mapRecords
         //if (pcoin->GetBlocksToMaturity() > 0)
         //    continue;
@@ -9217,22 +9361,56 @@ void CHDWallet::AvailableAnonCoins(std::vector<COutputR> &vCoins, bool fOnlyConf
         int nDepth = GetDepthInMainChain(rtx.blockHash, rtx.nIndex);
         if (nDepth < consensusParams.nMinRCTOutputDepth)
             continue;
-        
-        
+
+        // Coins at depth 0 will never be available, no need to check depth0 cases
+
+        if (nDepth < nMinDepth || nDepth > nMaxDepth)
+            continue;
+
+        bool safeTx = IsTrusted(txid, rtx.blockHash);
+
+        if (fOnlySafe && !safeTx) {
+            continue;
+        }
+
         for (auto &r : rtx.vout)
         {
             if (r.nType != OUTPUT_RINGCT)
                 continue;
-            
-            if (r.nFlags & ORF_OWNED && !(IsSpent(txid, r.n)))
-            {
-                vCoins.push_back(COutputR(txid, it, r.n, nDepth));
-            };
+
+            if (!(r.nFlags & ORF_OWNED))
+                continue;
+
+            if (IsSpent(txid, r.n))
+                continue;
+
+            if (r.nValue < nMinimumAmount || r.nValue > nMaximumAmount)
+                continue;
+
+            if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs && !coinControl->IsSelected(COutPoint(txid, r.n)))
+                continue;
+
+            if (IsLockedCoin(txid, r.n))
+                continue;
+
+            vCoins.push_back(COutputR(txid, it, r.n, nDepth));
+
+            if (nMinimumSumAmount != MAX_MONEY) {
+                nTotal += r.nValue;
+
+                if (nTotal >= nMinimumSumAmount) {
+                    return;
+                }
+            }
+
+            // Checks the maximum number of UTXO's.
+            if (nMaximumCount > 0 && vCoins.size() >= nMaximumCount) {
+                return;
+            }
         };
     };
-    
+
     std::shuffle(std::begin(vCoins), std::end(vCoins), std::default_random_engine(unsigned(time(NULL))));
-    
 };
 
 /*

@@ -594,13 +594,13 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
         params.push_back("part");
         UniValue arr(UniValue::VARR);
         UniValue out(UniValue::VOBJ);
-        
+
         out.pushKV("address", request.params[0].get_str());
         out.pushKV("amount", request.params[1]);
-        
+
         if (request.params.size() > 5)
             out.pushKV("narr", request.params[5].get_str());
-        
+
         if (fSubtractFeeFromAmount)
         {
             UniValue uvBool;
@@ -609,11 +609,38 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
         }
         arr.push_back(out);
         params.push_back(arr);
-        
+
+        std::string sComment, sCommentTo;
         if (request.params.size() > 2 && !request.params[2].isNull() && !request.params[2].get_str().empty())
-            params.push_back(request.params[2].get_str());
+            sComment = request.params[2].get_str();
         if (request.params.size() > 3 && !request.params[3].isNull() && !request.params[3].get_str().empty())
-            params.push_back(request.params[3].get_str());
+            sCommentTo = request.params[3].get_str();
+
+        params.push_back(sComment);
+        params.push_back(sCommentTo);
+
+        // Add coinstake params
+        if (request.params.size() > 6)
+        {
+            params.push_back(4);
+            params.push_back(32);
+            params.push_back(false); // test_fee
+
+            UniValue uvCoinControl(UniValue::VOBJ);
+
+            uvCoinControl.pushKV("replaceable", coin_control.signalRbf);
+            unsigned int target = coin_control.m_confirm_target ? *coin_control.m_confirm_target : ::nTxConfirmTarget;
+            uvCoinControl.pushKV("conf_target", (int)target);
+            std::string sEstimateMode = "UNSET";
+            if (coin_control.m_fee_mode == FeeEstimateMode::ECONOMICAL)
+                sEstimateMode = "ECONOMICAL";
+            else
+            if (coin_control.m_fee_mode == FeeEstimateMode::CONSERVATIVE)
+                sEstimateMode = "CONSERVATIVE";
+            uvCoinControl.pushKV("estimate_mode", sEstimateMode);
+
+            params.push_back(uvCoinControl);
+        };
         
         newRequest.params = params;
         
@@ -3244,9 +3271,8 @@ UniValue listunspent(const JSONRPCRequest& request)
         RPCTypeCheckArgument(request.params[3], UniValue::VBOOL);
         include_unsafe = request.params[3].get_bool();
     }
-    
-    bool fCCFormat = false;
 
+    bool fCCFormat = false;
     CAmount nMinimumAmount = 0;
     CAmount nMaximumAmount = MAX_MONEY;
     CAmount nMinimumSumAmount = MAX_MONEY;
@@ -3275,15 +3301,9 @@ UniValue listunspent(const JSONRPCRequest& request)
     std::vector<COutput> vecOutputs;
     assert(pwallet != NULL);
     LOCK2(cs_main, pwallet->cs_wallet);
-    
-    if (IsHDWallet(pwallet))
-    {
-        GetHDWallet(pwallet)->AvailableCoins(vecOutputs, !include_unsafe, NULL, true);
-    } else
-    {
-        pwallet->AvailableCoins(vecOutputs, !include_unsafe, nullptr, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount, nMinDepth, nMaxDepth);
-    };
-    
+
+    pwallet->AvailableCoins(vecOutputs, !include_unsafe, nullptr, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount, nMinDepth, nMaxDepth);
+
     for (const COutput& out : vecOutputs) {
         
         CAmount nValue;

@@ -14,6 +14,7 @@
 #include "policy/policy.h"
 #include "policy/rbf.h"
 #include "rpc/server.h"
+#include "rpc/mining.h"
 #include "script/sign.h"
 #include "timedata.h"
 #include "util.h"
@@ -3105,7 +3106,14 @@ UniValue listunspentanon(const JSONRPCRequest &request)
             "                  because they come from unconfirmed untrusted transactions or unconfirmed\n"
             "                  replacement transactions (cases where we are less sure that a conflicting\n"
             "                  transaction won't be mined).\n"
-            "5. cc_format      (bool, optional, default=false) format for coincontrol\n"
+            "5. query_options    (json, optional) JSON with query options\n"
+            "    {\n"
+            "      \"minimumAmount\"    (numeric or string, default=0) Minimum value of each UTXO in " + CURRENCY_UNIT + "\n"
+            "      \"maximumAmount\"    (numeric or string, default=unlimited) Maximum value of each UTXO in " + CURRENCY_UNIT + "\n"
+            "      \"maximumCount\"     (numeric or string, default=unlimited) Maximum number of UTXOs\n"
+            "      \"minimumSumAmount\" (numeric or string, default=unlimited) Minimum sum value of all UTXOs in " + CURRENCY_UNIT + "\n"
+            "      \"cc_format\"        (bool, default=false) Format for coincontrol\n"
+            "    }\n"
             "\nResult\n"
             "[                   (array of json object)\n"
             "  {\n"
@@ -3135,7 +3143,7 @@ UniValue listunspentanon(const JSONRPCRequest &request)
         nMinDepth = request.params[0].get_int();
     }
 
-    int nMaxDepth = 9999999;
+    int nMaxDepth = 0x7FFFFFFF;
     if (request.params.size() > 1 && !request.params[1].isNull()) {
         RPCTypeCheckArgument(request.params[1], UniValue::VNUM);
         nMaxDepth = request.params[1].get_int();
@@ -3161,27 +3169,45 @@ UniValue listunspentanon(const JSONRPCRequest &request)
         RPCTypeCheckArgument(request.params[3], UniValue::VBOOL);
         include_unsafe = request.params[3].get_bool();
     }
-    
+
     bool fCCFormat = false;
-    if (request.params.size() > 4 && !request.params[4].isNull()) {
-        RPCTypeCheckArgument(request.params[4], UniValue::VBOOL);
-        fCCFormat = request.params[4].get_bool();
+    CAmount nMinimumAmount = 0;
+    CAmount nMaximumAmount = MAX_MONEY;
+    CAmount nMinimumSumAmount = MAX_MONEY;
+    uint64_t nMaximumCount = 0;
+
+    if (!request.params[4].isNull()) {
+        const UniValue& options = request.params[4].get_obj();
+
+        if (options.exists("minimumAmount"))
+            nMinimumAmount = AmountFromValue(options["minimumAmount"]);
+
+        if (options.exists("maximumAmount"))
+            nMaximumAmount = AmountFromValue(options["maximumAmount"]);
+
+        if (options.exists("minimumSumAmount"))
+            nMinimumSumAmount = AmountFromValue(options["minimumSumAmount"]);
+
+        if (options.exists("maximumCount"))
+            nMaximumCount = options["maximumCount"].get_int64();
+        
+        if (options.exists("cc_format"))
+            fCCFormat = options["cc_format"].get_bool();
     }
-    
+
     UniValue results(UniValue::VARR);
     std::vector<COutputR> vecOutputs;
     assert(pwallet != NULL);
     LOCK2(cs_main, pwallet->cs_wallet);
-    
-    
+
     // TODO: filter on stealth address
-    pwallet->AvailableAnonCoins(vecOutputs, !include_unsafe, NULL, true);
-    
+    pwallet->AvailableAnonCoins(vecOutputs, !include_unsafe, nullptr, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount, nMinDepth, nMaxDepth);
+
     for (const auto &out : vecOutputs)
     {
         if (out.nDepth < nMinDepth || out.nDepth > nMaxDepth)
             continue;
-        
+
         const COutputRecord *pout = out.rtx->second.GetOutput(out.i);
         
         if (!pout)
@@ -3255,7 +3281,14 @@ UniValue listunspentblind(const JSONRPCRequest &request)
             "                  because they come from unconfirmed untrusted transactions or unconfirmed\n"
             "                  replacement transactions (cases where we are less sure that a conflicting\n"
             "                  transaction won't be mined).\n"
-            "5. cc_format      (bool, optional, default=false) format for coincontrol\n"
+            "5. query_options    (json, optional) JSON with query options\n"
+            "    {\n"
+            "      \"minimumAmount\"    (numeric or string, default=0) Minimum value of each UTXO in " + CURRENCY_UNIT + "\n"
+            "      \"maximumAmount\"    (numeric or string, default=unlimited) Maximum value of each UTXO in " + CURRENCY_UNIT + "\n"
+            "      \"maximumCount\"     (numeric or string, default=unlimited) Maximum number of UTXOs\n"
+            "      \"minimumSumAmount\" (numeric or string, default=unlimited) Minimum sum value of all UTXOs in " + CURRENCY_UNIT + "\n"
+            "      \"cc_format\"        (bool, default=false) Format for coincontrol\n"
+            "    }\n"
             "\nResult\n"
             "[                   (array of json object)\n"
             "  {\n"
@@ -3285,16 +3318,35 @@ UniValue listunspentblind(const JSONRPCRequest &request)
         nMinDepth = request.params[0].get_int();
     }
 
-    int nMaxDepth = 9999999;
+    int nMaxDepth = 0x7FFFFFFF;
     if (request.params.size() > 1 && !request.params[1].isNull()) {
         RPCTypeCheckArgument(request.params[1], UniValue::VNUM);
         nMaxDepth = request.params[1].get_int();
     }
-    
+
     bool fCCFormat = false;
-    if (request.params.size() > 4 && !request.params[4].isNull()) {
-        RPCTypeCheckArgument(request.params[4], UniValue::VBOOL);
-        fCCFormat = request.params[4].get_bool();
+    CAmount nMinimumAmount = 0;
+    CAmount nMaximumAmount = MAX_MONEY;
+    CAmount nMinimumSumAmount = MAX_MONEY;
+    uint64_t nMaximumCount = 0;
+
+    if (!request.params[4].isNull()) {
+        const UniValue& options = request.params[4].get_obj();
+
+        if (options.exists("minimumAmount"))
+            nMinimumAmount = AmountFromValue(options["minimumAmount"]);
+
+        if (options.exists("maximumAmount"))
+            nMaximumAmount = AmountFromValue(options["maximumAmount"]);
+
+        if (options.exists("minimumSumAmount"))
+            nMinimumSumAmount = AmountFromValue(options["minimumSumAmount"]);
+
+        if (options.exists("maximumCount"))
+            nMaximumCount = options["maximumCount"].get_int64();
+        
+        if (options.exists("cc_format"))
+            fCCFormat = options["cc_format"].get_bool();
     }
 
     std::set<CBitcoinAddress> setAddress;
@@ -3323,7 +3375,7 @@ UniValue listunspentblind(const JSONRPCRequest &request)
     assert(pwallet != NULL);
     LOCK2(cs_main, pwallet->cs_wallet);
     
-    pwallet->AvailableBlindedCoins(vecOutputs, !include_unsafe, NULL, true);
+    pwallet->AvailableBlindedCoins(vecOutputs, !include_unsafe, nullptr, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount, nMinDepth, nMaxDepth);
     
     for (const auto &out : vecOutputs)
     {
@@ -3687,7 +3739,33 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
                 coincontrol.setSelected.insert(op);
             };
         };
-        
+
+        if (uvCoinControl.exists("replaceable"))
+        {
+            if (!uvCoinControl["replaceable"].isBool())
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Replaceable parameter must be boolean.");
+            
+            coincontrol.signalRbf = uvCoinControl["replaceable"].get_bool();
+        };
+
+        if (uvCoinControl.exists("conf_target"))
+        {
+            if (!uvCoinControl["conf_target"].isNum())
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "conf_target parameter must be numeric.");
+            
+            coincontrol.m_confirm_target = ParseConfirmTarget(uvCoinControl["conf_target"]);
+        };
+
+        if (uvCoinControl.exists("estimate_mode"))
+        {
+            if (!uvCoinControl["estimate_mode"].isStr())
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "estimate_mode parameter must be a string.");
+            
+            if (!FeeModeFromString(uvCoinControl["estimate_mode"].get_str(), coincontrol.m_fee_mode)) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid estimate_mode parameter");
+            }
+        };
+
         if (uvCoinControl["debug"].isBool() && uvCoinControl["debug"].get_bool() == true)
             fShowHex = true;
     };
@@ -3978,7 +4056,18 @@ UniValue sendtypeto(const JSONRPCRequest &request)
             "7. inputs_per_sig   (int, optional) Only applies when typein is anon.\n"
             "8. test_fee         (bool, optional, default=false) Only return the fee it would cost to send, txn is discarded.\n"
             "9. coin_control     (json, optional) Coincontrol object.\n"
-            "                       {changeaddress: , inputs: [{tx:, n:},...]}\n"
+            "   {\"changeaddress\": ,\n"
+            "    \"inputs\": [{\"tx\":, \"n\":},...],\n"
+            "    \"replaceable\": boolean,\n"
+            "       Allow this transaction to be replaced by a transaction with higher fees via BIP 125\n"
+            "    \"conf_target\": numeric,\n"
+            "       Confirmation target (in blocks)\n"
+            "    \"estimate_mode\": string,\n"
+            "       The fee estimate mode, must be one of:\n"
+            "           \"UNSET\"\n"
+            "           \"ECONOMICAL\"\n"
+            "           \"CONSERVATIVE\"\n"
+            "   }\n"
             "\nResult:\n"
             "\"txid\"              (string) The transaction id.\n"
             "\nExamples:\n"
