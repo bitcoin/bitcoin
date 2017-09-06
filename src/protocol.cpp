@@ -33,6 +33,7 @@ const char *NOTFOUND="notfound";
 const char *FILTERLOAD="filterload";
 const char *FILTERADD="filteradd";
 const char *FILTERCLEAR="filterclear";
+const char *FILTERSIZEXTHIN="filtersizext";
 const char *REJECT="reject";
 const char *SENDHEADERS="sendheaders";
 // BUIP010 Xtreme Thinblocks - begin section
@@ -58,8 +59,6 @@ static const char* ppszTypeName[] =
     // BUIP010 Xtreme Thinblocks - begin section
     NetMsgType::THINBLOCK,
     NetMsgType::XTHINBLOCK,
-    NetMsgType::XBLOCKTX,
-    NetMsgType::GET_XBLOCKTX,
     // BUIP010 Xtreme Thinblocks - end section
 };
 
@@ -86,6 +85,7 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::FILTERLOAD,
     NetMsgType::FILTERADD,
     NetMsgType::FILTERCLEAR,
+    NetMsgType::FILTERSIZEXTHIN,
     NetMsgType::REJECT,
     NetMsgType::SENDHEADERS,
     // BUIP010 Xtreme Thinbocks - begin section

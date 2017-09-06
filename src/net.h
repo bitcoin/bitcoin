@@ -388,6 +388,7 @@ public:
     uint64_t nGetXBlockTxLastTime; // The last time a get_xblocktx request was made
     double nGetXthinCount; // Count how many get_xthin requests are made
     uint64_t nGetXthinLastTime; // The last time a get_xthin request was made
+    uint32_t nXthinBloomfilterSize; // The maximum xthin bloom filter size (in bytes) that our peer will accept.
     // BUIP010 Xtreme Thinblocks: end section
 
     unsigned short addrFromPort;
@@ -519,7 +520,7 @@ public:
     // BUIP010:
     bool ThinBlockCapable()
     {
-        if (nServices & NODE_XTHIN)
+        if ((nServices & NODE_XTHIN) && (nServices & NODE_BLOOM))
             return true;
         return false;
     }

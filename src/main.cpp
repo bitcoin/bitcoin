@@ -85,6 +85,7 @@ bool fCheckBlockIndex = false;
 bool fCheckpointsEnabled = DEFAULT_CHECKPOINTS_ENABLED;
 size_t nCoinCacheUsage = 5000 * 300;
 uint64_t nPruneTarget = 0;
+uint32_t nXthinBloomFilterSize = MAX_BLOOM_FILTER_SIZE;
 
 CFeeRate minRelayTxFee = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE);
 
@@ -5899,6 +5900,12 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
             pfrom->PushMessage(NetMsgType::SENDHEADERS);
         }
 
+        // Tell the peer what maximum xthin bloom filter size we will consider acceptable.
+        if (pfrom->ThinBlockCapable())
+        {
+            pfrom->PushMessage(NetMsgType::FILTERSIZEXTHIN, nXthinBloomFilterSize);
+        }
+
         // BU expedited procecessing requires the exchange of the listening port id but we have to send it in a separate
         // version
         // message because we don't know if in the future Core will append more data to the end of the current VERSION
@@ -7046,6 +7053,18 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
         pfrom->fRelayTxes = true;
     }
 
+    else if (strCommand == NetMsgType::FILTERSIZEXTHIN)
+    {
+        if (pfrom->ThinBlockCapable())
+        {
+            vRecv >> pfrom->nXthinBloomfilterSize;
+        }
+        else
+        {
+            pfrom->fDisconnect = true;
+            return false;
+        }
+    }
 
     else if (strCommand == NetMsgType::REJECT)
     {

@@ -220,6 +220,11 @@ extern const char *FILTERADD;
  */
 extern const char *FILTERCLEAR;
 /**
+ * The filtersizexthin message tells the receiving peer the maximum xthin bloom
+ * filter size that it will accept.
+ */
+extern const char *FILTERSIZEXTHIN;
+/**
  * The reject message informs the receiving node that one of its previous
  * messages has been rejected.
  * @since protocol version 70002 as described by BIP61.

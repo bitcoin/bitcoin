@@ -190,6 +190,10 @@ extern bool fHavePruned;
 extern bool fPruneMode;
 /** Number of MiB of block files that we're trying to stay below. */
 extern uint64_t nPruneTarget;
+/** The maximum bloom filter size that we will support for an xthin request. This value is communicated to
+ *  our peer at the time we first make the connection.
+ */
+extern uint32_t nXthinBloomFilterSize;
 /** Block files containing a block-height within MIN_BLOCKS_TO_KEEP of chainActive.Tip() will not be pruned. */
 static const unsigned int MIN_BLOCKS_TO_KEEP = 288;
 

@@ -23,8 +23,6 @@
 #include <sstream>
 #include <string.h>
 
-extern void BuildSeededBloomFilter(CBloomFilter& memPoolFilter, std::vector<uint256>& vOrphanHashes, uint256 hash);
-
 CBlock TestBlock() { //Thanks dagurval :)
     // Block taken from bloom_tests.cpp merkle_block_1
     // Random real block (0000000000013b8ab2cd513b0261a14096412195a72a0c4827d229dcc7e0f7af)
@@ -35,6 +33,13 @@ CBlock TestBlock() { //Thanks dagurval :)
     return block;
 };
 
+CService ipaddress2(uint32_t i, uint32_t port)
+{
+    struct in_addr s;
+    s.s_addr = i;
+    return CService(CNetAddr(s), port);
+}
+
 
 BOOST_FIXTURE_TEST_SUITE(thinblock_tests, TestingSetup)
 
@@ -42,6 +47,9 @@ BOOST_AUTO_TEST_CASE(thinblock_test) {
 
     CBloomFilter filter;
     std::vector<uint256> vOrphanHashes;
+    CAddress addr1(ipaddress2(0xa0b0c001, 10000));
+    CNode dummyNode1(INVALID_SOCKET, addr1, "", true);
+
     // Create 10 random hashes to seed the orphanhash vector.  This way we will create a bloom filter
     // with a size of 10 elements.
     std::string hash = "3fba505b48865fccda4e248cecc39d5dfbc6b8ef7b4adc9cd27242c1193c714";
@@ -52,7 +60,7 @@ BOOST_AUTO_TEST_CASE(thinblock_test) {
         uint256 random_hash = uint256S(hash);
         vOrphanHashes.push_back(random_hash);
     }
-    BuildSeededBloomFilter(filter, vOrphanHashes, TestBlock().GetHash(), true);
+    BuildSeededBloomFilter(filter, vOrphanHashes, TestBlock().GetHash(), &dummyNode1, true);
 
     /* empty filter */
     CBlock block = TestBlock();
@@ -88,7 +96,7 @@ BOOST_AUTO_TEST_CASE(thinblock_test) {
     //  Add tests using a non-deterministic bloom filter which may
     //  or may not yeild a false positive.
     CBloomFilter filter1;
-    BuildSeededBloomFilter(filter1, vOrphanHashes, TestBlock().GetHash(), false);
+    BuildSeededBloomFilter(filter1, vOrphanHashes, TestBlock().GetHash(), &dummyNode1, false);
 
     /* empty filter */
     CBlock block1 = TestBlock();
