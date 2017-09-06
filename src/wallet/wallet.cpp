@@ -2742,7 +2742,7 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
     return true;
 }
 
-static CFeeRate GetDiscardRate(const CBlockPolicyEstimator& estimator)
+CFeeRate GetDiscardRate(const CBlockPolicyEstimator& estimator)
 {
     unsigned int highest_target = estimator.HighestTargetTracked(FeeEstimateHorizon::LONG_HALFLIFE);
     CFeeRate discard_rate = estimator.estimateSmartFee(highest_target, nullptr /* FeeCalculation */, false /* conservative */);
@@ -2813,6 +2813,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
     assert(txNew.nLockTime <= (unsigned int)chainActive.Height());
     assert(txNew.nLockTime < LOCKTIME_THRESHOLD);
     FeeCalculation feeCalc;
+    CAmount nFeeNeeded;
     unsigned int nBytes;
     {
         std::set<CInputCoin> setCoins;
@@ -2974,7 +2975,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                     vin.scriptWitness.SetNull();
                 }
 
-                CAmount nFeeNeeded = GetMinimumFee(nBytes, coin_control, ::mempool, ::feeEstimator, &feeCalc);
+                nFeeNeeded = GetMinimumFee(nBytes, coin_control, ::mempool, ::feeEstimator, &feeCalc);
 
                 // If we made it here and we aren't even able to meet the relay fee on the next pass, give up
                 // because we must be at the maximum allowed fee.
@@ -2995,13 +2996,15 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                     // new inputs. We now know we only need the smaller fee
                     // (because of reduced tx size) and so we should add a
                     // change output. Only try this once.
-                    CAmount fee_needed_for_change = GetMinimumFee(change_prototype_size, coin_control, ::mempool, ::feeEstimator, nullptr);
-                    CAmount minimum_value_for_change = GetDustThreshold(change_prototype_txout, discard_rate);
-                    CAmount max_excess_fee = fee_needed_for_change + minimum_value_for_change;
-                    if (nFeeRet > nFeeNeeded + max_excess_fee && nChangePosInOut == -1 && nSubtractFeeFromAmount == 0 && pick_new_inputs) {
-                        pick_new_inputs = false;
-                        nFeeRet = nFeeNeeded + fee_needed_for_change;
-                        continue;
+                    if (nChangePosInOut == -1 && nSubtractFeeFromAmount == 0 && pick_new_inputs) {
+                        unsigned int tx_size_with_change = nBytes + change_prototype_size + 2; // Add 2 as a buffer in case increasing # of outputs changes compact size
+                        CAmount fee_needed_with_change = GetMinimumFee(tx_size_with_change, coin_control, ::mempool, ::feeEstimator, nullptr);
+                        CAmount minimum_value_for_change = GetDustThreshold(change_prototype_txout, discard_rate);
+                        if (nFeeRet >= fee_needed_with_change + minimum_value_for_change) {
+                            pick_new_inputs = false;
+                            nFeeRet = fee_needed_with_change;
+                            continue;
+                        }
                     }
 
                     // If we have change output already, just increase it
@@ -3099,8 +3102,8 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
         }
     }
 
-    LogPrintf("Fee Calculation: Fee:%d Bytes:%u Tgt:%d (requested %d) Reason:\"%s\" Decay %.5f: Estimation: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out) Fail: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out)\n",
-              nFeeRet, nBytes, feeCalc.returnedTarget, feeCalc.desiredTarget, StringForFeeReason(feeCalc.reason), feeCalc.est.decay,
+    LogPrintf("Fee Calculation: Fee:%d Bytes:%u Needed:%d Tgt:%d (requested %d) Reason:\"%s\" Decay %.5f: Estimation: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out) Fail: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out)\n",
+              nFeeRet, nBytes, nFeeNeeded, feeCalc.returnedTarget, feeCalc.desiredTarget, StringForFeeReason(feeCalc.reason), feeCalc.est.decay,
               feeCalc.est.pass.start, feeCalc.est.pass.end,
               100 * feeCalc.est.pass.withinTarget / (feeCalc.est.pass.totalConfirmed + feeCalc.est.pass.inMempool + feeCalc.est.pass.leftMempool),
               feeCalc.est.pass.withinTarget, feeCalc.est.pass.totalConfirmed, feeCalc.est.pass.inMempool, feeCalc.est.pass.leftMempool,

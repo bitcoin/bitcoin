@@ -2812,6 +2812,8 @@ static bool InsertChangeAddress(CTempRecipient &r, std::vector<CTempRecipient> &
 };
 
 
+extern CFeeRate GetDiscardRate(const CBlockPolicyEstimator& estimator);
+
 int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
     std::vector<CTempRecipient> &vecSend,
     CExtKeyAccount *sea, CStoredExtKey *pc,
@@ -2846,6 +2848,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
     assert(txNew.nLockTime < LOCKTIME_THRESHOLD);
     
     FeeCalculation feeCalc;
+    CAmount nFeeNeeded;
     unsigned int nBytes;
     {
         LOCK2(cs_main, cs_wallet);
@@ -2854,6 +2857,10 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
         std::vector<COutput> vAvailableCoins;
         AvailableCoins(vAvailableCoins, true, coinControl);
         
+        CFeeRate discard_rate = GetDiscardRate(::feeEstimator);
+        nFeeRet = 0;
+        bool pick_new_inputs = true;
+        CAmount nValueIn = 0;
         // Start with no fee and loop until there is enough fee
         for (;;)
         {
@@ -2864,13 +2871,15 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             CAmount nValueToSelect = nValue;
             if (nSubtractFeeFromAmount == 0)
                 nValueToSelect += nFeeRet;
-            
+
             // Choose coins to use
-            CAmount nValueIn = 0;
-            setCoins.clear();
-            if (!SelectCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn, coinControl))
-                return errorN(1, sError, __func__, _("Insufficient funds.").c_str());
-            
+            if (pick_new_inputs) {
+                nValueIn = 0;
+                setCoins.clear();
+                if (!SelectCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn, coinControl))
+                    return errorN(1, sError, __func__, _("Insufficient funds.").c_str());
+            }
+
             int nChangePosInOut = -1;
             
             const CAmount nChange = nValueIn - nValueToSelect;
@@ -2893,10 +2902,8 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 r.fChange = true;
                 r.SetAmount(nChange);
                 
-                
                 if (!SetChangeDest(coinControl, r, sError))
                     return errorN(1, sError, __func__, ("SetChangeDest failed: " + sError).c_str());
-                
                 
                 CTxOutStandard tempOut;
                 tempOut.scriptPubKey = r.scriptPubKey;
@@ -2904,7 +2911,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 
                 // Never create dust outputs; if we would, just
                 // add the dust to the fee.
-                if (IsDust(&tempOut, dustRelayFee))
+                if (IsDust(&tempOut, discard_rate))
                 {
                     nChangePosInOut = -1;
                     nFeeRet += nChange;
@@ -3044,7 +3051,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             }
             
             
-            CAmount nFeeNeeded = GetMinimumFee(nBytes, *coinControl, ::mempool, ::feeEstimator, &feeCalc);
+            nFeeNeeded = GetMinimumFee(nBytes, *coinControl, ::mempool, ::feeEstimator, &feeCalc);
             if (HaveAnonOutputs(vecSend))
                 nFeeNeeded *= ANON_FEE_MULTIPLIER;
             
@@ -3055,16 +3062,31 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             
             if (nFeeRet >= nFeeNeeded)
             {
-                // Reduce fee to only the needed amount if we have change
-                // output to increase.  This prevents potential overpayment
-                // in fees if the coins selected to meet nFeeNeeded result
-                // in a transaction that requires less fee than the prior
-                // iteration.
-                // TODO: The case where nSubtractFeeFromAmount > 0 remains
-                // to be addressed because it requires returning the fee to
-                // the payees and not the change output.
-                // TODO: The case where there is no change output remains
-                // to be addressed so we avoid creating too small an output.
+                // Reduce fee to only the needed amount if possible. This
+                // prevents potential overpayment in fees if the coins
+                // selected to meet nFeeNeeded result in a transaction that
+                // requires less fee than the prior iteration.
+
+                // If we have no change and a big enough excess fee, then
+                // try to construct transaction again only without picking
+                // new inputs. We now know we only need the smaller fee
+                // (because of reduced tx size) and so we should add a
+                // change output. Only try this once.
+                if (nChangePosInOut == -1 && nSubtractFeeFromAmount == 0 && pick_new_inputs) {
+                    CKeyID idNull;
+                    CScript scriptChange = GetScriptForDestination(idNull);
+                    CTxOut change_prototype_txout(0, scriptChange);
+                    size_t change_prototype_size = GetSerializeSize(change_prototype_txout, SER_DISK, 0);
+                    unsigned int tx_size_with_change = nBytes + change_prototype_size + 2; // Add 2 as a buffer in case increasing # of outputs changes compact size
+                    CAmount fee_needed_with_change = GetMinimumFee(tx_size_with_change, *coinControl, ::mempool, ::feeEstimator, nullptr);
+                    CAmount minimum_value_for_change = GetDustThreshold(change_prototype_txout, discard_rate);
+                    if (nFeeRet >= fee_needed_with_change + minimum_value_for_change) {
+                        pick_new_inputs = false;
+                        nFeeRet = fee_needed_with_change;
+                        continue;
+                    }
+                }
+                
                 if (nFeeRet > nFeeNeeded && nChangePosInOut != -1
                     && nSubtractFeeFromAmount == 0)
                 {
@@ -3078,7 +3100,15 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                     nFeeRet -= extraFeePaid;
                 };
                 break; // Done, enough fee included.
-            };
+            } else
+            if (!pick_new_inputs) {
+                // This shouldn't happen, we should have had enough excess
+                // fee to pay for the new output and still meet nFeeNeeded
+                // Or we should have just subtracted fee from recipients and
+                // nFeeNeeded should not have changed
+                sError = _("Transaction fee and change calculation failed");
+                return false;
+            }
             
             // Try to reduce change to include necessary fee
             if (nChangePosInOut != -1
@@ -3098,6 +3128,12 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                     break; // Done, able to increase fee from change
                 };
             };
+
+            // If subtracting fee from recipients, we now know what fee we
+            // need to subtract, we have no reason to reselect inputs
+            if (nSubtractFeeFromAmount > 0) {
+                pick_new_inputs = false;
+            }
 
             // Include more fee and try again.
             nFeeRet = nFeeNeeded;
@@ -3144,8 +3180,8 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
         
     } // cs_main, cs_wallet
     
-    LogPrintf("Fee Calculation: Fee:%d Bytes:%u Tgt:%d (requested %d) Reason:\"%s\" Decay %.5f: Estimation: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out) Fail: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out)\n",
-              nFeeRet, nBytes, feeCalc.returnedTarget, feeCalc.desiredTarget, StringForFeeReason(feeCalc.reason), feeCalc.est.decay,
+    LogPrintf("Fee Calculation: Fee:%d Bytes:%u Needed:%d Tgt:%d (requested %d) Reason:\"%s\" Decay %.5f: Estimation: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out) Fail: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out)\n",
+              nFeeRet, nBytes, nFeeNeeded, feeCalc.returnedTarget, feeCalc.desiredTarget, StringForFeeReason(feeCalc.reason), feeCalc.est.decay,
               feeCalc.est.pass.start, feeCalc.est.pass.end,
               100 * feeCalc.est.pass.withinTarget / (feeCalc.est.pass.totalConfirmed + feeCalc.est.pass.inMempool + feeCalc.est.pass.leftMempool),
               feeCalc.est.pass.withinTarget, feeCalc.est.pass.totalConfirmed, feeCalc.est.pass.inMempool, feeCalc.est.pass.leftMempool,
@@ -3284,6 +3320,7 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
     assert(txNew.nLockTime < LOCKTIME_THRESHOLD);
     
     FeeCalculation feeCalc;
+    CAmount nFeeNeeded;
     unsigned int nBytes;
     {
         LOCK2(cs_main, cs_wallet);
@@ -3295,6 +3332,9 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
         CAmount nValueOutPlain = 0;
         int nChangePosInOut = -1;
         
+        nFeeRet = 0;
+        bool pick_new_inputs = true;
+        CAmount nValueIn = 0;
         // Start with no fee and loop until there is enough fee
         for (;;)
         {
@@ -3308,11 +3348,12 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             
             
             // Choose coins to use
-            CAmount nValueIn = 0;
-            setCoins.clear();
-            if (!SelectBlindedCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn, coinControl))
-                return errorN(1, sError, __func__, _("Insufficient funds.").c_str());
-            
+            if (pick_new_inputs) {
+                nValueIn = 0;
+                setCoins.clear();
+                if (!SelectBlindedCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn, coinControl))
+                    return errorN(1, sError, __func__, _("Insufficient funds.").c_str());
+            }
             
             const CAmount nChange = nValueIn - nValueToSelect;
             
@@ -3429,7 +3470,7 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
 
             CTransaction txNewConst(txNew);
             
-            CAmount nFeeNeeded = GetMinimumFee(nBytes, *coinControl, ::mempool, ::feeEstimator, &feeCalc);
+            nFeeNeeded = GetMinimumFee(nBytes, *coinControl, ::mempool, ::feeEstimator, &feeCalc);
             if (HaveAnonOutputs(vecSend))
                 nFeeNeeded *= ANON_FEE_MULTIPLIER;
             
@@ -3441,16 +3482,11 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             
             if (nFeeRet >= nFeeNeeded)
             {
-                // Reduce fee to only the needed amount if we have change
-                // output to increase.  This prevents potential overpayment
-                // in fees if the coins selected to meet nFeeNeeded result
-                // in a transaction that requires less fee than the prior
-                // iteration.
-                // TODO: The case where nSubtractFeeFromAmount > 0 remains
-                // to be addressed because it requires returning the fee to
-                // the payees and not the change output.
-                // TODO: The case where there is no change output remains
-                // to be addressed so we avoid creating too small an output.
+                // Reduce fee to only the needed amount if possible. This
+                // prevents potential overpayment in fees if the coins
+                // selected to meet nFeeNeeded result in a transaction that
+                // requires less fee than the prior iteration.
+                
                 if (nFeeRet > nFeeNeeded && nChangePosInOut != -1
                     && nSubtractFeeFromAmount == 0)
                 {
@@ -3462,7 +3498,15 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                     nFeeRet -= extraFeePaid;
                 };
                 break; // Done, enough fee included.
-            };
+            } else
+            if (!pick_new_inputs) {
+                // This shouldn't happen, we should have had enough excess
+                // fee to pay for the new output and still meet nFeeNeeded
+                // Or we should have just subtracted fee from recipients and
+                // nFeeNeeded should not have changed
+                sError = _("Transaction fee and change calculation failed");
+                return false;
+            }
             
             // Try to reduce change to include necessary fee
             if (nChangePosInOut != -1
@@ -3480,6 +3524,18 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 };
             };
             
+            // If subtracting fee from recipients, we now know what fee we
+            // need to subtract, we have no reason to reselect inputs
+            if (nSubtractFeeFromAmount > 0) {
+                pick_new_inputs = false;
+            }
+
+            // If subtracting fee from recipients, we now know what fee we
+            // need to subtract, we have no reason to reselect inputs
+            if (nSubtractFeeFromAmount > 0) {
+                pick_new_inputs = false;
+            }
+
             // Include more fee and try again.
             nFeeRet = nFeeNeeded;
             continue;
@@ -3608,8 +3664,8 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
         
     } // cs_main, cs_wallet
     
-    LogPrintf("Fee Calculation: Fee:%d Bytes:%u Tgt:%d (requested %d) Reason:\"%s\" Decay %.5f: Estimation: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out) Fail: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out)\n",
-              nFeeRet, nBytes, feeCalc.returnedTarget, feeCalc.desiredTarget, StringForFeeReason(feeCalc.reason), feeCalc.est.decay,
+    LogPrintf("Fee Calculation: Fee:%d Bytes:%u Needed:%d Tgt:%d (requested %d) Reason:\"%s\" Decay %.5f: Estimation: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out) Fail: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out)\n",
+              nFeeRet, nBytes, nFeeNeeded, feeCalc.returnedTarget, feeCalc.desiredTarget, StringForFeeReason(feeCalc.reason), feeCalc.est.decay,
               feeCalc.est.pass.start, feeCalc.est.pass.end,
               100 * feeCalc.est.pass.withinTarget / (feeCalc.est.pass.totalConfirmed + feeCalc.est.pass.inMempool + feeCalc.est.pass.leftMempool),
               feeCalc.est.pass.withinTarget, feeCalc.est.pass.totalConfirmed, feeCalc.est.pass.inMempool, feeCalc.est.pass.leftMempool,
@@ -3848,6 +3904,7 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
     txNew.nLockTime = 0;
     
     FeeCalculation feeCalc;
+    CAmount nFeeNeeded;
     unsigned int nBytes;
     {
         LOCK2(cs_main, cs_wallet);
@@ -3863,6 +3920,8 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
         std::vector<std::vector<uint8_t> > vInputBlinds;
         std::vector<size_t> vSecretColumns;
         
+        bool pick_new_inputs = true;
+        CAmount nValueIn = 0;
         // Start with no fee and loop until there is enough fee
         for (;;)
         {
@@ -3875,10 +3934,12 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 nValueToSelect += nFeeRet;
             
             // Choose coins to use
-            CAmount nValueIn = 0;
-            setCoins.clear();
-            if (!SelectBlindedCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn, coinControl))
-                return errorN(1, sError, __func__, _("Insufficient funds.").c_str());
+            if (pick_new_inputs) {
+                nValueIn = 0;
+                setCoins.clear();
+                if (!SelectBlindedCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn, coinControl))
+                    return errorN(1, sError, __func__, _("Insufficient funds.").c_str());
+            }
             
             const CAmount nChange = nValueIn - nValueToSelect;
             
@@ -4039,7 +4100,7 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             
             CTransaction txNewConst(txNew);
             
-            CAmount nFeeNeeded = GetMinimumFee(nBytes, *coinControl, ::mempool, ::feeEstimator, &feeCalc);
+            nFeeNeeded = GetMinimumFee(nBytes, *coinControl, ::mempool, ::feeEstimator, &feeCalc);
             //if (HaveAnonOutputs(vecSend))
                 nFeeNeeded *= ANON_FEE_MULTIPLIER;
             
@@ -4051,16 +4112,10 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             
             if (nFeeRet >= nFeeNeeded)
             {
-                // Reduce fee to only the needed amount if we have change
-                // output to increase.  This prevents potential overpayment
-                // in fees if the coins selected to meet nFeeNeeded result
-                // in a transaction that requires less fee than the prior
-                // iteration.
-                // TODO: The case where nSubtractFeeFromAmount > 0 remains
-                // to be addressed because it requires returning the fee to
-                // the payees and not the change output.
-                // TODO: The case where there is no change output remains
-                // to be addressed so we avoid creating too small an output.
+                // Reduce fee to only the needed amount if possible. This
+                // prevents potential overpayment in fees if the coins
+                // selected to meet nFeeNeeded result in a transaction that
+                // requires less fee than the prior iteration.
                 if (nFeeRet > nFeeNeeded && nChangePosInOut != -1
                     && nSubtractFeeFromAmount == 0)
                 {
@@ -4072,7 +4127,15 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                     nFeeRet -= extraFeePaid;
                 };
                 break; // Done, enough fee included.
-            };
+            } else
+            if (!pick_new_inputs) {
+                // This shouldn't happen, we should have had enough excess
+                // fee to pay for the new output and still meet nFeeNeeded
+                // Or we should have just subtracted fee from recipients and
+                // nFeeNeeded should not have changed
+                sError = _("Transaction fee and change calculation failed");
+                return false;
+            }
             
             // Try to reduce change to include necessary fee
             if (nChangePosInOut != -1
@@ -4089,6 +4152,12 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 };
             };
             
+            // If subtracting fee from recipients, we now know what fee we
+            // need to subtract, we have no reason to reselect inputs
+            if (nSubtractFeeFromAmount > 0) {
+                pick_new_inputs = false;
+            }
+            
             // Include more fee and try again.
             nFeeRet = nFeeNeeded;
             continue;
@@ -4104,7 +4173,6 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             txin.scriptData.stack[0].resize(0);
             txin.scriptWitness.stack[1].resize(0);
         };
-        
         
         
         std::vector<const uint8_t*> vpOutCommits;
@@ -4335,8 +4403,8 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
         
     } // cs_main, cs_wallet
     
-    LogPrintf("Fee Calculation: Fee:%d Bytes:%u Tgt:%d (requested %d) Reason:\"%s\" Decay %.5f: Estimation: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out) Fail: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out)\n",
-              nFeeRet, nBytes, feeCalc.returnedTarget, feeCalc.desiredTarget, StringForFeeReason(feeCalc.reason), feeCalc.est.decay,
+    LogPrintf("Fee Calculation: Fee:%d Bytes:%u Needed:%d Tgt:%d (requested %d) Reason:\"%s\" Decay %.5f: Estimation: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out) Fail: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out)\n",
+              nFeeRet, nBytes, nFeeNeeded, feeCalc.returnedTarget, feeCalc.desiredTarget, StringForFeeReason(feeCalc.reason), feeCalc.est.decay,
               feeCalc.est.pass.start, feeCalc.est.pass.end,
               100 * feeCalc.est.pass.withinTarget / (feeCalc.est.pass.totalConfirmed + feeCalc.est.pass.inMempool + feeCalc.est.pass.leftMempool),
               feeCalc.est.pass.withinTarget, feeCalc.est.pass.totalConfirmed, feeCalc.est.pass.inMempool, feeCalc.est.pass.leftMempool,

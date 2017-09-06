@@ -311,7 +311,7 @@
     </message>
     <message>
         <source>&amp;Receiving addresses...</source>
-        <translation>&amp;Ontvang adressen...</translation>
+        <translation>&amp;Ontvangstadressen...</translation>
     </message>
     <message>
         <source>Open &amp;URI...</source>
@@ -423,7 +423,7 @@
     </message>
     <message>
         <source>Show the list of used receiving addresses and labels</source>
-        <translation>Toon de lijst met gebruikte ontvangst adressen en labels</translation>
+        <translation>Toon de lijst met gebruikte ontvangstadressen en labels</translation>
     </message>
     <message>
         <source>Open a bitcoin: URI or payment request</source>
@@ -1809,7 +1809,7 @@
     </message>
     <message>
         <source>An optional label to associate with the new receiving address.</source>
-        <translation>Een optioneel label om te associëren met het nieuwe ontvangende adres</translation>
+        <translation>Een optioneel label om te associëren met het nieuwe ontvangstadres</translation>
     </message>
     <message>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>

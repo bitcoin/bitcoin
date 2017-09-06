@@ -1004,6 +1004,10 @@
         <translation>מיפוי פתחה באמצעות UPnP</translation>
     </message>
     <message>
+        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
+        <translation>התחבר לרשת הביטקוין דרך פרוקסי SOCKS5.</translation>
+    </message>
+    <message>
         <source>Proxy &amp;IP:</source>
         <translation>כתובת ה־IP של המ&amp;תווך:</translation>
     </message>
