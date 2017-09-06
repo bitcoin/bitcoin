@@ -5,7 +5,7 @@
 
 import sys
 
-from test_framework.test_framework import (BitcoinTestFramework, BITCOIND_PROC_WAIT_TIMEOUT)
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
 # Create one-input, one-output, no-fee transaction:
