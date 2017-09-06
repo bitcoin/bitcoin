@@ -1773,7 +1773,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	if (!GetOffer(escrow.offerTuple, theOffer))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4524 - " + _("Could not find offer related to this escrow"));
 	CAliasIndex buyerAlias, arbiterAlias, sellerAlias, buyerAliasLatest, arbiterAliasLatest, sellerAliasLatest, linkSellerAliasLatest;
-	CSyscoinAddress buyerAddressPayment, arbiterAddressPayment, sellerAddressPayment, sellerAddress, buyerAddress, arbiterAddress, linkSellerAddress;
+	CSyscoinAddress buyerAddressPayment, arbiterAddressPayment, sellerAddressPayment, linkSellerAddress;
 	CScript arbiterScript;
 	GetAlias(escrow.arbiterAliasTuple, arbiterAlias);
 	if (GetAlias(escrow.arbiterAliasTuple.first, arbiterAliasLatest))
@@ -1880,12 +1880,12 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 		// check arb fee is paid to arbiter or buyer
 		if(!foundFeePayment)
 		{
-			if(strAddress == arbiterAddress.ToString() && iVout >= escrow.nArbiterFee)
+			if(strAddress == arbiterAddressPayment.ToString() && iVout >= escrow.nArbiterFee)
 				foundFeePayment = true;
 		}
 		if(!foundFeePayment)
 		{
-			if(strAddress == buyerAddress.ToString() && iVout >= escrow.nArbiterFee)
+			if(strAddress == buyerAddressPayment.ToString() && iVout >= escrow.nArbiterFee)
 				foundFeePayment = true;
 		}
 		if(!theOffer.linkOfferTuple.first.empty())
@@ -1899,7 +1899,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 			}
 			if(!foundSellerPayment)
 			{
-				if(strAddress == sellerAddress.ToString() && iVout >= (nTotal-escrow.nCommission))
+				if(strAddress == sellerAddressPayment.ToString() && iVout >= (nTotal-escrow.nCommission))
 				{
 					foundSellerPayment = true;
 				}
@@ -1907,7 +1907,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 		}
 		else if(!foundSellerPayment)
 		{
-			if(strAddress == sellerAddress.ToString() && iVout >= nTotal)
+			if(strAddress == sellerAddressPayment.ToString() && iVout >= nTotal)
 			{
 				foundSellerPayment = true;
 			}
