@@ -49,7 +49,7 @@ public:
 	CAmount nPrice;
 	uint256 txExtId;
 	uint64_t nHeight;
-	uint64t nPaymentOption;
+	uint64_t nPaymentOption;
 	CNameTXIDTuple buyerAliasTuple;
 	CFeedback feedback;
 	std::string sTotal;
