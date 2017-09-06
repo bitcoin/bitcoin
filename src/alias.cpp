@@ -585,7 +585,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				prevCoins = NULL;
 				continue;
 			}
-			if (IsAliasOp(pop, true) && (vvchArgs[0] == vvch[0] || op == OP_ALIAS_ACTIVATE)) {
+			if (IsAliasOp(pop, true) && ((vvchArgs[0] == vvch[0] && vvchArgs[1] == vvch[1]) || op == OP_ALIAS_ACTIVATE)) {
 				prevOp = pop;
 				vvchPrevArgs = vvch;
 				break;
@@ -702,18 +702,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				if (!IsAliasOp(prevOp, true))
 				{
 					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5012 - " + _("Alias input to this transaction not found");
-					return error(errorMessage.c_str());
-				}
-				// Check GUID
-				if (vvchArgs.size() <= 1 || vvchPrevArgs.size() <= 1 || vvchPrevArgs[1] != vvchArgs[1])
-				{
-					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5013 - " + _("Alias Guid input mismatch");
-					return error(errorMessage.c_str());
-				}
-				// Check name
-				if (vvchPrevArgs[0] != vvchArgs[0])
-				{
-					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5014 - " + _("Alias input mismatch");
 					return error(errorMessage.c_str());
 				}
 				if(!theAlias.IsNull())
