@@ -192,6 +192,9 @@ extern std::atomic<bool> fDIP0001ActiveAtTip;
 /** Block hash whose ancestors we will assume to have valid scripts without checking them. */
 extern uint256 hashAssumeValid;
 
+/** Minimum work we will assume exists on some valid chain. */
+extern arith_uint256 nMinimumChainWork;
+
 /** Best header we've seen so far (used for getheaders queries' starting points). */
 extern CBlockIndex *pindexBestHeader;
 
