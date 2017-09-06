@@ -136,7 +136,16 @@ add_custom_command(
   COMMENT "Generating ${nsis_wizard_bmp} from ${nsis_wizard_input}"
   VERBATIM
 )
-add_custom_target(generate_nsis_images DEPENDS "${nsis_wizard_bmp}")
+set(nsis_header_input "res/src/nsis-header.svg")
+set(nsis_header_bmp "${ICON_PATH}/nsis-header.bmp")
+add_custom_command(
+  OUTPUT "${nsis_header_bmp}"
+  COMMAND sed s/CLIENT_NAME/${CLIENT_NAME}/ < ${CMAKE_CURRENT_SOURCE_DIR}/${nsis_header_input} | ${RSVG_CONVERT} -f png -d 57 -p 57 | ${IMAGEMAGICK_CONVERT} - -background white -alpha remove BMP3:${nsis_header_bmp}
+  DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${nsis_header_input}"
+  COMMENT "Generating ${nsis_header_bmp} from ${nsis_header_input}"
+  VERBATIM
+)
+add_custom_target(generate_nsis_images DEPENDS "${nsis_wizard_bmp}" "${nsis_header_bmp}")
 
 configure_file(bitcoin_locale.qrc bitcoin_locale.qrc USE_SOURCE_PERMISSIONS COPYONLY)
 configure_file(bitcoin_rendered.qrc bitcoin_rendered.qrc USE_SOURCE_PERMISSIONS COPYONLY)
