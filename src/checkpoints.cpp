@@ -15,7 +15,7 @@
 
 namespace Checkpoints {
 
-    CBlockIndex* GetLastCheckpoint(const CCheckpointData& data)
+    const CBlockIndex* GetLastCheckpoint(const CCheckpointData& data)
     {
         const MapCheckpoints& checkpoints = data.mapCheckpoints;
 

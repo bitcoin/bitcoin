@@ -47,7 +47,7 @@ unsigned int ParseConfirmTarget(const UniValue& value)
  * If 'height' is nonnegative, compute the estimate at the time when a given block was found.
  */
 UniValue GetNetworkHashPS(int lookup, int height) {
-    CBlockIndex *pb = chainActive.Tip();
+    const CBlockIndex *pb = chainActive.Tip();
 
     if (height >= 0 && height < chainActive.Height())
         pb = chainActive[height];
@@ -63,7 +63,7 @@ UniValue GetNetworkHashPS(int lookup, int height) {
     if (lookup > pb->nHeight)
         lookup = pb->nHeight;
 
-    CBlockIndex *pb0 = pb;
+    const CBlockIndex *pb0 = pb;
     int64_t minTime = pb0->GetBlockTime();
     int64_t maxTime = minTime;
     for (int i = 0; i < lookup; i++) {
@@ -400,9 +400,9 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
                 throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Block decode failed");
 
             uint256 hash = block.GetHash();
-            BlockMap::iterator mi = mapBlockIndex.find(hash);
+            BlockMap::const_iterator mi = mapBlockIndex.find(hash);
             if (mi != mapBlockIndex.end()) {
-                CBlockIndex *pindex = mi->second;
+                const CBlockIndex *pindex = mi->second;
                 if (pindex->IsValid(BLOCK_VALID_SCRIPTS))
                     return "duplicate";
                 if (pindex->nStatus & BLOCK_FAILED_MASK)
@@ -410,7 +410,7 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
                 return "duplicate-inconclusive";
             }
 
-            CBlockIndex* const pindexPrev = chainActive.Tip();
+            const CBlockIndex* const pindexPrev = chainActive.Tip();
             // TestBlockValidity only supports blocks built on the current Tip
             if (block.hashPrevBlock != pindexPrev->GetBlockHash())
                 return "inconclusive-not-best-prevblk";
@@ -501,7 +501,7 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
     bool fSupportsSegwit = setClientRules.find(segwit_info.name) != setClientRules.end();
 
     // Update block
-    static CBlockIndex* pindexPrev;
+    static const CBlockIndex* pindexPrev;
     static int64_t nStart;
     static std::unique_ptr<CBlockTemplate> pblocktemplate;
     // Cache whether the last invocation was with segwit support, to avoid returning
@@ -516,7 +516,7 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
 
         // Store the pindexBest used before CreateNewBlock, to avoid races
         nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
-        CBlockIndex* pindexPrevNew = chainActive.Tip();
+        const CBlockIndex* pindexPrevNew = chainActive.Tip();
         nStart = GetTime();
         fLastTemplateSupportsSegwit = fSupportsSegwit;
 
@@ -731,9 +731,9 @@ UniValue submitblock(const JSONRPCRequest& request)
     bool fBlockPresent = false;
     {
         LOCK(cs_main);
-        BlockMap::iterator mi = mapBlockIndex.find(hash);
+        BlockMap::const_iterator mi = mapBlockIndex.find(hash);
         if (mi != mapBlockIndex.end()) {
-            CBlockIndex *pindex = mi->second;
+            const CBlockIndex *pindex = mi->second;
             if (pindex->IsValid(BLOCK_VALID_SCRIPTS)) {
                 return "duplicate";
             }
@@ -747,7 +747,7 @@ UniValue submitblock(const JSONRPCRequest& request)
 
     {
         LOCK(cs_main);
-        BlockMap::iterator mi = mapBlockIndex.find(block.hashPrevBlock);
+        BlockMap::const_iterator mi = mapBlockIndex.find(block.hashPrevBlock);
         if (mi != mapBlockIndex.end()) {
             UpdateUncommittedBlockStructures(block, mi->second, Params().GetConsensus());
         }

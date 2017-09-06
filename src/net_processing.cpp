@@ -375,7 +375,7 @@ void ProcessBlockAvailability(NodeId nodeid) {
     assert(state != nullptr);
 
     if (!state->hashLastUnknownBlock.IsNull()) {
-        BlockMap::iterator itOld = mapBlockIndex.find(state->hashLastUnknownBlock);
+        BlockMap::const_iterator itOld = mapBlockIndex.find(state->hashLastUnknownBlock);
         if (itOld != mapBlockIndex.end() && itOld->second->nChainWork > 0) {
             if (state->pindexBestKnownBlock == nullptr || itOld->second->nChainWork >= state->pindexBestKnownBlock->nChainWork)
                 state->pindexBestKnownBlock = itOld->second;
@@ -391,7 +391,7 @@ void UpdateBlockAvailability(NodeId nodeid, const uint256 &hash) {
 
     ProcessBlockAvailability(nodeid);
 
-    BlockMap::iterator it = mapBlockIndex.find(hash);
+    BlockMap::const_iterator it = mapBlockIndex.find(hash);
     if (it != mapBlockIndex.end() && it->second->nChainWork > 0) {
         // An actually better block was announced.
         if (state->pindexBestKnownBlock == nullptr || it->second->nChainWork >= state->pindexBestKnownBlock->nChainWork)
@@ -977,7 +977,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
             if (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK || inv.type == MSG_CMPCT_BLOCK || inv.type == MSG_WITNESS_BLOCK)
             {
                 bool send = false;
-                BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
+                BlockMap::const_iterator mi = mapBlockIndex.find(inv.hash);
                 std::shared_ptr<const CBlock> a_recent_block;
                 std::shared_ptr<const CBlockHeaderAndShortTxIDs> a_recent_compact_block;
                 bool fWitnessesPresentInARecentCompactBlock;
@@ -1690,7 +1690,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
         LOCK(cs_main);
 
-        BlockMap::iterator it = mapBlockIndex.find(req.blockhash);
+        BlockMap::const_iterator it = mapBlockIndex.find(req.blockhash);
         if (it == mapBlockIndex.end() || !(it->second->nStatus & BLOCK_HAVE_DATA)) {
             LogPrintf("Peer %d sent us a getblocktxn for a block we don't have", pfrom->GetId());
             return true;
@@ -1738,7 +1738,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         if (locator.IsNull())
         {
             // If locator is null, return the hashStop block
-            BlockMap::iterator mi = mapBlockIndex.find(hashStop);
+            BlockMap::const_iterator mi = mapBlockIndex.find(hashStop);
             if (mi == mapBlockIndex.end())
                 return true;
             pindex = (*mi).second;
@@ -2938,7 +2938,7 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
                 // then send all headers past that one.  If we come across any
                 // headers that aren't on chainActive, give up.
                 for (const uint256 &hash : pto->vBlockHashesToAnnounce) {
-                    BlockMap::iterator mi = mapBlockIndex.find(hash);
+                    BlockMap::const_iterator mi = mapBlockIndex.find(hash);
                     assert(mi != mapBlockIndex.end());
                     const CBlockIndex *pindex = mi->second;
                     if (chainActive[pindex->nHeight] != pindex) {
@@ -3031,7 +3031,7 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
                 // in the past.
                 if (!pto->vBlockHashesToAnnounce.empty()) {
                     const uint256 &hashToAnnounce = pto->vBlockHashesToAnnounce.back();
-                    BlockMap::iterator mi = mapBlockIndex.find(hashToAnnounce);
+                    BlockMap::const_iterator mi = mapBlockIndex.find(hashToAnnounce);
                     assert(mi != mapBlockIndex.end());
                     const CBlockIndex *pindex = mi->second;
 

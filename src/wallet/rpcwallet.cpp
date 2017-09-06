@@ -91,7 +91,7 @@ void WalletTxToJSON(const CWalletTx& wtx, UniValue& entry)
     {
         entry.push_back(Pair("blockhash", wtx.hashBlock.GetHex()));
         entry.push_back(Pair("blockindex", wtx.nIndex));
-        entry.push_back(Pair("blocktime", mapBlockIndex[wtx.hashBlock]->GetBlockTime()));
+        entry.push_back(Pair("blocktime", mapBlockIndex.at(wtx.hashBlock)->GetBlockTime()));
     } else {
         entry.push_back(Pair("trusted", wtx.IsTrusted()));
     }
@@ -1865,7 +1865,7 @@ UniValue listsinceblock(const JSONRPCRequest& request)
         uint256 blockId;
 
         blockId.SetHex(request.params[0].get_str());
-        BlockMap::iterator it = mapBlockIndex.find(blockId);
+        BlockMap::const_iterator it = mapBlockIndex.find(blockId);
         if (it != mapBlockIndex.end()) {
             paltindex = pindex = it->second;
             if (chainActive[pindex->nHeight] != pindex) {
@@ -1922,7 +1922,7 @@ UniValue listsinceblock(const JSONRPCRequest& request)
         paltindex = paltindex->pprev;
     }
 
-    CBlockIndex *pblockLast = chainActive[chainActive.Height() + 1 - target_confirms];
+    const CBlockIndex *pblockLast = chainActive[chainActive.Height() + 1 - target_confirms];
     uint256 lastblock = pblockLast ? pblockLast->GetBlockHash() : uint256();
 
     UniValue ret(UniValue::VOBJ);

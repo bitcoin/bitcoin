@@ -375,11 +375,11 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
     LOCK(cs_main);
 
     // Cap last block file size, and mine new block in a new block file.
-    CBlockIndex* const nullBlock = nullptr;
-    CBlockIndex* oldTip = chainActive.Tip();
+    const CBlockIndex* const nullBlock = nullptr;
+    const CBlockIndex* oldTip = chainActive.Tip();
     GetBlockFileInfo(oldTip->GetBlockPos().nFile)->nSize = MAX_BLOCKFILE_SIZE;
     CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-    CBlockIndex* newTip = chainActive.Tip();
+    const CBlockIndex* newTip = chainActive.Tip();
 
     // Verify ScanForWalletTransactions picks up transactions in both the old
     // and new block files.
@@ -534,10 +534,10 @@ static int64_t AddTx(CWallet& wallet, uint32_t lockTime, int64_t mockTime, int64
     SetMockTime(mockTime);
     CBlockIndex* block = nullptr;
     if (blockTime > 0) {
-        auto inserted = mapBlockIndex.emplace(GetRandHash(), new CBlockIndex);
+        auto inserted = const_cast<BlockMap&>(mapBlockIndex).emplace(GetRandHash(), new CBlockIndex);
         assert(inserted.second);
         const uint256& hash = inserted.first->first;
-        block = inserted.first->second;
+        block = const_cast<CBlockIndex*>(inserted.first->second);
         block->nTime = blockTime;
         block->phashBlock = &hash;
     }
