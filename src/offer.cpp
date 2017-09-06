@@ -857,7 +857,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1065 - " + _("Offer payment already exists");
 				return true;
 			}
-			if (GetOffer(offerAccept.offerTuple, myPriceOffer))
+			if (!GetOffer(theOfferAccept.offerTuple, myPriceOffer))
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1065 - " + _("Could not get offer at the time of accept");
 				return true;
