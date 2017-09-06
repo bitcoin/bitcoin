@@ -35,7 +35,7 @@ public:
 	uint256 extTxId;
 	uint256 redeemTxId;
     uint64_t nHeight;
-	uint32_t nPaymentOption;
+	uint64_t nPaymentOption;
 	unsigned int nQty;
 	unsigned int op;
 	bool bPaymentAck;

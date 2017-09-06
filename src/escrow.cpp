@@ -1162,8 +1162,8 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 		string err = "SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4510 - " + _("Could not validate the payment option value");
 		throw runtime_error(err.c_str());
 	}
-		// payment options - and convert payment options string to a bitmask for the txn
-	unsigned char paymentOptionMask = (unsigned char) GetPaymentOptionsMaskFromString(paymentOption);
+	// payment options - and convert payment options string to a bitmask for the txn
+	uint64_t paymentOptionMask = GetPaymentOptionsMaskFromString(paymentOption);
 	vector<unsigned char> vchRedeemScript;
 	if(CheckParam(params, 7))
 		vchRedeemScript = vchFromValue(params[7]);

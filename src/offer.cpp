@@ -41,12 +41,12 @@ bool IsOfferOp(int op) {
         || op == OP_OFFER_ACCEPT;
 }
 
-bool ValidatePaymentOptionsMask(const uint32_t &paymentOptionsMask) {
-	uint32_t maxVal = PAYMENTOPTION_SYS | PAYMENTOPTION_BTC | PAYMENTOPTION_ZEC;
+bool ValidatePaymentOptionsMask(const uint64_t &paymentOptionsMask) {
+	uint64_t maxVal = PAYMENTOPTION_SYS | PAYMENTOPTION_BTC | PAYMENTOPTION_ZEC;
 	return !(paymentOptionsMask < 1 || paymentOptionsMask > maxVal);
 }
 
-bool IsValidPaymentOption(const uint32_t &paymentOptionsMask) {
+bool IsValidPaymentOption(const uint64_t &paymentOptionsMask) {
 	return (paymentOptionsMask == PAYMENTOPTION_SYS || paymentOptionsMask == PAYMENTOPTION_BTC || paymentOptionsMask == PAYMENTOPTION_ZEC);
 }
 
@@ -63,9 +63,9 @@ bool ValidatePaymentOptionsString(const std::string &paymentOptionsString) {
 	return retval;
 }
 
-uint32_t GetPaymentOptionsMaskFromString(const std::string &paymentOptionsString) {
+uint64_t GetPaymentOptionsMaskFromString(const std::string &paymentOptionsString) {
 	vector<string> strs;
-	uint32_t retval = 0;
+	uint64_t retval = 0;
 	boost::split(strs, paymentOptionsString, boost::is_any_of("+"));
 	for (size_t i = 0; i < strs.size(); i++) {
 		if(!strs[i].compare("SYS")) {
@@ -82,7 +82,7 @@ uint32_t GetPaymentOptionsMaskFromString(const std::string &paymentOptionsString
 	return retval;
 }
 
-bool IsPaymentOptionInMask(const uint32_t &mask, const uint32_t &paymentOption) {
+bool IsPaymentOptionInMask(const uint64_t &mask, const uint64_t &paymentOption) {
   return mask & paymentOption ? true : false;
 }
 
@@ -1243,7 +1243,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 		throw runtime_error(err.c_str());
 	}
 	// payment options - and convert payment options string to a bitmask for the txn
-	unsigned char paymentOptionsMask = (unsigned char) GetPaymentOptionsMaskFromString(paymentOptions);
+	uint64_t paymentOptionsMask = GetPaymentOptionsMaskFromString(paymentOptions);
 	bool bPrivate = false;
 	if(CheckParam(params, 10))
 		bPrivate = params[10].get_str() == "true"? true: false;
@@ -1942,7 +1942,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	{
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1532 - " + _("Could not validate payment options string"));
 	}
-	unsigned char paymentOptionsMask = (unsigned char) GetPaymentOptionsMaskFromString(paymentOptions);
+	uint64_t paymentOptionsMask = GetPaymentOptionsMaskFromString(paymentOptions);
 	vector<unsigned char> vchWitness;
 	if(CheckParam(params, 13))
 		vchWitness = vchFromValue(params[13]);
@@ -2171,7 +2171,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 		throw runtime_error(err.c_str());
 	}
 	// payment options - and convert payment options string to a bitmask for the txn
-	unsigned char paymentOptionsMask = (unsigned char) GetPaymentOptionsMaskFromString(paymentOptions);
+	uint64_t paymentOptionsMask = GetPaymentOptionsMaskFromString(paymentOptions);
 	vector<unsigned char> vchWitness;
 	if(CheckParam(params, 5))
 		vchWitness = vchFromValue(params[5]);	
@@ -3015,7 +3015,7 @@ bool BuildOfferAcceptJson(const COfferAccept& theOfferAccept, UniValue& oOfferAc
 	oOfferAccept.push_back(Pair("status",statusStr));
 	return true;
 }
-std::string GetPaymentOptionsString(const uint32_t &paymentOptions)
+std::string GetPaymentOptionsString(const uint64_t &paymentOptions)
 {
 	vector<std::string> currencies;
 	if(IsPaymentOptionInMask(paymentOptions, PAYMENTOPTION_SYS)) {
@@ -3029,7 +3029,7 @@ std::string GetPaymentOptionsString(const uint32_t &paymentOptions)
 	}
 	return boost::algorithm::join(currencies, "+");
 }
-CChainParams::AddressType PaymentOptionToAddressType(const uint32_t &paymentOption)
+CChainParams::AddressType PaymentOptionToAddressType(const uint64_t &paymentOption)
 {
 	CChainParams::AddressType myAddressType = CChainParams::ADDRESS_SYS;
 	if(paymentOption == PAYMENTOPTION_ZEC)

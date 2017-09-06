@@ -30,13 +30,13 @@ bool RemoveOfferScriptPrefix(const CScript& scriptIn, CScript& scriptOut);
 #define PAYMENTOPTION_BTC 0x02
 #define PAYMENTOPTION_ZEC 0x04
 
-bool ValidatePaymentOptionsMask(const uint32_t &paymentOptionsMask);
+bool ValidatePaymentOptionsMask(const uint64_t &paymentOptionsMask);
 bool ValidatePaymentOptionsString(const std::string &paymentOptionsString);
-bool IsValidPaymentOption(const uint32_t &paymentOptionsMask);
+bool IsValidPaymentOption(const uint64_t &paymentOptionsMask);
 uint32_t GetPaymentOptionsMaskFromString(const std::string &paymentOptionsString);
-bool IsPaymentOptionInMask(const uint32_t &mask, const uint32_t &paymentOption);
-std::string GetPaymentOptionsString(const uint32_t &paymentOptions);
-CChainParams::AddressType PaymentOptionToAddressType(const uint32_t &paymentOptions);
+bool IsPaymentOptionInMask(const uint64_t &mask, const uint64_t &paymentOption);
+std::string GetPaymentOptionsString(const uint64_t &paymentOptions);
+CChainParams::AddressType PaymentOptionToAddressType(const uint64_t &paymentOptions);
 
 
 class COfferAccept {
@@ -49,7 +49,7 @@ public:
 	CAmount nPrice;
 	uint256 txExtId;
 	uint64_t nHeight;
-	uint32_t nPaymentOption;
+	uint64t nPaymentOption;
 	CNameTXIDTuple buyerAliasTuple;
 	CFeedback feedback;
 	std::string sTotal;
@@ -63,7 +63,8 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
 		READWRITE(vchAcceptRand);
         READWRITE(VARINT(nQty));
-        READWRITE(VARINT(nPaymentOption));
+		READWRITE(VARINT(Height));
+		READWRITE(VARINT(PaymentOption);
     	READWRITE(nPrice);
 		READWRITE(buyerAliasTuple);
 		READWRITE(txExtId);
@@ -73,7 +74,6 @@ public:
 		READWRITE(offerTuple);
 		READWRITE(sTotal);
 		READWRITE(txHash);
-		READWRITE(nHeight);
 	}
 
     inline friend bool operator==(const COfferAccept &a, const COfferAccept &b) {

@@ -1576,7 +1576,7 @@ const UniValue FindOfferAcceptFeedback(const string& node, const string& acceptg
 }
 void EscrowClaimRelease(const string& node, const string& guid, const string &witness)
 {
-	UniValue r, a;
+	UniValue r;
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + guid));
 	string selleralias = find_value(r.get_obj(), "seller").get_str();
@@ -1590,7 +1590,7 @@ void EscrowClaimRelease(const string& node, const string& guid, const string &wi
 	int nQtyOfferBefore = find_value(r.get_obj(), "quantity").get_int();
 
 	// get balances before
-	BOOST_CHECK_NO_THROW(a = CallRPC(node, "aliasbalance " + selleralias));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + selleralias));
 	CAmount balanceSellerBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
 	string rawtx = "\"\"";
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowclaimrelease " + guid + " " + rawtx + " " + witness));
@@ -1605,7 +1605,7 @@ void EscrowClaimRelease(const string& node, const string& guid, const string &wi
 	BOOST_CHECK_EQUAL(nQtyOfferBefore, nQtyOfferAfter);
 
 	// get balances after
-	BOOST_CHECK_NO_THROW(a = CallRPC(node, "aliasbalance " + selleralias));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + selleralias));
 	CAmount balanceSellerAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 
 	balanceSellerBefore += nSellerTotal;
