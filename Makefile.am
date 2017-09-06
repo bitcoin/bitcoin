@@ -52,7 +52,7 @@ BIN_CHECKS=$(top_srcdir)/contrib/devtools/symbol-check.py \
            $(top_srcdir)/contrib/devtools/utils.py
 
 WINDOWS_PACKAGING = src/qt/res/rendered_icons/bitcoin.ico \
-  $(top_srcdir)/share/pixmaps/nsis-header.bmp \
+  src/qt/res/rendered_icons/nsis-header.bmp \
   src/qt/res/rendered_icons/nsis-wizard.bmp \
   $(top_srcdir)/doc/README_windows.txt
 
