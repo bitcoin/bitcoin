@@ -62,13 +62,13 @@ def assert_raises_jsonrpc(code, message, fun, *args, **kwds):
 
     Calls function `fun` with arguments `args` and `kwds`. Catches a JSONRPCException
     and verifies that the error code and message are as expected. Throws AssertionError if
-    no JSONRPCException was returned or if the error code/message are not as expected.
+    no JSONRPCException was raised or if the error code/message are not as expected.
 
     Args:
         code (int), optional: the error code returned by the RPC call (defined
             in src/rpc/protocol.h). Set to None if checking the error code is not required.
         message (string), optional: [a substring of] the error string returned by the
-            RPC call. Set to None if checking the error string is not required
+            RPC call. Set to None if checking the error string is not required.
         fun (function): the function to call. This should be the name of an RPC.
         args*: positional arguments for the function.
         kwds**: named arguments for the function.
