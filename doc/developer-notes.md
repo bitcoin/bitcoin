@@ -650,6 +650,8 @@ Source code organization
     failures when those indirect dependencies change. Furthermore, it obscures what the real code
     dependencies are.
 
+- Use `#include <cxxx>` instead of the deprecated form `#include <xxx.h>` when including C compatibility headers (such as `<cstdint>`, `<cstdlib>`, `<cstring>`, etc.).
+
 - Don't import anything into the global namespace (`using namespace ...`). Use
   fully specified types such as `std::string`.
 
