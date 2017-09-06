@@ -36,11 +36,6 @@ void RPCNestedTests::rpcNestedTests()
     // do some test setup
     // could be moved to a more generic place when we add more tests on QT level
     tableRPC.appendCommand("rpcNestedTest", &vRPCCommands[0]);
-    ClearDatadirCache();
-    std::string path = QDir::tempPath().toStdString() + "/" + strprintf("test_bitcoin_qt_%lu_%i", (unsigned long)GetTime(), (int)(GetRand(100000)));
-    QDir dir(QString::fromStdString(path));
-    dir.mkpath(".");
-    gArgs.ForceSetArg("-datadir", path);
     //mempool.setSanityCheck(1.0);
 
     TestingSetup test;
@@ -135,6 +130,4 @@ void RPCNestedTests::rpcNestedTests()
     QVERIFY_EXCEPTION_THROWN(RPCConsole::RPCExecuteCommandLine(result, "rpcNestedTest(abc,,abc)"), std::runtime_error); //don't tollerate empty arguments when using ,
     QVERIFY_EXCEPTION_THROWN(RPCConsole::RPCExecuteCommandLine(result, "rpcNestedTest(abc,,)"), std::runtime_error); //don't tollerate empty arguments when using ,
 #endif
-
-    fs::remove_all(fs::path(path));
 }
