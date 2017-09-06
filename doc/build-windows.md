@@ -71,7 +71,7 @@ To build executables for Windows 64-bit, install the following dependencies:
 Then build using:
 
     cd depends
-    make HOST=x86_64-w64-mingw32
+    make HOST=x86_64-w64-mingw32 PATH=$(getconf PATH)
     cd ..
     ./autogen.sh # not required when building from tarball
     CONFIG_SITE=$PWD/depends/x86_64-w64-mingw32/share/config.site ./configure --prefix=/
