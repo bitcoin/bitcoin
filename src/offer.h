@@ -63,7 +63,7 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
 		READWRITE(vchAcceptRand);
         READWRITE(VARINT(nQty));
-		READWRITE(VARINT(Height));
+		READWRITE(VARINT(nHeight));
 		READWRITE(VARINT(nPaymentOption));
     	READWRITE(nPrice);
 		READWRITE(buyerAliasTuple);
