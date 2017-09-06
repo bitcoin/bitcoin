@@ -1185,8 +1185,9 @@ void EscrowFeedback(const string& node, const string& role, const string& escrow
 	string id = escrowguid + user;
 	string query = "\"{\\\"_id\\\":\\\"" + id + "\\\"}\"";
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinquery feedback " + query));
-	BOOST_CHECK(r.type() == UniValue::VOBJ);
-	const UniValue &feedbackObj = r.get_obj();
+	BOOST_CHECK(r.type() == UniValue::VARR);
+	UniValue feedbackObj;
+	feedbackObj.read(feedbackArray[i].get_str());
 	const string &feedbackid = find_value(feedbackObj, "_id").get_str();
 	BOOST_CHECK(feedbackid == id);
 	BOOST_CHECK(find_value(r.get_obj(), "txid").get_str() == escrowTxid);
@@ -1541,7 +1542,8 @@ const UniValue FindOfferAcceptList(const string& node, const string& alias, cons
 	const UniValue &arrayValue = r.get_array();
 	for(int i=0;i<arrayValue.size();i++)
 	{		
-		const UniValue& acceptObj = arrayValue[i].get_obj();
+		UniValue acceptObj;
+		acceptObj.read(arrayValue[i].get_str());
 		const string &acceptvalueguid = find_value(acceptObj, "id").get_str();
 		const string &offervalueguid = find_value(acceptObj, "offer").get_str();
 		if(acceptvalueguid == acceptguid && offervalueguid == offerguid)
@@ -1561,8 +1563,10 @@ const UniValue FindOfferAcceptFeedback(const string& node, const string& acceptg
 	string id = acceptguid + user;
 	string query = "\"{\\\"_id\\\":\\\"" + id + "\\\"}\"";
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinquery feedback " + query));
-	BOOST_CHECK(r.type() == UniValue::VOBJ);
-	const UniValue &feedbackObj = r.get_obj();
+	BOOST_CHECK(r.type() == UniValue::VARR);
+	const UniValue &feedbackArray = r.get_array();
+	UniValue feedbackObj;
+	feedbackObj.read(feedbackArray[i].get_str());
 	const string &feedbackid = find_value(feedbackObj, "_id").get_str();
 	if (feedbackid == id)
 	{
