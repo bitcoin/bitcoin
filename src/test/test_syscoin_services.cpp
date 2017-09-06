@@ -1544,7 +1544,7 @@ const UniValue FindOfferAcceptList(const string& node, const string& alias, cons
 	for(int i=0;i<arrayValue.size();i++)
 	{		
 		UniValue acceptObj;
-		acceptObj.read(arrayValue[i].get_str());
+		acceptObj.read(arrayValue[i].write());
 		const string &acceptvalueguid = find_value(acceptObj, "id").get_str();
 		const string &offervalueguid = find_value(acceptObj, "offer").get_str();
 		if(acceptvalueguid == acceptguid && offervalueguid == offerguid)
