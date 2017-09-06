@@ -23,7 +23,7 @@
 
 using namespace std;
 
-void CBloomFilter::setup(unsigned int nElements, double nFPRate, unsigned int nTweakIn, unsigned char nFlagsIn, bool size_constrained, uint32_t nMaxFilterSize) {
+void CBloomFilter::setup(unsigned int nElements, double nFPRate, unsigned int nTweakIn, unsigned char nFlagsIn, bool size_constrained, uint32_t nMaxFilterSize = MAX_BLOOM_FILTER_SIZE) {
     if (nElements == 0) {
         LogPrintf("Construction of empty CBloomFilter attempted.\n");
         nElements = 1;
@@ -51,15 +51,10 @@ CBloomFilter::CBloomFilter(unsigned int nElements, double nFPRate, unsigned int 
     setup(nElements, nFPRate, nTweakIn, nFlagsIn, true, nMaxFilterSize);
 }
 
-CBloomFilter::CBloomFilter(unsigned int nElements, double nFPRate, unsigned int nTweakIn, unsigned char nFlagsIn)
-{
-    setup(nElements, nFPRate, nTweakIn, nFlagsIn, true, MAX_BLOOM_FILTER_SIZE);
-}
-
 // Private constructor used by CRollingBloomFilter
 CBloomFilter::CBloomFilter(unsigned int nElements, double nFPRate, unsigned int nTweakIn)
 {
-    setup(nElements, nFPRate, nTweakIn, BLOOM_UPDATE_NONE, false, MAX_BLOOM_FILTER_SIZE);
+    setup(nElements, nFPRate, nTweakIn, BLOOM_UPDATE_NONE, false);
 }
 
 inline unsigned int CBloomFilter::Hash(unsigned int nHashNum, const std::vector<unsigned char>& vDataToHash) const
