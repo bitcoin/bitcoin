@@ -24,7 +24,7 @@
 
 #include <atomic>
 #include <deque>
-#include <stdint.h>
+#include <cstdint>
 #include <thread>
 #include <memory>
 #include <condition_variable>

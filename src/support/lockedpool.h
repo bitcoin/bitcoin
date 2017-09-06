@@ -5,7 +5,7 @@
 #ifndef BITCOIN_SUPPORT_LOCKEDPOOL_H
 #define BITCOIN_SUPPORT_LOCKEDPOOL_H
 
-#include <stdint.h>
+#include <cstdint>
 #include <list>
 #include <map>
 #include <mutex>

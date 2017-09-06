@@ -7,9 +7,9 @@
 #include "hash.h"
 #include "uint256.h"
 
-#include <assert.h>
-#include <stdint.h>
-#include <string.h>
+#include <cassert>
+#include <cstdint>
+#include <cstring>
 #include <vector>
 #include <string>
 #include <boost/variant/apply_visitor.hpp>

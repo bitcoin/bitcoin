@@ -10,7 +10,7 @@
 #include "validation.h"
 #include "uint256.h"
 
-#include <stdint.h>
+#include <cstdint>
 
 
 namespace Checkpoints {

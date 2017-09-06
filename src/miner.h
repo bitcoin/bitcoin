@@ -9,7 +9,7 @@
 #include "primitives/block.h"
 #include "txmempool.h"
 
-#include <stdint.h>
+#include <cstdint>
 #include <memory>
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/ordered_index.hpp>

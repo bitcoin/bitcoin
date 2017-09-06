@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <boost/test/unit_test.hpp>
-#include <stdint.h>
+#include <cstdint>
 #include <sstream>
 #include <iomanip>
 #include <limits>

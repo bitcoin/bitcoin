@@ -15,7 +15,7 @@
 #include "utilstrencodings.h"
 #include "ui_interface.h"
 #include "crypto/hmac_sha256.h"
-#include <stdio.h>
+#include <cstdio>
 
 #include <boost/algorithm/string.hpp> // boost::trim
 

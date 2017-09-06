@@ -18,7 +18,7 @@
 #include "wallet/db.h"
 #include "wallet/wallet.h"
 
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 
 QString TransactionDesc::FormatTxStatus(const CWalletTx& wtx)

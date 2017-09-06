@@ -30,7 +30,7 @@
 #include "wallet/wallet.h"
 #endif
 
-#include <stdint.h>
+#include <cstdint>
 
 #include <univalue.h>
 

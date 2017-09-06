@@ -20,7 +20,7 @@
 #include "util.h"
 #include "warnings.h"
 
-#include <stdint.h>
+#include <cstdint>
 
 #include <QDebug>
 #include <QTimer>

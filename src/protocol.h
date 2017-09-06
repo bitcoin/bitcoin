@@ -15,7 +15,7 @@
 #include "uint256.h"
 #include "version.h"
 
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 
 /** Message header.

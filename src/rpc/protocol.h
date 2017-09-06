@@ -10,7 +10,7 @@
 
 #include <list>
 #include <map>
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 
 #include <univalue.h>

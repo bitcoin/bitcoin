@@ -10,7 +10,7 @@
 #include "util.h"
 #include "utilstrencodings.h"
 
-#include <assert.h>
+#include <cassert>
 
 #include "chainparamsseeds.h"
 

@@ -5,7 +5,7 @@
 #ifndef BITCOIN_FS_H
 #define BITCOIN_FS_H
 
-#include <stdio.h>
+#include <cstdio>
 #include <string>
 
 #include <boost/filesystem.hpp>

@@ -5,7 +5,7 @@
 #ifndef BITCOIN_LIMITEDMAP_H
 #define BITCOIN_LIMITEDMAP_H
 
-#include <assert.h>
+#include <cassert>
 #include <map>
 
 /** STL-like map container that only keeps the N elements with the highest value. */

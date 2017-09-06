@@ -6,7 +6,7 @@
 #ifndef BITCOIN_UTILTIME_H
 #define BITCOIN_UTILTIME_H
 
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 
 /**

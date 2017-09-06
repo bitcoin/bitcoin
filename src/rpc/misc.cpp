@@ -24,7 +24,7 @@
 #endif
 #include "warnings.h"
 
-#include <stdint.h>
+#include <cstdint>
 #ifdef HAVE_MALLOC_INFO
 #include <malloc.h>
 #endif

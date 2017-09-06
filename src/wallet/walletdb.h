@@ -12,7 +12,7 @@
 #include "key.h"
 
 #include <list>
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 #include <utility>
 #include <vector>

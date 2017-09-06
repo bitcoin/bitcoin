@@ -10,7 +10,7 @@
 #include "primitives/transaction.h"
 
 #include <vector>
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 
 class CPubKey;

@@ -14,7 +14,7 @@
 #include "ui_interface.h"
 #include "init.h"
 
-#include <stdint.h>
+#include <cstdint>
 
 #include <boost/thread.hpp>
 
