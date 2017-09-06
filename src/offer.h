@@ -33,7 +33,7 @@ bool RemoveOfferScriptPrefix(const CScript& scriptIn, CScript& scriptOut);
 bool ValidatePaymentOptionsMask(const uint64_t &paymentOptionsMask);
 bool ValidatePaymentOptionsString(const std::string &paymentOptionsString);
 bool IsValidPaymentOption(const uint64_t &paymentOptionsMask);
-uint32_t GetPaymentOptionsMaskFromString(const std::string &paymentOptionsString);
+uint64_t GetPaymentOptionsMaskFromString(const std::string &paymentOptionsString);
 bool IsPaymentOptionInMask(const uint64_t &mask, const uint64_t &paymentOption);
 std::string GetPaymentOptionsString(const uint64_t &paymentOptions);
 CChainParams::AddressType PaymentOptionToAddressType(const uint64_t &paymentOptions);
