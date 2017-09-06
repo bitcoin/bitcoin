@@ -1186,9 +1186,12 @@ void EscrowFeedback(const string& node, const string& role, const string& escrow
 	string query = "\"{\\\"_id\\\":\\\"" + id + "\\\"}\"";
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinquery feedback " + query));
 	BOOST_CHECK(r.type() == UniValue::VARR);
-	const UniValue &feedbackArray = r.get_array();
-	UniValue feedbackObj;
-	feedbackObj.read(feedbackArray[0].get_str());
+	const UniValue &arrayValue = r.get_array();
+	string arrayValueEscaped = arrayValue[0].write();
+	boost::replace_all(arrayValueEscaped, "\\\"", "\"");
+	UniValue feedbackJSON(UniValue::VSTR);
+	feedbackJSON.read(arrayValueEscaped);
+	const UniValue &feedbackObj = feedbackJSON.get_obj();
 	const string &feedbackid = find_value(feedbackObj, "_id").get_str();
 	BOOST_CHECK(feedbackid == id);
 	BOOST_CHECK(find_value(r.get_obj(), "txid").get_str() == escrowTxid);
@@ -1544,9 +1547,10 @@ const UniValue FindOfferAcceptList(const string& node, const string& alias, cons
 	for(int i=0;i<arrayValue.size();i++)
 	{	
 		string arrayValueEscaped = arrayValue[i].write();
-		boost::replace_all(arrayValueEscaped, "\"\"", "\"");
-		UniValue acceptObj;
-		acceptObj.read(arrayValueEscaped);
+		boost::replace_all(arrayValueEscaped, "\\\"", "\"");
+		UniValue acceptJSON(UniValue::VSTR);
+		acceptJSON.read(arrayValueEscaped);
+		const UniValue &acceptObj = acceptJSON.get_obj();
 		const string &acceptvalueguid = find_value(acceptObj, "id").get_str();
 		const string &offervalueguid = find_value(acceptObj, "offer").get_str();
 		if(acceptvalueguid == acceptguid && offervalueguid == offerguid)
@@ -1567,9 +1571,13 @@ const UniValue FindOfferAcceptFeedback(const string& node, const string& acceptg
 	string query = "\"{\\\"_id\\\":\\\"" + id + "\\\"}\"";
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinquery feedback " + query));
 	BOOST_CHECK(r.type() == UniValue::VARR);
-	const UniValue &feedbackArray = r.get_array();
-	UniValue feedbackObj;
-	feedbackObj.read(feedbackArray[0].get_str());
+	const UniValue &arrayValue = r.get_array();
+	string arrayValueEscaped = arrayValue[0].write();
+	boost::replace_all(arrayValueEscaped, "\\\"", "\"");
+	UniValue feedbackJSON(UniValue::VSTR);
+	feedbackJSON.read(arrayValueEscaped);
+	const UniValue &feedbackObj = feedbackJSON.get_obj();
+
 	const string &feedbackid = find_value(feedbackObj, "_id").get_str();
 	if (feedbackid == id)
 	{
