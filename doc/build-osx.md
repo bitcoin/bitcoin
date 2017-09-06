@@ -57,22 +57,28 @@ Bitcoin Core is now available at `./src/bitcoind`
 
 Before running, it's recommended you create an RPC configuration file.
 
-    echo -e "rpcuser=bitcoinrpc\nrpcpassword=$(xxd -l 16 -p /dev/urandom)" > "/Users/${USER}/Library/Application Support/Bitcoin/bitcoin.conf"
+```bash
+echo -e "rpcuser=bitcoinrpc\nrpcpassword=$(xxd -l 16 -p /dev/urandom)" > "/Users/${USER}/Library/Application Support/Bitcoin/bitcoin.conf"
 
-    chmod 600 "/Users/${USER}/Library/Application Support/Bitcoin/bitcoin.conf"
+chmod 600 "/Users/${USER}/Library/Application Support/Bitcoin/bitcoin.conf"
+```
 
 The first time you run bitcoind, it will start downloading the blockchain. This process could take several hours.
 
 You can monitor the download process by looking at the debug.log file:
 
-    tail -f $HOME/Library/Application\ Support/Bitcoin/debug.log
+```bash
+tail -f $HOME/Library/Application\ Support/Bitcoin/debug.log
+```
 
 Other commands:
 -------
 
-    ./src/bitcoind -daemon # Starts the bitcoin daemon.
-    ./src/bitcoin-cli --help # Outputs a list of command-line options.
-    ./src/bitcoin-cli help # Outputs a list of RPC commands when the daemon is running.
+```bash
+./src/bitcoind -daemon    # Starts the bitcoin daemon.
+./src/bitcoin-cli --help  # Outputs a list of command-line options.
+./src/bitcoin-cli help    # Outputs a list of RPC commands when the daemon is running.
+```
 
 Using Qt Creator as IDE
 ------------------------
