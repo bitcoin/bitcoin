@@ -150,6 +150,13 @@ public:
             int nRequired;
             ExtractDestinations(subscript, whichType, addresses, nRequired);
             obj.push_back(Pair("script", GetTxnOutputType(whichType)));
+            CKeyID keyID;
+            CPubKey pubkey;
+            if (GetWitnessKeyID(pwallet, scriptID, keyID) && pwallet->GetPubKey(keyID, pubkey)) {
+                // Wallet should only have compressed pubkeys for segwit
+                assert(pubkey.IsCompressed());
+                obj.push_back(Pair("pubkey", HexStr(pubkey)));
+            }
             obj.push_back(Pair("hex", HexStr(subscript.begin(), subscript.end())));
             UniValue a(UniValue::VARR);
             for (const CTxDestination& addr : addresses)
@@ -236,6 +243,12 @@ UniValue validateaddress(const JSONRPCRequest& request)
             auto it = address.GetKeyID(keyID) ? meta.find(keyID) : meta.end();
             if (it == meta.end()) {
                 it = meta.find(CScriptID(scriptPubKey));
+                if (it == meta.end()) {
+                    CScriptID scriptID;
+                    if (address.GetScriptID(scriptID) && GetWitnessKeyID(pwallet, scriptID, keyID)) {
+                        it = meta.find(keyID);
+                    }
+                }
             }
             if (it != meta.end()) {
                 ret.push_back(Pair("timestamp", it->second.nCreateTime));
@@ -280,9 +293,11 @@ CScript _createmultisig_redeemScript(CWallet * const pwallet, const UniValue& pa
         CBitcoinAddress address(ks);
         if (pwallet && address.IsValid()) {
             CKeyID keyID;
-            if (!address.GetKeyID(keyID))
+            CScriptID scriptID;
+            if (!address.GetKeyID(keyID) && (!address.GetScriptID(scriptID) || !GetWitnessKeyID(pwallet, scriptID, keyID))) {
                 throw std::runtime_error(
                     strprintf("%s does not refer to a key",ks));
+            }
             CPubKey vchPubKey;
             if (!pwallet->GetPubKey(keyID, vchPubKey)) {
                 throw std::runtime_error(

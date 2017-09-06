@@ -1170,6 +1170,9 @@ public:
     }
 };
 
+// Retrieves the witness program keyhash from p2sh scriptID with help of keystore
+bool GetWitnessKeyID(const CKeyStore* store, const CScriptID &scriptID, CKeyID &keyID);
+
 // Helper for producing a bunch of max-sized low-S signatures (eg 72 bytes)
 // ContainerType is meant to hold pair<CWalletTx *, int>, and be iterable
 // so that each entry corresponds to each vIn, in order.

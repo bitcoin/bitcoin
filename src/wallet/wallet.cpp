@@ -4023,3 +4023,21 @@ bool CMerkleTx::AcceptToMemoryPool(const CAmount& nAbsurdFee, CValidationState& 
 {
     return ::AcceptToMemoryPool(mempool, state, tx, true, nullptr, nullptr, false, nAbsurdFee);
 }
+
+bool GetWitnessKeyID(const CKeyStore* const store, const CScriptID &scriptID, CKeyID &keyID)
+{
+    CScript subscript;
+    if (!store->GetCScript(scriptID, subscript)) {
+        return false;
+    }
+    int witnessVer = 0;
+    std::vector<unsigned char> witnessProgram;
+    if (!subscript.IsWitnessProgram(witnessVer, witnessProgram)) {
+        return false;
+    }
+    if (witnessProgram.size() != 20) {
+        return false;
+    }
+    keyID = CKeyID(uint160(witnessProgram));
+    return true;
+}
