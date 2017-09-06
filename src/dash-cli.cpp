@@ -309,19 +309,22 @@ int CommandLineRPC(int argc, char *argv[])
         }
         std::string rpcPass;
         if (gArgs.GetBoolArg("-stdinrpcpass", false)) {
-            if(!std::getline(std::cin,rpcPass))
+            if (!std::getline(std::cin, rpcPass)) {
                 throw std::runtime_error("-stdinrpcpass specified but failed to read from standard input");
+            }
             gArgs.ForceSetArg("-rpcpassword", rpcPass);
         }
         std::vector<std::string> args = std::vector<std::string>(&argv[1], &argv[argc]);
         if (gArgs.GetBoolArg("-stdin", false)) {
             // Read one arg per line from stdin and append
             std::string line;
-            while (std::getline(std::cin,line))
+            while (std::getline(std::cin, line)) {
                 args.push_back(line);
+            }
         }
-        if (args.size() < 1)
+        if (args.size() < 1) {
             throw std::runtime_error("too few parameters (need at least command)");
+        }
         std::string strMethod = args[0];
         args.erase(args.begin()); // Remove trailing method name from arguments vector
 
