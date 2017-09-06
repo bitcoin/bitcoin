@@ -1188,9 +1188,9 @@ void EscrowFeedback(const string& node, const string& role, const string& escrow
 	BOOST_CHECK(r.type() == UniValue::VARR);
 	const UniValue &arrayValue = r.get_array();
 	string arrayValueEscaped = arrayValue[0].write();
-	boost::replace_all(arrayValueEscaped, "\\\"", "\"");
 	UniValue feedbackJSON(UniValue::VSTR);
-	feedbackJSON.read(arrayValueEscaped);
+	bool read = feedbackJSON.read(arrayValueEscaped);
+	BOOST_CHECK(read);
 	const UniValue &feedbackObj = feedbackJSON.get_obj();
 	const string &feedbackid = find_value(feedbackObj, "_id").get_str();
 	BOOST_CHECK(feedbackid == id);
@@ -1547,9 +1547,9 @@ const UniValue FindOfferAcceptList(const string& node, const string& alias, cons
 	for(int i=0;i<arrayValue.size();i++)
 	{	
 		string arrayValueEscaped = arrayValue[i].write();
-		boost::replace_all(arrayValueEscaped, "\\\"", "\"");
 		UniValue acceptJSON(UniValue::VSTR);
-		acceptJSON.read(arrayValueEscaped);
+		bool read = acceptJSON.read(arrayValueEscaped);
+		BOOST_CHECK(read);
 		const UniValue &acceptObj = acceptJSON.get_obj();
 		const string &acceptvalueguid = find_value(acceptObj, "id").get_str();
 		const string &offervalueguid = find_value(acceptObj, "offer").get_str();
@@ -1573,9 +1573,9 @@ const UniValue FindOfferAcceptFeedback(const string& node, const string& acceptg
 	BOOST_CHECK(r.type() == UniValue::VARR);
 	const UniValue &arrayValue = r.get_array();
 	string arrayValueEscaped = arrayValue[0].write();
-	boost::replace_all(arrayValueEscaped, "\\\"", "\"");
 	UniValue feedbackJSON(UniValue::VSTR);
-	feedbackJSON.read(arrayValueEscaped);
+	bool read = feedbackJSON.read(arrayValueEscaped);
+	BOOST_CHECK(read);
 	const UniValue &feedbackObj = feedbackJSON.get_obj();
 
 	const string &feedbackid = find_value(feedbackObj, "_id").get_str();
