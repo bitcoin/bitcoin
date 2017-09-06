@@ -1080,6 +1080,7 @@ static void ApplyStats(CCoinsStats &stats, CHashWriter& ss, const uint256& hash,
 static bool GetUTXOStats(CCoinsView *view, CCoinsStats &stats)
 {
     std::unique_ptr<CCoinsViewCursor> pcursor(view->Cursor());
+    assert(pcursor);
 
     CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
     stats.hashBlock = pcursor->GetBestBlock();
@@ -1815,6 +1816,8 @@ UniValue getchaintxstats(const JSONRPCRequest& request)
             pindex = chainActive.Tip();
         }
     }
+    
+    assert(pindex != nullptr);
 
     if (blockcount < 1 || blockcount >= pindex->nHeight) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid block count: should be between 1 and the block's height");
