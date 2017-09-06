@@ -64,7 +64,7 @@ public:
 		READWRITE(vchAcceptRand);
         READWRITE(VARINT(nQty));
 		READWRITE(VARINT(Height));
-		READWRITE(VARINT(PaymentOption));
+		READWRITE(VARINT(nPaymentOption));
     	READWRITE(nPrice);
 		READWRITE(buyerAliasTuple);
 		READWRITE(txExtId);
