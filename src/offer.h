@@ -402,7 +402,7 @@ public:
 
 	bool WriteOfferAccept(const COfferAccept& offerAccept) {
 		WriteOfferAcceptIndex(offerAccept);
-		return Write(make_pair(std::string("offera"), offerAccept.vchAcceptRand, offerAccept);
+		return Write(make_pair(std::string("offera"), offerAccept.vchAcceptRand), offerAccept);
 	}
 
 	bool EraseOfferAccept(const vector<unsigned char> &vchOfferAccept) {
