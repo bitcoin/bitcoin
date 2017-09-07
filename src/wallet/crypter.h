@@ -137,52 +137,16 @@ public:
     {
     }
 
-    bool IsCrypted() const
-    {
-        return fUseCrypto;
-    }
-
-    bool IsLocked() const
-    {
-        if (!IsCrypted())
-            return false;
-        bool result;
-        {
-            LOCK(cs_KeyStore);
-            result = vMasterKey.empty();
-        }
-        return result;
-    }
-
+    bool IsCrypted() const { return fUseCrypto; }
+    bool IsLocked() const;
     bool Lock();
 
     virtual bool AddCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
     bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey) override;
-    bool HaveKey(const CKeyID &address) const override
-    {
-        {
-            LOCK(cs_KeyStore);
-            if (!IsCrypted()) {
-                return CBasicKeyStore::HaveKey(address);
-            }
-            return mapCryptedKeys.count(address) > 0;
-        }
-        return false;
-    }
+    bool HaveKey(const CKeyID &address) const override;
     bool GetKey(const CKeyID &address, CKey& keyOut) const override;
     bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const override;
-    std::set<CKeyID> GetKeys() const override
-    {
-        LOCK(cs_KeyStore);
-        if (!IsCrypted()) {
-            return CBasicKeyStore::GetKeys();
-        }
-        std::set<CKeyID> set_address;
-        for (const auto& mi : mapCryptedKeys) {
-            set_address.insert(mi.first);
-        }
-        return set_address;
-    }
+    std::set<CKeyID> GetKeys() const override;
 
     /**
      * Wallet status (encrypted, locked) changed.
