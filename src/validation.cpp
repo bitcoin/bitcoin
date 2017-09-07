@@ -4015,12 +4015,12 @@ bool LoadChainTip(const CChainParams& chainparams)
 
 CVerifyDB::CVerifyDB()
 {
-    uiInterface.ShowProgress(_("Verifying blocks..."), 0);
+    uiInterface.ShowProgress(_("Verifying blocks..."), 0, false);
 }
 
 CVerifyDB::~CVerifyDB()
 {
-    uiInterface.ShowProgress("", 100);
+    uiInterface.ShowProgress("", 100, false);
 }
 
 bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview, int nCheckLevel, int nCheckDepth)
@@ -4053,7 +4053,7 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
             LogPrintf("[%d%%]...", percentageDone);
             reportDone = percentageDone/10;
         }
-        uiInterface.ShowProgress(_("Verifying blocks..."), percentageDone);
+        uiInterface.ShowProgress(_("Verifying blocks..."), percentageDone, false);
         if (pindex->nHeight < chainActive.Height()-nCheckDepth)
             break;
         if (fPruneMode && !(pindex->nStatus & BLOCK_HAVE_DATA)) {
@@ -4104,7 +4104,7 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
         CBlockIndex *pindex = pindexState;
         while (pindex != chainActive.Tip()) {
             boost::this_thread::interruption_point();
-            uiInterface.ShowProgress(_("Verifying blocks..."), std::max(1, std::min(99, 100 - (int)(((double)(chainActive.Height() - pindex->nHeight)) / (double)nCheckDepth * 50))));
+            uiInterface.ShowProgress(_("Verifying blocks..."), std::max(1, std::min(99, 100 - (int)(((double)(chainActive.Height() - pindex->nHeight)) / (double)nCheckDepth * 50))), false);
             pindex = chainActive.Next(pindex);
             CBlock block;
             if (!ReadBlockFromDisk(block, pindex, chainparams.GetConsensus()))
@@ -4151,7 +4151,7 @@ bool ReplayBlocks(const CChainParams& params, CCoinsView* view)
     if (hashHeads.empty()) return true; // We're already in a consistent state.
     if (hashHeads.size() != 2) return error("ReplayBlocks(): unknown inconsistent state");
 
-    uiInterface.ShowProgress(_("Replaying blocks..."), 0);
+    uiInterface.ShowProgress(_("Replaying blocks..."), 0, false);
     LogPrintf("Replaying blocks\n");
 
     const CBlockIndex* pindexOld = nullptr;  // Old tip during the interrupted flush.
@@ -4202,7 +4202,7 @@ bool ReplayBlocks(const CChainParams& params, CCoinsView* view)
 
     cache.SetBestBlock(pindexNew->GetBlockHash());
     cache.Flush();
-    uiInterface.ShowProgress("", 100);
+    uiInterface.ShowProgress("", 100, false);
     return true;
 }
 
