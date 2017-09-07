@@ -223,7 +223,7 @@ bool GetOffer(const vector<unsigned char> &vchOffer,
 	return true;
 }
 bool GetOfferAccept(const vector<unsigned char> &vchOfferAccept, COfferAccept &theOfferAccept) {
-	if (!pofferbd || !pofferdb->ReadOfferAccept(theOfferAccept.vchAcceptRand, theOfferAccept))
+	if (!pofferdb || !pofferdb->ReadOfferAccept(theOfferAccept.vchAcceptRand, theOfferAccept))
 		return false;
 	return true;
 }
