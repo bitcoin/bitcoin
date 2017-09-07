@@ -2,6 +2,7 @@ sudo: required
 dist: trusty
 os: linux
 language: generic
+group: deprecated-2017Q3
 cache:
   directories:
   - depends/built
