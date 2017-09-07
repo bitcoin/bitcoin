@@ -1187,11 +1187,8 @@ void EscrowFeedback(const string& node, const string& role, const string& escrow
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinquery feedback " + query));
 	BOOST_CHECK(r.type() == UniValue::VARR);
 	const UniValue &arrayValue = r.get_array();
-	string arrayValueEscaped = arrayValue[0].write();
-	UniValue feedbackJSON(UniValue::VSTR);
-	bool read = feedbackJSON.read(arrayValueEscaped);
-	BOOST_CHECK(read);
-	const UniValue &feedbackObj = feedbackJSON.get_obj();
+	UniValue feedbackObj;
+	BOOST_CHECK(feedbackObj.read(arrayValue[0].get_str()));
 	const string &feedbackid = find_value(feedbackObj, "_id").get_str();
 	BOOST_CHECK(feedbackid == id);
 	BOOST_CHECK(find_value(r.get_obj(), "txid").get_str() == escrowTxid);
@@ -1546,13 +1543,9 @@ const UniValue FindOfferAcceptList(const string& node, const string& alias, cons
 	const UniValue &arrayValue = r.get_array();
 	for(int i=0;i<arrayValue.size();i++)
 	{	
-		string arrayValueEscaped = arrayValue[i].write();
-		UniValue acceptJSON(UniValue::VSTR);
-		boost::replace_all(arrayValueEscaped, "\\\"", "\"");
-		bool read = acceptJSON.read(arrayValueEscaped);
-		BOOST_CHECK(read);
-		const UniValue &acceptObj = acceptJSON.get_obj();
-		const string &acceptvalueguid = find_value(acceptObj, "id").get_str();
+		UniValue acceptObj;
+		BOOST_CHECK(acceptObj.read(arrayValue[i].get_str()));
+		const string &acceptvalueguid = find_value(acceptObj, "_id").get_str();
 		const string &offervalueguid = find_value(acceptObj, "offer").get_str();
 		if(acceptvalueguid == acceptguid && offervalueguid == offerguid)
 		{
@@ -1573,12 +1566,8 @@ const UniValue FindOfferAcceptFeedback(const string& node, const string& acceptg
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinquery feedback " + query));
 	BOOST_CHECK(r.type() == UniValue::VARR);
 	const UniValue &arrayValue = r.get_array();
-	string arrayValueEscaped = arrayValue[0].write();
-	UniValue feedbackJSON(UniValue::VSTR);
-	bool read = feedbackJSON.read(arrayValueEscaped);
-	BOOST_CHECK(read);
-	const UniValue &feedbackObj = feedbackJSON.get_obj();
-
+	UniValue feedbackObj;
+	BOOST_CHECK(feedbackObj.read(arrayValue[0].get_str()));
 	const string &feedbackid = find_value(feedbackObj, "_id").get_str();
 	if (feedbackid == id)
 	{
