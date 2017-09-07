@@ -54,23 +54,6 @@ bool IsDust(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
     return (txout.nValue < GetDustThreshold(txout, dustRelayFeeIn));
 }
 
-    /**
-     * Check transaction inputs to mitigate two
-     * potential denial-of-service attacks:
-     * 
-     * 1. scriptSigs with extra data stuffed into them,
-     *    not consumed by scriptPubKey (or P2SH script)
-     * 2. P2SH scripts with a crazy number of expensive
-     *    CHECKSIG/CHECKMULTISIG operations
-     *
-     * Why bother? To avoid denial-of-service attacks; an attacker
-     * can submit a standard HASH... OP_EQUAL transaction,
-     * which will get accepted into blocks. The redemption
-     * script can be anything; an attacker could use a very
-     * expensive-to-check-upon-redemption script like:
-     *   DUP CHECKSIG DROP ... repeated 100 times... OP_1
-     */
-
 bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType, const bool witnessEnabled)
 {
     std::vector<std::vector<unsigned char> > vSolutions;
@@ -160,6 +143,22 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason, const bool witnes
     return true;
 }
 
+/**
+ * Check transaction inputs to mitigate two
+ * potential denial-of-service attacks:
+ *
+ * 1. scriptSigs with extra data stuffed into them,
+ *    not consumed by scriptPubKey (or P2SH script)
+ * 2. P2SH scripts with a crazy number of expensive
+ *    CHECKSIG/CHECKMULTISIG operations
+ *
+ * Why bother? To avoid denial-of-service attacks; an attacker
+ * can submit a standard HASH... OP_EQUAL transaction,
+ * which will get accepted into blocks. The redemption
+ * script can be anything; an attacker could use a very
+ * expensive-to-check-upon-redemption script like:
+ *   DUP CHECKSIG DROP ... repeated 100 times... OP_1
+ */
 bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
 {
     if (tx.IsCoinBase())
