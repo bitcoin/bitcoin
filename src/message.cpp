@@ -633,7 +633,7 @@ UniValue messageinfo(const UniValue& params, bool fHelp) {
 
     return oMessage;
 }
-bool BuildMessageJson(const CMessage& message, UniValue& oName)
+bool BuildMessageJson(const CMessage& message, UniValue& oName, int messageRole)
 {
 	oName.push_back(Pair("GUID", stringFromVch(message.vchMessage)));
 	string sTime;
@@ -647,8 +647,10 @@ bool BuildMessageJson(const CMessage& message, UniValue& oName)
 	oName.push_back(Pair("from", stringFromVch(message.vchAliasFrom)));
 	oName.push_back(Pair("to", stringFromVch(message.vchAliasTo)));
 	oName.push_back(Pair("subject", stringFromVch(message.vchSubject)));
-	oName.push_back(Pair("messageto", stringFromVch(message.vchMessageTo)));
-	oName.push_back(Pair("messagefrom", stringFromVch(message.vchMessageFrom)));
+	if(messageRole == MESSAGE_RECV || messageRole == -1)
+		oName.push_back(Pair("message", stringFromVch(message.vchMessageTo)));
+	else if (messageRole == MESSAGE_SENT)
+		oName.push_back(Pair("message", stringFromVch(message.vchMessageFrom)));
 	return true;
 }
 UniValue messagereceivecount(const UniValue& params, bool fHelp) {
@@ -742,7 +744,7 @@ UniValue messagereceivelist(const UniValue& params, bool fHelp) {
 			break;
 		found++;
 		UniValue oName(UniValue::VOBJ);
-		if (found >= from && BuildMessageJson(message, oName))
+		if (found >= from && BuildMessageJson(message, oName, MESSAGE_RECV)
 			oRes.push_back(oName);
 	}
 	return oRes;
@@ -891,7 +893,7 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
 
 					UniValue oMessage(UniValue::VOBJ);
 					found++;
-					if (found >= from && BuildMessageJson(theMessage, oMessage))
+					if (found >= from && BuildMessageJson(theMessage, oMessage, MESSAGE_SENT))
 					{
 						oRes.push_back(oMessage);
 					}
