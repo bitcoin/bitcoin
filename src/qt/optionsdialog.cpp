@@ -29,8 +29,6 @@
 #include <QLocale>
 #include <QMessageBox>
 #include <QTimer>
-#include "qzecjsonrpcclient.h"
-#include "qbtcjsonrpcclient.h"
 #if QT_VERSION < 0x050000
 #include <QUrl>
 #else
@@ -153,48 +151,6 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
 OptionsDialog::~OptionsDialog()
 {
     delete ui;
-}
-// SYSCOIN
-void OptionsDialog::on_testZECButton_clicked()
-{
-	ZecRpcClient zecClient(ui->zecEndPoint->text(), ui->zecRPCLogin->text(), ui->zecRPCPassword->text());
-	ui->testZECButton->setText(tr("Please Wait..."));	
-	ui->testBTCButton->setEnabled(false);
-	ui->testZECButton->setEnabled(false);
-	QNetworkAccessManager *nam = new QNetworkAccessManager(this);  
-	connect(nam, SIGNAL(finished(QNetworkReply *)), this, SLOT(slotConfirmedFinished(QNetworkReply *)));
-	zecClient.sendRequest(nam, "getinfo");
-}
-void OptionsDialog::on_testBTCButton_clicked()
-{
-	BtcRpcClient btcClient(ui->btcEndPoint->text(), ui->btcRPCLogin->text(), ui->btcRPCPassword->text());
-	ui->testBTCButton->setText(tr("Please Wait..."));	
-	ui->testBTCButton->setEnabled(false);
-	ui->testZECButton->setEnabled(false);
-	QNetworkAccessManager *nam = new QNetworkAccessManager(this);  
-	connect(nam, SIGNAL(finished(QNetworkReply *)), this, SLOT(slotConfirmedFinished(QNetworkReply *)));
-	btcClient.sendRequest(nam, "getinfo");
-}
-void OptionsDialog::slotConfirmedFinished(QNetworkReply * reply)
-{
-	ui->testBTCButton->setText(tr("Test Connection"));	
-	ui->testZECButton->setText(tr("Test Connection"));	
-	ui->testBTCButton->setEnabled(true);
-	ui->testZECButton->setEnabled(true);
-	if(reply->error() != QNetworkReply::NoError) {
-        QString msg = tr("Error communicating with %1: %2")
-            .arg(reply->request().url().toString())
-            .arg(reply->errorString());
-
-        QMessageBox::critical(this, windowTitle(),msg,QMessageBox::Ok, QMessageBox::Ok);
-	}
-	else
-	{
-        QMessageBox::information(this, windowTitle(),
-            tr("Connection successfully established!"),
-                QMessageBox::Ok, QMessageBox::Ok);
-	}
-	reply->deleteLater();
 }
 void OptionsDialog::setModel(OptionsModel *_model)
 {
