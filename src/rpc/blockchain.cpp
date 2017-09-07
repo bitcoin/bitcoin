@@ -333,6 +333,7 @@ UniValue getdifficulty(const JSONRPCRequest& request)
 std::string EntryDescriptionString()
 {
     return "    \"size\" : n,             (numeric) virtual transaction size as defined in BIP 141. This is different from actual serialized size for witness transactions as witness data is discounted.\n"
+           "    \"weight\" : n,           (numeric) transaction weight as defined in BIP 141.\n"
            "    \"fee\" : n,              (numeric) transaction fee in " + CURRENCY_UNIT + "\n"
            "    \"modifiedfee\" : n,      (numeric) transaction fee with fee deltas used for mining priority\n"
            "    \"time\" : n,             (numeric) local time transaction entered pool in seconds since 1 Jan 1970 GMT\n"
@@ -354,6 +355,7 @@ void entryToJSON(UniValue &info, const CTxMemPoolEntry &e)
     AssertLockHeld(mempool.cs);
 
     info.push_back(Pair("size", (int)e.GetTxSize()));
+    info.push_back(Pair("weight", (int)e.GetTxWeight()));
     info.push_back(Pair("fee", ValueFromAmount(e.GetFee())));
     info.push_back(Pair("modifiedfee", ValueFromAmount(e.GetModifiedFee())));
     info.push_back(Pair("time", e.GetTime()));
