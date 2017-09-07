@@ -1548,6 +1548,7 @@ const UniValue FindOfferAcceptList(const string& node, const string& alias, cons
 	{	
 		string arrayValueEscaped = arrayValue[i].write();
 		UniValue acceptJSON(UniValue::VSTR);
+		boost::replace_all(arrayValueEscaped, "\\\"", "\"");
 		bool read = acceptJSON.read(arrayValueEscaped);
 		BOOST_CHECK(read);
 		const UniValue &acceptObj = acceptJSON.get_obj();
