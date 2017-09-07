@@ -24,7 +24,8 @@ void MessageTxToJSON(const int op, const std::vector<unsigned char> &vchData, co
 std::string messageFromOp(int op);
 static const unsigned int MAX_MESSAGE_LENGTH = 1024*4;
 static const unsigned int MAX_ENCRYPTED_MESSAGE_LENGTH = MAX_MESSAGE_LENGTH + 85;
-
+static const unsigned int MESSAGE_SENT = 0;
+static const unsigned int MESSAGE_RECV = 1;
 class CMessage {
 public:
 	std::vector<unsigned char> vchMessage;
@@ -124,6 +125,6 @@ public:
 };
 
 bool GetTxOfMessage(const std::vector<unsigned char> &vchMessage, CTransaction& tx);
-bool BuildMessageJson(const CMessage& message, UniValue& oName);
+bool BuildMessageJson(const CMessage& message, UniValue& oName, int messageRole=-1);
 uint64_t GetMessageExpiration(const CMessage& message);
 #endif // MESSAGE_H
