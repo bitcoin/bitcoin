@@ -1873,7 +1873,7 @@ UniValue offerwhitelist(const UniValue& params, bool fHelp) {
 			UniValue oList(UniValue::VOBJ);
 			oList.push_back(Pair("alias", stringFromVch(entry.aliasLinkVchRand)));
 			oList.push_back(Pair("expires_on",theAlias.nExpireTime));
-			oList.push_back(Pair("offer_discount_percentage", strprintf("%d%%", entry.nDiscountPct)));
+			oList.push_back(Pair("offer_discount_percentage", entry.nDiscountPct));
 			oRes.push_back(oList);
 		}
     }
@@ -2993,7 +2993,7 @@ bool BuildOfferAcceptJson(const COfferAccept& theOfferAccept, UniValue& oOfferAc
 	oOfferAccept.push_back(Pair("currency", stringFromVch(theOffer.sCurrencyCode)));
 	oOfferAccept.push_back(Pair("address", EncodeBase58(sellerAlias.vchAddress)));
 	if(theOffer.GetPrice() > 0)
-		oOfferAccept.push_back(Pair("offer_discount_percentage", 100.0f - 100.0f*((float)theOfferAccept.nPrice/(float)theOffer.nPrice)));
+		oOfferAccept.push_back(Pair("offer_discount_percentage", (int)(100.0f - 100.0f*((float)theOfferAccept.nPrice/(float)theOffer.nPrice))));
 	else
 		oOfferAccept.push_back(Pair("offer_discount_percentage", 0));
 

@@ -1227,7 +1227,7 @@ const string OfferAccept(const string& ownernode, const string& buyernode, const
 	
 	const UniValue &acceptSellerValue = FindOfferAcceptList(ownernode, selleralias, offerguid, acceptguid);
 	CAmount nSellerTotal = find_value(acceptSellerValue, "systotal").get_int64();
-	int discount = atoi(find_value(acceptSellerValue, "offer_discount_percentage").get_str().c_str());
+	int discount = find_value(acceptSellerValue, "offer_discount_percentage").get_int();
 	int lMarkup = 100 - discount;
 	nTotal = (nTotal*lMarkup) / 100;
 
@@ -1289,7 +1289,7 @@ const string LinkOfferAccept(const string& ownernode, const string& buyernode, c
 	GenerateBlocks(5, "node3");
 	const UniValue &acceptSellerValue = FindOfferAcceptList(ownernode, rootalias, offerguid, acceptguid);
 	
-	int discount = atoi(find_value(acceptSellerValue, "offer_discount_percentage").get_str().c_str());
+	int discount = find_value(acceptSellerValue, "offer_discount_percentage").get_int();
 	int lMarkup = 100 - discount;
 	nTotal = (nTotal*lMarkup) / 100;
 
@@ -1502,9 +1502,8 @@ void OfferAddWhitelist(const string& node,const string& offerguid, const string&
 		
 		if(aliasguid == aliasname)
 		{
-			const string& discountpct = discount + "%";
 			found = true;
-			BOOST_CHECK_EQUAL(find_value(arrayValue[i].get_obj(), "offer_discount_percentage").get_str(), discountpct);
+			BOOST_CHECK_EQUAL(find_value(arrayValue[i].get_obj(), "offer_discount_percentage").get_int(), atoi(discount));
 		}
 
 	}
