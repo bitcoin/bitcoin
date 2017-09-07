@@ -91,7 +91,7 @@ public:
 
     bool Sign(std::string strSignKey);
     bool CheckSignature();
-    void Relay();
+    void Relay(CConnman& connman);
 };
 
 
@@ -106,9 +106,9 @@ public:
 
     CSporkManager() {}
 
-    void ProcessSpork(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
+    void ProcessSpork(CNode* pfrom, std::string& strCommand, CDataStream& vRecv, CConnman& connman);
     void ExecuteSpork(int nSporkID, int nValue);
-    bool UpdateSpork(int nSporkID, int64_t nValue);
+    bool UpdateSpork(int nSporkID, int64_t nValue, CConnman& connman);
 
     bool IsSporkActive(int nSporkID);
     int64_t GetSporkValue(int nSporkID);

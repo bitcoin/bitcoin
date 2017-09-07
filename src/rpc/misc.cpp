@@ -244,11 +244,14 @@ UniValue spork(const UniValue& params, bool fHelp)
             return "Invalid spork name";
         }
 
+        if (!g_connman)
+            throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+
         // SPORK VALUE
         int64_t nValue = params[1].get_int64();
 
         //broadcast new spork
-        if(sporkManager.UpdateSpork(nSporkID, nValue)){
+        if(sporkManager.UpdateSpork(nSporkID, nValue, *g_connman)){
             sporkManager.ExecuteSpork(nSporkID, nValue);
             return "success";
         } else {
