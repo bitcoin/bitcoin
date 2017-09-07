@@ -510,23 +510,6 @@ static void NotifyKeyStoreStatusChanged(WalletModel *walletmodel, CCryptoKeyStor
     qDebug() << "NotifyKeyStoreStatusChanged";
     QMetaObject::invokeMethod(walletmodel, "updateStatus", Qt::QueuedConnection);
 }
-// SYSCOIN
-static void NotifySyscoinTransactionChanged(WalletModel *walletmodel, const CTransaction &tx, ChangeType status)
-{
-	std::vector<std::vector<unsigned char> > vvchArgs;
-	int op, nOut;
-	// there should only be one service with data carrying output per tx, notify for that one
-	if (DecodeAndParseAliasTx(tx, op, nOut, vvchArgs))
-		QMetaObject::invokeMethod(walletmodel, "updateAlias", Qt::QueuedConnection);
-	else if (DecodeAndParseOfferTx(tx, op, nOut, vvchArgs))
-		QMetaObject::invokeMethod(walletmodel, "updateOffer", Qt::QueuedConnection);
-	else if (DecodeAndParseCertTx(tx, op, nOut, vvchArgs))
-		QMetaObject::invokeMethod(walletmodel, "updateCert", Qt::QueuedConnection);
-	else if (DecodeAndParseEscrowTx(tx, op, nOut, vvchArgs))
-		QMetaObject::invokeMethod(walletmodel, "updateEscrow", Qt::QueuedConnection);
-	else if (DecodeAndParseMessageTx(tx, op, nOut, vvchArgs))
-		QMetaObject::invokeMethod(walletmodel, "updateMessage", Qt::QueuedConnection);
-}
 static void NotifyAddressBookChanged(WalletModel *walletmodel, CWallet *wallet,
         const CTxDestination &address, const std::string &label, bool isMine,
         const std::string &purpose, ChangeType status)
@@ -550,11 +533,6 @@ static void NotifyTransactionChanged(WalletModel *walletmodel, CWallet *wallet, 
     Q_UNUSED(hash);
     Q_UNUSED(status);
     QMetaObject::invokeMethod(walletmodel, "updateTransaction", Qt::QueuedConnection);
-    // SYSCOIN
-    std::map<uint256, CWalletTx>::iterator mi = wallet->mapWallet.find(hash);
-    bool inWallet = mi != wallet->mapWallet.end();
-	if(inWallet)
-		NotifySyscoinTransactionChanged(walletmodel, mi->second, status);
 }
 
 static void ShowProgress(WalletModel *walletmodel, const std::string &title, int nProgress)
