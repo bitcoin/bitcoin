@@ -600,12 +600,6 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 		res.push_back(wtx.GetHash().GetHex());
 		res.push_back(stringFromVch(vchMessage));
 	}
-	// once we have used correct inputs for this message unlock coins that were locked in the wallet
-	BOOST_FOREACH(const COutPoint& outpoint, lockedOutputs)
-	{
-		 LOCK2(cs_main, pwalletMain->cs_wallet);
-		 pwalletMain->UnlockCoin(outpoint);
-	}
 	return res;
 }
 
