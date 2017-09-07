@@ -44,6 +44,8 @@ QString TransactionDesc::FormatTxStatus(const CWalletTx& wtx)
 
         if (fOffline) {
             strTxStatus = tr("%1/offline").arg(nDepth);
+        } else if (nDepth == 0) {
+            strTxStatus = tr("0/unconfirmed, %1").arg((wtx.InMempool() ? tr("in memory pool") : tr("not in memory pool")));
         } else if (nDepth < 6) {
             strTxStatus = tr("%1/unconfirmed").arg(nDepth);
         } else {

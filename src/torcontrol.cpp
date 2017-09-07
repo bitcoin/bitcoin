@@ -304,7 +304,7 @@ static std::map<std::string,std::string> ParseTorReplyMapping(const std::string 
 
 /** Read full contents of a file and return them in a std::string.
  * Returns a pair <status, string>.
- * If an error occured, status will be false, otherwise status will be true and the data will be returned in string.
+ * If an error occurred, status will be false, otherwise status will be true and the data will be returned in string.
  *
  * @param maxsize Puts a maximum size limit on the file that is read. If the file is larger than this, truncated data
  *         (with len > maxsize) will be returned.

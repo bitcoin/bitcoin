@@ -1371,8 +1371,8 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>Reset all settings changes made over the GUI</source>
-        <translation>Reset all settings changes made over the GUI</translation>
+        <source>Reset all settings changed in the GUI</source>
+        <translation>Reset all settings changed in the GUI</translation>
     </message>
     <message>
         <location line="+42"/>

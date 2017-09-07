@@ -1,6 +1,7 @@
 <!DOCTYPE RCC><RCC version="1.0">
     <qresource prefix="/icons">
         <file alias="bitcoin">res/icons/bitcoin.png</file>
+        <file alias="prompticon">res/icons/chevron.png</file>
     </qresource>
     <qresource prefix="/icons/drkblue">
         <file alias="address-book">res/icons/drkblue/address-book.png</file>
@@ -53,6 +54,8 @@
         <file alias="verify">res/icons/drkblue/verify.png</file>
         <file alias="hd_enabled">res/icons/drkblue/hd_enabled.png</file>
         <file alias="hd_disabled">res/icons/drkblue/hd_disabled.png</file>
+        <file alias="fontbigger">res/icons/drkblue/fontbigger.png</file>
+        <file alias="fontsmaller">res/icons/drkblue/fontsmaller.png</file>
     </qresource>
     <qresource prefix="/icons/crownium">
         <file alias="address-book">res/icons/crownium/address-book.png</file>
@@ -105,6 +108,8 @@
         <file alias="verify">res/icons/crownium/verify.png</file>
         <file alias="hd_enabled">res/icons/crownium/hd_enabled.png</file>
         <file alias="hd_disabled">res/icons/crownium/hd_disabled.png</file>
+        <file alias="fontbigger">res/icons/crownium/fontbigger.png</file>
+        <file alias="fontsmaller">res/icons/crownium/fontsmaller.png</file>
     </qresource>
     <qresource prefix="/icons/light">
         <file alias="address-book">res/icons/light/address-book.png</file>
@@ -157,6 +162,8 @@
         <file alias="verify">res/icons/light/verify.png</file>
         <file alias="hd_enabled">res/icons/light/hd_enabled.png</file>
         <file alias="hd_disabled">res/icons/light/hd_disabled.png</file>
+        <file alias="fontbigger">res/icons/light/fontbigger.png</file>
+        <file alias="fontsmaller">res/icons/light/fontsmaller.png</file>
     </qresource>
     <qresource prefix="/icons/trad">
         <file alias="address-book">res/icons/trad/address-book.png</file>
@@ -209,6 +216,8 @@
         <file alias="verify">res/icons/trad/verify.png</file>
         <file alias="hd_enabled">res/icons/trad/hd_enabled.png</file>
         <file alias="hd_disabled">res/icons/trad/hd_disabled.png</file>
+        <file alias="fontbigger">res/icons/trad/fontbigger.png</file>
+        <file alias="fontsmaller">res/icons/trad/fontsmaller.png</file>
     </qresource>
     <qresource prefix="/css">
         <file alias="drkblue">res/css/drkblue.css</file>
