@@ -169,12 +169,11 @@ bool COfferDB::CleanupDatabase(int &servicesCleaned)
             }
 			else if (pcursor->GetKey(key) && key.first == "offera") {
 				COffer offer;
-				const CNameTXIDTuple &offerAcceptTuple = key.second;
 				pcursor->GetValue(offerAccept);
 				if (!GetOffer(offerAccept.offerTuple.first, offer) || chainActive.Tip()->nTime >= GetOfferExpiration(offer))
 				{
 					servicesCleaned++;
-					EraseOfferAccept(offerAcceptTuple);
+					EraseOfferAccept(key.second);
 				}
 
 			}
@@ -224,10 +223,7 @@ bool GetOffer(const vector<unsigned char> &vchOffer,
 	return true;
 }
 bool GetOfferAccept(const vector<unsigned char> &vchOfferAccept, COfferAccept &theOfferAccept) {
-	uint256 txid;
-	if (!pofferdb || !pofferdb->ReadOfferAcceptLastTXID(vchOfferAccept, txid))
-		return false;
-	if (!pofferdb->ReadOfferAccept(CNameTXIDTuple(theOfferAccept.vchAcceptRand, txid), theOfferAccept))
+	if (!pofferbd || !pofferdb->ReadOfferAccept(theOfferAccept.vchAcceptRand, theOfferAccept))
 		return false;
 	return true;
 }
@@ -737,6 +733,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			theOfferAccept = theOffer.accept;
 			theOfferAccept.txHash = tx.GetHash();
 			theOfferAccept.nHeight = nHeight;
+			theOfferAccept.vchAcceptRand = vvchArgs[0];
 			COfferAccept offerAccept;
 			COffer acceptOffer;
 
@@ -2286,7 +2283,6 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 
 	
 	COfferAccept txAccept;
-	txAccept.vchAcceptRand = vchAccept;
 	txAccept.nQty = nQty;
 	txAccept.nPrice = nPrice;
 	txAccept.offerTuple = CNameTXIDTuple(theOffer.vchOffer, theOffer.txHash);
@@ -2458,7 +2454,7 @@ void COfferDB::WriteOfferAcceptIndex(const COfferAccept& offerAccept) {
 	mongoc_update_flags_t update_flags;
 	update_flags = (mongoc_update_flags_t)(MONGOC_UPDATE_NO_VALIDATE | MONGOC_UPDATE_UPSERT);
 	if (BuildOfferAcceptJson(offerAccept, oName)) {
-		selector = BCON_NEW("_id", BCON_UTF8(find_value(oName, "_id").get_str().c_str()));
+		selector = BCON_NEW("_id", BCON_UTF8(stringFromVch(offerAccept.vchAcceptRand).c_str()));
 		write_concern = mongoc_write_concern_new();
 		mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
 		update = bson_new_from_json((unsigned char *)oName.write().c_str(), -1, &error);
@@ -2539,12 +2535,12 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
     if (fHelp || params.size() < 4 || params.size() > 5)
         throw runtime_error(
 			"offeracceptfeedback <offeraccept guid> <user role> <feedback> <rating> [witness]\n"
-                        "Send feedback and rating for offer accept specified. Ratings are numbers from 1 to 5. User Role is either 'buyer', 'seller'.\n"
+                        "Send feedback and rating for offer accept specified. Ratings are numbers from 1 to 5. User Role is either 'buyer', 'seller'. If you are the 'buyer' for example, you are leaving rating/feedback for the 'seller'.\n"
                         + HelpRequiringPassphrase());
    // gather & validate inputs
 	int nRating = 0;
-	string role = params[0].get_str();
-	vector<unsigned char> vchAcceptRand = vchFromValue(params[1]);
+	vector<unsigned char> vchAcceptRand = vchFromValue(params[0]);
+	string role = params[1].get_str();
 	vector<unsigned char> vchFeedback = vchFromValue(params[2]);
 	try {
 		nRating = boost::lexical_cast<int>(params[3].get_str());
@@ -2601,6 +2597,7 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 
 	theOffer.ClearOffer();
 	theOffer.accept = theOfferAccept;
+	theOffer.accept.vchAcceptRand.clear();
 	theOffer.accept.buyerAliasTuple = CNameTXIDTuple(theAlias.vchAlias, theAlias.txHash);
 	theOffer.accept.bPaymentAck = false;
 	theOffer.nHeight = chainActive.Tip()->nHeight;
@@ -2839,7 +2836,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 
 	CTransaction tx;
 	if (!GetSyscoinTransaction(txPos.nHeight, txPos.txHash, tx, Params().GetConsensus()))
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR: ERRCODE: 4604 - " + _("Failed to read from offer tx"));
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR: ERRCODE: 4604 - " + _("Failed to read offer tx"));
 	vector<vector<unsigned char> > vvch;
 	int op, nOut;
 	if (!DecodeOfferTx(tx, op, nOut, vvch))
@@ -2849,6 +2846,32 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1593 - " + _("Could not find this offer"));
 
 	return oOffer;
+
+}
+UniValue offeracceptinfo(const UniValue& params, bool fHelp) {
+	if (fHelp || 1 > params.size())
+		throw runtime_error("offeracceptinfo <acceptguid>\n"
+			"Show details of an offer purchase\n");
+
+	UniValue oOfferAccept(UniValue::VOBJ);
+	vector<unsigned char> vchOfferAccept = vchFromValue(params[0]);
+	COfferAccept offerAccept;
+	if (!GetOfferAccept(vchOfferAccept, offerAccept))
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR: ERRCODE: 5536 - " + _("Failed to read from offeraccept DB"));
+
+	CTransaction tx;
+	if (!GetSyscoinTransaction(offerAccept.nHeight, offerAccept.txHash, tx, Params().GetConsensus()))
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR: ERRCODE: 4604 - " + _("Failed to read offeraccept tx"));
+
+	vector<vector<unsigned char> > vvch;
+	int op, nOut;
+	if (!DecodeOfferTx(tx, op, nOut, vvch))
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR: ERRCODE: 4604 - " + _("Failed to decode offeraccept"));
+
+	if (!BuildOfferAcceptJson(offerAccept, oOfferAccept))
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1593 - " + _("Could not find this offeraccept"));
+
+	return oOfferAccept;
 
 }
 void BuildFeedbackJson(const COfferAccept& theOfferAccept, UniValue& oFeedback) {
@@ -2971,8 +2994,7 @@ bool BuildOfferAcceptJson(const COfferAccept& theOfferAccept, UniValue& oOfferAc
 	CAliasIndex sellerAlias;
 	if (!GetAlias(theOffer.aliasTuple, sellerAlias))
 		return false;
-	oOfferAccept.push_back(Pair("_id", stringFromVch(theOffer.vchOffer) + stringFromVch(theOfferAccept.vchAcceptRand)));
-	oOfferAccept.push_back(Pair("offeraccept", stringFromVch(theOfferAccept.vchAcceptRand)));
+	oOfferAccept.push_back(Pair("_id", stringFromVch(theOfferAccept.vchAcceptRand)));
 	oOfferAccept.push_back(Pair("offer", stringFromVch(theOffer.vchOffer)));
 	int64_t nTime = 0;
 	CBlockIndex *pindex = chainActive[theOfferAccept.nHeight];

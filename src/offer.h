@@ -402,16 +402,15 @@ public:
 
 	bool WriteOfferAccept(const COfferAccept& offerAccept) {
 		WriteOfferAcceptIndex(offerAccept);
-		return Write(make_pair(std::string("offera"), CNameTXIDTuple(offerAccept.vchAcceptRand, offerAccept.txHash)), offerAccept) && WriteOfferAcceptLastTXID(offerAccept.vchAcceptRand, offerAccept.txHash);
+		return Write(make_pair(std::string("offera"), offerAccept.vchAcceptRand, offerAccept);
 	}
 
-	bool EraseOfferAccept(const CNameTXIDTuple& offerAcceptTuple) {
-		EraseOfferAcceptLastTXID(offerAcceptTuple.first);
-		return Erase(make_pair(std::string("offera"), offerAcceptTuple));
+	bool EraseOfferAccept(const vector<unsigned char> &vchOfferAccept) {
+		return Erase(make_pair(std::string("offera"), vchOfferAccept));
 	}
 
-	bool ReadOfferAccept(const CNameTXIDTuple& offerAcceptTuple, COfferAccept& offerAccept) {
-		return Read(make_pair(std::string("offera"), offerAcceptTuple), offerAccept);
+	bool ReadOfferAccept(const vector<unsigned char> &vchOfferAccept, COfferAccept& offerAccept) {
+		return Read(make_pair(std::string("offera"), vchOfferAccept), offerAccept);
 	}
 
 	bool WriteOfferLastTXID(const std::vector<unsigned char>& offer, const uint256& txid) {
@@ -422,15 +421,6 @@ public:
 	}
 	bool EraseOfferLastTXID(const std::vector<unsigned char>& offer) {
 		return Erase(make_pair(std::string("offerlt"), offer));
-	}
-	bool WriteOfferAcceptLastTXID(const std::vector<unsigned char>& offerAccept, const uint256& txid) {
-		return Write(make_pair(std::string("offeralt"), offerAccept), txid);
-	}
-	bool ReadOfferAcceptLastTXID(const std::vector<unsigned char>& offerAccept, uint256& txid) {
-		return Read(make_pair(std::string("offeralt"), offerAccept), txid);
-	}
-	bool EraseOfferAcceptLastTXID(const std::vector<unsigned char>& offerAccept) {
-		return Erase(make_pair(std::string("offeralt"), offerAccept));
 	}
 	bool WriteExtTXID(const uint256& txid) {
 		return Write(make_pair(std::string("offert"), txid), txid);

@@ -434,6 +434,7 @@ static const CRPCCommand vRPCCommands[] =
 	{ "wallet", "offerclearwhitelist",	&offerclearwhitelist,  false },
 	{ "wallet", "offerwhitelist",		&offerwhitelist,	   false },
 	{ "wallet", "offerinfo",            &offerinfo,            false },
+	{ "wallet", "offeracceptinfo",      &offeracceptinfo,            false },
 
 		// use the blockchain as a certificate issuance platform
 	{ "wallet", "certnew",         &certnew,     false },

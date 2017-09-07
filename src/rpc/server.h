@@ -325,7 +325,7 @@ extern UniValue offerremovewhitelist(const UniValue& params, bool fHelp);
 extern UniValue offerclearwhitelist(const UniValue& params, bool fHelp);
 extern UniValue offerwhitelist(const UniValue& params, bool fHelp);
 extern UniValue offerinfo(const UniValue& params, bool fHelp);
-
+extern UniValue offeracceptinfo(const UniValue& params, bool fHelp);
 
 extern UniValue certupdate(const UniValue& params, bool fHelp);
 extern UniValue certnew(const UniValue& params, bool fHelp);

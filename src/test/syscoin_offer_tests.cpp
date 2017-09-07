@@ -503,8 +503,10 @@ BOOST_AUTO_TEST_CASE (generate_offeracceptfeedback)
 	string offerfeedbackstr = "offeracceptfeedback " + acceptguid + " testfeedback 1";
 	// leave another feedback and notice that you can't find it in the indexer (first feedback will be indexed only per user per acceptguid)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", offerfeedbackstr));
+	UniValue arr = r.get_array();
+	string feedbackTxid = arr[0].get_str();
 	GenerateBlocks(10, "node2");
-	r = FindOfferAcceptFeedback("node2", acceptguid, FEEDBACKSELLER);
+	r = FindFeedback("node2", feedbackTxid);
 	BOOST_CHECK(r.isNull());
 
 	// perform a valid accept
@@ -515,11 +517,13 @@ BOOST_AUTO_TEST_CASE (generate_offeracceptfeedback)
 	// then seller 
 	OfferAcceptFeedback("node1", "selleraliasfeedback",acceptguid, "feedbackseller", "5", FEEDBACKBUYER);
 
-	offerfeedbackstr = "offeracceptfeedback " + acceptguid + " testfeedback 1";
+	offerfeedbackstr = "offeracceptfeedback " + acceptguid + " seller testfeedback 1";
 	// leave another feedback and notice that you can't find it in the indexer (first feedback will be indexed only per user per acceptguid+touser combination)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", offerfeedbackstr));
+	arr = r.get_array();
+	feedbackTxid = arr[0].get_str();
 	GenerateBlocks(10, "node1");
-	r = FindOfferAcceptFeedback("node1", acceptguid, FEEDBACKBUYER);
+	r = FindFeedback("node1", feedbackTxid);
 	BOOST_CHECK(r.isNull());
 
 }

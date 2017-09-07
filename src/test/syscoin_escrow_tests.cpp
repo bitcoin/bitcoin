@@ -154,12 +154,41 @@ BOOST_AUTO_TEST_CASE (generate_escrowfeedback)
 	// seller leaves feedback first to the other parties
 	EscrowFeedback("node1", "seller", guid,"feedbackbuyer", "1", FEEDBACKBUYER);
 	EscrowFeedback("node1", "seller", guid, "feedbackarbiter", "1", FEEDBACKARBITER);
+
+	// leave another feedback and notice that you can't find it in the indexer (first feedback will be indexed only per user per guid+touser combination)
+	string escrowfeedbackstr = "escrowfeedback " + guid + " seller feedback 1";
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", escrowfeedbackstr));
+	UniValue arr = r.get_array();
+	string feedbackTxid = arr[0].get_str();
+	GenerateBlocks(10, "node1");
+	r = FindFeedback("node1", feedbackTxid);
+	BOOST_CHECK(r.isNull());
+
 	// buyer can leave feedback
 	EscrowFeedback("node2", "buyer", guid, "feedbackseller", "1", FEEDBACKSELLER);
 	EscrowFeedback("node2", "buyer", guid, "feedbackarbiter", "1", FEEDBACKARBITER);
+
+	// leave another feedback and notice that you can't find it in the indexer (first feedback will be indexed only per user per guid+touser combination)
+	escrowfeedbackstr = "escrowfeedback " + guid + " buyer feedback 1";
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", escrowfeedbackstr));
+	arr = r.get_array();
+	feedbackTxid = arr[0].get_str();
+	GenerateBlocks(10, "node2");
+	r = FindFeedback("node2", feedbackTxid);
+	BOOST_CHECK(r.isNull());
+
 	// arbiter leaves feedback
 	EscrowFeedback("node3", "arbiter", guid, "feedbackbuyer", "4", FEEDBACKBUYER);
 	EscrowFeedback("node3", "arbiter", guid, "feedbackseller", "4", FEEDBACKSELLER);
+
+	// leave another feedback and notice that you can't find it in the indexer (first feedback will be indexed only per user per guid+touser combination)
+	escrowfeedbackstr = "escrowfeedback " + guid + " arbiter feedback 1";
+	BOOST_CHECK_NO_THROW(r = CallRPC("node3", escrowfeedbackstr));
+	arr = r.get_array();
+	feedbackTxid = arr[0].get_str();
+	GenerateBlocks(10, "node3");
+	r = FindFeedback("node3", feedbackTxid);
+	BOOST_CHECK(r.isNull());
 }
 BOOST_AUTO_TEST_CASE (generate_escrow_linked_release)
 {
