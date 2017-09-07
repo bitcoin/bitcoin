@@ -14,10 +14,9 @@
   transactions are still available, but that the unconfirmed transaction has
   been zapped.
 """
+
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import (assert_equal,
-                                 assert_raises_jsonrpc,
-                                 )
+from test_framework.util import assert_equal, assert_raises_jsonrpc
 
 class ZapWalletTXesTest (BitcoinTestFramework):
     def set_test_params(self):

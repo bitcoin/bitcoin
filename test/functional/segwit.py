@@ -4,12 +4,44 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the SegWit changeover logic."""
 
-from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
-from test_framework.mininode import sha256, CTransaction, CTxIn, COutPoint, CTxOut, COIN, ToHex, FromHex
-from test_framework.address import script_to_p2sh, key_to_p2pkh
-from test_framework.script import CScript, OP_HASH160, OP_CHECKSIG, OP_0, hash160, OP_EQUAL, OP_DUP, OP_EQUALVERIFY, OP_1, OP_2, OP_CHECKMULTISIG, OP_TRUE
+from decimal import Decimal
 from io import BytesIO
+
+from test_framework.address import key_to_p2pkh, script_to_p2sh
+from test_framework.mininode import (
+    COIN,
+    COutPoint,
+    CTransaction,
+    CTxIn,
+    CTxOut,
+    FromHex,
+    ToHex,
+    sha256,
+)
+from test_framework.script import (
+    OP_0,
+    OP_1,
+    OP_2,
+    OP_CHECKMULTISIG,
+    OP_CHECKSIG,
+    OP_DUP,
+    OP_EQUAL,
+    OP_EQUALVERIFY,
+    OP_HASH160,
+    OP_TRUE,
+    CScript,
+    hash160,
+)
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import (
+    JSONRPCException,
+    assert_equal,
+    assert_raises_jsonrpc,
+    bytes_to_hex_str,
+    connect_nodes,
+    hex_str_to_bytes,
+    sync_blocks,
+)
 
 NODE_0 = 0
 NODE_2 = 2

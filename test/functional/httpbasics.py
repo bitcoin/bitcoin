@@ -4,11 +4,11 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the RPC HTTP basics."""
 
-from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
-
 import http.client
 import urllib.parse
+
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import assert_equal, str_to_b64str
 
 class HTTPBasicsTest (BitcoinTestFramework):
     def set_test_params(self):
@@ -102,7 +102,6 @@ class HTTPBasicsTest (BitcoinTestFramework):
         conn.request('GET', '/' + ('x'*10000), '', headers)
         out1 = conn.getresponse()
         assert_equal(out1.status, http.client.BAD_REQUEST)
-
 
 if __name__ == '__main__':
     HTTPBasicsTest ().main ()

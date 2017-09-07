@@ -14,20 +14,28 @@ added in the future, they should try to follow the same convention and not
 make assumptions about execution order.
 """
 
+import io
+from decimal import Decimal
+
 from segwit import send_to_witness
-from test_framework.test_framework import BitcoinTestFramework
 from test_framework import blocktools
 from test_framework.mininode import CTransaction
-from test_framework.util import *
-
-import io
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import (
+    assert_equal,
+    assert_greater_than,
+    assert_raises_jsonrpc,
+    bytes_to_hex_str,
+    connect_nodes_bi,
+    hex_str_to_bytes,
+    sync_mempools,
+)
 
 # Sequence number that is BIP 125 opt-in and BIP 68-compliant
 BIP125_SEQUENCE_NUMBER = 0xfffffffd
 
 WALLET_PASSPHRASE = "test"
 WALLET_PASSPHRASE_TIMEOUT = 3600
-
 
 class BumpFeeTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -293,7 +301,6 @@ def submit_block_with_tx(node, tx):
     block.solve()
     node.submitblock(bytes_to_hex_str(block.serialize(True)))
     return block
-
 
 if __name__ == "__main__":
     BumpFeeTest().main()

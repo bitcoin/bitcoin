@@ -4,10 +4,10 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the RBF code."""
 
+from test_framework.mininode import *
+from test_framework.script import *
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
-from test_framework.script import *
-from test_framework.mininode import *
 
 MAX_REPLACEMENT_LIMIT = 100
 

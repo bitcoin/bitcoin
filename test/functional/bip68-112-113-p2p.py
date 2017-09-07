@@ -43,14 +43,16 @@ bip112txs_vary_OP_CSV_9 - 16 txs with nSequence = 9 evaluated against varying {r
 bip112tx_special - test negative argument to OP_CSV
 """
 
-from test_framework.test_framework import ComparisonTestFramework
-from test_framework.util import *
-from test_framework.mininode import ToHex, CTransaction, NetworkThread
-from test_framework.blocktools import create_coinbase, create_block
-from test_framework.comptool import TestInstance, TestManager
-from test_framework.script import *
-from io import BytesIO
 import time
+from decimal import Decimal
+from io import BytesIO
+
+from test_framework.blocktools import create_block, create_coinbase
+from test_framework.comptool import TestInstance, TestManager
+from test_framework.mininode import CTransaction, NetworkThread, ToHex
+from test_framework.script import OP_CHECKSEQUENCEVERIFY, OP_DROP, CScript
+from test_framework.test_framework import ComparisonTestFramework
+from test_framework.util import assert_equal, get_bip9_status, hex_str_to_bytes
 
 base_relative_locktime = 10
 seq_disable_flag = 1<<31
@@ -528,7 +530,6 @@ class BIP68_112_113Test(ComparisonTestFramework):
 
         ### Missing aspects of test
         ##  Testing empty stack fails
-
 
 if __name__ == '__main__':
     BIP68_112_113Test().main()

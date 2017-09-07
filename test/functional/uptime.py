@@ -11,7 +11,6 @@ import time
 
 from test_framework.test_framework import BitcoinTestFramework
 
-
 class UptimeTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
@@ -24,7 +23,6 @@ class UptimeTest(BitcoinTestFramework):
         wait_time = 10
         self.nodes[0].setmocktime(int(time.time() + wait_time))
         assert(self.nodes[0].uptime() >= wait_time)
-
 
 if __name__ == '__main__':
     UptimeTest().main()

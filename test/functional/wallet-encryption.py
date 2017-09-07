@@ -7,10 +7,7 @@
 import time
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import (
-    assert_equal,
-    assert_raises_jsonrpc,
-)
+from test_framework.util import assert_equal, assert_raises_jsonrpc
 
 class WalletEncryptionTest(BitcoinTestFramework):
     def set_test_params(self):

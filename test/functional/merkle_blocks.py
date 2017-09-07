@@ -5,7 +5,11 @@
 """Test gettxoutproof and verifytxoutproof RPCs."""
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import (
+    assert_equal,
+    assert_raises_jsonrpc,
+    connect_nodes,
+)
 
 class MerkleBlockTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -77,7 +81,6 @@ class MerkleBlockTest(BitcoinTestFramework):
         assert_equal(self.nodes[2].verifytxoutproof(self.nodes[3].gettxoutproof([txid_spent])), [txid_spent])
         # We can't get a proof if we specify transactions from different blocks
         assert_raises_jsonrpc(-5, "Not all transactions found in specified or retrieved block", self.nodes[2].gettxoutproof, [txid1, txid3])
-
 
 if __name__ == '__main__':
     MerkleBlockTest().main()

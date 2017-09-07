@@ -5,12 +5,12 @@ This streams the combined log output to stdout. Use combine_logs.py > outputfile
 to write to an outputfile."""
 
 import argparse
-from collections import defaultdict, namedtuple
 import heapq
 import itertools
 import os
 import re
 import sys
+from collections import defaultdict, namedtuple
 
 # Matches on the date format at the start of the log event
 TIMESTAMP_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{6}")

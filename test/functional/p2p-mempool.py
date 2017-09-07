@@ -8,9 +8,14 @@ Test that nodes are disconnected if they send mempool messages when bloom
 filters are not enabled.
 """
 
-from test_framework.mininode import *
+from test_framework.mininode import (
+    NetworkThread,
+    NodeConn,
+    NodeConnCB,
+    msg_mempool,
+)
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import assert_equal, p2p_port
 
 class P2PMempoolTests(BitcoinTestFramework):
     def set_test_params(self):
@@ -32,6 +37,6 @@ class P2PMempoolTests(BitcoinTestFramework):
 
         #mininode must be disconnected at this point
         assert_equal(len(self.nodes[0].getpeerinfo()), 0)
-    
+
 if __name__ == '__main__':
     P2PMempoolTests().main()
