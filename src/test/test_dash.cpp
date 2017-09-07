@@ -59,7 +59,6 @@ BasicTestingSetup::~BasicTestingSetup()
         delete evoDb;
 
         ECC_Stop();
-        g_connman.reset();
 }
 
 TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(chainName)
@@ -96,17 +95,18 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
         nScriptCheckThreads = 3;
         for (int i=0; i < nScriptCheckThreads-1; i++)
             threadGroup.create_thread(&ThreadScriptCheck);
-        RegisterNodeSignals(GetNodeSignals());
+        peerLogic.reset(new PeerLogicValidation(connman));
 }
 
 TestingSetup::~TestingSetup()
 {
-        UnregisterNodeSignals(GetNodeSignals());
         llmq::InterruptLLMQSystem();
         threadGroup.interrupt_all();
         threadGroup.join_all();
         GetMainSignals().FlushBackgroundCallbacks();
         GetMainSignals().UnregisterBackgroundSignalScheduler();
+        g_connman.reset();
+        peerLogic.reset();
         UnloadBlockIndex();
         delete pcoinsTip;
         llmq::DestroyLLMQSystem();
