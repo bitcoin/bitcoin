@@ -2457,11 +2457,10 @@ void COfferDB::WriteOfferAcceptIndex(const COfferAccept& offerAccept) {
 	UniValue oName(UniValue::VOBJ);
 	mongoc_update_flags_t update_flags;
 	update_flags = (mongoc_update_flags_t)(MONGOC_UPDATE_NO_VALIDATE | MONGOC_UPDATE_UPSERT);
-	id = stringFromVch(offerAccept.vchAcceptRand);
-	selector = BCON_NEW("_id", BCON_UTF8(id.c_str()));
-	write_concern = mongoc_write_concern_new();
-	mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
 	if (BuildOfferAcceptJson(offerAccept, oName)) {
+		selector = BCON_NEW("_id", BCON_UTF8(find_value(oName, "_id").get_str().c_str()));
+		write_concern = mongoc_write_concern_new();
+		mongoc_write_concern_set_w(write_concern, MONGOC_WRITE_CONCERN_W_UNACKNOWLEDGED);
 		update = bson_new_from_json((unsigned char *)oName.write().c_str(), -1, &error);
 		if (!update || !mongoc_collection_update(offeraccept_collection, update_flags, selector, update, write_concern, &error)) {
 			LogPrintf("MONGODB OFFER ACCEPT ERROR: %s\n", error.message);

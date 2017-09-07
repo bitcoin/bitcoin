@@ -1547,7 +1547,7 @@ const UniValue FindOfferAcceptList(const string& node, const string& alias, cons
 		BOOST_CHECK(acceptObj.read(arrayValue[i].get_str()));
 		const string &acceptvalueguid = find_value(acceptObj, "_id").get_str();
 		const string &offervalueguid = find_value(acceptObj, "offer").get_str();
-		if(acceptvalueguid == acceptguid && offervalueguid == offerguid)
+		if(acceptvalueguid == id && offervalueguid == offerguid)
 		{
 			ret = acceptObj;
 			break;
