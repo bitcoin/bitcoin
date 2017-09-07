@@ -16,13 +16,13 @@ const unsigned int WALLET_CRYPTO_IV_SIZE = 16;
 /**
  * Private key encryption is done based on a CMasterKey,
  * which holds a salt and random encryption key.
- * 
+ *
  * CMasterKeys are encrypted using AES-256-CBC using a key
  * derived using derivation method nDerivationMethod
  * (0 == EVP_sha512()) and derivation iterations nDeriveIterations.
  * vchOtherDerivationParameters is provided for alternative algorithms
  * which may require more parameters (such as scrypt).
- * 
+ *
  * Wallet Private Keys are then encrypted using AES-256-CBC
  * with the double-sha256 of the public key as the IV, and the
  * master key's key as the encryption key (see keystore.[ch]).
@@ -192,28 +192,26 @@ public:
     {
         {
             LOCK(cs_KeyStore);
-            if (!IsCrypted())
+            if (!IsCrypted()) {
                 return CBasicKeyStore::HaveKey(address);
+            }
             return mapCryptedKeys.count(address) > 0;
         }
         return false;
     }
     bool GetKey(const CKeyID &address, CKey& keyOut) const override;
     bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const override;
-    void GetKeys(std::set<CKeyID> &setAddress) const override
+    std::set<CKeyID> GetKeys() const override
     {
-        if (!IsCrypted())
-        {
-            CBasicKeyStore::GetKeys(setAddress);
-            return;
+        LOCK(cs_KeyStore);
+        if (!IsCrypted()) {
+            return CBasicKeyStore::GetKeys();
         }
-        setAddress.clear();
-        CryptedKeyMap::const_iterator mi = mapCryptedKeys.begin();
-        while (mi != mapCryptedKeys.end())
-        {
-            setAddress.insert((*mi).first);
-            mi++;
+        std::set<CKeyID> set_address;
+        for (const auto& mi : mapCryptedKeys) {
+            set_address.insert(mi.first);
         }
+        return set_address;
     }
 
     virtual bool GetHDChain(CHDChain& hdChainRet) const override;
