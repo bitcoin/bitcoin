@@ -26,27 +26,14 @@
 #include <QTimer>
 
 #include <boost/foreach.hpp>
-// SYSCOIN
+
 #include "guiutil.h"
-#include "aliastablemodel.h"
-#include "messagetablemodel.h"
-#include "escrowtablemodel.h"
-#include "certtablemodel.h"
-#include "offertablemodel.h"
-#include "offeraccepttablemodel.h"
 #include <QSettings>
 using namespace std;
-extern bool DecodeAndParseAliasTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
-extern bool DecodeAndParseOfferTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
-extern bool DecodeAndParseCertTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
-extern bool DecodeAndParseMessageTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
-extern bool DecodeAndParseEscrowTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
 extern std::string EncodeHexTx(const CTransaction& tx, const int serializeFlags = 0);
 extern bool DecodeHexTx(CTransaction& tx, const std::string& strHexTx, bool fTryNoWitness = false);
 WalletModel::WalletModel(const PlatformStyle *platformStyle, CWallet *_wallet, OptionsModel *_optionsModel, QObject *parent) :
     QObject(parent), wallet(_wallet), optionsModel(_optionsModel), addressTableModel(0),
-	// SYSCOIN
-	aliasTableModelMine(0), aliasTableModelAll(0), certTableModelMine(0), certTableModelAll(0), offerTableModelMine(0), offerTableModelAll(0), offerTableModelAccept(0), offerTableModelMyAccept(0),
     transactionTableModel(0),
     recentRequestsTableModel(0),
     cachedBalance(0), cachedUnconfirmedBalance(0), cachedImmatureBalance(0),
@@ -59,19 +46,6 @@ WalletModel::WalletModel(const PlatformStyle *platformStyle, CWallet *_wallet, O
     addressTableModel = new AddressTableModel(wallet, this);
     transactionTableModel = new TransactionTableModel(platformStyle, wallet, this);
     recentRequestsTableModel = new RecentRequestsTableModel(wallet, this);
-	// SYSCOIN
-	aliasTableModelMine = new AliasTableModel(wallet, this, MyAlias);
-	aliasTableModelAll = new AliasTableModel(wallet, this, AllAlias);
-	escrowTableModelMine = new EscrowTableModel(wallet, this, MyEscrow);
-	escrowTableModelAll = new EscrowTableModel(wallet, this, AllEscrow);
-	inMessageTableModel = new MessageTableModel(wallet, this, InMessage);
-	outMessageTableModel = new MessageTableModel(wallet, this, OutMessage);
-	certTableModelMine = new CertTableModel(wallet, this, MyCert);
-	certTableModelAll = new CertTableModel(wallet, this, AllCert);
-	offerTableModelMine = new OfferTableModel(wallet, this, MyOffer);
-	offerTableModelAll = new OfferTableModel(wallet, this, AllOffer);
-	offerTableModelAccept = new OfferAcceptTableModel(wallet, this, Accept);
-	offerTableModelMyAccept = new OfferAcceptTableModel(wallet, this, MyAccept);
     // This timer will be fired repeatedly to update the balance
     pollTimer = new QTimer(this);
     connect(pollTimer, SIGNAL(timeout()), this, SLOT(pollBalanceChanged()));
@@ -83,53 +57,6 @@ WalletModel::WalletModel(const PlatformStyle *platformStyle, CWallet *_wallet, O
 WalletModel::~WalletModel()
 {
     unsubscribeFromCoreSignals();
-}
-// SYSCOIN
-void appendListAliases(UniValue& defaultAliasArray, bool allAliases)
-{
-	QSettings settings;
-	QString defaultListAlias = settings.value("defaultListAlias", "").toString();
-	if(allAliases || defaultListAlias == QObject::tr("All"))
-	{
-		string strMethod = string("aliaslist");
-		UniValue params(UniValue::VARR); 
-		UniValue result ;
-		string name_str;
-		
-		try {
-
-			result = tableRPC.execute(strMethod, params);
-
-			if (result.type() == UniValue::VARR)
-			{
-				name_str = "";
-				const UniValue &arr = result.get_array();
-				for (unsigned int idx = 0; idx < arr.size(); idx++) {
-					const UniValue& input = arr[idx];
-					if (input.type() != UniValue::VOBJ)
-						continue;
-					const UniValue& o = input.get_obj();
-					name_str = "";
-					const UniValue& name_value = find_value(o, "name");
-					if (name_value.type() == UniValue::VSTR)
-					{
-						name_str = name_value.get_str();
-						defaultAliasArray.push_back(name_str);
-					}
-				}
-			}
-		}
-		catch (UniValue& objError)
-		{
-		}
-		catch(std::exception& e)
-		{
-		}
-	}
-	else
-	{
-		defaultAliasArray.push_back(defaultListAlias.toStdString());
-	}
 }
 CAmount WalletModel::getBalance(const CCoinControl *coinControl) const
 {
@@ -251,34 +178,7 @@ void WalletModel::updateAddressBook(const QString &address, const QString &label
     if(addressTableModel)
         addressTableModel->updateEntry(address, label, isMine, purpose, status);
 }
-// SYSCOIN
-void WalletModel::updateAlias() {
-	if (aliasTableModelMine)
-		aliasTableModelMine->refreshAliasTable();
-}
 
-void WalletModel::updateCert() {
-	if (certTableModelMine)
-		certTableModelMine->refreshCertTable();
-}
-void WalletModel::updateMessage() {
-	if (inMessageTableModel)
-		inMessageTableModel->refreshMessageTable();
-	if (outMessageTableModel)
-		outMessageTableModel->refreshMessageTable();
-}
-void WalletModel::updateEscrow() {
-	if (escrowTableModelMine)
-		escrowTableModelMine->refreshEscrowTable();
-}
-void WalletModel::updateOffer() {
-	if (offerTableModelMine)
-		offerTableModelMine->refreshOfferTable();
-	if (offerTableModelAccept)
-		offerTableModelAccept->refreshOfferTable();
-	if (offerTableModelMyAccept)
-		offerTableModelMyAccept->refreshOfferTable();
-}
 void WalletModel::updateWatchOnlyFlag(bool fHaveWatchonly)
 {
     fHaveWatchOnly = fHaveWatchonly;
@@ -538,43 +438,7 @@ TransactionTableModel *WalletModel::getTransactionTableModel()
 {
     return transactionTableModel;
 }
-// SYSCOIN
-AliasTableModel *WalletModel::getAliasTableModelMine() {
-	return aliasTableModelMine;
-}
-AliasTableModel *WalletModel::getAliasTableModelAll() {
-	return aliasTableModelAll;
-}
-EscrowTableModel *WalletModel::getEscrowTableModelMine() {
-	return escrowTableModelMine;
-}
-EscrowTableModel *WalletModel::getEscrowTableModelAll() {
-	return escrowTableModelAll;
-}
-MessageTableModel *WalletModel::getMessageTableModelIn() {
-	return inMessageTableModel;
-}
-MessageTableModel *WalletModel::getMessageTableModelOut() {
-	return outMessageTableModel;
-}
-CertTableModel *WalletModel::getCertTableModelMine() {
-	return certTableModelMine;
-}
-CertTableModel *WalletModel::getCertTableModelAll() {
-	return certTableModelAll;
-}
-OfferTableModel *WalletModel::getOfferTableModelMine() {
-	return offerTableModelMine;
-}
-OfferTableModel *WalletModel::getOfferTableModelAll() {
-	return offerTableModelAll;
-}
-OfferAcceptTableModel *WalletModel::getOfferTableModelAccept() {
-	return offerTableModelAccept;
-}
-OfferAcceptTableModel *WalletModel::getOfferTableModelMyAccept() {
-	return offerTableModelMyAccept;
-}
+
 RecentRequestsTableModel *WalletModel::getRecentRequestsTableModel()
 {
     return recentRequestsTableModel;
