@@ -224,7 +224,7 @@ SYSCOIN_QT_H = \
   qt/walletmodel.h \
   qt/walletmodeltransaction.h \
   qt/walletview.h \
-  qt/winshutdownmonitor.h \
+  qt/winshutdownmonitor.h
 
 RES_ICONS = \
   qt/res/icons/syscoin.ico \
