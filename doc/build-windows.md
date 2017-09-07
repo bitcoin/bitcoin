@@ -62,6 +62,8 @@ A host toolchain (`build-essential`) is necessary because some dependency
 packages (such as `protobuf`) need to build host utilities that are used in the
 build process.
 
+See also: [dependencies.md](dependencies.md).
+
 ## Building for 64-bit Windows
 
 To build executables for Windows 64-bit, install the following dependencies:
