@@ -405,11 +405,11 @@ public:
 		return Write(make_pair(std::string("offera"), offerAccept.vchAcceptRand), offerAccept);
 	}
 
-	bool EraseOfferAccept(const vector<unsigned char> &vchOfferAccept) {
+	bool EraseOfferAccept(const std::vector<unsigned char> &vchOfferAccept) {
 		return Erase(make_pair(std::string("offera"), vchOfferAccept));
 	}
 
-	bool ReadOfferAccept(const vector<unsigned char> &vchOfferAccept, COfferAccept& offerAccept) {
+	bool ReadOfferAccept(const std::vector<unsigned char> &vchOfferAccept, COfferAccept& offerAccept) {
 		return Read(make_pair(std::string("offera"), vchOfferAccept), offerAccept);
 	}
 
