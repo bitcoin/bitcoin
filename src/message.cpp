@@ -448,8 +448,6 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
         // set the message's txn-dependent values
 		theMessage.txHash = tx.GetHash();
 		theMessage.nHeight = nHeight;
-		if(theMessage.bHex)
-			theMessage.vchMessageFrom.clear();
 		PutToMessageList(vtxPos, theMessage);
         // write message  
 
@@ -473,24 +471,22 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
 }
 
 UniValue messagenew(const UniValue& params, bool fHelp) {
-    if (fHelp || 4 > params.size() || 5 < params.size() )
+    if (fHelp || 5 > params.size() )
         throw runtime_error(
-		"messagenew <subject> <message> <fromalias> <toalias> [hex='No']\n"
+			"messagenew <subject> <fromalias> <toalias> <frommessage> <tomessage>\n"
 						"<subject> Subject of message.\n"
-						"<message> Message to send to alias.\n"
 						"<fromalias> Alias to send message from.\n"
 						"<toalias> Alias to send message to.\n"	
-						"<hex> Is data an hex based message(only To-Message will be displayed). No by default.\n"	
+						"<frommessage> Message encrypted to from alias.\n"
+						"<tomessage> Message encrypted to sending alias.\n"
                         + HelpRequiringPassphrase());
 	vector<unsigned char> vchMySubject = vchFromValue(params[0]);
-	vector<unsigned char> vchMyMessage = vchFromString(params[1].get_str());
-	string strFromAddress = params[2].get_str();
+	string strFromAddress = params[1].get_str();
 	boost::algorithm::to_lower(strFromAddress);
-	string strToAddress = params[3].get_str();
+	string strToAddress = params[2].get_str();
 	boost::algorithm::to_lower(strToAddress);
-	bool bHex = false;
-	if(params.size() >= 5)
-		bHex = params[4].get_str() == "Yes"? true: false;
+	vector<unsigned char> vchMyMessageFrom = vchFromString(params[3].get_str());
+	vector<unsigned char> vchMyMessageTo = vchFromString(params[4].get_str());
 
 	EnsureWalletIsUnlocked();
 
@@ -505,33 +501,13 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 	CSyscoinAddress fromAddr;
 	GetAddress(aliasFrom, &fromAddr, scriptPubKeyAliasOrig);
 
-	// lock coins before going into aliasunspent if we are sending raw tx that uses inputs in our wallet
-	vector<COutPoint> lockedOutputs;
-	if(bHex)
-	{
-		CTransaction rawTx;
-		DecodeHexTx(rawTx,stringFromVch(vchMyMessage));
-		BOOST_FOREACH(const CTxIn& txin, rawTx.vin)
-		{
-			if(!pwalletMain->IsLockedCoin(txin.prevout.hash, txin.prevout.n))
-			{
-              LOCK2(cs_main, pwalletMain->cs_wallet);
-              pwalletMain->LockCoin(txin.prevout);
-			  lockedOutputs.push_back(txin.prevout);
-			}
-		}
-	}
+
 	
 	COutPoint outPoint;
 	int numResults  = aliasunspent(aliasFrom.vchAlias, outPoint);	
 	const CWalletTx *wtxAliasIn = pwalletMain->GetWalletTx(outPoint.hash);
 	if (wtxAliasIn == NULL)
 	{
-		BOOST_FOREACH(const COutPoint& outpoint, lockedOutputs)
-		{
-			 LOCK2(cs_main, pwalletMain->cs_wallet);
-			 pwalletMain->UnlockCoin(outpoint);
-		}
 		throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3502 - " + _("This alias is not in your wallet"));
 	}
 
@@ -542,11 +518,6 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 
 	if(!GetTxOfAlias(vchFromString(strToAddress), aliasTo, aliastx))
 	{
-		BOOST_FOREACH(const COutPoint& outpoint, lockedOutputs)
-		{
-			 LOCK2(cs_main, pwalletMain->cs_wallet);
-			 pwalletMain->UnlockCoin(outpoint);
-		}
 		throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3503 - " + _("Failed to read to alias from alias DB"));
 	}
 	CSyscoinAddress toAddr;
@@ -557,24 +528,15 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchMessage = vchFromString(GenerateSyscoinGuid());
     // this is a syscoin transaction
     CWalletTx wtx;
-
-	vector<unsigned char> vchMessageByte;
-	if(bHex)
-		boost::algorithm::unhex(vchMyMessage.begin(), vchMyMessage.end(), std::back_inserter(vchMessageByte ));
-	else
-		vchMessageByte = vchMyMessage;
-	
 	
 
     // build message
     CMessage newMessage;
 	newMessage.vchMessage = vchMessage;
-	if(!bHex)
-		newMessage.vchMessageFrom = vchMessageByte;
-	newMessage.vchMessageTo = vchMessageByte;
+	newMessage.vchMessageFrom = vchMyMessageFrom;
+	newMessage.vchMessageTo = vchMyMessageTo;
 	newMessage.vchSubject = vchMySubject;
 	newMessage.vchAliasFrom = aliasFrom.vchAlias;
-	newMessage.bHex = bHex;
 	newMessage.vchAliasTo = aliasTo.vchAlias;
 	newMessage.nHeight = chainActive.Tip()->nHeight;
 
@@ -685,7 +647,8 @@ bool BuildMessageJson(const CMessage& message, UniValue& oName)
 	oName.push_back(Pair("from", stringFromVch(message.vchAliasFrom)));
 	oName.push_back(Pair("to", stringFromVch(message.vchAliasTo)));
 	oName.push_back(Pair("subject", stringFromVch(message.vchSubject)));
-	oName.push_back(Pair("message", stringFromVch(message.vchMessageTo)));
+	oName.push_back(Pair("messageto", stringFromVch(message.vchMessageTo)));
+	oName.push_back(Pair("messagefrom", stringFromVch(message.vchMessageFrom)));
 	return true;
 }
 UniValue messagereceivecount(const UniValue& params, bool fHelp) {
@@ -977,7 +940,8 @@ void MessageTxToJSON(const int op, const std::vector<unsigned char> &vchData, co
 	string subjectValue = stringFromVch(message.vchSubject);
 	entry.push_back(Pair("subject", subjectValue));
 
-	entry.push_back(Pair("message", stringFromVch(message.vchMessageTo)));
+	entry.push_back(Pair("messageto", stringFromVch(message.vchMessageTo)));
+	entry.push_back(Pair("messagefrom", stringFromVch(message.vchMessageFrom)));
 
 
 }
