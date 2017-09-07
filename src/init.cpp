@@ -194,9 +194,13 @@ void Shutdown()
     }
 #endif
     MapPort(false);
+
+    // Because these depend on each-other, we make sure that neither can be
+    // using the other before destroying them.
     UnregisterValidationInterface(peerLogic.get());
-    g_connman.reset();
+    g_connman->Stop();
     peerLogic.reset();
+    g_connman.reset();
 
     StopTorControl();
     if (fDumpMempoolLater && gArgs.GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
