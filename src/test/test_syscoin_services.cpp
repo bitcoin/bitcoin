@@ -1154,7 +1154,7 @@ void OfferAcceptFeedback(const string& node, const string &alias, const string& 
 
 	GenerateBlocks(10, node);
 	r = FindFeedback(node, acceptTxid);
-	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == acceptguid+user));
+	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == acceptguid+user);
 	BOOST_CHECK(find_value(r.get_obj(), "offeraccept").get_str() == acceptguid);
 	BOOST_CHECK(find_value(r.get_obj(), "txid").get_str() == acceptTxid);
 	BOOST_CHECK(find_value(r.get_obj(), "rating").get_int() == atoi(rating.c_str()));
@@ -1162,7 +1162,7 @@ void OfferAcceptFeedback(const string& node, const string &alias, const string& 
 	BOOST_CHECK(find_value(r.get_obj(), "feedbackto").get_int() == user);
 	
 	r = FindFeedback(otherNode1, acceptTxid);
-	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == acceptguid + user));
+	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == acceptguid + user);
 	BOOST_CHECK(find_value(r.get_obj(), "offeraccept").get_str() == acceptguid);
 	BOOST_CHECK(find_value(r.get_obj(), "txid").get_str() == acceptTxid);
 	BOOST_CHECK(find_value(r.get_obj(), "rating").get_int() == atoi(rating.c_str()));
@@ -1170,7 +1170,7 @@ void OfferAcceptFeedback(const string& node, const string &alias, const string& 
 	BOOST_CHECK(find_value(r.get_obj(), "feedbackto").get_int() == user);
 	
 	r = FindFeedback(otherNode2, acceptTxid);
-	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == acceptguid + user));
+	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == acceptguid + user);
 	BOOST_CHECK(find_value(r.get_obj(), "offeraccept").get_str() == acceptguid);
 	BOOST_CHECK(find_value(r.get_obj(), "txid").get_str() == acceptTxid);
 	BOOST_CHECK(find_value(r.get_obj(), "rating").get_int() == atoi(rating.c_str()));
@@ -1189,7 +1189,7 @@ void EscrowFeedback(const string& node, const string& role, const string& escrow
 	GenerateBlocks(10, node);
 	
 	r = FindFeedback(node, escrowTxid);
-	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == escrowguid + user));
+	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == escrowguid + user);
 	BOOST_CHECK(find_value(r.get_obj(), "escrow").get_str() == escrowguid);
 	BOOST_CHECK(find_value(r.get_obj(), "txid").get_str() == escrowTxid);
 	BOOST_CHECK(find_value(r.get_obj(), "rating").get_int() == atoi(rating.c_str()));
