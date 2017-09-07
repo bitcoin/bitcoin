@@ -236,7 +236,6 @@ libparticl_server_a_SOURCES = \
   policy/rbf.cpp \
   pow.cpp \
   pos/kernel.cpp \
-  pos/miner.cpp \
   rest.cpp \
   rpc/anon.cpp \
   rpc/mnemonic.cpp \
@@ -285,6 +284,7 @@ libparticl_wallet_a_SOURCES = \
   wallet/hdwallet.cpp \
   wallet/hdwalletdb.cpp \
   wallet/rpchdwallet.cpp \
+  pos/miner.cpp \
   blind.cpp \
   key/stealth.cpp \
   pos/miner.cpp \

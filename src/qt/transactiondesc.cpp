@@ -26,6 +26,8 @@
 #include <stdint.h>
 #include <string>
 
+#include <QUrl>
+
 
 extern UniValue gettransaction(const JSONRPCRequest& request);
 

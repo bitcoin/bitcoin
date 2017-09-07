@@ -14,9 +14,7 @@
 #include "base58.h"
 #include "crypto/sha256.h"
 
-#ifdef ENABLE_WALLET
 #include "wallet/hdwallet.h"
-#endif
 
 #include "fs.h"
 #include <atomic>
@@ -24,6 +22,7 @@
 #include <thread>
 #include <condition_variable>
 
+typedef CWallet* CWalletRef;
 std::vector<StakeThread*> vStakeThreads;
 
 void StakeThread::condWaitFor(int ms)
@@ -265,7 +264,6 @@ static inline void condWaitFor(size_t nThreadID, int ms)
 
 void ThreadStakeMiner(size_t nThreadID, std::vector<CWalletRef> &vpwallets, size_t nStart, size_t nEnd)
 {
-#ifdef ENABLE_WALLET
     LogPrintf("Starting staking thread %d, %d wallet%s.\n", nThreadID, nEnd - nStart, (nEnd - nStart) > 1 ? "s" : "");
 
     int nBestHeight; // TODO: set from new block signal?
@@ -421,6 +419,5 @@ void ThreadStakeMiner(size_t nThreadID, std::vector<CWalletRef> &vpwallets, size
             condWaitFor(nThreadID, nMinerSleep);
         };
     };
-#endif
 };
 

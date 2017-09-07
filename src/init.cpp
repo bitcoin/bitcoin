@@ -1013,9 +1013,6 @@ bool AppInitParameterInteraction()
     if (gArgs.IsArgSet("-blockminsize"))
         InitWarning("Unsupported argument -blockminsize ignored.");
     
-    nMinStakeInterval = gArgs.GetArg("-minstakeinterval", 0);
-    nMinerSleep = gArgs.GetArg("-minersleep", 500);
-    
     // Checkmempool and checkblockindex default to true in regtest mode
     int ratio = std::min<int>(std::max<int>(gArgs.GetArg("-checkmempool", chainparams.DefaultConsistencyChecks() ? 1 : 0), 0), 1000000);
     if (ratio != 0) {
@@ -1827,6 +1824,8 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     #ifdef ENABLE_WALLET
     if (fParticlWallet)
     {
+        nMinStakeInterval = gArgs.GetArg("-minstakeinterval", 0);
+        nMinerSleep = gArgs.GetArg("-minersleep", 500);
         if (!gArgs.GetBoolArg("-staking", true))
             LogPrintf("Staking disabled\n");
         else

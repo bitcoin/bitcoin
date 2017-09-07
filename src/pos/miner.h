@@ -8,6 +8,8 @@
 #include "primitives/block.h"
 #include <thread>
 #include <condition_variable>
+#include <atomic>
+#include <vector>
 
 class CHDWallet;
 class CWallet;

@@ -603,8 +603,7 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
 
         if (fSubtractFeeFromAmount)
         {
-            UniValue uvBool;
-            uvBool.setBool(fSubtractFeeFromAmount);
+            UniValue uvBool(fSubtractFeeFromAmount);
             out.pushKV("subfee", uvBool);
         }
         arr.push_back(out);
@@ -622,9 +621,12 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
         // Add coinstake params
         if (request.params.size() > 6)
         {
-            params.push_back(4);
-            params.push_back(32);
-            params.push_back(false); // test_fee
+            UniValue uvRingsize(4);
+            params.push_back(uvRingsize);
+            UniValue uvNumInputs(32);
+            params.push_back(uvNumInputs);
+            UniValue uvBool(false);
+            params.push_back(uvBool); // test_fee
 
             UniValue uvCoinControl(UniValue::VOBJ);
 
