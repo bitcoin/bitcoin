@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(skiplist_test)
 
         BOOST_CHECK(vIndex[SKIPLIST_LENGTH - 1].GetAncestor(from) == &vIndex[from]);
         BOOST_CHECK(vIndex[from].GetAncestor(to) == &vIndex[to]);
-        BOOST_CHECK(vIndex[from].GetAncestor(0) == &vIndex[0]);
+        BOOST_CHECK(vIndex[from].GetAncestor(0) == vIndex.data());
     }
 }
 
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(getlocator_test)
     for (unsigned int i=0; i<vBlocksSide.size(); i++) {
         vHashSide[i] = ArithToUint256(i + 50000 + (arith_uint256(1) << 128)); // Add 1<<128 to the hashes, so GetLow64() still returns the height.
         vBlocksSide[i].nHeight = i + 50000;
-        vBlocksSide[i].pprev = i ? &vBlocksSide[i - 1] : &vBlocksMain[49999];
+        vBlocksSide[i].pprev = i ? &vBlocksSide[i - 1] : (vBlocksMain.data()+49999);
         vBlocksSide[i].phashBlock = &vHashSide[i];
         vBlocksSide[i].BuildSkip();
         BOOST_CHECK_EQUAL((int)UintToArith256(vBlocksSide[i].GetBlockHash()).GetLow64(), vBlocksSide[i].nHeight);
