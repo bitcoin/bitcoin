@@ -4,9 +4,26 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test BIP68 implementation."""
 
+from test_framework.blocktools import (
+    COIN,
+    COutPoint,
+    CScript,
+    CTransaction,
+    CTxIn,
+    CTxOut,
+    FromHex,
+    ToHex,
+    create_block,
+    create_coinbase,
+)
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
-from test_framework.blocktools import *
+from test_framework.util import (
+    assert_equal,
+    assert_raises_jsonrpc,
+    get_bip9_status,
+    satoshi_round,
+    sync_blocks,
+)
 
 SEQUENCE_LOCKTIME_DISABLE_FLAG = (1<<31)
 SEQUENCE_LOCKTIME_TYPE_FLAG = (1<<22) # this means use time (0 means height)
@@ -129,7 +146,7 @@ class BIP68Test(BitcoinTestFramework):
 
             # Track whether any sequence locks used should fail
             should_pass = True
-            
+
             # Track whether this transaction was built with sequence locks
             using_sequence_locks = False
 
@@ -343,7 +360,7 @@ class BIP68Test(BitcoinTestFramework):
         tx2.rehash()
 
         self.nodes[0].sendrawtransaction(ToHex(tx2))
-        
+
         # Now make an invalid spend of tx2 according to BIP68
         sequence_value = 100 # 100 block relative locktime
 

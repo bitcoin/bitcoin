@@ -10,12 +10,19 @@ if uploadtarget has been reached.
 if uploadtarget has been reached.
 * Verify that the upload counters are reset after 24 hours.
 """
-from collections import defaultdict
-import time
 
-from test_framework.mininode import *
+import time
+from collections import defaultdict
+
+from test_framework.mininode import (
+    CInv,
+    NetworkThread,
+    NodeConn,
+    NodeConnCB,
+    msg_getdata,
+)
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import assert_equal, mine_large_block, p2p_port
 
 class TestNode(NodeConnCB):
     def __init__(self):

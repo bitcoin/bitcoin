@@ -12,8 +12,14 @@ Test the following RPCs:
    - getrawtransaction
 """
 
+from decimal import Decimal
+
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import (
+    assert_equal,
+    assert_raises_jsonrpc,
+    connect_nodes_bi,
+)
 
 # Create one-input, one-output, no-fee transaction:
 class RawTransactionsTest(BitcoinTestFramework):

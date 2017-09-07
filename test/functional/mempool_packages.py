@@ -4,9 +4,17 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test descendant package tracking code."""
 
-from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from decimal import Decimal
+
 from test_framework.mininode import COIN
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import (
+    assert_equal,
+    assert_raises_jsonrpc,
+    satoshi_round,
+    sync_blocks,
+    sync_mempools,
+)
 
 MAX_ANCESTORS = 25
 MAX_DESCENDANTS = 25
@@ -100,7 +108,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
         for x in chain:
             ancestor_fees += mempool[x]['fee']
             assert_equal(mempool[x]['ancestorfees'], ancestor_fees * COIN + 1000)
-        
+
         # Undo the prioritisetransaction for later tests
         self.nodes[0].prioritisetransaction(txid=chain[0], fee_delta=-1000)
 
@@ -232,7 +240,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
         signedtx = self.nodes[0].signrawtransaction(rawtx)
         txid = self.nodes[0].sendrawtransaction(signedtx['hex'])
         sync_mempools(self.nodes)
-        
+
         # Now try to disconnect the tip on each node...
         self.nodes[1].invalidateblock(self.nodes[1].getbestblockhash())
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())

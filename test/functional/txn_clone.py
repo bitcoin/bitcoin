@@ -5,7 +5,12 @@
 """Test the wallet accounts properly when there are cloned transactions with malleated scriptsigs."""
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import (
+    assert_equal,
+    connect_nodes,
+    disconnect_nodes,
+    sync_blocks,
+)
 
 class TxnMallTest(BitcoinTestFramework):
     def set_test_params(self):

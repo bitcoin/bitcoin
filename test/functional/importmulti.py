@@ -3,8 +3,14 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the importmulti RPC."""
+
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import (
+    JSONRPCException,
+    assert_equal,
+    assert_greater_than,
+    assert_raises_message,
+)
 
 class ImportMultiTest (BitcoinTestFramework):
     def set_test_params(self):
@@ -432,7 +438,6 @@ class ImportMultiTest (BitcoinTestFramework):
                 "scriptPubKey": address['scriptPubKey'],
                 "timestamp": "",
             }])
-
 
 if __name__ == '__main__':
     ImportMultiTest ().main ()

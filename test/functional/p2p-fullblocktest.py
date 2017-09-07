@@ -11,14 +11,15 @@ We use the testing framework in which we expect a particular answer from
 each test.
 """
 
-from test_framework.test_framework import ComparisonTestFramework
-from test_framework.util import *
-from test_framework.comptool import TestManager, TestInstance, RejectResult
-from test_framework.blocktools import *
+import struct
 import time
+
+from test_framework.blocktools import *
+from test_framework.comptool import RejectResult, TestInstance, TestManager
 from test_framework.key import CECKey
 from test_framework.script import *
-import struct
+from test_framework.test_framework import ComparisonTestFramework
+from test_framework.util import *
 
 class PreviousSpendableOutput(object):
     def __init__(self, tx = CTransaction(), n = -1):

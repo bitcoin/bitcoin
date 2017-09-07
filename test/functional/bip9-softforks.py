@@ -15,17 +15,27 @@ mine a further 143 blocks (LOCKED_IN)
 test that enforcement has not triggered (which triggers ACTIVE)
 test that enforcement has triggered
 """
-from io import BytesIO
+
+import itertools
 import shutil
 import time
-import itertools
+from io import BytesIO
 
-from test_framework.test_framework import ComparisonTestFramework
-from test_framework.util import *
-from test_framework.mininode import CTransaction, NetworkThread
-from test_framework.blocktools import create_coinbase, create_block
+from test_framework.blocktools import create_block, create_coinbase
 from test_framework.comptool import TestInstance, TestManager
-from test_framework.script import CScript, OP_1NEGATE, OP_CHECKSEQUENCEVERIFY, OP_DROP
+from test_framework.mininode import CTransaction, NetworkThread
+from test_framework.script import (
+    OP_1NEGATE,
+    OP_CHECKSEQUENCEVERIFY,
+    OP_DROP,
+    CScript,
+)
+from test_framework.test_framework import ComparisonTestFramework
+from test_framework.util import (
+    assert_equal,
+    bytes_to_hex_str,
+    hex_str_to_bytes,
+)
 
 class BIP9SoftForksTest(ComparisonTestFramework):
     def set_test_params(self):

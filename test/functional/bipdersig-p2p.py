@@ -7,12 +7,26 @@
 Test that the DERSIG soft-fork activates at (regtest) height 1251.
 """
 
-from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
-from test_framework.mininode import *
-from test_framework.blocktools import create_coinbase, create_block
-from test_framework.script import CScript
 from io import BytesIO
+
+from test_framework.blocktools import create_block, create_coinbase
+from test_framework.mininode import (
+    CTransaction,
+    NetworkThread,
+    NodeConn,
+    NodeConnCB,
+    mininode_lock,
+    msg_block,
+    msg_tx,
+)
+from test_framework.script import CScript
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import (
+    assert_equal,
+    hex_str_to_bytes,
+    p2p_port,
+    wait_until,
+)
 
 DERSIG_HEIGHT = 1251
 

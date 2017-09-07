@@ -3,8 +3,11 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the importprunedfunds and removeprunedfunds RPCs."""
+
+from decimal import Decimal
+
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import assert_equal, assert_raises_jsonrpc
 
 class ImportPrunedFundsTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -16,7 +19,7 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         self.nodes[0].generate(101)
 
         self.sync_all()
-        
+
         # address
         address1 = self.nodes[0].getnewaddress()
         # pubkey

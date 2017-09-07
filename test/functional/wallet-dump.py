@@ -9,7 +9,6 @@ import os
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
 
-
 def read_dump(file_name, addrs, hd_master_addr_old):
     """
     Read the given dump, count the addrs that match, count change and reserve.

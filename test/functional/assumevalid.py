@@ -29,23 +29,26 @@ Start three nodes:
       block 200. node2 will reject block 102 since it's assumed valid, but it
       isn't buried by at least two weeks' work.
 """
+
 import time
 
-from test_framework.blocktools import (create_block, create_coinbase)
+from test_framework.blocktools import create_block, create_coinbase
 from test_framework.key import CECKey
-from test_framework.mininode import (CBlockHeader,
-                                     COutPoint,
-                                     CTransaction,
-                                     CTxIn,
-                                     CTxOut,
-                                     NetworkThread,
-                                     NodeConn,
-                                     NodeConnCB,
-                                     msg_block,
-                                     msg_headers)
-from test_framework.script import (CScript, OP_TRUE)
+from test_framework.mininode import (
+    CBlockHeader,
+    COutPoint,
+    CTransaction,
+    CTxIn,
+    CTxOut,
+    NetworkThread,
+    NodeConn,
+    NodeConnCB,
+    msg_block,
+    msg_headers,
+)
+from test_framework.script import OP_TRUE, CScript
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import (p2p_port, assert_equal)
+from test_framework.util import assert_equal, p2p_port
 
 class BaseNode(NodeConnCB):
     def send_header_for_blocks(self, new_blocks):

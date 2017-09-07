@@ -9,10 +9,18 @@ This test uses 4GB of disk space.
 This test takes 30 mins or more (up to 2 hours)
 """
 
-from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
-import time
 import os
+import time
+
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import (
+    assert_equal,
+    assert_greater_than,
+    assert_raises_jsonrpc,
+    connect_nodes,
+    mine_large_block,
+    sync_blocks,
+)
 
 MIN_BLOCKS_TO_KEEP = 288
 
@@ -20,7 +28,6 @@ MIN_BLOCKS_TO_KEEP = 288
 # the manual prune RPC avoids pruning blocks in the same window to be
 # compatible with pruning based on key creation time.
 TIMESTAMP_WINDOW = 2 * 60 * 60
-
 
 def calc_usage(blockdir):
     return sum(os.path.getsize(blockdir+f) for f in os.listdir(blockdir) if os.path.isfile(blockdir+f)) / (1024. * 1024.)

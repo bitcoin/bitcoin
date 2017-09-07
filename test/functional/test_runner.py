@@ -523,6 +523,5 @@ class RPCCoverage(object):
 
         return all_cmds - covered_cmds
 
-
 if __name__ == '__main__':
     main()

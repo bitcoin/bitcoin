@@ -17,17 +17,17 @@ Test the following RPCs:
 Tests correspond to code in rpc/blockchain.cpp.
 """
 
-from decimal import Decimal
 import http.client
 import subprocess
+from decimal import Decimal
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_is_hash_string,
+    assert_is_hex_string,
     assert_raises,
     assert_raises_jsonrpc,
-    assert_is_hex_string,
-    assert_is_hash_string,
 )
 
 class BlockchainTest(BitcoinTestFramework):
@@ -144,7 +144,6 @@ class BlockchainTest(BitcoinTestFramework):
         self.nodes[0].wait_until_stopped()
         self.start_node(0)
         assert_equal(self.nodes[0].getblockcount(), 207)
-
 
 if __name__ == '__main__':
     BlockchainTest().main()

@@ -4,10 +4,18 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the listtransactions API."""
 
-from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
-from test_framework.mininode import CTransaction, COIN
+from decimal import Decimal
 from io import BytesIO
+
+from test_framework.mininode import COIN, CTransaction
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import (
+    assert_array_result,
+    assert_equal,
+    bytes_to_hex_str,
+    hex_str_to_bytes,
+    sync_mempools,
+)
 
 def txFromHex(hexstring):
     tx = CTransaction()
@@ -195,7 +203,5 @@ class ListTransactionsTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].gettransaction(txid_3b)["bip125-replaceable"], "no")
         assert_equal(self.nodes[0].gettransaction(txid_4)["bip125-replaceable"], "unknown")
 
-
 if __name__ == '__main__':
     ListTransactionsTest().main()
-

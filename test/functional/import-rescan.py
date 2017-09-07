@@ -19,18 +19,22 @@ importing nodes pick up the new transactions regardless of whether rescans
 happened previously.
 """
 
-from test_framework.authproxy import JSONRPCException
-from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import (connect_nodes, sync_blocks, assert_equal, set_node_times)
-
 import collections
 import enum
 import itertools
 
+from test_framework.authproxy import JSONRPCException
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import (
+    assert_equal,
+    connect_nodes,
+    set_node_times,
+    sync_blocks,
+)
+
 Call = enum.Enum("Call", "single multi")
 Data = enum.Enum("Data", "address pub priv")
 Rescan = enum.Enum("Rescan", "no yes late_timestamp")
-
 
 class Variant(collections.namedtuple("Variant", "call data rescan prune")):
     """Helper for importing one key and verifying scanned transactions."""
@@ -185,7 +189,6 @@ def try_rpc(func, *args, **kwargs):
         return func(*args, **kwargs), None
     except JSONRPCException as e:
         return None, e.error
-
 
 if __name__ == "__main__":
     ImportRescanTest().main()

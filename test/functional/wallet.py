@@ -3,8 +3,21 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the wallet."""
+
+import time
+from decimal import Decimal
+
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import (
+    assert_array_result,
+    assert_equal,
+    assert_fee_amount,
+    assert_raises_jsonrpc,
+    connect_nodes_bi,
+    count_bytes,
+    sync_blocks,
+    sync_mempools,
+)
 
 class WalletTest(BitcoinTestFramework):
     def set_test_params(self):

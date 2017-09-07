@@ -48,11 +48,23 @@ The test:
    Node0 should process and the tip should advance.
 """
 
-from test_framework.mininode import *
-from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+import os
 import time
+
 from test_framework.blocktools import create_block, create_coinbase
+from test_framework.mininode import (
+    CBlockHeader,
+    CInv,
+    NetworkThread,
+    NodeConn,
+    NodeConnCB,
+    mininode_lock,
+    msg_block,
+    msg_headers,
+    msg_inv,
+)
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import assert_equal, assert_raises_jsonrpc, p2p_port
 
 class AcceptBlockTest(BitcoinTestFramework):
     def add_options(self, parser):

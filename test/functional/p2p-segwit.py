@@ -4,15 +4,22 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test segwit transactions and blocks on P2P network."""
 
+import random
+import time
+from binascii import hexlify
+
+from test_framework.blocktools import (
+    WITNESS_COMMITMENT_HEADER,
+    add_witness_commitment,
+    create_block,
+    create_coinbase,
+    get_witness_script,
+)
+from test_framework.key import CECKey, CPubKey
 from test_framework.mininode import *
+from test_framework.script import *
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
-from test_framework.script import *
-from test_framework.blocktools import create_block, create_coinbase, add_witness_commitment, get_witness_script, WITNESS_COMMITMENT_HEADER
-from test_framework.key import CECKey, CPubKey
-import time
-import random
-from binascii import hexlify
 
 # The versionbit bit used to signal activation of SegWit
 VB_WITNESS_BIT = 1
@@ -20,7 +27,6 @@ VB_PERIOD = 144
 VB_TOP_BITS = 0x20000000
 
 MAX_SIGOP_COST = 80000
-
 
 # Calculate the virtual size of a witness block:
 # (base + witness/4)
@@ -1943,7 +1949,6 @@ class SegWitTest(BitcoinTestFramework):
         sync_blocks(self.nodes)
         self.test_upgrade_after_activation(node_id=2)
         self.test_witness_sigops()
-
 
 if __name__ == '__main__':
     SegWitTest().main()
