@@ -21,12 +21,12 @@
 #include "platformstyle.h"
 #include "rpcconsole.h"
 #include "utilitydialog.h"
-#include "mnemonicdialog.h"
 
 #ifdef ENABLE_WALLET
 #include "walletframe.h"
 #include "walletview.h"
 #include "walletmodel.h"
+#include "mnemonicdialog.h"
 #endif // ENABLE_WALLET
 
 #ifdef Q_OS_MAC
@@ -58,6 +58,8 @@
 #include <QTimer>
 #include <QToolBar>
 #include <QVBoxLayout>
+
+
 
 #if QT_VERSION < 0x050000
 #include <QTextDocument>

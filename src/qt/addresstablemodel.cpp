@@ -376,7 +376,7 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
         // Generate a new address to associate with given label
         
         
-        std::string sCommand;
+        QString sCommand;
         switch (addrType)
         {
             case ADDR_STEALTH:
@@ -388,24 +388,8 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
         };
         
         UniValue rv;
-        try {
-            rv = CallRPC(sCommand + "\""+strLabel+ "\"");
-        } catch (UniValue& objError)
-        {
-            try { // Nice formatting for standard-format error
-                int code = find_value(objError, "code").get_int();
-                std::string message = find_value(objError, "message").get_str();
-                warningBox(QString::fromStdString(message) + " (code " + QString::number(code) + ")");
-            } catch (const std::runtime_error&) // raised when converting to invalid type, i.e. missing code or message
-            {   // Show raw JSON object
-                warningBox(QString::fromStdString(objError.write()));
-            }
-            return QString();
-        } catch (const std::exception& e)
-        {
-            warningBox(e.what());
-            return QString();
-        }
+        walletModel->tryCallRpc(sCommand + "\""+label+ "\"", rv);
+        
         return QString::fromStdString(rv.get_str());
     }
     else

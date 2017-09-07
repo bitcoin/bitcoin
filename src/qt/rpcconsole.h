@@ -17,6 +17,7 @@
 class ClientModel;
 class PlatformStyle;
 class RPCTimerInterface;
+class WalletFrame;
 
 namespace Ui {
     class RPCConsole;
@@ -139,6 +140,7 @@ private:
 
     };
 
+    WalletFrame *walletFrame;
     Ui::RPCConsole *ui;
     ClientModel *clientModel;
     QStringList history;

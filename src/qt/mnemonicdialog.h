@@ -19,8 +19,6 @@ class MnemonicDialog : public QDialog
     Q_OBJECT
 private:
     WalletModel *walletModel;
-    
-    bool tryCallRpc(const QString &sCommand, UniValue &rv);
     void warningBox(QString msg);
 
 public:

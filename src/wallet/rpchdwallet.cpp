@@ -2288,7 +2288,7 @@ UniValue reservebalance(const JSONRPCRequest &request)
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "cannot specify amount to turn off reserve.");
             pwallet->SetReserveBalance(0);
         };
-        WakeThreadStakeMiner();
+        WakeThreadStakeMiner(pwallet);
     };
 
     UniValue result(UniValue::VOBJ);
@@ -3048,11 +3048,25 @@ UniValue getstakinginfo(const JSONRPCRequest &request)
 
     uint64_t nNetworkWeight = GetPoSKernelPS();
     
-    bool fStaking = nLastCoinStakeSearchTime && nWeight && fIsStaking;
+    bool fStaking = nWeight && fIsStaking;
     uint64_t nExpectedTime = fStaking ? (Params().GetTargetSpacing() * nNetworkWeight / nWeight) : 0;
 
     obj.pushKV("enabled", gArgs.GetBoolArg("-staking", true));
-    obj.pushKV("staking", fStaking);
+    obj.pushKV("staking", fStaking && pwallet->nIsStaking == CHDWallet::IS_STAKING);
+    switch (pwallet->nIsStaking)
+    {
+        case CHDWallet::NOT_STAKING_LOCKED:
+            obj.pushKV("cause", "locked");
+            break;
+        case CHDWallet::NOT_STAKING_BALANCE:
+            obj.pushKV("cause", "low_balance");
+            break;
+        case CHDWallet::NOT_STAKING_DEPTH:
+            obj.pushKV("cause", "low_depth");
+            break;
+        default:
+            break;
+    };
     obj.pushKV("errors", GetWarnings("statusbar"));
 
     obj.pushKV("percentyearreward", rCoinYearReward);
@@ -3071,7 +3085,7 @@ UniValue getstakinginfo(const JSONRPCRequest &request)
     obj.pushKV("pooledtx", (uint64_t)mempool.size());
 
     obj.pushKV("difficulty", GetDifficulty());
-    obj.pushKV("search-interval", (int)nLastCoinStakeSearchInterval);
+    obj.pushKV("last-search-time", (uint64_t)pwallet->nLastCoinStakeSearchTime);
 
     obj.pushKV("weight", (uint64_t)nWeight);
     obj.pushKV("netstakeweight", (uint64_t)nNetworkWeight);
@@ -4660,6 +4674,7 @@ UniValue tallyvotes(const JSONRPCRequest &request)
 
 
 
+
 static const CRPCCommand commands[] =
 { //  category              name                        actor (function)           okSafeMode
   //  --------------------- ------------------------    -----------------------    ----------
@@ -4710,18 +4725,11 @@ static const CRPCCommand commands[] =
     { "wallet",             "rewindchain",              &rewindchain,              false,  {"height"} },
     
     { "wallet",             "walletsettings",           &walletsettings,           true,   {} },
-    
-    
-    
-    
+
+
     { "governance",         "setvote",                  &setvote,                  false,  {"proposal","option","height_start","height_end"} },
     { "governance",         "votehistory",              &votehistory,              false,  {"current_only"} },
     { "governance",         "tallyvotes",               &tallyvotes,               false,  {"proposal","height_start","height_end"} },
-    
-    
-    
-    
-    
 };
 
 void RegisterHDWalletRPCCommands(CRPCTable &t)

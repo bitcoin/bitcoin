@@ -7,10 +7,8 @@
 
 #include "guiutil.h"
 
-#ifdef ENABLE_WALLET
 #include "walletmodel.h"
 #include "wallet/hdwallet.h"
-#endif
 
 #include "rpc/rpcutil.h"
 #include "util.h"
@@ -44,8 +42,6 @@ void MnemonicDialog::on_btnCancel2_clicked()
 
 void MnemonicDialog::on_btnImport_clicked()
 {
-#ifdef ENABLE_WALLET
-    
     QString sCommand = (ui->chkImportChain->checkState() == Qt::Unchecked)
         ? "extkeyimportmaster" : "extkeygenesisimport";
     sCommand += " \"" + ui->tbxMnemonic->toPlainText() + "\"";
@@ -55,53 +51,24 @@ void MnemonicDialog::on_btnImport_clicked()
         sCommand += " \"" + sPassword + "\"";
    
     UniValue rv;
-    if (tryCallRpc(sCommand, rv))
+    if (walletModel->tryCallRpc(sCommand, rv))
     {
         close();
     };
-#endif
 }
 
 void MnemonicDialog::on_btnGenerate_clicked()
 {
-#ifdef ENABLE_WALLET
-    
     int nBytesEntropy = ui->spinEntropy->value();
     QString sLanguage = ui->cbxLanguage->currentText().toLower();
     
     QString sCommand = "mnemonic new  \"\" " + sLanguage + " " + QString::number(nBytesEntropy);
     
     UniValue rv;
-    if (tryCallRpc(sCommand, rv))
+    if (walletModel->tryCallRpc(sCommand, rv))
     {
         ui->tbxMnemonicOut->setText(QString::fromStdString(rv["mnemonic"].get_str()));
     };
-#endif
-};
-
-bool MnemonicDialog::tryCallRpc(const QString &sCommand, UniValue &rv)
-{
-    try {
-        rv = CallRPC(sCommand.toStdString());
-    } catch (UniValue& objError)
-    {
-        try { // Nice formatting for standard-format error
-            int code = find_value(objError, "code").get_int();
-            std::string message = find_value(objError, "message").get_str();
-            warningBox(QString::fromStdString(message) + " (code " + QString::number(code) + ")");
-            return false;
-        } catch (const std::runtime_error&) // raised when converting to invalid type, i.e. missing code or message
-        {   // Show raw JSON object
-            warningBox(QString::fromStdString(objError.write()));
-            return false;
-        };
-    } catch (const std::exception &e)
-    {
-        warningBox(QString::fromStdString(e.what()));
-        return false;
-    };
-    
-    return true;
 };
 
 void MnemonicDialog::warningBox(QString msg)

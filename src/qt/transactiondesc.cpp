@@ -369,6 +369,8 @@ QString TransactionDesc::toHTML(CHDWallet *wallet, CTransactionRecord &rtx, Tran
     
     
     JSONRPCRequest request;
+    QByteArray encodedName = QUrl::toPercentEncoding(QString::fromStdString(wallet->GetName()));
+    request.URI = "/wallet/"+std::string(encodedName.constData(), encodedName.length());
     request.fHelp = false;
     UniValue params(UniValue::VARR);
     params.push_back(rec->getTxID().toStdString());

@@ -28,7 +28,7 @@
 
 extern CWallet* pwalletMain;
 
-extern UniValue CallRPC(std::string args);
+extern UniValue CallRPC(std::string args, std::string wallet="");
 
 extern bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pindex,
                   CCoinsViewCache& view, const CChainParams& chainparams, bool fJustCheck = false);
@@ -144,16 +144,13 @@ BOOST_AUTO_TEST_CASE(stake_test)
 {
     CHDWallet *pwallet = (CHDWallet*) pwalletMain;
     UniValue rv;
-    
+
     std::unique_ptr<CChainParams> regtestChainParams = CreateChainParams(CBaseChainParams::REGTEST);
     const CChainParams &chainparams = *regtestChainParams;
-    
-    
+
     BOOST_REQUIRE(chainparams.GenesisBlock().GetHash() == chainActive.Tip()->GetBlockHash());
-    
     BOOST_CHECK_NO_THROW(rv = CallRPC("extkeyimportmaster tprv8ZgxMBicQKsPeK5mCpvMsd1cwyT1JZsrBN82XkoYuZY1EVK7EwDaiL9sDfqUU5SntTfbRfnRedFWjg5xkDG5i3iwd3yP7neX5F2dtdCojk4"));
-    
-    
+
     // Import the key to the last 5 outputs in the regtest genesis coinbase
     BOOST_CHECK_NO_THROW(rv = CallRPC("extkeyimportmaster tprv8ZgxMBicQKsPe3x7bUzkHAJZzCuGqN6y28zFFyg5i7Yqxqm897VCnmMJz6QScsftHDqsyWW5djx6FzrbkF9HSD3ET163z1SzRhfcWxvwL4G"));
     BOOST_CHECK_NO_THROW(rv = CallRPC("getnewextaddress lblHDKey")); 
@@ -163,62 +160,56 @@ BOOST_AUTO_TEST_CASE(stake_test)
         BOOST_REQUIRE(pwallet->GetBalance() == 12500000000000);
     }
 
-    nLastCoinStakeSearchTime = GetAdjustedTime(); // startup timestamp
-    
     StakeNBlocks(pwallet, 2);
-    
+
     CBlockIndex *pindexDelete = chainActive.Tip();
     BOOST_REQUIRE(pindexDelete);
-    
+
     CBlock block;
     BOOST_REQUIRE(ReadBlockFromDisk(block, pindexDelete, chainparams.GetConsensus()));
-    
+
     const CTxIn &txin = block.vtx[0]->vin[0];
-    
+
     CCoinsViewCache view(pcoinsTip);
     const Coin &coin = view.AccessCoin(txin.prevout);
     BOOST_REQUIRE(coin.IsSpent());
-    
+
     CValidationState state;
     BOOST_REQUIRE(DISCONNECT_OK == DisconnectBlock(block, pindexDelete, view));
     BOOST_REQUIRE(FlushView(&view, state, true));
     BOOST_REQUIRE(FlushStateToDisk(chainparams, state, FLUSH_STATE_IF_NEEDED));
     UpdateTip(pindexDelete->pprev, chainparams);
-    
-    
+
+
     BOOST_REQUIRE(pindexDelete->pprev->GetBlockHash() == chainActive.Tip()->GetBlockHash());
-    
+
     const Coin &coin2 = view.AccessCoin(txin.prevout);
     BOOST_REQUIRE(!coin2.IsSpent());
-    
+
     BOOST_CHECK(chainActive.Height() == pindexDelete->nHeight - 1);
     BOOST_CHECK(chainActive.Tip()->GetBlockHash() == pindexDelete->pprev->GetBlockHash());
-    
-    
+
+
     // reconnect block
     {
         std::shared_ptr<const CBlock> pblock = std::make_shared<const CBlock>(block);
         BOOST_REQUIRE(ActivateBestChain(state, chainparams, pblock));
     }
-    
-    
+
     {
         CCoinsViewCache view(pcoinsTip);
         const Coin &coin = view.AccessCoin(txin.prevout);
         BOOST_REQUIRE(coin.IsSpent());
     }
-    
-    
+
     CKey kRecv;
     kRecv.MakeNewKey(true);
-    
     CKeyID idRecv = kRecv.GetPubKey().GetID();
-    
+
     bool fSubtractFeeFromAmount = false;
     CAmount nAmount = 10000;
     CWalletTx wtx;
-    //SendMoney(idRecv, nAmount, fSubtractFeeFromAmount, wtx);
-    
+
     // Parse Bitcoin address
     CScript scriptPubKey = GetScriptForDestination(idRecv);
 
@@ -230,25 +221,25 @@ BOOST_AUTO_TEST_CASE(stake_test)
     int nChangePosRet = -1;
     CRecipient recipient(scriptPubKey, nAmount, fSubtractFeeFromAmount);
     vecSend.push_back(recipient);
-    
+
     CCoinControl coinControl;
     BOOST_CHECK(pwallet->CreateTransaction(vecSend, wtx, reservekey, nFeeRequired, nChangePosRet, strError, coinControl));
-    
+
     {
         g_connman = std::unique_ptr<CConnman>(new CConnman(GetRand(std::numeric_limits<uint64_t>::max()), GetRand(std::numeric_limits<uint64_t>::max())));
         CValidationState state;
         pwallet->SetBroadcastTransactions(true);
         BOOST_CHECK(pwallet->CommitTransaction(wtx, reservekey, g_connman.get(), state));
     }
-    
+
     StakeNBlocks(pwallet, 1);
-    
+
     CBlock blockLast;
     BOOST_REQUIRE(ReadBlockFromDisk(blockLast, chainActive.Tip(), chainparams.GetConsensus()));
-    
+
     BOOST_REQUIRE(blockLast.vtx.size() == 2);
     BOOST_REQUIRE(blockLast.vtx[1]->GetHash() == wtx.GetHash());
-    
+
     {
         uint256 tipHash = chainActive.Tip()->GetBlockHash();
         uint256 prevTipHash = chainActive.Tip()->pprev->GetBlockHash();

@@ -362,7 +362,6 @@ void SendCoinsDialog::on_sendButton_clicked()
     if (!model->tryCallRpc(sGetFeeCommand, rv))
         return;
     
-    
     double rFee = rv["fee"].get_real();
     
     bool fSubbedFee = rv["outputs_fee"].size() > 0 ? true : false;
@@ -490,8 +489,6 @@ void SendCoinsDialog::on_sendButton_clicked()
         
         model->tryCallRpc(sCommand, rv);
     };
-    
-    
     
     processSendCoinsReturn(sendStatus);
 

@@ -19,7 +19,7 @@
 using namespace std;
 
 //extern JSONRPCRequest createArgs(int nRequired, const char* address1 = NULL, const char* address2 = NULL);
-extern UniValue CallRPC(string args);
+extern UniValue CallRPC(std::string args, std::string wallet="");
 
 extern CWallet* pwalletMain;
 

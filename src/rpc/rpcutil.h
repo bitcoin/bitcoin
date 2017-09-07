@@ -11,7 +11,7 @@
 #include <string>
 
 
-UniValue CallRPC(std::string args);
+UniValue CallRPC(std::string args, std::string wallet="");
 
 class JSONRPCRequest;
 extern UniValue gettransactionsummary(const JSONRPCRequest &request);

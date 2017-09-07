@@ -672,7 +672,7 @@ bool WalletModel::isSpent(const COutPoint& outpoint) const
 bool WalletModel::tryCallRpc(const QString &sCommand, UniValue &rv) const
 {
     try {
-        rv = CallRPC(sCommand.toStdString());
+        rv = CallRPC(sCommand.toStdString(), wallet->GetName());
     } catch (UniValue& objError)
     {
         try { // Nice formatting for standard-format error

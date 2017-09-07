@@ -9,8 +9,11 @@
 #include "rpc/rpcutil.h"
 #include "util.h"
 
+#include "support/events.h"
 
-UniValue CallRPC(std::string args)
+
+
+UniValue CallRPC(std::string args, std::string wallet)
 {
     if (args.empty())
         throw std::runtime_error("No input.");
@@ -45,6 +48,16 @@ UniValue CallRPC(std::string args)
     JSONRPCRequest request;
     request.strMethod = strMethod;
     request.params = RPCConvertValues(strMethod, vArgs);
+    
+    if (!wallet.empty()) {
+        char *encodedURI = evhttp_uriencode(wallet.c_str(), wallet.size(), false);
+        if (encodedURI) {
+            request.URI = "/wallet/"+ std::string(encodedURI);
+            free(encodedURI);
+        } else {
+            throw std::runtime_error("uri-encode failed");
+        }
+    }
     
     request.fHelp = false;
     const CRPCCommand *cmd = tableRPC[strMethod];

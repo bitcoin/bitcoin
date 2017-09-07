@@ -7,27 +7,39 @@
 
 #include "primitives/block.h"
 #include <thread>
+#include <condition_variable>
 
 class CHDWallet;
+class CWallet;
 
-extern std::thread threadStakeMiner;
+class StakeThread
+{
+public:
+    void condWaitFor(int ms);
+    
+    StakeThread() {};
+    std::thread thread;
+    std::condition_variable condMinerProc;
+    std::mutex mtxMinerProc;
+    bool fWakeMinerProc = false;
+};
 
-extern bool fIsStaking;
+extern std::vector<StakeThread*> vStakeThreads;
+
+extern std::atomic<bool> fIsStaking;
 
 extern int nMinStakeInterval;
 extern int nMinerSleep;
-extern int64_t nLastCoinStakeSearchInterval;
-extern int64_t nLastCoinStakeSearchTime;
 
 double GetPoSKernelPS();
 
 bool CheckStake(CBlock *pblock);
 
 void ShutdownThreadStakeMiner();
-void WakeThreadStakeMiner();
+void WakeThreadStakeMiner(CHDWallet *pwallet);
 bool ThreadStakeMinerStopped(); // replace interruption_point
 
-void ThreadStakeMiner(CHDWallet *pwallet);
+void ThreadStakeMiner(size_t nThreadID, std::vector<CWallet*> &vpwallets, size_t nStart, size_t nEnd);
 
 #endif // POS_MINER_H
 

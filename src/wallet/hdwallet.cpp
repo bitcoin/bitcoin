@@ -145,7 +145,8 @@ std::string CHDWallet::GetWalletHelpString(bool showDebug)
     strUsage += HelpMessageOpt("-extkeysaveancestors", strprintf(_("On saving a key from the lookahead pool, save all unsaved keys leading up to it too. (default: %s)"), "true"));
     
     strUsage += HelpMessageGroup(_("Wallet staking options:"));
-    strUsage += HelpMessageOpt("-staking", _("Stake your coins to support network and gain reward (default: 1)"));
+    strUsage += HelpMessageOpt("-staking", _("Stake your coins to support network and gain reward (default: true)"));
+    strUsage += HelpMessageOpt("-stakingthreads", _("Number of threads to start for staking, max 1 per active wallet, will divide wallets evenly between threads (default: 1)"));
     strUsage += HelpMessageOpt("-minstakeinterval=<n>", _("Minimum time in seconds between successful stakes (default: 30)"));
     strUsage += HelpMessageOpt("-minersleep=<n>", _("Milliseconds between stake attempts. Lowering this param will not result in more stakes. (default: 500)"));
     strUsage += HelpMessageOpt("-reservebalance=<amount>", _("Ensure available balance remains above reservebalance. (default: 0)"));
@@ -878,7 +879,7 @@ bool CHDWallet::Unlock(const SecureString &strWalletPassphrase)
         SecureMsgWalletUnlocked();
     } // cs_main, cs_wallet
     
-    WakeThreadStakeMiner();
+    WakeThreadStakeMiner(this);
     
     return true;
 };
@@ -8152,7 +8153,7 @@ bool CHDWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const CBloc
             {
                 CTransactionRecord rtx;
                 bool rv = AddToRecord(rtx, tx, pIndex, posInBlock, false);
-                WakeThreadStakeMiner(); // wallet balance may have changed
+                WakeThreadStakeMiner(this); // wallet balance may have changed
                 return rv;
             };
             
@@ -8183,7 +8184,7 @@ bool CHDWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const CBloc
             if (pIndex != nullptr)
                 wtx.SetMerkleBranch(pIndex, posInBlock);
             bool rv = AddToWallet(wtx, false);
-            WakeThreadStakeMiner(); // wallet balance may have changed
+            WakeThreadStakeMiner(this); // wallet balance may have changed
             return rv;
         };
     }
@@ -10503,11 +10504,10 @@ bool CHDWallet::SignBlock(CBlockTemplate *pblocktemplate, int nHeight, int64_t n
             // Remove coinbasetxn
             pblock->vtx[0].reset();
             pblock->vtx.erase(pblock->vtx.begin());
-            
-            
+
             // Insert coinstake as txn0
             pblock->vtx.insert(pblock->vtx.begin(), MakeTransactionRef(txCoinStake));
-            
+
             bool mutated;
             pblock->hashMerkleRoot = BlockMerkleRoot(*pblock, &mutated);
             pblock->hashWitnessMerkleRoot = BlockWitnessMerkleRoot(*pblock, &mutated);
@@ -10516,9 +10516,9 @@ bool CHDWallet::SignBlock(CBlockTemplate *pblocktemplate, int nHeight, int64_t n
             return key.Sign(pblock->GetHash(), pblock->vchBlockSig);
         };
     };
-    
+
     nLastCoinStakeSearchTime = nSearchTime;
-    
+
     return false;
 };
 
@@ -10529,7 +10529,7 @@ int ToStealthRecipient(CStealthAddress &sx, CAmount nValue, bool fSubtractFeeFro
     CKey sEphem;
     CKey sShared;
     ec_point pkSendTo;
-    
+
     int k, nTries = 24;
     for (k = 0; k < nTries; ++k) // if StealthSecret fails try again with new ephem key
     {
@@ -10542,7 +10542,7 @@ int ToStealthRecipient(CStealthAddress &sx, CAmount nValue, bool fSubtractFeeFro
         strError = "Could not generate receiving public key.";
         return 1;
     };
-    
+
     CPubKey pkEphem = sEphem.GetPubKey();
     CPubKey pkTo(pkSendTo);
     CKeyID idTo = pkTo.GetID();

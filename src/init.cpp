@@ -1524,19 +1524,19 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
                 // Check for changed -addressindex state
                 if (fAddressIndex != gArgs.GetBoolArg("-addressindex", DEFAULT_ADDRESSINDEX)) {
-                    strLoadError = _("You need to rebuild the database using -reindex-chainstate to change -addressindex");
+                    strLoadError = _("You need to rebuild the database using -reindex to change -addressindex");
                     break;
                 }
 
                 // Check for changed -spentindex state
                 if (fSpentIndex != gArgs.GetBoolArg("-spentindex", DEFAULT_SPENTINDEX)) {
-                    strLoadError = _("You need to rebuild the database using -reindex-chainstate to change -spentindex");
+                    strLoadError = _("You need to rebuild the database using -reindex to change -spentindex");
                     break;
                 }
 
                 // Check for changed -timestampindex state
                 if (fTimestampIndex != gArgs.GetBoolArg("-timestampindex", DEFAULT_TIMESTAMPINDEX)) {
-                    strLoadError = _("You need to rebuild the database using -reindex-chainstate to change -timestampindex");
+                    strLoadError = _("You need to rebuild the database using -reindex to change -timestampindex");
                     break;
                 }
 
@@ -1831,9 +1831,22 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
             LogPrintf("Staking disabled\n");
         else
         {
-            // TODO: multiple threads or stake all wallets in one thread?
-            assert(vpwallets.size() > 0);
-            threadStakeMiner = std::thread(&TraceThread<std::function<void()> >, "miner", std::function<void()>(std::bind(&ThreadStakeMiner, (CHDWallet*)vpwallets[0])));
+            size_t nWallets = vpwallets.size();
+            assert(nWallets > 0);
+            size_t nThreads = std::min(nWallets, (size_t)gArgs.GetArg("-stakingthreads", 1));
+
+            size_t nPerThread = nWallets / nThreads;
+            for (size_t i = 0; i < nThreads; ++i)
+            {
+                size_t nStart = nPerThread * i;
+                size_t nEnd = (i == nThreads-1) ? nWallets : nPerThread * (i+1);
+                StakeThread *t = new StakeThread();
+                GetHDWallet(vpwallets[i])->nStakeThread = i;
+                std::string sName = strprintf("miner%d", i);
+                t->thread = std::thread(&TraceThread<std::function<void()> >, sName.c_str(), std::function<void()>(std::bind(&ThreadStakeMiner, i, vpwallets, nStart, nEnd)));
+                vStakeThreads.push_back(t);
+            };
+            //threadStakeMiner = std::thread(&TraceThread<std::function<void()> >, "miner", std::function<void()>(std::bind(&ThreadStakeMiner, vpwallets, nStart, nEnd)));
         }
     };
     #endif
