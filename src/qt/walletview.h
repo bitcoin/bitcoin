@@ -19,12 +19,6 @@ class SendCoinsRecipient;
 class TransactionView;
 class WalletModel;
 class AddressBookPage;
-// SYSCOIN
-class AliasView;
-class CertView;
-class OfferView;
-class EscrowView;
-class MessageView;
 QT_BEGIN_NAMESPACE
 class QModelIndex;
 class QProgressDialog;
@@ -62,17 +56,6 @@ public:
 private:
     ClientModel *clientModel;
     WalletModel *walletModel;
-	// SYSCOIN
-    AliasView *aliasView;
-	EscrowView *escrowView;
-	MessageView *messageView;
-	CertView *certView;
-    OfferView *offerView;
-    QStackedWidget* aliasListPage;
-	QStackedWidget* escrowListPage;
-    QStackedWidget* messageListPage;
-	QStackedWidget* offerListPage;
-    QStackedWidget *certListPage;
 
     OverviewPage *overviewPage;
     QWidget *transactionsPage;
@@ -95,12 +78,6 @@ public Q_SLOTS:
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */
     void gotoSendCoinsPage(QString addr = "");
-	// SYSCOIN
-    void gotoAliasListPage();
-    void gotoEscrowListPage();
-    void gotoMessageListPage();
-    void gotoOfferListPage();
-    void gotoCertListPage();
     /** Show Sign/Verify Message dialog and switch to sign message tab */
     void gotoSignMessageTab(QString addr = "");
     /** Show Sign/Verify Message dialog and switch to verify message tab */

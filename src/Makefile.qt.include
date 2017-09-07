@@ -105,38 +105,7 @@ QT_FORMS_UI = \
   qt/forms/sendcoinsdialog.ui \
   qt/forms/sendcoinsentry.ui \
   qt/forms/signverifymessagedialog.ui \
-  qt/forms/transactiondescdialog.ui \
-  qt/forms/aliaslistpage.ui \
-  qt/forms/editaliasdialog.ui \
-  qt/forms/newmessagedialog.ui \
-  qt/forms/signrawtxdialog.ui \
-  qt/forms/manageescrowdialog.ui \
-  qt/forms/offerfeedbackdialog.ui \
-  qt/forms/messageinfodialog.ui \
-  qt/forms/escrowlistpage.ui \
-  qt/forms/myescrowlistpage.ui \
-  qt/forms/messagelistpage.ui \
-  qt/forms/myaliaslistpage.ui \
-  qt/forms/offerlistpage.ui \
-  qt/forms/editofferdialog.ui \
-  qt/forms/myofferlistpage.ui \
-  qt/forms/editwhitelistofferdialog.ui \
-  qt/forms/mywhitelistofferdialog.ui \
-  qt/forms/newwhitelistdialog.ui \
-  qt/forms/resellofferdialog.ui \
-  qt/forms/myacceptedofferlistpage.ui \
-  qt/forms/acceptedofferlistpage.ui \
-  qt/forms/mycertlistpage.ui \
-  qt/forms/acceptandpayofferlistpage.ui \
-  qt/forms/offeracceptinfodialog.ui \
-  qt/forms/escrowinfodialog.ui \
-  qt/forms/offerpaydialog.ui \
-  qt/forms/offerescrowdialog.ui \
-  qt/forms/offeracceptdialog.ui \
-  qt/forms/offeracceptdialogbtc.ui \
-  qt/forms/offeracceptdialogzec.ui \
-  qt/forms/editcertdialog.ui \
-  qt/forms/certlistpage.ui
+  qt/forms/transactiondescdialog.ui
   
 QT_MOC_CPP = \
   qt/moc_addressbookpage.cpp \
@@ -182,53 +151,7 @@ QT_MOC_CPP = \
   qt/moc_utilitydialog.cpp \
   qt/moc_walletframe.cpp \
   qt/moc_walletmodel.cpp \
-  qt/moc_walletview.cpp \
-  qt/moc_aliasview.cpp \
-  qt/moc_certview.cpp \
-  qt/moc_offerview.cpp \
-  qt/moc_escrowview.cpp \
-  qt/moc_messageview.cpp  \
-  qt/moc_aliastablemodel.cpp \
-  qt/moc_escrowtablemodel.cpp \
-  qt/moc_escrowlistpage.cpp \
-  qt/moc_myescrowlistpage.cpp \
-  qt/moc_messagetablemodel.cpp \
-  qt/moc_editaliasdialog.cpp \
-  qt/moc_newmessagedialog.cpp \
-  qt/moc_signrawtxdialog.cpp \
-  qt/moc_manageescrowdialog.cpp \
-  qt/moc_offerfeedbackdialog.cpp \
-  qt/moc_messageinfodialog.cpp \
-  qt/moc_inmessagelistpage.cpp \
-  qt/moc_outmessagelistpage.cpp \
-  qt/moc_aliaslistpage.cpp \
-  qt/moc_myaliaslistpage.cpp \
-  qt/moc_offertablemodel.cpp \
-  qt/moc_offeraccepttablemodel.cpp \
-  qt/moc_offeracceptinfodialog.cpp \
-  qt/moc_escrowinfodialog.cpp \
-  qt/moc_editofferdialog.cpp \
-  qt/moc_newwhitelistdialog.cpp \
-  qt/moc_resellofferdialog.cpp \
-  qt/moc_offerwhitelisttablemodel.cpp \
-  qt/moc_myofferwhitelisttablemodel.cpp \
-  qt/moc_editwhitelistofferdialog.cpp \
-  qt/moc_mywhitelistofferdialog.cpp \
-  qt/moc_offerlistpage.cpp \
-  qt/moc_myofferlistpage.cpp \
-  qt/moc_myacceptedofferlistpage.cpp \
-  qt/moc_acceptedofferlistpage.cpp \
-  qt/moc_offerpaydialog.cpp \
-  qt/moc_offerescrowdialog.cpp \
-  qt/moc_offeracceptdialog.cpp \
-  qt/moc_offeracceptdialogbtc.cpp \
-  qt/moc_offeracceptdialogzec.cpp \
-  qt/moc_acceptandpayofferlistpage.cpp \
-  qt/moc_certtablemodel.cpp \
-  qt/moc_editcertdialog.cpp \
-  qt/moc_mycertlistpage.cpp \
-  qt/moc_certlistpage.cpp \
-  qt/moc_qcomboboxdelegate.cpp
+  qt/moc_walletview.cpp
 
 SYSCOIN_MM = \
   qt/macdockiconhandler.mm \
@@ -251,9 +174,6 @@ PROTOBUF_H = qt/paymentrequest.pb.h
 PROTOBUF_PROTO = qt/paymentrequest.proto
 
 SYSCOIN_QT_H = \
-  qt/qjsonrpcclient.h \
-  qt/qbtcjsonrpcclient.h \
-  qt/qzecjsonrpcclient.h \
   qt/addressbookpage.h \
   qt/addresstablemodel.h \
   qt/askpassphrasedialog.h \
@@ -305,52 +225,6 @@ SYSCOIN_QT_H = \
   qt/walletmodeltransaction.h \
   qt/walletview.h \
   qt/winshutdownmonitor.h \
-  qt/aliasview.h \
-  qt/certview.h \
-  qt/offerview.h \
-  qt/escrowview.h \
-  qt/messageview.h  \
-  qt/aliastablemodel.h \
-  qt/escrowtablemodel.h \
-  qt/escrowlistpage.h \
-  qt/myescrowlistpage.h \
-  qt/messagetablemodel.h \
-  qt/editaliasdialog.h \
-  qt/newmessagedialog.h \
-  qt/signrawtxdialog.h \
-  qt/manageescrowdialog.h \
-  qt/offerfeedbackdialog.h \
-  qt/messageinfodialog.h \
-  qt/inmessagelistpage.h \
-  qt/outmessagelistpage.h \
-  qt/aliaslistpage.h \
-  qt/myaliaslistpage.h \
-  qt/offertablemodel.h \
-  qt/offeraccepttablemodel.h \
-  qt/offeracceptinfodialog.h \
-  qt/escrowinfodialog.h \
-  qt/editofferdialog.h \
-  qt/newwhitelistdialog.h \
-  qt/resellofferdialog.h \
-  qt/offerwhitelisttablemodel.h \
-  qt/myofferwhitelisttablemodel.h \
-  qt/editwhitelistofferdialog.h \
-  qt/mywhitelistofferdialog.h \
-  qt/offerlistpage.h \
-  qt/myofferlistpage.h \
-  qt/myacceptedofferlistpage.h \
-  qt/acceptedofferlistpage.h \
-  qt/offerpaydialog.h \
-  qt/offerescrowdialog.h \
-  qt/offeracceptdialog.h \
-  qt/offeracceptdialogbtc.h \
-  qt/offeracceptdialogzec.h \
-  qt/acceptandpayofferlistpage.h \
-  qt/certtablemodel.h \
-  qt/editcertdialog.h \
-  qt/mycertlistpage.h \
-  qt/qcomboboxdelegate.h \
-  qt/certlistpage.h
 
 RES_ICONS = \
   qt/res/icons/syscoin.ico \
@@ -586,9 +460,6 @@ endif
 
 if ENABLE_WALLET
 SYSCOIN_QT_CPP += \
-  qt/qjsonrpcclient.cpp \
-  qt/qbtcjsonrpcclient.cpp \
-  qt/qzecjsonrpcclient.cpp \
   qt/addressbookpage.cpp \
   qt/addresstablemodel.cpp \
   qt/askpassphrasedialog.cpp \
@@ -614,53 +485,7 @@ SYSCOIN_QT_CPP += \
   qt/walletframe.cpp \
   qt/walletmodel.cpp \
   qt/walletmodeltransaction.cpp \
-  qt/walletview.cpp \
-  qt/aliasview.cpp \
-  qt/certview.cpp \
-  qt/offerview.cpp \
-  qt/escrowview.cpp \
-  qt/messageview.cpp  \
-  qt/aliastablemodel.cpp \
-  qt/escrowtablemodel.cpp \
-  qt/escrowlistpage.cpp \
-  qt/myescrowlistpage.cpp \
-  qt/messagetablemodel.cpp \
-  qt/editaliasdialog.cpp \
-  qt/newmessagedialog.cpp \
-  qt/signrawtxdialog.cpp \
-  qt/manageescrowdialog.cpp \
-  qt/offerfeedbackdialog.cpp \
-  qt/messageinfodialog.cpp \
-  qt/inmessagelistpage.cpp \
-  qt/outmessagelistpage.cpp \
-  qt/aliaslistpage.cpp \
-  qt/myaliaslistpage.cpp \
-  qt/offertablemodel.cpp \
-  qt/offeraccepttablemodel.cpp \
-  qt/offeracceptinfodialog.cpp \
-  qt/escrowinfodialog.cpp \
-  qt/editofferdialog.cpp \
-  qt/newwhitelistdialog.cpp \
-  qt/resellofferdialog.cpp \
-  qt/offerwhitelisttablemodel.cpp \
-  qt/myofferwhitelisttablemodel.cpp \
-  qt/editwhitelistofferdialog.cpp \
-  qt/mywhitelistofferdialog.cpp \
-  qt/offerlistpage.cpp \
-  qt/myofferlistpage.cpp \
-  qt/myacceptedofferlistpage.cpp \
-  qt/acceptedofferlistpage.cpp \
-  qt/offerpaydialog.cpp \
-  qt/offerescrowdialog.cpp \
-  qt/offeracceptdialog.cpp \
-  qt/offeracceptdialogbtc.cpp \
-  qt/offeracceptdialogzec.cpp \
-  qt/acceptandpayofferlistpage.cpp \
-  qt/certtablemodel.cpp \
-  qt/editcertdialog.cpp \
-  qt/mycertlistpage.cpp \
-  qt/qcomboboxdelegate.cpp \
-  qt/certlistpage.cpp
+  qt/walletview.cpp
 endif
 
 RES_IMAGES = \

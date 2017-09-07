@@ -148,39 +148,6 @@ void WalletFrame::gotoVerifyMessageTab(QString addr)
     if (walletView)
         walletView->gotoVerifyMessageTab(addr);
 }
-// SYSCOIN
-void WalletFrame::gotoAliasListPage()
-{
-    WalletView *walletView = currentWalletView();
-    if (walletView)
-        walletView->gotoAliasListPage();
-}
-void WalletFrame::gotoMessageListPage()
-{
-    WalletView *walletView = currentWalletView();
-    if (walletView)
-        walletView->gotoMessageListPage();
-}
-void WalletFrame::gotoEscrowListPage()
-{
-    WalletView *walletView = currentWalletView();
-    if (walletView)
-        walletView->gotoEscrowListPage();
-}
-
-void WalletFrame::gotoOfferListPage()
-{
-    WalletView *walletView = currentWalletView();
-    if (walletView)
-        walletView->gotoOfferListPage();
-}
-
-void WalletFrame::gotoCertListPage()
-{
-    WalletView *walletView = currentWalletView();
-    if (walletView)
-        walletView->gotoCertListPage();
-}
 void WalletFrame::encryptWallet(bool status)
 {
     WalletView *walletView = currentWalletView();

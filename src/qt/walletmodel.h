@@ -21,13 +21,6 @@ class PlatformStyle;
 class RecentRequestsTableModel;
 class TransactionTableModel;
 class WalletModelTransaction;
-// SYSCOIN
-class AliasTableModel;
-class MessageTableModel;
-class EscrowTableModel;
-class CertTableModel;
-class OfferTableModel;
-class OfferAcceptTableModel;
 
 class CCoinControl;
 class CKeyID;
@@ -141,19 +134,7 @@ public:
     AddressTableModel *getAddressTableModel();
     TransactionTableModel *getTransactionTableModel();
     RecentRequestsTableModel *getRecentRequestsTableModel();
-	// SYSCOIN
-    AliasTableModel *getAliasTableModelMine();
-    AliasTableModel *getAliasTableModelAll();
-	MessageTableModel *getMessageTableModelIn();
-	MessageTableModel *getMessageTableModelOut();
-	EscrowTableModel *getEscrowTableModelMine();
-	EscrowTableModel *getEscrowTableModelAll();
-    CertTableModel *getCertTableModelMine();
-    CertTableModel *getCertTableModelAll();
-    OfferTableModel *getOfferTableModelMine();
-    OfferTableModel *getOfferTableModelAll();
-    OfferAcceptTableModel *getOfferTableModelAccept();
-    OfferAcceptTableModel *getOfferTableModelMyAccept();
+	
 
     CAmount getBalance(const CCoinControl *coinControl = NULL) const;
     CAmount getUnconfirmedBalance() const;
@@ -240,19 +221,6 @@ private:
     AddressTableModel *addressTableModel;
     TransactionTableModel *transactionTableModel;
     RecentRequestsTableModel *recentRequestsTableModel;
-	// SYSCOIN
-	AliasTableModel *aliasTableModelMine;
-    AliasTableModel *aliasTableModelAll;
-    EscrowTableModel *escrowTableModelMine;
-	EscrowTableModel *escrowTableModelAll;
-    MessageTableModel *inMessageTableModel;
-	MessageTableModel *outMessageTableModel;
-    CertTableModel *certTableModelMine;
-    CertTableModel *certTableModelAll;
-    OfferTableModel *offerTableModelMine;
-    OfferTableModel *offerTableModelAll;
-	OfferAcceptTableModel *offerTableModelAccept;
-    OfferAcceptTableModel *offerTableModelMyAccept;
 
     // Cache some values to be able to detect changes
     CAmount cachedBalance;
@@ -313,6 +281,4 @@ public Q_SLOTS:
 	void updateOffer();
 	void updateMessage();
 };
-// SYSCOIN
-extern void appendListAliases(UniValue& defaultAliasArray, bool allAliases=false);
 #endif // SYSCOIN_QT_WALLETMODEL_H
