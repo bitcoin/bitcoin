@@ -154,12 +154,13 @@ bool COfferDB::CleanupDatabase(int &servicesCleaned)
 	pcursor->SeekToFirst();
 	COffer offer;
 	COfferAccept offerAccept;
-	pair<string, CNameTXIDTuple > key;
+	pair<string, CNameTXIDTuple > keyTuple;
+	pair<string, vector<unsigned char> > keyVch;
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
         try {
-			if (pcursor->GetKey(key) && key.first == "offeri") {
-				const CNameTXIDTuple &offerTuple = key.second;
+			if (pcursor->GetKey(keyTuple) && keyTuple.first == "offeri") {
+				const CNameTXIDTuple &offerTuple = keyTuple.second;
   				if (!GetOffer(offerTuple.first, offer) || chainActive.Tip()->nTime >= GetOfferExpiration(offer))
 				{
 					servicesCleaned++;
@@ -167,13 +168,13 @@ bool COfferDB::CleanupDatabase(int &servicesCleaned)
 				} 
 				
             }
-			else if (pcursor->GetKey(key) && key.first == "offera") {
+			else if (pcursor->GetKey(keyVch) && keyVch.first == "offera") {
 				COffer offer;
 				pcursor->GetValue(offerAccept);
 				if (!GetOffer(offerAccept.offerTuple.first, offer) || chainActive.Tip()->nTime >= GetOfferExpiration(offer))
 				{
 					servicesCleaned++;
-					EraseOfferAccept(key.second);
+					EraseOfferAccept(keyVch.second);
 				}
 
 			}
