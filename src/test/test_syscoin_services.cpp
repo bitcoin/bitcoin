@@ -731,7 +731,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	string acceptTransfers = "\"\"";
 	string expires = "\"\"";
 	string encryptionpubkey = "\"\"";
-
+	// "aliasupdate <aliaspeg> <aliasname> [public value] [private value] [address] [accept_transfers=true] [expire_timestamp] [password_salt] [encryption_privatekey] [encryption_publickey] [witness]\n"
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdate sysrates.peg " + aliasname + " " + pubdata + " " + strPrivateHex +  " " + addressStr + " " + acceptTransfers + " " + expires + " " + strPasswordSalt + " " + encryptionpubkey + " " + encryptionpubkey + " " + witness));
 	const UniValue& resArray = r.get_array();
 	if(resArray.size() > 1)

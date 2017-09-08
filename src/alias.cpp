@@ -1765,7 +1765,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue aliasupdate(const UniValue& params, bool fHelp) {
-	if (fHelp || 2 > params.size() || 12 < params.size())
+	if (fHelp || 2 > params.size() || 11 < params.size())
 		throw runtime_error(
 		"aliasupdate <aliaspeg> <aliasname> [public value] [private value] [address] [accept_transfers=true] [expire_timestamp] [password_salt] [encryption_privatekey] [encryption_publickey] [witness]\n"
 						"Update and possibly transfer an alias.\n"
@@ -1794,18 +1794,18 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	CWalletTx wtx;
 	CAliasIndex updateAlias;
 	string strAddress = "";
-	if(CheckParam(params, 5))
-		strAddress = params[5].get_str();
+	if(CheckParam(params,4))
+		strAddress = params[4].get_str();
 	
 	string strAcceptCertTransfers = "";
-	if(CheckParam(params, 6))
-		strAcceptCertTransfers = params[6].get_str();
+	if(CheckParam(params, 5))
+		strAcceptCertTransfers = params[5].get_str();
 	
 	uint64_t nTime = chainActive.Tip()->nTime+ONE_YEAR_IN_SECONDS;
 	bool timeSet = false;
-	if(CheckParam(params, 7))
+	if(CheckParam(params, 6))
 	{
-		nTime = boost::lexical_cast<uint64_t>(params[7].get_str());
+		nTime = boost::lexical_cast<uint64_t>(params[6].get_str());
 		timeSet = true;
 	}
 	// sanity check set to 1 hr
@@ -1813,21 +1813,21 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 		nTime = chainActive.Tip()->nTime+3600;
 
 	string strPasswordSalt = "";
-	if(CheckParam(params, 8))
-		strPasswordSalt = params[8].get_str();
+	if(CheckParam(params, 7))
+		strPasswordSalt = params[7].get_str();
 	
 
 	string strEncryptionPrivateKey = "";
-	if(CheckParam(params, 9))
-		strEncryptionPrivateKey = params[9].get_str();
+	if(CheckParam(params, 8))
+		strEncryptionPrivateKey = params[8].get_str();
 	
 	string strEncryptionPublicKey = "";
-	if(CheckParam(params, 10))
-		strEncryptionPublicKey = params[10].get_str();
+	if(CheckParam(params, 9))
+		strEncryptionPublicKey = params[9].get_str();
 	
 	vector<unsigned char> vchWitness;
-	if(CheckParam(params, 11))
-		vchWitness = vchFromValue(params[11]);
+	if(CheckParam(params, 10))
+		vchWitness = vchFromValue(params[10]);
 
 	CAliasIndex theAlias;
 	if (!GetAlias(vchAlias, theAlias))
