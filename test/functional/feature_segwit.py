@@ -204,6 +204,13 @@ class SegWitTest(BitcoinTestFramework):
         assert(tx.wit.is_null()) # This should not be a segwit input
         assert(txid1 in self.nodes[0].getrawmempool())
 
+        tx1_hex = self.nodes[0].gettransaction(txid1)['hex']
+        tx1 = FromHex(CTransaction(), tx1_hex)
+
+        # Check that weight and size (actually vsize) are properly reported in mempool entry (txid1)
+        assert_equal(self.nodes[0].getmempoolentry(txid1)["size"], (self.nodes[0].getmempoolentry(txid1)["weight"] + 3) // 4)
+        assert_equal(self.nodes[0].getmempoolentry(txid1)["weight"], len(tx1.serialize_without_witness())*3 + len(tx1.serialize_with_witness()))
+
         # Now create tx2, which will spend from txid1.
         tx = CTransaction()
         tx.vin.append(CTxIn(COutPoint(int(txid1, 16), 0), b''))
@@ -212,6 +219,10 @@ class SegWitTest(BitcoinTestFramework):
         txid2 = self.nodes[0].sendrawtransaction(tx2_hex)
         tx = FromHex(CTransaction(), tx2_hex)
         assert(not tx.wit.is_null())
+
+        # Check that weight and size (actually vsize) are properly reported in mempool entry (txid2)
+        assert_equal(self.nodes[0].getmempoolentry(txid2)["size"], (self.nodes[0].getmempoolentry(txid2)["weight"] + 3) // 4)
+        assert_equal(self.nodes[0].getmempoolentry(txid2)["weight"], len(tx.serialize_without_witness())*3 + len(tx.serialize_with_witness()))
 
         # Now create tx3, which will spend from txid2
         tx = CTransaction()
@@ -239,6 +250,10 @@ class SegWitTest(BitcoinTestFramework):
 
         # Check that wtxid is properly reported in mempool entry
         assert_equal(int(self.nodes[0].getmempoolentry(txid3)["wtxid"], 16), tx.calc_sha256(True))
+
+        # Check that weight and size (actually vsize) are properly reported in mempool entry (txid3)
+        assert_equal(self.nodes[0].getmempoolentry(txid3)["size"], (self.nodes[0].getmempoolentry(txid3)["weight"] + 3) // 4)
+        assert_equal(self.nodes[0].getmempoolentry(txid3)["weight"], len(tx.serialize_without_witness())*3 + len(tx.serialize_with_witness()))
 
         # Mine a block to clear the gbt cache again.
         self.nodes[0].generate(1)
