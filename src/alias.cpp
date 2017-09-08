@@ -1536,13 +1536,12 @@ UniValue syscoinquery(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue aliasnew(const UniValue& params, bool fHelp) {
-	if (fHelp || 2 > params.size() || 12 < params.size())
+	if (fHelp || 2 > params.size() || 11 < params.size())
 		throw runtime_error(
-		"aliasnew <aliaspeg> <aliasname> <public value> [private value] [safe search=true] [accept transfers=true] [expire_timestamp] [address] [password_salt] [encryption_privatekey] [encryption_publickey] [witness]\n"
+		"aliasnew <aliaspeg> <aliasname> <public value> [private value] [accept transfers=true] [expire_timestamp] [address] [password_salt] [encryption_privatekey] [encryption_publickey] [witness]\n"
 						"<aliasname> alias name.\n"
 						"<public value> alias public profile data, 1024 chars max.\n"
 						"<private value> alias private profile data, 1024 chars max. Will be private and readable by anyone with encryption_privatekey. Should be encrypted to encryption_publickey.\n"
-						"<safe search> set to No if this alias should only show in the search when safe search is not selected. Defaults to Yes (alias shows with or without safe search selected in search lists).\n"
 						"<accept transfers> set to No if this alias should not allow a certificate to be transferred to it. Defaults to Yes.\n"	
 						"<expire_timestamp> String. Time in seconds. Future time when to expire alias. It is exponentially more expensive per year, calculation is FEERATE*(2.88^years). FEERATE is the dynamic satoshi per byte fee set in the rate peg alias used for this alias. Defaults to 1 year.\n"	
 						"<address> Address for this alias.\n"		
@@ -1598,32 +1597,32 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 		strPrivateValue = params[3].get_str();
 	string strAcceptCertTransfers = "true";
 
-	if(CheckParam(params, 5))
-		strAcceptCertTransfers = params[5].get_str();
+	if(CheckParam(params, 4))
+		strAcceptCertTransfers = params[4].get_str();
 	uint64_t nTime = chainActive.Tip()->nTime+ONE_YEAR_IN_SECONDS;
-	if(CheckParam(params, 6))
-		nTime = boost::lexical_cast<uint64_t>(params[6].get_str());
+	if(CheckParam(params, 5))
+		nTime = boost::lexical_cast<uint64_t>(params[5].get_str());
 	// sanity check set to 1 hr
 	if(nTime < chainActive.Tip()->nTime+3600)
 		nTime = chainActive.Tip()->nTime+3600;
 
 	string strAddress = "";
-	if(CheckParam(params, 7))
-		strAddress = params[7].get_str();
+	if(CheckParam(params, 6))
+		strAddress = params[6].get_str();
 	string strPasswordSalt = "";
 
-	if(CheckParam(params, 98))
-		strPasswordSalt = params[8].get_str();
+	if(CheckParam(params, 7))
+		strPasswordSalt = params[7].get_str();
 	
 	string strEncryptionPrivateKey = "";
-	if(CheckParam(params, 9))
-		strEncryptionPrivateKey = params[9].get_str();
+	if(CheckParam(params, 8))
+		strEncryptionPrivateKey = params[8].get_str();
 	string strEncryptionPublicKey = "";
-	if(CheckParam(params, 10))
-		strEncryptionPublicKey = params[10].get_str();
+	if(CheckParam(params, 9))
+		strEncryptionPublicKey = params[9].get_str();
 	vector<unsigned char> vchWitness;
-	if(CheckParam(params, 11))
-		vchWitness = vchFromValue(params[11]);
+	if(CheckParam(params, 10))
+		vchWitness = vchFromValue(params[10]);
 
 	CWalletTx wtx;
 

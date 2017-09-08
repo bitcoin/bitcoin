@@ -554,7 +554,7 @@ void GetOtherNodes(const string& node, string& otherNode1, string& otherNode2)
 	}
 
 }
-string AliasNew(const string& node, const string& aliasname, const string& pubdata, string privdata, string safesearchStr, string witness)
+string AliasNew(const string& node, const string& aliasname, const string& pubdata, string privdata, string witness)
 {
 	string otherNode1, otherNode2;
 	GetOtherNodes(node, otherNode1, otherNode2);
@@ -572,7 +572,6 @@ string AliasNew(const string& node, const string& aliasname, const string& pubda
 	vector<unsigned char> vchPasswordSalt;
 
 	privKey.MakeNewKey(true);
-	bool safesearch = safesearchStr == "true";
 	CPubKey pubKey = privKey.GetPubKey();
 	vchPubKey = vector<unsigned char>(pubKey.begin(), pubKey.end());
 	CSyscoinAddress aliasAddress(pubKey.GetID());
@@ -595,7 +594,7 @@ string AliasNew(const string& node, const string& aliasname, const string& pubda
 
 	UniValue r;
 	// registration
-	BOOST_CHECK_NO_THROW(CallRPC(node, "aliasnew sysrates.peg " + aliasname + " " + pubdata + " " + strPrivateHex + " " + safesearchStr + " " + acceptTransfers +  " " + expireTime + " " + aliasAddress.ToString() + " " + salt + " " + strEncryptionPrivateKeyHex + " " + HexStr(vchPubEncryptionKey) + " " + witness));
+	BOOST_CHECK_NO_THROW(CallRPC(node, "aliasnew sysrates.peg " + aliasname + " " + pubdata + " " + strPrivateHex + " " + acceptTransfers +  " " + expireTime + " " + aliasAddress.ToString() + " " + salt + " " + strEncryptionPrivateKeyHex + " " + HexStr(vchPubEncryptionKey) + " " + witness));
 	GenerateBlocks(5, node);
 	// activation
 	BOOST_CHECK_NO_THROW(CallRPC(node, "aliasnew sysrates.peg " + aliasname + " \"\" \"\""));
@@ -663,11 +662,10 @@ string AliasTransfer(const string& node, const string& aliasname, const string& 
 	string expires = "\"\"";
 	string address = aliasAddress.ToString();
 	string password = "\"\"";
-	string safesearch = "\"\"";
 	string passwordsalt = "\"\"";
 	string encryptionpubkey = "\"\"";
 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdate sysrates.peg " + aliasname + " " + pubdata + " " + strPrivateHex + " " + safesearch + " " + address + " " + acceptTransfers + " " + expires + " " + passwordsalt + " " + encryptionpubkey + " " + encryptionpubkey + " " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdate sysrates.peg " + aliasname + " " + pubdata + " " + strPrivateHex + " " + address + " " + acceptTransfers + " " + expires + " " + passwordsalt + " " + encryptionpubkey + " " + encryptionpubkey + " " + witness));
 	const UniValue& resArray = r.get_array();
 	if(resArray.size() > 1)
 	{
@@ -705,7 +703,7 @@ string AliasTransfer(const string& node, const string& aliasname, const string& 
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , aliasAddress.ToString());
 	return "";
 }
-string AliasUpdate(const string& node, const string& aliasname, const string& pubdata, const string& privdata, string safesearchStr, string addressStr, string witness)
+string AliasUpdate(const string& node, const string& aliasname, const string& pubdata, const string& privdata, string addressStr, string witness)
 {
 	string addressStr1 = addressStr;
 	string otherNode1, otherNode2;
@@ -734,7 +732,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	string expires = "\"\"";
 	string encryptionpubkey = "\"\"";
 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdate sysrates.peg " + aliasname + " " + pubdata + " " + strPrivateHex +  " " + safesearchStr + " " + addressStr + " " + acceptTransfers + " " + expires + " " + strPasswordSalt + " " + encryptionpubkey + " " + encryptionpubkey + " " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdate sysrates.peg " + aliasname + " " + pubdata + " " + strPrivateHex +  " " + addressStr + " " + acceptTransfers + " " + expires + " " + strPasswordSalt + " " + encryptionpubkey + " " + encryptionpubkey + " " + witness));
 	const UniValue& resArray = r.get_array();
 	if(resArray.size() > 1)
 	{
@@ -840,7 +838,7 @@ bool EscrowFilter(const string& node, const string& escrow)
 	const UniValue &arr = r.get_array();
 	return !arr.empty();
 }
-const string CertNew(const string& node, const string& alias, const string& title, const string& privdata, const string& pubdata, const string& safesearch, const string& witness)
+const string CertNew(const string& node, const string& alias, const string& title, const string& privdata, const string& pubdata, const string& witness)
 {
 	string otherNode1, otherNode2;
 	GetOtherNodes(node, otherNode1, otherNode2);
@@ -857,7 +855,7 @@ const string CertNew(const string& node, const string& alias, const string& titl
 
 
 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certnew " + alias + " " + title + " " + pubdata + " " + strCipherPrivateData + " " + safesearch + " certificates " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certnew " + alias + " " + title + " " + pubdata + " " + strCipherPrivateData + " certificates " + witness));
 	const UniValue &arr = r.get_array();
 	string guid = arr[1].get_str();
 	GenerateBlocks(10, node);
@@ -884,7 +882,7 @@ const string CertNew(const string& node, const string& alias, const string& titl
 	}
 	return guid;
 }
-void CertUpdate(const string& node, const string& guid, const string& title, const string& privdata, const string& pubdata, const string& safesearch, const string& witness)
+void CertUpdate(const string& node, const string& guid, const string& title, const string& privdata, const string& pubdata, const string& witness)
 {
 	string otherNode1, otherNode2;
 	GetOtherNodes(node, otherNode1, otherNode2);
@@ -909,7 +907,7 @@ void CertUpdate(const string& node, const string& guid, const string& title, con
 
 
 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certupdate " + guid + " " + title + " " + pubdata + " " + strCipherPrivateData + " " + safesearch + " certificates " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certupdate " + guid + " " + title + " " + pubdata + " " + strCipherPrivateData + " certificates " + witness));
 	GenerateBlocks(10, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certinfo " + guid));
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == guid);
@@ -1012,7 +1010,7 @@ const string OfferLink(const string& node, const string& alias, const string& gu
 	}
 	return linkedguid;
 }
-const string OfferNew(const string& node, const string& aliasname, const string& category, const string& title, const string& qtyStr, const string& price, const string& description, const string& currency, const string& certguid, const string& paymentoptions, const string& safesearch, const string& witness)
+const string OfferNew(const string& node, const string& aliasname, const string& category, const string& title, const string& qtyStr, const string& price, const string& description, const string& currency, const string& certguid, const string& paymentoptions, const string& witness)
 {
 	string otherNode1, otherNode2;
 	GetOtherNodes(node, otherNode1, otherNode2);
@@ -1022,8 +1020,8 @@ const string OfferNew(const string& node, const string& aliasname, const string&
 	string units = "\"\"";
 	int qty = atoi(qtyStr.c_str());
 	UniValue r;
-	//						"offernew <alias> <category> <title> <quantity> <price> <description> <currency> [cert. guid] [payment options=SYS] [safe search=Yes] [private=false] [units] [coinoffer=false] [witness]"
-	string offercreatestr = "offernew " + aliasname + " " + category + " " + title + " " + qtyStr + " " + price + " " + description + " " + currency  + " " + certguid + " " + paymentoptions + " " + safesearch + " " + pvt + " " + units + " " + coinoffer + " " + witness;
+	//						"offernew <alias> <category> <title> <quantity> <price> <description> <currency> [cert. guid] [payment options=SYS] [private=false] [units] [coinoffer=false] [witness]"
+	string offercreatestr = "offernew " + aliasname + " " + category + " " + title + " " + qtyStr + " " + price + " " + description + " " + currency  + " " + certguid + " " + paymentoptions + " " + pvt + " " + units + " " + coinoffer + " " + witness;
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, offercreatestr));
 	const UniValue &arr = r.get_array();
 	string guid = arr[1].get_str();
@@ -1067,7 +1065,7 @@ const string OfferNew(const string& node, const string& aliasname, const string&
 	return guid;
 }
 
-void OfferUpdate(const string& node, const string& aliasname, const string& offerguid, const string& category, const string& title, const string& qtyStr, const string& price, const string& description, const string& currency, const string &isprivateStr, const string& certguid, const string& safesearchStr, const string& commissionStr, const string& paymentoptions, const string& witness) {
+void OfferUpdate(const string& node, const string& aliasname, const string& offerguid, const string& category, const string& title, const string& qtyStr, const string& price, const string& description, const string& currency, const string &isprivateStr, const string& certguid, const string& commissionStr, const string& paymentoptions, const string& witness) {
 	string otherNode1, otherNode2;
 	GetOtherNodes(node, otherNode1, otherNode2);
 	
@@ -1088,7 +1086,7 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 	string oldtitle = find_value(r.get_obj(), "title").get_str();
 	string oldcategory = find_value(r.get_obj(), "category").get_str();
 	//						"offerupdate <alias> <guid> [category] [title] [quantity] [price] [description] [currency] [private=false] [cert. guid] [commission] [paymentOptions] [witness]"
-	string offerupdatestr = "offerupdate " + aliasname + " " + offerguid + " " + category + " " + title + " " + qtyStr + " " + price + " " + description + " " + currency + " " + isprivateStr + " " + certguid + " " +  safesearchStr + " " + commissionStr + " " + paymentoptions + " " + witness;
+	string offerupdatestr = "offerupdate " + aliasname + " " + offerguid + " " + category + " " + title + " " + qtyStr + " " + price + " " + description + " " + currency + " " + isprivateStr + " " + certguid + " " +  commissionStr + " " + paymentoptions + " " + witness;
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, offerupdatestr));
 	GenerateBlocks(10, node);
 

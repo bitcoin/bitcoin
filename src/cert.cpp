@@ -580,9 +580,9 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 
 
 UniValue certnew(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() < 3 || params.size() > 7)
+    if (fHelp || params.size() < 3 || params.size() > 6)
         throw runtime_error(
-		"certnew <alias> <title> <public> [private] [safe search=true] [category=certificates] [witness]\n"
+		"certnew <alias> <title> <public> [private] [category=certificates] [witness]\n"
 						"<alias> An alias you own.\n"
 						"<title> title, 256 characters max.\n"
                         "<public> public data, 256 characters max.\n"
@@ -598,11 +598,11 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 	string strData = "";
 	if(CheckParam(params, 3))
 		strData = params[3].get_str();
-	if(CheckParam(params, 5))
-		strCategory = params[5].get_str();
+	if(CheckParam(params, 4))
+		strCategory = params[4].get_str();
 	vector<unsigned char> vchWitness;
-	if(CheckParam(params, 6))
-		vchWitness = vchFromValue(params[6]);
+	if(CheckParam(params, 5))
+		vchWitness = vchFromValue(params[5]);
 	// check for alias existence in DB
 	CAliasIndex theAlias;
 

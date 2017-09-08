@@ -1182,9 +1182,9 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 }
 
 UniValue offernew(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() < 7 || params.size() > 14)
+	if (fHelp || params.size() < 7 || params.size() > 13)
 		throw runtime_error(
-		"offernew <alias> <category> <title> <quantity> <price> <description> <currency> [cert. guid] [payment options=SYS] [safe search=true] [private=false] [units] [coinoffer=false] [witness]\n"
+		"offernew <alias> <category> <title> <quantity> <price> <description> <currency> [cert. guid] [payment options=SYS] [private=false] [units] [coinoffer=false] [witness]\n"
 						"<alias> An alias you own.\n"
 						"<category> category, 255 chars max.\n"
 						"<title> title, 255 chars max.\n"
@@ -1193,8 +1193,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 						"<description> description, 1 KB max.\n"
 						"<currency> The currency code that you want your offer to be in ie: USD.\n"
 						"<cert. guid> Set this to the guid of a certificate you wish to sell\n"
-						"<paymentOptions> 'SYS' to accept SYS only, 'BTC' for BTC only, 'ZEC' for zcash only, or a |-delimited string to accept multiple currencies (e.g. 'BTC|SYS' to accept BTC or SYS). Leave empty for default. Defaults to 'SYS'.\n"
-						"<safe search> set to No if this offer should only show in the search when safe search is not selected. Defaults to Yes (offer shows with or without safe search selected in search lists).\n"						
+						"<paymentOptions> 'SYS' to accept SYS only, 'BTC' for BTC only, 'ZEC' for zcash only, or a |-delimited string to accept multiple currencies (e.g. 'BTC|SYS' to accept BTC or SYS). Leave empty for default. Defaults to 'SYS'.\n"		
 						"<private> set to Yes if this offer should be private not be searchable. Defaults to No.\n"
 						"<units> Units that 1 qty represents. For example if selling 1 BTC.\n"
 						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"	
@@ -1243,23 +1242,23 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	// payment options - and convert payment options string to a bitmask for the txn
 	uint64_t paymentOptionsMask = GetPaymentOptionsMaskFromString(paymentOptions);
 	bool bPrivate = false;
-	if(CheckParam(params, 10))
-		bPrivate = params[10].get_str() == "true"? true: false;
+	if(CheckParam(params, 9))
+		bPrivate = params[9].get_str() == "true"? true: false;
 	float fUnits=1.0f;
-	if(CheckParam(params, 11))
+	if(CheckParam(params, 10))
 	{
 		try {
-			fUnits =  boost::lexical_cast<float>(params[11].get_str());
+			fUnits =  boost::lexical_cast<float>(params[10].get_str());
 		} catch (std::exception &e) {
 			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1503 - " + _("Invalid units value"));
 		}
 	}
 	bool bCoinOffer = false;
-	if(CheckParam(params, 12))
-		bCoinOffer = params[12].get_str() == "true"? true: false;
+	if(CheckParam(params, 11))
+		bCoinOffer = params[11].get_str() == "true"? true: false;
 	vector<unsigned char> vchWitness;
-	if(CheckParam(params, 13))
-		vchWitness = vchFromValue(params[13]);
+	if(CheckParam(params, 12))
+		vchWitness = vchFromValue(params[12]);
 	int precision = 2;
 	CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(latestAliasPegTuple, vchCurrency, fPrice, precision);
 	if(nPricePerUnit == 0)

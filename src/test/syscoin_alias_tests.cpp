@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE (generate_aliaswitness)
 	UniValue r;
 	AliasNew("node1", "witness1", "pub");
 	AliasNew("node2", "witness2", "pub");
-	string hex_str = AliasUpdate("node1", "witness1", "newpubdata", "\"\"", "\"\"", "\"\"", "witness2");
+	string hex_str = AliasUpdate("node1", "witness1", "newpubdata", "\"\"", "\"\"", "witness2");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo witness1"));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str(), "pub");
 	BOOST_CHECK(!hex_str.empty());
@@ -481,14 +481,14 @@ BOOST_AUTO_TEST_CASE (generate_multisigalias)
 	redeemScript = redeemScript_value.get_str();
 	addressStr = address_value.get_str();
 		
-	string tmp = AliasUpdate("node1", "jagnodemultisig1", "pubdata0", "privdata", "\"\"", addressStr);
+	string tmp = AliasUpdate("node1", "jagnodemultisig1", "pubdata0", "privdata", addressStr);
 	BOOST_CHECK_EQUAL(tmp, "");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo jagnodemultisig1"));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str(), addressStr);
 	// change the multisigs pw and public data
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasaddscript " + redeemScript));
 	
-	string hex_str = AliasUpdate("node1", "jagnodemultisig1", "pubdata1", "privdata1", "\"\"", addressStr);
+	string hex_str = AliasUpdate("node1", "jagnodemultisig1", "pubdata1", "privdata1", addressStr);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo jagnodemultisig1"));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str(), addressStr);
 	// ensure data did not change because its 2 of 2 and we only got 1 sig so far
@@ -511,7 +511,7 @@ BOOST_AUTO_TEST_CASE (generate_multisigalias)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo jagnodemultisig1"));
 	BOOST_CHECK(abs(balanceBefore - balanceAfter) < COIN);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str(), addressStr);
-	hex_str = AliasUpdate("node2", "jagnodemultisig1", "\"\"", "\"\"", "\"\"", addressStr);
+	hex_str = AliasUpdate("node2", "jagnodemultisig1", "\"\"", "\"\"", addressStr);
 	BOOST_CHECK(hex_str != "");
 
 	// create 1 of 2
@@ -522,7 +522,7 @@ BOOST_AUTO_TEST_CASE (generate_multisigalias)
 	BOOST_CHECK(address_value.isStr());
 	redeemScript = redeemScript_value.get_str();
 	addressStr = address_value.get_str();
-	hex_str = AliasUpdate("node1", "jagnodemultisig1", "pubdata", "privdata", "\"\"", addressStr);
+	hex_str = AliasUpdate("node1", "jagnodemultisig1", "pubdata", "privdata", addressStr);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "syscoinsignrawtransaction " + hex_str));
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5);
@@ -547,13 +547,13 @@ BOOST_AUTO_TEST_CASE (generate_multisigalias)
 	BOOST_CHECK(address_value.isStr());
 	redeemScript = redeemScript_value.get_str();
 	addressStr = address_value.get_str();
-	tmp = AliasUpdate("node1", "jagnodemultisig1", "pubdata", "privdata", "\"\"", addressStr);
+	tmp = AliasUpdate("node1", "jagnodemultisig1", "pubdata", "privdata", addressStr);
 	BOOST_CHECK_EQUAL(tmp, "");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo jagnodemultisig1"));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str(), addressStr);
 	// 2 sigs needed, remove redeemScript to make it a normal alias
 	BOOST_CHECK_NO_THROW(CallRPC("node3", "aliasaddscript " + redeemScript));
-	hex_str = AliasUpdate("node3", "jagnodemultisig1", "\"\"", "\"\"", "\"\"", oldAddressStr);
+	hex_str = AliasUpdate("node3", "jagnodemultisig1", "\"\"", "\"\"", oldAddressStr);
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasaddscript " + redeemScript));
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsignrawtransaction " + hex_str));
 	GenerateBlocks(5, "node3");
@@ -872,9 +872,9 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	// should fail: alias update on expired alias
 	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate sysrates.peg aliasexpirednode2 newdata1"), runtime_error);
 	// should fail: alias transfer from expired alias
-	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate sysrates.peg aliasexpirednode2 changedata1 \"\" \"\" " + aliasAddress.ToString()), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate sysrates.peg aliasexpirednode2 changedata1 \"\" " + aliasAddress.ToString()), runtime_error);
 	// should fail: alias transfer to another non-expired alias address
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate sysrates.peg aliasexpire2 changedata1 \"\" \"\" " + aliasexpire1address), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate sysrates.peg aliasexpire2 changedata1 \"\" " + aliasexpire1address), runtime_error);
 
 	// should fail: link to an expired alias in offer
 	BOOST_CHECK_THROW(CallRPC("node2", "offerlink aliasexpirednode2 " + offerguid + " 5 newdetails"), runtime_error);
@@ -919,7 +919,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 
 	BOOST_CHECK_NO_THROW(AliasNew("node1", "aliasexpire2", "somedata"));
 	// should pass: alias transfer to another expired alias address
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate sysrates.peg aliasexpire2 changedata1 \"\" \"\" " + aliasexpire2node2address));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate sysrates.peg aliasexpire2 changedata1 \"\" " + aliasexpire2node2address));
 	GenerateBlocks(5);
 	BOOST_CHECK(aliasexpirenode2address != AliasNew("node2", "aliasexpirednode2", "somedata"));
 
