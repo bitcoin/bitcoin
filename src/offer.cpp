@@ -388,7 +388,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				continue;
 			if(foundAlias)
 				break;
-			if (!foundAlias && IsAliasOp(pop, true) && vvch.size() >= 4 && vvch[3].empty() && ((theOffer.accept.IsNull() && theOffer.aliasTuple.first == vvch[0]) || (!theOffer.accept.IsNull() && theOffer.accept.buyerAliasTuple.first == vvch[0])))
+			if (!foundAlias && IsAliasOp(pop, true) && vvch.size() >= 4 && vvch[3].empty() && ((theOffer.accept.IsNull() && theOffer.aliasTuple.first == vvch[0] && theOffer.aliasTuple.third == vvch[1]) || (!theOffer.accept.IsNull() && theOffer.accept.buyerAliasTuple.first == vvch[0] && theOffer.accept.buyerAliasTuple.third == vvch[1])))
 			{
 				foundAlias = true;
 				prevAliasOp = pop;
@@ -459,7 +459,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1014 - " + _("Offer guid in the data output does not match the guid in the transaction");
 				return error(errorMessage.c_str());
 			}
-			if(!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty() || theOffer.aliasTuple.first != vvchPrevAliasArgs[0])
+			if(!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty())
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Alias input mismatch");
 				return error(errorMessage.c_str());
@@ -527,7 +527,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1014 - " + _("Offer guid in the data output does not match the guid in the transaction");
 				return error(errorMessage.c_str());
 			}
-			if(!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty() || theOffer.aliasTuple.first != vvchPrevAliasArgs[0])
+			if(!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty())
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1026 - " + _("Alias input mismatch");
 				return error(errorMessage.c_str());
@@ -576,7 +576,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			break;
 		case OP_OFFER_ACCEPT:
 			theOfferAccept = theOffer.accept;
-			if(!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty() || theOfferAccept.buyerAliasTuple.first != vvchPrevAliasArgs[0])
+			if(!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty())
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1035 - " + _("Alias input mismatch");
 				return error(errorMessage.c_str());
@@ -652,11 +652,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				return true;
 			}
 			dbOffer = theOffer;
-			if(serializedOffer.aliasTuple.first != theOffer.aliasTuple.first)
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1049 - " + _("Offer alias mismatch");
-				serializedOffer.aliasTuple = theOffer.aliasTuple;
-			}
 			serializedOffer.linkOfferTuple = theOffer.linkOfferTuple;
 			serializedOffer.vchOffer = theOffer.vchOffer;
 			serializedOffer.nSold = theOffer.nSold;
@@ -688,11 +683,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					if(serializedOffer.paymentOptions <= 0)
 						theOffer.paymentOptions = dbOffer.paymentOptions;
 
-					if (theOffer.aliasTuple != dbOffer.aliasTuple)
-					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2023 - " + _("Wrong alias input provided in this offer transaction");
-						theOffer.aliasTuple = dbOffer.aliasTuple;
-					}
 
 					// non linked offers cant edit commission
 					if(theOffer.linkOfferTuple.first.empty())
@@ -1305,7 +1295,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	// unserialize offer from txn, serialize back
 	// build offer
 	COffer newOffer;
-	newOffer.aliasTuple = CNameTXIDTuple(alias.vchAlias, alias.txHash);
+	newOffer.aliasTuple = CNameTXIDTuple(alias.vchAlias, alias.txHash,alias.vchGUID);
 	newOffer.vchOffer = vchOffer;
 	newOffer.sCategory = vchCategory;
 	newOffer.sTitle = vchTitle;
@@ -1463,7 +1453,7 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	// build offer
 	COffer newOffer;
 	newOffer.vchOffer = vchOffer;
-	newOffer.aliasTuple = CNameTXIDTuple(alias.vchAlias, alias.txHash);
+	newOffer.aliasTuple = CNameTXIDTuple(alias.vchAlias, alias.txHash, alias.vchGUID);
 	newOffer.sDescription = vchDescription;
 	newOffer.SetPrice(linkOffer.GetPrice());
 	newOffer.paymentOptions = linkOffer.paymentOptions;
@@ -2063,7 +2053,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 		theOffer.paymentOptions = paymentOptionsMask;
 
 	if(!vchAlias.empty() && vchAlias != alias.vchAlias)
-		theOffer.linkAliasTuple = CNameTXIDTuple(linkAlias.vchAlias, linkAlias.txHash);
+		theOffer.linkAliasTuple = CNameTXIDTuple(linkAlias.vchAlias, linkAlias.txHash, linkAlias.vchGUID);
 	if(strQty.empty())
 		theOffer.nQty = offerCopy.nQty;
 	else
@@ -2294,7 +2284,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	txAccept.offerTuple = CNameTXIDTuple(theOffer.vchOffer, theOffer.txHash);
 	if (!theOffer.linkOfferTuple.first.empty())
 		txAccept.linkOfferTuple = CNameTXIDTuple(linkOffer.vchOffer, linkOffer.txHash);
-	txAccept.buyerAliasTuple = CNameTXIDTuple(buyerAlias.vchAlias, buyerAlias.txHash);
+	txAccept.buyerAliasTuple = CNameTXIDTuple(buyerAlias.vchAlias, buyerAlias.txHash, buyerAlias.vchGUID);
 	txAccept.nPaymentOption = paymentOptionsMask;
     CAmount nTotalValue = ( nPrice * nQty );
 	CAmount nTotalCommission = ( nCommission * nQty );
@@ -2604,7 +2594,7 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 	theOffer.ClearOffer();
 	theOffer.accept = theOfferAccept;
 	theOffer.accept.vchAcceptRand.clear();
-	theOffer.accept.buyerAliasTuple = CNameTXIDTuple(theAlias.vchAlias, theAlias.txHash);
+	theOffer.accept.buyerAliasTuple = CNameTXIDTuple(theAlias.vchAlias, theAlias.txHash, theAlias.vchGUID);
 	theOffer.accept.bPaymentAck = false;
 	theOffer.nHeight = chainActive.Tip()->nHeight;
 	// buyer
@@ -2760,7 +2750,7 @@ UniValue offeracceptacknowledge(const UniValue& params, bool fHelp) {
 
 	theOffer.ClearOffer();
 	theOffer.accept.bPaymentAck = true;
-	theOffer.accept.buyerAliasTuple = CNameTXIDTuple(sellerAlias.vchAlias, sellerAlias.txHash);
+	theOffer.accept.buyerAliasTuple = CNameTXIDTuple(sellerAlias.vchAlias, sellerAlias.txHash, sellerAlias.vchGUID);
 	theOffer.accept.nPaymentOption = theOfferAccept.nPaymentOption;
 	theOffer.nHeight = chainActive.Tip()->nHeight;
 

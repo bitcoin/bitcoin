@@ -353,7 +353,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				continue;
 			if(foundAlias)
 				break;
-			else if (!foundAlias && IsAliasOp(pop, true) && vvch.size() >= 4 && vvch[3].empty())
+			else if (!foundAlias && IsAliasOp(pop, true) && vvch.size() >= 4 && vvch[3].empty() && theCert.aliasTuple.first == vvch[0] && theCert.aliasTuple.third == vvch[1])
 			{
 				foundAlias = true; 
 				prevAliasOp = pop;
@@ -405,7 +405,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2010 - " + _("Certificate linked alias not allowed in activate");
 				return error(errorMessage.c_str());
 			}
-			if(!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty() || theCert.aliasTuple.first != vvchPrevAliasArgs[0])
+			if(!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty())
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2011 - " + _("Alias input mismatch");
 				return error(errorMessage.c_str());
@@ -433,7 +433,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2015 - " + _("Certificate title too big");
 				return error(errorMessage.c_str());
 			}
-			if(!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty() || theCert.aliasTuple.first != vvchPrevAliasArgs[0])
+			if(!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty())
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2016 - " + _("Alias input mismatch");
 				return error(errorMessage.c_str());
@@ -451,7 +451,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2018 - " + _("Certificate guid mismatch");
 				return error(errorMessage.c_str());
 			}
-			if(!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty() || theCert.aliasTuple.first != vvchPrevAliasArgs[0])
+			if(!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty())
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2019 - " + _("Alias input mismatch");
 				return error(errorMessage.c_str());
@@ -489,11 +489,6 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				theCert.sCategory = dbCert.sCategory;
 			
 			theCert.vchCert = dbCert.vchCert;
-			if(theCert.aliasTuple != dbCert.aliasTuple)
-			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2023 - " + _("Wrong alias input provided in this certificate transaction");
-				theCert.aliasTuple = dbCert.aliasTuple;
-			}
 			uint256 txid;
 			CCert firstCert;
 			if (!pcertdb->ReadCertFirstTXID(dbCert.vchCert, txid)) {
@@ -632,7 +627,7 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 		newCert.vchData = vchFromString(strData);
 	newCert.vchPubData = vchPubData;
 	newCert.nHeight = chainActive.Tip()->nHeight;
-	newCert.aliasTuple = CNameTXIDTuple(vchAlias, theAlias.txHash);
+	newCert.aliasTuple = CNameTXIDTuple(vchAlias, theAlias.txHash, theAlias.vchGUID);
 
 	vector<unsigned char> data;
 	newCert.Serialize(data);
@@ -878,8 +873,8 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	theCert.ClearCert();
     CScript scriptPubKey;
 	theCert.nHeight = chainActive.Tip()->nHeight;
-	theCert.aliasTuple = CNameTXIDTuple(fromAlias.vchAlias, fromAlias.txHash);
-	theCert.linkAliasTuple = CNameTXIDTuple(toAlias.vchAlias, toAlias.txHash);
+	theCert.aliasTuple = CNameTXIDTuple(fromAlias.vchAlias, fromAlias.txHash, fromAlias.vchGUID);
+	theCert.linkAliasTuple = CNameTXIDTuple(toAlias.vchAlias, toAlias.txHash, toAlias.vchGUID);
 
 	if(!strData.empty())
 		theCert.vchData = vchFromString(strData);

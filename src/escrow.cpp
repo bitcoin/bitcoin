@@ -497,7 +497,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			case OP_ESCROW_ACTIVATE:
 				if (theEscrow.bPaymentAck)
 				{
-					if(!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty() || theEscrow.linkAliasTuple.first != vvchPrevAliasArgs[0] )
+					if(!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty() || theEscrow.linkAliasTuple.first != vvchPrevAliasArgs[0] || theEscrow.linkAliasTuple.third != vvchPrevAliasArgs[1])
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4010 - " + _("Alias input mismatch");
 						return error(errorMessage.c_str());
@@ -505,7 +505,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				}
 				else
 				{
-					if(!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty() || theEscrow.buyerAliasTuple.first != vvchPrevAliasArgs[0] )
+					if(!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty() || theEscrow.buyerAliasTuple.first != vvchPrevAliasArgs[0] || theEscrow.linkAliasTbuyerAliasTupleuple.third != vvchPrevAliasArgs[1])
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4011 - " + _("Alias input mismatch");
 						return error(errorMessage.c_str());
@@ -573,7 +573,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 
 				break;
 			case OP_ESCROW_COMPLETE:
-				if(!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty() || theEscrow.linkAliasTuple.first != vvchPrevAliasArgs[0] )
+				if(!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty() || theEscrow.linkAliasTuple.first != vvchPrevAliasArgs[0] || theEscrow.linkAliasTuple.third != vvchPrevAliasArgs[1])
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4023 - " + _("Alias input mismatch");
 					return error(errorMessage.c_str());
@@ -596,7 +596,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				}
 				break;
 			case OP_ESCROW_REFUND:
-				if(!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty() || theEscrow.linkAliasTuple.first != vvchPrevAliasArgs[0] )
+				if(!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty() || theEscrow.linkAliasTuple.first != vvchPrevAliasArgs[0]  || theEscrow.linkAliasTuple.third != vvchPrevAliasArgs[1])
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4027 - " + _("Alias input mismatch");
 					return error(errorMessage.c_str());
@@ -1299,13 +1299,13 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
     CEscrow newEscrow;
 	newEscrow.op = OP_ESCROW_ACTIVATE;
 	newEscrow.vchEscrow = vchEscrow;
-	newEscrow.buyerAliasTuple = CNameTXIDTuple(buyeralias.vchAlias, buyeralias.txHash);
-	newEscrow.arbiterAliasTuple = CNameTXIDTuple(arbiteralias.vchAlias, arbiteralias.txHash);
+	newEscrow.buyerAliasTuple = CNameTXIDTuple(buyeralias.vchAlias, buyeralias.txHash, buyeralias.vchGUID);
+	newEscrow.arbiterAliasTuple = CNameTXIDTuple(arbiteralias.vchAlias, arbiteralias.txHash, arbiteralias.vchGUID);
 	newEscrow.vchRedeemScript = redeemScript;
 	newEscrow.offerTuple = CNameTXIDTuple(theOffer.vchOffer, theOffer.txHash);
 	newEscrow.extTxId = uint256S(extTxIdStr);
-	newEscrow.sellerAliasTuple = CNameTXIDTuple(selleralias.vchAlias, selleralias.txHash);
-	newEscrow.linkSellerAliasTuple = CNameTXIDTuple(reselleralias.vchAlias, reselleralias.txHash);
+	newEscrow.sellerAliasTuple = CNameTXIDTuple(selleralias.vchAlias, selleralias.txHash, selleralias.vchGUID);
+	newEscrow.linkSellerAliasTuple = CNameTXIDTuple(reselleralias.vchAlias, reselleralias.txHash, reselleralias.vchGUID);
 	newEscrow.nQty = nQty;
 	newEscrow.nPaymentOption = paymentOptionMask;
 	newEscrow.nHeight = chainActive.Tip()->nHeight;
@@ -1570,7 +1570,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	escrow.rawTx = ParseHex(hex_str);
 	escrow.nHeight = chainActive.Tip()->nHeight;
 	escrow.bPaymentAck = false;
-	escrow.linkAliasTuple = CNameTXIDTuple(theAlias.vchAlias, theAlias.txHash);
+	escrow.linkAliasTuple = CNameTXIDTuple(theAlias.vchAlias, theAlias.txHash, theAlias.vchGUID);
 
 	vector<unsigned char> data;
 	escrow.Serialize(data);
@@ -1686,7 +1686,7 @@ UniValue escrowacknowledge(const UniValue& params, bool fHelp) {
 	escrow.ClearEscrow();
 	escrow.bPaymentAck = true;
 	escrow.nHeight = chainActive.Tip()->nHeight;
-	escrow.linkAliasTuple = CNameTXIDTuple(sellerAliasLatest.vchAlias, sellerAliasLatest.txHash);
+	escrow.linkAliasTuple = CNameTXIDTuple(sellerAliasLatest.vchAlias, sellerAliasLatest.txHash, sellerAliasLatest.vchGUID);
 
 	vector<unsigned char> data;
 	escrow.Serialize(data);
@@ -2028,7 +2028,7 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
 	escrow.op = OP_ESCROW_COMPLETE;
 	escrow.bPaymentAck = false;
 	escrow.nHeight = chainActive.Tip()->nHeight;
-	escrow.linkAliasTuple = CNameTXIDTuple(sellerAliasLatest.vchAlias, sellerAliasLatest.txHash);
+	escrow.linkAliasTuple = CNameTXIDTuple(sellerAliasLatest.vchAlias, sellerAliasLatest.txHash, sellerAliasLatest.vchGUID);
 	escrow.redeemTxId = myRawTx.GetHash();
 
     CScript scriptPubKeyBuyer, scriptPubKeySeller, scriptPubKeyArbiter;
@@ -2272,7 +2272,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	escrow.bPaymentAck = false;
 	escrow.rawTx = ParseHex(hex_str);
 	escrow.nHeight = chainActive.Tip()->nHeight;
-	escrow.linkAliasTuple = CNameTXIDTuple(theAlias.vchAlias, theAlias.txHash);
+	escrow.linkAliasTuple = CNameTXIDTuple(theAlias.vchAlias, theAlias.txHash, theAlias.vchGUID);
 
 	vector<unsigned char> data;
 	escrow.Serialize(data);
@@ -2545,7 +2545,7 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 	escrow.op = OP_ESCROW_COMPLETE;
 	escrow.bPaymentAck = false;
 	escrow.nHeight = chainActive.Tip()->nHeight;
-	escrow.linkAliasTuple = CNameTXIDTuple(buyerAliasLatest.vchAlias, buyerAliasLatest.txHash);
+	escrow.linkAliasTuple = CNameTXIDTuple(buyerAliasLatest.vchAlias, buyerAliasLatest.txHash, buyerAliasLatest.vchGUID);
 	escrow.redeemTxId = myRawTx.GetHash();
 
     CScript scriptPubKeyBuyer, scriptPubKeySeller, scriptPubKeyArbiter;
@@ -2720,7 +2720,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	escrow.op = OP_ESCROW_COMPLETE;
 	escrow.bPaymentAck = false;
 	escrow.nHeight = chainActive.Tip()->nHeight;
-	escrow.linkAliasTuple = CNameTXIDTuple(theAlias.vchAlias, theAlias.txHash);
+	escrow.linkAliasTuple = CNameTXIDTuple(theAlias.vchAlias, theAlias.txHash, theAlias.vchGUID);
 	// buyer
 	if(role == "buyer")
 	{
