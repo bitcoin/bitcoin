@@ -738,8 +738,8 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
         throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2504 - " + _("Could not find a certificate with this key"));
 
 	CAliasIndex theAlias;
-	// get latest alias
-	if (!GetAlias(theCert.aliasTuple.first, theAlias))
+
+	if (!GetAlias(theCert.aliasTuple, theAlias))
 		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2505 - " + _("Failed to read alias from alias DB"));
 
 	CCert copyCert = theCert;
@@ -864,7 +864,7 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
         throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2510 - " + _("Could not find a certificate with this key"));
 
 	CAliasIndex fromAlias;
-	if(!GetAlias(theCert.aliasTuple.first, fromAlias))
+	if(!GetAlias(theCert.aliasTuple, fromAlias))
 	{
 		 throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2511 - " + _("Could not find the certificate alias"));
 	}

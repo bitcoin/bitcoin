@@ -893,7 +893,8 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + certgoodguid + " titlenew privdata pubdata"));
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate aliasexpire0 " + offerguid + " category title 100 0.05 description"));
 	GenerateBlocks(5, "node1");
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + certguid + " jag1 data pubdata"));
+	// cannot update cert because it expired and was renewed
+	BOOST_CHECK_THROW(CallRPC("node1", "certupdate " + certguid + " jag1 data pubdata"), runtime_error);
 	GenerateBlocks(5, "node1");
 
 	StartNode("node3");
@@ -923,8 +924,8 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	GenerateBlocks(5);
 	BOOST_CHECK(aliasexpirenode2address != AliasNew("node2", "aliasexpirednode2", "somedata"));
 
-	// should fail: cert alias not owned by node1
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certtransfer " + certgoodguid + " aliasexpirednode2"));
+	// should fail: cert alias was expired and renewed(aliasexpire2)
+	BOOST_CHECK_THROW(r = CallRPC("node1", "certtransfer " + certgoodguid + " aliasexpirednode2"), runtime_error);
 	const UniValue& resArray = r.get_array();
 	if (resArray.size() > 1)
 	{

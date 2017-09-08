@@ -688,6 +688,12 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					if(serializedOffer.paymentOptions <= 0)
 						theOffer.paymentOptions = dbOffer.paymentOptions;
 
+					if (theOffer.aliasTuple != dbOffer.aliasTuple)
+					{
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2023 - " + _("Wrong alias input provided in this offer transaction");
+						theOffer.aliasTuple = dbOffer.aliasTuple;
+					}
+
 					// non linked offers cant edit commission
 					if(theOffer.linkOfferTuple.first.empty())
 						theOffer.nCommission = 0;
@@ -1673,7 +1679,7 @@ UniValue offerremovewhitelist(const UniValue& params, bool fHelp) {
 	if (!GetOffer( vchOffer, theOffer))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1523 - " + _("Could not find an offer with this guid"));
 	CAliasIndex theAlias;
-	if (!GetAlias( theOffer.aliasTuple.first, theAlias))
+	if (!GetAlias( theOffer.aliasTuple, theAlias))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1524 - " + _("Could not find an alias with this name"));
 	
 
@@ -1769,7 +1775,7 @@ UniValue offerclearwhitelist(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1528 - " + _("Could not find an offer with this guid"));
 
 	CAliasIndex theAlias;
-	if (!GetAlias(theOffer.aliasTuple.first, theAlias))
+	if (!GetAlias(theOffer.aliasTuple, theAlias))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1529 - " + _("Could not find an alias with this name"));
 
 
@@ -1954,7 +1960,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	if (!GetOffer( vchOffer, theOffer))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1534 - " + _("Could not find an offer with this guid"));
 
-	if (!GetAlias(theOffer.aliasTuple.first, alias))
+	if (!GetAlias(theOffer.aliasTuple, alias))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1535 - " + _("Could not find an alias with this name"));
 	if (vchAlias != alias.vchAlias && !GetAlias(vchAlias, linkAlias))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1536 - " + _("Could not find an alias with this name"));
