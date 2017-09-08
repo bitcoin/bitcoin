@@ -699,7 +699,7 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 }
 
 UniValue certupdate(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() < 1 || params.size() > 7)
+    if (fHelp || params.size() < 1 || params.size() > 6)
         throw runtime_error(
 		"certupdate <guid> [title] [public] [private] [category=certificates] [witness]\n"
 						"Perform an update on an certificate you control.\n"
@@ -722,12 +722,12 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 		strPubData = params[2].get_str();
 	if(CheckParam(params, 3))
 		strData = params[3].get_str();
-	if(CheckParam(params, 5))
-		strCategory = params[5].get_str();
+	if(CheckParam(params, 4))
+		strCategory = params[4].get_str();
 
 	vector<unsigned char> vchWitness;
-	if(CheckParam(params, 6))
-		vchWitness = vchFromValue(params[6]);
+	if(CheckParam(params, 5))
+		vchWitness = vchFromValue(params[5]);
 
     // this is a syscoind txn
     CWalletTx wtx;
