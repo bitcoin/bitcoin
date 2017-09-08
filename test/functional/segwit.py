@@ -240,45 +240,45 @@ class SegWitTest(BitcoinTestFramework):
         #                      tx2 (segwit input, paying to a non-segwit output) ->
         #                      tx3 (non-segwit input, paying to a non-segwit output).
         # tx1 is allowed to appear in the block, but no others.
-        txid1 = send_to_witness(1, self.nodes[0], find_unspent(self.nodes[0], 50), self.pubkey[0], False, Decimal("49.996"))
-        hex_tx = self.nodes[0].gettransaction(txid)['hex']
-        tx = FromHex(CTransaction(), hex_tx)
+        tx_hex = self.nodes[0].gettransaction(txid)['hex']
+        tx = FromHex(CTransaction(), tx_hex)
         assert(tx.wit.is_null()) # This should not be a segwit input
-        assert(txid1 in self.nodes[0].getrawmempool())
 
-        hex_tx = self.nodes[0].gettransaction(txid1)['hex']
-        tx = FromHex(CTransaction(), hex_tx)
+        txid1 = send_to_witness(1, self.nodes[0], find_unspent(self.nodes[0], 50), self.pubkey[0], False, Decimal("49.996"))
+        assert(txid1 in self.nodes[0].getrawmempool())
+        tx1_hex = self.nodes[0].gettransaction(txid1)['hex']
+        tx1 = FromHex(CTransaction(), tx1_hex)
 
         # Check that wtxid is properly reported in mempool entry (txid1)
-        assert_equal(int(self.nodes[0].getmempoolentry(txid1)["wtxid"], 16), tx.calc_sha256(True))
+        assert_equal(int(self.nodes[0].getmempoolentry(txid1)["wtxid"], 16), tx1.calc_sha256(True))
 
         # Check that weight and sizei (actually vsize) are properly reported in mempool entry (txid1)
         assert_equal(self.nodes[0].getmempoolentry(txid1)["size"], (self.nodes[0].getmempoolentry(txid1)["weight"] + 3) // 4)
-        assert_equal(self.nodes[0].getmempoolentry(txid1)["weight"], len(tx.serialize())*3 + len(tx.serialize_with_witness()))
+        assert_equal(self.nodes[0].getmempoolentry(txid1)["weight"], len(tx1.serialize())*3 + len(tx1.serialize_with_witness()))
 
         # Now create tx2, which will spend from txid1.
-        tx = CTransaction()
-        tx.vin.append(CTxIn(COutPoint(int(txid1, 16), 0), b''))
-        tx.vout.append(CTxOut(int(49.99*COIN), CScript([OP_TRUE])))
-        tx2_hex = self.nodes[0].signrawtransaction(ToHex(tx))['hex']
+        tx2 = CTransaction()
+        tx2.vin.append(CTxIn(COutPoint(int(txid1, 16), 0), b''))
+        tx2.vout.append(CTxOut(int(49.99*COIN), CScript([OP_TRUE])))
+        tx2_hex = self.nodes[0].signrawtransaction(ToHex(tx2))['hex']
         txid2 = self.nodes[0].sendrawtransaction(tx2_hex)
-        tx = FromHex(CTransaction(), tx2_hex)
-        assert(not tx.wit.is_null())
+        tx2 = FromHex(CTransaction(), tx2_hex)
+        assert(not tx2.wit.is_null())
 
         # Check that wtxid is properly reported in mempool entry (txid2)
-        assert_equal(int(self.nodes[0].getmempoolentry(txid2)["wtxid"], 16), tx.calc_sha256(True))
+        assert_equal(int(self.nodes[0].getmempoolentry(txid2)["wtxid"], 16), tx2.calc_sha256(True))
 
         # Check that weight and size (actually vsize) are properly reported in mempool entry (txid2)
         assert_equal(self.nodes[0].getmempoolentry(txid2)["size"], (self.nodes[0].getmempoolentry(txid2)["weight"] + 3) // 4)
-        assert_equal(self.nodes[0].getmempoolentry(txid2)["weight"], len(tx.serialize())*3 + len(tx.serialize_with_witness()))
+        assert_equal(self.nodes[0].getmempoolentry(txid2)["weight"], len(tx2.serialize())*3 + len(tx2.serialize_with_witness()))
 
         # Now create tx3, which will spend from txid2
-        tx = CTransaction()
-        tx.vin.append(CTxIn(COutPoint(int(txid2, 16), 0), b""))
-        tx.vout.append(CTxOut(int(49.95*COIN), CScript([OP_TRUE]))) # Huge fee
-        tx.calc_sha256()
-        txid3 = self.nodes[0].sendrawtransaction(ToHex(tx))
-        assert(tx.wit.is_null())
+        tx3 = CTransaction()
+        tx3.vin.append(CTxIn(COutPoint(int(txid2, 16), 0), b""))
+        tx3.vout.append(CTxOut(int(49.95*COIN), CScript([OP_TRUE]))) # Huge fee
+        tx3.calc_sha256()
+        txid3 = self.nodes[0].sendrawtransaction(ToHex(tx3))
+        assert(tx3.wit.is_null())
         assert(txid3 in self.nodes[0].getrawmempool())
 
         # Now try calling getblocktemplate() without segwit support.
@@ -297,11 +297,11 @@ class SegWitTest(BitcoinTestFramework):
         assert(txid3 in template_txids)
 
         # Check that wtxid is properly reported in mempool entry (txid3)
-        assert_equal(int(self.nodes[0].getmempoolentry(txid3)["wtxid"], 16), tx.calc_sha256(True))
+        assert_equal(int(self.nodes[0].getmempoolentry(txid3)["wtxid"], 16), tx3.calc_sha256(True))
 
         # Check that weight and size (actually vsize) are properly reported in mempool entry (txid3)
         assert_equal(self.nodes[0].getmempoolentry(txid3)["size"], (self.nodes[0].getmempoolentry(txid3)["weight"] + 3) // 4)
-        assert_equal(self.nodes[0].getmempoolentry(txid3)["weight"], len(tx.serialize())*3 + len(tx.serialize_with_witness()))
+        assert_equal(self.nodes[0].getmempoolentry(txid3)["weight"], len(tx3.serialize())*3 + len(tx3.serialize_with_witness()))
 
         # Mine a block to clear the gbt cache again.
         self.nodes[0].generate(1)
