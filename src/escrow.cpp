@@ -505,7 +505,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				}
 				else
 				{
-					if(!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty() || theEscrow.buyerAliasTuple.first != vvchPrevAliasArgs[0] || theEscrow.linkAliasTbuyerAliasTupleuple.third != vvchPrevAliasArgs[1])
+					if(!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty() || theEscrow.buyerAliasTuple.first != vvchPrevAliasArgs[0] || theEscrow.linkAliasTbuyerAliasTuple.third != vvchPrevAliasArgs[1])
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4011 - " + _("Alias input mismatch");
 						return error(errorMessage.c_str());
