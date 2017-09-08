@@ -161,7 +161,7 @@ public:
 		if(address.empty())
 			return false;	
 		WriteAliasIndex(alias);
-		return Write(make_pair(std::string("namei"), tuple), alias) && Write(make_pair(std::string("namea"), address), alias.vchAlias) && Write(make_pair(std::string("nameu"), alias.vchAlias), aliasUnprunable) && WriteAliasLastTXID(alias.vchAlias, alias.txHash);
+		return Write(make_pair(std::string("namei"), CNameTXIDTuple(alias.vchAlias, alias.txHash, alias.vchGUID)), alias) && Write(make_pair(std::string("namea"), address), alias.vchAlias) && Write(make_pair(std::string("nameu"), alias.vchAlias), aliasUnprunable) && WriteAliasLastTXID(alias.vchAlias, alias.txHash);
 	}
 
 
