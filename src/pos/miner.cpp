@@ -338,23 +338,7 @@ void ThreadStakeMiner(size_t nThreadID, std::vector<CWalletRef> &vpwallets, size
             continue;
         };
 
-        std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler(Params()).CreateNewBlock(coinbaseScript));
-        if (!pblocktemplate.get())
-        {
-            fIsStaking = false;
-            LogPrint(BCLog::POS, "%s: Couldn't create new block.\n", __func__);
-            condWaitFor(nThreadID, nMinerSleep);
-            continue;
-        };
-
-        if (nBestHeight+1 <= nLastImportHeight
-            && !ImportOutputs(pblocktemplate.get(), nBestHeight+1))
-        {
-            fIsStaking = false;
-            condWaitFor(nThreadID, 30000);
-            LogPrint(BCLog::POS, "%s: ImportOutputs failed.\n", __func__);
-            continue;
-        };
+        std::unique_ptr<CBlockTemplate> pblocktemplate;
 
         size_t nWaitFor = 60000;
         for (size_t i = nStart; i < nEnd; ++i)
@@ -383,6 +367,28 @@ void ThreadStakeMiner(size_t nThreadID, std::vector<CWalletRef> &vpwallets, size
                 continue;
             };
 
+            if (!pblocktemplate.get())
+            {
+                pblocktemplate = BlockAssembler(Params()).CreateNewBlock(coinbaseScript);
+                if (!pblocktemplate.get())
+                {
+                    fIsStaking = false;
+                    //condWaitFor(nThreadID, nMinerSleep); // [rml]
+                    nWaitFor = std::min(nWaitFor, (size_t)nMinerSleep);
+                    LogPrint(BCLog::POS, "%s: Couldn't create new block.\n", __func__);
+                    continue;
+                };
+            };
+
+            if (nBestHeight+1 <= nLastImportHeight
+                && !ImportOutputs(pblocktemplate.get(), nBestHeight+1))
+            {
+                fIsStaking = false;
+                //condWaitFor(nThreadID, 30000); // [rml]
+                nWaitFor = std::min(nWaitFor, (size_t)30000);
+                LogPrint(BCLog::POS, "%s: ImportOutputs failed.\n", __func__);
+                continue;
+            };
 
             pwallet->nIsStaking = CHDWallet::IS_STAKING;
             nWaitFor = 0;
