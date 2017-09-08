@@ -315,6 +315,7 @@ UniValue validateaddress(const UniValue& params, bool fHelp)
 		CSyscoinAddress v1addr;
 		v1addr.Set(dest, CChainParams::ADDRESS_OLDSYS);
 		string addressStr = params[0].get_str();
+		ret.push_back(Pair("v1address", v1addr.ToString()));
 		if (addressStr[0] == 'S')
 			ret.push_back(Pair("address", v1addr.ToString()));
 		else
