@@ -23,7 +23,7 @@ public:
 		READWRITE(third);
 	}
 
-	CNameTXIDTuple(const std::vector<unsigned char> &f, uint256 s, const std::vector<unsigned char> &third =std::vector<unsigned char>()) {
+	CNameTXIDTuple(const std::vector<unsigned char> &f, uint256 s, const std::vector<unsigned char> &guid=std::vector<unsigned char>()) {
 		first = f;
 		second = s;
 		third = guid;
