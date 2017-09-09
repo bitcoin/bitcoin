@@ -17,8 +17,8 @@ uint256 ComputeStakeModifierV2(const CBlockIndex *pindexPrev, const uint256 &ker
  * Sets hashProofOfStake on success return
  */
 bool CheckStakeKernelHash(const CBlockIndex *pindexPrev,
-    unsigned int nBits, const CBlock &blockFrom,
-    const CTransaction &txPrev, const COutPoint &prevout, unsigned int nTimeTx,
+    uint32_t nBits, uint32_t nBlockFromTime,
+    CAmount prevOutAmount, const COutPoint &prevout, uint32_t nTimeTx,
     uint256 &hashProofOfStake, uint256 &targetProofOfStake,
     bool fPrintProofOfStake=false);
 

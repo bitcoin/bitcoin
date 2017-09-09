@@ -4671,13 +4671,13 @@ int CHDWallet::GetDefaultConfidentialChain(CHDWalletDB *pwdb, CExtKeyAccount *&s
     {
         uint64_t n;
         GetCompressedInt64(mvi->second, n);
-        
+
         if (n < sea->vExtKeys.size())
         {
             pc = sea->vExtKeys[n];
             return 0;
         };
-        
+
         return errorN(1, "%s: %s.", __func__, _("Confidential chain set but not found"));
     };
     
@@ -4708,8 +4708,10 @@ int CHDWallet::GetDefaultConfidentialChain(CHDWalletDB *pwdb, CExtKeyAccount *&s
     sekConfidential->nFlags |= EAF_ACTIVE | EAF_IN_ACCOUNT;
     sekConfidential->mapValue[EKVT_KEY_TYPE] = SetChar(v, EKT_CONFIDENTIAL);
     
-    sea->vExtKeyIDs.push_back(sekConfidential->GetID());
+    CKeyID idk = sekConfidential->GetID();
+    sea->vExtKeyIDs.push_back(idk);
     sea->vExtKeys.push_back(sekConfidential);
+    mapExtKeys[idk] = sekConfidential; // wallet destructor will delete
     
     sea->mapValue[EKVT_CONFIDENTIAL_CHAIN] = SetCompressedInt64(v, nConfidential);
     

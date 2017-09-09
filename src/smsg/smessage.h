@@ -73,7 +73,7 @@ public:
     SecureMessage()
     {
         nPayload = 0;
-        pPayload = NULL;
+        pPayload = nullptr;
         paid = false;
     };
 
@@ -81,7 +81,7 @@ public:
     {
         if (pPayload)
             delete[] pPayload;
-        pPayload = NULL;
+        pPayload = nullptr;
     };
 
     uint8_t  hash[4];
@@ -302,7 +302,7 @@ class SecMsgDB
 public:
     SecMsgDB()
     {
-        activeBatch = NULL;
+        activeBatch = nullptr;
     };
 
     ~SecMsgDB()

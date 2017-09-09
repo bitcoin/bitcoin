@@ -33,12 +33,12 @@ BOOST_AUTO_TEST_CASE(smsg_test)
 #ifdef ENABLE_WALLET
     fParticlMode = true;
     g_connman = std::unique_ptr<CConnman>(new CConnman(GetRand(std::numeric_limits<uint64_t>::max()), GetRand(std::numeric_limits<uint64_t>::max())));
-    
+
     const std::string sTestMessage =
         "A short test message 0123456789 !@#$%^&*()_+-=";
 
     fSecMsgEnabled = true;
-    int rv;
+    int rv = 0;
     const int nKeys = 12;
     CWallet keystore;
     CKey keyOwn[nKeys];
@@ -58,10 +58,10 @@ BOOST_AUTO_TEST_CASE(smsg_test)
     };
 
     BOOST_CHECK(true == SecureMsgStart(&keystore, false, false));
-    
+
     CKeyID idNull;
     BOOST_CHECK(idNull.IsNull());
-    
+
     for (int i = 0; i < nKeys; i++)
     {
         SecureMessage smsg;
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(smsg_test)
         std::string sAddrFail = addrFail.ToString();
 
         bool fSendAnonymous = rand() % 3 == 0;
-        
+
         BOOST_MESSAGE("sAddrFrom " << (fSendAnonymous ? std::string("Anon") : sAddrFrom));
         BOOST_MESSAGE("sAddrTo " << sAddrTo);
 
@@ -97,8 +97,7 @@ BOOST_AUTO_TEST_CASE(smsg_test)
     };
 
     SecureMsgShutdown();
-    
-    
+
     CConnman *p = g_connman.release();
     delete p;
 #endif

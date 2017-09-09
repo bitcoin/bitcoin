@@ -2285,7 +2285,6 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         }
     }
 
-    
     int nLockTimeFlags = 0;
     if (fParticlMode)
     {
@@ -2296,7 +2295,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             nLockTimeFlags |= LOCKTIME_VERIFY_SEQUENCE;
         }
     };
-    
+
     // Get the script flags for this block
     unsigned int flags = GetBlockScriptFlags(pindex, chainparams.GetConsensus());
 
@@ -2306,7 +2305,6 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     CBlockUndo blockundo;
     
     CCheckQueueControl<CScriptCheck> control(fScriptChecks && nScriptCheckThreads ? &scriptcheckqueue : nullptr);
-    
     
     std::vector<int> prevheights;
     CAmount nFees = 0;
@@ -2319,7 +2317,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     vPos.reserve(block.vtx.size());
     
     blockundo.vtxundo.reserve(block.vtx.size() - (fParticlMode ? 0 : 1));
-    
+
     std::vector<PrecomputedTransactionData> txdata;
     txdata.reserve(block.vtx.size()); // Required so that pointers to individual PrecomputedTransactionData don't get invalidated
     
@@ -2334,9 +2332,11 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         
         if (!tx.IsCoinBase())
         {
-            if (!view.HaveInputs(tx))
+            if (!view.HaveInputs(tx)) {
+                control.Wait();
                 return state.DoS(100, error("ConnectBlock(): inputs missing/spent"),
                                  REJECT_INVALID, "bad-txns-inputs-missingorspent");
+            }
             
             // Check that transaction is BIP68 final
             // BIP68 lock checks (as opposed to nLockTime checks) must
@@ -2351,6 +2351,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             }
 
             if (!SequenceLocks(tx, nLockTimeFlags, &prevheights, *pindex)) {
+                control.Wait();
                 return state.DoS(100, error("%s: contains a non-BIP68-final transaction", __func__),
                                  REJECT_INVALID, "bad-txns-nonfinal");
             }
@@ -2403,17 +2404,18 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             };
         };
 
-
         // GetTransactionSigOpCost counts 3 types of sigops:
         // * legacy (always)
         // * p2sh (when P2SH enabled in flags and excludes coinbase)
         // * witness (when witness enabled in flags and excludes coinbase)
         nSigOpsCost += GetTransactionSigOpCost(tx, view, flags);
-        if (nSigOpsCost > MAX_BLOCK_SIGOPS_COST)
+        if (nSigOpsCost > MAX_BLOCK_SIGOPS_COST) {
+            control.Wait();
             return state.DoS(100, error("ConnectBlock(): too many sigops"),
                              REJECT_INVALID, "bad-blk-sigops");
+        }
         txdata.emplace_back(tx);
-        
+
         size_t nStandardOut = 0, nCtOut = 0, nRingCTOut = 0;
         size_t nStandardIn = 0, nCtIn = 0, nRingCTIn = 0;
         if (!tx.IsCoinBase())
@@ -2428,18 +2430,22 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                     nStakeReward += nPlainValueOut - nPlainValueIn;
                     nMoneyCreated += nStakeReward;
                     
-                    if (nCtOut > 0 || nRingCTOut > 0 || nCtIn > 0 || nRingCTIn > 0)
+                    if (nCtOut > 0 || nRingCTOut > 0 || nCtIn > 0 || nRingCTIn > 0) {
+                        control.Wait();
                         return state.DoS(100, error("ConnectBlock(): non-standard outputs in coinstake"),
                              REJECT_INVALID, "bad-coinstake-outputs");
+                    };
                 } else
                 {
                     if (nCtOut > 0 || nRingCTOut > 0 || nCtIn > 0 || nRingCTIn > 0)
                     {
                         // fee is serialised in data output at vpout0
                         CAmount nFee;
-                        if (!tx.GetCTFee(nFee))
+                        if (!tx.GetCTFee(nFee)) {
+                            control.Wait();
                             return state.DoS(100, error("ConnectBlock(): bad-fee-output"),
                                 REJECT_INVALID, "bad-fee-output");
+                        };
                         nFees += nFee;
                     } else
                     {
@@ -2453,9 +2459,12 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
             std::vector<CScriptCheck> vChecks;
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
-            if (!CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, fCacheResults, txdata[i], nScriptCheckThreads ? &vChecks : nullptr))
+
+            if (!CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, fCacheResults, txdata[i], nScriptCheckThreads ? &vChecks : nullptr)) {
+                control.Wait();
                 return error("ConnectBlock(): CheckInputs on %s failed with %s",
                     txhash.ToString(), FormatStateMessage(state));
+            };
 
             control.Add(vChecks);
 
@@ -2482,7 +2491,6 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                 };
             };
             
-            
             COutPoint op(txhash, 0);
             
             for (const auto &txin : tx.vin)
@@ -2492,8 +2500,10 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                     uint32_t nInputs, nRingSize;
                     txin.GetAnonInfo(nInputs, nRingSize);
                     if (txin.scriptData.stack.size() != 1
-                        || txin.scriptData.stack[0].size() != 33 * nInputs)
+                        || txin.scriptData.stack[0].size() != 33 * nInputs) {
+                        control.Wait();
                         return error("%s: Bad scriptData stack, %s.", __func__, txhash.ToString());
+                    };
                     
                     const std::vector<uint8_t> &vKeyImages = txin.scriptData.stack[0];
                     
@@ -2516,8 +2526,10 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                 int64_t nTestExists;
                 if (!fVerifyingDB
                     && (pblocktree->ReadRCTOutputLink(txout->pk, nTestExists)
-                        || view.ReadRCTOutputLink(txout->pk, nTestExists)))
+                        || view.ReadRCTOutputLink(txout->pk, nTestExists))) {
+                    control.Wait();
                     return error("%s: Duplicate anon-output %s, index %d.", __func__, HexStr(txout->pk.begin(), txout->pk.end()), nTestExists);
+                };
                 
                 op.n = k;
                 view.nLastRCTOutput++;
@@ -2560,6 +2572,9 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
     int64_t nTime3 = GetTimeMicros(); nTimeConnect += nTime3 - nTime2;
     LogPrint(BCLog::BENCH, "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs]\n", (unsigned)block.vtx.size(), 0.001 * (nTime3 - nTime2), 0.001 * (nTime3 - nTime2) / block.vtx.size(), nInputs <= 1 ? 0 : 0.001 * (nTime3 - nTime2) / (nInputs-1), nTimeConnect * 0.000001);
+
+    if (!control.Wait())
+        return state.DoS(100, error("%s: CheckQueue failed", __func__), REJECT_INVALID, "block-validation-failed");
 
     if (fParticlMode)
     {
@@ -2654,15 +2669,13 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                                    block.vtx[0]->GetValueOut(), blockReward),
                                    REJECT_INVALID, "bad-cb-amount");
     };
-    
-    if (!control.Wait())
-        return state.DoS(100, error("%s: CheckQueue failed", __func__), REJECT_INVALID, "block-validation-failed");
+
     int64_t nTime4 = GetTimeMicros(); nTimeVerify += nTime4 - nTime2;
     LogPrint(BCLog::BENCH, "    - Verify %u txins: %.2fms (%.3fms/txin) [%.2fs]\n", nInputs - 1, 0.001 * (nTime4 - nTime2), nInputs <= 1 ? 0 : 0.001 * (nTime4 - nTime2) / (nInputs-1), nTimeVerify * 0.000001);
 
     if (fJustCheck)
         return true;
-    
+
     pindex->nMoneySupply = (pindex->pprev? pindex->pprev->nMoneySupply : 0) + nMoneyCreated;
     setDirtyBlockIndex.insert(pindex); // pindex has changed, must save to disk
 

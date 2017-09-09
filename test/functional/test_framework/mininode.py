@@ -1670,9 +1670,11 @@ class NodeConn(asyncore.dispatcher):
         b"blocktxn": msg_blocktxn
     }
     MAGIC_BYTES = {
-        "mainnet": b"\xf9\xbe\xb4\xd9",   # mainnet
-        "testnet3": b"\x0b\x11\x09\x07",  # testnet3
+        #"mainnet": b"\xf9\xbe\xb4\xd9",   # mainnet
+        #"testnet3": b"\x0b\x11\x09\x07",  # testnet3
         #"regtest": b"\xfa\xbf\xb5\xda",   # regtest
+        "mainnet": b"\xfb\xf2\xef\xb4",   # mainnet
+        "testnet3": b"\x08\x11\x05\x0b",  # testnet3
         "regtest": b"\x09\x12\x06\x0c",   # regtest
     }
 

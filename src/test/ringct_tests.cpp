@@ -183,6 +183,7 @@ int testCommitmentSum(secp256k1_context *ctx, CAmount nValueIn,
     if (memncmp(blindSum, 0, 32) == 0)
     {
         BOOST_REQUIRE(fPass == (0 == memncmp(&m[(index+(nRows-1)*nCols)*33], 0, 33))); // point at infinity encoded as 0*33
+        free(m);
         return 0;
     };
     
@@ -378,6 +379,7 @@ BOOST_AUTO_TEST_CASE(ringct_test)
     uint8_t randSeed[32];
     GetStrongRandBytes(randSeed, 32);
     uint8_t preimage[32];
+    GetStrongRandBytes(preimage, 32);
     
     uint8_t pc[32];
     std::vector<uint8_t> ki(33 * txins.size());
@@ -623,6 +625,7 @@ int doTest(secp256k1_context *ctx, size_t nInputs, size_t nOutputs, CAmount nFee
     std::vector<uint8_t> ss(nCols * nRows * 32);
     
     GetBytes(randSeed, 32, fDeterministic);
+    GetBytes(preimage, 32, fDeterministic);
     
     BOOST_CHECK(0 == secp256k1_generate_mlsag(ctx, &ki[0], pc, &ss[0],
         randSeed, preimage, nCols, nRows, index, 

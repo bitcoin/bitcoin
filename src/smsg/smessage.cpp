@@ -85,15 +85,15 @@ CCriticalSection cs_smsg;
 CCriticalSection cs_smsgDB;
 CCriticalSection cs_smsgThreads;
 
-leveldb::DB *smsgDB = NULL;
+leveldb::DB *smsgDB = nullptr;
 
 extern void Misbehaving(NodeId pnode, int howmuch);
 extern bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams);
 extern CChain chainActive;
 extern CCriticalSection cs_main;
 
-secp256k1_context *secp256k1_context_smsg = NULL;
-CWallet *pwalletSmsg = NULL;
+secp256k1_context *secp256k1_context_smsg = nullptr;
+CWallet *pwalletSmsg = nullptr;
 
 typedef std::vector<unsigned char> valtype; // script/ismine.cpp
 
@@ -295,7 +295,7 @@ bool SecMsgDB::TxnCommit()
     writeOptions.sync = true;
     leveldb::Status status = pdb->Write(writeOptions, activeBatch);
     delete activeBatch;
-    activeBatch = NULL;
+    activeBatch = nullptr;
 
     if (!status.ok())
         return error("SecMsgDB batch commit failure: %s\n", status.ToString());
@@ -306,7 +306,7 @@ bool SecMsgDB::TxnCommit()
 bool SecMsgDB::TxnAbort()
 {
     delete activeBatch;
-    activeBatch = NULL;
+    activeBatch = nullptr;
     return true;
 };
 
@@ -1016,7 +1016,7 @@ int SecureMsgReadIni()
             continue;
 
         if (!(pName = strtok(cLine, "="))
-            || !(pValue = strtok(NULL, "=")))
+            || !(pValue = strtok(nullptr, "=")))
             continue;
 
         if (strcmp(pName, "newAddressRecv") == 0)
@@ -1222,14 +1222,14 @@ bool SecureMsgShutdown()
     {
         LOCK(cs_smsgDB);
         delete smsgDB;
-        smsgDB = NULL;
+        smsgDB = nullptr;
     };
 
     if (secp256k1_context_smsg)
         secp256k1_context_destroy(secp256k1_context_smsg);
-    secp256k1_context_smsg = NULL;
+    secp256k1_context_smsg = nullptr;
 
-    pwalletSmsg = NULL;
+    pwalletSmsg = nullptr;
 
     return true;
 };
@@ -2252,7 +2252,7 @@ bool SecureMsgScanBlockChain()
     if (lockMain)
     {
         CBlockIndex *pindexScan = chainActive.Genesis();
-        if (pindexScan == NULL)
+        if (pindexScan == nullptr)
         {
             LogPrintf("Error: pindexGenesisBlock not set.\n");
             return false;
@@ -3332,7 +3332,7 @@ int SecureMsgSetHash(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload)
 
         for (int i = 0; i < 32; i+=4)
             memcpy(civ+i, &nonce, 4);
-        
+
         CHMAC_SHA256 ctx(&civ[0], 32);
         ctx.Write((uint8_t*) pHeader+4, SMSG_HDR_LEN-4);
         ctx.Write((uint8_t*) pPayload, nPayload);
@@ -3493,7 +3493,7 @@ int SecureMsgEncrypt(SecureMessage &smsg, const CKeyID &addressFrom, const CKeyI
     //   The first 32 bytes of H are called key_e and the last 32 bytes are called key_m.
     std::vector<uint8_t> vchHashed;
     vchHashed.resize(64); // 512
-    
+    memset(vchHashed.data(), 0, 64);
     CSHA512().Write(&vchP[0], vchP.size()).Finalize(&vchHashed[0]);
     std::vector<uint8_t> key_e(&vchHashed[0], &vchHashed[0]+32);
     std::vector<uint8_t> key_m(&vchHashed[32], &vchHashed[32]+32);
@@ -3818,6 +3818,7 @@ int SecureMsgDecrypt(bool fTestOnly, CKeyID &address, uint8_t *pHeader, uint8_t 
     //  The first 32 bytes of H are called key_e and the last 32 bytes are called key_m.
     std::vector<uint8_t> vchHashedDec;
     vchHashedDec.resize(64);    // 512 bits
+    memset(vchHashedDec.data(), 0, 64); 
     CSHA512().Write(&vchP[0], vchP.size()).Finalize(&vchHashedDec[0]);
     std::vector<uint8_t> key_e(&vchHashedDec[0], &vchHashedDec[0]+32);
     std::vector<uint8_t> key_m(&vchHashedDec[32], &vchHashedDec[32]+32);

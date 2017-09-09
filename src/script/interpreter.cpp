@@ -1216,7 +1216,7 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
         uint256 hashPrevouts;
         uint256 hashSequence;
         uint256 hashOutputs;
-        
+
         if (!(nHashType & SIGHASH_ANYONECANPAY)) {
             hashPrevouts = cache ? cache->hashPrevouts : GetPrevoutHash(txTo);
         }

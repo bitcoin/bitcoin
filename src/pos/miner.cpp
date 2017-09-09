@@ -373,7 +373,6 @@ void ThreadStakeMiner(size_t nThreadID, std::vector<CWalletRef> &vpwallets, size
                 if (!pblocktemplate.get())
                 {
                     fIsStaking = false;
-                    //condWaitFor(nThreadID, nMinerSleep); // [rml]
                     nWaitFor = std::min(nWaitFor, (size_t)nMinerSleep);
                     LogPrint(BCLog::POS, "%s: Couldn't create new block.\n", __func__);
                     continue;
@@ -384,7 +383,6 @@ void ThreadStakeMiner(size_t nThreadID, std::vector<CWalletRef> &vpwallets, size
                 && !ImportOutputs(pblocktemplate.get(), nBestHeight+1))
             {
                 fIsStaking = false;
-                //condWaitFor(nThreadID, 30000); // [rml]
                 nWaitFor = std::min(nWaitFor, (size_t)30000);
                 LogPrint(BCLog::POS, "%s: ImportOutputs failed.\n", __func__);
                 continue;

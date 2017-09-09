@@ -37,7 +37,6 @@ struct StakeTestingSetup: public TestingSetup {
     StakeTestingSetup(const std::string& chainName = CBaseChainParams::REGTEST):
         TestingSetup(chainName, true) // fParticlMode = true
     {
-        
         bitdb.MakeMock();
 
         bool fFirstRun;
