@@ -323,7 +323,7 @@ string getCurrencyToSYSFromAlias(const CNameTXIDTuple &aliasPegTuple, const vect
 	string currencyCodeToFind = stringFromVch(vchCurrency);
 	// check for alias existence in DB
 	CAliasIndex foundAlias;
-	if (!GetAlias(aliasPegTuple, foundAlias))
+	if (!GetAlias(CNameTXIDTuple(aliasPegTuple.first, aliasPegTuple.second), foundAlias))
 	{
 		if(fDebug)
 			LogPrintf("getCurrencyToSYSFromAlias() Could not find %s alias\n", stringFromVch(aliasPegTuple.first).c_str());

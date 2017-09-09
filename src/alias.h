@@ -155,13 +155,13 @@ public:
     }
 	bool WriteAlias(const CAliasIndex& alias) {
 		WriteAliasIndex(alias);
-		return Write(make_pair(std::string("namei"), CNameTXIDTuple(alias.vchAlias, alias.txHash, alias.vchGUID)), alias);
+		return Write(make_pair(std::string("namei"), CNameTXIDTuple(alias.vchAlias, alias.txHash)), alias);
 	}
 	bool WriteAlias(const CAliasUnprunable &aliasUnprunable, const std::vector<unsigned char>& address, const CAliasIndex& alias) {
 		if(address.empty())
 			return false;	
 		WriteAliasIndex(alias);
-		return Write(make_pair(std::string("namei"), CNameTXIDTuple(alias.vchAlias, alias.txHash, alias.vchGUID)), alias) && Write(make_pair(std::string("namea"), address), alias.vchAlias) && Write(make_pair(std::string("nameu"), alias.vchAlias), aliasUnprunable) && WriteAliasLastTXID(alias.vchAlias, alias.txHash);
+		return Write(make_pair(std::string("namei"), tuple), CNameTXIDTuple(alias.vchAlias, alias.txHash)) && Write(make_pair(std::string("namea"), address), alias.vchAlias) && Write(make_pair(std::string("nameu"), alias.vchAlias), aliasUnprunable) && WriteAliasLastTXID(alias.vchAlias, alias.txHash);
 	}
 
 

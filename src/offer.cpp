@@ -874,7 +874,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1067 - " + _("Could not get linked offer");
 					return true;
 				}
-				if(!GetAlias(linkOffer.aliasTuple, linkAlias))
+				if(!GetAlias(CNameTXIDTuple(linkOffer.aliasTuple.first, linkOffer.aliasTuple.second), linkAlias))
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1068 - " + _("Cannot find alias for this linked offer. It may be expired");
 					return true;
@@ -921,7 +921,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1076 - " + _("Cannot purchase a wanted offer");
 				return true;
 			}
-			if(!GetAlias(myPriceOffer.aliasTuple, alias))
+			if(!GetAlias(CNameTXIDTuple(myPriceOffer.aliasTuple.first, myPriceOffer.aliasTuple.second), alias))
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1077 - " + _("Cannot find alias for this offer. It may be expired");
 				return true;
@@ -1669,7 +1669,7 @@ UniValue offerremovewhitelist(const UniValue& params, bool fHelp) {
 	if (!GetOffer( vchOffer, theOffer))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1523 - " + _("Could not find an offer with this guid"));
 	CAliasIndex theAlias;
-	if (!GetAlias( theOffer.aliasTuple, theAlias))
+	if (!GetAlias(CNameTXIDTuple(theOffer.aliasTuple.first, theOffer.aliasTuple.second), theAlias))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1524 - " + _("Could not find an alias with this name"));
 	
 
@@ -1765,7 +1765,7 @@ UniValue offerclearwhitelist(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1528 - " + _("Could not find an offer with this guid"));
 
 	CAliasIndex theAlias;
-	if (!GetAlias(theOffer.aliasTuple, theAlias))
+	if (!GetAlias(CNameTXIDTuple(theOffer.aliasTuple.first, theOffer.aliasTuple.second), theAlias))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1529 - " + _("Could not find an alias with this name"));
 
 
@@ -1950,7 +1950,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	if (!GetOffer( vchOffer, theOffer))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1534 - " + _("Could not find an offer with this guid"));
 
-	if (!GetAlias(theOffer.aliasTuple, alias))
+	if (!GetAlias(CNameTXIDTuple(theOffer.aliasTuple.first, theOffer.aliasTuple.second), alias))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1535 - " + _("Could not find an alias with this name"));
 	if (vchAlias != alias.vchAlias && !GetAlias(vchAlias, linkAlias))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1536 - " + _("Could not find an alias with this name"));
@@ -2709,7 +2709,7 @@ UniValue offeracceptacknowledge(const UniValue& params, bool fHelp) {
 	if (!GetOfferAccept(vchAcceptRand, theOfferAccept))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1586 - " + _("Could not find this offer purchase"));
 
-	if(!GetAlias(theOfferAccept.buyerAliasTuple, buyerAlias))
+	if(!GetAlias(CNameTXIDTuple(theOfferAccept.buyerAliasTuple.first, theOfferAccept.buyerAliasTuple.second), buyerAlias))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1587 - " + _("Could not find buyer alias"));
 
 	if (!GetOffer(theOfferAccept.offerTuple, theOffer))
@@ -2722,12 +2722,12 @@ UniValue offeracceptacknowledge(const UniValue& params, bool fHelp) {
 	{
 		if (!GetOffer(theOffer.linkOfferTuple, theOffer))
 			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1583 - " + _("Could not find a linked offer with this guid"));
-		if (!GetAlias(theOffer.aliasTuple, sellerAlias))
+		if (!GetAlias(CNameTXIDTuple(theOffer.aliasTuple.first, theOffer.aliasTuple.second), sellerAlias))
 			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1584 - " + _("Could not find merchant alias"));
 	}
 	else
 	{
-		if (!GetAlias(theOffer.aliasTuple, sellerAlias))
+		if (!GetAlias(CNameTXIDTuple(theOffer.aliasTuple.first, theOffer.aliasTuple.second), sellerAlias))
 			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1585 - " + _("Could not find merchant alias"));
 	}
 
@@ -2895,7 +2895,7 @@ void BuildFeedbackJson(const COfferAccept& theOfferAccept, UniValue& oFeedback) 
 bool BuildOfferJson(const COffer& theOffer, UniValue& oOffer)
 {
 	CAliasIndex alias, latestAlias;
-	if (!GetAlias(theOffer.aliasTuple, alias))
+	if (!GetAlias(CNameTXIDTuple(theOffer.aliasTuple.first, theOffer.aliasTuple.second), alias))
 		return false;
 	uint256 txid;
 	if (!paliasdb || !paliasdb->ReadAliasLastTXID(theOffer.aliasTuple.first, txid))
@@ -2988,7 +2988,7 @@ bool BuildOfferAcceptJson(const COfferAccept& theOfferAccept, UniValue& oOfferAc
 	if (!theOfferAccept.linkOfferTuple.first.empty() && !GetOffer(theOfferAccept.linkOfferTuple, linkOffer))
 		return false;
 	CAliasIndex sellerAlias;
-	if (!GetAlias(theOffer.aliasTuple, sellerAlias))
+	if (!GetAlias(CNameTXIDTuple(theOffer.aliasTuple.first, theOffer.aliasTuple.second), sellerAlias))
 		return false;
 	oOfferAccept.push_back(Pair("_id", stringFromVch(theOfferAccept.vchAcceptRand)));
 	oOfferAccept.push_back(Pair("offer", stringFromVch(theOffer.vchOffer)));
@@ -3063,9 +3063,6 @@ void OfferTxToJSON(const int op, const std::vector<unsigned char> &vchData, cons
 
 	COffer dbOffer;
 	GetOffer(CNameTXIDTuple(offer.vchOffer, offer.txHash), dbOffer);
-	
-	CAliasIndex dbAlias;
-	GetAlias(dbOffer.aliasTuple, dbAlias);
 
 	if(offer.accept.bPaymentAck)
 		opName += "("+_("acknowledged")+")";

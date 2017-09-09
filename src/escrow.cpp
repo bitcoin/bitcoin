@@ -1407,21 +1407,21 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	CAliasIndex sellerAlias, sellerAliasLatest, buyerAlias, buyerAliasLatest, arbiterAlias, arbiterAliasLatest, resellerAlias, resellerAliasLatest;
 	CSyscoinAddress arbiterAddressPayment, buyerAddressPayment, sellerAddressPayment, resellerAddressPayment;
 	CScript arbiterScript;
-	GetAlias(escrow.arbiterAliasTuple, arbiterAlias);
+	GetAlias(CNameTXIDTuple(escrow.arbiterAliasTuple.first, escrow.arbiterAliasTuple.second), arbiterAlias);
 	if (GetAlias(escrow.arbiterAliasTuple.first, arbiterAliasLatest))
 	{
 		GetAddress(arbiterAliasLatest, &arbiterAddressPayment, arbiterScript, escrow.nPaymentOption);
 	}
 
 	CScript buyerScript;
-	GetAlias(escrow.buyerAliasTuple, buyerAlias);
+	GetAlias(CNameTXIDTuple(escrow.buyerAliasTuple.first, escrow.buyerAliasTuple.second), buyerAlias);
 	if (GetAlias(escrow.buyerAliasTuple.first, buyerAliasLatest))
 	{
 		GetAddress(buyerAliasLatest, &buyerAddressPayment, buyerScript, escrow.nPaymentOption);
 	}
 
 	CScript sellerScript;
-	GetAlias(escrow.sellerAliasTuple, sellerAlias);
+	GetAlias(CNameTXIDTuple(escrow.sellerAliasTuple.first, escrow.sellerAliasTuple.second), sellerAlias);
 	if (GetAlias(escrow.sellerAliasTuple.first, sellerAliasLatest))
 	{
 		GetAddress(sellerAliasLatest, &sellerAddressPayment, sellerScript, escrow.nPaymentOption);
@@ -1658,21 +1658,21 @@ UniValue escrowacknowledge(const UniValue& params, bool fHelp) {
 	CAliasIndex sellerAlias, sellerAliasLatest, buyerAlias, buyerAliasLatest, arbiterAlias, arbiterAliasLatest, resellerAlias;
 	CSyscoinAddress arbiterAddressPayment, buyerAddressPayment, sellerAddressPayment, resellerAddressPayment;
 	CScript arbiterScript;
-	GetAlias(escrow.arbiterAliasTuple, arbiterAlias);
+	GetAlias(CNameTXIDTuple(escrow.arbiterAliasTuple.first, escrow.arbiterAliasTuple.second), arbiterAlias);
 	if (GetAlias(escrow.arbiterAliasTuple.first, arbiterAliasLatest))
 	{
 		GetAddress(arbiterAliasLatest, &arbiterAddressPayment, arbiterScript, escrow.nPaymentOption);
 	}
 
 	CScript buyerScript;
-	GetAlias(escrow.buyerAliasTuple, buyerAlias);
+	GetAlias(CNameTXIDTuple(escrow.buyerAliasTuple.first, escrow.buyerAliasTuple.second), buyerAlias);
 	if (GetAlias(escrow.buyerAliasTuple.first, buyerAliasLatest))
 	{
 		GetAddress(buyerAliasLatest, &buyerAddressPayment, buyerScript, escrow.nPaymentOption);
 	}
 
 	CScript sellerScript;
-	GetAlias(escrow.sellerAliasTuple, sellerAlias);
+	GetAlias(CNameTXIDTuple(escrow.sellerAliasTuple.first, escrow.sellerAliasTuple.second), sellerAlias);
 	if (GetAlias(escrow.sellerAliasTuple.first, sellerAliasLatest))
 	{
 		GetAddress(sellerAliasLatest, &sellerAddressPayment, sellerScript, escrow.nPaymentOption);
@@ -1775,21 +1775,21 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	CAliasIndex buyerAlias, arbiterAlias, sellerAlias, buyerAliasLatest, arbiterAliasLatest, sellerAliasLatest, linkSellerAliasLatest;
 	CSyscoinAddress buyerAddressPayment, arbiterAddressPayment, sellerAddressPayment, linkSellerAddress;
 	CScript arbiterScript;
-	GetAlias(escrow.arbiterAliasTuple, arbiterAlias);
+	GetAlias(CNameTXIDTuple(escrow.arbiterAliasTuple.first, escrow.arbiterAliasTuple.second), arbiterAlias);
 	if (GetAlias(escrow.arbiterAliasTuple.first, arbiterAliasLatest))
 	{
 		GetAddress(arbiterAliasLatest, &arbiterAddressPayment, arbiterScript, escrow.nPaymentOption);
 	}
 
 	CScript buyerScript;
-	GetAlias(escrow.buyerAliasTuple, buyerAlias);
+	GetAlias(CNameTXIDTuple(escrow.buyerAliasTuple.first, escrow.buyerAliasTuple.second), buyerAlias);
 	if (GetAlias(escrow.buyerAliasTuple.first, buyerAliasLatest))
 	{
 		GetAddress(buyerAliasLatest, &buyerAddressPayment, buyerScript, escrow.nPaymentOption);
 	}
 
 	CScript sellerScript;
-	GetAlias(escrow.sellerAliasTuple, sellerAlias);
+	GetAlias(CNameTXIDTuple(escrow.sellerAliasTuple.first, escrow.sellerAliasTuple.second), sellerAlias);
 	if (GetAlias(escrow.sellerAliasTuple.first, sellerAliasLatest))
 	{
 		GetAddress(sellerAliasLatest, &sellerAddressPayment, sellerScript, escrow.nPaymentOption);
@@ -1996,21 +1996,21 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
 	CAliasIndex sellerAliasLatest, buyerAliasLatest, arbiterAliasLatest, resellerAliasLatest, buyerAlias, sellerAlias, arbiterAlias;
 	CSyscoinAddress arbiterPaymentAddress, buyerPaymentAddress, sellerPaymentAddress;
 	CScript arbiterScript;
-	GetAlias(escrow.arbiterAliasTuple, arbiterAlias);
+	GetAlias(CNameTXIDTuple(escrow.arbiterAliasTuple.first, escrow.arbiterAliasTuple.second), arbiterAlias);
 	if (GetAlias(escrow.arbiterAliasTuple.first, arbiterAliasLatest))
 	{
 		GetAddress(arbiterAliasLatest, &arbiterPaymentAddress, arbiterScript, escrow.nPaymentOption);
 	}
 
 	CScript buyerScript;
-	GetAlias(escrow.buyerAliasTuple, buyerAlias);
+	GetAlias(CNameTXIDTuple(escrow.buyerAliasTuple.first, escrow.buyerAliasTuple.second), buyerAlias);
 	if (GetAlias(escrow.buyerAliasTuple.first, buyerAliasLatest))
 	{
 		GetAddress(buyerAliasLatest, &buyerPaymentAddress, buyerScript, escrow.nPaymentOption);
 	}
 
 	CScript sellerScript;
-	GetAlias(escrow.sellerAliasTuple, sellerAlias);
+	GetAlias(CNameTXIDTuple(escrow.sellerAliasTuple.first, escrow.sellerAliasTuple.second), sellerAlias);
 	if (GetAlias(escrow.sellerAliasTuple.first, sellerAliasLatest))
 	{
 		GetAddress(sellerAliasLatest, &sellerPaymentAddress, sellerScript, escrow.nPaymentOption);
@@ -2129,21 +2129,21 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	vector<CAliasIndex> aliasVtxPos;
 	CSyscoinAddress arbiterAddressPayment, buyerAddressPayment, sellerAddressPayment, resellerAddressPayment;
 	CScript arbiterScript;
-	GetAlias(escrow.arbiterAliasTuple, arbiterAlias);
+	GetAlias(CNameTXIDTuple(escrow.arbiterAliasTuple.first, escrow.arbiterAliasTuple.second), arbiterAlias);
 	if (GetAlias(escrow.arbiterAliasTuple.first, arbiterAliasLatest))
 	{
 		GetAddress(arbiterAliasLatest, &arbiterAddressPayment, arbiterScript, escrow.nPaymentOption);
 	}
 
 	CScript buyerScript;
-	GetAlias(escrow.buyerAliasTuple, buyerAlias);
+	GetAlias(CNameTXIDTuple(escrow.buyerAliasTuple.first, escrow.buyerAliasTuple.second), buyerAlias);
 	if (GetAlias(escrow.buyerAliasTuple.first, buyerAliasLatest))
 	{
 		GetAddress(buyerAliasLatest, &buyerAddressPayment, buyerScript, escrow.nPaymentOption);
 	}
 
 	CScript sellerScript;
-	GetAlias(escrow.sellerAliasTuple, sellerAlias);
+	GetAlias(CNameTXIDTuple(escrow.sellerAliasTuple.first, escrow.sellerAliasTuple.second), sellerAlias);
 	if (GetAlias(escrow.sellerAliasTuple.first, sellerAliasLatest))
 	{
 		GetAddress(sellerAliasLatest, &sellerAddressPayment, sellerScript, escrow.nPaymentOption);
@@ -2356,7 +2356,7 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 
 	CAliasIndex sellerAlias;
 	CPubKey sellerKey;
-	GetAlias(escrow.sellerAliasTuple, sellerAlias);
+	GetAlias(CNameTXIDTuple(escrow.sellerAliasTuple.first, escrow.sellerAliasTuple.second), sellerAlias);
 
 	CAmount nEscrowTotal = escrow.nSysTotal + escrow.nArbiterFee + escrow.nNetworkFee;
 	CAmount nTotal = escrow.nSysTotal;
@@ -2514,21 +2514,21 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 	CAliasIndex sellerAliasLatest, buyerAliasLatest, arbiterAliasLatest, resellerAliasLatest, buyerAlias, sellerAlias, arbiterAlias;
 	CSyscoinAddress arbiterPaymentAddress, buyerPaymentAddress, sellerPaymentAddress;
 	CScript arbiterScript;
-	GetAlias(escrow.arbiterAliasTuple, arbiterAlias);
+	GetAlias(CNameTXIDTuple(escrow.arbiterAliasTuple.first, escrow.arbiterAliasTuple.second), arbiterAlias);
 	if (GetAlias(escrow.arbiterAliasTuple.first, arbiterAliasLatest))
 	{
 		GetAddress(arbiterAliasLatest, &arbiterPaymentAddress, arbiterScript, escrow.nPaymentOption);
 	}
 
 	CScript buyerScript;
-	GetAlias(escrow.buyerAliasTuple, buyerAlias);
+	GetAlias(CNameTXIDTuple(escrow.buyerAliasTuple.first, escrow.buyerAliasTuple.second), buyerAlias);
 	if (GetAlias(escrow.buyerAliasTuple.first, buyerAliasLatest))
 	{
 		GetAddress(buyerAliasLatest, &buyerPaymentAddress, buyerScript, escrow.nPaymentOption);
 	}
 
 	CScript sellerScript;
-	GetAlias(escrow.sellerAliasTuple, sellerAlias);
+	GetAlias(CNameTXIDTuple(escrow.sellerAliasTuple.first, escrow.sellerAliasTuple.second), sellerAlias);
 	if (GetAlias(escrow.sellerAliasTuple.first, sellerAliasLatest))
 	{
 		GetAddress(sellerAliasLatest, &sellerPaymentAddress, sellerScript, escrow.nPaymentOption);
@@ -2651,27 +2651,27 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	CAliasIndex sellerAliasLatest, buyerAliasLatest, arbiterAliasLatest, resellerAliasLatest, buyerAlias, sellerAlias, arbiterAlias, resellerAlias;
 	CSyscoinAddress arbiterPaymentAddress, buyerPaymentAddress, sellerPaymentAddress, resellerPaymentAddress;
 	CScript arbiterScript;
-	GetAlias(escrow.arbiterAliasTuple, arbiterAlias);
+	GetAlias(CNameTXIDTuple(escrow.arbiterAliasTuple.first, escrow.arbiterAliasTuple.second), arbiterAlias);
 	if (GetAlias(escrow.arbiterAliasTuple.first, arbiterAliasLatest))
 	{
 		GetAddress(arbiterAliasLatest, &arbiterPaymentAddress, arbiterScript, escrow.nPaymentOption);
 	}
 
 	CScript buyerScript;
-	GetAlias(escrow.buyerAliasTuple, buyerAlias);
+	GetAlias(CNameTXIDTuple(escrow.buyerAliasTuple.first, escrow.buyerAliasTuple.second), buyerAlias);
 	if (GetAlias(escrow.buyerAliasTuple.first, buyerAliasLatest))
 	{
 		GetAddress(buyerAliasLatest, &buyerPaymentAddress, buyerScript, escrow.nPaymentOption);
 	}
 
 	CScript sellerScript;
-	GetAlias(escrow.sellerAliasTuple, sellerAlias);
+	GetAlias(CNameTXIDTuple(escrow.sellerAliasTuple.first, escrow.sellerAliasTuple.second), sellerAlias);
 	if (GetAlias(escrow.sellerAliasTuple.first, sellerAliasLatest))
 	{
 		GetAddress(sellerAliasLatest, &sellerPaymentAddress, sellerScript, escrow.nPaymentOption);
 	}
 	CScript resellerScript;
-	GetAlias(escrow.linkSellerAliasTuple, resellerAlias);
+	GetAlias(CNameTXIDTuple(escrow.linkSellerAliasTuple.first, escrow.linkSellerAliasTuple.second), resellerAlias);
 	if (GetAlias(escrow.linkSellerAliasTuple.first, resellerAliasLatest))
 	{
 		GetAddress(resellerAliasLatest, &resellerPaymentAddress, resellerScript, escrow.nPaymentOption);
