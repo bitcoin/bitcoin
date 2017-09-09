@@ -1160,6 +1160,15 @@ margin-top:12px;
 margin-left:0px; /* CSS Voodoo - set to -66px to hide default transaction icons */
 }
 
+/* MODAL OVERLAY */
+
+QWidget#bgWidget .QPushButton#warningIcon {
+width:64px;
+height:64px;
+padding:5px;
+background-color:transparent;
+}
+
 /* SEND DIALOG */
 
 QDialog#SendCoinsDialog .QFrame#frameCoinControl { /* Coin Control Section */

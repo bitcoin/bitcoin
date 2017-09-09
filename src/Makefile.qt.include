@@ -28,6 +28,7 @@ QT_FORMS_UI = \
   qt/forms/editaddressdialog.ui \
   qt/forms/helpmessagedialog.ui \
   qt/forms/intro.ui \
+  qt/forms/modaloverlay.ui \
   qt/forms/masternodelist.ui \
   qt/forms/openuridialog.ui \
   qt/forms/optionsdialog.ui \
@@ -59,6 +60,7 @@ QT_MOC_CPP = \
   qt/moc_intro.cpp \
   qt/moc_macdockiconhandler.cpp \
   qt/moc_macnotificationhandler.cpp \
+  qt/moc_modaloverlay.cpp \
   qt/moc_masternodelist.cpp \
   qt/moc_notificator.cpp \
   qt/moc_openuridialog.cpp \
@@ -128,6 +130,7 @@ BITCOIN_QT_H = \
   qt/intro.h \
   qt/macdockiconhandler.h \
   qt/macnotificationhandler.h \
+  qt/modaloverlay.h \
   qt/masternodelist.h \
   qt/networkstyle.h \
   qt/notificator.h \
@@ -168,6 +171,7 @@ RES_ICONS = \
   qt/res/icons/bitcoin.ico \
   qt/res/icons/bitcoin.png \
   qt/res/icons/chevron.png \
+  qt/res/icons/warning.png \
   qt/res/icons/drkblue/add.png \
   qt/res/icons/drkblue/address-book.png \
   qt/res/icons/drkblue/browse.png \
@@ -220,6 +224,7 @@ RES_ICONS = \
   qt/res/icons/drkblue/verify.png \
   qt/res/icons/drkblue/fontbigger.png \
   qt/res/icons/drkblue/fontsmaller.png \
+  qt/res/icons/drkblue/transaction_abandoned.png \
   qt/res/icons/crownium/add.png \
   qt/res/icons/crownium/address-book.png \
   qt/res/icons/crownium/browse.png \
@@ -272,6 +277,7 @@ RES_ICONS = \
   qt/res/icons/crownium/verify.png \
   qt/res/icons/crownium/fontbigger.png \
   qt/res/icons/crownium/fontsmaller.png \
+  qt/res/icons/crownium/transaction_abandoned.png \
   qt/res/icons/light/add.png \
   qt/res/icons/light/address-book.png \
   qt/res/icons/light/browse.png \
@@ -324,6 +330,7 @@ RES_ICONS = \
   qt/res/icons/light/verify.png \
   qt/res/icons/light/fontbigger.png \
   qt/res/icons/light/fontsmaller.png \
+  qt/res/icons/light/transaction_abandoned.png \
   qt/res/icons/trad/add.png \
   qt/res/icons/trad/address-book.png \
   qt/res/icons/trad/browse.png \
@@ -375,7 +382,8 @@ RES_ICONS = \
   qt/res/icons/trad/about_qt.png \
   qt/res/icons/trad/verify.png \
   qt/res/icons/trad/fontbigger.png \
-  qt/res/icons/trad/fontsmaller.png
+  qt/res/icons/trad/fontsmaller.png \
+  qt/res/icons/trad/transaction_abandoned.png
 
 BITCOIN_QT_CPP = \
   qt/bantablemodel.cpp \
@@ -387,6 +395,7 @@ BITCOIN_QT_CPP = \
   qt/csvmodelwriter.cpp \
   qt/guiutil.cpp \
   qt/intro.cpp \
+  qt/modaloverlay.cpp \
   qt/networkstyle.cpp \
   qt/notificator.cpp \
   qt/optionsdialog.cpp \

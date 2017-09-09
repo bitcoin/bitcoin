@@ -40,6 +40,11 @@ static bool noui_ThreadSafeMessageBox(const std::string& message, const std::str
     return false;
 }
 
+static bool noui_ThreadSafeQuestion(const std::string& /* ignored interactive message */, const std::string& message, const std::string& caption, unsigned int style)
+{
+    return noui_ThreadSafeMessageBox(message, caption, style);
+}
+
 static void noui_InitMessage(const std::string& message)
 {
     LogPrintf("init message: %s\n", message);
@@ -49,5 +54,6 @@ void noui_connect()
 {
     // Connect dashd signal handlers
     uiInterface.ThreadSafeMessageBox.connect(noui_ThreadSafeMessageBox);
+    uiInterface.ThreadSafeQuestion.connect(noui_ThreadSafeQuestion);
     uiInterface.InitMessage.connect(noui_InitMessage);
 }

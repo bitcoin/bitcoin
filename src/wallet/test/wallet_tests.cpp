@@ -48,7 +48,7 @@ static void add_coin(const CAmount& nValue, int nAge = 6*24, bool fIsFromMe = fa
         wtx->fDebitCached = true;
         wtx->nDebitCached = 1;
     }
-    COutput output(wtx, nInput, nAge, true);
+    COutput output(wtx, nInput, nAge, true, true);
     vCoins.push_back(output);
 }
 

@@ -607,8 +607,9 @@ public:
     bool fWhitelisted;
     double dPingTime;
     double dPingWait;
-    double dPingMin;
+    double dMinPing;
     std::string addrLocal;
+    CAddress addr;
 };
 
 
