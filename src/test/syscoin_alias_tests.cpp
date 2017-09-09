@@ -891,7 +891,8 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	GenerateBlocks(5, "node1");
 	
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + certgoodguid + " titlenew privdata pubdata"));
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate aliasexpire0 " + offerguid + " category title 100 0.05 description"));
+	// should fail: offer alias expired and was renewed
+	BOOST_CHECK_THROW(CallRPC("node1", "offerupdate aliasexpire0 " + offerguid + " category title 100 0.05 description"), runtime_error);
 	GenerateBlocks(5, "node1");
 	// cannot update cert because it expired and was renewed
 	BOOST_CHECK_THROW(CallRPC("node1", "certupdate " + certguid + " jag1 data pubdata"), runtime_error);
@@ -918,7 +919,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	ExpireAlias("aliasexpirednode2");
 	GenerateBlocks(5);
 
-	BOOST_CHECK_NO_THROW(AliasNew("node1", "aliasexpire2", "somedata"));
+	BOOST_CHECK_NO_THROW(AliasNew("node2", "aliasexpire2", "somedata"));
 	// should pass: alias transfer to another expired alias address
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate sysrates.peg aliasexpire2 changedata1 \"\" " + aliasexpire2node2address));
 	GenerateBlocks(5);
