@@ -1190,8 +1190,7 @@ UniValue smsgview(const JSONRPCRequest &request)
             {
                 if (!fInbox && smsgStored.addrOutbox.IsNull())
                 {
-                    if (fDebugSmsg)
-                        debugEmptySent++;
+                    debugEmptySent++;
                     continue;
                 };
 
@@ -1296,7 +1295,7 @@ UniValue smsgview(const JSONRPCRequest &request)
 
     result.pushKV("messages", messageList);
     
-    if (fDebugSmsg)
+    if (LogAcceptCategory(BCLog::SMSG))
         result.pushKV("debug empty sent", (int)debugEmptySent);
 
     result.pushKV("result", strprintf("Displayed %u messages.", nMessages));

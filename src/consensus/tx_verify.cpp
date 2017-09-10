@@ -218,7 +218,7 @@ bool CheckBlindOutput(CValidationState &state, const CTxOutCT *p)
         NULL, 0,
         secp256k1_generator_h);
     
-    if (fDebug)
+    if (LogAcceptCategory(BCLog::RINGCT))
         LogPrintf("%s: rv, min_value, max_value %d, %s, %s\n", __func__,
             rv, FormatMoney((CAmount)min_value), FormatMoney((CAmount)max_value));
     
@@ -249,7 +249,7 @@ bool CheckAnonOutput(CValidationState &state, const CTxOutRingCT *p)
         NULL, 0,
         secp256k1_generator_h);
     
-    if (fDebug)
+    if (LogAcceptCategory(BCLog::RINGCT))
         LogPrintf("%s: rv, min_value, max_value %d, %s, %s\n", __func__,
             rv, FormatMoney((CAmount)min_value), FormatMoney((CAmount)max_value));
     

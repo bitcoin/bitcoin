@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(smsg_test)
     int rv = 0;
     const int nKeys = 12;
     CWallet keystore;
-    CKey keyOwn[nKeys];
+    std::vector<CKey> keyOwn(nKeys);
     for (int i = 0; i < nKeys; i++)
     {
         keyOwn[i].MakeNewKey(true);
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(smsg_test)
         keystore.AddKey(keyOwn[i]);
     };
 
-    CKey keyRemote[nKeys];
+    std::vector<CKey> keyRemote(nKeys);
     for (int i = 0; i < nKeys; i++)
     {
         keyRemote[i].MakeNewKey(true);
@@ -93,7 +93,6 @@ BOOST_AUTO_TEST_CASE(smsg_test)
             && 0 == memcmp(&msg.vchMessage[0], sTestMessage.data(), msg.vchMessage.size()-1));
 
         BOOST_CHECK_MESSAGE(1 == (rv = SecureMsgDecrypt(false, kFail, smsg, msg)), "SecureMsgDecrypt " << rv);
-
     };
 
     SecureMsgShutdown();

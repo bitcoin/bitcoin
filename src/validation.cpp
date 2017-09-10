@@ -1796,7 +1796,7 @@ int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out)
  *  When FAILED is returned, view is left in an indeterminate state. */
 DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view)
 {
-    if (fDebug)
+    if (LogAcceptCategory(BCLog::HDWALLET))
         LogPrintf("%s: hash %s, height %d\n", __func__, block.GetHash().ToString(), pindex->nHeight);
     
     assert(pindex->GetBlockHash() == view.GetBestBlock());
@@ -4197,8 +4197,7 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
                 uint32_t voteToken;
                 memcpy(&voteToken, &vData[5], 4);
 
-                if (fDebug)
-                    LogPrintf(_("Block %d casts vote for option %u of proposal %u.\n").c_str(),
+                LogPrint(BCLog::HDWALLET, _("Block %d casts vote for option %u of proposal %u.\n").c_str(),
                     nHeight, voteToken >> 16, voteToken & 0xFFFF);
             };
 

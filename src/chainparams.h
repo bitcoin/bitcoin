@@ -49,8 +49,6 @@ public:
 class DevFundSettings
 {
 public:
-    //DevFundSettings(std::string sAddrTo, float rMinDevStakeSplit_, int nDevOutputGap_, CAmount nMinDevOutputSize_)
-    //    : sDevFundAddresses(sAddrTo), rMinDevStakeSplit(rMinDevStakeSplit_), nDevOutputGap(nDevOutputGap_), nMinDevOutputSize(nMinDevOutputSize_)
     DevFundSettings(std::string sAddrTo, int nMinDevStakePercent_, int nDevOutputPeriod_)
         : sDevFundAddresses(sAddrTo), nMinDevStakePercent(nMinDevStakePercent_), nDevOutputPeriod(nDevOutputPeriod_)
         {};
@@ -97,7 +95,7 @@ public:
     uint32_t GetStakeMinConfirmations() const { return nStakeMinConfirmations; }
     uint32_t GetTargetSpacing() const { return nTargetSpacing; }
     uint32_t GetTargetTimespan() const { return nTargetTimespan; }
-    uint32_t GetStakeTimestampMask(int nHeight) const { return (1 << 4) -1; } // 3 bits, every kernel stake hash will change every 8 seconds
+    uint32_t GetStakeTimestampMask(int nHeight) const { return (1 << 4) -1; } // 4 bits, every kernel stake hash will change every 16 seconds
     
     int64_t GetStakeCombineThreshold() const { return nStakeCombineThreshold; }
     int64_t GetStakeSplitThreshold() const { return nStakeSplitThreshold; }

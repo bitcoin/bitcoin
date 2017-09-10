@@ -987,13 +987,10 @@ bool AppInitParameterInteraction()
         }
         logCategories &= ~flag;
     }
-    
-    fDebug = gArgs.mapMultiArgs.count("-debug");
-    if (fDebug) {
-        gArgs.SoftSetBoolArg("-debugsmsg", true);
-    }
-    fDebugSmsg = gArgs.GetBoolArg("-debugsmsg", false);
 
+    // Check for -debugsmsg
+    if (gArgs.GetBoolArg("-debugsmsg", false))
+        InitWarning(_("Unsupported argument -debugnet ignored, use -debug=smsg."));
     // Check for -debugnet
     if (gArgs.GetBoolArg("-debugnet", false))
         InitWarning(_("Unsupported argument -debugnet ignored, use -debug=net."));

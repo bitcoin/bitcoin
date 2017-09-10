@@ -603,7 +603,7 @@ int CExtKeyAccount::HaveKey(const CKeyID &id, bool fUpdate, CEKAKey &ak)
     mi = mapLookAhead.find(id);
     if (mi != mapLookAhead.end())
     {
-        if (fDebug)
+        if (LogAcceptCategory(BCLog::HDWALLET))
             LogPrintf("HaveKey in lookAhead %s\n", CBitcoinAddress(mi->first).ToString());
         if (fUpdate)
         {
@@ -682,7 +682,7 @@ int CExtKeyAccount::GetKey(const CKeyID &id, CKey &keyOut, CEKAKey &ak, CKeyID &
     };
     
     // [rm] necessary?
-    if (fDebug && keyOut.GetPubKey().GetID() != id)
+    if (LogAcceptCategory(BCLog::HDWALLET) && keyOut.GetPubKey().GetID() != id)
     {
         return error("Stored key mismatch.");
     };
@@ -708,7 +708,7 @@ bool CExtKeyAccount::GetPubKey(const CKeyID &id, CPubKey &pkOut) const
         return false;
     };
     
-    if (fDebug) // [rm] necessary?
+    if (LogAcceptCategory(BCLog::HDWALLET)) // [rm] necessary?
     {
         if (pkOut.GetID() != id)
             return errorN(1, "%s: Extracted public key mismatch.", __func__);
@@ -794,7 +794,7 @@ bool CExtKeyAccount::SaveKey(const CKeyID &id, CEKAKey &keyIn)
             AddLookAhead(keyIn.nParent, 1);
     };
     
-    if (fDebug)
+    if (LogAcceptCategory(BCLog::HDWALLET))
     {
         LogPrintf("Saved key %s %d, %s.\n", GetIDString58(), keyIn.nParent, CBitcoinAddress(id).ToString());
         
@@ -832,23 +832,22 @@ bool CExtKeyAccount::SaveKey(const CKeyID &id, CEKASCKey &keyIn)
     AccKeySCMap::const_iterator mi = mapStealthChildKeys.find(id);
     if (mi != mapStealthChildKeys.end())
         return false; // already saved
-    
+
     AccStealthKeyMap::const_iterator miSk = mapStealthKeys.find(keyIn.idStealthKey);
     if (miSk == mapStealthKeys.end())
         return error("SaveKey(): CEKASCKey Stealth key not in this account!");
-    
+
     mapStealthChildKeys[id] = keyIn;
-    
-    if (fDebug)
+
+    if (LogAcceptCategory(BCLog::HDWALLET))
         LogPrintf("SaveKey(): CEKASCKey %s, %s.\n", GetIDString58(), CBitcoinAddress(id).ToString());
-    
+
     return true;
 };
 
 bool CExtKeyAccount::IsLocked(const CEKAStealthKey &aks)
 {
     // TODO: check aks belongs to account??
-    
     CStoredExtKey *pc = GetChain(aks.akSpend.nParent);
     if (pc && !pc->fLocked)
         return false;
@@ -862,8 +861,8 @@ int CExtKeyAccount::AddLookBehind(uint32_t nChain, uint32_t nKeys)
     if (!pc)
         return errorN(1, "%s: Unknown chain, %d.", __func__, nChain);
     
-    if (fDebug)
-        LogPrint(BCLog::HDWALLET, "%s: chain %s, keys %d.\n", __func__, pc->GetIDString58(), nKeys);
+    if (LogAcceptCategory(BCLog::HDWALLET))
+        LogPrintf("%s: chain %s, keys %d.\n", __func__, pc->GetIDString58(), nKeys);
     
     AccKeyMap::const_iterator mi;
     uint32_t nChild = pc->nGenerated;
@@ -897,8 +896,8 @@ int CExtKeyAccount::AddLookBehind(uint32_t nChain, uint32_t nKeys)
             keyId = pk.GetID();
             if ((mi = mapKeys.find(keyId)) != mapKeys.end())
             {
-                if (fDebug)
-                    LogPrint(BCLog::HDWALLET, "%s: key exists in map skipping %s.\n", __func__, CBitcoinAddress(keyId).ToString());
+                if (LogAcceptCategory(BCLog::HDWALLET))
+                    LogPrintf("%s: key exists in map skipping %s.\n", __func__, CBitcoinAddress(keyId).ToString());
                 continue;
             };
             
@@ -917,8 +916,8 @@ int CExtKeyAccount::AddLookBehind(uint32_t nChain, uint32_t nKeys)
         
         mapLookAhead[keyId] = CEKAKey(nChain, nChildOut);
         
-        if (fDebug)
-            LogPrint(BCLog::HDWALLET, "%s: Added %s, look-ahead size %u.\n", __func__, CBitcoinAddress(keyId).ToString(), mapLookAhead.size());
+        if (LogAcceptCategory(BCLog::HDWALLET))
+            LogPrintf("%s: Added %s, look-ahead size %u.\n", __func__, CBitcoinAddress(keyId).ToString(), mapLookAhead.size());
     };
     
     return 0;
@@ -931,8 +930,8 @@ int CExtKeyAccount::AddLookAhead(uint32_t nChain, uint32_t nKeys)
     if (!pc)
         return errorN(1, "%s: Unknown chain, %d.", __func__, nChain);
     
-    if (fDebug)
-        LogPrint(BCLog::HDWALLET, "%s: chain %s, keys %d.\n", __func__, pc->GetIDString58(), nKeys);
+    if (LogAcceptCategory(BCLog::HDWALLET))
+        LogPrintf("%s: chain %s, keys %d.\n", __func__, pc->GetIDString58(), nKeys);
     
     AccKeyMap::const_iterator mi;
     uint32_t nChild = std::max(pc->nGenerated, pc->nLastLookAhead);
@@ -958,8 +957,8 @@ int CExtKeyAccount::AddLookAhead(uint32_t nChain, uint32_t nKeys)
             keyId = pk.GetID();
             if ((mi = mapKeys.find(keyId)) != mapKeys.end())
             {
-                if (fDebug)
-                    LogPrint(BCLog::HDWALLET, "%s: key exists in map skipping %s.\n", __func__, CBitcoinAddress(keyId).ToString());
+                if (LogAcceptCategory(BCLog::HDWALLET))
+                    LogPrintf("%s: key exists in map skipping %s.\n", __func__, CBitcoinAddress(keyId).ToString());
                 continue;
             };
             
@@ -979,10 +978,10 @@ int CExtKeyAccount::AddLookAhead(uint32_t nChain, uint32_t nKeys)
         mapLookAhead[keyId] = CEKAKey(nChain, nChildOut);
         pc->nLastLookAhead = nChildOut;
         
-        if (fDebug)
-            LogPrint(BCLog::HDWALLET, "%s: Added %s, look-ahead size %u.\n", __func__, CBitcoinAddress(keyId).ToString(), mapLookAhead.size());
+        if (LogAcceptCategory(BCLog::HDWALLET))
+            LogPrintf("%s: Added %s, look-ahead size %u.\n", __func__, CBitcoinAddress(keyId).ToString(), mapLookAhead.size());
     };
-    
+
     return 0;
 };
 

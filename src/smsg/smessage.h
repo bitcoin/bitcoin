@@ -39,7 +39,6 @@ const unsigned int SMSG_MAX_MSG_WORST = LZ4_COMPRESSBOUND(SMSG_MAX_MSG_BYTES+SMS
 
 #define SMSG_MASK_UNREAD            (1 << 0)
 
-extern bool fDebugSmsg;
 extern bool fSecMsgEnabled;
 
 class CWallet;

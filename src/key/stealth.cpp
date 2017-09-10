@@ -24,22 +24,19 @@ bool CStealthAddress::SetEncoded(const std::string &encodedAddress)
     
     if (!DecodeBase58(encodedAddress, raw))
     {
-        if (fDebug)
-            LogPrintf("%s: DecodeBase58 falied.\n", __func__);
+        LogPrint(BCLog::HDWALLET, "%s: DecodeBase58 falied.\n", __func__);
         return false;
     };
     
     if (!VerifyChecksum(raw))
     {
-        if (fDebug)
-            LogPrintf("%s: verify_checksum falied.\n", __func__);
+        LogPrint(BCLog::HDWALLET, "%s: verify_checksum falied.\n", __func__);
         return false;
     };
     
     if (raw.size() < MIN_STEALTH_RAW_SIZE + 5)
     {
-        if (fDebug)
-            LogPrintf("%s: too few bytes provided.\n", __func__);
+        LogPrint(BCLog::HDWALLET, "%s: too few bytes provided.\n", __func__);
         return false;
     };
     

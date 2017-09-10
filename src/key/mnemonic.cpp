@@ -162,31 +162,29 @@ int MnemonicDetectLanguage(const std::string &sWordList)
 
 int MnemonicEncode(int nLanguage, const std::vector<uint8_t> &vEntropy, std::string &sWordList, std::string &sError)
 {
-    if (fDebug)
-        LogPrintf("%s: language %d.\n", __func__, nLanguage);
-    
+    LogPrint(BCLog::HDWALLET, "%s: language %d.\n", __func__, nLanguage);
+
     sWordList = "";
-    
+
     if (nLanguage < 1 || nLanguage > WLL_MAX)
     {
         sError = "Unknown language.";
         return errorN(1, "%s: %s", __func__, sError.c_str());
     };
-    
+
     // Checksum is 1st n bytes of the sha256 hash
     uint8_t hash[32];
     CSHA256().Write(&vEntropy[0], vEntropy.size()).Finalize((uint8_t*)hash);
-    
+
     int nCsSize = vEntropy.size() / 4; // 32 / 8
-    
     if (nCsSize < 1 || nCsSize > 256)
     {
         sError = "Entropy bytes out of range.";
         return errorN(2, "%s: %s", __func__, sError.c_str());
     };
-    
+
     std::vector<uint8_t> vIn = vEntropy;
-    
+
     int ncb = nCsSize/8;
     int r = nCsSize % 8;
     if (r != 0)
@@ -194,26 +192,26 @@ int MnemonicEncode(int nLanguage, const std::vector<uint8_t> &vEntropy, std::str
     std::vector<uint8_t> vTmp(32);
     memcpy(&vTmp[0], &hash, ncb);
     memset(&vTmp[ncb], 0, 32-ncb);
-    
+
     vIn.insert(vIn.end(), vTmp.begin(), vTmp.end());
-    
+
     std::vector<int> vWord;
-    
+
     int nBits = vEntropy.size() * 8 + nCsSize;
-    
+
     int i = 0;
     while (i < nBits)
     {
         int o = 0;
         int s = i / 8;
         int r = i % 8;
-        
+
         uint8_t b1 = vIn[s];
         uint8_t b2 = vIn[s+1];
-        
+
         o = (b1 << r) & 0xFF;
         o = o << (11 - 8);
-        
+
         if (r > 5)
         {
             uint8_t b3 = vIn[s+2];
@@ -223,33 +221,32 @@ int MnemonicEncode(int nLanguage, const std::vector<uint8_t> &vEntropy, std::str
         {
             o |= ((int)b2) >> ((8 - (11 - 8))-r);
         };
-        
+
         o = o & 0x7FF;
-        
+
         vWord.push_back(o);
         i += 11;
     };
-    
+
     char *pwl = (char*) mnLanguages[nLanguage];
     int m = mnLanguageLens[nLanguage];
-    
+
     for (size_t k = 0; k < vWord.size(); ++k)
     {
         int o = vWord[k];
-        
+
         std::string sWord;
-        
         if (0 != GetWord(o, pwl, m, sWord))
         {
             sError = strprintf("Word extract failed %d, language %d.", o, nLanguage);
             return errorN(3, "%s: %s", __func__, sError.c_str());
         };
-         
+
         if (sWordList != "")
             sWordList += " ";
         sWordList += sWord;
     };
-    
+
     if (nLanguage == WLL_JAPANESE)
         part::ReplaceStrInPlace(sWordList, " ", "\u3000");
     
@@ -258,8 +255,7 @@ int MnemonicEncode(int nLanguage, const std::vector<uint8_t> &vEntropy, std::str
 
 int MnemonicDecode(int nLanguage, const std::string &sWordListIn, std::vector<uint8_t> &vEntropy, std::string &sError, bool fIgnoreChecksum)
 {
-    if (fDebug)
-        LogPrintf("%s: Language %d.\n", __func__, nLanguage);
+    LogPrint(BCLog::HDWALLET, "%s: Language %d.\n", __func__, nLanguage);
     
     std::string sWordList = sWordListIn;
     part::ReplaceStrInPlace(sWordList, "\u3000", " ");
@@ -273,8 +269,7 @@ int MnemonicDecode(int nLanguage, const std::string &sWordListIn, std::vector<ui
         return errorN(1, "%s: %s", __func__, sError.c_str());
     };
     
-    if (fDebug)
-        LogPrintf("%s: Detected language %d.\n", __func__, nLanguage);
+    LogPrint(BCLog::HDWALLET, "%s: Detected language %d.\n", __func__, nLanguage);
     
     char tmp[2048];
     if (sWordList.size() >= 2048)
@@ -440,8 +435,7 @@ static void NormaliseUnicode(std::string &str)
 
 int MnemonicToSeed(const std::string &sMnemonic, const std::string &sPasswordIn, std::vector<uint8_t> &vSeed)
 {
-    if (fDebug)
-        LogPrintf("%s\n", __func__);
+    LogPrint(BCLog::HDWALLET, "%s\n", __func__);
     
     vSeed.resize(64);
     
@@ -486,8 +480,7 @@ int MnemonicAddChecksum(int nLanguageIn, const std::string &sWordListIn, std::st
 
 int MnemonicGetWord(int nLanguage, int nWord, std::string &sWord, std::string &sError)
 {
-    if (fDebug)
-        LogPrintf("%s: Language %d.\n", __func__, nLanguage);
+    LogPrint(BCLog::HDWALLET, "%s: Language %d.\n", __func__, nLanguage);
     
     if (nLanguage < 1 || nLanguage > WLL_MAX)
     {

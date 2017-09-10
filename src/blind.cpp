@@ -8,6 +8,7 @@
 #include <secp256k1.h>
 #include <secp256k1_rangeproof.h>
 
+#include "support/allocators/secure.h"
 #include "random.h"
 #include "util.h"
 
@@ -127,6 +128,14 @@ void ECC_Start_Blinding()
 
     secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
     assert(ctx != NULL);
+
+    {
+        // Pass in a random blinding seed to the secp256k1 context.
+        std::vector<unsigned char, secure_allocator<unsigned char>> vseed(32);
+        GetRandBytes(vseed.data(), 32);
+        bool ret = secp256k1_context_randomize(ctx, vseed.data());
+        assert(ret);
+    }
 
     secp256k1_ctx_blind = ctx;
 };

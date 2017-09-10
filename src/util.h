@@ -45,7 +45,6 @@ public:
     boost::signals2::signal<std::string (const char* psz)> Translate;
 };
 
-extern bool fDebug;
 extern bool fParticlMode;
 extern bool fParticlWallet;
 extern bool fPrintToConsole;

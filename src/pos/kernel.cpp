@@ -110,7 +110,7 @@ bool CheckStakeKernelHash(const CBlockIndex *pindexPrev,
     if (UintToArith256(hashProofOfStake) > bnTarget)
         return false;
 
-    if (fDebug && !fPrintProofOfStake)
+    if (LogAcceptCategory(BCLog::POS) && !fPrintProofOfStake)
     {
         LogPrintf("%s: using modifier=%s at height=%d timestamp=%s\n",
             __func__, bnStakeModifier.ToString(), nStakeModifierHeight,
@@ -119,7 +119,7 @@ bool CheckStakeKernelHash(const CBlockIndex *pindexPrev,
             __func__, bnStakeModifier.ToString(),
             nBlockFromTime, prevout.n, nTime,
             hashProofOfStake.ToString());
-    }
+    };
 
     return true;
 }
@@ -236,7 +236,7 @@ bool CheckProofOfStake(const CBlockIndex *pindexPrev, const CTransaction &tx, in
     */
 
     if (!CheckStakeKernelHash(pindexPrev, nBits, nBlockFromTime,
-        amount, txin.prevout, nTime, hashProofOfStake, targetProofOfStake, fDebug))
+        amount, txin.prevout, nTime, hashProofOfStake, targetProofOfStake, LogAcceptCategory(BCLog::POS)))
         return state.DoS(1, // may occur during initial download or if behind on block chain sync
             error("%s: INFO: check kernel failed on coinstake %s, hashProof=%s", __func__, tx.GetHash().ToString(), hashProofOfStake.ToString()),
             REJECT_INVALID, "check-kernel-failed");  

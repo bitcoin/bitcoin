@@ -236,9 +236,9 @@ void ShutdownThreadStakeMiner()
 
 void WakeThreadStakeMiner(CHDWallet *pwallet)
 {
-    // call once chain is synced, or wallet unlocked
+    // Call when chain is synced, wallet unlocked or balance changed
     LogPrint(BCLog::POS, "WakeThreadStakeMiner thread %d\n", pwallet->nStakeThread);
-    
+
     if (pwallet->nStakeThread >= vStakeThreads.size())
         return; // stake unit test
     StakeThread *t = vStakeThreads[pwallet->nStakeThread];
@@ -247,7 +247,7 @@ void WakeThreadStakeMiner(CHDWallet *pwallet)
         std::lock_guard<std::mutex> lock(t->mtxMinerProc);
         t->fWakeMinerProc = true;
     }
-    
+
     t->condMinerProc.notify_one();
 };
 
@@ -330,11 +330,21 @@ void ThreadStakeMiner(size_t nThreadID, std::vector<CWalletRef> &vpwallets, size
             continue;
         };
 
-        int64_t nSearchTime = GetAdjustedTime() & ~Params().GetStakeTimestampMask(nBestHeight+1);
+        
+        int64_t nTime = GetAdjustedTime();
+        int64_t nMask = Params().GetStakeTimestampMask(nBestHeight+1);
+        int64_t nSearchTime = nTime & ~nMask;
         if (nSearchTime <= nBestTime)
         {
-            LogPrint(BCLog::POS, "%s: Can't stake before last block time.\n", __func__);
-            condWaitFor(nThreadID, 10000);
+            if (nTime < nBestTime)
+            {
+                LogPrint(BCLog::POS, "%s: Can't stake before last block time.\n", __func__);
+                condWaitFor(nThreadID, std::min(1000 + (nBestTime - nTime) * 1000, (int64_t)30000));
+                continue;
+            };
+
+            int64_t nNextSearch = nSearchTime + nMask;
+            condWaitFor(nThreadID, std::min(nMinerSleep + (nNextSearch - nTime) * 1000, (int64_t)10000));
             continue;
         };
 
@@ -377,19 +387,20 @@ void ThreadStakeMiner(size_t nThreadID, std::vector<CWalletRef> &vpwallets, size
                     LogPrint(BCLog::POS, "%s: Couldn't create new block.\n", __func__);
                     continue;
                 };
-            };
 
-            if (nBestHeight+1 <= nLastImportHeight
-                && !ImportOutputs(pblocktemplate.get(), nBestHeight+1))
-            {
-                fIsStaking = false;
-                nWaitFor = std::min(nWaitFor, (size_t)30000);
-                LogPrint(BCLog::POS, "%s: ImportOutputs failed.\n", __func__);
-                continue;
+                if (nBestHeight+1 <= nLastImportHeight
+                    && !ImportOutputs(pblocktemplate.get(), nBestHeight+1))
+                {
+                    fIsStaking = false;
+                    nWaitFor = std::min(nWaitFor, (size_t)30000);
+                    LogPrint(BCLog::POS, "%s: ImportOutputs failed.\n", __func__);
+                    continue;
+                };
             };
 
             pwallet->nIsStaking = CHDWallet::IS_STAKING;
-            nWaitFor = 0;
+            nWaitFor = nMinerSleep;
+            fIsStaking = true;
             if (pwallet->SignBlock(pblocktemplate.get(), nBestHeight+1, nSearchTime))
             {
                 CBlock *pblock = &pblocktemplate->block;
@@ -414,14 +425,7 @@ void ThreadStakeMiner(size_t nThreadID, std::vector<CWalletRef> &vpwallets, size
             };
         };
 
-        if (nWaitFor > 0) // lowest wait time of all wallets
-        {
-            condWaitFor(nThreadID, nWaitFor);
-        } else
-        {
-            fIsStaking = true;
-            condWaitFor(nThreadID, nMinerSleep);
-        };
+        condWaitFor(nThreadID, nWaitFor);
     };
 };
 

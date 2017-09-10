@@ -4470,8 +4470,7 @@ int CMerkleTx::GetDepthInMainChainCached() const
     if (hashUnset())
         return 0;
     
-    if (fDebug)
-        AssertLockHeld(cs_main);
+    AssertLockHeld(cs_main);
     
     int nChainHeight = chainActive.Height();
     

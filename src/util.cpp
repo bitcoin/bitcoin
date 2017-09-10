@@ -91,7 +91,6 @@ const int64_t nStartupTime = GetTime();
 const char * const BITCOIN_CONF_FILENAME = "particl.conf";
 const char * const BITCOIN_PID_FILENAME = "particld.pid";
 
-bool fDebug = false;
 bool fParticlMode = true;
 bool fParticlWallet = false;
 ArgsManager gArgs;
@@ -245,6 +244,12 @@ const CLogCategoryDesc LogCategories[] =
     {BCLog::COINDB, "coindb"},
     {BCLog::QT, "qt"},
     {BCLog::LEVELDB, "leveldb"},
+
+    {BCLog::SMSG, "smsg"},
+    {BCLog::RINGCT, "ringct"},
+    {BCLog::POS, "pos"},
+    {BCLog::HDWALLET, "hdwallet"},
+
     {BCLog::ALL, "1"},
     {BCLog::ALL, "all"},
 };
