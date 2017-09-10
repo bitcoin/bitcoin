@@ -584,6 +584,29 @@ class SegWitTest(BitcoinTestFramework):
         self.nodes[0].importprivkey("cTW5mR5M45vHxXkeChZdtSPozrFwFgmEvTNnanCW6wrqwaCZ1X7K")
         self.create_and_mine_tx_from_txids(solvable_txid)
 
+        # Test that importing native P2WPKH/P2WSH scripts works
+        for use_p2wsh in [False, True]:
+            if use_p2wsh:
+                scriptPubKey = "00203a59f3f56b713fdcf5d1a57357f02c44342cbf306ffe0c4741046837bf90561a"
+                transaction = "01000000000100e1f505000000002200203a59f3f56b713fdcf5d1a57357f02c44342cbf306ffe0c4741046837bf90561a00000000"
+            else:
+                scriptPubKey = "a9142f8c469c2f0084c48e11f998ffbe7efa7549f26d87"
+                transaction = "01000000000100e1f5050000000017a9142f8c469c2f0084c48e11f998ffbe7efa7549f26d8700000000"
+
+            self.nodes[1].importaddress(scriptPubKey, "", False)
+            rawtxfund = self.nodes[1].fundrawtransaction(transaction)['hex']
+            rawtxfund = self.nodes[1].signrawtransaction(rawtxfund)["hex"]
+            txid = self.nodes[1].sendrawtransaction(rawtxfund)
+
+            assert_equal(self.nodes[1].gettransaction(txid, True)["txid"], txid)
+            assert_equal(self.nodes[1].listtransactions("*", 1, 0, True)[0]["txid"], txid)
+
+            # Assert it is properly saved
+            self.stop_node(1)
+            self.start_node(1)
+            assert_equal(self.nodes[1].gettransaction(txid, True)["txid"], txid)
+            assert_equal(self.nodes[1].listtransactions("*", 1, 0, True)[0]["txid"], txid)
+
     def mine_and_test_listunspent(self, script_list, ismine):
         utxo = find_unspent(self.nodes[0], 50)
         tx = CTransaction()
