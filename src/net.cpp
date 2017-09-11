@@ -346,6 +346,12 @@ bool CConnman::CheckIncomingNonce(uint64_t nonce)
 
 CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fConnectToMasternode)
 {
+    // TODO: This is different from what we have in Bitcoin which only calls ConnectNode from OpenNetworkConnection
+    //       If we ever switch to using OpenNetworkConnection for MNs as well, this can be removed
+    if (!fNetworkActive) {
+        return NULL;
+    }
+
     if (pszDest == NULL) {
         // we clean masternode connections in CMasternodeMan::ProcessMasternodeConnections()
         // so should be safe to skip this and connect to local Hot MN on CActiveMasternode::ManageState()
@@ -1039,6 +1045,12 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
         int nErr = WSAGetLastError();
         if (nErr != WSAEWOULDBLOCK)
             LogPrintf("socket error accept failed: %s\n", NetworkErrorString(nErr));
+        return;
+    }
+
+    if (!fNetworkActive) {
+        LogPrintf("connection from %s dropped: not accepting new connections\n", addr.ToString());
+        CloseSocket(hSocket);
         return;
     }
 
@@ -1878,6 +1890,9 @@ bool CConnman::OpenNetworkConnection(const CAddress& addrConnect, CSemaphoreGran
     if (interruptNet) {
         return false;
     }
+    if (!fNetworkActive) {
+        return false;
+    }	
     if (!pszDest) {
         if (IsLocal(addrConnect) ||
             FindNode((CNetAddr)addrConnect) || IsBanned(addrConnect) ||
@@ -2094,8 +2109,30 @@ void Discover(boost::thread_group& threadGroup)
 #endif
 }
 
+void CConnman::SetNetworkActive(bool active)
+{
+    if (fDebug) {
+        LogPrint("net", "SetNetworkActive: %s\n", active);
+    }
+
+    if (!active) {
+        fNetworkActive = false;
+
+        LOCK(cs_vNodes);
+        // Close sockets to all nodes
+        BOOST_FOREACH(CNode* pnode, vNodes) {
+            pnode->CloseSocketDisconnect();
+        }
+    } else {
+        fNetworkActive = true;
+    }
+
+    uiInterface.NotifyNetworkActiveChanged(fNetworkActive);
+}
+
 CConnman::CConnman()
 {
+    fNetworkActive = true;
     setBannedIsDirty = false;
     fAddressesInitialized = false;
     nLastNodeId = 0;

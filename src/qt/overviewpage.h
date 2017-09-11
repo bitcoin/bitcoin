@@ -8,6 +8,7 @@
 #include "amount.h"
 
 #include <QWidget>
+#include <memory>
 
 class ClientModel;
 class TransactionFilterProxy;
@@ -61,7 +62,7 @@ private:
     bool fShowAdvancedPSUI;
 
     TxViewDelegate *txdelegate;
-    TransactionFilterProxy *filter;
+    std::unique_ptr<TransactionFilterProxy> filter;
 
     void SetupTransactionList(int nNumItems);
     void DisablePrivateSendCompletely();

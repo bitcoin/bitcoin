@@ -56,6 +56,7 @@
 #include <QSettings>
 #include <QTextDocument> // for Qt::mightBeRichText
 #include <QThread>
+#include <QMouseEvent>
 
 #if QT_VERSION < 0x050000
 #include <QUrl>
@@ -290,17 +291,11 @@ void copyEntryData(QAbstractItemView *view, int column, int role)
     }
 }
 
-QVariant getEntryData(QAbstractItemView *view, int column, int role)
+QList<QModelIndex> getEntryData(QAbstractItemView *view, int column)
 {
     if(!view || !view->selectionModel())
-        return QVariant();
-    QModelIndexList selection = view->selectionModel()->selectedRows(column);
-
-    if(!selection.isEmpty()) {
-        // Return first item
-        return (selection.at(0).data(role));
-    }
-    return QVariant();
+        return QList<QModelIndex>();
+    return view->selectionModel()->selectedRows(column);
 }
 
 QString getSaveFileName(QWidget *parent, const QString &caption, const QString &dir,
@@ -620,7 +615,8 @@ void TableViewLastColumnResizingFixer::on_geometriesChanged()
  * Initializes all internal variables and prepares the
  * the resize modes of the last 2 columns of the table and
  */
-TableViewLastColumnResizingFixer::TableViewLastColumnResizingFixer(QTableView* table, int lastColMinimumWidth, int allColsMinimumWidth) :
+TableViewLastColumnResizingFixer::TableViewLastColumnResizingFixer(QTableView* table, int lastColMinimumWidth, int allColsMinimumWidth, QObject *parent) :
+    QObject(parent),
     tableView(table),
     lastColumnMinimumWidth(lastColMinimumWidth),
     allColumnsMinimumWidth(allColsMinimumWidth)
@@ -1029,7 +1025,7 @@ QString formatTimeOffset(int64_t nTimeOffset)
   return QString(QObject::tr("%1 s")).arg(QString::number((int)nTimeOffset, 10));
 }
 
-QString formateNiceTimeOffset(qint64 secs)
+QString formatNiceTimeOffset(qint64 secs)
 {
     // Represent time from last generated block in human readable text
     QString timeBehindText;
@@ -1065,4 +1061,15 @@ QString formateNiceTimeOffset(qint64 secs)
     }
     return timeBehindText;
 }
+
+void ClickableLabel::mouseReleaseEvent(QMouseEvent *event)
+{
+    Q_EMIT clicked(event->pos());
+}
+    
+void ClickableProgressBar::mouseReleaseEvent(QMouseEvent *event)
+{
+    Q_EMIT clicked(event->pos());
+}
+
 } // namespace GUIUtil

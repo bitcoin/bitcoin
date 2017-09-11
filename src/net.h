@@ -134,6 +134,8 @@ public:
     void Stop();
     void Interrupt();
     bool BindListenPort(const CService &bindAddr, std::string& strError, bool fWhitelisted = false);
+    bool GetNetworkActive() const { return fNetworkActive; };
+    void SetNetworkActive(bool active);
     bool OpenNetworkConnection(const CAddress& addrConnect, CSemaphoreGrant *grantOutbound = NULL, const char *strDest = NULL, bool fOneShot = false, bool fFeeler = false);
     bool CheckIncomingNonce(uint64_t nonce);
 
@@ -459,6 +461,7 @@ private:
     unsigned int nReceiveFloodSize;
 
     std::vector<ListenSocket> vhListenSocket;
+    bool fNetworkActive;
     banmap_t setBanned;
     CCriticalSection cs_setBanned;
     bool setBannedIsDirty;

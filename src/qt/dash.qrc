@@ -58,6 +58,7 @@
         <file alias="fontbigger">res/icons/drkblue/fontbigger.png</file>
         <file alias="fontsmaller">res/icons/drkblue/fontsmaller.png</file>
         <file alias="transaction_abandoned">res/icons/drkblue/transaction_abandoned.png</file>
+        <file alias="network_disabled">res/icons/drkblue/network_disabled.png</file>
     </qresource>
     <qresource prefix="/icons/crownium">
         <file alias="address-book">res/icons/crownium/address-book.png</file>
@@ -113,6 +114,7 @@
         <file alias="fontbigger">res/icons/crownium/fontbigger.png</file>
         <file alias="fontsmaller">res/icons/crownium/fontsmaller.png</file>
         <file alias="transaction_abandoned">res/icons/crownium/transaction_abandoned.png</file>
+        <file alias="network_disabled">res/icons/crownium/network_disabled.png</file>
     </qresource>
     <qresource prefix="/icons/light">
         <file alias="address-book">res/icons/light/address-book.png</file>
@@ -168,6 +170,7 @@
         <file alias="fontbigger">res/icons/light/fontbigger.png</file>
         <file alias="fontsmaller">res/icons/light/fontsmaller.png</file>
         <file alias="transaction_abandoned">res/icons/light/transaction_abandoned.png</file>
+        <file alias="network_disabled">res/icons/light/network_disabled.png</file>
     </qresource>
     <qresource prefix="/icons/trad">
         <file alias="address-book">res/icons/trad/address-book.png</file>
@@ -223,6 +226,7 @@
         <file alias="fontbigger">res/icons/trad/fontbigger.png</file>
         <file alias="fontsmaller">res/icons/trad/fontsmaller.png</file>
         <file alias="transaction_abandoned">res/icons/trad/transaction_abandoned.png</file>
+        <file alias="network_disabled">res/icons/trad/network_disabled.png</file>
     </qresource>
     <qresource prefix="/css">
         <file alias="drkblue">res/css/drkblue.css</file>

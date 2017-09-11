@@ -219,7 +219,7 @@ QLabel { color: rgb(40,40,40);  }</string>
            <item row="0" column="1">
             <widget class="QLabel" name="numberOfBlocksLeft">
              <property name="text">
-              <string>unknown...</string>
+              <string>Unknown...</string>
              </property>
             </widget>
            </item>
@@ -245,7 +245,7 @@ QLabel { color: rgb(40,40,40);  }</string>
               </sizepolicy>
              </property>
              <property name="text">
-              <string>unknown...</string>
+              <string>Unknown...</string>
              </property>
             </widget>
            </item>
@@ -275,6 +275,9 @@ QLabel { color: rgb(40,40,40);  }</string>
               <widget class="QProgressBar" name="progressBar">
                <property name="value">
                 <number>24</number>
+               </property>
+               <property name="format">
+                <string/>
                </property>
               </widget>
              </item>

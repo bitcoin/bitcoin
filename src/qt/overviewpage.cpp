@@ -37,9 +37,9 @@ class TxViewDelegate : public QAbstractItemDelegate
 {
     Q_OBJECT
 public:
-    TxViewDelegate(const PlatformStyle *platformStyle):
-        QAbstractItemDelegate(), unit(BitcoinUnits::DASH),
-        platformStyle(platformStyle)
+    TxViewDelegate(const PlatformStyle *_platformStyle, QObject *parent=nullptr):
+        QAbstractItemDelegate(parent), unit(BitcoinUnits::DASH),
+        platformStyle(_platformStyle)
     {
 
     }
@@ -132,8 +132,7 @@ OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) 
     currentWatchOnlyBalance(-1),
     currentWatchUnconfBalance(-1),
     currentWatchImmatureBalance(-1),
-    txdelegate(new TxViewDelegate(platformStyle)),
-    filter(0)
+    txdelegate(new TxViewDelegate(platformStyle, this))
 {
     ui->setupUi(this);
     QString theme = GUIUtil::getThemeName();
@@ -653,7 +652,7 @@ void OverviewPage::SetupTransactionList(int nNumItems) {
 
     if(walletModel && walletModel->getOptionsModel()) {
         // Set up transaction list
-        filter = new TransactionFilterProxy();
+        filter.reset(new TransactionFilterProxy());
         filter->setSourceModel(walletModel->getTransactionTableModel());
         filter->setLimit(nNumItems);
         filter->setDynamicSortFilter(true);
@@ -661,7 +660,7 @@ void OverviewPage::SetupTransactionList(int nNumItems) {
         filter->setShowInactive(false);
         filter->sort(TransactionTableModel::Status, Qt::DescendingOrder);
 
-        ui->listTransactions->setModel(filter);
+        ui->listTransactions->setModel(filter.get());
         ui->listTransactions->setModelColumn(TransactionTableModel::ToAddress);
     }
 }

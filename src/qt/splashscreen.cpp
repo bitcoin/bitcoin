@@ -119,6 +119,7 @@ void SplashScreen::slotFinish(QWidget *mainWin)
     if (isMinimized())
         showNormal();
     hide();
+    deleteLater(); // No more need for this
 }
 
 static void InitMessage(SplashScreen *splash, const std::string &message)
