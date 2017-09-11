@@ -2916,7 +2916,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             txNew.vin.clear();
             txNew.vpout.clear();
             wtx.fFromMe = true;
-            
+
             CAmount nValueToSelect = nValue;
             if (nSubtractFeeFromAmount == 0)
                 nValueToSelect += nFeeRet;
@@ -3024,16 +3024,14 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 r.n = txNew.vpout.size();
                 txNew.vpout.push_back(txbout);
             };
-            
-            
+
             std::vector<uint8_t*> vpBlinds;
             std::vector<uint8_t> vBlindPlain;
-            
+
             size_t nBlindedInputs = 1;
             secp256k1_pedersen_commitment plainCommitment;
             secp256k1_pedersen_commitment plainInputCommitment;
-            
-            
+
             vBlindPlain.resize(32);
             memset(&vBlindPlain[0], 0, 32);
             vpBlinds.push_back(&vBlindPlain[0]);
@@ -3098,8 +3096,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 vin.scriptSig = CScript();
                 vin.scriptWitness.SetNull();
             }
-            
-            
+
             nFeeNeeded = GetMinimumFee(nBytes, *coinControl, ::mempool, ::feeEstimator, &feeCalc);
             if (HaveAnonOutputs(vecSend))
                 nFeeNeeded *= ANON_FEE_MULTIPLIER;
@@ -3136,11 +3133,11 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                     }
                 }
                 
+                // If we have change output already, just increase it
                 if (nFeeRet > nFeeNeeded && nChangePosInOut != -1
                     && nSubtractFeeFromAmount == 0)
                 {
                     auto &r = vecSend[nChangePosInOut];
-                    
                     CAmount extraFeePaid = nFeeRet - nFeeNeeded;
                     CTxOutBaseRef c = txNew.vpout[r.n];
                     c->SetValue(c->GetValue() + extraFeePaid);
@@ -3164,7 +3161,6 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 && nSubtractFeeFromAmount == 0)
             {
                 auto &r = vecSend[nChangePosInOut];
-                
                 CAmount additionalFeeNeeded = nFeeNeeded - nFeeRet;
                 
                 CTxOutBaseRef c = txNew.vpout[r.n];
@@ -3188,7 +3184,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             nFeeRet = nFeeNeeded;
             continue;
         };
-        
+
         if (!fOnlyStandardOutputs)
         {
             std::vector<uint8_t> &vData = ((CTxOutData*)txNew.vpout[0].get())->vData;
@@ -3196,7 +3192,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             if (0 != PutVarInt(vData, nFeeRet))
                 return errorN(1, "%s: PutVarInt %d failed\n", __func__, nFeeRet);
         };
-        
+
         if (sign)
         {
             CTransaction txNewConst(txNew);
@@ -3218,17 +3214,14 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 nIn++;
             };
         };
-        
-        
-        
+
         rtx.nFee = nFeeRet;
         AddOutputRecordMetaData(rtx, vecSend);
-        
+
         // Embed the constructed transaction data in wtxNew.
         wtx.SetTx(MakeTransactionRef(std::move(txNew)));
-        
     } // cs_main, cs_wallet
-    
+
     LogPrintf("Fee Calculation: Fee:%d Bytes:%u Needed:%d Tgt:%d (requested %d) Reason:\"%s\" Decay %.5f: Estimation: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out) Fail: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out)\n",
               nFeeRet, nBytes, nFeeNeeded, feeCalc.returnedTarget, feeCalc.desiredTarget, StringForFeeReason(feeCalc.reason), feeCalc.est.decay,
               feeCalc.est.pass.start, feeCalc.est.pass.end,
@@ -3314,7 +3307,6 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 uint32_t nChild = nLastHardened;
                 PushUInt32(vEphemPath, SetHardenedBit(nChild));
                 rtx.mapValue[RTXVT_EPHEM_PATH] = vEphemPath;
-                
             } else
             {
                 LogPrintf("Warning: %s - missing path value.\n", __func__);

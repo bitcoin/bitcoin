@@ -2468,7 +2468,7 @@ static void ApproximateBestSubset(const std::vector<CInputCoin>& vValue, const C
                 //the selection random.
                 if (nPass == 0 ? insecure_rand.randbool() : !vfIncluded[i])
                 {
-                    nTotal += vValue[i].txout.nValue;
+                    nTotal += vValue[i].GetValue();
                     vfIncluded[i] = true;
                     if (nTotal >= nTargetValue)
                     {
@@ -2478,7 +2478,7 @@ static void ApproximateBestSubset(const std::vector<CInputCoin>& vValue, const C
                             nBest = nTotal;
                             vfBest = vfIncluded;
                         }
-                        nTotal -= vValue[i].txout.nValue;
+                        nTotal -= vValue[i].GetValue();
                         vfIncluded[i] = false;
                     }
                 }
