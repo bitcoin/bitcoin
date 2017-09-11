@@ -1687,9 +1687,8 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         connOptions.vWhitelistedRange.push_back(subnet);
     }
 
-    if (gArgs.IsArgSet("-seednode")) {
-        connOptions.vSeedNodes = gArgs.GetArgs("-seednode");
-    }
+    connOptions.vSeedNodes = gArgs.GetArgs("-seednode");
+
     // Initiate outbound connections unless connect=0
     connOptions.m_use_addrman_outgoing = !gArgs.IsArgSet("-connect");
     if (!connOptions.m_use_addrman_outgoing) {
