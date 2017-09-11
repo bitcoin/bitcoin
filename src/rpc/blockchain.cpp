@@ -352,7 +352,7 @@ std::string EntryDescriptionString()
            "       ... ]\n";
 }
 
-void entryToJSON(UniValue &info, const CTxMemPoolEntry &e)
+void entryToJSON(UniValue &info, const CTxMemPoolEntry &e) EXCLUSIVE_LOCKS_REQUIRED(mempool.cs_txMemPool)
 {
     AssertLockHeld(mempool.cs_txMemPool);
 
