@@ -589,6 +589,7 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
     {
         JSONRPCRequest newRequest;
         newRequest.fHelp = false;
+        newRequest.URI = request.URI;
         UniValue params(UniValue::VARR);
         params.push_back("part");
         params.push_back("part");
