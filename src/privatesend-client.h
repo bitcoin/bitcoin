@@ -8,6 +8,7 @@
 #include "masternode.h"
 #include "privatesend.h"
 #include "wallet/wallet.h"
+#include "privatesend-util.h"
 
 class CPrivateSendClient;
 class CConnman;
@@ -54,6 +55,8 @@ private:
     std::string strAutoDenomResult;
 
     CMutableTransaction txMyCollateral; // client side collateral
+
+    CKeyHolderStorage keyHolderStorage; // storage for keys used in PrepareDenominate
 
     /// Check for process
     void CheckPool();
