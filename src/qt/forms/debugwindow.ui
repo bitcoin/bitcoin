@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>740</width>
-    <height>430</height>
+    <height>513</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tab_info">
       <attribute name="title">
@@ -165,17 +165,17 @@
         </widget>
        </item>
        <item row="6" column="0">
-           <widget class="QLabel" name="labelNetwork">
-               <property name="font">
-                   <font>
-                       <weight>75</weight>
-                       <bold>true</bold>
-                   </font>
-               </property>
-               <property name="text">
-                   <string>Network</string>
-               </property>
-           </widget>
+        <widget class="QLabel" name="labelNetwork">
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>Network</string>
+         </property>
+        </widget>
        </item>
        <item row="7" column="0">
         <widget class="QLabel" name="label_8">
@@ -413,6 +413,22 @@
           <number>4</number>
          </property>
          <item>
+          <widget class="QComboBox" name="cbxActiveWallet">
+           <property name="minimumSize">
+            <size>
+             <width>200</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="toolTip">
+            <string>Active Wallet</string>
+           </property>
+           <property name="locale">
+            <locale language="English" country="UnitedKingdom"/>
+           </property>
+          </widget>
+         </item>
+         <item>
           <spacer name="horizontalSpacer">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
@@ -433,11 +449,11 @@
              <height>24</height>
             </size>
            </property>
-           <property name="text">
-            <string/>
-           </property>
            <property name="toolTip">
             <string>Decrease font size</string>
+           </property>
+           <property name="text">
+            <string/>
            </property>
            <property name="icon">
             <iconset resource="../bitcoin.qrc">

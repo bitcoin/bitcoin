@@ -37,20 +37,6 @@ class AddressIndexTest(ParticlTestFramework):
         self.is_network_split = False
         self.sync_all()
 
-    def stakeToHeight(self, height, fSync=True):
-        ro = self.nodes[0].reservebalance(False)
-        assert(self.wait_for_height(self.nodes[0], height))
-        ro = self.nodes[0].reservebalance(True, 10000000)
-        if not fSync:
-            return
-        self.sync_all()
-        assert(self.nodes[1].getblockcount() == height)
-
-    def stakeBlocks(self, nBlocks):
-        height = self.nodes[0].getblockcount()
-        
-        self.stakeToHeight(height + nBlocks)
-
     def run_test(self):
         nodes = self.nodes
         
@@ -204,6 +190,7 @@ class AddressIndexTest(ParticlTestFramework):
         ro = self.nodes[0].decoderawtransaction(txsigned['hex'])
         print(json.dumps(ro, indent=4, default=self.jsonDecimal))
         
+        self.sync_all()
         self.stakeBlocks(1)
         
         txidsmany = self.nodes[1].getaddresstxids("pqavEUgLCZeGh8o9sTcCfYVAsrTgnQTUsK")

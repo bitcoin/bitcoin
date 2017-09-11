@@ -747,6 +747,7 @@ public:
         nStakeMinConfirmations = 12;
         nTargetSpacing = 5;             // 5 seconds
         nTargetTimespan = 16 * 60;      // 16 mins
+        nStakeTimestampMask = 0;
         
         SetLastImportHeight();
         

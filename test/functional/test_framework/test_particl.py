@@ -19,7 +19,7 @@ class ParticlTestFramework(BitcoinTestFramework):
     
     def start_node(self, i, dirname, extra_args=None, rpchost=None, timewait=None, binary=None, stderr=None):
         return super().start_node(i, dirname, extra_args, rpchost, timewait, binary, stderr, False)
-        
+    
     
     def wait_for_height(self, node, nHeight, nTries=500):
         for i in range(nTries):
@@ -40,6 +40,21 @@ class ParticlTestFramework(BitcoinTestFramework):
             except:
                 continue
         return False
+    
+    def stakeToHeight(self, height, fSync=True, nStakeNode=0, nSyncCheckNode=1):
+        ro = self.nodes[nStakeNode].walletsettings('stakelimit', {'height':height})
+        ro = self.nodes[nStakeNode].reservebalance(False)
+        assert(self.wait_for_height(self.nodes[nStakeNode], height))
+        ro = self.nodes[nStakeNode].reservebalance(True, 10000000)
+        if not fSync:
+            return
+        self.sync_all()
+        assert(self.nodes[nSyncCheckNode].getblockcount() == height)
+    
+    def stakeBlocks(self, nBlocks):
+        height = self.nodes[0].getblockcount()
+        
+        self.stakeToHeight(height + nBlocks)
     
     def jsonDecimal(self, obj):
         if isinstance(obj, decimal.Decimal):

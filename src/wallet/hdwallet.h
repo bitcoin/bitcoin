@@ -677,6 +677,7 @@ public:
     int64_t nReserveBalance;
     size_t nStakeThread = 9999999; // unset
     mutable int deepestTxnDepth = 0; // for stake mining
+    int nStakeLimitHeight = 0; // for regtest, don't stake above nStakeLimitHeight
     
     enum eStakingState {
         NOT_STAKING = 0,
@@ -684,6 +685,7 @@ public:
         NOT_STAKING_BALANCE = -1,
         NOT_STAKING_DEPTH = -2,
         NOT_STAKING_LOCKED = -3,
+        NOT_STAKING_LIMITED = -4,
     } nIsStaking = NOT_STAKING;
     
     std::set<CStealthAddress> stealthAddresses;

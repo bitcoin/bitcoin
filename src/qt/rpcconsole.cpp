@@ -85,7 +85,7 @@ class RPCExecutor : public QObject
     Q_OBJECT
 
 public Q_SLOTS:
-    void request(const QString &command);
+    void request(const QString &command, const QString &wallet);
 
 Q_SIGNALS:
     void reply(int category, const QString &command);
@@ -146,7 +146,7 @@ public:
  * @param[out]   pstrFilteredOut  Command line, filtered to remove any sensitive data
  */
 
-bool RPCConsole::RPCParseCommandLine(std::string &strResult, const std::string &strCommand, const bool fExecute, std::string * const pstrFilteredOut)
+bool RPCConsole::RPCParseCommandLine(std::string &strResult, const std::string &strCommand, const bool fExecute, std::string * const pstrFilteredOut, std::string *pwalletName)
 {
     std::vector< std::vector<std::string> > stack;
     stack.push_back(std::vector<std::string>());
@@ -304,6 +304,11 @@ bool RPCConsole::RPCParseCommandLine(std::string &strResult, const std::string &
                             req.params = RPCConvertValues(stack.back()[0], std::vector<std::string>(stack.back().begin() + 1, stack.back().end()));
                             req.strMethod = stack.back()[0];
 #ifdef ENABLE_WALLET
+                            if (pwalletName)
+                            {
+                                QByteArray encodedName = QUrl::toPercentEncoding(QString::fromStdString(*pwalletName));
+                                req.URI = "/wallet/"+std::string(encodedName.constData(), encodedName.length());
+                            } else
                             // TODO: Move this logic to WalletModel
                             if (!vpwallets.empty()) {
                                 // in Qt, use always the wallet with index 0 when running with multiple wallets
@@ -386,13 +391,15 @@ bool RPCConsole::RPCParseCommandLine(std::string &strResult, const std::string &
     }
 }
 
-void RPCExecutor::request(const QString &command)
+void RPCExecutor::request(const QString &command, const QString &wallet)
 {
     try
     {
         std::string result;
         std::string executableCommand = command.toStdString() + "\n";
-        if(!RPCConsole::RPCExecuteCommandLine(result, executableCommand))
+        std::string sWallet = wallet.toStdString();
+        std::string *pwallet = sWallet.empty() ? nullptr : &sWallet;
+        if(!RPCConsole::RPCExecuteCommandLine(result, executableCommand, nullptr, pwallet))
         {
             Q_EMIT reply(RPCConsole::CMD_ERROR, QString("Parse error: unbalanced ' or \""));
             return;
@@ -830,7 +837,12 @@ void RPCConsole::on_lineEdit_returnPressed()
         std::string strFilteredCmd;
         try {
             std::string dummy;
-            if (!RPCParseCommandLine(dummy, cmd.toStdString(), false, &strFilteredCmd)) {
+            std::string *pwalletname = nullptr;
+#ifdef ENABLE_WALLET
+            std::string sWalletName = ui->cbxActiveWallet->currentText().toStdString();
+            pwalletname = &sWalletName;
+#endif
+            if (!RPCParseCommandLine(dummy, cmd.toStdString(), false, &strFilteredCmd, pwalletname)) {
                 // Failed to parse command, so we cannot even filter it for the history
                 throw std::runtime_error("Invalid command line");
             }
@@ -843,8 +855,12 @@ void RPCConsole::on_lineEdit_returnPressed()
 
         cmdBeforeBrowsing = QString();
 
+        QString sWalletName = "";
+#ifdef ENABLE_WALLET
+        sWalletName = ui->cbxActiveWallet->currentText();
+#endif
         message(CMD_REQUEST, QString::fromStdString(strFilteredCmd));
-        Q_EMIT cmdRequest(cmd);
+        Q_EMIT cmdRequest(cmd, sWalletName);
 
         cmd = QString::fromStdString(strFilteredCmd);
 
@@ -892,7 +908,7 @@ void RPCConsole::startExecutor()
     // Replies from executor object must go to this object
     connect(executor, SIGNAL(reply(int,QString)), this, SLOT(message(int,QString)));
     // Requests from this object must go to executor
-    connect(this, SIGNAL(cmdRequest(QString)), executor, SLOT(request(QString)));
+    connect(this, SIGNAL(cmdRequest(QString, QString)), executor, SLOT(request(QString, QString)));
 
     // On stopExecutor signal
     // - quit the Qt event loop in the execution thread
@@ -1092,6 +1108,20 @@ void RPCConsole::showEvent(QShowEvent *event)
 
     if (!clientModel || !clientModel->getPeerTableModel())
         return;
+
+#ifdef ENABLE_WALLET
+    ui->cbxActiveWallet->clear();
+    
+    for (CWallet *pw : vpwallets)
+    {
+        QString name = QString::fromStdString(pw->GetName());
+        ui->cbxActiveWallet->addItem(name);
+    }
+    
+    ui->cbxActiveWallet->show();
+#else
+    ui->cbxActiveWallet->hide();
+#endif
 
     // start PeerTableModel auto refresh
     clientModel->getPeerTableModel()->startAutoRefresh();

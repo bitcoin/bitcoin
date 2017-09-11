@@ -156,6 +156,7 @@ class StealthTest(ParticlTestFramework):
         
         
         # Start staking
+        ro = node.walletsettings('stakelimit', {'height':1})
         ro = node.reservebalance(False)
         
         assert(self.wait_for_height(node, 1))
@@ -178,11 +179,8 @@ class StealthTest(ParticlTestFramework):
         assert('node2 -> node1' in str(ro[-1]))
         
         
-        
-        
         #assert(False)
         #print(json.dumps(ro, indent=4, default=self.jsonDecimal))
-        
 
 if __name__ == '__main__':
     StealthTest().main()

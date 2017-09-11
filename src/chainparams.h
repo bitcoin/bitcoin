@@ -95,7 +95,7 @@ public:
     uint32_t GetStakeMinConfirmations() const { return nStakeMinConfirmations; }
     uint32_t GetTargetSpacing() const { return nTargetSpacing; }
     uint32_t GetTargetTimespan() const { return nTargetTimespan; }
-    uint32_t GetStakeTimestampMask(int nHeight) const { return (1 << 4) -1; } // 4 bits, every kernel stake hash will change every 16 seconds
+    uint32_t GetStakeTimestampMask(int nHeight) const { return nStakeTimestampMask; } 
     
     int64_t GetStakeCombineThreshold() const { return nStakeCombineThreshold; }
     int64_t GetStakeSplitThreshold() const { return nStakeSplitThreshold; }
@@ -161,6 +161,7 @@ protected:
     
     int64_t nStakeCombineThreshold = 1000 * COIN;
     int64_t nStakeSplitThreshold = 2 * nStakeCombineThreshold;
+    uint32_t nStakeTimestampMask = (1 << 4) -1; // 4 bits, every kernel stake hash will change every 16 seconds
     
     int64_t nCoinYearReward = 2 * CENT; // 2% per year
     

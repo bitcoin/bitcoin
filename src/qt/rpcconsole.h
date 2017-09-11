@@ -37,9 +37,9 @@ public:
     explicit RPCConsole(const PlatformStyle *platformStyle, QWidget *parent);
     ~RPCConsole();
 
-    static bool RPCParseCommandLine(std::string &strResult, const std::string &strCommand, bool fExecute, std::string * const pstrFilteredOut = nullptr);
-    static bool RPCExecuteCommandLine(std::string &strResult, const std::string &strCommand, std::string * const pstrFilteredOut = nullptr) {
-        return RPCParseCommandLine(strResult, strCommand, true, pstrFilteredOut);
+    static bool RPCParseCommandLine(std::string &strResult, const std::string &strCommand, bool fExecute, std::string * const pstrFilteredOut = nullptr, std::string *pwalletName = nullptr);
+    static bool RPCExecuteCommandLine(std::string &strResult, const std::string &strCommand, std::string * const pstrFilteredOut = nullptr, std::string *pwalletName = nullptr) {
+        return RPCParseCommandLine(strResult, strCommand, true, pstrFilteredOut, pwalletName);
     }
 
     void setClientModel(ClientModel *model);
@@ -121,7 +121,7 @@ public Q_SLOTS:
 Q_SIGNALS:
     // For RPC command executor
     void stopExecutor();
-    void cmdRequest(const QString &command);
+    void cmdRequest(const QString &command, const QString &wallet);
 
 private:
     static QString FormatBytes(quint64 bytes);

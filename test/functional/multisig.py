@@ -161,6 +161,7 @@ class MultiSigTest(ParticlTestFramework):
         
         
         # start staking
+        ro = nodes[0].walletsettings('stakelimit', {'height':1})
         ro = nodes[0].reservebalance(False)
         assert(self.wait_for_height(nodes[0], 1))
         block1_hash = nodes[0].getblockhash(1)

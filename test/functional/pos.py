@@ -39,7 +39,7 @@ class PosTest(ParticlTestFramework):
         
         ro = node.getinfo()
         assert(ro['total_balance'] == 100000)
-        
+        ro = node.walletsettings('stakelimit', {'height':1})
         
         # test reserve balance
         ro = node.getwalletinfo()
@@ -103,6 +103,7 @@ class PosTest(ParticlTestFramework):
         
         
         # start staking
+        ro = node.walletsettings('stakelimit', {'height':2})
         ro = node.reservebalance(False)
         
         assert(self.wait_for_height(node, 2))

@@ -58,11 +58,14 @@ class ForkTest(ParticlTestFramework):
         
         
         # start staking
+        nBlocksShorterChain = 2
+        nBlocksLongerChain = 5
+        
+        ro = nodes[0].walletsettings('stakelimit', {'height':nBlocksShorterChain})
+        ro = nodes[3].walletsettings('stakelimit', {'height':nBlocksLongerChain})
         ro = nodes[0].reservebalance(False)
         ro = nodes[3].reservebalance(False)
         
-        nBlocksShorterChain = 2
-        nBlocksLongerChain = 5
         
         self.wait_for_height(nodes[0], nBlocksShorterChain, 1000)
         

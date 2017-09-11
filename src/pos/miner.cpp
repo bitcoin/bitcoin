@@ -216,7 +216,8 @@ bool ImportOutputs(CBlockTemplate *pblocktemplate, int nHeight)
 
 void ShutdownThreadStakeMiner()
 {
-    if (vStakeThreads.size() < 1) // no thread created
+    if (vStakeThreads.size() < 1 // no thread created
+        || fStopMinerProc)
         return;
     LogPrint(BCLog::POS, "ShutdownThreadStakeMiner\n");
     fStopMinerProc = true;
@@ -330,7 +331,6 @@ void ThreadStakeMiner(size_t nThreadID, std::vector<CWalletRef> &vpwallets, size
             continue;
         };
 
-        
         int64_t nTime = GetAdjustedTime();
         int64_t nMask = Params().GetStakeTimestampMask(nBestHeight+1);
         int64_t nSearchTime = nTime & ~nMask;
@@ -358,6 +358,13 @@ void ThreadStakeMiner(size_t nThreadID, std::vector<CWalletRef> &vpwallets, size
             if (nSearchTime <= pwallet->nLastCoinStakeSearchTime)
             {
                 nWaitFor = std::min(nWaitFor, (size_t)nMinerSleep);
+                continue;
+            };
+
+            if (pwallet->nStakeLimitHeight && nBestHeight >= pwallet->nStakeLimitHeight)
+            {
+                pwallet->nIsStaking = CHDWallet::NOT_STAKING_LIMITED;
+                nWaitFor = std::min(nWaitFor, (size_t)30000);
                 continue;
             };
 
