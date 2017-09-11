@@ -47,6 +47,8 @@ class CValidationState;
 
 struct LockPoints;
 
+static std::atomic<bool> fDIP0001ActiveAtTip{false};
+
 /** Default for accepting alerts from the P2P network. */
 static const bool DEFAULT_ALERTS = true;
 /** Default for DEFAULT_WHITELISTRELAY. */
@@ -839,7 +841,7 @@ extern VersionBitsCache versionbitscache;
 /**
  * Determine what nVersion a new block should use.
  */
-int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& params);
+int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& params, bool fAssumeMasternodeIsUpgraded = false);
 
 /**
  * Return true if hash can be found in chainActive at nBlockHeight height.
