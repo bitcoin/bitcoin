@@ -128,28 +128,74 @@ struct update_for_parent_inclusion
     CTxMemPool::txiter iter;
 };
 
+struct update_for_parent_removal
+{
+    update_for_parent_removal(CTxMemPool::txiter it) : iter(it) {}
+
+    void operator() (CTxMemPoolModifiedEntry &e)
+    {
+        e.nModFeesWithAncestors += iter->GetFee();
+        e.nSizeWithAncestors += iter->GetTxSize();
+        e.nSigOpCostWithAncestors += iter->GetSigOpCost();
+    }
+
+    CTxMemPool::txiter iter;
+};
+
 /** Generate a new block, without valid proof-of-work */
 class BlockAssembler
 {
 private:
-    // The constructed block template
-    std::unique_ptr<CBlockTemplate> pblocktemplate;
-    // A convenience pointer that always refers to the CBlock in pblocktemplate
-    CBlock* pblock;
+    // The state associated with construction of a block.
+    struct WorkingState {
+        WorkingState() :
+            pblocktemplate(new CBlockTemplate()),
+            pblock(&pblocktemplate->block),
+            // Reserve space for coinbase tx
+            nBlockWeight(4000),
+            nBlockSize(1000),
+            nBlockSigOpsCost(400),
+            // These counters do not include coinbase tx
+            nBlockTx(0),
+            nFees(0),
+            nModifiedFees(0) { }
+
+        WorkingState(const WorkingState &ws) :
+            pblocktemplate(new CBlockTemplate(*ws.pblocktemplate)),
+            pblock(&pblocktemplate->block),
+            nBlockWeight(ws.nBlockWeight),
+            nBlockSize(ws.nBlockSize),
+            nBlockSigOpsCost(ws.nBlockSigOpsCost),
+            nBlockTx(ws.nBlockTx),
+            nFees(ws.nFees),
+            nModifiedFees(ws.nModifiedFees),
+            inBlock(ws.inBlock) { }
+
+        // The constructed block template
+        std::unique_ptr<CBlockTemplate> pblocktemplate;
+        // A convenience pointer that always refers to the CBlock in pblocktemplate
+        CBlock* pblock;
+
+        // Information on the current status of the block
+        uint64_t nBlockWeight;
+        uint64_t nBlockSize;
+        uint64_t nBlockSigOpsCost;
+        uint64_t nBlockTx;
+        CAmount nFees;
+        CAmount nModifiedFees;
+        CTxMemPool::setEntries inBlock;
+    };
 
     // Configuration parameters for the block size
     bool fIncludeWitness;
     unsigned int nBlockMaxWeight, nBlockMaxSize;
+    // Exclude transactions received in nRecentTxWindow if the income
+    // reduction from doing so is below (1-dRecentTxStaleRate).
+    // See comment above CreateNewBlock().
+    int64_t nRecentTxWindow;
+    double dIncomeThreshold;
     bool fNeedSizeAccounting;
     CFeeRate blockMinFeeRate;
-
-    // Information on the current status of the block
-    uint64_t nBlockWeight;
-    uint64_t nBlockSize;
-    uint64_t nBlockTx;
-    uint64_t nBlockSigOpsCost;
-    CAmount nFees;
-    CTxMemPool::setEntries inBlock;
 
     // Chain context for the block
     int nHeight;
@@ -162,6 +208,8 @@ public:
         size_t nBlockMaxWeight;
         size_t nBlockMaxSize;
         CFeeRate blockMinFeeRate;
+        int64_t nRecentTxWindow;
+        double dRecentTxStaleRate;
     };
 
     explicit BlockAssembler(const CChainParams& params);
@@ -172,36 +220,38 @@ public:
 
 private:
     // utility functions
-    /** Clear the block's state and prepare for assembling a new block */
-    void resetBlock();
     /** Add a tx to the block */
-    void AddToBlock(CTxMemPool::txiter iter);
+    void AddToBlock(WorkingState &workState, CTxMemPool::txiter iter) const;
+    /** Remove recent transactions from a block, including any descendants */
+    void RemoveRecentTransactionsFromBlockAndUpdatePackages(WorkingState &workState, int64_t timeCutoff, indexed_modified_transaction_set &mapModifiedTx);
 
     // Methods for how to add transactions to a block.
     /** Add transactions based on feerate including unconfirmed ancestors
       * Increments nPackagesSelected / nDescendantsUpdated with corresponding
-      * statistics from the package selection (for logging statistics). */
-    void addPackageTxs(int &nPackagesSelected, int &nDescendantsUpdated);
+      * statistics from the package selection (for logging statistics).
+     *  mapModifiedTx will track the updated ancestor feerate score of
+     *  not-in-block transactions that have parents in the block */
+    void addPackageTxs(WorkingState &workState, int &nPackagesSelected, int &nDescendantsUpdated, int64_t nTimeCutoff, indexed_modified_transaction_set &mapModifiedTx) const;
 
     // helper functions for addPackageTxs()
     /** Remove confirmed (inBlock) entries from given set */
-    void onlyUnconfirmed(CTxMemPool::setEntries& testSet);
+    void onlyUnconfirmed(WorkingState &workState, CTxMemPool::setEntries& testSet) const;
     /** Test if a new package would "fit" in the block */
-    bool TestPackage(uint64_t packageSize, int64_t packageSigOpsCost) const;
+    bool TestPackage(const WorkingState &workState, uint64_t packageSize, int64_t packageSigOpsCost) const;
     /** Perform checks on each transaction in a package:
       * locktime, premature-witness, serialized size (if necessary)
       * These checks should always succeed, and they're here
       * only as an extra check in case of suboptimal node configuration */
-    bool TestPackageTransactions(const CTxMemPool::setEntries& package);
+    bool TestPackageTransactions(WorkingState &workState, const CTxMemPool::setEntries& package) const;
     /** Return true if given transaction from mapTx has already been evaluated,
       * or if the transaction's cached data in mapTx is incorrect. */
-    bool SkipMapTxEntry(CTxMemPool::txiter it, indexed_modified_transaction_set &mapModifiedTx, CTxMemPool::setEntries &failedTx);
+    bool SkipMapTxEntry(WorkingState &workState, CTxMemPool::txiter it, indexed_modified_transaction_set &mapModifiedTx, CTxMemPool::setEntries &failedTx) const;
     /** Sort the package in an order that is valid to appear in a block */
-    void SortForBlock(const CTxMemPool::setEntries& package, CTxMemPool::txiter entry, std::vector<CTxMemPool::txiter>& sortedEntries);
+    void SortForBlock(const CTxMemPool::setEntries& package, CTxMemPool::txiter entry, std::vector<CTxMemPool::txiter>& sortedEntries) const;
     /** Add descendants of given transactions to mapModifiedTx with ancestor
       * state updated assuming given transactions are inBlock. Returns number
       * of updated descendants. */
-    int UpdatePackagesForAdded(const CTxMemPool::setEntries& alreadyAdded, indexed_modified_transaction_set &mapModifiedTx);
+    int UpdatePackagesForAdded(const CTxMemPool::setEntries& alreadyAdded, indexed_modified_transaction_set &mapModifiedTx) const;
 };
 
 /** Modify the extranonce in a block */

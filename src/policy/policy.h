@@ -22,6 +22,11 @@ static const unsigned int DEFAULT_BLOCK_MAX_SIZE = 750000;
 static const unsigned int DEFAULT_BLOCK_MAX_WEIGHT = 3000000;
 /** Default for -blockmintxfee, which sets the minimum feerate for a transaction in blocks created by mining code **/
 static const unsigned int DEFAULT_BLOCK_MIN_TX_FEE = 1000;
+/** Default in milliseconds for how we define 'recent' transactions, which we might omit in block creation */
+static constexpr int64_t DEFAULT_RECENT_TX_WINDOW = 30000;
+/** Default stale rate assumed for blocks with transactions in RECENT_TX_WINDOW; this gets interpreted as
+ * the amount of income we're willing to forgo to avoid selecting recent transactions */
+static constexpr double DEFAULT_RECENT_TX_STALE_RATE = 0.005;
 /** The maximum weight for transactions we're willing to relay/mine */
 static const unsigned int MAX_STANDARD_TX_WEIGHT = 400000;
 /** Maximum number of signature check operations in an IsStandard() P2SH script */
