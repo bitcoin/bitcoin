@@ -6,7 +6,7 @@
 #include "util.h"
 #include "test/test_bitcoin.h"
 
-#include <stdint.h>
+#include <cstdint>
 
 #include <boost/test/unit_test.hpp>
 

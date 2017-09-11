@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <limits>
 #include <stdexcept>
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 #include <vector>
 #include "assert.h"

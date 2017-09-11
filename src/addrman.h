@@ -15,7 +15,7 @@
 
 #include <map>
 #include <set>
-#include <stdint.h>
+#include <cstdint>
 #include <vector>
 
 /**

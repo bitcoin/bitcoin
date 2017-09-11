@@ -12,7 +12,7 @@
 #include "utiltime.h"
 #include "version.h"
 
-#include <stdint.h>
+#include <cstdint>
 #include <fstream>
 
 /**

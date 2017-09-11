@@ -8,7 +8,7 @@
 #include "tinyformat.h"
 #include "util.h"
 
-#include <assert.h>
+#include <cassert>
 
 const std::string CBaseChainParams::MAIN = "main";
 const std::string CBaseChainParams::TESTNET = "test";

@@ -5,10 +5,10 @@
 #ifndef BITCOIN_PREVECTOR_H
 #define BITCOIN_PREVECTOR_H
 
-#include <assert.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
+#include <cassert>
+#include <cstdlib>
+#include <cstdint>
+#include <cstring>
 
 #include <iterator>
 #include <type_traits>

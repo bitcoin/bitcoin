@@ -5,7 +5,7 @@
 #ifndef BITCOIN_MERKLE
 #define BITCOIN_MERKLE
 
-#include <stdint.h>
+#include <cstdint>
 #include <vector>
 
 #include "primitives/transaction.h"

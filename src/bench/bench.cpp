@@ -5,7 +5,7 @@
 #include "bench.h"
 #include "perf.h"
 
-#include <assert.h>
+#include <cassert>
 #include <iostream>
 #include <iomanip>
 #include <sys/time.h>

@@ -20,7 +20,7 @@
 #include "rpcwallet.h"
 
 #include <fstream>
-#include <stdint.h>
+#include <cstdint>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>

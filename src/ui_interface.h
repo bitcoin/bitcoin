@@ -6,7 +6,7 @@
 #ifndef BITCOIN_UI_INTERFACE_H
 #define BITCOIN_UI_INTERFACE_H
 
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 
 #include <boost/signals2/last_value.hpp>

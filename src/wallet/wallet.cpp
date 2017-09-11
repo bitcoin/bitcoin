@@ -32,7 +32,7 @@
 #include "utilmoneystr.h"
 #include "wallet/fees.h"
 
-#include <assert.h>
+#include <cassert>
 
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/thread.hpp>

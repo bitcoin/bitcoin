@@ -10,15 +10,15 @@
 #include "serialize.h"
 
 #include <algorithm>
-#include <assert.h>
+#include <cassert>
 #include <ios>
 #include <limits>
 #include <map>
 #include <set>
-#include <stdint.h>
-#include <stdio.h>
+#include <cstdint>
+#include <cstdio>
 #include <string>
-#include <string.h>
+#include <cstring>
 #include <utility>
 #include <vector>
 

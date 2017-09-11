@@ -6,7 +6,7 @@
 #ifndef H_PERF
 #define H_PERF
 
-#include <stdint.h>
+#include <cstdint>
 
 #if defined(__i386__)
 

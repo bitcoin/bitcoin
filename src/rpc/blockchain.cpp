@@ -25,7 +25,7 @@
 #include "utilstrencodings.h"
 #include "hash.h"
 
-#include <stdint.h>
+#include <cstdint>
 
 #include <univalue.h>
 

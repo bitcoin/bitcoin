@@ -21,7 +21,7 @@
 #include "init.h"
 #include "util.h"
 
-#include <stdio.h>
+#include <cstdio>
 
 #include <QCloseEvent>
 #include <QLabel>

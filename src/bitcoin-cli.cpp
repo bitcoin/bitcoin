@@ -15,7 +15,7 @@
 #include "util.h"
 #include "utilstrencodings.h"
 
-#include <stdio.h>
+#include <cstdio>
 
 #include <event2/buffer.h>
 #include <event2/keyvalq_struct.h>

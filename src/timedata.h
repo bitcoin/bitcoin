@@ -6,8 +6,8 @@
 #define BITCOIN_TIMEDATA_H
 
 #include <algorithm>
-#include <assert.h>
-#include <stdint.h>
+#include <cassert>
+#include <cstdint>
 #include <vector>
 
 static const int64_t DEFAULT_MAX_TIME_ADJUSTMENT = 70 * 60;

@@ -8,7 +8,7 @@
 #include "util.h"
 
 #include <set>
-#include <stdint.h>
+#include <cstdint>
 
 #include <univalue.h>
 

@@ -20,7 +20,7 @@
 #include "version.h"
 #include "pubkey.h"
 
-#include <stdint.h>
+#include <cstdint>
 #include <unistd.h>
 
 #include <algorithm>

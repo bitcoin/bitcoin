@@ -8,7 +8,7 @@
 #include "memusage.h"
 #include "random.h"
 
-#include <assert.h>
+#include <cassert>
 
 bool CCoinsView::GetCoin(const COutPoint &outpoint, Coin &coin) const { return false; }
 uint256 CCoinsView::GetBestBlock() const { return uint256(); }

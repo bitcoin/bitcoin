@@ -9,7 +9,7 @@
 #ifndef BITCOIN_UTILSTRENCODINGS_H
 #define BITCOIN_UTILSTRENCODINGS_H
 
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 #include <vector>
 
