@@ -122,8 +122,8 @@ public:
         vchSig()
         {}
 
-    CMasternodePaymentVote(CTxIn vinMasternode, int nBlockHeight, CScript payee) :
-        vinMasternode(vinMasternode),
+    CMasternodePaymentVote(COutPoint outpointMasternode, int nBlockHeight, CScript payee) :
+        vinMasternode(outpointMasternode),
         nBlockHeight(nBlockHeight),
         payee(payee),
         vchSig()

@@ -44,7 +44,7 @@ private:
     int nCachedBlockHeight;
 
     // map to hold all MNs
-    std::vector<CMasternode> vMasternodes;
+    std::map<COutPoint, CMasternode> mapMasternodes;
     // who's asked for the Masternode list and the last time
     std::map<CNetAddr, int64_t> mAskedUsForMasternodeList;
     // who we asked for the Masternode list and the last time
@@ -70,6 +70,8 @@ private:
     int64_t nLastWatchdogVoteTime;
 
     friend class CMasternodeSync;
+    /// Find an entry
+    CMasternode* Find(const COutPoint& outpoint);
 
 public:
     // Keep track of all broadcasts I've seen
@@ -96,7 +98,7 @@ public:
             READWRITE(strVersion);
         }
 
-        READWRITE(vMasternodes);
+        READWRITE(mapMasternodes);
         READWRITE(mAskedUsForMasternodeList);
         READWRITE(mWeAskedForMasternodeList);
         READWRITE(mWeAskedForMasternodeListEntry);
@@ -118,8 +120,12 @@ public:
     bool Add(CMasternode &mn);
 
     /// Ask (source) node for mnb
-    void AskForMN(CNode *pnode, const CTxIn &vin);
+    void AskForMN(CNode *pnode, const COutPoint& outpoint);
     void AskForMnb(CNode *pnode, const uint256 &hash);
+
+    bool PoSeBan(const COutPoint &outpoint);
+    bool AllowMixing(const COutPoint &outpoint);
+    bool DisallowMixing(const COutPoint &outpoint);
 
     /// Check all Masternodes
     void Check();
@@ -142,32 +148,26 @@ public:
 
     void DsegUpdate(CNode* pnode);
 
-    /// Find an entry
-    CMasternode* Find(const CScript &payee);
-    CMasternode* Find(const CTxIn& vin);
-    CMasternode* Find(const CPubKey& pubKeyMasternode);
-
     /// Versions of Find that are safe to use from outside the class
-    bool Get(const CPubKey& pubKeyMasternode, CMasternode& masternode);
-    bool Get(const CTxIn& vin, CMasternode& masternode);
-    bool Has(const CTxIn& vin);
+    bool Get(const COutPoint& outpoint, CMasternode& masternodeRet);
+    bool Has(const COutPoint& outpoint);
 
-    masternode_info_t GetMasternodeInfo(const CTxIn& vin);
+    bool GetMasternodeInfo(const COutPoint& outpoint, masternode_info_t& mnInfoRet);
 
-    masternode_info_t GetMasternodeInfo(const CPubKey& pubKeyMasternode);
+    bool GetMasternodeInfo(const CPubKey& pubKeyMasternode, masternode_info_t& mnInfoRet);
 
     /// Find an entry in the masternode list that is next to be paid
-    CMasternode* GetNextMasternodeInQueueForPayment(int nBlockHeight, bool fFilterSigTime, int& nCount);
+    bool GetNextMasternodeInQueueForPayment(int nBlockHeight, bool fFilterSigTime, int& nCountRet, masternode_info_t& mnInfoRet);
     /// Same as above but use current block height
-    CMasternode* GetNextMasternodeInQueueForPayment(bool fFilterSigTime, int& nCount);
+    bool GetNextMasternodeInQueueForPayment(bool fFilterSigTime, int& nCountRet, masternode_info_t& mnInfoRet);
 
     /// Find a random entry
-    masternode_info_t FindRandomNotInVec(const std::vector<CTxIn> &vecToExclude, int nProtocolVersion = -1);
+    masternode_info_t FindRandomNotInVec(const std::vector<COutPoint> &vecToExclude, int nProtocolVersion = -1);
 
-    std::vector<CMasternode> GetFullMasternodeVector() { return vMasternodes; }
+    std::map<COutPoint, CMasternode> GetFullMasternodeMap() { return mapMasternodes; }
 
     std::vector<std::pair<int, CMasternode> > GetMasternodeRanks(int nBlockHeight = -1, int nMinProtocol=0);
-    int GetMasternodeRank(const CTxIn &vin, int nBlockHeight, int nMinProtocol=0, bool fOnlyActive=true);
+    int GetMasternodeRank(const COutPoint &outpoint, int nBlockHeight, int nMinProtocol=0, bool fOnlyActive=true);
     bool GetMasternodeByRank(int nRank, int nBlockHeight, int nMinProtocol, bool fOnlyActive, masternode_info_t& mnInfoRet);
 
     void ProcessMasternodeConnections();
@@ -183,7 +183,7 @@ public:
     void ProcessVerifyBroadcast(CNode* pnode, const CMasternodeVerification& mnv);
 
     /// Return the number of (unique) Masternodes
-    int size() { return vMasternodes.size(); }
+    int size() { return mapMasternodes.size(); }
 
     std::string ToString() const;
 
@@ -194,7 +194,6 @@ public:
     bool IsMnbRecoveryRequested(const uint256& hash) { return mMnbRecoveryRequests.count(hash); }
 
     void UpdateLastPaid(const CBlockIndex* pindex);
-    bool UpdateLastDsq(const CTxIn& vin);
 
     void AddDirtyGovernanceObjectHash(const uint256& nHash)
     {
@@ -211,18 +210,14 @@ public:
     }
 
     bool IsWatchdogActive();
-    void UpdateWatchdogVoteTime(const CTxIn& vin);
-    bool AddGovernanceVote(const CTxIn& vin, uint256 nGovernanceObjectHash);
+    void UpdateWatchdogVoteTime(const COutPoint& outpoint);
+    bool AddGovernanceVote(const COutPoint& outpoint, uint256 nGovernanceObjectHash);
     void RemoveGovernanceObject(uint256 nGovernanceObjectHash);
 
-    void CheckMasternode(const CTxIn& vin, bool fForce = false);
-    void CheckMasternode(const CPubKey& pubKeyMasternode, bool fForce = false);
+    void CheckMasternode(const CPubKey& pubKeyMasternode, bool fForce);
 
-    int GetMasternodeState(const CTxIn& vin);
-    int GetMasternodeState(const CPubKey& pubKeyMasternode);
-
-    bool IsMasternodePingedWithin(const CTxIn& vin, int nSeconds, int64_t nTimeToCheckAt = -1);
-    void SetMasternodeLastPing(const CTxIn& vin, const CMasternodePing& mnp);
+    bool IsMasternodePingedWithin(const COutPoint& outpoint, int nSeconds, int64_t nTimeToCheckAt = -1);
+    void SetMasternodeLastPing(const COutPoint& outpoint, const CMasternodePing& mnp);
 
     void UpdatedBlockTip(const CBlockIndex *pindex);
 

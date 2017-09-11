@@ -271,14 +271,14 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int nBlockH
     if(!mnpayments.GetBlockPayee(nBlockHeight, payee)) {
         // no masternode detected...
         int nCount = 0;
-        CMasternode *winningNode = mnodeman.GetNextMasternodeInQueueForPayment(nBlockHeight, true, nCount);
-        if(!winningNode) {
+        masternode_info_t mnInfo;
+        if(!mnodeman.GetNextMasternodeInQueueForPayment(nBlockHeight, true, nCount, mnInfo)) {
             // ...and we can't calculate it on our own
             LogPrintf("CMasternodePayments::FillBlockPayee -- Failed to detect masternode to pay\n");
             return;
         }
         // fill payee with locally calculated winner and hope for the best
-        payee = GetScriptForDestination(winningNode->pubKeyCollateralAddress.GetID());
+        payee = GetScriptForDestination(mnInfo.pubKeyCollateralAddress.GetID());
     }
 
     // GET MASTERNODE PAYMENT VARIABLES SETUP
@@ -373,11 +373,11 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, std::string& strCommand, 
             return;
         }
 
-        masternode_info_t mnInfo = mnodeman.GetMasternodeInfo(vote.vinMasternode);
-        if(!mnInfo.fInfoValid) {
+        masternode_info_t mnInfo;
+        if(!mnodeman.GetMasternodeInfo(vote.vinMasternode.prevout, mnInfo)) {
             // mn was not found, so we can't check vote, some info is probably missing
             LogPrintf("MASTERNODEPAYMENTVOTE -- masternode is missing %s\n", vote.vinMasternode.prevout.ToStringShort());
-            mnodeman.AskForMN(pfrom, vote.vinMasternode);
+            mnodeman.AskForMN(pfrom, vote.vinMasternode.prevout);
             return;
         }
 
@@ -392,7 +392,7 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, std::string& strCommand, 
             }
             // Either our info or vote info could be outdated.
             // In case our info is outdated, ask for an update,
-            mnodeman.AskForMN(pfrom, vote.vinMasternode);
+            mnodeman.AskForMN(pfrom, vote.vinMasternode.prevout);
             // but there is nothing we can do if vote info itself is outdated
             // (i.e. it was signed by a mn which changed its key),
             // so just quit here.
@@ -654,13 +654,13 @@ void CMasternodePayments::CheckAndRemove()
 
 bool CMasternodePaymentVote::IsValid(CNode* pnode, int nValidationHeight, std::string& strError)
 {
-    CMasternode* pmn = mnodeman.Find(vinMasternode);
+    masternode_info_t mnInfo;
 
-    if(!pmn) {
+    if(!mnodeman.GetMasternodeInfo(vinMasternode.prevout, mnInfo)) {
         strError = strprintf("Unknown Masternode: prevout=%s", vinMasternode.prevout.ToStringShort());
         // Only ask if we are already synced and still have no idea about that Masternode
         if(masternodeSync.IsMasternodeListSynced()) {
-            mnodeman.AskForMN(pnode, vinMasternode);
+            mnodeman.AskForMN(pnode, vinMasternode.prevout);
         }
 
         return false;
@@ -675,8 +675,8 @@ bool CMasternodePaymentVote::IsValid(CNode* pnode, int nValidationHeight, std::s
         nMinRequiredProtocol = MIN_MASTERNODE_PAYMENT_PROTO_VERSION_1;
     }
 
-    if(pmn->nProtocolVersion < nMinRequiredProtocol) {
-        strError = strprintf("Masternode protocol is too old: nProtocolVersion=%d, nMinRequiredProtocol=%d", pmn->nProtocolVersion, nMinRequiredProtocol);
+    if(mnInfo.nProtocolVersion < nMinRequiredProtocol) {
+        strError = strprintf("Masternode protocol is too old: nProtocolVersion=%d, nMinRequiredProtocol=%d", mnInfo.nProtocolVersion, nMinRequiredProtocol);
         return false;
     }
 
@@ -684,7 +684,7 @@ bool CMasternodePaymentVote::IsValid(CNode* pnode, int nValidationHeight, std::s
     // Regular clients (miners included) need to verify masternode rank for future block votes only.
     if(!fMasterNode && nBlockHeight < nValidationHeight) return true;
 
-    int nRank = mnodeman.GetMasternodeRank(vinMasternode, nBlockHeight - 101, nMinRequiredProtocol, false);
+    int nRank = mnodeman.GetMasternodeRank(vinMasternode.prevout, nBlockHeight - 101, nMinRequiredProtocol, false);
 
     if(nRank == -1) {
         LogPrint("mnpayments", "CMasternodePaymentVote::IsValid -- Can't calculate rank for masternode %s\n",
@@ -720,7 +720,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
     // if we have not enough data about masternodes.
     if(!masternodeSync.IsMasternodeListSynced()) return false;
 
-    int nRank = mnodeman.GetMasternodeRank(activeMasternode.vin, nBlockHeight - 101, GetMinMasternodePaymentsProto(), false);
+    int nRank = mnodeman.GetMasternodeRank(activeMasternode.outpoint, nBlockHeight - 101, GetMinMasternodePaymentsProto(), false);
 
     if (nRank == -1) {
         LogPrint("mnpayments", "CMasternodePayments::ProcessBlock -- Unknown Masternode\n");
@@ -735,23 +735,23 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
 
     // LOCATE THE NEXT MASTERNODE WHICH SHOULD BE PAID
 
-    LogPrintf("CMasternodePayments::ProcessBlock -- Start: nBlockHeight=%d, masternode=%s\n", nBlockHeight, activeMasternode.vin.prevout.ToStringShort());
+    LogPrintf("CMasternodePayments::ProcessBlock -- Start: nBlockHeight=%d, masternode=%s\n", nBlockHeight, activeMasternode.outpoint.ToStringShort());
 
     // pay to the oldest MN that still had no payment but its input is old enough and it was active long enough
     int nCount = 0;
-    CMasternode *pmn = mnodeman.GetNextMasternodeInQueueForPayment(nBlockHeight, true, nCount);
+    masternode_info_t mnInfo;
 
-    if (pmn == NULL) {
+    if (!mnodeman.GetNextMasternodeInQueueForPayment(nBlockHeight, true, nCount, mnInfo)) {
         LogPrintf("CMasternodePayments::ProcessBlock -- ERROR: Failed to find masternode to pay\n");
         return false;
     }
 
-    LogPrintf("CMasternodePayments::ProcessBlock -- Masternode found by GetNextMasternodeInQueueForPayment(): %s\n", pmn->vin.prevout.ToStringShort());
+    LogPrintf("CMasternodePayments::ProcessBlock -- Masternode found by GetNextMasternodeInQueueForPayment(): %s\n", mnInfo.vin.prevout.ToStringShort());
 
 
-    CScript payee = GetScriptForDestination(pmn->pubKeyCollateralAddress.GetID());
+    CScript payee = GetScriptForDestination(mnInfo.pubKeyCollateralAddress.GetID());
 
-    CMasternodePaymentVote voteNew(activeMasternode.vin, nBlockHeight, payee);
+    CMasternodePaymentVote voteNew(activeMasternode.outpoint, nBlockHeight, payee);
 
     CTxDestination address1;
     ExtractDestination(payee, address1);

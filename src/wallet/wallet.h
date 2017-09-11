@@ -775,20 +775,20 @@ public:
     bool SelectCoinsGrouppedByAddresses(std::vector<CompactTallyItem>& vecTallyRet, bool fSkipDenominated = true, bool fAnonymizable = true, bool fSkipUnconfirmed = true) const;
 
     /// Get 1000DASH output and keys which can be used for the Masternode
-    bool GetMasternodeVinAndKeys(CTxIn& txinRet, CPubKey& pubKeyRet, CKey& keyRet, std::string strTxHash = "", std::string strOutputIndex = "");
+    bool GetMasternodeOutpointAndKeys(COutPoint& outpointRet, CPubKey& pubKeyRet, CKey& keyRet, std::string strTxHash = "", std::string strOutputIndex = "");
     /// Extract txin information and keys from output
-    bool GetVinAndKeysFromOutput(COutput out, CTxIn& txinRet, CPubKey& pubKeyRet, CKey& keyRet);
+    bool GetOutpointAndKeysFromOutput(const COutput& out, COutPoint& outpointRet, CPubKey& pubKeyRet, CKey& keyRet);
 
     bool HasCollateralInputs(bool fOnlyConfirmed = true) const;
     bool IsCollateralAmount(CAmount nInputAmount) const;
     int  CountInputsWithAmount(CAmount nInputAmount);
 
     // get the PrivateSend chain depth for a given input
-    int GetRealInputPrivateSendRounds(CTxIn txin, int nRounds) const;
+    int GetRealOutpointPrivateSendRounds(const COutPoint& outpoint, int nRounds) const;
     // respect current settings
-    int GetInputPrivateSendRounds(CTxIn txin) const;
+    int GetOutpointPrivateSendRounds(const COutPoint& outpoint) const;
 
-    bool IsDenominated(const CTxIn &txin) const;
+    bool IsDenominated(const COutPoint& outpoint) const;
     bool IsDenominatedAmount(CAmount nInputAmount) const;
 
     bool IsSpent(const uint256& hash, unsigned int n) const;

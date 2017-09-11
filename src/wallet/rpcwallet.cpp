@@ -2632,7 +2632,7 @@ UniValue listunspent(const UniValue& params, bool fHelp)
         }
         entry.push_back(Pair("amount",ValueFromAmount(nValue)));
         entry.push_back(Pair("confirmations",out.nDepth));
-        entry.push_back(Pair("ps_rounds", pwalletMain->GetInputPrivateSendRounds(CTxIn(out.tx->GetHash(), out.i))));
+        entry.push_back(Pair("ps_rounds", pwalletMain->GetOutpointPrivateSendRounds(COutPoint(out.tx->GetHash(), out.i))));
         entry.push_back(Pair("spendable", out.fSpendable));
         entry.push_back(Pair("solvable", out.fSolvable));
         results.push_back(entry);

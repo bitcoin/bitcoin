@@ -165,9 +165,9 @@ public:
         fTried(false)
         {}
 
-    CDarksendQueue(int nDenom, CTxIn vin, int64_t nTime, bool fReady) :
+    CDarksendQueue(int nDenom, COutPoint outpoint, int64_t nTime, bool fReady) :
         nDenom(nDenom),
-        vin(vin),
+        vin(CTxIn(outpoint)),
         nTime(nTime),
         fReady(fReady),
         vchSig(std::vector<unsigned char>()),
@@ -236,10 +236,10 @@ public:
         sigTime(0)
         {}
 
-    CDarksendBroadcastTx(CTransaction tx, CTxIn vin, int64_t sigTime) :
+    CDarksendBroadcastTx(CTransaction tx, COutPoint outpoint, int64_t sigTime) :
         nConfirmedHeight(-1),
         tx(tx),
-        vin(vin),
+        vin(CTxIn(outpoint)),
         vchSig(),
         sigTime(sigTime)
         {}

@@ -36,7 +36,7 @@ private:
     mutable CCriticalSection cs_darksend;
 
     // Keep track of the used Masternodes
-    std::vector<CTxIn> vecMasternodesUsed;
+    std::vector<COutPoint> vecMasternodesUsed;
 
     std::vector<CAmount> vecDenominationsSkipped;
     std::vector<COutPoint> vecOutPointLocked;

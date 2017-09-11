@@ -1233,14 +1233,14 @@ CAmount CWallet::GetDebit(const CTxIn &txin, const isminefilter& filter) const
 }
 
 // Recursively determine the rounds of a given input (How deep is the PrivateSend chain for a given input)
-int CWallet::GetRealInputPrivateSendRounds(CTxIn txin, int nRounds) const
+int CWallet::GetRealOutpointPrivateSendRounds(const COutPoint& outpoint, int nRounds) const
 {
     static std::map<uint256, CMutableTransaction> mDenomWtxes;
 
     if(nRounds >= 16) return 15; // 16 rounds max
 
-    uint256 hash = txin.prevout.hash;
-    unsigned int nout = txin.prevout.n;
+    uint256 hash = outpoint.hash;
+    unsigned int nout = outpoint.n;
 
     const CWalletTx* wtx = GetWalletTx(hash);
     if(wtx != NULL)
@@ -1248,7 +1248,7 @@ int CWallet::GetRealInputPrivateSendRounds(CTxIn txin, int nRounds) const
         std::map<uint256, CMutableTransaction>::const_iterator mdwi = mDenomWtxes.find(hash);
         if (mdwi == mDenomWtxes.end()) {
             // not known yet, let's add it
-            LogPrint("privatesend", "GetRealInputPrivateSendRounds INSERTING %s\n", hash.ToString());
+            LogPrint("privatesend", "GetRealOutpointPrivateSendRounds INSERTING %s\n", hash.ToString());
             mDenomWtxes[hash] = CMutableTransaction(*wtx);
         } else if(mDenomWtxes[hash].vout[nout].nRounds != -10) {
             // found and it's not an initial value, just return it
@@ -1259,20 +1259,20 @@ int CWallet::GetRealInputPrivateSendRounds(CTxIn txin, int nRounds) const
         // bounds check
         if (nout >= wtx->vout.size()) {
             // should never actually hit this
-            LogPrint("privatesend", "GetRealInputPrivateSendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, -4);
+            LogPrint("privatesend", "GetRealOutpointPrivateSendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, -4);
             return -4;
         }
 
         if (IsCollateralAmount(wtx->vout[nout].nValue)) {
             mDenomWtxes[hash].vout[nout].nRounds = -3;
-            LogPrint("privatesend", "GetRealInputPrivateSendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
+            LogPrint("privatesend", "GetRealOutpointPrivateSendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
             return mDenomWtxes[hash].vout[nout].nRounds;
         }
 
         //make sure the final output is non-denominate
         if (!IsDenominatedAmount(wtx->vout[nout].nValue)) { //NOT DENOM
             mDenomWtxes[hash].vout[nout].nRounds = -2;
-            LogPrint("privatesend", "GetRealInputPrivateSendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
+            LogPrint("privatesend", "GetRealOutpointPrivateSendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
             return mDenomWtxes[hash].vout[nout].nRounds;
         }
 
@@ -1284,7 +1284,7 @@ int CWallet::GetRealInputPrivateSendRounds(CTxIn txin, int nRounds) const
         // this one is denominated but there is another non-denominated output found in the same tx
         if (!fAllDenoms) {
             mDenomWtxes[hash].vout[nout].nRounds = 0;
-            LogPrint("privatesend", "GetRealInputPrivateSendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
+            LogPrint("privatesend", "GetRealOutpointPrivateSendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
             return mDenomWtxes[hash].vout[nout].nRounds;
         }
 
@@ -1293,7 +1293,7 @@ int CWallet::GetRealInputPrivateSendRounds(CTxIn txin, int nRounds) const
         // only denoms here so let's look up
         BOOST_FOREACH(CTxIn txinNext, wtx->vin) {
             if (IsMine(txinNext)) {
-                int n = GetRealInputPrivateSendRounds(txinNext, nRounds + 1);
+                int n = GetRealOutpointPrivateSendRounds(txinNext.prevout, nRounds + 1);
                 // denom found, find the shortest chain or initially assign nShortest with the first found value
                 if(n >= 0 && (n < nShortest || nShortest == -10)) {
                     nShortest = n;
@@ -1304,7 +1304,7 @@ int CWallet::GetRealInputPrivateSendRounds(CTxIn txin, int nRounds) const
         mDenomWtxes[hash].vout[nout].nRounds = fDenomFound
                 ? (nShortest >= 15 ? 16 : nShortest + 1) // good, we a +1 to the shortest one but only 16 rounds max allowed
                 : 0;            // too bad, we are the fist one in that chain
-        LogPrint("privatesend", "GetRealInputPrivateSendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
+        LogPrint("privatesend", "GetRealOutpointPrivateSendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
         return mDenomWtxes[hash].vout[nout].nRounds;
     }
 
@@ -1312,22 +1312,22 @@ int CWallet::GetRealInputPrivateSendRounds(CTxIn txin, int nRounds) const
 }
 
 // respect current settings
-int CWallet::GetInputPrivateSendRounds(CTxIn txin) const
+int CWallet::GetOutpointPrivateSendRounds(const COutPoint& outpoint) const
 {
     LOCK(cs_wallet);
-    int realPrivateSendRounds = GetRealInputPrivateSendRounds(txin, 0);
+    int realPrivateSendRounds = GetRealOutpointPrivateSendRounds(outpoint, 0);
     return realPrivateSendRounds > privateSendClient.nPrivateSendRounds ? privateSendClient.nPrivateSendRounds : realPrivateSendRounds;
 }
 
-bool CWallet::IsDenominated(const CTxIn &txin) const
+bool CWallet::IsDenominated(const COutPoint& outpoint) const
 {
     LOCK(cs_wallet);
 
-    map<uint256, CWalletTx>::const_iterator mi = mapWallet.find(txin.prevout.hash);
+    map<uint256, CWalletTx>::const_iterator mi = mapWallet.find(outpoint.hash);
     if (mi != mapWallet.end()) {
         const CWalletTx& prev = (*mi).second;
-        if (txin.prevout.n < prev.vout.size()) {
-            return IsDenominatedAmount(prev.vout[txin.prevout.n].nValue);
+        if (outpoint.n < prev.vout.size()) {
+            return IsDenominatedAmount(prev.vout[outpoint.n].nValue);
         }
     }
 
@@ -1952,11 +1952,11 @@ CAmount CWalletTx::GetAnonymizedCredit(bool fUseCache) const
     for (unsigned int i = 0; i < vout.size(); i++)
     {
         const CTxOut &txout = vout[i];
-        const CTxIn txin = CTxIn(hashTx, i);
+        const COutPoint outpoint = COutPoint(hashTx, i);
 
-        if(pwallet->IsSpent(hashTx, i) || !pwallet->IsDenominated(txin)) continue;
+        if(pwallet->IsSpent(hashTx, i) || !pwallet->IsDenominated(outpoint)) continue;
 
-        const int nRounds = pwallet->GetInputPrivateSendRounds(txin);
+        const int nRounds = pwallet->GetOutpointPrivateSendRounds(outpoint);
         if(nRounds >= privateSendClient.nPrivateSendRounds){
             nCredit += pwallet->GetCredit(txout, ISMINE_SPENDABLE);
             if (!MoneyRange(nCredit))
@@ -2206,11 +2206,11 @@ float CWallet::GetAverageAnonymizedRounds() const
 
             for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
 
-                CTxIn txin = CTxIn(hash, i);
+                COutPoint outpoint = COutPoint(hash, i);
 
-                if(IsSpent(hash, i) || IsMine(pcoin->vout[i]) != ISMINE_SPENDABLE || !IsDenominated(txin)) continue;
+                if(IsSpent(hash, i) || IsMine(pcoin->vout[i]) != ISMINE_SPENDABLE || !IsDenominated(outpoint)) continue;
 
-                nTotal += GetInputPrivateSendRounds(txin);
+                nTotal += GetOutpointPrivateSendRounds(outpoint);
                 nCount++;
             }
         }
@@ -2239,12 +2239,12 @@ CAmount CWallet::GetNormalizedAnonymizedBalance() const
 
             for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
 
-                CTxIn txin = CTxIn(hash, i);
+                COutPoint outpoint = COutPoint(hash, i);
 
-                if(IsSpent(hash, i) || IsMine(pcoin->vout[i]) != ISMINE_SPENDABLE || !IsDenominated(txin)) continue;
+                if(IsSpent(hash, i) || IsMine(pcoin->vout[i]) != ISMINE_SPENDABLE || !IsDenominated(outpoint)) continue;
                 if (pcoin->GetDepthInMainChain() < 0) continue;
 
-                int nRounds = GetInputPrivateSendRounds(txin);
+                int nRounds = GetOutpointPrivateSendRounds(outpoint);
                 nTotal += pcoin->vout[i].nValue * nRounds / privateSendClient.nPrivateSendRounds;
             }
         }
@@ -2643,8 +2643,8 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
                 continue;
 
             if(nCoinType == ONLY_DENOMINATED) {
-                CTxIn txin = CTxIn(out.tx->GetHash(),out.i);
-                int nRounds = GetInputPrivateSendRounds(txin);
+                COutPoint outpoint = COutPoint(out.tx->GetHash(),out.i);
+                int nRounds = GetOutpointPrivateSendRounds(outpoint);
                 // make sure it's actually anonymized
                 if(nRounds < privateSendClient.nPrivateSendRounds) continue;
             }
@@ -2666,8 +2666,8 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
             {
                 //make sure it's the denom we're looking for, round the amount up to smallest denom
                 if(out.tx->vout[out.i].nValue == nDenom && nValueRet + nDenom < nTargetValue + nSmallestDenom) {
-                    CTxIn txin = CTxIn(out.tx->GetHash(),out.i);
-                    int nRounds = GetInputPrivateSendRounds(txin);
+                    COutPoint outpoint = COutPoint(out.tx->GetHash(),out.i);
+                    int nRounds = GetOutpointPrivateSendRounds(outpoint);
                     // make sure it's actually anonymized
                     if(nRounds < privateSendClient.nPrivateSendRounds) continue;
                     nValueRet += nDenom;
@@ -2800,7 +2800,7 @@ bool CWallet::SelectCoinsByDenominations(int nDenom, CAmount nValueMin, CAmount 
 
             CTxIn txin = CTxIn(out.tx->GetHash(), out.i);
 
-            int nRounds = GetInputPrivateSendRounds(txin);
+            int nRounds = GetOutpointPrivateSendRounds(txin.prevout);
             if(nRounds >= nPrivateSendRoundsMax) continue;
             if(nRounds < nPrivateSendRoundsMin) continue;
 
@@ -2884,7 +2884,7 @@ bool CWallet::SelectCoinsGrouppedByAddresses(std::vector<CompactTallyItem>& vecT
                 // otherwise they will just lead to higher fee / lower priority
                 if(wtx.vout[i].nValue <= nSmallestDenom/10) continue;
                 // ignore anonymized
-                if(GetInputPrivateSendRounds(CTxIn(wtx.GetHash(), i)) >= privateSendClient.nPrivateSendRounds) continue;
+                if(GetOutpointPrivateSendRounds(COutPoint(wtx.GetHash(), i)) >= privateSendClient.nPrivateSendRounds) continue;
             }
 
             CompactTallyItem& item = mapTally[address];
@@ -2948,7 +2948,7 @@ bool CWallet::SelectCoinsDark(CAmount nValueMin, CAmount nValueMax, std::vector<
         if(nValueRet + out.tx->vout[out.i].nValue <= nValueMax){
             CTxIn txin = CTxIn(out.tx->GetHash(),out.i);
 
-            int nRounds = GetInputPrivateSendRounds(txin);
+            int nRounds = GetOutpointPrivateSendRounds(txin.prevout);
             if(nRounds >= nPrivateSendRoundsMax) continue;
             if(nRounds < nPrivateSendRoundsMin) continue;
 
@@ -2981,7 +2981,7 @@ bool CWallet::GetCollateralTxIn(CTxIn& txinRet, CAmount& nValueRet) const
     return false;
 }
 
-bool CWallet::GetMasternodeVinAndKeys(CTxIn& txinRet, CPubKey& pubKeyRet, CKey& keyRet, std::string strTxHash, std::string strOutputIndex)
+bool CWallet::GetMasternodeOutpointAndKeys(COutPoint& outpointRet, CPubKey& pubKeyRet, CKey& keyRet, std::string strTxHash, std::string strOutputIndex)
 {
     // wait for reindex and/or import to finish
     if (fImporting || fReindex) return false;
@@ -2990,12 +2990,12 @@ bool CWallet::GetMasternodeVinAndKeys(CTxIn& txinRet, CPubKey& pubKeyRet, CKey& 
     std::vector<COutput> vPossibleCoins;
     AvailableCoins(vPossibleCoins, true, NULL, false, ONLY_1000);
     if(vPossibleCoins.empty()) {
-        LogPrintf("CWallet::GetMasternodeVinAndKeys -- Could not locate any valid masternode vin\n");
+        LogPrintf("CWallet::GetMasternodeOutpointAndKeys -- Could not locate any valid masternode vin\n");
         return false;
     }
 
     if(strTxHash.empty()) // No output specified, select the first one
-        return GetVinAndKeysFromOutput(vPossibleCoins[0], txinRet, pubKeyRet, keyRet);
+        return GetOutpointAndKeysFromOutput(vPossibleCoins[0], outpointRet, pubKeyRet, keyRet);
 
     // Find specific vin
     uint256 txHash = uint256S(strTxHash);
@@ -3003,20 +3003,20 @@ bool CWallet::GetMasternodeVinAndKeys(CTxIn& txinRet, CPubKey& pubKeyRet, CKey& 
 
     BOOST_FOREACH(COutput& out, vPossibleCoins)
         if(out.tx->GetHash() == txHash && out.i == nOutputIndex) // found it!
-            return GetVinAndKeysFromOutput(out, txinRet, pubKeyRet, keyRet);
+            return GetOutpointAndKeysFromOutput(out, outpointRet, pubKeyRet, keyRet);
 
-    LogPrintf("CWallet::GetMasternodeVinAndKeys -- Could not locate specified masternode vin\n");
+    LogPrintf("CWallet::GetMasternodeOutpointAndKeys -- Could not locate specified masternode vin\n");
     return false;
 }
 
-bool CWallet::GetVinAndKeysFromOutput(COutput out, CTxIn& txinRet, CPubKey& pubKeyRet, CKey& keyRet)
+bool CWallet::GetOutpointAndKeysFromOutput(const COutput& out, COutPoint& outpointRet, CPubKey& pubKeyRet, CKey& keyRet)
 {
     // wait for reindex and/or import to finish
     if (fImporting || fReindex) return false;
 
     CScript pubScript;
 
-    txinRet = CTxIn(out.tx->GetHash(), out.i);
+    outpointRet = COutPoint(out.tx->GetHash(), out.i);
     pubScript = out.tx->vout[out.i].scriptPubKey; // the inputs PubKey
 
     CTxDestination address1;
@@ -3025,12 +3025,12 @@ bool CWallet::GetVinAndKeysFromOutput(COutput out, CTxIn& txinRet, CPubKey& pubK
 
     CKeyID keyID;
     if (!address2.GetKeyID(keyID)) {
-        LogPrintf("CWallet::GetVinAndKeysFromOutput -- Address does not refer to a key\n");
+        LogPrintf("CWallet::GetOutpointAndKeysFromOutput -- Address does not refer to a key\n");
         return false;
     }
 
     if (!GetKey(keyID, keyRet)) {
-        LogPrintf ("CWallet::GetVinAndKeysFromOutput -- Private key for address is not known\n");
+        LogPrintf ("CWallet::GetOutpointAndKeysFromOutput -- Private key for address is not known\n");
         return false;
     }
 
@@ -3051,11 +3051,11 @@ int CWallet::CountInputsWithAmount(CAmount nInputAmount)
 
                 for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
                     COutput out = COutput(pcoin, i, nDepth, true, true);
-                    CTxIn txin = CTxIn(out.tx->GetHash(), out.i);
+                    COutPoint outpoint = COutPoint(out.tx->GetHash(), out.i);
 
                     if(out.tx->vout[out.i].nValue != nInputAmount) continue;
                     if(!IsDenominatedAmount(pcoin->vout[i].nValue)) continue;
-                    if(IsSpent(out.tx->GetHash(), i) || IsMine(pcoin->vout[i]) != ISMINE_SPENDABLE || !IsDenominated(txin)) continue;
+                    if(IsSpent(out.tx->GetHash(), i) || IsMine(pcoin->vout[i]) != ISMINE_SPENDABLE || !IsDenominated(outpoint)) continue;
 
                     nTotal++;
                 }

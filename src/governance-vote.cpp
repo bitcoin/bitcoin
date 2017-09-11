@@ -212,11 +212,11 @@ CGovernanceVote::CGovernanceVote()
       vchSig()
 {}
 
-CGovernanceVote::CGovernanceVote(CTxIn vinMasternodeIn, uint256 nParentHashIn, vote_signal_enum_t eVoteSignalIn, vote_outcome_enum_t eVoteOutcomeIn)
+CGovernanceVote::CGovernanceVote(COutPoint outpointMasternodeIn, uint256 nParentHashIn, vote_signal_enum_t eVoteSignalIn, vote_outcome_enum_t eVoteOutcomeIn)
     : fValid(true),
       fSynced(false),
       nVoteSignal(eVoteSignalIn),
-      vinMasternode(vinMasternodeIn),
+      vinMasternode(outpointMasternodeIn),
       nParentHash(nParentHashIn),
       nVoteOutcome(eVoteOutcomeIn),
       nTime(GetAdjustedTime()),
@@ -273,8 +273,8 @@ bool CGovernanceVote::IsValid(bool fSignatureCheck) const
         return false;
     }
 
-    masternode_info_t infoMn = mnodeman.GetMasternodeInfo(vinMasternode);
-    if(!infoMn.fInfoValid) {
+    masternode_info_t infoMn;
+    if(!mnodeman.GetMasternodeInfo(vinMasternode.prevout, infoMn)) {
         LogPrint("gobject", "CGovernanceVote::IsValid -- Unknown Masternode - %s\n", vinMasternode.prevout.ToStringShort());
         return false;
     }
