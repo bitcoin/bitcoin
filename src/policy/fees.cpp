@@ -1043,5 +1043,5 @@ CAmount FeeFilterRounder::round(CAmount currentMinFee)
     if ((it != feeset.begin() && insecure_rand.rand32() % 3 != 0) || it == feeset.end()) {
         it--;
     }
-    return *it;
+    return static_cast<CAmount>(*it);
 }
