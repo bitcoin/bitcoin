@@ -40,7 +40,7 @@ struct StakeTestingSetup: public TestingSetup {
         bitdb.MakeMock();
 
         bool fFirstRun;
-        std::unique_ptr<CWalletDBWrapper> dbw(new CWalletDBWrapper(&bitdb, "wallet_test.dat"));
+        std::unique_ptr<CWalletDBWrapper> dbw(new CWalletDBWrapper(&bitdb, "wallet_test_part.dat"));
         pwalletMain = (CWallet*) new CHDWallet(std::move(dbw));
         vpwallets.push_back(pwalletMain);
         fParticlWallet = true;
