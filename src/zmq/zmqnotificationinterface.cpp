@@ -5,10 +5,10 @@
 #include "zmqnotificationinterface.h"
 #include "zmqpublishnotifier.h"
 
-#include "version.h"
-#include "validation.h"
-#include "streams.h"
-#include "util.h"
+#include "core/streams.h"
+#include "core/util.h"
+#include "core/validation.h"
+#include "core/version.h"
 
 void zmqError(const char *str)
 {

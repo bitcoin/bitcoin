@@ -3,16 +3,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "rpc/server.h"
+#include "server.h"
 
-#include "base58.h"
-#include "fs.h"
-#include "init.h"
-#include "random.h"
-#include "sync.h"
-#include "ui_interface.h"
-#include "util.h"
-#include "utilstrencodings.h"
+#include "core/base58.h"
+#include "core/fs.h"
+#include "core/init.h"
+#include "core/random.h"
+#include "core/sync.h"
+#include "core/ui_interface.h"
+#include "core/util.h"
+#include "core/utilstrencodings.h"
 
 #include <univalue.h>
 

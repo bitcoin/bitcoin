@@ -2,13 +2,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "policy/policy.h"
-#include "policy/fees.h"
-#include "txmempool.h"
-#include "uint256.h"
-#include "util.h"
+#include "test_bitcoin.h"
 
-#include "test/test_bitcoin.h"
+#include "core/txmempool.h"
+#include "core/uint256.h"
+#include "core/util.h"
+#include "policy/fees.h"
+#include "policy/policy.h"
 
 #include <boost/test/unit_test.hpp>
 

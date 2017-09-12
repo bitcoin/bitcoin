@@ -2,9 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "test_bitcoin.h"
+
 #include "compat/sanity.h"
-#include "key.h"
-#include "test/test_bitcoin.h"
+#include "core/key.h"
 
 #include <boost/test/unit_test.hpp>
 

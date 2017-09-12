@@ -5,14 +5,14 @@
 #ifndef BITCOIN_TEST_TEST_BITCOIN_H
 #define BITCOIN_TEST_TEST_BITCOIN_H
 
-#include "chainparamsbase.h"
-#include "fs.h"
-#include "key.h"
-#include "pubkey.h"
-#include "random.h"
-#include "scheduler.h"
-#include "txdb.h"
-#include "txmempool.h"
+#include "core/chainparamsbase.h"
+#include "core/fs.h"
+#include "core/key.h"
+#include "core/pubkey.h"
+#include "core/random.h"
+#include "core/scheduler.h"
+#include "core/txdb.h"
+#include "core/txmempool.h"
 
 #include <boost/thread.hpp>
 

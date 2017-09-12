@@ -2,10 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "dbwrapper.h"
-#include "uint256.h"
-#include "random.h"
-#include "test/test_bitcoin.h"
+#include "test_bitcoin.h"
+
+#include "core/dbwrapper.h"
+#include "core/random.h"
+#include "core/uint256.h"
 
 #include <boost/test/unit_test.hpp>
 

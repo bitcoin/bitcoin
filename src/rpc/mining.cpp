@@ -3,33 +3,35 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "base58.h"
-#include "amount.h"
-#include "chain.h"
-#include "chainparams.h"
+#include "mining.h"
+
+#include "blockchain.h"
+#include "server.h"
+
 #include "consensus/consensus.h"
 #include "consensus/params.h"
 #include "consensus/validation.h"
-#include "core_io.h"
-#include "init.h"
-#include "validation.h"
-#include "miner.h"
-#include "net.h"
+#include "core/amount.h"
+#include "core/base58.h"
+#include "core/chain.h"
+#include "core/chainparams.h"
+#include "core/core_io.h"
+#include "core/init.h"
+#include "core/miner.h"
+#include "core/net.h"
+#include "core/pow.h"
+#include "core/txmempool.h"
+#include "core/util.h"
+#include "core/utilstrencodings.h"
+#include "core/validation.h"
+#include "core/validationinterface.h"
+#include "core/warnings.h"
 #include "policy/fees.h"
-#include "pow.h"
-#include "rpc/blockchain.h"
-#include "rpc/mining.h"
-#include "rpc/server.h"
-#include "txmempool.h"
-#include "util.h"
-#include "utilstrencodings.h"
-#include "validationinterface.h"
-#include "warnings.h"
+
+#include <univalue.h>
 
 #include <memory>
 #include <stdint.h>
-
-#include <univalue.h>
 
 unsigned int ParseConfirmTarget(const UniValue& value)
 {

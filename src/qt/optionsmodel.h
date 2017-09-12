@@ -5,7 +5,7 @@
 #ifndef BITCOIN_QT_OPTIONSMODEL_H
 #define BITCOIN_QT_OPTIONSMODEL_H
 
-#include "amount.h"
+#include "core/amount.h"
 
 #include <QAbstractListModel>
 

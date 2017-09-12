@@ -10,14 +10,14 @@
 #include "guiutil.h"
 #include "optionsmodel.h"
 #include "platformstyle.h"
-#include "txmempool.h"
 #include "walletmodel.h"
 
-#include "wallet/coincontrol.h"
-#include "init.h"
+#include "core/init.h"
+#include "core/txmempool.h"
+#include "core/validation.h" // For mempool
 #include "policy/fees.h"
 #include "policy/policy.h"
-#include "validation.h" // For mempool
+#include "wallet/coincontrol.h"
 #include "wallet/fees.h"
 #include "wallet/wallet.h"
 

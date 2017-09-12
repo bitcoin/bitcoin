@@ -13,11 +13,11 @@
 #include "transactionrecord.h"
 #include "walletmodel.h"
 
-#include "core_io.h"
-#include "validation.h"
-#include "sync.h"
-#include "uint256.h"
-#include "util.h"
+#include "core/core_io.h"
+#include "core/sync.h"
+#include "core/uint256.h"
+#include "core/util.h"
+#include "core/validation.h"
 #include "wallet/wallet.h"
 
 #include <QColor>

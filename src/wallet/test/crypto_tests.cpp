@@ -2,13 +2,15 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "test/test_bitcoin.h"
-#include "utilstrencodings.h"
-#include "wallet/crypter.h"
+#include "../crypter.h"
 
-#include <vector>
+#include "test/test_bitcoin.h"
+
+#include "core/utilstrencodings.h"
 
 #include <boost/test/unit_test.hpp>
+
+#include <vector>
 
 BOOST_FIXTURE_TEST_SUITE(wallet_crypto, BasicTestingSetup)
 

@@ -7,18 +7,18 @@
 #endif
 
 #include "consensus/merkle.h"
+#include "core/addrman.h"
+#include "core/chain.h"
+#include "core/coins.h"
+#include "core/compressor.h"
+#include "core/net.h"
+#include "core/protocol.h"
+#include "core/pubkey.h"
+#include "core/streams.h"
+#include "core/undo.h"
+#include "core/version.h"
 #include "primitives/block.h"
 #include "script/script.h"
-#include "addrman.h"
-#include "chain.h"
-#include "coins.h"
-#include "compressor.h"
-#include "net.h"
-#include "protocol.h"
-#include "streams.h"
-#include "undo.h"
-#include "version.h"
-#include "pubkey.h"
 
 #include <stdint.h>
 #include <unistd.h>

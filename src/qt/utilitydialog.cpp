@@ -17,9 +17,9 @@
 #include "paymentrequestplus.h"
 #include "guiutil.h"
 
-#include "clientversion.h"
-#include "init.h"
-#include "util.h"
+#include "core/clientversion.h"
+#include "core/init.h"
+#include "core/util.h"
 
 #include <stdio.h>
 

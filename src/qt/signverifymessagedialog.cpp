@@ -10,9 +10,9 @@
 #include "platformstyle.h"
 #include "walletmodel.h"
 
-#include "base58.h"
-#include "init.h"
-#include "validation.h" // For strMessageMagic
+#include "core/base58.h"
+#include "core/init.h"
+#include "core/validation.h" // For strMessageMagic
 #include "wallet/wallet.h"
 
 #include <string>

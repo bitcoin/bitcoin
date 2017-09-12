@@ -2,18 +2,19 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "consensus/merkle.h"
-#include "merkleblock.h"
-#include "serialize.h"
-#include "streams.h"
-#include "uint256.h"
-#include "arith_uint256.h"
-#include "version.h"
-#include "test/test_bitcoin.h"
+#include "test_bitcoin.h"
 
-#include <vector>
+#include "consensus/merkle.h"
+#include "core/arith_uint256.h"
+#include "core/merkleblock.h"
+#include "core/serialize.h"
+#include "core/streams.h"
+#include "core/uint256.h"
+#include "core/version.h"
 
 #include <boost/test/unit_test.hpp>
+
+#include <vector>
 
 class CPartialMerkleTreeTester : public CPartialMerkleTree
 {

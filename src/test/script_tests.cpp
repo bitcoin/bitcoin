@@ -2,31 +2,31 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "test_bitcoin.h"
 #include "data/script_tests.json.h"
 
-#include "core_io.h"
-#include "key.h"
-#include "keystore.h"
+#include "core/core_io.h"
+#include "core/key.h"
+#include "core/keystore.h"
+#include "core/util.h"
+#include "core/utilstrencodings.h"
 #include "script/script.h"
 #include "script/script_error.h"
 #include "script/sign.h"
-#include "util.h"
-#include "utilstrencodings.h"
-#include "test/test_bitcoin.h"
 #include "rpc/server.h"
 
 #if defined(HAVE_CONSENSUS_LIB)
 #include "script/bitcoinconsensus.h"
 #endif
 
+#include <univalue.h>
+
+#include <boost/test/unit_test.hpp>
+
 #include <fstream>
 #include <stdint.h>
 #include <string>
 #include <vector>
-
-#include <boost/test/unit_test.hpp>
-
-#include <univalue.h>
 
 // Uncomment if you want to output updated JSON tests.
 // #define UPDATE_JSON_TESTS

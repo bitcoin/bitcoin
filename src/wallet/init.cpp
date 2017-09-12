@@ -3,14 +3,15 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "wallet/init.h"
+#include "init.h"
 
-#include "net.h"
-#include "util.h"
-#include "utilmoneystr.h"
-#include "validation.h"
-#include "wallet/wallet.h"
-#include "wallet/rpcwallet.h"
+#include "wallet.h"
+#include "rpcwallet.h"
+
+#include "core/net.h"
+#include "core/util.h"
+#include "core/utilmoneystr.h"
+#include "core/validation.h"
 
 std::string GetWalletHelpString(bool showDebug)
 {

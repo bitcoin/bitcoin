@@ -3,8 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "zmqabstractnotifier.h"
-#include "util.h"
 
+#include "core/util.h"
 
 CZMQAbstractNotifier::~CZMQAbstractNotifier()
 {

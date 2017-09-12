@@ -9,7 +9,7 @@
 #include "config/bitcoin-config.h"
 #endif
 
-#include "amount.h"
+#include "core/amount.h"
 
 #include <QLabel>
 #include <QMainWindow>

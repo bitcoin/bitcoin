@@ -6,14 +6,14 @@
 #ifndef BITCOIN_RPCPROTOCOL_H
 #define BITCOIN_RPCPROTOCOL_H
 
-#include "fs.h"
+#include "core/fs.h"
+
+#include <univalue.h>
 
 #include <list>
 #include <map>
 #include <stdint.h>
 #include <string>
-
-#include <univalue.h>
 
 //! HTTP status codes
 enum HTTPStatusCode

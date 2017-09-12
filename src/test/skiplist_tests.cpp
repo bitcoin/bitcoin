@@ -2,13 +2,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "chain.h"
-#include "util.h"
-#include "test/test_bitcoin.h"
+#include "test_bitcoin.h"
 
-#include <vector>
+#include "core/chain.h"
+#include "core/util.h"
 
 #include <boost/test/unit_test.hpp>
+
+#include <vector>
 
 #define SKIPLIST_LENGTH 300000
 

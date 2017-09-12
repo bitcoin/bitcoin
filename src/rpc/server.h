@@ -6,16 +6,17 @@
 #ifndef BITCOIN_RPCSERVER_H
 #define BITCOIN_RPCSERVER_H
 
-#include "amount.h"
-#include "rpc/protocol.h"
-#include "uint256.h"
+#include "protocol.h"
+
+#include "core/amount.h"
+#include "core/uint256.h"
+
+#include <univalue.h>
 
 #include <list>
 #include <map>
 #include <stdint.h>
 #include <string>
-
-#include <univalue.h>
 
 static const unsigned int DEFAULT_RPC_SERIALIZE_VERSION = 1;
 

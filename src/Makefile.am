@@ -75,89 +75,90 @@ endif
 .PHONY: FORCE check-symbols check-security
 # bitcoin core #
 BITCOIN_CORE_H = \
-  addrdb.h \
-  addrman.h \
-  base58.h \
-  bloom.h \
-  blockencodings.h \
-  chain.h \
-  chainparams.h \
-  chainparamsbase.h \
-  chainparamsseeds.h \
-  checkpoints.h \
-  checkqueue.h \
-  clientversion.h \
-  coins.h \
-  compat.h \
   compat/byteswap.h \
   compat/endian.h \
   compat/sanity.h \
-  compressor.h \
   consensus/consensus.h \
   consensus/tx_verify.h \
-  core_io.h \
-  core_memusage.h \
-  cuckoocache.h \
-  fs.h \
-  httprpc.h \
-  httpserver.h \
-  indirectmap.h \
-  init.h \
-  key.h \
-  keystore.h \
-  dbwrapper.h \
-  limitedmap.h \
-  memusage.h \
-  merkleblock.h \
-  miner.h \
-  net.h \
-  net_processing.h \
-  netaddress.h \
-  netbase.h \
-  netmessagemaker.h \
-  noui.h \
+  core/addrdb.h \
+  core/addrman.h \
+  core/base58.h \
+  core/blockencodings.h \
+  core/bloom.h \
+  core/chain.h \
+  core/chainparams.h \
+  core/chainparamsbase.h \
+  core/chainparamsseeds.h \
+  core/checkpoints.h \
+  core/checkqueue.h \
+  core/clientversion.h \
+  core/coins.h \
+  core/compat.h \
+  core/compressor.h \
+  core/core_io.h \
+  core/core_memusage.h \
+  core/cuckoocache.h \
+  core/fs.h \
+  core/httprpc.h \
+  core/httpserver.h \
+  core/indirectmap.h \
+  core/init.h \
+  core/key.h \
+  core/keystore.h \
+  core/dbwrapper.h \
+  core/limitedmap.h \
+  core/memusage.h \
+  core/merkleblock.h \
+  core/miner.h \
+  core/net.h \
+  core/net_processing.h \
+  core/netaddress.h \
+  core/netbase.h \
+  core/netmessagemaker.h \
+  core/noui.h \
+  core/pow.h \
+  core/protocol.h \
+  core/random.h \
+  core/reverse_iterator.h \
+  core/reverselock.h \
+  core/scheduler.h \
+  core/streams.h \
+  core/sync.h \
+  core/threadsafety.h \
+  core/threadinterrupt.h \
+  core/timedata.h \
+  core/torcontrol.h \
+  core/txdb.h \
+  core/txmempool.h \
+  core/ui_interface.h \
+  core/undo.h \
+  core/util.h \
+  core/utilmoneystr.h \
+  core/utiltime.h \
+  core/validation.h \
+  core/validationinterface.h \
+  core/versionbits.h \
+  core/warnings.h \
   policy/feerate.h \
   policy/fees.h \
   policy/policy.h \
   policy/rbf.h \
-  pow.h \
-  protocol.h \
-  random.h \
-  reverse_iterator.h \
-  reverselock.h \
   rpc/blockchain.h \
   rpc/client.h \
   rpc/mining.h \
   rpc/protocol.h \
   rpc/safemode.h \
-  rpc/server.h \
   rpc/register.h \
-  scheduler.h \
+  rpc/server.h \
+  script/ismine.h \
   script/sigcache.h \
   script/sign.h \
   script/standard.h \
-  script/ismine.h \
-  streams.h \
   support/allocators/secure.h \
   support/allocators/zeroafterfree.h \
   support/cleanse.h \
   support/events.h \
   support/lockedpool.h \
-  sync.h \
-  threadsafety.h \
-  threadinterrupt.h \
-  timedata.h \
-  torcontrol.h \
-  txdb.h \
-  txmempool.h \
-  ui_interface.h \
-  undo.h \
-  util.h \
-  utilmoneystr.h \
-  utiltime.h \
-  validation.h \
-  validationinterface.h \
-  versionbits.h \
   wallet/coincontrol.h \
   wallet/crypter.h \
   wallet/db.h \
@@ -167,7 +168,6 @@ BITCOIN_CORE_H = \
   wallet/rpcwallet.h \
   wallet/wallet.h \
   wallet/walletdb.h \
-  warnings.h \
   zmq/zmqabstractnotifier.h \
   zmq/zmqconfig.h\
   zmq/zmqnotificationinterface.h \
@@ -178,33 +178,41 @@ obj/build.h: FORCE
 	@$(MKDIR_P) $(builddir)/obj
 	@$(top_srcdir)/share/genbuild.sh "$(abs_top_builddir)/src/obj/build.h" \
 	  "$(abs_top_srcdir)"
-libbitcoin_util_a-clientversion.$(OBJEXT): obj/build.h
+core/libbitcoin_util_a-clientversion.$(OBJEXT): obj/build.h
 
 # server: shared between bitcoind and bitcoin-qt
 libbitcoin_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
 libbitcoin_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_server_a_SOURCES = \
-  addrdb.cpp \
-  addrman.cpp \
-  bloom.cpp \
-  blockencodings.cpp \
-  chain.cpp \
-  checkpoints.cpp \
   consensus/tx_verify.cpp \
-  httprpc.cpp \
-  httpserver.cpp \
-  init.cpp \
-  dbwrapper.cpp \
-  merkleblock.cpp \
-  miner.cpp \
-  net.cpp \
-  net_processing.cpp \
-  noui.cpp \
+  core/addrdb.cpp \
+  core/addrman.cpp \
+  core/blockencodings.cpp \
+  core/bloom.cpp \
+  core/chain.cpp \
+  core/checkpoints.cpp \
+  core/dbwrapper.cpp \
+  core/httprpc.cpp \
+  core/httpserver.cpp \
+  core/init.cpp \
+  core/merkleblock.cpp \
+  core/miner.cpp \
+  core/net.cpp \
+  core/net_processing.cpp \
+  core/noui.cpp \
+  core/pow.cpp \
+  core/rest.cpp \
+  core/timedata.cpp \
+  core/torcontrol.cpp \
+  core/txdb.cpp \
+  core/txmempool.cpp \
+  core/ui_interface.cpp \
+  core/validation.cpp \
+  core/validationinterface.cpp \
+  core/versionbits.cpp \
   policy/fees.cpp \
   policy/policy.cpp \
   policy/rbf.cpp \
-  pow.cpp \
-  rest.cpp \
   rpc/blockchain.cpp \
   rpc/mining.cpp \
   rpc/misc.cpp \
@@ -212,16 +220,8 @@ libbitcoin_server_a_SOURCES = \
   rpc/rawtransaction.cpp \
   rpc/safemode.cpp \
   rpc/server.cpp \
-  script/sigcache.cpp \
   script/ismine.cpp \
-  timedata.cpp \
-  torcontrol.cpp \
-  txdb.cpp \
-  txmempool.cpp \
-  ui_interface.cpp \
-  validation.cpp \
-  validationinterface.cpp \
-  versionbits.cpp \
+  script/sigcache.cpp \
   $(BITCOIN_CORE_H)
 
 if ENABLE_ZMQ
@@ -280,57 +280,57 @@ endif
 libbitcoin_consensus_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_consensus_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_consensus_a_SOURCES = \
-  amount.h \
-  arith_uint256.cpp \
-  arith_uint256.h \
   consensus/merkle.cpp \
   consensus/merkle.h \
   consensus/params.h \
   consensus/validation.h \
-  hash.cpp \
-  hash.h \
-  prevector.h \
+  core/amount.h \
+  core/arith_uint256.cpp \
+  core/arith_uint256.h \
+  core/hash.cpp \
+  core/hash.h \
+  core/prevector.h \
+  core/pubkey.cpp \
+  core/pubkey.h \
+  core/serialize.h \
+  core/tinyformat.h \
+  core/uint256.cpp \
+  core/uint256.h \
+  core/utilstrencodings.cpp \
+  core/utilstrencodings.h \
+  core/version.h \
   primitives/block.cpp \
   primitives/block.h \
   primitives/transaction.cpp \
   primitives/transaction.h \
-  pubkey.cpp \
-  pubkey.h \
   script/bitcoinconsensus.cpp \
   script/interpreter.cpp \
   script/interpreter.h \
   script/script.cpp \
   script/script.h \
   script/script_error.cpp \
-  script/script_error.h \
-  serialize.h \
-  tinyformat.h \
-  uint256.cpp \
-  uint256.h \
-  utilstrencodings.cpp \
-  utilstrencodings.h \
-  version.h
+  script/script_error.h
 
 # common: shared between bitcoind, and bitcoin-qt and non-server tools
 libbitcoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_common_a_SOURCES = \
-  base58.cpp \
-  chainparams.cpp \
-  coins.cpp \
-  compressor.cpp \
-  core_read.cpp \
-  core_write.cpp \
-  key.cpp \
-  keystore.cpp \
-  netaddress.cpp \
-  netbase.cpp \
+  core/base58.cpp \
+  core/chainparams.cpp \
+  core/coins.cpp \
+  core/compressor.cpp \
+  core/core_read.cpp \
+  core/core_write.cpp \
+  core/key.cpp \
+  core/keystore.cpp \
+  core/netaddress.cpp \
+  core/netbase.cpp \
+  core/protocol.cpp \
+  core/scheduler.cpp \
+  core/warnings.cpp \
   policy/feerate.cpp \
-  protocol.cpp \
-  scheduler.cpp \
   script/sign.cpp \
   script/standard.cpp \
-  warnings.cpp \
   $(BITCOIN_CORE_H)
 
 # util: shared between all executables.
@@ -339,22 +339,22 @@ libbitcoin_common_a_SOURCES = \
 libbitcoin_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_util_a_SOURCES = \
-  support/lockedpool.cpp \
-  chainparamsbase.cpp \
-  clientversion.cpp \
   compat/glibc_sanity.cpp \
   compat/glibcxx_sanity.cpp \
   compat/strnlen.cpp \
-  fs.cpp \
-  random.cpp \
+  core/chainparamsbase.cpp \
+  core/clientversion.cpp \
+  core/fs.cpp \
+  core/random.cpp \
+  core/sync.cpp \
+  core/threadinterrupt.cpp \
+  core/util.cpp \
+  core/utilmoneystr.cpp \
+  core/utilstrencodings.cpp \
+  core/utiltime.cpp \
   rpc/protocol.cpp \
   support/cleanse.cpp \
-  sync.cpp \
-  threadinterrupt.cpp \
-  util.cpp \
-  utilmoneystr.cpp \
-  utilstrencodings.cpp \
-  utiltime.cpp \
+  support/lockedpool.cpp \
   $(BITCOIN_CORE_H)
 
 if GLIBC_BACK_COMPAT
@@ -372,13 +372,13 @@ nodist_libbitcoin_util_a_SOURCES = $(srcdir)/obj/build.h
 #
 
 # bitcoind binary #
-bitcoind_SOURCES = bitcoind.cpp
+bitcoind_SOURCES = core/bitcoind.cpp
 bitcoind_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 bitcoind_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 bitcoind_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-bitcoind_SOURCES += bitcoind-res.rc
+bitcoind_SOURCES += core/bitcoind-res.rc
 endif
 
 bitcoind_LDADD = \
@@ -398,13 +398,13 @@ bitcoind_LDADD = \
 bitcoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS)
 
 # bitcoin-cli binary #
-bitcoin_cli_SOURCES = bitcoin-cli.cpp
+bitcoin_cli_SOURCES = core/bitcoin-cli.cpp
 bitcoin_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
 bitcoin_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 bitcoin_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-bitcoin_cli_SOURCES += bitcoin-cli-res.rc
+bitcoin_cli_SOURCES += core/bitcoin-cli-res.rc
 endif
 
 bitcoin_cli_LDADD = \
@@ -417,13 +417,13 @@ bitcoin_cli_LDADD += $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
 #
 
 # bitcoin-tx binary #
-bitcoin_tx_SOURCES = bitcoin-tx.cpp
+bitcoin_tx_SOURCES = core/bitcoin-tx.cpp
 bitcoin_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 bitcoin_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 bitcoin_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-bitcoin_tx_SOURCES += bitcoin-tx-res.rc
+bitcoin_tx_SOURCES += core/bitcoin-tx-res.rc
 endif
 
 bitcoin_tx_LDADD = \
@@ -465,6 +465,7 @@ CLEANFILES = $(EXTRA_LIBRARIES)
 CLEANFILES += *.gcda *.gcno
 CLEANFILES += compat/*.gcda compat/*.gcno
 CLEANFILES += consensus/*.gcda consensus/*.gcno
+CLEANFILES += core/*.gcda core/*.gcno
 CLEANFILES += crypto/*.gcda crypto/*.gcno
 CLEANFILES += policy/*.gcda policy/*.gcno
 CLEANFILES += primitives/*.gcda primitives/*.gcno

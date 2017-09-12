@@ -6,16 +6,17 @@
 #include "config/bitcoin-config.h"
 #endif
 
-#include "chainparams.h"
-#include "rpcnestedtests.h"
-#include "util.h"
-#include "uritests.h"
 #include "compattests.h"
+#include "rpcnestedtests.h"
+#include "uritests.h"
 
 #ifdef ENABLE_WALLET
 #include "paymentservertests.h"
 #include "wallettests.h"
 #endif
+
+#include "core/chainparams.h"
+#include "core/util.h"
 
 #include <QApplication>
 #include <QObject>

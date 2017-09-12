@@ -5,11 +5,12 @@
 #ifndef BITCOIN_POLICYESTIMATOR_H
 #define BITCOIN_POLICYESTIMATOR_H
 
-#include "amount.h"
 #include "feerate.h"
-#include "uint256.h"
-#include "random.h"
-#include "sync.h"
+
+#include "core/amount.h"
+#include "core/random.h"
+#include "core/sync.h"
+#include "core/uint256.h"
 
 #include <map>
 #include <string>

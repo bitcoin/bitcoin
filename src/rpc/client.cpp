@@ -3,14 +3,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "rpc/client.h"
-#include "rpc/protocol.h"
-#include "util.h"
+#include "client.h"
+
+#include "protocol.h"
+
+#include "core/util.h"
+
+#include <univalue.h>
 
 #include <set>
 #include <stdint.h>
-
-#include <univalue.h>
 
 class CRPCConvertParam
 {

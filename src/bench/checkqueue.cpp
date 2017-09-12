@@ -3,14 +3,16 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "bench.h"
-#include "util.h"
-#include "validation.h"
-#include "checkqueue.h"
-#include "prevector.h"
-#include <vector>
-#include <boost/thread/thread.hpp>
-#include "random.h"
 
+#include "core/checkqueue.h"
+#include "core/prevector.h"
+#include "core/random.h"
+#include "core/util.h"
+#include "core/validation.h"
+
+#include <boost/thread/thread.hpp>
+
+#include <vector>
 
 // This Benchmark tests the CheckQueue with the lightest
 // weight Checks, so it should make any lock contention

@@ -4,10 +4,10 @@
 
 #include "transactionrecord.h"
 
-#include "base58.h"
 #include "consensus/consensus.h"
-#include "validation.h"
-#include "timedata.h"
+#include "core/base58.h"
+#include "core/timedata.h"
+#include "core/validation.h"
 #include "wallet/wallet.h"
 
 #include <stdint.h>

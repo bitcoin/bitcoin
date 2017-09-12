@@ -7,10 +7,7 @@
 #endif
 
 #include "bitcoingui.h"
-
-#include "chainparams.h"
 #include "clientmodel.h"
-#include "fs.h"
 #include "guiconstants.h"
 #include "guiutil.h"
 #include "intro.h"
@@ -26,12 +23,14 @@
 #include "walletmodel.h"
 #endif
 
-#include "init.h"
+#include "core/chainparams.h"
+#include "core/fs.h"
+#include "core/init.h"
+#include "core/scheduler.h"
+#include "core/ui_interface.h"
+#include "core/util.h"
+#include "core/warnings.h"
 #include "rpc/server.h"
-#include "scheduler.h"
-#include "ui_interface.h"
-#include "util.h"
-#include "warnings.h"
 
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"

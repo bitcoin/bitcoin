@@ -3,17 +3,17 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "rpc/protocol.h"
+#include "protocol.h"
 
-#include "random.h"
-#include "tinyformat.h"
-#include "util.h"
-#include "utilstrencodings.h"
-#include "utiltime.h"
-#include "version.h"
+#include "core/random.h"
+#include "core/tinyformat.h"
+#include "core/util.h"
+#include "core/utilstrencodings.h"
+#include "core/utiltime.h"
+#include "core/version.h"
 
-#include <stdint.h>
 #include <fstream>
+#include <stdint.h>
 
 /**
  * JSON-RPC protocol.  Bitcoin speaks version 1.0 for maximum compatibility,

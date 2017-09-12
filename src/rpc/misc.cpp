@@ -3,33 +3,34 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "base58.h"
-#include "chain.h"
-#include "clientversion.h"
-#include "core_io.h"
-#include "init.h"
-#include "validation.h"
-#include "httpserver.h"
-#include "net.h"
-#include "netbase.h"
-#include "rpc/blockchain.h"
-#include "rpc/server.h"
-#include "timedata.h"
-#include "util.h"
-#include "utilstrencodings.h"
+#include "blockchain.h"
+#include "server.h"
+
+#include "core/base58.h"
+#include "core/chain.h"
+#include "core/clientversion.h"
+#include "core/core_io.h"
+#include "core/init.h"
+#include "core/httpserver.h"
+#include "core/net.h"
+#include "core/netbase.h"
+#include "core/timedata.h"
+#include "core/util.h"
+#include "core/utilstrencodings.h"
+#include "core/validation.h"
+#include "core/warnings.h"
 #ifdef ENABLE_WALLET
 #include "wallet/rpcwallet.h"
 #include "wallet/wallet.h"
 #include "wallet/walletdb.h"
 #endif
-#include "warnings.h"
 
-#include <stdint.h>
+#include <univalue.h>
+
 #ifdef HAVE_MALLOC_INFO
 #include <malloc.h>
 #endif
-
-#include <univalue.h>
+#include <stdint.h>
 
 #ifdef ENABLE_WALLET
 class DescribeAddressVisitor : public boost::static_visitor<UniValue>

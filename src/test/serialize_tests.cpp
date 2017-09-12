@@ -2,14 +2,15 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "serialize.h"
-#include "streams.h"
-#include "hash.h"
-#include "test/test_bitcoin.h"
+#include "test_bitcoin.h"
 
-#include <stdint.h>
+#include "core/serialize.h"
+#include "core/streams.h"
+#include "core/hash.h"
 
 #include <boost/test/unit_test.hpp>
+
+#include <stdint.h>
 
 BOOST_FIXTURE_TEST_SUITE(serialize_tests, BasicTestingSetup)
 

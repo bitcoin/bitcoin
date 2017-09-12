@@ -2,8 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "reverselock.h"
-#include "test/test_bitcoin.h"
+#include "test_bitcoin.h"
+
+#include "core/reverselock.h"
 
 #include <boost/test/unit_test.hpp>
 

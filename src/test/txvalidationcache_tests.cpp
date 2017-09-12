@@ -2,20 +2,21 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "test_bitcoin.h"
+
 #include "consensus/validation.h"
-#include "key.h"
-#include "validation.h"
-#include "miner.h"
-#include "pubkey.h"
-#include "txmempool.h"
-#include "random.h"
+#include "core/core_io.h"
+#include "core/key.h"
+#include "core/keystore.h"
+#include "core/miner.h"
+#include "core/pubkey.h"
+#include "core/random.h"
+#include "core/txmempool.h"
+#include "core/utiltime.h"
+#include "core/validation.h"
+#include "policy/policy.h"
 #include "script/standard.h"
 #include "script/sign.h"
-#include "test/test_bitcoin.h"
-#include "utiltime.h"
-#include "core_io.h"
-#include "keystore.h"
-#include "policy/policy.h"
 
 #include <boost/test/unit_test.hpp>
 

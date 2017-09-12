@@ -31,10 +31,10 @@
 #include "macdockiconhandler.h"
 #endif
 
-#include "chainparams.h"
-#include "init.h"
-#include "ui_interface.h"
-#include "util.h"
+#include "core/chainparams.h"
+#include "core/init.h"
+#include "core/ui_interface.h"
+#include "core/util.h"
 
 #include <iostream>
 

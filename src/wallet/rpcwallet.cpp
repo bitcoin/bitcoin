@@ -3,14 +3,25 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "amount.h"
-#include "base58.h"
-#include "chain.h"
+#include "rpcwallet.h"
+
+#include "coincontrol.h"
+#include "feebumper.h"
+#include "wallet.h"
+#include "walletdb.h"
+
 #include "consensus/validation.h"
-#include "core_io.h"
-#include "httpserver.h"
-#include "validation.h"
-#include "net.h"
+#include "core/amount.h"
+#include "core/base58.h"
+#include "core/chain.h"
+#include "core/core_io.h"
+#include "core/httpserver.h"
+#include "core/init.h"  // For StartShutdown
+#include "core/net.h"
+#include "core/timedata.h"
+#include "core/util.h"
+#include "core/utilmoneystr.h"
+#include "core/validation.h"
 #include "policy/feerate.h"
 #include "policy/fees.h"
 #include "policy/policy.h"
@@ -19,19 +30,10 @@
 #include "rpc/safemode.h"
 #include "rpc/server.h"
 #include "script/sign.h"
-#include "timedata.h"
-#include "util.h"
-#include "utilmoneystr.h"
-#include "wallet/coincontrol.h"
-#include "wallet/feebumper.h"
-#include "wallet/wallet.h"
-#include "wallet/walletdb.h"
-
-#include <init.h>  // For StartShutdown
-
-#include <stdint.h>
 
 #include <univalue.h>
+
+#include <stdint.h>
 
 static const std::string WALLET_ENDPOINT_BASE = "/wallet/";
 

@@ -2,33 +2,33 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "test_bitcoin.h"
 #include "data/tx_invalid.json.h"
 #include "data/tx_valid.json.h"
-#include "test/test_bitcoin.h"
 
-#include "clientversion.h"
-#include "checkqueue.h"
 #include "consensus/tx_verify.h"
 #include "consensus/validation.h"
-#include "core_io.h"
-#include "key.h"
-#include "keystore.h"
-#include "validation.h"
+#include "core/checkqueue.h"
+#include "core/clientversion.h"
+#include "core/core_io.h"
+#include "core/key.h"
+#include "core/keystore.h"
+#include "core/utilstrencodings.h"
+#include "core/validation.h"
 #include "policy/policy.h"
 #include "script/script.h"
-#include "script/sign.h"
 #include "script/script_error.h"
+#include "script/sign.h"
 #include "script/standard.h"
-#include "utilstrencodings.h"
 
-#include <map>
-#include <string>
+#include <univalue.h>
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <univalue.h>
+#include <map>
+#include <string>
 
 typedef std::vector<unsigned char> valtype;
 

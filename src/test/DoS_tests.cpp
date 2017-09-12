@@ -4,21 +4,21 @@
 
 // Unit tests for denial-of-service detection/prevention code
 
-#include "chainparams.h"
-#include "keystore.h"
-#include "net.h"
-#include "net_processing.h"
-#include "pow.h"
+#include "test_bitcoin.h"
+
+#include "core/chainparams.h"
+#include "core/keystore.h"
+#include "core/net.h"
+#include "core/net_processing.h"
+#include "core/pow.h"
+#include "core/serialize.h"
+#include "core/util.h"
+#include "core/validation.h"
 #include "script/sign.h"
-#include "serialize.h"
-#include "util.h"
-#include "validation.h"
-
-#include "test/test_bitcoin.h"
-
-#include <stdint.h>
 
 #include <boost/test/unit_test.hpp>
+
+#include <stdint.h>
 
 // Tests these internal-to-net_processing.cpp methods:
 extern bool AddOrphanTx(const CTransactionRef& tx, NodeId peer);

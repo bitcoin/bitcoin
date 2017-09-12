@@ -5,14 +5,15 @@
 #include "tx_verify.h"
 
 #include "consensus.h"
-#include "primitives/transaction.h"
-#include "script/interpreter.h"
 #include "validation.h"
 
+#include "primitives/transaction.h"
+#include "script/interpreter.h"
+
 // TODO remove the following dependencies
-#include "chain.h"
-#include "coins.h"
-#include "utilmoneystr.h"
+#include "core/chain.h"
+#include "core/coins.h"
+#include "core/utilmoneystr.h"
  
 bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
 {

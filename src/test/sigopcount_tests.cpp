@@ -2,18 +2,19 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "test_bitcoin.h"
+
 #include "consensus/tx_verify.h"
 #include "consensus/validation.h"
-#include "pubkey.h"
-#include "key.h"
+#include "core/pubkey.h"
+#include "core/key.h"
+#include "core/uint256.h"
 #include "script/script.h"
 #include "script/standard.h"
-#include "uint256.h"
-#include "test/test_bitcoin.h"
-
-#include <vector>
 
 #include <boost/test/unit_test.hpp>
+
+#include <vector>
 
 // Helpers:
 static std::vector<unsigned char>

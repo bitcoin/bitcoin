@@ -2,23 +2,24 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "util.h"
-#include "utiltime.h"
-#include "validation.h"
+#include "test_bitcoin.h"
 
-#include "test/test_bitcoin.h"
-#include "checkqueue.h"
+#include "core/checkqueue.h"
+#include "core/random.h"
+#include "core/util.h"
+#include "core/utiltime.h"
+#include "core/validation.h"
+
 #include <boost/test/unit_test.hpp>
 #include <boost/thread.hpp>
-#include <atomic>
-#include <thread>
-#include <vector>
-#include <mutex>
-#include <condition_variable>
 
-#include <unordered_set>
+#include <atomic>
+#include <condition_variable>
 #include <memory>
-#include "random.h"
+#include <mutex>
+#include <thread>
+#include <unordered_set>
+#include <vector>
 
 // BasicTestingSetup not sufficient because nScriptCheckThreads is not set
 // otherwise.

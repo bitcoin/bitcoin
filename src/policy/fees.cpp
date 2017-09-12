@@ -3,16 +3,17 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "policy/fees.h"
-#include "policy/policy.h"
+#include "fees.h"
 
-#include "amount.h"
-#include "clientversion.h"
+#include "policy.h"
+
+#include "core/amount.h"
+#include "core/clientversion.h"
+#include "core/random.h"
+#include "core/streams.h"
+#include "core/txmempool.h"
+#include "core/util.h"
 #include "primitives/transaction.h"
-#include "random.h"
-#include "streams.h"
-#include "txmempool.h"
-#include "util.h"
 
 static constexpr double INF_FEERATE = 1e99;
 

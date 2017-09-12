@@ -2,31 +2,31 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "base58.h"
-#include "chain.h"
-#include "rpc/safemode.h"
-#include "rpc/server.h"
 #include "init.h"
-#include "validation.h"
-#include "script/script.h"
-#include "script/standard.h"
-#include "sync.h"
-#include "util.h"
-#include "utiltime.h"
-#include "wallet.h"
-#include "merkleblock.h"
-#include "core_io.h"
 
 #include "rpcwallet.h"
+#include "wallet.h"
 
-#include <fstream>
-#include <stdint.h>
+#include "core/base58.h"
+#include "core/chain.h"
+#include "core/core_io.h"
+#include "core/merkleblock.h"
+#include "core/sync.h"
+#include "core/util.h"
+#include "core/utiltime.h"
+#include "core/validation.h"
+#include "rpc/safemode.h"
+#include "rpc/server.h"
+#include "script/script.h"
+#include "script/standard.h"
+
+#include <univalue.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-#include <univalue.h>
-
+#include <fstream>
+#include <stdint.h>
 
 std::string static EncodeDumpTime(int64_t nTime) {
     return DateTimeStrFormat("%Y-%m-%dT%H:%M:%SZ", nTime);
