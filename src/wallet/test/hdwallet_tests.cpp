@@ -8,6 +8,7 @@
 #include "base58.h"
 #include "chainparams.h"
 #include "smsg/smessage.h"
+#include "smsg/crypter.h"
 
 #include <boost/test/unit_test.hpp>
 

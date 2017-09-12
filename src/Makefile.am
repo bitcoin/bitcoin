@@ -165,6 +165,8 @@ BITCOIN_CORE_H = \
   script/standard.h \
   script/ismine.h \
   streams.h \
+  smsg/db.h \
+  smsg/crypter.h \
   smsg/smessage.h \
   support/allocators/secure.h \
   support/allocators/zeroafterfree.h \
@@ -414,7 +416,9 @@ libparticl_util_a_SOURCES = \
 libparticl_smsg_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libparticl_smsg_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libparticl_smsg_a_SOURCES = \
-  smsg/smessage.cpp
+  smsg/smessage.cpp \
+  smsg/crypter.cpp \
+  smsg/db.cpp
 
 
 if GLIBC_BACK_COMPAT

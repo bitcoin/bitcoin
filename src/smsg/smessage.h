@@ -6,10 +6,6 @@
 #ifndef SEC_MESSAGE_H
 #define SEC_MESSAGE_H
 
-#include <leveldb/db.h>
-#include <leveldb/write_batch.h>
-
-#include "support/allocators/secure.h"
 #include "net.h"
 #include "lz4/lz4.h"
 #include "base58.h"
@@ -63,7 +59,6 @@ extern SecMsgOptions                    smsgOptions;
 extern CWallet                          *pwalletSmsg;
 
 extern CCriticalSection cs_smsg;            // all except inbox and outbox
-extern CCriticalSection cs_smsgDB;
 
 #pragma pack(push, 1)
 class SecureMessage
@@ -157,7 +152,6 @@ public:
     std::set<SecMsgToken> setTokens;
 };
 
-// Get at the data
 class CBitcoinAddress_B : public CBitcoinAddress
 {
 public:
@@ -205,7 +199,6 @@ public:
     };
 };
 
-// Secure Message Options
 class SecMsgOptions
 {
 public:
@@ -222,43 +215,7 @@ public:
     bool fScanIncoming;
 };
 
-// Secure Message Crypter
-class SecMsgCrypter
-{
-private:
-    uint8_t chKey[32];
-    uint8_t chIV[16];
-    bool fKeySet;
-public:
 
-    SecMsgCrypter()
-    {
-        // Try to keep the key data out of swap (and be a bit over-careful to keep the IV that we don't even use out of swap)
-        // Note that this does nothing about suspend-to-disk (which will put all our key data on disk)
-        // Note as well that at no point in this program is any attempt made to prevent stealing of keys by reading the memory of the running process.
-        //LockedPageManager::Instance().LockRange(&chKey[0], sizeof chKey);
-        //LockedPageManager::Instance().LockRange(&chIV[0], sizeof chIV);
-        fKeySet = false;
-    };
-
-    ~SecMsgCrypter()
-    {
-        // Clean key
-        memset(&chKey, 0, sizeof chKey);
-        memset(&chIV, 0, sizeof chIV);
-        fKeySet = false;
-
-        //LockedPageManager::Instance().UnlockRange(&chKey[0], sizeof chKey);
-        //LockedPageManager::Instance().UnlockRange(&chIV[0], sizeof chIV);
-    };
-
-    bool SetKey(const std::vector<uint8_t> &vchNewKey, const uint8_t *chNewIV);
-    bool SetKey(const uint8_t *chNewKey, const uint8_t *chNewIV);
-    bool Encrypt(uint8_t *chPlaintext,  uint32_t nPlain,  std::vector<uint8_t> &vchCiphertext);
-    bool Decrypt(uint8_t *chCiphertext, uint32_t nCipher, std::vector<uint8_t> &vchPlaintext);
-};
-
-// Secure Message storage
 class SecMsgStored
 {
 public:
@@ -294,44 +251,6 @@ public:
         s >> addrOutbox;
         s >> vchMessage;
     };
-};
-
-class SecMsgDB
-{
-public:
-    SecMsgDB()
-    {
-        activeBatch = nullptr;
-    };
-
-    ~SecMsgDB()
-    {
-        // Deletes only data scoped to this SecMsgDB object.
-        if (activeBatch)
-            delete activeBatch;
-    };
-
-    bool Open(const char *pszMode="r+");
-
-    bool ScanBatch(const CDataStream &key, std::string *value, bool *deleted) const;
-
-    bool TxnBegin();
-    bool TxnCommit();
-    bool TxnAbort();
-
-    bool ReadPK(CKeyID &addr, CPubKey &pubkey);
-    bool WritePK(CKeyID &addr, CPubKey &pubkey);
-    bool ExistsPK(CKeyID &addr);
-
-    bool NextSmesg(leveldb::Iterator *it, std::string &prefix, uint8_t *vchKey, SecMsgStored &smsgStored);
-    bool NextSmesgKey(leveldb::Iterator *it, std::string &prefix, uint8_t *vchKey);
-    bool ReadSmesg(uint8_t *chKey, SecMsgStored &smsgStored);
-    bool WriteSmesg(uint8_t *chKey, SecMsgStored &smsgStored);
-    bool ExistsSmesg(uint8_t *chKey);
-    bool EraseSmesg(uint8_t *chKey);
-
-    leveldb::DB *pdb;       // points to the global instance
-    leveldb::WriteBatch *activeBatch;
 };
 
 std::string SecureMsgGetHelpString(bool showDebug);

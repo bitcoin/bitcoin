@@ -9,6 +9,7 @@
 #include <string>
 
 #include "smsg/smessage.h"
+#include "smsg/db.h"
 #include "script/ismine.h"
 #include "utilstrencodings.h"
 

@@ -14,6 +14,7 @@
 #include "consensus/validation.h"
 #include "consensus/merkle.h"
 #include "smsg/smessage.h"
+#include "smsg/crypter.h"
 #include "pos/kernel.h"
 #include "pos/miner.h"
 #include "utilmoneystr.h"
