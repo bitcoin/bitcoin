@@ -1323,7 +1323,7 @@ UniValue certfilter(const UniValue& params, bool fHelp) {
 
 	if (params.size() > 4 && !params[4].get_str().empty())
 		strCategory = params[4].get_str();
-
+	boost::algorithm::to_lower(strCategory);
     UniValue oRes(UniValue::VARR);
     
     vector<CCert> certScan;
