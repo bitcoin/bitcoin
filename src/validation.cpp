@@ -1818,10 +1818,10 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consens
 
     unsigned int flags = SCRIPT_VERIFY_NONE;
 
-    // Start enforcing P2SH (BIP16)
-    if (pindex->nHeight >= consensusparams.BIP16Height) {
-        flags |= SCRIPT_VERIFY_P2SH;
-    }
+    // BIP16 became active on Bitcoin Apr 1 2012
+    // As those rules have always been in place for Chaincoin,
+    // just enforce from Genesis
+    flags |= SCRIPT_VERIFY_P2SH;
 
     // Start enforcing the DERSIG (BIP66) rule
     if (pindex->nHeight >= consensusparams.BIP66Height) {
