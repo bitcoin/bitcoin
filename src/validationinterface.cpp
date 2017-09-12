@@ -24,7 +24,7 @@ struct MainSignalsInstance {
     boost::signals2::signal<void (const CTransactionRef &)> TransactionAddedToMempool;
     boost::signals2::signal<void (const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex, const std::vector<CTransactionRef>&)> BlockConnected;
     boost::signals2::signal<void (const std::shared_ptr<const CBlock> &)> BlockDisconnected;
-    boost::signals2::signal<void (const CTransactionRef &)> TransactionRemovedFromMempool;
+    boost::signals2::signal<void (const CTransactionRef &, MemPoolRemovalReason)> TransactionRemovedFromMempool;
     boost::signals2::signal<void (const CBlockLocator &)> ChainStateFlushed;
     boost::signals2::signal<void (const uint256 &)> Inventory;
     boost::signals2::signal<void (int64_t nBestBlockTime, CConnman* connman)> Broadcast;
@@ -87,7 +87,7 @@ void RegisterValidationInterface(CValidationInterface* pwalletIn) {
 
 void RegisterMempoolInterface(MempoolInterface* listener) {
     g_signals.m_internals->TransactionAddedToMempool.connect(boost::bind(&MempoolInterface::TransactionAddedToMempool, listener, _1));
-    g_signals.m_internals->TransactionRemovedFromMempool.connect(boost::bind(&MempoolInterface::TransactionRemovedFromMempool, listener, _1));
+    g_signals.m_internals->TransactionRemovedFromMempool.connect(boost::bind(&MempoolInterface::TransactionRemovedFromMempool, listener, _1, _2));
 }
 
 void UnregisterValidationInterface(CValidationInterface* pwalletIn) {
@@ -103,7 +103,7 @@ void UnregisterValidationInterface(CValidationInterface* pwalletIn) {
 
 void UnregisterMempoolInterface(MempoolInterface* listener) {
     g_signals.m_internals->TransactionAddedToMempool.disconnect(boost::bind(&MempoolInterface::TransactionAddedToMempool, listener, _1));
-    g_signals.m_internals->TransactionRemovedFromMempool.disconnect(boost::bind(&MempoolInterface::TransactionRemovedFromMempool, listener, _1));
+    g_signals.m_internals->TransactionRemovedFromMempool.disconnect(boost::bind(&MempoolInterface::TransactionRemovedFromMempool, listener, _1, _2));
 }
 
 void UnregisterAllValidationAndMempoolInterfaces() {
@@ -138,8 +138,8 @@ void SyncWithValidationInterfaceQueue() {
 
 void CMainSignals::MempoolEntryRemoved(CTransactionRef ptx, MemPoolRemovalReason reason) {
     if (reason != MemPoolRemovalReason::BLOCK && reason != MemPoolRemovalReason::CONFLICT) {
-        m_internals->m_schedulerClient.AddToProcessQueue([ptx, this] {
-            m_internals->TransactionRemovedFromMempool(ptx);
+        m_internals->m_schedulerClient.AddToProcessQueue([ptx, reason, this] {
+            m_internals->TransactionRemovedFromMempool(ptx, reason);
         });
     }
 }

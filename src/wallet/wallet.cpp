@@ -1238,7 +1238,7 @@ void CWallet::TransactionAddedToMempool(const CTransactionRef& ptx) {
     }
 }
 
-void CWallet::TransactionRemovedFromMempool(const CTransactionRef &ptx) {
+void CWallet::TransactionRemovedFromMempool(const CTransactionRef &ptx, MemPoolRemovalReason reason) {
     LOCK(cs_wallet);
     auto it = mapWallet.find(ptx->GetHash());
     if (it != mapWallet.end()) {
@@ -1258,11 +1258,11 @@ void CWallet::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const 
 
     for (const CTransactionRef& ptx : vtxConflicted) {
         SyncTransaction(ptx);
-        TransactionRemovedFromMempool(ptx);
+        TransactionRemovedFromMempool(ptx, MemPoolRemovalReason::CONFLICT);
     }
     for (size_t i = 0; i < pblock->vtx.size(); i++) {
         SyncTransaction(pblock->vtx[i], pindex, i);
-        TransactionRemovedFromMempool(pblock->vtx[i]);
+        TransactionRemovedFromMempool(pblock->vtx[i], MemPoolRemovalReason::BLOCK);
     }
 
     m_last_block_processed = pindex;

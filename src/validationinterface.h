@@ -99,7 +99,7 @@ protected:
      *
      * Called on a background thread.
      */
-    virtual void TransactionRemovedFromMempool(const CTransactionRef &ptx) {}
+    virtual void TransactionRemovedFromMempool(const CTransactionRef &ptx, MemPoolRemovalReason reason) {}
     friend void ::RegisterMempoolInterface(MempoolInterface*);
     friend void ::UnregisterMempoolInterface(MempoolInterface*);
 };
