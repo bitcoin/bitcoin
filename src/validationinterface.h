@@ -46,7 +46,14 @@ void CallFunctionInValidationInterfaceQueue(std::function<void ()> func);
 class CValidationInterface {
 protected:
     /**
-     * Notifies listeners of updated block chain tip
+     * Notifies listeners of updated block chain tip.
+     *
+     * Is called after a series of BlockConnected/BlockDisconnected events once
+     * the chain has made forward progress and is now at the best-known-tip.
+     *
+     * If a block is found to be invalid, this event may trigger without
+     * forward-progress, only to trigger again soon thereafter.
+     * (TODO: remove this edge case)
      *
      * Called on a background thread.
      */
@@ -65,6 +72,13 @@ protected:
      * replacement. This does not include any transactions which are included
      * in BlockConnectedDisconnected either in block->vtx or in txnConflicted.
      *
+     * reason == REORG is not ordered with BlockDisconnected/BlockDisconnected!
+     *
+     * Note that in some rare cases (eg mempool limiting) a
+     * TransactionRemovedFromMempool event may fire with no corresponding
+     * TransactionAddedToMempool event.
+     * (TODO: remove this edge case)
+     *
      * Called on a background thread.
      */
     virtual void TransactionRemovedFromMempool(const CTransactionRef &ptx) {}
@@ -78,11 +92,21 @@ protected:
     /**
      * Notifies listeners of a block being disconnected
      *
+     * The ordering of BlockDisconnected and TransactionRemovedFromMempool
+     * (for transactions removed due to memory constraints or lock time/
+     * coinbase maturity chenges during the disconnection/reorg) is undefined,
+     * and the TransactionRemovedFromMempool callbacks may occur *both* before
+     * and after BlockDisconnected/BlockConnected calls!
+     *
      * Called on a background thread.
      */
     virtual void BlockDisconnected(const std::shared_ptr<const CBlock> &block) {}
     /**
      * Notifies listeners of the new active block chain on-disk.
+     *
+     * Because flushing to disk happens in batches, this can happen
+     * significantly after BlockConnected/UpdatedBlockTip calls (and always is
+     * ordered after BlockConnected/UpdatedBlockTip).
      *
      * Called on a background thread.
      */
