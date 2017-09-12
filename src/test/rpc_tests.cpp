@@ -2,19 +2,19 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "test_bitcoin.h"
+
 #include "rpc/server.h"
 #include "rpc/client.h"
 
-#include "base58.h"
-#include "core_io.h"
-#include "netbase.h"
+#include "core/base58.h"
+#include "core/core_io.h"
+#include "core/netbase.h"
 
-#include "test/test_bitcoin.h"
+#include <univalue.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/test/unit_test.hpp>
-
-#include <univalue.h>
 
 UniValue CallRPC(std::string args)
 {

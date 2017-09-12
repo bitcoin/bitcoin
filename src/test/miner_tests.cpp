@@ -2,27 +2,27 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "chainparams.h"
-#include "coins.h"
+#include "test_bitcoin.h"
+
 #include "consensus/consensus.h"
 #include "consensus/merkle.h"
 #include "consensus/tx_verify.h"
 #include "consensus/validation.h"
-#include "validation.h"
-#include "miner.h"
+#include "core/chainparams.h"
+#include "core/coins.h"
+#include "core/miner.h"
+#include "core/pubkey.h"
+#include "core/txmempool.h"
+#include "core/uint256.h"
+#include "core/util.h"
+#include "core/utilstrencodings.h"
+#include "core/validation.h"
 #include "policy/policy.h"
-#include "pubkey.h"
 #include "script/standard.h"
-#include "txmempool.h"
-#include "uint256.h"
-#include "util.h"
-#include "utilstrencodings.h"
-
-#include "test/test_bitcoin.h"
-
-#include <memory>
 
 #include <boost/test/unit_test.hpp>
+
+#include <memory>
 
 BOOST_FIXTURE_TEST_SUITE(miner_tests, TestingSetup)
 

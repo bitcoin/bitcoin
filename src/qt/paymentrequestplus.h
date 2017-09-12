@@ -10,7 +10,7 @@
 #include "paymentrequest.pb.h"
 #pragma GCC diagnostic pop
 
-#include "base58.h"
+#include "core/base58.h"
 
 #include <openssl/x509.h>
 

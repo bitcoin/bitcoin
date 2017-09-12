@@ -5,13 +5,13 @@
 
 #include "sigcache.h"
 
-#include "memusage.h"
-#include "pubkey.h"
-#include "random.h"
-#include "uint256.h"
-#include "util.h"
+#include "core/cuckoocache.h"
+#include "core/memusage.h"
+#include "core/pubkey.h"
+#include "core/random.h"
+#include "core/uint256.h"
+#include "core/util.h"
 
-#include "cuckoocache.h"
 #include <boost/thread.hpp>
 
 namespace {

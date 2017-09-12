@@ -2,23 +2,23 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "bloom.h"
+#include "test_bitcoin.h"
 
-#include "base58.h"
-#include "clientversion.h"
-#include "key.h"
-#include "merkleblock.h"
-#include "random.h"
-#include "serialize.h"
-#include "streams.h"
-#include "uint256.h"
-#include "util.h"
-#include "utilstrencodings.h"
-#include "test/test_bitcoin.h"
-
-#include <vector>
+#include "core/base58.h"
+#include "core/bloom.h"
+#include "core/clientversion.h"
+#include "core/key.h"
+#include "core/merkleblock.h"
+#include "core/random.h"
+#include "core/serialize.h"
+#include "core/streams.h"
+#include "core/uint256.h"
+#include "core/util.h"
+#include "core/utilstrencodings.h"
 
 #include <boost/test/unit_test.hpp>
+
+#include <vector>
 
 BOOST_FIXTURE_TEST_SUITE(bloom_tests, BasicTestingSetup)
 

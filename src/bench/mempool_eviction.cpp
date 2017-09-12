@@ -3,8 +3,9 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "bench.h"
+
+#include "core/txmempool.h"
 #include "policy/policy.h"
-#include "txmempool.h"
 
 #include <list>
 #include <vector>

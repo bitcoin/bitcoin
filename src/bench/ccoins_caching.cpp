@@ -3,7 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "bench.h"
-#include "coins.h"
+
+#include "core/coins.h"
 #include "policy/policy.h"
 #include "wallet/crypter.h"
 

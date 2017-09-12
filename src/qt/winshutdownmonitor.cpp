@@ -5,8 +5,8 @@
 #include "winshutdownmonitor.h"
 
 #if defined(Q_OS_WIN) && QT_VERSION >= 0x050000
-#include "init.h"
-#include "util.h"
+#include "core/init.h"
+#include "core/util.h"
 
 #include <windows.h>
 

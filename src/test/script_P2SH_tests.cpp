@@ -2,21 +2,22 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "test_bitcoin.h"
+
 #include "consensus/tx_verify.h"
-#include "core_io.h"
-#include "key.h"
-#include "keystore.h"
-#include "validation.h"
+#include "core/core_io.h"
+#include "core/key.h"
+#include "core/keystore.h"
+#include "core/validation.h"
 #include "policy/policy.h"
+#include "script/ismine.h"
 #include "script/script.h"
 #include "script/script_error.h"
 #include "script/sign.h"
-#include "script/ismine.h"
-#include "test/test_bitcoin.h"
-
-#include <vector>
 
 #include <boost/test/unit_test.hpp>
+
+#include <vector>
 
 // Helpers:
 static std::vector<unsigned char>

@@ -10,14 +10,14 @@
 
 #include "bitcoinunits.h"
 #include "guiutil.h"
-
-#include "amount.h"
-#include "init.h"
-#include "validation.h" // For DEFAULT_SCRIPTCHECK_THREADS
-#include "net.h"
-#include "netbase.h"
-#include "txdb.h" // for -dbcache defaults
 #include "intro.h" 
+
+#include "core/amount.h"
+#include "core/init.h"
+#include "core/net.h"
+#include "core/netbase.h"
+#include "core/txdb.h" // for -dbcache defaults
+#include "core/validation.h" // For DEFAULT_SCRIPTCHECK_THREADS
 
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"

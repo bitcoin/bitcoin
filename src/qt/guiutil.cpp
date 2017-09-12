@@ -9,14 +9,14 @@
 #include "qvalidatedlineedit.h"
 #include "walletmodel.h"
 
-#include "fs.h"
-#include "primitives/transaction.h"
-#include "init.h"
+#include "core/fs.h"
+#include "core/init.h"
+#include "core/protocol.h"
+#include "core/util.h"
 #include "policy/policy.h"
-#include "protocol.h"
+#include "primitives/transaction.h"
 #include "script/script.h"
 #include "script/standard.h"
-#include "util.h"
 
 #ifdef WIN32
 #ifdef _WIN32_WINNT

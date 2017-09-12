@@ -10,11 +10,11 @@
 
 #include "networkstyle.h"
 
-#include "clientversion.h"
-#include "init.h"
-#include "util.h"
-#include "ui_interface.h"
-#include "version.h"
+#include "core/clientversion.h"
+#include "core/init.h"
+#include "core/ui_interface.h"
+#include "core/util.h"
+#include "core/version.h"
 
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"

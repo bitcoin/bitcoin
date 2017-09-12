@@ -15,13 +15,13 @@
 #include "sendcoinsentry.h"
 #include "walletmodel.h"
 
-#include "base58.h"
-#include "chainparams.h"
-#include "wallet/coincontrol.h"
-#include "validation.h" // mempool and minRelayTxFee
-#include "ui_interface.h"
-#include "txmempool.h"
+#include "core/base58.h"
+#include "core/chainparams.h"
+#include "core/txmempool.h"
+#include "core/ui_interface.h"
+#include "core/validation.h" // mempool and minRelayTxFee
 #include "policy/fees.h"
+#include "wallet/coincontrol.h"
 #include "wallet/fees.h"
 
 #include <QFontMetrics>

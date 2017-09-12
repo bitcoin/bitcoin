@@ -13,11 +13,12 @@
 #include "clientmodel.h"
 #include "guiutil.h"
 #include "platformstyle.h"
-#include "chainparams.h"
-#include "netbase.h"
-#include "rpc/server.h"
+
+#include "core/chainparams.h"
+#include "core/netbase.h"
+#include "core/util.h"
 #include "rpc/client.h"
-#include "util.h"
+#include "rpc/server.h"
 
 #include <openssl/crypto.h>
 

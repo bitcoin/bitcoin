@@ -2,19 +2,20 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "coins.h"
-#include "script/standard.h"
-#include "uint256.h"
-#include "undo.h"
-#include "utilstrencodings.h"
-#include "test/test_bitcoin.h"
-#include "validation.h"
-#include "consensus/validation.h"
+#include "test_bitcoin.h"
 
-#include <vector>
-#include <map>
+#include "consensus/validation.h"
+#include "core/coins.h"
+#include "core/uint256.h"
+#include "core/undo.h"
+#include "core/utilstrencodings.h"
+#include "core/validation.h"
+#include "script/standard.h"
 
 #include <boost/test/unit_test.hpp>
+
+#include <map>
+#include <vector>
 
 int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out);
 void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txundo, int nHeight);

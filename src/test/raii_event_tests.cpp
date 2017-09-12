@@ -7,16 +7,15 @@
 #ifdef EVENT_SET_MEM_FUNCTIONS_IMPLEMENTED
 // It would probably be ideal to define dummy test(s) that report skipped, but boost::test doesn't seem to make that practical (at least not in versions available with common distros)
 
-#include <map>
-#include <stdlib.h>
+#include "test_bitcoin.h"
 
 #include "support/events.h"
 
-#include "test/test_bitcoin.h"
-
-#include <vector>
-
 #include <boost/test/unit_test.hpp>
+
+#include <map>
+#include <stdlib.h>
+#include <vector>
 
 static std::map<void*, short> tags;
 static std::map<void*, uint16_t> orders;

@@ -6,11 +6,13 @@
 #ifndef BITCOIN_CONSENSUS_VALIDATION_H
 #define BITCOIN_CONSENSUS_VALIDATION_H
 
-#include <string>
-#include "version.h"
-#include "consensus/consensus.h"
+#include "consensus.h"
+
+#include "core/version.h"
 #include "primitives/transaction.h"
 #include "primitives/block.h"
+
+#include <string>
 
 /** "reject" message codes */
 static const unsigned char REJECT_MALFORMED = 0x01;

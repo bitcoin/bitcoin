@@ -19,7 +19,7 @@
 #include "transactionview.h"
 #include "walletmodel.h"
 
-#include "ui_interface.h"
+#include "core/ui_interface.h"
 
 #include <QAction>
 #include <QActionGroup>

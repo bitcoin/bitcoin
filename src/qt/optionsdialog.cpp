@@ -13,9 +13,9 @@
 #include "guiutil.h"
 #include "optionsmodel.h"
 
-#include "validation.h" // for DEFAULT_SCRIPTCHECK_THREADS and MAX_SCRIPTCHECK_THREADS
-#include "netbase.h"
-#include "txdb.h" // for -dbcache defaults
+#include "core/netbase.h"
+#include "core/txdb.h" // for -dbcache defaults
+#include "core/validation.h" // for DEFAULT_SCRIPTCHECK_THREADS and MAX_SCRIPTCHECK_THREADS
 
 #include <QDataWidgetMapper>
 #include <QDir>

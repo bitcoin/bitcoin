@@ -1,17 +1,21 @@
 // Copyright (c) 2012-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#include "addrman.h"
-#include "test/test_bitcoin.h"
-#include <string>
+
+#include "test_bitcoin.h"
+
+#include "core/addrman.h"
+#include "core/chainparams.h"
+#include "core/hash.h"
+#include "core/net.h"
+#include "core/netbase.h"
+#include "core/serialize.h"
+#include "core/streams.h"
+#include "core/util.h"
+
 #include <boost/test/unit_test.hpp>
-#include "hash.h"
-#include "serialize.h"
-#include "streams.h"
-#include "net.h"
-#include "netbase.h"
-#include "chainparams.h"
-#include "util.h"
+
+#include <string>
 
 class CAddrManSerializationMock : public CAddrMan
 {

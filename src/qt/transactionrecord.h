@@ -5,8 +5,8 @@
 #ifndef BITCOIN_QT_TRANSACTIONRECORD_H
 #define BITCOIN_QT_TRANSACTIONRECORD_H
 
-#include "amount.h"
-#include "uint256.h"
+#include "core/amount.h"
+#include "core/uint256.h"
 
 #include <QList>
 #include <QString>

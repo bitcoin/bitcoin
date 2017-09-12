@@ -6,19 +6,19 @@
 #ifndef BITCOIN_WALLET_DB_H
 #define BITCOIN_WALLET_DB_H
 
-#include "clientversion.h"
-#include "fs.h"
-#include "serialize.h"
-#include "streams.h"
-#include "sync.h"
-#include "version.h"
+#include "core/clientversion.h"
+#include "core/fs.h"
+#include "core/serialize.h"
+#include "core/streams.h"
+#include "core/sync.h"
+#include "core/version.h"
+
+#include <db_cxx.h>
 
 #include <atomic>
 #include <map>
 #include <string>
 #include <vector>
-
-#include <db_cxx.h>
 
 static const unsigned int DEFAULT_WALLET_DBLOGSIZE = 100;
 static const bool DEFAULT_WALLET_PRIVDB = true;

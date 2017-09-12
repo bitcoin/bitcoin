@@ -4,7 +4,7 @@
 
 #include "bitcoinaddressvalidator.h"
 
-#include "base58.h"
+#include "core/base58.h"
 
 /* Base58 characters are:
      "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"

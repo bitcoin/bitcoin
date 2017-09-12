@@ -2,16 +2,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <vector>
-#include "prevector.h"
+#include "test_bitcoin.h"
 
-#include "reverse_iterator.h"
-#include "serialize.h"
-#include "streams.h"
-
-#include "test/test_bitcoin.h"
+#include "core/prevector.h"
+#include "core/reverse_iterator.h"
+#include "core/serialize.h"
+#include "core/streams.h"
 
 #include <boost/test/unit_test.hpp>
+
+#include <vector>
 
 BOOST_FIXTURE_TEST_SUITE(PrevectorTests, TestingSetup)
 

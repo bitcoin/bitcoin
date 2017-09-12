@@ -2,11 +2,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <iostream>
-
 #include "bench.h"
-#include "bloom.h"
-#include "utiltime.h"
+
+#include "core/bloom.h"
+#include "core/utiltime.h"
+
+#include <iostream>
 
 static void RollingBloom(benchmark::State& state)
 {

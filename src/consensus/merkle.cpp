@@ -3,8 +3,9 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "merkle.h"
-#include "hash.h"
-#include "utilstrencodings.h"
+
+#include "core/hash.h"
+#include "core/utilstrencodings.h"
 
 /*     WARNING! If you're reading this because you're learning about crypto
        and/or designing a new system that will use merkle trees, keep in mind

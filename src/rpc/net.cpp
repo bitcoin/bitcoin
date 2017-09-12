@@ -2,24 +2,24 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "rpc/server.h"
+#include "server.h"
 
-#include "chainparams.h"
-#include "clientversion.h"
-#include "core_io.h"
-#include "validation.h"
-#include "net.h"
-#include "net_processing.h"
-#include "netbase.h"
+#include "core/chainparams.h"
+#include "core/clientversion.h"
+#include "core/core_io.h"
+#include "core/net.h"
+#include "core/net_processing.h"
+#include "core/netbase.h"
+#include "core/protocol.h"
+#include "core/sync.h"
+#include "core/timedata.h"
+#include "core/ui_interface.h"
+#include "core/util.h"
+#include "core/utilstrencodings.h"
+#include "core/validation.h"
+#include "core/version.h"
+#include "core/warnings.h"
 #include "policy/policy.h"
-#include "protocol.h"
-#include "sync.h"
-#include "timedata.h"
-#include "ui_interface.h"
-#include "util.h"
-#include "utilstrencodings.h"
-#include "version.h"
-#include "warnings.h"
 
 #include <univalue.h>
 

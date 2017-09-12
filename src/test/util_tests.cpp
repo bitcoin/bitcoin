@@ -2,19 +2,19 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "util.h"
+#include "test_bitcoin.h"
 
-#include "clientversion.h"
+#include "core/clientversion.h"
+#include "core/sync.h"
+#include "core/util.h"
+#include "core/utilstrencodings.h"
+#include "core/utilmoneystr.h"
 #include "primitives/transaction.h"
-#include "sync.h"
-#include "utilstrencodings.h"
-#include "utilmoneystr.h"
-#include "test/test_bitcoin.h"
+
+#include <boost/test/unit_test.hpp>
 
 #include <stdint.h>
 #include <vector>
-
-#include <boost/test/unit_test.hpp>
 
 BOOST_FIXTURE_TEST_SUITE(util_tests, BasicTestingSetup)
 

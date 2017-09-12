@@ -4,7 +4,7 @@
 
 #define BOOST_TEST_MODULE Bitcoin Test Suite
 
-#include "net.h"
+#include "core/net.h"
 
 #include <boost/test/unit_test.hpp>
 

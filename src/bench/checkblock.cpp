@@ -4,13 +4,13 @@
 
 #include "bench.h"
 
-#include "chainparams.h"
-#include "validation.h"
-#include "streams.h"
 #include "consensus/validation.h"
+#include "core/chainparams.h"
+#include "core/streams.h"
+#include "core/validation.h"
 
 namespace block_bench {
-#include "bench/data/block413567.raw.h"
+#include "data/block413567.raw.h"
 } // namespace block_bench
 
 // These are the two major time-sinks which happen after we have fully received

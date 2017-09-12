@@ -2,14 +2,15 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <boost/test/unit_test.hpp>
+#include "test_bitcoin.h"
 
-#include "base58.h"
-#include "key.h"
-#include "uint256.h"
-#include "util.h"
-#include "utilstrencodings.h"
-#include "test/test_bitcoin.h"
+#include "core/base58.h"
+#include "core/key.h"
+#include "core/uint256.h"
+#include "core/util.h"
+#include "core/utilstrencodings.h"
+
+#include <boost/test/unit_test.hpp>
 
 #include <string>
 #include <vector>

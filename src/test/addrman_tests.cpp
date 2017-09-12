@@ -1,14 +1,17 @@
 // Copyright (c) 2012-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#include "addrman.h"
-#include "test/test_bitcoin.h"
-#include <string>
+
+#include "test_bitcoin.h"
+
+#include "core/addrman.h"
+#include "core/hash.h"
+#include "core/netbase.h"
+#include "core/random.h"
+
 #include <boost/test/unit_test.hpp>
 
-#include "hash.h"
-#include "netbase.h"
-#include "random.h"
+#include <string>
 
 class CAddrManTest : public CAddrMan
 {

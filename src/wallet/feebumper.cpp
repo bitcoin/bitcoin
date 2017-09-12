@@ -2,19 +2,21 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "feebumper.h"
+
+#include "coincontrol.h"
+#include "fees.h"
+#include "wallet.h"
+
 #include "consensus/validation.h"
-#include "wallet/coincontrol.h"
-#include "wallet/feebumper.h"
-#include "wallet/fees.h"
-#include "wallet/wallet.h"
+#include "core/validation.h" //for mempool access
+#include "core/txmempool.h"
+#include "core/utilmoneystr.h"
+#include "core/util.h"
+#include "core/net.h"
 #include "policy/fees.h"
 #include "policy/policy.h"
 #include "policy/rbf.h"
-#include "validation.h" //for mempool access
-#include "txmempool.h"
-#include "utilmoneystr.h"
-#include "util.h"
-#include "net.h"
 
 // Calculate the size of the transaction assuming all signatures are max size
 // Use DummySignatureCreator, which inserts 72 byte signatures everywhere.

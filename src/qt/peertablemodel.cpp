@@ -8,8 +8,8 @@
 #include "guiconstants.h"
 #include "guiutil.h"
 
-#include "validation.h" // for cs_main
-#include "sync.h"
+#include "core/sync.h"
+#include "core/validation.h" // for cs_main
 
 #include <QDebug>
 #include <QList>

@@ -3,13 +3,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "script/standard.h"
+#include "standard.h"
 
-#include "pubkey.h"
-#include "script/script.h"
-#include "util.h"
-#include "utilstrencodings.h"
+#include "script.h"
 
+#include "core/pubkey.h"
+#include "core/util.h"
+#include "core/utilstrencodings.h"
 
 typedef std::vector<unsigned char> valtype;
 

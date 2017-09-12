@@ -5,12 +5,12 @@
 
 #include "ismine.h"
 
-#include "key.h"
-#include "keystore.h"
-#include "script/script.h"
-#include "script/standard.h"
-#include "script/sign.h"
+#include "script.h"
+#include "sign.h"
+#include "standard.h"
 
+#include "core/key.h"
+#include "core/keystore.h"
 
 typedef std::vector<unsigned char> valtype;
 

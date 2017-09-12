@@ -3,29 +3,28 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "rpc/blockchain.h"
+#include "blockchain.h"
 
-#include "amount.h"
-#include "chain.h"
-#include "chainparams.h"
-#include "checkpoints.h"
-#include "coins.h"
+#include "server.h"
+
 #include "consensus/validation.h"
-#include "validation.h"
-#include "core_io.h"
+#include "core/amount.h"
+#include "core/chain.h"
+#include "core/chainparams.h"
+#include "core/checkpoints.h"
+#include "core/coins.h"
+#include "core/core_io.h"
+#include "core/hash.h"
+#include "core/streams.h"
+#include "core/sync.h"
+#include "core/txdb.h"
+#include "core/txmempool.h"
+#include "core/util.h"
+#include "core/utilstrencodings.h"
+#include "core/validation.h"
 #include "policy/feerate.h"
 #include "policy/policy.h"
 #include "primitives/transaction.h"
-#include "rpc/server.h"
-#include "streams.h"
-#include "sync.h"
-#include "txdb.h"
-#include "txmempool.h"
-#include "util.h"
-#include "utilstrencodings.h"
-#include "hash.h"
-
-#include <stdint.h>
 
 #include <univalue.h>
 
@@ -33,6 +32,7 @@
 
 #include <mutex>
 #include <condition_variable>
+#include <stdint.h>
 
 struct CUpdatedBlock
 {

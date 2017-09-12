@@ -9,16 +9,16 @@
 #include "guiutil.h"
 #include "peertablemodel.h"
 
-#include "chain.h"
-#include "chainparams.h"
-#include "checkpoints.h"
-#include "clientversion.h"
-#include "validation.h"
-#include "net.h"
-#include "txmempool.h"
-#include "ui_interface.h"
-#include "util.h"
-#include "warnings.h"
+#include "core/chain.h"
+#include "core/chainparams.h"
+#include "core/checkpoints.h"
+#include "core/clientversion.h"
+#include "core/net.h"
+#include "core/txmempool.h"
+#include "core/ui_interface.h"
+#include "core/util.h"
+#include "core/validation.h"
+#include "core/warnings.h"
 
 #include <stdint.h>
 

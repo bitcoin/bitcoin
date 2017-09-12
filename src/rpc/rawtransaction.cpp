@@ -3,36 +3,37 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "base58.h"
-#include "chain.h"
-#include "coins.h"
+#include "safemode.h"
+#include "server.h"
+
 #include "consensus/validation.h"
-#include "core_io.h"
-#include "init.h"
-#include "keystore.h"
-#include "validation.h"
-#include "merkleblock.h"
-#include "net.h"
+#include "core/base58.h"
+#include "core/chain.h"
+#include "core/coins.h"
+#include "core/core_io.h"
+#include "core/init.h"
+#include "core/keystore.h"
+#include "core/merkleblock.h"
+#include "core/net.h"
+#include "core/txmempool.h"
+#include "core/uint256.h"
+#include "core/utilstrencodings.h"
+#include "core/validation.h"
 #include "policy/policy.h"
 #include "policy/rbf.h"
 #include "primitives/transaction.h"
-#include "rpc/safemode.h"
-#include "rpc/server.h"
 #include "script/script.h"
 #include "script/script_error.h"
 #include "script/sign.h"
 #include "script/standard.h"
-#include "txmempool.h"
-#include "uint256.h"
-#include "utilstrencodings.h"
 #ifdef ENABLE_WALLET
 #include "wallet/rpcwallet.h"
 #include "wallet/wallet.h"
 #endif
 
-#include <stdint.h>
-
 #include <univalue.h>
+
+#include <stdint.h>
 
 
 void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)

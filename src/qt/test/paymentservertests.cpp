@@ -4,15 +4,15 @@
 
 #include "paymentservertests.h"
 
-#include "optionsmodel.h"
 #include "paymentrequestdata.h"
+#include "../optionsmodel.h"
 
-#include "amount.h"
-#include "random.h"
+#include "core/amount.h"
+#include "core/random.h"
+#include "core/util.h"
+#include "core/utilstrencodings.h"
 #include "script/script.h"
 #include "script/standard.h"
-#include "util.h"
-#include "utilstrencodings.h"
 
 #include <openssl/x509.h>
 #include <openssl/x509_vfy.h>

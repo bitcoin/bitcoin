@@ -2,12 +2,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "chain.h"
-#include "versionbits.h"
-#include "test/test_bitcoin.h"
-#include "chainparams.h"
-#include "validation.h"
+#include "test_bitcoin.h"
+
 #include "consensus/params.h"
+#include "core/chain.h"
+#include "core/chainparams.h"
+#include "core/validation.h"
+#include "core/versionbits.h"
 
 #include <boost/test/unit_test.hpp>
 
