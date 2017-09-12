@@ -511,7 +511,7 @@ void CConnman::DumpBanlist()
 
 void CNode::CloseSocketDisconnect()
 {
-    fDisconnect = true;
+    Disconnect();
     LOCK(cs_hSocket);
     if (hSocket != INVALID_SOCKET)
     {
@@ -591,7 +591,7 @@ void CConnman::Ban(const CSubNet& subNet, const BanReason &banReason, int64_t ba
         LOCK(cs_vNodes);
         for (CNode* pnode : vNodes) {
             if (subNet.Match((CNetAddr)pnode->addr))
-                pnode->fDisconnect = true;
+                pnode->Disconnect();
         }
     }
     if(banReason == BanReasonManuallyAdded)
@@ -1093,7 +1093,7 @@ bool CConnman::AttemptToEvictConnection()
     LOCK(cs_vNodes);
     for(std::vector<CNode*>::const_iterator it(vNodes.begin()); it != vNodes.end(); ++it) {
         if ((*it)->GetId() == evicted) {
-            (*it)->fDisconnect = true;
+            (*it)->Disconnect();
             return true;
         }
     }
@@ -1444,27 +1444,27 @@ void CConnman::ThreadSocketHandler()
                 if (pnode->nLastRecv == 0 || pnode->nLastSend == 0)
                 {
                     LogPrint(BCLog::NET, "socket no message in first 60 seconds, %d %d from %d\n", pnode->nLastRecv != 0, pnode->nLastSend != 0, pnode->GetId());
-                    pnode->fDisconnect = true;
+                    pnode->Disconnect();
                 }
                 else if (nTime - pnode->nLastSend > TIMEOUT_INTERVAL)
                 {
                     LogPrintf("socket sending timeout: %is\n", nTime - pnode->nLastSend);
-                    pnode->fDisconnect = true;
+                    pnode->Disconnect();
                 }
                 else if (nTime - pnode->nLastRecv > (pnode->nVersion > BIP0031_VERSION ? TIMEOUT_INTERVAL : 90*60))
                 {
                     LogPrintf("socket receive timeout: %is\n", nTime - pnode->nLastRecv);
-                    pnode->fDisconnect = true;
+                    pnode->Disconnect();
                 }
                 else if (pnode->nPingNonceSent && pnode->nPingUsecStart + TIMEOUT_INTERVAL * 1000000 < GetTimeMicros())
                 {
                     LogPrintf("ping timeout: %fs\n", 0.000001 * (GetTimeMicros() - pnode->nPingUsecStart));
-                    pnode->fDisconnect = true;
+                    pnode->Disconnect();
                 }
                 else if (!pnode->fSuccessfullyConnected)
                 {
                     LogPrintf("version handshake timeout from %d\n", pnode->GetId());
-                    pnode->fDisconnect = true;
+                    pnode->Disconnect();
                 }
             }
         }
@@ -2240,7 +2240,7 @@ void CConnman::SetNetworkActive(bool active)
         LOCK(cs_vNodes);
         // Disconnect all nodes
         for (CNode* pnode : vNodes) {
-            pnode->fDisconnect = true;
+            pnode->Disconnect();
         }
     }
 
@@ -2590,7 +2590,7 @@ bool CConnman::DisconnectNode(const std::string& strNode)
 {
     LOCK(cs_vNodes);
     if (CNode* pnode = FindNode(strNode)) {
-        pnode->fDisconnect = true;
+        pnode->Disconnect();
         return true;
     }
     return false;
@@ -2600,7 +2600,7 @@ bool CConnman::DisconnectNode(NodeId id)
     LOCK(cs_vNodes);
     for(CNode* pnode : vNodes) {
         if (id == pnode->GetId()) {
-            pnode->fDisconnect = true;
+            pnode->Disconnect();
             return true;
         }
     }
