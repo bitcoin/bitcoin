@@ -179,6 +179,8 @@ class ImportRescanTest(BitcoinTestFramework):
             else:
                 variant.check()
 
+        assert_equal(try_rpc(self.nodes[0].abortrescan)[1], None)
+
 
 def try_rpc(func, *args, **kwargs):
     try:
