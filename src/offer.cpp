@@ -276,7 +276,8 @@ bool COfferDB::ScanOffers(const std::vector<unsigned char>& vchOffer, const stri
 					pcursor->Next();
 					continue;
 				}
-				if(strCategory.size() > 0 && !boost::algorithm::starts_with(stringFromVch(txPos.sCategory), strCategory) && !boost::algorithm::starts_with(stringFromVch(txPos.sCategory), boost::algorithm::to_lower(strCategory)))
+				const string& strCategoryLower = boost::algorithm::to_lower(strCategory);
+				if(strCategory.size() > 0 && !boost::algorithm::starts_with(stringFromVch(txPos.sCategory), strCategory) && !boost::algorithm::starts_with(stringFromVch(txPos.sCategory), strCategoryLower))
 				{
 					pcursor->Next();
 					continue;
