@@ -1235,6 +1235,9 @@ public:
     /* Generates a new HD master key (will not be activated) */
     CPubKey GenerateNewHDMasterKey();
 
+    /* Derives a new HD master key (will not be activated) */
+    CPubKey DeriveNewMasterHDKey(const CKey& key);
+
     /* Set the current HD master key (will reset the chain child index counters)
        Sets the master key's version based on the current wallet version (so the
        caller must ensure the current wallet version is correct before calling
