@@ -2863,6 +2863,34 @@ static bool InsertChangeAddress(CTempRecipient &r, std::vector<CTempRecipient> &
 
 extern CFeeRate GetDiscardRate(const CBlockPolicyEstimator& estimator);
 
+int PreAcceptMempoolTx(CWalletTx &wtx, std::string &sError)
+{
+    // Check if wtx can get into the mempool
+    
+    // Limit size
+    if (GetTransactionWeight(wtx) >= MAX_STANDARD_TX_WEIGHT)
+    {
+        return errorN(1, sError, __func__, _("Transaction too large").c_str());
+    }
+    
+    if (gArgs.GetBoolArg("-walletrejectlongchains", DEFAULT_WALLET_REJECT_LONG_CHAINS)) {
+        // Lastly, ensure this tx will pass the mempool's chain limits
+        LockPoints lp;
+        CTxMemPoolEntry entry(wtx.tx, 0, 0, 0, false, 0, lp);
+        CTxMemPool::setEntries setAncestors;
+        size_t nLimitAncestors = gArgs.GetArg("-limitancestorcount", DEFAULT_ANCESTOR_LIMIT);
+        size_t nLimitAncestorSize = gArgs.GetArg("-limitancestorsize", DEFAULT_ANCESTOR_SIZE_LIMIT)*1000;
+        size_t nLimitDescendants = gArgs.GetArg("-limitdescendantcount", DEFAULT_DESCENDANT_LIMIT);
+        size_t nLimitDescendantSize = gArgs.GetArg("-limitdescendantsize", DEFAULT_DESCENDANT_SIZE_LIMIT)*1000;
+        std::string errString;
+        if (!mempool.CalculateMemPoolAncestors(entry, setAncestors, nLimitAncestors, nLimitAncestorSize, nLimitDescendants, nLimitDescendantSize, errString)) {
+            return errorN(1, sError, __func__, _("Transaction has too long of a mempool chain").c_str());
+        }
+    }
+    
+    return 0;
+}
+
 int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
     std::vector<CTempRecipient> &vecSend,
     CExtKeyAccount *sea, CStoredExtKey *pc,
@@ -3152,8 +3180,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 // fee to pay for the new output and still meet nFeeNeeded
                 // Or we should have just subtracted fee from recipients and
                 // nFeeNeeded should not have changed
-                sError = _("Transaction fee and change calculation failed");
-                return false;
+                return errorN(1, sError, __func__, _("Transaction fee and change calculation failed.").c_str());
             }
             
             // Try to reduce change to include necessary fee
@@ -3221,6 +3248,9 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
         // Embed the constructed transaction data in wtxNew.
         wtx.SetTx(MakeTransactionRef(std::move(txNew)));
     } // cs_main, cs_wallet
+
+    if (0 != PreAcceptMempoolTx(wtx, sError))
+        return 1;
 
     LogPrintf("Fee Calculation: Fee:%d Bytes:%u Needed:%d Tgt:%d (requested %d) Reason:\"%s\" Decay %.5f: Estimation: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out) Fail: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out)\n",
               nFeeRet, nBytes, nFeeNeeded, feeCalc.returnedTarget, feeCalc.desiredTarget, StringForFeeReason(feeCalc.reason), feeCalc.est.decay,
@@ -3545,8 +3575,7 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 // fee to pay for the new output and still meet nFeeNeeded
                 // Or we should have just subtracted fee from recipients and
                 // nFeeNeeded should not have changed
-                sError = _("Transaction fee and change calculation failed");
-                return false;
+                return errorN(1, sError, __func__, _("Transaction fee and change calculation failed.").c_str());
             }
             
             // Try to reduce change to include necessary fee
@@ -3704,6 +3733,9 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
         wtx.SetTx(MakeTransactionRef(std::move(txNew)));
         
     } // cs_main, cs_wallet
+    
+    if (0 != PreAcceptMempoolTx(wtx, sError))
+        return 1;
     
     LogPrintf("Fee Calculation: Fee:%d Bytes:%u Needed:%d Tgt:%d (requested %d) Reason:\"%s\" Decay %.5f: Estimation: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out) Fail: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out)\n",
               nFeeRet, nBytes, nFeeNeeded, feeCalc.returnedTarget, feeCalc.desiredTarget, StringForFeeReason(feeCalc.reason), feeCalc.est.decay,
@@ -4174,8 +4206,7 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                 // fee to pay for the new output and still meet nFeeNeeded
                 // Or we should have just subtracted fee from recipients and
                 // nFeeNeeded should not have changed
-                sError = _("Transaction fee and change calculation failed");
-                return false;
+                return errorN(1, sError, __func__, _("Transaction fee and change calculation failed.").c_str());
             }
             
             // Try to reduce change to include necessary fee
@@ -4443,6 +4474,9 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
         wtx.SetTx(MakeTransactionRef(std::move(txNew)));
         
     } // cs_main, cs_wallet
+    
+    if (0 != PreAcceptMempoolTx(wtx, sError))
+        return 1;
     
     LogPrintf("Fee Calculation: Fee:%d Bytes:%u Needed:%d Tgt:%d (requested %d) Reason:\"%s\" Decay %.5f: Estimation: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out) Fail: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out)\n",
               nFeeRet, nBytes, nFeeNeeded, feeCalc.returnedTarget, feeCalc.desiredTarget, StringForFeeReason(feeCalc.reason), feeCalc.est.decay,
