@@ -1,4 +1,4 @@
-#include <trafficgraphdata.h>
+#include "trafficgraphdata.h"
 
 const int TrafficGraphData::RangeMinutes[] = {5,10,15,30,60,120,180,360,720,1440};
 const int TrafficGraphData::DESIRED_DATA_SAMPLES = 800;
@@ -26,7 +26,7 @@ TrafficGraphData::TrafficGraphData(GraphRange range)
 {
 }
 
-    void TrafficGraphData::tryAddingSampleToStash(GraphRange range)
+void TrafficGraphData::tryAddingSampleToStash(GraphRange range)
 {
     SampleQueue& queue = sampleMap[range];
     if (queue.size() > DesiredQueueSizes[range]){
@@ -58,8 +58,8 @@ void TrafficGraphData::setLastBytes(quint64 nLastBytesIn, quint64 nLastBytesOut)
 
 bool TrafficGraphData::update(quint64 totalBytesRecv, quint64 totalBytesSent)
 {
-    float inRate = (totalBytesRecv - nLastBytesIn) / 1024.0f * 1000 / SMALLEST_SAMPLE_PERIOD;
-    float outRate = (totalBytesSent - nLastBytesOut) / 1024.0f * 1000 / SMALLEST_SAMPLE_PERIOD;
+    float inRate = totalBytesRecv - nLastBytesIn ;
+    float outRate = totalBytesSent - nLastBytesOut;
     nLastBytesIn = totalBytesRecv;
     nLastBytesOut = totalBytesSent;
     return update(TrafficSample(inRate,outRate));
@@ -233,6 +233,29 @@ TrafficGraphData::SampleQueue TrafficGraphData::getCurrentRangeQueue()
 {
     SampleQueue newQueue;
     getRangeQueue(currentGraphRange).mid(0,DESIRED_DATA_SAMPLES).swap(newQueue);
+    return newQueue;
+}
+
+
+float TrafficGraphData::converSampletoBandwith(float dataAmount){
+    // to base range
+    float result  = dataAmount / RangeMinutes[currentGraphRange] * RangeMinutes[TrafficGraphData::Range_5m];
+    // to B/s
+    result = result * 1000 / SMALLEST_SAMPLE_PERIOD;
+    // to KB/s
+    result = result / 1024;
+
+    return result;
+
+}
+
+TrafficGraphData::SampleQueue TrafficGraphData::getCurrentRangeQueueWithAverageBandwidth(){
+    SampleQueue newQueue;
+    getRangeQueue(currentGraphRange).mid(0,DESIRED_DATA_SAMPLES).swap(newQueue);
+    for(auto& sample : newQueue){
+        sample.in = converSampletoBandwith(sample.in);
+        sample.out = converSampletoBandwith(sample.out);
+    }
     return newQueue;
 }
 

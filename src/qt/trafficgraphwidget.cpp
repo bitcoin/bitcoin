@@ -115,7 +115,7 @@ void TrafficGraphWidget::paintEvent(QPaintEvent *)
         }
     }
 
-    const TrafficGraphData::SampleQueue& queue = trafficGraphData.getCurrentRangeQueue();
+    const TrafficGraphData::SampleQueue& queue = trafficGraphData.getCurrentRangeQueueWithAverageBandwidth();
 
     if(!queue.empty()) {
         QPainterPath pIn;
@@ -140,7 +140,7 @@ void TrafficGraphWidget::updateRates()
 
     if (updated){
         float tmax = DEFAULT_SAMPLE_HEIGHT;
-        Q_FOREACH(const TrafficSample& sample, trafficGraphData.getCurrentRangeQueue()) {
+        Q_FOREACH(const TrafficSample& sample, trafficGraphData.getCurrentRangeQueueWithAverageBandwidth()) {
             if(sample.in > tmax) tmax = sample.in;
             if(sample.out > tmax) tmax = sample.out;
         }

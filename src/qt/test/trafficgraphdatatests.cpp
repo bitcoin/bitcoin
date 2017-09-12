@@ -172,3 +172,52 @@ void TrafficGraphDataTests::clearTests()
     }
     QCOMPARE(trafficGraphData.getCurrentRangeQueue().size(), TrafficGraphData::DESIRED_DATA_SAMPLES);
 }
+
+void TrafficGraphDataTests::averageBandwidthTest()
+{
+    TrafficGraphData trafficGraphData(TrafficGraphData::Range_5m);
+    int step = 384;
+    quint64 totalBytesRecv = 0;
+    quint64 totalBytesSent = 0;
+    for (int i = 1; i <= TrafficGraphData::DESIRED_DATA_SAMPLES; i++){
+        totalBytesRecv += step;
+        totalBytesSent += step;
+        trafficGraphData.update(totalBytesRecv, totalBytesSent);
+    }
+    QCOMPARE(trafficGraphData.getCurrentRangeQueueWithAverageBandwidth().size(), TrafficGraphData::DESIRED_DATA_SAMPLES);
+    for(auto& sample : trafficGraphData.getCurrentRangeQueueWithAverageBandwidth()){
+        QCOMPARE(sample.in, 1.0);
+        QCOMPARE(sample.out, 1.0);
+    }
+
+    trafficGraphData.switchRange(TrafficGraphData::Range_10m);
+
+    QCOMPARE(trafficGraphData.getCurrentRangeQueueWithAverageBandwidth().size(), TrafficGraphData::DESIRED_DATA_SAMPLES / 2);
+    for(auto& sample : trafficGraphData.getCurrentRangeQueueWithAverageBandwidth()){
+        QCOMPARE(sample.in, 1.0);
+        QCOMPARE(sample.out, 1.0);
+    }
+}
+
+void TrafficGraphDataTests::averageBandwidthEvery2EmptyTest()
+{
+    TrafficGraphData trafficGraphData(TrafficGraphData::Range_5m);
+    int step = 384;
+    quint64 totalBytesRecv = 0;
+    quint64 totalBytesSent = 0;
+    for (int i = 1; i <= TrafficGraphData::DESIRED_DATA_SAMPLES; i++){
+        if (i % 2 == 0) {
+            totalBytesRecv += step;
+            totalBytesSent += step;
+        }
+        trafficGraphData.update(totalBytesRecv, totalBytesSent);
+    }
+
+    trafficGraphData.switchRange(TrafficGraphData::Range_10m);
+
+    QCOMPARE(trafficGraphData.getCurrentRangeQueueWithAverageBandwidth().size(), TrafficGraphData::DESIRED_DATA_SAMPLES / 2);
+    for(auto& sample : trafficGraphData.getCurrentRangeQueueWithAverageBandwidth()){
+        QCOMPARE(sample.in, 0.5);
+        QCOMPARE(sample.out, 0.5);
+    }
+}
