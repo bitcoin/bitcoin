@@ -166,7 +166,8 @@ bool CCertDB::ScanCerts(const std::vector<unsigned char>& vchCert, const string 
 					continue;
 				}
 
-				const string& strCategoryLower = boost::algorithm::to_lower(strCategory);
+				string strCategoryLower = strCategory;
+				boost::algorithm::to_lower(strCategoryLower);
 				if(strCategory.size() > 0 && !boost::algorithm::starts_with(stringFromVch(txPos.sCategory), strCategory) && !boost::algorithm::starts_with(stringFromVch(txPos.sCategory), strCategoryLower))
 				{
 					pcursor->Next();
