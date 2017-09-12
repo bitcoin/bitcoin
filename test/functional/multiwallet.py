@@ -18,6 +18,8 @@ class MultiWalletTest(BitcoinTestFramework):
         self.extra_args = [['-wallet=w1', '-wallet=w2', '-wallet=w3']]
 
     def run_test(self):
+        assert_equal(set(self.nodes[0].listwallets()), {"w1", "w2", "w3"})
+
         self.stop_node(0)
 
         # should not initialize if there are duplicate wallets
