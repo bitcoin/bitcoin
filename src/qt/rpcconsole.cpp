@@ -69,6 +69,7 @@ namespace {
 const QStringList historyFilter = QStringList()
     << "importprivkey"
     << "importmulti"
+    << "sethdseed"
     << "signmessagewithprivkey"
     << "signrawtransaction"
     << "walletpassphrase"
