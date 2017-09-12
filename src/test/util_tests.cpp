@@ -20,17 +20,17 @@ BOOST_FIXTURE_TEST_SUITE(util_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(util_criticalsection)
 {
-    CCriticalSection cs;
+    CCriticalSection cs_test;
 
     do {
-        LOCK(cs);
+        LOCK(cs_test);
         break;
 
         BOOST_ERROR("break was swallowed!");
     } while(0);
 
     do {
-        TRY_LOCK(cs, lockTest);
+        TRY_LOCK(cs_test, lockTest);
         if (lockTest)
             break;
 

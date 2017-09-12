@@ -562,14 +562,14 @@ fs::path GetDefaultDataDir()
 #endif
 }
 
-static CCriticalSection csPathCached;
-static fs::path pathCached GUARDED_BY(csPathCached);
-static fs::path pathCachedNetSpecific GUARDED_BY(csPathCached);
+static CCriticalSection cs_pathCached;
+static fs::path pathCached GUARDED_BY(cs_pathCached);
+static fs::path pathCachedNetSpecific GUARDED_BY(cs_pathCached);
 
 const fs::path &GetDataDir(bool fNetSpecific)
 {
 
-    LOCK(csPathCached);
+    LOCK(cs_pathCached);
 
     fs::path &path = fNetSpecific ? pathCachedNetSpecific : pathCached;
 
@@ -600,7 +600,7 @@ const fs::path &GetDataDir(bool fNetSpecific)
 
 void ClearDatadirCache()
 {
-    LOCK(csPathCached);
+    LOCK(cs_pathCached);
 
     pathCached = fs::path();
     pathCachedNetSpecific = fs::path();
