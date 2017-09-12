@@ -857,11 +857,12 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         }
         pool.RemoveStaged(allConflicting, false, MemPoolRemovalReason::REPLACED);
 
-        // This transaction should only count for fee estimation if it isn't a
-        // BIP 125 replacement transaction (may not be widely supported), the
-        // node is not behind, and the transaction is not dependent on any other
-        // transactions in the mempool.
-        bool validForFeeEstimation = !fReplacementTransaction && IsCurrentForFeeEstimation() && pool.HasNoInputsOf(tx);
+        // This transaction should only count for fee estimation if:
+        // - it isn't a BIP 125 replacement transaction (may not be widely supported)
+        // - it's not being readded during a reorg which bypasses typical mempool fee limits
+        // - the node is not behind
+        // - the transaction is not dependent on any other transactions in the mempool
+        bool validForFeeEstimation = !fReplacementTransaction && !bypass_limits && IsCurrentForFeeEstimation() && pool.HasNoInputsOf(tx);
 
         // Store transaction in memory
         pool.addUnchecked(hash, entry, setAncestors, validForFeeEstimation);
