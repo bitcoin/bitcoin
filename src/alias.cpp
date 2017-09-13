@@ -1827,7 +1827,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	
 	vector<unsigned char> vchWitness;
 	if(CheckParam(params, 9))
-		vchWitness = vchFromValue(params[19]);
+		vchWitness = vchFromValue(params[9]);
 
 	CAliasIndex theAlias;
 	if (!GetAlias(vchAlias, theAlias))
