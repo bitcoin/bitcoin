@@ -32,8 +32,8 @@ def get_virtual_size(witness_block):
     return vsize
 
 class TestNode(NodeConnCB):
-    def set_test_params(self):
-        self.num_nodes = 3
+    def __init__(self):
+        super().__init__()
         self.getdataset = set()
 
     def on_getdata(self, conn, message):
