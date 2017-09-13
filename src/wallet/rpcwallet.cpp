@@ -645,10 +645,10 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	CCoinsViewCache inputs(pcoinsTip);
 	if (DecodeAliasTx(wtxNew, op, nOut, vvch))
 	{
-		CheckAliasInputs(wtxNew, op, j, vvch, inputs, fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, true);
+		CheckAliasInputs(wtxNew, op, nOut, vvch, inputs, fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, true);
 		if (!errorMessage.empty())
 			throw runtime_error(errorMessage.c_str());
-		CheckAliasInputs(wtxNew, op, j, vvch, inputs, !fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, true);
+		CheckAliasInputs(wtxNew, op, nOut, vvch, inputs, !fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, true);
 		if (!errorMessage.empty())
 			throw runtime_error(errorMessage.c_str());
 	}
