@@ -363,6 +363,22 @@ static CAddress GetBindAddress(SOCKET sock)
 // if successful, this moves the passed grant to the constructed node
 void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound, const char *pszDest, bool fOneShot, bool fFeeler, bool fAddnode)
 {
+    struct ConnectionAttempt
+    {
+        ConnectionAttempt(CConnman& connman, NewConnection& conn) : m_connman(connman), m_conn(conn) {}
+        ~ConnectionAttempt() {
+            if (!m_successful) {
+                m_connman.OnFailedOutgoingConnection(std::move(m_conn));
+            }
+        }
+        void success() {
+            assert(!m_successful);
+            m_successful = true;
+        }
+        bool m_successful = false;
+        CConnman& m_connman;
+        NewConnection& m_conn;
+    };
     //
     // Initiate outbound network connection
     //
@@ -378,15 +394,15 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     conn.incoming = false;
     conn.whitelisted = false;
 
+    ConnectionAttempt attempt(*this, conn);
+
     if (interruptNet || !fNetworkActive) {
-        OnFailedOutgoingConnection(std::move(conn));
         return;
     }
 
     if (conn.remote_str.empty()) {
         if (IsLocal(conn.remote_addr) || IsBanned(conn.remote_addr) ||
             FindNode(conn.remote_addr.ToStringIPPort())) {
-                OnFailedOutgoingConnection(std::move(conn));
                 return;
         }
 
@@ -395,11 +411,9 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
         if (pnode)
         {
             LogPrintf("Failed to open new connection, already connected\n");
-            OnFailedOutgoingConnection(std::move(conn));
             return;
         }
     } else if (FindNode(conn.remote_str)) {
-        OnFailedOutgoingConnection(std::move(conn));
         return;
     }
 
@@ -416,7 +430,6 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
             conn.remote_addr = CAddress(resolved[GetRand(resolved.size())], NODE_NONE);
             if (!conn.remote_addr.IsValid()) {
                 LogPrint(BCLog::NET, "Resolver returned invalid address %s for %s", conn.remote_addr.ToString(), conn.remote_str);
-                OnFailedOutgoingConnection(std::move(conn));
                 return;
             }
             // It is possible that we already have a connection to the IP/port pszDest resolved to.
@@ -429,7 +442,6 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
             {
                 pnode->MaybeSetAddrName(conn.remote_str);
                 LogPrintf("Failed to open new connection, already connected\n");
-                OnFailedOutgoingConnection(std::move(conn));
                 return;
             }
         }
@@ -443,14 +455,12 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
 
         if (GetProxy(conn.remote_addr.GetNetwork(), proxy)) {
             if (!CreateSocket(proxy.proxy, conn.sock)) {
-                OnFailedOutgoingConnection(std::move(conn));
                 return;
             }
             connected = ConnectThroughProxy(proxy, conn.remote_addr.ToStringIP(), conn.remote_addr.GetPort(), conn.sock, nConnectTimeout, &proxyConnectionFailed);
         } else {
             // no proxy needed (none set for target network)
             if (!CreateSocket(conn.remote_addr, conn.sock)) {
-                OnFailedOutgoingConnection(std::move(conn));
                 return;
             }
             connected = ConnectSocketDirectly(conn.remote_addr, conn.sock, nConnectTimeout);
@@ -462,7 +472,6 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
         }
     } else if (!conn.remote_str.empty() && GetNameProxy(proxy)) {
         if (!CreateSocket(proxy.proxy, conn.sock)) {
-            OnFailedOutgoingConnection(std::move(conn));
             return;
         }
         std::string host;
@@ -472,13 +481,12 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     }
     if (connected) {
         if (IsSelectableSocket(conn.sock)) {
+            attempt.success();
             AddConnection(std::move(conn));
             return;
         }
         LogPrintf("Cannot create connection: non-selectable socket created (fd >= FD_SETSIZE ?)\n");
-        CloseSocket(conn.sock);
     }
-    OnFailedOutgoingConnection(std::move(conn));
 }
 
 void CConnman::DumpBanlist()
