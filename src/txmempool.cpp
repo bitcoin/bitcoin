@@ -541,7 +541,7 @@ void CTxMemPool::removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMem
     RemoveStaged(setAllRemoves, false, MemPoolRemovalReason::REORG);
 }
 
-void CTxMemPool::removeConflicts(const CTransaction &tx)
+void CTxMemPool::removeConflicts(const CTransaction &tx, std::vector<CTransactionRef> &txn_removed)
 {
     // Remove transactions which depend on inputs of tx, recursively
     LOCK(cs);
@@ -552,7 +552,12 @@ void CTxMemPool::removeConflicts(const CTransaction &tx)
             if (txConflict != tx)
             {
                 ClearPrioritisation(txConflict.GetHash());
-                removeRecursive(txConflict, MemPoolRemovalReason::CONFLICT);
+                setEntries set_removes;
+                calculateRemoveRecursive(txConflict, set_removes);
+                for (const txiter& it : set_removes) {
+                    txn_removed.push_back(it->GetSharedTx());
+                }
+                RemoveStaged(set_removes, false, MemPoolRemovalReason::CONFLICT);
             }
         }
     }
@@ -575,6 +580,8 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigne
     }
     // Before the txs in the new block have been removed from the mempool, update policy estimates
     if (minerPolicyEstimator) {minerPolicyEstimator->processBlock(nBlockHeight, entries);}
+    std::vector<CTransactionRef> txn_conflicts, txn_removed_in_block;
+    txn_removed_in_block.reserve(vtx.size());
     for (const auto& tx : vtx)
     {
         txiter it = mapTx.find(tx->GetHash());
@@ -582,8 +589,9 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigne
             setEntries stage;
             stage.insert(it);
             RemoveStaged(stage, true, MemPoolRemovalReason::BLOCK);
+            txn_removed_in_block.push_back(tx); // Use the block's copy as witness may be different
         }
-        removeConflicts(*tx);
+        removeConflicts(*tx, txn_conflicts);
         ClearPrioritisation(tx->GetHash());
     }
     lastRollingFeeUpdate = GetTime();
