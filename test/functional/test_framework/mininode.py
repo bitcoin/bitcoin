@@ -1896,6 +1896,7 @@ class NetworkThread(threading.Thread):
                     disconnected.append(obj)
             [ obj.handle_close() for obj in disconnected ]
             asyncore.loop(0.1, use_poll=True, map=mininode_socket_map, count=1)
+        logger.debug("Network thread closing")
 
 def network_thread_start():
     """Start the network thread."""
