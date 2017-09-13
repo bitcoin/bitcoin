@@ -305,6 +305,20 @@ private:
         ListenSocket(SOCKET socket_, bool whitelisted_) : socket(socket_), whitelisted(whitelisted_) {}
     };
 
+    struct NewConnection
+    {
+        SOCKET sock;
+        CAddress remote_addr;
+        std::string remote_str;
+        CSemaphoreGrant* outbound_grant;
+        bool incoming;
+        bool count_failure;
+        bool oneshot;
+        bool feeler;
+        bool addnode;
+        bool whitelisted;
+    };
+
     bool BindListenPort(const CService &bindAddr, std::string& strError, bool fWhitelisted = false);
     bool Bind(const CService &addr, unsigned int flags);
     bool InitBinds(const std::vector<CService>& binds, const std::vector<CService>& whiteBinds);
@@ -325,7 +339,7 @@ private:
     CNode* FindNode(const CService& addr);
 
     bool AttemptToEvictConnection();
-    CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure);
+    CNode* ConnectNode(NewConnection conn);
     bool IsWhitelistedRange(const CNetAddr &addr);
 
     void DeleteNode(CNode* pnode);

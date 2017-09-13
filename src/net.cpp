@@ -360,14 +360,14 @@ static CAddress GetBindAddress(SOCKET sock)
     return addr_bind;
 }
 
-CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure)
+CNode* CConnman::ConnectNode(NewConnection conn)
 {
-    if (pszDest == nullptr) {
-        if (IsLocal(addrConnect))
+    if (conn.remote_str.empty()) {
+        if (IsLocal(conn.remote_addr))
             return nullptr;
 
         // Look for an existing connection
-        CNode* pnode = FindNode((CService)addrConnect);
+        CNode* pnode = FindNode((CService)conn.remote_addr);
         if (pnode)
         {
             LogPrintf("Failed to open new connection, already connected\n");
@@ -377,17 +377,17 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
 
     /// debug print
     LogPrint(BCLog::NET, "trying connection %s lastseen=%.1fhrs\n",
-        pszDest ? pszDest : addrConnect.ToString(),
-        pszDest ? 0.0 : (double)(GetAdjustedTime() - addrConnect.nTime)/3600.0);
+        !conn.remote_str.empty() ? conn.remote_str : conn.remote_addr.ToString(),
+        !conn.remote_str.empty() ? 0.0 : (double)(GetAdjustedTime() - conn.remote_addr.nTime)/3600.0);
 
     // Resolve
     const int default_port = Params().GetDefaultPort();
-    if (pszDest) {
+    if (!conn.remote_str.empty()) {
         std::vector<CService> resolved;
-        if (Lookup(pszDest, resolved,  default_port, fNameLookup && !HaveNameProxy(), 256) && !resolved.empty()) {
-            addrConnect = CAddress(resolved[GetRand(resolved.size())], NODE_NONE);
-            if (!addrConnect.IsValid()) {
-                LogPrint(BCLog::NET, "Resolver returned invalid address %s for %s", addrConnect.ToString(), pszDest);
+        if (Lookup(conn.remote_str.c_str(), resolved,  default_port, fNameLookup && !HaveNameProxy(), 256) && !resolved.empty()) {
+            conn.remote_addr = CAddress(resolved[GetRand(resolved.size())], NODE_NONE);
+            if (!conn.remote_addr.IsValid()) {
+                LogPrint(BCLog::NET, "Resolver returned invalid address %s for %s", conn.remote_addr.ToString(), conn.remote_str);
                 return nullptr;
             }
             // It is possible that we already have a connection to the IP/port pszDest resolved to.
@@ -395,10 +395,10 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
             // Also store the name we used to connect in that CNode, so that future FindNode() calls to that
             // name catch this early.
             LOCK(cs_vNodes);
-            CNode* pnode = FindNode((CService)addrConnect);
+            CNode* pnode = FindNode((CService)conn.remote_addr);
             if (pnode)
             {
-                pnode->MaybeSetAddrName(std::string(pszDest));
+                pnode->MaybeSetAddrName(conn.remote_str);
                 LogPrintf("Failed to open new connection, already connected\n");
                 return nullptr;
             }
@@ -407,51 +407,59 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
 
     // Connect
     bool connected = false;
-    SOCKET hSocket;
     proxyType proxy;
-    if (addrConnect.IsValid()) {
+    if (conn.remote_addr.IsValid()) {
         bool proxyConnectionFailed = false;
 
-        if (GetProxy(addrConnect.GetNetwork(), proxy)) {
-            if (!CreateSocket(proxy.proxy, hSocket)) {
+        if (GetProxy(conn.remote_addr.GetNetwork(), proxy)) {
+            if (!CreateSocket(proxy.proxy, conn.sock)) {
                 return nullptr;
             }
-            connected = ConnectThroughProxy(proxy, addrConnect.ToStringIP(), addrConnect.GetPort(), hSocket, nConnectTimeout, &proxyConnectionFailed);
+            connected = ConnectThroughProxy(proxy, conn.remote_addr.ToStringIP(), conn.remote_addr.GetPort(), conn.sock, nConnectTimeout, &proxyConnectionFailed);
         } else {
             // no proxy needed (none set for target network)
-            if (!CreateSocket(addrConnect, hSocket)) {
+            if (!CreateSocket(conn.remote_addr, conn.sock)) {
                 return nullptr;
             }
-            connected = ConnectSocketDirectly(addrConnect, hSocket, nConnectTimeout);
+            connected = ConnectSocketDirectly(conn.remote_addr, conn.sock, nConnectTimeout);
         }
         if (!proxyConnectionFailed) {
             // If a connection to the node was attempted, and failure (if any) is not caused by a problem connecting to
             // the proxy, mark this as an attempt.
-            addrman.Attempt(addrConnect, fCountFailure);
+            addrman.Attempt(conn.remote_addr, conn.count_failure);
         }
-    } else if (pszDest && GetNameProxy(proxy)) {
-        if (!CreateSocket(proxy.proxy, hSocket)) {
+    } else if (!conn.remote_str.empty() && GetNameProxy(proxy)) {
+        if (!CreateSocket(proxy.proxy, conn.sock)) {
             return nullptr;
         }
         std::string host;
         int port = default_port;
-        SplitHostPort(std::string(pszDest), port, host);
-        connected = ConnectThroughProxy(proxy, host, port, hSocket, nConnectTimeout, nullptr);
+        SplitHostPort(conn.remote_str, port, host);
+        connected = ConnectThroughProxy(proxy, host, port, conn.sock, nConnectTimeout, nullptr);
     }
     if (connected) {
-        if (!IsSelectableSocket(hSocket)) {
+        if (!IsSelectableSocket(conn.sock)) {
             LogPrintf("Cannot create connection: non-selectable socket created (fd >= FD_SETSIZE ?)\n");
-            CloseSocket(hSocket);
+            CloseSocket(conn.sock);
             return nullptr;
         }
 
         // Add node
         NodeId id = GetNewNodeId();
         uint64_t nonce = GetDeterministicRandomizer(RANDOMIZER_ID_LOCALHOSTNONCE).Write(id).Finalize();
-        CAddress addr_bind = GetBindAddress(hSocket);
-        CNode* pnode = new CNode(id, nLocalServices, GetBestHeight(), hSocket, addrConnect, CalculateKeyedNetGroup(addrConnect), nonce, addr_bind, pszDest ? pszDest : "", false);
-        pnode->nServicesExpected = ServiceFlags(addrConnect.nServices & nRelevantServices);
+        CAddress addr_bind = GetBindAddress(conn.sock);
+        CNode* pnode = new CNode(id, nLocalServices, GetBestHeight(), conn.sock, conn.remote_addr, CalculateKeyedNetGroup(conn.remote_addr), nonce, addr_bind, conn.remote_str, false);
+        pnode->nServicesExpected = ServiceFlags(conn.remote_addr.nServices & nRelevantServices);
         pnode->AddRef();
+
+        if (conn.outbound_grant)
+            conn.outbound_grant->MoveTo(pnode->grantOutbound);
+        if (conn.oneshot)
+            pnode->fOneShot = true;
+        if (conn.feeler)
+            pnode->fFeeler = true;
+        if (conn.addnode)
+            pnode->fAddnode = true;
 
         return pnode;
     }
@@ -1978,18 +1986,21 @@ bool CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     } else if (FindNode(std::string(pszDest)))
         return false;
 
-    CNode* pnode = ConnectNode(addrConnect, pszDest, fCountFailure);
+    NewConnection conn;
+    conn.sock = INVALID_SOCKET;
+    conn.remote_addr = addrConnect;
+    conn.remote_str = pszDest ? pszDest : "";
+    conn.count_failure = fCountFailure;
+    conn.outbound_grant = grantOutbound;
+    conn.oneshot = fOneShot;
+    conn.feeler = fFeeler;
+    conn.addnode = fAddnode;
+    conn.incoming = false;
+    conn.whitelisted = false;
 
+    CNode* pnode = ConnectNode(std::move(conn));
     if (!pnode)
         return false;
-    if (grantOutbound)
-        grantOutbound->MoveTo(pnode->grantOutbound);
-    if (fOneShot)
-        pnode->fOneShot = true;
-    if (fFeeler)
-        pnode->fFeeler = true;
-    if (fAddnode)
-        pnode->fAddnode = true;
 
     m_msgproc->InitializeNode(pnode);
     {
