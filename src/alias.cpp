@@ -804,7 +804,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					if(theAlias.vchPasswordSalt.empty())
 						theAlias.vchPasswordSalt = dbAlias.vchPasswordSalt;
 					// can't change alias peg name once it is set, only update it to latest txid
-					if (!theAlias.aliasPegTuple.empty() && theAlias.aliasPegTuple.first != dbAlias.aliasPegTuple.first)
+					if (!theAlias.aliasPegTuple.IsNull() && theAlias.aliasPegTuple.first != dbAlias.aliasPegTuple.first)
 						theAlias.aliasPegTuple = dbAlias.aliasPegTuple;
 
 					if(theAlias.vchAddress.empty())

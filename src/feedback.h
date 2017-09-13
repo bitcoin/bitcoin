@@ -49,7 +49,9 @@ public:
 		first.clear();
 		third.clear();
 	}
-
+	void IsNull() {
+		return (first.empty() && second.IsNull() && third.empty());
+	}
 };
 class CFeedback {
 public:

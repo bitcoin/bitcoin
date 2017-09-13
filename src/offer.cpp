@@ -3125,7 +3125,7 @@ void OfferTxToJSON(const int op, const std::vector<unsigned char> &vchData, cons
 bool COfferLinkWhitelist::GetLinkEntryByHash(const std::vector<unsigned char> &ahash, COfferLinkWhitelistEntry &entry, bool strict) const {
 	entry.SetNull();
 	for (unsigned int i = 0; i<entries.size(); i++) {
-		if (entries[i].aliasLinkVchRand == ahash)) {
+		if (entries[i].aliasLinkVchRand == ahash) {
 			entry = entries[i];
 			return true;
 		}
