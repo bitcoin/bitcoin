@@ -1536,6 +1536,7 @@ class NodeConnCB(object):
             except:
                 print("ERROR delivering %s (%s)" % (repr(message),
                                                     sys.exc_info()[0]))
+                raise
 
     def set_deliver_sleep_time(self, value):
         with mininode_lock:
@@ -1744,13 +1745,10 @@ class NodeConn(asyncore.dispatcher):
         self.cb.on_close(self)
 
     def handle_read(self):
-        try:
-            t = self.recv(8192)
-            if len(t) > 0:
-                self.recvbuf += t
-                self.got_data()
-        except:
-            pass
+        t = self.recv(8192)
+        if len(t) > 0:
+            self.recvbuf += t
+            self.got_data()
 
     def readable(self):
         return True
@@ -1816,8 +1814,10 @@ class NodeConn(asyncore.dispatcher):
                     self.got_message(t)
                 else:
                     logger.warning("Received unknown command from %s:%d: '%s' %s" % (self.dstaddr, self.dstport, str(command), repr(msg)))
+                    raise ValueError("Unknown command: '%s'" % (command))
         except Exception as e:
             logger.exception('got_data:', repr(e))
+            raise
 
     def send_message(self, message, pushbuf=False):
         if self.state != "connected" and not pushbuf:
