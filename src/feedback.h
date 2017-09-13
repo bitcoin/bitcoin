@@ -44,12 +44,12 @@ public:
 	inline bool operator!=(const CNameTXIDTuple& other) const {
 		return (this->first != other.first || this->second != other.second || this->third != other.third);
 	}
-	void SetNull() {
+	inline void SetNull() {
 		second.SetNull();
 		first.clear();
 		third.clear();
 	}
-	void IsNull() {
+	inline bool IsNull() {
 		return (first.empty() && second.IsNull() && third.empty());
 	}
 };
