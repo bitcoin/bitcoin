@@ -246,16 +246,16 @@ BOOST_AUTO_TEST_CASE (generate_escrow_linked_release_with_peg_update)
 	EscrowRelease("node1", "buyer", guid);
 	// update the EUR peg twice before claiming escrow
 	string data = "{\\\"rates\\\":[{\\\"currency\\\":\\\"USD\\\",\\\"rate\\\":2690.1,\\\"precision\\\":2},{\\\"currency\\\":\\\"EUR\\\",\\\"rate\\\":269.2,\\\"precision\\\":2},{\\\"currency\\\":\\\"GBP\\\",\\\"rate\\\":2697.3,\\\"precision\\\":2},{\\\"currency\\\":\\\"CAD\\\",\\\"rate\\\":2698.0,\\\"precision\\\":2},{\\\"currency\\\":\\\"BTC\\\",\\\"rate\\\":100000.0,\\\"precision\\\":8},{\\\"currency\\\":\\\"SYS\\\",\\\"rate\\\":1.0,\\\"precision\\\":2}]}";
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate sysrates.peg sysrates.peg " + data));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate sysrates.peg " + data));
 	GenerateBlocks(5);
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5, "node3");
 	data = "{\\\"rates\\\":[{\\\"currency\\\":\\\"USD\\\",\\\"rate\\\":2690.1,\\\"precision\\\":2},{\\\"currency\\\":\\\"EUR\\\",\\\"rate\\\":218.2,\\\"precision\\\":2},{\\\"currency\\\":\\\"GBP\\\",\\\"rate\\\":2697.3,\\\"precision\\\":2},{\\\"currency\\\":\\\"CAD\\\",\\\"rate\\\":2698.0,\\\"precision\\\":2},{\\\"currency\\\":\\\"BTC\\\",\\\"rate\\\":100000.0,\\\"precision\\\":8},{\\\"currency\\\":\\\"SYS\\\",\\\"rate\\\":1.0,\\\"precision\\\":2}]}";
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate sysrates.peg sysrates.peg " + data));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate sysrates.peg " + data));
 	// ensure dependent services don't expire
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate sysrates.peg buyeralias33 data"));
-	BOOST_CHECK_NO_THROW(CallRPC("node2", "aliasupdate sysrates.peg selleralias33 data"));
-	BOOST_CHECK_NO_THROW(CallRPC("node3", "aliasupdate sysrates.peg arbiteralias333 data"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate buyeralias33 data"));
+	BOOST_CHECK_NO_THROW(CallRPC("node2", "aliasupdate selleralias33 data"));
+	BOOST_CHECK_NO_THROW(CallRPC("node3", "aliasupdate arbiteralias333 data"));
 	GenerateBlocks(5);
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5, "node3");
@@ -264,7 +264,7 @@ BOOST_AUTO_TEST_CASE (generate_escrow_linked_release_with_peg_update)
 	EscrowClaimRelease("node2", guid);
 	// restore EUR peg
 	data = "{\\\"rates\\\":[{\\\"currency\\\":\\\"USD\\\",\\\"rate\\\":2690.1,\\\"precision\\\":2},{\\\"currency\\\":\\\"EUR\\\",\\\"rate\\\":2695.2,\\\"precision\\\":2},{\\\"currency\\\":\\\"GBP\\\",\\\"rate\\\":2697.3,\\\"precision\\\":2},{\\\"currency\\\":\\\"CAD\\\",\\\"rate\\\":2698.0,\\\"precision\\\":2},{\\\"currency\\\":\\\"BTC\\\",\\\"rate\\\":100000.0,\\\"precision\\\":8},{\\\"currency\\\":\\\"SYS\\\",\\\"rate\\\":1.0,\\\"precision\\\":2}]}";
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate sysrates.peg sysrates.peg " + data));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate sysrates.peg " + data));
 	GenerateBlocks(5);
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5, "node3");

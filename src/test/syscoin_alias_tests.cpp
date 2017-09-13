@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
 	BOOST_CHECK(hex_str.empty());
 	// can do 5 free updates, 1 above and 4 below
 	for(unsigned int i=0;i<MAX_ALIAS_UPDATES_PER_BLOCK-1;i++)
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate sysrates.peg jagmultiupdate changedata1"));
+		BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate jagmultiupdate changedata1"));
 
 	GenerateBlocks(10, "node1");
 	GenerateBlocks(10, "node1");
@@ -111,15 +111,15 @@ BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
 
 	// new owner can update
 	for(unsigned int i=0;i<MAX_ALIAS_UPDATES_PER_BLOCK;i++)
-		BOOST_CHECK_NO_THROW(CallRPC("node2", "aliasupdate sysrates.peg jagmultiupdate changedata4"));
+		BOOST_CHECK_NO_THROW(CallRPC("node2", "aliasupdate jagmultiupdate changedata4"));
 
 	// after generation MAX_ALIAS_UPDATES_PER_BLOCK utxo's should be available
 	GenerateBlocks(10, "node2");
 	GenerateBlocks(10, "node2");
 	for(unsigned int i=0;i<MAX_ALIAS_UPDATES_PER_BLOCK;i++)
-		BOOST_CHECK_NO_THROW(CallRPC("node2", "aliasupdate sysrates.peg jagmultiupdate changedata5"));
+		BOOST_CHECK_NO_THROW(CallRPC("node2", "aliasupdate agmultiupdate changedata5"));
 
-	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate sysrates.peg jagmultiupdate changedata6"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate jagmultiupdate changedata6"), runtime_error);
 	GenerateBlocks(10, "node2");
 	GenerateBlocks(10, "node2");
 	// transfer sends utxo's to new owner
@@ -129,9 +129,9 @@ BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
 	hex_str = AliasTransfer("node2", "jagmultiupdate", "node1", "changedata8");
 	BOOST_CHECK(!hex_str.empty());
 	for(unsigned int i=0;i<MAX_ALIAS_UPDATES_PER_BLOCK;i++)
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate sysrates.peg jagmultiupdate changedata9"));
+		BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate jagmultiupdate changedata9"));
 	
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate sysrates.peg jagmultiupdate changedata10"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate jagmultiupdate changedata10"), runtime_error);
 	GenerateBlocks(10, "node1");
 	GenerateBlocks(10, "node1");
 	hex_str = AliasUpdate("node1", "jagmultiupdate", "changeddata11", "privdata");
@@ -233,11 +233,11 @@ BOOST_AUTO_TEST_CASE (generate_aliaspay)
 	// update aliases afterwards, there should be MAX_ALIAS_UPDATES_PER_BLOCK UTXOs again after update
 	// alias1 was only funded with 10 sys which gets used in the 5th update, 1 was used above in aliasupdate, while alias2/alias3 have more fund utxos so they can do more updates without a block
 	for (unsigned int i = 0; i<MAX_ALIAS_UPDATES_PER_BLOCK-1; i++)
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate sysrates.peg alias1.aliaspay.tld changedata1"));
+		BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate alias1.aliaspay.tld changedata1"));
 	for (unsigned int i = 0; i<MAX_ALIAS_UPDATES_PER_BLOCK; i++)
-		BOOST_CHECK_NO_THROW(CallRPC("node2", "aliasupdate sysrates.peg alias2.aliaspay.tld changedata2"));
+		BOOST_CHECK_NO_THROW(CallRPC("node2", "aliasupdate alias2.aliaspay.tld changedata2"));
 	for (unsigned int i = 0; i<MAX_ALIAS_UPDATES_PER_BLOCK; i++)
-		BOOST_CHECK_NO_THROW(CallRPC("node3", "aliasupdate sysrates.peg alias3.aliaspay.tld changedata3"));
+		BOOST_CHECK_NO_THROW(CallRPC("node3", "aliasupdate alias3.aliaspay.tld changedata3"));
 	GenerateBlocks(10, "node1");
 	GenerateBlocks(10, "node2");
 	GenerateBlocks(10, "node3");
@@ -736,7 +736,7 @@ BOOST_AUTO_TEST_CASE (generate_aliaspruning)
 	BOOST_CHECK_EQUAL(AliasFilter("node2", "aliasprune1"), true);
 	ExpireAlias("aliasprune1");
 	// now it should be expired
-	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate sysrates.peg aliasprune1 newdata2 " + HexStr(vchFromString("privatedata"))), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate aliasprune1 newdata2 " + HexStr(vchFromString("privatedata"))), runtime_error);
 
 	BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasprune1"), true);
 	BOOST_CHECK_EQUAL(AliasFilter("node2", "aliasprune1"), true);
@@ -870,11 +870,11 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	BOOST_CHECK(pubKey.IsFullyValid());
 	CSyscoinAddress aliasAddress(pubKey.GetID());
 	// should fail: alias update on expired alias
-	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate sysrates.peg aliasexpirednode2 newdata1"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate aliasexpirednode2 newdata1"), runtime_error);
 	// should fail: alias transfer from expired alias
-	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate sysrates.peg aliasexpirednode2 changedata1 \"\" " + aliasAddress.ToString()), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate aliasexpirednode2 changedata1 \"\" " + aliasAddress.ToString()), runtime_error);
 	// should fail: alias transfer to another non-expired alias address
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate sysrates.peg aliasexpire2 changedata1 \"\" " + aliasexpire1address), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate aliasexpire2 changedata1 \"\" " + aliasexpire1address), runtime_error);
 
 	// should fail: link to an expired alias in offer
 	BOOST_CHECK_THROW(CallRPC("node2", "offerlink aliasexpirednode2 " + offerguid + " 5 newdetails"), runtime_error);
@@ -886,8 +886,8 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	// should fail: new escrow with expired alias
 	BOOST_CHECK_THROW(CallRPC("node2", "escrownew aliasexpirednode2 " + offerguid + " 1 " + " aliasexpire"), runtime_error);
 
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate sysrates.peg aliasexpire newdata1"));
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate sysrates.peg aliasexpire2 newdata1"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate aliasexpire newdata1"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate aliasexpire2 newdata1"));
 	GenerateBlocks(5, "node1");
 	
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + certgoodguid + " titlenew privdata pubdata"));
@@ -921,13 +921,13 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 
 	BOOST_CHECK_NO_THROW(AliasNew("node2", "aliasexpire2", "somedata"));
 	// should fail: alias update by old owner shouldn't work after renewal by someone else
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate sysrates.peg aliasexpire2 changedata1 \"\" " + aliasexpire2node2address));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate aliasexpire2 changedata1 \"\" " + aliasexpire2node2address));
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo aliasexpire2"));
 	// data hasn't changed
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str(), "somedata");
 
 	// should pass: alias transfer to another expired alias address
-	BOOST_CHECK_NO_THROW(CallRPC("node2", "aliasupdate sysrates.peg aliasexpire2 changedata1 \"\" " + aliasexpire2node2address));
+	BOOST_CHECK_NO_THROW(CallRPC("node2", "aliasupdate aliasexpire2 changedata1 \"\" " + aliasexpire2node2address));
 	GenerateBlocks(5);
 	BOOST_CHECK(aliasexpirenode2address != AliasNew("node2", "aliasexpirednode2", "somedata"));
 

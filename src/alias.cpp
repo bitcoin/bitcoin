@@ -803,6 +803,9 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						theAlias.vchEncryptionPublicKey = dbAlias.vchEncryptionPublicKey;
 					if(theAlias.vchPasswordSalt.empty())
 						theAlias.vchPasswordSalt = dbAlias.vchPasswordSalt;
+					// can't change alias peg name once it is set, only update it to latest txid
+					if (!theAlias.aliasPegTuple.empty() && theAlias.aliasPegTuple.first != dbAlias.aliasPegTuple.first)
+						theAlias.aliasPegTuple = dbAlias.aliasPegTuple;
 
 					if(theAlias.vchAddress.empty())
 						theAlias.vchAddress = dbAlias.vchAddress;
@@ -1765,9 +1768,9 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue aliasupdate(const UniValue& params, bool fHelp) {
-	if (fHelp || 2 > params.size() || 11 < params.size())
+	if (fHelp || 1 > params.size() || 10 < params.size())
 		throw runtime_error(
-		"aliasupdate <aliaspeg> <aliasname> [public value] [private value] [address] [accept_transfers=true] [expire_timestamp] [password_salt] [encryption_privatekey] [encryption_publickey] [witness]\n"
+		"aliasupdate <aliasname> [public value] [private value] [address] [accept_transfers=true] [expire_timestamp] [password_salt] [encryption_privatekey] [encryption_publickey] [witness]\n"
 						"Update and possibly transfer an alias.\n"
 						"<aliasname> alias name.\n"
 						"<public_value> alias public profile data, 1024 chars max.\n"
@@ -1780,9 +1783,6 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 						"<encryption_publickey> Public key used for encryption/decryption of private data related to this alias. Useful if you are changing pub/priv keypair for encryption on this alias.\n"						
 						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"	
 						+ HelpRequiringPassphrase());
-	vector<unsigned char> vchAliasPeg = vchFromString(params[0].get_str());
-	if(vchAliasPeg.empty())
-		vchAliasPeg = vchFromString("sysrates.peg");
 	vector<unsigned char> vchAlias = vchFromString(params[1].get_str());
 	string strPrivateValue = "";
 	string strPublicValue = "";
@@ -1834,7 +1834,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5518 - " + _("Could not find an alias with this name"));
 
 	CAliasIndex pegAlias;
-	if (!GetAlias(vchAliasPeg, pegAlias))
+	if (!GetAlias(theAlias.aliasPegTuple.first, pegAlias))
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5508 - " + _("The alias peg does not exist"));
 
 	CAliasIndex copyAlias = theAlias;
