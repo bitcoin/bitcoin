@@ -1601,16 +1601,32 @@ CAmount CHDWallet::GetCredit(const CTransaction &tx, const isminefilter &filter)
         if (!MoneyRange(nCredit))
             throw std::runtime_error(std::string(__func__) + ": value out of range");
     };
-    
-    // Legacy txns
-    for (const auto &txout : tx.vout)
-    {
-        nCredit += CWallet::GetCredit(txout, filter);
-        if (!MoneyRange(nCredit))
-            throw std::runtime_error(std::string(__func__) + ": value out of range");
-    }
     return nCredit;
 }
+
+void CHDWallet::GetCredit(const CTransaction &tx, CAmount &nSpendable, CAmount &nWatchOnly) const
+{
+    nSpendable = 0;
+    nWatchOnly = 0;
+    for (const auto txout : tx.vpout)
+    {
+        if (!txout->IsType(OUTPUT_STANDARD))
+            continue;
+        
+        isminetype ismine = IsMine(txout.get());
+        
+        if (ismine & ISMINE_SPENDABLE)
+            nSpendable += txout->GetValue();
+        if (ismine & ISMINE_WATCH_ONLY)
+            nWatchOnly += txout->GetValue();
+    };
+    
+    if (!MoneyRange(nSpendable))
+        throw std::runtime_error(std::string(__func__) + ": value out of range");
+    if (!MoneyRange(nWatchOnly))
+            throw std::runtime_error(std::string(__func__) + ": value out of range");
+};
+
 
 bool CHDWallet::InMempool(const uint256 &hash) const
 {
@@ -1853,8 +1869,8 @@ CAmount CHDWallet::GetStaked()
             && pcoin->GetDepthInMainChainCached() > 0 // checks for hashunset
             && pcoin->GetBlocksToMaturity() > 0)
         {
-            nTotal += CHDWallet::GetCredit(*pcoin, ISMINE_ALL);
-        }
+            nTotal += CHDWallet::GetCredit(*pcoin, ISMINE_SPENDABLE);
+        };
     };
     return nTotal;
 };
@@ -1931,7 +1947,10 @@ bool CHDWallet::GetBalances(CHDWalletBalances &bal)
             && pcoin->GetDepthInMainChainCached() > 0 // checks for hashunset
             && pcoin->GetBlocksToMaturity() > 0)
         {
-            bal.nPartStaked += CHDWallet::GetCredit(*pcoin, ISMINE_ALL);
+            CAmount nSpendable, nWatchOnly;
+            CHDWallet::GetCredit(*pcoin, nSpendable, nWatchOnly);
+            bal.nPartStaked += nSpendable;
+            bal.nPartWatchOnlyStaked += nWatchOnly;
         };
         
         if (pcoin->IsTrusted())

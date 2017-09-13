@@ -161,7 +161,7 @@ OverviewPage::~OverviewPage()
 
 void OverviewPage::setBalance(const CAmount& balance, const CAmount& staked,
     const CAmount& blindBalance,const CAmount& anonBalance, const CAmount& unconfirmedBalance,
-    const CAmount& immatureBalance, const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance)
+    const CAmount& immatureBalance, const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance, const CAmount& watchStakedBalance)
 {
     int unit = walletModel->getOptionsModel()->getDisplayUnit();
     currentBalance = balance;
@@ -173,6 +173,7 @@ void OverviewPage::setBalance(const CAmount& balance, const CAmount& staked,
     currentWatchOnlyBalance = watchOnlyBalance;
     currentWatchUnconfBalance = watchUnconfBalance;
     currentWatchImmatureBalance = watchImmatureBalance;
+    currentWatchStakedBalance = watchStakedBalance;
     ui->labelBalance->setText(BitcoinUnits::formatWithUnit(unit, balance, false, BitcoinUnits::separatorAlways));
     ui->labelStaked->setText(BitcoinUnits::formatWithUnit(unit, staked, false, BitcoinUnits::separatorAlways));
     ui->labelBlindBalance->setText(BitcoinUnits::formatWithUnit(unit, blindBalance, false, BitcoinUnits::separatorAlways));
@@ -183,7 +184,8 @@ void OverviewPage::setBalance(const CAmount& balance, const CAmount& staked,
     ui->labelWatchAvailable->setText(BitcoinUnits::formatWithUnit(unit, watchOnlyBalance, false, BitcoinUnits::separatorAlways));
     ui->labelWatchPending->setText(BitcoinUnits::formatWithUnit(unit, watchUnconfBalance, false, BitcoinUnits::separatorAlways));
     ui->labelWatchImmature->setText(BitcoinUnits::formatWithUnit(unit, watchImmatureBalance, false, BitcoinUnits::separatorAlways));
-    ui->labelWatchTotal->setText(BitcoinUnits::formatWithUnit(unit, watchOnlyBalance + watchUnconfBalance + watchImmatureBalance, false, BitcoinUnits::separatorAlways));
+    ui->labelWatchStaked->setText(BitcoinUnits::formatWithUnit(unit, watchStakedBalance, false, BitcoinUnits::separatorAlways));
+    ui->labelWatchTotal->setText(BitcoinUnits::formatWithUnit(unit, watchOnlyBalance + watchUnconfBalance + watchImmatureBalance + watchStakedBalance, false, BitcoinUnits::separatorAlways));
 
     // only show immature (newly mined) balance if it's non-zero, so as not to complicate things
     // for the non-mining users
@@ -216,6 +218,7 @@ void OverviewPage::updateWatchOnlyLabels(bool showWatchOnly)
     ui->lineWatchBalance->setVisible(showWatchOnly);    // show watch-only balance separator line
     ui->labelWatchAvailable->setVisible(showWatchOnly); // show watch-only available balance
     ui->labelWatchPending->setVisible(showWatchOnly);   // show watch-only pending balance
+    ui->labelWatchStaked->setVisible(showWatchOnly);    // show watch-only staked balance
     ui->labelWatchTotal->setVisible(showWatchOnly);     // show watch-only total balance
 
     if (!showWatchOnly)
@@ -251,7 +254,7 @@ void OverviewPage::setWalletModel(WalletModel *model)
         ui->listTransactions->setModelColumn(TransactionTableModel::ToAddress);
 
         // Keep up to date with wallet
-        connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(setBalance(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)));
+        connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(setBalance(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)));
         model->checkBalanceChanged();
         
         connect(walletModel->getOptionsModel(), SIGNAL(reserveBalanceChanged(CAmount)), this, SLOT(setReservedBalance(CAmount)));
@@ -274,7 +277,7 @@ void OverviewPage::updateDisplayUnit()
         if(currentBalance != -1)
         {
             setBalance(currentBalance, currentStaked, currentBlindBalance, currentAnonBalance, currentUnconfirmedBalance, currentImmatureBalance,
-                       currentWatchOnlyBalance, currentWatchUnconfBalance, currentWatchImmatureBalance);
+                       currentWatchOnlyBalance, currentWatchUnconfBalance, currentWatchImmatureBalance, currentWatchStakedBalance);
             setReservedBalance(currentReservedBalance);
         };
         

@@ -98,12 +98,9 @@ typedef std::vector<unsigned char> valtype; // script/ismine.cpp
 
 void SecMsgBucket::hashBucket()
 {
-    LogPrint(BCLog::SMSG, "SecMsgBucket::hashBucket()\n");
+    void *state = XXH32_init(1);
 
     std::set<SecMsgToken>::iterator it;
-
-    void* state = XXH32_init(1);
-
     for (it = setTokens.begin(); it != setTokens.end(); ++it)
     {
         XXH32_update(state, it->sample, 8);
@@ -322,13 +319,13 @@ void ThreadSecureMsgPow()
 std::string SecureMsgGetHelpString(bool showDebug)
 {
     std::string strUsage;
-    
+
     strUsage += HelpMessageGroup(_("Secure messaging options:"));
     strUsage += HelpMessageOpt("-smsg", _("Enable secure messaging (default: true)"));
     strUsage += HelpMessageOpt("-debugsmsg", _("Show extra debug messages (default: false)"));
     strUsage += HelpMessageOpt("-smsgscanchain", _("Scan the block chain for public key addresses on startup (default: false)"));
     strUsage += HelpMessageOpt("-smsgnotify=<cmd>", _("Execute command when a message is received (%s in cmd is replaced by receiving address)"));
-    
+
     return strUsage;
 };
 
@@ -670,9 +667,7 @@ int SecureMsgWriteIni()
         };
     };
 
-
     fclose(fp);
-
 
     try {
         fs::path finalpath = GetDataDir() / "smsg.ini";
@@ -696,8 +691,6 @@ bool SecureMsgStart(CWallet *pwallet, bool fDontStart, bool fScanChain)
     if (pwalletSmsg)
         return error("%s: pwalletSmsg is already set.", __func__);
     pwalletSmsg = pwallet;
-    //if (!(pwalletSmsg = dynamic_cast<CHDWallet*>(pwallet)))
-    //    return errorN(0, "%s: pwalletMain is not an instance of class CHDWallet.", __func__);
 
     fSecMsgEnabled = true;
     g_connman->SetLocalServices(ServiceFlags(g_connman->GetLocalServices() | NODE_SMSG));
@@ -776,7 +769,6 @@ bool SecureMsgShutdown()
     secp256k1_context_smsg = nullptr;
 
     pwalletSmsg = nullptr;
-
     return true;
 };
 
@@ -799,11 +791,13 @@ bool SecureMsgEnable(CWallet *pwallet)
             return error("%s: SecureMsgStart failed.\n", __func__);
     } // cs_smsg
 
-    // Ping each peer, don't know which have messaging enabled
+    // Ping each peer advertising smsg
     {
         LOCK(g_connman->cs_vNodes);
         for(auto *pnode : g_connman->vNodes)
         {
+            if (!(pnode->GetLocalServices() & NODE_SMSG))
+                continue;
             g_connman->PushMessage(pnode,
                 CNetMsgMaker(INIT_PROTO_VERSION).Make("smsgPing"));
             g_connman->PushMessage(pnode,
@@ -829,7 +823,6 @@ bool SecureMsgDisable()
 
         if (!SecureMsgShutdown())
             return error("%s: SecureMsgShutdown failed.\n", __func__);
-
 
         // Clear smsgBuckets
         std::map<int64_t, SecMsgBucket>::iterator it;
@@ -1103,8 +1096,6 @@ int SecureMsgReceiveData(CNode *pfrom, const std::string &strCommand, CDataStrea
             g_connman->PushMessage(pfrom,
                 CNetMsgMaker(INIT_PROTO_VERSION).Make("smsgHave", vchDataOut));
         };
-
-
     } else
     if (strCommand == "smsgHave")
     {
@@ -1504,7 +1495,6 @@ static int SecureMsgInsertAddress(CKeyID &hashKey, CPubKey &pubKey, SecMsgDB &ad
             4 address is already in db
     */
 
-
     if (addrpkdb.ExistsPK(hashKey))
     {
         //LogPrintf("DB already contains public key for address.\n");
@@ -1521,27 +1511,20 @@ static int SecureMsgInsertAddress(CKeyID &hashKey, CPubKey &pubKey, SecMsgDB &ad
     };
 
     if (!addrpkdb.WritePK(hashKey, pubKey))
-    {
-        LogPrintf("Write pair failed.\n");
-        return 1;
-    };
+        return errorN(1, "%s: Write pair failed.", __func__);
 
     return 0;
 };
 
 int SecureMsgInsertAddress(CKeyID &hashKey, CPubKey &pubKey)
 {
-    int rv;
-    {
-        LOCK(cs_smsgDB);
-        SecMsgDB addrpkdb;
+    LOCK(cs_smsgDB);
+    SecMsgDB addrpkdb;
 
-        if (!addrpkdb.Open("cr+"))
-            return 1;
+    if (!addrpkdb.Open("cr+"))
+        return 1;
 
-        rv = SecureMsgInsertAddress(hashKey, pubKey, addrpkdb);
-    }
-    return rv;
+    return SecureMsgInsertAddress(hashKey, pubKey, addrpkdb);
 };
 
 static bool ScanBlock(const CBlock &block, SecMsgDB &addrpkdb,

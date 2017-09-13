@@ -169,6 +169,7 @@ void WalletModel::checkBalanceChanged()
     CAmount newWatchOnlyBalance = 0;
     CAmount newWatchUnconfBalance = 0;
     CAmount newWatchImmatureBalance = 0;
+    CAmount newWatchStakedBalance = 0;
     
     CHDWalletBalances bal;
     if (fParticlWallet)
@@ -186,8 +187,9 @@ void WalletModel::checkBalanceChanged()
 
         newWatchOnlyBalance = bal.nPartWatchOnly;
         newWatchUnconfBalance = bal.nPartWatchOnlyUnconf;
+        newWatchStakedBalance = bal.nPartWatchOnlyStaked;
 
-        bool fHaveWatchOnlyCheck = bal.nPartWatchOnly || bal.nPartWatchOnlyUnconf;
+        bool fHaveWatchOnlyCheck = bal.nPartWatchOnly || bal.nPartWatchOnlyUnconf || bal.nPartWatchOnlyStaked;
         if (fHaveWatchOnlyCheck != fHaveWatchOnly)
             updateWatchOnlyFlag(fHaveWatchOnlyCheck);
     } else
@@ -200,7 +202,7 @@ void WalletModel::checkBalanceChanged()
 
     if(cachedBalance != newBalance || cachedStaked != bal.nPartStaked
         || cachedUnconfirmedBalance != newUnconfirmedBalance || cachedImmatureBalance != newImmatureBalance
-        || cachedWatchOnlyBalance != newWatchOnlyBalance || cachedWatchUnconfBalance != newWatchUnconfBalance || cachedWatchImmatureBalance != newWatchImmatureBalance
+        || cachedWatchOnlyBalance != newWatchOnlyBalance || cachedWatchUnconfBalance != newWatchUnconfBalance || cachedWatchImmatureBalance != newWatchImmatureBalance || cachedWatchStakedBalance != newWatchStakedBalance
         || newBlindBalance != cachedBlindBalance || newAnonBalance != cachedAnonBalance)
     {
         cachedBalance = newBalance;
@@ -212,8 +214,9 @@ void WalletModel::checkBalanceChanged()
         cachedWatchImmatureBalance = newWatchImmatureBalance;
         cachedBlindBalance = newBlindBalance;
         cachedAnonBalance = newAnonBalance;
+        cachedWatchStakedBalance = newWatchStakedBalance;
         Q_EMIT balanceChanged(newBalance, bal.nPartStaked, newBlindBalance, newAnonBalance, newUnconfirmedBalance, newImmatureBalance,
-                            newWatchOnlyBalance, newWatchUnconfBalance, newWatchImmatureBalance);
+                            newWatchOnlyBalance, newWatchUnconfBalance, newWatchImmatureBalance, newWatchStakedBalance);
     }
 }
 

@@ -319,6 +319,7 @@ public:
         nPartImmature = 0;
         nPartWatchOnly = 0;
         nPartWatchOnlyUnconf = 0;
+        nPartWatchOnlyStaked = 0;
         
         nBlind = 0;
         nBlindUnconf = 0;
@@ -333,6 +334,7 @@ public:
     CAmount nPartImmature = 0;
     CAmount nPartWatchOnly = 0;
     CAmount nPartWatchOnlyUnconf = 0;
+    CAmount nPartWatchOnlyStaked = 0;
     
     CAmount nBlind = 0;
     CAmount nBlindUnconf = 0;
@@ -447,6 +449,8 @@ public:
     
     CAmount GetCredit(const CTxOutBase *txout, const isminefilter &filter) const;
     CAmount GetCredit(const CTransaction &tx, const isminefilter &filter) const;
+    
+    void GetCredit(const CTransaction &tx, CAmount &nSpendable, CAmount &nWatchOnly) const;
     
     int GetDepthInMainChain(const uint256 &blockhash, int nIndex = 0) const;
     bool InMempool(const uint256 &hash) const;

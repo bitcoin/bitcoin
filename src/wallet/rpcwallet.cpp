@@ -3055,6 +3055,7 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
         if (bal.nPartWatchOnly > 0 || bal.nPartWatchOnlyUnconf > 0)
         {
             obj.push_back(Pair("watchonly_balance",                 ValueFromAmount(bal.nPartWatchOnly)));
+            obj.push_back(Pair("watchonly_staked_balance",          ValueFromAmount(bal.nPartWatchOnlyStaked)));
             obj.push_back(Pair("watchonly_unconfirmed_balance",     ValueFromAmount(bal.nPartWatchOnlyUnconf)));
         };
     } else
