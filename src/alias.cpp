@@ -1834,7 +1834,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5518 - " + _("Could not find an alias with this name"));
 
 	CAliasIndex pegAlias;
-	if (!GetAlias(theAlias.aliasPegTuple.first, pegAlias))
+	if (vchAlias != vchFromString("sysrates.peg") && !GetAlias(theAlias.aliasPegTuple.first, pegAlias))
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5508 - " + _("The alias peg does not exist"));
 
 	CAliasIndex copyAlias = theAlias;
