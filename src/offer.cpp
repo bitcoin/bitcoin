@@ -402,7 +402,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	// unserialize offer from txn, check for valid
 	COfferAccept theOfferAccept;
 	COffer linkOffer;
-	COffer myPriceOffer;
 	COffer myOffer;
 	COfferLinkWhitelistEntry entry;
 	CCert theCert;
@@ -851,23 +850,23 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1065 - " + _("Offer payment already exists");
 				return true;
 			}
-			if (!GetOffer(theOfferAccept.offerTuple, myPriceOffer))
+			if (!GetOffer(theOfferAccept.offerTuple, theOffer))
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1065 - " + _("Could not get offer at the time of accept");
 				return true;
 			}
 
-			if(myPriceOffer.bPrivate && !myPriceOffer.linkWhitelist.IsNull())
+			if(theOffer.bPrivate && !theOffer.linkWhitelist.IsNull())
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1066 - " + _("Cannot purchase this private offer, must purchase through an affiliate");
 				return true;
 			}
-			if (offerAccept.linkOfferTuple.first != myPriceOffer.linkOfferTuple.first) 
+			if (offerAccept.linkOfferTuple.first != theOffer.linkOfferTuple.first)
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1066 - " + _("Linked offer does not match offer being purchased");
 				return true;
 			}
-			if(!myPriceOffer.linkOfferTuple.first.empty())
+			if(!theOffer.linkOfferTuple.first.empty())
 			{
 				if(!GetOffer(offerAccept.linkOfferTuple, linkOffer))
 				{
@@ -901,12 +900,12 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					return true;
 				}
 			}
-			if(!IsPaymentOptionInMask(myPriceOffer.paymentOptions, theOfferAccept.nPaymentOption))
+			if(!IsPaymentOptionInMask(theOffer.paymentOptions, theOfferAccept.nPaymentOption))
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1073 - " + _("User selected payment option not found in list of accepted offer payment options");
 				return true;
 			}
-			else if(!theOfferAccept.txExtId.IsNull() && (myPriceOffer.paymentOptions == PAYMENTOPTION_SYS || theOfferAccept.nPaymentOption == PAYMENTOPTION_SYS))
+			else if(!theOfferAccept.txExtId.IsNull() && (theOffer.paymentOptions == PAYMENTOPTION_SYS || theOfferAccept.nPaymentOption == PAYMENTOPTION_SYS))
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1074 - " + _("External chain payment cannot be made with this offer");
 				return true;
@@ -916,12 +915,12 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1075 - " + _("External chain payment txid missing");
 				return true;
 			}
-			if(myPriceOffer.sCategory.size() > 0 && boost::algorithm::istarts_with(stringFromVch(myPriceOffer.sCategory), "wanted"))
+			if(theOffer.sCategory.size() > 0 && boost::algorithm::istarts_with(stringFromVch(theOffer.sCategory), "wanted"))
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1076 - " + _("Cannot purchase a wanted offer");
 				return true;
 			}
-			if(!GetAlias(CNameTXIDTuple(myPriceOffer.aliasTuple.first, myPriceOffer.aliasTuple.second), alias))
+			if(!GetAlias(CNameTXIDTuple(theOffer.aliasTuple.first, theOffer.aliasTuple.second), alias))
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1077 - " + _("Cannot find alias for this offer. It may be expired");
 				return true;
@@ -933,17 +932,17 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				CAmount nPrice;
 				CAmount nCommission;
 				// try to get the whitelist entry here from the sellers whitelist, apply the discount with GetPrice()
-				if(myPriceOffer.linkOfferTuple.first.empty())
+				if(theOffer.linkOfferTuple.first.empty())
 				{
-					myPriceOffer.linkWhitelist.GetLinkEntryByHash(theOfferAccept.buyerAliasTuple.first, entry);
-					nPrice = myPriceOffer.GetPrice(entry);
+					theOffer.linkWhitelist.GetLinkEntryByHash(theOfferAccept.buyerAliasTuple.first, entry);
+					nPrice = theOffer.GetPrice(entry);
 					nCommission = 0;
 				}
 				else
 				{
-					linkOffer.linkWhitelist.GetLinkEntryByHash(myPriceOffer.aliasTuple.first, entry);
+					linkOffer.linkWhitelist.GetLinkEntryByHash(theOffer.aliasTuple.first, entry);
 					nPrice = linkOffer.GetPrice(entry);
-					nCommission = myPriceOffer.GetPrice() - nPrice;
+					nCommission = theOffer.GetPrice() - nPrice;
 				}
 				if(nPrice != theOfferAccept.nPrice)
 				{
@@ -959,7 +958,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1079 - " + _("Offer payment does not pay enough according to the offer price");
 					return true;
 				}
-				if(!myPriceOffer.linkOfferTuple.first.empty())
+				if(!theOffer.linkOfferTuple.first.empty())
 				{
 					nOutCommission = FindOfferAcceptPayment(tx, nTotalCommission);
 					if(nOutCommission < 0)
@@ -1008,13 +1007,13 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					}
 				}
 				// autonomously transfer certificate to new owner (buyer) if paid in full amount with SYS
-				if (!myPriceOffer.certTuple.first.empty())
+				if (!theOffer.certTuple.first.empty())
 				{
 					CCert cert;
-					if (GetCert(myPriceOffer.certTuple.first, cert))
+					if (GetCert(theOffer.certTuple.first, cert))
 					{
 						// ensure cert owner is merchant of offer before transferring
-						if (cert.aliasTuple.first == myPriceOffer.aliasTuple.first) {
+						if (cert.aliasTuple.first == theOffer.aliasTuple.first) {
 							cert.aliasTuple = theOfferAccept.buyerAliasTuple;
 							cert.nHeight = nHeight;
 							cert.txHash = tx.GetHash();
@@ -1098,14 +1097,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1090 - " + _("Failed to write to offer accept to DB");
 				return error(errorMessage.c_str());
 			}
-			if (fDebug)
-				LogPrintf("CONNECTED OFFER: op=%s offer=%s qty=%u hash=%s height=%d\n",
-					offerFromOp(op).c_str(),
-					stringFromVch(vvchArgs[0]).c_str(),
-					theOffer.nQty,
-					tx.GetHash().ToString().c_str(),
-					nHeight);
-			return true;
 		}
 
 
@@ -1155,6 +1146,11 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			// if this offer is linked to a parent update it with parent information
 			if(!theOffer.linkOfferTuple.first.empty())
 			{
+				if (!GetOffer(theOffer.linkOfferTuple.first, linkOffer))
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1096 - " + _("Linked offer not found. It may be expired");
+					return true;
+				}
 				theOffer.nQty = linkOffer.nQty;
 				theOffer.certTuple = linkOffer.certTuple;
 				theOffer.paymentOptions = linkOffer.paymentOptions;
