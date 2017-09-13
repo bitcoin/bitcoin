@@ -339,7 +339,6 @@ private:
     CNode* FindNode(const CService& addr);
 
     bool AttemptToEvictConnection();
-    void ConnectNode(NewConnection conn);
     bool IsWhitelistedRange(const CNetAddr &addr);
 
     void OnFailedOutgoingConnection(NewConnection conn);

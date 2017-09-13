@@ -360,8 +360,29 @@ static CAddress GetBindAddress(SOCKET sock)
     return addr_bind;
 }
 
-void CConnman::ConnectNode(NewConnection conn)
+// if successful, this moves the passed grant to the constructed node
+void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound, const char *pszDest, bool fOneShot, bool fFeeler, bool fAddnode)
 {
+    //
+    // Initiate outbound network connection
+    //
+    NewConnection conn;
+    conn.sock = INVALID_SOCKET;
+    conn.remote_addr = addrConnect;
+    conn.remote_str = pszDest ? pszDest : "";
+    conn.count_failure = fCountFailure;
+    conn.outbound_grant = grantOutbound;
+    conn.oneshot = fOneShot;
+    conn.feeler = fFeeler;
+    conn.addnode = fAddnode;
+    conn.incoming = false;
+    conn.whitelisted = false;
+
+    if (interruptNet || !fNetworkActive) {
+        OnFailedOutgoingConnection(std::move(conn));
+        return;
+    }
+
     if (conn.remote_str.empty()) {
         if (IsLocal(conn.remote_addr) || IsBanned(conn.remote_addr) ||
             FindNode(conn.remote_addr.ToStringIPPort())) {
@@ -1956,32 +1977,6 @@ void CConnman::ThreadOpenAddedConnections()
         if (!interruptNet.sleep_for(std::chrono::seconds(tried ? 60 : 2)))
             return;
     }
-}
-
-// if successful, this moves the passed grant to the constructed node
-void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound, const char *pszDest, bool fOneShot, bool fFeeler, bool fAddnode)
-{
-    //
-    // Initiate outbound network connection
-    //
-    NewConnection conn;
-    conn.sock = INVALID_SOCKET;
-    conn.remote_addr = addrConnect;
-    conn.remote_str = pszDest ? pszDest : "";
-    conn.count_failure = fCountFailure;
-    conn.outbound_grant = grantOutbound;
-    conn.oneshot = fOneShot;
-    conn.feeler = fFeeler;
-    conn.addnode = fAddnode;
-    conn.incoming = false;
-    conn.whitelisted = false;
-
-    if (interruptNet || !fNetworkActive) {
-        OnFailedOutgoingConnection(std::move(conn));
-        return;
-    }
-
-    ConnectNode(std::move(conn));
 }
 
 void CConnman::AddConnection(NewConnection conn)
