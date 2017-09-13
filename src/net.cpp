@@ -1101,20 +1101,33 @@ bool CConnman::AttemptToEvictConnection()
 }
 
 void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
+
     struct sockaddr_storage sockaddr;
     socklen_t len = sizeof(sockaddr);
-    SOCKET hSocket = accept(hListenSocket.socket, (struct sockaddr*)&sockaddr, &len);
-    CAddress addr;
+
+    NewConnection conn;
+    conn.sock = accept(hListenSocket.socket, (struct sockaddr*)&sockaddr, &len);
+    conn.remote_addr = CAddress();
+    conn.remote_str = "";
+    conn.count_failure = false;
+    conn.outbound_grant = nullptr;
+    conn.oneshot = false;
+    conn.feeler = false;
+    conn.addnode = false;
+    conn.incoming = true;
+    conn.whitelisted = hListenSocket.whitelisted;
+
     int nInbound = 0;
     int nMaxInbound = nMaxConnections - (nMaxOutbound + nMaxFeeler);
 
-    if (hSocket != INVALID_SOCKET) {
-        if (!addr.SetSockAddr((const struct sockaddr*)&sockaddr)) {
+    if (conn.sock != INVALID_SOCKET) {
+        if (!conn.remote_addr.SetSockAddr((const struct sockaddr*)&sockaddr)) {
             LogPrintf("Warning: Unknown socket family\n");
         }
     }
 
-    bool whitelisted = hListenSocket.whitelisted || IsWhitelistedRange(addr);
+    conn.whitelisted = conn.whitelisted || IsWhitelistedRange(conn.remote_addr);
+
     {
         LOCK(cs_vNodes);
         for (CNode* pnode : vNodes)
@@ -1122,7 +1135,7 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
                 nInbound++;
     }
 
-    if (hSocket == INVALID_SOCKET)
+    if (conn.sock == INVALID_SOCKET)
     {
         int nErr = WSAGetLastError();
         if (nErr != WSAEWOULDBLOCK)
@@ -1131,26 +1144,26 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     }
 
     if (!fNetworkActive) {
-        LogPrintf("connection from %s dropped: not accepting new connections\n", addr.ToString());
-        CloseSocket(hSocket);
+        LogPrintf("connection from %s dropped: not accepting new connections\n", conn.remote_addr.ToString());
+        CloseSocket(conn.sock);
         return;
     }
 
-    if (!IsSelectableSocket(hSocket))
+    if (!IsSelectableSocket(conn.sock))
     {
-        LogPrintf("connection from %s dropped: non-selectable socket\n", addr.ToString());
-        CloseSocket(hSocket);
+        LogPrintf("connection from %s dropped: non-selectable socket\n", conn.remote_addr.ToString());
+        CloseSocket(conn.sock);
         return;
     }
 
     // According to the internet TCP_NODELAY is not carried into accepted sockets
     // on all platforms.  Set it again here just to be sure.
-    SetSocketNoDelay(hSocket);
+    SetSocketNoDelay(conn.sock);
 
-    if (IsBanned(addr) && !whitelisted)
+    if (IsBanned(conn.remote_addr) && !conn.whitelisted)
     {
-        LogPrintf("connection from %s dropped (banned)\n", addr.ToString());
-        CloseSocket(hSocket);
+        LogPrintf("connection from %s dropped (banned)\n", conn.remote_addr.ToString());
+        CloseSocket(conn.sock);
         return;
     }
 
@@ -1159,26 +1172,12 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
         if (!AttemptToEvictConnection()) {
             // No connection to evict, disconnect the new connection
             LogPrint(BCLog::NET, "failed to find an eviction candidate - connection dropped (full)\n");
-            CloseSocket(hSocket);
+            CloseSocket(conn.sock);
             return;
         }
     }
 
-    NodeId id = GetNewNodeId();
-    uint64_t nonce = GetDeterministicRandomizer(RANDOMIZER_ID_LOCALHOSTNONCE).Write(id).Finalize();
-    CAddress addr_bind = GetBindAddress(hSocket);
-
-    CNode* pnode = new CNode(id, nLocalServices, GetBestHeight(), hSocket, addr, CalculateKeyedNetGroup(addr), nonce, addr_bind, "", true);
-    pnode->AddRef();
-    pnode->fWhitelisted = whitelisted;
-    m_msgproc->InitializeNode(pnode);
-
-    LogPrint(BCLog::NET, "connection from %s accepted\n", addr.ToString());
-
-    {
-        LOCK(cs_vNodes);
-        vNodes.push_back(pnode);
-    }
+    AddConnection(std::move(conn));
 }
 
 void CConnman::ThreadSocketHandler()
@@ -2005,6 +2004,8 @@ void CConnman::AddConnection(NewConnection conn)
         pnode->fFeeler = true;
     if (conn.addnode)
         pnode->fAddnode = true;
+    if (conn.whitelisted)
+        pnode->fWhitelisted = true;
 
     m_msgproc->InitializeNode(pnode);
     {
