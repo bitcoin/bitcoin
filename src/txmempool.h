@@ -514,6 +514,8 @@ private:
 
     std::vector<indexed_transaction_set::const_iterator> GetSortedDepthAndScore() const;
 
+    void calculateRemoveRecursive(const CTransaction &tx, setEntries &stage);
+
 public:
     indirectmap<COutPoint, const CTransaction*> mapNextTx;
     std::map<uint256, CAmount> mapDeltas;
