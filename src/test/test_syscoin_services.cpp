@@ -988,7 +988,6 @@ const string OfferLink(const string& node, const string& alias, const string& gu
 	int commission = atoi(commissionStr.c_str());
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == linkedguid);
 	BOOST_CHECK(find_value(r.get_obj(), "offerlink_guid").get_str() == guid);
-	BOOST_CHECK(find_value(r.get_obj(), "offerlink").get_str() == "true");
 	BOOST_CHECK(find_value(r.get_obj(), "commission").get_int() == commission);
 	if(!otherNode1.empty())
 	{

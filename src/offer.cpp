@@ -2957,7 +2957,6 @@ bool BuildOfferJson(const COffer& theOffer, UniValue& oOffer)
 	oOffer.push_back(Pair("price", theOffer.sPrice));
 	if(!theOffer.linkOfferTuple.first.empty()) {
 		oOffer.push_back(Pair("commission", theOffer.nCommission));
-		oOffer.push_back(Pair("offerlink", true));
 		oOffer.push_back(Pair("offerlink_guid", stringFromVch(theOffer.linkOfferTuple.first)));
 		oOffer.push_back(Pair("offerlink_seller", stringFromVch(linkOffer.aliasTuple.first)));
 
@@ -2965,7 +2964,6 @@ bool BuildOfferJson(const COffer& theOffer, UniValue& oOffer)
 	else
 	{
 		oOffer.push_back(Pair("commission", 0));
-		oOffer.push_back(Pair("offerlink", false));
 		oOffer.push_back(Pair("offerlink_guid", ""));
 		oOffer.push_back(Pair("offerlink_seller", ""));
 	}
