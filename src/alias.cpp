@@ -523,49 +523,45 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	vector<unsigned char> vchAlias;
 	vector<unsigned char> vchHash;
 	int nDataOut;
-	if(op != OP_ALIAS_PAYMENT)
+	
+	bool bData = GetSyscoinData(tx, vchData, vchHash, nDataOut);
+	if(bData && !theAlias.UnserializeFromData(vchData, vchHash))
 	{
-		bool bData = GetSyscoinData(tx, vchData, vchHash, nDataOut);
-		if(bData && !theAlias.UnserializeFromData(vchData, vchHash))
-		{
-			theAlias.SetNull();
-		}
-		// we need to check for cert update specially because an alias update without data is sent along with offers linked with the alias
-		else if (!bData)
-		{
-			if(fDebug)
-				LogPrintf("CheckAliasInputs(): Null alias, skipping...\n");	
-			return true;
-		}
-	}
-	else
 		theAlias.SetNull();
+	}
+	// we need to check for cert update specially because an alias update without data is sent along with offers linked with the alias
+	else if (!bData)
+	{
+		if(fDebug)
+			LogPrintf("CheckAliasInputs(): Null alias, skipping...\n");	
+		return true;
+	}
+	
+
 	if(fJustCheck)
 	{
-		if(op != OP_ALIAS_PAYMENT)
+		
+		if(vvchArgs.size() != 4)
 		{
-			if(vvchArgs.size() != 4)
-			{
-				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5001 - " + _("Alias arguments incorrect size");
-				return error(errorMessage.c_str());
-			}
+			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5001 - " + _("Alias arguments incorrect size");
+			return error(errorMessage.c_str());
 		}
+		
 		else if(vvchArgs.size() <= 0 || vvchArgs.size() > 4)
 		{
 			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5002 - " + _("Alias payment arguments incorrect size");
 			return error(errorMessage.c_str());
 		}
-		if(op != OP_ALIAS_PAYMENT)
+		
+		if(!theAlias.IsNull())
 		{
-			if(!theAlias.IsNull())
+			if(vvchArgs.size() <= 2 || vchHash != vvchArgs[2])
 			{
-				if(vvchArgs.size() <= 2 || vchHash != vvchArgs[2])
-				{
-					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5003 - " + _("Hash provided doesn't match the calculated hash of the data");
-					return true;
-				}
-			}					
-		}
+				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5003 - " + _("Hash provided doesn't match the calculated hash of the data");
+				return true;
+			}
+		}					
+		
 	}
 	if(fJustCheck || op != OP_ALIAS_ACTIVATE)
 	{
@@ -591,7 +587,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				break;
 			}
 		}
-		if(op != OP_ALIAS_PAYMENT && vvchArgs.size() >= 4 && !vvchArgs[3].empty())
+		if(vvchArgs.size() >= 4 && !vvchArgs[3].empty())
 		{
 			bool bWitnessSigFound = false;
 			for (unsigned int i = 0; i < tx.vin.size(); i++) {
@@ -667,8 +663,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			return error(errorMessage.c_str());
 		}
 		switch (op) {
-			case OP_ALIAS_PAYMENT:
-				break;
 			case OP_ALIAS_ACTIVATE:
 				if (prevOp != OP_ALIAS_ACTIVATE)
 				{
@@ -734,8 +728,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5018 - " + _("Failed to read from alias DB");
 				return true;
 			}
-			else if(op == OP_ALIAS_PAYMENT && dbAlias.IsNull())
-				return true;
 		}
 		if(!vchData.empty())
 		{
@@ -868,16 +860,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5028 - " + _("Trying to renew an alias that isn't expired");
 				return true;
 			}
-		}
-		else if(op == OP_ALIAS_PAYMENT)
-		{
-			if(fDebug)
-				LogPrintf(
-					"CONNECTED ALIAS: name=%s  op=%s  hash=%s  height=%d\n",
-					stringFromVch(vchAlias).c_str(),
-					aliasFromOp(op).c_str(),
-					tx.GetHash().ToString().c_str(), nHeight);
-			return true;
 		}
 		theAlias.nHeight = nHeight;
 		theAlias.txHash = tx.GetHash();
