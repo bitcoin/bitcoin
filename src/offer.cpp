@@ -1132,7 +1132,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					}
 					else if(!serializedOffer.linkWhitelist.entries[0].aliasLinkVchRand.empty())
 					{
-						if (serializedOffer.linkWhitelist.entries[0].aliasLinkVchRand == vchFromString("na") || GetAlias(serializedOffer.linkWhitelist.entries[0].aliasLinkVchRand, theAlias))
+						if (GetAlias(serializedOffer.linkWhitelist.entries[0].aliasLinkVchRand, theAlias))
 						{
 							theOffer.linkWhitelist.PutWhitelistEntry(serializedOffer.linkWhitelist.entries[0]);
 						}
@@ -1580,6 +1580,9 @@ UniValue offeraddwhitelist(const UniValue& params, bool fHelp) {
 	entry.nDiscountPct = nDiscountPctInteger;
 	theOffer.ClearOffer();
 	theOffer.linkWhitelist.PutWhitelistEntry(entry);
+	if (theOffer.linkWhitelist.entries.size() != 1 || !theOffer.linkWhitelist.GetLinkEntryByHash(vchAlias, foundEntry))
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1523 - " + _("This alias entry was not added to affiliate list"));
+
 	theOffer.nHeight = chainActive.Tip()->nHeight;
 
 
@@ -3122,7 +3125,7 @@ void OfferTxToJSON(const int op, const std::vector<unsigned char> &vchData, cons
 bool COfferLinkWhitelist::GetLinkEntryByHash(const std::vector<unsigned char> &ahash, COfferLinkWhitelistEntry &entry, bool strict) const {
 	entry.SetNull();
 	for (unsigned int i = 0; i<entries.size(); i++) {
-		if (entries[i].aliasLinkVchRand == ahash || (!strict && entries[i].aliasLinkVchRand == vchFromString("na"))) {
+		if (entries[i].aliasLinkVchRand == ahash)) {
 			entry = entries[i];
 			return true;
 		}
