@@ -1223,7 +1223,16 @@ void CWallet::TransactionRemovedFromMempool(const CTransactionRef &ptx, MemPoolR
     }
 }
 
-void CWallet::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex *pindex, const std::vector<CTransactionRef>& vtxConflicted) {
+void CWallet::MempoolUpdatedForBlockConnect(const std::vector<CTransactionRef>& tx_removed_in_block, const std::vector<CTransactionRef>& tx_removed_conflicted) {
+    LOCK2(cs_main, cs_wallet);
+    for (const CTransactionRef& ptx : tx_removed_conflicted) {
+        SyncTransaction(ptx);
+        TransactionRemovedFromMempool(ptx, MemPoolRemovalReason::CONFLICT);
+    }
+    // We can ignore tx_removed_in_block, we'll get it in BlockConnected
+}
+
+void CWallet::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex *pindex) {
     LOCK2(cs_main, cs_wallet);
     // TODO: Temporarily ensure that mempool removals are notified before
     // connected transactions.  This shouldn't matter, but the abandoned
@@ -1232,11 +1241,6 @@ void CWallet::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const 
     // notification of a connected conflict might cause an outside process
     // to abandon a transaction and then have it inadvertently cleared by
     // the notification that the conflicted transaction was evicted.
-
-    for (const CTransactionRef& ptx : vtxConflicted) {
-        SyncTransaction(ptx);
-        TransactionRemovedFromMempool(ptx, MemPoolRemovalReason::CONFLICT);
-    }
     for (size_t i = 0; i < pblock->vtx.size(); i++) {
         SyncTransaction(pblock->vtx[i], pindex, i);
         TransactionRemovedFromMempool(pblock->vtx[i], MemPoolRemovalReason::BLOCK);

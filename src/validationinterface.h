@@ -100,6 +100,19 @@ protected:
      * Called on a background thread.
      */
     virtual void TransactionRemovedFromMempool(const CTransactionRef &ptx, MemPoolRemovalReason reason) {}
+    /**
+     * Notifies listeners of mempool being updated for a block connection.
+     *
+     * Entries in tx_removed_in_block represent transactions which were in the
+     * block and thus removed from the mempool. The tx_removed_in_block txn are
+     * as they appear in the block, and may have different witnesses from the
+     * version which was previously in the mempool.
+     *
+     * This callback fires prior to BlockConnected in CValidationInterface.
+     *
+     * Called on a background thread.
+     */
+    virtual void MempoolUpdatedForBlockConnect(const std::vector<CTransactionRef>& tx_removed_in_block, const std::vector<CTransactionRef>& tx_removed_conflicted) {}
     friend void ::RegisterMempoolInterface(MempoolInterface*);
     friend void ::UnregisterMempoolInterface(MempoolInterface*);
 };
@@ -136,11 +149,10 @@ protected:
     virtual void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {}
     /**
      * Notifies listeners of a block being connected.
-     * Provides a vector of transactions evicted from the mempool as a result.
      *
      * Called on a background thread.
      */
-    virtual void BlockConnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex *pindex, const std::vector<CTransactionRef> &txnConflicted) {}
+    virtual void BlockConnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex *pindex) {}
     /**
      * Notifies listeners of a block being disconnected
      *
@@ -217,7 +229,8 @@ public:
 
     void UpdatedBlockTip(const CBlockIndex *, const CBlockIndex *, bool fInitialDownload);
     void TransactionAddedToMempool(const CTransactionRef &);
-    void BlockConnected(const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex, const std::shared_ptr<const std::vector<CTransactionRef>> &);
+    void MempoolUpdatedForBlockConnect(std::vector<CTransactionRef>&& tx_removed_in_block, std::vector<CTransactionRef>&& tx_removed_conflicted);
+    void BlockConnected(const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex);
     void BlockDisconnected(const std::shared_ptr<const CBlock> &);
     void SetBestChain(const CBlockLocator &);
     void Inventory(const uint256 &);

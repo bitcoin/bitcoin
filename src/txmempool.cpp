@@ -9,6 +9,7 @@
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
 #include <validation.h>
+#include <validationinterface.h>
 #include <policy/policy.h>
 #include <policy/fees.h>
 #include <reverse_iterator.h>
@@ -594,6 +595,7 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigne
         removeConflicts(*tx, txn_conflicts);
         ClearPrioritisation(tx->GetHash());
     }
+    GetMainSignals().MempoolUpdatedForBlockConnect(std::move(txn_removed_in_block), std::move(txn_conflicts));
     lastRollingFeeUpdate = GetTime();
     blockSinceLastRollingFeeBump = true;
 }

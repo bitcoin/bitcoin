@@ -45,7 +45,7 @@ public:
     /**
      * Overridden from CValidationInterface.
      */
-    void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected, const std::vector<CTransactionRef>& vtxConflicted) override;
+    void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected) override;
     /**
      * Overridden from CValidationInterface.
      */
