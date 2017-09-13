@@ -515,6 +515,7 @@ private:
     std::vector<indexed_transaction_set::const_iterator> GetSortedDepthAndScore() const;
 
     void calculateRemoveRecursive(const CTransaction &tx, setEntries &stage);
+    void removeConflicts(const CTransaction &tx, std::vector<CTransactionRef> &txn_removed);
 
 public:
     indirectmap<COutPoint, const CTransaction*> mapNextTx;
@@ -545,7 +546,6 @@ public:
 
     void removeRecursive(const CTransaction &tx, MemPoolRemovalReason reason = MemPoolRemovalReason::UNKNOWN);
     void removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMemPoolHeight, int flags);
-    void removeConflicts(const CTransaction &tx);
     void removeForBlock(const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight);
 
     void clear();
