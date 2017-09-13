@@ -921,23 +921,22 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 
 	BOOST_CHECK_NO_THROW(AliasNew("node2", "aliasexpire2", "somedata"));
 	// should fail: alias update by old owner shouldn't work after renewal by someone else
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate sysrates.peg aliasexpire2 changedata1 \"\" " + aliasexpire2node2address), runtime_error);
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate sysrates.peg aliasexpire2 changedata1 \"\" " + aliasexpire2node2address));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo aliasexpire2"));
+	// data hasn't changed
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str(), "somedata");
+
 	// should pass: alias transfer to another expired alias address
 	BOOST_CHECK_NO_THROW(CallRPC("node2", "aliasupdate sysrates.peg aliasexpire2 changedata1 \"\" " + aliasexpire2node2address));
 	GenerateBlocks(5);
 	BOOST_CHECK(aliasexpirenode2address != AliasNew("node2", "aliasexpirednode2", "somedata"));
 
 	// should fail: cert alias was expired and renewed(aliasexpire2)
-	BOOST_CHECK_THROW(r = CallRPC("node1", "certtransfer " + certgoodguid + " aliasexpirednode2"), runtime_error);
-	const UniValue& resArray = r.get_array();
-	if (resArray.size() > 1)
-	{
-		const UniValue& complete_value = resArray[1];
-		bool bComplete = false;
-		if (complete_value.isStr())
-			bComplete = complete_value.get_str() == "true";
-		BOOST_CHECK(!bComplete);
-	}
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certtransfer " + certgoodguid + " aliasexpirednode2"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certinfo " + certgoodguid));
+	// alias hasn't changed
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "alias").get_str(), "aliasexpire2");
+
 	ExpireAlias("aliasexpire2");
 	// should fail: update cert with expired alias
 	BOOST_CHECK_THROW(CallRPC("node1", "certupdate " + certgoodguid + " title pubdata"), runtime_error);
