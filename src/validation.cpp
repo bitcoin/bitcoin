@@ -578,17 +578,12 @@ bool CheckSyscoinInputs(const CTransaction& tx, const CCoinsViewCache& inputs, b
 	if (tx.nVersion == GetSyscoinTxVersion())
 	{
 		bool good = true;
-		for (unsigned int j = 0; j<tx.vout.size(); j++)
+		if (DecodeAliasTx(tx, op, nOut, vvchArgs))
 		{
-			if (!good)
-				break;
-			if (DecodeAliasScript(tx.vout[j].scriptPubKey, op, vvchArgs))
-			{
-				errorMessage.clear();
-				good = CheckAliasInputs(tx, op, j, vvchArgs, inputs, fJustCheck, nHeight, errorMessage);
-				if (fDebug && !errorMessage.empty())
-					LogPrintf("%s\n", errorMessage.c_str());
-			}
+			errorMessage.clear();
+			good = CheckAliasInputs(tx, op, nOut, vvchArgs, inputs, fJustCheck, nHeight, errorMessage);
+			if (fDebug && !errorMessage.empty())
+				LogPrintf("%s\n", errorMessage.c_str());
 		}
 		if (good)
 		{
