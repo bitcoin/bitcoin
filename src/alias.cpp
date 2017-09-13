@@ -1783,29 +1783,29 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 						"<encryption_publickey> Public key used for encryption/decryption of private data related to this alias. Useful if you are changing pub/priv keypair for encryption on this alias.\n"						
 						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"	
 						+ HelpRequiringPassphrase());
-	vector<unsigned char> vchAlias = vchFromString(params[1].get_str());
+	vector<unsigned char> vchAlias = vchFromString(params[0].get_str());
 	string strPrivateValue = "";
 	string strPublicValue = "";
-	if(CheckParam(params, 2))
-		strPublicValue = params[2].get_str();
+	if(CheckParam(params, 1))
+		strPublicValue = params[1].get_str();
 	
-	if(CheckParam(params, 3))
-		strPrivateValue = params[3].get_str();
+	if(CheckParam(params, 2))
+		strPrivateValue = params[2].get_str();
 	CWalletTx wtx;
 	CAliasIndex updateAlias;
 	string strAddress = "";
-	if(CheckParam(params,4))
-		strAddress = params[4].get_str();
+	if(CheckParam(params,3))
+		strAddress = params[3].get_str();
 	
 	string strAcceptCertTransfers = "";
-	if(CheckParam(params, 5))
-		strAcceptCertTransfers = params[5].get_str();
+	if(CheckParam(params, 4))
+		strAcceptCertTransfers = params[4].get_str();
 	
 	uint64_t nTime = chainActive.Tip()->nTime+ONE_YEAR_IN_SECONDS;
 	bool timeSet = false;
-	if(CheckParam(params, 6))
+	if(CheckParam(params, 5))
 	{
-		nTime = boost::lexical_cast<uint64_t>(params[6].get_str());
+		nTime = boost::lexical_cast<uint64_t>(params[5].get_str());
 		timeSet = true;
 	}
 	// sanity check set to 1 hr
@@ -1813,21 +1813,21 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 		nTime = chainActive.Tip()->nTime+3600;
 
 	string strPasswordSalt = "";
-	if(CheckParam(params, 7))
-		strPasswordSalt = params[7].get_str();
+	if(CheckParam(params, 6))
+		strPasswordSalt = params[6].get_str();
 	
 
 	string strEncryptionPrivateKey = "";
-	if(CheckParam(params, 8))
-		strEncryptionPrivateKey = params[8].get_str();
+	if(CheckParam(params, 7))
+		strEncryptionPrivateKey = params[7].get_str();
 	
 	string strEncryptionPublicKey = "";
-	if(CheckParam(params, 9))
-		strEncryptionPublicKey = params[9].get_str();
+	if(CheckParam(params, 8))
+		strEncryptionPublicKey = params[8].get_str();
 	
 	vector<unsigned char> vchWitness;
-	if(CheckParam(params, 10))
-		vchWitness = vchFromValue(params[10]);
+	if(CheckParam(params, 9))
+		vchWitness = vchFromValue(params[19]);
 
 	CAliasIndex theAlias;
 	if (!GetAlias(vchAlias, theAlias))
