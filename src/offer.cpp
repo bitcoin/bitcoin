@@ -1119,7 +1119,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						theOffer.linkWhitelist.SetNull();
 				}
 				// the stored offer has this entry meaning we want to remove this entry
-				else if(theOffer.linkWhitelist.GetLinkEntryByHash(serializedOffer.linkWhitelist.entries[0].aliasLinkVchRand, entry, true))
+				else if(theOffer.linkWhitelist.GetLinkEntryByHash(serializedOffer.linkWhitelist.entries[0].aliasLinkVchRand, entry))
 				{
 					theOffer.linkWhitelist.RemoveWhitelistEntry(serializedOffer.linkWhitelist.entries[0].aliasLinkVchRand);
 				}
@@ -2209,7 +2209,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	float fEscrowFee;
 	if(getCurrencyToSYSFromAlias(latestAliasPegTuple, theOffer.sCurrencyCode, nRate, rateList,precision, nFeePerByte, fEscrowFee) != "")
 	{
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR: ERRCODE: 1556 - " + _("Could not find currency in the peg alias"));
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR: ERRCODE: 1556 - " + _("Could not find currency in the peg alias: ") + " Currency: " + stringFromVch(theOffer.sCurrencyCode).c_str() + " Peg Alias: " + stringFromVch(latestAliasPegTuple.first).c_str());
 	}
 	CCert theCert;
 	// trying to purchase a cert
@@ -3122,7 +3122,7 @@ void OfferTxToJSON(const int op, const std::vector<unsigned char> &vchData, cons
 	if(offer.bPrivate != dbOffer.bPrivate)
 		entry.push_back(Pair("private", offer.bPrivate));
 }
-bool COfferLinkWhitelist::GetLinkEntryByHash(const std::vector<unsigned char> &ahash, COfferLinkWhitelistEntry &entry, bool strict) const {
+bool COfferLinkWhitelist::GetLinkEntryByHash(const std::vector<unsigned char> &ahash, COfferLinkWhitelistEntry &entry) const {
 	entry.SetNull();
 	for (unsigned int i = 0; i<entries.size(); i++) {
 		if (entries[i].aliasLinkVchRand == ahash) {

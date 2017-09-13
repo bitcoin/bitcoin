@@ -168,7 +168,7 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(entries);
 	}
-	bool GetLinkEntryByHash(const std::vector<unsigned char> &ahash, COfferLinkWhitelistEntry &entry, bool strict = false) const;
+	bool GetLinkEntryByHash(const std::vector<unsigned char> &ahash, COfferLinkWhitelistEntry &entry) const;
     	
     inline bool RemoveWhitelistEntry(const std::vector<unsigned char> &ahash) {
     	for(unsigned int i=0;i<entries.size();i++) {
