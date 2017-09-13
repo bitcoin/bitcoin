@@ -643,17 +643,14 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	bool fJustCheck = true;
 	string errorMessage = "";
 	CCoinsViewCache inputs(pcoinsTip);
-	for (unsigned int j = 0; j<wtxNew.vout.size(); j++)
+	if (DecodeAliasTx(wtxNew, op, nOut, vvch))
 	{
-		if (DecodeAliasScript(wtxNew.vout[j].scriptPubKey, op, vvch))
-		{
-			CheckAliasInputs(wtxNew, op, j, vvch, inputs, fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, true);
-			if (!errorMessage.empty())
-				throw runtime_error(errorMessage.c_str());
-			CheckAliasInputs(wtxNew, op, j, vvch, inputs, !fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, true);
-			if (!errorMessage.empty())
-				throw runtime_error(errorMessage.c_str());
-		}
+		CheckAliasInputs(wtxNew, op, j, vvch, inputs, fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, true);
+		if (!errorMessage.empty())
+			throw runtime_error(errorMessage.c_str());
+		CheckAliasInputs(wtxNew, op, j, vvch, inputs, !fJustCheck, chainActive.Tip()->nHeight + 1, errorMessage, true);
+		if (!errorMessage.empty())
+			throw runtime_error(errorMessage.c_str());
 	}
 	if (DecodeCertTx(wtxNew, op, nOut, vvch))
 	{
