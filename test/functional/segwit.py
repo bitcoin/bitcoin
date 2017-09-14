@@ -4,10 +4,18 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the SegWit changeover logic."""
 
+from test_framework.address import (
+    key_to_p2sh_p2wpkh,
+    key_to_p2wpkh,
+    program_to_witness,
+    script_to_p2sh_p2wsh,
+    script_to_p2wsh,
+)
+from test_framework.blocktools import witness_script, send_to_witness
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 from test_framework.mininode import sha256, CTransaction, CTxIn, COutPoint, CTxOut, COIN, ToHex, FromHex
-from test_framework.address import script_to_p2sh, key_to_p2pkh, key_to_p2sh_p2wpkh, key_to_p2wpkh, script_to_p2sh_p2wsh, script_to_p2wsh, program_to_witness
+from test_framework.address import script_to_p2sh, key_to_p2pkh
 from test_framework.script import CScript, OP_HASH160, OP_CHECKSIG, OP_0, hash160, OP_EQUAL, OP_DUP, OP_EQUALVERIFY, OP_1, OP_2, OP_CHECKMULTISIG, OP_TRUE
 from io import BytesIO
 
@@ -15,52 +23,6 @@ NODE_0 = 0
 NODE_2 = 2
 WIT_V0 = 0
 WIT_V1 = 1
-
-# Create a scriptPubKey corresponding to either a P2WPKH output for the
-# given pubkey, or a P2WSH output of a 1-of-1 multisig for the given
-# pubkey. Returns the hex encoding of the scriptPubKey.
-def witness_script(use_p2wsh, pubkey):
-    if (use_p2wsh == False):
-        # P2WPKH instead
-        pubkeyhash = hash160(hex_str_to_bytes(pubkey))
-        pkscript = CScript([OP_0, pubkeyhash])
-    else:
-        # 1-of-1 multisig
-        witness_program = CScript([OP_1, hex_str_to_bytes(pubkey), OP_1, OP_CHECKMULTISIG])
-        scripthash = sha256(witness_program)
-        pkscript = CScript([OP_0, scripthash])
-    return bytes_to_hex_str(pkscript)
-
-# Return a transaction (in hex) that spends the given utxo to a segwit output,
-# optionally wrapping the segwit output using P2SH.
-def create_witness_tx(node, use_p2wsh, utxo, pubkey, encode_p2sh, amount):
-    if use_p2wsh:
-        program = CScript([OP_1, hex_str_to_bytes(pubkey), OP_1, OP_CHECKMULTISIG])
-        addr = script_to_p2sh_p2wsh(program) if encode_p2sh else script_to_p2wsh(program)
-    else:
-        addr = key_to_p2sh_p2wpkh(pubkey) if encode_p2sh else key_to_p2wpkh(pubkey)
-    if not encode_p2sh:
-        assert_equal(node.validateaddress(addr)['scriptPubKey'], witness_script(use_p2wsh, pubkey))
-    return node.createrawtransaction([utxo], {addr: amount})
-
-# Create a transaction spending a given utxo to a segwit output corresponding
-# to the given pubkey: use_p2wsh determines whether to use P2WPKH or P2WSH;
-# encode_p2sh determines whether to wrap in P2SH.
-# sign=True will have the given node sign the transaction.
-# insert_redeem_script will be added to the scriptSig, if given.
-def send_to_witness(use_p2wsh, node, utxo, pubkey, encode_p2sh, amount, sign=True, insert_redeem_script=""):
-    tx_to_witness = create_witness_tx(node, use_p2wsh, utxo, pubkey, encode_p2sh, amount)
-    if (sign):
-        signed = node.signrawtransaction(tx_to_witness)
-        assert("errors" not in signed or len(["errors"]) == 0)
-        return node.sendrawtransaction(signed["hex"])
-    else:
-        if (insert_redeem_script):
-            tx = FromHex(CTransaction(), tx_to_witness)
-            tx.vin[0].scriptSig += CScript([hex_str_to_bytes(insert_redeem_script)])
-            tx_to_witness = ToHex(tx)
-
-    return node.sendrawtransaction(tx_to_witness)
 
 def getutxo(txid):
     utxo = {}
