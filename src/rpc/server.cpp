@@ -25,10 +25,10 @@
 #include <memory> // for unique_ptr
 #include <unordered_map>
 
-static bool fRPCRunning = false;
-static bool fRPCInWarmup = true;
-static std::string rpcWarmupStatus("RPC server started");
 static CCriticalSection cs_rpcWarmup;
+static bool fRPCRunning = false;
+static bool fRPCInWarmup = true; // GUARDED_BY(cs_rpcWarmup)
+static std::string rpcWarmupStatus("RPC server started"); // GUARDED_BY(cs_rpcWarmup)
 /* Timer-creating functions */
 static RPCTimerInterface* timerInterface = nullptr;
 /* Map of name to timer. */
