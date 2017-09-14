@@ -5,19 +5,19 @@
 """Test wallet import RPCs.
 
 Test rescan behavior of importprivkey when aborted. The test ensures that:
-1. The abortrescan command indeed stops the rescan process.
-2. Subsequent rescan catches the aborted address UTXO
+- The abortrescan command indeed stops the rescan process.
+- Subsequent rescan catches the aborted address UTXO.
 """
 
+import threading
 from decimal import Decimal
-import threading # for bg importprivkey
-import time      # for sleep
+from time import sleep
+
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (assert_equal, get_rpc_proxy)
 
 class ImportAbortRescanTest(BitcoinTestFramework):
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.num_nodes = 2
 
     def run_test(self):
@@ -49,15 +49,16 @@ class ImportAbortRescanTest(BitcoinTestFramework):
         # because we will start checking before above thread starts processing
         self.log.info("Attempting to abort scan ...")
         for i in range(2000):
-            time.sleep(0.001)
+            sleep(0.001)
             abortres = self.nodes[1].abortrescan()
             if abortres:
+                assert(not self.nodes[1].abortrescan())
                 break
         assert abortres, "failed to abort rescan within allotted time"
         self.log.info("Waiting for import thread to die ...")
         # import should die soon
         for i in range(10):
-            time.sleep(0.1)
+            sleep(0.1)
             deadres = not importthread.isAlive()
             if deadres:
                 break
