@@ -2273,8 +2273,6 @@ int CHDWallet::ExpandTempRecipients(std::vector<CTempRecipient> &vecSend, CStore
                 if (r.address.type() == typeid(CExtKeyPair))
                 {
                     CExtKeyPair ek = boost::get<CExtKeyPair>(r.address);
-                    CExtKey58 ek58;
-                    ek58.SetKeyP(ek);
                     CPubKey pkDest;
                     uint32_t nChildKey;
                     if (0 != ExtKeyGetDestination(ek, pkDest, nChildKey))
@@ -2360,8 +2358,6 @@ int CHDWallet::ExpandTempRecipients(std::vector<CTempRecipient> &vecSend, CStore
             if (r.address.type() == typeid(CExtKeyPair))
             {
                 CExtKeyPair ek = boost::get<CExtKeyPair>(r.address);
-                CExtKey58 ek58;
-                ek58.SetKeyP(ek);
                 uint32_t nDestChildKey;
                 if (0 != ExtKeyGetDestination(ek, r.pkTo, nDestChildKey))
                     return errorN(1, sError, __func__, "ExtKeyGetDestination failed.");
@@ -2554,7 +2550,7 @@ int CHDWallet::PostProcessTempRecipients(std::vector<CTempRecipient> &vecSend)
         {
             CExtKeyPair ek = boost::get<CExtKeyPair>(r.addressColdStaking);
             r.nChildKeyColdStaking+=1;
-            ExtKeyUpdateLooseKey(ek, r.nChildKeyColdStaking, true);
+            ExtKeyUpdateLooseKey(ek, r.nChildKeyColdStaking, false);
         };
     };
     
@@ -2684,8 +2680,6 @@ static bool ExpandChangeAddress(CHDWallet *phdw, CTempRecipient &r, std::string 
     if (r.address.type() == typeid(CExtKeyPair))
     {
         CExtKeyPair ek = boost::get<CExtKeyPair>(r.address);
-        CExtKey58 ek58;
-        ek58.SetKeyP(ek);
         uint32_t nChildKey;
         
         if (0 != phdw->ExtKeyGetDestination(ek, r.pkTo, nChildKey))
@@ -2808,19 +2802,14 @@ bool CHDWallet::SetChangeDest(const CCoinControl *coinControl, CTempRecipient &r
                 std::string sAddress = jsonSettings["coldstakingaddress"].get_str();
                 
                 CBitcoinAddress addr(sAddress);
-                
                 if (!addr.IsValid())
                     return errorN(0, sError, __func__, "Invalid coldstaking address setting.");
-                
                 r.addressColdStaking = addr.Get();
                 
                 CScript scriptStaking;
-                
                 if (r.addressColdStaking.type() == typeid(CExtKeyPair))
                 {
                     CExtKeyPair ek = boost::get<CExtKeyPair>(r.addressColdStaking);
-                    CExtKey58 ek58;
-                    ek58.SetKeyP(ek);
                     uint32_t nChildKey;
                     
                     CPubKey pkTemp;
@@ -2830,8 +2819,7 @@ bool CHDWallet::SetChangeDest(const CCoinControl *coinControl, CTempRecipient &r
                     r.nChildKeyColdStaking = nChildKey;
                     CKeyID idTo = pkTemp.GetID();
                     scriptStaking = GetScriptForDestination(idTo);
-                };
-                
+                } else
                 if (r.addressColdStaking.type() == typeid(CKeyID))
                 {
                     CKeyID idk = boost::get<CKeyID>(r.addressColdStaking);
@@ -2847,6 +2835,9 @@ bool CHDWallet::SetChangeDest(const CCoinControl *coinControl, CTempRecipient &r
                     script += r.scriptPubKey;
                     script << OP_ENDIF;
                     r.scriptPubKey = script;
+                } else
+                {
+                    return errorN(false, sError, __func__, "Unknown scriptStaking type, must be pay-to-public-key-hash.");
                 };
             };
         };
@@ -3332,7 +3323,6 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
         return errorN(1, sError, __func__, _("Could not get confidential chain from account.").c_str());
     
     uint32_t nLastHardened = pcC->nHGenerated;
-    
     if (0 != AddStandardInputs(wtx, rtx, vecSend, sea, pcC, sign, nFeeRet, coinControl, sError))
     {
         // sError will be set
@@ -8876,7 +8866,7 @@ void CHDWallet::ResendWalletTransactions(int64_t nBestBlockTime, CConnman *connm
         LogPrintf("%s: rebroadcast %u unconfirmed transactions\n", __func__, relayed.size() + relayedRecord.size());
 };
 
-void CHDWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const CCoinControl *coinControl, const CAmount &nMinimumAmount, const CAmount &nMaximumAmount, const CAmount &nMinimumSumAmount, const uint64_t &nMaximumCount, const int &nMinDepth, const int &nMaxDepth) const
+void CHDWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const CCoinControl *coinControl, const CAmount &nMinimumAmount, const CAmount &nMaximumAmount, const CAmount &nMinimumSumAmount, const uint64_t &nMaximumCount, const int &nMinDepth, const int &nMaxDepth, bool fIncludeImmature) const
 {
     vCoins.clear();
 
@@ -8891,7 +8881,9 @@ void CHDWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, con
         if (!CheckFinalTx(*pcoin))
             continue;
 
-        if (pcoin->GetBlocksToMaturity() > 0)
+        bool fMature = !(pcoin->GetBlocksToMaturity() > 0);
+        if (!fIncludeImmature
+            && !fMature)
             continue;
 
         int nDepth = pcoin->GetDepthInMainChain();
@@ -8969,7 +8961,7 @@ void CHDWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, con
             bool fSpendableIn = ((mine & ISMINE_SPENDABLE) != ISMINE_NO) || (coinControl && coinControl->fAllowWatchOnly && (mine & ISMINE_WATCH_SOLVABLE) != ISMINE_NO);
             bool fSolvableIn = (mine & (ISMINE_SPENDABLE | ISMINE_WATCH_SOLVABLE)) != ISMINE_NO;
 
-            vCoins.push_back(COutput(pcoin, i, nDepth, fSpendableIn, fSolvableIn, safeTx));
+            vCoins.emplace_back(pcoin, i, nDepth, fSpendableIn, fSolvableIn, safeTx, fMature);
 
             // Checks the sum amount of all UTXO's.
             if (nMinimumSumAmount != MAX_MONEY) {
@@ -9052,7 +9044,7 @@ void CHDWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, con
                     return;
                 };
             };
-            vCoins.push_back(COutput(&twi->second, r.n, nDepth, true, true, safeTx));
+            vCoins.emplace_back(&twi->second, r.n, nDepth, true, true, safeTx);
 
             if (nMinimumSumAmount != MAX_MONEY) {
                 nTotal += r.nValue;
@@ -10175,7 +10167,7 @@ bool CHDWallet::CreateCoinStake(unsigned int nBits, int64_t nTime, int nBlockHei
     txNew.vout.clear();
     txNew.vpout.clear();
     
-    // Mark coin stake transaction
+    // Mark as coin stake transaction
     txNew.nVersion = PARTICL_TXN_VERSION;
     txNew.SetType(TXN_COINSTAKE);
     
@@ -10211,6 +10203,7 @@ bool CHDWallet::CreateCoinStake(unsigned int nBits, int64_t nTime, int nBlockHei
         int64_t nBlockTime;
         if (CheckKernel(pindexPrev, nBits, nTime, prevoutStake, &nBlockTime))
         {
+            LOCK(cs_wallet);
             // Found a kernel
             LogPrint(BCLog::POS, "%s: Kernel found.\n", __func__);
             
@@ -10252,20 +10245,73 @@ bool CHDWallet::CreateCoinStake(unsigned int nBits, int64_t nTime, int nBlockHei
                 break;  // unable to find corresponding key
             };
             
-            //scriptPubKeyKernel << ToByteVector(key.GetPubKey()) << OP_CHECKSIG;
-            
             if (fConditionalStake)
+            {
                 scriptPubKeyKernel = kernelOut->scriptPubKey;
-            else
+            } else
+            {
                 scriptPubKeyKernel << OP_DUP << OP_HASH160 << ToByteVector(spendId) << OP_EQUALVERIFY << OP_CHECKSIG;
-            
-            
+                
+                // If the wallet has a coldstaking-change-address loaded, send the output to a coldstaking-script.
+                UniValue jsonSettings;
+                if (GetSetting("changeaddress", jsonSettings)
+                    && jsonSettings["coldstakingaddress"].isStr())
+                {
+                    std::string sAddress;
+                    try { sAddress = jsonSettings["coldstakingaddress"].get_str();
+                    } catch (std::exception &e) {
+                        return error("%s: Get coldstakingaddress failed %s.", __func__, e.what());
+                    };
+                    
+                    LogPrint(BCLog::POS, "%s: Sending output to coldstakingscript %s.\n", __func__, sAddress);
+                    
+                    CBitcoinAddress addrColdStaking(sAddress);
+                    CTxDestination destColdStaking = addrColdStaking.Get();
+                    
+                    CScript scriptStaking;
+                    if (destColdStaking.type() == typeid(CExtKeyPair))
+                    {
+                        CExtKeyPair ek = boost::get<CExtKeyPair>(destColdStaking);
+                        uint32_t nChildKey;
+                        
+                        CPubKey pkTemp;
+                        if (0 != ExtKeyGetDestination(ek, pkTemp, nChildKey))
+                            return error("%s: ExtKeyGetDestination failed.", __func__);
+                        
+                        nChildKey++;
+                        ExtKeyUpdateLooseKey(ek, nChildKey, false);
+                        
+                        scriptStaking = GetScriptForDestination(pkTemp.GetID());
+                    } else
+                    if (destColdStaking.type() == typeid(CKeyID))
+                    {
+                        CKeyID idk = boost::get<CKeyID>(destColdStaking);
+                        scriptStaking = GetScriptForDestination(idk);
+                    } else
+                    {
+                        return error("%s: Unknown coldstakingaddress type.", __func__);
+                    };
+                    
+                    if (scriptStaking.IsPayToPublicKeyHash())
+                    {
+                        CScript script = CScript() << OP_ISCOINSTAKE << OP_IF;
+                        script += scriptStaking;
+                        script << OP_ELSE;
+                        script += scriptPubKeyKernel;
+                        script << OP_ENDIF;
+                        
+                        scriptPubKeyKernel = script;
+                    } else
+                    {
+                        return error("%s: Unknown scriptStaking type, must be pay-to-public-key-hash.", __func__);
+                    };
+                };
+            };
             
             txNew.nVersion = PARTICL_TXN_VERSION;
             txNew.SetType(TXN_COINSTAKE);
             txNew.vin.clear();
             txNew.vout.clear();
-            
             
             txNew.vin.push_back(CTxIn(pcoin.first->GetHash(), pcoin.second));
             
@@ -10309,7 +10355,6 @@ bool CHDWallet::CreateCoinStake(unsigned int nBits, int64_t nTime, int nBlockHei
     size_t nStakesCombined = 0;
     
     // Attempt to add more inputs
-    // TODO: necessary with static reward?
     // only advantage here is to setup the next stake using this output as a kernel to have a higher chance of staking
     it = setCoins.begin();
     while (it != setCoins.end())
@@ -10362,7 +10407,6 @@ bool CHDWallet::CreateCoinStake(unsigned int nBits, int64_t nTime, int nBlockHei
         return false;
     
     const DevFundSettings *pDevFundSettings = Params().GetDevFundSettings(nTime);
-    
     if (!pDevFundSettings || pDevFundSettings->nMinDevStakePercent <= 0)
     {
         nCredit += nReward;
@@ -10434,28 +10478,25 @@ bool CHDWallet::CreateCoinStake(unsigned int nBits, int64_t nTime, int nBlockHei
     for (const auto &pcoin : vwtxPrev)
     {
         uint32_t nPrev = txNew.vin[nIn].prevout.n;
-        
+
         CTxOutStandard *prevOut = (CTxOutStandard*)pcoin->tx->vpout[nPrev].get();
         CScript &scriptPubKeyOut = prevOut->scriptPubKey;
         std::vector<uint8_t> vchAmount;
         prevOut->PutValue(vchAmount);
-        
+
         SignatureData sigdata;
         CTransaction txToConst(txNew);
         if (!ProduceSignature(TransactionSignatureCreator(this,&txToConst, nIn, vchAmount, SIGHASH_ALL), scriptPubKeyOut, sigdata))
-        {
-            LogPrint(BCLog::POS, "%s: ProduceSignature failed.\n", __func__);
-            return false;
-        };
-        
+            return error("%s: ProduceSignature failed.", __func__);
+
         UpdateTransaction(txNew, nIn, sigdata);
         nIn++;
     };
-    
+
     // Limit size
     unsigned int nBytes = ::GetSerializeSize(txNew, SER_NETWORK, PROTOCOL_VERSION);
     if (nBytes >= DEFAULT_BLOCK_MAX_SIZE/5)
-        return error("CreateCoinStake : exceeded coinstake size limit");
+        return error("%s: Exceeded coinstake size limit.", __func__);
 
     // Successfully generated coinstake
     return true;

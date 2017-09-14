@@ -3052,11 +3052,13 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
         obj.push_back(Pair("unconfirmed_anon",      ValueFromAmount(bal.nAnonUnconf)));
         obj.push_back(Pair("immature_balance",      ValueFromAmount(bal.nPartImmature)));
         
-        if (bal.nPartWatchOnly > 0 || bal.nPartWatchOnlyUnconf > 0)
+        if (bal.nPartWatchOnly > 0 || bal.nPartWatchOnlyUnconf > 0 || bal.nPartWatchOnlyStaked > 0)
         {
             obj.push_back(Pair("watchonly_balance",                 ValueFromAmount(bal.nPartWatchOnly)));
             obj.push_back(Pair("watchonly_staked_balance",          ValueFromAmount(bal.nPartWatchOnlyStaked)));
             obj.push_back(Pair("watchonly_unconfirmed_balance",     ValueFromAmount(bal.nPartWatchOnlyUnconf)));
+            obj.push_back(Pair("watchonly_total_balance",
+                ValueFromAmount(bal.nPartWatchOnly + bal.nPartWatchOnlyStaked + bal.nPartWatchOnlyUnconf)));
         };
     } else
     {
@@ -3214,6 +3216,7 @@ UniValue listunspent(const JSONRPCRequest& request)
             "      \"maximumCount\"     (numeric or string, default=unlimited) Maximum number of UTXOs\n"
             "      \"minimumSumAmount\" (numeric or string, default=unlimited) Minimum sum value of all UTXOs in " + CURRENCY_UNIT + "\n"
             "      \"cc_format\"        (bool, default=false) Format for coincontrol\n"
+            "      \"include_immature\" (bool, default=false) Include immature staked outputs\n"
             "    }\n"
             "\nResult\n"
             "[                     (array of json object)\n"
@@ -3221,6 +3224,7 @@ UniValue listunspent(const JSONRPCRequest& request)
             "    \"txid\" : \"txid\",        (string) the transaction id \n"
             "    \"vout\" : n,               (numeric) the vout value\n"
             "    \"address\" : \"address\",  (string) the particl address\n"
+            "    \"coldstaking_address\"  : \"address\" (string) the particl address this output must stake on\n"
             "    \"account\" : \"account\",  (string) DEPRECATED. The associated account, or \"\" for the default account\n"
             "    \"scriptPubKey\" : \"key\", (string) the script key\n"
             "    \"amount\" : x.xxx,         (numeric) the transaction output amount in " + CURRENCY_UNIT + "\n"
@@ -3241,6 +3245,8 @@ UniValue listunspent(const JSONRPCRequest& request)
             + HelpExampleRpc("listunspent", "6, 9999999 \"[\\\"PfqK97PXYfqRFtdYcZw82x3dzPrZbEAcYa\\\",\\\"Pka9M2Bva8WetQhQ4ngC255HAbMJf5P5Dc\\\"]\"")
             + HelpExampleCli("listunspent", "6 9999999 '[]' true '{ \"minimumAmount\": 0.005 }'")
             + HelpExampleRpc("listunspent", "6, 9999999, [] , true, { \"minimumAmount\": 0.005 } ")
+            + HelpExampleCli("listunspent", "1 9999999 '[]' false '{\"include_immature\":true}'")
+            + HelpExampleRpc("listunspent", "1, 9999999, [] , false, {\"include_immature\":true} ")
         );
 
     int nMinDepth = 1;
@@ -3277,6 +3283,7 @@ UniValue listunspent(const JSONRPCRequest& request)
     }
 
     bool fCCFormat = false;
+    bool fIncludeImmature = false;
     CAmount nMinimumAmount = 0;
     CAmount nMaximumAmount = MAX_MONEY;
     CAmount nMinimumSumAmount = MAX_MONEY;
@@ -3284,7 +3291,14 @@ UniValue listunspent(const JSONRPCRequest& request)
 
     if (!request.params[4].isNull()) {
         const UniValue& options = request.params[4].get_obj();
-
+        
+        RPCTypeCheckObj(options,
+            {
+                {"maximumCount",            UniValueType(UniValue::VNUM)},
+                {"cc_format",               UniValueType(UniValue::VBOOL)},
+                {"include_immature",        UniValueType(UniValue::VBOOL)},
+            }, true, false);
+        
         if (options.exists("minimumAmount"))
             nMinimumAmount = AmountFromValue(options["minimumAmount"]);
 
@@ -3299,6 +3313,9 @@ UniValue listunspent(const JSONRPCRequest& request)
         
         if (options.exists("cc_format"))
             fCCFormat = options["cc_format"].get_bool();
+        
+        if (options.exists("include_immature"))
+            fIncludeImmature = options["include_immature"].get_bool();
     }
 
     UniValue results(UniValue::VARR);
@@ -3306,7 +3323,7 @@ UniValue listunspent(const JSONRPCRequest& request)
     assert(pwallet != NULL);
     LOCK2(cs_main, pwallet->cs_wallet);
 
-    pwallet->AvailableCoins(vecOutputs, !include_unsafe, nullptr, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount, nMinDepth, nMaxDepth);
+    pwallet->AvailableCoins(vecOutputs, !include_unsafe, nullptr, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount, nMinDepth, nMaxDepth, fIncludeImmature);
 
     for (const COutput& out : vecOutputs) {
         
@@ -3354,7 +3371,7 @@ UniValue listunspent(const JSONRPCRequest& request)
             if (GetCoinstakeScriptPath(*scriptPubKey, scriptStake))
             {
                 if (ExtractDestination(scriptStake, address))
-                    entry.push_back(Pair("staking_address", CBitcoinAddress(address).ToString()));
+                    entry.push_back(Pair("coldstaking_address", CBitcoinAddress(address).ToString()));
             };
         };
 
@@ -3373,6 +3390,9 @@ UniValue listunspent(const JSONRPCRequest& request)
         entry.push_back(Pair("spendable", out.fSpendable));
         entry.push_back(Pair("solvable", out.fSolvable));
         entry.push_back(Pair("safe", out.fSafe));
+        if (fIncludeImmature)
+            entry.push_back(Pair("mature", out.fMature));
+
         results.push_back(entry);
     }
 

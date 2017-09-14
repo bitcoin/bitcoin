@@ -3197,6 +3197,12 @@ UniValue listunspentanon(const JSONRPCRequest &request)
     if (!request.params[4].isNull()) {
         const UniValue& options = request.params[4].get_obj();
 
+        RPCTypeCheckObj(options,
+            {
+                {"maximumCount",            UniValueType(UniValue::VNUM)},
+                {"cc_format",               UniValueType(UniValue::VBOOL)},
+            }, true, false);
+
         if (options.exists("minimumAmount"))
             nMinimumAmount = AmountFromValue(options["minimumAmount"]);
 
@@ -3350,6 +3356,12 @@ UniValue listunspentblind(const JSONRPCRequest &request)
 
     if (!request.params[4].isNull()) {
         const UniValue& options = request.params[4].get_obj();
+
+        RPCTypeCheckObj(options,
+            {
+                {"maximumCount",            UniValueType(UniValue::VNUM)},
+                {"cc_format",               UniValueType(UniValue::VBOOL)},
+            }, true, false);
 
         if (options.exists("minimumAmount"))
             nMinimumAmount = AmountFromValue(options["minimumAmount"]);
@@ -4456,6 +4468,10 @@ UniValue walletsettings(const JSONRPCRequest &request)
                     
                     if (addr.IsValidStealthAddress())
                         throw JSONRPCError(RPC_INVALID_PARAMETER, _("coldstakingaddress can't be a stealthaddress."));
+                    
+                    // TODO: override option?
+                    if (pwallet->HaveAddress(addr))
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, sAddress + _(" is spendable from this wallet."));
                 } else
                 {
                     warnings.push_back("Unknown key " + sKey);

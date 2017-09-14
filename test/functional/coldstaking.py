@@ -31,6 +31,7 @@ class ColdStakingTest(ParticlTestFramework):
         # Stop staking
         ro = nodes[0].reservebalance(True, 10000000)
         ro = nodes[1].reservebalance(True, 10000000)
+        ro = nodes[2].reservebalance(True, 10000000)
         
         ro = nodes[0].extkeyimportmaster('abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb')
         assert(ro['account_id'] == 'aaaZf2qnNr5T7PWRmqgmusuu5ACnBcX2ev')
@@ -72,6 +73,25 @@ class ColdStakingTest(ParticlTestFramework):
         
         ro = nodes[0].walletsettings('changeaddress', changeaddress)
         assert(ro['changeaddress']['coldstakingaddress'] == coldstakingaddr)
+        
+        
+        # Trying to set a coldstakingchangeaddress known to the wallet should fail
+        ro = nodes[0].extkey('account')
+        externalChain0 = ''
+        for c in ro['chains']:
+            if c['function'] != 'active_external':
+                continue
+            externalChain0 = c['chain']
+            break
+        assert(externalChain0 == 'pparszMzzW1247AwkKCH1MqneucXJfDoR3M5KoLsJZJpHkcjayf1xUMwPoTcTfUoQ32ahnkHhjvD2vNiHN5dHL6zmx8vR799JxgCw95APdkwuGm1')
+        
+        changeaddress = {'coldstakingaddress':externalChain0}
+        try:
+            ro = nodes[0].walletsettings('changeaddress', changeaddress)
+            assert(False), 'Added known address as cold-staking-change-address.'
+        except JSONRPCException as e:
+            assert('is spendable from this wallet' in e.error['message'])
+        
         
         
         txid1 = nodes[0].sendtoaddress(addr2_1, 100)
@@ -161,7 +181,6 @@ class ColdStakingTest(ParticlTestFramework):
         
         
         ro = nodes[0].extkey('list', 'true')
-        
         fFound = False
         for ek in ro:
             if ek['id'] == 'xBDBWFLeYrbBhPRSKHzVwN61rwUGwCXvUB':
@@ -171,7 +190,6 @@ class ColdStakingTest(ParticlTestFramework):
         assert(fFound)
         
         ro = nodes[0].extkey('account')
-        
         fFound = False
         for chain in ro['chains']:
             if chain['id'] == 'xXZRLYvJgbJyrqJhgNzMjEvVGViCdGmVAt':
@@ -216,7 +234,6 @@ class ColdStakingTest(ParticlTestFramework):
         assert(ro[0] == keyhash_to_p2pkh(hex_str_to_bytes(hashOther)))
         
         ro = nodes[0].extkey('list', 'true')
-        
         fFound = False
         for ek in ro:
             if ek['id'] == 'xBDBWFLeYrbBhPRSKHzVwN61rwUGwCXvUB':
@@ -226,7 +243,6 @@ class ColdStakingTest(ParticlTestFramework):
         assert(fFound)
         
         ro = nodes[0].extkey('account')
-        
         fFound = False
         for chain in ro['chains']:
             if chain['id'] == 'xXZRLYvJgbJyrqJhgNzMjEvVGViCdGmVAt':
@@ -241,11 +257,25 @@ class ColdStakingTest(ParticlTestFramework):
         assert(ro['num_derives'] == '3')
         
         
+        # Test stake to coldstakingchangeaddress
+        ro = nodes[0].walletsettings('stakelimit', {'height':2})
+        ro = nodes[0].reservebalance(False)
         
+        assert(self.wait_for_height(nodes[0], 2))
+        self.sync_all()
         
+        ro = nodes[1].getwalletinfo()
+        assert(ro['watchonly_staked_balance'] > 0)
         
-        
-        
+        ro = nodes[0].extkey('list', 'true')
+        print("list0", json.dumps(ro, indent=4, default=self.jsonDecimal))
+        fFound = False
+        for ek in ro:
+            if ek['id'] == 'xBDBWFLeYrbBhPRSKHzVwN61rwUGwCXvUB':
+                fFound = True
+                assert(ek['evkey'] == 'Unknown')
+                assert(ek['num_derives'] == '5')
+        assert(fFound)
         
         #assert(False)
         #print(json.dumps(ro, indent=4, default=self.jsonDecimal))
