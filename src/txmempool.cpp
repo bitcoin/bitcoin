@@ -599,7 +599,7 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigne
         removeConflicts(*tx, txn_conflicts);
         ClearPrioritisation(tx->GetHash());
     }
-    GetMainSignals().MempoolUpdatedForBlockConnect(std::move(txn_removed_in_block), std::move(txn_conflicts));
+    GetMainSignals().MempoolUpdatedForBlockConnect(std::move(txn_removed_in_block), std::move(txn_conflicts), nBlockHeight);
     lastRollingFeeUpdate = GetTime();
     blockSinceLastRollingFeeBump = true;
 }

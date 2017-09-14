@@ -1249,7 +1249,7 @@ void CWallet::TransactionRemovedFromMempool(const CTransactionRef &ptx, MemPoolR
     }
 }
 
-void CWallet::MempoolUpdatedForBlockConnect(const std::vector<CTransactionRef>& tx_removed_in_block, const std::vector<CTransactionRef>& tx_removed_conflicted) {
+void CWallet::MempoolUpdatedForBlockConnect(const std::vector<CTransactionRef>& tx_removed_in_block, const std::vector<CTransactionRef>& tx_removed_conflicted, int block_height) {
     LOCK2(cs_main, cs_wallet);
     for (const CTransactionRef& ptx : tx_removed_conflicted) {
         SyncTransaction(ptx);

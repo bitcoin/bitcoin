@@ -112,7 +112,7 @@ protected:
      *
      * Called on a background thread.
      */
-    virtual void MempoolUpdatedForBlockConnect(const std::vector<CTransactionRef>& tx_removed_in_block, const std::vector<CTransactionRef>& tx_removed_conflicted) {}
+    virtual void MempoolUpdatedForBlockConnect(const std::vector<CTransactionRef>& tx_removed_in_block, const std::vector<CTransactionRef>& tx_removed_conflicted, int block_height) {}
     friend void ::RegisterMempoolInterface(MempoolInterface*);
     friend void ::UnregisterMempoolInterface(MempoolInterface*);
 };
@@ -231,7 +231,7 @@ public:
 
     void UpdatedBlockTip(const CBlockIndex *, const CBlockIndex *, bool fInitialDownload);
     void TransactionAddedToMempool(const CTransactionRef &, const std::shared_ptr<std::vector<CTransactionRef>>& txn_replaced);
-    void MempoolUpdatedForBlockConnect(std::vector<CTransactionRef>&& tx_removed_in_block, std::vector<CTransactionRef>&& tx_removed_conflicted);
+    void MempoolUpdatedForBlockConnect(std::vector<CTransactionRef>&& tx_removed_in_block, std::vector<CTransactionRef>&& tx_removed_conflicted, int block_height);
     void MempoolEntryRemoved(CTransactionRef tx, MemPoolRemovalReason reason);
     void BlockConnected(const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex);
     void BlockDisconnected(const std::shared_ptr<const CBlock> &);
