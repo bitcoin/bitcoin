@@ -104,8 +104,8 @@ namespace {
      *
      * Memory used: 1.3 MB
      */
-    std::unique_ptr<CRollingBloomFilter> recentRejects;
-    uint256 hashRecentRejectsChainTip;
+    std::unique_ptr<CRollingBloomFilter> recentRejects GUARDED_BY(cs_main);
+    uint256 hashRecentRejectsChainTip GUARDED_BY(cs_main);
 
     /** Blocks that are in flight, and that are in the queue to be downloaded. Protected by cs_main. */
     struct QueuedBlock {
@@ -133,9 +133,9 @@ namespace {
 
     /** Relay map, protected by cs_main. */
     typedef std::map<uint256, CTransactionRef> MapRelay;
-    MapRelay mapRelay;
+    MapRelay mapRelay GUARDED_BY(cs_main);
     /** Expiration-time ordered list of (expire time, relay map entry) pairs, protected by cs_main). */
-    std::deque<std::pair<int64_t, MapRelay::iterator>> vRelayExpiration;
+    std::deque<std::pair<int64_t, MapRelay::iterator>> vRelayExpiration GUARDED_BY(cs_main);
 } // namespace
 
 namespace {
