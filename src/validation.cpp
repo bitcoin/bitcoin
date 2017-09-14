@@ -137,7 +137,7 @@ namespace {
 
     CCriticalSection cs_LastBlockFile;
     std::vector<CBlockFileInfo> vinfoBlockFile;
-    int nLastBlockFile = 0; // GUARDED_BY(cs_LastBlockFile)
+    int nLastBlockFile GUARDED_BY(cs_LastBlockFile) = 0;
     /** Global flag to indicate we should check to see if there are
      *  block/undo files that should be deleted.  Set on startup
      *  or if we allocate more file space when we're in prune mode
@@ -3963,7 +3963,7 @@ bool RewindBlockIndex(const CChainParams& params)
 // May NOT be used after any connections are up as much
 // of the peer-processing logic assumes a consistent
 // block index state
-void UnloadBlockIndex()
+void UnloadBlockIndex() EXCLUSIVE_LOCKS_REQUIRED(cs_LastBlockFile)
 {
     LOCK(cs_main);
     setBlockIndexCandidates.clear();
