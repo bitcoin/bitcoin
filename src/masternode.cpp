@@ -30,7 +30,7 @@ CMasternode::CMasternode(const CMasternode& other) :
     masternode_info_t{other},
     lastPing(other.lastPing),
     vchSig(other.vchSig),
-    nCacheCollateralBlock(other.nCacheCollateralBlock),
+    nCollateralMinConfBlockHash(other.nCollateralMinConfBlockHash),
     nBlockLastPaid(other.nBlockLastPaid),
     nPoSeBanScore(other.nPoSeBanScore),
     nPoSeBanHeight(other.nPoSeBanHeight),
@@ -90,6 +90,15 @@ bool CMasternode::UpdateFromNewBroadcast(CMasternodeBroadcast& mnb)
 //
 arith_uint256 CMasternode::CalculateScore(const uint256& blockHash)
 {
+    if (fDIP0001LockedInAtTip) {
+        // Deterministically calculate a "score" for a Masternode based on any given (block)hash
+        CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+        ss << vin.prevout << nCollateralMinConfBlockHash << blockHash;
+        return UintToArith256(ss.GetHash());
+    }
+
+    // TODO: remove calculations below after migration to 12.2
+
     uint256 aux = ArithToUint256(UintToArith256(vin.prevout.hash) + vin.prevout.n);
 
     CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
@@ -572,6 +581,8 @@ bool CMasternodeBroadcast::CheckOutpoint(int& nDos)
             mnodeman.mapSeenMasternodeBroadcast.erase(GetHash());
             return false;
         }
+        // remember the hash of the block where masternode collateral had minimum required confirmations
+        nCollateralMinConfBlockHash = chainActive[nHeight + Params().GetConsensus().nMasternodeMinimumConfirmations - 1]->GetBlockHash();
     }
 
     LogPrint("masternode", "CMasternodeBroadcast::CheckOutpoint -- Masternode UTXO verified\n");

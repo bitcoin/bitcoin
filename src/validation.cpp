@@ -1883,7 +1883,7 @@ int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Para
         const struct BIP9DeploymentInfo& vbinfo = VersionBitsDeploymentInfo[pos];
         if (vbinfo.check_mn_protocol && state == THRESHOLD_STARTED && !fAssumeMasternodeIsUpgraded) {
             masternode_info_t mnInfo;
-            bool fFound = mnodeman.GetMasternodeByRank(1, pindexPrev->nHeight, 0, false, mnInfo);
+            bool fFound = mnodeman.GetMasternodeByRank(1, mnInfo, pindexPrev->nHeight);
             if (!fFound || mnInfo.nProtocolVersion < PROTOCOL_VERSION) {
                 // no masternodes(?) or masternode is not upgraded yet
                 continue;
@@ -2461,7 +2461,8 @@ void static UpdateTip(CBlockIndex *pindexNew) {
         }
     }
 
-    // Update global flag
+    // Update global flags
+    fDIP0001LockedInAtTip = (VersionBitsTipState(chainParams.GetConsensus(), Consensus::DEPLOYMENT_DIP0001) == THRESHOLD_LOCKED_IN);
     fDIP0001ActiveAtTip = (VersionBitsTipState(chainParams.GetConsensus(), Consensus::DEPLOYMENT_DIP0001) == THRESHOLD_ACTIVE);
 }
 

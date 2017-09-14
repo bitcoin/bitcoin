@@ -684,9 +684,9 @@ bool CMasternodePaymentVote::IsValid(CNode* pnode, int nValidationHeight, std::s
     // Regular clients (miners included) need to verify masternode rank for future block votes only.
     if(!fMasterNode && nBlockHeight < nValidationHeight) return true;
 
-    int nRank = mnodeman.GetMasternodeRank(vinMasternode.prevout, nBlockHeight - 101, nMinRequiredProtocol, false);
+    int nRank;
 
-    if(nRank == -1) {
+    if(!mnodeman.GetMasternodeRank(vinMasternode.prevout, nRank, nBlockHeight - 101, nMinRequiredProtocol)) {
         LogPrint("mnpayments", "CMasternodePaymentVote::IsValid -- Can't calculate rank for masternode %s\n",
                     vinMasternode.prevout.ToStringShort());
         return false;
@@ -700,7 +700,10 @@ bool CMasternodePaymentVote::IsValid(CNode* pnode, int nValidationHeight, std::s
         if(nRank > MNPAYMENTS_SIGNATURES_TOTAL*2 && nBlockHeight > nValidationHeight) {
             strError = strprintf("Masternode is not in the top %d (%d)", MNPAYMENTS_SIGNATURES_TOTAL*2, nRank);
             LogPrintf("CMasternodePaymentVote::IsValid -- Error: %s\n", strError);
-            Misbehaving(pnode->GetId(), 20);
+            // do not ban nodes before DIP0001 is locked in to avoid banning majority of (old) masternodes
+            if (fDIP0001LockedInAtTip) {
+                Misbehaving(pnode->GetId(), 20);
+            }
         }
         // Still invalid however
         return false;
@@ -720,9 +723,9 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
     // if we have not enough data about masternodes.
     if(!masternodeSync.IsMasternodeListSynced()) return false;
 
-    int nRank = mnodeman.GetMasternodeRank(activeMasternode.outpoint, nBlockHeight - 101, GetMinMasternodePaymentsProto(), false);
+    int nRank;
 
-    if (nRank == -1) {
+    if (!mnodeman.GetMasternodeRank(activeMasternode.outpoint, nRank, nBlockHeight - 101, GetMinMasternodePaymentsProto())) {
         LogPrint("mnpayments", "CMasternodePayments::ProcessBlock -- Unknown Masternode\n");
         return false;
     }
@@ -779,7 +782,8 @@ void CMasternodePaymentVote::Relay()
     // do not relay until synced
     if (!masternodeSync.IsWinnersListSynced()) return;
     CInv inv(MSG_MASTERNODE_PAYMENT_VOTE, GetHash());
-    g_connman->RelayInv(inv);
+    // relay votes only strictly to new nodes until DIP0001 is locked in to avoid being banned by majority of (old) masternodes
+    g_connman->RelayInv(inv, fDIP0001LockedInAtTip ? mnpayments.GetMinMasternodePaymentsProto() : MIN_MASTERNODE_PAYMENT_PROTO_VERSION_2);
 }
 
 bool CMasternodePaymentVote::CheckSignature(const CPubKey& pubKeyMasternode, int nValidationHeight, int &nDos)

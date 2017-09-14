@@ -47,6 +47,7 @@ class CValidationState;
 
 struct LockPoints;
 
+static std::atomic<bool> fDIP0001LockedInAtTip{false};
 static std::atomic<bool> fDIP0001ActiveAtTip{false};
 
 /** Default for accepting alerts from the P2P network. */

@@ -504,7 +504,8 @@ UniValue masternodelist(const UniValue& params, bool fHelp)
 
     UniValue obj(UniValue::VOBJ);
     if (strMode == "rank") {
-        std::vector<std::pair<int, CMasternode> > vMasternodeRanks = mnodeman.GetMasternodeRanks();
+        CMasternodeMan::rank_pair_vec_t vMasternodeRanks;
+        mnodeman.GetMasternodeRanks(vMasternodeRanks);
         BOOST_FOREACH(PAIRTYPE(int, CMasternode)& s, vMasternodeRanks) {
             std::string strOutpoint = s.second.vin.prevout.ToStringShort();
             if (strFilter !="" && strOutpoint.find(strFilter) == std::string::npos) continue;
