@@ -667,10 +667,10 @@ private:
     CWalletDB *pwalletdbEncryption;
 
     //! the current wallet version: clients below this version are not able to load the wallet
-    int nWalletVersion; // GUARDED_BY(cs_wallet)
+    int nWalletVersion GUARDED_BY(cs_wallet);
 
     //! the maximum wallet format version: memory-only variable that specifies to what version this wallet may be upgraded
-    int nWalletMaxVersion; // GUARDED_BY(cs_wallet)
+    int nWalletMaxVersion GUARDED_BY(cs_wallet);
 
     int64_t nNextResend;
     int64_t nLastResend;
