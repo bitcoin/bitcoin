@@ -2727,8 +2727,11 @@ static bool ReceivedBlockTransactions(const CBlock &block, CValidationState& sta
                 LOCK(cs_nBlockSequenceId);
                 pindex->nSequenceId = nBlockSequenceId++;
             }
-            if (chainActive.Tip() == nullptr || !setBlockIndexCandidates.value_comp()(pindex, chainActive.Tip())) {
-                setBlockIndexCandidates.insert(pindex);
+            {
+                LOCK(cs_main);
+                if (chainActive.Tip() == nullptr || !setBlockIndexCandidates.value_comp()(pindex, chainActive.Tip())) {
+                    setBlockIndexCandidates.insert(pindex);
+                }
             }
             std::pair<std::multimap<CBlockIndex*, CBlockIndex*>::iterator, std::multimap<CBlockIndex*, CBlockIndex*>::iterator> range = mapBlocksUnlinked.equal_range(pindex);
             while (range.first != range.second) {
