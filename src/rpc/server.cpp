@@ -27,8 +27,8 @@
 
 static CCriticalSection cs_rpcWarmup;
 static bool fRPCRunning = false;
-static bool fRPCInWarmup = true; // GUARDED_BY(cs_rpcWarmup)
-static std::string rpcWarmupStatus("RPC server started"); // GUARDED_BY(cs_rpcWarmup)
+static bool fRPCInWarmup GUARDED_BY(cs_rpcWarmup) = true;
+static std::string rpcWarmupStatus GUARDED_BY(cs_rpcWarmup) = "RPC server started";
 /* Timer-creating functions */
 static RPCTimerInterface* timerInterface = nullptr;
 /* Map of name to timer. */
