@@ -192,6 +192,7 @@ private:
     {
         unsigned int blockHeight;
         CAmount m_fee_per_k;
+        uint256 witness_hash;
         TxStatsInfo() : blockHeight(0), m_fee_per_k(0) {}
     };
 
@@ -263,7 +264,7 @@ private:
     mutable CCriticalSection cs_feeEstimator;
 
     /** Process a transaction confirmed in a block*/
-    bool processBlockTx(unsigned int nBlockHeight, const uint256& hash);
+    bool processBlockTx(unsigned int nBlockHeight, const CTransactionRef& tx);
 
     /** Helper for estimateSmartFee */
     double estimateCombinedFee(unsigned int confTarget, double successThreshold, bool checkShorterHorizon, EstimationResult *result) const;

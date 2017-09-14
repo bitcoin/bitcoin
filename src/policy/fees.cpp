@@ -568,6 +568,7 @@ void CBlockPolicyEstimator::TransactionAddedToMempool(const NewMempoolTransactio
 
     mapMemPoolTxs[hash].blockHeight = txHeight;
     mapMemPoolTxs[hash].m_fee_per_k = feeRate.GetFeePerK();
+    mapMemPoolTxs[hash].witness_hash = info.m_tx->GetWitnessHash();
     unsigned int bucketIndex = feeStats->NewTx(txHeight, (double)feeRate.GetFeePerK());
     unsigned int bucketIndex2 = shortStats->NewTx(txHeight, (double)feeRate.GetFeePerK());
     assert(bucketIndex == bucketIndex2);
@@ -580,11 +581,18 @@ void CBlockPolicyEstimator::TransactionRemovedFromMempool(const CTransactionRef 
     removeTxNotInBlock(tx->GetHash());
 }
 
-bool CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const uint256& hash)
+bool CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const CTransactionRef& tx)
 {
-    std::map<uint256, TxStatsInfo>::iterator pos = mapMemPoolTxs.find(hash);
+    std::map<uint256, TxStatsInfo>::iterator pos = mapMemPoolTxs.find(tx->GetHash());
     if (pos == mapMemPoolTxs.end()) {
         // This transaction wasn't being tracked for fee estimation
+        return false;
+    }
+    if (pos->second.witness_hash != tx->GetWitnessHash()) {
+        // In the case that we saw a tx which had its witness malleated,
+        // pretend it just got removed (we should handle that better, too)
+        removeTx(pos, false);
+        mapMemPoolTxs.erase(pos);
         return false;
     }
     removeTx(pos, true);
@@ -647,7 +655,7 @@ void CBlockPolicyEstimator::MempoolUpdatedForBlockConnect(const std::vector<CTra
     unsigned int countedTxs = 0;
     // Update averages with data points from current block
     for (const auto& entry : txn_removed_in_block) {
-        if (processBlockTx(nBlockHeight, entry->GetHash()))
+        if (processBlockTx(nBlockHeight, entry))
             countedTxs++;
     }
 
