@@ -3758,6 +3758,11 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
             };
         };
 
+        if (uvCoinControl.exists("feeRate") && uvCoinControl.exists("estimate_mode"))
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both estimate_mode and feeRate");
+        if (uvCoinControl.exists("feeRate") && uvCoinControl.exists("conf_target"))
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both conf_target and feeRate");
+
         if (uvCoinControl.exists("replaceable"))
         {
             if (!uvCoinControl["replaceable"].isBool())
@@ -3779,9 +3784,14 @@ static UniValue SendToInner(const JSONRPCRequest &request, OutputTypes typeIn, O
             if (!uvCoinControl["estimate_mode"].isStr())
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "estimate_mode parameter must be a string.");
             
-            if (!FeeModeFromString(uvCoinControl["estimate_mode"].get_str(), coincontrol.m_fee_mode)) {
+            if (!FeeModeFromString(uvCoinControl["estimate_mode"].get_str(), coincontrol.m_fee_mode))
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid estimate_mode parameter");
-            }
+        };
+
+        if (uvCoinControl.exists("feeRate"))
+        {
+            coincontrol.m_feerate = CFeeRate(AmountFromValue(uvCoinControl["feeRate"]));
+            coincontrol.fOverrideFeeRate = true;
         };
 
         if (uvCoinControl["debug"].isBool() && uvCoinControl["debug"].get_bool() == true)
@@ -4085,6 +4095,7 @@ UniValue sendtypeto(const JSONRPCRequest &request)
             "           \"UNSET\"\n"
             "           \"ECONOMICAL\"\n"
             "           \"CONSERVATIVE\"\n"
+            "     \"feeRate\"                (numeric, optional, default not set: makes wallet determine the fee) Set a specific feerate (" + CURRENCY_UNIT + " per KB)\n"
             "   }\n"
             "\nResult:\n"
             "\"txid\"              (string) The transaction id.\n"

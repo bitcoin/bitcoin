@@ -3115,7 +3115,6 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
                     };
                     
                     assert(r.n < (int)txNew.vpout.size());
-                    
                     if (0 != AddCTData(txNew.vpout[r.n].get(), r, sError))
                         return 1; // sError will be set
                 };

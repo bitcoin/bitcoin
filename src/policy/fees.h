@@ -100,6 +100,7 @@ enum class FeeEstimateMode {
 };
 
 bool FeeModeFromString(const std::string& mode_string, FeeEstimateMode& fee_estimate_mode);
+bool StringFromFeeMode(FeeEstimateMode fee_estimate_mode, std::string& mode_string);
 
 /* Used to return detailed information about a feerate bucket */
 struct EstimatorBucket

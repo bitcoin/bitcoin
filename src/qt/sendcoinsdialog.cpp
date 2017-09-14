@@ -322,41 +322,47 @@ void SendCoinsDialog::on_sendButton_clicked()
     int nMaxInputs = ui->spinMaxInputs->value();
     
     sCommand += "] \"\" \"\" "+QString::number(nRingSize)+" "+QString::number(nMaxInputs);
-    
+
+
     QString sCoinControl;
-    if (!boost::get<CNoDestination>(&ctrl.destChange) || ctrl.NumSelected() > 0)
+    sCoinControl += " {";
+    sCoinControl += "\"replaceable\":" + QString::fromUtf8((ctrl.signalRbf ? "true" : "false"));
+
+    if (ctrl.m_feerate)
     {
-        sCoinControl += " {";
-        bool fNeedComma = false;
-        if (!boost::get<CNoDestination>(&ctrl.destChange))
-        {
-            CBitcoinAddress addrChange(ctrl.destChange);
-            sCoinControl += "\"changeaddress\":\""+QString::fromStdString(addrChange.ToString())+"\"";
-            fNeedComma = true;
-        };
-        
-        if (ctrl.NumSelected() > 0)
-        {
-            sCoinControl += QString(fNeedComma ? "," : "") + "\"inputs\":[";
-            bool fNeedCommaInputs = false;
-            for (const auto &op : ctrl.setSelected)
-            {
-                sCoinControl += fNeedCommaInputs ? ",{" : "{";
-                sCoinControl += "\"tx\":\"" + QString::fromStdString(op.hash.ToString()) + "\"";
-                sCoinControl += ",\"n\":" + QString::number(op.n);
-                sCoinControl += "}";
-                fNeedCommaInputs = true;
-            };
-            sCoinControl += "]";
-            fNeedComma = true;
-        };
-        
-        
-        
-        sCoinControl += "} ";
+        sCoinControl += ",\"feeRate\":" + QString::fromStdString(ctrl.m_feerate->ToString(false));
+    } else
+    {
+        std::string sFeeMode;
+        if (StringFromFeeMode(ctrl.m_fee_mode, sFeeMode))
+            sCoinControl += ",\"estimate_mode\":\"" + QString::fromStdString(sFeeMode) +"\"";
+        if (ctrl.m_confirm_target)
+            sCoinControl += ",\"conf_target\":" + QString::number(*ctrl.m_confirm_target);
     };
     
+    if (!boost::get<CNoDestination>(&ctrl.destChange))
+    {
+        CBitcoinAddress addrChange(ctrl.destChange);
+        sCoinControl += ",\"changeaddress\":\""+QString::fromStdString(addrChange.ToString())+"\"";
+    };
     
+    if (ctrl.NumSelected() > 0)
+    {
+        sCoinControl += ",\"inputs\":[";
+        bool fNeedCommaInputs = false;
+        for (const auto &op : ctrl.setSelected)
+        {
+            sCoinControl += fNeedCommaInputs ? ",{" : "{";
+            sCoinControl += "\"tx\":\"" + QString::fromStdString(op.hash.ToString()) + "\"";
+            sCoinControl += ",\"n\":" + QString::number(op.n);
+            sCoinControl += "}";
+            fNeedCommaInputs = true;
+        };
+        sCoinControl += "]";
+    };
+    sCoinControl += "} ";
+
+
     UniValue rv;
     QString sGetFeeCommand = sCommand + " true" + sCoinControl;
     if (!model->tryCallRpc(sGetFeeCommand, rv))

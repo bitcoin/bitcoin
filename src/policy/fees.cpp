@@ -63,6 +63,24 @@ bool FeeModeFromString(const std::string& mode_string, FeeEstimateMode& fee_esti
     return true;
 }
 
+bool StringFromFeeMode(FeeEstimateMode fee_estimate_mode, std::string& mode_string) {
+    switch(fee_estimate_mode)
+    {
+        case FeeEstimateMode::ECONOMICAL:
+            mode_string = "ECONOMICAL";
+            break;
+        case FeeEstimateMode::CONSERVATIVE:
+            mode_string = "CONSERVATIVE";
+            break;
+        case FeeEstimateMode::UNSET:
+            mode_string = "UNSET";
+            break;
+        default:
+            return false;
+    }
+    return true;
+}
+
 /**
  * We will instantiate an instance of this class to track transactions that were
  * included in a block. We will lump transactions into a bucket according to their

@@ -37,7 +37,9 @@ CAmount CFeeRate::GetFee(size_t nBytes_) const
     return nFee;
 }
 
-std::string CFeeRate::ToString() const
+std::string CFeeRate::ToString(bool fShowCurrencyUnit) const
 {
+    if (!fShowCurrencyUnit)
+        return strprintf("%d.%08d", nSatoshisPerK / COIN, nSatoshisPerK % COIN);
     return strprintf("%d.%08d %s/kB", nSatoshisPerK / COIN, nSatoshisPerK % COIN, CURRENCY_UNIT);
 }
