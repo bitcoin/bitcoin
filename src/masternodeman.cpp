@@ -132,6 +132,18 @@ bool CMasternodeMan::DisallowMixing(const COutPoint &outpoint)
     return true;
 }
 
+bool CMasternodeMan::PoSeBan(const COutPoint &outpoint)
+{
+    LOCK(cs);
+    CMasternode* pmn = Find(outpoint);
+    if (!pmn) {
+        return false;
+    }
+    pmn->PoSeBan();
+
+    return true;
+}
+
 void CMasternodeMan::Check()
 {
     LOCK(cs);
