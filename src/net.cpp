@@ -999,6 +999,7 @@ bool CConnman::AttemptToEvictConnection()
     // Reduce to the network group with the most connections
     std::vector<NodeEvictionCandidate> vEvictionNodes = mapAddrCounts[naMostConnections];
 
+    // Do not disconnect peers if there is only 1 connection from their network group
     if(vEvictionNodes.empty()) {
         return false;
     }
