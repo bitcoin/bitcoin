@@ -150,7 +150,7 @@ namespace {
      */
     CCriticalSection cs_nBlockSequenceId;
     /** Blocks loaded from disk are assigned id 0, so start the counter at 1. */
-    int32_t nBlockSequenceId = 1;
+    int32_t nBlockSequenceId GUARDED_BY(cs_nBlockSequenceId) = 1;
     /** Decreasing counter (used by subsequent preciousblock calls). */
     int32_t nBlockReverseSequenceId = -1;
     /** chainwork for the last block that preciousblock has been applied to. */
@@ -3963,7 +3963,7 @@ bool RewindBlockIndex(const CChainParams& params)
 // May NOT be used after any connections are up as much
 // of the peer-processing logic assumes a consistent
 // block index state
-void UnloadBlockIndex() EXCLUSIVE_LOCKS_REQUIRED(cs_LastBlockFile)
+void UnloadBlockIndex() EXCLUSIVE_LOCKS_REQUIRED(cs_LastBlockFile, cs_nBlockSequenceId)
 {
     LOCK(cs_main);
     setBlockIndexCandidates.clear();
