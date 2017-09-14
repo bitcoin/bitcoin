@@ -1200,7 +1200,7 @@ bool AppInitLockDataDirectory()
     return true;
 }
 
-bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
+bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler) NO_THREAD_SAFETY_ANALYSIS
 {
     const CChainParams& chainparams = Params();
     // ********************************************************* Step 4a: application initialization

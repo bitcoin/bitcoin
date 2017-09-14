@@ -616,7 +616,7 @@ public:
         ::bitdb.Reset();
     }
 
-    CWalletTx& AddTx(CRecipient recipient)
+    CWalletTx& AddTx(CRecipient recipient) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
     {
         CWalletTx wtx;
         CReserveKey reservekey(wallet.get());

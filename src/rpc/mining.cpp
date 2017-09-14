@@ -46,7 +46,7 @@ unsigned int ParseConfirmTarget(const UniValue& value)
  * or from the last difficulty change if 'lookup' is nonpositive.
  * If 'height' is nonnegative, compute the estimate at the time when a given block was found.
  */
-UniValue GetNetworkHashPS(int lookup, int height) {
+UniValue GetNetworkHashPS(int lookup, int height) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
     CBlockIndex *pb = chainActive.Tip();
 
     if (height >= 0 && height < chainActive.Height())
@@ -293,7 +293,7 @@ std::string gbt_vb_name(const Consensus::DeploymentPos pos) {
     return s;
 }
 
-UniValue getblocktemplate(const JSONRPCRequest& request)
+UniValue getblocktemplate(const JSONRPCRequest& request) NO_THREAD_SAFETY_ANALYSIS
 {
     if (request.fHelp || request.params.size() > 1)
         throw std::runtime_error(
