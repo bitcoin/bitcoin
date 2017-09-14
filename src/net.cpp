@@ -2557,7 +2557,7 @@ void CConnman::RecordBytesSent(uint64_t bytes)
 void CConnman::SetMaxOutboundTarget(uint64_t limit)
 {
     LOCK(cs_totalBytesSent);
-    uint64_t recommendedMinimum = (nMaxOutboundTimeframe / 600) * MaxBlockSize(fDIP0001ActiveAtTip);
+    uint64_t recommendedMinimum = (nMaxOutboundTimeframe / 600) * MaxBlockSize(true);
     nMaxOutboundLimit = limit;
 
     if (limit > 0 && limit < recommendedMinimum)
