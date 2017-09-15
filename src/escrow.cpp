@@ -1421,6 +1421,13 @@ UniValue escrowacknowledge(const UniValue& params, bool fHelp) {
 		GetAddress(arbiterAliasLatest, &arbiterAddressPayment, arbiterScript, escrow.nPaymentOption);
 	}
 
+	CScript buyerScript;
+	GetAlias(CNameTXIDTuple(escrow.buyerAliasTuple.first, escrow.buyerAliasTuple.second), buyerAlias);
+	if (GetAlias(escrow.buyerAliasTuple.first, buyerAliasLatest))
+	{
+		GetAddress(buyerAliasLatest, &buyerAddressPayment, buyerScript, escrow.nPaymentOption);
+	}
+
 	CScript sellerScript;
 	GetAlias(CNameTXIDTuple(escrow.sellerAliasTuple.first, escrow.sellerAliasTuple.second), sellerAlias);
 	if (GetAlias(escrow.sellerAliasTuple.first, sellerAliasLatest))

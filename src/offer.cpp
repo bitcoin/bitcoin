@@ -344,7 +344,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				continue;
 			if(foundAlias)
 				break;
-			if (!foundAlias && IsAliasOp(pop, true) && vvch.size() >= 4 && vvch[3].empty() && ((theOffer.accept.IsNull() && theOffer.aliasTuple.first == vvch[0] && theOffer.aliasTuple.third == vvch[1]) || (!theOffer.accept.IsNull() && theOffer.accept.buyerAliasTuple.first == vvch[0] && theOffer.accept.buyerAliasTuple.third == vvch[1])))
+			if (!foundAlias && IsAliasOp(pop, true) && vvch.size() >= 4 && vvch[3].empty() && ((theOffer.aliasTuple.first == vvch[0] && theOffer.aliasTuple.third == vvch[1])))
 			{
 				foundAlias = true;
 				prevAliasOp = pop;
@@ -423,11 +423,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1016 - " + _("Invalid payment option");
 				return error(errorMessage.c_str());
 			}
-			if(!theOffer.accept.IsNull())
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1017 - " + _("Cannot have accept information on offer activation");
-				return error(errorMessage.c_str());
-			}
 			if ( theOffer.vchOffer != vvchArgs[0])
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1018 - " + _("Offer input and offer guid mismatch");
@@ -491,11 +486,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1027 - " + _("Invalid payment option");
 				return error(errorMessage.c_str());
 			}
-			if(!theOffer.accept.IsNull())
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1028 - " + _("Cannot have accept information on offer update");
-				return error(errorMessage.c_str());
-			}
 			if ( theOffer.vchOffer != vvchArgs[0])
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1029 - " + _("Offer input and offer guid mismatch");
@@ -551,9 +541,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			serializedOffer.linkOfferTuple = theOffer.linkOfferTuple;
 			serializedOffer.vchOffer = theOffer.vchOffer;
 			serializedOffer.nSold = theOffer.nSold;
-			serializedOffer.accept.SetNull();
 			theOffer = serializedOffer;
-			theOffer.accept.SetNull();
 			if(!dbOffer.IsNull())
 			{
 				// if updating whitelist, we dont allow updating any offer details
@@ -635,8 +623,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 
 		if(op == OP_OFFER_UPDATE)
 		{
-			// ensure the accept is null as this should just have the offer information and no accept information
-			theOffer.accept.SetNull();
 			// if the txn whitelist entry exists (meaning we want to remove or add)
 			if(serializedOffer.linkWhitelist.entries.size() == 1)
 			{
@@ -1854,11 +1840,6 @@ void OfferTxToJSON(const int op, const std::vector<unsigned char> &vchData, cons
 	COffer dbOffer;
 	GetOffer(CNameTXIDTuple(offer.vchOffer, offer.txHash), dbOffer);
 
-	if(offer.accept.bPaymentAck)
-		opName += "("+_("acknowledged")+")";
-	else if(!offer.accept.feedback.IsNull())
-		opName += "("+_("feedback")+")";
-	entry.push_back(Pair("txtype", opName));
 	entry.push_back(Pair("_id", stringFromVch(offer.vchOffer)));
 
 	if(!offer.linkWhitelist.IsNull())
@@ -1884,9 +1865,6 @@ void OfferTxToJSON(const int op, const std::vector<unsigned char> &vchData, cons
 
 	if(offer.paymentOptions > 0 && offer.paymentOptions != dbOffer.paymentOptions)
 		entry.push_back(Pair("paymentoptions",GetPaymentOptionsString( offer.paymentOptions)));
-
-	if(offer.accept.bPaymentAck && offer.accept.bPaymentAck != dbOffer.accept.bPaymentAck)
-		entry.push_back(Pair("paymentacknowledge", offer.accept.bPaymentAck));
 
 	if(!offer.sDescription.empty() && offer.sDescription != dbOffer.sDescription)
 		entry.push_back(Pair("description", stringFromVch(offer.sDescription)));
