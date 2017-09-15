@@ -462,11 +462,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1024 - " + _("Quantity must be 1 for a digital offer");
 				return error(errorMessage.c_str());
 			}
-			if(theOffer.nPrice <= 0)
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1025 - " + _("Offer price must be greater than 0");
-				return error(errorMessage.c_str());
-			}
 
 
 			break;
@@ -505,11 +500,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			if(!theOffer.certTuple.first.empty() && theOffer.nQty != 1)
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1032 - " + _("Quantity must be 1 for a digital offer");
-				return error(errorMessage.c_str());
-			}
-			if(theOffer.nPrice <= 0)
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1033 - " + _("Offer price must be greater than 0");
 				return error(errorMessage.c_str());
 			}
 			if(theOffer.nCommission > 100 || theOffer.nCommission < -90)
@@ -602,14 +592,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				theOffer.nQty = linkOffer.nQty;
 				theOffer.sCurrencyCode = linkOffer.sCurrencyCode;
 				theOffer.certTuple = linkOffer.certTuple;
-				theOffer.SetPrice(linkOffer.nPrice);
-
-				int precision = 2;
-				COfferLinkWhitelistEntry foundEntry;
-				linkOffer.linkWhitelist.GetLinkEntryByHash(theOffer.aliasTuple.first, foundEntry);
-				CAmount currencyPrice = convertSyscoinToCurrencyCode(theAlias.aliasPegTuple, theOffer.sCurrencyCode, theOffer.GetPrice(entry), precision);
-				theOffer.sPrice = strprintf("%.*f", precision, ValueFromAmount(currencyPrice).get_real());
-
+				theOffer.sPrice = linkOffer.sPrice;
 				theOffer.sCategory = linkOffer.sCategory;
 				theOffer.sTitle = linkOffer.sTitle;
 				theOffer.paymentOptions = linkOffer.paymentOptions;
@@ -675,7 +658,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				theOffer.paymentOptions = linkOffer.paymentOptions;
 				theOffer.bCoinOffer = linkOffer.bCoinOffer;
 				theOffer.fUnits = linkOffer.fUnits;
-				theOffer.SetPrice(linkOffer.nPrice);
 				theOffer.sPrice = linkOffer.sPrice;
 			}
 		}
@@ -825,7 +807,6 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	newOffer.sDescription = vchDescription;
 	newOffer.nQty = nQty;
 	newOffer.nHeight = chainActive.Tip()->nHeight;
-	newOffer.SetPrice(nPricePerUnit);
 	if (!vchCert.empty())
 		newOffer.certTuple = CNameTXIDTuple(theCert.vchCert, theCert.txHash);
 	newOffer.sCurrencyCode = vchCurrency;
@@ -833,8 +814,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	newOffer.paymentOptions = paymentOptionsMask;
 	newOffer.fUnits = fUnits;
 	newOffer.bCoinOffer = bCoinOffer;
-	CAmount currencyPrice = convertSyscoinToCurrencyCode(latestAliasPegTuple, newOffer.sCurrencyCode, newOffer.GetDisplayPrice(), precision);
-	newOffer.sPrice = strprintf("%.*f", precision, ValueFromAmount(currencyPrice).get_real());
+	newOffer.sPrice = strprintf("%.*f", precision, fPrice);
 
 	vector<unsigned char> data;
 	newOffer.Serialize(data);
@@ -978,8 +958,6 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	newOffer.vchOffer = vchOffer;
 	newOffer.aliasTuple = CNameTXIDTuple(alias.vchAlias, alias.txHash, alias.vchGUID);
 	newOffer.sDescription = vchDescription;
-	newOffer.SetPrice(linkOffer.GetPrice());
-	newOffer.paymentOptions = linkOffer.paymentOptions;
 	newOffer.nCommission = commissionInteger;
 	newOffer.linkOfferTuple = CNameTXIDTuple(linkOffer.vchOffer, linkOffer.txHash);
 	newOffer.nHeight = chainActive.Tip()->nHeight;
@@ -1541,7 +1519,6 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	theOffer.ClearOffer();
 	theOffer.nHeight = chainActive.Tip()->nHeight;
 
-	CAmount nPricePerUnit = offerCopy.GetPrice();
 	if(!strCurrency.empty())
 		theOffer.sCurrencyCode = vchFromString(strCurrency);
 	if(!strTitle.empty())
@@ -1564,8 +1541,6 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 			string err = "SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1549 - " + _("Could not find currency in the peg alias");
 			throw runtime_error(err.c_str());
 		}
-	
-		theOffer.SetPrice(nPricePerUnit);
 		theOffer.sPrice = strprintf("%.*f", precision, fPrice);
 	}
 
@@ -1776,8 +1751,7 @@ bool BuildOfferJson(const COffer& theOffer, UniValue& oOffer)
 	else
 		oOffer.push_back(Pair("quantity", nQty));
 	oOffer.push_back(Pair("currency", stringFromVch(theOffer.sCurrencyCode)));
-	oOffer.push_back(Pair("sysprice", theOffer.GetDisplayPrice()));
-	oOffer.push_back(Pair("price", theOffer.sPrice));
+	oOffer.push_back(Pair("price", theOffer.GetDisplayPrice()));
 	if(!theOffer.linkOfferTuple.first.empty()) {
 		oOffer.push_back(Pair("commission", theOffer.nCommission));
 		oOffer.push_back(Pair("offerlink_guid", stringFromVch(theOffer.linkOfferTuple.first)));
@@ -1882,7 +1856,7 @@ void OfferTxToJSON(const int op, const std::vector<unsigned char> &vchData, cons
 		entry.push_back(Pair("currency", stringFromVch(offer.sCurrencyCode)));
 
 	if(offer.GetPrice() != dbOffer.GetPrice())
-		entry.push_back(Pair("price", boost::lexical_cast<string>(offer.GetPrice())));
+		entry.push_back(Pair("price", offer.GetDisplayPrice()));
 
 	if(offer.bPrivate != dbOffer.bPrivate)
 		entry.push_back(Pair("private", offer.bPrivate));
@@ -1896,4 +1870,31 @@ bool COfferLinkWhitelist::GetLinkEntryByHash(const std::vector<unsigned char> &a
 		}
 	}
 	return false;
+}
+string COffer::GetDisplayPrice(const COfferLinkWhitelistEntry& entry = COfferLinkWhitelistEntry()) const {
+	return boost::lexical_cast<string>(GetPrice(entry, true));
+}
+double COffer::GetPrice(const COfferLinkWhitelistEntry& entry = COfferLinkWhitelistEntry(), bool display = false) const {
+	double price = boost::lexical_cast<double>(sPrice);
+	if (!display)
+	{
+		if (bCoinOffer)
+			price = fUnits;
+		else if (fUnits != 1)
+			price *= fUnits;
+	}
+
+	char nDiscount = entry.nDiscountPct;
+	if (entry.nDiscountPct > 99)
+		nDiscount = 0;
+	// nMarkup is a percentage, commission minus discount
+	char nMarkup = nCommission - nDiscount;
+	if (nMarkup != 0)
+	{
+		float lMarkup = 1 / (nMarkup / 100.0);
+		lMarkup = floorf(lMarkup * 100) / 100;
+		CAmount priceMarkup = price / lMarkup;
+		price += priceMarkup;
+	}
+	return price;
 }

@@ -134,7 +134,6 @@ public:
 	CNameTXIDTuple aliasTuple;
     uint256 txHash;
     uint64_t nHeight;
-	CAmount nPrice;
 	std::string sPrice;
 	float fUnits;
 	char nCommission;
@@ -181,7 +180,6 @@ public:
 			READWRITE(sDescription);
 			READWRITE(txHash);
 			READWRITE(VARINT(nHeight));
-    		READWRITE(nPrice);
 			READWRITE(sPrice);
     		READWRITE(nQty);
 			READWRITE(VARINT(nSold));
@@ -198,43 +196,14 @@ public:
 			READWRITE(vchOffer);
 			READWRITE(linkAliasTuple);
 	}
-	inline CAmount GetDisplayPrice(const COfferLinkWhitelistEntry& entry=COfferLinkWhitelistEntry()) const{
-		return GetPrice(entry, true);
-	}
-	inline CAmount GetPrice(const COfferLinkWhitelistEntry& entry=COfferLinkWhitelistEntry(), bool display=false) const{
-		CAmount price = nPrice;
-		if(!display)
-		{
-			if(bCoinOffer)
-				price = fUnits*COIN;
-			else if(fUnits != 1)
-				price *= fUnits;
-		}
-									
-		char nDiscount = entry.nDiscountPct;
-		if(entry.nDiscountPct > 99)
-			nDiscount = 0;
-		// nMarkup is a percentage, commission minus discount
-		char nMarkup = nCommission - nDiscount;
-		if(nMarkup != 0)
-		{
-			float lMarkup = 1/ (nMarkup/100.0);
-			lMarkup = floorf(lMarkup * 100) / 100;
-			CAmount priceMarkup = price/lMarkup;
-			price += priceMarkup;
-		}
-		return price;
-	}
-	inline void SetPrice(CAmount price){
-		nPrice = price;
-	}
+	std::string GetDisplayPrice(const COfferLinkWhitelistEntry& entry = COfferLinkWhitelistEntry()) const;
+	double GetPrice(const COfferLinkWhitelistEntry& entry = COfferLinkWhitelistEntry(), bool display = false);
 
     inline friend bool operator==(const COffer &a, const COffer &b) {
         return (
          a.sCategory==b.sCategory
         && a.sTitle == b.sTitle
         && a.sDescription == b.sDescription
-        && a.nPrice == b.nPrice
 		&& a.sPrice == b.sPrice
         && a.nQty == b.nQty
 		&& a.fUnits == b.fUnits
@@ -259,7 +228,6 @@ public:
         sCategory = b.sCategory;
         sTitle = b.sTitle;
         sDescription = b.sDescription;
-        nPrice = b.nPrice;
 		sPrice = b.sPrice;
 		nQty = b.nQty;
 		nSold = b.nSold;
@@ -284,8 +252,8 @@ public:
         return !(a == b);
     }
 
-	inline void SetNull() { sCategory.clear(); sTitle.clear(); vchOffer.clear(); sDescription.clear(); bCoinOffer = false; sPrice.clear(); fUnits = 1; nHeight = nPrice = nQty = nSold = paymentOptions = 0; txHash.SetNull(); bPrivate = false; linkOfferTuple.first.clear(); aliasTuple.first.clear(); linkWhitelist.SetNull(); sCurrencyCode.clear(); nCommission = 0; aliasTuple.first.clear(); certTuple.first.clear(); }
-    inline bool IsNull() const { return (sCategory.empty() && sTitle.empty() && sPrice.empty() && sDescription.empty() && vchOffer.empty() && !bCoinOffer && fUnits == 1 && aliasTuple.first.empty() && txHash.IsNull() && nHeight == 0 && nPrice == 0 && paymentOptions == 0 && nQty == 0 && nSold ==0 && linkWhitelist.IsNull() && nCommission == 0 && bPrivate == false && paymentOptions == 0 && sCurrencyCode.empty() && linkOfferTuple.first.empty() && linkAliasTuple.first.empty() && certTuple.first.empty() ); }
+	inline void SetNull() { sCategory.clear(); sTitle.clear(); vchOffer.clear(); sDescription.clear(); bCoinOffer = false; sPrice.clear(); fUnits = 1; nHeight = nQty = nSold = paymentOptions = 0; txHash.SetNull(); bPrivate = false; linkOfferTuple.first.clear(); aliasTuple.first.clear(); linkWhitelist.SetNull(); sCurrencyCode.clear(); nCommission = 0; aliasTuple.first.clear(); certTuple.first.clear(); }
+    inline bool IsNull() const { return (sCategory.empty() && sTitle.empty() && sPrice.empty() && sDescription.empty() && vchOffer.empty() && !bCoinOffer && fUnits == 1 && aliasTuple.first.empty() && txHash.IsNull() && nHeight == 0 && paymentOptions == 0 && nQty == 0 && nSold ==0 && linkWhitelist.IsNull() && nCommission == 0 && bPrivate == false && paymentOptions == 0 && sCurrencyCode.empty() && linkOfferTuple.first.empty() && linkAliasTuple.first.empty() && certTuple.first.empty() ); }
 
     bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);

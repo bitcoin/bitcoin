@@ -1058,6 +1058,19 @@ UniValue generateescrowmultisig(const UniValue& params, bool fHelp) {
 	
 	CAliasIndex pegAlias;
 	if (!GetAlias(selleralias.aliasPegTuple.first, pegAlias))
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 1500 - " + _("Could not find seller peg alias with this name"));
+
+	const CNameTXIDTuple &latestAliasPegTuple = CNameTXIDTuple(pegAlias.vchAlias, pegAlias.txHash);
+
+	CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(latestAliasPegTuple, vchFromString(GetPaymentOptionsString(paymentOption)), 1, precision);
+	if (nPricePerUnit == 0)
+	{
+		string err = "SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 1549 - " + _("Could not find payment currency in the peg alias");
+		throw runtime_error(err.c_str());
+	}
+
+	CAliasIndex pegAlias;
+	if (!GetAlias(selleralias.aliasPegTuple.first, pegAlias))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 5509 - " + _("Invalid peg rates alias"));
 	const CNameTXIDTuple &latestAliasPegTuple = CNameTXIDTuple(pegAlias.vchAlias, pegAlias.txHash);
 
@@ -1102,14 +1115,20 @@ UniValue generateescrowmultisig(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4508 - " + _("Could not create escrow transaction: Invalid response from createescrow"));
 
 	int precision = 2;
-	float fEscrowFee = getEscrowFee(selleralias.aliasPegTuple, vchFromString(paymentOption),  precision);
-	CAmount nTotal = convertSyscoinToCurrencyCode(latestAliasPegTuple, vchFromString(paymentOption), theOffer.GetPrice(foundEntry), precision)*nQty;
+	UniValue params(UniValue::VARR);
+	params.push_back(stringFromVch(selleralias.vchAlias));
+	params.push_back(stringFromVch(theOffer.sCurrencyCode));
+	params.push_back(stringFromVch(GetPaymentOptionsString(paymentOption)));
+	params.push_back(theOffer.GetPrice(foundEntry)*nQty);
+	const UniValue &r = tableRPC.execute("aliasconvertcurrency", params);
+	CAmount nTotal = AmountFromValue(find_value(r.get_obj(), "convertedrate"));
 
+	float fEscrowFee = getEscrowFee(selleralias.aliasPegTuple, vchFromString(GetPaymentOptionsString(paymentOption)), precision);
 	CAmount nEscrowFee = GetEscrowArbiterFee(nTotal, fEscrowFee);
 	int nExtFeePerByte = getFeePerByte(selleralias.aliasPegTuple, vchFromString(paymentOption), precision);
 	// multisig spend is about 400 bytes
 	nTotal += nEscrowFee + (nExtFeePerByte*400);
-	resCreate.push_back(Pair("total", ValueFromAmount(nTotal)));
+	resCreate.push_back(Pair("total", strprintf("%.*f", precision, ValueFromAmount(nTotal).get_real())));
 	resCreate.push_back(Pair("merchant_aliaspeg_txid", latestAliasPegTuple.second.GetHex()));
 	return resCreate;
 }
@@ -1221,7 +1240,13 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 
 	const CNameTXIDTuple &merchantAliasPegTuple = CNameTXIDTuple(selleralias.aliasPegTuple.first, merchantAliasPegTx.IsNull()? sellerAliasPeg.txHash: merchantAliasPegTx);
 
-
+	int paymentPrecision = 2;
+	CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(merchantAliasPegTuple, vchFromString(GetPaymentOptionsString(paymentOptionMask)), 1, paymentPrecision);
+	if (nPricePerUnit == 0)
+	{
+		string err = "SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 1549 - " + _("Could not find payment currency in the peg alias");
+		throw runtime_error(err.c_str());
+	}
 	CSyscoinAddress buyerAddress;
 	GetAddress(buyeralias, &buyerAddress, scriptPubKeyAliasOrig);
 
@@ -1273,9 +1298,24 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 		redeemScript = ParseHex(stringFromVch(vchRedeemScript));
 	}
 	CAmount nCommission = 0;
+	UniValue params(UniValue::VARR);
+	params.push_back(stringFromVch(selleralias.vchAlias));
+	params.push_back(stringFromVch(theOffer.sCurrencyCode));
+	params.push_back(stringFromVch(GetPaymentOptionsString(paymentOptionMask)));
+	params.push_back(theOffer.GetPrice()*nQty);
+	const UniValue &r = tableRPC.execute("aliasconvertcurrency", params);
+	CAmount nTotalOfferPrice = AmountFromValue(find_value(r.get_obj(), "convertedrate"));
 	if (!theOffer.linkOfferTuple.first.empty())
 	{
-		nCommission = theOffer.GetPrice() - linkedOffer.GetPrice(foundEntry);
+		params.clear();
+		params.push_back(stringFromVch(theLinkedAlias.vchAlias));
+		params.push_back(stringFromVch(linkedOffer.sCurrencyCode));
+		params.push_back(stringFromVch(GetPaymentOptionsString(paymentOptionMask)));
+		params.push_back(linkedOffer.GetPrice(foundEntry)*nQty);
+		const UniValue &r = tableRPC.execute("aliasconvertcurrency", params);
+		CAmount nTotalLinkedOfferPrice = AmountFromValue(find_value(r.get_obj(), "convertedrate"));
+
+		nCommission = nTotalOfferPrice - nTotalLinkedOfferPrice;
 		if (nCommission < 0)
 			nCommission = 0;
 	}
@@ -1284,23 +1324,22 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	int precision = 2;
 	// send to escrow address
 
-	UniValue params(UniValue::VARR);
+	params.clear();
 	params.push_back(stringFromVch(selleralias.vchAlias));
 	params.push_back(stringFromVch(theOffer.sCurrencyCode));
 	params.push_back(stringFromVch(GetPaymentOptionsString(paymentOptionMask)));
-	params.push_back(boost::lexical_cast<double>(theOffer.GetPrice(foundEntry)*nQty);
+	params.push_back(theOffer.GetPrice(foundEntry)*nQty);
 	const UniValue &r = tableRPC.execute("aliasconvertcurrency", params);
-	string sTotal = find_value(r, "convertedrate").get_str();
-	CAmount nTotal = AmountFromValue(boost::lexical_cast<float>(sTotal));
+	CAmount nTotalWithBuyerDiscount = AmountFromValue(find_value(r.get_obj(), "convertedrate"));
 
 	int nFeePerByte = getFeePerByte(selleralias.aliasPegTuple, vchFromString(GetPaymentOptionsString(paymentOptionMask)), precision);
-	float fEscrowFee = getEscrowFee(selleralias.aliasPegTuple, vchFromString("SYS"), precision);
-	CAmount nEscrowFee = GetEscrowArbiterFee(nTotal, fEscrowFee);
+	float fEscrowFee = getEscrowFee(selleralias.aliasPegTuple, vchFromString(GetPaymentOptionsString(paymentOptionMask)), precision);
+	CAmount nEscrowFee = GetEscrowArbiterFee(nTotalWithBuyerDiscount, fEscrowFee);
 	nEscrowFee = convertSyscoinToCurrencyCode(selleralias.aliasPegTuple, vchFromString(GetPaymentOptionsString(paymentOptionMask)), nEscrowFee, precision);
 	
 	CAmount nNetworkFee = (nFeePerByte * 400);
 	vector<CRecipient> vecSend;
-	CAmount nAmountWithFee = nTotal+nEscrowFee+nNetworkFee;
+	CAmount nAmountWithFee = nTotalWithBuyerDiscount+nEscrowFee+nNetworkFee;
 	CWalletTx escrowWtx;
 	CRecipient recipientEscrow  = {scriptPubKey, nAmountWithFee, false};
 	if(extTxIdStr.empty())
@@ -1323,11 +1362,11 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	newEscrow.nHeight = chainActive.Tip()->nHeight;
 	newEscrow.sCurrencyCode = stringFromVch(theOffer.sCurrencyCode);
 	newEscrow.bCoinOffer = theOffer.bCoinOffer;
-	newEscrow.sTotal = sTotal;
+	newEscrow.paymentPrecision = paymentPrecision;
 	newEscrow.nCommission = nCommission;
 	newEscrow.nNetworkFee = nNetworkFee;
 	newEscrow.nArbiterFee = nEscrowFee;
-	newEscrow.nSysTotal = nTotal;
+	newEscrow.nTotal = nAmountWithFee;
 	vector<unsigned char> data;
 	newEscrow.Serialize(data);
     uint256 hash = Hash(data.begin(), data.end());
@@ -1556,8 +1595,8 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 
 	CScript scriptPubKeyAlias, scriptPubKeyAliasOrig;
 
-	CAmount nEscrowTotal = escrow.nSysTotal + escrow.nArbiterFee + escrow.nNetworkFee;
-	CAmount nTotal = escrow.nSysTotal;
+	CAmount nEscrowTotal = escrow.nTotal;
+	CAmount nTotal = escrow.nTotal - escrow.nArbiterFee - escrow.nNetworkFee;
 
 	CAmount nBalance = 0;
 	for (unsigned int i = 0; i < inputs.size(); i++)
@@ -1625,7 +1664,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	arrayCreateParams.push_back(createAddressUniValue);
 	arrayCreateParams.push_back(NullUniValue);
 	// if external blockchain then we dont set the alias payments scriptpubkey
-	arrayCreateParams.push_back(rawTx.empty());
+	arrayCreateParams.push_back(escrow.extTxId.IsNull());
 	UniValue resCreate;
 	try
 	{
@@ -1785,8 +1824,8 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 		GetAddress(linkSellerAliasLatest, &linkSellerAddress, script, escrow.nPaymentOption);
 	}
 
-	CAmount nEscrowTotal = escrow.nSysTotal + escrow.nArbiterFee + escrow.nNetworkFee;
-	CAmount nTotal = escrow.nSysTotal;
+	CAmount nEscrowTotal = escrow.nTotal;
+	CAmount nTotal = escrow.nTotal - escrow.nArbiterFee - escrow.nNetworkFee;
 	
 	CAmount nBalance = 0;
 	for (unsigned int i = 0; i < inputs.size(); i++)
@@ -2118,8 +2157,8 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 		GetAddress(sellerAliasLatest, &sellerAddressPayment, sellerScript, escrow.nPaymentOption);
 	}
 
-	CAmount nEscrowTotal = escrow.nSysTotal + escrow.nArbiterFee + escrow.nNetworkFee;
-	CAmount nTotal = escrow.nSysTotal;
+	CAmount nEscrowTotal = escrow.nTotal;
+	CAmount nTotal = escrow.nTotal - escrow.nArbiterFee - escrow.nNetworkFee;
 
 	CAmount nBalance = 0;
 	for (unsigned int i = 0; i < inputs.size(); i++)
@@ -2171,7 +2210,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	arrayCreateParams.push_back(createAddressUniValue);
 	arrayCreateParams.push_back(NullUniValue);
 	// if external blockchain then we dont set the alias payments scriptpubkey
-	arrayCreateParams.push_back(rawTx.empty());
+	arrayCreateParams.push_back(escrow.extTxId.IsNull());
 	UniValue resCreate;
 	try
 	{
@@ -2302,8 +2341,8 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	CPubKey sellerKey;
 	GetAlias(CNameTXIDTuple(escrow.sellerAliasTuple.first, escrow.sellerAliasTuple.second), sellerAlias);
 
-	CAmount nEscrowTotal = escrow.nSysTotal + escrow.nArbiterFee + escrow.nNetworkFee;
-	CAmount nTotal = escrow.nSysTotal;
+	CAmount nEscrowTotal = escrow.nTotal;
+	CAmount nTotal = escrow.nTotal - escrow.nArbiterFee - escrow.nNetworkFee;
 
 	CAmount nBalance = 0;
 	for (unsigned int i = 0; i < inputs.size(); i++)
@@ -2838,8 +2877,7 @@ bool BuildEscrowJson(const CEscrow &escrow, const std::vector<std::vector<unsign
 	oEscrow.push_back(Pair("offer", stringFromVch(escrow.offerTuple.first)));
 	oEscrow.push_back(Pair("offerlink_seller", stringFromVch(escrow.linkSellerAliasTuple.first)));
 	oEscrow.push_back(Pair("quantity", (int)escrow.nQty));
-	oEscrow.push_back(Pair("total", escrow.sTotal));
-	oEscrow.push_back(Pair("systotal", escrow.nSysTotal));
+	oEscrow.push_back(Pair("total", strprintf("%.*f", escrow.paymentPrecision, ValueFromAmount(escrow.nTotal).get_real())));
 	oEscrow.push_back(Pair("commission", escrow.nCommission));
 	oEscrow.push_back(Pair("arbiterfee", escrow.nArbiterFee));
 	oEscrow.push_back(Pair("networkfee", escrow.nNetworkFee));

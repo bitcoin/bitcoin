@@ -39,12 +39,12 @@ public:
 	unsigned int nQty;
 	unsigned int op;
 	bool bPaymentAck;
-	std::string sTotal;
+	unsigned char paymentPrecision;
 	std::string sCurrencyCode;
 	bool bCoinOffer;
 	CAmount nShipping;
 	CAmount nCommission;
-	CAmount nSysTotal;
+	CAmount nTotal;
 	CAmount nArbiterFee;
 	CAmount nNetworkFee;
 	void ClearEscrow()
@@ -55,7 +55,6 @@ public:
 		vchRedeemScript.clear();
 		offerTuple.first.clear();
 		rawTx.clear();
-		sTotal.clear();
 		sCurrencyCode.clear();
 	}
     CEscrow() {
@@ -87,8 +86,8 @@ public:
 		READWRITE(linkAliasTuple);
 		READWRITE(feedback);
 		READWRITE(bPaymentAck);
-		READWRITE(sTotal);
-		READWRITE(nSysTotal);
+		READWRITE(VARINT(paymentPrecision));
+		READWRITE(nTotal);
 		READWRITE(nArbiterFee);
 		READWRITE(nNetworkFee);
 		READWRITE(sCurrencyCode);
@@ -117,8 +116,8 @@ public:
 			&& a.feedback == b.feedback
 			&& a.redeemTxId == b.redeemTxId
 			&& a.bPaymentAck == b.bPaymentAck
-			&& a.sTotal == b.sTotal
-			&& a.nSysTotal == b.nSysTotal
+			&& a.paymentPrecision == b.paymentPrecision
+			&& a.nTotal == b.nTotal
 			&& a.nArbiterFee == b.nArbiterFee
 			&& a.nNetworkFee == b.nNetworkFee
 			&& a.sCurrencyCode == b.sCurrencyCode
@@ -147,8 +146,8 @@ public:
 		feedback = b.feedback;
 		redeemTxId = b.redeemTxId;
 		bPaymentAck = b.bPaymentAck;
-		sTotal = b.sTotal;
-		nSysTotal = b.nSysTotal;
+		paymentPrecision = b.paymentPrecision;
+		nTotal = b.nTotal;
 		nArbiterFee = b.nArbiterFee;
 		nNetworkFee = b.nNetworkFee;
 		sCurrencyCode = b.sCurrencyCode;
@@ -161,8 +160,8 @@ public:
     friend bool operator!=(const CEscrow &a, const CEscrow &b) {
         return !(a == b);
     }
-	void SetNull() { sTotal.clear(); sCurrencyCode.clear();  bCoinOffer = false;  nSysTotal = nArbiterFee = nNetworkFee = nCommission = nShipping = 0; extTxId.SetNull(); op = 0; bPaymentAck = false; redeemTxId.SetNull(); linkAliasTuple.first.clear(); feedback.SetNull(); linkSellerAliasTuple.first.clear(); vchEscrow.clear(); nHeight = nPaymentOption = 0; txHash.SetNull(); nQty = 0; buyerAliasTuple.first.clear(); arbiterAliasTuple.first.clear(); sellerAliasTuple.first.clear(); vchRedeemScript.clear(); offerTuple.first.clear(); rawTx.clear(); }
-    bool IsNull() const { return (sTotal.empty() && sCurrencyCode.empty() && !bCoinOffer && nSysTotal == 0 && nArbiterFee == 0 && nCommission == 0 && nNetworkFee == 0 && nShipping == 0 && extTxId.IsNull() && bPaymentAck == false && redeemTxId.IsNull() && linkSellerAliasTuple.first.empty() && linkAliasTuple.first.empty() && feedback.IsNull() && op == 0 && vchEscrow.empty() && txHash.IsNull() && nHeight == 0 && nPaymentOption == 0 && nQty == 0 && buyerAliasTuple.first.empty() && arbiterAliasTuple.first.empty() && sellerAliasTuple.first.empty() && vchRedeemScript.empty() && offerTuple.first.empty() && rawTx.empty()); }
+	void SetNull() { paymentPrecision = 0; sCurrencyCode.clear();  bCoinOffer = false;  nTotal = nArbiterFee = nNetworkFee = nCommission = nShipping = 0; extTxId.SetNull(); op = 0; bPaymentAck = false; redeemTxId.SetNull(); linkAliasTuple.first.clear(); feedback.SetNull(); linkSellerAliasTuple.first.clear(); vchEscrow.clear(); nHeight = nPaymentOption = 0; txHash.SetNull(); nQty = 0; buyerAliasTuple.first.clear(); arbiterAliasTuple.first.clear(); sellerAliasTuple.first.clear(); vchRedeemScript.clear(); offerTuple.first.clear(); rawTx.clear(); }
+    bool IsNull() const { return (paymentPrecision == 0 && sCurrencyCode.empty() && !bCoinOffer && nTotal == 0 && nArbiterFee == 0 && nCommission == 0 && nNetworkFee == 0 && nShipping == 0 && extTxId.IsNull() && bPaymentAck == false && redeemTxId.IsNull() && linkSellerAliasTuple.first.empty() && linkAliasTuple.first.empty() && feedback.IsNull() && op == 0 && vchEscrow.empty() && txHash.IsNull() && nHeight == 0 && nPaymentOption == 0 && nQty == 0 && buyerAliasTuple.first.empty() && arbiterAliasTuple.first.empty() && sellerAliasTuple.first.empty() && vchRedeemScript.empty() && offerTuple.first.empty() && rawTx.empty()); }
     bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
 	void Serialize(std::vector<unsigned char>& vchData);
