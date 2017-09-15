@@ -9,6 +9,7 @@
 #include "coins.h"
 #include "dbwrapper.h"
 #include "chain.h"
+#include "spentindex.h"
 
 #include <map>
 #include <string>
@@ -20,16 +21,6 @@
 class CBlockIndex;
 class CCoinsViewDBCursor;
 class uint256;
-
-struct CAddressUnspentKey;
-struct CAddressUnspentValue;
-struct CAddressIndexKey;
-struct CAddressIndexIteratorKey;
-struct CAddressIndexIteratorHeightKey;
-struct CTimestampIndexKey;
-struct CTimestampIndexIteratorKey;
-struct CSpentIndexKey;
-struct CSpentIndexValue;
 
 //! -dbcache default (MiB)
 static const int64_t nDefaultDbCache = 100;
