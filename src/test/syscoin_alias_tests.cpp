@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
 	GenerateBlocks(10, "node2");
 	GenerateBlocks(10, "node2");
 	for(unsigned int i=0;i<MAX_ALIAS_UPDATES_PER_BLOCK;i++)
-		BOOST_CHECK_NO_THROW(CallRPC("node2", "aliasupdate agmultiupdate changedata5"));
+		BOOST_CHECK_NO_THROW(CallRPC("node2", "aliasupdate jagmultiupdate changedata5"));
 
 	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate jagmultiupdate changedata6"), runtime_error);
 	GenerateBlocks(10, "node2");
