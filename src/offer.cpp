@@ -1874,7 +1874,7 @@ bool COfferLinkWhitelist::GetLinkEntryByHash(const std::vector<unsigned char> &a
 string COffer::GetDisplayPrice(const COfferLinkWhitelistEntry& entry) const {
 	return boost::lexical_cast<string>(GetPrice(entry, true));
 }
-double COffer::GetPrice(const COfferLinkWhitelistEntry& entry = COfferLinkWhitelistEntry(), bool display) const {
+double COffer::GetPrice(const COfferLinkWhitelistEntry& entry, bool display) const {
 	double price = boost::lexical_cast<double>(sPrice);
 	if (!display)
 	{
