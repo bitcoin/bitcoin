@@ -542,7 +542,7 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
         Dbc* pcursor = batch.GetCursor();
         if (!pcursor)
         {
-            LogPrintf("Error getting wallet database cursor\n");
+            LogPrintf("[%s] Error getting wallet database cursor\n", pwallet->GetName());
             return DB_CORRUPT;
         }
 
@@ -556,7 +556,7 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
                 break;
             else if (ret != 0)
             {
-                LogPrintf("Error reading next record from wallet database\n");
+                LogPrintf("[%s] Error reading next record from wallet database\n", pwallet->GetName());
                 return DB_CORRUPT;
             }
 
@@ -578,7 +578,7 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
                 }
             }
             if (!strErr.empty())
-                LogPrintf("%s\n", strErr);
+                LogPrintf("[%s] %s\n", pwallet->GetName(), strErr);
         }
         pcursor->close();
     }
@@ -597,10 +597,10 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
     if (result != DB_LOAD_OK)
         return result;
 
-    LogPrintf("nFileVersion = %d\n", wss.nFileVersion);
+    LogPrintf("[%s] nFileVersion = %d\n", pwallet->GetName(), wss.nFileVersion);
 
-    LogPrintf("Keys: %u plaintext, %u encrypted, %u w/ metadata, %u total\n",
-           wss.nKeys, wss.nCKeys, wss.nKeyMeta, wss.nKeys + wss.nCKeys);
+    LogPrintf("[%s] Keys: %u plaintext, %u encrypted, %u w/ metadata, %u total\n",
+           pwallet->GetName(), wss.nKeys, wss.nCKeys, wss.nKeyMeta, wss.nKeys + wss.nCKeys);
 
     // nTimeFirstKey is only reliable if all keys have metadata
     if ((wss.nKeys + wss.nCKeys + wss.nWatchKeys) != wss.nKeyMeta)
