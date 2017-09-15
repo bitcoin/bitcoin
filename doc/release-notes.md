@@ -1,12 +1,8 @@
-(note: this is a temporary file, to be added-to by anybody, and moved to
-release-notes at release time)
+Bitcoin Core version *0.15.0.1* is now available from:
 
-Bitcoin Core version *0.15.1* is now available from:
+  <https://bitcoin.org/bin/bitcoin-core-0.15.0.1/>
 
-  <https://bitcoin.org/bin/bitcoin-core-0.15.1/>
-
-This is a new major version release, including new features, various bugfixes
-and performance improvements, as well as updated translations.
+This is a minor bug fix for 0.15.0.
 
 Please report bugs using the issue tracker at GitHub:
 
@@ -60,16 +56,28 @@ frequently tested on them.
 Notable changes
 ===============
 
+GUI startup crash issue
+-------------------------
 
+After upgrade to 0.15.0, some clients would crash at startup because a custom
+fee setting was configured that no longer exists in the GUI. This is a minimal
+patch to avoid this issue from occuring.
 
-0.15.1 Change log
-=================
+0.15.0.1 Change log
+====================
+
+-  #11332 `46c8d23` Fix possible crash with invalid nCustomFeeRadio in QSettings (achow101, TheBlueMatt)
+
+Also the manpages were updated, as this was forgotten for 0.15.0.
 
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
 
-(fill this in)
+- Andrew Chow
+- Matt Corallo
+- Jonas Schnelli
+- Wladimir J. van der Laan
 
 As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
