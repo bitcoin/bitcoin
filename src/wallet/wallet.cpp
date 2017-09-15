@@ -4529,7 +4529,7 @@ bool CWallet::InitLoadWallet()
 
         if (GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET) && !walletInstance->IsHDEnabled()) {
             if (GetArg("-mnemonicpassphrase", "").size() > 256) {
-                return UIError(_("Mnemonic passphrase is too long, must be at most 256 characters"));
+                return InitError(_("Mnemonic passphrase is too long, must be at most 256 characters"));
             }
             // generate a new master key
             walletInstance->GenerateNewHDChain();
@@ -4552,10 +4552,10 @@ bool CWallet::InitLoadWallet()
         std::string strBackupError;
         if(!AutoBackupWallet(walletInstance, "", strBackupWarning, strBackupError)) {
             if (!strBackupWarning.empty()) {
-                UIWarning(strBackupWarning);
+                InitWarning(strBackupWarning);
             }
             if (!strBackupError.empty()) {
-                return UIError(strBackupError);
+                return InitError(strBackupError);
             }
         }
 
@@ -4563,18 +4563,18 @@ bool CWallet::InitLoadWallet()
     else if (mapArgs.count("-usehd")) {
         bool useHD = GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET);
         if (walletInstance->IsHDEnabled() && !useHD) {
-            return UIError(strprintf(_("Error loading %s: You can't disable HD on a already existing HD wallet"),
+            return InitError(strprintf(_("Error loading %s: You can't disable HD on a already existing HD wallet"),
                                      walletInstance->strWalletFile));
         }
         if (!walletInstance->IsHDEnabled() && useHD) {
-            return UIError(strprintf(_("Error loading %s: You can't enable HD on a already existing non-HD wallet"),
+            return InitError(strprintf(_("Error loading %s: You can't enable HD on a already existing non-HD wallet"),
                                      walletInstance->strWalletFile));
         }
     }
 
     // Warn user every time he starts non-encrypted HD wallet
     if (GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET) && !walletInstance->IsLocked()) {
-        UIWarning(_("Make sure to encrypt your wallet and delete all non-encrypted backups after you verified that wallet works!"));
+        InitWarning(_("Make sure to encrypt your wallet and delete all non-encrypted backups after you verified that wallet works!"));
     }
 
     LogPrintf(" wallet      %15dms\n", GetTimeMillis() - nStart);
