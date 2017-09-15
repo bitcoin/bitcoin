@@ -316,6 +316,7 @@ bool CheckSequenceLocks(const CTransaction &tx, int flags, LockPoints* lp, bool 
                 }
             }
             lp->maxInputBlock = tip->GetAncestor(maxInputHeight);
+            assert(lp->maxInputBlock != nullptr);
         }
     }
     return EvaluateSequenceLocks(index, lockPair);
@@ -3750,6 +3751,7 @@ bool ReplayBlocks(const CChainParams& params, CCoinsView* view)
     int nForkHeight = pindexFork ? pindexFork->nHeight : 0;
     for (int nHeight = nForkHeight + 1; nHeight <= pindexNew->nHeight; ++nHeight) {
         const CBlockIndex* pindex = pindexNew->GetAncestor(nHeight);
+        assert(pindex != nullptr);
         LogPrintf("Rolling forward %s (%i)\n", pindex->GetBlockHash().ToString(), nHeight);
         if (!RollforwardBlock(pindex, cache, params)) return false;
     }
