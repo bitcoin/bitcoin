@@ -1304,7 +1304,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 		paramsConvert.clear();
 		paramsConvert.push_back(stringFromVch(theLinkedAlias.vchAlias));
 		paramsConvert.push_back(stringFromVch(linkedOffer.sCurrencyCode));
-		paramsConvert.push_back(stringFromVch(GetPaymentOptionsString(paymentOptionMask)));
+		paramsConvert.push_back(GetPaymentOptionsString(paymentOptionMask));
 		paramsConvert.push_back(linkedOffer.GetPrice(foundEntry)*nQty);
 		r = tableRPC.execute("aliasconvertcurrency", paramsConvert);
 		CAmount nTotalLinkedOfferPrice = AmountFromValue(find_value(r.get_obj(), "convertedrate"));
