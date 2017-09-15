@@ -425,16 +425,12 @@ static const CRPCCommand vRPCCommands[] =
 		// use the blockchain as a distributed marketplace
 	{ "wallet", "offernew",             &offernew,             false },
 	{ "wallet", "offerupdate",          &offerupdate,          false },
-	{ "wallet", "offeraccept",          &offeraccept,          false },
-	{ "wallet", "offeracceptfeedback",  &offeracceptfeedback,  false },
-	{ "wallet", "offeracceptacknowledge",  &offeracceptacknowledge,false },
 	{ "wallet", "offerlink",		    &offerlink,            false },
 	{ "wallet", "offeraddwhitelist",    &offeraddwhitelist,	   false },
 	{ "wallet", "offerremovewhitelist",	&offerremovewhitelist, false },
 	{ "wallet", "offerclearwhitelist",	&offerclearwhitelist,  false },
 	{ "wallet", "offerwhitelist",		&offerwhitelist,	   false },
 	{ "wallet", "offerinfo",            &offerinfo,            false },
-	{ "wallet", "offeracceptinfo",      &offeracceptinfo,            false },
 
 		// use the blockchain as a certificate issuance platform
 	{ "wallet", "certnew",         &certnew,     false },

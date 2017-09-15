@@ -28,8 +28,6 @@ void CertTransfer(const string& node, const string& tonode, const string& guid, 
 bool CertFilter(const string& node, const string& regex);
 bool EscrowFilter(const string& node, const string& regex);
 void CreateSysRatesIfNotExist();
-void OfferAcceptFeedback(const string& node, const string &alias, const string& acceptguid, const string& feedback, const string& rating, const char& user, const string& witness="\"\"");
-const UniValue FindOfferAcceptList(const string& node, const string& alias, const string& offerguid, const string& acceptguid);
 const UniValue FindFeedback(const string& node, const string& txid);
 const string OfferNew(const string& node, const string& aliasname, const string& category, const string& title, const string& qty, const string& price, const string& description, const string& currency, const string& certguid="\"\"", const string& paymentoptions="\"\"",  const string& witness="\"\"");
 void OfferUpdate(const string& node, const string& aliasname, const string& offerguid,  const string& category="\"\"", const string& title="\"\"", const string& qty="\"\"", const string& price="\"\"", const string& description="\"\"", const string& currency="\"\"", const string &isprivate="\"\"", const string& certguid="\"\"",  const string &commission="\"\"", const string &paymentoptions="\"\"", const string& witness="\"\"");
@@ -40,7 +38,6 @@ void OfferClearWhitelist(const string& node, const string& offer, const string& 
 void EscrowFeedback(const string& node, const string& role, const string& escrowguid, const string& feedback, const string& rating, char user, const string& witness="\"\"");
 const string OfferLink(const string& node, const string& alias, const string& guid, const string& commission, const string& newdetails, const string& witness="\"\"");
 const string OfferAccept(const string& ownernode, const string& node, const string& aliasname, const string& offerguid, const string& qty, const string& witness="\"\"");
-const string LinkOfferAccept(const string& ownernode, const string& buyernode, const string& aliasname, const string& offerguid, const string& qty, const string& resellernode, const string& witness="\"\"");
 const string EscrowNew(const string& node, const string& sellernode, const string& buyeralias, const string& offerguid, const string& qty, const string& arbiteralias, const string& selleralias, const string& discountexpected="\"\"", const string& witness="\"\"");
 void EscrowRelease(const string& node, const string& role, const string& guid, const string& witness="\"\"");
 void EscrowClaimRelease(const string& node, const string& guid, const string& witness="\"\"");

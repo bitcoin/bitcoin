@@ -1135,45 +1135,6 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 	}
 }
 
-void OfferAcceptFeedback(const string& node, const string &alias, const string& acceptguid, const string& feedback, const string& rating, const char& user, const string& witness) {
-
-	string otherNode1, otherNode2;
-	GetOtherNodes(node, otherNode1, otherNode2);
-	
-	string role = user == FEEDBACKBUYER ? "buyer" : "seller";
-	UniValue r;
-	string offerfeedbackstr = "offeracceptfeedback " + acceptguid + " " + role + " " + feedback + " " + rating + " " + witness;
-	
-
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, offerfeedbackstr));
-	const UniValue &arr = r.get_array();
-	string acceptTxid = arr[0].get_str();
-
-	GenerateBlocks(10, node);
-	r = FindFeedback(node, acceptTxid);
-	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == acceptguid+user);
-	BOOST_CHECK(find_value(r.get_obj(), "offeraccept").get_str() == acceptguid);
-	BOOST_CHECK(find_value(r.get_obj(), "txid").get_str() == acceptTxid);
-	BOOST_CHECK(find_value(r.get_obj(), "rating").get_int() == atoi(rating.c_str()));
-	BOOST_CHECK(find_value(r.get_obj(), "feedback").get_str() == feedback);
-	BOOST_CHECK(find_value(r.get_obj(), "feedbackto").get_int() == user);
-	
-	r = FindFeedback(otherNode1, acceptTxid);
-	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == acceptguid + user);
-	BOOST_CHECK(find_value(r.get_obj(), "offeraccept").get_str() == acceptguid);
-	BOOST_CHECK(find_value(r.get_obj(), "txid").get_str() == acceptTxid);
-	BOOST_CHECK(find_value(r.get_obj(), "rating").get_int() == atoi(rating.c_str()));
-	BOOST_CHECK(find_value(r.get_obj(), "feedback").get_str() == feedback);
-	BOOST_CHECK(find_value(r.get_obj(), "feedbackto").get_int() == user);
-	
-	r = FindFeedback(otherNode2, acceptTxid);
-	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == acceptguid + user);
-	BOOST_CHECK(find_value(r.get_obj(), "offeraccept").get_str() == acceptguid);
-	BOOST_CHECK(find_value(r.get_obj(), "txid").get_str() == acceptTxid);
-	BOOST_CHECK(find_value(r.get_obj(), "rating").get_int() == atoi(rating.c_str()));
-	BOOST_CHECK(find_value(r.get_obj(), "feedback").get_str() == feedback);
-	BOOST_CHECK(find_value(r.get_obj(), "feedbackto").get_int() == user);
-}
 void EscrowFeedback(const string& node, const string& role, const string& escrowguid, const string& feedback, const string& rating,  char user, const string& witness) {
 
 	UniValue r, ret;
@@ -1193,142 +1154,15 @@ void EscrowFeedback(const string& node, const string& role, const string& escrow
 	BOOST_CHECK(find_value(r.get_obj(), "feedback").get_str() == rating);
 	BOOST_CHECK(find_value(r.get_obj(), "feedbackto").get_int() == user);
 }
-// offeraccept <alias> <guid> [quantity] [Ext TxId] [payment option] [witness]
 const string OfferAccept(const string& ownernode, const string& buyernode, const string& aliasname, const string& offerguid, const string& qty, const string& witness) {
-
 	CreateSysRatesIfNotExist();
-	string exttxid = "\"\"";
-	string paymentoptions = "\"\"";
-
 	UniValue r;
-	BOOST_CHECK_NO_THROW(r = CallRPC(buyernode, "offerinfo " + offerguid));
-	string selleralias = find_value(r.get_obj(), "alias").get_str();
-	int nCurrentQty = find_value(r.get_obj(), "quantity").get_int();
-	int nQtyToAccept = atoi(qty.c_str());
-	CAmount nTotal = find_value(r.get_obj(), "sysprice").get_int64()*nQtyToAccept;
-	int nTargetQty = nCurrentQty - nQtyToAccept;
-
-	BOOST_CHECK_NO_THROW(r = CallRPC(ownernode, "aliasbalance " + selleralias));
-	CAmount balanceBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
-	BOOST_CHECK_NO_THROW(r = CallRPC(ownernode, "aliasinfo " + selleralias));
-	string encryptionkey = find_value(r.get_obj(), "encryption_publickey").get_str();
-
-	string offeracceptstr = "offeraccept " + aliasname + " " + offerguid + " " + qty + " " + exttxid + " " + paymentoptions + " " + witness;
-
-	BOOST_CHECK_NO_THROW(r = CallRPC(buyernode, offeracceptstr));
-	const UniValue &arr = r.get_array();
-	string acceptguid = arr[1].get_str();
-
-	GenerateBlocks(10, ownernode);
-	GenerateBlocks(10, buyernode);
-	
-	const UniValue &acceptSellerValue = FindOfferAcceptList(ownernode, selleralias, offerguid, acceptguid);
-	CAmount nSellerTotal = find_value(acceptSellerValue, "systotal").get_int64();
-	int discount = find_value(acceptSellerValue, "offer_discount_percentage").get_int();
-	int lMarkup = 100 - discount;
-	nTotal = (nTotal*lMarkup) / 100;
-
-	
-	
-	BOOST_CHECK_NO_THROW(r = CallRPC(buyernode, "offerinfo " + offerguid));
-	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == offerguid);
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "quantity").get_int(), nTargetQty);
-	BOOST_CHECK_EQUAL(nSellerTotal, nTotal);
-
-	BOOST_CHECK_NO_THROW(r = CallRPC(ownernode, "aliasbalance " + selleralias));
-	balanceBefore += nSellerTotal;
-	CAmount balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
-	BOOST_CHECK_NO_THROW(r = CallRPC(ownernode, "aliasinfo " + selleralias));
-	BOOST_CHECK(abs(balanceBefore - balanceAfter) < 0.1*COIN);
-	BOOST_CHECK_THROW(r = CallRPC(buyernode, "offeracceptacknowledge " + acceptguid), runtime_error);
-	BOOST_CHECK_NO_THROW(r = CallRPC(ownernode, "offeracceptacknowledge " +  acceptguid));
-	GenerateBlocks(10, ownernode);
-	BOOST_CHECK_THROW(r = CallRPC(ownernode, "offeracceptacknowledge " +  acceptguid), runtime_error);
 	BOOST_CHECK_NO_THROW(r = CallRPC(ownernode, "offerinfo " + offerguid));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "quantity").get_int(), nTargetQty);
-	return acceptguid;
+	string escrowguid = EscrowNew(buyernode, ownernode, aliasname, offerguid, qty, "sysrates.peg", find_value(r.get_obj(), "alias").get_str());
+	EscrowRelease("node2", "buyer", escrowguid);
+	EscrowClaimRelease("node1", escrowguid);
+	return escrowguid;
 }
-const string LinkOfferAccept(const string& ownernode, const string& buyernode, const string& aliasname, const string& offerguid, const string& qty, const string& resellernode, const string& witness) {
-
-	CreateSysRatesIfNotExist();
-
-	UniValue r;
-
-	BOOST_CHECK_NO_THROW(r = CallRPC(buyernode, "offerinfo " + offerguid));
-	string selleralias = find_value(r.get_obj(), "alias").get_str();
-	int nCurrentQty = find_value(r.get_obj(), "quantity").get_int();
-	string rootalias = find_value(r.get_obj(), "offerlink_seller").get_str();
-	string rootofferguid = find_value(r.get_obj(), "offerlink_guid").get_str();
-	BOOST_CHECK(!rootalias.empty());
-	BOOST_CHECK(!rootofferguid.empty());
-	int nQtyToAccept = atoi(qty.c_str());
-	CAmount nTotal = find_value(r.get_obj(), "sysprice").get_int64()*nQtyToAccept;
-	int nTargetQty = nCurrentQty-nQtyToAccept;
-
-	BOOST_CHECK_NO_THROW(r = CallRPC(ownernode, "aliasbalance " + rootalias));
-	CAmount balanceOwnerBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
-	BOOST_CHECK_NO_THROW(r = CallRPC(ownernode, "aliasinfo " + rootalias));
-	string encryptionkey = find_value(r.get_obj(), "encryption_publickey").get_str();
-
-	
-	BOOST_CHECK_NO_THROW(r = CallRPC(resellernode, "aliasbalance " + selleralias));
-	CAmount balanceResellerBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
-	string exttxid = "\"\"";
-	string paymentoptions = "\"\"";
-	string offeracceptstr = "offeraccept " + aliasname + " " + offerguid + " " + qty + " " + exttxid + " " + paymentoptions + " " + witness;
-
-	BOOST_CHECK_NO_THROW(r = CallRPC(buyernode, offeracceptstr));
-	const UniValue &arr = r.get_array();
-	string acceptguid = arr[1].get_str();
-
-	GenerateBlocks(5, "node1");
-	GenerateBlocks(5, "node2");
-	GenerateBlocks(5, "node3");
-	const UniValue &acceptSellerValue = FindOfferAcceptList(ownernode, rootalias, offerguid, acceptguid);
-	
-	int discount = find_value(acceptSellerValue, "offer_discount_percentage").get_int();
-	int lMarkup = 100 - discount;
-	nTotal = (nTotal*lMarkup) / 100;
-
-
-	BOOST_CHECK_NO_THROW(r = CallRPC(buyernode, "offerinfo " + offerguid));
-	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == offerguid);
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "quantity").get_int(), nTargetQty);
-
-	BOOST_CHECK_NO_THROW(r = CallRPC(resellernode, "offerinfo " + rootofferguid));
-	CAmount nSellerTotal = find_value(r.get_obj(), "sysprice").get_int64()*nQtyToAccept;
-
-	BOOST_CHECK_NO_THROW(r = CallRPC(ownernode, "aliasbalance " + rootalias));
-	CAmount balanceOwnerAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
-	balanceOwnerBefore += nSellerTotal;
-	BOOST_CHECK_EQUAL(balanceOwnerBefore , balanceOwnerAfter);
-	// now get the accept from the resellernode
-	const UniValue &acceptReSellerValue = FindOfferAcceptList(resellernode, selleralias, offerguid, acceptguid);
-	CAmount nCommission = find_value(acceptReSellerValue, "systotal").get_int64();
-
-	BOOST_CHECK_NO_THROW(r = CallRPC(resellernode, "aliasbalance " + selleralias));
-	CAmount balanceResellerAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
-	balanceResellerBefore += nCommission;
-	BOOST_CHECK_EQUAL(balanceResellerBefore ,  balanceResellerAfter);
-	nSellerTotal += nCommission;
-
-	GenerateBlocks(2, "node1");
-	GenerateBlocks(2, "node2");
-	GenerateBlocks(2, "node3");
-
-	BOOST_CHECK_EQUAL(nSellerTotal, nTotal);
-	BOOST_CHECK_THROW(r = CallRPC(buyernode, "offeracceptacknowledge " + acceptguid), runtime_error);
-	BOOST_CHECK_THROW(r = CallRPC(resellernode, "offeracceptacknowledge " +  acceptguid), runtime_error);
-	GenerateBlocks(2,ownernode);
-	BOOST_CHECK_NO_THROW(r = CallRPC(ownernode, "offeracceptacknowledge " +  acceptguid));
-	GenerateBlocks(2,ownernode);
-	BOOST_CHECK_THROW(r = CallRPC(ownernode, "offeracceptacknowledge " +  acceptguid), runtime_error);
-	BOOST_CHECK_THROW(r = CallRPC(ownernode, "offeracceptacknowledge " +  acceptguid), runtime_error);
-	BOOST_CHECK_NO_THROW(r = CallRPC(ownernode, "offerinfo " + offerguid));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "quantity").get_int(), nTargetQty);
-	return acceptguid;
-}
-
 const string EscrowNew(const string& node, const string& sellernode, const string& buyeralias, const string& offerguid, const string& qtyStr, const string& arbiteralias, const string& selleralias, const string &discountexpected, const string &witness)
 {
 	string otherNode1, otherNode2;
@@ -1450,6 +1284,7 @@ void EscrowClaimRefund(const string& node, const string& guid, const string& wit
 	string buyeralias = find_value(r.get_obj(), "buyer").get_str();
 	CAmount nEscrowFee = find_value(r.get_obj(), "networkfee").get_int64() + find_value(r.get_obj(), "arbiterfee").get_int64();
 	CAmount nBuyerTotal = find_value(r.get_obj(), "systotal").get_int64();
+	string escrowaddress = find_value(r.get_obj(), "escrowaddress").get_str();
 	BOOST_CHECK(!buyeralias.empty());
 	string offer = find_value(r.get_obj(), "offer").get_str();
 
@@ -1457,11 +1292,24 @@ void EscrowClaimRefund(const string& node, const string& guid, const string& wit
 	string rootselleralias = find_value(r.get_obj(), "offerlink_seller").get_str();
 	int nQtyOfferBefore = find_value(r.get_obj(), "quantity").get_int();
 
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "getaddressutxos '{\\\"addresses\": [\\\"" + escrowaddress + "\\\"]}'"));
+	UniValue addressUTXOsArray = r.get_array();
+	// "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0,\\\"satoshis\\\":10000}]\"
+	string inputStr = "\"[";
+	for (unsigned int i = 0; i < addressUTXOsArray.size(); i++)
+	{
+		const UniValue& utxoObj = addressUTXOsArray[i].get_obj();
+		const string& txidStr = find_value(utxoObj.get_obj(), "txid").get_str();
+		const int& nOut = find_value(utxoObj.get_obj(), "outputIndex").get_int();
+		CAmount satoshis = AmountFromValue(find_value(utxoObj.get_obj(), "satoshis"));
+		inputStr += "{\\\"txid\\\":\\\"" + txidStr + "\\\",\\\"vout\\\":" + boost::lexical_cast<string>(nOut) + ",\\\"satoshis\\\":" + boost::lexical_cast<string>(satoshis) + "}";
+	}
+	inputStr += "]\"";
+
 	// get balances before
 	BOOST_CHECK_NO_THROW(a = CallRPC(node, "aliasbalance " + buyeralias));
-	CAmount balanceBuyerBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
-	string rawtx = "\"\"";
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowclaimrefund " + guid  + " " + rawtx + " " + witness));
+	CAmount balanceBuyerBefore = AmountFromValue(find_value(a.get_obj(), "balance"));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowclaimrefund " + guid  + " " + inputStr + " " + witness));
 	UniValue resArray = r.get_array();
 	string strRawTx = resArray[0].get_str();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowcompleterefund " + guid + " " + strRawTx + " " + witness));
@@ -1474,7 +1322,7 @@ void EscrowClaimRefund(const string& node, const string& guid, const string& wit
 
 	// get balances after
 	BOOST_CHECK_NO_THROW(a = CallRPC(node, "aliasbalance " + buyeralias));
-	CAmount balanceBuyerAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
+	CAmount balanceBuyerAfter = AmountFromValue(find_value(a.get_obj(), "balance"));
 	BOOST_CHECK(balanceBuyerBefore != balanceBuyerAfter);
 	balanceBuyerBefore += nBuyerTotal;
 	if(rootselleralias.empty())
@@ -1529,31 +1377,6 @@ void OfferClearWhitelist(const string& node, const string& offer, const string &
 	BOOST_CHECK(arrayValue.empty());
 
 }
-const UniValue FindOfferAcceptList(const string& node, const string& alias, const string& offerguid, const string& acceptguid)
-{
-	UniValue r, ret;
-	string query = "\"{\\\"_id\\\":\\\"" + acceptguid + "\\\"}\"";
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinquery offeraccept " + query));
-	BOOST_CHECK(r.type() == UniValue::VARR);
-	const UniValue &arrayValue = r.get_array();
-	for(int i=0;i<arrayValue.size();i++)
-	{	
-		UniValue acceptObj;
-		BOOST_CHECK(acceptObj.read(arrayValue[i].get_str()));
-		const string &acceptvalueguid = find_value(acceptObj, "_id").get_str();
-		const string &offervalueguid = find_value(acceptObj, "offer").get_str();
-		BOOST_CHECK(acceptvalueguid == acceptguid && offervalueguid == offerguid);
-
-	}
-
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offeracceptinfo " + acceptguid));
-	ret = r.get_obj();
-	const string &acceptvalueguid = find_value(r.get_obj(), "_id").get_str();
-	const string &offervalueguid = find_value(r.get_obj(), "offer").get_str();
-	BOOST_CHECK(acceptvalueguid == acceptguid && offervalueguid == offerguid);
-	BOOST_CHECK(!ret.isNull());
-	return ret;
-}
 const UniValue FindFeedback(const string& node, const string& txid)
 {
 	UniValue r, ret;
@@ -1573,18 +1396,30 @@ void EscrowClaimRelease(const string& node, const string& guid, const string &wi
 	string selleralias = find_value(r.get_obj(), "seller").get_str();
 	CAmount nEscrowFee = find_value(r.get_obj(), "networkfee").get_int64() + find_value(r.get_obj(), "arbiterfee").get_int64();
 	CAmount nSellerTotal = find_value(r.get_obj(), "systotal").get_int64();
+	string escrowaddress = find_value(r.get_obj(), "escrowaddress").get_str();
 	BOOST_CHECK(!selleralias.empty());
 	string offer = find_value(r.get_obj(), "offer").get_str();
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offer));
 	string rootselleralias = find_value(r.get_obj(), "offerlink_seller").get_str();
 	int nQtyOfferBefore = find_value(r.get_obj(), "quantity").get_int();
-
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "getaddressutxos '{\\\"addresses\": [\\\"" + escrowaddress + "\\\"]}'"));
+	UniValue addressUTXOsArray = r.get_array();
+	// "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0,\\\"satoshis\\\":10000}]\"
+	string inputStr = "\"[";
+	for (unsigned int i = 0; i < addressUTXOsArray.size(); i++)
+	{
+		const UniValue& utxoObj = addressUTXOsArray[i].get_obj();
+		const string& txidStr = find_value(utxoObj.get_obj(), "txid").get_str();
+		const int& nOut = find_value(utxoObj.get_obj(), "outputIndex").get_int();
+		CAmount satoshis = AmountFromValue(find_value(utxoObj.get_obj(), "satoshis"));
+		inputStr += "{\\\"txid\\\":\\\"" + txidStr + "\\\",\\\"vout\\\":" + boost::lexical_cast<string>(nOut) + ",\\\"satoshis\\\":" + boost::lexical_cast<string>(satoshis) + "}";
+	}
+	inputStr += "]\"";
 	// get balances before
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + selleralias));
 	CAmount balanceSellerBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
-	string rawtx = "\"\"";
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowclaimrelease " + guid + " " + rawtx + " " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowclaimrelease " + guid + " " + inputStr + " " + witness));
 	UniValue resArray = r.get_array();
 	string strRawTx = resArray[0].get_str();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowcompleterelease " + guid + " " + strRawTx + " " + witness));

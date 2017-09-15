@@ -50,8 +50,6 @@ enum opcodetype
 	// distributed exchange
 	OP_OFFER_ACTIVATE = 0x04,
 	OP_OFFER_UPDATE = 0x05,
-	OP_OFFER_ACCEPT = 0x06,
-	OP_OFFER_ACCEPT_FEEDBACK = 0x07,
 
 	// distributed licensing system
 	OP_CERT_ACTIVATE = 0x08,

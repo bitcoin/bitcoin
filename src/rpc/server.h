@@ -316,16 +316,12 @@ extern UniValue syscoinquery(const UniValue& params, bool fHelp);
 
 extern UniValue offernew(const UniValue& params, bool fHelp);
 extern UniValue offerupdate(const UniValue& params, bool fHelp);
-extern UniValue offeraccept(const UniValue& params, bool fHelp);
-extern UniValue offeracceptfeedback(const UniValue& params, bool fHelp);
-extern UniValue offeracceptacknowledge(const UniValue& params, bool fHelp);
 extern UniValue offerlink(const UniValue& params, bool fHelp);
 extern UniValue offeraddwhitelist(const UniValue& params, bool fHelp);
 extern UniValue offerremovewhitelist(const UniValue& params, bool fHelp);
 extern UniValue offerclearwhitelist(const UniValue& params, bool fHelp);
 extern UniValue offerwhitelist(const UniValue& params, bool fHelp);
 extern UniValue offerinfo(const UniValue& params, bool fHelp);
-extern UniValue offeracceptinfo(const UniValue& params, bool fHelp);
 
 extern UniValue certupdate(const UniValue& params, bool fHelp);
 extern UniValue certnew(const UniValue& params, bool fHelp);

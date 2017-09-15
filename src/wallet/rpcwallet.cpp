@@ -1778,43 +1778,6 @@ string GetSyscoinTransactionDescription(const int op, const vector<vector<unsign
 		strResponse = _("Offer Updated");
 		responseEnglish = "Offer Updated";
 		break;
-	case OP_OFFER_ACCEPT:
-		offer = COffer(wtx);
-		if (!offer.accept.feedback.IsNull())
-		{
-			if (type == "send")
-			{
-				strResponse = _("Offer Accept Feedback");
-				responseEnglish = "Offer Accept Feedback";
-			}
-			else if (type == "recv")
-			{
-				strResponse = _("Offer Accept Feedback Received");
-				responseEnglish = "Offer Accept Feedback Received";
-			}
-		}
-		else if (offer.accept.bPaymentAck)
-		{
-			strResponse = _("Offer Accept Acknowledged");
-			responseEnglish = "Offer Accept Acknowledged";
-		}
-		else
-		{
-			if (type == "send")
-			{
-				strResponse = _("Offer Accepted");
-				responseEnglish = "Offer Accepted";
-			}
-			else if (type == "recv")
-			{
-				strResponse = _("Offer Accept Received");
-				responseEnglish = "Offer Accept Received";
-			}
-		}
-		responseGUID = stringFromVch(vvchArgs[0]);
-		strResponse += " " + stringFromVch(vvchArgs[0]);
-		return strResponse;
-		break;
 	case OP_CERT_ACTIVATE:
 		strResponse = _("Certificate Activated");
 		responseEnglish = "Certificate Activated";

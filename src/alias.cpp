@@ -45,7 +45,6 @@ mongoc_client_t *client = NULL;
 mongoc_database_t *database = NULL;
 mongoc_collection_t *alias_collection = NULL;
 mongoc_collection_t *offer_collection = NULL;
-mongoc_collection_t *offeraccept_collection = NULL;
 mongoc_collection_t *escrow_collection = NULL;
 mongoc_collection_t *cert_collection = NULL;
 mongoc_collection_t *feedback_collection = NULL;
@@ -1365,13 +1364,11 @@ void startMongoDB(){
 		database = mongoc_client_get_database(client, "syscoindb");
 		alias_collection = mongoc_client_get_collection(client, "syscoindb", "alias");
 		offer_collection = mongoc_client_get_collection(client, "syscoindb", "offer");
-		offeraccept_collection = mongoc_client_get_collection(client, "syscoindb", "offeraccept");
 		escrow_collection = mongoc_client_get_collection(client, "syscoindb", "escrow");
 		cert_collection = mongoc_client_get_collection(client, "syscoindb", "cert");
 		feedback_collection = mongoc_client_get_collection(client, "syscoindb", "feedback");
 		BSON_ASSERT(alias_collection);
 		BSON_ASSERT(offer_collection);
-		BSON_ASSERT(offeraccept_collection);
 		BSON_ASSERT(escrow_collection);
 		BSON_ASSERT(cert_collection);
 		BSON_ASSERT(feedback_collection);
@@ -1436,8 +1433,6 @@ void stopMongoDB() {
 		mongoc_collection_destroy(alias_collection);
 	if(offer_collection)
 		mongoc_collection_destroy(offer_collection);
-	if(offeraccept_collection)
-		mongoc_collection_destroy(offeraccept_collection);
 	if(escrow_collection)
 		mongoc_collection_destroy(escrow_collection);
 	if(cert_collection)
@@ -1455,7 +1450,7 @@ UniValue syscoinquery(const UniValue& params, bool fHelp) {
 	if (fHelp || 2 > params.size() || 3 < params.size())
 		throw runtime_error(
 			"syscoinquery <collection> <query> [options]\n"
-			"<collection> Collection name, either: 'alias', 'cert', 'offer', 'offeraccept', 'feedback', 'escrow'.\n"
+			"<collection> Collection name, either: 'alias', 'cert', 'offer', 'feedback', 'escrow'.\n"
 			"<query> JSON query on the collection to retrieve a set of documents.\n"
 			"<options> JSON option arguments into the query. Based on mongoc_collection_find_with_opts.\n"
 			+ HelpRequiringPassphrase());
@@ -1489,14 +1484,12 @@ UniValue syscoinquery(const UniValue& params, bool fHelp) {
 		selectedCollection = cert_collection;
 	else if (collection == "offer")
 		selectedCollection = offer_collection;
-	else if (collection == "offeraccept")
-		selectedCollection = offeraccept_collection;
 	else if (collection == "escrow")
 		selectedCollection = escrow_collection;
 	else if (collection == "feedback")
 		selectedCollection = feedback_collection;
 	else
-		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5508 - " + _("Invalid selection collection name, please specify the collection parameter as either 'alias', 'cert', 'offer', 'offeraccept', 'feedback' or 'escrow'"));
+		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5508 - " + _("Invalid selection collection name, please specify the collection parameter as either 'alias', 'cert', 'offer', 'feedback' or 'escrow'"));
 
 	cursor = mongoc_collection_find_with_opts(selectedCollection, filter, opts, NULL);
 	UniValue res(UniValue::VARR);

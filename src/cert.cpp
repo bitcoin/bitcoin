@@ -24,7 +24,6 @@ extern mongoc_client_t *client;
 extern mongoc_database_t *database;
 extern mongoc_collection_t *alias_collection;
 extern mongoc_collection_t *offer_collection;
-extern mongoc_collection_t *offeraccept_collection;
 extern mongoc_collection_t *escrow_collection;
 extern mongoc_collection_t *cert_collection;
 extern mongoc_collection_t *feedback_collection;

@@ -179,7 +179,6 @@ public:
     }
     bool EraseEscrow(const CNameTXIDTuple& escrowTuple) {
 		EraseEscrowLastTXID(escrowTuple.first);
-		EraseEscrowFirstTXID(escrowTuple.first);
 		EraseEscrowIndex(escrowTuple.first);
 		EraseEscrowFeedbackIndex(escrowTuple.first);
         return Erase(make_pair(std::string("escrowi"), escrowTuple));
@@ -195,15 +194,6 @@ public:
 	}
 	bool EraseEscrowLastTXID(const std::vector<unsigned char>& escrow) {
 		return Erase(make_pair(std::string("escrowlt"), escrow));
-	}
-	bool WriteEscrowFirstTXID(const std::vector<unsigned char>& escrow, const uint256& txid) {
-		return Write(make_pair(std::string("escrowft"), escrow), txid);
-	}
-	bool ReadEscrowFirstTXID(const std::vector<unsigned char>& escrow, uint256& txid) {
-		return Read(make_pair(std::string("escrowft"), escrow), txid);
-	}
-	bool EraseEscrowFirstTXID(const std::vector<unsigned char>& escrow) {
-		return Erase(make_pair(std::string("escrowft"), escrow));
 	}
 	bool CleanupDatabase(int &servicesCleaned);
 	void WriteEscrowIndex(const CEscrow& escrow, const std::vector<std::vector<unsigned char> > &vvchArgs);
