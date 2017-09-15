@@ -36,7 +36,7 @@ void CMasternodeSync::BumpAssetLastTime(std::string strFuncName)
 {
     if(IsSynced() || IsFailed()) return;
     nTimeLastBumped = GetTime();
-    if(fDebug) LogPrintf("CMasternodeSync::BumpAssetLastTime -- %s\n", strFuncName);
+    LogPrint("mnsync", "CMasternodeSync::BumpAssetLastTime -- %s\n", strFuncName);
 }
 
 std::string CMasternodeSync::GetAssetName()
@@ -412,8 +412,7 @@ void CMasternodeSync::SendGovernanceSyncRequest(CNode* pnode)
 
 void CMasternodeSync::AcceptedBlockHeader(const CBlockIndex *pindexNew)
 {
-    if (fDebug)
-        LogPrintf("CMasternodeSync::AcceptedBlockHeader -- pindexNew->nHeight: %d\n", pindexNew->nHeight);
+    LogPrint("mnsync", "CMasternodeSync::AcceptedBlockHeader -- pindexNew->nHeight: %d\n", pindexNew->nHeight);
 
     if (!IsBlockchainSynced()) {
         // Postpone timeout each time new block header arrives while we are still syncing blockchain
@@ -423,8 +422,7 @@ void CMasternodeSync::AcceptedBlockHeader(const CBlockIndex *pindexNew)
 
 void CMasternodeSync::NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload)
 {
-    if (fDebug)
-        LogPrintf("CMasternodeSync::NotifyHeaderTip -- pindexNew->nHeight: %d fInitialDownload=%d\n", pindexNew->nHeight, fInitialDownload);
+    LogPrint("mnsync", "CMasternodeSync::NotifyHeaderTip -- pindexNew->nHeight: %d fInitialDownload=%d\n", pindexNew->nHeight, fInitialDownload);
 
     if (IsFailed() || IsSynced() || !pindexBestHeader)
         return;
@@ -454,8 +452,7 @@ void CMasternodeSync::NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitia
 
     fReachedBestHeader = fReachedBestHeaderNew;
 
-    if (fDebug)
-        LogPrintf("CMasternodeSync::NotifyHeaderTip -- pindexNew->nHeight: %d pindexBestHeader->nHeight: %d fInitialDownload=%d fReachedBestHeader=%d\n",
+    LogPrint("mnsync", "CMasternodeSync::NotifyHeaderTip -- pindexNew->nHeight: %d pindexBestHeader->nHeight: %d fInitialDownload=%d fReachedBestHeader=%d\n",
                 pindexNew->nHeight, pindexBestHeader->nHeight, fInitialDownload, fReachedBestHeader);
 
     if (!IsBlockchainSynced() && fReachedBestHeader) {
