@@ -1753,8 +1753,7 @@ bool BuildOfferJson(const COffer& theOffer, UniValue& oOffer)
 	else
 		oOffer.push_back(Pair("quantity", nQty));
 	oOffer.push_back(Pair("currency", stringFromVch(theOffer.sCurrencyCode)));
-	COfferLinkWhiteListEntry entry;
-	oOffer.push_back(Pair("price", strprintf("%.*f", theOffer.paymentPrecision, theOffer.GetPrice(entry, true))));
+	oOffer.push_back(Pair("price", strprintf("%.*f", theOffer.paymentPrecision, theOffer.GetPrice(COfferLinkWhitelistEntry(), true))));
 	if(!theOffer.linkOfferTuple.first.empty()) {
 		oOffer.push_back(Pair("commission", theOffer.nCommission));
 		oOffer.push_back(Pair("offerlink_guid", stringFromVch(theOffer.linkOfferTuple.first)));
@@ -1858,9 +1857,8 @@ void OfferTxToJSON(const int op, const std::vector<unsigned char> &vchData, cons
 	if(!offer.sCurrencyCode.empty()  && offer.sCurrencyCode != dbOffer.sCurrencyCode)
 		entry.push_back(Pair("currency", stringFromVch(offer.sCurrencyCode)));
 
-	COfferLinkWhiteListEntry entry;
 	if(offer.GetPrice() != dbOffer.GetPrice())
-		entry.push_back(Pair("price", strprintf("%.*f", offer.paymentPrecision, offer.GetPrice(entry, true)));
+		entry.push_back(Pair("price", strprintf("%.*f", offer.paymentPrecision, offer.GetPrice(COfferLinkWhitelistEntry(), true)));
 
 	if(offer.bPrivate != dbOffer.bPrivate)
 		entry.push_back(Pair("private", offer.bPrivate));
