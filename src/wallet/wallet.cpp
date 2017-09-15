@@ -4464,11 +4464,13 @@ CWallet* CWallet::InitLoadWallet(bool fDisableWallet, const std::string& strWall
         // Create new keyUser and set as default key
         RandAddSeedPerfmon();
 
-        if (GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET) && !pwalletMain->IsHDEnabled()) {
-            if (GetArg("-mnemonicpassphrase", "").size() > 256)
-                return InitError(_("Mnemonic passphrase is too long, must be at most 256 characters"));
+        if (GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET) && !walletInstance->IsHDEnabled()) {
+            if (GetArg("-mnemonicpassphrase", "").size() > 256) {
+                errorString += _("Mnemonic passphrase is too long, must be at most 256 characters");
+                return NULL;
+            }
             // generate a new master key
-            pwalletMain->GenerateNewHDChain();
+            walletInstance->GenerateNewHDChain();
 
             // ensure this wallet.dat can only be opened by clients supporting HD
             pwalletMain->SetMinVersion(FEATURE_HD);
@@ -4489,25 +4491,38 @@ CWallet* CWallet::InitLoadWallet(bool fDisableWallet, const std::string& strWall
         // Try to create wallet backup right after new wallet was created
         std::string strBackupWarning;
         std::string strBackupError;
-        if(!AutoBackupWallet(pwalletMain, "", strBackupWarning, strBackupError)) {
-            if (!strBackupWarning.empty())
-                InitWarning(strBackupWarning);
-            if (!strBackupError.empty())
-                return InitError(strBackupError);
+        if(!AutoBackupWallet(walletInstance, "", strBackupWarning, strBackupError)) {
+            if (!strBackupWarning.empty()) {
+                if (!warningString.empty())
+                    warningString += "\n";
+                warningString += strBackupWarning;
+            }
+            if (!strBackupError.empty()) {
+                errorString += strBackupError;
+                return NULL;
+            }
         }
 
     }
     else if (mapArgs.count("-usehd")) {
         bool useHD = GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET);
-        if (pwalletMain->IsHDEnabled() && !useHD)
-            return InitError(strprintf(_("Error loading %s: You can't disable HD on a already existing HD wallet"), strWalletFile));
-        if (!pwalletMain->IsHDEnabled() && useHD)
-            return InitError(strprintf(_("Error loading %s: You can't enable HD on a already existing non-HD wallet"), strWalletFile));
+        if (walletInstance->IsHDEnabled() && !useHD) {
+            errorString += strprintf(_("Error loading %s: You can't disable HD on a already existing HD wallet"),
+                                     strWalletFile);
+            return NULL;
+        }
+        if (!walletInstance->IsHDEnabled() && useHD) {
+            errorString += strprintf(_("Error loading %s: You can't enable HD on a already existing non-HD wallet"),
+                                     strWalletFile);
+            return NULL;
+        }
     }
 
     // Warn user every time he starts non-encrypted HD wallet
-    if (GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET) && !pwalletMain->IsLocked()) {
-        InitWarning(_("Make sure to encrypt your wallet and delete all non-encrypted backups after you verified that wallet works!"));
+    if (GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET) && !walletInstance->IsLocked()) {
+        if (!warningString.empty())
+            warningString += "\n";
+        warningString += _("Make sure to encrypt your wallet and delete all non-encrypted backups after you verified that wallet works!");
     }
 
     LogPrintf(" wallet      %15dms\n", GetTimeMillis() - nStart);
