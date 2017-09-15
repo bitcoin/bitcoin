@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE (generate_escrowrefund_invalid)
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyeraliasrefund2 10000"), runtime_error);
 	GenerateBlocks(10);
 	string guid = EscrowNew("node1", "node2", "buyeraliasrefund2", offerguid, qty,"arbiteraliasrefund2", "selleraliasrefund2");
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1, "escrowinfo " + guid));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + guid));
 	string escrowaddress = find_value(r.get_obj(), "escrowaddress").get_str();
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "getaddressutxos '{\\\"addresses\": [\\\"" + escrowaddress + "\\\"]}'"));
@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE (generate_escrowrelease_invalid)
 	string offerguid = OfferNew("node2", "selleraliasrefund3", "category", "title", "100", "1.45", "description", "SYS");
 	string guid = EscrowNew("node1", "node2", "buyeraliasrefund3", offerguid, qty, "arbiteraliasrefund3", "selleraliasrefund3");
 
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1, "escrowinfo " + guid));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + guid));
 	string escrowaddress = find_value(r.get_obj(), "escrowaddress").get_str();
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "getaddressutxos '{\\\"addresses\": [\\\"" + escrowaddress + "\\\"]}'"));
