@@ -1061,7 +1061,7 @@ UniValue generateescrowmultisig(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 1500 - " + _("Could not find seller peg alias with this name"));
 
 	const CNameTXIDTuple &latestAliasPegTuple = CNameTXIDTuple(pegAlias.vchAlias, pegAlias.txHash);
-
+	int precision = 2;
 	CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(latestAliasPegTuple, vchFromString(GetPaymentOptionsString(paymentOptionMask)), 1, precision);
 	if (nPricePerUnit == 0)
 	{
@@ -1109,11 +1109,10 @@ UniValue generateescrowmultisig(const UniValue& params, bool fHelp) {
 	if (!resCreate.isObject())
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4508 - " + _("Could not create escrow transaction: Invalid response from createescrow"));
 
-	int precision = 2;
 	UniValue paramsConvert(UniValue::VARR);
 	paramsConvert.push_back(stringFromVch(selleralias.vchAlias));
 	paramsConvert.push_back(stringFromVch(theOffer.sCurrencyCode));
-	paramsConvert.push_back(stringFromVch(GetPaymentOptionsString(paymentOptionMask)));
+	paramsConvert.push_back(GetPaymentOptionsString(paymentOptionMask));
 	paramsConvert.push_back(theOffer.GetPrice(foundEntry)*nQty);
 	const UniValue &r = tableRPC.execute("aliasconvertcurrency", paramsConvert);
 	CAmount nTotal = AmountFromValue(find_value(r.get_obj(), "convertedrate"));
@@ -1296,7 +1295,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	UniValue paramsConvert(UniValue::VARR);
 	paramsConvert.push_back(stringFromVch(selleralias.vchAlias));
 	paramsConvert.push_back(stringFromVch(theOffer.sCurrencyCode));
-	paramsConvert.push_back(stringFromVch(GetPaymentOptionsString(paymentOptionMask)));
+	paramsConvert.push_back(GetPaymentOptionsString(paymentOptionMask));
 	paramsConvert.push_back(theOffer.GetPrice()*nQty);
 	UniValue r = tableRPC.execute("aliasconvertcurrency", paramsConvert);
 	CAmount nTotalOfferPrice = AmountFromValue(find_value(r.get_obj(), "convertedrate"));
