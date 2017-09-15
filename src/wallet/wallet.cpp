@@ -3852,7 +3852,7 @@ std::vector<std::string> CWallet::GetDestValues(const std::string& prefix) const
     return values;
 }
 
-CWallet* CWallet::CreateWalletFromFile(const std::string walletFile) NO_THREAD_SAFETY_ANALYSIS
+CWallet* CWallet::CreateWalletFromFile(const std::string walletFile) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     // needed to restore wallet transaction meta data after -zapwallettxes
     std::vector<CWalletTx> vWtx;
