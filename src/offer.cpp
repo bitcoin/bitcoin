@@ -1754,7 +1754,7 @@ bool BuildOfferJson(const COffer& theOffer, UniValue& oOffer)
 		oOffer.push_back(Pair("quantity", nQty));
 	oOffer.push_back(Pair("currency", stringFromVch(theOffer.sCurrencyCode)));
 	COfferLinkWhiteListEntry entry;
-	oOffer.push_back(Pair("price", strprintf("%.*f", theOffer.paymentPrecision, theOffer.GetPric(eentry, true))));
+	oOffer.push_back(Pair("price", strprintf("%.*f", theOffer.paymentPrecision, theOffer.GetPrice(entry, true))));
 	if(!theOffer.linkOfferTuple.first.empty()) {
 		oOffer.push_back(Pair("commission", theOffer.nCommission));
 		oOffer.push_back(Pair("offerlink_guid", stringFromVch(theOffer.linkOfferTuple.first)));

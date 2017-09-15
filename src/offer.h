@@ -222,7 +222,7 @@ public:
 			&& a.bCoinOffer == b.bCoinOffer
 			&& a.paymentOptions == b.paymentOptions
 			&& a.vchOffer == b.vchOffer
-			&& a.paymentPrecision == b.paymentPrecision;
+			&& a.paymentPrecision == b.paymentPrecision);
         );
     }
 
