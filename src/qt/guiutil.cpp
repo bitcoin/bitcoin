@@ -878,9 +878,9 @@ void restoreWindowGeometry(const QString& strSetting, const QSize& defaultSize, 
     parent->resize(size);
     parent->move(pos);
 
-    if ((!pos.x() && !pos.y()) || (QApplication::desktop()->screenNumber(parent) == -1))
-    {
-        QRect screen = QApplication::desktop()->screenGeometry();
+    int screen_number = QApplication::desktop()->screenNumber(parent);
+    QRect screen = QApplication::desktop()->availableGeometry(screen_number);
+    if ((!pos.x() && !pos.y()) || screen_number == -1 || !screen.contains(parent->frameGeometry())) {
         QPoint defaultPos((screen.width() - defaultSize.width()) / 2,
                           (screen.height() - defaultSize.height()) / 2);
         parent->resize(defaultSize);
