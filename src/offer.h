@@ -197,7 +197,7 @@ public:
 			READWRITE(linkAliasTuple);
 	}
 	std::string GetDisplayPrice(const COfferLinkWhitelistEntry& entry = COfferLinkWhitelistEntry()) const;
-	double GetPrice(const COfferLinkWhitelistEntry& entry = COfferLinkWhitelistEntry(), bool display = false);
+	double GetPrice(const COfferLinkWhitelistEntry& entry = COfferLinkWhitelistEntry(), bool display = false) const;
 
     inline friend bool operator==(const COffer &a, const COffer &b) {
         return (

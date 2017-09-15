@@ -1535,7 +1535,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 		if(!strCert.empty())
 			theOffer.certTuple = CNameTXIDTuple(theCert.vchCert, theCert.txHash);
 		int precision = 2;
-		nPricePerUnit = convertCurrencyCodeToSyscoin(latestAliasPegTuple, strCurrency.empty()? offerCopy.sCurrencyCode: vchFromString(strCurrency), fPrice, precision);
+		CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(latestAliasPegTuple, strCurrency.empty()? offerCopy.sCurrencyCode: vchFromString(strCurrency), fPrice, precision);
 		if(nPricePerUnit == 0)
 		{
 			string err = "SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1549 - " + _("Could not find currency in the peg alias");
@@ -1871,10 +1871,10 @@ bool COfferLinkWhitelist::GetLinkEntryByHash(const std::vector<unsigned char> &a
 	}
 	return false;
 }
-string COffer::GetDisplayPrice(const COfferLinkWhitelistEntry& entry = COfferLinkWhitelistEntry()) const {
+string COffer::GetDisplayPrice(const COfferLinkWhitelistEntry& entry) const {
 	return boost::lexical_cast<string>(GetPrice(entry, true));
 }
-double COffer::GetPrice(const COfferLinkWhitelistEntry& entry = COfferLinkWhitelistEntry(), bool display = false) const {
+double COffer::GetPrice(const COfferLinkWhitelistEntry& entry = COfferLinkWhitelistEntry(), bool display) const {
 	double price = boost::lexical_cast<double>(sPrice);
 	if (!display)
 	{
