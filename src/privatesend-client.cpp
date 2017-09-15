@@ -419,7 +419,7 @@ bool CPrivateSendClient::SendDenominate(const std::vector<CTxDSIn>& vecTxDSIn, c
 
         mempool.PrioritiseTransaction(tx.GetHash(), tx.GetHash().ToString(), 1000, 0.1*COIN);
         TRY_LOCK(cs_main, lockMain);
-        if(!lockMain || !AcceptToMemoryPool(mempool, validationState, CTransaction(tx), false, NULL, false, true, true)) {
+        if(!lockMain || !AcceptToMemoryPool(mempool, validationState, CTransaction(tx), false, NULL, NULL, false, true, true)) {
             LogPrintf("CPrivateSendClient::SendDenominate -- AcceptToMemoryPool() failed! tx=%s", tx.ToString());
             UnlockCoins();
             keyHolderStorage.ReturnAll();
