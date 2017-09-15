@@ -1183,36 +1183,45 @@ const string EscrowNew(const string& node, const string& sellernode, const strin
 	string guid = arr[1].get_str();
 	GenerateBlocks(10, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offerguid));
-	CAmount offerprice = find_value(r.get_obj(), "sysprice").get_int64();
+	CAmount offerprice = AmountFromValue(find_value(r.get_obj(), "price"));
 	int nQtyAfter = find_value(r.get_obj(), "quantity").get_int();
 	BOOST_CHECK_EQUAL(nQtyAfter, nQtyBefore-qty);
 	CAmount nTotal = offerprice*qty;
 	if(discountexpected != "\"\"")
 		nTotal = nTotal*(float)((100-atoi(discountexpected.c_str()))/100.0f);
+	CAmount arbiterFee = AmountFromValue(find_value(r.get_obj(), "arbiterfee"));
+	CAmount networkFee = AmountFromValue(find_value(r.get_obj(), "networkfee"));
+	CAmount nodeTotal = AmountFromValue(find_value(r.get_obj(), "total")) - arbiterFee - networkFee;
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + guid));
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == guid);
 	BOOST_CHECK(find_value(r.get_obj(), "offer").get_str() == offerguid);
 	BOOST_CHECK(find_value(r.get_obj(), "quantity").get_int() == qty);
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "systotal").get_int64() , nTotal);
+	BOOST_CHECK(nodeTotal, nTotal);
 	BOOST_CHECK(find_value(r.get_obj(), "arbiter").get_str() == arbiteralias);
 	BOOST_CHECK(find_value(r.get_obj(), "seller").get_str() == selleralias);
 	if(!otherNode1.empty())
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "escrowinfo " + guid));
+		arbiterFee = AmountFromValue(find_value(r.get_obj(), "arbiterfee"));
+		networkFee = AmountFromValue(find_value(r.get_obj(), "networkfee"));
+		nodeTotal = AmountFromValue(find_value(r.get_obj(), "total")) - arbiterFee - networkFee;
 		BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == guid);
 		BOOST_CHECK(find_value(r.get_obj(), "offer").get_str() == offerguid);
 		BOOST_CHECK(find_value(r.get_obj(), "quantity").get_int() == qty);
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "systotal").get_int64() , nTotal);
+		BOOST_CHECK_EQUAL(nodeTotal, nTotal);
 		BOOST_CHECK(find_value(r.get_obj(), "arbiter").get_str() == arbiteralias);
 		BOOST_CHECK(find_value(r.get_obj(), "seller").get_str() == selleralias);
 	}
 	if(!otherNode2.empty())
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "escrowinfo " + guid));
+		arbiterFee = AmountFromValue(find_value(r.get_obj(), "arbiterfee"));
+		networkFee = AmountFromValue(find_value(r.get_obj(), "networkfee"));
+		nodeTotal = AmountFromValue(find_value(r.get_obj(), "total")) - arbiterFee - networkFee;
 		BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == guid);
 		BOOST_CHECK(find_value(r.get_obj(), "offer").get_str() == offerguid);
 		BOOST_CHECK(find_value(r.get_obj(), "quantity").get_int() == qty);
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "systotal").get_int64() , nTotal);
+		BOOST_CHECK_EQUAL(nodeTotal, nTotal);
 		BOOST_CHECK(find_value(r.get_obj(), "arbiter").get_str() == arbiteralias);
 		BOOST_CHECK(find_value(r.get_obj(), "seller").get_str() == selleralias);
 	}
