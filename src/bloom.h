@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2014 The Bitcoin Core developers
+// Copyright (c) 2012-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -54,7 +54,7 @@ private:
     unsigned int Hash(unsigned int nHashNum, const std::vector<unsigned char>& vDataToHash) const;
 
     // Private constructor for CRollingBloomFilter, no restrictions on size
-    CBloomFilter(unsigned int nElements, double nFPRate, unsigned int nTweak);
+    CBloomFilter(const unsigned int nElements, const double nFPRate, const unsigned int nTweak);
     friend class CRollingBloomFilter;
 
 public:
@@ -67,13 +67,13 @@ public:
      * It should generally always be a random value (and is largely only exposed for unit testing)
      * nFlags should be one of the BLOOM_UPDATE_* enums (not _MASK)
      */
-    CBloomFilter(unsigned int nElements, double nFPRate, unsigned int nTweak, unsigned char nFlagsIn);
+    CBloomFilter(const unsigned int nElements, const double nFPRate, const unsigned int nTweak, unsigned char nFlagsIn);
     CBloomFilter() : isFull(true), isEmpty(false), nHashFuncs(0), nTweak(0), nFlags(0) {}
 
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(vData);
         READWRITE(nHashFuncs);
         READWRITE(nTweak);
@@ -89,7 +89,7 @@ public:
     bool contains(const uint256& hash) const;
 
     void clear();
-    void reset(unsigned int nNewTweak);
+    void reset(const unsigned int nNewTweak);
 
     //! True if the size is <= MAX_BLOOM_FILTER_SIZE and the number of hash functions is <= MAX_HASH_FUNCS
     //! (catch a filter which was just deserialized which was too big)
@@ -110,8 +110,11 @@ public:
  * reset() is provided, which also changes nTweak to decrease the impact of
  * false-positives.
  *
- * contains(item) will always return true if item was one of the last N things
+ * contains(item) will always return true if item was one of the last N to 1.5*N
  * insert()'ed ... but may also return true for items that were not inserted.
+ *
+ * It needs around 1.8 bytes per element per factor 0.1 of false positive rate.
+ * (More accurately: 3/(log(256)*log(2)) * log(1/fpRate) * nElements bytes)
  */
 class CRollingBloomFilter
 {
@@ -119,7 +122,7 @@ public:
     // A random bloom filter calls GetRand() at creation time.
     // Don't create global CRollingBloomFilter objects, as they may be
     // constructed before the randomizer is properly initialized.
-    CRollingBloomFilter(unsigned int nElements, double nFPRate);
+    CRollingBloomFilter(const unsigned int nElements, const double nFPRate);
 
     void insert(const std::vector<unsigned char>& vKey);
     void insert(const uint256& hash);
@@ -129,10 +132,12 @@ public:
     void reset();
 
 private:
-    unsigned int nBloomSize;
-    unsigned int nInsertions;
-    CBloomFilter b1, b2;
+    int nEntriesPerGeneration;
+    int nEntriesThisGeneration;
+    int nGeneration;
+    std::vector<uint64_t> data;
+    unsigned int nTweak;
+    int nHashFuncs;
 };
-
 
 #endif // BITCOIN_BLOOM_H

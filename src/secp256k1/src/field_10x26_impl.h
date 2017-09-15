@@ -7,8 +7,6 @@
 #ifndef _SECP256K1_FIELD_REPR_IMPL_H_
 #define _SECP256K1_FIELD_REPR_IMPL_H_
 
-#include <stdio.h>
-#include <string.h>
 #include "util.h"
 #include "num.h"
 #include "field.h"
@@ -39,10 +37,6 @@ static void secp256k1_fe_verify(const secp256k1_fe *a) {
         }
     }
     VERIFY_CHECK(r == 1);
-}
-#else
-static void secp256k1_fe_verify(const secp256k1_fe *a) {
-    (void)a;
 }
 #endif
 
@@ -327,17 +321,17 @@ static int secp256k1_fe_cmp_var(const secp256k1_fe *a, const secp256k1_fe *b) {
 }
 
 static int secp256k1_fe_set_b32(secp256k1_fe *r, const unsigned char *a) {
-    int i;
-    r->n[0] = r->n[1] = r->n[2] = r->n[3] = r->n[4] = 0;
-    r->n[5] = r->n[6] = r->n[7] = r->n[8] = r->n[9] = 0;
-    for (i=0; i<32; i++) {
-        int j;
-        for (j=0; j<4; j++) {
-            int limb = (8*i+2*j)/26;
-            int shift = (8*i+2*j)%26;
-            r->n[limb] |= (uint32_t)((a[31-i] >> (2*j)) & 0x3) << shift;
-        }
-    }
+    r->n[0] = (uint32_t)a[31] | ((uint32_t)a[30] << 8) | ((uint32_t)a[29] << 16) | ((uint32_t)(a[28] & 0x3) << 24);
+    r->n[1] = (uint32_t)((a[28] >> 2) & 0x3f) | ((uint32_t)a[27] << 6) | ((uint32_t)a[26] << 14) | ((uint32_t)(a[25] & 0xf) << 22);
+    r->n[2] = (uint32_t)((a[25] >> 4) & 0xf) | ((uint32_t)a[24] << 4) | ((uint32_t)a[23] << 12) | ((uint32_t)(a[22] & 0x3f) << 20);
+    r->n[3] = (uint32_t)((a[22] >> 6) & 0x3) | ((uint32_t)a[21] << 2) | ((uint32_t)a[20] << 10) | ((uint32_t)a[19] << 18);
+    r->n[4] = (uint32_t)a[18] | ((uint32_t)a[17] << 8) | ((uint32_t)a[16] << 16) | ((uint32_t)(a[15] & 0x3) << 24);
+    r->n[5] = (uint32_t)((a[15] >> 2) & 0x3f) | ((uint32_t)a[14] << 6) | ((uint32_t)a[13] << 14) | ((uint32_t)(a[12] & 0xf) << 22);
+    r->n[6] = (uint32_t)((a[12] >> 4) & 0xf) | ((uint32_t)a[11] << 4) | ((uint32_t)a[10] << 12) | ((uint32_t)(a[9] & 0x3f) << 20);
+    r->n[7] = (uint32_t)((a[9] >> 6) & 0x3) | ((uint32_t)a[8] << 2) | ((uint32_t)a[7] << 10) | ((uint32_t)a[6] << 18);
+    r->n[8] = (uint32_t)a[5] | ((uint32_t)a[4] << 8) | ((uint32_t)a[3] << 16) | ((uint32_t)(a[2] & 0x3) << 24);
+    r->n[9] = (uint32_t)((a[2] >> 2) & 0x3f) | ((uint32_t)a[1] << 6) | ((uint32_t)a[0] << 14);
+
     if (r->n[9] == 0x3FFFFFUL && (r->n[8] & r->n[7] & r->n[6] & r->n[5] & r->n[4] & r->n[3] & r->n[2]) == 0x3FFFFFFUL && (r->n[1] + 0x40UL + ((r->n[0] + 0x3D1UL) >> 26)) > 0x3FFFFFFUL) {
         return 0;
     }
@@ -351,21 +345,42 @@ static int secp256k1_fe_set_b32(secp256k1_fe *r, const unsigned char *a) {
 
 /** Convert a field element to a 32-byte big endian value. Requires the input to be normalized */
 static void secp256k1_fe_get_b32(unsigned char *r, const secp256k1_fe *a) {
-    int i;
 #ifdef VERIFY
     VERIFY_CHECK(a->normalized);
     secp256k1_fe_verify(a);
 #endif
-    for (i=0; i<32; i++) {
-        int j;
-        int c = 0;
-        for (j=0; j<4; j++) {
-            int limb = (8*i+2*j)/26;
-            int shift = (8*i+2*j)%26;
-            c |= ((a->n[limb] >> shift) & 0x3) << (2 * j);
-        }
-        r[31-i] = c;
-    }
+    r[0] = (a->n[9] >> 14) & 0xff;
+    r[1] = (a->n[9] >> 6) & 0xff;
+    r[2] = ((a->n[9] & 0x3F) << 2) | ((a->n[8] >> 24) & 0x3);
+    r[3] = (a->n[8] >> 16) & 0xff;
+    r[4] = (a->n[8] >> 8) & 0xff;
+    r[5] = a->n[8] & 0xff;
+    r[6] = (a->n[7] >> 18) & 0xff;
+    r[7] = (a->n[7] >> 10) & 0xff;
+    r[8] = (a->n[7] >> 2) & 0xff;
+    r[9] = ((a->n[7] & 0x3) << 6) | ((a->n[6] >> 20) & 0x3f);
+    r[10] = (a->n[6] >> 12) & 0xff;
+    r[11] = (a->n[6] >> 4) & 0xff;
+    r[12] = ((a->n[6] & 0xf) << 4) | ((a->n[5] >> 22) & 0xf);
+    r[13] = (a->n[5] >> 14) & 0xff;
+    r[14] = (a->n[5] >> 6) & 0xff;
+    r[15] = ((a->n[5] & 0x3f) << 2) | ((a->n[4] >> 24) & 0x3);
+    r[16] = (a->n[4] >> 16) & 0xff;
+    r[17] = (a->n[4] >> 8) & 0xff;
+    r[18] = a->n[4] & 0xff;
+    r[19] = (a->n[3] >> 18) & 0xff;
+    r[20] = (a->n[3] >> 10) & 0xff;
+    r[21] = (a->n[3] >> 2) & 0xff;
+    r[22] = ((a->n[3] & 0x3) << 6) | ((a->n[2] >> 20) & 0x3f);
+    r[23] = (a->n[2] >> 12) & 0xff;
+    r[24] = (a->n[2] >> 4) & 0xff;
+    r[25] = ((a->n[2] & 0xf) << 4) | ((a->n[1] >> 22) & 0xf);
+    r[26] = (a->n[1] >> 14) & 0xff;
+    r[27] = (a->n[1] >> 6) & 0xff;
+    r[28] = ((a->n[1] & 0x3f) << 2) | ((a->n[0] >> 24) & 0x3);
+    r[29] = (a->n[0] >> 16) & 0xff;
+    r[30] = (a->n[0] >> 8) & 0xff;
+    r[31] = a->n[0] & 0xff;
 }
 
 SECP256K1_INLINE static void secp256k1_fe_negate(secp256k1_fe *r, const secp256k1_fe *a, int m) {
@@ -428,6 +443,14 @@ SECP256K1_INLINE static void secp256k1_fe_add(secp256k1_fe *r, const secp256k1_f
     secp256k1_fe_verify(r);
 #endif
 }
+
+#if defined(USE_EXTERNAL_ASM)
+
+/* External assembler implementation */
+void secp256k1_fe_mul_inner(uint32_t *r, const uint32_t *a, const uint32_t * SECP256K1_RESTRICT b);
+void secp256k1_fe_sqr_inner(uint32_t *r, const uint32_t *a);
+
+#else
 
 #ifdef VERIFY
 #define VERIFY_BITS(x, n) VERIFY_CHECK(((x) >> (n)) == 0)
@@ -1037,7 +1060,7 @@ SECP256K1_INLINE static void secp256k1_fe_sqr_inner(uint32_t *r, const uint32_t 
     VERIFY_BITS(r[2], 27);
     /* [r9 r8 r7 r6 r5 r4 r3 r2 r1 r0] = [p18 p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
 }
-
+#endif
 
 static void secp256k1_fe_mul(secp256k1_fe *r, const secp256k1_fe *a, const secp256k1_fe * SECP256K1_RESTRICT b) {
 #ifdef VERIFY

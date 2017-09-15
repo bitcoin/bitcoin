@@ -79,7 +79,7 @@ class LogTest {
     virtual Status Skip(uint64_t n) {
       if (n > contents_.size()) {
         contents_.clear();
-        return Status::NotFound("in-memory file skipepd past end");
+        return Status::NotFound("in-memory file skipped past end");
       }
 
       contents_.remove_prefix(n);
@@ -104,23 +104,34 @@ class LogTest {
   StringSource source_;
   ReportCollector report_;
   bool reading_;
-  Writer writer_;
-  Reader reader_;
+  Writer* writer_;
+  Reader* reader_;
 
   // Record metadata for testing initial offset functionality
   static size_t initial_offset_record_sizes_[];
   static uint64_t initial_offset_last_record_offsets_[];
+  static int num_initial_offset_records_;
 
  public:
   LogTest() : reading_(false),
-              writer_(&dest_),
-              reader_(&source_, &report_, true/*checksum*/,
-                      0/*initial_offset*/) {
+              writer_(new Writer(&dest_)),
+              reader_(new Reader(&source_, &report_, true/*checksum*/,
+                      0/*initial_offset*/)) {
+  }
+
+  ~LogTest() {
+    delete writer_;
+    delete reader_;
+  }
+
+  void ReopenForAppend() {
+    delete writer_;
+    writer_ = new Writer(&dest_, dest_.contents_.size());
   }
 
   void Write(const std::string& msg) {
     ASSERT_TRUE(!reading_) << "Write() after starting to read";
-    writer_.AddRecord(Slice(msg));
+    writer_->AddRecord(Slice(msg));
   }
 
   size_t WrittenBytes() const {
@@ -134,7 +145,7 @@ class LogTest {
     }
     std::string scratch;
     Slice record;
-    if (reader_.ReadRecord(&record, &scratch)) {
+    if (reader_->ReadRecord(&record, &scratch)) {
       return record.ToString();
     } else {
       return "EOF";
@@ -182,11 +193,16 @@ class LogTest {
   }
 
   void WriteInitialOffsetLog() {
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < num_initial_offset_records_; i++) {
       std::string record(initial_offset_record_sizes_[i],
                          static_cast<char>('a' + i));
       Write(record);
     }
+  }
+
+  void StartReadingAt(uint64_t initial_offset) {
+    delete reader_;
+    reader_ = new Reader(&source_, &report_, true/*checksum*/, initial_offset);
   }
 
   void CheckOffsetPastEndReturnsNoRecords(uint64_t offset_past_end) {
@@ -208,32 +224,48 @@ class LogTest {
     source_.contents_ = Slice(dest_.contents_);
     Reader* offset_reader = new Reader(&source_, &report_, true/*checksum*/,
                                        initial_offset);
-    Slice record;
-    std::string scratch;
-    ASSERT_TRUE(offset_reader->ReadRecord(&record, &scratch));
-    ASSERT_EQ(initial_offset_record_sizes_[expected_record_offset],
-              record.size());
-    ASSERT_EQ(initial_offset_last_record_offsets_[expected_record_offset],
-              offset_reader->LastRecordOffset());
-    ASSERT_EQ((char)('a' + expected_record_offset), record.data()[0]);
+
+    // Read all records from expected_record_offset through the last one.
+    ASSERT_LT(expected_record_offset, num_initial_offset_records_);
+    for (; expected_record_offset < num_initial_offset_records_;
+         ++expected_record_offset) {
+      Slice record;
+      std::string scratch;
+      ASSERT_TRUE(offset_reader->ReadRecord(&record, &scratch));
+      ASSERT_EQ(initial_offset_record_sizes_[expected_record_offset],
+                record.size());
+      ASSERT_EQ(initial_offset_last_record_offsets_[expected_record_offset],
+                offset_reader->LastRecordOffset());
+      ASSERT_EQ((char)('a' + expected_record_offset), record.data()[0]);
+    }
     delete offset_reader;
   }
-
 };
 
 size_t LogTest::initial_offset_record_sizes_[] =
     {10000,  // Two sizable records in first block
      10000,
      2 * log::kBlockSize - 1000,  // Span three blocks
-     1};
+     1,
+     13716,  // Consume all but two bytes of block 3.
+     log::kBlockSize - kHeaderSize, // Consume the entirety of block 4.
+    };
 
 uint64_t LogTest::initial_offset_last_record_offsets_[] =
     {0,
      kHeaderSize + 10000,
      2 * (kHeaderSize + 10000),
      2 * (kHeaderSize + 10000) +
-         (2 * log::kBlockSize - 1000) + 3 * kHeaderSize};
+         (2 * log::kBlockSize - 1000) + 3 * kHeaderSize,
+     2 * (kHeaderSize + 10000) +
+         (2 * log::kBlockSize - 1000) + 3 * kHeaderSize
+         + kHeaderSize + 1,
+     3 * log::kBlockSize,
+    };
 
+// LogTest::initial_offset_last_record_offsets_ must be defined before this.
+int LogTest::num_initial_offset_records_ =
+    sizeof(LogTest::initial_offset_last_record_offsets_)/sizeof(uint64_t);
 
 TEST(LogTest, Empty) {
   ASSERT_EQ("EOF", Read());
@@ -315,6 +347,15 @@ TEST(LogTest, AlignedEof) {
   Write(BigString("foo", n));
   ASSERT_EQ(kBlockSize - kHeaderSize + 4, WrittenBytes());
   ASSERT_EQ(BigString("foo", n), Read());
+  ASSERT_EQ("EOF", Read());
+}
+
+TEST(LogTest, OpenForAppend) {
+  Write("hello");
+  ReopenForAppend();
+  Write("world");
+  ASSERT_EQ("hello", Read());
+  ASSERT_EQ("world", Read());
   ASSERT_EQ("EOF", Read());
 }
 
@@ -445,6 +486,22 @@ TEST(LogTest, PartialLastIsIgnored) {
   ASSERT_EQ(0, DroppedBytes());
 }
 
+TEST(LogTest, SkipIntoMultiRecord) {
+  // Consider a fragmented record:
+  //    first(R1), middle(R1), last(R1), first(R2)
+  // If initial_offset points to a record after first(R1) but before first(R2)
+  // incomplete fragment errors are not actual errors, and must be suppressed
+  // until a new first or full record is encountered.
+  Write(BigString("foo", 3*kBlockSize));
+  Write("correct");
+  StartReadingAt(kBlockSize);
+
+  ASSERT_EQ("correct", Read());
+  ASSERT_EQ("", ReportMessage());
+  ASSERT_EQ(0, DroppedBytes());
+  ASSERT_EQ("EOF", Read());
+}
+
 TEST(LogTest, ErrorJoinsRecords) {
   // Consider two fragmented records:
   //    first(R1) last(R1) first(R2) last(R2)
@@ -512,6 +569,10 @@ TEST(LogTest, ReadFourthStart) {
   CheckInitialOffsetRecord(
       2 * (kHeaderSize + 1000) + (2 * log::kBlockSize - 1000) + 3 * kHeaderSize,
       3);
+}
+
+TEST(LogTest, ReadInitialOffsetIntoBlockPadding) {
+  CheckInitialOffsetRecord(3 * log::kBlockSize - 3, 5);
 }
 
 TEST(LogTest, ReadEnd) {

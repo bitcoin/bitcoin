@@ -56,7 +56,7 @@ public:
     bool setNumStr(const std::string& val);
     bool setInt(uint64_t val);
     bool setInt(int64_t val);
-    bool setInt(int val) { return setInt((int64_t)val); }
+    bool setInt(int val_) { return setInt((int64_t)val_); }
     bool setFloat(double val);
     bool setStr(const std::string& val);
     bool setArray();
@@ -95,28 +95,28 @@ public:
     bool push_backV(const std::vector<UniValue>& vec);
 
     bool pushKV(const std::string& key, const UniValue& val);
-    bool pushKV(const std::string& key, const std::string& val) {
-        UniValue tmpVal(VSTR, val);
+    bool pushKV(const std::string& key, const std::string& val_) {
+        UniValue tmpVal(VSTR, val_);
         return pushKV(key, tmpVal);
     }
     bool pushKV(const std::string& key, const char *val_) {
-        std::string val(val_);
-        return pushKV(key, val);
+        std::string _val(val_);
+        return pushKV(key, _val);
     }
-    bool pushKV(const std::string& key, int64_t val) {
-        UniValue tmpVal(val);
+    bool pushKV(const std::string& key, int64_t val_) {
+        UniValue tmpVal(val_);
         return pushKV(key, tmpVal);
     }
-    bool pushKV(const std::string& key, uint64_t val) {
-        UniValue tmpVal(val);
+    bool pushKV(const std::string& key, uint64_t val_) {
+        UniValue tmpVal(val_);
         return pushKV(key, tmpVal);
     }
-    bool pushKV(const std::string& key, int val) {
-        UniValue tmpVal((int64_t)val);
+    bool pushKV(const std::string& key, int val_) {
+        UniValue tmpVal((int64_t)val_);
         return pushKV(key, tmpVal);
     }
-    bool pushKV(const std::string& key, double val) {
-        UniValue tmpVal(val);
+    bool pushKV(const std::string& key, double val_) {
+        UniValue tmpVal(val_);
         return pushKV(key, tmpVal);
     }
     bool pushKVs(const UniValue& obj);
@@ -142,10 +142,10 @@ private:
 public:
     // Strict type-specific getters, these throw std::runtime_error if the
     // value is of unexpected type
-    std::vector<std::string> getKeys() const;
-    std::vector<UniValue> getValues() const;
+    const std::vector<std::string>& getKeys() const;
+    const std::vector<UniValue>& getValues() const;
     bool get_bool() const;
-    std::string get_str() const;
+    const std::string& get_str() const;
     int get_int() const;
     int64_t get_int64() const;
     double get_real() const;
@@ -242,6 +242,39 @@ enum jtokentype {
 extern enum jtokentype getJsonToken(std::string& tokenVal,
                                     unsigned int& consumed, const char *raw);
 extern const char *uvTypeName(UniValue::VType t);
+
+static inline bool jsonTokenIsValue(enum jtokentype jtt)
+{
+    switch (jtt) {
+    case JTOK_KW_NULL:
+    case JTOK_KW_TRUE:
+    case JTOK_KW_FALSE:
+    case JTOK_NUMBER:
+    case JTOK_STRING:
+        return true;
+
+    default:
+        return false;
+    }
+
+    // not reached
+}
+
+static inline bool json_isspace(int ch)
+{
+    switch (ch) {
+    case 0x20:
+    case 0x09:
+    case 0x0a:
+    case 0x0d:
+        return true;
+
+    default:
+        return false;
+    }
+
+    // not reached
+}
 
 extern const UniValue NullUniValue;
 

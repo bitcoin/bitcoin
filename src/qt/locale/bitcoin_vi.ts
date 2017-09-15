@@ -18,33 +18,13 @@
         <translation>Sao chép</translation>
     </message>
     <message>
-        <source>&amp;Copy Address</source>
-        <translation>Sao chép địa chỉ</translation>
-    </message>
-    <message>
         <source>&amp;Delete</source>
         <translation>&amp;Xóa</translation>
-    </message>
-    <message>
-        <source>Comma separated file (*.csv)</source>
-        <translation>Tập tin tách biệt bởi dấu phẩy (*.csv)</translation>
     </message>
     </context>
 <context>
     <name>AddressTableModel</name>
-    <message>
-        <source>Label</source>
-        <translation>Nhãn dữ liệu</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Địa chỉ</translation>
-    </message>
-    <message>
-        <source>(no label)</source>
-        <translation>(chưa có nhãn)</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>AskPassphraseDialog</name>
     </context>
@@ -55,21 +35,26 @@
     <name>BitcoinGUI</name>
     </context>
 <context>
-    <name>ClientModel</name>
-    </context>
-<context>
     <name>CoinControlDialog</name>
+    <message>
+        <source>Amount:</source>
+        <translation>Số lượng:</translation>
+    </message>
     <message>
         <source>Amount</source>
         <translation>Số lượng</translation>
     </message>
-    <message>
-        <source>(no label)</source>
-        <translation>(chưa có nhãn)</translation>
-    </message>
     </context>
 <context>
     <name>EditAddressDialog</name>
+    <message>
+        <source>&amp;Label</source>
+        <translation>Nhãn dữ liệu</translation>
+    </message>
+    <message>
+        <source>&amp;Address</source>
+        <translation>Địa chỉ</translation>
+    </message>
     </context>
 <context>
     <name>FreespaceChecker</name>
@@ -79,6 +64,9 @@
     </context>
 <context>
     <name>Intro</name>
+    </context>
+<context>
+    <name>ModalOverlay</name>
     </context>
 <context>
     <name>OpenURIDialog</name>
@@ -103,6 +91,9 @@
     </message>
     </context>
 <context>
+    <name>QObject::QObject</name>
+    </context>
+<context>
     <name>QRImageWidget</name>
     </context>
 <context>
@@ -114,42 +105,25 @@
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
-        <source>Address</source>
-        <translation>Địa chỉ</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>Số lượng</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Nhãn dữ liệu</translation>
+        <source>Copy &amp;Address</source>
+        <translation>Sao chép địa chỉ</translation>
     </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
-    <message>
-        <source>Label</source>
-        <translation>Nhãn dữ liệu</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>Số lượng</translation>
-    </message>
-    <message>
-        <source>(no label)</source>
-        <translation>(chưa có nhãn)</translation>
-    </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
-        <source>(no label)</source>
-        <translation>(chưa có nhãn)</translation>
+        <source>Amount:</source>
+        <translation>Số lượng:</translation>
     </message>
     </context>
 <context>
     <name>SendCoinsEntry</name>
+    </context>
+<context>
+    <name>SendConfirmationDialog</name>
     </context>
 <context>
     <name>ShutdownWindow</name>
@@ -165,35 +139,15 @@
     </context>
 <context>
     <name>TransactionDesc</name>
-    <message>
-        <source>Amount</source>
-        <translation>Số lượng</translation>
-    </message>
     </context>
 <context>
     <name>TransactionDescDialog</name>
     </context>
 <context>
     <name>TransactionTableModel</name>
-    <message>
-        <source>Label</source>
-        <translation>Nhãn dữ liệu</translation>
-    </message>
     </context>
 <context>
     <name>TransactionView</name>
-    <message>
-        <source>Comma separated file (*.csv)</source>
-        <translation>Tập tin tách biệt bởi dấu phẩy (*.csv)</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Nhãn dữ liệu</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Địa chỉ</translation>
-    </message>
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>

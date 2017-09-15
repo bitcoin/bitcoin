@@ -1,4 +1,4 @@
-// Copyright (c) 2014 The Bitcoin developers
+// Copyright (c) 2014-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,9 +9,9 @@
 #include "config/bitcoin-config.h"
 #endif
 
-#include <stdint.h>
-
 #include "compat/byteswap.h"
+
+#include <stdint.h>
 
 #if defined(HAVE_ENDIAN_H)
 #include <endian.h>

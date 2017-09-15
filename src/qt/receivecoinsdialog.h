@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2014 The Bitcoin Core developers
+// Copyright (c) 2011-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,7 +15,6 @@
 #include <QPoint>
 #include <QVariant>
 
-class OptionsModel;
 class PlatformStyle;
 class WalletModel;
 
@@ -36,7 +35,7 @@ public:
     enum ColumnWidths {
         DATE_COLUMN_WIDTH = 130,
         LABEL_COLUMN_WIDTH = 120,
-        AMOUNT_MINIMUM_COLUMN_WIDTH = 160,
+        AMOUNT_MINIMUM_COLUMN_WIDTH = 180,
         MINIMUM_COLUMN_WIDTH = 130
     };
 
@@ -60,6 +59,7 @@ private:
     QMenu *contextMenu;
     const PlatformStyle *platformStyle;
 
+    QModelIndex selectedRow();
     void copyColumnToClipboard(int column);
     virtual void resizeEvent(QResizeEvent *event);
 
@@ -71,6 +71,7 @@ private Q_SLOTS:
     void recentRequestsView_selectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
     void updateDisplayUnit();
     void showMenu(const QPoint &point);
+    void copyURI();
     void copyLabel();
     void copyMessage();
     void copyAmount();

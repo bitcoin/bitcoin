@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2014 The Bitcoin Core developers
+// Copyright (c) 2011-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,7 +9,6 @@
 #include <QObject>
 
 class BitcoinGUI;
-class ClientModel;
 
 namespace Ui {
     class HelpMessageDialog;
@@ -42,8 +41,8 @@ class ShutdownWindow : public QWidget
     Q_OBJECT
 
 public:
-    ShutdownWindow(QWidget *parent=0, Qt::WindowFlags f=0);
-    static void showShutdownWindow(BitcoinGUI *window);
+    explicit ShutdownWindow(QWidget *parent=0, Qt::WindowFlags f=0);
+    static QWidget *showShutdownWindow(BitcoinGUI *window);
 
 protected:
     void closeEvent(QCloseEvent *event);

@@ -1,20 +1,21 @@
-// Copyright (c) 2015 The Bitcoin Core developers
+// Copyright (c) 2015-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_BENCH_BENCH_H
 #define BITCOIN_BENCH_BENCH_H
 
+#include <functional>
+#include <limits>
 #include <map>
 #include <string>
 
-#include <boost/function.hpp>
 #include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/stringize.hpp>
 
 // Simple micro-benchmarking framework; API mostly matches a subset of the Google Benchmark
 // framework (see https://github.com/google/benchmark)
-// Wny not use the Google Benchmark framework? Because adding Yet Another Dependency
+// Why not use the Google Benchmark framework? Because adding Yet Another Dependency
 // (that uses cmake as its build system and has lots of features we don't need) isn't
 // worth it.
 
@@ -40,23 +41,31 @@ namespace benchmark {
         std::string name;
         double maxElapsed;
         double beginTime;
-        double lastTime, minTime, maxTime;
-        int64_t count;
-        int64_t timeCheckCount;
+        double lastTime, minTime, maxTime, countMaskInv;
+        uint64_t count;
+        uint64_t countMask;
+        uint64_t beginCycles;
+        uint64_t lastCycles;
+        uint64_t minCycles;
+        uint64_t maxCycles;
     public:
         State(std::string _name, double _maxElapsed) : name(_name), maxElapsed(_maxElapsed), count(0) {
             minTime = std::numeric_limits<double>::max();
             maxTime = std::numeric_limits<double>::min();
-            timeCheckCount = 1;
+            minCycles = std::numeric_limits<uint64_t>::max();
+            maxCycles = std::numeric_limits<uint64_t>::min();
+            countMask = 1;
+            countMaskInv = 1./(countMask + 1);
         }
         bool KeepRunning();
     };
 
-    typedef boost::function<void(State&)> BenchFunction;
+    typedef std::function<void(State&)> BenchFunction;
 
     class BenchRunner
     {
-        static std::map<std::string, BenchFunction> benchmarks;
+        typedef std::map<std::string, BenchFunction> BenchmarkMap;
+        static BenchmarkMap &benchmarks();
 
     public:
         BenchRunner(std::string name, BenchFunction func);

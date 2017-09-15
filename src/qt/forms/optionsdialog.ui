@@ -30,10 +30,10 @@
        <item>
         <widget class="QCheckBox" name="bitcoinAtStartup">
          <property name="toolTip">
-          <string>Automatically start Bitcoin Core after logging in to the system.</string>
+          <string>Automatically start %1 after logging in to the system.</string>
          </property>
          <property name="text">
-          <string>&amp;Start Bitcoin Core on system login</string>
+          <string>&amp;Start %1 on system login</string>
          </property>
         </widget>
        </item>
@@ -199,10 +199,10 @@
        <item>
         <widget class="QCheckBox" name="allowIncoming">
          <property name="toolTip">
-          <string>Accept connections from outside</string>
+          <string>Accept connections from outside.</string>
          </property>
          <property name="text">
-          <string>Allow incoming connections</string>
+          <string>Allow incomin&amp;g connections</string>
          </property>
         </widget>
        </item>
@@ -315,7 +315,7 @@
             <bool>false</bool>
            </property>
            <property name="toolTip">
-            <string>Shows, if the supplied default SOCKS5 proxy is used to reach peers via this network type.</string>
+            <string>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</string>
            </property>
            <property name="text">
             <string/>
@@ -338,7 +338,7 @@
             <bool>false</bool>
            </property>
            <property name="toolTip">
-            <string>Shows, if the supplied default SOCKS5 proxy is used to reach peers via this network type.</string>
+            <string>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</string>
            </property>
            <property name="text">
             <string/>
@@ -361,7 +361,7 @@
             <bool>false</bool>
            </property>
            <property name="toolTip">
-            <string>Shows, if the supplied default SOCKS5 proxy is used to reach peers via this network type.</string>
+            <string>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</string>
            </property>
            <property name="text">
             <string/>
@@ -399,7 +399,7 @@
           <string>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</string>
          </property>
          <property name="text">
-          <string>Use separate SOCKS5 proxy to reach peers via Tor hidden services:</string>
+          <string>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</string>
          </property>
         </widget>
        </item>
@@ -505,6 +505,16 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_Window">
        <item>
+        <widget class="QCheckBox" name="hideTrayIcon">
+         <property name="toolTip">
+          <string>Hide the icon from the system tray.</string>
+         </property>
+         <property name="text">
+          <string>&amp;Hide tray icon</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QCheckBox" name="minimizeToTray">
          <property name="toolTip">
           <string>Show only a tray icon after minimizing the window.</string>
@@ -562,7 +572,7 @@
          <item>
           <widget class="QValueComboBox" name="lang">
            <property name="toolTip">
-            <string>The user interface language can be set here. This setting will take effect after restarting Bitcoin Core.</string>
+            <string>The user interface language can be set here. This setting will take effect after restarting %1.</string>
            </property>
           </widget>
          </item>
@@ -600,7 +610,7 @@
             <string>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</string>
            </property>
            <property name="text">
-            <string>Third party transaction URLs</string>
+            <string>&amp;Third party transaction URLs</string>
            </property>
            <property name="buddy">
             <cstring>thirdPartyTxUrls</cstring>
@@ -682,17 +692,34 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_Buttons">
      <item>
-      <widget class="QPushButton" name="resetButton">
-       <property name="toolTip">
-        <string>Reset all client options to default.</string>
-       </property>
-       <property name="text">
-        <string>&amp;Reset Options</string>
-       </property>
-       <property name="autoDefault">
-        <bool>false</bool>
-       </property>
-      </widget>
+      <layout class="QVBoxLayout" name="verticalLayout_Buttons">
+       <item>
+        <widget class="QPushButton" name="openBitcoinConfButton">
+         <property name="toolTip">
+          <string>Open the %1 configuration file from the working directory.</string>
+         </property>
+         <property name="text">
+          <string>Open Configuration File</string>
+         </property>
+         <property name="autoDefault">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="resetButton">
+         <property name="toolTip">
+          <string>Reset all client options to default.</string>
+         </property>
+         <property name="text">
+          <string>&amp;Reset Options</string>
+         </property>
+         <property name="autoDefault">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
      <item>
       <spacer name="horizontalSpacer_1">
@@ -746,27 +773,48 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="okButton">
-       <property name="text">
-        <string>&amp;OK</string>
-       </property>
-       <property name="autoDefault">
-        <bool>false</bool>
-       </property>
-       <property name="default">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="cancelButton">
-       <property name="text">
-        <string>&amp;Cancel</string>
-       </property>
-       <property name="autoDefault">
-        <bool>false</bool>
-       </property>
-      </widget>
+      <layout class="QVBoxLayout" name="verticalLayout_4">
+       <item>
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <item>
+          <widget class="QPushButton" name="okButton">
+           <property name="text">
+            <string>&amp;OK</string>
+           </property>
+           <property name="autoDefault">
+            <bool>false</bool>
+           </property>
+           <property name="default">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="cancelButton">
+           <property name="text">
+            <string>&amp;Cancel</string>
+           </property>
+           <property name="autoDefault">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
      </item>
     </layout>
    </item>

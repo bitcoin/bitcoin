@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2014 The Bitcoin Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -26,7 +26,7 @@ class RecipientCatcher : public QObject
     Q_OBJECT
 
 public Q_SLOTS:
-    void getRecipient(SendCoinsRecipient r);
+    void getRecipient(const SendCoinsRecipient& r);
 
 public:
     SendCoinsRecipient recipient;

@@ -1,4 +1,4 @@
-// Copyright (c) 2014 The Bitcoin Core developers
+// Copyright (c) 2014-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,6 +7,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <string>
 
 /** A hasher class for SHA-256. */
 class CSHA256
@@ -14,7 +15,7 @@ class CSHA256
 private:
     uint32_t s[8];
     unsigned char buf[64];
-    size_t bytes;
+    uint64_t bytes;
 
 public:
     static const size_t OUTPUT_SIZE = 32;
@@ -24,5 +25,10 @@ public:
     void Finalize(unsigned char hash[OUTPUT_SIZE]);
     CSHA256& Reset();
 };
+
+/** Autodetect the best available SHA256 implementation.
+ *  Returns the name of the implementation.
+ */
+std::string SHA256AutoDetect();
 
 #endif // BITCOIN_CRYPTO_SHA256_H

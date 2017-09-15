@@ -73,6 +73,11 @@ class Reader {
   // Offset at which to start looking for the first record to return
   uint64_t const initial_offset_;
 
+  // True if we are resynchronizing after a seek (initial_offset_ > 0). In
+  // particular, a run of kMiddleType and kLastType records can be silently
+  // skipped in this mode
+  bool resyncing_;
+
   // Extend record types with the following special values
   enum {
     kEof = kMaxRecordType + 1,

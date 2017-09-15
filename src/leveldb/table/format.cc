@@ -30,15 +30,14 @@ Status BlockHandle::DecodeFrom(Slice* input) {
 }
 
 void Footer::EncodeTo(std::string* dst) const {
-#ifndef NDEBUG
   const size_t original_size = dst->size();
-#endif
   metaindex_handle_.EncodeTo(dst);
   index_handle_.EncodeTo(dst);
   dst->resize(2 * BlockHandle::kMaxEncodedLength);  // Padding
   PutFixed32(dst, static_cast<uint32_t>(kTableMagicNumber & 0xffffffffu));
   PutFixed32(dst, static_cast<uint32_t>(kTableMagicNumber >> 32));
   assert(dst->size() == original_size + kEncodedLength);
+  (void)original_size;  // Disable unused variable warning.
 }
 
 Status Footer::DecodeFrom(Slice* input) {

@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 The Bitcoin Core developers
+// Copyright (c) 2011-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE( basics ) // constructors, equality, inequality
     BOOST_CHECK( (R1L & arith_uint256("0xffffffffffffffff")) == arith_uint256(R1LLow64));
     BOOST_CHECK(ZeroL == arith_uint256(0));
     BOOST_CHECK(OneL == arith_uint256(1));
-    BOOST_CHECK(arith_uint256("0xffffffffffffffff") = arith_uint256(0xffffffffffffffffULL));
+    BOOST_CHECK(arith_uint256("0xffffffffffffffff") == arith_uint256(0xffffffffffffffffULL));
 
     // Assignment (from base_uint)
     arith_uint256 tmpL = ~ZeroL; BOOST_CHECK(tmpL == ~ZeroL);
@@ -219,7 +219,7 @@ BOOST_AUTO_TEST_CASE( unaryOperators ) // !    ~    -
 
 
 // Check if doing _A_ _OP_ _B_ results in the same as applying _OP_ onto each
-// element of Aarray and Barray, and then converting the result into a arith_uint256.
+// element of Aarray and Barray, and then converting the result into an arith_uint256.
 #define CHECKBITWISEOPERATOR(_A_,_B_,_OP_)                              \
     for (unsigned int i = 0; i < 32; ++i) { TmpArray[i] = _A_##Array[i] _OP_ _B_##Array[i]; } \
     BOOST_CHECK(arith_uint256V(std::vector<unsigned char>(TmpArray,TmpArray+32)) == (_A_##L _OP_ _B_##L));

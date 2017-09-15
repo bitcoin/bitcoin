@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2014 The Bitcoin Core developers
+// Copyright (c) 2011-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,7 +6,6 @@
 
 #include "clientversion.h"
 #include "primitives/transaction.h"
-#include "random.h"
 #include "sync.h"
 #include "utilstrencodings.h"
 #include "utilmoneystr.h"
@@ -16,8 +15,6 @@
 #include <vector>
 
 #include <boost/test/unit_test.hpp>
-
-using namespace std;
 
 BOOST_FIXTURE_TEST_SUITE(util_tests, BasicTestingSetup)
 
@@ -60,6 +57,10 @@ BOOST_AUTO_TEST_CASE(util_ParseHex)
     result = ParseHex("12 34 56 78");
     BOOST_CHECK(result.size() == 4 && result[0] == 0x12 && result[1] == 0x34 && result[2] == 0x56 && result[3] == 0x78);
 
+    // Leading space must be supported (used in CDBEnv::Salvage)
+    result = ParseHex(" 89 34 56 78");
+    BOOST_CHECK(result.size() == 4 && result[0] == 0x89 && result[1] == 0x34 && result[2] == 0x56 && result[3] == 0x78);
+
     // Stop parsing at invalid value
     result = ParseHex("1234 invalid 1234");
     BOOST_CHECK(result.size() == 2 && result[0] == 0x12 && result[1] == 0x34);
@@ -96,52 +97,67 @@ BOOST_AUTO_TEST_CASE(util_DateTimeStrFormat)
     BOOST_CHECK_EQUAL(DateTimeStrFormat("%a, %d %b %Y %H:%M:%S +0000", 1317425777), "Fri, 30 Sep 2011 23:36:17 +0000");
 }
 
+class TestArgsManager : public ArgsManager
+{
+public:
+    std::map<std::string, std::string>& GetMapArgs()
+    {
+        return mapArgs;
+    };
+    const std::map<std::string, std::vector<std::string> >& GetMapMultiArgs()
+    {
+        return mapMultiArgs;
+    };
+};
+
 BOOST_AUTO_TEST_CASE(util_ParseParameters)
 {
+    TestArgsManager testArgs;
     const char *argv_test[] = {"-ignored", "-a", "-b", "-ccc=argument", "-ccc=multiple", "f", "-d=e"};
 
-    ParseParameters(0, (char**)argv_test);
-    BOOST_CHECK(mapArgs.empty() && mapMultiArgs.empty());
+    testArgs.ParseParameters(0, (char**)argv_test);
+    BOOST_CHECK(testArgs.GetMapArgs().empty() && testArgs.GetMapMultiArgs().empty());
 
-    ParseParameters(1, (char**)argv_test);
-    BOOST_CHECK(mapArgs.empty() && mapMultiArgs.empty());
+    testArgs.ParseParameters(1, (char**)argv_test);
+    BOOST_CHECK(testArgs.GetMapArgs().empty() && testArgs.GetMapMultiArgs().empty());
 
-    ParseParameters(5, (char**)argv_test);
+    testArgs.ParseParameters(5, (char**)argv_test);
     // expectation: -ignored is ignored (program name argument),
     // -a, -b and -ccc end up in map, -d ignored because it is after
     // a non-option argument (non-GNU option parsing)
-    BOOST_CHECK(mapArgs.size() == 3 && mapMultiArgs.size() == 3);
-    BOOST_CHECK(mapArgs.count("-a") && mapArgs.count("-b") && mapArgs.count("-ccc")
-                && !mapArgs.count("f") && !mapArgs.count("-d"));
-    BOOST_CHECK(mapMultiArgs.count("-a") && mapMultiArgs.count("-b") && mapMultiArgs.count("-ccc")
-                && !mapMultiArgs.count("f") && !mapMultiArgs.count("-d"));
+    BOOST_CHECK(testArgs.GetMapArgs().size() == 3 && testArgs.GetMapMultiArgs().size() == 3);
+    BOOST_CHECK(testArgs.IsArgSet("-a") && testArgs.IsArgSet("-b") && testArgs.IsArgSet("-ccc")
+                && !testArgs.IsArgSet("f") && !testArgs.IsArgSet("-d"));
+    BOOST_CHECK(testArgs.GetMapMultiArgs().count("-a") && testArgs.GetMapMultiArgs().count("-b") && testArgs.GetMapMultiArgs().count("-ccc")
+                && !testArgs.GetMapMultiArgs().count("f") && !testArgs.GetMapMultiArgs().count("-d"));
 
-    BOOST_CHECK(mapArgs["-a"] == "" && mapArgs["-ccc"] == "multiple");
-    BOOST_CHECK(mapMultiArgs["-ccc"].size() == 2);
+    BOOST_CHECK(testArgs.GetMapArgs()["-a"] == "" && testArgs.GetMapArgs()["-ccc"] == "multiple");
+    BOOST_CHECK(testArgs.GetArgs("-ccc").size() == 2);
 }
 
 BOOST_AUTO_TEST_CASE(util_GetArg)
 {
-    mapArgs.clear();
-    mapArgs["strtest1"] = "string...";
+    TestArgsManager testArgs;
+    testArgs.GetMapArgs().clear();
+    testArgs.GetMapArgs()["strtest1"] = "string...";
     // strtest2 undefined on purpose
-    mapArgs["inttest1"] = "12345";
-    mapArgs["inttest2"] = "81985529216486895";
+    testArgs.GetMapArgs()["inttest1"] = "12345";
+    testArgs.GetMapArgs()["inttest2"] = "81985529216486895";
     // inttest3 undefined on purpose
-    mapArgs["booltest1"] = "";
+    testArgs.GetMapArgs()["booltest1"] = "";
     // booltest2 undefined on purpose
-    mapArgs["booltest3"] = "0";
-    mapArgs["booltest4"] = "1";
+    testArgs.GetMapArgs()["booltest3"] = "0";
+    testArgs.GetMapArgs()["booltest4"] = "1";
 
-    BOOST_CHECK_EQUAL(GetArg("strtest1", "default"), "string...");
-    BOOST_CHECK_EQUAL(GetArg("strtest2", "default"), "default");
-    BOOST_CHECK_EQUAL(GetArg("inttest1", -1), 12345);
-    BOOST_CHECK_EQUAL(GetArg("inttest2", -1), 81985529216486895LL);
-    BOOST_CHECK_EQUAL(GetArg("inttest3", -1), -1);
-    BOOST_CHECK_EQUAL(GetBoolArg("booltest1", false), true);
-    BOOST_CHECK_EQUAL(GetBoolArg("booltest2", false), false);
-    BOOST_CHECK_EQUAL(GetBoolArg("booltest3", false), false);
-    BOOST_CHECK_EQUAL(GetBoolArg("booltest4", false), true);
+    BOOST_CHECK_EQUAL(testArgs.GetArg("strtest1", "default"), "string...");
+    BOOST_CHECK_EQUAL(testArgs.GetArg("strtest2", "default"), "default");
+    BOOST_CHECK_EQUAL(testArgs.GetArg("inttest1", -1), 12345);
+    BOOST_CHECK_EQUAL(testArgs.GetArg("inttest2", -1), 81985529216486895LL);
+    BOOST_CHECK_EQUAL(testArgs.GetArg("inttest3", -1), -1);
+    BOOST_CHECK_EQUAL(testArgs.GetBoolArg("booltest1", false), true);
+    BOOST_CHECK_EQUAL(testArgs.GetBoolArg("booltest2", false), false);
+    BOOST_CHECK_EQUAL(testArgs.GetBoolArg("booltest3", false), false);
+    BOOST_CHECK_EQUAL(testArgs.GetBoolArg("booltest4", false), true);
 }
 
 BOOST_AUTO_TEST_CASE(util_FormatMoney)
@@ -196,6 +212,8 @@ BOOST_AUTO_TEST_CASE(util_ParseMoney)
     BOOST_CHECK_EQUAL(ret, COIN*10);
     BOOST_CHECK(ParseMoney("1.00", ret));
     BOOST_CHECK_EQUAL(ret, COIN);
+    BOOST_CHECK(ParseMoney("1", ret));
+    BOOST_CHECK_EQUAL(ret, COIN);
     BOOST_CHECK(ParseMoney("0.1", ret));
     BOOST_CHECK_EQUAL(ret, COIN/10);
     BOOST_CHECK(ParseMoney("0.01", ret));
@@ -215,6 +233,9 @@ BOOST_AUTO_TEST_CASE(util_ParseMoney)
 
     // Attempted 63 bit overflow should fail
     BOOST_CHECK(!ParseMoney("92233720368.54775808", ret));
+
+    // Parsing negative amounts must fail
+    BOOST_CHECK(!ParseMoney("-1", ret));
 }
 
 BOOST_AUTO_TEST_CASE(util_IsHex)
@@ -232,28 +253,48 @@ BOOST_AUTO_TEST_CASE(util_IsHex)
     BOOST_CHECK(!IsHex("0x0000"));
 }
 
+BOOST_AUTO_TEST_CASE(util_IsHexNumber)
+{
+    BOOST_CHECK(IsHexNumber("0x0"));
+    BOOST_CHECK(IsHexNumber("0"));
+    BOOST_CHECK(IsHexNumber("0x10"));
+    BOOST_CHECK(IsHexNumber("10"));
+    BOOST_CHECK(IsHexNumber("0xff"));
+    BOOST_CHECK(IsHexNumber("ff"));
+    BOOST_CHECK(IsHexNumber("0xFfa"));
+    BOOST_CHECK(IsHexNumber("Ffa"));
+    BOOST_CHECK(IsHexNumber("0x00112233445566778899aabbccddeeffAABBCCDDEEFF"));
+    BOOST_CHECK(IsHexNumber("00112233445566778899aabbccddeeffAABBCCDDEEFF"));
+
+    BOOST_CHECK(!IsHexNumber(""));   // empty string not allowed
+    BOOST_CHECK(!IsHexNumber("0x")); // empty string after prefix not allowed
+    BOOST_CHECK(!IsHexNumber("0x0 ")); // no spaces at end,
+    BOOST_CHECK(!IsHexNumber(" 0x0")); // or beginning,
+    BOOST_CHECK(!IsHexNumber("0x 0")); // or middle,
+    BOOST_CHECK(!IsHexNumber(" "));    // etc.
+    BOOST_CHECK(!IsHexNumber("0x0ga")); // invalid character
+    BOOST_CHECK(!IsHexNumber("x0"));    // broken prefix
+    BOOST_CHECK(!IsHexNumber("0x0x00")); // two prefixes not allowed
+
+}
+
 BOOST_AUTO_TEST_CASE(util_seed_insecure_rand)
 {
-    int i;
-    int count=0;
-
-    seed_insecure_rand(true);
-
+    SeedInsecureRand(true);
     for (int mod=2;mod<11;mod++)
     {
         int mask = 1;
-        // Really rough binomal confidence approximation.
+        // Really rough binomial confidence approximation.
         int err = 30*10000./mod*sqrt((1./mod*(1-1./mod))/10000.);
         //mask is 2^ceil(log2(mod))-1
         while(mask<mod-1)mask=(mask<<1)+1;
 
-        count = 0;
+        int count = 0;
         //How often does it get a zero from the uniform range [0,mod)?
-        for (i=0;i<10000;i++)
-        {
+        for (int i = 0; i < 10000; i++) {
             uint32_t rval;
             do{
-                rval=insecure_rand()&mask;
+                rval=InsecureRand32()&mask;
             }while(rval>=(uint32_t)mod);
             count += rval==0;
         }
@@ -312,12 +353,12 @@ BOOST_AUTO_TEST_CASE(test_ParseInt32)
 {
     int32_t n;
     // Valid values
-    BOOST_CHECK(ParseInt32("1234", NULL));
+    BOOST_CHECK(ParseInt32("1234", nullptr));
     BOOST_CHECK(ParseInt32("0", &n) && n == 0);
     BOOST_CHECK(ParseInt32("1234", &n) && n == 1234);
     BOOST_CHECK(ParseInt32("01234", &n) && n == 1234); // no octal
     BOOST_CHECK(ParseInt32("2147483647", &n) && n == 2147483647);
-    BOOST_CHECK(ParseInt32("-2147483648", &n) && n == -2147483648);
+    BOOST_CHECK(ParseInt32("-2147483648", &n) && n == (-2147483647 - 1)); // (-2147483647 - 1) equals INT_MIN
     BOOST_CHECK(ParseInt32("-1234", &n) && n == -1234);
     // Invalid values
     BOOST_CHECK(!ParseInt32("", &n));
@@ -331,17 +372,17 @@ BOOST_AUTO_TEST_CASE(test_ParseInt32)
     std::string teststr(test_bytes, sizeof(test_bytes));
     BOOST_CHECK(!ParseInt32(teststr, &n)); // no embedded NULs
     // Overflow and underflow
-    BOOST_CHECK(!ParseInt32("-2147483649", NULL));
-    BOOST_CHECK(!ParseInt32("2147483648", NULL));
-    BOOST_CHECK(!ParseInt32("-32482348723847471234", NULL));
-    BOOST_CHECK(!ParseInt32("32482348723847471234", NULL));
+    BOOST_CHECK(!ParseInt32("-2147483649", nullptr));
+    BOOST_CHECK(!ParseInt32("2147483648", nullptr));
+    BOOST_CHECK(!ParseInt32("-32482348723847471234", nullptr));
+    BOOST_CHECK(!ParseInt32("32482348723847471234", nullptr));
 }
 
 BOOST_AUTO_TEST_CASE(test_ParseInt64)
 {
     int64_t n;
     // Valid values
-    BOOST_CHECK(ParseInt64("1234", NULL));
+    BOOST_CHECK(ParseInt64("1234", nullptr));
     BOOST_CHECK(ParseInt64("0", &n) && n == 0LL);
     BOOST_CHECK(ParseInt64("1234", &n) && n == 1234LL);
     BOOST_CHECK(ParseInt64("01234", &n) && n == 1234LL); // no octal
@@ -361,17 +402,80 @@ BOOST_AUTO_TEST_CASE(test_ParseInt64)
     std::string teststr(test_bytes, sizeof(test_bytes));
     BOOST_CHECK(!ParseInt64(teststr, &n)); // no embedded NULs
     // Overflow and underflow
-    BOOST_CHECK(!ParseInt64("-9223372036854775809", NULL));
-    BOOST_CHECK(!ParseInt64("9223372036854775808", NULL));
-    BOOST_CHECK(!ParseInt64("-32482348723847471234", NULL));
-    BOOST_CHECK(!ParseInt64("32482348723847471234", NULL));
+    BOOST_CHECK(!ParseInt64("-9223372036854775809", nullptr));
+    BOOST_CHECK(!ParseInt64("9223372036854775808", nullptr));
+    BOOST_CHECK(!ParseInt64("-32482348723847471234", nullptr));
+    BOOST_CHECK(!ParseInt64("32482348723847471234", nullptr));
+}
+
+BOOST_AUTO_TEST_CASE(test_ParseUInt32)
+{
+    uint32_t n;
+    // Valid values
+    BOOST_CHECK(ParseUInt32("1234", nullptr));
+    BOOST_CHECK(ParseUInt32("0", &n) && n == 0);
+    BOOST_CHECK(ParseUInt32("1234", &n) && n == 1234);
+    BOOST_CHECK(ParseUInt32("01234", &n) && n == 1234); // no octal
+    BOOST_CHECK(ParseUInt32("2147483647", &n) && n == 2147483647);
+    BOOST_CHECK(ParseUInt32("2147483648", &n) && n == (uint32_t)2147483648);
+    BOOST_CHECK(ParseUInt32("4294967295", &n) && n == (uint32_t)4294967295);
+    // Invalid values
+    BOOST_CHECK(!ParseUInt32("", &n));
+    BOOST_CHECK(!ParseUInt32(" 1", &n)); // no padding inside
+    BOOST_CHECK(!ParseUInt32(" -1", &n));
+    BOOST_CHECK(!ParseUInt32("1 ", &n));
+    BOOST_CHECK(!ParseUInt32("1a", &n));
+    BOOST_CHECK(!ParseUInt32("aap", &n));
+    BOOST_CHECK(!ParseUInt32("0x1", &n)); // no hex
+    BOOST_CHECK(!ParseUInt32("0x1", &n)); // no hex
+    const char test_bytes[] = {'1', 0, '1'};
+    std::string teststr(test_bytes, sizeof(test_bytes));
+    BOOST_CHECK(!ParseUInt32(teststr, &n)); // no embedded NULs
+    // Overflow and underflow
+    BOOST_CHECK(!ParseUInt32("-2147483648", &n));
+    BOOST_CHECK(!ParseUInt32("4294967296", &n));
+    BOOST_CHECK(!ParseUInt32("-1234", &n));
+    BOOST_CHECK(!ParseUInt32("-32482348723847471234", nullptr));
+    BOOST_CHECK(!ParseUInt32("32482348723847471234", nullptr));
+}
+
+BOOST_AUTO_TEST_CASE(test_ParseUInt64)
+{
+    uint64_t n;
+    // Valid values
+    BOOST_CHECK(ParseUInt64("1234", nullptr));
+    BOOST_CHECK(ParseUInt64("0", &n) && n == 0LL);
+    BOOST_CHECK(ParseUInt64("1234", &n) && n == 1234LL);
+    BOOST_CHECK(ParseUInt64("01234", &n) && n == 1234LL); // no octal
+    BOOST_CHECK(ParseUInt64("2147483647", &n) && n == 2147483647LL);
+    BOOST_CHECK(ParseUInt64("9223372036854775807", &n) && n == 9223372036854775807ULL);
+    BOOST_CHECK(ParseUInt64("9223372036854775808", &n) && n == 9223372036854775808ULL);
+    BOOST_CHECK(ParseUInt64("18446744073709551615", &n) && n == 18446744073709551615ULL);
+    // Invalid values
+    BOOST_CHECK(!ParseUInt64("", &n));
+    BOOST_CHECK(!ParseUInt64(" 1", &n)); // no padding inside
+    BOOST_CHECK(!ParseUInt64(" -1", &n));
+    BOOST_CHECK(!ParseUInt64("1 ", &n));
+    BOOST_CHECK(!ParseUInt64("1a", &n));
+    BOOST_CHECK(!ParseUInt64("aap", &n));
+    BOOST_CHECK(!ParseUInt64("0x1", &n)); // no hex
+    const char test_bytes[] = {'1', 0, '1'};
+    std::string teststr(test_bytes, sizeof(test_bytes));
+    BOOST_CHECK(!ParseUInt64(teststr, &n)); // no embedded NULs
+    // Overflow and underflow
+    BOOST_CHECK(!ParseUInt64("-9223372036854775809", nullptr));
+    BOOST_CHECK(!ParseUInt64("18446744073709551616", nullptr));
+    BOOST_CHECK(!ParseUInt64("-32482348723847471234", nullptr));
+    BOOST_CHECK(!ParseUInt64("-2147483648", &n));
+    BOOST_CHECK(!ParseUInt64("-9223372036854775808", &n));
+    BOOST_CHECK(!ParseUInt64("-1234", &n));
 }
 
 BOOST_AUTO_TEST_CASE(test_ParseDouble)
 {
     double n;
     // Valid values
-    BOOST_CHECK(ParseDouble("1234", NULL));
+    BOOST_CHECK(ParseDouble("1234", nullptr));
     BOOST_CHECK(ParseDouble("0", &n) && n == 0.0);
     BOOST_CHECK(ParseDouble("1234", &n) && n == 1234.0);
     BOOST_CHECK(ParseDouble("01234", &n) && n == 1234.0); // no octal
@@ -391,20 +495,35 @@ BOOST_AUTO_TEST_CASE(test_ParseDouble)
     std::string teststr(test_bytes, sizeof(test_bytes));
     BOOST_CHECK(!ParseDouble(teststr, &n)); // no embedded NULs
     // Overflow and underflow
-    BOOST_CHECK(!ParseDouble("-1e10000", NULL));
-    BOOST_CHECK(!ParseDouble("1e10000", NULL));
+    BOOST_CHECK(!ParseDouble("-1e10000", nullptr));
+    BOOST_CHECK(!ParseDouble("1e10000", nullptr));
 }
 
 BOOST_AUTO_TEST_CASE(test_FormatParagraph)
 {
     BOOST_CHECK_EQUAL(FormatParagraph("", 79, 0), "");
     BOOST_CHECK_EQUAL(FormatParagraph("test", 79, 0), "test");
-    BOOST_CHECK_EQUAL(FormatParagraph(" test", 79, 0), "test");
+    BOOST_CHECK_EQUAL(FormatParagraph(" test", 79, 0), " test");
     BOOST_CHECK_EQUAL(FormatParagraph("test test", 79, 0), "test test");
     BOOST_CHECK_EQUAL(FormatParagraph("test test", 4, 0), "test\ntest");
-    BOOST_CHECK_EQUAL(FormatParagraph("testerde test ", 4, 0), "testerde\ntest");
+    BOOST_CHECK_EQUAL(FormatParagraph("testerde test", 4, 0), "testerde\ntest");
     BOOST_CHECK_EQUAL(FormatParagraph("test test", 4, 4), "test\n    test");
-    BOOST_CHECK_EQUAL(FormatParagraph("This is a very long test string. This is a second sentence in the very long test string."), "This is a very long test string. This is a second sentence in the very long\ntest string.");
+
+    // Make sure we don't indent a fully-new line following a too-long line ending
+    BOOST_CHECK_EQUAL(FormatParagraph("test test\nabc", 4, 4), "test\n    test\nabc");
+
+    BOOST_CHECK_EQUAL(FormatParagraph("This_is_a_very_long_test_string_without_any_spaces_so_it_should_just_get_returned_as_is_despite_the_length until it gets here", 79), "This_is_a_very_long_test_string_without_any_spaces_so_it_should_just_get_returned_as_is_despite_the_length\nuntil it gets here");
+
+    // Test wrap length is exact
+    BOOST_CHECK_EQUAL(FormatParagraph("a b c d e f g h i j k l m n o p q r s t u v w x y z 1 2 3 4 5 6 7 8 9 a b c de f g h i j k l m n o p", 79), "a b c d e f g h i j k l m n o p q r s t u v w x y z 1 2 3 4 5 6 7 8 9 a b c de\nf g h i j k l m n o p");
+    BOOST_CHECK_EQUAL(FormatParagraph("x\na b c d e f g h i j k l m n o p q r s t u v w x y z 1 2 3 4 5 6 7 8 9 a b c de f g h i j k l m n o p", 79), "x\na b c d e f g h i j k l m n o p q r s t u v w x y z 1 2 3 4 5 6 7 8 9 a b c de\nf g h i j k l m n o p");
+    // Indent should be included in length of lines
+    BOOST_CHECK_EQUAL(FormatParagraph("x\na b c d e f g h i j k l m n o p q r s t u v w x y z 1 2 3 4 5 6 7 8 9 a b c de f g h i j k l m n o p q r s t u v w x y z 0 1 2 3 4 5 6 7 8 9 a b c d e fg h i j k", 79, 4), "x\na b c d e f g h i j k l m n o p q r s t u v w x y z 1 2 3 4 5 6 7 8 9 a b c de\n    f g h i j k l m n o p q r s t u v w x y z 0 1 2 3 4 5 6 7 8 9 a b c d e fg\n    h i j k");
+
+    BOOST_CHECK_EQUAL(FormatParagraph("This is a very long test string. This is a second sentence in the very long test string.", 79), "This is a very long test string. This is a second sentence in the very long\ntest string.");
+    BOOST_CHECK_EQUAL(FormatParagraph("This is a very long test string.\nThis is a second sentence in the very long test string. This is a third sentence in the very long test string.", 79), "This is a very long test string.\nThis is a second sentence in the very long test string. This is a third\nsentence in the very long test string.");
+    BOOST_CHECK_EQUAL(FormatParagraph("This is a very long test string.\n\nThis is a second sentence in the very long test string. This is a third sentence in the very long test string.", 79), "This is a very long test string.\n\nThis is a second sentence in the very long test string. This is a third\nsentence in the very long test string.");
+    BOOST_CHECK_EQUAL(FormatParagraph("Testing that normal newlines do not get indented.\nLike here.", 79), "Testing that normal newlines do not get indented.\nLike here.");
 }
 
 BOOST_AUTO_TEST_CASE(test_FormatSubVersion)
