@@ -106,6 +106,10 @@ std::atomic<uint32_t> logCategories(0);
 
 /** Init OpenSSL library multithreading support */
 static std::unique_ptr<CCriticalSection[]> ppmutexOpenSSL;
+
+// NO_THREAD_SAFETY_ANALYSIS: Intentionally silencing the following warnings:
+// * error: releasing mutex 'operator[](ppmutexOpenSSL, i)' that was not held [-Werror,-Wthread-safety-analysis]
+// * error: mutex 'operator[](ppmutexOpenSSL, i)' is not held on every path through here [-Werror,-Wthread-safety-analysis]
 void locking_callback(int mode, int i, const char* file, int line) NO_THREAD_SAFETY_ANALYSIS
 {
     if (mode & CRYPTO_LOCK) {

@@ -293,6 +293,8 @@ std::string gbt_vb_name(const Consensus::DeploymentPos pos) {
     return s;
 }
 
+// NO_THREAD_SAFETY_ANALYSIS: Intentionally accessing chainActive without
+// holding cs_main (see LEAVE_CRITICAL_SECTION(cs_main)).
 UniValue getblocktemplate(const JSONRPCRequest& request) NO_THREAD_SAFETY_ANALYSIS
 {
     if (request.fHelp || request.params.size() > 1)

@@ -1200,6 +1200,8 @@ bool AppInitLockDataDirectory()
     return true;
 }
 
+// NO_THREAD_SAFETY_ANALYSIS: Access to guarded variables happens before any
+// thread is started.
 bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler) NO_THREAD_SAFETY_ANALYSIS
 {
     const CChainParams& chainparams = Params();

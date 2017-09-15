@@ -787,13 +787,16 @@ public:
         pwalletdbEncryption = nullptr;
     }
 
+    // NO_THREAD_SAFETY_ANALYSIS: Intentionally setting
+    // nOrderPosNext/nTimeFirstKey/nWalletVersion/nWalletMaxVersion without
+    // holding cs_wallet.
     void SetNull() NO_THREAD_SAFETY_ANALYSIS
     {
         nWalletVersion = FEATURE_BASE;
         nWalletMaxVersion = FEATURE_BASE;
         nMasterKeyMaxID = 0;
         pwalletdbEncryption = nullptr;
-        nOrderPosNext = 0; // NO_THREAD_SAFETY_ANALYSIS
+        nOrderPosNext = 0;
         nAccountingEntryNumber = 0;
         nNextResend = 0;
         nLastResend = 0;

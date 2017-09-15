@@ -120,6 +120,8 @@ public:
 };
 #endif
 
+// NO_THREAD_SAFETY_ANALYSIS: The conditional cs_wallet lock confuses the
+// thread-safety analyzer.
 UniValue validateaddress(const JSONRPCRequest& request) NO_THREAD_SAFETY_ANALYSIS
 {
     if (request.fHelp || request.params.size() != 1)
