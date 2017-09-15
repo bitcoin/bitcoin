@@ -1039,7 +1039,7 @@ UniValue generateescrowmultisig(const UniValue& params, bool fHelp) {
 		string err = "SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4501 - " + _("Could not validate the payment options value");
 		throw runtime_error(err.c_str());
 	}
-
+	uint64_t paymentOptionMask = GetPaymentOptionsMaskFromString(paymentOption);
 	CAliasIndex arbiteralias;
 	if (!GetAlias(vchArbiter, arbiteralias))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4502 - " + _("Failed to read arbiter alias from DB"));
@@ -1062,17 +1062,12 @@ UniValue generateescrowmultisig(const UniValue& params, bool fHelp) {
 
 	const CNameTXIDTuple &latestAliasPegTuple = CNameTXIDTuple(pegAlias.vchAlias, pegAlias.txHash);
 
-	CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(latestAliasPegTuple, vchFromString(GetPaymentOptionsString(paymentOption)), 1, precision);
+	CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(latestAliasPegTuple, vchFromString(GetPaymentOptionsString(paymentOptionMask)), 1, precision);
 	if (nPricePerUnit == 0)
 	{
 		string err = "SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 1549 - " + _("Could not find payment currency in the peg alias");
 		throw runtime_error(err.c_str());
 	}
-
-	CAliasIndex pegAlias;
-	if (!GetAlias(selleralias.aliasPegTuple.first, pegAlias))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 5509 - " + _("Invalid peg rates alias"));
-	const CNameTXIDTuple &latestAliasPegTuple = CNameTXIDTuple(pegAlias.vchAlias, pegAlias.txHash);
 
 	COfferLinkWhitelistEntry foundEntry;
 	if(!theOffer.linkOfferTuple.first.empty())
@@ -1115,17 +1110,17 @@ UniValue generateescrowmultisig(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4508 - " + _("Could not create escrow transaction: Invalid response from createescrow"));
 
 	int precision = 2;
-	UniValue params(UniValue::VARR);
-	params.push_back(stringFromVch(selleralias.vchAlias));
-	params.push_back(stringFromVch(theOffer.sCurrencyCode));
-	params.push_back(stringFromVch(GetPaymentOptionsString(paymentOption)));
-	params.push_back(theOffer.GetPrice(foundEntry)*nQty);
-	const UniValue &r = tableRPC.execute("aliasconvertcurrency", params);
+	UniValue paramsConvert(UniValue::VARR);
+	paramsConvert.push_back(stringFromVch(selleralias.vchAlias));
+	paramsConvert.push_back(stringFromVch(theOffer.sCurrencyCode));
+	paramsConvert.push_back(stringFromVch(GetPaymentOptionsString(paymentOptionMask)));
+	paramsConvert.push_back(theOffer.GetPrice(foundEntry)*nQty);
+	const UniValue &r = tableRPC.execute("aliasconvertcurrency", paramsConvert);
 	CAmount nTotal = AmountFromValue(find_value(r.get_obj(), "convertedrate"));
 
-	float fEscrowFee = getEscrowFee(selleralias.aliasPegTuple, vchFromString(GetPaymentOptionsString(paymentOption)), precision);
+	float fEscrowFee = getEscrowFee(selleralias.aliasPegTuple, vchFromString(GetPaymentOptionsString(paymentOptionMask)), precision);
 	CAmount nEscrowFee = GetEscrowArbiterFee(nTotal, fEscrowFee);
-	int nExtFeePerByte = getFeePerByte(selleralias.aliasPegTuple, vchFromString(paymentOption), precision);
+	int nExtFeePerByte = getFeePerByte(selleralias.aliasPegTuple, vchFromString(GetPaymentOptionsString(paymentOptionMask)), precision);
 	// multisig spend is about 400 bytes
 	nTotal += nEscrowFee + (nExtFeePerByte*400);
 	resCreate.push_back(Pair("total", strprintf("%.*f", precision, ValueFromAmount(nTotal).get_real())));
@@ -1298,21 +1293,21 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 		redeemScript = ParseHex(stringFromVch(vchRedeemScript));
 	}
 	CAmount nCommission = 0;
-	UniValue params(UniValue::VARR);
-	params.push_back(stringFromVch(selleralias.vchAlias));
-	params.push_back(stringFromVch(theOffer.sCurrencyCode));
-	params.push_back(stringFromVch(GetPaymentOptionsString(paymentOptionMask)));
-	params.push_back(theOffer.GetPrice()*nQty);
-	const UniValue &r = tableRPC.execute("aliasconvertcurrency", params);
+	UniValue paramsConvert(UniValue::VARR);
+	paramsConvert.push_back(stringFromVch(selleralias.vchAlias));
+	paramsConvert.push_back(stringFromVch(theOffer.sCurrencyCode));
+	paramsConvert.push_back(stringFromVch(GetPaymentOptionsString(paymentOptionMask)));
+	paramsConvert.push_back(theOffer.GetPrice()*nQty);
+	UniValue r = tableRPC.execute("aliasconvertcurrency", paramsConvert);
 	CAmount nTotalOfferPrice = AmountFromValue(find_value(r.get_obj(), "convertedrate"));
 	if (!theOffer.linkOfferTuple.first.empty())
 	{
-		params.clear();
-		params.push_back(stringFromVch(theLinkedAlias.vchAlias));
-		params.push_back(stringFromVch(linkedOffer.sCurrencyCode));
-		params.push_back(stringFromVch(GetPaymentOptionsString(paymentOptionMask)));
-		params.push_back(linkedOffer.GetPrice(foundEntry)*nQty);
-		const UniValue &r = tableRPC.execute("aliasconvertcurrency", params);
+		paramsConvert.clear();
+		paramsConvert.push_back(stringFromVch(theLinkedAlias.vchAlias));
+		paramsConvert.push_back(stringFromVch(linkedOffer.sCurrencyCode));
+		paramsConvert.push_back(stringFromVch(GetPaymentOptionsString(paymentOptionMask)));
+		paramsConvert.push_back(linkedOffer.GetPrice(foundEntry)*nQty);
+		r = tableRPC.execute("aliasconvertcurrency", paramsConvert);
 		CAmount nTotalLinkedOfferPrice = AmountFromValue(find_value(r.get_obj(), "convertedrate"));
 
 		nCommission = nTotalOfferPrice - nTotalLinkedOfferPrice;
@@ -1324,12 +1319,12 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	int precision = 2;
 	// send to escrow address
 
-	params.clear();
-	params.push_back(stringFromVch(selleralias.vchAlias));
-	params.push_back(stringFromVch(theOffer.sCurrencyCode));
-	params.push_back(stringFromVch(GetPaymentOptionsString(paymentOptionMask)));
-	params.push_back(theOffer.GetPrice(foundEntry)*nQty);
-	const UniValue &r = tableRPC.execute("aliasconvertcurrency", params);
+	paramsConvert.clear();
+	paramsConvert.push_back(stringFromVch(selleralias.vchAlias));
+	paramsConvert.push_back(stringFromVch(theOffer.sCurrencyCode));
+	paramsConvert.push_back(stringFromVch(GetPaymentOptionsString(paymentOptionMask)));
+	paramsConvert.push_back(theOffer.GetPrice(foundEntry)*nQty);
+	r = tableRPC.execute("aliasconvertcurrency", paramsConvert);
 	CAmount nTotalWithBuyerDiscount = AmountFromValue(find_value(r.get_obj(), "convertedrate"));
 
 	int nFeePerByte = getFeePerByte(selleralias.aliasPegTuple, vchFromString(GetPaymentOptionsString(paymentOptionMask)), precision);
