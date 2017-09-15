@@ -1272,3 +1272,4 @@ src/crypto/crypto_libbitcoin_crypto_a-sha256_sse4.o
 src/rpc/libbitcoin_server_a-safemode.o
 src/crypto/libchaincoinconsensus_la-sha256_sse4.lo
 src/crypto/libchaincoinconsensus_la-sha256_sse4.o
+test_test_bitcoin-script_standard_tests.Po
