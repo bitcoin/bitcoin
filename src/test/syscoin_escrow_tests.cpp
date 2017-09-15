@@ -6,6 +6,7 @@
 #include "alias.h"
 #include "cert.h"
 #include "base58.h"
+#include <boost/lexical_cast.hpp>
 BOOST_FIXTURE_TEST_SUITE (syscoin_escrow_tests, BasicSyscoinTestingSetup)
 
 BOOST_AUTO_TEST_CASE (generate_escrow_release)
@@ -70,7 +71,7 @@ BOOST_AUTO_TEST_CASE (generate_escrowrefund_invalid)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + guid));
 	string escrowaddress = find_value(r.get_obj(), "escrowaddress").get_str();
 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "getaddressutxos '{\\\"addresses\": [\\\"" + escrowaddress + "\\\"]}'"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getaddressutxos '{\\\"addresses\": [\\\"" + escrowaddress + "\\\"]}'"));
 	UniValue addressUTXOsArray = r.get_array();
 	string inputStr = "\"[";
 	for (unsigned int i = 0; i < addressUTXOsArray.size(); i++)
@@ -113,7 +114,7 @@ BOOST_AUTO_TEST_CASE (generate_escrowrelease_invalid)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + guid));
 	string escrowaddress = find_value(r.get_obj(), "escrowaddress").get_str();
 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "getaddressutxos '{\\\"addresses\": [\\\"" + escrowaddress + "\\\"]}'"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getaddressutxos '{\\\"addresses\": [\\\"" + escrowaddress + "\\\"]}'"));
 	UniValue addressUTXOsArray = r.get_array();
 	string inputStr = "\"[";
 	for (unsigned int i = 0; i < addressUTXOsArray.size(); i++)
@@ -306,7 +307,7 @@ BOOST_AUTO_TEST_CASE (generate_escrow_linked_release_with_peg_update)
 	guid = EscrowNew("node1", "node2", "buyeralias33", offerlinkguid, "4", "arbiteralias333", "selleralias33");
 	EscrowRelease("node1", "buyer", guid);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + guid));
-	CAmount nTotal = find_value(r.get_obj(), "systotal").get_int64();
+	nTotal = find_value(r.get_obj(), "systotal").get_int64();
 	// 218.2SYS/EUR
 	BOOST_CHECK_EQUAL(nTotal, AmountFromValue(4 * 0.07*1.06*218.2));
 
@@ -322,7 +323,7 @@ BOOST_AUTO_TEST_CASE (generate_escrow_linked_release_with_peg_update)
 	guid = EscrowNew("node1", "node2", "buyeralias33", offerlinkguid, "3", "arbiteralias333", "selleralias33");
 	EscrowRelease("node1", "buyer", guid);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + guid));
-	CAmount nTotal = find_value(r.get_obj(), "systotal").get_int64();
+	nTotal = find_value(r.get_obj(), "systotal").get_int64();
 	// 2695.2SYS/EUR
 	BOOST_CHECK_EQUAL(nTotal, AmountFromValue(3 * 0.07*1.06*2695.2));
 
