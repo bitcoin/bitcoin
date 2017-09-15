@@ -865,7 +865,7 @@ UniValue sendrawtransaction(const UniValue& params, bool fHelp)
     bool fHaveChain = existingCoins && existingCoins->nHeight < 1000000000;
     if (!fHaveMempool && !fHaveChain) {
         // push to local node and sync with wallets
-        if (fInstantSend && !instantsend.ProcessTxLockRequest(tx)) {
+        if (fInstantSend && !instantsend.ProcessTxLockRequest(tx, *g_connman)) {
             throw JSONRPCError(RPC_TRANSACTION_ERROR, "Not a valid InstantSend transaction, see debug.log for more info");
         }
         CValidationState state;

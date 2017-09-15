@@ -1761,7 +1761,7 @@ bool CWalletTx::RelayWalletTransaction(CConnman* connman, std::string strCommand
             LogPrintf("Relaying wtx %s\n", hash.ToString());
 
             if(strCommand == NetMsgType::TXLOCKREQUEST) {
-                instantsend.ProcessTxLockRequest(((CTxLockRequest)*this));
+                instantsend.ProcessTxLockRequest(((CTxLockRequest)*this), *connman);
             }
             if (connman) {
                 connman->RelayTransaction((CTransaction)*this);

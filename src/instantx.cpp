@@ -40,7 +40,7 @@ CInstantSend instantsend;
 // CInstantSend
 //
 
-void CInstantSend::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
+void CInstantSend::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv, CConnman& connman)
 {
     if(fLiteMode) return; // disable all Dash specific functionality
     if(!sporkManager.IsSporkActive(SPORK_2_INSTANTSEND_ENABLED)) return;
@@ -70,13 +70,13 @@ void CInstantSend::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataSt
         if(mapTxLockVotes.count(nVoteHash)) return;
         mapTxLockVotes.insert(std::make_pair(nVoteHash, vote));
 
-        ProcessTxLockVote(pfrom, vote);
+        ProcessTxLockVote(pfrom, vote, connman);
 
         return;
     }
 }
 
-bool CInstantSend::ProcessTxLockRequest(const CTxLockRequest& txLockRequest)
+bool CInstantSend::ProcessTxLockRequest(const CTxLockRequest& txLockRequest, CConnman& connman)
 {
     LOCK2(cs_main, cs_instantsend);
 
@@ -116,8 +116,8 @@ bool CInstantSend::ProcessTxLockRequest(const CTxLockRequest& txLockRequest)
 
     std::map<uint256, CTxLockCandidate>::iterator itLockCandidate = mapTxLockCandidates.find(txHash);
     CTxLockCandidate& txLockCandidate = itLockCandidate->second;
-    Vote(txLockCandidate);
-    ProcessOrphanTxLockVotes();
+    Vote(txLockCandidate, connman);
+    ProcessOrphanTxLockVotes(connman);
 
     // Masternodes will sometimes propagate votes before the transaction is known to the client.
     // If this just happened - lock inputs, resolve conflicting locks, update transaction status
@@ -174,7 +174,7 @@ void CInstantSend::CreateEmptyTxLockCandidate(const uint256& txHash)
     mapTxLockCandidates.insert(std::make_pair(txHash, CTxLockCandidate(txLockRequest)));
 }
 
-void CInstantSend::Vote(CTxLockCandidate& txLockCandidate)
+void CInstantSend::Vote(CTxLockCandidate& txLockCandidate, CConnman& connman)
 {
     if(!fMasterNode) return;
     if(!sporkManager.IsSporkActive(SPORK_2_INSTANTSEND_ENABLED)) return;
@@ -266,7 +266,7 @@ void CInstantSend::Vote(CTxLockCandidate& txLockCandidate)
                 }
             }
 
-            vote.Relay();
+            vote.Relay(connman);
         }
 
         ++itOutpointLock;
@@ -274,7 +274,7 @@ void CInstantSend::Vote(CTxLockCandidate& txLockCandidate)
 }
 
 //received a consensus vote
-bool CInstantSend::ProcessTxLockVote(CNode* pfrom, CTxLockVote& vote)
+bool CInstantSend::ProcessTxLockVote(CNode* pfrom, CTxLockVote& vote, CConnman& connman)
 {
     // cs_main, cs_wallet and cs_instantsend should be already locked
     AssertLockHeld(cs_main);
@@ -293,7 +293,7 @@ bool CInstantSend::ProcessTxLockVote(CNode* pfrom, CTxLockVote& vote)
     }
 
     // relay valid vote asap
-    vote.Relay();
+    vote.Relay(connman);
 
     // Masternodes will sometimes propagate votes before the transaction is known to the client,
     // will actually process only after the lock request itself has arrived
@@ -319,7 +319,7 @@ bool CInstantSend::ProcessTxLockVote(CNode* pfrom, CTxLockVote& vote)
                 // We have enough votes for corresponding lock to complete,
                 // tx lock request should already be received at this stage.
                 LogPrint("instantsend", "CInstantSend::ProcessTxLockVote -- Found enough orphan votes, reprocessing Transaction Lock Request: txid=%s\n", txHash.ToString());
-                ProcessTxLockRequest(itLockRequest->second);
+                ProcessTxLockRequest(itLockRequest->second, connman);
                 return true;
             }
         } else {
@@ -404,7 +404,7 @@ bool CInstantSend::ProcessTxLockVote(CNode* pfrom, CTxLockVote& vote)
     return true;
 }
 
-void CInstantSend::ProcessOrphanTxLockVotes()
+void CInstantSend::ProcessOrphanTxLockVotes(CConnman& connman)
 {
     LOCK(cs_main);
 #ifdef ENABLE_WALLET
@@ -415,7 +415,7 @@ void CInstantSend::ProcessOrphanTxLockVotes()
 
     std::map<uint256, CTxLockVote>::iterator it = mapTxLockVotesOrphan.begin();
     while(it != mapTxLockVotesOrphan.end()) {
-        if(ProcessTxLockVote(NULL, it->second)) {
+        if(ProcessTxLockVote(NULL, it->second, connman)) {
             mapTxLockVotesOrphan.erase(it++);
         } else {
             ++it;
@@ -815,13 +815,13 @@ bool CInstantSend::IsTxLockCandidateTimedOut(const uint256& txHash)
     return false;
 }
 
-void CInstantSend::Relay(const uint256& txHash)
+void CInstantSend::Relay(const uint256& txHash, CConnman& connman)
 {
     LOCK(cs_instantsend);
 
     std::map<uint256, CTxLockCandidate>::const_iterator itLockCandidate = mapTxLockCandidates.find(txHash);
     if (itLockCandidate != mapTxLockCandidates.end()) {
-        itLockCandidate->second.Relay();
+        itLockCandidate->second.Relay(connman);
     }
 }
 
@@ -1069,10 +1069,10 @@ bool CTxLockVote::Sign()
     return true;
 }
 
-void CTxLockVote::Relay() const
+void CTxLockVote::Relay(CConnman& connman) const
 {
     CInv inv(MSG_TXLOCK_VOTE, GetHash());
-    g_connman->RelayInv(inv);
+    connman.RelayInv(inv);
 }
 
 bool CTxLockVote::IsExpired(int nHeight) const
@@ -1114,11 +1114,11 @@ bool COutPointLock::HasMasternodeVoted(const COutPoint& outpointMasternodeIn) co
     return mapMasternodeVotes.count(outpointMasternodeIn);
 }
 
-void COutPointLock::Relay() const
+void COutPointLock::Relay(CConnman& connman) const
 {
     std::map<COutPoint, CTxLockVote>::const_iterator itVote = mapMasternodeVotes.begin();
     while(itVote != mapMasternodeVotes.end()) {
-        itVote->second.Relay();
+        itVote->second.Relay(connman);
         ++itVote;
     }
 }
@@ -1187,12 +1187,12 @@ bool CTxLockCandidate::IsTimedOut() const
     return GetTime() - nTimeCreated > INSTANTSEND_TIMEOUT_SECONDS;
 }
 
-void CTxLockCandidate::Relay() const
+void CTxLockCandidate::Relay(CConnman& connman) const
 {
-    g_connman->RelayTransaction(txLockRequest);
+    connman.RelayTransaction(txLockRequest);
     std::map<COutPoint, COutPointLock>::const_iterator itOutpointLock = mapOutPointLocks.begin();
     while(itOutpointLock != mapOutPointLocks.end()) {
-        itOutpointLock->second.Relay();
+        itOutpointLock->second.Relay(connman);
         ++itOutpointLock;
     }
 }
