@@ -2826,6 +2826,11 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
         return state.Invalid(error("%s : rejected nVersion=2 block", __func__),
                              REJECT_OBSOLETE, "bad-version");
 
+    // Reject block.nVersion=3 blocks when 95% (75% on testnet) of the network has upgraded to v5
+    if (block.nVersion < 4 && IsSuperMajority2(5, pindexPrev, consensusParams.nMajorityRejectBlockOutdated2, consensusParams))
+        return state.Invalid(error("%s : rejected nVersion=3 block", __func__),
+                             REJECT_OBSOLETE, "bad-version");
+
     return true;
 }
 
