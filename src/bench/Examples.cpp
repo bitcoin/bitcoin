@@ -32,3 +32,44 @@ static void Trig(benchmark::State& state)
 }
 
 BENCHMARK(Trig);
+
+
+volatile int64_t sort_result_dummy = 0; // volatile, global so not optimized away
+
+static void SmallSort(benchmark::State& state)
+{
+    int64_t pmedian[11] = {1, 3, 2, 4, 5, 6, 8, 7, 9, 11, 10};
+    auto* pbegin = &pmedian[11];
+    auto* pend = &pmedian[11];
+    int mutate_index = 0;
+
+    while (state.KeepRunning()) {
+        ++pmedian[mutate_index++];
+        mutate_index %= 11;
+        std::sort(pbegin, pend);
+    }
+    sort_result_dummy = pmedian[0];
+}
+
+BENCHMARK(SmallSort);
+
+
+volatile int64_t median_result_dummy = 0; // volatile, global so not optimized away
+
+static void SmallMedian(benchmark::State& state)
+{
+    int64_t pmedian[11] = {1, 3, 2, 4, 5, 6, 8, 7, 9, 11, 10};
+    auto* pbegin = &pmedian[11];
+    auto* pend = &pmedian[11];
+    int mutate_index = 0;
+
+    while (state.KeepRunning()) {
+        ++pmedian[mutate_index++];
+        mutate_index %= 11;
+        const size_t median_index = (pend - pbegin) / 2;
+        std::nth_element(pbegin, pbegin + median_index, pend);
+    }
+    median_result_dummy = pmedian[0];
+}
+
+BENCHMARK(SmallMedian);
