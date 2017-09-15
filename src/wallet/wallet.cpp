@@ -494,6 +494,11 @@ void CWallet::Flush(bool shutdown)
     dbw->Flush(shutdown);
 }
 
+static bool allowSymbolicLink()
+{
+	return gArgs.GetBoolArg("-walletallowsymboliclink", DEFAULT_WALLET_ALLOW_SYMBOLIC_LINK);
+}
+
 bool CWallet::Verify()
 {
     if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET))
@@ -515,7 +520,7 @@ bool CWallet::Verify()
 
         fs::path wallet_path = fs::absolute(walletFile, GetDataDir());
 
-        if (fs::exists(wallet_path) && (!fs::is_regular_file(wallet_path) || fs::is_symlink(wallet_path))) {
+        if (fs::exists(wallet_path) && (!fs::is_regular_file(wallet_path) || (fs::is_symlink(wallet_path) && !allowSymbolicLink()))) {
             return InitError(strprintf(_("Error loading wallet %s. -wallet filename must be a regular file."), walletFile));
         }
 
@@ -3907,6 +3912,7 @@ std::string CWallet::GetWalletHelpString(bool showDebug)
     strUsage += HelpMessageOpt("-txconfirmtarget=<n>", strprintf(_("If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)"), DEFAULT_TX_CONFIRM_TARGET));
     strUsage += HelpMessageOpt("-usehd", _("Use hierarchical deterministic key generation (HD) after BIP32. Only has effect during wallet creation/first start") + " " + strprintf(_("(default: %u)"), DEFAULT_USE_HD_WALLET));
     strUsage += HelpMessageOpt("-walletrbf", strprintf(_("Send transactions with full-RBF opt-in enabled (default: %u)"), DEFAULT_WALLET_RBF));
+    strUsage += HelpMessageOpt("-walletallowsymboliclink", strprintf(_("Allow symbolic link for wallet (default: %u)"), DEFAULT_WALLET_ALLOW_SYMBOLIC_LINK));
     strUsage += HelpMessageOpt("-upgradewallet", _("Upgrade wallet to latest format on startup"));
     strUsage += HelpMessageOpt("-wallet=<file>", _("Specify wallet file (within data directory)") + " " + strprintf(_("(default: %s)"), DEFAULT_WALLET_DAT));
     strUsage += HelpMessageOpt("-walletbroadcast", _("Make the wallet broadcast transactions") + " " + strprintf(_("(default: %u)"), DEFAULT_WALLETBROADCAST));
