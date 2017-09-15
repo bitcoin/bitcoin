@@ -47,9 +47,6 @@ class CValidationState;
 
 struct LockPoints;
 
-static std::atomic<bool> fDIP0001LockedInAtTip{false};
-static std::atomic<bool> fDIP0001ActiveAtTip{false};
-
 /** Default for accepting alerts from the P2P network. */
 static const bool DEFAULT_ALERTS = true;
 /** Default for DEFAULT_WHITELISTRELAY. */
@@ -164,6 +161,8 @@ extern bool fAlerts;
 extern bool fEnableReplacement;
 
 extern std::map<uint256, int64_t> mapRejectedBlocks;
+extern std::atomic<bool> fDIP0001LockedInAtTip;
+extern std::atomic<bool> fDIP0001ActiveAtTip;
 
 /** Block hash whose ancestors we will assume to have valid scripts without checking them. */
 extern uint256 hashAssumeValid;

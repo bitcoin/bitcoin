@@ -85,6 +85,9 @@ uint64_t nPruneTarget = 0;
 bool fAlerts = DEFAULT_ALERTS;
 bool fEnableReplacement = DEFAULT_ENABLE_REPLACEMENT;
 
+std::atomic<bool> fDIP0001LockedInAtTip{false};
+std::atomic<bool> fDIP0001ActiveAtTip{false};
+
 uint256 hashAssumeValid;
 
 /** Fees smaller than this (in duffs) are considered zero fee (for relaying, mining and transaction creation) */
@@ -2460,10 +2463,6 @@ void static UpdateTip(CBlockIndex *pindexNew) {
             }
         }
     }
-
-    // Update global flags
-    fDIP0001LockedInAtTip = (VersionBitsTipState(chainParams.GetConsensus(), Consensus::DEPLOYMENT_DIP0001) == THRESHOLD_LOCKED_IN);
-    fDIP0001ActiveAtTip = (VersionBitsTipState(chainParams.GetConsensus(), Consensus::DEPLOYMENT_DIP0001) == THRESHOLD_ACTIVE);
 }
 
 /** Disconnect chainActive's tip. You probably want to call mempool.removeForReorg and manually re-limit mempool size after this, with cs_main held. */

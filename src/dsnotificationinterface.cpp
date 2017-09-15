@@ -36,6 +36,12 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
     instantsend.UpdatedBlockTip(pindexNew);
     mnpayments.UpdatedBlockTip(pindexNew);
     governance.UpdatedBlockTip(pindexNew);
+
+    // DIP0001 updates
+
+    // Update global flags
+    fDIP0001LockedInAtTip = (VersionBitsState(pindexNew, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0001, versionbitscache) == THRESHOLD_LOCKED_IN);
+    fDIP0001ActiveAtTip = (VersionBitsState(pindexNew, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0001, versionbitscache) == THRESHOLD_ACTIVE);
 }
 
 void CDSNotificationInterface::SyncTransaction(const CTransaction &tx, const CBlock *pblock)
