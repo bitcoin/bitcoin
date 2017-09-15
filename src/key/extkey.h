@@ -404,7 +404,6 @@ public:
 };
 
 
-
 class CEKAKey
 {
 public:
@@ -512,7 +511,7 @@ public:
         s << pkSpend;
         s << nPrefixBits;
         s << nPrefix;
-    }
+    };
     template <typename Stream>
     void Unserialize(Stream &s)
     {
@@ -526,7 +525,7 @@ public:
         s >> pkSpend;
         s >> nPrefixBits;
         s >> nPrefix;
-    }
+    };
     
     uint8_t nFlags; // options of CStealthAddress
     std::string sLabel;
@@ -669,6 +668,18 @@ public:
     bool SaveKey(const CKeyID &id, CEKASCKey &keyIn);
     
     bool IsLocked(const CEKAStealthKey &aks);
+    
+    bool GetChainNum(CStoredExtKey *p, uint32_t &nChain) const
+    {
+        for (size_t i = 0; i < vExtKeys.size(); ++i)
+        {
+            if (vExtKeys[i] != p)
+                continue;
+            nChain = i;
+            return true;
+        };
+        return false;
+    };
     
     CStoredExtKey *GetChain(uint32_t nChain) const
     {

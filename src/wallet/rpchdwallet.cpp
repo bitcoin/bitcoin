@@ -1773,7 +1773,6 @@ UniValue keyinfo(const JSONRPCRequest &request)
         
         result.pushKV("public_key", HexStr(pk.begin(), pk.end()));
         
-        
         result.pushKV("result", "Success.");
         return result;
     }
@@ -2445,8 +2444,6 @@ UniValue deriverangekeys(const JSONRPCRequest &request)
                 };
             };
         };
-        
-        
         
         if (!sek)
             throw JSONRPCError(RPC_WALLET_ERROR, _("Unknown chain."));
@@ -4250,6 +4247,10 @@ UniValue debugwallet(const JSONRPCRequest &request)
     
     EnsureWalletIsUnlocked(pwallet);
     
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("wallet_name", pwallet->GetName());
+    
+    
     size_t nUnabandonedOrphans = 0;
     size_t nCoinStakes = 0;
     size_t nAbandonedOrphans = 0;
@@ -4265,7 +4266,6 @@ UniValue debugwallet(const JSONRPCRequest &request)
             const CWalletTx &wtx = it->second;
             
             nMapWallet++;
-            
             if (wtx.IsCoinStake())
             {
                 nCoinStakes++;
@@ -4288,18 +4288,88 @@ UniValue debugwallet(const JSONRPCRequest &request)
                 };
             };
         };
+        
+        LogPrintf("nUnabandonedOrphans %d\n", nUnabandonedOrphans);
+        LogPrintf("nCoinStakes %d\n", nCoinStakes);
+        LogPrintf("nAbandonedOrphans %d\n", nAbandonedOrphans);
+        LogPrintf("nMapWallet %d\n", nMapWallet);
+        result.pushKV("unabandoned_orphans", (int)nUnabandonedOrphans);
+        
+        // Check for gaps in the hd key chains
+        ExtKeyAccountMap::const_iterator itam = pwallet->mapExtAccounts.begin();
+        for ( ; itam != pwallet->mapExtAccounts.end(); ++itam)
+        {
+            CExtKeyAccount *sea = itam->second;
+            LogPrintf("Checking account %s\n", sea->GetIDString58());
+            for (CStoredExtKey *sek : sea->vExtKeys)
+            {
+                if (!(sek->nFlags & EAF_ACTIVE)
+                    || !(sek->nFlags & EAF_RECEIVE_ON))
+                    continue;
+                
+                UniValue rva(UniValue::VARR);
+                LogPrintf("Checking chain %s\n", sek->GetIDString58());
+                uint32_t nGenerated = sek->GetCounter(false);
+                LogPrintf("Generated %d\n", nGenerated);
+                
+                bool fHardened = false;
+                CPubKey newKey;
+                
+                for (uint32_t i = 0; i < nGenerated; ++i)
+                {
+                    uint32_t nChildOut;
+                    if (0 != sek->DeriveKey(newKey, i, nChildOut, fHardened))
+                        throw JSONRPCError(RPC_WALLET_ERROR, "DeriveKey failed.");
+                    
+                    if (i != nChildOut)
+                        LogPrintf("Warning: %s - DeriveKey skipped key %d, %d.\n", __func__, i, nChildOut);
+                    
+                    CEKAKey ak;
+                    CKeyID idk = newKey.GetID();
+                    CPubKey pk;
+                    if (!sea->GetPubKey(idk, pk))
+                    {
+                        UniValue tmp(UniValue::VOBJ);
+                        tmp.pushKV("position", (int)i);
+                        tmp.pushKV("address", CBitcoinAddress(idk).ToString());
+                        
+                        if (fAttemptRepair)
+                        {
+                            uint32_t nChain;
+                            if (!sea->GetChainNum(sek, nChain))
+                                throw JSONRPCError(RPC_WALLET_ERROR, "GetChainNum failed.");
+                            
+                            CEKAKey ak(nChain, nChildOut);
+                            if (0 != pwallet->ExtKeySaveKey(sea, idk, ak))
+                                throw JSONRPCError(RPC_WALLET_ERROR, "ExtKeySaveKey failed.");
+                            
+                            UniValue b;
+                            b.setBool(true);
+                            tmp.pushKV("attempt_fix", b);
+                        };
+                        
+                        rva.push_back(tmp);
+                    };
+                };
+                
+                if (rva.size() > 0)
+                {
+                    UniValue tmp(UniValue::VOBJ);
+                    tmp.pushKV("account", sea->GetIDString58());
+                    tmp.pushKV("chain", sek->GetIDString58());
+                    tmp.pushKV("missing_keys", rva);
+                    result.pushKV("error", tmp);
+                };
+                
+                // TODO: Check hardened keys, must detect stealth key chain
+            };
+        };
+        
     }
     
-    LogPrintf("nUnabandonedOrphans %d\n", nUnabandonedOrphans);
-    LogPrintf("nCoinStakes %d\n", nCoinStakes);
-    LogPrintf("nAbandonedOrphans %d\n", nAbandonedOrphans);
-    LogPrintf("nMapWallet %d\n", nMapWallet);
     
-    UniValue obj(UniValue::VOBJ);
     
-    obj.pushKV("unabandoned_orphans", (int)nUnabandonedOrphans);
-    
-    return obj;
+    return result;
 };
 
 UniValue rewindchain(const JSONRPCRequest &request)

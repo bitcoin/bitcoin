@@ -1695,7 +1695,7 @@ void ListTransactions(CWallet* const pwallet, const CWalletTx& wtx, const std::s
         for (const COutputEntry& s : listSent)
         {
             UniValue entry(UniValue::VOBJ);
-            if (involvesWatchonly || (::IsMine(*pwallet, s.destination) & ISMINE_WATCH_ONLY)) {
+            if (involvesWatchonly || (s.ismine & ISMINE_WATCH_ONLY)) {
                 entry.push_back(Pair("involvesWatchonly", true));
             }
             entry.push_back(Pair("account", strSentAccount));
@@ -1734,7 +1734,7 @@ void ListTransactions(CWallet* const pwallet, const CWalletTx& wtx, const std::s
             if (fAllAccounts || (account == strAccount))
             {
                 UniValue entry(UniValue::VOBJ);
-                if (involvesWatchonly || (::IsMine(*pwallet, r.destination) & ISMINE_WATCH_ONLY)) {
+                if (involvesWatchonly || (r.ismine & ISMINE_WATCH_ONLY)) {
                     entry.push_back(Pair("involvesWatchonly", true));
                 }
                 entry.push_back(Pair("account", account));
@@ -1794,7 +1794,7 @@ void ListTransactions(CWallet* const pwallet, const CWalletTx& wtx, const std::s
         for (const auto &s : listStaked)
         {
             UniValue entry(UniValue::VOBJ);
-            if(involvesWatchonly || (::IsMine(*pwallet, s.destination) & ISMINE_WATCH_ONLY))
+            if (involvesWatchonly || (s.ismine & ISMINE_WATCH_ONLY))
                 entry.push_back(Pair("involvesWatchonly", true));
             //entry.push_back(Pair("account", strSentAccount));
             MaybePushAddress(entry, s.destination);

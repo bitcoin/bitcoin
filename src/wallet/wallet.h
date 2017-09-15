@@ -208,6 +208,7 @@ struct COutputEntry
     CTxDestination destination;
     CAmount amount;
     int vout;
+    isminetype ismine;
 };
 
 extern const uint256 ABANDON_HASH;
@@ -1073,7 +1074,7 @@ public:
      * Returns amount of debit if the input matches the
      * filter, otherwise returns 0
      */
-    CAmount GetDebit(const CTxIn& txin, const isminefilter& filter) const;
+    virtual CAmount GetDebit(const CTxIn& txin, const isminefilter& filter) const;
     
     isminetype IsMine(const CTxOut& txout) const;
     CAmount GetCredit(const CTxOut& txout, const isminefilter& filter) const;

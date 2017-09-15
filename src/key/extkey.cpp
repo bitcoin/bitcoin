@@ -930,12 +930,12 @@ int CExtKeyAccount::AddLookAhead(uint32_t nChain, uint32_t nKeys)
     if (!pc)
         return errorN(1, "%s: Unknown chain, %d.", __func__, nChain);
     
-    if (LogAcceptCategory(BCLog::HDWALLET))
-        LogPrintf("%s: chain %s, keys %d.\n", __func__, pc->GetIDString58(), nKeys);
-    
     AccKeyMap::const_iterator mi;
     uint32_t nChild = std::max(pc->nGenerated, pc->nLastLookAhead);
     uint32_t nChildOut = nChild;
+    
+    if (LogAcceptCategory(BCLog::HDWALLET))
+        LogPrintf("%s: chain %s, keys %d, from %d.\n", __func__, pc->GetIDString58(), nKeys, nChildOut);
     
     CKeyID keyId;
     CPubKey pk;

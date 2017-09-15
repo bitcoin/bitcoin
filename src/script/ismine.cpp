@@ -13,7 +13,6 @@
 #include "script/standard.h"
 #include "script/sign.h"
 
-
 //typedef std::vector<unsigned char> valtype;
 
 unsigned int HaveKeys(const std::vector<valtype>& pubkeys, const CKeyStore& keystore)
@@ -65,7 +64,6 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, bool& 
             return typeB;
         
         isminetype typeA = IsMine(keystore, scriptA, isInvalid, sigversion);
-        
         if (typeA & ISMINE_SPENDABLE)
         {
             int ia = (int)typeA;

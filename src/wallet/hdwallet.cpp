@@ -235,6 +235,35 @@ bool CHDWallet::IsHDEnabled() const
     return false;
 }
 
+static void AppendKey(CHDWallet *pw, CKey &key, uint32_t nChild, UniValue &derivedKeys)
+{
+    UniValue keyobj(UniValue::VOBJ);
+    
+    CKeyID idk = key.GetPubKey().GetID();
+    
+    bool fHardened = IsHardened(nChild);
+    ClearHardenedBit(nChild);
+    keyobj.pushKV("path", std::to_string(nChild) + (fHardened ? "'" : ""));
+    keyobj.pushKV("address", CBitcoinAddress(idk).ToString());
+    keyobj.pushKV("privkey", CBitcoinSecret(key).ToString());
+    
+    std::map<CTxDestination, CAddressBookData>::const_iterator mi = pw->mapAddressBook.find(idk);
+    if (mi != pw->mapAddressBook.end())
+    {
+        // TODO: confirm vPath?
+        keyobj.pushKV("label", mi->second.name);
+        if (!mi->second.purpose.empty())
+            keyobj.pushKV("purpose", mi->second.purpose);
+        
+        UniValue objDestData(UniValue::VOBJ);
+        for (const auto &pair : mi->second.destdata)
+            objDestData.push_back(Pair(pair.first, pair.second));
+        if (objDestData.size() > 0)
+            keyobj.pushKV("destdata", objDestData);
+    };
+    derivedKeys.push_back(keyobj);
+};
+
 extern int ListLooseExtKeys(CHDWallet *pwallet, int nShowKeys, UniValue &ret, size_t &nKeys);
 extern int ListAccountExtKeys(CHDWallet *pwallet, int nShowKeys, UniValue &ret, size_t &nKeys);
 extern int ListLooseStealthAddresses(UniValue &arr, CHDWallet *pwallet, bool fShowSecrets, bool fAddressBookInfo);
@@ -254,7 +283,6 @@ bool CHDWallet::DumpJson(UniValue &rv, std::string &sError)
     UniValue extaccs(UniValue::VARR);
     ListLooseExtKeys(this, 2, extkeys, nKeys);
     ListAccountExtKeys(this, 3, extaccs, nAcc);
-    
     
     CExtKey58 eKey58;
     for (size_t k = 0; k < extaccs.size(); ++k)
@@ -305,28 +333,7 @@ bool CHDWallet::DumpJson(UniValue &rv, std::string &sError)
                 {
                     if (kp.Derive(key, nChild))
                     {
-                        UniValue keyobj(UniValue::VOBJ);
-                        
-                        CKeyID idk = key.GetPubKey().GetID();
-                        keyobj.pushKV("path", std::to_string(nChild));
-                        keyobj.pushKV("address", CBitcoinAddress(idk).ToString());
-                        keyobj.pushKV("privkey", CBitcoinSecret(key).ToString());
-                        
-                        std::map<CTxDestination, CAddressBookData>::const_iterator mi = mapAddressBook.find(idk);
-                        if (mi != mapAddressBook.end())
-                        {
-                            // TODO: confirm vPath?
-                            keyobj.pushKV("label", mi->second.name);
-                            if (!mi->second.purpose.empty())
-                                keyobj.pushKV("purpose", mi->second.purpose);
-                            
-                            UniValue objDestData(UniValue::VOBJ);
-                            for (const auto &pair : mi->second.destdata)
-                                objDestData.push_back(Pair(pair.first, pair.second));
-                            if (objDestData.size() > 0)
-                                keyobj.pushKV("destdata", objDestData);
-                        };
-                        derivedKeys.push_back(keyobj);
+                        AppendKey(this, key, nChild, derivedKeys);
                     };
                     nChild++;
                 };
@@ -334,8 +341,14 @@ bool CHDWallet::DumpJson(UniValue &rv, std::string &sError)
                 
                 for (size_t k = 0; k < nDerivesH; ++k)
                 {
-                    // TODO
+                    nChild = k;
+                    SetHardenedBit(nChild);
+                    if (kp.Derive(key, nChild))
+                    {
+                        AppendKey(this, key, nChild, derivedKeysH);
+                    };
                 };
+                chain.pushKV("derived_keys_hardened", derivedKeysH);
             };
         };
         // Read stealth keys from packs to keep metadata such as prefix
@@ -359,8 +372,6 @@ bool CHDWallet::DumpJson(UniValue &rv, std::string &sError)
         };
         
         accIdAddr.GetKeyID(idAcc, CChainParams::EXT_ACC_HASH);
-        
-        
         std::map<CKeyID, std::pair<CKey, std::string> > mapStealthKeySpend;
         UniValue stealthAddresses(UniValue::VARR);
         std::vector<CEKAStealthKeyPack> aksPak;
@@ -1463,10 +1474,6 @@ bool CHDWallet::IsMine(const CTransaction &tx) const
 {
     for (const auto txout : tx.vpout)
         if (IsMine(txout.get()))
-            return true;
-    
-    for (const auto &txout : tx.vout)
-        if (CWallet::IsMine(txout))
             return true;
     return false;
 }
@@ -6213,7 +6220,6 @@ int CHDWallet::ExtKeySaveKey(CHDWalletDB *pwdb, CExtKeyAccount *sea, const CKeyI
             LogPrintf("Warning: SaveKey %s key not found in look ahead %s.\n", sea->GetIDString58(), CBitcoinAddress(keyId).ToString());
         
         sea->mapKeys[keyId] = ak;
-        
         if (0 != ExtKeyAppendToPack(pwdb, sea, keyId, ak, fUpdateAccTmp))
             return errorN(1, "%s ExtKeyAppendToPack failed.", __func__);
         fUpdateAcc = fUpdateAccTmp ? true : fUpdateAcc;
@@ -6222,10 +6228,10 @@ int CHDWallet::ExtKeySaveKey(CHDWalletDB *pwdb, CExtKeyAccount *sea, const CKeyI
         if (!IsHardened(ak.nKey)
             && (pc = sea->GetChain(nChain)) != NULL)
         {
-            
-            if (ak.nKey == pc->nGenerated) 
+            if (ak.nKey == pc->nGenerated)
+            {
                 pc->nGenerated++;
-            else
+            } else
             if (pc->nGenerated < ak.nKey)
             {
                 uint32_t nOldGenerated = pc->nGenerated;
@@ -6247,11 +6253,9 @@ int CHDWallet::ExtKeySaveKey(CHDWalletDB *pwdb, CExtKeyAccount *sea, const CKeyI
                     
                     CEKAKey akExtra(nChain, nChildOut);
                     sea->mapKeys[idkExtra] = akExtra;
-                    
                     if (0 != ExtKeyAppendToPack(pwdb, sea, idkExtra, akExtra, fUpdateAccTmp))
                         return errorN(1, "%s ExtKeyAppendToPack failed.", __func__);
                     fUpdateAcc = fUpdateAccTmp ? true : fUpdateAcc;
-                    
                     
                     if (pc->nFlags & EAF_ACTIVE
                         && pc->nFlags & EAF_RECEIVE_ON)
@@ -6301,7 +6305,7 @@ int CHDWallet::ExtKeySaveKey(CExtKeyAccount *sea, const CKeyID &keyId, CEKAKey &
     //LOCK(cs_wallet);
     AssertLockHeld(cs_wallet);
 
-    CHDWalletDB wdb(*dbw, "r+");
+    CHDWalletDB wdb(*dbw, "r+", true); // FlushOnClose
 
     if (!wdb.TxnBegin())
         return errorN(1, "%s TxnBegin failed.", __func__);
@@ -8019,7 +8023,7 @@ bool CHDWallet::ScanForOwnedOutputs(const CTransaction &tx, size_t &nCT, size_t 
             
             if (IsMine(txout.get()))
                 fIsMine = true;
-        }
+        };
     };
     
     return fIsMine;
