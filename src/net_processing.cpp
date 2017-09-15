@@ -885,17 +885,12 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                 // Send stream from relay memory
                 bool pushed = false;
                 {
-                    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-                    {
-                        LOCK(cs_mapRelay);
-                        map<CInv, CDataStream>::iterator mi = mapRelay.find(inv);
-                        if (mi != mapRelay.end()) {
-                            ss += (*mi).second;
-                            pushed = true;
-                        }
+                    LOCK(cs_mapRelay);
+                    map<CInv, CDataStream>::iterator mi = mapRelay.find(inv);
+                    if (mi != mapRelay.end()) {
+                        pfrom->PushMessage(inv.GetCommand(), (*mi).second);
+                        pushed = true;
                     }
-                    if(pushed)
-                        connman.PushMessage(pfrom, inv.GetCommand(), ss);
                 }
 
                 if (!pushed && inv.type == MSG_TX) {
