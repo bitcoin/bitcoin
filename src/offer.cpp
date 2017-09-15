@@ -1858,7 +1858,7 @@ void OfferTxToJSON(const int op, const std::vector<unsigned char> &vchData, cons
 		entry.push_back(Pair("currency", stringFromVch(offer.sCurrencyCode)));
 
 	if(offer.GetPrice() != dbOffer.GetPrice())
-		entry.push_back(Pair("price", strprintf("%.*f", offer.paymentPrecision, offer.GetPrice(COfferLinkWhitelistEntry(), true)));
+		entry.push_back(Pair("price", strprintf("%.*f", offer.paymentPrecision, offer.GetPrice(COfferLinkWhitelistEntry(), true))));
 
 	if(offer.bPrivate != dbOffer.bPrivate)
 		entry.push_back(Pair("private", offer.bPrivate));
