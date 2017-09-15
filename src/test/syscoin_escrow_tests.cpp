@@ -297,7 +297,7 @@ BOOST_AUTO_TEST_CASE (generate_escrow_linked_release_with_peg_update)
 	guid = EscrowNew("node1", "node2", "buyeralias33", offerlinkguid, "2", "arbiteralias333", "selleralias33");
 	EscrowRelease("node1", "buyer", guid);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + guid));
-	CAmount nTotal = find_value(r.get_obj(), "systotal").get_int64();
+	nTotal = find_value(r.get_obj(), "systotal").get_int64();
 	// 218.2 SYS/EUR
 	BOOST_CHECK_EQUAL(nTotal, AmountFromValue(2 * 0.05*1.03*218.2));
 
