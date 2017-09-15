@@ -327,7 +327,7 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate_editcurrency)
 	GenerateBlocks(10);
 	// accept and confirm payment is accurate with usd
 	string escrowguid = OfferAccept("node1", "node2", "buyeraliascurrency", offerguid, "2");
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + escrowguid));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + escrowguid));
 	CAmount nTotal = find_value(r.get_obj(), "systotal").get_int64();
 	// 2690.1 SYS/USD
 	BOOST_CHECK_EQUAL(nTotal, AmountFromValue(2*0.05*2690.1));
