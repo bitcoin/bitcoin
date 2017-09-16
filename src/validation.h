@@ -459,7 +459,7 @@ extern std::unique_ptr<CBlockTreeDB> pblocktree PT_GUARDED_BY(cs_main);
  */
 int GetSpendHeight(const CCoinsViewCache& inputs);
 
-extern VersionBitsCache versionbitscache;
+extern VersionBitsCache versionbitscache GUARDED_BY(cs_main);
 
 /**
  * Determine what nVersion a new block should use.
