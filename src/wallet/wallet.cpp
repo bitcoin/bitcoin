@@ -1834,7 +1834,7 @@ CAmount CWalletTx::GetImmatureCredit(bool fUseCache) const
     return 0;
 }
 
-CAmount CWalletTx::GetAvailableCredit(bool fUseCache) const EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
+CAmount CWalletTx::GetAvailableCredit(bool fUseCache) const
 {
     if (pwallet == nullptr)
         return 0;
@@ -1850,6 +1850,7 @@ CAmount CWalletTx::GetAvailableCredit(bool fUseCache) const EXCLUSIVE_LOCKS_REQU
     uint256 hashTx = GetHash();
     for (unsigned int i = 0; i < tx->vout.size(); i++)
     {
+        LOCK(pwallet->cs_wallet);
         if (!pwallet->IsSpent(hashTx, i))
         {
             const CTxOut &txout = tx->vout[i];
@@ -1878,7 +1879,7 @@ CAmount CWalletTx::GetImmatureWatchOnlyCredit(const bool& fUseCache) const
     return 0;
 }
 
-CAmount CWalletTx::GetAvailableWatchOnlyCredit(const bool& fUseCache) const EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
+CAmount CWalletTx::GetAvailableWatchOnlyCredit(const bool& fUseCache) const
 {
     if (pwallet == nullptr)
         return 0;
@@ -1893,6 +1894,7 @@ CAmount CWalletTx::GetAvailableWatchOnlyCredit(const bool& fUseCache) const EXCL
     CAmount nCredit = 0;
     for (unsigned int i = 0; i < tx->vout.size(); i++)
     {
+        LOCK(pwallet->cs_wallet);
         if (!pwallet->IsSpent(GetHash(), i))
         {
             const CTxOut &txout = tx->vout[i];
