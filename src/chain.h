@@ -309,15 +309,17 @@ public:
     int64_t GetMedianTimePast() const
     {
         int64_t pmedian[nMedianTimeSpan];
-        int64_t* pbegin = &pmedian[nMedianTimeSpan];
-        int64_t* pend = &pmedian[nMedianTimeSpan];
+        auto* pbegin = &pmedian[nMedianTimeSpan];
+        auto* pend = &pmedian[nMedianTimeSpan];
 
         const CBlockIndex* pindex = this;
-        for (int i = 0; i < nMedianTimeSpan && pindex; i++, pindex = pindex->pprev)
+        for (int i = 0; i < nMedianTimeSpan && pindex; ++i, pindex = pindex->pprev) {
             *(--pbegin) = pindex->GetBlockTime();
+        }
 
-        std::sort(pbegin, pend);
-        return pbegin[(pend - pbegin)/2];
+        const size_t median_index = (pend - pbegin) / 2;
+        std::nth_element(pbegin, pbegin + median_index, pend);
+        return pbegin[median_index];
     }
 
     std::string ToString() const
