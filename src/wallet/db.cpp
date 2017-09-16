@@ -639,7 +639,7 @@ bool CDB::PeriodicFlush(CWalletDBWrapper& dbw)
     bool ret = false;
     CDBEnv *env = dbw.env;
     const std::string& strFile = dbw.strFile;
-    TRY_LOCK(bitdb.cs_db,lockDb);
+    TRY_LOCK(env->cs_db, lockDb);
     if (lockDb)
     {
         // Don't do this if any databases are in use
