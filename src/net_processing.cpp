@@ -286,7 +286,7 @@ void UpdatePreferredDownload(CNode* node, CNodeState* state)
     nPreferredDownload += state->fPreferredDownload;
 }
 
-void PushNodeVersion(CNode *pnode, CConnman* connman, int64_t nTime)
+void PushNodeVersion(CNode *pnode, CConnman* connman, int64_t nTime) EXCLUSIVE_LOCKS_REQUIRED(cs_filter)
 {
     ServiceFlags nLocalNodeServices = pnode->GetLocalServices();
     uint64_t nonce = pnode->GetLocalNonce();
@@ -566,7 +566,7 @@ bool IsOutboundDisconnectionCandidate(const CNode *node)
     return !(node->fInbound || node->m_manual_connection || node->fFeeler || node->fOneShot);
 }
 
-void PeerLogicValidation::InitializeNode(CNode *pnode) {
+void PeerLogicValidation::InitializeNode(CNode *pnode) EXCLUSIVE_LOCKS_REQUIRED(cs_filter) {
     CAddress addr = pnode->addr;
     std::string addrName = pnode->GetAddrName();
     NodeId nodeid = pnode->GetId();
@@ -1451,7 +1451,7 @@ bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, const std::ve
     return true;
 }
 
-bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, CConnman* connman, const std::atomic<bool>& interruptMsgProc)
+bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, CConnman* connman, const std::atomic<bool>& interruptMsgProc) EXCLUSIVE_LOCKS_REQUIRED(cs_filter)
 {
     LogPrint(BCLog::NET, "received: %s (%u bytes) peer=%d\n", SanitizeString(strCommand), vRecv.size(), pfrom->GetId());
     if (gArgs.IsArgSet("-dropmessagestest") && GetRand(gArgs.GetArg("-dropmessagestest", 0)) == 0)
@@ -2843,7 +2843,7 @@ static bool SendRejectsAndCheckIfBanned(CNode* pnode, CConnman* connman) EXCLUSI
     return false;
 }
 
-bool PeerLogicValidation::ProcessMessages(CNode* pfrom, std::atomic<bool>& interruptMsgProc)
+bool PeerLogicValidation::ProcessMessages(CNode* pfrom, std::atomic<bool>& interruptMsgProc) EXCLUSIVE_LOCKS_REQUIRED(cs_filter)
 {
     const CChainParams& chainparams = Params();
     //
