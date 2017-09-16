@@ -214,6 +214,11 @@ protected:
 public:
     CCoinsViewCache(CCoinsView *baseIn);
 
+    /**
+     * By deleting the copy constructor, we prevent accidentally using it when one intends to create a cache on top of a base cache.
+     */
+    CCoinsViewCache(const CCoinsViewCache &) = delete;
+
     // Standard CCoinsView methods
     bool GetCoin(const COutPoint &outpoint, Coin &coin) const override;
     bool HaveCoin(const COutPoint &outpoint) const override;
@@ -290,11 +295,6 @@ public:
 
 private:
     CCoinsMap::iterator FetchCoin(const COutPoint &outpoint) const;
-
-    /**
-     * By making the copy constructor private, we prevent accidentally using it when one intends to create a cache on top of a base cache.
-     */
-    CCoinsViewCache(const CCoinsViewCache &);
 };
 
 //! Utility function to add all of a transaction's outputs to a cache.
