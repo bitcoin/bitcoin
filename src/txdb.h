@@ -109,11 +109,11 @@ private:
 class CBlockTreeDB : public CDBWrapper
 {
 public:
-    CBlockTreeDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
-private:
-    CBlockTreeDB(const CBlockTreeDB&);
-    void operator=(const CBlockTreeDB&);
-public:
+    explicit CBlockTreeDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
+
+    CBlockTreeDB(const CBlockTreeDB&) = delete;
+    CBlockTreeDB& operator=(const CBlockTreeDB&) = delete;
+
     bool WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo*> >& fileInfo, int nLastFile, const std::vector<const CBlockIndex*>& blockinfo);
     bool ReadBlockFileInfo(int nFile, CBlockFileInfo &fileinfo);
     bool ReadLastBlockFile(int &nFile);
