@@ -1069,7 +1069,7 @@ public:
 
     std::set<CTxDestination> GetAccountAddresses(const std::string& strAccount) const;
 
-    isminetype IsMine(const CTxIn& txin) const;
+    virtual isminetype IsMine(const CTxIn& txin) const;
     /**
      * Returns amount of debit if the input matches the
      * filter, otherwise returns 0

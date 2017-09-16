@@ -4458,13 +4458,15 @@ UniValue walletsettings(const JSONRPCRequest &request)
     
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
-            "walletsettings \"setting\" json/\"clear\"\n"
+            "walletsettings \"setting\" json\n"
             "\nManage wallet settings.\n"
             "\nchangeaddress {\"address_standard\":,\"coldstakingaddress\":}.\n"
             "   - \"address_standard\": Change address for standard inputs.\n"
-            "   - \"coldstakingaddress\": Cold staking address for standard inputs.\n"
+            "   - \"coldstakingaddress\": Cold staking address for standard inputs."
             "\nstakelimit {\"height\":,int}.\n"
             "   Don't stake above height, used in functional testing.\n"
+            "\nEmpty json object will clear the setting.\n"
+            "\nstakelimit {}.\n"
         );
     
     EnsureWalletIsUnlocked(pwallet);
@@ -4490,27 +4492,19 @@ UniValue walletsettings(const JSONRPCRequest &request)
             return result;
         };
         
-        if (request.params[1].isStr())
+        if (request.params[1].isObject())
         {
-            std::string sCmd = request.params[1].get_str();
+            json = request.params[1].get_obj();
             
-            if (sCmd == "clear")
+            const std::vector<std::string> &vKeys = json.getKeys();
+            if (vKeys.size() < 1)
             {
                 if (!pwallet->EraseSetting(sSetting))
                     throw JSONRPCError(RPC_WALLET_ERROR, _("EraseSetting failed."));
                 
                 result.pushKV(sSetting, "cleared");
                 return result;
-            } else
-            {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, _("Unknown command."));
             };
-        } else
-        if (request.params[1].isObject())
-        {
-            json = request.params[1].get_obj();
-            
-            const std::vector<std::string> &vKeys = json.getKeys();
             
             for (const auto &sKey : vKeys)
             {
@@ -4556,7 +4550,7 @@ UniValue walletsettings(const JSONRPCRequest &request)
                 result.pushKV("warnings", warnings);
         } else
         {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, _("Must be json object or string 'clear'."));
+            throw JSONRPCError(RPC_INVALID_PARAMETER, _("Must be json object."));
         };
         result.pushKV(sSetting, json);
     } else
@@ -4571,16 +4565,18 @@ UniValue walletsettings(const JSONRPCRequest &request)
             return result;
         };
         
-        if (request.params[1].isStr() && request.params[1].get_str() == "clear")
-        {
-            pwallet->nStakeLimitHeight = 0;
-            result.pushKV(sSetting, "cleared");
-        } else
         if (request.params[1].isObject())
         {
             json = request.params[1].get_obj();
             
             const std::vector<std::string> &vKeys = json.getKeys();
+            if (vKeys.size() < 1)
+            {
+                pwallet->nStakeLimitHeight = 0;
+                result.pushKV(sSetting, "cleared");
+                return result;
+            };
+            
             for (const auto &sKey : vKeys)
             {
                 if (sKey == "height")
@@ -4600,7 +4596,7 @@ UniValue walletsettings(const JSONRPCRequest &request)
                 result.pushKV("warnings", warnings);
         } else
         {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, _("Must be json object or string 'clear'."));
+            throw JSONRPCError(RPC_INVALID_PARAMETER, _("Must be json object."));
         };
         
         WakeThreadStakeMiner(pwallet);

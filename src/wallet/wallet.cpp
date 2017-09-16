@@ -1560,10 +1560,11 @@ void CWalletTx::GetAmounts(
         {
             if (!txout->IsType(OUTPUT_STANDARD))
                 continue;
-            isminetype mine = pwallet->IsMine(txout.get());
             
-            if (!mine)
+            isminetype mine = pwallet->IsMine(txout.get());
+            if (!(mine & filter))
                 continue;
+            
             isMineAll = (isminetype)((uint8_t)isMineAll |(uint8_t)mine);
             nCredit += txout->GetValue();
             
@@ -1571,17 +1572,16 @@ void CWalletTx::GetAmounts(
                 ExtractDestination(*txout->GetPScriptPubKey(), address);
         };
         
+        if (!(isMineAll & filter))
+            return;
+        
         // Recalc fee as GetValueOut might include foundation fund output
         nFee = nDebit - nCredit;
-        
-        if (!(filter & ISMINE_WATCH_ONLY) && (isMineAll & ISMINE_WATCH_ONLY))
-            return;
         
         COutputEntry output = {address, nCredit, 1, isMineAll};
         listStaked.push_back(output);
         return;
     };
-    
 
     // Sent/received.
     if (tx->IsParticlVersion())
@@ -1603,7 +1603,7 @@ void CWalletTx::GetAmounts(
                 if (pwallet->IsChange(txout))
                     continue;
             } else
-            if (!(fIsMine & filter) || (!(filter & ISMINE_WATCH_ONLY) && (fIsMine & ISMINE_WATCH_ONLY)))
+            if (!(fIsMine & filter))
                 continue;
             
             
@@ -1645,7 +1645,7 @@ void CWalletTx::GetAmounts(
                 if (pwallet->IsChange(txout))
                     continue;
             }
-            else if (!(fIsMine & filter) || (!(filter & ISMINE_WATCH_ONLY) && (fIsMine & ISMINE_WATCH_ONLY)))
+            else if (!(fIsMine & filter))
                 continue;
 
             // In either case, we need to get the destination address
@@ -1665,7 +1665,7 @@ void CWalletTx::GetAmounts(
                 listSent.push_back(output);
 
             // If we are receiving the output, add it as a "received" entry
-            if (fIsMine & filter && (!(!(filter & ISMINE_WATCH_ONLY) && (fIsMine & ISMINE_WATCH_ONLY))))
+            if (fIsMine & filter)
                 listReceived.push_back(output);
         }
     }

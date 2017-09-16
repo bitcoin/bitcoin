@@ -1334,6 +1334,37 @@ int64_t CHDWallet::CountActiveAccountKeys()
     return nKeys;
 };
 
+isminetype CHDWallet::IsMine(const CTxIn& txin) const
+{
+    LOCK(cs_wallet);
+    MapWallet_t::const_iterator mi = mapWallet.find(txin.prevout.hash);
+    if (mi != mapWallet.end())
+    {
+        const CWalletTx &prev = (*mi).second;
+        if (txin.prevout.n < prev.tx->vpout.size())
+            return IsMine(prev.tx->vpout[txin.prevout.n].get());
+    };
+    
+    MapRecords_t::const_iterator mri = mapRecords.find(txin.prevout.hash);
+    if (mri != mapRecords.end())
+    {
+        const COutputRecord *oR = mri->second.GetOutput(txin.prevout.n);
+        
+        if (oR)
+        {
+            if (oR->nFlags & ORF_OWNED)
+                return ISMINE_SPENDABLE;
+            /* TODO
+            if ((filter & ISMINE_WATCH_ONLY)
+                && (oR->nFlags & ORF_WATCH_ONLY))
+                return ISMINE_WATCH_ONLY;
+            */
+        };
+    };
+    
+    return ISMINE_NO;
+};
+
 isminetype CHDWallet::IsMine(const CScript &scriptPubKey, CKeyID &keyID,
     CEKAKey &ak, CExtKeyAccount *&pa, bool &isInvalid, SigVersion sigversion)
 {
@@ -1353,7 +1384,7 @@ isminetype CHDWallet::IsMine(const CScript &scriptPubKey, CKeyID &keyID,
         {
             int ia = (int)typeA;
             ia &= ~ISMINE_SPENDABLE;
-            ia |= ISMINE_WATCH_SOLVABLE;
+            ia |= ISMINE_WATCH_COLDSTAKE;
             typeA = (isminetype)ia;
         };
         

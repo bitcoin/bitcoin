@@ -32,6 +32,7 @@ class StealthTest(ParticlTestFramework):
         # Stop staking
         ro = node.reservebalance(True, 10000000)
         ro = node1.reservebalance(True, 10000000)
+        ro = node2.reservebalance(True, 10000000)
         
         ro = node.extkeyimportmaster("abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb")
         assert(ro['account_id'] == 'aaaZf2qnNr5T7PWRmqgmusuu5ACnBcX2ev')
@@ -121,6 +122,9 @@ class StealthTest(ParticlTestFramework):
         # Restart node 2
         self.nodes[2] = self.start_node(2, self.options.tmpdir, self.extra_args[2])
         node2 = self.nodes[2]
+        ro = node2.walletpassphrase("qwerty234", 300)
+        ro = node2.reservebalance(True, 10000000)
+        ro = node2.walletlock()
         connect_nodes_bi(self.nodes, 0, 2)
         
         # Test send to locked wallet
@@ -166,9 +170,9 @@ class StealthTest(ParticlTestFramework):
         for txnHash in txnHashes:
             assert(txnHash in ro['tx'])
         
-        
-        #ro = node2.getinfo()
-        #print("node2.getinfo() ", ro)
+        self.sync_all()
+        ro = node2.getwalletinfo()
+        print("node2.getwalletinfo() ", ro)
         
         txnHash = node2.sendtoaddress(sxAddrTo3, 1.4, '', '', False, 'node2 -> node1')
         txnHashes.append(txnHash)

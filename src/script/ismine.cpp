@@ -68,7 +68,7 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, bool& 
         {
             int ia = (int)typeA;
             ia &= ~ISMINE_SPENDABLE;
-            ia |= ISMINE_WATCH_SOLVABLE;
+            ia |= ISMINE_WATCH_COLDSTAKE;
             typeA = (isminetype)ia;
         };
         

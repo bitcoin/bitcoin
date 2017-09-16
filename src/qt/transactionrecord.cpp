@@ -35,16 +35,23 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
     uint256 hash = wtx.GetHash();
     std::map<std::string, std::string> mapValue = wtx.mapValue;
     
-    
     CHDWallet *phdw = (CHDWallet*) wallet;
-    
     
     if (wtx.IsCoinStake())
     {
+        bool involvesWatchAddress = false;
         TransactionRecord sub(hash, nTime);
         
         sub.type = TransactionRecord::Staked;
         sub.debit = -nDebit;
+        
+        /*for (const CTxIn& txin : wtx.tx->vin)
+        {
+            if (txin.IsAnonInput())
+                continue;
+            isminetype mine = wallet->IsMine(txin);
+            if(mine & ISMINE_WATCH_ONLY) involvesWatchAddress = true;
+        }*/
         
         CAmount nCredit = 0;
         for (size_t i = 0; i < wtx.tx->vpout.size(); ++i)
@@ -62,7 +69,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
             if (sub.address.empty())
             {
                 CTxDestination address;
-                sub.involvesWatchAddress = mine & ISMINE_WATCH_ONLY;
+                involvesWatchAddress = involvesWatchAddress || (mine & ISMINE_WATCH_ONLY);
                 if (ExtractDestination(*txout->GetPScriptPubKey(), address))
                 {
                     sub.address = CBitcoinAddress(address).ToString();
@@ -70,6 +77,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
             }
         };
         
+        sub.involvesWatchAddress = involvesWatchAddress;
         sub.credit = nCredit;
         parts.append(sub);
         
@@ -92,7 +100,6 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
             if (!txout->IsType(OUTPUT_STANDARD))
                 continue;
             
-            
             isminetype mine = phdw->IsMine(txout);
             if (mine)
             {
@@ -108,7 +115,6 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                         sub.type = TransactionRecord::Staked;
                     else
                         sub.type = TransactionRecord::RecvWithAddress;
-                    
                     
                     sub.address = CBitcoinAddress(address).ToString();
                 } else
@@ -132,6 +138,8 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
         isminetype fAllFromMe = ISMINE_SPENDABLE;
         for (const CTxIn& txin : wtx.tx->vin)
         {
+            if (txin.IsAnonInput())
+                continue;
             isminetype mine = wallet->IsMine(txin);
             if(mine & ISMINE_WATCH_ONLY) involvesWatchAddress = true;
             if(fAllFromMe > mine) fAllFromMe = mine;
@@ -204,8 +212,6 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 
                 parts.append(sub);
             }
-            
-            
         }
         else
         {

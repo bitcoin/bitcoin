@@ -22,7 +22,7 @@ class AnonTest(ParticlTestFramework):
         connect_nodes_bi(self.nodes, 0, 2)
         self.is_network_split = False
         self.sync_all()
-    
+
     def run_test(self):
         nodes = self.nodes
         
@@ -45,15 +45,21 @@ class AnonTest(ParticlTestFramework):
         
         
         txnHash = nodes[0].sendparttoanon(sxAddrTo1_1, 1, '', '', False, 'node0 -> node1 p->a')
-        print("txnHash ", txnHash)
         txnHashes.append(txnHash)
         
         txnHash = nodes[0].sendparttoblind(sxAddrTo0_1, 1000, '', '', False, 'node0 -> node0 p->b')
-        print("txnHash ", txnHash)
         txnHashes.append(txnHash)
         
-        txnHash = nodes[0].sendblindtoanon(sxAddrTo1_1, 100, '', '', False, 'node0 -> node1 b->a')
-        print("txnHash ", txnHash)
+        txnHash = nodes[0].sendblindtoanon(sxAddrTo1_1, 100, '', '', False, 'node0 -> node1 b->a 1')
+        txnHashes.append(txnHash)
+        
+        txnHash = nodes[0].sendblindtoanon(sxAddrTo1_1, 100, '', '', False, 'node0 -> node1 b->a 2')
+        txnHashes.append(txnHash)
+        
+        txnHash = nodes[0].sendblindtoanon(sxAddrTo1_1, 100, '', '', False, 'node0 -> node1 b->a 3')
+        txnHashes.append(txnHash)
+        
+        txnHash = nodes[0].sendblindtoanon(sxAddrTo1_1, 100, '', '', False, 'node0 -> node1 b->a 4')
         txnHashes.append(txnHash)
         
         for k in range(6):
@@ -101,6 +107,8 @@ class AnonTest(ParticlTestFramework):
         for txnHash in txnHashes:
             assert(txnHash in ro['tx'])
         
+        ro = nodes[1].anonoutput()
+        print(ro)
         
         txnHash = nodes[1].sendanontoanon(sxAddrTo0_1, 101, '', '', False, 'node1 -> node0 a->a', 5, 1)
         print("1 sendanontoanon ", json.dumps(txnHash, indent=4, default=self.jsonDecimal))

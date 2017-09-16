@@ -65,7 +65,7 @@ class ColdStakingTest(ParticlTestFramework):
         ro = nodes[0].walletsettings('changeaddress')
         assert(ro['changeaddress']['coldstakingaddress'] == coldstakingaddr)
         
-        ro = nodes[0].walletsettings('changeaddress', 'clear')
+        ro = nodes[0].walletsettings('changeaddress', {})
         assert(ro['changeaddress'] == 'cleared')
         
         ro = nodes[0].walletsettings('changeaddress')
