@@ -64,7 +64,7 @@ CCriticalSection cs_main;
 
 BlockMap mapBlockIndex GUARDED_BY(cs_main);
 CChain chainActive;
-CBlockIndex *pindexBestHeader = nullptr;
+CBlockIndex *pindexBestHeader PT_GUARDED_BY(cs_main) = nullptr;
 CWaitableCriticalSection csBestBlock;
 CConditionVariable cvBlockChange;
 int nScriptCheckThreads = 0;
