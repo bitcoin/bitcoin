@@ -830,7 +830,7 @@ UniValue getwalletbalance(const UniValue& params, bool fHelp)
             "\nReturns the server's total available balance.\n"
             "\nExamples:\n"
             "\nThe total amount in the wallet\n"
-            + HelpExampleCli("getbalance", "")
+            + HelpExampleCli("getwalletbalance", "")
         );
 
     LOCK2(cs_main, pwalletMain->cs_wallet);
