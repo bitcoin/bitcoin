@@ -3199,7 +3199,7 @@ bool CWallet::DelAddressBook(const CTxDestination& address)
     return CWalletDB(*dbw).EraseName(EncodeDestination(address));
 }
 
-const std::string& CWallet::GetAccountName(const CScript& scriptPubKey) const
+const std::string& CWallet::GetAccountName(const CScript& scriptPubKey) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
 {
     CTxDestination address;
     if (ExtractDestination(scriptPubKey, address) && !scriptPubKey.IsUnspendable()) {
@@ -3804,7 +3804,7 @@ unsigned int CWallet::ComputeTimeSmart(const CWalletTx& wtx) const EXCLUSIVE_LOC
     return nTimeSmart;
 }
 
-bool CWallet::AddDestData(const CTxDestination &dest, const std::string &key, const std::string &value)
+bool CWallet::AddDestData(const CTxDestination &dest, const std::string &key, const std::string &value) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
 {
     if (boost::get<CNoDestination>(&dest))
         return false;
@@ -3813,20 +3813,20 @@ bool CWallet::AddDestData(const CTxDestination &dest, const std::string &key, co
     return CWalletDB(*dbw).WriteDestData(EncodeDestination(dest), key, value);
 }
 
-bool CWallet::EraseDestData(const CTxDestination &dest, const std::string &key)
+bool CWallet::EraseDestData(const CTxDestination &dest, const std::string &key) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
 {
     if (!mapAddressBook[dest].destdata.erase(key))
         return false;
     return CWalletDB(*dbw).EraseDestData(EncodeDestination(dest), key);
 }
 
-bool CWallet::LoadDestData(const CTxDestination &dest, const std::string &key, const std::string &value)
+bool CWallet::LoadDestData(const CTxDestination &dest, const std::string &key, const std::string &value) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
 {
     mapAddressBook[dest].destdata.insert(std::make_pair(key, value));
     return true;
 }
 
-bool CWallet::GetDestData(const CTxDestination &dest, const std::string &key, std::string *value) const
+bool CWallet::GetDestData(const CTxDestination &dest, const std::string &key, std::string *value) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
 {
     std::map<CTxDestination, CAddressBookData>::const_iterator i = mapAddressBook.find(dest);
     if(i != mapAddressBook.end())

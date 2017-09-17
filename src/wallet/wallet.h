@@ -819,7 +819,7 @@ public:
     uint64_t nAccountingEntryNumber;
     std::map<uint256, int> mapRequestCount GUARDED_BY(cs_wallet);
 
-    std::map<CTxDestination, CAddressBookData> mapAddressBook;
+    std::map<CTxDestination, CAddressBookData> mapAddressBook GUARDED_BY(cs_wallet);
 
     std::set<COutPoint> setLockedCoins GUARDED_BY(cs_wallet);
 
