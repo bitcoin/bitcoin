@@ -53,8 +53,10 @@ static const CAmount DEFAULT_FALLBACK_FEE = 20000;
 /**
  * We are ~100 times smaller then bitcoin now (2016-03-01), set minTxFee 10 times higher
  * so it's still 10 times lower comparing to bitcoin.
+ * 2017-07: we are 10x smaller now, let's lower defaults 10x via the same BIP9 bit as DIP0001
  */
-static const CAmount DEFAULT_TRANSACTION_MINFEE = 10000; // was 1000
+static const CAmount DEFAULT_LEGACY_TRANSACTION_MINFEE = 10000; // was 1000
+static const CAmount DEFAULT_DIP0001_TRANSACTION_MINFEE = 1000;
 //! -maxtxfee default
 static const CAmount DEFAULT_TRANSACTION_MAXFEE = 0.2 * COIN; // "smallest denom" + X * "denom tails"
 //! minimum change amount

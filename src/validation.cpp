@@ -91,7 +91,7 @@ std::atomic<bool> fDIP0001ActiveAtTip{false};
 uint256 hashAssumeValid;
 
 /** Fees smaller than this (in duffs) are considered zero fee (for relaying, mining and transaction creation) */
-CFeeRate minRelayTxFee = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE);
+CFeeRate minRelayTxFee = CFeeRate(DEFAULT_LEGACY_MIN_RELAY_TX_FEE);
 
 CTxMemPool mempool(::minRelayTxFee);
 map<uint256, int64_t> mapRejectedBlocks GUARDED_BY(cs_main);

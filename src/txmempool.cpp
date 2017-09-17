@@ -1097,6 +1097,14 @@ CFeeRate CTxMemPool::GetMinFee(size_t sizelimit) const {
     return std::max(CFeeRate(rollingMinimumFeeRate), minReasonableRelayFee);
 }
 
+void CTxMemPool::UpdateMinFee(const CFeeRate& _minReasonableRelayFee)
+{
+    LOCK(cs);
+    delete minerPolicyEstimator;
+    minerPolicyEstimator = new CBlockPolicyEstimator(_minReasonableRelayFee);
+    minReasonableRelayFee = _minReasonableRelayFee;
+}
+
 void CTxMemPool::trackPackageRemoved(const CFeeRate& rate) {
     AssertLockHeld(cs);
     if (rate.GetFeePerK() > rollingMinimumFeeRate) {
