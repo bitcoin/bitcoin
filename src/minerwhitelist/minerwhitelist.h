@@ -15,28 +15,33 @@ public:
   
   // Cap management
   bool EnableCap(unsigned int factor);
-  bool EnableCap();
+  bool ReEnableCap();
   
   bool DisableCap();
   bool IsCapEnabled();
   
   // Statistics
   unsigned int GetCapFactor();
-  unsigned int GetNumberOfMiners();
+  unsigned int GetNumberOfWhitelistedMiners();
   unsigned int GetAvgBlocksPerMiner();
   unsigned int GetCap();
   
   // Managing Whitelist
-  bool AddNewMiner(std::string address);
-  bool RemoveMiner(std::string address);
+  bool WhitelistMiner(std::string address);
+  bool BlacklistMiner(std::string address);
   bool ExistMiner(std::string address);
   
   
+  unsigned int GetTotalBlocks(std::string address);
+  unsigned int GetBlocksInWindow(std::string address);
+  unsigned int GetWindowStart(unsigned int height);
+  bool hasExceededCap(std::string address);
+
   // Managing Cap
-  bool MineBlock(std::string address);
-  unsigned int GetMinedCoins(std::string address);
+
+  bool MineBlock(unsigned int index, std::string address);
+  bool RewindBlock(unsigned int index);
   
-  unsigned int GetWindowStart(currHeight);
   
   
   bool Sync();

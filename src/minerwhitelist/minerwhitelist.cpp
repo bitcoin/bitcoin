@@ -6,31 +6,31 @@
 #include "../base58.h"
 
 
-static const char DB_FACTOR  = 'f';
-static const char DB_WINDOW_LENGTH  = 'w';
-static const char DB_CAP_ENABLED = 'e';
-static const char DB_NUMBER_MINERS = 'N';
-static const char DB_HEIGHT = 'h';
+static const char WL_FACTOR  = 'f';
+static const char WL_WINDOW_LENGTH  = 'w';
+static const char WL_CAP_ENABLED = 'e';
+static const char WL_NUMBER_MINERS = 'N';
+static const char WL_ADDRESS = 'a';
 
-static const char DB_ADDRESS = 'a';
+static const char DB_HEIGHT = 'h';
 static const char DB_BLOCK   = 'b';
 
 
 namespace {
     struct BlockEntry {
-        char type;
+        char key;
         unsigned int index;
-        BlockEntry(unsigned int bindex) : type(DB_BLOCK), index(bindex) {}
+        BlockEntry(unsigned int bindex) : key(DB_BLOCK), index(bindex) {}
         
         template<typename Stream>
         void Serialize(Stream &s) const {
-            s << type;
+            s << key;
             s << index;
         }
         
         template<typename Stream>
         void Unserialize(Stream& s) {
-            s >> type;
+            s >> key;
             s >> index;
         }
     };
@@ -61,8 +61,8 @@ namespace {
     struct MinerEntry {
         char type;
         std::string addr;
-        MinerEntry(CIoPAddress address) : type(DB_ADDRESS), addr(address.ToString()) {}
-        MinerEntry(std::string address) : type(DB_ADDRESS), addr(address) {}
+        MinerEntry(CBitcoinAddress address) : type(WL_ADDRESS), addr(address.ToString()) {}
+        MinerEntry(std::string address) : type(WL_ADDRESS), addr(address) {}
         
         template<typename Stream>
         void Serialize(Stream &s) const {
@@ -104,21 +104,22 @@ namespace {
 }
 
 
-
 CMinerWhiteListDB::CMinerWhiteListDB(size_t nCacheSize, bool fMemory, bool fWipe) : db(GetDataDir() / "minerwhitelist", nCacheSize, fMemory, fWipe, true) 
 {
   if(fWipe) {
     CDBBatch batch(db);
-    batch.Write(DB_FACTOR, 0);
-    batch.Write(DB_WINDOW_LENGTH, 2016);
-    batch.Write(DB_CAP_ENABLED, 0);
+    batch.Write(WL_FACTOR, 0);
+    batch.Write(WL_WINDOW_LENGTH, 2016);
+    batch.Write(WL_CAP_ENABLED
+    , 0);
     batch.Write(DB_HEIGHT, 0);
     unsigned int numberMiners = 0;
     for (admin: Params().GetConsensus().WLAdminKeys) {
       batch.Write(MinerEntry(admin), MinerDetails(true));
       numberMiners += 1;
     }
-    batch.Write(DB_NUMBER_MINERS, numberMiners);
+    batch.Write(WL_NUMBER_MINERS
+    , numberMiners);
     return db.WriteBatchSync(batch);
   }
 }
@@ -127,7 +128,7 @@ CMinerWhiteListDB::CMinerWhiteListDB(size_t nCacheSize, bool fMemory, bool fWipe
 bool CMinerWhiteListDB::EnableCap(unsigned int factor) {
     CDBBatch batch(db);
     batch.Write(WL_FACTOR, factor);
-    batch.Write(WL_ENABLED, '1');
+    batch.Write(WL_ENABLED, true);
     return db.WriteBatchSync(batch);
 }
 
@@ -139,15 +140,15 @@ bool CMinerWhiteListDB::ReEnableCap() {
     if (!db.Read(BlockEntry(height), det))
       return false;
     CDBBatch batch(db);
-    batch.Write(DB_ENABLED, '1');
-    batch.Write(DB_FACTOR, det.prevFactor);
+    batch.Write(DB_ENABLED, true);
+    batch.Write(WL_FACTOR, det.Factor);
     return db.WriteBatchSync(batch);
 }
 
 bool CMinerWhiteListDB::DisableCap() {
   CDBBatch batch(db);
-  batch.Write(WL_ENABLED,'0');
-  batch.Write(WL_FACTOR, '0');
+  batch.Write(WL_ENABLED,false);
+  batch.Write(WL_FACTOR, 0);// TODO: think about this a bit more!
   return db.WriteBatchSync(batch);
 }
 
@@ -155,7 +156,7 @@ bool CMinerWhiteListDB::IsCapEnabled() {
   char fEnabled;
   if (!db.Read(WL_ENABLED, fEnabled))
     return false;
-  return fEnabled == '1';
+  return fEnabled == true;
 }
 
 
@@ -168,7 +169,7 @@ unsigned int CMinerWhiteListDB::GetCapFactor() {
 
 unsigned int CMinerWhiteListDB::GetNumberOfWhitelistedMiners() {
   unsigned int number;
-  if (!db.Read(WL_NUMBER, &number))
+  if (!db.Read(WL_NUMBER_MINERS, &number))
     return 0;
   return number;
 }
@@ -176,7 +177,7 @@ unsigned int CMinerWhiteListDB::GetNumberOfWhitelistedMiners() {
 
 unsigned int CMinerWhiteListDB::GetAvgBlocksPerMiner() {
   unsigned int number;
-  if (!db.Read(WL_NUMBER, &number))
+  if (!db.Read(WL_NUMBER_MINERS, &number))
     return 2016;
   return 2016/number;
 }
@@ -185,7 +186,7 @@ unsigned int CMinerWhiteListDB::GetAvgBlocksPerMiner() {
 unsigned int CMinerWhiteListDB::GetCap() {
   unsigned int number;
   unsigned int factor;
-  if (db.Read(DB_NUMBER, &number) && db.Read(DB_FACTOR, &factor) ) {
+  if (db.Read(WL_NUMBER_MINERS, &number) && db.Read(WL_FACTOR, &factor) ) {
     if (chainActive.Height() < Params().GetConsensus().minerCapSystemChangeHeight)
       return factor*(2016/number);
     return (factor*2016)/number;
@@ -199,19 +200,18 @@ bool CMinerWhiteListDB::WhitelistMiner(std::string address) {
     MinerDetails mDetails;
     CDBBatch batch(db);
     unsigned int number;
-    if(!db.Read(DB_NUMBER_MINERS,&number))
-      return false
-
+    if(!db.Read(WL_NUMBER_MINERS,&number))
+      return false;
     if (db.Read(mEntry, mDetails)) {
       if (!mDetails.whitelisted) {
         mDetails.whitelisted = true;
         batch.Write(mEntry,mDetails);
-        batch.Write(DB_NUMBER_MINERS, number+1);
+        batch.Write(WL_NUMBER_MINERS, number+1);
       }
     } 
     else {
       batch.Write(mEntry,MinerDetails(true));
-      batch.Write(DB_NUMBER_MINERS, number+1);
+      batch.Write(WL_NUMBER_MINERS, number+1);
     }
     
     return db.WriteBatchSync(batch);
@@ -223,14 +223,14 @@ bool CMinerWhiteListDB::BlacklistMiner(std::string address) {
     CDBBatch batch(db);
 
     unsigned int number;
-    if (!db.Read(DB_NUMBER_MINERS, &number))
-      return false
+    if (!db.Read(WL_NUMBER_MINERS, &number))
+      return false;
 
     if (db.Read(mEntry, mDetails)) {
       if (mDetails.whitelisted) {
         mDetails.whitelisted = false;
         batch.Write(mEntry, mDetails);
-        batch.Write(DB_NUMBER_MINERS, number-1);
+        batch.Write(WL_NUMBER_MINERS, number-1);
       }
     }
     else {
@@ -244,14 +244,14 @@ bool CMinerWhiteListDB::ExistMiner(std::string address) {
   return db.Exist(MinerEntry(address))
 }
 
-unsigned int CMinerWhiteListDB::GetTotalCoins(std::string address) {
+unsigned int CMinerWhiteListDB::GetTotalBlocks(std::string address) {
   MinerDetails det;
   if (db.Read(MinerEntry(address), det))
     return det.totalCoins;
   return 0;
 }
 
-unsigned int CMinerWhiteListDB::GetCoinsInWindow(std::string address) {
+unsigned int CMinerWhiteListDB::GetBlocksInWindow(std::string address) {
   MinerDetails det;
   if (db.Read(MinerEntry(address), det))
     return det.windowCoins;
@@ -267,24 +267,22 @@ unsigned int CMinerWhiteListDB::GetWindowStart(unsigned int height) {
 	return height - 2016 + 1;
 }
 
-bool CMinerWhiteListDB::Sync() {
-  return db.Sync()
-}
+// bool CMinerWhiteListDB::Sync() {
+//   return db.Sync()
+// }
 
-bool CMinerWhiteListDB::MineBlock(unsigned int index, std::string address) {
+bool CMinerWhiteListDB::MineBlock(unsigned int newHeight, std::string address) {
 
     // First check that we are actually at the tip
     unsigned int currHeight;
     db.Read(DB_HEIGHT, &currHeight);
-    assert(currHeight==index);
+    assert(newHeight==currHeight+1);
 
     CDBBatch batch(db);
     
     // First make entry for the new Block
-    unsigned int currHeight;
-    db.Read(DB_HEIGHT, &currHeight);
-    assert(index==currHeight+1);
-    batch.Write(BlockEntry(index), BlockDetails(address, IsCapEnabled(), GetCapFactor()));
+    
+    batch.Write(BlockEntry(newHeight), BlockDetails(address, IsCapEnabled(), GetCapFactor()));
     batch.Write(DB_HEIGHT, index);
    
     // Now make sure that the minerstats match up. 
@@ -295,12 +293,11 @@ bool CMinerWhiteListDB::MineBlock(unsigned int index, std::string address) {
       // Reset the window every 2016 blocks
       if (index%2016==0) {
         std::unique_ptr<CDBIterator> it(NewIterator());
-        for (it->SeekToFirst(), it->Valid(), it->Next()) { // SeekToFirst should end up at an address (they start with 'a')
+        for (it->SeekToFirst(); it->Valid(); it->Next()) { // SeekToFirst should end up at an address (they start with 'a')
           MinerEntry entry;
           if (it->GetKey(entry)) { // Does this work? Should give false if Key is of other type than what we expect?!
-            MinerDetails det 
             it->GetValue(det);
-            if (entry.address == miner) {
+            if (entry.address == miner) { 
               det.totalCoins += 1;
             }
             det.windowCoins = 0;
@@ -346,20 +343,19 @@ bool CMinerWhiteListDB::MineBlock(unsigned int index, std::string address) {
         if (!db.Read(BlockEntry(address), dropDets))
           return false;
 
-
         if (dropDets.miner == address) { 
           // the miner who mined the current block also mined the one 
-          // dropping out of the window so do not increase his count.
+          // dropping out of the window so decrease his count again.
           minDets.windowCoins -= 1;
           batch.Write(MinerEntry(address), minDets);  
         }
         else { // different Miner
-          MinerDetails dets;
-          if (!db.Read(MinerEntry(dropDets.miner), dets))
+          MinerDetails otherDets;
+          if (!db.Read(MinerEntry(dropDets.miner), otherDets))
             return false;
-          dets.windowCoins -= 1;
+          otherDets.windowCoins -= 1;
           batch.Write(MinerEntry(address), minDets);  
-          batch.Write(MinerEntry(dropDets.miner), dets);  
+          batch.Write(MinerEntry(dropDets.miner), otherDets);  
         }
       } else {
         batch.Write(MinerEntry(address), minDets);
@@ -391,15 +387,19 @@ bool CMinerWhiteListDB::RewindBlock(unsigned int index) {
     // Window Handling
     if ( index < Params().GetConsensus().minerCapSystemChangeHeight ) {
       // old system
-
+      // code will never be used as the old system is buried unter checkpoints
 
       // This is what happens at the window border
       if (index%2016==0) {
         // TODO iterate over the last 2016 blocks to restore the correct value for the cap.
         std::unique_ptr<CDBIterator> it(NewIterator());
-        std::unordered_map<std::string, unsigned int> coinMap;
-        for (it->Seek(BlockEntry(index-2016+1)), it->Valid(), it->Next()) { // Start at beginning of Window, including the current block
+        std::unordered_map<std::string, unsigned int> coinMap; 
+        int bcount = 0;
+        for (it->Seek(BlockEntry(index-2016+1)), it->Valid(), it->Next()) { // Start at beginning of Window
           BlockEntry entry;
+          bcount+=1; // count blocks
+          if (bcount > 2016)
+            break; // only work until current block
           if (it->GetKey(entry)) { // Does this work? Should give false if Key is of other type than what we expect?!
             BlockDetails det;
             it->GetValue(det);
@@ -409,10 +409,10 @@ bool CMinerWhiteListDB::RewindBlock(unsigned int index) {
               return false;
             
             if(coinMap.count(det.miner)) {
-              coinMap[det.miner] += 1;
+              coinMap[det.miner] += 1; // miner already has coins
             }
             else {
-              coinMap[det.miner] = 1;
+              coinMap[det.miner] = 1; // first appearance of miner this window
             }
           }
           else { // Not a block anymore (LevelDB is sorted)
@@ -425,7 +425,7 @@ bool CMinerWhiteListDB::RewindBlock(unsigned int index) {
           
           if (x.first == miner) {
             mdetails.windowCoins = x.second - 1; // The current block will be removed from database. Do not count it
-            mdetails.totalCoins -= 1; // Also remove it from the miners total count.
+            mdetails.totalCoins -= 1; // also remove current block from the miners total count.
           }
           else {
             mdetails.windowCoins = x.second;
@@ -433,8 +433,7 @@ bool CMinerWhiteListDB::RewindBlock(unsigned int index) {
 
           batch.Write(MinerEntry(x.first), mdetails);
         } 
-      }
-      else { // normal stuff during the window
+      } else { // normal stuff during the window
         MinerDetails minDets;
         if (!db.Read(MinerEntry(miner), minDets))
           return false;
@@ -467,7 +466,7 @@ bool CMinerWhiteListDB::RewindBlock(unsigned int index) {
 
         if (dropDets.miner == miner) { 
           // the miner who mined the current block also mined the one 
-          // moving into the window so do not re-increase his count.
+          // moving into the window so re-increase his count.
           minDets.windowCoins += 1;
           batch.Write(MinerEntry(miner), minDets);  
         }
@@ -487,3 +486,13 @@ bool CMinerWhiteListDB::RewindBlock(unsigned int index) {
     db.WriteBatchSync(batch);
 }
 
+bool CMinerWhiteListDB::hasExceededCap(std::string address) {
+    if (Params().GetConsensus().minerWhiteListAdminAddress.count(address) || (chainActive.Height() < 38304 && address == "pGNcLNCavQLGXwXkVDwoHPCuQUBoXzJtPh"))
+        return false;
+
+    unsigned int cap = CMinerWhiteListDB::GetCapFactor();
+    unsigned int blocks = CMinerWhiteListDB::GetBlocksInWindow(address);
+    
+    LogPrint("MinerCap", "Has %s exceeded miner cap? %s > %s ?\n", address, blocks, cap);
+    return blocks > cap;
+}

@@ -1402,15 +1402,15 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                 delete pcoinsdbview;
                 delete pcoinscatcher;
                 delete pblocktree;
-                delete pwhitelist;
+                delete pminerwhitelist;
 
                 pblocktree = new CBlockTreeDB(nBlockTreeDBCache, false, fReset);
-                pwhitelist = new CWhitelistDB(nWhitelistDBCache, false, fReset); // TODO: check if I do this here or later
-                
+                pminerwhitelist = new CMinerWhitelistDB(nWhitelistDBCache, false, fReset); // TODO: check if I do this here or later
+
                 if (fReset) {
 
                     pblocktree->WriteReindexing(true);
-                    pwhitelist->WriteReindexing(true); // TODO: Check what this does!
+                    pminerwhitelist->WriteReindexing(true); // TODO: Check what this does!
                     //If we're reindexing in prune mode, wipe away unusable block files and all undo data files
                     if (fPruneMode)
                         CleanupBlockRevFiles();
