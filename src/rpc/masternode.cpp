@@ -400,7 +400,7 @@ UniValue masternode(const UniValue& params, bool fHelp)
 
         UniValue mnObj(UniValue::VOBJ);
 
-        mnObj.push_back(Pair("vin", activeMasternode.outpoint.ToStringShort()));
+        mnObj.push_back(Pair("outpoint", activeMasternode.outpoint.ToStringShort()));
         mnObj.push_back(Pair("service", activeMasternode.service.ToString()));
 
         CMasternode mn;
@@ -747,7 +747,7 @@ UniValue masternodebroadcast(const UniValue& params, bool fHelp)
 
             if(mnb.CheckSignature(nDos)) {
                 nSuccessful++;
-                resultObj.push_back(Pair("vin", mnb.vin.ToString()));
+                resultObj.push_back(Pair("outpoint", mnb.vin.prevout.ToStringShort()));
                 resultObj.push_back(Pair("addr", mnb.addr.ToString()));
                 resultObj.push_back(Pair("pubKeyCollateralAddress", CBitcoinAddress(mnb.pubKeyCollateralAddress.GetID()).ToString()));
                 resultObj.push_back(Pair("pubKeyMasternode", CBitcoinAddress(mnb.pubKeyMasternode.GetID()).ToString()));
@@ -757,7 +757,7 @@ UniValue masternodebroadcast(const UniValue& params, bool fHelp)
                 resultObj.push_back(Pair("nLastDsq", mnb.nLastDsq));
 
                 UniValue lastPingObj(UniValue::VOBJ);
-                lastPingObj.push_back(Pair("vin", mnb.lastPing.vin.ToString()));
+                lastPingObj.push_back(Pair("outpoint", mnb.lastPing.vin.prevout.ToStringShort()));
                 lastPingObj.push_back(Pair("blockHash", mnb.lastPing.blockHash.ToString()));
                 lastPingObj.push_back(Pair("sigTime", mnb.lastPing.sigTime));
                 lastPingObj.push_back(Pair("vchSig", EncodeBase64(&mnb.lastPing.vchSig[0], mnb.lastPing.vchSig.size())));
@@ -798,7 +798,7 @@ UniValue masternodebroadcast(const UniValue& params, bool fHelp)
         BOOST_FOREACH(CMasternodeBroadcast& mnb, vecMnb) {
             UniValue resultObj(UniValue::VOBJ);
 
-            resultObj.push_back(Pair("vin", mnb.vin.ToString()));
+            resultObj.push_back(Pair("outpoint", mnb.vin.prevout.ToStringShort()));
             resultObj.push_back(Pair("addr", mnb.addr.ToString()));
 
             int nDos = 0;

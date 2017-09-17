@@ -164,7 +164,7 @@ It should return you something like that:
 ```
 dash-cli masternode status
 {
-    "vin" : "CTxIn(COutPoint(<collateral_output>, <collateral_output_index>), scriptSig=)",
+    "outpoint" : "<collateral_output>-<collateral_output_index>",
     "service" : "<ipaddress>:<port>",
     "pubkey" : "<1000 DASH address>",
     "status" : "Masternode successfully started"
