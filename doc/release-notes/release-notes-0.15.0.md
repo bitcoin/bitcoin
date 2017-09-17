@@ -234,7 +234,7 @@ Low-level RPC changes
   containing one or more of the following members:
   - `minimumAmount` - a number specifying the minimum value of each UTXO
   - `maximumAmount` - a number specifying the maximum value of each UTXO
-  - `maximumCount` - a number specifying the minimum number of UTXOs
+  - `maximumCount` - a number specifying the maximum number of UTXOs
   - `minimumSumAmount` - a number specifying the minimum sum value of all UTXOs
 
 - The `getmempoolancestors`, `getmempooldescendants`, `getmempoolentry` and `getrawmempool` RPCs no longer return `startingpriority` and `currentpriority`. See [Removal of Coin Age Priority](#removal-of-coin-age-priority).
