@@ -147,7 +147,10 @@ public:
         std::vector<std::string> m_added_nodes;
     };
 
-    void Init(const Options& connOptions) {
+    // NO_THREAD_SAFETY_ANALYSIS: Intentionally setting
+    // nMaxOutboundTimeframe/nMaxOutboundLimit without holding
+    // cs_totalBytesSent.
+    void Init(const Options& connOptions) NO_THREAD_SAFETY_ANALYSIS {
         nLocalServices = connOptions.nLocalServices;
         nMaxConnections = connOptions.nMaxConnections;
         nMaxOutbound = std::min(connOptions.nMaxOutbound, connOptions.nMaxConnections);
