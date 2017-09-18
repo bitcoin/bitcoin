@@ -1329,7 +1329,8 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	int nFeePerByte = getFeePerByte(selleralias.aliasPegTuple, vchFromString(GetPaymentOptionsString(paymentOptionMask)), precision);
 	float fEscrowFee = getEscrowFee(selleralias.aliasPegTuple, vchFromString(GetPaymentOptionsString(paymentOptionMask)), precision);
 	CAmount nEscrowFee = GetEscrowArbiterFee(nTotalWithBuyerDiscount, fEscrowFee);
-	nEscrowFee = convertSyscoinToCurrencyCode(selleralias.aliasPegTuple, vchFromString(GetPaymentOptionsString(paymentOptionMask)), nEscrowFee, precision);
+	if(paymentOptionMask != PAYMENTOPTION_SYS)
+		nEscrowFee = convertSyscoinToCurrencyCode(selleralias.aliasPegTuple, vchFromString(GetPaymentOptionsString(paymentOptionMask)), nEscrowFee, precision);
 	
 	CAmount nNetworkFee = (nFeePerByte * 400);
 	vector<CRecipient> vecSend;
