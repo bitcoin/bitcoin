@@ -1113,7 +1113,7 @@ UniValue generateescrowmultisig(const UniValue& params, bool fHelp) {
 	paramsConvert.push_back(stringFromVch(selleralias.vchAlias));
 	paramsConvert.push_back(stringFromVch(theOffer.sCurrencyCode));
 	paramsConvert.push_back(GetPaymentOptionsString(paymentOptionMask));
-	paramsConvert.push_back(theOffer.GetPrice(foundEntry)*nQty);
+	paramsConvert.push_back(boost::lexical_cast<string>(theOffer.GetPrice(foundEntry)*nQty));
 	const UniValue &r = tableRPC.execute("aliasconvertcurrency", paramsConvert);
 	CAmount nTotal = AmountFromValue(find_value(r.get_obj(), "convertedrate"));
 
@@ -1296,7 +1296,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	paramsConvert.push_back(stringFromVch(selleralias.vchAlias));
 	paramsConvert.push_back(stringFromVch(theOffer.sCurrencyCode));
 	paramsConvert.push_back(GetPaymentOptionsString(paymentOptionMask));
-	paramsConvert.push_back(theOffer.GetPrice()*nQty);
+	paramsConvert.push_back(boost::lexical_cast<string>(theOffer.GetPrice()*nQty));
 	UniValue r = tableRPC.execute("aliasconvertcurrency", paramsConvert);
 	CAmount nTotalOfferPrice = AmountFromValue(find_value(r.get_obj(), "convertedrate"));
 	if (!theOffer.linkOfferTuple.first.empty())
@@ -1305,7 +1305,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 		paramsConvert.push_back(stringFromVch(theLinkedAlias.vchAlias));
 		paramsConvert.push_back(stringFromVch(linkedOffer.sCurrencyCode));
 		paramsConvert.push_back(GetPaymentOptionsString(paymentOptionMask));
-		paramsConvert.push_back(linkedOffer.GetPrice(foundEntry)*nQty);
+		paramsConvert.push_back(boost::lexical_cast<string>(linkedOffer.GetPrice(foundEntry)*nQty));
 		r = tableRPC.execute("aliasconvertcurrency", paramsConvert);
 		CAmount nTotalLinkedOfferPrice = AmountFromValue(find_value(r.get_obj(), "convertedrate"));
 
@@ -1322,7 +1322,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	paramsConvert.push_back(stringFromVch(selleralias.vchAlias));
 	paramsConvert.push_back(stringFromVch(theOffer.sCurrencyCode));
 	paramsConvert.push_back(GetPaymentOptionsString(paymentOptionMask));
-	paramsConvert.push_back(theOffer.GetPrice(foundEntry)*nQty);
+	paramsConvert.push_back(boost::lexical_cast<string>(theOffer.GetPrice(foundEntry)*nQty));
 	r = tableRPC.execute("aliasconvertcurrency", paramsConvert);
 	CAmount nTotalWithBuyerDiscount = AmountFromValue(find_value(r.get_obj(), "convertedrate"));
 
