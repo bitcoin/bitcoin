@@ -243,6 +243,8 @@ void Shutdown()
         pcoinsdbview = nullptr;
         delete pblocktree;
         pblocktree = nullptr;
+        delete pminerwhitelist;
+        pminerwhitelist= nullptr;
     }
 #ifdef ENABLE_WALLET
     for (CWalletRef pwallet : vpwallets) {
@@ -1377,8 +1379,8 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     int64_t nCoinDBCache = std::min(nTotalCache / 2, (nTotalCache / 4) + (1 << 23)); // use 25%-50% of the remainder for disk cache
     nCoinDBCache = std::min(nCoinDBCache, nMaxCoinsDBCache << 20); // cap total coins db cache
     nTotalCache -= nCoinDBCache;
-    int64_t nWhitelistCache = nTotalCache/2;
-    nTotalCache -= nWhitelistCache;
+    int64_t nWhitelistDBCache = nTotalCache/2;
+    nTotalCache -= nWhitelistDBCache;
     nCoinCacheUsage = nTotalCache; // the rest goes to in-memory cache
     int64_t nMempoolSizeMax = gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
     LogPrintf("Cache configuration:\n");
@@ -1405,12 +1407,12 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                 delete pminerwhitelist;
 
                 pblocktree = new CBlockTreeDB(nBlockTreeDBCache, false, fReset);
-                pminerwhitelist = new CMinerWhitelistDB(nWhitelistDBCache, false, fReset); // TODO: check if I do this here or later
+
 
                 if (fReset) {
 
                     pblocktree->WriteReindexing(true);
-                    pminerwhitelist->WriteReindexing(true); // TODO: Check what this does!
+                    //pminerwhitelist->WriteReindexing(true); // TODO: Check what this does!
                     //If we're reindexing in prune mode, wipe away unusable block files and all undo data files
                     if (fPruneMode)
                         CleanupBlockRevFiles();
@@ -1459,6 +1461,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                 // block tree into mapBlockIndex!
 
                 pcoinsdbview = new CCoinsViewDB(nCoinDBCache, false, fReset || fReindexChainState);
+                pminerwhitelist = new CMinerWhitelistDB(nWhitelistDBCache, false, fReset); // TODO: check if I do this here or late
                 pcoinscatcher = new CCoinsViewErrorCatcher(pcoinsdbview);
 
                 // If necessary, upgrade from older database format.

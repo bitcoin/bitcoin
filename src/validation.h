@@ -13,6 +13,7 @@
 #include "amount.h"
 #include "coins.h"
 #include "fs.h"
+#include "minerwhitelist.h"
 #include "protocol.h" // For CMessageHeader::MessageStartChars
 #include "policy/feerate.h"
 #include "script/script_error.h"
@@ -448,6 +449,9 @@ extern CCoinsViewCache *pcoinsTip;
 
 /** Global variable that points to the active block tree (protected by cs_main) */
 extern CBlockTreeDB *pblocktree;
+
+/** Global variable that points to the miner whitelist (protected by cs_main) */
+extern CMinerWhitelistDB *pminerwhitelist;
 
 /**
  * Return the spend height, which is one more than the inputs.GetBestBlock().

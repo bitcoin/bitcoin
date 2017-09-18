@@ -5,13 +5,15 @@
 #ifndef IOP_MINERWHITELIST_H
 #define IOP_MINERWHITELIST_H
 
-class CMinerWhiteListDB {
+#include "dbwrapper.h"
+
+class CMinerWhitelistDB {
 protected:
   CDBWrapper db;
 public:
-  CMinerWhiteListDB(size_t nCacheSize, bool fMemory, bool fWipe);
+  CMinerWhitelistDB(size_t nCacheSize, bool fMemory, bool fWipe);
   
-  enum WhiteListAction {ADD_MINER, REMOVE_MINER, ENABLE_CAP, DISABLE_CAP, NONE};
+  enum WhitelistAction {ADD_MINER, REMOVE_MINER, ENABLE_CAP, DISABLE_CAP, NONE};
   
   // Cap management
   bool EnableCap(unsigned int factor);
