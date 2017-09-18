@@ -1612,7 +1612,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	for (unsigned int i = 0; i < inputs.size(); i++)
 	{
 		const UniValue& inputsObj = inputs[i].get_obj();
-		nBalance += AmountFromValue(find_value(inputsObj.get_obj(), "satoshis"));
+		nBalance += AmountFromValue(find_value(inputsObj, "satoshis"));
 	}
 	nBalance -= nEscrowTotal;
 	if (nBalance < nEscrowTotal) {
@@ -1791,7 +1791,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() > 3 || params.size() < 1)
+    if (fHelp || params.size() > 3 || params.size() < 2)
         throw runtime_error(
 		"escrowclaimrelease <escrow guid> <[{\"txid\":\"id\",\"vout\":n, \"satoshis\":n},...]> [witness]\n"
                         "Claim escrow funds released from buyer or arbiter using escrowrelease. Second parameter is array of input (txid, vout, amount) pairs to be used to fund the release of payment.\n"
@@ -1841,7 +1841,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	for (unsigned int i = 0; i < inputs.size(); i++)
 	{
 		const UniValue& inputsObj = inputs[i].get_obj();
-		nBalance += AmountFromValue(find_value(inputsObj.get_obj(), "satoshis"));
+		nBalance += AmountFromValue(find_value(inputsObj, "satoshis"));
 	}
 	nBalance -= nEscrowTotal;
 	if (nBalance < nEscrowTotal) {
@@ -2123,7 +2123,7 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue escrowrefund(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() > 4 || params.size() < 2)
+    if (fHelp || params.size() > 4 || params.size() < 3)
         throw runtime_error(
 		"escrowrefund <escrow guid> <user role> <[{\"txid\":\"id\",\"vout\":n, \"satoshis\":n},...]> [witness]\n"
                         "Refunds escrow funds back to buyer, buyer needs to sign the output transaction and send to the network. User role represents either 'seller' or 'arbiter'. Third parameter is array of input (txid, vout, amount) pairs to be used to fund the refund of payment.\n"
@@ -2174,7 +2174,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	for (unsigned int i = 0; i < inputs.size(); i++)
 	{
 		const UniValue& inputsObj = inputs[i].get_obj();
-		nBalance += AmountFromValue(find_value(inputsObj.get_obj(), "satoshis"));
+		nBalance += AmountFromValue(find_value(inputsOb, "satoshis"));
 	}
 	nBalance -= nEscrowTotal;
 	if (nBalance < nEscrowTotal) {
@@ -2332,7 +2332,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() > 3 || params.size() < 1)
+    if (fHelp || params.size() > 3 || params.size() < 2)
         throw runtime_error(
 		"escrowclaimrefund <escrow guid> <[{\"txid\":\"id\",\"vout\":n, \"satoshis\":n},...]> [witness]\n"
                         "Claim escrow funds released from seller or arbiter using escrowrefund. Second parameter is array of input (txid, vout, amount) pairs to be used to fund the refund of payment.\n"
@@ -2358,7 +2358,7 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	for (unsigned int i = 0; i < inputs.size(); i++)
 	{
 		const UniValue& inputsObj = inputs[i].get_obj();
-		nBalance += AmountFromValue(find_value(inputsObj.get_obj(), "satoshis"));
+		nBalance += AmountFromValue(find_value(inputsObj, "satoshis"));
 	}
 	nBalance -= nEscrowTotal;
 	if (nBalance < nEscrowTotal) {
