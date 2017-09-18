@@ -1301,12 +1301,12 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	CAmount nTotalOfferPrice = AmountFromValue(find_value(r.get_obj(), "convertedrate"));
 	if (!theOffer.linkOfferTuple.first.empty())
 	{
-		paramsConvert.clear();
-		paramsConvert.push_back(stringFromVch(theLinkedAlias.vchAlias));
-		paramsConvert.push_back(stringFromVch(linkedOffer.sCurrencyCode));
-		paramsConvert.push_back(GetPaymentOptionsString(paymentOptionMask));
-		paramsConvert.push_back(boost::lexical_cast<string>(linkedOffer.GetPrice(foundEntry)*nQty));
-		r = tableRPC.execute("aliasconvertcurrency", paramsConvert);
+		UniValue paramsConvert1(UniValue::VARR);
+		paramsConvert1.push_back(stringFromVch(theLinkedAlias.vchAlias));
+		paramsConvert1.push_back(stringFromVch(linkedOffer.sCurrencyCode));
+		paramsConvert1.push_back(GetPaymentOptionsString(paymentOptionMask));
+		paramsConvert1.push_back(boost::lexical_cast<string>(linkedOffer.GetPrice(foundEntry)*nQty));
+		r = tableRPC.execute("aliasconvertcurrency", paramsConvert1);
 		CAmount nTotalLinkedOfferPrice = AmountFromValue(find_value(r.get_obj(), "convertedrate"));
 
 		nCommission = nTotalOfferPrice - nTotalLinkedOfferPrice;
@@ -1318,12 +1318,12 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	int precision = 2;
 	// send to escrow address
 
-	paramsConvert.clear();
-	paramsConvert.push_back(stringFromVch(selleralias.vchAlias));
-	paramsConvert.push_back(stringFromVch(theOffer.sCurrencyCode));
-	paramsConvert.push_back(GetPaymentOptionsString(paymentOptionMask));
-	paramsConvert.push_back(boost::lexical_cast<string>(theOffer.GetPrice(foundEntry)*nQty));
-	r = tableRPC.execute("aliasconvertcurrency", paramsConvert);
+	UniValue paramsConvert2(UniValue::VARR);
+	paramsConvert2.push_back(stringFromVch(selleralias.vchAlias));
+	paramsConvert2.push_back(stringFromVch(theOffer.sCurrencyCode));
+	paramsConvert2.push_back(GetPaymentOptionsString(paymentOptionMask));
+	paramsConvert2.push_back(boost::lexical_cast<string>(theOffer.GetPrice(foundEntry)*nQty));
+	r = tableRPC.execute("aliasconvertcurrency", paramsConvert2);
 	CAmount nTotalWithBuyerDiscount = AmountFromValue(find_value(r.get_obj(), "convertedrate"));
 
 	int nFeePerByte = getFeePerByte(selleralias.aliasPegTuple, vchFromString(GetPaymentOptionsString(paymentOptionMask)), precision);
