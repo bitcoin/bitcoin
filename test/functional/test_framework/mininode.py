@@ -1715,6 +1715,7 @@ class NodeConn(asyncore.dispatcher):
         self.dstaddr = dstaddr
         self.dstport = dstport
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         self.sendbuf = b""
         self.recvbuf = b""
         self.ver_send = 209
@@ -1855,7 +1856,14 @@ class NodeConn(asyncore.dispatcher):
             tmsg += h[:4]
         tmsg += data
         with mininode_lock:
-            self.sendbuf += tmsg
+            if (len(self.sendbuf) == 0 and not pushbuf):
+                try:
+                    sent = self.send(tmsg)
+                    self.sendbuf = tmsg[sent:]
+                except BlockingIOError:
+                    self.sendbuf = tmsg
+            else:
+                self.sendbuf += tmsg
             self.last_sent = time.time()
 
     def got_message(self, message):
