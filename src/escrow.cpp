@@ -2178,7 +2178,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	for (unsigned int i = 0; i < inputs.size(); i++)
 	{
 		const UniValue& inputsObj = inputs[i].get_obj();
-		nBalance += AmountFromValue(find_value(inputsOb, "satoshis"));
+		nBalance += AmountFromValue(find_value(inputsObj, "satoshis"));
 	}
 	nBalance -= nEscrowTotal;
 	if (nBalance < nEscrowTotal) {
