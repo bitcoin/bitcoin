@@ -1330,7 +1330,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	{
 		UniValue paramsConvert(UniValue::VARR);
 		paramsConvert.push_back(stringFromVch(selleralias.vchAlias));
-		paramsConvert2.push_back(stringFromVch(theOffer.sCurrencyCode));
+		paramsConvert.push_back(stringFromVch(theOffer.sCurrencyCode));
 		paramsConvert.push_back(GetPaymentOptionsString(paymentOptionMask));
 		paramsConvert.push_back(boost::lexical_cast<string>(nTotalWithBuyerDiscount));
 		UniValue r = tableRPC.execute("aliasconvertcurrency", paramsConvert);
