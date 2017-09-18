@@ -328,7 +328,7 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate_editcurrency)
 	// accept and confirm payment is accurate with usd
 	string escrowguid = OfferAccept("node1", "node2", "buyeraliascurrency", offerguid, "2");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + escrowguid));
-	CAmount nTotal = find_value(r.get_obj(), "systotal").get_int64();
+	CAmount nTotal = find_value(r.get_obj(), "total").get_int64();
 	// 2690.1 SYS/USD
 	BOOST_CHECK_EQUAL(nTotal, AmountFromValue(2*0.05*2690.1));
 
@@ -337,7 +337,7 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate_editcurrency)
 	// accept and confirm payment is accurate with cad
 	escrowguid = OfferAccept("node1", "node2", "buyeraliascurrency", offerguid, "3");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + escrowguid));
-	nTotal = find_value(r.get_obj(), "systotal").get_int64();
+	nTotal = find_value(r.get_obj(), "total").get_int64();
 	// 2698.0 SYS/CAD
 	BOOST_CHECK_EQUAL(nTotal, AmountFromValue(3*0.15*2698.0));
 
@@ -351,7 +351,7 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate_editcurrency)
 	// accept and confirm payment is accurate with sys
 	escrowguid = OfferAccept("node1", "node2", "buyeraliascurrency", offerguid, "3");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + escrowguid));
-	nTotal = find_value(r.get_obj(), "systotal").get_int64();
+	nTotal = find_value(r.get_obj(), "total").get_int64();
 	// 1 SYS/SYS
 	BOOST_CHECK_EQUAL(nTotal, AmountFromValue(3));
 
@@ -359,7 +359,7 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate_editcurrency)
 	// accept and confirm payment is accurate with btc
 	escrowguid = OfferAccept("node1", "node2", "buyeraliascurrency", offerguid, "4");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + escrowguid));
-	nTotal = find_value(r.get_obj(), "systotal").get_int64();
+	nTotal = find_value(r.get_obj(), "total").get_int64();
 	// 100000.0 SYS/BTC
 	BOOST_CHECK_EQUAL(nTotal, AmountFromValue(4*0.00001000*100000.0));
 
@@ -372,13 +372,13 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate_editcurrency)
 	GenerateBlocks(3);
 	GenerateBlocks(5, "node2");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + escrowguid));
-	nTotal = find_value(r.get_obj(), "systotal").get_int64();
+	nTotal = find_value(r.get_obj(), "total").get_int64();
 	// still used BTC conversion amount
 	BOOST_CHECK_EQUAL(nTotal, AmountFromValue(10*0.00001000*100000.0));
 	// 2695.2 SYS/EUR
 	escrowguid = OfferAccept("node1", "node2", "buyeraliascurrency", offerguid, "3");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + escrowguid));
-	nTotal = find_value(r.get_obj(), "systotal").get_int64();
+	nTotal = find_value(r.get_obj(), "total").get_int64();
 	BOOST_CHECK_EQUAL(nTotal, AmountFromValue(3*0.2*2695.2));
 
 	// linked offer with root and linked offer changing currencies
