@@ -2887,7 +2887,7 @@ bool BuildEscrowJson(const CEscrow &escrow, const std::vector<std::vector<unsign
 	oEscrow.push_back(Pair("offer", stringFromVch(escrow.offerTuple.first)));
 	oEscrow.push_back(Pair("offerlink_seller", stringFromVch(escrow.linkSellerAliasTuple.first)));
 	oEscrow.push_back(Pair("quantity", (int)escrow.nQty));
-	const UniValue &totalValue = ValueFromAmount(escrow.nCommission);
+	const UniValue &totalValue = ValueFromAmount(escrow.nTotal);
 	oEscrow.push_back(Pair("stotal", strprintf("%.*f", escrow.paymentPrecision, totalValue.get_real())));
 	oEscrow.push_back(Pair("total", totalValue));
 	oEscrow.push_back(Pair("commission", ValueFromAmount(escrow.nCommission)));
