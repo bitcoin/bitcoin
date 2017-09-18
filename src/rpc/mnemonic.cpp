@@ -70,7 +70,7 @@ UniValue mnemonic(const JSONRPCRequest &request)
         std::string st = " " + s + " "; // Note the spaces
         std::transform(st.begin(), st.end(), st.begin(), ::tolower);
         static const char *pmodes = " new decode addchecksum dumpwords listlanguages ";
-        if (strstr(pmodes, st.c_str()) != NULL)
+        if (strstr(pmodes, st.c_str()) != nullptr)
         {
             st.erase(std::remove(st.begin(), st.end(), ' '), st.end());
             mode = st;

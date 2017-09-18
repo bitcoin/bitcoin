@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(ct_test)
             ct_exponent, ct_bits, 
             amount_outs[k],
             (const unsigned char*) message, mlen,
-            NULL, 0,
+            nullptr, 0,
             secp256k1_generator_h));
         
         txout.vchRangeproof.resize(nRangeProofLen);
@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(ct_test)
         max_value = 0;
         BOOST_CHECK(1 == secp256k1_rangeproof_verify(ctx, &min_value, &max_value,
             &txout.commitment, txout.vchRangeproof.data(), txout.vchRangeproof.size(),
-            NULL, 0,
+            nullptr, 0,
             secp256k1_generator_h));
         
         
@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE(ct_test)
             blindOut, &amountOut, msg, &msg_size, nonce.begin(),
             &min_value, &max_value, 
             &txout.commitment, txout.vchRangeproof.data(), txout.vchRangeproof.size(),
-            NULL, 0,
+            nullptr, 0,
             secp256k1_generator_h));
         
         msg[9] = '\0';

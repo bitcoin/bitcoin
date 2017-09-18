@@ -554,6 +554,10 @@ public:
     int Height() const {
         return vChain.size() - 1;
     }
+    
+    int64_t Time() const {
+        return vChain.size() > 0 ? vChain[vChain.size() - 1]->nTime : 0;
+    }
 
     /** Set/initialize a chain with a given tip. */
     void SetTip(CBlockIndex *pindex);

@@ -4059,14 +4059,14 @@ unsigned int GetNextTargetRequired(const CBlockIndex *pindexLast)
     };
     
     
-    if (pindexLast == NULL)
+    if (pindexLast == nullptr)
         return nProofOfWorkLimit; // Genesis block
     
     const CBlockIndex* pindexPrev = pindexLast;
-    if (pindexPrev->pprev == NULL)
+    if (pindexPrev->pprev == nullptr)
         return nProofOfWorkLimit; // first block
     const CBlockIndex *pindexPrevPrev = pindexPrev->pprev;
-    if (pindexPrevPrev->pprev == NULL)
+    if (pindexPrevPrev->pprev == nullptr)
         return nProofOfWorkLimit; // second block
     
     int64_t nTargetSpacing = Params().GetTargetSpacing();
@@ -4097,7 +4097,7 @@ unsigned int GetNextTargetRequired(const CBlockIndex *pindexLast)
  *  set; UTXO-related validity checks are done in ConnectBlock(). */
 static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const CChainParams& params, const CBlockIndex* pindexPrev, int64_t nAdjustedTime)
 {
-    const int nHeight = pindexPrev == NULL ? 0 : pindexPrev->nHeight + 1;
+    const int nHeight = pindexPrev == nullptr ? 0 : pindexPrev->nHeight + 1;
     const Consensus::Params& consensusParams = params.GetConsensus();
 
     if (fParticlMode && pindexPrev)
@@ -4145,6 +4145,7 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
 static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
 {
     const int nHeight = pindexPrev == nullptr ? 0 : pindexPrev->nHeight + 1;
+    const int64_t nPrevTime = pindexPrev ? pindexPrev->nTime : 0;
 
     // Start enforcing BIP113 (Median Time Past) using versionbits logic.
     int nLockTimeFlags = 0;
@@ -4177,7 +4178,7 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
         if (block.IsProofOfStake())
         {
             // Limit the number of outputs in a coinstake txn to 6: 1 data + 1 foundation + 4 user
-            if (nHeight >= consensusParams.OpIsCoinstakeHeight)
+            if (nPrevTime >= consensusParams.OpIsCoinstakeTime)
             {
                 if (block.vtx[0]->vpout.size() > 6)
                     return state.DoS(100, false, REJECT_INVALID, "bad-cs-outputs", false, "Too many outputs in coinstake");

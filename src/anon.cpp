@@ -164,9 +164,9 @@ bool VerifyMLSAG(const CTransaction &tx, CValidationState &state)
             };
         };
         
-        if (0 != (rv = secp256k1_prepare_mlsag(&vM[0], NULL,
+        if (0 != (rv = secp256k1_prepare_mlsag(&vM[0], nullptr,
             vpOutCommits.size(), vpOutCommits.size(), nCols, nRows,
-            &vpInCommits[0], &vpOutCommits[0], NULL)))
+            &vpInCommits[0], &vpOutCommits[0], nullptr)))
             return state.DoS(100, error("%s: prepare-mlsag-failed %d", __func__, rv), REJECT_INVALID, "prepare-mlsag-failed");
         
         if (0 != (rv = secp256k1_verify_mlsag(secp256k1_ctx_blind,

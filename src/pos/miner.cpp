@@ -41,14 +41,14 @@ int nMinStakeInterval = 0;  // min stake interval in seconds
 int nMinerSleep = 500;
 std::atomic<int64_t> nTimeLastStake(0);
 
-extern double GetDifficulty(const CBlockIndex* blockindex = NULL);
+extern double GetDifficulty(const CBlockIndex* blockindex = nullptr);
 
 double GetPoSKernelPS()
 {
     LOCK(cs_main);
     
     CBlockIndex *pindex = chainActive.Tip();
-    CBlockIndex *pindexPrevStake = NULL;
+    CBlockIndex *pindexPrevStake = nullptr;
     
     int nBestHeight = pindex->nHeight;
     
@@ -119,7 +119,7 @@ bool CheckStake(CBlock *pblock)
     }
     
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
-    if (!ProcessNewBlock(Params(), shared_pblock, true, NULL))
+    if (!ProcessNewBlock(Params(), shared_pblock, true, nullptr))
         return error("%s: Block not accepted.", __func__);
     
     return true;
@@ -166,7 +166,7 @@ bool ImportOutputs(CBlockTemplate *pblocktemplate, int nHeight)
             cLine[len-1] = '\0', len--;
         
         if (!(pAddress = strtok(cLine, ","))
-            || !(pAmount = strtok(NULL, ",")))
+            || !(pAmount = strtok(nullptr, ",")))
             continue;
         
         nOutput++;
@@ -174,7 +174,7 @@ bool ImportOutputs(CBlockTemplate *pblocktemplate, int nHeight)
             continue;
         
         errno = 0;
-        uint64_t amount = strtoull(pAmount, NULL, 10);
+        uint64_t amount = strtoull(pAmount, nullptr, 10);
         if (errno || !MoneyRange(amount))
         {
             LogPrintf("Warning: %s - Skipping invalid amount: %s, %s\n", __func__, pAmount, strerror(errno));

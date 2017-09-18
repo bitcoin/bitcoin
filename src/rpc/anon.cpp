@@ -37,7 +37,7 @@ UniValue anonoutput(const JSONRPCRequest &request)
     if (IsDigits(sIn))
     {
         errno = 0;
-        nIndex = strtoll(sIn.c_str(), NULL, 10);
+        nIndex = strtoll(sIn.c_str(), nullptr, 10);
         if (errno)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid index");
     } else

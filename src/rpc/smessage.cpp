@@ -32,7 +32,7 @@ UniValue smsgenable(const JSONRPCRequest &request)
 
     UniValue result(UniValue::VOBJ);
     
-    CWallet *pwallet = NULL;
+    CWallet *pwallet = nullptr;
 #ifdef ENABLE_WALLET
     assert(vpwallets.size() > 0);
     pwallet = vpwallets[0];

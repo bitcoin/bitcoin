@@ -39,6 +39,6 @@ bool CheckCoinStakeTimestamp(int nHeight, int64_t nTimeBlock);
  * Also checks existence of kernel input and min age
  * Convenient for searching a kernel
  */
-bool CheckKernel(const CBlockIndex *pindexPrev, unsigned int nBits, int64_t nTime, const COutPoint &prevout, int64_t* pBlockTime = NULL);
+bool CheckKernel(const CBlockIndex *pindexPrev, unsigned int nBits, int64_t nTime, const COutPoint &prevout, int64_t* pBlockTime = nullptr);
 
 #endif // PPCOIN_KERNEL_H

@@ -113,8 +113,8 @@ int testCommitmentSum(secp256k1_context *ctx, CAmount nValueIn,
             pBlinds.back(), nonce.begin(),
             ct_exponent, ct_bits, 
             amountsOut[k],
-            NULL, 0,
-            NULL, 0,
+            nullptr, 0,
+            nullptr, 0,
             secp256k1_generator_h));
         
         txout.vchRangeproof.resize(nRangeProofLen);
@@ -316,8 +316,8 @@ BOOST_AUTO_TEST_CASE(ringct_test)
             pBlinds.back(), nonce.begin(),
             ct_exponent, ct_bits, 
             amount_outs[k],
-            NULL, 0,
-            NULL, 0,
+            nullptr, 0,
+            nullptr, 0,
             secp256k1_generator_h));
         
         txout.vchRangeproof.resize(nRangeProofLen);
@@ -414,7 +414,7 @@ BOOST_AUTO_TEST_CASE(ringct_test)
         max_value = 0;
         BOOST_CHECK(1 == secp256k1_rangeproof_verify(ctx, &min_value, &max_value,
             &txout.commitment, txout.vchRangeproof.data(), txout.vchRangeproof.size(),
-            NULL, 0,
+            nullptr, 0,
             secp256k1_generator_h));
 
         CPubKey ephemeral_key(txout.vchNonceCommitment);
@@ -430,7 +430,7 @@ BOOST_AUTO_TEST_CASE(ringct_test)
             blindOut, &amountOut, msg, &msg_size, nonce.begin(),
             &min_value, &max_value, 
             &txout.commitment, txout.vchRangeproof.data(), txout.vchRangeproof.size(),
-            NULL, 0,
+            nullptr, 0,
             secp256k1_generator_h));
     };
     
@@ -545,8 +545,8 @@ int doTest(secp256k1_context *ctx, size_t nInputs, size_t nOutputs, CAmount nFee
             pBlinds.back(), nonce.begin(),
             ct_exponent, ct_bits, 
             amountsOut[k],
-            NULL, 0,
-            NULL, 0,
+            nullptr, 0,
+            nullptr, 0,
             secp256k1_generator_h));
         
         txout.vchRangeproof.resize(nRangeProofLen);
@@ -654,7 +654,7 @@ int doTest(secp256k1_context *ctx, size_t nInputs, size_t nOutputs, CAmount nFee
 
         BOOST_CHECK(1 == secp256k1_rangeproof_verify(ctx, &min_value, &max_value,
             &txout.commitment, txout.vchRangeproof.data(), txout.vchRangeproof.size(),
-            NULL, 0,
+            nullptr, 0,
             secp256k1_generator_h));
         
         CPubKey ephemeral_key(txout.vchNonceCommitment);
@@ -670,7 +670,7 @@ int doTest(secp256k1_context *ctx, size_t nInputs, size_t nOutputs, CAmount nFee
             blindOut, &amountOut, msg, &mlen, nonce.begin(),
             &min_value, &max_value, 
             &txout.commitment, txout.vchRangeproof.data(), txout.vchRangeproof.size(),
-            NULL, 0,
+            nullptr, 0,
             secp256k1_generator_h));
         
         BOOST_CHECK(amountsOut[k] == (CAmount) amountOut);

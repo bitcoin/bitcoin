@@ -827,7 +827,7 @@ UniValue extkey(const JSONRPCRequest &request)
         std::string st = " " + s + " "; // Note the spaces
         std::transform(st.begin(), st.end(), st.begin(), ::tolower);
         static const char *pmodes = " info list gen account key import importaccount setmaster setdefaultaccount deriveaccount options ";
-        if (strstr(pmodes, st.c_str()) != NULL)
+        if (strstr(pmodes, st.c_str()) != nullptr)
         {
             st.erase(std::remove(st.begin(), st.end(), ' '), st.end());
             mode = st;
@@ -1130,7 +1130,7 @@ UniValue extkey(const JSONRPCRequest &request)
             {
                 // Setting timestamp directly
                 errno = 0;
-                nTimeStartScan = strtoimax(sVar.c_str(), NULL, 10);
+                nTimeStartScan = strtoimax(sVar.c_str(), nullptr, 10);
                 if (errno != 0)
                     throw std::runtime_error("Import Account failed - Parse time error.");
             } else
@@ -1612,7 +1612,7 @@ UniValue extkeyimportinternal(const JSONRPCRequest &request, bool fGenesisChain)
             CStoredExtKey *sekGenesisChain = new CStoredExtKey();
             
             if (0 != (rv = pwallet->NewExtKeyFromAccount(&wdb, idNewDefaultAccount,
-                genesisChainLabel, sekGenesisChain, NULL, &genesisChainNo)))
+                genesisChainLabel, sekGenesisChain, nullptr, &genesisChainNo)))
             {
                 delete sekGenesisChain;
                 pwallet->ExtKeyRemoveAccountFromMapsAndFree(sea);
@@ -1828,9 +1828,9 @@ UniValue getnewextaddress(const JSONRPCRequest &request)
     EnsureWalletIsUnlocked(pwallet);
     
     uint32_t nChild = 0;
-    uint32_t *pChild = NULL;
+    uint32_t *pChild = nullptr;
     std::string strLabel;
-    const char *pLabel = NULL;
+    const char *pLabel = nullptr;
     if (request.params.size() > 0)
     {
         strLabel = request.params[0].get_str();
@@ -1902,7 +1902,7 @@ UniValue getnewstealthaddress(const JSONRPCRequest &request)
     CEKAStealthKey akStealth;
     std::string sError;
 
-    if (0 != pwallet->NewStealthKeyFromAccount(sLabel, akStealth, num_prefix_bits, sPrefix_num.empty() ? NULL : sPrefix_num.c_str()))
+    if (0 != pwallet->NewStealthKeyFromAccount(sLabel, akStealth, num_prefix_bits, sPrefix_num.empty() ? nullptr : sPrefix_num.c_str()))
         throw JSONRPCError(RPC_WALLET_ERROR, _("NewStealthKeyFromAccount failed."));
     
     CStealthAddress sxAddr;
@@ -2373,8 +2373,8 @@ UniValue deriverangekeys(const JSONRPCRequest &request)
     {
         LOCK2(cs_main, pwallet->cs_wallet);
         
-        CStoredExtKey *sek = NULL;
-        CExtKeyAccount *sea = NULL;
+        CStoredExtKey *sek = nullptr;
+        CExtKeyAccount *sea = nullptr;
         uint32_t nChain = 0;
         if (sInKey.length() == 0)
         {
@@ -2919,7 +2919,7 @@ UniValue manageaddressbook(const JSONRPCRequest &request)
         if (mabi != pwallet->mapAddressBook.end())
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf(_("Address '%s' is recorded in the address book."), sAddress));
         
-        if (!pwallet->SetAddressBook(NULL, dest, sLabel, sPurpose, vPath, true))
+        if (!pwallet->SetAddressBook(nullptr, dest, sLabel, sPurpose, vPath, true))
             throw JSONRPCError(RPC_WALLET_ERROR, "SetAddressBook failed.");
     } else
     if (sAction == "edit")
@@ -2929,7 +2929,7 @@ UniValue manageaddressbook(const JSONRPCRequest &request)
         if (mabi == pwallet->mapAddressBook.end())
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf(_("Address '%s' is not in the address book."), sAddress));
         
-        if (!pwallet->SetAddressBook(NULL, dest, sLabel,
+        if (!pwallet->SetAddressBook(nullptr, dest, sLabel,
             fHavePurpose ? sPurpose : mabi->second.purpose, mabi->second.vPath, true))
             throw JSONRPCError(RPC_WALLET_ERROR, "SetAddressBook failed.");
         
@@ -3017,7 +3017,7 @@ UniValue manageaddressbook(const JSONRPCRequest &request)
     return result;
 }
 
-extern double GetDifficulty(const CBlockIndex* blockindex = NULL);
+extern double GetDifficulty(const CBlockIndex* blockindex = nullptr);
 UniValue getstakinginfo(const JSONRPCRequest &request)
 {
     CHDWallet *pwallet = GetHDWalletForJSONRPCRequest(request);
@@ -3218,7 +3218,7 @@ UniValue listunspentanon(const JSONRPCRequest &request)
 
     UniValue results(UniValue::VARR);
     std::vector<COutputR> vecOutputs;
-    assert(pwallet != NULL);
+    assert(pwallet != nullptr);
     LOCK2(cs_main, pwallet->cs_wallet);
 
     // TODO: filter on stealth address
@@ -3399,7 +3399,7 @@ UniValue listunspentblind(const JSONRPCRequest &request)
     
     UniValue results(UniValue::VARR);
     std::vector<COutputR> vecOutputs;
-    assert(pwallet != NULL);
+    assert(pwallet != nullptr);
     LOCK2(cs_main, pwallet->cs_wallet);
     
     pwallet->AvailableBlindedCoins(vecOutputs, !include_unsafe, nullptr, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount, nMinDepth, nMaxDepth);

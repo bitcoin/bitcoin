@@ -13,7 +13,7 @@
 #include "util.h"
 
 
-secp256k1_context *secp256k1_ctx_blind = NULL;
+secp256k1_context *secp256k1_ctx_blind = nullptr;
 
 static int CountLeadingZeros(uint64_t nValueIn)
 {
@@ -124,10 +124,10 @@ int GetRangeProofInfo(const std::vector<uint8_t> &vRangeproof, int &rexp, int &r
 
 void ECC_Start_Blinding()
 {
-    assert(secp256k1_ctx_blind == NULL);
+    assert(secp256k1_ctx_blind == nullptr);
 
     secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
-    assert(ctx != NULL);
+    assert(ctx != nullptr);
 
     {
         // Pass in a random blinding seed to the secp256k1 context.
@@ -143,7 +143,7 @@ void ECC_Start_Blinding()
 void ECC_Stop_Blinding()
 {
     secp256k1_context *ctx = secp256k1_ctx_blind;
-    secp256k1_ctx_blind = NULL;
+    secp256k1_ctx_blind = nullptr;
 
     if (ctx)
     {

@@ -362,7 +362,7 @@ public:
     {
         nReserveBalance = 0;
         
-        pEKMaster = NULL;
+        pEKMaster = nullptr;
         
         fUnlockForStakingOnly = false;
         nRCTOutSelectionGroup1 = 2400;
@@ -575,14 +575,14 @@ public:
     int ExtKeyGetIndex(CHDWalletDB *pwdb, CExtKeyAccount *sea, uint32_t &index, bool &fUpdate);
     int ExtKeyGetIndex(CExtKeyAccount *sea, uint32_t &index);
 
-    int NewKeyFromAccount(CHDWalletDB *pwdb, const CKeyID &idAccount, CPubKey &pkOut, bool fInternal, bool fHardened, const char *plabel = NULL);
-    int NewKeyFromAccount(CPubKey &pkOut, bool fInternal=false, bool fHardened=false, const char *plabel = NULL); // wrapper - use default account
+    int NewKeyFromAccount(CHDWalletDB *pwdb, const CKeyID &idAccount, CPubKey &pkOut, bool fInternal, bool fHardened, const char *plabel = nullptr);
+    int NewKeyFromAccount(CPubKey &pkOut, bool fInternal=false, bool fHardened=false, const char *plabel = nullptr); // wrapper - use default account
 
     int NewStealthKeyFromAccount(CHDWalletDB *pwdb, const CKeyID &idAccount, std::string &sLabel, CEKAStealthKey &akStealthOut, uint32_t nPrefixBits, const char *pPrefix);
     int NewStealthKeyFromAccount(std::string &sLabel, CEKAStealthKey &akStealthOut, uint32_t nPrefixBits, const char *pPrefix); // wrapper - use default account
 
-    int NewExtKeyFromAccount(CHDWalletDB *pwdb, const CKeyID &idAccount, std::string &sLabel, CStoredExtKey *sekOut, const char *plabel = NULL, uint32_t *childNo=NULL);
-    int NewExtKeyFromAccount(std::string &sLabel, CStoredExtKey *sekOut, const char *plabel = NULL, uint32_t *childNo=NULL); // wrapper - use default account
+    int NewExtKeyFromAccount(CHDWalletDB *pwdb, const CKeyID &idAccount, std::string &sLabel, CStoredExtKey *sekOut, const char *plabel = nullptr, uint32_t *childNo=nullptr);
+    int NewExtKeyFromAccount(std::string &sLabel, CStoredExtKey *sekOut, const char *plabel=nullptr, uint32_t *childNo=nullptr); // wrapper - use default account
 
     int ExtKeyGetDestination(const CExtKeyPair &ek, CPubKey &pkDest, uint32_t &nKey);
     int ExtKeyUpdateLooseKey(const CExtKeyPair &ek, uint32_t nKey, bool fAddToAddressBook);
@@ -650,7 +650,7 @@ public:
     bool SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CCoinControl *coinControl = nullptr) const;
 
     void AvailableBlindedCoins(std::vector<COutputR>& vCoins, bool fOnlySafe=true, const CCoinControl *coinControl = nullptr, const CAmount& nMinimumAmount = 1, const CAmount& nMaximumAmount = MAX_MONEY, const CAmount& nMinimumSumAmount = MAX_MONEY, const uint64_t& nMaximumCount = 0, const int& nMinDepth = 0, const int& nMaxDepth = 0x7FFFFFFF) const;
-    bool SelectBlindedCoins(const std::vector<COutputR>& vAvailableCoins, const CAmount& nTargetValue, std::vector<std::pair<MapRecords_t::const_iterator,unsigned int> > &setCoinsRet, CAmount &nValueRet, const CCoinControl *coinControl = NULL) const;
+    bool SelectBlindedCoins(const std::vector<COutputR>& vAvailableCoins, const CAmount& nTargetValue, std::vector<std::pair<MapRecords_t::const_iterator,unsigned int> > &setCoinsRet, CAmount &nValueRet, const CCoinControl *coinControl = nullptr) const;
 
     void AvailableAnonCoins(std::vector<COutputR> &vCoins, bool fOnlySafe=true, const CCoinControl *coinControl = nullptr, const CAmount& nMinimumAmount = 1, const CAmount& nMaximumAmount = MAX_MONEY, const CAmount& nMinimumSumAmount = MAX_MONEY, const uint64_t& nMaximumCount = 0, const int& nMinDepth = 0, const int& nMaxDepth = 0x7FFFFFFF) const;
     //bool SelectAnonCoins(const std::vector<COutputR> &vAvailableCoins, const CAmount &nTargetValue, std::vector<std::pair<MapRecords_t::const_iterator,unsigned int> > &setCoinsRet, CAmount &nValueRet, const CCoinControl *coinControl = NULL) const;
@@ -722,7 +722,7 @@ int ToStealthRecipient(CStealthAddress &sx, CAmount nValue, bool fSubtractFeeFro
 class LoopExtKeyCallback
 {
 public:
-    CHDWallet *pwallet = NULL;
+    CHDWallet *pwallet = nullptr;
     
     // NOTE: the key and account instances passed to Process are temporary
     virtual int ProcessKey(CKeyID &id, CStoredExtKey &sek) {return 1;};

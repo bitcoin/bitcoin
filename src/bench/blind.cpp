@@ -42,8 +42,8 @@ static void Blind(benchmark::State& state)
         &vBlind[0], ephemeral_key.begin(),
         ct_exponent, ct_bits, 
         nValue,
-        NULL, 0,
-        NULL, 0,
+        nullptr, 0,
+        nullptr, 0,
         secp256k1_generator_h));
     
     vchRangeproof.resize(nRangeProofLen);
@@ -54,7 +54,7 @@ static void Blind(benchmark::State& state)
     {
         assert(1 == secp256k1_rangeproof_verify(secp256k1_ctx_blind, &min_value, &max_value,
             &commitment, vchRangeproof.data(), vchRangeproof.size(),
-            NULL, 0, secp256k1_generator_h));
+            nullptr, 0, secp256k1_generator_h));
     };
     
     ECC_Stop_Blinding();

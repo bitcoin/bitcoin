@@ -118,9 +118,8 @@ bool IsDust(const CTxOutBase *txout, const CFeeRate& dustRelayFee)
 bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType, const bool witnessEnabled)
 {
     const Consensus::Params& consensusParams = Params().GetConsensus();
-    int nBestHeight = chainActive.Height();
     
-    if (nBestHeight >= consensusParams.OpIsCoinstakeHeight)
+    if (chainActive.Time() >= consensusParams.OpIsCoinstakeTime)
     {
         // TODO: better method
         if (HasIsCoinstakeOp(scriptPubKey))
@@ -136,6 +135,7 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType, const bool w
     std::vector<std::vector<unsigned char> > vSolutions;
     if (!Solver(scriptPubKey, whichType, vSolutions))
         return false;
+
 
     if (whichType == TX_MULTISIG)
     {
@@ -194,6 +194,7 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason, const bool witnes
 
     unsigned int nDataOut = 0;
     txnouttype whichType;
+    
     for (const CTxOut& txout : tx.vout) {
         if (!::IsStandard(txout.scriptPubKey, whichType, witnessEnabled)) {
             reason = "scriptpubkey";
@@ -206,6 +207,28 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason, const bool witnes
             reason = "bare-multisig";
             return false;
         } else if (IsDust(txout, ::dustRelayFee)) {
+            reason = "dust";
+            return false;
+        }
+    }
+
+    for (const auto txout : tx.vpout) {
+        const CTxOutBase *p = txout.get();
+        
+        if (!p->IsType(OUTPUT_STANDARD) && !p->IsType(OUTPUT_CT))
+            continue;
+        
+        if (!::IsStandard(*p->GetPScriptPubKey(), whichType, witnessEnabled)) {
+            reason = "scriptpubkey";
+            return false;
+        }
+
+        if (whichType == TX_NULL_DATA)
+            nDataOut++;
+        else if ((whichType == TX_MULTISIG) && (!fIsBareMultisigStd)) {
+            reason = "bare-multisig";
+            return false;
+        } else if (IsDust(p, ::dustRelayFee)) {
             reason = "dust";
             return false;
         }

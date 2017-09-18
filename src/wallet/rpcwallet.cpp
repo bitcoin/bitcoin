@@ -3321,7 +3321,7 @@ UniValue listunspent(const JSONRPCRequest& request)
 
     UniValue results(UniValue::VARR);
     std::vector<COutput> vecOutputs;
-    assert(pwallet != NULL);
+    assert(pwallet != nullptr);
     LOCK2(cs_main, pwallet->cs_wallet);
 
     pwallet->AvailableCoins(vecOutputs, !include_unsafe, nullptr, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount, nMinDepth, nMaxDepth, fIncludeImmature);

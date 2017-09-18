@@ -289,17 +289,17 @@ public:
     
     virtual const CScript *GetPScriptPubKey() const
     {
-        return NULL;
+        return nullptr;
     };
     
     virtual secp256k1_pedersen_commitment *GetPCommitment()
     {
-        return NULL;
+        return nullptr;
     };
     
     virtual std::vector<uint8_t> *GetPRangeproof()
     {
-        return NULL;
+        return nullptr;
     };
     
     

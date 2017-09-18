@@ -227,14 +227,14 @@ public:
     Dbc *GetTxnCursor()
     {
         if (!batch.pdb || !batch.activeTxn)
-            return NULL;
+            return nullptr;
 
         DbTxn *ptxnid = batch.activeTxn; // call TxnBegin first
 
-        Dbc *pcursor = NULL;
+        Dbc *pcursor = nullptr;
         int ret = batch.pdb->cursor(ptxnid, &pcursor, 0);
         if (ret != 0)
-            return NULL;
+            return nullptr;
         return pcursor;
     }
     
@@ -259,7 +259,7 @@ public:
         Dbt datValue(&ssValue[0], ssValue.size());
 
         // Write
-        int ret = pcursor->put(NULL, &datValue, DB_CURRENT);
+        int ret = pcursor->put(nullptr, &datValue, DB_CURRENT);
 
         if (ret != 0)
         {
@@ -294,7 +294,7 @@ public:
         int ret = pcursor->get(&datKey, &datValue, fFlags);
         if (ret != 0)
             return ret;
-        else if (datKey.get_data() == NULL || datValue.get_data() == NULL)
+        else if (datKey.get_data() == nullptr || datValue.get_data() == nullptr)
             return 99999;
 
         // Convert to streams
@@ -333,7 +333,7 @@ public:
         int ret = pcursor->get(&datKey, &datValue, fFlags);
         if (ret != 0)
             return ret;
-        if (datKey.get_data() == NULL)
+        if (datKey.get_data() == nullptr)
             return 99999;
 
         // Convert to streams

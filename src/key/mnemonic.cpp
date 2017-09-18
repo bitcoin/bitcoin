@@ -22,7 +22,7 @@
 
 static const unsigned char *mnLanguages[] =
 {
-    NULL,
+    nullptr,
     english_txt,
     french_txt,
     japanese_txt,
@@ -44,7 +44,7 @@ static const uint32_t mnLanguageLens[] =
 
 const char *mnLanguagesDesc[WLL_MAX] =
 {
-    NULL,
+    nullptr,
     "English",
     "French",
     "Japanese",

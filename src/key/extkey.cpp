@@ -762,7 +762,7 @@ bool CExtKeyAccount::SaveKey(const CKeyID &id, CEKAKey &keyIn)
     
     CStoredExtKey *pc;
     if (!IsHardened(keyIn.nKey)
-        && (pc = GetChain(keyIn.nParent)) != NULL)
+        && (pc = GetChain(keyIn.nParent)) != nullptr)
     {
         // TODO: gaps?
         if (keyIn.nKey == pc->nGenerated) 
@@ -800,7 +800,7 @@ bool CExtKeyAccount::SaveKey(const CKeyID &id, CEKAKey &keyIn)
         
         // Check match
         CStoredExtKey *pa;
-        if ((pa = GetChain(keyIn.nParent)) != NULL)
+        if ((pa = GetChain(keyIn.nParent)) != nullptr)
         {
             if ((keyIn.nKey >> 31) == 1
                 && pa->fLocked == 1)

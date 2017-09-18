@@ -16,7 +16,7 @@
 #include <cmath>
 #include <secp256k1.h>
 
-secp256k1_context *secp256k1_ctx_stealth = NULL;
+secp256k1_context *secp256k1_ctx_stealth = nullptr;
 
 bool CStealthAddress::SetEncoded(const std::string &encodedAddress)
 {
@@ -408,10 +408,10 @@ bool ExtractStealthPrefix(const char *pPrefix, uint32_t &nPrefix)
 
 void ECC_Start_Stealth()
 {
-    assert(secp256k1_ctx_stealth == NULL);
+    assert(secp256k1_ctx_stealth == nullptr);
 
     secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_VERIFY);
-    assert(ctx != NULL);
+    assert(ctx != nullptr);
 
     secp256k1_ctx_stealth = ctx;
 };
@@ -419,7 +419,7 @@ void ECC_Start_Stealth()
 void ECC_Stop_Stealth()
 {
     secp256k1_context *ctx = secp256k1_ctx_stealth;
-    secp256k1_ctx_stealth = NULL;
+    secp256k1_ctx_stealth = nullptr;
 
     if (ctx)
     {

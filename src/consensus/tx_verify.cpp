@@ -215,7 +215,7 @@ bool CheckBlindOutput(CValidationState &state, const CTxOutCT *p)
     uint64_t min_value, max_value;
     int rv = secp256k1_rangeproof_verify(secp256k1_ctx_blind, &min_value, &max_value,
         &p->commitment, p->vRangeproof.data(), p->vRangeproof.size(),
-        NULL, 0,
+        nullptr, 0,
         secp256k1_generator_h);
     
     if (LogAcceptCategory(BCLog::RINGCT))
@@ -246,7 +246,7 @@ bool CheckAnonOutput(CValidationState &state, const CTxOutRingCT *p)
     uint64_t min_value, max_value;
     int rv = secp256k1_rangeproof_verify(secp256k1_ctx_blind, &min_value, &max_value,
         &p->commitment, p->vRangeproof.data(), p->vRangeproof.size(),
-        NULL, 0,
+        nullptr, 0,
         secp256k1_generator_h);
     
     if (LogAcceptCategory(BCLog::RINGCT))

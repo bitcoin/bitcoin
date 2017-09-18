@@ -637,7 +637,7 @@ public:
         for (it = vExtKeys.begin(); it != vExtKeys.end(); ++it)
         {
             delete *it;
-            *it = NULL;
+            *it = nullptr;
         };
         return 0;
     };
@@ -684,7 +684,7 @@ public:
     CStoredExtKey *GetChain(uint32_t nChain) const
     {
         if (nChain >= vExtKeys.size())
-            return NULL;
+            return nullptr;
         return vExtKeys[nChain];
     };
     
@@ -706,7 +706,7 @@ public:
     CStoredExtKey *ChainAccount()
     {
         if (vExtKeys.size() < 1)
-            return NULL;
+            return nullptr;
         return vExtKeys[0];
     };
     

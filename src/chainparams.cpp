@@ -38,7 +38,7 @@ int64_t CChainParams::GetProofOfStakeReward(const CBlockIndex *pindexPrev, int64
 
     nSubsidy = (pindexPrev->nMoneySupply / COIN) * GetCoinYearReward(pindexPrev->nTime) / (365 * 24 * (60 * 60 / nTargetSpacing));
 
-    if (LogAcceptCategory(BCLog::HDWALLET) && gArgs.GetBoolArg("-printcreation", false))
+    if (LogAcceptCategory(BCLog::POS) && gArgs.GetBoolArg("-printcreation", false))
         LogPrintf("GetProofOfStakeReward(): create=%s\n", FormatMoney(nSubsidy).c_str());
 
     return nSubsidy + nFees;
@@ -444,7 +444,7 @@ public:
         consensus.BIP34Height = 0;
         consensus.BIP65Height = 0;
         consensus.BIP66Height = 0;
-        consensus.OpIsCoinstakeHeight = 1000000; // TODO: lower
+        consensus.OpIsCoinstakeTime = 1544572800; // 2018-12-12, TODO: lower
         
         
         consensus.powLimit = uint256S("000000000000bfffffffffffffffffffffffffffffffffffffffffffffffffff");
@@ -510,9 +510,13 @@ public:
         vSeeds.emplace_back("mainnet-seed.particl.io", true);
         vSeeds.emplace_back("dnsseed-mainnet.particl.io", true);
         vSeeds.emplace_back("mainnet.particl.io", true);
-        
-        
-        vDevFundSettings.push_back(std::make_pair(0, DevFundSettings("RJAPhgckEgRGVPZa9WoGSWW24spskSfLTQ", 10, 60)));
+
+
+        vDevFundSettings.emplace_back(0,
+            DevFundSettings("RJAPhgckEgRGVPZa9WoGSWW24spskSfLTQ", 10, 60));
+        vDevFundSettings.emplace_back(consensus.OpIsCoinstakeTime,
+            DevFundSettings("RBiiQBnQsVPPQkUaJVQTjsZM9K2xMKozST", 10, 60));
+
 
         base58Prefixes[PUBKEY_ADDRESS]     = {0x38}; // P
         base58Prefixes[SCRIPT_ADDRESS]     = {0x3c};
@@ -555,7 +559,7 @@ public:
             1504165008, // * UNIX timestamp of last known number of transactions
             34677,      // * total number of transactions between genesis and that timestamp
                         //   (the tx=... number in the SetBestChain debug.log lines)
-            0.1         // * estimated number of transactions per second after that timestamp
+            0.04        // * estimated number of transactions per second after that timestamp
         };
     }
     
@@ -584,7 +588,7 @@ public:
         consensus.BIP34Height = 0;
         consensus.BIP65Height = 0;
         consensus.BIP66Height = 0;
-        consensus.OpIsCoinstakeHeight = 0;
+        consensus.OpIsCoinstakeTime = 0;
         
         consensus.powLimit = uint256S("000000000005ffffffffffffffffffffffffffffffffffffffffffffffffffff");
         
@@ -708,7 +712,7 @@ public:
         consensus.BIP34Hash = uint256();
         consensus.BIP65Height = 1351; // BIP65 activated on regtest (Used in rpc activation tests)
         consensus.BIP66Height = 1251; // BIP66 activated on regtest (Used in rpc activation tests)
-        consensus.OpIsCoinstakeHeight = 0;
+        consensus.OpIsCoinstakeTime = 0;
         
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks

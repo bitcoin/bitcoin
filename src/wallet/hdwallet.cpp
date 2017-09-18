@@ -77,11 +77,11 @@ COutputRecord *CTransactionRecord::GetOutput(int n)
     for (auto &r : vout)
     {
         if (r.n > n)
-            return NULL;
+            return nullptr;
         if (r.n == n)
             return &r;
     };
-    return NULL;
+    return nullptr;
 };
 
 const COutputRecord *CTransactionRecord::GetOutput(int n) const
@@ -90,11 +90,11 @@ const COutputRecord *CTransactionRecord::GetOutput(int n) const
     for (auto &r : vout)
     {
         if (r.n > n)
-            return NULL;
+            return nullptr;
         if (r.n == n)
             return &r;
     };
-    return NULL;
+    return nullptr;
 };
 
 const COutputRecord *CTransactionRecord::GetChangeOutput() const
@@ -104,7 +104,7 @@ const COutputRecord *CTransactionRecord::GetChangeOutput() const
         if (r.nFlags & ORF_CHANGE)
             return &r;
     };
-    return NULL;
+    return nullptr;
 };
 
 
@@ -766,7 +766,7 @@ bool CHDWallet::EncryptWallet(const SecureString &strWalletPassphrase)
             if (!pwalletdbEncryption->TxnBegin())
             {
                 delete pwalletdbEncryption;
-                pwalletdbEncryption = NULL;
+                pwalletdbEncryption = nullptr;
                 return false;
             };
             pwalletdbEncryption->WriteMasterKey(nMasterKeyMaxID, kMasterKey);
@@ -808,7 +808,7 @@ bool CHDWallet::EncryptWallet(const SecureString &strWalletPassphrase)
             }
 
             delete pwalletdbEncryption;
-            pwalletdbEncryption = NULL;
+            pwalletdbEncryption = nullptr;
         }
 
         if (!Lock())
@@ -941,7 +941,7 @@ bool CHDWallet::HaveKey(const CKeyID &address, CEKAKey &ak, CExtKeyAccount *&pa)
         };
     };
     
-    pa = NULL;
+    pa = nullptr;
     return CCryptoKeyStore::HaveKey(address);
 };
 
@@ -951,7 +951,7 @@ bool CHDWallet::HaveKey(const CKeyID &address) const
     LOCK(cs_wallet);
     
     CEKAKey ak;
-    CExtKeyAccount *pa = NULL;
+    CExtKeyAccount *pa = nullptr;
     return HaveKey(address, ak, pa);
 };
 
@@ -995,7 +995,7 @@ int CHDWallet::GetKey(const CKeyID &address, CKey &keyOut, CExtKeyAccount *&pa, 
         return rv;
     };
     
-    pa = NULL;
+    pa = nullptr;
     return CCryptoKeyStore::GetKey(address, keyOut);
 };
 
@@ -1029,7 +1029,7 @@ bool CHDWallet::GetKeyFromPool(CPubKey &key)
 {
     
     // return a key from the internal chain
-    return 0 == NewKeyFromAccount(key, true, false, NULL);
+    return 0 == NewKeyFromAccount(key, true, false, nullptr);
 };
 
 bool CHDWallet::HaveStealthAddress(const CStealthAddress &sxAddr) const
@@ -1732,7 +1732,7 @@ bool CHDWallet::IsTrusted(const uint256 &txhash, const uint256 &blockhash, int n
         };
         
         const CWalletTx *parent = GetWalletTx(txin.prevout.hash);
-        if (parent == NULL)
+        if (parent == nullptr)
             return false;
         
         const CTxOutBase *parentOut = parent->tx->vpout[txin.prevout.n].get();
@@ -2086,7 +2086,7 @@ int CHDWallet::GetChangeAddress(CPubKey &pk)
     // Don't promote the key to the main map, that will happen when the transaction is processed.
 
     CStoredExtKey *pc;
-    if ((pc = mi->second->ChainInternal()) == NULL)
+    if ((pc = mi->second->ChainInternal()) == nullptr)
         return errorN(1, "%s Unknown chain.", __func__);
 
     
@@ -2560,7 +2560,7 @@ int CHDWallet::AddCTData(CTxOutBase *txout, CTempRecipient &r, std::string &sErr
         ct_exponent, ct_bits, 
         nValue,
         (const unsigned char*) message, mlen,
-        NULL, 0,
+        nullptr, 0,
         secp256k1_generator_h))
         return errorN(1, sError, __func__, "secp256k1_rangeproof_sign failed.");
     
@@ -3357,7 +3357,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
     
     CExtKeyAccount *sea;
     CStoredExtKey *pcC;
-    if (0 != GetDefaultConfidentialChain(NULL, sea, pcC))
+    if (0 != GetDefaultConfidentialChain(nullptr, sea, pcC))
         return errorN(1, sError, __func__, _("Could not get confidential chain from account.").c_str());
     
     uint32_t nLastHardened = pcC->nHGenerated;
@@ -3811,7 +3811,7 @@ int CHDWallet::AddBlindedInputs(CWalletTx &wtx, CTransactionRecord &rtx,
     
     CExtKeyAccount *sea;
     CStoredExtKey *pcC;
-    if (0 != GetDefaultConfidentialChain(NULL, sea, pcC))
+    if (0 != GetDefaultConfidentialChain(nullptr, sea, pcC))
         return errorN(1, sError, __func__, _("Could not get confidential chain from account.").c_str());
     
     uint32_t nLastHardened = pcC->nHGenerated;
@@ -4552,7 +4552,7 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
     
     CExtKeyAccount *sea;
     CStoredExtKey *pcC;
-    if (0 != GetDefaultConfidentialChain(NULL, sea, pcC))
+    if (0 != GetDefaultConfidentialChain(nullptr, sea, pcC))
         return errorN(1, sError, __func__, _("Could not get confidential chain from account.").c_str());
     
     uint32_t nLastHardened = pcC->nHGenerated;
@@ -5736,7 +5736,7 @@ int CHDWallet::ExtKeyCreateInitial(CHDWalletDB *pwdb)
 
     CEKAStealthKey aks;
     std::string strLbl = "Default Stealth Address";
-    if (0 != NewStealthKeyFromAccount(pwdb, idDefaultAccount, strLbl, aks, 0, NULL))
+    if (0 != NewStealthKeyFromAccount(pwdb, idDefaultAccount, strLbl, aks, 0, nullptr))
     {
         pwdb->TxnAbort();
         return errorN(1, "NewStealthKeyFromAccount failed.");
@@ -5790,14 +5790,14 @@ int CHDWallet::ExtKeyLoadMaster()
     if (!wdb.ReadExtKey(idMaster, *pEKMaster))
     {
         delete pEKMaster;
-        pEKMaster = NULL;
+        pEKMaster = nullptr;
         return errorN(1, "ReadExtKey failed to read master ext key.");
     };
 
     if (!pEKMaster->kp.IsValidP()) // wallet could be locked, check pk
     {
         delete pEKMaster;
-        pEKMaster = NULL;
+        pEKMaster = nullptr;
         return errorN(1, " Loaded master ext key is invalid %s.", pEKMaster->GetIDString58().c_str());
     };
 
@@ -5901,7 +5901,7 @@ int CHDWallet::ExtKeyLoadAccounts()
             {
                 addr.Set(idAccount, CChainParams::EXT_ACC_HASH);
                 LogPrintf("WARNING: Could not read key %d of account %s\n", i, addr.ToString());
-                sea->vExtKeys[i] = NULL;
+                sea->vExtKeys[i] = nullptr;
                 delete sek;
             };
         };
@@ -6257,7 +6257,7 @@ int CHDWallet::ExtKeySaveKey(CHDWalletDB *pwdb, CExtKeyAccount *sea, const CKeyI
         
         CStoredExtKey *pc;
         if (!IsHardened(ak.nKey)
-            && (pc = sea->GetChain(nChain)) != NULL)
+            && (pc = sea->GetChain(nChain)) != nullptr)
         {
             if (ak.nKey == pc->nGenerated)
             {
@@ -6528,7 +6528,7 @@ int CHDWallet::NewKeyFromAccount(CHDWalletDB *pwdb, const CKeyID &idAccount, CPu
         return errorN(2, "%s Unknown account.", __func__);
 
     CExtKeyAccount *sea = mi->second;
-    CStoredExtKey *sek = NULL;
+    CStoredExtKey *sek = nullptr;
 
     uint32_t nExtKey = fInternal ? sea->nActiveInternal : sea->nActiveExternal;
 
@@ -6976,7 +6976,7 @@ int CHDWallet::ScanChainFromTime(int64_t nTimeStartScan)
 
     CBlockIndex *pnext, *pindex = chainActive.Genesis();
 
-    if (pindex == NULL)
+    if (pindex == nullptr)
         return errorN(1, "%s: Genesis Block is not set.", __func__);
 
     while (pindex && pindex->nTime < nTimeStartScan
@@ -7003,7 +7003,7 @@ int CHDWallet::ScanChainFromHeight(int nHeight)
 
     CBlockIndex *pnext, *pindex = chainActive.Genesis();
 
-    if (pindex == NULL)
+    if (pindex == nullptr)
         return errorN(1, "%s: Genesis Block is not set.", __func__);
 
     while (pindex && pindex->nHeight < nHeight
@@ -7185,7 +7185,7 @@ bool CHDWallet::CommitTransaction(CWalletTx &wtxNew, CTransactionRecord &rtx,
         
         LogPrintf("CommitTransaction:\n%s", wtxNew.tx->ToString());
         
-        AddToRecord(rtx, *wtxNew.tx, NULL, -1);
+        AddToRecord(rtx, *wtxNew.tx, nullptr, -1);
         
         // Track how many getdata requests our transaction gets
         mapRequestCount[wtxNew.GetHash()] = 0;
@@ -7474,10 +7474,10 @@ bool CHDWallet::ProcessLockedStealthOutputs()
         if (!AddKeyPubKey(sSpendR, pk))
         {
             LogPrintf("%s: Error: AddKeyPubKey failed.\n", __func__);
-            pwalletdbEncryption = NULL;
+            pwalletdbEncryption = nullptr;
             continue;
         };
-        pwalletdbEncryption = NULL;
+        pwalletdbEncryption = nullptr;
         
         nExpanded++;
         
@@ -7571,7 +7571,7 @@ bool CHDWallet::ProcessLockedAnonOutputs()
         switch (txout->nVersion)
         {
             case OUTPUT_CT:
-                if (OwnBlindOut(&wdb, op.hash, (CTxOutCT*)txout.get(), NULL, n, *pout, stx, fUpdated)
+                if (OwnBlindOut(&wdb, op.hash, (CTxOutCT*)txout.get(), nullptr, n, *pout, stx, fUpdated)
                     && !fHave)
                 {
                     fUpdated = true;
@@ -7580,7 +7580,7 @@ bool CHDWallet::ProcessLockedAnonOutputs()
                 };
                 break;
             case OUTPUT_RINGCT:
-                if (OwnAnonOut(&wdb, op.hash, (CTxOutRingCT*)txout.get(), NULL, n, *pout, stx, fUpdated)
+                if (OwnAnonOut(&wdb, op.hash, (CTxOutRingCT*)txout.get(), nullptr, n, *pout, stx, fUpdated)
                     && !fHave)
                 {
                     fUpdated = true;
@@ -8215,7 +8215,7 @@ CWalletTx *CHDWallet::GetTempWalletTx(const uint256& hash)
     if (itr != mapTempWallet.end())
         return &(itr->second);
     
-    return NULL;
+    return nullptr;
 };
 
 const CWalletTx *CHDWallet::GetWalletTx(const uint256 &hash) const
@@ -8237,7 +8237,7 @@ CWalletTx *CHDWallet::GetWalletTx(const uint256& hash)
     
     MapWallet_t::iterator it = mapWallet.find(hash);
     if (it == mapWallet.end())
-        return NULL;
+        return nullptr;
     return &(it->second);
 };
 
@@ -8288,7 +8288,7 @@ int CHDWallet::OwnStandardOut(const CTxOutStandard *pout, const CTxOutData *pdat
     
     CKeyID idk;
     CEKAKey ak;
-    CExtKeyAccount *pa = NULL;
+    CExtKeyAccount *pa = nullptr;
     bool isInvalid;
     if (IsMine(pout->scriptPubKey, idk, ak, pa, isInvalid) != ISMINE_SPENDABLE)
     {
@@ -8328,7 +8328,7 @@ int CHDWallet::OwnBlindOut(CHDWalletDB *pwdb, const uint256 &txhash, const CTxOu
     
     CKeyID idk;
     CEKAKey ak;
-    CExtKeyAccount *pa = NULL;
+    CExtKeyAccount *pa = nullptr;
     bool isInvalid;
     if (IsMine(pout->scriptPubKey, idk, ak, pa, isInvalid) != ISMINE_SPENDABLE)
         return 0;
@@ -8381,7 +8381,7 @@ int CHDWallet::OwnBlindOut(CHDWalletDB *pwdb, const uint256 &txhash, const CTxOu
         blindOut, &amountOut, msg, &mlen, nonce.begin(),
         &min_value, &max_value, 
         &pout->commitment, pout->vRangeproof.data(), pout->vRangeproof.size(),
-        NULL, 0,
+        nullptr, 0,
         secp256k1_generator_h))
         return errorN(0, "%s: secp256k1_rangeproof_rewind failed.", __func__);
     
@@ -8410,7 +8410,7 @@ int CHDWallet::OwnAnonOut(CHDWalletDB *pwdb, const uint256 &txhash, const CTxOut
     CKey key;
     CKeyID idStealth;
     CEKAKey ak;
-    CExtKeyAccount *pa = NULL;
+    CExtKeyAccount *pa = nullptr;
     if (IsLocked())
     {
         if (!HaveKey(idk, ak, pa))
@@ -8461,7 +8461,7 @@ int CHDWallet::OwnAnonOut(CHDWalletDB *pwdb, const uint256 &txhash, const CTxOut
         blindOut, &amountOut, msg, &mlen, nonce.begin(),
         &min_value, &max_value, 
         &pout->commitment, pout->vRangeproof.data(), pout->vRangeproof.size(),
-        NULL, 0,
+        nullptr, 0,
         secp256k1_generator_h))
         return errorN(0, "%s: secp256k1_rangeproof_rewind failed.", __func__);
     
@@ -8639,8 +8639,8 @@ bool CHDWallet::AddToRecord(CTransactionRecord &rtxIn, const CTransaction &tx,
         };
     };
     
-    CExtKeyAccount *seaC = NULL;
-    CStoredExtKey *pcC = NULL;
+    CExtKeyAccount *seaC = nullptr;
+    CStoredExtKey *pcC = nullptr;
     std::vector<uint8_t> vEphemPath;
     uint32_t nCTStart = 0;
     mapRTxValue_t::iterator mvi = rtx.mapValue.find(RTXVT_EPHEM_PATH);
@@ -8695,7 +8695,7 @@ bool CHDWallet::AddToRecord(CTransactionRecord &rtxIn, const CTransaction &tx,
         {
             case OUTPUT_STANDARD:
                 {
-                CTxOutData *pdata = NULL;
+                CTxOutData *pdata = nullptr;
                 if (i < tx.vpout.size()-1)
                 {
                     if (tx.vpout[i+1]->nVersion == OUTPUT_DATA)
@@ -9908,7 +9908,7 @@ void CHDWallet::SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator> r
     // So: find smallest nOrderPos:
 
     int nMinOrderPos = std::numeric_limits<int>::max();
-    const CWalletTx* copyFrom = NULL;
+    const CWalletTx* copyFrom = nullptr;
     for (TxSpends::iterator it = range.first; it != range.second; ++it)
     {
         const uint256& hash = it->second;
@@ -10720,7 +10720,7 @@ int LoopExtAccountsInDB(CHDWallet *pwallet, bool fInactive, LoopExtKeyCallback &
             {
                 addr.Set(idAccount, CChainParams::EXT_ACC_HASH);
                 LogPrintf("WARNING: Could not read key %d of account %s\n", i, addr.ToString());
-                sea.vExtKeys[i] = NULL;
+                sea.vExtKeys[i] = nullptr;
                 delete sek;
             };
         };
