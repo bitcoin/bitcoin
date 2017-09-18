@@ -1262,7 +1262,7 @@ void EscrowRelease(const string& node, const string& role, const string& guid ,c
 		const string& txidStr = find_value(utxoObj.get_obj(), "txid").get_str();
 		const int& nOut = find_value(utxoObj.get_obj(), "outputIndex").get_int();
 		CAmount satoshis = find_value(utxoObj.get_obj(), "satoshis").get_int64();
-		inputStr += "{\\\"txid\\\":\\\"" + txidStr + "\\\",\\\"vout\\\":" + boost::lexical_cast<string>(nOut) + ",\\\"satoshis\\\":" + boost::lexical_cast<string>(ValueFromAmount(satoshis)) + "}";
+		inputStr += "{\\\"txid\\\":\\\"" + txidStr + "\\\",\\\"vout\\\":" + boost::lexical_cast<string>(nOut) + ",\\\"satoshis\\\":" + boost::lexical_cast<string>(ValueFromAmount(satoshis).get_real()) + "}";
 	}
 	inputStr += "]\"";
 	
@@ -1296,7 +1296,7 @@ void EscrowRefund(const string& node, const string& role, const string& guid, co
 		const string& txidStr = find_value(utxoObj.get_obj(), "txid").get_str();
 		const int& nOut = find_value(utxoObj.get_obj(), "outputIndex").get_int();
 		CAmount satoshis = find_value(utxoObj.get_obj(), "satoshis").get_int64();
-		inputStr += "{\\\"txid\\\":\\\"" + txidStr + "\\\",\\\"vout\\\":" + boost::lexical_cast<string>(nOut) + ",\\\"satoshis\\\":" + boost::lexical_cast<string>(ValueFromAmount(satoshis)) + "}";
+		inputStr += "{\\\"txid\\\":\\\"" + txidStr + "\\\",\\\"vout\\\":" + boost::lexical_cast<string>(nOut) + ",\\\"satoshis\\\":" + boost::lexical_cast<string>(ValueFromAmount(satoshis).get_real()) + "}";
 	}
 	inputStr += "]\"";
 
@@ -1339,7 +1339,7 @@ void EscrowClaimRefund(const string& node, const string& guid, const string& wit
 		const string& txidStr = find_value(utxoObj.get_obj(), "txid").get_str();
 		const int& nOut = find_value(utxoObj.get_obj(), "outputIndex").get_int();
 		CAmount satoshis = find_value(utxoObj.get_obj(), "satoshis").get_int64();
-		inputStr += "{\\\"txid\\\":\\\"" + txidStr + "\\\",\\\"vout\\\":" + boost::lexical_cast<string>(nOut) + ",\\\"satoshis\\\":" + boost::lexical_cast<string>(ValueFromAmount(satoshis)) + "}";
+		inputStr += "{\\\"txid\\\":\\\"" + txidStr + "\\\",\\\"vout\\\":" + boost::lexical_cast<string>(nOut) + ",\\\"satoshis\\\":" + boost::lexical_cast<string>(ValueFromAmount(satoshis).get_real()) + "}";
 	}
 	inputStr += "]\"";
 
@@ -1450,7 +1450,7 @@ void EscrowClaimRelease(const string& node, const string& guid, const string &wi
 		const string& txidStr = find_value(utxoObj.get_obj(), "txid").get_str();
 		const int& nOut = find_value(utxoObj.get_obj(), "outputIndex").get_int();
 		CAmount satoshis = find_value(utxoObj.get_obj(), "satoshis").get_int64();
-		inputStr += "{\\\"txid\\\":\\\"" + txidStr + "\\\",\\\"vout\\\":" + boost::lexical_cast<string>(nOut) + ",\\\"satoshis\\\":" + boost::lexical_cast<string>(ValueFromAmount(satoshis)) + "}";
+		inputStr += "{\\\"txid\\\":\\\"" + txidStr + "\\\",\\\"vout\\\":" + boost::lexical_cast<string>(nOut) + ",\\\"satoshis\\\":" + boost::lexical_cast<string>(ValueFromAmount(satoshis).get_real()) + "}";
 	}
 	inputStr += "]\"";
 	// get balances before
