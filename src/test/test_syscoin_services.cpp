@@ -1252,7 +1252,7 @@ void EscrowRelease(const string& node, const string& role, const string& guid ,c
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + guid));
 	string offer = find_value(r.get_obj(), "offer").get_str();
 	string escrowaddress = find_value(r.get_obj(), "escrowaddress").get_str();
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "getaddressutxos '{\\\"addresses\\\": [\\\"" + escrowaddress + "\\\"]}'"));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "getaddressutxos \"{\\\"addresses\\\": [\\\"" + escrowaddress + "\\\"]}\""));
 	UniValue addressUTXOsArray = r.get_array();
 	// "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0,\\\"satoshis\\\":10000}]\"
 	string inputStr = "\"[";
@@ -1286,7 +1286,7 @@ void EscrowRefund(const string& node, const string& role, const string& guid, co
 	string offer = find_value(r.get_obj(), "offer").get_str();
 	int nQty = find_value(r.get_obj(), "quantity").get_int();
 	string escrowaddress = find_value(r.get_obj(), "escrowaddress").get_str();
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "getaddressutxos '{\\\"addresses\\\": [\\\"" + escrowaddress + "\\\"]}'"));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "getaddressutxos \"{\\\"addresses\\\": [\\\"" + escrowaddress + "\\\"]}\""));
 	UniValue addressUTXOsArray = r.get_array();
 	// "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0,\\\"satoshis\\\":10000}]\"
 	string inputStr = "\"[";
@@ -1329,7 +1329,7 @@ void EscrowClaimRefund(const string& node, const string& guid, const string& wit
 	string rootselleralias = find_value(r.get_obj(), "offerlink_seller").get_str();
 	int nQtyOfferBefore = find_value(r.get_obj(), "quantity").get_int();
 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "getaddressutxos '{\\\"addresses\\\": [\\\"" + escrowaddress + "\\\"]}'"));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "getaddressutxos \"{\\\"addresses\\\": [\\\"" + escrowaddress + "\\\"]}\""));
 	UniValue addressUTXOsArray = r.get_array();
 	// "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0,\\\"satoshis\\\":10000}]\"
 	string inputStr = "\"[";
@@ -1440,7 +1440,7 @@ void EscrowClaimRelease(const string& node, const string& guid, const string &wi
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offer));
 	string rootselleralias = find_value(r.get_obj(), "offerlink_seller").get_str();
 	int nQtyOfferBefore = find_value(r.get_obj(), "quantity").get_int();
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "getaddressutxos '{\\\"addresses\\\": [\\\"" + escrowaddress + "\\\"]}'"));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "getaddressutxos \"{\\\"addresses\\\": [\\\"" + escrowaddress + "\\\"]}\""));
 	UniValue addressUTXOsArray = r.get_array();
 	// "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0,\\\"satoshis\\\":10000}]\"
 	string inputStr = "\"[";
