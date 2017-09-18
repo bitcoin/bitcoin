@@ -212,24 +212,11 @@ bool BlockAssembler::TestPackage(uint64_t packageSize, unsigned int packageSigOp
 
 // Perform transaction-level checks before adding to block:
 // - transaction finality (locktime)
-// - premature witness (in case segwit transactions are added to mempool before
-//   segwit activation)
-// - serialized size (in case -blockmaxsize is in use)
 bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries& package)
 {
-    uint64_t nPotentialBlockSize = nBlockSize; // only used with fNeedSizeAccounting
     BOOST_FOREACH (const CTxMemPool::txiter it, package) {
         if (!IsFinalTx(it->GetTx(), nHeight, nLockTimeCutoff))
             return false;
-        if (!fIncludeWitness && !it->GetTx().wit.IsNull())
-            return false;
-        if (fNeedSizeAccounting) {
-            uint64_t nTxSize = ::GetSerializeSize(it->GetTx(), SER_NETWORK, PROTOCOL_VERSION);
-            if (nPotentialBlockSize + nTxSize >= nBlockMaxSize) {
-                return false;
-            }
-            nPotentialBlockSize += nTxSize;
-        }
     }
     return true;
 }
@@ -421,7 +408,7 @@ void BlockAssembler::addPackageTxs()
             packageSigOps = modit->nSigOpCountWithAncestors;
         }
 
-        if (packageFees < ::minRelayTxFee.GetFee(packageSize) && nBlockSize >= nBlockMinSize) {
+        if (packageFees < ::minRelayTxFee.GetFee(packageSize)) {
             // Everything else we might consider has a lower fee rate
             return;
         }
