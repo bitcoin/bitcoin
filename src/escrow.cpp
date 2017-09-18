@@ -1612,7 +1612,9 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	for (unsigned int i = 0; i < inputs.size(); i++)
 	{
 		const UniValue& inputsObj = inputs[i].get_obj();
-		nBalance += AmountFromValue(ValueFromString(find_value(inputsObj, "satoshis").get_str()));
+		UniValue value;
+		value.setNumStr(find_value(inputsObj, "satoshis").get_str());
+		nBalance += AmountFromValue(value);
 	}
 	nBalance -= nEscrowTotal;
 	if (nBalance < nEscrowTotal) {
@@ -1841,7 +1843,9 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	for (unsigned int i = 0; i < inputs.size(); i++)
 	{
 		const UniValue& inputsObj = inputs[i].get_obj();
-		nBalance += AmountFromValue(ValueFromString(find_value(inputsObj, "satoshis").get_str()));
+		UniValue value;
+		value.setNumStr(find_value(inputsObj, "satoshis").get_str());
+		nBalance += AmountFromValue(value);
 	}
 	nBalance -= nEscrowTotal;
 	if (nBalance < nEscrowTotal) {
@@ -2358,7 +2362,9 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	for (unsigned int i = 0; i < inputs.size(); i++)
 	{
 		const UniValue& inputsObj = inputs[i].get_obj();
-		nBalance += AmountFromValue(ValueFromString(find_value(inputsObj, "satoshis").get_str()));
+		UniValue value;
+		value.setNumStr(find_value(inputsObj, "satoshis").get_str());
+		nBalance += AmountFromValue(value);
 	}
 	nBalance -= nEscrowTotal;
 	if (nBalance < nEscrowTotal) {
