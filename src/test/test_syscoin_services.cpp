@@ -1321,7 +1321,7 @@ void EscrowClaimRefund(const string& node, const string& guid, const string& wit
 	string buyeralias = find_value(r.get_obj(), "buyer").get_str();
 	CAmount nEscrowFee = AmountFromValue(find_value(r.get_obj(), "networkfee"));
 	CAmount nArbiterFee = AmountFromValue(find_value(r.get_obj(), "arbiterfee"));
-	CAmount nBuyerTotal = AmountFromValue(r.get_obj(), "total"));
+	CAmount nBuyerTotal = AmountFromValue(r.get_obj(), "total");
 	string escrowaddress = find_value(r.get_obj(), "escrowaddress").get_str();
 	BOOST_CHECK(!buyeralias.empty());
 	string offer = find_value(r.get_obj(), "offer").get_str();
