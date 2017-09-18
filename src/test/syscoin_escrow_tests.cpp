@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE (generate_escrowrefund_invalid)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + guid));
 	string escrowaddress = find_value(r.get_obj(), "escrowaddress").get_str();
 
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getaddressutxos '{\\\"addresses\": [\\\"" + escrowaddress + "\\\"]}'"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getaddressutxos '{\\\"addresses\\\": [\\\"" + escrowaddress + "\\\"]}'"));
 	UniValue addressUTXOsArray = r.get_array();
 	string inputStr = "\"[";
 	for (unsigned int i = 0; i < addressUTXOsArray.size(); i++)
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE (generate_escrowrelease_invalid)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + guid));
 	string escrowaddress = find_value(r.get_obj(), "escrowaddress").get_str();
 
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getaddressutxos '{\\\"addresses\": [\\\"" + escrowaddress + "\\\"]}'"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getaddressutxos '{\\\"addresses\\\": [\\\"" + escrowaddress + "\\\"]}'"));
 	UniValue addressUTXOsArray = r.get_array();
 	string inputStr = "\"[";
 	for (unsigned int i = 0; i < addressUTXOsArray.size(); i++)
