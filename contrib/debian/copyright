@@ -62,6 +62,10 @@ Files: src/qt/res/icons/tx_mined.png
        src/qt/res/src/mine.svg
        src/qt/res/icons/fontbigger.png
        src/qt/res/icons/fontsmaller.png
+       src/qt/res/icons/*/hd_disabled.png
+       src/qt/res/src/hd_disabled.svg
+       src/qt/res/icons/*/hd_enabled.png
+       src/qt/res/src/hd_enabled.svg
 Copyright: Jonas Schnelli
 License: Expat
 Comment:
