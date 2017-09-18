@@ -69,6 +69,8 @@ class AssumeValidTest(BitcoinTestFramework):
     def send_blocks_until_disconnected(self, node):
         """Keep sending blocks to the node until we're disconnected."""
         for i in range(len(self.blocks)):
+            if not node.connection:
+                break
             try:
                 node.send_message(msg_block(self.blocks[i]))
             except IOError as e:
