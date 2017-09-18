@@ -132,7 +132,7 @@ protected:
     bool EncryptKeys(CKeyingMaterial& vMasterKeyIn);
 
     bool Unlock(const CKeyingMaterial& vMasterKeyIn);
-    CryptedKeyMap mapCryptedKeys;
+    CryptedKeyMap mapCryptedKeys GUARDED_BY(cs_KeyStore);
 
 public:
     CCryptoKeyStore() : fUseCrypto(false), fDecryptionThoroughlyChecked(false)
