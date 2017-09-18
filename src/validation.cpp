@@ -142,7 +142,7 @@ namespace {
      *  block/undo files that should be deleted.  Set on startup
      *  or if we allocate more file space when we're in prune mode
      */
-    bool fCheckForPruning = false;
+    bool fCheckForPruning GUARDED_BY(cs_LastBlockFile) = false;
 
     /**
      * Every received block is assigned a unique and increasing identifier, so we
@@ -2028,7 +2028,7 @@ void FlushStateToDisk() {
     FlushStateToDisk(chainparams, state, FLUSH_STATE_ALWAYS);
 }
 
-void PruneAndFlush() {
+void PruneAndFlush() EXCLUSIVE_LOCKS_REQUIRED(cs_LastBlockFile) {
     CValidationState state;
     {
         LOCK(cs_LastBlockFile);
@@ -3188,7 +3188,7 @@ bool ProcessNewBlockHeaders(const std::vector<CBlockHeader>& headers, CValidatio
 }
 
 /** Store block on disk. If dbp is non-nullptr, the file is known to already reside on disk */
-static bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex, bool fRequested, const CDiskBlockPos* dbp, bool* fNewBlock) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+static bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex, bool fRequested, const CDiskBlockPos* dbp, bool* fNewBlock) EXCLUSIVE_LOCKS_REQUIRED(cs_main, cs_LastBlockFile)
 {
     const CBlock& block = *pblock;
 
@@ -3273,7 +3273,7 @@ static bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidation
     return true;
 }
 
-bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, bool fForceProcessing, bool *fNewBlock)
+bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, bool fForceProcessing, bool *fNewBlock) EXCLUSIVE_LOCKS_REQUIRED(cs_LastBlockFile)
 {
     {
         CBlockIndex *pindex = nullptr;
@@ -4055,7 +4055,7 @@ bool LoadGenesisBlock(const CChainParams& chainparams)
     return true;
 }
 
-bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskBlockPos *dbp)
+bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskBlockPos *dbp) EXCLUSIVE_LOCKS_REQUIRED(cs_LastBlockFile)
 {
     // Map of disk positions for blocks with unknown parent (only used for reindex)
     static std::multimap<uint256, CDiskBlockPos> mapBlocksUnknownParent;
