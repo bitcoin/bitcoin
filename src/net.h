@@ -343,6 +343,7 @@ private:
     bool AttemptToEvictConnection();
     bool IsWhitelistedRange(const CNetAddr &addr);
 
+    void OnNewConnections();
     void OnFailedOutgoingConnection(NewConnection conn);
     void AddConnection(NewConnection conn);
 
@@ -447,6 +448,10 @@ private:
 
     event* m_interrupt_event = nullptr;
     CCriticalSection m_cs_interrupt_event;
+
+    CCriticalSection m_cs_new_connections;
+    std::vector<NewConnection> m_new_connections;
+    event* m_connection_event = nullptr;
 };
 extern std::unique_ptr<CConnman> g_connman;
 void Discover(boost::thread_group& threadGroup);

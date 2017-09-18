@@ -489,8 +489,12 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     }
     if (connected) {
         if (IsSelectableSocket(conn.sock)) {
-            attempt.success();
-            AddConnection(std::move(conn));
+            LOCK(m_cs_new_connections);
+            if (m_connection_event) {
+                attempt.success();
+                m_new_connections.push_back(std::move(conn));
+                event_active(m_connection_event, 0, 0);
+            }
             return;
         }
         LogPrintf("Cannot create connection: non-selectable socket created (fd >= FD_SETSIZE ?)\n");
@@ -1426,6 +1430,19 @@ void CConnman::ThreadSocketHandler()
                 event_free(event);
             }
             m_listen_events.clear();
+            std::vector<NewConnection> interrupted_conns;
+            {
+                LOCK(m_cs_new_connections);
+                if (m_connection_event) {
+                    event_free(m_connection_event);
+                    m_connection_event = nullptr;
+                }
+                interrupted_conns = std::move(m_new_connections);
+                m_new_connections.clear();
+            }
+            for (auto& conn : interrupted_conns) {
+                OnFailedOutgoingConnection(std::move(conn));
+            }
         } else if (ret == 1) {
             // A return value of 1 means that no events are active or pending, which should only be
             // possible when the thread is first started. If there are no events yet, do a quick sleep
@@ -1447,6 +1464,10 @@ void CConnman::ThreadSocketHandler()
     {
         LOCK(cs_vNodes);
         assert(vNodes.empty());
+    }
+    {
+        LOCK(m_cs_new_connections);
+        assert(m_new_connections.empty());
     }
     assert(vNodesDisconnected.empty());
 }
@@ -2002,6 +2023,19 @@ void CConnman::AddConnection(NewConnection conn)
     event_add(pnode->m_write_timeout_event, &m_event_timeout);
 }
 
+void CConnman::OnNewConnections()
+{
+    std::vector<NewConnection> conns;
+    {
+        LOCK(m_cs_new_connections);
+        conns = std::move(m_new_connections);
+        m_new_connections.clear();
+    }
+    for (auto& conn : conns) {
+        AddConnection(std::move(conn));
+    }
+}
+
 void CConnman::OnFailedOutgoingConnection(NewConnection conn)
 {
     CloseSocket(conn.sock);
@@ -2405,6 +2439,10 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
     {
         LOCK(m_cs_interrupt_event);
         m_interrupt_event = event_new(m_event_base, -1, 0, [](evutil_socket_t, short, void* data) {static_cast<CConnman*>(data)->InterruptEvents();}, (this));
+    }
+    {
+        LOCK(m_cs_new_connections);
+        m_connection_event = event_new(m_event_base, -1, 0, [](evutil_socket_t, short, void* data) {static_cast<CConnman*>(data)->OnNewConnections();}, (this));
     }
     m_event_timeout = timeval{60, 0};
     const timeval* common_timeout = event_base_init_common_timeout(m_event_base, &m_event_timeout);
