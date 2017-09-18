@@ -1196,7 +1196,7 @@ const string EscrowNew(const string& node, const string& sellernode, const strin
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == guid);
 	BOOST_CHECK(find_value(r.get_obj(), "offer").get_str() == offerguid);
 	BOOST_CHECK(find_value(r.get_obj(), "quantity").get_int() == qty);
-	BOOST_CHECK(nodeTotal, nTotal);
+	BOOST_CHECK_EQUAL(nodeTotal, nTotal);
 	BOOST_CHECK(find_value(r.get_obj(), "arbiter").get_str() == arbiteralias);
 	BOOST_CHECK(find_value(r.get_obj(), "seller").get_str() == selleralias);
 	if(!otherNode1.empty())
