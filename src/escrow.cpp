@@ -1614,11 +1614,10 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 		const UniValue& inputsObj = inputs[i].get_obj();
 		nBalance += find_value(inputsObj, "satoshis").get_int64();
 	}
-	nBalance -= nEscrowTotal;
 	if (nBalance < nEscrowTotal) {
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4529 - " + _("Expected amount of escrow does not match what is held in escrow. Expected amount: ") + boost::lexical_cast<string>(nEscrowTotal) + _(" Amount Found: ") + boost::lexical_cast<string>(nBalance));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4529 - " + _("Not enough funds in the escrow address to process this transaction: ") + boost::lexical_cast<string>(nEscrowTotal) + _(" Amount Found: ") + boost::lexical_cast<string>(nBalance));
 	}
-
+	nBalance -= nEscrowTotal;
 	vector<unsigned char> vchLinkAlias;
 	CAliasIndex theAlias;
 
@@ -1843,11 +1842,10 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 		const UniValue& inputsObj = inputs[i].get_obj();
 		nBalance += find_value(inputsObj, "satoshis").get_int64();
 	}
-	nBalance -= nEscrowTotal;
 	if (nBalance < nEscrowTotal) {
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4529 - " + _("Expected amount of escrow does not match what is held in escrow. Expected amount: ") + boost::lexical_cast<string>(nEscrowTotal) + _(" Amount Found: ") + boost::lexical_cast<string>(nBalance));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4529 - " + _("Not enough funds in the escrow address to process this transaction: ") + boost::lexical_cast<string>(nEscrowTotal) + _(" Amount Found: ") + boost::lexical_cast<string>(nBalance));
 	}
-
+	nBalance -= nEscrowTotal;
 
 	bool foundSellerPayment = false;
 	bool foundCommissionPayment = false;
@@ -2176,11 +2174,10 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 		const UniValue& inputsObj = inputs[i].get_obj();
 		nBalance += find_value(inputsObj, "satoshis").get_int64();
 	}
-	nBalance -= nEscrowTotal;
 	if (nBalance < nEscrowTotal) {
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4529 - " + _("Expected amount of escrow does not match what is held in escrow. Expected amount: ") + boost::lexical_cast<string>(nEscrowTotal) + _(" Amount Found: ") + boost::lexical_cast<string>(nBalance));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4529 - " + _("Not enough funds in the escrow address to process this transaction: ") + boost::lexical_cast<string>(nEscrowTotal) + _(" Amount Found: ") + boost::lexical_cast<string>(nBalance));
 	}
-
+	nBalance -= nEscrowTotal;
 	vector<unsigned char> vchLinkAlias;
 	CAliasIndex theAlias;
 	CScript scriptPubKeyAlias;
@@ -2360,11 +2357,10 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 		const UniValue& inputsObj = inputs[i].get_obj();
 		nBalance += find_value(inputsObj, "satoshis").get_int64();
 	}
-	nBalance -= nEscrowTotal;
 	if (nBalance < nEscrowTotal) {
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4529 - " + _("Expected amount of escrow does not match what is held in escrow. Expected amount: ") + boost::lexical_cast<string>(nEscrowTotal) + _(" Amount Found: ") + boost::lexical_cast<string>(nBalance));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4529 - " + _("Not enough funds in the escrow address to process this transaction: ") + boost::lexical_cast<string>(nEscrowTotal) + _(" Amount Found: ") + boost::lexical_cast<string>(nBalance));
 	}
-
+	nBalance -= nEscrowTotal;
 
 	// decode rawTx and check it pays enough and it pays to buyer appropriately
 	// check that right amount is going to be sent to buyer
