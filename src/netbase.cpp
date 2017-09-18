@@ -399,7 +399,7 @@ static bool Socks5(const std::string& strDest, int port, const ProxyCredentials 
     return true;
 }
 
-bool ConnectSocketDirectly(const CService &addrConnect, SOCKET& hSocketRet, int nTimeout)
+bool CreateSocket(const CService &addrConnect, SOCKET& hSocketRet)
 {
     hSocketRet = INVALID_SOCKET;
 
@@ -428,7 +428,23 @@ bool ConnectSocketDirectly(const CService &addrConnect, SOCKET& hSocketRet, int 
         CloseSocket(hSocket);
         return error("ConnectSocketDirectly: Setting socket to non-blocking failed, error %s\n", NetworkErrorString(WSAGetLastError()));
     }
+    hSocketRet = hSocket;
+    return true;
+}
 
+bool ConnectSocketDirectly(const CService &addrConnect, SOCKET& hSocket, int nTimeout)
+{
+    struct sockaddr_storage sockaddr;
+    socklen_t len = sizeof(sockaddr);
+    if (hSocket == INVALID_SOCKET) {
+        LogPrintf("Cannot connect to %s: invalid socket\n", addrConnect.ToString());
+        return false;
+    }
+    if (!addrConnect.GetSockAddr((struct sockaddr*)&sockaddr, &len)) {
+        LogPrintf("Cannot connect to %s: unsupported network\n", addrConnect.ToString());
+        CloseSocket(hSocket);
+        return false;
+    }
     if (connect(hSocket, (struct sockaddr*)&sockaddr, len) == SOCKET_ERROR)
     {
         int nErr = WSAGetLastError();
@@ -481,8 +497,6 @@ bool ConnectSocketDirectly(const CService &addrConnect, SOCKET& hSocketRet, int 
             return false;
         }
     }
-
-    hSocketRet = hSocket;
     return true;
 }
 
@@ -534,9 +548,8 @@ bool IsProxy(const CNetAddr &addr) {
     return false;
 }
 
-bool ConnectThroughProxy(const proxyType &proxy, const std::string& strDest, int port, SOCKET& hSocketRet, int nTimeout, bool *outProxyConnectionFailed)
+bool ConnectThroughProxy(const proxyType &proxy, const std::string& strDest, int port, SOCKET& hSocket, int nTimeout, bool *outProxyConnectionFailed)
 {
-    SOCKET hSocket = INVALID_SOCKET;
     // first connect to proxy server
     if (!ConnectSocketDirectly(proxy.proxy, hSocket, nTimeout)) {
         if (outProxyConnectionFailed)
@@ -548,14 +561,16 @@ bool ConnectThroughProxy(const proxyType &proxy, const std::string& strDest, int
         ProxyCredentials random_auth;
         static std::atomic_int counter(0);
         random_auth.username = random_auth.password = strprintf("%i", counter++);
-        if (!Socks5(strDest, (unsigned short)port, &random_auth, hSocket))
+        if (!Socks5(strDest, (unsigned short)port, &random_auth, hSocket)) {
+            CloseSocket(hSocket);
             return false;
+        }
     } else {
-        if (!Socks5(strDest, (unsigned short)port, 0, hSocket))
+        if (!Socks5(strDest, (unsigned short)port, 0, hSocket)) {
+            CloseSocket(hSocket);
             return false;
+        }
     }
-
-    hSocketRet = hSocket;
     return true;
 }
 bool LookupSubNet(const char* pszName, CSubNet& ret)

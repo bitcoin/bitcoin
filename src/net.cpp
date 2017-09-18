@@ -412,16 +412,27 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
     if (addrConnect.IsValid()) {
         bool proxyConnectionFailed = false;
 
-        if (GetProxy(addrConnect.GetNetwork(), proxy))
+        if (GetProxy(addrConnect.GetNetwork(), proxy)) {
+            if (!CreateSocket(proxy.proxy, hSocket)) {
+                return nullptr;
+            }
             connected = ConnectThroughProxy(proxy, addrConnect.ToStringIP(), addrConnect.GetPort(), hSocket, nConnectTimeout, &proxyConnectionFailed);
-        else // no proxy needed (none set for target network)
+        } else {
+            // no proxy needed (none set for target network)
+            if (!CreateSocket(addrConnect, hSocket)) {
+                return nullptr;
+            }
             connected = ConnectSocketDirectly(addrConnect, hSocket, nConnectTimeout);
+        }
         if (!proxyConnectionFailed) {
             // If a connection to the node was attempted, and failure (if any) is not caused by a problem connecting to
             // the proxy, mark this as an attempt.
             addrman.Attempt(addrConnect, fCountFailure);
         }
     } else if (pszDest && GetNameProxy(proxy)) {
+        if (!CreateSocket(proxy.proxy, hSocket)) {
+            return nullptr;
+        }
         std::string host;
         int port = default_port;
         SplitHostPort(std::string(pszDest), port, host);
