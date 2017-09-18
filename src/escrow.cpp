@@ -1314,7 +1314,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 			paramsConvert.push_back(stringFromVch(linkedOffer.sCurrencyCode));
 			paramsConvert.push_back(GetPaymentOptionsString(paymentOptionMask));
 			paramsConvert.push_back(boost::lexical_cast<string>(nTotalLinkedOfferPrice));
-			r = tableRPC.execute("aliasconvertcurrency", paramsConvert);
+			UniValue r = tableRPC.execute("aliasconvertcurrency", paramsConvert);
 			nTotalLinkedOfferPrice = AmountFromValue(find_value(r.get_obj(), "convertedrate"));
 		}
 		nCommission = nTotalOfferPrice - nTotalLinkedOfferPrice;
@@ -1333,7 +1333,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 		paramsConvert2.push_back(stringFromVch(theOffer.sCurrencyCode));
 		paramsConvert.push_back(GetPaymentOptionsString(paymentOptionMask));
 		paramsConvert.push_back(boost::lexical_cast<string>(nTotalWithBuyerDiscount));
-		r = tableRPC.execute("aliasconvertcurrency", paramsConvert);
+		UniValue r = tableRPC.execute("aliasconvertcurrency", paramsConvert);
 		nTotalWithBuyerDiscount = AmountFromValue(find_value(r.get_obj(), "convertedrate"));
 	}
 
