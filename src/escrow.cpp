@@ -1109,19 +1109,23 @@ UniValue generateescrowmultisig(const UniValue& params, bool fHelp) {
 	if (!resCreate.isObject())
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4508 - " + _("Could not create escrow transaction: Invalid response from createescrow"));
 
-	UniValue paramsConvert(UniValue::VARR);
-	paramsConvert.push_back(stringFromVch(selleralias.vchAlias));
-	paramsConvert.push_back(stringFromVch(theOffer.sCurrencyCode));
-	paramsConvert.push_back(GetPaymentOptionsString(paymentOptionMask));
-	paramsConvert.push_back(boost::lexical_cast<string>(theOffer.GetPrice(foundEntry)*nQty));
-	const UniValue &r = tableRPC.execute("aliasconvertcurrency", paramsConvert);
-	CAmount nTotal = AmountFromValue(find_value(r.get_obj(), "convertedrate"));
+	CAmount nTotal = AmountFromValue(theOffer.GetPrice(foundEntry)*nQty);
+	if (stringFromVch(theOffer.sCurrencyCode) != GetPaymentOptionsString(paymentOptionMask))
+	{
+		UniValue paramsConvert(UniValue::VARR);
+		paramsConvert.push_back(stringFromVch(selleralias.vchAlias));
+		paramsConvert.push_back(stringFromVch(theOffer.sCurrencyCode));
+		paramsConvert.push_back(GetPaymentOptionsString(paymentOptionMask));
+		paramsConvert.push_back(boost::lexical_cast<string>(theOffer.GetPrice(foundEntry)*nQty));
+		const UniValue &r = tableRPC.execute("aliasconvertcurrency", paramsConvert);
+		nTotal = AmountFromValue(find_value(r.get_obj(), "convertedrate"));
+	}
 
 	float fEscrowFee = getEscrowFee(selleralias.aliasPegTuple, vchFromString(GetPaymentOptionsString(paymentOptionMask)), precision);
 	CAmount nEscrowFee = GetEscrowArbiterFee(nTotal, fEscrowFee);
 	int nExtFeePerByte = getFeePerByte(selleralias.aliasPegTuple, vchFromString(GetPaymentOptionsString(paymentOptionMask)), precision);
 	// multisig spend is about 400 bytes
-	nTotal += nEscrowFee + (nExtFeePerByte*400);
+	nTotal = nTotal + nEscrowFee + (nExtFeePerByte*400);
 	resCreate.push_back(Pair("total", strprintf("%.*f", precision, ValueFromAmount(nTotal).get_real())));
 	resCreate.push_back(Pair("merchant_aliaspeg_txid", latestAliasPegTuple.second.GetHex()));
 	return resCreate;
@@ -2884,7 +2888,7 @@ bool BuildEscrowJson(const CEscrow &escrow, const std::vector<std::vector<unsign
 	oEscrow.push_back(Pair("offerlink_seller", stringFromVch(escrow.linkSellerAliasTuple.first)));
 	oEscrow.push_back(Pair("quantity", (int)escrow.nQty));
 	oEscrow.push_back(Pair("total", strprintf("%.*f", escrow.paymentPrecision, ValueFromAmount(escrow.nTotal).get_real())));
-	oEscrow.push_back(Pair("commission", ValueFromAmount(escrow.nCommission)));
+	oEscrow.push_back(Pair("commission", ValueFromAmountescrow.nCommission));
 	oEscrow.push_back(Pair("arbiterfee", ValueFromAmount(escrow.nArbiterFee)));
 	oEscrow.push_back(Pair("networkfee", ValueFromAmount(escrow.nNetworkFee)));
 	oEscrow.push_back(Pair("currency", escrow.bCoinOffer? GetPaymentOptionsString(escrow.nPaymentOption):escrow.sCurrencyCode));
