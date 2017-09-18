@@ -275,7 +275,7 @@ BOOST_AUTO_TEST_CASE (generate_escrow_linked_release_with_peg_update)
 	EscrowRelease("node1", "buyer", guid);
 	UniValue r;
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + guid));
-	CAmount nTotal = find_value(r.get_obj(), "total").get_int64();
+	CAmount nTotal = AmountFromValue(find_value(r.get_obj(), "total"));
 	// 2695.2 SYS/EUR
 	BOOST_CHECK_EQUAL(nTotal, AmountFromValue(3 * 0.05*1.03*2695.2));
 	// update the EUR peg twice before claiming escrow
@@ -297,7 +297,7 @@ BOOST_AUTO_TEST_CASE (generate_escrow_linked_release_with_peg_update)
 	guid = EscrowNew("node1", "node2", "buyeralias33", offerlinkguid, "2", "arbiteralias333", "selleralias33");
 	EscrowRelease("node1", "buyer", guid);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + guid));
-	nTotal = find_value(r.get_obj(), "total").get_int64();
+	nTotal = AmountFromValue(find_value(r.get_obj(), "total"));
 	// 218.2 SYS/EUR
 	BOOST_CHECK_EQUAL(nTotal, AmountFromValue(2 * 0.05*1.03*218.2));
 
@@ -307,7 +307,7 @@ BOOST_AUTO_TEST_CASE (generate_escrow_linked_release_with_peg_update)
 	guid = EscrowNew("node1", "node2", "buyeralias33", offerlinkguid, "4", "arbiteralias333", "selleralias33");
 	EscrowRelease("node1", "buyer", guid);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + guid));
-	nTotal = find_value(r.get_obj(), "total").get_int64();
+	nTotal = AmountFromValue(find_value(r.get_obj(), "total"));
 	// 218.2SYS/EUR
 	BOOST_CHECK_EQUAL(nTotal, AmountFromValue(4 * 0.07*1.06*218.2));
 
@@ -323,7 +323,7 @@ BOOST_AUTO_TEST_CASE (generate_escrow_linked_release_with_peg_update)
 	guid = EscrowNew("node1", "node2", "buyeralias33", offerlinkguid, "3", "arbiteralias333", "selleralias33");
 	EscrowRelease("node1", "buyer", guid);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + guid));
-	nTotal = find_value(r.get_obj(), "total").get_int64();
+	nTotal = AmountFromValue(find_value(r.get_obj(), "total"));
 	// 2695.2SYS/EUR
 	BOOST_CHECK_EQUAL(nTotal, AmountFromValue(3 * 0.07*1.06*2695.2));
 
