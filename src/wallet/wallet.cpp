@@ -1530,7 +1530,6 @@ void CWalletTx::GetAmounts(std::list<COutputEntry>& listReceived,
 int64_t CWallet::RescanFromTime(int64_t startTime, bool update)
 {
     AssertLockHeld(cs_main);
-    AssertLockHeld(cs_wallet);
 
     // Find starting block. May be null if nCreateTime is greater than the
     // highest blockchain timestamp, in which case there is nothing that needs
