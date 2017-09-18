@@ -998,7 +998,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		theEscrow.txHash = tx.GetHash();
 		theEscrow.nHeight = nHeight;
         // write escrow
-		if (!dontaddtodb && !pescrowdb->WriteEscrow(vvchArgs, theEscrow) || (op == OP_ESCROW_ACTIVATE && !theEscrow.bPaymentAck))
+		if (!dontaddtodb && !pescrowdb->WriteEscrow(vvchArgs, theEscrow))
 		{
 			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4080 - " + _("Failed to write to escrow DB");
 			return error(errorMessage.c_str());
