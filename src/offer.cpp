@@ -962,6 +962,7 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	newOffer.nCommission = commissionInteger;
 	newOffer.linkOfferTuple = CNameTXIDTuple(linkOffer.vchOffer, linkOffer.txHash);
 	newOffer.nHeight = chainActive.Tip()->nHeight;
+	newOffer.paymentOptions = linkOffer.paymentOptions;
 	//create offeractivate txn keys
 
 	vector<unsigned char> data;
