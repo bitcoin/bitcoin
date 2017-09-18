@@ -96,7 +96,7 @@ private:
 
     CCriticalSection cs_callbacks_pending;
     std::list<std::function<void (void)>> m_callbacks_pending GUARDED_BY(cs_callbacks_pending);
-    bool m_are_callbacks_running = false;
+    bool m_are_callbacks_running GUARDED_BY(cs_callbacks_pending) = false;
 
     void MaybeScheduleProcessQueue();
     void ProcessQueue();
