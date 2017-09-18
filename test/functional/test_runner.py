@@ -134,6 +134,7 @@ EXTENDED_SCRIPTS = [
     'maxuploadtarget.py',
     'mempool_packages.py',
     'dbcrash.py',
+    'import-abort-rescan.py',
     # vv Tests less than 2m vv
     'bip68-sequence.py',
     'getblocktemplate_longpoll.py',
