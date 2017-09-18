@@ -1251,11 +1251,25 @@ void EscrowRelease(const string& node, const string& role, const string& guid ,c
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + guid));
 	string offer = find_value(r.get_obj(), "offer").get_str();
-
+	string escrowaddress = find_value(r.get_obj(), "escrowaddress").get_str();
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "getaddressutxos '{\\\"addresses\": [\\\"" + escrowaddress + "\\\"]}'"));
+	UniValue addressUTXOsArray = r.get_array();
+	// "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0,\\\"satoshis\\\":10000}]\"
+	string inputStr = "\"[";
+	for (unsigned int i = 0; i < addressUTXOsArray.size(); i++)
+	{
+		const UniValue& utxoObj = addressUTXOsArray[i].get_obj();
+		const string& txidStr = find_value(utxoObj.get_obj(), "txid").get_str();
+		const int& nOut = find_value(utxoObj.get_obj(), "outputIndex").get_int();
+		CAmount satoshis = AmountFromValue(find_value(utxoObj.get_obj(), "satoshis"));
+		inputStr += "{\\\"txid\\\":\\\"" + txidStr + "\\\",\\\"vout\\\":" + boost::lexical_cast<string>(nOut) + ",\\\"satoshis\\\":" + boost::lexical_cast<string>(satoshis) + "}";
+	}
+	inputStr += "]\"";
+	
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offer));
 	int nQtyOfferBefore = find_value(r.get_obj(), "quantity").get_int();
 	string rawtx = "\"\"";
-	BOOST_CHECK_NO_THROW(CallRPC(node, "escrowrelease " + guid + " " + role + " " + rawtx + " " + witness));
+	BOOST_CHECK_NO_THROW(CallRPC(node, "escrowrelease " + guid + " " + role + " " + inputStr + " " + witness));
 	GenerateBlocks(10, node);
 	GenerateBlocks(10, node);
 
@@ -1271,11 +1285,25 @@ void EscrowRefund(const string& node, const string& role, const string& guid, co
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + guid));
 	string offer = find_value(r.get_obj(), "offer").get_str();
 	int nQty = find_value(r.get_obj(), "quantity").get_int();
+	string escrowaddress = find_value(r.get_obj(), "escrowaddress").get_str();
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "getaddressutxos '{\\\"addresses\": [\\\"" + escrowaddress + "\\\"]}'"));
+	UniValue addressUTXOsArray = r.get_array();
+	// "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0,\\\"satoshis\\\":10000}]\"
+	string inputStr = "\"[";
+	for (unsigned int i = 0; i < addressUTXOsArray.size(); i++)
+	{
+		const UniValue& utxoObj = addressUTXOsArray[i].get_obj();
+		const string& txidStr = find_value(utxoObj.get_obj(), "txid").get_str();
+		const int& nOut = find_value(utxoObj.get_obj(), "outputIndex").get_int();
+		CAmount satoshis = AmountFromValue(find_value(utxoObj.get_obj(), "satoshis"));
+		inputStr += "{\\\"txid\\\":\\\"" + txidStr + "\\\",\\\"vout\\\":" + boost::lexical_cast<string>(nOut) + ",\\\"satoshis\\\":" + boost::lexical_cast<string>(satoshis) + "}";
+	}
+	inputStr += "]\"";
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offer));
 	int nQtyOfferBefore = find_value(r.get_obj(), "quantity").get_int();
 	string rawtx = "\"\"";
-	BOOST_CHECK_NO_THROW(CallRPC(node, "escrowrefund " + guid + " " + role + " " + rawtx + " " + witness));
+	BOOST_CHECK_NO_THROW(CallRPC(node, "escrowrefund " + guid + " " + role + " " + inputStr + " " + witness));
 	GenerateBlocks(10, node);
 	GenerateBlocks(10, node);
 
