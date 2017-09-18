@@ -382,7 +382,7 @@ CAddrInfo CAddrMan::Select_(bool newOnly)
 }
 
 #ifdef DEBUG_ADDRMAN
-int CAddrMan::Check_()
+int CAddrMan::Check_() EXCLUSIVE_LOCKS_REQUIRED(cs_addrMan)
 {
     std::set<int> setTried;
     std::map<int, int> mapNew;
