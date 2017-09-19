@@ -1764,7 +1764,7 @@ void TransferAliasBalances(const vector<unsigned char> &vchAlias, const CScript&
 UniValue aliasnew(const UniValue& params, bool fHelp) {
 	if (fHelp || 4 > params.size() || 10 < params.size())
 		throw runtime_error(
-		"aliasnew <aliaspeg> <aliasname> <password> <public value> [private value] [safe search=Yes] [accept transfers=Yes] [expire=31536000] [nrequired=0] [\"alias\",...]\n"
+		"aliasnew <aliaspeg> <aliasname> <password> <public value> [safe search=Yes] [accept transfers=Yes] [expire=31536000] [nrequired=0] [\"alias\",...]\n"
 						"<aliasname> alias name.\n"
 						"<password> used to generate your public/private key that controls this alias. Warning: Calling this function over a public network can lead to someone reading your password in plain text.\n"
 						"<public value> alias public profile data, 1024 chars max.\n"
