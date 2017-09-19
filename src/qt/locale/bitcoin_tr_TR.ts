@@ -80,7 +80,11 @@
         <source>Address</source>
         <translation>adres</translation>
     </message>
-    </context>
+    <message>
+        <source>(no label)</source>
+        <translation>(etiket yok)</translation>
+    </message>
+</context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
@@ -152,6 +156,10 @@
     </context>
 <context>
     <name>CoinControlDialog</name>
+    <message>
+        <source>(no label)</source>
+        <translation>(etiket yok)</translation>
+    </message>
     </context>
 <context>
     <name>EditAddressDialog</name>
@@ -231,10 +239,18 @@
         <source>Label</source>
         <translation>etiket</translation>
     </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(etiket yok)</translation>
+    </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
-    </context>
+    <message>
+        <source>(no label)</source>
+        <translation>(etiket yok)</translation>
+    </message>
+</context>
 <context>
     <name>SendCoinsEntry</name>
     </context>
@@ -264,6 +280,10 @@
     <message>
         <source>Label</source>
         <translation>etiket</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(etiket yok)</translation>
     </message>
     </context>
 <context>

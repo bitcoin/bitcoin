@@ -3067,7 +3067,7 @@
     </message>
     <message>
         <source>Accept relayed transactions received from whitelisted peers even when not relaying transactions (default: %d)</source>
-        <translation>Geben Sie immer die Transaktionen, die Sie von freigegebenen Peers erhalten haben, weiter (Voreinstellung: %d)</translation>
+        <translation>Immer übermittelte Transaktionen von freigegebenen Peers akzeptieren, auch wenn keine Transaktionen übermittelt werden (Standard: %d)</translation>
     </message>
     <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>

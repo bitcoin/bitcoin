@@ -1,7 +1,7 @@
 #!/bin/sh
 
 TOPDIR=${TOPDIR:-$(git rev-parse --show-toplevel)}
-SRCDIR=${SRCDIR:-$TOPDIR/src}
+SRCDIR=${SRCDIR:-$TOPDIR/build/src}
 MANDIR=${MANDIR:-$TOPDIR/doc/man}
 
 BITCOIND=${BITCOIND:-$SRCDIR/particld}
