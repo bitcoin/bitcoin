@@ -459,7 +459,6 @@ bool ArgsManager::GetBoolArg(const std::string& strArg, bool fDefault) const
 
 bool ArgsManager::SoftSetArg(const std::string& strArg, const std::string& strValue)
 {
-    LOCK(cs_args);
     if (IsArgSet(strArg)) return false;
     ForceSetArg(strArg, strValue);
     return true;
