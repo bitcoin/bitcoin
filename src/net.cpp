@@ -856,18 +856,6 @@ size_t CConnman::SocketSendData(CNode *pnode)
 
 struct NodeEvictionCandidate
 {
-    NodeEvictionCandidate(CNode* pnode)
-        : id(pnode->id),
-          nTimeConnected(pnode->nTimeConnected),
-          nMinPingUsecTime(pnode->nMinPingUsecTime),
-          nLastBlockTime(pnode->nLastBlockTime),
-          nLastTXTime(pnode->nLastTXTime),
-          fNetworkNode(pnode->fNetworkNode),
-          fRelayTxes(pnode->fRelayTxes),
-          fBloomFilter(pnode->pfilter != NULL),
-          nKeyedNetGroup(pnode->nKeyedNetGroup)
-        {}
-
     NodeId id;
     int64_t nTimeConnected;
     int64_t nMinPingUsecTime;
@@ -924,15 +912,17 @@ bool CConnman::AttemptToEvictConnection()
     {
         LOCK(cs_vNodes);
 
-        for(size_t i = 0; i < vNodes.size(); ++i) {
-            CNode* pnode = vNodes[i];
-            if (pnode->fWhitelisted)
+        BOOST_FOREACH(CNode *node, vNodes) {
+            if (node->fWhitelisted)
                 continue;
-            if (!pnode->fInbound)
+            if (!node->fInbound)
                 continue;
-            if (pnode->fDisconnect)
+            if (node->fDisconnect)
                 continue;
-            vEvictionCandidates.push_back(NodeEvictionCandidate(pnode));
+            NodeEvictionCandidate candidate = {node->id, node->nTimeConnected, node->nMinPingUsecTime,
+                                               node->nLastBlockTime, node->nLastTXTime, node->fNetworkNode,
+                                               node->fRelayTxes, node->pfilter != NULL, node->nKeyedNetGroup};
+            vEvictionCandidates.push_back(candidate);
         }
     }
 
