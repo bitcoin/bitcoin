@@ -1724,6 +1724,9 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
                     return InitError(_("Mnemonic passphrase is too long, must be at most 256 characters"));
                 // generate a new master key
                 pwalletMain->GenerateNewHDChain();
+
+                // ensure this wallet.dat can only be opened by clients supporting HD
+                pwalletMain->SetMinVersion(FEATURE_HD);
             }
 
             CPubKey newDefaultKey;
