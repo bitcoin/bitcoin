@@ -1350,7 +1350,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	CAmount nNetworkFee = (nFeePerByte * 400);
 	vector<CRecipient> vecSend;
 	CAmount nAmountWithFee = nTotalWithBuyerDiscount+nEscrowFee+nNetworkFee;
-	CAmount nTotalInCurrency = nAmountWithFee;
+	CAmount nTotalInCurrency = nTotalWithBuyerDiscount;
 	if (stringFromVch(theOffer.sCurrencyCode) != GetPaymentOptionsString(paymentOptionMask))
 	{
 		UniValue paramsConvert(UniValue::VARR);
