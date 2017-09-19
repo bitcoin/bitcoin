@@ -1891,9 +1891,9 @@ double COffer::GetPrice(const COfferLinkWhitelistEntry& entry, bool display) con
 	char nMarkup = nCommission - nDiscount;
 	if (nMarkup != 0)
 	{
-		float lMarkup = 1 / (nMarkup / 100.0);
+		double lMarkup = 1 / (nMarkup / 100.0);
 		lMarkup = floorf(lMarkup * 100) / 100;
-		CAmount priceMarkup = price / lMarkup;
+		double priceMarkup = price / lMarkup;
 		price += priceMarkup;
 	}
 	return price;
