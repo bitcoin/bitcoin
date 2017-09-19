@@ -321,10 +321,11 @@ std::string SecureMsgGetHelpString(bool showDebug)
     std::string strUsage;
 
     strUsage += HelpMessageGroup(_("Secure messaging options:"));
-    strUsage += HelpMessageOpt("-smsg", _("Enable secure messaging (default: true)"));
-    strUsage += HelpMessageOpt("-debugsmsg", _("Show extra debug messages (default: false)"));
-    strUsage += HelpMessageOpt("-smsgscanchain", _("Scan the block chain for public key addresses on startup (default: false)"));
-    strUsage += HelpMessageOpt("-smsgnotify=<cmd>", _("Execute command when a message is received (%s in cmd is replaced by receiving address)"));
+    strUsage += HelpMessageOpt("-smsg", _("Enable secure messaging. (default: true)"));
+    strUsage += HelpMessageOpt("-debugsmsg", _("Show extra debug messages. (default: false)"));
+    strUsage += HelpMessageOpt("-smsgscanchain", _("Scan the block chain for public key addresses on startup. (default: false)"));
+    strUsage += HelpMessageOpt("-smsgscanincoming", _("Scan incoming blocks for public key addresses. (default: false)"));
+    strUsage += HelpMessageOpt("-smsgnotify=<cmd>", _("Execute command when a message is received. (%s in cmd is replaced by receiving address)"));
 
     return strUsage;
 };
@@ -483,8 +484,6 @@ int SecureMsgAddWalletAddresses()
     if (!pwalletSmsg)
         return errorN(1, "No wallet.");
 
-    std::string sAnonPrefix("ao ");
-
     uint32_t nAdded = 0;
 
     for (const auto &entry : pwalletSmsg->mapAddressBook) // PAIRTYPE(CTxDestination, CAddressBookData)
@@ -492,13 +491,7 @@ int SecureMsgAddWalletAddresses()
         if (!IsMine(*pwalletSmsg, entry.first))
             continue;
 
-        // Skip addresses for anon outputs
-        // TODO: Use new CAddressBookData::purpose field?
-        if (entry.second.name.compare(0, sAnonPrefix.length(), sAnonPrefix) == 0)
-            continue;
-
         // TODO: skip addresses for stealth transactions
-
         CKeyID keyID;
         CBitcoinAddress coinAddress(entry.first);
         if (!coinAddress.IsValid()
@@ -1572,84 +1565,7 @@ static bool ScanBlock(const CBlock &block, SecMsgDB &addrpkdb,
             if (tx->IsCoinStake()) // coinstake inputs are always from the same address/pubkey
                 break;
         };
-        
-        /*
-        if (tx->IsCoinStake())
-        {
-            const CTxOut& txout = tx->vout[1];
-            CScript::const_iterator pc = txout.scriptPubKey.begin();
-            while (pc < txout.scriptPubKey.end())
-            {
-                if (!txout.scriptPubKey.GetOp(pc, opcode, vch))
-                    break;
 
-                if (vch.size() == 33) // pubkey
-                {
-                    CPubKey pubKey(vch);
-
-                    if (!pubKey.IsValid()
-                        || !pubKey.IsCompressed())
-                    {
-                        LogPrintf("Public key is invalid %s.\n", HexStr(pubKey));
-                        continue;
-                    };
-
-                    CKeyID addrKey = pubKey.GetID();
-                    switch (SecureMsgInsertAddress(addrKey, pubKey, addrpkdb))
-                    {
-                        case 0: nPubkeys++; break;      // added key
-                        case 4: nDuplicates++; break;   // duplicate key
-                    }
-                    break;
-                };
-            };
-            nElements++;
-        } else
-        if (IsStandardTx(*tx, reason))
-        {
-            for (uint32_t i = 0; i < tx->vin.size(); i++)
-            {
-                // TODO: add back ANON_TXN checks
-                //if (tx.nVersion == ANON_TXN_VERSION
-                //    && tx.vin[i].IsAnonInput())
-                //    continue; // skip anon inputs
-                const CScript *script = &tx->vin[i].scriptSig;
-                CScript::const_iterator pc = script->begin();
-                CScript::const_iterator pend = script->end();
-
-                CKey key;
-
-                while (pc < pend)
-                {
-                    if (!script->GetOp(pc, opcode, vch))
-                        break;
-                    // - opcode is the length of the following data, compressed public key is always 33
-                    if (opcode == 33)
-                    {
-                        CPubKey pubKey(vch);
-
-                        if (!pubKey.IsValid()
-                            || !pubKey.IsCompressed())
-                        {
-                            LogPrintf("Public key is invalid %s.\n", HexStr(pubKey));
-                            continue;
-                        };
-
-                        CKeyID addrKey = pubKey.GetID();
-                        switch (SecureMsgInsertAddress(addrKey, pubKey, addrpkdb))
-                        {
-                            case 0: nPubkeys++; break;      // added key
-                            case 4: nDuplicates++; break;   // duplicate key
-                        }
-                        break;
-                    };
-
-                    //LogPrintf("opcode %d, %s, value %s.\n", opcode, GetOpName(opcode), HexStr(vch));
-                };
-                nElements++;
-            };
-        };
-        */
         nTransactions++;
 
         if (nTransactions % 10000 == 0) // for ScanChainForPublicKeys
@@ -2025,7 +1941,7 @@ int SecureMsgWalletUnlocked()
 
                 try { vchData.resize(smsg.nPayload); } catch (std::exception &e)
                 {
-                    LogPrintf("SecureMsgWalletUnlocked(): Could not resize vchData, %u, %s\n", smsg.nPayload, e.what());
+                    LogPrintf("%s: Could not resize vchData, %u, %s\n", __func__, smsg.nPayload, e.what());
                     fclose(fp);
                     return 1;
                 };
@@ -2611,7 +2527,7 @@ int SecureMsgStore(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload, bool 
         return errorN(1, "Null pointer to header or payload.");
     };
 
-    SecureMessage* psmsg = (SecureMessage*) pHeader;
+    SecureMessage *psmsg = (SecureMessage*) pHeader;
 
 
     long int ofs;
@@ -2846,8 +2762,6 @@ int SecureMsgSetHash(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload)
         nonce++;
     };
 
-    //HMAC_CTX_cleanup(&ctx);
-
     if (!fSecMsgEnabled)
     {
         LogPrint(BCLog::SMSG, "%s: Stopped, shutdown detected.\n", __func__);
@@ -2933,7 +2847,6 @@ int SecureMsgEncrypt(SecureMessage &smsg, const CKeyID &addressFrom, const CKeyI
     {
         return errorN(5, "%s: Could not get public key for destination address.", __func__);
     };
-
 
     // Generate 16 random bytes as IV.
     GetStrongRandBytes(&smsg.iv[0], 16);

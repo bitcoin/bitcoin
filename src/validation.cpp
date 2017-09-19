@@ -4639,7 +4639,7 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
     if (!ActivateBestChain(state, chainparams, pblock))
         return error("%s: ActivateBestChain failed", __func__);
     
-    if (fSecMsgEnabled)
+    if (fSecMsgEnabled && gArgs.GetBoolArg("-smsgscanincoming", false))
         SecureMsgScanBlock(*pblock);
     return true;
 }
