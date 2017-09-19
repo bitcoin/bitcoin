@@ -1154,11 +1154,11 @@ void EscrowFeedback(const string& node, const string& role, const string& escrow
 	BOOST_CHECK(find_value(r.get_obj(), "feedback").get_str() == rating);
 	BOOST_CHECK(find_value(r.get_obj(), "feedbackto").get_int() == user);
 }
-const string OfferAccept(const string& ownernode, const string& buyernode, const string& aliasname, const string& offerguid, const string& qty, const string& witness) {
+const string OfferAccept(const string& ownernode, const string& buyernode, const string& aliasname, const string& offerguid, const string& qty, const string& discountexpected, const string& witness) {
 	CreateSysRatesIfNotExist();
 	UniValue r;
 	BOOST_CHECK_NO_THROW(r = CallRPC(ownernode, "offerinfo " + offerguid));
-	string escrowguid = EscrowNew(buyernode, ownernode, aliasname, offerguid, qty, "sysrates.peg", find_value(r.get_obj(), "alias").get_str());
+	string escrowguid = EscrowNew(buyernode, ownernode, aliasname, offerguid, qty, "sysrates.peg", find_value(r.get_obj(), "alias").get_str(), discountexpected);
 	EscrowRelease("node2", "buyer", escrowguid);
 	EscrowClaimRelease("node1", escrowguid);
 	return escrowguid;

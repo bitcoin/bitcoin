@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE (generate_offerwhitelists)
 	OfferAddWhitelist("node1", offerguid, "selleraddwhitelistalias1", "2");
 
 
-	OfferAccept("node1", "node2", "selleraddwhitelistalias1", offerguid, "1");
+	OfferAccept("node1", "node2", "selleraddwhitelistalias1", offerguid, "1", "2");
 	OfferClearWhitelist("node1", offerguid);
 
 
