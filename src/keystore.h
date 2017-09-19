@@ -66,14 +66,14 @@ public:
     {
         bool result;
         {
-            LOCK(cs_KeyStore);
+            LOCK(cs_KeyStore); // mapKeys
             result = (mapKeys.count(address) > 0);
         }
         return result;
     }
     std::set<CKeyID> GetKeys() const override
     {
-        LOCK(cs_KeyStore);
+        LOCK(cs_KeyStore); // mapKeys
         std::set<CKeyID> set_address;
         for (const auto& mi : mapKeys) {
             set_address.insert(mi.first);
@@ -83,7 +83,7 @@ public:
     bool GetKey(const CKeyID &address, CKey &keyOut) const override
     {
         {
-            LOCK(cs_KeyStore);
+            LOCK(cs_KeyStore); // mapKeys
             KeyMap::const_iterator mi = mapKeys.find(address);
             if (mi != mapKeys.end())
             {

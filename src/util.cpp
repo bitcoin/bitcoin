@@ -385,7 +385,7 @@ static void InterpretNegativeSetting(std::string& strKey, std::string& strValue)
 
 void ArgsManager::ParseParameters(int argc, const char* const argv[])
 {
-    LOCK(cs_args);
+    LOCK(cs_args); // mapArgs, mapMultiArgs
     mapArgs.clear();
     mapMultiArgs.clear();
 
@@ -421,7 +421,7 @@ void ArgsManager::ParseParameters(int argc, const char* const argv[])
 
 std::vector<std::string> ArgsManager::GetArgs(const std::string& strArg) const
 {
-    LOCK(cs_args);
+    LOCK(cs_args); // mapMultiArgs
     auto it = mapMultiArgs.find(strArg);
     if (it != mapMultiArgs.end()) return it->second;
     return {};
@@ -429,13 +429,13 @@ std::vector<std::string> ArgsManager::GetArgs(const std::string& strArg) const
 
 bool ArgsManager::IsArgSet(const std::string& strArg) const
 {
-    LOCK(cs_args);
+    LOCK(cs_args); // mapArgs
     return mapArgs.count(strArg);
 }
 
 std::string ArgsManager::GetArg(const std::string& strArg, const std::string& strDefault) const
 {
-    LOCK(cs_args);
+    LOCK(cs_args); // mapArgs
     auto it = mapArgs.find(strArg);
     if (it != mapArgs.end()) return it->second;
     return strDefault;
@@ -443,7 +443,7 @@ std::string ArgsManager::GetArg(const std::string& strArg, const std::string& st
 
 int64_t ArgsManager::GetArg(const std::string& strArg, int64_t nDefault) const
 {
-    LOCK(cs_args);
+    LOCK(cs_args); // mapArgs
     auto it = mapArgs.find(strArg);
     if (it != mapArgs.end()) return atoi64(it->second);
     return nDefault;
@@ -451,7 +451,7 @@ int64_t ArgsManager::GetArg(const std::string& strArg, int64_t nDefault) const
 
 bool ArgsManager::GetBoolArg(const std::string& strArg, bool fDefault) const
 {
-    LOCK(cs_args);
+    LOCK(cs_args); // mapArgs
     auto it = mapArgs.find(strArg);
     if (it != mapArgs.end()) return InterpretBool(it->second);
     return fDefault;
@@ -475,7 +475,7 @@ bool ArgsManager::SoftSetBoolArg(const std::string& strArg, bool fValue)
 
 void ArgsManager::ForceSetArg(const std::string& strArg, const std::string& strValue)
 {
-    LOCK(cs_args);
+    LOCK(cs_args); // mapArgs, mapMultiArgs
     mapArgs[strArg] = strValue;
     mapMultiArgs[strArg] = {strValue};
 }
@@ -581,7 +581,7 @@ const fs::path &GetDataDir(bool fNetSpecific)
 
 void ClearDatadirCache()
 {
-    LOCK(csPathCached);
+    LOCK(csPathCached); // pathCached, pathCachedNetSpecific
 
     pathCached = fs::path();
     pathCachedNetSpecific = fs::path();
@@ -603,7 +603,7 @@ void ArgsManager::ReadConfigFile(const std::string& confPath)
         return; // No bitcoin.conf file is OK
 
     {
-        LOCK(cs_args);
+        LOCK(cs_args); // mapArgs, mapMultiArgs
         std::set<std::string> setOptions;
         setOptions.insert("*");
 

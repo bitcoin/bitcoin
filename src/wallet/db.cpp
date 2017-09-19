@@ -145,7 +145,7 @@ void CDBEnv::MakeMock()
 
 CDBEnv::VerifyResult CDBEnv::Verify(const std::string& strFile, recoverFunc_type recoverFunc, std::string& out_backup_filename)
 {
-    LOCK(cs_db);
+    LOCK(cs_db); // mapFileUseCount
     assert(mapFileUseCount.count(strFile) == 0);
 
     Db db(dbenv, 0);
@@ -291,7 +291,7 @@ static const char *DATA_END = "DATA=END";
 
 bool CDBEnv::Salvage(const std::string& strFile, bool fAggressive, std::vector<CDBEnv::KeyValPair>& vResult)
 {
-    LOCK(cs_db);
+    LOCK(cs_db); // mapFileUseCount
     assert(mapFileUseCount.count(strFile) == 0);
 
     u_int32_t flags = DB_SALVAGE;
@@ -452,7 +452,7 @@ void CDB::Close()
         Flush();
 
     {
-        LOCK(env->cs_db);
+        LOCK(env->cs_db); // mapFileUseCount
         --env->mapFileUseCount[strFile];
     }
 }
@@ -460,7 +460,7 @@ void CDB::Close()
 void CDBEnv::CloseDb(const std::string& strFile)
 {
     {
-        LOCK(cs_db);
+        LOCK(cs_db); // mapDb
         if (mapDb[strFile] != nullptr) {
             // Close the database handle
             Db* pdb = mapDb[strFile];
@@ -480,7 +480,7 @@ bool CDB::Rewrite(CWalletDBWrapper& dbw, const char* pszSkip)
     const std::string& strFile = dbw.strFile;
     while (true) {
         {
-            LOCK(env->cs_db);
+            LOCK(env->cs_db); // mapFileUseCount
             if (!env->mapFileUseCount.count(strFile) || env->mapFileUseCount[strFile] == 0) {
                 // Flush log data to the dat file
                 env->CloseDb(strFile);
@@ -569,7 +569,7 @@ void CDBEnv::Flush(bool fShutdown)
     if (!fDbEnvInit)
         return;
     {
-        LOCK(cs_db);
+        LOCK(cs_db); // mapFileUseCount
         std::map<std::string, int>::iterator mi = mapFileUseCount.begin();
         while (mi != mapFileUseCount.end()) {
             std::string strFile = (*mi).first;
@@ -657,7 +657,7 @@ bool CWalletDBWrapper::Backup(const std::string& strDest)
     while (true)
     {
         {
-            LOCK(env->cs_db);
+            LOCK(env->cs_db); // mapFileUseCount
             if (!env->mapFileUseCount.count(strFile) || env->mapFileUseCount[strFile] == 0)
             {
                 // Flush log data to the dat file

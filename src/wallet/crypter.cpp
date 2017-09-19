@@ -143,7 +143,7 @@ static bool DecryptKey(const CKeyingMaterial& vMasterKey, const std::vector<unsi
 
 bool CCryptoKeyStore::SetCrypted()
 {
-    LOCK(cs_KeyStore);
+    LOCK(cs_KeyStore); // mapKeys
     if (fUseCrypto)
         return true;
     if (!mapKeys.empty())
@@ -158,7 +158,7 @@ bool CCryptoKeyStore::Lock()
         return false;
 
     {
-        LOCK(cs_KeyStore);
+        LOCK(cs_KeyStore); // vMasterKey
         vMasterKey.clear();
     }
 
@@ -169,7 +169,7 @@ bool CCryptoKeyStore::Lock()
 bool CCryptoKeyStore::Unlock(const CKeyingMaterial& vMasterKeyIn)
 {
     {
-        LOCK(cs_KeyStore);
+        LOCK(cs_KeyStore); // mapCryptedKeys, vMasterKey
         if (!SetCrypted())
             return false;
 
@@ -229,7 +229,7 @@ bool CCryptoKeyStore::AddKeyPubKey(const CKey& key, const CPubKey &pubkey)
 bool CCryptoKeyStore::AddCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret)
 {
     {
-        LOCK(cs_KeyStore);
+        LOCK(cs_KeyStore); // mapCryptedKeys
         if (!SetCrypted())
             return false;
 
@@ -241,7 +241,7 @@ bool CCryptoKeyStore::AddCryptedKey(const CPubKey &vchPubKey, const std::vector<
 bool CCryptoKeyStore::GetKey(const CKeyID &address, CKey& keyOut) const
 {
     {
-        LOCK(cs_KeyStore);
+        LOCK(cs_KeyStore); // mapCryptedKeys
         if (!IsCrypted())
             return CBasicKeyStore::GetKey(address, keyOut);
 
@@ -259,7 +259,7 @@ bool CCryptoKeyStore::GetKey(const CKeyID &address, CKey& keyOut) const
 bool CCryptoKeyStore::GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const
 {
     {
-        LOCK(cs_KeyStore);
+        LOCK(cs_KeyStore); // mapCryptedKeys
         if (!IsCrypted())
             return CBasicKeyStore::GetPubKey(address, vchPubKeyOut);
 
@@ -277,7 +277,7 @@ bool CCryptoKeyStore::GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) co
 bool CCryptoKeyStore::EncryptKeys(CKeyingMaterial& vMasterKeyIn)
 {
     {
-        LOCK(cs_KeyStore);
+        LOCK(cs_KeyStore); // mapKeys, mapCryptedKeys
         if (!mapCryptedKeys.empty() || IsCrypted())
             return false;
 

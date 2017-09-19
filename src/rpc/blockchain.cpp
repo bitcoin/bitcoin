@@ -160,7 +160,7 @@ UniValue getblockcount(const JSONRPCRequest& request)
             + HelpExampleRpc("getblockcount", "")
         );
 
-    LOCK(cs_main);
+    LOCK(cs_main); // chainActive
     return chainActive.Height();
 }
 
@@ -177,7 +177,7 @@ UniValue getbestblockhash(const JSONRPCRequest& request)
             + HelpExampleRpc("getbestblockhash", "")
         );
 
-    LOCK(cs_main);
+    LOCK(cs_main); // chainActive
     return chainActive.Tip()->GetBlockHash().GetHex();
 }
 
@@ -326,7 +326,7 @@ UniValue getdifficulty(const JSONRPCRequest& request)
             + HelpExampleRpc("getdifficulty", "")
         );
 
-    LOCK(cs_main);
+    LOCK(cs_main); // GetDifficulty(...)
     return GetDifficulty();
 }
 
@@ -386,7 +386,7 @@ UniValue mempoolToJSON(bool fVerbose)
 {
     if (fVerbose)
     {
-        LOCK(mempool.cs);
+        LOCK(mempool.cs); // mapTx, entryToJSON(...)
         UniValue o(UniValue::VOBJ);
         for (const CTxMemPoolEntry& e : mempool.mapTx)
         {
@@ -474,7 +474,7 @@ UniValue getmempoolancestors(const JSONRPCRequest& request)
 
     uint256 hash = ParseHashV(request.params[0], "parameter 1");
 
-    LOCK(mempool.cs);
+    LOCK(mempool.cs); // mapTx, entryToJSON(...)
 
     CTxMemPool::txiter it = mempool.mapTx.find(hash);
     if (it == mempool.mapTx.end()) {
@@ -538,7 +538,7 @@ UniValue getmempooldescendants(const JSONRPCRequest& request)
 
     uint256 hash = ParseHashV(request.params[0], "parameter 1");
 
-    LOCK(mempool.cs);
+    LOCK(mempool.cs); // mapTx, entryToJSON(...)
 
     CTxMemPool::txiter it = mempool.mapTx.find(hash);
     if (it == mempool.mapTx.end()) {
@@ -590,7 +590,7 @@ UniValue getmempoolentry(const JSONRPCRequest& request)
 
     uint256 hash = ParseHashV(request.params[0], "parameter 1");
 
-    LOCK(mempool.cs);
+    LOCK(mempool.cs); // mapTx, entryToJSON(...)
 
     CTxMemPool::txiter it = mempool.mapTx.find(hash);
     if (it == mempool.mapTx.end()) {
@@ -618,7 +618,7 @@ UniValue getblockhash(const JSONRPCRequest& request)
             + HelpExampleRpc("getblockhash", "1000")
         );
 
-    LOCK(cs_main);
+    LOCK(cs_main); // chainActive
 
     int nHeight = request.params[0].get_int();
     if (nHeight < 0 || nHeight > chainActive.Height())
@@ -662,7 +662,7 @@ UniValue getblockheader(const JSONRPCRequest& request)
             + HelpExampleRpc("getblockheader", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
         );
 
-    LOCK(cs_main);
+    LOCK(cs_main); // blockheaderToJSON(...), mapBlockIndex
 
     std::string strHash = request.params[0].get_str();
     uint256 hash(uint256S(strHash));
@@ -737,7 +737,7 @@ UniValue getblock(const JSONRPCRequest& request)
             + HelpExampleRpc("getblock", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
         );
 
-    LOCK(cs_main);
+    LOCK(cs_main); // blockToJSON(...), mapBlockIndex
 
     std::string strHash = request.params[0].get_str();
     uint256 hash(uint256S(strHash));
@@ -819,7 +819,7 @@ static bool GetUTXOStats(CCoinsView *view, CCoinsStats &stats)
     CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
     stats.hashBlock = pcursor->GetBestBlock();
     {
-        LOCK(cs_main);
+        LOCK(cs_main); // mapBlockIndex
         stats.nHeight = mapBlockIndex.find(stats.hashBlock)->second->nHeight;
     }
     ss << stats.hashBlock;
@@ -866,7 +866,7 @@ UniValue pruneblockchain(const JSONRPCRequest& request)
     if (!fPruneMode)
         throw JSONRPCError(RPC_MISC_ERROR, "Cannot prune blocks because node is not in prune mode.");
 
-    LOCK(cs_main);
+    LOCK(cs_main); // chainActive
 
     int heightParam = request.params[0].get_int();
     if (heightParam < 0)
@@ -978,7 +978,7 @@ UniValue gettxout(const JSONRPCRequest& request)
             + HelpExampleRpc("gettxout", "\"txid\", 1")
         );
 
-    LOCK(cs_main);
+    LOCK(cs_main); // pcoinsTip, mapBlockIndex
 
     UniValue ret(UniValue::VOBJ);
 
@@ -1168,7 +1168,7 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
             + HelpExampleRpc("getblockchaininfo", "")
         );
 
-    LOCK(cs_main);
+    LOCK(cs_main); // GetDifficulty(...), pindexBestHeader, chainActive
 
     UniValue obj(UniValue::VOBJ);
     obj.push_back(Pair("chain",                 Params().NetworkIDString()));
@@ -1252,7 +1252,7 @@ UniValue getchaintips(const JSONRPCRequest& request)
             + HelpExampleRpc("getchaintips", "")
         );
 
-    LOCK(cs_main);
+    LOCK(cs_main); // chainActive, mapBlockIndex
 
     /*
      * Idea:  the set of chain tips is chainActive.tip, plus orphan blocks which do not have another orphan building off of them.
@@ -1378,7 +1378,7 @@ UniValue preciousblock(const JSONRPCRequest& request)
     CBlockIndex* pblockindex;
 
     {
-        LOCK(cs_main);
+        LOCK(cs_main); // mapBlockIndex
         if (mapBlockIndex.count(hash) == 0)
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
 
@@ -1414,7 +1414,7 @@ UniValue invalidateblock(const JSONRPCRequest& request)
     CValidationState state;
 
     {
-        LOCK(cs_main);
+        LOCK(cs_main); // mapBlockIndex
         if (mapBlockIndex.count(hash) == 0)
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
 
@@ -1452,7 +1452,7 @@ UniValue reconsiderblock(const JSONRPCRequest& request)
     uint256 hash(uint256S(strHash));
 
     {
-        LOCK(cs_main);
+        LOCK(cs_main); // mapBlockIndex
         if (mapBlockIndex.count(hash) == 0)
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
 
@@ -1504,7 +1504,7 @@ UniValue getchaintxstats(const JSONRPCRequest& request)
     }
 
     {
-        LOCK(cs_main);
+        LOCK(cs_main); // chainActive, mapBlockIndex
         if (havehash) {
             auto it = mapBlockIndex.find(hash);
             if (it == mapBlockIndex.end()) {

@@ -599,19 +599,19 @@ public:
 
     unsigned long size()
     {
-        LOCK(cs);
+        LOCK(cs); // mapTx
         return mapTx.size();
     }
 
     uint64_t GetTotalTxSize() const
     {
-        LOCK(cs);
+        LOCK(cs); // totalTxSize
         return totalTxSize;
     }
 
     bool exists(uint256 hash) const
     {
-        LOCK(cs);
+        LOCK(cs); // mapTx
         return (mapTx.count(hash) != 0);
     }
 

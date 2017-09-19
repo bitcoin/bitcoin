@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE(acc_orderupgrade)
     CAccountingEntry ae;
     std::map<CAmount, CAccountingEntry> results;
 
-    LOCK(pwalletMain->cs_wallet);
+    LOCK(pwalletMain->cs_wallet); // mapWallet, nOrderPosNext
 
     ae.strAccount = "";
     ae.nCreditDebit = 1;

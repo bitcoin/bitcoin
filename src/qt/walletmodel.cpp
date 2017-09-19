@@ -350,7 +350,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
             CTxDestination dest = DecodeDestination(strAddress);
             std::string strLabel = rcp.label.toStdString();
             {
-                LOCK(wallet->cs_wallet);
+                LOCK(wallet->cs_wallet); // mapAddressBook
 
                 std::map<CTxDestination, CAddressBookData>::iterator mi = wallet->mapAddressBook.find(dest);
 
@@ -573,7 +573,7 @@ bool WalletModel::getPrivKey(const CKeyID &address, CKey& vchPrivKeyOut) const
 // returns a list of COutputs from COutPoints
 void WalletModel::getOutputs(const std::vector<COutPoint>& vOutpoints, std::vector<COutput>& vOutputs)
 {
-    LOCK2(cs_main, wallet->cs_wallet);
+    LOCK2(cs_main, wallet->cs_wallet); // mapWallet
     for (const COutPoint& outpoint : vOutpoints)
     {
         auto it = wallet->mapWallet.find(outpoint.hash);

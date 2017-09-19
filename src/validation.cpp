@@ -485,7 +485,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
     // Check for conflicts with in-memory transactions
     std::set<uint256> setConflicts;
     {
-    LOCK(pool.cs); // protect pool.mapNextTx
+    LOCK(pool.cs); // mapNextTx
     for (const CTxIn &txin : tx.vin)
     {
         auto itConflicting = pool.mapNextTx.find(txin.prevout);
@@ -670,7 +670,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         // If we don't hold the lock allConflicting might be incomplete; the
         // subsequent RemoveStaged() and addUnchecked() calls don't guarantee
         // mempool consistency for us.
-        LOCK(pool.cs);
+        LOCK(pool.cs); // mapTx
         const bool fReplacementTransaction = setConflicts.size();
         if (fReplacementTransaction)
         {
@@ -907,7 +907,7 @@ bool GetTransaction(const uint256 &hash, CTransactionRef &txOut, const Consensus
 {
     CBlockIndex *pindexSlow = nullptr;
 
-    LOCK(cs_main);
+    LOCK(cs_main); // pblocktree, chainActive
 
     CTransactionRef ptx = mempool.get(hash);
     if (ptx)
@@ -1044,7 +1044,7 @@ bool IsInitialBlockDownload()
     if (latchToFalse.load(std::memory_order_relaxed))
         return false;
 
-    LOCK(cs_main);
+    LOCK(cs_main); // chainActive
     if (latchToFalse.load(std::memory_order_relaxed))
         return false;
     if (fImporting || fReindex)
@@ -1208,7 +1208,7 @@ bool CScriptCheck::operator()() {
 
 int GetSpendHeight(const CCoinsViewCache& inputs)
 {
-    LOCK(cs_main);
+    LOCK(cs_main); // mapBlockIndex
     CBlockIndex* pindexPrev = mapBlockIndex.find(inputs.GetBestBlock())->second;
     return pindexPrev->nHeight + 1;
 }
@@ -1510,7 +1510,7 @@ static DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* 
 
 void static FlushBlockFile(bool fFinalize = false)
 {
-    LOCK(cs_LastBlockFile);
+    LOCK(cs_LastBlockFile); // nLastBlockFile
 
     CDiskBlockPos posOld(nLastBlockFile, 0);
 
@@ -1872,7 +1872,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
  */
 bool static FlushStateToDisk(const CChainParams& chainparams, CValidationState &state, FlushStateMode mode, int nManualPruneHeight) {
     int64_t nMempoolUsage = mempool.DynamicMemoryUsage();
-    LOCK(cs_main);
+    LOCK(cs_main); // pcoinsTip, pblocktree, chainActive
     static int64_t nLastWrite = 0;
     static int64_t nLastFlush = 0;
     static int64_t nLastSetChain = 0;
@@ -1882,7 +1882,7 @@ bool static FlushStateToDisk(const CChainParams& chainparams, CValidationState &
     int64_t nNow = 0;
     try {
     {
-        LOCK(cs_LastBlockFile);
+        LOCK(cs_LastBlockFile); // nLastBlockFile, fCheckForPruning
         if (fPruneMode && (fCheckForPruning || nManualPruneHeight > 0) && !fReindex) {
             if (nManualPruneHeight > 0) {
                 FindFilesToPruneManual(setFilesToPrune, nManualPruneHeight);
@@ -2439,7 +2439,7 @@ bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams,
         const CBlockIndex *pindexFork;
         bool fInitialDownload;
         {
-            LOCK(cs_main);
+            LOCK(cs_main); // chainActive, ActivateBestChainStep(...), FindMostWorkChain(...)
             ConnectTrace connectTrace(mempool); // Destructed before cs_main is unlocked
 
             CBlockIndex *pindexOldTip = chainActive.Tip();
@@ -2497,7 +2497,7 @@ bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams,
 bool PreciousBlock(CValidationState& state, const CChainParams& params, CBlockIndex *pindex)
 {
     {
-        LOCK(cs_main);
+        LOCK(cs_main); // PruneBlockIndexCandidates(...), chainActive
         if (pindex->nChainWork < chainActive.Tip()->nChainWork) {
             // Nothing to do, this block is not at the tip.
             return true;
@@ -2661,7 +2661,7 @@ static bool ReceivedBlockTransactions(const CBlock &block, CValidationState& sta
             queue.pop_front();
             pindex->nChainTx = (pindex->pprev ? pindex->pprev->nChainTx : 0) + pindex->nTx;
             {
-                LOCK(cs_nBlockSequenceId);
+                LOCK(cs_nBlockSequenceId); // nBlockSequenceId
                 pindex->nSequenceId = nBlockSequenceId++;
             }
             if (chainActive.Tip() == nullptr || !setBlockIndexCandidates.value_comp()(pindex, chainActive.Tip())) {
@@ -2686,7 +2686,7 @@ static bool ReceivedBlockTransactions(const CBlock &block, CValidationState& sta
 
 static bool FindBlockPos(CValidationState &state, CDiskBlockPos &pos, unsigned int nAddSize, unsigned int nHeight, uint64_t nTime, bool fKnown = false)
 {
-    LOCK(cs_LastBlockFile);
+    LOCK(cs_LastBlockFile); // nLastBlockFile, fCheckForPruning
 
     unsigned int nFile = fKnown ? pos.nFile : nLastBlockFile;
     if (vinfoBlockFile.size() <= nFile) {
@@ -2745,7 +2745,7 @@ static bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, 
 {
     pos.nFile = nFile;
 
-    LOCK(cs_LastBlockFile);
+    LOCK(cs_LastBlockFile); // fCheckForPruning
 
     unsigned int nNewSize;
     pos.nPos = vinfoBlockFile[nFile].nUndoSize;
@@ -3077,7 +3077,7 @@ static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state
 bool ProcessNewBlockHeaders(const std::vector<CBlockHeader>& headers, CValidationState& state, const CChainParams& chainparams, const CBlockIndex** ppindex)
 {
     {
-        LOCK(cs_main);
+        LOCK(cs_main); // AcceptBlockHeader(...)
         for (const CBlockHeader& header : headers) {
             CBlockIndex *pindex = nullptr; // Use a temp pindex instead of ppindex to avoid a const_cast
             if (!AcceptBlockHeader(header, state, chainparams, &pindex)) {
@@ -3182,7 +3182,7 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
         // belt-and-suspenders.
         bool ret = CheckBlock(*pblock, state, chainparams.GetConsensus());
 
-        LOCK(cs_main);
+        LOCK(cs_main); // AcceptBlock(...)
 
         if (ret) {
             // Store to disk
@@ -3289,7 +3289,7 @@ static void FindFilesToPruneManual(std::set<int>& setFilesToPrune, int nManualPr
 {
     assert(fPruneMode && nManualPruneHeight > 0);
 
-    LOCK2(cs_main, cs_LastBlockFile);
+    LOCK2(cs_main, cs_LastBlockFile); // chainActive, PruneOneBlockFile(...), nLastBlockFile
     if (chainActive.Tip() == nullptr)
         return;
 
@@ -3331,7 +3331,7 @@ void PruneBlockFilesManual(int nManualPruneHeight)
  */
 static void FindFilesToPrune(std::set<int>& setFilesToPrune, uint64_t nPruneAfterHeight)
 {
-    LOCK2(cs_main, cs_LastBlockFile);
+    LOCK2(cs_main, cs_LastBlockFile); // chainActive, PruneOneBlockFile(...), nLastBlockFile
     if (chainActive.Tip() == nullptr || nPruneTarget == 0) {
         return;
     }
@@ -3582,7 +3582,7 @@ CVerifyDB::~CVerifyDB()
 
 bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview, int nCheckLevel, int nCheckDepth)
 {
-    LOCK(cs_main);
+    LOCK(cs_main); // pcoinsTip, chainActive, ConnectBlock(...)
     if (chainActive.Tip() == nullptr || chainActive.Tip()->pprev == nullptr)
         return true;
 
@@ -3697,7 +3697,7 @@ static bool RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& inputs,
 
 bool ReplayBlocks(const CChainParams& params, CCoinsView* view)
 {
-    LOCK(cs_main);
+    LOCK(cs_main); // mapBlockIndex
 
     CCoinsViewCache cache(view);
 
@@ -3762,7 +3762,7 @@ bool ReplayBlocks(const CChainParams& params, CCoinsView* view)
 
 bool RewindBlockIndex(const CChainParams& params)
 {
-    LOCK(cs_main);
+    LOCK(cs_main); // PruneBlockIndexCandidates(...), chainActive, mapBlockIndex, DisconnectTip(...)
 
     // Note that during -reindex-chainstate we are called with an empty chainActive!
 
@@ -3858,7 +3858,7 @@ bool RewindBlockIndex(const CChainParams& params)
 // block index state
 void UnloadBlockIndex()
 {
-    LOCK(cs_main);
+    LOCK(cs_main); // mapBlockIndex, chainActive, versionbitscache, warningcache
     setBlockIndexCandidates.clear();
     chainActive.SetTip(nullptr);
     pindexBestInvalid = nullptr;
@@ -3909,7 +3909,7 @@ bool LoadBlockIndex(const CChainParams& chainparams)
 
 bool LoadGenesisBlock(const CChainParams& chainparams)
 {
-    LOCK(cs_main);
+    LOCK(cs_main); // AddToBlockIndex(...), mapBlockIndex
 
     // Check whether we're already initialized by checking for genesis in
     // mapBlockIndex. Note that we can't use chainActive here, since it is
@@ -4030,7 +4030,7 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskB
                         {
                             LogPrint(BCLog::REINDEX, "%s: Processing out of order child %s of %s\n", __func__, pblockrecursive->GetHash().ToString(),
                                     head.ToString());
-                            LOCK(cs_main);
+                            LOCK(cs_main); // AcceptBlock(...)
                             CValidationState dummy;
                             if (AcceptBlock(pblockrecursive, dummy, chainparams, nullptr, true, &it->second, nullptr))
                             {
@@ -4061,7 +4061,7 @@ void static CheckBlockIndex(const Consensus::Params& consensusParams)
         return;
     }
 
-    LOCK(cs_main);
+    LOCK(cs_main); // chainActive, mapBlockIndex
 
     // During a reindex, we read the genesis block and call CheckBlockIndex before ActivateBestChain,
     // so we have the genesis block in mapBlockIndex but no active chain.  (A few of the tests when
@@ -4251,19 +4251,19 @@ CBlockFileInfo* GetBlockFileInfo(size_t n)
 
 ThresholdState VersionBitsTipState(const Consensus::Params& params, Consensus::DeploymentPos pos)
 {
-    LOCK(cs_main);
+    LOCK(cs_main); // chainActive
     return VersionBitsState(chainActive.Tip(), params, pos, versionbitscache);
 }
 
 BIP9Stats VersionBitsTipStatistics(const Consensus::Params& params, Consensus::DeploymentPos pos)
 {
-    LOCK(cs_main);
+    LOCK(cs_main); // chainActive
     return VersionBitsStatistics(chainActive.Tip(), params, pos);
 }
 
 int VersionBitsTipStateSinceHeight(const Consensus::Params& params, Consensus::DeploymentPos pos)
 {
-    LOCK(cs_main);
+    LOCK(cs_main); // chainActive
     return VersionBitsStateSinceHeight(chainActive.Tip(), params, pos, versionbitscache);
 }
 
@@ -4307,7 +4307,7 @@ bool LoadMempool(void)
             }
             CValidationState state;
             if (nTime + nExpiryTimeout > nNow) {
-                LOCK(cs_main);
+                LOCK(cs_main); // AcceptToMemoryPoolWithTime(...)
                 AcceptToMemoryPoolWithTime(chainparams, mempool, state, tx, true, nullptr, nTime, nullptr, false, 0);
                 if (state.IsValid()) {
                     ++count;
@@ -4343,7 +4343,7 @@ bool DumpMempool(void)
     std::vector<TxMempoolInfo> vinfo;
 
     {
-        LOCK(mempool.cs);
+        LOCK(mempool.cs); // mapDeltas
         for (const auto &i : mempool.mapDeltas) {
             mapDeltas[i.first] = i.second;
         }

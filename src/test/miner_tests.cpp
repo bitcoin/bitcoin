@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     entry.nFee = 11;
     entry.nHeight = 11;
 
-    LOCK(cs_main);
+    LOCK(cs_main); // pcoinsTip, CreateBlockIndex(...), chainActive
     fCheckpointsEnabled = false;
 
     // Simple block creation, nothing special yet:

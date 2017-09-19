@@ -15,25 +15,25 @@ bool fLargeWorkInvalidChainFound = false;
 
 void SetMiscWarning(const std::string& strWarning)
 {
-    LOCK(cs_warnings);
+    LOCK(cs_warnings); // strMiscWarning
     strMiscWarning = strWarning;
 }
 
 void SetfLargeWorkForkFound(bool flag)
 {
-    LOCK(cs_warnings);
+    LOCK(cs_warnings); // fLargeWorkForkFound
     fLargeWorkForkFound = flag;
 }
 
 bool GetfLargeWorkForkFound()
 {
-    LOCK(cs_warnings);
+    LOCK(cs_warnings); // fLargeWorkForkFound
     return fLargeWorkForkFound;
 }
 
 void SetfLargeWorkInvalidChainFound(bool flag)
 {
-    LOCK(cs_warnings);
+    LOCK(cs_warnings); // fLargeWorkInvalidChainFound
     fLargeWorkInvalidChainFound = flag;
 }
 
@@ -44,7 +44,7 @@ std::string GetWarnings(const std::string& strFor)
     std::string strGUI;
     const std::string uiAlertSeperator = "<hr />";
 
-    LOCK(cs_warnings);
+    LOCK(cs_warnings); // strMiscWarning, fLargeWorkForkFound, fLargeWorkInvalidChainFound
 
     if (!CLIENT_VERSION_IS_RELEASE) {
         strStatusBar = "This is a pre-release test build - use at your own risk - do not use for mining or merchant applications";

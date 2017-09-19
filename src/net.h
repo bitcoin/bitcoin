@@ -183,7 +183,7 @@ public:
     template<typename Callable>
     void ForEachNode(Callable&& func)
     {
-        LOCK(cs_vNodes);
+        LOCK(cs_vNodes); // vNodes
         for (auto&& node : vNodes) {
             if (NodeFullyConnected(node))
                 func(node);
@@ -203,7 +203,7 @@ public:
     template<typename Callable, typename CallableAfter>
     void ForEachNodeThen(Callable&& pre, CallableAfter&& post)
     {
-        LOCK(cs_vNodes);
+        LOCK(cs_vNodes); // vNodes
         for (auto&& node : vNodes) {
             if (NodeFullyConnected(node))
                 pre(node);
@@ -795,14 +795,14 @@ public:
     void AddInventoryKnown(const CInv& inv)
     {
         {
-            LOCK(cs_inventory);
+            LOCK(cs_inventory); // filterInventoryKnown
             filterInventoryKnown.insert(inv.hash);
         }
     }
 
     void PushInventory(const CInv& inv)
     {
-        LOCK(cs_inventory);
+        LOCK(cs_inventory); // vInventoryBlockToSend, filterInventoryKnown
         if (inv.type == MSG_TX) {
             if (!filterInventoryKnown.contains(inv.hash)) {
                 setInventoryTxToSend.insert(inv.hash);
@@ -814,7 +814,7 @@ public:
 
     void PushBlockHash(const uint256 &hash)
     {
-        LOCK(cs_inventory);
+        LOCK(cs_inventory); // vBlockHashesToAnnounce
         vBlockHashesToAnnounce.push_back(hash);
     }
 

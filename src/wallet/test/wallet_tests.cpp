@@ -372,7 +372,7 @@ static void AddKey(CWallet& wallet, const CKey& key)
 
 BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
 {
-    LOCK(cs_main);
+    LOCK(cs_main); // chainActive
 
     // Cap last block file size, and mine new block in a new block file.
     CBlockIndex* const nullBlock = nullptr;
@@ -449,7 +449,7 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
 // than or equal to key birthday.
 BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
 {
-    LOCK(cs_main);
+    LOCK(cs_main); // chainActive
 
     // Create two blocks with same timestamp to verify that importwallet rescan
     // will pick up both blocks, not just the first.
@@ -467,7 +467,7 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
     // Import key into wallet and call dumpwallet to create backup file.
     {
         CWallet wallet;
-        LOCK(wallet.cs_wallet);
+        LOCK(wallet.cs_wallet); // mapKeyMetadata
         wallet.mapKeyMetadata[coinbaseKey.GetPubKey().GetID()].nCreateTime = KEY_TIME;
         wallet.AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey());
 
@@ -512,7 +512,7 @@ BOOST_FIXTURE_TEST_CASE(coin_mark_dirty_immature_credit, TestChain100Setup)
 {
     CWallet wallet;
     CWalletTx wtx(&wallet, MakeTransactionRef(coinbaseTxns.back()));
-    LOCK2(cs_main, wallet.cs_wallet);
+    LOCK2(cs_main, wallet.cs_wallet); // chainActive
     wtx.hashBlock = chainActive.Tip()->GetBlockHash();
     wtx.nIndex = 0;
 
@@ -638,7 +638,7 @@ public:
 BOOST_FIXTURE_TEST_CASE(ListCoins, ListCoinsTestingSetup)
 {
     std::string coinbaseAddress = coinbaseKey.GetPubKey().GetID().ToString();
-    LOCK2(cs_main, wallet->cs_wallet);
+    LOCK2(cs_main, wallet->cs_wallet); // AddTx(...)
 
     // Confirm ListCoins initially returns 1 coin grouped under coinbaseKey
     // address.
