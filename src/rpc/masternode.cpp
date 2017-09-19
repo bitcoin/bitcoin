@@ -364,7 +364,7 @@ UniValue masternode(const JSONRPCRequest& request)
         CKey secret;
         secret.MakeNewKey(false);
 
-        return CBitcoinSecret(secret).ToString();
+        return EncodeSecret(secret);
     }
 
     if (strCommand == "list-conf")

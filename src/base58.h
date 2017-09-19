@@ -94,21 +94,8 @@ public:
     bool operator> (const CBase58Data& b58) const { return CompareTo(b58) >  0; }
 };
 
-/**
- * A base58-encoded secret key
- */
-class CBitcoinSecret : public CBase58Data
-{
-public:
-    void SetKey(const CKey& vchSecret);
-    CKey GetKey();
-    bool IsValid() const;
-    bool SetString(const char* pszSecret);
-    bool SetString(const std::string& strSecret);
-
-    CBitcoinSecret(const CKey& vchSecret) { SetKey(vchSecret); }
-    CBitcoinSecret() {}
-};
+CKey DecodeSecret(const std::string& str);
+std::string EncodeSecret(const CKey& key);
 
 template<typename K, int Size, CChainParams::Base58Type Type> class CBitcoinExtKeyBase : public CBase58Data
 {
