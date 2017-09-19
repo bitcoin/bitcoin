@@ -1163,16 +1163,15 @@ const string OfferAccept(const string& ownernode, const string& buyernode, const
 	EscrowClaimRelease("node1", escrowguid);
 	return escrowguid;
 }
-const string EscrowNew(const string& node, const string& sellernode, const string& buyeralias, const string& offerguid, const string& qtyStr, const string& arbiteralias, const string& selleralias, const string &discountexpected, const string &witness)
+const string EscrowNew(const string& node, const string& sellernode, const string& buyeralias, const string& offerguid, const string& qtyStr, const string& arbiteralias, const string &discountexpected, const string &witness)
 {
 	string otherNode1, otherNode2;
 	GetOtherNodes(node, otherNode1, otherNode2);
 	UniValue r;
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasinfo " + selleralias));
-	string encryptionkey = find_value(r.get_obj(), "encryption_publickey").get_str();
 	int qty = atoi(qtyStr.c_str());
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offerguid));
 	int nQtyBefore = find_value(r.get_obj(), "quantity").get_int();
+	string selleralias = find_value(r.get_obj(), "alias").get_str();
 	string exttxid = "\"\"";
 	string merchantaliaspegtxid = "\"\"";
 	string paymentoptions = "\"\"";
