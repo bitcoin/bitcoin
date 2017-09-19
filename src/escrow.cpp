@@ -1350,6 +1350,18 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	CAmount nNetworkFee = (nFeePerByte * 400);
 	vector<CRecipient> vecSend;
 	CAmount nAmountWithFee = nTotalWithBuyerDiscount+nEscrowFee+nNetworkFee;
+	CAmount nTotalInCurrency = nAmountWithFee;
+	if (stringFromVch(theOffer.sCurrencyCode) != GetPaymentOptionsString(paymentOptionMask))
+	{
+		UniValue paramsConvert(UniValue::VARR);
+		paramsConvert.push_back(stringFromVch(selleralias.vchAlias));
+		paramsConvert.push_back(GetPaymentOptionsString(paymentOptionMask));
+		paramsConvert.push_back(stringFromVch(theOffer.sCurrencyCode));
+		paramsConvert.push_back(boost::lexical_cast<string>(ValueFromAmount(nAmountWithFee).get_real()));
+		UniValue r = tableRPC.execute("aliasconvertcurrency", paramsConvert);
+		nTotalInCurrency = AmountFromValue(find_value(r.get_obj(), "convertedrate"));
+	}
+
 	CWalletTx escrowWtx;
 	CRecipient recipientEscrow  = {scriptPubKey, nAmountWithFee, false};
 	if(extTxIdStr.empty())
@@ -1372,11 +1384,12 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	newEscrow.nHeight = chainActive.Tip()->nHeight;
 	newEscrow.sCurrencyCode = stringFromVch(theOffer.sCurrencyCode);
 	newEscrow.bCoinOffer = theOffer.bCoinOffer;
-	newEscrow.paymentPrecision = paymentPrecision;
 	newEscrow.nCommission = nCommission;
 	newEscrow.nNetworkFee = nNetworkFee;
 	newEscrow.nArbiterFee = nEscrowFee;
 	newEscrow.nTotal = nAmountWithFee;
+	newEscrow.sTotal = strprintf("%.*f", paymentPrecision, ValueFromAmount(nTotalInCurrency).get_real());
+	
 	vector<unsigned char> data;
 	newEscrow.Serialize(data);
     uint256 hash = Hash(data.begin(), data.end());
@@ -2884,7 +2897,7 @@ bool BuildEscrowJson(const CEscrow &escrow, const std::vector<std::vector<unsign
 	oEscrow.push_back(Pair("offerlink_seller", stringFromVch(escrow.linkSellerAliasTuple.first)));
 	oEscrow.push_back(Pair("quantity", (int)escrow.nQty));
 	const UniValue &totalValue = ValueFromAmount(escrow.nTotal);
-	oEscrow.push_back(Pair("stotal", strprintf("%.*f", escrow.paymentPrecision, totalValue.get_real())));
+	oEscrow.push_back(Pair("stotal", escrow.sTotal));
 	oEscrow.push_back(Pair("total", totalValue));
 	oEscrow.push_back(Pair("commission", ValueFromAmount(escrow.nCommission)));
 	oEscrow.push_back(Pair("arbiterfee", ValueFromAmount(escrow.nArbiterFee)));

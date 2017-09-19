@@ -1190,9 +1190,7 @@ const string EscrowNew(const string& node, const string& sellernode, const strin
 	if(discountexpected != "\"\"")
 		nTotal = nTotal*(float)((100-atoi(discountexpected.c_str()))/100.0f);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + guid));
-	CAmount arbiterFee = AmountFromValue(find_value(r.get_obj(), "arbiterfee"));
-	CAmount networkFee = AmountFromValue(find_value(r.get_obj(), "networkfee"));
-	CAmount nodeTotal = AmountFromValue(find_value(r.get_obj(), "total")) - arbiterFee - networkFee;
+	CAmount nodeTotal = AmountFromValue(find_value(r.get_obj(), "stotal"));
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == guid);
 	BOOST_CHECK(find_value(r.get_obj(), "offer").get_str() == offerguid);
 	BOOST_CHECK(find_value(r.get_obj(), "quantity").get_int() == qty);
@@ -1202,9 +1200,7 @@ const string EscrowNew(const string& node, const string& sellernode, const strin
 	if(!otherNode1.empty())
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "escrowinfo " + guid));
-		arbiterFee = AmountFromValue(find_value(r.get_obj(), "arbiterfee"));
-		networkFee = AmountFromValue(find_value(r.get_obj(), "networkfee"));
-		nodeTotal = AmountFromValue(find_value(r.get_obj(), "total")) - arbiterFee - networkFee;
+		nodeTotal = AmountFromValue(find_value(r.get_obj(), "stotal"));
 		BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == guid);
 		BOOST_CHECK(find_value(r.get_obj(), "offer").get_str() == offerguid);
 		BOOST_CHECK(find_value(r.get_obj(), "quantity").get_int() == qty);
@@ -1215,9 +1211,7 @@ const string EscrowNew(const string& node, const string& sellernode, const strin
 	if(!otherNode2.empty())
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "escrowinfo " + guid));
-		arbiterFee = AmountFromValue(find_value(r.get_obj(), "arbiterfee"));
-		networkFee = AmountFromValue(find_value(r.get_obj(), "networkfee"));
-		nodeTotal = AmountFromValue(find_value(r.get_obj(), "total")) - arbiterFee - networkFee;
+		nodeTotal = AmountFromValue(find_value(r.get_obj(), "stotal"));
 		BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == guid);
 		BOOST_CHECK(find_value(r.get_obj(), "offer").get_str() == offerguid);
 		BOOST_CHECK(find_value(r.get_obj(), "quantity").get_int() == qty);
