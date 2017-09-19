@@ -180,7 +180,9 @@ UniValue gobject(const JSONRPCRequest& request)
         CReserveKey reservekey(pwalletMain);
         // -- send the tx to the network
         CValidationState state;
-        pwalletMain->CommitTransaction(wtx, reservekey, g_connman.get(), state, NetMsgType::TX);
+        if (!pwalletMain->CommitTransaction(wtx, reservekey, g_connman.get(), state, NetMsgType::TX)) {
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "CommitTransaction failed! Reason given: " + state.GetRejectReason());
+        }
 
         DBG( cout << "gobject: prepare "
              << " strData = " << govobj.GetDataAsString()
