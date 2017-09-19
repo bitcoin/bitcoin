@@ -8,7 +8,9 @@
 #include "chain.h"
 #include "chainparams.h"
 #include "clientversion.h"
+namespace alert_tests {
 #include "data/alertTests.raw.h"
+}
 #include "serialize.h"
 #include "streams.h"
 #include "utilstrencodings.h"
