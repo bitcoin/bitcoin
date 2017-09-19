@@ -38,7 +38,7 @@ void OfferClearWhitelist(const string& node, const string& offer, const string& 
 void EscrowFeedback(const string& node, const string& role, const string& escrowguid, const string& feedback, const string& rating, char user, const string& witness="\"\"");
 const string OfferLink(const string& node, const string& alias, const string& guid, const string& commission, const string& newdetails, const string& witness="\"\"");
 const string OfferAccept(const string& ownernode, const string& node, const string& aliasname, const string& offerguid, const string& qty, const string& witness="\"\"");
-const string EscrowNew(const string& node, const string& sellernode, const string& buyeralias, const string& offerguid, const string& qty, const string& arbiteralias, const string& exttxid="\"\"", const string& discountexpected="\"\"", const string& witness="\"\"");
+const string EscrowNew(const string& node, const string& sellernode, const string& buyeralias, const string& offerguid, const string& qty, const string& arbiteralias, const string& discountexpected="\"\"", const string& witness="\"\"");
 void EscrowRelease(const string& node, const string& role, const string& guid, const string& witness="\"\"");
 void EscrowClaimRelease(const string& node, const string& guid, const string& witness="\"\"");
 void EscrowRefund(const string& node, const string& role, const string& guid, const string& witness="\"\"");
