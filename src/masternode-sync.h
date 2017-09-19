@@ -48,13 +48,13 @@ private:
     int64_t nTimeLastFailure;
 
     void Fail();
-    void ClearFulfilledRequests();
+    void ClearFulfilledRequests(CConnman& connman);
 
 public:
     CMasternodeSync() { Reset(); }
 
 
-    void SendGovernanceSyncRequest(CNode* pnode);
+    void SendGovernanceSyncRequest(CNode* pnode, CConnman& connman);
 
     bool IsFailed() { return nRequestedMasternodeAssets == MASTERNODE_SYNC_FAILED; }
     bool IsBlockchainSynced() { return nRequestedMasternodeAssets > MASTERNODE_SYNC_WAITING; }
@@ -70,13 +70,13 @@ public:
     std::string GetSyncStatus();
 
     void Reset();
-    void SwitchToNextAsset();
+    void SwitchToNextAsset(CConnman& connman);
 
     void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
-    void ProcessTick();
+    void ProcessTick(CConnman& connman);
 
     void AcceptedBlockHeader(const CBlockIndex *pindexNew);
-    void NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload);
+    void NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload, CConnman& connman);
 };
 
 #endif

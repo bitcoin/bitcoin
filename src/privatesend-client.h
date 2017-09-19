@@ -70,8 +70,8 @@ private:
 
     // Make sure we have enough keys since last backup
     bool CheckAutomaticBackup();
-    bool JoinExistingQueue(CAmount nBalanceNeedsAnonymized);
-    bool StartNewQueue(CAmount nValueMin, CAmount nBalanceNeedsAnonymized);
+    bool JoinExistingQueue(CAmount nBalanceNeedsAnonymized, CConnman& connman);
+    bool StartNewQueue(CAmount nValueMin, CAmount nBalanceNeedsAnonymized, CConnman& connman);
 
     /// Create denominations
     bool CreateDenominated(CConnman& connman);
@@ -82,11 +82,11 @@ private:
     bool MakeCollateralAmounts(const CompactTallyItem& tallyItem, bool fTryDenominated, CConnman& connman);
 
     /// As a client, submit part of a future mixing transaction to a Masternode to start the process
-    bool SubmitDenominate();
+    bool SubmitDenominate(CConnman& connman);
     /// step 1: prepare denominated inputs and outputs
     bool PrepareDenominate(int nMinRounds, int nMaxRounds, std::string& strErrorRet, std::vector<CTxIn>& vecTxInRet, std::vector<CTxOut>& vecTxOutRet);
     /// step 2: send denominated inputs and outputs prepared in step 1
-    bool SendDenominate(const std::vector<CTxIn>& vecTxIn, const std::vector<CTxOut>& vecTxOut);
+    bool SendDenominate(const std::vector<CTxIn>& vecTxIn, const std::vector<CTxOut>& vecTxOut, CConnman& connman);
 
     /// Get Masternode updates about the progress of mixing
     bool CheckPoolStateUpdate(PoolState nStateNew, int nEntriesCountNew, PoolStatusUpdate nStatusUpdate, PoolMessage nMessageID, int nSessionIDNew=0);
@@ -94,9 +94,9 @@ private:
     void SetState(PoolState nStateNew);
 
     /// As a client, check and sign the final transaction
-    bool SignFinalTransaction(const CTransaction& finalTransactionNew, CNode* pnode);
+    bool SignFinalTransaction(const CTransaction& finalTransactionNew, CNode* pnode, CConnman& connman);
 
-    void RelayIn(const CDarkSendEntry& entry);
+    void RelayIn(const CDarkSendEntry& entry, CConnman& connman);
 
     void SetNull();
 
@@ -123,7 +123,7 @@ public:
         nCachedNumBlocks(std::numeric_limits<int>::max()),
         fCreateAutoBackups(true) { SetNull(); }
 
-    void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
+    void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv, CConnman& connman);
 
     void ClearSkippedDenominations() { vecDenominationsSkipped.clear(); }
 

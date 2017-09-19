@@ -13,6 +13,7 @@
 using namespace std;
 
 class CGovernanceVote;
+class CConnman;
 
 // INTENTION OF MASTERNODES REGARDING ITEM
 enum vote_outcome_enum_t  {
@@ -122,7 +123,7 @@ public:
 
     bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode);
     bool IsValid(bool fSignatureCheck) const;
-    void Relay() const;
+    void Relay(CConnman& connman) const;
 
     std::string GetVoteString() const {
         return CGovernanceVoting::ConvertOutcomeToString(GetOutcome());

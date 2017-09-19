@@ -13,7 +13,7 @@ extern CWallet* pwalletMain;
 // Keep track of the active Masternode
 CActiveMasternode activeMasternode;
 
-void CActiveMasternode::ManageState()
+void CActiveMasternode::ManageState(CConnman& connman)
 {
     LogPrint("masternode", "CActiveMasternode::ManageState -- Start\n");
     if(!fMasterNode) {
@@ -34,7 +34,7 @@ void CActiveMasternode::ManageState()
     LogPrint("masternode", "CActiveMasternode::ManageState -- status = %s, type = %s, pinger enabled = %d\n", GetStatus(), GetTypeString(), fPingerEnabled);
 
     if(eType == MASTERNODE_UNKNOWN) {
-        ManageStateInitial();
+        ManageStateInitial(connman);
     }
 
     if(eType == MASTERNODE_REMOTE) {
@@ -43,10 +43,10 @@ void CActiveMasternode::ManageState()
         // Try Remote Start first so the started local masternode can be restarted without recreate masternode broadcast.
         ManageStateRemote();
         if(nState != ACTIVE_MASTERNODE_STARTED)
-            ManageStateLocal();
+            ManageStateLocal(connman);
     }
 
-    SendMasternodePing();
+    SendMasternodePing(connman);
 }
 
 std::string CActiveMasternode::GetStateString() const
@@ -93,7 +93,7 @@ std::string CActiveMasternode::GetTypeString() const
     return strType;
 }
 
-bool CActiveMasternode::SendMasternodePing()
+bool CActiveMasternode::SendMasternodePing(CConnman& connman)
 {
     if(!fPingerEnabled) {
         LogPrint("masternode", "CActiveMasternode::SendMasternodePing -- %s: masternode ping service is disabled, skipping...\n", GetStateString());
@@ -125,7 +125,7 @@ bool CActiveMasternode::SendMasternodePing()
     mnodeman.SetMasternodeLastPing(outpoint, mnp);
 
     LogPrintf("CActiveMasternode::SendMasternodePing -- Relaying ping, collateral=%s\n", outpoint.ToStringShort());
-    mnp.Relay();
+    mnp.Relay(connman);
 
     return true;
 }
@@ -138,7 +138,7 @@ bool CActiveMasternode::UpdateSentinelPing(int version)
     return true;
 }
 
-void CActiveMasternode::ManageStateInitial()
+void CActiveMasternode::ManageStateInitial(CConnman& connman)
 {
     LogPrint("masternode", "CActiveMasternode::ManageStateInitial -- status = %s, type = %s, pinger enabled = %d\n", GetStatus(), GetTypeString(), fPingerEnabled);
 
@@ -156,7 +156,7 @@ void CActiveMasternode::ManageStateInitial()
     if(!fFoundLocal) {
         bool empty = true;
         // If we have some peers, let's try to find our local address from one of them
-        g_connman->ForEachNodeContinueIf(CConnman::AllNodes, [&fFoundLocal, &empty, this](CNode* pnode) {
+        connman.ForEachNodeContinueIf(CConnman::AllNodes, [&fFoundLocal, &empty, this](CNode* pnode) {
             empty = false;
             if (pnode->addr.IsIPv4())
                 fFoundLocal = GetLocal(service, &pnode->addr) && CMasternode::IsValidNetAddr(service);
@@ -195,8 +195,7 @@ void CActiveMasternode::ManageStateInitial()
 
     LogPrintf("CActiveMasternode::ManageStateInitial -- Checking inbound connection to '%s'\n", service.ToString());
 
-    // TODO: Pass CConnman instance somehow and don't use global variable.
-    if(!g_connman->ConnectNode(CAddress(service, NODE_NETWORK), NULL, true)) {
+    if(!connman.ConnectNode(CAddress(service, NODE_NETWORK), NULL, true)) {
         nState = ACTIVE_MASTERNODE_NOT_CAPABLE;
         strNotCapableReason = "Could not connect to " + service.ToString();
         LogPrintf("CActiveMasternode::ManageStateInitial -- %s: %s\n", GetStateString(), strNotCapableReason);
@@ -275,7 +274,7 @@ void CActiveMasternode::ManageStateRemote()
     }
 }
 
-void CActiveMasternode::ManageStateLocal()
+void CActiveMasternode::ManageStateLocal(CConnman& connman)
 {
     LogPrint("masternode", "CActiveMasternode::ManageStateLocal -- status = %s, type = %s, pinger enabled = %d\n", GetStatus(), GetTypeString(), fPingerEnabled);
     if(nState == ACTIVE_MASTERNODE_STARTED) {
@@ -314,11 +313,11 @@ void CActiveMasternode::ManageStateLocal()
 
         //update to masternode list
         LogPrintf("CActiveMasternode::ManageStateLocal -- Update Masternode List\n");
-        mnodeman.UpdateMasternodeList(mnb);
-        mnodeman.NotifyMasternodeUpdates();
+        mnodeman.UpdateMasternodeList(mnb, connman);
+        mnodeman.NotifyMasternodeUpdates(connman);
 
         //send to all peers
         LogPrintf("CActiveMasternode::ManageStateLocal -- Relay broadcast, collateral=%s\n", outpoint.ToStringShort());
-        mnb.Relay();
+        mnb.Relay(connman);
     }
 }

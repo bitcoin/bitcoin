@@ -223,10 +223,10 @@ CGovernanceVote::CGovernanceVote(COutPoint outpointMasternodeIn, uint256 nParent
       vchSig()
 {}
 
-void CGovernanceVote::Relay() const
+void CGovernanceVote::Relay(CConnman& connman) const
 {
     CInv inv(MSG_GOVERNANCE_OBJECT_VOTE, GetHash());
-    g_connman->RelayInv(inv, PROTOCOL_VERSION);
+    connman.RelayInv(inv, PROTOCOL_VERSION);
 }
 
 bool CGovernanceVote::Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode)

@@ -18,7 +18,7 @@
 
 CPrivateSendClient privateSendClient;
 
-void CPrivateSendClient::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
+void CPrivateSendClient::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv, CConnman& connman)
 {
     if(fMasterNode) return;
     if(fLiteMode) return; // ignore all Dash related functionality
@@ -53,7 +53,7 @@ void CPrivateSendClient::ProcessMessage(CNode* pfrom, std::string& strCommand, C
 
         if(!dsq.CheckSignature(infoMn.pubKeyMasternode)) {
             // we probably have outdated info
-            mnodeman.AskForMN(pfrom, dsq.vin.prevout);
+            mnodeman.AskForMN(pfrom, dsq.vin.prevout, connman);
             return;
         }
 
@@ -67,7 +67,7 @@ void CPrivateSendClient::ProcessMessage(CNode* pfrom, std::string& strCommand, C
 
             if(nState == POOL_STATE_QUEUE) {
                 LogPrint("privatesend", "DSQUEUE -- PrivateSend queue (%s) is ready on masternode %s\n", dsq.ToString(), infoMn.addr.ToString());
-                SubmitDenominate();
+                SubmitDenominate(connman);
             }
         } else {
             BOOST_FOREACH(CDarksendQueue q, vecDarksendQueue) {
@@ -93,7 +93,7 @@ void CPrivateSendClient::ProcessMessage(CNode* pfrom, std::string& strCommand, C
                 dsq.fTried = true;
             }
             vecDarksendQueue.push_back(dsq);
-            dsq.Relay();
+            dsq.Relay(connman);
         }
 
     } else if(strCommand == NetMsgType::DSSTATUSUPDATE) {
@@ -165,7 +165,7 @@ void CPrivateSendClient::ProcessMessage(CNode* pfrom, std::string& strCommand, C
         LogPrint("privatesend", "DSFINALTX -- txNew %s", txNew.ToString());
 
         //check to see if input is spent already? (and probably not confirmed)
-        SignFinalTransaction(txNew, pfrom);
+        SignFinalTransaction(txNew, pfrom, connman);
 
     } else if(strCommand == NetMsgType::DSCOMPLETE) {
 
@@ -359,7 +359,7 @@ void CPrivateSendClient::CheckTimeout()
 // Execute a mixing denomination via a Masternode.
 // This is only ran from clients
 //
-bool CPrivateSendClient::SendDenominate(const std::vector<CTxIn>& vecTxIn, const std::vector<CTxOut>& vecTxOut)
+bool CPrivateSendClient::SendDenominate(const std::vector<CTxIn>& vecTxIn, const std::vector<CTxOut>& vecTxOut, CConnman& connman)
 {
     if(fMasterNode) {
         LogPrintf("CPrivateSendClient::SendDenominate -- PrivateSend from a Masternode is not supported currently.\n");
@@ -432,7 +432,7 @@ bool CPrivateSendClient::SendDenominate(const std::vector<CTxIn>& vecTxIn, const
     // store our entry for later use
     CDarkSendEntry entry(vecTxIn, vecTxOut, txMyCollateral);
     vecEntries.push_back(entry);
-    RelayIn(entry);
+    RelayIn(entry, connman);
     nTimeLastSuccessfulStep = GetTimeMillis();
 
     return true;
@@ -485,7 +485,7 @@ bool CPrivateSendClient::CheckPoolStateUpdate(PoolState nStateNew, int nEntriesC
 // check it to make sure it's what we want, then sign it if we agree.
 // If we refuse to sign, it's possible we'll be charged collateral
 //
-bool CPrivateSendClient::SignFinalTransaction(const CTransaction& finalTransactionNew, CNode* pnode)
+bool CPrivateSendClient::SignFinalTransaction(const CTransaction& finalTransactionNew, CNode* pnode, CConnman& connman)
 {
     if(fMasterNode || pnode == NULL) return false;
 
@@ -564,7 +564,7 @@ bool CPrivateSendClient::SignFinalTransaction(const CTransaction& finalTransacti
 
     // push all of our signatures to the Masternode
     LogPrintf("CPrivateSendClient::SignFinalTransaction -- pushing sigs to the masternode, finalMutableTransaction=%s", finalMutableTransaction.ToString());
-    g_connman->PushMessage(pnode, NetMsgType::DSSIGNFINALTX, sigs);
+    connman.PushMessage(pnode, NetMsgType::DSSIGNFINALTX, sigs);
     SetState(POOL_STATE_SIGNING);
     nTimeLastSuccessfulStep = GetTimeMillis();
 
@@ -817,20 +817,20 @@ bool CPrivateSendClient::DoAutomaticDenominating(CConnman& connman, bool fDryRun
 
     bool fUseQueue = GetRandInt(100) > 33;
     // don't use the queues all of the time for mixing unless we are a liquidity provider
-    if((nLiquidityProvider || fUseQueue) && JoinExistingQueue(nBalanceNeedsAnonymized))
+    if((nLiquidityProvider || fUseQueue) && JoinExistingQueue(nBalanceNeedsAnonymized, connman))
         return true;
 
     // do not initiate queue if we are a liquidity provider to avoid useless inter-mixing
     if(nLiquidityProvider) return false;
 
-    if(StartNewQueue(nValueMin, nBalanceNeedsAnonymized))
+    if(StartNewQueue(nValueMin, nBalanceNeedsAnonymized, connman))
         return true;
 
     strAutoDenomResult = _("No compatible Masternode found.");
     return false;
 }
 
-bool CPrivateSendClient::JoinExistingQueue(CAmount nBalanceNeedsAnonymized)
+bool CPrivateSendClient::JoinExistingQueue(CAmount nBalanceNeedsAnonymized, CConnman& connman)
 {
     std::vector<CAmount> vecStandardDenoms = CPrivateSend::GetStandardDenominations();
     // Look through the queues and see if anything matches
@@ -876,7 +876,7 @@ bool CPrivateSendClient::JoinExistingQueue(CAmount nBalanceNeedsAnonymized)
 
         CNode* pnodeFound = NULL;
         bool fDisconnect = false;
-        g_connman->ForNode(infoMn.addr, CConnman::AllNodes, [&pnodeFound, &fDisconnect](CNode* pnode) {
+        connman.ForNode(infoMn.addr, CConnman::AllNodes, [&pnodeFound, &fDisconnect](CNode* pnode) {
             pnodeFound = pnode;
             if(pnodeFound->fDisconnect) {
                 fDisconnect = true;
@@ -890,13 +890,12 @@ bool CPrivateSendClient::JoinExistingQueue(CAmount nBalanceNeedsAnonymized)
 
         LogPrintf("CPrivateSendClient::JoinExistingQueue -- attempt to connect to masternode from queue, addr=%s\n", infoMn.addr.ToString());
         // connect to Masternode and submit the queue request
-        // TODO: Pass CConnman instance somehow and don't use global variable.
-        CNode* pnode = (pnodeFound && pnodeFound->fMasternode) ? pnodeFound : g_connman->ConnectNode(CAddress(infoMn.addr, NODE_NETWORK), NULL, true);
+        CNode* pnode = (pnodeFound && pnodeFound->fMasternode) ? pnodeFound : connman.ConnectNode(CAddress(infoMn.addr, NODE_NETWORK), NULL, true);
         if(pnode) {
             infoMixingMasternode = infoMn;
             nSessionDenom = dsq.nDenom;
 
-            g_connman->PushMessage(pnode, NetMsgType::DSACCEPT, nSessionDenom, txMyCollateral);
+            connman.PushMessage(pnode, NetMsgType::DSACCEPT, nSessionDenom, txMyCollateral);
             LogPrintf("CPrivateSendClient::JoinExistingQueue -- connected (from queue), sending DSACCEPT: nSessionDenom: %d (%s), addr=%s\n",
                     nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom), pnode->addr.ToString());
             strAutoDenomResult = _("Mixing in progress...");
@@ -915,7 +914,7 @@ bool CPrivateSendClient::JoinExistingQueue(CAmount nBalanceNeedsAnonymized)
     return false;
 }
 
-bool CPrivateSendClient::StartNewQueue(CAmount nValueMin, CAmount nBalanceNeedsAnonymized)
+bool CPrivateSendClient::StartNewQueue(CAmount nValueMin, CAmount nBalanceNeedsAnonymized, CConnman& connman)
 {
     int nTries = 0;
     int nMnCountEnabled = mnodeman.CountEnabled(MIN_PRIVATESEND_PEER_PROTO_VERSION);
@@ -951,7 +950,7 @@ bool CPrivateSendClient::StartNewQueue(CAmount nValueMin, CAmount nBalanceNeedsA
 
         CNode* pnodeFound = NULL;
         bool fDisconnect = false;
-        g_connman->ForNode(infoMn.addr, CConnman::AllNodes, [&pnodeFound, &fDisconnect](CNode* pnode) {
+        connman.ForNode(infoMn.addr, CConnman::AllNodes, [&pnodeFound, &fDisconnect](CNode* pnode) {
             pnodeFound = pnode;
             if(pnodeFound->fDisconnect) {
                 fDisconnect = true;
@@ -966,8 +965,7 @@ bool CPrivateSendClient::StartNewQueue(CAmount nValueMin, CAmount nBalanceNeedsA
         }
 
         LogPrintf("CPrivateSendClient::StartNewQueue -- attempt %d connection to Masternode %s\n", nTries, infoMn.addr.ToString());
-        // TODO: Pass CConnman instance somehow and don't use global variable.
-        CNode* pnode = (pnodeFound && pnodeFound->fMasternode) ? pnodeFound : g_connman->ConnectNode(CAddress(infoMn.addr, NODE_NETWORK), NULL, true);
+        CNode* pnode = (pnodeFound && pnodeFound->fMasternode) ? pnodeFound : connman.ConnectNode(CAddress(infoMn.addr, NODE_NETWORK), NULL, true);
         if(pnode) {
             LogPrintf("CPrivateSendClient::StartNewQueue -- connected, addr=%s\n", infoMn.addr.ToString());
             infoMixingMasternode = infoMn;
@@ -979,7 +977,7 @@ bool CPrivateSendClient::StartNewQueue(CAmount nValueMin, CAmount nBalanceNeedsA
                 nSessionDenom = CPrivateSend::GetDenominationsByAmounts(vecAmounts);
             }
 
-            g_connman->PushMessage(pnode, NetMsgType::DSACCEPT, nSessionDenom, txMyCollateral);
+            connman.PushMessage(pnode, NetMsgType::DSACCEPT, nSessionDenom, txMyCollateral);
             LogPrintf("CPrivateSendClient::StartNewQueue -- connected, sending DSACCEPT, nSessionDenom: %d (%s)\n",
                     nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom));
             strAutoDenomResult = _("Mixing in progress...");
@@ -998,7 +996,7 @@ bool CPrivateSendClient::StartNewQueue(CAmount nValueMin, CAmount nBalanceNeedsA
     return false;
 }
 
-bool CPrivateSendClient::SubmitDenominate()
+bool CPrivateSendClient::SubmitDenominate(CConnman& connman)
 {
     std::string strError;
     std::vector<CTxIn> vecTxInRet;
@@ -1009,7 +1007,7 @@ bool CPrivateSendClient::SubmitDenominate()
     for(int i = nPrivateSendRounds; i > 0; i--) {
         if(PrepareDenominate(i - 1, i, strError, vecTxInRet, vecTxOutRet)) {
             LogPrintf("CPrivateSendClient::SubmitDenominate -- Running PrivateSend denominate for %d rounds, success\n", i);
-            return SendDenominate(vecTxInRet, vecTxOutRet);
+            return SendDenominate(vecTxInRet, vecTxOutRet, connman);
         }
         LogPrint("privatesend", "CPrivateSendClient::SubmitDenominate -- Running PrivateSend denominate for %d rounds, error: %s\n", i, strError);
     }
@@ -1017,7 +1015,7 @@ bool CPrivateSendClient::SubmitDenominate()
     // We failed? That's strange but let's just make final attempt and try to mix everything
     if(PrepareDenominate(0, nPrivateSendRounds, strError, vecTxInRet, vecTxOutRet)) {
         LogPrintf("CPrivateSendClient::SubmitDenominate -- Running PrivateSend denominate for all rounds, success\n");
-        return SendDenominate(vecTxInRet, vecTxOutRet);
+        return SendDenominate(vecTxInRet, vecTxOutRet, connman);
     }
 
     // Should never actually get here but just in case
@@ -1369,13 +1367,13 @@ bool CPrivateSendClient::CreateDenominated(const CompactTallyItem& tallyItem, bo
     return true;
 }
 
-void CPrivateSendClient::RelayIn(const CDarkSendEntry& entry)
+void CPrivateSendClient::RelayIn(const CDarkSendEntry& entry, CConnman& connman)
 {
     if(!infoMixingMasternode.fInfoValid) return;
 
-    g_connman->ForNode(infoMixingMasternode.addr, [&entry](CNode* pnode) {
+    connman.ForNode(infoMixingMasternode.addr, [&entry, &connman](CNode* pnode) {
         LogPrintf("CPrivateSendClient::RelayIn -- found master, relaying message to %s\n", pnode->addr.ToString());
-        g_connman->PushMessage(pnode, NetMsgType::DSVIN, entry);
+        connman.PushMessage(pnode, NetMsgType::DSVIN, entry);
         return true;
     });
 }

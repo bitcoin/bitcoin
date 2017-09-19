@@ -50,7 +50,7 @@ CMasternode::CMasternode(const CMasternodeBroadcast& mnb) :
 //
 // When a new masternode broadcast is sent, update our information
 //
-bool CMasternode::UpdateFromNewBroadcast(CMasternodeBroadcast& mnb)
+bool CMasternode::UpdateFromNewBroadcast(CMasternodeBroadcast& mnb, CConnman& connman)
 {
     if(mnb.sigTime <= sigTime && !mnb.fRecovery) return false;
 
@@ -63,7 +63,7 @@ bool CMasternode::UpdateFromNewBroadcast(CMasternodeBroadcast& mnb)
     nPoSeBanHeight = 0;
     nTimeLastChecked = 0;
     int nDos = 0;
-    if(mnb.lastPing == CMasternodePing() || (mnb.lastPing != CMasternodePing() && mnb.lastPing.CheckAndUpdate(this, true, nDos))) {
+    if(mnb.lastPing == CMasternodePing() || (mnb.lastPing != CMasternodePing() && mnb.lastPing.CheckAndUpdate(this, true, nDos, connman))) {
         lastPing = mnb.lastPing;
         mnodeman.mapSeenMasternodePing.insert(std::make_pair(lastPing.GetHash(), lastPing));
     }
@@ -72,7 +72,7 @@ bool CMasternode::UpdateFromNewBroadcast(CMasternodeBroadcast& mnb)
         nPoSeBanScore = -MASTERNODE_POSE_BAN_MAX_SCORE;
         if(nProtocolVersion == PROTOCOL_VERSION) {
             // ... and PROTOCOL_VERSION, then we've been remotely activated ...
-            activeMasternode.ManageState();
+            activeMasternode.ManageState(connman);
         } else {
             // ... otherwise we need to reactivate our node, do not add it to the list and do not relay
             // but also do not ban the node we get this message from
@@ -488,7 +488,7 @@ bool CMasternodeBroadcast::SimpleCheck(int& nDos)
     return true;
 }
 
-bool CMasternodeBroadcast::Update(CMasternode* pmn, int& nDos)
+bool CMasternodeBroadcast::Update(CMasternode* pmn, int& nDos, CConnman& connman)
 {
     nDos = 0;
 
@@ -530,9 +530,9 @@ bool CMasternodeBroadcast::Update(CMasternode* pmn, int& nDos)
     if(!pmn->IsBroadcastedWithin(MASTERNODE_MIN_MNB_SECONDS) || (fMasterNode && pubKeyMasternode == activeMasternode.pubKeyMasternode)) {
         // take the newest entry
         LogPrintf("CMasternodeBroadcast::Update -- Got UPDATED Masternode entry: addr=%s\n", addr.ToString());
-        if(pmn->UpdateFromNewBroadcast((*this))) {
+        if(pmn->UpdateFromNewBroadcast(*this, connman)) {
             pmn->Check();
-            Relay();
+            Relay(connman);
         }
         masternodeSync.BumpAssetLastTime("CMasternodeBroadcast::Update");
     }
@@ -662,10 +662,10 @@ bool CMasternodeBroadcast::CheckSignature(int& nDos)
     return true;
 }
 
-void CMasternodeBroadcast::Relay()
+void CMasternodeBroadcast::Relay(CConnman& connman)
 {
     CInv inv(MSG_MASTERNODE_ANNOUNCE, GetHash());
-    g_connman->RelayInv(inv);
+    connman.RelayInv(inv);
 }
 
 CMasternodePing::CMasternodePing(const COutPoint& outpoint)
@@ -740,7 +740,7 @@ bool CMasternodePing::SimpleCheck(int& nDos)
     return true;
 }
 
-bool CMasternodePing::CheckAndUpdate(CMasternode* pmn, bool fFromNewBroadcast, int& nDos)
+bool CMasternodePing::CheckAndUpdate(CMasternode* pmn, bool fFromNewBroadcast, int& nDos, CConnman& connman)
 {
     // don't ban by default
     nDos = 0;
@@ -814,15 +814,15 @@ bool CMasternodePing::CheckAndUpdate(CMasternode* pmn, bool fFromNewBroadcast, i
     if (!pmn->IsEnabled()) return false;
 
     LogPrint("masternode", "CMasternodePing::CheckAndUpdate -- Masternode ping acceepted and relayed, masternode=%s\n", vin.prevout.ToStringShort());
-    Relay();
+    Relay(connman);
 
     return true;
 }
 
-void CMasternodePing::Relay()
+void CMasternodePing::Relay(CConnman& connman)
 {
     CInv inv(MSG_MASTERNODE_PING, GetHash());
-    g_connman->RelayInv(inv);
+    connman.RelayInv(inv);
 }
 
 void CMasternode::AddGovernanceVote(uint256 nGovernanceObjectHash)

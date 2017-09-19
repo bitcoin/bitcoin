@@ -286,7 +286,7 @@ bool CInstantSend::ProcessTxLockVote(CNode* pfrom, CTxLockVote& vote, CConnman& 
 
     uint256 txHash = vote.GetTxHash();
 
-    if(!vote.IsValid(pfrom)) {
+    if(!vote.IsValid(pfrom, connman)) {
         // could be because of missing MN
         LogPrint("instantsend", "CInstantSend::ProcessTxLockVote -- Vote is invalid, txid=%s\n", txHash.ToString());
         return false;
@@ -983,11 +983,11 @@ int CTxLockRequest::GetMaxSignatures() const
 // CTxLockVote
 //
 
-bool CTxLockVote::IsValid(CNode* pnode) const
+bool CTxLockVote::IsValid(CNode* pnode, CConnman& connman) const
 {
     if(!mnodeman.Has(outpointMasternode)) {
         LogPrint("instantsend", "CTxLockVote::IsValid -- Unknown masternode %s\n", outpointMasternode.ToStringShort());
-        mnodeman.AskForMN(pnode, outpointMasternode);
+        mnodeman.AskForMN(pnode, outpointMasternode, connman);
         return false;
     }
 

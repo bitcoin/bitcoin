@@ -97,7 +97,8 @@ CGovernanceObject::CGovernanceObject(const CGovernanceObject& other)
 
 bool CGovernanceObject::ProcessVote(CNode* pfrom,
                                     const CGovernanceVote& vote,
-                                    CGovernanceException& exception)
+                                    CGovernanceException& exception,
+                                    CConnman& connman)
 {
     if(!mnodeman.Has(vote.GetMasternodeOutpoint())) {
         std::ostringstream ostr;
@@ -105,7 +106,7 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
         exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_WARNING);
         if(mapOrphanVotes.Insert(vote.GetMasternodeOutpoint(), vote_time_pair_t(vote, GetAdjustedTime() + GOVERNANCE_ORPHAN_EXPIRATION_TIME))) {
             if(pfrom) {
-                mnodeman.AskForMN(pfrom, vote.GetMasternodeOutpoint());
+                mnodeman.AskForMN(pfrom, vote.GetMasternodeOutpoint(), connman);
             }
             LogPrintf("%s\n", ostr.str());
         }
@@ -648,10 +649,10 @@ bool CGovernanceObject::GetCurrentMNVotes(const COutPoint& mnCollateralOutpoint,
     return  true;
 }
 
-void CGovernanceObject::Relay()
+void CGovernanceObject::Relay(CConnman& connman)
 {
     CInv inv(MSG_GOVERNANCE_OBJECT, GetHash());
-    g_connman->RelayInv(inv, PROTOCOL_VERSION);
+    connman.RelayInv(inv, PROTOCOL_VERSION);
 }
 
 void CGovernanceObject::UpdateSentinelVariables()
@@ -715,7 +716,7 @@ void CGovernanceObject::swap(CGovernanceObject& first, CGovernanceObject& second
     swap(first.fExpired, second.fExpired);
 }
 
-void CGovernanceObject::CheckOrphanVotes()
+void CGovernanceObject::CheckOrphanVotes(CConnman& connman)
 {
     int64_t nNow = GetAdjustedTime();
     const vote_mcache_t::list_t& listVotes = mapOrphanVotes.GetItemList();
@@ -733,11 +734,11 @@ void CGovernanceObject::CheckOrphanVotes()
             continue;
         }
         CGovernanceException exception;
-        if(!ProcessVote(NULL, vote, exception)) {
+        if(!ProcessVote(NULL, vote, exception, connman)) {
             LogPrintf("CGovernanceObject::CheckOrphanVotes -- Failed to add orphan vote: %s\n", exception.what());
         }
         else {
-            vote.Relay();
+            vote.Relay(connman);
             fRemove = true;
         }
         ++it;

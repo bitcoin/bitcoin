@@ -180,7 +180,7 @@ public:
     COutPoint GetOutpoint() const { return outpoint; }
     COutPoint GetMasternodeOutpoint() const { return outpointMasternode; }
 
-    bool IsValid(CNode* pnode) const;
+    bool IsValid(CNode* pnode, CConnman& connman) const;
     void SetConfirmedHeight(int nConfirmedHeightIn) { nConfirmedHeight = nConfirmedHeightIn; }
     bool IsExpired(int nHeight) const;
     bool IsTimedOut() const;

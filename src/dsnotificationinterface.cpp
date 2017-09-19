@@ -24,7 +24,7 @@ void CDSNotificationInterface::AcceptedBlockHeader(const CBlockIndex *pindexNew)
 
 void CDSNotificationInterface::NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload)
 {
-    masternodeSync.NotifyHeaderTip(pindexNew, fInitialDownload);
+    masternodeSync.NotifyHeaderTip(pindexNew, fInitialDownload, connman);
 }
 
 void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
@@ -35,8 +35,8 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
     mnodeman.UpdatedBlockTip(pindexNew);
     privateSendClient.UpdatedBlockTip(pindexNew);
     instantsend.UpdatedBlockTip(pindexNew);
-    mnpayments.UpdatedBlockTip(pindexNew);
-    governance.UpdatedBlockTip(pindexNew);
+    mnpayments.UpdatedBlockTip(pindexNew, connman);
+    governance.UpdatedBlockTip(pindexNew, connman);
 
     // DIP0001 updates
 

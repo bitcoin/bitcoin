@@ -166,14 +166,14 @@ UniValue mnsync(const UniValue& params, bool fHelp)
 
     if(strMode == "next")
     {
-        masternodeSync.SwitchToNextAsset();
+        masternodeSync.SwitchToNextAsset(*g_connman);
         return "sync updated to " + masternodeSync.GetAssetName();
     }
 
     if(strMode == "reset")
     {
         masternodeSync.Reset();
-        masternodeSync.SwitchToNextAsset();
+        masternodeSync.SwitchToNextAsset(*g_connman);
         return "success";
     }
     return "failure";

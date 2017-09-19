@@ -13,6 +13,7 @@
 #include "timedata.h"
 
 class CPrivateSend;
+class CConnman;
 
 // timeouts
 static const int PRIVATESEND_AUTO_TIMEOUT_MIN       = 5;
@@ -196,7 +197,7 @@ public:
     /// Check if we have a valid Masternode address
     bool CheckSignature(const CPubKey& pubKeyMasternode);
 
-    bool Relay();
+    bool Relay(CConnman &connman);
 
     /// Is this queue expired?
     bool IsExpired() { return GetAdjustedTime() - nTime > PRIVATESEND_QUEUE_TIMEOUT; }
@@ -355,6 +356,6 @@ public:
     static void SyncTransaction(const CTransaction& tx, const CBlock* pblock);
 };
 
-void ThreadCheckPrivateSend();
+void ThreadCheckPrivateSend(CConnman& connman);
 
 #endif
