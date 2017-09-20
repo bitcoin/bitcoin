@@ -569,7 +569,7 @@ BOOST_AUTO_TEST_CASE (generate_certofferexpired)
 
 	// generate a good cert offer
 	string offerguid = OfferNew("node1", "node1alias2", "certificates", "title", "1", "0.05", "description", "USD", certguid);
-	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress node2alias2 125"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress node2alias2 126"), runtime_error);
 	GenerateBlocks(10);
 	// updates the alias which updates the offer and cert using this alias
 	OfferAccept("node1", "node2", "node2alias2", offerguid, "1");
@@ -606,8 +606,8 @@ BOOST_AUTO_TEST_CASE (generate_offerpruning)
 	StartNode("node2");
 	ExpireAlias("pruneoffer");
 	GenerateBlocks(5, "node2");
-
-	BOOST_CHECK_EQUAL(OfferFilter("node1", guid), false);
+	// it can still be found via search because node hasn't restarted and pruned itself
+	BOOST_CHECK_EQUAL(OfferFilter("node1", guid), true);
 
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offerinfo " + guid));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), true);
@@ -629,6 +629,9 @@ BOOST_AUTO_TEST_CASE (generate_offerpruning)
 	StopNode("node1");
 	StartNode("node1");
 	GenerateBlocks(5, "node1");
+
+	// after stopping and starting, indexer should remove guid offer from db
+	BOOST_CHECK_EQUAL(OfferFilter("node1", guid), false);
 	// ensure you can still update before expiry
 	OfferUpdate("node1", "pruneoffer", guid1, "category", "title", "1", "0.05", "description", "USD");
 	// you can search it still on node1/node2
@@ -642,8 +645,9 @@ BOOST_AUTO_TEST_CASE (generate_offerpruning)
 	ExpireAlias("pruneoffer");
 	// now it should be expired
 	BOOST_CHECK_THROW(CallRPC("node1", "offerupdate pruneoffer " + guid1 + " category title 1 0.05 description"), runtime_error);
-	BOOST_CHECK_EQUAL(OfferFilter("node1", guid1), false);
-	BOOST_CHECK_EQUAL(OfferFilter("node2", guid1), false);
+	// can still search
+	BOOST_CHECK_EQUAL(OfferFilter("node1", guid1), true);
+	BOOST_CHECK_EQUAL(OfferFilter("node2", guid1), true);
 	// and it should say its expired
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "offerinfo " + guid1));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(),true);	
