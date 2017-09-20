@@ -496,7 +496,11 @@ void ForceSetArg(const std::string& strArg, const std::string& strValue)
     mapArgs[strArg] = strValue;
 }
 
-
+void ForceSetMultiArgs(const std::string& strArg, const std::vector<std::string>& values)
+{
+    LOCK(cs_args);
+    _mapMultiArgs[strArg] = values;
+}
 
 void ForceRemoveArg(const std::string& strArg)
 {

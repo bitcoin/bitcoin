@@ -201,6 +201,7 @@ bool SoftSetBoolArg(const std::string& strArg, bool fValue);
 
 // Forces a arg setting, used only in testing
 void ForceSetArg(const std::string& strArg, const std::string& strValue);
+void ForceSetMultiArgs(const std::string& strArg, const std::vector<std::string>& values);
 void ForceRemoveArg(const std::string& strArg);
 
 /**

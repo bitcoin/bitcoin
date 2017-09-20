@@ -132,9 +132,10 @@ UniValue debug(const JSONRPCRequest& request)
 
     std::string strMode = request.params[0].get_str();
 
-    mapMultiArgs["-debug"].clear();
-    boost::split(mapMultiArgs["-debug"], strMode, boost::is_any_of(","));
-    mapArgs["-debug"] = mapMultiArgs["-debug"][mapMultiArgs["-debug"].size() - 1];
+    std::vector<std::string> newMultiArgs;
+    boost::split(newMultiArgs, strMode, boost::is_any_of(","));
+    ForceSetMultiArgs("-debug", newMultiArgs);
+    ForceSetArg("-debug", newMultiArgs[newMultiArgs.size() - 1]);
 
     fDebug = GetArg("-debug", "") != "0";
 
