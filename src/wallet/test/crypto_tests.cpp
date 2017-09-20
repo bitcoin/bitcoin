@@ -44,6 +44,8 @@ bool OldEncrypt(const CKeyingMaterial& vchPlaintext, std::vector<unsigned char> 
 
     EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
 
+    if (!ctx) return false;
+
     bool fOk = true;
 
     EVP_CIPHER_CTX_init(ctx);
@@ -69,6 +71,8 @@ bool OldDecrypt(const std::vector<unsigned char>& vchCiphertext, CKeyingMaterial
     vchPlaintext = CKeyingMaterial(nPLen);
 
     EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+
+    if (!ctx) return false;
 
     bool fOk = true;
 
