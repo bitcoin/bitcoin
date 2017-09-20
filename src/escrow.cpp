@@ -1240,20 +1240,18 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 
 	int paymentPrecision = 2;
 	int precision = 2;
-	CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(merchantAliasPegTuple, vchFromString(GetPaymentOptionsString(paymentOptionMask)), 1, paymentPrecision);
+	CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(merchantAliasPegTuple, vchFromString(GetPaymentOptionsString(paymentOptionMask)), 1, precision);
 	if (nPricePerUnit == 0)
 	{
 		string err = "SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 1549 - " + _("Could not find payment currency in the peg alias");
 		throw runtime_error(err.c_str());
 	}
-	nPricePerUnit = convertCurrencyCodeToSyscoin(merchantAliasPegTuple, theOffer.sCurrencyCode, 1, precision);
+	nPricePerUnit = convertCurrencyCodeToSyscoin(merchantAliasPegTuple, theOffer.sCurrencyCode, 1, paymentPrecision);
 	if (nPricePerUnit == 0)
 	{
 		string err = "SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 1549 - " + _("Could not find offer currency in the peg alias");
 		throw runtime_error(err.c_str());
 	}
-	if (precision > paymentPrecision)
-		paymentPrecision = precision;
 	CSyscoinAddress buyerAddress;
 	GetAddress(buyeralias, &buyerAddress, scriptPubKeyAliasOrig);
 
