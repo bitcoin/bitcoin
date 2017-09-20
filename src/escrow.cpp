@@ -1109,7 +1109,7 @@ UniValue generateescrowmultisig(const UniValue& params, bool fHelp) {
 	if (!resCreate.isObject())
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4508 - " + _("Could not create escrow transaction: Invalid response from createescrow"));
 
-	CAmount nTotal = AmountFromValue(strprintf("%.*f", 8, theOffer.GetPrice(foundEntry)*nQty);
+	CAmount nTotal = AmountFromValue(strprintf("%.*f", 8, theOffer.GetPrice(foundEntry)*nQty));
 	if (stringFromVch(theOffer.sCurrencyCode) != GetPaymentOptionsString(paymentOptionMask))
 	{
 		UniValue paramsConvert(UniValue::VARR);
@@ -1118,7 +1118,7 @@ UniValue generateescrowmultisig(const UniValue& params, bool fHelp) {
 		paramsConvert.push_back(GetPaymentOptionsString(paymentOptionMask));
 		paramsConvert.push_back(boost::lexical_cast<string>(theOffer.GetPrice(foundEntry)*nQty));
 		const UniValue &r = tableRPC.execute("aliasconvertcurrency", paramsConvert);
-		nTotal = AmountFromValue(strprintf("%.*f", 8, find_value(r.get_obj(), "convertedrate").get_str());
+		nTotal = AmountFromValue(strprintf("%.*f", 8, find_value(r.get_obj(), "convertedrate").get_str()));
 	}
 
 	float fEscrowFee = getEscrowFee(selleralias.aliasPegTuple, vchFromString(GetPaymentOptionsString(paymentOptionMask)), precision);
@@ -1304,7 +1304,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	}
 	CAmount nCommission = 0;
 
-	CAmount nTotalOfferPrice = AmountFromValue(strprintf("%.*f", 8, theOffer.GetPrice(foundEntry)*nQty);
+	CAmount nTotalOfferPrice = AmountFromValue(strprintf("%.*f", 8, theOffer.GetPrice(foundEntry)*nQty));
 	if (stringFromVch(theOffer.sCurrencyCode) != GetPaymentOptionsString(paymentOptionMask))
 	{
 		UniValue paramsConvert(UniValue::VARR);
@@ -1313,11 +1313,11 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 		paramsConvert.push_back(GetPaymentOptionsString(paymentOptionMask));
 		paramsConvert.push_back(boost::lexical_cast<string>(theOffer.GetPrice(foundEntry)*nQty));
 		UniValue r = tableRPC.execute("aliasconvertcurrency", paramsConvert);
-		nTotalOfferPrice = AmountFromValue(strprintf("%.*f", 8, find_value(r.get_obj(), "convertedrate").get_str());
+		nTotalOfferPrice = AmountFromValue(strprintf("%.*f", 8, find_value(r.get_obj(), "convertedrate").get_str()));
 	}
 	if (!theOffer.linkOfferTuple.first.empty())
 	{
-		CAmount nTotalLinkedOfferPrice = AmountFromValue(strprintf("%.*f", 8, linkedOffer.GetPrice(foundEntry)*nQty);
+		CAmount nTotalLinkedOfferPrice = AmountFromValue(strprintf("%.*f", 8, linkedOffer.GetPrice(foundEntry)*nQty));
 		if (stringFromVch(linkedOffer.sCurrencyCode) != GetPaymentOptionsString(paymentOptionMask))
 		{
 			UniValue paramsConvert(UniValue::VARR);
@@ -1326,7 +1326,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 			paramsConvert.push_back(GetPaymentOptionsString(paymentOptionMask));
 			paramsConvert.push_back(boost::lexical_cast<string>(linkedOffer.GetPrice(foundEntry)*nQty));
 			UniValue r = tableRPC.execute("aliasconvertcurrency", paramsConvert);
-			nTotalLinkedOfferPrice = AmountFromValue(strprintf("%.*f", 8, find_value(r.get_obj(), "convertedrate").get_str());
+			nTotalLinkedOfferPrice = AmountFromValue(strprintf("%.*f", 8, find_value(r.get_obj(), "convertedrate").get_str()));
 		}
 		nCommission = nTotalOfferPrice - nTotalLinkedOfferPrice;
 		if (nCommission < 0)
@@ -1335,7 +1335,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	CSyscoinAddress address(strAddress);
 	scriptPubKey = GetScriptForDestination(address.Get());
 	// send to escrow address
-	CAmount nTotalWithBuyerDiscount = AmountFromValue(strprintf("%.*f", 8, theOffer.GetPrice(foundEntry)*nQty);
+	CAmount nTotalWithBuyerDiscount = AmountFromValue(strprintf("%.*f", 8, theOffer.GetPrice(foundEntry)*nQty));
 	if (stringFromVch(theOffer.sCurrencyCode) != GetPaymentOptionsString(paymentOptionMask))
 	{
 		UniValue paramsConvert(UniValue::VARR);
@@ -1344,7 +1344,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 		paramsConvert.push_back(GetPaymentOptionsString(paymentOptionMask));
 		paramsConvert.push_back(boost::lexical_cast<string>(theOffer.GetPrice(foundEntry)*nQty));
 		UniValue r = tableRPC.execute("aliasconvertcurrency", paramsConvert);
-		nTotalWithBuyerDiscount = AmountFromValue(strprintf("%.*f", 8, find_value(r.get_obj(), "convertedrate").get_str());
+		nTotalWithBuyerDiscount = AmountFromValue(strprintf("%.*f", 8, find_value(r.get_obj(), "convertedrate").get_str()));
 	}
 
 	int nFeePerByte = getFeePerByte(selleralias.aliasPegTuple, vchFromString(GetPaymentOptionsString(paymentOptionMask)), precision);
@@ -1365,7 +1365,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 		paramsConvert.push_back(stringFromVch(theOffer.sCurrencyCode));
 		paramsConvert.push_back(boost::lexical_cast<string>(ValueFromAmount(nTotalWithBuyerDiscount).get_real()));
 		UniValue r = tableRPC.execute("aliasconvertcurrency", paramsConvert);
-		nTotalInCurrency = AmountFromValue(strprintf("%.*f", 8, find_value(r.get_obj(), "convertedrate").get_str());
+		nTotalInCurrency = AmountFromValue(strprintf("%.*f", 8, find_value(r.get_obj(), "convertedrate").get_str()));
 	}
 
 	CWalletTx escrowWtx;
