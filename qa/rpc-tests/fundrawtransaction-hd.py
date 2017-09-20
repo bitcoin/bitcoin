@@ -14,7 +14,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         initialize_chain_clean(self.options.tmpdir, 4)
 
     def setup_network(self, split=False):
-        self.nodes = start_nodes(4, self.options.tmpdir, [['-usehd=0'], ['-usehd=0'], ['-usehd=0'], ['-usehd=0']])
+        self.nodes = start_nodes(4, self.options.tmpdir, [['-usehd=1'], ['-usehd=1'], ['-usehd=1'], ['-usehd=1']])
 
         connect_nodes_bi(self.nodes,0,1)
         connect_nodes_bi(self.nodes,1,2)
@@ -444,7 +444,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         stop_nodes(self.nodes)
         wait_bitcoinds()
 
-        self.nodes = start_nodes(4, self.options.tmpdir, [['-usehd=0'], ['-usehd=0'], ['-usehd=0'], ['-usehd=0']])
+        self.nodes = start_nodes(4, self.options.tmpdir, [['-usehd=1'], ['-usehd=1'], ['-usehd=1'], ['-usehd=1']])
         # This test is not meant to test fee estimation and we'd like
         # to be sure all txs are sent at a consistent desired feerate
         for node in self.nodes:
@@ -459,6 +459,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         # drain the keypool
         self.nodes[1].getnewaddress()
+        self.nodes[1].getrawchangeaddress()
         inputs = []
         outputs = {self.nodes[0].getnewaddress():1.1}
         rawTx = self.nodes[1].createrawtransaction(inputs, outputs)
@@ -472,6 +473,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         #refill the keypool
         self.nodes[1].walletpassphrase("test", 100)
+        self.nodes[1].keypoolrefill(2) #need to refill the keypool to get an internal change address
         self.nodes[1].walletlock()
 
         try:

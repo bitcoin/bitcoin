@@ -108,6 +108,7 @@ testScripts = [
     'proxy_test.py',
     'merkle_blocks.py',
     'fundrawtransaction.py',
+    'fundrawtransaction-hd.py',
     'signrawtransactions.py',
     'walletbackup.py',
     'nodehandling.py',
@@ -121,6 +122,7 @@ testScripts = [
     'disablewallet.py',
     'sendheaders.py', # NOTE: needs dash_hash to pass
     'keypool.py',
+    'keypool-hd.py',
     'prioritise_transaction.py',
     'invalidblockrequest.py', # NOTE: needs dash_hash to pass
     'invalidtxrequest.py', # NOTE: needs dash_hash to pass
