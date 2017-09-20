@@ -5,8 +5,8 @@
 #ifndef MASTERNODE_H
 #define MASTERNODE_H
 
-#include <base58.h>
 #include <key.h>
+#include <key_io.h>
 #include <net.h>
 #include <validation.h>
 

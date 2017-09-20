@@ -5,13 +5,15 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <base58.h>
 #include <chain.h>
 #include <coins.h>
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <init.h>
 #include <keystore.h>
+#include <validation.h>
+#include <validationinterface.h>
+#include <key_io.h>
 #include <merkleblock.h>
 #include <net.h>
 #include <policy/policy.h>
@@ -27,8 +29,6 @@
 #include <txmempool.h>
 #include <uint256.h>
 #include <utilstrencodings.h>
-#include <validation.h>
-#include <validationinterface.h>
 
 #ifdef ENABLE_WALLET
 #include <wallet/rpcwallet.h>

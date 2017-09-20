@@ -16,6 +16,7 @@
 
 #include <wallet/coincontrol.h>
 #include <init.h>
+#include <key_io.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <validation.h> // For Mempool
