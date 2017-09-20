@@ -1075,7 +1075,7 @@ void CleanupSyscoinServiceDatabases(int &numServicesCleaned)
 }
 bool GetAlias(const CNameTXIDTuple &aliasTuple,
 	CAliasIndex& txPos) {
-	if (!paliasdb || !paliasdb->ReadAlias(aliasTuple, txPos))
+	if (!paliasdb || !paliasdb->ReadAlias(CNameTXIDTuple(aliasTuple.first, aliasTuple.second), txPos))
 		return false;
 	return true;
 }
