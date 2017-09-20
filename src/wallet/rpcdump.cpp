@@ -736,10 +736,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
             CExtKey masterKey;
             masterKey.SetMaster(key.begin(), key.size());
 
-            CBitcoinExtKey b58extkey;
-            b58extkey.SetKey(masterKey);
-
-            file << "# extended private masterkey: " << b58extkey.ToString() << "\n\n";
+            file << "# extended private masterkey: " << EncodeExtKey(masterKey) << "\n\n";
         }
     }
     for (std::vector<std::pair<int64_t, CKeyID> >::const_iterator it = vKeyBirth.begin(); it != vKeyBirth.end(); it++) {
