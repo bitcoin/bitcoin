@@ -1985,6 +1985,10 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 			}
 		}
 	}
+	catch (UniValue& objError)
+	{
+		throw runtime_error(find_value(objError, "message").get_str());
+	}
 	if (!resSign.isObject())
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4560 - " + _("Could not sign escrow transaction: Invalid response from signrawtransaction"));
 
@@ -2500,6 +2504,10 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 				throw runtime_error(find_value(objError, "message").get_str());
 			}
 		}
+	}
+	catch (UniValue& objError)
+	{
+		throw runtime_error(find_value(objError, "message").get_str());
 	}
 	CTransaction rawTransaction;
 	DecodeHexTx(rawTransaction,hex_str);
