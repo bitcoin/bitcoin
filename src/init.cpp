@@ -1677,6 +1677,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     connOptions.nMaxOutboundTimeframe = nMaxOutboundTimeframe;
     connOptions.nMaxOutboundLimit = nMaxOutboundLimit;
     connOptions.m_default_listen_port = listen_port;
+    connOptions.m_default_outbound_port = chainparams.GetDefaultPort();
 
     for (const std::string& strBind : gArgs.GetArgs("-bind")) {
         CService addrBind;
