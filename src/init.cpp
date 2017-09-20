@@ -189,7 +189,7 @@ void Shutdown()
 #ifdef ENABLE_WALLET
     FlushWallets();
 #endif
-    MapPort(false);
+    MapPort(false, 0);
 
     // Because these depend on each-other, we make sure that neither can be
     // using the other before destroying them.
@@ -1651,13 +1651,14 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     //// debug print
     LogPrintf("mapBlockIndex.size() = %u\n",   mapBlockIndex.size());
     LogPrintf("nBestHeight = %d\n",                   chainActive.Height());
+
     if (gArgs.GetBoolArg("-listenonion", DEFAULT_LISTEN_ONION))
         StartTorControl(gArgs.GetArg("-torcontrol", DEFAULT_TOR_CONTROL), listen_port);
 
-    Discover(threadGroup);
+    Discover(listen_port);
 
     // Map ports with UPnP
-    MapPort(gArgs.GetBoolArg("-upnp", DEFAULT_UPNP));
+    MapPort(gArgs.GetBoolArg("-upnp", DEFAULT_UPNP), listen_port);
 
     CConnman::Options connOptions;
     connOptions.nLocalServices = nLocalServices;
