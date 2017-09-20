@@ -686,6 +686,7 @@ void CWallet::SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator> ran
         const uint256& hash = it->second;
         CWalletTx* copyTo = &mapWallet[hash];
         if (copyFrom == copyTo) continue;
+        assert(copyFrom && "Oldest wallet transaction in range assumed to have been found.");
         if (!copyFrom->IsEquivalentTo(*copyTo)) continue;
         copyTo->mapValue = copyFrom->mapValue;
         copyTo->vOrderForm = copyFrom->vOrderForm;
