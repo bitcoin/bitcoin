@@ -3125,21 +3125,21 @@ UniValue bumpfee(const JSONRPCRequest& request)
     LOCK2(cs_main, pwallet->cs_wallet);
     EnsureWalletIsUnlocked(pwallet);
 
-    FeeBumper feeBump(pwallet, hash, coin_control, totalFee);
-    BumpFeeResult res = feeBump.getResult();
-    if (res != BumpFeeResult::OK)
+    feebumper::FeeBumper feeBump(pwallet, hash, coin_control, totalFee);
+    feebumper::Result res = feeBump.getResult();
+    if (res != feebumper::Result::OK)
     {
         switch(res) {
-            case BumpFeeResult::INVALID_ADDRESS_OR_KEY:
+            case feebumper::Result::INVALID_ADDRESS_OR_KEY:
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, feeBump.getErrors()[0]);
                 break;
-            case BumpFeeResult::INVALID_REQUEST:
+            case feebumper::Result::INVALID_REQUEST:
                 throw JSONRPCError(RPC_INVALID_REQUEST, feeBump.getErrors()[0]);
                 break;
-            case BumpFeeResult::INVALID_PARAMETER:
+            case feebumper::Result::INVALID_PARAMETER:
                 throw JSONRPCError(RPC_INVALID_PARAMETER, feeBump.getErrors()[0]);
                 break;
-            case BumpFeeResult::WALLET_ERROR:
+            case feebumper::Result::WALLET_ERROR:
                 throw JSONRPCError(RPC_WALLET_ERROR, feeBump.getErrors()[0]);
                 break;
             default:

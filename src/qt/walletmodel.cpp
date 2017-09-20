@@ -666,14 +666,14 @@ bool WalletModel::transactionCanBeBumped(uint256 hash) const
 
 bool WalletModel::bumpFee(uint256 hash)
 {
-    std::unique_ptr<FeeBumper> feeBump;
+    std::unique_ptr<feebumper::FeeBumper> feeBump;
     {
         CCoinControl coin_control;
         coin_control.signalRbf = true;
         LOCK2(cs_main, wallet->cs_wallet);
-        feeBump.reset(new FeeBumper(wallet, hash, coin_control, 0));
+        feeBump.reset(new feebumper::FeeBumper(wallet, hash, coin_control, 0));
     }
-    if (feeBump->getResult() != BumpFeeResult::OK)
+    if (feeBump->getResult() != feebumper::Result::OK)
     {
         QMessageBox::critical(0, tr("Fee bump error"), tr("Increasing transaction fee failed") + "<br />(" +
             (feeBump->getErrors().size() ? QString::fromStdString(feeBump->getErrors()[0]) : "") +")");
