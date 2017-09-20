@@ -23,39 +23,39 @@ enum class BumpFeeResult
     MISC_ERROR,
 };
 
-class CFeeBumper
+class FeeBumper
 {
 public:
-    CFeeBumper(const CWallet *pWalletIn, const uint256 txidIn, const CCoinControl& coin_control, CAmount totalFee);
-    BumpFeeResult getResult() const { return currentResult; }
-    const std::vector<std::string>& getErrors() const { return vErrors; }
-    CAmount getOldFee() const { return nOldFee; }
-    CAmount getNewFee() const { return nNewFee; }
-    uint256 getBumpedTxId() const { return bumpedTxid; }
+    FeeBumper(const CWallet *wallet, const uint256 txid_in, const CCoinControl& coin_control, CAmount total_fee);
+    BumpFeeResult getResult() const { return current_result; }
+    const std::vector<std::string>& getErrors() const { return errors; }
+    CAmount getOldFee() const { return old_fee; }
+    CAmount getNewFee() const { return new_fee; }
+    uint256 getBumpedTxId() const { return bumped_txid; }
 
     /* signs the new transaction,
      * returns false if the tx couldn't be found or if it was
      * impossible to create the signature(s)
      */
-    bool signTransaction(CWallet *pWallet);
+    bool signTransaction(CWallet *wallet);
 
     /* commits the fee bump,
      * returns true, in case of CWallet::CommitTransaction was successful
-     * but, eventually sets vErrors if the tx could not be added to the mempool (will try later)
+     * but, eventually sets errors if the tx could not be added to the mempool (will try later)
      * or if the old transaction could not be marked as replaced
      */
-    bool commit(CWallet *pWalletNonConst);
+    bool commit(CWallet *wallet);
 
 private:
-    bool preconditionChecks(const CWallet *pWallet, const CWalletTx& wtx);
+    bool preconditionChecks(const CWallet *wallet, const CWalletTx& wtx);
 
     const uint256 txid;
-    uint256 bumpedTxid;
+    uint256 bumped_txid;
     CMutableTransaction mtx;
-    std::vector<std::string> vErrors;
-    BumpFeeResult currentResult;
-    CAmount nOldFee;
-    CAmount nNewFee;
+    std::vector<std::string> errors;
+    BumpFeeResult current_result;
+    CAmount old_fee;
+    CAmount new_fee;
 };
 
 #endif // BITCOIN_WALLET_FEEBUMPER_H

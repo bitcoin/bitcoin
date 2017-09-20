@@ -23,7 +23,7 @@
 // calculation, but we should be able to refactor after priority is removed).
 // NOTE: this requires that all inputs must be in mapWallet (eg the tx should
 // be IsAllFromMe).
-int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *pWallet)
+int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet)
 {
     CMutableTransaction txNew(tx);
     std::vector<CInputCoin> vCoins;
@@ -31,11 +31,11 @@ int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *pWal
     // IsAllFromMe(ISMINE_SPENDABLE), so every input should already be in our
     // wallet, with a valid index into the vout array.
     for (auto& input : tx.vin) {
-        const auto mi = pWallet->mapWallet.find(input.prevout.hash);
-        assert(mi != pWallet->mapWallet.end() && input.prevout.n < mi->second.tx->vout.size());
+        const auto mi = wallet->mapWallet.find(input.prevout.hash);
+        assert(mi != wallet->mapWallet.end() && input.prevout.n < mi->second.tx->vout.size());
         vCoins.emplace_back(CInputCoin(&(mi->second), input.prevout.n));
     }
-    if (!pWallet->DummySignTx(txNew, vCoins)) {
+    if (!wallet->DummySignTx(txNew, vCoins)) {
         // This should never happen, because IsAllFromMe(ISMINE_SPENDABLE)
         // implies that we can sign for every input.
         return -1;
@@ -43,10 +43,10 @@ int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *pWal
     return GetVirtualTransactionSize(txNew);
 }
 
-bool CFeeBumper::preconditionChecks(const CWallet *pWallet, const CWalletTx& wtx) {
-    if (pWallet->HasWalletSpend(wtx.GetHash())) {
-        vErrors.push_back("Transaction has descendants in the wallet");
-        currentResult = BumpFeeResult::INVALID_PARAMETER;
+bool FeeBumper::preconditionChecks(const CWallet *wallet, const CWalletTx& wtx) {
+    if (wallet->HasWalletSpend(wtx.GetHash())) {
+        errors.push_back("Transaction has descendants in the wallet");
+        current_result = BumpFeeResult::INVALID_PARAMETER;
         return false;
     }
 
@@ -54,58 +54,58 @@ bool CFeeBumper::preconditionChecks(const CWallet *pWallet, const CWalletTx& wtx
         LOCK(mempool.cs);
         auto it_mp = mempool.mapTx.find(wtx.GetHash());
         if (it_mp != mempool.mapTx.end() && it_mp->GetCountWithDescendants() > 1) {
-            vErrors.push_back("Transaction has descendants in the mempool");
-            currentResult = BumpFeeResult::INVALID_PARAMETER;
+            errors.push_back("Transaction has descendants in the mempool");
+            current_result = BumpFeeResult::INVALID_PARAMETER;
             return false;
         }
     }
 
     if (wtx.GetDepthInMainChain() != 0) {
-        vErrors.push_back("Transaction has been mined, or is conflicted with a mined transaction");
-        currentResult = BumpFeeResult::WALLET_ERROR;
+        errors.push_back("Transaction has been mined, or is conflicted with a mined transaction");
+        current_result = BumpFeeResult::WALLET_ERROR;
         return false;
     }
     return true;
 }
 
-CFeeBumper::CFeeBumper(const CWallet *pWallet, const uint256 txidIn, const CCoinControl& coin_control, CAmount totalFee)
+FeeBumper::FeeBumper(const CWallet *wallet, const uint256 txid_in, const CCoinControl& coin_control, CAmount total_fee)
     :
-    txid(std::move(txidIn)),
-    nOldFee(0),
-    nNewFee(0)
+    txid(std::move(txid_in)),
+    old_fee(0),
+    new_fee(0)
 {
-    vErrors.clear();
-    bumpedTxid.SetNull();
-    AssertLockHeld(pWallet->cs_wallet);
-    auto it = pWallet->mapWallet.find(txid);
-    if (it == pWallet->mapWallet.end()) {
-        vErrors.push_back("Invalid or non-wallet transaction id");
-        currentResult = BumpFeeResult::INVALID_ADDRESS_OR_KEY;
+    errors.clear();
+    bumped_txid.SetNull();
+    AssertLockHeld(wallet->cs_wallet);
+    auto it = wallet->mapWallet.find(txid);
+    if (it == wallet->mapWallet.end()) {
+        errors.push_back("Invalid or non-wallet transaction id");
+        current_result = BumpFeeResult::INVALID_ADDRESS_OR_KEY;
         return;
     }
     const CWalletTx& wtx = it->second;
 
-    if (!preconditionChecks(pWallet, wtx)) {
+    if (!preconditionChecks(wallet, wtx)) {
         return;
     }
 
     if (!SignalsOptInRBF(*wtx.tx)) {
-        vErrors.push_back("Transaction is not BIP 125 replaceable");
-        currentResult = BumpFeeResult::WALLET_ERROR;
+        errors.push_back("Transaction is not BIP 125 replaceable");
+        current_result = BumpFeeResult::WALLET_ERROR;
         return;
     }
 
     if (wtx.mapValue.count("replaced_by_txid")) {
-        vErrors.push_back(strprintf("Cannot bump transaction %s which was already bumped by transaction %s", txid.ToString(), wtx.mapValue.at("replaced_by_txid")));
-        currentResult = BumpFeeResult::WALLET_ERROR;
+        errors.push_back(strprintf("Cannot bump transaction %s which was already bumped by transaction %s", txid.ToString(), wtx.mapValue.at("replaced_by_txid")));
+        current_result = BumpFeeResult::WALLET_ERROR;
         return;
     }
 
     // check that original tx consists entirely of our inputs
     // if not, we can't bump the fee, because the wallet has no way of knowing the value of the other inputs (thus the fee)
-    if (!pWallet->IsAllFromMe(*wtx.tx, ISMINE_SPENDABLE)) {
-        vErrors.push_back("Transaction contains inputs that don't belong to this wallet");
-        currentResult = BumpFeeResult::WALLET_ERROR;
+    if (!wallet->IsAllFromMe(*wtx.tx, ISMINE_SPENDABLE)) {
+        errors.push_back("Transaction contains inputs that don't belong to this wallet");
+        current_result = BumpFeeResult::WALLET_ERROR;
         return;
     }
 
@@ -113,33 +113,33 @@ CFeeBumper::CFeeBumper(const CWallet *pWallet, const uint256 txidIn, const CCoin
     // if there was no change output or multiple change outputs, fail
     int nOutput = -1;
     for (size_t i = 0; i < wtx.tx->vout.size(); ++i) {
-        if (pWallet->IsChange(wtx.tx->vout[i])) {
+        if (wallet->IsChange(wtx.tx->vout[i])) {
             if (nOutput != -1) {
-                vErrors.push_back("Transaction has multiple change outputs");
-                currentResult = BumpFeeResult::WALLET_ERROR;
+                errors.push_back("Transaction has multiple change outputs");
+                current_result = BumpFeeResult::WALLET_ERROR;
                 return;
             }
             nOutput = i;
         }
     }
     if (nOutput == -1) {
-        vErrors.push_back("Transaction does not have a change output");
-        currentResult = BumpFeeResult::WALLET_ERROR;
+        errors.push_back("Transaction does not have a change output");
+        current_result = BumpFeeResult::WALLET_ERROR;
         return;
     }
 
     // Calculate the expected size of the new transaction.
     int64_t txSize = GetVirtualTransactionSize(*(wtx.tx));
-    const int64_t maxNewTxSize = CalculateMaximumSignedTxSize(*wtx.tx, pWallet);
+    const int64_t maxNewTxSize = CalculateMaximumSignedTxSize(*wtx.tx, wallet);
     if (maxNewTxSize < 0) {
-        vErrors.push_back("Transaction contains inputs that cannot be signed");
-        currentResult = BumpFeeResult::INVALID_ADDRESS_OR_KEY;
+        errors.push_back("Transaction contains inputs that cannot be signed");
+        current_result = BumpFeeResult::INVALID_ADDRESS_OR_KEY;
         return;
     }
 
     // calculate the old fee and fee-rate
-    nOldFee = wtx.GetDebit(ISMINE_SPENDABLE) - wtx.tx->GetValueOut();
-    CFeeRate nOldFeeRate(nOldFee, txSize);
+    old_fee = wtx.GetDebit(ISMINE_SPENDABLE) - wtx.tx->GetValueOut();
+    CFeeRate nOldFeeRate(old_fee, txSize);
     CFeeRate nNewFeeRate;
     // The wallet uses a conservative WALLET_INCREMENTAL_RELAY_FEE value to
     // future proof against changes to network wide policy for incremental relay
@@ -149,26 +149,26 @@ CFeeBumper::CFeeBumper(const CWallet *pWallet, const uint256 txidIn, const CCoin
         walletIncrementalRelayFee = ::incrementalRelayFee;
     }
 
-    if (totalFee > 0) {
+    if (total_fee > 0) {
         CAmount minTotalFee = nOldFeeRate.GetFee(maxNewTxSize) + ::incrementalRelayFee.GetFee(maxNewTxSize);
-        if (totalFee < minTotalFee) {
-            vErrors.push_back(strprintf("Insufficient totalFee, must be at least %s (oldFee %s + incrementalFee %s)",
+        if (total_fee < minTotalFee) {
+            errors.push_back(strprintf("Insufficient totalFee, must be at least %s (oldFee %s + incrementalFee %s)",
                                                                 FormatMoney(minTotalFee), FormatMoney(nOldFeeRate.GetFee(maxNewTxSize)), FormatMoney(::incrementalRelayFee.GetFee(maxNewTxSize))));
-            currentResult = BumpFeeResult::INVALID_PARAMETER;
+            current_result = BumpFeeResult::INVALID_PARAMETER;
             return;
         }
         CAmount requiredFee = GetRequiredFee(maxNewTxSize);
-        if (totalFee < requiredFee) {
-            vErrors.push_back(strprintf("Insufficient totalFee (cannot be less than required fee %s)",
+        if (total_fee < requiredFee) {
+            errors.push_back(strprintf("Insufficient totalFee (cannot be less than required fee %s)",
                                                                 FormatMoney(requiredFee)));
-            currentResult = BumpFeeResult::INVALID_PARAMETER;
+            current_result = BumpFeeResult::INVALID_PARAMETER;
             return;
         }
-        nNewFee = totalFee;
-        nNewFeeRate = CFeeRate(totalFee, maxNewTxSize);
+        new_fee = total_fee;
+        nNewFeeRate = CFeeRate(total_fee, maxNewTxSize);
     } else {
-        nNewFee = GetMinimumFee(maxNewTxSize, coin_control, mempool, ::feeEstimator, nullptr /* FeeCalculation */);
-        nNewFeeRate = CFeeRate(nNewFee, maxNewTxSize);
+        new_fee = GetMinimumFee(maxNewTxSize, coin_control, mempool, ::feeEstimator, nullptr /* FeeCalculation */);
+        nNewFeeRate = CFeeRate(new_fee, maxNewTxSize);
 
         // New fee rate must be at least old rate + minimum incremental relay rate
         // walletIncrementalRelayFee.GetFeePerK() should be exact, because it's initialized
@@ -177,15 +177,15 @@ CFeeBumper::CFeeBumper(const CWallet *pWallet, const uint256 txidIn, const CCoin
         // add 1 satoshi to the result, because it may have been rounded down.
         if (nNewFeeRate.GetFeePerK() < nOldFeeRate.GetFeePerK() + 1 + walletIncrementalRelayFee.GetFeePerK()) {
             nNewFeeRate = CFeeRate(nOldFeeRate.GetFeePerK() + 1 + walletIncrementalRelayFee.GetFeePerK());
-            nNewFee = nNewFeeRate.GetFee(maxNewTxSize);
+            new_fee = nNewFeeRate.GetFee(maxNewTxSize);
         }
     }
 
     // Check that in all cases the new fee doesn't violate maxTxFee
-     if (nNewFee > maxTxFee) {
-         vErrors.push_back(strprintf("Specified or calculated fee %s is too high (cannot be higher than maxTxFee %s)",
-                               FormatMoney(nNewFee), FormatMoney(maxTxFee)));
-         currentResult = BumpFeeResult::WALLET_ERROR;
+     if (new_fee > maxTxFee) {
+         errors.push_back(strprintf("Specified or calculated fee %s is too high (cannot be higher than maxTxFee %s)",
+                               FormatMoney(new_fee), FormatMoney(maxTxFee)));
+         current_result = BumpFeeResult::WALLET_ERROR;
          return;
      }
 
@@ -193,29 +193,29 @@ CFeeBumper::CFeeBumper(const CWallet *pWallet, const uint256 txidIn, const CCoin
     // (no point in bumping fee if we know that the new tx won't be accepted to the mempool)
     // This may occur if the user set TotalFee or paytxfee too low, if fallbackfee is too low, or, perhaps,
     // in a rare situation where the mempool minimum fee increased significantly since the fee estimation just a
-    // moment earlier. In this case, we report an error to the user, who may use totalFee to make an adjustment.
+    // moment earlier. In this case, we report an error to the user, who may use total_fee to make an adjustment.
     CFeeRate minMempoolFeeRate = mempool.GetMinFee(gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000);
     if (nNewFeeRate.GetFeePerK() < minMempoolFeeRate.GetFeePerK()) {
-        vErrors.push_back(strprintf(
+        errors.push_back(strprintf(
             "New fee rate (%s) is lower than the minimum fee rate (%s) to get into the mempool -- "
             "the totalFee value should be at least %s or the settxfee value should be at least %s to add transaction",
             FormatMoney(nNewFeeRate.GetFeePerK()),
             FormatMoney(minMempoolFeeRate.GetFeePerK()),
             FormatMoney(minMempoolFeeRate.GetFee(maxNewTxSize)),
             FormatMoney(minMempoolFeeRate.GetFeePerK())));
-        currentResult = BumpFeeResult::WALLET_ERROR;
+        current_result = BumpFeeResult::WALLET_ERROR;
         return;
     }
 
     // Now modify the output to increase the fee.
     // If the output is not large enough to pay the fee, fail.
-    CAmount nDelta = nNewFee - nOldFee;
+    CAmount nDelta = new_fee - old_fee;
     assert(nDelta > 0);
     mtx =  *wtx.tx;
     CTxOut* poutput = &(mtx.vout[nOutput]);
     if (poutput->nValue < nDelta) {
-        vErrors.push_back("Change output is too small to bump the fee");
-        currentResult = BumpFeeResult::WALLET_ERROR;
+        errors.push_back("Change output is too small to bump the fee");
+        current_result = BumpFeeResult::WALLET_ERROR;
         return;
     }
 
@@ -223,7 +223,7 @@ CFeeBumper::CFeeBumper(const CWallet *pWallet, const uint256 txidIn, const CCoin
     poutput->nValue -= nDelta;
     if (poutput->nValue <= GetDustThreshold(*poutput, ::dustRelayFee)) {
         LogPrint(BCLog::RPC, "Bumping fee and discarding dust output\n");
-        nNewFee += poutput->nValue;
+        new_fee += poutput->nValue;
         mtx.vout.erase(mtx.vout.begin() + nOutput);
     }
 
@@ -234,36 +234,36 @@ CFeeBumper::CFeeBumper(const CWallet *pWallet, const uint256 txidIn, const CCoin
         }
     }
 
-    currentResult = BumpFeeResult::OK;
+    current_result = BumpFeeResult::OK;
 }
 
-bool CFeeBumper::signTransaction(CWallet *pWallet)
+bool FeeBumper::signTransaction(CWallet *wallet)
 {
-     return pWallet->SignTransaction(mtx);
+     return wallet->SignTransaction(mtx);
 }
 
-bool CFeeBumper::commit(CWallet *pWallet)
+bool FeeBumper::commit(CWallet *wallet)
 {
-    AssertLockHeld(pWallet->cs_wallet);
-    if (!vErrors.empty() || currentResult != BumpFeeResult::OK) {
+    AssertLockHeld(wallet->cs_wallet);
+    if (!errors.empty() || current_result != BumpFeeResult::OK) {
         return false;
     }
-    auto it = txid.IsNull() ? pWallet->mapWallet.end() : pWallet->mapWallet.find(txid);
-    if (it == pWallet->mapWallet.end()) {
-        vErrors.push_back("Invalid or non-wallet transaction id");
-        currentResult = BumpFeeResult::MISC_ERROR;
+    auto it = txid.IsNull() ? wallet->mapWallet.end() : wallet->mapWallet.find(txid);
+    if (it == wallet->mapWallet.end()) {
+        errors.push_back("Invalid or non-wallet transaction id");
+        current_result = BumpFeeResult::MISC_ERROR;
         return false;
     }
     CWalletTx& oldWtx = it->second;
 
     // make sure the transaction still has no descendants and hasn't been mined in the meantime
-    if (!preconditionChecks(pWallet, oldWtx)) {
+    if (!preconditionChecks(wallet, oldWtx)) {
         return false;
     }
 
-    CWalletTx wtxBumped(pWallet, MakeTransactionRef(std::move(mtx)));
+    CWalletTx wtxBumped(wallet, MakeTransactionRef(std::move(mtx)));
     // commit/broadcast the tx
-    CReserveKey reservekey(pWallet);
+    CReserveKey reservekey(wallet);
     wtxBumped.mapValue = oldWtx.mapValue;
     wtxBumped.mapValue["replaces_txid"] = oldWtx.GetHash().ToString();
     wtxBumped.vOrderForm = oldWtx.vOrderForm;
@@ -271,26 +271,26 @@ bool CFeeBumper::commit(CWallet *pWallet)
     wtxBumped.fTimeReceivedIsTxTime = true;
     wtxBumped.fFromMe = true;
     CValidationState state;
-    if (!pWallet->CommitTransaction(wtxBumped, reservekey, g_connman.get(), state)) {
+    if (!wallet->CommitTransaction(wtxBumped, reservekey, g_connman.get(), state)) {
         // NOTE: CommitTransaction never returns false, so this should never happen.
-        vErrors.push_back(strprintf("The transaction was rejected: %s", state.GetRejectReason()));
+        errors.push_back(strprintf("The transaction was rejected: %s", state.GetRejectReason()));
         return false;
     }
 
-    bumpedTxid = wtxBumped.GetHash();
+    bumped_txid = wtxBumped.GetHash();
     if (state.IsInvalid()) {
         // This can happen if the mempool rejected the transaction.  Report
         // what happened in the "errors" response.
-        vErrors.push_back(strprintf("The transaction was rejected: %s", FormatStateMessage(state)));
+        errors.push_back(strprintf("The transaction was rejected: %s", FormatStateMessage(state)));
     }
 
     // mark the original tx as bumped
-    if (!pWallet->MarkReplaced(oldWtx.GetHash(), wtxBumped.GetHash())) {
+    if (!wallet->MarkReplaced(oldWtx.GetHash(), wtxBumped.GetHash())) {
         // TODO: see if JSON-RPC has a standard way of returning a response
         // along with an exception. It would be good to return information about
         // wtxBumped to the caller even if marking the original transaction
         // replaced does not succeed for some reason.
-        vErrors.push_back("Created new bumpfee transaction but could not mark the original transaction as replaced");
+        errors.push_back("Created new bumpfee transaction but could not mark the original transaction as replaced");
     }
     return true;
 }
