@@ -13,7 +13,9 @@ class uint256;
 class CCoinControl;
 enum class FeeEstimateMode;
 
-enum class BumpFeeResult
+namespace feebumper {
+
+enum class Result
 {
     OK,
     INVALID_ADDRESS_OR_KEY,
@@ -27,7 +29,7 @@ class FeeBumper
 {
 public:
     FeeBumper(const CWallet *wallet, const uint256 txid_in, const CCoinControl& coin_control, CAmount total_fee);
-    BumpFeeResult getResult() const { return current_result; }
+    Result getResult() const { return current_result; }
     const std::vector<std::string>& getErrors() const { return errors; }
     CAmount getOldFee() const { return old_fee; }
     CAmount getNewFee() const { return new_fee; }
@@ -53,9 +55,11 @@ private:
     uint256 bumped_txid;
     CMutableTransaction mtx;
     std::vector<std::string> errors;
-    BumpFeeResult current_result;
+    Result current_result;
     CAmount old_fee;
     CAmount new_fee;
 };
+
+} // namespace feebumper
 
 #endif // BITCOIN_WALLET_FEEBUMPER_H
