@@ -3,12 +3,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <base58.h>
 #include <chain.h>
 #include <clientversion.h>
 #include <core_io.h>
 #include <crypto/ripemd160.h>
 #include <init.h>
+#include <key_io.h>
 #include <validation.h>
 #include <httpserver.h>
 #include <net.h>
