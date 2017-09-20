@@ -152,67 +152,6 @@ bool DecodeBase58Check(const std::string& str, std::vector<unsigned char>& vchRe
     return DecodeBase58Check(str.c_str(), vchRet);
 }
 
-CBase58Data::CBase58Data()
-{
-    vchVersion.clear();
-    vchData.clear();
-}
-
-void CBase58Data::SetData(const std::vector<unsigned char>& vchVersionIn, const void* pdata, size_t nSize)
-{
-    vchVersion = vchVersionIn;
-    vchData.resize(nSize);
-    if (!vchData.empty())
-        memcpy(vchData.data(), pdata, nSize);
-}
-
-void CBase58Data::SetData(const std::vector<unsigned char>& vchVersionIn, const unsigned char* pbegin, const unsigned char* pend)
-{
-    SetData(vchVersionIn, (void*)pbegin, pend - pbegin);
-}
-
-bool CBase58Data::SetString(const char* psz, unsigned int nVersionBytes)
-{
-    std::vector<unsigned char> vchTemp;
-    bool rc58 = DecodeBase58Check(psz, vchTemp);
-    if ((!rc58) || (vchTemp.size() < nVersionBytes)) {
-        vchData.clear();
-        vchVersion.clear();
-        return false;
-    }
-    vchVersion.assign(vchTemp.begin(), vchTemp.begin() + nVersionBytes);
-    vchData.resize(vchTemp.size() - nVersionBytes);
-    if (!vchData.empty())
-        memcpy(vchData.data(), vchTemp.data() + nVersionBytes, vchData.size());
-    memory_cleanse(vchTemp.data(), vchTemp.size());
-    return true;
-}
-
-bool CBase58Data::SetString(const std::string& str)
-{
-    return SetString(str.c_str());
-}
-
-std::string CBase58Data::ToString() const
-{
-    std::vector<unsigned char> vch = vchVersion;
-    vch.insert(vch.end(), vchData.begin(), vchData.end());
-    return EncodeBase58Check(vch);
-}
-
-int CBase58Data::CompareTo(const CBase58Data& b58) const
-{
-    if (vchVersion < b58.vchVersion)
-        return -1;
-    if (vchVersion > b58.vchVersion)
-        return 1;
-    if (vchData < b58.vchData)
-        return -1;
-    if (vchData > b58.vchData)
-        return 1;
-    return 0;
-}
-
 namespace
 {
 class DestinationEncoder : public boost::static_visitor<std::string>
@@ -347,6 +286,53 @@ std::string EncodeSecret(const CKey& key)
     if (key.IsCompressed()) {
         data.push_back(1);
     }
+    std::string ret = EncodeBase58Check(data);
+    memory_cleanse(data.data(), data.size());
+    return ret;
+}
+
+CExtPubKey DecodeExtPubKey(const std::string& str)
+{
+    CExtPubKey key;
+    std::vector<unsigned char> data;
+    if (DecodeBase58Check(str, data)) {
+        const std::vector<unsigned char>& prefix = Params().Base58Prefix(CChainParams::EXT_PUBLIC_KEY);
+        if (data.size() == BIP32_EXTKEY_SIZE + prefix.size() && std::equal(prefix.begin(), prefix.end(), data.begin())) {
+            key.Decode(data.data() + prefix.size());
+        }
+    }
+    return key;
+}
+
+std::string EncodeExtPubKey(const CExtPubKey& key)
+{
+    std::vector<unsigned char> data = Params().Base58Prefix(CChainParams::EXT_PUBLIC_KEY);
+    size_t size = data.size();
+    data.resize(size + BIP32_EXTKEY_SIZE);
+    key.Encode(data.data() + size);
+    std::string ret = EncodeBase58Check(data);
+    return ret;
+}
+
+CExtKey DecodeExtKey(const std::string& str)
+{
+    CExtKey key;
+    std::vector<unsigned char> data;
+    if (DecodeBase58Check(str, data)) {
+        const std::vector<unsigned char>& prefix = Params().Base58Prefix(CChainParams::EXT_SECRET_KEY);
+        if (data.size() == BIP32_EXTKEY_SIZE + prefix.size() && std::equal(prefix.begin(), prefix.end(), data.begin())) {
+            key.Decode(data.data() + prefix.size());
+        }
+    }
+    return key;
+}
+
+std::string EncodeExtKey(const CExtKey& key)
+{
+    std::vector<unsigned char> data = Params().Base58Prefix(CChainParams::EXT_SECRET_KEY);
+    size_t size = data.size();
+    data.resize(size + BIP32_EXTKEY_SIZE);
+    key.Encode(data.data() + size);
     std::string ret = EncodeBase58Check(data);
     memory_cleanse(data.data(), data.size());
     return ret;
