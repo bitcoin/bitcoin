@@ -1905,11 +1905,11 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	// if external blockchain then we dont set the alias payments scriptpubkey
 	arrayCreateParams2.push_back(escrow.extTxId.IsNull());
 
-	UniValue resCreate1, resCreate1;
+	UniValue resCreate1, resCreate2;
 	try
 	{
-		resCreate = tableRPC.execute("createrawtransaction", arrayCreateParams1);
-		resCreate = tableRPC.execute("createrawtransaction", arrayCreateParams2);
+		resCreate1 = tableRPC.execute("createrawtransaction", arrayCreateParams1);
+		resCreate2 = tableRPC.execute("createrawtransaction", arrayCreateParams2);
 	}
 	catch (UniValue& objError)
 	{
@@ -1925,9 +1925,9 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	DecodeHexTx(rawTx2, createEscrowSpendingTx2);
 	for (int i = 0; i < escrow.scriptSigs.size(); i++) {
 		if (rawTx1.vin.size() >= i)
-			rawTx1.vin[i].scriptSig = CScript(escrow.scriptSigs[i].begin(), escrow.scriptSigs[i].end());
+			rawTx1.vin[i].scriptSig = CScript() << std::vector<unsigned char>(escrow.scriptSigs[i].begin(), escrow.scriptSigs[i].end());
 		if (rawTx2.vin.size() >= i)
-			rawTx2.vin[i].scriptSig = CScript(escrow.scriptSigs[i].begin(), escrow.scriptSigs[i].end());
+			rawTx2.vin[i].scriptSig = CScript() << std::vector<unsigned char>(escrow.scriptSigs[i].begin(), escrow.scriptSigs[i].end());
 	}
 	string strRawTx1 = EncodeHexTx(rawTx1);
 	string strRawTx2 = EncodeHexTx(rawTx2);
@@ -2355,6 +2355,22 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	CPubKey sellerKey;
 	GetAlias(CNameTXIDTuple(escrow.sellerAliasTuple.first, escrow.sellerAliasTuple.second), sellerAlias);
 
+	CAliasIndex buyerAlias, buyerAliasLatest, arbiterAlias, arbiterAliasLatest;
+	CSyscoinAddress arbiterAddressPayment, buyerAddressPayment;
+	CScript arbiterScript;
+	GetAlias(CNameTXIDTuple(escrow.arbiterAliasTuple.first, escrow.arbiterAliasTuple.second), arbiterAlias);
+	if (GetAlias(escrow.arbiterAliasTuple.first, arbiterAliasLatest))
+	{
+		GetAddress(arbiterAliasLatest, &arbiterAddressPayment, arbiterScript, escrow.nPaymentOption);
+	}
+
+	CScript buyerScript;
+	GetAlias(CNameTXIDTuple(escrow.buyerAliasTuple.first, escrow.buyerAliasTuple.second), buyerAlias);
+	if (GetAlias(escrow.buyerAliasTuple.first, buyerAliasLatest))
+	{
+		GetAddress(buyerAliasLatest, &buyerAddressPayment, buyerScript, escrow.nPaymentOption);
+	}
+
 	CAmount nEscrowTotal = escrow.nTotal;
 	CAmount nTotal = escrow.nTotal - escrow.nArbiterFee - escrow.nNetworkFee;
 
@@ -2391,11 +2407,11 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	// if external blockchain then we dont set the alias payments scriptpubkey
 	arrayCreateParams2.push_back(escrow.extTxId.IsNull());
 
-	UniValue resCreate1, resCreate1;
+	UniValue resCreate1, resCreate2;
 	try
 	{
-		resCreate = tableRPC.execute("createrawtransaction", arrayCreateParams1);
-		resCreate = tableRPC.execute("createrawtransaction", arrayCreateParams2);
+		resCreate1 = tableRPC.execute("createrawtransaction", arrayCreateParams1);
+		resCreate2 = tableRPC.execute("createrawtransaction", arrayCreateParams2);
 	}
 	catch (UniValue& objError)
 	{
@@ -2411,9 +2427,9 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	DecodeHexTx(rawTx2, createEscrowSpendingTx2);
 	for (int i = 0; i < escrow.scriptSigs.size(); i++) {
 		if (rawTx1.vin.size() >= i)
-			rawTx1.vin[i].scriptSig = CScript(escrow.scriptSigs[i].begin(), escrow.scriptSigs[i].end());
+			rawTx1.vin[i].scriptSig = CScript() << std::vector<unsigned char>(escrow.scriptSigs[i].begin(), escrow.scriptSigs[i].end());
 		if (rawTx2.vin.size() >= i)
-			rawTx2.vin[i].scriptSig = CScript(escrow.scriptSigs[i].begin(), escrow.scriptSigs[i].end());
+			rawTx2.vin[i].scriptSig = CScript() << std::vector<unsigned char>(escrow.scriptSigs[i].begin(), escrow.scriptSigs[i].end());
 	}
 	string strRawTx1 = EncodeHexTx(rawTx1);
 	string strRawTx2 = EncodeHexTx(rawTx2);
