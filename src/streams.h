@@ -84,6 +84,10 @@ class CVectorWriter
         if(nPos > vchData.size())
             vchData.resize(nPos);
     }
+    size_t size() const
+    {
+        return vchData.size() - nPos;
+    }
 private:
     const int nType;
     const int nVersion;
