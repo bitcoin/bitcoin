@@ -368,10 +368,9 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
         pszDest ? 0.0 : (double)(GetAdjustedTime() - addrConnect.nTime)/3600.0);
 
     // Resolve
-    const int default_port = Params().GetDefaultPort();
     if (pszDest) {
         std::vector<CService> resolved;
-        if (Lookup(pszDest, resolved,  default_port, fNameLookup && !HaveNameProxy(), 256) && !resolved.empty()) {
+        if (Lookup(pszDest, resolved, m_default_connect_port, fNameLookup && !HaveNameProxy(), 256) && !resolved.empty()) {
             addrConnect = CAddress(resolved[GetRand(resolved.size())], NODE_NONE);
             if (!addrConnect.IsValid()) {
                 LogPrint(BCLog::NET, "Resolver returned invalid address %s for %s\n", addrConnect.ToString(), pszDest);
@@ -424,7 +423,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
             return nullptr;
         }
         std::string host;
-        int port = default_port;
+        int port = m_default_connect_port;
         SplitHostPort(std::string(pszDest), port, host);
         connected = ConnectThroughProxy(proxy, host, port, hSocket, nConnectTimeout, nullptr);
     }
@@ -1566,7 +1565,7 @@ void CConnman::ThreadDNSAddressSeed()
                 for (const CNetAddr& ip : vIPs)
                 {
                     int nOneDay = 24*3600;
-                    CAddress addr = CAddress(CService(ip, Params().GetDefaultPort()), requiredServiceBits);
+                    CAddress addr = CAddress(CService(ip, m_default_connect_port), requiredServiceBits);
                     addr.nTime = GetTime() - 3*nOneDay - GetRand(4*nOneDay); // use a random age between 3 and 7 days old
                     vAdd.push_back(addr);
                     found++;
@@ -1798,7 +1797,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             }
 
             // do not allow non-default ports, unless after 50 invalid addresses selected already
-            if (addr.GetPort() != Params().GetDefaultPort() && nTries < 50)
+            if (addr.GetPort() != m_default_connect_port && nTries < 50)
                 continue;
 
             addrConnect = addr;
@@ -1849,7 +1848,7 @@ std::vector<AddedNodeInfo> CConnman::GetAddedNodeInfo()
     }
 
     for (const std::string& strAddNode : lAddresses) {
-        CService service(LookupNumeric(strAddNode.c_str(), Params().GetDefaultPort()));
+        CService service(LookupNumeric(strAddNode.c_str(), m_default_connect_port));
         AddedNodeInfo addedNode{strAddNode, CService(), false, false};
         if (service.IsValid()) {
             // strAddNode is an IP:port

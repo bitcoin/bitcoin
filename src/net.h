@@ -145,6 +145,7 @@ public:
         std::vector<std::string> m_specified_outgoing;
         std::vector<std::string> m_added_nodes;
         uint16_t m_listen_port = 0;
+        uint16_t m_default_connect_port = 0;
     };
 
     void Init(const Options& connOptions) {
@@ -172,6 +173,7 @@ public:
             vAddedNodes = connOptions.m_added_nodes;
         }
         m_listen_port = connOptions.m_listen_port;
+        m_default_connect_port = connOptions.m_default_connect_port;
     }
 
     CConnman(uint64_t seed0, uint64_t seed1);
@@ -390,6 +392,7 @@ private:
     unsigned int nReceiveFloodSize{0};
 
     uint16_t m_listen_port;
+    uint16_t m_default_connect_port;
 
     std::vector<ListenSocket> vhListenSocket;
     std::atomic<bool> fNetworkActive{true};
