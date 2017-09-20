@@ -1173,7 +1173,7 @@ const string EscrowNew(const string& node, const string& sellernode, const strin
 	int nQtyBefore = find_value(r.get_obj(), "quantity").get_int();
 	string selleralias = find_value(r.get_obj(), "alias").get_str();
 	string sellerlink_alias = find_value(r.get_obj(), "offerlink_seller").get_str();
-	if (!sellerlink.empty()))
+	if (!sellerlink.empty())
 		selleralias = sellerlink_alias;
 	string exttxid = "\"\"";
 	string merchantaliaspegtxid = "\"\"";
