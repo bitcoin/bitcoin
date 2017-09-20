@@ -29,7 +29,12 @@ void CDSNotificationInterface::NotifyHeaderTip(const CBlockIndex *pindexNew, boo
 
 void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
 {
-    if (fInitialDownload || pindexNew == pindexFork) // In IBD or blocks were disconnected without any new ones
+    if (pindexNew == pindexFork) // blocks were disconnected without any new ones
+        return;
+
+    masternodeSync.UpdatedBlockTip(pindexNew, fInitialDownload, connman);
+
+    if (fInitialDownload) // In IBD
         return;
 
     mnodeman.UpdatedBlockTip(pindexNew);
