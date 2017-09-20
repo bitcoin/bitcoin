@@ -1480,8 +1480,8 @@ UniValue escrowacknowledge(const UniValue& params, bool fHelp) {
 	if (!GetEscrow(vchEscrow, escrow))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4536 - " + _("Could not find a escrow with this key"));
 
-	CAliasIndex sellerAlias, sellerAliasLatest, buyerAlias, buyerAliasLatest, arbiterAlias, arbiterAliasLatest, resellerAlias;
-	CSyscoinAddress arbiterAddressPayment, buyerAddressPayment, sellerAddressPayment, resellerAddressPayment;
+	CAliasIndex sellerAlias, sellerAliasLatest, buyerAlias, buyerAliasLatest, arbiterAlias, arbiterAliasLatest;
+	CSyscoinAddress arbiterAddressPayment, buyerAddressPayment, sellerAddressPayment;
 	CScript arbiterScript;
 	GetAlias(CNameTXIDTuple(escrow.arbiterAliasTuple.first, escrow.arbiterAliasTuple.second), arbiterAlias);
 	if (GetAlias(escrow.arbiterAliasTuple.first, arbiterAliasLatest))
@@ -1599,8 +1599,8 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	COffer theOffer;
 	if (!GetOffer(escrow.offerTuple, theOffer))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4524 - " + _("Could not find offer related to this escrow"));
-	CAliasIndex sellerAlias, sellerAliasLatest, buyerAlias, buyerAliasLatest, arbiterAlias, arbiterAliasLatest, resellerAlias, resellerAliasLatest;
-	CSyscoinAddress arbiterAddressPayment, buyerAddressPayment, sellerAddressPayment, resellerAddressPayment;
+	CAliasIndex sellerAlias, sellerAliasLatest, buyerAlias, buyerAliasLatest, arbiterAlias, arbiterAliasLatest, linkSellerAliasLatest;
+	CSyscoinAddress arbiterAddressPayment, buyerAddressPayment, sellerAddressPayment, linkSellerAddress;
 	CScript arbiterScript;
 	GetAlias(CNameTXIDTuple(escrow.arbiterAliasTuple.first, escrow.arbiterAliasTuple.second), arbiterAlias);
 	if (GetAlias(escrow.arbiterAliasTuple.first, arbiterAliasLatest))
@@ -1621,7 +1621,11 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	{
 		GetAddress(sellerAliasLatest, &sellerAddressPayment, sellerScript, escrow.nPaymentOption);
 	}
-
+	if (GetAlias(escrow.linkSellerAliasTuple.first, linkSellerAliasLatest))
+	{
+		CScript script;
+		GetAddress(linkSellerAliasLatest, &linkSellerAddress, script, escrow.nPaymentOption);
+	}
 	CScript scriptPubKeyAlias, scriptPubKeyAliasOrig;
 
 	CAmount nEscrowTotal = escrow.nTotal;
@@ -1667,7 +1671,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 		if(!theOffer.linkOfferTuple.first.empty())
 		{
 			if(escrow.nCommission > 0)
-				createAddressUniValue.push_back(Pair(resellerAddressPayment.ToString(), ValueFromAmount(escrow.nCommission)));
+				createAddressUniValue.push_back(Pair(linkSellerAddress.ToString(), ValueFromAmount(escrow.nCommission)));
 			createAddressUniValue.push_back(Pair(sellerAddressPayment.ToString(), ValueFromAmount(nTotal- escrow.nCommission)));
 		}
 		else
@@ -1680,7 +1684,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 		if(!theOffer.linkOfferTuple.first.empty())
 		{
 			if(escrow.nCommission > 0)
-				createAddressUniValue.push_back(Pair(resellerAddressPayment.ToString(), ValueFromAmount(escrow.nCommission)));
+				createAddressUniValue.push_back(Pair(linkSellerAddress.ToString(), ValueFromAmount(escrow.nCommission)));
 			createAddressUniValue.push_back(Pair(sellerAddressPayment.ToString(), ValueFromAmount(nTotal-escrow.nCommission)));
 		}
 		else
@@ -2030,7 +2034,7 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
 	if (escrow.nPaymentOption != PAYMENTOPTION_SYS)
 		extPayment = true;
 
-	CAliasIndex sellerAliasLatest, buyerAliasLatest, arbiterAliasLatest, resellerAliasLatest, buyerAlias, sellerAlias, arbiterAlias;
+	CAliasIndex sellerAliasLatest, buyerAliasLatest, arbiterAliasLatest, buyerAlias, sellerAlias, arbiterAlias;
 	CSyscoinAddress arbiterPaymentAddress, buyerPaymentAddress, sellerPaymentAddress;
 	CScript arbiterScript;
 	GetAlias(CNameTXIDTuple(escrow.arbiterAliasTuple.first, escrow.arbiterAliasTuple.second), arbiterAlias);
@@ -2160,9 +2164,9 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
         throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4564 - " + _("Could not find a escrow with this key"));
 
  
-	CAliasIndex sellerAlias, sellerAliasLatest, buyerAlias, buyerAliasLatest, arbiterAlias, arbiterAliasLatest, resellerAlias, resellerAliasLatest;
+	CAliasIndex sellerAlias, sellerAliasLatest, buyerAlias, buyerAliasLatest, arbiterAlias, arbiterAliasLatest;
 	vector<CAliasIndex> aliasVtxPos;
-	CSyscoinAddress arbiterAddressPayment, buyerAddressPayment, sellerAddressPayment, resellerAddressPayment;
+	CSyscoinAddress arbiterAddressPayment, buyerAddressPayment, sellerAddressPayment;
 	CScript arbiterScript;
 	GetAlias(CNameTXIDTuple(escrow.arbiterAliasTuple.first, escrow.arbiterAliasTuple.second), arbiterAlias);
 	if (GetAlias(escrow.arbiterAliasTuple.first, arbiterAliasLatest))
@@ -2504,7 +2508,7 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 	if (escrow.nPaymentOption != PAYMENTOPTION_SYS)
 		extPayment = true;
 
-	CAliasIndex sellerAliasLatest, buyerAliasLatest, arbiterAliasLatest, resellerAliasLatest, buyerAlias, sellerAlias, arbiterAlias;
+	CAliasIndex sellerAliasLatest, buyerAliasLatest, arbiterAliasLatest, buyerAlias, sellerAlias, arbiterAlias;
 	CSyscoinAddress arbiterPaymentAddress, buyerPaymentAddress, sellerPaymentAddress;
 	CScript arbiterScript;
 	GetAlias(CNameTXIDTuple(escrow.arbiterAliasTuple.first, escrow.arbiterAliasTuple.second), arbiterAlias);
