@@ -1737,7 +1737,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	escrow.op = OP_ESCROW_RELEASE;
 	for (int i = 0; i < signedTx.vin.size(); i++) {
 		if(!signedTx.vin[i].scriptSig.empty())
-			escrow.scriptSigs.push_back(signedTx.vin[i].scriptSig);
+			escrow.scriptSigs.push_back((CScriptBase)signedTx.vin[i].scriptSig);
 	}
 	escrow.nHeight = chainActive.Tip()->nHeight;
 	escrow.bPaymentAck = false;
@@ -1925,9 +1925,9 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	DecodeHexTx(rawTx2, createEscrowSpendingTx2);
 	for (int i = 0; i < escrow.scriptSigs.size(); i++) {
 		if (rawTx1.vin.size() >= i)
-			rawTx1.vin[i].scriptSig = escrow.scriptSigs[i];
+			rawTx1.vin[i].scriptSig = CScript(escrow.scriptSigs[i].begin(), escrow.scriptSigs[i].end());
 		if (rawTx2.vin.size() >= i)
-			rawTx2.vin[i].scriptSig = escrow.scriptSigs[i];
+			rawTx2.vin[i].scriptSig = CScript(escrow.scriptSigs[i].begin(), escrow.scriptSigs[i].end());
 	}
 	string strRawTx1 = EncodeHexTx(rawTx1);
 	string strRawTx2 = EncodeHexTx(rawTx2);
@@ -2268,7 +2268,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	escrow.op = OP_ESCROW_REFUND;
 	for (int i = 0; i < signedTx.vin.size(); i++) {
 		if (!signedTx.vin[i].scriptSig.empty())
-			escrow.scriptSigs.push_back(signedTx.vin[i].scriptSig);
+			escrow.scriptSigs.push_back((CScriptBase)signedTx.vin[i].scriptSig);
 	}
 	escrow.bPaymentAck = false;
 	escrow.nHeight = chainActive.Tip()->nHeight;
@@ -2411,9 +2411,9 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	DecodeHexTx(rawTx2, createEscrowSpendingTx2);
 	for (int i = 0; i < escrow.scriptSigs.size(); i++) {
 		if (rawTx1.vin.size() >= i)
-			rawTx1.vin[i].scriptSig = escrow.scriptSigs[i];
+			rawTx1.vin[i].scriptSig = CScript(escrow.scriptSigs[i].begin(), escrow.scriptSigs[i].end());
 		if (rawTx2.vin.size() >= i)
-			rawTx2.vin[i].scriptSig = escrow.scriptSigs[i];
+			rawTx2.vin[i].scriptSig = CScript(escrow.scriptSigs[i].begin(), escrow.scriptSigs[i].end());
 	}
 	string strRawTx1 = EncodeHexTx(rawTx1);
 	string strRawTx2 = EncodeHexTx(rawTx2);

@@ -27,7 +27,7 @@ public:
 	CNameTXIDTuple arbiterAliasTuple;
 	std::vector<unsigned char> vchRedeemScript;
 	CNameTXIDTuple offerTuple;
-	std::vector<CScript> scriptSigs;
+	std::vector<CScriptBase> scriptSigs;
 	CNameTXIDTuple buyerAliasTuple;
 	CNameTXIDTuple linkAliasTuple;
 	CFeedback feedback;
