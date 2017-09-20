@@ -1159,8 +1159,8 @@ const string OfferAccept(const string& ownernode, const string& buyernode, const
 	UniValue r;
 	BOOST_CHECK_NO_THROW(r = CallRPC(ownernode, "offerinfo " + offerguid));
 	string escrowguid = EscrowNew(buyernode, ownernode, aliasname, offerguid, qty, "sysrates.peg", discountexpected);
-	EscrowRelease("node2", "buyer", escrowguid);
-	EscrowClaimRelease("node1", escrowguid);
+	EscrowRelease(buyernode, "buyer", escrowguid);
+	EscrowClaimRelease(ownernode, escrowguid);
 	return escrowguid;
 }
 const string EscrowNew(const string& node, const string& sellernode, const string& buyeralias, const string& offerguid, const string& qtyStr, const string& arbiteralias, const string &discountexpected, const string &witness)
