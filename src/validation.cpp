@@ -1885,10 +1885,18 @@ int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Para
         ThresholdState state = VersionBitsState(pindexPrev, params, pos, versionbitscache);
         const struct BIP9DeploymentInfo& vbinfo = VersionBitsDeploymentInfo[pos];
         if (vbinfo.check_mn_protocol && state == THRESHOLD_STARTED && !fAssumeMasternodeIsUpgraded) {
+            CScript payee;
             masternode_info_t mnInfo;
-            bool fFound = mnodeman.GetMasternodeByRank(1, mnInfo, pindexPrev->nHeight);
-            if (!fFound || mnInfo.nProtocolVersion < PROTOCOL_VERSION) {
-                // no masternodes(?) or masternode is not upgraded yet
+            if (!mnpayments.GetBlockPayee(pindexPrev->nHeight + 1, payee)) {
+                // no votes for this block
+                continue;
+            }
+            if (!mnodeman.GetMasternodeInfo(payee, mnInfo)) {
+                // unknown masternode
+                continue;
+            }
+            if (mnInfo.nProtocolVersion < DIP0001_PROTOCOL_VERSION) {
+                // masternode is not upgraded yet
                 continue;
             }
         }

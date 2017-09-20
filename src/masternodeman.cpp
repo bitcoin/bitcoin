@@ -460,6 +460,19 @@ bool CMasternodeMan::GetMasternodeInfo(const CPubKey& pubKeyMasternode, masterno
     return false;
 }
 
+bool CMasternodeMan::GetMasternodeInfo(const CScript& payee, masternode_info_t& mnInfoRet)
+{
+    LOCK(cs);
+    for (auto& mnpair : mapMasternodes) {
+        CScript scriptCollateralAddress = GetScriptForDestination(mnpair.second.pubKeyCollateralAddress.GetID());
+        if (scriptCollateralAddress == payee) {
+            mnInfoRet = mnpair.second.GetInfo();
+            return true;
+        }
+    }
+    return false;
+}
+
 bool CMasternodeMan::Has(const COutPoint& outpoint)
 {
     LOCK(cs);
