@@ -92,12 +92,7 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_parse)
         std::vector<unsigned char> exp_payload = ParseHex(test[1].get_str());
         const UniValue &metadata = test[2].get_obj();
         bool isPrivkey = find_value(metadata, "isPrivkey").get_bool();
-        bool isTestnet = find_value(metadata, "chain").get_str() == "testnet";
-        if (isTestnet) {
-            SelectParams(CBaseChainParams::TESTNET);
-        } else {
-            SelectParams(CBaseChainParams::MAIN);
-        }
+        SelectParams(find_value(metadata, "chain").get_str());
         if (isPrivkey) {
             bool isCompressed = find_value(metadata, "isCompressed").get_bool();
             // Must be valid private key
@@ -141,12 +136,7 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_gen)
         std::vector<unsigned char> exp_payload = ParseHex(test[1].get_str());
         const UniValue &metadata = test[2].get_obj();
         bool isPrivkey = find_value(metadata, "isPrivkey").get_bool();
-        bool isTestnet = find_value(metadata, "chain").get_str() == "testnet";
-        if (isTestnet) {
-            SelectParams(CBaseChainParams::TESTNET);
-        } else {
-            SelectParams(CBaseChainParams::MAIN);
-        }
+        SelectParams(find_value(metadata, "chain").get_str());
         if (isPrivkey) {
             bool isCompressed = find_value(metadata, "isCompressed").get_bool();
             CKey key;
@@ -185,10 +175,13 @@ BOOST_AUTO_TEST_CASE(base58_keys_invalid)
         std::string exp_base58string = test[0].get_str();
 
         // must be invalid as public and as private key
-        destination = DecodeDestination(exp_base58string);
-        BOOST_CHECK_MESSAGE(!IsValidDestination(destination), "IsValid pubkey:" + strTest);
-        secret.SetString(exp_base58string);
-        BOOST_CHECK_MESSAGE(!secret.IsValid(), "IsValid privkey:" + strTest);
+        for (auto chain : { CBaseChainParams::MAIN, CBaseChainParams::TESTNET, CBaseChainParams::REGTEST }) {
+            SelectParams(chain);
+            destination = DecodeDestination(exp_base58string);
+            BOOST_CHECK_MESSAGE(!IsValidDestination(destination), "IsValid pubkey in mainnet:" + strTest);
+            secret.SetString(exp_base58string);
+            BOOST_CHECK_MESSAGE(!secret.IsValid(), "IsValid privkey in mainnet:" + strTest);
+        }
     }
 }
 
