@@ -1924,10 +1924,11 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	CTransaction rawTx2;
 	DecodeHexTx(rawTx2, createEscrowSpendingTx2);
 	for (int i = 0; i < escrow.scriptSigs.size(); i++) {
+		const CScript &script = CScript() << std::vector<unsigned char>(escrow.scriptSigs[i].begin(), escrow.scriptSigs[i].end());
 		if (rawTx1.vin.size() >= i)
-			rawTx1.vin[i].scriptSig = CScript() << std::vector<unsigned char>(escrow.scriptSigs[i].begin(), escrow.scriptSigs[i].end());
+			rawTx1.vin[i].scriptSig = script;
 		if (rawTx2.vin.size() >= i)
-			rawTx2.vin[i].scriptSig = CScript() << std::vector<unsigned char>(escrow.scriptSigs[i].begin(), escrow.scriptSigs[i].end());
+			rawTx2.vin[i].scriptSig = script;
 	}
 	string strRawTx1 = EncodeHexTx(rawTx1);
 	string strRawTx2 = EncodeHexTx(rawTx2);
@@ -2426,10 +2427,11 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	CTransaction rawTx2;
 	DecodeHexTx(rawTx2, createEscrowSpendingTx2);
 	for (int i = 0; i < escrow.scriptSigs.size(); i++) {
+		const CScript &script = CScript() << std::vector<unsigned char>(escrow.scriptSigs[i].begin(), escrow.scriptSigs[i].end());
 		if (rawTx1.vin.size() >= i)
-			rawTx1.vin[i].scriptSig = CScript() << std::vector<unsigned char>(escrow.scriptSigs[i].begin(), escrow.scriptSigs[i].end());
+			rawTx1.vin[i].scriptSig = script;
 		if (rawTx2.vin.size() >= i)
-			rawTx2.vin[i].scriptSig = CScript() << std::vector<unsigned char>(escrow.scriptSigs[i].begin(), escrow.scriptSigs[i].end());
+			rawTx2.vin[i].scriptSig = script;
 	}
 	string strRawTx1 = EncodeHexTx(rawTx1);
 	string strRawTx2 = EncodeHexTx(rawTx2);
