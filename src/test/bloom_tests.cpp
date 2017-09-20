@@ -4,9 +4,9 @@
 
 #include <bloom.h>
 
-#include <base58.h>
 #include <clientversion.h>
 #include <key.h>
+#include <key_io.h>
 #include <merkleblock.h>
 #include <primitives/block.h>
 #include <random.h>

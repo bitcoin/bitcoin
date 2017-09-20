@@ -9,8 +9,8 @@
 #include <qt/paymentserver.h>
 #include <qt/transactionrecord.h>
 
-#include <base58.h>
 #include <consensus/consensus.h>
+#include <key_io.h>
 #include <validation.h>
 #include <script/script.h>
 #include <timedata.h>
