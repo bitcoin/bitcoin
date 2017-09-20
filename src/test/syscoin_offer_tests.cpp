@@ -381,8 +381,8 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate_editcurrency)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "escrownew buyeraliascurrency " + offerguid + " 10 arbiteraliascurrency"));
 	const UniValue &arr = r.get_array();
 	escrowguid = arr[1].get_str();
-	GenerateBlocks(2);
-	GenerateBlocks(3);
+	GenerateBlocks(5);
+	GenerateBlocks(5);
 	GenerateBlocks(5, "node2");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + escrowguid));
 	nTotal = AmountFromValue(find_value(r.get_obj(), "total"));
@@ -573,8 +573,8 @@ BOOST_AUTO_TEST_CASE (generate_certofferexpired)
 	GenerateBlocks(10);
 	// updates the alias which updates the offer and cert using this alias
 	OfferAccept("node1", "node2", "node2alias2", offerguid, "1");
-	// should fail: generate a cert offer using transferred cert
-	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew node1alias2 certificates title 1 0.05 description USD " + certguid), runtime_error);
+	// should pass: generate a cert offer
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offernew node1alias2 certificates title 1 0.05 description USD " + certguid));
 
 	offerguid = OfferNew("node1", "node1alias2a", "certificates", "title", "1", "0.05", "description", "USD", certguid1);
 	ExpireAlias("node2alias2");
@@ -620,10 +620,6 @@ BOOST_AUTO_TEST_CASE (generate_offerpruning)
 	// should fail: already expired alias
 	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate pruneoffer newdata privdata"), runtime_error);
 	GenerateBlocks(5, "node1");
-	// create a new service
-	AliasNew("node1", "pruneoffer", "data");
-	string guid1 = OfferNew("node1", "pruneoffer", "category", "title", "1", "0.05", "description", "USD");
-	
 	
 	// stop and start node1
 	StopNode("node1");
@@ -632,6 +628,11 @@ BOOST_AUTO_TEST_CASE (generate_offerpruning)
 
 	// after stopping and starting, indexer should remove guid offer from db
 	BOOST_CHECK_EQUAL(OfferFilter("node1", guid), false);
+
+	// create a new service
+	AliasNew("node1", "pruneoffer", "data");
+	string guid1 = OfferNew("node1", "pruneoffer", "category", "title", "1", "0.05", "description", "USD");
+
 	// ensure you can still update before expiry
 	OfferUpdate("node1", "pruneoffer", guid1, "category", "title", "1", "0.05", "description", "USD");
 	// you can search it still on node1/node2
