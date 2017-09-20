@@ -590,11 +590,8 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				}
 				// if creating a linked offer we set some mandatory fields from the parent
 				theOffer.nQty = linkOffer.nQty;
-				theOffer.sCurrencyCode = linkOffer.sCurrencyCode;
 				theOffer.certTuple = linkOffer.certTuple;
 				theOffer.sPrice = linkOffer.sPrice;
-				theOffer.sCategory = linkOffer.sCategory;
-				theOffer.sTitle = linkOffer.sTitle;
 				theOffer.paymentOptions = linkOffer.paymentOptions;
 				theOffer.fUnits = linkOffer.fUnits;
 				theOffer.bCoinOffer = linkOffer.bCoinOffer;
@@ -963,6 +960,10 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	newOffer.linkOfferTuple = CNameTXIDTuple(linkOffer.vchOffer, linkOffer.txHash);
 	newOffer.nHeight = chainActive.Tip()->nHeight;
 	newOffer.paymentOptions = linkOffer.paymentOptions;
+	newOffer.paymentPrecision = linkOffer.paymentPrecision;
+	theOffer.sCurrencyCode = linkOffer.sCurrencyCode;
+	theOffer.sCategory = linkOffer.sCategory;
+	theOffer.sTitle = linkOffer.sTitle;
 	//create offeractivate txn keys
 
 	vector<unsigned char> data;
