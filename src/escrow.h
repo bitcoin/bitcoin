@@ -27,7 +27,7 @@ public:
 	CNameTXIDTuple arbiterAliasTuple;
 	std::vector<unsigned char> vchRedeemScript;
 	CNameTXIDTuple offerTuple;
-	std::vector<unsigned char> rawTx;
+	std::vector<CScript> scriptSigs;
 	CNameTXIDTuple buyerAliasTuple;
 	CNameTXIDTuple linkAliasTuple;
 	CFeedback feedback;
@@ -54,7 +54,7 @@ public:
 		linkAliasTuple.first.clear();
 		vchRedeemScript.clear();
 		offerTuple.first.clear();
-		rawTx.clear();
+		scriptSigs.clear();
 		sCurrencyCode.clear();
 		sTotal.clear();
 	}
@@ -74,7 +74,7 @@ public:
 		READWRITE(arbiterAliasTuple);
 		READWRITE(vchRedeemScript);
         READWRITE(offerTuple);
-		READWRITE(rawTx);
+		READWRITE(scriptSigs);
 		READWRITE(txHash);
 		READWRITE(extTxId);
 		READWRITE(redeemTxId);
@@ -105,7 +105,7 @@ public:
 			&& a.arbiterAliasTuple == b.arbiterAliasTuple
 			&& a.vchRedeemScript == b.vchRedeemScript
 			&& a.offerTuple == b.offerTuple
-			&& a.rawTx == b.rawTx
+			&& a.scriptSigs == b.scriptSigs
 			&& a.extTxId == b.extTxId
 			&& a.txHash == b.txHash
 			&& a.nHeight == b.nHeight
@@ -135,7 +135,7 @@ public:
 		arbiterAliasTuple = b.arbiterAliasTuple;
 		vchRedeemScript = b.vchRedeemScript;
         offerTuple = b.offerTuple;
-		rawTx = b.rawTx;
+		scriptSigs = b.scriptSigs;
 		extTxId = b.extTxId;
 		txHash = b.txHash;
 		linkAliasTuple = b.linkAliasTuple;
@@ -161,8 +161,8 @@ public:
     friend bool operator!=(const CEscrow &a, const CEscrow &b) {
         return !(a == b);
     }
-	void SetNull() { sTotal.clear(); sCurrencyCode.clear();  bCoinOffer = false;  nTotal = nArbiterFee = nNetworkFee = nCommission = nShipping = 0; extTxId.SetNull(); op = 0; bPaymentAck = false; redeemTxId.SetNull(); linkAliasTuple.first.clear(); feedback.SetNull(); linkSellerAliasTuple.first.clear(); vchEscrow.clear(); nHeight = nPaymentOption = 0; txHash.SetNull(); nQty = 0; buyerAliasTuple.first.clear(); arbiterAliasTuple.first.clear(); sellerAliasTuple.first.clear(); vchRedeemScript.clear(); offerTuple.first.clear(); rawTx.clear(); }
-    bool IsNull() const { return (sTotal.empty() && sCurrencyCode.empty() && !bCoinOffer && nTotal == 0 && nArbiterFee == 0 && nCommission == 0 && nNetworkFee == 0 && nShipping == 0 && extTxId.IsNull() && bPaymentAck == false && redeemTxId.IsNull() && linkSellerAliasTuple.first.empty() && linkAliasTuple.first.empty() && feedback.IsNull() && op == 0 && vchEscrow.empty() && txHash.IsNull() && nHeight == 0 && nPaymentOption == 0 && nQty == 0 && buyerAliasTuple.first.empty() && arbiterAliasTuple.first.empty() && sellerAliasTuple.first.empty() && vchRedeemScript.empty() && offerTuple.first.empty() && rawTx.empty()); }
+	void SetNull() { sTotal.clear(); sCurrencyCode.clear();  bCoinOffer = false;  nTotal = nArbiterFee = nNetworkFee = nCommission = nShipping = 0; extTxId.SetNull(); op = 0; bPaymentAck = false; redeemTxId.SetNull(); linkAliasTuple.first.clear(); feedback.SetNull(); linkSellerAliasTuple.first.clear(); vchEscrow.clear(); nHeight = nPaymentOption = 0; txHash.SetNull(); nQty = 0; buyerAliasTuple.first.clear(); arbiterAliasTuple.first.clear(); sellerAliasTuple.first.clear(); vchRedeemScript.clear(); offerTuple.first.clear(); scriptSigs.clear(); }
+    bool IsNull() const { return (sTotal.empty() && sCurrencyCode.empty() && !bCoinOffer && nTotal == 0 && nArbiterFee == 0 && nCommission == 0 && nNetworkFee == 0 && nShipping == 0 && extTxId.IsNull() && bPaymentAck == false && redeemTxId.IsNull() && linkSellerAliasTuple.first.empty() && linkAliasTuple.first.empty() && feedback.IsNull() && op == 0 && vchEscrow.empty() && txHash.IsNull() && nHeight == 0 && nPaymentOption == 0 && nQty == 0 && buyerAliasTuple.first.empty() && arbiterAliasTuple.first.empty() && sellerAliasTuple.first.empty() && vchRedeemScript.empty() && offerTuple.first.empty() && scriptSigs.empty()); }
     bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
 	void Serialize(std::vector<unsigned char>& vchData);
