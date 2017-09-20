@@ -1945,37 +1945,49 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 		UniValue signUniValue(UniValue::VARR);
 		signUniValue.push_back(strRawTx1);
 		resSign = tableRPC.execute("signrawtransaction", signUniValue);
-	}
-	catch (UniValue& objError)
-	{
-		try
-		{
-			UniValue signUniValue(UniValue::VARR);
-			signUniValue.push_back(strRawTx2);
-			resSign = tableRPC.execute("signrawtransaction", signUniValue);
-		}
-		catch (UniValue& objError)
-		{
-			throw runtime_error(find_value(objError, "message").get_str());
+		const UniValue& o = resSign.get_obj();
+		string hex_str = "";
+
+		const UniValue& hex_value = find_value(o, "hex");
+		if (hex_value.isStr())
+			hex_str = hex_value.get_str();
+
+
+		const UniValue& complete_value = find_value(o, "complete");
+		bool bComplete = false;
+		if (complete_value.isBool())
+			bComplete = complete_value.get_bool();
+		if (!bComplete) {
+			try
+			{
+				UniValue signUniValue(UniValue::VARR);
+				signUniValue.push_back(strRawTx2);
+				resSign = tableRPC.execute("signrawtransaction", signUniValue);
+				const UniValue& o = resSign.get_obj();
+				string hex_str = "";
+
+				const UniValue& hex_value = find_value(o, "hex");
+				if (hex_value.isStr())
+					hex_str = hex_value.get_str();
+
+
+				const UniValue& complete_value = find_value(o, "complete");
+				bool bComplete = false;
+				if (complete_value.isBool())
+					bComplete = complete_value.get_bool();
+
+				if (!bComplete)
+					throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4561 - " + _("Escrow is incomplete"));
+			}
+			catch (UniValue& objError)
+			{
+				throw runtime_error(find_value(objError, "message").get_str());
+			}
 		}
 	}
 	if (!resSign.isObject())
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4560 - " + _("Could not sign escrow transaction: Invalid response from signrawtransaction"));
 
-	const UniValue& o = resSign.get_obj();
-	string hex_str = "";
-
-	const UniValue& hex_value = find_value(o, "hex");
-	if (hex_value.isStr())
-		hex_str = hex_value.get_str();
-
-
-	const UniValue& complete_value = find_value(o, "complete");
-	bool bComplete = false;
-	if (complete_value.isBool())
-		bComplete = complete_value.get_bool();
-	if(!bComplete)
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4561 - " + _("Escrow is incomplete"));
 
 	CTransaction rawTransaction;
 	DecodeHexTx(rawTransaction,hex_str);
@@ -2449,38 +2461,46 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 		UniValue signUniValue(UniValue::VARR);
 		signUniValue.push_back(strRawTx1);
 		resSign = tableRPC.execute("signrawtransaction", signUniValue);
-	}
-	catch (UniValue& objError)
-	{
-		try
-		{
-			UniValue signUniValue(UniValue::VARR);
-			signUniValue.push_back(strRawTx2);
-			resSign = tableRPC.execute("signrawtransaction", signUniValue);
+		const UniValue& o = resSign.get_obj();
+		string hex_str = "";
+
+		const UniValue& hex_value = find_value(o, "hex");
+		if (hex_value.isStr())
+			hex_str = hex_value.get_str();
+
+
+		const UniValue& complete_value = find_value(o, "complete");
+		bool bComplete = false;
+		if (complete_value.isBool())
+			bComplete = complete_value.get_bool();
+		if (!bComplete) {
+			try
+			{
+				UniValue signUniValue(UniValue::VARR);
+				signUniValue.push_back(strRawTx2);
+				resSign = tableRPC.execute("signrawtransaction", signUniValue);
+				const UniValue& o = resSign.get_obj();
+				string hex_str = "";
+
+				const UniValue& hex_value = find_value(o, "hex");
+				if (hex_value.isStr())
+					hex_str = hex_value.get_str();
+
+
+				const UniValue& complete_value = find_value(o, "complete");
+				bool bComplete = false;
+				if (complete_value.isBool())
+					bComplete = complete_value.get_bool();
+
+				if (!bComplete)
+					throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4561 - " + _("Escrow is incomplete"));
+			}
+			catch (UniValue& objError)
+			{
+				throw runtime_error(find_value(objError, "message").get_str());
+			}
 		}
-		catch (UniValue& objError)
-		{
-			throw runtime_error(find_value(objError, "message").get_str());
-		}
 	}
-	if (!resSign.isObject())
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4560 - " + _("Could not sign escrow transaction: Invalid response from signrawtransaction"));
-
- 	
-	const UniValue& o = resSign.get_obj();
-	string hex_str = "";
-
-	const UniValue& hex_value = find_value(o, "hex");
-	if (hex_value.isStr())
-		hex_str = hex_value.get_str();
-
-	const UniValue& complete_value = find_value(o, "complete");
-	bool bComplete = false;
-	if (complete_value.isBool())
-		bComplete = complete_value.get_bool();
-	if(!bComplete)
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4595 - " + _("Escrow is incomplete"));
-
 	CTransaction rawTransaction;
 	DecodeHexTx(rawTransaction,hex_str);
 	UniValue ret(UniValue::VARR);
