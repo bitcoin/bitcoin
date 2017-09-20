@@ -15,8 +15,8 @@ from test_framework.blocktools import *
 
 SEQUENCE_LOCKTIME_DISABLE_FLAG = (1<<31)
 SEQUENCE_LOCKTIME_TYPE_FLAG = (1<<22) # this means use time (0 means height)
-SEQUENCE_LOCKTIME_GRANULARITY = 9 # this is a bit-shift
-SEQUENCE_LOCKTIME_MASK = 0x0000ffff
+SEQUENCE_LOCKTIME_GRANULARITY = 7 # this is a bit-shift
+SEQUENCE_LOCKTIME_MASK = 0x0003ffff
 
 # RPC error for non-BIP68 final transactions
 NOT_FINAL_ERROR = "64: non-BIP68-final"
