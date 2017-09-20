@@ -453,8 +453,8 @@ BOOST_AUTO_TEST_CASE (generate_linkedaccept)
 
 	string offerguid = OfferNew("node1", "node1aliaslinked", "category", "title", "10", "0.05", "description", "USD");
 	OfferAddWhitelist("node1", offerguid, "node2aliaslinked", "0");
-	string lofferguid = OfferLink("node2", "node2aliaslinked", offerguid, "5", "newdescription");
-	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress node3aliaslinked 850"), runtime_error);
+	string lofferguid = OfferLink("node2", "node2aliaslinked", offerguid, "20", "newdescription");
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress node3aliaslinked 8500"), runtime_error);
 	GenerateBlocks(10);
 	OfferAccept("node1", "node3", "node3aliaslinked", lofferguid, "6");
 }
@@ -477,7 +477,7 @@ BOOST_AUTO_TEST_CASE (generate_cert_linkedaccept)
 	// generate a good cert offer
 	string offerguid = OfferNew("node1", "node1alias", "certificates", "title", "1", "0.05", "description", "USD", certguid);
 	OfferAddWhitelist("node1", offerguid, "node2alias", "0");
-	string lofferguid = OfferLink("node2", "node2alias", offerguid, "5", "newdescription");
+	string lofferguid = OfferLink("node2", "node2alias", offerguid, "20", "newdescription");
 
 	string hex_str = AliasUpdate("node1", "node1alias", "changeddata2", "privdata2");
 	BOOST_CHECK(hex_str.empty());
@@ -485,7 +485,7 @@ BOOST_AUTO_TEST_CASE (generate_cert_linkedaccept)
 	BOOST_CHECK(hex_str.empty());
 	hex_str = AliasUpdate("node3", "node3alias", "changeddata3", "privdata3");
 	BOOST_CHECK(hex_str.empty());
-	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress node3alias 135"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress node3alias 1350"), runtime_error);
 	GenerateBlocks(10);
 	OfferAccept("node1", "node3", "node3alias", lofferguid, "1");
 	GenerateBlocks(5, "node1");
