@@ -1172,9 +1172,9 @@ const string EscrowNew(const string& node, const string& sellernode, const strin
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offerguid));
 	int nQtyBefore = find_value(r.get_obj(), "quantity").get_int();
 	string selleralias = find_value(r.get_obj(), "alias").get_str();
-	string sellerlink alias = find_value(r.get_obj(), "offerlink_seller").get_str();
+	string sellerlink_alias = find_value(r.get_obj(), "offerlink_seller").get_str();
 	if (!sellerlink.empty()))
-		selleralias = sellerlink;
+		selleralias = sellerlink_alias;
 	string exttxid = "\"\"";
 	string merchantaliaspegtxid = "\"\"";
 	string paymentoptions = "\"\"";
