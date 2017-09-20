@@ -2110,6 +2110,7 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
 	}
 	catch (UniValue& objError)
 	{
+		throw runtime_error(find_value(objError, "message").get_str());
 	}
 	UniValue signParams(UniValue::VARR);
 	signParams.push_back(EncodeHexTx(wtx));
@@ -2619,6 +2620,7 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 	}
 	catch (UniValue& objError)
 	{
+		throw runtime_error(find_value(objError, "message").get_str());
 	}
 	UniValue signParams(UniValue::VARR);
 	signParams.push_back(EncodeHexTx(wtx));
