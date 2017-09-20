@@ -1940,14 +1940,14 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 		pwalletMain->AddCScript(inner);
 	}
 	UniValue resSign;
+	string hex_str = "";
 	try
 	{
 		UniValue signUniValue(UniValue::VARR);
 		signUniValue.push_back(strRawTx1);
 		resSign = tableRPC.execute("signrawtransaction", signUniValue);
 		const UniValue& o = resSign.get_obj();
-		string hex_str = "";
-
+		
 		const UniValue& hex_value = find_value(o, "hex");
 		if (hex_value.isStr())
 			hex_str = hex_value.get_str();
@@ -1964,7 +1964,6 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 				signUniValue.push_back(strRawTx2);
 				resSign = tableRPC.execute("signrawtransaction", signUniValue);
 				const UniValue& o = resSign.get_obj();
-				string hex_str = "";
 
 				const UniValue& hex_value = find_value(o, "hex");
 				if (hex_value.isStr())
@@ -2460,13 +2459,13 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 		pwalletMain->AddCScript(inner);
 	}
 	UniValue resSign;
+	string hex_str = "";
 	try
 	{
 		UniValue signUniValue(UniValue::VARR);
 		signUniValue.push_back(strRawTx1);
 		resSign = tableRPC.execute("signrawtransaction", signUniValue);
 		const UniValue& o = resSign.get_obj();
-		string hex_str = "";
 
 		const UniValue& hex_value = find_value(o, "hex");
 		if (hex_value.isStr())
@@ -2484,7 +2483,6 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 				signUniValue.push_back(strRawTx2);
 				resSign = tableRPC.execute("signrawtransaction", signUniValue);
 				const UniValue& o = resSign.get_obj();
-				string hex_str = "";
 
 				const UniValue& hex_value = find_value(o, "hex");
 				if (hex_value.isStr())
