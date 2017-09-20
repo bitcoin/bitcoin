@@ -961,9 +961,9 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	newOffer.nHeight = chainActive.Tip()->nHeight;
 	newOffer.paymentOptions = linkOffer.paymentOptions;
 	newOffer.paymentPrecision = linkOffer.paymentPrecision;
-	theOffer.sCurrencyCode = linkOffer.sCurrencyCode;
-	theOffer.sCategory = linkOffer.sCategory;
-	theOffer.sTitle = linkOffer.sTitle;
+	newOffer.sCurrencyCode = linkOffer.sCurrencyCode;
+	newOffer.sCategory = linkOffer.sCategory;
+	newOffer.sTitle = linkOffer.sTitle;
 	//create offeractivate txn keys
 
 	vector<unsigned char> data;
