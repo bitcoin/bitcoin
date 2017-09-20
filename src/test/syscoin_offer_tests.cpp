@@ -490,9 +490,6 @@ BOOST_AUTO_TEST_CASE (generate_cert_linkedaccept)
 	OfferAccept("node1", "node3", "node3alias", lofferguid, "1");
 	GenerateBlocks(5, "node1");
 	GenerateBlocks(5, "node3");
-	// cert transferred autonomously
-	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "certinfo " + certguid));
-	BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == "node3alias");
 }
 BOOST_AUTO_TEST_CASE (generate_offerexpired)
 {
