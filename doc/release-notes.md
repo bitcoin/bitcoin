@@ -8,7 +8,7 @@ Bitcoin Core version *version* is now available from:
 This is a new major version release, including new features, various bugfixes
 and performance improvements, as well as updated translations.
 
-Please report bugs using the issue tracker at github:
+Please report bugs using the issue tracker at GitHub:
 
   <https://github.com/bitcoin/bitcoin/issues>
 
@@ -21,7 +21,7 @@ How to Upgrade
 
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes for older versions), then run the 
-installer (on Windows) or just copy over /Applications/Bitcoin-Qt (on Mac)
+installer (on Windows) or just copy over `/Applications/Bitcoin-Qt` (on Mac)
 or `bitcoind`/`bitcoin-qt` (on Linux).
 
 The first time you run version 0.15.0, your chainstate database will be converted to a
@@ -68,9 +68,20 @@ implied blockmaxweight, instead of limiting block size directly. Any miners who 
 to limit their blocks by size, instead of by weight, will have to do so manually by
 removing transactions from their block template directly.
 
+HD-wallets by default
+---------------------
+Due to a backward-incompatible change in the wallet database, wallets created
+with version 0.16.0 will be rejected by previous versions. Also, version 0.16.0
+will only create hierarchical deterministic (HD) wallets.
+
 Low-level RPC changes
 ----------------------
 - The "currentblocksize" value in getmininginfo has been removed.
+- The deprecated RPC `getinfo` was removed. It is recommended that the more specific RPCs are used:
+  * `getblockchaininfo`
+  * `getnetworkinfo`
+  * `getwalletinfo`
+  * `getmininginfo`
 
 Credits
 =======
