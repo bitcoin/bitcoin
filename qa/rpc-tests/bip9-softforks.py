@@ -84,6 +84,7 @@ class BIP9SoftForksTest(ComparisonTestFramework):
 
 
     def test_BIP(self, bipName, activated_version, invalidate, invalidatePostSignature, bitno):
+        wait_to_sync(self.nodes[0])
         # generate some coins for later
         self.coinbase_blocks = self.nodes[0].generate(2)
         self.height = 3  # height of the next block to build
