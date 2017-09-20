@@ -20,6 +20,7 @@
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/thread.hpp>
 
 #include <event2/bufferevent.h>
 #include <event2/buffer.h>
@@ -411,7 +412,7 @@ static bool WriteBinaryFile(const fs::path &filename, const std::string &data)
 class TorController
 {
 public:
-    TorController(struct event_base* base, const std::string& target);
+    TorController(struct event_base* base, const std::string& target, uint16_t default_port);
     ~TorController();
 
     /** Get name fo file to store private key in */
@@ -429,6 +430,7 @@ private:
     struct event *reconnect_ev;
     float reconnect_timeout;
     CService service;
+    uint16_t m_listen_port;
     /** Cookie for SAFECOOKIE auth */
     std::vector<uint8_t> cookie;
     /** ClientNonce for SAFECOOKIE auth */
@@ -451,10 +453,10 @@ private:
     static void reconnect_cb(evutil_socket_t fd, short what, void *arg);
 };
 
-TorController::TorController(struct event_base* _base, const std::string& _target):
+TorController::TorController(struct event_base* _base, const std::string& _target, uint16_t default_port):
     base(_base),
     target(_target), conn(base), reconnect(true), reconnect_ev(0),
-    reconnect_timeout(RECONNECT_TIMEOUT_START)
+    reconnect_timeout(RECONNECT_TIMEOUT_START), m_listen_port(default_port)
 {
     reconnect_ev = event_new(base, -1, 0, reconnect_cb, this);
     if (!reconnect_ev)
@@ -502,7 +504,7 @@ void TorController::add_onion_cb(TorControlConnection& _conn, const TorControlRe
             }
             return;
         }
-        service = LookupNumeric(std::string(service_id+".onion").c_str(), GetListenPort());
+        service = LookupNumeric(std::string(service_id+".onion").c_str(), m_listen_port);
         LogPrintf("tor: Got service ID %s, advertising service %s\n", service_id, service.ToString());
         if (WriteBinaryFile(GetPrivateKeyFile(), private_key)) {
             LogPrint(BCLog::TOR, "tor: Cached service private key to %s\n", GetPrivateKeyFile().string());
@@ -538,7 +540,7 @@ void TorController::auth_cb(TorControlConnection& _conn, const TorControlReply& 
         // Request hidden service, redirect port.
         // Note that the 'virtual' port doesn't have to be the same as our internal port, but this is just a convenient
         // choice.  TODO; refactor the shutdown sequence some day.
-        _conn.Command(strprintf("ADD_ONION %s Port=%i,127.0.0.1:%i", private_key, GetListenPort(), GetListenPort()),
+        _conn.Command(strprintf("ADD_ONION %s Port=%i,127.0.0.1:%i", private_key, m_listen_port, m_listen_port),
             boost::bind(&TorController::add_onion_cb, this, _1, _2));
     } else {
         LogPrintf("tor: Authentication failed\n");
@@ -733,14 +735,14 @@ void TorController::reconnect_cb(evutil_socket_t fd, short what, void *arg)
 static struct event_base *gBase;
 static boost::thread torControlThread;
 
-static void TorControlThread()
+static void TorControlThread(const std::string& target, uint16_t default_port)
 {
-    TorController ctrl(gBase, gArgs.GetArg("-torcontrol", DEFAULT_TOR_CONTROL));
+    TorController ctrl(gBase, target, default_port);
 
     event_base_dispatch(gBase);
 }
 
-void StartTorControl(boost::thread_group& threadGroup, CScheduler& scheduler)
+void StartTorControl(const std::string& target, uint16_t default_port)
 {
     assert(!gBase);
 #ifdef WIN32
@@ -754,7 +756,7 @@ void StartTorControl(boost::thread_group& threadGroup, CScheduler& scheduler)
         return;
     }
 
-    torControlThread = boost::thread(boost::bind(&TraceThread<void (*)()>, "torcontrol", &TorControlThread));
+    torControlThread = boost::thread(&TraceThread<std::function<void()> >, "torcontrol", std::bind(&TorControlThread, target, default_port));
 }
 
 void InterruptTorControl()

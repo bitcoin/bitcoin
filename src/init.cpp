@@ -1350,6 +1350,13 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     fDiscover = gArgs.GetBoolArg("-discover", true);
     fRelayTxes = !gArgs.GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY);
 
+    int listen_port = chainparams.GetDefaultPort();
+    assert(listen_port <= 0xffff);
+    listen_port = gArgs.GetArg("-port", listen_port);
+    if (listen_port > 0xffff) {
+        return InitError(strprintf(_("Invalid port specified in -port: '%s'"), listen_port));
+    }
+
     for (const std::string& strAddr : gArgs.GetArgs("-externalip")) {
         CService addrLocal;
         if (Lookup(strAddr.c_str(), addrLocal, GetListenPort(), fNameLookup) && addrLocal.IsValid())
@@ -1645,7 +1652,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     LogPrintf("mapBlockIndex.size() = %u\n",   mapBlockIndex.size());
     LogPrintf("nBestHeight = %d\n",                   chainActive.Height());
     if (gArgs.GetBoolArg("-listenonion", DEFAULT_LISTEN_ONION))
-        StartTorControl(threadGroup, scheduler);
+        StartTorControl(gArgs.GetArg("-torcontrol", DEFAULT_TOR_CONTROL), listen_port);
 
     Discover(threadGroup);
 
