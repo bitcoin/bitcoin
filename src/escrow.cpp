@@ -1923,15 +1923,16 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	DecodeHexTx(rawTx1, createEscrowSpendingTx1);
 	CTransaction rawTx2;
 	DecodeHexTx(rawTx2, createEscrowSpendingTx2);
+	CMutableTransaction rawTx1m(rawTx1);
+	CMutableTransaction rawTx2m(rawTx2);
 	for (int i = 0; i < escrow.scriptSigs.size(); i++) {
-		const CScript &script = CScript() << std::vector<unsigned char>(escrow.scriptSigs[i].begin(), escrow.scriptSigs[i].end());
-		if (rawTx1.vin.size() >= i)
-			rawTx1.vin[i].scriptSig = script;
-		if (rawTx2.vin.size() >= i)
-			rawTx2.vin[i].scriptSig = script;
+		if (rawTx1m.vin.size() >= i)
+			rawTx1m.vin[i].scriptSig = CScript(escrow.scriptSigs[i].begin(), escrow.scriptSigs[i].end());
+		if (rawTx2m.vin.size() >= i)
+			rawTx2m.vin[i].scriptSig = CScript(escrow.scriptSigs[i].begin(), escrow.scriptSigs[i].end());
 	}
-	string strRawTx1 = EncodeHexTx(rawTx1);
-	string strRawTx2 = EncodeHexTx(rawTx2);
+	string strRawTx1 = EncodeHexTx(rawTx1m);
+	string strRawTx2 = EncodeHexTx(rawTx2m);
     // Seller signs it
 	if(pwalletMain)
 	{
@@ -2426,15 +2427,16 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	DecodeHexTx(rawTx1, createEscrowSpendingTx1);
 	CTransaction rawTx2;
 	DecodeHexTx(rawTx2, createEscrowSpendingTx2);
+	CMutableTransaction rawTx1m(rawTx1);
+	CMutableTransaction rawTx2m(rawTx2);
 	for (int i = 0; i < escrow.scriptSigs.size(); i++) {
-		const CScript &script = CScript() << std::vector<unsigned char>(escrow.scriptSigs[i].begin(), escrow.scriptSigs[i].end());
-		if (rawTx1.vin.size() >= i)
-			rawTx1.vin[i].scriptSig = script;
-		if (rawTx2.vin.size() >= i)
-			rawTx2.vin[i].scriptSig = script;
+		if (rawTx1m.vin.size() >= i)
+			rawTx1m.vin[i].scriptSig = CScript(escrow.scriptSigs[i].begin(), escrow.scriptSigs[i].end());
+		if (rawTx2m.vin.size() >= i)
+			rawTx2m.vin[i].scriptSig = CScript(escrow.scriptSigs[i].begin(), escrow.scriptSigs[i].end());
 	}
-	string strRawTx1 = EncodeHexTx(rawTx1);
-	string strRawTx2 = EncodeHexTx(rawTx2);
+	string strRawTx1 = EncodeHexTx(rawTx1m);
+	string strRawTx2 = EncodeHexTx(rawTx2m);
 	// Buyer signs it
 	if (pwalletMain)
 	{
