@@ -1265,7 +1265,8 @@ void EscrowRelease(const string& node, const string& role, const string& guid ,c
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offer));
 	int nQtyOfferBefore = find_value(r.get_obj(), "quantity").get_int();
 	string rawtx = "\"\"";
-	BOOST_CHECK_NO_THROW(CallRPC(node, "escrowrelease " + guid + " " + role + " " + inputStr + " " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowrelease " + guid + " " + role + " " + inputStr + " " + witness));
+	BOOT_CHECK(r.get_array().size() == 1);
 	GenerateBlocks(10, node);
 	GenerateBlocks(10, node);
 
@@ -1299,7 +1300,8 @@ void EscrowRefund(const string& node, const string& role, const string& guid, co
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offer));
 	int nQtyOfferBefore = find_value(r.get_obj(), "quantity").get_int();
 	string rawtx = "\"\"";
-	BOOST_CHECK_NO_THROW(CallRPC(node, "escrowrefund " + guid + " " + role + " " + inputStr + " " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowrefund " + guid + " " + role + " " + inputStr + " " + witness));
+	BOOT_CHECK(r.get_array().size() == 1);
 	GenerateBlocks(10, node);
 	GenerateBlocks(10, node);
 
