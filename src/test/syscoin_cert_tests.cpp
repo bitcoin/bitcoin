@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE (generate_certpruning)
 	ExpireAlias("jagprune1");
 	GenerateBlocks(5, "node2");
 
-	BOOST_CHECK_EQUAL(CertFilter("node1", guid), false);
+	BOOST_CHECK_EQUAL(CertFilter("node1", guid), true);
 
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certinfo " + guid));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), true);
@@ -142,13 +142,16 @@ BOOST_AUTO_TEST_CASE (generate_certpruning)
 	// should fail: already expired alias
 	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate jagprune1 newdata"), runtime_error);
 	GenerateBlocks(5, "node1");
-	// create a new service
-	AliasNew("node1", "jagprune1", "temp", "data");
-	string guid1 = CertNew("node1", "jagprune1", "title", "privdata", "pubdata");
+
 	// stop and start node1
 	StopNode("node1");
 	StartNode("node1");
 	GenerateBlocks(5, "node1");
+
+	BOOST_CHECK_EQUAL(CertFilter("node1", guid), false);
+	// create a new service
+	AliasNew("node1", "jagprune1", "temp", "data");
+	string guid1 = CertNew("node1", "jagprune1", "title", "privdata", "pubdata");
 	// ensure you can still update before expiry
 	CertUpdate("node1", guid1, "pubdata1", "privdata");
 	// you can search it still on node1/node2
