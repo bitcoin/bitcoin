@@ -79,14 +79,11 @@ static int AppInitRawTx(int argc, char* argv[])
         strUsage += HelpMessageOpt("nversion=N", _("Set TX version to N"));
         strUsage += HelpMessageOpt("outaddr=VALUE:ADDRESS", _("Add address-based output to TX"));
         strUsage += HelpMessageOpt("outpubkey=VALUE:PUBKEY[:FLAGS]", _("Add pay-to-pubkey output to TX") + ". " +
-            _("Optionally add the \"W\" flag to produce a pay-to-witness-pubkey-hash output") + ". " +
             _("Optionally add the \"S\" flag to wrap the output in a pay-to-script-hash."));
         strUsage += HelpMessageOpt("outdata=[VALUE:]DATA", _("Add data-based output to TX"));
         strUsage += HelpMessageOpt("outscript=VALUE:SCRIPT[:FLAGS]", _("Add raw script output to TX") + ". " +
-            _("Optionally add the \"W\" flag to produce a pay-to-witness-script-hash output") + ". " +
             _("Optionally add the \"S\" flag to wrap the output in a pay-to-script-hash."));
         strUsage += HelpMessageOpt("outmultisig=VALUE:REQUIRED:PUBKEYS:PUBKEY1:PUBKEY2:....[:FLAGS]", _("Add Pay To n-of-m Multi-sig output to TX. n = REQUIRED, m = PUBKEYS") + ". " +
-            _("Optionally add the \"W\" flag to produce a pay-to-witness-script-hash output") + ". " +
             _("Optionally add the \"S\" flag to wrap the output in a pay-to-script-hash."));
         strUsage += HelpMessageOpt("sign=SIGHASH-FLAGS", _("Add zero or more signatures to transaction") + ". " +
             _("This command requires JSON registers:") +
@@ -275,18 +272,12 @@ static void MutateTxAddOutPubKey(CMutableTransaction& tx, const std::string& str
     CBitcoinAddress addr(scriptPubKey);
 
     // Extract and validate FLAGS
-    bool bSegWit = false;
     bool bScriptHash = false;
     if (vStrInputParts.size() == 3) {
         std::string flags = vStrInputParts[2];
-        bSegWit = (flags.find("W") != std::string::npos);
         bScriptHash = (flags.find("S") != std::string::npos);
     }
 
-    if (bSegWit) {
-        // Call GetScriptForWitness() to build a P2WSH scriptPubKey
-        scriptPubKey = GetScriptForWitness(scriptPubKey);
-    }
     if (bScriptHash) {
         // Get the address for the redeem script, then call
         // GetScriptForDestination() to construct a P2SH scriptPubKey.
@@ -336,11 +327,9 @@ static void MutateTxAddOutMultiSig(CMutableTransaction& tx, const std::string& s
     }
 
     // Extract FLAGS
-    bool bSegWit = false;
     bool bScriptHash = false;
     if (vStrInputParts.size() == numkeys + 4) {
         std::string flags = vStrInputParts.back();
-        bSegWit = (flags.find("W") != std::string::npos);
         bScriptHash = (flags.find("S") != std::string::npos);
     }
     else if (vStrInputParts.size() > numkeys + 4) {
@@ -350,10 +339,6 @@ static void MutateTxAddOutMultiSig(CMutableTransaction& tx, const std::string& s
 
     CScript scriptPubKey = GetScriptForMultisig(required, pubkeys);
 
-    if (bSegWit) {
-        // Call GetScriptForWitness() to build a P2WSH scriptPubKey
-        scriptPubKey = GetScriptForWitness(scriptPubKey);
-    }
     if (bScriptHash) {
         // Get the address for the redeem script, then call
         // GetScriptForDestination() to construct a P2SH scriptPubKey.
@@ -409,17 +394,12 @@ static void MutateTxAddOutScript(CMutableTransaction& tx, const std::string& str
     CScript scriptPubKey = ParseScript(strScript);
 
     // Extract FLAGS
-    bool bSegWit = false;
     bool bScriptHash = false;
     if (vStrInputParts.size() == 3) {
         std::string flags = vStrInputParts.back();
-        bSegWit = (flags.find("W") != std::string::npos);
         bScriptHash = (flags.find("S") != std::string::npos);
     }
 
-    if (bSegWit) {
-      scriptPubKey = GetScriptForWitness(scriptPubKey);
-    }
     if (bScriptHash) {
       CBitcoinAddress addr(scriptPubKey);
       scriptPubKey = GetScriptForDestination(addr.Get());
