@@ -384,6 +384,8 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate_editcurrency)
 	GenerateBlocks(5);
 	GenerateBlocks(5);
 	GenerateBlocks(5, "node2");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offerinfo " + offerguid));
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "currency").get_str(), "EUR");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + escrowguid));
 	nTotal = AmountFromValue(find_value(r.get_obj(), "total"));
 	nArbiterFee = AmountFromValue(find_value(r.get_obj(), "arbiterfee"));
@@ -394,6 +396,7 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate_editcurrency)
 	// 2695.2 SYS/EUR
 	escrowguid = OfferAccept("node1", "node2", "buyeraliascurrency", offerguid, "3");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + escrowguid));
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "currency").get_str(), "EUR");
 	nTotal = AmountFromValue(find_value(r.get_obj(), "total"));
 	nArbiterFee = AmountFromValue(find_value(r.get_obj(), "arbiterfee"));
 	nNetworkFee = AmountFromValue(find_value(r.get_obj(), "networkfee"));
