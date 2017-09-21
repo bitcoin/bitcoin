@@ -1805,7 +1805,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() > 3 || params.size() < 2)
+    if (fHelp || params.size() != 3)
         throw runtime_error(
 		"escrowclaimrelease <escrow guid> <user role> <[{\"txid\":\"id\",\"vout\":n, \"satoshis\":n},...]>\n"
                         "Claim escrow funds released from buyer or arbiter using escrowrelease. User role represents either 'buyer' or 'arbiter'. Third parameter is array of input (txid, vout, amount) pairs to be used to fund the release of payment.\n"
@@ -2310,7 +2310,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() > 3 || params.size() < 2)
+    if (fHelp || params.size() != 3)
         throw runtime_error(
 		"escrowclaimrefund <escrow guid> <user role> <[{\"txid\":\"id\",\"vout\":n, \"satoshis\":n},...]>\n"
                         "Claim escrow funds released from seller or arbiter using escrowrefund. User role represents either 'seller' or 'arbiter'. Third parameter is array of input (txid, vout, amount) pairs to be used to fund the refund of payment.\n"
