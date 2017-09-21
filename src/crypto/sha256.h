@@ -21,6 +21,7 @@ public:
     static const size_t OUTPUT_SIZE = 32;
 
     CSHA256();
+    CSHA256(const unsigned char iv[OUTPUT_SIZE]);
     CSHA256& Write(const unsigned char* data, size_t len);
     void Finalize(unsigned char hash[OUTPUT_SIZE]);
     void Midstate(unsigned char hash[OUTPUT_SIZE], uint64_t* bytes, unsigned char* buffer);

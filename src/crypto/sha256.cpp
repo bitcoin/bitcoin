@@ -198,6 +198,18 @@ CSHA256::CSHA256() : bytes(0)
     sha256::Initialize(s);
 }
 
+CSHA256::CSHA256(const unsigned char iv[OUTPUT_SIZE]) : bytes(0)
+{
+    s[0] = ReadBE32(iv);
+    s[1] = ReadBE32(iv + 4);
+    s[2] = ReadBE32(iv + 8);
+    s[3] = ReadBE32(iv + 12);
+    s[4] = ReadBE32(iv + 16);
+    s[5] = ReadBE32(iv + 20);
+    s[6] = ReadBE32(iv + 24);
+    s[7] = ReadBE32(iv + 28);
+}
+
 CSHA256& CSHA256::Write(const unsigned char* data, size_t len)
 {
     const unsigned char* end = data + len;
