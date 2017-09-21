@@ -2699,6 +2699,16 @@ bool SendMessages(CNode* pto, CConnman& connman, std::atomic<bool>& interruptMsg
                     pto->filterInventoryKnown.insert(hash);
                 }
             }
+
+            // Send non-tx/non-block inventory items
+            for (const auto& inv : pto->vInventoryOtherToSend) {
+                vInv.push_back(inv);
+                if (vInv.size() == MAX_INV_SZ) {
+                    connman.PushMessage(pto, NetMsgType::INV, vInv);
+                    vInv.clear();
+                }
+            }
+            pto->vInventoryOtherToSend.clear();
         }
         if (!vInv.empty())
             connman.PushMessage(pto, NetMsgType::INV, vInv);

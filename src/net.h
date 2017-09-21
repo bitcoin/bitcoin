@@ -747,6 +747,8 @@ public:
     // There is no final sorting before sending, as they are always sent immediately
     // and in the order requested.
     std::vector<uint256> vInventoryBlockToSend;
+    // List of non-tx/non-block inventory items
+    std::vector<CInv> vInventoryOtherToSend;
     CCriticalSection cs_inventory;
     std::set<uint256> setAskFor;
     std::multimap<int64_t, CInv> mapAskFor;
@@ -889,6 +891,9 @@ public:
         } else if (inv.type == MSG_BLOCK) {
             LogPrint("net", "PushInventory --  inv: %s peer=%d\n", inv.ToString(), id);
             vInventoryBlockToSend.push_back(inv.hash);
+        } else {
+            LogPrint("net", "PushInventory --  inv: %s peer=%d\n", inv.ToString(), id);
+            vInventoryOtherToSend.push_back(inv);
         }
     }
 
