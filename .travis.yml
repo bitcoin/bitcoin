@@ -73,17 +73,17 @@ before_deploy:
     else if [ "$HOST" == "i686-w64-mingw32" ]; then HOST2="Win32";
     else if [ "$HOST" == "x86_64-w64-mingw32" ]; then HOST2="Win64";
     else if [ "$HOST" == "i686-pc-linux-gnu" ]; then HOST2="Linux32";
-    else if [ "$HOST" == "x86_64-unknown-linux-gnu2" ]; then HOST2="Linux64";
+    else if [ "$HOST" == "x86_64-unknown-linux-gnu" ]; then HOST2="Linux64";
     else if [ "$HOST" == "x86_64-apple-darwin11" ]; then HOST2="Osx";
     fi; fi; fi; fi; fi; fi
-  - cd ${OUTDIR}/../ && zip -r crown-$HOST2.zip $TRAVIS_JOB_NUMBER-$HOST
+  - cd ${OUTDIR}/../ && zip -r Crown-$HOST2.zip $TRAVIS_JOB_NUMBER-$HOST
 deploy:
   skip_cleanup: true
   provider: releases
   api_key:
     secure: "jcw2OYoyW6eVZ3ZV97GNAs+j8aOQO0yy/qEUbEFo3jyPXrrMiYq4IEEAA/FhNv9KSOUyH2pTKQ6Gz8kbZo1Qj49x+9FjDnxDWIX9Jw80WFeB2+pO5lyFiE7KTG96VKsi4Z1dFveg2mmOWHYX1L1wQZMwZWzQCB4hvKbfdsGXwPYZR143OCzUVan7jvEcp5429GUL6zMHfuso+zOT6+CqEEqdTt6xNBMY8xsY/QhZNFD7vVZ4ygUW0/5RAPIzT7a/bBW7IWQ4Xt2hZ6DzBcFM85KsDmOzSaxB9cxSPOKYM9vK5mIe2vIbsl8xNke57wZOw2kHP3wRDXl1Y2+/k3cBzZMn0iQV7eOfM1CYQ8l68yLmTNOSdDLY0NERkrtZGczevGTjIDAFGgMEdE4tsLzarrtdR/gBxYLg7kb+eZWf8it5ECqiIP8Rho3HIKk84vCWPcaT0/ETT4qZd5P1iWDCXiX2yNF2lIavmfl5IzER1aHM4K6dJ09POZABQ1lYo6jGmEJY2U7qTWYXv2pwUd9PB5rZId0Xa2csDUHRU2Ry0Cy5qMbTeQPIVzqvfGXHs2PtMJROhFmk16Vr3nMka+EkBxyqMGdCaZ37s8e7Q6+kk2mdL2Hn/vRW95X8T3X2A5r5oo0VMAPjlsmqc8JdFbgwjX0DYuCxbq+BvaTX4HURY6I="
   file:
-    - ${OUTDIR}/..//crown-$HOST2.zip
+    - ${OUTDIR}/..//Crown-$HOST2.zip
   on:
     repo: Crowndev/crowncoin
     tags: true
