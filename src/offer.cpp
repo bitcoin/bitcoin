@@ -1424,8 +1424,10 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	}
 	if(CheckParam(params, 6))
 		strDescription = params[6].get_str();
+
 	if(CheckParam(params, 7))
 		strCurrency = params[7].get_str();
+
 	if(CheckParam(params, 8))
 		strPrivate = params[8].get_str();
 	if(CheckParam(params, 9))
