@@ -52,19 +52,20 @@ SetupDummyInputs(CBasicKeyStore& keystoreRet, CCoinsViewCache& coinsRet)
     }
 
     // Create some dummy input transactions
+    int nHeight = 1000; // any height will do
     dummyTransactions[0].vout.resize(2);
     dummyTransactions[0].vout[0].nValue = 11*CENT;
     dummyTransactions[0].vout[0].scriptPubKey << ToByteVector(key[0].GetPubKey()) << OP_CHECKSIG;
     dummyTransactions[0].vout[1].nValue = 50*CENT;
     dummyTransactions[0].vout[1].scriptPubKey << ToByteVector(key[1].GetPubKey()) << OP_CHECKSIG;
-    coinsRet.ModifyCoins(dummyTransactions[0].GetHash())->FromTx(dummyTransactions[0], 0);
+    AddCoins(coinsRet, dummyTransactions[0], nHeight);
 
     dummyTransactions[1].vout.resize(2);
     dummyTransactions[1].vout[0].nValue = 21*CENT;
     dummyTransactions[1].vout[0].scriptPubKey = GetScriptForDestination(key[2].GetPubKey().GetID());
     dummyTransactions[1].vout[1].nValue = 22*CENT;
     dummyTransactions[1].vout[1].scriptPubKey = GetScriptForDestination(key[3].GetPubKey().GetID());
-    coinsRet.ModifyCoins(dummyTransactions[1].GetHash())->FromTx(dummyTransactions[1], 0);
+    AddCoins(coinsRet, dummyTransactions[1], nHeight);
 
     return dummyTransactions;
 }
