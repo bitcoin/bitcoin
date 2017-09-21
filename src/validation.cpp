@@ -301,9 +301,9 @@ static std::pair<int, int64_t> CalculateSequenceLocks(const CTransaction &tx, in
             // smallest allowed timestamp of the block containing the
             // txout being spent, which is the median time past of the
             // block prior.
-            nMinTime = std::max(nMinTime, nCoinTime + (int64_t)((txin.nSequence & CTxIn::GetSequenceLocktimeMask(fDIP0001ActiveAtTip)) << CTxIn::GetSequenceLocktimeGranularity(fDIP0001ActiveAtTip)) - 1);
+            nMinTime = std::max(nMinTime, nCoinTime + (int64_t)((txin.nSequence & CTxIn::SEQUENCE_LOCKTIME_MASK) << CTxIn::SEQUENCE_LOCKTIME_GRANULARITY) - 1);
         } else {
-            nMinHeight = std::max(nMinHeight, nCoinHeight + (int)(txin.nSequence & CTxIn::GetSequenceLocktimeMask(fDIP0001ActiveAtTip)) - 1);
+            nMinHeight = std::max(nMinHeight, nCoinHeight + (int)(txin.nSequence & CTxIn::SEQUENCE_LOCKTIME_MASK) - 1);
         }
     }
 

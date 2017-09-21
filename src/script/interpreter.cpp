@@ -1213,7 +1213,7 @@ bool TransactionSignatureChecker::CheckSequence(const CScriptNum& nSequence) con
 
     // Mask off any bits that do not have consensus-enforced meaning
     // before doing the integer comparisons
-    const uint32_t nLockTimeMask = CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG | CTxIn::LEGACY_SEQUENCE_LOCKTIME_MASK;
+    const uint32_t nLockTimeMask = CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG | CTxIn::SEQUENCE_LOCKTIME_MASK;
     const int64_t txToSequenceMasked = txToSequence & nLockTimeMask;
     const CScriptNum nSequenceMasked = nSequence & nLockTimeMask;
 

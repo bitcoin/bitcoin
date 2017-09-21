@@ -311,7 +311,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 
     // relative time locked
     tx.vin[0].prevout.hash = txFirst[1]->GetHash();
-    tx.vin[0].nSequence = CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG | (((chainActive.Tip()->GetMedianTimePast()+1-chainActive[1]->GetMedianTimePast()) >> CTxIn::GetSequenceLocktimeGranularity(fDIP0001ActiveAtTip)) + 1); // txFirst[1] is the 3rd block
+    tx.vin[0].nSequence = CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG | (((chainActive.Tip()->GetMedianTimePast()+1-chainActive[1]->GetMedianTimePast()) >> CTxIn::SEQUENCE_LOCKTIME_GRANULARITY) + 1); // txFirst[1] is the 3rd block
     prevheights[0] = baseheight + 2;
     hash = tx.GetHash();
     mempool.addUnchecked(hash, entry.Time(GetTime()).FromTx(tx));
@@ -319,10 +319,10 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     BOOST_CHECK(!TestSequenceLocks(tx, flags)); // Sequence locks fail
 
     for (int i = 0; i < CBlockIndex::nMedianTimeSpan; i++)
-        chainActive.Tip()->GetAncestor(chainActive.Tip()->nHeight - i)->nTime += fDIP0001ActiveAtTip ? 128 : 512; //Trick the MedianTimePast
-    BOOST_CHECK(SequenceLocks(tx, flags, &prevheights, CreateBlockIndex(chainActive.Tip()->nHeight + 1))); // Sequence locks pass 128/512 seconds later
+        chainActive.Tip()->GetAncestor(chainActive.Tip()->nHeight - i)->nTime += 512; //Trick the MedianTimePast
+    BOOST_CHECK(SequenceLocks(tx, flags, &prevheights, CreateBlockIndex(chainActive.Tip()->nHeight + 1))); // Sequence locks pass 512 seconds later
     for (int i = 0; i < CBlockIndex::nMedianTimeSpan; i++)
-        chainActive.Tip()->GetAncestor(chainActive.Tip()->nHeight - i)->nTime -= fDIP0001ActiveAtTip ? 128 : 512; //undo tricked MTP
+        chainActive.Tip()->GetAncestor(chainActive.Tip()->nHeight - i)->nTime -= 512; //undo tricked MTP
 
     // absolute height locked
     tx.vin[0].prevout.hash = txFirst[2]->GetHash();
@@ -368,9 +368,9 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     // For now these will still generate a valid template until BIP68 soft fork
     BOOST_CHECK_EQUAL(pblocktemplate->block.vtx.size(), 3);
     delete pblocktemplate;
-    // However if we advance height by 1 and time by 128/512, all of them should be mined
+    // However if we advance height by 1 and time by 512, all of them should be mined
     for (int i = 0; i < CBlockIndex::nMedianTimeSpan; i++)
-        chainActive.Tip()->GetAncestor(chainActive.Tip()->nHeight - i)->nTime += fDIP0001ActiveAtTip ? 128 : 512; //Trick the MedianTimePast
+        chainActive.Tip()->GetAncestor(chainActive.Tip()->nHeight - i)->nTime += 512; //Trick the MedianTimePast
     chainActive.Tip()->nHeight++;
     SetMockTime(chainActive.Tip()->GetMedianTimePast() + 1);
 
