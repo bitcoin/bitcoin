@@ -1156,11 +1156,9 @@ void EscrowFeedback(const string& node, const string& role, const string& escrow
 }
 const string OfferAccept(const string& ownernode, const string& buyernode, const string& aliasname, const string& offerguid, const string& qty, const string& discountexpected, const string& witness) {
 	CreateSysRatesIfNotExist();
-	UniValue r;
-	BOOST_CHECK_NO_THROW(r = CallRPC(ownernode, "offerinfo " + offerguid));
 	string escrowguid = EscrowNew(buyernode, ownernode, aliasname, offerguid, qty, "sysrates.peg", discountexpected);
 	EscrowRelease(buyernode, "buyer", escrowguid);
-	EscrowClaimRelease(ownernode, escrowguid);
+	EscrowClaimRelease(ownernode, "seller", escrowguid);
 	return escrowguid;
 }
 const string EscrowNew(const string& node, const string& sellernode, const string& buyeralias, const string& offerguid, const string& qtyStr, const string& arbiteralias, const string &discountexpected, const string &witness)
@@ -1310,7 +1308,7 @@ void EscrowRefund(const string& node, const string& role, const string& guid, co
 	// refund adds qty
 	BOOST_CHECK_EQUAL(nQtyOfferAfter, nQtyOfferBefore+nQty);
 }
-void EscrowClaimRefund(const string& node, const string& guid, const string& witness)
+void EscrowClaimRefund(const string& node, const string& role, const string& guid)
 {
 
 	UniValue r, a;
@@ -1346,10 +1344,10 @@ void EscrowClaimRefund(const string& node, const string& guid, const string& wit
 	// get balances before
 	BOOST_CHECK_NO_THROW(a = CallRPC(node, "aliasbalance " + buyeralias));
 	CAmount balanceBuyerBefore = AmountFromValue(find_value(a.get_obj(), "balance"));
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowclaimrefund " + guid  + " " + inputStr + " " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowclaimrefund " + guid  + " " + role + " " + inputStr));
 	UniValue resArray = r.get_array();
 	string strRawTx = resArray[0].get_str();
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowcompleterefund " + guid + " " + strRawTx + " " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowcompleterefund " + guid + " " + strRawTx));
 	GenerateBlocks(10, node);
 	GenerateBlocks(10, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offer));
@@ -1425,7 +1423,7 @@ const UniValue FindFeedback(const string& node, const string& txid)
 	BOOST_CHECK(!ret.isNull());
 	return ret;
 }
-void EscrowClaimRelease(const string& node, const string& guid, const string &witness)
+void EscrowClaimRelease(const string& node, const string& role, const string& guid)
 {
 	UniValue r;
 
@@ -1458,10 +1456,10 @@ void EscrowClaimRelease(const string& node, const string& guid, const string &wi
 	// get balances before
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasbalance " + selleralias));
 	CAmount balanceSellerBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowclaimrelease " + guid + " " + inputStr + " " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowclaimrelease " + guid + " " + role + " " + inputStr));
 	UniValue resArray = r.get_array();
 	string strRawTx = resArray[0].get_str();
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowcompleterelease " + guid + " " + strRawTx + " " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowcompleterelease " + guid + " " + strRawTx));
 	GenerateBlocks(10, node);
 	GenerateBlocks(10, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offer));

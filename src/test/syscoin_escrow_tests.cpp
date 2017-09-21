@@ -25,7 +25,7 @@ BOOST_AUTO_TEST_CASE (generate_escrow_release)
 	GenerateBlocks(10);
 	string guid = EscrowNew("node1", "node2", "buyeralias", offerguid, qty, "arbiteralias");
 	EscrowRelease("node1", "buyer", guid);	
-	EscrowClaimRelease("node2", guid);
+	EscrowClaimRelease("node2", "seller", guid);
 }
 BOOST_AUTO_TEST_CASE (generate_escrowrefund_seller)
 {
@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE (generate_escrowrefund_seller)
 	GenerateBlocks(10);
 	string guid = EscrowNew("node1", "node2", "buyeraliasrefund", offerguid, qty, "arbiteraliasrefund");
 	EscrowRefund("node2", "seller", guid);
-	EscrowClaimRefund("node1", guid);
+	EscrowClaimRefund("node1", "buyer", guid);
 }
 BOOST_AUTO_TEST_CASE (generate_escrowrefund_arbiter)
 {
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE (generate_escrowrefund_arbiter)
 	GenerateBlocks(10);
 	string guid = EscrowNew("node1", "node2", "buyeraliasrefund", offerguid, qty, "arbiteraliasrefund");
 	EscrowRefund("node3", "arbiter", guid);
-	EscrowClaimRefund("node1", guid);
+	EscrowClaimRefund("node1", "buyer", guid);
 }
 BOOST_AUTO_TEST_CASE (generate_escrowrefund_invalid)
 {
@@ -85,17 +85,17 @@ BOOST_AUTO_TEST_CASE (generate_escrowrefund_invalid)
 	inputStr += "]\"";
 
 	// try to claim refund even if not refunded
-	BOOST_CHECK_THROW(CallRPC("node2", "escrowclaimrefund " + inputStr + " " + guid), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "escrowclaimrefund " + guid + " buyer " + inputStr), runtime_error);
 	// buyer cant refund to himself
 	BOOST_CHECK_THROW(CallRPC("node1", "escrowrefund " + guid + " buyer"), runtime_error);
 	EscrowRefund("node2", "seller", guid);
 	// cant refund already refunded escrow
 	BOOST_CHECK_THROW(CallRPC("node2", "escrowrefund " + guid + " seller"), runtime_error);
 	// seller cannot
-	BOOST_CHECK_THROW(r = CallRPC("node2", "escrowclaimrefund " + inputStr + " " + guid), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node2", "escrowclaimrefund " + guid + " buyer " + inputStr), runtime_error);
 	// arbiter can resend claim refund to buyer
 	EscrowRefund("node3", "arbiter", guid);
-	EscrowClaimRefund("node1", guid);
+	EscrowClaimRefund("node1", "buyer", guid);
 	// cant inititate another refund after claimed already
 	BOOST_CHECK_THROW(CallRPC("node2", "escrowrefund " + guid + " seller"), runtime_error);
 	BOOST_CHECK_THROW(CallRPC("node1", "escrowrefund " + guid + " buyer"), runtime_error);
@@ -128,18 +128,18 @@ BOOST_AUTO_TEST_CASE (generate_escrowrelease_invalid)
 	inputStr += "]\"";
 
 	// try to claim release even if not released
-	BOOST_CHECK_THROW(CallRPC("node2", "escrowclaimrelease " + inputStr + " " + guid), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "escrowclaimrelease " + guid + " seller " + inputStr), runtime_error);
 	// seller cant release buyers funds
 	BOOST_CHECK_THROW(CallRPC("node2", "escrowrelease " + guid + " seller"), runtime_error);
 	EscrowRelease("node1", "buyer", guid);
 	// cant release already released escrow
 	BOOST_CHECK_THROW(CallRPC("node1", "escrowrelease " + guid + " buyer"), runtime_error);
 	// buyer cant
-	BOOST_CHECK_THROW(r = CallRPC("node1", "escrowclaimrelease " + inputStr + " " + guid), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node1", "escrowclaimrelease " + guid + " seller " + inputStr), runtime_error);
 
 	EscrowRelease("node3", "arbiter", guid);
 
-	EscrowClaimRelease("node2", guid);
+	EscrowClaimRelease("node2", "seller", guid);
 	// cant inititate another release after claimed already
 	BOOST_CHECK_THROW(CallRPC("node1", "escrowrelease " + guid + " buyer"), runtime_error);
 	BOOST_CHECK_THROW(CallRPC("node1", "escrowrelease " + guid + " seller"), runtime_error);
@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE (generate_escrowrelease_arbiter)
 	GenerateBlocks(10);
 	string guid = EscrowNew("node1", "node2", "buyeralias1", offerguid, qty, "arbiteralias1");
 	EscrowRelease("node3", "arbiter", guid);
-	EscrowClaimRelease("node2", guid);
+	EscrowClaimRelease("node2", "seller", guid);
 }
 BOOST_AUTO_TEST_CASE (generate_escrowfeedback)
 {
@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE (generate_escrowfeedback)
 	GenerateBlocks(10);
 	string guid = EscrowNew("node2", "node1", "buyerescrowfeedback", offerguid, qty, "arbiterescrowfeedback");
 	EscrowRelease("node3", "arbiter", guid);
-	EscrowClaimRelease("node1", guid);
+	EscrowClaimRelease("node1", "seller", guid);
 	// seller leaves feedback first to the other parties
 	EscrowFeedback("node1", "seller", guid,"feedbackbuyer", "1", FEEDBACKBUYER);
 	EscrowFeedback("node1", "seller", guid, "feedbackarbiter", "1", FEEDBACKARBITER);
@@ -252,7 +252,7 @@ BOOST_AUTO_TEST_CASE (generate_escrow_linked_release)
 	hex_str = AliasUpdate("node3", "arbiteralias2", "changeddata1", "priv");
 	BOOST_CHECK(hex_str.empty());
 	OfferUpdate("node2", "selleralias22", offerguid, "category", "titlenew", "100", "0.04", "descriptionnew", "EUR");
-	EscrowClaimRelease("node2", guid);
+	EscrowClaimRelease("node2", "seller", guid);
 }
 BOOST_AUTO_TEST_CASE (generate_escrow_linked_release_with_peg_update)
 {
@@ -312,7 +312,7 @@ BOOST_AUTO_TEST_CASE (generate_escrow_linked_release_with_peg_update)
 	BOOST_CHECK_EQUAL(nTotal, AmountFromValue(4 * 0.07*1.06*218.2));
 
 	GenerateBlocks(5, "node2");
-	EscrowClaimRelease("node2", guid);
+	EscrowClaimRelease("node2", "seller", guid);
 	// restore EUR peg
 	data = "{\\\"rates\\\":[{\\\"currency\\\":\\\"USD\\\",\\\"rate\\\":2690.1,\\\"precision\\\":2},{\\\"currency\\\":\\\"EUR\\\",\\\"rate\\\":2695.2,\\\"precision\\\":2},{\\\"currency\\\":\\\"GBP\\\",\\\"rate\\\":2697.3,\\\"precision\\\":2},{\\\"currency\\\":\\\"CAD\\\",\\\"rate\\\":2698.0,\\\"precision\\\":2},{\\\"currency\\\":\\\"BTC\\\",\\\"rate\\\":100000.0,\\\"precision\\\":8},{\\\"currency\\\":\\\"SYS\\\",\\\"rate\\\":1.0,\\\"precision\\\":2}]}";
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate sysrates.peg " + data));
@@ -355,7 +355,7 @@ BOOST_AUTO_TEST_CASE (generate_escrowpruning)
 
 	EscrowRelease("node2", "buyer", guid1);
 	OfferUpdate("node1", "selleraliasprune", offerguid);
-	EscrowClaimRelease("node1", guid1);
+	EscrowClaimRelease("node1", "seller", guid1);
 	OfferUpdate("node1", "selleraliasprune", offerguid);
 	GenerateBlocks(5, "node1");
 	

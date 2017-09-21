@@ -1729,8 +1729,6 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	if (hex_value.isStr())
 		hex_str = hex_value.get_str();
 
-	if(createEscrowSpendingTx == hex_str)
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4535 - " + _("Could not sign escrow transaction: Signature not added to transaction"));
 	CTransaction signedTx;
 	DecodeHexTx(signedTx, hex_str);
 	escrow.ClearEscrow();
@@ -1809,12 +1807,14 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
     if (fHelp || params.size() > 3 || params.size() < 2)
         throw runtime_error(
-		"escrowclaimrelease <escrow guid> <[{\"txid\":\"id\",\"vout\":n, \"satoshis\":n},...]> [witness]\n"
-                        "Claim escrow funds released from buyer or arbiter using escrowrelease. Second parameter is array of input (txid, vout, amount) pairs to be used to fund the release of payment.\n"
+		"escrowclaimrelease <escrow guid> <user role> <[{\"txid\":\"id\",\"vout\":n, \"satoshis\":n},...]>\n"
+                        "Claim escrow funds released from buyer or arbiter using escrowrelease. User role represents either 'buyer' or 'arbiter'. Third parameter is array of input (txid, vout, amount) pairs to be used to fund the release of payment.\n"
                         + HelpRequiringPassphrase());
     // gather & validate inputs
     vector<unsigned char> vchEscrow = vchFromValue(params[0]);
-	const UniValue &inputs = params[1].get_array();
+	string role = params[1].get_str();
+	const UniValue &inputs = params[2].get_array();
+
 	UniValue ret(UniValue::VARR);
 	CEscrow escrow;
 	if (!GetEscrow(vchEscrow, escrow))
@@ -1864,136 +1864,92 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	}
 	nBalance -= nEscrowTotal;
 
-	UniValue arrayCreateParams1(UniValue::VARR);
-	UniValue arrayCreateParams2(UniValue::VARR);
-	UniValue arrayCreateParamsArbiter(UniValue::VOBJ);
-	UniValue arrayCreateParamsBuyer(UniValue::VOBJ);
-	// if linked offer send commission to affiliate
-	if (!theOffer.linkOfferTuple.first.empty())
+	UniValue arrayCreateParams(UniValue::VARR);
+	UniValue createAddressUniValue(UniValue::VOBJ);
+	if (role == "arbiter")
 	{
-		if (escrow.nCommission > 0)
-			arrayCreateParamsArbiter.push_back(Pair(linkSellerAddress.ToString(), ValueFromAmount(escrow.nCommission)));
-		arrayCreateParamsArbiter.push_back(Pair(sellerAddressPayment.ToString(), ValueFromAmount(nTotal - escrow.nCommission)));
+		// if linked offer send commission to affiliate
+		if (!theOffer.linkOfferTuple.first.empty())
+		{
+			if (escrow.nCommission > 0)
+				createAddressUniValue.push_back(Pair(linkSellerAddress.ToString(), ValueFromAmount(escrow.nCommission)));
+			createAddressUniValue.push_back(Pair(sellerAddressPayment.ToString(), ValueFromAmount(nTotal - escrow.nCommission)));
+		}
+		else
+			createAddressUniValue.push_back(Pair(sellerAddressPayment.ToString(), ValueFromAmount(nTotal + nBalance)));
+		createAddressUniValue.push_back(Pair(arbiterAddressPayment.ToString(), ValueFromAmount(escrow.nArbiterFee)));
 	}
-	else
-		arrayCreateParamsArbiter.push_back(Pair(sellerAddressPayment.ToString(), ValueFromAmount(nTotal + nBalance)));
-
-	arrayCreateParamsArbiter.push_back(Pair(arbiterAddressPayment.ToString(), ValueFromAmount(escrow.nArbiterFee)));
-
-	// if linked offer send commission to affiliate
-	if (!theOffer.linkOfferTuple.first.empty())
+	else if (role == "buyer")
 	{
-		if (escrow.nCommission > 0)
-			arrayCreateParamsBuyer.push_back(Pair(linkSellerAddress.ToString(), ValueFromAmount(escrow.nCommission)));
-		arrayCreateParamsBuyer.push_back(Pair(sellerAddressPayment.ToString(), ValueFromAmount(nTotal - escrow.nCommission)));
+		// if linked offer send commission to affiliate
+		if (!theOffer.linkOfferTuple.first.empty())
+		{
+			if (escrow.nCommission > 0)
+				createAddressUniValue.push_back(Pair(linkSellerAddress.ToString(), ValueFromAmount(escrow.nCommission)));
+			createAddressUniValue.push_back(Pair(sellerAddressPayment.ToString(), ValueFromAmount(nTotal - escrow.nCommission)));
+		}
+		else
+			createAddressUniValue.push_back(Pair(sellerAddressPayment.ToString(), ValueFromAmount(nTotal + nBalance)));
+		createAddressUniValue.push_back(Pair(buyerAddressPayment.ToString(), ValueFromAmount(escrow.nArbiterFee)));
 	}
-	else
-		arrayCreateParamsBuyer.push_back(Pair(sellerAddressPayment.ToString(), ValueFromAmount(nTotal + nBalance)));
 
-	arrayCreateParamsBuyer.push_back(Pair(buyerAddressPayment.ToString(), ValueFromAmount(escrow.nArbiterFee)));
-	
-
-	arrayCreateParams1.push_back(inputs);
-	arrayCreateParams1.push_back(arrayCreateParamsArbiter);
-	arrayCreateParams1.push_back(NullUniValue);
+	arrayCreateParams.push_back(inputs);
+	arrayCreateParams.push_back(createAddressUniValue);
+	arrayCreateParams.push_back(NullUniValue);
 	// if external blockchain then we dont set the alias payments scriptpubkey
-	arrayCreateParams1.push_back(escrow.extTxId.IsNull());
-
-	arrayCreateParams2.push_back(inputs);
-	arrayCreateParams2.push_back(arrayCreateParamsBuyer);
-	arrayCreateParams2.push_back(NullUniValue);
-	// if external blockchain then we dont set the alias payments scriptpubkey
-	arrayCreateParams2.push_back(escrow.extTxId.IsNull());
-
-	UniValue resCreate1, resCreate2;
+	arrayCreateParams.push_back(escrow.extTxId.IsNull());
+	UniValue resCreate;
 	try
 	{
-		resCreate1 = tableRPC.execute("createrawtransaction", arrayCreateParams1);
-		resCreate2 = tableRPC.execute("createrawtransaction", arrayCreateParams2);
+		resCreate = tableRPC.execute("createrawtransaction", arrayCreateParams);
 	}
 	catch (UniValue& objError)
 	{
-		throw runtime_error(find_value(objError, "message").get_str());	
+		throw runtime_error(find_value(objError, "message").get_str());
 	}
-	if (!resCreate1.isStr() || !resCreate2.isStr())
+	if (!resCreate.isStr())
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4532 - " + _("Could not create escrow transaction: Invalid response from createrawtransaction"));
-	string createEscrowSpendingTx1 = resCreate1.get_str();
-	string createEscrowSpendingTx2 = resCreate2.get_str();
-	CTransaction rawTx1;
-	DecodeHexTx(rawTx1, createEscrowSpendingTx1);
-	CTransaction rawTx2;
-	DecodeHexTx(rawTx2, createEscrowSpendingTx2);
-	CMutableTransaction rawTx1m(rawTx1);
-	CMutableTransaction rawTx2m(rawTx2);
-	for (int i = 0; i < escrow.scriptSigs.size(); i++) {
-		if (rawTx1m.vin.size() >= i)
-			rawTx1m.vin[i].scriptSig = CScript(escrow.scriptSigs[i].begin(), escrow.scriptSigs[i].end());
-		if (rawTx2m.vin.size() >= i)
-			rawTx2m.vin[i].scriptSig = CScript(escrow.scriptSigs[i].begin(), escrow.scriptSigs[i].end());
-	}
-	string strRawTx1 = EncodeHexTx(rawTx1m);
-	string strRawTx2 = EncodeHexTx(rawTx2m);
-    // Seller signs it
-	if(pwalletMain)
+	string createEscrowSpendingTx = resCreate.get_str();
+
+	if (pwalletMain)
 	{
 		CScript inner(escrow.vchRedeemScript.begin(), escrow.vchRedeemScript.end());
 		pwalletMain->AddCScript(inner);
 	}
+
+	CTransaction rawTx;
+	DecodeHexTx(rawTx, createEscrowSpendingTx);
+	CMutableTransaction rawTxm(rawTx);
+	for (int i = 0; i < escrow.scriptSigs.size(); i++) {
+		if (rawTxm.vin.size() >= i)
+			rawTxm.vin[i].scriptSig = CScript(escrow.scriptSigs[i].begin(), escrow.scriptSigs[i].end());
+	}
+	string strRawTx = EncodeHexTx(rawTxm);
+
+	UniValue signUniValue(UniValue::VARR);
+	signUniValue.push_back(strRawTx);
+
 	UniValue resSign;
 	string hex_str = "";
 	try
 	{
-		UniValue signUniValue(UniValue::VARR);
-		signUniValue.push_back(strRawTx1);
 		resSign = tableRPC.execute("signrawtransaction", signUniValue);
-		const UniValue& o = resSign.get_obj();
-		
-		const UniValue& hex_value = find_value(o, "hex");
-		if (hex_value.isStr())
-			hex_str = hex_value.get_str();
-
-
-		const UniValue& complete_value = find_value(o, "complete");
-		bool bComplete = false;
-		if (complete_value.isBool())
-			bComplete = complete_value.get_bool();
-		if (!bComplete) {
-			try
-			{
-				UniValue signUniValue(UniValue::VARR);
-				signUniValue.push_back(strRawTx2);
-				resSign = tableRPC.execute("signrawtransaction", signUniValue);
-				const UniValue& o = resSign.get_obj();
-
-				const UniValue& hex_value = find_value(o, "hex");
-				if (hex_value.isStr())
-					hex_str = hex_value.get_str();
-
-
-				const UniValue& complete_value = find_value(o, "complete");
-				bool bComplete = false;
-				if (complete_value.isBool())
-					bComplete = complete_value.get_bool();
-
-				if (!bComplete)
-					throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4561 - " + _("Escrow is incomplete"));
-			}
-			catch (UniValue& objError)
-			{
-				throw runtime_error(find_value(objError, "message").get_str());
-			}
-		}
 	}
 	catch (UniValue& objError)
 	{
 		throw runtime_error(find_value(objError, "message").get_str());
 	}
 	if (!resSign.isObject())
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4560 - " + _("Could not sign escrow transaction: Invalid response from signrawtransaction"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4534 - " + _("Could not sign escrow transaction: Invalid response from signrawtransaction"));
 
+	const UniValue& o = resSign.get_obj();
+
+	const UniValue& hex_value = find_value(o, "hex");
+	if (hex_value.isStr())
+		hex_str = hex_value.get_str();
 
 	CTransaction rawTransaction;
-	DecodeHexTx(rawTransaction,hex_str);
+	DecodeHexTx(rawTransaction, hex_str);
 	ret.push_back(hex_str);
 	ret.push_back(rawTransaction.GetHash().GetHex());
 	ret.push_back(nBalance);
@@ -2356,15 +2312,14 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
     if (fHelp || params.size() > 3 || params.size() < 2)
         throw runtime_error(
-		"escrowclaimrefund <escrow guid> <[{\"txid\":\"id\",\"vout\":n, \"satoshis\":n},...]> [witness]\n"
-                        "Claim escrow funds released from seller or arbiter using escrowrefund. Second parameter is array of input (txid, vout, amount) pairs to be used to fund the refund of payment.\n"
+		"escrowclaimrefund <escrow guid> <user role> <[{\"txid\":\"id\",\"vout\":n, \"satoshis\":n},...]>\n"
+                        "Claim escrow funds released from seller or arbiter using escrowrefund. User role represents either 'seller' or 'arbiter'. Third parameter is array of input (txid, vout, amount) pairs to be used to fund the refund of payment.\n"
                         + HelpRequiringPassphrase());
     // gather & validate inputs
     vector<unsigned char> vchEscrow = vchFromValue(params[0]);
-	const UniValue &inputs = params[1].get_array();
-	vector<unsigned char> vchWitness;
-	if(CheckParam(params, 2))
-		vchWitness = vchFromValue(params[2]);
+	string role = params[1].get_str();
+	const UniValue &inputs = params[2].get_array();
+
 	CEscrow escrow;
 	if (!GetEscrow(vchEscrow, escrow))
         throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4576 - " + _("Could not find a escrow with this key"));
@@ -2402,112 +2357,74 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4529 - " + _("Not enough funds in the escrow address to process this transaction. Expected amount: ") + boost::lexical_cast<string>(nEscrowTotal) + _(" Amount Found: ") + boost::lexical_cast<string>(nBalance));
 	}
 	nBalance -= nEscrowTotal;
-	UniValue arrayCreateParams1(UniValue::VARR);
-	UniValue arrayCreateParams2(UniValue::VARR);
-	UniValue arrayCreateParamsArbiter(UniValue::VOBJ);
-	UniValue arrayCreateParamsSeller(UniValue::VOBJ);
-	
-	arrayCreateParamsArbiter.push_back(Pair(buyerAddressPayment.ToString(), ValueFromAmount(nTotal + nBalance)));
-	arrayCreateParamsArbiter.push_back(Pair(arbiterAddressPayment.ToString(), ValueFromAmount(escrow.nArbiterFee)));
-	
-	arrayCreateParamsSeller.push_back(Pair(buyerAddressPayment.ToString(), ValueFromAmount(nTotal + nBalance + escrow.nArbiterFee)));
-	
+	// refunds buyer from escrow
+	UniValue arrayCreateParams(UniValue::VARR);
+	UniValue createAddressUniValue(UniValue::VOBJ);
 
-	arrayCreateParams1.push_back(inputs);
-	arrayCreateParams1.push_back(arrayCreateParamsArbiter);
-	arrayCreateParams1.push_back(NullUniValue);
+	if (role == "arbiter")
+	{
+		createAddressUniValue.push_back(Pair(buyerAddressPayment.ToString(), ValueFromAmount(nTotal + nBalance)));
+		createAddressUniValue.push_back(Pair(arbiterAddressPayment.ToString(), ValueFromAmount(escrow.nArbiterFee)));
+	}
+	else if (role == "seller")
+	{
+		createAddressUniValue.push_back(Pair(buyerAddressPayment.ToString(), ValueFromAmount(nTotal + nBalance + escrow.nArbiterFee)));
+	}
+	arrayCreateParams.push_back(inputs);
+	arrayCreateParams.push_back(createAddressUniValue);
+	arrayCreateParams.push_back(NullUniValue);
 	// if external blockchain then we dont set the alias payments scriptpubkey
-	arrayCreateParams1.push_back(escrow.extTxId.IsNull());
-
-	arrayCreateParams2.push_back(inputs);
-	arrayCreateParams2.push_back(arrayCreateParamsSeller);
-	arrayCreateParams2.push_back(NullUniValue);
-	// if external blockchain then we dont set the alias payments scriptpubkey
-	arrayCreateParams2.push_back(escrow.extTxId.IsNull());
-
-	UniValue resCreate1, resCreate2;
+	arrayCreateParams.push_back(escrow.extTxId.IsNull());
+	UniValue resCreate;
 	try
 	{
-		resCreate1 = tableRPC.execute("createrawtransaction", arrayCreateParams1);
-		resCreate2 = tableRPC.execute("createrawtransaction", arrayCreateParams2);
+		resCreate = tableRPC.execute("createrawtransaction", arrayCreateParams);
 	}
 	catch (UniValue& objError)
 	{
 		throw runtime_error(find_value(objError, "message").get_str());
 	}
-	if (!resCreate1.isStr() || !resCreate2.isStr())
+	if (!resCreate.isStr())
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4532 - " + _("Could not create escrow transaction: Invalid response from createrawtransaction"));
-	string createEscrowSpendingTx1 = resCreate1.get_str();
-	string createEscrowSpendingTx2 = resCreate2.get_str();
-	CTransaction rawTx1;
-	DecodeHexTx(rawTx1, createEscrowSpendingTx1);
-	CTransaction rawTx2;
-	DecodeHexTx(rawTx2, createEscrowSpendingTx2);
-	CMutableTransaction rawTx1m(rawTx1);
-	CMutableTransaction rawTx2m(rawTx2);
-	for (int i = 0; i < escrow.scriptSigs.size(); i++) {
-		if (rawTx1m.vin.size() >= i)
-			rawTx1m.vin[i].scriptSig = CScript(escrow.scriptSigs[i].begin(), escrow.scriptSigs[i].end());
-		if (rawTx2m.vin.size() >= i)
-			rawTx2m.vin[i].scriptSig = CScript(escrow.scriptSigs[i].begin(), escrow.scriptSigs[i].end());
-	}
-	string strRawTx1 = EncodeHexTx(rawTx1m);
-	string strRawTx2 = EncodeHexTx(rawTx2m);
-	// Buyer signs it
+	string createEscrowSpendingTx = resCreate.get_str();
+
 	if (pwalletMain)
 	{
 		CScript inner(escrow.vchRedeemScript.begin(), escrow.vchRedeemScript.end());
 		pwalletMain->AddCScript(inner);
 	}
+
+	CTransaction rawTx;
+	DecodeHexTx(rawTx, createEscrowSpendingTx);
+	CMutableTransaction rawTxm(rawTx);
+	for (int i = 0; i < escrow.scriptSigs.size(); i++) {
+		if (rawTxm.vin.size() >= i)
+			rawTxm.vin[i].scriptSig = CScript(escrow.scriptSigs[i].begin(), escrow.scriptSigs[i].end());
+	}
+	string strRawTx = EncodeHexTx(rawTxm);
+
+	UniValue signUniValue(UniValue::VARR);
+	signUniValue.push_back(strRawTx);
+
 	UniValue resSign;
 	string hex_str = "";
 	try
 	{
-		UniValue signUniValue(UniValue::VARR);
-		signUniValue.push_back(strRawTx1);
 		resSign = tableRPC.execute("signrawtransaction", signUniValue);
-		const UniValue& o = resSign.get_obj();
-
-		const UniValue& hex_value = find_value(o, "hex");
-		if (hex_value.isStr())
-			hex_str = hex_value.get_str();
-
-
-		const UniValue& complete_value = find_value(o, "complete");
-		bool bComplete = false;
-		if (complete_value.isBool())
-			bComplete = complete_value.get_bool();
-		if (!bComplete) {
-			try
-			{
-				UniValue signUniValue(UniValue::VARR);
-				signUniValue.push_back(strRawTx2);
-				resSign = tableRPC.execute("signrawtransaction", signUniValue);
-				const UniValue& o = resSign.get_obj();
-
-				const UniValue& hex_value = find_value(o, "hex");
-				if (hex_value.isStr())
-					hex_str = hex_value.get_str();
-
-
-				const UniValue& complete_value = find_value(o, "complete");
-				bool bComplete = false;
-				if (complete_value.isBool())
-					bComplete = complete_value.get_bool();
-
-				if (!bComplete)
-					throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4561 - " + _("Escrow is incomplete"));
-			}
-			catch (UniValue& objError)
-			{
-				throw runtime_error(find_value(objError, "message").get_str());
-			}
-		}
 	}
 	catch (UniValue& objError)
 	{
 		throw runtime_error(find_value(objError, "message").get_str());
 	}
+	if (!resSign.isObject())
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4534 - " + _("Could not sign escrow transaction: Invalid response from signrawtransaction"));
+	
+	const UniValue& o = resSign.get_obj();
+
+	const UniValue& hex_value = find_value(o, "hex");
+	if (hex_value.isStr())
+		hex_str = hex_value.get_str();
+
 	CTransaction rawTransaction;
 	DecodeHexTx(rawTransaction,hex_str);
 	UniValue ret(UniValue::VARR);

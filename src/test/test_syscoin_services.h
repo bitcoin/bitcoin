@@ -40,9 +40,9 @@ const string OfferLink(const string& node, const string& alias, const string& gu
 const string OfferAccept(const string& ownernode, const string& node, const string& aliasname, const string& offerguid, const string& qty, const string& discountexpected = "\"\"", const string& witness="\"\"");
 const string EscrowNew(const string& node, const string& sellernode, const string& buyeralias, const string& offerguid, const string& qty, const string& arbiteralias, const string& discountexpected="\"\"", const string& witness="\"\"");
 void EscrowRelease(const string& node, const string& role, const string& guid, const string& witness="\"\"");
-void EscrowClaimRelease(const string& node, const string& guid, const string& witness="\"\"");
+void EscrowClaimRelease(const string& node, const string& role, const string& guid);
 void EscrowRefund(const string& node, const string& role, const string& guid, const string& witness="\"\"");
-void EscrowClaimRefund(const string& node, const string& guid, const string& witness="\"\"");
+void EscrowClaimRefund(const string& node, const string& role, const string& guid);
 // SYSCOIN testing setup
 struct SyscoinTestingSetup {
     SyscoinTestingSetup();
