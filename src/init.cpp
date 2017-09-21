@@ -1461,8 +1461,10 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                 // block tree into mapBlockIndex!
 
                 pcoinsdbview = new CCoinsViewDB(nCoinDBCache, false, fReset || fReindexChainState);
-                pminerwhitelist = new CMinerWhitelistDB(nWhitelistDBCache, false, fReset); // TODO: check if I do this here or late
                 pcoinscatcher = new CCoinsViewErrorCatcher(pcoinsdbview);
+                pminerwhitelist = new CMinerWhitelistDB(nWhitelistDBCache, false, fReset); // TODO: check if I do this here or late
+                
+                pminerwhitelist->Init(fReset);
 
                 // If necessary, upgrade from older database format.
                 // This is a no-op if we cleared the coinsviewdb with -reindex or -reindex-chainstate

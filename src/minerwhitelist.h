@@ -7,12 +7,12 @@
 
 #include "dbwrapper.h"
 
-class CMinerWhitelistDB {
-protected:
-    CDBWrapper db;
+class CMinerWhitelistDB : CDBWrapper 
+{
 public:
     CMinerWhitelistDB(size_t nCacheSize, bool fMemory, bool fWipe);
-    
+    bool Init(bool fWipe);
+
     enum WhitelistAction {ADD_MINER, REMOVE_MINER, ENABLE_CAP, DISABLE_CAP, NONE};
     
     // Cap management

@@ -115,13 +115,16 @@ namespace {
 }
 
 
-CMinerWhitelistDB::CMinerWhitelistDB(size_t nCacheSize, bool fMemory, bool fWipe) : db(GetDataDir() / "minerwhitelist", nCacheSize, fMemory, fWipe, true) 
+CMinerWhitelistDB::CMinerWhitelistDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "minerwhitelist", nCacheSize, fMemory, fWipe) 
 {
-    LogPrintf("MinerDatabase: Opening Database.\n");
+}
+
+
+bool CMinerWhitelistDB::Init(bool fWipe){
     bool init;
-    if(fWipe || db.Read(DB_INIT,init)==false || init==false ) {
+    if(fWipe || Read(DB_INIT,init)==false || init==false ) {
         LogPrintf("MinerDatabase: Create new Database.\n");
-        CDBBatch batch(db);
+        CDBBatch batch(*this);
         batch.Write(WL_FACTOR, 0);
         batch.Write(WL_WINDOW_LENGTH, 2016);
         batch.Write(WL_CAP_ENABLED, 0);
@@ -149,45 +152,44 @@ CMinerWhitelistDB::CMinerWhitelistDB(size_t nCacheSize, bool fMemory, bool fWipe
         }
         batch.Write(DB_HEIGHT, Params().GetConsensus().minerWhiteListActivationHeight);
         batch.Write(DB_INIT,true);
-        db.WriteBatch(batch);
+        WriteBatch(batch);
     }
 }
 
-
 bool CMinerWhitelistDB::EnableCap(unsigned int factor) {
     LogPrintf("MinerDatabase: Enabling Cap with factor %d.\n", factor);
-    CDBBatch batch(db);
+    CDBBatch batch(*this);
     batch.Write(WL_FACTOR, factor);
     batch.Write(WL_CAP_ENABLED, true);
-    return db.WriteBatch(batch);
+    return WriteBatch(batch);
 }
 
 bool CMinerWhitelistDB::ReEnableCap() {
     unsigned int height;
     LogPrintf("MinerDatabase: Re-Enabling Cap with previous factor.\n");
-    if (!db.Read(DB_HEIGHT, height))
+    if (!Read(DB_HEIGHT, height))
         return false;
     BlockDetails det = BlockDetails();
-    if (!db.Read(BlockEntry(height), det))
+    if (!Read(BlockEntry(height), det))
         return false;
     LogPrintf("MinerDatabase: Previous factor was %d\n", det.prevFactor);
-    CDBBatch batch(db);
+    CDBBatch batch(*this);
     batch.Write(WL_CAP_ENABLED, true);
     batch.Write(WL_FACTOR, det.prevFactor);
-    return db.WriteBatch(batch);
+    return WriteBatch(batch);
 }
 
 bool CMinerWhitelistDB::DisableCap() {
     LogPrintf("MinerDatabase: Disabling Cap.\n");
-    CDBBatch batch(db);
+    CDBBatch batch(*this);
     batch.Write(WL_CAP_ENABLED,false);
     batch.Write(WL_FACTOR, 0);// TODO: think about this a bit more!
-    return db.WriteBatch(batch);
+    return WriteBatch(batch);
 }
 
 bool CMinerWhitelistDB::IsCapEnabled() {
     char fEnabled;
-    if (!db.Read(WL_CAP_ENABLED, fEnabled))
+    if (!Read(WL_CAP_ENABLED, fEnabled))
         return false;
     return fEnabled == true;
 }
@@ -195,14 +197,14 @@ bool CMinerWhitelistDB::IsCapEnabled() {
 
 unsigned int CMinerWhitelistDB::GetCapFactor() {
     unsigned int factor;
-    db.Read(WL_FACTOR, factor);
+    Read(WL_FACTOR, factor);
 
     return factor;
 }
 
 unsigned int CMinerWhitelistDB::GetNumberOfWhitelistedMiners() {
     unsigned int number;
-    db.Read(WL_NUMBER_MINERS, number);
+    Read(WL_NUMBER_MINERS, number);
 
     // On block 34342, the third admin key was finaly blacklisted. 
     // Up to that point substract one from the number of miners to accomodate the 
@@ -239,10 +241,10 @@ bool CMinerWhitelistDB::WhitelistMiner(std::string address) {
     
     MinerEntry mEntry(address);
     MinerDetails mDetails = MinerDetails();
-    CDBBatch batch(db);
+    CDBBatch batch(*this);
     unsigned int number;
-    db.Read(WL_NUMBER_MINERS, number);
-    if (db.Read(mEntry, mDetails)) {
+    Read(WL_NUMBER_MINERS, number);
+    if (Read(mEntry, mDetails)) {
         LogPrintf("MinerDatabase: Miner already in Database. %s\n", address);
         if (!mDetails.whitelisted) {
             LogPrintf("MinerDatabase: Adding Miner back to whitelist. %s\n", address);
@@ -258,19 +260,19 @@ bool CMinerWhitelistDB::WhitelistMiner(std::string address) {
         batch.Write(WL_NUMBER_MINERS, number+1);
     }
     
-    return db.WriteBatch(batch);
+    return WriteBatch(batch);
 }
 
 bool CMinerWhitelistDB::BlacklistMiner(std::string address) {
     
     MinerEntry mEntry(address);
     MinerDetails mDetails = MinerDetails();
-    CDBBatch batch(db);
+    CDBBatch batch(*this);
 
     unsigned int number;
-    db.Read(WL_NUMBER_MINERS, number);
+    Read(WL_NUMBER_MINERS, number);
 
-    if (db.Read(mEntry, mDetails)) {
+    if (Read(mEntry, mDetails)) {
         // if (mDetails.isAdmin) { // don't remove admins, but no error.
         // LogPrintf("MinerDatabase: NOT Blacklisting admin %s\n", address);
         //     return true;
@@ -287,35 +289,35 @@ bool CMinerWhitelistDB::BlacklistMiner(std::string address) {
         batch.Write(mEntry, MinerDetails(false,false));
     }
 
-    return db.WriteBatch(batch);
+    return WriteBatch(batch);
 }
 
 bool CMinerWhitelistDB::ExistMiner(std::string address) {
-    return db.Exists(MinerEntry(address));
+    return Exists(MinerEntry(address));
 }
 
 bool CMinerWhitelistDB::isWhitelisted(std::string address) {
     MinerEntry mEntry(address);
     MinerDetails mDetails = MinerDetails();
-    if (!db.Exists(mEntry)) {
+    if (!Exists(mEntry)) {
         LogPrintf("MinerDatabase: Miner does not exist in database.\n");
         return false;
     }
     LogPrintf("MinerDatabase: Miner is in database.\n");
-    db.Read(mEntry, mDetails);
+    Read(mEntry, mDetails);
     return mDetails.whitelisted;
 }
 
 unsigned int CMinerWhitelistDB::GetTotalBlocks(std::string address) {
     MinerDetails det = MinerDetails();
-    if (db.Read(MinerEntry(address), det))
+    if (Read(MinerEntry(address), det))
         return det.totalBlocks;
     return 0;
 }
 
 unsigned int CMinerWhitelistDB::GetBlocksInWindow(std::string address) {
     MinerDetails det = MinerDetails();
-    if (db.Read(MinerEntry(address), det))
+    if (Read(MinerEntry(address), det))
         return det.windowBlocks;
     return 0;
 }
@@ -330,13 +332,13 @@ unsigned int CMinerWhitelistDB::GetWindowStart(unsigned int height) {
 }
 
 // bool CMinerWhitelistDB::Sync() {
-//   return db.Sync()
+//   return Sync()
 // }
 
 bool CMinerWhitelistDB::DumpWindowStats(std::vector< std::pair< std::string, uint32_t > > *MinerVector) {
     LogPrintf("MinerDatabase: Dumping all miner stats.\n");
     
-    std::unique_ptr<CDBIterator> it(db.NewIterator());
+    std::unique_ptr<CDBIterator> it(NewIterator());
     for (it->Seek(MinerEntry(DUMMY)); it->Valid(); it->Next()) { // Seek should end up at an address (they start with 'a')
         MinerEntry entry = MinerEntry();
         MinerDetails det = MinerDetails();
@@ -364,11 +366,11 @@ bool CMinerWhitelistDB::DumpStatsForMiner(std::string address, bool *wlisted, un
     LogPrintf("MinerDatabase: Dumping stats for miner %s.\n", address);
     
     MinerEntry entry = MinerEntry(address);
-    if(!db.Exists(entry))
+    if(!Exists(entry))
         return false;
     
     MinerDetails details = MinerDetails();
-    db.Read(entry, details);
+    Read(entry, details);
     *wlisted = details.whitelisted;
     *windowBlocks = details.windowBlocks;
     *totalBlocks = details.totalBlocks;
@@ -382,12 +384,12 @@ bool CMinerWhitelistDB::MineBlock(unsigned int newHeight, std::string address) {
     LogPrintf("MinerDatabase: Adding Block %d to the database. Mined by %s\n", newHeight, address);
     // First check that we are actually at the tip
     unsigned int currHeight;
-    db.Read(DB_HEIGHT, currHeight);
+    Read(DB_HEIGHT, currHeight);
     LogPrintf("MinerDatabase: Database is currently at block %d\n", currHeight);
 
     assert(newHeight==currHeight+1);
 
-    CDBBatch batch(db);
+    CDBBatch batch(*this);
     
 
     /* SPECIAL STUFF for block no 617. The first implementation of the whitelist took
@@ -415,7 +417,7 @@ bool CMinerWhitelistDB::MineBlock(unsigned int newHeight, std::string address) {
             LogPrintf("MinerDatabase: New Window beginning\n");
             LogPrintf("MinerDatabase: Creating Iterator\n");
             sleep(10);
-            std::unique_ptr<CDBIterator> it(db.NewIterator());
+            std::unique_ptr<CDBIterator> it(NewIterator());
             LogPrintf("MinerDatabase: Starting Loop.\n");
             for (it->Seek(MinerEntry(DUMMY)); it->Valid(); it->Next()) { // SeekToFirst should end up at an address (they start with 'a')
                 MinerEntry entry = MinerEntry();
@@ -437,9 +439,9 @@ bool CMinerWhitelistDB::MineBlock(unsigned int newHeight, std::string address) {
         else {
             LogPrintf("MinerDatabase: In window\n");
             MinerDetails minDets = MinerDetails();
-            if (!db.Exists(MinerEntry(address)))
+            if (!Exists(MinerEntry(address)))
                 return false;
-            db.Read(MinerEntry(address), minDets);
+            Read(MinerEntry(address), minDets);
             // Increase counter for the one mining the block
             minDets.totalBlocks += 1;
             minDets.windowBlocks += 1;
@@ -451,9 +453,9 @@ bool CMinerWhitelistDB::MineBlock(unsigned int newHeight, std::string address) {
         // new System
         LogPrintf("MinerDatabase: We are using the new cap system.\n");
         MinerDetails minDets = MinerDetails();
-        if (!db.Exists(MinerEntry(address)))
+        if (!Exists(MinerEntry(address)))
             return false;
-        db.Read(MinerEntry(address), minDets);
+        Read(MinerEntry(address), minDets);
         // Increase counter for the one mining the block
         minDets.totalBlocks += 1;
         minDets.windowBlocks += 1;
@@ -465,9 +467,9 @@ bool CMinerWhitelistDB::MineBlock(unsigned int newHeight, std::string address) {
         
         if (blockDroppingOut) { // There is!
             BlockDetails dropDets = BlockDetails();
-            if (!db.Exists(BlockEntry(blockDroppingOut)))
+            if (!Exists(BlockEntry(blockDroppingOut)))
                 return false;
-            db.Read(BlockEntry(blockDroppingOut), dropDets);
+            Read(BlockEntry(blockDroppingOut), dropDets);
             if (dropDets.miner == address) { 
                 // the miner who mined the current block also mined the one 
                 // dropping out of the window so decrease his count again.
@@ -475,9 +477,9 @@ bool CMinerWhitelistDB::MineBlock(unsigned int newHeight, std::string address) {
                 batch.Write(MinerEntry(address), minDets);  
             } else { // different Miner
                 MinerDetails otherDets = MinerDetails();
-                if (!db.Exists(MinerEntry(dropDets.miner)))
+                if (!Exists(MinerEntry(dropDets.miner)))
                     return false;
-                db.Read(MinerEntry(dropDets.miner), otherDets);
+                Read(MinerEntry(dropDets.miner), otherDets);
                 otherDets.windowBlocks -= 1;
                 batch.Write(MinerEntry(address), minDets);  
                 batch.Write(MinerEntry(dropDets.miner), otherDets);  
@@ -486,26 +488,26 @@ bool CMinerWhitelistDB::MineBlock(unsigned int newHeight, std::string address) {
             batch.Write(MinerEntry(address), minDets);
         }
     }
-    db.WriteBatch(batch);
+    WriteBatch(batch);
     return true;
 }
       
 bool CMinerWhitelistDB::RewindBlock(unsigned int index) {
     LogPrintf("MinerDatabase: Removing Block %d from the database.\n", index);
 
-    CDBBatch batch(db);
+    CDBBatch batch(*this);
 
     // First check that we are actually at the tip
     unsigned int currHeight;
-    db.Read(DB_HEIGHT, currHeight);
+    Read(DB_HEIGHT, currHeight);
     LogPrintf("MinerDatabase: Database was at block %d previously.\n", currHeight);
     assert(currHeight==index);
 
     // See who mined this block
     BlockDetails currDets = BlockDetails();
-    if (!db.Exists(BlockEntry(currHeight)))
+    if (!Exists(BlockEntry(currHeight)))
         return false;
-    db.Read(BlockEntry(currHeight), currDets);
+    Read(BlockEntry(currHeight), currDets);
     std::string miner = currDets.miner;
 
     // delete entry for the block
@@ -521,7 +523,7 @@ bool CMinerWhitelistDB::RewindBlock(unsigned int index) {
         // This is what happens at the window border
         if (index%2016==0) {
             // TODO iterate over the last 2016 blocks to restore the correct value for the cap.
-            std::unique_ptr<CDBIterator> it(db.NewIterator());
+            std::unique_ptr<CDBIterator> it(NewIterator());
             std::unordered_map<std::string, unsigned int> coinMap; 
             int bcount = 0;
             for (it->Seek(BlockEntry(index-2016+1)); it->Valid(); it->Next()) { // Start at beginning of Window
@@ -534,9 +536,9 @@ bool CMinerWhitelistDB::RewindBlock(unsigned int index) {
                     it->GetValue(det);
                     MinerDetails bMDets = MinerDetails();
                     
-                    if (!db.Exists(MinerEntry(det.miner)))
+                    if (!Exists(MinerEntry(det.miner)))
                         return false;
-                    db.Read(MinerEntry(det.miner), bMDets);
+                    Read(MinerEntry(det.miner), bMDets);
                     if (coinMap.count(det.miner)) {
                         coinMap[det.miner] += 1; // miner already has coins
                     } else {
@@ -549,7 +551,7 @@ bool CMinerWhitelistDB::RewindBlock(unsigned int index) {
             // we now have a map of the coincount per miner. rewrite it into db
             for (auto& x: coinMap) {
                 MinerDetails mdetails = MinerDetails(); 
-                db.Read(MinerEntry(x.first), mdetails);
+                Read(MinerEntry(x.first), mdetails);
                 
                 if (x.first == miner) {
                     mdetails.windowBlocks = x.second - 1; // The current block will be removed from database. Do not count it
@@ -562,9 +564,9 @@ bool CMinerWhitelistDB::RewindBlock(unsigned int index) {
             } 
         } else { // normal stuff during the window
             MinerDetails minDets = MinerDetails();
-            if (!db.Exists(MinerEntry(miner)))
+            if (!Exists(MinerEntry(miner)))
                 return false;
-            db.Read(MinerEntry(miner), minDets);
+            Read(MinerEntry(miner), minDets);
             // Decrease counter for the one mining the block
             minDets.totalBlocks -= 1;
             minDets.windowBlocks -= 1;
@@ -575,9 +577,9 @@ bool CMinerWhitelistDB::RewindBlock(unsigned int index) {
     else {
         // new System
         MinerDetails minDets = MinerDetails();
-        if (!db.Exists(MinerEntry(miner)))
+        if (!Exists(MinerEntry(miner)))
             return false;
-        db.Read(MinerEntry(miner), minDets);
+        Read(MinerEntry(miner), minDets);
         // Decrease counter for the one mining the block
         minDets.totalBlocks -= 1;
         minDets.windowBlocks -= 1;
@@ -588,9 +590,9 @@ bool CMinerWhitelistDB::RewindBlock(unsigned int index) {
         
         if (blockMovingIn) { // There is!
             BlockDetails dropDets = BlockDetails();
-            if (!db.Exists(BlockEntry(blockMovingIn)))
+            if (!Exists(BlockEntry(blockMovingIn)))
                 return false;
-            db.Read(BlockEntry(blockMovingIn), dropDets);
+            Read(BlockEntry(blockMovingIn), dropDets);
             if (dropDets.miner == miner) { 
                 // the miner who mined the current block also mined the one 
                 // moving into the window so re-increase his count.
@@ -598,9 +600,9 @@ bool CMinerWhitelistDB::RewindBlock(unsigned int index) {
                 batch.Write(MinerEntry(miner), minDets);  
             } else { // different Miner
                 MinerDetails dets = MinerDetails();
-                if (!db.Exists(MinerEntry(dropDets.miner)))
+                if (!Exists(MinerEntry(dropDets.miner)))
                     return false;
-                db.Read(MinerEntry(dropDets.miner), dets);
+                Read(MinerEntry(dropDets.miner), dets);
                 dets.windowBlocks += 1;
                 batch.Write(MinerEntry(miner), minDets);  
                 batch.Write(MinerEntry(dropDets.miner), dets);  
@@ -609,7 +611,7 @@ bool CMinerWhitelistDB::RewindBlock(unsigned int index) {
             batch.Write(MinerEntry(miner), minDets);
         }
     }
-    db.WriteBatch(batch);
+    WriteBatch(batch);
     return true;
 }
 
@@ -648,6 +650,6 @@ bool CMinerWhitelistDB::hasExceededCap(std::string address) {
 
 std::string CMinerWhitelistDB::getMinerforBlock(unsigned int index) {
     BlockDetails bdets = BlockDetails();
-    db.Read(BlockEntry(index), bdets);
+    Read(BlockEntry(index), bdets);
     return bdets.miner;
 }
