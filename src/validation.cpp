@@ -1511,99 +1511,100 @@ static DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* 
             // At this point, all of txundo.vprevout should have been moved out.
         }
     }
-    // revert effects to minerwhitelist:
-    for (unsigned int i = 0; i < block.vtx.size(); i++){
-        const CTransaction &tx = *(block.vtx[i]);
-        if (!tx.IsCoinBase()) {
-            for (const CTxIn& in : tx.vin) {
-                CScript::const_iterator pc = in.scriptSig.begin();
-                opcodetype opcode;
-                std::vector<unsigned char> value;
 
-                while (pc < in.scriptSig.end()){
-                    in.scriptSig.GetOp(pc, opcode, value);
-                }
+    // // revert effects to minerwhitelist:
+    // for (unsigned int i = 0; i < block.vtx.size(); i++){
+    //     const CTransaction &tx = *(block.vtx[i]);
+    //     if (!tx.IsCoinBase()) {
+    //         for (const CTxIn& in : tx.vin) {
+    //             CScript::const_iterator pc = in.scriptSig.begin();
+    //             opcodetype opcode;
+    //             std::vector<unsigned char> value;
 
-                // last OPCode is publicKey from ScriptSig
-                std::string pkey = HexStr(value);
+    //             while (pc < in.scriptSig.end()){
+    //                 in.scriptSig.GetOp(pc, opcode, value);
+    //             }
 
-                // this transaction has been identified as a white miner list transaction.
-                // no check of admin rights needed, because the block would not be connected if they key was invalid.
-                // fist output script must be OP_RETURN to identify the action
-                if (tx.vout[0].scriptPubKey[0] == OP_RETURN){
-                    CScript outScript = tx.vout[0].scriptPubKey;
-                    CScript::const_iterator pc = outScript.begin();
-                    opcodetype opcode;
-                    std::vector<unsigned char> value;
+    //             // last OPCode is publicKey from ScriptSig
+    //             std::string pkey = HexStr(value);
 
-                    while (pc < outScript.end()){
-                        outScript.GetOp(pc, opcode, value);
-                    }
+    //             // this transaction has been identified as a white miner list transaction.
+    //             // no check of admin rights needed, because the block would not be connected if they key was invalid.
+    //             // fist output script must be OP_RETURN to identify the action
+    //             if (tx.vout[0].scriptPubKey[0] == OP_RETURN){
+    //                 CScript outScript = tx.vout[0].scriptPubKey;
+    //                 CScript::const_iterator pc = outScript.begin();
+    //                 opcodetype opcode;
+    //                 std::vector<unsigned char> value;
 
-                    // we get the OP_Return data into the string.
-                    std::string opreturn = HexStr(value);
+    //                 while (pc < outScript.end()){
+    //                     outScript.GetOp(pc, opcode, value);
+    //                 }
 
-                    CMinerWhitelistDB::WhitelistAction action = CMinerWhitelistDB::NONE;
+    //                 // we get the OP_Return data into the string.
+    //                 std::string opreturn = HexStr(value);
 
-                    if (opreturn.compare("616464") == 0) //add
-                        action = CMinerWhitelistDB::ADD_MINER;
+    //                 CMinerWhitelistDB::WhitelistAction action = CMinerWhitelistDB::NONE;
 
-                    if (opreturn.compare("72656d") == 0) //rem
-                        action = CMinerWhitelistDB::REMOVE_MINER;
+    //                 if (opreturn.compare("616464") == 0) //add
+    //                     action = CMinerWhitelistDB::ADD_MINER;
 
-                    // enable_cap command includes the factor that sets the cap in the form of enable_cap:n where n can be 1, 2, 3, etc.
-                    // cap for miners is stablished like (2016 / amount of miners) * n
-                    // the factor is a 1 byte size, or 2 characters, so we compare the enable_cap: string to identify the action.
-                    if (opreturn.substr(0, opreturn.size()-2).compare("656e61626c655f6361703a") == 0) //enable_cap:
-                    action = CMinerWhitelistDB::ENABLE_CAP;
+    //                 if (opreturn.compare("72656d") == 0) //rem
+    //                     action = CMinerWhitelistDB::REMOVE_MINER;
 
-                    if (opreturn.compare("64697361626c655f636170") == 0) //disable_cap
-                    action = CMinerWhitelistDB::DISABLE_CAP;
+    //                 // enable_cap command includes the factor that sets the cap in the form of enable_cap:n where n can be 1, 2, 3, etc.
+    //                 // cap for miners is stablished like (2016 / amount of miners) * n
+    //                 // the factor is a 1 byte size, or 2 characters, so we compare the enable_cap: string to identify the action.
+    //                 if (opreturn.substr(0, opreturn.size()-2).compare("656e61626c655f6361703a") == 0) //enable_cap:
+    //                 action = CMinerWhitelistDB::ENABLE_CAP;
+
+    //                 if (opreturn.compare("64697361626c655f636170") == 0) //disable_cap
+    //                 action = CMinerWhitelistDB::DISABLE_CAP;
 
 
-                    // once the action has been identifed, lets extract the address from each output
-                    // and perform the action on the white list db.
-                    for (const CTxOut& out : tx.vout) {
-                        CScript redeemScript = out.scriptPubKey;
-                        CTxDestination destinationAddress;
-                        ExtractDestination(redeemScript, destinationAddress);
-                        CBitcoinAddress address(destinationAddress);
+    //                 // once the action has been identifed, lets extract the address from each output
+    //                 // and perform the action on the white list db.
+    //                 for (const CTxOut& out : tx.vout) {
+    //                     CScript redeemScript = out.scriptPubKey;
+    //                     CTxDestination destinationAddress;
+    //                     ExtractDestination(redeemScript, destinationAddress);
+    //                     CBitcoinAddress address(destinationAddress);
 
-                        if (address.IsValid()){
-                            switch(action)
-                            {
-                                case CMinerWhitelistDB::ADD_MINER: // revert adding, so remove
-                                    pminerwhitelist->BlacklistMiner(address.ToString());
-                                    //LogPrint("MinerWhitelistTransaction", "Miner address added: %s \n", strAddress);
-                                    break;
-                                case CMinerWhitelistDB::REMOVE_MINER: // revert removing, so add 
-                                    // will remove the address only if is not the admin.
-                                    pminerwhitelist->WhitelistMiner(address.ToString());
-                                    // LogPrint("MinerWhitelistTransaction", "Miner address removed: %s \n", strAddress);
-                                    break;
-                                case CMinerWhitelistDB::ENABLE_CAP: // revert enabling, so disable
-                                    //LogPrint("MinerWhitelistTransaction", "Miner Cap enabled.\n");
-                                    // the last two characters of the opreturn are the factor for the cap calculation.
-                                    pminerwhitelist->DisableCap(); //we are enabling with the factor passed.
-                                    break;
-                                case CMinerWhitelistDB::DISABLE_CAP: //revert disabling, so enable
-                                    //LogPrint("MinerWhitelistTransaction", "Miner Cap disabled.\n");
-                                    pminerwhitelist->ReEnableCap();
-                                    break;
-                                default:
-                                    // do nothing
-                                    //LogPrint("MinerWhitelistTransaction", "Unrecognized Action from admin.");
-                                    break;
-                            }
-                        }
-                    }
-                }
-            }
-        } 
-    }
+    //                     if (address.IsValid()){
+    //                         switch(action)
+    //                         {
+    //                             case CMinerWhitelistDB::ADD_MINER: // revert adding, so remove
+    //                                 pminerwhitelist->BlacklistMiner(address.ToString());
+    //                                 //LogPrint("MinerWhitelistTransaction", "Miner address added: %s \n", strAddress);
+    //                                 break;
+    //                             case CMinerWhitelistDB::REMOVE_MINER: // revert removing, so add 
+    //                                 // will remove the address only if is not the admin.
+    //                                 pminerwhitelist->WhitelistMiner(address.ToString());
+    //                                 // LogPrint("MinerWhitelistTransaction", "Miner address removed: %s \n", strAddress);
+    //                                 break;
+    //                             case CMinerWhitelistDB::ENABLE_CAP: // revert enabling, so disable
+    //                                 //LogPrint("MinerWhitelistTransaction", "Miner Cap enabled.\n");
+    //                                 // the last two characters of the opreturn are the factor for the cap calculation.
+    //                                 pminerwhitelist->DisableCap(); //we are enabling with the factor passed.
+    //                                 break;
+    //                             case CMinerWhitelistDB::DISABLE_CAP: //revert disabling, so enable
+    //                                 //LogPrint("MinerWhitelistTransaction", "Miner Cap disabled.\n");
+    //                                 pminerwhitelist->ReEnableCap();
+    //                                 break;
+    //                             default:
+    //                                 // do nothing
+    //                                 //LogPrint("MinerWhitelistTransaction", "Unrecognized Action from admin.");
+    //                                 break;
+    //                         }
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     } 
+    // }
     // move best block pointer to prevout block
     view.SetBestBlock(pindex->pprev->GetBlockHash());
-    pminerwhitelist->RewindBlock(pindex->nHeight);
+    //pminerwhitelist->RewindBlock(pindex->nHeight);
 
     return fClean ? DISCONNECT_OK : DISCONNECT_UNCLEAN;
 }
@@ -1866,6 +1867,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     bool fIsMinerWhitelist = pindex->nHeight > chainparams.GetConsensus().minerWhiteListActivationHeight;
      
     if (fIsMinerWhitelist){
+        LogPrintf("Whitelist activated: Checking for Miner Signature.\n");
         // first transaction is coinbase with only one input
         const CTransaction &tx = *(block.vtx[0]);
         const CScript scriptSig = tx.vin[0].scriptSig;
@@ -1877,7 +1879,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
         // we get the signature
         scriptSig.GetOp(pc, opcode, value);
         const std::vector<unsigned char> signature = value;
-        ScriptError* serror;
+        ScriptError* serror = nullptr;
         if (!CheckSignatureEncoding(signature, SCRIPT_VERIFY_DERSIG, serror)){
             LogPrintf("Invalid coinbase transaction: Provided signature is not valid: %s \n", serror);
             return state.DoS(100, false, REJECT_INVALID, "bad-CB-signature", false, "Coinbase invalid signature");
@@ -1922,7 +1924,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
             return state.DoS(100, false, REJECT_INVALID, "bad-CB-address", false, "Coinbase Address");
         }
 
-        if (!pminerwhitelist->ExistMiner(cAddress.ToString())){
+        if (!pminerwhitelist->isWhitelisted(cAddress.ToString())){
             LogPrintf("Invalid coinbase transaction: Coinbase not from an authorized miner: %s \n", cAddress.ToString());
             return state.DoS(100, false, REJECT_INVALID, "bad-CB-miner", false, "Coinbase not authorized");
         }
@@ -2066,10 +2068,14 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     }
     
     // now apply admin actions.
-    for (unsigned int i = 0; i < block.vtx.size(); i++){
+    LogPrintf("Looking for admin actions.\n");
+    LogPrintf("Txns to check: %d \n",block.vtx.size()-1);
+    for (unsigned int i = 1; i < block.vtx.size(); i++){ // start at 1, 0 is coinbase
+        LogPrintf("Checking txn %d.\n",i);
         const CTransaction &tx = *(block.vtx[i]);
         if (!tx.IsCoinBase()){
-            for (const CTxIn& in : tx.vin) {
+            for (unsigned int j = 0; j < tx.vin.size(); j++) {
+                const CTxIn& in = tx.vin[j];
                 CScript::const_iterator pc = in.scriptSig.begin();
                 opcodetype opcode;
                 std::vector<unsigned char> value;
@@ -2080,10 +2086,11 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
 
                 // last OPCode is publicKey from ScriptSig
                 std::string pkey = HexStr(value);
+                // LogPrintf("Found key %s.\n", pkey);
 
                 // this transaction has been identified as a white miner list transaction.
                 if (chainparams.GetConsensus().minerWhiteListAdminPubKey.count(pkey) || (pindex->nHeight < 38304 && pkey == "038f21c88b0d7f60e736cc447a3a6716c81a7b403b27bede2b67522d7c29b6e608")){
-                    LogPrintf("MinerWhitelistTransaction: Miner White List Transaction detected: %s \n", tx.ToString());
+                    LogPrintf("Miner Whitelist: Admin Transaction detected: %s \n", tx.ToString());
 
                     // fist output script must be OP_RETURN to identify the action
                     if (tx.vout[0].scriptPubKey[0] == OP_RETURN){
@@ -2130,21 +2137,24 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
                                 switch(action)
                                 {
                                     case CMinerWhitelistDB::ADD_MINER:
-                                        pminerwhitelist->WhitelistMiner(address.ToString());
-                                        LogPrintf("MinerWhitelistTransaction: Miner address added: %s \n", address.ToString());
+                                        if (!Params().GetConsensus().minerWhiteListAdminAddress.count(address.ToString()))
+                                            pminerwhitelist->WhitelistMiner(address.ToString());
+                                        //LogPrintf("MinerWhitelistTransaction: Miner address added: %s \n", address.ToString());
                                         break;
                                     case CMinerWhitelistDB::REMOVE_MINER:
-                                        // will remove the address only if is not the admin.
-                                        pminerwhitelist->BlacklistMiner(address.ToString());
-                                        LogPrintf("MinerWhitelistTransaction: Miner address removed: %s \n", address.ToString());
+                                        // will act on the address only if is not the admin.
+                                        if (!Params().GetConsensus().minerWhiteListAdminAddress.count(address.ToString()))
+                                            pminerwhitelist->BlacklistMiner(address.ToString());
+                                        
+                                        //LogPrintf("MinerWhitelistTransaction: Miner address removed: %s \n", address.ToString());
                                         break;
                                     case CMinerWhitelistDB::ENABLE_CAP:
-                                        LogPrintf("MinerWhitelistTransaction: Miner Cap enabled.\n");
+                                        //LogPrintf("MinerWhitelistTransaction: Miner Cap enabled.\n");
                                         // the last two characters of the opreturn are the factor for the cap calculation.
                                         pminerwhitelist->EnableCap( (int)(opreturn.back() - '0') ); //we are enabling with the factor passed.
                                         break;
                                     case CMinerWhitelistDB::DISABLE_CAP:
-                                        LogPrintf("MinerWhitelistTransaction: Miner Cap disabled.\n");
+                                        //LogPrintf("MinerWhitelistTransaction: Miner Cap disabled.\n");
                                         pminerwhitelist->DisableCap();
                                         break;
                                     default:
@@ -2155,6 +2165,8 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
                             }
                         }
                     }
+                // } else {
+                //     LogPrintf("No Admin Transaction.\n");
                 }
             }
         }

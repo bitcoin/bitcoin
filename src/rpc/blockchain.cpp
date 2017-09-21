@@ -254,7 +254,7 @@ UniValue waitforblock(const JSONRPCRequest& request)
     uint256 hash = uint256S(request.params[0].get_str());
 
     if (!request.params[1].isNull())
-        timeout = request.params[1].get_int();
+        timeout = request.params[1].get_int(); 
 
     CUpdatedBlock block;
     {
@@ -1477,6 +1477,95 @@ UniValue reconsiderblock(const JSONRPCRequest& request)
     return NullUniValue;
 }
 
+bool comppair(std::pair<std::string,uint32_t> a, std::pair<std::string,uint32_t> b) {
+    return a.second > b.second;
+}
+
+
+/*
+ *  IoP beta release - scans the blockchain identifying blocks from whitelisted miners and showing the stats of how much they mined.
+ */
+UniValue dumpminerstats(const JSONRPCRequest& request) {
+    int currHeight = chainActive.Height();
+    
+    if (request.fHelp || request.params.size() > 1) {
+        throw std::runtime_error(
+            "dumpminerstats [minerAddress]\n"
+            "\nReturns the statistics of blocks mined by the specified miner. If no miner address is specified, then stats from all miners is retrieved.\n"
+            "\nArguments:\n"
+            "1. mineraddress         (string, optional) The whitelisted address of a miner\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"currentheight\" : n,             (int) the actual blockchain height.\n"
+            "  \"windowstart\" : n,               (int) the starting block of the window.\n"
+            "  \"minercapenabled\" : bool,        (int) the actual status of the cap limitation.\n"
+            "  \"currentwhitelisted\" : n,        (int) the current numbers of whitelisted miners.\n"
+            "  \"currentavgblocksperminer\" : n,  (int) the current amount of blocks per miner expected.\n"
+            "  \"currentfactor\" : n,             (int) the current multiplying factor defined by the admin.\n"
+            "  \"currentcap\" : n,                (int) the current max. of blocks per miner.\n"
+            "  \"stats\" : \n"
+            "  {\n"
+            "    \"mineraddress\" : n            (int) the block count that the miner mined on the window.\n"
+            "  }\n"
+            "}\n"
+        );
+    }
+    
+    UniValue result(UniValue::VOBJ);
+    std::string minerParameter;
+    if (request.params.size()== 1) {
+        minerParameter = request.params[0].getValStr();
+        LogPrintf("dumpminerstats: Single miner stats.\n");
+        bool wlisted;
+        unsigned int windowBlocks; 
+        unsigned int totalBlocks;
+        unsigned int lastBlock;
+
+        result.push_back(Pair("address", minerParameter));
+
+        if (pminerwhitelist->DumpStatsForMiner(minerParameter, &wlisted, &windowBlocks, &totalBlocks, &lastBlock)) {
+            UniValue lastResult(UniValue::VOBJ);
+            lastResult.push_back(Pair("whitelisted",(uint64_t)wlisted));
+            lastResult.push_back(Pair("windowBlocks",(uint64_t)windowBlocks));
+            lastResult.push_back(Pair("totalBlocks",(uint64_t)totalBlocks));
+            lastResult.push_back(Pair("lastBlock",(uint64_t)lastBlock));
+             
+            result.push_back(Pair("stats", lastResult));
+        }
+        return result;
+    }
+    
+
+    std::vector<std::pair<std::string, uint32_t>> minerVector;
+    
+    pminerwhitelist->DumpWindowStats(&minerVector);
+
+    result.push_back(Pair("currentheight", currHeight));
+    result.push_back(Pair("windowstart", (uint64_t)pminerwhitelist->GetWindowStart(currHeight)));
+    result.push_back(Pair("minercapenabled", pminerwhitelist->IsCapEnabled()));
+    
+    result.push_back(Pair("currentwhitelisted", (uint64_t)pminerwhitelist->GetNumberOfWhitelistedMiners()));
+    result.push_back(Pair("currentavgblocksperminer", (uint64_t)pminerwhitelist->GetAvgBlocksPerMiner()));
+    result.push_back(Pair("currentfactor", (uint64_t)pminerwhitelist->GetCapFactor()));
+    result.push_back(Pair("currentcap", (uint64_t)pminerwhitelist->GetCap()));
+
+    
+    // LogPrintf("dumpminerstats: %d miners in database.\n",minerVector.size());
+    std::sort(minerVector.begin(), minerVector.end(), comppair);
+
+    UniValue lastResult(UniValue::VOBJ);
+    std::string key;
+    int value;
+    for (int i = 0; i < minerVector.size() ; i++) {
+        key = minerVector[i].first;
+        value = minerVector[i].second;
+        lastResult.push_back(Pair(key, value));
+    }
+    result.push_back(Pair("stats", lastResult));
+    return result;
+}
+
+
 UniValue getchaintxstats(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() > 2)
@@ -1563,8 +1652,10 @@ static const CRPCCommand commands[] =
     { "blockchain",         "gettxoutsetinfo",        &gettxoutsetinfo,        true,  {} },
     { "blockchain",         "pruneblockchain",        &pruneblockchain,        true,  {"height"} },
     { "blockchain",         "verifychain",            &verifychain,            true,  {"checklevel","nblocks"} },
-
+    
     { "blockchain",         "preciousblock",          &preciousblock,          true,  {"blockhash"} },
+
+    { "blockchain",         "dumpminerstats",         &dumpminerstats,         true,  {"address"} },
 
     /* Not shown in help */
     { "hidden",             "invalidateblock",        &invalidateblock,        true,  {"blockhash"} },

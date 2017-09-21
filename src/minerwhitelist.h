@@ -9,44 +9,48 @@
 
 class CMinerWhitelistDB {
 protected:
-  CDBWrapper db;
+    CDBWrapper db;
 public:
-  CMinerWhitelistDB(size_t nCacheSize, bool fMemory, bool fWipe);
-  
-  enum WhitelistAction {ADD_MINER, REMOVE_MINER, ENABLE_CAP, DISABLE_CAP, NONE};
-  
-  // Cap management
-  bool EnableCap(unsigned int factor);
-  bool ReEnableCap();
-  
-  bool DisableCap();
-  bool IsCapEnabled();
-  
-  // Statistics
-  unsigned int GetCapFactor();
-  unsigned int GetNumberOfWhitelistedMiners();
-  unsigned int GetAvgBlocksPerMiner();
-  unsigned int GetCap();
-  
-  // Managing Whitelist
-  bool WhitelistMiner(std::string address);
-  bool BlacklistMiner(std::string address);
-  bool ExistMiner(std::string address);
-  
-  
-  unsigned int GetTotalBlocks(std::string address);
-  unsigned int GetBlocksInWindow(std::string address);
-  unsigned int GetWindowStart(unsigned int height);
-  bool hasExceededCap(std::string address);
+    CMinerWhitelistDB(size_t nCacheSize, bool fMemory, bool fWipe);
+    
+    enum WhitelistAction {ADD_MINER, REMOVE_MINER, ENABLE_CAP, DISABLE_CAP, NONE};
+    
+    // Cap management
+    bool EnableCap(unsigned int factor);
+    bool ReEnableCap();
+    
+    bool DisableCap();
+    bool IsCapEnabled();
+    
+    // Statistics
+    unsigned int GetCapFactor();
+    unsigned int GetNumberOfWhitelistedMiners();
+    unsigned int GetAvgBlocksPerMiner();
+    unsigned int GetCap();
+    bool DumpWindowStats(std::vector<std::pair<std::string, uint32_t>> *MinerVector);
+    
+    // Managing Whitelist
+    bool WhitelistMiner(std::string address);
+    bool BlacklistMiner(std::string address);
+    bool ExistMiner(std::string address);
+    bool isWhitelisted(std::string address);
+    
+    
+    unsigned int GetTotalBlocks(std::string address);
+    unsigned int GetBlocksInWindow(std::string address);
+    unsigned int GetWindowStart(unsigned int height);
+    bool hasExceededCap(std::string address);
 
-  // Managing Cap
+    // Managing Cap
 
-  bool MineBlock(unsigned int index, std::string address);
-  bool RewindBlock(unsigned int index);
-  
-  
-  
-  bool Sync();
+    bool MineBlock(unsigned int index, std::string address);
+    bool RewindBlock(unsigned int index);
+    std::string getMinerforBlock(unsigned int index);
+    bool DumpStatsForMiner(std::string address, bool *wlisted, unsigned int *windowCoins, unsigned int *totalCoins, unsigned int *lastBlock);
+    
+    
+    
+    bool Sync();
   
 };
 
