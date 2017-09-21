@@ -14,12 +14,24 @@
         <translation>ใหม่</translation>
     </message>
     <message>
+        <source>Copy the currently selected address to the system clipboard</source>
+        <translation>คัดลอกที่อยู่ที่เลือกอยู่ไปยังคลิบบอร์ดของระบบ</translation>
+    </message>
+    <message>
         <source>&amp;Copy</source>
         <translation>คัดลอก</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
         <translation>ปิด</translation>
+    </message>
+    <message>
+        <source>Delete the currently selected address from the list</source>
+        <translation>ลบที่อยู่ที่เลือกไว้ออกจากรายการ</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>ส่งออกข้อมูลที่อยู่ในแถบนี้ไปในไฟล์</translation>
     </message>
     <message>
         <source>&amp;Export</source>
@@ -195,6 +207,10 @@
     <message>
         <source>&amp;Export</source>
         <translation>ส่งออก</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>ส่งออกข้อมูลที่อยู่ในแถบนี้ไปในไฟล์</translation>
     </message>
     </context>
 <context>

@@ -41,9 +41,61 @@
         <source>&amp;Delete</source>
         <translation>&amp;Şterge</translation>
     </message>
+    <message>
+        <source>C&amp;hoose</source>
+        <translation>&amp;Alegeţi</translation>
+    </message>
+    <message>
+        <source>Sending addresses</source>
+        <translation>Adresa destinatarului</translation>
+    </message>
+    <message>
+        <source>Receiving addresses</source>
+        <translation>Adresa de primire</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Acestea sunt adresele tale Bitcoin pentru efectuarea platilor. Intotdeauna verifica atent suma de plata si adresa beneficiarului inainte de a trimite monede.</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>Acestea sunt adresele tale Bitcoin pentru receptionarea platilor. Este recomandat sa folosesti mereu o adresa noua pentru primirea platilor.</translation>
+    </message>
+    <message>
+        <source>&amp;Copy Address</source>
+        <translation>&amp;Copiază adresa</translation>
+    </message>
+    <message>
+        <source>Copy &amp;Label</source>
+        <translation>Copiaza si eticheteaza</translation>
+    </message>
+    <message>
+        <source>&amp;Edit</source>
+        <translation>&amp;Editare</translation>
+    </message>
+    <message>
+        <source>Export Address List</source>
+        <translation>Exportă listă de adrese</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Fisier .csv cu separator - virgula</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>Exportarea a eșuat</translation>
+    </message>
     </context>
 <context>
     <name>AddressTableModel</name>
+    <message>
+        <source>Label</source>
+        <translation>Etichetă</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>Adresă</translation>
+    </message>
     </context>
 <context>
     <name>AskPassphraseDialog</name>
@@ -62,6 +114,30 @@
     <message>
         <source>Repeat new passphrase</source>
         <translation>Repetaţi noua frază de acces</translation>
+    </message>
+    <message>
+        <source>Encrypt wallet</source>
+        <translation>Criptare portofel</translation>
+    </message>
+    <message>
+        <source>Unlock wallet</source>
+        <translation>Deblocare portofel</translation>
+    </message>
+    <message>
+        <source>Decrypt wallet</source>
+        <translation>Decriptare portofel</translation>
+    </message>
+    <message>
+        <source>Change passphrase</source>
+        <translation>Schimbă parola</translation>
+    </message>
+    <message>
+        <source>Confirm wallet encryption</source>
+        <translation>Confirmaţi criptarea portofelului</translation>
+    </message>
+    <message>
+        <source>Wallet encrypted</source>
+        <translation>Portofel criptat</translation>
     </message>
     </context>
 <context>
@@ -1231,12 +1307,24 @@
         <translation>&amp;Salvează imaginea...</translation>
     </message>
     <message>
+        <source>Address</source>
+        <translation>Adresă</translation>
+    </message>
+    <message>
         <source>Amount</source>
         <translation>Cantitate</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Etichetă</translation>
     </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
+    <message>
+        <source>Label</source>
+        <translation>Etichetă</translation>
+    </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
@@ -1547,9 +1635,29 @@
     </context>
 <context>
     <name>TransactionTableModel</name>
+    <message>
+        <source>Label</source>
+        <translation>Etichetă</translation>
+    </message>
     </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Fisier .csv cu separator - virgula</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Etichetă</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>Adresă</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>Exportarea a eșuat</translation>
+    </message>
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>

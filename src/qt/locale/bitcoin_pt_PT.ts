@@ -2162,8 +2162,16 @@
         <translation>O total excede o seu saldo quando a taxa de transação %1 está incluída.</translation>
     </message>
     <message>
+        <source>Duplicate address found: addresses should only be used once each.</source>
+        <translation>Endereço duplicado encontrado: os endereços devem ser usados ​​apenas uma vez.</translation>
+    </message>
+    <message>
         <source>Transaction creation failed!</source>
         <translation>A criação da transação falhou!</translation>
+    </message>
+    <message>
+        <source>The transaction was rejected with the following reason: %1</source>
+        <translation>A transação foi rejeitada pelo seguinte motivo: %1</translation>
     </message>
     <message>
         <source>A fee higher than %1 is considered an absurdly high fee.</source>
@@ -2173,9 +2181,17 @@
         <source>Payment request expired.</source>
         <translation>Pedido de pagamento expirado.</translation>
     </message>
+    <message numerus="yes">
+        <source>%n block(s)</source>
+        <translation><numerusform>%n bloco</numerusform><numerusform>%n blocos</numerusform></translation>
+    </message>
     <message>
         <source>Pay only the required fee of %1</source>
         <translation>Pague apenas a taxa obrigatória de %1</translation>
+    </message>
+    <message numerus="yes">
+        <source>Estimated to begin confirmation within %n block(s).</source>
+        <translation><numerusform>Estimativa para iniciar a confirmação dentro de %n bloco.</numerusform><numerusform>Estimativa para iniciar a confirmação dentro de %n blocos.</numerusform></translation>
     </message>
     <message>
         <source>Warning: Invalid Bitcoin address</source>
@@ -2188,6 +2204,10 @@
     <message>
         <source>Confirm custom change address</source>
         <translation>Confirmar endereço de troco personalizado</translation>
+    </message>
+    <message>
+        <source>The address you selected for change is not part of this wallet. Any or all funds in your wallet may be sent to this address. Are you sure?</source>
+        <translation>O endereço que você selecionou para alterar não faz parte desta carteira. Qualquer ou todos os fundos em sua carteira podem ser enviados para este endereço. Você tem certeza?</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -2272,7 +2292,11 @@
         <source>Memo:</source>
         <translation>Memorando:</translation>
     </message>
-    </context>
+    <message>
+        <source>Enter a label for this address to add it to your address book</source>
+        <translation>Digite um rótulo para este endereço para adicioná-lo ao seu catálogo de endereços</translation>
+    </message>
+</context>
 <context>
     <name>SendConfirmationDialog</name>
     <message>
@@ -2446,6 +2470,10 @@
 </context>
 <context>
     <name>TransactionDesc</name>
+    <message numerus="yes">
+        <source>Open for %n more block(s)</source>
+        <translation><numerusform>Abrir para %n ou mais bloco</numerusform><numerusform>Abrir para %n ou mais blocos</numerusform></translation>
+    </message>
     <message>
         <source>Open until %1</source>
         <translation>Aberto até %1</translation>
@@ -2485,6 +2513,10 @@
     <message>
         <source>, has not been successfully broadcast yet</source>
         <translation>, ainda não foi transmitido com sucesso</translation>
+    </message>
+    <message numerus="yes">
+        <source>, broadcast through %n node(s)</source>
+        <translation><numerusform>, transmitido através de %n nó</numerusform><numerusform>, transmitido através de %n nós</numerusform></translation>
     </message>
     <message>
         <source>Date</source>
@@ -2744,6 +2776,10 @@
         <translation>Outras</translation>
     </message>
     <message>
+        <source>Enter address or label to search</source>
+        <translation>Digite o endereço ou o rótulo para pesquisar</translation>
+    </message>
+    <message>
         <source>Min amount</source>
         <translation>Valor mín.</translation>
     </message>
@@ -2845,7 +2881,11 @@
 </context>
 <context>
     <name>WalletFrame</name>
-    </context>
+    <message>
+        <source>No wallet has been loaded.</source>
+        <translation>Nenhuma carteira foi carregada</translation>
+    </message>
+</context>
 <context>
     <name>WalletModel</name>
     <message>
@@ -2969,6 +3009,10 @@
     <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Executar o comando quando uma transação da carteira muda (no comando, %s é substituído pela Id. da Transação)</translation>
+    </message>
+    <message>
+        <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
+        <translation>Por favor verifique que a data e hora do seu computador estão certos! Se o relógio não estiver certo, o %s não funcionará corretamente.</translation>
     </message>
     <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
@@ -3497,6 +3541,10 @@
     <message>
         <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
         <translation>Atenção: Versões desconhecidas de blocos estão a ser mineradas! É possível que regras desconhecias estão a ser efetuadas</translation>
+    </message>
+    <message>
+        <source>%s is set very high!</source>
+        <translation>%s está demasiado elevado!</translation>
     </message>
     <message>
         <source>(default: %s)</source>

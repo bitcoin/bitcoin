@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Tasto destro per modificare l'indirizzo o l'etichetta</translation>
+        <translation>Fare clic con il tasto destro del mouse per modificare l'indirizzo o l'etichetta</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -882,6 +882,10 @@
         <translation>Modulo</translation>
     </message>
     <message>
+        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</source>
+        <translation>Transazioni recenti potrebbero non essere visibili ancora, perciò il saldo del tuo portafoglio potrebbe non essere corretto. Questa informazione risulterà corretta quando il tuo portafoglio avrà terminato la sincronizzazione con la rete bitcoin, come indicato in dettaglio più sotto.</translation>
+    </message>
+    <message>
         <source>Number of blocks left</source>
         <translation>Numero di blocchi mancanti</translation>
     </message>
@@ -1431,6 +1435,14 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
 </context>
 <context>
     <name>QObject::QObject</name>
+    <message>
+        <source>Error: Specified data directory "%1" does not exist.</source>
+        <translation>Errore: La cartella dati "%1" specificata non esiste.</translation>
+    </message>
+    <message>
+        <source>Error: Cannot parse configuration file: %1. Only use key=value syntax.</source>
+        <translation>Errore: impossibile interpretare il file di configurazione: %1. Usare esclusivamente la sintassi chiave=valore.</translation>
+    </message>
     <message>
         <source>Error: %1</source>
         <translation>Errore: %1</translation>
@@ -2165,6 +2177,10 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <source>Pay only the required fee of %1</source>
         <translation> Paga solamente la commissione richiesta di %1</translation>
     </message>
+    <message numerus="yes">
+        <source>Estimated to begin confirmation within %n block(s).</source>
+        <translation><numerusform>Inizio delle conferme stimato entro %n blocchi.</numerusform><numerusform>Inizio delle conferme stimato entro %n blocchi.</numerusform></translation>
+    </message>
     <message>
         <source>Warning: Invalid Bitcoin address</source>
         <translation>Attenzione: Indirizzo Bitcoin non valido</translation>
@@ -2593,6 +2609,10 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Non confermata</translation>
     </message>
     <message>
+        <source>Abandoned</source>
+        <translation>Abbandonato</translation>
+    </message>
+    <message>
         <source>Confirmed (%1 confirmations)</source>
         <translation>Confermata (%1 conferme)</translation>
     </message>
@@ -2607,6 +2627,10 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>Received with</source>
         <translation>Ricevuto tramite</translation>
+    </message>
+    <message>
+        <source>Received from</source>
+        <translation>Ricevuto da</translation>
     </message>
     <message>
         <source>Sent to</source>
@@ -2714,6 +2738,10 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>Min amount</source>
         <translation>Importo minimo</translation>
+    </message>
+    <message>
+        <source>Abandon transaction</source>
+        <translation>Abbandona transazione </translation>
     </message>
     <message>
         <source>Copy address</source>
