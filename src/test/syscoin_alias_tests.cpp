@@ -759,12 +759,13 @@ BOOST_AUTO_TEST_CASE (generate_aliasprunewithoffer)
 	GenerateBlocks(5);
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5, "node3");
+	AliasNew("node3", "aliasprunewithoffer3", "pubdata", "privdata");
 	StopNode("node3");
 	AliasNew("node1", "aliasprunewithoffer", "pubdata", "privdata");
 	AliasNew("node1", "aliasprunewithoffer1", "pubdata", "privdata");
 	AliasNew("node2", "aliasprunewithoffer2", "pubdata", "privdata");
 	string offerguid = OfferNew("node1", "aliasprunewithoffer", "category", "title", "1", "0.05", "description", "SYS");
-	string escrowguid = EscrowNew("node2", "node1", "aliasprunewithoffer2", offerguid, "1", "aliasprunewithoffer1");
+	string escrowguid = EscrowNew("node2", "node1", "aliasprunewithoffer2", offerguid, "1", "aliasprunewithoffer3");
 	EscrowRelease("node2", "buyer", escrowguid);
 	EscrowClaimRelease("node1", escrowguid);
 	// last created alias should have furthest expiry
@@ -840,6 +841,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	AliasNew("node1", "aliasexpire", "somedata");
 	AliasNew("node1", "aliasexpire0", "somedata");
 	AliasNew("node2", "aliasexpire1", "somedata");
+	AliasNew("node3", "aliasexpire3", "somedata");
 	string aliasexpirenode2address = AliasNew("node2", "aliasexpirednode2", "somedata");
 	string offerguid = OfferNew("node1", "aliasexpire0", "category", "title", "100", "1.00", "description", "USD");
 	OfferAddWhitelist("node1", offerguid, "aliasexpirednode2", "5");
@@ -851,7 +853,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	AliasNew("node1", "aliasexpire2", "pubdata", "privdata");
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress aliasexpirednode2 3000"), runtime_error);
 	GenerateBlocks(10);	
-	string escrowguid = EscrowNew("node2", "node1", "aliasexpirednode2", offerguid, "1", "aliasexpire", "5");
+	string escrowguid = EscrowNew("node2", "node1", "aliasexpirednode2", offerguid, "1", "aliasexpire3", "5");
 	string aliasexpire2node2address = AliasNew("node2", "aliasexpire2node2", "pubdata", "privdata");
 	string certgoodguid = CertNew("node1", "aliasexpire2", "certtitle", "privdata", "pubdata");
 	ExpireAlias("aliasexpirednode2");
