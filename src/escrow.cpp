@@ -910,7 +910,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			if(theEscrow.nQty <= 0)
 				theEscrow.nQty = 1;
 
-			if (GetOffer( theEscrow.offerTuple, dbOffer))
+			if (GetOffer( theEscrow.offerTuple.first, dbOffer))
 			{
 				if(dbOffer.bPrivate && !dbOffer.linkWhitelist.IsNull())
 				{
