@@ -174,14 +174,16 @@ public:
     CEscrowDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "escrow", nCacheSize, fMemory, fWipe) {}
 
     bool WriteEscrow( const std::vector<std::vector<unsigned char> > &vvchArgs, const CEscrow& escrow) {
+		bool writeState = WriteEscrowLastTXID(escrow.vchEscrow, escrow.txHash) && Write(make_pair(std::string("escrowi"), CNameTXIDTuple(escrow.vchEscrow, escrow.txHash)), escrow);
 		WriteEscrowIndex(escrow, vvchArgs);
-        return Write(make_pair(std::string("escrowi"), CNameTXIDTuple(escrow.vchEscrow, escrow.txHash)), escrow) && WriteEscrowLastTXID(escrow.vchEscrow, escrow.txHash);
+        return writeState;
     }
     bool EraseEscrow(const CNameTXIDTuple& escrowTuple) {
+		bool eraseState = Erase(make_pair(std::string("escrowi"), escrowTuple));
 		EraseEscrowLastTXID(escrowTuple.first);
 		EraseEscrowIndex(escrowTuple.first);
 		EraseEscrowFeedbackIndex(escrowTuple.first);
-        return Erase(make_pair(std::string("escrowi"), escrowTuple));
+        return eraseState;
     }
     bool ReadEscrow(const CNameTXIDTuple& escrowTuple, CEscrow& escrow) {
         return Read(make_pair(std::string("escrowi"), escrowTuple), escrow);

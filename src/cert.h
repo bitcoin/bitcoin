@@ -107,15 +107,17 @@ public:
     CCertDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "certificates", nCacheSize, fMemory, fWipe) {}
 
     bool WriteCert(const CCert& cert) {
+		bool writeState = WriteCertLastTXID(cert.vchCert, cert.txHash) && Write(make_pair(std::string("certi"), CNameTXIDTuple(cert.vchCert, cert.txHash)), cert);
 		WriteCertIndex(cert);
-        return Write(make_pair(std::string("certi"), CNameTXIDTuple(cert.vchCert, cert.txHash)), cert) && WriteCertLastTXID(cert.vchCert, cert.txHash);
+        return writeState;
     }
 
     bool EraseCert(const CNameTXIDTuple& certTuple) {
+		bool eraseState = Erase(make_pair(std::string("certi"), certTuple));
 		EraseCertLastTXID(certTuple.first);
 		EraseCertFirstTXID(certTuple.first);
 		EraseCertIndex(certTuple.first);
-        return Erase(make_pair(std::string("certi"), certTuple));
+        return eraseState;
     }
 
     bool ReadCert(const CNameTXIDTuple& certTuple, CCert& cert) {

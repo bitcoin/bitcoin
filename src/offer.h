@@ -268,14 +268,16 @@ public:
 	COfferDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "offers", nCacheSize, fMemory, fWipe) {}
 
 	bool WriteOffer(const COffer& offer) {
+		bool writeState = WriteOfferLastTXID(offer.vchOffer, offer.txHash) && Write(make_pair(std::string("offeri"), CNameTXIDTuple(offer.vchOffer, offer.txHash)), offer);
 		WriteOfferIndex(offer);
-		return Write(make_pair(std::string("offeri"), CNameTXIDTuple(offer.vchOffer, offer.txHash)), offer) && WriteOfferLastTXID(offer.vchOffer, offer.txHash);
+		return writeState;
 	}
 
 	bool EraseOffer(const CNameTXIDTuple& offerTuple) {
+		bool eraseState = Erase(make_pair(std::string("offeri"), offerTuple));
 		EraseOfferLastTXID(offerTuple.first);
 		EraseOfferIndex(offerTuple.first);
-	    return Erase(make_pair(std::string("offeri"), offerTuple));
+	    return eraseState;
 	}
 
 	bool ReadOffer(const CNameTXIDTuple& offerTuple, COffer& offer) {

@@ -154,21 +154,24 @@ public:
     CAliasDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "aliases", nCacheSize, fMemory, fWipe) {
     }
 	bool WriteAlias(const CAliasIndex& alias) {
+		bool writeState = Write(make_pair(std::string("namei"), CNameTXIDTuple(alias.vchAlias, alias.txHash)), alias);
 		WriteAliasIndex(alias);
-		return Write(make_pair(std::string("namei"), CNameTXIDTuple(alias.vchAlias, alias.txHash)), alias);
+		return writeState;
 	}
 	bool WriteAlias(const CAliasUnprunable &aliasUnprunable, const std::vector<unsigned char>& address, const CAliasIndex& alias) {
 		if(address.empty())
 			return false;	
+		bool writeState = WriteAliasLastTXID(alias.vchAlias, alias.txHash) && Write(make_pair(std::string("namei"), CNameTXIDTuple(alias.vchAlias, alias.txHash)), alias) && Write(make_pair(std::string("namea"), address), alias.vchAlias) && Write(make_pair(std::string("nameu"), alias.vchAlias), aliasUnprunable);
 		WriteAliasIndex(alias);
-		return Write(make_pair(std::string("namei"), CNameTXIDTuple(alias.vchAlias, alias.txHash)), alias) && Write(make_pair(std::string("namea"), address), alias.vchAlias) && Write(make_pair(std::string("nameu"), alias.vchAlias), aliasUnprunable) && WriteAliasLastTXID(alias.vchAlias, alias.txHash);
+		return writeState;
 	}
 
 
 	bool EraseAlias(const CNameTXIDTuple& aliasTuple) {
+		bool eraseState = Erase(make_pair(std::string("namei"), CNameTXIDTuple(aliasTuple.first, aliasTuple.second)));
 		EraseAliasLastTXID(aliasTuple.first);
 		EraseAliasIndex(aliasTuple.first);
-		return Erase(make_pair(std::string("namei"), CNameTXIDTuple(aliasTuple.first, aliasTuple.second)));
+		return eraseState;
 	}
 	bool ReadAlias(const CNameTXIDTuple& aliasTuple, CAliasIndex& alias) {
 		return Read(make_pair(std::string("namei"), CNameTXIDTuple(aliasTuple.first, aliasTuple.second)), alias);
