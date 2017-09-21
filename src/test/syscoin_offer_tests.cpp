@@ -370,14 +370,15 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate_editcurrency)
 	escrowguid = OfferAccept("node1", "node2", "buyeraliascurrency", offerguid, "4");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + escrowguid));
 	nTotal = AmountFromValue(find_value(r.get_obj(), "total"));
-	nArbiterFee = AmountFromValue(find_value(r.get_obj(), "arbiterfee"));
+	nArbiterFee = AmountFromValue(find_value(r.get
+		_obj(), "arbiterfee"));
 	nNetworkFee = AmountFromValue(find_value(r.get_obj(), "networkfee"));
 	nTotal = nTotal - nArbiterFee - nNetworkFee;
 	// 100000.0 SYS/BTC
 	BOOST_CHECK_EQUAL(nTotal, AmountFromValue(4*0.00001000*100000.0));
 
 	// try to update currency and accept in same block, ensure payment uses old currency not new
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate selleraliascurrency " + offerguid + " category title 90 0.2 desc EUR"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate selleraliascurrency " + offerguid + " category title 93 0.2 desc EUR"));
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "escrownew buyeraliascurrency " + offerguid + " 10 arbiteraliascurrency"));
 	const UniValue &arr = r.get_array();
 	escrowguid = arr[1].get_str();
