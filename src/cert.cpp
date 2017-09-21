@@ -974,10 +974,9 @@ UniValue certinfo(const UniValue& params, bool fHelp) {
 	if (!DecodeCertTx(tx, op, nOut, vvch))
 		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 4604 - " + _("Failed to decode cert"));
 
-
 	CAliasIndex alias;
-	if (!GetAlias(txPos.aliasTuple.first, alias))
-		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2516 - " + _("Failed to read xfer alias from alias DB"));
+	if (!GetAlias(txPos.aliasTuple, alias))
+		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2516 - " + _("Failed to read cert alias from alias DB"));
 
 	if(!BuildCertJson(txPos, alias, oCert))
 		oCert.clear();
