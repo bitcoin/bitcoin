@@ -129,8 +129,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "getaddressmempool", 0},
 	{ "escrowrelease", 2 },
 	{ "escrowrefund", 2 },
-	{ "escrowclaimrelease", 1 },
-	{ "escrowclaimrefund", 1 },
+	{ "escrowclaimrelease", 2 },
+	{ "escrowclaimrefund", 2 },
 	
 };
 
