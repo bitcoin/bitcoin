@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE (generate_certpruning)
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), true);
 
 	// should be pruned
-	BOOST_CHECK_THROW(CallRPC("node2", "offerinfo " + guid), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "certinfo " + guid), runtime_error);
 
 	// stop node3
 	StopNode("node3");
