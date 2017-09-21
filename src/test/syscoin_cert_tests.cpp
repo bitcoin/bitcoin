@@ -165,8 +165,8 @@ BOOST_AUTO_TEST_CASE (generate_certpruning)
 	// now it should be expired
 	BOOST_CHECK_THROW(CallRPC("node1",  "certupdate " + guid1 + " title pubdata3 newdata1"), runtime_error);
 	GenerateBlocks(5, "node1");
-	BOOST_CHECK_EQUAL(CertFilter("node1", guid1), false);
-	BOOST_CHECK_EQUAL(CertFilter("node2", guid1), false);
+	BOOST_CHECK_EQUAL(CertFilter("node1", guid1), true);
+	BOOST_CHECK_EQUAL(CertFilter("node2", guid1), true);
 	// and it should say its expired
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "certinfo " + guid1));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), true);
