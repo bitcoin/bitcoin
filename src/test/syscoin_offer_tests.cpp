@@ -370,8 +370,7 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate_editcurrency)
 	escrowguid = OfferAccept("node1", "node2", "buyeraliascurrency", offerguid, "4");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + escrowguid));
 	nTotal = AmountFromValue(find_value(r.get_obj(), "total"));
-	nArbiterFee = AmountFromValue(find_value(r.get
-		_obj(), "arbiterfee"));
+	nArbiterFee = AmountFromValue(find_value(r.get_obj(), "arbiterfee"));
 	nNetworkFee = AmountFromValue(find_value(r.get_obj(), "networkfee"));
 	nTotal = nTotal - nArbiterFee - nNetworkFee;
 	// 100000.0 SYS/BTC
