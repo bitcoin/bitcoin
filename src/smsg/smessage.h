@@ -14,7 +14,7 @@
 
 
 
-const unsigned int SMSG_HDR_LEN        = 104;               // length of unencrypted header, 4 + 2 + 1 + 8 + 16 + 33 + 32 + 4 +4
+const unsigned int SMSG_HDR_LEN        = 104;               // length of unencrypted header, 4 + 2 + 1 + 8 + 16 + 33 + 32 + 4 + 4
 const unsigned int SMSG_PL_HDR_LEN     = 1+20+65+4;         // length of encrypted header in payload
 
 const unsigned int SMSG_BUCKET_LEN     = 60 * 10;           // in seconds
@@ -68,7 +68,6 @@ public:
     {
         nPayload = 0;
         pPayload = nullptr;
-        paid = false;
     };
 
     ~SecureMessage()
@@ -88,8 +87,6 @@ public:
     uint8_t  nonce[4];
     uint32_t nPayload;
     uint8_t* pPayload;
-    bool     paid;
-
 };
 #pragma pack(pop)
 
@@ -127,7 +124,7 @@ public:
         return timestamp < y.timestamp;
     }
 
-    int64_t timestamp;    // doesn't need to be full 64 bytes?
+    int64_t timestamp;    // TODO doesn't need to be full 64 bytes?
     uint8_t sample[8];    // first 8 bytes of payload - a hash
     int64_t offset;       // offset
 };

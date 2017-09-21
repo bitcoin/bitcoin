@@ -95,6 +95,14 @@ public:
     {
         return (exp_addrType == "stealthaddress");
     }
+    bool operator()(const CKeyID256 &id) const
+    {
+        return (exp_addrType == "pubkey256");
+    }
+    bool operator()(const CScriptID256 &id) const
+    {
+        return (exp_addrType == "script256");
+    }
     bool operator()(const CNoDestination &no) const
     {
         return (exp_addrType == "none");

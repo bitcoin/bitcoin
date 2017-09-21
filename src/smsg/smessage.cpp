@@ -2357,7 +2357,7 @@ int SecureMsgReceive(CNode *pfrom, std::vector<uint8_t> &vchData)
     memcpy(&bktTime, &vchData[4], 8);
 
     // Check bktTime ()
-    //  bucket may not exist yet - will be created when messages are added
+    //  Bucket may not exist yet - will be created when messages are added
     int64_t now = GetTime();
     if (bktTime > now + SMSG_TIME_LEEWAY)
     {
@@ -2443,7 +2443,7 @@ int SecureMsgReceive(CNode *pfrom, std::vector<uint8_t> &vchData)
             return 1;
         };
 
-        itb->second.nLockCount  = 0; // this node has received data from peer, release lock
+        itb->second.nLockCount  = 0; // This node has received data from peer, release lock
         itb->second.nLockPeerId = 0;
         itb->second.hashBucket();
     } // cs_smsg
@@ -2478,15 +2478,9 @@ int SecureMsgStoreUnscanned(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPaylo
 
     int64_t now = GetTime();
     if (psmsg->timestamp > now + SMSG_TIME_LEEWAY)
-    {
-        LogPrintf("Message > now.\n");
-        return 1;
-    } else
+        return errorN(1, "%s: Message > now.", __func__);
     if (psmsg->timestamp < now - SMSG_RETENTION)
-    {
-        LogPrintf("Message < SMSG_RETENTION.\n");
-        return 1;
-    };
+        return errorN(1, "%s: Message < SMSG_RETENTION.", __func__);
 
     int64_t bucket = psmsg->timestamp - (psmsg->timestamp % SMSG_BUCKET_LEN);
 
@@ -2542,15 +2536,9 @@ int SecureMsgStore(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload, bool 
 
     int64_t now = GetTime();
     if (psmsg->timestamp > now + SMSG_TIME_LEEWAY)
-    {
-        LogPrintf("Message > now.\n");
-        return 1;
-    } else
+        return errorN(1, "%s: Message > now.", __func__);
     if (psmsg->timestamp < now - SMSG_RETENTION)
-    {
-        LogPrintf("Message < SMSG_RETENTION.\n");
-        return 1;
-    };
+        return errorN(1, "%s: Message < SMSG_RETENTION.", __func__);
 
     int64_t bucket = psmsg->timestamp - (psmsg->timestamp % SMSG_BUCKET_LEN);
 

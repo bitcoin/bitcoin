@@ -988,8 +988,6 @@ static bool sortMsgDesc(const std::pair<int64_t, UniValue> &a, const std::pair<i
 
 static int64_t strToEpoch(const char *input)
 {
-    // strptime is posix only, boost::posix_time needs an extra lib linked
-    
     int year, month, day, hours, minutes, seconds;
     int n = sscanf(input, "%d-%d-%dT%d:%d:%d", 
         &year, &month, &day, &hours, &minutes, &seconds);

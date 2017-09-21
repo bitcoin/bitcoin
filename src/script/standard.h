@@ -27,6 +27,16 @@ public:
     CScriptID() : uint160() {}
     CScriptID(const CScript& in);
     CScriptID(const uint160& in) : uint160(in) {}
+    
+    bool Set(const uint256& in);
+};
+
+class CScriptID256 : public uint256
+{
+public:
+    CScriptID256() : uint256() {}
+    //CScriptID256(const CScript& in); // Clashes with CScriptID(const CScript& in)
+    CScriptID256(const uint256& in) : uint256(in) {}
 };
 
 static const unsigned int MAX_OP_RETURN_RELAY = 83; //!< bytes (+1 for OP_RETURN, +2 for the pushdata opcodes)
@@ -56,7 +66,8 @@ enum txnouttype
     TX_WITNESS_V0_SCRIPTHASH,
     TX_WITNESS_V0_KEYHASH,
     
-    TX_PUBKEY256HASH,
+    TX_SCRIPTHASH256,
+    TX_PUBKEYHASH256,
     TX_TIMELOCKED_SCRIPTHASH,
     TX_TIMELOCKED_PUBKEYHASH,
     TX_TIMELOCKED_MULTISIG,
@@ -76,7 +87,7 @@ public:
  *  * CScriptID: TX_SCRIPTHASH destination
  *  A CTxDestination is the internal data type encoded in a CBitcoinAddress
  */
-typedef boost::variant<CNoDestination, CKeyID, CScriptID, CStealthAddress, CExtKeyPair> CTxDestination;
+typedef boost::variant<CNoDestination, CKeyID, CScriptID, CStealthAddress, CExtKeyPair, CKeyID256, CScriptID256> CTxDestination;
 
 const char* GetTxnOutputType(txnouttype t);
 

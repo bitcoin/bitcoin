@@ -1027,9 +1027,8 @@ bool CHDWallet::GetPubKey(const CKeyID &address, CPubKey& pkOut) const
 
 bool CHDWallet::GetKeyFromPool(CPubKey &key)
 {
-    
     // return a key from the internal chain
-    return 0 == NewKeyFromAccount(key, true, false, nullptr);
+    return 0 == NewKeyFromAccount(key, true, false, false, nullptr);
 };
 
 bool CHDWallet::HaveStealthAddress(const CStealthAddress &sxAddr) const
@@ -1417,7 +1416,14 @@ isminetype CHDWallet::IsMine(const CScript &scriptPubKey, CKeyID &keyID,
         break;
     case TX_PUBKEYHASH:
     case TX_TIMELOCKED_PUBKEYHASH:
-        keyID = CKeyID(uint160(vSolutions[0]));
+    case TX_PUBKEYHASH256:
+        if (vSolutions[0].size() == 20)
+            keyID = CKeyID(uint160(vSolutions[0]));
+        else
+        if (vSolutions[0].size() == 32)
+            keyID = CKeyID(uint256(vSolutions[0]));
+        else
+            return ISMINE_NO;
         if (sigversion != SIGVERSION_BASE) {
             CPubKey pubkey;
             if (GetPubKey(keyID, pubkey) && !pubkey.IsCompressed()) {
@@ -1430,8 +1436,16 @@ isminetype CHDWallet::IsMine(const CScript &scriptPubKey, CKeyID &keyID,
         break;
     case TX_SCRIPTHASH:
     case TX_TIMELOCKED_SCRIPTHASH:
+    case TX_SCRIPTHASH256:
     {
-        CScriptID scriptID = CScriptID(uint160(vSolutions[0]));
+        CScriptID scriptID;
+        if (vSolutions[0].size() == 20)
+            scriptID = CScriptID(uint160(vSolutions[0]));
+        else
+        if (vSolutions[0].size() == 32)
+            scriptID.Set(uint256(vSolutions[0]));
+        else
+            return ISMINE_NO;
         CScript subscript;
         if (GetCScript(scriptID, subscript)) {
             isminetype ret = ::IsMine(*((CKeyStore*)this), subscript, isInvalid);
@@ -1466,9 +1480,6 @@ isminetype CHDWallet::IsMine(const CScript &scriptPubKey, CKeyID &keyID,
             return ISMINE_SPENDABLE;
         break;
     }
-    case TX_PUBKEY256HASH:
-        LogPrintf("%s: TODO TX_PUBKEY256HASH.\n");
-        return ISMINE_NO;
     default:
         return ISMINE_NO;
     };
@@ -2864,6 +2875,11 @@ bool CHDWallet::SetChangeDest(const CCoinControl *coinControl, CTempRecipient &r
                     
                     scriptStaking = GetScriptForDestination(idk);
                 };
+                
+                // Switch to sha256 hash
+                CKeyID256 idChange = r.pkTo.GetID256();
+                r.address = idChange;
+                r.scriptPubKey = GetScriptForDestination(idChange);
                 
                 if (scriptStaking.IsPayToPublicKeyHash())
                 {
@@ -6505,7 +6521,7 @@ int CHDWallet::ExtKeyGetIndex(CExtKeyAccount *sea, uint32_t &index)
     return 0;
 };
 
-int CHDWallet::NewKeyFromAccount(CHDWalletDB *pwdb, const CKeyID &idAccount, CPubKey &pkOut, bool fInternal, bool fHardened, const char *plabel)
+int CHDWallet::NewKeyFromAccount(CHDWalletDB *pwdb, const CKeyID &idAccount, CPubKey &pkOut, bool fInternal, bool fHardened, bool f256bit, const char *plabel)
 {
     // If plabel is not null, add to mapAddressBook
     
@@ -6591,13 +6607,21 @@ int CHDWallet::NewKeyFromAccount(CHDWalletDB *pwdb, const CKeyID &idAccount, CPu
             LogPrintf("Warning: %s - missing path value.\n", __func__);
             vPath.clear();
         };
-        SetAddressBook(pwdb, idKey, plabel, "receive", vPath, false);
+        
+        if (f256bit)
+        {
+            CKeyID256 idKey256 = pkOut.GetID256();
+            SetAddressBook(pwdb, idKey256, plabel, "receive", vPath, true);
+        } else
+        {
+            SetAddressBook(pwdb, idKey, plabel, "receive", vPath, true);
+        };
     };
 
     return 0;
 };
 
-int CHDWallet::NewKeyFromAccount(CPubKey &pkOut, bool fInternal, bool fHardened, const char *plabel)
+int CHDWallet::NewKeyFromAccount(CPubKey &pkOut, bool fInternal, bool fHardened, bool f256bit, const char *plabel)
 {
     {
         LOCK(cs_wallet);
@@ -6606,7 +6630,7 @@ int CHDWallet::NewKeyFromAccount(CPubKey &pkOut, bool fInternal, bool fHardened,
         if (!wdb.TxnBegin())
             return errorN(1, "%s TxnBegin failed.", __func__);
 
-        if (0 != NewKeyFromAccount(&wdb, idDefaultAccount, pkOut, fInternal, fHardened, plabel))
+        if (0 != NewKeyFromAccount(&wdb, idDefaultAccount, pkOut, fInternal, fHardened, f256bit, plabel))
         {
             wdb.TxnAbort();
             return 1;
@@ -6743,7 +6767,7 @@ int CHDWallet::NewStealthKeyFromAccount(
             return errorN(1, "%s WriteExtAccount failed.", __func__);
     };
     
-    SetAddressBook(pwdb, sxAddr, sLabel, "receive", vPath, false);
+    SetAddressBook(pwdb, sxAddr, sLabel, "receive", vPath, true);
     
     akStealthOut = aks;
     return 0;
@@ -6848,7 +6872,7 @@ int CHDWallet::NewExtKeyFromAccount(CHDWalletDB *pwdb, const CKeyID &idAccount,
             vPath.push_back(idIndex); // first entry is the index to the account / master key
             
         vPath.push_back(nNewChildNo);
-        SetAddressBook(pwdb, sekOut->kp, plabel, "receive", vPath, false);
+        SetAddressBook(pwdb, sekOut->kp, plabel, "receive", vPath, true);
     };
 
     if (!pwdb->WriteExtAccount(idAccount, *sea)
@@ -10326,6 +10350,13 @@ bool CHDWallet::CreateCoinStake(unsigned int nBits, int64_t nTime, int nBlockHei
                     {
                         return error("%s: Unknown coldstakingaddress type.", __func__);
                     };
+                    
+                    // Get new key from the active internal chain
+                    CPubKey pkSpend;
+                    if (0 != GetChangeAddress(pkSpend))
+                        return error("%s: GetChangeAddress failed.", __func__);
+                    CKeyID256 id256 = pkSpend.GetID256();
+                    scriptPubKeyKernel = GetScriptForDestination(id256);
                     
                     if (scriptStaking.IsPayToPublicKeyHash())
                     {

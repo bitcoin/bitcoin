@@ -31,6 +31,15 @@ class CKeyID : public uint160
 public:
     CKeyID() : uint160() {}
     CKeyID(const uint160& in) : uint160(in) {}
+    
+    CKeyID(const uint256& in);
+};
+
+class CKeyID256 : public uint256
+{
+public:
+    CKeyID256() : uint256() {}
+    CKeyID256(const uint256& in) : uint256(in) {}
 };
 
 typedef uint256 ChainCode;
@@ -143,6 +152,12 @@ public:
     {
         return CKeyID(Hash160(vch, vch + size()));
     }
+
+    CKeyID256 GetID256() const
+    {
+        return CKeyID256(HashSha256(vch, vch + size()));
+    }
+
 
     //! Get the 256-bit hash of this public key.
     uint256 GetHash() const

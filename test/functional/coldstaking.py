@@ -159,7 +159,7 @@ class ColdStakingTest(ParticlTestFramework):
         tx = nodes[0].getrawtransaction(txid2, True)
         
         hashCoinstake = ''
-        hashOther = ''
+        hashSpend = ''
         found = False
         for out in tx['vout']:
             asm = out['scriptPubKey']['asm']
@@ -167,16 +167,17 @@ class ColdStakingTest(ParticlTestFramework):
             if asm[0] != 'OP_ISCOINSTAKE':
                 continue
             hashCoinstake = asm[4]
-            hashOther = asm[10]
+            hashSpend = asm[10]
         
         assert(hashCoinstake == '1ac277619e43a7e0558c612f86b918104742f65c')
-        assert(hashOther == '804100d12950368cd21b654ca558cf31d9a9ffe1')
+        assert(hashSpend == '55e9e9b1aebf76f2a2ce9d7af6267be996bc235e3a65fa0f87a345267f9b3895')
+        
         
         ro = nodes[0].deriverangekeys(1, 1, coldstakingaddr)
         assert(ro[0] == keyhash_to_p2pkh(hex_str_to_bytes(hashCoinstake)))
         
-        ro = nodes[0].deriverangekeys(0, 0, ekChange)
-        assert(ro[0] == keyhash_to_p2pkh(hex_str_to_bytes(hashOther)))
+        ro = nodes[0].deriverangekeys(0, 0, ekChange, 'false', 'false', 'false', 'true')
+        assert(ro[0] == keyhash_to_p2pkh(hex_str_to_bytes(hashSpend)))
         
         
         
@@ -217,7 +218,7 @@ class ColdStakingTest(ParticlTestFramework):
         tx = nodes[0].getrawtransaction(txid3, True)
         
         hashCoinstake = ''
-        hashOther = ''
+        hashSpend = ''
         found = False
         for out in tx['vout']:
             asm = out['scriptPubKey']['asm']
@@ -225,13 +226,13 @@ class ColdStakingTest(ParticlTestFramework):
             if asm[0] != 'OP_ISCOINSTAKE':
                 continue
             hashCoinstake = asm[4]
-            hashOther = asm[10]
+            hashSpend = asm[10]
         
         ro = nodes[0].deriverangekeys(2, 2, coldstakingaddr)
         assert(ro[0] == keyhash_to_p2pkh(hex_str_to_bytes(hashCoinstake)))
-        
-        ro = nodes[0].deriverangekeys(1, 1, ekChange)
-        assert(ro[0] == keyhash_to_p2pkh(hex_str_to_bytes(hashOther)))
+         
+        ro = nodes[0].deriverangekeys(1, 1, ekChange, 'false', 'false', 'false', 'true')
+        assert(ro[0] == keyhash_to_p2pkh(hex_str_to_bytes(hashSpend)))
         
         ro = nodes[0].extkey('list', 'true')
         fFound = False
@@ -268,7 +269,6 @@ class ColdStakingTest(ParticlTestFramework):
         assert(ro['watchonly_staked_balance'] > 0)
         
         ro = nodes[0].extkey('list', 'true')
-        print("list0", json.dumps(ro, indent=4, default=self.jsonDecimal))
         fFound = False
         for ek in ro:
             if ek['id'] == 'xBDBWFLeYrbBhPRSKHzVwN61rwUGwCXvUB':

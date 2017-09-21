@@ -445,6 +445,7 @@ public:
         consensus.BIP65Height = 0;
         consensus.BIP66Height = 0;
         consensus.OpIsCoinstakeTime = 1544572800; // 2018-12-12, TODO: lower
+        consensus.fAllowOpIsCoinstakeWithP2PKH = false;
         
         
         consensus.powLimit = uint256S("000000000000bfffffffffffffffffffffffffffffffffffffffffffffffffff");
@@ -520,6 +521,8 @@ public:
 
         base58Prefixes[PUBKEY_ADDRESS]     = {0x38}; // P
         base58Prefixes[SCRIPT_ADDRESS]     = {0x3c};
+        base58Prefixes[PUBKEY_ADDRESS_256] = {0x39};
+        base58Prefixes[SCRIPT_ADDRESS_256] = {0x3d};
         base58Prefixes[SECRET_KEY]         = {0x6c};
         base58Prefixes[EXT_PUBLIC_KEY]     = {0x69, 0x6e, 0x82, 0xd1}; // PPAR
         base58Prefixes[EXT_SECRET_KEY]     = {0x8f, 0x1d, 0xae, 0xb8}; // XPAR
@@ -528,17 +531,17 @@ public:
         base58Prefixes[EXT_ACC_HASH]       = {0x17}; // A
         base58Prefixes[EXT_PUBLIC_KEY_BTC] = {0x04, 0x88, 0xB2, 0x1E}; // xpub
         base58Prefixes[EXT_SECRET_KEY_BTC] = {0x04, 0x88, 0xAD, 0xE4}; // xprv
-        base58Prefixes[EXT_PUBLIC_KEY_SDC] = {0xEE, 0x80, 0x28, 0x6A};
-        base58Prefixes[EXT_SECRET_KEY_SDC] = {0xEE, 0x80, 0x31, 0xE8};
         
-        bech32Prefixes[PUBKEY_ADDRESS].assign   ("ph","ph"+2);
-        bech32Prefixes[SCRIPT_ADDRESS].assign   ("pr","pr"+2);
-        bech32Prefixes[SECRET_KEY].assign       ("px","px"+2);
-        bech32Prefixes[EXT_PUBLIC_KEY].assign   ("pep","pep"+3);
-        bech32Prefixes[EXT_SECRET_KEY].assign   ("pex","pex"+3);
-        bech32Prefixes[STEALTH_ADDRESS].assign  ("ps","ps"+2);
-        bech32Prefixes[EXT_KEY_HASH].assign     ("pek","pek"+3);
-        bech32Prefixes[EXT_KEY_HASH].assign     ("pea","pea"+3);
+        bech32Prefixes[PUBKEY_ADDRESS].assign       ("ph","ph"+2);
+        bech32Prefixes[SCRIPT_ADDRESS].assign       ("pr","pr"+2);
+        bech32Prefixes[PUBKEY_ADDRESS_256].assign   ("pl","pl"+2);
+        bech32Prefixes[SCRIPT_ADDRESS_256].assign   ("pj","pj"+2);
+        bech32Prefixes[SECRET_KEY].assign           ("px","px"+2);
+        bech32Prefixes[EXT_PUBLIC_KEY].assign       ("pep","pep"+3);
+        bech32Prefixes[EXT_SECRET_KEY].assign       ("pex","pex"+3);
+        bech32Prefixes[STEALTH_ADDRESS].assign      ("ps","ps"+2);
+        bech32Prefixes[EXT_KEY_HASH].assign         ("pek","pek"+3);
+        bech32Prefixes[EXT_KEY_HASH].assign         ("pea","pea"+3);
 
         vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_main, pnSeed6_main + ARRAYLEN(pnSeed6_main));
 
@@ -589,6 +592,7 @@ public:
         consensus.BIP65Height = 0;
         consensus.BIP66Height = 0;
         consensus.OpIsCoinstakeTime = 0;
+        consensus.fAllowOpIsCoinstakeWithP2PKH = true;
         
         consensus.powLimit = uint256S("000000000005ffffffffffffffffffffffffffffffffffffffffffffffffffff");
         
@@ -656,27 +660,29 @@ public:
         vDevFundSettings.push_back(std::make_pair(0, DevFundSettings("rTvv9vsbu269mjYYEecPYinDG8Bt7D86qD", 10, 60)));
         
         
-        base58Prefixes[PUBKEY_ADDRESS]     = {118}; // p
-        base58Prefixes[SCRIPT_ADDRESS]     = {122};
-        base58Prefixes[SECRET_KEY]         = {46};
+        base58Prefixes[PUBKEY_ADDRESS]     = {0x76}; // p
+        base58Prefixes[SCRIPT_ADDRESS]     = {0x7a};
+        base58Prefixes[PUBKEY_ADDRESS_256] = {0x77};
+        base58Prefixes[SCRIPT_ADDRESS_256] = {0x7b};
+        base58Prefixes[SECRET_KEY]         = {0x2e};
         base58Prefixes[EXT_PUBLIC_KEY]     = {0xe1, 0x42, 0x78, 0x00}; // ppar
         base58Prefixes[EXT_SECRET_KEY]     = {0x04, 0x88, 0x94, 0x78}; // xpar
-        base58Prefixes[STEALTH_ADDRESS]    = {21}; // T
-        base58Prefixes[EXT_KEY_HASH]       = {137}; // x
-        base58Prefixes[EXT_ACC_HASH]       = {83};  // a
+        base58Prefixes[STEALTH_ADDRESS]    = {0x15}; // T
+        base58Prefixes[EXT_KEY_HASH]       = {0x89}; // x
+        base58Prefixes[EXT_ACC_HASH]       = {0x53}; // a
         base58Prefixes[EXT_PUBLIC_KEY_BTC] = {0x04, 0x35, 0x87, 0xCF}; // tpub
         base58Prefixes[EXT_SECRET_KEY_BTC] = {0x04, 0x35, 0x83, 0x94}; // tprv
-        base58Prefixes[EXT_PUBLIC_KEY_SDC] = {0x76, 0xC0, 0xFD, 0xFB};
-        base58Prefixes[EXT_SECRET_KEY_SDC] = {0x76, 0xC1, 0x07, 0x7A};
         
-        bech32Prefixes[PUBKEY_ADDRESS].assign   ("tph","tph"+3);
-        bech32Prefixes[SCRIPT_ADDRESS].assign   ("tpr","tpr"+3);
-        bech32Prefixes[SECRET_KEY].assign       ("tpx","tpx"+3);
-        bech32Prefixes[EXT_PUBLIC_KEY].assign   ("tpep","tpep"+4);
-        bech32Prefixes[EXT_SECRET_KEY].assign   ("tpex","tpex"+4);
-        bech32Prefixes[STEALTH_ADDRESS].assign  ("tps","tps"+3);
-        bech32Prefixes[EXT_KEY_HASH].assign     ("tpek","tpek"+4);
-        bech32Prefixes[EXT_KEY_HASH].assign     ("tpea","tpea"+4);
+        bech32Prefixes[PUBKEY_ADDRESS].assign       ("tph","tph"+3);
+        bech32Prefixes[SCRIPT_ADDRESS].assign       ("tpr","tpr"+3);
+        bech32Prefixes[PUBKEY_ADDRESS_256].assign   ("tpl","tpl"+3);
+        bech32Prefixes[SCRIPT_ADDRESS_256].assign   ("tpj","tpj"+3);
+        bech32Prefixes[SECRET_KEY].assign           ("tpx","tpx"+3);
+        bech32Prefixes[EXT_PUBLIC_KEY].assign       ("tpep","tpep"+4);
+        bech32Prefixes[EXT_SECRET_KEY].assign       ("tpex","tpex"+4);
+        bech32Prefixes[STEALTH_ADDRESS].assign      ("tps","tps"+3);
+        bech32Prefixes[EXT_KEY_HASH].assign         ("tpek","tpek"+4);
+        bech32Prefixes[EXT_KEY_HASH].assign         ("tpea","tpea"+4);
         
 
         vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_test, pnSeed6_test + ARRAYLEN(pnSeed6_test));
@@ -713,6 +719,7 @@ public:
         consensus.BIP65Height = 1351; // BIP65 activated on regtest (Used in rpc activation tests)
         consensus.BIP66Height = 1251; // BIP66 activated on regtest (Used in rpc activation tests)
         consensus.OpIsCoinstakeTime = 0;
+        consensus.fAllowOpIsCoinstakeWithP2PKH = false;
         
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
@@ -778,27 +785,29 @@ public:
             }
         };
         
-        base58Prefixes[PUBKEY_ADDRESS]     = {118}; // p
-        base58Prefixes[SCRIPT_ADDRESS]     = {122};
-        base58Prefixes[SECRET_KEY]         = {46};
+        base58Prefixes[PUBKEY_ADDRESS]     = {0x76}; // p
+        base58Prefixes[SCRIPT_ADDRESS]     = {0x7a};
+        base58Prefixes[PUBKEY_ADDRESS_256] = {0x77};
+        base58Prefixes[SCRIPT_ADDRESS_256] = {0x7b};
+        base58Prefixes[SECRET_KEY]         = {0x2e};
         base58Prefixes[EXT_PUBLIC_KEY]     = {0xe1, 0x42, 0x78, 0x00}; // ppar
         base58Prefixes[EXT_SECRET_KEY]     = {0x04, 0x88, 0x94, 0x78}; // xpar
-        base58Prefixes[STEALTH_ADDRESS]    = {21}; // T
-        base58Prefixes[EXT_KEY_HASH]       = {137}; // x
-        base58Prefixes[EXT_ACC_HASH]       = {83};  // a
+        base58Prefixes[STEALTH_ADDRESS]    = {0x15}; // T
+        base58Prefixes[EXT_KEY_HASH]       = {0x89}; // x
+        base58Prefixes[EXT_ACC_HASH]       = {0x53}; // a
         base58Prefixes[EXT_PUBLIC_KEY_BTC] = {0x04, 0x35, 0x87, 0xCF}; // tpub
         base58Prefixes[EXT_SECRET_KEY_BTC] = {0x04, 0x35, 0x83, 0x94}; // tprv
-        base58Prefixes[EXT_PUBLIC_KEY_SDC] = {0x76, 0xC0, 0xFD, 0xFB};
-        base58Prefixes[EXT_SECRET_KEY_SDC] = {0x76, 0xC1, 0x07, 0x7A};
         
-        bech32Prefixes[PUBKEY_ADDRESS].assign   ("tph","tph"+3);
-        bech32Prefixes[SCRIPT_ADDRESS].assign   ("tpr","tpr"+3);
-        bech32Prefixes[SECRET_KEY].assign       ("tpx","tpx"+3);
-        bech32Prefixes[EXT_PUBLIC_KEY].assign   ("tpep","tpep"+4);
-        bech32Prefixes[EXT_SECRET_KEY].assign   ("tpex","tpex"+4);
-        bech32Prefixes[STEALTH_ADDRESS].assign  ("tps","tps"+3);
-        bech32Prefixes[EXT_KEY_HASH].assign     ("tpek","tpek"+4);
-        bech32Prefixes[EXT_KEY_HASH].assign     ("tpea","tpea"+4);
+        bech32Prefixes[PUBKEY_ADDRESS].assign       ("tph","tph"+3);
+        bech32Prefixes[SCRIPT_ADDRESS].assign       ("tpr","tpr"+3);
+        bech32Prefixes[PUBKEY_ADDRESS_256].assign   ("tpl","tpl"+3);
+        bech32Prefixes[SCRIPT_ADDRESS_256].assign   ("tpj","tpj"+3);
+        bech32Prefixes[SECRET_KEY].assign           ("tpx","tpx"+3);
+        bech32Prefixes[EXT_PUBLIC_KEY].assign       ("tpep","tpep"+4);
+        bech32Prefixes[EXT_SECRET_KEY].assign       ("tpex","tpex"+4);
+        bech32Prefixes[STEALTH_ADDRESS].assign      ("tps","tps"+3);
+        bech32Prefixes[EXT_KEY_HASH].assign         ("tpek","tpek"+4);
+        bech32Prefixes[EXT_KEY_HASH].assign         ("tpea","tpea"+4);
 
         chainTxData = ChainTxData{
             0,

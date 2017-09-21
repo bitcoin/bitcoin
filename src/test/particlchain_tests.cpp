@@ -149,20 +149,33 @@ BOOST_AUTO_TEST_CASE(opiscoinstake_test)
     keystoreB.AddKey(kB);
     
     CPubKey pkB = kB.GetPubKey();
-    CKeyID idB = pkB.GetID();
+    CKeyID256 idB = pkB.GetID256();
     
     CScript scriptSignA = CScript() << OP_DUP << OP_HASH160 << ToByteVector(idA) << OP_EQUALVERIFY << OP_CHECKSIG;
-    CScript scriptSignB = CScript() << OP_DUP << OP_HASH160 << ToByteVector(idB) << OP_EQUALVERIFY << OP_CHECKSIG;
+    //CScript scriptSignB = CScript() << OP_DUP << OP_HASH160 << ToByteVector(idB) << OP_EQUALVERIFY << OP_CHECKSIG;
+    CScript scriptSignB = CScript() << OP_DUP << OP_SHA256 << ToByteVector(idB) << OP_EQUALVERIFY << OP_CHECKSIG;
     
     CScript script = CScript()
         << OP_ISCOINSTAKE << OP_IF
         << OP_DUP << OP_HASH160 << ToByteVector(idA) << OP_EQUALVERIFY << OP_CHECKSIG
         << OP_ELSE
-        << OP_DUP << OP_HASH160 << ToByteVector(idB) << OP_EQUALVERIFY << OP_CHECKSIG
+        << OP_DUP << OP_SHA256 << ToByteVector(idB) << OP_EQUALVERIFY << OP_CHECKSIG
         << OP_ENDIF;
     
     
     BOOST_CHECK(HasIsCoinstakeOp(script));
+    
+    BOOST_CHECK(!IsSpendScriptP2PKH(script));
+    
+    
+    CScript scriptFail1 = CScript()
+        << OP_ISCOINSTAKE << OP_IF
+        << OP_DUP << OP_HASH160 << ToByteVector(idA) << OP_EQUALVERIFY << OP_CHECKSIG
+        << OP_ELSE
+        << OP_DUP << OP_HASH160 << ToByteVector(idA) << OP_EQUALVERIFY << OP_CHECKSIG
+        << OP_ENDIF;
+    BOOST_CHECK(IsSpendScriptP2PKH(scriptFail1));
+    
     
     CScript scriptTest, scriptTestB;
     BOOST_CHECK(GetCoinstakeScriptPath(script, scriptTest));

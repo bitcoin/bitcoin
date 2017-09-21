@@ -185,6 +185,7 @@ enum opcodetype
     // template matching params
     OP_SMALLINTEGER = 0xfa,
     OP_PUBKEYS = 0xfb,
+    OP_PUBKEYHASH256 = 0xfc,
     OP_PUBKEYHASH = 0xfd,
     OP_PUBKEY = 0xfe,
 
@@ -635,6 +636,9 @@ public:
     
     bool IsPayToPublicKeyHash() const;
     bool IsPayToScriptHash() const;
+    bool IsPayToPublicKeyHash(size_t ofs) const;
+    bool IsPayToPublicKeyHash256() const;
+    bool IsPayToScriptHash256() const;
     bool IsPayToTimeLockedScriptHash() const;
     bool IsPayToWitnessScriptHash() const;
     bool IsWitnessProgram(int& version, std::vector<unsigned char>& program) const;

@@ -113,7 +113,14 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, bool& 
     }
     case TX_PUBKEYHASH:
     case TX_TIMELOCKED_PUBKEYHASH:
-        keyID = CKeyID(uint160(vSolutions[0]));
+    case TX_PUBKEYHASH256:
+        if (vSolutions[0].size() == 20)
+            keyID = CKeyID(uint160(vSolutions[0]));
+        else
+        if (vSolutions[0].size() == 32)
+            keyID = CKeyID(uint256(vSolutions[0]));
+        else
+            return ISMINE_NO;
         if (sigversion != SIGVERSION_BASE) {
             CPubKey pubkey;
             if (keystore.GetPubKey(keyID, pubkey) && !pubkey.IsCompressed()) {
@@ -126,8 +133,16 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, bool& 
         break;
     case TX_SCRIPTHASH:
     case TX_TIMELOCKED_SCRIPTHASH:
+    case TX_SCRIPTHASH256:
     {
-        CScriptID scriptID = CScriptID(uint160(vSolutions[0]));
+        CScriptID scriptID;
+        if (vSolutions[0].size() == 20)
+            scriptID = CScriptID(uint160(vSolutions[0]));
+        else
+        if (vSolutions[0].size() == 32)
+            scriptID.Set(uint256(vSolutions[0]));
+        else
+            return ISMINE_NO;
         CScript subscript;
         if (keystore.GetCScript(scriptID, subscript)) {
             isminetype ret = IsMine(keystore, subscript, isInvalid);

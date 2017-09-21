@@ -79,8 +79,9 @@ public:
         EXT_ACC_HASH,
         EXT_PUBLIC_KEY_BTC,
         EXT_SECRET_KEY_BTC,
-        EXT_PUBLIC_KEY_SDC,
-        EXT_SECRET_KEY_SDC,
+
+        PUBKEY_ADDRESS_256,
+        SCRIPT_ADDRESS_256,
 
         MAX_BASE58_TYPES
     };

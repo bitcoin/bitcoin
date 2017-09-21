@@ -593,14 +593,25 @@ class WalletParticlTest(ParticlTestFramework):
                 break
         assert(sPath == "m/0/0'")
         
+        ro = nodes[0].getnewaddress('', 'false', 'false', 'true')
+        ro = nodes[0].validateaddress(ro)
+        assert(ro['isvalid'] == True)
+        assert(ro['ismine'] == True)
+        
+        ro = nodes[0].getnewaddress('', 'true', 'false', 'true')
+        ro = nodes[0].validateaddress(ro)
+        assert(ro['address'].startswith('tpl1'))
+        assert(ro['isvalid'] == True)
+        assert(ro['ismine'] == True)
+        
         #sAddrStake = sHardenedAddr
         sAddrStake = 'pomrQeo26xVLV5pnuDYkTUYuABFuP13HHE'
-        sAddrSpend = 'piNdRiuL2BqUA8hh2A6AtEbBkKqKxK13LT'
+        sAddrSpend = 'tpl1vj4wplpq9ct7zmms3tvpr5dah84txlffz9sp5s5w4c7dhh6hvqus29mjpy'
         jsonInput = {'recipe':'ifcoinstake', 'addrstake':sAddrStake, 'addrspend':sAddrSpend}
         
         ro = nodes[0].buildscript(jsonInput)
         scriptHex = ro['hex']
-        assert(scriptHex == 'b86376a914cf3837ef2e493d5b485c7f4536f27415c5cd3b6088ac6776a91493fb2f9e77825e4d38045a2406efd60aac9c956e88ac68')
+        assert(scriptHex == 'b86376a914cf3837ef2e493d5b485c7f4536f27415c5cd3b6088ac6776a82064aae0fc202e17e16f708ad811d1bdb9eab37d2911601a428eae3cdbdf57603988ac68')
         
         
         
@@ -609,7 +620,6 @@ class WalletParticlTest(ParticlTestFramework):
         ro = nodes[2].sendtypeto('part', 'part', outputs, 'comment', 'comment-to', 4, 32, True, coincontrol)
         
         ro = nodes[2].decoderawtransaction(ro['hex']);
-        print(json.dumps(ro, indent=4, default=self.jsonDecimal))
         fFound = False
         for output in ro['vout']:
             if output['type'] != 'standard':

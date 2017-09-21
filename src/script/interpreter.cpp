@@ -1656,6 +1656,31 @@ bool HasIsCoinstakeOp(const CScript &script)
     return false;
 };
 
+bool IsSpendScriptP2PKH(const CScript &script)
+{
+    CScript::const_iterator pc = script.begin();
+    CScript::const_iterator pend = script.end();
+    
+    opcodetype opcode;
+    valtype vchPushValue;
+    
+    bool fFoundOp = false;
+    while (pc < pend)
+    {
+        if (!script.GetOp(pc, opcode, vchPushValue))
+            break;
+        
+        if (!fFoundOp
+            && opcode == OP_ELSE)
+        {
+            size_t ofs = pc - script.begin();
+            return script.IsPayToPublicKeyHash(ofs);
+        };
+    };
+    
+    return false;
+};
+
 bool GetCoinstakeScriptPath(const CScript &scriptIn, CScript &scriptOut)
 {
     CScript::const_iterator pc = scriptIn.begin();

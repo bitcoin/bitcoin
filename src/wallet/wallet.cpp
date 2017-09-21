@@ -112,6 +112,17 @@ public:
             Process(script);
     }
 
+    void operator()(const CKeyID256 &keyId) {
+        //if (keystore.HaveKey(keyId))
+        //    vKeys.push_back(keyId);
+    }
+
+    void operator()(const CScriptID256 &scriptId) {
+        //CScript script;
+        //if (keystore.GetCScript(scriptId, script))
+        //    Process(script);
+    }
+
     void operator()(const CNoDestination &none) {}
 
     void operator()(const CExtKeyPair &none) {}
@@ -1554,6 +1565,7 @@ void CWalletTx::GetAmounts(
     {
         CAmount nCredit = 0;
         CTxDestination address = CNoDestination();
+        CTxDestination addressStake = CNoDestination();
         
         isminetype isMineAll = ISMINE_NO;
         for (const auto txout : tx->vpout)
@@ -1570,6 +1582,14 @@ void CWalletTx::GetAmounts(
             
             if (address.type() == typeid(CNoDestination))
                 ExtractDestination(*txout->GetPScriptPubKey(), address);
+            
+            if (addressStake.type() == typeid(CNoDestination)
+                && HasIsCoinstakeOp(*txout->GetPScriptPubKey()))
+            {
+                CScript scriptOut;
+                if (GetCoinstakeScriptPath(*txout->GetPScriptPubKey(), scriptOut))
+                    ExtractDestination(scriptOut, addressStake);
+            };
         };
         
         if (!(isMineAll & filter))
@@ -1578,7 +1598,7 @@ void CWalletTx::GetAmounts(
         // Recalc fee as GetValueOut might include foundation fund output
         nFee = nDebit - nCredit;
         
-        COutputEntry output = {address, nCredit, 1, isMineAll};
+        COutputEntry output = {address, nCredit, 1, isMineAll, addressStake};
         listStaked.push_back(output);
         return;
     };
@@ -1610,6 +1630,7 @@ void CWalletTx::GetAmounts(
             // In either case, we need to get the destination address
             const CScript &scriptPubKey = ((CTxOutStandard*)txout)->scriptPubKey;
             CTxDestination address;
+            CTxDestination addressStake = CNoDestination();
 
             if (!ExtractDestination(scriptPubKey, address) && !scriptPubKey.IsUnspendable())
             {
@@ -1617,8 +1638,15 @@ void CWalletTx::GetAmounts(
                          this->GetHash().ToString());
                 address = CNoDestination();
             };
-            
-            COutputEntry output = {address, txout->GetValue(), (int)i, fIsMine};
+
+            if (HasIsCoinstakeOp(scriptPubKey))
+            {
+                CScript scriptOut;
+                if (GetCoinstakeScriptPath(scriptPubKey, scriptOut))
+                    ExtractDestination(scriptOut, addressStake);
+            };
+
+            COutputEntry output = {address, txout->GetValue(), (int)i, fIsMine, addressStake};
             
             if (nFee)
 
@@ -1650,6 +1678,7 @@ void CWalletTx::GetAmounts(
 
             // In either case, we need to get the destination address
             CTxDestination address;
+            CTxDestination addressStake = CNoDestination();
 
             if (!ExtractDestination(txout.scriptPubKey, address) && !txout.scriptPubKey.IsUnspendable())
             {
@@ -1657,8 +1686,7 @@ void CWalletTx::GetAmounts(
                          this->GetHash().ToString());
                 address = CNoDestination();
             }
-
-            COutputEntry output = {address, txout.nValue, (int)i, fIsMine};
+            COutputEntry output = {address, txout.nValue, (int)i, fIsMine, addressStake};
 
             // If we are debited by the transaction, add the output as a "sent" entry
             if (nDebit > 0)

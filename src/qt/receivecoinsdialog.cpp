@@ -160,6 +160,9 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
         else
         if (ui->cbxAddressType->currentText() == "Extended")
             addrType = AddressTableModel::ADDR_EXT;
+        else
+        if (ui->cbxAddressType->currentText() == "Standard 256bit")
+            addrType = AddressTableModel::ADDR_STANDARD256;
         
         address = model->getAddressTableModel()->addRow(AddressTableModel::Receive, label, "", addrType);
         

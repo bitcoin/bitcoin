@@ -109,6 +109,8 @@ class CBitcoinAddress : public CBase58Data {
 public:
     bool Set(const CKeyID &id, bool fBech32 = false);
     bool Set(const CScriptID &id, bool fBech32 = false);
+    bool Set(const CKeyID256 &id, bool fBech32 = false);
+    bool Set(const CScriptID256 &id, bool fBech32 = false);
     bool Set(const CKeyID &id, CChainParams::Base58Type prefix, bool fBech32 = false);
     bool Set(const CStealthAddress &sx, bool fBech32 = false);
     bool Set(const CExtKeyPair &ek, bool fBech32 = false);
@@ -128,6 +130,7 @@ public:
 
     CTxDestination Get() const;
     bool GetKeyID(CKeyID &keyID) const;
+    bool GetKeyID(CKeyID256 &keyID) const;
     bool GetKeyID(CKeyID &keyID, CChainParams::Base58Type prefix) const;
     bool GetIndexKey(uint160 &hashBytes, int &type) const;
     bool IsScript() const;
@@ -157,7 +160,7 @@ public:
         key.Encode(vch);
         SetData(Params().Base58Prefix(Type), vch, vch+Size);
     }
-    
+
     int Set58(const char *base58)
     {
         std::vector<uint8_t> vchBytes;

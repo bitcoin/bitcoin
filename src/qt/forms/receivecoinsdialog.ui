@@ -88,6 +88,9 @@
          <layout class="QHBoxLayout" name="horizontalLayout">
           <item>
            <widget class="QComboBox" name="cbxAddressType">
+            <property name="locale">
+             <locale language="English" country="UnitedKingdom"/>
+            </property>
             <item>
              <property name="text">
               <string>Standard</string>
@@ -101,6 +104,11 @@
             <item>
              <property name="text">
               <string>Extended</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Standard 256bit</string>
              </property>
             </item>
            </widget>

@@ -12,12 +12,15 @@
 
 #include "blind.h"
 #include "anon.h"
+#include "timedata.h"
 #include "util.h"
+
 
 // TODO remove the following dependencies
 #include "chain.h"
 #include "coins.h"
 #include "utilmoneystr.h"
+
 
 extern bool fBusyImporting;
 extern bool fSkipRangeproof;
@@ -192,10 +195,21 @@ bool CheckValue(CValidationState &state, CAmount nValue, CAmount &nValueOut)
     return true;
 }
 
-bool CheckStandardOutput(CValidationState &state, const CTxOutStandard *p, CAmount &nValueOut)
+bool CheckStandardOutput(CValidationState &state, const Consensus::Params& consensusParams, const CTxOutStandard *p, CAmount &nValueOut)
 {
     if (!CheckValue(state, p->nValue, nValueOut))
         return false;
+    
+    if (HasIsCoinstakeOp(p->scriptPubKey))
+    {
+        if (GetAdjustedTime() < consensusParams.OpIsCoinstakeTime)
+            return state.DoS(10, false, REJECT_INVALID, "bad-txns-vout-opiscoinstake");
+        if (!consensusParams.fAllowOpIsCoinstakeWithP2PKH)
+        {
+            if (IsSpendScriptP2PKH(p->scriptPubKey))
+                return state.DoS(10, false, REJECT_INVALID, "bad-txns-vout-opiscoinstake-spend-p2pkh");
+        };
+    };
     
     return true;
 }
@@ -283,6 +297,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fChe
     
     if (tx.IsParticlVersion())
     {
+        const Consensus::Params& consensusParams = Params().GetConsensus();
         if (tx.vpout.empty())
             return state.DoS(10, false, REJECT_INVALID, "bad-txns-vpout-empty");
         if (!tx.vout.empty())
@@ -296,7 +311,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fChe
             switch (txout->nVersion)
             {
                 case OUTPUT_STANDARD:
-                    if (!CheckStandardOutput(state, (CTxOutStandard*) txout.get(), nValueOut))
+                    if (!CheckStandardOutput(state, consensusParams, (CTxOutStandard*) txout.get(), nValueOut))
                         return false;
                     nStandardOutputs++;
                     break;
@@ -509,28 +524,27 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
                 return state.Invalid(false, REJECT_INVALID, "commit-failed");
             vpCommitsIn.push_back(&plainInCommitment);
         };
-        
+
         if (nPlainValueOut > 0)
         {
             if (!secp256k1_pedersen_commit(secp256k1_ctx_blind, &plainOutCommitment, blindPlain, (uint64_t) nPlainValueOut, secp256k1_generator_h))
                 return state.Invalid(false, REJECT_INVALID, "commit-failed");
             vpCommitsOut.push_back(&plainOutCommitment);
         };
-        
+
         secp256k1_pedersen_commitment *pc;
         for (auto &txout : tx.vpout)
         {
             if ((pc = txout->GetPCommitment()))
                 vpCommitsOut.push_back(pc);
         };
-        
-        
+
         int rv = secp256k1_pedersen_verify_tally(secp256k1_ctx_blind,
             vpCommitsIn.data(), vpCommitsIn.size(), vpCommitsOut.data(), vpCommitsOut.size());
         
         if (rv != 1)
             return state.DoS(100, false, REJECT_INVALID, "bad-commitment-sum");
     };
-    
+
     return true;
 }

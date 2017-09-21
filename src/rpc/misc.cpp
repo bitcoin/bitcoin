@@ -206,6 +206,18 @@ public:
         obj.push_back(Pair("TODO", true));
         return obj;
     }
+
+    UniValue operator()(const CKeyID256 &ekp) const {
+        UniValue obj(UniValue::VOBJ);
+        obj.push_back(Pair("TODO", true));
+        return obj;
+    }
+
+    UniValue operator()(const CScriptID256 &sxAddr) const {
+        UniValue obj(UniValue::VOBJ);
+        obj.push_back(Pair("TODO", true));
+        return obj;
+    }
 };
 #endif
 

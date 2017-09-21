@@ -90,6 +90,7 @@ bool EditAddressDialog::saveCurrentRow()
                 ui->addressEdit->text(),
                 ui->cbxType->currentText() == "Stealth" ? AddressTableModel::ADDR_STEALTH
                     : ui->cbxType->currentText() == "Extended" ? AddressTableModel::ADDR_EXT
+                    : ui->cbxType->currentText() == "Standard 256bit" ? AddressTableModel::ADDR_STANDARD256
                     : AddressTableModel::ADDR_STANDARD);
         break;
     case NewSendingAddress:

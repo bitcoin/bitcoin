@@ -221,10 +221,40 @@ bool CScript::IsPayToScriptHash() const
             (*this)[22] == OP_EQUAL);
 }
 
+bool CScript::IsPayToPublicKeyHash(size_t ofs) const
+{
+    // Extra-fast test for pay-to-script-hash CScripts:
+    return (this->size() - ofs >= 26 && // +1 for OP_END
+            (*this)[ofs + 0] == OP_DUP &&
+            (*this)[ofs + 1] == OP_HASH160 &&
+            (*this)[ofs + 2] == 0x14 &&
+            (*this)[ofs + 23] == OP_EQUALVERIFY &&
+            (*this)[ofs + 24] == OP_CHECKSIG);
+}
+
+bool CScript::IsPayToPublicKeyHash256() const
+{
+    // Extra-fast test for pay-to-pubkey-hash CScripts:
+    return (this->size() == 37 &&
+        (*this)[0] == OP_DUP &&
+        (*this)[1] == OP_HASH160 &&
+        (*this)[2] == 0x20 &&
+        (*this)[35] == OP_EQUALVERIFY &&
+        (*this)[36] == OP_CHECKSIG);
+}
+
+bool CScript::IsPayToScriptHash256() const
+{
+    // Extra-fast test for pay-to-script-hash CScripts:
+    return (this->size() == 35 &&
+            (*this)[0] == OP_SHA256 &&
+            (*this)[1] == 0x20 &&
+            (*this)[34] == OP_EQUAL);
+}
+
 bool CScript::IsPayToTimeLockedScriptHash() const
 {
     // Extra-fast test for pay-to-script-hash CScripts:
-    
     int offset = 7;
     return (this->size() == 30 &&
             (*this)[offset + 0] == OP_HASH160 &&

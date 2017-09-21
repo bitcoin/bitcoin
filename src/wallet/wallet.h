@@ -209,6 +209,7 @@ struct COutputEntry
     CAmount amount;
     int vout;
     isminetype ismine;
+    CTxDestination destStake;
 };
 
 extern const uint256 ABANDON_HASH;

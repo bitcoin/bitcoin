@@ -27,8 +27,11 @@ def byte_to_base58(b, version):
 # TODO: def base58_decode
 
 def keyhash_to_p2pkh(hash, main = False):
-    assert (len(hash) == 20)
-    version = 56 if main else 118
+    assert (len(hash) == 20 or len(hash) == 32)
+    if len(hash) == 20:
+        version = 56 if main else 118
+        return byte_to_base58(hash, version)
+    version = 57 if main else 119
     return byte_to_base58(hash, version)
 
 def scripthash_to_p2sh(hash, main = False):

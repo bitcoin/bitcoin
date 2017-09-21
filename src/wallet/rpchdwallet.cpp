@@ -2302,15 +2302,16 @@ UniValue deriverangekeys(const JSONRPCRequest &request)
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
         return NullUniValue;
     
-    if (request.fHelp || request.params.size() < 1 ||request.params.size() > 6)
+    if (request.fHelp || request.params.size() < 1 ||request.params.size() > 7)
         throw std::runtime_error(
-            "deriverangekeys <start> [end] [key/id] [hardened] [save] [add_to_addressbook]\n"
+            "deriverangekeys <start> [end] [key/id] [hardened] [save] [add_to_addressbook] [256bithash]\n"
             "<start> start from key.\n"
             "[end] stop deriving after key, default set to derive one key.\n"
             "[key/id] account to derive from, default external chain of current account.\n"
             "[hardened] derive hardened keys, default false.\n"
             "[save] save derived keys to the wallet, default false.\n"
             "[add_to_addressbook] add derived keys to address book, only applies when saving keys, default false.\n"
+            "[256bithash] Display addresses from sha256 hash of public keys.\n"
             "Derive keys from the specified chain.\n"
             "Wallet must be unlocked if save or hardened options are set.\n");
     
@@ -2339,7 +2340,6 @@ UniValue deriverangekeys(const JSONRPCRequest &request)
     if (request.params.size() > 3)
     {
         std::string s = request.params[3].get_str();
-        
         if (!part::GetStringBool(s, fHardened))
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Unknown argument for hardened: %s.", s.c_str()));
     };
@@ -2348,7 +2348,6 @@ UniValue deriverangekeys(const JSONRPCRequest &request)
     if (request.params.size() > 4)
     {
         std::string s = request.params[4].get_str();
-        
         if (!part::GetStringBool(s, fSave))
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Unknown argument for save: %s.", s.c_str()));
     };
@@ -2357,9 +2356,16 @@ UniValue deriverangekeys(const JSONRPCRequest &request)
     if (request.params.size() > 5)
     {
         std::string s = request.params[5].get_str();
-        
         if (!part::GetStringBool(s, fAddToAddressBook))
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf(_("Unknown argument for add_to_addressbook: %s."), s.c_str()));
+    };
+    
+    bool f256bit = false;
+    if (request.params.size() > 6)
+    {
+        std::string s = request.params[6].get_str();
+        if (!part::GetStringBool(s, f256bit))
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf(_("Unknown argument for 256bithash: %s."), s.c_str()));
     };
     
     if (!fSave && fAddToAddressBook)
@@ -2422,7 +2428,7 @@ UniValue deriverangekeys(const JSONRPCRequest &request)
                 && addr.IsValid(CChainParams::EXT_KEY_HASH)
                 && addr.GetKeyID(idk, CChainParams::EXT_KEY_HASH))
             {
-                
+                // idk is set
             } else
             if (eKey58.Set58(sInKey.c_str()) == 0)
             {
@@ -2477,8 +2483,17 @@ UniValue deriverangekeys(const JSONRPCRequest &request)
             if (fHardened)
                 SetHardenedBit(nChildOut);
             
+            
             CKeyID idk = newKey.GetID();
-            result.push_back(CBitcoinAddress(idk).ToString());
+            CKeyID256 idk256;
+            if (f256bit)
+            {
+                idk256 = newKey.GetID256();
+                result.push_back(CBitcoinAddress(idk256).ToString());
+            } else
+            {
+                result.push_back(CBitcoinAddress(idk).ToString());
+            };
             
             if (fSave)
             {
@@ -2500,7 +2515,10 @@ UniValue deriverangekeys(const JSONRPCRequest &request)
                         vPath.clear();
                     
                     std::string strAccount = "";
-                    pwallet->SetAddressBook(&wdb, idk, strAccount, "receive", vPath, false);
+                    if (f256bit)
+                        pwallet->SetAddressBook(&wdb, idk256, strAccount, "receive", vPath, false);
+                    else
+                        pwallet->SetAddressBook(&wdb, idk, strAccount, "receive", vPath, false);
                 };
             };
         };
@@ -4170,11 +4188,15 @@ UniValue buildscript(const JSONRPCRequest &request)
         
         if (!addrTrue.IsValid())
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid addrstake.");
+        
         if (!addrFalse.IsValid())
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid addrspend.");
+        if (addrFalse.IsValid(CChainParams::PUBKEY_ADDRESS))
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid addrspend, can't be p2pkh.");
         
         CScript scriptTrue = GetScriptForDestination(addrTrue.Get());
         CScript scriptFalse = GetScriptForDestination(addrFalse.Get());
+        // TODO: More checks
         
         scriptOut = CScript() << OP_ISCOINSTAKE << OP_IF;
         scriptOut += scriptTrue;
@@ -4833,7 +4855,7 @@ static const CRPCCommand commands[] =
     
     { "wallet",             "scanchain",                &scanchain,                false,  {} },
     { "wallet",             "reservebalance",           &reservebalance,           false,  {"enabled","amount"} },
-    { "wallet",             "deriverangekeys",          &deriverangekeys,          false,  {"start", "end", "key/id", "hardened", "save", "add_to_addressbook"} },
+    { "wallet",             "deriverangekeys",          &deriverangekeys,          false,  {"start", "end", "key/id", "hardened", "save", "add_to_addressbook", "256bithash"} },
     { "wallet",             "clearwallettransactions",  &clearwallettransactions,  false,  {} },
     
     { "wallet",             "filtertransactions",       &filtertransactions,       false,  {"offset","count","sort_code"} },

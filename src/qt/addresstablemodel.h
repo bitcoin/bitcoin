@@ -46,7 +46,8 @@ public:
     enum AddrType {
         ADDR_STANDARD,
         ADDR_STEALTH,
-        ADDR_EXT
+        ADDR_EXT,
+        ADDR_STANDARD256,
     };
 
     static const QString Send;      /**< Specifies send address */
