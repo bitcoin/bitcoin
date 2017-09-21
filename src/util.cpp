@@ -592,7 +592,8 @@ const boost::filesystem::path &GetBackupsDir()
         if (fs::is_directory(backupsDir)) return backupsDir;
         // Fallback to default path if it doesn't
         LogPrintf("%s: Warning: incorrect parameter -walletbackupsdir, path must exist! Using default path.\n", __func__);
-        SetMiscWarning(_("Warning: incorrect parameter -walletbackupsdir, path must exist! Using default path."));
+        // TODO this causes link errors for dash-cli. I tried to add LIBBITCOIN_COMMON to dash-cli, but with no luck
+        //SetMiscWarning(_("Warning: incorrect parameter -walletbackupsdir, path must exist! Using default path."));
     }
     // Default path
     backupsDir = GetDataDir() / "backups";
