@@ -1717,12 +1717,9 @@ bool BuildOfferJson(const COffer& theOffer, UniValue& oOffer)
 		return false;
 	CTransaction linkTx;
 	COffer linkOffer;
-	CAliasIndex linkAlias;
 	if( !theOffer.linkOfferTuple.first.empty())
 	{
 		if(!GetOffer( theOffer.linkOfferTuple.first, linkOffer))
-			return false;
-		if(!GetAlias(linkOffer.aliasTuple.first, linkAlias))
 			return false;
 	}
 
