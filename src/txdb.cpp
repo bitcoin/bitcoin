@@ -12,6 +12,7 @@
 #include "main.h"
 #include "pow.h"
 #include "uint256.h"
+#include "ui_interface.h"
 
 #include <stdint.h>
 
@@ -367,6 +368,7 @@ bool CCoinsViewDB::Upgrade() {
     }
 
     LogPrintf("Upgrading database...\n");
+    uiInterface.InitMessage(_("Upgrading database...this may take a while"));
     size_t batch_size = 1 << 24;
     CDBBatch batch(db);
     while (pcursor->Valid()) {
