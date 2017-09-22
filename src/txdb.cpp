@@ -372,7 +372,6 @@ bool CCoinsViewDB::Upgrade() {
     size_t batch_size = 1 << 24;
     CDBBatch batch(db);
 
-    int reportDone = 0;
     std::pair<unsigned char, uint256> key;
     std::pair<unsigned char, uint256> prev_key = {DB_COINS, uint256()};
     while (pcursor->Valid()) {
@@ -405,7 +404,6 @@ bool CCoinsViewDB::Upgrade() {
         }
     }
     db.WriteBatch(batch);
-
     db.CompactRange({DB_COINS, uint256()}, key);
 
     return true;

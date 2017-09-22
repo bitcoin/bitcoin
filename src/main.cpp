@@ -1934,7 +1934,7 @@ bool CheckInputs(const CTransaction &tx,
             {
                 const COutPoint &prevout = tx.vin[i].prevout;
                 const Coin& coin = inputs.AccessCoin(prevout);
-                if (!coin.IsSpent())
+                if (coin.IsSpent())
                     LogPrintf("ASSERTION: no inputs available\n");
                 assert(!coin.IsSpent());
 
