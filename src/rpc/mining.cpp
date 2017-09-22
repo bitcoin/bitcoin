@@ -211,14 +211,14 @@ UniValue getmininginfo(const JSONRPCRequest& request)
     LOCK(cs_main);
 
     UniValue obj(UniValue::VOBJ);
-    obj.push_back(Pair("blocks",           (int)chainActive.Height()));
-    obj.push_back(Pair("currentblockweight", (uint64_t)nLastBlockWeight));
-    obj.push_back(Pair("currentblocktx",   (uint64_t)nLastBlockTx));
-    obj.push_back(Pair("difficulty",       (double)GetDifficulty()));
-    obj.push_back(Pair("networkhashps",    getnetworkhashps(request)));
-    obj.push_back(Pair("pooledtx",         (uint64_t)mempool.size()));
-    obj.push_back(Pair("chain",            Params().NetworkIDString()));
-    obj.push_back(Pair("warnings",         GetWarnings("statusbar")));
+    obj.pushKV("blocks",           (int)chainActive.Height());
+    obj.pushKV("currentblockweight", (uint64_t)nLastBlockWeight);
+    obj.pushKV("currentblocktx",   (uint64_t)nLastBlockTx);
+    obj.pushKV("difficulty",       (double)GetDifficulty());
+    obj.pushKV("networkhashps",    getnetworkhashps(request));
+    obj.pushKV("pooledtx",         (uint64_t)mempool.size());
+    obj.pushKV("chain",            Params().NetworkIDString());
+    obj.pushKV("warnings",         GetWarnings("statusbar"));
     return obj;
 }
 
@@ -550,9 +550,9 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
 
         UniValue entry(UniValue::VOBJ);
 
-        entry.push_back(Pair("data", EncodeHexTx(tx)));
-        entry.push_back(Pair("txid", txHash.GetHex()));
-        entry.push_back(Pair("hash", tx.GetWitnessHash().GetHex()));
+        entry.pushKV("data", EncodeHexTx(tx));
+        entry.pushKV("txid", txHash.GetHex());
+        entry.pushKV("hash", tx.GetWitnessHash().GetHex());
 
         UniValue deps(UniValue::VARR);
         for (const CTxIn &in : tx.vin)
@@ -560,23 +560,23 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
             if (setTxIndex.count(in.prevout.hash))
                 deps.push_back(setTxIndex[in.prevout.hash]);
         }
-        entry.push_back(Pair("depends", deps));
+        entry.pushKV("depends", deps);
 
         int index_in_template = i - 1;
-        entry.push_back(Pair("fee", pblocktemplate->vTxFees[index_in_template]));
+        entry.pushKV("fee", pblocktemplate->vTxFees[index_in_template]);
         int64_t nTxSigOps = pblocktemplate->vTxSigOpsCost[index_in_template];
         if (fPreSegWit) {
             assert(nTxSigOps % WITNESS_SCALE_FACTOR == 0);
             nTxSigOps /= WITNESS_SCALE_FACTOR;
         }
-        entry.push_back(Pair("sigops", nTxSigOps));
-        entry.push_back(Pair("weight", GetTransactionWeight(tx)));
+        entry.pushKV("sigops", nTxSigOps);
+        entry.pushKV("weight", GetTransactionWeight(tx));
 
         transactions.push_back(entry);
     }
 
     UniValue aux(UniValue::VOBJ);
-    aux.push_back(Pair("flags", HexStr(COINBASE_FLAGS.begin(), COINBASE_FLAGS.end())));
+    aux.pushKV("flags", HexStr(COINBASE_FLAGS.begin(), COINBASE_FLAGS.end()));
 
     arith_uint256 hashTarget = arith_uint256().SetCompact(pblock->nBits);
 
@@ -586,7 +586,7 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
     aMutable.push_back("prevblock");
 
     UniValue result(UniValue::VOBJ);
-    result.push_back(Pair("capabilities", aCaps));
+    result.pushKV("capabilities", aCaps);
 
     UniValue aRules(UniValue::VARR);
     UniValue vbavailable(UniValue::VOBJ);
@@ -605,7 +605,7 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
             case THRESHOLD_STARTED:
             {
                 const struct VBDeploymentInfo& vbinfo = VersionBitsDeploymentInfo[pos];
-                vbavailable.push_back(Pair(gbt_vb_name(pos), consensusParams.vDeployments[pos].bit));
+                vbavailable.pushKV(gbt_vb_name(pos), consensusParams.vDeployments[pos].bit);
                 if (setClientRules.find(vbinfo.name) == setClientRules.end()) {
                     if (!vbinfo.gbt_force) {
                         // If the client doesn't support this, don't indicate it in the [default] version
@@ -630,10 +630,10 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
             }
         }
     }
-    result.push_back(Pair("version", pblock->nVersion));
-    result.push_back(Pair("rules", aRules));
-    result.push_back(Pair("vbavailable", vbavailable));
-    result.push_back(Pair("vbrequired", int(0)));
+    result.pushKV("version", pblock->nVersion);
+    result.pushKV("rules", aRules);
+    result.pushKV("vbavailable", vbavailable);
+    result.pushKV("vbrequired", int(0));
 
     if (nMaxVersionPreVB >= 2) {
         // If VB is supported by the client, nMaxVersionPreVB is -1, so we won't get here
@@ -643,15 +643,15 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
         aMutable.push_back("version/force");
     }
 
-    result.push_back(Pair("previousblockhash", pblock->hashPrevBlock.GetHex()));
-    result.push_back(Pair("transactions", transactions));
-    result.push_back(Pair("coinbaseaux", aux));
-    result.push_back(Pair("coinbasevalue", (int64_t)pblock->vtx[0]->vout[0].nValue));
-    result.push_back(Pair("longpollid", chainActive.Tip()->GetBlockHash().GetHex() + i64tostr(nTransactionsUpdatedLast)));
-    result.push_back(Pair("target", hashTarget.GetHex()));
-    result.push_back(Pair("mintime", (int64_t)pindexPrev->GetMedianTimePast()+1));
-    result.push_back(Pair("mutable", aMutable));
-    result.push_back(Pair("noncerange", "00000000ffffffff"));
+    result.pushKV("previousblockhash", pblock->hashPrevBlock.GetHex());
+    result.pushKV("transactions", transactions);
+    result.pushKV("coinbaseaux", aux);
+    result.pushKV("coinbasevalue", (int64_t)pblock->vtx[0]->vout[0].nValue);
+    result.pushKV("longpollid", chainActive.Tip()->GetBlockHash().GetHex() + i64tostr(nTransactionsUpdatedLast));
+    result.pushKV("target", hashTarget.GetHex());
+    result.pushKV("mintime", (int64_t)pindexPrev->GetMedianTimePast()+1);
+    result.pushKV("mutable", aMutable);
+    result.pushKV("noncerange", "00000000ffffffff");
     int64_t nSigOpLimit = MAX_BLOCK_SIGOPS_COST;
     int64_t nSizeLimit = MAX_BLOCK_SERIALIZED_SIZE;
     if (fPreSegWit) {
@@ -660,17 +660,17 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
         assert(nSizeLimit % WITNESS_SCALE_FACTOR == 0);
         nSizeLimit /= WITNESS_SCALE_FACTOR;
     }
-    result.push_back(Pair("sigoplimit", nSigOpLimit));
-    result.push_back(Pair("sizelimit", nSizeLimit));
+    result.pushKV("sigoplimit", nSigOpLimit);
+    result.pushKV("sizelimit", nSizeLimit);
     if (!fPreSegWit) {
-        result.push_back(Pair("weightlimit", (int64_t)MAX_BLOCK_WEIGHT));
+        result.pushKV("weightlimit", (int64_t)MAX_BLOCK_WEIGHT);
     }
-    result.push_back(Pair("curtime", pblock->GetBlockTime()));
-    result.push_back(Pair("bits", strprintf("%08x", pblock->nBits)));
-    result.push_back(Pair("height", (int64_t)(pindexPrev->nHeight+1)));
+    result.pushKV("curtime", pblock->GetBlockTime());
+    result.pushKV("bits", strprintf("%08x", pblock->nBits));
+    result.pushKV("height", (int64_t)(pindexPrev->nHeight+1));
 
     if (!pblocktemplate->vchCoinbaseCommitment.empty() && fSupportsSegwit) {
-        result.push_back(Pair("default_witness_commitment", HexStr(pblocktemplate->vchCoinbaseCommitment.begin(), pblocktemplate->vchCoinbaseCommitment.end())));
+        result.pushKV("default_witness_commitment", HexStr(pblocktemplate->vchCoinbaseCommitment.begin(), pblocktemplate->vchCoinbaseCommitment.end()));
     }
 
     return result;
@@ -823,12 +823,12 @@ UniValue estimatesmartfee(const JSONRPCRequest& request)
     FeeCalculation feeCalc;
     CFeeRate feeRate = ::feeEstimator.estimateSmartFee(conf_target, &feeCalc, conservative);
     if (feeRate != CFeeRate(0)) {
-        result.push_back(Pair("feerate", ValueFromAmount(feeRate.GetFeePerK())));
+        result.pushKV("feerate", ValueFromAmount(feeRate.GetFeePerK()));
     } else {
         errors.push_back("Insufficient data or no feerate found");
-        result.push_back(Pair("errors", errors));
+        result.pushKV("errors", errors);
     }
-    result.push_back(Pair("blocks", feeCalc.returnedTarget));
+    result.pushKV("blocks", feeCalc.returnedTarget);
     return result;
 }
 
@@ -899,37 +899,37 @@ UniValue estimaterawfee(const JSONRPCRequest& request)
         UniValue horizon_result(UniValue::VOBJ);
         UniValue errors(UniValue::VARR);
         UniValue passbucket(UniValue::VOBJ);
-        passbucket.push_back(Pair("startrange", round(buckets.pass.start)));
-        passbucket.push_back(Pair("endrange", round(buckets.pass.end)));
-        passbucket.push_back(Pair("withintarget", round(buckets.pass.withinTarget * 100.0) / 100.0));
-        passbucket.push_back(Pair("totalconfirmed", round(buckets.pass.totalConfirmed * 100.0) / 100.0));
-        passbucket.push_back(Pair("inmempool", round(buckets.pass.inMempool * 100.0) / 100.0));
-        passbucket.push_back(Pair("leftmempool", round(buckets.pass.leftMempool * 100.0) / 100.0));
+        passbucket.pushKV("startrange", round(buckets.pass.start));
+        passbucket.pushKV("endrange", round(buckets.pass.end));
+        passbucket.pushKV("withintarget", round(buckets.pass.withinTarget * 100.0) / 100.0);
+        passbucket.pushKV("totalconfirmed", round(buckets.pass.totalConfirmed * 100.0) / 100.0);
+        passbucket.pushKV("inmempool", round(buckets.pass.inMempool * 100.0) / 100.0);
+        passbucket.pushKV("leftmempool", round(buckets.pass.leftMempool * 100.0) / 100.0);
         UniValue failbucket(UniValue::VOBJ);
-        failbucket.push_back(Pair("startrange", round(buckets.fail.start)));
-        failbucket.push_back(Pair("endrange", round(buckets.fail.end)));
-        failbucket.push_back(Pair("withintarget", round(buckets.fail.withinTarget * 100.0) / 100.0));
-        failbucket.push_back(Pair("totalconfirmed", round(buckets.fail.totalConfirmed * 100.0) / 100.0));
-        failbucket.push_back(Pair("inmempool", round(buckets.fail.inMempool * 100.0) / 100.0));
-        failbucket.push_back(Pair("leftmempool", round(buckets.fail.leftMempool * 100.0) / 100.0));
+        failbucket.pushKV("startrange", round(buckets.fail.start));
+        failbucket.pushKV("endrange", round(buckets.fail.end));
+        failbucket.pushKV("withintarget", round(buckets.fail.withinTarget * 100.0) / 100.0);
+        failbucket.pushKV("totalconfirmed", round(buckets.fail.totalConfirmed * 100.0) / 100.0);
+        failbucket.pushKV("inmempool", round(buckets.fail.inMempool * 100.0) / 100.0);
+        failbucket.pushKV("leftmempool", round(buckets.fail.leftMempool * 100.0) / 100.0);
 
         // CFeeRate(0) is used to indicate error as a return value from estimateRawFee
         if (feeRate != CFeeRate(0)) {
-            horizon_result.push_back(Pair("feerate", ValueFromAmount(feeRate.GetFeePerK())));
-            horizon_result.push_back(Pair("decay", buckets.decay));
-            horizon_result.push_back(Pair("scale", (int)buckets.scale));
-            horizon_result.push_back(Pair("pass", passbucket));
+            horizon_result.pushKV("feerate", ValueFromAmount(feeRate.GetFeePerK()));
+            horizon_result.pushKV("decay", buckets.decay);
+            horizon_result.pushKV("scale", (int)buckets.scale);
+            horizon_result.pushKV("pass", passbucket);
             // buckets.fail.start == -1 indicates that all buckets passed, there is no fail bucket to output
-            if (buckets.fail.start != -1) horizon_result.push_back(Pair("fail", failbucket));
+            if (buckets.fail.start != -1) horizon_result.pushKV("fail", failbucket);
         } else {
             // Output only information that is still meaningful in the event of error
-            horizon_result.push_back(Pair("decay", buckets.decay));
-            horizon_result.push_back(Pair("scale", (int)buckets.scale));
-            horizon_result.push_back(Pair("fail", failbucket));
+            horizon_result.pushKV("decay", buckets.decay);
+            horizon_result.pushKV("scale", (int)buckets.scale);
+            horizon_result.pushKV("fail", failbucket);
             errors.push_back("Insufficient data or no feerate found which meets threshold");
-            horizon_result.push_back(Pair("errors",errors));
+            horizon_result.pushKV("errors",errors);
         }
-        result.push_back(Pair(StringForFeeEstimateHorizon(horizon), horizon_result));
+        result.pushKV(StringForFeeEstimateHorizon(horizon), horizon_result);
     }
     return result;
 }
