@@ -158,7 +158,6 @@ public:
     struct Options {
         Options();
         size_t nBlockMaxWeight;
-        size_t nBlockMaxSize;
         CFeeRate blockMinFeeRate;
     };
 
