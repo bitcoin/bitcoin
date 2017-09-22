@@ -1808,7 +1808,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
     if (fHelp || params.size() != 3)
         throw runtime_error(
 		"escrowclaimrelease <escrow guid> <user role> <[{\"txid\":\"id\",\"vout\":n, \"satoshis\":n},...]>\n"
-                        "Claim escrow funds released from buyer or arbiter using escrowrelease. User role represents either 'buyer' or 'arbiter'. Third parameter is array of input (txid, vout, amount) pairs to be used to fund the release of payment.\n"
+                        "Claim escrow funds released from buyer or arbiter using escrowrelease. User role represents either 'seller' or 'arbiter'. Third parameter is array of input (txid, vout, amount) pairs to be used to fund the release of payment.\n"
                         + HelpRequiringPassphrase());
     // gather & validate inputs
     vector<unsigned char> vchEscrow = vchFromValue(params[0]);
@@ -1879,7 +1879,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 			createAddressUniValue.push_back(Pair(sellerAddressPayment.ToString(), ValueFromAmount(nTotal + nBalance)));
 		createAddressUniValue.push_back(Pair(arbiterAddressPayment.ToString(), ValueFromAmount(escrow.nArbiterFee)));
 	}
-	else if (role == "buyer")
+	else if (role == "seller")
 	{
 		// if linked offer send commission to affiliate
 		if (!theOffer.linkOfferTuple.first.empty())
@@ -2313,7 +2313,7 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
     if (fHelp || params.size() != 3)
         throw runtime_error(
 		"escrowclaimrefund <escrow guid> <user role> <[{\"txid\":\"id\",\"vout\":n, \"satoshis\":n},...]>\n"
-                        "Claim escrow funds released from seller or arbiter using escrowrefund. User role represents either 'seller' or 'arbiter'. Third parameter is array of input (txid, vout, amount) pairs to be used to fund the refund of payment.\n"
+                        "Claim escrow funds released from seller or arbiter using escrowrefund. User role represents either 'buyer' or 'arbiter'. Third parameter is array of input (txid, vout, amount) pairs to be used to fund the refund of payment.\n"
                         + HelpRequiringPassphrase());
     // gather & validate inputs
     vector<unsigned char> vchEscrow = vchFromValue(params[0]);
@@ -2366,7 +2366,7 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 		createAddressUniValue.push_back(Pair(buyerAddressPayment.ToString(), ValueFromAmount(nTotal + nBalance)));
 		createAddressUniValue.push_back(Pair(arbiterAddressPayment.ToString(), ValueFromAmount(escrow.nArbiterFee)));
 	}
-	else if (role == "seller")
+	else if (role == "buyer")
 	{
 		createAddressUniValue.push_back(Pair(buyerAddressPayment.ToString(), ValueFromAmount(nTotal + nBalance + escrow.nArbiterFee)));
 	}
