@@ -9209,7 +9209,7 @@ bool CHDWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const C
     return res;
 };
 
-void CHDWallet::AvailableBlindedCoins(std::vector<COutputR>& vCoins, bool fOnlySafe, const CCoinControl *coinControl, const CAmount& nMinimumAmount, const CAmount& nMaximumAmount, const CAmount& nMinimumSumAmount, const uint64_t& nMaximumCount, const int& nMinDepth, const int& nMaxDepth) const
+void CHDWallet::AvailableBlindedCoins(std::vector<COutputR>& vCoins, bool fOnlySafe, const CCoinControl *coinControl, const CAmount& nMinimumAmount, const CAmount& nMaximumAmount, const CAmount& nMinimumSumAmount, const uint64_t& nMaximumCount, const int& nMinDepth, const int& nMaxDepth, bool fIncludeImmature) const
 {
     vCoins.clear();
 
@@ -9269,8 +9269,9 @@ void CHDWallet::AvailableBlindedCoins(std::vector<COutputR>& vCoins, bool fOnlyS
 
             if (IsLockedCoin(txid, r.n))
                 continue;
-
-            vCoins.push_back(COutputR(txid, it, r.n, nDepth));
+            
+            bool fMature = true;
+            vCoins.emplace_back(txid, it, r.n, nDepth, safeTx, fMature);
 
             if (nMinimumSumAmount != MAX_MONEY) {
                 nTotal += r.nValue;
@@ -9384,7 +9385,7 @@ bool CHDWallet::SelectBlindedCoins(const std::vector<COutputR> &vAvailableCoins,
     return res;
 };
 
-void CHDWallet::AvailableAnonCoins(std::vector<COutputR> &vCoins, bool fOnlySafe, const CCoinControl *coinControl, const CAmount& nMinimumAmount, const CAmount& nMaximumAmount, const CAmount& nMinimumSumAmount, const uint64_t& nMaximumCount, const int& nMinDepth, const int& nMaxDepth) const
+void CHDWallet::AvailableAnonCoins(std::vector<COutputR> &vCoins, bool fOnlySafe, const CCoinControl *coinControl, const CAmount& nMinimumAmount, const CAmount& nMaximumAmount, const CAmount& nMinimumSumAmount, const uint64_t& nMaximumCount, const int& nMinDepth, const int& nMaxDepth, bool fIncludeImmature) const
 {
     vCoins.clear();
 
@@ -9402,7 +9403,9 @@ void CHDWallet::AvailableAnonCoins(std::vector<COutputR> &vCoins, bool fOnlySafe
         //    continue;
 
         int nDepth = GetDepthInMainChain(rtx.blockHash, rtx.nIndex);
-        if (nDepth < consensusParams.nMinRCTOutputDepth)
+        bool fMature = nDepth >= consensusParams.nMinRCTOutputDepth;
+        if (!fIncludeImmature
+            && !fMature)
             continue;
 
         // Coins at depth 0 will never be available, no need to check depth0 cases
@@ -9436,7 +9439,7 @@ void CHDWallet::AvailableAnonCoins(std::vector<COutputR> &vCoins, bool fOnlySafe
             if (IsLockedCoin(txid, r.n))
                 continue;
 
-            vCoins.push_back(COutputR(txid, it, r.n, nDepth));
+            vCoins.emplace_back(txid, it, r.n, nDepth, safeTx, fMature);
 
             if (nMinimumSumAmount != MAX_MONEY) {
                 nTotal += r.nValue;

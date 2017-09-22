@@ -3146,6 +3146,7 @@ UniValue listunspentanon(const JSONRPCRequest &request)
             "      \"maximumCount\"     (numeric or string, default=unlimited) Maximum number of UTXOs\n"
             "      \"minimumSumAmount\" (numeric or string, default=unlimited) Minimum sum value of all UTXOs in " + CURRENCY_UNIT + "\n"
             "      \"cc_format\"        (bool, default=false) Format for coincontrol\n"
+            "      \"include_immature\" (bool, default=false) Include immature outputs\n"
             "    }\n"
             "\nResult\n"
             "[                   (array of json object)\n"
@@ -3204,6 +3205,7 @@ UniValue listunspentanon(const JSONRPCRequest &request)
     }
 
     bool fCCFormat = false;
+    bool fIncludeImmature = false;
     CAmount nMinimumAmount = 0;
     CAmount nMaximumAmount = MAX_MONEY;
     CAmount nMinimumSumAmount = MAX_MONEY;
@@ -3232,6 +3234,9 @@ UniValue listunspentanon(const JSONRPCRequest &request)
         
         if (options.exists("cc_format"))
             fCCFormat = options["cc_format"].get_bool();
+        
+        if (options.exists("include_immature"))
+            fIncludeImmature = options["include_immature"].get_bool();
     }
 
     UniValue results(UniValue::VARR);
@@ -3240,7 +3245,7 @@ UniValue listunspentanon(const JSONRPCRequest &request)
     LOCK2(cs_main, pwallet->cs_wallet);
 
     // TODO: filter on stealth address
-    pwallet->AvailableAnonCoins(vecOutputs, !include_unsafe, nullptr, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount, nMinDepth, nMaxDepth);
+    pwallet->AvailableAnonCoins(vecOutputs, !include_unsafe, nullptr, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount, nMinDepth, nMaxDepth, fIncludeImmature);
 
     for (const auto &out : vecOutputs)
     {
@@ -3290,6 +3295,10 @@ UniValue listunspentanon(const JSONRPCRequest &request)
         entry.pushKV("confirmations", out.nDepth);
         //entry.pushKV("spendable", out.fSpendable);
         //entry.pushKV("solvable", out.fSolvable);
+        entry.push_back(Pair("safe", out.fSafe));
+        if (fIncludeImmature)
+            entry.push_back(Pair("mature", out.fMature));
+        
         results.push_back(entry);
     }
 
@@ -3476,6 +3485,7 @@ UniValue listunspentblind(const JSONRPCRequest &request)
         entry.pushKV("confirmations", out.nDepth);
         //entry.push_back(Pair("spendable", out.fSpendable));
         //entry.push_back(Pair("solvable", out.fSolvable));
+        entry.push_back(Pair("safe", out.fSafe));
         results.push_back(entry);
     }
 
@@ -4866,8 +4876,8 @@ static const CRPCCommand commands[] =
     
     //{ "wallet",             "gettransactionsummary",    &gettransactionsummary,    true,  {} },
     
-    { "wallet",             "listunspentanon",          &listunspentanon,          true,   {"minconf","maxconf","addresses","include_unsafe","cc_format"} },
-    { "wallet",             "listunspentblind",         &listunspentblind,         true,   {"minconf","maxconf","addresses","include_unsafe","cc_format"} },
+    { "wallet",             "listunspentanon",          &listunspentanon,          true,   {"minconf","maxconf","addresses","include_unsafe","query_options"} },
+    { "wallet",             "listunspentblind",         &listunspentblind,         true,   {"minconf","maxconf","addresses","include_unsafe","query_options"} },
     
     
     //sendparttopart // normal txn
