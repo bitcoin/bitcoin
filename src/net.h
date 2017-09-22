@@ -171,6 +171,7 @@ public:
         std::vector<CService> vBinds, vWhiteBinds;
         bool m_use_addrman_outgoing = true;
         std::vector<std::string> m_specified_outgoing;
+        std::vector<std::string> m_added_nodes;
     };
 
     void Init(const Options& connOptions) {
@@ -187,6 +188,7 @@ public:
         nMaxOutboundTimeframe = connOptions.nMaxOutboundTimeframe;
         nMaxOutboundLimit = connOptions.nMaxOutboundLimit;
         vWhitelistedRange = connOptions.vWhitelistedRange;
+        vAddedNodes = connOptions.m_added_nodes;
     }
 
     CConnman(uint64_t seed0, uint64_t seed1);
