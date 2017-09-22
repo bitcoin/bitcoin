@@ -71,7 +71,7 @@ int ClientModel::getNumConnections(unsigned int flags) const
 
 int ClientModel::getNumBlocks() const
 {
-    LOCK(cs_main);
+    LOCK(cs_main); // chainActive
     return chainActive.Height();
 }
 
@@ -80,7 +80,7 @@ int ClientModel::getHeaderTipHeight() const
     if (cachedBestHeaderHeight == -1) {
         // make sure we initially populate the cache via a cs_main lock
         // otherwise we need to wait for a tip update
-        LOCK(cs_main);
+        LOCK(cs_main); // pindexBestHeader
         if (pindexBestHeader) {
             cachedBestHeaderHeight = pindexBestHeader->nHeight;
             cachedBestHeaderTime = pindexBestHeader->GetBlockTime();
@@ -92,7 +92,7 @@ int ClientModel::getHeaderTipHeight() const
 int64_t ClientModel::getHeaderTipTime() const
 {
     if (cachedBestHeaderTime == -1) {
-        LOCK(cs_main);
+        LOCK(cs_main); // pindexBestHeader
         if (pindexBestHeader) {
             cachedBestHeaderHeight = pindexBestHeader->nHeight;
             cachedBestHeaderTime = pindexBestHeader->GetBlockTime();
@@ -117,7 +117,7 @@ quint64 ClientModel::getTotalBytesSent() const
 
 QDateTime ClientModel::getLastBlockDate() const
 {
-    LOCK(cs_main);
+    LOCK(cs_main); // chainActive
 
     if (chainActive.Tip())
         return QDateTime::fromTime_t(chainActive.Tip()->GetBlockTime());
@@ -140,7 +140,7 @@ double ClientModel::getVerificationProgress(const CBlockIndex *tipIn) const
     CBlockIndex *tip = const_cast<CBlockIndex *>(tipIn);
     if (!tip)
     {
-        LOCK(cs_main);
+        LOCK(cs_main); // chainActive
         tip = chainActive.Tip();
     }
     return GuessVerificationProgress(Params().TxData(), tip);

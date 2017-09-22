@@ -148,7 +148,7 @@ public:
             return false;
         bool result;
         {
-            LOCK(cs_KeyStore);
+            LOCK(cs_KeyStore); // vMasterKey
             result = vMasterKey.empty();
         }
         return result;
@@ -161,7 +161,7 @@ public:
     bool HaveKey(const CKeyID &address) const override
     {
         {
-            LOCK(cs_KeyStore);
+            LOCK(cs_KeyStore); // mapCryptedKeys
             if (!IsCrypted()) {
                 return CBasicKeyStore::HaveKey(address);
             }
@@ -173,7 +173,7 @@ public:
     bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const override;
     std::set<CKeyID> GetKeys() const override
     {
-        LOCK(cs_KeyStore);
+        LOCK(cs_KeyStore); // mapCryptedKeys
         if (!IsCrypted()) {
             return CBasicKeyStore::GetKeys();
         }

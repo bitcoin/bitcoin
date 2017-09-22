@@ -334,20 +334,20 @@ bool IsRPCRunning()
 
 void SetRPCWarmupStatus(const std::string& newStatus)
 {
-    LOCK(cs_rpcWarmup);
+    LOCK(cs_rpcWarmup); // rpcWarmupStatus
     rpcWarmupStatus = newStatus;
 }
 
 void SetRPCWarmupFinished()
 {
-    LOCK(cs_rpcWarmup);
+    LOCK(cs_rpcWarmup); // fRPCInWarmup
     assert(fRPCInWarmup);
     fRPCInWarmup = false;
 }
 
 bool RPCIsInWarmup(std::string *outStatus)
 {
-    LOCK(cs_rpcWarmup);
+    LOCK(cs_rpcWarmup); // rpcWarmupStatus, fRPCInWarmup
     if (outStatus)
         *outStatus = rpcWarmupStatus;
     return fRPCInWarmup;
@@ -469,7 +469,7 @@ UniValue CRPCTable::execute(const JSONRPCRequest &request) const
 {
     // Return immediately if in warmup
     {
-        LOCK(cs_rpcWarmup);
+        LOCK(cs_rpcWarmup); // fRPCInWarmup
         if (fRPCInWarmup)
             throw JSONRPCError(RPC_IN_WARMUP, rpcWarmupStatus);
     }

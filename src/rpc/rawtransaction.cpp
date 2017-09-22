@@ -132,7 +132,7 @@ UniValue getrawtransaction(const JSONRPCRequest& request)
             + HelpExampleRpc("getrawtransaction", "\"mytxid\", true")
         );
 
-    LOCK(cs_main);
+    LOCK(cs_main); // TxToJSON(...)
 
     uint256 hash = ParseHashV(request.params[0], "parameter 1");
 
@@ -204,7 +204,7 @@ UniValue gettxoutproof(const JSONRPCRequest& request)
        oneTxid = hash;
     }
 
-    LOCK(cs_main);
+    LOCK(cs_main); // chainActive, mapBlockIndex
 
     CBlockIndex* pblockindex = nullptr;
 
@@ -278,7 +278,7 @@ UniValue verifytxoutproof(const JSONRPCRequest& request)
     if (merkleBlock.txn.ExtractMatches(vMatch, vIndex) != merkleBlock.header.hashMerkleRoot)
         return res;
 
-    LOCK(cs_main);
+    LOCK(cs_main); // chainActive, mapBlockIndex
 
     if (!mapBlockIndex.count(merkleBlock.header.GetHash()) || !chainActive.Contains(mapBlockIndex[merkleBlock.header.GetHash()]))
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found in chain");
@@ -912,7 +912,7 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
         );
 
     ObserveSafeMode();
-    LOCK(cs_main);
+    LOCK(cs_main); // pcoinsTip
     RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VBOOL});
 
     // parse hex string from parameter

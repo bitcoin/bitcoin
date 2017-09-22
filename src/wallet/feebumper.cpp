@@ -51,7 +51,7 @@ bool CFeeBumper::preconditionChecks(const CWallet *pWallet, const CWalletTx& wtx
     }
 
     {
-        LOCK(mempool.cs);
+        LOCK(mempool.cs); // mapTx
         auto it_mp = mempool.mapTx.find(wtx.GetHash());
         if (it_mp != mempool.mapTx.end() && it_mp->GetCountWithDescendants() > 1) {
             vErrors.push_back("Transaction has descendants in the mempool");

@@ -101,7 +101,7 @@ UniValue getnetworkhashps(const JSONRPCRequest& request)
             + HelpExampleRpc("getnetworkhashps", "")
        );
 
-    LOCK(cs_main);
+    LOCK(cs_main); // GetNetworkHashPS(...)
     return GetNetworkHashPS(!request.params[0].isNull() ? request.params[0].get_int() : 120, !request.params[1].isNull() ? request.params[1].get_int() : -1);
 }
 
@@ -112,7 +112,7 @@ UniValue generateBlocks(std::shared_ptr<CReserveScript> coinbaseScript, int nGen
     int nHeight = 0;
 
     {   // Don't keep cs_main locked
-        LOCK(cs_main);
+        LOCK(cs_main); // chainActive
         nHeight = chainActive.Height();
         nHeightEnd = nHeight+nGenerate;
     }
@@ -125,7 +125,7 @@ UniValue generateBlocks(std::shared_ptr<CReserveScript> coinbaseScript, int nGen
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't create new block");
         CBlock *pblock = &pblocktemplate->block;
         {
-            LOCK(cs_main);
+            LOCK(cs_main); // chainActive
             IncrementExtraNonce(pblock, chainActive.Tip(), nExtraNonce);
         }
         while (nMaxTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus())) {
@@ -210,7 +210,7 @@ UniValue getmininginfo(const JSONRPCRequest& request)
         );
 
 
-    LOCK(cs_main);
+    LOCK(cs_main); // chainActive
 
     UniValue obj(UniValue::VOBJ);
     obj.push_back(Pair("blocks",           (int)chainActive.Height()));
@@ -728,7 +728,7 @@ UniValue submitblock(const JSONRPCRequest& request)
     uint256 hash = block.GetHash();
     bool fBlockPresent = false;
     {
-        LOCK(cs_main);
+        LOCK(cs_main); // mapBlockIndex
         BlockMap::iterator mi = mapBlockIndex.find(hash);
         if (mi != mapBlockIndex.end()) {
             CBlockIndex *pindex = mi->second;
@@ -744,7 +744,7 @@ UniValue submitblock(const JSONRPCRequest& request)
     }
 
     {
-        LOCK(cs_main);
+        LOCK(cs_main); // mapBlockIndex
         BlockMap::iterator mi = mapBlockIndex.find(block.hashPrevBlock);
         if (mi != mapBlockIndex.end()) {
             UpdateUncommittedBlockStructures(block, mi->second, Params().GetConsensus());

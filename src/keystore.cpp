@@ -17,7 +17,7 @@ bool CBasicKeyStore::GetPubKey(const CKeyID &address, CPubKey &vchPubKeyOut) con
 {
     CKey key;
     if (!GetKey(address, key)) {
-        LOCK(cs_KeyStore);
+        LOCK(cs_KeyStore); // mapWatchKeys
         WatchKeyMap::const_iterator it = mapWatchKeys.find(address);
         if (it != mapWatchKeys.end()) {
             vchPubKeyOut = it->second;
@@ -31,7 +31,7 @@ bool CBasicKeyStore::GetPubKey(const CKeyID &address, CPubKey &vchPubKeyOut) con
 
 bool CBasicKeyStore::AddKeyPubKey(const CKey& key, const CPubKey &pubkey)
 {
-    LOCK(cs_KeyStore);
+    LOCK(cs_KeyStore); // mapKeys
     mapKeys[pubkey.GetID()] = key;
     return true;
 }
@@ -41,20 +41,20 @@ bool CBasicKeyStore::AddCScript(const CScript& redeemScript)
     if (redeemScript.size() > MAX_SCRIPT_ELEMENT_SIZE)
         return error("CBasicKeyStore::AddCScript(): redeemScripts > %i bytes are invalid", MAX_SCRIPT_ELEMENT_SIZE);
 
-    LOCK(cs_KeyStore);
+    LOCK(cs_KeyStore); // mapScripts
     mapScripts[CScriptID(redeemScript)] = redeemScript;
     return true;
 }
 
 bool CBasicKeyStore::HaveCScript(const CScriptID& hash) const
 {
-    LOCK(cs_KeyStore);
+    LOCK(cs_KeyStore); // mapScripts
     return mapScripts.count(hash) > 0;
 }
 
 bool CBasicKeyStore::GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const
 {
-    LOCK(cs_KeyStore);
+    LOCK(cs_KeyStore); // mapScripts
     ScriptMap::const_iterator mi = mapScripts.find(hash);
     if (mi != mapScripts.end())
     {
@@ -82,7 +82,7 @@ static bool ExtractPubKey(const CScript &dest, CPubKey& pubKeyOut)
 
 bool CBasicKeyStore::AddWatchOnly(const CScript &dest)
 {
-    LOCK(cs_KeyStore);
+    LOCK(cs_KeyStore); // mapWatchKeys, setWatchOnly
     setWatchOnly.insert(dest);
     CPubKey pubKey;
     if (ExtractPubKey(dest, pubKey))
@@ -92,7 +92,7 @@ bool CBasicKeyStore::AddWatchOnly(const CScript &dest)
 
 bool CBasicKeyStore::RemoveWatchOnly(const CScript &dest)
 {
-    LOCK(cs_KeyStore);
+    LOCK(cs_KeyStore); // mapWatchKeys, setWatchOnly
     setWatchOnly.erase(dest);
     CPubKey pubKey;
     if (ExtractPubKey(dest, pubKey))
@@ -102,12 +102,12 @@ bool CBasicKeyStore::RemoveWatchOnly(const CScript &dest)
 
 bool CBasicKeyStore::HaveWatchOnly(const CScript &dest) const
 {
-    LOCK(cs_KeyStore);
+    LOCK(cs_KeyStore); // setWatchOnly
     return setWatchOnly.count(dest) > 0;
 }
 
 bool CBasicKeyStore::HaveWatchOnly() const
 {
-    LOCK(cs_KeyStore);
+    LOCK(cs_KeyStore); // setWatchOnly
     return (!setWatchOnly.empty());
 }

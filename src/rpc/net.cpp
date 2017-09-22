@@ -472,7 +472,7 @@ UniValue getnetworkinfo(const JSONRPCRequest& request)
     obj.push_back(Pair("incrementalfee", ValueFromAmount(::incrementalRelayFee.GetFeePerK())));
     UniValue localAddresses(UniValue::VARR);
     {
-        LOCK(cs_mapLocalHost);
+        LOCK(cs_mapLocalHost); // mapLocalHost
         for (const std::pair<CNetAddr, LocalServiceInfo> &item : mapLocalHost)
         {
             UniValue rec(UniValue::VOBJ);

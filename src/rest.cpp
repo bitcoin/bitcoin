@@ -146,7 +146,7 @@ static bool rest_headers(HTTPRequest* req,
     std::vector<const CBlockIndex *> headers;
     headers.reserve(count);
     {
-        LOCK(cs_main);
+        LOCK(cs_main); // chainActive, mapBlockIndex
         BlockMap::const_iterator it = mapBlockIndex.find(hash);
         const CBlockIndex *pindex = (it != mapBlockIndex.end()) ? it->second : nullptr;
         while (pindex != nullptr && chainActive.Contains(pindex)) {
@@ -208,7 +208,7 @@ static bool rest_block(HTTPRequest* req,
     CBlock block;
     CBlockIndex* pblockindex = nullptr;
     {
-        LOCK(cs_main);
+        LOCK(cs_main); // mapBlockIndex
         if (mapBlockIndex.count(hash) == 0)
             return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found");
 

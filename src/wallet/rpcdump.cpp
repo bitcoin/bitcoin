@@ -101,7 +101,7 @@ UniValue importprivkey(const JSONRPCRequest& request)
         );
 
 
-    LOCK2(cs_main, pwallet->cs_wallet);
+    LOCK2(cs_main, pwallet->cs_wallet); // mapKeyMetadata
 
     EnsureWalletIsUnlocked(pwallet);
 
@@ -319,7 +319,7 @@ UniValue importprunedfunds(const JSONRPCRequest& request)
     unsigned int txnIndex = 0;
     if (merkleBlock.txn.ExtractMatches(vMatch, vIndex) == merkleBlock.header.hashMerkleRoot) {
 
-        LOCK(cs_main);
+        LOCK(cs_main); // chainActive, mapBlockIndex
 
         if (!mapBlockIndex.count(merkleBlock.header.GetHash()) || !chainActive.Contains(mapBlockIndex[merkleBlock.header.GetHash()]))
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found in chain");
@@ -471,7 +471,7 @@ UniValue importwallet(const JSONRPCRequest& request)
     if (fPruneMode)
         throw JSONRPCError(RPC_WALLET_ERROR, "Importing wallets is disabled in pruned mode");
 
-    LOCK2(cs_main, pwallet->cs_wallet);
+    LOCK2(cs_main, pwallet->cs_wallet); // chainActive, mapKeyMetadata
 
     EnsureWalletIsUnlocked(pwallet);
 
@@ -612,7 +612,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
             + HelpExampleRpc("dumpwallet", "\"test\"")
         );
 
-    LOCK2(cs_main, pwallet->cs_wallet);
+    LOCK2(cs_main, pwallet->cs_wallet); // chainActive, mapKeyMetadata, mapAddressBook
 
     EnsureWalletIsUnlocked(pwallet);
 
@@ -1079,7 +1079,7 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
         }
     }
 
-    LOCK2(cs_main, pwallet->cs_wallet);
+    LOCK2(cs_main, pwallet->cs_wallet); // chainActive, ProcessImport(...)
     EnsureWalletIsUnlocked(pwallet);
 
     // Verify all timestamps are present before importing any keys.

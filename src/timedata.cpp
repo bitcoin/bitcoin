@@ -28,7 +28,7 @@ static int64_t nTimeOffset = 0;
  */
 int64_t GetTimeOffset()
 {
-    LOCK(cs_nTimeOffset);
+    LOCK(cs_nTimeOffset); // nTimeOffset
     return nTimeOffset;
 }
 
@@ -46,7 +46,7 @@ static int64_t abs64(int64_t n)
 
 void AddTimeData(const CNetAddr& ip, int64_t nOffsetSample)
 {
-    LOCK(cs_nTimeOffset);
+    LOCK(cs_nTimeOffset); // nTimeOffset
     // Ignore duplicates
     static std::set<CNetAddr> setKnown;
     if (setKnown.size() == BITCOIN_TIMEDATA_MAX_SAMPLES)

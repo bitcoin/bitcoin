@@ -148,7 +148,7 @@ bool CScheduler::AreThreadsServicingQueue() const {
 
 void SingleThreadedSchedulerClient::MaybeScheduleProcessQueue() {
     {
-        LOCK(m_cs_callbacks_pending);
+        LOCK(m_cs_callbacks_pending); // m_are_callbacks_running, m_callbacks_pending
         // Try to avoid scheduling too many copies here, but if we
         // accidentally have two ProcessQueue's scheduled at once its
         // not a big deal.
@@ -161,7 +161,7 @@ void SingleThreadedSchedulerClient::MaybeScheduleProcessQueue() {
 void SingleThreadedSchedulerClient::ProcessQueue() {
     std::function<void (void)> callback;
     {
-        LOCK(m_cs_callbacks_pending);
+        LOCK(m_cs_callbacks_pending); // m_are_callbacks_running, m_callbacks_pending
         if (m_are_callbacks_running) return;
         if (m_callbacks_pending.empty()) return;
         m_are_callbacks_running = true;
@@ -191,7 +191,7 @@ void SingleThreadedSchedulerClient::AddToProcessQueue(std::function<void (void)>
     assert(m_pscheduler);
 
     {
-        LOCK(m_cs_callbacks_pending);
+        LOCK(m_cs_callbacks_pending); // m_callbacks_pending
         m_callbacks_pending.emplace_back(std::move(func));
     }
     MaybeScheduleProcessQueue();
@@ -202,7 +202,7 @@ void SingleThreadedSchedulerClient::EmptyQueue() {
     bool should_continue = true;
     while (should_continue) {
         ProcessQueue();
-        LOCK(m_cs_callbacks_pending);
+        LOCK(m_cs_callbacks_pending); // m_callbacks_pending
         should_continue = !m_callbacks_pending.empty();
     }
 }

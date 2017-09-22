@@ -275,7 +275,7 @@ UniValue setaccount(const JSONRPCRequest& request)
             + HelpExampleRpc("setaccount", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\", \"tabby\"")
         );
 
-    LOCK2(cs_main, pwallet->cs_wallet);
+    LOCK2(cs_main, pwallet->cs_wallet); // mapAddressBook
 
     CTxDestination dest = DecodeDestination(request.params[0].get_str());
     if (!IsValidDestination(dest)) {
@@ -324,7 +324,7 @@ UniValue getaccount(const JSONRPCRequest& request)
             + HelpExampleRpc("getaccount", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\"")
         );
 
-    LOCK2(cs_main, pwallet->cs_wallet);
+    LOCK2(cs_main, pwallet->cs_wallet); // mapAddressBook
 
     CTxDestination dest = DecodeDestination(request.params[0].get_str());
     if (!IsValidDestination(dest)) {
@@ -363,7 +363,7 @@ UniValue getaddressesbyaccount(const JSONRPCRequest& request)
             + HelpExampleRpc("getaddressesbyaccount", "\"tabby\"")
         );
 
-    LOCK2(cs_main, pwallet->cs_wallet);
+    LOCK2(cs_main, pwallet->cs_wallet); // mapAddressBook
 
     std::string strAccount = AccountFromValue(request.params[0]);
 
@@ -533,7 +533,7 @@ UniValue listaddressgroupings(const JSONRPCRequest& request)
         );
 
     ObserveSafeMode();
-    LOCK2(cs_main, pwallet->cs_wallet);
+    LOCK2(cs_main, pwallet->cs_wallet); // mapAddressBook
 
     UniValue jsonGroupings(UniValue::VARR);
     std::map<CTxDestination, CAmount> balances = pwallet->GetAddressBalances();
@@ -645,7 +645,7 @@ UniValue getreceivedbyaddress(const JSONRPCRequest& request)
        );
 
     ObserveSafeMode();
-    LOCK2(cs_main, pwallet->cs_wallet);
+    LOCK2(cs_main, pwallet->cs_wallet); // mapWallet
 
     // Bitcoin address
     CTxDestination dest = DecodeDestination(request.params[0].get_str());
@@ -707,7 +707,7 @@ UniValue getreceivedbyaccount(const JSONRPCRequest& request)
         );
 
     ObserveSafeMode();
-    LOCK2(cs_main, pwallet->cs_wallet);
+    LOCK2(cs_main, pwallet->cs_wallet); // mapWallet
 
     // Minimum confirmations
     int nMinDepth = 1;
@@ -1229,7 +1229,7 @@ UniValue addwitnessaddress(const JSONRPCRequest& request)
     }
 
     {
-        LOCK(cs_main);
+        LOCK(cs_main); // chainActive
         if (!IsWitnessEnabled(chainActive.Tip(), Params().GetConsensus()) && !gArgs.GetBoolArg("-walletprematurewitness", false)) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Segregated witness not enabled on network");
         }
@@ -1423,7 +1423,7 @@ UniValue listreceivedbyaddress(const JSONRPCRequest& request)
         );
 
     ObserveSafeMode();
-    LOCK2(cs_main, pwallet->cs_wallet);
+    LOCK2(cs_main, pwallet->cs_wallet); // ListReceived(...)
 
     return ListReceived(pwallet, request.params, false);
 }
@@ -1463,7 +1463,7 @@ UniValue listreceivedbyaccount(const JSONRPCRequest& request)
         );
 
     ObserveSafeMode();
-    LOCK2(cs_main, pwallet->cs_wallet);
+    LOCK2(cs_main, pwallet->cs_wallet); // ListReceived(...)
 
     return ListReceived(pwallet, request.params, true);
 }
@@ -1651,7 +1651,7 @@ UniValue listtransactions(const JSONRPCRequest& request)
         );
 
     ObserveSafeMode();
-    LOCK2(cs_main, pwallet->cs_wallet);
+    LOCK2(cs_main, pwallet->cs_wallet); // ListTransactions(...)
 
     std::string strAccount = "*";
     if (!request.params[0].isNull())
@@ -1745,7 +1745,7 @@ UniValue listaccounts(const JSONRPCRequest& request)
         );
 
     ObserveSafeMode();
-    LOCK2(cs_main, pwallet->cs_wallet);
+    LOCK2(cs_main, pwallet->cs_wallet); // mapWallet, mapAddressBook
 
     int nMinDepth = 1;
     if (!request.params[0].isNull())
@@ -1854,7 +1854,7 @@ UniValue listsinceblock(const JSONRPCRequest& request)
         );
 
     ObserveSafeMode();
-    LOCK2(cs_main, pwallet->cs_wallet);
+    LOCK2(cs_main, pwallet->cs_wallet); // chainActive, ListTransactions(...), mapBlockIndex, mapWallet
 
     const CBlockIndex* pindex = nullptr;    // Block index of the specified block or the common ancestor, if the block provided was in a deactivated chain.
     const CBlockIndex* paltindex = nullptr; // Block index of the specified block, even if it's in a deactivated chain.
@@ -1986,7 +1986,7 @@ UniValue gettransaction(const JSONRPCRequest& request)
         );
 
     ObserveSafeMode();
-    LOCK2(cs_main, pwallet->cs_wallet);
+    LOCK2(cs_main, pwallet->cs_wallet); // ListTransactions(...), WalletTxToJSON(...), mapWallet
 
     uint256 hash;
     hash.SetHex(request.params[0].get_str());
@@ -2048,7 +2048,7 @@ UniValue abandontransaction(const JSONRPCRequest& request)
         );
 
     ObserveSafeMode();
-    LOCK2(cs_main, pwallet->cs_wallet);
+    LOCK2(cs_main, pwallet->cs_wallet); // mapWallet
 
     uint256 hash;
     hash.SetHex(request.params[0].get_str());
@@ -2112,7 +2112,7 @@ UniValue keypoolrefill(const JSONRPCRequest& request)
             + HelpExampleRpc("keypoolrefill", "")
         );
 
-    LOCK2(cs_main, pwallet->cs_wallet);
+    LOCK2(cs_main, pwallet->cs_wallet); // GetKeyPoolSize(...)
 
     // 0 is interpreted by TopUpKeyPool() as the default keypool size given by -keypool
     unsigned int kpSize = 0;
@@ -2560,7 +2560,7 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
         );
 
     ObserveSafeMode();
-    LOCK2(cs_main, pwallet->cs_wallet);
+    LOCK2(cs_main, pwallet->cs_wallet); // CanSupportFeature(...), GetKeyPoolSize(...), mapWallet
 
     UniValue obj(UniValue::VOBJ);
 
@@ -2772,7 +2772,7 @@ UniValue listunspent(const JSONRPCRequest& request)
     UniValue results(UniValue::VARR);
     std::vector<COutput> vecOutputs;
     assert(pwallet != nullptr);
-    LOCK2(cs_main, pwallet->cs_wallet);
+    LOCK2(cs_main, pwallet->cs_wallet); // mapAddressBook
 
     pwallet->AvailableCoins(vecOutputs, !include_unsafe, nullptr, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount, nMinDepth, nMaxDepth);
     for (const COutput& out : vecOutputs) {

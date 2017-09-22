@@ -79,7 +79,7 @@ public:
     {
         cachedAddressTable.clear();
         {
-            LOCK(wallet->cs_wallet);
+            LOCK(wallet->cs_wallet); // mapAddressBook
             for (const std::pair<CTxDestination, CAddressBookData>& item : wallet->mapAddressBook)
             {
                 const CTxDestination& address = item.first;
@@ -245,7 +245,7 @@ bool AddressTableModel::setData(const QModelIndex &index, const QVariant &value,
 
     if(role == Qt::EditRole)
     {
-        LOCK(wallet->cs_wallet); /* For SetAddressBook / DelAddressBook */
+        LOCK(wallet->cs_wallet); // mapAddressBook
         CTxDestination curAddress = DecodeDestination(rec->address.toStdString());
         if(index.column() == Label)
         {
@@ -357,7 +357,7 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
         }
         // Check for duplicate addresses
         {
-            LOCK(wallet->cs_wallet);
+            LOCK(wallet->cs_wallet); // mapAddressBook
             if(wallet->mapAddressBook.count(DecodeDestination(strAddress)))
             {
                 editStatus = DUPLICATE_ADDRESS;
@@ -422,7 +422,7 @@ bool AddressTableModel::removeRows(int row, int count, const QModelIndex &parent
 QString AddressTableModel::labelForAddress(const QString &address) const
 {
     {
-        LOCK(wallet->cs_wallet);
+        LOCK(wallet->cs_wallet); // mapAddressBook
         CTxDestination destination = DecodeDestination(address.toStdString());
         std::map<CTxDestination, CAddressBookData>::iterator mi = wallet->mapAddressBook.find(destination);
         if (mi != wallet->mapAddressBook.end())

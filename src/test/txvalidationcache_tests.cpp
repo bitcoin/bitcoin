@@ -191,7 +191,7 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, TestChain100Setup)
         spend_tx.vin[0].scriptSig << vchSig;
     }
 
-    LOCK(cs_main);
+    LOCK(cs_main); // pcoinsTip, chainActive
 
     // Test that invalidity under a set of flags doesn't preclude validity
     // under other (eg consensus) flags.
