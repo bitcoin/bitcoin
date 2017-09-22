@@ -56,11 +56,6 @@ public:
         keydata.resize(32);
     }
 
-    //! Destructor (again necessary because of memlocking).
-    ~CKey()
-    {
-    }
-
     friend bool operator==(const CKey& a, const CKey& b)
     {
         return a.fCompressed == b.fCompressed &&
