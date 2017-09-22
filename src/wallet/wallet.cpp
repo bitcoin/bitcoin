@@ -58,7 +58,7 @@ CFeeRate CWallet::minTxFee = CFeeRate(DEFAULT_LEGACY_TRANSACTION_MINFEE);
  * Has no effect if not using fee estimation
  * Override with -fallbackfee
  */
-CFeeRate CWallet::fallbackFee = CFeeRate(DEFAULT_FALLBACK_FEE);
+CFeeRate CWallet::fallbackFee = CFeeRate(DEFAULT_LEGACY_FALLBACK_FEE);
 
 const uint256 CMerkleTx::ABANDON_HASH(uint256S("0000000000000000000000000000000000000000000000000000000000000001"));
 

@@ -50,7 +50,7 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
     fDIP0001LockedInAtTip = (VersionBitsState(pindexNew, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0001, versionbitscache) == THRESHOLD_LOCKED_IN);
     fDIP0001ActiveAtTip = (VersionBitsState(pindexNew, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0001, versionbitscache) == THRESHOLD_ACTIVE);
 
-    // Update min fees only if activation changed and we are using default minRelayTxFee
+    // Update min fees only if activation changed and we are using default fees
     if (fDIP0001ActiveAtTipTmp != fDIP0001ActiveAtTip) {
         if (!mapArgs.count("-minrelaytxfee")) {
             ::minRelayTxFee = CFeeRate(fDIP0001ActiveAtTip ? DEFAULT_DIP0001_MIN_RELAY_TX_FEE : DEFAULT_LEGACY_MIN_RELAY_TX_FEE);
@@ -58,6 +58,9 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
         }
         if (!mapArgs.count("-mintxfee")) {
             CWallet::minTxFee = CFeeRate(fDIP0001ActiveAtTip ? DEFAULT_DIP0001_TRANSACTION_MINFEE : DEFAULT_LEGACY_TRANSACTION_MINFEE);
+        }
+        if (!mapArgs.count("-fallbackfee")) {
+            CWallet::fallbackFee = CFeeRate(fDIP0001ActiveAtTip ? DEFAULT_DIP0001_FALLBACK_FEE : DEFAULT_LEGACY_FALLBACK_FEE);
         }
     }
 }
