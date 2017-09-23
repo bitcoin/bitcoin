@@ -497,6 +497,13 @@ boost::filesystem::path GetThroneConfigFile()
     return pathConfigFile;
 }
 
+boost::filesystem::path GetServicenodeConfigFile()
+{
+    boost::filesystem::path pathConfigFile(GetArg("-mnconf", "servicenode.conf"));
+    if (!pathConfigFile.is_complete()) pathConfigFile = GetDataDir() / pathConfigFile;
+    return pathConfigFile;
+}
+
 void ReadConfigFile(map<string, string>& mapSettingsRet,
                     map<string, vector<string> >& mapMultiSettingsRet)
 {

@@ -139,6 +139,7 @@ BITCOIN_CORE_H = \
   throne-sync.h \
   throneman.h \
   throneconfig.h \
+  servicenodeconfig.h \
   threadsafety.h \
   timedata.h \
   tinyformat.h \
@@ -224,6 +225,7 @@ libbitcoin_wallet_a_SOURCES = \
   throne-payments.cpp \
   throne-sync.cpp \
   throneconfig.cpp \
+  servicenodeconfig.cpp \
   throneman.cpp \
   rpcdump.cpp \
   rpcwallet.cpp \
