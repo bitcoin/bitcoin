@@ -25,6 +25,7 @@
 #include "walletmodel.h"
 #endif
 #include "throneconfig.h"
+#include "servicenodeconfig.h"
 
 #include "init.h"
 #include "main.h"
@@ -637,6 +638,12 @@ int main(int argc, char *argv[])
     if(!throneConfig.read(strErr)) {
         QMessageBox::critical(0, QObject::tr("Crown Core"),
                               QObject::tr("Error reading throne configuration file: %1").arg(strErr.c_str()));
+        return false;
+    }
+
+    if(!servicenodeConfig.read(strErr)) {
+        QMessageBox::critical(0, QObject::tr("Crown Core"),
+                              QObject::tr("Error reading servicenode configuration file: %1").arg(strErr.c_str()));
         return false;
     }
 
