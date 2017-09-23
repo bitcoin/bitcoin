@@ -38,7 +38,10 @@ void seed_insecure_rand(bool fDeterministic = false);
  */
 class FastRandomContext {
 public:
-    explicit FastRandomContext(bool fDeterministic=false);
+    explicit FastRandomContext(bool fDeterministic = false);
+
+    uint32_t Rz;
+    uint32_t Rw;
 
     uint32_t rand32() {
         Rz = 36969 * (Rz & 65535) + (Rz >> 16);
@@ -46,12 +49,15 @@ public:
         return (Rw << 16) + Rz;
     }
 
+    uint64_t rand64() {
+        uint64_t a = rand32();
+        uint64_t b = rand32();
+        return (b << 32) + a;
+    }
+
     bool randbool() {
         return rand32() & 1;
     }
-
-    uint32_t Rz;
-    uint32_t Rw;
 };
 
 /* Number of random bytes returned by GetOSRand.
