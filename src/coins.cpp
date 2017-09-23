@@ -54,7 +54,7 @@ size_t CCoinsViewCache::ResetCachedCoinUsage() const
 }
 
 CCoinsMap::iterator CCoinsViewCache::FetchCoin(const COutPoint &outpoint) const {
-    // requires cs_utxo
+    AssertLockHeld(cs_utxo);
     CCoinsMap::iterator it = cacheCoins.find(outpoint);
     if (it != cacheCoins.end())
         return it;
@@ -72,6 +72,7 @@ CCoinsMap::iterator CCoinsViewCache::FetchCoin(const COutPoint &outpoint) const 
 }
 
 bool CCoinsViewCache::GetCoin(const COutPoint &outpoint, Coin &coin) const {
+    LOCK(cs_utxo);
     CCoinsMap::const_iterator it = FetchCoin(outpoint);
     if (it != cacheCoins.end()) {
         coin = it->second.coin;
@@ -81,6 +82,7 @@ bool CCoinsViewCache::GetCoin(const COutPoint &outpoint, Coin &coin) const {
 }
 
 void CCoinsViewCache::AddCoin(const COutPoint &outpoint, Coin&& coin, bool possible_overwrite) {
+    LOCK(cs_utxo);
     assert(!coin.IsSpent());
     if (coin.out.scriptPubKey.IsUnspendable()) return;
     CCoinsMap::iterator it;
@@ -112,6 +114,7 @@ void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight) {
 }
 
 void CCoinsViewCache::SpendCoin(const COutPoint &outpoint, Coin* moveout) {
+    LOCK(cs_utxo);
     CCoinsMap::iterator it = FetchCoin(outpoint);
     if (it == cacheCoins.end()) return;
     cachedCoinsUsage -= it->second.coin.DynamicMemoryUsage();
@@ -129,6 +132,7 @@ void CCoinsViewCache::SpendCoin(const COutPoint &outpoint, Coin* moveout) {
 static const Coin coinEmpty;
 
 const Coin& CCoinsViewCache::AccessCoin(const COutPoint &outpoint) const {
+    LOCK(cs_utxo);
     CCoinsMap::const_iterator it = FetchCoin(outpoint);
     if (it == cacheCoins.end()) {
         return coinEmpty;
@@ -138,11 +142,13 @@ const Coin& CCoinsViewCache::AccessCoin(const COutPoint &outpoint) const {
 }
 
 bool CCoinsViewCache::HaveCoin(const COutPoint &outpoint) const {
+    LOCK(cs_utxo);
     CCoinsMap::const_iterator it = FetchCoin(outpoint);
     return (it != cacheCoins.end() && !it->second.coin.IsSpent());
 }
 
 bool CCoinsViewCache::HaveCoinInCache(const COutPoint &outpoint) const {
+    LOCK(cs_utxo);
     CCoinsMap::const_iterator it = cacheCoins.find(outpoint);
     return it != cacheCoins.end();
 }
