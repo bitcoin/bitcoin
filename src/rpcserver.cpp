@@ -318,6 +318,9 @@ static const CRPCCommand vRPCCommands[] =
     { "crown",               "mnfinalbudget",         &mnfinalbudget,          true,      true,       false },
     { "crown",               "mnsync",                &mnsync,                 true,      true,       false },
     { "crown",               "spork",                 &spork,                  true,      true,       false },
+    { "crown",               "servicenode",           &servicenode,            true,      true,       false },
+    { "crown",               "servicenodelist",       &servicenodelist,        true,      true,       false },
+    { "crown",               "servicenodebroadcast",  &servicenodebroadcast,   true,      true,       false },
 
     /* API features */
     { "api",                 "service",               &service,                true,      true,       false },

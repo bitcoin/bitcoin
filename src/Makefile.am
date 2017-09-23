@@ -198,6 +198,7 @@ libbitcoin_server_a_SOURCES = \
   rpcservice.cpp \
   rpcthrone.cpp \
   rpcthrone-budget.cpp \
+  rpcservicenode.cpp \
   rpcmining.cpp \
   rpcmisc.cpp \
   rpcnet.cpp \

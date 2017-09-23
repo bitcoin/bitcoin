@@ -12,6 +12,7 @@
 #include "ui_interface.h"
 #include "util.h"
 #include "throneconfig.h"
+#include "servicenodeconfig.h"
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
@@ -113,6 +114,12 @@ bool AppInit(int argc, char* argv[])
         std::string strErr;
         if(!throneConfig.read(strErr)) {
             fprintf(stderr,"Error reading throne configuration file: %s\n", strErr.c_str());
+            return false;
+        }
+
+        // parse servicenode.conf
+        if (!servicenodeConfig.read(strErr)) {
+            fprintf(stderr, "Error reading servicenode configuration file: %s\n", strErr.c_str());
             return false;
         }
 

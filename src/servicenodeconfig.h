@@ -13,7 +13,7 @@
 #include <boost/filesystem/fstream.hpp>
 
 class CServicenodeConfig;
-extern CServicenodeConfig throneConfig;
+extern CServicenodeConfig servicenodeConfig;
 
 class CServicenodeConfig
 {
