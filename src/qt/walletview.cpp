@@ -213,6 +213,13 @@ void WalletView::gotoThronePage()
     }
 }
 
+void WalletView::gotoServicenodePage()
+{
+    if (servicenodeConfig.getCount() >= 0) {
+        // To be defined
+    }
+}
+
 void WalletView::gotoMultisigTab()
 {
     // calls show() in showTab_SM()

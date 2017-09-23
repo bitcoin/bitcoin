@@ -92,6 +92,7 @@ private:
     QAction *overviewAction;
     QAction *historyAction;
     QAction *throneAction;
+    QAction *servicenodeAction;
     QAction *quitAction;
     QAction *sendCoinsAction;
     QAction *usedSendingAddressesAction;
@@ -205,6 +206,8 @@ private slots:
     void gotoVerifyMessageTab(QString addr = "");
     /** Switch to throne manager page */
     void gotoThronePage();
+    /** Switch to servicenode manager page */
+    void gotoServicenodePage();
     /** Switch to multisig tab */
     void gotoMultisigTab();
 

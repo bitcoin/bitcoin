@@ -83,6 +83,8 @@ public slots:
     void gotoSendCoinsPage(QString addr = "");
     /** Switch to throne page */
     void gotoThronePage();
+    /** Switch to servicenode page */
+    void gotoServicenodePage();
     /** Switch to multisig page*/
     void gotoMultisigTab();
 
