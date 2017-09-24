@@ -2010,18 +2010,27 @@ int SecureMsgWalletKeyChanged(CKeyID &keyId, const std::string &sLabel, ChangeTy
     {
         LOCK(cs_smsg);
 
+        std::vector<SecMsgAddress>::iterator itFound = smsgAddresses.end();
+        for (std::vector<SecMsgAddress>::iterator it = smsgAddresses.begin(); it != smsgAddresses.end(); ++it)
+        {
+            if (keyId != it->address)
+                continue;
+            itFound = it;
+            break;
+        };
+
         switch(mode)
         {
             case CT_NEW:
-                smsgAddresses.push_back(SecMsgAddress(keyId, smsgOptions.fNewAddressRecv, smsgOptions.fNewAddressAnon));
+                if (itFound == smsgAddresses.end())
+                    smsgAddresses.push_back(SecMsgAddress(keyId, smsgOptions.fNewAddressRecv, smsgOptions.fNewAddressAnon));
+                else
+                    LogPrint(BCLog::SMSG, "%s: Already have address: %s.\n", __func__, CBitcoinAddress(keyId).ToString());
                 break;
             case CT_DELETED:
-                for (std::vector<SecMsgAddress>::iterator it = smsgAddresses.begin(); it != smsgAddresses.end(); ++it)
+                if (itFound != smsgAddresses.end())
                 {
-                    if (keyId != it->address)
-                        continue;
-                    smsgAddresses.erase(it);
-                    break;
+                    smsgAddresses.erase(itFound);
                 };
                 break;
             default:

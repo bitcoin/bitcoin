@@ -343,8 +343,7 @@ static std::vector<valtype> CombineMultisig(const CScript& scriptPubKey, const B
             }
         }
     }
-    
-    
+
     // Now build a merged CScript:
     unsigned int nSigsHave = 0;
     std::vector<valtype> result; result.push_back(valtype()); // pop-one-too-many workaround
@@ -359,7 +358,6 @@ static std::vector<valtype> CombineMultisig(const CScript& scriptPubKey, const B
     // Fill any missing with OP_0:
     for (unsigned int i = nSigsHave; i < nSigsRequired; i++)
         result.push_back(valtype());
-    
 
     return result;
 }
@@ -403,9 +401,8 @@ static Stacks CombineSignatures(const CScript& scriptPubKey, const BaseSignature
         if (txHackType == TX_SCRIPTHASH || txHackType == TX_TIMELOCKED_SCRIPTHASH)
             txHackType = TX_WITNESS_V0_SCRIPTHASH;
     };
-    
-    
-    
+
+
     switch (txHackType)
     {
     case TX_NONSTANDARD:
@@ -450,8 +447,6 @@ static Stacks CombineSignatures(const CScript& scriptPubKey, const BaseSignature
     case TX_TIMELOCKED_MULTISIG:
             return Stacks(CombineMultisig(scriptPubKey, checker, vSolutions, sigs1.script, sigs2.script, sigversion));
     case TX_WITNESS_V0_SCRIPTHASH:
-        
-        
         if (sigs1.witness.empty() || sigs1.witness.back().empty())
             return sigs2;
         else if (sigs2.witness.empty() || sigs2.witness.back().empty())

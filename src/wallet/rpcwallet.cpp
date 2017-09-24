@@ -94,7 +94,7 @@ void WalletTxToJSON(const CWalletTx& wtx, UniValue& entry)
     {
         entry.push_back(Pair("blockhash", wtx.hashBlock.GetHex()));
         entry.push_back(Pair("blockindex", wtx.nIndex));
-        entry.push_back(Pair("blocktime", mapBlockIndex[wtx.hashBlock]->GetBlockTime()));
+        PushTime(entry, "blocktime", mapBlockIndex[wtx.hashBlock]->GetBlockTime());
     } else {
         entry.push_back(Pair("trusted", wtx.IsTrusted()));
     }
@@ -104,8 +104,8 @@ void WalletTxToJSON(const CWalletTx& wtx, UniValue& entry)
     for (const uint256& conflict : wtx.GetConflicts())
         conflicts.push_back(conflict.GetHex());
     entry.push_back(Pair("walletconflicts", conflicts));
-    entry.push_back(Pair("time", wtx.GetTxTime()));
-    entry.push_back(Pair("timereceived", (int64_t)wtx.nTimeReceived));
+    PushTime(entry, "time", wtx.GetTxTime());
+    PushTime(entry, "timereceived", wtx.nTimeReceived);
 
     // Add opt-in RBF status
     std::string rbfStatus = "no";
@@ -137,7 +137,7 @@ void RecordTxToJSON(CHDWallet *phdw, const uint256 &hash, const CTransactionReco
     {
         entry.push_back(Pair("blockhash", rtx.blockHash.GetHex()));
         entry.push_back(Pair("blockindex", rtx.nIndex));
-        entry.push_back(Pair("blocktime", rtx.nBlockTime));
+        PushTime(entry, "blocktime", rtx.nBlockTime);
     } else {
         entry.push_back(Pair("trusted", phdw->IsTrusted(hash, rtx.blockHash)));
     }
@@ -147,8 +147,8 @@ void RecordTxToJSON(CHDWallet *phdw, const uint256 &hash, const CTransactionReco
     for (const auto &conflict : phdw->GetConflicts(hash))
         conflicts.push_back(conflict.GetHex());
     entry.push_back(Pair("walletconflicts", conflicts));
-    entry.push_back(Pair("time", rtx.GetTxTime()));
-    entry.push_back(Pair("timereceived", (int64_t)rtx.nTimeReceived));
+    PushTime(entry, "time", rtx.GetTxTime());
+    PushTime(entry, "timereceived", rtx.nTimeReceived);
     
     for (const auto &item : rtx.mapValue)
     {
@@ -351,6 +351,18 @@ UniValue getrawchangeaddress(const JSONRPCRequest& request)
        );
 
     LOCK2(cs_main, pwallet->cs_wallet);
+
+    if (IsHDWallet(pwallet))
+    {
+        CHDWallet *phdw = GetHDWallet(pwallet);
+        CPubKey pkOut;
+
+        if (0 != phdw->NewKeyFromAccount(pkOut, true))
+            throw JSONRPCError(RPC_WALLET_ERROR, "NewKeyFromAccount failed.");
+
+        CKeyID keyID = pkOut.GetID();
+        return CBitcoinAddress(keyID).ToString();
+    };
 
     if (!pwallet->IsLocked()) {
         pwallet->TopUpKeyPool();
@@ -1960,7 +1972,7 @@ void ListRecord(CHDWallet *phdw, const uint256 &hash, const CTransactionRecord &
             conflicts.push_back(conflict.GetHex());
         entry.push_back(Pair("walletconflicts", conflicts));
         
-        entry.push_back(Pair("time", (int64_t)rtx.nTimeReceived));
+        PushTime(entry, "time", rtx.nTimeReceived);
         
         if (!r.sNarration.empty())
             entry.push_back(Pair("narration", r.sNarration));

@@ -123,8 +123,8 @@ void TxToJSONExpanded(const CTransaction& tx, const uint256 hashBlock, UniValue&
         if (nConfirmations > 0) {
             entry.push_back(Pair("height", nHeight));
             entry.push_back(Pair("confirmations", nConfirmations));
-            entry.push_back(Pair("time", nBlockTime));
-            entry.push_back(Pair("blocktime", nBlockTime));
+            PushTime(entry, "time", nBlockTime);
+            PushTime(entry, "blocktime", nBlockTime);
         } else
         {
             entry.push_back(Pair("height", -1));
@@ -1009,9 +1009,9 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
         }
         if (coin.nType != OUTPUT_STANDARD)
             throw JSONRPCError(RPC_MISC_ERROR, "TODO: make work for !StandardOutput");
-        
+
         size_t nOutputs = fParticlMode ? mtx.vpout.size() : mtx.vout.size();
-        
+
         std::vector<uint8_t> vchAmount(8);
         SignatureData sigdata;
         CScript prevPubKey = coin.out.scriptPubKey;
@@ -1024,7 +1024,6 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
 
         sigdata = CombineSignatures(prevPubKey, TransactionSignatureChecker(&txConst, i, vchAmount), sigdata, DataFromTransaction(mtx, i));
         UpdateTransaction(mtx, i, sigdata);
-        
 
         ScriptError serror = SCRIPT_ERR_OK;
         if (!VerifyScript(txin.scriptSig, prevPubKey, &txin.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, TransactionSignatureChecker(&txConst, i, vchAmount), &serror)) {

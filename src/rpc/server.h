@@ -200,4 +200,6 @@ int RPCSerializationFlags();
 // Retrieves any serialization flags requested in command line argument
 int RPCSerializationFlags();
 
+void PushTime(UniValue &o, const char *name, int64_t nTime);
+
 #endif // BITCOIN_RPCSERVER_H

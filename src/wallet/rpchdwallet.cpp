@@ -4574,7 +4574,7 @@ UniValue walletsettings(const JSONRPCRequest &request)
                 };
             };
             
-            json.pushKV("time", GetTime());
+            PushTime(json, "time", GetTime());
             if (!pwallet->SetSetting(sSetting, json))
                 throw JSONRPCError(RPC_WALLET_ERROR, _("SetSetting failed."));
             

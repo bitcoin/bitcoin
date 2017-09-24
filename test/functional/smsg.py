@@ -16,6 +16,8 @@ class SmsgTest(ParticlTestFramework):
         self.extra_args = [ [] for i in range(self.num_nodes) ]
 
     def setup_network(self, split=False):
+        extra_args = [["-smsgscanincoming"]
+                      for i in range(self.num_nodes)]
         
         self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir, self.extra_args)
         connect_nodes_bi(self.nodes,0,1)

@@ -1143,7 +1143,7 @@ bool CHDWallet::AddressBookChangedNotify(const CTxDestination &address, ChangeTy
         
         tIsMine = ::IsMine(*this, address);
     }
-    
+
     NotifyAddressBookChanged(this, address, entry.name, tIsMine != ISMINE_NO, entry.purpose, nMode);
 
     if (tIsMine == ISMINE_SPENDABLE
@@ -6611,10 +6611,10 @@ int CHDWallet::NewKeyFromAccount(CHDWalletDB *pwdb, const CKeyID &idAccount, CPu
         if (f256bit)
         {
             CKeyID256 idKey256 = pkOut.GetID256();
-            SetAddressBook(pwdb, idKey256, plabel, "receive", vPath, true);
+            SetAddressBook(pwdb, idKey256, plabel, "receive", vPath, false);
         } else
         {
-            SetAddressBook(pwdb, idKey, plabel, "receive", vPath, true);
+            SetAddressBook(pwdb, idKey, plabel, "receive", vPath, false);
         };
     };
 
@@ -6640,7 +6640,10 @@ int CHDWallet::NewKeyFromAccount(CPubKey &pkOut, bool fInternal, bool fHardened,
             return errorN(1, "%s TxnCommit failed.", __func__);
     }
     
-    AddressBookChangedNotify(pkOut.GetID(), CT_NEW);
+    if (f256bit)
+        AddressBookChangedNotify(pkOut.GetID256(), CT_NEW);
+    else
+        AddressBookChangedNotify(pkOut.GetID(), CT_NEW);
     return 0;
 };
 
@@ -6767,7 +6770,7 @@ int CHDWallet::NewStealthKeyFromAccount(
             return errorN(1, "%s WriteExtAccount failed.", __func__);
     };
     
-    SetAddressBook(pwdb, sxAddr, sLabel, "receive", vPath, true);
+    SetAddressBook(pwdb, sxAddr, sLabel, "receive", vPath, false);
     
     akStealthOut = aks;
     return 0;
@@ -6872,7 +6875,7 @@ int CHDWallet::NewExtKeyFromAccount(CHDWalletDB *pwdb, const CKeyID &idAccount,
             vPath.push_back(idIndex); // first entry is the index to the account / master key
             
         vPath.push_back(nNewChildNo);
-        SetAddressBook(pwdb, sekOut->kp, plabel, "receive", vPath, true);
+        SetAddressBook(pwdb, sekOut->kp, plabel, "receive", vPath, false);
     };
 
     if (!pwdb->WriteExtAccount(idAccount, *sea)
@@ -6888,7 +6891,7 @@ int CHDWallet::NewExtKeyFromAccount(CHDWalletDB *pwdb, const CKeyID &idAccount,
     if (mvi != sekOut->mapValue.end())
         nLookAhead = GetCompressedInt64(mvi->second, nLookAhead);
     sea->AddLookAhead(chainNo, nLookAhead);
-    
+
     mapExtKeys[idNewChain] = sekOut;
 
     return 0;
