@@ -317,11 +317,11 @@ CCoinsViewCursor::~CCoinsViewCursor()
 {
 }
 
-static const size_t MAX_OUTPUTS_PER_BLOCK = 1000000 /  ::GetSerializeSize(CTxOut(), SER_NETWORK, PROTOCOL_VERSION); // TODO: 
+static const size_t nMaxOutputsPerBlock = DEFAULT_LARGEST_TRANSACTION / ::GetSerializeSize(CTxOut(), SER_NETWORK, PROTOCOL_VERSION);
 const Coin& AccessByTxid(const CCoinsViewCache& view, const uint256& txid)
 {
     COutPoint iter(txid, 0);
-    while (iter.n < MAX_OUTPUTS_PER_BLOCK) {
+    while (iter.n < nMaxOutputsPerBlock) {
         const Coin& alternate = view.AccessCoin(iter);
         if (!alternate.IsSpent()) return alternate;
         ++iter.n;
