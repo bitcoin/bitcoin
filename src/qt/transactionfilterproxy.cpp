@@ -38,6 +38,7 @@ bool TransactionFilterProxy::filterAcceptsRow(int sourceRow, const QModelIndex &
     bool involvesWatchAddress = index.data(TransactionTableModel::WatchonlyRole).toBool();
     QString address = index.data(TransactionTableModel::AddressRole).toString();
     QString label = index.data(TransactionTableModel::LabelRole).toString();
+    QString txid = index.data(TransactionTableModel::TxIDRole).toString();
     qint64 amount = llabs(index.data(TransactionTableModel::AmountRole).toLongLong());
     int status = index.data(TransactionTableModel::StatusRole).toInt();
 
@@ -51,8 +52,11 @@ bool TransactionFilterProxy::filterAcceptsRow(int sourceRow, const QModelIndex &
         return false;
     if(datetime < dateFrom || datetime > dateTo)
         return false;
-    if (!address.contains(m_search_string, Qt::CaseInsensitive) && !label.contains(m_search_string, Qt::CaseInsensitive))
+    if (!address.contains(m_search_string, Qt::CaseInsensitive) &&
+        !  label.contains(m_search_string, Qt::CaseInsensitive) &&
+        !   txid.contains(m_search_string, Qt::CaseInsensitive)) {
         return false;
+    }
     if(amount < minAmount)
         return false;
 
