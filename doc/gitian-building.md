@@ -361,7 +361,7 @@ Building Dash Core
 ----------------
 
 To build Dash Core (for Linux, OS X and Windows) just follow the steps under 'perform
-Gitian builds' in [doc/release-process.md](release-process.md#perform-gitian-builds) in the Dash Core repository.
+Gitian builds' in [doc/release-process.md](release-process.md#setup-and-perform-gitian-builds) in the Dash Core repository.
 
 This may take some time as it will build all the dependencies needed for each descriptor.
 These dependencies will be cached after a successful build to avoid rebuilding them when possible.
