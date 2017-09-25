@@ -77,9 +77,9 @@ class SegWitTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3
-        self.extra_args = [["-walletprematurewitness", "-rpcserialversion=0"],
-                           ["-blockversion=4", "-promiscuousmempoolflags=517", "-prematurewitness", "-walletprematurewitness", "-rpcserialversion=1"],
-                           ["-blockversion=536870915", "-promiscuousmempoolflags=517", "-prematurewitness", "-walletprematurewitness"]]
+        self.extra_args = [["-rpcserialversion=0"],
+                           ["-blockversion=4", "-promiscuousmempoolflags=517", "-prematurewitness", "-rpcserialversion=1"],
+                           ["-blockversion=536870915", "-promiscuousmempoolflags=517", "-prematurewitness"]]
 
     def setup_network(self):
         super().setup_network()

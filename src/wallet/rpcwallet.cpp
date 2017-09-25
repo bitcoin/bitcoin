@@ -1228,13 +1228,6 @@ UniValue addwitnessaddress(const JSONRPCRequest& request)
         throw std::runtime_error(msg);
     }
 
-    {
-        LOCK(cs_main);
-        if (!IsWitnessEnabled(chainActive.Tip(), Params().GetConsensus()) && !gArgs.GetBoolArg("-walletprematurewitness", false)) {
-            throw JSONRPCError(RPC_WALLET_ERROR, "Segregated witness not enabled on network");
-        }
-    }
-
     CTxDestination dest = DecodeDestination(request.params[0].get_str());
     if (!IsValidDestination(dest)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
