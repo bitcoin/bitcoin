@@ -20,8 +20,8 @@ TransactionFilterProxy::TransactionFilterProxy(QObject *parent) :
     QSortFilterProxyModel(parent),
     dateFrom(MIN_DATE),
     dateTo(MAX_DATE),
-    addrPrefix(),
-    typeFilter(COMMON_TYPES),
+    m_search_string(),
+    typeFilter(ALL_TYPES),
     watchOnlyFilter(WatchOnlyFilter_All),
     minAmount(0),
     limitRows(-1),
@@ -51,7 +51,7 @@ bool TransactionFilterProxy::filterAcceptsRow(int sourceRow, const QModelIndex &
         return false;
     if(datetime < dateFrom || datetime > dateTo)
         return false;
-    if (!address.contains(addrPrefix, Qt::CaseInsensitive) && !label.contains(addrPrefix, Qt::CaseInsensitive))
+    if (!address.contains(m_search_string, Qt::CaseInsensitive) && !label.contains(m_search_string, Qt::CaseInsensitive))
         return false;
     if(amount < minAmount)
         return false;
@@ -66,9 +66,15 @@ void TransactionFilterProxy::setDateRange(const QDateTime &from, const QDateTime
     invalidateFilter();
 }
 
+<<<<<<< HEAD
 void TransactionFilterProxy::setAddressPrefix(const QString &addrPrefix)
 {
     this->addrPrefix = addrPrefix;
+=======
+void TransactionFilterProxy::setSearchString(const QString &search_string)
+{
+    m_search_string = search_string;
+>>>>>>> b1f6342... Qt: Rename confusingly-named "address prefix" to "search string"
     invalidateFilter();
 }
 

@@ -1281,3 +1281,6 @@ src/test/.deps/test_test_bitcoin-bech32_tests.Po
 src/test/.deps/test_test_bitcoin-merkleblock_tests.Po
 test/config.ini
 chaincoin.icns
+src/test/.deps/test_test_bitcoin-txvalidation_tests.Po
+src/wallet/libbitcoin_wallet_a-walletutil.o
+src/wallet/.deps/libbitcoin_wallet_a-walletutil.Po
