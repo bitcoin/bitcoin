@@ -53,12 +53,17 @@ public:
 class CServicenode
 {
 public:
+    CTxIn vin;
+    CService addr;
+    CPubKey pubkey;
+    int64_t sigTime; //snb message time
+
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
     }
-
+    bool IsValidNetAddr();
 };
 
 
@@ -69,10 +74,19 @@ public:
 class CServicenodeBroadcast : public CServicenode
 {
 public:
+    bool CheckAndUpdate(int& nDoS);
+    bool CheckInputsAndAdd(int& nDos);
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    }
+
+    uint256 GetHash(){
+        CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+        ss << sigTime;
+        ss << pubkey;
+        return ss.GetHash();
     }
 
 };

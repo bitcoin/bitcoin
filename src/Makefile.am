@@ -227,8 +227,9 @@ libbitcoin_wallet_a_SOURCES = \
   throne-payments.cpp \
   throne-sync.cpp \
   throneconfig.cpp \
-  servicenodeconfig.cpp \
   throneman.cpp \
+  servicenode.cpp \
+  servicenodeconfig.cpp \
   servicenodeman.cpp \
   rpcdump.cpp \
   rpcwallet.cpp \

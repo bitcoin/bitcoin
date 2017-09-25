@@ -10,4 +10,18 @@
 #include "addrman.h"
 #include <boost/lexical_cast.hpp>
 
+bool CServicenode::IsValidNetAddr()
+{
+    // TODO: regtest is fine with any addresses for now,
+    // should probably be a bit smarter if one day we start to implement tests for this
+    return (addr.IsIPv4() && addr.IsRoutable());
+}
+
+bool CServicenodeBroadcast::CheckAndUpdate(int& nDos)
+{
+}
+
+bool CServicenodeBroadcast::CheckInputsAndAdd(int& nDos)
+{
+}
 

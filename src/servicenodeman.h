@@ -27,11 +27,23 @@ class CServicenodeDB
 
 class CServicenodeMan
 {
+private:
+    // critical section to protect the inner data structures
+    mutable CCriticalSection cs;
+
+    // critical section to protect the inner data structures specifically on messaging
+    mutable CCriticalSection cs_process_message;
+
 public:
     // Keep track of all broadcasts I've seen
     map<uint256, CServicenodeBroadcast> mapSeenServicenodeBroadcast;
     // Keep track of all pings I've seen
     map<uint256, CServicenodePing> mapSeenServicenodePing;
+
+    void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
+
+    /// Perform complete check and only then update list and maps
+    bool CheckSnbAndUpdateServicenodeList(CServicenodeBroadcast snb, int& nDos);
 };
 
 #endif
