@@ -29,8 +29,10 @@
 #include <utility>
 #include <vector>
 
-typedef CWallet* CWalletRef;
-extern std::vector<CWalletRef> vpwallets;
+bool AddWallet(std::shared_ptr<CWallet> pwallet);
+bool RemoveWallet(std::shared_ptr<CWallet> pwallet);
+std::vector<std::shared_ptr<CWallet>> GetWallets();
+bool ClearWallets();
 
 /**
  * Settings
@@ -1081,7 +1083,7 @@ public:
     bool MarkReplaced(const uint256& originalHash, const uint256& newHash);
 
     /* Initializes the wallet, returns a new CWallet instance or a null pointer in case of an error */
-    static CWallet* CreateWalletFromFile(const std::string walletFile);
+    static std::shared_ptr<CWallet> CreateWalletFromFile(const std::string walletFile);
 
     /**
      * Wallet post-init setup
@@ -1112,15 +1114,14 @@ public:
 class CReserveKey final : public CReserveScript
 {
 protected:
-    CWallet* pwallet;
+    CWallet* const pwallet;
     int64_t nIndex;
     CPubKey vchPubKey;
     bool fInternal;
 public:
-    explicit CReserveKey(CWallet* pwalletIn)
+    explicit CReserveKey(CWallet* pwalletIn) : pwallet(pwalletIn)
     {
         nIndex = -1;
-        pwallet = pwalletIn;
         fInternal = false;
     }
 

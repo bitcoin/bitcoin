@@ -37,7 +37,36 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/thread.hpp>
 
-std::vector<CWalletRef> vpwallets;
+static std::vector<std::shared_ptr<CWallet>> vpwallets;
+
+bool AddWallet(std::shared_ptr<CWallet> pwallet)
+{
+    vpwallets.push_back(pwallet);
+    return true;
+}
+
+bool RemoveWallet(std::shared_ptr<CWallet> pwallet)
+{
+    for (auto it = vpwallets.begin(); it != vpwallets.end(); ++it) {
+        if (*it == pwallet) {
+            vpwallets.erase(it);
+            return true;
+        }
+    }
+    return false;
+}
+
+std::vector<std::shared_ptr<CWallet>> GetWallets()
+{
+    return vpwallets;
+}
+
+bool ClearWallets()
+{
+    vpwallets.clear();
+    return true;
+}
+
 /** Transaction fee set by the user */
 CFeeRate payTxFee(DEFAULT_TRANSACTION_FEE);
 unsigned int nTxConfirmTarget = DEFAULT_TX_CONFIRM_TARGET;
@@ -3755,7 +3784,7 @@ std::vector<std::string> CWallet::GetDestValues(const std::string& prefix) const
     return values;
 }
 
-CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
+std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(const std::string walletFile)
 {
     // needed to restore wallet transaction meta data after -zapwallettxes
     std::vector<CWalletTx> vWtx;
@@ -3777,7 +3806,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
     int64_t nStart = GetTimeMillis();
     bool fFirstRun = true;
     std::unique_ptr<CWalletDBWrapper> dbw(new CWalletDBWrapper(&bitdb, walletFile));
-    CWallet *walletInstance = new CWallet(std::move(dbw));
+    std::shared_ptr<CWallet> walletInstance = std::make_shared<CWallet>(std::move(dbw));
     DBErrors nLoadWalletRet = walletInstance->LoadWallet(fFirstRun);
     if (nLoadWalletRet != DB_LOAD_OK)
     {
@@ -3861,7 +3890,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
 
     LogPrintf(" wallet      %15dms\n", GetTimeMillis() - nStart);
 
-    RegisterValidationInterface(walletInstance);
+    RegisterValidationInterface(walletInstance.get());
 
     // Try to top up keypool. No-op if the wallet is locked.
     walletInstance->TopUpKeyPool();
