@@ -4267,7 +4267,7 @@ void static ProcessGetData(CNode* pfrom)
                     if(snodeman.mapSeenServicenodeBroadcast.count(inv.hash)){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        //ss << snodeman.mapSeenServicenodeBroadcast[inv.hash];
+                        ss << snodeman.mapSeenServicenodeBroadcast[inv.hash];
                         pfrom->PushMessage("snb", ss);
                         pushed = true;
                     }
@@ -4277,7 +4277,7 @@ void static ProcessGetData(CNode* pfrom)
                     if(snodeman.mapSeenServicenodePing.count(inv.hash)){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        //ss << snodeman.mapSeenServicenodePing[inv.hash];
+                        ss << snodeman.mapSeenServicenodePing[inv.hash];
                         pfrom->PushMessage("snp", ss);
                         pushed = true;
                     }

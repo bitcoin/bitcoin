@@ -11,21 +11,13 @@
 #include "util.h"
 #include "base58.h"
 #include "main.h"
+#include "servicenode.h"
 
 using namespace std;
 
 class CServicenodeMan;
 
 extern CServicenodeMan snodeman;
-
-// This is work around for now to avoid compilation errors
-class CServicenodeBroadcast
-{
-};
-
-class CServicenodePing
-{
-};
 
 /** Access to the SN database (sncache.dat)
  */
