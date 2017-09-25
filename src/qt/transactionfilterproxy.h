@@ -35,7 +35,7 @@ public:
     };
 
     void setDateRange(const QDateTime &from, const QDateTime &to);
-    void setAddressPrefix(const QString &addrPrefix);
+    void setSearchString(const QString &);
     /**
       @note Type filter takes a bit field created with TYPE() or ALL_TYPES
      */
@@ -57,7 +57,7 @@ protected:
 private:
     QDateTime dateFrom;
     QDateTime dateTo;
-    QString addrPrefix;
+    QString m_search_string;
     quint32 typeFilter;
     WatchOnlyFilter watchOnlyFilter;
     CAmount minAmount;
