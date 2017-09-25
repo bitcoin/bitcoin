@@ -73,6 +73,7 @@ void TransactionFilterProxy::setAddressPrefix(const QString &addrPrefix)
 =======
 void TransactionFilterProxy::setSearchString(const QString &search_string)
 {
+    if (m_search_string == search_string) return;
     m_search_string = search_string;
 >>>>>>> b1f6342... Qt: Rename confusingly-named "address prefix" to "search string"
     invalidateFilter();
