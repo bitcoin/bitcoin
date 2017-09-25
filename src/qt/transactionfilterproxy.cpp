@@ -68,6 +68,7 @@ void TransactionFilterProxy::setDateRange(const QDateTime &from, const QDateTime
 
 void TransactionFilterProxy::setSearchString(const QString &search_string)
 {
+    if (m_search_string == search_string) return;
     m_search_string = search_string;
     invalidateFilter();
 }
