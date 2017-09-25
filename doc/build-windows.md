@@ -74,6 +74,7 @@ Then build using:
 
     cd depends
     make HOST=x86_64-w64-mingw32
+    #if the above line fails run this "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games"
     cd ..
     ./autogen.sh # not required when building from tarball
     CONFIG_SITE=$PWD/depends/x86_64-w64-mingw32/share/config.site ./configure --prefix=/
@@ -89,6 +90,7 @@ Then build using:
 
     cd depends
     make HOST=i686-w64-mingw32
+    
     cd ..
     ./autogen.sh # not required when building from tarball
     CONFIG_SITE=$PWD/depends/i686-w64-mingw32/share/config.site ./configure --prefix=/
