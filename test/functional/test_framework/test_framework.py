@@ -295,6 +295,11 @@ class BitcoinTestFramework(object):
             # Wait for nodes to stop
             node.wait_until_stopped()
 
+    def restart_node(self, i, extra_args=None):
+        """Stop and start a test node"""
+        self.stop_node(i)
+        self.start_node(i, extra_args)
+
     def assert_start_raises_init_error(self, i, extra_args=None, expected_msg=None):
         with tempfile.SpooledTemporaryFile(max_size=2**16) as log_stderr:
             try:
