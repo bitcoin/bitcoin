@@ -53,6 +53,14 @@ const char *mnLanguagesDesc[WLL_MAX] =
     "Chinese Traditional",
 };
 
+static void NormaliseUnicode(std::string &str)
+{
+    std::u32string u32;
+    ufal::unilib::utf8::decode(str, u32);
+    ufal::unilib::uninorms::nfkd(u32);
+    ufal::unilib::utf8::encode(u32, str);
+}
+
 int GetWord(int o, const char *pwl, int max, std::string &sWord)
 {
     sWord = "";
@@ -258,7 +266,7 @@ int MnemonicDecode(int nLanguage, const std::string &sWordListIn, std::vector<ui
     LogPrint(BCLog::HDWALLET, "%s: Language %d.\n", __func__, nLanguage);
     
     std::string sWordList = sWordListIn;
-    part::ReplaceStrInPlace(sWordList, "\u3000", " ");
+    NormaliseUnicode(sWordList);
     
     if (nLanguage == -1)
         nLanguage = MnemonicDetectLanguage(sWordList);
@@ -424,14 +432,6 @@ static int mnemonicKdf(const uint8_t *password, size_t lenPassword,
 
     return 0;
 };
-
-static void NormaliseUnicode(std::string &str)
-{
-    std::u32string u32;
-    ufal::unilib::utf8::decode(str, u32);
-    ufal::unilib::uninorms::nfkd(u32);
-    ufal::unilib::utf8::encode(u32, str);
-}
 
 int MnemonicToSeed(const std::string &sMnemonic, const std::string &sPasswordIn, std::vector<uint8_t> &vSeed)
 {
