@@ -21,13 +21,14 @@ public:
     static const std::string TESTNET;
     static const std::string REGTEST;
 
+    CBaseChainParams() {};
+    CBaseChainParams(const std::string& chain)
+    {
+        strDataDir = chain;
+    }
     const std::string& DataDir() const { return strDataDir; }
-    int RPCPort() const { return nRPCPort; }
 
 protected:
-    CBaseChainParams() {}
-
-    int nRPCPort;
     std::string strDataDir;
 };
 

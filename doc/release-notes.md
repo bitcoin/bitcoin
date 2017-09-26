@@ -16,6 +16,13 @@ To receive security and update notifications, please subscribe to:
 
   <https://bitcoincore.org/en/list/announcements/join/>
 
+Testnets interface changes:
+
+- Command line argument -rpcport no longer has a complex default to
+  think about. The default for bitcoin is 8332 and remains that.
+  For testnet3 and regtest; explicitly specifying -rpcport=18332 and -rpcport=18443
+  respectively is still possible as always. 
+
 How to Upgrade
 ==============
 
