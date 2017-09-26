@@ -62,13 +62,14 @@ def make_utxo(node, amount, confirmed=True, scriptPubKey=CScript([1])):
 class ReplaceByFeeTest(BitcoinTestFramework):
 
     def set_test_params(self):
-        self.num_nodes = 1
+        self.num_nodes = 2
         self.extra_args= [["-maxorphantx=1000",
                            "-whitelist=127.0.0.1",
                            "-limitancestorcount=50",
                            "-limitancestorsize=101",
                            "-limitdescendantcount=200",
-                           "-limitdescendantsize=101"]]
+                           "-limitdescendantsize=101"],
+                           ["-mempoolreplacement=0"]]
 
     def run_test(self):
         make_utxo(self.nodes[0], 1*COIN)
@@ -115,6 +116,8 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         tx1a_hex = txToHex(tx1a)
         tx1a_txid = self.nodes[0].sendrawtransaction(tx1a_hex, True)
 
+        self.sync_all([self.nodes])
+
         # Should fail because we haven't changed the fee
         tx1b = CTransaction()
         tx1b.vin = [CTxIn(tx0_outpoint, nSequence=0)]
@@ -123,12 +126,17 @@ class ReplaceByFeeTest(BitcoinTestFramework):
 
         # This will raise an exception due to insufficient fee
         assert_raises_jsonrpc(-26, "insufficient fee", self.nodes[0].sendrawtransaction, tx1b_hex, True)
+        # This will raise an exception due to transaction replacement being disabled
+        assert_raises_jsonrpc(-26, "txn-mempool-conflict", self.nodes[1].sendrawtransaction, tx1b_hex, True)
 
         # Extra 0.1 BTC fee
         tx1b = CTransaction()
         tx1b.vin = [CTxIn(tx0_outpoint, nSequence=0)]
         tx1b.vout = [CTxOut(int(0.9*COIN), CScript([b'b']))]
         tx1b_hex = txToHex(tx1b)
+        # Replacement still disabled even with "enough fee"
+        assert_raises_jsonrpc(-26, "txn-mempool-conflict", self.nodes[1].sendrawtransaction, tx1b_hex, True)
+        # Works when enabled
         tx1b_txid = self.nodes[0].sendrawtransaction(tx1b_hex, True)
 
         mempool = self.nodes[0].getrawmempool()
@@ -137,6 +145,11 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         assert (tx1b_txid in mempool)
 
         assert_equal(tx1b_hex, self.nodes[0].getrawtransaction(tx1b_txid))
+
+        # Second node is running mempoolreplacement=0, will not replace originally-seen txn
+        mempool = self.nodes[1].getrawmempool()
+        assert tx1a_txid in mempool
+        assert tx1b_txid not in mempool
 
     def test_doublespend_chain(self):
         """Doublespend of a long chain"""
