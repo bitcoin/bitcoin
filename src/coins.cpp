@@ -245,12 +245,11 @@ double CCoinsViewCache::GetPriority(const CTransaction &tx, int nHeight, CAmount
     double dResult = 0.0;
     BOOST_FOREACH(const CTxIn& txin, tx.vin)
     {
-        const CCoins* coins = AccessCoins(txin.prevout.hash);
-        assert(coins);
-        if (!coins->IsAvailable(txin.prevout.n)) continue;
-        if (coins->nHeight <= nHeight) {
-            dResult += coins->vout[txin.prevout.n].nValue * (nHeight-coins->nHeight);
-            inChainInputValue += coins->vout[txin.prevout.n].nValue;
+        const Coin& coin = AccessCoin(txin.prevout);
+        if (coin.IsSpent()) continue;
+        if (coin.nHeight <= nHeight) {
+            dResult += coin.out.nValue * (nHeight-coin.nHeight);
+            inChainInputValue += coin.out.nValue;
         }
     }
     return tx.ComputePriority(dResult);
