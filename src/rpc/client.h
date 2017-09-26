@@ -8,6 +8,8 @@
 
 #include <univalue.h>
 
+static const int DEFAULT_RPC_PORT = 8332;
+
 /** Convert positional arguments to command-specific RPC representation */
 UniValue RPCConvertValues(const std::string& strMethod, const std::vector<std::string>& strParams);
 
