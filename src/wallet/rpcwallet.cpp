@@ -16,7 +16,6 @@
 #include "policy/policy.h"
 #include "policy/rbf.h"
 #include "rpc/mining.h"
-#include "rpc/safemode.h"
 #include "rpc/server.h"
 #include "script/sign.h"
 #include "timedata.h"
@@ -454,7 +453,6 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
             + HelpExampleRpc("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\", 0.1, \"donation\", \"seans outpost\"")
         );
 
-    ObserveSafeMode();
     LOCK2(cs_main, pwallet->cs_wallet);
 
     CTxDestination dest = DecodeDestination(request.params[0].get_str());
@@ -532,7 +530,6 @@ UniValue listaddressgroupings(const JSONRPCRequest& request)
             + HelpExampleRpc("listaddressgroupings", "")
         );
 
-    ObserveSafeMode();
     LOCK2(cs_main, pwallet->cs_wallet);
 
     UniValue jsonGroupings(UniValue::VARR);
@@ -644,7 +641,6 @@ UniValue getreceivedbyaddress(const JSONRPCRequest& request)
             + HelpExampleRpc("getreceivedbyaddress", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\", 6")
        );
 
-    ObserveSafeMode();
     LOCK2(cs_main, pwallet->cs_wallet);
 
     // Bitcoin address
@@ -706,7 +702,6 @@ UniValue getreceivedbyaccount(const JSONRPCRequest& request)
             + HelpExampleRpc("getreceivedbyaccount", "\"tabby\", 6")
         );
 
-    ObserveSafeMode();
     LOCK2(cs_main, pwallet->cs_wallet);
 
     // Minimum confirmations
@@ -779,7 +774,6 @@ UniValue getbalance(const JSONRPCRequest& request)
             + HelpExampleRpc("getbalance", "\"*\", 6")
         );
 
-    ObserveSafeMode();
     LOCK2(cs_main, pwallet->cs_wallet);
 
     const UniValue& account_value = request.params[0];
@@ -824,7 +818,6 @@ UniValue getunconfirmedbalance(const JSONRPCRequest &request)
                 "getunconfirmedbalance\n"
                 "Returns the server's total unconfirmed balance\n");
 
-    ObserveSafeMode();
     LOCK2(cs_main, pwallet->cs_wallet);
 
     return ValueFromAmount(pwallet->GetUnconfirmedBalance());
@@ -859,7 +852,6 @@ UniValue movecmd(const JSONRPCRequest& request)
             + HelpExampleRpc("move", "\"timotei\", \"akiko\", 0.01, 6, \"happy birthday!\"")
         );
 
-    ObserveSafeMode();
     LOCK2(cs_main, pwallet->cs_wallet);
 
     std::string strFrom = AccountFromValue(request.params[0]);
@@ -918,7 +910,6 @@ UniValue sendfrom(const JSONRPCRequest& request)
             + HelpExampleRpc("sendfrom", "\"tabby\", \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\", 0.01, 6, \"donation\", \"seans outpost\"")
         );
 
-    ObserveSafeMode();
     LOCK2(cs_main, pwallet->cs_wallet);
 
     std::string strAccount = AccountFromValue(request.params[0]);
@@ -1003,7 +994,6 @@ UniValue sendmany(const JSONRPCRequest& request)
             + HelpExampleRpc("sendmany", "\"\", \"{\\\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\\\":0.01,\\\"1353tsE8YMTA4EuV7dgUXGjNFf9KpVvKHz\\\":0.02}\", 6, \"testing\"")
         );
 
-    ObserveSafeMode();
     LOCK2(cs_main, pwallet->cs_wallet);
 
     if (pwallet->GetBroadcastTransactions() && !g_connman) {
@@ -1422,7 +1412,6 @@ UniValue listreceivedbyaddress(const JSONRPCRequest& request)
             + HelpExampleRpc("listreceivedbyaddress", "6, true, true")
         );
 
-    ObserveSafeMode();
     LOCK2(cs_main, pwallet->cs_wallet);
 
     return ListReceived(pwallet, request.params, false);
@@ -1462,7 +1451,6 @@ UniValue listreceivedbyaccount(const JSONRPCRequest& request)
             + HelpExampleRpc("listreceivedbyaccount", "6, true, true")
         );
 
-    ObserveSafeMode();
     LOCK2(cs_main, pwallet->cs_wallet);
 
     return ListReceived(pwallet, request.params, true);
@@ -1650,7 +1638,6 @@ UniValue listtransactions(const JSONRPCRequest& request)
             + HelpExampleRpc("listtransactions", "\"*\", 20, 100")
         );
 
-    ObserveSafeMode();
     LOCK2(cs_main, pwallet->cs_wallet);
 
     std::string strAccount = "*";
@@ -1744,7 +1731,6 @@ UniValue listaccounts(const JSONRPCRequest& request)
             + HelpExampleRpc("listaccounts", "6")
         );
 
-    ObserveSafeMode();
     LOCK2(cs_main, pwallet->cs_wallet);
 
     int nMinDepth = 1;
@@ -1853,7 +1839,6 @@ UniValue listsinceblock(const JSONRPCRequest& request)
             + HelpExampleRpc("listsinceblock", "\"000000000000000bacf66f7497b7dc45ef753ee9a7d38571037cdb1a57f663ad\", 6")
         );
 
-    ObserveSafeMode();
     LOCK2(cs_main, pwallet->cs_wallet);
 
     const CBlockIndex* pindex = nullptr;    // Block index of the specified block or the common ancestor, if the block provided was in a deactivated chain.
@@ -1985,7 +1970,6 @@ UniValue gettransaction(const JSONRPCRequest& request)
             + HelpExampleRpc("gettransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
         );
 
-    ObserveSafeMode();
     LOCK2(cs_main, pwallet->cs_wallet);
 
     uint256 hash;
@@ -2047,7 +2031,6 @@ UniValue abandontransaction(const JSONRPCRequest& request)
             + HelpExampleRpc("abandontransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
         );
 
-    ObserveSafeMode();
     LOCK2(cs_main, pwallet->cs_wallet);
 
     uint256 hash;
@@ -2480,7 +2463,6 @@ UniValue listlockunspent(const JSONRPCRequest& request)
             + HelpExampleRpc("listlockunspent", "")
         );
 
-    ObserveSafeMode();
     LOCK2(cs_main, pwallet->cs_wallet);
 
     std::vector<COutPoint> vOutpts;
@@ -2559,7 +2541,6 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
             + HelpExampleRpc("getwalletinfo", "")
         );
 
-    ObserveSafeMode();
     LOCK2(cs_main, pwallet->cs_wallet);
 
     UniValue obj(UniValue::VOBJ);
@@ -2711,8 +2692,6 @@ UniValue listunspent(const JSONRPCRequest& request)
             + HelpExampleCli("listunspent", "6 9999999 '[]' true '{ \"minimumAmount\": 0.005 }'")
             + HelpExampleRpc("listunspent", "6, 9999999, [] , true, { \"minimumAmount\": 0.005 } ")
         );
-
-    ObserveSafeMode();
 
     int nMinDepth = 1;
     if (!request.params[0].isNull()) {
@@ -2876,7 +2855,6 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
                             + HelpExampleCli("sendrawtransaction", "\"signedtransactionhex\"")
                             );
 
-    ObserveSafeMode();
     RPCTypeCheck(request.params, {UniValue::VSTR});
 
     CCoinControl coinControl;
