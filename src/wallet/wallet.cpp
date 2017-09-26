@@ -41,6 +41,11 @@ static std::vector<std::shared_ptr<CWallet>> vpwallets;
 
 bool AddWallet(std::shared_ptr<CWallet> pwallet)
 {
+    for (auto it = vpwallets.begin(); it != vpwallets.end(); ++it) {
+        if (*it == pwallet) {
+            return false;
+        }
+    }
     vpwallets.push_back(pwallet);
     return true;
 }
