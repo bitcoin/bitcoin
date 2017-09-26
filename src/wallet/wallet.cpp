@@ -37,10 +37,12 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/thread.hpp>
 
-static std::vector<std::shared_ptr<CWallet>> vpwallets;
+static CCriticalSection cs_wallets;
+static std::vector<CWalletRef> wallets;
 
 bool AddWallet(std::shared_ptr<CWallet> pwallet)
 {
+    LOCK(cs_wallets);
     for (auto it = vpwallets.begin(); it != vpwallets.end(); ++it) {
         if (*it == pwallet) {
             return false;
@@ -52,6 +54,7 @@ bool AddWallet(std::shared_ptr<CWallet> pwallet)
 
 bool RemoveWallet(std::shared_ptr<CWallet> pwallet)
 {
+    LOCK(cs_wallets);
     for (auto it = vpwallets.begin(); it != vpwallets.end(); ++it) {
         if (*it == pwallet) {
             vpwallets.erase(it);
@@ -63,11 +66,13 @@ bool RemoveWallet(std::shared_ptr<CWallet> pwallet)
 
 std::vector<std::shared_ptr<CWallet>> GetWallets()
 {
+    LOCK(cs_wallets);
     return vpwallets;
 }
 
 bool ClearWallets()
 {
+    LOCK(cs_wallets);
     vpwallets.clear();
     return true;
 }
