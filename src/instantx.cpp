@@ -598,8 +598,8 @@ bool CInstantSend::ResolveConflicts(const CTxLockCandidate& txLockCandidate)
     }
     // Not in block yet, make sure all its inputs are still unspent
     BOOST_FOREACH(const CTxIn& txin, txLockCandidate.txLockRequest.vin) {
-        CCoins coins;
-        if(!GetUTXOCoins(txin.prevout, coins)) {
+        Coin coin;
+        if(!GetUTXOCoin(txin.prevout, coin)) {
             // Not in UTXO anymore? A conflicting tx was mined while we were waiting for votes.
             LogPrintf("CInstantSend::ResolveConflicts -- ERROR: Failed to find UTXO %s, can't complete Transaction Lock\n", txin.prevout.ToStringShort());
             return false;
@@ -935,14 +935,14 @@ bool CTxLockRequest::IsValid() const
 
     BOOST_FOREACH(const CTxIn& txin, vin) {
 
-        CCoins coins;
+        Coin coin;
 
-        if(!GetUTXOCoins(txin.prevout, coins)) {
+        if(!GetUTXOCoin(txin.prevout, coin)) {
             LogPrint("instantsend", "CTxLockRequest::IsValid -- Failed to find UTXO %s\n", txin.prevout.ToStringShort());
             return false;
         }
 
-        int nTxAge = chainActive.Height() - coins.nHeight + 1;
+        int nTxAge = chainActive.Height() - coin.nHeight + 1;
         // 1 less than the "send IX" gui requires, in case of a block propagating the network at the time
         int nConfirmationsRequired = INSTANTSEND_CONFIRMATIONS_REQUIRED - 1;
 
@@ -952,7 +952,7 @@ bool CTxLockRequest::IsValid() const
             return false;
         }
 
-        nValueIn += coins.vout[txin.prevout.n].nValue;
+        nValueIn += coin.out.nValue;
     }
 
     if(nValueIn > sporkManager.GetSporkValue(SPORK_5_INSTANTSEND_MAX_VALUE)*COIN) {
@@ -991,13 +991,13 @@ bool CTxLockVote::IsValid(CNode* pnode, CConnman& connman) const
         return false;
     }
 
-    CCoins coins;
-    if(!GetUTXOCoins(outpoint, coins)) {
+    Coin coin;
+    if(!GetUTXOCoin(outpoint, coin)) {
         LogPrint("instantsend", "CTxLockVote::IsValid -- Failed to find UTXO %s\n", outpoint.ToStringShort());
         return false;
     }
 
-    int nLockInputHeight = coins.nHeight + 4;
+    int nLockInputHeight = coin.nHeight + 4;
 
     int nRank;
     if(!mnodeman.GetMasternodeRank(outpointMasternode, nRank, nLockInputHeight, MIN_INSTANTSEND_PROTO_VERSION)) {

@@ -443,19 +443,21 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& in
     return nSigOps;
 }
 
-bool GetUTXOCoins(const COutPoint& outpoint, CCoins& coins)
+bool GetUTXOCoin(const COutPoint& outpoint, Coin& coin)
 {
     LOCK(cs_main);
-    return !(!pcoinsTip->GetCoins(outpoint.hash, coins) ||
-             (unsigned int)outpoint.n>=coins.vout.size() ||
-             coins.vout[outpoint.n].IsNull());
+    if (!pcoinsTip->GetCoin(outpoint, coin))
+        return false;
+    if (coin.IsSpent())
+        return false;
+    return true;
 }
 
 int GetUTXOHeight(const COutPoint& outpoint)
 {
     // -1 means UTXO is yet unknown or already spent
-    CCoins coins;
-    return GetUTXOCoins(outpoint, coins) ? coins.nHeight : -1;
+    Coin coin;
+    return GetUTXOCoin(outpoint, coin) ? coin.nHeight : -1;
 }
 
 int GetUTXOConfirmations(const COutPoint& outpoint)
