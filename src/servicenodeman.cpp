@@ -78,3 +78,32 @@ bool CServicenodeMan::CheckSnbAndUpdateServicenodeList(CServicenodeBroadcast snb
     return true;
 }
 
+CServicenode *CServicenodeMan::Find(const CTxIn &vin)
+{
+    LOCK(cs);
+
+    BOOST_FOREACH(CServicenode& sn, vServicenodes)
+    {
+        if(sn.vin.prevout == vin.prevout)
+            return &sn;
+    }
+    return NULL;
+}
+
+bool CServicenodeMan::Add(CServicenode &sn)
+{
+    LOCK(cs);
+
+    if (!sn.IsEnabled())
+        return false;
+
+    CServicenode *psn = Find(sn.vin);
+    if (psn == NULL)
+    {
+        LogPrint("throne", "CServicenodeMan: Adding new Servicenode %s - %i now\n", sn.addr.ToString(), size() + 1);
+        vServicenodes.push_back(sn);
+        return true;
+    }
+
+    return false;
+}

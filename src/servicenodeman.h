@@ -35,6 +35,8 @@ private:
     mutable CCriticalSection cs_process_message;
 
 public:
+    // map to hold all SNs
+    std::vector<CServicenode> vServicenodes;
     // Keep track of all broadcasts I've seen
     map<uint256, CServicenodeBroadcast> mapSeenServicenodeBroadcast;
     // Keep track of all pings I've seen
@@ -44,6 +46,14 @@ public:
 
     /// Perform complete check and only then update list and maps
     bool CheckSnbAndUpdateServicenodeList(CServicenodeBroadcast snb, int& nDos);
+    /// Find an entry
+    CServicenode* Find(const CTxIn& vin);
+    void Remove(CTxIn vin);
+
+    /// Add an entry
+    bool Add(CServicenode &mn);
+    /// Return the number of (unique) Thrones
+    int size() { return vServicenodes.size(); }
 };
 
 #endif
