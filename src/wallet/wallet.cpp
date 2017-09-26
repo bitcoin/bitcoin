@@ -40,40 +40,40 @@
 static CCriticalSection cs_wallets;
 static std::vector<CWalletRef> wallets;
 
-bool AddWallet(std::shared_ptr<CWallet> pwallet)
+bool AddWallet(CWalletRef wallet)
 {
     LOCK(cs_wallets);
-    for (auto it = vpwallets.begin(); it != vpwallets.end(); ++it) {
-        if (*it == pwallet) {
+    for (auto it = wallets.begin(); it != wallets.end(); ++it) {
+        if (*it == wallet) {
             return false;
         }
     }
-    vpwallets.push_back(pwallet);
+    wallets.push_back(wallet);
     return true;
 }
 
-bool RemoveWallet(std::shared_ptr<CWallet> pwallet)
+bool RemoveWallet(CWalletRef wallet)
 {
     LOCK(cs_wallets);
-    for (auto it = vpwallets.begin(); it != vpwallets.end(); ++it) {
-        if (*it == pwallet) {
-            vpwallets.erase(it);
+    for (auto it = wallets.begin(); it != wallets.end(); ++it) {
+        if (*it == wallet) {
+            wallets.erase(it);
             return true;
         }
     }
     return false;
 }
 
-std::vector<std::shared_ptr<CWallet>> GetWallets()
+std::vector<CWalletRef> GetWallets()
 {
     LOCK(cs_wallets);
-    return vpwallets;
+    return wallets;
 }
 
 bool ClearWallets()
 {
     LOCK(cs_wallets);
-    vpwallets.clear();
+    wallets.clear();
     return true;
 }
 
@@ -3794,7 +3794,7 @@ std::vector<std::string> CWallet::GetDestValues(const std::string& prefix) const
     return values;
 }
 
-std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(const std::string walletFile)
+CWalletRef CWallet::CreateWalletFromFile(const std::string walletFile)
 {
     // needed to restore wallet transaction meta data after -zapwallettxes
     std::vector<CWalletTx> vWtx;
@@ -3816,7 +3816,7 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(const std::string walletF
     int64_t nStart = GetTimeMillis();
     bool fFirstRun = true;
     std::unique_ptr<CWalletDBWrapper> dbw(new CWalletDBWrapper(&bitdb, walletFile));
-    std::shared_ptr<CWallet> walletInstance = std::make_shared<CWallet>(std::move(dbw));
+    CWalletRef walletInstance = std::make_shared<CWallet>(std::move(dbw));
     DBErrors nLoadWalletRet = walletInstance->LoadWallet(fFirstRun);
     if (nLoadWalletRet != DB_LOAD_OK)
     {

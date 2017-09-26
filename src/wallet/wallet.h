@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <atomic>
 #include <map>
+#include <memory>
 #include <set>
 #include <stdexcept>
 #include <stdint.h>
@@ -29,9 +30,11 @@
 #include <utility>
 #include <vector>
 
-bool AddWallet(std::shared_ptr<CWallet> pwallet);
-bool RemoveWallet(std::shared_ptr<CWallet> pwallet);
-std::vector<std::shared_ptr<CWallet>> GetWallets();
+typedef std::shared<CWallet> CWalletRef;
+
+bool AddWallet(CWalletRef wallet);
+bool RemoveWallet(CWalletRef wallet);
+std::vector<CWalletRef> GetWallets();
 bool ClearWallets();
 
 /**
@@ -1083,7 +1086,7 @@ public:
     bool MarkReplaced(const uint256& originalHash, const uint256& newHash);
 
     /* Initializes the wallet, returns a new CWallet instance or a null pointer in case of an error */
-    static std::shared_ptr<CWallet> CreateWalletFromFile(const std::string walletFile);
+    static CWalletRef CreateWalletFromFile(const std::string walletFile);
 
     /**
      * Wallet post-init setup

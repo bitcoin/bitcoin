@@ -35,7 +35,7 @@
 
 static const std::string WALLET_ENDPOINT_BASE = "/wallet/";
 
-std::shared_ptr<CWallet> GetWalletForJSONRPCRequest(const JSONRPCRequest& request)
+CWalletRef GetWalletForJSONRPCRequest(const JSONRPCRequest& request)
 {
     auto wallets = GetWallets();
     if (request.URI.substr(0, WALLET_ENDPOINT_BASE.size()) == WALLET_ENDPOINT_BASE) {
