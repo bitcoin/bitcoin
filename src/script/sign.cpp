@@ -411,3 +411,71 @@ bool IsSolvable(const SigningProvider& provider, const CScript& script)
     }
     return false;
 }
+
+PartiallySignedTransaction::PartiallySignedTransaction(const PartiallySignedTransaction& psbtx_in) : tx(psbtx_in.tx), redeem_scripts(psbtx_in.redeem_scripts), witness_scripts(psbtx_in.witness_scripts), inputs(psbtx_in.inputs), unknown(psbtx_in.unknown), hd_keypaths(psbtx_in.hd_keypaths), num_ins(psbtx_in.num_ins), use_in_index(psbtx_in.use_in_index) {}
+PartiallySignedTransaction::PartiallySignedTransaction(const CMutableTransaction& tx, const std::map<uint160, CScript>& redeem_scripts, const std::map<uint256, CScript>& witness_scripts, const std::vector<PartiallySignedInput>& inputs, const std::map<CPubKey, std::vector<uint32_t>> hd_keypaths)
+{
+    this->tx = tx;
+    this->redeem_scripts = redeem_scripts;
+    this->witness_scripts = witness_scripts;
+    this->inputs = inputs;
+    this->hd_keypaths = hd_keypaths;
+
+    SanitizeForSerialization();
+}
+
+void PartiallySignedTransaction::SanitizeForSerialization()
+{
+    // Remove sigs from inputs
+    for (unsigned int i = 0; i < tx.vin.size(); i++) {
+        CTxIn& in = tx.vin[i];
+        const PartiallySignedInput& psbt_in = inputs[i];
+        CTxOut vout;
+        if (psbt_in.non_witness_utxo) {
+            vout = psbt_in.non_witness_utxo->vout[in.prevout.n];
+        } else if (!psbt_in.witness_utxo.IsNull()) {
+            vout = psbt_in.witness_utxo;
+        } else {
+            // There is no input here, skip
+            continue;
+        }
+
+        // Check the input for sigs. Remove partial sigs. Assume that they are already in partial_sigs
+        ScriptError serror = SCRIPT_ERR_OK;
+        const CAmount& amount = vout.nValue;
+        const CTransaction const_tx(tx);
+        if (!VerifyScript(in.scriptSig, vout.scriptPubKey, &in.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, TransactionSignatureChecker(&const_tx, i, amount), &serror)) {
+            in.scriptSig.clear();
+            in.scriptWitness.SetNull();
+        } else { // If this passes, then remove all input data for this input
+            inputs[i].SetNull();
+        }
+    }
+}
+
+void PartiallySignedTransaction::SetNull()
+{
+    tx = CMutableTransaction();
+    redeem_scripts.clear();
+    witness_scripts.clear();
+    inputs.clear();
+    hd_keypaths.clear();
+}
+
+bool PartiallySignedTransaction::IsNull()
+{
+    return tx.vin.empty() && tx.vout.empty() && redeem_scripts.empty() && witness_scripts.empty() && inputs.empty() && hd_keypaths.empty();
+}
+
+void PartiallySignedInput::SetNull()
+{
+    non_witness_utxo.reset();
+    witness_utxo.SetNull();
+    partial_sigs.clear();
+    unknown.clear();
+}
+
+bool PartiallySignedInput::IsNull()
+{
+    return !non_witness_utxo && witness_utxo.IsNull() && partial_sigs.empty() && unknown.empty();
+}
