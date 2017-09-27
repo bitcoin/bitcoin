@@ -10,11 +10,112 @@
 #include "addrman.h"
 #include <boost/lexical_cast.hpp>
 
+CServicenodePing::CServicenodePing()
+{
+    vin = CTxIn();
+    blockHash = uint256();
+    sigTime = 0;
+    vchSig = std::vector<unsigned char>();
+}
+
+CServicenodePing::CServicenodePing(CTxIn& newVin)
+{
+    vin = newVin;
+    blockHash = chainActive[chainActive.Height() - 12]->GetBlockHash();
+    sigTime = GetAdjustedTime();
+    vchSig = std::vector<unsigned char>();
+}
+
+bool CServicenodePing::Sign(CKey& keyServicenode, CPubKey& pubKeyServicenode)
+{
+    std::string errorMessage;
+    std::string strThroNeSignMessage;
+
+    sigTime = GetAdjustedTime();
+    std::string strMessage = vin.ToString() + blockHash.ToString() + boost::lexical_cast<std::string>(sigTime);
+
+    if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchSig, keyServicenode)) {
+        LogPrintf("CServicenodePing::Sign() - Error: %s\n", errorMessage);
+        return false;
+    }
+
+    if(!darkSendSigner.VerifyMessage(pubKeyServicenode, vchSig, strMessage, errorMessage)) {
+        LogPrintf("CServicenodePing::Sign() - Error: %s\n", errorMessage);
+        return false;
+    }
+
+    return true;
+}
+
 bool CServicenode::IsValidNetAddr()
 {
     // TODO: regtest is fine with any addresses for now,
     // should probably be a bit smarter if one day we start to implement tests for this
     return (addr.IsIPv4() && addr.IsRoutable());
+}
+
+//
+// When a new servicenode broadcast is sent, update our information
+//
+bool CServicenode::UpdateFromNewBroadcast(CServicenodeBroadcast& snb)
+{
+    if(snb.sigTime > sigTime) {    
+        pubkey2 = snb.pubkey2;
+        sigTime = snb.sigTime;
+        sig = snb.sig;
+        protocolVersion = snb.protocolVersion;
+        addr = snb.addr;
+        lastTimeChecked = 0;
+        int nDoS = 0;
+        //if(snb.lastPing == CServicenodePing() || (snb.lastPing != CServicenodePing() && snb.lastPing.CheckAndUpdate(nDoS, false))) {
+        //    lastPing = snb.lastPing;
+        //    snodeman.mapSeenServicenodePing.insert(make_pair(lastPing.GetHash(), lastPing));
+        //}
+        return true;
+    }
+    return false;
+}
+
+void CServicenode::Check(bool forceCheck)
+{
+    if(ShutdownRequested()) return;
+
+    if(!forceCheck && (GetTime() - lastTimeChecked < SERVICENODE_CHECK_SECONDS)) return;
+    lastTimeChecked = GetTime();
+
+
+    //once spent, stop doing the checks
+    if(activeState == SERVICENODE_VIN_SPENT) return;
+
+
+    if(!IsPingedWithin(SERVICENODE_REMOVAL_SECONDS)){
+        activeState = SERVICENODE_REMOVE;
+        return;
+    }
+
+    if(!IsPingedWithin(SERVICENODE_EXPIRATION_SECONDS)){
+        activeState = SERVICENODE_EXPIRED;
+        return;
+    }
+
+    if(!unitTest){
+        CValidationState state;
+        CMutableTransaction tx = CMutableTransaction();
+        CTxOut vout = CTxOut(9999.99*COIN, darkSendPool.collateralPubKey);
+        tx.vin.push_back(vin);
+        tx.vout.push_back(vout);
+
+        {
+            TRY_LOCK(cs_main, lockMain);
+            if(!lockMain) return;
+
+            if(!AcceptableInputs(mempool, state, CTransaction(tx), false, NULL)){
+                activeState = SERVICENODE_VIN_SPENT;
+                return;
+            }
+        }
+    }
+    activeState = SERVICENODE_ENABLED; // OK
 }
 
 bool CServicenodeBroadcast::CheckAndUpdate(int& nDos)
@@ -239,88 +340,146 @@ bool CServicenodeBroadcast::CheckInputsAndAdd(int& nDoS)
 
 }
 
-//
-// When a new servicenode broadcast is sent, update our information
-//
-bool CServicenode::UpdateFromNewBroadcast(CServicenodeBroadcast& snb)
-{
-    if(snb.sigTime > sigTime) {    
-        pubkey2 = snb.pubkey2;
-        sigTime = snb.sigTime;
-        sig = snb.sig;
-        protocolVersion = snb.protocolVersion;
-        addr = snb.addr;
-        lastTimeChecked = 0;
-        int nDoS = 0;
-        //if(snb.lastPing == CServicenodePing() || (snb.lastPing != CServicenodePing() && snb.lastPing.CheckAndUpdate(nDoS, false))) {
-        //    lastPing = snb.lastPing;
-        //    snodeman.mapSeenServicenodePing.insert(make_pair(lastPing.GetHash(), lastPing));
-        //}
-        return true;
-    }
-    return false;
-}
-
-void CServicenode::Check(bool forceCheck)
-{
-    if(ShutdownRequested()) return;
-
-    if(!forceCheck && (GetTime() - lastTimeChecked < SERVICENODE_CHECK_SECONDS)) return;
-    lastTimeChecked = GetTime();
-
-
-    //once spent, stop doing the checks
-    if(activeState == SERVICENODE_VIN_SPENT) return;
-
-
-    if(!IsPingedWithin(SERVICENODE_REMOVAL_SECONDS)){
-        activeState = SERVICENODE_REMOVE;
-        return;
-    }
-
-    if(!IsPingedWithin(SERVICENODE_EXPIRATION_SECONDS)){
-        activeState = SERVICENODE_EXPIRED;
-        return;
-    }
-
-    if(!unitTest){
-        CValidationState state;
-        CMutableTransaction tx = CMutableTransaction();
-        CTxOut vout = CTxOut(9999.99*COIN, darkSendPool.collateralPubKey);
-        tx.vin.push_back(vin);
-        tx.vout.push_back(vout);
-
-        {
-            TRY_LOCK(cs_main, lockMain);
-            if(!lockMain) return;
-
-            if(!AcceptableInputs(mempool, state, CTransaction(tx), false, NULL)){
-                activeState = SERVICENODE_VIN_SPENT;
-                return;
-            }
-        }
-    }
-    activeState = SERVICENODE_ENABLED; // OK
-}
-
 void CServicenodeBroadcast::Relay()
 {
     CInv inv(MSG_SERVICENODE_ANNOUNCE, GetHash());
     RelayInv(inv);
 }
 
-void CServicenodeMan::Remove(CTxIn vin)
+CServicenodeBroadcast::CServicenodeBroadcast()
 {
-    LOCK(cs);
+    vin = CTxIn();
+    addr = CService();
+    pubkey = CPubKey();
+    pubkey2 = CPubKey();
+    sig = std::vector<unsigned char>();
+    activeState = SERVICENODE_ENABLED;
+    sigTime = GetAdjustedTime();
+    lastPing = CServicenodePing();
+    unitTest = false;
+    protocolVersion = PROTOCOL_VERSION;
+}
 
-    vector<CServicenode>::iterator it = vServicenodes.begin();
-    while(it != vServicenodes.end()){
-        if((*it).vin == vin){
-            LogPrint("throne", "CServicenodeMan: Removing Servicenode %s - %i now\n", (*it).addr.ToString(), size() - 1);
-            vServicenodes.erase(it);
-            break;
-        }
-        ++it;
+CServicenodeBroadcast::CServicenodeBroadcast(CService newAddr, CTxIn newVin, CPubKey newPubkey, CPubKey newPubkey2, int protocolVersionIn)
+{
+    vin = newVin;
+    addr = newAddr;
+    pubkey = newPubkey;
+    pubkey2 = newPubkey2;
+    sig = std::vector<unsigned char>();
+    activeState = SERVICENODE_ENABLED;
+    sigTime = GetAdjustedTime();
+    lastPing = CServicenodePing();
+    unitTest = false;
+    protocolVersion = protocolVersionIn;
+}
+
+CServicenodeBroadcast::CServicenodeBroadcast(const CServicenode& mn)
+{
+    vin = mn.vin;
+    addr = mn.addr;
+    pubkey = mn.pubkey;
+    pubkey2 = mn.pubkey2;
+    sig = mn.sig;
+    activeState = mn.activeState;
+    sigTime = mn.sigTime;
+    lastPing = mn.lastPing;
+    unitTest = mn.unitTest;
+    protocolVersion = mn.protocolVersion;
+}
+
+
+bool CServicenodeBroadcast::Create(std::string strService, std::string strKeyServicenode, std::string strTxHash, std::string strOutputIndex, std::string& strErrorMessage, CServicenodeBroadcast &mnb, bool fOffline) {
+    CTxIn txin;
+    CPubKey pubKeyCollateralAddress;
+    CKey keyCollateralAddress;
+    CPubKey pubKeyServicenodeNew;
+    CKey keyServicenodeNew;
+
+    //need correct blocks to send ping
+    //if(!fOffline && !servicenodeSync.IsBlockchainSynced()) {
+    //    strErrorMessage = "Sync in progress. Must wait until sync is complete to start Servicenode";
+    //    LogPrintf("CServicenodeBroadcast::Create -- %s\n", strErrorMessage);
+    //    return false;
+    //}
+
+    if(!darkSendSigner.SetKey(strKeyServicenode, strErrorMessage, keyServicenodeNew, pubKeyServicenodeNew))
+    {
+        strErrorMessage = strprintf("Can't find keys for servicenode %s - %s", strService, strErrorMessage);
+        LogPrintf("CServicenodeBroadcast::Create -- %s\n", strErrorMessage);
+        return false;
     }
+
+    if(!pwalletMain->GetServicenodeVinAndKeys(txin, pubKeyCollateralAddress, keyCollateralAddress, strTxHash, strOutputIndex)) {
+        strErrorMessage = strprintf("Could not allocate txin %s:%s for servicenode %s", strTxHash, strOutputIndex, strService);
+        LogPrintf("CServicenodeBroadcast::Create -- %s\n", strErrorMessage);
+        return false;
+    }
+
+    CService service = CService(strService);
+    if(Params().NetworkID() == CBaseChainParams::MAIN) {
+        if(service.GetPort() != 9340) {
+            strErrorMessage = strprintf("Invalid port %u for servicenode %s - only 9340 is supported on mainnet.", service.GetPort(), strService);
+            LogPrintf("CServicenodeBroadcast::Create -- %s\n", strErrorMessage);
+            return false;
+        }
+    } else if(service.GetPort() == 9340) {
+        strErrorMessage = strprintf("Invalid port %u for servicenode %s - 9340 is only supported on mainnet.", service.GetPort(), strService);
+        LogPrintf("CServicenodeBroadcast::Create -- %s\n", strErrorMessage);
+        return false;
+    }
+
+    return Create(txin, CService(strService), keyCollateralAddress, pubKeyCollateralAddress, keyServicenodeNew, pubKeyServicenodeNew, strErrorMessage, mnb);
+}
+
+bool CServicenodeBroadcast::Create(CTxIn txin, CService service, CKey keyCollateralAddress, CPubKey pubKeyCollateralAddress, CKey keyServicenodeNew, CPubKey pubKeyServicenodeNew, std::string &strErrorMessage, CServicenodeBroadcast &snb) {
+    // wait for reindex and/or import to finish
+    if (fImporting || fReindex) return false;
+
+    CServicenodePing snp(txin);
+    if(!snp.Sign(keyServicenodeNew, pubKeyServicenodeNew)){
+        strErrorMessage = strprintf("Failed to sign ping, txin: %s", txin.ToString());
+        LogPrintf("CServicenodeBroadcast::Create --  %s\n", strErrorMessage);
+        snb = CServicenodeBroadcast();
+        return false;
+    }
+
+    snb = CServicenodeBroadcast(service, txin, pubKeyCollateralAddress, pubKeyServicenodeNew, PROTOCOL_VERSION);
+
+    if(!snb.IsValidNetAddr()) {
+        strErrorMessage = strprintf("Invalid IP address, servicenode=%s", txin.prevout.ToStringShort());
+        LogPrintf("CServicenodeBroadcast::Create -- %s\n", strErrorMessage);
+        snb = CServicenodeBroadcast();
+        return false;
+    }
+
+    snb.lastPing = snp;
+    if(!snb.Sign(keyCollateralAddress)){
+        strErrorMessage = strprintf("Failed to sign broadcast, txin: %s", txin.ToString());
+        LogPrintf("CServicenodeBroadcast::Create -- %s\n", strErrorMessage);
+        snb = CServicenodeBroadcast();
+        return false;
+    }
+
+    return true;
+}
+
+bool CServicenodeBroadcast::Sign(CKey& keyCollateralAddress)
+{
+    std::string errorMessage;
+
+    std::string vchPubKey(pubkey.begin(), pubkey.end());
+    std::string vchPubKey2(pubkey2.begin(), pubkey2.end());
+
+    sigTime = GetAdjustedTime();
+
+    std::string strMessage = addr.ToString(false) + boost::lexical_cast<std::string>(sigTime) + vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(protocolVersion);
+
+    if(!darkSendSigner.SignMessage(strMessage, errorMessage, sig, keyCollateralAddress)) {
+        LogPrintf("CServicenodeBroadcast::Sign() - Error: %s\n", errorMessage);
+        return false;
+    }
+
+    return true;
 }
 

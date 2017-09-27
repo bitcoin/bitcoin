@@ -7,8 +7,11 @@
 #include "db.h"
 #include "init.h"
 #include "servicenodeconfig.h"
+#include "servicenode.h"
+#include "servicenodeman.h"
 #include "rpcserver.h"
 #include "utilmoneystr.h"
+#include "wallet.h"
 #include "key.h"
 #include "base58.h"
 
@@ -103,6 +106,73 @@ Value servicenode(const Array& params, bool fHelp)
         return CBitcoinSecret(secret).ToString();
     }
 
+    if (strCommand == "outputs"){
+        // Find possible candidates
+        std::vector<COutput> vPossibleCoins;
+        pwalletMain->AvailableCoins(vPossibleCoins, true, NULL, ONLY_500);
+
+        Object obj;
+        BOOST_FOREACH(COutput& out, vPossibleCoins)
+            obj.push_back(Pair(out.tx->GetHash().ToString(), strprintf("%d", out.i)));
+
+        return obj;
+    }
+
+    if (strCommand == "start-many" || strCommand == "start-all" || strCommand == "start-missing" || strCommand == "start-disabled")
+    {
+        {
+            LOCK(pwalletMain->cs_wallet);
+            EnsureWalletIsUnlocked();
+        }
+
+        //if((strCommand == "start-missing" || strCommand == "start-disabled") &&
+        // (servicenodeSync.RequestedServicenodeAssets <= THRONE_SYNC_LIST ||
+        //  servicenodeSync.RequestedServicenodeAssets == THRONE_SYNC_FAILED)) {
+        //    throw runtime_error("You can't use this command until servicenode list is synced\n");
+        //}
+
+        std::vector<CServicenodeConfig::CServicenodeEntry> mnEntries;
+        mnEntries = servicenodeConfig.getEntries();
+
+        int successful = 0;
+        int failed = 0;
+
+        Object resultsObj;
+
+        BOOST_FOREACH(CServicenodeConfig::CServicenodeEntry mne, servicenodeConfig.getEntries()) {
+            std::string errorMessage;
+
+            CTxIn vin = CTxIn(uint256S(mne.getTxHash()), uint32_t(atoi(mne.getOutputIndex().c_str())));
+            CServicenode *pmn = snodeman.Find(vin);
+            CServicenodeBroadcast snb;
+
+            if(strCommand == "start-missing" && pmn) continue;
+            if(strCommand == "start-disabled" && pmn && pmn->IsEnabled()) continue;
+
+            bool result = CServicenodeBroadcast::Create(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage, snb);
+
+            Object statusObj;
+            statusObj.push_back(Pair("alias", mne.getAlias()));
+            statusObj.push_back(Pair("result", result ? "successful" : "failed"));
+
+            if(result) {
+                successful++;
+                snodeman.UpdateServicenodeList(snb);
+                snb.Relay();
+            } else {
+                failed++;
+                statusObj.push_back(Pair("errorMessage", errorMessage));
+            }
+
+            resultsObj.push_back(Pair("status", statusObj));
+        }
+
+        Object returnObj;
+        returnObj.push_back(Pair("overall", strprintf("Successfully started %d servicenodes, failed to start %d, total %d", successful, failed, successful + failed)));
+        returnObj.push_back(Pair("detail", resultsObj));
+
+        return returnObj;
+    }
 
     return Value::null;
 }

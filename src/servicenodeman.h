@@ -54,6 +54,7 @@ public:
     bool Add(CServicenode &mn);
     /// Return the number of (unique) Thrones
     int size() { return vServicenodes.size(); }
+    void UpdateServicenodeList(CServicenodeBroadcast snb);
 };
 
 #endif

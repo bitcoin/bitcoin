@@ -21,6 +21,7 @@ void CServicenodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CDat
     LOCK(cs_process_message);
 
     if (strCommand == "snb") { //Servicenode Broadcast
+        LogPrint("servicenode", "CServicenodeMan::ProcessMessage - snb");
         CServicenodeBroadcast snb;
         vRecv >> snb;
 
@@ -100,10 +101,43 @@ bool CServicenodeMan::Add(CServicenode &sn)
     CServicenode *psn = Find(sn.vin);
     if (psn == NULL)
     {
-        LogPrint("throne", "CServicenodeMan: Adding new Servicenode %s - %i now\n", sn.addr.ToString(), size() + 1);
+        LogPrint("servicenode", "CServicenodeMan: Adding new Servicenode %s - %i now\n", sn.addr.ToString(), size() + 1);
         vServicenodes.push_back(sn);
         return true;
     }
 
     return false;
 }
+
+void CServicenodeMan::UpdateServicenodeList(CServicenodeBroadcast snb) {
+    mapSeenServicenodePing.insert(make_pair(snb.lastPing.GetHash(), snb.lastPing));
+    mapSeenServicenodeBroadcast.insert(make_pair(snb.GetHash(), snb));
+    //servicenodeSync.AddedServicenodeList(snb.GetHash());
+
+    LogPrintf("CServicenodeMan::UpdateServicenodeList() - addr: %s\n    vin: %s\n", snb.addr.ToString(), snb.vin.ToString());
+
+    CServicenode* pmn = Find(snb.vin);
+    if(pmn == NULL)
+    {
+        CServicenode mn(snb);
+        Add(mn);
+    } else {
+        pmn->UpdateFromNewBroadcast(snb);
+    }
+}
+
+void CServicenodeMan::Remove(CTxIn vin)
+{
+    LOCK(cs);
+
+    vector<CServicenode>::iterator it = vServicenodes.begin();
+    while(it != vServicenodes.end()){
+        if((*it).vin == vin){
+            LogPrint("servicenode", "CServicenodeMan: Removing Servicenode %s - %i now\n", (*it).addr.ToString(), size() - 1);
+            vServicenodes.erase(it);
+            break;
+        }
+        ++it;
+    }
+}
+
