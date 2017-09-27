@@ -350,19 +350,7 @@ void OverviewPage::updatePrivateSendProgress()
         return;
     }
 
-    CAmount nDenominatedConfirmedBalance;
-    CAmount nDenominatedUnconfirmedBalance;
-    CAmount nAnonymizableBalance;
-    CAmount nNormalizedAnonymizedBalance;
-    float nAverageAnonymizedRounds;
-
-    {
-        nDenominatedConfirmedBalance = pwalletMain->GetDenominatedBalance();
-        nDenominatedUnconfirmedBalance = pwalletMain->GetDenominatedBalance(true);
-        nAnonymizableBalance = pwalletMain->GetAnonymizableBalance(false, false);
-        nNormalizedAnonymizedBalance = pwalletMain->GetNormalizedAnonymizedBalance();
-        nAverageAnonymizedRounds = pwalletMain->GetAverageAnonymizedRounds();
-    }
+    CAmount nAnonymizableBalance = pwalletMain->GetAnonymizableBalance(false, false);
 
     CAmount nMaxToAnonymize = nAnonymizableBalance + currentAnonymizedBalance;
 
@@ -388,6 +376,18 @@ void OverviewPage::updatePrivateSendProgress()
                 " / " + tr("%n Rounds", "", privateSendClient.nPrivateSendRounds) + "</span>";
     }
     ui->labelAmountRounds->setText(strAmountAndRounds);
+
+    if (!fShowAdvancedPSUI) return;
+
+    CAmount nDenominatedConfirmedBalance;
+    CAmount nDenominatedUnconfirmedBalance;
+    CAmount nNormalizedAnonymizedBalance;
+    float nAverageAnonymizedRounds;
+
+    nDenominatedConfirmedBalance = pwalletMain->GetDenominatedBalance();
+    nDenominatedUnconfirmedBalance = pwalletMain->GetDenominatedBalance(true);
+    nNormalizedAnonymizedBalance = pwalletMain->GetNormalizedAnonymizedBalance();
+    nAverageAnonymizedRounds = pwalletMain->GetAverageAnonymizedRounds();
 
     // calculate parts of the progress, each of them shouldn't be higher than 1
     // progress of denominating
