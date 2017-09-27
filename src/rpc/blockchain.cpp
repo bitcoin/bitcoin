@@ -88,7 +88,7 @@ UniValue blockheaderToJSON(const CBlockIndex* blockindex)
     return result;
 }
 
-UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool txDetails = false)
+UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool txDetails = false, bool listTxns = true)
 {
     UniValue result(UniValue::VOBJ);
     result.push_back(Pair("hash", blockindex->GetBlockHash().GetHex()));
@@ -103,18 +103,26 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool tx
     result.push_back(Pair("versionHex", strprintf("%08x", block.nVersion)));
     result.push_back(Pair("merkleroot", block.hashMerkleRoot.GetHex()));
     UniValue txs(UniValue::VARR);
-    BOOST_FOREACH(const CTransaction&tx, block.vtx)
-    {
-        if(txDetails)
+    if (listTxns) {
+        for (const CTransaction &tx : block.vtx)
         {
-            UniValue objTx(UniValue::VOBJ);
-            TxToJSON(tx, uint256(), objTx);
-            txs.push_back(objTx);
+            if(txDetails)
+            {
+                UniValue objTx(UniValue::VOBJ);
+                TxToJSON(tx, uint256(), objTx);
+                txs.push_back(objTx);
+            }
+            else
+            {
+                txs.push_back(tx.GetHash().GetHex());
+            }
         }
-        else
-            txs.push_back(tx.GetHash().GetHex());
+        result.push_back(Pair("tx", txs));
     }
-    result.push_back(Pair("tx", txs));
+    else
+    {
+        result.push_back(Pair("txcount", (uint64_t)block.vtx.size()));
+    }
     result.push_back(Pair("time", block.GetBlockTime()));
     result.push_back(Pair("mediantime", (int64_t)blockindex->GetMedianTimePast()));
     result.push_back(Pair("nonce", (uint64_t)block.nNonce));
@@ -363,15 +371,17 @@ UniValue getblockheader(const UniValue& params, bool fHelp)
 
 UniValue getblock(const UniValue& params, bool fHelp)
 {
-    if (fHelp || params.size() < 1 || params.size() > 2)
+    if (fHelp || params.size() < 1 || params.size() > 3)
         throw runtime_error(
-            "getblock \"hash\" ( verbose )\n"
+            "getblock \"hash\" ( verbose ) ( listtransactions )\n"
             "\nIf verbose is false, returns a string that is serialized, hex-encoded data for block 'hash'.\n"
             "If verbose is true, returns an Object with information about block <hash>.\n"
+            "If listtransactions is true, a list of the IDs of all the transactions included in the block will be shown.\n"
             "\nArguments:\n"
             "1. \"hash\"          (string, required) The block hash or height\n"
             "2. verbose           (boolean, optional, default=true) true for a json object, false for the hex encoded data\n"
-            "\nResult (for verbose = true):\n"
+            "3. listtransactions  (boolean, optional, default=true) true to get a list of all txns, false to get just txns count\n"
+            "\nResult (for verbose = true, listtransactions = true):\n"
             "{\n"
             "  \"hash\" : \"hash\",     (string) the block hash (same as provided)\n"
             "  \"confirmations\" : n,   (numeric) The number of confirmations, or -1 if the block is not on the main chain\n"
@@ -406,8 +416,11 @@ UniValue getblock(const UniValue& params, bool fHelp)
     uint256 hash(uint256S(strHash));
     CBlockIndex* pblockindex = NULL;
     bool fVerbose = true;
+    bool fListTxns = true;
     if (params.size() > 1)
         fVerbose = params[1].get_bool();
+    if (params.size() == 3)
+        fListTxns = params[2].get_bool();
 
     if (mapBlockIndex.count(hash) == 0)
     {
@@ -443,7 +456,7 @@ UniValue getblock(const UniValue& params, bool fHelp)
         return strHex;
     }
 
-    return blockToJSON(block, pblockindex);
+    return blockToJSON(block, pblockindex, false, fListTxns);
 }
 
 UniValue gettxoutsetinfo(const UniValue& params, bool fHelp)
