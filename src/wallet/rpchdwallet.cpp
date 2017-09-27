@@ -2682,14 +2682,29 @@ static void WalletTxToJSON(CWalletTx& wtx, UniValue& entry)
         entry.push_back(Pair(item.first, item.second));
 }
 
-static void MaybePushAddress(UniValue & entry, const CTxDestination &dest)
-{
+static void ParseOutput(
+    UniValue& output,
+    const COutputEntry& o,
+    CHDWallet * const pwallet,
+    bool involvesWatchonly
+) {
     CBitcoinAddress addr;
-    if (addr.Set(dest))
-        entry.push_back(Pair("address", addr.ToString()));
+    
+    if (addr.Set(o.destination))
+        output.push_back(Pair("address", addr.ToString()));
+    if (involvesWatchonly || (o.ismine & ISMINE_WATCH_ONLY)) {
+        output.push_back(Pair("involvesWatchonly", true));
+    }
+    if (o.destStake.type() != typeid(CNoDestination)) {
+        output.push_back(Pair("coldstake_address", CBitcoinAddress(o.destStake).ToString()));
+    }
+    if (pwallet->mapAddressBook.count(o.destination)) {
+        output.push_back(Pair("label", pwallet->mapAddressBook[o.destination].name));
+    }
+    output.push_back(Pair("vout", o.vout));
 }
 
-static void ListTransactions(
+static void ParseOutputs(
     CHDWallet * const pwallet,
     CWalletTx & wtx,
     UniValue & ret,
@@ -2711,7 +2726,6 @@ static void ListTransactions(
     UniValue entry(UniValue::VOBJ);
     UniValue outputs(UniValue::VARR);
     entry.push_back(Pair("account", strSentAccount));
-    entry.push_back(Pair("fee", ValueFromAmount(-nFee)));
     entry.push_back(Pair("abandoned", wtx.isAbandoned()));
     WalletTxToJSON(wtx, entry);
     CAmount amount = 0;
@@ -2719,21 +2733,10 @@ static void ListTransactions(
     // sent
     if (!listSent.empty()) {
         entry.push_back(Pair("category", "send"));
-        for (const COutputEntry& s : listSent) {
+        entry.push_back(Pair("fee", ValueFromAmount(-nFee)));
+        for (const auto &s : listSent) {
             UniValue output(UniValue::VOBJ);
-            // identical
-            MaybePushAddress(output, s.destination);
-            if (involvesWatchonly || (s.ismine & ISMINE_WATCH_ONLY)) {
-                output.push_back(Pair("involvesWatchonly", true));
-            }
-            if (s.destStake.type() != typeid(CNoDestination)) {
-                output.push_back(Pair("coldstake_address", CBitcoinAddress(s.destStake).ToString()));
-            }
-            if (pwallet->mapAddressBook.count(s.destination)) {
-                output.push_back(Pair("label", pwallet->mapAddressBook[s.destination].name));
-            }
-            output.push_back(Pair("vout", s.vout));
-            //
+            ParseOutput(output, s, pwallet, involvesWatchonly);
             output.push_back(Pair("amount", ValueFromAmount(-s.amount)));
             amount -= s.amount;
             outputs.push_back(output);
@@ -2743,22 +2746,20 @@ static void ListTransactions(
     
     // received
     if (!listReceived.empty()) {
-        for (const COutputEntry& r : listReceived) {
+        if (wtx.IsCoinBase()) {
+            if (wtx.GetDepthInMainChain() < 1) {
+                entry.push_back(Pair("category", "orphan"));
+            } else if (wtx.GetBlocksToMaturity() > 0) {
+                entry.push_back(Pair("category", "immature"));
+            } else {
+                entry.push_back(Pair("category", "coinbase"));
+            }
+        } else {
+            entry.push_back(Pair("category", "receive"));
+        }
+        for (const auto &r : listReceived) {
             UniValue output(UniValue::VOBJ);
-            // identical
-            MaybePushAddress(entry, r.destination);
-            if (involvesWatchonly || (r.ismine & ISMINE_WATCH_ONLY)) {
-                output.push_back(Pair("involvesWatchonly", true));
-            }
-            if (r.destStake.type() != typeid(CNoDestination)) {
-                output.push_back(Pair("coldstake_address", CBitcoinAddress(r.destStake).ToString()));
-            }
-            if (pwallet->mapAddressBook.count(r.destination)) {
-                output.push_back(Pair("label", pwallet->mapAddressBook[r.destination].name));
-            }
-            output.push_back(Pair("vout", r.vout));
-            //
-            
+            ParseOutput(output, r, pwallet, involvesWatchonly);
             if (r.destination.type() == typeid(CKeyID)) {
                 CStealthAddress sx;
                 CKeyID idK = boost::get<CKeyID>(r.destination);
@@ -2766,34 +2767,33 @@ static void ListTransactions(
                     output.push_back(Pair("stealth_address", sx.Encoded()));
                 }
             }
-            
-            if (wtx.IsCoinBase()) {
-                if (wtx.GetDepthInMainChain() < 1) {
-                    output.push_back(Pair("category", "orphan"));
-                } else if (wtx.GetBlocksToMaturity() > 0) {
-                    output.push_back(Pair("category", "immature"));
-                } else {
-                    output.push_back(Pair("category", "coinbase"));
-                }
-            } else {
-                output.push_back(Pair("category", "receive"));
-            }
-            
             output.push_back(Pair("amount", ValueFromAmount(r.amount)));
             amount += r.amount;
-            // TODO: push to the outputs
+            outputs.push_back(output);
+        }
+        entry.push_back(Pair("outputs", outputs));
+    }
+    
+    // staked
+    if (!listStaked.empty()) {
+        entry.push_back(Pair("reward", ValueFromAmount(-nFee)));
+        if (wtx.GetDepthInMainChain() < 1) {
+            entry.push_back(Pair("category", "orphaned_stake"));
+        } else {
+            entry.push_back(Pair("category", "stake"));
+        }
+        for (const auto &s : listStaked) {
+            UniValue output(UniValue::VOBJ);
+            ParseOutput(output, s, pwallet, involvesWatchonly);
+            output.push_back(Pair("amount", ValueFromAmount(s.amount)));
+            amount += s.amount;
             outputs.push_back(output);
         }
         entry.push_back(Pair("outputs", outputs));
     }
     
     entry.push_back(Pair("amount", ValueFromAmount(amount)));
-    reverseRet.push_back(entry);
-    
-    // TODO: replace with push_fronts
-    for (size_t i = reverseRet.size(); i-- > 0;) {
-        ret.push_back(reverseRet[i]);
-    }
+    ret.push_back(entry);
 }
 
 UniValue filtertransactions(const JSONRPCRequest &request)
@@ -2840,10 +2840,20 @@ UniValue filtertransactions(const JSONRPCRequest &request)
     std::string category = "all";
     if (!request.params[4].isNull()) {
         RPCTypeCheckArgument(request.params[4], UniValue::VSTR);
-        // TODO: check category validity
-        // received, sent, staked
-        // orpan_stake, coinbase, orphan and immature
         category = request.params[4].get_str();
+        std::vector<std::string> categories = {
+            "all",
+            "send",
+            "orphan",
+            "immature",
+            "coinbase",
+            "receive",
+            "orphaned_stake",
+            "stake"
+        };
+        if (std::find(categories.begin(), categories.end(), category) == categories.end()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid category: %s.", category));
+        }
     }
     
     UniValue result(UniValue::VARR);
@@ -2853,8 +2863,8 @@ UniValue filtertransactions(const JSONRPCRequest &request)
     CWallet::TxItems::const_reverse_iterator it = txOrdered.rbegin();
     for (; it != txOrdered.rend(); it++) {
         CWalletTx * const pwtx = (*it).second.first;
-        if (pwtx != NULL) {
-            ListTransactions(pwallet, *pwtx, result, watchonly);
+        if (pwtx) {
+            ParseOutputs(pwallet, *pwtx, result, watchonly);
         }
     }
     
