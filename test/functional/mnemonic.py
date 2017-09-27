@@ -111,13 +111,16 @@ class MnemonicTest (BitcoinTestFramework):
         assert(len(ro) == 6)
         
         
-        # test incorrect parameter order: mnemonic,password vs password,mnemonic
+        # Test incorrect parameter order: mnemonic,password vs password,mnemonic
         try:
             ro = node.mnemonic("decode", "abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb", "")
             assert(False), "Decoded empty word string."
         except JSONRPCException as e:
             assert("Mnemonic can't be blank" in e.error['message'])
         
+        # Normalise 'alléger'
+        ro = node.mnemonic('decode', '', 'sortir hygiène boueux détourer doyen émission prospère tunnel cerveau miracle brioche feuille arbitre terne alléger prison connoter diable méconnu fraise pelle carbone erreur admettre')
+        assert(ro['master'] == 'tprv8ZgxMBicQKsPdsKV1vzsQkRQp5TobgyfXsBLcU49jmnC2zBT4Cd5LTCtdoWe5gg7EPjjQnAsxbMG1qyoCn1bHn6n4c1ZEdFLKg1TJAwTriQ')
         
         
         #print(json.dumps(ro, indent=4))
