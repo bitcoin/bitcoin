@@ -9,6 +9,8 @@
 #include "servicenodeconfig.h"
 #include "rpcserver.h"
 #include "utilmoneystr.h"
+#include "key.h"
+#include "base58.h"
 
 #include <fstream>
 #include <string>
@@ -92,6 +94,15 @@ Value servicenode(const Array& params, bool fHelp)
         // TODO to be implemented
         return "Option is not implemented yet";
     }
+
+    if (strCommand == "genkey")
+    {
+        CKey secret;
+        secret.MakeNewKey(false);
+
+        return CBitcoinSecret(secret).ToString();
+    }
+
 
     return Value::null;
 }
