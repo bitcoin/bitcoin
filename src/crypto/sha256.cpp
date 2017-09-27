@@ -24,6 +24,11 @@ namespace sha256d64_sse41
 void Transform_4way(unsigned char* out, const unsigned char* in);
 }
 
+namespace sha256d64_avx2
+{
+void Transform_8way(unsigned char* out, const unsigned char* in);
+}
+
 // Internal implementation code.
 namespace
 {
@@ -471,19 +476,37 @@ bool SelfTest(TransformType tr) {
 TransformType Transform = sha256::Transform;
 TransformD64Type TransformD64 = sha256::TransformD64;
 TransformD64Type TransformD64_4way = nullptr;
+TransformD64Type TransformD64_8way = nullptr;
+
+#if defined(USE_ASM) && (defined(__x86_64__) || defined(__amd64__))
+// We can't use cpuid.h's __get_cpuid as it does not support subleafs.
+void inline cpuid(uint32_t leaf, uint32_t subleaf, uint32_t& a, uint32_t& b, uint32_t& c, uint32_t& d)
+{
+  __asm__ ("cpuid" : "=a"(a), "=b"(b), "=c"(c), "=d"(d) : "0"(leaf), "2"(subleaf));
+}
+#endif
 } // namespace
+
 
 std::string SHA256AutoDetect()
 {
     std::string ret = "standard";
 #if defined(USE_ASM) && (defined(__x86_64__) || defined(__amd64__))
     uint32_t eax, ebx, ecx, edx;
-    if (__get_cpuid(1, &eax, &ebx, &ecx, &edx) && (ecx >> 19) & 1) {
+    cpuid(1, 0, eax, ebx, ecx, edx);
+    if ((ecx >> 19) & 1) {
         Transform = sha256_sse4::Transform;
         TransformD64 = TransformD64Wrapper<sha256_sse4::Transform>;
 #if defined(ENABLE_SSE41) && !defined(BUILD_BITCOIN_INTERNAL)
         TransformD64_4way = sha256d64_sse41::Transform_4way;
         ret = "sse4(1way+4way)";
+#if defined(ENABLE_AVX2) && !defined(BUILD_BITCOIN_INTERNAL)
+        cpuid(7, 0, eax, ebx, ecx, edx);
+        if ((ebx >> 5) & 1) {
+            TransformD64_8way = sha256d64_avx2::Transform_8way;
+            ret += ",avx2(8way)";
+        }
+#endif
 #else
         ret = "sse4";
 #endif
@@ -553,6 +576,14 @@ CSHA256& CSHA256::Reset()
 
 void SHA256D64(unsigned char* out, const unsigned char* in, size_t blocks)
 {
+    if (TransformD64_8way) {
+        while (blocks >= 8) {
+            TransformD64_8way(out, in);
+            out += 256;
+            in += 512;
+            blocks -= 8;
+        }
+    }
     if (TransformD64_4way) {
         while (blocks >= 4) {
             TransformD64_4way(out, in);
