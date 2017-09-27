@@ -9,6 +9,7 @@
 
 #include "clientversion.h"
 #include "uint256.h"
+
 #include <map>
 #include <string>
 
