@@ -313,6 +313,19 @@ static void registerSignalHandler(int signal, void(*handler)(int))
     sa.sa_flags = 0;
     sigaction(signal, &sa, nullptr);
 }
+#else
+BOOL WINAPI ConsoleHandler(DWORD dwType)
+{
+    switch(dwType)
+    {
+        case CTRL_C_EVENT:
+            HandleSIGTERM(1);
+            return TRUE;
+        default:
+            break;
+    }
+    return FALSE;
+}
 #endif
 
 void OnRPCStarted()
@@ -919,6 +932,9 @@ bool AppInitBasicSetup()
 
     // Ignore SIGPIPE, otherwise it will bring the daemon down if the client closes unexpectedly
     signal(SIGPIPE, SIG_IGN);
+#else
+    if (!SetConsoleCtrlHandler((PHANDLER_ROUTINE)ConsoleHandler, TRUE))
+        return InitError("SetConsoleCtrlHandler failed");
 #endif
 
     std::set_new_handler(new_handler_terminate);
