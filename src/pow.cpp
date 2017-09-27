@@ -11,6 +11,7 @@
 #include "chain.h"
 #include "primitives/block.h"
 #include "uint256.h"
+#include "util.h"
 
 unsigned int GetNextWorkRequired(const CBlockIndex *pindexLast,
     const CBlockHeader *pblock,
@@ -87,12 +88,35 @@ unsigned int GetNextWorkRequired(const CBlockIndex *pindexLast,
     return nPow.GetCompact();
 }
 
-unsigned int CalculateNextWorkRequired(const CBlockIndex *pindexLast,
-    int64_t nFirstBlockTime,
-    const Consensus::Params &params)
-{
-    if (params.fPowNoRetargeting)
-        return pindexLast->nBits;
+uint32_t GetNextWorkRequired(const CBlockIndex *pindexPrev,
+                             const CBlockHeader *pblock,
+                             const Consensus::Params &params) {
+    // Genesis block
+    if (pindexPrev == nullptr) {
+        return UintToArith256(params.powLimit).GetCompact();
+    }
+
+    // Special rule for regtest: we never retarget.
+    if (params.fPowNoRetargeting) {
+        return pindexPrev->nBits;
+    }
+
+#ifdef BITCOIN_CASH
+    if (pindexPrev->GetMedianTimePast() >=
+        GetArg("-newdaaactivationtime", params.cashHardForkActivationTime)) {
+        return GetNextCashWorkRequired(pindexPrev, pblock, params);
+    }
+#endif
+
+    return GetNextEDAWorkRequired(pindexPrev, pblock, params);
+}
+
+uint32_t CalculateNextWorkRequired(const CBlockIndex *pindexPrev,
+                                   int64_t nFirstBlockTime,
+                                   const Consensus::Params &params) {
+    if (params.fPowNoRetargeting) {
+        return pindexPrev->nBits;
+    }
 
     // Limit adjustment step
     int64_t nActualTimespan = pindexLast->GetBlockTime() - nFirstBlockTime;
