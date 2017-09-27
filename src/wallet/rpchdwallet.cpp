@@ -2682,18 +2682,24 @@ static void WalletTxToJSON(CWalletTx& wtx, UniValue& entry)
         entry.push_back(Pair(item.first, item.second));
 }
 
-static void ParseOutput(
+static bool ParseOutput(
     UniValue& output,
     const COutputEntry& o,
     CHDWallet * const pwallet,
-    bool involvesWatchonly
+    std::vector<std::string>& addresses,
+    std::vector<std::string>& amounts
 ) {
     CBitcoinAddress addr;
     
-    if (addr.Set(o.destination))
+    if (addr.Set(o.destination)) {
         output.push_back(Pair("address", addr.ToString()));
-    if (involvesWatchonly || (o.ismine & ISMINE_WATCH_ONLY)) {
+        addresses.push_back(addr.ToString());
+    }
+    if (o.ismine & ISMINE_WATCH_ONLY) {
         output.push_back(Pair("involvesWatchonly", true));
+        // if (!watchonly) {
+        //     return (false);
+        // }
     }
     if (o.destStake.type() != typeid(CNoDestination)) {
         output.push_back(Pair("coldstake_address", CBitcoinAddress(o.destStake).ToString()));
@@ -2702,14 +2708,18 @@ static void ParseOutput(
         output.push_back(Pair("label", pwallet->mapAddressBook[o.destination].name));
     }
     output.push_back(Pair("vout", o.vout));
+    amounts.push_back(std::to_string(o.amount));
+    return (true);
 }
 
-static void ParseOutputs(
-    CHDWallet * const pwallet,
+static bool ParseOutputs(
+    UniValue & entry,
     CWalletTx & wtx,
-    UniValue & ret,
-    const isminefilter & watchonly)
-{
+    CHDWallet * const pwallet,
+    const isminefilter & watchonly_filter,
+    std::string search,
+    std::string category
+) {
     // GetAmounts variables
     std::list<COutputEntry> listReceived;
     std::list<COutputEntry> listSent;
@@ -2717,13 +2727,18 @@ static void ParseOutputs(
     CAmount nFee;
     std::string strSentAccount;
     
-    wtx.GetAmounts(listReceived, listSent, listStaked, nFee, strSentAccount, watchonly);
-    bool involvesWatchonly = wtx.IsFromMe(ISMINE_WATCH_ONLY);
-    
-    UniValue reverseRet(UniValue::VARR);
+    wtx.GetAmounts(
+        listReceived,
+        listSent,
+        listStaked,
+        nFee,
+        strSentAccount,
+        watchonly_filter);
+        
+    std::vector<std::string> addresses;
+    std::vector<std::string> amounts;
     
     // common to every type of transaction
-    UniValue entry(UniValue::VOBJ);
     UniValue outputs(UniValue::VARR);
     entry.push_back(Pair("account", strSentAccount));
     entry.push_back(Pair("abandoned", wtx.isAbandoned()));
@@ -2736,7 +2751,7 @@ static void ParseOutputs(
         entry.push_back(Pair("fee", ValueFromAmount(-nFee)));
         for (const auto &s : listSent) {
             UniValue output(UniValue::VOBJ);
-            ParseOutput(output, s, pwallet, involvesWatchonly);
+            ParseOutput(output, s, pwallet, addresses, amounts);
             output.push_back(Pair("amount", ValueFromAmount(-s.amount)));
             amount -= s.amount;
             outputs.push_back(output);
@@ -2759,7 +2774,7 @@ static void ParseOutputs(
         }
         for (const auto &r : listReceived) {
             UniValue output(UniValue::VOBJ);
-            ParseOutput(output, r, pwallet, involvesWatchonly);
+            ParseOutput(output, r, pwallet, addresses, amounts);
             if (r.destination.type() == typeid(CKeyID)) {
                 CStealthAddress sx;
                 CKeyID idK = boost::get<CKeyID>(r.destination);
@@ -2784,7 +2799,7 @@ static void ParseOutputs(
         }
         for (const auto &s : listStaked) {
             UniValue output(UniValue::VOBJ);
-            ParseOutput(output, s, pwallet, involvesWatchonly);
+            ParseOutput(output, s, pwallet, addresses, amounts);
             output.push_back(Pair("amount", ValueFromAmount(s.amount)));
             amount += s.amount;
             outputs.push_back(output);
@@ -2793,7 +2808,25 @@ static void ParseOutputs(
     }
     
     entry.push_back(Pair("amount", ValueFromAmount(amount)));
-    ret.push_back(entry);
+    
+    if (!(find_value(entry, "category").get_str() == category || category == "all")) {
+        return (false);
+    }
+    if (search != "") {
+        if (std::any_of(addresses.begin(), addresses.end(), [search](std::string addr) {
+            return (addr.find(search) != std::string::npos);
+        })) {
+            return (true);
+        }
+        if (std::any_of(amounts.begin(), amounts.end(), [search](std::string amount) {
+            std::cout << amount << std::endl;
+            return (amount.find(search) != std::string::npos);
+        })) {
+            return (true);
+        }
+        return (false);
+    }
+    return (true);
 }
 
 UniValue filtertransactions(const JSONRPCRequest &request)
@@ -2860,17 +2893,37 @@ UniValue filtertransactions(const JSONRPCRequest &request)
     
     const CHDWallet::TxItems &txOrdered = pwallet->wtxOrdered;
     
+    int i = 0;
+    bool match;
     CWallet::TxItems::const_reverse_iterator it = txOrdered.rbegin();
-    for (; it != txOrdered.rend(); it++) {
-        CWalletTx * const pwtx = (*it).second.first;
-        if (pwtx) {
-            ParseOutputs(pwallet, *pwtx, result, watchonly);
+    while (it != txOrdered.rend() && i < count) {
+        UniValue transaction(UniValue::VOBJ);
+        if (CWalletTx* const pwtx = (*it++).second.first) {
+            match = ParseOutputs(transaction, *pwtx, pwallet, watchonly, search, category);
+            if (match && skip-- <= 0) {
+                i++;
+                result.push_back(transaction);
+            }
         }
     }
     
-    return result;
+    // find and merge same txid in 'internal_transfer' category
+    std::vector<UniValue> txid = result.getValues();
+    std::sort(txid.begin(), txid.end(), [](UniValue a, UniValue b) {
+        return (find_value(a, "txid").get_str() > find_value(b, "txid").get_str());
+    });
+    for (unsigned int i = 0; i < result.size() - 1; i++) {
+        if (find_value(result[i], "txid").get_str() == find_value(result[i + 1], "txid").get_str()) {
+            UniValue & transfer = result.get(i);
+            UniValue & category = transfer.get("category");
+            category = "internal_transfer";
+            result.erase(i + 1, i + 1);
+            i--;
+        }
+    }
+    
+    return (result);
 }
-
 
 enum SortCodes
 {
