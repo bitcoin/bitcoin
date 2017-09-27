@@ -58,6 +58,12 @@ static bool GetPubKey(const SigningProvider* provider, const SignatureData* sigd
         pubkey = it->second.first;
         return true;
     }
+    // Look for pubkey in pubkey list
+    const auto& pk_it = sigdata->misc_pubkeys.find(address);
+    if (pk_it != sigdata->misc_pubkeys.end()) {
+        pubkey = pk_it->second;
+        return true;
+    }
     return false;
 }
 
@@ -357,6 +363,66 @@ bool SignSignature(const SigningProvider &provider, const CTransaction& txFrom, 
     const CTxOut& txout = txFrom.vout[txin.prevout.n];
 
     return SignSignature(provider, txout.scriptPubKey, txTo, nIn, txout.nValue, nHashType);
+}
+
+// Iterates through all inputs of the partially signed transaction and just produces signatures for what it can and adds them to the psbt partial sigs
+// Returns true if the transaction is finalized, false otherwise. False does not necessarily mean that signing failed, just that a complete set of signatures
+// for the transaction does not exist or the final transaction was not constructed.
+bool SignPartiallySignedTransaction(PartiallySignedTransaction& psbt, SigningProvider* provider, int nHashType, bool finalize)
+{
+    // Create the SignatureData with global data
+    SignatureData sigdata;
+    sigdata.scripts.insert(psbt.redeem_scripts.begin(), psbt.redeem_scripts.end());
+    for (const auto& script_pair : psbt.witness_scripts) {
+        sigdata.scripts.emplace(CScriptID(script_pair.second), script_pair.second);
+    }
+    for (const auto& key_pair : psbt.hd_keypaths) {
+        sigdata.misc_pubkeys.emplace(key_pair.first.GetID(), key_pair.first);
+    }
+
+    CMutableTransaction mtx = psbt.tx;
+    bool solved = finalize;
+    for (unsigned int i = 0; i < mtx.vin.size(); ++i) {
+        // Clear sigdata for input specific things
+        sigdata.signatures.clear();
+        sigdata.scriptSig.clear();
+        sigdata.scriptWitness.SetNull();
+        sigdata.complete = false;
+
+        CTxIn& txin = mtx.vin[i];
+        PartiallySignedInput psbt_in = psbt.inputs[i];
+
+        // Find the non witness utxo first
+        CTxOut utxo;
+        if (psbt_in.non_witness_utxo) {
+            utxo = psbt_in.non_witness_utxo->vout[txin.prevout.n];
+        }
+        // Now find the witness utxo if the non witness doesn't exist
+        else if (!psbt_in.witness_utxo.IsNull()) {
+            utxo = psbt_in.witness_utxo;
+        }
+        // If there is no nonwitness or witness utxo, then this input is fully signed and we are done here
+        else {
+            continue;
+        }
+
+        CScript script = utxo.scriptPubKey;
+        const CAmount& amount = utxo.nValue;
+
+        sigdata.signatures.insert(psbt.inputs[i].partial_sigs.begin(), psbt.inputs[i].partial_sigs.end());
+        MutableTransactionSignatureCreator creator(&mtx, i, amount, nHashType);
+        bool sig_complete = ProduceSignature(*provider, creator, script, sigdata);
+        psbt.inputs[i].partial_sigs.insert(sigdata.signatures.begin(), sigdata.signatures.end());
+        if (sig_complete && finalize) {
+            // signatures are complete
+            // Add scriptsig/scriptwitness to transaction
+            psbt.tx.vin[i].scriptSig = sigdata.scriptSig;
+            psbt.tx.vin[i].scriptWitness = sigdata.scriptWitness;
+        }
+        solved &= sig_complete;
+    }
+
+    return solved;
 }
 
 namespace {

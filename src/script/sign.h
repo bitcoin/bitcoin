@@ -10,6 +10,7 @@
 #include <pubkey.h>
 #include <script/interpreter.h>
 #include <streams.h>
+#include <version.h>
 
 class CKey;
 class CKeyID;
@@ -66,6 +67,7 @@ struct SignatureData {
     CScriptWitness scriptWitness; // The scriptWitness of an input. Contains complete signatures or the traditional partial signatures format
     std::map<CKeyID, SigPair> signatures; // BIP 174 style partial signatures for the input. May contain complete signatures
     std::map<CScriptID, CScript> scripts; // BIP 174 style scripts for the input
+    std::map<CKeyID, CPubKey> misc_pubkeys;
 
     SignatureData() {}
     explicit SignatureData(const CScript& script) : scriptSig(script) {}
@@ -498,6 +500,8 @@ struct PartiallySignedTransaction
 
 /** Produce a script signature using a generic signature creator. */
 bool ProduceSignature(const SigningProvider& provider, const BaseSignatureCreator& creator, const CScript& scriptPubKey, SignatureData& sigdata);
+
+bool SignPartiallySignedTransaction(PartiallySignedTransaction& psbt, SigningProvider* provider, int nHashType, bool finalize = false);
 
 /** Produce a script signature for a transaction. */
 bool SignSignature(const SigningProvider &provider, const CScript& fromPubKey, CMutableTransaction& txTo, unsigned int nIn, const CAmount& amount, int nHashType);
