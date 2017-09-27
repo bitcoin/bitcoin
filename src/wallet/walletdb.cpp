@@ -43,9 +43,9 @@ bool CWalletDB::WritePurpose(const std::string& strAddress, const std::string& s
     return WriteIC(std::make_pair(std::string("purpose"), strAddress), strPurpose);
 }
 
-bool CWalletDB::ErasePurpose(const std::string& strPurpose)
+bool CWalletDB::ErasePurpose(const std::string& strAddress)
 {
-    return EraseIC(std::make_pair(std::string("purpose"), strPurpose));
+    return EraseIC(std::make_pair(std::string("purpose"), strAddress));
 }
 
 bool CWalletDB::WriteTx(const CWalletTx& wtx)
