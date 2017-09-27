@@ -382,6 +382,13 @@ void JSONRPCRequest::parse(const UniValue& valRequest)
         throw JSONRPCError(RPC_INVALID_REQUEST, "Params must be an array or object");
 }
 
+bool IsDeprecatedRPCEnabled(const std::string& method)
+{
+    const std::vector<std::string> enabled_methods = gArgs.GetArgs("-deprecatedrpc");
+
+    return find(enabled_methods.begin(), enabled_methods.end(), method) != enabled_methods.end();
+}
+
 static UniValue JSONRPCExecOne(const UniValue& req)
 {
     UniValue rpc_result(UniValue::VOBJ);
