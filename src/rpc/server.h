@@ -168,6 +168,8 @@ public:
     bool appendCommand(const std::string& name, const CRPCCommand* pcmd);
 };
 
+bool IsDeprecatedRPCEnabled(const std::string& method);
+
 extern CRPCTable tableRPC;
 
 /**
