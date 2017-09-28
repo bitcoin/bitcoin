@@ -32,6 +32,7 @@
 #include "rpc/register.h"
 #include "rpc/safemode.h"
 #include "rpc/blockchain.h"
+#include "rpc/notifications.h"
 #include "script/standard.h"
 #include "script/sigcache.h"
 #include "scheduler.h"
@@ -1366,6 +1367,9 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         RegisterValidationInterface(pzmqNotificationInterface);
     }
 #endif
+    // register http long poll notifications
+    RegisterLongPollNotificationsInterface();
+
     uint64_t nMaxOutboundLimit = 0; //unlimited unless -maxuploadtarget is set
     uint64_t nMaxOutboundTimeframe = MAX_UPLOAD_TIMEFRAME;
 
