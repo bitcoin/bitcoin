@@ -2807,26 +2807,34 @@ static bool ParseOutputs(
         entry.push_back(Pair("outputs", outputs));
     }
     
+    // total amount of outputs
     entry.push_back(Pair("amount", ValueFromAmount(amount)));
     
-    if (!(find_value(entry, "category").get_str() == category || category == "all")) {
+    // is this transaction of the searched category ?
+    if (!(entry["category"].get_str() == category || category == "all")) {
         return (false);
     }
-    if (search != "") {
-        if (std::any_of(addresses.begin(), addresses.end(), [search](std::string addr) {
-            return (addr.find(search) != std::string::npos);
-        })) {
-            return (true);
-        }
-        if (std::any_of(amounts.begin(), amounts.end(), [search](std::string amount) {
-            std::cout << amount << std::endl;
-            return (amount.find(search) != std::string::npos);
-        })) {
-            return (true);
-        }
-        return (false);
+    
+    // done if there's nothing to search for
+    if (search == "") {
+        return (true);
     }
-    return (true);
+    // search in addresses
+    if (std::any_of(addresses.begin(), addresses.end(), [search](std::string addr) {
+        return (addr.find(search) != std::string::npos);
+    })) {
+        return (true);
+    }
+    // search in amounts (character DOT '.' is not searched for)
+    // search 123 will find 1.23 and 12.3
+    if (std::any_of(amounts.begin(), amounts.end(), [search](std::string amount) {
+        std::cout << amount << std::endl;
+        return (amount.find(search) != std::string::npos);
+    })) {
+        return (true);
+    }
+    // not found
+    return (false);
 }
 
 static bool ParseRecords(
@@ -2885,10 +2893,6 @@ static bool ParseRecords(
             }
         }
         
-        if (record.nFlags & ORF_LOCKED) {
-            entry.push_back(Pair("require_unlock", "true"));
-        }
-        
         if (extracted && dest.type() == typeid(CNoDestination)) {
             entry.push_back(Pair("address", "none"));
         } else {
@@ -2908,10 +2912,6 @@ static bool ParseRecords(
             : record.nType == OUTPUT_CT       ? "blind"
             : record.nType == OUTPUT_RINGCT   ? "anon"
             : "unknown"));
-        
-        if (record.nFlags & ORF_OWNED && record.nFlags & ORF_FROM) {
-            entry.push_back(Pair("fromself", "true"));
-        }
         
         int confirmations = pwallet->GetDepthInMainChain(rtx.blockHash);
         entry.push_back(Pair("confirmations", confirmations));
@@ -2935,8 +2935,15 @@ static bool ParseRecords(
             amount *= -1;
         }
         entry.push_back(Pair("amount", ValueFromAmount(amount)));
+        
+        if (record.nFlags & ORF_OWNED && record.nFlags & ORF_FROM) {
+            entry.push_back(Pair("fromself", "true"));
+        }
         if (record.nFlags & ORF_FROM) {
             entry.push_back(Pair("fee", ValueFromAmount(-rtx.nFee)));
+        }
+        if (record.nFlags & ORF_LOCKED) {
+            entry.push_back(Pair("require_unlock", "true"));
         }
         if (!record.sNarration.empty()) {
             entry.push_back(Pair("narration", record.sNarration));
@@ -2972,7 +2979,8 @@ UniValue filtertransactions(const JSONRPCRequest &request)
         RPCTypeCheckArgument(request.params[0], UniValue::VNUM);
         count = request.params[0].get_int();
         if (count < 1) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid count: %i.", count));
+            throw JSONRPCError(RPC_INVALID_PARAMETER,
+                strprintf("Invalid count: %i.", count));
         }
     }
     int skip = 0;
@@ -2980,7 +2988,8 @@ UniValue filtertransactions(const JSONRPCRequest &request)
         RPCTypeCheckArgument(request.params[1], UniValue::VNUM);
         skip = request.params[1].get_int();
         if (skip < 0) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid skip number: %i.", skip));
+            throw JSONRPCError(RPC_INVALID_PARAMETER,
+                strprintf("Invalid skip number: %i.", skip));
         }
     }
     isminefilter watchonly = ISMINE_SPENDABLE;
@@ -3010,10 +3019,12 @@ UniValue filtertransactions(const JSONRPCRequest &request)
             "stake"
         };
         if (std::find(categories.begin(), categories.end(), category) == categories.end()) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid category: %s.", category));
+            throw JSONRPCError(RPC_INVALID_PARAMETER,
+                strprintf("Invalid category: %s.", category));
         }
     }
     
+    // TODO
     int skipsave = skip;
     
     UniValue result(UniValue::VARR);
@@ -3026,6 +3037,8 @@ UniValue filtertransactions(const JSONRPCRequest &request)
     while (it != txOrdered.rend() && i < count) {
         CWalletTx* const pwtx = (it++)->second.first;
         if (!pwtx) {
+            // TODO
+            throw ;
         }
         UniValue transaction(UniValue::VOBJ);
         match = ParseOutputs(transaction, *pwtx, pwallet, watchonly, search, category);
@@ -3061,24 +3074,6 @@ UniValue filtertransactions(const JSONRPCRequest &request)
         }
         rit++;
     }
-    
-    /*
-    // TODO: remove
-    // find and merge same txid in 'internal_transfer' category
-    std::vector<UniValue> txid = result.getValues();
-    std::sort(txid.begin(), txid.end(), [](UniValue a, UniValue b) {
-        return (find_value(a, "txid").get_str() > find_value(b, "txid").get_str());
-    });
-    for (unsigned int i = 0; i < result.size() - 1; i++) {
-        if (find_value(result[i], "txid").get_str() == find_value(result[i + 1], "txid").get_str()) {
-            UniValue & transfer = result.get(i);
-            UniValue & category = transfer.get("category");
-            category = "internal_transfer";
-            result.erase(i + 1, i + 1);
-            i--;
-        }
-    }
-    */
     
     return (result);
 }
