@@ -203,7 +203,7 @@ bool ClientModel::getNetworkActive() const
 
 QString ClientModel::getStatusBarWarnings() const
 {
-    return QString::fromStdString(GetWarnings("gui"));
+    return QString::fromStdString(GetWarnings(true));
 }
 
 OptionsModel *ClientModel::getOptionsModel()
