@@ -186,7 +186,7 @@ CCoinsViewCursor *CCoinsViewDB::Cursor() const
     return i;
 }
 
-bool CCoinsViewDBCursor::GetKey(uint256 &key) const
+bool CCoinsViewDBCursor::GetKey(COutPoint &key) const
 {
     // Return cached key
     if (keyTmp.first == DB_COIN) {
@@ -196,9 +196,9 @@ bool CCoinsViewDBCursor::GetKey(uint256 &key) const
     return false;
 }
 
-bool CCoinsViewDBCursor::GetValue(CCoins &coins) const
+bool CCoinsViewDBCursor::GetValue(Coin &coin) const
 {
-    return pcursor->GetValue(coins);
+    return pcursor->GetValue(coin);
 }
 
 unsigned int CCoinsViewDBCursor::GetValueSize() const
@@ -214,7 +214,7 @@ bool CCoinsViewDBCursor::Valid() const
 void CCoinsViewDBCursor::Next()
 {
     pcursor->Next();
-    CoinsEntry entry(&keyTmp.second);
+    CoinEntry entry(&keyTmp.second);
     if (!pcursor->Valid() || !pcursor->GetKey(entry)) {
         keyTmp.first = 0; // Invalidate cached key after last record so that Valid() and GetKey() return false
     } else {

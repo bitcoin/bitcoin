@@ -142,8 +142,8 @@ public:
     CCoinsViewCursor(const uint256 &hashBlockIn): hashBlock(hashBlockIn) {}
     virtual ~CCoinsViewCursor();
 
-    virtual bool GetKey(uint256 &key) const = 0;
-    virtual bool GetValue(CCoins &coins) const = 0;
+    virtual bool GetKey(COutPoint &key) const = 0;
+    virtual bool GetValue(Coin &coin) const = 0;
     /* Don't care about GetKeySize here */
     virtual unsigned int GetValueSize() const = 0;
 
@@ -176,11 +176,7 @@ public:
     //! The passed mapCoins can be modified.
     virtual bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, size_t &nChildCachedCoinsUsage);
 
-<<<<<<< HEAD
     //! Get a cursor to iterate over the whole state
-=======
-    //! Get a Cursor to interate over the whole state
->>>>>>> 239f540... Switch CCoinsView and chainstate db from per-txid to per-txout
     virtual CCoinsViewCursor *Cursor() const;
 
     //! As we use CCoinsViews polymorphically, have a virtual destructor

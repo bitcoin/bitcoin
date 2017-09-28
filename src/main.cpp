@@ -1947,8 +1947,6 @@ bool CheckInputs(const CTransaction &tx,
                 const CAmount amount = coin.out.nValue;
 
                 // Verify signature
-                const CScript &scriptPubKey = coins->vout[prevout.n].scriptPubKey;
-                const CAmount amount = coins->vout[prevout.n].nValue;
                 CScriptCheck check(resourceTracker, scriptPubKey, amount, tx, i, flags, cacheStore);
                 if (pvChecks)
                 {

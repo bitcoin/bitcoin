@@ -16,11 +16,7 @@ bool CCoinsView::GetCoin(const COutPoint &outpoint, Coin &coin) const { return f
 bool CCoinsView::HaveCoin(const COutPoint &outpoint) const { return false; }
 uint256 CCoinsView::GetBestBlock() const { return uint256(); }
 bool CCoinsView::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, size_t &nChildCachedCoinsUsage) { return false; }
-<<<<<<< HEAD
-CCoinsViewCursor *CCoinsView::Cursor() const { return 0; }
-=======
 CCoinsViewCursor *CCoinsView::Cursor() const { return nullptr; }
->>>>>>> 239f540... Switch CCoinsView and chainstate db from per-txid to per-txout
 
 
 CCoinsViewBacked::CCoinsViewBacked(CCoinsView *viewIn) : base(viewIn) { }
@@ -321,7 +317,7 @@ CCoinsViewCursor::~CCoinsViewCursor()
 {
 }
 
-static const size_t MAX_OUTPUTS_PER_BLOCK = MAX_BLOCK_BASE_SIZE /  ::GetSerializeSize(CTxOut(), SER_NETWORK, PROTOCOL_VERSION); // TODO: 
+static const size_t MAX_OUTPUTS_PER_BLOCK = 1000000 /  ::GetSerializeSize(CTxOut(), SER_NETWORK, PROTOCOL_VERSION); // TODO: 
 const Coin& AccessByTxid(const CCoinsViewCache& view, const uint256& txid)
 {
     COutPoint iter(txid, 0);
