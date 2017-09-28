@@ -47,6 +47,53 @@ bool CServicenodePing::Sign(CKey& keyServicenode, CPubKey& pubKeyServicenode)
     return true;
 }
 
+CServicenode::CServicenode()
+{
+    LOCK(cs);
+    vin = CTxIn();
+    addr = CService();
+    pubkey = CPubKey();
+    pubkey2 = CPubKey();
+    sig = std::vector<unsigned char>();
+    activeState = SERVICENODE_ENABLED;
+    sigTime = GetAdjustedTime();
+    lastPing = CServicenodePing();
+    unitTest = false;
+    protocolVersion = PROTOCOL_VERSION;
+    lastTimeChecked = 0;
+}
+
+CServicenode::CServicenode(const CServicenode& other)
+{
+    LOCK(cs);
+    vin = other.vin;
+    addr = other.addr;
+    pubkey = other.pubkey;
+    pubkey2 = other.pubkey2;
+    sig = other.sig;
+    activeState = other.activeState;
+    sigTime = other.sigTime;
+    lastPing = other.lastPing;
+    unitTest = other.unitTest;
+    protocolVersion = other.protocolVersion;
+    lastTimeChecked = 0;
+}
+
+CServicenode::CServicenode(const CServicenodeBroadcast& snb)
+{
+    LOCK(cs);
+    vin = snb.vin;
+    addr = snb.addr;
+    pubkey = snb.pubkey;
+    pubkey2 = snb.pubkey2;
+    sig = snb.sig;
+    activeState = SERVICENODE_ENABLED;
+    sigTime = snb.sigTime;
+    lastPing = snb.lastPing;
+    unitTest = false;
+    protocolVersion = snb.protocolVersion;
+}
+
 bool CServicenode::IsValidNetAddr()
 {
     // TODO: regtest is fine with any addresses for now,
@@ -389,7 +436,7 @@ CServicenodeBroadcast::CServicenodeBroadcast(const CServicenode& mn)
 }
 
 
-bool CServicenodeBroadcast::Create(std::string strService, std::string strKeyServicenode, std::string strTxHash, std::string strOutputIndex, std::string& strErrorMessage, CServicenodeBroadcast &mnb, bool fOffline) {
+bool CServicenodeBroadcast::Create(std::string strService, std::string strKeyServicenode, std::string strTxHash, std::string strOutputIndex, std::string& strErrorMessage, CServicenodeBroadcast &snb, bool fOffline) {
     CTxIn txin;
     CPubKey pubKeyCollateralAddress;
     CKey keyCollateralAddress;
@@ -429,7 +476,7 @@ bool CServicenodeBroadcast::Create(std::string strService, std::string strKeySer
         return false;
     }
 
-    return Create(txin, CService(strService), keyCollateralAddress, pubKeyCollateralAddress, keyServicenodeNew, pubKeyServicenodeNew, strErrorMessage, mnb);
+    return Create(txin, CService(strService), keyCollateralAddress, pubKeyCollateralAddress, keyServicenodeNew, pubKeyServicenodeNew, strErrorMessage, snb);
 }
 
 bool CServicenodeBroadcast::Create(CTxIn txin, CService service, CKey keyCollateralAddress, CPubKey pubKeyCollateralAddress, CKey keyServicenodeNew, CPubKey pubKeyServicenodeNew, std::string &strErrorMessage, CServicenodeBroadcast &snb) {

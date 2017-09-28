@@ -57,6 +57,10 @@ public:
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        READWRITE(vin);
+        READWRITE(blockHash);
+        READWRITE(sigTime);
+        READWRITE(vchSig);
     }
     friend bool operator==(const CServicenodePing& a, const CServicenodePing& b)
     {
@@ -76,6 +80,8 @@ public:
 class CServicenode
 {
 private:
+    // critical section to protect the inner data structures
+    mutable CCriticalSection cs;
     int64_t lastTimeChecked;
 public:
     enum state {
@@ -91,16 +97,38 @@ public:
     CPubKey pubkey;
     CPubKey pubkey2;
     std::vector<unsigned char> sig;
-    int64_t sigTime; //snb message time
     int activeState;
-    int protocolVersion;
+    int64_t sigTime; //snb message time
     bool unitTest;
+    int protocolVersion;
     CServicenodePing lastPing;
+
+    CServicenode();
+    CServicenode(const CServicenode& other);
+    CServicenode(const CServicenodeBroadcast& snb);
+
+    CServicenode& operator=(CServicenode from)
+    {
+        swap(*this, from);
+        return *this;
+    }
 
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+            LOCK(cs);
+
+            READWRITE(vin);
+            READWRITE(addr);
+            READWRITE(pubkey);
+            READWRITE(pubkey2);
+            READWRITE(sig);
+            READWRITE(sigTime);
+            READWRITE(protocolVersion);
+            READWRITE(activeState);
+            READWRITE(lastPing);
+            READWRITE(unitTest);
     }
     bool IsValidNetAddr();
     bool IsEnabled()
@@ -124,7 +152,6 @@ public:
 
 };
 
-
 //
 // The Servicenode Broadcast Class : Contains a different serialize method for sending servicenodes through the network
 //
@@ -135,17 +162,28 @@ public:
     CServicenodeBroadcast();
     CServicenodeBroadcast(CService newAddr, CTxIn newVin, CPubKey newPubkey, CPubKey newPubkey2, int protocolVersionIn);
     CServicenodeBroadcast(const CServicenode& mn);
-    bool CheckAndUpdate(int& nDoS);
-    bool CheckInputsAndAdd(int& nDos);
-    bool Sign(CKey& keyCollateralAddress);
+
     /// Create Servicenode broadcast, needs to be relayed manually after that
     static bool Create(CTxIn txin, CService service, CKey keyCollateral, CPubKey pubKeyCollateral, CKey keyServicenodeNew, CPubKey pubKeyServicenodeNew, std::string &strErrorMessage, CServicenodeBroadcast &mnb);
     static bool Create(std::string strService, std::string strKey, std::string strTxHash, std::string strOutputIndex, std::string& strErrorMessage, CServicenodeBroadcast &mnb, bool fOffline = false);
+
+    bool CheckAndUpdate(int& nDoS);
+    bool CheckInputsAndAdd(int& nDos);
+    bool Sign(CKey& keyCollateralAddress);
+    void Relay();
 
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        READWRITE(vin);
+        READWRITE(addr);
+        READWRITE(pubkey);
+        READWRITE(pubkey2);
+        READWRITE(sig);
+        READWRITE(sigTime);
+        READWRITE(protocolVersion);
+        READWRITE(lastPing);
     }
 
     uint256 GetHash(){
@@ -154,7 +192,6 @@ public:
         ss << pubkey;
         return ss.GetHash();
     }
-    void Relay();
 };
 
 #endif
