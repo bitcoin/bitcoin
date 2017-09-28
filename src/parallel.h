@@ -50,9 +50,8 @@ public:
         unsigned int nInIn,
         unsigned int nFlagsIn,
         bool cacheIn)
-        : resourceTracker(resourceTrackerIn), scriptPubKey(scriptPubKeyIn), amount(amountIn),
-          ptxTo(&txToIn), nIn(nInIn), nFlags(nFlagsIn), cacheStore(cacheIn), error(SCRIPT_ERR_UNKNOWN_ERROR),
-          sighashType(0)
+        : resourceTracker(resourceTrackerIn), scriptPubKey(scriptPubKeyIn), amount(amountIn), ptxTo(&txToIn),
+          nIn(nInIn), nFlags(nFlagsIn), cacheStore(cacheIn), error(SCRIPT_ERR_UNKNOWN_ERROR), sighashType(0)
     {
     }
 

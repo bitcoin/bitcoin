@@ -117,7 +117,7 @@ uint64_t BlockAssembler::reserveBlockSize(const CScript &scriptPubKeyIn)
 
     // This serializes with output value, a fixed-length 8 byte field, of zero and height, a serialized CScript
     // signed integer taking up 4 bytes for heights 32768-8388607 (around the year 2167) after which it will use 5.
-    nCoinbaseSize =  ::GetSerializeSize(coinbaseTx(scriptPubKeyIn, 400000, 0), SER_NETWORK, PROTOCOL_VERSION);
+    nCoinbaseSize = ::GetSerializeSize(coinbaseTx(scriptPubKeyIn, 400000, 0), SER_NETWORK, PROTOCOL_VERSION);
 
     // BU Miners take the block we give them, wipe away our coinbase and add their own.
     // So if their reserve choice is bigger then our coinbase then use that.
