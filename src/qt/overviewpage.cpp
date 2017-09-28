@@ -527,7 +527,7 @@ void OverviewPage::privateSendStatus()
 
 void OverviewPage::privateSendAuto(){
     const std::string name = walletModel->getWalletName().toStdString();
-    privateSendClient.DoOnceDenominating(name, g_connman.get());
+    privateSendClient.DoOnceDenominating(name);
 }
 
 void OverviewPage::privateSendReset(){

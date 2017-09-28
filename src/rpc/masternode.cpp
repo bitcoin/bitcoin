@@ -61,7 +61,7 @@ UniValue privatesend(const JSONRPCRequest& request)
                 throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please unlock wallet for mixing with walletpassphrase first.");
         }
 
-        bool result = privateSendClient.DoAutomaticDenominating(g_connman.get());
+        bool result = privateSendClient.DoAutomaticDenominating();
         return "Mixing " + (result ? "started successfully" : ("start failed: " + privateSendClient.GetStatus() + ", will retry"));
     }
 

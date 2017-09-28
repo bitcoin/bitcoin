@@ -5,6 +5,7 @@
 
 #include <chainparams.h>
 #include <init.h>
+#include <interfaces/chain.h>
 #include <interfaces/modules.h>
 #include <net.h>
 #include <scheduler.h>
@@ -30,28 +31,8 @@ public:
     //! Wallets parameter interaction
     bool ParameterInteraction() const override;
 
-    //! Register wallet RPCs.
-    void RegisterRPC(CRPCTable &tableRPC) const override;
-
-    //! Responsible for reading and validating the -wallet arguments and verifying the wallet database.
-    //  This function will perform salvage on the wallet if requested, as long as only one wallet is
-    //  being loaded (WalletParameterInteraction forbids -salvagewallet, -zapwallettxes or -upgradewallet with multiwallet).
-    bool Verify(interfaces::Chain& chain) const override;
-
-    //! Load wallet databases.
-    bool Open(interfaces::Chain& chain) const override;
-
-    //! Complete startup of wallets.
-    void Start(CScheduler& scheduler, CConnman* connman) const override;
-
-    //! Flush all wallets in preparation for shutdown.
-    void Flush() const override;
-
-    //! Stop all wallets. Wallets will be flushed first.
-    void Stop() const override;
-
-    //! Close all wallets.
-    void Close() const override;
+    //! Add wallets that should be opened to list of init interfaces.
+    void Construct(InitInterfaces& interfaces) const override;
 };
 
 const WalletInitInterface& g_wallet_init_interface = WalletInit();
@@ -107,7 +88,6 @@ bool WalletInit::ParameterInteraction() const
         return true;
     }
 
-    gArgs.SoftSetArg("-wallet", "");
     const bool is_multiwallet = gArgs.GetArgs("-wallet").size() > 1;
 
     if (gArgs.GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY) && gArgs.SoftSetBoolArg("-walletbroadcast", false)) {
@@ -200,21 +180,8 @@ bool WalletInit::ParameterInteraction() const
     return true;
 }
 
-void WalletInit::RegisterRPC(CRPCTable &t) const
+bool VerifyWallets(interfaces::Chain& chain, const std::vector<std::string>& wallet_files)
 {
-    if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
-        return;
-    }
-
-    RegisterWalletRPCCommands(t);
-}
-
-bool WalletInit::Verify(interfaces::Chain& chain) const
-{
-    if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
-        return true;
-    }
-
     if (gArgs.IsArgSet("-walletdir")) {
         fs::path wallet_dir = gArgs.GetArg("-walletdir", "");
         boost::system::error_code error;
@@ -234,8 +201,6 @@ bool WalletInit::Verify(interfaces::Chain& chain) const
     LogPrintf("Using wallet directory %s\n", GetWalletDir().string());
 
     uiInterface.InitMessage(_("Verifying and backing up wallet(s)..."));
-
-    std::vector<std::string> wallet_files = gArgs.GetArgs("-wallet");
 
     // Parameter interaction code should have thrown an error if -salvagewallet
     // was enabled with more than wallet file, so the wallet_files size check
@@ -263,14 +228,19 @@ bool WalletInit::Verify(interfaces::Chain& chain) const
     return true;
 }
 
-bool WalletInit::Open(interfaces::Chain& chain) const
+void WalletInit::Construct(InitInterfaces& interfaces) const
 {
     if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
         LogPrintf("Wallet disabled!\n");
-        return true;
+        return;
     }
+    gArgs.SoftSetArg("-wallet", "");
+    interfaces.chain_clients.emplace_back(interfaces::MakeWalletClient(*interfaces.chain, gArgs.GetArgs("-wallet")));
+}
 
-    for (const std::string& walletFile : gArgs.GetArgs("-wallet")) {
+bool LoadWallets(interfaces::Chain& chain, const std::vector<std::string>& wallet_files)
+{
+    for (const std::string& walletFile : wallet_files) {
         std::shared_ptr<CWallet> pwallet = CWallet::CreateWalletFromFile(chain, WalletLocation(walletFile));
         if (!pwallet) {
             return false;
@@ -281,25 +251,25 @@ bool WalletInit::Open(interfaces::Chain& chain) const
     return true;
 }
 
-void WalletInit::Start(CScheduler& scheduler, CConnman* connman) const
+void StartWallets(CScheduler& scheduler)
 {
     for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
         pwallet->postInitProcess(gArgs.GetBoolArg("-mnconflock", true) ? true : false);
     }
-    if(HasWallets()) privateSendClient.Controller(scheduler, connman);
+    if(HasWallets()) privateSendClient.Controller(scheduler);
 
     // Run a thread to flush wallet periodically
     scheduler.scheduleEvery(MaybeCompactWalletDB, 500);
 }
 
-void WalletInit::Flush() const
+void FlushWallets()
 {
     for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
         pwallet->Flush(false);
     }
 }
 
-void WalletInit::Stop() const
+void StopWallets()
 {
     for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
         pwallet->Flush(true);
@@ -309,24 +279,14 @@ void WalletInit::Stop() const
     privateSendClient.ResetPool();
 }
 
-void WalletInit::Close() const
+void UnloadWallets()
 {
     for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
         RemoveWallet(pwallet);
     }
 }
 
-class CWalletInterface : public WalletInterface {
-public:
-    /** Check MN Collateral */
-    bool CheckMNCollateral(COutPoint& outpointRet, CTxDestination &destRet, CPubKey& pubKeyRet, CKey& keyRet, const std::string& strTxHash, const std::string& strOutputIndex) const override;
-    /** Return MN mixing state */
-    bool IsMixingMasternode(const CNode* pnode) const override;
-};
-
-const WalletInterface& g_wallet_interface = CWalletInterface();
-
-bool CWalletInterface::CheckMNCollateral(COutPoint& outpointRet, CTxDestination &destRet, CPubKey& pubKeyRet, CKey& keyRet, const std::string& strTxHash, const std::string& strOutputIndex) const
+bool CheckMNCollateral(COutPoint& outpointRet, CTxDestination &destRet, CPubKey& pubKeyRet, CKey& keyRet, const std::string& strTxHash, const std::string& strOutputIndex)
 {
     bool foundmnout = false;
     for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
@@ -336,8 +296,7 @@ bool CWalletInterface::CheckMNCollateral(COutPoint& outpointRet, CTxDestination 
     return foundmnout;
 }
 
-bool CWalletInterface::IsMixingMasternode(const CNode* pnode) const
+bool IsMixingMasternode(const CNode* pnode)
 {
     return privateSendClient.IsMixingMasternode(pnode);
 }
-

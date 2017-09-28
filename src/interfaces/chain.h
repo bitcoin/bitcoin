@@ -5,9 +5,15 @@
 #ifndef BITCOIN_INTERFACES_CHAIN_H
 #define BITCOIN_INTERFACES_CHAIN_H
 
+#include <script/standard.h>           // For CTxDestination
+
 #include <memory>
 #include <string>
 #include <vector>
+
+class CKey;
+class CNode;
+class CScheduler;
 
 namespace interfaces {
 
@@ -24,6 +30,31 @@ class ChainClient
 {
 public:
     virtual ~ChainClient() {}
+
+    //! Register rpcs.
+    virtual void registerRpcs() = 0;
+
+    //! Check for errors before loading.
+    virtual bool verify() = 0;
+
+    //! Load saved state.
+    virtual bool load() = 0;
+
+    //! Start client execution and provide a scheduler.
+    virtual void start(CScheduler& scheduler) = 0;
+
+    //! Save state to disk.
+    virtual void flush() = 0;
+
+    //! Shut down client.
+    virtual void stop() = 0;
+
+    //! Check MN Collateral */
+    virtual bool checkCollateral(COutPoint& outpointRet, CTxDestination &destRet, CPubKey& pubKeyRet, CKey& keyRet, const std::string& strTxHash, const std::string& strOutputIndex) = 0;
+
+    //! Return MN mixing state */
+    virtual bool mixingMasternode(const CNode* pnode) = 0;
+
 };
 
 //! Return implementation of Chain interface.

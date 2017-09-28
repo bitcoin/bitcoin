@@ -7,7 +7,7 @@
 #include <clientversion.h>
 #include <governance.h>
 #include <init.h>
-#include <interfaces/modules.h>
+#include <interfaces/chain.h>
 #include <masternode-payments.h>
 #include <masternode-sync.h>
 #include <masternodeman.h>
@@ -723,7 +723,12 @@ void CMasternodeMan::ProcessMasternodeConnections(CConnman* connman)
     if(Params().NetworkIDString() == CBaseChainParams::REGTEST) return;
 
     connman->ForEachNode([](CNode* pnode) {
-        if(pnode->fMasternode && !g_wallet_interface.IsMixingMasternode(pnode)) {
+        bool ismixing = false;
+        for (const auto& client : g_mn_interfaces->chain_clients) {
+            if (client->mixingMasternode(pnode))
+                ismixing = true;
+        }
+        if(!ismixing) {
             LogPrintf("Closing Masternode connection: peer=%d, addr=%s\n", pnode->GetId(), pnode->addr.ToString());
             pnode->fDisconnect = true;
         }

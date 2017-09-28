@@ -15,13 +15,7 @@ public:
     bool HasWalletSupport() const override {return false;}
     void AddWalletOptions() const override;
     bool ParameterInteraction() const override {return true;}
-    void RegisterRPC(CRPCTable &) const override {}
-    bool Verify(interfaces::Chain& chain) const override {return true;}
-    bool Open(interfaces::Chain& chain) const override {LogPrintf("No wallet support compiled in!\n"); return true;}
-    void Start(CScheduler& scheduler, CConnman* connman) const override {}
-    void Flush() const override {}
-    void Stop() const override {}
-    void Close() const override {}
+    void Construct(InitInterfaces& interfaces) const override {LogPrintf("No wallet support compiled in!\n");}
 };
 
 void DummyWalletInit::AddWalletOptions() const
@@ -35,14 +29,6 @@ void DummyWalletInit::AddWalletOptions() const
 
 const WalletInitInterface& g_wallet_init_interface = DummyWalletInit();
 
-class DummyWallet : public WalletInterface {
-public:
-
-    bool CheckMNCollateral(COutPoint& outpointRet, CTxDestination &destRet, CPubKey& pubKeyRet, CKey& keyRet, const std::string& strTxHash, const std::string& strOutputIndex) const override {return false;}
-    bool IsMixingMasternode(const CNode* pnode) const override {return false;}
-};
-
-const WalletInterface& g_wallet_interface = DummyWallet();
 fs::path GetWalletDir()
 {
     throw std::logic_error("Wallet function called in non-wallet build.");

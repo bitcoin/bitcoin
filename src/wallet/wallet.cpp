@@ -4797,7 +4797,7 @@ bool CWallet::Verify(interfaces::Chain& chain, const WalletLocation& location, b
         return false;
     }
 
-    return AutoBackupWallet(nullptr, wallet_file, warning_string, error_string);
+    return AutoBackupWallet(nullptr, location.GetName(), warning_string, error_string);
 }
 
 std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain, const WalletLocation& location, uint64_t wallet_creation_flags)

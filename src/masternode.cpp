@@ -8,7 +8,7 @@
 #include <chainparams.h>
 #include <consensus/tx_verify.h>
 #include <init.h>
-#include <interfaces/modules.h>
+#include <interfaces/chain.h>
 #include <netbase.h>
 #include <masternode.h>
 #include <masternode-payments.h>
@@ -22,6 +22,7 @@
 
 #include <string>
 
+InitInterfaces* g_mn_interfaces = nullptr;
 
 CMasternode::CMasternode() :
     masternode_info_t{ MASTERNODE_ENABLED, PROTOCOL_VERSION, GetAdjustedTime()},
@@ -366,7 +367,13 @@ bool CMasternodeBroadcast::Create(const std::string& strService, const std::stri
     if (!CMessageSigner::GetKeysFromSecret(strKeyMasternode, keyMasternodeNew, pubKeyMasternodeNew))
         return Log(strprintf("Invalid masternode key %s", strKeyMasternode));
 
-    if (!g_wallet_interface.CheckMNCollateral(outpoint, destNew, pubKeyCollateralAddressNew, keyCollateralAddressNew, strTxHash, strOutputIndex))
+    bool foundmnout = false;
+    for (const auto& client : g_mn_interfaces->chain_clients) {
+        if (client->checkCollateral(outpoint, destNew, pubKeyCollateralAddressNew, keyCollateralAddressNew, strTxHash, strOutputIndex))
+            foundmnout = true;
+    }
+
+    if (!foundmnout)
         return Log(strprintf("Could not allocate outpoint %s:%s for masternode %s", strTxHash, strOutputIndex, strService));
 
     CService service;

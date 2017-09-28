@@ -13,6 +13,9 @@
 class CMasternode;
 class CMasternodeBroadcast;
 class CConnman;
+struct InitInterfaces;
+
+extern InitInterfaces* g_mn_interfaces;
 
 static const int MASTERNODE_CHECK_SECONDS               =  10;
 static const int MASTERNODE_MIN_MNB_SECONDS             =   5 * 60;
