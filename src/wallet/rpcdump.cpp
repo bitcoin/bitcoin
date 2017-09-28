@@ -685,7 +685,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
     file.close();
 
     UniValue reply(UniValue::VOBJ);
-    reply.push_back(Pair("filename", filepath.string()));
+    reply.pushKV("filename", filepath.string());
 
     return reply;
 }
