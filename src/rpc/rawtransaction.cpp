@@ -643,7 +643,7 @@ UniValue combinerawtransaction(const JSONRPCRequest& request)
 UniValue signrawtransaction(const JSONRPCRequest& request)
 {
 #ifdef ENABLE_WALLET
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    auto const pwallet = GetWalletForJSONRPCRequest(request);
 #endif
 
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 4)
@@ -655,7 +655,7 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
             "The third optional argument (may be null) is an array of base58-encoded private\n"
             "keys that, if given, will be the only keys used to sign the transaction.\n"
 #ifdef ENABLE_WALLET
-            + HelpRequiringPassphrase(pwallet) + "\n"
+            + HelpRequiringPassphrase(pwallet.get()) + "\n"
 #endif
 
             "\nArguments:\n"
@@ -752,7 +752,7 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
     }
 #ifdef ENABLE_WALLET
     else if (pwallet) {
-        EnsureWalletIsUnlocked(pwallet);
+        EnsureWalletIsUnlocked(pwallet.get());
     }
 #endif
 

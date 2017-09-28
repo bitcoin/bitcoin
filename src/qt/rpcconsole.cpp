@@ -305,9 +305,10 @@ bool RPCConsole::RPCParseCommandLine(std::string &strResult, const std::string &
                             req.strMethod = stack.back()[0];
 #ifdef ENABLE_WALLET
                             // TODO: Move this logic to WalletModel
-                            if (!vpwallets.empty()) {
+                            auto wallets = GetWallets();
+                            if (!wallets.empty()) {
                                 // in Qt, use always the wallet with index 0 when running with multiple wallets
-                                QByteArray encodedName = QUrl::toPercentEncoding(QString::fromStdString(vpwallets[0]->GetName()));
+                                QByteArray encodedName = QUrl::toPercentEncoding(QString::fromStdString(wallets[0]->GetName()));
                                 req.URI = "/wallet/"+std::string(encodedName.constData(), encodedName.length());
                             }
 #endif

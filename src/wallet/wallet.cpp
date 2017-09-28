@@ -37,7 +37,46 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/thread.hpp>
 
-std::vector<CWalletRef> vpwallets;
+static CCriticalSection cs_wallets;
+static std::vector<CWalletRef> wallets;
+
+bool AddWallet(CWalletRef wallet)
+{
+    LOCK(cs_wallets);
+    for (auto it = wallets.begin(); it != wallets.end(); ++it) {
+        if (*it == wallet) {
+            return false;
+        }
+    }
+    wallets.push_back(wallet);
+    return true;
+}
+
+bool RemoveWallet(CWalletRef wallet)
+{
+    LOCK(cs_wallets);
+    for (auto it = wallets.begin(); it != wallets.end(); ++it) {
+        if (*it == wallet) {
+            wallets.erase(it);
+            return true;
+        }
+    }
+    return false;
+}
+
+std::vector<CWalletRef> GetWallets()
+{
+    LOCK(cs_wallets);
+    return wallets;
+}
+
+bool ClearWallets()
+{
+    LOCK(cs_wallets);
+    wallets.clear();
+    return true;
+}
+
 /** Transaction fee set by the user */
 CFeeRate payTxFee(DEFAULT_TRANSACTION_FEE);
 unsigned int nTxConfirmTarget = DEFAULT_TX_CONFIRM_TARGET;
@@ -3764,7 +3803,7 @@ std::vector<std::string> CWallet::GetDestValues(const std::string& prefix) const
     return values;
 }
 
-CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
+CWalletRef CWallet::CreateWalletFromFile(const std::string walletFile)
 {
     // needed to restore wallet transaction meta data after -zapwallettxes
     std::vector<CWalletTx> vWtx;
@@ -3786,7 +3825,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
     int64_t nStart = GetTimeMillis();
     bool fFirstRun = true;
     std::unique_ptr<CWalletDBWrapper> dbw(new CWalletDBWrapper(&bitdb, walletFile));
-    CWallet *walletInstance = new CWallet(std::move(dbw));
+    CWalletRef walletInstance = std::make_shared<CWallet>(std::move(dbw));
     DBErrors nLoadWalletRet = walletInstance->LoadWallet(fFirstRun);
     if (nLoadWalletRet != DB_LOAD_OK)
     {
@@ -3870,7 +3909,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
 
     LogPrintf(" wallet      %15dms\n", GetTimeMillis() - nStart);
 
-    RegisterValidationInterface(walletInstance);
+    RegisterValidationInterface(walletInstance.get());
 
     // Try to top up keypool. No-op if the wallet is locked.
     walletInstance->TopUpKeyPool();

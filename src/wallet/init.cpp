@@ -242,38 +242,35 @@ bool OpenWallets()
         return true;
     }
 
-    for (const std::string& walletFile : gArgs.GetArgs("-wallet")) {
-        CWallet * const pwallet = CWallet::CreateWalletFromFile(walletFile);
+    for (const std::string& wallet_file : gArgs.GetArgs("-wallet")) {
+        auto pwallet = CWallet::CreateWalletFromFile(wallet_file);
         if (!pwallet) {
             return false;
         }
-        vpwallets.push_back(pwallet);
+        AddWallet(pwallet);
     }
 
     return true;
 }
 
 void StartWallets(CScheduler& scheduler) {
-    for (CWalletRef pwallet : vpwallets) {
+    for (auto pwallet : GetWallets()) {
         pwallet->postInitProcess(scheduler);
     }
 }
 
 void FlushWallets() {
-    for (CWalletRef pwallet : vpwallets) {
+    for (auto pwallet : GetWallets()) {
         pwallet->Flush(false);
     }
 }
 
 void StopWallets() {
-    for (CWalletRef pwallet : vpwallets) {
+    for (auto pwallet : GetWallets()) {
         pwallet->Flush(true);
     }
 }
 
 void CloseWallets() {
-    for (CWalletRef pwallet : vpwallets) {
-        delete pwallet;
-    }
-    vpwallets.clear();
+    ClearWallets();
 }
