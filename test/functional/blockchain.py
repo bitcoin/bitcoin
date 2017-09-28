@@ -60,6 +60,7 @@ class BlockchainTest(BitcoinTestFramework):
             'pruned',
             'softforks',
             'verificationprogress',
+            'warnings',
         ]
         res = self.nodes[0].getblockchaininfo()
         # result should have pruneheight and default keys if pruning is enabled
