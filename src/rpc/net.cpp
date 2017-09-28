@@ -483,7 +483,7 @@ UniValue getnetworkinfo(const JSONRPCRequest& request)
         }
     }
     obj.push_back(Pair("localaddresses", localAddresses));
-    obj.push_back(Pair("warnings",       GetWarnings("statusbar")));
+    obj.push_back(Pair("warnings",       GetWarnings()));
     return obj;
 }
 

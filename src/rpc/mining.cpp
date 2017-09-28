@@ -217,7 +217,7 @@ UniValue getmininginfo(const JSONRPCRequest& request)
     obj.push_back(Pair("currentblockweight", (uint64_t)nLastBlockWeight));
     obj.push_back(Pair("currentblocktx",   (uint64_t)nLastBlockTx));
     obj.push_back(Pair("difficulty",       (double)GetDifficulty()));
-    obj.push_back(Pair("errors",           GetWarnings("statusbar")));
+    obj.push_back(Pair("errors",           GetWarnings()));
     obj.push_back(Pair("networkhashps",    getnetworkhashps(request)));
     obj.push_back(Pair("pooledtx",         (uint64_t)mempool.size()));
     obj.push_back(Pair("chain",            Params().NetworkIDString()));

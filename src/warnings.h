@@ -13,14 +13,11 @@ void SetMiscWarning(const std::string& strWarning);
 void SetfLargeWorkForkFound(bool flag);
 bool GetfLargeWorkForkFound();
 void SetfLargeWorkInvalidChainFound(bool flag);
-/** Format a string that describes several potential problems detected by the core.
- * strFor can have three values:
- * - "rpc": get critical warnings, which should put the client in safe mode if non-empty
- * - "statusbar": get all warnings
- * - "gui": get all warnings, translated (where possible) for GUI
- * This function only returns the highest priority warning of the set selected by strFor.
+/** Format a string that describes several potential detected problems.
+ * If htmlMultiline is set to true, this functiomn returns multiple (and translated) warnings seperated by a <hr> tag.
+ * Otherwise only the highest priority warning will be returned.
  */
-std::string GetWarnings(const std::string& strFor);
+std::string GetWarnings(bool htmlMultiline = false);
 
 static const bool DEFAULT_TESTSAFEMODE = false;
 
