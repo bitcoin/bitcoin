@@ -107,6 +107,25 @@ public:
     CServicenode(const CServicenode& other);
     CServicenode(const CServicenodeBroadcast& snb);
 
+    void swap(CServicenode& first, CServicenode& second) // nothrow
+    {
+        // enable ADL (not necessary in our case, but good practice)
+        using std::swap;
+
+        // by swapping the members of two classes,
+        // the two classes are effectively swapped
+        swap(first.vin, second.vin);
+        swap(first.addr, second.addr);
+        swap(first.pubkey, second.pubkey);
+        swap(first.pubkey2, second.pubkey2);
+        swap(first.sig, second.sig);
+        swap(first.activeState, second.activeState);
+        swap(first.sigTime, second.sigTime);
+        swap(first.lastPing, second.lastPing);
+        swap(first.unitTest, second.unitTest);
+        swap(first.protocolVersion, second.protocolVersion);
+    }
+
     CServicenode& operator=(CServicenode from)
     {
         swap(*this, from);
