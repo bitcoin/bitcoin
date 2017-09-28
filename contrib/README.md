@@ -26,7 +26,7 @@ Contains files used to package bitcoind/bitcoin-qt
 for Debian-based Linux systems. If you compile bitcoind/bitcoin-qt yourself, there are some useful files here.
 
 ### [Gitian-descriptors](/contrib/gitian-descriptors) ###
-Notes on getting Gitian builds up and running using KVM.
+Files used during the gitian build process. For more information about gitian, see the [the Bitcoin Core documentation repository](https://github.com/bitcoin-core/docs).
 
 ### [Gitian-keys](/contrib/gitian-keys)
 PGP keys used for signing Bitcoin Core [Gitian release](/doc/release-process.md) results.
