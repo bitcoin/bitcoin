@@ -9,6 +9,8 @@
 #include <string>
 #include <vector>
 
+class CScheduler;
+
 namespace interfaces {
 
 //! Interface for giving wallet processes access to blockchain state.
@@ -24,6 +26,24 @@ class ChainClient
 {
 public:
     virtual ~ChainClient() {}
+
+    //! Register rpcs.
+    virtual void registerRpcs() = 0;
+
+    //! Check for errors before loading.
+    virtual bool verify() = 0;
+
+    //! Load saved state.
+    virtual bool load() = 0;
+
+    //! Start client execution and provide a scheduler.
+    virtual void start(CScheduler& scheduler) = 0;
+
+    //! Save state to disk.
+    virtual void flush() = 0;
+
+    //! Shut down client.
+    virtual void stop() = 0;
 };
 
 //! Return implementation of Chain interface.
