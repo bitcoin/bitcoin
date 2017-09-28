@@ -18,7 +18,7 @@ static void MerkleRoot(benchmark::State& state)
     }
     while (state.KeepRunning()) {
         bool mutation = false;
-        uint256 hash = ComputeMerkleRoot(leaves, &mutation);
+        uint256 hash = ComputeMerkleRoot(std::vector<uint256>(leaves), &mutation);
         leaves[mutation] = hash;
     }
 }
