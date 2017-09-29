@@ -148,6 +148,10 @@ Value mnsync(const Array& params, bool fHelp)
     return "failure";
 }
 
+Value snsync(const Array& params, bool fHelp)
+{
+}
+
 #ifdef ENABLE_WALLET
 class DescribeAddressVisitor : public boost::static_visitor<Object>
 {
