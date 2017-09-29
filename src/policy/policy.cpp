@@ -76,7 +76,7 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType, const bool w
     else if (!witnessEnabled && (whichType == TX_WITNESS_V0_KEYHASH || whichType == TX_WITNESS_V0_SCRIPTHASH))
         return false;
 
-    return whichType != TX_NONSTANDARD;
+    return whichType != TX_NONSTANDARD && whichType != TX_WITNESS_UNKNOWN;
 }
 
 bool IsStandardTx(const CTransaction& tx, std::string& reason, const bool witnessEnabled)
