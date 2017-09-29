@@ -4,8 +4,8 @@
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
-#ifndef _SECP256K1_SCALAR_REPR_IMPL_H_
-#define _SECP256K1_SCALAR_REPR_IMPL_H_
+#ifndef SECP256K1_SCALAR_REPR_IMPL_H
+#define SECP256K1_SCALAR_REPR_IMPL_H
 
 #include "scalar.h"
 
@@ -111,4 +111,4 @@ SECP256K1_INLINE static int secp256k1_scalar_eq(const secp256k1_scalar *a, const
     return *a == *b;
 }
 
-#endif
+#endif /* SECP256K1_SCALAR_REPR_IMPL_H */

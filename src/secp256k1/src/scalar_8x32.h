@@ -4,8 +4,8 @@
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
-#ifndef _SECP256K1_SCALAR_REPR_
-#define _SECP256K1_SCALAR_REPR_
+#ifndef SECP256K1_SCALAR_REPR_H
+#define SECP256K1_SCALAR_REPR_H
 
 #include <stdint.h>
 
@@ -16,4 +16,4 @@ typedef struct {
 
 #define SECP256K1_SCALAR_CONST(d7, d6, d5, d4, d3, d2, d1, d0) {{(d0), (d1), (d2), (d3), (d4), (d5), (d6), (d7)}}
 
-#endif
+#endif /* SECP256K1_SCALAR_REPR_H */

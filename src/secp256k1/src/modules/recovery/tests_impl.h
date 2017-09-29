@@ -4,8 +4,8 @@
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
-#ifndef _SECP256K1_MODULE_RECOVERY_TESTS_
-#define _SECP256K1_MODULE_RECOVERY_TESTS_
+#ifndef SECP256K1_MODULE_RECOVERY_TESTS_H
+#define SECP256K1_MODULE_RECOVERY_TESTS_H
 
 static int recovery_test_nonce_function(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, const unsigned char *algo16, void *data, unsigned int counter) {
     (void) msg32;
@@ -390,4 +390,4 @@ void run_recovery_tests(void) {
     test_ecdsa_recovery_edge_cases();
 }
 
-#endif
+#endif /* SECP256K1_MODULE_RECOVERY_TESTS_H */
