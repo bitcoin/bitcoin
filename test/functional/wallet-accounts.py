@@ -128,7 +128,7 @@ class WalletAccountsTest(BitcoinTestFramework):
             addresses = []
             for x in range(10):
                 addresses.append(node.getnewaddress())
-            multisig_address = node.addmultisigaddress(5, addresses, account.name)
+            multisig_address = node.addmultisigaddress(5, addresses, account.name)['address']
             account.add_address(multisig_address)
             account.verify(node)
             node.sendfrom("", multisig_address, 50)

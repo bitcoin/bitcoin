@@ -117,14 +117,14 @@ class AddressTypeTest(BitcoinTestFramework):
 
         # addmultisigaddress with at least 1 uncompressed key should return a legacy address.
         for node in range(4):
-            self.test_address(node, self.nodes[node].addmultisigaddress(2, [uncompressed_1, uncompressed_2]), True, 'legacy')
-            self.test_address(node, self.nodes[node].addmultisigaddress(2, [compressed_1, uncompressed_2]), True, 'legacy')
-            self.test_address(node, self.nodes[node].addmultisigaddress(2, [uncompressed_1, compressed_2]), True, 'legacy')
+            self.test_address(node, self.nodes[node].addmultisigaddress(2, [uncompressed_1, uncompressed_2])['address'], True, 'legacy')
+            self.test_address(node, self.nodes[node].addmultisigaddress(2, [compressed_1, uncompressed_2])['address'], True, 'legacy')
+            self.test_address(node, self.nodes[node].addmultisigaddress(2, [uncompressed_1, compressed_2])['address'], True, 'legacy')
         # addmultisigaddress with all compressed keys should return the appropriate address type (even when the keys are not ours).
-        self.test_address(0, self.nodes[0].addmultisigaddress(2, [compressed_1, compressed_2]), True, 'legacy')
-        self.test_address(1, self.nodes[1].addmultisigaddress(2, [compressed_1, compressed_2]), True, 'p2sh-segwit')
-        self.test_address(2, self.nodes[2].addmultisigaddress(2, [compressed_1, compressed_2]), True, 'p2sh-segwit')
-        self.test_address(3, self.nodes[3].addmultisigaddress(2, [compressed_1, compressed_2]), True, 'bech32')
+        self.test_address(0, self.nodes[0].addmultisigaddress(2, [compressed_1, compressed_2])['address'], True, 'legacy')
+        self.test_address(1, self.nodes[1].addmultisigaddress(2, [compressed_1, compressed_2])['address'], True, 'p2sh-segwit')
+        self.test_address(2, self.nodes[2].addmultisigaddress(2, [compressed_1, compressed_2])['address'], True, 'p2sh-segwit')
+        self.test_address(3, self.nodes[3].addmultisigaddress(2, [compressed_1, compressed_2])['address'], True, 'bech32')
 
         for explicit_type, multisig, from_node in itertools.product([False, True], [False, True], range(4)):
             address_type = None
@@ -155,7 +155,7 @@ class AddressTypeTest(BitcoinTestFramework):
                 else:
                     addr1 = self.nodes[to_node].getnewaddress()
                     addr2 = self.nodes[to_node].getnewaddress()
-                    address = self.nodes[to_node].addmultisigaddress(2, [addr1, addr2])
+                    address = self.nodes[to_node].addmultisigaddress(2, [addr1, addr2])['address']
 
                 # Do some sanity checking on the created address
                 if address_type is not None:
