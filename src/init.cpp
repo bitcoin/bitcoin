@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2016 The Bitcoin Core developers
+// Copyright (c) 2017 IoP Ventures LLC
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -219,6 +220,9 @@ void Shutdown()
     if (pcoinsTip != nullptr) {
         FlushStateToDisk();
     }
+    if (pminerwhitelist != nullptr) {
+        pminerwhitelist->Sync();
+    }
 
     // After there are no more peers/RPC left to give us new data which may generate
     // CValidationInterface callbacks, flush them...
@@ -235,6 +239,9 @@ void Shutdown()
         if (pcoinsTip != nullptr) {
             FlushStateToDisk();
         }
+        if (pminerwhitelist != nullptr) {
+            pminerwhitelist->Sync();
+        }
         delete pcoinsTip;
         pcoinsTip = nullptr;
         delete pcoinscatcher;
@@ -243,6 +250,8 @@ void Shutdown()
         pcoinsdbview = nullptr;
         delete pblocktree;
         pblocktree = nullptr;
+        delete pminerwhitelist;
+        pminerwhitelist= nullptr;
     }
 #ifdef ENABLE_WALLET
     for (CWalletRef pwallet : vpwallets) {
@@ -1377,11 +1386,14 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     int64_t nCoinDBCache = std::min(nTotalCache / 2, (nTotalCache / 4) + (1 << 23)); // use 25%-50% of the remainder for disk cache
     nCoinDBCache = std::min(nCoinDBCache, nMaxCoinsDBCache << 20); // cap total coins db cache
     nTotalCache -= nCoinDBCache;
+    int64_t nWhitelistDBCache = nTotalCache/2;
+    nTotalCache -= nWhitelistDBCache;
     nCoinCacheUsage = nTotalCache; // the rest goes to in-memory cache
     int64_t nMempoolSizeMax = gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
     LogPrintf("Cache configuration:\n");
     LogPrintf("* Using %.1fMiB for block index database\n", nBlockTreeDBCache * (1.0 / 1024 / 1024));
     LogPrintf("* Using %.1fMiB for chain state database\n", nCoinDBCache * (1.0 / 1024 / 1024));
+    LogPrintf("* Using %.1fMiB for whitelist database\n", nWhitelistDBCache * (1.0 / 1024 / 1024));
     LogPrintf("* Using %.1fMiB for in-memory UTXO set (plus up to %.1fMiB of unused mempool space)\n", nCoinCacheUsage * (1.0 / 1024 / 1024), nMempoolSizeMax * (1.0 / 1024 / 1024));
 
     bool fLoaded = false;
@@ -1399,11 +1411,15 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                 delete pcoinsdbview;
                 delete pcoinscatcher;
                 delete pblocktree;
+                delete pminerwhitelist;
 
                 pblocktree = new CBlockTreeDB(nBlockTreeDBCache, false, fReset);
 
+
                 if (fReset) {
+
                     pblocktree->WriteReindexing(true);
+                    //pminerwhitelist->WriteReindexing(true); // TODO: Check what this does!
                     //If we're reindexing in prune mode, wipe away unusable block files and all undo data files
                     if (fPruneMode)
                         CleanupBlockRevFiles();
@@ -1453,6 +1469,9 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
                 pcoinsdbview = new CCoinsViewDB(nCoinDBCache, false, fReset || fReindexChainState);
                 pcoinscatcher = new CCoinsViewErrorCatcher(pcoinsdbview);
+                pminerwhitelist = new CMinerWhitelistDB(nWhitelistDBCache, false, fReset); // TODO: check if I do this here or late
+                
+                pminerwhitelist->Init(fReset);
 
                 // If necessary, upgrade from older database format.
                 // This is a no-op if we cleared the coinsviewdb with -reindex or -reindex-chainstate

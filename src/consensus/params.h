@@ -73,15 +73,15 @@ struct Params {
 
 
      /* IoP beta release - Miner White List params */
-     int minerWhiteListActivationHeight;
+     unsigned int minerWhiteListActivationHeight;
      std::set<std::string> minerWhiteListAdminPubKey;
      std::set<std::string> minerWhiteListAdminAddress;
-     int minerCapSystemChangeHeight;
+     unsigned int minerCapSystemChangeHeight;
  
     //  int nPowSubsidyIncreaseHeight;
      /* Voting System Parameters */
     //  int ccBlockStartAdditionalHeight; // this amount of blocks is used to calculate the start of a CC. Current Height + n + User Provided CC height
-     int ccLastCCBlockHeight;
+     unsigned int ccLastCCBlockHeight;
 };
 } // namespace Consensus
 
