@@ -4,25 +4,63 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the SegWit changeover logic."""
 
-from test_framework.address import (
-    key_to_p2sh_p2wpkh,
-    key_to_p2wpkh,
-    program_to_witness,
-    script_to_p2sh_p2wsh,
-    script_to_p2wsh,
-)
-from test_framework.blocktools import witness_script, send_to_witness
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 from test_framework.mininode import sha256, CTransaction, CTxIn, COutPoint, CTxOut, COIN, ToHex, FromHex
-from test_framework.address import script_to_p2sh, key_to_p2pkh
-from test_framework.script import CScript, OP_HASH160, OP_CHECKSIG, OP_0, hash160, OP_EQUAL, OP_DUP, OP_EQUALVERIFY, OP_1, OP_2, OP_CHECKMULTISIG, OP_TRUE, OP_DROP
+from test_framework.address import script_to_p2sh, key_to_p2pkh, key_to_p2sh_p2wpkh, key_to_p2wpkh, script_to_p2sh_p2wsh, script_to_p2wsh, program_to_witness
+from test_framework.script import CScript, OP_HASH160, OP_CHECKSIG, OP_0, hash160, OP_EQUAL, OP_DUP, OP_EQUALVERIFY, OP_1, OP_2, OP_CHECKMULTISIG, OP_TRUE
 from io import BytesIO
 
 NODE_0 = 0
 NODE_2 = 2
 WIT_V0 = 0
 WIT_V1 = 1
+
+# Create a scriptPubKey corresponding to either a P2WPKH output for the
+# given pubkey, or a P2WSH output of a 1-of-1 multisig for the given
+# pubkey. Returns the hex encoding of the scriptPubKey.
+def witness_script(use_p2wsh, pubkey):
+    if (use_p2wsh == False):
+        # P2WPKH instead
+        pubkeyhash = hash160(hex_str_to_bytes(pubkey))
+        pkscript = CScript([OP_0, pubkeyhash])
+    else:
+        # 1-of-1 multisig
+        witness_program = CScript([OP_1, hex_str_to_bytes(pubkey), OP_1, OP_CHECKMULTISIG])
+        scripthash = sha256(witness_program)
+        pkscript = CScript([OP_0, scripthash])
+    return bytes_to_hex_str(pkscript)
+
+# Return a transaction (in hex) that spends the given utxo to a segwit output,
+# optionally wrapping the segwit output using P2SH.
+def create_witness_tx(node, use_p2wsh, utxo, pubkey, encode_p2sh, amount):
+    if use_p2wsh:
+        program = CScript([OP_1, hex_str_to_bytes(pubkey), OP_1, OP_CHECKMULTISIG])
+        addr = script_to_p2sh_p2wsh(program) if encode_p2sh else script_to_p2wsh(program)
+    else:
+        addr = key_to_p2sh_p2wpkh(pubkey) if encode_p2sh else key_to_p2wpkh(pubkey)
+    if not encode_p2sh:
+        assert_equal(node.validateaddress(addr)['scriptPubKey'], witness_script(use_p2wsh, pubkey))
+    return node.createrawtransaction([utxo], {addr: amount})
+
+# Create a transaction spending a given utxo to a segwit output corresponding
+# to the given pubkey: use_p2wsh determines whether to use P2WPKH or P2WSH;
+# encode_p2sh determines whether to wrap in P2SH.
+# sign=True will have the given node sign the transaction.
+# insert_redeem_script will be added to the scriptSig, if given.
+def send_to_witness(use_p2wsh, node, utxo, pubkey, encode_p2sh, amount, sign=True, insert_redeem_script=""):
+    tx_to_witness = create_witness_tx(node, use_p2wsh, utxo, pubkey, encode_p2sh, amount)
+    if (sign):
+        signed = node.signrawtransaction(tx_to_witness)
+        assert("errors" not in signed or len(["errors"]) == 0)
+        return node.sendrawtransaction(signed["hex"])
+    else:
+        if (insert_redeem_script):
+            tx = FromHex(CTransaction(), tx_to_witness)
+            tx.vin[0].scriptSig += CScript([hex_str_to_bytes(insert_redeem_script)])
+            tx_to_witness = ToHex(tx)
+
+    return node.sendrawtransaction(tx_to_witness)
 
 def getutxo(txid):
     utxo = {}
@@ -36,15 +74,13 @@ def find_unspent(node, min_value):
             return utxo
 
 class SegWitTest(BitcoinTestFramework):
-
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3
         # This test tests SegWit both pre and post-activation, so use the normal BIP9 activation.
-        self.extra_args = [["-walletprematurewitness", "-rpcserialversion=0", "-vbparams=segwit:0:999999999999", "-addresstype=legacy", "-deprecatedrpc=addwitnessaddress"],
-                           ["-blockversion=4", "-promiscuousmempoolflags=517", "-prematurewitness", "-walletprematurewitness", "-rpcserialversion=1", "-vbparams=segwit:0:999999999999", "-addresstype=legacy", "-deprecatedrpc=addwitnessaddress"],
-                           ["-blockversion=536870915", "-promiscuousmempoolflags=517", "-prematurewitness", "-walletprematurewitness", "-vbparams=segwit:0:999999999999", "-addresstype=legacy", "-deprecatedrpc=addwitnessaddress"]]
+        self.extra_args = [["-walletprematurewitness", "-rpcserialversion=0", "-vbparams=segwit:0:999999999999", "-addresstype=legacy"],
+                           ["-blockversion=4", "-promiscuousmempoolflags=517", "-prematurewitness", "-walletprematurewitness", "-rpcserialversion=1", "-vbparams=segwit:0:999999999999", "-addresstype=legacy"],
+                           ["-blockversion=536870915", "-promiscuousmempoolflags=517", "-prematurewitness", "-walletprematurewitness", "-vbparams=segwit:0:999999999999", "-addresstype=legacy"]]
 
     def setup_network(self):
         super().setup_network()
@@ -97,11 +133,12 @@ class SegWitTest(BitcoinTestFramework):
         for i in range(3):
             newaddress = self.nodes[i].getnewaddress()
             self.pubkey.append(self.nodes[i].validateaddress(newaddress)["pubkey"])
+            multiaddress = self.nodes[i].addmultisigaddress(1, [self.pubkey[-1]])['address']
             multiscript = CScript([OP_1, hex_str_to_bytes(self.pubkey[-1]), OP_1, OP_CHECKMULTISIG])
             p2sh_addr = self.nodes[i].addwitnessaddress(newaddress)
             bip173_addr = self.nodes[i].addwitnessaddress(newaddress, False)
-            p2sh_ms_addr = self.nodes[i].addmultisigaddress(1, [self.pubkey[-1]], '', 'p2sh-segwit')['address']
-            bip173_ms_addr = self.nodes[i].addmultisigaddress(1, [self.pubkey[-1]], '', 'bech32')['address']
+            p2sh_ms_addr = self.nodes[i].addwitnessaddress(multiaddress)
+            bip173_ms_addr = self.nodes[i].addwitnessaddress(multiaddress, False)
             assert_equal(p2sh_addr, key_to_p2sh_p2wpkh(self.pubkey[-1]))
             assert_equal(bip173_addr, key_to_p2wpkh(self.pubkey[-1]))
             assert_equal(p2sh_ms_addr, script_to_p2sh_p2wsh(multiscript))
@@ -220,7 +257,7 @@ class SegWitTest(BitcoinTestFramework):
         # Now create tx2, which will spend from txid1.
         tx = CTransaction()
         tx.vin.append(CTxIn(COutPoint(int(txid1, 16), 0), b''))
-        tx.vout.append(CTxOut(int(49.99 * COIN), CScript([OP_TRUE, OP_DROP] * 15 + [OP_TRUE])))
+        tx.vout.append(CTxOut(int(49.99*COIN), CScript([OP_TRUE])))
         tx2_hex = self.nodes[0].signrawtransaction(ToHex(tx))['hex']
         txid2 = self.nodes[0].sendrawtransaction(tx2_hex)
         tx = FromHex(CTransaction(), tx2_hex)
@@ -229,7 +266,7 @@ class SegWitTest(BitcoinTestFramework):
         # Now create tx3, which will spend from txid2
         tx = CTransaction()
         tx.vin.append(CTxIn(COutPoint(int(txid2, 16), 0), b""))
-        tx.vout.append(CTxOut(int(49.95 * COIN), CScript([OP_TRUE, OP_DROP] * 15 + [OP_TRUE])))  # Huge fee
+        tx.vout.append(CTxOut(int(49.95*COIN), CScript([OP_TRUE]))) # Huge fee
         tx.calc_sha256()
         txid3 = self.nodes[0].sendrawtransaction(ToHex(tx))
         assert(tx.wit.is_null())

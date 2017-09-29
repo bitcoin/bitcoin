@@ -6,18 +6,13 @@
 
 Test the following RPCs:
    - createrawtransaction
-   - signrawtransactionwithwallet
+   - signrawtransaction
    - sendrawtransaction
    - decoderawtransaction
    - getrawtransaction
 """
 
-from collections import OrderedDict
-from io import BytesIO
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.messages import (
-    CTransaction,
-)
 from test_framework.util import *
 
 
@@ -48,10 +43,11 @@ class RawTransactionsTest(BitcoinTestFramework):
 
     def setup_network(self, split=False):
         super().setup_network()
-        connect_nodes_bi(self.nodes, 0, 2)
+        connect_nodes_bi(self.nodes,0,2)
 
     def run_test(self):
-        self.log.info('prepare some coins for multiple *rawtransaction commands')
+
+        #prepare some coins for multiple *rawtransaction commands
         self.nodes[2].generate(1)
         self.sync_all()
         self.nodes[0].generate(101)
@@ -63,11 +59,6 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.nodes[0].generate(5)
         self.sync_all()
 
-        self.log.info('Test getrawtransaction on genesis block coinbase returns an error')
-        block = self.nodes[0].getblock(self.nodes[0].getblockhash(0))
-        assert_raises_rpc_error(-5, "The genesis block coinbase is not considered an ordinary transaction", self.nodes[0].getrawtransaction, block['merkleroot'])
-
-        self.log.info('Check parameter types and required parameters of createrawtransaction')
         # Test `createrawtransaction` required parameters
         assert_raises_rpc_error(-1, "createrawtransaction", self.nodes[0].createrawtransaction)
         assert_raises_rpc_error(-1, "createrawtransaction", self.nodes[0].createrawtransaction, [])
@@ -88,18 +79,12 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         # Test `createrawtransaction` invalid `outputs`
         address = self.nodes[0].getnewaddress()
-        address2 = self.nodes[0].getnewaddress()
-        assert_raises_rpc_error(-1, "JSON value is not an array as expected", self.nodes[0].createrawtransaction, [], 'foo')
-        self.nodes[0].createrawtransaction(inputs=[], outputs={})  # Should not throw for backwards compatibility
-        self.nodes[0].createrawtransaction(inputs=[], outputs=[])
+        assert_raises_rpc_error(-3, "Expected type object", self.nodes[0].createrawtransaction, [], 'foo')
         assert_raises_rpc_error(-8, "Data must be hexadecimal string", self.nodes[0].createrawtransaction, [], {'data': 'foo'})
         assert_raises_rpc_error(-5, "Invalid Bitcoin address", self.nodes[0].createrawtransaction, [], {'foo': 0})
         assert_raises_rpc_error(-3, "Invalid amount", self.nodes[0].createrawtransaction, [], {address: 'foo'})
         assert_raises_rpc_error(-3, "Amount out of range", self.nodes[0].createrawtransaction, [], {address: -1})
         assert_raises_rpc_error(-8, "Invalid parameter, duplicated address: %s" % address, self.nodes[0].createrawtransaction, [], multidict([(address, 1), (address, 1)]))
-        assert_raises_rpc_error(-8, "Invalid parameter, duplicated address: %s" % address, self.nodes[0].createrawtransaction, [], [{address: 1}, {address: 1}])
-        assert_raises_rpc_error(-8, "Invalid parameter, key-value pair must contain exactly one key", self.nodes[0].createrawtransaction, [], [{'a': 1, 'b': 2}])
-        assert_raises_rpc_error(-8, "Invalid parameter, key-value pair not an object as expected", self.nodes[0].createrawtransaction, [], [['key-value pair1'], ['2']])
 
         # Test `createrawtransaction` invalid `locktime`
         assert_raises_rpc_error(-3, "Expected type number", self.nodes[0].createrawtransaction, [], {}, 'foo')
@@ -109,42 +94,13 @@ class RawTransactionsTest(BitcoinTestFramework):
         # Test `createrawtransaction` invalid `replaceable`
         assert_raises_rpc_error(-3, "Expected type bool", self.nodes[0].createrawtransaction, [], {}, 0, 'foo')
 
-        self.log.info('Check that createrawtransaction accepts an array and object as outputs')
-        tx = CTransaction()
-        # One output
-        tx.deserialize(BytesIO(hex_str_to_bytes(self.nodes[2].createrawtransaction(inputs=[{'txid': txid, 'vout': 9}], outputs={address: 99}))))
-        assert_equal(len(tx.vout), 1)
-        assert_equal(
-            bytes_to_hex_str(tx.serialize()),
-            self.nodes[2].createrawtransaction(inputs=[{'txid': txid, 'vout': 9}], outputs=[{address: 99}]),
-        )
-        # Two outputs
-        tx.deserialize(BytesIO(hex_str_to_bytes(self.nodes[2].createrawtransaction(inputs=[{'txid': txid, 'vout': 9}], outputs=OrderedDict([(address, 99), (address2, 99)])))))
-        assert_equal(len(tx.vout), 2)
-        assert_equal(
-            bytes_to_hex_str(tx.serialize()),
-            self.nodes[2].createrawtransaction(inputs=[{'txid': txid, 'vout': 9}], outputs=[{address: 99}, {address2: 99}]),
-        )
-        # Two data outputs
-        tx.deserialize(BytesIO(hex_str_to_bytes(self.nodes[2].createrawtransaction(inputs=[{'txid': txid, 'vout': 9}], outputs=multidict([('data', '99'), ('data', '99')])))))
-        assert_equal(len(tx.vout), 2)
-        assert_equal(
-            bytes_to_hex_str(tx.serialize()),
-            self.nodes[2].createrawtransaction(inputs=[{'txid': txid, 'vout': 9}], outputs=[{'data': '99'}, {'data': '99'}]),
-        )
-        # Multiple mixed outputs
-        tx.deserialize(BytesIO(hex_str_to_bytes(self.nodes[2].createrawtransaction(inputs=[{'txid': txid, 'vout': 9}], outputs=multidict([(address, 99), ('data', '99'), ('data', '99')])))))
-        assert_equal(len(tx.vout), 3)
-        assert_equal(
-            bytes_to_hex_str(tx.serialize()),
-            self.nodes[2].createrawtransaction(inputs=[{'txid': txid, 'vout': 9}], outputs=[{address: 99}, {'data': '99'}, {'data': '99'}]),
-        )
-
-        self.log.info('sendrawtransaction with missing input')
+        #########################################
+        # sendrawtransaction with missing input #
+        #########################################
         inputs  = [ {'txid' : "1d1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000", 'vout' : 1}] #won't exists
         outputs = { self.nodes[0].getnewaddress() : 4.998 }
         rawtx   = self.nodes[2].createrawtransaction(inputs, outputs)
-        rawtx   = self.nodes[2].signrawtransactionwithwallet(rawtx)
+        rawtx   = self.nodes[2].signrawtransaction(rawtx)
 
         # This will raise an exception since there are missing inputs
         assert_raises_rpc_error(-25, "Missing inputs", self.nodes[2].sendrawtransaction, rawtx['hex'])
@@ -186,8 +142,8 @@ class RawTransactionsTest(BitcoinTestFramework):
         addr1 = self.nodes[2].getnewaddress()
         addr2 = self.nodes[2].getnewaddress()
 
-        addr1Obj = self.nodes[2].getaddressinfo(addr1)
-        addr2Obj = self.nodes[2].getaddressinfo(addr2)
+        addr1Obj = self.nodes[2].validateaddress(addr1)
+        addr2Obj = self.nodes[2].validateaddress(addr2)
 
         # Tests for createmultisig and addmultisigaddress
         assert_raises_rpc_error(-5, "Invalid public key", self.nodes[0].createmultisig, 1, ["01020304"])
@@ -213,9 +169,9 @@ class RawTransactionsTest(BitcoinTestFramework):
         addr2 = self.nodes[2].getnewaddress()
         addr3 = self.nodes[2].getnewaddress()
 
-        addr1Obj = self.nodes[1].getaddressinfo(addr1)
-        addr2Obj = self.nodes[2].getaddressinfo(addr2)
-        addr3Obj = self.nodes[2].getaddressinfo(addr3)
+        addr1Obj = self.nodes[1].validateaddress(addr1)
+        addr2Obj = self.nodes[2].validateaddress(addr2)
+        addr3Obj = self.nodes[2].validateaddress(addr3)
 
         mSigObj = self.nodes[2].addmultisigaddress(2, [addr1Obj['pubkey'], addr2Obj['pubkey'], addr3Obj['pubkey']])['address']
 
@@ -226,7 +182,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.nodes[0].generate(1)
         self.sync_all()
 
-        #THIS IS AN INCOMPLETE FEATURE
+        #THIS IS A INCOMPLETE FEATURE
         #NODE2 HAS TWO OF THREE KEY AND THE FUNDS SHOULD BE SPENDABLE AND COUNT AT BALANCE CALCULATION
         assert_equal(self.nodes[2].getbalance(), bal) #for now, assume the funds of a 2of3 multisig tx are not marked as spendable
 
@@ -242,10 +198,10 @@ class RawTransactionsTest(BitcoinTestFramework):
         inputs = [{ "txid" : txId, "vout" : vout['n'], "scriptPubKey" : vout['scriptPubKey']['hex'], "amount" : vout['value']}]
         outputs = { self.nodes[0].getnewaddress() : 2.19 }
         rawTx = self.nodes[2].createrawtransaction(inputs, outputs)
-        rawTxPartialSigned = self.nodes[1].signrawtransactionwithwallet(rawTx, inputs)
+        rawTxPartialSigned = self.nodes[1].signrawtransaction(rawTx, inputs)
         assert_equal(rawTxPartialSigned['complete'], False) #node1 only has one key, can't comp. sign the tx
 
-        rawTxSigned = self.nodes[2].signrawtransactionwithwallet(rawTx, inputs)
+        rawTxSigned = self.nodes[2].signrawtransaction(rawTx, inputs)
         assert_equal(rawTxSigned['complete'], True) #node2 can sign the tx compl., own two of three keys
         self.nodes[2].sendrawtransaction(rawTxSigned['hex'])
         rawTx = self.nodes[0].decoderawtransaction(rawTxSigned['hex'])
@@ -259,12 +215,12 @@ class RawTransactionsTest(BitcoinTestFramework):
         addr1 = self.nodes[1].getnewaddress()
         addr2 = self.nodes[2].getnewaddress()
 
-        addr1Obj = self.nodes[1].getaddressinfo(addr1)
-        addr2Obj = self.nodes[2].getaddressinfo(addr2)
+        addr1Obj = self.nodes[1].validateaddress(addr1)
+        addr2Obj = self.nodes[2].validateaddress(addr2)
 
         self.nodes[1].addmultisigaddress(2, [addr1Obj['pubkey'], addr2Obj['pubkey']])['address']
         mSigObj = self.nodes[2].addmultisigaddress(2, [addr1Obj['pubkey'], addr2Obj['pubkey']])['address']
-        mSigObjValid = self.nodes[2].getaddressinfo(mSigObj)
+        mSigObjValid = self.nodes[2].validateaddress(mSigObj)
 
         txId = self.nodes[0].sendtoaddress(mSigObj, 2.2)
         decTx = self.nodes[0].gettransaction(txId)
@@ -287,15 +243,15 @@ class RawTransactionsTest(BitcoinTestFramework):
         inputs = [{ "txid" : txId, "vout" : vout['n'], "scriptPubKey" : vout['scriptPubKey']['hex'], "redeemScript" : mSigObjValid['hex'], "amount" : vout['value']}]
         outputs = { self.nodes[0].getnewaddress() : 2.19 }
         rawTx2 = self.nodes[2].createrawtransaction(inputs, outputs)
-        rawTxPartialSigned1 = self.nodes[1].signrawtransactionwithwallet(rawTx2, inputs)
-        self.log.debug(rawTxPartialSigned1)
+        rawTxPartialSigned1 = self.nodes[1].signrawtransaction(rawTx2, inputs)
+        self.log.info(rawTxPartialSigned1)
         assert_equal(rawTxPartialSigned['complete'], False) #node1 only has one key, can't comp. sign the tx
 
-        rawTxPartialSigned2 = self.nodes[2].signrawtransactionwithwallet(rawTx2, inputs)
-        self.log.debug(rawTxPartialSigned2)
+        rawTxPartialSigned2 = self.nodes[2].signrawtransaction(rawTx2, inputs)
+        self.log.info(rawTxPartialSigned2)
         assert_equal(rawTxPartialSigned2['complete'], False) #node2 only has one key, can't comp. sign the tx
         rawTxComb = self.nodes[2].combinerawtransaction([rawTxPartialSigned1['hex'], rawTxPartialSigned2['hex']])
-        self.log.debug(rawTxComb)
+        self.log.info(rawTxComb)
         self.nodes[2].sendrawtransaction(rawTxComb)
         rawTx2 = self.nodes[0].decoderawtransaction(rawTxComb)
         self.sync_all()
@@ -313,7 +269,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         encrawtx = "01000000010000000000000072c1a6a246ae63f74f931e8365e15a089c68d61900000000000000000000ffffffff0100e1f505000000000000000000"
         decrawtx = self.nodes[0].decoderawtransaction(encrawtx, False) # decode as non-witness transaction
         assert_equal(decrawtx['vout'][0]['value'], Decimal('1.00000000'))
-
+        
         # getrawtransaction tests
         # 1. valid parameters - only supply txid
         txHash = rawTx["hash"]
