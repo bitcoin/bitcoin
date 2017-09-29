@@ -40,7 +40,7 @@ Notes for 0.15.0.2
 Hard Fork - Nov 10th
 --------------------
 
-Particl Core 0.15.0.1.2 will activate a hard fork on the 10th November 2017.
+Particl Core 0.15.0.2 will activate a hard fork on the 10th November 2017.
 The Hark Fork will activate the Cold Staking Protocol (`OP_ISCOINSTAKE`) on the Particl blockchain.
 
 
