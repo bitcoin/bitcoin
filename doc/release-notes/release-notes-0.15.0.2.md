@@ -6,12 +6,12 @@ shut down (which might take a few minutes for older versions), then run the
 installer (on Windows) or just copy over `/Applications/particl-Qt` (on Mac)
 or `bitcoind`/`particl-qt` (on Linux).
 
-The first time you run version 0.15.1, your chainstate database will be converted to a
+The first time you run version 0.15.0.2, your chainstate database will be converted to a
 new format, which will take anywhere from a few seconds to a minute,
 depending on the speed of your machine. Should you recieve an error restart with `-reindex`.
 
-The file format of `fee_estimates.dat` changed in version 0.15.1. Hence, a
-downgrade from version 0.15.1 or upgrade to version 0.15.1 will cause all fee
+The file format of `fee_estimates.dat` changed in version 0.15.0.2. Hence, a
+downgrade from version 0.15.0.2 or upgrade to version 0.15.0.2 will cause all fee
 estimates to be discarded.
 
 Downgrading warning
@@ -34,8 +34,8 @@ the Linux kernel, macOS 10.8+, and Windows Vista and later. Windows XP is not su
 Particl Core should also work on most other Unix-like systems but is not
 frequently tested on them.
 
-Notes for 0.15.1
-================
+Notes for 0.15.0.2
+==================
 
 Hard Fork - Nov 10th
 --------------------
