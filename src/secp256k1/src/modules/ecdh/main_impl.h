@@ -4,8 +4,8 @@
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
-#ifndef _SECP256K1_MODULE_ECDH_MAIN_
-#define _SECP256K1_MODULE_ECDH_MAIN_
+#ifndef SECP256K1_MODULE_ECDH_MAIN_H
+#define SECP256K1_MODULE_ECDH_MAIN_H
 
 #include "include/secp256k1_ecdh.h"
 #include "ecmult_const_impl.h"
@@ -51,4 +51,4 @@ int secp256k1_ecdh(const secp256k1_context* ctx, unsigned char *result, const se
     return ret;
 }
 
-#endif
+#endif /* SECP256K1_MODULE_ECDH_MAIN_H */
