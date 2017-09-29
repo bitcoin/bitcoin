@@ -94,7 +94,7 @@ class WalletDumpTest(BitcoinTestFramework):
 
         # Test scripts dump by adding a P2SH witness and a 1-of-1 multisig address
         witness_addr = self.nodes[0].addwitnessaddress(addrs[0]["address"], True)
-        multisig_addr = self.nodes[0].addmultisigaddress(1, [addrs[1]["address"]])
+        multisig_addr = self.nodes[0].addmultisigaddress(1, [addrs[1]["address"]])["address"]
         script_addrs = [witness_addr, multisig_addr]
 
         # dump unencrypted wallet
