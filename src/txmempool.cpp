@@ -357,13 +357,19 @@ void CTxMemPool::AddTransactionsUpdated(unsigned int n)
     nTransactionsUpdated += n;
 }
 
-bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry, setEntries &setAncestors, bool validFeeEstimate)
+bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry, setEntries &setAncestors, bool validFeeEstimate, bool dryRun)
 {
     NotifyEntryAdded(entry.GetSharedTx());
     // Add to memory pool without checking anything.
     // Used by AcceptToMemoryPool(), which DOES do
     // all the appropriate checks.
     LOCK(cs);
+
+    if (dryRun) {
+        dryRunMapTx.insert(entry);
+        return true;
+    }
+
     indexed_transaction_set::iterator newit = mapTx.insert(entry).first;
     mapLinks.insert(make_pair(newit, TxLinks()));
 
@@ -815,10 +821,18 @@ std::vector<TxMempoolInfo> CTxMemPool::infoAll() const
 CTransactionRef CTxMemPool::get(const uint256& hash) const
 {
     LOCK(cs);
+
     indexed_transaction_set::const_iterator i = mapTx.find(hash);
-    if (i == mapTx.end())
-        return nullptr;
-    return i->GetSharedTx();
+    if (i != mapTx.end()) {
+        return i->GetSharedTx();
+    }
+
+    i = dryRunMapTx.find(hash);
+    if (i != dryRunMapTx.end()) {
+        return i->GetSharedTx();
+    }
+
+    return nullptr;
 }
 
 TxMempoolInfo CTxMemPool::info(const uint256& hash) const
@@ -932,14 +946,14 @@ int CTxMemPool::Expire(int64_t time) {
     return stage.size();
 }
 
-bool CTxMemPool::addUnchecked(const uint256&hash, const CTxMemPoolEntry &entry, bool validFeeEstimate)
+bool CTxMemPool::addUnchecked(const uint256&hash, const CTxMemPoolEntry &entry, bool validFeeEstimate, bool dryRun)
 {
     LOCK(cs);
     setEntries setAncestors;
     uint64_t nNoLimit = std::numeric_limits<uint64_t>::max();
     std::string dummy;
     CalculateMemPoolAncestors(entry, setAncestors, nNoLimit, nNoLimit, nNoLimit, nNoLimit, dummy);
-    return addUnchecked(hash, entry, setAncestors, validFeeEstimate);
+    return addUnchecked(hash, entry, setAncestors, validFeeEstimate, dryRun);
 }
 
 void CTxMemPool::UpdateChild(txiter entry, txiter child, bool add)

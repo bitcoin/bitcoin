@@ -13,7 +13,9 @@
 #include "validation.h"
 #include "merkleblock.h"
 #include "net.h"
+#include "miner.h"
 #include "policy/policy.h"
+#include "policy/fees.h"
 #include "policy/rbf.h"
 #include "primitives/transaction.h"
 #include "rpc/safemode.h"
@@ -893,6 +895,231 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
     return result;
 }
 
+UniValue verifyrawtransactions(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
+        throw std::runtime_error(
+            "verifyrawtransactions [\"hex_tx\", ...] ( use_local_rules )\n"
+            "\nTests the validity of a series of raw transactions (serialized, hex-encoded), without submitting them.\n"
+            "The transactions can be dependent on one another, or have ancestors residing in the mempool. The\n"
+            "use_local_rules flag determines if the transactions should be validated against the node's local\n"
+            "policies. Setting it to false effectively checks if this node would reject the block containing\n"
+            "these transactions and their mempool resident ancestors, should they be mined.\n"
+            "\nAlso see createrawtransaction and signrawtransaction calls.\n"
+            "\nArguments:\n"
+            "1. \"transactions\"    (array) A json array of hex encoded transactions\n"
+            "    [\n"
+            "      \"hex_tx\"       (string) A hex encoded transaction\n"
+            "      ,...\n"
+            "    ]\n"
+            "2. \"use_local_rules\" (boolean, optional, default=true) If enabled, checks transactions against local policies\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"valid\"  : true|false,    (string) The transaction id\n"
+            "  \"reason\" : \"reason\",      (string) Description of why verification failed or succeeded\n"
+            "}\n"
+            "\nExamples:\n"
+            "Create a transaction\n"
+            + HelpExampleCli("createrawtransaction", "\"[{\\\"txid\\\" : \\\"mytxid\\\",\\\"vout\\\":0}]\" \"{\\\"myaddress\\\":0.01}\"") +
+            "Sign the transaction, and get back the hex\n"
+            + HelpExampleCli("signrawtransaction", "\"myhex\"") +
+            "\nVerify the transaction (signed hex)\n"
+            + HelpExampleCli("verifyrawtransactions", "[\"signedhex\"]") +
+            "\nAs a json rpc call\n"
+            + HelpExampleRpc("verifyrawtransactions", "[\"signedhex\"]")
+        );
+
+    LOCK(cs_main);
+    LOCK(mempool.cs);
+
+    // Type check arguments
+    RPCTypeCheck(request.params, {UniValue::VARR, UniValue::VBOOL}, true);
+    UniValue hex_transactions = request.params[0].get_array();
+
+    // { valid true/false , reason str }
+    UniValue result(UniValue::VOBJ);
+
+    bool use_local_policy = request.params[1].isNull() || request.params[1].get_bool();
+
+    // Parse all of the transactions (map is txhash -> tx).
+    std::map<uint256, CTransactionRef> transactions;
+    std::map<uint256, CTransactionRef>::iterator txit;
+    for (unsigned int idx = 0; idx < hex_transactions.size(); idx++) {
+        const UniValue& hex_tx = hex_transactions[idx];
+        CMutableTransaction mtx;
+        if (!DecodeHexTx(mtx, hex_tx.get_str())) {
+            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
+        }
+        CTransactionRef ref = MakeTransactionRef(std::move(mtx));
+        transactions.insert(std::pair<uint256, CTransactionRef>(ref->GetHash(), ref));
+    }
+
+    // Find the ancestors of all of the transactions, including ones in mempool
+    std::map<uint256, CTransactionRef> ancestors;
+    for (auto const& hash_tx : transactions) {
+        CTransactionRef tx = hash_tx.second;
+        for (const CTxIn& txin : tx->vin) {
+            // Check the mempool
+            const uint256& hash = txin.prevout.hash;
+            CTxMemPool::txiter it = mempool.mapTx.find(hash);
+
+            // Ancestor not in mempool
+            if (it == mempool.mapTx.end()) {
+                continue;
+            }
+
+            // Add the ancestor to the map
+            ancestors.insert(std::pair<uint256, CTransactionRef>(hash, MakeTransactionRef(it->GetTx())));
+
+            // CalculateMemPoolAncestors only works on mempool entries, which is why we are iterating over vin
+            CTxMemPool::setEntries tx_ancestors;
+            uint64_t no_limit = std::numeric_limits<uint64_t>::max();
+            std::string dummy;
+            mempool.CalculateMemPoolAncestors(*it, tx_ancestors, no_limit, no_limit, no_limit, no_limit, dummy, false);
+
+            // Insert ancestors' ancestors into the map
+            for (CTxMemPool::txiter ancestor_it : tx_ancestors) {
+                CTransactionRef atf = MakeTransactionRef(ancestor_it->GetTx());
+                ancestors.insert(std::pair<uint256, CTransactionRef>(atf->GetHash(), atf));
+            }
+        }
+    }
+
+    // Merge the ancestors into the transactions
+    transactions.insert(ancestors.begin(), ancestors.end());
+
+    // Now, come up with a valid topological sort over the transactions
+    std::vector<CTransactionRef> ordered_tx;
+    std::vector<CTransactionRef> block_tx;
+
+    // Iterate over the transactions, removing all of those with no
+    // dependencies in the list each time. Technically, this is worst
+    // case n^2 since the transactions could be dependent in reverse
+    // order. In practice, I think this is better than e.g. implementing
+    // an asymptotically efficient topological sort since input sizes will
+    // likely be small and this is way easier to implement.
+    while (transactions.size() > 0) {
+        auto hash_tx = transactions.begin();
+        bool found_independent = false;
+        while (hash_tx != transactions.end()) {
+            CTransactionRef tx = hash_tx->second;
+            bool is_independent = true;
+            for (const CTxIn& txin : tx->vin) {
+                txit = transactions.find(txin.prevout.hash);
+                if (txit != transactions.end()) {
+                    is_independent = false;
+                    break;
+                }
+            }
+            if (is_independent) {
+                found_independent = true;
+                // Don't insert mempool ancestors
+                if (ancestors.find(hash_tx->first) == ancestors.end()) {
+                    ordered_tx.push_back(tx);
+                }
+                block_tx.push_back(tx);
+                hash_tx = transactions.erase(hash_tx);
+            } else {
+                hash_tx++;
+            }
+        }
+        if (found_independent) {
+            continue;
+        }
+        // We got all the way through without finding an independent tx
+        result.push_back(Pair("valid",  false));
+        result.push_back(Pair("reason", "circular transaction dependency"));
+        return result;
+    }
+
+    // Should we check against our local policy, or just consensus rules?
+    if (use_local_policy) {
+        // For each input transaction
+        for (auto const& tx : ordered_tx) {
+            const uint256& hash = tx->GetHash();
+            CCoinsViewCache& view = *pcoinsTip;
+
+            // Fail fast if we have an unspent output from this transaction
+            // already in our wallet, which indicates right away that this is a
+            // duplicate tx (copied from sendrawtransaction)
+            bool have_chain = false;
+            for (size_t o = 0; !have_chain && o < tx->vout.size(); o++) {
+                const Coin& existing_coin = view.AccessCoin(COutPoint(hash, o));
+                have_chain = !existing_coin.IsSpent();
+            }
+
+            // Check if transaction already exists in mempool
+            bool have_mempool = mempool.exists(hash);
+
+            if (have_chain) {
+                result.push_back(Pair("valid",  false));
+                result.push_back(Pair("reason", "transaction already in chain"));
+                return result;
+            }
+
+            if (have_mempool) {
+                result.push_back(Pair("valid",  false));
+                result.push_back(Pair("reason", "transaction already in mempool"));
+                return result;
+            }
+
+            // If we are reasonably confident that this transaction is not a
+            // duplicate, do an AcceptToMemoryPool dry run
+            CValidationState state;
+            bool missing_inputs;
+
+            // Call AcceptToMemoryPool with the dryrun flag set
+            if (!AcceptToMemoryPool(mempool, state, std::move(tx), true, &missing_inputs, nullptr, false, true, 0)) {
+                if (state.IsInvalid()) {
+                    result.push_back(Pair("valid",  false));
+                    result.push_back(Pair("reason", strprintf("%i: %s", state.GetRejectCode(), state.GetRejectReason())));
+                    return result;
+                } else if (missing_inputs) {
+                    // We want to ignore the "missing inputs" case here, since the input
+                    // may actually be in the mempool. If the input is truly missing, we
+                    // will find out later after the ancestor and consensus check.
+                    continue;
+                }
+                // Unknown error
+                result.push_back(Pair("valid",  false));
+                result.push_back(Pair("reason", "couldn't accept transaction to mempool"));
+                return result;
+            }
+        }
+    }
+
+    // Clean up the dryRunMap
+    mempool.dryRunMapTx.clear();
+
+    // Create the dummy block
+    CScript script_dummy = CScript() << OP_TRUE;
+    std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler(Params()).CreateNewBlock(script_dummy, true, false));
+    CBlock* block = &pblocktemplate->block;
+
+    // Add all of the transactions
+    block->vtx.reserve(1 + block_tx.size());
+    block->vtx.insert(block->vtx.begin() + 1, block_tx.begin(), block_tx.end());
+
+    // Check if that block would be valid (modulo PoW and merkle root checks)
+    CBlockIndex* const index_prev = chainActive.Tip();
+    CValidationState state;
+    bool res = TestBlockValidity(state, Params(), *block, index_prev, false, false);
+
+    if (!res) {
+        result.push_back(Pair("valid",  false));
+        if (state.IsInvalid()) {
+            result.push_back(Pair("reason", strprintf("%i: %s", state.GetRejectCode(), state.GetRejectReason())));
+        } else {
+            result.push_back(Pair("reason", "unknown consensus error"));
+        }
+    } else {
+        result.push_back(Pair("valid",  true));
+        result.push_back(Pair("reason", "transaction(s) appear to be valid"));
+    }
+
+    return result;
+}
+
 UniValue sendrawtransaction(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
@@ -943,7 +1170,7 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
         CValidationState state;
         bool fMissingInputs;
         bool fLimitFree = true;
-        if (!AcceptToMemoryPool(mempool, state, std::move(tx), fLimitFree, &fMissingInputs, nullptr, false, nMaxRawTxFee)) {
+        if (!AcceptToMemoryPool(mempool, state, std::move(tx), fLimitFree, &fMissingInputs, nullptr, false, false, nMaxRawTxFee)) {
             if (state.IsInvalid()) {
                 throw JSONRPCError(RPC_TRANSACTION_REJECTED, strprintf("%i: %s", state.GetRejectCode(), state.GetRejectReason()));
             } else {
@@ -975,10 +1202,11 @@ static const CRPCCommand commands[] =
     { "rawtransactions",    "decoderawtransaction",   &decoderawtransaction,   {"hexstring"} },
     { "rawtransactions",    "decodescript",           &decodescript,           {"hexstring"} },
     { "rawtransactions",    "sendrawtransaction",     &sendrawtransaction,     {"hexstring","allowhighfees"} },
+    { "rawtransactions",    "verifyrawtransactions",  &verifyrawtransactions,  {"transactions","use_local_policy"} },
     { "rawtransactions",    "combinerawtransaction",  &combinerawtransaction,  {"txs"} },
     { "rawtransactions",    "signrawtransaction",     &signrawtransaction,     {"hexstring","prevtxs","privkeys","sighashtype"} }, /* uses wallet if enabled */
 
-    { "blockchain",         "gettxoutproof",          &gettxoutproof,          {"txids", "blockhash"} },
+    { "blockchain",         "gettxoutproof",          &gettxoutproof,          {"txids","blockhash"} },
     { "blockchain",         "verifytxoutproof",       &verifytxoutproof,       {"proof"} },
 };
 
