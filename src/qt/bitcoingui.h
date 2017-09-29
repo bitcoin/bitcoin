@@ -5,9 +5,7 @@
 #ifndef BITCOIN_QT_BITCOINGUI_H
 #define BITCOIN_QT_BITCOINGUI_H
 
-#if defined(HAVE_CONFIG_H)
-#include "config/bitcoin-config.h"
-#endif
+#include "config/bitcoin-config-if-present.h"
 
 #include "amount.h"
 
