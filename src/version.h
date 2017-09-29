@@ -9,7 +9,7 @@
  * network protocol versioning
  */
 
-static const int PROTOCOL_VERSION = 90004;
+static const int PROTOCOL_VERSION = 90005;
 static const int MIN_PARTICL_VERSION = 90004;
 
 //! initial proto version, to be increased after version/verack negotiation
