@@ -138,8 +138,9 @@ BITCOIN_CORE_H = \
   throne-budget.h \
   throne-sync.h \
   throneman.h \
-  servicenodeman.h \
   throneconfig.h \
+  servicenode.h \
+  servicenodeman.h \
   servicenodeconfig.h \
   threadsafety.h \
   timedata.h \
