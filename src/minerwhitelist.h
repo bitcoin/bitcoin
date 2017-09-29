@@ -5,7 +5,11 @@
 #ifndef IOP_MINERWHITELIST_H
 #define IOP_MINERWHITELIST_H
 
+#include "chain.h"
 #include "dbwrapper.h"
+
+/** The currently-connected chain of blocks (protected by cs_main). */
+extern CChain chainActive;
 
 class CMinerWhitelistDB : CDBWrapper 
 {
@@ -49,8 +53,7 @@ public:
     bool DumpStatsForMiner(std::string address, bool *wlisted, unsigned int *windowCoins, unsigned int *totalCoins, unsigned int *lastBlock);
     
     
-    
-    bool Sync();
+    using CDBWrapper::Sync;
   
 };
 

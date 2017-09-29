@@ -219,6 +219,9 @@ void Shutdown()
     if (pcoinsTip != nullptr) {
         FlushStateToDisk();
     }
+    if (pminerwhitelist != nullptr) {
+        pminerwhitelist->Sync();
+    }
 
     // After there are no more peers/RPC left to give us new data which may generate
     // CValidationInterface callbacks, flush them...
@@ -234,6 +237,9 @@ void Shutdown()
         LOCK(cs_main);
         if (pcoinsTip != nullptr) {
             FlushStateToDisk();
+        }
+        if (pminerwhitelist != nullptr) {
+            pminerwhitelist->Sync();
         }
         delete pcoinsTip;
         pcoinsTip = nullptr;

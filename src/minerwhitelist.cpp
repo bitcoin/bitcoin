@@ -8,7 +8,7 @@
 #include "util.h" 
 #include <unordered_map>
 
-CChain chainActive;
+// CChain chainActive;
 
 static const std::string DUMMY = "0000000000000000000000000000000000"; 
 
@@ -332,7 +332,7 @@ unsigned int CMinerWhitelistDB::GetWindowStart(unsigned int height) {
 }
 
 // bool CMinerWhitelistDB::Sync() {
-//   return Sync()
+//   return Sync();
 // }
 
 bool CMinerWhitelistDB::DumpWindowStats(std::vector< std::pair< std::string, uint32_t > > *MinerVector) {
