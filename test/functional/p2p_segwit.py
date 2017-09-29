@@ -1918,7 +1918,6 @@ class SegWitTest(BitcoinTestFramework):
         self.test_unnecessary_witness_before_segwit_activation()
         self.test_witness_tx_relay_before_segwit_activation()
         self.test_block_relay(segwit_activated=False)
-        self.test_p2sh_witness(segwit_activated=False)
         self.test_standardness_v0(segwit_activated=False)
 
         sync_blocks(self.nodes)
