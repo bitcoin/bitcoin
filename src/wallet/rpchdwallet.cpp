@@ -3097,7 +3097,6 @@ UniValue getstakinginfo(const JSONRPCRequest &request)
     const DevFundSettings *pDevFundSettings = Params().GetDevFundSettings(nTipTime);
     if (pDevFundSettings && pDevFundSettings->nMinDevStakePercent > 0)
         obj.pushKV("foundationdonationpercent", pDevFundSettings->nMinDevStakePercent);
-    
 
     obj.pushKV("currentblocksize", (uint64_t)nLastBlockSize);
     obj.pushKV("currentblocktx", (uint64_t)nLastBlockTx);
@@ -4568,13 +4567,17 @@ UniValue walletsettings(const JSONRPCRequest &request)
                     // TODO: override option?
                     if (pwallet->HaveAddress(addr))
                         throw JSONRPCError(RPC_INVALID_PARAMETER, sAddress + _(" is spendable from this wallet."));
+                    
+                    const Consensus::Params& consensusParams = Params().GetConsensus();
+                    if (GetAdjustedTime() < consensusParams.OpIsCoinstakeTime)
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, _("OpIsCoinstake is not active yet."));
                 } else
                 {
                     warnings.push_back("Unknown key " + sKey);
                 };
             };
             
-            PushTime(json, "time", GetTime());
+            json.pushKV("time", GetTime());
             if (!pwallet->SetSetting(sSetting, json))
                 throw JSONRPCError(RPC_WALLET_ERROR, _("SetSetting failed."));
             

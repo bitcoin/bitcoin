@@ -1625,8 +1625,7 @@ void CWalletTx::GetAmounts(
             } else
             if (!(fIsMine & filter))
                 continue;
-            
-            
+
             // In either case, we need to get the destination address
             const CScript &scriptPubKey = ((CTxOutStandard*)txout)->scriptPubKey;
             CTxDestination address;
@@ -1647,8 +1646,6 @@ void CWalletTx::GetAmounts(
             };
 
             COutputEntry output = {address, txout->GetValue(), (int)i, fIsMine, addressStake};
-            
-            if (nFee)
 
             // If we are debited by the transaction, add the output as a "sent" entry
             if (nDebit > 0)

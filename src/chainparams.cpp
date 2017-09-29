@@ -444,7 +444,7 @@ public:
         consensus.BIP34Height = 0;
         consensus.BIP65Height = 0;
         consensus.BIP66Height = 0;
-        consensus.OpIsCoinstakeTime = 1544572800; // 2018-12-12, TODO: lower
+        consensus.OpIsCoinstakeTime = 1510272000; // 2017-11-10 00:00:00 UTC
         consensus.fAllowOpIsCoinstakeWithP2PKH = false;
         
         
