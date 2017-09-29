@@ -2028,13 +2028,15 @@ bool UndoReadFromDisk(CBlockUndo &blockundo, const CDiskBlockPos &pos, const uin
     // Open history file to read
     CAutoFile filein(OpenUndoFile(pos, true), SER_DISK, CLIENT_VERSION);
     if (filein.IsNull())
-        return error("%s: OpenBlockFile failed", __func__);
+        return error("%s: OpenUndoFile failed", __func__);
 
     // Read block
     uint256 hashChecksum;
+    CHashVerifier<CAutoFile> verifier(&filein); // We need a CHashVerifier as reserializing may lose data
     try
     {
-        filein >> blockundo;
+        verifier << hashBlock;
+        verifier >> blockundo;
         filein >> hashChecksum;
     }
     catch (const std::exception &e)
@@ -2043,10 +2045,7 @@ bool UndoReadFromDisk(CBlockUndo &blockundo, const CDiskBlockPos &pos, const uin
     }
 
     // Verify checksum
-    CHashWriter hasher(SER_GETHASH, PROTOCOL_VERSION);
-    hasher << hashBlock;
-    hasher << blockundo;
-    if (hashChecksum != hasher.GetHash())
+    if (hashChecksum != verifier.GetHash())
         return error("%s: Checksum mismatch", __func__);
 
     return true;
