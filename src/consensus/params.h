@@ -17,13 +17,13 @@ enum BuriedDeploymentPos
     DEPLOYMENT_BIP34,
     DEPLOYMENT_BIP65,
     DEPLOYMENT_BIP66,
+    DEPLOYMENT_CSV,
     MAX_BURIED_DEPLOYMENTS
 };
 
 enum DeploymentPos
 {
     DEPLOYMENT_TESTDUMMY,
-    DEPLOYMENT_CSV, // Deployment of BIP68, BIP112, and BIP113.
     DEPLOYMENT_SEGWIT, // Deployment of BIP141, BIP143, and BIP147.
     // NOTE: Also add new deployments to VersionBitsDeploymentInfo in versionbits.cpp
     MAX_VERSION_BITS_DEPLOYMENTS
