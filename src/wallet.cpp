@@ -1921,7 +1921,7 @@ bool CWallet::GetThroneVinAndKeys(CTxIn& vinRet, CPubKey& pubKeyRet, CKey& keyRe
     return false;
 }
 
-bool CWallet::GetServicenodeVinAndKeys(CTxIn& vinRet, CPubKey& pubKeyRet, CKey& keyRet, std::string strTxHash, std::string strOutputIndex)
+bool CWallet::GetSystemnodeVinAndKeys(CTxIn& vinRet, CPubKey& pubKeyRet, CKey& keyRet, std::string strTxHash, std::string strOutputIndex)
 {
     // wait for reindex and/or import to finish
     if (fImporting || fReindex) return false;
@@ -1930,7 +1930,7 @@ bool CWallet::GetServicenodeVinAndKeys(CTxIn& vinRet, CPubKey& pubKeyRet, CKey& 
     std::vector<COutput> vPossibleCoins;
     AvailableCoins(vPossibleCoins, true, NULL, ONLY_500);
     if(vPossibleCoins.empty()) {
-        LogPrintf("CWallet::GetServicenodeVinAndKeys - Could not locate any valid servicenode vin\n");
+        LogPrintf("CWallet::GetSystemnodeVinAndKeys - Could not locate any valid servicenode vin\n");
         return false;
     }
 
@@ -1945,7 +1945,7 @@ bool CWallet::GetServicenodeVinAndKeys(CTxIn& vinRet, CPubKey& pubKeyRet, CKey& 
         if(out.tx->GetHash() == txHash && out.i == nOutputIndex) // found it!
             return GetVinAndKeysFromOutput(out, vinRet, pubKeyRet, keyRet);
 
-    LogPrintf("CWallet::GetServicenodeVinAndKeys - Could not locate specified servicenode vin\n");
+    LogPrintf("CWallet::GetSystemnodeVinAndKeys - Could not locate specified servicenode vin\n");
     return false;
 }
 

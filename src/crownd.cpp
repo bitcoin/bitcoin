@@ -12,7 +12,7 @@
 #include "ui_interface.h"
 #include "util.h"
 #include "throneconfig.h"
-#include "servicenodeconfig.h"
+#include "systemnodeconfig.h"
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
@@ -117,9 +117,9 @@ bool AppInit(int argc, char* argv[])
             return false;
         }
 
-        // parse servicenode.conf
-        if (!servicenodeConfig.read(strErr)) {
-            fprintf(stderr, "Error reading servicenode configuration file: %s\n", strErr.c_str());
+        // parse systemnode.conf
+        if (!systemnodeConfig.read(strErr)) {
+            fprintf(stderr, "Error reading systemnode configuration file: %s\n", strErr.c_str());
             return false;
         }
 

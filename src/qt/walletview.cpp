@@ -10,7 +10,7 @@
 #include "clientmodel.h"
 #include "guiutil.h"
 #include "throneconfig.h"
-#include "servicenodeconfig.h"
+#include "systemnodeconfig.h"
 #include "optionsmodel.h"
 #include "overviewpage.h"
 #include "receivecoinsdialog.h"
@@ -214,9 +214,9 @@ void WalletView::gotoThronePage()
     }
 }
 
-void WalletView::gotoServicenodePage()
+void WalletView::gotoSystemnodePage()
 {
-    if (servicenodeConfig.getCount() >= 0) {
+    if (systemnodeConfig.getCount() >= 0) {
         // To be defined
     }
 }

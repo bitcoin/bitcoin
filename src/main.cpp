@@ -19,7 +19,7 @@
 #include "throneman.h"
 #include "throne-payments.h"
 #include "throne-budget.h"
-#include "servicenodeman.h"
+#include "systemnodeman.h"
 #include "merkleblock.h"
 #include "net.h"
 #include "pow.h"
@@ -4263,21 +4263,21 @@ void static ProcessGetData(CNode* pfrom)
                     }
                 }
 
-                if (!pushed && inv.type == MSG_SERVICENODE_ANNOUNCE) {
-                    if(snodeman.mapSeenServicenodeBroadcast.count(inv.hash)){
+                if (!pushed && inv.type == MSG_SYSTEMNODE_ANNOUNCE) {
+                    if(snodeman.mapSeenSystemnodeBroadcast.count(inv.hash)){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << snodeman.mapSeenServicenodeBroadcast[inv.hash];
+                        ss << snodeman.mapSeenSystemnodeBroadcast[inv.hash];
                         pfrom->PushMessage("snb", ss);
                         pushed = true;
                     }
                 }
 
-                if (!pushed && inv.type == MSG_SERVICENODE_PING) {
-                    if(snodeman.mapSeenServicenodePing.count(inv.hash)){
+                if (!pushed && inv.type == MSG_SYSTEMNODE_PING) {
+                    if(snodeman.mapSeenSystemnodePing.count(inv.hash)){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << snodeman.mapSeenServicenodePing[inv.hash];
+                        ss << snodeman.mapSeenSystemnodePing[inv.hash];
                         pfrom->PushMessage("snp", ss);
                         pushed = true;
                     }

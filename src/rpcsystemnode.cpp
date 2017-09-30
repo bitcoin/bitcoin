@@ -6,9 +6,9 @@
 #include "main.h"
 #include "db.h"
 #include "init.h"
-#include "servicenodeconfig.h"
-#include "servicenode.h"
-#include "servicenodeman.h"
+#include "systemnodeconfig.h"
+#include "systemnode.h"
+#include "systemnodeman.h"
 #include "rpcserver.h"
 #include "utilmoneystr.h"
 #include "wallet.h"
@@ -20,7 +20,7 @@
 using namespace std;
 using namespace json_spirit;
 
-Value servicenode(const Array& params, bool fHelp)
+Value systemnode(const Array& params, bool fHelp)
 {
     string strCommand;
     if (params.size() >= 1)
@@ -33,32 +33,32 @@ Value servicenode(const Array& params, bool fHelp)
          strCommand != "winners" && strCommand != "genkey" && strCommand != "connect" && strCommand != "outputs" && 
          strCommand != "status" && strCommand != "calcscore"))
         throw runtime_error(
-                "servicenode \"command\"... ( \"passphrase\" )\n"
-                "Set of commands to execute servicenode related actions\n"
+                "systemnode \"command\"... ( \"passphrase\" )\n"
+                "Set of commands to execute systemnode related actions\n"
                 "\nArguments:\n"
                 "1. \"command\"        (string or set of strings, required) The command to execute\n"
                 "2. \"passphrase\"     (string, optional) The wallet passphrase\n"
                 "\nAvailable commands:\n"
-                "  count        - Print number of all known servicenodes (optional: 'ds', 'enabled', 'all', 'qualify')\n"
-                "  current      - Print info on current servicenode winner\n"
-                "  debug        - Print servicenode status\n"
-                "  genkey       - Generate new servicenodeprivkey\n"
-                "  enforce      - Enforce servicenode payments\n"
-                "  outputs      - Print servicenode compatible outputs\n"
-                "  start        - Start servicenode configured in crown.conf\n"
-                "  start-alias  - Start single servicenode by assigned alias configured in servicenode.conf\n"
-                "  start-<mode> - Start servicenodes configured in servicenode.conf (<mode>: 'all', 'missing', 'disabled')\n"
-                "  status       - Print servicenode status information\n"
-                "  list         - Print list of all known servicenodes (see servicenodelist for more info)\n"
-                "  list-conf    - Print servicenode.conf in JSON format\n"
-                "  winners      - Print list of servicenode winners\n"
+                "  count        - Print number of all known systemnodes (optional: 'ds', 'enabled', 'all', 'qualify')\n"
+                "  current      - Print info on current systemnode winner\n"
+                "  debug        - Print systemnode status\n"
+                "  genkey       - Generate new systemnodeprivkey\n"
+                "  enforce      - Enforce systemnode payments\n"
+                "  outputs      - Print systemnode compatible outputs\n"
+                "  start        - Start systemnode configured in crown.conf\n"
+                "  start-alias  - Start single systemnode by assigned alias configured in systemnode.conf\n"
+                "  start-<mode> - Start systemnodes configured in systemnode.conf (<mode>: 'all', 'missing', 'disabled')\n"
+                "  status       - Print systemnode status information\n"
+                "  list         - Print list of all known systemnodes (see systemnodelist for more info)\n"
+                "  list-conf    - Print systemnode.conf in JSON format\n"
+                "  winners      - Print list of systemnode winners\n"
                 );
 
     if (strCommand == "list")
     {
         Array newParams(params.size() - 1);
         std::copy(params.begin() + 1, params.end(), newParams.begin());
-        return servicenodelist(newParams, fHelp);
+        return systemnodelist(newParams, fHelp);
     }
 
     if (strCommand == "budget")
@@ -72,7 +72,7 @@ Value servicenode(const Array& params, bool fHelp)
         if (params.size() == 2) {
             strAddress = params[1].get_str();
         } else {
-            throw runtime_error("Servicenode address required\n");
+            throw runtime_error("Systemnode address required\n");
         }
 
         CService addr = CService(strAddress);
@@ -126,30 +126,30 @@ Value servicenode(const Array& params, bool fHelp)
         }
 
         //if((strCommand == "start-missing" || strCommand == "start-disabled") &&
-        // (servicenodeSync.RequestedServicenodeAssets <= THRONE_SYNC_LIST ||
-        //  servicenodeSync.RequestedServicenodeAssets == THRONE_SYNC_FAILED)) {
-        //    throw runtime_error("You can't use this command until servicenode list is synced\n");
+        // (systemnodeSync.RequestedSystemnodeAssets <= THRONE_SYNC_LIST ||
+        //  systemnodeSync.RequestedSystemnodeAssets == THRONE_SYNC_FAILED)) {
+        //    throw runtime_error("You can't use this command until systemnode list is synced\n");
         //}
 
-        std::vector<CServicenodeConfig::CServicenodeEntry> mnEntries;
-        mnEntries = servicenodeConfig.getEntries();
+        std::vector<CSystemnodeConfig::CSystemnodeEntry> mnEntries;
+        mnEntries = systemnodeConfig.getEntries();
 
         int successful = 0;
         int failed = 0;
 
         Object resultsObj;
 
-        BOOST_FOREACH(CServicenodeConfig::CServicenodeEntry mne, servicenodeConfig.getEntries()) {
+        BOOST_FOREACH(CSystemnodeConfig::CSystemnodeEntry mne, systemnodeConfig.getEntries()) {
             std::string errorMessage;
 
             CTxIn vin = CTxIn(uint256S(mne.getTxHash()), uint32_t(atoi(mne.getOutputIndex().c_str())));
-            CServicenode *pmn = snodeman.Find(vin);
-            CServicenodeBroadcast snb;
+            CSystemnode *pmn = snodeman.Find(vin);
+            CSystemnodeBroadcast snb;
 
             if(strCommand == "start-missing" && pmn) continue;
             if(strCommand == "start-disabled" && pmn && pmn->IsEnabled()) continue;
 
-            bool result = CServicenodeBroadcast::Create(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage, snb);
+            bool result = CSystemnodeBroadcast::Create(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage, snb);
 
             Object statusObj;
             statusObj.push_back(Pair("alias", mne.getAlias()));
@@ -157,7 +157,7 @@ Value servicenode(const Array& params, bool fHelp)
 
             if(result) {
                 successful++;
-                snodeman.UpdateServicenodeList(snb);
+                snodeman.UpdateSystemnodeList(snb);
                 snb.Relay();
             } else {
                 failed++;
@@ -168,7 +168,7 @@ Value servicenode(const Array& params, bool fHelp)
         }
 
         Object returnObj;
-        returnObj.push_back(Pair("overall", strprintf("Successfully started %d servicenodes, failed to start %d, total %d", successful, failed, successful + failed)));
+        returnObj.push_back(Pair("overall", strprintf("Successfully started %d systemnodes, failed to start %d, total %d", successful, failed, successful + failed)));
         returnObj.push_back(Pair("detail", resultsObj));
 
         return returnObj;
@@ -177,12 +177,12 @@ Value servicenode(const Array& params, bool fHelp)
     return Value::null;
 }
 
-Value servicenodelist(const Array& params, bool fHelp)
+Value systemnodelist(const Array& params, bool fHelp)
 {
     return Value::null;
 }
 
-Value servicenodebroadcast(const Array& params, bool fHelp)
+Value systemnodebroadcast(const Array& params, bool fHelp)
 {
     return Value::null;
 }

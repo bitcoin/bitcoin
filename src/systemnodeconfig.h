@@ -3,8 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef SRC_SERVICENODECONFIG_H_
-#define SRC_SERVICENODECONFIG_H_
+#ifndef SRC_SYSTEMNODECONFIG_H_
+#define SRC_SYSTEMNODECONFIG_H_
 
 #include <string>
 #include <vector>
@@ -12,15 +12,15 @@
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 
-class CServicenodeConfig;
-extern CServicenodeConfig servicenodeConfig;
+class CSystemnodeConfig;
+extern CSystemnodeConfig systemnodeConfig;
 
-class CServicenodeConfig
+class CSystemnodeConfig
 {
 
 public:
 
-    class CServicenodeEntry {
+    class CSystemnodeEntry {
 
     private:
         std::string alias;
@@ -30,7 +30,7 @@ public:
         std::string outputIndex;
     public:
 
-        CServicenodeEntry(std::string alias, std::string ip, std::string privKey, std::string txHash, std::string outputIndex) {
+        CSystemnodeEntry(std::string alias, std::string ip, std::string privKey, std::string txHash, std::string outputIndex) {
             this->alias = alias;
             this->ip = ip;
             this->privKey = privKey;
@@ -79,31 +79,31 @@ public:
         }
     };
 
-    CServicenodeConfig() {
-        entries = std::vector<CServicenodeEntry>();
+    CSystemnodeConfig() {
+        entries = std::vector<CSystemnodeEntry>();
     }
 
     void clear();
     bool read(std::string& strErr);
     void add(std::string alias, std::string ip, std::string privKey, std::string txHash, std::string outputIndex);
 
-    std::vector<CServicenodeEntry>& getEntries() {
+    std::vector<CSystemnodeEntry>& getEntries() {
         return entries;
     }
 
     int getCount() {
         int c = -1;
-        BOOST_FOREACH(CServicenodeEntry e, entries) {
+        BOOST_FOREACH(CSystemnodeEntry e, entries) {
             if(e.getAlias() != "") c++;
         }
         return c;
     }
 
 private:
-    std::vector<CServicenodeEntry> entries;
+    std::vector<CSystemnodeEntry> entries;
 
 
 };
 
 
-#endif /* SRC_SERVICENODECONFIG_H_ */
+#endif /* SRC_SYSTEMNODECONFIG_H_ */

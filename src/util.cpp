@@ -497,9 +497,9 @@ boost::filesystem::path GetThroneConfigFile()
     return pathConfigFile;
 }
 
-boost::filesystem::path GetServicenodeConfigFile()
+boost::filesystem::path GetSystemnodeConfigFile()
 {
-    boost::filesystem::path pathConfigFile(GetArg("-mnconf", "servicenode.conf"));
+    boost::filesystem::path pathConfigFile(GetArg("-mnconf", "systemnode.conf"));
     if (!pathConfigFile.is_complete()) pathConfigFile = GetDataDir() / pathConfigFile;
     return pathConfigFile;
 }

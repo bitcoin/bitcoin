@@ -15,7 +15,7 @@
 #include "util.h"
 #include "spork.h"
 #include "throne-sync.h"
-#include "servicenode-sync.h"
+#include "systemnode-sync.h"
 #ifdef ENABLE_WALLET
 #include "wallet.h"
 #include "walletdb.h"
@@ -162,29 +162,29 @@ Value snsync(const Array& params, bool fHelp)
     if(strMode == "status") {
         Object obj;
 
-        obj.push_back(Pair("IsBlockchainSynced", servicenodeSync.IsBlockchainSynced()));
-        obj.push_back(Pair("lastServicenodeList", servicenodeSync.lastServicenodeList));
-        obj.push_back(Pair("lastServicenodeWinner", servicenodeSync.lastServicenodeWinner));
-        obj.push_back(Pair("lastBudgetItem", servicenodeSync.lastBudgetItem));
-        obj.push_back(Pair("lastFailure", servicenodeSync.lastFailure));
-        obj.push_back(Pair("nCountFailures", servicenodeSync.nCountFailures));
-        obj.push_back(Pair("sumServicenodeList", servicenodeSync.sumServicenodeList));
-        obj.push_back(Pair("sumServicenodeWinner", servicenodeSync.sumServicenodeWinner));
-        obj.push_back(Pair("sumBudgetItemProp", servicenodeSync.sumBudgetItemProp));
-        obj.push_back(Pair("sumBudgetItemFin", servicenodeSync.sumBudgetItemFin));
-        obj.push_back(Pair("countServicenodeList", servicenodeSync.countServicenodeList));
-        obj.push_back(Pair("countServicenodeWinner", servicenodeSync.countServicenodeWinner));
-        obj.push_back(Pair("countBudgetItemProp", servicenodeSync.countBudgetItemProp));
-        obj.push_back(Pair("countBudgetItemFin", servicenodeSync.countBudgetItemFin));
-        obj.push_back(Pair("RequestedServicenodeAssets", servicenodeSync.RequestedServicenodeAssets));
-        obj.push_back(Pair("RequestedServicenodeAttempt", servicenodeSync.RequestedServicenodeAttempt));
+        obj.push_back(Pair("IsBlockchainSynced", systemnodeSync.IsBlockchainSynced()));
+        obj.push_back(Pair("lastSystemnodeList", systemnodeSync.lastSystemnodeList));
+        obj.push_back(Pair("lastSystemnodeWinner", systemnodeSync.lastSystemnodeWinner));
+        obj.push_back(Pair("lastBudgetItem", systemnodeSync.lastBudgetItem));
+        obj.push_back(Pair("lastFailure", systemnodeSync.lastFailure));
+        obj.push_back(Pair("nCountFailures", systemnodeSync.nCountFailures));
+        obj.push_back(Pair("sumSystemnodeList", systemnodeSync.sumSystemnodeList));
+        obj.push_back(Pair("sumSystemnodeWinner", systemnodeSync.sumSystemnodeWinner));
+        obj.push_back(Pair("sumBudgetItemProp", systemnodeSync.sumBudgetItemProp));
+        obj.push_back(Pair("sumBudgetItemFin", systemnodeSync.sumBudgetItemFin));
+        obj.push_back(Pair("countSystemnodeList", systemnodeSync.countSystemnodeList));
+        obj.push_back(Pair("countSystemnodeWinner", systemnodeSync.countSystemnodeWinner));
+        obj.push_back(Pair("countBudgetItemProp", systemnodeSync.countBudgetItemProp));
+        obj.push_back(Pair("countBudgetItemFin", systemnodeSync.countBudgetItemFin));
+        obj.push_back(Pair("RequestedSystemnodeAssets", systemnodeSync.RequestedSystemnodeAssets));
+        obj.push_back(Pair("RequestedSystemnodeAttempt", systemnodeSync.RequestedSystemnodeAttempt));
 
         return obj;
     }
 
     if(strMode == "reset")
     {
-        servicenodeSync.Reset();
+        systemnodeSync.Reset();
         return "success";
     }
     return "failure";

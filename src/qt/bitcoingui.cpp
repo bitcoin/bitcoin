@@ -18,7 +18,7 @@
 #include "rpcconsole.h"
 #include "utilitydialog.h"
 #include "throneconfig.h"
-#include "servicenodeconfig.h"
+#include "systemnodeconfig.h"
 #include "thronelist.h"
 
 #ifdef ENABLE_WALLET
@@ -80,7 +80,7 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
     overviewAction(0),
     historyAction(0),
     throneAction(0),
-    servicenodeAction(0),
+    systemnodeAction(0),
     quitAction(0),
     sendCoinsAction(0),
     usedSendingAddressesAction(0),
@@ -326,19 +326,19 @@ void BitcoinGUI::createActions(const NetworkStyle *networkStyle)
         connect(throneAction, SIGNAL(triggered()), this, SLOT(gotoThronePage()));
     }
 
-    if (servicenodeConfig.getCount() >= 0) {
-        servicenodeAction = new QAction(QIcon(":/icons/throne"), tr("&Servicenodes"), this);
-        servicenodeAction->setStatusTip(tr("Browse servicenodes"));
-        servicenodeAction->setToolTip(servicenodeAction->statusTip());
-        servicenodeAction->setCheckable(true);
+    if (systemnodeConfig.getCount() >= 0) {
+        systemnodeAction = new QAction(QIcon(":/icons/throne"), tr("&Systemnodes"), this);
+        systemnodeAction->setStatusTip(tr("Browse systemnodes"));
+        systemnodeAction->setToolTip(systemnodeAction->statusTip());
+        systemnodeAction->setCheckable(true);
 #ifdef Q_OS_MAC
-        servicenodeAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_6));
+        systemnodeAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_6));
 #else
-        servicenodeAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_6));
+        systemnodeAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_6));
 #endif
-        tabGroup->addAction(servicenodeAction);
-        connect(servicenodeAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
-        connect(servicenodeAction, SIGNAL(triggered()), this, SLOT(gotoServicenodePage()));
+        tabGroup->addAction(systemnodeAction);
+        connect(systemnodeAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+        connect(systemnodeAction, SIGNAL(triggered()), this, SLOT(gotoSystemnodePage()));
     }
 
 #ifdef Q_OS_MAC
@@ -544,9 +544,9 @@ void BitcoinGUI::createToolBars()
         {
             toolbar->addAction(throneAction);
         }
-        if (servicenodeConfig.getCount() >= 0)
+        if (systemnodeConfig.getCount() >= 0)
         {
-            toolbar->addAction(servicenodeAction);
+            toolbar->addAction(systemnodeAction);
         }
         toolbar->setMovable(false); // remove unused icon in upper left corner
         overviewAction->setChecked(true);
@@ -641,8 +641,8 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
     if (throneConfig.getCount() >= 0) {
         throneAction->setEnabled(enabled);
     }
-    if (servicenodeConfig.getCount() >= 0) {
-        servicenodeAction->setEnabled(enabled);
+    if (systemnodeConfig.getCount() >= 0) {
+        systemnodeAction->setEnabled(enabled);
     }
     encryptWalletAction->setEnabled(enabled);
     backupWalletAction->setEnabled(enabled);
@@ -778,11 +778,11 @@ void BitcoinGUI::gotoThronePage()
     }
 }
 
-void BitcoinGUI::gotoServicenodePage()
+void BitcoinGUI::gotoSystemnodePage()
 {
-    if (servicenodeConfig.getCount() >= 0) {
-        servicenodeAction->setChecked(true);
-        if (walletFrame) walletFrame->gotoServicenodePage();
+    if (systemnodeConfig.getCount() >= 0) {
+        systemnodeAction->setChecked(true);
+        if (walletFrame) walletFrame->gotoSystemnodePage();
     }
 }
 

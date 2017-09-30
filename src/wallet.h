@@ -75,7 +75,7 @@ enum AvailableCoinsType
     ONLY_NOT10000IFMN = 3,
     ONLY_NONDENOMINATED_NOT10000IFMN = 4,
     ONLY_10000 = 5, // find throne outputs including locked ones (use with caution)
-    ONLY_500 // find servicenode outputs including locked ones
+    ONLY_500 // find systemnode outputs including locked ones
 };
 
 
@@ -157,8 +157,8 @@ public:
 
     /// Get 10000CRW input that can be used for the Throne
     bool GetThroneVinAndKeys(CTxIn& vinRet, CPubKey& pubKeyRet, CKey& keyRet, std::string strTxHash = "", std::string strOutputIndex = "");
-    /// Get 500CRW input that can be used for the Servicenode
-    bool GetServicenodeVinAndKeys(CTxIn& vinRet, CPubKey& pubKeyRet, CKey& keyRet, std::string strTxHash = "", std::string strOutputIndex = "");
+    /// Get 500CRW input that can be used for the Systemnode
+    bool GetSystemnodeVinAndKeys(CTxIn& vinRet, CPubKey& pubKeyRet, CKey& keyRet, std::string strTxHash = "", std::string strOutputIndex = "");
     // Extract vin information from output
     bool GetVinAndKeysFromOutput(COutput out, CTxIn& vinRet, CPubKey& pubKeyRet, CKey& keyRet);
 
