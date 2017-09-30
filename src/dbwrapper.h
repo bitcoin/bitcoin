@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_DBWRAPPER_H
-#define BITCOIN_DBWRAPPER_H
+#ifndef IOP_DBWRAPPER_H
+#define IOP_DBWRAPPER_H
 
 #include "clientversion.h"
 #include "fs.h"
@@ -340,4 +340,4 @@ public:
 
 };
 
-#endif // BITCOIN_DBWRAPPER_H
+#endif // IOP_DBWRAPPER_H

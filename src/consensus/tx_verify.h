@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_CONSENSUS_TX_VERIFY_H
-#define BITCOIN_CONSENSUS_TX_VERIFY_H
+#ifndef IOP_CONSENSUS_TX_VERIFY_H
+#define IOP_CONSENSUS_TX_VERIFY_H
 
 #include <stdint.h>
 #include <vector>
@@ -75,4 +75,4 @@ bool EvaluateSequenceLocks(const CBlockIndex& block, std::pair<int, int64_t> loc
  */
 bool SequenceLocks(const CTransaction &tx, int flags, std::vector<int>* prevHeights, const CBlockIndex& block);
 
-#endif // BITCOIN_CONSENSUS_TX_VERIFY_H
+#endif // IOP_CONSENSUS_TX_VERIFY_H

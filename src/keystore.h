@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_KEYSTORE_H
-#define BITCOIN_KEYSTORE_H
+#ifndef IOP_KEYSTORE_H
+#define IOP_KEYSTORE_H
 
 #include "key.h"
 #include "pubkey.h"
@@ -110,4 +110,4 @@ public:
 typedef std::vector<unsigned char, secure_allocator<unsigned char> > CKeyingMaterial;
 typedef std::map<CKeyID, std::pair<CPubKey, std::vector<unsigned char> > > CryptedKeyMap;
 
-#endif // BITCOIN_KEYSTORE_H
+#endif // IOP_KEYSTORE_H

@@ -104,7 +104,7 @@ use old versions of Upstart and do not supply the start-stop-daemon utility.
 Copy bitcoind.init to /etc/init.d/bitcoind. Test by running `service bitcoind start`.
 
 Using this script, you can adjust the path and flags to the bitcoind program by
-setting the BITCOIND and FLAGS environment variables in the file
+setting the IOPD and FLAGS environment variables in the file
 /etc/sysconfig/bitcoind. You can also use the DAEMONOPTS environment variable here.
 
 4e) Mac OS X

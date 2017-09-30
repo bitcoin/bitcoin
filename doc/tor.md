@@ -1,4 +1,4 @@
-TOR SUPPORT IN BITCOIN
+TOR SUPPORT IN IOP
 ======================
 
 It is possible to run Bitcoin as a Tor hidden service, and connect to such services.

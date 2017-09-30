@@ -6,7 +6,7 @@
 
 import time
 
-from test_framework.test_framework import BitcoinTestFramework, BITCOIND_PROC_WAIT_TIMEOUT
+from test_framework.test_framework import BitcoinTestFramework, IOPD_PROC_WAIT_TIMEOUT
 from test_framework.util import (
     assert_equal,
     assert_raises_jsonrpc,
@@ -31,7 +31,7 @@ class WalletEncryptionTest(BitcoinTestFramework):
 
         # Encrypt the wallet
         self.nodes[0].encryptwallet(passphrase)
-        self.bitcoind_processes[0].wait(timeout=BITCOIND_PROC_WAIT_TIMEOUT)
+        self.bitcoind_processes[0].wait(timeout=IOPD_PROC_WAIT_TIMEOUT)
         self.nodes[0] = self.start_node(0, self.options.tmpdir)
 
         # Test that the wallet is encrypted

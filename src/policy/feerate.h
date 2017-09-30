@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_POLICY_FEERATE_H
-#define BITCOIN_POLICY_FEERATE_H
+#ifndef IOP_POLICY_FEERATE_H
+#define IOP_POLICY_FEERATE_H
 
 #include "amount.h"
 #include "serialize.h"
@@ -52,4 +52,4 @@ public:
     }
 };
 
-#endif //  BITCOIN_POLICY_FEERATE_H
+#endif //  IOP_POLICY_FEERATE_H

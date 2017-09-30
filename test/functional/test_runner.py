@@ -203,7 +203,7 @@ def main():
 
     enable_wallet = config["components"].getboolean("ENABLE_WALLET")
     enable_utils = config["components"].getboolean("ENABLE_UTILS")
-    enable_bitcoind = config["components"].getboolean("ENABLE_BITCOIND")
+    enable_bitcoind = config["components"].getboolean("ENABLE_IOPD")
 
     if config["environment"]["EXEEXT"] == ".exe" and not args.force:
         # https://github.com/bitcoin/bitcoin/commit/d52802551752140cf41f0d9a225a43e84404d3e9
@@ -277,8 +277,8 @@ def run_tests(test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_cove
         print("%sWARNING!%s There is a cache directory here: %s. If tests fail unexpectedly, try deleting the cache directory." % (BOLD[1], BOLD[0], cache_dir))
 
     #Set env vars
-    if "BITCOIND" not in os.environ:
-        os.environ["BITCOIND"] = build_dir + '/src/bitcoind' + exeext
+    if "IOPD" not in os.environ:
+        os.environ["IOPD"] = build_dir + '/src/bitcoind' + exeext
 
     tests_dir = src_dir + '/test/functional/'
 

@@ -21,7 +21,7 @@ from decimal import Decimal
 import http.client
 import subprocess
 
-from test_framework.test_framework import (BitcoinTestFramework, BITCOIND_PROC_WAIT_TIMEOUT)
+from test_framework.test_framework import (BitcoinTestFramework, IOPD_PROC_WAIT_TIMEOUT)
 from test_framework.util import (
     assert_equal,
     assert_raises,
@@ -145,7 +145,7 @@ class BlockchainTest(BitcoinTestFramework):
         except (ConnectionError, http.client.BadStatusLine):
             pass  # The node already shut down before response
         self.log.debug('Node should stop at this height...')
-        self.bitcoind_processes[0].wait(timeout=BITCOIND_PROC_WAIT_TIMEOUT)
+        self.bitcoind_processes[0].wait(timeout=IOPD_PROC_WAIT_TIMEOUT)
         self.nodes[0] = self.start_node(0, self.options.tmpdir)
         assert_equal(self.nodes[0].getblockcount(), 207)
 

@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_ARITH_UINT256_H
-#define BITCOIN_ARITH_UINT256_H
+#ifndef IOP_ARITH_UINT256_H
+#define IOP_ARITH_UINT256_H
 
 #include <assert.h>
 #include <cstring>
@@ -293,4 +293,4 @@ public:
 uint256 ArithToUint256(const arith_uint256 &);
 arith_uint256 UintToArith256(const uint256 &);
 
-#endif // BITCOIN_ARITH_UINT256_H
+#endif // IOP_ARITH_UINT256_H

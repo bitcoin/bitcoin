@@ -51,15 +51,15 @@ while true; do
 	fi
 
 	if [ "$NO_SHA1" = "1" ]; then
-		export BITCOIN_VERIFY_COMMITS_ALLOW_SHA1=0
+		export IOP_VERIFY_COMMITS_ALLOW_SHA1=0
 	else
-		export BITCOIN_VERIFY_COMMITS_ALLOW_SHA1=1
+		export IOP_VERIFY_COMMITS_ALLOW_SHA1=1
 	fi
 
 	if [ "${REVSIG_ALLOWED#*$CURRENT_COMMIT}" != "$REVSIG_ALLOWED" ]; then
-		export BITCOIN_VERIFY_COMMITS_ALLOW_REVSIG=1
+		export IOP_VERIFY_COMMITS_ALLOW_REVSIG=1
 	else
-		export BITCOIN_VERIFY_COMMITS_ALLOW_REVSIG=0
+		export IOP_VERIFY_COMMITS_ALLOW_REVSIG=0
 	fi
 
 	if ! git -c "gpg.program=${DIR}/gpg.sh" verify-commit "$CURRENT_COMMIT" > /dev/null; then

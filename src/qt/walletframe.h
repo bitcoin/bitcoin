@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_WALLETFRAME_H
-#define BITCOIN_QT_WALLETFRAME_H
+#ifndef IOP_QT_WALLETFRAME_H
+#define IOP_QT_WALLETFRAME_H
 
 #include <QFrame>
 #include <QMap>
@@ -93,4 +93,4 @@ public Q_SLOTS:
     void outOfSyncWarningClicked();
 };
 
-#endif // BITCOIN_QT_WALLETFRAME_H
+#endif // IOP_QT_WALLETFRAME_H

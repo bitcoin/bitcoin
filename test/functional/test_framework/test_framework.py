@@ -48,7 +48,7 @@ TEST_EXIT_PASSED = 0
 TEST_EXIT_FAILED = 1
 TEST_EXIT_SKIPPED = 77
 
-BITCOIND_PROC_WAIT_TIMEOUT = 60
+IOPD_PROC_WAIT_TIMEOUT = 60
 
 class BitcoinTestFramework(object):
     """Base class for a bitcoin test script.
@@ -215,7 +215,7 @@ class BitcoinTestFramework(object):
 
         datadir = os.path.join(dirname, "node" + str(i))
         if binary is None:
-            binary = os.getenv("BITCOIND", "bitcoind")
+            binary = os.getenv("IOPD", "bitcoind")
         args = [binary, "-datadir=" + datadir, "-server", "-keypool=1", "-discover=0", "-rest", "-logtimemicros", "-debug", "-debugexclude=libevent", "-debugexclude=leveldb", "-mocktime=" + str(self.mocktime), "-uacomment=testnode%d" % i]
         if extra_args is not None:
             args.extend(extra_args)
@@ -261,7 +261,7 @@ class BitcoinTestFramework(object):
             self.nodes[i].stop()
         except http.client.CannotSendRequest as e:
             self.log.exception("Unable to stop node")
-        return_code = self.bitcoind_processes[i].wait(timeout=BITCOIND_PROC_WAIT_TIMEOUT)
+        return_code = self.bitcoind_processes[i].wait(timeout=IOPD_PROC_WAIT_TIMEOUT)
         del self.bitcoind_processes[i]
         assert_equal(return_code, 0)
 
@@ -386,7 +386,7 @@ class BitcoinTestFramework(object):
             # Create cache directories, run bitcoinds:
             for i in range(MAX_NODES):
                 datadir = initialize_datadir(cachedir, i)
-                args = [os.getenv("BITCOIND", "bitcoind"), "-server", "-keypool=1", "-datadir=" + datadir, "-discover=0"]
+                args = [os.getenv("IOPD", "bitcoind"), "-server", "-keypool=1", "-datadir=" + datadir, "-discover=0"]
                 if i > 0:
                     args.append("-connect=127.0.0.1:" + str(p2p_port(0)))
                 self.bitcoind_processes[i] = subprocess.Popen(args)
@@ -483,10 +483,10 @@ class ComparisonTestFramework(BitcoinTestFramework):
 
     def add_options(self, parser):
         parser.add_option("--testbinary", dest="testbinary",
-                          default=os.getenv("BITCOIND", "bitcoind"),
+                          default=os.getenv("IOPD", "bitcoind"),
                           help="bitcoind binary to test")
         parser.add_option("--refbinary", dest="refbinary",
-                          default=os.getenv("BITCOIND", "bitcoind"),
+                          default=os.getenv("IOPD", "bitcoind"),
                           help="bitcoind binary to use for reference nodes (if any)")
 
     def setup_network(self):

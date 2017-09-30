@@ -19,14 +19,14 @@ fi
 RETVAL=0
 
 prog=bitcoind
-# you can override the lockfile via BITCOIND_LOCKFILE in /etc/sysconfig/bitcoind
-lockfile=${BITCOIND_LOCKFILE-/var/lock/subsys/bitcoind}
+# you can override the lockfile via IOPD_LOCKFILE in /etc/sysconfig/bitcoind
+lockfile=${IOPD_LOCKFILE-/var/lock/subsys/bitcoind}
 
-# bitcoind defaults to /usr/bin/bitcoind, override with BITCOIND_BIN
-bitcoind=${BITCOIND_BIN-/usr/bin/bitcoind}
+# bitcoind defaults to /usr/bin/bitcoind, override with IOPD_BIN
+bitcoind=${IOPD_BIN-/usr/bin/bitcoind}
 
-# bitcoind opts default to -disablewallet, override with BITCOIND_OPTS
-bitcoind_opts=${BITCOIND_OPTS--disablewallet}
+# bitcoind opts default to -disablewallet, override with IOPD_OPTS
+bitcoind_opts=${IOPD_OPTS--disablewallet}
 
 start() {
     echo -n $"Starting $prog: "

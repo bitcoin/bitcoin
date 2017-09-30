@@ -43,8 +43,8 @@ This makes it necessary to build boost, or at least the parts used by Bitcoin Co
 
 ```
 # Pick some path to install boost to, here we create a directory within the bitcoin directory
-BITCOIN_ROOT=$(pwd)
-BOOST_PREFIX="${BITCOIN_ROOT}/boost"
+IOP_ROOT=$(pwd)
+BOOST_PREFIX="${IOP_ROOT}/boost"
 mkdir -p $BOOST_PREFIX
 
 # Fetch the source and verify that it is not tampered with
@@ -75,8 +75,8 @@ You cannot use the BerkeleyDB library from ports, for the same reason as boost a
 
 ```bash
 # Pick some path to install BDB to, here we create a directory within the bitcoin directory
-BITCOIN_ROOT=$(pwd)
-BDB_PREFIX="${BITCOIN_ROOT}/db4"
+IOP_ROOT=$(pwd)
+BDB_PREFIX="${IOP_ROOT}/db4"
 mkdir -p $BDB_PREFIX
 
 # Fetch the source and verify that it is not tampered with
