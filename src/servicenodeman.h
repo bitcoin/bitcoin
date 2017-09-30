@@ -13,6 +13,9 @@
 #include "main.h"
 #include "servicenode.h"
 
+#define SERVICENODES_DUMP_SECONDS               (15*60)
+#define SERVICENODES_DSEG_SECONDS               (3*60*60)
+
 using namespace std;
 
 class CServicenodeMan;
@@ -23,6 +26,23 @@ extern CServicenodeMan snodeman;
  */
 class CServicenodeDB
 {
+private:
+    boost::filesystem::path pathSN;
+    std::string strMagicMessage;
+public:
+    enum ReadResult {
+        Ok,
+        FileError,
+        HashReadError,
+        IncorrectHash,
+        IncorrectMagicMessage,
+        IncorrectMagicNumber,
+        IncorrectFormat
+    };
+
+    CServicenodeDB();
+    bool Write(const CServicenodeMan &snodemanToSave);
+    ReadResult Read(CServicenodeMan& snodemanToLoad, bool fDryRun = false);
 };
 
 class CServicenodeMan
@@ -49,6 +69,20 @@ public:
     // Keep track of all pings I've seen
     map<uint256, CServicenodePing> mapSeenServicenodePing;
 
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        LOCK(cs);
+        READWRITE(vServicenodes);
+        READWRITE(mAskedUsForServicenodeList);
+        READWRITE(mWeAskedForServicenodeList);
+        READWRITE(mWeAskedForServicenodeListEntry);
+
+        READWRITE(mapSeenServicenodeBroadcast);
+        READWRITE(mapSeenServicenodePing);
+    }
+
     void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
 
     /// Perform complete check and only then update list and maps
@@ -56,8 +90,20 @@ public:
     void DsegUpdate(CNode* pnode);
     /// Find an entry
     CServicenode* Find(const CTxIn& vin);
+
+    /// Clear Servicenode vector
+    void Clear();
+
+    /// Check all Servicenodes
+    void Check();
+
+    /// Check all Servicenodes and remove inactive
+    void CheckAndRemove(bool forceExpiredRemoval = false);
+
     void Remove(CTxIn vin);
     int CountEnabled(int protocolVersion = -1);
+
+    std::string ToString() const;
 
     /// Add an entry
     bool Add(CServicenode &mn);

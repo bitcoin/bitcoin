@@ -30,6 +30,7 @@
 #include "throne-payments.h"
 #include "throneman.h"
 #include "throneconfig.h"
+#include "servicenodeman.h"
 #include "spork.h"
 #include "utilmoneystr.h"
 #ifdef ENABLE_WALLET
@@ -1425,6 +1426,22 @@ bool AppInit2(boost::thread_group& threadGroup)
         else
             LogPrintf("file format is unknown or invalid, please fix it manually\n");
     }
+
+    uiInterface.InitMessage(_("Loading servicenode cache..."));
+
+    CServicenodeDB sndb;
+    CServicenodeDB::ReadResult readResultS = sndb.Read(snodeman);
+    if (readResultS == CServicenodeDB::FileError)
+        LogPrintf("Missing servicenode cache file - sncache.dat, will try to recreate\n");
+    else if (readResultS != CServicenodeDB::Ok)
+    {
+        LogPrintf("Error reading sncache.dat: ");
+        if(readResultS == CServicenodeDB::IncorrectFormat)
+            LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
+        else
+            LogPrintf("file format is unknown or invalid, please fix it manually\n");
+    }
+
 
     uiInterface.InitMessage(_("Loading budget cache..."));
 
