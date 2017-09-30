@@ -14,7 +14,7 @@ RPCs tested are:
 """
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import assert_equal, assert_raises_rpc_error
 
 class WalletAccountsTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -40,6 +40,23 @@ class WalletAccountsTest(BitcoinTestFramework):
         assert_equal(sorted_default, sorted_false)
         assert_equal("2N6dne8yzh13wsRJxCcMgCYNeN9fxKWNHt8", sorted_default)
         assert_equal("2MsJ2YhGewgDPGEQk4vahGs4wRikJXpRRtU", sorted_true)
+
+    def test_sort_multisig_with_uncompressed_hash160(self, node):
+        node.importpubkey("02632b12f4ac5b1d1b72b2a3b508c19172de44f6f46bcee50ba33f3f9291e47ed0")
+        node.importpubkey("04dd4fe618a8ad14732f8172fe7c9c5e76dd18c2cc501ef7f86e0f4e285ca8b8b32d93df2f4323ebb02640fa6b975b2e63ab3c9d6979bc291193841332442cc6ad")
+        address = "2MxvEpFdXeEDbnz8MbRwS23kDZC8tzQ9NjK"
+
+        addresses = [
+            "msDoRfEfZQFaQNfAEWyqf69H99yntZoBbG",
+            "myrfasv56W7579LpepuRy7KFhVhaWsJYS8",
+        ]
+        default = self.nodes[0].addmultisigaddress(2, addresses)
+        assert_equal(address, default)
+
+        unsorted = self.nodes[0].addmultisigaddress(2, addresses, "", False)
+        assert_equal(address, unsorted)
+
+        assert_raises_rpc_error(-1, "Compressed key required for BIP67: myrfasv56W7579LpepuRy7KFhVhaWsJYS8", node.addmultisigaddress, 2, addresses, "", True)
 
     def run_test (self):
         node = self.nodes[0]
@@ -154,6 +171,7 @@ class WalletAccountsTest(BitcoinTestFramework):
             assert_equal(node.getbalance(account.name), 50)
 
         self.test_sort_multisig(node)
+        self.test_sort_multisig_with_uncompressed_hash160(node)
 
         # Check that setaccount can change the account of an address from a
         # different account.
