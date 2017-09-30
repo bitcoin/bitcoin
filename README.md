@@ -14,9 +14,6 @@ with no central authority: managing transactions and issuing money are carried
 out collectively by the network. IoP Core is the name of open source
 software which enables the use of this currency.
 
-For more information, as well as an immediately useable, binary version of
-the IoP Core software, see https://iop.org/en/download, or read the
-[original whitepaper](https://iopcore.org/iop.pdf).
 
 License
 -------
@@ -28,7 +25,7 @@ Development Process
 -------------------
 
 The `master` branch is regularly built and tested, but is not guaranteed to be
-completely stable. [Tags](https://github.com/Internet-of-People/iop-hd/tags) are created
+completely stable. [Tags](https://github.com/Internet-of-People/iopg-hd/tags) are created
 regularly to indicate new official, stable release versions of IoP Core.
 
 The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md).
