@@ -47,7 +47,7 @@ Notable changes
 ===============
 
 This fixes a serious problem on Windows with data directories that have non-ASCII
-characters (https://github.com/iop/iop/issues/6078).
+characters (https://github.com/bitcoin/bitcoin/issues/6078).
 
 For other platforms there are no notable changes.
 

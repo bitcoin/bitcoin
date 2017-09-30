@@ -14,7 +14,7 @@ portable to different data directories by default. If you need a
 portable blkindex.dat file then run with the new -detachdb=1 option
 or the "Detach databases at shutdown" GUI preference.
 
-Fixed https://github.com/iop/iop/issues/1065, a bug that
+Fixed https://github.com/bitcoin/bitcoin/issues/1065, a bug that
 could cause long-running nodes to crash.
 
 Mac and Windows binaries are compiled against OpenSSL 1.0.1b (Linux

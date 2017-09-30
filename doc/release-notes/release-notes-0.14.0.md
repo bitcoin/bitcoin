@@ -242,7 +242,7 @@ Low-level RPC changes
 
  - A new RPC command `getmemoryinfo` has been added which will return information
    about the memory usage of IoP Core. This was added in conjunction with
-   optimizations to memory management. See [Pull #8753](https://github.com/iop/iop/pull/8753)
+   optimizations to memory management. See [Pull #8753](https://github.com/bitcoin/bitcoin/pull/8753)
    for more information.
 
  - A new RPC command `bumpfee` has been added which allows replacing an
