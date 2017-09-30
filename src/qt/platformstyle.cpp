@@ -82,6 +82,7 @@ PlatformStyle::PlatformStyle(const QString &_name, bool _imagesOnButtons, bool _
 {
     // Determine icon highlighting color
     if (colorizeIcons) {
+        /*
         const QColor colorHighlightBg(QApplication::palette().color(QPalette::Highlight));
         const QColor colorHighlightFg(QApplication::palette().color(QPalette::HighlightedText));
         const QColor colorText(QApplication::palette().color(QPalette::WindowText));
@@ -92,9 +93,11 @@ PlatformStyle::PlatformStyle(const QString &_name, bool _imagesOnButtons, bool _
         else
             colorbase = colorHighlightFg;
         singleColor = colorbase;
+        */
+        singleColor = QColor(108,200,239);
     }
     // Determine text color
-    textColor = QColor(QApplication::palette().color(QPalette::WindowText));
+    textColor = QColor(12,175,165);
 }
 
 QImage PlatformStyle::SingleColorImage(const QString& filename) const
