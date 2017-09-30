@@ -43,7 +43,6 @@ public:
     void setTypeFilter(quint32 modes);
     void setMinAmount(const CAmount& minimum);
     void setWatchOnlyFilter(WatchOnlyFilter filter);
-    void setPublicLabelFilter(bool filter);
 
     /** Set maximum number of rows returned, -1 if unlimited. */
     void setLimit(int limit);

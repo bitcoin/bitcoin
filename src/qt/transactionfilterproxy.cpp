@@ -51,8 +51,8 @@ bool TransactionFilterProxy::filterAcceptsRow(int sourceRow, const QModelIndex &
         return false;
     if (!involvesWatchAddress && watchOnlyFilter == WatchOnlyFilter_Yes)
         return false;
-    if (involvesPublicLabelAddress != publicLabelFilter)
-        return false;
+    //if (involvesPublicLabelAddress == false && publicLabelFilter == true)
+    //    return false;
     if(datetime < dateFrom || datetime > dateTo)
         return false;
     if (!address.contains(addrPrefix, Qt::CaseInsensitive) && !label.contains(addrPrefix, Qt::CaseInsensitive))
@@ -91,12 +91,6 @@ void TransactionFilterProxy::setMinAmount(const CAmount& minimum)
 void TransactionFilterProxy::setWatchOnlyFilter(WatchOnlyFilter filter)
 {
     this->watchOnlyFilter = filter;
-    invalidateFilter();
-}
-
-void TransactionFilterProxy::setPublicLabelFilter(bool filter)
-{
-    this->publicLabelFilter = filter;
     invalidateFilter();
 }
 
