@@ -1,31 +1,31 @@
-# /etc/conf.d/bitcoind: config file for /etc/init.d/bitcoind
+# /etc/conf.d/iopd: config file for /etc/init.d/iopd
 
 # Config file location
-#IOPD_CONFIGFILE="/etc/bitcoin/bitcoin.conf"
+#IOPD_CONFIGFILE="/etc/iop/iop.conf"
 
 # What directory to write pidfile to?  (created and owned by $IOPD_USER)
-#IOPD_PIDDIR="/var/run/bitcoind"
+#IOPD_PIDDIR="/var/run/iopd"
 
 # What filename to give the pidfile
-#IOPD_PIDFILE="${IOPD_PIDDIR}/bitcoind.pid"
+#IOPD_PIDFILE="${IOPD_PIDDIR}/iopd.pid"
 
-# Where to write bitcoind data (be mindful that the blockchain is large)
-#IOPD_DATADIR="/var/lib/bitcoind"
+# Where to write iopd data (be mindful that the blockchain is large)
+#IOPD_DATADIR="/var/lib/iopd"
 
-# User and group to own bitcoind process
-#IOPD_USER="bitcoin"
-#IOPD_GROUP="bitcoin"
+# User and group to own iopd process
+#IOPD_USER="iop"
+#IOPD_GROUP="iop"
 
-# Path to bitcoind executable
-#IOPD_BIN="/usr/bin/bitcoind"
+# Path to iopd executable
+#IOPD_BIN="/usr/bin/iopd"
 
-# Nice value to run bitcoind under
+# Nice value to run iopd under
 #IOPD_NICE=0
 
 # Additional options (avoid -conf and -datadir, use flags above)
 #IOPD_OPTS=""
 
-# The timeout in seconds OpenRC will wait for bitcoind to terminate
+# The timeout in seconds OpenRC will wait for iopd to terminate
 # after a SIGTERM has been raised.
 # Note that this will be mapped as argument to start-stop-daemon's
 # '--retry' option, which means you can specify a retry schedule

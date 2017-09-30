@@ -1,2 +1,2 @@
-usr/local/bin/bitcoind usr/bin
-usr/local/bin/bitcoin-cli usr/bin
+usr/local/bin/iopd usr/bin
+usr/local/bin/iop-cli usr/bin

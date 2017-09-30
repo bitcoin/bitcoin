@@ -778,7 +778,7 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>iop-core</name>
     <message>
         <source>Options:</source>
         <translation>Opsionet:</translation>

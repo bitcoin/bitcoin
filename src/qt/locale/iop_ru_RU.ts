@@ -830,14 +830,14 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>iop-core</name>
     <message>
         <source>Bitcoin Core</source>
         <translation>Bitcoin Core</translation>
     </message>
     <message>
         <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
-        <translation>bitcoin-core</translation>
+        <translation>iop-core</translation>
     </message>
     <message>
         <source>Information</source>

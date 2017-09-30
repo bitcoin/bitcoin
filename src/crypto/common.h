@@ -6,7 +6,7 @@
 #define IOP_CRYPTO_COMMON_H
 
 #if defined(HAVE_CONFIG_H)
-#include "bitcoin-config.h"
+#include "iop-config.h"
 #endif
 
 #include <stdint.h>

@@ -2,11 +2,11 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-TESTS += test/test_bitcoin
-bin_PROGRAMS += test/test_bitcoin
-noinst_PROGRAMS += test/test_bitcoin_fuzzy
+TESTS += test/test_iop
+bin_PROGRAMS += test/test_iop
+noinst_PROGRAMS += test/test_iop_fuzzy
 TEST_SRCDIR = test
-TEST_BINARY=test/test_bitcoin$(EXEEXT)
+TEST_BINARY=test/test_iop$(EXEEXT)
 
 JSON_TEST_FILES = \
   test/data/script_tests.json \
@@ -21,7 +21,7 @@ RAW_TEST_FILES =
 
 GENERATED_TEST_FILES = $(JSON_TEST_FILES:.json=.json.h) $(RAW_TEST_FILES:.raw=.raw.h)
 
-# test_bitcoin binary #
+# test_iop binary #
 IOP_TESTS =\
   test/arith_uint256_tests.cpp \
   test/scriptnum10.h \
@@ -71,9 +71,9 @@ IOP_TESTS =\
   test/sigopcount_tests.cpp \
   test/skiplist_tests.cpp \
   test/streams_tests.cpp \
-  test/test_bitcoin.cpp \
-  test/test_bitcoin.h \
-  test/test_bitcoin_main.cpp \
+  test/test_iop.cpp \
+  test/test_iop.h \
+  test/test_iop_main.cpp \
   test/testutil.cpp \
   test/testutil.h \
   test/timedata_tests.cpp \
@@ -94,31 +94,31 @@ IOP_TESTS += \
   wallet/test/crypto_tests.cpp
 endif
 
-test_test_bitcoin_SOURCES = $(IOP_TESTS) $(JSON_TEST_FILES) $(RAW_TEST_FILES)
-test_test_bitcoin_CPPFLAGS = $(AM_CPPFLAGS) $(IOP_INCLUDES) -I$(builddir)/test/ $(TESTDEFS) $(EVENT_CFLAGS)
-test_test_bitcoin_LDADD =
+test_test_iop_SOURCES = $(IOP_TESTS) $(JSON_TEST_FILES) $(RAW_TEST_FILES)
+test_test_iop_CPPFLAGS = $(AM_CPPFLAGS) $(IOP_INCLUDES) -I$(builddir)/test/ $(TESTDEFS) $(EVENT_CFLAGS)
+test_test_iop_LDADD =
 if ENABLE_WALLET
-test_test_bitcoin_LDADD += $(LIBIOP_WALLET)
+test_test_iop_LDADD += $(LIBIOP_WALLET)
 endif
-test_test_bitcoin_LDADD += $(LIBIOP_SERVER) $(LIBIOP_CLI) $(LIBIOP_COMMON) $(LIBIOP_UTIL) $(LIBIOP_CONSENSUS) $(LIBIOP_CRYPTO) $(LIBUNIVALUE) \
+test_test_iop_LDADD += $(LIBIOP_SERVER) $(LIBIOP_CLI) $(LIBIOP_COMMON) $(LIBIOP_UTIL) $(LIBIOP_CONSENSUS) $(LIBIOP_CRYPTO) $(LIBUNIVALUE) \
   $(LIBLEVELDB) $(LIBLEVELDB_SSE42) $(LIBMEMENV) $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(LIBSECP256K1) $(EVENT_LIBS) $(EVENT_PTHREADS_LIBS)
-test_test_bitcoin_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_test_iop_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
-test_test_bitcoin_LDADD += $(LIBIOP_CONSENSUS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS)
-test_test_bitcoin_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) -static
+test_test_iop_LDADD += $(LIBIOP_CONSENSUS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS)
+test_test_iop_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) -static
 
 if ENABLE_ZMQ
-test_test_bitcoin_LDADD += $(ZMQ_LIBS)
+test_test_iop_LDADD += $(ZMQ_LIBS)
 endif
 #
 
-# test_bitcoin_fuzzy binary #
-test_test_bitcoin_fuzzy_SOURCES = test/test_bitcoin_fuzzy.cpp
-test_test_bitcoin_fuzzy_CPPFLAGS = $(AM_CPPFLAGS) $(IOP_INCLUDES)
-test_test_bitcoin_fuzzy_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-test_test_bitcoin_fuzzy_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+# test_iop_fuzzy binary #
+test_test_iop_fuzzy_SOURCES = test/test_iop_fuzzy.cpp
+test_test_iop_fuzzy_CPPFLAGS = $(AM_CPPFLAGS) $(IOP_INCLUDES)
+test_test_iop_fuzzy_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_test_iop_fuzzy_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
-test_test_bitcoin_fuzzy_LDADD = \
+test_test_iop_fuzzy_LDADD = \
   $(LIBUNIVALUE) \
   $(LIBIOP_SERVER) \
   $(LIBIOP_COMMON) \
@@ -127,10 +127,10 @@ test_test_bitcoin_fuzzy_LDADD = \
   $(LIBIOP_CRYPTO) \
   $(LIBSECP256K1)
 
-test_test_bitcoin_fuzzy_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
+test_test_iop_fuzzy_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 #
 
-nodist_test_test_bitcoin_SOURCES = $(GENERATED_TEST_FILES)
+nodist_test_test_iop_SOURCES = $(GENERATED_TEST_FILES)
 
 $(IOP_TESTS): $(GENERATED_TEST_FILES)
 
@@ -138,17 +138,17 @@ CLEAN_IOP_TEST = test/*.gcda test/*.gcno $(GENERATED_TEST_FILES)
 
 CLEANFILES += $(CLEAN_IOP_TEST)
 
-bitcoin_test: $(TEST_BINARY)
+iop_test: $(TEST_BINARY)
 
-bitcoin_test_check: $(TEST_BINARY) FORCE
+iop_test_check: $(TEST_BINARY) FORCE
 	$(MAKE) check-TESTS TESTS=$^
 
-bitcoin_test_clean : FORCE
-	rm -f $(CLEAN_IOP_TEST) $(test_test_bitcoin_OBJECTS) $(TEST_BINARY)
+iop_test_clean : FORCE
+	rm -f $(CLEAN_IOP_TEST) $(test_test_iop_OBJECTS) $(TEST_BINARY)
 
 check-local:
-	@echo "Running test/util/bitcoin-util-test.py..."
-	$(top_builddir)/test/util/bitcoin-util-test.py
+	@echo "Running test/util/iop-util-test.py..."
+	$(top_builddir)/test/util/iop-util-test.py
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C secp256k1 check
 if EMBEDDED_UNIVALUE
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C univalue check

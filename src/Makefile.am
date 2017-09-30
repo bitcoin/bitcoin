@@ -24,23 +24,23 @@ IOP_INCLUDES=-I$(builddir) -I$(builddir)/obj $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $
 IOP_INCLUDES += -I$(srcdir)/secp256k1/include
 IOP_INCLUDES += $(UNIVALUE_CFLAGS)
 
-LIBIOP_SERVER=libbitcoin_server.a
-LIBIOP_COMMON=libbitcoin_common.a
-LIBIOP_CONSENSUS=libbitcoin_consensus.a
-LIBIOP_CLI=libbitcoin_cli.a
-LIBIOP_UTIL=libbitcoin_util.a
-LIBIOP_CRYPTO=crypto/libbitcoin_crypto.a
-LIBIOPQT=qt/libbitcoinqt.a
+LIBIOP_SERVER=libiop_server.a
+LIBIOP_COMMON=libiop_common.a
+LIBIOP_CONSENSUS=libiop_consensus.a
+LIBIOP_CLI=libiop_cli.a
+LIBIOP_UTIL=libiop_util.a
+LIBIOP_CRYPTO=crypto/libiop_crypto.a
+LIBIOPQT=qt/libiopqt.a
 LIBSECP256K1=secp256k1/libsecp256k1.la
 
 if ENABLE_ZMQ
-LIBIOP_ZMQ=libbitcoin_zmq.a
+LIBIOP_ZMQ=libiop_zmq.a
 endif
 if BUILD_IOP_LIBS
-LIBIOPCONSENSUS=libbitcoinconsensus.la
+LIBIOPCONSENSUS=libiopconsensus.la
 endif
 if ENABLE_WALLET
-LIBIOP_WALLET=libbitcoin_wallet.a
+LIBIOP_WALLET=libiop_wallet.a
 endif
 
 $(LIBSECP256K1): $(wildcard secp256k1/src/*) $(wildcard secp256k1/include/*)
@@ -66,15 +66,15 @@ TESTS =
 BENCHMARKS =
 
 if BUILD_IOPD
-  bin_PROGRAMS += bitcoind
+  bin_PROGRAMS += iopd
 endif
 
 if BUILD_IOP_UTILS
-  bin_PROGRAMS += bitcoin-cli bitcoin-tx
+  bin_PROGRAMS += iop-cli iop-tx
 endif
 
 .PHONY: FORCE check-symbols check-security
-# bitcoin core #
+# iop core #
 IOP_CORE_H = \
   addrdb.h \
   addrman.h \
@@ -177,12 +177,12 @@ obj/build.h: FORCE
 	@$(MKDIR_P) $(builddir)/obj
 	@$(top_srcdir)/share/genbuild.sh "$(abs_top_builddir)/src/obj/build.h" \
 	  "$(abs_top_srcdir)"
-libbitcoin_util_a-clientversion.$(OBJEXT): obj/build.h
+libiop_util_a-clientversion.$(OBJEXT): obj/build.h
 
-# server: shared between bitcoind and bitcoin-qt
-libbitcoin_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(IOP_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
-libbitcoin_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libbitcoin_server_a_SOURCES = \
+# server: shared between iopd and iop-qt
+libiop_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(IOP_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
+libiop_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libiop_server_a_SOURCES = \
   addrdb.cpp \
   addrman.cpp \
   bloom.cpp \
@@ -224,20 +224,20 @@ libbitcoin_server_a_SOURCES = \
   $(IOP_CORE_H)
 
 if ENABLE_ZMQ
-libbitcoin_zmq_a_CPPFLAGS = $(IOP_INCLUDES) $(ZMQ_CFLAGS)
-libbitcoin_zmq_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libbitcoin_zmq_a_SOURCES = \
+libiop_zmq_a_CPPFLAGS = $(IOP_INCLUDES) $(ZMQ_CFLAGS)
+libiop_zmq_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libiop_zmq_a_SOURCES = \
   zmq/zmqabstractnotifier.cpp \
   zmq/zmqnotificationinterface.cpp \
   zmq/zmqpublishnotifier.cpp
 endif
 
 
-# wallet: shared between bitcoind and bitcoin-qt, but only linked
+# wallet: shared between iopd and iop-qt, but only linked
 # when wallet enabled
-libbitcoin_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(IOP_INCLUDES)
-libbitcoin_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libbitcoin_wallet_a_SOURCES = \
+libiop_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(IOP_INCLUDES)
+libiop_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libiop_wallet_a_SOURCES = \
   wallet/crypter.cpp \
   wallet/db.cpp \
   wallet/feebumper.cpp \
@@ -248,9 +248,9 @@ libbitcoin_wallet_a_SOURCES = \
   $(IOP_CORE_H)
 
 # crypto primitives library
-crypto_libbitcoin_crypto_a_CPPFLAGS = $(AM_CPPFLAGS) $(IOP_CONFIG_INCLUDES)
-crypto_libbitcoin_crypto_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-crypto_libbitcoin_crypto_a_SOURCES = \
+crypto_libiop_crypto_a_CPPFLAGS = $(AM_CPPFLAGS) $(IOP_CONFIG_INCLUDES)
+crypto_libiop_crypto_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+crypto_libiop_crypto_a_SOURCES = \
   crypto/aes.cpp \
   crypto/aes.h \
   crypto/chacha20.h \
@@ -270,13 +270,13 @@ crypto_libbitcoin_crypto_a_SOURCES = \
   crypto/sha512.h
 
 if EXPERIMENTAL_ASM
-crypto_libbitcoin_crypto_a_SOURCES += crypto/sha256_sse4.cpp
+crypto_libiop_crypto_a_SOURCES += crypto/sha256_sse4.cpp
 endif
 
 # consensus: shared between all executables that validate any consensus rules.
-libbitcoin_consensus_a_CPPFLAGS = $(AM_CPPFLAGS) $(IOP_INCLUDES)
-libbitcoin_consensus_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libbitcoin_consensus_a_SOURCES = \
+libiop_consensus_a_CPPFLAGS = $(AM_CPPFLAGS) $(IOP_INCLUDES)
+libiop_consensus_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libiop_consensus_a_SOURCES = \
   amount.h \
   arith_uint256.cpp \
   arith_uint256.h \
@@ -293,7 +293,7 @@ libbitcoin_consensus_a_SOURCES = \
   primitives/transaction.h \
   pubkey.cpp \
   pubkey.h \
-  script/bitcoinconsensus.cpp \
+  script/iopconsensus.cpp \
   script/interpreter.cpp \
   script/interpreter.h \
   script/script.cpp \
@@ -308,10 +308,10 @@ libbitcoin_consensus_a_SOURCES = \
   utilstrencodings.h \
   version.h
 
-# common: shared between bitcoind, and bitcoin-qt and non-server tools
-libbitcoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(IOP_INCLUDES)
-libbitcoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libbitcoin_common_a_SOURCES = \
+# common: shared between iopd, and iop-qt and non-server tools
+libiop_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(IOP_INCLUDES)
+libiop_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libiop_common_a_SOURCES = \
   base58.cpp \
   chainparams.cpp \
   coins.cpp \
@@ -333,9 +333,9 @@ libbitcoin_common_a_SOURCES = \
 # util: shared between all executables.
 # This library *must* be included to make sure that the glibc
 # backward-compatibility objects and their sanity checks are linked.
-libbitcoin_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(IOP_INCLUDES)
-libbitcoin_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libbitcoin_util_a_SOURCES = \
+libiop_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(IOP_INCLUDES)
+libiop_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libiop_util_a_SOURCES = \
   support/lockedpool.cpp \
   chainparamsbase.cpp \
   clientversion.cpp \
@@ -355,30 +355,30 @@ libbitcoin_util_a_SOURCES = \
   $(IOP_CORE_H)
 
 if GLIBC_BACK_COMPAT
-libbitcoin_util_a_SOURCES += compat/glibc_compat.cpp
+libiop_util_a_SOURCES += compat/glibc_compat.cpp
 endif
 
-# cli: shared between bitcoin-cli and bitcoin-qt
-libbitcoin_cli_a_CPPFLAGS = $(AM_CPPFLAGS) $(IOP_INCLUDES)
-libbitcoin_cli_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libbitcoin_cli_a_SOURCES = \
+# cli: shared between iop-cli and iop-qt
+libiop_cli_a_CPPFLAGS = $(AM_CPPFLAGS) $(IOP_INCLUDES)
+libiop_cli_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libiop_cli_a_SOURCES = \
   rpc/client.cpp \
   $(IOP_CORE_H)
 
-nodist_libbitcoin_util_a_SOURCES = $(srcdir)/obj/build.h
+nodist_libiop_util_a_SOURCES = $(srcdir)/obj/build.h
 #
 
-# bitcoind binary #
-bitcoind_SOURCES = bitcoind.cpp
-bitcoind_CPPFLAGS = $(AM_CPPFLAGS) $(IOP_INCLUDES)
-bitcoind_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-bitcoind_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+# iopd binary #
+iopd_SOURCES = iopd.cpp
+iopd_CPPFLAGS = $(AM_CPPFLAGS) $(IOP_INCLUDES)
+iopd_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+iopd_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-bitcoind_SOURCES += bitcoind-res.rc
+iopd_SOURCES += iopd-res.rc
 endif
 
-bitcoind_LDADD = \
+iopd_LDADD = \
   $(LIBIOP_SERVER) \
   $(LIBIOP_COMMON) \
   $(LIBUNIVALUE) \
@@ -392,38 +392,38 @@ bitcoind_LDADD = \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
 
-bitcoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS)
+iopd_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS)
 
-# bitcoin-cli binary #
-bitcoin_cli_SOURCES = bitcoin-cli.cpp
-bitcoin_cli_CPPFLAGS = $(AM_CPPFLAGS) $(IOP_INCLUDES) $(EVENT_CFLAGS)
-bitcoin_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-bitcoin_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+# iop-cli binary #
+iop_cli_SOURCES = iop-cli.cpp
+iop_cli_CPPFLAGS = $(AM_CPPFLAGS) $(IOP_INCLUDES) $(EVENT_CFLAGS)
+iop_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+iop_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-bitcoin_cli_SOURCES += bitcoin-cli-res.rc
+iop_cli_SOURCES += iop-cli-res.rc
 endif
 
-bitcoin_cli_LDADD = \
+iop_cli_LDADD = \
   $(LIBIOP_CLI) \
   $(LIBUNIVALUE) \
   $(LIBIOP_UTIL) \
   $(LIBIOP_CRYPTO)
 
-bitcoin_cli_LDADD += $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
+iop_cli_LDADD += $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
 #
 
-# bitcoin-tx binary #
-bitcoin_tx_SOURCES = bitcoin-tx.cpp
-bitcoin_tx_CPPFLAGS = $(AM_CPPFLAGS) $(IOP_INCLUDES)
-bitcoin_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-bitcoin_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+# iop-tx binary #
+iop_tx_SOURCES = iop-tx.cpp
+iop_tx_CPPFLAGS = $(AM_CPPFLAGS) $(IOP_INCLUDES)
+iop_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+iop_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-bitcoin_tx_SOURCES += bitcoin-tx-res.rc
+iop_tx_SOURCES += iop-tx-res.rc
 endif
 
-bitcoin_tx_LDADD = \
+iop_tx_LDADD = \
   $(LIBUNIVALUE) \
   $(LIBIOP_COMMON) \
   $(LIBIOP_UTIL) \
@@ -431,22 +431,22 @@ bitcoin_tx_LDADD = \
   $(LIBIOP_CRYPTO) \
   $(LIBSECP256K1)
 
-bitcoin_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
+iop_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 #
 
-# bitcoinconsensus library #
+# iopconsensus library #
 if BUILD_IOP_LIBS
-include_HEADERS = script/bitcoinconsensus.h
-libbitcoinconsensus_la_SOURCES = $(crypto_libbitcoin_crypto_a_SOURCES) $(libbitcoin_consensus_a_SOURCES)
+include_HEADERS = script/iopconsensus.h
+libiopconsensus_la_SOURCES = $(crypto_libiop_crypto_a_SOURCES) $(libiop_consensus_a_SOURCES)
 
 if GLIBC_BACK_COMPAT
-  libbitcoinconsensus_la_SOURCES += compat/glibc_compat.cpp
+  libiopconsensus_la_SOURCES += compat/glibc_compat.cpp
 endif
 
-libbitcoinconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
-libbitcoinconsensus_la_LIBADD = $(LIBSECP256K1)
-libbitcoinconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_IOP_INTERNAL
-libbitcoinconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libiopconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
+libiopconsensus_la_LIBADD = $(LIBSECP256K1)
+libiopconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_IOP_INTERNAL
+libiopconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
 endif
 #
@@ -477,12 +477,12 @@ DISTCLEANFILES = obj/build.h
 EXTRA_DIST = $(CTAES_DIST)
 
 
-config/bitcoin-config.h: config/stamp-h1
+config/iop-config.h: config/stamp-h1
 	@$(MAKE) -C $(top_builddir) $(subdir)/$(@)
-config/stamp-h1: $(top_srcdir)/$(subdir)/config/bitcoin-config.h.in $(top_builddir)/config.status
+config/stamp-h1: $(top_srcdir)/$(subdir)/config/iop-config.h.in $(top_builddir)/config.status
 	$(AM_V_at)$(MAKE) -C $(top_builddir) $(subdir)/$(@)
-$(top_srcdir)/$(subdir)/config/bitcoin-config.h.in:  $(am__configure_deps)
-	$(AM_V_at)$(MAKE) -C $(top_srcdir) $(subdir)/config/bitcoin-config.h.in
+$(top_srcdir)/$(subdir)/config/iop-config.h.in:  $(am__configure_deps)
+	$(AM_V_at)$(MAKE) -C $(top_srcdir) $(subdir)/config/iop-config.h.in
 
 clean-local:
 	-$(MAKE) -C secp256k1 clean

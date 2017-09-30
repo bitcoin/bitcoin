@@ -4,10 +4,10 @@ TOPDIR=${TOPDIR:-$(git rev-parse --show-toplevel)}
 SRCDIR=${SRCDIR:-$TOPDIR/src}
 MANDIR=${MANDIR:-$TOPDIR/doc/man}
 
-IOPD=${IOPD:-$SRCDIR/bitcoind}
-IOPCLI=${IOPCLI:-$SRCDIR/bitcoin-cli}
-IOPTX=${IOPTX:-$SRCDIR/bitcoin-tx}
-IOPQT=${IOPQT:-$SRCDIR/qt/bitcoin-qt}
+IOPD=${IOPD:-$SRCDIR/iopd}
+IOPCLI=${IOPCLI:-$SRCDIR/iop-cli}
+IOPTX=${IOPTX:-$SRCDIR/iop-tx}
+IOPQT=${IOPQT:-$SRCDIR/qt/iop-qt}
 
 [ ! -x $IOPD ] && echo "$IOPD not found or not executable." && exit 1
 
@@ -15,8 +15,8 @@ IOPQT=${IOPQT:-$SRCDIR/qt/bitcoin-qt}
 BTCVER=($($IOPCLI --version | head -n1 | awk -F'[ -]' '{ print $6, $7 }'))
 
 # Create a footer file with copyright content.
-# This gets autodetected fine for bitcoind if --version-string is not set,
-# but has different outcomes for bitcoin-qt and bitcoin-cli.
+# This gets autodetected fine for iopd if --version-string is not set,
+# but has different outcomes for iop-qt and iop-cli.
 echo "[COPYRIGHT]" > footer.h2m
 $IOPD --version | sed -n '1!p' >> footer.h2m
 

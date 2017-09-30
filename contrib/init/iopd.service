@@ -3,13 +3,13 @@ Description=Bitcoin's distributed currency daemon
 After=network.target
 
 [Service]
-User=bitcoin
-Group=bitcoin
+User=iop
+Group=iop
 
 Type=forking
-PIDFile=/var/lib/bitcoind/bitcoind.pid
-ExecStart=/usr/bin/bitcoind -daemon -pid=/var/lib/bitcoind/bitcoind.pid \
--conf=/etc/bitcoin/bitcoin.conf -datadir=/var/lib/bitcoind -disablewallet
+PIDFile=/var/lib/iopd/iopd.pid
+ExecStart=/usr/bin/iopd -daemon -pid=/var/lib/iopd/iopd.pid \
+-conf=/etc/iop/iop.conf -datadir=/var/lib/iopd -disablewallet
 
 Restart=always
 PrivateTmp=true

@@ -1,10 +1,10 @@
 
-## <summary>policy for bitcoin</summary>
+## <summary>policy for iop</summary>
 
 
 ########################################
 ## <summary>
-##	Transition to bitcoin.
+##	Transition to iop.
 ## </summary>
 ## <param name="domain">
 ## <summary>
@@ -12,19 +12,19 @@
 ## </summary>
 ## </param>
 #
-interface(`bitcoin_domtrans',`
+interface(`iop_domtrans',`
 	gen_require(`
-		type bitcoin_t, bitcoin_exec_t;
+		type iop_t, iop_exec_t;
 	')
 
 	corecmd_search_bin($1)
-	domtrans_pattern($1, bitcoin_exec_t, bitcoin_t)
+	domtrans_pattern($1, iop_exec_t, iop_t)
 ')
 
 
 ########################################
 ## <summary>
-##	Execute bitcoin server in the bitcoin domain.
+##	Execute iop server in the iop domain.
 ## </summary>
 ## <param name="domain">
 ##	<summary>
@@ -32,18 +32,18 @@ interface(`bitcoin_domtrans',`
 ##	</summary>
 ## </param>
 #
-interface(`bitcoin_initrc_domtrans',`
+interface(`iop_initrc_domtrans',`
 	gen_require(`
-		type bitcoin_initrc_exec_t;
+		type iop_initrc_exec_t;
 	')
 
-	init_labeled_script_domtrans($1, bitcoin_initrc_exec_t)
+	init_labeled_script_domtrans($1, iop_initrc_exec_t)
 ')
 
 
 ########################################
 ## <summary>
-##	Search bitcoin lib directories.
+##	Search iop lib directories.
 ## </summary>
 ## <param name="domain">
 ##	<summary>
@@ -51,18 +51,18 @@ interface(`bitcoin_initrc_domtrans',`
 ##	</summary>
 ## </param>
 #
-interface(`bitcoin_search_lib',`
+interface(`iop_search_lib',`
 	gen_require(`
-		type bitcoin_var_lib_t;
+		type iop_var_lib_t;
 	')
 
-	allow $1 bitcoin_var_lib_t:dir search_dir_perms;
+	allow $1 iop_var_lib_t:dir search_dir_perms;
 	files_search_var_lib($1)
 ')
 
 ########################################
 ## <summary>
-##	Read bitcoin lib files.
+##	Read iop lib files.
 ## </summary>
 ## <param name="domain">
 ##	<summary>
@@ -70,18 +70,18 @@ interface(`bitcoin_search_lib',`
 ##	</summary>
 ## </param>
 #
-interface(`bitcoin_read_lib_files',`
+interface(`iop_read_lib_files',`
 	gen_require(`
-		type bitcoin_var_lib_t;
+		type iop_var_lib_t;
 	')
 
 	files_search_var_lib($1)
-	read_files_pattern($1, bitcoin_var_lib_t, bitcoin_var_lib_t)
+	read_files_pattern($1, iop_var_lib_t, iop_var_lib_t)
 ')
 
 ########################################
 ## <summary>
-##	Manage bitcoin lib files.
+##	Manage iop lib files.
 ## </summary>
 ## <param name="domain">
 ##	<summary>
@@ -89,18 +89,18 @@ interface(`bitcoin_read_lib_files',`
 ##	</summary>
 ## </param>
 #
-interface(`bitcoin_manage_lib_files',`
+interface(`iop_manage_lib_files',`
 	gen_require(`
-		type bitcoin_var_lib_t;
+		type iop_var_lib_t;
 	')
 
 	files_search_var_lib($1)
-	manage_files_pattern($1, bitcoin_var_lib_t, bitcoin_var_lib_t)
+	manage_files_pattern($1, iop_var_lib_t, iop_var_lib_t)
 ')
 
 ########################################
 ## <summary>
-##	Manage bitcoin lib directories.
+##	Manage iop lib directories.
 ## </summary>
 ## <param name="domain">
 ##	<summary>
@@ -108,20 +108,20 @@ interface(`bitcoin_manage_lib_files',`
 ##	</summary>
 ## </param>
 #
-interface(`bitcoin_manage_lib_dirs',`
+interface(`iop_manage_lib_dirs',`
 	gen_require(`
-		type bitcoin_var_lib_t;
+		type iop_var_lib_t;
 	')
 
 	files_search_var_lib($1)
-	manage_dirs_pattern($1, bitcoin_var_lib_t, bitcoin_var_lib_t)
+	manage_dirs_pattern($1, iop_var_lib_t, iop_var_lib_t)
 ')
 
 
 ########################################
 ## <summary>
 ##	All of the rules required to administrate
-##	a bitcoin environment
+##	a iop environment
 ## </summary>
 ## <param name="domain">
 ##	<summary>
@@ -135,23 +135,23 @@ interface(`bitcoin_manage_lib_dirs',`
 ## </param>
 ## <rolecap/>
 #
-interface(`bitcoin_admin',`
+interface(`iop_admin',`
 	gen_require(`
-		type bitcoin_t;
-		type bitcoin_initrc_exec_t;
-		type bitcoin_var_lib_t;
+		type iop_t;
+		type iop_initrc_exec_t;
+		type iop_var_lib_t;
 	')
 
-	allow $1 bitcoin_t:process { ptrace signal_perms };
-	ps_process_pattern($1, bitcoin_t)
+	allow $1 iop_t:process { ptrace signal_perms };
+	ps_process_pattern($1, iop_t)
 
-	bitcoin_initrc_domtrans($1)
+	iop_initrc_domtrans($1)
 	domain_system_change_exemption($1)
-	role_transition $2 bitcoin_initrc_exec_t system_r;
+	role_transition $2 iop_initrc_exec_t system_r;
 	allow $2 system_r;
 
 	files_search_var_lib($1)
-	admin_pattern($1, bitcoin_var_lib_t)
+	admin_pattern($1, iop_var_lib_t)
 
 ')
 

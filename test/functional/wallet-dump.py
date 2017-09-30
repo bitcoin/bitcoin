@@ -95,7 +95,7 @@ class WalletDumpTest(BitcoinTestFramework):
 
         #encrypt wallet, restart, unlock and dump
         self.nodes[0].encryptwallet('test')
-        self.bitcoind_processes[0].wait()
+        self.iopd_processes[0].wait()
         self.nodes[0] = self.start_node(0, self.options.tmpdir, self.extra_args[0])
         self.nodes[0].walletpassphrase('test', 10)
         # Should be a no-op:

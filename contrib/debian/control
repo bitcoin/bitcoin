@@ -1,4 +1,4 @@
-Source: bitcoin
+Source: iop
 Section: utils
 Priority: optional
 Maintainer: Matt Corallo <matt@mattcorallo.com>
@@ -26,11 +26,11 @@ Build-Depends: debhelper,
  python,
  libzmq3-dev
 Standards-Version: 3.9.2
-Homepage: https://bitcoincore.org/
-Vcs-Git: git://github.com/bitcoin/bitcoin.git
-Vcs-Browser: https://github.com/bitcoin/bitcoin
+Homepage: https://iopcore.org/
+Vcs-Git: git://github.com/iop/iop.git
+Vcs-Browser: https://github.com/iop/iop
 
-Package: bitcoind
+Package: iopd
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer network based digital currency - daemon
@@ -40,10 +40,10 @@ Description: peer-to-peer network based digital currency - daemon
  transact directly with each other, with the help of a P2P network to
  check for double-spending.
  .
- This package provides the daemon, bitcoind, and the CLI tool
- bitcoin-cli to interact with the daemon.
+ This package provides the daemon, iopd, and the CLI tool
+ iop-cli to interact with the daemon.
 
-Package: bitcoin-qt
+Package: iop-qt
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer network based digital currency - Qt GUI
@@ -55,7 +55,7 @@ Description: peer-to-peer network based digital currency - Qt GUI
  .
  This package provides Bitcoin-Qt, a GUI for Bitcoin based on Qt.
 
-Package: bitcoin-tx
+Package: iop-tx
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer digital currency - standalone transaction tool
@@ -65,6 +65,6 @@ Description: peer-to-peer digital currency - standalone transaction tool
  transact directly with each other, with the help of a P2P network to
  check for double-spending.
  .
- This package provides bitcoin-tx, a command-line transaction creation
- tool which can be used without a bitcoin daemon.  Some means of
+ This package provides iop-tx, a command-line transaction creation
+ tool which can be used without a iop daemon.  Some means of
  exchanging minimal transaction data with peers is still required.

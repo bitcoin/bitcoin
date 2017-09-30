@@ -5,7 +5,7 @@
 #ifndef IOP_QT_TRANSACTIONTABLEMODEL_H
 #define IOP_QT_TRANSACTIONTABLEMODEL_H
 
-#include "bitcoinunits.h"
+#include "iopunits.h"
 
 #include <QAbstractTableModel>
 #include <QStringList>

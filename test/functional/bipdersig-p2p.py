@@ -131,9 +131,9 @@ class BIP66Test(BitcoinTestFramework):
         assert wait_until (lambda: "reject" in node0.last_message.keys())
         with mininode_lock:
             # We can receive different reject messages depending on whether
-            # bitcoind is running with multiple script check threads. If script
+            # iopd is running with multiple script check threads. If script
             # check threads are not in use, then transaction script validation
-            # happens sequentially, and bitcoind produces more specific reject
+            # happens sequentially, and iopd produces more specific reject
             # reasons.
             assert node0.last_message["reject"].code in [REJECT_INVALID, REJECT_NONSTANDARD]
             assert_equal(node0.last_message["reject"].data, block.sha256)

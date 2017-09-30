@@ -6,7 +6,7 @@
 
 #include "addressbookpage.h"
 #include "askpassphrasedialog.h"
-#include "bitcoingui.h"
+#include "iopgui.h"
 #include "clientmodel.h"
 #include "guiutil.h"
 #include "optionsmodel.h"

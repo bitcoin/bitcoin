@@ -2,8 +2,8 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-bin_PROGRAMS += qt/test/test_bitcoin-qt
-TESTS += qt/test/test_bitcoin-qt
+bin_PROGRAMS += qt/test/test_iop-qt
+TESTS += qt/test/test_iop-qt
 
 TEST_QT_MOC_CPP = \
   qt/test/moc_compattests.cpp \
@@ -25,17 +25,17 @@ TEST_QT_H = \
   qt/test/wallettests.h
 
 TEST_IOP_CPP = \
-  test/test_bitcoin.cpp \
+  test/test_iop.cpp \
   test/testutil.cpp
 
 TEST_IOP_H = \
-  test/test_bitcoin.h \
+  test/test_iop.h \
   test/testutil.h
 
-qt_test_test_bitcoin_qt_CPPFLAGS = $(AM_CPPFLAGS) $(IOP_INCLUDES) $(IOP_QT_INCLUDES) \
+qt_test_test_iop_qt_CPPFLAGS = $(AM_CPPFLAGS) $(IOP_INCLUDES) $(IOP_QT_INCLUDES) \
   $(QT_INCLUDES) $(QT_TEST_INCLUDES) $(PROTOBUF_CFLAGS)
 
-qt_test_test_bitcoin_qt_SOURCES = \
+qt_test_test_iop_qt_SOURCES = \
   qt/test/compattests.cpp \
   qt/test/rpcnestedtests.cpp \
   qt/test/test_main.cpp \
@@ -44,36 +44,36 @@ qt_test_test_bitcoin_qt_SOURCES = \
   $(TEST_IOP_CPP) \
   $(TEST_IOP_H)
 if ENABLE_WALLET
-qt_test_test_bitcoin_qt_SOURCES += \
+qt_test_test_iop_qt_SOURCES += \
   qt/test/paymentservertests.cpp \
   qt/test/wallettests.cpp \
   wallet/test/wallet_test_fixture.cpp
 endif
 
-nodist_qt_test_test_bitcoin_qt_SOURCES = $(TEST_QT_MOC_CPP)
+nodist_qt_test_test_iop_qt_SOURCES = $(TEST_QT_MOC_CPP)
 
-qt_test_test_bitcoin_qt_LDADD = $(LIBIOPQT) $(LIBIOP_SERVER)
+qt_test_test_iop_qt_LDADD = $(LIBIOPQT) $(LIBIOP_SERVER)
 if ENABLE_WALLET
-qt_test_test_bitcoin_qt_LDADD += $(LIBIOP_WALLET)
+qt_test_test_iop_qt_LDADD += $(LIBIOP_WALLET)
 endif
 if ENABLE_ZMQ
-qt_test_test_bitcoin_qt_LDADD += $(LIBIOP_ZMQ) $(ZMQ_LIBS)
+qt_test_test_iop_qt_LDADD += $(LIBIOP_ZMQ) $(ZMQ_LIBS)
 endif
-qt_test_test_bitcoin_qt_LDADD += $(LIBIOP_CLI) $(LIBIOP_COMMON) $(LIBIOP_UTIL) $(LIBIOP_CONSENSUS) $(LIBIOP_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) \
+qt_test_test_iop_qt_LDADD += $(LIBIOP_CLI) $(LIBIOP_COMMON) $(LIBIOP_UTIL) $(LIBIOP_CONSENSUS) $(LIBIOP_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) \
   $(LIBLEVELDB_SSE42) $(LIBMEMENV) $(BOOST_LIBS) $(QT_DBUS_LIBS) $(QT_TEST_LIBS) $(QT_LIBS) \
   $(QR_LIBS) $(PROTOBUF_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(LIBSECP256K1) \
   $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
-qt_test_test_bitcoin_qt_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(QT_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
-qt_test_test_bitcoin_qt_CXXFLAGS = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
+qt_test_test_iop_qt_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(QT_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+qt_test_test_iop_qt_CXXFLAGS = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
 
 CLEAN_IOP_QT_TEST = $(TEST_QT_MOC_CPP) qt/test/*.gcda qt/test/*.gcno
 
 CLEANFILES += $(CLEAN_IOP_QT_TEST)
 
-test_bitcoin_qt : qt/test/test_bitcoin-qt$(EXEEXT)
+test_iop_qt : qt/test/test_iop-qt$(EXEEXT)
 
-test_bitcoin_qt_check : qt/test/test_bitcoin-qt$(EXEEXT) FORCE
+test_iop_qt_check : qt/test/test_iop-qt$(EXEEXT) FORCE
 	$(MAKE) check-TESTS TESTS=$^
 
-test_bitcoin_qt_clean: FORCE
-	rm -f $(CLEAN_IOP_QT_TEST) $(qt_test_test_bitcoin_qt_OBJECTS)
+test_iop_qt_clean: FORCE
+	rm -f $(CLEAN_IOP_QT_TEST) $(qt_test_test_iop_qt_OBJECTS)

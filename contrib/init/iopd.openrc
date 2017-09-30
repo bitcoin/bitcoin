@@ -2,26 +2,26 @@
 
 # backward compatibility for existing gentoo layout 
 #
-if [ -d "/var/lib/bitcoin/.bitcoin" ]; then
-	IOPD_DEFAULT_DATADIR="/var/lib/bitcoin/.bitcoin"
+if [ -d "/var/lib/iop/.iop" ]; then
+	IOPD_DEFAULT_DATADIR="/var/lib/iop/.iop"
 else
-	IOPD_DEFAULT_DATADIR="/var/lib/bitcoind"
+	IOPD_DEFAULT_DATADIR="/var/lib/iopd"
 fi
 
-IOPD_CONFIGFILE=${IOPD_CONFIGFILE:-/etc/bitcoin/bitcoin.conf}
-IOPD_PIDDIR=${IOPD_PIDDIR:-/var/run/bitcoind}
-IOPD_PIDFILE=${IOPD_PIDFILE:-${IOPD_PIDDIR}/bitcoind.pid}
+IOPD_CONFIGFILE=${IOPD_CONFIGFILE:-/etc/iop/iop.conf}
+IOPD_PIDDIR=${IOPD_PIDDIR:-/var/run/iopd}
+IOPD_PIDFILE=${IOPD_PIDFILE:-${IOPD_PIDDIR}/iopd.pid}
 IOPD_DATADIR=${IOPD_DATADIR:-${IOPD_DEFAULT_DATADIR}}
-IOPD_USER=${IOPD_USER:-${IOP_USER:-bitcoin}}
-IOPD_GROUP=${IOPD_GROUP:-bitcoin}
-IOPD_BIN=${IOPD_BIN:-/usr/bin/bitcoind}
+IOPD_USER=${IOPD_USER:-${IOP_USER:-iop}}
+IOPD_GROUP=${IOPD_GROUP:-iop}
+IOPD_BIN=${IOPD_BIN:-/usr/bin/iopd}
 IOPD_NICE=${IOPD_NICE:-${NICELEVEL:-0}}
 IOPD_OPTS="${IOPD_OPTS:-${IOP_OPTS}}"
 
 name="Bitcoin Core Daemon"
 description="Bitcoin cryptocurrency P2P network daemon"
 
-command="/usr/bin/bitcoind"
+command="/usr/bin/iopd"
 command_args="-pid=\"${IOPD_PIDFILE}\" \
 		-conf=\"${IOPD_CONFIGFILE}\" \
 		-datadir=\"${IOPD_DATADIR}\" \
@@ -71,7 +71,7 @@ checkconfig()
 {
 	if ! grep -qs '^rpcpassword=' "${IOPD_CONFIGFILE}" ; then
 		eerror ""
-		eerror "ERROR: You must set a secure rpcpassword to run bitcoind."
+		eerror "ERROR: You must set a secure rpcpassword to run iopd."
 		eerror "The setting must appear in ${IOPD_CONFIGFILE}"
 		eerror ""
 		eerror "This password is security critical to securing wallets "

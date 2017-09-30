@@ -1,13 +1,13 @@
 *.tar.gz
 
 *.exe
-src/bitcoin
-src/bitcoind
-src/bitcoin-cli
-src/bitcoin-tx
-src/test/test_bitcoin
-src/test/test_bitcoin_fuzzy
-src/qt/test/test_bitcoin-qt
+src/iop
+src/iopd
+src/iop-cli
+src/iop-tx
+src/test/test_iop
+src/test/test_iop_fuzzy
+src/qt/test/test_iop-qt
 
 # autoreconf
 Makefile.in
@@ -30,8 +30,8 @@ config.log
 config.status
 configure
 libtool
-src/config/bitcoin-config.h
-src/config/bitcoin-config.h.in
+src/config/iop-config.h
+src/config/iop-config.h.in
 src/config/stamp-h1
 share/setup.nsi
 share/qt/Info.plist
@@ -74,12 +74,12 @@ src/qt/test/moc*.cpp
 # Compilation and Qt preprocessor part
 *.qm
 Makefile
-bitcoin-qt
+iop-qt
 Bitcoin-Qt.app
 
 # Unit-tests
 Makefile.test
-bitcoin-qt_test
+iop-qt_test
 
 # Resources cpp
 qrc_*.cpp
@@ -92,7 +92,7 @@ build
 *.gcno
 *.gcda
 /*.info
-test_bitcoin.coverage/
+test_iop.coverage/
 total.coverage/
 coverage_percent.txt
 
@@ -107,7 +107,7 @@ test/cache/*
 
 /doc/doxygen/
 
-libbitcoinconsensus.pc
+libiopconsensus.pc
 contrib/devtools/split-debug.sh
 .idea
 .vscode

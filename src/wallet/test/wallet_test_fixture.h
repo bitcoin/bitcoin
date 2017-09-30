@@ -5,7 +5,7 @@
 #ifndef IOP_WALLET_TEST_FIXTURE_H
 #define IOP_WALLET_TEST_FIXTURE_H
 
-#include "test/test_bitcoin.h"
+#include "test/test_iop.h"
 
 /** Testing setup and teardown for wallet.
  */

@@ -579,7 +579,7 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>iop-core</name>
     <message>
         <source>Information</source>
         <translation>Information</translation>

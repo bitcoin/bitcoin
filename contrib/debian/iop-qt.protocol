@@ -1,6 +1,6 @@
 [Protocol]
-exec=bitcoin-qt '%u'
-protocol=bitcoin
+exec=iop-qt '%u'
+protocol=iop
 input=none
 output=none
 helper=true

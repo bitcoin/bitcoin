@@ -18,7 +18,7 @@ class KeyPoolTest(BitcoinTestFramework):
         
         # Encrypt wallet and wait to terminate
         nodes[0].encryptwallet('test')
-        self.bitcoind_processes[0].wait()
+        self.iopd_processes[0].wait()
         # Restart node 0
         nodes[0] = self.start_node(0, self.options.tmpdir)
         # Keep creating keys

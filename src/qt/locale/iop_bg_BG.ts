@@ -418,7 +418,7 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>iop-core</name>
     <message>
         <source>Bitcoin Core</source>
         <translation>Биткойн ядро</translation>
