@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "servicenodeman.h"
+#include "servicenode-sync.h"
 #include "darksend.h"
 #include "util.h"
 #include "addrman.h"
@@ -16,7 +17,7 @@ CServicenodeMan snodeman;
 void CServicenodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
     if(fLiteMode) return; //disable all Darksend/Servicenode related functionality
-    //if(!servicenodeSync.IsBlockchainSynced()) return;
+    if(!servicenodeSync.IsBlockchainSynced()) return;
 
     LOCK(cs_process_message);
 
@@ -41,7 +42,7 @@ bool CServicenodeMan::CheckSnbAndUpdateServicenodeList(CServicenodeBroadcast snb
     LogPrint("servicenode", "CServicenodeMan::CheckSnbAndUpdateServicenodeList - Servicenode broadcast, vin: %s\n", snb.vin.ToString());
 
     if(mapSeenServicenodeBroadcast.count(snb.GetHash())) { //seen
-//        servicenodeSync.AddedServicenodeList(snb.GetHash());
+        servicenodeSync.AddedServicenodeList(snb.GetHash());
         return true;
     }
     mapSeenServicenodeBroadcast.insert(make_pair(snb.GetHash(), snb));
@@ -70,7 +71,7 @@ bool CServicenodeMan::CheckSnbAndUpdateServicenodeList(CServicenodeBroadcast snb
     // make sure it's still unspent
     //  - this is checked later by .check() in many places and by ThreadCheckDarkSendPool()
     if(snb.CheckInputsAndAdd(nDos)) {
-//        servicenodeSync.AddedServicenodeList(snb.GetHash());
+        servicenodeSync.AddedServicenodeList(snb.GetHash());
     } else {
         LogPrintf("CServicenodeMan::CheckSnbAndUpdateServicenodeList - Rejected Servicenode entry %s\n", snb.addr.ToString());
         return false;
@@ -112,7 +113,7 @@ bool CServicenodeMan::Add(CServicenode &sn)
 void CServicenodeMan::UpdateServicenodeList(CServicenodeBroadcast snb) {
     mapSeenServicenodePing.insert(make_pair(snb.lastPing.GetHash(), snb.lastPing));
     mapSeenServicenodeBroadcast.insert(make_pair(snb.GetHash(), snb));
-    //servicenodeSync.AddedServicenodeList(snb.GetHash());
+    servicenodeSync.AddedServicenodeList(snb.GetHash());
 
     LogPrintf("CServicenodeMan::UpdateServicenodeList() - addr: %s\n    vin: %s\n", snb.addr.ToString(), snb.vin.ToString());
 
@@ -139,5 +140,49 @@ void CServicenodeMan::Remove(CTxIn vin)
         }
         ++it;
     }
+}
+
+// TODO remove this later
+int GetMinServicenodePaymentsProto() {
+    return IsSporkActive(SPORK_10_THRONE_PAY_UPDATED_NODES)
+                         ? MIN_THRONE_PAYMENT_PROTO_VERSION_2
+                         : MIN_THRONE_PAYMENT_PROTO_VERSION_1;
+}
+
+
+int CServicenodeMan::CountEnabled(int protocolVersion)
+{
+    int i = 0;
+    protocolVersion = protocolVersion == -1 ? GetMinServicenodePaymentsProto() : protocolVersion;
+
+    BOOST_FOREACH(CServicenode& sn, vServicenodes) {
+        sn.Check();
+        if(sn.protocolVersion < protocolVersion || !sn.IsEnabled()) continue;
+        i++;
+    }
+
+    return i;
+}
+
+void CServicenodeMan::DsegUpdate(CNode* pnode)
+{
+    LOCK(cs);
+
+    if(Params().NetworkID() == CBaseChainParams::MAIN) {
+        if(!(pnode->addr.IsRFC1918() || pnode->addr.IsLocal())){
+            std::map<CNetAddr, int64_t>::iterator it = mWeAskedForServicenodeList.find(pnode->addr);
+            if (it != mWeAskedForServicenodeList.end())
+            {
+                if (GetTime() < (*it).second) {
+                    LogPrintf("dseg - we already asked %s for the list; skipping...\n", pnode->addr.ToString());
+                    return;
+                }
+            }
+        }
+    }
+    
+    pnode->PushMessage("dseg", CTxIn());
+    int64_t askAgain = GetTime() + THRONES_DSEG_SECONDS;
+    mWeAskedForServicenodeList[pnode->addr] = askAgain;
 }
 

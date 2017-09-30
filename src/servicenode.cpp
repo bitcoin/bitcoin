@@ -4,6 +4,7 @@
 
 #include "servicenode.h"
 #include "servicenodeman.h"
+#include "servicenode-sync.h"
 #include "darksend.h"
 #include "util.h"
 #include "sync.h"
@@ -291,7 +292,7 @@ bool CServicenodeBroadcast::CheckAndUpdate(int& nDos)
             pmn->Check();
             if(pmn->IsEnabled()) Relay();
         }
-    //    servicenodeSync.AddedServicenodeList(GetHash());
+        servicenodeSync.AddedServicenodeList(GetHash());
     }
 
     return true;
@@ -330,7 +331,7 @@ bool CServicenodeBroadcast::CheckInputsAndAdd(int& nDoS)
         if(!lockMain) {
             // not snb fault, let it to be checked again later
             snodeman.mapSeenServicenodeBroadcast.erase(GetHash());
-//            servicenodeSync.mapSeenSyncMNB.erase(GetHash());
+            servicenodeSync.mapSeenSyncMNB.erase(GetHash());
             return false;
         }
 
@@ -347,7 +348,7 @@ bool CServicenodeBroadcast::CheckInputsAndAdd(int& nDoS)
         LogPrintf("snb - Input must have at least %d confirmations\n", SERVICENODE_MIN_CONFIRMATIONS);
         // maybe we miss few blocks, let this snb to be checked again later
         snodeman.mapSeenServicenodeBroadcast.erase(GetHash());
-        //servicenodeSync.mapSeenSyncMNB.erase(GetHash());
+        servicenodeSync.mapSeenSyncMNB.erase(GetHash());
         return false;
     }
 
@@ -444,11 +445,11 @@ bool CServicenodeBroadcast::Create(std::string strService, std::string strKeySer
     CKey keyServicenodeNew;
 
     //need correct blocks to send ping
-    //if(!fOffline && !servicenodeSync.IsBlockchainSynced()) {
-    //    strErrorMessage = "Sync in progress. Must wait until sync is complete to start Servicenode";
-    //    LogPrintf("CServicenodeBroadcast::Create -- %s\n", strErrorMessage);
-    //    return false;
-    //}
+    if(!fOffline && !servicenodeSync.IsBlockchainSynced()) {
+        strErrorMessage = "Sync in progress. Must wait until sync is complete to start Servicenode";
+        LogPrintf("CServicenodeBroadcast::Create -- %s\n", strErrorMessage);
+        return false;
+    }
 
     if(!darkSendSigner.SetKey(strKeyServicenode, strErrorMessage, keyServicenodeNew, pubKeyServicenodeNew))
     {

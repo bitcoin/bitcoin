@@ -34,9 +34,16 @@ private:
     // critical section to protect the inner data structures specifically on messaging
     mutable CCriticalSection cs_process_message;
 
-public:
     // map to hold all SNs
     std::vector<CServicenode> vServicenodes;
+    // who's asked for the Servicenode list and the last time
+    std::map<CNetAddr, int64_t> mAskedUsForServicenodeList;
+    // who we asked for the Servicenode list and the last time
+    std::map<CNetAddr, int64_t> mWeAskedForServicenodeList;
+    // which Servicenodes we've asked for
+    std::map<COutPoint, int64_t> mWeAskedForServicenodeListEntry;
+
+public:
     // Keep track of all broadcasts I've seen
     map<uint256, CServicenodeBroadcast> mapSeenServicenodeBroadcast;
     // Keep track of all pings I've seen
@@ -46,13 +53,15 @@ public:
 
     /// Perform complete check and only then update list and maps
     bool CheckSnbAndUpdateServicenodeList(CServicenodeBroadcast snb, int& nDos);
+    void DsegUpdate(CNode* pnode);
     /// Find an entry
     CServicenode* Find(const CTxIn& vin);
     void Remove(CTxIn vin);
+    int CountEnabled(int protocolVersion = -1);
 
     /// Add an entry
     bool Add(CServicenode &mn);
-    /// Return the number of (unique) Thrones
+    /// Return the number of (unique) Servicenodes
     int size() { return vServicenodes.size(); }
     void UpdateServicenodeList(CServicenodeBroadcast snb);
 };
