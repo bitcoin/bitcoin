@@ -1044,6 +1044,9 @@ static RPCHelpMan addmultisigaddress()
         } else {
             pubkeys.push_back(AddrToPubKey(spk_man, keys_or_addrs[i].get_str()));
         }
+        if (sort && !pubkeys.back().IsCompressed()) {
+            throw std::runtime_error(strprintf("Compressed key required for BIP67: %s", keys_or_addrs[i].get_str()));
+        }
     }
 
     if (!request.params[3].isNull()) {

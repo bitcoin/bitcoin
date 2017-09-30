@@ -158,6 +158,9 @@ static RPCHelpMan createmultisig()
     for (unsigned int i = 0; i < keys.size(); ++i) {
         if (IsHex(keys[i].get_str()) && (keys[i].get_str().length() == 66 || keys[i].get_str().length() == 130)) {
             pubkeys.push_back(HexToPubKey(keys[i].get_str()));
+            if (sort && !pubkeys.back().IsCompressed()) {
+                throw std::runtime_error(strprintf("Compressed key required for BIP67: %s", keys[i].get_str()));
+            }
         } else {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Invalid public key: %s\n.", keys[i].get_str()));
         }
