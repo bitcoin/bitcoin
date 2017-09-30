@@ -71,7 +71,7 @@ namespace {
         char type;
         std::string addr;
         MinerEntry() : type(WL_ADDRESS), addr(DUMMY) {}
-        MinerEntry(CBitcoinAddress address) : type(WL_ADDRESS), addr(address.ToString()) {}
+        MinerEntry(CIoPAddress address) : type(WL_ADDRESS), addr(address.ToString()) {}
         MinerEntry(std::string address) : type(WL_ADDRESS), addr(address) {}
         
         template<typename Stream>

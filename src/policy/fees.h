@@ -2,8 +2,8 @@
 // Copyright (c) 2009-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#ifndef BITCOIN_POLICYESTIMATOR_H
-#define BITCOIN_POLICYESTIMATOR_H
+#ifndef IOP_POLICYESTIMATOR_H
+#define IOP_POLICYESTIMATOR_H
 
 #include "amount.h"
 #include "feerate.h"
@@ -294,4 +294,4 @@ private:
     FastRandomContext insecure_rand;
 };
 
-#endif /*BITCOIN_POLICYESTIMATOR_H */
+#endif /*IOP_POLICYESTIMATOR_H */

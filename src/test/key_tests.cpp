@@ -10,7 +10,7 @@
 #include "uint256.h"
 #include "util.h"
 #include "utilstrencodings.h"
-#include "test/test_bitcoin.h"
+#include "test/test_iop.h"
 
 #include <string>
 #include <vector>
@@ -21,10 +21,10 @@
 // static const std::string strSecret2     ("5KC4ejrDjv152FGwP386VD1i2NYc5KkfSMyv1nGy1VGDxGHqVY3");
 static const std::string strSecret1C    ("8PaFEa1MTGG6Ck6XjHAvJUhYHycoqESptxz57Cbf9d3v9ZjPXR5J");
 static const std::string strSecret2C    ("8N4ii3fC1pYeK3W7rcCcLQJyKn7nn5XBsmiRyS7cQyxFMHkGGicw");
-// static const CBitcoinAddress addr1 ("1QFqqMUD55ZV3PJEJZtaKCsQmjLT6JkjvJ");
-// static const CBitcoinAddress addr2 ("1F5y5E5FMc5YzdJtB9hLaUe43GDxEKXENJ");
-static const CBitcoinAddress addr1C("p83Lcskdh3PNE2RuLcLPA7p2TQJYjNk9vt");
-static const CBitcoinAddress addr2C("pKKqjhL4b7YTNqyMARLUiWKUXDqbke8Rvi");
+// static const CIoPAddress addr1 ("1QFqqMUD55ZV3PJEJZtaKCsQmjLT6JkjvJ");
+// static const CIoPAddress addr2 ("1F5y5E5FMc5YzdJtB9hLaUe43GDxEKXENJ");
+static const CIoPAddress addr1C("p83Lcskdh3PNE2RuLcLPA7p2TQJYjNk9vt");
+static const CIoPAddress addr2C("pKKqjhL4b7YTNqyMARLUiWKUXDqbke8Rvi");
 
 
 static const std::string strAddressBad("pKKqjhL4b7YuNqyMARLUiWKUXDqbke8Rvi");
@@ -34,7 +34,7 @@ BOOST_FIXTURE_TEST_SUITE(key_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(key_test1)
 {
-    CBitcoinSecret bsecret1, bsecret2, bsecret1C, bsecret2C, baddress1;
+    CIoPSecret bsecret1, bsecret2, bsecret1C, bsecret2C, baddress1;
     // BOOST_CHECK( bsecret1.SetString (strSecret1));
     // BOOST_CHECK( bsecret2.SetString (strSecret2));
     BOOST_CHECK( bsecret1C.SetString(strSecret1C));

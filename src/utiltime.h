@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_UTILTIME_H
-#define BITCOIN_UTILTIME_H
+#ifndef IOP_UTILTIME_H
+#define IOP_UTILTIME_H
 
 #include <stdint.h>
 #include <string>
@@ -29,4 +29,4 @@ void MilliSleep(int64_t n);
 
 std::string DateTimeStrFormat(const char* pszFormat, int64_t nTime);
 
-#endif // BITCOIN_UTILTIME_H
+#endif // IOP_UTILTIME_H

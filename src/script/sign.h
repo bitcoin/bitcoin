@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_SCRIPT_SIGN_H
-#define BITCOIN_SCRIPT_SIGN_H
+#ifndef IOP_SCRIPT_SIGN_H
+#define IOP_SCRIPT_SIGN_H
 
 #include "script/interpreter.h"
 
@@ -81,4 +81,4 @@ SignatureData CombineSignatures(const CScript& scriptPubKey, const BaseSignature
 SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nIn);
 void UpdateTransaction(CMutableTransaction& tx, unsigned int nIn, const SignatureData& data);
 
-#endif // BITCOIN_SCRIPT_SIGN_H
+#endif // IOP_SCRIPT_SIGN_H

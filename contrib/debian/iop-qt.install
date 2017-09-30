@@ -1,0 +1,6 @@
+usr/local/bin/iop-qt usr/bin
+share/pixmaps/iop32.xpm usr/share/pixmaps
+share/pixmaps/iop16.xpm usr/share/pixmaps
+share/pixmaps/iop128.png usr/share/pixmaps
+debian/iop-qt.desktop usr/share/applications
+debian/iop-qt.protocol usr/share/kde4/services/

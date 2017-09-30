@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_CLIENTMODEL_H
-#define BITCOIN_QT_CLIENTMODEL_H
+#ifndef IOP_QT_CLIENTMODEL_H
+#define IOP_QT_CLIENTMODEL_H
 
 #include <QObject>
 #include <QDateTime>
@@ -34,7 +34,7 @@ enum NumConnections {
     CONNECTIONS_ALL  = (CONNECTIONS_IN | CONNECTIONS_OUT),
 };
 
-/** Model for Bitcoin network client. */
+/** Model for IoP network client. */
 class ClientModel : public QObject
 {
     Q_OBJECT
@@ -116,4 +116,4 @@ public Q_SLOTS:
     void updateBanlist();
 };
 
-#endif // BITCOIN_QT_CLIENTMODEL_H
+#endif // IOP_QT_CLIENTMODEL_H

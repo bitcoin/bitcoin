@@ -1,0 +1,13 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=IoP Core
+Comment=Connect to the IoP P2P Network
+Comment[de]=Verbinde mit dem IoP peer-to-peer Netzwerk
+Comment[fr]=IoP, monnaie virtuelle cryptographique pair à pair
+Comment[tr]=IoP, eşten eşe kriptografik sanal para birimi
+Exec=iop-qt %u
+Terminal=false
+Type=Application
+Icon=iop128
+MimeType=x-scheme-handler/iop;
+Categories=Office;Finance;

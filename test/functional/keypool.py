@@ -4,10 +4,10 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the wallet keypool and interaction with wallet encryption/locking."""
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import IoPTestFramework
 from test_framework.util import *
 
-class KeyPoolTest(BitcoinTestFramework):
+class KeyPoolTest(IoPTestFramework):
 
     def run_test(self):
         nodes = self.nodes
@@ -18,7 +18,7 @@ class KeyPoolTest(BitcoinTestFramework):
         
         # Encrypt wallet and wait to terminate
         nodes[0].encryptwallet('test')
-        self.bitcoind_processes[0].wait()
+        self.iopd_processes[0].wait()
         # Restart node 0
         nodes[0] = self.start_node(0, self.options.tmpdir)
         # Keep creating keys

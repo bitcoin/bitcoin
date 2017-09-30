@@ -9,10 +9,10 @@ filters are not enabled.
 """
 
 from test_framework.mininode import *
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import IoPTestFramework
 from test_framework.util import *
 
-class P2PMempoolTests(BitcoinTestFramework):
+class P2PMempoolTests(IoPTestFramework):
 
     def __init__(self):
         super().__init__()

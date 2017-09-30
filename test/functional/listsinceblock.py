@@ -4,10 +4,10 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the listsincelast RPC."""
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import IoPTestFramework
 from test_framework.util import assert_equal
 
-class ListSinceBlockTest (BitcoinTestFramework):
+class ListSinceBlockTest (IoPTestFramework):
 
     def __init__(self):
         super().__init__()
@@ -92,8 +92,8 @@ class ListSinceBlockTest (BitcoinTestFramework):
 
         Problematic case:
 
-        1. User 1 receives BTC in tx1 from utxo1 in block aa1.
-        2. User 2 receives BTC in tx2 from utxo1 (same) in block bb1
+        1. User 1 receives IOP in tx1 from utxo1 in block aa1.
+        2. User 2 receives IOP in tx2 from utxo1 (same) in block bb1
         3. User 1 sees 2 confirmations at block aa3.
         4. Reorg into bb chain.
         5. User 1 asks `listsinceblock aa3` and does not see that tx1 is now

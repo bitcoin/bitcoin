@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the zapwallettxes functionality.
 
-- start two bitcoind nodes
+- start two iopd nodes
 - create two transactions on node 0 - one is confirmed and one is unconfirmed.
 - restart node 0 and verify that both the confirmed and the unconfirmed
   transactions are still available.
@@ -14,12 +14,12 @@
   transactions are still available, but that the unconfirmed transaction has
   been zapped.
 """
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import IoPTestFramework
 from test_framework.util import (assert_equal,
                                  assert_raises_jsonrpc,
                                  )
 
-class ZapWalletTXesTest (BitcoinTestFramework):
+class ZapWalletTXesTest (IoPTestFramework):
 
     def __init__(self):
         super().__init__()

@@ -5,41 +5,41 @@ and tests weren't explicitly disabled.
 
 After configuring, they can be run with `make check`.
 
-To run the bitcoind tests manually, launch `src/test/test_bitcoin`.
+To run the iopd tests manually, launch `src/test/test_iop`.
 
-To add more bitcoind tests, add `BOOST_AUTO_TEST_CASE` functions to the existing
+To add more iopd tests, add `BOOST_AUTO_TEST_CASE` functions to the existing
 .cpp files in the `test/` directory or add new .cpp files that
 implement new BOOST_AUTO_TEST_SUITE sections.
 
-To run the bitcoin-qt tests manually, launch `src/qt/test/test_bitcoin-qt`
+To run the iop-qt tests manually, launch `src/qt/test/test_iop-qt`
 
-To add more bitcoin-qt tests, add them to the `src/qt/test/` directory and
+To add more iop-qt tests, add them to the `src/qt/test/` directory and
 the `src/qt/test/test_main.cpp` file.
 
 ### Running individual tests
 
-test_bitcoin has some built-in command-line arguments; for
+test_iop has some built-in command-line arguments; for
 example, to run just the getarg_tests verbosely:
 
-    test_bitcoin --log_level=all --run_test=getarg_tests
+    test_iop --log_level=all --run_test=getarg_tests
 
 ... or to run just the doubledash test:
 
-    test_bitcoin --run_test=getarg_tests/doubledash
+    test_iop --run_test=getarg_tests/doubledash
 
-Run `test_bitcoin --help` for the full list.
+Run `test_iop --help` for the full list.
 
 ### Note on adding test cases
 
 The sources in this directory are unit test cases.  Boost includes a
-unit testing framework, and since bitcoin already uses boost, it makes
+unit testing framework, and since iop already uses boost, it makes
 sense to simply use this framework rather than require developers to
 configure some other framework (we want as few impediments to creating
 unit tests as possible).
 
-The build system is setup to compile an executable called `test_bitcoin`
+The build system is setup to compile an executable called `test_iop`
 that runs all of the unit tests.  The main source file is called
-test_bitcoin.cpp. To add a new unit test file to our test suite you need 
+test_iop.cpp. To add a new unit test file to our test suite you need 
 to add the file to `src/Makefile.test.include`. The pattern is to create 
 one test file for each class or source file for which you want to create 
 unit tests.  The file naming convention is `<source_filename>_tests.cpp` 

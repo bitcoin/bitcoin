@@ -5,7 +5,7 @@
 #include "bench.h"
 #include "key.h"
 #if defined(HAVE_CONSENSUS_LIB)
-#include "script/bitcoinconsensus.h"
+#include "script/iopconsensus.h"
 #endif
 #include "script/script.h"
 #include "script/sign.h"
@@ -95,7 +95,7 @@ static void VerifyScriptBench(benchmark::State& state)
 #if defined(HAVE_CONSENSUS_LIB)
         CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
         stream << txSpend;
-        int csuccess = bitcoinconsensus_verify_script_with_amount(
+        int csuccess = iopconsensus_verify_script_with_amount(
             txCredit.vout[0].scriptPubKey.data(),
             txCredit.vout[0].scriptPubKey.size(),
             txCredit.vout[0].nValue,

@@ -33,10 +33,10 @@ and confirm again balances are correct.
 from random import randint
 import shutil
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import IoPTestFramework
 from test_framework.util import *
 
-class WalletBackupTest(BitcoinTestFramework):
+class WalletBackupTest(IoPTestFramework):
 
     def __init__(self):
         super().__init__()

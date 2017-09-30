@@ -1,0 +1,81 @@
+policy_module(iop, 1.100.1)
+
+########################################
+#
+# Declarations
+#
+
+type iop_t;
+type iop_exec_t;
+init_daemon_domain(iop_t, iop_exec_t)
+
+permissive iop_t;
+
+type iop_initrc_exec_t;
+init_script_file(iop_initrc_exec_t)
+
+type iop_conf_t;
+files_type(iop_conf_t)
+
+type iop_var_lib_t;
+files_type(iop_var_lib_t)
+
+type iop_var_run_t;
+files_type(iop_var_run_t)
+
+type iop_port_t;
+corenet_port(iop_port_t)
+
+########################################
+#
+# iop local policy
+#
+allow iop_t self:process { fork };
+
+allow iop_t self:fifo_file rw_fifo_file_perms;
+allow iop_t self:unix_stream_socket create_stream_socket_perms;
+
+manage_dirs_pattern(iop_t, iop_conf_t, iop_conf_t)
+manage_files_pattern(iop_t, iop_conf_t, iop_conf_t)
+
+manage_dirs_pattern(iop_t, iop_var_lib_t, iop_var_lib_t)
+manage_files_pattern(iop_t, iop_var_lib_t, iop_var_lib_t)
+files_var_lib_filetrans(iop_t, iop_var_lib_t, { dir file })
+
+manage_dirs_pattern(iop_t, iop_var_run_t, iop_var_run_t)
+manage_files_pattern(iop_t, iop_var_run_t, iop_var_run_t)
+
+sysnet_dns_name_resolve(iop_t)
+corenet_all_recvfrom_unlabeled(iop_t)
+
+allow iop_t self:tcp_socket create_stream_socket_perms;
+corenet_tcp_sendrecv_generic_if(iop_t)
+corenet_tcp_sendrecv_generic_node(iop_t)
+corenet_tcp_sendrecv_all_ports(iop_t)
+corenet_tcp_bind_generic_node(iop_t)
+
+gen_require(`
+    type iop_port_t;
+')
+allow iop_t iop_port_t:tcp_socket name_bind;
+
+gen_require(`
+    type iop_port_t;
+')
+allow iop_t iop_port_t:tcp_socket name_connect;
+
+domain_use_interactive_fds(iop_t)
+
+files_read_etc_files(iop_t)
+
+miscfiles_read_localization(iop_t)
+
+sysnet_dns_name_resolve(iop_t)
+
+allow iop_t iop_exec_t:file execute_no_trans;
+allow iop_t self:process setsched;
+corecmd_exec_ls(iop_t)
+corenet_tcp_connect_http_port(iop_t)
+dev_read_urand(iop_t)
+fs_getattr_xattr_fs(iop_t)
+kernel_read_system_state(iop_t)

@@ -2,17 +2,17 @@
 # Copyright (c) 2014-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Test running bitcoind with the -rpcbind and -rpcallowip options."""
+"""Test running iopd with the -rpcbind and -rpcallowip options."""
 
 import socket
 import sys
 
-from test_framework.test_framework import BitcoinTestFramework, SkipTest
+from test_framework.test_framework import IoPTestFramework, SkipTest
 from test_framework.util import *
 from test_framework.netutil import *
 
 
-class RPCBindTest(BitcoinTestFramework):
+class RPCBindTest(IoPTestFramework):
 
     def __init__(self):
         super().__init__()
@@ -37,7 +37,7 @@ class RPCBindTest(BitcoinTestFramework):
             base_args += ['-rpcallowip=' + x for x in allow_ips]
         binds = ['-rpcbind='+addr for addr in addresses]
         self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir, [base_args + binds], connect_to)
-        pid = self.bitcoind_processes[0].pid
+        pid = self.iopd_processes[0].pid
         assert_equal(set(get_bind_addrs(pid)), set(expected))
         self.stop_nodes()
 

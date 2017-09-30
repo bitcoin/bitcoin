@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_NETMESSAGEMAKER_H
-#define BITCOIN_NETMESSAGEMAKER_H
+#ifndef IOP_NETMESSAGEMAKER_H
+#define IOP_NETMESSAGEMAKER_H
 
 #include "net.h"
 #include "serialize.h"
@@ -33,4 +33,4 @@ private:
     const int nVersion;
 };
 
-#endif // BITCOIN_NETMESSAGEMAKER_H
+#endif // IOP_NETMESSAGEMAKER_H

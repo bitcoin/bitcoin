@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_BANTABLEMODEL_H
-#define BITCOIN_QT_BANTABLEMODEL_H
+#ifndef IOP_QT_BANTABLEMODEL_H
+#define IOP_QT_BANTABLEMODEL_H
 
 #include "net.h"
 
@@ -70,4 +70,4 @@ private:
     std::unique_ptr<BanTablePriv> priv;
 };
 
-#endif // BITCOIN_QT_BANTABLEMODEL_H
+#endif // IOP_QT_BANTABLEMODEL_H

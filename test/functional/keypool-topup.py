@@ -12,14 +12,14 @@ Two nodes. Node1 is under test. Node0 is providing transactions and generating b
 - connect node1 to node0. Verify that they sync and node1 receives its funds."""
 import shutil
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import IoPTestFramework
 from test_framework.util import (
     assert_equal,
     connect_nodes_bi,
     sync_blocks,
 )
 
-class KeypoolRestoreTest(BitcoinTestFramework):
+class KeypoolRestoreTest(IoPTestFramework):
     def __init__(self):
         super().__init__()
         self.setup_clean_chain = True
