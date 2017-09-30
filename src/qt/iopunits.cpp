@@ -17,9 +17,9 @@ BitcoinUnits::BitcoinUnits(QObject *parent):
 QList<BitcoinUnits::Unit> BitcoinUnits::availableUnits()
 {
     QList<BitcoinUnits::Unit> unitlist;
-    unitlist.append(BTC);
-    unitlist.append(mBTC);
-    unitlist.append(uBTC);
+    unitlist.append(IOP);
+    unitlist.append(mIOP);
+    unitlist.append(uIOP);
     return unitlist;
 }
 
@@ -27,9 +27,9 @@ bool BitcoinUnits::valid(int unit)
 {
     switch(unit)
     {
-    case BTC:
-    case mBTC:
-    case uBTC:
+    case IOP:
+    case mIOP:
+    case uIOP:
         return true;
     default:
         return false;
@@ -40,9 +40,9 @@ QString BitcoinUnits::name(int unit)
 {
     switch(unit)
     {
-    case BTC: return QString("BTC");
-    case mBTC: return QString("mBTC");
-    case uBTC: return QString::fromUtf8("μBTC");
+    case IOP: return QString("IOP");
+    case mIOP: return QString("mIOP");
+    case uIOP: return QString::fromUtf8("μIOP");
     default: return QString("???");
     }
 }
@@ -51,9 +51,9 @@ QString BitcoinUnits::description(int unit)
 {
     switch(unit)
     {
-    case BTC: return QString("Bitcoins");
-    case mBTC: return QString("Milli-Bitcoins (1 / 1" THIN_SP_UTF8 "000)");
-    case uBTC: return QString("Micro-Bitcoins (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
+    case IOP: return QString("Bitcoins");
+    case mIOP: return QString("Milli-Bitcoins (1 / 1" THIN_SP_UTF8 "000)");
+    case uIOP: return QString("Micro-Bitcoins (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
     default: return QString("???");
     }
 }
@@ -62,9 +62,9 @@ qint64 BitcoinUnits::factor(int unit)
 {
     switch(unit)
     {
-    case BTC:  return 100000000;
-    case mBTC: return 100000;
-    case uBTC: return 100;
+    case IOP:  return 100000000;
+    case mIOP: return 100000;
+    case uIOP: return 100;
     default:   return 100000000;
     }
 }
@@ -73,9 +73,9 @@ int BitcoinUnits::decimals(int unit)
 {
     switch(unit)
     {
-    case BTC: return 8;
-    case mBTC: return 5;
-    case uBTC: return 2;
+    case IOP: return 8;
+    case mIOP: return 5;
+    case uIOP: return 2;
     default: return 0;
     }
 }

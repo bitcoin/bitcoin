@@ -141,13 +141,13 @@ class AbandonConflictTest(BitcoinTestFramework):
         connect_nodes(self.nodes[0], 1)
         sync_blocks(self.nodes)
 
-        # Verify that B and C's 10 BTC outputs are available for spending again because AB1 is now conflicted
+        # Verify that B and C's 10 IOP outputs are available for spending again because AB1 is now conflicted
         newbalance = self.nodes[0].getbalance()
         assert_equal(newbalance, balance + Decimal("20"))
         balance = newbalance
 
         # There is currently a minor bug around this and so this test doesn't work.  See Issue #7315
-        # Invalidate the block with the double spend and B's 10 BTC output should no longer be available
+        # Invalidate the block with the double spend and B's 10 IOP output should no longer be available
         # Don't think C's should either
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
         newbalance = self.nodes[0].getbalance()

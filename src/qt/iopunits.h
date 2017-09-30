@@ -56,9 +56,9 @@ public:
      */
     enum Unit
     {
-        BTC,
-        mBTC,
-        uBTC
+        IOP,
+        mIOP,
+        uIOP
     };
 
     enum SeparatorStyle

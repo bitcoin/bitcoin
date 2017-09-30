@@ -395,7 +395,7 @@ git merge commit are mentioned.
 - #7967 `8c1e49b` Add feerate option to `fundrawtransaction` (jonasschnelli)
 - #8118 `9b6a48c` Reduce unnecessary hashing in `signrawtransaction` (jonasnick)
 - #7957 `79004d4` Add support for transaction sequence number (jonasschnelli)
-- #8153 `75ec320` `fundrawtransaction` feeRate: Use BTC/kB (MarcoFalke)
+- #8153 `75ec320` `fundrawtransaction` feeRate: Use IOP/kB (MarcoFalke)
 - #7292 `7ce9ac5` Expose ancestor/descendant information over RPC (sdaftuar)
 - #8171 `62fcf27` Fix createrawtx sequence number unsigned int parsing (jonasschnelli)
 - #7892 `9c3d0fa` Add full UTF-8 support to RPC (laanwj)

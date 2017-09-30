@@ -450,10 +450,10 @@ Then when building, override the remote URLs that gbuild would otherwise pull fr
 cd /some/root/path/
 git clone https://github.com/iop-core/iop-detached-sigs.git
 
-BTCPATH=/some/root/path/iop
+IOPPATH=/some/root/path/iop
 SIGPATH=/some/root/path/iop-detached-sigs
 
-./bin/gbuild --url iop=${BTCPATH},signature=${SIGPATH} ../iop/contrib/gitian-descriptors/gitian-win-signer.yml
+./bin/gbuild --url iop=${IOPPATH},signature=${SIGPATH} ../iop/contrib/gitian-descriptors/gitian-win-signer.yml
 ```
 
 Signing externally
