@@ -8,7 +8,7 @@ Upgrading to this release is recommended.
 
 Please report bugs using the issue tracker at github:
 
-  https://github.com/iop/iop/issues
+  https://github.com/bitcoin/bitcoin/issues
 
 How to Upgrade
 --------------

@@ -7,7 +7,7 @@ bug fixes.
 
 Please report bugs using the issue tracker at github:
 
-  https://github.com/iop/iop/issues
+  https://github.com/bitcoin/bitcoin/issues
 
 Upgrading and downgrading
 =========================
@@ -230,7 +230,7 @@ bindings such as [python-ioplib](https://pypi.python.org/pypi/python-ioplib) or
 alternative node implementations.
 
 This library is called `libiopconsensus.so` (or, `.dll` for Windows).
-Its interface is defined in the C header [iopconsensus.h](https://github.com/iop/iop/blob/0.10/src/script/iopconsensus.h).
+Its interface is defined in the C header [iopconsensus.h](https://github.com/bitcoin/bitcoin/blob/0.10/src/script/iopconsensus.h).
 
 In its initial version the API includes two functions:
 

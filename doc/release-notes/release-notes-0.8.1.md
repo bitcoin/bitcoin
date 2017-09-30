@@ -5,7 +5,7 @@ This is a maintenance release that adds a new network rule to avoid
 a chain-forking incompatibility with versions 0.7.2 and earlier.
 
 Please report bugs using the issue tracker at github:
-  https://github.com/iop/iop/issues
+  https://github.com/bitcoin/bitcoin/issues
 
 
 How to Upgrade

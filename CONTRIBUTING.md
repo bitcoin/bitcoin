@@ -1,7 +1,7 @@
 Contributing to IoP Core
 ============================
 
-The Bitcoin Core project operates an open contributor model where anyone is
+The IoP Core project operates an open contributor model where anyone is
 welcome to contribute towards development in the form of peer review, testing
 and patches. This document explains the practical process and guidelines for
 contributing.
@@ -87,7 +87,7 @@ in the body of the pull request to indicate tasks are pending.
 
 The body of the pull request should contain enough description about what the
 patch does together with any justification/reasoning. You should include
-references to any discussions (for example other tickets or mailing list
+references to any discussions (for example other tickets or Discord
 discussions).
 
 At this stage one should expect comments and review from other contributors. You
@@ -181,7 +181,7 @@ In general, all pull requests must:
 
 Patches that change IoP consensus rules are considerably more involved than
 normal because they affect the entire ecosystem and so must be preceded by
-extensive mailing list discussions and have a numbered BIP. While each case will
+extensive Discord discussions and have a numbered BIP. While each case will
 be different, one should be prepared to expend more time and effort than for
 other kinds of patches because of increased peer review and consensus building
 requirements.
@@ -194,7 +194,7 @@ request. Typically reviewers will review the code for obvious errors, as well as
 test out the patch set and opine on the technical merits of the patch. Project
 maintainers take into account the peer review when determining if there is
 consensus to merge a pull request (remember that discussions may have been
-spread out over GitHub, mailing list and IRC discussions). The following
+spread out over GitHub, Discord discussions). The following
 language is used within pull-request comments:
 
   - ACK means "I have tested the code and I agree it should be merged";
@@ -221,7 +221,7 @@ mistakes could be very costly to the wider community. This includes refactoring
 of consensus critical code.
 
 Where a patch set proposes to change the IoP consensus, it must have been
-discussed extensively on the mailing list and IRC, be accompanied by a widely
+discussed extensively on the Discord, be accompanied by a widely
 discussed BIP and have a generally widely perceived technical consensus of being
 a worthwhile change based on the judgement of the maintainers.
 

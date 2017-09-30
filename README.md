@@ -1,7 +1,7 @@
 IoP Core integration/staging tree
 =====================================
 
-[![Build Status](https://travis-ci.org/iop/iop.svg?branch=master)](https://travis-ci.org/iop/iop)
+[![Build Status](https://travis-ci.org/Internet-of-People/iop-hd.svg?branch=master)](https://travis-ci.org/Internet-of-People/iop-hd)
 
 https://iopcore.org
 
@@ -14,9 +14,6 @@ with no central authority: managing transactions and issuing money are carried
 out collectively by the network. IoP Core is the name of open source
 software which enables the use of this currency.
 
-For more information, as well as an immediately useable, binary version of
-the IoP Core software, see https://iop.org/en/download, or read the
-[original whitepaper](https://iopcore.org/iop.pdf).
 
 License
 -------
@@ -28,16 +25,14 @@ Development Process
 -------------------
 
 The `master` branch is regularly built and tested, but is not guaranteed to be
-completely stable. [Tags](https://github.com/iop/iop/tags) are created
+completely stable. [Tags](https://github.com/Internet-of-People/iopg-hd/tags) are created
 regularly to indicate new official, stable release versions of IoP Core.
 
 The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 
-The developer [mailing list](https://lists.linuxfoundation.org/mailman/listinfo/iop-dev)
+The [Discord channel](https://discord.gg/gsRKp6T)
 should be used to discuss complicated or controversial changes before working
 on a patch set.
-
-Developer IRC can be found on Freenode at #iop-core-dev.
 
 Testing
 -------
@@ -66,17 +61,3 @@ Changes should be tested by somebody other than the developer who wrote the
 code. This is especially important for large or high-risk changes. It is useful
 to add a test plan to the pull request description if testing the changes is
 not straightforward.
-
-Translations
-------------
-
-Changes to translations as well as new translations can be submitted to
-[IoP Core's Transifex page](https://www.transifex.com/projects/p/iop/).
-
-Translations are periodically pulled from Transifex and merged into the git repository. See the
-[translation process](doc/translation_process.md) for details on how this works.
-
-**Important**: We do not accept translation changes as GitHub pull requests because the next
-pull from Transifex would automatically overwrite them again.
-
-Translators should also subscribe to the [mailing list](https://groups.google.com/forum/#!forum/iop-translators).
