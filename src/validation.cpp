@@ -1614,17 +1614,17 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consens
     unsigned int flags = SCRIPT_VERIFY_NONE;
 
     // Start enforcing P2SH (BIP16)
-    if (pindex->nHeight >= consensusparams.BIP16Height) {
+    if (pindex->nHeight >= consensusparams.buried_deployments[Consensus::DEPLOYMENT_BIP16]) {
         flags |= SCRIPT_VERIFY_P2SH;
     }
 
     // Start enforcing the DERSIG (BIP66) rule
-    if (pindex->nHeight >= consensusparams.BIP66Height) {
+    if (pindex->nHeight >= consensusparams.buried_deployments[Consensus::DEPLOYMENT_BIP66]) {
         flags |= SCRIPT_VERIFY_DERSIG;
     }
 
     // Start enforcing CHECKLOCKTIMEVERIFY (BIP65) rule
-    if (pindex->nHeight >= consensusparams.BIP65Height) {
+    if (pindex->nHeight >= consensusparams.buried_deployments[Consensus::DEPLOYMENT_BIP65]) {
         flags |= SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
     }
 
@@ -1736,7 +1736,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     // duplicate transactions descending from the known pairs either.
     // If we're on the known chain at height greater than where BIP34 activated, we can save the db accesses needed for the BIP30 check.
     assert(pindex->pprev);
-    CBlockIndex *pindexBIP34height = pindex->pprev->GetAncestor(chainparams.GetConsensus().BIP34Height);
+    CBlockIndex *pindexBIP34height = pindex->pprev->GetAncestor(chainparams.GetConsensus().buried_deployments[Consensus::DEPLOYMENT_BIP34]);
     //Only continue to enforce if we're below BIP34 activation height or the block hash at that height doesn't correspond.
     fEnforceBIP30 = fEnforceBIP30 && (!pindexBIP34height || !(pindexBIP34height->GetBlockHash() == chainparams.GetConsensus().BIP34Hash));
 
@@ -2983,9 +2983,9 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
 
     // Reject outdated version blocks when 95% (75% on testnet) of the network has upgraded:
     // check for version 2, 3 and 4 upgrades
-    if((block.nVersion < 2 && nHeight >= consensusParams.BIP34Height) ||
-       (block.nVersion < 3 && nHeight >= consensusParams.BIP66Height) ||
-       (block.nVersion < 4 && nHeight >= consensusParams.BIP65Height))
+    if((block.nVersion < 2 && nHeight >= consensusParams.buried_deployments[Consensus::DEPLOYMENT_BIP34]) ||
+       (block.nVersion < 3 && nHeight >= consensusParams.buried_deployments[Consensus::DEPLOYMENT_BIP66]) ||
+       (block.nVersion < 4 && nHeight >= consensusParams.buried_deployments[Consensus::DEPLOYMENT_BIP65]))
             return state.Invalid(false, REJECT_OBSOLETE, strprintf("bad-version(0x%08x)", block.nVersion),
                                  strprintf("rejected nVersion=0x%08x block", block.nVersion));
 
@@ -3014,7 +3014,7 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
     }
 
     // Enforce rule that the coinbase starts with serialized block height
-    if (nHeight >= consensusParams.BIP34Height)
+    if (nHeight >= consensusParams.buried_deployments[Consensus::DEPLOYMENT_BIP34])
     {
         CScript expect = CScript() << nHeight;
         if (block.vtx[0]->vin[0].scriptSig.size() < expect.size() ||
