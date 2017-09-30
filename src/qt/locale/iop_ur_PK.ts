@@ -80,7 +80,7 @@
     <name>BanTableModel</name>
     </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>IoPGUI</name>
     <message>
         <source>Error</source>
         <translation>نقص</translation>

@@ -6,13 +6,13 @@
 
 import time
 
-from test_framework.test_framework import BitcoinTestFramework, IOPD_PROC_WAIT_TIMEOUT
+from test_framework.test_framework import IoPTestFramework, IOPD_PROC_WAIT_TIMEOUT
 from test_framework.util import (
     assert_equal,
     assert_raises_jsonrpc,
 )
 
-class WalletEncryptionTest(BitcoinTestFramework):
+class WalletEncryptionTest(IoPTestFramework):
 
     def __init__(self):
         super().__init__()

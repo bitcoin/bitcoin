@@ -1,5 +1,5 @@
-Bitcoin version 0.5.1 is now available for download at:
-http://sourceforge.net/projects/iop/files/Bitcoin/iop-0.5.1/
+IoP version 0.5.1 is now available for download at:
+http://sourceforge.net/projects/iop/files/IoP/iop-0.5.1/
 
 This is a bugfix-only release.
 

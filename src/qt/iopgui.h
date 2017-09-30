@@ -38,10 +38,10 @@ class QProgressDialog;
 QT_END_NAMESPACE
 
 /**
-  Bitcoin GUI main class. This class represents the main window of the Bitcoin UI. It communicates with both the client and
+  IoP GUI main class. This class represents the main window of the IoP UI. It communicates with both the client and
   wallet models to give the user an up-to-date view of the current core state.
 */
-class BitcoinGUI : public QMainWindow
+class IoPGUI : public QMainWindow
 {
     Q_OBJECT
 
@@ -49,8 +49,8 @@ public:
     static const QString DEFAULT_WALLET;
     static const std::string DEFAULT_UIPLATFORM;
 
-    explicit BitcoinGUI(const PlatformStyle *platformStyle, const NetworkStyle *networkStyle, QWidget *parent = 0);
-    ~BitcoinGUI();
+    explicit IoPGUI(const PlatformStyle *platformStyle, const NetworkStyle *networkStyle, QWidget *parent = 0);
+    ~IoPGUI();
 
     /** Set the client model.
         The client model represents the part of the core that communicates with the P2P network, and is wallet-agnostic.

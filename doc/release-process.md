@@ -38,7 +38,7 @@ Check out the source code in the following directory hierarchy.
     git clone https://github.com/devrandom/gitian-builder.git
     git clone https://github.com/iop/iop.git
 
-### Bitcoin maintainers/release engineers, suggestion for writing release notes
+### IoP maintainers/release engineers, suggestion for writing release notes
 
 Write release notes. git shortlog helps a lot, for example:
 
@@ -108,7 +108,7 @@ NOTE: Offline builds must use the --url flag to ensure Gitian fetches only from 
 
 The gbuild invocations below <b>DO NOT DO THIS</b> by default.
 
-### Build and sign Bitcoin Core for Linux, Windows, and OS X:
+### Build and sign IoP Core for Linux, Windows, and OS X:
 
     pushd ./gitian-builder
     ./bin/gbuild --num-make 2 --memory 3000 --commit iop=v${VERSION} ../iop/contrib/gitian-descriptors/gitian-linux.yml
@@ -275,14 +275,14 @@ iop.org (see below for iop.org update instructions).
 
 - Update iop.org version
 
-  - First, check to see if the Bitcoin.org maintainers have prepared a
+  - First, check to see if the IoP.org maintainers have prepared a
     release: https://github.com/iop-dot-org/iop.org/labels/Releases
 
       - If they have, it will have previously failed their Travis CI
         checks because the final release files weren't uploaded.
         Trigger a Travis CI rebuild---if it passes, merge.
 
-  - If they have not prepared a release, follow the Bitcoin.org release
+  - If they have not prepared a release, follow the IoP.org release
     instructions: https://github.com/iop-dot-org/iop.org#release-notes
 
   - After the pull request is merged, the website will automatically show the newest version within 15 minutes, as well
@@ -292,13 +292,13 @@ iop.org (see below for iop.org update instructions).
 
   - iop-dev and iop-core-dev mailing list
 
-  - Bitcoin Core announcements list https://iopcore.org/en/list/announcements/join/
+  - IoP Core announcements list https://iopcore.org/en/list/announcements/join/
 
   - iopcore.org blog post
 
   - Update title of #iop on Freenode IRC
 
-  - Optionally twitter, reddit /r/Bitcoin, ... but this will usually sort out itself
+  - Optionally twitter, reddit /r/IoP, ... but this will usually sort out itself
 
   - Notify BlueMatt so that he can start building [the PPAs](https://launchpad.net/~iop/+archive/ubuntu/iop)
 

@@ -64,7 +64,7 @@
     <name>BanTableModel</name>
     </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>IoPGUI</name>
     <message>
         <source>Synchronizing with network...</source>
         <translation>Sincronizando con la red...</translation>
@@ -126,8 +126,8 @@
         <translation>Abrir &amp;URL...</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation>Enviando monedas a una dirección de Bitcoin</translation>
+        <source>Send coins to a IoP address</source>
+        <translation>Enviando monedas a una dirección de IoP</translation>
     </message>
     <message>
         <source>Change the passphrase used for wallet encryption</source>
@@ -146,8 +146,8 @@
         <translation>&amp;Verificar Mensaje...</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
+        <source>IoP</source>
+        <translation>IoP</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -296,8 +296,8 @@
 <context>
     <name>iop-core</name>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
+        <source>IoP Core</source>
+        <translation>IoP Core</translation>
     </message>
     <message>
         <source>Insufficient funds</source>

@@ -271,7 +271,7 @@ static void MutateTxAddOutAddr(CMutableTransaction& tx, const std::string& strIn
 
     // extract and validate ADDRESS
     std::string strAddr = vStrInputParts[1];
-    CBitcoinAddress addr(strAddr);
+    CIoPAddress addr(strAddr);
     if (!addr.IsValid())
         throw std::runtime_error("invalid TX output address");
     // build standard output script via GetScriptForDestination()
@@ -316,7 +316,7 @@ static void MutateTxAddOutPubKey(CMutableTransaction& tx, const std::string& str
     if (bScriptHash) {
         // Get the address for the redeem script, then call
         // GetScriptForDestination() to construct a P2SH scriptPubKey.
-        CBitcoinAddress redeemScriptAddr(scriptPubKey);
+        CIoPAddress redeemScriptAddr(scriptPubKey);
         scriptPubKey = GetScriptForDestination(redeemScriptAddr.Get());
     }
 
@@ -383,7 +383,7 @@ static void MutateTxAddOutMultiSig(CMutableTransaction& tx, const std::string& s
     if (bScriptHash) {
         // Get the address for the redeem script, then call
         // GetScriptForDestination() to construct a P2SH scriptPubKey.
-        CBitcoinAddress addr(scriptPubKey);
+        CIoPAddress addr(scriptPubKey);
         scriptPubKey = GetScriptForDestination(addr.Get());
     }
 
@@ -447,7 +447,7 @@ static void MutateTxAddOutScript(CMutableTransaction& tx, const std::string& str
       scriptPubKey = GetScriptForWitness(scriptPubKey);
     }
     if (bScriptHash) {
-      CBitcoinAddress addr(scriptPubKey);
+      CIoPAddress addr(scriptPubKey);
       scriptPubKey = GetScriptForDestination(addr.Get());
     }
 
@@ -547,7 +547,7 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
     for (unsigned int kidx = 0; kidx < keysObj.size(); kidx++) {
         if (!keysObj[kidx].isStr())
             throw std::runtime_error("privatekey not a std::string");
-        CBitcoinSecret vchSecret;
+        CIoPSecret vchSecret;
         bool fGood = vchSecret.SetString(keysObj[kidx].getValStr());
         if (!fGood)
             throw std::runtime_error("privatekey not valid");

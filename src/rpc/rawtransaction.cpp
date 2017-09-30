@@ -383,7 +383,7 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
         rawTx.vin.push_back(in);
     }
 
-    std::set<CBitcoinAddress> setAddress;
+    std::set<CIoPAddress> setAddress;
     std::vector<std::string> addrList = sendTo.getKeys();
     for (const std::string& name_ : addrList) {
 
@@ -393,9 +393,9 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
             CTxOut out(0, CScript() << OP_RETURN << data);
             rawTx.vout.push_back(out);
         } else {
-            CBitcoinAddress address(name_);
+            CIoPAddress address(name_);
             if (!address.IsValid())
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Bitcoin address: ")+name_);
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid IoP address: ")+name_);
 
             if (setAddress.count(address))
                 throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, duplicated address: ")+name_);
@@ -528,7 +528,7 @@ UniValue decodescript(const JSONRPCRequest& request)
     if (type.isStr() && type.get_str() != "scripthash") {
         // P2SH cannot be wrapped in a P2SH. If this script is already a P2SH,
         // don't return the address for a P2SH of the P2SH.
-        r.push_back(Pair("p2sh", CBitcoinAddress(CScriptID(script)).ToString()));
+        r.push_back(Pair("p2sh", CIoPAddress(CScriptID(script)).ToString()));
     }
 
     return r;
@@ -737,7 +737,7 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
         UniValue keys = request.params[2].get_array();
         for (unsigned int idx = 0; idx < keys.size(); idx++) {
             UniValue k = keys[idx];
-            CBitcoinSecret vchSecret;
+            CIoPSecret vchSecret;
             bool fGood = vchSecret.SetString(k.get_str());
             if (!fGood)
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");

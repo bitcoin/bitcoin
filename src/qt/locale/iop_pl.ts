@@ -62,12 +62,12 @@
         <translation>Adresy odbioru</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Tutaj znajdują się adresy Bitcoin na które wysyłasz płatności. Zawsze sprawdzaj ilość i adres odbiorcy przed wysyłką monet.</translation>
+        <source>These are your IoP addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Tutaj znajdują się adresy IoP na które wysyłasz płatności. Zawsze sprawdzaj ilość i adres odbiorcy przed wysyłką monet.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>To są twoje adresy Bitcoin do odbierania płatności. Zaleca się używanie nowych adresów odbiorczych dla każdej transakcji.</translation>
+        <source>These are your IoP addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>To są twoje adresy IoP do odbierania płatności. Zaleca się używanie nowych adresów odbiorczych dla każdej transakcji.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -232,7 +232,7 @@
     </message>
 </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>IoPGUI</name>
     <message>
         <source>Sign &amp;message...</source>
         <translation>Podpisz wiado&amp;mość...</translation>
@@ -338,7 +338,7 @@
         <translation>Ponowne indeksowanie bloków na dysku...</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
+        <source>Send coins to a IoP address</source>
         <translation>Wyślij monety na adres iopowy</translation>
     </message>
     <message>
@@ -362,8 +362,8 @@
         <translation>&amp;Zweryfikuj wiadomość...</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
+        <source>IoP</source>
+        <translation>IoP</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -390,11 +390,11 @@
         <translation>Szyfruj klucze prywatne, które są w twoim portfelu</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
+        <source>Sign messages with your IoP addresses to prove you own them</source>
         <translation>Podpisz wiadomości swoim adresem aby udowodnić jego posiadanie</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
+        <source>Verify messages to ensure they were signed with specified IoP addresses</source>
         <translation>Zweryfikuj wiadomość,  aby upewnić się, że została podpisana podanym adresem iopowym.</translation>
     </message>
     <message>
@@ -434,8 +434,8 @@
         <translation>&amp;Opcje linii komend</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network</source>
-        <translation><numerusform>%n aktywnych połączeń do sieci Bitcoin</numerusform><numerusform>%n aktywnych połączeń do sieci Bitcoin</numerusform><numerusform>%n aktywnych połączeń do sieci Bitcoin</numerusform><numerusform>%n aktywnych połączeń do sieci Bitcoin</numerusform></translation>
+        <source>%n active connection(s) to IoP network</source>
+        <translation><numerusform>%n aktywnych połączeń do sieci IoP</numerusform><numerusform>%n aktywnych połączeń do sieci IoP</numerusform><numerusform>%n aktywnych połączeń do sieci IoP</numerusform><numerusform>%n aktywnych połączeń do sieci IoP</numerusform></translation>
     </message>
     <message>
         <source>Indexing blocks on disk...</source>
@@ -478,7 +478,7 @@
         <translation>Aktualny</translation>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
+        <source>Show the %1 help message to get a list with possible IoP command-line options</source>
         <translation>Pokaż pomoc %1 aby zobaczyć listę wszystkich opcji lnii poleceń.</translation>
     </message>
     <message>
@@ -548,8 +548,8 @@
         <translation>Portfel jest &lt;b&gt;zaszyfrowany&lt;/b&gt; i obecnie &lt;b&gt;zablokowany&lt;/b&gt;</translation>
     </message>
     <message>
-        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>Wystąpił krytyczny błąd. Bitcoin nie jest w stanie kontynuować bezpiecznie i zostanie zamknięty.</translation>
+        <source>A fatal error occurred. IoP can no longer continue safely and will quit.</source>
+        <translation>Wystąpił krytyczny błąd. IoP nie jest w stanie kontynuować bezpiecznie i zostanie zamknięty.</translation>
     </message>
 </context>
 <context>
@@ -742,8 +742,8 @@
         <translation>Zmień adres wysyłania</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid Bitcoin address.</source>
-        <translation>Wprowadzony adres "%1" nie jest prawidłowym adresem Bitcoin.</translation>
+        <source>The entered address "%1" is not a valid IoP address.</source>
+        <translation>Wprowadzony adres "%1" nie jest prawidłowym adresem IoP.</translation>
     </message>
     <message>
         <source>The entered address "%1" is already in the address book.</source>
@@ -851,8 +851,8 @@
         <translation>Ponieważ jest to pierwsze uruchomienie programu, możesz wybrać gdzie %1 będzie przechowywał swoje dane.</translation>
     </message>
     <message>
-        <source>%1 will download and store a copy of the Bitcoin block chain. At least %2GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>%1 pobierze i będzie przechowywał kopię łańcucha bloków Bitcoin. W wybranym katalogu zostanie zapisanych %2GB danych, a z czasem ta ilość będzie rosła. Portfel będzie przechowywany w tym samym katalogu.</translation>
+        <source>%1 will download and store a copy of the IoP block chain. At least %2GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
+        <translation>%1 pobierze i będzie przechowywał kopię łańcucha bloków IoP. W wybranym katalogu zostanie zapisanych %2GB danych, a z czasem ta ilość będzie rosła. Portfel będzie przechowywany w tym samym katalogu.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -1048,16 +1048,16 @@
         <translation>Wydaj niepotwierdzoną re&amp;sztę</translation>
     </message>
     <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Automatycznie otwiera port klienta Bitcoin na routerze. Ta opcja dzieła tylko jeśli twój router wspiera UPnP i jest ono włączone.</translation>
+        <source>Automatically open the IoP client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>Automatycznie otwiera port klienta IoP na routerze. Ta opcja dzieła tylko jeśli twój router wspiera UPnP i jest ono włączone.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
         <translation>Mapuj port używając &amp;UPnP</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
-        <translation>Połącz się z siecią Bitcoin poprzez proxy SOCKS5.</translation>
+        <source>Connect to the IoP network through a SOCKS5 proxy.</source>
+        <translation>Połącz się z siecią IoP poprzez proxy SOCKS5.</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -1096,8 +1096,8 @@
         <translation>Tor</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>Połącz się z siecią Bitcoin przy pomocy oddzielnego SOCKS5 proxy dla sieci TOR</translation>
+        <source>Connect to the IoP network through a separate SOCKS5 proxy for Tor hidden services.</source>
+        <translation>Połącz się z siecią IoP przy pomocy oddzielnego SOCKS5 proxy dla sieci TOR</translation>
     </message>
     <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services:</source>
@@ -1195,7 +1195,7 @@
         <translation>Formularz</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the IoP network after a connection is established, but this process has not completed yet.</source>
         <translation>Wyświetlana informacja może być nieaktualna. Twój portfel synchronizuje się automatycznie z siecią iop, zaraz po tym jak uzyskano połączenie, ale proces ten nie został jeszcze ukończony.</translation>
     </message>
     <message>
@@ -1356,7 +1356,7 @@
         <translation>Kwota</translation>
     </message>
     <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
+        <source>Enter a IoP address (e.g. %1)</source>
         <translation>Wprowadź adres iopowy (np. %1)</translation>
     </message>
     <message>
@@ -1780,8 +1780,8 @@
         <translation>U&amp;żyj ponownie istniejącego adresu odbiorczego (niepolecane)</translation>
     </message>
     <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
-        <translation>Opcjonalna wiadomość do dołączenia do żądania płatności, która będzie wyświetlana, gdy żądanie zostanie otwarte. Uwaga: wiadomość ta nie zostanie wysłana wraz z płatnością w sieci Bitcoin.</translation>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the IoP network.</source>
+        <translation>Opcjonalna wiadomość do dołączenia do żądania płatności, która będzie wyświetlana, gdy żądanie zostanie otwarte. Uwaga: wiadomość ta nie zostanie wysłana wraz z płatnością w sieci IoP.</translation>
     </message>
     <message>
         <source>An optional label to associate with the new receiving address.</source>
@@ -2173,8 +2173,8 @@
         <translation><numerusform>Przybliżony czas zatwierdzenia: %n blok.</numerusform><numerusform>Przybliżony czas zatwierdzenia: %n bloki.</numerusform><numerusform>Przybliżony czas zatwierdzenia: %n bloków.</numerusform><numerusform>Przybliżony czas zatwierdzenia: %n bloków.</numerusform></translation>
     </message>
     <message>
-        <source>Warning: Invalid Bitcoin address</source>
-        <translation>Ostrzeżenie: nieprawidłowy adres Bitcoin</translation>
+        <source>Warning: Invalid IoP address</source>
+        <translation>Ostrzeżenie: nieprawidłowy adres IoP</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
@@ -2212,8 +2212,8 @@
         <translation>To jest standardowa płatność</translation>
     </message>
     <message>
-        <source>The Bitcoin address to send the payment to</source>
-        <translation>Adres Bitcoin gdzie wysłać płatność</translation>
+        <source>The IoP address to send the payment to</source>
+        <translation>Adres IoP gdzie wysłać płatność</translation>
     </message>
     <message>
         <source>Alt+A</source>
@@ -2256,8 +2256,8 @@
         <translation>Wprowadź etykietę dla tego adresu by dodać go do listy użytych adresów</translation>
     </message>
     <message>
-        <source>A message that was attached to the iop: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
-        <translation>Wiadomość, która została dołączona do URI iop:, która będzie przechowywana wraz z transakcją w celach informacyjnych. Uwaga: Ta wiadomość nie będzie rozsyłana w sieci Bitcoin.</translation>
+        <source>A message that was attached to the iop: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the IoP network.</source>
+        <translation>Wiadomość, która została dołączona do URI iop:, która będzie przechowywana wraz z transakcją w celach informacyjnych. Uwaga: Ta wiadomość nie będzie rozsyłana w sieci IoP.</translation>
     </message>
     <message>
         <source>Pay To:</source>
@@ -2305,8 +2305,8 @@
         <translation>Możesz podpisywać wiadomości swoimi adresami aby udowodnić, że jesteś ich właścicielem. Uważaj, aby nie podpisywać niczego co wzbudza Twoje podejrzenia, ponieważ ktoś może stosować phishing próbując nakłonić Cię do ich podpisania. Akceptuj i podpisuj tylko w pełni zrozumiałe komunikaty i wiadomości.</translation>
     </message>
     <message>
-        <source>The Bitcoin address to sign the message with</source>
-        <translation>Adres Bitcoin, za pomocą którego podpisać wiadomość</translation>
+        <source>The IoP address to sign the message with</source>
+        <translation>Adres IoP, za pomocą którego podpisać wiadomość</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -2337,7 +2337,7 @@
         <translation>Kopiuje aktualny podpis do schowka systemowego</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Bitcoin address</source>
+        <source>Sign the message to prove you own this IoP address</source>
         <translation>Podpisz wiadomość aby dowieść, że ten adres jest twój</translation>
     </message>
     <message>
@@ -2362,12 +2362,12 @@
 Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadawca posiada klucz do adresu, natomiast nie potwierdza to, że poprawne wysłanie jakiejkolwiek transakcji! </translation>
     </message>
     <message>
-        <source>The Bitcoin address the message was signed with</source>
-        <translation>Adres Bitcoin, którym została podpisana wiadomość</translation>
+        <source>The IoP address the message was signed with</source>
+        <translation>Adres IoP, którym została podpisana wiadomość</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
-        <translation>Zweryfikuj wiadomość,  aby upewnić się, że została podpisana odpowiednim adresem Bitcoin.</translation>
+        <source>Verify the message to ensure it was signed with the specified IoP address</source>
+        <translation>Zweryfikuj wiadomość,  aby upewnić się, że została podpisana odpowiednim adresem IoP.</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
@@ -2963,8 +2963,8 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation>Uruchomienie serwera HTTP nie powiodło się. Zobacz dziennik debugowania, aby uzyskać więcej szczegółów.</translation>
     </message>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Rdzeń Bitcoina</translation>
+        <source>IoP Core</source>
+        <translation>Rdzeń IoPa</translation>
     </message>
     <message>
         <source>The %s developers</source>

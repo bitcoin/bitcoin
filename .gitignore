@@ -75,7 +75,7 @@ src/qt/test/moc*.cpp
 *.qm
 Makefile
 iop-qt
-Bitcoin-Qt.app
+IoP-Qt.app
 
 # Unit-tests
 Makefile.test

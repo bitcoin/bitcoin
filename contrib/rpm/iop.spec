@@ -37,7 +37,7 @@ Source30:	https://raw.githubusercontent.com/iop/iop/v%{version}/contrib/rpm/iop.
 Source31:	https://raw.githubusercontent.com/iop/iop/v%{version}/contrib/rpm/iop.fc
 Source32:	https://raw.githubusercontent.com/iop/iop/v%{version}/contrib/rpm/iop.if
 
-Source100:	https://upload.wikimedia.org/wikipedia/commons/4/46/Bitcoin.svg
+Source100:	https://upload.wikimedia.org/wikipedia/commons/4/46/IoP.svg
 
 %if 0%{?_use_libressl:1}
 BuildRequires:	libressl-devel
@@ -54,7 +54,7 @@ Patch0:		iop-0.12.0-libressl.patch
 
 
 %description
-Bitcoin is a digital cryptographic currency that uses peer-to-peer technology to
+IoP is a digital cryptographic currency that uses peer-to-peer technology to
 operate with no central authority or banks; managing transactions and the
 issuing of iops is carried out collectively by the network.
 
@@ -79,17 +79,17 @@ BuildRequires:	%{_bindir}/inkscape
 BuildRequires:	%{_bindir}/convert
 
 %description core
-Bitcoin is a digital cryptographic currency that uses peer-to-peer technology to
+IoP is a digital cryptographic currency that uses peer-to-peer technology to
 operate with no central authority or banks; managing transactions and the
 issuing of iops is carried out collectively by the network.
 
 This package contains the Qt based graphical client and node. If you are looking
-to run a Bitcoin wallet, this is probably the package you want.
+to run a IoP wallet, this is probably the package you want.
 %endif
 
 
 %package libs
-Summary:	Bitcoin shared libraries
+Summary:	IoP shared libraries
 Group:		System Environment/Libraries
 
 %description libs
@@ -134,7 +134,7 @@ If you use the graphical iop-core client then you almost certainly do not
 need this package.
 
 %package utils
-Summary:	Bitcoin utilities
+Summary:	IoP utilities
 Group:		Applications/System
 
 %description utils
@@ -209,7 +209,7 @@ touch -a -m -t 201504280000 %{buildroot}%{_sysconfdir}/sysconfig/iop
 mkdir -p %{buildroot}%{_unitdir}
 cat <<EOF > %{buildroot}%{_unitdir}/iop.service
 [Unit]
-Description=Bitcoin daemon
+Description=IoP daemon
 After=syslog.target network.target
 
 [Service]
@@ -265,10 +265,10 @@ mkdir -p %{buildroot}%{_datadir}/applications
 cat <<EOF > %{buildroot}%{_datadir}/applications/iop-core.desktop
 [Desktop Entry]
 Encoding=UTF-8
-Name=Bitcoin
-Comment=Bitcoin P2P Cryptocurrency
-Comment[fr]=Bitcoin, monnaie virtuelle cryptographique pair à pair
-Comment[tr]=Bitcoin, eşten eşe kriptografik sanal para birimi
+Name=IoP
+Comment=IoP P2P Cryptocurrency
+Comment[fr]=IoP, monnaie virtuelle cryptographique pair à pair
+Comment[tr]=IoP, eşten eşe kriptografik sanal para birimi
 Exec=iop-qt %u
 Terminal=false
 Type=Application
@@ -322,7 +322,7 @@ test/functional/test_runner.py --extended
 getent group iop >/dev/null || groupadd -r iop
 getent passwd iop >/dev/null ||
 	useradd -r -g iop -d /var/lib/iop -s /sbin/nologin \
-	-c "Bitcoin wallet server" iop
+	-c "IoP wallet server" iop
 exit 0
 
 %post server

@@ -2,7 +2,7 @@
 
 This issue tracker is only for technical issues related to iop-core.
 
-General iop questions and/or support requests and are best directed to the [Bitcoin StackExchange](https://iop.stackexchange.com).
+General iop questions and/or support requests and are best directed to the [IoP StackExchange](https://iop.stackexchange.com).
 
 For reporting security issues, please read instructions at [https://iopcore.org/en/contact/](https://iopcore.org/en/contact/).
 

@@ -4,7 +4,7 @@
 # Copyright (c) 2010-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Bitcoin P2P network half-a-node.
+"""IoP P2P network half-a-node.
 
 This python code was modified from ArtForz' public domain  half-a-node, as
 found in the mini-node branch of http://github.com/jgarzik/pynode.
@@ -1699,7 +1699,7 @@ class NodeConn(asyncore.dispatcher):
             vt.addrFrom.port = 0
             self.send_message(vt, True)
 
-        logger.info('Connecting to Bitcoin Node: %s:%d' % (self.dstaddr, self.dstport))
+        logger.info('Connecting to IoP Node: %s:%d' % (self.dstaddr, self.dstport))
 
         try:
             self.connect((dstaddr, dstport))

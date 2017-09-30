@@ -2,7 +2,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 '''
-Bitcoin base58 encoding and decoding.
+IoP base58 encoding and decoding.
 
 Based on https://ioptalk.org/index.php?topic=1026.0 (public domain)
 '''
@@ -37,7 +37,7 @@ def b58encode(v):
         long_value = div
     result = __b58chars[long_value] + result
 
-    # Bitcoin does a little leading-zero-compression:
+    # IoP does a little leading-zero-compression:
     # leading 0-bytes in the input become leading-1s
     nPad = 0
     for c in v:

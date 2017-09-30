@@ -84,7 +84,7 @@ WalletView::~WalletView()
 {
 }
 
-void WalletView::setBitcoinGUI(BitcoinGUI *gui)
+void WalletView::setIoPGUI(IoPGUI *gui)
 {
     if (gui)
     {

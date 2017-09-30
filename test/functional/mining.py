@@ -11,7 +11,7 @@ from binascii import b2a_hex
 import copy
 
 from test_framework.blocktools import create_coinbase
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import IoPTestFramework
 from test_framework.mininode import CBlock
 from test_framework.util import *
 
@@ -24,7 +24,7 @@ def assert_template(node, block, expect, rehash=True):
     rsp = node.getblocktemplate({'data': b2x(block.serialize()), 'mode': 'proposal'})
     assert_equal(rsp, expect)
 
-class MiningTest(BitcoinTestFramework):
+class MiningTest(IoPTestFramework):
 
     def __init__(self):
         super().__init__()

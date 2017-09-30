@@ -18,8 +18,8 @@ IOPD_BIN=${IOPD_BIN:-/usr/bin/iopd}
 IOPD_NICE=${IOPD_NICE:-${NICELEVEL:-0}}
 IOPD_OPTS="${IOPD_OPTS:-${IOP_OPTS}}"
 
-name="Bitcoin Core Daemon"
-description="Bitcoin cryptocurrency P2P network daemon"
+name="IoP Core Daemon"
+description="IoP cryptocurrency P2P network daemon"
 
 command="/usr/bin/iopd"
 command_args="-pid=\"${IOPD_PIDFILE}\" \
@@ -84,7 +84,7 @@ checkconfig()
 		eerror "It is also recommended that you also set alertnotify so you are "
 		eerror "notified of problems:"
 		eerror ""
-		eerror "ie: alertnotify=echo %%s | mail -s \"Bitcoin Alert\"" \
+		eerror "ie: alertnotify=echo %%s | mail -s \"IoP Alert\"" \
 			"admin@foo.com"
 		eerror ""
 		return 1

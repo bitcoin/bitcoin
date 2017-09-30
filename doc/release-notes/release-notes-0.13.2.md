@@ -1,4 +1,4 @@
-Bitcoin Core version 0.13.2 is now available from:
+IoP Core version 0.13.2 is now available from:
 
   <https://iop.org/bin/iop-core-0.13.2/>
 
@@ -21,7 +21,7 @@ an OS initially released in 2001. This means that not even critical security
 updates will be released anymore. Without security updates, using a iop
 wallet on a XP machine is irresponsible at least.
 
-In addition to that, with 0.12.x there have been varied reports of Bitcoin Core
+In addition to that, with 0.12.x there have been varied reports of IoP Core
 randomly crashing on Windows XP. It is [not clear](https://github.com/iop/iop/issues/7681#issuecomment-217439891)
 what the source of these crashes is, but it is likely that upstream
 libraries such as Qt are no longer being tested on XP.

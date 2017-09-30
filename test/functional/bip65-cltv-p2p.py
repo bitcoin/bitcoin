@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2016 The Bitcoin Core developers
+# Copyright (c) 2015-2016 The IoP Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test BIP65 (CHECKLOCKTIMEVERIFY).
@@ -8,7 +8,7 @@ Test that the CHECKLOCKTIMEVERIFY soft-fork activates at (regtest) block height
 1351.
 """
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import IoPTestFramework
 from test_framework.util import *
 from test_framework.mininode import *
 from test_framework.blocktools import create_coinbase, create_block
@@ -59,7 +59,7 @@ def create_transaction(node, coinbase, to_address, amount):
     tx.deserialize(BytesIO(hex_str_to_bytes(signresult['hex'])))
     return tx
 
-class BIP65Test(BitcoinTestFramework):
+class BIP65Test(IoPTestFramework):
 
     def __init__(self):
         super().__init__()

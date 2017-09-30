@@ -11,7 +11,7 @@
 
 /**
  * CBaseChainParams defines the base parameters (shared between iop-cli and iopd)
- * of a given instance of the Bitcoin system.
+ * of a given instance of the IoP system.
  */
 class CBaseChainParams
 {

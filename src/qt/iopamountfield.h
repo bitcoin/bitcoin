@@ -17,7 +17,7 @@ QT_END_NAMESPACE
 
 /** Widget for entering iop amounts.
   */
-class BitcoinAmountField: public QWidget
+class IoPAmountField: public QWidget
 {
     Q_OBJECT
 
@@ -26,7 +26,7 @@ class BitcoinAmountField: public QWidget
     Q_PROPERTY(qint64 value READ value WRITE setValue NOTIFY valueChanged USER true)
 
 public:
-    explicit BitcoinAmountField(QWidget *parent = 0);
+    explicit IoPAmountField(QWidget *parent = 0);
 
     CAmount value(bool *value=0) const;
     void setValue(const CAmount& value);

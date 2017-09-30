@@ -10,7 +10,7 @@ forward all unrecognized arguments onto the individual test scripts.
 Functional tests are disabled on Windows by default. Use --force to run them anyway.
 
 For a description of arguments recognized by test scripts, see
-`test/functional/test_framework/test_framework.py:BitcoinTestFramework.main`.
+`test/functional/test_framework/test_framework.py:IoPTestFramework.main`.
 
 """
 

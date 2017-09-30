@@ -1,9 +1,9 @@
-Bitcoin version 0.4.4 is now available for download at:
+IoP version 0.4.4 is now available for download at:
 http://luke.dashjr.org/programs/iop/files/iopd-0.4.4/
 
 This is a bugfix-only release based on 0.4.0.
 
-Please note that the wxBitcoin GUI client is no longer maintained nor supported. If someone would like to step up to maintain this, they should contact Luke-Jr.
+Please note that the wxIoP GUI client is no longer maintained nor supported. If someone would like to step up to maintain this, they should contact Luke-Jr.
 
 Please report bugs for the daemon only using the issue tracker at github:
 https://github.com/iop/iop/issues

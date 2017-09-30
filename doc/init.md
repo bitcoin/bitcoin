@@ -68,9 +68,9 @@ can then be controlled by group membership.
 3b) Mac OS X
 
 Binary:              `/usr/local/bin/iopd`  
-Configuration file:  `~/Library/Application Support/Bitcoin/iop.conf`  
-Data directory:      `~/Library/Application Support/Bitcoin`
-Lock file:           `~/Library/Application Support/Bitcoin/.lock`
+Configuration file:  `~/Library/Application Support/IoP/iop.conf`  
+Data directory:      `~/Library/Application Support/IoP`
+Lock file:           `~/Library/Application Support/IoP/.lock`
 
 4. Installing Service Configuration
 -----------------------------------

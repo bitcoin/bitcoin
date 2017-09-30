@@ -34,7 +34,7 @@ Package: iopd
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer network based digital currency - daemon
- Bitcoin is a free open source peer-to-peer electronic cash system that
+ IoP is a free open source peer-to-peer electronic cash system that
  is completely decentralized, without the need for a central server or
  trusted parties.  Users hold the crypto keys to their own money and
  transact directly with each other, with the help of a P2P network to
@@ -47,19 +47,19 @@ Package: iop-qt
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer network based digital currency - Qt GUI
- Bitcoin is a free open source peer-to-peer electronic cash system that
+ IoP is a free open source peer-to-peer electronic cash system that
  is completely decentralized, without the need for a central server or
  trusted parties.  Users hold the crypto keys to their own money and
  transact directly with each other, with the help of a P2P network to
  check for double-spending.
  .
- This package provides Bitcoin-Qt, a GUI for Bitcoin based on Qt.
+ This package provides IoP-Qt, a GUI for IoP based on Qt.
 
 Package: iop-tx
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer digital currency - standalone transaction tool
- Bitcoin is a free open source peer-to-peer electronic cash system that
+ IoP is a free open source peer-to-peer electronic cash system that
  is completely decentralized, without the need for a central server or
  trusted parties.  Users hold the crypto keys to their own money and
  transact directly with each other, with the help of a P2P network to

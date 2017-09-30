@@ -4,14 +4,14 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test multiple RPC users."""
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import IoPTestFramework
 from test_framework.util import str_to_b64str, assert_equal
 
 import os
 import http.client
 import urllib.parse
 
-class HTTPBasicsTest (BitcoinTestFramework):
+class HTTPBasicsTest (IoPTestFramework):
 
     def __init__(self):
         super().__init__()

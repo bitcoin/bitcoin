@@ -1,7 +1,7 @@
-Bitcoin version 0.7.0 is now available for download at:
-  http://sourceforge.net/projects/iop/files/Bitcoin/iop-0.7.0/
+IoP version 0.7.0 is now available for download at:
+  http://sourceforge.net/projects/iop/files/IoP/iop-0.7.0/
 
-We recommend that everybody running prior versions of iopd/Bitcoin-Qt
+We recommend that everybody running prior versions of iopd/IoP-Qt
 upgrade to this release, except for users running Mac OSX 10.5.
 
 Please report bugs using the issue tracker at github:
@@ -27,7 +27,7 @@ If you are running an older version, shut it down. Wait
 until it has completely shut down (which might take a few minutes for older
 versions), then run the installer (on Windows) or just copy over
 Code:
-/Applications/Bitcoin-Qt
+/Applications/IoP-Qt
 (on Mac) or
 Code:
 iopd/iop-qt
@@ -45,7 +45,7 @@ Incompatible Changes
   and 'getrawmempool' commands.
 * Remove deprecated RPC 'getblocknumber'
 
-Bitcoin Improvement Proposals implemented
+IoP Improvement Proposals implemented
 
 BIP 22 - 'getblocktemplate', 'submitblock' RPCs
 BIP 34 - block version 2, height in coinbase

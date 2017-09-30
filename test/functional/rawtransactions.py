@@ -12,11 +12,11 @@ Test the following RPCs:
    - getrawtransaction
 """
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import IoPTestFramework
 from test_framework.util import *
 
 # Create one-input, one-output, no-fee transaction:
-class RawTransactionsTest(BitcoinTestFramework):
+class RawTransactionsTest(IoPTestFramework):
 
     def __init__(self):
         super().__init__()

@@ -62,12 +62,12 @@
         <translation>Mottager adresser</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Dette er dine Bitcoin adresser for å sende  å sende betalinger. Husk å sjekke beløp og mottager adresser før du sender mynter.</translation>
+        <source>These are your IoP addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Dette er dine IoP adresser for å sende  å sende betalinger. Husk å sjekke beløp og mottager adresser før du sender mynter.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Dette er dine Bitcoin adresse for å motta betalinger. Det er anbefalt å bruke en ny mottager adresse for hver transaksjon.</translation>
+        <source>These are your IoP addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>Dette er dine IoP adresse for å motta betalinger. Det er anbefalt å bruke en ny mottager adresse for hver transaksjon.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -232,7 +232,7 @@
     </message>
 </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>IoPGUI</name>
     <message>
         <source>Sign &amp;message...</source>
         <translation>Signer &amp;melding</translation>
@@ -338,8 +338,8 @@
         <translation>Reindekserer blokker på disken</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation>Send mynter til en Bitcoin adresse</translation>
+        <source>Send coins to a IoP address</source>
+        <translation>Send mynter til en IoP adresse</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -362,8 +362,8 @@
         <translation>&amp;Verifiser meldingen...</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
+        <source>IoP</source>
+        <translation>IoP</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -390,12 +390,12 @@
         <translation>Krypter de private nøklene som tilhører lommeboken din</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>Signer meldingene med Bitcoin adresse for å bevise at diu eier dem</translation>
+        <source>Sign messages with your IoP addresses to prove you own them</source>
+        <translation>Signer meldingene med IoP adresse for å bevise at diu eier dem</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>Verifiser meldinger for å sikre at de ble signert med en angitt Bitcoin adresse</translation>
+        <source>Verify messages to ensure they were signed with specified IoP addresses</source>
+        <translation>Verifiser meldinger for å sikre at de ble signert med en angitt IoP adresse</translation>
     </message>
     <message>
         <source>&amp;File</source>

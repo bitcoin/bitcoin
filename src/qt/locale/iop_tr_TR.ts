@@ -124,7 +124,7 @@
     <name>BanTableModel</name>
     </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>IoPGUI</name>
     <message>
         <source>E&amp;xit</source>
         <translation>Çıkış</translation>

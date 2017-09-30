@@ -7,12 +7,12 @@ import configparser
 import os
 import struct
 
-from test_framework.test_framework import BitcoinTestFramework, SkipTest
+from test_framework.test_framework import IoPTestFramework, SkipTest
 from test_framework.util import (assert_equal,
                                  bytes_to_hex_str,
                                  )
 
-class ZMQTest (BitcoinTestFramework):
+class ZMQTest (IoPTestFramework):
 
     def __init__(self):
         super().__init__()

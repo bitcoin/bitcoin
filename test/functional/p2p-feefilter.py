@@ -5,7 +5,7 @@
 """Test processing of feefilter messages."""
 
 from test_framework.mininode import *
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import IoPTestFramework
 from test_framework.util import *
 import time
 
@@ -36,7 +36,7 @@ class TestNode(NodeConnCB):
         with mininode_lock:
             self.txinvs = []
 
-class FeeFilterTest(BitcoinTestFramework):
+class FeeFilterTest(IoPTestFramework):
 
     def __init__(self):
         super().__init__()

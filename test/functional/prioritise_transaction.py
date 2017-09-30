@@ -4,11 +4,11 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the prioritisetransaction mining RPC."""
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import IoPTestFramework
 from test_framework.util import *
 from test_framework.mininode import COIN, MAX_BLOCK_BASE_SIZE
 
-class PrioritiseTransactionTest(BitcoinTestFramework):
+class PrioritiseTransactionTest(IoPTestFramework):
 
     def __init__(self):
         super().__init__()

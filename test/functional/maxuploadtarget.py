@@ -14,7 +14,7 @@ from collections import defaultdict
 import time
 
 from test_framework.mininode import *
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import IoPTestFramework
 from test_framework.util import *
 
 class TestNode(NodeConnCB):
@@ -29,7 +29,7 @@ class TestNode(NodeConnCB):
         message.block.calc_sha256()
         self.block_receive_map[message.block.sha256] += 1
 
-class MaxUploadTest(BitcoinTestFramework):
+class MaxUploadTest(IoPTestFramework):
  
     def __init__(self):
         super().__init__()

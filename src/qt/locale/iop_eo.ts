@@ -62,11 +62,11 @@
         <translation>Ricevaj adresoj</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <source>These are your IoP addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation>Jen viaj Bitmon-adresoj por sendi pagojn. Zorge kontrolu la sumon kaj la alsendan adreson antaŭ ol sendi.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <source>These are your IoP addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
         <translation>Jen viaj bitmonaj adresoj por ricevi pagojn. Estas konsilinde uzi apartan ricevan adreson por ĉiu transakcio.</translation>
     </message>
     <message>
@@ -136,7 +136,7 @@
     <name>BanTableModel</name>
     </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>IoPGUI</name>
     <message>
         <source>Sign &amp;message...</source>
         <translation>Subskribi &amp;mesaĝon...</translation>
@@ -214,7 +214,7 @@
         <translation>Reindeksado de blokoj sur disko...</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
+        <source>Send coins to a IoP address</source>
         <translation>Sendi monon al Bitmon-adreso</translation>
     </message>
     <message>
@@ -238,7 +238,7 @@
         <translation>&amp;Kontroli mesaĝon...</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
+        <source>IoP</source>
         <translation>Bitmono</translation>
     </message>
     <message>
@@ -266,11 +266,11 @@
         <translation>Ĉifri la privatajn ŝlosilojn de via monujo</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
+        <source>Sign messages with your IoP addresses to prove you own them</source>
         <translation>Subskribi mesaĝojn per via Bitmon-adresoj por pravigi, ke vi estas la posedanto</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
+        <source>Verify messages to ensure they were signed with specified IoP addresses</source>
         <translation>Kontroli mesaĝojn por kontroli ĉu ili estas subskribitaj per specifaj Bitmon-adresoj</translation>
     </message>
     <message>
@@ -628,7 +628,7 @@
         <translation>Fakulo</translation>
     </message>
     <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <source>Automatically open the IoP client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>Aŭtomate malfermi la kursilan pordon por Bitmono. Tio funkcias nur se via kursilo havas la UPnP-funkcion, kaj se tiu ĉi estas ŝaltita.</translation>
     </message>
     <message>
@@ -723,7 +723,7 @@
         <translation>Formularo</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the IoP network after a connection is established, but this process has not completed yet.</source>
         <translation>Eblas, ke la informoj videblaj ĉi tie estas eksdataj. Via monujo aŭtomate sinkoniĝas kun la bitmona reto kiam ili konektiĝas, sed tiu procezo ankoraŭ ne finfariĝis.</translation>
     </message>
     <message>
@@ -1213,7 +1213,7 @@
         <translation>Kopii la aktualan subskribon al la tondejo</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Bitcoin address</source>
+        <source>Sign the message to prove you own this IoP address</source>
         <translation>Subskribi la mesaĝon por pravigi, ke vi estas la posedanto de tiu Bitmon-adreso</translation>
     </message>
     <message>
@@ -1233,7 +1233,7 @@
         <translation>&amp;Kontroli Mesaĝon</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
+        <source>Verify the message to ensure it was signed with the specified IoP address</source>
         <translation>Kontroli la mesaĝon por pravigi, ke ĝi ja estas subskribita per la specifa Bitmon-adreso</translation>
     </message>
     <message>
@@ -1338,7 +1338,7 @@
         <translation>Ruli fone kiel demono kaj akcepti komandojn</translation>
     </message>
     <message>
-        <source>Bitcoin Core</source>
+        <source>IoP Core</source>
         <translation>Kerno de Bitmono</translation>
     </message>
     <message>

@@ -80,12 +80,12 @@
     </message>
     <message>
         <location line="+7"/>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <source>These are your IoP addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+4"/>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <source>These are your IoP addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -297,7 +297,7 @@
     </message>
 </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>IoPGUI</name>
     <message>
         <location filename="../iopgui.cpp" line="+357"/>
         <source>Sign &amp;message...</source>
@@ -430,8 +430,8 @@
     </message>
     <message>
         <location line="-510"/>
-        <source>Send coins to a Bitcoin address</source>
-        <translation>Send coins to a Bitcoin address</translation>
+        <source>Send coins to a IoP address</source>
+        <translation>Send coins to a IoP address</translation>
     </message>
     <message>
         <location line="+67"/>
@@ -460,8 +460,8 @@
     </message>
     <message>
         <location line="+516"/>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
+        <source>IoP</source>
+        <translation>IoP</translation>
     </message>
     <message>
         <location line="-741"/>
@@ -495,13 +495,13 @@
     </message>
     <message>
         <location line="+7"/>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>Sign messages with your Bitcoin addresses to prove you own them</translation>
+        <source>Sign messages with your IoP addresses to prove you own them</source>
+        <translation>Sign messages with your IoP addresses to prove you own them</translation>
     </message>
     <message>
         <location line="+2"/>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>Verify messages to ensure they were signed with specified Bitcoin addresses</translation>
+        <source>Verify messages to ensure they were signed with specified IoP addresses</source>
+        <translation>Verify messages to ensure they were signed with specified IoP addresses</translation>
     </message>
     <message>
         <location line="+58"/>
@@ -550,10 +550,10 @@
     </message>
     <message numerus="yes">
         <location line="+356"/>
-        <source>%n active connection(s) to Bitcoin network</source>
+        <source>%n active connection(s) to IoP network</source>
         <translation>
-            <numerusform>%n active connection to Bitcoin network</numerusform>
-            <numerusform>%n active connections to Bitcoin network</numerusform>
+            <numerusform>%n active connection to IoP network</numerusform>
+            <numerusform>%n active connections to IoP network</numerusform>
         </translation>
     </message>
     <message>
@@ -611,7 +611,7 @@
     </message>
     <message>
         <location line="-440"/>
-        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
+        <source>Show the %1 help message to get a list with possible IoP command-line options</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -691,7 +691,7 @@
     </message>
     <message>
         <location filename="../iop.cpp" line="+534"/>
-        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
+        <source>A fatal error occurred. IoP can no longer continue safely and will quit.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -934,7 +934,7 @@
     </message>
     <message>
         <location line="+71"/>
-        <source>The entered address &quot;%1&quot; is not a valid Bitcoin address.</source>
+        <source>The entered address &quot;%1&quot; is not a valid IoP address.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1094,8 +1094,8 @@
     </message>
     <message>
         <location filename="../intro.cpp" line="+20"/>
-        <source>Bitcoin</source>
-        <translation type="unfinished">Bitcoin</translation>
+        <source>IoP</source>
+        <translation type="unfinished">IoP</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -1109,7 +1109,7 @@
     </message>
     <message>
         <location line="+8"/>
-        <source>%1 will download and store a copy of the Bitcoin block chain.</source>
+        <source>%1 will download and store a copy of the IoP block chain.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1376,8 +1376,8 @@
     </message>
     <message>
         <location line="+30"/>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</translation>
+        <source>Automatically open the IoP client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>Automatically open the IoP client port on the router. This only works when your router supports UPnP and it is enabled.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1386,7 +1386,7 @@
     </message>
     <message>
         <location line="+17"/>
-        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
+        <source>Connect to the IoP network through a SOCKS5 proxy.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1434,7 +1434,7 @@
     </message>
     <message>
         <location line="+25"/>
-        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
+        <source>Connect to the IoP network through a separate SOCKS5 proxy for Tor hidden services.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1579,8 +1579,8 @@
     <message>
         <location line="+62"/>
         <location line="+386"/>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</translation>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the IoP network after a connection is established, but this process has not completed yet.</source>
+        <translation>The displayed information may be out of date. Your wallet automatically synchronizes with the IoP network after a connection is established, but this process has not completed yet.</translation>
     </message>
     <message>
         <location line="-139"/>
@@ -1699,7 +1699,7 @@
     </message>
     <message>
         <location line="+8"/>
-        <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
+        <source>URI cannot be parsed! This can be caused by an invalid IoP address or malformed URI parameters.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1821,7 +1821,7 @@
     </message>
     <message>
         <location filename="../guiutil.cpp" line="+130"/>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
+        <source>Enter a IoP address (e.g. %1)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2407,7 +2407,7 @@
     <message>
         <location line="+14"/>
         <location line="+23"/>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the IoP network.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2921,7 +2921,7 @@
     </message>
     <message>
         <location line="+101"/>
-        <source>Warning: Invalid Bitcoin address</source>
+        <source>Warning: Invalid IoP address</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2976,7 +2976,7 @@
     </message>
     <message>
         <location line="+39"/>
-        <source>The Bitcoin address to send the payment to</source>
+        <source>The IoP address to send the payment to</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3033,7 +3033,7 @@
     </message>
     <message>
         <location line="+47"/>
-        <source>A message that was attached to the iop: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
+        <source>A message that was attached to the iop: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the IoP network.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3095,7 +3095,7 @@
     </message>
     <message>
         <location line="+18"/>
-        <source>The Bitcoin address to sign the message with</source>
+        <source>The IoP address to sign the message with</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3137,8 +3137,8 @@
     </message>
     <message>
         <location line="+21"/>
-        <source>Sign the message to prove you own this Bitcoin address</source>
-        <translation>Sign the message to prove you own this Bitcoin address</translation>
+        <source>Sign the message to prove you own this IoP address</source>
+        <translation>Sign the message to prove you own this IoP address</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -3168,13 +3168,13 @@
     </message>
     <message>
         <location line="+21"/>
-        <source>The Bitcoin address the message was signed with</source>
+        <source>The IoP address the message was signed with</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+37"/>
-        <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
-        <translation>Verify the message to ensure it was signed with the specified Bitcoin address</translation>
+        <source>Verify the message to ensure it was signed with the specified IoP address</source>
+        <translation>Verify the message to ensure it was signed with the specified IoP address</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -4066,8 +4066,8 @@
     </message>
     <message>
         <location line="-384"/>
-        <source>Bitcoin Core</source>
-        <translation type="unfinished">Bitcoin Core</translation>
+        <source>IoP Core</source>
+        <translation type="unfinished">IoP Core</translation>
     </message>
     <message>
         <location line="+1"/>

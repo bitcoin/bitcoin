@@ -378,7 +378,7 @@ iop (0.4.0-1) unstable; urgency=low
   * Drop dpkg-source local-options hint: Declared options are default
     since dpkg-source 1.16.1.
     + Add irc URL to Upstream-Contact.
-    + Add comment on Bitcoin Developers to catch-all Files section.
+    + Add comment on IoP Developers to catch-all Files section.
     + Add Files sections for newly readded src/cryptopp/* (new custom
       BSD-like license), and newly added doc/build-osx.txt and
       src/makefile.osx (Expat).

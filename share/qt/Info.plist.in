@@ -29,16 +29,16 @@
   <string>????</string>
 
   <key>CFBundleExecutable</key>
-  <string>Bitcoin-Qt</string>
+  <string>IoP-Qt</string>
   
   <key>CFBundleName</key>
-  <string>Bitcoin-Qt</string>
+  <string>IoP-Qt</string>
 
   <key>LSHasLocalizedDisplayName</key>
   <true/>
 
   <key>CFBundleIdentifier</key>
-  <string>org.iopfoundation.Bitcoin-Qt</string>
+  <string>org.iopfoundation.IoP-Qt</string>
 
   <key>CFBundleURLTypes</key>
   <array>
@@ -46,7 +46,7 @@
       <key>CFBundleTypeRole</key>
       <string>Editor</string>
       <key>CFBundleURLName</key>
-      <string>org.iop.BitcoinPayment</string>
+      <string>org.iop.IoPPayment</string>
       <key>CFBundleURLSchemes</key>
       <array>
         <string>iop</string>
@@ -60,7 +60,7 @@
       <key>UTTypeIdentifier</key>
       <string>org.iop.paymentrequest</string>
       <key>UTTypeDescription</key>
-      <string>Bitcoin payment request</string>
+      <string>IoP payment request</string>
       <key>UTTypeConformsTo</key>
       <array>
         <string>public.data</string>

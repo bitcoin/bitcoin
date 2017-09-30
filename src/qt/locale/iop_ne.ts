@@ -93,7 +93,7 @@
     </message>
 </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>IoPGUI</name>
     <message>
         <source>Sign &amp;message...</source>
         <translation>सन्देशमा &amp;amp;हस्ताक्षर  गर्नुहोस्...</translation>
@@ -183,7 +183,7 @@
         <translation>डिस्कमा ब्लकलाई पुनः सूचीकरण गरिँदै...</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
+        <source>Send coins to a IoP address</source>
         <translation>बिटकोइन ठेगानामा सिक्का पठाउनुहोस्</translation>
     </message>
     <message>
@@ -227,7 +227,7 @@
 <context>
     <name>Intro</name>
     <message>
-        <source>%1 will download and store a copy of the Bitcoin block chain. At least %2GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
+        <source>%1 will download and store a copy of the IoP block chain. At least %2GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
         <translation>%1 ले बिटकोइन ब्लक चेनको एउटा प्रतिलिपि डाउनलोड र भण्डारण गर्नेछ । यो निर्देशिकामा कम्तिमा पनि %2GB डाटा भण्डारण गरिनेछ, र यो समयसँगै बढ्नेछ । वालेटलाई पनि यो निर्देशिकामा भण्डारण गरिनेछ ।</translation>
     </message>
     </context>
@@ -247,7 +247,7 @@
 <context>
     <name>OverviewPage</name>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the IoP network after a connection is established, but this process has not completed yet.</source>
         <translation>देखाइएको सूचना पूरानो हुन सक्छ । कनेक्सन स्थापित भएपछि, तपाईंको वालेट बिटकोइन नेटवर्कमा स्वचालित रूपमा समिकरण हुन्छ , तर यो प्रक्रिया अहिले सम्म पूरा भएको छैन ।</translation>
     </message>
     <message>
@@ -312,7 +312,7 @@
         <translation>रकम</translation>
     </message>
     <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
+        <source>Enter a IoP address (e.g. %1)</source>
         <translation>कृपया बिटकोइन ठेगाना प्रवेश गर्नुहोस् (उदाहरण %1)</translation>
     </message>
     </context>
@@ -364,7 +364,7 @@
         <translation>यो ठेगानालाई प्रयोग गरिएको ठेगानाको सूचीमा थप्न एउटा लेबल प्रविष्ट गर्नुहोस्</translation>
     </message>
     <message>
-        <source>A message that was attached to the iop: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
+        <source>A message that was attached to the iop: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the IoP network.</source>
         <translation>बिटकोइनमा संलग्न गरिएको सन्देश: तपाईंको मध्यस्थको लागि कारोबारको साथमा भण्डारण गरिने URI । नोट: यो सन्देश बिटकोइन नेटवर्क मार्फत पठाइने छैन ।</translation>
     </message>
     </context>

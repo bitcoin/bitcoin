@@ -8,10 +8,10 @@ Verify that a iopd node can load multiple wallet files
 """
 import os
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import IoPTestFramework
 from test_framework.util import assert_equal, assert_raises_jsonrpc
 
-class MultiWalletTest(BitcoinTestFramework):
+class MultiWalletTest(IoPTestFramework):
 
     def __init__(self):
         super().__init__()

@@ -1,5 +1,5 @@
-Bitcoin-Qt version 0.8.3 is now available from:
-  http://sourceforge.net/projects/iop/files/Bitcoin/iop-0.8.3/
+IoP-Qt version 0.8.3 is now available from:
+  http://sourceforge.net/projects/iop/files/IoP/iop-0.8.3/
 
 This is a maintenance release to fix a denial-of-service attack that
 can cause nodes to crash.

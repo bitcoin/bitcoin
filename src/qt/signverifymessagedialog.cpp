@@ -117,7 +117,7 @@ void SignVerifyMessageDialog::on_signMessageButton_SM_clicked()
     /* Clear old signature to ensure users don't get confused on error with an old signature displayed */
     ui->signatureOut_SM->clear();
 
-    CBitcoinAddress addr(ui->addressIn_SM->text().toStdString());
+    CIoPAddress addr(ui->addressIn_SM->text().toStdString());
     if (!addr.IsValid())
     {
         ui->statusLabel_SM->setStyleSheet("QLabel { color: red; }");
@@ -197,7 +197,7 @@ void SignVerifyMessageDialog::on_addressBookButton_VM_clicked()
 
 void SignVerifyMessageDialog::on_verifyMessageButton_VM_clicked()
 {
-    CBitcoinAddress addr(ui->addressIn_VM->text().toStdString());
+    CIoPAddress addr(ui->addressIn_VM->text().toStdString());
     if (!addr.IsValid())
     {
         ui->statusLabel_VM->setStyleSheet("QLabel { color: red; }");
@@ -237,7 +237,7 @@ void SignVerifyMessageDialog::on_verifyMessageButton_VM_clicked()
         return;
     }
 
-    if (!(CBitcoinAddress(pubkey.GetID()) == addr))
+    if (!(CIoPAddress(pubkey.GetID()) == addr))
     {
         ui->statusLabel_VM->setStyleSheet("QLabel { color: red; }");
         ui->statusLabel_VM->setText(QString("<nobr>") + tr("Message verification failed.") + QString("</nobr>"));

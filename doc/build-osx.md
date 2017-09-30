@@ -24,7 +24,7 @@ If you want to build the disk image with `make deploy` (.dmg / optional), you ne
 
 NOTE: Building with Qt4 is still supported, however, could result in a broken UI. Building with Qt5 is recommended.
 
-Build Bitcoin Core
+Build IoP Core
 ------------------------
 
 1. Clone the iop source code and cd into `iop`
@@ -53,19 +53,19 @@ Build Bitcoin Core
 Running
 -------
 
-Bitcoin Core is now available at `./src/iopd`
+IoP Core is now available at `./src/iopd`
 
 Before running, it's recommended you create an RPC configuration file.
 
-    echo -e "rpcuser=ioprpc\nrpcpassword=$(xxd -l 16 -p /dev/urandom)" > "/Users/${USER}/Library/Application Support/Bitcoin/iop.conf"
+    echo -e "rpcuser=ioprpc\nrpcpassword=$(xxd -l 16 -p /dev/urandom)" > "/Users/${USER}/Library/Application Support/IoP/iop.conf"
 
-    chmod 600 "/Users/${USER}/Library/Application Support/Bitcoin/iop.conf"
+    chmod 600 "/Users/${USER}/Library/Application Support/IoP/iop.conf"
 
 The first time you run iopd, it will start downloading the blockchain. This process could take several hours.
 
 You can monitor the download process by looking at the debug.log file:
 
-    tail -f $HOME/Library/Application\ Support/Bitcoin/debug.log
+    tail -f $HOME/Library/Application\ Support/IoP/debug.log
 
 Other commands:
 -------

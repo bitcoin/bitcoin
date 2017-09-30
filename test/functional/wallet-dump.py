@@ -6,7 +6,7 @@
 
 import os
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import IoPTestFramework
 from test_framework.util import assert_equal
 
 
@@ -55,7 +55,7 @@ def read_dump(file_name, addrs, hd_master_addr_old):
         return found_addr, found_addr_chg, found_addr_rsv, hd_master_addr_ret
 
 
-class WalletDumpTest(BitcoinTestFramework):
+class WalletDumpTest(IoPTestFramework):
 
     def __init__(self):
         super().__init__()

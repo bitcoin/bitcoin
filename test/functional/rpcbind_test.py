@@ -7,12 +7,12 @@
 import socket
 import sys
 
-from test_framework.test_framework import BitcoinTestFramework, SkipTest
+from test_framework.test_framework import IoPTestFramework, SkipTest
 from test_framework.util import *
 from test_framework.netutil import *
 
 
-class RPCBindTest(BitcoinTestFramework):
+class RPCBindTest(IoPTestFramework):
 
     def __init__(self):
         super().__init__()

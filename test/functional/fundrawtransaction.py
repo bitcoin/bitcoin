@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2016 The Bitcoin Core developers
+# Copyright (c) 2014-2016 The IoP Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the fundrawtransaction RPC."""
 
-from test_framework.test_framework import BitcoinTestFramework, IOPD_PROC_WAIT_TIMEOUT
+from test_framework.test_framework import IoPTestFramework, IOPD_PROC_WAIT_TIMEOUT
 from test_framework.util import *
 
 
@@ -15,7 +15,7 @@ def get_unspent(listunspent, amount):
     raise AssertionError('Could not find unspent with amount={}'.format(amount))
 
 
-class RawTransactionsTest(BitcoinTestFramework):
+class RawTransactionsTest(IoPTestFramework):
 
     def __init__(self):
         super().__init__()

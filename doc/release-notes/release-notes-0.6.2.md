@@ -1,5 +1,5 @@
-Bitcoin version 0.6.2 is now available for download at:
-http://sourceforge.net/projects/iop/files/Bitcoin/iop-0.6.2/
+IoP version 0.6.2 is now available for download at:
+http://sourceforge.net/projects/iop/files/IoP/iop-0.6.2/
 
 This is a bug-fix and code-cleanup release, with no major new features.
 

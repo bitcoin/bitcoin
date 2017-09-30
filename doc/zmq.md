@@ -33,7 +33,7 @@ buffering or reassembly.
 
 ## Prerequisites
 
-The ZeroMQ feature in Bitcoin Core requires ZeroMQ API version 4.x or
+The ZeroMQ feature in IoP Core requires ZeroMQ API version 4.x or
 newer. Typically, it is packaged by distributions as something like
 *libzmq3-dev*. The C++ wrapper for ZeroMQ is *not* needed.
 
@@ -102,5 +102,5 @@ retrieve the chain from the last known block to the new tip.
 
 There are several possibilities that ZMQ notification can get lost
 during transmission depending on the communication type your are
-using. Bitcoind appends an up-counting sequence number to each
+using. IoPd appends an up-counting sequence number to each
 notification which allows listeners to detect lost notifications.

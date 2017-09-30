@@ -57,12 +57,12 @@ void ConfirmSend(QString* text = nullptr, bool cancel = false)
 }
 
 //! Send coins to address and return txid.
-uint256 SendCoins(CWallet& wallet, SendCoinsDialog& sendCoinsDialog, const CBitcoinAddress& address, CAmount amount, bool rbf)
+uint256 SendCoins(CWallet& wallet, SendCoinsDialog& sendCoinsDialog, const CIoPAddress& address, CAmount amount, bool rbf)
 {
     QVBoxLayout* entries = sendCoinsDialog.findChild<QVBoxLayout*>("entries");
     SendCoinsEntry* entry = qobject_cast<SendCoinsEntry*>(entries->itemAt(0)->widget());
     entry->findChild<QValidatedLineEdit*>("payTo")->setText(QString::fromStdString(address.ToString()));
-    entry->findChild<BitcoinAmountField*>("payAmount")->setValue(amount);
+    entry->findChild<IoPAmountField*>("payAmount")->setValue(amount);
     sendCoinsDialog.findChild<QFrame*>("frameFee")
         ->findChild<QFrame*>("frameFeeSelection")
         ->findChild<QCheckBox*>("optInRBF")
@@ -172,8 +172,8 @@ void TestSendCoins()
     // Send two transactions, and verify they are added to transaction list.
     TransactionTableModel* transactionTableModel = walletModel.getTransactionTableModel();
     QCOMPARE(transactionTableModel->rowCount({}), 105);
-    uint256 txid1 = SendCoins(wallet, sendCoinsDialog, CBitcoinAddress(CKeyID()), 5 * COIN, false /* rbf */);
-    uint256 txid2 = SendCoins(wallet, sendCoinsDialog, CBitcoinAddress(CKeyID()), 10 * COIN, true /* rbf */);
+    uint256 txid1 = SendCoins(wallet, sendCoinsDialog, CIoPAddress(CKeyID()), 5 * COIN, false /* rbf */);
+    uint256 txid2 = SendCoins(wallet, sendCoinsDialog, CIoPAddress(CKeyID()), 10 * COIN, true /* rbf */);
     QCOMPARE(transactionTableModel->rowCount({}), 107);
     QVERIFY(FindTx(*transactionTableModel, txid1).isValid());
     QVERIFY(FindTx(*transactionTableModel, txid2).isValid());

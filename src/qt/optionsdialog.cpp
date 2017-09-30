@@ -112,7 +112,7 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     ui->thirdPartyTxUrls->setPlaceholderText("https://example.com/tx/%s");
 #endif
 
-    ui->unit->setModel(new BitcoinUnits(this));
+    ui->unit->setModel(new IoPUnits(this));
 
     /* Widget-to-option mapper */
     mapper = new QDataWidgetMapper(this);
@@ -230,7 +230,7 @@ void OptionsDialog::on_resetButton_clicked()
     }
 }
 
-void OptionsDialog::on_openBitcoinConfButton_clicked()
+void OptionsDialog::on_openIoPConfButton_clicked()
 {
     /* explain the purpose of the config file */
     QMessageBox::information(this, tr("Configuration options"),
@@ -238,7 +238,7 @@ void OptionsDialog::on_openBitcoinConfButton_clicked()
            "Additionally, any command-line options will override this configuration file."));
 
     /* show an error if there was some problem opening the file */
-    if (!GUIUtil::openBitcoinConf())
+    if (!GUIUtil::openIoPConf())
         QMessageBox::critical(this, tr("Error"), tr("The configuration file could not be opened."));
 }
 

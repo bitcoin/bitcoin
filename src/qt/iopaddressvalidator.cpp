@@ -15,12 +15,12 @@
   - All lower-case letters except for 'l'
 */
 
-BitcoinAddressEntryValidator::BitcoinAddressEntryValidator(QObject *parent) :
+IoPAddressEntryValidator::IoPAddressEntryValidator(QObject *parent) :
     QValidator(parent)
 {
 }
 
-QValidator::State BitcoinAddressEntryValidator::validate(QString &input, int &pos) const
+QValidator::State IoPAddressEntryValidator::validate(QString &input, int &pos) const
 {
     Q_UNUSED(pos);
 
@@ -80,16 +80,16 @@ QValidator::State BitcoinAddressEntryValidator::validate(QString &input, int &po
     return state;
 }
 
-BitcoinAddressCheckValidator::BitcoinAddressCheckValidator(QObject *parent) :
+IoPAddressCheckValidator::IoPAddressCheckValidator(QObject *parent) :
     QValidator(parent)
 {
 }
 
-QValidator::State BitcoinAddressCheckValidator::validate(QString &input, int &pos) const
+QValidator::State IoPAddressCheckValidator::validate(QString &input, int &pos) const
 {
     Q_UNUSED(pos);
-    // Validate the passed Bitcoin address
-    CBitcoinAddress addr(input.toStdString());
+    // Validate the passed IoP address
+    CIoPAddress addr(input.toStdString());
     if (addr.IsValid())
         return QValidator::Acceptable;
 

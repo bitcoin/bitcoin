@@ -4,11 +4,11 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test resurrection of mined transactions when the blockchain is re-organized."""
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import IoPTestFramework
 from test_framework.util import *
 
 # Create one-input, one-output, no-fee transaction:
-class MempoolCoinbaseTest(BitcoinTestFramework):
+class MempoolCoinbaseTest(IoPTestFramework):
 
     def __init__(self):
         super().__init__()

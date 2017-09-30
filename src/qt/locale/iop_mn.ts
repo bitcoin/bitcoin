@@ -60,7 +60,7 @@
     <name>BanTableModel</name>
     </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>IoPGUI</name>
     <message>
         <source>Sign &amp;message...</source>
         <translation>&amp;Зурвас хавсаргах...</translation>
@@ -126,7 +126,7 @@
         <translation>Оношилгоо ба засварын консолыг онгойлго</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
+        <source>IoP</source>
         <translation>Биткойн</translation>
     </message>
     <message>

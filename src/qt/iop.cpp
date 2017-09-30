@@ -170,14 +170,14 @@ void DebugMessageHandler(QtMsgType type, const QMessageLogContext& context, cons
 }
 #endif
 
-/** Class encapsulating Bitcoin Core startup and shutdown.
+/** Class encapsulating IoP Core startup and shutdown.
  * Allows running startup and shutdown in a different thread from the UI thread.
  */
-class BitcoinCore: public QObject
+class IoPCore: public QObject
 {
     Q_OBJECT
 public:
-    explicit BitcoinCore();
+    explicit IoPCore();
     /** Basic initialization, before starting initialization/shutdown thread.
      * Return true on success.
      */
@@ -200,13 +200,13 @@ private:
     void handleRunawayException(const std::exception *e);
 };
 
-/** Main Bitcoin application object */
-class BitcoinApplication: public QApplication
+/** Main IoP application object */
+class IoPApplication: public QApplication
 {
     Q_OBJECT
 public:
-    explicit BitcoinApplication(int &argc, char **argv);
-    ~BitcoinApplication();
+    explicit IoPApplication(int &argc, char **argv);
+    ~IoPApplication();
 
 #ifdef ENABLE_WALLET
     /// Create payment server
@@ -229,7 +229,7 @@ public:
     /// Get process return value
     int getReturnValue() { return returnValue; }
 
-    /// Get window identifier of QMainWindow (BitcoinGUI)
+    /// Get window identifier of QMainWindow (IoPGUI)
     WId getMainWinId() const;
 
 public Q_SLOTS:
@@ -248,7 +248,7 @@ private:
     QThread *coreThread;
     OptionsModel *optionsModel;
     ClientModel *clientModel;
-    BitcoinGUI *window;
+    IoPGUI *window;
     QTimer *pollShutdownTimer;
 #ifdef ENABLE_WALLET
     PaymentServer* paymentServer;
@@ -263,18 +263,18 @@ private:
 
 #include "iop.moc"
 
-BitcoinCore::BitcoinCore():
+IoPCore::IoPCore():
     QObject()
 {
 }
 
-void BitcoinCore::handleRunawayException(const std::exception *e)
+void IoPCore::handleRunawayException(const std::exception *e)
 {
     PrintExceptionContinue(e, "Runaway exception");
     Q_EMIT runawayException(QString::fromStdString(GetWarnings("gui")));
 }
 
-bool BitcoinCore::baseInitialize()
+bool IoPCore::baseInitialize()
 {
     if (!AppInitBasicSetup())
     {
@@ -295,7 +295,7 @@ bool BitcoinCore::baseInitialize()
     return true;
 }
 
-void BitcoinCore::initialize()
+void IoPCore::initialize()
 {
     try
     {
@@ -309,7 +309,7 @@ void BitcoinCore::initialize()
     }
 }
 
-void BitcoinCore::shutdown()
+void IoPCore::shutdown()
 {
     try
     {
@@ -326,7 +326,7 @@ void BitcoinCore::shutdown()
     }
 }
 
-BitcoinApplication::BitcoinApplication(int &argc, char **argv):
+IoPApplication::IoPApplication(int &argc, char **argv):
     QApplication(argc, argv),
     coreThread(0),
     optionsModel(0),
@@ -342,17 +342,17 @@ BitcoinApplication::BitcoinApplication(int &argc, char **argv):
     setQuitOnLastWindowClosed(false);
 
     // UI per-platform customization
-    // This must be done inside the BitcoinApplication constructor, or after it, because
+    // This must be done inside the IoPApplication constructor, or after it, because
     // PlatformStyle::instantiate requires a QApplication
     std::string platformName;
-    platformName = gArgs.GetArg("-uiplatform", BitcoinGUI::DEFAULT_UIPLATFORM);
+    platformName = gArgs.GetArg("-uiplatform", IoPGUI::DEFAULT_UIPLATFORM);
     platformStyle = PlatformStyle::instantiate(QString::fromStdString(platformName));
     if (!platformStyle) // Fall back to "other" if specified name not found
         platformStyle = PlatformStyle::instantiate("other");
     assert(platformStyle);
 }
 
-BitcoinApplication::~BitcoinApplication()
+IoPApplication::~IoPApplication()
 {
     if(coreThread)
     {
@@ -375,27 +375,27 @@ BitcoinApplication::~BitcoinApplication()
 }
 
 #ifdef ENABLE_WALLET
-void BitcoinApplication::createPaymentServer()
+void IoPApplication::createPaymentServer()
 {
     paymentServer = new PaymentServer(this);
 }
 #endif
 
-void BitcoinApplication::createOptionsModel(bool resetSettings)
+void IoPApplication::createOptionsModel(bool resetSettings)
 {
     optionsModel = new OptionsModel(nullptr, resetSettings);
 }
 
-void BitcoinApplication::createWindow(const NetworkStyle *networkStyle)
+void IoPApplication::createWindow(const NetworkStyle *networkStyle)
 {
-    window = new BitcoinGUI(platformStyle, networkStyle, 0);
+    window = new IoPGUI(platformStyle, networkStyle, 0);
 
     pollShutdownTimer = new QTimer(window);
     connect(pollShutdownTimer, SIGNAL(timeout()), window, SLOT(detectShutdown()));
     pollShutdownTimer->start(200);
 }
 
-void BitcoinApplication::createSplashScreen(const NetworkStyle *networkStyle)
+void IoPApplication::createSplashScreen(const NetworkStyle *networkStyle)
 {
     SplashScreen *splash = new SplashScreen(0, networkStyle);
     // We don't hold a direct pointer to the splash screen after creation, but the splash
@@ -405,12 +405,12 @@ void BitcoinApplication::createSplashScreen(const NetworkStyle *networkStyle)
     connect(this, SIGNAL(requestedShutdown()), splash, SLOT(close()));
 }
 
-void BitcoinApplication::startThread()
+void IoPApplication::startThread()
 {
     if(coreThread)
         return;
     coreThread = new QThread(this);
-    BitcoinCore *executor = new BitcoinCore();
+    IoPCore *executor = new IoPCore();
     executor->moveToThread(coreThread);
 
     /*  communication to and from thread */
@@ -426,20 +426,20 @@ void BitcoinApplication::startThread()
     coreThread->start();
 }
 
-void BitcoinApplication::parameterSetup()
+void IoPApplication::parameterSetup()
 {
     InitLogging();
     InitParameterInteraction();
 }
 
-void BitcoinApplication::requestInitialize()
+void IoPApplication::requestInitialize()
 {
     qDebug() << __func__ << ": Requesting initialize";
     startThread();
     Q_EMIT requestedInitialize();
 }
 
-void BitcoinApplication::requestShutdown()
+void IoPApplication::requestShutdown()
 {
     // Show a simple window indicating shutdown status
     // Do this first as some of the steps may take some time below,
@@ -466,7 +466,7 @@ void BitcoinApplication::requestShutdown()
     Q_EMIT requestedShutdown();
 }
 
-void BitcoinApplication::initializeResult(bool success)
+void IoPApplication::initializeResult(bool success)
 {
     qDebug() << __func__ << ": Initialization result: " << success;
     // Set exit result.
@@ -489,8 +489,8 @@ void BitcoinApplication::initializeResult(bool success)
         {
             walletModel = new WalletModel(platformStyle, vpwallets[0], optionsModel);
 
-            window->addWallet(BitcoinGUI::DEFAULT_WALLET, walletModel);
-            window->setCurrentWallet(BitcoinGUI::DEFAULT_WALLET);
+            window->addWallet(IoPGUI::DEFAULT_WALLET, walletModel);
+            window->setCurrentWallet(IoPGUI::DEFAULT_WALLET);
 
             connect(walletModel, SIGNAL(coinsSent(CWallet*,SendCoinsRecipient,QByteArray)),
                              paymentServer, SLOT(fetchPaymentACK(CWallet*,const SendCoinsRecipient&,QByteArray)));
@@ -524,18 +524,18 @@ void BitcoinApplication::initializeResult(bool success)
     }
 }
 
-void BitcoinApplication::shutdownResult()
+void IoPApplication::shutdownResult()
 {
     quit(); // Exit main loop after shutdown finished
 }
 
-void BitcoinApplication::handleRunawayException(const QString &message)
+void IoPApplication::handleRunawayException(const QString &message)
 {
-    QMessageBox::critical(0, "Runaway exception", BitcoinGUI::tr("A fatal error occurred. Bitcoin can no longer continue safely and will quit.") + QString("\n\n") + message);
+    QMessageBox::critical(0, "Runaway exception", IoPGUI::tr("A fatal error occurred. IoP can no longer continue safely and will quit.") + QString("\n\n") + message);
     ::exit(EXIT_FAILURE);
 }
 
-WId BitcoinApplication::getMainWinId() const
+WId IoPApplication::getMainWinId() const
 {
     if (!window)
         return 0;
@@ -564,7 +564,7 @@ int main(int argc, char *argv[])
     Q_INIT_RESOURCE(iop);
     Q_INIT_RESOURCE(iop_locale);
 
-    BitcoinApplication app(argc, argv);
+    IoPApplication app(argc, argv);
 #if QT_VERSION > 0x050100
     // Generate high-dpi pixmaps
     QApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
@@ -706,7 +706,7 @@ int main(int argc, char *argv[])
         // Perform base initialization before spinning up initialization/shutdown thread
         // This is acceptable because this function only contains steps that are quick to execute,
         // so the GUI thread won't be held up.
-        if (BitcoinCore::baseInitialize()) {
+        if (IoPCore::baseInitialize()) {
             app.requestInitialize();
 #if defined(Q_OS_WIN) && QT_VERSION >= 0x050000
             WinShutdownMonitor::registerShutdownBlockReason(QObject::tr("%1 didn't yet exit safely...").arg(QObject::tr(PACKAGE_NAME)), (HWND)app.getMainWinId());

@@ -50,7 +50,7 @@ TEST_EXIT_SKIPPED = 77
 
 IOPD_PROC_WAIT_TIMEOUT = 60
 
-class BitcoinTestFramework(object):
+class IoPTestFramework(object):
     """Base class for a iop test script.
 
     Individual iop test scripts should subclass this class and override the following methods:
@@ -356,7 +356,7 @@ class BitcoinTestFramework(object):
         self.log.addHandler(ch)
 
         if self.options.trace_rpc:
-            rpc_logger = logging.getLogger("BitcoinRPC")
+            rpc_logger = logging.getLogger("IoPRPC")
             rpc_logger.setLevel(logging.DEBUG)
             rpc_handler = logging.StreamHandler(sys.stdout)
             rpc_handler.setLevel(logging.DEBUG)
@@ -468,7 +468,7 @@ class BitcoinTestFramework(object):
                     raise
             time.sleep(0.25)
 
-class ComparisonTestFramework(BitcoinTestFramework):
+class ComparisonTestFramework(IoPTestFramework):
     """Test framework for doing p2p comparison testing
 
     Sets up some iopd binaries:

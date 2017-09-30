@@ -29,7 +29,7 @@ class QUrl;
 class QWidget;
 QT_END_NAMESPACE
 
-/** Utility functions used by the Bitcoin Qt UI.
+/** Utility functions used by the IoP Qt UI.
  */
 namespace GUIUtil
 {
@@ -45,9 +45,9 @@ namespace GUIUtil
     void setupAmountWidget(QLineEdit *widget, QWidget *parent);
 
     // Parse "iop:" URI into recipient object, return true on successful parsing
-    bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out);
-    bool parseBitcoinURI(QString uri, SendCoinsRecipient *out);
-    QString formatBitcoinURI(const SendCoinsRecipient &info);
+    bool parseIoPURI(const QUrl &uri, SendCoinsRecipient *out);
+    bool parseIoPURI(QString uri, SendCoinsRecipient *out);
+    QString formatIoPURI(const SendCoinsRecipient &info);
 
     // Returns true if given address+amount meets "dust" definition
     bool isDust(const QString& address, const CAmount& amount);
@@ -114,7 +114,7 @@ namespace GUIUtil
     void openDebugLogfile();
 
     // Open the config file
-    bool openBitcoinConf();
+    bool openIoPConf();
 
     // Replace invalid default fonts with known good ones
     void SubstituteFonts(const QString& language);

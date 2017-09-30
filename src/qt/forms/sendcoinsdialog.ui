@@ -862,7 +862,7 @@
                   </widget>
                  </item>
                  <item>
-                  <widget class="BitcoinAmountField" name="customFee"/>
+                  <widget class="IoPAmountField" name="customFee"/>
                  </item>
                  <item>
                   <spacer name="horizontalSpacer_6">
@@ -1273,7 +1273,7 @@
    <header>qvalidatedlineedit.h</header>
   </customwidget>
   <customwidget>
-   <class>BitcoinAmountField</class>
+   <class>IoPAmountField</class>
    <extends>QLineEdit</extends>
    <header>iopamountfield.h</header>
    <container>1</container>

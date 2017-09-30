@@ -16,8 +16,8 @@ BEGIN
     BEGIN
         BLOCK "040904E4" // U.S. English - multilingual (hex)
         BEGIN
-            VALUE "CompanyName",        "Bitcoin"
-            VALUE "FileDescription",    "iop-tx (CLI Bitcoin transaction editor utility)"
+            VALUE "CompanyName",        "IoP"
+            VALUE "FileDescription",    "iop-tx (CLI IoP transaction editor utility)"
             VALUE "FileVersion",        VER_FILEVERSION_STR
             VALUE "InternalName",       "iop-tx"
             VALUE "LegalCopyright",     COPYRIGHT_STR

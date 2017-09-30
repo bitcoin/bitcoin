@@ -1,5 +1,5 @@
 [Unit]
-Description=Bitcoin's distributed currency daemon
+Description=IoP's distributed currency daemon
 After=network.target
 
 [Service]

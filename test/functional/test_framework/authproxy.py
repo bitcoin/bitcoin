@@ -52,7 +52,7 @@ USER_AGENT = "AuthServiceProxy/0.1"
 
 HTTP_TIMEOUT = 30
 
-log = logging.getLogger("BitcoinRPC")
+log = logging.getLogger("IoPRPC")
 
 class JSONRPCException(Exception):
     def __init__(self, rpc_error):

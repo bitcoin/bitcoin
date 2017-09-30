@@ -12,10 +12,10 @@
     <name>BanTableModel</name>
     </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>IoPGUI</name>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
+        <source>IoP</source>
+        <translation>IoP</translation>
     </message>
     </context>
 <context>
@@ -156,8 +156,8 @@
 <context>
     <name>iop-core</name>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Jezrga</translation>
+        <source>IoP Core</source>
+        <translation>IoP Jezrga</translation>
     </message>
     </context>
 </TS>

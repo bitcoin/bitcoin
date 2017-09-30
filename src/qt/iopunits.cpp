@@ -8,22 +8,22 @@
 
 #include <QStringList>
 
-BitcoinUnits::BitcoinUnits(QObject *parent):
+IoPUnits::IoPUnits(QObject *parent):
         QAbstractListModel(parent),
         unitlist(availableUnits())
 {
 }
 
-QList<BitcoinUnits::Unit> BitcoinUnits::availableUnits()
+QList<IoPUnits::Unit> IoPUnits::availableUnits()
 {
-    QList<BitcoinUnits::Unit> unitlist;
+    QList<IoPUnits::Unit> unitlist;
     unitlist.append(IOP);
     unitlist.append(mIOP);
     unitlist.append(uIOP);
     return unitlist;
 }
 
-bool BitcoinUnits::valid(int unit)
+bool IoPUnits::valid(int unit)
 {
     switch(unit)
     {
@@ -36,7 +36,7 @@ bool BitcoinUnits::valid(int unit)
     }
 }
 
-QString BitcoinUnits::name(int unit)
+QString IoPUnits::name(int unit)
 {
     switch(unit)
     {
@@ -47,18 +47,18 @@ QString BitcoinUnits::name(int unit)
     }
 }
 
-QString BitcoinUnits::description(int unit)
+QString IoPUnits::description(int unit)
 {
     switch(unit)
     {
-    case IOP: return QString("Bitcoins");
-    case mIOP: return QString("Milli-Bitcoins (1 / 1" THIN_SP_UTF8 "000)");
-    case uIOP: return QString("Micro-Bitcoins (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
+    case IOP: return QString("IoPs");
+    case mIOP: return QString("Milli-IoPs (1 / 1" THIN_SP_UTF8 "000)");
+    case uIOP: return QString("Micro-IoPs (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
     default: return QString("???");
     }
 }
 
-qint64 BitcoinUnits::factor(int unit)
+qint64 IoPUnits::factor(int unit)
 {
     switch(unit)
     {
@@ -69,7 +69,7 @@ qint64 BitcoinUnits::factor(int unit)
     }
 }
 
-int BitcoinUnits::decimals(int unit)
+int IoPUnits::decimals(int unit)
 {
     switch(unit)
     {
@@ -80,7 +80,7 @@ int BitcoinUnits::decimals(int unit)
     }
 }
 
-QString BitcoinUnits::format(int unit, const CAmount& nIn, bool fPlus, SeparatorStyle separators)
+QString IoPUnits::format(int unit, const CAmount& nIn, bool fPlus, SeparatorStyle separators)
 {
     // Note: not using straight sprintf here because we do NOT want
     // localized number formatting.
@@ -119,12 +119,12 @@ QString BitcoinUnits::format(int unit, const CAmount& nIn, bool fPlus, Separator
 // Please take care to use formatHtmlWithUnit instead, when
 // appropriate.
 
-QString BitcoinUnits::formatWithUnit(int unit, const CAmount& amount, bool plussign, SeparatorStyle separators)
+QString IoPUnits::formatWithUnit(int unit, const CAmount& amount, bool plussign, SeparatorStyle separators)
 {
     return format(unit, amount, plussign, separators) + QString(" ") + name(unit);
 }
 
-QString BitcoinUnits::formatHtmlWithUnit(int unit, const CAmount& amount, bool plussign, SeparatorStyle separators)
+QString IoPUnits::formatHtmlWithUnit(int unit, const CAmount& amount, bool plussign, SeparatorStyle separators)
 {
     QString str(formatWithUnit(unit, amount, plussign, separators));
     str.replace(QChar(THIN_SP_CP), QString(THIN_SP_HTML));
@@ -132,7 +132,7 @@ QString BitcoinUnits::formatHtmlWithUnit(int unit, const CAmount& amount, bool p
 }
 
 
-bool BitcoinUnits::parse(int unit, const QString &value, CAmount *val_out)
+bool IoPUnits::parse(int unit, const QString &value, CAmount *val_out)
 {
     if(!valid(unit) || value.isEmpty())
         return false; // Refuse to parse invalid unit or empty string
@@ -171,23 +171,23 @@ bool BitcoinUnits::parse(int unit, const QString &value, CAmount *val_out)
     return ok;
 }
 
-QString BitcoinUnits::getAmountColumnTitle(int unit)
+QString IoPUnits::getAmountColumnTitle(int unit)
 {
     QString amountTitle = QObject::tr("Amount");
-    if (BitcoinUnits::valid(unit))
+    if (IoPUnits::valid(unit))
     {
-        amountTitle += " ("+BitcoinUnits::name(unit) + ")";
+        amountTitle += " ("+IoPUnits::name(unit) + ")";
     }
     return amountTitle;
 }
 
-int BitcoinUnits::rowCount(const QModelIndex &parent) const
+int IoPUnits::rowCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
     return unitlist.size();
 }
 
-QVariant BitcoinUnits::data(const QModelIndex &index, int role) const
+QVariant IoPUnits::data(const QModelIndex &index, int role) const
 {
     int row = index.row();
     if(row >= 0 && row < unitlist.size())
@@ -207,7 +207,7 @@ QVariant BitcoinUnits::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
-CAmount BitcoinUnits::maxMoney()
+CAmount IoPUnits::maxMoney()
 {
     return MAX_MONEY;
 }

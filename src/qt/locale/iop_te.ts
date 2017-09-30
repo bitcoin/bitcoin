@@ -38,11 +38,11 @@
         <translation>అందుకునే చిరునామాలు</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <source>These are your IoP addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation>ఇవి మీరు పంపే చెల్లింపుల బిట్‌కాయిన్ చిరునామాలు. నాణేలు పంపే ముందు ప్రతిసారి అందుకునే చిరునామా మరియు చెల్లింపు మొత్తం సరిచూసుకోండి.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <source>These are your IoP addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
         <translation>ఇవి మీరు అందుకునే చెల్లింపుల బిట్‌కాయిన్ చిరునామాలు. ప్రతీ లావాదేవీకి క్రొత్త అందుకునే చిరునామా వాడటం మంచిది.</translation>
     </message>
     <message>
@@ -104,7 +104,7 @@
     <name>BanTableModel</name>
     </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>IoPGUI</name>
     <message>
         <source>Error</source>
         <translation>లోపం</translation>

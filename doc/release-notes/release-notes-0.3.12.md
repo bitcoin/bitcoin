@@ -10,4 +10,4 @@ If you have json-rpc code that checks the contents of the error string, you need
 http://www.iop.org/smf/index.php?topic=969.0
 
 Download:
-http://sourceforge.net/projects/iop/files/Bitcoin/iop-0.3.12/
+http://sourceforge.net/projects/iop/files/IoP/iop-0.3.12/

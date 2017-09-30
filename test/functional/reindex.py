@@ -9,11 +9,11 @@
 - Stop the node and restart it with -reindex-chainstate. Verify that the node has reindexed up to block 3.
 """
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import IoPTestFramework
 from test_framework.util import assert_equal
 import time
 
-class ReindexTest(BitcoinTestFramework):
+class ReindexTest(IoPTestFramework):
 
     def __init__(self):
         super().__init__()

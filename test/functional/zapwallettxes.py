@@ -14,12 +14,12 @@
   transactions are still available, but that the unconfirmed transaction has
   been zapped.
 """
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import IoPTestFramework
 from test_framework.util import (assert_equal,
                                  assert_raises_jsonrpc,
                                  )
 
-class ZapWalletTXesTest (BitcoinTestFramework):
+class ZapWalletTXesTest (IoPTestFramework):
 
     def __init__(self):
         super().__init__()

@@ -24,7 +24,7 @@
 from time import sleep
 
 from test_framework.mininode import *
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import IoPTestFramework
 from test_framework.util import *
 
 class TestNode(NodeConnCB):
@@ -32,7 +32,7 @@ class TestNode(NodeConnCB):
         # Don't send a verack in response
         pass
 
-class TimeoutsTest(BitcoinTestFramework):
+class TimeoutsTest(IoPTestFramework):
     def __init__(self):
         super().__init__()
         self.setup_clean_chain = True

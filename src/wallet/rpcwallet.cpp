@@ -136,7 +136,7 @@ UniValue getnewaddress(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() > 1)
         throw std::runtime_error(
             "getnewaddress ( \"account\" )\n"
-            "\nReturns a new Bitcoin address for receiving payments.\n"
+            "\nReturns a new IoP address for receiving payments.\n"
             "If 'account' is specified (DEPRECATED), it is added to the address book \n"
             "so payments received with the address will be credited to 'account'.\n"
             "\nArguments:\n"
@@ -168,18 +168,18 @@ UniValue getnewaddress(const JSONRPCRequest& request)
 
     pwallet->SetAddressBook(keyID, strAccount, "receive");
 
-    return CBitcoinAddress(keyID).ToString();
+    return CIoPAddress(keyID).ToString();
 }
 
 
-CBitcoinAddress GetAccountAddress(CWallet* const pwallet, std::string strAccount, bool bForceNew=false)
+CIoPAddress GetAccountAddress(CWallet* const pwallet, std::string strAccount, bool bForceNew=false)
 {
     CPubKey pubKey;
     if (!pwallet->GetAccountPubkey(pubKey, strAccount, bForceNew)) {
         throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
     }
 
-    return CBitcoinAddress(pubKey.GetID());
+    return CIoPAddress(pubKey.GetID());
 }
 
 UniValue getaccountaddress(const JSONRPCRequest& request)
@@ -192,7 +192,7 @@ UniValue getaccountaddress(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
             "getaccountaddress \"account\"\n"
-            "\nDEPRECATED. Returns the current Bitcoin address for receiving payments to this account.\n"
+            "\nDEPRECATED. Returns the current IoP address for receiving payments to this account.\n"
             "\nArguments:\n"
             "1. \"account\"       (string, required) The account name for the address. It can also be set to the empty string \"\" to represent the default account. The account does not need to exist, it will be created and a new address created  if there is no account by the given name.\n"
             "\nResult:\n"
@@ -226,7 +226,7 @@ UniValue getrawchangeaddress(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() > 0)
         throw std::runtime_error(
             "getrawchangeaddress\n"
-            "\nReturns a new Bitcoin address, for receiving change.\n"
+            "\nReturns a new IoP address, for receiving change.\n"
             "This is for use with raw transactions, NOT normal use.\n"
             "\nResult:\n"
             "\"address\"    (string) The address\n"
@@ -250,7 +250,7 @@ UniValue getrawchangeaddress(const JSONRPCRequest& request)
 
     CKeyID keyID = vchPubKey.GetID();
 
-    return CBitcoinAddress(keyID).ToString();
+    return CIoPAddress(keyID).ToString();
 }
 
 
@@ -275,9 +275,9 @@ UniValue setaccount(const JSONRPCRequest& request)
 
     LOCK2(cs_main, pwallet->cs_wallet);
 
-    CBitcoinAddress address(request.params[0].get_str());
+    CIoPAddress address(request.params[0].get_str());
     if (!address.IsValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid IoP address");
 
     std::string strAccount;
     if (request.params.size() > 1)
@@ -323,9 +323,9 @@ UniValue getaccount(const JSONRPCRequest& request)
 
     LOCK2(cs_main, pwallet->cs_wallet);
 
-    CBitcoinAddress address(request.params[0].get_str());
+    CIoPAddress address(request.params[0].get_str());
     if (!address.IsValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid IoP address");
 
     std::string strAccount;
     std::map<CTxDestination, CAddressBookData>::iterator mi = pwallet->mapAddressBook.find(address.Get());
@@ -365,8 +365,8 @@ UniValue getaddressesbyaccount(const JSONRPCRequest& request)
 
     // Find all addresses that have the given account
     UniValue ret(UniValue::VARR);
-    for (const std::pair<CBitcoinAddress, CAddressBookData>& item : pwallet->mapAddressBook) {
-        const CBitcoinAddress& address = item.first;
+    for (const std::pair<CIoPAddress, CAddressBookData>& item : pwallet->mapAddressBook) {
+        const CIoPAddress& address = item.first;
         const std::string& strName = item.second.name;
         if (strName == strAccount)
             ret.push_back(address.ToString());
@@ -389,7 +389,7 @@ static void SendMoney(CWallet * const pwallet, const CTxDestination &address, CA
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
     }
 
-    // Parse Bitcoin address
+    // Parse IoP address
     CScript scriptPubKey = GetScriptForDestination(address);
 
     // Create and send the transaction
@@ -451,9 +451,9 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
 
     LOCK2(cs_main, pwallet->cs_wallet);
 
-    CBitcoinAddress address(request.params[0].get_str());
+    CIoPAddress address(request.params[0].get_str());
     if (!address.IsValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid IoP address");
 
     // Amount
     CAmount nAmount = AmountFromValue(request.params[1]);
@@ -534,11 +534,11 @@ UniValue listaddressgroupings(const JSONRPCRequest& request)
         for (CTxDestination address : grouping)
         {
             UniValue addressInfo(UniValue::VARR);
-            addressInfo.push_back(CBitcoinAddress(address).ToString());
+            addressInfo.push_back(CIoPAddress(address).ToString());
             addressInfo.push_back(ValueFromAmount(balances[address]));
             {
-                if (pwallet->mapAddressBook.find(CBitcoinAddress(address).Get()) != pwallet->mapAddressBook.end()) {
-                    addressInfo.push_back(pwallet->mapAddressBook.find(CBitcoinAddress(address).Get())->second.name);
+                if (pwallet->mapAddressBook.find(CIoPAddress(address).Get()) != pwallet->mapAddressBook.end()) {
+                    addressInfo.push_back(pwallet->mapAddressBook.find(CIoPAddress(address).Get())->second.name);
                 }
             }
             jsonGrouping.push_back(addressInfo);
@@ -583,7 +583,7 @@ UniValue signmessage(const JSONRPCRequest& request)
     std::string strAddress = request.params[0].get_str();
     std::string strMessage = request.params[1].get_str();
 
-    CBitcoinAddress addr(strAddress);
+    CIoPAddress addr(strAddress);
     if (!addr.IsValid())
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
 
@@ -636,10 +636,10 @@ UniValue getreceivedbyaddress(const JSONRPCRequest& request)
 
     LOCK2(cs_main, pwallet->cs_wallet);
 
-    // Bitcoin address
-    CBitcoinAddress address = CBitcoinAddress(request.params[0].get_str());
+    // IoP address
+    CIoPAddress address = CIoPAddress(request.params[0].get_str());
     if (!address.IsValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid IoP address");
     CScript scriptPubKey = GetScriptForDestination(address.Get());
     if (!IsMine(*pwallet, scriptPubKey)) {
         return ValueFromAmount(0);
@@ -892,9 +892,9 @@ UniValue sendfrom(const JSONRPCRequest& request)
     LOCK2(cs_main, pwallet->cs_wallet);
 
     std::string strAccount = AccountFromValue(request.params[0]);
-    CBitcoinAddress address(request.params[1].get_str());
+    CIoPAddress address(request.params[1].get_str());
     if (!address.IsValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid IoP address");
     CAmount nAmount = AmountFromValue(request.params[2]);
     if (nAmount <= 0)
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send");
@@ -1008,16 +1008,16 @@ UniValue sendmany(const JSONRPCRequest& request)
         }
     }
 
-    std::set<CBitcoinAddress> setAddress;
+    std::set<CIoPAddress> setAddress;
     std::vector<CRecipient> vecSend;
 
     CAmount totalAmount = 0;
     std::vector<std::string> keys = sendTo.getKeys();
     for (const std::string& name_ : keys)
     {
-        CBitcoinAddress address(name_);
+        CIoPAddress address(name_);
         if (!address.IsValid())
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Bitcoin address: ")+name_);
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid IoP address: ")+name_);
 
         if (setAddress.count(address))
             throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, duplicated address: ")+name_);
@@ -1078,7 +1078,7 @@ UniValue addmultisigaddress(const JSONRPCRequest& request)
     {
         std::string msg = "addmultisigaddress nrequired [\"key\",...] ( \"account\" )\n"
             "\nAdd a nrequired-to-sign multisignature address to the wallet.\n"
-            "Each key is a Bitcoin address or hex-encoded public key.\n"
+            "Each key is a IoP address or hex-encoded public key.\n"
             "If 'account' is specified (DEPRECATED), assign address to that account.\n"
 
             "\nArguments:\n"
@@ -1114,7 +1114,7 @@ UniValue addmultisigaddress(const JSONRPCRequest& request)
     pwallet->AddCScript(inner);
 
     pwallet->SetAddressBook(innerID, strAccount, "send");
-    return CBitcoinAddress(innerID).ToString();
+    return CIoPAddress(innerID).ToString();
 }
 
 class Witnessifier : public boost::static_visitor<bool>
@@ -1202,9 +1202,9 @@ UniValue addwitnessaddress(const JSONRPCRequest& request)
         }
     }
 
-    CBitcoinAddress address(request.params[0].get_str());
+    CIoPAddress address(request.params[0].get_str());
     if (!address.IsValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid IoP address");
 
     Witnessifier w(pwallet);
     CTxDestination dest = address.Get();
@@ -1215,7 +1215,7 @@ UniValue addwitnessaddress(const JSONRPCRequest& request)
 
     pwallet->SetAddressBook(w.result, "", "receive");
 
-    return CBitcoinAddress(w.result).ToString();
+    return CIoPAddress(w.result).ToString();
 }
 
 struct tallyitem
@@ -1250,7 +1250,7 @@ UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bool fByA
             filter = filter | ISMINE_WATCH_ONLY;
 
     // Tally
-    std::map<CBitcoinAddress, tallyitem> mapTally;
+    std::map<CIoPAddress, tallyitem> mapTally;
     for (const std::pair<uint256, CWalletTx>& pairWtx : pwallet->mapWallet) {
         const CWalletTx& wtx = pairWtx.second;
 
@@ -1283,10 +1283,10 @@ UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bool fByA
     // Reply
     UniValue ret(UniValue::VARR);
     std::map<std::string, tallyitem> mapAccountTally;
-    for (const std::pair<CBitcoinAddress, CAddressBookData>& item : pwallet->mapAddressBook) {
-        const CBitcoinAddress& address = item.first;
+    for (const std::pair<CIoPAddress, CAddressBookData>& item : pwallet->mapAddressBook) {
+        const CIoPAddress& address = item.first;
         const std::string& strAccount = item.second.name;
-        std::map<CBitcoinAddress, tallyitem>::iterator it = mapTally.find(address);
+        std::map<CIoPAddress, tallyitem>::iterator it = mapTally.find(address);
         if (it == mapTally.end() && !fIncludeEmpty)
             continue;
 
@@ -1435,7 +1435,7 @@ UniValue listreceivedbyaccount(const JSONRPCRequest& request)
 
 static void MaybePushAddress(UniValue & entry, const CTxDestination &dest)
 {
-    CBitcoinAddress addr;
+    CIoPAddress addr;
     if (addr.Set(dest))
         entry.push_back(Pair("address", addr.ToString()));
 }
@@ -2312,7 +2312,7 @@ UniValue encryptwallet(const JSONRPCRequest& request)
     // slack space in .dat files; that is bad if the old data is
     // unencrypted private keys. So:
     StartShutdown();
-    return "wallet encrypted; Bitcoin server stopping, restart to run with encrypted wallet. The keypool has been flushed and a new HD seed was generated (if you are using HD). You need to make a new backup.";
+    return "wallet encrypted; IoP server stopping, restart to run with encrypted wallet. The keypool has been flushed and a new HD seed was generated (if you are using HD). You need to make a new backup.";
 }
 
 UniValue lockunspent(const JSONRPCRequest& request)
@@ -2681,15 +2681,15 @@ UniValue listunspent(const JSONRPCRequest& request)
         nMaxDepth = request.params[1].get_int();
     }
 
-    std::set<CBitcoinAddress> setAddress;
+    std::set<CIoPAddress> setAddress;
     if (request.params.size() > 2 && !request.params[2].isNull()) {
         RPCTypeCheckArgument(request.params[2], UniValue::VARR);
         UniValue inputs = request.params[2].get_array();
         for (unsigned int idx = 0; idx < inputs.size(); idx++) {
             const UniValue& input = inputs[idx];
-            CBitcoinAddress address(input.get_str());
+            CIoPAddress address(input.get_str());
             if (!address.IsValid())
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Bitcoin address: ")+input.get_str());
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid IoP address: ")+input.get_str());
             if (setAddress.count(address))
                 throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, duplicated address: ")+input.get_str());
            setAddress.insert(address);
@@ -2742,7 +2742,7 @@ UniValue listunspent(const JSONRPCRequest& request)
         entry.push_back(Pair("vout", out.i));
 
         if (fValidAddress) {
-            entry.push_back(Pair("address", CBitcoinAddress(address).ToString()));
+            entry.push_back(Pair("address", CIoPAddress(address).ToString()));
 
             if (pwallet->mapAddressBook.count(address)) {
                 entry.push_back(Pair("account", pwallet->mapAddressBook[address].name));
@@ -2864,7 +2864,7 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
             true, true);
 
         if (options.exists("changeAddress")) {
-            CBitcoinAddress address(options["changeAddress"].get_str());
+            CIoPAddress address(options["changeAddress"].get_str());
 
             if (!address.IsValid())
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "changeAddress must be a valid iop address");

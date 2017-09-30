@@ -153,7 +153,7 @@ public:
             obj.push_back(Pair("hex", HexStr(subscript.begin(), subscript.end())));
             UniValue a(UniValue::VARR);
             for (const CTxDestination& addr : addresses)
-                a.push_back(CBitcoinAddress(addr).ToString());
+                a.push_back(CIoPAddress(addr).ToString());
             obj.push_back(Pair("addresses", a));
             if (whichType == TX_MULTISIG)
                 obj.push_back(Pair("sigsrequired", nRequired));
@@ -207,7 +207,7 @@ UniValue validateaddress(const JSONRPCRequest& request)
     LOCK(cs_main);
 #endif
 
-    CBitcoinAddress address(request.params[0].get_str());
+    CIoPAddress address(request.params[0].get_str());
     bool isValid = address.IsValid();
 
     UniValue ret(UniValue::VOBJ);
@@ -276,8 +276,8 @@ CScript _createmultisig_redeemScript(CWallet * const pwallet, const UniValue& pa
     {
         const std::string& ks = keys[i].get_str();
 #ifdef ENABLE_WALLET
-        // Case 1: Bitcoin address and we have full public key:
-        CBitcoinAddress address(ks);
+        // Case 1: IoP address and we have full public key:
+        CIoPAddress address(ks);
         if (pwallet && address.IsValid()) {
             CKeyID keyID;
             if (!address.GetKeyID(keyID))
@@ -357,7 +357,7 @@ UniValue createmultisig(const JSONRPCRequest& request)
     // Construct using pay-to-script-hash:
     CScript inner = _createmultisig_redeemScript(pwallet, request.params);
     CScriptID innerID(inner);
-    CBitcoinAddress address(innerID);
+    CIoPAddress address(innerID);
 
     UniValue result(UniValue::VOBJ);
     result.push_back(Pair("address", address.ToString()));
@@ -395,7 +395,7 @@ UniValue verifymessage(const JSONRPCRequest& request)
     std::string strSign     = request.params[1].get_str();
     std::string strMessage  = request.params[2].get_str();
 
-    CBitcoinAddress addr(strAddress);
+    CIoPAddress addr(strAddress);
     if (!addr.IsValid())
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
 
@@ -443,7 +443,7 @@ UniValue signmessagewithprivkey(const JSONRPCRequest& request)
     std::string strPrivkey = request.params[0].get_str();
     std::string strMessage = request.params[1].get_str();
 
-    CBitcoinSecret vchSecret;
+    CIoPSecret vchSecret;
     bool fGood = vchSecret.SetString(strPrivkey);
     if (!fGood)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");

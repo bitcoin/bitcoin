@@ -9,7 +9,7 @@ Version 2 compact blocks are post-segwit (wtxids)
 """
 
 from test_framework.mininode import *
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import IoPTestFramework
 from test_framework.util import *
 from test_framework.blocktools import create_block, create_coinbase, add_witness_commitment
 from test_framework.script import CScript, OP_TRUE
@@ -92,7 +92,7 @@ class TestNode(NodeConnCB):
             raise AssertionError("send_await_disconnect failed!")
         return success
 
-class CompactBlocksTest(BitcoinTestFramework):
+class CompactBlocksTest(IoPTestFramework):
     def __init__(self):
         super().__init__()
         self.setup_clean_chain = True
