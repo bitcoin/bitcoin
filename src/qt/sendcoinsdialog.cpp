@@ -23,6 +23,7 @@
 #include "txmempool.h"
 #include "policy/fees.h"
 #include "wallet/wallet.h"
+#include "wallet/hdwallet.h"
 
 #include "univalue.h"
 
@@ -163,9 +164,14 @@ void SendCoinsDialog::setModel(WalletModel *_model)
             }
         }
 
-        setBalance(_model->getBalance(), _model->getUnconfirmedBalance(), _model->getImmatureBalance(),
-                   _model->getWatchBalance(), _model->getWatchUnconfirmedBalance(), _model->getWatchImmatureBalance());
-        connect(_model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(setBalance(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)));
+        CHDWalletBalances bal;
+        CHDWallet *pw = model->getParticlWallet();
+        pw->GetBalances(bal);
+        
+        setBalance(bal.nPart, bal.nPartStaked, bal.nBlind, bal.nAnon, bal.nPartUnconf, bal.nPartImmature,
+            bal.nPartWatchOnly, bal.nPartWatchOnlyUnconf, 0, bal.nPartWatchOnlyStaked);
+        connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)),
+            this, SLOT(setBalance(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)));
         connect(_model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
         updateDisplayUnit();
 
@@ -642,24 +648,39 @@ bool SendCoinsDialog::handlePaymentRequest(const SendCoinsRecipient &rv)
     return true;
 }
 
-void SendCoinsDialog::setBalance(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
-                                 const CAmount& watchBalance, const CAmount& watchUnconfirmedBalance, const CAmount& watchImmatureBalance)
+void SendCoinsDialog::setBalance(const CAmount& balance, const CAmount& staked, const CAmount& blindBalance, const CAmount& anonBalance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
+                const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance, const CAmount& watchStakedBalance)
 {
     Q_UNUSED(unconfirmedBalance);
+    Q_UNUSED(staked);
     Q_UNUSED(immatureBalance);
-    Q_UNUSED(watchBalance);
-    Q_UNUSED(watchUnconfirmedBalance);
+    Q_UNUSED(watchOnlyBalance);
+    Q_UNUSED(watchUnconfBalance);
     Q_UNUSED(watchImmatureBalance);
+    Q_UNUSED(watchStakedBalance);
 
     if(model && model->getOptionsModel())
     {
-        ui->labelBalance->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), balance));
+        QString sBalance = BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), balance);
+        
+        if (blindBalance > 0)
+            sBalance += "\n" + BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), blindBalance) + " B";
+        if (anonBalance > 0)
+            sBalance += "\n" + BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), anonBalance) + " A";
+        ui->labelBalance->setText(sBalance);
     }
 }
 
 void SendCoinsDialog::updateDisplayUnit()
 {
-    setBalance(model->getBalance(), 0, 0, 0, 0, 0);
+    if (!model)
+        return;
+    CHDWalletBalances bal;
+    CHDWallet *pw = model->getParticlWallet();
+    pw->GetBalances(bal);
+    
+    setBalance(bal.nPart, bal.nPartStaked, bal.nBlind, bal.nAnon, bal.nPartUnconf, bal.nPartImmature,
+        bal.nPartWatchOnly, bal.nPartWatchOnlyUnconf, 0, bal.nPartWatchOnlyStaked);
     ui->customFee->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
     updateMinFeeLabel();
     updateSmartFeeLabel();
