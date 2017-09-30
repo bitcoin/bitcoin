@@ -124,7 +124,8 @@ IoPGUI::IoPGUI(const PlatformStyle *_platformStyle, const NetworkStyle *networkS
     platformStyle(_platformStyle)
 {
     GUIUtil::restoreWindowGeometry("nWindow", QSize(850, 550), this);
-    setStyleSheet("background: rgb(15,15,15); color: rgb(12,175,165)");
+    //setStyleSheet("QWidget {background: rgb(15,15,15); alternate-background-color: rgb(20,20,20); color: rgb(12,175,165)} QPushButton { background-color: qlineargradient(x1:0, y1:0, x2: 0.5, y2: 0, x3: 1, y3: 0, stop: 0 rgb(108,200,239), stop: 1 rgb(102,204,204), stop: 2 rgb(12,175,165)); color: rgb(15,15,15); border: 2px solid rgb(12,175,165); }");
+    setStyleSheet("QWidget {background: rgb(15,15,15); alternate-background-color: rgb(20,20,20); color: rgb(12,175,165)} QPushButton { background-color: rgb(108,200,239); color: rgb(15,15,15); }");    
     QString windowTitle = tr(PACKAGE_NAME) + " - ";
 #ifdef ENABLE_WALLET
     enableWallet = WalletModel::isWalletEnabled();
