@@ -25,6 +25,7 @@ public:
     
     bool DisableCap();
     bool IsCapEnabled();
+    bool IsWhitelistEnabled();
     
     // Statistics
     unsigned int GetCapFactor();

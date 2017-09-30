@@ -31,6 +31,11 @@
 #include <queue>
 #include <utility>
 
+
+// IoP
+#include <random>
+#include "base58.h"
+
 //////////////////////////////////////////////////////////////////////////////
 //
 // IoPMiner
@@ -76,6 +81,11 @@ BlockAssembler::BlockAssembler(const CChainParams& params, const Options& option
     nBlockMaxSize = std::max<size_t>(1000, std::min<size_t>(MAX_BLOCK_SERIALIZED_SIZE - 1000, options.nBlockMaxSize));
     // Whether we need to account for byte usage (in addition to weight usage)
     fNeedSizeAccounting = (nBlockMaxSize < MAX_BLOCK_SERIALIZED_SIZE - 1000);
+}
+
+
+void BlockAssembler::setPrivateKey(std::string PrivateKey){
+	minerPrivateKey = PrivateKey;
 }
 
 static BlockAssembler::Options DefaultOptions(const CChainParams& params)
@@ -185,7 +195,26 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     coinbaseTx.vout.resize(1);
     coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn;
     coinbaseTx.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
-    coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
+
+
+    if (minerPrivateKey.empty() || minerPrivateKey.compare("") == 0)
+        // no private key provided, so we continue as always.
+        coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
+    else {
+        // I will add an OP_return output to the cb with random data to generate more randomness
+        coinbaseTx.vout.resize(2);
+
+        //generate random data.
+        srand(std::random_device()());
+
+        // create op_return script.
+        coinbaseTx.vout[1].scriptPubKey = CScript() << OP_RETURN << rand();
+        coinbaseTx.vout[1].nValue = COIN * 0;
+
+        // Modify the scriptSig with the signature and public key.
+        coinbaseTx = SignCoinbaseTransactionForWhiteList(coinbaseTx, minerPrivateKey);
+    }
+
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
     pblocktemplate->vchCoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());
     pblocktemplate->vTxFees[0] = -nFees;
@@ -473,7 +502,64 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
     }
 }
 
-void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce)
+
+/**
+ * Iop Beta release
+ * Modifies the scriptSig's coinbase script to include the signature and public key
+ * from the provided publish key. This coinbase format is the expected for the Miner White list control.
+ */
+CMutableTransaction SignCoinbaseTransactionForWhiteList(CMutableTransaction coinbaseTx, const std::string strPrivKey)
+{
+	if (strPrivKey.empty()){
+		LogPrintf("Can't sign coinbase transaction. Private key is empty.\n");
+		throw std::runtime_error(strprintf("Provided private key is empty.%s", strPrivKey));
+	}
+
+	// creates a private key from the secret passed.
+	CBitcoinSecret vchSecret;
+	bool fGood = vchSecret.SetString(strPrivKey.data());
+	if (!fGood) {
+		LogPrintf("Can't sign coinbase transaction. Provided private key '%s' is not valid\n", strPrivKey);
+		throw std::runtime_error(strprintf("Provided private key (%s) is not valid. Invalid private key encoding", strPrivKey));
+	}
+
+	CKey key = vchSecret.GetKey();
+	if (!key.IsValid()) {
+		LogPrintf("Provided private key (%s) is not valid. Private key outside allowed range.\n", strPrivKey);
+		throw std::runtime_error(strprintf("Provided private key (%s) is not valid. Private key outside allowed range.", strPrivKey));
+	}
+
+	// get the public key
+	CPubKey publicKey = key.GetPubKey();
+	if (!publicKey.IsValid()) {
+		LogPrintf("Provided private key (%s) is not valid. Derived public key not valid.\n", strPrivKey);
+		throw std::runtime_error(strprintf("Provided private key (%s) is not valid. Derived public key not valid.", strPrivKey));
+	}
+	std::vector<unsigned char> vpkey (publicKey.begin(), publicKey.end());
+
+
+	// Prepare new transaction to hash and sign
+	CMutableTransaction cbDraft = coinbaseTx;
+	std::vector<unsigned char> vIoP = ParseHex("496f50");
+	CScript unScriptSig = CScript() << vIoP;
+	cbDraft.vin[0].scriptSig = unScriptSig;
+	CTransaction cbTx = cbDraft;
+
+	// this is the hash to sign
+	uint256 hash = cbTx.GetHash();
+
+	std::vector<unsigned char> signature;
+	key.Sign(hash, signature);
+	// add the SIGHASH_ALL byte
+	signature.push_back(0x01);
+
+	// I push into the scriptSig the signature and public key used.
+	coinbaseTx.vin[0].scriptSig = CScript() << signature << vpkey;
+
+	return coinbaseTx;
+}
+
+void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce, const std::string privateKey)
 {
     // Update nExtraNonce
     static uint256 hashPrevBlock;
@@ -485,8 +571,20 @@ void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned
     ++nExtraNonce;
     unsigned int nHeight = pindexPrev->nHeight+1; // Height first in coinbase required for block.version=2
     CMutableTransaction txCoinbase(*pblock->vtx[0]);
-    txCoinbase.vin[0].scriptSig = (CScript() << nHeight << CScriptNum(nExtraNonce)) + COINBASE_FLAGS;
-    assert(txCoinbase.vin[0].scriptSig.size() <= 100);
+
+    // IoP beta change - If the miner white list control is activated, we need to add random data into the opreturn
+    if (nHeight >= Params().GetConsensus().minerWhiteListActivationHeight){
+    	// we must make sure we have a private key.
+    	if (privateKey.empty()) throw std::runtime_error(strprintf("Provided private key is empty.", privateKey));
+
+    	txCoinbase.vout[1].scriptPubKey = CScript() << OP_RETURN << rand() << nExtraNonce;
+
+    	//since we change the coinbase transaction, we need to generate a new signature
+    	txCoinbase = SignCoinbaseTransactionForWhiteList(txCoinbase, privateKey);
+    } else {
+        txCoinbase.vin[0].scriptSig = (CScript() << nHeight << CScriptNum(nExtraNonce)) + COINBASE_FLAGS;
+        assert(txCoinbase.vin[0].scriptSig.size() <= 100);
+    }
 
     pblock->vtx[0] = MakeTransactionRef(std::move(txCoinbase));
     pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);

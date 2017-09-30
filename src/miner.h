@@ -155,6 +155,7 @@ private:
     int nHeight;
     int64_t nLockTimeCutoff;
     const CChainParams& chainparams;
+    std::string minerPrivateKey;
 
 public:
     struct Options {
@@ -166,6 +167,7 @@ public:
 
     BlockAssembler(const CChainParams& params);
     BlockAssembler(const CChainParams& params, const Options& options);
+    void setPrivateKey(std::string PrivateKey);
 
     /** Construct a new block template with coinbase to scriptPubKeyIn */
     std::unique_ptr<CBlockTemplate> CreateNewBlock(const CScript& scriptPubKeyIn, bool fMineWitnessTx=true);
@@ -203,6 +205,8 @@ private:
       * of updated descendants. */
     int UpdatePackagesForAdded(const CTxMemPool::setEntries& alreadyAdded, indexed_modified_transaction_set &mapModifiedTx);
 };
+
+CMutableTransaction SignCoinbaseTransactionForWhiteList(CMutableTransaction coinbaseTx, const std::string strPrivKey);
 
 /** Modify the extranonce in a block */
 void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce);
