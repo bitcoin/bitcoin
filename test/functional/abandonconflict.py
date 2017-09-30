@@ -38,13 +38,13 @@ class AbandonConflictTest(BitcoinTestFramework):
         # Disconnect nodes so node0's transactions don't get into node1's mempool
         disconnect_nodes(self.nodes[0], 1)
 
-        # Identify the 10btc outputs
+        # Identify the 10iop outputs
         nA = next(i for i, vout in enumerate(self.nodes[0].getrawtransaction(txA, 1)["vout"]) if vout["value"] == Decimal("10"))
         nB = next(i for i, vout in enumerate(self.nodes[0].getrawtransaction(txB, 1)["vout"]) if vout["value"] == Decimal("10"))
         nC = next(i for i, vout in enumerate(self.nodes[0].getrawtransaction(txC, 1)["vout"]) if vout["value"] == Decimal("10"))
 
         inputs =[]
-        # spend 10btc outputs from txA and txB
+        # spend 10iop outputs from txA and txB
         inputs.append({"txid":txA, "vout":nA})
         inputs.append({"txid":txB, "vout":nB})
         outputs = {}
@@ -54,7 +54,7 @@ class AbandonConflictTest(BitcoinTestFramework):
         signed = self.nodes[0].signrawtransaction(self.nodes[0].createrawtransaction(inputs, outputs))
         txAB1 = self.nodes[0].sendrawtransaction(signed["hex"])
 
-        # Identify the 14.99998btc output
+        # Identify the 14.99998iop output
         nAB = next(i for i, vout in enumerate(self.nodes[0].getrawtransaction(txAB1, 1)["vout"]) if vout["value"] == Decimal("14.99998"))
 
         #Create a child tx spending AB1 and C
