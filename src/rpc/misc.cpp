@@ -245,6 +245,8 @@ CScript _createmultisig_redeemScript(CWallet * const pwallet, const UniValue& pa
             }
             if (!vchPubKey.IsFullyValid())
                 throw std::runtime_error(" Invalid public key: "+ks);
+            if (fSorted && !vchPubKey.IsCompressed())
+                throw std::runtime_error(" Compressed key required for BIP67: "+ks);
             pubkeys[i] = vchPubKey;
         }
 
@@ -256,6 +258,8 @@ CScript _createmultisig_redeemScript(CWallet * const pwallet, const UniValue& pa
             CPubKey vchPubKey(ParseHex(ks));
             if (!vchPubKey.IsFullyValid())
                 throw std::runtime_error(" Invalid public key: "+ks);
+            if (fSorted && !vchPubKey.IsCompressed())
+                throw std::runtime_error(" Compressed key required for BIP67: "+ks);
             pubkeys[i] = vchPubKey;
         }
         else
