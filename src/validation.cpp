@@ -1568,7 +1568,7 @@ static DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* 
     //                     CScript redeemScript = out.scriptPubKey;
     //                     CTxDestination destinationAddress;
     //                     ExtractDestination(redeemScript, destinationAddress);
-    //                     CBitcoinAddress address(destinationAddress);
+    //                     CIoPAddress address(destinationAddress);
 
     //                     if (address.IsValid()){
     //                         switch(action)
@@ -1917,7 +1917,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
         }
 
         // to be valid, the public key used to sign the coinbase input must be from a valid miner an exists in the minerwhitelistdb
-        CBitcoinAddress cAddress;
+        CIoPAddress cAddress;
         cAddress.Set(pkey.GetID());
         if (!cAddress.IsValid()){
             LogPrintf("Invalid coinbase transaction: Generated base58 IoP address is not valid. %s \n", cAddress.ToString());
@@ -2061,7 +2061,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     
         // make sure the public key is ok.
         if (pkey.IsValid()){
-            CBitcoinAddress cAddress;
+            CIoPAddress cAddress;
             cAddress.Set(pkey.GetID());
             pminerwhitelist->MineBlock(pindex->nHeight, cAddress.ToString() );
         }
@@ -2131,7 +2131,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
                             CScript redeemScript = out.scriptPubKey;
                             CTxDestination destinationAddress;
                             ExtractDestination(redeemScript, destinationAddress);
-                            CBitcoinAddress address(destinationAddress);
+                            CIoPAddress address(destinationAddress);
 
                             if (address.IsValid()){
                                 switch(action)
