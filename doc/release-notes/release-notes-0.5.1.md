@@ -9,18 +9,18 @@ More translations are welcome; join the project at Transifex if you can help:
 https://www.transifex.net/projects/p/iop/
 
 Please report bugs using the issue tracker at github:
-https://github.com/iop/iop/issues
+https://github.com/bitcoin/bitcoin/issues
 
 Project source code is hosted at github; we are no longer
 distributing .tar.gz files here, you can get them
 directly from github:
-https://github.com/iop/iop/tarball/v0.5.1  # .tar.gz
-https://github.com/iop/iop/zipball/v0.5.1  # .zip
+https://github.com/bitcoin/bitcoin/tarball/v0.5.1  # .tar.gz
+https://github.com/bitcoin/bitcoin/zipball/v0.5.1  # .zip
 
 For Ubuntu users, there is a new ppa maintained by Matt Corallo which
 you can add to your system so that it will automatically keep
 iop up-to-date.  Just type
-sudo apt-add-repository ppa:iop/iop
+sudo apt-add-repository ppa:bitcoin/bitcoin
 in your terminal, then install the iop-qt package.
 
 

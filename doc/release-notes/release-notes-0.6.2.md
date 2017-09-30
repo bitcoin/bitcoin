@@ -4,7 +4,7 @@ http://sourceforge.net/projects/iop/files/IoP/iop-0.6.2/
 This is a bug-fix and code-cleanup release, with no major new features.
 
 Please report bugs using the github issue tracker at:
-https://github.com/iop/iop/issues
+https://github.com/bitcoin/bitcoin/issues
 
 
 NOTABLE CHANGES

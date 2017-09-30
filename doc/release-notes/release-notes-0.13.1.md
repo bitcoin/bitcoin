@@ -8,7 +8,7 @@ updated translations.
 
 Please report bugs using the issue tracker at github:
 
-  <https://github.com/iop/iop/issues>
+  <https://github.com/bitcoin/bitcoin/issues>
 
 To receive security and update notifications, please subscribe to:
 

@@ -4,17 +4,17 @@ IoP version 0.7.1 is now available from:
 This is a bug-fix minor release.
 
 Please report bugs using the issue tracker at github:
-  https://github.com/iop/iop/issues
+  https://github.com/bitcoin/bitcoin/issues
 
 Project source code is hosted at github; you can get
 source-only tarballs/zipballs directly from there:
-  https://github.com/iop/iop/tarball/v0.7.1  # .tar.gz
-  https://github.com/iop/iop/zipball/v0.7.1  # .zip
+  https://github.com/bitcoin/bitcoin/tarball/v0.7.1  # .tar.gz
+  https://github.com/bitcoin/bitcoin/zipball/v0.7.1  # .zip
 
 Ubuntu Linux users can use the "Personal Package Archive" (PPA)
 maintained by Matt Corallo to automatically keep 
 up-to-date.  Just type:
-  sudo apt-add-repository ppa:iop/iop
+  sudo apt-add-repository ppa:bitcoin/bitcoin
   sudo apt-get update
 in your terminal, then install the iop-qt package:
   sudo apt-get install iop-qt

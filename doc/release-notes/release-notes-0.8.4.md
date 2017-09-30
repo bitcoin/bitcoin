@@ -5,7 +5,7 @@ This is a maintenance release to fix a critical bug and three
 security issues; we urge all users to upgrade.
 
 Please report bugs using the issue tracker at github:
-  https://github.com/iop/iop/issues
+  https://github.com/bitcoin/bitcoin/issues
 
 
 How to Upgrade

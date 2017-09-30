@@ -4,7 +4,7 @@ IoP version 0.6.3 is now available for download at:
 This is a bug-fix release, with no new features.
 
 Please report bugs using the issue tracker at github:
-  https://github.com/iop/iop/issues
+  https://github.com/bitcoin/bitcoin/issues
 
 CHANGE SUMMARY
 

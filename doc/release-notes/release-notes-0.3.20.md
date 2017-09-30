@@ -1,6 +1,6 @@
 Please checkout the git integration branch from:
 
-https://github.com/iop/iop
+https://github.com/bitcoin/bitcoin
 
 ... and help test.  The new features that need testing are:
 
@@ -19,4 +19,4 @@ Bug fixes that also need testing:
 
 This needs more testing on Windows!  Please drop me a quick private message, email, or IRC message if you are able to do some testing.  If you find bugs, please open an issue at:
 
-https://github.com/iop/iop/issues
+https://github.com/bitcoin/bitcoin/issues
