@@ -1,7 +1,7 @@
 IoP Core integration/staging tree
 =====================================
 
-[![Build Status](https://travis-ci.org/iop/iop.svg?branch=master)](https://travis-ci.org/iop/iop)
+[![Build Status](https://travis-ci.org/Internet-of-People/iop-hd.svg?branch=master)](https://travis-ci.org/Internet-of-People/iop-hd)
 
 https://iopcore.org
 
@@ -28,7 +28,7 @@ Development Process
 -------------------
 
 The `master` branch is regularly built and tested, but is not guaranteed to be
-completely stable. [Tags](https://github.com/iop/iop-hd/tags) are created
+completely stable. [Tags](https://github.com/Internet-of-People/iop-hd/tags) are created
 regularly to indicate new official, stable release versions of IoP Core.
 
 The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md).
