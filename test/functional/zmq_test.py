@@ -8,6 +8,7 @@ import os
 import struct
 
 from test_framework.test_framework import BitcoinTestFramework, SkipTest
+from test_framework.mininode import CTransaction, BytesIO
 from test_framework.util import (assert_equal,
                                  bytes_to_hex_str,
                                  hash256,
@@ -71,12 +72,14 @@ class ZMQTest (BitcoinTestFramework):
         msg = self.zmqSubSocket.recv_multipart()
         topic = msg[0]
         assert_equal(topic, b"rawtx")
-        body = msg[1]
+        body = CTransaction()
+        body.deserialize(BytesIO(msg[1]))
+        body.calc_sha256()
         msgSequence = struct.unpack('<I', msg[-1])[-1]
         assert_equal(msgSequence, 0) # must be sequence 0 on rawtx
 
         # Check that the rawtx hashes to the hashtx
-        assert_equal(hash256(body), txhash)
+        assert_equal(body.hash, bytes_to_hex_str(txhash))
 
         self.log.info("Wait for block")
         msg = self.zmqSubSocket.recv_multipart()

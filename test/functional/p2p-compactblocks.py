@@ -93,7 +93,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         # Node0 = pre-segwit, node1 = segwit-aware
         self.num_nodes = 2
-        self.extra_args = [["-vbparams=segwit:0:0"], ["-txindex"]]
+        self.extra_args = [["-segwitheight=-1"], ["-txindex","-segwitheight=432"]]
         self.utxos = []
 
     def build_block_on_tip(self, node, segwit=False):
@@ -676,7 +676,7 @@ class CompactBlocksTest(BitcoinTestFramework):
 
     def activate_segwit(self, node):
         node.generate(144*3)
-        assert_equal(get_bip9_status(node, "segwit")["status"], 'active')
+        assert_equal(get_softfork_status(self.nodes[0], 'csv')['active'], True)
 
     def test_end_to_end_block_relay(self, node, listeners):
         utxo = self.utxos.pop(0)
