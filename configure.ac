@@ -380,9 +380,9 @@ case $host in
          dnl add default macports paths
          CPPFLAGS="$CPPFLAGS -isystem /opt/local/include"
          LIBS="$LIBS -L/opt/local/lib"
-         if test -d /opt/local/include/db48; then
-           CPPFLAGS="$CPPFLAGS -I/opt/local/include/db48"
-           LIBS="$LIBS -L/opt/local/lib/db48"
+         if test -d /opt/local/include/db53; then
+           CPPFLAGS="$CPPFLAGS -I/opt/local/include/db53"
+           LIBS="$LIBS -L/opt/local/lib/db53"
          fi
        fi
 
@@ -396,7 +396,7 @@ case $host in
          dnl the user (--without-wallet or --without-gui for example).
 
          openssl_prefix=`$BREW --prefix openssl 2>/dev/null`
-         bdb_prefix=`$BREW --prefix berkeley-db4 2>/dev/null`
+         bdb_prefix=`$BREW --prefix berkeley-db5 2>/dev/null`
          qt5_prefix=`$BREW --prefix qt5 2>/dev/null`
          if test x$openssl_prefix != x; then
            PKG_CONFIG_PATH="$openssl_prefix/lib/pkgconfig:$PKG_CONFIG_PATH"
@@ -707,7 +707,7 @@ AC_SUBST(LIBMEMENV)
 
 if test x$enable_wallet != xno; then
     dnl Check for libdb_cxx only if wallet enabled
-    IOP_FIND_BDB48
+    IOP_FIND_BDB53
 fi
 
 dnl Check for libminiupnpc (optional)
