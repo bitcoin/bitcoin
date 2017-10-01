@@ -154,6 +154,7 @@ bool CMinerWhitelistDB::Init(bool fWipe){
         batch.Write(DB_INIT,true);
         WriteBatch(batch);
     }
+    return true;
 }
 
 bool CMinerWhitelistDB::EnableCap(unsigned int factor) {
