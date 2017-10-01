@@ -117,7 +117,9 @@ void CMainSignals::MempoolEntryRemoved(CTransactionRef ptx, MemPoolRemovalReason
 }
 
 void CMainSignals::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {
-    m_internals->UpdatedBlockTip(pindexNew, pindexFork, fInitialDownload);
+    m_internals->m_schedulerClient.AddToProcessQueue([pindexNew, pindexFork, fInitialDownload, this] {
+        m_internals->UpdatedBlockTip(pindexNew, pindexFork, fInitialDownload);
+    });
 }
 
 void CMainSignals::TransactionAddedToMempool(const CTransactionRef &ptx) {
