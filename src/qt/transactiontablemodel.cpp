@@ -380,6 +380,8 @@ QString TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
         return tr("Mined");
     case TransactionRecord::PublicLabel:
         return tr("Public label");
+    case TransactionRecord::Other:
+        return tr("Other");
     default:
         return QString();
     }
