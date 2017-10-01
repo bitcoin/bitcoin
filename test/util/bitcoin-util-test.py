@@ -9,9 +9,14 @@ Runs automatically during `make check`.
 
 Can also be run manually."""
 
+from __future__ import division,print_function,unicode_literals
+
 import argparse
 import binascii
-import configparser
+try:
+    import configparser
+except ImportError:
+    import ConfigParser as configparser
 import difflib
 import json
 import logging
@@ -22,7 +27,9 @@ import sys
 
 def main():
     config = configparser.ConfigParser()
-    config.read_file(open(os.path.dirname(__file__) + "/../config.ini"))
+    config.optionxform = str
+    config.readfp(open(os.path.join(os.path.dirname(__file__), "../config.ini")))
+    env_conf = dict(config.items('environment'))
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('-v', '--verbose', action='store_true')
@@ -37,7 +44,7 @@ def main():
     # Add the format/level to the logger
     logging.basicConfig(format=formatter, level=level)
 
-    bctester(config["environment"]["SRCDIR"] + "/test/util/data", "bitcoin-util-test.json", config["environment"])
+    bctester(os.path.join(env_conf["SRCDIR"], "test/util/data"), "bitcoin-util-test.json", env_conf)
 
 def bctester(testDir, input_basename, buildenv):
     """ Loads and parses the input file, runs all tests and reports results"""
