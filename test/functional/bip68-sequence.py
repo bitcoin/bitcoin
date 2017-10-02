@@ -369,11 +369,14 @@ class BIP68Test(BitcoinTestFramework):
 
     def activateCSV(self):
         # activation should happen at block height 432 (3 periods)
+        # getblockchaininfo will show CSV as active at block 431 (144 * 3 -1) since it's returning whether CSV is active for the next block.
         min_activation_height = 432
         height = self.nodes[0].getblockcount()
-        assert(height < min_activation_height)
-        self.nodes[0].generate(min_activation_height-height)
-        assert(get_bip9_status(self.nodes[0], 'csv')['status'] == 'active')
+        assert_greater_than(min_activation_height - height, 2)
+        self.nodes[0].generate(min_activation_height - height - 2)
+        assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], "locked_in")
+        self.nodes[0].generate(1)
+        assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], "active")
         sync_blocks(self.nodes)
 
     # Use self.nodes[1] to test that version 2 transactions are standard.
