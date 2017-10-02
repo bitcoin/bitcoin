@@ -417,7 +417,6 @@ bool CMinerWhitelistDB::MineBlock(unsigned int newHeight, std::string address) {
         if ( newHeight%2016 == 0) {
             LogPrintf("MinerDatabase: New Window beginning\n");
             LogPrintf("MinerDatabase: Creating Iterator\n");
-            sleep(10);
             std::unique_ptr<CDBIterator> it(NewIterator());
             LogPrintf("MinerDatabase: Starting Loop.\n");
             for (it->Seek(MinerEntry(DUMMY)); it->Valid(); it->Next()) { // SeekToFirst should end up at an address (they start with 'a')
