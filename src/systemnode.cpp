@@ -11,6 +11,12 @@
 #include "addrman.h"
 #include <boost/lexical_cast.hpp>
 
+int GetMinSystemnodePaymentsProto();
+
+//
+// CSystemnodePing
+//
+
 CSystemnodePing::CSystemnodePing()
 {
     vin = CTxIn();
@@ -47,6 +53,110 @@ bool CSystemnodePing::Sign(CKey& keySystemnode, CPubKey& pubKeySystemnode)
 
     return true;
 }
+
+void CSystemnodePing::Relay()
+{
+    CInv inv(MSG_SYSTEMNODE_PING, GetHash());
+    RelayInv(inv);
+}
+
+bool CSystemnodePing::CheckAndUpdate(int& nDos, bool fRequireEnabled, bool fCheckSigTimeOnly)
+{
+    if (sigTime > GetAdjustedTime() + 60 * 60) {
+        LogPrintf("CSystemnodePing::CheckAndUpdate - Signature rejected, too far into the future %s\n", vin.ToString());
+        nDos = 1;
+        return false;
+    }
+
+    if (sigTime <= GetAdjustedTime() - 60 * 60) {
+        LogPrintf("CSystemnodePing::CheckAndUpdate - Signature rejected, too far into the past %s - %d %d \n", vin.ToString(), sigTime, GetAdjustedTime());
+        nDos = 1;
+        return false;
+    }
+
+    if(fCheckSigTimeOnly) {
+        CSystemnode* pmn = snodeman.Find(vin);
+        if(pmn) return VerifySignature(pmn->pubkey2, nDos);
+        return true;
+    }
+
+    LogPrint("systemnode", "CSystemnodePing::CheckAndUpdate - New Ping - %s - %s - %lli\n", GetHash().ToString(), blockHash.ToString(), sigTime);
+
+    // see if we have this Systemnode
+    CSystemnode* pmn = snodeman.Find(vin);
+    if(pmn != NULL && pmn->protocolVersion >= GetMinSystemnodePaymentsProto())
+    {
+        if (fRequireEnabled && !pmn->IsEnabled()) return false;
+
+        // LogPrintf("mnping - Found corresponding mn for vin: %s\n", vin.ToString());
+        // update only if there is no known ping for this systemnode or
+        // last ping was more then SYSTEMNODE_MIN_MNP_SECONDS-60 ago comparing to this one
+        if(!pmn->IsPingedWithin(SYSTEMNODE_MIN_SNP_SECONDS - 60, sigTime))
+        {
+            if(!VerifySignature(pmn->pubkey2, nDos))
+                return false;
+
+            BlockMap::iterator mi = mapBlockIndex.find(blockHash);
+            if (mi != mapBlockIndex.end() && (*mi).second)
+            {
+                if((*mi).second->nHeight < chainActive.Height() - 24)
+                {
+                    LogPrintf("CSystemnodePing::CheckAndUpdate - Systemnode %s block hash %s is too old\n", vin.ToString(), blockHash.ToString());
+                    // Do nothing here (no Systemnode update, no mnping relay)
+                    // Let this node to be visible but fail to accept mnping
+
+                    return false;
+                }
+            } else {
+                if (fDebug) LogPrintf("CSystemnodePing::CheckAndUpdate - Systemnode %s block hash %s is unknown\n", vin.ToString(), blockHash.ToString());
+                // maybe we stuck so we shouldn't ban this node, just fail to accept it
+                // TODO: or should we also request this block?
+
+                return false;
+            }
+
+            pmn->lastPing = *this;
+
+            //snodeman.mapSeenSystemnodeBroadcast.lastPing is probably outdated, so we'll update it
+            CSystemnodeBroadcast mnb(*pmn);
+            uint256 hash = mnb.GetHash();
+            if(snodeman.mapSeenSystemnodeBroadcast.count(hash)) {
+                snodeman.mapSeenSystemnodeBroadcast[hash].lastPing = *this;
+            }
+
+            pmn->Check(true);
+            if(!pmn->IsEnabled()) return false;
+
+            LogPrint("systemnode", "CSystemnodePing::CheckAndUpdate - Systemnode ping accepted, vin: %s\n", vin.ToString());
+
+            Relay();
+            return true;
+        }
+        LogPrint("systemnode", "CSystemnodePing::CheckAndUpdate - Systemnode ping arrived too early, vin: %s\n", vin.ToString());
+        //nDos = 1; //disable, this is happening frequently and causing banned peers
+        return false;
+    }
+    LogPrint("systemnode", "CSystemnodePing::CheckAndUpdate - Couldn't find compatible Systemnode entry, vin: %s\n", vin.ToString());
+
+    return false;
+}
+
+bool CSystemnodePing::VerifySignature(CPubKey& pubKeySystemnode, int &nDos) {
+    std::string strMessage = vin.ToString() + blockHash.ToString() + boost::lexical_cast<std::string>(sigTime);
+    std::string errorMessage = "";
+
+    if(!darkSendSigner.VerifyMessage(pubKeySystemnode, vchSig, strMessage, errorMessage))
+    {
+        LogPrintf("CSystemnodePing::VerifySignature - Got bad Systemnode ping signature %s Error: %s\n", vin.ToString(), errorMessage);
+        nDos = 33;
+        return false;
+    }
+    return true;
+}
+
+//
+// CSystemnode
+//
 
 CSystemnode::CSystemnode()
 {
@@ -115,10 +225,10 @@ bool CSystemnode::UpdateFromNewBroadcast(CSystemnodeBroadcast& snb)
         addr = snb.addr;
         lastTimeChecked = 0;
         int nDoS = 0;
-        //if(snb.lastPing == CSystemnodePing() || (snb.lastPing != CSystemnodePing() && snb.lastPing.CheckAndUpdate(nDoS, false))) {
-        //    lastPing = snb.lastPing;
-        //    snodeman.mapSeenSystemnodePing.insert(make_pair(lastPing.GetHash(), lastPing));
-        //}
+        if(snb.lastPing == CSystemnodePing() || (snb.lastPing != CSystemnodePing() && snb.lastPing.CheckAndUpdate(nDoS, false))) {
+            lastPing = snb.lastPing;
+            snodeman.mapSeenSystemnodePing.insert(make_pair(lastPing.GetHash(), lastPing));
+        }
         return true;
     }
     return false;
@@ -166,6 +276,10 @@ void CSystemnode::Check(bool forceCheck)
     activeState = SYSTEMNODE_ENABLED; // OK
 }
 
+//
+// CSystemnodeBroadcast
+//
+
 bool CSystemnodeBroadcast::CheckAndUpdate(int& nDos)
 {
     nDos = 0;
@@ -177,10 +291,10 @@ bool CSystemnodeBroadcast::CheckAndUpdate(int& nDos)
         return false;
     }
 
-    //if(protocolVersion < systemnodePayments.GetMinSystemnodePaymentsProto()) {
-    //    LogPrintf("snb - ignoring outdated systemnode %s protocol version %d\n", vin.ToString(), protocolVersion);
-    //    return false;
-    //}
+    if(protocolVersion < GetMinSystemnodePaymentsProto()) {
+        LogPrintf("snb - ignoring outdated systemnode %s protocol version %d\n", vin.ToString(), protocolVersion);
+        return false;
+    }
 
     CScript pubkeyScript;
     pubkeyScript = GetScriptForDestination(pubkey.GetID());
@@ -206,8 +320,8 @@ bool CSystemnodeBroadcast::CheckAndUpdate(int& nDos)
     }
 
     // incorrect ping or its sigTime
-    //if(lastPing == CsystemnodePing() || !lastPing.CheckAndUpdate(nDos, false, true))
-    //    return false;
+    if(lastPing == CSystemnodePing() || !lastPing.CheckAndUpdate(nDos, false, true))
+        return false;
 
     std::string strMessage;
     std::string errorMessage = "";
@@ -303,13 +417,13 @@ bool CSystemnodeBroadcast::CheckInputsAndAdd(int& nDoS)
 {
     // we are a systemnode with the same vin (i.e. already activated) and this snb is ours (matches our systemnode privkey)
     // so nothing to do here for us
-//    if(fsystemnode && vin.prevout == activesystemnode.vin.prevout && pubkey2 == activesystemnode.pubKeysystemnode)
-//        return true;
-//
-//    // incorrect ping or its sigTime
-//    if(lastPing == CsystemnodePing() || !lastPing.CheckAndUpdate(nDoS, false, true))
-//        return false;
-//
+    //if(fsystemnode && vin.prevout == activesystemnode.vin.prevout && pubkey2 == activesystemnode.pubKeysystemnode)
+    //    return true;
+
+    // incorrect ping or its sigTime
+    if(lastPing == CSystemnodePing() || !lastPing.CheckAndUpdate(nDoS, false, true))
+        return false;
+
     // search existing systemnode list
     CSystemnode* pmn = snodeman.Find(vin);
 
@@ -375,10 +489,10 @@ bool CSystemnodeBroadcast::CheckInputsAndAdd(int& nDoS)
     snodeman.Add(mn);
 
     // if it matches our systemnode privkey, then we've been remotely activated
-//    if(pubkey2 == activesystemnode.pubKeysystemnode && protocolVersion == PROTOCOL_VERSION){
-//        activesystemnode.EnableHotColdsystemnode(vin, addr);
-//    }
-//
+    //if(pubkey2 == activeSystemnode.pubKeysystemnode && protocolVersion == PROTOCOL_VERSION){
+    //    activeSystemnode.EnableHotColdsystemnode(vin, addr);
+    //}
+
     bool isLocal = addr.IsRFC1918() || addr.IsLocal();
     if(Params().NetworkID() == CBaseChainParams::REGTEST) isLocal = false;
 
@@ -435,7 +549,6 @@ CSystemnodeBroadcast::CSystemnodeBroadcast(const CSystemnode& mn)
     unitTest = mn.unitTest;
     protocolVersion = mn.protocolVersion;
 }
-
 
 bool CSystemnodeBroadcast::Create(std::string strService, std::string strKeySystemnode, std::string strTxHash, std::string strOutputIndex, std::string& strErrorMessage, CSystemnodeBroadcast &snb, bool fOffline) {
     CTxIn txin;
@@ -529,10 +642,4 @@ bool CSystemnodeBroadcast::Sign(CKey& keyCollateralAddress)
     }
 
     return true;
-}
-
-void CSystemnodePing::Relay()
-{
-    CInv inv(MSG_SYSTEMNODE_PING, GetHash());
-    RelayInv(inv);
 }

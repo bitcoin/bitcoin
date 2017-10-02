@@ -50,6 +50,7 @@ public:
     ADD_SERIALIZE_METHODS;
 
     bool CheckAndUpdate(int& nDos, bool fRequireEnabled = true, bool fCheckSigTimeOnly = false);
+    bool VerifySignature(CPubKey& pubKeySystemnode, int &nDos);
     void Relay();
     uint256 GetHash(){
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
