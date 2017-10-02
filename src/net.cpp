@@ -2078,43 +2078,20 @@ bool CConnman::BindListenPort(const CService &addrBind, std::string& strError, b
         return false;
     }
 
-    SOCKET hListenSocket = socket(((struct sockaddr*)&sockaddr)->sa_family, SOCK_STREAM, IPPROTO_TCP);
+    SOCKET hListenSocket = CreateSocket(addrBind);
     if (hListenSocket == INVALID_SOCKET)
     {
         strError = strprintf("Error: Couldn't open socket for incoming connections (socket returned error %s)", NetworkErrorString(WSAGetLastError()));
         LogPrintf("%s\n", strError);
         return false;
     }
-    if (!IsSelectableSocket(hListenSocket))
-    {
-        strError = "Error: Couldn't create a listenable socket for incoming connections";
-        LogPrintf("%s\n", strError);
-        return false;
-    }
-
-
 #ifndef WIN32
-#ifdef SO_NOSIGPIPE
-    // Different way of disabling SIGPIPE on BSD
-    setsockopt(hListenSocket, SOL_SOCKET, SO_NOSIGPIPE, (void*)&nOne, sizeof(int));
-#endif
     // Allow binding if the port is still in TIME_WAIT state after
     // the program was closed and restarted.
     setsockopt(hListenSocket, SOL_SOCKET, SO_REUSEADDR, (void*)&nOne, sizeof(int));
-    // Disable Nagle's algorithm
-    setsockopt(hListenSocket, IPPROTO_TCP, TCP_NODELAY, (void*)&nOne, sizeof(int));
 #else
     setsockopt(hListenSocket, SOL_SOCKET, SO_REUSEADDR, (const char*)&nOne, sizeof(int));
-    setsockopt(hListenSocket, IPPROTO_TCP, TCP_NODELAY, (const char*)&nOne, sizeof(int));
 #endif
-
-    // Set to non-blocking, incoming connections will also inherit this
-    if (!SetSocketNonBlocking(hListenSocket, true)) {
-        CloseSocket(hListenSocket);
-        strError = strprintf("BindListenPort: Setting listening socket to non-blocking failed, error %s\n", NetworkErrorString(WSAGetLastError()));
-        LogPrintf("%s\n", strError);
-        return false;
-    }
 
     // some systems don't have IPV6_V6ONLY but are always v6only; others do have the option
     // and enable it by default or not. Try to enable it, if possible.
