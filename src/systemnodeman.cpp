@@ -253,6 +253,18 @@ CSystemnode *CSystemnodeMan::Find(const CTxIn &vin)
     return NULL;
 }
 
+CSystemnode *CSystemnodeMan::Find(const CPubKey &pubKeySystemnode)
+{
+    LOCK(cs);
+
+    BOOST_FOREACH(CSystemnode& mn, vSystemnodes)
+    {
+        if(mn.pubkey2 == pubKeySystemnode)
+            return &mn;
+    }
+    return NULL;
+}
+
 bool CSystemnodeMan::Add(CSystemnode &sn)
 {
     LOCK(cs);

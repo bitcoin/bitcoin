@@ -90,6 +90,7 @@ public:
     void DsegUpdate(CNode* pnode);
     /// Find an entry
     CSystemnode* Find(const CTxIn& vin);
+    CSystemnode* Find(const CPubKey& pubKeySystemnode);
 
     /// Clear Systemnode vector
     void Clear();

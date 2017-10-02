@@ -71,6 +71,7 @@ endif
 # crown core #
 BITCOIN_CORE_H = \
   activethrone.h \
+  activesystemnode.h \
   addrman.h \
   alert.h \
   amount.h \
@@ -219,6 +220,7 @@ libbitcoin_server_a_SOURCES = \
 libbitcoin_wallet_a_CPPFLAGS = $(BITCOIN_INCLUDES)
 libbitcoin_wallet_a_SOURCES = \
   activethrone.cpp \
+  activesystemnode.cpp \
   darksend.cpp \
   darksend-relay.cpp \
   db.cpp \

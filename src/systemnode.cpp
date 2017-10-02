@@ -531,3 +531,8 @@ bool CSystemnodeBroadcast::Sign(CKey& keyCollateralAddress)
     return true;
 }
 
+void CSystemnodePing::Relay()
+{
+    CInv inv(MSG_SYSTEMNODE_PING, GetHash());
+    RelayInv(inv);
+}
