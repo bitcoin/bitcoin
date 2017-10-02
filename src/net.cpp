@@ -446,24 +446,19 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
         SplitHostPort(std::string(pszDest), port, host);
         connected = ConnectThroughProxy(proxy, host, port, hSocket, nConnectTimeout, nullptr);
     }
-    if (connected) {
-        if (!IsSelectableSocket(hSocket)) {
-            LogPrintf("Cannot create connection: non-selectable socket created (fd >= FD_SETSIZE ?)\n");
-            CloseSocket(hSocket);
-            return nullptr;
-        }
-
-        // Add node
-        NodeId id = GetNewNodeId();
-        uint64_t nonce = GetDeterministicRandomizer(RANDOMIZER_ID_LOCALHOSTNONCE).Write(id).Finalize();
-        CAddress addr_bind = GetBindAddress(hSocket);
-        CNode* pnode = new CNode(id, nLocalServices, GetBestHeight(), hSocket, addrConnect, CalculateKeyedNetGroup(addrConnect), nonce, addr_bind, pszDest ? pszDest : "", false);
-        pnode->AddRef();
-
-        return pnode;
+    if (!connected) {
+        CloseSocket(hSocket);
+        return nullptr;
     }
 
-    return nullptr;
+    // Add node
+    NodeId id = GetNewNodeId();
+    uint64_t nonce = GetDeterministicRandomizer(RANDOMIZER_ID_LOCALHOSTNONCE).Write(id).Finalize();
+    CAddress addr_bind = GetBindAddress(hSocket);
+    CNode* pnode = new CNode(id, nLocalServices, GetBestHeight(), hSocket, addrConnect, CalculateKeyedNetGroup(addrConnect), nonce, addr_bind, pszDest ? pszDest : "", false);
+    pnode->AddRef();
+
+    return pnode;
 }
 
 void CConnman::DumpBanlist()

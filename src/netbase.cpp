@@ -465,6 +465,12 @@ SOCKET CreateSocket(const CService &addrConnect)
     if (hSocket == INVALID_SOCKET)
         return INVALID_SOCKET;
 
+    if (!IsSelectableSocket(hSocket)) {
+        CloseSocket(hSocket);
+        LogPrintf("Cannot create connection: non-selectable socket created (fd >= FD_SETSIZE ?)\n");
+        return INVALID_SOCKET;
+    }
+
 #ifdef SO_NOSIGPIPE
     int set = 1;
     // Different way of disabling SIGPIPE on BSD
