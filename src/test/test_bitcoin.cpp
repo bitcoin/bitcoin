@@ -105,6 +105,7 @@ TestingSetup::~TestingSetup()
 
 TestChain100Setup::TestChain100Setup() : TestingSetup(CBaseChainParams::REGTEST)
 {
+    UpdateBuriedDeploymentHeight(Consensus::DEPLOYMENT_SEGWIT, 432);
     // Generate a 100-block chain:
     coinbaseKey.MakeNewKey(true);
     CScript scriptPubKey = CScript() <<  ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;

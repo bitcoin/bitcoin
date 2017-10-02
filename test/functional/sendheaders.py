@@ -215,7 +215,7 @@ class SendHeadersTest(BitcoinTestFramework):
         connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], inv_node))
         # Set nServices to 0 for test_node, so no block download will occur outside of
         # direct fetching
-        connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], test_node, services=0))
+        connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], test_node, services=NODE_WITNESS))
         inv_node.add_connection(connections[0])
         test_node.add_connection(connections[1])
 

@@ -53,6 +53,7 @@ class FullBlockTest(ComparisonTestFramework):
     # Change the "outcome" variable from each TestInstance object to only do the comparison.
     def set_test_params(self):
         self.num_nodes = 1
+        self.extra_args = [["-segwitheight=432", "-whitelist=127.0.0.1"]]
         self.setup_clean_chain = True
         self.block_heights = {}
         self.coinbase_key = CECKey()

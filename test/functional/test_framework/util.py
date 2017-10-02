@@ -312,9 +312,9 @@ def get_auth_cookie(datadir):
 def log_filename(dirname, n_node, logname):
     return os.path.join(dirname, "node" + str(n_node), "regtest", logname)
 
-def get_bip9_status(node, key):
+def get_softfork_status(node, key):
     info = node.getblockchaininfo()
-    return info['bip9_softforks'][key]
+    return info['softforks'][key]
 
 def set_node_times(nodes, t):
     for node in nodes:

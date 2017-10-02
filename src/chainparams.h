@@ -78,6 +78,7 @@ public:
     const CCheckpointData& Checkpoints() const { return checkpointData; }
     const ChainTxData& TxData() const { return chainTxData; }
     void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout);
+    void UpdateBuriedDeploymentHeight(const Consensus::BuriedDeploymentPos& id, const int& height);
 protected:
     CChainParams() {}
 
@@ -121,5 +122,10 @@ void SelectParams(const std::string& chain);
  * Allows modifying the Version Bits regtest parameters.
  */
 void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout);
+
+/**
+ * Allows modifying the activation height of segwit in regtest.
+ */
+void UpdateBuriedDeploymentHeight(const Consensus::BuriedDeploymentPos& id, const int& height);
 
 #endif // BITCOIN_CHAINPARAMS_H

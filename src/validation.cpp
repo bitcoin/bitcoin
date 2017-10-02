@@ -1596,17 +1596,17 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consens
     unsigned int flags = fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE;
 
     // Start enforcing the DERSIG (BIP66) rule
-    if (pindex->nHeight >= consensusparams.BIP66Height) {
+    if (pindex->nHeight >= consensusparams.buried_deployments[Consensus::DEPLOYMENT_BIP66]) {
         flags |= SCRIPT_VERIFY_DERSIG;
     }
 
     // Start enforcing CHECKLOCKTIMEVERIFY (BIP65) rule
-    if (pindex->nHeight >= consensusparams.BIP65Height) {
+    if (pindex->nHeight >= consensusparams.buried_deployments[Consensus::DEPLOYMENT_BIP65]) {
         flags |= SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
     }
 
-    // Start enforcing BIP68 (sequence locks) and BIP112 (CHECKSEQUENCEVERIFY) using versionbits logic.
-    if (VersionBitsState(pindex->pprev, consensusparams, Consensus::DEPLOYMENT_CSV, versionbitscache) == THRESHOLD_ACTIVE) {
+    // Start enforcing BIP68 (sequence locks) and BIP112 (CHECKSEQUENCEVERIFY)
+    if (pindex->nHeight >= consensusparams.buried_deployments[Consensus::DEPLOYMENT_CSV]) {
         flags |= SCRIPT_VERIFY_CHECKSEQUENCEVERIFY;
     }
 
@@ -1713,7 +1713,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     // duplicate transactions descending from the known pairs either.
     // If we're on the known chain at height greater than where BIP34 activated, we can save the db accesses needed for the BIP30 check.
     assert(pindex->pprev);
-    CBlockIndex *pindexBIP34height = pindex->pprev->GetAncestor(chainparams.GetConsensus().BIP34Height);
+    CBlockIndex *pindexBIP34height = pindex->pprev->GetAncestor(chainparams.GetConsensus().buried_deployments[Consensus::DEPLOYMENT_BIP34]);
     //Only continue to enforce if we're below BIP34 activation height or the block hash at that height doesn't correspond.
     fEnforceBIP30 = fEnforceBIP30 && (!pindexBIP34height || !(pindexBIP34height->GetBlockHash() == chainparams.GetConsensus().BIP34Hash));
 
@@ -1728,9 +1728,9 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
         }
     }
 
-    // Start enforcing BIP68 (sequence locks) and BIP112 (CHECKSEQUENCEVERIFY) using versionbits logic.
+    // Start enforcing BIP68 (sequence locks) and BIP112 (CHECKSEQUENCEVERIFY)
     int nLockTimeFlags = 0;
-    if (VersionBitsState(pindex->pprev, chainparams.GetConsensus(), Consensus::DEPLOYMENT_CSV, versionbitscache) == THRESHOLD_ACTIVE) {
+    if (pindex->nHeight >= chainparams.GetConsensus().buried_deployments[Consensus::DEPLOYMENT_CSV]) {
         nLockTimeFlags |= LOCKTIME_VERIFY_SEQUENCE;
     }
 
@@ -2847,8 +2847,8 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
 
 bool IsWitnessEnabled(const CBlockIndex* pindexPrev, const Consensus::Params& params)
 {
-    LOCK(cs_main);
-    return (VersionBitsState(pindexPrev, params, Consensus::DEPLOYMENT_SEGWIT, versionbitscache) == THRESHOLD_ACTIVE);
+    int height = pindexPrev == nullptr ? 0 : pindexPrev->nHeight + 1;
+    return (height >= params.buried_deployments[Consensus::DEPLOYMENT_SEGWIT]);
 }
 
 // Compute at which vout of the block's coinbase transaction the witness
@@ -2883,7 +2883,7 @@ std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBloc
     std::vector<unsigned char> commitment;
     int commitpos = GetWitnessCommitmentIndex(block);
     std::vector<unsigned char> ret(32, 0x00);
-    if (consensusParams.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout != 0) {
+    if (consensusParams.buried_deployments[Consensus::DEPLOYMENT_SEGWIT] != std::numeric_limits<int>::max()) {
         if (commitpos == -1) {
             uint256 witnessroot = BlockWitnessMerkleRoot(block, nullptr);
             CHash256().Write(witnessroot.begin(), 32).Write(ret.data(), 32).Finalize(witnessroot.begin());
@@ -2940,9 +2940,9 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
 
     // Reject outdated version blocks when 95% (75% on testnet) of the network has upgraded:
     // check for version 2, 3 and 4 upgrades
-    if((block.nVersion < 2 && nHeight >= consensusParams.BIP34Height) ||
-       (block.nVersion < 3 && nHeight >= consensusParams.BIP66Height) ||
-       (block.nVersion < 4 && nHeight >= consensusParams.BIP65Height))
+    if((block.nVersion < 2 && nHeight >= consensusParams.buried_deployments[Consensus::DEPLOYMENT_BIP34]) ||
+       (block.nVersion < 3 && nHeight >= consensusParams.buried_deployments[Consensus::DEPLOYMENT_BIP66]) ||
+       (block.nVersion < 4 && nHeight >= consensusParams.buried_deployments[Consensus::DEPLOYMENT_BIP65]))
             return state.Invalid(false, REJECT_OBSOLETE, strprintf("bad-version(0x%08x)", block.nVersion),
                                  strprintf("rejected nVersion=0x%08x block", block.nVersion));
 
@@ -2953,9 +2953,9 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
 {
     const int nHeight = pindexPrev == nullptr ? 0 : pindexPrev->nHeight + 1;
 
-    // Start enforcing BIP113 (Median Time Past) using versionbits logic.
+    // Start enforcing BIP113 (Median Time Past)
     int nLockTimeFlags = 0;
-    if (VersionBitsState(pindexPrev, consensusParams, Consensus::DEPLOYMENT_CSV, versionbitscache) == THRESHOLD_ACTIVE) {
+    if (nHeight >= consensusParams.buried_deployments[Consensus::DEPLOYMENT_CSV]) {
         nLockTimeFlags |= LOCKTIME_MEDIAN_TIME_PAST;
     }
 
@@ -2971,7 +2971,7 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
     }
 
     // Enforce rule that the coinbase starts with serialized block height
-    if (nHeight >= consensusParams.BIP34Height)
+    if (nHeight >= consensusParams.buried_deployments[Consensus::DEPLOYMENT_BIP34])
     {
         CScript expect = CScript() << nHeight;
         if (block.vtx[0]->vin[0].scriptSig.size() < expect.size() ||
@@ -2989,7 +2989,7 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
     //   {0xaa, 0x21, 0xa9, 0xed}, and the following 32 bytes are SHA256^2(witness root, witness nonce). In case there are
     //   multiple, the last one is used.
     bool fHaveWitness = false;
-    if (VersionBitsState(pindexPrev, consensusParams, Consensus::DEPLOYMENT_SEGWIT, versionbitscache) == THRESHOLD_ACTIVE) {
+    if (nHeight >= consensusParams.buried_deployments[Consensus::DEPLOYMENT_SEGWIT]) {
         int commitpos = GetWitnessCommitmentIndex(block);
         if (commitpos != -1) {
             bool malleated = false;
