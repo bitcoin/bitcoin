@@ -20,6 +20,7 @@
 #include "throne-payments.h"
 #include "throne-budget.h"
 #include "systemnodeman.h"
+#include "systemnode-sync.h"
 #include "merkleblock.h"
 #include "net.h"
 #include "pow.h"
@@ -4057,6 +4058,14 @@ bool static AlreadyHave(const CInv& inv)
         return false;
     case MSG_THRONE_PING:
         return mnodeman.mapSeenThronePing.count(inv.hash);
+    case MSG_SYSTEMNODE_ANNOUNCE:
+        if(snodeman.mapSeenSystemnodeBroadcast.count(inv.hash)) {
+            systemnodeSync.AddedSystemnodeList(inv.hash);
+            return true;
+        }
+        return false;
+    case MSG_SYSTEMNODE_PING:
+        return snodeman.mapSeenSystemnodePing.count(inv.hash);
     }
     // Don't know what it is, just say we already got one
     return true;
