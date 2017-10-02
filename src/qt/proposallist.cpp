@@ -171,7 +171,7 @@ ProposalList::ProposalList(interfaces::Node& node, const PlatformStyle *platform
     QAction *voteAbstainAction = new QAction(tr("Vote abstain"), this);
     QAction *voteNoAction = new QAction(tr("Vote no"), this);
     QAction *openUrlAction = new QAction(tr("Visit proposal website"), this);
-    QAction *openStatisticsAction = new QAction(tr("Visit statistics website"), this);
+    // QAction *openStatisticsAction = new QAction(tr("Visit statistics website"), this);
 
     contextMenu = new QMenu(this);
     contextMenu->addAction(voteYesAction);
@@ -228,7 +228,7 @@ ProposalList::ProposalList(interfaces::Node& node, const PlatformStyle *platform
     proposalList->setColumnWidth(ProposalTableModel::Amount, AMOUNT_COLUMN_WIDTH);
     proposalList->setColumnWidth(ProposalTableModel::Percentage, PERCENTAGE_COLUMN_WIDTH);
 
-    connect(proposalList->selectionModel(), SIGNAL(selectionChanged(QItemSelection, QItemSelection)), this, SLOT(computeSum()));
+    // connect(proposalList->selectionModel(), SIGNAL(selectionChanged(QItemSelection, QItemSelection)), this, SLOT(computeSum()));
 
     columnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(proposalList, PERCENTAGE_COLUMN_WIDTH, MINIMUM_COLUMN_WIDTH, this);
         

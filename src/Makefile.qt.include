@@ -320,6 +320,7 @@ RES_ICONS = \
   qt/res/icons/drkblue/masternodes.png \
   qt/res/icons/drkblue/overview.png \
   qt/res/icons/drkblue/quit.png \
+  qt/res/icons/drkblue/proxy.png \
   qt/res/icons/drkblue/receive.png \
   qt/res/icons/drkblue/remove.png \
   qt/res/icons/drkblue/send.png \
@@ -373,6 +374,7 @@ RES_ICONS = \
   qt/res/icons/crownium/lock_open.png \
   qt/res/icons/crownium/masternodes.png \
   qt/res/icons/crownium/overview.png \
+  qt/res/icons/crownium/proxy.png \
   qt/res/icons/crownium/quit.png \
   qt/res/icons/crownium/receive.png \
   qt/res/icons/crownium/remove.png \
@@ -427,6 +429,7 @@ RES_ICONS = \
   qt/res/icons/light/lock_open.png \
   qt/res/icons/light/masternodes.png \
   qt/res/icons/light/overview.png \
+  qt/res/icons/light/proxy.png \
   qt/res/icons/light/quit.png \
   qt/res/icons/light/receive.png \
   qt/res/icons/light/remove.png \
@@ -481,6 +484,7 @@ RES_ICONS = \
   qt/res/icons/trad/lock_open.png \
   qt/res/icons/trad/masternodes.png \
   qt/res/icons/trad/overview.png \
+  qt/res/icons/trad/proxy.png \
   qt/res/icons/trad/quit.png \
   qt/res/icons/trad/receive.png \
   qt/res/icons/trad/remove.png \
@@ -545,6 +549,7 @@ RES_ICONS = \
   qt/res/icons/green/peers.png \
   qt/res/icons/green/qrcode.png \
   qt/res/icons/green/questionmark.png \
+  qt/res/icons/green/proxy.png \
   qt/res/icons/green/quit.png \
   qt/res/icons/green/receive.png \
   qt/res/icons/green/remove.png \
