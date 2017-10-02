@@ -73,6 +73,7 @@ bool fReindex = false;
 bool fTxIndex = false;
 bool fHavePruned = false;
 bool fPruneMode = false;
+std::string strPruneLocation = "";
 bool fIsBareMultisigStd = DEFAULT_PERMIT_BAREMULTISIG;
 bool fRequireStandard = true;
 bool fCheckBlockIndex = false;
@@ -1949,8 +1950,20 @@ bool static FlushStateToDisk(const CChainParams& chainparams, CValidationState &
                 }
             }
             // Finally remove any pruned files
-            if (fFlushForPrune)
-                UnlinkPrunedFiles(setFilesToPrune);
+            if (fFlushForPrune) {
+                fs::path location(strPruneLocation);
+                if (// check if prune-to location is set
+                    strPruneLocation != "" &&
+                    // check if it exists in the filesystem
+                    fs::exists(location) &&
+                    // check if it is a directory
+                    // TODO: add error reporting for this two cases
+                    fs::is_directory(location)) {
+                    MovePrunedFiles(setFilesToPrune, location);
+                } else {
+                    UnlinkPrunedFiles(setFilesToPrune);
+                }
+            }
             nLastWrite = nNow;
         }
         // Flush best chain related state. This can only be done if the blocks / block index write was also done.
@@ -3274,6 +3287,17 @@ void PruneOneBlockFile(const int fileNumber)
     setDirtyFileInfo.insert(fileNumber);
 }
 
+void MovePrunedFiles(const std::set<int>& setFilesToPrune, fs::path location)
+{
+    for (std::set<int>::iterator it = setFilesToPrune.begin(); it != setFilesToPrune.end(); ++it) {
+        CDiskBlockPos pos(*it, 0);
+        fs::path blk = GetBlockPosFilename(pos, "blk");
+        fs::path rev = GetBlockPosFilename(pos, "rev");
+        fs::rename(blk, location / GetBlockPosFilename(pos, "blk", true));
+        fs::rename(rev, location / GetBlockPosFilename(pos, "rev", true));
+        LogPrintf("Prune: %s moved blk/rev (%05u)\n", __func__, *it);
+    }
+}
 
 void UnlinkPrunedFiles(const std::set<int>& setFilesToPrune)
 {
@@ -3420,9 +3444,12 @@ static FILE* OpenUndoFile(const CDiskBlockPos &pos, bool fReadOnly) {
     return OpenDiskFile(pos, "rev", fReadOnly);
 }
 
-fs::path GetBlockPosFilename(const CDiskBlockPos &pos, const char *prefix)
+fs::path GetBlockPosFilename(const CDiskBlockPos &pos, const char *prefix, bool relative)
 {
-    return GetDataDir() / "blocks" / strprintf("%s%05u.dat", prefix, pos.nFile);
+    fs::path filename = fs::path("blocks") / strprintf("%s%05u.dat", prefix, pos.nFile);
+    if (!relative)
+        filename = GetDataDir() / filename;
+    return filename;
 }
 
 CBlockIndex * InsertBlockIndex(uint256 hash)
