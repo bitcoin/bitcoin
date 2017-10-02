@@ -534,7 +534,7 @@ void CConnman::Ban(const CSubNet& subNet, const BanReason &banReason, int64_t ba
     banEntry.banReason = banReason;
     if (bantimeoffset <= 0)
     {
-        bantimeoffset = gArgs.GetArg("-bantime", DEFAULT_MISBEHAVING_BANTIME);
+        bantimeoffset = m_bantime;
         sinceUnixEpoch = false;
     }
     banEntry.nBanUntil = (sinceUnixEpoch ? 0 : GetTime() )+bantimeoffset;

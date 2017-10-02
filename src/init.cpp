@@ -1666,7 +1666,10 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     connOptions.nSendBufferMaxSize = 1000*gArgs.GetArg("-maxsendbuffer", DEFAULT_MAXSENDBUFFER);
     connOptions.nReceiveFloodSize = 1000*gArgs.GetArg("-maxreceivebuffer", DEFAULT_MAXRECEIVEBUFFER);
     connOptions.m_added_nodes = gArgs.GetArgs("-addnode");
-
+    connOptions.m_bantime = gArgs.GetArg("-bantime", DEFAULT_MISBEHAVING_BANTIME);
+    if (connOptions.m_bantime <= 0) {
+        return InitError(strprintf(_("%s cannot be configured with a negative value."), "-bantime"));
+    }
     connOptions.nMaxOutboundTimeframe = nMaxOutboundTimeframe;
     connOptions.nMaxOutboundLimit = nMaxOutboundLimit;
 

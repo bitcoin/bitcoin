@@ -148,6 +148,7 @@ public:
         bool m_use_addrman_outgoing = true;
         std::vector<std::string> m_specified_outgoing;
         std::vector<std::string> m_added_nodes;
+        int64_t m_bantime = DEFAULT_MISBEHAVING_BANTIME;
     };
 
     void Init(const Options& connOptions) {
@@ -166,6 +167,7 @@ public:
         nMaxOutboundLimit = connOptions.nMaxOutboundLimit;
         vWhitelistedRange = connOptions.vWhitelistedRange;
         vAddedNodes = connOptions.m_added_nodes;
+        m_bantime = connOptions.m_bantime;
     }
 
     CConnman(uint64_t seed0, uint64_t seed1);
@@ -386,6 +388,7 @@ private:
     std::list<CNode*> vNodesDisconnected;
     mutable CCriticalSection cs_vNodes;
     std::atomic<NodeId> nLastNodeId;
+    int64_t m_bantime;
 
     /** Services this instance offers */
     ServiceFlags nLocalServices;
