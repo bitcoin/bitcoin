@@ -7053,6 +7053,15 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
         if (pfrom->ThinBlockCapable())
         {
             vRecv >> pfrom->nXthinBloomfilterSize;
+
+            // As a safeguard don't allow a smaller max bloom filter size than the default max size.
+            if (!pfrom->nXthinBloomfilterSize || (pfrom->nXthinBloomfilterSize < MAX_BLOOM_FILTER_SIZE))
+            {
+                pfrom->PushMessage(
+                    NetMsgType::REJECT, strCommand, REJECT_INVALID, std::string("filter size was too small"));
+                pfrom->fDisconnect = true;
+                return false;
+            }
         }
         else
         {
