@@ -33,7 +33,7 @@ void CActiveSystemnode::ManageStatus()
         pmn = snodeman.Find(pubKeySystemnode);
         if(pmn != NULL) {
             pmn->Check();
-            if(pmn->IsEnabled() && pmn->protocolVersion == PROTOCOL_VERSION) EnableHotColdThroNe(pmn->vin, pmn->addr);
+            if(pmn->IsEnabled() && pmn->protocolVersion == PROTOCOL_VERSION) EnableHotColdSystemNode(pmn->vin, pmn->addr);
         }
     }
 
@@ -212,7 +212,7 @@ bool CActiveSystemnode::SendSystemnodePing(std::string& errorMessage) {
 }
 
 // when starting a Systemnode, this can enable to run as a hot wallet with no funds
-bool CActiveSystemnode::EnableHotColdThroNe(CTxIn& newVin, CService& newService)
+bool CActiveSystemnode::EnableHotColdSystemNode(CTxIn& newVin, CService& newService)
 {
     if(!fSystemNode) return false;
 
@@ -222,7 +222,7 @@ bool CActiveSystemnode::EnableHotColdThroNe(CTxIn& newVin, CService& newService)
     vin = newVin;
     service = newService;
 
-    LogPrintf("CActiveSystemnode::EnableHotColdThroNe() - Enabled! You may shut down the cold daemon.\n");
+    LogPrintf("CActiveSystemnode::EnableHotColdSystemNode() - Enabled! You may shut down the cold daemon.\n");
 
     return true;
 }

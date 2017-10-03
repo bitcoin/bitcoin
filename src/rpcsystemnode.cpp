@@ -143,11 +143,11 @@ Value systemnode(const Array& params, bool fHelp)
             EnsureWalletIsUnlocked();
         }
 
-        //if((strCommand == "start-missing" || strCommand == "start-disabled") &&
-        // (systemnodeSync.RequestedSystemnodeAssets <= SYSTEMNODE_SYNC_LIST ||
-        //  systemnodeSync.RequestedSystemnodeAssets == SYSTEMNODE_SYNC_FAILED)) {
-        //    throw runtime_error("You can't use this command until systemnode list is synced\n");
-        //}
+        if((strCommand == "start-missing" || strCommand == "start-disabled") &&
+         (systemnodeSync.RequestedSystemnodeAssets <= SYSTEMNODE_SYNC_LIST ||
+          systemnodeSync.RequestedSystemnodeAssets == SYSTEMNODE_SYNC_FAILED)) {
+            throw runtime_error("You can't use this command until systemnode list is synced\n");
+        }
 
         std::vector<CSystemnodeConfig::CSystemnodeEntry> mnEntries;
         mnEntries = systemnodeConfig.getEntries();

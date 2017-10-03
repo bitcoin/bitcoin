@@ -21,7 +21,6 @@
 #define SYSTEMNODE_REMOVAL_SECONDS             (75*60)
 #define SYSTEMNODE_CHECK_SECONDS               5
 
-
 using namespace std;
 
 class CSystemnode;
@@ -49,23 +48,43 @@ public:
 
     ADD_SERIALIZE_METHODS;
 
-    bool CheckAndUpdate(int& nDos, bool fRequireEnabled = true, bool fCheckSigTimeOnly = false);
-    bool VerifySignature(CPubKey& pubKeySystemnode, int &nDos);
-    void Relay();
-    uint256 GetHash(){
-        CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-        ss << vin;
-        ss << sigTime;
-        return ss.GetHash();
-    }
-    bool Sign(CKey& keySystemnode, CPubKey& pubKeySystemnode);
-
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(vin);
         READWRITE(blockHash);
         READWRITE(sigTime);
         READWRITE(vchSig);
+    }
+
+    bool CheckAndUpdate(int& nDos, bool fRequireEnabled = true, bool fCheckSigTimeOnly = false);
+    bool Sign(CKey& keySystemnode, CPubKey& pubKeySystemnode);
+    bool VerifySignature(CPubKey& pubKeySystemnode, int &nDos);
+    void Relay();
+
+    uint256 GetHash(){
+        CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+        ss << vin;
+        ss << sigTime;
+        return ss.GetHash();
+    }
+
+    void swap(CSystemnodePing& first, CSystemnodePing& second) // nothrow
+    {
+        // enable ADL (not necessary in our case, but good practice)
+        using std::swap;
+
+        // by swapping the members of two classes,
+        // the two classes are effectively swapped
+        swap(first.vin, second.vin);
+        swap(first.blockHash, second.blockHash);
+        swap(first.sigTime, second.sigTime);
+        swap(first.vchSig, second.vchSig);
+    }
+
+    CSystemnodePing& operator=(CSystemnodePing from)
+    {
+        swap(*this, from);
+        return *this;
     }
     friend bool operator==(const CSystemnodePing& a, const CSystemnodePing& b)
     {
@@ -136,6 +155,14 @@ public:
         swap(*this, from);
         return *this;
     }
+    friend bool operator==(const CSystemnode& a, const CSystemnode& b)
+    {
+        return a.vin == b.vin;
+    }
+    friend bool operator!=(const CSystemnode& a, const CSystemnode& b)
+    {
+        return !(a.vin == b.vin);
+    }
 
     ADD_SERIALIZE_METHODS;
 
@@ -154,17 +181,17 @@ public:
             READWRITE(lastPing);
             READWRITE(unitTest);
     }
-    bool IsValidNetAddr();
-    bool IsEnabled()
-    {
-        return activeState == SYSTEMNODE_ENABLED;
-    }
+    bool UpdateFromNewBroadcast(CSystemnodeBroadcast& snb);
+    void Check(bool forceCheck = false);
     bool IsBroadcastedWithin(int seconds)
     {
         return (GetAdjustedTime() - sigTime) < seconds;
     }
-    bool UpdateFromNewBroadcast(CSystemnodeBroadcast& snb);
-    void Check(bool forceCheck = false);
+    bool IsEnabled()
+    {
+        return activeState == SYSTEMNODE_ENABLED;
+    }
+    bool IsValidNetAddr();
     bool IsPingedWithin(int seconds, int64_t now = -1)
     {
         now == -1 ? now = GetAdjustedTime() : now;
@@ -185,7 +212,7 @@ class CSystemnodeBroadcast : public CSystemnode
 public:
     CSystemnodeBroadcast();
     CSystemnodeBroadcast(CService newAddr, CTxIn newVin, CPubKey newPubkey, CPubKey newPubkey2, int protocolVersionIn);
-    CSystemnodeBroadcast(const CSystemnode& mn);
+    CSystemnodeBroadcast(const CSystemnode& sn);
 
     /// Create Systemnode broadcast, needs to be relayed manually after that
     static bool Create(CTxIn txin, CService service, CKey keyCollateral, CPubKey pubKeyCollateral, CKey keySystemnodeNew, CPubKey pubKeySystemnodeNew, std::string &strErrorMessage, CSystemnodeBroadcast &mnb);

@@ -83,17 +83,11 @@ public:
         READWRITE(mapSeenSystemnodePing);
     }
 
-    void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
+    //CSystemnodeMan();
+    //CSystemnodeMan(CSystemnodeMan& other);
 
-    /// Perform complete check and only then update list and maps
-    bool CheckSnbAndUpdateSystemnodeList(CSystemnodeBroadcast snb, int& nDos);
-    void DsegUpdate(CNode* pnode);
-    /// Find an entry
-    CSystemnode* Find(const CTxIn& vin);
-    CSystemnode* Find(const CPubKey& pubKeySystemnode);
-
-    /// Clear Systemnode vector
-    void Clear();
+    /// Add an entry
+    bool Add(CSystemnode &mn);
 
     /// Check all Systemnodes
     void Check();
@@ -101,16 +95,31 @@ public:
     /// Check all Systemnodes and remove inactive
     void CheckAndRemove(bool forceExpiredRemoval = false);
 
-    void Remove(CTxIn vin);
+    /// Clear Systemnode vector
+    void Clear();
+
     int CountEnabled(int protocolVersion = -1);
+
+    void DsegUpdate(CNode* pnode);
+
+    /// Find an entry
+    CSystemnode* Find(const CTxIn& vin);
+    CSystemnode* Find(const CPubKey& pubKeySystemnode);
+
+    void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
+
+    /// Return the number of (unique) Systemnodes
+    int size() { return vSystemnodes.size(); }
 
     std::string ToString() const;
 
-    /// Add an entry
-    bool Add(CSystemnode &mn);
-    /// Return the number of (unique) Systemnodes
-    int size() { return vSystemnodes.size(); }
+    void Remove(CTxIn vin);
+
+    /// Update systemnode list and maps using provided CSystemnodeBroadcast
     void UpdateSystemnodeList(CSystemnodeBroadcast snb);
+
+    /// Perform complete check and only then update list and maps
+    bool CheckSnbAndUpdateSystemnodeList(CSystemnodeBroadcast snb, int& nDos);
 };
 
 #endif

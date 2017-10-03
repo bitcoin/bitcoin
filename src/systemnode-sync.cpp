@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "main.h"
-//#include "activesystemnode.h"
+#include "activesystemnode.h"
 #include "systemnode-sync.h"
 //#include "systemnode-payments.h"
 //#include "systemnode-budget.h"
@@ -12,6 +12,8 @@
 #include "spork.h"
 #include "util.h"
 #include "addrman.h"
+
+int GetMinSystemnodePaymentsProto();
 
 class CSystemnodeSync;
 CSystemnodeSync systemnodeSync;
@@ -91,43 +93,6 @@ void CSystemnodeSync::AddedSystemnodeList(uint256 hash)
         lastSystemnodeList = GetTime();
         mapSeenSyncMNB.insert(make_pair(hash, 1));
     }
-}
-
-void CSystemnodeSync::AddedSystemnodeWinner(uint256 hash)
-{
-    //if(systemnodePayments.mapSystemnodePayeeVotes.count(hash)) {
-    //    if(mapSeenSyncMNW[hash] < SYSTEMNODE_SYNC_THRESHOLD) {
-    //        lastSystemnodeWinner = GetTime();
-    //        mapSeenSyncMNW[hash]++;
-    //    }
-    //} else {
-    //    lastSystemnodeWinner = GetTime();
-    //    mapSeenSyncMNW.insert(make_pair(hash, 1));
-    //}
-}
-
-void CSystemnodeSync::AddedBudgetItem(uint256 hash)
-{
-    //if(budget.mapSeenSystemnodeBudgetProposals.count(hash) || budget.mapSeenSystemnodeBudgetVotes.count(hash) ||
-    //        budget.mapSeenFinalizedBudgets.count(hash) || budget.mapSeenFinalizedBudgetVotes.count(hash)) {
-    //    if(mapSeenSyncBudget[hash] < SYSTEMNODE_SYNC_THRESHOLD) {
-    //        lastBudgetItem = GetTime();
-    //        mapSeenSyncBudget[hash]++;
-    //    }
-    //} else {
-    //    lastBudgetItem = GetTime();
-    //    mapSeenSyncBudget.insert(make_pair(hash, 1));
-    //}
-}
-
-bool CSystemnodeSync::IsBudgetPropEmpty()
-{
-    return sumBudgetItemProp==0 && countBudgetItemProp>0;
-}
-
-bool CSystemnodeSync::IsBudgetFinEmpty()
-{
-    return sumBudgetItemFin==0 && countBudgetItemFin>0;
 }
 
 void CSystemnodeSync::GetNextAsset()
@@ -266,9 +231,9 @@ void CSystemnodeSync::Process()
                 snodeman.DsegUpdate(pnode); 
             } else if(RequestedSystemnodeAttempt < 6) {
                 int nMnCount = snodeman.CountEnabled();
-                pnode->PushMessage("mnget", nMnCount); //sync payees
+                pnode->PushMessage("snget", nMnCount); //sync payees
                 uint256 n = uint256();
-                pnode->PushMessage("mnvs", n); //sync systemnode votes
+                pnode->PushMessage("snvs", n); //sync systemnode votes
             } else {
                 RequestedSystemnodeAssets = SYSTEMNODE_SYNC_FINISHED;
             }
@@ -288,96 +253,89 @@ void CSystemnodeSync::Process()
             return;
         }
 
-        //if (pnode->nVersion >= systemnodePayments.GetMinSystemnodePaymentsProto()) {
+        if (pnode->nVersion >= GetMinSystemnodePaymentsProto()) {
 
-        //    if(RequestedSystemnodeAssets == SYSTEMNODE_SYNC_LIST) {
-        //        if(fDebug) LogPrintf("CSystemnodeSync::Process() - lastSystemnodeList %lld (GetTime() - SYSTEMNODE_SYNC_TIMEOUT) %lld\n", lastSystemnodeList, GetTime() - SYSTEMNODE_SYNC_TIMEOUT);
-        //        if(lastSystemnodeList > 0 && lastSystemnodeList < GetTime() - SYSTEMNODE_SYNC_TIMEOUT*2 && RequestedSystemnodeAttempt >= SYSTEMNODE_SYNC_THRESHOLD){ //hasn't received a new item in the last five seconds, so we'll move to the
-        //            GetNextAsset();
-        //            return;
-        //        }
+            if(RequestedSystemnodeAssets == SYSTEMNODE_SYNC_LIST) {
+                if(fDebug) LogPrintf("CSystemnodeSync::Process() - lastSystemnodeList %lld (GetTime() - SYSTEMNODE_SYNC_TIMEOUT) %lld\n", lastSystemnodeList, GetTime() - SYSTEMNODE_SYNC_TIMEOUT);
+                if(lastSystemnodeList > 0 && lastSystemnodeList < GetTime() - SYSTEMNODE_SYNC_TIMEOUT*2 && RequestedSystemnodeAttempt >= SYSTEMNODE_SYNC_THRESHOLD){ //hasn't received a new item in the last five seconds, so we'll move to the
+                    GetNextAsset();
+                    return;
+                }
 
-        //        if(pnode->HasFulfilledRequest("mnsync")) continue;
-        //        pnode->FulfilledRequest("mnsync");
+                if(pnode->HasFulfilledRequest("snsync")) continue;
+                pnode->FulfilledRequest("snsync");
 
-        //        // timeout
-        //        if(lastSystemnodeList == 0 &&
-        //        (RequestedSystemnodeAttempt >= SYSTEMNODE_SYNC_THRESHOLD*3 || GetTime() - nAssetSyncStarted > SYSTEMNODE_SYNC_TIMEOUT*5)) {
-        //            if(IsSporkActive(SPORK_8_SYSTEMNODE_PAYMENT_ENFORCEMENT)) {
-        //                LogPrintf("CSystemnodeSync::Process - ERROR - Sync has failed, will retry later\n");
-        //                RequestedSystemnodeAssets = SYSTEMNODE_SYNC_FAILED;
-        //                RequestedSystemnodeAttempt = 0;
-        //                lastFailure = GetTime();
-        //                nCountFailures++;
-        //            } else {
-        //                GetNextAsset();
-        //            }
-        //            return;
-        //        }
+                // timeout
+                if(lastSystemnodeList == 0 &&
+                (RequestedSystemnodeAttempt >= SYSTEMNODE_SYNC_THRESHOLD*3 || GetTime() - nAssetSyncStarted > SYSTEMNODE_SYNC_TIMEOUT*5)) {
+                    if(IsSporkActive(SPORK_8_SYSTEMNODE_PAYMENT_ENFORCEMENT)) {
+                        LogPrintf("CSystemnodeSync::Process - ERROR - Sync has failed, will retry later\n");
+                        RequestedSystemnodeAssets = SYSTEMNODE_SYNC_FAILED;
+                        RequestedSystemnodeAttempt = 0;
+                        lastFailure = GetTime();
+                        nCountFailures++;
+                    } else {
+                        GetNextAsset();
+                    }
+                    return;
+                }
 
-        //        if(RequestedSystemnodeAttempt >= SYSTEMNODE_SYNC_THRESHOLD*3) return;
+                if(RequestedSystemnodeAttempt >= SYSTEMNODE_SYNC_THRESHOLD*3) return;
 
-        //        snodeman.DsegUpdate(pnode);
-        //        RequestedSystemnodeAttempt++;
-        //        return;
-        //    }
+                snodeman.DsegUpdate(pnode);
+                RequestedSystemnodeAttempt++;
+                return;
+            }
 
-        //    if(RequestedSystemnodeAssets == SYSTEMNODE_SYNC_MNW) {
-        //        if(lastSystemnodeWinner > 0 && lastSystemnodeWinner < GetTime() - SYSTEMNODE_SYNC_TIMEOUT*2 && RequestedSystemnodeAttempt >= SYSTEMNODE_SYNC_THRESHOLD){ //hasn't received a new item in the last five seconds, so we'll move to the
-        //            GetNextAsset();
-        //            return;
-        //        }
+            if(RequestedSystemnodeAssets == SYSTEMNODE_SYNC_MNW) {
+                if(lastSystemnodeWinner > 0 && lastSystemnodeWinner < GetTime() - SYSTEMNODE_SYNC_TIMEOUT*2 && RequestedSystemnodeAttempt >= SYSTEMNODE_SYNC_THRESHOLD){ //hasn't received a new item in the last five seconds, so we'll move to the
+                    GetNextAsset();
+                    return;
+                }
 
-        //        if(pnode->HasFulfilledRequest("mnwsync")) continue;
-        //        pnode->FulfilledRequest("mnwsync");
+                if(pnode->HasFulfilledRequest("snwsync")) continue;
+                pnode->FulfilledRequest("snwsync");
 
-        //        // timeout
-        //        if(lastSystemnodeWinner == 0 &&
-        //        (RequestedSystemnodeAttempt >= SYSTEMNODE_SYNC_THRESHOLD*3 || GetTime() - nAssetSyncStarted > SYSTEMNODE_SYNC_TIMEOUT*5)) {
-        //            if(IsSporkActive(SPORK_8_SYSTEMNODE_PAYMENT_ENFORCEMENT)) {
-        //                LogPrintf("CSystemnodeSync::Process - ERROR - Sync has failed, will retry later\n");
-        //                RequestedSystemnodeAssets = SYSTEMNODE_SYNC_FAILED;
-        //                RequestedSystemnodeAttempt = 0;
-        //                lastFailure = GetTime();
-        //                nCountFailures++;
-        //            } else {
-        //                GetNextAsset();
-        //            }
-        //            return;
-        //        }
+                // timeout
+                if(lastSystemnodeWinner == 0 &&
+                (RequestedSystemnodeAttempt >= SYSTEMNODE_SYNC_THRESHOLD*3 || GetTime() - nAssetSyncStarted > SYSTEMNODE_SYNC_TIMEOUT*5)) {
+                    if(IsSporkActive(SPORK_8_SYSTEMNODE_PAYMENT_ENFORCEMENT)) {
+                        LogPrintf("CSystemnodeSync::Process - ERROR - Sync has failed, will retry later\n");
+                        RequestedSystemnodeAssets = SYSTEMNODE_SYNC_FAILED;
+                        RequestedSystemnodeAttempt = 0;
+                        lastFailure = GetTime();
+                        nCountFailures++;
+                    } else {
+                        GetNextAsset();
+                    }
+                    return;
+                }
 
-        //        if(RequestedSystemnodeAttempt >= SYSTEMNODE_SYNC_THRESHOLD*3) return;
+                if(RequestedSystemnodeAttempt >= SYSTEMNODE_SYNC_THRESHOLD*3) return;
 
-        //        CBlockIndex* pindexPrev = chainActive.Tip();
-        //        if(pindexPrev == NULL) return;
+                CBlockIndex* pindexPrev = chainActive.Tip();
+                if(pindexPrev == NULL) return;
 
-        //        int nMnCount = snodeman.CountEnabled();
-        //        pnode->PushMessage("mnget", nMnCount); //sync payees
-        //        RequestedSystemnodeAttempt++;
+                int nMnCount = snodeman.CountEnabled();
+                pnode->PushMessage("snget", nMnCount); //sync payees
+                RequestedSystemnodeAttempt++;
 
-        //        return;
-        //    }
-        //}
+                return;
+            }
+        }
 
         if (pnode->nVersion >= MIN_BUDGET_PEER_PROTO_VERSION) {
 
             if(RequestedSystemnodeAssets == SYSTEMNODE_SYNC_BUDGET){
                 //we'll start rejecting votes if we accidentally get set as synced too soon
-                if(lastBudgetItem > 0 && lastBudgetItem < GetTime() - SYSTEMNODE_SYNC_TIMEOUT*2 && RequestedSystemnodeAttempt >= SYSTEMNODE_SYNC_THRESHOLD){ //hasn't received a new item in the last five seconds, so we'll move to the
-                    //LogPrintf("CSystemnodeSync::Process - HasNextFinalizedBudget %d nCountFailures %d IsBudgetPropEmpty %d\n", budget.HasNextFinalizedBudget(), nCountFailures, IsBudgetPropEmpty());
-                    //if(budget.HasNextFinalizedBudget() || nCountFailures >= 2 || IsBudgetPropEmpty()) {
-                        GetNextAsset();
+                if(lastBudgetItem > 0 && lastBudgetItem < GetTime() - SYSTEMNODE_SYNC_TIMEOUT*2 && 
+                   RequestedSystemnodeAttempt >= SYSTEMNODE_SYNC_THRESHOLD)
+                { 
+                    //hasn't received a new item in the last five seconds, so we'll move to the
+                    GetNextAsset();
 
-                        //try to activate our systemnode if possible
-                        // TODO uncomment later
-                        //activeSystemnode.ManageStatus();
-                    // } else { //we've failed to sync, this state will reject the next budget block
-                    //     LogPrintf("CSystemnodeSync::Process - ERROR - Sync has failed, will retry later\n");
-                    //     RequestedSystemnodeAssets = SYSTEMNODE_SYNC_FAILED;
-                    //     RequestedSystemnodeAttempt = 0;
-                    //     lastFailure = GetTime();
-                    //     nCountFailures++;
-                    // }
+                    //try to activate our systemnode if possible
+                    activeSystemnode.ManageStatus();
                     return;
                 }
 
@@ -386,7 +344,7 @@ void CSystemnodeSync::Process()
                 (RequestedSystemnodeAttempt >= SYSTEMNODE_SYNC_THRESHOLD*3 || GetTime() - nAssetSyncStarted > SYSTEMNODE_SYNC_TIMEOUT*5)) {
                     // maybe there is no budgets at all, so just finish syncing
                     GetNextAsset();
-                    //activeSystemnode.ManageStatus();
+                    activeSystemnode.ManageStatus();
                     return;
                 }
 
@@ -396,7 +354,7 @@ void CSystemnodeSync::Process()
                 if(RequestedSystemnodeAttempt >= SYSTEMNODE_SYNC_THRESHOLD*3) return;
 
                 uint256 n = uint256();
-                pnode->PushMessage("mnvs", n); //sync systemnode votes
+                pnode->PushMessage("snvs", n); //sync systemnode votes
                 RequestedSystemnodeAttempt++;
                 
                 return;

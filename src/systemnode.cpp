@@ -490,9 +490,9 @@ bool CSystemnodeBroadcast::CheckInputsAndAdd(int& nDoS)
     snodeman.Add(mn);
 
     // if it matches our systemnode privkey, then we've been remotely activated
-    //if(pubkey2 == activeSystemnode.pubKeysystemnode && protocolVersion == PROTOCOL_VERSION){
-    //    activeSystemnode.EnableHotColdsystemnode(vin, addr);
-    //}
+    if(pubkey2 == activeSystemnode.pubKeySystemnode && protocolVersion == PROTOCOL_VERSION){
+        activeSystemnode.EnableHotColdSystemNode(vin, addr);
+    }
 
     bool isLocal = addr.IsRFC1918() || addr.IsLocal();
     if(Params().NetworkID() == CBaseChainParams::REGTEST) isLocal = false;
