@@ -59,6 +59,7 @@ struct CNodeStateStats {
 /** Get statistics from node state */
 bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
 /** Increase a node's misbehavior score. */
-void Misbehaving(NodeId nodeid, int howmuch);
+enum class DoS_SEVERITY;
+void Misbehaving(NodeId nodeid, DoS_SEVERITY nDoS);
 
 #endif // BITCOIN_NET_PROCESSING_H
