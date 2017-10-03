@@ -125,7 +125,7 @@ struct TestMemPoolEntryHelper
     TestMemPoolEntryHelper() :
         nFee(0), nTime(0), nHeight(1),
         spendsCoinbase(false), sigOpCount(4) { }
-    
+
     CTxMemPoolEntry FromTx(const CMutableTransaction &tx);
     CTxMemPoolEntry FromTx(const CTransaction &tx);
 
@@ -136,4 +136,7 @@ struct TestMemPoolEntryHelper
     TestMemPoolEntryHelper &SpendsCoinbase(bool _flag) { spendsCoinbase = _flag; return *this; }
     TestMemPoolEntryHelper &SigOps(unsigned int _sigops) { sigOpCount = _sigops; return *this; }
 };
+
+CBlock getBlock13b8a();
+
 #endif

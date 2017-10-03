@@ -9,7 +9,8 @@
 #include <consensus/consensus.h>
 #include <utilstrencodings.h>
 
-CMerkleBlock::CMerkleBlock(const CBlock& block, CBloomFilter& filter)
+
+CMerkleBlock::CMerkleBlock(const CBlock& block, CBloomFilter* filter, const std::set<uint256>* txids)
 {
     header = block.GetBlockHeader();
 
@@ -34,36 +35,14 @@ CMerkleBlock::CMerkleBlock(const CBlock& block, CBloomFilter& filter)
         const uint256& hash = tx.GetHash();
         bool isAllowedType = tx.nVersion != 3 || allowedTxTypes.count(tx.nType) != 0;
 
-        if (isAllowedType && filter.IsRelevantAndUpdate(tx))
-        {
+        if (txids && txids->count(hash)) {
             vMatch.push_back(true);
-            vMatchedTxn.push_back(std::make_pair(i, hash));
+        } else if (isAllowedType && filter && filter->IsRelevantAndUpdate(*block.vtx[i])) {
+            vMatch.push_back(true);
+            vMatchedTxn.emplace_back(i, hash);
+        } else {
+            vMatch.push_back(false);
         }
-        else
-            vMatch.push_back(false);
-        vHashes.push_back(hash);
-    }
-
-    txn = CPartialMerkleTree(vHashes, vMatch);
-}
-
-CMerkleBlock::CMerkleBlock(const CBlock& block, const std::set<uint256>& txids)
-{
-    header = block.GetBlockHeader();
-
-    std::vector<bool> vMatch;
-    std::vector<uint256> vHashes;
-
-    vMatch.reserve(block.vtx.size());
-    vHashes.reserve(block.vtx.size());
-
-    for (unsigned int i = 0; i < block.vtx.size(); i++)
-    {
-        const uint256& hash = block.vtx[i]->GetHash();
-        if (txids.count(hash))
-            vMatch.push_back(true);
-        else
-            vMatch.push_back(false);
         vHashes.push_back(hash);
     }
 
