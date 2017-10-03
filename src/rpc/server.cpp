@@ -431,6 +431,39 @@ static inline JSONRPCRequest transformNamedArguments(const JSONRPCRequest& in, c
     for (size_t i=0; i<keys.size(); ++i) {
         argsIn[keys[i]] = &values[i];
     }
+    // Move unexpected parameters to options object.
+    std::set<std::string> all_known_params;
+    for (const std::string &argNamePattern : argNames) {
+        std::vector<std::string> vargNames;
+        boost::algorithm::split(vargNames, argNamePattern, boost::algorithm::is_any_of("|"));
+        if (std::find(vargNames.begin(), vargNames.end(), "options") != vargNames.end()) {
+            // Aliases to options are always converted into options
+            all_known_params.insert("options");
+            continue;
+        }
+        all_known_params.insert(vargNames.begin(), vargNames.end());
+    }
+    UniValue options;
+    if (all_known_params.count("options")) {
+        {
+            auto provided_options = argsIn.find("options");
+            if (provided_options != argsIn.end()) {
+                options = *provided_options->second;
+            } else {
+                options = UniValue(UniValue::VOBJ);
+            }
+        }
+        for (auto& key : keys) {
+            if (!all_known_params.count(key)) {
+                // Move to options object
+                options.pushKV(key, *argsIn.at(key));
+                argsIn.erase(key);
+            }
+        }
+        if (!options.empty()) {
+            argsIn["options"] = &options;
+        }
+    }
     // Process expected parameters.
     int hole = 0;
     for (const std::string &argNamePattern: argNames) {
