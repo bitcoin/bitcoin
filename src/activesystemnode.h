@@ -20,6 +20,10 @@
 #define ACTIVE_SYSTEMNODE_NOT_CAPABLE                 3
 #define ACTIVE_SYSTEMNODE_STARTED                     4
 
+class CActiveSystemnode;
+
+extern CActiveSystemnode activeSystemnode;
+
 // Responsible for activating the Systemnode and pinging the network
 class CActiveSystemnode
 {

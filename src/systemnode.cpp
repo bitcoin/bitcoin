@@ -5,6 +5,7 @@
 #include "systemnode.h"
 #include "systemnodeman.h"
 #include "systemnode-sync.h"
+#include "activesystemnode.h"
 #include "darksend.h"
 #include "util.h"
 #include "sync.h"
@@ -417,8 +418,8 @@ bool CSystemnodeBroadcast::CheckInputsAndAdd(int& nDoS)
 {
     // we are a systemnode with the same vin (i.e. already activated) and this snb is ours (matches our systemnode privkey)
     // so nothing to do here for us
-    //if(fsystemnode && vin.prevout == activesystemnode.vin.prevout && pubkey2 == activesystemnode.pubKeysystemnode)
-    //    return true;
+    if(fSystemNode && vin.prevout == activeSystemnode.vin.prevout && pubkey2 == activeSystemnode.pubKeySystemnode)
+        return true;
 
     // incorrect ping or its sigTime
     if(lastPing == CSystemnodePing() || !lastPing.CheckAndUpdate(nDoS, false, true))

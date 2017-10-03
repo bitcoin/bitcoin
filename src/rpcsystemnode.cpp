@@ -9,6 +9,7 @@
 #include "systemnodeconfig.h"
 #include "systemnode.h"
 #include "systemnodeman.h"
+#include "activesystemnode.h"
 #include "rpcserver.h"
 #include "utilmoneystr.h"
 #include "wallet.h"
@@ -118,6 +119,23 @@ Value systemnode(const Array& params, bool fHelp)
         return obj;
     }
 
+    if (strCommand == "start")
+    {
+        if(!fSystemNode) throw runtime_error("you must set systemnode=1 in the configuration\n");
+
+        {
+            LOCK(pwalletMain->cs_wallet);
+            EnsureWalletIsUnlocked();
+        }
+
+        if(activeSystemnode.status != ACTIVE_SYSTEMNODE_STARTED){
+            activeSystemnode.status = ACTIVE_SYSTEMNODE_INITIAL; // TODO: consider better way
+            activeSystemnode.ManageStatus();
+        }
+
+        return activeSystemnode.GetStatus();
+    }
+
     if (strCommand == "start-many" || strCommand == "start-all" || strCommand == "start-missing" || strCommand == "start-disabled")
     {
         {
@@ -126,8 +144,8 @@ Value systemnode(const Array& params, bool fHelp)
         }
 
         //if((strCommand == "start-missing" || strCommand == "start-disabled") &&
-        // (systemnodeSync.RequestedSystemnodeAssets <= THRONE_SYNC_LIST ||
-        //  systemnodeSync.RequestedSystemnodeAssets == THRONE_SYNC_FAILED)) {
+        // (systemnodeSync.RequestedSystemnodeAssets <= SYSTEMNODE_SYNC_LIST ||
+        //  systemnodeSync.RequestedSystemnodeAssets == SYSTEMNODE_SYNC_FAILED)) {
         //    throw runtime_error("You can't use this command until systemnode list is synced\n");
         //}
 

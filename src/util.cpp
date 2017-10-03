@@ -104,8 +104,11 @@ using namespace std;
 
 //Crown only features
 bool fThroNe = false;
+bool fSystemNode = false;
 string strThroNePrivKey = "";
 string strThroNeAddr = "";
+string strSystemNodePrivKey = "";
+string strSystemNodeAddr = "";
 bool fLiteMode = false;
 bool fEnableInstantX = true;
 int nInstantXDepth = 5;

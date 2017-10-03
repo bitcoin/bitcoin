@@ -6,6 +6,8 @@
 #include "systemnode.h"
 #include "spork.h"
 
+CActiveSystemnode activeSystemnode;
+
 //
 // Bootup the Systemnode, look for a 10000 CRW input and register on the network
 //
@@ -13,7 +15,7 @@ void CActiveSystemnode::ManageStatus()
 {    
     std::string errorMessage;
 
-    if(!fThroNe) return;
+    if(!fSystemNode) return;
 
     if (fDebug) LogPrintf("CActiveSystemnode::ManageStatus() - Begin\n");
 
@@ -53,14 +55,14 @@ void CActiveSystemnode::ManageStatus()
             return;
         }
 
-        if(strThroNeAddr.empty()) {
+        if(strSystemNodeAddr.empty()) {
             if(!GetLocal(service)) {
                 notCapableReason = "Can't detect external address. Please use the systemnodeaddr configuration option.";
                 LogPrintf("CActiveSystemnode::ManageStatus() - not capable: %s\n", notCapableReason);
                 return;
             }
         } else {
-            service = CService(strThroNeAddr);
+            service = CService(strSystemNodeAddr);
         }
 
         if(Params().NetworkID() == CBaseChainParams::MAIN) {
@@ -103,7 +105,7 @@ void CActiveSystemnode::ManageStatus()
             CPubKey pubKeySystemnode;
             CKey keySystemnode;
 
-            if(!darkSendSigner.SetKey(strThroNePrivKey, errorMessage, keySystemnode, pubKeySystemnode))
+            if(!darkSendSigner.SetKey(strSystemNodePrivKey, errorMessage, keySystemnode, pubKeySystemnode))
             {
                 notCapableReason = "Error upon calling SetKey: " + errorMessage;
                 LogPrintf("Register::ManageStatus() - %s\n", notCapableReason);
@@ -162,7 +164,7 @@ bool CActiveSystemnode::SendSystemnodePing(std::string& errorMessage) {
     CPubKey pubKeySystemnode;
     CKey keySystemnode;
 
-    if(!darkSendSigner.SetKey(strThroNePrivKey, errorMessage, keySystemnode, pubKeySystemnode))
+    if(!darkSendSigner.SetKey(strSystemNodePrivKey, errorMessage, keySystemnode, pubKeySystemnode))
     {
         errorMessage = strprintf("Error upon calling SetKey: %s\n", errorMessage);
         return false;
@@ -212,7 +214,7 @@ bool CActiveSystemnode::SendSystemnodePing(std::string& errorMessage) {
 // when starting a Systemnode, this can enable to run as a hot wallet with no funds
 bool CActiveSystemnode::EnableHotColdThroNe(CTxIn& newVin, CService& newService)
 {
-    if(!fThroNe) return false;
+    if(!fSystemNode) return false;
 
     status = ACTIVE_SYSTEMNODE_STARTED;
 

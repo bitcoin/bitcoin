@@ -31,6 +31,7 @@
 //Crown only features
 
 extern bool fThroNe;
+extern bool fSystemNode;
 extern bool fLiteMode;
 extern bool fEnableInstantX;
 extern int nInstantXDepth;
@@ -40,6 +41,8 @@ extern int nLiquidityProvider;
 extern bool fEnableDarksend;
 extern int64_t enforceThronePaymentsTime;
 extern std::string strThroNeAddr;
+extern std::string strSystemNodeAddr;
+extern std::string strSystemNodePrivKey;
 extern int keysLoaded;
 extern bool fSucessfullyLoaded;
 extern std::vector<int64_t> darkSendDenominations;

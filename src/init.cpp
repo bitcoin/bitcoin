@@ -26,6 +26,7 @@
 #include "ui_interface.h"
 #include "util.h"
 #include "activethrone.h"
+#include "activesystemnode.h"
 #include "throne-budget.h"
 #include "throne-payments.h"
 #include "throneman.h"
@@ -418,6 +419,13 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += "  -throneprivkey=<n>     " + _("Set the throne private key") + "\n";
     strUsage += "  -throneaddr=<n>        " + strprintf(_("Set external address:port to get to this throne (example: %s)"), "128.127.106.235:9340") + "\n";
     strUsage += "  -budgetvotemode=<mode>     " + _("Change automatic finalized budget voting behavior. mode=auto: Vote for only exact finalized budget match to my generated budget. (string, default: auto)") + "\n";
+
+    strUsage += "\n" + _("Systemnode options:") + "\n";
+    strUsage += "  -systemnode=<n>            " + strprintf(_("Enable the client to act as a systemnode (0-1, default: %u)"), 0) + "\n";
+    strUsage += "  -snconf=<file>             " + strprintf(_("Specify systemnode configuration file (default: %s)"), "systemnode.conf") + "\n";
+    strUsage += "  -snconflock=<n>            " + strprintf(_("Lock systemnodes from systemnode configuration file (default: %u)"), 1) + "\n";
+    strUsage += "  -systemnodeprivkey=<n>     " + _("Set the systemnode private key") + "\n";
+    strUsage += "  -systemnodeaddr=<n>        " + strprintf(_("Set external address:port to get to this systemnode (example: %s)"), "128.127.106.235:9340") + "\n";
 
     strUsage += "\n" + _("InstantX options:") + "\n";
     strUsage += "  -enableinstantx=<n>    " + strprintf(_("Enable instantx, show confirmations for locked transactions (bool, default: %s)"), "true") + "\n";
@@ -1481,6 +1489,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     }
 
     fThroNe = GetBoolArg("-throne", false);
+    fSystemNode = GetBoolArg("-systemnode", false);
 
     if((fThroNe || throneConfig.getCount() > -1) && fTxIndex == false) {
         return InitError("Enabling Throne support requires turning on transaction indexing."
@@ -1518,7 +1527,39 @@ bool AppInit2(boost::thread_group& threadGroup)
             return InitError(_("You must specify a throneprivkey in the configuration. Please see documentation for help."));
         }
     }
-    
+
+    if(fSystemNode) {
+        LogPrintf("IS DARKSEND SYSTEM NODE\n");
+        strSystemNodeAddr = GetArg("-systemnodeaddr", "");
+
+        LogPrintf(" addr %s\n", strSystemNodeAddr.c_str());
+
+        if(!strSystemNodeAddr.empty()){
+            CService addrTest = CService(strSystemNodeAddr);
+            if (!addrTest.IsValid()) {
+                return InitError("Invalid -systemnodeaddr address: " + strSystemNodeAddr);
+            }
+        }
+
+        strSystemNodePrivKey = GetArg("-systemnodeprivkey", "");
+        if(!strSystemNodePrivKey.empty()){
+            std::string errorMessage;
+
+            CKey key;
+            CPubKey pubkey;
+
+            if(!darkSendSigner.SetKey(strSystemNodePrivKey, errorMessage, key, pubkey))
+            {
+                return InitError(_("Invalid systemnodeprivkey. Please see documenation."));
+            }
+
+            activeSystemnode.pubKeySystemnode = pubkey;
+
+        } else {
+            return InitError(_("You must specify a systemnodeprivkey in the configuration. Please see documentation for help."));
+        }
+    }
+
     //get the mode of budget voting for this throne
     strBudgetMode = GetArg("-budgetvotemode", "auto");
 
@@ -1559,6 +1600,9 @@ bool AppInit2(boost::thread_group& threadGroup)
     fLiteMode = GetBoolArg("-litemode", false);
     if(fThroNe && fLiteMode){
         return InitError("You can not start a throne in litemode");
+    }
+    if(fSystemNode && fLiteMode){
+        return InitError("You can not start a servicenode in litemode");
     }
 
     LogPrintf("fLiteMode %d\n", fLiteMode);
