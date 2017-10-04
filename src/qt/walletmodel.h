@@ -30,10 +30,6 @@ class CPubKey;
 class CWallet;
 class uint256;
 
-QT_BEGIN_NAMESPACE
-class QTimer;
-QT_END_NAMESPACE
-
 class SendCoinsRecipient
 {
 public:
@@ -221,7 +217,6 @@ public:
 private:
     CWallet *wallet;
     bool fHaveWatchOnly;
-    bool fForceCheckBalanceChanged;
 
     // Wallet has an options model for wallet-specific options
     // (transaction fee, for example)
@@ -241,11 +236,8 @@ private:
     EncryptionStatus cachedEncryptionStatus;
     int cachedNumBlocks;
 
-    QTimer *pollTimer;
-
     void subscribeToCoreSignals();
     void unsubscribeFromCoreSignals();
-    void checkBalanceChanged();
 
 Q_SIGNALS:
     // Signal that balance in wallet changed
@@ -275,14 +267,12 @@ Q_SIGNALS:
 public Q_SLOTS:
     /* Wallet status might have changed */
     void updateStatus();
-    /* New transaction, or transaction changed status */
-    void updateTransaction();
     /* New, updated or removed address book entry */
     void updateAddressBook(const QString &address, const QString &label, bool isMine, const QString &purpose, int status);
     /* Watch-only added */
     void updateWatchOnlyFlag(bool fHaveWatchonly);
-    /* Current, immature or unconfirmed balance might have changed - emit 'balanceChanged' if so */
-    void pollBalanceChanged();
+    /* Update balance */
+    void updateBalance();
 };
 
 #endif // BITCOIN_QT_WALLETMODEL_H

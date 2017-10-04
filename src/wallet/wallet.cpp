@@ -762,6 +762,7 @@ DBErrors CWallet::ReorderTransactions()
     }
     walletdb.WriteOrderPosNext(nOrderPosNext);
 
+    MarkBalancesDirty();
     return DB_LOAD_OK;
 }
 
@@ -851,11 +852,10 @@ bool CWallet::GetAccountPubkey(CPubKey &pubKey, std::string strAccount, bool bFo
 
 void CWallet::MarkDirty()
 {
-    {
-        LOCK(cs_wallet);
-        for (std::pair<const uint256, CWalletTx>& item : mapWallet)
-            item.second.MarkDirty();
-    }
+    LOCK(cs_wallet);
+    MarkBalancesDirty();
+    for (std::pair<const uint256, CWalletTx>& item : mapWallet)
+        item.second.MarkDirty();
 }
 
 bool CWallet::MarkReplaced(const uint256& originalHash, const uint256& newHash)
@@ -882,6 +882,7 @@ bool CWallet::MarkReplaced(const uint256& originalHash, const uint256& newHash)
         success = false;
     }
 
+    MarkBalancesDirty();
     NotifyTransactionChanged(this, originalHash, CT_UPDATED);
 
     return success;
@@ -955,6 +956,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
 
     // Break debit/credit balance caches:
     wtx.MarkDirty();
+    MarkBalancesDirty();
 
     // Notify UI of new or updated transaction
     NotifyTransactionChanged(this, hash, fInsertedNew ? CT_NEW : CT_UPDATED);
@@ -1130,6 +1132,7 @@ bool CWallet::AbandonTransaction(const uint256& hashTx)
         }
     }
 
+    MarkBalancesDirty();
     return true;
 }
 
@@ -1192,6 +1195,7 @@ void CWallet::MarkConflicted(const uint256& hashBlock, const uint256& hashTx)
             }
         }
     }
+    MarkBalancesDirty();
 }
 
 void CWallet::SyncTransaction(const CTransactionRef& ptx, const CBlockIndex *pindex, int posInBlock) {
@@ -1232,6 +1236,7 @@ void CWallet::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const 
     for (size_t i = 0; i < pblock->vtx.size(); i++) {
         SyncTransaction(pblock->vtx[i], pindex, i);
     }
+    MarkBalancesDirty();
 }
 
 void CWallet::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock) {
@@ -1240,6 +1245,7 @@ void CWallet::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock) {
     for (const CTransactionRef& ptx : pblock->vtx) {
         SyncTransaction(ptx);
     }
+    MarkBalancesDirty();
 }
 
 
@@ -1960,9 +1966,23 @@ void CWallet::ResendWalletTransactions(int64_t nBestBlockTime, CConnman* connman
  * @{
  */
 
+void CWallet::MarkBalancesDirty()
+{
+    fBalanceDirty = true;
+    fUnconfirmedBalanceDirty = true;
+    fImmatureBalanceDirty = true;
+    fWatchOnlyBalanceDirty = true;
+    fUnconfirmedWatchOnlyBalanceDirty = true;
+    fImmatureWatchOnlyBalanceDirty = true;
+    BalancesChanged(); //emit signal
+}
 
 CAmount CWallet::GetBalance() const
 {
+    if (!fBalanceDirty) {
+        return nBalanceCache;
+    }
+
     CAmount nTotal = 0;
     {
         LOCK2(cs_main, cs_wallet);
@@ -1972,13 +1992,18 @@ CAmount CWallet::GetBalance() const
             if (pcoin->IsTrusted())
                 nTotal += pcoin->GetAvailableCredit();
         }
+        nBalanceCache = nTotal;
+        fBalanceDirty = false;
     }
-
-    return nTotal;
+    return nBalanceCache;
 }
 
 CAmount CWallet::GetUnconfirmedBalance() const
 {
+    if (!fUnconfirmedBalanceDirty) {
+        return nUnconfirmedBalanceCache;
+    }
+
     CAmount nTotal = 0;
     {
         LOCK2(cs_main, cs_wallet);
@@ -1988,12 +2013,18 @@ CAmount CWallet::GetUnconfirmedBalance() const
             if (!pcoin->IsTrusted() && pcoin->GetDepthInMainChain() == 0 && pcoin->InMempool())
                 nTotal += pcoin->GetAvailableCredit();
         }
+        nUnconfirmedBalanceCache = nTotal;
+        fUnconfirmedBalanceDirty = false;
     }
-    return nTotal;
+    return nUnconfirmedBalanceCache;
 }
 
 CAmount CWallet::GetImmatureBalance() const
 {
+    if (!fImmatureBalanceDirty) {
+        return nImmatureBalanceCache;
+    }
+
     CAmount nTotal = 0;
     {
         LOCK2(cs_main, cs_wallet);
@@ -2002,12 +2033,18 @@ CAmount CWallet::GetImmatureBalance() const
             const CWalletTx* pcoin = &(*it).second;
             nTotal += pcoin->GetImmatureCredit();
         }
+        nImmatureBalanceCache = nTotal;
+        fImmatureBalanceDirty = false;
     }
-    return nTotal;
+    return nImmatureBalanceCache;
 }
 
 CAmount CWallet::GetWatchOnlyBalance() const
 {
+    if (!fWatchOnlyBalanceDirty) {
+        return nWatchOnlyBalanceCache;
+    }
+
     CAmount nTotal = 0;
     {
         LOCK2(cs_main, cs_wallet);
@@ -2017,13 +2054,18 @@ CAmount CWallet::GetWatchOnlyBalance() const
             if (pcoin->IsTrusted())
                 nTotal += pcoin->GetAvailableWatchOnlyCredit();
         }
+        nWatchOnlyBalanceCache = nTotal;
+        fWatchOnlyBalanceDirty = false;
     }
-
-    return nTotal;
+    return nWatchOnlyBalanceCache;
 }
 
 CAmount CWallet::GetUnconfirmedWatchOnlyBalance() const
 {
+    if (!fUnconfirmedWatchOnlyBalanceDirty) {
+        return nUnconfirmedWatchOnlyBalanceCache;
+    }
+
     CAmount nTotal = 0;
     {
         LOCK2(cs_main, cs_wallet);
@@ -2033,12 +2075,18 @@ CAmount CWallet::GetUnconfirmedWatchOnlyBalance() const
             if (!pcoin->IsTrusted() && pcoin->GetDepthInMainChain() == 0 && pcoin->InMempool())
                 nTotal += pcoin->GetAvailableWatchOnlyCredit();
         }
+        nUnconfirmedWatchOnlyBalanceCache = nTotal;
+        fUnconfirmedWatchOnlyBalanceDirty = false;
     }
-    return nTotal;
+    return nUnconfirmedWatchOnlyBalanceCache;
 }
 
 CAmount CWallet::GetImmatureWatchOnlyBalance() const
 {
+    if (!fImmatureWatchOnlyBalanceDirty) {
+        return nImmatureWatchOnlyBalanceCache;
+    }
+
     CAmount nTotal = 0;
     {
         LOCK2(cs_main, cs_wallet);
@@ -2047,8 +2095,10 @@ CAmount CWallet::GetImmatureWatchOnlyBalance() const
             const CWalletTx* pcoin = &(*it).second;
             nTotal += pcoin->GetImmatureWatchOnlyCredit();
         }
+        nImmatureWatchOnlyBalanceCache = nTotal;
+        fImmatureWatchOnlyBalanceDirty = false;
     }
-    return nTotal;
+    return nImmatureWatchOnlyBalanceCache;
 }
 
 // Calculate total balance in a different way from GetBalance. The biggest

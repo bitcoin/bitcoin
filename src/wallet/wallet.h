@@ -792,6 +792,12 @@ public:
         nRelockTime = 0;
         fAbortRescan = false;
         fScanningWallet = false;
+        fBalanceDirty = true;
+        fUnconfirmedBalanceDirty = true;
+        fImmatureBalanceDirty = true;
+        fWatchOnlyBalanceDirty = true;
+        fUnconfirmedWatchOnlyBalanceDirty = true;
+        fImmatureWatchOnlyBalanceDirty = true;
     }
 
     std::map<uint256, CWalletTx> mapWallet;
@@ -924,6 +930,8 @@ public:
     void ResendWalletTransactions(int64_t nBestBlockTime, CConnman* connman) override;
     // ResendWalletTransactionsBefore may only be called if fBroadcastTransactions!
     std::vector<uint256> ResendWalletTransactionsBefore(int64_t nTime, CConnman* connman);
+
+    void MarkBalancesDirty();
     CAmount GetBalance() const;
     CAmount GetUnconfirmedBalance() const;
     CAmount GetImmatureBalance() const;
@@ -932,6 +940,22 @@ public:
     CAmount GetImmatureWatchOnlyBalance() const;
     CAmount GetLegacyBalance(const isminefilter& filter, int minDepth, const std::string* account) const;
     CAmount GetAvailableBalance(const CCoinControl* coinControl = nullptr) const;
+
+    mutable std::atomic<CAmount> nBalanceCache;
+    mutable std::atomic<CAmount> nUnconfirmedBalanceCache;
+    mutable std::atomic<CAmount> nImmatureBalanceCache;
+    mutable std::atomic<CAmount> nWatchOnlyBalanceCache;
+    mutable std::atomic<CAmount> nUnconfirmedWatchOnlyBalanceCache;
+    mutable std::atomic<CAmount> nImmatureWatchOnlyBalanceCache;
+    mutable std::atomic<bool> fBalanceDirty;
+    mutable std::atomic<bool> fUnconfirmedBalanceDirty;
+    mutable std::atomic<bool> fImmatureBalanceDirty;
+    mutable std::atomic<bool> fWatchOnlyBalanceDirty;
+    mutable std::atomic<bool> fUnconfirmedWatchOnlyBalanceDirty;
+    mutable std::atomic<bool> fImmatureWatchOnlyBalanceDirty;
+
+    /** Notification for balance changes */
+    boost::signals2::signal<void ()> BalancesChanged;
 
     /**
      * Insert additional inputs into the transaction by
