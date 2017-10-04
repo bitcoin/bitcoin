@@ -106,6 +106,8 @@ public:
     CSystemnode* Find(const CTxIn& vin);
     CSystemnode* Find(const CPubKey& pubKeySystemnode);
 
+    std::vector<CSystemnode> GetFullSystemnodeVector() { Check(); return vSystemnodes; }
+
     void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
 
     /// Return the number of (unique) Systemnodes

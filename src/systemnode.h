@@ -200,7 +200,17 @@ public:
                 ? false
                 : now - lastPing.sigTime < seconds;
     }
+    std::string Status() {
+        std::string strStatus = "ACTIVE";
 
+        if(activeState == CSystemnode::SYSTEMNODE_ENABLED) strStatus   = "ENABLED";
+        if(activeState == CSystemnode::SYSTEMNODE_EXPIRED) strStatus   = "EXPIRED";
+        if(activeState == CSystemnode::SYSTEMNODE_VIN_SPENT) strStatus = "VIN_SPENT";
+        if(activeState == CSystemnode::SYSTEMNODE_REMOVE) strStatus    = "REMOVE";
+        if(activeState == CSystemnode::SYSTEMNODE_POS_ERROR) strStatus = "POS_ERROR";
+
+        return strStatus;
+    }
 };
 
 //
