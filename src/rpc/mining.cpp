@@ -105,7 +105,7 @@ UniValue getnetworkhashps(const JSONRPCRequest& request)
     return GetNetworkHashPS(!request.params[0].isNull() ? request.params[0].get_int() : 120, !request.params[1].isNull() ? request.params[1].get_int() : -1);
 }
 
-UniValue generateBlocks(std::shared_ptr<CReserveScript> coinbaseScript, int nGenerate, uint64_t nMaxTries, bool keepScript, const std::string &whiteListPrivKey)
+UniValue generateBlocks(std::shared_ptr<CReserveScript> coinbaseScript, int nGenerate, uint64_t nMaxTries, bool keepScript, const std::string &whiteListPrivKey, uint8_t threadId)
 {
     static const int nInnerLoopCount = 0x10000;
     int nHeightEnd = 0;
@@ -121,14 +121,14 @@ UniValue generateBlocks(std::shared_ptr<CReserveScript> coinbaseScript, int nGen
     while (nHeight < nHeightEnd)
     {
         BlockAssembler blockAssembler = BlockAssembler(Params());
-    	blockAssembler.setPrivateKey(whiteListPrivKey);
+    	blockAssembler.setPrivateKey(whiteListPrivKey, threadId);
         std::unique_ptr<CBlockTemplate> pblocktemplate(blockAssembler.CreateNewBlock(coinbaseScript->reserveScript));
         if (!pblocktemplate.get())
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't create new block");
         CBlock *pblock = &pblocktemplate->block;
         {
             LOCK(cs_main);
-            IncrementExtraNonce(pblock, chainActive.Tip(), nExtraNonce);
+            IncrementExtraNonce(pblock, chainActive.Tip(), nExtraNonce, whiteListPrivKey, threadId);
         }
         while (nMaxTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus())) {
             ++pblock->nNonce;
@@ -185,7 +185,7 @@ UniValue generatetoaddress(const JSONRPCRequest& request)
     std::shared_ptr<CReserveScript> coinbaseScript = std::make_shared<CReserveScript>();
     coinbaseScript->reserveScript = GetScriptForDestination(address.Get());
 
-    return generateBlocks(coinbaseScript, nGenerate, nMaxTries, false);
+    return generateBlocks(coinbaseScript, nGenerate, nMaxTries, false, "", 0);
 }
 
 UniValue getmininginfo(const JSONRPCRequest& request)
