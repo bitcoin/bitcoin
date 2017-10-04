@@ -1272,6 +1272,10 @@ UniValue ListReceived(const UniValue& params, bool fByAccounts)
         if (it == mapTally.end() && !fIncludeEmpty)
             continue;
 
+        isminefilter mine = IsMine(*pwalletMain, address.Get());
+        if(!(mine & filter))
+            continue;
+
         CAmount nAmount = 0;
         int nConf = std::numeric_limits<int>::max();
         bool fIsWatchonly = false;
