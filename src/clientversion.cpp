@@ -13,7 +13,7 @@
  * for both iopd and iop-core, to make it harder for attackers to
  * target servers or GUI users specifically.
  */
-const std::string CLIENT_NAME("Satoshi");
+const std::string CLIENT_NAME("IoP-HD");
 
 /**
  * Client version number
