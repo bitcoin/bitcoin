@@ -36,7 +36,7 @@ PREV_COMMIT=""
 
 while true; do
 	if [ "$CURRENT_COMMIT" = $VERIFIED_ROOT ]; then
-		echo "There is a valid path from "$CURRENT_COMMIT" to $VERIFIED_ROOT where all commits are signed!"
+		echo "There is a valid path from \"$CURRENT_COMMIT\" to $VERIFIED_ROOT where all commits are signed!"
 		exit 0
 	fi
 
