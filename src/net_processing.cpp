@@ -2961,14 +2961,14 @@ static bool SendRejectsAndCheckIfBanned(CNode* pnode, CConnman* connman, bool en
             LogPrintf("Warning: not punishing whitelisted peer %s!\n", pnode->addr.ToString());
         else if (pnode->m_manual_connection)
             LogPrintf("Warning: not punishing manually-connected peer %s!\n", pnode->addr.ToString());
-        else {
+        else if (pnode->addr.IsLocal()) {
+            // Disconnect but don't ban _this_ local node
+            LogPrintf("Warning: disconnecting but not banning local peer %s!\n", pnode->addr.ToString());
             pnode->fDisconnect = true;
-            if (pnode->addr.IsLocal())
-                LogPrintf("Warning: not banning local peer %s!\n", pnode->addr.ToString());
-            else
-            {
-                connman->Ban(pnode->addr, BanReasonNodeMisbehaving);
-            }
+        } else {
+            // Disconnect and ban all nodes sharing the address
+            connman->Ban(pnode->addr, BanReasonNodeMisbehaving);
+            connman->DisconnectNode(pnode->addr);
         }
         return true;
     }
