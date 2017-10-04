@@ -600,7 +600,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
             "dumpwallet \"filename\"\n"
-            "\nDumps all wallet keys in a human-readable format.\n"
+            "\nDumps all wallet keys in a human-readable format to a server-side file. This does not allow overwriting existing files.\n"
             "\nArguments:\n"
             "1. \"filename\"    (string, required) The filename with path (either absolute or relative to bitcoind)\n"
             "\nResult:\n"
@@ -616,9 +616,19 @@ UniValue dumpwallet(const JSONRPCRequest& request)
 
     EnsureWalletIsUnlocked(pwallet);
 
-    std::ofstream file;
     boost::filesystem::path filepath = request.params[0].get_str();
     filepath = boost::filesystem::absolute(filepath);
+
+    /* Prevent arbitrary files from being overwritten. There have been reports
+     * that users have overwritten wallet files this way:
+     * https://github.com/bitcoin/bitcoin/issues/9934
+     * It may also avoid other security issues.
+     */
+    if (boost::filesystem::exists(filepath)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, filepath.string() + " already exists. If you are sure this is what you want, move it out of the way first");
+    }
+
+    std::ofstream file;
     file.open(filepath.string().c_str());
     if (!file.is_open())
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
