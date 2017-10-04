@@ -45,17 +45,23 @@ class AuthServiceProxyWrapper(object):
 
         """
         return_val = self.auth_service_proxy_instance.__call__(*args, **kwargs)
+        self._log_call()
+        return return_val
+
+    def _log_call(self):
         rpc_method = self.auth_service_proxy_instance._service_name
 
         if self.coverage_logfile:
             with open(self.coverage_logfile, 'a+', encoding='utf8') as f:
                 f.write("%s\n" % rpc_method)
 
-        return return_val
-
     def __truediv__(self, relative_uri):
         return AuthServiceProxyWrapper(self.auth_service_proxy_instance / relative_uri,
                                        self.coverage_logfile)
+
+    def get_request(self, *args, **kwargs):
+        self._log_call()
+        return self.auth_service_proxy_instance.get_request(*args, **kwargs)
 
 def get_filename(dirname, n_node):
     """
