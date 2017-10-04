@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "governance-vote.h"
+#include "governance-object.h"
 #include "masternodeman.h"
 #include "messagesigner.h"
 #include "util.h"
@@ -226,7 +227,7 @@ CGovernanceVote::CGovernanceVote(COutPoint outpointMasternodeIn, uint256 nParent
 void CGovernanceVote::Relay(CConnman& connman) const
 {
     CInv inv(MSG_GOVERNANCE_OBJECT_VOTE, GetHash());
-    connman.RelayInv(inv, PROTOCOL_VERSION);
+    connman.RelayInv(inv, MIN_GOVERNANCE_PEER_PROTO_VERSION);
 }
 
 bool CGovernanceVote::Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode)
