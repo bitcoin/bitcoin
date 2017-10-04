@@ -1866,7 +1866,11 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
      // check if whitelist functionality is activated.
     bool fIsMinerWhitelist = pindex->nHeight > chainparams.GetConsensus().minerWhiteListActivationHeight;
      
-    if (fIsMinerWhitelist){
+    // get height of last checkpoint
+    CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(params.Checkpoints());
+    bool fCheckMinerSig = pindex->nHeight > pcheckpoint->nHeight;
+
+    if (fIsMinerWhitelist && fCheckMinerSig ){
         LogPrintf("Whitelist activated: Checking for Miner Signature.\n");
         // first transaction is coinbase with only one input
         const CTransaction &tx = *(block.vtx[0]);
@@ -2069,9 +2073,9 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     
     // now apply admin actions.
     LogPrintf("Looking for admin actions.\n");
-    LogPrintf("Txns to check: %d \n",block.vtx.size()-1);
+    //LogPrintf("Txns to check: %d \n",block.vtx.size()-1);
     for (unsigned int i = 1; i < block.vtx.size(); i++){ // start at 1, 0 is coinbase
-        LogPrintf("Checking txn %d.\n",i);
+        //LogPrintf("Checking txn %d.\n",i);
         const CTransaction &tx = *(block.vtx[i]);
         if (!tx.IsCoinBase()){
             for (unsigned int j = 0; j < tx.vin.size(); j++) {
