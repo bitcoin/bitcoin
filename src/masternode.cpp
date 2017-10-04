@@ -90,7 +90,7 @@ bool CMasternode::UpdateFromNewBroadcast(CMasternodeBroadcast& mnb, CConnman& co
 //
 arith_uint256 CMasternode::CalculateScore(const uint256& blockHash)
 {
-    if (fDIP0001LockedInAtTip) {
+    if (fDIP0001WasLockedIn) {
         // Deterministically calculate a "score" for a Masternode based on any given (block)hash
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
         ss << vin.prevout << nCollateralMinConfBlockHash << blockHash;

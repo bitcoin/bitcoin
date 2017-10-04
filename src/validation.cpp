@@ -85,7 +85,7 @@ uint64_t nPruneTarget = 0;
 bool fAlerts = DEFAULT_ALERTS;
 bool fEnableReplacement = DEFAULT_ENABLE_REPLACEMENT;
 
-std::atomic<bool> fDIP0001LockedInAtTip{false};
+std::atomic<bool> fDIP0001WasLockedIn{false};
 std::atomic<bool> fDIP0001ActiveAtTip{false};
 
 uint256 hashAssumeValid;

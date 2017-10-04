@@ -165,7 +165,7 @@ extern bool fEnableReplacement;
 extern std::map<uint256, int64_t> mapRejectedBlocks;
 
 static const int DIP0001_PROTOCOL_VERSION = 70208;
-extern std::atomic<bool> fDIP0001LockedInAtTip;
+extern std::atomic<bool> fDIP0001WasLockedIn;
 extern std::atomic<bool> fDIP0001ActiveAtTip;
 
 /** Block hash whose ancestors we will assume to have valid scripts without checking them. */

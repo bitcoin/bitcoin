@@ -38,8 +38,8 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
 
     bool fDIP0001ActiveAtTipTmp = fDIP0001ActiveAtTip;
     // Update global flags
-    fDIP0001LockedInAtTip = (VersionBitsState(pindexNew, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0001, versionbitscache) == THRESHOLD_LOCKED_IN);
     fDIP0001ActiveAtTip = (VersionBitsState(pindexNew, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0001, versionbitscache) == THRESHOLD_ACTIVE);
+    fDIP0001WasLockedIn = fDIP0001ActiveAtTip || (VersionBitsState(pindexNew, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0001, versionbitscache) == THRESHOLD_LOCKED_IN);
 
     // Update min fees only if activation changed and we are using default fees
     if (fDIP0001ActiveAtTipTmp != fDIP0001ActiveAtTip) {
