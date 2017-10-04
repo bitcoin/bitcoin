@@ -78,6 +78,37 @@ class RawTransactionsTest(BitcoinTestFramework):
         dec_tx  = self.nodes[2].decoderawtransaction(rawtxfund['hex'])
         assert(len(dec_tx['vin']) > 0) #test that we have enough inputs
 
+        #############################
+        # test preserving nLockTime #
+        #############################
+        inputs  = [ ]
+        outputs = { self.nodes[0].getnewaddress() : 1.0 }
+        rawtx   = self.nodes[2].createrawtransaction(inputs, outputs,1234)
+        dec_tx  = self.nodes[2].decoderawtransaction(rawtx)
+        rawtxfund = self.nodes[2].fundrawtransaction(rawtx)
+        fee = rawtxfund['fee']
+        dec_tx  = self.nodes[2].decoderawtransaction(rawtxfund['hex'])
+        assert(dec_tx["locktime"] == 1234)
+
+        ################################
+        # test using default nLockTime #
+        ################################
+        blockcount =  self.nodes[0].getblockcount()
+        inputs  = [ ]
+        outputs = { self.nodes[0].getnewaddress() : 1.0 }
+        rawtx   = self.nodes[2].createrawtransaction(inputs, outputs)
+        dec_tx  = self.nodes[2].decoderawtransaction(rawtx)
+
+        # there's a random chance of an earlier locktime so iterate a few times
+        for i in range(0,20):
+            rawtxfund = self.nodes[2].fundrawtransaction(rawtx)
+            fee = rawtxfund['fee']
+            dec_tx  = self.nodes[2].decoderawtransaction(rawtxfund['hex'])
+            if dec_tx["locktime"] == blockcount:
+                break
+            assert(dec_tx["locktime"] > 0)
+            assert(i<18)  # incrediably unlikely to never produce the current blockcount
+
         ##############################
         # simple test with two coins #
         ##############################
