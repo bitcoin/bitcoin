@@ -252,8 +252,8 @@ void CExtPubKey::Encode(unsigned char code[BIP32_EXTKEY_SIZE]) const {
     code[5] = (nChild >> 24) & 0xFF; code[6] = (nChild >> 16) & 0xFF;
     code[7] = (nChild >>  8) & 0xFF; code[8] = (nChild >>  0) & 0xFF;
     memcpy(code+9, chaincode.begin(), 32);
-    assert(pubkey.size() == COMPRESSED_PUBLIC_KEY_SIZE);
-    memcpy(code+41, pubkey.begin(), COMPRESSED_PUBLIC_KEY_SIZE);
+    assert(pubkey.size() == CPubKey::COMPRESSED_PUBLIC_KEY_SIZE);
+    memcpy(code+41, pubkey.begin(), CPubKey::COMPRESSED_PUBLIC_KEY_SIZE);
 }
 
 void CExtPubKey::Decode(const unsigned char code[BIP32_EXTKEY_SIZE]) {
