@@ -390,7 +390,7 @@ bool CMinerWhitelistDB::MineBlock(unsigned int newHeight, std::string address) {
     // First check that we are actually at the tip
     unsigned int currHeight;
     Read(DB_HEIGHT, currHeight);
-    LogPrintf("MinerDatabase: Database is currently at block %d\n", currHeight);
+    //LogPrintf("MinerDatabase: Database is currently at block %d\n", currHeight);
 
     assert(newHeight==currHeight+1);
 
@@ -415,18 +415,18 @@ bool CMinerWhitelistDB::MineBlock(unsigned int newHeight, std::string address) {
     // Now make sure that the minerstats match up. 
     // Window Handling
     if ( newHeight < Params().GetConsensus().minerCapSystemChangeHeight ) {
-        LogPrintf("MinerDatabase: We are using the old cap system.\n");
+        //LogPrintf("MinerDatabase: We are using the old cap system.\n");
         // old system
         // Reset the window every 2016 blocks
         if ( newHeight%2016 == 0) {
-            LogPrintf("MinerDatabase: New Window beginning\n");
-            LogPrintf("MinerDatabase: Creating Iterator\n");
+            //LogPrintf("MinerDatabase: New Window beginning\n");
+            //LogPrintf("MinerDatabase: Creating Iterator\n");
             std::unique_ptr<CDBIterator> it(NewIterator());
-            LogPrintf("MinerDatabase: Starting Loop.\n");
+            //LogPrintf("MinerDatabase: Starting Loop.\n");
             for (it->Seek(MinerEntry(DUMMY)); it->Valid(); it->Next()) { // SeekToFirst should end up at an address (they start with 'a')
                 MinerEntry entry = MinerEntry();
                 MinerDetails det = MinerDetails();
-                LogPrintf("MinerDatabase: Reading Entry.\n");
+                //LogPrintf("MinerDatabase: Reading Entry.\n");
                 if (it->GetKey(entry)) { // Does this work? Should give false if Key is of other type than what we expect?!
                     it->GetValue(det);
                     if (entry.addr == address) { 
@@ -441,7 +441,7 @@ bool CMinerWhitelistDB::MineBlock(unsigned int newHeight, std::string address) {
             } 
         } 
         else {
-            LogPrintf("MinerDatabase: In window\n");
+            //LogPrintf("MinerDatabase: In window\n");
             MinerDetails minDets = MinerDetails();
             if (!Exists(MinerEntry(address)))
                 return false;
@@ -455,7 +455,7 @@ bool CMinerWhitelistDB::MineBlock(unsigned int newHeight, std::string address) {
     }
     else {
         // new System
-        LogPrintf("MinerDatabase: We are using the new cap system.\n");
+        //LogPrintf("MinerDatabase: We are using the new cap system.\n");
         MinerDetails minDets = MinerDetails();
         if (!Exists(MinerEntry(address)))
             return false;

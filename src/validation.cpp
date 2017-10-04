@@ -1867,7 +1867,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     bool fIsMinerWhitelist = pindex->nHeight > chainparams.GetConsensus().minerWhiteListActivationHeight;
      
     // get height of last checkpoint
-    CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(params.Checkpoints());
+    CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(chainparams.Checkpoints());
     bool fCheckMinerSig = pindex->nHeight > pcheckpoint->nHeight;
 
     if (fIsMinerWhitelist && fCheckMinerSig ){

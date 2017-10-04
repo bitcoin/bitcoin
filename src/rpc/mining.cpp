@@ -128,12 +128,15 @@ UniValue generateBlocks(std::shared_ptr<CReserveScript> coinbaseScript, int nGen
         CBlock *pblock = &pblocktemplate->block;
         {
             LOCK(cs_main);
+            // LogPrintf("Miner %u: ExtraNonce: %u\n", threadId, nExtraNonce);
             IncrementExtraNonce(pblock, chainActive.Tip(), nExtraNonce, whiteListPrivKey, threadId);
         }
         while (nMaxTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus())) {
             ++pblock->nNonce;
             --nMaxTries;
         }
+        if (ShutdownRequested())  
+            return blockHashes;  // Properly stop mining on app shutdown
         if (nMaxTries == 0) {
             break;
         }
