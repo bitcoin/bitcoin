@@ -7,11 +7,12 @@ bin_PROGRAMS += bench/bench_dash
 BENCH_SRCDIR = bench
 BENCH_BINARY = bench/bench_dash$(EXEEXT)
 
-RAW_TEST_FILES = \
+RAW_BENCH_FILES = \
   bench/data/block813851.raw
-GENERATED_TEST_FILES = $(RAW_TEST_FILES:.raw=.raw.h)
+GENERATED_BENCH_FILES = $(RAW_BENCH_FILES:.raw=.raw.h)
 
 bench_bench_dash_SOURCES = \
+  $(RAW_BENCH_FILES) \
   bench/bench_dash.cpp \
   bench/bench.cpp \
   bench/bench.h \
@@ -36,7 +37,7 @@ bench_bench_dash_SOURCES = \
   bench/prevector.cpp \
   bench/string_cast.cpp
 
-nodist_bench_bench_dash_SOURCES = $(GENERATED_TEST_FILES)
+nodist_bench_bench_dash_SOURCES = $(GENERATED_BENCH_FILES)
 
 bench_bench_dash_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CLFAGS) $(EVENT_PTHREADS_CFLAGS) -I$(builddir)/bench/
 bench_bench_dash_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
@@ -64,7 +65,7 @@ endif
 bench_bench_dash_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(BLS_LIBS)
 bench_bench_dash_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
-CLEAN_BITCOIN_BENCH = bench/*.gcda bench/*.gcno $(GENERATED_TEST_FILES)
+CLEAN_BITCOIN_BENCH = bench/*.gcda bench/*.gcno $(GENERATED_BENCH_FILES)
 
 CLEANFILES += $(CLEAN_BITCOIN_BENCH)
 
