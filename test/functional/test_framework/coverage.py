@@ -54,7 +54,8 @@ class AuthServiceProxyWrapper(object):
         return return_val
 
     def __truediv__(self, relative_uri):
-        return AuthServiceProxyWrapper(self.auth_service_proxy_instance / relative_uri)
+        return AuthServiceProxyWrapper(self.auth_service_proxy_instance / relative_uri,
+                                       self.coverage_logfile)
 
 def get_filename(dirname, n_node):
     """
