@@ -195,6 +195,10 @@ bool CMinerWhitelistDB::IsCapEnabled() {
     return fEnabled == true;
 }
 
+bool CMinerWhitelistDB::IsWhitelistEnabled() {
+    return chainActive.Height() >= Params().GetConsensus().minerWhiteListActivationHeight;
+}
+
 
 unsigned int CMinerWhitelistDB::GetCapFactor() {
     unsigned int factor;
