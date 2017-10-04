@@ -12,8 +12,8 @@ When a "Transaction Lock" occurs the hash of the related transaction is broadcas
 * `zmqpubhashtxlock`: publishes the transaction hash when locked via InstantSend
 
 This mechanism has been integrated into Bitcore-Node-Dash which allows for notification to be broadcast through Insight API in one of two ways:
-* WebSocket: [https://github.com/dashpay/insight-api-dash#web-socket-api](https://github.com/dashpay/insight-api-dash#web-socket-api) 
-* API: [https://github.com/dashpay/insight-api-dash#instantsend-transactions](https://github.com/dashpay/insight-api-dash#instantsend-transactions) 
+* WebSocket: [https://github.com/dashpay/insight-api-dash#web-socket-api](https://github.com/dashpay/insight-api-dash#web-socket-api)
+* API: [https://github.com/dashpay/insight-api-dash#instantsend-transactions](https://github.com/dashpay/insight-api-dash#instantsend-transactions)
 
 #### Command line option
 
@@ -39,20 +39,42 @@ This value can be overridden by passing the following argument to the Dash Core 
 -instantsenddepth=<n>
 ```
 
-The key thing to understand is that this value indicates the number of "confirmations" a successful Transaction Lock represents. When Wallet RPC commands are performed (such as `listsinceblock`) this attribute is taken into account when returning information about the transaction. The value in `confirmations` field you see through RPC is showing the number of `"Blockchain Confirmations" + "InstantSend Depth"` (assuming the funds were sent via InstantSend).
+The key thing to understand is that this value indicates the number of "confirmations" a successful Transaction Lock represents. When Wallet RPC commands which support `minconf` and `addlockconf` parameters (such as `listreceivedbyaddress`) are performed and `addlockconf` is `true`, then `instantsenddepth` attribute is taken into account when returning information about the transaction. In this case the value in `confirmations` field you see through RPC is showing the number of `"Blockchain Confirmations" + "InstantSend Depth"` (assuming the funds were sent via InstantSend).
 
-There is also a field named `bcconfirmations`. The value in this field represents the total number of `"Blockchain Confirmations"` for a given transaction without taking into account whether it was InstantSend or not.
+There is also a field named `instantlock` (that is present in commands such as `listsinceblock`). The value in this field indicates whether a given transaction is locked via InstantSend.
 
 **Examples**
-* InstantSend transaction just occurred:
-    * confirmations: 5
-    * bcconfirmations: 0
-* InstantSend transaction received one confirmation from blockchain:
-    * confirmations: 6
-    * bcconfirmations: 1
-* non-InstantSend transaction just occurred:
-    * confirmations: 0
-    * bcconfirmations: 0
-* non-InstantSend transaction received one confirmation from blockchain:
-    * confirmations: 1
-    * bcconfirmations: 1
+
+1. `listreceivedbyaddress 0 true`
+   * InstantSend transaction just occurred:
+        * confirmations: 5
+   * InstantSend transaction received one confirmation from blockchain:
+        * confirmations: 6
+   * non-InstantSend transaction just occurred:
+        * confirmations: 0
+   * non-InstantSend transaction received one confirmation from blockchain:
+        * confirmations: 1
+
+2. `listreceivedbyaddress 0`
+   * InstantSend transaction just occurred:
+        * confirmations: 0
+   * InstantSend transaction received one confirmation from blockchain:
+        * confirmations: 1
+   * non-InstantSend transaction just occurred:
+        * confirmations: 0
+   * non-InstantSend transaction received one confirmation from blockchain:
+        * confirmations: 1
+
+3. `listsinceblock`
+    * InstantSend transaction just occurred:
+        * confirmations: 0
+        * instantlock: true
+    * InstantSend transaction received one confirmation from blockchain:
+        * confirmations: 1
+        * instantlock: true
+    * non-InstantSend transaction just occurred:
+        * confirmations: 0
+        * instantlock: false
+    * non-InstantSend transaction received one confirmation from blockchain:
+        * confirmations: 1
+        * instantlock: false
