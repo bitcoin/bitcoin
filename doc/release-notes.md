@@ -109,6 +109,9 @@ See detailed [set of changes](https://github.com/dashpay/dash/compare/v0.14.0.2.
 - [`4286dde49`](https://github.com/dashpay/dash/commit/4286dde49) Remove support for InstantSend locked gobject collaterals (#3019)
 - [`788d42dbc`](https://github.com/dashpay/dash/commit/788d42dbc) Bump version to 0.14.0.3 and copy release notes (#3053)
 
+- `dumpwallet` no longer allows overwriting files. This is a security measure
+  as well as prevents dangerous user mistakes.
+
 Credits
 =======
 
