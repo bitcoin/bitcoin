@@ -504,7 +504,7 @@ When to pay with this method:
 3b) use total amount + required amount from 2a (if non zero) to find outputs in alias balance, if not enough balance throw error
 3c) transaction completely funded
 4) if transaction completely funded, try to sign and send to network*/
-void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const vector<unsigned char> &vchAliasPeg, const string &currencyCode, const CRecipient &aliasRecipient, const CRecipient &aliasFeePlaceholderRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool useOnlyAliasPaymentToFund = true, bool transferAlias = false)
+void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const string &currencyCode, const CRecipient &aliasRecipient, const CRecipient &aliasFeePlaceholderRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool useOnlyAliasPaymentToFund = true, bool transferAlias = false)
 {
 	int op;
 	vector<vector<unsigned char> > vvch;
@@ -546,7 +546,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 
 	CWalletTx wtxNew1, wtxNew2;
 	// get total output required
-	if (!pwalletMain->CreateTransaction(vecSend, wtxNew1, reservekey, nFeeRequired, nChangePosRet, strError, coinControl, false, vchAliasPeg, currencyCode, true, useOnlyAliasPaymentToFund)) {
+	if (!pwalletMain->CreateTransaction(vecSend, wtxNew1, reservekey, nFeeRequired, nChangePosRet, strError, coinControl, false, currencyCode, true, useOnlyAliasPaymentToFund)) {
 		throw runtime_error(strError);
 	}
 
@@ -590,7 +590,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	if (nBalance > 0 && !bAliasRegistration)
 	{
 		// get total output required
-		if (!pwalletMain->CreateTransaction(vecSend, wtxNew2, reservekey, nFeeRequired, nChangePosRet, strError, coinControl, false, vchAliasPeg, currencyCode, true, useOnlyAliasPaymentToFund)) {
+		if (!pwalletMain->CreateTransaction(vecSend, wtxNew2, reservekey, nFeeRequired, nChangePosRet, strError, coinControl, false, currencyCode, true, useOnlyAliasPaymentToFund)) {
 			throw runtime_error(strError);
 		}
 		CAmount nOutputTotal = 0;
@@ -635,7 +635,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	}
 	// now create the transaction and fake sign with enough funding from alias utxo's (if coinControl specified fAllowOtherInputs(true) then and only then are wallet inputs are allowed)
 	// actual signing happens in syscoinsignrawtransaction outside of this function call after the wtxNew raw transaction is returned back to it
-	if (!pwalletMain->CreateTransaction(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet, strError, coinControl, false, vchAliasPeg, currencyCode, true, useOnlyAliasPaymentToFund)) {
+	if (!pwalletMain->CreateTransaction(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet, strError, coinControl, false, currencyCode, true, useOnlyAliasPaymentToFund)) {
 		throw runtime_error(strError);
 	}
 	// run a check on the inputs without putting them into the db, just to ensure it will go into the mempool without issues

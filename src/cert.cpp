@@ -25,9 +25,10 @@ extern mongoc_database_t *database;
 extern mongoc_collection_t *alias_collection;
 extern mongoc_collection_t *offer_collection;
 extern mongoc_collection_t *escrow_collection;
+extern mongoc_collection_t *escrowbid_collection;
 extern mongoc_collection_t *cert_collection;
 extern mongoc_collection_t *feedback_collection;
-extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const vector<unsigned char> &vchAliasPeg, const string &currencyCode, const CRecipient &aliasRecipient, const CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool useOnlyAliasPaymentToFund=true, bool transferAlias=false);
+extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchWitness, const string &currencyCode, const CRecipient &aliasRecipient, const CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool useOnlyAliasPaymentToFund=true, bool transferAlias=false);
 bool IsCertOp(int op) {
     return op == OP_CERT_ACTIVATE
         || op == OP_CERT_UPDATE
@@ -377,11 +378,6 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2005 - " + _("Certificate category too big");
 			return error(errorMessage.c_str());
 		}
-		if(theCert.vchData.size() > MAX_ENCRYPTED_VALUE_LENGTH)
-		{
-			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2006 - " + _("Certificate private data too big");
-			return error(errorMessage.c_str());
-		}
 		if(theCert.vchPubData.size() > MAX_VALUE_LENGTH)
 		{
 			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2007 - " + _("Certificate public data too big");
@@ -478,8 +474,6 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2022 - " + _("Failed to read from certificate DB");
 				return true;
 			}
-			if(theCert.vchData.empty())
-				theCert.vchData = dbCert.vchData;
 			if(theCert.vchPubData.empty())
 				theCert.vchPubData = dbCert.vchPubData;
 			if(theCert.vchTitle.empty())
@@ -574,13 +568,12 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 
 
 UniValue certnew(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() < 3 || params.size() > 6)
+    if (fHelp || params.size() < 3 || params.size() > 5)
         throw runtime_error(
-		"certnew <alias> <title> <public> [private] [category=certificates] [witness]\n"
+		"certnew <alias> <title> <public> [category=certificates] [witness]\n"
 						"<alias> An alias you own.\n"
 						"<title> title, 256 characters max.\n"
                         "<public> public data, 256 characters max.\n"
-						"<private> private data, 1024 characters max.\n"
 						"<safe search> set to No if this cert should only show in the search when safe search is not selected. Defaults to Yes (cert shows with or without safe search selected in search lists).\n"                     
 						"<category> category, 25 characters max. Defaults to certificates\n"
 						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"	
@@ -589,14 +582,11 @@ UniValue certnew(const UniValue& params, bool fHelp) {
     vector<unsigned char> vchTitle = vchFromString(params[1].get_str());
 	vector<unsigned char> vchPubData = vchFromString(params[2].get_str());
 	string strCategory = "certificates";
-	string strData = "";
 	if(CheckParam(params, 3))
-		strData = params[3].get_str();
-	if(CheckParam(params, 4))
-		strCategory = params[4].get_str();
+		strCategory = params[3].get_str();
 	vector<unsigned char> vchWitness;
-	if(CheckParam(params, 5))
-		vchWitness = vchFromValue(params[5]);
+	if(CheckParam(params, 4))
+		vchWitness = vchFromValue(params[4]);
 	// check for alias existence in DB
 	CAliasIndex theAlias;
 
@@ -622,8 +612,6 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 	newCert.vchCert = vchCert;
 	newCert.sCategory = vchFromString(strCategory);
 	newCert.vchTitle = vchTitle;
-	if(!strData.empty())
-		newCert.vchData = vchFromString(strData);
 	newCert.vchPubData = vchPubData;
 	newCert.nHeight = chainActive.Tip()->nHeight;
 	newCert.aliasTuple = CNameTXIDTuple(vchAlias, theAlias.txHash, theAlias.vchGUID);
@@ -647,12 +635,12 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
 	CRecipient aliasPaymentRecipient;
-	CreateAliasRecipient(scriptPubKeyOrig, theAlias.vchAlias, theAlias.aliasPegTuple, aliasPaymentRecipient);
+	CreateAliasRecipient(scriptPubKeyOrig, theAlias.vchAlias, aliasPaymentRecipient);
 		
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
-	CreateFeeRecipient(scriptData, theAlias.aliasPegTuple, data, fee);
+	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
 
 	
@@ -660,7 +648,7 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;	
-	SendMoneySyscoin(vchAlias, vchWitness, theAlias.aliasPegTuple.first, "", aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(vchAlias, vchWitness, "", aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 	UniValue res(UniValue::VARR);
 	UniValue signParams(UniValue::VARR);
 	signParams.push_back(EncodeHexTx(wtx));
@@ -693,14 +681,13 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 }
 
 UniValue certupdate(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() < 1 || params.size() > 6)
+    if (fHelp || params.size() < 1 || params.size() > 5)
         throw runtime_error(
-		"certupdate <guid> [title] [public] [private] [category=certificates] [witness]\n"
+		"certupdate <guid> [title] [public] [category=certificates] [witness]\n"
 						"Perform an update on an certificate you control.\n"
 						"<guid> certificate guidkey.\n"
 						"<title> certificate title, 256 characters max.\n"
-                        "<public> public data, 256 characters max.\n"
-						"<private> private data, 256 characters max.\n"                    
+                        "<public> public data, 256 characters max.\n"                
 						"<category> category, 256 characters max. Defaults to certificates\n"
 						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"	
 						+ HelpRequiringPassphrase());
@@ -715,13 +702,11 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 	if(CheckParam(params, 2))
 		strPubData = params[2].get_str();
 	if(CheckParam(params, 3))
-		strData = params[3].get_str();
-	if(CheckParam(params, 4))
-		strCategory = params[4].get_str();
+		strCategory = params[3].get_str();
 
 	vector<unsigned char> vchWitness;
-	if(CheckParam(params, 5))
-		vchWitness = vchFromValue(params[5]);
+	if(CheckParam(params, 4))
+		vchWitness = vchFromValue(params[4]);
 
     // this is a syscoind txn
     CWalletTx wtx;
@@ -744,8 +729,6 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
     // create CERTUPDATE txn keys
     CScript scriptPubKey;
 
-	if(!strData.empty())
-		theCert.vchData = vchFromString(strData);
 	if(!strPubData.empty())
 		theCert.vchPubData = vchFromString(strPubData);
 	if(!strCategory.empty())
@@ -771,19 +754,19 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
 	CRecipient aliasPaymentRecipient;
-	CreateAliasRecipient(scriptPubKeyOrig, theAlias.vchAlias, theAlias.aliasPegTuple, aliasPaymentRecipient);
+	CreateAliasRecipient(scriptPubKeyOrig, theAlias.vchAlias, aliasPaymentRecipient);
 		
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
-	CreateFeeRecipient(scriptData, theAlias.aliasPegTuple, data, fee);
+	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
 	
 	
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;	
-	SendMoneySyscoin(theAlias.vchAlias, vchWitness, theAlias.aliasPegTuple.first, "", aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(theAlias.vchAlias, vchWitness, "", aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
  	UniValue res(UniValue::VARR);
 
 	UniValue signParams(UniValue::VARR);
@@ -816,14 +799,13 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 
 
 UniValue certtransfer(const UniValue& params, bool fHelp) {
- if (fHelp || params.size() < 2 || params.size() > 6)
+ if (fHelp || params.size() < 2 || params.size() > 5)
         throw runtime_error(
-		"certtransfer <guid> <alias> [public] [private] [accessflags=2] [witness]\n"
+		"certtransfer <guid> <alias> [public] [accessflags=2] [witness]\n"
 						"Transfer a certificate you own to another alias.\n"
 						"<guid> certificate guidkey.\n"
 						"<alias> alias to transfer to.\n"
-                        "<public> public data, 256 characters max.\n"
-						"<private> private data, 256 characters max.\n"				
+                        "<public> public data, 256 characters max.\n"	
 						"<accessflags> Set new access flags for new owner for this certificate, 0 for read-only, 1 for edit, 2 for edit and transfer access.\n"
 						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"	
 						+ HelpRequiringPassphrase());
@@ -832,18 +814,15 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchCert = vchFromValue(params[0]);
 	vector<unsigned char> vchAlias = vchFromValue(params[1]);
 
-	string strData = "";
 	string strPubData = "";
 	string strAccessFlags = "";
 	if(CheckParam(params, 2))
 		strPubData = params[2].get_str();
 	if(CheckParam(params, 3))
-		strData = params[3].get_str();
-	if(CheckParam(params, 4))
-		strAccessFlags = params[4].get_str();
+		strAccessFlags = params[3].get_str();
 	vector<unsigned char> vchWitness;
-	if(CheckParam(params, 5))
-		vchWitness = vchFromValue(params[5]);
+	if(CheckParam(params, 4))
+		vchWitness = vchFromValue(params[4]);
 	// check for alias existence in DB
 	CAliasIndex toAlias;
 	if (!GetAlias(vchAlias, toAlias))
@@ -875,8 +854,6 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	theCert.aliasTuple = CNameTXIDTuple(fromAlias.vchAlias, fromAlias.txHash, fromAlias.vchGUID);
 	theCert.linkAliasTuple = CNameTXIDTuple(toAlias.vchAlias, toAlias.txHash, toAlias.vchGUID);
 
-	if(!strData.empty())
-		theCert.vchData = vchFromString(strData);
 	if(!strPubData.empty())
 		theCert.vchPubData = vchFromString(strPubData);
 
@@ -906,19 +883,19 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
 	CRecipient aliasPaymentRecipient;
-	CreateAliasRecipient(scriptPubKeyFromOrig, fromAlias.vchAlias, fromAlias.aliasPegTuple, aliasPaymentRecipient);
+	CreateAliasRecipient(scriptPubKeyFromOrig, fromAlias.vchAlias, aliasPaymentRecipient);
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
-	CreateFeeRecipient(scriptData, fromAlias.aliasPegTuple, data, fee);
+	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
 	
 	
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(fromAlias.vchAlias, vchWitness, fromAlias.aliasPegTuple.first, "", aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(fromAlias.vchAlias, vchWitness, "", aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 	UniValue res(UniValue::VARR);
 
 	UniValue signParams(UniValue::VARR);
@@ -996,7 +973,6 @@ bool BuildCertJson(const CCert& cert, const CAliasIndex& alias, UniValue& oCert)
 	}
 	oCert.push_back(Pair("time", nTime));
 	oCert.push_back(Pair("title", stringFromVch(cert.vchTitle)));
-    oCert.push_back(Pair("privatevalue", stringFromVch(cert.vchData)));
 	oCert.push_back(Pair("publicvalue", stringFromVch(cert.vchPubData)));
 	oCert.push_back(Pair("category", stringFromVch(cert.sCategory)));
 	oCert.push_back(Pair("alias", stringFromVch(cert.aliasTuple.first)));
@@ -1030,9 +1006,6 @@ void CertTxToJSON(const int op, const std::vector<unsigned char> &vchData, const
 
 	if(!cert.vchTitle.empty() && cert.vchTitle != dbCert.vchTitle)
 		entry.push_back(Pair("title", stringFromVch(cert.vchTitle)));
-
-	if(!cert.vchData.empty() && cert.vchData != dbCert.vchData)
-		entry.push_back(Pair("privatedata", stringFromVch(cert.vchData)));
 
 	if(!cert.vchPubData.empty() && cert.vchPubData != dbCert.vchPubData)
 		entry.push_back(Pair("publicdata", stringFromVch(cert.vchPubData)));

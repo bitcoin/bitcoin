@@ -416,9 +416,10 @@ static const CRPCCommand vRPCCommands[] =
 	{ "wallet", "aliasinfo",         &aliasinfo,         false },
 	{ "wallet", "aliasbalance",      &aliasbalance,         false },
 	{ "wallet", "aliaspay",       &aliaspay,       false },
-	{ "wallet", "aliasconvertcurrency",       &aliasconvertcurrency,       false },
-	{ "wallet", "aliasdecodemultisigredeemscript",        &aliasdecodemultisigredeemscript,       false },
 	{ "wallet", "aliasaddscript",        &aliasaddscript,       false },
+	{ "wallet", "aliasupdatewhitelist",        &aliasupdatewhitelist,       false },
+	{ "wallet", "aliasclearwhitelist",        &aliasclearwhitelist,       false },
+	{ "wallet", "aliaswhitelist",        &aliaswhitelist,       false },
 	{ "wallet", "syscoinsignrawtransaction",		 &syscoinsignrawtransaction,	false },
 	{ "wallet", "syscoindecoderawtransaction",		 &syscoindecoderawtransaction,	false },
 	{ "wallet", "syscoinquery",          &syscoinquery,          false },
@@ -426,10 +427,6 @@ static const CRPCCommand vRPCCommands[] =
 	{ "wallet", "offernew",             &offernew,             false },
 	{ "wallet", "offerupdate",          &offerupdate,          false },
 	{ "wallet", "offerlink",		    &offerlink,            false },
-	{ "wallet", "offeraddwhitelist",    &offeraddwhitelist,	   false },
-	{ "wallet", "offerremovewhitelist",	&offerremovewhitelist, false },
-	{ "wallet", "offerclearwhitelist",	&offerclearwhitelist,  false },
-	{ "wallet", "offerwhitelist",		&offerwhitelist,	   false },
 	{ "wallet", "offerinfo",            &offerinfo,            false },
 
 		// use the blockchain as a certificate issuance platform
@@ -439,8 +436,8 @@ static const CRPCCommand vRPCCommands[] =
 	{ "wallet", "certinfo",              &certinfo,          false },
 
 		// use the blockchain for escrow linked to offers
-	{ "wallet", "generateescrowmultisig",         &generateescrowmultisig,     false },
 	{ "wallet", "escrownew",         &escrownew,     false },
+	{ "wallet", "escrowbid",         &escrowbid,     false },
 	{ "wallet", "escrowrelease",      &escrowrelease,  false },
 	{ "wallet", "escrowclaimrelease",      &escrowclaimrelease,  false },
 	{ "wallet", "escrowcompleterelease",      &escrowcompleterelease,  false },

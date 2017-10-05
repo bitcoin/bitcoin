@@ -61,9 +61,9 @@ BOOST_AUTO_TEST_CASE (generate_certoffer)
 	AliasNew("node1", "node1aliasa", "node1aliasdata");
 	AliasNew("node2", "node2alias", "node2aliasdata");
 
-	string certguid1  = CertNew("node1", "node1alias", "title", "privdata", "pubdata");
-	string certguid1a  = CertNew("node1", "node1aliasa", "title", "privdata", "pubdata");
-	string certguid2  = CertNew("node2", "node2alias", "title", "privdata", "pubdata");
+	string certguid1  = CertNew("node1", "node1alias", "title", "pubdata");
+	string certguid1a  = CertNew("node1", "node1aliasa", "title", "pubdata");
+	string certguid2  = CertNew("node2", "node2alias", "title", "pubdata");
 
 	// generate a good cert offer
 	string offerguidnoncert = OfferNew("node1", "node1alias", "category", "title", "10", "0.05", "description", "USD");
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE (generate_certoffer)
 	// should fail: generate a cert offer with invalid payment option
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew node1alias certificates title 1 0.05 description USD " + certguid1 + " BTC+SSS"), runtime_error);
 }
-BOOST_AUTO_TEST_CASE (generate_offerwhitelists)
+BOOST_AUTO_TEST_CASE(generate_offerwhitelists)
 {
 	printf("Running generate_offerwhitelists...\n");
 	UniValue r;
@@ -128,13 +128,13 @@ BOOST_AUTO_TEST_CASE (generate_offerwhitelists)
 	// generate a good offer
 	string offerguid = OfferNew("node1", "sellerwhitelistalias", "category", "title", "100", "9.00", "description", "SYS");
 	// add to whitelist
-	OfferAddWhitelist("node1", offerguid, "selleraddwhitelistalias", "5");
-	BOOST_CHECK_THROW(CallRPC("node1", "offeraddwhitelist " + offerguid + " selleraddwhitelistalias 5"), runtime_error);
+	AliasAddWhitelist("node1", "sellerwhitelistalias", "selleraddwhitelistalias", "5");
 	// add to whitelist
-	OfferAddWhitelist("node1", offerguid, "selleraddwhitelistalias1", "6");
+	AliasAddWhitelist("node1", "sellerwhitelistalias", "selleraddwhitelistalias1", "6");
 	// remove from whitelist
-	OfferRemoveWhitelist("node1", offerguid, "selleraddwhitelistalias");
-	BOOST_CHECK_THROW(CallRPC("node1", "offerremovewhitelist " + offerguid + " selleraddwhitelistalias"), runtime_error);
+	AliasRemoveWhitelist("node1", "sellerwhitelistalias", "selleraddwhitelistalias", "5");
+	string whiteListArray = "\"{\\\"aliases\\\":[{\\\"alias\\\":\\\"selleraddwhitelistalias\\\",\\\"discount_percentage\\\":5}]}\"";
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdatewhitelist sellerwhitelistalias " + whiteListArray), runtime_error);
 
 	string hex_str = AliasUpdate("node1", "sellerwhitelistalias", "changeddata2", "privdata2");
 	BOOST_CHECK(hex_str.empty());
@@ -144,11 +144,11 @@ BOOST_AUTO_TEST_CASE (generate_offerwhitelists)
 	BOOST_CHECK(hex_str.empty());
 
 	// add to whitelist
-	OfferAddWhitelist("node1", offerguid, "selleraddwhitelistalias", "4");
-	OfferClearWhitelist("node1", offerguid);
-	BOOST_CHECK_THROW(CallRPC("node1", "offerclearwhitelist " + offerguid), runtime_error);
+	AliasAddWhitelist("node1", "sellerwhitelistalias", "selleraddwhitelistalias", "4");
+	AliasClearWhitelist("node1", "sellerwhitelistalias");
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasclearwhitelist sellerwhitelistalias"), runtime_error);
 
-	OfferAddWhitelist("node1", offerguid, "selleraddwhitelistalias", "6");
+	AliasAddWhitelist("node1", "sellerwhitelistalias", "selleraddwhitelistalias", "6");
 
 	OfferAccept("node1", "node2", "selleraddwhitelistalias1", offerguid, "1");
 
@@ -162,15 +162,17 @@ BOOST_AUTO_TEST_CASE (generate_offerwhitelists)
 	hex_str = AliasUpdate("node2", "selleraddwhitelistalias1", "changeddata2", "privdata2");
 	BOOST_CHECK(hex_str.empty());
 
-	OfferRemoveWhitelist("node1", offerguid, "selleraddwhitelistalias");
+	AliasRemoveWhitelist("node1", "sellerwhitelistalias", "selleraddwhitelistalias", "6");
+	string whiteListArray = "\"{\\\"aliases\\\":[{\\\"alias\\\":\\\"selleraddwhitelistalias\\\",\\\"discount_percentage\\\":6}]}\"";
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdatewhitelist sellerwhitelistalias " + whiteListArray), runtime_error);
 
-	OfferAddWhitelist("node1", offerguid, "selleraddwhitelistalias", "1");
+	AliasAddWhitelist("node1", "sellerwhitelistalias", "selleraddwhitelistalias", "1");
 	OfferAccept("node1", "node2", "selleraddwhitelistalias1", offerguid, "1");
-	OfferAddWhitelist("node1", offerguid, "selleraddwhitelistalias1", "2");
+	AliasAddWhitelist("node1", "sellerwhitelistalias", "selleraddwhitelistalias1", "2");
 
 
 	OfferAccept("node1", "node2", "selleraddwhitelistalias1", offerguid, "1", "2");
-	OfferClearWhitelist("node1", offerguid);
+	AliasClearWhitelist("node1", "sellerwhitelistalias");
 
 
 }
@@ -188,13 +190,12 @@ BOOST_AUTO_TEST_CASE (generate_offernew_linkedoffer)
 
 	// generate a good offer
 	string offerguid = OfferNew("node1", "selleralias5", "category", "title", "100", "10.00", "description", "USD");
-	OfferAddWhitelist("node1", offerguid, "selleralias6", "10");
+	AliasAddWhitelist("node1", "selleralias5", "selleralias6", "10");
 	string lofferguid = OfferLink("node2", "selleralias6", offerguid, "20", "newdescription");
 
-	// it was already added to whitelist, remove it and add it as 5% discount
-	OfferRemoveWhitelist("node1", offerguid, "selleralias6");
-	OfferAddWhitelist("node1", offerguid, "selleralias6", "5");
-	
+	// it was already added to whitelist, update it to 5% discount
+	AliasAddWhitelist("node1", "selleralias5", "selleralias6", "5");
+
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "offerinfo " + lofferguid));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "price").get_str(), "12.00");
 
@@ -234,7 +235,7 @@ BOOST_AUTO_TEST_CASE (generate_offernew_linkedofferexmode)
 	// should fail: attempt to create a linked offer for a product without being on the whitelist
 	BOOST_CHECK_THROW(r = CallRPC("node2", "offerlink selleralias9 " + offerguid + " 5 newdescription"), runtime_error);
 
-	OfferAddWhitelist("node1", offerguid, "selleralias9", "5");
+	AliasAddWhitelist("node1", "selleralias8", "selleralias9", "5");
 
 	// should succeed: attempt to create a linked offer for a product while being on the whitelist
 	OfferLink("node2", "selleralias9", offerguid, "5", "newdescription");
@@ -255,8 +256,7 @@ BOOST_AUTO_TEST_CASE (generate_offernew_linkedlinkedoffer)
 
 	// generate a good offer
 	string offerguid = OfferNew("node1", "selleralias12", "category", "title", "100", "0.05", "description", "USD");
-	OfferAddWhitelist("node1", offerguid, "selleralias13", "5");
-
+	AliasAddWhitelist("node1", "selleralias12", "selleralias13", "5");
 	string lofferguid = OfferLink("node2", "selleralias13", offerguid, "5", "newdescription");
 
 	// should fail: try to generate a linked offer with a linked offer
@@ -348,9 +348,9 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate_editcurrency)
 	// 2698.0 SYS/CAD
 	BOOST_CHECK_EQUAL(nTotal, AmountFromValue(3*0.15*2698.0));
 
-	string hex_str = AliasUpdate("node1", "selleraliascurrency", "changeddata2", "privdata2");
+	string hex_str = AliasUpdate("node1", "selleraliascurrency", "changeddata2");
 	BOOST_CHECK(hex_str.empty());
-	hex_str = AliasUpdate("node2", "buyeraliascurrency", "changeddata2", "privdata2");
+	hex_str = AliasUpdate("node2", "buyeraliascurrency", "changeddata2");
 	BOOST_CHECK(hex_str.empty());
 
 
@@ -455,7 +455,7 @@ BOOST_AUTO_TEST_CASE (generate_linkedaccept)
 	AliasNew("node3", "node3aliaslinked", "node2aliasdata");
 
 	string offerguid = OfferNew("node1", "node1aliaslinked", "category", "title", "10", "0.05", "description", "USD");
-	OfferAddWhitelist("node1", offerguid, "node2aliaslinked", "0");
+	AliasAddWhitelist("node1", "node1aliaslinked" , "*", "0");
 	string lofferguid = OfferLink("node2", "node2aliaslinked", offerguid, "20", "newdescription");
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress node3aliaslinked 8500"), runtime_error);
 	GenerateBlocks(10);
@@ -474,19 +474,19 @@ BOOST_AUTO_TEST_CASE (generate_cert_linkedaccept)
 	AliasNew("node2", "node2alias", "node2aliasdata");
 	AliasNew("node3", "node3alias", "node2aliasdata");
 
-	string certguid  = CertNew("node1", "node1alias", "title", "privdata", "pubdata");
+	string certguid  = CertNew("node1", "node1alias", "title", "pubdata");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certinfo " + certguid));
 	BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == "node1alias");
 	// generate a good cert offer
 	string offerguid = OfferNew("node1", "node1alias", "certificates", "title", "1", "0.05", "description", "USD", certguid);
-	OfferAddWhitelist("node1", offerguid, "node2alias", "0");
+	AliasAddWhitelist("node1", "node1alias", "*", "0");
 	string lofferguid = OfferLink("node2", "node2alias", offerguid, "20", "newdescription");
 
-	string hex_str = AliasUpdate("node1", "node1alias", "changeddata2", "privdata2");
+	string hex_str = AliasUpdate("node1", "node1alias", "changeddata2");
 	BOOST_CHECK(hex_str.empty());
-	hex_str = AliasUpdate("node2", "node2alias", "changeddata2", "privdata2");
+	hex_str = AliasUpdate("node2", "node2alias", "changeddata2");
 	BOOST_CHECK(hex_str.empty());
-	hex_str = AliasUpdate("node3", "node3alias", "changeddata3", "privdata3");
+	hex_str = AliasUpdate("node3", "node3alias", "changeddata3");
 	BOOST_CHECK(hex_str.empty());
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress node3alias 1350"), runtime_error);
 	GenerateBlocks(10);
@@ -509,7 +509,7 @@ BOOST_AUTO_TEST_CASE (generate_offerexpired)
 
 	// generate a good offer
 	string offerguid = OfferNew("node1", "selleralias4", "category", "title", "100", "0.01", "description", "USD");
-	OfferAddWhitelist("node1", offerguid, "buyeralias4", "5");
+	AliasAddWhitelist("node1", "selleralias4", "*", "5");
 	// this will expire the offer
 	ExpireAlias("buyeralias4");
 
@@ -539,16 +539,15 @@ BOOST_AUTO_TEST_CASE (generate_offerexpiredexmode)
 
 	// generate a good offer 
 	string offerguid = OfferNew("node1", "selleralias10", "category", "title", "100", "0.05", "description", "USD");
-
 	// should succeed: offer seller adds affiliate to whitelist
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offeraddwhitelist " + offerguid + " selleralias11 10"));
+	AliasAddWhitelist("node1", "selleralias10", "selleralias11", "10");
 	ExpireAlias("selleralias10");
 
 	// should fail: remove whitelist item from expired offer
-	BOOST_CHECK_THROW(r = CallRPC("node1", "offerremovewhitelist " + offerguid + " selleralias11"), runtime_error);
+	string whiteListArray = "\"{\\\"aliases\\\":[{\\\"alias\\\":\\\"selleralias11\\\",\\\"discount_percentage\\\":10}]}\"";
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdatewhitelist selleralias10 " + whiteListArray), runtime_error);
 	// should fail: clear whitelist from expired offer
-	BOOST_CHECK_THROW(r = CallRPC("node1", "offerclearwhitelist " + offerguid), runtime_error);
-
+	BOOST_CHECK_THROW(r = CallRPC("node1", "aliasclearwhitelist selleralias10"), runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE (generate_certofferexpired)
@@ -565,8 +564,8 @@ BOOST_AUTO_TEST_CASE (generate_certofferexpired)
 	AliasNew("node2", "node2alias2", "node2aliasdata");
 	AliasNew("node3", "node3alias2", "node3aliasdata");
 
-	string certguid  = CertNew("node1", "node1alias2", "title", "privdata", "pubdata");
-	string certguid1  = CertNew("node1", "node1alias2a", "title", "privdata", "pubdata");
+	string certguid  = CertNew("node1", "node1alias2", "title", "pubdata");
+	string certguid1  = CertNew("node1", "node1alias2a", "title", "pubdata");
 
 	GenerateBlocks(5);
 
@@ -621,7 +620,7 @@ BOOST_AUTO_TEST_CASE (generate_offerpruning)
 	// stop node3
 	StopNode("node3");
 	// should fail: already expired alias
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate pruneoffer newdata privdata"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate pruneoffer newdata"), runtime_error);
 	GenerateBlocks(5, "node1");
 	
 	// stop and start node1

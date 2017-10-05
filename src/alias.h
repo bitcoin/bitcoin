@@ -22,8 +22,6 @@ static const unsigned int MAX_GUID_LENGTH = 71;
 static const unsigned int MAX_NAME_LENGTH = 256;
 static const unsigned int MAX_VALUE_LENGTH = 1024;
 static const unsigned int MAX_ID_LENGTH = 20;
-static const unsigned int MAX_ENCRYPTED_VALUE_LENGTH = MAX_VALUE_LENGTH + 85;
-static const unsigned int MAX_ENCRYPTED_NAME_LENGTH = MAX_NAME_LENGTH + 85;
 static const unsigned int MAX_ENCRYPTED_GUID_LENGTH = MAX_GUID_LENGTH + 85;
 static const uint64_t ONE_YEAR_IN_SECONDS = 31536000;
 
@@ -63,7 +61,86 @@ class CAliasUnprunable
     inline void SetNull() { vchGUID.clear(); nExpireTime=0;}
     inline bool IsNull() const { return (vchGUID.empty() && nExpireTime == 0); }
 };
+typedef std::map<const std::vector<unsigned char>, COfferLinkWhitelistEntry> whiteListMap_t;
+class COfferLinkWhitelistEntry {
+public:
+	std::vector<unsigned char> aliasLinkVchRand;
+	unsigned char nDiscountPct;
+	COfferLinkWhitelistEntry() {
+		SetNull();
+	}
 
+	ADD_SERIALIZE_METHODS;
+	template <typename Stream, typename Operation>
+	inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+		READWRITE(aliasLinkVchRand);
+		READWRITE(VARINT(nDiscountPct));
+	}
+
+	inline friend bool operator==(const COfferLinkWhitelistEntry &a, const COfferLinkWhitelistEntry &b) {
+		return (
+			a.aliasLinkVchRand == b.aliasLinkVchRand
+			&& a.nDiscountPct == b.nDiscountPct
+			);
+	}
+
+	inline COfferLinkWhitelistEntry operator=(const COfferLinkWhitelistEntry &b) {
+		aliasLinkVchRand = b.aliasLinkVchRand;
+		nDiscountPct = b.nDiscountPct;
+		return *this;
+	}
+
+	inline friend bool operator!=(const COfferLinkWhitelistEntry &a, const COfferLinkWhitelistEntry &b) {
+		return !(a == b);
+	}
+
+	inline void SetNull() { aliasLinkVchRand.clear(); nDiscountPct = 0; }
+	inline bool IsNull() const { return (aliasLinkVchRand.empty() && nDiscountPct == 0); }
+
+};
+class COfferLinkWhitelist {
+public:
+	whiteListMap_t entries;
+	COfferLinkWhitelist() {
+		SetNull();
+	}
+
+	ADD_SERIALIZE_METHODS;
+	template <typename Stream, typename Operation>
+	inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+		READWRITE(entries);
+	}
+	bool GetLinkEntryByHash(const std::vector<unsigned char> &ahash, COfferLinkWhitelistEntry &entry) const;
+
+	inline void RemoveWhitelistEntry(const std::vector<unsigned char> &ahash) {
+		entries.erase(ahash);
+	}
+	inline void PutWhitelistEntry(const COfferLinkWhitelistEntry &theEntry) {
+		if (entries[theEntry.aliasLinkVchRand]) {
+			entries[theEntry.aliasLinkVchRand] = theEntry;
+			return;
+		}
+		entries[theEntry.aliasLinkVchRand] = theEntry;
+	}
+	inline friend bool operator==(const COfferLinkWhitelist &a, const COfferLinkWhitelist &b) {
+		return (
+			a.entries == b.entries
+			);
+	}
+
+	inline COfferLinkWhitelist operator=(const COfferLinkWhitelist &b) {
+		entries = b.entries;
+		return *this;
+	}
+
+	inline friend bool operator!=(const COfferLinkWhitelist &a, const COfferLinkWhitelist &b) {
+		return !(a == b);
+	}
+
+	inline void SetNull() { entries.clear(); }
+	inline bool IsNull() const { return (entries.empty()); }
+
+};
 class CAliasIndex {
 public:
 	std::vector<unsigned char> vchAlias;
@@ -71,18 +148,15 @@ public:
     uint256 txHash;
     uint64_t nHeight;
 	uint64_t nExpireTime;
-	CNameTXIDTuple aliasPegTuple;
 	std::vector<unsigned char> vchAddress;
 	std::vector<unsigned char> vchEncryptionPublicKey;
 	std::vector<unsigned char> vchEncryptionPrivateKey;
 	bool acceptCertTransfers;
 	// 1 can edit, 2 can edit/transfer
 	unsigned char nAccessFlags;
-
-	std::vector<unsigned char> vchPasswordSalt;
-
 	std::vector<unsigned char> vchPublicValue;
-	std::vector<unsigned char> vchPrivateValue;
+	// to control reseller access + wholesaler discounts
+	whiteListMap_t offerWhiteList;
     CAliasIndex() { 
         SetNull();
     }
@@ -95,10 +169,9 @@ public:
 		vchEncryptionPublicKey.clear();
 		vchEncryptionPrivateKey.clear();
 		vchPublicValue.clear();
-		vchPrivateValue.clear();
 		vchGUID.clear();
 		vchAddress.clear();
-		vchPasswordSalt.clear();
+		offerWhiteList.SetNull();
 	}
 	ADD_SERIALIZE_METHODS;
     template <typename Stream, typename Operation>
@@ -106,20 +179,18 @@ public:
 		READWRITE(txHash);
 		READWRITE(VARINT(nHeight));
 		READWRITE(vchPublicValue);
-		READWRITE(vchPrivateValue);
 		READWRITE(vchEncryptionPublicKey);
 		READWRITE(vchEncryptionPrivateKey);
 		READWRITE(vchAlias);
-		READWRITE(aliasPegTuple);
 		READWRITE(vchGUID);
 		READWRITE(VARINT(nExpireTime));
 		READWRITE(acceptCertTransfers);
 		READWRITE(VARINT(nAccessFlags));
-		READWRITE(vchPasswordSalt);
 		READWRITE(vchAddress);	
+		READWRITE(offerWhiteList);
 	}
     friend bool operator==(const CAliasIndex &a, const CAliasIndex &b) {
-		return (a.aliasPegTuple == b.aliasPegTuple && a.nAccessFlags == b.nAccessFlags && a.vchAddress == b.vchAddress && a.vchEncryptionPublicKey == b.vchEncryptionPublicKey && a.vchEncryptionPrivateKey == b.vchEncryptionPrivateKey && a.vchPasswordSalt ==b.vchPasswordSalt && a.acceptCertTransfers == b.acceptCertTransfers && a.nExpireTime == b.nExpireTime && a.vchGUID == b.vchGUID && a.vchAlias == b.vchAlias && a.nHeight == b.nHeight && a.txHash == b.txHash && a.vchPublicValue == b.vchPublicValue && a.vchPrivateValue == b.vchPrivateValue);
+		return (a.offerWhiteList == b.offerWhiteList && a.nAccessFlags == b.nAccessFlags && a.vchAddress == b.vchAddress && a.vchEncryptionPublicKey == b.vchEncryptionPublicKey && a.vchEncryptionPrivateKey == b.vchEncryptionPrivateKey && a.acceptCertTransfers == b.acceptCertTransfers && a.nExpireTime == b.nExpireTime && a.vchGUID == b.vchGUID && a.vchAlias == b.vchAlias && a.nHeight == b.nHeight && a.txHash == b.txHash && a.vchPublicValue == b.vchPublicValue);
     }
 
     friend bool operator!=(const CAliasIndex &a, const CAliasIndex &b) {
@@ -129,21 +200,19 @@ public:
 		vchGUID = b.vchGUID;
 		nExpireTime = b.nExpireTime;
 		vchAlias = b.vchAlias;
-		aliasPegTuple = b.aliasPegTuple;
         txHash = b.txHash;
         nHeight = b.nHeight;
         vchPublicValue = b.vchPublicValue;
-        vchPrivateValue = b.vchPrivateValue;
-		vchPasswordSalt = b.vchPasswordSalt;
 		vchAddress = b.vchAddress;
 		acceptCertTransfers = b.acceptCertTransfers;
 		vchEncryptionPrivateKey = b.vchEncryptionPrivateKey;
 		vchEncryptionPublicKey = b.vchEncryptionPublicKey;
 		nAccessFlags = b.nAccessFlags;
+		offerWhiteList = b.offerWhiteList;
         return *this;
     }   
-    void SetNull() {nAccessFlags = 2; vchAddress.clear(); vchEncryptionPublicKey.clear();vchEncryptionPrivateKey.clear(); aliasPegTuple.first.clear(); vchPasswordSalt.clear();acceptCertTransfers = true; nExpireTime = 0; vchGUID.clear(); vchAlias.clear();txHash.SetNull(); nHeight = 0; vchPublicValue.clear(); vchPrivateValue.clear();}
-    bool IsNull() const { return (nAccessFlags == 2 && vchAddress.empty() && vchEncryptionPublicKey.empty() && vchEncryptionPrivateKey.empty() && aliasPegTuple.first.empty() && vchPasswordSalt.empty() && acceptCertTransfers && nExpireTime == 0 && vchGUID.empty() && vchAlias.empty() && nHeight == 0 && txHash.IsNull() && vchPublicValue.empty() && vchPrivateValue.empty()); }
+	void SetNull() { offerWhiteList.SetNull(); nAccessFlags = 2; vchAddress.clear(); vchEncryptionPublicKey.clear(); vchEncryptionPrivateKey.clear(); acceptCertTransfers = true; nExpireTime = 0; vchGUID.clear(); vchAlias.clear(); txHash.SetNull(); nHeight = 0; vchPublicValue.clear(); }
+    bool IsNull() const { return (offerWhiteList.IsNull() && nAccessFlags == 2 && vchAddress.empty() && vchEncryptionPublicKey.empty() && vchEncryptionPrivateKey.empty() && acceptCertTransfers && nExpireTime == 0 && vchGUID.empty() && vchAlias.empty() && nHeight == 0 && txHash.IsNull() && vchPublicValue.empty()); }
 	bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
 	void Serialize(std::vector<unsigned char>& vchData);
@@ -221,10 +290,10 @@ const int SYSCOIN_TX_VERSION = 0x7400;
 bool IsValidAliasName(const std::vector<unsigned char> &vchAlias);
 bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const std::vector<std::vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, std::string &errorMessage, bool dontaddtodb=false);
 void CreateRecipient(const CScript& scriptPubKey, CRecipient& recipient);
-void CreateFeeRecipient(CScript& scriptPubKey, const CNameTXIDTuple& aliasPegTuple, const std::vector<unsigned char>& data, CRecipient& recipient);
-void CreateAliasRecipient(const CScript& scriptPubKey, const std::vector<unsigned char>& vchAlias, const CNameTXIDTuple& aliasPegTuple, CRecipient& recipient);
+void CreateFeeRecipient(CScript& scriptPubKey, const std::vector<unsigned char>& data, CRecipient& recipient);
+void CreateAliasRecipient(const CScript& scriptPubKey, const std::vector<unsigned char>& vchAlias, CRecipient& recipient);
 int aliasselectpaymentcoins(const std::vector<unsigned char> &vchAlias, const CAmount &nAmount, std::vector<COutPoint>& outPoints, bool& bIsFunded, CAmount &nRequiredAmount, bool bSelectFeePlacementOnly, bool bSelectAll=false, bool bNoAliasRecipient=false);
-CAmount GetDataFee(const CScript& scriptPubKey, const CNameTXIDTuple& aliasPegTuple);
+CAmount GetDataFee(const CScript& scriptPubKey);
 bool IsSyscoinTxMine(const CTransaction& tx,const std::string &type);
 bool IsAliasOp(int op, bool ismine=false);
 bool GetAlias(const CNameTXIDTuple& aliasTuple, CAliasIndex& alias);
@@ -239,11 +308,8 @@ bool DecodeAliasScript(const CScript& script, int& op,
 		std::vector<std::vector<unsigned char> > &vvch);
 bool GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, std::vector<unsigned char> &vchPubKey);
 bool GetAliasFromAddress(const std::string& strAddress, std::string& strAlias, std::vector<unsigned char> &vchPubKey);
-CAmount convertCurrencyCodeToSyscoin(const CNameTXIDTuple& aliasPegTuple, const std::vector<unsigned char> &vchCurrencyCode, const double &nPrice,int &precision);
-int getFeePerByte(const CNameTXIDTuple& aliasPegTuple, const std::vector<unsigned char> &vchCurrencyCode, int &precision);
-float getEscrowFee(const CNameTXIDTuple& aliasPegTupleg, const std::vector<unsigned char> &vchCurrencyCode, int &precision);
-CAmount convertSyscoinToCurrencyCode(const CNameTXIDTuple& aliasPegTuple, const std::vector<unsigned char> &vchCurrencyCode, const CAmount &nPrice, int &precision);
-std::string getCurrencyToSYSFromAlias(const CNameTXIDTuple& aliasPegTuple, const std::vector<unsigned char> &vchCurrency, double &nFee, std::vector<std::string>& rateList, int &precision, int &nFeePerByte, float &fEscrowFee);
+int getFeePerByte(const uint64_t &paymentOptionMask);
+float getEscrowFee();
 std::string aliasFromOp(int op);
 std::string GenerateSyscoinGuid();
 bool RemoveAliasScriptPrefix(const CScript& scriptIn, CScript& scriptOut);

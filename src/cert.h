@@ -31,7 +31,6 @@ public:
 	// 1 can edit, 2 can edit/transfer
 	unsigned char nAccessFlags;
 	std::vector<unsigned char> vchTitle;
-	std::vector<unsigned char> vchData;
 	std::vector<unsigned char> vchPubData;
 	std::vector<unsigned char> sCategory;
     CCert() {
@@ -43,7 +42,6 @@ public:
     }
 	void ClearCert()
 	{
-		vchData.clear();
 		vchPubData.clear();
 		vchTitle.clear();
 		sCategory.clear();
@@ -51,7 +49,6 @@ public:
 	ADD_SERIALIZE_METHODS;
     template <typename Stream, typename Operation>
 	inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {		
-		READWRITE(vchData);
 		READWRITE(vchTitle);
 		READWRITE(vchPubData);
 		READWRITE(txHash);
@@ -64,8 +61,7 @@ public:
 	}
     friend bool operator==(const CCert &a, const CCert &b) {
         return (
-        a.vchData == b.vchData
-		&& a.vchTitle == b.vchTitle
+		a.vchTitle == b.vchTitle
 		&& a.vchPubData == b.vchPubData
         && a.txHash == b.txHash
         && a.nHeight == b.nHeight
@@ -79,7 +75,6 @@ public:
 
     CCert operator=(const CCert &b) {
 		vchTitle = b.vchTitle;
-        vchData = b.vchData;
 		vchPubData = b.vchPubData;
         txHash = b.txHash;
         nHeight = b.nHeight;
@@ -94,8 +89,8 @@ public:
     friend bool operator!=(const CCert &a, const CCert &b) {
         return !(a == b);
     }
-    void SetNull() { sCategory.clear(); vchTitle.clear(); nAccessFlags = 2; linkAliasTuple.first.clear(); vchCert.clear(); nHeight = 0; txHash.SetNull(); aliasTuple.first.clear(); vchData.clear(); vchPubData.clear();}
-    bool IsNull() const { return (sCategory.empty() && vchTitle.empty() && nAccessFlags == 2 && linkAliasTuple.first.empty() && vchCert.empty() && txHash.IsNull() &&  nHeight == 0 && vchData.empty() && vchPubData.empty() && aliasTuple.first.empty()); }
+    void SetNull() { sCategory.clear(); vchTitle.clear(); nAccessFlags = 2; linkAliasTuple.first.clear(); vchCert.clear(); nHeight = 0; txHash.SetNull(); aliasTuple.first.clear(); vchPubData.clear();}
+    bool IsNull() const { return (sCategory.empty() && vchTitle.empty() && nAccessFlags == 2 && linkAliasTuple.first.empty() && vchCert.empty() && txHash.IsNull() &&  nHeight == 0 && vchPubData.empty() && aliasTuple.first.empty()); }
     bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
 	void Serialize(std::vector<unsigned char>& vchData);

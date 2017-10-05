@@ -3271,7 +3271,7 @@ bool CWallet::ConvertList(std::vector<CTxIn> vecTxIn, std::vector<CAmount>& vecA
 }
 // SYSCOIN
 bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet,
-                                int& nChangePosRet, std::string& strFailReason, const CCoinControl* coinControl, bool sign, const vector<unsigned char> &vchAliasPeg, const string &currencyCode, bool sysTx, bool bAliasPay, AvailableCoinsType nCoinType, bool fUseInstantSend)
+                                int& nChangePosRet, std::string& strFailReason, const CCoinControl* coinControl, bool sign, const string &currencyCode, bool sysTx, bool bAliasPay, AvailableCoinsType nCoinType, bool fUseInstantSend)
 {
     CAmount nFeePay = fUseInstantSend ? CTxLockRequest().GetMinFee() : 0;
 
@@ -3286,9 +3286,8 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
         }
         nValue += recipient.nAmount;
 
-		// SYSCOIN
-		/* if (recipient.fSubtractFeeFromAmount)
-		nSubtractFeeFromAmount++;*/
+		if (recipient.fSubtractFeeFromAmount)
+			nSubtractFeeFromAmount++;
     }
     if (vecSend.empty() || nValue < 0)
     {
@@ -3373,10 +3372,10 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 								if (currencyCode.empty())
 									scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_PAYMENT) << vchFromString(address.aliasName) << OP_2DROP;
 								else
-									scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_PAYMENT) << vchFromString(address.aliasName) << vchFromString("0") << vchAliasPeg << vchFromString(currencyCode) << OP_DROP << OP_2DROP << OP_2DROP;
+									scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_PAYMENT) << vchFromString(address.aliasName) << vchFromString("0") << vchFromString(currencyCode) << OP_2DROP << OP_2DROP;
 								scriptPubKey += myrecipient.scriptPubKey;
 								// SYSCOIN
-								myrecipient = { scriptPubKey, myrecipient.nAmount, false/*myrecipient.fSubtractFeeFromAmount*/ };
+								myrecipient = { scriptPubKey, myrecipient.nAmount, myrecipient.fSubtractFeeFromAmount };
 								txNew.nVersion = GetSyscoinTxVersion();
 							}
 						}

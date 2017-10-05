@@ -30,102 +30,67 @@ bool RemoveOfferScriptPrefix(const CScript& scriptIn, CScript& scriptOut);
 #define PAYMENTOPTION_BTC 0x02
 #define PAYMENTOPTION_ZEC 0x04
 
+#define OFFERTYPE_BUYNOW 0x01
+#define OFFERTYPE_COIN 0x02
+#define OFFERTYPE_AUCTION 0x04
+
 bool ValidatePaymentOptionsMask(const uint64_t &paymentOptionsMask);
 bool ValidatePaymentOptionsString(const std::string &paymentOptionsString);
 bool IsValidPaymentOption(const uint64_t &paymentOptionsMask);
 uint64_t GetPaymentOptionsMaskFromString(const std::string &paymentOptionsString);
 bool IsPaymentOptionInMask(const uint64_t &mask, const uint64_t &paymentOption);
+bool ValidateOfferTypeMask(const uint64_t &offerTypeMask);
+bool ValidateOfferTypeString(const std::string &offerTypeString);
+bool IsValidOfferType(const uint64_t &offerTypeMask);
+uint64_t GetOfferTypeMaskFromString(const std::string &offerTypeString);
+bool IsOfferTypeInMask(const uint64_t &mask, const uint64_t &offerType);
 std::string GetPaymentOptionsString(const uint64_t &paymentOptions);
 CChainParams::AddressType PaymentOptionToAddressType(const uint64_t &paymentOptions);
 
-class COfferLinkWhitelistEntry {
+class CAuctionOffer {
 public:
-	std::vector<unsigned char> aliasLinkVchRand;
-	unsigned char nDiscountPct;
-	COfferLinkWhitelistEntry() {
+	uint64_t nExpireTime;
+	float fReservePrice;
+	bool bRequireWitness;
+	float fDepositPercentage;
+	CAuctionOffer() {
 		SetNull();
 	}
 
 	ADD_SERIALIZE_METHODS;
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(aliasLinkVchRand);
-		READWRITE(VARINT(nDiscountPct));
+	template <typename Stream, typename Operation>
+	inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+		READWRITE(VARINT(nExpireTime));
+		READWRITE(fReservePrice);
+		READWRITE(bRequireWitness);
+		READWRITE(fDepositPercentage);
 	}
 
-    inline friend bool operator==(const COfferLinkWhitelistEntry &a, const COfferLinkWhitelistEntry &b) {
-        return (
-           a.aliasLinkVchRand == b.aliasLinkVchRand
-		&& a.nDiscountPct == b.nDiscountPct
-        );
-    }
+	inline friend bool operator==(const CAuctionOffer &a, const CAuctionOffer &b) {
+		return (
+			a.nExpireTime == b.nExpireTime &&
+			a.fReservePrice == b.fReservePrice &&
+			a.bRequireWitness == b.bRequireWitness &&
+			a.fDepositPercentage == b.fDepositPercentage
+			);
+	}
 
-    inline COfferLinkWhitelistEntry operator=(const COfferLinkWhitelistEntry &b) {
-    	aliasLinkVchRand = b.aliasLinkVchRand;
-		nDiscountPct = b.nDiscountPct;
-        return *this;
-    }
+	inline CAuctionOffer operator=(const CAuctionOffer &b) {
+		nExpireTime = b.nExpireTime;
+		fReservePrice = b.fReservePrice;
+		bRequireWitness = b.bRequireWitness;
+		fDepositPercentage = b.fDepositPercentage;
+		return *this;
+	}
 
-    inline friend bool operator!=(const COfferLinkWhitelistEntry &a, const COfferLinkWhitelistEntry &b) {
-        return !(a == b);
-    }
+	inline friend bool operator!=(const CAuctionOffer &a, const CAuctionOffer &b) {
+		return !(a == b);
+	}
 
-    inline void SetNull() { aliasLinkVchRand.clear(); nDiscountPct = 0;}
-    inline bool IsNull() const { return (aliasLinkVchRand.empty() && nDiscountPct == 0); }
+	inline void SetNull() { fDepositPercentage = 0 nExpireTime = 0; fReservePrice = 0;  bRequireWitness =  false; }
+	inline bool IsNull() const { return (fDepositPercentage == 0 && nExpireTime == 0 && fReservePrice == 0 && !bRequireWitness); }
 
 };
-class COfferLinkWhitelist {
-public:
-	std::vector<COfferLinkWhitelistEntry> entries;
-	COfferLinkWhitelist() {
-		SetNull();
-	}
-
-	ADD_SERIALIZE_METHODS;
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(entries);
-	}
-	bool GetLinkEntryByHash(const std::vector<unsigned char> &ahash, COfferLinkWhitelistEntry &entry) const;
-    	
-    inline bool RemoveWhitelistEntry(const std::vector<unsigned char> &ahash) {
-    	for(unsigned int i=0;i<entries.size();i++) {
-    		if(entries[i].aliasLinkVchRand == ahash) {
-    			return entries.erase(entries.begin()+i) != entries.end();
-    		}
-    	}
-    	return false;
-    }
-    inline void PutWhitelistEntry(const COfferLinkWhitelistEntry &theEntry) {
-    	for(unsigned int i=0;i<entries.size();i++) {
-    		COfferLinkWhitelistEntry entry = entries[i];
-    		if(theEntry.aliasLinkVchRand == entry.aliasLinkVchRand) {
-    			entries[i] = theEntry;
-    			return;
-    		}
-    	}
-    	entries.push_back(theEntry);
-    }
-    inline friend bool operator==(const COfferLinkWhitelist &a, const COfferLinkWhitelist &b) {
-        return (
-           a.entries == b.entries
-        );
-    }
-
-    inline COfferLinkWhitelist operator=(const COfferLinkWhitelist &b) {
-    	entries = b.entries;
-        return *this;
-    }
-
-    inline friend bool operator!=(const COfferLinkWhitelist &a, const COfferLinkWhitelist &b) {
-        return !(a == b);
-    }
-
-    inline void SetNull() { entries.clear();}
-    inline bool IsNull() const { return (entries.empty());}
-
-};
-
 class COffer {
 
 public:
@@ -134,7 +99,7 @@ public:
 	CNameTXIDTuple aliasTuple;
     uint256 txHash;
     uint64_t nHeight;
-	std::string sPrice;
+	float fPrice;
 	float fUnits;
 	char nCommission;
 	int nQty;
@@ -142,15 +107,14 @@ public:
 	CNameTXIDTuple linkAliasTuple;
 	std::vector<unsigned char> sCurrencyCode;
 	CNameTXIDTuple certTuple;
-	COfferLinkWhitelist linkWhitelist;
 	bool bPrivate;
-	bool bCoinOffer;
+	uint32_t offerType;
 	uint64_t paymentOptions;
-	unsigned char paymentPrecision;
 	unsigned int nSold;
 	std::vector<unsigned char> sCategory;
 	std::vector<unsigned char> sTitle;
 	std::vector<unsigned char> sDescription;
+	CAuctionOffer auctionOffer;
 	COffer() {
         SetNull();
     }
@@ -162,7 +126,6 @@ public:
 	// clear everything but the necessary information for an offer to prepare it to go into a txn
 	inline void ClearOffer()
 	{
-		linkWhitelist.SetNull();
 		sCategory.clear();
 		sTitle.clear();
 		sDescription.clear();
@@ -170,7 +133,6 @@ public:
 		linkAliasTuple.first.clear();
 		certTuple.first.clear();
 		sCurrencyCode.clear();
-		sPrice.clear();
 	}
 
  	ADD_SERIALIZE_METHODS;
@@ -181,31 +143,29 @@ public:
 			READWRITE(sDescription);
 			READWRITE(txHash);
 			READWRITE(VARINT(nHeight));
-			READWRITE(sPrice);
+			READWRITE(fPrice);
     		READWRITE(nQty);
 			READWRITE(VARINT(nSold));
-			READWRITE(VARINT(paymentPrecision));
 			READWRITE(fUnits);
 			READWRITE(linkOfferTuple);
-			READWRITE(linkWhitelist);
 			READWRITE(sCurrencyCode);
 			READWRITE(nCommission);
 			READWRITE(aliasTuple);
 			READWRITE(certTuple);
 			READWRITE(bPrivate);
-			READWRITE(bCoinOffer);
+			READWRITE(VARINT(offerType));
 			READWRITE(VARINT(paymentOptions));
 			READWRITE(vchOffer);
 			READWRITE(linkAliasTuple);
 	}
-	double GetPrice(const COfferLinkWhitelistEntry& entry = COfferLinkWhitelistEntry(), bool display = false) const;
+	double GetPrice(bool display = false) const;
 
     inline friend bool operator==(const COffer &a, const COffer &b) {
 		return (
 			a.sCategory == b.sCategory
 			&& a.sTitle == b.sTitle
 			&& a.sDescription == b.sDescription
-			&& a.sPrice == b.sPrice
+			&& a.fPrice == b.fPrice
 			&& a.nQty == b.nQty
 			&& a.fUnits == b.fUnits
 			&& a.nSold == b.nSold
@@ -213,16 +173,14 @@ public:
 			&& a.nHeight == b.nHeight
 			&& a.linkOfferTuple == b.linkOfferTuple
 			&& a.linkAliasTuple == b.linkAliasTuple
-			&& a.linkWhitelist == b.linkWhitelist
 			&& a.sCurrencyCode == b.sCurrencyCode
 			&& a.nCommission == b.nCommission
 			&& a.aliasTuple == b.aliasTuple
 			&& a.certTuple == b.certTuple
 			&& a.bPrivate == b.bPrivate
-			&& a.bCoinOffer == b.bCoinOffer
+			&& a.offerType == b.offerType
 			&& a.paymentOptions == b.paymentOptions
 			&& a.vchOffer == b.vchOffer
-			&& a.paymentPrecision == b.paymentPrecision
         );
     }
 
@@ -230,7 +188,7 @@ public:
         sCategory = b.sCategory;
         sTitle = b.sTitle;
         sDescription = b.sDescription;
-		sPrice = b.sPrice;
+		fPrice = b.fPrice;
 		nQty = b.nQty;
 		nSold = b.nSold;
         fUnits = b.fUnits;
@@ -238,16 +196,14 @@ public:
         nHeight = b.nHeight;
 		linkOfferTuple = b.linkOfferTuple;
 		linkAliasTuple = b.linkAliasTuple;
-		linkWhitelist = b.linkWhitelist;
 		sCurrencyCode = b.sCurrencyCode;
 		nCommission = b.nCommission;
 		aliasTuple = b.aliasTuple;
 		certTuple = b.certTuple;
 		bPrivate = b.bPrivate;
-		bCoinOffer = b.bCoinOffer;
+		offerType = b.offerType;
 		paymentOptions = b.paymentOptions;
 		vchOffer = b.vchOffer;
-		paymentPrecision = b.paymentPrecision;
         return *this;
     }
 
@@ -255,8 +211,8 @@ public:
         return !(a == b);
     }
 
-	inline void SetNull() { paymentPrecision = 0; sCategory.clear(); sTitle.clear(); vchOffer.clear(); sDescription.clear(); bCoinOffer = false; sPrice.clear(); fUnits = 1; nHeight = nQty = nSold = paymentOptions = 0; txHash.SetNull(); bPrivate = false; linkOfferTuple.first.clear(); aliasTuple.first.clear(); linkWhitelist.SetNull(); sCurrencyCode.clear(); nCommission = 0; aliasTuple.first.clear(); certTuple.first.clear(); }
-    inline bool IsNull() const { return (paymentPrecision == 0 && sCategory.empty() && sTitle.empty() && sPrice.empty() && sDescription.empty() && vchOffer.empty() && !bCoinOffer && fUnits == 1 && aliasTuple.first.empty() && txHash.IsNull() && nHeight == 0 && paymentOptions == 0 && nQty == 0 && nSold ==0 && linkWhitelist.IsNull() && nCommission == 0 && bPrivate == false && paymentOptions == 0 && sCurrencyCode.empty() && linkOfferTuple.first.empty() && linkAliasTuple.first.empty() && certTuple.first.empty() ); }
+	inline void SetNull() { auctionOffer.SetNull();  sCategory.clear(); sTitle.clear(); vchOffer.clear(); sDescription.clear(); offerType = 0; fPrice = 0; fUnits = 1; nHeight = nQty = nSold = paymentOptions = 0; txHash.SetNull(); bPrivate = false; linkOfferTuple.first.clear(); aliasTuple.first.clear(); sCurrencyCode.clear(); nCommission = 0; aliasTuple.first.clear(); certTuple.first.clear(); }
+    inline bool IsNull() const { return (auctionOffer.IsNull() && sCategory.empty() && sTitle.empty() && fPrice == 0 && sDescription.empty() && vchOffer.empty() && offerType == 0 && fUnits == 1 && aliasTuple.first.empty() && txHash.IsNull() && nHeight == 0 && paymentOptions == 0 && nQty == 0 && nSold ==0 && nCommission == 0 && bPrivate == false && paymentOptions == 0 && sCurrencyCode.empty() && linkOfferTuple.first.empty() && linkAliasTuple.first.empty() && certTuple.first.empty() ); }
 
     bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
