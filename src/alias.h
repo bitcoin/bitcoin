@@ -61,7 +61,7 @@ class CAliasUnprunable
     inline void SetNull() { vchGUID.clear(); nExpireTime=0;}
     inline bool IsNull() const { return (vchGUID.empty() && nExpireTime == 0); }
 };
-struct COfferLinkWhitelistEntry {
+class COfferLinkWhitelistEntry {
 public:
 	std::vector<unsigned char> aliasLinkVchRand;
 	unsigned char nDiscountPct;
@@ -98,7 +98,7 @@ public:
 
 };
 typedef std::map<std::vector<unsigned char>, COfferLinkWhitelistEntry> whitelistMap_t;
-struct COfferLinkWhitelist {
+class COfferLinkWhitelist {
 public:
 	whitelistMap_t entries;
 	COfferLinkWhitelist() {

@@ -666,7 +666,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				}
 				if (theAlias.offerWhitelist.GetLinkEntryByHash(theOffer.aliasTuple.first, entry))
 				{
-					if (nCommission.nCommission <= -entry.nDiscountPct)
+					if (theOffer.nCommission <= -entry.nDiscountPct)
 					{
 						throw runtime_error("SYSCOIN_OFFER_RPC_ERROR: ERRCODE: 1514 - " + _("This resold offer must be of higher price than the original offer including any discount"));
 					}
@@ -1312,7 +1312,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 		if(!strCert.empty())
 			theOffer.certTuple = CNameTXIDTuple(theCert.vchCert, theCert.txHash);
 
-		theOffer.nPrice = fPrice;
+		theOffer.fPrice = fPrice;
 	}
 
 	if(strCommission.empty())
@@ -1528,7 +1528,7 @@ bool BuildOfferJson(const COffer& theOffer, UniValue& oOffer)
 	int nQty = theOffer.nQty;
 	int sold = theOffer.nSold;
 	string offerTypeStr = "";
-	COfferAuction auctionOffer;
+	CAuctionOffer auctionOffer;
 	if (IsOfferTypeInMask(theOffer.offerType, OFFERTYPE_AUCTION))
 		auctionOffer = theOffer.auctionOffer;
 	if(!theOffer.linkOfferTuple.first.empty()) {
@@ -1576,16 +1576,30 @@ bool BuildOfferJson(const COffer& theOffer, UniValue& oOffer)
 
 	return true;
 }
+std::string GetOfferTypeString(const uint64_t &offerType)
+{
+	vector<std::string> types;
+	if(IsPaymentOptionInMask(offerType, OFFERTYPE_BUYNOW)) {
+		types.push_back(std::string("BUYNOW"));
+	}
+	if(IsPaymentOptionInMask(offerType, OFFERTYPE_COIN)) {
+		types.push_back(std::string("COIN"));
+	}
+	if(IsPaymentOptionInMask(offerType, OFFERTYPE_AUCTION)) {
+		types.push_back(std::string("AUCTION"));
+	}
+	return boost::algorithm::join(types, "+");
+}
 std::string GetPaymentOptionsString(const uint64_t &paymentOptions)
 {
 	vector<std::string> currencies;
-	if(IsPaymentOptionInMask(paymentOptions, PAYMENTOPTION_SYS)) {
+	if (IsPaymentOptionInMask(paymentOptions, PAYMENTOPTION_SYS)) {
 		currencies.push_back(std::string("SYS"));
 	}
-	if(IsPaymentOptionInMask(paymentOptions, PAYMENTOPTION_BTC)) {
+	if (IsPaymentOptionInMask(paymentOptions, PAYMENTOPTION_BTC)) {
 		currencies.push_back(std::string("BTC"));
 	}
-	if(IsPaymentOptionInMask(paymentOptions, PAYMENTOPTION_ZEC)) {
+	if (IsPaymentOptionInMask(paymentOptions, PAYMENTOPTION_ZEC)) {
 		currencies.push_back(std::string("ZEC"));
 	}
 	return boost::algorithm::join(currencies, "+");

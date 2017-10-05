@@ -45,6 +45,7 @@ bool IsValidOfferType(const uint64_t &offerTypeMask);
 uint64_t GetOfferTypeMaskFromString(const std::string &offerTypeString);
 bool IsOfferTypeInMask(const uint64_t &mask, const uint64_t &offerType);
 std::string GetPaymentOptionsString(const uint64_t &paymentOptions);
+std::string GetOfferTypeString(const uint64_t &offerType);
 CChainParams::AddressType PaymentOptionToAddressType(const uint64_t &paymentOptions);
 
 class CAuctionOffer {
@@ -158,7 +159,7 @@ public:
 			READWRITE(vchOffer);
 			READWRITE(linkAliasTuple);
 	}
-	double GetPrice(bool display = false) const;
+	double GetPrice(const COfferLinkWhitelistEntry& entry=COfferLinkWhitelistEntry(), bool display = false) const;
 
     inline friend bool operator==(const COffer &a, const COffer &b) {
 		return (
