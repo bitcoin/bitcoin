@@ -4,6 +4,7 @@
 
 #define BOOST_TEST_MODULE Bitcoin Test Suite
 
+#include <banman.h>
 #include <net.h>
 
 #include <memory>
