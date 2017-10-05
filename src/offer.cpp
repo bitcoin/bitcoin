@@ -1533,7 +1533,7 @@ bool BuildOfferJson(const COffer& theOffer, UniValue& oOffer)
 		auctionOffer = theOffer.auctionOffer;
 	if(!theOffer.linkOfferTuple.first.empty()) {
 		oOffer.push_back(Pair("currency", stringFromVch(linkOffer.sCurrencyCode)));
-		oOffer.push_back(Pair("price", linkOffer.GetPrice(OfferLinkWhitelistEntry(), true)));
+		oOffer.push_back(Pair("price", linkOffer.GetPrice(true)));
 		oOffer.push_back(Pair("commission", theOffer.nCommission));
 		oOffer.push_back(Pair("offerlink_guid", stringFromVch(theOffer.linkOfferTuple.first)));
 		oOffer.push_back(Pair("offerlink_seller", stringFromVch(linkOffer.aliasTuple.first)));
@@ -1548,7 +1548,7 @@ bool BuildOfferJson(const COffer& theOffer, UniValue& oOffer)
 	else
 	{
 		oOffer.push_back(Pair("currency", stringFromVch(theOffer.sCurrencyCode)));
-		oOffer.push_back(Pair("price", theOffer.GetPrice(OfferLinkWhitelistEntry(), true)));
+		oOffer.push_back(Pair("price", theOffer.GetPrice(true)));
 		oOffer.push_back(Pair("commission", 0));
 		oOffer.push_back(Pair("offerlink_guid", ""));
 		oOffer.push_back(Pair("offerlink_seller", ""));
@@ -1653,8 +1653,8 @@ void OfferTxToJSON(const int op, const std::vector<unsigned char> &vchData, cons
 	if(!offer.sCurrencyCode.empty()  && offer.sCurrencyCode != dbOffer.sCurrencyCode)
 		entry.push_back(Pair("currency", stringFromVch(offer.sCurrencyCode)));
 
-	if(offer.GetPrice(OfferLinkWhitelistEntry(), true) != dbOffer.GetPrice(OfferLinkWhitelistEntry(), true))
-		entry.push_back(Pair("price", offer.GetPrice(OfferLinkWhitelistEntry(), true)));
+	if(offer.GetPrice(true) != dbOffer.GetPrice(true))
+		entry.push_back(Pair("price", offer.GetPrice(true)));
 
 	if(offer.bPrivate != dbOffer.bPrivate)
 		entry.push_back(Pair("private", offer.bPrivate));
