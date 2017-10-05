@@ -1868,6 +1868,7 @@ bool CheckTxInputs(const CTransaction &tx, CValidationState &state, const CCoins
 
     CAmount nValueIn = 0;
     CAmount nFees = 0;
+    int nSpendHeight = -1;
     for (unsigned int i = 0; i < tx.vin.size(); i++)
     {
         const COutPoint &prevout = tx.vin[i].prevout;
@@ -1877,7 +1878,8 @@ bool CheckTxInputs(const CTransaction &tx, CValidationState &state, const CCoins
         // If prev is coinbase, check that it's matured
         if (coin.IsCoinBase())
         {
-            int nSpendHeight = GetSpendHeight(inputs);
+            if (nSpendHeight == -1)
+                nSpendHeight = GetSpendHeight(inputs);
             if (nSpendHeight - coin.nHeight < COINBASE_MATURITY)
                 return state.Invalid(false, REJECT_INVALID, "bad-txns-premature-spend-of-coinbase",
                     strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
