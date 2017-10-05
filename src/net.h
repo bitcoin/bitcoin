@@ -133,7 +133,7 @@ public:
     // between nodes running old code and nodes running
     // new code.
     ~BanMan();
-    BanMan(fs::path ban_file, CClientUIInterface* client_interface);
+    BanMan(fs::path ban_file, CClientUIInterface* client_interface, int64_t default_ban_time);
     void Ban(const CNetAddr& netAddr, const BanReason& reason, int64_t bantimeoffset = 0, bool sinceUnixEpoch = false);
     void Ban(const CSubNet& subNet, const BanReason& reason, int64_t bantimeoffset = 0, bool sinceUnixEpoch = false);
     void ClearBanned(); // needed for unit testing
@@ -157,6 +157,7 @@ private:
     bool setBannedIsDirty;
     CClientUIInterface* clientInterface = nullptr;
     CBanDB m_ban_db;
+    int64_t m_default_ban_time;
 };
 
 class NetEventsInterface;
