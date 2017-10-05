@@ -29,6 +29,7 @@
 #include <boost/thread.hpp>
 #include <boost/algorithm/hex.hpp>
 #include <boost/algorithm/string/find.hpp>
+#include <boost/assign/list_of.hpp>
 #include <mongoc.h>
 using namespace std;
 CAliasDB *paliasdb = NULL;
@@ -227,6 +228,7 @@ int getFeePerByte(const uint64_t &paymentOptionMask)
 		return 25;
 	else  if (IsPaymentOptionInMask(paymentOptionMask, PAYMENTOPTION_ZEC))
 		return 25;
+	return 25;
 }
 void PutToAliasList(std::vector<CAliasIndex> &aliasList, CAliasIndex& index) {
 	int i = aliasList.size() - 1;
@@ -650,13 +652,14 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					else
 					{
 						for (int x = 0; x < theAlias.offerWhitelist.entries.size(); x++) {
+							COfferLinkWhitelistEntry entry;
 							const COfferLinkWhitelistEntry &newEntry = theAlias.offerWhitelist.entries[x];
 							if (newEntry.nDiscountPct > 99) {
 								newEntry.nDiscountPct = 99;
 								errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1094 -" + _("Whitelist discount must be between 0 and 99");
 							}
 							// the stored whitelist has this entry (and its the same) then we want to remove this entry
-							if (dbAlias.offerWhitelist.GetLinkEntryByHash(newEntry.aliasLinkVchRand, newEntry) && newEntry == entry)
+							if (dbAlias.offerWhitelist.GetLinkEntryByHash(newEntry.aliasLinkVchRand, entry) && newEntry == entry)
 							{
 								dbAlias.offerWhitelist.RemoveWhitelistEntry(newEntry.aliasLinkVchRand);
 							}
@@ -672,7 +675,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							}
 						}
 					}
-					theAlias.offerWhiteList = dbAlias.offerWhiteList;
+					theAlias.offerWhitelist = dbAlias.offerWhiteList;
 				}
 			}
 			else
@@ -1102,7 +1105,7 @@ void CreateAliasRecipient(const CScript& scriptPubKeyDest, const vector<unsigned
 	scriptChangeOrig += scriptPubKeyDest;
 	CRecipient recp = {scriptChangeOrig, 0, false};
 	recipient = recp;
-	int nFeePerByte = getFeePerByte(PAYMENT_OPTION_SYS);
+	int nFeePerByte = getFeePerByte(PAYMENTOPTION_SYS);
 	CTxOut txout(0,	recipient.scriptPubKey);
 	size_t nSize = txout.GetSerializeSize(SER_DISK,0)+148u;
 	// create alias payment utxo max 1500 bytes worth of fees
@@ -1127,7 +1130,7 @@ void CreateFeeRecipient(CScript& scriptPubKey, const vector<unsigned char>& data
 	recipient = recp;
 	CTxOut txout(0,	recipient.scriptPubKey);
 	size_t nSize = txout.GetSerializeSize(SER_DISK,0)+148u;
-	int nFeePerByte = getFeePerByte(PAYMENT_OPTION_SYS);
+	int nFeePerByte = getFeePerByte(PAYMENTOPTION_SYS);
 	if(nFeePerByte <= 0)
 		nFee = CWallet::GetMinimumFee(nSize, nTxConfirmTarget, mempool);
 	else
@@ -1144,7 +1147,7 @@ CAmount GetDataFee(const CScript& scriptPubKey)
 	recipient = recp;
 	CTxOut txout(0,	recipient.scriptPubKey);
     size_t nSize = txout.GetSerializeSize(SER_DISK,0)+148u;
-	int nFeePerByte = getFeePerByte(PAYMENT_OPTION_SYS);
+	int nFeePerByte = getFeePerByte(PAYMENTOPTION_SYS);
 	if(nFeePerByte <= 0)
 		nFee = CWallet::GetMinimumFee(nSize, nTxConfirmTarget, mempool);
 	else
@@ -2226,7 +2229,7 @@ UniValue aliaspay(const UniValue& params, bool fHelp) {
 			if (addr.get_str() == name_)
 				fSubtractFeeFromAmount = true;
 		}
-        CRecipient recipient = {scriptPubKey, nPricePerUnit, fSubtractFeeFromAmount };
+        CRecipient recipient = {scriptPubKey, nAmount, fSubtractFeeFromAmount };
         vecSend.push_back(recipient);
     }
 
@@ -2318,7 +2321,7 @@ UniValue aliasupdatewhitelist(const UniValue& params, bool fHelp) {
 	CScript scriptPubKeyOrig;
 
 
-	COffer theOffer;
+	CAliasIndex theAlias;
 	if (!GetAlias(vchOwnerAlias, theAlias))
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR ERRCODE: 1518 - " + _("Could not find an alias with this guid"));
 
@@ -2329,7 +2332,7 @@ UniValue aliasupdatewhitelist(const UniValue& params, bool fHelp) {
 	theAlias.nHeight = chainActive.Tip()->nHeight;
 
 	for (unsigned int idx = 0; idx < whitelistEntries.size(); idx++) {
-		const UniValue& p = whiteListEntry[idx];
+		const UniValue& p = whitelistEntries[idx];
 		if (!p.isObject())
 			throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected object with {\"alias\",\"discount_percentage\"}");
 
@@ -2341,9 +2344,9 @@ UniValue aliasupdatewhitelist(const UniValue& params, bool fHelp) {
 		COfferLinkWhitelistEntry entry;
 		entry.aliasLinkVchRand = vchFromString(aliasEntryName);
 		entry.nDiscountPct = nDiscount;
-		theAlias.offerWhiteList.PutWhitelistEntry(entry);
+		theAlias.offerWhitelist.PutWhitelistEntry(entry);
 
-		if (!theAlias.offerWhiteList.GetLinkEntryByHash(vchFromString(aliasEntryName), entry))
+		if (!theAlias.offerWhitelist.GetLinkEntryByHash(vchFromString(aliasEntryName), entry))
 			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR ERRCODE: 1523 - " + _("This alias entry was not added to affiliate list: ") + aliasEntryName);
 	}
 	vector<unsigned char> data;
@@ -2369,7 +2372,7 @@ UniValue aliasupdatewhitelist(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(theAlias.vchAlias, vchWitness, "", aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(theAlias.vchAlias, vchWitness, "", recipient, recipientPayment, vecSend, wtx, &coinControl);
 
 	UniValue res(UniValue::VARR);
 	UniValue signParams(UniValue::VARR);
@@ -2429,7 +2432,7 @@ UniValue aliasclearwhitelist(const UniValue& params, bool fHelp) {
 
 	theAlias.ClearAlias();
 	theAlias.nHeight = chainActive.Tip()->nHeight;
-	theAlias.offerWhiteList.PutWhitelistEntry(entry);
+	theAlias.offerWhitelist.PutWhitelistEntry(entry);
 	vector<unsigned char> data;
 	theAlias.Serialize(data);
 	uint256 hash = Hash(data.begin(), data.end());
@@ -2454,7 +2457,7 @@ UniValue aliasclearwhitelist(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(theAlias.vchAlias, vchWitness, "", aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(theAlias.vchAlias, vchWitness, "", recipient, recipientPayment, vecSend, wtx, &coinControl);
 
 	UniValue res(UniValue::VARR);
 	UniValue signParams(UniValue::VARR);
@@ -2499,6 +2502,7 @@ UniValue aliaswhitelist(const UniValue& params, bool fHelp) {
 
 	if (!GetAlias(vchAlias, theAlias))
 		throw runtime_error("could not find an offer with this guid");
+
 	whiteListMap_t::iterator it = theAlias.offerWhitelist.entries.begin();
 	while (it != theAlias.offerWhitelist.entries.end())
 	{
@@ -2513,7 +2517,7 @@ UniValue aliaswhitelist(const UniValue& params, bool fHelp) {
 }
 bool COfferLinkWhitelist::GetLinkEntryByHash(const std::vector<unsigned char> &ahash, COfferLinkWhitelistEntry &entry) const {
 	entry.SetNull();
-	if (entries[ahash]) {
+	if (!entries[ahash].IsNull()) {
 		entry = entries[ahash];
 		return true;
 	}

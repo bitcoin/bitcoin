@@ -58,7 +58,6 @@ public:
 		linkAliasTuple.first.clear();
 		offerTuple.first.clear();
 		scriptSigs.clear();
-		sCurrencyCode.clear();
 		vchWitness.clear();
 		escrowAddress.clear();
 	}
@@ -196,7 +195,7 @@ public:
 	void WriteEscrowBid(const CEscrow& escrow) {
 		WriteEscrowBidIndex(escrow, "valid");
 	}
-	void RefundEscrowBid(const std::vector<std::vector<unsigned char> &vchEscrow) {
+	void RefundEscrowBid(const std::vector<unsigned char> &vchEscrow) {
 		RefundEscrowBidIndex(vchEscrow, "refunded");
 	}
     bool EraseEscrow(const CNameTXIDTuple& escrowTuple) {
