@@ -308,7 +308,7 @@ bool CMinerWhitelistDB::isWhitelisted(std::string address) {
         LogPrintf("MinerDatabase: Miner does not exist in database.\n");
         return false;
     }
-    LogPrintf("MinerDatabase: Miner is in database.\n");
+    //LogPrintf("MinerDatabase: Miner is in database.\n");
     Read(mEntry, mDetails);
     return mDetails.whitelisted;
 }
