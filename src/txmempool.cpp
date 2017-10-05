@@ -996,7 +996,7 @@ CFeeRate CTxMemPool::GetMinFee(size_t sizelimit) const {
 
         if (rollingMinimumFeeRate < (double)incrementalRelayFee.GetFeePerK() / 2) {
             rollingMinimumFeeRate = 0;
-            return CFeeRate(0);
+            return ::minRelayTxFee;
         }
     }
     return std::max(CFeeRate(llround(rollingMinimumFeeRate)), incrementalRelayFee);
