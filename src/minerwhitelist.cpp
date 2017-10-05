@@ -632,11 +632,15 @@ bool CMinerWhitelistDB::hasExceededCap(std::string address) {
     // There has been a bug in the previous implementation that did not take the current block 
     // into account when counting the number of blocks mined. Fix these manually.
     if (blocks == cap + 1 && chainActive.Height() < Params().GetConsensus().minerCapSystemChangeHeight && address == getMinerforBlock(chainActive.Height()) ) {
-        LogPrintf("MinerCap: Exception because of two consecutive blocks from the same miner.\n");
+        LogPrintf("MinerCap: %s has exceeded cap. Exception because of two consecutive blocks from the same miner.\n", address);
+        return false;
+    } else if (blocks > cap) {
+        LogPrintf("MinerCap: %s has exceeded cap. Not accepting Block.\n", address);
+        return true;
+    } else {
         return false;
     }
 
-    return blocks > cap;
 }
 
 // bool CMinerWhitelistDB::WriteReindexing(bool fReindexing) {
