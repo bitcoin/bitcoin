@@ -4,6 +4,7 @@
 
 #include <test/test_bitcoin.h>
 
+#include <banman.h>
 #include <chainparams.h>
 #include <consensus/consensus.h>
 #include <consensus/params.h>
