@@ -87,7 +87,7 @@ public:
 		return !(a == b);
 	}
 
-	inline void SetNull() { fDepositPercentage = 0 nExpireTime = 0; fReservePrice = 0;  bRequireWitness =  false; }
+	inline void SetNull() { fDepositPercentage = 0; nExpireTime = 0; fReservePrice = 0;  bRequireWitness = false; }
 	inline bool IsNull() const { return (fDepositPercentage == 0 && nExpireTime == 0 && fReservePrice == 0 && !bRequireWitness); }
 
 };

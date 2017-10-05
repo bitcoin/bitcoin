@@ -640,7 +640,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						theAlias.offerWhitelist.SetNull();
 					}
 					// special case we use to remove all entries
-					else if (theAlias.offerWhitelist.entries[0].nDiscountPct == 127)
+					else if (theAlias.offerWhitelist.entries.size() == 1 && theAlias.offerWhitelist.entries.begin()->second.nDiscountPct == 127)
 					{
 						if (dbAlias.offerWhitelist.entries.empty())
 						{
@@ -651,9 +651,10 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					}
 					else
 					{
-						for (int x = 0; x < theAlias.offerWhitelist.entries.size(); x++) {
+						while (auto const &it : theAlias.offerWhitelist.entries)
+						{
 							COfferLinkWhitelistEntry entry;
-							const COfferLinkWhitelistEntry &newEntry = theAlias.offerWhitelist.entries[x];
+							const COfferLinkWhitelistEntry& newEntry = it.second;
 							if (newEntry.nDiscountPct > 99) {
 								errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1094 -" + _("Whitelist discount must be between 0 and 99");
 								continue;
@@ -666,13 +667,14 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							// we want to add it to the whitelist
 							else
 							{
-								if(dbAlias.offerWhitelist.entries.size() < 20)
+								if (dbAlias.offerWhitelist.entries.size() < 20)
 									dbAlias.offerWhitelist.PutWhitelistEntry(newEntry);
 								else
 								{
 									errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1094 -" + _("Too many affiliates for this whitelist, maximum 20 entries allowed");
 								}
 							}
+							it++;
 						}
 					}
 					theAlias.offerWhitelist = dbAlias.offerWhitelist;
@@ -1766,7 +1768,7 @@ void AliasTxToJSON(const int op, const vector<unsigned char> &vchData, const vec
 	entry.push_back(Pair("_id", stringFromVch(alias.vchAlias)));
 	if (!alias.offerWhitelist.IsNull())
 	{
-		if (alias.offerWhitelist.entries[0].nDiscountPct == 127)
+		if (alias.offerWhitelist.entries.begin()->second.nDiscountPct == 127)
 			entry.push_back(Pair("whitelist", _("Whitelist was cleared")));
 		else
 			entry.push_back(Pair("whitelist", _("Whitelist entries were added or removed")));
@@ -2503,10 +2505,9 @@ UniValue aliaswhitelist(const UniValue& params, bool fHelp) {
 	if (!GetAlias(vchAlias, theAlias))
 		throw runtime_error("could not find an offer with this guid");
 
-	whiteListMap_t::iterator it = theAlias.offerWhitelist.entries.begin();
-	while (it != theAlias.offerWhitelist.entries.end())
+	while (auto const &it : theAlias.offerWhitelist.entries)
 	{
-		const COfferLinkWhitelistEntry& entry = it->second;
+		const COfferLinkWhitelistEntry& entry = it.second;
 		UniValue oList(UniValue::VOBJ);
 		oList.push_back(Pair("alias", stringFromVch(entry.aliasLinkVchRand)));
 		oList.push_back(Pair("discount_percentage", entry.nDiscountPct));
