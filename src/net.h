@@ -505,8 +505,7 @@ CAddress GetLocalAddress(const CNetAddr *paddrPeer, ServiceFlags nLocalServices)
 
 extern bool fDiscover;
 extern bool fListen;
-extern CCriticalSection cs_filter;
-extern bool fRelayTxes GUARDED_BY(cs_filter);
+extern bool fRelayTxes;
 
 extern limitedmap<uint256, int64_t> mapAlreadyAskedFor;
 
