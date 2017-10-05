@@ -42,7 +42,7 @@ CAmount GetMinimumFee(unsigned int nTxBytes, const CCoinControl& coin_control, c
     else { // 2. or 4.
         // We will use smart fee estimation
         unsigned int target = coin_control.m_confirm_target ? *coin_control.m_confirm_target : ::nTxConfirmTarget;
-        // By default estimates are economical iff we are signaling opt-in-RBF
+        // By default estimates are economical if we are signaling opt-in-RBF
         bool conservative_estimate = !coin_control.signalRbf;
         // Allow to override the default fee estimate mode over the CoinControl instance
         if (coin_control.m_fee_mode == FeeEstimateMode::CONSERVATIVE) conservative_estimate = true;
@@ -54,21 +54,23 @@ CAmount GetMinimumFee(unsigned int nTxBytes, const CCoinControl& coin_control, c
             fee_needed = CWallet::fallbackFee.GetFee(nTxBytes);
             if (feeCalc) feeCalc->reason = FeeReason::FALLBACK;
         }
-        // Obey mempool min fee when using smart fee estimation
-        CAmount min_mempool_fee = pool.GetMinFee(gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFee(nTxBytes);
-        if (fee_needed < min_mempool_fee) {
-            fee_needed = min_mempool_fee;
-            if (feeCalc) feeCalc->reason = FeeReason::MEMPOOL_MIN;
-        }
     }
 
-    // prevent user from paying a fee below minRelayTxFee or minTxFee
-    CAmount required_fee = GetRequiredFee(nTxBytes);
-    if (required_fee > fee_needed) {
-        fee_needed = required_fee;
+    // prevent user from paying a fee below minTxFee
+    CAmount min_tx_fee = CWallet::minTxFee.GetFee(nTxBytes);
+    if (fee_needed < min_tx_fee) {
+        fee_needed = min_tx_fee;
         if (feeCalc) feeCalc->reason = FeeReason::REQUIRED;
     }
-    // But always obey the maximum
+
+    // Obey mempool min fee
+    CAmount min_mempool_fee = pool.GetMinFee(gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFee(nTxBytes);
+    if (fee_needed < min_mempool_fee) {
+        fee_needed = min_mempool_fee;
+        if (feeCalc) feeCalc->reason = FeeReason::MEMPOOL_MIN;
+    }
+
+    // And the maximum tx fee
     if (fee_needed > maxTxFee) {
         fee_needed = maxTxFee;
         if (feeCalc) feeCalc->reason = FeeReason::MAXTXFEE;
