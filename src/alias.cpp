@@ -507,7 +507,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	}
 	
 	if (!fJustCheck ) {
-		bool pwChange = false;
 		CAliasIndex dbAlias;
 		string strName = stringFromVch(vvchArgs[0]);
 		boost::algorithm::to_lower(strName);
@@ -1099,7 +1098,6 @@ void CreateRecipient(const CScript& scriptPubKey, CRecipient& recipient)
 }
 void CreateAliasRecipient(const CScript& scriptPubKeyDest, const vector<unsigned char>& vchAlias, CRecipient& recipient)
 {
-	int precision = 0;
 	CAmount nFee = 0;
 	CScript scriptChangeOrig;
 	scriptChangeOrig << CScript::EncodeOP_N(OP_ALIAS_PAYMENT) << vchAlias << vchFromString("1") << OP_DROP << OP_2DROP;
@@ -1121,7 +1119,6 @@ void CreateAliasRecipient(const CScript& scriptPubKeyDest, const vector<unsigned
 }
 void CreateFeeRecipient(CScript& scriptPubKey, const vector<unsigned char>& data, CRecipient& recipient)
 {
-	int precision = 0;
 	CAmount nFee = 0;
 	// add hash to data output (must match hash in inputs check with the tx scriptpubkey hash)
     uint256 hash = Hash(data.begin(), data.end());
@@ -1141,7 +1138,6 @@ void CreateFeeRecipient(CScript& scriptPubKey, const vector<unsigned char>& data
 }
 CAmount GetDataFee(const CScript& scriptPubKey)
 {
-	int precision = 0;
 	CAmount nFee = 0;
 	CRecipient recipient;
 	CRecipient recp = {scriptPubKey, 0, false};

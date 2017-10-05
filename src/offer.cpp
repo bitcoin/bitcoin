@@ -86,7 +86,7 @@ bool IsPaymentOptionInMask(const uint64_t &mask, const uint64_t &paymentOption) 
 
 bool ValidateOfferTypeMask(const uint32_t &offerTypeMask) {
 	uint64_t maxVal = OFFERTYPE_BUYNOW | OFFERTYPE_COIN | OFFERTYPE_AUCTION;
-	return !(paymentOptionsMask < 1 || paymentOptionsMask > maxVal);
+	return !(offerTypeMask < 1 || offerTypeMask > maxVal);
 }
 
 bool IsValidOfferType(const uint32_t &offerTypeMask) {

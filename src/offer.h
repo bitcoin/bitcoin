@@ -15,6 +15,8 @@ class CCoins;
 class CBlockIndex;
 class CBlock;
 class CAliasIndex;
+class COfferLinkWhitelistEntry;
+
 bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const std::vector<std::vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, std::string &errorMessage, bool dontaddtodb=false);
 
 
