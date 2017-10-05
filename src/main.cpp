@@ -1859,7 +1859,7 @@ int GetSpendHeight(const CCoinsViewCache &inputs)
 
 namespace Consensus
 {
-bool CheckTxInputs(const CTransaction &tx, CValidationState &state, const CCoinsViewCache &inputs, int nSpendHeight)
+bool CheckTxInputs(const CTransaction &tx, CValidationState &state, const CCoinsViewCache &inputs)
 {
     // This doesn't trigger the DoS code on purpose; if it did, it would make it easier
     // for an attacker to attempt to split the network.
@@ -1877,6 +1877,7 @@ bool CheckTxInputs(const CTransaction &tx, CValidationState &state, const CCoins
         // If prev is coinbase, check that it's matured
         if (coin.IsCoinBase())
         {
+            int nSpendHeight = GetSpendHeight(inputs);
             if (nSpendHeight - coin.nHeight < COINBASE_MATURITY)
                 return state.Invalid(false, REJECT_INVALID, "bad-txns-premature-spend-of-coinbase",
                     strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
@@ -1915,7 +1916,7 @@ bool CheckInputs(const CTransaction &tx,
 {
     if (!tx.IsCoinBase())
     {
-        if (!Consensus::CheckTxInputs(tx, state, inputs, GetSpendHeight(inputs)))
+        if (!Consensus::CheckTxInputs(tx, state, inputs))
             return false;
         if (pvChecks)
             pvChecks->reserve(tx.vin.size());
