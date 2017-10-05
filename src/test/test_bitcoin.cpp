@@ -24,21 +24,6 @@ const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
 FastRandomContext g_insecure_rand_ctx;
 
-void CConnmanTest::AddNode(CNode& node)
-{
-    LOCK(g_connman->cs_vNodes);
-    g_connman->vNodes.push_back(&node);
-}
-
-void CConnmanTest::ClearNodes()
-{
-    LOCK(g_connman->cs_vNodes);
-    for (const CNode* node : g_connman->vNodes) {
-        delete node;
-    }
-    g_connman->vNodes.clear();
-}
-
 std::ostream& operator<<(std::ostream& os, const uint256& num)
 {
     os << num.ToString();
@@ -109,8 +94,6 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
         for (int i=0; i < nScriptCheckThreads-1; i++)
             threadGroup.create_thread(&ThreadScriptCheck);
         g_connman = MakeUnique<CConnman>(0x1337, 0x1337); // Deterministic randomness for tests.
-        connman = g_connman.get();
-        peerLogic.reset(new PeerLogicValidation(connman, scheduler, /*enable_bip61=*/true));
 }
 
 TestingSetup::~TestingSetup()
@@ -120,7 +103,6 @@ TestingSetup::~TestingSetup()
     GetMainSignals().FlushBackgroundCallbacks();
     GetMainSignals().UnregisterBackgroundSignalScheduler();
     g_connman.reset();
-    peerLogic.reset();
     UnloadBlockIndex();
     pcoinsTip.reset();
     pcoinsdbview.reset();
