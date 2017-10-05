@@ -18,9 +18,22 @@
 #include <stdio.h>
 
 #include <boost/algorithm/string.hpp> // boost::trim
+#include <boost/signals2/signal.hpp>
 
 /** WWW-Authenticate to present with 401 Unauthorized response */
 static const char* WWW_AUTH_HEADER_DATA = "Basic realm=\"jsonrpc\"";
+
+boost::signals2::signal<void (JSONRPCRequest&, const HTTPRequest&)> PrepareJSONRPCRequestCallbacks;
+
+void RegisterJSONRPCRequestPreparer(const JSONRPCRequestPreparer& preparer)
+{
+    PrepareJSONRPCRequestCallbacks.connect(preparer);
+}
+
+void UnregisterJSONRPCRequestPreparer(const JSONRPCRequestPreparer& preparer)
+{
+    PrepareJSONRPCRequestCallbacks.disconnect(preparer);
+}
 
 /** Simple one-shot callback timer to be used by the RPC mechanism to e.g.
  * re-lock the wallet.
@@ -179,6 +192,8 @@ static bool HTTPReq_JSONRPC(HTTPRequest* req, const std::string &)
 
         // Set the URI
         jreq.URI = req->GetURI();
+
+        PrepareJSONRPCRequestCallbacks(jreq, *req);
 
         std::string strReply;
         // singleton request
