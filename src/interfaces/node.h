@@ -18,6 +18,7 @@
 #include <tuple>
 #include <vector>
 
+class BanMan;
 class CCoinControl;
 class CFeeRate;
 class CNodeStats;

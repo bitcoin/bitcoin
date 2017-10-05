@@ -6,6 +6,7 @@
 
 #include <addrdb.h>
 #include <amount.h>
+#include <banman.h>
 #include <chain.h>
 #include <chainparams.h>
 #include <init.h>

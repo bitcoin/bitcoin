@@ -4,6 +4,7 @@
 
 // Unit tests for denial-of-service detection/prevention code
 
+#include <banman.h>
 #include <chainparams.h>
 #include <keystore.h>
 #include <net.h>
