@@ -76,6 +76,7 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
         nScriptCheckThreads = 3;
         for (int i=0; i < nScriptCheckThreads-1; i++)
             threadGroup.create_thread(&ThreadScriptCheck);
+        g_banman = std::unique_ptr<BanMan>(new BanMan(nullptr));
         g_connman = std::unique_ptr<CConnman>(new CConnman(0x1337, 0x1337)); // Deterministic randomness for tests.
 }
 
@@ -86,6 +87,7 @@ TestingSetup::~TestingSetup()
         GetMainSignals().FlushBackgroundCallbacks();
         GetMainSignals().UnregisterBackgroundSignalScheduler();
         g_connman.reset();
+        g_banman.reset();
         UnloadBlockIndex();
         pcoinsTip.reset();
         pcoinsdbview.reset();
