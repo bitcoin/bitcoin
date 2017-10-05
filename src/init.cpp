@@ -1296,7 +1296,7 @@ bool AppInitMain(InitInterfaces& interfaces)
     // need to reindex later.
 
     assert(!g_banman);
-    g_banman = MakeUnique<BanMan>(&uiInterface);
+    g_banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", &uiInterface);
     assert(!g_connman);
     g_connman = std::unique_ptr<CConnman>(new CConnman(GetRand(std::numeric_limits<uint64_t>::max()), GetRand(std::numeric_limits<uint64_t>::max())));
 

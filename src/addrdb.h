@@ -92,9 +92,9 @@ public:
 class CBanDB
 {
 private:
-    fs::path pathBanlist;
+    const fs::path m_ban_list_path;
 public:
-    CBanDB();
+    explicit CBanDB(fs::path ban_list_path);
     bool Write(const banmap_t& banSet);
     bool Read(banmap_t& banSet);
 };
