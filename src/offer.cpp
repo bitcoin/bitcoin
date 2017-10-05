@@ -108,7 +108,7 @@ bool ValidateOfferTypeString(const std::string &offerTypeString) {
 
 uint32_t GetOfferTypeMaskFromString(const std::string &offerTypeString) {
 	vector<string> strs;
-	uint64_t retval = 0;
+	uint32_t retval = 0;
 	boost::split(strs, offerTypeString, boost::is_any_of("+"));
 	for (size_t i = 0; i < strs.size(); i++) {
 		if (!strs[i].compare("BUYNOW")) {
@@ -1674,6 +1674,27 @@ double COffer::GetPrice(const COfferLinkWhitelistEntry& entry, bool display) con
 		nDiscount = 0;
 	// nMarkup is a percentage, commission minus discount
 	char nMarkup = nCommission - nDiscount;
+	if (nMarkup != 0)
+	{
+		double lMarkup = 1 / (nMarkup / 100.0);
+		lMarkup = floorf(lMarkup * 100) / 100;
+		double priceMarkup = price / lMarkup;
+		price += priceMarkup;
+	}
+	return price;
+}
+double COffer::GetPrice(bool display) const {
+	double price = boost::lexical_cast<double>(fPrice);
+	if (!display)
+	{
+		if (IsOfferTypeInMask(offerType, OFFERTYPE_COIN))
+			price = fUnits;
+		else if (fUnits != 1)
+			price *= fUnits;
+	}
+
+	// nMarkup is a percentage, commission
+	char nMarkup = nCommission;
 	if (nMarkup != 0)
 	{
 		double lMarkup = 1 / (nMarkup / 100.0);

@@ -41,13 +41,13 @@ bool ValidatePaymentOptionsString(const std::string &paymentOptionsString);
 bool IsValidPaymentOption(const uint64_t &paymentOptionsMask);
 uint64_t GetPaymentOptionsMaskFromString(const std::string &paymentOptionsString);
 bool IsPaymentOptionInMask(const uint64_t &mask, const uint64_t &paymentOption);
-bool ValidateOfferTypeMask(const uint64_t &offerTypeMask);
+bool ValidateOfferTypeMask(const uint32_t &offerTypeMask);
 bool ValidateOfferTypeString(const std::string &offerTypeString);
-bool IsValidOfferType(const uint64_t &offerTypeMask);
-uint64_t GetOfferTypeMaskFromString(const std::string &offerTypeString);
-bool IsOfferTypeInMask(const uint64_t &mask, const uint64_t &offerType);
-std::string GetPaymentOptionsString(const uint64_t &paymentOptions);
-std::string GetOfferTypeString(const uint64_t &offerType);
+bool IsValidOfferType(const uint32_t &offerTypeMask);
+uint32_t GetOfferTypeMaskFromString(const std::string &offerTypeString);
+bool IsOfferTypeInMask(const uint32_t &mask, const uint32_t &offerType);
+std::string GetPaymentOptionsString(const uint32_t &paymentOptions);
+std::string GetOfferTypeString(const uint32_t &offerType);
 CChainParams::AddressType PaymentOptionToAddressType(const uint64_t &paymentOptions);
 
 class CAuctionOffer {
@@ -161,8 +161,8 @@ public:
 			READWRITE(vchOffer);
 			READWRITE(linkAliasTuple);
 	}
-	double GetPrice(const COfferLinkWhitelistEntry& entry=COfferLinkWhitelistEntry(), bool display = false) const;
-
+	double GetPrice(const COfferLinkWhitelistEntry& entry, bool display = false) const;
+	double GetPrice(bool display = false) const;
     inline friend bool operator==(const COffer &a, const COffer &b) {
 		return (
 			a.sCategory == b.sCategory
