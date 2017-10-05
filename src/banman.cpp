@@ -12,12 +12,12 @@
 
 
 BanMan::BanMan(fs::path ban_file, CClientUIInterface* client_interface, int64_t default_ban_time)
-    : clientInterface(client_interface), m_ban_db(std::move(ban_file)), m_default_ban_time(default_ban_time)
+    : m_client_interface(client_interface), m_ban_db(std::move(ban_file)), m_default_ban_time(default_ban_time)
 {
-    if (clientInterface) clientInterface->InitMessage(_("Loading banlist..."));
+    if (m_client_interface) m_client_interface->InitMessage(_("Loading banlist..."));
 
     int64_t nStart = GetTimeMillis();
-    setBannedIsDirty = false;
+    m_is_dirty = false;
     banmap_t banmap;
     if (m_ban_db.Read(banmap)) {
         SetBanned(banmap);        // thread save setter
@@ -59,18 +59,18 @@ void BanMan::DumpBanlist()
 void BanMan::ClearBanned()
 {
     {
-        LOCK(cs_setBanned);
-        setBanned.clear();
-        setBannedIsDirty = true;
+        LOCK(m_cs_banned);
+        m_banned.clear();
+        m_is_dirty = true;
     }
     DumpBanlist(); //store banlist to disk
-    if (clientInterface) clientInterface->BannedListChanged();
+    if (m_client_interface) m_client_interface->BannedListChanged();
 }
 
 bool BanMan::IsBanned(CNetAddr netAddr)
 {
-    LOCK(cs_setBanned);
-    for (const auto& it : setBanned) {
+    LOCK(m_cs_banned);
+    for (const auto& it : m_banned) {
         CSubNet subNet = it.first;
         CBanEntry banEntry = it.second;
 
@@ -83,9 +83,9 @@ bool BanMan::IsBanned(CNetAddr netAddr)
 
 bool BanMan::IsBanned(CSubNet subNet)
 {
-    LOCK(cs_setBanned);
-    banmap_t::iterator i = setBanned.find(subNet);
-    if (i != setBanned.end()) {
+    LOCK(m_cs_banned);
+    banmap_t::iterator i = m_banned.find(subNet);
+    if (i != m_banned.end()) {
         CBanEntry banEntry = (*i).second;
         if (GetTime() < banEntry.nBanUntil) {
             return true;
@@ -111,14 +111,14 @@ void BanMan::Ban(const CSubNet& subNet, const BanReason& banReason, int64_t bant
     banEntry.nBanUntil = (sinceUnixEpoch ? 0 : GetTime()) + bantimeoffset;
 
     {
-        LOCK(cs_setBanned);
-        if (setBanned[subNet].nBanUntil < banEntry.nBanUntil) {
-            setBanned[subNet] = banEntry;
-            setBannedIsDirty = true;
+        LOCK(m_cs_banned);
+        if (m_banned[subNet].nBanUntil < banEntry.nBanUntil) {
+            m_banned[subNet] = banEntry;
+            m_is_dirty = true;
         } else
             return;
     }
-    if (clientInterface) clientInterface->BannedListChanged();
+    if (m_client_interface) m_client_interface->BannedListChanged();
 
     //store banlist to disk immediately if user requested ban
     if (banReason == BanReasonManuallyAdded) DumpBanlist();
@@ -133,28 +133,28 @@ bool BanMan::Unban(const CNetAddr& netAddr)
 bool BanMan::Unban(const CSubNet& subNet)
 {
     {
-        LOCK(cs_setBanned);
-        if (setBanned.erase(subNet) == 0) return false;
-        setBannedIsDirty = true;
+        LOCK(m_cs_banned);
+        if (m_banned.erase(subNet) == 0) return false;
+        m_is_dirty = true;
     }
-    if (clientInterface) clientInterface->BannedListChanged();
+    if (m_client_interface) m_client_interface->BannedListChanged();
     DumpBanlist(); //store banlist to disk immediately
     return true;
 }
 
 void BanMan::GetBanned(banmap_t& banMap)
 {
-    LOCK(cs_setBanned);
+    LOCK(m_cs_banned);
     // Sweep the banlist so expired bans are not returned
     SweepBanned();
-    banMap = setBanned; //create a thread safe copy
+    banMap = m_banned; //create a thread safe copy
 }
 
 void BanMan::SetBanned(const banmap_t& banMap)
 {
-    LOCK(cs_setBanned);
-    setBanned = banMap;
-    setBannedIsDirty = true;
+    LOCK(m_cs_banned);
+    m_banned = banMap;
+    m_is_dirty = true;
 }
 
 void BanMan::SweepBanned()
@@ -162,14 +162,14 @@ void BanMan::SweepBanned()
     int64_t now = GetTime();
     bool notifyUI = false;
     {
-        LOCK(cs_setBanned);
-        banmap_t::iterator it = setBanned.begin();
-        while (it != setBanned.end()) {
+        LOCK(m_cs_banned);
+        banmap_t::iterator it = m_banned.begin();
+        while (it != m_banned.end()) {
             CSubNet subNet = (*it).first;
             CBanEntry banEntry = (*it).second;
             if (now > banEntry.nBanUntil) {
-                setBanned.erase(it++);
-                setBannedIsDirty = true;
+                m_banned.erase(it++);
+                m_is_dirty = true;
                 notifyUI = true;
                 LogPrint(BCLog::NET, "%s: Removed banned node ip/subnet from banlist.dat: %s\n", __func__, subNet.ToString());
             } else
@@ -177,19 +177,19 @@ void BanMan::SweepBanned()
         }
     }
     // update UI
-    if (notifyUI && clientInterface) {
-        clientInterface->BannedListChanged();
+    if (notifyUI && m_client_interface) {
+        m_client_interface->BannedListChanged();
     }
 }
 
 bool BanMan::BannedSetIsDirty()
 {
-    LOCK(cs_setBanned);
-    return setBannedIsDirty;
+    LOCK(m_cs_banned);
+    return m_is_dirty;
 }
 
 void BanMan::SetBannedSetDirty(bool dirty)
 {
-    LOCK(cs_setBanned); //reuse setBanned lock for the setBannedIsDirty flag
-    setBannedIsDirty = dirty;
+    LOCK(m_cs_banned); //reuse m_banned lock for the m_is_dirty flag
+    m_is_dirty = dirty;
 }

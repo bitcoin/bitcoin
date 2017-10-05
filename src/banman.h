@@ -57,10 +57,10 @@ private:
     //!clean unused entries (if bantime has expired)
     void SweepBanned();
 
-    banmap_t setBanned;
-    CCriticalSection cs_setBanned;
-    bool setBannedIsDirty;
-    CClientUIInterface* clientInterface = nullptr;
+    banmap_t m_banned;
+    CCriticalSection m_cs_banned;
+    bool m_is_dirty;
+    CClientUIInterface* m_client_interface = nullptr;
     CBanDB m_ban_db;
     int64_t m_default_ban_time;
 };
