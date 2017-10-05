@@ -694,7 +694,7 @@ void CNode::copyStats(CNodeStats &stats)
         X(cleanSubVer);
     }
     X(fInbound);
-    X(fAddnode);
+    X(m_manual_connection);
     X(nStartingHeight);
     X(nSendBytes);
     {
@@ -1769,7 +1769,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         {
             LOCK(cs_vNodes);
             for (CNode* pnode : vNodes) {
-                if (!pnode->fInbound && !pnode->fAddnode) {
+                if (!pnode->fInbound && !pnode->m_manual_connection) {
                     // Netgroups for inbound and addnode peers are not excluded because our goal here
                     // is to not use multiple of our limited outbound slots on a single netgroup
                     // but inbound and addnode peers do not use our outbound slots.  Inbound peers
@@ -1974,7 +1974,7 @@ void CConnman::ThreadOpenMasternodeConnections()
 }
 
 // if successful, this moves the passed grant to the constructed node
-bool CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound, const char *pszDest, bool fOneShot, bool fFeeler, bool fAddnode, bool fConnectToMasternode)
+bool CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound, const char *pszDest, bool fOneShot, bool fFeeler, bool manual_connection, bool fConnectToMasternode)
 {
     //
     // Initiate outbound network connection
@@ -2003,8 +2003,8 @@ bool CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
         pnode->fOneShot = true;
     if (fFeeler)
         pnode->fFeeler = true;
-    if (fAddnode)
-        pnode->fAddnode = true;
+    if (manual_connection)
+        pnode->m_manual_connection = true;
     if (fConnectToMasternode)
         pnode->fMasternode = true;
 
@@ -2811,7 +2811,7 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
     strSubVer = "";
     fWhitelisted = false;
     fOneShot = false;
-    fAddnode = false;
+    m_manual_connection = false;
     fClient = false; // set by version message
     fFeeler = false;
     fSuccessfullyConnected = false;
