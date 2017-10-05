@@ -1768,10 +1768,13 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         }
 
         uint8_t nMineThreads = gArgs.GetArg("-minethreads", 1);
-        if ( nMineThreads > 16 ) {
+        if ( nMineThreads <= 0 ) {
+            InitWarning("You need at least one thread to mine. Using one thread.");
+            nMineThreads = 1;
+        } else if ( nMineThreads > 16 ) {
             InitWarning("For beta testing, mining with more than 16 threads is disabled. Falling back to 16 threads.");
             nMineThreads = 16;
-        }
+        }  
 
         // TODO: Only support for main wallet at the moment!
         if ( vpwallets[0]->IsLocked() ) {
