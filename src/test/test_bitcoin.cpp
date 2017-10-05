@@ -17,21 +17,6 @@
 #include <rpc/register.h>
 #include <script/sigcache.h>
 
-void CConnmanTest::AddNode(CNode& node)
-{
-    LOCK(g_connman->cs_vNodes);
-    g_connman->vNodes.push_back(&node);
-}
-
-void CConnmanTest::ClearNodes()
-{
-    LOCK(g_connman->cs_vNodes);
-    for (CNode* node : g_connman->vNodes) {
-        delete node;
-    }
-    g_connman->vNodes.clear();
-}
-
 uint256 insecure_rand_seed = GetRandHash();
 FastRandomContext insecure_rand_ctx(insecure_rand_seed);
 
@@ -92,8 +77,6 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
         for (int i=0; i < nScriptCheckThreads-1; i++)
             threadGroup.create_thread(&ThreadScriptCheck);
         g_connman = std::unique_ptr<CConnman>(new CConnman(0x1337, 0x1337)); // Deterministic randomness for tests.
-        connman = g_connman.get();
-        peerLogic.reset(new PeerLogicValidation(connman, scheduler));
 }
 
 TestingSetup::~TestingSetup()
@@ -103,7 +86,6 @@ TestingSetup::~TestingSetup()
         GetMainSignals().FlushBackgroundCallbacks();
         GetMainSignals().UnregisterBackgroundSignalScheduler();
         g_connman.reset();
-        peerLogic.reset();
         UnloadBlockIndex();
         pcoinsTip.reset();
         pcoinsdbview.reset();

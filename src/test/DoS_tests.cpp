@@ -20,6 +20,23 @@
 
 #include <boost/test/unit_test.hpp>
 
+struct CConnmanTest : public CConnman {
+    using CConnman::CConnman;
+    void AddNode(CNode& node)
+    {
+        LOCK(cs_vNodes);
+        vNodes.push_back(&node);
+    }
+    void ClearNodes()
+    {
+        LOCK(cs_vNodes);
+        for (CNode* node : vNodes) {
+            delete node;
+        }
+        vNodes.clear();
+    }
+};
+
 // Tests these internal-to-net_processing.cpp methods:
 extern bool AddOrphanTx(const CTransactionRef& tx, NodeId peer);
 extern void EraseOrphansFor(NodeId peer);
@@ -54,6 +71,9 @@ BOOST_FIXTURE_TEST_SUITE(DoS_tests, TestingSetup)
 // work.
 BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
 {
+    auto connman = std::unique_ptr<CConnman>(new CConnman(0x1337, 0x1337));
+    auto peerLogic = std::unique_ptr<PeerLogicValidation>(new PeerLogicValidation(connman.get(), scheduler));
+
     std::atomic<bool> interruptDummy(false);
 
     // Mock an outbound peer
@@ -92,7 +112,7 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
     peerLogic->FinalizeNode(dummyNode1.GetId(), dummy);
 }
 
-void AddRandomOutboundPeer(std::vector<CNode *> &vNodes, PeerLogicValidation &peerLogic)
+void AddRandomOutboundPeer(std::vector<CNode *> &vNodes, PeerLogicValidation &peerLogic, CConnmanTest* connman)
 {
     CAddress addr(ip(GetRandInt(0xffffffff)), NODE_NONE);
     vNodes.emplace_back(new CNode(id++, ServiceFlags(NODE_NETWORK|NODE_WITNESS), 0, INVALID_SOCKET, addr, 0, 0, CAddress(), "", /*fInboundIn=*/ false));
@@ -103,11 +123,14 @@ void AddRandomOutboundPeer(std::vector<CNode *> &vNodes, PeerLogicValidation &pe
     node.nVersion = 1;
     node.fSuccessfullyConnected = true;
 
-    CConnmanTest::AddNode(node);
+    connman->AddNode(node);
 }
 
 BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
 {
+    auto connman = std::unique_ptr<CConnmanTest>(new CConnmanTest(0x1337, 0x1337));
+    auto peerLogic = std::unique_ptr<PeerLogicValidation>(new PeerLogicValidation(connman.get(), scheduler));
+
     const Consensus::Params& consensusParams = Params().GetConsensus();
     constexpr int nMaxOutbound = 8;
     CConnman::Options options;
@@ -120,7 +143,7 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
 
     // Mock some outbound peers
     for (int i=0; i<nMaxOutbound; ++i) {
-        AddRandomOutboundPeer(vNodes, *peerLogic);
+        AddRandomOutboundPeer(vNodes, *peerLogic, connman.get());
     }
 
     peerLogic->CheckForStaleTipAndEvictPeers(consensusParams);
@@ -145,7 +168,7 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
     // If we add one more peer, something should get marked for eviction
     // on the next check (since we're mocking the time to be in the future, the
     // required time connected check should be satisfied).
-    AddRandomOutboundPeer(vNodes, *peerLogic);
+    AddRandomOutboundPeer(vNodes, *peerLogic, connman.get());
 
     peerLogic->CheckForStaleTipAndEvictPeers(consensusParams);
     for (int i=0; i<nMaxOutbound; ++i) {
@@ -172,11 +195,13 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
         peerLogic->FinalizeNode(node->GetId(), dummy);
     }
 
-    CConnmanTest::ClearNodes();
+    connman->ClearNodes();
 }
 
 BOOST_AUTO_TEST_CASE(DoS_banning)
 {
+    auto connman = std::unique_ptr<CConnman>(new CConnman(0x1337, 0x1337));
+    auto peerLogic = std::unique_ptr<PeerLogicValidation>(new PeerLogicValidation(connman.get(), scheduler));
     std::atomic<bool> interruptDummy(false);
 
     connman->ClearBanned();
@@ -223,6 +248,8 @@ BOOST_AUTO_TEST_CASE(DoS_banning)
 
 BOOST_AUTO_TEST_CASE(DoS_banscore)
 {
+    auto connman = std::unique_ptr<CConnman>(new CConnman(0x1337, 0x1337));
+    auto peerLogic = std::unique_ptr<PeerLogicValidation>(new PeerLogicValidation(connman.get(), scheduler));
     std::atomic<bool> interruptDummy(false);
 
     connman->ClearBanned();
@@ -260,6 +287,8 @@ BOOST_AUTO_TEST_CASE(DoS_banscore)
 
 BOOST_AUTO_TEST_CASE(DoS_bantime)
 {
+    auto connman = std::unique_ptr<CConnman>(new CConnman(0x1337, 0x1337));
+    auto peerLogic = std::unique_ptr<PeerLogicValidation>(new PeerLogicValidation(connman.get(), scheduler));
     std::atomic<bool> interruptDummy(false);
 
     connman->ClearBanned();
