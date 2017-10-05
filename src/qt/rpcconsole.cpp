@@ -313,6 +313,9 @@ void RPCConsole::setClientModel(ClientModel *model)
         setThroneCount(model->getThroneCountString());
         connect(model, SIGNAL(strThronesChanged(QString)), this, SLOT(setThroneCount(QString)));
 
+        setSystemnodeCount(model->getSystemnodeCountString());
+        connect(model, SIGNAL(strSystemnodesChanged(QString)), this, SLOT(setSystemnodeCount(QString)));
+
         updateTrafficStats(model->getTotalBytesRecv(), model->getTotalBytesSent());
         connect(model, SIGNAL(bytesChanged(quint64,quint64)), this, SLOT(updateTrafficStats(quint64, quint64)));
 
@@ -488,6 +491,11 @@ void RPCConsole::setNumBlocks(int count)
 void RPCConsole::setThroneCount(const QString &strThrones)
 {
     ui->throneCount->setText(strThrones);
+}
+
+void RPCConsole::setSystemnodeCount(const QString &strSystemnodes)
+{
+    ui->systemnodeCount->setText(strSystemnodes);
 }
 
 void RPCConsole::on_lineEdit_returnPressed()

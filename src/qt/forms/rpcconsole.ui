@@ -47,6 +47,13 @@
          </property>
         </widget>
        </item>
+       <item row="11" column="1">
+        <widget class="QLabel" name="systemnodeCount">
+         <property name="text">
+          <string>N/A</string>
+         </property>
+        </widget>
+       </item>
        <item row="1" column="1">
         <widget class="QLabel" name="clientName">
          <property name="cursor">
@@ -326,6 +333,13 @@
         <widget class="QLabel" name="throneCountLabel">
          <property name="text">
           <string>Number of Thrones</string>
+         </property>
+        </widget>
+       </item>
+       <item row="11" column="0">
+        <widget class="QLabel" name="systemnodeCountLabel">
+         <property name="text">
+          <string>Number of Systemnodes</string>
          </property>
         </widget>
        </item>

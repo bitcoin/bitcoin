@@ -7,6 +7,7 @@
 
 #include "amount.h"
 #include "thronelist.h"
+#include "systemnodelist.h"
 #include "multisigdialog.h"
 
 #include <QStackedWidget>
@@ -65,6 +66,7 @@ private:
     ReceiveCoinsDialog *receiveCoinsPage;
     SendCoinsDialog *sendCoinsPage;
     ThroneList *throneListPage;
+    SystemnodeList *systemnodeListPage;
     MultisigDialog *multisigPage;
 
     TransactionView *transactionView;

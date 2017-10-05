@@ -72,6 +72,9 @@ WalletView::WalletView(QWidget *parent):
     if (throneConfig.getCount() >= 0) {
         throneListPage = new ThroneList();
     }
+    if (systemnodeConfig.getCount() >= 0) {
+        systemnodeListPage = new SystemnodeList();
+    }
 
     addWidget(overviewPage);
     addWidget(transactionsPage);
@@ -79,6 +82,9 @@ WalletView::WalletView(QWidget *parent):
     addWidget(sendCoinsPage);
     if (throneConfig.getCount() >= 0) {
         addWidget(throneListPage);
+    }
+    if (systemnodeConfig.getCount() >= 0) {
+        addWidget(systemnodeListPage);
     }
 
     // Clicking on a transaction on the overview pre-selects the transaction on the transaction history page
@@ -130,6 +136,9 @@ void WalletView::setClientModel(ClientModel *clientModel)
     if (throneConfig.getCount() >= 0) {
         throneListPage->setClientModel(clientModel);
     }
+    if (systemnodeConfig.getCount() >= 0) {
+        systemnodeListPage->setClientModel(clientModel);
+    }
 }
 
 void WalletView::setWalletModel(WalletModel *walletModel)
@@ -143,6 +152,9 @@ void WalletView::setWalletModel(WalletModel *walletModel)
     sendCoinsPage->setModel(walletModel);
     if (throneConfig.getCount() >= 0) {
         throneListPage->setWalletModel(walletModel);
+    }
+    if (systemnodeConfig.getCount() >= 0) {
+        systemnodeListPage->setWalletModel(walletModel);
     }
 
     if (walletModel)
@@ -217,7 +229,7 @@ void WalletView::gotoThronePage()
 void WalletView::gotoSystemnodePage()
 {
     if (systemnodeConfig.getCount() >= 0) {
-        // To be defined
+        setCurrentWidget(systemnodeListPage);
     }
 }
 
