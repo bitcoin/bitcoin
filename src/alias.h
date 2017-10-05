@@ -97,9 +97,10 @@ public:
 	inline bool IsNull() const { return (aliasLinkVchRand.empty() && nDiscountPct == 0); }
 
 };
+typedef std::map<const std::vector<unsigned char>, COfferLinkWhitelistEntry> whitelistMap_t;
 struct COfferLinkWhitelist {
 public:
-	std::map<const std::vector<unsigned char>, COfferLinkWhitelistEntry> entries;
+	whitelistMap_t entries;
 	COfferLinkWhitelist() {
 		SetNull();
 	}
