@@ -116,7 +116,7 @@ public:
 		entries.erase(ahash);
 	}
 	inline void PutWhitelistEntry(const COfferLinkWhitelistEntry &theEntry) {
-		if (!entries[theEntry.aliasLinkVchRand].IsNull()) {
+		if (entries.count(theEntry.aliasLinkVchRand) > 0) {
 			entries[theEntry.aliasLinkVchRand] = theEntry;
 			return;
 		}

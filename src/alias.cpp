@@ -2504,21 +2504,20 @@ UniValue aliaswhitelist(const UniValue& params, bool fHelp) {
 	if (!GetAlias(vchAlias, theAlias))
 		throw runtime_error("could not find an offer with this guid");
 
-	while (auto const &it : theAlias.offerWhitelist.entries)
+	for (auto const &it : theAlias.offerWhitelist.entries)
 	{
 		const COfferLinkWhitelistEntry& entry = it.second;
 		UniValue oList(UniValue::VOBJ);
 		oList.push_back(Pair("alias", stringFromVch(entry.aliasLinkVchRand)));
 		oList.push_back(Pair("discount_percentage", entry.nDiscountPct));
 		oRes.push_back(oList);
-		it++;
 	}
 	return oRes;
 }
 bool COfferLinkWhitelist::GetLinkEntryByHash(const std::vector<unsigned char> &ahash, COfferLinkWhitelistEntry &entry) const {
 	entry.SetNull();
-	if (!entries[ahash].IsNull()) {
-		entry = entries[ahash];
+	if (entries.count(ahash) > 0) {
+		entry = entries.at(ahash);
 		return true;
 	}
 	return false;
