@@ -651,7 +651,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					}
 					else
 					{
-						while (auto const &it : theAlias.offerWhitelist.entries)
+						for (auto const &it : theAlias.offerWhitelist.entries)
 						{
 							COfferLinkWhitelistEntry entry;
 							const COfferLinkWhitelistEntry& newEntry = it.second;
@@ -674,7 +674,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 									errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1094 -" + _("Too many affiliates for this whitelist, maximum 20 entries allowed");
 								}
 							}
-							it++;
 						}
 					}
 					theAlias.offerWhitelist = dbAlias.offerWhitelist;
