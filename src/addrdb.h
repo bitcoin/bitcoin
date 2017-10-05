@@ -94,7 +94,7 @@ class CBanDB
 private:
     fs::path pathBanlist;
 public:
-    CBanDB();
+    explicit CBanDB(fs::path pathBanlist);
     bool Write(const banmap_t& banSet);
     bool Read(banmap_t& banSet);
 };

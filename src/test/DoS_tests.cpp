@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
 
 BOOST_AUTO_TEST_CASE(DoS_banning)
 {
-    auto banman = std::unique_ptr<BanMan>(new BanMan(nullptr));
+    auto banman = std::unique_ptr<BanMan>(new BanMan(GetDataDir() / "banlist.dat", nullptr));
     auto connman = std::unique_ptr<CConnman>(new CConnman(0x1337, 0x1337));
     auto peerLogic = std::unique_ptr<PeerLogicValidation>(new PeerLogicValidation(connman.get(), banman.get(), scheduler));
     std::atomic<bool> interruptDummy(false);
@@ -249,7 +249,7 @@ BOOST_AUTO_TEST_CASE(DoS_banning)
 
 BOOST_AUTO_TEST_CASE(DoS_banscore)
 {
-    auto banman = std::unique_ptr<BanMan>(new BanMan(nullptr));
+    auto banman = std::unique_ptr<BanMan>(new BanMan(GetDataDir() / "banlist.dat", nullptr));
     auto connman = std::unique_ptr<CConnman>(new CConnman(0x1337, 0x1337));
     auto peerLogic = std::unique_ptr<PeerLogicValidation>(new PeerLogicValidation(connman.get(), banman.get(), scheduler));
     std::atomic<bool> interruptDummy(false);
@@ -289,7 +289,7 @@ BOOST_AUTO_TEST_CASE(DoS_banscore)
 
 BOOST_AUTO_TEST_CASE(DoS_bantime)
 {
-    auto banman = std::unique_ptr<BanMan>(new BanMan(nullptr));
+    auto banman = std::unique_ptr<BanMan>(new BanMan(GetDataDir() / "banlist.dat", nullptr));
     auto connman = std::unique_ptr<CConnman>(new CConnman(0x1337, 0x1337));
     auto peerLogic = std::unique_ptr<PeerLogicValidation>(new PeerLogicValidation(connman.get(), banman.get(), scheduler));
     std::atomic<bool> interruptDummy(false);
