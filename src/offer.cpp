@@ -546,7 +546,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1027 - " + _("Invalid offer type");
 				return error(errorMessage.c_str());
 			}
-			if(!theOffer.linkWhitelist.entries.empty() && theOffer.linkWhitelist.entries[0].nDiscountPct > 99 && theOffer.linkWhitelist.entries[0].nDiscountPct != 127)
 			if ( theOffer.vchOffer != vvchArgs[0])
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1029 - " + _("Offer input and offer guid mismatch");
@@ -665,6 +664,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1051 - " + _("Linked offer alias not found. It may be expired");
 					return true;
 				}
+				if (theAlias.offerWhitelist.GetLinkEntryByHash(theOffer.aliasTuple.first, entry))
 				{
 					if (nCommission.nCommission <= -entry.nDiscountPct)
 					{
@@ -672,12 +672,16 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					}
 				}
 				// make sure alias exists in the root offer affiliate list
+				else
+				{
 					throw runtime_error("SYSCOIN_OFFER_RPC_ERROR: ERRCODE: 1515 - " + _("Cannot find this alias in the parent offer affiliate list"));
 				}
 
 				if (!linkOffer.linkOfferTuple.first.empty())
 				{
 					throw runtime_error("SYSCOIN_OFFER_RPC_ERROR: ERRCODE: 1516 - " + _("Cannot link to an offer that is already linked to another offer"));
+				}
+				else if (linkOffer.sCategory.size() > 0 && boost::algorithm::istarts_with(stringFromVch(linkOffer.sCategory), "wanted"))
 				{
 					throw runtime_error("SYSCOIN_OFFER_RPC_ERROR: ERRCODE: 1517 - " + _("Cannot link to a wanted offer"));
 				}
@@ -687,6 +691,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				theOffer.fPrice = linkOffer.fPrice;
 				theOffer.paymentOptions = linkOffer.paymentOptions;
 				theOffer.fUnits = linkOffer.fUnits;
+				theOffer.offerType = linkOffer.offerType;
 				theOffer.sCurrencyCode = linkOffer.sCurrencyCode;
 				theOffer.auctionOffer = linkOffer.auctionOffer;
 			}
