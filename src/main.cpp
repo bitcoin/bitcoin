@@ -4989,6 +4989,8 @@ bool LoadExternalBlockFile(const CChainParams &chainparams, FILE *fileIn, CDiskB
             unsigned int nSize = 0;
             try
             {
+                // even if chainparams.MessageStart() is commonly used as network magic id
+                // in this case is also used to separate blocks stored on disk on a block file.
                 // locate a header
                 unsigned char buf[MESSAGE_START_SIZE];
                 blkdat.FindByte(chainparams.MessageStart()[0]);
