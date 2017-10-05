@@ -122,24 +122,24 @@ public:
     }
     bool getBanned(banmap_t& banmap) override
     {
-        if (g_connman) {
-            g_connman->GetBanned(banmap);
+        if (g_banman) {
+            g_banman->GetBanned(banmap);
             return true;
         }
         return false;
     }
     bool ban(const CNetAddr& net_addr, BanReason reason, int64_t ban_time_offset) override
     {
-        if (g_connman) {
-            g_connman->Ban(net_addr, reason, ban_time_offset);
+        if (g_banman) {
+            g_banman->Ban(net_addr, reason, ban_time_offset);
             return true;
         }
         return false;
     }
     bool unban(const CSubNet& ip) override
     {
-        if (g_connman) {
-            g_connman->Unban(ip);
+        if (g_banman) {
+            g_banman->Unban(ip);
             return true;
         }
         return false;
