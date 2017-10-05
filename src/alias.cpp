@@ -655,8 +655,8 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							COfferLinkWhitelistEntry entry;
 							const COfferLinkWhitelistEntry &newEntry = theAlias.offerWhitelist.entries[x];
 							if (newEntry.nDiscountPct > 99) {
-								newEntry.nDiscountPct = 99;
 								errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1094 -" + _("Whitelist discount must be between 0 and 99");
+								continue;
 							}
 							// the stored whitelist has this entry (and its the same) then we want to remove this entry
 							if (dbAlias.offerWhitelist.GetLinkEntryByHash(newEntry.aliasLinkVchRand, entry) && newEntry == entry)
@@ -675,7 +675,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							}
 						}
 					}
-					theAlias.offerWhitelist = dbAlias.offerWhiteList;
+					theAlias.offerWhitelist = dbAlias.offerWhitelist;
 				}
 			}
 			else
@@ -2295,7 +2295,7 @@ UniValue aliasupdatewhitelist(const UniValue& params, bool fHelp) {
 	if (fHelp || params.size() < 2 || params.size() > 4)
 		throw runtime_error(
 			"aliasupdatewhitelist <owner alias> [{\"alias\":\"aliasname\",\"discount_percentage\":n},...] [witness]\n"
-			"Update to the whitelist(controls who can resell). Array of whitelist entries in parameter 1.\n
+			"Update to the whitelist(controls who can resell). Array of whitelist entries in parameter 1.\n"
 			"To add to list, include a new alias/discount percentage that does not exist in the whitelist.\n"
 			"To update entry, change the discount percentage of an existing whitelist entry.\n"
 			"To remove whitelist entry, pass the whilelist entry without changing discount percentage.\n"
