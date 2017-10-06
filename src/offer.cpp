@@ -1580,7 +1580,7 @@ bool BuildOfferJson(const COffer& theOffer, UniValue& oOffer)
 
 	return true;
 }
-std::string GetOfferTypeString(const uint64_t &offerType)
+std::string GetOfferTypeString(const uint32_t &offerType)
 {
 	vector<std::string> types;
 	if(IsPaymentOptionInMask(offerType, OFFERTYPE_BUYNOW)) {

@@ -46,7 +46,7 @@ bool ValidateOfferTypeString(const std::string &offerTypeString);
 bool IsValidOfferType(const uint32_t &offerTypeMask);
 uint32_t GetOfferTypeMaskFromString(const std::string &offerTypeString);
 bool IsOfferTypeInMask(const uint32_t &mask, const uint32_t &offerType);
-std::string GetPaymentOptionsString(const uint32_t &paymentOptions);
+std::string GetPaymentOptionsString(const uint64_t &paymentOptions);
 std::string GetOfferTypeString(const uint32_t &offerType);
 CChainParams::AddressType PaymentOptionToAddressType(const uint64_t &paymentOptions);
 
