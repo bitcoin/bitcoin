@@ -313,6 +313,9 @@ void RPCConsole::setClientModel(ClientModel *model)
         setMasternodeCount(model->getMasternodeCountString());
         connect(model, SIGNAL(strMasternodesChanged(QString)), this, SLOT(setMasternodeCount(QString)));
 
+        setSystemnodeCount(model->getSystemnodeCountString());
+        connect(model, SIGNAL(strSystemnodesChanged(QString)), this, SLOT(setSystemnodeCount(QString)));
+
         updateTrafficStats(model->getTotalBytesRecv(), model->getTotalBytesSent());
         connect(model, SIGNAL(bytesChanged(quint64,quint64)), this, SLOT(updateTrafficStats(quint64, quint64)));
 
@@ -488,6 +491,11 @@ void RPCConsole::setNumBlocks(int count)
 void RPCConsole::setMasternodeCount(const QString &strMasternodes)
 {
     ui->masternodeCount->setText(strMasternodes);
+}
+
+void RPCConsole::setSystemnodeCount(const QString &strSystemnodes)
+{
+    ui->systemnodeCount->setText(strSystemnodes);
 }
 
 void RPCConsole::on_lineEdit_returnPressed()

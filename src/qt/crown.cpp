@@ -25,6 +25,7 @@
 #include "walletmodel.h"
 #endif
 #include "masternodeconfig.h"
+#include "systemnodeconfig.h"
 
 #include "init.h"
 #include "main.h"
@@ -637,6 +638,12 @@ int main(int argc, char *argv[])
     if(!masternodeConfig.read(strErr)) {
         QMessageBox::critical(0, QObject::tr("Crown Core"),
                               QObject::tr("Error reading masternode configuration file: %1").arg(strErr.c_str()));
+        return false;
+    }
+
+    if(!systemnodeConfig.read(strErr)) {
+        QMessageBox::critical(0, QObject::tr("Crown Core"),
+                              QObject::tr("Error reading systemnode configuration file: %1").arg(strErr.c_str()));
         return false;
     }
 

@@ -18,6 +18,7 @@
 #include "rpcconsole.h"
 #include "utilitydialog.h"
 #include "masternodeconfig.h"
+#include "systemnodeconfig.h"
 #include "masternodelist.h"
 
 #ifdef ENABLE_WALLET
@@ -79,6 +80,7 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
     overviewAction(0),
     historyAction(0),
     masternodeAction(0),
+    systemnodeAction(0),
     quitAction(0),
     sendCoinsAction(0),
     usedSendingAddressesAction(0),
@@ -324,6 +326,21 @@ void BitcoinGUI::createActions(const NetworkStyle *networkStyle)
         connect(masternodeAction, SIGNAL(triggered()), this, SLOT(gotoMasternodePage()));
     }
 
+    if (systemnodeConfig.getCount() >= 0) {
+        systemnodeAction = new QAction(QIcon(":/icons/throne"), tr("&Systemnodes"), this);
+        systemnodeAction->setStatusTip(tr("Browse systemnodes"));
+        systemnodeAction->setToolTip(systemnodeAction->statusTip());
+        systemnodeAction->setCheckable(true);
+#ifdef Q_OS_MAC
+        systemnodeAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_6));
+#else
+        systemnodeAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_6));
+#endif
+        tabGroup->addAction(systemnodeAction);
+        connect(systemnodeAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+        connect(systemnodeAction, SIGNAL(triggered()), this, SLOT(gotoSystemnodePage()));
+    }
+
 #ifdef Q_OS_MAC
     receiveCoinsAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_5));
 #else
@@ -527,6 +544,10 @@ void BitcoinGUI::createToolBars()
         {
             toolbar->addAction(masternodeAction);
         }
+        if (systemnodeConfig.getCount() >= 0)
+        {
+            toolbar->addAction(systemnodeAction);
+        }
         toolbar->setMovable(false); // remove unused icon in upper left corner
         overviewAction->setChecked(true);
 
@@ -619,6 +640,9 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
     historyAction->setEnabled(enabled);
     if (masternodeConfig.getCount() >= 0) {
         masternodeAction->setEnabled(enabled);
+    }
+    if (systemnodeConfig.getCount() >= 0) {
+        systemnodeAction->setEnabled(enabled);
     }
     encryptWalletAction->setEnabled(enabled);
     backupWalletAction->setEnabled(enabled);
@@ -751,6 +775,14 @@ void BitcoinGUI::gotoMasternodePage()
     if (masternodeConfig.getCount() >= 0) {
         masternodeAction->setChecked(true);
         if (walletFrame) walletFrame->gotoMasternodePage();
+    }
+}
+
+void BitcoinGUI::gotoSystemnodePage()
+{
+    if (systemnodeConfig.getCount() >= 0) {
+        systemnodeAction->setChecked(true);
+        if (walletFrame) walletFrame->gotoSystemnodePage();
     }
 }
 

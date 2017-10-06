@@ -71,6 +71,7 @@ endif
 # crown core #
 BITCOIN_CORE_H = \
   activemasternode.h \
+  activesystemnode.h \
   addrman.h \
   alert.h \
   amount.h \
@@ -140,6 +141,10 @@ BITCOIN_CORE_H = \
   masternode-sync.h \
   masternodeman.h \
   masternodeconfig.h \
+  systemnode.h \
+  systemnode-sync.h \
+  systemnodeman.h \
+  systemnodeconfig.h \
   threadsafety.h \
   timedata.h \
   tinyformat.h \
@@ -198,6 +203,7 @@ libbitcoin_server_a_SOURCES = \
   rpcservice.cpp \
   rpcmasternode.cpp \
   rpcmasternode-budget.cpp \
+  rpcsystemnode.cpp \
   rpcmining.cpp \
   rpcmisc.cpp \
   rpcnet.cpp \
@@ -215,6 +221,7 @@ libbitcoin_server_a_SOURCES = \
 libbitcoin_wallet_a_CPPFLAGS = $(BITCOIN_INCLUDES)
 libbitcoin_wallet_a_SOURCES = \
   activemasternode.cpp \
+  activesystemnode.cpp \
   legacysigner.cpp \
   db.cpp \
   crypter.cpp \
@@ -225,6 +232,10 @@ libbitcoin_wallet_a_SOURCES = \
   masternode-sync.cpp \
   masternodeconfig.cpp \
   masternodeman.cpp \
+  systemnode-sync.cpp \
+  systemnode.cpp \
+  systemnodeconfig.cpp \
+  systemnodeman.cpp \
   rpcdump.cpp \
   rpcwallet.cpp \
   wallet.cpp \

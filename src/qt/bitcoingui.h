@@ -92,6 +92,7 @@ private:
     QAction *overviewAction;
     QAction *historyAction;
     QAction *masternodeAction;
+    QAction *systemnodeAction;
     QAction *quitAction;
     QAction *sendCoinsAction;
     QAction *usedSendingAddressesAction;
@@ -205,6 +206,8 @@ private slots:
     void gotoVerifyMessageTab(QString addr = "");
     /** Switch to masternode manager page */
     void gotoMasternodePage();
+    /** Switch to systemnode manager page */
+    void gotoSystemnodePage();
     /** Switch to multisig tab */
     void gotoMultisigTab();
 

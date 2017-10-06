@@ -232,10 +232,14 @@ extern json_spirit::Value spork(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value masternode(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value masternodelist(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value masternodebroadcast(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value systemnode(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value systemnodelist(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value systemnodebroadcast(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value mnbudget(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value mnbudgetvoteraw(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value mnfinalbudget(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value mnsync(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value snsync(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value service(const json_spirit::Array& params, bool fHelp);
 
 // in rest.cpp

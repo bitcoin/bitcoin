@@ -104,8 +104,11 @@ using namespace std;
 
 //Crown only features
 bool fMasterNode = false;
+bool fSystemNode = false;
 string strMasterNodePrivKey = "";
 string strMasterNodeAddr = "";
+string strSystemNodePrivKey = "";
+string strSystemNodeAddr = "";
 bool fLiteMode = false;
 bool fEnableInstantX = true;
 int nInstantXDepth = 5;
@@ -486,6 +489,13 @@ boost::filesystem::path GetConfigFile()
 boost::filesystem::path GetMasternodeConfigFile()
 {
     boost::filesystem::path pathConfigFile(GetArg("-mnconf", "masternode.conf"));
+    if (!pathConfigFile.is_complete()) pathConfigFile = GetDataDir() / pathConfigFile;
+    return pathConfigFile;
+}
+
+boost::filesystem::path GetSystemnodeConfigFile()
+{
+    boost::filesystem::path pathConfigFile(GetArg("-mnconf", "systemnode.conf"));
     if (!pathConfigFile.is_complete()) pathConfigFile = GetDataDir() / pathConfigFile;
     return pathConfigFile;
 }
