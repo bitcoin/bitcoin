@@ -2512,8 +2512,13 @@ UniValue aliaswhitelist(const UniValue& params, bool fHelp) {
 }
 bool COfferLinkWhitelist::GetLinkEntryByHash(const std::vector<unsigned char> &ahash, COfferLinkWhitelistEntry &entry) const {
 	entry.SetNull();
+	const vector<unsigned char> allAliases = vchFromString("*");
 	if (entries.count(ahash) > 0) {
 		entry = entries.at(ahash);
+		return true;
+	}
+	else if(entries.count(allAliases) > 0) {
+		entry = entries.at(allAliases);
 		return true;
 	}
 	return false;

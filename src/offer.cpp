@@ -611,7 +611,11 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 
 				if (IsOfferTypeInMask(dbOffer.offerType, OFFERTYPE_AUCTION))
 				{
-
+					if (!IsOfferTypeInMask(theOffer.offerType, OFFERTYPE_AUCTION))
+					{
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1024 - " + _("Cannot change to this offer type until auction expires");
+						return true;
+					}
 					if (theOffer.auctionOffer.fReservePrice < 0)
 					{
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1024 - " + _("Reserve price must be greator or equal to 0");
