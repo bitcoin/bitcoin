@@ -2982,92 +2982,122 @@ UniValue filtertransactions(const JSONRPCRequest &request)
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
         return NullUniValue;
     
-    if (request.fHelp || request.params.size() > 6)
+    if (request.fHelp || request.params.size() > 1)
         throw std::runtime_error(
-            "filtertransactions [count:10] [skip:0] [include_watchonly:false] [search:''] [category:'all'] [sort:'time']\n"
+            "filtertransactions [options]\n"
             "List transactions.\n"
-            "\tcount: number of entries to be displayed\n"
-            "\t\tcount > 0\n"
-            "\tskip: number of entries to skip\n"
-            "\t\tskip >= 0\n"
-            "\tinclude_watchonly: whether to include watchOnly transactions\n"
-            "\t\tbool string\n"
-            "\tsearch: a query to find in addresses and amounts\n"
-            "\t\tquery string\n"
-            "\tcategory: select only one category of entries to return\n"
-            "\t\tall, send, orphan, immature, coinbase, receive, orphaned_stake, stake, internal_transfer\n"
-            "\tsort: sort entries by criteria\n"
-            "\t\ttime (most recent first), address (alphabetical), category (alphabetical), amount (biggest first), confirmations (most confirmations first), txid (alphabetical)\n"
+            "1. options (json, optional) : A configuration object for the query\n"
+            "\n"
+            "\tAll keys are optional. Default values are:\n"
+            "\t{\n"
+            "\t\t\"count\": \t\t10,\n"
+            "\t\t\"skip\": \t\t0,\n"
+            "\t\t\"include_watchonly\": \tfalse,\n"
+            "\t\t\"search\": \t\t''\n"
+            "\t\t\"category\": \t\t'all',\n"
+            "\t\t\"sort\": \t\t'time'\n"
+            "\t}\n"
+            "\n"
+            "\texpected values are as follows:\n"
+            "\t\tcount: \t\t\tnumber of entries to be displayed\n"
+            "\t\t\t\t\tcount > 0\n"
+            "\t\tskip: \t\t\tnumber of entries to skip\n"
+            "\t\t\t\t\tskip >= 0\n"
+            "\t\tinclude_watchonly: \twhether to include watchOnly transactions\n"
+            "\t\t\t\t\tbool string\n"
+            "\t\tsearch: \t\ta query to find in addresses and amounts\n"
+            "\t\t\t\t\tquery string\n"
+            "\t\tcategory: \t\tselect only one category of entries to return\n"
+            "\t\t\t\t\tall, send, orphan, immature, coinbase, receive,\n"
+            "\t\t\t\t\torphaned_stake, stake, internal_transfer\n"
+            "\t\tsort: \t\t\tsort entries by criteria\n"
+            "\t\t\t\t\ttime \t\tmost recent first\n"
+            "\t\t\t\t\taddress \talphabetical\n"
+            "\t\t\t\t\tcategory \talphabetical\n"
+            "\t\t\t\t\tamount \t\tbiggest first\n"
+            "\t\t\t\t\tconfirmations \tmost confirmations first\n"
+            "\t\t\t\t\ttxid \t\talphabetical\n"
         );
     
     LOCK2(cs_main, pwallet->cs_wallet);
     
-    // arguments parsing
-    unsigned int count = 10;
-    if (!request.params[0].isNull()) {
-        RPCTypeCheckArgument(request.params[0], UniValue::VNUM);
-        count = request.params[0].get_int();
-        if (count < 1) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER,
-                strprintf("Invalid count: %i.", count));
-        }
-    }
-    int skip = 0;
-    if (!request.params[1].isNull()) {
-        RPCTypeCheckArgument(request.params[1], UniValue::VNUM);
-        skip = request.params[1].get_int();
-        if (skip < 0) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER,
-                strprintf("Invalid skip number: %i.", skip));
-        }
-    }
+    unsigned int count     = 10;
+    int          skip      = 0;
     isminefilter watchonly = ISMINE_SPENDABLE;
-    if (!request.params[2].isNull()) {
-        RPCTypeCheckArgument(request.params[2], UniValue::VBOOL);
-        if (request.params[2].get_bool()) {
-            watchonly = watchonly | ISMINE_WATCH_ONLY;
+    std::string  search    = "";
+    std::string  category  = "all";
+    std::string  sort      = "time";
+    
+    if (!request.params[0].isNull()) {
+        const UniValue & options = request.params[0].get_obj();
+        RPCTypeCheckObj(options,
+            {
+                {"count",     UniValueType(UniValue::VNUM)},
+                {"skip",      UniValueType(UniValue::VNUM)},
+                {"watchonly", UniValueType(UniValue::VBOOL)},
+                {"search",    UniValueType(UniValue::VSTR)},
+                {"category",  UniValueType(UniValue::VSTR)},
+                {"sort",      UniValueType(UniValue::VSTR)}
+            },
+            true,             // alow null
+            false             // strict
+        );
+        if (options.exists("count")) {
+            count = options["count"].get_int();
+            if (count < 1) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER,
+                    strprintf("Invalid count: %i.", count));
+            }
         }
-    }
-    std::string search = "";
-    if (!request.params[3].isNull()) {
-        RPCTypeCheckArgument(request.params[3], UniValue::VSTR);
-        search = request.params[3].get_str();
-    }
-    std::string category = "all";
-    if (!request.params[4].isNull()) {
-        RPCTypeCheckArgument(request.params[4], UniValue::VSTR);
-        category = request.params[4].get_str();
-        std::vector<std::string> categories = {
-            "all",
-            "send",
-            "orphan",
-            "immature",
-            "coinbase",
-            "receive",
-            "orphaned_stake",
-            "stake",
-            "internal_transfer"
-        };
-        if (std::find(categories.begin(), categories.end(), category) == categories.end()) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER,
-                strprintf("Invalid category: %s.", category));
+        if (options.exists("skip")) {
+            skip = options["skip"].get_int();
+            if (skip < 0) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER,
+                    strprintf("Invalid skip number: %i.", skip));
+            }
         }
-    }
-    std::string sort = "time";
-    if (!request.params[5].isNull()) {
-        RPCTypeCheckArgument(request.params[5], UniValue::VSTR);
-        sort = request.params[5].get_str();
-        std::vector<std::string> sorts = {
-            "time",
-            "address",
-            "category",
-            "amount",
-            "confirmations",
-            "txid"
-        };
-        if (std::find(sorts.begin(), sorts.end(), sort) == sorts.end()) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER,
-                strprintf("Invalid sort: %s.", sort));
+        if (options.exists("watchonly")) {
+            if (options["watchonly"].get_bool()) {
+                watchonly = watchonly | ISMINE_WATCH_ONLY;
+            }
+        }
+        if (options.exists("search")) {
+            search = options["search"].get_str();
+        }
+        if (options.exists("category")) {
+            category = options["category"].get_str();
+            std::vector<std::string> categories = {
+                "all",
+                "send",
+                "orphan",
+                "immature",
+                "coinbase",
+                "receive",
+                "orphaned_stake",
+                "stake",
+                "internal_transfer"
+            };
+            auto it = std::find(categories.begin(), categories.end(), category);
+            if (it == categories.end()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER,
+                    strprintf("Invalid category: %s.", category));
+            }
+        }
+        if (options.exists("sort")) {
+            sort = options["sort"].get_str();
+            std::vector<std::string> sorts = {
+                "time",
+                "address",
+                "category",
+                "amount",
+                "confirmations",
+                "txid"
+            };
+            auto it = std::find(sorts.begin(), sorts.end(), sort);
+            if (it == sorts.end()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER,
+                    strprintf("Invalid sort: %s.", sort));
+            }
         }
     }
     
