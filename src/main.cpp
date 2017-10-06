@@ -4319,21 +4319,6 @@ void static ProcessGetData(CNode* pfrom)
                     }
                 }
 
-                if (!pushed && inv.type == MSG_DSTX) {       
-                    if(mapDarksendBroadcastTxes.count(inv.hash)){
-                        CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-                        ss.reserve(1000);
-                        ss <<
-                            mapDarksendBroadcastTxes[inv.hash].tx <<
-                            mapDarksendBroadcastTxes[inv.hash].vin <<
-                            mapDarksendBroadcastTxes[inv.hash].vchSig <<
-                            mapDarksendBroadcastTxes[inv.hash].sigTime;
-
-                        pfrom->PushMessage("dstx", ss);
-                        pushed = true;
-                    }
-                }
-
 
                 if (!pushed) {
                     vNotFound.push_back(inv);

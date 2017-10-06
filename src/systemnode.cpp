@@ -6,7 +6,7 @@
 #include "systemnodeman.h"
 #include "systemnode-sync.h"
 #include "activesystemnode.h"
-#include "darksend.h"
+#include "legacysigner.h"
 #include "util.h"
 #include "sync.h"
 #include "addrman.h"
@@ -42,12 +42,12 @@ bool CSystemnodePing::Sign(CKey& keySystemnode, CPubKey& pubKeySystemnode)
     sigTime = GetAdjustedTime();
     std::string strMessage = vin.ToString() + blockHash.ToString() + boost::lexical_cast<std::string>(sigTime);
 
-    if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchSig, keySystemnode)) {
+    if(!legacySigner.SignMessage(strMessage, errorMessage, vchSig, keySystemnode)) {
         LogPrintf("CSystemnodePing::Sign() - Error: %s\n", errorMessage);
         return false;
     }
 
-    if(!darkSendSigner.VerifyMessage(pubKeySystemnode, vchSig, strMessage, errorMessage)) {
+    if(!legacySigner.VerifyMessage(pubKeySystemnode, vchSig, strMessage, errorMessage)) {
         LogPrintf("CSystemnodePing::Sign() - Error: %s\n", errorMessage);
         return false;
     }
@@ -146,7 +146,7 @@ bool CSystemnodePing::VerifySignature(CPubKey& pubKeySystemnode, int &nDos) {
     std::string strMessage = vin.ToString() + blockHash.ToString() + boost::lexical_cast<std::string>(sigTime);
     std::string errorMessage = "";
 
-    if(!darkSendSigner.VerifyMessage(pubKeySystemnode, vchSig, strMessage, errorMessage))
+    if(!legacySigner.VerifyMessage(pubKeySystemnode, vchSig, strMessage, errorMessage))
     {
         LogPrintf("CSystemnodePing::VerifySignature - Got bad Systemnode ping signature %s Error: %s\n", vin.ToString(), errorMessage);
         nDos = 33;
@@ -260,7 +260,7 @@ void CSystemnode::Check(bool forceCheck)
     if(!unitTest){
         CValidationState state;
         CMutableTransaction tx = CMutableTransaction();
-        CTxOut vout = CTxOut(0.99*COIN, darkSendPool.collateralPubKey);
+        CTxOut vout = CTxOut(0.99*COIN, legacySigner.collateralPubKey);
         tx.vin.push_back(vin);
         tx.vout.push_back(vout);
 
@@ -337,7 +337,7 @@ bool CSystemnodeBroadcast::CheckAndUpdate(int& nDos)
             SanitizeString(strMessage), CBitcoinAddress(pubkey.GetID()).ToString(),
             EncodeBase64(&sig[0], sig.size()));
 
-        if(!darkSendSigner.VerifyMessage(pubkey, sig, strMessage, errorMessage)){
+        if(!legacySigner.VerifyMessage(pubkey, sig, strMessage, errorMessage)){
             if (addr.ToString() != addr.ToString(false))
             {
                 // maybe it's wrong format, try again with the old one
@@ -348,7 +348,7 @@ bool CSystemnodeBroadcast::CheckAndUpdate(int& nDos)
                     SanitizeString(strMessage), CBitcoinAddress(pubkey.GetID()).ToString(),
                     EncodeBase64(&sig[0], sig.size()));
 
-                if(!darkSendSigner.VerifyMessage(pubkey, sig, strMessage, errorMessage)){
+                if(!legacySigner.VerifyMessage(pubkey, sig, strMessage, errorMessage)){
                     // didn't work either
                     LogPrintf("snb - Got bad systemnode address signature, sanitized error: %s\n", SanitizeString(errorMessage));
                     // there is a bug in old MN signatures, ignore such MN but do not ban the peer we got this from
@@ -369,7 +369,7 @@ bool CSystemnodeBroadcast::CheckAndUpdate(int& nDos)
         LogPrint("systemnode", "snb - strMessage: %s, pubkey address: %s, sig: %s\n",
             strMessage, CBitcoinAddress(pubkey.GetID()).ToString(), EncodeBase64(&sig[0], sig.size()));
 
-        if(!darkSendSigner.VerifyMessage(pubkey, sig, strMessage, errorMessage)){
+        if(!legacySigner.VerifyMessage(pubkey, sig, strMessage, errorMessage)){
             LogPrintf("snb - Got bad systemnode address signature, error: %s\n", errorMessage);
             nDos = 100;
             return false;
@@ -437,7 +437,7 @@ bool CSystemnodeBroadcast::CheckInputsAndAdd(int& nDoS)
 
     CValidationState state;
     CMutableTransaction tx = CMutableTransaction();
-    CTxOut vout = CTxOut(0.99*COIN, darkSendPool.collateralPubKey);
+    CTxOut vout = CTxOut(0.99*COIN, legacySigner.collateralPubKey);
     tx.vin.push_back(vin);
     tx.vout.push_back(vout);
 
@@ -565,7 +565,7 @@ bool CSystemnodeBroadcast::Create(std::string strService, std::string strKeySyst
         return false;
     }
 
-    if(!darkSendSigner.SetKey(strKeySystemnode, strErrorMessage, keySystemnodeNew, pubKeySystemnodeNew))
+    if(!legacySigner.SetKey(strKeySystemnode, strErrorMessage, keySystemnodeNew, pubKeySystemnodeNew))
     {
         strErrorMessage = strprintf("Can't find keys for systemnode %s - %s", strService, strErrorMessage);
         LogPrintf("CSystemnodeBroadcast::Create -- %s\n", strErrorMessage);
@@ -637,7 +637,7 @@ bool CSystemnodeBroadcast::Sign(CKey& keyCollateralAddress)
 
     std::string strMessage = addr.ToString(false) + boost::lexical_cast<std::string>(sigTime) + vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(protocolVersion);
 
-    if(!darkSendSigner.SignMessage(strMessage, errorMessage, sig, keyCollateralAddress)) {
+    if(!legacySigner.SignMessage(strMessage, errorMessage, sig, keyCollateralAddress)) {
         LogPrintf("CSystemnodeBroadcast::Sign() - Error: %s\n", errorMessage);
         return false;
     }

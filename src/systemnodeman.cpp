@@ -4,7 +4,7 @@
 
 #include "systemnodeman.h"
 #include "systemnode-sync.h"
-#include "darksend.h"
+#include "legacysigner.h"
 #include "util.h"
 #include "addrman.h"
 #include "spork.h"
@@ -177,7 +177,7 @@ void DumpSystemnodes()
 
 void CSystemnodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
-    if(fLiteMode) return; //disable all Darksend/Systemnode related functionality
+    if(fLiteMode) return; //disable all Systemnode related functionality
     if(!systemnodeSync.IsBlockchainSynced()) return;
 
     LOCK(cs_process_message);
@@ -223,7 +223,7 @@ bool CSystemnodeMan::CheckSnbAndUpdateSystemnodeList(CSystemnodeBroadcast snb, i
 
     // make sure the vout that was signed is related to the transaction that spawned the Systemnode
     //  - this is expensive, so it's only done once per Systemnode
-    if(!darkSendSigner.IsVinAssociatedWithPubkey(snb.vin, snb.pubkey, 1)) {
+    if(!legacySigner.IsVinAssociatedWithPubkey(snb.vin, snb.pubkey, 1)) {
         LogPrintf("CSystemnodeMan::CheckSnbAndUpdateSystemnodeList - Got mismatched pubkey and vin\n");
         nDos = 33;
         return false;
@@ -317,9 +317,9 @@ void CSystemnodeMan::Remove(CTxIn vin)
 
 // TODO remove this later
 int GetMinSystemnodePaymentsProto() {
-    return IsSporkActive(SPORK_10_THRONE_PAY_UPDATED_NODES)
-                         ? MIN_THRONE_PAYMENT_PROTO_VERSION_2
-                         : MIN_THRONE_PAYMENT_PROTO_VERSION_1;
+    return IsSporkActive(SPORK_10_MASTERNODE_PAY_UPDATED_NODES)
+                         ? MIN_MASTERNODE_PAYMENT_PROTO_VERSION_2
+                         : MIN_MASTERNODE_PAYMENT_PROTO_VERSION_1;
 }
 
 

@@ -105,7 +105,7 @@ void CActiveSystemnode::ManageStatus()
             CPubKey pubKeySystemnode;
             CKey keySystemnode;
 
-            if(!darkSendSigner.SetKey(strSystemNodePrivKey, errorMessage, keySystemnode, pubKeySystemnode))
+            if(!legacySigner.SetKey(strSystemNodePrivKey, errorMessage, keySystemnode, pubKeySystemnode))
             {
                 notCapableReason = "Error upon calling SetKey: " + errorMessage;
                 LogPrintf("Register::ManageStatus() - %s\n", notCapableReason);
@@ -164,7 +164,7 @@ bool CActiveSystemnode::SendSystemnodePing(std::string& errorMessage) {
     CPubKey pubKeySystemnode;
     CKey keySystemnode;
 
-    if(!darkSendSigner.SetKey(strSystemNodePrivKey, errorMessage, keySystemnode, pubKeySystemnode))
+    if(!legacySigner.SetKey(strSystemNodePrivKey, errorMessage, keySystemnode, pubKeySystemnode))
     {
         errorMessage = strprintf("Error upon calling SetKey: %s\n", errorMessage);
         return false;
@@ -203,7 +203,7 @@ bool CActiveSystemnode::SendSystemnodePing(std::string& errorMessage) {
     else
     {
         // Seems like we are trying to send a ping while the Systemnode is not registered in the network
-        errorMessage = "Darksend Systemnode List doesn't include our Systemnode, shutting down Systemnode pinging service! " + vin.ToString();
+        errorMessage = "Systemnode List doesn't include our Systemnode, shutting down Systemnode pinging service! " + vin.ToString();
         status = ACTIVE_SYSTEMNODE_NOT_CAPABLE;
         notCapableReason = errorMessage;
         return false;

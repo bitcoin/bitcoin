@@ -26,6 +26,7 @@
 #include "ui_interface.h"
 #include "util.h"
 #include "activemasternode.h"
+#include "activesystemnode.h"
 #include "masternode-budget.h"
 #include "masternode-payments.h"
 #include "masternodeman.h"
@@ -1550,7 +1551,7 @@ bool AppInit2(boost::thread_group& threadGroup)
             CKey key;
             CPubKey pubkey;
 
-            if(!darkSendSigner.SetKey(strSystemNodePrivKey, errorMessage, key, pubkey))
+            if(!legacySigner.SetKey(strSystemNodePrivKey, errorMessage, key, pubkey))
             {
                 return InitError(_("Invalid systemnodeprivkey. Please see documenation."));
             }

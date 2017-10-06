@@ -323,7 +323,7 @@ void SystemnodeList::on_startButton_clicked()
     }
 
     WalletModel::EncryptionStatus encStatus = walletModel->getEncryptionStatus();
-    if(encStatus == walletModel->Locked || encStatus == walletModel->UnlockedForAnonymizationOnly)
+    if(encStatus == walletModel->Locked)
     {
         WalletModel::UnlockContext ctx(walletModel->requestUnlock(true));
         if(!ctx.isValid())
@@ -352,7 +352,7 @@ void SystemnodeList::on_startAllButton_clicked()
     }
 
     WalletModel::EncryptionStatus encStatus = walletModel->getEncryptionStatus();
-    if(encStatus == walletModel->Locked || encStatus == walletModel->UnlockedForAnonymizationOnly)
+    if(encStatus == walletModel->Locked)
     {
         WalletModel::UnlockContext ctx(walletModel->requestUnlock(true));
         if(!ctx.isValid())
@@ -390,7 +390,7 @@ void SystemnodeList::on_startMissingButton_clicked()
     }
 
     WalletModel::EncryptionStatus encStatus = walletModel->getEncryptionStatus();
-    if(encStatus == walletModel->Locked || encStatus == walletModel->UnlockedForAnonymizationOnly)
+    if(encStatus == walletModel->Locked)
     {
         WalletModel::UnlockContext ctx(walletModel->requestUnlock(true));
         if(!ctx.isValid())

@@ -152,15 +152,10 @@ private:
 public:
 //    bool SelectCoins(int64_t nTargetValue, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet, const CCoinControl *coinControl = NULL, AvailableCoinsType coin_type=ALL_COINS, bool useIX = true) const;
 
-<<<<<<< HEAD
     /// Get 10000CRW input that can be used for the Masternode
     bool GetMasternodeVinAndKeys(CTxIn& vinRet, CPubKey& pubKeyRet, CKey& keyRet, std::string strTxHash = "", std::string strOutputIndex = "");
-=======
-    /// Get 10000CRW input that can be used for the Throne
-    bool GetThroneVinAndKeys(CTxIn& vinRet, CPubKey& pubKeyRet, CKey& keyRet, std::string strTxHash = "", std::string strOutputIndex = "");
     /// Get 500CRW input that can be used for the Systemnode
     bool GetSystemnodeVinAndKeys(CTxIn& vinRet, CPubKey& pubKeyRet, CKey& keyRet, std::string strTxHash = "", std::string strOutputIndex = "");
->>>>>>> origin/servicenode
     // Extract vin information from output
     bool GetVinAndKeysFromOutput(COutput out, CTxIn& vinRet, CPubKey& pubKeyRet, CKey& keyRet);
 
