@@ -21,7 +21,7 @@ BOOST_AUTO_TEST_CASE(generate_auction_regular)
 	AliasNew("node3", "arbiterauction", "changeddata3");
 	string qty = "3";
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getblockchaininfo"));
-	mediantime = find_value(r.get_obj(), "mediantime").get_int64() + 3600;
+	int64_t mediantime = find_value(r.get_obj(), "mediantime").get_int64() + 3600;
 	string expiry = boost::lexical_cast<string>(mediantime);
 	string offerguid = OfferNew("node2", "sellerauction", "category", "title", "100", "0.05", "description", "USD", "\"\"" /*certguid*/, "\"\"" /*paymentoptions*/, "BUYNOW|AUCTION", expiry);
 	// can't update offer auction settings until auction expires
@@ -35,9 +35,9 @@ BOOST_AUTO_TEST_CASE(generate_auction_regular)
 	EscrowBid("node1", "buyerauction", guid, "0.001", "0.01");
 	EscrowBid("node1", "buyerauction", guid, "0.002", "0.02");
 	// must bid higher
-	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction " + guid " 0.002 0.02"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction " + guid + " 0.002 0.02"), runtime_error);
 	// must bid higher
-	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction " + guid " 0.001 0.01"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction " + guid + " 0.001 0.01"), runtime_error);
 	// this is ok because merchant UI should check that the amount in SYS is = to converted amount to USD (1 sys = 10 USD) and if it is off, ask bidder to create a higher bid with correct amount set
 	EscrowBid("node1", "buyerauction", guid, "0.0001", "0.03");
 
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(generate_auction_reserve)
 	AliasNew("node3", "arbiterauction", "changeddata3");
 	string qty = "3";
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getblockchaininfo"));
-	mediantime = find_value(r.get_obj(), "mediantime").get_int64() + 3600;
+	int64_t mediantime = find_value(r.get_obj(), "mediantime").get_int64() + 3600;
 	string expiry = boost::lexical_cast<string>(mediantime);
 	string offerguid = OfferNew("node2", "sellerauction", "category", "title", "100", "0.05", "description", "USD", "\"\"" /*certguid*/, "\"\"" /*paymentoptions*/, "BUYNOW|AUCTION", expiry, "0.01");
 	BOOST_CHECK_THROW(CallRPC("node1", "buyerauction buyerauction 500"), runtime_error);
@@ -77,16 +77,16 @@ BOOST_AUTO_TEST_CASE(generate_auction_reserve)
 	string bid_in_payment_option = "0.11";
 	string bid_in_offer_currency = "0.009";
 	// try to underbid in offer currency
-	BOOST_CHECK_THROW(r = CallRPC(node, "escrownew false buyerauction" + " " + offerguid + " " + qty + " " + buyNowStr + " " + bid_in_payment_option + " arbiterauction " + bid_in_offer_currency + " " + shippingFee + " " + networkFee + " " + arbiterFee + " " + witnessFee + " " + exttxid + " " + paymentoptions + " " + witness), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node1", "escrownew false buyerauction" + " " + offerguid + " " + qty + " " + buyNowStr + " " + bid_in_payment_option + " arbiterauction " + bid_in_offer_currency + " " + shippingFee + " " + networkFee + " " + arbiterFee + " " + witnessFee + " " + exttxid + " " + paymentoptions + " " + witness), runtime_error);
 
 	string guid = EscrowNewAuction("node1", "node2", "buyerauction", offerguid, qty, "0.0005", "0.01", "arbiterauction");
 	// assume rate is 1 sys = 10 USD
 	EscrowBid("node1", "buyerauction", guid, "0.001", "0.02");
 	EscrowBid("node1", "buyerauction", guid, "0.002", "0.03");
 	// must bid higher
-	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction " + guid " 0.002 0.02"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction " + guid + " 0.002 0.02"), runtime_error);
 	// must bid higher
-	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction " + guid " 0.001 0.01"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "escrowbid buyerauction " + guid + " 0.001 0.01"), runtime_error);
 	// this is ok because merchant UI should check that the amount in SYS is = to converted amount to USD (1 sys = 10 USD) and if it is off, ask bidder to create a higher bid with correct amount set
 	EscrowBid("node1", "buyerauction", guid, "0.0001", "0.04");
 
