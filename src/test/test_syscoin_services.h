@@ -16,7 +16,7 @@ void StopNodes();
 void GenerateBlocks(int nBlocks, const string& node="node1");
 void GenerateMainNetBlocks(int nBlocks, const string& node);
 string CallExternal(string &cmd);
-void SetMocktime(const int64& expiryTime);
+void SetMocktime(const int64_t& expiryTime);
 void ExpireAlias(const string& alias);
 void GetOtherNodes(const string& node, string& otherNode1, string& otherNode2);
 string AliasNew(const string& node, const string& aliasname, const string& pubdata, string witness="\"\"");
@@ -43,7 +43,7 @@ const string OfferLink(const string& node, const string& alias, const string& gu
 const string OfferAccept(const string& ownernode, const string& node, const string& aliasname, const string& offerguid, const string& qty, const string& discountexpected = "\"\"", const string& witness="\"\"");
 const string EscrowNewBuyItNow(const string& node, const string& sellernode, const string& buyeralias, const string& offerguid, const string& qtyStr, const string& arbiteralias, const string& witness = "\"\"");
 const string EscrowNewAuction(const string& node, const string& sellernode, const string& buyeralias, const string& offerguid, const string& qtyStr, const string& bid_in_payment_option, const string& bid_in_offer_currency, const string& arbiteralias, const string& witness = "\"\"");
-void EscrowBid(const string& node, const string& buyeralias, const string& escrowguid, const string& bid_in_payment_option, const string& bid_in_offer_currency, const string &witness = "\"\"")
+void EscrowBid(const string& node, const string& buyeralias, const string& escrowguid, const string& bid_in_payment_option, const string& bid_in_offer_currency, const string &witness = "\"\"");
 void EscrowRelease(const string& node, const string& role, const string& guid, const string& witness="\"\"");
 void EscrowClaimRelease(const string& node, const string& role, const string& guid);
 void EscrowRefund(const string& node, const string& role, const string& guid, const string& witness="\"\"");

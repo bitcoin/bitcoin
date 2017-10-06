@@ -662,7 +662,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpiredbuyback)
 	// this time steal the alias and try to recreate at the same time
 	ExpireAlias("aliasexpirebuyback");
 	AliasNew("node1", "aliasexpirebuyback", "somedata");
-	hex_str = AliasUpdate("node1", "aliasexpirebuyback", "changedata3"");
+	hex_str = AliasUpdate("node1", "aliasexpirebuyback", "changedata3");
 	BOOST_CHECK(hex_str.empty());
 	ExpireAlias("aliasexpirebuyback");
 	AliasNew("node2", "aliasexpirebuyback", "somedata", "data");
@@ -722,7 +722,7 @@ BOOST_AUTO_TEST_CASE (generate_aliaspruning)
 	BOOST_CHECK_EQUAL(AliasFilter("node2", "aliasprune1"), true);
 	ExpireAlias("aliasprune1");
 	// now it should be expired
-	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate aliasprune1 newdata2")), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate aliasprune1 newdata2"), runtime_error);
 
 	BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasprune1"), true);
 	BOOST_CHECK_EQUAL(AliasFilter("node2", "aliasprune1"), true);
@@ -747,7 +747,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasprunewithoffer)
 	GenerateBlocks(5, "node3");
 	AliasNew("node3", "aliasprunewithoffer3", "pubdata");
 	StopNode("node3");
-	AliasNew("node1", "aliasprunewithoffer", "pubdata";
+	AliasNew("node1", "aliasprunewithoffer", "pubdata");
 	AliasNew("node1", "aliasprunewithoffer1", "pubdata");
 	AliasNew("node2", "aliasprunewithoffer2", "pubdata");
 	string offerguid = OfferNew("node1", "aliasprunewithoffer", "category", "title", "1", "0.05", "description", "SYS");

@@ -415,7 +415,7 @@ void GenerateBlocks(int nBlocks, const string& node)
   height = 0;
   timeoutCounter = 0;
 }
-void SetMocktime(const int64& expiryTime) {
+void SetMocktime(const int64_t& expiryTime) {
 	string cmd = strprintf("setmocktime %lld", expiryTime);
 	try
 	{
