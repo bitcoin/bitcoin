@@ -1186,7 +1186,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 		strOfferType = params[12].get_str();
 
 	boost::algorithm::to_upper(strOfferType);
-	if (!ValidateOfferTypeString(strOfferType))
+	if (!strOfferType.empty() && !ValidateOfferTypeString(strOfferType))
 	{
 		string err = "SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1504 - " + _("Could not validate offer type");
 		throw runtime_error(err.c_str());
