@@ -416,45 +416,48 @@ void GenerateBlocks(int nBlocks, const string& node)
   timeoutCounter = 0;
 }
 void SetMocktime(const int64_t& expiryTime) {
+	if (expiryTime <= 0) {
+		return;
+	}
 	string cmd = strprintf("setmocktime %lld", expiryTime);
 	try
 	{
-		if (expiryTime > 0)
-		{
-			CallRPC("node1", "getinfo");
-			BOOST_CHECK_NO_THROW(CallRPC("node1", cmd, true, false));
-			UniValue r;
-			BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getblockchaininfo"));
-			BOOST_CHECK_EQUAL(expiryTime, find_value(r.get_obj(), "mediantime").get_int64());
-		}
+		CallRPC("node1", "getinfo");
+		BOOST_CHECK_NO_THROW(CallRPC("node1", cmd, true, false));
+		GenerateBlocks(5, "node1");
+		GenerateBlocks(5, "node1");
+		GenerateBlocks(5, "node1");
+		UniValue r;
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getblockchaininfo"));
+		BOOST_CHECK(expiryTime >= find_value(r.get_obj(), "mediantime").get_int64());
 	}
 	catch (const runtime_error &e)
 	{
 	}
 	try
 	{
-		if (expiryTime > 0)
-		{
-			CallRPC("node2", "getinfo");
-			BOOST_CHECK_NO_THROW(CallRPC("node2", cmd, true, false));
-			UniValue r;
-			BOOST_CHECK_NO_THROW(r = CallRPC("node2", "getblockchaininfo"));
-			BOOST_CHECK_EQUAL(expiryTime, find_value(r.get_obj(), "mediantime").get_int64());
-		}
+		CallRPC("node2", "getinfo");
+		BOOST_CHECK_NO_THROW(CallRPC("node2", cmd, true, false));
+		GenerateBlocks(5, "node2");
+		GenerateBlocks(5, "node2");
+		GenerateBlocks(5, "node2");
+		UniValue r;
+		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "getblockchaininfo"));
+		BOOST_CHECK(expiryTime >= find_value(r.get_obj(), "mediantime").get_int64());
 	}
 	catch (const runtime_error &e)
 	{
 	}
 	try
 	{
-		if (expiryTime > 0)
-		{
-			CallRPC("node3", "getinfo");
-			BOOST_CHECK_NO_THROW(CallRPC("node3", cmd, true, false));
-			UniValue r;
-			BOOST_CHECK_NO_THROW(r = CallRPC("node3", "getblockchaininfo"));
-			BOOST_CHECK_EQUAL(expiryTime, find_value(r.get_obj(), "mediantime").get_int64());
-		}
+		CallRPC("node3", "getinfo");
+		BOOST_CHECK_NO_THROW(CallRPC("node3", cmd, true, false));
+		GenerateBlocks(5, "node3");
+		GenerateBlocks(5, "node3");
+		GenerateBlocks(5, "node3");
+		UniValue r;
+		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "getblockchaininfo"));
+		BOOST_CHECK_EQUAL(expiryTime >= find_value(r.get_obj(), "mediantime").get_int64());
 	}
 	catch (const runtime_error &e)
 	{
@@ -471,7 +474,6 @@ void ExpireAlias(const string& alias)
 		aliasres = CallRPC("node1", "aliasinfo " + alias);
 		expiryTime = find_value(r.get_obj(), "expires_on").get_int64();
 		SetMockTime(expiryTime + 1);
-		GenerateBlocks(5, "node1");
 		r = CallRPC("node1", "aliasinfo " + alias);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), true);
 	}
@@ -486,7 +488,6 @@ void ExpireAlias(const string& alias)
 			expiryTime = find_value(r.get_obj(), "expires_on").get_int64();
 			SetMockTime(expiryTime + 1);
 		}
-		GenerateBlocks(5, "node2");
 		r = CallRPC("node2", "aliasinfo " + alias);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), true);
 	}
@@ -501,7 +502,6 @@ void ExpireAlias(const string& alias)
 			expiryTime = find_value(r.get_obj(), "expires_on").get_int64();
 			SetMockTime(expiryTime + 1);
 		}
-		GenerateBlocks(5, "node3");
 		r = CallRPC("node3", "aliasinfo " + alias);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), true);
 	}
