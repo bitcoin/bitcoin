@@ -53,6 +53,27 @@ bool IsEscrowOp(int op) {
 		|| op == OP_ESCROW_ACKNOWLEDGE
 		|| op == OP_ESCROW_ADD_SHIPPING;
 }
+// % fee on escrow value for arbiter
+int64_t GetEscrowArbiterFee(const int64_t &escrowValue, const float &fEscrowFee) {
+
+	if (fEscrowFee < 0.005)
+		fEscrowFee = 0.005;
+	int fee = 1 / fEscrowFee;
+	int64_t nFee = escrowValue / fee;
+	if (nFee < DEFAULT_MIN_RELAY_TX_FEE)
+		nFee = DEFAULT_MIN_RELAY_TX_FEE;
+	return nFee;
+}
+
+// % fee on escrow value for witness
+int64_t GetEscrowWitnessFee(const int64_t &escrowValue, const float &fWitnessFee) {
+
+	if (fWitnessFee <= 0)
+		return 0;
+	int fee = 1 / fWitnessFee;
+	int64_t nFee = escrowValue / fee;
+	return nFee;
+}
 // check that the minimum arbiter fee is found in nBalance (escrow address balance)
 bool ValidateArbiterFee(const CAmount &nBalance, const CEscrow &escrow) {
 	CAmount nFee = nBalance;
@@ -103,34 +124,13 @@ bool ValidateShipping(const CAmount &nBalance, const CEscrow &escrow) {
 	nFee -= escrow.nWitnessFee;
 	return nFee >= escrow.nShipping;
 }
-// % fee on escrow value for arbiter
-int64_t GetEscrowArbiterFee(const int64_t &escrowValue, const float &fEscrowFee) {
-
-	if(fEscrowFee < 0.005)
-		fEscrowFee = 0.005;
-	int fee = 1/fEscrowFee;
-	int64_t nFee = escrowValue/fee;
-	if(nFee < DEFAULT_MIN_RELAY_TX_FEE)
-		nFee = DEFAULT_MIN_RELAY_TX_FEE;
-	return nFee;
-}
-
-// % fee on escrow value for witness
-int64_t GetEscrowWitnessFee(const int64_t &escrowValue, const float &fWitnessFee) {
-
-	if (fWitnessFee <= 0)
-		return 0;
-	int fee = 1 / fWitnessFee;
-	int64_t nFee = escrowValue / fee;
-	return nFee;
-}
 
 // Minimum amount of deposit per auction bid
 int64_t GetDepositMinimum(const int64_t &escrowValue, const float &fDepositPercentage) {
-
-	if (fDepositPercentage < 0)
-		fDepositPercentage = 0;
-	int fee = 1 / fDepositPercentage;
+	float fDep = fDepositPercentage;
+	if (fDep < 0)
+		fDep = 0;
+	int fee = 1 / fDep;
 	int64_t nMinDep = escrowValue / fee;
 	return nMinDep;
 }
@@ -610,7 +610,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 	}
 
 	CAliasIndex buyerAlias, sellerAlias, arbiterAlias;
-    COffer theOffer;
+    COffer theOffer, myLinkOffer;
 	string retError = "";
 	CTransaction txOffer;
 	int escrowOp = OP_ESCROW_ACTIVATE;
@@ -984,7 +984,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Linked offer auction has expired, cannot place bid!");
 						return true;
 					}
-					if (myLinkOffer.auctionOffer.bRequireWitness && serializedEscrow.vchWitness.empty()))
+					if (myLinkOffer.auctionOffer.bRequireWitness && serializedEscrow.vchWitness.empty())
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Linked offer auction requires a witness signature for each bid but none provided");
 						return true;
@@ -1091,7 +1091,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					}
 					if (IsOfferTypeInMask(myLinkOffer.offerType, OFFERTYPE_AUCTION))
 					{
-						if (myLinkOffer.auctionOffer.bRequireWitness && serializedEscrow.vchWitness.empty()))
+						if (myLinkOffer.auctionOffer.bRequireWitness && serializedEscrow.vchWitness.empty())
 						{
 							errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Offer auction refund requires a witness signature but none provided");
 							return true;
@@ -1100,7 +1100,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				}
 				if (IsOfferTypeInMask(dbOffer.offerType, OFFERTYPE_AUCTION))
 				{
-					if (dbOffer.auctionOffer.bRequireWitness && serializedEscrow.vchWitness.empty()))
+					if (dbOffer.auctionOffer.bRequireWitness && serializedEscrow.vchWitness.empty())
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Offer auction refund requires a witness signature but none provided");
 						return true;
@@ -1183,7 +1183,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 
 				// if this escrow was actually a series of bids, set the bid status to 'refunded' in escrow bid collection
 				if (!dontaddtodb && !theEscrow.bBuyNow) {
-					RefundEscrowBid(theEscrow.vchEscrow);
+					pescrowdb->RefundEscrowBid(theEscrow.vchEscrow);
 				}
 			}
 			else if(op == OP_ESCROW_REFUND && vvchArgs[1] == vchFromString("1"))
@@ -1393,18 +1393,18 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				}
 				if (IsOfferTypeInMask(dbOffer.offerType, OFFERTYPE_AUCTION))
 				{
-					if (dbOffer.auctionOffer.fReservePrice > serializedEscrow.fTotal)
+					if (dbOffer.auctionOffer.fReservePrice > theEscrow.fTotal)
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Cannot purchase below offer reserve price of: ") + boost::lexical_cast<string>(dbOffer.auctionOffer.fReservePrice) + " " + stringFromVch(dbOffer.sCurrencyCode);
 						return true;
 					}
-					if (dbOffer.auctionOffer.nExpireTime <= chainActive.Tip()->nTime && !serializedEscrow.bBuyNow)
+					if (dbOffer.auctionOffer.nExpireTime <= chainActive.Tip()->nTime && !theEscrow.bBuyNow)
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("This auction has expired, cannot place bid");
 						return true;
 					}
 				}
-				if (!IsOfferTypeInMask(dbOffer.offerType, OFFERTYPE_BUYNOW) && serializedEscrow.bBuyNow)
+				if (!IsOfferTypeInMask(dbOffer.offerType, OFFERTYPE_BUYNOW) && theEscrow.bBuyNow)
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Offer does not support the Buy It Now feature");
 					return true;
@@ -1433,18 +1433,18 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				}
 				if (IsOfferTypeInMask(myLinkOffer.offerType, OFFERTYPE_AUCTION))
 				{
-					if (myLinkOffer.auctionOffer.fReservePrice > serializedEscrow.fTotal)
+					if (myLinkOffer.auctionOffer.fReservePrice > theEscrow.fTotal)
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Cannot purchase below linked offer reserve price of: ") + boost::lexical_cast<string>(dbOffer.auctionOffer.fReservePrice) + " " + stringFromVch(dbOffer.sCurrencyCode);
 						return true;
 					}
-					if (myLinkOffer.auctionOffer.nExpireTime <= chainActive.Tip()->nTime && !serializedEscrow.bBuyNow)
+					if (myLinkOffer.auctionOffer.nExpireTime <= chainActive.Tip()->nTime && !theEscrow.bBuyNow)
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("This linked offer auction has expired, cannot place bid");
 						return true;
 					}
 				}
-				if (!IsOfferTypeInMask(myLinkOffer.offerType, OFFERTYPE_BUYNOW) && serializedEscrow.bBuyNow)
+				if (!IsOfferTypeInMask(myLinkOffer.offerType, OFFERTYPE_BUYNOW) && theEscrow.bBuyNow)
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Linked offer does not support the Buy It Now feature");
 					return true;
